@@ -2,7 +2,7 @@
 // Author: Axel Naumann, 2011-10-19
 
 /*************************************************************************
- * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -10,27 +10,27 @@
  *************************************************************************/
 
 
-#ifndef ROOT_TCintWithCling
-#define ROOT_TCintWithCling
+#ifndef ROOT_TCling
+#define ROOT_TCling
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TCintWithCling                                                       //
+// TCling                                                               //
 //                                                                      //
-// This class defines an interface to the CINT C/C++ interpreter made   //
-// by Masaharu Goto of HP Japan.                                        //
+// This class defines an interface to the cling C++ interpreter.        //
 //                                                                      //
-// CINT is an almost full ANSI compliant C/C++ interpreter.             //
+// Cling is a full ANSI compliant C++-11 interpreter based on           //
+// clang/LLVM technology.                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TInterpreter
 #include "TInterpreter.h"
-#endif // ROOT_TInterpreter
+#endif
 
 #ifndef WIN32
 #define TWin32SendClass char
-#endif // WIN32
+#endif
 
 extern "C" {
    namespace clang {
@@ -39,16 +39,16 @@ extern "C" {
    namespace cling {
       class Transaction;
    }
-   void TCintWithCling__RegisterModule(const char* modulename,
+   void TCling__RegisterModule(const char* modulename,
                                        const char** headers,
                                        const char** includePaths,
                                        const char** macroDefines,
                                        const char** macroUndefines,
                                        void (*triggerFunc)() );
-   void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction&);
-   void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction&);
-   TObject* TCintWithCling__GetObjectAddress(const char *Name, void *&LookupCtx);
-   const clang::Decl* TCintWithCling__GetObjectDecl(TObject *obj);
+   void TCling__UpdateListsOnCommitted(const cling::Transaction&);
+   void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
+   TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
+   const clang::Decl* TCling__GetObjectDecl(TObject *obj);
 
 }
 
@@ -69,7 +69,7 @@ namespace ROOT {
    }
 }
 
-class TCintWithCling : public TInterpreter {
+class TCling : public TInterpreter {
 private: // Static Data Members
 
    static void* fgSetOfSpecials; // set of TObjects used in CINT variables
@@ -100,8 +100,8 @@ private: // Data Members
 
 public: // Public Interface
 
-   virtual ~TCintWithCling();
-   TCintWithCling(const char* name, const char* title);
+   virtual ~TCling();
+   TCling(const char* name, const char* title);
 
    cling::Interpreter *GetInterpreter() { return fInterpreter; }
 
@@ -228,6 +228,7 @@ public: // Public Interface
    virtual CallFunc_t*   CallFunc_Factory() const;
    virtual CallFunc_t*   CallFunc_FactoryCopy(CallFunc_t* func) const;
    virtual MethodInfo_t* CallFunc_FactoryMethod(CallFunc_t* func) const;
+   virtual void   CallFunc_IgnoreExtraArgs(CallFunc_t* func, bool ignore) const;
    virtual void   CallFunc_Init(CallFunc_t* func) const;
    virtual bool   CallFunc_IsValid(CallFunc_t* func) const;
    virtual void   CallFunc_ResetArg(CallFunc_t* func) const;
@@ -367,9 +368,9 @@ public: // Public Interface
 
 private: // Private Utility Functions
 
-   TCintWithCling();
-   TCintWithCling(const TCintWithCling&); // NOT IMPLEMENTED
-   TCintWithCling& operator=(const TCintWithCling&); // NOT IMPLEMENTED
+   TCling();
+   TCling(const TCling&); // NOT IMPLEMENTED
+   TCling& operator=(const TCling&); // NOT IMPLEMENTED
 
    void Execute(TMethod*, TObjArray*, int* /*error*/ = 0)
    {
@@ -378,7 +379,7 @@ private: // Private Utility Functions
    void UpdateListOfLoadedSharedLibraries();
    void RegisterLoadedSharedLibrary(const char* name);
 
-   ClassDef(TCintWithCling, 0) //Interface to CINT C/C++ interpreter
+   ClassDef(TCling, 0) //Interface to CINT C/C++ interpreter
 };
 
 #endif

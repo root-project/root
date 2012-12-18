@@ -11,10 +11,16 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// This class defines an interface to cling as interpreter backend.     //
+// TCling                                                               //
+//                                                                      //
+// This class defines an interface to the cling C++ interpreter.        //
+//                                                                      //
+// Cling is a full ANSI compliant C++-11 interpreter based on           //
+// clang/LLVM technology.                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-#include "TCintWithCling.h"
+
+#include "TCling.h"
 
 #include "TClingBaseClassInfo.h"
 #include "TClingCallFunc.h"
@@ -112,7 +118,7 @@ namespace {
    // A module and its headers. Intentionally not a copy:
    // If these strings end up in this struct they are
    // long lived by definition because they get passed in
-   // before initialization of TCintWithCling.
+   // before initialization of TCling.
    struct ModuleHeaderInfo_t {
       ModuleHeaderInfo_t(const char* moduleName,
                          const char** headers,
@@ -136,7 +142,7 @@ namespace {
 
 //______________________________________________________________________________
 extern "C"
-void TCintWithCling__RegisterModule(const char* modulename,
+void TCling__RegisterModule(const char* modulename,
                                     const char** headers,
                                     const char** includePaths,
                                     const char** macroDefines,
@@ -144,7 +150,7 @@ void TCintWithCling__RegisterModule(const char* modulename,
                                     void (*triggerFunc)() )
 {
    // Called by static dictionary initialization to register clang modules
-   // for headers. Calls TCintWithCling::RegisterModule() unless gCling
+   // for headers. Calls TCling::RegisterModule() unless gCling
    // is NULL, i.e. during startup, where the information is buffered in
    // the static moduleHeaderInfoBuffer which then later can be accessed
    // via the global *gModuleHeaderInfoBuffer after a call to this function
@@ -156,8 +162,8 @@ void TCintWithCling__RegisterModule(const char* modulename,
       return;
    }
 
-   if (gCint) {
-      ((TCintWithCling*)gCint)->RegisterModule(modulename,
+   if (gCling) {
+      ((TCling*)gCling)->RegisterModule(modulename,
                                                headers,
                                                includePaths,
                                                macroDefines,
@@ -204,7 +210,7 @@ public:
 };
 
 //______________________________________________________________________________
-static void TCintWithCling__UpdateClassInfo(TagDecl* TD)
+static void TCling__UpdateClassInfo(TagDecl* TD)
 {
    // Update TClingClassInfo for a class (e.g. upon seeing a definition).
    static Bool_t entered = kFALSE;
@@ -217,7 +223,7 @@ static void TCintWithCling__UpdateClassInfo(TagDecl* TD)
       topLevel = kTRUE;
    }
    if (topLevel) {
-      ((TCintWithCling*)gInterpreter)->UpdateClassInfoWithDecl(TD);
+      ((TCling*)gInterpreter)->UpdateClassInfoWithDecl(TD);
    } else {
       // If we are called indirectly from within another call to
       // TCint::UpdateClassInfo, we delay the update until the dictionary loading
@@ -230,7 +236,7 @@ static void TCintWithCling__UpdateClassInfo(TagDecl* TD)
    }
    if (topLevel) {
       while (!updateList.empty()) {
-         ((TCintWithCling*)gInterpreter)
+         ((TCling*)gInterpreter)
             ->UpdateClassInfoWithDecl(updateList.back());
          updateList.pop_back();
       }
@@ -241,9 +247,9 @@ static void TCintWithCling__UpdateClassInfo(TagDecl* TD)
 
 
 extern "C" 
-void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
+void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
    TCollection *listOfSmth = 0;
-   cling::Interpreter* interp = ((TCintWithCling*)gCint)->GetInterpreter();
+   cling::Interpreter* interp = ((TCling*)gCling)->GetInterpreter();
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
        I != E; ++I)
       for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(), 
@@ -274,7 +280,7 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
             }            
          }
          else if (RecordDecl *TD = dyn_cast<RecordDecl>(*DI)) {
-            TCintWithCling__UpdateClassInfo(TD);
+            TCling__UpdateClassInfo(TD);
          }
          else if (const TypedefDecl* TdefD = dyn_cast<TypedefDecl>(*DI)) {
             listOfSmth = gROOT->GetListOfTypes();
@@ -287,7 +293,7 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
             if (TagDecl *TD = dyn_cast<TagDecl>(*DI)) {
                // Mostly just for EnumDecl (the other TagDecl are handled
                // by the 'RecordDecl' if statement.
-               TCintWithCling__UpdateClassInfo(TD);
+               TCling__UpdateClassInfo(TD);
             }
 
             // We care about declarations on the global scope.
@@ -323,7 +329,7 @@ void TCintWithCling__UpdateListsOnCommitted(const cling::Transaction &T) {
 }
 
 extern "C" 
-void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
+void TCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
    TGlobal *global = 0;
    TCollection* globals = gROOT->GetListOfGlobals();
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
@@ -342,20 +348,20 @@ void TCintWithCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
 }
 
 extern "C"  
-TObject* TCintWithCling__GetObjectAddress(const char *Name, void *&LookupCtx) {
+TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx) {
    return gROOT->FindSpecialObject(Name, LookupCtx);
 }
 
-extern "C" const Decl* TCintWithCling__GetObjectDecl(TObject *obj) {
+extern "C" const Decl* TCling__GetObjectDecl(TObject *obj) {
    return ((TClingClassInfo*)obj->IsA()->GetClassInfo())->GetDecl();
 }
 
 // Load library containing specified class. Returns 0 in case of error
 // and 1 in case if success.
-extern "C" int TCintWithCling__AutoLoadCallback(const char* className)
+extern "C" int TCling__AutoLoadCallback(const char* className)
 {
    string cls(className);
-   return gCint->AutoLoad(cls.c_str());
+   return gCling->AutoLoad(cls.c_str());
 }
 
 //______________________________________________________________________________
@@ -399,7 +405,7 @@ void* autoloadCallback(const std::string& mangled_name)
    }
    //fprintf(stderr, "name: '%s'\n", name.c_str());
    // Now we have the class or namespace name, so do the lookup.
-   TString libs = gCint->GetClassSharedLibs(name.c_str());
+   TString libs = gCling->GetClassSharedLibs(name.c_str());
    if (libs.IsNull()) {
       // Not found in the map, all done.
       return 0;
@@ -609,17 +615,17 @@ const char* fantomline = "TRint::EndOfLineAction();";
 //
 //
 
-void* TCintWithCling::fgSetOfSpecials = 0;
+void* TCling::fgSetOfSpecials = 0;
 
 //______________________________________________________________________________
 //
 //
 //
 
-ClassImp(TCintWithCling)
+ClassImp(TCling)
 
 //______________________________________________________________________________
-TCintWithCling::TCintWithCling(const char *name, const char *title)
+TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0), 
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
    fClingCallbacks(0)
@@ -637,11 +643,11 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    fInterpreter->installLazyFunctionCreator(autoloadCallback);
 
    // Add the current path to the include path
-   TCintWithCling::AddIncludePath(".");
+   TCling::AddIncludePath(".");
 
    // Add the root include directory and etc/ to list searched by default.
-   // Use explicit TCintWithCling::AddIncludePath() to avoid vtable: we're in the c'tor!
-   TCintWithCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
+   // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
+   TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
 
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
@@ -664,9 +670,9 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    fInterpreter->declare("#include \"Rtypes.h\"\n#include <string>");
 
    // During the loading of the first modules, RegisterModule which can calls Info
-   // which needs the TClass for TCintWithCling, which in turns need the 'dictionary'
+   // which needs the TClass for TCling, which in turns need the 'dictionary'
    // information to be loaded:
-   fInterpreter->declare("#include \"TCintWithCling.h\"");
+   fInterpreter->declare("#include \"TCling.h\"");
   
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
@@ -674,9 +680,9 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
    TClassEdit::Init(*fInterpreter,*fNormalizedCtxt);
 
    // set the gModuleHeaderInfoBuffer pointer
-   TCintWithCling__RegisterModule(0, 0, 0, 0, 0, 0);
+   TCling__RegisterModule(0, 0, 0, 0, 0, 0);
 
-   TCintWithCling::InitializeDictionaries();
+   TCling::InitializeDictionaries();
    
    // Initialize the CINT interpreter interface.
    fMore      = 0;
@@ -700,7 +706,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
 #else // ROOTINCDIR
    include = ROOTINCDIR;
 #endif // ROOTINCDIR
-   TCintWithCling::AddIncludePath(include);
+   TCling::AddIncludePath(include);
 
    // Attach cling callbacks
    fClingCallbacks = new TClingCallbacks(fInterpreter);
@@ -708,7 +714,7 @@ TCintWithCling::TCintWithCling(const char *name, const char *title)
 }
 
 //______________________________________________________________________________
-TCintWithCling::~TCintWithCling()
+TCling::~TCling()
 {
    // Destroy the interpreter interface.
    delete fMapfile;
@@ -717,10 +723,10 @@ TCintWithCling::~TCintWithCling()
    delete fTemporaries;
    delete fNormalizedCtxt;
    delete fInterpreter;
-   gCint = 0;
+   gCling = 0;
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
-   Warning("~TCintWithCling", "Interface not available yet.");
+   Warning("~TCling", "Interface not available yet.");
 #ifdef R__COMPLETE_MEM_TERMINATION
    // remove all cling objects
 #endif
@@ -765,7 +771,7 @@ static const char *FindLibraryName(void (*func)())
 }
 
 //______________________________________________________________________________
-void TCintWithCling::RegisterModule(const char* modulename,
+void TCling::RegisterModule(const char* modulename,
                                     const char** headers,
                                     const char** includePaths,
                                     const char** macroDefines,
@@ -783,7 +789,7 @@ void TCintWithCling::RegisterModule(const char* modulename,
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
-      TCintWithCling::AddIncludePath(*inclPath);
+      TCling::AddIncludePath(*inclPath);
    }
    for (const char** macroD = macroDefines; *macroD; ++macroD) {
       TString macroPP("#define ");
@@ -863,7 +869,7 @@ void TCintWithCling::RegisterModule(const char* modulename,
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
+Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 {
    // Let cling process a command line.
    //
@@ -1014,7 +1020,7 @@ Long_t TCintWithCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::PrintIntro()
+void TCling::PrintIntro()
 {
    // Print CINT introduction and help message.
 
@@ -1022,7 +1028,7 @@ void TCintWithCling::PrintIntro()
 }
 
 //______________________________________________________________________________
-void TCintWithCling::AddIncludePath(const char *path)
+void TCling::AddIncludePath(const char *path)
 {
    // Add the given path to the list of directories in which the interpreter
    // looks for include files. Only one path item can be specified at a
@@ -1033,7 +1039,7 @@ void TCintWithCling::AddIncludePath(const char *path)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
+void TCling::InspectMembers(TMemberInspector& insp, void* obj,
                                     const TClass* cl)
 {
    // Visit all members over members, recursing over base classes.
@@ -1241,7 +1247,7 @@ void TCintWithCling::InspectMembers(TMemberInspector& insp, void* obj,
 }
 
 //______________________________________________________________________________
-void TCintWithCling::ClearFileBusy()
+void TCling::ClearFileBusy()
 {
    // Reset the interpreter internal state in case a previous action was not correctly
    // terminated.
@@ -1250,7 +1256,7 @@ void TCintWithCling::ClearFileBusy()
 }
 
 //______________________________________________________________________________
-void TCintWithCling::ClearStack()
+void TCling::ClearStack()
 {
    // Delete existing temporary values.
 
@@ -1258,7 +1264,7 @@ void TCintWithCling::ClearStack()
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::InitializeDictionaries()
+Int_t TCling::InitializeDictionaries()
 {
    // Initialize all registered dictionaries.
 
@@ -1269,12 +1275,12 @@ Int_t TCintWithCling::InitializeDictionaries()
       le = gModuleHeaderInfoBuffer->end();
    for (; li != le; ++li) {
       // process buffered module registrations
-      ((TCintWithCling*)gCint)->RegisterModule(li->fModuleName,
-                                               li->fHeaders,
-                                               li->fIncludePaths,
-                                               li->fMacroDefines,
-                                               li->fMacroUndefines,
-                                               li->fTriggerFunc);
+      ((TCling*)gCling)->RegisterModule(li->fModuleName,
+                                        li->fHeaders,
+                                        li->fIncludePaths,
+                                        li->fMacroDefines,
+                                        li->fMacroUndefines,
+                                        li->fTriggerFunc);
    }
    gModuleHeaderInfoBuffer->clear();
 
@@ -1282,7 +1288,7 @@ Int_t TCintWithCling::InitializeDictionaries()
 }
 
 //______________________________________________________________________________
-void TCintWithCling::EnableAutoLoading()
+void TCling::EnableAutoLoading()
 {
    // Enable the automatic loading of shared libraries when a class
    // is used that is stored in a not yet loaded library. Uses the
@@ -1293,7 +1299,7 @@ void TCintWithCling::EnableAutoLoading()
 }
 
 //______________________________________________________________________________
-void TCintWithCling::EndOfLineAction()
+void TCling::EndOfLineAction()
 {
    // It calls a "fantom" method to synchronize user keyboard input
    // and ROOT prompt line.
@@ -1301,7 +1307,7 @@ void TCintWithCling::EndOfLineAction()
 }
 
 //______________________________________________________________________________
-Bool_t TCintWithCling::IsLoaded(const char* filename) const
+Bool_t TCling::IsLoaded(const char* filename) const
 {
    // Return true if the file has already been loaded by cint.
    // We will try in this order:
@@ -1357,12 +1363,12 @@ Bool_t TCintWithCling::IsLoaded(const char* filename) const
 }
 
 //______________________________________________________________________________
-void TCintWithCling::UpdateListOfLoadedSharedLibraries()
+void TCling::UpdateListOfLoadedSharedLibraries()
 {
 #ifdef R_WIN32
    // need to call RegisterLoadedSharedLibrary() here
    // by calling Win32's EnumerateLoadedModules().
-   Error("TCintWithCling::UpdateListOfLoadedSharedLibraries",
+   Error("TCling::UpdateListOfLoadedSharedLibraries",
          "Platform not supported!");   
 #elif defined(R__MACOSX)
    // fPrevLoadedDynLibInfo stores the *next* image index to look at
@@ -1403,13 +1409,13 @@ void TCintWithCling::UpdateListOfLoadedSharedLibraries()
    }
    fPrevLoadedDynLibInfo = iDyLib;
 #else
-   Error("TCintWithCling::UpdateListOfLoadedSharedLibraries",
+   Error("TCling::UpdateListOfLoadedSharedLibraries",
          "Platform not supported!");
 #endif
 }
 
 //______________________________________________________________________________
-void TCintWithCling::RegisterLoadedSharedLibrary(const char* filename)
+void TCling::RegisterLoadedSharedLibrary(const char* filename)
 {
    // Register a new shared library name with the interpreter; add it to
    // fSharedLibs.
@@ -1437,7 +1443,7 @@ void TCintWithCling::RegisterLoadedSharedLibrary(const char* filename)
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::Load(const char* filename, Bool_t system)
+Int_t TCling::Load(const char* filename, Bool_t system)
 {
    // Load a library file in CINT's memory.
    // if 'system' is true, the library is never unloaded.
@@ -1459,7 +1465,7 @@ Int_t TCintWithCling::Load(const char* filename, Bool_t system)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::LoadMacro(const char* filename, EErrorCode* error)
+void TCling::LoadMacro(const char* filename, EErrorCode* error)
 {
    // Load a macro file in CINT's memory.
    ProcessLine(Form(".L %s", filename), error);
@@ -1469,14 +1475,14 @@ void TCintWithCling::LoadMacro(const char* filename, EErrorCode* error)
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::ProcessLineAsynch(const char* line, EErrorCode* error)
+Long_t TCling::ProcessLineAsynch(const char* line, EErrorCode* error)
 {
    // Let CINT process a command line asynch.
    return ProcessLine(line, error);
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::ProcessLineSynch(const char* line, EErrorCode* error)
+Long_t TCling::ProcessLineSynch(const char* line, EErrorCode* error)
 {
    // Let CINT process a command line synchronously, i.e we are waiting
    // it will be finished.
@@ -1491,7 +1497,7 @@ Long_t TCintWithCling::ProcessLineSynch(const char* line, EErrorCode* error)
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::Calc(const char* line, EErrorCode* error)
+Long_t TCling::Calc(const char* line, EErrorCode* error)
 {
    // Directly execute an executable statement (e.g. "func()", "3+5", etc.
    // however not declarations, like "Int_t x;").
@@ -1544,7 +1550,7 @@ Long_t TCintWithCling::Calc(const char* line, EErrorCode* error)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SetGetline(const char * (*getlineFunc)(const char* prompt),
+void TCling::SetGetline(const char * (*getlineFunc)(const char* prompt),
                                 void (*histaddFunc)(const char* line))
 {
    // Set a getline function to call when input is needed.
@@ -1560,7 +1566,7 @@ void TCintWithCling::SetGetline(const char * (*getlineFunc)(const char* prompt),
 }
 
 //______________________________________________________________________________
-void TCintWithCling::RecursiveRemove(TObject* obj)
+void TCling::RecursiveRemove(TObject* obj)
 {
    // Delete object from CINT symbol table so it can not be used anymore.
    // CINT objects are always on the heap.
@@ -1577,10 +1583,10 @@ void TCintWithCling::RecursiveRemove(TObject* obj)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::Reset()
+void TCling::Reset()
 {
    // Reset the Cling state to the state saved by the last call to
-   // TCintWithCling::SaveContext().
+   // TCling::SaveContext().
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
@@ -1591,7 +1597,7 @@ void TCintWithCling::Reset()
 }
 
 //______________________________________________________________________________
-void TCintWithCling::ResetAll()
+void TCling::ResetAll()
 {
    // Reset the Cling state to its initial state.
 
@@ -1604,10 +1610,10 @@ void TCintWithCling::ResetAll()
 }
 
 //______________________________________________________________________________
-void TCintWithCling::ResetGlobals()
+void TCling::ResetGlobals()
 {
    // Reset in Cling the list of global variables to the state saved by the last
-   // call to TCintWithCling::SaveGlobalsContext().
+   // call to TCling::SaveGlobalsContext().
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
@@ -1618,10 +1624,10 @@ void TCintWithCling::ResetGlobals()
 }
 
 //______________________________________________________________________________
-void TCintWithCling::ResetGlobalVar(void* obj)
+void TCling::ResetGlobalVar(void* obj)
 {
    // Reset the Cling 'user' global objects/variables state to the state saved by the last
-   // call to TCintWithCling::SaveGlobalsContext().
+   // call to TCling::SaveGlobalsContext().
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
@@ -1632,7 +1638,7 @@ void TCintWithCling::ResetGlobalVar(void* obj)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::RewindDictionary()
+void TCling::RewindDictionary()
 {
    // Rewind Cling dictionary to the point where it was before executing
    // the current macro. This function is typically called after SEGV or
@@ -1647,7 +1653,7 @@ void TCintWithCling::RewindDictionary()
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::DeleteGlobal(void* obj)
+Int_t TCling::DeleteGlobal(void* obj)
 {
    // Delete obj from Cling symbol table so it cannot be accessed anymore.
    // Returns 1 in case of success and 0 in case object was not in table.
@@ -1662,7 +1668,7 @@ Int_t TCintWithCling::DeleteGlobal(void* obj)
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::DeleteVariable(const char* name)
+Int_t TCling::DeleteVariable(const char* name)
 {
    // Undeclare obj called name.
    // Returns 1 in case of success, 0 for failure.
@@ -1718,7 +1724,7 @@ Int_t TCintWithCling::DeleteVariable(const char* name)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SaveContext()
+void TCling::SaveContext()
 {
    // Save the current Cling state.
 
@@ -1731,7 +1737,7 @@ void TCintWithCling::SaveContext()
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SaveGlobalsContext()
+void TCling::SaveGlobalsContext()
 {
    // Save the current Cling state of global objects.
 
@@ -1744,25 +1750,25 @@ void TCintWithCling::SaveGlobalsContext()
 }
 
 //______________________________________________________________________________
-void TCintWithCling::UpdateListOfGlobals()
+void TCling::UpdateListOfGlobals()
 {
    // No op: see TClingCallbacks (used to update the list of globals)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::UpdateListOfGlobalFunctions()
+void TCling::UpdateListOfGlobalFunctions()
 {
    // No op: see TClingCallbacks (used to update the list of global functions)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::UpdateListOfTypes()
+void TCling::UpdateListOfTypes()
 {
    // No op: see TClingCallbacks (used to update the list of types)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SetClassInfo(TClass* cl, Bool_t reload)
+void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 {
    // Set pointer to the TClingClassInfo in TClass.
    R__LOCKGUARD2(gClingMutex);
@@ -1827,7 +1833,7 @@ void TCintWithCling::SetClassInfo(TClass* cl, Bool_t reload)
 }
 
 //______________________________________________________________________________
-Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
+Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
 {
    // Checks if a class with the specified name is defined in Cling.
    // Returns kFALSE is class is not defined.
@@ -1948,7 +1954,7 @@ Bool_t TCintWithCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRU
 }
 
 //______________________________________________________________________________
-Bool_t TCintWithCling::CheckClassTemplate(const char *name)
+Bool_t TCling::CheckClassTemplate(const char *name)
 {
    // Return true if there is a class template by the given name ...
 
@@ -1964,7 +1970,7 @@ Bool_t TCintWithCling::CheckClassTemplate(const char *name)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CreateListOfBaseClasses(TClass* cl)
+void TCling::CreateListOfBaseClasses(TClass* cl)
 {
    // Create list of pointers to base class(es) for TClass cl.
    R__LOCKGUARD2(gClingMutex);
@@ -1984,7 +1990,7 @@ void TCintWithCling::CreateListOfBaseClasses(TClass* cl)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CreateListOfDataMembers(TClass* cl)
+void TCling::CreateListOfDataMembers(TClass* cl)
 {
    // Create list of pointers to data members for TClass cl.
    R__LOCKGUARD2(gClingMutex);
@@ -2003,7 +2009,7 @@ void TCintWithCling::CreateListOfDataMembers(TClass* cl)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CreateListOfMethods(TClass* cl)
+void TCling::CreateListOfMethods(TClass* cl)
 {
    // Create list of pointers to methods for TClass cl.
    R__LOCKGUARD2(gClingMutex);
@@ -2022,7 +2028,7 @@ void TCintWithCling::CreateListOfMethods(TClass* cl)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::UpdateListOfMethods(TClass* cl)
+void TCling::UpdateListOfMethods(TClass* cl)
 {
    // Update the list of pointers to method for TClass cl, if necessary
    if (cl->fMethod) {
@@ -2037,7 +2043,7 @@ void TCintWithCling::UpdateListOfMethods(TClass* cl)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CreateListOfMethodArgs(TFunction* m)
+void TCling::CreateListOfMethodArgs(TFunction* m)
 {
    // Create list of pointers to method arguments for TMethod m.
    R__LOCKGUARD2(gClingMutex);
@@ -2055,7 +2061,7 @@ void TCintWithCling::CreateListOfMethodArgs(TFunction* m)
 }
 
 //______________________________________________________________________________
-TClass *TCintWithCling::GenerateTClass(const char *classname, Bool_t silent /* = kFALSE */)
+TClass *TCling::GenerateTClass(const char *classname, Bool_t silent /* = kFALSE */)
 {
    // Generate a TClass for the given class.
 
@@ -2108,7 +2114,7 @@ static void GenerateTClass_GatherInnerIncludes(cling::Interpreter *interp, TStri
                   std::string Result;
                   llvm::raw_string_ostream OS(Result);
                   arg.print(argdecl->getASTContext().getPrintingPolicy(),OS);
-                  Warning("TCintWithCling::GenerateTClass","Missing header file for %s",OS.str().c_str());
+                  Warning("TCling::GenerateTClass","Missing header file for %s",OS.str().c_str());
                }
             }
           }
@@ -2118,7 +2124,7 @@ static void GenerateTClass_GatherInnerIncludes(cling::Interpreter *interp, TStri
 #endif
 
 //______________________________________________________________________________
-TClass *TCintWithCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE */)
+TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE */)
 {
    // Generate a TClass for the given class.
 
@@ -2160,7 +2166,7 @@ TClass *TCintWithCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* 
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::GenerateDictionary(const char* classes, const char* includes /* = 0 */, const char* /* options  = 0 */)
+Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 0 */, const char* /* options  = 0 */)
 {
    // Generate the dictionary for the C++ classes listed in the first
    // argmument (in a semi-colon separated list).
@@ -2211,7 +2217,7 @@ Int_t TCintWithCling::GenerateDictionary(const char* classes, const char* includ
 
 
 //______________________________________________________________________________
-TString TCintWithCling::GetMangledName(TClass* cl, const char* method,
+TString TCling::GetMangledName(TClass* cl, const char* method,
                               const char* params)
 {
    // Return the CINT mangled name for a method of a class with parameters
@@ -2237,7 +2243,7 @@ TString TCintWithCling::GetMangledName(TClass* cl, const char* method,
 }
 
 //______________________________________________________________________________
-TString TCintWithCling::GetMangledNameWithPrototype(TClass* cl, const char* method,
+TString TCling::GetMangledNameWithPrototype(TClass* cl, const char* method,
       const char* proto)
 {
    // Return the CINT mangled name for a method of a class with a certain
@@ -2254,7 +2260,7 @@ TString TCintWithCling::GetMangledNameWithPrototype(TClass* cl, const char* meth
 }
 
 //______________________________________________________________________________
-void* TCintWithCling::GetInterfaceMethod(TClass* cl, const char* method,
+void* TCling::GetInterfaceMethod(TClass* cl, const char* method,
                                          const char* params)
 {
    // Return pointer to CINT interface function for a method of a class with
@@ -2276,7 +2282,7 @@ void* TCintWithCling::GetInterfaceMethod(TClass* cl, const char* method,
 }
 
 //______________________________________________________________________________
-void* TCintWithCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
+void* TCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
       const char* proto)
 {
    // Return pointer to CINT interface function for a method of a class with
@@ -2298,7 +2304,7 @@ void* TCintWithCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* me
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::GetInterpreterTypeName(const char* name, Bool_t full)
+const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
 {
    // The 'name' is known to the interpreter, this function returns
    // the internal version of this name (usually just resolving typedefs)
@@ -2329,7 +2335,7 @@ const char* TCintWithCling::GetInterpreterTypeName(const char* name, Bool_t full
 }
 
 //______________________________________________________________________________
-void TCintWithCling::Execute(const char* function, const char* params, int* error)
+void TCling::Execute(const char* function, const char* params, int* error)
 {
    // Execute a global function with arguments params.
    //
@@ -2353,7 +2359,7 @@ void TCintWithCling::Execute(const char* function, const char* params, int* erro
 }
 
 //______________________________________________________________________________
-void TCintWithCling::Execute(TObject* obj, TClass* cl, const char* method,
+void TCling::Execute(TObject* obj, TClass* cl, const char* method,
                     const char* params, int* error)
 {
    // Execute a method from class cl with arguments params.
@@ -2382,7 +2388,7 @@ void TCintWithCling::Execute(TObject* obj, TClass* cl, const char* method,
 }
 
 //______________________________________________________________________________
-void TCintWithCling::Execute(TObject* obj, TClass* cl, TMethod* method,
+void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
       TObjArray* params, int* error)
 {
    // Execute a method from class cl with the arguments in array params
@@ -2433,7 +2439,7 @@ void TCintWithCling::Execute(TObject* obj, TClass* cl, TMethod* method,
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::ExecuteMacro(const char* filename, EErrorCode* error)
+Long_t TCling::ExecuteMacro(const char* filename, EErrorCode* error)
 {
    // Execute a CINT macro.
    R__LOCKGUARD(gClingMutex);
@@ -2441,7 +2447,7 @@ Long_t TCintWithCling::ExecuteMacro(const char* filename, EErrorCode* error)
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::GetTopLevelMacroName() const
+const char* TCling::GetTopLevelMacroName() const
 {
    // Return the file name of the current un-included interpreted file.
    // See the documentation for GetCurrentMacroName().
@@ -2453,7 +2459,7 @@ const char* TCintWithCling::GetTopLevelMacroName() const
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::GetCurrentMacroName() const
+const char* TCling::GetCurrentMacroName() const
 {
    // Return the file name of the currently interpreted file,
    // included or not. Example to illustrate the difference between
@@ -2466,10 +2472,10 @@ const char* TCintWithCling::GetCurrentMacroName() const
       <pre style="margin:0pt">#include &lt;iostream&gt;
    void inclfile() {
    std::cout &lt;&lt; "In inclfile.C" &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCintWithCling::GetCurrentMacroName() returns  " &lt;&lt;
-      TCintWithCling::GetCurrentMacroName() &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCintWithCling::GetTopLevelMacroName() returns " &lt;&lt;
-      TCintWithCling::GetTopLevelMacroName() &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCling::GetCurrentMacroName() returns  " &lt;&lt;
+      TCling::GetCurrentMacroName() &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCling::GetTopLevelMacroName() returns " &lt;&lt;
+      TCling::GetTopLevelMacroName() &lt;&lt; std::endl;
    }</pre></div>
       <div style="clear:both"></div>
       <span style="color:#ffffff;background-color:#7777ff;padding-left:0.3em;padding-right:0.3em">mymacro.C</span>
@@ -2477,10 +2483,10 @@ const char* TCintWithCling::GetCurrentMacroName() const
       <pre style="margin:0pt">#include &lt;iostream&gt;
    void mymacro() {
    std::cout &lt;&lt; "In mymacro.C" &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCintWithCling::GetCurrentMacroName() returns  " &lt;&lt;
-      TCintWithCling::GetCurrentMacroName() &lt;&lt; std::endl;
-   std::cout &lt;&lt; "  TCintWithCling::GetTopLevelMacroName() returns " &lt;&lt;
-      TCintWithCling::GetTopLevelMacroName() &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCling::GetCurrentMacroName() returns  " &lt;&lt;
+      TCling::GetCurrentMacroName() &lt;&lt; std::endl;
+   std::cout &lt;&lt; "  TCling::GetTopLevelMacroName() returns " &lt;&lt;
+      TCling::GetTopLevelMacroName() &lt;&lt; std::endl;
    std::cout &lt;&lt; "  Now calling inclfile..." &lt;&lt; std::endl;
    gInterpreter->ProcessLine(".x inclfile.C");;
    }</pre></div>
@@ -2491,12 +2497,12 @@ const char* TCintWithCling::GetCurrentMacroName() const
    //
    // root [0] .x mymacro.C
    // In mymacro.C
-   //   TCintWithCling::GetCurrentMacroName() returns  ./mymacro.C
-   //   TCintWithCling::GetTopLevelMacroName() returns ./mymacro.C
+   //   TCling::GetCurrentMacroName() returns  ./mymacro.C
+   //   TCling::GetTopLevelMacroName() returns ./mymacro.C
    //   Now calling inclfile...
    // In inclfile.h
-   //   TCintWithCling::GetCurrentMacroName() returns  inclfile.C
-   //   TCintWithCling::GetTopLevelMacroName() returns ./mymacro.C
+   //   TCling::GetCurrentMacroName() returns  inclfile.C
+   //   TCling::GetTopLevelMacroName() returns ./mymacro.C
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,0)
@@ -2509,7 +2515,7 @@ const char* TCintWithCling::GetCurrentMacroName() const
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::TypeName(const char* typeDesc)
+const char* TCling::TypeName(const char* typeDesc)
 {
    // Return the absolute type of typeDesc.
    // E.g.: typeDesc = "class TNamed**", returns "TNamed".
@@ -2555,7 +2561,7 @@ const char* TCintWithCling::TypeName(const char* typeDesc)
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::LoadLibraryMap(const char* rootmapfile)
+Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 {
    // Load map between class and library. If rootmapfile is specified a
    // specific rootmap file can be added (typically used by ACLiC).
@@ -2681,7 +2687,7 @@ Int_t TCintWithCling::LoadLibraryMap(const char* rootmapfile)
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::RescanLibraryMap()
+Int_t TCling::RescanLibraryMap()
 {
    // Scan again along the dynamic path for library maps. Entries for the loaded
    // shared libraries are unloaded first. This can be useful after reseting
@@ -2693,7 +2699,7 @@ Int_t TCintWithCling::RescanLibraryMap()
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::ReloadAllSharedLibraryMaps()
+Int_t TCling::ReloadAllSharedLibraryMaps()
 {
    // Reload the library map entries coming from all the loaded shared libraries,
    // after first unloading the current ones.
@@ -2754,7 +2760,7 @@ Int_t TCintWithCling::ReloadAllSharedLibraryMaps()
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::UnloadAllSharedLibraryMaps()
+Int_t TCling::UnloadAllSharedLibraryMaps()
 {
    // Unload the library map entries coming from all the loaded shared libraries.
    // Returns 0 if succesful
@@ -2770,7 +2776,7 @@ Int_t TCintWithCling::UnloadAllSharedLibraryMaps()
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::UnloadLibraryMap(const char* library)
+Int_t TCling::UnloadLibraryMap(const char* library)
 {
    // Unload library map entries coming from the specified library.
    // Returns -1 in case no entries for the specified library were found,
@@ -2823,7 +2829,7 @@ Int_t TCintWithCling::UnloadLibraryMap(const char* library)
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::AutoLoad(const char* cls)
+Int_t TCling::AutoLoad(const char* cls)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
@@ -2843,11 +2849,11 @@ Int_t TCintWithCling::AutoLoad(const char* cls)
          const char* deplib = ((TObjString*)tokens->At(i))->GetName();
          if (gROOT->LoadClass(cls, deplib) == 0) {
             if (gDebug > 0)
-               ::Info("TCintWithCling::AutoLoad",
+               ::Info("TCling::AutoLoad",
                       "loaded dependent library %s for class %s", deplib, cls);
          }
          else
-            ::Error("TCintWithCling::AutoLoad",
+            ::Error("TCling::AutoLoad",
                     "failure loading dependent library %s for class %s",
                     deplib, cls);
       }
@@ -2855,12 +2861,12 @@ Int_t TCintWithCling::AutoLoad(const char* cls)
       if (lib[0]) {
          if (gROOT->LoadClass(cls, lib) == 0) {
             if (gDebug > 0)
-               ::Info("TCintWithCling::AutoLoad",
+               ::Info("TCling::AutoLoad",
                       "loaded library %s for class %s", lib, cls);
             status = 1;
          }
          else
-            ::Error("TCintWithCling::AutoLoad",
+            ::Error("TCling::AutoLoad",
                     "failure loading library %s for class %s", lib, cls);
       }
       delete tokens;
@@ -2870,7 +2876,7 @@ Int_t TCintWithCling::AutoLoad(const char* cls)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::UpdateClassInfoWithDecl(void* vTD)
+void TCling::UpdateClassInfoWithDecl(void* vTD)
 {
    // Internal function. Inform a TClass about its new TagDecl.
    TagDecl* td = (TagDecl*)vTD;
@@ -2905,21 +2911,21 @@ void TCintWithCling::UpdateClassInfoWithDecl(void* vTD)
 }
 
 //______________________________________________________________________________
-void TCintWithCling::UpdateClassInfo(char* item, Long_t tagnum)
+void TCling::UpdateClassInfo(char* item, Long_t tagnum)
 {
    // No op: see TClingCallbacks
 }
 
 //______________________________________________________________________________
 //FIXME: Factor out that function in TClass, because TClass does it already twice
-void TCintWithCling::UpdateClassInfoWork(const char* item)
+void TCling::UpdateClassInfoWork(const char* item)
 {
    // This is a no-op as part of the API.
-   // TCintWithCling uses UpdateClassInfoWithDecl() instead.
+   // TCling uses UpdateClassInfoWithDecl() instead.
 }
 
 //______________________________________________________________________________
-void TCintWithCling::UpdateAllCanvases()
+void TCling::UpdateAllCanvases()
 {
    // Update all canvases at end the terminal input command.
    TIter next(gROOT->GetListOfCanvases());
@@ -2930,7 +2936,7 @@ void TCintWithCling::UpdateAllCanvases()
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::GetSharedLibs()
+const char* TCling::GetSharedLibs()
 {
    // Return the list of shared libraries loaded into the process.
    if (!fPrevLoadedDynLibInfo && fSharedLibs.IsNull())
@@ -2939,7 +2945,7 @@ const char* TCintWithCling::GetSharedLibs()
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::GetClassSharedLibs(const char* cls)
+const char* TCling::GetClassSharedLibs(const char* cls)
 {
    // Get the list of shared libraries containing the code for class cls.
    // The first library in the list is the one containing the class, the
@@ -2970,7 +2976,7 @@ const char* TCintWithCling::GetClassSharedLibs(const char* cls)
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::GetSharedLibDeps(const char* lib)
+const char* TCling::GetSharedLibDeps(const char* lib)
 {
    // Get the list a libraries on which the specified lib depends. The
    // returned string contains as first element the lib itself.
@@ -2998,7 +3004,7 @@ const char* TCintWithCling::GetSharedLibDeps(const char* lib)
 }
 
 //______________________________________________________________________________
-Bool_t TCintWithCling::IsErrorMessagesEnabled() const
+Bool_t TCling::IsErrorMessagesEnabled() const
 {
    // If error messages are disabled, the interpreter should suppress its
    // failures and warning messages from stdout.
@@ -3011,7 +3017,7 @@ Bool_t TCintWithCling::IsErrorMessagesEnabled() const
 }
 
 //______________________________________________________________________________
-Bool_t TCintWithCling::SetErrorMessages(Bool_t enable)
+Bool_t TCling::SetErrorMessages(Bool_t enable)
 {
    // If error messages are disabled, the interpreter should suppress its
    // failures and warning messages from stdout. Return the previous state.
@@ -3020,11 +3026,11 @@ Bool_t TCintWithCling::SetErrorMessages(Bool_t enable)
    Warning("SetErrorMessages", "Interface not available yet.");
 #endif
 #endif
-   return TCintWithCling::IsErrorMessagesEnabled();
+   return TCling::IsErrorMessagesEnabled();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::GetIncludePath()
+const char* TCling::GetIncludePath()
 {
    // Refresh the list of include paths known to the interpreter and return it
    // with -I prepended.
@@ -3054,7 +3060,7 @@ const char* TCintWithCling::GetIncludePath()
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::GetSTLIncludePath() const
+const char* TCling::GetSTLIncludePath() const
 {
    // Return the directory containing CINT's stl cintdlls.
    static TString stldir;
@@ -3077,14 +3083,14 @@ const char* TCintWithCling::GetSTLIncludePath() const
 //                      M I S C
 //______________________________________________________________________________
 
-int TCintWithCling::DisplayClass(FILE* /*fout*/, const char* /*name*/, int /*base*/, int /*start*/) const
+int TCling::DisplayClass(FILE* /*fout*/, const char* /*name*/, int /*base*/, int /*start*/) const
 {
    // Interface to CINT function
    return 0;
 }
 
 //______________________________________________________________________________
-int TCintWithCling::DisplayIncludePath(FILE *fout) const
+int TCling::DisplayIncludePath(FILE *fout) const
 {
    // Interface to CINT function
    assert(fout != 0 && "DisplayIncludePath, 'fout' parameter is null");
@@ -3112,14 +3118,14 @@ int TCintWithCling::DisplayIncludePath(FILE *fout) const
 }
 
 //______________________________________________________________________________
-void* TCintWithCling::FindSym(const char* entry) const
+void* TCling::FindSym(const char* entry) const
 {
    // Interface to CINT function
    return fInterpreter->getAddressOfGlobal(entry);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::GenericError(const char* error) const
+void TCling::GenericError(const char* error) const
 {
    // Let the interpreter issue a generic error, and set its error state.
 #if defined(R__MUST_REVISIT)
@@ -3130,7 +3136,7 @@ void TCintWithCling::GenericError(const char* error) const
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::GetExecByteCode() const
+Long_t TCling::GetExecByteCode() const
 {
    // This routines used to return the address of the internal wrapper
    // function (of the interpreter) that was used to call *all* the
@@ -3148,7 +3154,7 @@ Long_t TCintWithCling::GetExecByteCode() const
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::Getgvp() const
+Long_t TCling::Getgvp() const
 {
    // Interface to the CINT global object pointer which was controlling the
    // behavior of the wrapper around the calls to operator new and the constructor
@@ -3159,7 +3165,7 @@ Long_t TCintWithCling::Getgvp() const
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::Getp2f2funcname(void*) const
+const char* TCling::Getp2f2funcname(void*) const
 {
    Error("Getp2f2funcname", "Will not be implemented: "
          "all function pointers are compiled!");
@@ -3167,7 +3173,7 @@ const char* TCintWithCling::Getp2f2funcname(void*) const
 }
 
 //______________________________________________________________________________
-int TCintWithCling::GetSecurityError() const
+int TCling::GetSecurityError() const
 {
    // Interface to CINT function
 #if defined(R__MUST_REVISIT)
@@ -3179,14 +3185,14 @@ int TCintWithCling::GetSecurityError() const
 }
 
 //______________________________________________________________________________
-int TCintWithCling::LoadFile(const char* path) const
+int TCling::LoadFile(const char* path) const
 {
    // Load a source file or library called path into the interpreter.
    return fInterpreter->loadFile(path);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::LoadText(const char* text) const
+void TCling::LoadText(const char* text) const
 {
    // Load the declarations from text into the interpreter.
    // Note that this cannot be (top level) statements; text must contain
@@ -3195,7 +3201,7 @@ void TCintWithCling::LoadText(const char* text) const
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::MapCppName(const char* name) const
+const char* TCling::MapCppName(const char* name) const
 {
    // Interface to CINT function
    static std::string buffer;
@@ -3204,7 +3210,7 @@ const char* TCintWithCling::MapCppName(const char* name) const
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SetAlloclockfunc(void (* /* p */ )()) const
+void TCling::SetAlloclockfunc(void (* /* p */ )()) const
 {
    // [Place holder for Mutex Lock] 
    // Provide the interpreter with a way to
@@ -3215,7 +3221,7 @@ void TCintWithCling::SetAlloclockfunc(void (* /* p */ )()) const
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SetAllocunlockfunc(void (* /* p */ )()) const
+void TCling::SetAllocunlockfunc(void (* /* p */ )()) const
 {
    // [Place holder for Mutex Unlock] Provide the interpreter with a way to
    // release a lock used to protect critical section 
@@ -3225,7 +3231,7 @@ void TCintWithCling::SetAllocunlockfunc(void (* /* p */ )()) const
 }
 
 //______________________________________________________________________________
-int TCintWithCling::SetClassAutoloading(int autoload) const
+int TCling::SetClassAutoloading(int autoload) const
 {
    // Enable/Disable the Autoloading of libraries.
    // Returns the old value, i.e whether it was enabled or not.
@@ -3238,7 +3244,7 @@ int TCintWithCling::SetClassAutoloading(int autoload) const
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SetErrmsgcallback(void* p) const
+void TCling::SetErrmsgcallback(void* p) const
 {
    // Set a callback to receive error messages.
 #if defined(R__MUST_REVISIT)
@@ -3249,7 +3255,7 @@ void TCintWithCling::SetErrmsgcallback(void* p) const
 }
 
 //______________________________________________________________________________
-void TCintWithCling::Setgvp(Long_t gvp) const
+void TCling::Setgvp(Long_t gvp) const
 {
    // Interface to the CINT global object pointer which was controlling the
    // behavior of the wrapper around the calls to operator new and the constructor
@@ -3260,26 +3266,26 @@ void TCintWithCling::Setgvp(Long_t gvp) const
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SetRTLD_NOW() const
+void TCling::SetRTLD_NOW() const
 {
    Error("SetRTLD_NOW()", "Will never be implemented! Don't use!");
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SetRTLD_LAZY() const
+void TCling::SetRTLD_LAZY() const
 {
    Error("SetRTLD_LAZY()", "Will never be implemented! Don't use!");
 }
 
 //______________________________________________________________________________
-void TCintWithCling::SetTempLevel(int val) const
+void TCling::SetTempLevel(int val) const
 {
    // Create / close a scope for temporaries. No-op for cling; use
    // StoredValueRef instead.
 }
 
 //______________________________________________________________________________
-int TCintWithCling::UnloadFile(const char* path) const
+int TCling::UnloadFile(const char* path) const
 {
    // Unload a shared library or a source file.
 
@@ -3301,8 +3307,8 @@ int TCintWithCling::UnloadFile(const char* path) const
 
    if (fileInfo->getType() == cling::Interpreter::LoadedFileInfo::kDynamicLibrary) {
       // Signal that the list of shared libs needs to be updated.
-      const_cast<TCintWithCling*>(this)->fPrevLoadedDynLibInfo = 0;
-      const_cast<TCintWithCling*>(this)->fSharedLibs = "";
+      const_cast<TCling*>(this)->fPrevLoadedDynLibInfo = 0;
+      const_cast<TCling*>(this)->fSharedLibs = "";
 
       Error("UnloadFile", "Unloading of shared libraries not yet implemented!\n"
             "Not unloading file %s!", path);
@@ -3329,123 +3335,130 @@ int TCintWithCling::UnloadFile(const char* path) const
 //
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_Delete(CallFunc_t* func) const
+void TCling::CallFunc_Delete(CallFunc_t* func) const
 {
    delete (TClingCallFunc*) func;
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_Exec(CallFunc_t* func, void* address) const
+void TCling::CallFunc_Exec(CallFunc_t* func, void* address) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->Exec(address);
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::CallFunc_ExecInt(CallFunc_t* func, void* address) const
+Long_t TCling::CallFunc_ExecInt(CallFunc_t* func, void* address) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    return f->ExecInt(address);
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::CallFunc_ExecInt64(CallFunc_t* func, void* address) const
+Long_t TCling::CallFunc_ExecInt64(CallFunc_t* func, void* address) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    return f->ExecInt64(address);
 }
 
 //______________________________________________________________________________
-Double_t TCintWithCling::CallFunc_ExecDouble(CallFunc_t* func, void* address) const
+Double_t TCling::CallFunc_ExecDouble(CallFunc_t* func, void* address) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    return f->ExecDouble(address);
 }
 
 //______________________________________________________________________________
-CallFunc_t* TCintWithCling::CallFunc_Factory() const
+CallFunc_t* TCling::CallFunc_Factory() const
 {
    return (CallFunc_t*) new TClingCallFunc(fInterpreter);
 }
 
 //______________________________________________________________________________
-CallFunc_t* TCintWithCling::CallFunc_FactoryCopy(CallFunc_t* func) const
+CallFunc_t* TCling::CallFunc_FactoryCopy(CallFunc_t* func) const
 {
    return (CallFunc_t*) new TClingCallFunc(*(TClingCallFunc*)func);
 }
 
 //______________________________________________________________________________
-MethodInfo_t* TCintWithCling::CallFunc_FactoryMethod(CallFunc_t* func) const
+MethodInfo_t* TCling::CallFunc_FactoryMethod(CallFunc_t* func) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    return (MethodInfo_t*) f->FactoryMethod();
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_Init(CallFunc_t* func) const
+void TCling::CallFunc_IgnoreExtraArgs(CallFunc_t* func, bool ignore) const
+{
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   f->IgnoreExtraArgs(ignore);
+}
+
+//______________________________________________________________________________
+void TCling::CallFunc_Init(CallFunc_t* func) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->Init();
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::CallFunc_IsValid(CallFunc_t* func) const
+bool TCling::CallFunc_IsValid(CallFunc_t* func) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    return f->IsValid();
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_ResetArg(CallFunc_t* func) const
+void TCling::CallFunc_ResetArg(CallFunc_t* func) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->ResetArg();
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_SetArg(CallFunc_t* func, Long_t param) const
+void TCling::CallFunc_SetArg(CallFunc_t* func, Long_t param) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->SetArg(param);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_SetArg(CallFunc_t* func, Double_t param) const
+void TCling::CallFunc_SetArg(CallFunc_t* func, Double_t param) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->SetArg(param);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_SetArg(CallFunc_t* func, Long64_t param) const
+void TCling::CallFunc_SetArg(CallFunc_t* func, Long64_t param) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->SetArg(param);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_SetArg(CallFunc_t* func, ULong64_t param) const
+void TCling::CallFunc_SetArg(CallFunc_t* func, ULong64_t param) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->SetArg(param);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_SetArgArray(CallFunc_t* func, Long_t* paramArr, Int_t nparam) const
+void TCling::CallFunc_SetArgArray(CallFunc_t* func, Long_t* paramArr, Int_t nparam) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->SetArgArray(paramArr, nparam);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_SetArgs(CallFunc_t* func, const char* param) const
+void TCling::CallFunc_SetArgs(CallFunc_t* func, const char* param) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->SetArgs(param);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_SetFunc(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* params, Long_t* offset) const
+void TCling::CallFunc_SetFunc(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* params, Long_t* offset) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    TClingClassInfo* ci = (TClingClassInfo*) info;
@@ -3453,7 +3466,7 @@ void TCintWithCling::CallFunc_SetFunc(CallFunc_t* func, ClassInfo_t* info, const
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_SetFunc(CallFunc_t* func, MethodInfo_t* info) const
+void TCling::CallFunc_SetFunc(CallFunc_t* func, MethodInfo_t* info) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    TClingMethodInfo* minfo = (TClingMethodInfo*) info;
@@ -3461,7 +3474,7 @@ void TCintWithCling::CallFunc_SetFunc(CallFunc_t* func, MethodInfo_t* info) cons
 }
 
 //______________________________________________________________________________
-void TCintWithCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, Long_t* offset) const
+void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, Long_t* offset) const
 {
    // Interface to CINT function
    TClingCallFunc* f = (TClingCallFunc*) func;
@@ -3475,212 +3488,212 @@ void TCintWithCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, 
 //  ClassInfo interface
 //
 
-Long_t TCintWithCling::ClassInfo_ClassProperty(ClassInfo_t* cinfo) const
+Long_t TCling::ClassInfo_ClassProperty(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->ClassProperty();
 }
 
 //______________________________________________________________________________
-void TCintWithCling::ClassInfo_Delete(ClassInfo_t* cinfo) const
+void TCling::ClassInfo_Delete(ClassInfo_t* cinfo) const
 {
    delete (TClingClassInfo*) cinfo;
 }
 
 //______________________________________________________________________________
-void TCintWithCling::ClassInfo_Delete(ClassInfo_t* cinfo, void* arena) const
+void TCling::ClassInfo_Delete(ClassInfo_t* cinfo, void* arena) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    TClinginfo->Delete(arena);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::ClassInfo_DeleteArray(ClassInfo_t* cinfo, void* arena, bool dtorOnly) const
+void TCling::ClassInfo_DeleteArray(ClassInfo_t* cinfo, void* arena, bool dtorOnly) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    TClinginfo->DeleteArray(arena, dtorOnly);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::ClassInfo_Destruct(ClassInfo_t* cinfo, void* arena) const
+void TCling::ClassInfo_Destruct(ClassInfo_t* cinfo, void* arena) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    TClinginfo->Destruct(arena);
 }
 
 //______________________________________________________________________________
-ClassInfo_t* TCintWithCling::ClassInfo_Factory() const
+ClassInfo_t* TCling::ClassInfo_Factory() const
 {
    return (ClassInfo_t*) new TClingClassInfo(fInterpreter);
 }
 
 //______________________________________________________________________________
-ClassInfo_t* TCintWithCling::ClassInfo_Factory(ClassInfo_t* cinfo) const
+ClassInfo_t* TCling::ClassInfo_Factory(ClassInfo_t* cinfo) const
 {
    return (ClassInfo_t*) new TClingClassInfo(*(TClingClassInfo*)cinfo);
 }
 
 //______________________________________________________________________________
-ClassInfo_t* TCintWithCling::ClassInfo_Factory(const char* name) const
+ClassInfo_t* TCling::ClassInfo_Factory(const char* name) const
 {
    return (ClassInfo_t*) new TClingClassInfo(fInterpreter, name);
 }
 
 //______________________________________________________________________________
-int TCintWithCling::ClassInfo_GetMethodNArg(ClassInfo_t* cinfo, const char* method, const char* proto) const
+int TCling::ClassInfo_GetMethodNArg(ClassInfo_t* cinfo, const char* method, const char* proto) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->GetMethodNArg(method, proto);
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::ClassInfo_HasDefaultConstructor(ClassInfo_t* cinfo) const
+bool TCling::ClassInfo_HasDefaultConstructor(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->HasDefaultConstructor();
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::ClassInfo_HasMethod(ClassInfo_t* cinfo, const char* name) const
+bool TCling::ClassInfo_HasMethod(ClassInfo_t* cinfo, const char* name) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->HasMethod(name);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::ClassInfo_Init(ClassInfo_t* cinfo, const char* name) const
+void TCling::ClassInfo_Init(ClassInfo_t* cinfo, const char* name) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    TClinginfo->Init(name);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::ClassInfo_Init(ClassInfo_t* cinfo, int tagnum) const
+void TCling::ClassInfo_Init(ClassInfo_t* cinfo, int tagnum) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    TClinginfo->Init(tagnum);
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::ClassInfo_IsBase(ClassInfo_t* cinfo, const char* name) const
+bool TCling::ClassInfo_IsBase(ClassInfo_t* cinfo, const char* name) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->IsBase(name);
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::ClassInfo_IsEnum(const char* name) const
+bool TCling::ClassInfo_IsEnum(const char* name) const
 {
    return TClingClassInfo::IsEnum(fInterpreter, name);
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::ClassInfo_IsLoaded(ClassInfo_t* cinfo) const
+bool TCling::ClassInfo_IsLoaded(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->IsLoaded();
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::ClassInfo_IsValid(ClassInfo_t* cinfo) const
+bool TCling::ClassInfo_IsValid(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->IsValid();
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::ClassInfo_IsValidMethod(ClassInfo_t* cinfo, const char* method, const char* proto, Long_t* offset) const
+bool TCling::ClassInfo_IsValidMethod(ClassInfo_t* cinfo, const char* method, const char* proto, Long_t* offset) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->IsValidMethod(method, proto, offset);
 }
 
 //______________________________________________________________________________
-int TCintWithCling::ClassInfo_Next(ClassInfo_t* cinfo) const
+int TCling::ClassInfo_Next(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->Next();
 }
 
 //______________________________________________________________________________
-void* TCintWithCling::ClassInfo_New(ClassInfo_t* cinfo) const
+void* TCling::ClassInfo_New(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->New();
 }
 
 //______________________________________________________________________________
-void* TCintWithCling::ClassInfo_New(ClassInfo_t* cinfo, int n) const
+void* TCling::ClassInfo_New(ClassInfo_t* cinfo, int n) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->New(n);
 }
 
 //______________________________________________________________________________
-void* TCintWithCling::ClassInfo_New(ClassInfo_t* cinfo, int n, void* arena) const
+void* TCling::ClassInfo_New(ClassInfo_t* cinfo, int n, void* arena) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->New(n, arena);
 }
 
 //______________________________________________________________________________
-void* TCintWithCling::ClassInfo_New(ClassInfo_t* cinfo, void* arena) const
+void* TCling::ClassInfo_New(ClassInfo_t* cinfo, void* arena) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->New(arena);
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::ClassInfo_Property(ClassInfo_t* cinfo) const
+Long_t TCling::ClassInfo_Property(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->Property();
 }
 
 //______________________________________________________________________________
-int TCintWithCling::ClassInfo_Size(ClassInfo_t* cinfo) const
+int TCling::ClassInfo_Size(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->Size();
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::ClassInfo_Tagnum(ClassInfo_t* cinfo) const
+Long_t TCling::ClassInfo_Tagnum(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->Tagnum();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::ClassInfo_FileName(ClassInfo_t* cinfo) const
+const char* TCling::ClassInfo_FileName(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->FileName();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::ClassInfo_FullName(ClassInfo_t* cinfo) const
+const char* TCling::ClassInfo_FullName(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->FullName(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::ClassInfo_Name(ClassInfo_t* cinfo) const
+const char* TCling::ClassInfo_Name(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->Name();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::ClassInfo_Title(ClassInfo_t* cinfo) const
+const char* TCling::ClassInfo_Title(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->Title();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::ClassInfo_TmpltName(ClassInfo_t* cinfo) const
+const char* TCling::ClassInfo_TmpltName(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return TClinginfo->TmpltName();
@@ -3694,69 +3707,69 @@ const char* TCintWithCling::ClassInfo_TmpltName(ClassInfo_t* cinfo) const
 //
 
 //______________________________________________________________________________
-void TCintWithCling::BaseClassInfo_Delete(BaseClassInfo_t* bcinfo) const
+void TCling::BaseClassInfo_Delete(BaseClassInfo_t* bcinfo) const
 {
    delete(TClingBaseClassInfo*) bcinfo;
 }
 
 //______________________________________________________________________________
-BaseClassInfo_t* TCintWithCling::BaseClassInfo_Factory(ClassInfo_t* cinfo) const
+BaseClassInfo_t* TCling::BaseClassInfo_Factory(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
    return (BaseClassInfo_t*) new TClingBaseClassInfo(fInterpreter, TClinginfo);
 }
 
 //______________________________________________________________________________
-int TCintWithCling::BaseClassInfo_Next(BaseClassInfo_t* bcinfo) const
+int TCling::BaseClassInfo_Next(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    return TClinginfo->Next();
 }
 
 //______________________________________________________________________________
-int TCintWithCling::BaseClassInfo_Next(BaseClassInfo_t* bcinfo, int onlyDirect) const
+int TCling::BaseClassInfo_Next(BaseClassInfo_t* bcinfo, int onlyDirect) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    return TClinginfo->Next(onlyDirect);
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::BaseClassInfo_Offset(BaseClassInfo_t* bcinfo) const
+Long_t TCling::BaseClassInfo_Offset(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    return TClinginfo->Offset();
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::BaseClassInfo_Property(BaseClassInfo_t* bcinfo) const
+Long_t TCling::BaseClassInfo_Property(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    return TClinginfo->Property();
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::BaseClassInfo_Tagnum(BaseClassInfo_t* bcinfo) const
+Long_t TCling::BaseClassInfo_Tagnum(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    return TClinginfo->Tagnum();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::BaseClassInfo_FullName(BaseClassInfo_t* bcinfo) const
+const char* TCling::BaseClassInfo_FullName(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    return TClinginfo->FullName(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::BaseClassInfo_Name(BaseClassInfo_t* bcinfo) const
+const char* TCling::BaseClassInfo_Name(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    return TClinginfo->Name();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::BaseClassInfo_TmpltName(BaseClassInfo_t* bcinfo) const
+const char* TCling::BaseClassInfo_TmpltName(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    return TClinginfo->TmpltName();
@@ -3768,111 +3781,111 @@ const char* TCintWithCling::BaseClassInfo_TmpltName(BaseClassInfo_t* bcinfo) con
 //
 
 //______________________________________________________________________________
-int TCintWithCling::DataMemberInfo_ArrayDim(DataMemberInfo_t* dminfo) const
+int TCling::DataMemberInfo_ArrayDim(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->ArrayDim();
 }
 
 //______________________________________________________________________________
-void TCintWithCling::DataMemberInfo_Delete(DataMemberInfo_t* dminfo) const
+void TCling::DataMemberInfo_Delete(DataMemberInfo_t* dminfo) const
 {
    delete(TClingDataMemberInfo*) dminfo;
 }
 
 //______________________________________________________________________________
-DataMemberInfo_t* TCintWithCling::DataMemberInfo_Factory(ClassInfo_t* clinfo /*= 0*/) const
+DataMemberInfo_t* TCling::DataMemberInfo_Factory(ClassInfo_t* clinfo /*= 0*/) const
 {
    TClingClassInfo* TClingclass_info = (TClingClassInfo*) clinfo;
    return (DataMemberInfo_t*) new TClingDataMemberInfo(fInterpreter, TClingclass_info);
 }
 
 //______________________________________________________________________________
-DataMemberInfo_t* TCintWithCling::DataMemberInfo_FactoryCopy(DataMemberInfo_t* dminfo) const
+DataMemberInfo_t* TCling::DataMemberInfo_FactoryCopy(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return (DataMemberInfo_t*) new TClingDataMemberInfo(*TClinginfo);
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::DataMemberInfo_IsValid(DataMemberInfo_t* dminfo) const
+bool TCling::DataMemberInfo_IsValid(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->IsValid();
 }
 
 //______________________________________________________________________________
-int TCintWithCling::DataMemberInfo_MaxIndex(DataMemberInfo_t* dminfo, Int_t dim) const
+int TCling::DataMemberInfo_MaxIndex(DataMemberInfo_t* dminfo, Int_t dim) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->MaxIndex(dim);
 }
 
 //______________________________________________________________________________
-int TCintWithCling::DataMemberInfo_Next(DataMemberInfo_t* dminfo) const
+int TCling::DataMemberInfo_Next(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->Next();
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::DataMemberInfo_Offset(DataMemberInfo_t* dminfo) const
+Long_t TCling::DataMemberInfo_Offset(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->Offset();
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::DataMemberInfo_Property(DataMemberInfo_t* dminfo) const
+Long_t TCling::DataMemberInfo_Property(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->Property();
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::DataMemberInfo_TypeProperty(DataMemberInfo_t* dminfo) const
+Long_t TCling::DataMemberInfo_TypeProperty(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->TypeProperty();
 }
 
 //______________________________________________________________________________
-int TCintWithCling::DataMemberInfo_TypeSize(DataMemberInfo_t* dminfo) const
+int TCling::DataMemberInfo_TypeSize(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->TypeSize();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::DataMemberInfo_TypeName(DataMemberInfo_t* dminfo) const
+const char* TCling::DataMemberInfo_TypeName(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->TypeName();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::DataMemberInfo_TypeTrueName(DataMemberInfo_t* dminfo) const
+const char* TCling::DataMemberInfo_TypeTrueName(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->TypeTrueName(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::DataMemberInfo_Name(DataMemberInfo_t* dminfo) const
+const char* TCling::DataMemberInfo_Name(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->Name();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::DataMemberInfo_Title(DataMemberInfo_t* dminfo) const
+const char* TCling::DataMemberInfo_Title(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->Title();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) const
+const char* TCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->ValidArrayIndex();
@@ -3886,115 +3899,115 @@ const char* TCintWithCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dmi
 //
 
 //______________________________________________________________________________
-void TCintWithCling::MethodInfo_Delete(MethodInfo_t* minfo) const
+void TCling::MethodInfo_Delete(MethodInfo_t* minfo) const
 {
    // Interface to CINT function
    delete(TClingMethodInfo*) minfo;
 }
 
 //______________________________________________________________________________
-void TCintWithCling::MethodInfo_CreateSignature(MethodInfo_t* minfo, TString& signature) const
+void TCling::MethodInfo_CreateSignature(MethodInfo_t* minfo, TString& signature) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    info->CreateSignature(signature);
 }
 
 //______________________________________________________________________________
-MethodInfo_t* TCintWithCling::MethodInfo_Factory() const
+MethodInfo_t* TCling::MethodInfo_Factory() const
 {
    return (MethodInfo_t*) new TClingMethodInfo(fInterpreter);
 }
 
 //______________________________________________________________________________
-MethodInfo_t* TCintWithCling::MethodInfo_Factory(ClassInfo_t* clinfo) const
+MethodInfo_t* TCling::MethodInfo_Factory(ClassInfo_t* clinfo) const
 {
    return (MethodInfo_t*) new TClingMethodInfo(fInterpreter, (TClingClassInfo*)clinfo);
 }
 //______________________________________________________________________________
-MethodInfo_t* TCintWithCling::MethodInfo_FactoryCopy(MethodInfo_t* minfo) const
+MethodInfo_t* TCling::MethodInfo_FactoryCopy(MethodInfo_t* minfo) const
 {
    return (MethodInfo_t*) new TClingMethodInfo(*(TClingMethodInfo*)minfo);
 }
 
 //______________________________________________________________________________
-void* TCintWithCling::MethodInfo_InterfaceMethod(MethodInfo_t* minfo) const
+void* TCling::MethodInfo_InterfaceMethod(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return (void*) info->InterfaceMethod();
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::MethodInfo_IsValid(MethodInfo_t* minfo) const
+bool TCling::MethodInfo_IsValid(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return info->IsValid();
 }
 
 //______________________________________________________________________________
-int TCintWithCling::MethodInfo_NArg(MethodInfo_t* minfo) const
+int TCling::MethodInfo_NArg(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return info->NArg();
 }
 
 //______________________________________________________________________________
-int TCintWithCling::MethodInfo_NDefaultArg(MethodInfo_t* minfo) const
+int TCling::MethodInfo_NDefaultArg(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return info->NDefaultArg();
 }
 
 //______________________________________________________________________________
-int TCintWithCling::MethodInfo_Next(MethodInfo_t* minfo) const
+int TCling::MethodInfo_Next(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return info->Next();
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::MethodInfo_Property(MethodInfo_t* minfo) const
+Long_t TCling::MethodInfo_Property(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return info->Property();
 }
 
 //______________________________________________________________________________
-void* TCintWithCling::MethodInfo_Type(MethodInfo_t* minfo) const
+void* TCling::MethodInfo_Type(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return info->Type();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::MethodInfo_GetMangledName(MethodInfo_t* minfo) const
+const char* TCling::MethodInfo_GetMangledName(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return info->GetMangledName();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::MethodInfo_GetPrototype(MethodInfo_t* minfo) const
+const char* TCling::MethodInfo_GetPrototype(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return info->GetPrototype();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::MethodInfo_Name(MethodInfo_t* minfo) const
+const char* TCling::MethodInfo_Name(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return info->Name();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::MethodInfo_TypeName(MethodInfo_t* minfo) const
+const char* TCling::MethodInfo_TypeName(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return info->TypeName();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::MethodInfo_Title(MethodInfo_t* minfo) const
+const char* TCling::MethodInfo_Title(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    return info->Title();
@@ -4006,74 +4019,74 @@ const char* TCintWithCling::MethodInfo_Title(MethodInfo_t* minfo) const
 //
 
 //______________________________________________________________________________
-void TCintWithCling::MethodArgInfo_Delete(MethodArgInfo_t* marginfo) const
+void TCling::MethodArgInfo_Delete(MethodArgInfo_t* marginfo) const
 {
    delete(TClingMethodArgInfo*) marginfo;
 }
 
 //______________________________________________________________________________
-MethodArgInfo_t* TCintWithCling::MethodArgInfo_Factory() const
+MethodArgInfo_t* TCling::MethodArgInfo_Factory() const
 {
    return (MethodArgInfo_t*) new TClingMethodArgInfo(fInterpreter);
 }
 
 //______________________________________________________________________________
-MethodArgInfo_t* TCintWithCling::MethodArgInfo_Factory(MethodInfo_t *minfo) const
+MethodArgInfo_t* TCling::MethodArgInfo_Factory(MethodInfo_t *minfo) const
 {
    return (MethodArgInfo_t*) new TClingMethodArgInfo(fInterpreter, (TClingMethodInfo*)minfo);
 }
 
 //______________________________________________________________________________
-MethodArgInfo_t* TCintWithCling::MethodArgInfo_FactoryCopy(MethodArgInfo_t* marginfo) const
+MethodArgInfo_t* TCling::MethodArgInfo_FactoryCopy(MethodArgInfo_t* marginfo) const
 {
    return (MethodArgInfo_t*)
           new TClingMethodArgInfo(*(TClingMethodArgInfo*)marginfo);
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::MethodArgInfo_IsValid(MethodArgInfo_t* marginfo) const
+bool TCling::MethodArgInfo_IsValid(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
    return info->IsValid();
 }
 
 //______________________________________________________________________________
-int TCintWithCling::MethodArgInfo_Next(MethodArgInfo_t* marginfo) const
+int TCling::MethodArgInfo_Next(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
    return info->Next();
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::MethodArgInfo_Property(MethodArgInfo_t* marginfo) const
+Long_t TCling::MethodArgInfo_Property(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
    return info->Property();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::MethodArgInfo_DefaultValue(MethodArgInfo_t* marginfo) const
+const char* TCling::MethodArgInfo_DefaultValue(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
    return info->DefaultValue();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::MethodArgInfo_Name(MethodArgInfo_t* marginfo) const
+const char* TCling::MethodArgInfo_Name(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
    return info->Name();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::MethodArgInfo_TypeName(MethodArgInfo_t* marginfo) const
+const char* TCling::MethodArgInfo_TypeName(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
    return info->TypeName();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::MethodArgInfo_TrueTypeName(MethodArgInfo_t* marginfo) const
+const char* TCling::MethodArgInfo_TrueTypeName(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
    return info->Type()->TrueName(*fNormalizedCtxt);
@@ -4086,67 +4099,67 @@ const char* TCintWithCling::MethodArgInfo_TrueTypeName(MethodArgInfo_t* marginfo
 //
 
 //______________________________________________________________________________
-void TCintWithCling::TypeInfo_Delete(TypeInfo_t* tinfo) const
+void TCling::TypeInfo_Delete(TypeInfo_t* tinfo) const
 {
    delete (TClingTypeInfo*) tinfo;
 }
 
 //______________________________________________________________________________
-TypeInfo_t* TCintWithCling::TypeInfo_Factory() const
+TypeInfo_t* TCling::TypeInfo_Factory() const
 {
    return (TypeInfo_t*) new TClingTypeInfo(fInterpreter);
 }
 
 //______________________________________________________________________________
-TypeInfo_t* TCintWithCling::TypeInfo_FactoryCopy(TypeInfo_t* tinfo) const
+TypeInfo_t* TCling::TypeInfo_FactoryCopy(TypeInfo_t* tinfo) const
 {
    return (TypeInfo_t*) new TClingTypeInfo(*(TClingTypeInfo*)tinfo);
 }
 
 //______________________________________________________________________________
-void TCintWithCling::TypeInfo_Init(TypeInfo_t* tinfo, const char* name) const
+void TCling::TypeInfo_Init(TypeInfo_t* tinfo, const char* name) const
 {
    TClingTypeInfo* TClinginfo = (TClingTypeInfo*) tinfo;
    TClinginfo->Init(name);
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::TypeInfo_IsValid(TypeInfo_t* tinfo) const
+bool TCling::TypeInfo_IsValid(TypeInfo_t* tinfo) const
 {
    TClingTypeInfo* TClinginfo = (TClingTypeInfo*) tinfo;
    return TClinginfo->IsValid();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::TypeInfo_Name(TypeInfo_t* tinfo) const
+const char* TCling::TypeInfo_Name(TypeInfo_t* tinfo) const
 {
    TClingTypeInfo* TClinginfo = (TClingTypeInfo*) tinfo;
    return TClinginfo->Name();
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::TypeInfo_Property(TypeInfo_t* tinfo) const
+Long_t TCling::TypeInfo_Property(TypeInfo_t* tinfo) const
 {
    TClingTypeInfo* TClinginfo = (TClingTypeInfo*) tinfo;
    return TClinginfo->Property();
 }
 
 //______________________________________________________________________________
-int TCintWithCling::TypeInfo_RefType(TypeInfo_t* tinfo) const
+int TCling::TypeInfo_RefType(TypeInfo_t* tinfo) const
 {
    TClingTypeInfo* TClinginfo = (TClingTypeInfo*) tinfo;
    return TClinginfo->RefType();
 }
 
 //______________________________________________________________________________
-int TCintWithCling::TypeInfo_Size(TypeInfo_t* tinfo) const
+int TCling::TypeInfo_Size(TypeInfo_t* tinfo) const
 {
    TClingTypeInfo* TClinginfo = (TClingTypeInfo*) tinfo;
    return TClinginfo->Size();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::TypeInfo_TrueName(TypeInfo_t* tinfo) const
+const char* TCling::TypeInfo_TrueName(TypeInfo_t* tinfo) const
 {
    TClingTypeInfo* TClinginfo = (TClingTypeInfo*) tinfo;
    return TClinginfo->TrueName(*fNormalizedCtxt);
@@ -4159,25 +4172,25 @@ const char* TCintWithCling::TypeInfo_TrueName(TypeInfo_t* tinfo) const
 //
 
 //______________________________________________________________________________
-void TCintWithCling::TypedefInfo_Delete(TypedefInfo_t* tinfo) const
+void TCling::TypedefInfo_Delete(TypedefInfo_t* tinfo) const
 {
    delete(TClingTypedefInfo*) tinfo;
 }
 
 //______________________________________________________________________________
-TypedefInfo_t* TCintWithCling::TypedefInfo_Factory() const
+TypedefInfo_t* TCling::TypedefInfo_Factory() const
 {
    return (TypedefInfo_t*) new TClingTypedefInfo(fInterpreter);
 }
 
 //______________________________________________________________________________
-TypedefInfo_t* TCintWithCling::TypedefInfo_FactoryCopy(TypedefInfo_t* tinfo) const
+TypedefInfo_t* TCling::TypedefInfo_FactoryCopy(TypedefInfo_t* tinfo) const
 {
    return (TypedefInfo_t*) new TClingTypedefInfo(*(TClingTypedefInfo*)tinfo);
 }
 
 //______________________________________________________________________________
-TypedefInfo_t TCintWithCling::TypedefInfo_Init(TypedefInfo_t* tinfo,
+TypedefInfo_t TCling::TypedefInfo_Init(TypedefInfo_t* tinfo,
                                       const char* name) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
@@ -4185,49 +4198,49 @@ TypedefInfo_t TCintWithCling::TypedefInfo_Init(TypedefInfo_t* tinfo,
 }
 
 //______________________________________________________________________________
-bool TCintWithCling::TypedefInfo_IsValid(TypedefInfo_t* tinfo) const
+bool TCling::TypedefInfo_IsValid(TypedefInfo_t* tinfo) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    return TClinginfo->IsValid();
 }
 
 //______________________________________________________________________________
-Int_t TCintWithCling::TypedefInfo_Next(TypedefInfo_t* tinfo) const
+Int_t TCling::TypedefInfo_Next(TypedefInfo_t* tinfo) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    return TClinginfo->Next();
 }
 
 //______________________________________________________________________________
-Long_t TCintWithCling::TypedefInfo_Property(TypedefInfo_t* tinfo) const
+Long_t TCling::TypedefInfo_Property(TypedefInfo_t* tinfo) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    return TClinginfo->Property();
 }
 
 //______________________________________________________________________________
-int TCintWithCling::TypedefInfo_Size(TypedefInfo_t* tinfo) const
+int TCling::TypedefInfo_Size(TypedefInfo_t* tinfo) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    return TClinginfo->Size();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::TypedefInfo_TrueName(TypedefInfo_t* tinfo) const
+const char* TCling::TypedefInfo_TrueName(TypedefInfo_t* tinfo) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    return TClinginfo->TrueName(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::TypedefInfo_Name(TypedefInfo_t* tinfo) const
+const char* TCling::TypedefInfo_Name(TypedefInfo_t* tinfo) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    return TClinginfo->Name();
 }
 
 //______________________________________________________________________________
-const char* TCintWithCling::TypedefInfo_Title(TypedefInfo_t* tinfo) const
+const char* TCling::TypedefInfo_Title(TypedefInfo_t* tinfo) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    return TClinginfo->Title();
