@@ -1895,6 +1895,12 @@ namespace {
       TString fName;
       TString fClassName;
       TString fComment;
+      Int_t   fDataType;
+
+      void SetDataType(Int_t datatype) {
+         fDataType = datatype;
+      }
+
       void SetName(const char *name) {
          fName = name;
       }
@@ -1926,7 +1932,12 @@ namespace {
        */
       Bool_t operator!=(const TMemberInfo &other) {
          if (fName != other.fName) return kTRUE;
-         if (fClassName != other.fClassName) {
+         if (fDataType < TStreamerInfo::kObject) {
+            // For simple type, let compare the data type
+            if (fDataType != other.fDataType) {
+               return kTRUE;
+            }
+         } else if (fClassName != other.fClassName) {
             if ( (fClassName == "long" && (other.fClassName == "long long" || other.fClassName == "Long64_t"))
                   || ( (fClassName == "long long" || fClassName == "Long64_t") && other.fClassName == "long") ) {
                // This is okay both have the same on file format.
@@ -2146,6 +2157,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
          local.SetName( el->GetName() );
          local.SetClassName( el->GetTypeName() );
          local.SetComment( el->GetTitle() );
+         local.SetDataType( el->GetType() );
       }
       if (cl) {
          TDataMember *tdm = (TDataMember*)membernext();
@@ -2154,8 +2166,11 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
          }
          if (tdm) {
             other.SetName( tdm->GetName() );
-            other.SetClassName( tdm->GetFullTypeName() );
+            other.SetClassName( tdm->GetTrueTypeName() );
             other.SetComment( tdm->GetTitle() );
+            if (tdm->GetDataType()) {
+               other.SetDataType( tdm->GetDataType()->GetType() );
+            }
          } else if (el==0) {
             done = kTRUE;
             break;
@@ -2169,6 +2184,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
             other.SetName( infoel->GetName() );
             other.SetClassName( infoel->GetTypeName() );
             other.SetComment( infoel->GetTitle() );
+            other.SetDataType( infoel->GetType() );
          } else if (el==0) {
             done = kTRUE;
             break;
