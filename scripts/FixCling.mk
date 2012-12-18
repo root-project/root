@@ -11,6 +11,7 @@ CALLROOTEXE = root.exe
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectInitOrder"
 CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
 CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
+CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndConversion"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
@@ -52,6 +53,7 @@ CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 ClingWorkAroundMissingImplicitAuto = yes
 ClingWorkAroundMissingDynamicScope = yes
 ClingWorkAroundMissingUnloading = yes
+ClingWorkAroundCallfuncAndConversion = yes     # See https://savannah.cern.ch/bugs/index.php?99517
 ClingWorkAroundMissingAutoLoading = yes        # See *also* the problem namespace and templates:
                                                #     https://savannah.cern.ch/bugs/index.php?99329
                                                #     https://savannah.cern.ch/bugs/index.php?99309
