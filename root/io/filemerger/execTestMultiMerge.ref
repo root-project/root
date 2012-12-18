@@ -26,3 +26,4 @@ Collection name='TList', class='TList', size=12
  TObjString = uno
  TObjString = due
  TObjString = tre
+(int) 0

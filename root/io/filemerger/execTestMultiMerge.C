@@ -10,4 +10,5 @@ int execTestMultiMerge()
    file->cd("named");
    gDirectory->ls();
    file->Get("MyList")->Print();
+   return 0;
 }
