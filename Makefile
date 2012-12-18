@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := clingtest
+
 CLEAN_TARGETS += $(ALL_LIBRARIES)
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -10,6 +12,10 @@ CLING_TESTS := $(patsubst %,%.test,$(CLING_SUBDIRS) )
 
 ifeq ($(MAKECMDGOALS),clingtest)
 MAKE += FIXCLING=yes
+else
+ifeq ($(.DEFAULT_GOAL),clingtest)
+MAKE += FIXCLING=yes
+endif
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
