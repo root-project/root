@@ -6459,7 +6459,13 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
       char *bdcur = bd;
       TString desc="", olddesc="F";
       char bdelim = ':';
-      if(delimiter != ' ') bdelim = delimiter;
+      if(delimiter != ' ') {
+         bdelim = delimiter;
+         if (strchr(bdcur,bdelim)==0 && strchr(bdcur,':') != 0) {
+            // revert to the default
+            bdelim = ':';
+         }
+      }
       while (bdcur) {
          char *colon = strchr(bdcur,bdelim);
          if (colon) *colon = 0;
