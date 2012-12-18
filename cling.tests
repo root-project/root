@@ -23,9 +23,5 @@
 ./root/io/rootcint/stl
 ./root/io/vararyobj
 ./root/io/webfile
-./root/treeformula/depth
-./root/treeformula/event
-./root/tree/interpreted
-./root/tree/split
-./root/tree/tcut
-./root/tree/stl
+./root/treeformula
+./root/tree
