@@ -17,5 +17,9 @@ int runReadFile() {
    t->ReadFile("data.csv");
    t->Scan();
    delete t;
+   t = new TTree("spectrum","tree from csv");
+   t->ReadFile("spectrum.csv");
+   t->Scan();
+   delete t;
    return 0;
 }
