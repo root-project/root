@@ -3,7 +3,6 @@ Processing execCreateAndMerge.C...
 4 a files created
 4 b files created
 4 a files merged
-Warning in <TFileMerger::MergeRecursive>: cannot merge object type (n:'namedObj', t:'namedObj') - Merge(TCollection *) not implemented
 4 b files merged
 ******* MERGED A FILE ******** 4 objects with different names
 TFile**		a_file.root	
