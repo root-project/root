@@ -2167,10 +2167,10 @@ function createFillPatterns(svg, id, color) {
             return {
                x: graph['fX'][p],
                y: graph['fY'][p],
-               exlow:  graph['fEX'][p] / 2.0,
-               exhigh: graph['fEY'][p] / 2.0,
-               eylow:  graph['fEX'][p] / 2.0,
-               eyhigh: graph['fEY'][p] / 2.0
+               exlow:  graph['fEX'][p],
+               exhigh: graph['fEX'][p],
+               eylow:  graph['fEY'][p],
+               eyhigh: graph['fEY'][p]
             };
          }
          else if (graph['_typename'] == 'JSROOTIO.TGraphAsymmErrors' ||
