@@ -1139,21 +1139,21 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    // Eg. void f() //comment 
    //     {}
    if (!decl.hasBody())
-      while (*commentStart !=';' && *commentStart != '\n' && *commentStart != '\r')
+      while (*commentStart !=';' && *commentStart != '\n' && *commentStart != '\r' && *commentStart != '\0')
          ++commentStart;
 
    // Eat up the last char of the declaration if wasn't newline or comment terminator
-   if (*commentStart != '\n' && *commentStart != '\r' && *commentStart != '{')
+   if (*commentStart != '\n' && *commentStart != '\r' && *commentStart != '{' && *commentStart != '\0')
       ++commentStart;
 
    // Now skip the spaces and beginning of comments.
    while ( (isspace(*commentStart) || *commentStart == '/') 
-           && *commentStart != '\n' && *commentStart != '\r') {
+           && *commentStart != '\n' && *commentStart != '\r' && *commentStart != '\0') {
       ++commentStart;
    }
 
    const char* commentEnd = commentStart;
-   while (*commentEnd != '\n' && *commentEnd != '\r' && *commentEnd != '{') {
+   while (*commentEnd != '\n' && *commentEnd != '\r' && *commentEnd != '{' && *commentStart != '\0') {
       ++commentEnd;
    }
 
