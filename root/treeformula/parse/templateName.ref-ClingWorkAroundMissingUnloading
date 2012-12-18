@@ -108,7 +108,6 @@ Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+
 Info in <ACLiC>: modified script has already been compiled and loaded
 Info in <ACLiC>: it will be regenerated and reloaded!
 Error in <TCling::UnloadFile>: Unloading of shared libraries not yet implemented!
-Not unloading file /Users/pcanal/root_working/roottest/root/treeformula/parse/./generatedSel_h.so!
 3,4c3,4
 < //   from TTree mytree/Icecube
 ---

@@ -50,7 +50,7 @@ BoolOrder: BoolOrder.log
 	$(TestDiff)
 
 templateName.log: templateName_cpp.$(DllSuf) $(ROOTCORELIBS) $(ROOT_LOC)/lib/libTreePlayer.$(LibSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runtemplateName.C 2>&1 | grep -v 'ROOT version' | grep -v -e 'Creating library' -e \\.cxx -e 'creating shared' -e 'Warning in <TClassTable::Add>: class generatedSel already in TClassTable' > templateName.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runtemplateName.C 2>&1 | grep -v 'ROOT version' | grep -v -e 'Creating library' -e \\.cxx -e 'creating shared' -e 'Warning in <TClassTable::Add>: class generatedSel already in TClassTable' -e 'Not unloading file' > templateName.log
 
 ifneq ($(ClingWorkAroundMissingUnloading),)
 templateName: CINT_VERSION = ClingWorkAroundMissingUnloading
