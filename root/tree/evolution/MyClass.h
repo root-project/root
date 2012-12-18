@@ -49,14 +49,15 @@ public:
    TopLevel() : fTracksPtr(0) {};
 #ifdef ClingWorkAroundJITandInline
    virtual ~TopLevel();
+   void AddTrack(int seed);
 #else
    virtual ~TopLevel() { delete fTracksPtr; }
-#endif
    void AddTrack(int seed) {
       if (fTracksPtr==0) fTracksPtr = new vector<Track>;
       Track t(seed); fTracks.push_back(t); 
       fTracksPtr->push_back(t);
    }
+#endif
    const Track &GetTrack(int which) { return fTracks[which]; }
 
 #ifdef WITHCLASSDEF
@@ -66,6 +67,11 @@ public:
 
 #ifdef ClingWorkAroundJITandInline
 inline TopLevel::~TopLevel() { delete fTracksPtr; }
+void TopLevel::AddTrack(int seed) {
+   if (fTracksPtr==0) fTracksPtr = new vector<Track>;
+   Track t(seed); fTracks.push_back(t); 
+   fTracksPtr->push_back(t);
+}
 #endif
 
 #elif VERSION==3
