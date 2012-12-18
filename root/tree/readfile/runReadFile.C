@@ -9,5 +9,13 @@ int runReadFile() {
    t->ReadFile("arraydata.txt");
    t->Scan();
    delete t;
+   t = new TTree("arraytree","tree with array created from readfile");
+   t->ReadFile("arraydata2.txt");
+   t->Scan();
+   delete t;
+   t = new TTree("data","tree from csv");
+   t->ReadFile("data.csv");
+   t->Scan();
+   delete t;
    return 0;
 }
