@@ -1,4 +1,7 @@
 {
+#ifdef ClingWorkAroundIncorrectTearDownOrder
+   if (1) {
+#endif
 
 #ifndef ClingWorkAroundMissingDynamicScope
 gROOT->ProcessLine(".L TestObj.cpp+");
@@ -80,4 +83,7 @@ if (h2->GetMean()!=1 || h2->GetEntries()!=240) {
    fprintf(stderr,"99. r.p.t not properly drawn (entry %lf, mean is %lf)\n",h2->GetEntries(), h2->GetMean());
 }
 
+#ifdef ClingWorkAroundIncorrectTearDownOrder
+   }
+#endif
 }
