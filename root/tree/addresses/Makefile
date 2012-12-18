@@ -96,6 +96,10 @@ ifeq ($(FAIL),)
 endif
 
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+merging.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
+endif
+
 merging.log: merging.C
 
 merging: merging.log
