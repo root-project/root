@@ -150,7 +150,9 @@ function displayTree(tree, cycle, node_id) {
 function displayObject(obj, cycle, idx) {
    if (!obj['_typename'].match(/\bJSROOTIO.TH1/) &&
        !obj['_typename'].match(/\bJSROOTIO.TH2/) &&
-       obj['_typename'] != 'JSROOTIO.TGraph' &&
+       !obj['_typename'].match(/\bJSROOTIO.TGraph/) &&
+       !obj['_typename'].match(/\bRooHist/) &&
+       !obj['_typename'].match(/\RooCurve/) &&
        obj['_typename'] != 'JSROOTIO.TCanvas' &&
        obj['_typename'] != 'JSROOTIO.TF1' &&
        obj['_typename'] != 'JSROOTIO.TProfile') {

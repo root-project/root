@@ -1328,6 +1328,8 @@ function createFillPatterns(svg, id, color) {
          for (var i=0;i<vis['objects'].length;++i) {
             zoom.x(vis['objects'][i].x.domain([xmin, xmax]))
                 .y(vis['objects'][i].y.domain([ymin, ymax]));
+            if ('ys' in vis['objects'][i])
+               vis['objects'][i].ys.domain([ymin, ymax])
          }
          refresh();
       };
@@ -1365,6 +1367,8 @@ function createFillPatterns(svg, id, color) {
             for (var i=0;i<vis['objects'].length;++i) {
                zoom.x(vis['objects'][i].x.domain([xmin, xmax]))
                    .y(vis['objects'][i].y.domain([ymin, ymax]));
+               if ('ys' in vis['objects'][i])
+                  vis['objects'][i].ys.domain([ymin, ymax])
             }
          }
          rect.remove();
@@ -2078,7 +2082,7 @@ function createFillPatterns(svg, id, color) {
    };
 
    JSROOTPainter.drawGraph = function(vis, pad, graph, hframe) {
-      var scalex = 1, scaley = 1, logx = false, logy = false, logz = false,
+      var logx = false, logy = false, logz = false,
           gridx = false, gridy = false, draw_all = true;
       var optionLine, optionAxis, optionCurve, optionStar, optionMark,
           optionBar, optionR, optionOne, optionE, optionFill, optionZ,
@@ -2140,25 +2144,50 @@ function createFillPatterns(svg, id, color) {
             draw_errors = false;
       }
       var seriesType = 'scatter';
+      if (optionBar == 1)
+         seriesType = 'bar';
       var showMarker = false;
       if (optionMark == 1 || optionStar == 1)
          showMarker = true;
-      if (optionLine == 1 || optionCurve == 1)
+      if (optionLine == 1 || optionCurve == 1 || optionFill == 1)
          seriesType = 'line';
 
+      var binwidth = (graph['fHistogram']['fXaxis']['fXmax'] - graph['fHistogram']['fXaxis']['fXmin']) / 
+                       graph['fNpoints'];
       var bins = d3.range(graph['fNpoints']).map(function(p) {
-         if (graph['_typename'] == 'JSROOTIO.TGraphErrors') {
+         if (optionBar == 1) {
             return {
-               x: graph['fX'][p] * scalex,
-               y: graph['fY'][p] * scaley,
-               xerr: graph['fEX'][p] * scalex,
-               yerr: graph['fEY'][p] * scaley
+               x: graph['fX'][p] - (binwidth / 2),
+               y: graph['fY'][p], // graph['fHistogram']['fXaxis']['fXmin'],
+               bw: binwidth,
+               bh: graph['fY'][p]
+            }
+         }
+         else if (graph['_typename'] == 'JSROOTIO.TGraphErrors') {
+            return {
+               x: graph['fX'][p],
+               y: graph['fY'][p],
+               exlow:  graph['fEX'][p] / 2.0,
+               exhigh: graph['fEY'][p] / 2.0,
+               eylow:  graph['fEX'][p] / 2.0,
+               eyhigh: graph['fEY'][p] / 2.0
+            };
+         }
+         else if (graph['_typename'] == 'JSROOTIO.TGraphAsymmErrors' ||
+             graph['_typename'].match(/\bRooHist/)) {
+            return {
+               x: graph['fX'][p],
+               y: graph['fY'][p],
+               exlow:  graph['fEXlow'][p],
+               exhigh: graph['fEXhigh'][p],
+               eylow:  graph['fEYlow'][p],
+               eyhigh: graph['fEYhigh'][p]
             };
          }
          else {
             return {
-               x: graph['fX'][p] * scalex,
-               y: graph['fY'][p] * scaley
+               x: graph['fX'][p],
+               y: graph['fY'][p]
             };
          }
       });
@@ -2180,6 +2209,12 @@ function createFillPatterns(svg, id, color) {
          else
             var y = d3.scale.linear().domain([graph['fHistogram']['fYaxis']['fXmin'],
                                     graph['fHistogram']['fYaxis']['fXmax']]).range([h, 0]);
+         if (logy)
+            var ys = d3.scale.log().domain([graph['fHistogram']['fYaxis']['fXmin'],
+                                 graph['fHistogram']['fYaxis']['fXmax']]).range([0, h]);
+         else
+            var ys = d3.scale.linear().domain([graph['fHistogram']['fYaxis']['fXmin'],
+                                    graph['fHistogram']['fYaxis']['fXmax']]).range([0, h]);
          graph['x_min'] = graph['fHistogram']['fXaxis']['fXmin'];
          graph['x_max'] = graph['fHistogram']['fXaxis']['fXmax'];
          graph['y_min'] = graph['fHistogram']['fYaxis']['fXmin'];
@@ -2196,6 +2231,11 @@ function createFillPatterns(svg, id, color) {
          else
             var y = d3.scale.linear().domain([hframe['ymin'], hframe['ymax']]).range([h, 0]);
 
+         if (logy)
+            var ys = d3.scale.log().domain([hframe['ymin'], hframe['ymax']]).range([0, h]);
+         else
+            var ys = d3.scale.linear().domain([hframe['ymin'], hframe['ymax']]).range([0, h]);
+
          graph['x_min'] = hframe['xmin'];
          graph['x_max'] = hframe['xmax'];
          graph['y_min'] = hframe['ymin'];
@@ -2203,6 +2243,7 @@ function createFillPatterns(svg, id, color) {
       }
       graph['x'] = x;
       graph['y'] = y;
+      graph['ys'] = ys;
       graph['bins'] = bins;
 
       // exclusion graphs
@@ -2221,6 +2262,7 @@ function createFillPatterns(svg, id, color) {
             glw = 65536 - glw;
          }
          lw = glw % 100; // line width
+         if (lw > 0) optionLine = 1;
          ec = root_colors[graph['fFillColor']];
          ec = ec.replace('rgb', 'rgba');
          ec = ec.replace(')', ', 0.20)');
@@ -2430,6 +2472,22 @@ function createFillPatterns(svg, id, color) {
                .x(function(d) { return graph.x(d.x);})
                .y(function(d) { return graph.y(d.y);});
          }
+         if (seriesType == 'bar') {
+            var fillcolor = root_colors[graph['fFillColor']];
+            if (typeof(fillcolor) == 'undefined') fillcolor = "rgb(204, 204, 204)";
+            /* filled bar graph */
+            var xdom = graph.x.domain();
+            var xfactor = xdom[1]-xdom[0];
+            g.selectAll("bar_graph")
+               .data(graph.bins)
+               .enter()
+               .append("svg:rect")
+               .attr("x", function(d) { return graph.x(d.x)} )
+               .attr("y", function(d) { return graph.y(d.y)} )
+               .attr("width", function(d) { return (w / (xdom[1]-xdom[0]))-1} )
+               .attr("height", function(d) { return graph.ys(d.bh)} )
+               .style("fill", fillcolor);
+         }
          if (exclusionGraph) {
             /* first draw exclusion area, and then the line */
             showMarker = false;
@@ -2456,20 +2514,22 @@ function createFillPatterns(svg, id, color) {
             g.append("svg:path")
                .attr("class", "line")
                .attr("d", line(bins))
-               .style("stroke", root_colors[graph['fLineColor']])
+               .style("stroke", (optionLine == 1) ? root_colors[graph['fLineColor']] : "none")
                .style("stroke-width", lw)
                .style("stroke-dasharray", root_line_styles[graph['fLineStyle']])
-               .style("fill", "none");
+               .style("fill", (optionFill == 1) ? root_colors[graph['fFillColor']] : "none");
          }
-         if (graph['_typename'] == 'JSROOTIO.TGraphErrors' && draw_errors) {
+         if ((graph['_typename'] == 'JSROOTIO.TGraphErrors' ||
+              graph['_typename'] == 'JSROOTIO.TGraphAsymmErrors' ||
+              graph['_typename'].match(/\bRooHist/)) && draw_errors) {
             /* Add x-error indicators */
             g.selectAll("error_x")
                .data(graph.bins)
                .enter()
                .append("svg:line")
-               .attr("x1", function(d) { return graph.x(d.x-d.xerr)} )
+               .attr("x1", function(d) { return graph.x(d.x-d.exlow)} )
                .attr("y1", function(d) { return graph.y(d.y)} )
-               .attr("x2", function(d) { return graph.x(d.x+d.xerr)} )
+               .attr("x2", function(d) { return graph.x(d.x+d.exhigh)} )
                .attr("y2", function(d) { return graph.y(d.y)} )
                .style("stroke", root_colors[graph['fLineColor']])
                .style("stroke-width", graph['fLineWidth']);
@@ -2479,9 +2539,9 @@ function createFillPatterns(svg, id, color) {
                .enter()
                .append("svg:line")
                .attr("y1", function(d) { return graph.y(d.y)-3} )
-               .attr("x1", function(d) { return graph.x(d.x-d.xerr)})
+               .attr("x1", function(d) { return graph.x(d.x-d.exlow)})
                .attr("y2", function(d) { return graph.y(d.y)+3})
-               .attr("x2", function(d) { return graph.x(d.x-d.xerr)})
+               .attr("x2", function(d) { return graph.x(d.x-d.exlow)})
                .style("stroke", root_colors[graph['fLineColor']])
                .style("stroke-width", graph['fLineWidth']);
             g.selectAll("e1_x")
@@ -2489,9 +2549,9 @@ function createFillPatterns(svg, id, color) {
                .enter()
                .append("svg:line")
                .attr("y1", function(d) { return graph.y(d.y)-3} )
-               .attr("x1", function(d) { return graph.x(d.x+d.xerr) })
+               .attr("x1", function(d) { return graph.x(d.x+d.exhigh) })
                .attr("y2", function(d) { return graph.y(d.y)+3})
-               .attr("x2", function(d) { return graph.x(d.x+d.xerr) })
+               .attr("x2", function(d) { return graph.x(d.x+d.exhigh) })
                .style("stroke", root_colors[graph['fLineColor']])
                .style("stroke-width", graph['fLineWidth']);
 
@@ -2501,9 +2561,9 @@ function createFillPatterns(svg, id, color) {
                .enter()
                .append("svg:line")
                .attr("x1", function(d) { return graph.x(d.x)})
-               .attr("y1", function(d) { return graph.y(d.y-d.yerr) })
+               .attr("y1", function(d) { return graph.y(d.y-d.eylow) })
                .attr("x2", function(d) { return graph.x(d.x)})
-               .attr("y2", function(d) { return graph.y(d.y+d.yerr) })
+               .attr("y2", function(d) { return graph.y(d.y+d.eyhigh) })
                .style("stroke", root_colors[graph['fLineColor']])
                .style("stroke-width", graph['fLineWidth']);
 
@@ -2512,9 +2572,9 @@ function createFillPatterns(svg, id, color) {
                .enter()
                .append("svg:line")
                .attr("x1", function(d) { return graph.x(d.x)-3})
-               .attr("y1", function(d) { return graph.y(d.y-d.yerr) })
+               .attr("y1", function(d) { return graph.y(d.y-d.eylow) })
                .attr("x2", function(d) { return graph.x(d.x)+3})
-               .attr("y2", function(d) { return graph.y(d.y-d.yerr) })
+               .attr("y2", function(d) { return graph.y(d.y-d.eylow) })
                .style("stroke", root_colors[graph['fLineColor']])
                .style("stroke-width", graph['fLineWidth']);
             g.selectAll("e1_y")
@@ -2522,9 +2582,9 @@ function createFillPatterns(svg, id, color) {
                .enter()
                .append("svg:line")
                .attr("x1", function(d) { return graph.x(d.x)-3})
-               .attr("y1", function(d) { return graph.y(d.y+d.yerr) })
+               .attr("y1", function(d) { return graph.y(d.y+d.eyhigh) })
                .attr("x2", function(d) { return graph.x(d.x)+3})
-               .attr("y2", function(d) { return graph.y(d.y+d.yerr) })
+               .attr("y2", function(d) { return graph.y(d.y+d.eyhigh) })
                .style("stroke", root_colors[graph['fLineColor']])
                .style("stroke-width", graph['fLineWidth']);
          }
@@ -2542,7 +2602,7 @@ function createFillPatterns(svg, id, color) {
             var filled = info_marker['toFill'];
             var toRotate = info_marker['toRotate'];
             var markerSize = graph['fMarkerSize'];
-            var markerScale = 65;
+            var markerScale = (shape == 0) ? 32 : 64;
             if (graph['fMarkerStyle'] == 1) markerScale = 1;
 
             switch (shape) {
@@ -2772,6 +2832,11 @@ function createFillPatterns(svg, id, color) {
 
       if (options.Error > 0) {
          this.drawErrors(svg_frame, bins, histo, pad, x, y);
+      }
+      else if (options.Bar == 0 && options.Hist == 0) {
+         histo['redraw'] = function() {
+            JSROOTPainter.drawGrid(frame, histo, pad, x, y);
+         };
       }
       else {
          function do_redraw() {
@@ -3600,7 +3665,9 @@ function createFillPatterns(svg, id, color) {
          else if (obj['_typename'] == 'JSROOTIO.TF1') {
             JSROOTPainter.drawFunction(svg, null, obj, null);
          }
-         else if (obj['_typename'].match(/\bTGraph/)) {
+         else if (obj['_typename'].match(/\bTGraph/) ||
+                  obj['_typename'].match(/\bRooHist/) ||
+                  obj['_typename'].match(/\RooCurve/)) {
             JSROOTPainter.drawGraph(svg, null, obj, null);
          }
          else if (obj['_typename'] == 'JSROOTIO.TMultiGraph') {
@@ -4051,7 +4118,9 @@ function createFillPatterns(svg, id, color) {
                this.drawFunction(vis, pad, primitives[i], fframe);
             primitives[i]['isDrawn'] = true;
          }
-         if (classname.match(/\bTGraph/)) {
+         if (classname.match(/\bTGraph/) ||
+             classname.match(/\bRooHist/) ||
+             classname.match(/\RooCurve/)) {
             primitives[i]['fName'] += i;
             this.drawGraph(vis, pad, primitives[i], frame);
          }
@@ -4363,7 +4432,9 @@ function createFillPatterns(svg, id, color) {
          var node_img = source_dir+'img/page.gif';
          if (keys[i]['className'].match(/\bTH1/)  ||
              keys[i]['className'].match(/\bTH2/)  ||
-             keys[i]['className'].match(/\bTGraph/)) {
+             keys[i]['className'].match(/\bTGraph/) ||
+             keys[i]['className'].match(/\bRooHist/) ||
+             keys[i]['className'].match(/\RooCurve/)) {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
             node_img = source_dir+'img/graphical.png';
          }
@@ -4427,7 +4498,9 @@ function createFillPatterns(svg, id, color) {
          var node_title = keys[i]['className'];
          if (keys[i]['className'].match(/\bTH1/) ||
              keys[i]['className'].match(/\bTH2/) ||
-             keys[i]['className'].match(/\bTGraph/)) {
+             keys[i]['className'].match(/\bTGraph/) ||
+             keys[i]['className'].match(/\bRooHist/) ||
+             keys[i]['className'].match(/\RooCurve/)) {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
             node_img = source_dir+'img/graphical.png';
             node_title = keys[i]['name'];
