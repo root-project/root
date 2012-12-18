@@ -65,8 +65,12 @@ templateBase: templateBase.log
 aliases: aliases.log
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundCallfuncAndConversion),)
+gaus: CINT_VERSION = ClingWorkAroundCallfuncAndConversion
+endif
+
 gaus: gaus.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 
 cscan: cscan.clog
 	$(TestDiff)
