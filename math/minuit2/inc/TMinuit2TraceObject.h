@@ -39,7 +39,7 @@ public:
 
    virtual void operator() (int i, const ROOT::Minuit2::MinimumState & state); 
 
-   // ClassDef(TMinuit2TraceObject,1) // Example Trace Object for Minuit2
+   ClassDef(TMinuit2TraceObject,0) // Example Trace Object for Minuit2
 
 private: 
 
