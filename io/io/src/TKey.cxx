@@ -784,7 +784,7 @@ TObject *TKey::ReadObj()
    if (fObjlen > fNbytes-fKeylen) {
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
-      Int_t nin, nout, nbuf;
+      Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
          Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
@@ -911,7 +911,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
    if (fObjlen > fNbytes-fKeylen) {
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
-      Int_t nin, nout, nbuf;
+      Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
          Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
@@ -1056,7 +1056,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
    if (fObjlen > fNbytes-fKeylen) {
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
-      Int_t nin, nout, nbuf;
+      Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
          Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
@@ -1146,7 +1146,7 @@ Int_t TKey::Read(TObject *obj)
    if (fObjlen > fNbytes-fKeylen) {
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
-      Int_t nin, nout, nbuf;
+      Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
          Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
