@@ -11294,7 +11294,7 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save)
          TString oo(ord), o;
          Int_t from = 0;
          while(oo.Tokenize(o, from, ","))
-            if (o.BeginsWith(gProofServ->GetOrdinal)) ords->Add(new TObjString(o));
+            if (o.BeginsWith(gProofServ->GetOrdinal())) ords->Add(new TObjString(o));
       }
       // We do not need to send forward 
       fw = kFALSE;
