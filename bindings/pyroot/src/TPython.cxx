@@ -428,7 +428,8 @@ void* TPython::ObjectProxy_AsVoidPtr( PyObject* pyobject )
 }
 
 //____________________________________________________________________________
-PyObject* TPython::ObjectProxy_FromVoidPtr( void* addr, const char* classname )
+PyObject* TPython::ObjectProxy_FromVoidPtr(
+   void* addr, const char* classname, Bool_t python_owns )
 {
 // Bind the addr to a python object of class defined by classname.
 
@@ -437,5 +438,11 @@ PyObject* TPython::ObjectProxy_FromVoidPtr( void* addr, const char* classname )
       return 0;
 
 // perform cast (the call will check TClass and addr, and set python errors)
-   return PyROOT::BindRootObjectNoCast( addr, TClass::GetClass( classname ), kFALSE );
+   PyObject* pyobject = PyROOT::BindRootObjectNoCast( addr, TClass::GetClass( classname ), kFALSE );
+
+// give ownership, for ref-counting, to the python side, if so requested
+   if ( python_owns && PyROOT::ObjectProxy_Check( pyobject ) )
+      ((PyROOT::ObjectProxy*)pyobject)->HoldOn();
+
+   return pyobject;
 }

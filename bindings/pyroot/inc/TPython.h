@@ -54,7 +54,8 @@ public:
    static void* ObjectProxy_AsVoidPtr( PyObject* pyobject );
 
 // void* to object proxy conversion, returns a new reference
-   static PyObject* ObjectProxy_FromVoidPtr( void* addr, const char* classname );
+   static PyObject* ObjectProxy_FromVoidPtr(
+      void* addr, const char* classname, Bool_t python_owns = kFALSE );
 
    virtual ~TPython() { }
    ClassDef(TPython,0)   //Access to the python interpreter
