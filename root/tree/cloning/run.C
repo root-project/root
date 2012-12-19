@@ -1,7 +1,8 @@
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-void run ()
-#endif
 {
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+if (1) {
+#endif
+
     bool result = true;
 
     TChain *chain = new TChain("ntuple");
@@ -100,4 +101,7 @@ void run ()
     }
     
     if (!result) gApplication->Terminate(1);
+#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
+}
+#endif
 }
