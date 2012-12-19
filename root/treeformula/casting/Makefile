@@ -12,8 +12,13 @@ Event.root: copiedEvent$(ExeSuf)
 	$(CMDECHO) ./copiedEvent 20 1 9 1
 
 Simple.log: Simple_cxx.$(DllSuf) Read.C Create.C Run.C
+ifneq ($(ClingWorkAroundCallfuncAndInline),)
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q Run.C 2>&1 | grep -v GetVisibility > Simple.log 
+else
 	$(CMDECHO) $(CALLROOTEXE) -l -b -q Run.C > Simple.log 2>&1
+endif
 
 Simple: Simple.log
-	$(CMDECHO) diff -ubw Simple.log Simple.ref
+	$(TestDiffCintSpecific)
+
 
