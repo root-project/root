@@ -1,7 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
    gSystem->Load("libMatrix");
    TFile *f = TFile::Open("multi.zip#1");
    f->ls();
@@ -19,13 +16,7 @@
    }
 #ifdef ClingWorkAroundBrokenUnnamedReturn
    gApplication->Terminate(!result);
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-      }
-#endif
 #else
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-      }
-#endif
       return !result; // We need to return the correct error code for a shell script or makefile
 #endif
 }

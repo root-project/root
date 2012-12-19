@@ -1,8 +1,7 @@
 {
 // compile and run the test in smatrix directory
    gROOT->ProcessLine(".L testOperations.cxx+");
-#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || \
-   defined(ClingWorkAroundMissingDynamicScope)
+#if defined(ClingWorkAroundMissingDynamicScope)
    int ret = 0;
    ret = gROOT->ProcessLine("testOperations();");
 #else

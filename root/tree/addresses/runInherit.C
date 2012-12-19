@@ -5,12 +5,8 @@
   STreeEvent* pEvent = new STreeEvent; pEvent->Init();
   TTree tree; 
   tree.Branch("Event.", "STreeEvent", &pEvent);
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   TBranch *b ; b = tree.GetBranch("Event.Fit");
-#else
-   TBranch *b = tree.GetBranch("Event.Fit");
-#endif
-   if (b==0) {
+  TBranch *b = tree.GetBranch("Event.Fit");
+  if (b==0) {
      cerr << "There are no reasons to not have the branch Event.Fit" << endl;
   }
 
@@ -29,11 +25,7 @@
      cerr << "Abnormal value of pEvent.Fit.val! It should have been 3." << endl;
      gApplication->Terminate(1);
   }
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-  BottomTrack * t ; t = dynamic_cast<BottomTrack*>(pEvent->Fit.pPhotons->At(0));
-#else
   BottomTrack * t = dynamic_cast<BottomTrack*>(pEvent->Fit.pPhotons->At(0));
-#endif
   if (t==0) {
      cerr << "Missing Track in pEvent->Fit.pPhotons" << endl;
      gApplication->Terminate(1);

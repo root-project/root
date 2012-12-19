@@ -1,7 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-if (1) {
-#endif
 
     bool result = true;
 
@@ -101,7 +98,4 @@ if (1) {
     }
     
     if (!result) gApplication->Terminate(1);
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-}
-#endif
 }

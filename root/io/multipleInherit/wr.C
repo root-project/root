@@ -1,7 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
 #ifndef SECOND_RUN
       gROOT->ProcessLine(".L na.cxx+");
 #endif
@@ -33,9 +30,6 @@
    //f.Close();
 #endif // SECOND_RUN
 
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-}
-#endif
 #ifdef ClingWorkAroundBrokenUnnamedReturn
    gApplication->Terminate(0);
 #else

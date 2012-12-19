@@ -1,5 +1,5 @@
 {
-#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || defined(ClingWorkAroundIncorrectTearDownOrder)
+#if defined(ClingWorkAroundIncorrectTearDownOrder)
    if (1) {
 #endif
 
@@ -17,7 +17,7 @@
 #else    
       return (res==0);
 #endif
-#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || defined(ClingWorkAroundIncorrectTearDownOrder)
+#if defined(ClingWorkAroundIncorrectTearDownOrder)
    }
 #ifndef ClingWorkAroundBrokenUnnamedReturn
    return 1;

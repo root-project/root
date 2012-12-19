@@ -1,8 +1,5 @@
 {
 // Fill out the code of the actual test
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
 #ifndef SECOND_RUN
    gROOT->ProcessLine(".L test_classes.h+");
 #endif
@@ -111,9 +108,6 @@
 
    
    cout << "Done " << endl;
-#endif
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-      }
 #endif
 #ifdef ClingWorkAroundBrokenUnnamedReturn
       gApplication->Terminate(0);

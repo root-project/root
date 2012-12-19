@@ -5,9 +5,6 @@
 #else
    printf("G__catchexception=0\n");
 #endif
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
 #ifdef ClingWorkAroundMissingDynamicScope
    if (TFile *f = (TFile*)gROOT->ProcessLine("gFile;"))
 #else
@@ -36,7 +33,4 @@
 //mk->Scan("iem.mt:iem.i:Emcl[iem.i]._HMx8:iem.dphi_met","(iem.dphi_met>0.5) && (Emcl[iem.i]._HMx8<20)","colsize=15",50,200)
 //mk->Scan("iem.mt:iem.i:Emcl[iem.i]._HMx8:iem.dphi_met","(Emcl[iem.i]._HMx8<20) && (iem.dphi_met>0.5)","colsize=15",50,200)
 //*/
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   }
-#endif
 }

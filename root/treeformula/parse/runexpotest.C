@@ -1,8 +1,5 @@
 {
 //("sshl1e + sshl2e")
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
 TTree *t = new TTree("T","T");
 float one,two;
 one = 1.5;
@@ -69,8 +66,5 @@ if (myhist->GetMean()!=0 || myhist->GetRMS()!=0) {
    gApplication->Terminate(0);
 #else
    return 0;
-#endif
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   }
 #endif
 }

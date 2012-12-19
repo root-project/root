@@ -1,7 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
    gROOT->ProcessLine(".L macos.C");
 #ifdef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine("macos(\"macos\");");
@@ -15,8 +12,5 @@
    gApplication->Terminate(res==0);
 #else
    return res==0;
-#endif
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   }
 #endif
 }

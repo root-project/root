@@ -1,7 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
    gErrorIgnoreLevel = kError;
    TFile *_file0 = TFile::Open("missingString.root");
 #ifdef ClingWorkAroundMissingDynamicScope
@@ -15,8 +12,5 @@
    gApplication->Terminate(res != 56);
 #else
    return (res != 56);
-#endif
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   }
 #endif
 }

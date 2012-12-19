@@ -1,5 +1,5 @@
 {
-new TFile("digi.root");
+   new TFile("digi.root");
 #ifdef ClingWorkAroundMissingDynamicScope
    TTree *Digi; gFile->GetObject("Digi",Digi);
 #endif
@@ -12,6 +12,6 @@ int n = Digi->BuildIndex("m_runId", "m_eventId");
 #ifdef ClingWorkAroundBrokenUnnamedReturn
    gApplication->Terminate(!(n>0)); // to signal succesfull we need a zero!
 #else
-return ! (n>0); // to signal succesfull we need a zero!
+   return ! (n>0); // to signal succesfull we need a zero!
 #endif
 }

@@ -1,7 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
    // Avoid loading the library
    gInterpreter->UnloadLibraryMap("sel01_C");
 
@@ -117,8 +114,5 @@
       
 #endif // defined(ClingWorkAroundScriptClassDef) || !defined(ClingWorkAroundMissingUnloading)
       
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   }
-#endif
 }
    

@@ -1,11 +1,7 @@
 {
 bool result = true;
 TFile *f = new TFile("orange.root");
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-TTree *t ; t =  (TTree*)f->Get("h1");
-#else
 TTree *t = (TTree*)f->Get("h1");
-#endif
 #ifdef ClingWorkAroundMissingImplicitAuto
 TCanvas *c;
 #endif

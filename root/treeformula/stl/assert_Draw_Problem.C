@@ -1,5 +1,5 @@
 {
-#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || defined(ClingWorkAroundIncorrectTearDownOrder)
+#if defined(ClingWorkAroundIncorrectTearDownOrder)
    if (1) {
 #endif
 
@@ -46,7 +46,7 @@
 
    //   tracks->Scan("shgloblen","itrack==43");
    //   tracks->Scan("shgloblen","itrack==43");
-#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || defined(ClingWorkAroundIncorrectTearDownOrder)
+#if defined(ClingWorkAroundIncorrectTearDownOrder)
    }
 #endif
 

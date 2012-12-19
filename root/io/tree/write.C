@@ -1,8 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
-
 #ifndef SECOND_RUN
 gROOT->ProcessLine(".L classes.C+");
 
@@ -31,7 +27,4 @@ file->Close();
       
 #endif
       
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   }
-#endif
 }

@@ -7,13 +7,8 @@
 #endif
 
    ConfigRecord* record = 0;
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   TFile* f ; f = new TFile("configtest.root", "READ");
-   TTree* t ; t = (TTree*) f->Get("Config");
-#else
    TFile* f = new TFile("configtest.root", "READ");
    TTree* t = (TTree*) f->Get("Config");
-#endif
    t->SetBranchAddress("ConfigRecord", &record);
 
    for (Int_t i = 0; i < 5; ++i) {

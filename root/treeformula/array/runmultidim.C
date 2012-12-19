@@ -6,12 +6,7 @@ gROOT->ProcessLine("FillNtp();");
 #else
 FillNtp();
 #endif
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-TFile *_file0 = 0;
-_file0 = TFile::Open("NtpRecord.root"); 
-#else
 TFile *_file0 = TFile::Open("NtpRecord.root"); 
-#endif
 if (_file0)
 {
 TTree *tree = (TTree*)_file0->Get("Ntp");

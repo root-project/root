@@ -15,7 +15,7 @@ if (!res) return !res;
  fprintf(stderr,"Info in <ACLiC>: unloading testSelector.C and compiling it\n");
 #endif
 gROOT->ProcessLine(".L testSelector.C+");
-#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || defined(ClingWorkAroundMissingDynamicScope) || defined(ClingWorkAroundBrokenUnnamedReturn)
+#if defined(ClingWorkAroundMissingDynamicScope) || defined(ClingWorkAroundBrokenUnnamedReturn)
  bool res;
  res = gROOT->ProcessLine("runtest();");
  res = !res;

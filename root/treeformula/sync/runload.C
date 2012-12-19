@@ -1,7 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
 // Fill out the code of the actual test
    gROOT->ProcessLine(".L loadcode.C+");
 #ifdef ClingWorkAroundMissingDynamicScope
@@ -24,11 +21,5 @@
    gApplication->Terminate(0);
 #else    
       return (0);
-#endif
-#if defined(ClingWorkAroundUnnamedIncorrectInitOrder)
-   }
-#ifndef ClingWorkAroundBrokenUnnamedReturn
-   return 1;
-#endif
 #endif
 }

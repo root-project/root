@@ -1,7 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
    int i;
    TTree *in = new TTree("in",""); in->Branch("i",&i);
    new TFile("execmisstop.root","RECREATE"); // Open a 'writeable' file.
@@ -12,8 +9,5 @@
    gApplication->Terminate(cloner_quiet.IsValid() ? 0 : 1);
 #else
    return cloner_quiet.IsValid() ? 0 : 1;
-#endif
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   }
 #endif
 }

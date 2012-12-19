@@ -1,8 +1,7 @@
 {
    // Compile and run the code of math/unuran/test directory 
    gROOT->ProcessLine(".L unuranDistr.cxx+");
-#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || \
-   defined(ClingWorkAroundMissingDynamicScope)
+#if defined(ClingWorkAroundMissingDynamicScope)
    int ret = 0;
    ret = gROOT->ProcessLine("unuranDistr();");
 #else

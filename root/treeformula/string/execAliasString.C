@@ -10,12 +10,7 @@
    tree->SetAlias("second", "count==2");
    tree->Scan();
    
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   Long64_t res;
-   res = tree->Draw("name", "first");
-#else 
    Long64_t res = tree->Draw("name", "first");
-#endif    
    if (res != 1) {
       error = true;
       fprintf(stdout,"Error: Draw(\"name\", \"first\") returned %lld instead of 1\n",res);

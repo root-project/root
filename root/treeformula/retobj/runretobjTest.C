@@ -8,9 +8,6 @@ gROOT->ProcessLine(".L helper.C");
 #endif
 
 gSystem->Load("libEvent");
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
 TFile *Event = TFile::Open("Event.new.split0.root");
 #ifdef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine("TTree *tree = (TTree*)gFile->Get(\"T\"); TTreeFormula *tf;TObject * o;");
@@ -55,9 +52,6 @@ new TFile("mcpool.root");
    TTree* Events; gFile->GetObject("Events",Events);
 #endif
 Events->Draw("HepMCProduct_PythiaInput__HepMC.obj.evt_.m_signal_process_vertex.@m_particles_out.size()");
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   }
-#endif
 }
 
 /*

@@ -33,7 +33,7 @@ event1.root: Event.new.split0.root
 	$(CMDECHO) cp Event.new.split0.root event1.root
 	$(CMDECHO) cp event1.root event2.root
 
-ifneq ($(ClingWorkAroundBrokenUnnamedReturn)$(ClingWorkAroundUnnamedIncorrectInitOrder),)
+ifneq ($(ClingWorkAroundBrokenUnnamedReturn),)
 treeCloneTest.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
 endif
 
@@ -62,7 +62,7 @@ CopyTree.root: make_CopyTree.C ver_40200.root $(ROOTCORELIBS)
 
 deepClass.log: CopyTree.root
 
-ifneq ($(ClingWorkAroundBrokenUnnamedReturn)$(ClingWorkAroundUnnamedIncorrectInitOrder),)
+ifneq ($(ClingWorkAroundBrokenUnnamedReturn),)
 deepClass: CINT_VERSION := brokenReturn
 endif
 

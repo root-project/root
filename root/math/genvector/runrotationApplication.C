@@ -1,15 +1,10 @@
 {
 // compile and run the  test in genvector directory
    gROOT->ProcessLine(".L rotationApplication.cxx+");
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   int ret = 0;
-   ret = gROOT->ProcessLine("rotationApplication();");
-#else
 #ifdef ClingWorkAroundMissingDynamicScope
    int ret = gROOT->ProcessLine("rotationApplication();"); 
 #else
    int ret = rotationApplication(); 
-#endif
 #endif
    if (ret == 0)
       std::cerr << "test rotationApplication: OK" << std::endl;

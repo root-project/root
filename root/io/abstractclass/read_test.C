@@ -1,9 +1,6 @@
 {
 gROOT->Reset();
 
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-if (1) {
-#endif
 gSystem->Load("libData");
 
 #ifdef ClingWorkAroundMissingDynamicScope
@@ -26,7 +23,4 @@ db1->Print();
 db2->Print();
 #endif
 
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-}
-#endif
 }

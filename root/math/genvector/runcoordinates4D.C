@@ -1,8 +1,7 @@
 {
 // compile and run the coordinates3D test in genvector
    gROOT->ProcessLine(".L coordinates4D.cxx+");
-#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || \
-   defined(ClingWorkAroundMissingDynamicScope)
+#if defined(ClingWorkAroundMissingDynamicScope)
    int ret = 0;
    ret = gROOT->ProcessLine("coordinates4D();");
 #else

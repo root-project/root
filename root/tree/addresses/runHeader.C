@@ -2,29 +2,16 @@
 #ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L header.h+g"); // .x STreeEvent.so
 #endif
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   STreeEvent* pSubEvent ; pSubEvent = new SubSTreeEvent; pSubEvent->Init();
-#else
    STreeEvent* pSubEvent = new SubSTreeEvent; pSubEvent->Init();
-#endif
    TTree tree; 
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   TBranchElement *t1 ; t1 = (TBranchElement*)tree.Branch("EventBad.", "SubSTreeEvent", &pSubEvent);
-   TBranch *b ; b =tree.GetBranch("EventBad.STreeEvent.Clusters");
-#else
    TBranchElement *t1 = (TBranchElement*)tree.Branch("EventBad.", "SubSTreeEvent", &pSubEvent);
    TBranch *b=tree.GetBranch("EventBad.STreeEvent.Clusters");
-#endif
    if (b==0) {
       cerr << "There are no reasons to not have the branch EventBad.STreeEvent.Clusters" << endl;
       cerr << "The branch is missing only because it is located inside a base class!!!" << endl;
    }
    STreeEvent* pEvent = new STreeEvent; pEvent->Init();  
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   TBranchElement *t2; t2 = (TBranchElement*)tree.Branch("Event.", "STreeEvent", &pEvent);
-#else
    TBranchElement *t2 = (TBranchElement*)tree.Branch("Event.", "STreeEvent", &pEvent);
-#endif
    b=tree.GetBranch("Event.Clusters");
    if (b==0) {
       cerr << "Now I don't understand the branch Event.Clusters has disappeared!!" << endl;
@@ -55,11 +42,7 @@
       cerr << "Abnormal value of pSubEvent.Clusters.val! It should have been 33." << endl;
       gApplication->Terminate(1);
    }
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   Track * t; t = dynamic_cast<Track*>(pEvent->Clusters.pPhotons->At(0));
-#else
    Track * t = dynamic_cast<Track*>(pEvent->Clusters.pPhotons->At(0));
-#endif
    if (t==0) {
       cerr << "Missing Track in pEvent->Cluster.pPhotons" << endl;
       gApplication->Terminate(1);

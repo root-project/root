@@ -7,10 +7,6 @@
 
    tph->Merge("merged.root");
 
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   TFile *fil; fil = new TFile("merged.root");
-#else
    TFile *fil = new TFile("merged.root");
-#endif
    fil->ls();
 }

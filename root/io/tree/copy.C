@@ -1,8 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
-      
 #ifndef SECOND_RUN
    gROOT->ProcessLine(".L classes.C+");
       
@@ -35,9 +31,6 @@ tree->Fill();
 file->Write();
 #endif
       
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   }
-#endif
 #ifdef ClingWorkAroundBrokenUnnamedReturn
    gApplication->Terminate(0);
 #else

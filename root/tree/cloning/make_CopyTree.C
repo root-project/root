@@ -1,4 +1,4 @@
-#if defined(ClingWorkAroundBrokenUnnamedReturn) || defined(ClingWorkAroundUnnamedIncorrectInitOrder)
+#if defined(ClingWorkAroundBrokenUnnamedReturn)
 int make_CopyTree()
 #endif
 {

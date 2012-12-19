@@ -1,5 +1,5 @@
 {
-#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || defined(ClingWorkAroundIncorrectTearDownOrder)
+#if defined(ClingWorkAroundIncorrectTearDownOrder)
    if (1) {
 #endif
       
@@ -18,7 +18,7 @@
 #endif
       tf = new TTreeFormula("tf","fTemperature",T);
       
-#if defined(ClingWorkAroundUnnamedIncorrectInitOrder) || defined(ClingWorkAroundIncorrectTearDownOrder)
+#if defined(ClingWorkAroundIncorrectTearDownOrder)
    }
 #endif
 }

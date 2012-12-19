@@ -1,6 +1,6 @@
 void writefile(int version = 1) {
    gROOT->ProcessLine(Form(".L data%d.C+",version));
-#if defined(ClingWorkAroundMissingAutoLoading) || defined(ClingWorkAroundUnnamedIncorrectInitOrder)
+#if defined(ClingWorkAroundMissingAutoLoading)
    TFile *f;
    f = new TFile(Form("data%d.root",version),"RECREATE");
    gROOT->ProcessLine(TString::Format("TFile *f = (TFile*)%p;\n",f));

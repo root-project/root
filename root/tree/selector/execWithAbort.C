@@ -1,7 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
    // Avoid loading the library
    gInterpreter->UnloadLibraryMap("selabort_C");
    TChain ch("T");
@@ -17,9 +14,6 @@
 #endif
    ch.Process(sel,"theoptions");
 
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   }
-#endif
 #ifdef ClingWorkAroundBrokenUnnamedReturn
    gApplication->Terminate(0);
 #else

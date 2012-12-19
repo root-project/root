@@ -4,19 +4,11 @@
    TFile *
 #endif
    fFile = TFile::Open("copy.root","RECREATE");
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   TTree *tree; tree = new TTree("T","T");
-#else
    TTree *tree = new TTree("T","T");
-#endif
    int i;
    tree->Branch("i",&i);
    tree->BranchRef();
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   TFile *temp; temp = TFile::Open("temp.root","RECREATE");
-#else
    TFile *temp = TFile::Open("temp.root","RECREATE");
-#endif
    temp->cd();
    newTree = tree->CloneTree(0);
    newTree->SetDirectory(fFile);

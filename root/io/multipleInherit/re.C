@@ -1,7 +1,4 @@
 {
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   if (1) {
-#endif
    gROOT->ProcessLine(".L na.cxx+");
    gSystem->Load("libHistPainter");
    TFile f("hout.root");
@@ -17,7 +14,4 @@
      fprintf(stdout,"name %s\n",l->At(i)->IsA()->GetName());
 
    };
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-   }
-#endif
 }

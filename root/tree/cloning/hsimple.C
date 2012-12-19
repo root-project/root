@@ -21,11 +21,7 @@
 #ifdef ClingWorkAroundMissingImplicitAuto
   TNtuple *ntuple;
 #endif
-#ifdef ClingWorkAroundUnnamedIncorrectInitOrder
-  TFile *hfile; hfile = (TFile*)gROOT->FindObject("hsimple.root"); if (hfile) hfile->Close();
-#else
   TFile *hfile = (TFile*)gROOT->FindObject("hsimple.root"); if (hfile) hfile->Close();
-#endif
   hfile = new TFile("hsimple.root","RECREATE","Demo ROOT file with histograms");
   ntuple = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
 
