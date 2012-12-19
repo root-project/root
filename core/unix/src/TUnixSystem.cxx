@@ -2612,9 +2612,21 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
          }
          xh->fStdOutTty = "";
       } else {
+         if (close(STDOUT_FILENO) != 0) {
+            SysError("RedirectOutput",
+                     "problems closing STDOUT_FILENO (%d) before 'dup2' (errno: %d)",
+                     STDOUT_FILENO, TSystem::GetErrno());
+            rc = -1;
+         }
          if (dup2(xh->fStdOutDup, STDOUT_FILENO) < 0) {
             SysError("RedirectOutput", "could not restore stdout (back to original redirected"
                      " file) (errno: %d)", TSystem::GetErrno());
+            rc = -1;
+         }
+         if (close(xh->fStdOutDup) != 0) {
+            SysError("RedirectOutput",
+                     "problems closing temporary 'out' descriptor %d (errno: %d)",
+                     TSystem::GetErrno(), xh->fStdOutDup);
             rc = -1;
          }
       }
@@ -2626,9 +2638,21 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
          }
          xh->fStdErrTty = "";
       } else {
+         if (close(STDERR_FILENO) != 0) {
+            SysError("RedirectOutput",
+                     "problems closing STDERR_FILENO (%d) before 'dup2' (errno: %d)",
+                     STDERR_FILENO, TSystem::GetErrno());
+            rc = -1;
+         }
          if (dup2(xh->fStdErrDup, STDERR_FILENO) < 0) {
             SysError("RedirectOutput", "could not restore stderr (back to original redirected"
                      " file) (errno: %d)", TSystem::GetErrno());
+            rc = -1;
+         }
+         if (close(xh->fStdErrDup) != 0) {
+            SysError("RedirectOutput",
+                     "problems closing temporary 'err' descriptor %d (errno: %d)",
+                     TSystem::GetErrno(), xh->fStdErrDup);
             rc = -1;
          }
       }
