@@ -4,7 +4,7 @@
 //
 #include "XrdProofdXrdVers.h"
 
-#if ROOTXRDVERS < ROOT_XrdUtils
+#if defined(ROOT_XrdNoUtils)
 #define XrdSysDNS           XrdNetDNS
 #include "XrdNet/XrdNetDNS.hh"
 #else

@@ -18,10 +18,15 @@
 // This is when libXrdNetUtil appeared
 #define ROOT_XrdNetUtil      20100729
 
-// This is when the PhyConn interface changed
-#define ROOT_PhyConnNoReuse  300000002
+// This is when the PhyConn interface changed (v3.0.2)
+#define ROOT_PhyConnNoReuse  20110126
 
-// This is when the header and library packaging changed
-#define ROOT_XrdUtils        300010000
+// This is when the header and library packaging changed (v3.1.0)
+#if (ROOTXRDVERS < 30000000 && ROOTXRDVERS < 20111021) || \
+    (ROOTXRDVERS >= 30000000 && ROOTXRDVERS < 300010000)
+#   define ROOT_XrdNoUtils
+#else
+#   undef ROOT_XrdNoUtils
+#endif
 
 #endif

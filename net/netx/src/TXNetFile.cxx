@@ -56,6 +56,7 @@
 #include "TVirtualPerfStats.h"
 
 #include <XrdClient/XrdClient.hh>
+#include <XrdClient/XrdClientConn.hh>
 #include <XrdClient/XrdClientConst.hh>
 #include <XrdClient/XrdClientEnv.hh>
 #include <XProtocol/XProtocol.hh>
