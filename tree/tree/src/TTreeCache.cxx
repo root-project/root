@@ -449,8 +449,8 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
 //_____________________________________________________________________________
 void TTreeCache::DropBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 {
-   //Remove a branch to the list of branches to be stored in the cache
-   //this function is called by TBranch::GetBasket
+   // Remove a branch to the list of branches to be stored in the cache
+   // this function is called by TBranch::GetBasket.
 
    if (!fIsLearning) return;
 
