@@ -1283,7 +1283,7 @@ public:
       bModel->SetSnapshot(*bModel->GetParametersOfInterest());
 
       HypoTestCalculatorGeneric *calc = 
-         buildHypoTestCalculator(fCalculatorType, *w->data("data"), *bModel, *sbModel, 200, 1);
+         buildHypoTestCalculator(fCalculatorType, *w->data("data"), *bModel, *sbModel, 500, 50);
       if(fCalculatorType == kAsymptotic) { ((AsymptoticCalculator *)calc)->SetOneSidedDiscovery(kTRUE); }      
 
       // ToyMCSampler configuration

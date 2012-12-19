@@ -1696,9 +1696,12 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   Bool_t extended = pc.getInt("extended") ;
   Bool_t autoBinned = pc.getInt("autoBinned") ;
   const char* binnedTag = pc.getString("binnedTag") ;
-  Int_t nEvents = pc.getInt("nEvents") ;
+  Int_t nEventsI = pc.getInt("nEvents") ;
+  Double_t nEventsD = pc.getInt("nEventsD") ;
   //Bool_t verbose = pc.getInt("verbose") ;
   Bool_t expectedData = pc.getInt("expectedData") ;
+
+  Double_t nEvents = (nEventsD>0) ? nEventsD : Double_t(nEventsI); 
 
   // Force binned mode for expected data mode
   if (expectedData) {
@@ -1706,13 +1709,12 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   }
 
   if (extended) {
-    nEvents = RooRandom::randomGenerator()->Poisson(nEvents==0?expectedEvents(&whatVars):nEvents) ;
-    cxcoutI(Generation) << " Extended mode active, number of events generated (" << nEvents << ") is Poisson fluctuation on " 
-			  << GetName() << "::expectedEvents() = " << nEvents << endl ;
-    // If Poisson fluctuation results in zero events, stop here
-    if (nEvents==0) {
-      return new RooDataSet("emptyData","emptyData",whatVars) ;
-    }
+     if (nEvents == 0) nEvents = expectedEvents(&whatVars);
+     //  nEvents = RooRandom::randomGenerator()->Poisson(nEvents==0 ? expectedEvents(&whatVars) : nEvents  ) ;
+    // // If Poisson fluctuation results in zero events, stop here
+    // if (nEvents==0) {
+    //   return new RooDataSet("emptyData","emptyData",whatVars) ;
+    // }
   } else if (nEvents==0) {
     cxcoutI(Generation) << "No number of events specified , number of events generated is " 
 			  << GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< endl ;
@@ -1844,8 +1846,9 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
 
   //Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen) : spec._nGen ;
   //Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen==0?expectedEvents(spec._whatVars):spec._nGen) : spec._nGen ;
-  Int_t nEvt = spec._nGen == 0 ? RooRandom::randomGenerator()->Poisson(expectedEvents(spec._whatVars)) : spec._nGen;
+  //Int_t nEvt = spec._nGen == 0 ? RooRandom::randomGenerator()->Poisson(expectedEvents(spec._whatVars)) : spec._nGen;
   
+  Double_t nEvt =  spec._nGen == 0 ?  expectedEvents(spec._whatVars) : spec._nGen; 
   
   RooDataSet* ret = generate(*spec._genContext,spec._whatVars,spec._protoData, nEvt,kFALSE,spec._randProto,spec._resampleProto,
 			     spec._init,spec._extended) ;
@@ -1858,7 +1861,7 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
 
 
 //_____________________________________________________________________________
-RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t verbose, Bool_t autoBinned, const char* binnedTag, Bool_t expectedData, Bool_t extended) const 
+RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Double_t nEvents, Bool_t verbose, Bool_t autoBinned, const char* binnedTag, Bool_t expectedData, Bool_t extended) const 
 {
   // Generate a new dataset containing the specified variables with
   // events sampled from our distribution. Generate the specified
@@ -1894,7 +1897,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Int_t nEvents, Bool_t
 
 //_____________________________________________________________________________
 RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &whatVars, const RooDataSet *prototype,
-				Int_t nEvents, Bool_t /*verbose*/, Bool_t randProtoOrder, Bool_t resampleProto, 
+				Double_t nEvents, Bool_t /*verbose*/, Bool_t randProtoOrder, Bool_t resampleProto, 
 				Bool_t skipInit, Bool_t extended) const 
 {
   // Internal method  
