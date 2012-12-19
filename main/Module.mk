@@ -55,8 +55,9 @@ endif
 ifeq ($(PROOFLIB),)
 PTESTEXE :=
 endif
-PTESTLIBS    := -lProof -lHist -lRIO -lNet -lThread 
-PTESTLIBSDEP  = $(IOLIB) $(NETLIB) $(HISTLIB) $(PROOFLIB) $(THREADLIB)
+PTESTLIBS    := -lProof -lTree -lHist -lRIO -lNet -lThread -lMathCore 
+PTESTLIBSDEP  = $(IOLIB) $(TREELIB) $(NETLIB) $(HISTLIB) $(PROOFLIB) \
+                $(THREADLIB) $(MATHCORELIB)
 
 ##### roots.exe #####
 ROOTSEXES   := $(MODDIRS)/roots.cxx
