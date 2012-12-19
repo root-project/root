@@ -45,6 +45,19 @@ PROOFSERVEXE :=
 PROOFSERVSH  :=
 endif
 
+##### ptest #####
+PTESTS   := $(MODDIRS)/ptest.cxx
+PTESTO   := $(call stripsrc,$(PTESTS:.cxx=.o))
+PTESTDEP := $(PTESTO:.o=.d)
+ifneq ($(PLATFORM),win32)
+PTESTEXE := bin/ptest
+endif
+ifeq ($(PROOFLIB),)
+PTESTEXE :=
+endif
+PTESTLIBS    := -lProof -lHist -lRIO -lNet -lThread 
+PTESTLIBSDEP  = $(IOLIB) $(NETLIB) $(HISTLIB) $(PROOFLIB) $(THREADLIB)
+
 ##### roots.exe #####
 ROOTSEXES   := $(MODDIRS)/roots.cxx
 ROOTSEXEO   := $(call stripsrc,$(ROOTSEXES:.cxx=.o))
@@ -98,14 +111,14 @@ endif
 
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-                $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
+                $(PTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
 ifneq ($(F77),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT)
 endif
 
 # include all dependency files
-INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(HADDDEP) $(H2ROOTDEP) \
-                $(SSH2RPDDEP) $(ROOTSEXEDEP)
+INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(PTESTDEP) $(HADDDEP) \
+                $(H2ROOTDEP) $(SSH2RPDDEP) $(ROOTSEXEDEP)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
@@ -128,6 +141,10 @@ $(PROOFSERVSH): $(call stripsrc,$(MAINDIRS)/proofserv.sh)
 		@echo "Install proofserv wrapper."
 		@cp $< $@
 		@chmod 0755 $@
+
+$(PTESTEXE): $(PTESTO) $(BOOTLIBSDEP) $(PTESTLIBSDEP)
+		$(LD) $(LDFLAGS) -o $@ $(PTESTO) \
+		$(RPATH) $(BOOTLIBS) $(PTESTLIBS) $(SYSLIBS)
 
 $(ROOTSEXE):    $(ROOTSEXEO) $(BOOTLIBSDEP)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTSEXEO) \
@@ -158,23 +175,23 @@ $(G2ROOT):      $(G2ROOTO) $(ORDER_) $(MINICERNLIB)
 
 ifneq ($(F77),)
 all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-                $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) \
+                $(PTESTEXE) $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) \
                 $(ROOTSEXE) $(ROOTSSH)
 else
 all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-                $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
+                $(PTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
 endif
 
 clean-$(MODNAME):
-		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(HADDO) $(H2ROOTO) \
+		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(PTESTO) $(HADDO) $(H2ROOTO) \
 		   $(G2ROOTO) $(SSH2RPDO) $(ROOTSEXEO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
-		   $(PROOFSERVEXE) $(PROOFSERVSH) $(HADDDEP) $(HADD) \
-		   $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) \
+		   $(PROOFSERVEXE) $(PROOFSERVSH)  $(PTESTDEP) $(PTESTEXE) \
+		   $(HADDDEP) $(HADD) $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) \
 		   $(SSH2RPDDEP) $(SSH2RPD) $(ROOTSEXEDEP) $(ROOTSEXE) \
 		   $(ROOTSSH)
 
