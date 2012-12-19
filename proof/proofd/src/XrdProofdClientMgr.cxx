@@ -347,6 +347,13 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
       return 0;
    }
 
+   TRACE(ALL," hostname: '"<<p->Link()->Host()<<"'");
+   //
+   // Check if in any-server mode (localhost connections always are)
+   bool anyserver = (fMgr->SrvType() == kXPD_AnyServer ||
+                     !strcmp(p->Link()->Host(), "localhost") ||
+                     !strcmp(p->Link()->Host(), "127.0.0.0")) ? 1 : 0;
+   
    // Find out the connection type: 'i', internal, means this is a proofsrv calling back.
    bool needauth = 0;
    bool ismaster = (fMgr->SrvType() == kXPD_TopMaster || fMgr->SrvType() == kXPD_Master) ? 1 : 0;
@@ -360,7 +367,7 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
       response->SetTag("int");
       break;
    case 'M':
-      if (fMgr->SrvType() == kXPD_AnyServer || ismaster) {
+      if (anyserver || ismaster) {
          p->SetConnType(kXPD_ClientMaster);
          needauth = 1;
          response->SetTag("m2c");
@@ -372,7 +379,7 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
       }
       break;
    case 'm':
-      if (fMgr->SrvType() == kXPD_AnyServer || ismaster) {
+      if (anyserver || ismaster) {
          p->SetConnType(kXPD_MasterMaster);
          needauth = 1;
          response->SetTag("m2m");
@@ -384,7 +391,7 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
       }
       break;
    case 's':
-      if (fMgr->SrvType() == kXPD_AnyServer || fMgr->SrvType() == kXPD_MasterWorker) {
+      if (anyserver || fMgr->SrvType() == kXPD_MasterWorker) {
          p->SetConnType(kXPD_MasterWorker);
          needauth = 1;
          response->SetTag("w2m");
