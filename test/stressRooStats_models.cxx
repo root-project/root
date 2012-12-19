@@ -14,7 +14,7 @@ using namespace RooStats;
 void buildSimultaneousModel(RooWorkspace *w)
 {
    // Build model
-   w->factory("sig[2,0,10]");
+   w->factory("sig[8,0,50]");
    w->factory("Uniform::u1(x1[0,1])");
    w->factory("Uniform::u2(x2[0,1])");
    w->factory("Gaussian::constr1(gbkg1[50,0,100], bkg1[50,0,100], 3)");
@@ -39,6 +39,7 @@ void buildSimultaneousModel(RooWorkspace *w)
    w->import(*bModel);
 
    // define data set
+   RooRandom::randomGenerator()->Rndm();  //wast a number to get a better dataset (not too high significance) and closer to expected
    RooDataSet *data = w->pdf("sim_pdf")->generate(*sbModel->GetObservables(), Extended(), Name("data"));
    w->import(*data);
 }
