@@ -59,7 +59,11 @@ else
 endif
 
 Timestamp: Timestamp.log
+ifneq ($(ClingWorkAroundCallfuncAndInline),)
+	@true
+else
 	$(TestDiff)
+endif
 
 subform: subform.log
 	$(TestDiff)

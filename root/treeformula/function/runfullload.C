@@ -15,7 +15,11 @@
 #endif
   cout << "Direct access: " << htemp->GetMean() << endl;
   new TCanvas;
+#ifdef ClingWorkAroundCallfuncAndInline
+  tree->Draw("B.fA.tv.fZ","B.fA.val==1");
+#else
   tree->Draw("B.fA.tv.Z()","B.fA.val==1");
+#endif
   gPad->Modified();
   gPad->Update();
 #ifdef ClingWorkAroundMissingDynamicScope
@@ -28,7 +32,7 @@
 #endif
   // new TBrowser;
 #ifdef ClingWorkAroundBrokenUnnamedReturn
-   int res = 0;
+   gApplication->Terminate(0);
 #else
   return 0;
 #endif
