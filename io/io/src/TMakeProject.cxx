@@ -275,7 +275,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
          fprintf(fp, "operator int() { return 0; };\n");
       } else {
          fprintf(fp, "enum %s { kDefault_%s };\n", clname, clname);
-         // The nesting space of this class may not be #pragma declared (and without
+         // The nesting space of this class may not be #pragma declared (and without it
          // the dictionary is broken), so for now skip those
          if (implementEmptyClass==1) {
             if (strchr(fullname, ':') == 0) {
