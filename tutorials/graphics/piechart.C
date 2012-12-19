@@ -32,7 +32,7 @@ void piechart()
    pie2->SetEntryLineStyle(2,2);
    pie2->SetEntryFillStyle(1,3030);
    pie2->SetCircle(.5,.45,.3);
-   pie2->Draw("r");
+   pie2->Draw("rsc");
 
    cpie->cd(3);
    pie3->SetY(.32);
