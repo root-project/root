@@ -1259,7 +1259,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
       // Initialize the security library plugin, if needed
       XrdOucString libsec;
       if (!fgSecPlugin) { 
-#if ROOTXRDVERS >= ROOT_XrdUtils
+#if !defined(ROOT_XrdNoUtils)
          libsec = "libXrdSec";
          libsec += LT_MODULE_EXT;
 #else

@@ -22,6 +22,11 @@
 #define ROOT_PhyConnNoReuse  20110126
 
 // This is when the header and library packaging changed (v3.1.0)
-#define ROOT_XrdUtils        20111021
+#if (ROOTXRDVERS < 30000000 && ROOTXRDVERS < 20111021) || \
+    (ROOTXRDVERS >= 30000000 && ROOTXRDVERS < 300010000)
+#   define ROOT_XrdNoUtils
+#else
+#   undef ROOT_XrdNoUtils
+#endif
 
 #endif

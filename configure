@@ -4712,7 +4712,11 @@ if test "x$enable_xrootd" = "xyes" ; then
    libxrdoucbjr=""
    # 
    # Release date of version 3.1.0 containing the new lib packaging
-   decrefutils=20111021
+   decreftre=300000000
+   decrefutils=300010000
+   if [ $decver -lt $decreftre ] ; then
+      decrefutils=20111021
+   fi
    decrefnetut=20100729
    if [ $decver -ge $decrefutils ] ; then
       xrdlibs="libXrdMain libXrdUtils libXrdClient" 
