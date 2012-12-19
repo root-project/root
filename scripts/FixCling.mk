@@ -8,7 +8,6 @@ CINT_VERSION := cling
 CALLROOTEXE = root.exe
 # Essential problems, must be fixed before the release.
 # (incorrect behavior of C++ compliant code)
-CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectInitOrder"
 CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
 CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndConversion"
@@ -60,7 +59,6 @@ ClingWorkAroundMissingAutoLoading = yes        # See *also* the problem namespac
 ClingWorkAroundJITfullSymbolResolution = yes   # See https://savannah.cern.ch/bugs/index.php?98898
 ClingWorkAroundMissingSmartInclude = yes
 ClingWorkAroundBrokenUnnamedReturn = yes       # See https://savannah.cern.ch/bugs/index.php?99032
-ClingWorkAroundUnnamedIncorrectInitOrder = yes # See https://savannah.cern.ch/bugs/index.php?99210
 ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://savannah.cern.ch/bugs/index.php?99236
 ClingWorkAroundPrintfIssues = yes              # see https://savannah.cern.ch/bugs/index.php?99234
 ClingWorkAroundCallfuncAndInline = yes         # see https://savannah.cern.ch/bugs/index.php?98425
