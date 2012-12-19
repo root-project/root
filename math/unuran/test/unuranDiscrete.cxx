@@ -441,9 +441,9 @@ int unuranDiscrete() {
       std::cerr <<"\n\nUnuRan Discrete Distribution Test:\t  Failed !!!!!!!" << std::endl;
    else 
       std::cerr << "\n\nUnuRan Discrete Distribution Test:\t OK" << std::endl;
+
    return iret; 
 
-   return iret;
 }
 
 
@@ -459,5 +459,6 @@ int main(int argc, char **argv)
    else 
       iret =  unuranDiscrete();
    
+   return iret; 
 }
 #endif
