@@ -74,8 +74,6 @@ class XrdProofdClient {
 
    void                    Broadcast(const char *msg);
 
-   bool                    Running();
-
    XrdOucString            ExportSessions(XrdOucString &emsg, XrdProofdResponse *r = 0);
    void                    SkipSessionsCheck(std::list<XrdProofdProofServ *> *active,
                                              XrdOucString &emsg, XrdProofdResponse *r = 0);

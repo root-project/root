@@ -571,11 +571,19 @@ int XrdProofdResponse::LinkSend(const char *buff, int len, XrdOucString &emsg)
    // If we fail we close the link, and ask the client to reconnect
    if ((rc = fLink->Send(buff, len)) < 0) {
       XPDFORM(emsg, "problems sending %d bytes", len);
+#if 0
       fLink->Close();
    }
 
    // Done
    return ((rc < 0) ? fLink->setEtext("send failure") : 0);
+#else
+      fLink = 0;
+      return -1;
+   }
+   // Done
+   return 0;
+#endif
 }
 
 //______________________________________________________________________________
@@ -597,11 +605,19 @@ int XrdProofdResponse::LinkSend(const struct iovec *iov,
       int bytes = 0;
       for (int i = 0; i < iocnt; i++) bytes += iov[i].iov_len;
       XPDFORM(emsg, "problems sending %d bytes (writev)", bytes);
+#if 0
       fLink->Close();
    }
 
    // Done
    return ((rc < 0) ? fLink->setEtext("send (writev) failure") : 0);
+#else
+      fLink = 0;
+      return -1;
+   }
+   // Done
+   return 0;
+#endif
 }
 
 //______________________________________________________________________________

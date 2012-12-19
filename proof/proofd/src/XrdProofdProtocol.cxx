@@ -742,9 +742,9 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
          XrdOucString discpath(fAdminPath);
          discpath.replace("/cid", "/disconnected");
          FILE *fd = fopen(discpath.c_str(), "w");
-         if (!fd) {
+         if (!fd && errno != ENOENT) {
             TRACE(XERR, "unable to create path: " <<discpath<<" (errno: "<<errno<<")");
-         } else {
+         } else if (fd) {
             fclose(fd);  
          } 
 
@@ -755,13 +755,15 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
             XrdSysMutexHelper mhp(fgMgr->SessionMgr()->Mutex());
 
             fgMgr->SessionMgr()->DisconnectFromProofServ(fPid);
-            if(pmgr->Running()) {
-               TRACE(REQ,"Non-idle proofserv processes attached to this client, setting reconnect time");
+            if((fConnType == 0) && fgMgr->SessionMgr()->Alive(this)) {
+               TRACE(REQ, "Non-destroyed proofserv processes attached to this protocol ("<<this<<
+                          "), setting reconnect time");             
                fgMgr->SessionMgr()->SetReconnectTime(true);
             }
             fgMgr->SessionMgr()->CheckActiveSessions(0);
          } else {
-            TRACE(XERR,"No XrdProofdMgr ("<<fgMgr<<") or SessionMgr ("<<fgMgr->SessionMgr()<<")")
+            TRACE(XERR, "No XrdProofdMgr ("<<fgMgr<<") or SessionMgr ("
+                        <<(fgMgr ? fgMgr->SessionMgr() : (void *) -1)<<")")
          }
 
       } else {

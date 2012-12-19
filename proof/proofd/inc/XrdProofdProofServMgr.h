@@ -23,6 +23,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <list>
+#include <map>
 
 #include "XpdSysPthread.h"
 
@@ -164,6 +165,8 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
 
    XrdSecCredsSaver_t fCredsSaver; // If defined, function to be used to save the credentials
 
+   std::map<XrdProofdProtocol*,int> fDestroyTimes; // Tracks destroyed sessions
+   
    int                DoDirectiveProofServMgr(char *, XrdOucStream *, bool);
    int                DoDirectivePutEnv(char *, XrdOucStream *, bool);
    int                DoDirectivePutRc(char *, XrdOucStream *, bool);
@@ -235,6 +238,8 @@ public:
    bool              IsReconnecting();
    bool              IsClientRecovering(const char *usr, const char *grp, int &deadline);
    void              SetReconnectTime(bool on = 1);
+
+   bool              Alive(XrdProofdProtocol *p);
 
    int               Process(XrdProofdProtocol *p);
    XrdSysSemWait    *ProcessSem() { return &fProcessSem; }
