@@ -690,7 +690,7 @@ endif
 
 ##### TARGETS #####
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
-                clean distclean maintainer-clean compiledata \
+                clean distclean distclean-xrootd maintainer-clean compiledata \
                 version html changelog install uninstall showbuild \
                 releasenotes staticlib static map debian redhat skip postbin \
                 showit help runtimedirs plugins-ios
@@ -1061,6 +1061,11 @@ maintainer-clean:: distclean
 	   macros/html.C \
 	   build/misc/root-help.el build-arch-stamp build-indep-stamp \
 	   configure-stamp build-arch-cint-stamp config.status config.log
+
+distclean-xrootd:
+	   make distclean-netx
+	   make distclean-proofx
+	   make distclean-proofd
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)
