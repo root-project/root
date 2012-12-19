@@ -142,8 +142,9 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
   // Generate the specified number of events with nEvents>0 and
   // and return a dataset containing the generated events. With nEvents<=0,
   // generate the number of events in the prototype dataset, if available,
-  // or else the expected number of events, if non-zero. The returned
-  // dataset belongs to the caller. Return zero in case of an error.
+  // or else the expected number of events, if non-zero. 
+  // If extendedMode = true generate according to a Poisson(nEvents) 
+  // The returned dataset belongs to the caller. Return zero in case of an error.
   // Generation of individual events is delegated to a virtual generateEvent()
   // method. A virtual initGenerator() method is also called just before the
   // first call to generateEvent().
@@ -173,10 +174,14 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
     }
     coutI(Generation) << ClassName() << "::" << GetName() << ":generate: will generate "
 		      << nEvents << " events" << endl;
+
   }
 
   if (extendedMode) {
-    nEvents = RooRandom::randomGenerator()->Poisson(nEvents) ;
+     double nExpEvents = nEvents;
+     nEvents = RooRandom::randomGenerator()->Poisson(nEvents) ;
+     cxcoutI(Generation) << " Extended mode active, number of events generated (" << nEvents << ") is Poisson fluctuation on " 
+                         << GetName() << "::expectedEvents() = " << nExpEvents << endl ;
   }
 
   // check that any prototype dataset still defines the variables we need

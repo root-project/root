@@ -56,7 +56,7 @@ public:
                        const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
                        const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
                        const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
-  RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents = 0, Bool_t verbose=kFALSE, Bool_t autoBinned=kTRUE, 
+  RooDataSet *generate(const RooArgSet &whatVars, Double_t nEvents = 0, Bool_t verbose=kFALSE, Bool_t autoBinned=kTRUE, 
 		       const char* binnedTag="", Bool_t expectedData=kFALSE, Bool_t extended = kFALSE) const;
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype, Int_t nEvents= 0,
 		       Bool_t verbose=kFALSE, Bool_t randProtoOrder=kFALSE, Bool_t resampleProto=kFALSE) const;
@@ -257,7 +257,7 @@ public:
 protected:
 
   RooDataSet *generate(RooAbsGenContext& context, const RooArgSet& whatVars, const RooDataSet* prototype,
-		       Int_t nEvents, Bool_t verbose, Bool_t randProtoOrder, Bool_t resampleProto, Bool_t skipInit=kFALSE, 
+		       Double_t nEvents, Bool_t verbose, Bool_t randProtoOrder, Bool_t resampleProto, Bool_t skipInit=kFALSE, 
 		       Bool_t extended=kFALSE) const ;
 
   // Implementation version
