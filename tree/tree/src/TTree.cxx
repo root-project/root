@@ -914,10 +914,10 @@ void TTree::AddBranchToCache(TBranch *b, Bool_t subbranches)
 //______________________________________________________________________________
 void TTree::DropBranchFromCache(const char*bname, Bool_t subbranches)
 {
-   // Add branch with name bname to the Tree cache.
-   // If bname="*" all branches are added to the cache.
+   // Remove the branch with name 'bname' from the Tree cache.
+   // If bname="*" all branches are removed from the cache.
    // if subbranches is true all the branches of the subbranches are
-   // also put to the cache.
+   // also removed from the cache.
 
    TFile *f = GetCurrentFile();
    if (!f) return;
@@ -928,9 +928,9 @@ void TTree::DropBranchFromCache(const char*bname, Bool_t subbranches)
 //______________________________________________________________________________
 void TTree::DropBranchFromCache(TBranch *b, Bool_t subbranches)
 {
-   // Add branch b to the Tree cache.
+   // Remove the branch b from the Tree cache.
    // if subbranches is true all the branches of the subbranches are
-   // also put to the cache.
+   // also removed from the cache.
 
    TFile *f = GetCurrentFile();
    if (!f) return;
