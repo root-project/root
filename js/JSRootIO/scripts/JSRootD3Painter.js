@@ -2152,8 +2152,10 @@ function createFillPatterns(svg, id, color) {
       if (optionLine == 1 || optionCurve == 1 || optionFill == 1)
          seriesType = 'line';
 
-      var binwidth = (graph['fHistogram']['fXaxis']['fXmax'] - graph['fHistogram']['fXaxis']['fXmin']) / 
-                       graph['fNpoints'];
+      if (optionBar == 1) {
+         var binwidth = (graph['fHistogram']['fXaxis']['fXmax'] - graph['fHistogram']['fXaxis']['fXmin']) / 
+                         graph['fNpoints'];
+      }
       var bins = d3.range(graph['fNpoints']).map(function(p) {
          if (optionBar == 1) {
             return {
