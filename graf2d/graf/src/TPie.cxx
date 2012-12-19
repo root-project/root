@@ -810,6 +810,7 @@ void TPie::Paint(Option_t *option)
    // "R"   Print the labels along the central "R"adius of slices.
    // "T"   Print the label in a direction "T"angent to circle that describes
    //       the TPie.
+   // "SC"  Paint the the labels with the "S"ame "C"olor as the slices.
    // "3D"  Draw the pie-chart with a pseudo 3D effect.
    // "NOL" No OutLine: Don't draw the slices' outlines, any property over the
    //       slices' line is ignored.
@@ -830,6 +831,9 @@ void TPie::Paint(Option_t *option)
 
    // if true the lines around the slices are drawn, if false not
    Bool_t optionLine(kTRUE);
+   
+   // if true the labels' colors are the same as the slices' colors
+   Bool_t optionSameColor(kFALSE);
 
    // For the label orientation there are 3 possibilities:
    //   0: horizontal
@@ -848,6 +852,11 @@ void TPie::Paint(Option_t *option)
    if ( (idx=soption.Index("nol"))>=0 ) {
       optionLine = kFALSE;
       soption.Remove(idx,3);
+   }
+   
+   if ( (idx=soption.Index("sc"))>=0 ) {
+      optionSameColor = kTRUE;
+      soption.Remove(idx,2);
    }
 
    // check if is active the pseudo-3d
@@ -1049,7 +1058,8 @@ void TPie::Paint(Option_t *option)
       Float_t rphi = TMath::ATan2((ly-fY)*radXY,lx-fX);
       if (rphi < 0 && fIs3D && label_off>=0.)
          ly -= fHeight;
-
+      
+      if (optionSameColor) textlabel->SetTextColor((fPieSlices[i]->GetFillColor()));
       textlabel->PaintLatex(lx,ly,
                             lblang*180/TMath::Pi()+GetTextAngle(),
                             GetTextSize(), tmptxt.Data());
