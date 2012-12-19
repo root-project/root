@@ -143,7 +143,7 @@ $(PROOFSERVSH): $(call stripsrc,$(MAINDIRS)/proofserv.sh)
 		@cp $< $@
 		@chmod 0755 $@
 
-$(PTESTEXE): $(PTESTO) $(PTESTLIBSDEP)
+$(PTESTEXE): $(PTESTO) $(BOOTLIBSDEP) $(PTESTLIBSDEP)
 		$(LD) $(LDFLAGS) -o $@ $(PTESTO) \
 		$(RPATH) $(BOOTLIBS) $(PTESTLIBS) $(SYSLIBS)
 
