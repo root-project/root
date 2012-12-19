@@ -2941,6 +2941,9 @@ int XrdProofdProofServMgr::Destroy(XrdProofdProtocol *p)
    p->Client()->TerminateSessions(kXPD_AnyServer, xpsref,
                                   msg.c_str(), Pipe(), fMgr->ChangeOwn());
 
+   // Add to destroyed list
+   fDestroyTimes[p] = time(0);
+
    // Notify to user
    response->Send();
 
@@ -4710,12 +4713,17 @@ void XrdProofdProofServMgr::BroadcastClusterInfo()
       }
       si++;
    }
-   XPDPRT("tot: "<<tot<<", act: "<<act);
-   // Now propagate
-   si = fActiveSessions.begin();
-   while (si != fActiveSessions.end()) {
-      if ((*si)->Status() == kXPD_running) (*si)->SendClusterInfo(tot, act);
-      si++;
+   if (tot > 0) {
+      XPDPRT("tot: "<<tot<<", act: "<<act);
+      // Now propagate to master or sub-masters
+      si = fActiveSessions.begin();
+      while (si != fActiveSessions.end()) {
+         if ((*si)->Status() == kXPD_running &&
+            (*si)->SrvType() != kXPD_Worker) (*si)->SendClusterInfo(tot, act);
+         si++;
+      }
+   } else {
+      TRACE(DBG, "No master or submaster controlled by this manager");
    }
 }
 
@@ -4765,6 +4773,30 @@ void XrdProofdProofServMgr::SetReconnectTime(bool on)
    } else {
       fReconnectTime = -1;
    }
+}
+
+//__________________________________________________________________________
+bool XrdProofdProofServMgr::Alive(XrdProofdProtocol* p)
+{
+   // Check destroyed status
+   //
+
+   XrdSysMutexHelper mhp(fMutex);
+
+   bool alive = true;
+   int now = time(0);
+   std::map<XrdProofdProtocol*,int>::iterator iter = fDestroyTimes.begin();
+   while (iter != fDestroyTimes.end()) {
+      int rect = now - iter->second;
+      if (rect < fReconnectTimeOut) {
+         if (p == iter->first) alive = false;
+      } else {
+         fDestroyTimes.erase(iter);
+      }
+      iter++;
+   }
+
+   return alive;
 }
 
 //__________________________________________________________________________

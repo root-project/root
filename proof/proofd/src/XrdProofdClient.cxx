@@ -633,24 +633,6 @@ XrdOucString XrdProofdClient::ExportSessions(XrdOucString &emsg,
 }
 
 //______________________________________________________________________________
-bool XrdProofdClient::Running()
-{
-   // Check status of attached proofservs
-
-   XrdSysMutexHelper mh(fMutex);
-
-   int is = 0; bool running = false;
-   XrdProofdProofServ *s = 0;
-   for (is = 0; is < (int) fProofServs.size(); is++) {
-      if ((s = fProofServs.at(is)) && s->IsValid()) {
-	 if(!running && (s->Status()!=kXPD_idle)) running = true;
-      }
-   }
-
-   return running;
-}
-
-//______________________________________________________________________________
 void XrdProofdClient::TerminateSessions(int srvtype, XrdProofdProofServ *ref,
                                         const char *msg, XrdProofdPipe *pipe,
                                         bool changeown)

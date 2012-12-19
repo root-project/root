@@ -23,6 +23,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <list>
+#include <map>
 
 #include "XpdSysPthread.h"
 
@@ -158,6 +159,8 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    std::list<XrdProofdProofServ *> fActiveSessions;     // List of active sessions (non-idle)
    std::list<XpdClientSessions *> *fRecoverClients; // List of client potentially recovering
 
+   std::map<XrdProofdProtocol*,int> fDestroyTimes; // Tracks destroyed sessions
+   
    int                DoDirectiveProofServMgr(char *, XrdOucStream *, bool);
    int                DoDirectivePutEnv(char *, XrdOucStream *, bool);
    int                DoDirectivePutRc(char *, XrdOucStream *, bool);
@@ -229,6 +232,8 @@ public:
    bool              IsReconnecting();
    bool              IsClientRecovering(const char *usr, const char *grp, int &deadline);
    void              SetReconnectTime(bool on = 1);
+
+   bool              Alive(XrdProofdProtocol *p);
 
    int               Process(XrdProofdProtocol *p);
    XrdSysSemWait    *ProcessSem() { return &fProcessSem; }
