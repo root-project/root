@@ -46,7 +46,7 @@ void fit1() {
    // We now annotate the picture by creating a PaveText object
    // and displaying the list of commands in this macro
    //
-   fitlabel = new TPaveText(0.6,0.3,0.9,0.80,"NDC");
+   auto fitlabel = new TPaveText(0.6,0.3,0.9,0.80,"NDC");
    fitlabel->SetTextAlign(12);
    fitlabel->SetFillColor(42);
    fitlabel->ReadFile(Form("%sfit1_C.C",dir.Data()));

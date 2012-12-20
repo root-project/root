@@ -12,10 +12,10 @@ void hsum() {
   gBenchmark->Start("hsum");
 
 // Create some histograms.
-  total  = new TH1F("total","This is the total distribution",100,-4,4);
-  main   = new TH1F("main","Main contributor",100,-4,4);
-  s1     = new TH1F("s1","This is the first signal",100,-4,4);
-  s2     = new TH1F("s2","This is the second signal",100,-4,4);
+  auto total  = new TH1F("total","This is the total distribution",100,-4,4);
+  auto main   = new TH1F("main","Main contributor",100,-4,4);
+  auto s1     = new TH1F("s1","This is the first signal",100,-4,4);
+  auto s2     = new TH1F("s2","This is the second signal",100,-4,4);
   total->Sumw2();  // store the sum of squares of weights
   total->SetMarkerStyle(21);
   total->SetMarkerSize(0.7);

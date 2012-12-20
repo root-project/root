@@ -13,7 +13,7 @@ void na49view() {
    TPad *tof = new TPad("tof","One Time Of Flight element",0.52,0.02,0.98,0.82,28);
    all->Draw();
    tof->Draw();
-   na49title = new TPaveLabel(0.04,0.86,0.96,0.98,"Two views of the NA49 detector");
+   TPaveLabel *na49title = new TPaveLabel(0.04,0.86,0.96,0.98,"Two views of the NA49 detector");
    na49title->SetFillColor(32);
    na49title->Draw();
    //

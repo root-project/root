@@ -49,6 +49,7 @@ const char *cd(char *path=0)
  return pwd();
 }
 
+TCanvas *bench = 0;
 //______________________________________________________________________________
 void bexec2(char *macro)
 {

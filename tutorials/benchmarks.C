@@ -1,4 +1,4 @@
-void bexec(TString &dir,char *macro)
+void bexec(TString &dir,const char *macro)
 {
    if (gROOT->IsBatch()) printf("Processing benchmark: %s%s\n",dir.Data(),macro);
    TPaveText *summary = (TPaveText*)bench->GetPrimitive("TPave");
@@ -19,7 +19,7 @@ void benchmarks() {
    dir.ReplaceAll("benchmarks.C","");
    dir.ReplaceAll("/./","/");
    bench = new TCanvas("bench","Benchmarks Summary",-1000,50,200,500);
-   summary = new TPaveText(0,0,1,1);
+   TPaveText *summary = new TPaveText(0,0,1,1);
    summary->SetTextAlign(12);
    summary->SetTextSize(0.08);
    summary->Draw();

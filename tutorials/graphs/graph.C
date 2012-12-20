@@ -15,7 +15,7 @@ void graph() {
      y[i] = 10*sin(x[i]+0.2);
      printf(" i %i %f %f \n",i,x[i],y[i]);
    }
-   gr = new TGraph(n,x,y);
+   auto gr = new TGraph(n,x,y);
    gr->SetLineColor(2);
    gr->SetLineWidth(4);
    gr->SetMarkerColor(4);
