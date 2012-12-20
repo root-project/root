@@ -427,7 +427,7 @@ TList *TXProofMgr::QuerySessions(Option_t *opt)
             Int_t id = -1, st = -1;
             TString al, tg, tk;
             Ssiz_t from = 0;
-            while ((to->GetString()[from] == ' ')) { from++; }
+            while (to->GetString()[from] == ' ') { from++; }
             if (!to->GetString().Tokenize(tk, from, " ") || !tk.IsDigit()) continue;
             id = tk.Atoi();
             if (!to->GetString().Tokenize(tg, from, " ")) continue;
