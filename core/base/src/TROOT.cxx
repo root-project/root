@@ -555,10 +555,23 @@ TROOT::~TROOT()
       // Cleanup system class
       delete gSystem;
 
-      // Problem deleting the interpreter. Want's to delete objects already
-      // deleted in the dtor's above. Crash.
-      // It should only close the files and NOT delete.
+#ifdef R__COMPLETE_MEM_TERMINATION
+      // On some 'newer' platform (Fedora Core 17+, Ubuntu 12), the 
+      // initialization order is (by default?) is 'wrong' and so we can't
+      // delete the interpreter now .. because any of the static in the 
+      // interpreter's libray have already been deleted.
+      // On the link line, we must list the most dependent .o file 
+      // and end with the least dependent (LLVM libraries), unfortunately,
+      // Fedora Core 17+ or Ubuntu 12 will also execute the initialization
+      // in the same order (hence doing libCore's before LLVM's and 
+      // vice et versa for both the destructor.  We worked around the 
+      // initialization order by delay the TROOT creation until first use.
+      // We can not do the same for destruction as we have no way of knowing
+      // the last access ...
+      // So for now, let's avoid delete TCling except in the special build
+      // checking the completeness of the termination deletion.
       SafeDelete(fInterpreter);
+#endif
 
 #ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fCleanups);
