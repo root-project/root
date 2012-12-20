@@ -14,6 +14,7 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "CocoaGuiTypes.h"
 #import "TVirtualX.h"
 #import "GuiTypes.h"
 
@@ -52,12 +53,11 @@
 - (unsigned) fHeight;
 
 //Functions to copy one drawable into another.
-//Point_t, Rectangle_t are in GuiTypes.h
-- (void) copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *)mask 
-         clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
+- (void) copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *)mask
+         clipOrigin : (ROOT::MacOSX::X11::Point) origin toPoint : (ROOT::MacOSX::X11::Point) dstPoint;
 
 //Get access to pixel data.
-- (unsigned char *) readColorBits : (Rectangle_t) area;
+- (unsigned char *) readColorBits : (ROOT::MacOSX::X11::Rectangle) area;
 
 @end
 

@@ -20,6 +20,10 @@
 
 #include <Cocoa/Cocoa.h>
 
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+#  include FT_GLYPH_H
+
 #include "QuartzFillArea.h"
 #include "TColorGradient.h"
 #include "QuartzMarker.h"
@@ -114,7 +118,8 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
 {
    //Check some conditions first.
    if (fDirectDraw) {
-      fPimpl->fX11CommandBuffer.AddDrawBoxXor(fSelectedDrawable, x1, y1, x2, y2);
+      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap)
+         fPimpl->fX11CommandBuffer.AddDrawBoxXor(fSelectedDrawable, x1, y1, x2, y2);
       return;
    }
 
@@ -220,7 +225,8 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
    // x2,y2        : end of line
 
    if (fDirectDraw) {
-      fPimpl->fX11CommandBuffer.AddDrawLineXor(fSelectedDrawable, x1, y1, x2, y2);   
+      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap)
+         fPimpl->fX11CommandBuffer.AddDrawLineXor(fSelectedDrawable, x1, y1, x2, y2);   
       return;
    }
 
@@ -339,7 +345,8 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/, co
 
    try {
       if (CTFontRef currentFont = fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize())) {
-         if (GetTextFont() / 10 == 12) {//Greek and math symbols.
+         const unsigned fontIndex = GetTextFont() / 10;
+         if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
             //This is a hack. Correct way is to extract glyphs from symbol.ttf,
             //find correct mapping, place this glyphs. This requires manual layout though (?),
             //and as usually, I have to many things to do, may be, one day I'll fix text rendering also.
@@ -699,7 +706,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
       //For this mode, TGX11TTF does some work to: a) preserve pixels under symbols
       //b) calculate (interpolate) pixel for glyphs.
       
-      Rectangle_t bbox = {Short_t(x1), Short_t(y1), UShort_t(w), UShort_t(h)};
+      X11::Rectangle bbox(x1, y1, w, h);
       //We already check IsVisible, so, in principle, bbox at least has intersection with
       //the current selected drawable.
       if (X11::AdjustCropArea(dstPixmap, bbox))
@@ -745,9 +752,9 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
                             mode == kClear ? ULong_t(-1) : 0xffffff, bx, by);
    }
 
-   Rectangle_t copyArea = {0, 0, UShort_t(w), UShort_t(h)};
-   Point_t dstPoint = {Short_t(x1), Short_t(y1)};
-   [dstPixmap copy : pixmap.Get() area : copyArea withMask : nil clipOrigin : Point_t() toPoint : dstPoint];
+   const X11::Rectangle copyArea(0, 0, w, h);
+   const X11::Point dstPoint(x1, y1);
+   [dstPixmap copy : pixmap.Get() area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : dstPoint];
 }
 
 //______________________________________________________________________________
@@ -882,8 +889,18 @@ void *TGQuartz::GetSelectedDrawableChecked(const char *calledFrom) const
    NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(fSelectedDrawable);
    if (!drawable.fIsPixmap) {
       //TPad/TCanvas ALWAYS draw only into a pixmap.
-      Error(calledFrom, "Selected drawable is not a pixmap");
-      return 0;
+      if ([drawable isKindOfClass : [QuartzView class]]) {
+         QuartzView *view = (QuartzView *)drawable;
+         if (!view.fBackBuffer) {
+            Error(calledFrom, "Selected window is not double buffered");
+            return 0;
+         }
+         
+         drawable = view.fBackBuffer;
+      } else {
+         Error(calledFrom, "Selected drawable is neither a pixmap, nor a double buffered window");
+         return 0;
+      }
    }
    
    if (!drawable.fContext) {

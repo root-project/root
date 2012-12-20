@@ -14,6 +14,7 @@
 
 #import <Cocoa/Cocoa.h>
 
+#import "CocoaGuiTypes.h"
 #import "X11Drawable.h"
 #import "GuiTypes.h"
 
@@ -77,17 +78,16 @@
 - (void) setX : (int) x Y : (int) y;
 
 //
-- (void) copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *) mask 
-         clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
+- (void) copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *) mask
+         clipOrigin : (ROOT::MacOSX::X11::Point) origin toPoint : (ROOT::MacOSX::X11::Point) dstPoint;
 
-- (unsigned char *) readColorBits : (Rectangle_t) area;
+- (unsigned char *) readColorBits : (ROOT::MacOSX::X11::Rectangle) area;
 
 
 //X11Window protocol.
 
 /////////////////////////////////////////////////////////////////
 //SetWindowAttributes_t/WindowAttributes_t
-
 @property (nonatomic, assign) unsigned long fBackgroundPixel;
 @property (nonatomic, readonly) int         fMapState;
 
@@ -159,9 +159,9 @@
 - (void)     setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h;
 - (void)     setX : (int) x Y : (int) y;
 
-- (void)     copy : (NSObject<X11Drawable> *) src area : (Rectangle_t) area withMask : (QuartzImage *)mask 
-             clipOrigin : (Point_t) origin toPoint : (Point_t) dstPoint;
-- (unsigned char *) readColorBits : (Rectangle_t) area;
+- (void)     copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *)mask 
+             clipOrigin : (ROOT::MacOSX::X11::Point) origin toPoint : (ROOT::MacOSX::X11::Point) dstPoint;
+- (unsigned char *) readColorBits : (ROOT::MacOSX::X11::Rectangle) area;
 
 //X11Window protocol.
 

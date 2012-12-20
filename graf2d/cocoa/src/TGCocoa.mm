@@ -639,10 +639,8 @@ void TGCocoa::UpdateWindow(Int_t /*mode*/)
       
       if (dstView.fContext) {
          //We can draw directly.
-         Rectangle_t copyArea = {};
-         copyArea.fWidth = pixmap.fWidth, copyArea.fHeight = pixmap.fHeight;
-         
-         [dstView copy : pixmap area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
+         const X11::Rectangle copyArea(0, 0, pixmap.fWidth, pixmap.fHeight);
+         [dstView copy : pixmap area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : X11::Point()];
       } else {
          //Have to wait.
          fPimpl->fX11CommandBuffer.AddUpdateWindow(dstView);
@@ -1477,9 +1475,9 @@ void TGCocoa::DrawLineAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x1, In
 
    CGContextSetAllowsAntialiasing(ctx, false);//Smoothed line is of wrong color and in a wrong position - this is bad for GUI.
    
-   if (!drawable.fIsPixmap) {
-      CGContextTranslateCTM(ctx, 0.f, 1.);
-   } else {
+   if (!drawable.fIsPixmap)
+      CGContextTranslateCTM(ctx, 0.5, 0.5);
+   else {
       //Pixmap uses native Cocoa's left-low-corner system.
       //TODO: check the line on the edge.
       y1 = Int_t(X11::LocalYROOTToCocoa(drawable, y1));
@@ -1912,15 +1910,8 @@ void TGCocoa::CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gcVa
    NSObject<X11Drawable> * const srcDrawable = fPimpl->GetDrawable(src);
    NSObject<X11Drawable> * const dstDrawable = fPimpl->GetDrawable(dst);
 
-   Point_t dstPoint = {};
-   dstPoint.fX = dstX;
-   dstPoint.fY = dstY;
-
-   Rectangle_t copyArea = {};
-   copyArea.fX = srcX;
-   copyArea.fY = srcY; 
-   copyArea.fWidth = (UShort_t)width;//TODO: check size?
-   copyArea.fHeight = (UShort_t)height;//TODO: check size?
+   const X11::Point dstPoint(dstX, dstY);
+   const X11::Rectangle copyArea(srcX, srcY, width, height);
 
    QuartzImage *mask = nil;
    if ((gcVals.fMask & kGCClipMask) && gcVals.fClipMask) {
@@ -1928,7 +1919,7 @@ void TGCocoa::CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gcVa
       mask = (QuartzImage *)fPimpl->GetDrawable(gcVals.fClipMask);
    }
    
-   Point_t clipOrigin = {};
+   X11::Point clipOrigin;
    if (gcVals.fMask & kGCClipXOrigin)
       clipOrigin.fX = gcVals.fClipXOrigin;
    if (gcVals.fMask & kGCClipYOrigin)
@@ -2224,16 +2215,10 @@ void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
       }
    }
 
-   //TODO ugly initialization with casts, fix by declaring my own Rectangle_t with correct types.
-   Rectangle_t copyArea = {};
-   copyArea.fWidth = UShort_t(pixmap.fWidth);
-   copyArea.fHeight = UShort_t(pixmap.fHeight);
-
-   Point_t dstPoint = {};
-   dstPoint.fX = Short_t(x);
-   dstPoint.fY = Short_t(y);
-
-   [destination copy : pixmap area : copyArea withMask : nil clipOrigin : Point_t() toPoint : dstPoint];
+   const X11::Rectangle copyArea(0, 0, pixmap.fWidth, pixmap.fHeight);
+   const X11::Point dstPoint(x, y);
+   
+   [destination copy : pixmap area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : dstPoint];
 }
 
 //______________________________________________________________________________
@@ -2382,8 +2367,7 @@ unsigned char *TGCocoa::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w,
       assert(w != 0 && "GetColorBits, w parameter is 0");
       assert(h != 0 && "GetColorBits, h parameter is 0");
 
-      Rectangle_t area = {};
-      area.fX = x, area.fY = y, area.fWidth = w, area.fHeight = h;
+      const X11::Rectangle area(x, y, w, h);
       return [fPimpl->GetDrawable(wid) readColorBits : area];//readColorBits can throw std::bad_alloc, no resource will leak.
    }
 

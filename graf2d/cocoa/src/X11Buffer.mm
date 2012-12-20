@@ -70,7 +70,7 @@ bool Command::IsGraphicsCommand()const
 }
 
 //______________________________________________________________________________
-DrawLine::DrawLine(Drawable_t wid, const GCValues_t &gc, const Point_t &p1, const Point_t &p2)
+DrawLine::DrawLine(Drawable_t wid, const GCValues_t &gc, const Point &p1, const Point &p2)
             : Command(wid, gc),
               fP1(p1),
               fP2(p2)
@@ -119,7 +119,7 @@ void ClearArea::Execute()const
 }
 
 //______________________________________________________________________________
-CopyArea::CopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, const Rectangle_t &area, const Point_t &dstPoint)
+CopyArea::CopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, const Rectangle_t &area, const Point &dstPoint)
                : Command(dst, gc),
                  fSrc(src),
                  fArea(area),
@@ -142,7 +142,7 @@ void CopyArea::Execute()const
 }
 
 //______________________________________________________________________________
-DrawString::DrawString(Drawable_t wid, const GCValues_t &gc, const Point_t &point, const std::string &text)
+DrawString::DrawString(Drawable_t wid, const GCValues_t &gc, const Point &point, const std::string &text)
                : Command(wid, gc),
                  fPoint(point),
                  fText(text)
@@ -218,12 +218,8 @@ void UpdateWindow::Execute()const
 {
    assert(fView.fContext != 0 && "Execute, view.fContext is null");
 
-   if (QuartzPixmap *pixmap = fView.fBackBuffer) {
-      Rectangle_t copyArea = {};
-      copyArea.fWidth = UShort_t(pixmap.fWidth);
-      copyArea.fHeight = UShort_t(pixmap.fHeight);
-      [fView copy : pixmap area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
-   }
+   if (QuartzPixmap *pixmap = fView.fBackBuffer)
+      [fView copy : pixmap area : Rectangle(0, 0, pixmap.fWidth, pixmap.fHeight) withMask : nil clipOrigin : Point() toPoint : Point()];
 }
 
 //______________________________________________________________________________
@@ -241,17 +237,15 @@ void DeletePixmap::Execute()const
 }
 
 //______________________________________________________________________________
-DrawBoxXor::DrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+DrawBoxXor::DrawBoxXor(Window_t windowID, const Point &p1, const Point &p2)
                : Command(windowID, GCValues_t()),
-                 fX1(x1),
-                 fY1(y1),
-                 fX2(x2),
-                 fY2(y2)
+                 fP1(p1),
+                 fP2(p2)
 {
-   if (fX1 > fX2)
-      std::swap(fX1, fX2);
-   if (fY1 > fY2)
-      std::swap(fY1, fY2);
+   if (fP1.fX > fP2.fX)
+      std::swap(fP1.fX, fP2.fX);
+   if (fP1.fY > fP2.fY)
+      std::swap(fP1.fY, fP2.fY);
 }
 
 //______________________________________________________________________________
@@ -269,16 +263,14 @@ void DrawBoxXor::Execute(CGContextRef ctx)const
    CGContextSetRGBStrokeColor(ctx, 0., 0., 0., 1.);
    CGContextSetLineWidth(ctx, 1.);
    
-   CGContextStrokeRect(ctx, CGRectMake(fX1, fY1, fX2 - fX1, fY2 - fY1));
+   CGContextStrokeRect(ctx, CGRectMake(fP1.fX, fP1.fY, fP2.fX - fP1.fX, fP2.fY - fP1.fY));
 }
 
 //______________________________________________________________________________
-DrawLineXor::DrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+DrawLineXor::DrawLineXor(Window_t windowID, const Point &p1, const Point &p2)
                : Command(windowID, GCValues_t()),
-                 fX1(x1),
-                 fY1(y1),
-                 fX2(x2),
-                 fY2(y2)
+                 fP1(p1),
+                 fP2(p2)
 {
 }
 
@@ -298,8 +290,8 @@ void DrawLineXor::Execute(CGContextRef ctx)const
    CGContextSetLineWidth(ctx, 1.);
    
    CGContextBeginPath(ctx);
-   CGContextMoveToPoint(ctx, fX1, fY1);
-   CGContextAddLineToPoint(ctx, fX2, fY2);
+   CGContextMoveToPoint(ctx, fP1.fX, fP1.fY);
+   CGContextAddLineToPoint(ctx, fP2.fX, fP2.fY);
    CGContextStrokePath(ctx);
 }
 
@@ -319,15 +311,7 @@ CommandBuffer::~CommandBuffer()
 void CommandBuffer::AddDrawLine(Drawable_t wid, const GCValues_t &gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    try {
-      Point_t p1 = {}; 
-      //I'd use .fX = x1 from standard C, but ... this is already C++0x + Obj-C :)
-      //So, not to make it worse :)
-      p1.fX = x1;
-      p1.fY = y1;
-      Point_t p2 = {};
-      p2.fX = x2;
-      p2.fY = y2;
-      std::auto_ptr<DrawLine> cmd(new DrawLine(wid, gc, p1, p2));//if this throws, I do not care.
+      std::auto_ptr<DrawLine> cmd(new DrawLine(wid, gc, Point(x1, y1), Point(x2, y2)));//if this throws, I do not care.
       fCommands.push_back(cmd.get());//this can throw.
       cmd.release();
    } catch (const std::exception &) {
@@ -354,7 +338,7 @@ void CommandBuffer::AddDrawSegments(Drawable_t wid, const GCValues_t &gc, const 
 void CommandBuffer::AddClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    try {
-      Rectangle_t r = {};
+      Rectangle_t r = {};//To be replaced with X11::Rectangle.
       r.fX = x;
       r.fY = y;
       r.fWidth = (UShort_t)w;
@@ -377,10 +361,7 @@ void CommandBuffer::AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t
       area.fY = srcY;
       area.fWidth = (UShort_t)width;
       area.fHeight = (UShort_t)height;
-      Point_t dstPoint = {};
-      dstPoint.fX = dstX;
-      dstPoint.fY = dstY;
-      std::auto_ptr<CopyArea> cmd(new CopyArea(src, dst, gc, area, dstPoint));//Can throw, nothing leaks.
+      std::auto_ptr<CopyArea> cmd(new CopyArea(src, dst, gc, area, Point(dstX, dstY)));//Can throw, nothing leaks.
       fCommands.push_back(cmd.get());//this can throw.
       cmd.release();
    } catch (const std::exception &) {
@@ -395,10 +376,7 @@ void CommandBuffer::AddDrawString(Drawable_t wid, const GCValues_t &gc, Int_t x,
       if (len < 0)//Negative length can come from caller.
          len = std::strlen(text);
       const std::string substr(text, len);//Can throw.
-      Point_t p = {};
-      p.fX = x;
-      p.fY = y;
-      std::auto_ptr<DrawString> cmd(new DrawString(wid, gc, p, substr));//Can throw.
+      std::auto_ptr<DrawString> cmd(new DrawString(wid, gc, Point(x, y), substr));//Can throw.
       fCommands.push_back(cmd.get());//can throw.
       cmd.release();
    } catch (const std::exception &) {
@@ -485,7 +463,7 @@ void CommandBuffer::AddDeletePixmap(Pixmap_t pixmapID)
 void CommandBuffer::AddDrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    try {
-      std::auto_ptr<DrawBoxXor> cmd(new DrawBoxXor(windowID, x1, y1, x2, y2));
+      std::auto_ptr<DrawBoxXor> cmd(new DrawBoxXor(windowID, Point(x1, y1), Point(x2, y2)));
       fXorOps.push_back(cmd.get());
       cmd.release();
    } catch (const std::exception &) {
@@ -497,7 +475,7 @@ void CommandBuffer::AddDrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x
 void CommandBuffer::AddDrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    try {
-      std::auto_ptr<DrawLineXor> cmd(new DrawLineXor(windowID, x1, y1, x2, y2));
+      std::auto_ptr<DrawLineXor> cmd(new DrawLineXor(windowID, Point(x1, y1), Point(x2, y2)));
       fXorOps.push_back(cmd.get());
       cmd.release();
    } catch (const std::exception &) {
@@ -562,10 +540,8 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
             
             if (view.fBackBuffer) {
                //Very "special" window.
-               Rectangle_t copyArea = {};
-               copyArea.fWidth = UShort_t(view.fBackBuffer.fWidth);
-               copyArea.fHeight = UShort_t(view.fBackBuffer.fHeight);
-               [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];
+               const Rectangle copyArea(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
+               [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point() toPoint : Point()];
             }
             
             [view unlockFocus];
@@ -620,10 +596,8 @@ void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
    
       if (view.fBackBuffer) {//back buffer has canvas' contents.
          //Very "special" window.
-         Rectangle_t copyArea = {};
-         copyArea.fWidth = UShort_t(view.fBackBuffer.fWidth);
-         copyArea.fHeight = UShort_t(view.fBackBuffer.fHeight);
-         [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point_t() toPoint : Point_t()];      
+         const Rectangle copyArea(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
+         [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point() toPoint : Point()];
       }
    
       //Now, do "XOR" drawings.
@@ -790,10 +764,10 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
          //Check if two rects intersect.
          if (RectsOverlap(frame2, frame1)) {
             //Substruct frame1 from our view's rect.
-            clipRect.x1 = frame1.origin.x;
-            clipRect.x2 = clipRect.x1 + frame1.size.width;
-            clipRect.y1 = frame1.origin.y;
-            clipRect.y2 = clipRect.y1 + frame1.size.height;
+            clipRect.fX1 = frame1.origin.x;
+            clipRect.fX2 = clipRect.fX1 + frame1.size.width;
+            clipRect.fY1 = frame1.origin.y;
+            clipRect.fY2 = clipRect.fY1 + frame1.size.height;
             fRectsToClip.push_back(clipRect);
          }
       }
@@ -814,10 +788,10 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
          frame1.origin = [view convertPoint : frame1.origin toView : view.fParentView];
       
       if (RectsOverlap(frame2, frame1)) {
-         clipRect.x1 = frame1.origin.x;
-         clipRect.x2 = clipRect.x1 + frame1.size.width;
-         clipRect.y1 = frame1.origin.y;
-         clipRect.y2 = clipRect.y1 + frame1.size.height;
+         clipRect.fX1 = frame1.origin.x;
+         clipRect.fX2 = clipRect.fX1 + frame1.size.width;
+         clipRect.fY1 = frame1.origin.y;
+         clipRect.fY2 = clipRect.fY1 + frame1.size.height;
          fRectsToClip.push_back(clipRect);
       }
    }
@@ -908,23 +882,23 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
 
    //[First, we "cut" the original rect into stripes.
    for (rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end(); recIt != endIt; ++recIt) {
-      if (recIt->x1 <= rect.x1 && recIt->x2 >= rect.x2 && recIt->y1 <= rect.y1 && recIt->y2 >= rect.y2) {
+      if (recIt->fX1 <= rect.fX1 && recIt->fX2 >= rect.fX2 && recIt->fY1 <= rect.fY1 && recIt->fY2 >= rect.fY2) {
          //this rect completely overlaps our view, not need to calculate anything at all.
          fClippedRegion.push_back(CGRectMake(0., 0., 0., 0.));
          return;
       }
    
-      if (recIt->x1 > rect.x1)//recIt->x1 is always < rect.x2 (input validation).
-         fXBounds.push_back(recIt->x1);
+      if (recIt->fX1 > rect.fX1)//recIt->x1 is always < rect.x2 (input validation).
+         fXBounds.push_back(recIt->fX1);
 
-      if (recIt->x2 < rect.x2)//recIt->x2 is always > rect.x1 (input validation).
-         fXBounds.push_back(recIt->x2);
+      if (recIt->fX2 < rect.fX2)//recIt->x2 is always > rect.x1 (input validation).
+         fXBounds.push_back(recIt->fX2);
 
-      if (recIt->y1 > rect.y1)
-         fYBounds.push_back(recIt->y1);
+      if (recIt->fY1 > rect.fY1)
+         fYBounds.push_back(recIt->fY1);
 
-      if (recIt->y2 < rect.y2)
-         fYBounds.push_back(recIt->y2);
+      if (recIt->fY2 < rect.fY2)
+         fYBounds.push_back(recIt->fY2);
    }
 
    std::sort(fXBounds.begin(), fXBounds.end());
@@ -942,16 +916,16 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
 
    //Mark the overlapped parts.
    for (rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end(); recIt != endIt; ++recIt) {
-      const int_iterator left = BinarySearchLeft(fXBounds.begin(), xBoundsEnd, recIt->x1);
+      const int_iterator left = BinarySearchLeft(fXBounds.begin(), xBoundsEnd, recIt->fX1);
       const size_type firstXBand = left == xBoundsEnd ? 0 : left - fXBounds.begin() + 1;
       
-      const int_iterator right = BinarySearchRight(fXBounds.begin(), xBoundsEnd, recIt->x2);
+      const int_iterator right = BinarySearchRight(fXBounds.begin(), xBoundsEnd, recIt->fX2);
       const size_type lastXBand = right - fXBounds.begin() + 1;
       
-      const int_iterator bottom = BinarySearchLeft(fYBounds.begin(), yBoundsEnd, recIt->y1);
+      const int_iterator bottom = BinarySearchLeft(fYBounds.begin(), yBoundsEnd, recIt->fY1);
       const size_type firstYBand = bottom == yBoundsEnd ? 0 : bottom - fYBounds.begin() + 1;
 
-      const int_iterator top = BinarySearchRight(fYBounds.begin(), yBoundsEnd, recIt->y2);
+      const int_iterator top = BinarySearchRight(fYBounds.begin(), yBoundsEnd, recIt->fY2);
       const size_type lastYBand = top - fYBounds.begin() + 1;
 
       for (size_type i = firstYBand; i < lastYBand; ++i) {
@@ -969,11 +943,11 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
       const size_type baseIndex = i * nXBands;
       for (size_type j = 0; j < nXBands; ++j) {
          if (!fGrid[baseIndex + j]) {
-            newRect.origin.x = j ? fXBounds[j - 1] : rect.x1;
-            newRect.origin.y = i ? fYBounds[i - 1] : rect.y1;
+            newRect.origin.x = j ? fXBounds[j - 1] : rect.fX1;
+            newRect.origin.y = i ? fYBounds[i - 1] : rect.fY1;
             
-            newRect.size.width = (j == nXBands - 1 ? rect.x2 : fXBounds[j]) - newRect.origin.x;
-            newRect.size.height = (i == nYBands - 1 ? rect.y2 : fYBounds[i]) - newRect.origin.y;
+            newRect.size.width = (j == nXBands - 1 ? rect.fX2 : fXBounds[j]) - newRect.origin.x;
+            newRect.size.height = (i == nYBands - 1 ? rect.fY2 : fYBounds[i]) - newRect.origin.y;
 
             fClippedRegion.push_back(newRect);
          }

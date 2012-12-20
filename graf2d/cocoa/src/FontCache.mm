@@ -30,12 +30,14 @@ namespace Details {
 
 namespace {
 
-//ROOT uses indices for fonts.
-//Later, I'll find (I promise! ;) better
-//way to map font indices to actual fonts
-//(families, etc.) - I simply do not have any time now.
+//ROOT uses indices for fonts. Indices are in the range [1 .. 15],
+//12 is a symbol font (quite special thing, see the code below,
+//15 is a "symbol italic" font - shear transformation is applied.
 
-const int fmdNOfFonts = 13;
+//TODO: actually, it's not good to assume I have these fonts for sure,
+//find a better way to check the available fonts and search for the best
+//match.
+
 const CFStringRef fixedFontNames[FontCache::nPadFonts] =
                                      {
                                       CFSTR("TimesNewRomanPS-ItalicMT"),
@@ -50,7 +52,9 @@ const CFStringRef fixedFontNames[FontCache::nPadFonts] =
                                       CFSTR("Courier-Bold"),
                                       CFSTR("Courier-BoldOblique"),
                                       CFSTR("Symbol"),
-                                      CFSTR("TimesNewRomanPSMT")
+                                      CFSTR("TimesNewRomanPSMT"),
+                                      CFSTR("Wingdings"),
+                                      CFSTR("Symbol-Italic")
                                      };
 
 
@@ -412,13 +416,12 @@ CTFontRef FontCache::SelectFont(Font_t fontIndex, Float_t fontSize)
 
    if (fontIndex > nPadFonts || !fontIndex) {
       ::Warning("FontCache::SelectFont", "Font with index %d was requested", fontIndex);
-      fontIndex = 1;
-   }
+      fontIndex = 3;//Select the Helvetica as default.
+   } else
+      fontIndex -= 1;
    
-   fontIndex -= 1;
-   
-   if (fontIndex == 11)//Special case, our own symbol.ttf file.
-      return SelectSymbolFont(fontSize);
+   if (fontIndex == 11 || fontIndex == 14)//Special case, our own symbol.ttf file.
+      return SelectSymbolFont(fontSize, fontIndex);
    
    const UInt_t fixedSize = UInt_t(fontSize);
    font_map_iterator it = fFonts[fontIndex].find(fixedSize);
@@ -443,12 +446,14 @@ CTFontRef FontCache::SelectFont(Font_t fontIndex, Float_t fontSize)
 }
 
 //_________________________________________________________________
-CTFontRef FontCache::SelectSymbolFont(Float_t fontSize)
+CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
 {
+   assert(fontIndex == 11 || fontIndex == 14 && "SelectSymbolFont, parameter fontIndex has invalid value");
+
    const UInt_t fixedSize = UInt_t(fontSize);
-   font_map_iterator it = fFonts[11].find(fixedSize);//In ROOT, 11 is a font from symbol.ttf.
+   font_map_iterator it = fFonts[fontIndex].find(fixedSize);//In ROOT, 11 is a font from symbol.ttf.
    
-   if (it == fFonts[11].end()) {
+   if (it == fFonts[fontIndex].end()) {
       //This GetValue + Which I took from Olivier's code.
       const char * const fontDirectoryPath = gEnv->GetValue("Root.TTFontPath","$(ROOTSYS)/fonts");//This one I do not own.
       char * const fontFileName = gSystem->Which(fontDirectoryPath, "symbol.ttf", kReadPermission);//This must be deleted.
@@ -474,13 +479,17 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize)
          }
 
          CTFontDescriptorRef fontDesc = (CTFontDescriptorRef)CFArrayGetValueAtIndex(arr.Get(), 0);
-         const CTFontGuard_t font(CTFontCreateWithFontDescriptor(fontDesc, fixedSize, 0), false);
+         
+         const CGAffineTransform shearMatrix = {1., 0., 0.26794, 1., 0., 0.};//Yes, these are hardcoded values, taken from TPDF class.
+         const CTFontGuard_t font(CTFontCreateWithFontDescriptorAndOptions(fontDesc, fixedSize,
+                                                                           fontIndex == 11 ? &CGAffineTransformIdentity :
+                                                                           &shearMatrix, kCTFontOptionsDefault), false);
          if (!font.Get()) {
             ::Error("FontCache::SelectSymbolFont", "CTFontCreateWithFontDescriptor failed");
             return 0;
          }
 
-         fFonts[11][fixedSize] = font;//This can throw.
+         fFonts[fontIndex][fixedSize] = font;//This can throw.
          return fSelectedFont = font.Get();
       } catch (const std::exception &) {//Bad alloc.
          //RAII destructors should do their work.
