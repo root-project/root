@@ -44,6 +44,7 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "TRandom3.h"
+#include "TRandom2.h"
 #include "TClass.h"
 #include "TUUID.h"
 
@@ -194,24 +195,28 @@ void TRandom3::SetSeed(UInt_t seed)
 
    TRandom::SetSeed(seed);
    fCount624 = 624;
-   Int_t i,j;
    if (seed > 0) {
       fMt[0] = fSeed;
-      j = 1;
-   } else {
-      TUUID uid;
-      UChar_t uuid[16];
-      uid.GetUUID(uuid);
-      for (i=0;i<8;i++) {
-         fMt[i] = uuid[2*i]*256 +uuid[2*i+1];
-         if (i > 1) fMt[i] += fMt[0];
+
+      // use multipliers from  Knuth's "Art of Computer Programming" Vol. 2, 3rd Ed. p.106
+      for(Int_t i=1; i<624; i++) {
+         fMt[i] = (1812433253 * ( fMt[i-1]  ^ ( fMt[i-1] >> 30)) + i );
       }
-      j = 8;
+
+   } else {
+         
+      // use TRandom2 (which is based on TUUId to generate the seed
+      // TRandom2 works fairly well  and has been tested against example
+      // layout in https://savannah.cern.ch/bugs/?99516
+      TRandom2 r(0);
+      for (Int_t i = 0; i< 624; i++) {
+         fMt[i]   = static_cast<UInt_t> (4294967296.*r.Rndm());
+      }
+      // warm up the generator 
+      for (Int_t i = 10; i < 10; ++i) Rndm(); 
    }
-   // use multipliers from  Knuth's "Art of Computer Programming" Vol. 2, 3rd Ed. p.106
-   for(i=j; i<624; i++) {
-      fMt[i] = (1812433253 * ( fMt[i-1]  ^ ( fMt[i-1] >> 30)) + i);
-   }
+
+
 }
 
 //______________________________________________________________________________

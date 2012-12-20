@@ -22,6 +22,7 @@
 
 #include "TRandom2.h"
 #include "TRandom3.h"
+#include "TUUID.h"
 
 
 ClassImp(TRandom2)
@@ -125,11 +126,23 @@ void TRandom2::SetSeed(UInt_t seed)
       fSeed2 = LCG (fSeed1);
       if (fSeed2 < 16) fSeed2 += 16UL;
    } else {
-      // initialize using TRandom3 which uses a UUID
-      TRandom3 r3(0);
-      fSeed   = static_cast<UInt_t> (4294967296.*r3.Rndm());
-      fSeed1  = static_cast<UInt_t> (4294967296.*r3.Rndm());
-      fSeed2  = static_cast<UInt_t> (4294967296.*r3.Rndm());
+      // initialize using a TUUID
+      TUUID u; 
+      UChar_t uuid[16];
+      u.GetUUID(uuid);
+      fSeed  =  int(uuid[3])*16777216 + int(uuid[2])*65536 + int(uuid[1])*256 + int(uuid[0]);
+      fSeed1  =  int(uuid[7])*16777216 + int(uuid[6])*65536 + int(uuid[5])*256 + int(uuid[4]);
+      fSeed2  =  int(uuid[11])*16777216 + int(uuid[10])*65536 + int(uuid[9])*256 + int(uuid[8]);
+      // use also the other bytes
+      UInt_t seed3 = int(uuid[15])*16777216 + int(uuid[14])*65536 + int(uuid[13])*256 + int(uuid[12]);
+      fSeed2 += seed3; 
+
+
+
+      //    TRandom r3(0);
+      // fSeed   = static_cast<UInt_t> (4294967296.*r3.Rndm());
+      // fSeed1  = static_cast<UInt_t> (4294967296.*r3.Rndm());
+      // fSeed2  = static_cast<UInt_t> (4294967296.*r3.Rndm());
 
       if (fSeed < 2)   fSeed  += 2UL;
       if (fSeed1 < 8)  fSeed1 += 8UL;
