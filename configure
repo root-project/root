@@ -6322,7 +6322,7 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  lib/libProofGui* bin/libProofGui* \
  lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld* \
  lib/libSQL.* bin/libSQL.* \
- lib/libASPluginGS.* bin/g2rootold* \
+ lib/libASPluginGS.* bin/g2rootold* bin/ptest \
  math/mathcore/src/G__MathCore32.* \
  tmva/src/G__TMVA.* graf3d/eve/src/G__Eve.* \
  xrootd/src/headers.d include/Xpm.h \

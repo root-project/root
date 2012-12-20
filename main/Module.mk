@@ -50,14 +50,14 @@ PTESTS   := $(MODDIRS)/ptest.cxx
 PTESTO   := $(call stripsrc,$(PTESTS:.cxx=.o))
 PTESTDEP := $(PTESTO:.o=.d)
 ifneq ($(PLATFORM),win32)
-PTESTEXE := bin/ptest
+PTESTEXE := bin/xpdtest
 endif
 ifeq ($(PROOFLIB),)
 PTESTEXE :=
 endif
-PTESTLIBS    := -lProof -lTree -lHist -lRIO -lNet -lThread -lMathCore 
+PTESTLIBS    := -lProof -lTree -lHist -lRIO -lNet -lThread -lMatrix -lMathCore 
 PTESTLIBSDEP  = $(IOLIB) $(TREELIB) $(NETLIB) $(HISTLIB) $(PROOFLIB) \
-                $(THREADLIB) $(MATHCORELIB)
+                $(THREADLIB) $(MATRIXLIB) $(MATHCORELIB)
 
 ##### roots.exe #####
 ROOTSEXES   := $(MODDIRS)/roots.cxx
