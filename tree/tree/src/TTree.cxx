@@ -791,6 +791,7 @@ TTree::~TTree()
       TFile *file = fDirectory->GetFile();
       if (file) {
          TFileCacheRead *pf = file->GetCacheRead(this);
+         pf->WaitFinishPrefetch();
          file->SetCacheRead(0,this);
          delete pf;
       }
@@ -7345,6 +7346,7 @@ void TTree::SetCacheSize(Long64_t cacheSize)
       if (cacheSize == fCacheSize) {
          return;
       }
+      pf->WaitFinishPrefetch();
       file->SetCacheRead(0, this);
       delete pf;
       pf = 0;
@@ -7490,13 +7492,15 @@ void TTree::SetDirectory(TDirectory* dir)
       // Delete or move the file cache if it points to this Tree
       TFile *file = fDirectory->GetFile();
       if (file) {
-         TFileCacheRead *pf = file->GetCacheRead(this);
-         file->SetCacheRead(0,this);
-         TFile *newfile = dir ? dir->GetFile() : 0;
-         if (newfile) {
-            newfile->SetCacheRead(pf,this);
-         } else {
-            delete pf;
+         TTreeCache *pf = dynamic_cast<TTreeCache*>(file->GetCacheRead(this));
+         if (pf && pf->GetTree() == this) {
+            file->SetCacheRead(0,this);
+            TFile *newfile = dir ? dir->GetFile() : 0;
+            if (newfile) {
+               newfile->SetCacheRead(pf,this);
+            } else {
+               delete pf;
+            }
          }
       }
    }
