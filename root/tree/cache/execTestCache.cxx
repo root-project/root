@@ -6,7 +6,7 @@
 
 
 void execTestCache() {
-   TString in_fname("/tmp/test_in.root");
+   TString in_fname("test_in.root");
 
    // create a tree in file
    {
@@ -50,7 +50,7 @@ void execTestCache() {
 
 
 
-   TFile * out_file = TFile::Open("/tmp/test_out.root", "RECREATE");
+   TFile * out_file = TFile::Open("test_out.root", "RECREATE");
    out_file->SetCompressionLevel(0);
    in_file->cd(); // Probably somewhere inside PROOF code
 
