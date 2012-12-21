@@ -310,7 +310,7 @@ static bool CXXRecordDecl__FindOrdinaryMember(const clang::CXXBaseSpecifier *Spe
    if (found) {
       // Humm, this is somewhat bad (well really bad), oh well.
       // Let's hope Paths never thinks it owns those (it should not as far as I can tell).
-      Path.Decls.first  = (clang::NamedDecl**)found;
+      Path.Decls.first  = reinterpret_cast<clang::NamedDecl**>(const_cast<clang::FieldDecl*>(found));
       Path.Decls.second = 0;
       return true;
    }
