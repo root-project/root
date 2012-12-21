@@ -984,7 +984,7 @@ public:
             
       PP.Lex(tok);
       const char *start = fSourceManager.getCharacterData(tok.getLocation());
-      clang::Token end;
+      clang::Token end = tok;
       while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) 
       {
          end = tok;
