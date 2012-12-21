@@ -78,7 +78,7 @@ $(LLVMRES): $(LLVMLIB)
 $(LLVMLIB): $(LLVMDEPO) $(FORCELLVMTARGET)
 		@(echo "*** Building $@..."; \
 		cd $(LLVMDIRO) && \
-		$(MAKE) && \
+		$(MAKE) VERBOSE=1 && \
 		rm -rf $(LLVMDIRI)/lib/clang && \
 		$(MAKE) install)
 
@@ -116,7 +116,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		fi; \
 		if [ $(ARCH) = "ios" ]; then \
 			LLVM_CFLAGS="-arch armv7 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
-			LLVM_EXTRA_OPTIONS="--with-extra-options='$$LLVM_CFLAGS'"; \
+			LLVM_EXTRA_OPTIONS="--with-extra-options=$$LLVM_CFLAGS"; \
 			LLVM_HOST="--host=armv7-apple-darwin"; \
 			LLVM_TARGET="--target=armv7-apple-darwin"; \
 			LLVM_BUILD="--build=i386-apple-darwin"; \
@@ -154,7 +154,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		$$LLVMLIBCXX11 \
 		$(LLVMOPTFLAGS) \
 		--enable-targets=host \
-		$$LLVM_EXTRA_OPTIONS \
+		"$$LLVM_EXTRA_OPTIONS" \
 		CC=$$LLVMCC CXX=$$LLVMCXX \
 		$$LLVM_BUILD_CC $$LLVM_BUILD_CXX \
 		CFLAGS="$$LLVM_CFLAGS" CXXFLAGS="$$LLVM_CFLAGS" )
