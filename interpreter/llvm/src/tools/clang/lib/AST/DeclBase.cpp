@@ -1321,10 +1321,26 @@ void DeclContext::makeDeclVisibleInContextWithFlags(NamedDecl *D, bool Internal,
 
 void DeclContext::makeDeclVisibleInContextImpl(NamedDecl *D, bool Internal) {
   // Find or create the stored declaration map.
+  bool MustVisitExternalSources = false;
   StoredDeclsMap *Map = LookupPtr.getPointer();
   if (!Map) {
     ASTContext *C = &getParentASTContext();
     Map = CreateStoredDeclsMap(*C);
+    MustVisitExternalSources = true;
+  } else if (hasExternalVisibleStorage() &&
+             Map->find(D->getDeclName()) == Map->end())
+    MustVisitExternalSources = true;
+
+  // Insert this declaration into the map.
+  StoredDeclsList &DeclNameEntries = (*Map)[D->getDeclName()];
+  if (DeclNameEntries.isNull()) {
+    DeclNameEntries.setOnlyValue(D);
+  } else if (DeclNameEntries.HandleRedeclaration(D)) {
+    // This declaration has replaced an existing one for which
+    // declarationReplaces returns true.
+  } else {
+     // Put this declaration into the appropriate slot.
+     DeclNameEntries.AddSubsequentDecl(D);
   }
 
   // If there is an external AST source, load any declarations it knows about
@@ -1333,25 +1349,8 @@ void DeclContext::makeDeclVisibleInContextImpl(NamedDecl *D, bool Internal) {
   // have already checked the external source.
   if (!Internal)
     if (ExternalASTSource *Source = getParentASTContext().getExternalSource())
-      if (hasExternalVisibleStorage() &&
-          Map->find(D->getDeclName()) == Map->end())
+      if (MustVisitExternalSources)
         Source->FindExternalVisibleDeclsByName(this, D->getDeclName());
-
-  // Insert this declaration into the map.
-  StoredDeclsList &DeclNameEntries = (*Map)[D->getDeclName()];
-  if (DeclNameEntries.isNull()) {
-    DeclNameEntries.setOnlyValue(D);
-    return;
-  }
-
-  if (DeclNameEntries.HandleRedeclaration(D)) {
-    // This declaration has replaced an existing one for which
-    // declarationReplaces returns true.
-    return;
-  }
-
-  // Put this declaration into the appropriate slot.
-  DeclNameEntries.AddSubsequentDecl(D);
 }
 
 /// Returns iterator range [First, Last) of UsingDirectiveDecls stored within
