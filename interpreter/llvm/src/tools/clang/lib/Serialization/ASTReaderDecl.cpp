@@ -1734,10 +1734,19 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
   if (isa<ObjCInterfaceDecl>(X) || isa<ObjCProtocolDecl>(X))
     return true;
   
+  // Identical template names and kinds match for equal number of args.
+  if (TemplateDecl* TDX = dyn_cast<TemplateDecl>(X)) {
+    TemplateDecl* TDY = dyn_cast<TemplateDecl>(Y);
+    return (TDX->getTemplateParameters()->size()
+            == TDY->getTemplateParameters()->size());
+  }
+
   // Compatible tags match.
   if (TagDecl *TagX = dyn_cast<TagDecl>(X)) {
     TagDecl *TagY = cast<TagDecl>(Y);
-    return (TagX->getTagKind() == TagY->getTagKind()) ||
+    return !TagX->getTypeForDecl() || // still reading
+      !TagY->getTypeForDecl() ||
+      (TagX->getTagKind() == TagY->getTagKind()) ||
       ((TagX->getTagKind() == TTK_Struct || TagX->getTagKind() == TTK_Class ||
         TagX->getTagKind() == TTK_Interface) &&
        (TagY->getTagKind() == TTK_Struct || TagY->getTagKind() == TTK_Class ||
@@ -1749,15 +1758,19 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
   //prototyped/non-prototyped functions, etc.
   if (FunctionDecl *FuncX = dyn_cast<FunctionDecl>(X)) {
     FunctionDecl *FuncY = cast<FunctionDecl>(Y);
-    return (FuncX->getLinkage() == FuncY->getLinkage()) &&
-      FuncX->getASTContext().hasSameType(FuncX->getType(), FuncY->getType());
+    return FuncX->getType().isNull() || // still reading
+      FuncY->getType().isNull() ||
+      ((FuncX->getLinkage() == FuncY->getLinkage()) &&
+       FuncX->getASTContext().hasSameType(FuncX->getType(), FuncY->getType()));
   }
 
   // Variables with the same type and linkage match.
   if (VarDecl *VarX = dyn_cast<VarDecl>(X)) {
     VarDecl *VarY = cast<VarDecl>(Y);
-    return (VarX->getLinkage() == VarY->getLinkage()) &&
-      VarX->getASTContext().hasSameType(VarX->getType(), VarY->getType());
+    return VarX->getType().isNull() || // still reading
+      VarY->getType().isNull() ||
+      ((VarX->getLinkage() == VarY->getLinkage()) &&
+       VarX->getASTContext().hasSameType(VarX->getType(), VarY->getType()));
   }
   
   // Namespaces with the same name and inlinedness match.
@@ -1765,10 +1778,6 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
     NamespaceDecl *NamespaceY = cast<NamespaceDecl>(Y);
     return NamespaceX->isInline() == NamespaceY->isInline();
   }
-
-  // Identical template names and kinds match.
-  if (isa<TemplateDecl>(X))
-    return true;
 
   // FIXME: Many other cases to implement.
   return false;
