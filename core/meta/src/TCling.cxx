@@ -652,16 +652,6 @@ TCling::TCling(const char *name, const char *title)
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
 
-   // Set the patch for searching for modules
-#ifndef ROOTINCDIR
-   TString dictDir = getenv("ROOTSYS");
-   dictDir += "/lib";
-#else // ROOTINCDIR
-   TString dictDir = ROOTLIBDIR;
-#endif // ROOTINCDIR
-   clang::HeaderSearch& HS = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo();
-   HS.setModuleCachePath(dictDir.Data());
-
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter);
 
    fInterpreter->declare("namespace std {} using namespace std;");

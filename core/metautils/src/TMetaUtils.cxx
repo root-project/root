@@ -1036,6 +1036,10 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
    clang::Preprocessor& PP = CI->getPreprocessor();
    clang::ModuleMap& ModuleMap = PP.getHeaderSearchInfo().getModuleMap();
 
+   // Set the patch for searching for modules
+   clang::HeaderSearch& HS = CI->getPreprocessor().getHeaderSearchInfo();
+   HS.setModuleCachePath(llvm::sys::path::parent_path(moduleFileName));
+
    llvm::StringRef moduleName = llvm::sys::path::filename(moduleFileName);
    moduleName = llvm::sys::path::stem(moduleName);
 
