@@ -22,6 +22,8 @@ ToyMCSampler as its TestStatSampler.
 
 #include "RooAddPdf.h"
 
+#include "RooRandom.h"
+
 
 ClassImp(RooStats::HypoTestCalculatorGeneric)
 
@@ -40,7 +42,8 @@ HypoTestCalculatorGeneric::HypoTestCalculatorGeneric(
    fData(&data),
    fTestStatSampler(sampler),
    fDefaultSampler(0),
-   fDefaultTestStat(0)
+   fDefaultTestStat(0),
+   fAltToysSeed(0)
 {
    // Constructor. When test stat sampler is not provided
    // uses ToyMCSampler and RatioOfProfiledLikelihoodsTestStat
@@ -184,6 +187,15 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    SamplingDistribution* samp_alt = NULL;
    RooDataSet* detOut_alt = NULL;
    if(toymcs) {
+
+      // case of re-using same toys for every points
+      // set a given seed 
+      unsigned int prevSeed = 0;
+      if (fAltToysSeed > 0) { 
+         prevSeed = RooRandom::integer(std::numeric_limits<unsigned int>::max()-1)+1;  // want to avoid zero value
+         RooRandom::randomGenerator()->SetSeed(fAltToysSeed);
+      }
+
       detOut_alt = toymcs->GetSamplingDistributions(paramPointAlt);
       if( detOut_alt ) {
         samp_alt = new SamplingDistribution( detOut_alt->GetName(), detOut_alt->GetTitle(), *detOut_alt );
@@ -192,6 +204,12 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
           detOut_alt= 0;
         }
       }
+
+      // restore the seed 
+      if (prevSeed > 0) { 
+         RooRandom::randomGenerator()->SetSeed(prevSeed);
+      }
+
    }else samp_alt = fTestStatSampler->GetSamplingDistribution(paramPointAlt);
 
 
@@ -224,6 +242,11 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    return res;
 }
 
-
+//____________________________________________________
+void HypoTestCalculatorGeneric::UseSameAltToys()  {
+   // to re-use same toys for alternate hypothesis
+   fAltToysSeed = RooRandom::integer(std::numeric_limits<unsigned int>::max()-1)+1;
+}
+   
 
 

@@ -76,6 +76,12 @@ namespace RooStats {
       // TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
       TestStatSampler* GetTestStatSampler(void) const { return fTestStatSampler; }
 
+      // set this for re-using always the same toys for alternate hypothesis in 
+      // case of calls at dofferent null parameter points
+      // This is useful to get more stable bands when running the HypoTest inversion
+      void UseSameAltToys(); 
+      
+
    protected:
       // should return zero (to be used later for conditional flow)
       virtual int CheckHook(void) const { return 0; }
@@ -92,6 +98,8 @@ namespace RooStats {
       TestStatSampler *fDefaultSampler;
       TestStatistic *fDefaultTestStat;
 
+      unsigned int fAltToysSeed;   // to have same toys for alternate 
+
    private:
       void SetupSampler(const ModelConfig& model) const;
       void SetAdaptiveLimits(Double_t obsTestStat, Bool_t forNull) const;
@@ -104,7 +112,7 @@ namespace RooStats {
 
 
    protected:
-   ClassDef(HypoTestCalculatorGeneric,1)
+   ClassDef(HypoTestCalculatorGeneric,2)
 };
 }
 
