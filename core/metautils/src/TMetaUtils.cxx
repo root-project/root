@@ -309,7 +309,7 @@ static bool CXXRecordDecl__FindOrdinaryMember(const clang::CXXBaseSpecifier *Spe
    const clang::FieldDecl *found = R__GetDataMemberFromAll(*clxx,(const char*)Name);
    if (found) {
       // Humm, this is somewhat bad (well really bad), oh well.
-      // Let's hope Paths never things its own those (it should not as far as I can tell).
+      // Let's hope Paths never thinks it owns those (it should not as far as I can tell).
       Path.Decls.first  = (clang::NamedDecl**)found;
       Path.Decls.second = 0;
       return true;
@@ -342,7 +342,7 @@ static const clang::FieldDecl *R__GetDataMemberFromAllParents(const clang::CXXRe
    clang::CXXBasePaths Paths;
    Paths.setOrigin(const_cast<clang::CXXRecordDecl*>(&cl));
    if (cl.lookupInBases(&CXXRecordDecl__FindOrdinaryMember,
-                        (void*) what,
+                        (void*) const_cast<char*>(what),
                         Paths) )
    {
       clang::CXXBasePaths::paths_iterator iter = Paths.begin();
