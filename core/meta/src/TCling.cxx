@@ -659,6 +659,18 @@ TCling::TCling(const char *name, const char *title)
                          "#include <string>\n"
                          "using namespace std;");
 
+   // The sole purpose of this include is to avoid the JIT complaing:
+   /*
+    ExecutionContext: use of undefined symbol '_ZNK7TString8ContainsEPKcNS_12ECaseCompareE'!
+    ExecutionContext: use of undefined symbol '_ZN7TString10ReplaceAllERKS_S1_'!
+    ExecutionContext::executeFunction: symbol '_ZN7TString10ReplaceAllERKS_S1_' unresolved while linking function '_Z15__cling_Un1Qu34v'!
+    ExecutionContext::executeFunction: symbol '_ZNK7TString8ContainsEPKcNS_12ECaseCompareE' unresolved while linking function '_Z15__cling_Un1Qu34v'!
+    */
+   // Indeed the cause and effect of this solution is unknown, but it
+   // make roottest go until we really find the problem with the inline 
+   // functions.
+   fInterpreter->declare("#include \"TCling.h\"");
+
   
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
