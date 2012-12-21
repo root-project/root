@@ -654,15 +654,11 @@ TCling::TCling(const char *name, const char *title)
 
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter);
 
-   fInterpreter->declare("namespace std {} using namespace std;");
-
    // For the list to also include string, we have to include it now.
-   fInterpreter->declare("#include \"Rtypes.h\"\n#include <string>");
+   fInterpreter->declare("#include \"Rtypes.h\"\n"
+                         "#include <string>\n"
+                         "using namespace std;");
 
-   // During the loading of the first modules, RegisterModule which can calls Info
-   // which needs the TClass for TCling, which in turns need the 'dictionary'
-   // information to be loaded:
-   fInterpreter->declare("#include \"TCling.h\"");
   
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
@@ -837,10 +833,12 @@ void TCling::RegisterModule(const char* modulename,
    }
 
    if (!gSystem->FindFile(searchPath, pcmFileName)) {
-      Error("RegisterModule", "cannot find dictionary module %s in %s",
+      ::Error("TCintWithCling::RegisterModule", "cannot find dictionary module %s in %s",
             ROOT::TMetaUtils::GetModuleFileName(modulename).c_str(), searchPath.Data());
    } else {
-      if (gDebug > 5) Info("RegisterModule", "Loading PCM %s", pcmFileName.Data());
+      if (gDebug > 5) {
+         ::Info("TCintWithCling::RegisterModule", "Loading PCM %s", pcmFileName.Data());
+      }
       clang::CompilerInstance* CI = fInterpreter->getCI();
       ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
    }
@@ -850,7 +848,9 @@ void TCling::RegisterModule(const char* modulename,
      oldValue = SetClassAutoloading(false);
 
    for (const char** hdr = headers; *hdr; ++hdr) {
-      if (gDebug > 5) Info("RegisterModule", "   #including %s...", *hdr);
+      if (gDebug > 5) {
+         ::Info("TCintWithCling::RegisterModule", "   #including %s...", *hdr);
+      }
       fInterpreter->parse(TString::Format("#include \"%s\"", *hdr).Data());
    }
 
