@@ -387,9 +387,10 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
 
       // set variables to requested parameter point
       *allVars = *saveAll; // important for example for SimpleLikelihoodRatioTestStat
-      *allVars = *fParametersForTestStat;
       
       RooAbsData* toydata = GenerateToyData(*paramPoint, weight);
+
+      *allVars = *fParametersForTestStat;
 
       const RooArgList* allTS = EvaluateAllTestStatistics(*toydata, *fParametersForTestStat, detOutAgg);
       if (allTS->getSize() > Int_t(fTestStatistics.size()))
