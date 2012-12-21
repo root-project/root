@@ -669,7 +669,7 @@ TCling::TCling(const char *name, const char *title)
    // Indeed the cause and effect of this solution is unknown, but it
    // make roottest go until we really find the problem with the inline 
    // functions.
-   fInterpreter->declare("#include \"TCling.h\"");
+   fInterpreter->declare("#include \"TString.h\"");
 
   
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
