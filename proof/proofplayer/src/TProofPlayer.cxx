@@ -2414,7 +2414,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                }
                // If only one instance the list in the merger is not yet created: do it now
                if (!pf->IsMerged()) {
-                  pf->Print();
+                  PDB(kOutput,2) pf->Print();
                   TString fileLoc = TString::Format("%s/%s", pf->GetDir(), pf->GetFileName());
                   filemerger->AddFile(fileLoc);
                }
@@ -2542,7 +2542,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                fOutput->Remove(pf);
                if (!rmList) rmList = new TList;
                rmList->Add(pf);
-                  fOutput->Print();
+               PDB(kOutput,2) fOutput->Print();
             }
          }
       }

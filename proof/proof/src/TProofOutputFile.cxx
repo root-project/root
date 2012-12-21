@@ -379,7 +379,7 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
          // Add special local URL to keep track of the file
          path.Form("%s/%s?node=%s", GetDir(kTRUE), GetFileName(), GetLocalHost());
          fi->AddUrl(path);
-         fi->Print();
+         PDB(kOutput,2) fi->Print();
          // Now add to the dataset
          dataset->Add(fi);
       }
@@ -405,7 +405,7 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
             // Add special local URL to keep track of the file
             path.Form("%s/%s?node=%s", pFile->GetDir(kTRUE), pFile->GetFileName(), pFile->GetLocalHost());
             fi->AddUrl(path);
-            fi->Print();
+            PDB(kOutput,2) fi->Print();
             // Now add to the dataset
             dataset->Add(fi);
          }
