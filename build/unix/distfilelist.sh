@@ -21,6 +21,7 @@ fi
 mv -f tutorials/gallery.root tutorials/gallery.root-
 mv -f tutorials/mlp/mlpHiggs.root tutorials/mlp/mlpHiggs.root-
 mv -f tutorials/quadp/stock.root tutorials/quadp/stock.root-
+mv -f tutorials/proof/ntprndm.root tutorials/proof/ntprndm.root-
 find tutorials -name "*.root" -exec rm -rf {} \; >/dev/null 2>&1;true
 find tutorials -name "*.ps" -exec rm -rf {} \; >/dev/null 2>&1;true
 find tutorials -path tutorials/doc -prune -o -name "*.gif" -exec rm -rf {} \; >/dev/null 2>&1;true
@@ -33,6 +34,7 @@ find tutorials -name "work.pcl" -exec rm -rf {} \; >/dev/null 2>&1;true
 mv -f tutorials/gallery.root- tutorials/gallery.root
 mv -f tutorials/mlp/mlpHiggs.root- tutorials/mlp/mlpHiggs.root
 mv -f tutorials/quadp/stock.root- tutorials/quadp/stock.root
+mv -f tutorials/proof/ntprndm.root- tutorials/proof/ntprndm.root
 
 # mixture of files, wildcards, and directories
 WILDCARDS="LICENSE README bin \
