@@ -56,7 +56,7 @@ private:
    AParamType  fVal;
 
 public:
-   TParameter() { /* leave fVal uninitialized */ }
+   TParameter(): fVal() {}
    TParameter(const char *name, const AParamType &val)
              : fName(name), fVal(val) { ResetBit(kMultiply); }
    TParameter(const char *name, const AParamType &val, char mergemode)
