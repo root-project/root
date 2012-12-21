@@ -80,6 +80,13 @@ int initialFit = -1;                     // do a first  fit to the model (-1 : d
 int randomSeed = -1;                     // random seed (if = -1: use default value, if = 0 always random )
                                          // NOTE: Proof uses automatically a random seed
 
+int nAsimovBins = 0;                     // number of bins in observables used for Asimov data sets (0 is the default and it is given by workspace, typically is 100)
+
+bool reuseAltToys = false;                // reuse same toys for alternate hypothesis (if set one gets more stable bands)
+
+
+
+
 std::string massValue = "";              // extra string to tag output file of result 
 std::string  minimizerType = "";                  // minimizer type (default is what is in ROOT::Math::MinimizerOptions::DefaultMinimizerType()
 int   printLevel = 0;                    // print level for debugging PL test statistics and calculators  
@@ -130,6 +137,7 @@ namespace RooStats {
       bool mGenerateBinned;
       bool mUseProof;
       bool mRebuild;
+      bool mReuseAltToys; 
       int     mNWorkers;
       int     mNToyToRebuild;
       int     mPrintLevel;
@@ -137,6 +145,7 @@ namespace RooStats {
       int     mRandomSeed; 
       double  mNToysRatio;
       double  mMaxPoi;
+      int mAsimovBins;
       std::string mMassValue;
       std::string mMinimizerType;                  // minimizer type (default is what is in ROOT::Math::MinimizerOptions::DefaultMinimizerType()
       TString     mResultFileName; 
@@ -151,6 +160,7 @@ RooStats::HypoTestInvTool::HypoTestInvTool() : mPlotHypoTestResult(true),
                                                mGenerateBinned(false),
                                                mUseProof(false),
                                                mRebuild(false),
+                                               mReuseAltToys(false),
                                                mNWorkers(4),
                                                mNToyToRebuild(100),
                                                mPrintLevel(0),
@@ -158,6 +168,7 @@ RooStats::HypoTestInvTool::HypoTestInvTool() : mPlotHypoTestResult(true),
                                                mRandomSeed(-1),
                                                mNToysRatio(2),
                                                mMaxPoi(-1),
+                                               mAsimovBins(0),
                                                mMassValue(""),
                                                mMinimizerType(""),
                                                mResultFileName() {
@@ -180,6 +191,7 @@ RooStats::HypoTestInvTool::SetParameter(const char * name, bool value){
    if (s_name.find("GenerateBinned") != std::string::npos) mGenerateBinned = value;
    if (s_name.find("UseProof") != std::string::npos) mUseProof = value;
    if (s_name.find("Rebuild") != std::string::npos) mRebuild = value;
+   if (s_name.find("ReuseAltToys") != std::string::npos) mReUseAltToys = value;
 
    return;
 }
@@ -199,6 +211,7 @@ RooStats::HypoTestInvTool::SetParameter(const char * name, int value){
    if (s_name.find("PrintLevel") != std::string::npos) mPrintLevel = value;
    if (s_name.find("InitialFit") != std::string::npos) mInitialFit = value;
    if (s_name.find("RandomSeed") != std::string::npos) mRandomSeed = value;
+   if (s_name.find("AsimovBins") != std::string::npos) mAsimovBins = value;
 
    return;
 }
@@ -352,6 +365,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
    calc.SetParameter("UseProof", useProof);
    calc.SetParameter("NWorkers", nworkers);
    calc.SetParameter("Rebuild", rebuild);
+   calc.SetParameter("ReuseAltToys", reuseAltToys);
    calc.SetParameter("NToyToRebuild", nToyToRebuild);
    calc.SetParameter("MassValue", massValue.c_str());
    calc.SetParameter("MinimizerType", minimizerType.c_str());
@@ -359,6 +373,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
    calc.SetParameter("InitialFit",initialFit);
    calc.SetParameter("ResultFileName",resultFileName);
    calc.SetParameter("RandomSeed",randomSeed);
+   calc.SetParameter("AsimovBins",nAsimovBins);
 
 
    RooWorkspace * w = dynamic_cast<RooWorkspace*>( file->Get(wsName) );
@@ -737,8 +752,8 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    HypoTestCalculatorGeneric *  hc = 0;
    if (type == 0) hc = new FrequentistCalculator(*data, *bModel, *sbModel);
    else if (type == 1) hc = new HybridCalculator(*data, *bModel, *sbModel);
-   else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel);
-   else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true);  // for using Asimov data generated with nominal values 
+   else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, false, mAsimovBins);
+   else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true, mAsimovBins);  // for using Asimov data generated with nominal values 
    else {
       Error("StandardHypoTestInvDemo","Invalid - calculator type = %d supported values are only :\n\t\t\t 0 (Frequentist) , 1 (Hybrid) , 2 (Asymptotic) ",type);
       return 0;
@@ -795,6 +810,10 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
     
    }
   
+   // specify if need to re-use same toys
+   if (reuseAltToys) {
+      hc->UseSameAltToys();
+   }
   
    if (type == 1) { 
       HybridCalculator *hhc = dynamic_cast<HybridCalculator*> (hc);
