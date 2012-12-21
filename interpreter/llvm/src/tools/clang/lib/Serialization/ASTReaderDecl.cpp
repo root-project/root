@@ -322,7 +322,9 @@ void ASTDeclReader::Visit(Decl *D) {
     // FunctionDecl's body was written last after all other Stmts/Exprs.
     if (Record[Idx++])
       FD->setLazyBody(GetCurrentCursorOffset());
-  } else if (D->isTemplateParameter()) {
+  }
+  // no else, might be TemplateTypeParmDecl which is also a TypeDecl
+  if (D->isTemplateParameter()) {
     // If we have a fully initialized template parameter, we can now
     // set its DeclContext.
     DeclContext *SemaDC = cast<DeclContext>(
