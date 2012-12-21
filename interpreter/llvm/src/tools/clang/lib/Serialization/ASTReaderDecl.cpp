@@ -1209,6 +1209,82 @@ void ASTDeclReader::VisitCXXRecordDecl(CXXRecordDecl *D) {
   }
 }
 
+/// \brief Determine whether the two declarations refer to the same entity.
+static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
+  assert(X->getDeclName() == Y->getDeclName() && "Declaration name mismatch!");
+  
+  if (X == Y)
+    return true;
+  
+  // Must be in the same context.
+  if (!X->getDeclContext()->getRedeclContext()->Equals(
+         Y->getDeclContext()->getRedeclContext()))
+    return false;
+
+  // Two typedefs refer to the same entity if they have the same underlying
+  // type.
+  if (TypedefNameDecl *TypedefX = dyn_cast<TypedefNameDecl>(X))
+    if (TypedefNameDecl *TypedefY = dyn_cast<TypedefNameDecl>(Y))
+      return X->getASTContext().hasSameType(TypedefX->getUnderlyingType(),
+                                            TypedefY->getUnderlyingType());
+  
+  // Must have the same kind.
+  if (X->getKind() != Y->getKind())
+    return false;
+    
+  // Objective-C classes and protocols with the same name always match.
+  if (isa<ObjCInterfaceDecl>(X) || isa<ObjCProtocolDecl>(X))
+    return true;
+  
+  // Identical template names and kinds match for equal number of args.
+  if (TemplateDecl* TDX = dyn_cast<TemplateDecl>(X)) {
+    TemplateDecl* TDY = dyn_cast<TemplateDecl>(Y);
+    return (TDX->getTemplateParameters()->size()
+            == TDY->getTemplateParameters()->size());
+  }
+
+  // Compatible tags match.
+  if (TagDecl *TagX = dyn_cast<TagDecl>(X)) {
+    TagDecl *TagY = cast<TagDecl>(Y);
+    return !TagX->getTypeForDecl() || // still reading
+      !TagY->getTypeForDecl() ||
+      (TagX->getTagKind() == TagY->getTagKind()) ||
+      ((TagX->getTagKind() == TTK_Struct || TagX->getTagKind() == TTK_Class ||
+        TagX->getTagKind() == TTK_Interface) &&
+       (TagY->getTagKind() == TTK_Struct || TagY->getTagKind() == TTK_Class ||
+        TagY->getTagKind() == TTK_Interface));
+  }
+  
+  // Functions with the same type and linkage match.
+  // FIXME: This needs to cope with function templates, merging of 
+  //prototyped/non-prototyped functions, etc.
+  if (FunctionDecl *FuncX = dyn_cast<FunctionDecl>(X)) {
+    FunctionDecl *FuncY = cast<FunctionDecl>(Y);
+    return FuncX->getType().isNull() || // still reading
+      FuncY->getType().isNull() ||
+      ((FuncX->getLinkage() == FuncY->getLinkage()) &&
+       FuncX->getASTContext().hasSameType(FuncX->getType(), FuncY->getType()));
+  }
+
+  // Variables with the same type and linkage match.
+  if (VarDecl *VarX = dyn_cast<VarDecl>(X)) {
+    VarDecl *VarY = cast<VarDecl>(Y);
+    return VarX->getType().isNull() || // still reading
+      VarY->getType().isNull() ||
+      ((VarX->getLinkage() == VarY->getLinkage()) &&
+       VarX->getASTContext().hasSameType(VarX->getType(), VarY->getType()));
+  }
+  
+  // Namespaces with the same name and inlinedness match.
+  if (NamespaceDecl *NamespaceX = dyn_cast<NamespaceDecl>(X)) {
+    NamespaceDecl *NamespaceY = cast<NamespaceDecl>(Y);
+    return NamespaceX->isInline() == NamespaceY->isInline();
+  }
+
+  // FIXME: Many other cases to implement.
+  return false;
+}
+
 void ASTDeclReader::VisitCXXMethodDecl(CXXMethodDecl *D) {
   VisitFunctionDecl(D);
   unsigned NumOverridenMethods = Record[Idx++];
@@ -1705,82 +1781,6 @@ ASTReader::RecordLocation ASTReader::getLocalBitOffset(uint64_t GlobalOffset) {
 
 uint64_t ASTReader::getGlobalBitOffset(ModuleFile &M, uint32_t LocalOffset) {
   return LocalOffset + M.GlobalBitOffset;
-}
-
-/// \brief Determine whether the two declarations refer to the same entity.
-static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
-  assert(X->getDeclName() == Y->getDeclName() && "Declaration name mismatch!");
-  
-  if (X == Y)
-    return true;
-  
-  // Must be in the same context.
-  if (!X->getDeclContext()->getRedeclContext()->Equals(
-         Y->getDeclContext()->getRedeclContext()))
-    return false;
-
-  // Two typedefs refer to the same entity if they have the same underlying
-  // type.
-  if (TypedefNameDecl *TypedefX = dyn_cast<TypedefNameDecl>(X))
-    if (TypedefNameDecl *TypedefY = dyn_cast<TypedefNameDecl>(Y))
-      return X->getASTContext().hasSameType(TypedefX->getUnderlyingType(),
-                                            TypedefY->getUnderlyingType());
-  
-  // Must have the same kind.
-  if (X->getKind() != Y->getKind())
-    return false;
-    
-  // Objective-C classes and protocols with the same name always match.
-  if (isa<ObjCInterfaceDecl>(X) || isa<ObjCProtocolDecl>(X))
-    return true;
-  
-  // Identical template names and kinds match for equal number of args.
-  if (TemplateDecl* TDX = dyn_cast<TemplateDecl>(X)) {
-    TemplateDecl* TDY = dyn_cast<TemplateDecl>(Y);
-    return (TDX->getTemplateParameters()->size()
-            == TDY->getTemplateParameters()->size());
-  }
-
-  // Compatible tags match.
-  if (TagDecl *TagX = dyn_cast<TagDecl>(X)) {
-    TagDecl *TagY = cast<TagDecl>(Y);
-    return !TagX->getTypeForDecl() || // still reading
-      !TagY->getTypeForDecl() ||
-      (TagX->getTagKind() == TagY->getTagKind()) ||
-      ((TagX->getTagKind() == TTK_Struct || TagX->getTagKind() == TTK_Class ||
-        TagX->getTagKind() == TTK_Interface) &&
-       (TagY->getTagKind() == TTK_Struct || TagY->getTagKind() == TTK_Class ||
-        TagY->getTagKind() == TTK_Interface));
-  }
-  
-  // Functions with the same type and linkage match.
-  // FIXME: This needs to cope with function templates, merging of 
-  //prototyped/non-prototyped functions, etc.
-  if (FunctionDecl *FuncX = dyn_cast<FunctionDecl>(X)) {
-    FunctionDecl *FuncY = cast<FunctionDecl>(Y);
-    return FuncX->getType().isNull() || // still reading
-      FuncY->getType().isNull() ||
-      ((FuncX->getLinkage() == FuncY->getLinkage()) &&
-       FuncX->getASTContext().hasSameType(FuncX->getType(), FuncY->getType()));
-  }
-
-  // Variables with the same type and linkage match.
-  if (VarDecl *VarX = dyn_cast<VarDecl>(X)) {
-    VarDecl *VarY = cast<VarDecl>(Y);
-    return VarX->getType().isNull() || // still reading
-      VarY->getType().isNull() ||
-      ((VarX->getLinkage() == VarY->getLinkage()) &&
-       VarX->getASTContext().hasSameType(VarX->getType(), VarY->getType()));
-  }
-  
-  // Namespaces with the same name and inlinedness match.
-  if (NamespaceDecl *NamespaceX = dyn_cast<NamespaceDecl>(X)) {
-    NamespaceDecl *NamespaceY = cast<NamespaceDecl>(Y);
-    return NamespaceX->isInline() == NamespaceY->isInline();
-  }
-
-  // FIXME: Many other cases to implement.
-  return false;
 }
 
 ASTDeclReader::FindExistingResult::~FindExistingResult() {
