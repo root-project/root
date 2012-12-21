@@ -281,6 +281,9 @@ private:
   /// = I + 1 has already been loaded.
   std::vector<Decl *> DeclsLoaded;
 
+  /// \brief Declarations that are being loaded.
+  llvm::SmallSet<Decl *, 64> DeclsInFlight;
+
   typedef ContinuousRangeMap<serialization::DeclID, ModuleFile *, 4>
     GlobalDeclMapType;
 
@@ -1156,6 +1159,8 @@ public:
   /// building a new declaration.
   Decl *GetDecl(serialization::DeclID ID);
   virtual Decl *GetExternalDecl(uint32_t ID);
+
+  bool isDeclInFlight(Decl* D) { return DeclsInFlight.count(D); }
 
   /// \brief Reads a declaration with the given local ID in the given module.
   Decl *GetLocalDecl(ModuleFile &F, uint32_t LocalID) {

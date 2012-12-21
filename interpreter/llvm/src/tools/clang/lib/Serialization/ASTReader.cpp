@@ -4967,7 +4967,7 @@ namespace {
       ASTDeclContextNameLookupTrait::data_type Data = *Pos;
       for (; Data.first != Data.second; ++Data.first) {
         NamedDecl *ND = This->Reader.GetLocalDeclAs<NamedDecl>(M, *Data.first);
-        if (!ND)
+        if (!ND || This->Reader.isDeclInFlight(ND))
           continue;
 
         if (ND->getDeclName() != This->Name) {
