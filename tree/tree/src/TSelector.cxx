@@ -194,14 +194,14 @@ TSelector *TSelector::GetSelector(const char *filename)
             ::Error("TSelector::GetSelector",
                     "class %s does not exist or does not derive from TSelector", filename);
       }
-      gCint->ClassInfo_Delete(cl);
+      gCling->ClassInfo_Delete(cl);
       return 0;
    }
 
    // we can now create an instance of the class
    TSelector *selector = (TSelector*)gCling->ClassInfo_New(cl);
    if (!selector || isCompiled) { 
-      gCint->ClassInfo_Delete(cl);
+      gCling->ClassInfo_Delete(cl);
       return selector;
    }
 
