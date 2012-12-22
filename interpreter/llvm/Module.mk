@@ -140,6 +140,9 @@ $(LLVMDEPO): $(LLVMDEPS)
 		if [ $(LIBCXX11) = "yes" ]; then \
 			LLVMLIBCXX11="--enable-libcpp"; \
 		fi; \
+		if [ "x$$LLVM_EXTRA_OPTIONS" = "x" ]; then \
+			LLVM_EXTRA_OPTIONS="--with-extra-options="; \
+		fi; \
 		echo "*** Configuring LLVM in $(dir $@) ..."; \
 		mkdir -p $(dir $@) && \
 		cd $(dir $@)  && \
