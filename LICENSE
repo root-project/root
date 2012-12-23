@@ -295,7 +295,7 @@ of these things:
     Library will not necessarily be able to recompile the application
     to use the modified definitions.)
 
-    b) Use a suitable shared library mechanism for linking with the
+    b) Use a suitable 	shared library mechanism for linking with the
     Library.  A suitable mechanism is one that (1) uses at run time a
     copy of the library already present on the user's computer system,
     rather than copying library functions into the executable, and (2)
@@ -308,7 +308,9 @@ of these things:
     specified in Subsection 6a, above, for a charge no more
     than the cost of performing this distribution.
 
-    d) If distribution of the work is made by offering access to copy
+    d) If distribution of the 
+		
+work is made by offering access to copy
     from a designated place, offer equivalent access to copy the above
     specified materials from the same place.
 
