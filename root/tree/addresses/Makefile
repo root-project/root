@@ -174,6 +174,10 @@ deepnest: deepnest.clog
 baseString: baseString.clog
 	$(TestDiffW)
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+prova.log: CALLROOTEXE += -e 'gSystem->Load("libMinuit");'
+endif
+
 prova: prova.log
 	$(TestDiffW)
 

@@ -13,12 +13,18 @@ constargs_test : constargs
 constargs : constargs.clog
 	$(TestDiffCintSpecific) && touch $@
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+formio.log: CALLROOTEXE += -e 'gSystem->Load("libHist");gSystem->Load("libRIO");gSystem->Load("libGpad");'
+endif
 
 formio_test : formio
 
 formio : formio.log
 	$(TestDiff) && touch $@
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+execGetExp.log assertTernary.elog string.log recurse.log: CALLROOTEXE += -e 'gSystem->Load("libHist");gSystem->Load("libRIO");'
+endif
 
 recurse_test : recurse
 

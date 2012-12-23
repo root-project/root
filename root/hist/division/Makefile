@@ -59,7 +59,9 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+testTEfficiency.log: CALLROOTEXE += -e 'gSystem->Load("libHist");gSystem->Load("libRIO");'
+endif
 
 testTEfficiency: testTEfficiency.log
 ifeq ($(ClingWorkAroundJITandInline),)

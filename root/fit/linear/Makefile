@@ -59,6 +59,9 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+storing.log: CALLROOTEXE += -e 'gSystem->Load("libMinuit");'
+endif
 
 
 storing: storing.log
