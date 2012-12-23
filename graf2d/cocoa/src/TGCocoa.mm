@@ -307,6 +307,39 @@ bool ParentRendersToChild(NSView<X11Window> *child)
           !child.fIsOverlapped;
 }
 
+//______________________________________________________________________________
+bool IsNonPrintableAsciiCharacter(UniChar c)
+{
+   if (c == 9 || (c >= 32 && c < 127))
+      return false;
+   
+   return true;
+}
+
+//______________________________________________________________________________
+void FixAscii(std::vector<UniChar> &text)
+{
+   //GUI text is essentially ASCII. Our GUI
+   //calculates text metrix 'per-symbol', this means,
+   //it never asks about 'Text' metrics, but 'T', 'e', 'x', 't'.
+   //Obviously, text does not fit any widget because of
+   //this and I have to place all glyphs manually.
+   //And here I have another problem from our GUI - it
+   //can easily feed TGCocoa with non-printable symbols
+   //(this is a bug). Obviously, I do not have glyphs for, say, form feed
+   //or 'data link escape'. So I have to fix ascii text before
+   //manual glyph rendering: DLE symbol - replaced by space (this
+   //is done in TGText, but due to a bug it fails to replace them all)
+   //Other non-printable symbols simply removed (and thus ignored).
+   
+   //Replace remaining ^P symbols with whitespaces, I have not idea why
+   //TGTextView replaces only part of them and not all of them.
+   std::replace(text.begin(), text.end(), UniChar(16), UniChar(' '));
+
+   //Now, remove remaining non-printable characters (no glyphs exist for them).
+   text.erase(std::remove_if(text.begin(), text.end(), IsNonPrintableAsciiCharacter), text.end());
+}
+
 }
 
 ClassImp(TGCocoa)
@@ -2010,10 +2043,7 @@ void TGCocoa::DrawStringAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, I
    //GUI uses non-ascii symbols, and does not care about signed/unsigned - just dump everything
    //into a char and be happy. I'm not.
    std::vector<UniChar> unichars((unsigned char *)text, (unsigned char *)text + len);
-
-   //Replace remaining ^P symbols with whitespaces, I have not idea why
-   //TGTextView replaces only part of them and not all of them (but I know the name for such a behavior - BUG).
-   std::replace(unichars.begin(), unichars.end(), UniChar(16), UniChar(' '));
+   FixAscii(unichars);
    
    Quartz::DrawTextLineNoKerning(ctx, (CTFontRef)gcVals.fFont, unichars, x,  X11::LocalYROOTToCocoa(drawable, y));
 }
