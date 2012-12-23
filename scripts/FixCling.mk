@@ -82,4 +82,6 @@ ClingWorkAroundEmulatedProxyPair = yes
 # ClingReinstateRedeclarationAllowed = yes     # See https://savannah.cern.ch/bugs/index.php?99396 
 # ClingReinstateImplicitDynamicCast = yes      # See https://savannah.cern.ch/bugs/index.php?99395
 
-
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+CALLROOTEXE += -e 'gSystem->Load("libTreePlayer"); gSystem->Load("libPhysics");'
+endif
