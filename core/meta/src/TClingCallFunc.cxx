@@ -748,15 +748,15 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues,
    if (num_given_args < min_args) {
       // Not all required arguments given.
       Error("TClingCallFunc::Invoke",
-            "Not enough function arguments given (min: %u max:%u, given: %lu)",
-            min_args, num_params, num_given_args);
+            "Not enough function arguments given to %s (min: %u max:%u, given: %lu)",
+            fMethod->Name(), min_args, num_params, num_given_args);
       return;
    }
    else if (num_given_args > num_params) {
       if (!fIgnoreExtraArgs) {
          Error("TClingCallFunc::Invoke",
-               "Too many function arguments given (min: %u max: %u, given: %lu)",
-               min_args, num_params, num_given_args);
+               "Too many function arguments given to %s (min: %u max: %u, given: %lu)",
+               fMethod->Name(), min_args, num_params, num_given_args);
          return;
       }
    }
