@@ -361,16 +361,16 @@ void TEveTrack::MakeTrack(Bool_t recurse)
       {
          TEveVectorD currP = fP;
          Bool_t decay = kFALSE;
-         fPropagator->InitTrack(fV, fCharge);
+         rTP.InitTrack(fV, fCharge);
          for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm, ++fLastPMIdx)
          {
-            Int_t start_point = fPropagator->GetCurrentPoint();
+            Int_t start_point = rTP.GetCurrentPoint();
 
             if (rTP.GetFitReferences() && pm->fType == TEvePathMarkD::kReference)
             {
                if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
                   break;
-               if (fPropagator->GoToVertex(pm->fV, currP))
+               if (rTP.GoToVertex(pm->fV, currP))
                {
                   currP.fX = pm->fP.fX; currP.fY = pm->fP.fY; currP.fZ = pm->fP.fZ;
                }
@@ -383,12 +383,12 @@ void TEveTrack::MakeTrack(Bool_t recurse)
             {
                if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
                   break;
-               if (fPropagator->GoToVertex(pm->fV, currP))
+               if (rTP.GoToVertex(pm->fV, currP))
                {
                   currP.fX -= pm->fP.fX; currP.fY -= pm->fP.fY; currP.fZ -= pm->fP.fZ;
                   if (fDpDs != 0)
                   {
-                     Double_t dp = fDpDs * fPropagator->GetTrackLength(start_point);
+                     Double_t dp = fDpDs * rTP.GetTrackLength(start_point);
                      Double_t p  = currP.Mag();
                      if (p > dp)   currP *= 1.0 - dp / p;
                   }
@@ -402,7 +402,7 @@ void TEveTrack::MakeTrack(Bool_t recurse)
             {
                if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
                   break;
-               fPropagator->GoToVertex(pm->fV, currP);
+               rTP.GoToVertex(pm->fV, currP);
                decay = kTRUE;
                ++fLastPMIdx;
                break;
@@ -410,18 +410,18 @@ void TEveTrack::MakeTrack(Bool_t recurse)
             else if (rTP.GetFitCluster2Ds() && pm->fType == TEvePathMarkD::kCluster2D)
             {
                TEveVectorD itsect;
-               if (fPropagator->IntersectPlane(currP, pm->fV, pm->fP, itsect))
+               if (rTP.IntersectPlane(currP, pm->fV, pm->fP, itsect))
                {
                   TEveVectorD delta   = itsect - pm->fV;
                   TEveVectorD vtopass = pm->fV + pm->fE*(pm->fE.Dot(delta));
                   if (TEveTrackPropagator::IsOutsideBounds(vtopass, maxRsq, maxZ))
                      break;
-                  if ( ! fPropagator->GoToVertex(vtopass, currP))
+                  if ( ! rTP.GoToVertex(vtopass, currP))
                      break;
 
                   if (fDpDs != 0)
                   {
-                     Double_t dp = fDpDs * fPropagator->GetTrackLength(start_point);
+                     Double_t dp = fDpDs * rTP.GetTrackLength(start_point);
                      Double_t p  = currP.Mag();
                      if (p > dp)   currP *= 1.0 - dp / p;
                   }
@@ -436,11 +436,11 @@ void TEveTrack::MakeTrack(Bool_t recurse)
                if (TEveTrackPropagator::IsOutsideBounds(pm->fV, maxRsq, maxZ))
                   break;
 
-               if (fPropagator->GoToLineSegment(pm->fV, pm->fE, currP))
+               if (rTP.GoToLineSegment(pm->fV, pm->fE, currP))
                {
                   if (fDpDs != 0)
                   {
-                     Double_t dp = fDpDs * fPropagator->GetTrackLength(start_point);
+                     Double_t dp = fDpDs * rTP.GetTrackLength(start_point);
                      Double_t p  = currP.Mag();
                      if (p > dp)   currP *= 1.0 - dp / p;
                   }
@@ -460,12 +460,12 @@ void TEveTrack::MakeTrack(Bool_t recurse)
          if (!decay)
          {
             // printf("%s loop to bounds  \n",fName.Data() );
-            fPropagator->GoToBounds(currP);
+            rTP.GoToBounds(currP);
          }
          fPEnd = currP;
          //  make_polyline:
-         fPropagator->FillPointSet(this);
-         fPropagator->ResetTrack();
+         rTP.FillPointSet(this);
+         rTP.ResetTrack();
       }
    }
 
@@ -571,15 +571,16 @@ Bool_t TEveTrack::ShouldBreakTrack() const
 {
    // Should this track be broken in projections.
 
-   Error("ShouldBreakTrack", "Deprected -- use TEveTrackPropagator functions.");
-   return fPropagator->GetProjTrackBreaking() == TEveTrackPropagator::kPTB_Break;
+   Error("ShouldBreakTrack", "Deprecated -- use TEveTrackPropagator functions.");
+   TEveTrackPropagator& rTP((fPropagator != 0) ? *fPropagator : TEveTrackPropagator::fgDefault);
+   return rTP.GetProjTrackBreaking() == TEveTrackPropagator::kPTB_Break;
 }
 
 //______________________________________________________________________________
 UChar_t TEveTrack::GetBreakProjectedTracks() const
 {
    // Deprected -- use TEveTrackPropagator functions.
-   Error("GetBreakProjectedTracks", "Deprected -- use TEveTrackPropagator functions.");
+   Error("GetBreakProjectedTracks", "Deprecated -- use TEveTrackPropagator functions.");
    return 0;
 }
 
@@ -588,7 +589,7 @@ void TEveTrack::SetBreakProjectedTracks(UChar_t)
 {
    // Deprected -- use TEveTrackPropagator functions.
 
-   Error("SetBreakProjectedTracks", "Deprected -- use TEveTrackPropagator functions.");
+   Error("SetBreakProjectedTracks", "Deprecated -- use TEveTrackPropagator functions.");
 }
 
 //______________________________________________________________________________
@@ -694,7 +695,7 @@ void TEveTrackList::SetPropagator(TEveTrackPropagator* prop)
    if (fPropagator == prop) return;
    if (fPropagator) fPropagator->DecRefCount();
    fPropagator = prop;
-   if (fPropagator) prop->IncRefCount();
+   if (fPropagator) fPropagator->IncRefCount();
 }
 
 //==============================================================================
