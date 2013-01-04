@@ -564,54 +564,6 @@ void TEveTrack::SecSelected(TEveTrack* track)
    Emit("SecSelected(TEveTrack*)", (Long_t)track);
 }
 
-//------------------------------------------------------------------------------
-
-//______________________________________________________________________________
-Bool_t TEveTrack::ShouldBreakTrack() const
-{
-   // Should this track be broken in projections.
-
-   Error("ShouldBreakTrack", "Deprecated -- use TEveTrackPropagator functions.");
-   TEveTrackPropagator& rTP((fPropagator != 0) ? *fPropagator : TEveTrackPropagator::fgDefault);
-   return rTP.GetProjTrackBreaking() == TEveTrackPropagator::kPTB_Break;
-}
-
-//______________________________________________________________________________
-UChar_t TEveTrack::GetBreakProjectedTracks() const
-{
-   // Deprected -- use TEveTrackPropagator functions.
-   Error("GetBreakProjectedTracks", "Deprecated -- use TEveTrackPropagator functions.");
-   return 0;
-}
-
-//______________________________________________________________________________
-void TEveTrack::SetBreakProjectedTracks(UChar_t)
-{
-   // Deprected -- use TEveTrackPropagator functions.
-
-   Error("SetBreakProjectedTracks", "Deprecated -- use TEveTrackPropagator functions.");
-}
-
-//______________________________________________________________________________
-Bool_t TEveTrack::GetDefaultBreakProjectedTracks()
-{
-   // Deprected -- use TEveTrackPropagator functions.
-   // Return true if tracks get broken into several segments when the
-   // projected space consists of separate domains (like Rho-Z).
-   // Static function.
-
-   ::Error("TEveTrack::GetDefaultBreakProjectedTracks", "Deprected -- use TEveTrackPropagator functions.");
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-void TEveTrack::SetDefaultBreakProjectedTracks(Bool_t)
-{
-   // Deprected -- use TEveTrackPropagator functions.
-
-   ::Error("TEveTrack::SetDefaultBreakProjectedTracks", "Deprected -- use TEveTrackPropagator functions.");
-}
-
 
 //==============================================================================
 //==============================================================================
