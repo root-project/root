@@ -429,9 +429,10 @@ public:
 class TShutdownTimer : public TTimer {
 private:
    TProofServ    *fProofServ;
+   Int_t          fTimeout;
 
 public:
-   TShutdownTimer(TProofServ *p, Int_t delay) : TTimer(delay, kFALSE), fProofServ(p) { }
+   TShutdownTimer(TProofServ *p, Int_t delay);
 
    Bool_t Notify();
 };
