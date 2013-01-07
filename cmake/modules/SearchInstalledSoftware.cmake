@@ -71,6 +71,7 @@ if(builtin_lzma)
     ExternalProject_Add(
 	  LZMA
 	  URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz 
+	  URL_MD5  65693dc257802b6778c28ed53ecca678
 	  PREFIX LZMA
 	  INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
@@ -83,6 +84,7 @@ if(builtin_lzma)
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz 
+      URL_MD5 858405e79590e9b05634c399497f4ba7
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --with-pic --disable-shared
       BUILD_IN_SOURCE 1)
