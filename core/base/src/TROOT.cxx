@@ -741,6 +741,21 @@ void TROOT::CloseFiles()
    if (fMappedFiles && fMappedFiles->First()) {
       R__ListSlowClose(static_cast<TList*>(fMappedFiles));
    }
+
+   // Now a set of simpler things to delete.  See the same ordering in
+   // TROOT::~TROOT
+   fSpecials->Delete();
+   //fSecContexts->Delete();
+   fFunctions->Delete();
+   fColors->Delete();
+   fStyles->Delete();
+   fGeometries->Delete();
+   fBrowsers->Delete();
+   fCanvases->Delete();
+   fTasks->Delete();
+   fProofs->Delete();
+   fDataSets->Delete();
+   fClipboard->Delete();
 }
 
 //______________________________________________________________________________
