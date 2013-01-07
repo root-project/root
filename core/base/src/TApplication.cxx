@@ -206,6 +206,18 @@ TApplication::~TApplication()
       ProcessLine("TMemStat::Close()");
       fUseMemstat = kFALSE;
    }
+
+   // Reduce the risk of the files or sockets being closed after the
+   // end of 'main' (or more exactly before the library start being
+   // unloaded).
+   if (fgApplications == 0 || fgApplications->FirstLink() == 0 ) {
+      if (gROOT) {
+         gROOT->CloseFiles();
+      }
+      if (gInterpreter) {
+         gInterpreter->ResetGlobals();
+      }
+   }
 }
 
 //______________________________________________________________________________
