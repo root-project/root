@@ -122,7 +122,7 @@ public:
          // Calculate likelihood interval from data via analytic methods
          Double_t estMean = data->mean(*w->var("x"));
          Double_t intervalHalfWidth =
-            normal_quantile_c((1.0 - fConfidenceLevel) / 2.0, w->var("sigma")->getValV() / sqrt(N));
+            normal_quantile_c((1.0 - fConfidenceLevel) / 2.0, w->var("sigma")->getValV() / sqrt((double)N));
          Double_t lowerLimit = estMean - intervalHalfWidth;
          Double_t upperLimit = estMean + intervalHalfWidth;
 
@@ -1501,7 +1501,7 @@ public:
             if (n > 0 && interval->GetResult(0)->GetNullDistribution()) {
                TCanvas *c2 = new TCanvas("thti1_teststat_dist", "HTI Test Statistic Distributions", 2);
                if (n > 1) {
-                  int ny = TMath::CeilNint(sqrt(n));
+                  int ny = TMath::CeilNint(sqrt((double)n));
                   int nx = TMath::CeilNint(double(n) / ny);
                   c2->Divide(nx, ny);
                }
@@ -1665,7 +1665,7 @@ public:
             if (n > 0 && interval->GetResult(0)->GetNullDistribution()) {
                TCanvas *c2 = new TCanvas("thti2_teststat_dist", "HTI Test Statistic Distributions", 2);
                if (n > 1) {
-                  int ny = TMath::CeilNint(sqrt(n));
+                  int ny = TMath::CeilNint(sqrt((double)n));
                   int nx = TMath::CeilNint(double(n) / ny);
                   c2->Divide(nx, ny);
                }
