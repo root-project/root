@@ -386,13 +386,24 @@ TProofServLogHandlerGuard::~TProofServLogHandlerGuard()
 
 //--- Special timer to control delayed shutdowns ----------------------------//
 //______________________________________________________________________________
+TShutdownTimer::TShutdownTimer(TProofServ *p, Int_t delay)
+               : TTimer(delay, kFALSE), fProofServ(p)
+{
+   // Construtor
+
+   fTimeout = gEnv->GetValue("ProofServ.ShutdownTimeout", 20);
+   // Backward compaitibility: until 5.32 the variable was called ProofServ.ShutdonwTimeout
+   fTimeout = gEnv->GetValue("ProofServ.ShutdonwTimeout", fTimeout);
+}
+
+//______________________________________________________________________________
 Bool_t TShutdownTimer::Notify()
 {
    // Handle expiration of the shutdown timer. In the case of low activity the
    // process will be aborted.
 
    if (gDebug > 0)
-      Info ("Notify","checking activity on the input socket");
+      Printf("TShutdownTimer::Notify: checking activity on the input socket");
 
    // Check activity on the socket
    TSocket *xs = 0;
@@ -401,22 +412,18 @@ Bool_t TShutdownTimer::Notify()
       TTimeStamp ts = xs->GetLastUsage();
       Long_t dt = (Long_t)(now.GetSec() - ts.GetSec()) * 1000 +
                   (Long_t)(now.GetNanoSec() - ts.GetNanoSec()) / 1000000 ;
-      Int_t to = gEnv->GetValue("ProofServ.ShutdownTimeout", 20);
-      // Backward compaitibility: until 5.32 the variable was called ProofServ.ShutdonwTimeout
-      to = gEnv->GetValue("ProofServ.ShutdonwTimeout", to);
-      if (dt > to * 60000) {
+      if (dt > fTimeout * 60000) {
          Printf("TShutdownTimer::Notify: input socket: %p: did not show any activity"
-                         " during the last %d mins: aborting", xs, to);
+                         " during the last %d mins: aborting", xs, fTimeout);
          // At this point we lost our controller: we need to abort to avoid
          // hidden timeouts or loops
          gSystem->Abort();
       } else {
          if (gDebug > 0)
-            Info("Notify", "input socket: %p: show activity"
-                           " %ld secs ago", xs, dt / 60000);
+            Printf("TShutdownTimer::Notify: input socket: %p: show activity"
+                   " %ld secs ago", xs, dt / 60000);
       }
    }
-   Start(-1, kFALSE);
    return kTRUE;
 }
 
