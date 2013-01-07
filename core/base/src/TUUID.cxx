@@ -473,6 +473,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
       char          hostname[MAX_COMPUTERNAME_LENGTH + 1];
    };
    randomness r;
+   memset(&r, 0, sizeof(r));  // zero also padding bytes
 
    // memory usage stats
    GlobalMemoryStatus(&r.m);
@@ -495,6 +496,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
       char             hostname[257];
    };
    randomness r;
+   memset(&r, 0, sizeof(r));  // zero also padding bytes
 
 #if defined(R__LINUX) && !defined(R__WINGCC)
    sysinfo(&r.s);
