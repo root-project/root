@@ -738,7 +738,7 @@ void TProofBench::DrawDataSet(const char *outfile,
       hprofn.Form("Prof_x_DataRead_%s", typ.Data());
    } else if (!strcmp(opt, "norm:")) {
       hprofn.Form("Norm_DataRead_%s", typ.Data());
-   } else if (!strcmp(opt, "absx:")) {
+   } else if (!strcmp(opt, "normx:")) {
       hprofn.Form("Norm_x_DataRead_%s", typ.Data());
    } else {
       ::Error("DrawDataSet", "unknown option '%s'", opt);
