@@ -45,6 +45,8 @@
 #include "TBrowser.h"
 #include "TUrl.h"
 
+#include <stdlib.h>
+
 #if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
 #include "TGIOS.h"
 #endif
