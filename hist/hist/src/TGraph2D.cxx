@@ -1052,6 +1052,24 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
       hymin = ymin - fMargin * (ymax - ymin);
       hxmax = xmax + fMargin * (xmax - xmin);
       hymax = ymax + fMargin * (ymax - ymin);
+      if (hxmin==hxmax) {
+         if (hxmin==0) {
+            hxmin = -0.01;
+            hxmax =  0.01;
+         } else {
+            hxmin = hxmin-hxmin*0.01;
+            hxmax = hxmax+hxmax*0.01;
+         }
+      }
+      if (hymin==hymax) {
+         if (hxmin==0) {
+            hymin = -0.01;
+            hymax =  0.01;
+         } else {
+            hymin = hymin-hymin*0.01;
+            hymax = hymax+hymax*0.01;
+         }
+      }
       fHistogram = new TH2D(GetName(), GetTitle(),
                             fNpx , hxmin, hxmax,
                             fNpy, hymin, hymax);
