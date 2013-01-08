@@ -15,10 +15,10 @@ set(CRYPTLIBS)
 #---Select compiler flags----------------------------------------------------------------
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -Z7")
 set(CMAKE_CXX_FLAGS_RELEASE        "-O2")
-set(CMAKE_CXX_FLAGS_DEBUG          "-Z7")
+set(CMAKE_CXX_FLAGS_DEBUG          "-Od -Z7")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -Z7")
 set(CMAKE_C_FLAGS_RELEASE          "-O2")
-set(CMAKE_C_FLAGS_DEBUG            "-Z7")
+set(CMAKE_C_FLAGS_DEBUG            "-Od -Z7")
 
 if(winrtdebug)
   set(BLDCXXFLAGS "-MDd -GR")
