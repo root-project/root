@@ -74,6 +74,13 @@ Bool_t TIdleTimer::Notify()
 
 ClassImp(TApplication)
 
+static void CallCloseFiles()
+{
+  // Insure that the files, canvases and sockets are closed.
+
+  gROOT->CloseFiles();
+}
+
 //______________________________________________________________________________
 TApplication::TApplication() :
    fArgc(0), fArgv(0), fAppImp(0), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
@@ -126,6 +133,10 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    if (!gSystem)
       ::Fatal("TApplication::TApplication", "gSystem not initialized");
 
+   if (!gApplication) {
+      // If we are the first TApplication register the atexit)
+      atexit(CallCloseFiles);
+   }
    gApplication = this;
    gROOT->SetApplication(this);
    gROOT->SetName(appClassName);
