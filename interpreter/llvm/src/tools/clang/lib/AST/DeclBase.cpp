@@ -1326,7 +1326,7 @@ void DeclContext::makeDeclVisibleInContextImpl(NamedDecl *D, bool Internal) {
   if (!Map) {
     ASTContext *C = &getParentASTContext();
     Map = CreateStoredDeclsMap(*C);
-    MustVisitExternalSources = true;
+    MustVisitExternalSources = hasExternalVisibleStorage();
   } else if (hasExternalVisibleStorage() &&
              Map->find(D->getDeclName()) == Map->end())
     MustVisitExternalSources = true;
