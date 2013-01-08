@@ -403,7 +403,7 @@ Bool_t TShutdownTimer::Notify()
    // process will be aborted.
 
    if (gDebug > 0)
-      Printf("TShutdownTimer::Notify: checking activity on the input socket");
+      printf("TShutdownTimer::Notify: checking activity on the input socket\n");
 
    // Check activity on the socket
    TSocket *xs = 0;
@@ -413,17 +413,19 @@ Bool_t TShutdownTimer::Notify()
       Long_t dt = (Long_t)(now.GetSec() - ts.GetSec()) * 1000 +
                   (Long_t)(now.GetNanoSec() - ts.GetNanoSec()) / 1000000 ;
       if (dt > fTimeout * 60000) {
-         Printf("TShutdownTimer::Notify: input socket: %p: did not show any activity"
-                         " during the last %d mins: aborting", xs, fTimeout);
+         printf("TShutdownTimer::Notify: input socket: %p: did not show any activity"
+                         " during the last %d mins: aborting\n", xs, fTimeout);
          // At this point we lost our controller: we need to abort to avoid
          // hidden timeouts or loops
          gSystem->Abort();
       } else {
          if (gDebug > 0)
-            Printf("TShutdownTimer::Notify: input socket: %p: show activity"
-                   " %ld secs ago", xs, dt / 60000);
+            printf("TShutdownTimer::Notify: input socket: %p: show activity"
+                   " %ld secs ago\n", xs, dt / 60000);
       }
    }
+   // Needed for the next shot
+   Reset();
    return kTRUE;
 }
 
