@@ -169,6 +169,7 @@ static Int_t ITIMQQ(const char *time)
    sscanf(time, "%d:%d:%d", &hh, &mm, &ss);
    return 100*hh + mm;
 }
+
 //______________________________________________________________________________
 static void CleanUpROOTAtExit()
 {
