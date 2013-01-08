@@ -856,25 +856,36 @@ void TAxis::SetRange(Int_t first, Int_t last)
 {
    //  Set the viewing range for the axis from bin first to last
    //  To set a range using the axis coordinates, use TAxis::SetRangeUser.
-   //  if first<=1 and last>=Nbins or if last < first the range is reset by removing the
-   //  bit TAxis::kAxisRange. In this case the functions TAxis::GetFirst() and TAxis::GetLast()
-   //  will return 1 and Nbins.
-   //  NOTE: If the bit has been set manually by the user in case of no range defined
-   //         GetFirst() and GetLast() will return 0.
 
-   if (last <= 0) last = fNbins;
-   if (last > fNbins) last = fNbins;
-   if (last  < first) { first = 1; last = fNbins; }
-   if (first < 1)     first = 1;
-   if (first == 1 && last == fNbins) {
-      SetBit(kAxisRange,0);
-      fFirst = 0;
-      fLast  = 0;
+   //  If first == last == 0 or if last < first or if the range specified does
+   //  not intersect at all with the maximum available range [0, fNbins + 1],
+   //  then the range is reset by removing the bit TAxis::kAxisRange. In this 
+   //  case the functions TAxis::GetFirst() and TAxis::GetLast() will return 1 
+   //  and fNbins.
+
+   //  If the range specified partially intersects [0, fNbins + 1], then the
+   //  intersection range is set. For instance, if first == -2 and last == fNbins,
+   //  then the set range is [0, fNbins] (fFirst = 0 and fLast = fNbins).
+   // 
+   //  NOTE: for historical reasons, SetRange(0,0) resets the range even though Bin 0 is 
+   //       technically reserved for the underflow; in order to set the range of the axis
+   //       so that it only includes the underflow, use SetRange(a,0), where a < 0
+
+   Int_t nCells = fNbins + 1; // bins + overflow
+
+   // special reset range cases
+   if (last < first || (first < 0 && last < 0) ||
+         (first > nCells && last > nCells) || (first == 0 && last == 0)
+   ) {
+      fFirst = 1;
+      fLast = fNbins;
+      SetBit(kAxisRange, 0);
    } else {
-      SetBit(kAxisRange,1);
-      fFirst = first;
-      fLast  = last;
+      fFirst = std::max(first, 0);
+      fLast = std::min(last, nCells);
+      SetBit(kAxisRange, 1);
    }
+
 }
 
 

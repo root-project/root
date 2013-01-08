@@ -547,8 +547,6 @@ void THnSparseArrayChunk::Sumw2()
 // a THnSparse. See the Projection() members. To only project parts of the
 // histogram, call
 //   THnSparse::GetAxis(12)->SetRange(from_bin, to_bin);
-// See the important remark in THnSparse::IsInRange() when excluding under-
-// and overflow bins!
 //
 // * Internal Representation
 // An entry for a filled bin consists of its n-dimensional coordinates and
