@@ -125,8 +125,7 @@ Bool_t TDispatchTimer::Notify()
    // events while processing. We must act as fast as possible here, so
    // we just set a flag submitting a request for dispatching pending events
 
-   if (gDebug > 0)
-      Info ("Notify","called!");
+   if (gDebug > 0) printf("TDispatchTimer::Notify: called!\n");
 
    fPlayer->SetBit(TProofPlayer::kDispatchOneEvent);
 
@@ -176,8 +175,7 @@ Bool_t TStopTimer::Notify()
    // We raise an exception which will be processed in the
    // event loop.
 
-   if (gDebug > 0)
-      Info ("Notify","called!");
+   if (gDebug > 0) printf("TStopTimer::Notify: called!\n");
 
    if (fAbort)
       Throw(kPEX_ABORTED);
