@@ -389,7 +389,6 @@ TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
    fMinimum   = -1111;
    fMaximum   = -1111;
    fMethodCall = 0;
-   fCintFunc   = 0;
    SetFillStyle(0);
 }
 
@@ -448,7 +447,6 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
    fMinimum    = -1111;
    fMaximum    = -1111;
    fMethodCall = 0;
-   fCintFunc   = 0;
 
    if (fNdim != 1 && xmin < xmax) {
       Error("TF1","function: %s/%s has %d parameters instead of 1",name,formula,fNdim);
@@ -515,7 +513,6 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
    fMinimum    = -1111;
    fMaximum    = -1111;
    fMethodCall = 0;
-   fCintFunc   = 0;
    fNdim       = 1;
 
    TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
@@ -567,7 +564,6 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 
    fType       = 1;
    fMethodCall = 0;
-   fCintFunc   = 0;
    fFunctor = ROOT::Math::ParamFunctor(fcn);
 
    if (npar > 0 ) fNpar = npar;
@@ -639,7 +635,6 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 
    fType       = 1;
    fMethodCall = 0;
-   fCintFunc   = 0;
    fFunctor = ROOT::Math::ParamFunctor(fcn);
 
    if (npar > 0 ) fNpar = npar;
@@ -717,7 +712,6 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    fMaximum   ( -1111 ),
    fMinimum   ( -1111 ),
    fMethodCall( 0 ),
-   fCintFunc  ( 0 ),
    fFunctor   ( ROOT::Math::ParamFunctor(f) )
 {
    // F1 constructor using the Functor class.
@@ -833,7 +827,6 @@ TF1::TF1(const TF1 &f1) : TFormula(), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
    fMinimum   = -1111;
    fMaximum   = -1111;
    fMethodCall = 0;
-   fCintFunc   = 0;
    SetFillStyle(0);
 
    ((TF1&)f1).Copy(*this);
@@ -888,7 +881,6 @@ void TF1::Copy(TObject &obj) const
    ((TF1&)obj).fXmax = fXmax;
    ((TF1&)obj).fNpx  = fNpx;
    ((TF1&)obj).fType = fType;
-   ((TF1&)obj).fCintFunc  = fCintFunc;
    ((TF1&)obj).fFunctor   = fFunctor;
    ((TF1&)obj).fChisquare = fChisquare;
    ((TF1&)obj).fNpfits  = fNpfits;
@@ -1336,12 +1328,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
       else             result = GetSave(x);
       return result;
    }
-   if (fType == 3) {
-      //std::cout << "Eval interp function object  " << fCintFunc << " result = " << result << std::endl;
-      if (fMethodCall) fMethodCall->Execute(fCintFunc,result);
-      else             result = GetSave(x);
-      return result;
-   }
+
    return result;
 }
 

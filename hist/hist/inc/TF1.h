@@ -77,7 +77,6 @@ protected:
    Double_t     fMaximum;    //Maximum value for plotting
    Double_t     fMinimum;    //Minimum value for plotting
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
-   void        *fCintFunc;              //! pointer to interpreted function class
    ROOT::Math::ParamFunctor fFunctor;   //! Functor object to wrap any C++ callable object
 
    static Bool_t fgAbsValue;  //use absolute value of function when computing integral
@@ -141,7 +140,6 @@ public:
       fMaximum   ( -1111 ),
       fMinimum   ( -1111 ),
       fMethodCall ( 0),
-      fCintFunc  ( 0 ),
       fFunctor( ROOT::Math::ParamFunctor(f) )
    {
       CreateFromFunctor(name, npar);
@@ -182,7 +180,6 @@ public:
       fMaximum   ( -1111 ),
       fMinimum   ( -1111 ),
       fMethodCall( 0 ),
-      fCintFunc  ( 0 ),
       fFunctor   ( ROOT::Math::ParamFunctor(p,memFn) )
    {
       CreateFromFunctor(name, npar);
