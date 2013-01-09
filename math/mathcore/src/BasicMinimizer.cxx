@@ -250,7 +250,7 @@ void BasicMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & func) {
 
 bool BasicMinimizer::CheckDimension() const { 
    unsigned int npar = fValues.size(); 
-   if (npar == 0 || npar < fObjFunc->NDim()  ) { 
+   if (npar == 0 || npar < fDim  ) { 
       MATH_ERROR_MSGVAL("BasicMinimizer::CheckDimension","Wrong number of parameters",npar);
       return false;
    }

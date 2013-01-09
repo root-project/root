@@ -147,7 +147,7 @@ public:
    virtual const double *  X() const { return &fValues.front(); } 
 
    /// number of dimensions
-   virtual unsigned int NDim() const { return fObjFunc->NDim(); }   
+   virtual unsigned int NDim() const { return fDim; }   
 
    /// number of free variables (real dimension of the problem)
    virtual unsigned int NFree() const;   

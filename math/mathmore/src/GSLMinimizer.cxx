@@ -153,6 +153,16 @@ bool GSLMinimizer::Minimize() {
       steps.resize(trFunc->NDim());
    }
 
+   // in case all parameters are free - just evaluate the function
+   if (NFree() == 0) { 
+      MATH_INFO_MSG("GSLMinimizer::Minimize","There are no free parameter - just compute the function value");
+      double fval = (*function)((double*)0);   // no need to pass parameters
+      SetFinalValues(&startValues[0]);
+      SetMinValue(fval); 
+      fStatus = 0;
+      return true;
+   }
+
    // use a global step size = modules of  step vectors 
    double stepSize = 0; 
    for (unsigned int i = 0; i < steps.size(); ++i)  
