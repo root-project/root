@@ -296,7 +296,7 @@ bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
 bool TMinuitMinimizer::CheckMinuitInstance() const {
    // check instance of fMinuit
    if (fMinuit == 0) { 
-      Error("CheckMinuitInstance","Invalid TMinuit pointer. Need to call first SetFunction"); 
+      Error("TMinuitMinimizer::CheckMinuitInstance","Invalid TMinuit pointer. Need to call first SetFunction"); 
       return false; 
    }
    return true; 
@@ -305,7 +305,7 @@ bool TMinuitMinimizer::CheckMinuitInstance() const {
 bool TMinuitMinimizer::CheckVarIndex(unsigned int ivar) const {
    // check index of Variable (assume fMinuit exists) 
    if ((int) ivar >= fMinuit->fNu ) {
-      Error("CheckVarIndex","Invalid parameter index"); 
+      Error("TMinuitMinimizer::CheckVarIndex","Invalid parameter index"); 
       return false; 
    }
    return true; 
@@ -364,13 +364,13 @@ bool TMinuitMinimizer::SetVariableStepSize(unsigned int ivar, double step) {
 bool TMinuitMinimizer::SetVariableLowerLimit(unsigned int , double  ) { 
    // set the limits of an existing variable
    // parameter must exist or return false
-   Error("SetVariableLowerLimit","not implemented - use SetVariableLimits"); 
+   Error("TMinuitMinimizer::SetVariableLowerLimit","not implemented - use SetVariableLimits"); 
    return false;
 }
 bool TMinuitMinimizer::SetVariableUpperLimit(unsigned int , double  ) { 
    // set the limits of an existing variable
    // parameter must exist or return false
-   Error("SetVariableUpperLimit","not implemented - use SetVariableLimits"); 
+   Error("TMinuitMinimizer::SetVariableUpperLimit","not implemented - use SetVariableLimits"); 
    return false;
 }
 
@@ -453,17 +453,27 @@ bool TMinuitMinimizer::Minimize() {
 
 
    if (fMinuit == 0) { 
-      Error("Minimize","invalid TMinuit pointer. Need to call first SetFunction and SetVariable"); 
+      Error("TMinuitMinimizer::Minimize","invalid TMinuit pointer. Need to call first SetFunction and SetVariable"); 
       return false; 
    }
 
 
    // total number of parameter defined in Minuit is fNu
    if (fMinuit->fNu <  static_cast<int>(fDim) ) { 
-      Error("Minimize","The total number of defined parameters is different than the function dimension, npar = %d, dim = %d",fMinuit->fNu, fDim);
+      Error("TMinuitMinimizer::Minimize","The total number of defined parameters is different than the function dimension, npar = %d, dim = %d",fMinuit->fNu, fDim);
       return false; 
    }
 
+   // total number of free parameter is 0
+   if (fMinuit->fNpar <= 0) { 
+      // retrieve parameters values  from TMinuit
+      RetrieveParams(); 
+      fMinuit->fAmin = (*fgFunc)(&fParams.front());
+      Info("TMinuitMinimizer::Minimize","There are no free parameter - just compute the function value");
+      return true; 
+   }
+
+ 
    double arglist[10]; 
    int ierr = 0; 
 
@@ -534,13 +544,13 @@ bool TMinuitMinimizer::Minimize() {
    fStatus = ierr; 
    int minErrStatus = ierr;
 
-   if (printlevel>2) Info("Minimize","Finished to run MIGRAD - status %d",ierr);
+   if (printlevel>2) Info("TMinuitMinimizer::Minimize","Finished to run MIGRAD - status %d",ierr);
 
    // run improved if needed
    if (ierr == 0 && fType == ROOT::Minuit::kMigradImproved) {
       fMinuit->mnexcm("IMPROVE",arglist,1,ierr);
       fStatus += 1000*ierr; 
-      if (printlevel>2) Info("Minimize","Finished to run IMPROVE - status %d",ierr);
+      if (printlevel>2) Info("TMinuitMinimizer::Minimize","Finished to run IMPROVE - status %d",ierr);
    }
 
 
@@ -550,7 +560,7 @@ bool TMinuitMinimizer::Minimize() {
    if (minErrStatus == 0  && (IsValidError() || ( strategy >=1 && CovMatrixStatus() < 3) ) ) { 
       fMinuit->mnexcm("HESSE",arglist,1,ierr);
       fStatus += 100*ierr; 
-      if (printlevel>2) Info("Minimize","Finished to run HESSE - status %d",ierr);
+      if (printlevel>2) Info("TMinuitMinimizer::Minimize","Finished to run HESSE - status %d",ierr);
    }
 
    // retrieve parameters and errors  from TMinuit
@@ -659,7 +669,7 @@ bool TMinuitMinimizer::GetCovMatrix(double * cov) const {
    // get covariance matrix
    int covStatus = CovMatrixStatus(); 
    if ( fCovar.size() != fDim*fDim || covStatus < 2) { 
-      Error("GetHessianMatrix","Hessian matrix has not been computed - status %d",covStatus);
+      Error("TMinuitMinimizer::GetHessianMatrix","Hessian matrix has not been computed - status %d",covStatus);
       return false;
    }
    std::copy(fCovar.begin(), fCovar.end(), cov);
@@ -673,7 +683,7 @@ bool TMinuitMinimizer::GetHessianMatrix(double * hes) const {
    // but need to get the compact form to avoid the zero for the fixed parameters 
    int covStatus = CovMatrixStatus(); 
    if ( fCovar.size() != fDim*fDim || covStatus < 2) { 
-      Error("GetHessianMatrix","Hessian matrix has not been computed - status %d",covStatus);
+      Error("TMinuitMinimizer::GetHessianMatrix","Hessian matrix has not been computed - status %d",covStatus);
       return false;
    }
    // case of fixed params need to take care 
@@ -735,7 +745,7 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // Perform Minos analysis for the given parameter  i 
 
    if (fMinuit == 0) { 
-      Error("GetMinosError","invalid TMinuit pointer. Need to call first SetFunction and SetVariable"); 
+      Error("TMinuitMinimizer::GetMinosError","invalid TMinuit pointer. Need to call first SetFunction and SetVariable"); 
       return false; 
    }
 
@@ -873,7 +883,7 @@ bool TMinuitMinimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
 
 
    if (npoints < 4) { 
-      Error("Contour","Cannot make contour with so few points");
+      Error("TMinuitMinimizer::Contour","Cannot make contour with so few points");
       return false; 
    }
    int npfound = 0; 
@@ -881,12 +891,12 @@ bool TMinuitMinimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
    fMinuit->mncont( ipar,jpar,npoints, x, y,npfound); 
    if (npfound<4) {
       // mncont did go wrong
-      Error("Contour","Cannot find more than 4 points");
+      Error("TMinuitMinimizer::Contour","Cannot find more than 4 points");
       return false;
    }
    if (npfound!=(int)npoints) {
       // mncont did go wrong
-      Warning("Contour","Returning only %d points ",npfound);
+      Warning("TMinuitMinimizer::Contour","Returning only %d points ",npfound);
       npoints = npfound;
    }
    return true; 
@@ -969,7 +979,7 @@ bool TMinuitMinimizer::Hesse() {
    // perform calculation of Hessian
 
    if (fMinuit == 0) { 
-      Error("Hesse","invalid TMinuit pointer. Need to call first SetFunction and SetVariable"); 
+      Error("TMinuitMinimizer::Hesse","invalid TMinuit pointer. Need to call first SetFunction and SetVariable"); 
       return false; 
    }
 
