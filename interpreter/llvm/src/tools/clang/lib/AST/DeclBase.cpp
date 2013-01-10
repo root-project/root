@@ -1161,12 +1161,16 @@ DeclContext::lookup(DeclarationName Name) {
   if (PrimaryContext != this)
     return PrimaryContext->lookup(Name);
 
+  StoredDeclsMap *Map = LookupPtr.getPointer();
+  if (LookupPtr.getInt())
+    Map = buildLookup();
+
   if (hasExternalVisibleStorage()) {
     // If a PCH has a result for this name, and we have a local declaration, we
     // will have imported the PCH result when adding the local declaration.
     // FIXME: For modules, we could have had more declarations added by module
     // imoprts since we saw the declaration of the local name.
-    if (StoredDeclsMap *Map = LookupPtr.getPointer()) {
+    if (Map) {
       StoredDeclsMap::iterator I = Map->find(Name);
       if (I != Map->end())
         return I->second.getLookupResult();
@@ -1175,10 +1179,6 @@ DeclContext::lookup(DeclarationName Name) {
     ExternalASTSource *Source = getParentASTContext().getExternalSource();
     return Source->FindExternalVisibleDeclsByName(this, Name);
   }
-
-  StoredDeclsMap *Map = LookupPtr.getPointer();
-  if (LookupPtr.getInt())
-    Map = buildLookup();
 
   if (!Map)
     return lookup_result(lookup_iterator(0), lookup_iterator(0));
