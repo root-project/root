@@ -45,19 +45,19 @@ PROOFSERVEXE :=
 PROOFSERVSH  :=
 endif
 
-##### ptest #####
-PTESTS   := $(MODDIRS)/ptest.cxx
-PTESTO   := $(call stripsrc,$(PTESTS:.cxx=.o))
-PTESTDEP := $(PTESTO:.o=.d)
+##### xpdtest #####
+XPDTESTS   := $(MODDIRS)/xpdtest.cxx
+XPDTESTO   := $(call stripsrc,$(XPDTESTS:.cxx=.o))
+XPDTESTDEP := $(XPDTESTO:.o=.d)
 ifneq ($(PLATFORM),win32)
-PTESTEXE := bin/xpdtest
+XPDTESTEXE := bin/xpdtest
 endif
 ifeq ($(PROOFLIB),)
-PTESTEXE :=
+XPDTESTEXE :=
 endif
-PTESTLIBS    := -lProof -lTree -lHist -lRIO -lNet -lThread -lMatrix -lMathCore 
-PTESTLIBSDEP  = $(IOLIB) $(TREELIB) $(NETLIB) $(HISTLIB) $(PROOFLIB) \
-                $(THREADLIB) $(MATRIXLIB) $(MATHCORELIB)
+XPDTESTLIBS := -lProof -lTree -lHist -lRIO -lNet -lThread -lMatrix -lMathCore 
+XPDTESTLIBSDEP = $(IOLIB) $(TREELIB) $(NETLIB) $(HISTLIB) $(PROOFLIB) \
+                 $(THREADLIB) $(MATRIXLIB) $(MATHCORELIB)
 
 ##### roots.exe #####
 ROOTSEXES   := $(MODDIRS)/roots.cxx
@@ -112,13 +112,13 @@ endif
 
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-                $(PTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
+                $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
 ifneq ($(F77),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT)
 endif
 
 # include all dependency files
-INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(PTESTDEP) $(HADDDEP) \
+INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(XPDTESTDEP) $(HADDDEP) \
                 $(H2ROOTDEP) $(SSH2RPDDEP) $(ROOTSEXEDEP)
 
 ##### local rules #####
@@ -143,9 +143,9 @@ $(PROOFSERVSH): $(call stripsrc,$(MAINDIRS)/proofserv.sh)
 		@cp $< $@
 		@chmod 0755 $@
 
-$(PTESTEXE): $(PTESTO) $(BOOTLIBSDEP) $(PTESTLIBSDEP)
-		$(LD) $(LDFLAGS) -o $@ $(PTESTO) \
-		$(RPATH) $(BOOTLIBS) $(PTESTLIBS) $(SYSLIBS)
+$(XPDTESTEXE): $(XPDTESTO) $(BOOTLIBSDEP) $(XPDTESTLIBSDEP)
+		$(LD) $(LDFLAGS) -o $@ $(XPDTESTO) \
+		$(RPATH) $(BOOTLIBS) $(XPDTESTLIBS) $(SYSLIBS)
 
 $(ROOTSEXE):    $(ROOTSEXEO) $(BOOTLIBSDEP)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTSEXEO) \
@@ -176,22 +176,22 @@ $(G2ROOT):      $(G2ROOTO) $(ORDER_) $(MINICERNLIB)
 
 ifneq ($(F77),)
 all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-                $(PTESTEXE) $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) \
+                $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(H2ROOT) $(G2ROOT) \
                 $(ROOTSEXE) $(ROOTSSH)
 else
 all-$(MODNAME): $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
-                $(PTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
+                $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
 endif
 
 clean-$(MODNAME):
-		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(PTESTO) $(HADDO) $(H2ROOTO) \
-		   $(G2ROOTO) $(SSH2RPDO) $(ROOTSEXEO)
+		@rm -f $(ROOTEXEO) $(PROOFSERVO) $(XPDTESTO) $(HADDO) \
+		   $(H2ROOTO) $(G2ROOTO) $(SSH2RPDO) $(ROOTSEXEO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
-		   $(PROOFSERVEXE) $(PROOFSERVSH)  $(PTESTDEP) $(PTESTEXE) \
+		   $(PROOFSERVEXE) $(PROOFSERVSH)  $(XPDTESTDEP) $(XPDTESTEXE) \
 		   $(HADDDEP) $(HADD) $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) \
 		   $(SSH2RPDDEP) $(SSH2RPD) $(ROOTSEXEDEP) $(ROOTSEXE) \
 		   $(ROOTSSH)
