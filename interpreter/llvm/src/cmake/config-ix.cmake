@@ -210,6 +210,8 @@ if( LLVM_USING_GLIBC )
   add_llvm_definitions( -D_GNU_SOURCE )
 endif()
 
+check_function_exists(__dso_handle HAVE___DSO_HANDLE)
+
 set(headers "")
 if (HAVE_SYS_TYPES_H)
   set(headers ${headers} "sys/types.h")

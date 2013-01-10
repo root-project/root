@@ -84,8 +84,8 @@ set_source_files_properties(${CMAKE_SOURCE_DIR}/core/base/src/TPRegexp.cxx
 set_source_files_properties(${CMAKE_SOURCE_DIR}/core/lzma/src/ZipLZMA.c
                             COMPILE_FLAGS -I${LZMA_INCLUDE_DIR}
                            )
-set_source_files_properties(${CMAKE_SOURCE_DIR}/core/meta/src/TCintWithCling.cxx
-                            COMPILE_FLAGS "${CLING_CXXFLAGS} -I${LLVM_INCLUDE_DIR} -I${CLING_INCLUDE_DIR}"
+set_source_files_properties(${CMAKE_SOURCE_DIR}/core/meta/src/TClingCallbacks.cxx
+                            COMPILE_FLAGS -fno-rtti
                             )
 set_source_files_properties(${CMAKE_SOURCE_DIR}/core/metautils/src/TClassEdit.cxx
                             COMPILE_FLAGS "${CLING_CXXFLAGS} -I${LLVM_INCLUDE_DIR} -I${CLING_INCLUDE_DIR}"

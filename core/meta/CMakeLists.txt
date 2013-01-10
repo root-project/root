@@ -5,19 +5,7 @@
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 
-file(GLOB tcling_headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/TCling*.h)
-file(GLOB tcling_sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCling*.cxx)
-
-if(BuildCling)
-  add_definitions(-DR__WITH_CLING)
-  list(REMOVE_ITEM headers TCint.h)
-  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCint.cxx)
-else()
-  list(REMOVE_ITEM headers TCling.h)
-  list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCling.cxx ${tcling_sources})
-endif()
-
-ROOT_GENERATE_DICTIONARY(G__Meta ${headers} LINKDEF LinkDef.h OPTIONS -DG__API)
+ROOT_GENERATE_DICTIONARY(G__Meta ${headers} LINKDEF LinkDef.h OPTIONS -DR__WITH_CLING)
 set(dictionaries ${CMAKE_CURRENT_BINARY_DIR}/G__Meta.cxx)
 
 set(LibCore_SRCS ${LibCore_SRCS} ${sources} PARENT_SCOPE)
@@ -28,3 +16,4 @@ set(META_DICTIONARY ${dictionaries}  PARENT_SCOPE)
 set_target_properties(META_DICTIONARY PROPERTIES FOLDER Dictionaries)
 
 ROOT_INSTALL_HEADERS()
+

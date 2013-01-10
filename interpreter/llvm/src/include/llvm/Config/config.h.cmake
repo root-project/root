@@ -500,8 +500,8 @@
 /* Have host's __divdi3 */
 #cmakedefine HAVE___DIVDI3 ${HAVE___DIVDI3}
 
-/* Define to 1 if you have the `__dso_handle' function. */
-#undef HAVE___DSO_HANDLE
+/* Have host's `__dso_handle' */
+#cmakedefine HAVE___DSO_HANDLE ${HAVE___DSO_HANDLE}
 
 /* Have host's __fixdfdi */
 #cmakedefine HAVE___FIXDFDI ${HAVE___FIXDFDI}
