@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// PTest                                                                //
+// xpdtest                                                              //
 //                                                                      //
 // Program used to test existence and status of a proof daemon          //
 //                                                                      //
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 {
    //  PROOF daemon test program.
    //  Syntax
-   //          ptest  <url> <sandbox_dir> <time_span>
+   //          xpdtest  <url> <sandbox_dir> <time_span>
    // 
    //          <url>            URL to test; default 'localhost:1093'
    //          <sandbox_dir>    directory with users sandboxes; used to find out
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
    bool keep = 0;
    int rc = parse_args(argc, argv, url, sboxdir, span, test, logfile, keep);
    if (rc < 0) {
-      fprintf(stderr, "ptest: parse_args failure\n");
+      fprintf(stderr, "xpdtest: parse_args failure\n");
       gSystem->Exit(1);
    } else if (rc > 0) {
       gSystem->Exit(0);
@@ -102,11 +102,11 @@ int main(int argc, char **argv)
    // Check sandbox dir
    FileStat_t fst;
    if (gSystem->GetPathInfo(sboxdir, fst) != 0) {
-      fprintf(stderr, "ptest: stat failure for '%s'\n", sboxdir.Data());
+      fprintf(stderr, "xpdtest: stat failure for '%s'\n", sboxdir.Data());
       rc = 1;
    }
    if (rc == 0 && !R_ISDIR(fst.fMode)) {
-      fprintf(stderr, "ptest: '%s' is not a directory\n", sboxdir.Data());
+      fprintf(stderr, "xpdtest: '%s' is not a directory\n", sboxdir.Data());
       rc = 1;
    }
     
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
    // Do ping 
    if (rc == 0)
       if ((rc = xpd_ping(u.GetHost(), u.GetPort())) != 0)
-         fprintf(stderr, "ptest: failure pinging '%s'\n", url.Data());
+         fprintf(stderr, "xpdtest: failure pinging '%s'\n", url.Data());
 
    if (test > 0) {
       // Do TProof::Open in "masteronly" mode
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
          rc = proof_open(u.GetUrl());
          if (!logfile.IsNull()) gSystem->RedirectOutput(logfile, "a", &redirH);
          if (rc != 0)
-            fprintf(stderr, "ptest: TProof::Open failure for default user '%s'\n", u.GetUrl());
+            fprintf(stderr, "xpdtest: TProof::Open failure for default user '%s'\n", u.GetUrl());
       }
 
       if (test > 1) {
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
                if (span > 0) {
                   dent.Form("%s/%s", sboxdir.Data(), ent);
                   if (gSystem->GetPathInfo(dent, st) != 0) {
-                     fprintf(stderr, "ptest: stat failure for '%s'\n", dent.Data());
+                     fprintf(stderr, "xpdtest: stat failure for '%s'\n", dent.Data());
                      rc = 1;
                      break;
                   }
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
                   rc = proof_open(u.GetUrl());
                   if (!logfile.IsNull()) gSystem->RedirectOutput(logfile, "a", &redirH);
                   if (rc != 0) {
-                     fprintf(stderr, "ptest: failure scanning sandbox dir '%s'\n", sboxdir.Data());
+                     fprintf(stderr, "xpdtest: failure scanning sandbox dir '%s'\n", sboxdir.Data());
                      break;
                   }
                }
@@ -200,26 +200,26 @@ int parse_args(int argc, char **argv,
    keep = 0;
 
    // Check environment settings first
-   if (getenv("PTEST_URL")) {
-      url = getenv("PTEST_URL");
+   if (getenv("XPDTEST_URL")) {
+      url = getenv("XPDTEST_URL");
    }
-   if (getenv("PTEST_SBOXDIR")) {
-      sboxdir = getenv("PTEST_SBOXDIR");
+   if (getenv("XPDTEST_SBOXDIR")) {
+      sboxdir = getenv("XPDTEST_SBOXDIR");
    }
-   if (getenv("PTEST_TIMESPAN")) {
+   if (getenv("XPDTEST_TIMESPAN")) {
       errno = 0;
-      long xspan = strtol(getenv("PTEST_TIMESPAN"), 0, 10);
+      long xspan = strtol(getenv("XPDTEST_TIMESPAN"), 0, 10);
       if (errno == 0) span = (time_t) xspan;
    }
-   if (getenv("PTEST_TEST")) {
+   if (getenv("XPDTEST_TEST")) {
       errno = 0;
-      long xtest = strtol(getenv("PTEST_TEST"), 0, 10);
-      if (errno == 0 && xtest >= 0 && xtest <= 2) sscanf(getenv("PTEST_TEST"), "%d", &test);
+      long xtest = strtol(getenv("XPDTEST_TEST"), 0, 10);
+      if (errno == 0 && xtest >= 0 && xtest <= 2) sscanf(getenv("XPDTEST_TEST"), "%d", &test);
    }
-   if (getenv("PTEST_LOGFILE")) {
-      logfile = getenv("PTEST_LOGFILE");
+   if (getenv("XPDTEST_LOGFILE")) {
+      logfile = getenv("XPDTEST_LOGFILE");
    }
-   if (getenv("PTEST_KEEP")) {
+   if (getenv("XPDTEST_KEEP")) {
       keep = 1;
    }
 
@@ -301,10 +301,10 @@ void printhelp()
 {
    // Help function
    fprintf(stderr, "\n");
-   fprintf(stderr, "   ptest: test xproofd service on (remote) host\n");
+   fprintf(stderr, "   xpdtest: test xproofd service on (remote) host\n");
    fprintf(stderr, "\n");
    fprintf(stderr, "   Syntax:\n");
-   fprintf(stderr, "            ptest [-u url] [-t test] [-d sbdir] [-s span] [-l logfile] [-k] [-h|--help]\n");
+   fprintf(stderr, "            xpdtest [-u url] [-t test] [-d sbdir] [-s span] [-l logfile] [-k] [-h|--help]\n");
    fprintf(stderr, "\n");
    fprintf(stderr, "   url:     URL where the xproofd under test responds [localhost:1093]\n");
    fprintf(stderr, "   test:    type of test [0]\n");
@@ -333,7 +333,7 @@ int proof_open(const char *master)
    // Return 0 on success, 1 on failure
    int rc = 0;
    RedirectHandle_t rh;
-   TString popenfile = TString::Format("%s/ptest_popen_file", gSystem->TempDirectory());
+   TString popenfile = TString::Format("%s/xpdtest_popen_file", gSystem->TempDirectory());
    gSystem->RedirectOutput(popenfile, "w", &rh);
    TProof *p = TProof::Open(master, "masteronly");
    gSystem->RedirectOutput(0, 0, &rh);
