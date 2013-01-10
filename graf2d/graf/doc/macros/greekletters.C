@@ -1,3 +1,4 @@
+TCanvas *greekletters()
 {
    TCanvas *Gl = new TCanvas("greek","greek",500,700);
 
