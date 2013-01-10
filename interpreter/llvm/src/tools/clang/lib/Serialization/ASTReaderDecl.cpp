@@ -521,6 +521,7 @@ void ASTDeclReader::VisitDeclaratorDecl(DeclaratorDecl *DD) {
 
 void ASTDeclReader::VisitFunctionDecl(FunctionDecl *FD) {
   RedeclarableResult Redecl = VisitRedeclarable(FD);
+
   if (ExistingDef)
     return;
   VisitDeclaratorDecl(FD);
@@ -652,6 +653,22 @@ void ASTDeclReader::VisitFunctionDecl(FunctionDecl *FD) {
   for (unsigned I = 0; I != NumParams; ++I)
     Params.push_back(ReadDeclAs<ParmVarDecl>(Record, Idx));
   FD->setParams(Reader.getContext(), Params);
+
+  if (FD->getOverloadedOperator() == clang::OO_LessLess
+      && FD->getDeclContext()->getDeclKind()
+      == Decl::Namespace
+      && FD->getTemplatedKind()
+      == FunctionDecl::TK_FunctionTemplateSpecialization
+      && FD->getTemplateSpecializationArgs()->size() == 1
+      && FD->getTemplateSpecializationArgs()->data()->getKind()
+      == TemplateArgument::Type
+      /*&& FD->getTemplateSpecializationArgs()->data()->getAsType()->isRecordType()
+      && FD->getTemplateSpecializationArgs()->data()->getAsType()
+      ->getAs<clang::RecordType>()->getDecl()->getName()
+      == "char_traits"*/) {
+     llvm::errs() << "DEBUG: FD at " << FD << '\n';
+     FD->dump();
+  }
 }
 
 void ASTDeclReader::VisitObjCMethodDecl(ObjCMethodDecl *MD) {
@@ -1269,12 +1286,27 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
   // Objective-C classes and protocols with the same name always match.
   if (isa<ObjCInterfaceDecl>(X) || isa<ObjCProtocolDecl>(X))
     return true;
+
+  // Template arguments, same kinds always match
+  if (isa<TemplateTemplateParmDecl>(X)
+      || isa<NonTypeTemplateParmDecl>(X)
+      || isa<TemplateTypeParmDecl>(X))
+    return true;
   
   // Identical template names and kinds match for equal number of args.
   if (TemplateDecl* TDX = dyn_cast<TemplateDecl>(X)) {
     TemplateDecl* TDY = dyn_cast<TemplateDecl>(Y);
-    return (TDX->getTemplateParameters()->size()
-            == TDY->getTemplateParameters()->size());
+    if (TDX->getTemplateParameters()->size()
+        != TDY->getTemplateParameters()->size())
+      return false;
+
+    for (unsigned int IPar = 0, NPar = TDX->getTemplateParameters()->size();
+         IPar < NPar; ++IPar) {
+           if (!isSameEntity(TDX->getTemplateParameters()->getParam(IPar),
+                             TDY->getTemplateParameters()->getParam(IPar)))
+             return false;
+    }
+    return true;
   }
 
   // Compatible tags match.
@@ -2297,6 +2329,8 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
       }
       if (Offsets.second != 0) {
         DC->getPrimaryContext()->setHasExternalVisibleStorage(true);
+        if (Offsets.first != 0)
+          DC->getPrimaryContext()->setMustBuildLookupTable();
       }
       if (ReadDeclContextStorage(*Loc.F, DeclsCursor, Offsets, 
                                  Loc.F->DeclContextInfos[ReadDC]))
