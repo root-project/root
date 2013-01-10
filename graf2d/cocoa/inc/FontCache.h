@@ -105,6 +105,8 @@ private:
 
    FontCache(const FontCache &rhs);
    FontCache &operator = (const FontCache &rhs);
+
+   bool fSymbolFontRegistered;
 };
 
 }
