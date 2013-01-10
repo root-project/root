@@ -7,7 +7,6 @@
    cout << "Hard2Stream version #" << cl->GetClassVersion() << endl;
 #ifdef ClingWorkAroundMissingDynamicScope
 gROOT->ProcessLine(
-   "TClass *cl = gROOT->GetClass(\"Hard2Stream\");"
    "TBufferFile buf(TBuffer::kWrite);"
    "Hard2Stream myobj(33.33);"
    "myobj.print();"
