@@ -20,7 +20,7 @@ MATHTEXTO    := $(call stripsrc,$(MATHTEXTS:.cxx=.o))
 MATHTEXTDEP  := $(MATHTEXTO:.o=.d)
 
 ifeq ($(PLATFORM),win32)
-MATHTEXTLIB  := $(LPATH)\libmathtext.lib
+MATHTEXTLIB  := $(LPATH)/libmathtext.lib
 MATHTEXTAR   := link.exe -lib /out:
 else
 MATHTEXTLIB  := $(LPATH)/libmathtext.a
