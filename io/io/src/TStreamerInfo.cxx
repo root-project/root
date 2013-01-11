@@ -1935,8 +1935,16 @@ namespace {
          if (fDataType < TStreamerInfo::kObject) {
             // For simple type, let compare the data type
             if (fDataType != other.fDataType) {
-               return kTRUE;
-            }
+               if ( (fDataType == 4 && other.fDataType == 16) 
+                    || (fDataType == 16 && other.fDataType == 4) ) {
+                  // long and 'long long' have the same  file format
+               } else if ( (fDataType == 14 && other.fDataType == 17) 
+                           || (fDataType == 17 && other.fDataType == 14) ) {
+                  // unsigned long and 'unsigned long long' have the same  file format
+               } else {
+                  return kTRUE;
+               }
+            } 
          } else if (fClassName != other.fClassName) {
             if ( (fClassName == "long" && (other.fClassName == "long long" || other.fClassName == "Long64_t"))
                   || ( (fClassName == "long long" || fClassName == "Long64_t") && other.fClassName == "long") ) {
