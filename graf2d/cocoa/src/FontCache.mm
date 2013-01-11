@@ -207,6 +207,7 @@ void CreateXLFDString(const X11::XLFDName &xlfd, std::string &xlfdString)
 
 //_________________________________________________________________
 FontCache::FontCache()
+             : fSymbolFontRegistered(false)
 {
 }
 
@@ -461,7 +462,7 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
       const Util::ScopedArray<char> arrayGuard(fontFileName);
 
       if (!fontFileName || fontFileName[0] == 0) {
-         ::Error("FontCache::SelectSymbolFont", "sumbol.ttf file not found");
+         ::Error("FontCache::SelectSymbolFont", "symbol.ttf file not found");
          return 0;
       }
 
@@ -471,8 +472,26 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
             ::Error("FontCache::SelectSymbolFont", "CFStringCreateWithCString failed");
             return 0;
          }
+
+         const Util::CFScopeGuard<CFURLRef> fontURL(CFURLCreateWithFileSystemPath(kCFAllocatorDefault, path.Get(), kCFURLPOSIXPathStyle, false));
+         if (!fontURL.Get()) {
+            ::Error("FontCache::SelectSymbolFont", "CFURLCreateWithFileSystemPath failed");
+            return 0;
+         }
          
-         const Util::CFScopeGuard<CFArrayRef> arr(CTFontManagerCreateFontDescriptorsFromURL(CFURLCreateWithFileSystemPath(kCFAllocatorDefault, path.Get(), kCFURLPOSIXPathStyle, false)));
+         //Try to register this font.
+         if (!fSymbolFontRegistered) {
+            CFErrorRef err = 0;
+            fSymbolFontRegistered = CTFontManagerRegisterFontsForURL(fontURL.Get(), kCTFontManagerScopeProcess, &err);
+            if (!fSymbolFontRegistered) {
+               ::Error("FontCache::SelectSymbolFont", "CTFontManagerRegisterFontsForURL failed");
+               if (err)
+                  CFRelease(err);
+               return 0;
+            }
+         }
+         
+         const Util::CFScopeGuard<CFArrayRef> arr(CTFontManagerCreateFontDescriptorsFromURL(fontURL.Get()));
          if (!arr.Get()) {
             ::Error("FontCache::SelectSymbolFont", "CTFontManagerCreateFontDescriptorsFromURL failed");
             return 0;
