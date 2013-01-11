@@ -297,30 +297,20 @@ bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
    int iret = fMinuit->DefineParameter(ivar, name.c_str(), val, step, lower, upper ); 
    return (iret == 0); 
 }
-#ifdef LATER
-bool Minuit2Minimizer::SetLowerLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double lower ) {
-    // add a lower bounded variable as a double bound one, using a very large number for the upper limit
 
-   if (fMinuit == 0) { 
-      Error("TMinuitMinimizer::CheckMinuitInstance","Invalid TMinuit pointer. Need to call first SetFunction"); 
-      return false; 
-   }
-
-   fUsed = fgUsed; 
-
-   // clear after minimization when setting params
-   if (fUsed) DoClear(); 
-
-   // check if parameter was defined and in case it was fixed, release it 
-   DoReleaseFixParameter(ivar);
-
-   double s = val-lower; 
-   double upper = s*1.0E15; 
-   if (s != 0)  upper = 1.0E15;
-   return SetLimitedVariable(ivar, name, val, step, lower,upper);
+bool TMinuitMinimizer::SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower ) { 
+   // set a lower limited variable
+   // since is not supported in TMinuit , just use a artificial large value 
+   Warning("TMinuitMinimizer::SetLowerLimitedVariable","not implemented - use as upper limit 1.E7 instead of +inf"); 
+   return SetLimitedVariable(ivar, name, val , step, lower, lower+ 1.E7);  // use 1.E7 which will make TMinuit happy
 }
-#endif
 
+bool TMinuitMinimizer::SetUpperLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double upper ) { 
+   // set a upper limited variable
+   // since is not supported in TMinuit , just use a artificial large negative value 
+   Warning("TMinuitMinimizer::SetUpperLimitedVariable","not implemented - use as lower limit -1.E7 instead of -inf"); 
+   return SetLimitedVariable(ivar, name, val , step, upper -1.E7, upper);
+}
 
 bool TMinuitMinimizer::SetFixedVariable(unsigned int ivar, const std::string & name, double val) { 
    // set a fixed variable.
