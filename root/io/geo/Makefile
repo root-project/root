@@ -65,6 +65,10 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+CALLROOTEXE += -e 'gSystem->Load("libGeom");'
+endif
+
 %.root: %.C unpack.last
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q export.C\(\"$*\"\) > $*.log 2>&1
 
