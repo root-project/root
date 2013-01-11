@@ -161,6 +161,7 @@ Bool_t RooMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& p
   // Handle floatParamList
   for(index= 0; index < _floatParamList->getSize(); index++) {
     RooRealVar *par= dynamic_cast<RooRealVar*>(_floatParamList->at(index)) ;
+    
     if (!par) continue ;
 
     Double_t pstep(0) ;
@@ -181,10 +182,10 @@ Bool_t RooMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& p
       }
 
       // Set the limits, if not infinite
-      if (par->hasMin() && par->hasMax()) {
+      if (par->hasMin() )
 	pmin = par->getMin();
+      if (par->hasMax() )
 	pmax = par->getMax();
-      }
       
       // Calculate step size
       pstep = par->getError();
@@ -226,10 +227,15 @@ Bool_t RooMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& p
 							  par->getVal(),
 							  pstep,
 							  pmin,pmax));
-      } else {
+      }
+      else {
 	parameters.push_back(ROOT::Fit::ParameterSettings(par->GetName(),
 							  par->getVal(),
 							  pstep));
+        if (par->hasMin() ) 
+           parameters.back().SetLowerLimit(pmin);
+        else if (par->hasMax() ) 
+           parameters.back().SetUpperLimit(pmax);
       }
       
       continue;
@@ -290,7 +296,12 @@ Bool_t RooMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& p
       if (oldVar!=par->getVal() || oldVlo!=pmin || oldVhi != pmax || oldVerr!=pstep) {
 	parameters[index].SetValue(par->getVal()); 
 	parameters[index].SetStepSize(pstep);
-	parameters[index].SetLimits(pmin,pmax);  
+        if (par->hasMin() && par->hasMax() ) 
+           parameters[index].SetLimits(pmin,pmax);  
+        else if (par->hasMin() )
+           parameters[index].SetLowerLimit(pmin);  
+        else if (par->hasMax() )
+           parameters[index].SetUpperLimit(pmax);  
       }
 
       // Inform user about changes in verbose mode

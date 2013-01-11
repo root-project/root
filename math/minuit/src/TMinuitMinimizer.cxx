@@ -293,6 +293,21 @@ bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
    return (iret == 0); 
 }
 
+bool TMinuitMinimizer::SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower ) { 
+   // set a lower limited variable
+   // since is not supported in TMinuit , just use a artificial large value 
+   Warning("TMinuitMinimizer::SetLowerLimitedVariable","not implemented - use as upper limit 1.E7 instead of +inf"); 
+   return SetLimitedVariable(ivar, name, val , step, lower, lower+ 1.E7);  // use 1.E7 which will make TMinuit happy
+}
+
+bool TMinuitMinimizer::SetUpperLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double upper ) { 
+   // set a upper limited variable
+   // since is not supported in TMinuit , just use a artificial large negative value 
+   Warning("TMinuitMinimizer::SetUpperLimitedVariable","not implemented - use as lower limit -1.E7 instead of -inf"); 
+   return SetLimitedVariable(ivar, name, val , step, upper -1.E7, upper);
+}
+
+
 bool TMinuitMinimizer::CheckMinuitInstance() const {
    // check instance of fMinuit
    if (fMinuit == 0) { 
@@ -361,17 +376,17 @@ bool TMinuitMinimizer::SetVariableStepSize(unsigned int ivar, double step) {
    
 }
 
-bool TMinuitMinimizer::SetVariableLowerLimit(unsigned int , double  ) { 
+bool TMinuitMinimizer::SetVariableLowerLimit(unsigned int ivar, double lower ) { 
    // set the limits of an existing variable
    // parameter must exist or return false
-   Error("TMinuitMinimizer::SetVariableLowerLimit","not implemented - use SetVariableLimits"); 
-   return false;
+   Warning("TMinuitMinimizer::SetVariableLowerLimit","not implemented - use as upper limit 1.E30 instead of +inf"); 
+   return SetVariableLimits(ivar, lower, 1.E30);
 }
-bool TMinuitMinimizer::SetVariableUpperLimit(unsigned int , double  ) { 
+bool TMinuitMinimizer::SetVariableUpperLimit(unsigned int ivar, double upper ) { 
    // set the limits of an existing variable
    // parameter must exist or return false
-   Error("TMinuitMinimizer::SetVariableUpperLimit","not implemented - use SetVariableLimits"); 
-   return false;
+   Warning("TMinuitMinimizer::SetVariableUpperLimit","not implemented - - use as lower limit -1.E30 instead of +inf"); 
+   return SetVariableLimits(ivar, -1.E30, upper);
 }
 
 bool TMinuitMinimizer::SetVariableLimits(unsigned int ivar, double lower, double upper) { 
