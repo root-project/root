@@ -2,7 +2,7 @@
 #ifndef SECOND_RUN
 gROOT->ProcessLine(".L little.C+");
 #endif
-#if defined(ClingWorkAroundMissingDynamicScope))  && !defined(SECOND_RUN)
+#if defined(ClingWorkAroundMissingDynamicScope)  && !defined(SECOND_RUN)
 #define SECOND_RUN
    gROOT->ProcessLine(".x produceLittleFile.C");
 #else
