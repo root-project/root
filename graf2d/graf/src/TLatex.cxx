@@ -536,9 +536,9 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
    Int_t opCurlyCurly    = -1;   // Position of first }{
    Int_t opSquareCurly   = -1;   // Position of first ]{
    Int_t opCloseCurly    = -2;   // Position of first }
-   Int_t opColor         = -1;   // Position of first \color
-   Int_t opFont          = -1;   // Position of first \font
-   Int_t opScale         = -1;   // Position of first \scale
+   Int_t opColor         = -1;   // Position of first #color
+   Int_t opFont          = -1;   // Position of first #font
+   Int_t opScale         = -1;   // Position of first #scale
    Int_t opGreek         = -1;   // Position of a Greek letter
    Int_t opSpec          = -1;   // position of a special character
    Int_t opAbove         = -1;   // position of a vector/overline
@@ -552,8 +552,9 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
    Int_t opOdot          = 0;    // position of #odot
    Int_t opHbar          = 0;    // position of #hbar
    Int_t opMp            = 0;    // position of #mp
+   Int_t opBackslash     = 0;    // position of #backslash
    Int_t opParallel      = 0;    // position of #parallel
-   Int_t opSplitLine     = -1;   // Position of first \splitline
+   Int_t opSplitLine     = -1;   // Position of first #splitline
    Int_t opKern          = -1;   // Position of first #kern
    Int_t opLower         = -1;   // Position of first #lower
    Int_t opBf            = -1;   // Position of first #bf
@@ -650,6 +651,15 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             strncpy(buf,&text[i+1],10);
             if (strncmp(buf,"splitline{",10)==0) {
                opSplitLine=i; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue;
+            }
+         }
+         if (length>i+9) {
+            Char_t buf[10];
+            strncpy(buf,&text[i+1],9);
+            if (!opBackslash && strncmp(buf,"backslash",9)==0) {
+               opBackslash=1; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                continue;
             }
@@ -1108,6 +1118,26 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          DrawLine(x0,y1,x0,y2,spec);
       }
       result = fs1;
+   }
+   else if (opBackslash) {
+      Double_t square = GetHeight()*spec.fSize/2;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+10,length-10);
+      } else {
+         fs1 = Analyse(x+square,y,spec,text+10,length-10);
+         TText bs;
+         bs.SetTextFont(GetTextFont());
+         bs.SetTextColor(fTextColor);
+         bs.SetTextSize(spec.fSize);
+         bs.SetTextAngle(fTextAngle);
+         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t angle   = kPI*spec.fAngle/180.;
+         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         bs.PaintText(xx,yy,"\\");
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
    }
    else if (opParallel) {
       Double_t square = GetHeight()*spec.fSize/1.4;
