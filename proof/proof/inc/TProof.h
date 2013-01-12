@@ -140,7 +140,7 @@ class TSelector;
 // 34 -> 35: Development cycle 5.99/01 (PLite on workers, staging requests in separate dsmgr...)
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 34;            // protocol version number
+const Int_t       kPROOF_Protocol        = 35;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
