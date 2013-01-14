@@ -905,7 +905,12 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
          return;
       }
    }
-   SetRange(FindFixBin(ufirst),FindFixBin(ulast));
+   Int_t ifirst = FindFixBin(ufirst); 
+   Int_t ilast = FindFixBin(ulast); 
+   // fixes for numerical error and for https://savannah.cern.ch/bugs/index.php?99777
+   if (GetBinUpEdge(ifirst) <= ufirst ) ifirst += 1;
+   if (GetBinLowEdge(ilast) >= ulast ) ilast -= 1;
+   SetRange(ifirst, ilast);
 }
 
 //______________________________________________________________________________
