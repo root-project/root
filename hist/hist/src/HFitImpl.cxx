@@ -44,6 +44,7 @@
 
 namespace HFit { 
 
+
    int GetDimension(const TH1 * h1) { return h1->GetDimension(); }
    int GetDimension(const TGraph * ) { return 1; }
    int GetDimension(const TMultiGraph * ) { return 1; }
@@ -51,8 +52,6 @@ namespace HFit {
    int GetDimension(const THnBase * s1) { return s1->GetNdimensions(); }
 
    int CheckFitFunction(const TF1 * f1, int hdim);
-
-   void FitOptionsMake(const char *option, Foption_t &fitOption);
 
    void CheckGraphFitOptions(Foption_t &fitOption);
 
@@ -69,6 +68,7 @@ namespace HFit {
 
    template <class FitObject>
    void StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::DataRange & range, bool, bool, const char *goption);
+
 
 } 
 
@@ -147,7 +147,8 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    ROOT::Fit::DataOptions opt; 
    opt.fIntegral = fitOption.Integral; 
    opt.fUseRange = fitOption.Range; 
-   if (fitOption.Like) opt.fUseEmpty = true;  // use empty bins in log-likelihood fits 
+   opt.fExpErrors = fitOption.PChi2;  // pearson chi2 with expected errors
+   if (fitOption.Like || fitOption.PChi2) opt.fUseEmpty = true;  // use empty bins in log-likelihood fits 
    if (special==300) opt.fCoordErrors = false; // no need to use coordinate errors in a pol0 fit
    if (fitOption.NoErrX) opt.fCoordErrors = false;  // do not use coordinate errors when requested
    if (fitOption.W1 ) opt.fErrors1 = true;
@@ -234,8 +235,13 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       if (plow*pup != 0 && plow >= pup) { // this is a limitation - cannot fix a parameter to zero value
          parSettings.Fix();
       }
-      else if (plow < pup ) { 
-         parSettings.SetLimits(plow,pup);
+      else if (plow < pup ) {
+         if (!TMath::Finite(pup) && TMath::Finite(plow) ) 
+            parSettings.SetLowerLimit(plow);
+         else if (!TMath::Finite(plow) && TMath::Finite(pup) ) 
+            parSettings.SetUpperLimit(pup);
+         else 
+            parSettings.SetLimits(plow,pup);
       }
 
       // set the parameter step size (by default are set to 0.3 of value)
@@ -243,7 +249,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       double err = f1->GetParError(i); 
       if ( err > 0) 
          parSettings.SetStepSize(err); 
-      else if (plow < pup) { // in case of limits improve step sizes 
+      else if (plow < pup && TMath::Finite(plow) && TMath::Finite(pup) ) { // in case of limits improve step sizes 
          double step = 0.1 * (pup - plow); 
          // check if value is not too close to limit otherwise trim value
          if (  parSettings.Value() < pup && pup - parSettings.Value() < 2 * step  ) 
@@ -628,26 +634,48 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
 }
 
 
-void ROOT::Fit::FitOptionsMake(const char *option, Foption_t &fitOption) { 
-   //   - Decode list of options into fitOption (used by the TGraph)
-   Double_t h=0;
+void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_t &fitOption) { 
+   //   - Decode list of options into fitOption (used by both TGraph and TH1)
+   //  works for both histograms and graph depending on the enum FitObjectType defined in HFit
+
+   if (option == 0) return;
+   if (strlen(option) == 0) return;
+ 
    TString opt = option;
    opt.ToUpper();
-   opt.ReplaceAll("ROB", "H");
-   opt.ReplaceAll("EX0", "T");
 
-   //for robust fitting, see if # of good points is defined
-   // decode parameters for robust fitting
-   if (opt.Contains("H=0.")) {
-      int start = opt.Index("H=0.");
-      int numpos = start + strlen("H=0.");
-      int numlen = 0;
-      int len = opt.Length();
-      while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
-      TString num = opt(numpos,numlen);
-      opt.Remove(start+strlen("H"),strlen("=0.")+numlen);
-      h = atof(num.Data());
-      h*=TMath::Power(10, -numlen);
+   // parse firt the specific options
+   if (type == kHistogram) { 
+
+      if (opt.Contains("I"))  fitOption.Integral= 1;   // integral of function in the bin (no sense for graph)
+      if (opt.Contains("W"))  fitOption.W1      = 1; // all non-empty bins have weight =1
+      if (opt.Contains("WW")) fitOption.W1      = 2; //all bins have weight=1, even empty bins
+
+   }
+   
+   // specific Graph options (need to be parsed before)
+   else if (type == kGraph) { 
+      opt.ReplaceAll("ROB", "H");
+      opt.ReplaceAll("EX0", "T");
+
+      //for robust fitting, see if # of good points is defined
+      // decode parameters for robust fitting
+      Double_t h=0;
+      if (opt.Contains("H=0.")) {
+         int start = opt.Index("H=0.");
+         int numpos = start + strlen("H=0.");
+         int numlen = 0;
+         int len = opt.Length();
+         while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
+         TString num = opt(numpos,numlen);
+         opt.Remove(start+strlen("H"),strlen("=0.")+numlen);
+         h = atof(num.Data());
+         h*=TMath::Power(10, -numlen);
+      }
+
+      if (opt.Contains("H")) { fitOption.Robust  = 1;   fitOption.hRobust = h; } 
+      if (opt.Contains("T")) fitOption.NoErrX   = 1;  // no error in X
+
    }
 
    if (opt.Contains("U")) fitOption.User    = 1;
@@ -655,6 +683,7 @@ void ROOT::Fit::FitOptionsMake(const char *option, Foption_t &fitOption) {
    if (opt.Contains("V")){fitOption.Verbose = 1; fitOption.Quiet   = 0;}
    if (opt.Contains("L")) fitOption.Like    = 1;
    if (opt.Contains("X")) fitOption.Chi2    = 1;
+   if (opt.Contains("P")) fitOption.PChi2    = 1; 
    if (opt.Contains("I")) fitOption.Integral= 1;
    // likelihood fit options
    if (opt.Contains("L")) { 
@@ -674,12 +703,10 @@ void ROOT::Fit::FitOptionsMake(const char *option, Foption_t &fitOption) {
    if (opt.Contains("N")) fitOption.Nostore = 1;
    if (opt.Contains("0")) fitOption.Nograph = 1;
    if (opt.Contains("+")) fitOption.Plus    = 1;
-   if (opt.Contains("B")) fitOption.Bound   = 1;
+   if (opt.Contains("B")) fitOption.Bound   = 1;  
    if (opt.Contains("C")) fitOption.Nochisq = 1;
    if (opt.Contains("F")) fitOption.Minuit  = 1;
-   if (opt.Contains("T")) fitOption.NoErrX   = 1;
    if (opt.Contains("S")) fitOption.StoreResult   = 1;
-   if (opt.Contains("H")) { fitOption.Robust  = 1;   fitOption.hRobust = h; } 
 
 }
 
@@ -739,15 +766,21 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc,
       if (plow*pup != 0 && plow >= pup) {
          parSettings.Fix();
       }
-      else if (plow < pup ) 
-         parSettings.SetLimits(plow,pup);
+      else if (plow < pup ) {
+         if (!TMath::Finite(pup) && TMath::Finite(plow) ) 
+            parSettings.SetLowerLimit(plow);
+         else if (!TMath::Finite(plow) && TMath::Finite(pup) ) 
+            parSettings.SetUpperLimit(pup);
+         else 
+            parSettings.SetLimits(plow,pup);
+      }
 
       // set the parameter step size (by default are set to 0.3 of value)
       // if function provides meaningful error values
       double err = fitfunc->GetParError(i); 
       if ( err > 0) 
          parSettings.SetStepSize(err); 
-      else if (plow < pup) { // in case of limits improve step sizes 
+      else if (plow < pup && TMath::Finite(plow) && TMath::Finite(pup) ) { // in case of limits improve step sizes 
          double step = 0.1 * (pup - plow); 
          // check if value is not too close to limit otherwise trim value
          if (  parSettings.Value() < pup && pup - parSettings.Value() < 2 * step  ) 

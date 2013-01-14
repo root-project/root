@@ -1315,7 +1315,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //
 
    Foption_t fitOption;
-   ROOT::Fit::FitOptionsMake(option, fitOption);
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::kGraph, option, fitOption);
    // create range and minimizer options with default values
    ROOT::Fit::DataRange range(rxmin, rxmax);
    ROOT::Math::MinimizerOptions minOption;

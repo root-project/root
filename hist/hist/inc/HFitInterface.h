@@ -12,7 +12,6 @@
 // set of free functions used to couple the ROOT data object with the fitting classes
 
 // avoid including this file when running CINT since free functions cannot be re-defined
-#if !defined(__CINT__) || defined(__MAKECINT__)
 
 #ifndef ROOT_HFitInterface
 #define ROOT_HFitInterface
@@ -38,19 +37,26 @@ namespace ROOT {
 
    namespace Fit { 
 
-      //class BinData; 
+      //class BinData;
+
       class FitResult;
       class DataRange; 
       class BinData;
       class UnBinData; 
       class SparseData;
 
-#ifndef __CINT__  // does not link on Windows (why ??)
+      enum EFitObjectType { 
+         kHistogram, 
+         kGraph
+      };
+
+
+      //#ifndef __CINT__  // does not link on Windows (why ??)
 
       /**
          Decode list of options into fitOption
        */
-      void FitOptionsMake(const char *option, Foption_t &fitOption);
+      void FitOptionsMake(EFitObjectType type, const char *option, Foption_t &fitOption);
 
       /**
          fitting function for a TH1 (called from TH1::Fit)
@@ -76,7 +82,7 @@ namespace ROOT {
          fitting function for a THn / THnSparse (called from THnBase::Fit)
        */
       TFitResultPtr FitObject(THnBase * s1, TF1 *f1, Foption_t & option, const ROOT::Math::MinimizerOptions & moption, const char *goption, ROOT::Fit::DataRange & range); 
-#endif
+
 
       /** 
           fit an unbin data set (from tree or from histogram buffer) 
@@ -166,4 +172,4 @@ namespace ROOT {
 #endif /* ROOT_Fit_TH1Interface */
 
 
-#endif  /* not CINT OR MAKE_CINT */
+//#endif  /* not CINT OR MAKE_CINT */

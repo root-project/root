@@ -3772,8 +3772,8 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 
    // implementation of Fit method is in file hist/src/HFitImpl.cxx
    Foption_t fitOption;
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::kHistogram,option,fitOption);
 
-   if (!FitOptionsMake(option,fitOption)) return 0;
    // create range and minimizer options with default values
    ROOT::Fit::DataRange range(xxmin,xxmax);
    ROOT::Math::MinimizerOptions minOption;
@@ -4091,40 +4091,7 @@ Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &fitOption)
    //   -*-*-*-*-*-*-*Decode string choptin and fill fitOption structure*-*-*-*-*-*
    //                 ================================================
 
-   if (choptin == 0) return 1;
-   if (strlen(choptin) == 0) return 1;
-   TString opt = choptin;
-   opt.ToUpper();
-   if (opt.Contains("Q"))  fitOption.Quiet   = 1;
-   if (opt.Contains("V")) {fitOption.Verbose = 1; fitOption.Quiet = 0;}
-   if (opt.Contains("X"))  fitOption.Chi2    = 1;
-   if (opt.Contains("W"))  fitOption.W1      = 1;
-   if (opt.Contains("WW")) fitOption.W1      = 2; //all bins have weight=1, even empty bins
-   // likelihood fit options
-   if (opt.Contains("L")) { 
-      fitOption.Like    = 1;
-      //if (opt.Contains("LL")) fitOption.Like    = 2;
-      if (opt.Contains("W")){ fitOption.Like    = 2;  fitOption.W1=0;}//  (weighted likelihood)
-      if (opt.Contains("MULTI")) { 
-         if (fitOption.Like == 2) fitOption.Like = 6; // weighted multinomial 
-         else fitOption.Like    = 4; // multinomial likelihood fit instead of Poisson
-         opt.ReplaceAll("MULTI","");
-      }
-   }
-   if (opt.Contains("E"))  fitOption.Errors  = 1;
-   if (opt.Contains("M"))  fitOption.More    = 1;
-   if (opt.Contains("R"))  fitOption.Range   = 1;
-   if (opt.Contains("G"))  fitOption.Gradient= 1;
-   if (opt.Contains("N"))  fitOption.Nostore = 1;
-   if (opt.Contains("0"))  fitOption.Nograph = 1;
-   if (opt.Contains("+"))  fitOption.Plus    = 1;
-   if (opt.Contains("I"))  fitOption.Integral= 1;
-   if (opt.Contains("B"))  fitOption.Bound   = 1;
-   if (opt.Contains("U")) {fitOption.User    = 1; fitOption.Like = 0;}
-   if (opt.Contains("F"))  fitOption.Minuit = 1;
-   if (opt.Contains("C"))  fitOption.Nochisq = 1;
-   if (opt.Contains("S"))  fitOption.StoreResult = 1;
-
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::kHistogram, choptin,fitOption);
    return 1;
 }
 
@@ -5310,6 +5277,12 @@ Long64_t TH1::Merge(TCollection *li)
                   allHaveLabels = kFALSE;
                } 
             }
+            // else if (h == this) { 
+            //    // in case of a full labels histogram set 
+            //    // the kCanRebin bit otherwise labels will be lost
+            //    // Info("Merge","Histogram %s has labels but has not the kCanRebin bit set - set the bit on to not loose labels",GetName() );
+            //    // allHaveLabels = kFALSE;
+            // }
          }         
       }
    }    while ( ( h = dynamic_cast<TH1*> ( next() ) ) != NULL );

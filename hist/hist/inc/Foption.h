@@ -30,6 +30,7 @@ struct Foption_t {
    int Verbose;     // "V"  Verbose mode. Print results after each iteration
    int Bound;       // "B"  When using pre-defined functions user parameter settings are used instead of default one
    int Chi2;        // "X"  For fitting THnsparse use chi2 method (default is likelihood)
+   int PChi2;       // "P"  Use Pearson chi2 built with the expected error instead of the observed ones
    int Like;        // "L"  Use Log Likelihood. Default is chisquare method except fitting THnsparse
    int User;        // "U"  Use a User specified fitting algorithm (via SetFCN)
    int W1;          // "W"  Set all the weights to 1. Ignore error bars
@@ -53,6 +54,7 @@ struct Foption_t {
       Verbose      (0),
       Bound        (0),
       Chi2         (0),
+      PChi2        (0),
       Like         (0),
       User         (0),
       W1           (0),
