@@ -1952,6 +1952,12 @@ namespace {
             } else if ( (fClassName == "unsigned long" && (other.fClassName == "unsigned long long" || other.fClassName == "ULong64_t"))
                        || ( (fClassName == "unsigned long long" || fClassName == "ULong64_t") && other.fClassName == "unsigned long") ) {
                // This is okay both have the same on file format.
+            } else if (TClassEdit::IsSTLCont(fName)) {
+               TString name = TClassEdit::ShortType( fName, TClassEdit::kDropStlDefault );
+               TString othername = TClassEdit::ShortType( other.fName, TClassEdit::kDropStlDefault );
+               if (name != othername) {
+                  return kTRUE;
+               }
             } else {
                return kTRUE;
             }
@@ -2120,6 +2126,10 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
             done = kTRUE;
             break;
          }
+      } 
+      if (TClassEdit::IsSTLCont(localClass)) {
+         localClass = TClassEdit::ShortType( localClass, TClassEdit::kDropStlDefault );
+         otherClass = TClassEdit::ShortType( otherClass, TClassEdit::kDropStlDefault );
       }
       // Need to normalized the name
       if (localClass != otherClass) {
