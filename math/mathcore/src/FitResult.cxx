@@ -430,7 +430,7 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
    // need to add also minos errors , globalCC, etc..
    unsigned int npar = fParams.size(); 
    if (npar == 0) { 
-      std::cout << "Error: Empty  FitResult  ! " << std::endl;
+      std::cout << "FitResult::Print - Error: Empty  FitResult  ! " << std::endl;
       return;
    }
    os << "\n****************************************\n";

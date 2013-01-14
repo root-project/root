@@ -37,6 +37,7 @@ struct DataOptions {
       fUseEmpty(false), 
       fUseRange(false), 
       fErrors1(false),
+      fExpErrors(false),
       fCoordErrors(true),
       fAsymErrors(true)
    {}
@@ -47,6 +48,7 @@ struct DataOptions {
    bool fUseEmpty;    // use empty bins (default is false) with a fixed error of 1
    bool fUseRange;    // use the function range when creating the fit data (default is false)
    bool fErrors1;     // use all errors equal to 1, i.e. fit without errors (default is false) 
+   bool fExpErrors;   // use expected errors from the function and not from the data 
    bool fCoordErrors; // use errors on the x coordinates when available (default is true)
    bool fAsymErrors;  // use asymmetric errors in the value when available, selecting them according to the on sign of residual (default is true)
 
