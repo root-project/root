@@ -783,13 +783,13 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
    TString opt = option;
    opt.ToLower();
    Bool_t integral = kFALSE;
-   if (opt.Contains("i") && fDimension ==1) integral = kTRUE;
+   if (opt.Contains("i") && fDimension == 1) integral = kTRUE;
 
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY();
-   Int_t nbinsz = GetNbinsZ();
-   if (fDimension < 2) nbinsy = -1;
-   if (fDimension < 3) nbinsz = -1;
+   Int_t ncellsx = GetNbinsX() + 2; // cells = normal bins + underflow bin + overflow bin
+   Int_t ncellsy = GetNbinsY() + 2;
+   Int_t ncellsz = GetNbinsZ() + 2;
+   if (fDimension < 2) ncellsy = 1;
+   if (fDimension < 3) ncellsz = 1;
 
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
@@ -802,26 +802,25 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
    SetMinimum();
    SetMaximum();
 
-
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
    Double_t cu=0;
    Double_t xx[3];
    Double_t *params = 0;
    f1->InitArgs(xx,params);
-   for (binz=0;binz<=nbinsz+1;binz++) {
+   for (binz = 0; binz < ncellsz; ++binz) {
       xx[2] = fZaxis.GetBinCenter(binz);
-      for (biny=0;biny<=nbinsy+1;biny++) {
+      for (biny = 0; biny < ncellsy; ++biny) {
          xx[1] = fYaxis.GetBinCenter(biny);
-         for (binx=0;binx<=nbinsx+1;binx++) {
+         for (binx = 0; binx < ncellsx; ++binx) {
             xx[0] = fXaxis.GetBinCenter(binx);
             if (!f1->IsInside(xx)) continue;
             TF1::RejectPoint(kFALSE);
-            bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
+            bin = binx + ncellsx * (biny + ncellsy * binz);
             if (integral) {
                xx[0] = fXaxis.GetBinLowEdge(binx);
                cu  = c1*f1->EvalPar(xx);
-               cu += c1*f1->Integral(fXaxis.GetBinLowEdge(binx),fXaxis.GetBinUpEdge(binx))*fXaxis.GetBinWidth(binx);
+               cu += c1*f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx)) * fXaxis.GetBinWidth(binx);
             } else {
                cu  = c1*f1->EvalPar(xx);
             }
@@ -835,6 +834,7 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
          }
       }
    }
+
    return kTRUE;
 }
 
@@ -1031,9 +1031,10 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
    Bool_t normWidth = kFALSE;
    if (h1 == h2 && c2 < 0) {c2 = 0; normWidth = kTRUE;}
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY(); 
-   Int_t nbinsz = GetNbinsZ();
+
+   Int_t nbinsx = GetNbinsX() + 2; // normal bins + underflow, overflow
+   Int_t nbinsy = GetNbinsY() + 2; 
+   Int_t nbinsz = GetNbinsZ() + 2;
 
    if (h1 != h2) { 
       try {
@@ -1051,9 +1052,8 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       }
    }
 
-   if (fDimension < 2) nbinsy = -1;
-   if (fDimension < 3) nbinsz = -1;
-   if (fDimension < 3) nbinsz = -1;
+   if (fDimension < 2) nbinsy = 1;
+   if (fDimension < 3) nbinsz = 1;
 
 //    Create Sumw2 if h1 or h2 have Sumw2 set
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
@@ -1061,12 +1061,15 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 //   - Add statistics
    Double_t nEntries = TMath::Abs( c1*h1->GetEntries() + c2*h2->GetEntries() );
 
+// TODO remove
 // statistics can be preserved only in case of positive coefficients
 // otherwise with negative c1 (histogram subtraction) one risks to get negative variances
 // also in case of scaling with the width we cannot preserve the statistics
    Double_t s1[kNstat] = {0};
    Double_t s2[kNstat] = {0};
    Double_t s3[kNstat];
+
+
    Bool_t resetStats = (c1*c2 < 0) || normWidth;
    if (!resetStats) {
       // need to initialize to zero s1 and s2 since 
@@ -1082,82 +1085,78 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
    SetMinimum();
    SetMaximum();
+// TODO remove
 
-   Bool_t timeDisplayX = fXaxis.GetTimeDisplay();
-   if (timeDisplayX)  fXaxis.SetTimeDisplay(0);
-  
-
-//   - Loop on bins (including underflows/overflows)
-   Int_t bin, binx, biny, binz;
-   Double_t cu;
-   for (binz=0;binz<=nbinsz+1;binz++) {
-      Double_t wz = h1->GetZaxis()->GetBinWidth(binz);
-      for (biny=0;biny<=nbinsy+1;biny++) {
-         Double_t wy = h1->GetYaxis()->GetBinWidth(biny);
-         for (binx=0;binx<=nbinsx+1;binx++) {
-            Double_t wx = h1->GetXaxis()->GetBinWidth(binx);
-            bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            //special case where histograms have the kIsAverage bit set
-            if (h1->TestBit(kIsAverage) && h2->TestBit(kIsAverage)) {
-               Double_t y1 = h1->GetBinContent(bin);
-               Double_t y2 = h2->GetBinContent(bin);
-               Double_t e1 = h1->GetBinError(bin);
-               Double_t e2 = h2->GetBinError(bin);
-               Double_t w1 = 1., w2 = 1.;
-               // consider all special cases  when bin errors are zero
-               // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
-               if (e1 > 0 )   
-                  w1 = 1./(e1*e1);
-               else if (h1->fSumw2.fN) { 
-                  w1 = 1.E200; // use an arbitrary huge value
-                  if (y1 == 0 ) { 
-                     // use an estimated error from the global histogram scale
-                     double sf = (s1[0] != 0) ? s1[1]/s1[0] : 1;  
-                     w1 = 1./(sf*sf); 
-                  }
-               }
-               if (e2 > 0)    
-                  w2 = 1./(e2*e2);
-               else if (h2->fSumw2.fN) { 
-                  w2 = 1.E200; // use an arbitrary huge value
-                  if (y2 == 0) { 
-                     // use an estimated error from the global histogram scale
-                     double sf = (s2[0] != 0) ? s2[1]/s2[0] : 1;  
-                     w2 = 1./(sf*sf); 
-                  }
-               }              
-               double y =  (w1*y1 + w2*y2)/(w1 + w2);
-               UpdateBinContent(bin, y);
-               if (fSumw2.fN) { 
-                  double err2 =  1./(w1 + w2);
-                  if (err2 < 1.E-200) err2 = 0;  // to remove arbitrary value when e1=0 AND e2=0
-                  fSumw2.fArray[bin] = err2;
-               }               
-            } 
-
-            // case of histogram Addition 
-            else {
-               if (normWidth) {
-                  Double_t w = wx*wy*wz;
-                  cu  = c1*h1->GetBinContent(bin)/w;
-                  UpdateBinContent(bin,cu);
-                  if (fSumw2.fN) {
-                     Double_t e1 = h1->GetBinError(bin)/w;
-                     fSumw2.fArray[bin] = c1*c1*e1*e1;
-                  }
-               } else {
-                  cu  = c1*h1->GetBinContent(bin)+ c2*h2->GetBinContent(bin);
-                  UpdateBinContent(bin,cu);
-                  if (fSumw2.fN) {
-                     Double_t e1 = h1->GetBinError(bin);
-                     Double_t e2 = h2->GetBinError(bin);
-                     fSumw2.fArray[bin] = c1*c1*e1*e1 + c2*c2*e2*e2;
-                  }
+   if (normWidth) { // DEPRECATED CASE: belongs to fitting / drawing modules
+      Int_t bin, binx, biny, binz;
+      Double_t cu;
+      for (binz = 0; binz < nbinsz; ++binz) {
+         Double_t wz = h1->GetZaxis()->GetBinWidth(binz);
+         for (biny = 0; biny < nbinsy; ++biny) {
+            Double_t wy = h1->GetYaxis()->GetBinWidth(biny);
+            for (binx = 0; binx < nbinsx; ++binx) {
+               Double_t wx = h1->GetXaxis()->GetBinWidth(binx);
+               bin = GetBin(binx, biny, binz);
+               
+               Double_t w = wx*wy*wz;
+               cu  = c1*h1->RetrieveBinContent(bin)/w;
+               UpdateBinContent(bin,cu);
+               if (fSumw2.fN) {
+                  Double_t e1 = h1->GetBinError(bin)/w;
+                  fSumw2.fArray[bin] = c1*c1*e1*e1;
                }
             }
          }
       }
+   } else if (h1->TestBit(kIsAverage) && h2->TestBit(kIsAverage)) {
+      for (Int_t i = 0; i < fNcells; ++i) { // loop on cells (bins including underflow / overflow)
+         // special case where histograms have the kIsAverage bit set
+         Double_t y1 = h1->RetrieveBinContent(i);
+         Double_t y2 = h2->RetrieveBinContent(i);
+         Double_t e1 = h1->GetBinError(i);
+         Double_t e2 = h2->GetBinError(i);
+         Double_t w1 = 1., w2 = 1.;
+
+         // consider all special cases  when bin errors are zero
+         // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
+         if (e1 > 0) w1 = 1./(e1*e1);
+         else if (h1->fSumw2.fN) { 
+            w1 = 1.E200; // use an arbitrary huge value
+            if (y1 == 0 ) { // use an estimated error from the global histogram scale
+               double sf = (s1[0] != 0) ? s1[1]/s1[0] : 1;  
+               w1 = 1./(sf*sf); 
+            }
+         }
+         if (e2 > 0) w2 = 1./(e2*e2);
+         else if (h2->fSumw2.fN) { 
+            w2 = 1.E200; // use an arbitrary huge value
+            if (y2 == 0) { // use an estimated error from the global histogram scale
+               double sf = (s2[0] != 0) ? s2[1]/s2[0] : 1;  
+               w2 = 1./(sf*sf); 
+            }
+         }              
+
+         double y =  (w1*y1 + w2*y2)/(w1 + w2);
+         UpdateBinContent(i, y);
+         if (fSumw2.fN) { 
+            double err2 =  1./(w1 + w2);
+            if (err2 < 1.E-200) err2 = 0;  // to remove arbitrary value when e1=0 AND e2=0
+            fSumw2.fArray[i] = err2;
+         }               
+      }
+   } else { // case of simple histogram addition
+      Double_t c1sq = c1 * c1;
+      Double_t c2sq = c2 * c2;
+      for (Int_t i = 0; i < fNcells; ++i) { // Loop on cells (bins including underflows/overflows)
+         UpdateBinContent(i, c1 * h1->RetrieveBinContent(i) + c2*h2->RetrieveBinContent(i));
+         if (fSumw2.fN) {
+            Double_t e1 = h1->GetBinError(i);
+            Double_t e2 = h2->GetBinError(i);
+            fSumw2.fArray[i] = c1sq*e1*e1 + c2sq*e2*e2;
+         }
+      }
    }
+
    if (resetStats)  {
       // statistics need to be reset in case coefficient are negative
       ResetStats();
@@ -1167,8 +1166,6 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       PutStats(s3);
       SetEntries(nEntries);
    }
-
-   if (timeDisplayX)  fXaxis.SetTimeDisplay(1);
 
    return kTRUE;
 }
@@ -6048,20 +6045,26 @@ void TH1::Scale(Double_t c1, Option_t *option)
    // If option contains "width" the bin contents and errors are divided
    // by the bin width.
 
-   TString opt = option;
-   opt.ToLower();
-   Double_t ent = fEntries;
-   if (opt.Contains("width")) Add(this,this,c1,-1);
-   else                       Add(this,this,c1,0);
-   fEntries = ent;
 
-   //if contours set, must also scale contours
+   TString opt = option; opt.ToLower();
+   if (opt.Contains("width")) Add(this, this, c1, -1);
+   else {
+      // XXX if (fBuffer) BufferEmpty(1); 
+      for(Int_t i = 0; i < fNcells; ++i) UpdateBinContent(i, c1 * RetrieveBinContent(i));
+      if (fSumw2.fN) {
+         Double_t c1sq = c1 * c1;
+         //Double_t ersq = GetBinError(); ersq *= ersq; 
+         for(Int_t i = 0; i < fNcells; ++i) fSumw2.fArray[i] *= c1sq; // update errors
+      }
+      SetMinimum(); SetMaximum(); // minimum and maximum value will be recalculated the next time
+   }
+
+   // if contours set, must also scale contours
    Int_t ncontours = GetContour();
    if (ncontours == 0) return;
-   Double_t *levels = fContour.GetArray();
-   for (Int_t i=0;i<ncontours;i++) {
-      levels[i] *= c1;
-   }
+   Double_t* levels = fContour.GetArray();
+   for (Int_t i = 0; i < ncontours; ++i) levels[i] *= c1;
+
 }
 
 //______________________________________________________________________________
@@ -8196,7 +8199,7 @@ Double_t TH1::GetBinError(Int_t bin) const
       Double_t err2 = fSumw2.fArray[bin];
       return TMath::Sqrt(err2);
    }
-   Double_t error2 = TMath::Abs(GetBinContent(bin));
+   Double_t error2 = TMath::Abs(RetrieveBinContent(bin));
    return TMath::Sqrt(error2);
 }
 
@@ -8220,7 +8223,7 @@ Double_t TH1::GetBinErrorLow(Int_t bin) const
    Double_t alpha = 1.- 0.682689492;
    if (fBinStatErrOpt == kPoisson2) alpha = 0.05; 
 
-   Double_t c = GetBinContent(bin);
+   Double_t c = RetrieveBinContent(bin);
    Int_t n = int(c);  
    if (n < 0) { 
       Warning("GetBinErrorLow","Histogram has negative bin content-force usage to normal errors");
