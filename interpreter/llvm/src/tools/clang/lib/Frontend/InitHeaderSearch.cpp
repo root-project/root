@@ -305,7 +305,8 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
   case llvm::Triple::RTEMS:
     break;
   case llvm::Triple::Cygwin:
-    AddPath("/usr/include/w32api", System, true, false, false);
+    // The headers in w32api/ are not cygwin-compatible (but native)
+    //AddPath("/usr/include/w32api", System, true, false, false);
     break;
   case llvm::Triple::MinGW32: { 
       // mingw-w64 crt include paths
