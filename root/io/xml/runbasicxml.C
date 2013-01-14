@@ -1,6 +1,9 @@
 {
 // Fill out the code of the actual test
 #ifndef SECOND_RUN
+#ifdef ClingWorkAroundMissingAutoLoading
+   gSystem->Load("libXMLIO");
+#endif
    gROOT->ProcessLine(".L test_classes.h+");
 #endif
 
