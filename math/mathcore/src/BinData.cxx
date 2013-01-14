@@ -16,6 +16,7 @@
 #include <cassert> 
 #include <cmath>
 
+
 namespace ROOT { 
 
    namespace Fit { 
@@ -30,6 +31,8 @@ BinData::BinData(unsigned int maxpoints , unsigned int dim , ErrorType err ) :
    fDim(dim),
    fPointSize(GetPointSize(err,dim) ),
    fNPoints(0),
+   fSumContent(0),
+   fSumError2(0),
    fRefVolume(1.0),
    fDataVector(0),
    fDataWrapper(0)
@@ -48,6 +51,8 @@ BinData::BinData (const DataOptions & opt, unsigned int maxpoints, unsigned int 
    fDim(dim),
    fPointSize(GetPointSize(err,dim) ),
    fNPoints(0),
+   fSumContent(0),
+   fSumError2(0),
    fRefVolume(1.0),
    fDataVector(0),
    fDataWrapper(0)
@@ -70,6 +75,8 @@ BinData::BinData (const DataOptions & opt, const DataRange & range, unsigned int
    fDim(dim),
    fPointSize(GetPointSize(err,dim) ),
    fNPoints(0),
+   fSumContent(0),
+   fSumError2(0),
    fRefVolume(1.0),
    fDataVector(0),
    fDataWrapper(0)
@@ -90,6 +97,8 @@ BinData::BinData(unsigned int n, const double * dataX, const double * val, const
    fDim(1), 
    fPointSize(2),
    fNPoints(n),
+   fSumContent(0),
+   fSumError2(0),
    fRefVolume(1.0),
    fDataVector(0)
 { 
@@ -109,6 +118,8 @@ BinData::BinData(unsigned int n, const double * dataX, const double * dataY, con
    fDim(2), 
    fPointSize(3),
    fNPoints(n),
+   fSumContent(0),
+   fSumError2(0),
    fRefVolume(1.0),
    fDataVector(0)
 { 
@@ -126,6 +137,8 @@ BinData::BinData(unsigned int n, const double * dataX, const double * dataY, con
    fDim(3), 
    fPointSize(4),
    fNPoints(n),
+   fSumContent(0),
+   fSumError2(0),
    fRefVolume(1.0),
    fDataVector(0)
 { 
@@ -143,7 +156,9 @@ BinData::BinData(const BinData & rhs) :
    fDim(rhs.fDim), 
    fPointSize(rhs.fPointSize), 
    fNPoints(rhs.fNPoints), 
-   fRefVolume(1.0),
+   fSumContent(rhs.fSumContent),
+   fSumError2(rhs.fSumError2),
+   fRefVolume(rhs.fRefVolume),
    fDataVector(0),
    fDataWrapper(0), 
    fBinEdge(rhs.fBinEdge)
@@ -170,6 +185,8 @@ BinData & BinData::operator= (const BinData & rhs) {
    fDim = rhs.fDim;  
    fPointSize = rhs.fPointSize;  
    fNPoints = rhs.fNPoints;  
+   fSumContent = rhs.fSumContent;
+   fSumError2 = rhs.fSumError2;
    fBinEdge = rhs.fBinEdge;
    fRefVolume = rhs.fRefVolume;
    // delete previous pointers 
@@ -256,6 +273,7 @@ void BinData::Add(double x, double y ) {
    *itr++ = y; 
    
    fNPoints++;
+   fSumContent += y;  
 }
    
    /**
@@ -276,6 +294,8 @@ void BinData::Add(double x, double y, double ey) {
    *itr++ =  (ey!= 0) ? 1.0/ey : 0; 
    
    fNPoints++;
+   fSumContent += y;  
+   fSumError2 += ey*ey;  
 }
 
    /**
@@ -296,6 +316,8 @@ void BinData::Add(double x, double y, double ex, double ey) {
    *itr++ = ey; 
    
    fNPoints++;
+   fSumContent += y;  
+   fSumError2  += ey*ey;  
 }
 
    /**
@@ -317,6 +339,8 @@ void BinData::Add(double x, double y, double ex, double eyl , double eyh) {
    *itr++ = eyh; 
    
    fNPoints++;
+   fSumContent += y;  
+   fSumError2  += (eyl+eyh)*(eyl+eyh)/4;  
 }
 
 
@@ -340,6 +364,7 @@ void BinData::Add(const double *x, double val) {
    *itr++ = val; 
    
    fNPoints++;
+   fSumContent += val;  
 }
 
    /**
@@ -363,6 +388,8 @@ void BinData::Add(const double *x, double val, double  eval) {
    *itr++ =  (eval!= 0) ? 1.0/eval : 0; 
    
    fNPoints++;
+   fSumContent += val;  
+   fSumError2  += eval*eval;  
 }
 
 
@@ -389,6 +416,8 @@ void BinData::Add(const double *x, double val, const double * ex, double  eval) 
    *itr++ = eval; 
    
    fNPoints++;
+   fSumContent += val;  
+   fSumError2  += eval*eval;  
 }
 
    /**
@@ -415,6 +444,8 @@ void BinData::Add(const double *x, double val, const double * ex, double  elval,
    *itr++ = ehval; 
    
    fNPoints++;
+   fSumContent += val;  
+   fSumError2  += (elval+ehval)*(elval+ehval)/4;  
 }
 
 void BinData::AddBinUpEdge(const double *xup ) { 
@@ -464,6 +495,8 @@ BinData & BinData::LogTransform() {
          fPointSize = fDim + 2;
       }
 
+      fSumContent = 0;
+      fSumError2 = 0;
       while (ip <  fNPoints ) {     
          assert( itr != data.end() );
          DataItr valitr = itr + fDim; 
@@ -475,6 +508,7 @@ BinData & BinData::LogTransform() {
             return *this; 
          }
          *(valitr) = std::log(val);
+         fSumContent += *(valitr);
          // change also errors to 1/val * err
          if (type == kNoError ) { 
             // insert new error value 
@@ -485,12 +519,21 @@ BinData & BinData::LogTransform() {
          }
          else if (type == kValueError) { 
              // new weight = val * old weight
-            *(valitr+1) *= val; 
+            *(valitr+1) *= val;
+            double invErr = *(valitr+1);
+            fSumError2  += 1./(invErr*invErr);
          } 
          else {
             // other case (error in value is stored) : new error = old_error/value 
-            for (unsigned int j = fDim + 1; j < fPointSize; ++j)  
+            for (unsigned int j = 2*fDim + 1; j < fPointSize; ++j)  {
                *(itr+j) /= val;  
+            }
+            double err = 0; 
+            if (type != kAsymError) 
+               err = *(itr+2*fDim+1);            
+            else 
+               err = 0.5 * ( *(itr+2*fDim+1) + *(itr+2*fDim+2) );
+            fSumError2 += err*err;
          }
          itr += fPointSize; 
          ip++;
@@ -537,6 +580,7 @@ BinData & BinData::LogTransform() {
    *this = tmpData; 
    return *this; 
 }
+
 
    } // end namespace Fit
 

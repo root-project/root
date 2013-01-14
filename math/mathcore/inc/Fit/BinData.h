@@ -496,6 +496,20 @@ public :
     */
    void SetRefVolume(double value) { fRefVolume = value; }
 
+
+   /**
+      compute the total sum of the data content
+      (sum of weights in cse of weighted data set)
+   */
+   double SumOfContent() const { return fSumContent; } 
+
+   /**
+      compute the total sum of the error square
+      (sum of weight square in case of a weighted data set)
+   */
+   double SumOfError2() const { return fSumError2;}
+   
+
 protected: 
 
    void SetNPoints(unsigned int n) { fNPoints = n; }
@@ -506,6 +520,8 @@ private:
    unsigned int fDim;       // coordinate dimension
    unsigned int fPointSize; // total point size including value and errors (= fDim + 2 for error in only Y ) 
    unsigned int fNPoints;   // number of contained points in the data set (can be different than size of vector)
+   double fSumContent;  // total sum of the bin data content 
+   double fSumError2;  // total sum square of the errors
    double fRefVolume;  // reference bin volume - used to normalize the bins in case of variable bins data
 
    DataVector * fDataVector;  // pointer to the copied in data vector
