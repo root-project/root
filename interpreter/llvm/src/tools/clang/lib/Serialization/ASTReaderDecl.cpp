@@ -1287,13 +1287,8 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
   if (isa<ObjCInterfaceDecl>(X) || isa<ObjCProtocolDecl>(X))
     return true;
 
-  // Template arguments, same kinds always match
-  if (isa<TemplateTemplateParmDecl>(X)
-      || isa<NonTypeTemplateParmDecl>(X)
-      || isa<TemplateTypeParmDecl>(X))
-    return true;
-  
-  // Identical template names and kinds match for equal number of args.
+  // Identical template names and kinds match for equal number of args,
+  // arg kinds, and templated decls.
   if (TemplateDecl* TDX = dyn_cast<TemplateDecl>(X)) {
     TemplateDecl* TDY = dyn_cast<TemplateDecl>(Y);
     if (TDX->getTemplateParameters()->size()
@@ -1302,10 +1297,55 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
 
     for (unsigned int IPar = 0, NPar = TDX->getTemplateParameters()->size();
          IPar < NPar; ++IPar) {
-           if (!isSameEntity(TDX->getTemplateParameters()->getParam(IPar),
-                             TDY->getTemplateParameters()->getParam(IPar)))
-             return false;
+      const NamedDecl *TParX = TDX->getTemplateParameters()->getParam(IPar);
+      const NamedDecl *TParY = TDY->getTemplateParameters()->getParam(IPar);
+
+      // The name comparison is bogus, but it works around false positives
+      // caused by the TemplatedDecl not being read yet, which thus cannot
+      // be used for identity comparisons.
+      if (TParX->getKind() != TParY->getKind()
+          || TParX->getName() != TParY->getName())
+        return false;
     }
+
+    // TemplatedDecl is not read yet!
+    //if (!isSameEntity(TDX->getTemplatedDecl(), TDY->getTemplatedDecl()))
+    //  return false;
+    // Instead, compare as much as possible...
+    // ClassTemplateDecls are identical (no overloading possible).
+    if (FunctionTemplateDecl* FTX = dyn_cast<FunctionTemplateDecl>(TDX)) {
+      typedef llvm::SmallVector<std::pair<QualType, QualType>, 4> DependentTypesToCheck_t;
+      DependentTypesToCheck_t DependentTypesToCheck;
+      FunctionTemplateDecl* FTY = dyn_cast<FunctionTemplateDecl>(TDY);
+      const FunctionProtoType* FPTX
+        = FTX->getTemplatedDecl()->getType()->getAs<FunctionProtoType>();
+      const FunctionProtoType* FPTY
+        = FTY->getTemplatedDecl()->getType()->getAs<FunctionProtoType>();
+      if (FPTX->getNumArgs() != FPTY->getNumArgs())
+        return false;
+      for (unsigned IArg = 0, NArg = FPTX->getNumArgs(); IArg < NArg; ++IArg) {
+        QualType ArgTX = FPTX->getArgType(IArg);
+        QualType ArgTY = FPTY->getArgType(IArg);
+        if (!FTX->getASTContext().hasSameType(ArgTX, ArgTY)) {
+          if (ArgTX->isDependentType()) {
+            if (!ArgTY->isDependentType())
+              return false;
+            DependentTypesToCheck.push_back(std::make_pair(ArgTX, ArgTY));
+          }
+        }
+      }
+      if (!DependentTypesToCheck.empty()) {
+        for (DependentTypesToCheck_t::const_iterator
+               IArgT = DependentTypesToCheck.begin(),
+               EArgT = DependentTypesToCheck.end(); IArgT != EArgT; ++IArgT) {
+          // FIXME: going via strings is terrible (but quite reliable).
+          // Will need to recurse through template args etc.
+          if (IArgT->first.getAsString() != IArgT->second.getAsString())
+            return false;
+        }
+      }
+    }
+
     return true;
   }
 
