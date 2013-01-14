@@ -1549,7 +1549,7 @@ Double_t TGeoPgon::Rproj(Double_t z, Double_t *point, Double_t *dir, Double_t cp
 // Computes projected distance at a given Z for a given ray inside a given sector 
 // and fills coefficients:
 //   Rproj = a + b*z
-   if (TMath::Abs(dir[2])<1E-8) {
+   if (TMath::Abs(dir[2])<TGeoShape::Tolerance()) {
       a =  b = TGeoShape::Big();
       return TGeoShape::Big();
    }
