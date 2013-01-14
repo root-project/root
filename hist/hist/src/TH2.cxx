@@ -1077,7 +1077,7 @@ void TH2::GetStats(Double_t *stats) const
             bin = GetBin(binx,biny);
             x   = fXaxis.GetBinCenter(binx);
             //w   = TMath::Abs(GetBinContent(bin));
-            w   = GetBinContent(bin);
+            w   = RetrieveBinContent(bin);
             err = TMath::Abs(GetBinError(bin));
             stats[0] += w;
             stats[1] += err*err;
@@ -1212,10 +1212,10 @@ Double_t TH2::Interpolate(Double_t)
    Int_t bin_q12 = GetBin(bin_x1,bin_y2);
    Int_t bin_q11 = GetBin(bin_x1,bin_y1);
    Int_t bin_q21 = GetBin(bin_x2,bin_y1);
-   Double_t q11 = GetBinContent(bin_q11);
-   Double_t q12 = GetBinContent(bin_q12);
-   Double_t q21 = GetBinContent(bin_q21);
-   Double_t q22 = GetBinContent(bin_q22);
+   Double_t q11 = RetrieveBinContent(bin_q11);
+   Double_t q12 = RetrieveBinContent(bin_q12);
+   Double_t q21 = RetrieveBinContent(bin_q21);
+   Double_t q22 = RetrieveBinContent(bin_q22);
    Double_t d = 1.0*(x2-x1)*(y2-y1);
    f = 1.0*q11/d*(x2-x)*(y2-y)+1.0*q21/d*(x-x1)*(y2-y)+1.0*q12/d*(x2-x)*(y-y1)+1.0*q22/d*(x-x1)*(y-y1);
    return f;
@@ -1617,7 +1617,7 @@ Long64_t TH2::Merge(TCollection *list)
                iy = biny; 
             for (binx = 0; binx <= nx + 1; binx++) {
                bin = binx +(nx+2)*biny;
-               cu = h->GetBinContent(bin);
+               cu = h->RetrieveBinContent(bin);
                if (!allSameLimits) { 
                   if (cu != 0 && ( h->IsBinUnderflow(bin) || h->IsBinOverflow(bin) )) {
                      Error("Merge", "Cannot merge histograms - the histograms have"
@@ -2098,7 +2098,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
             if (!fPainter->IsInside(binx,biny)) continue;
          }
          Int_t bin = GetBin(binx, biny);
-         Double_t cxy = GetBinContent(bin);
+         Double_t cxy = RetrieveBinContent(bin);
 
 
          if (cxy) {
@@ -2794,7 +2794,7 @@ void TH2::Smooth(Int_t ntimes, Option_t *option)
    for (i=ifirst; i<=ilast; i++){
       for (j=jfirst; j<=jlast; j++){
          bin = GetBin(i,j);
-         buf[bin] =GetBinContent(bin);
+         buf[bin] = RetrieveBinContent(bin);
          if (ebuf) ebuf[bin]=GetBinError(bin);
       }
    }

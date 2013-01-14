@@ -895,7 +895,7 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
          Int_t nfill = 0;
          for (binz=1;binz<=nbinsz;binz++) {
             bin = GetBin(binx,biny,binz);
-            Float_t w = GetBinContent(bin);
+            Float_t w = RetrieveBinContent(bin);
             if (w == 0) continue;
             hpz->Fill(fZaxis.GetBinCenter(binz),w);
             hpz->SetBinError(binz,GetBinError(bin));
@@ -1118,7 +1118,7 @@ void TH3::GetStats(Double_t *stats) const
                bin = GetBin(binx,biny,binz);
                x   = fXaxis.GetBinCenter(binx);
                //w   = TMath::Abs(GetBinContent(bin));
-               w   = GetBinContent(bin);
+               w   = RetrieveBinContent(bin);
                err = TMath::Abs(GetBinError(bin));
                stats[0] += w;
                stats[1] += err*err;
@@ -1682,7 +1682,7 @@ Long64_t TH3::Merge(TCollection *list)
 
                for (binx = 0; binx <= nx + 1; binx++) {
                   bin = binx +(nx+2)*(biny + (ny+2)*binz);
-                  cu  = h->GetBinContent(bin);
+                  cu  = h->RetrieveBinContent(bin);
                   if (!allSameLimits) { 
                      // look at non-empty unerflow/overflows
                      if (cu != 0 && ( h->IsBinUnderflow(bin) || h->IsBinOverflow(bin) )) {
@@ -2075,7 +2075,7 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
             Int_t bin = GetBin(*refX, *refY, *refZ);
 
             // sum the bin contents and errors if needed
-            cont += GetBinContent(bin);
+            cont += RetrieveBinContent(bin);
             if (computeErrors) { 
                Double_t exyz = GetBinError(bin);
                err2 += exyz*exyz;
@@ -2305,7 +2305,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis
             Int_t bin = GetBin(*refX,*refY,*refZ);
 
             // sum the bin contents and errors if needed
-            cont += GetBinContent(bin);
+            cont += RetrieveBinContent(bin);
             if (computeErrors) { 
                Double_t exyz = GetBinError(bin);
                err2 += exyz*exyz;
@@ -2731,7 +2731,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
 
             //DoFillProfileProjection(p2, *projY, *projX, *outAxis, iybin, ixbin, outbin, bin, useWeights); 
 
-            Double_t cont = GetBinContent(bin); 
+            Double_t cont = RetrieveBinContent(bin); 
             if (!cont) continue; 
 
             Double_t tmp = 0;
@@ -2982,7 +2982,7 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
    Double_t entries = fEntries;
    Double_t *oldBins = new Double_t[fNcells];
    for (Int_t ibin = 0; ibin < fNcells; ibin++) {
-      oldBins[ibin] = GetBinContent(ibin);
+      oldBins[ibin] = RetrieveBinContent(ibin);
    }
    Double_t *oldSumw2 = 0;
    if (fSumw2.fN != 0) { 
