@@ -463,14 +463,11 @@ Double_t TAxis::GetBinUpEdge(Int_t bin) const
 {
    // Return up edge of bin
 
-   Double_t binwidth;
-   if (!fXbins.fN || bin<1 || bin>fNbins) {
-      binwidth = (fXmax - fXmin) / Double_t(fNbins);
+   if (!fXbins.fN || bin < 1 || bin>fNbins) {
+      Double_t binwidth = binwidth = (fXmax - fXmin) / Double_t(fNbins);
       return fXmin + bin*binwidth;
-   } else {
-      binwidth = fXbins.fArray[bin] - fXbins.fArray[bin-1];
-      return fXbins.fArray[bin-1] + binwidth;
-   }
+   } 
+   return fXbins.fArray[bin]; 
 }
 
 //______________________________________________________________________________
