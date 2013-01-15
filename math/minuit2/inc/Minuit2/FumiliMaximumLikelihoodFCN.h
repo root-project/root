@@ -15,6 +15,7 @@
 #include <cmath>
 #include <float.h>
 #include "Minuit2/ParametricFunction.h"
+#include "Math/Util.h"
 
 namespace ROOT {
 
@@ -150,10 +151,7 @@ public:
       double tmp = vecElements[i]; 
       //for max likelihood probability have to be positive
       assert(tmp >= 0);
-      if ( tmp < FLT_MIN*5 )
-	tmp = FLT_MIN*5; 
-
-      sumoflogs -= std::log(tmp);
+      sumoflogs -= ROOT::Math::Util::EvalLog(tmp);
       //std::cout << " i " << tmp << " lik " << sumoflogs << std::endl;
     }
       
