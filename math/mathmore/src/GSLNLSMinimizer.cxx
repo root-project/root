@@ -319,20 +319,23 @@ bool GSLNLSMinimizer::Minimize() {
    fErrors.resize(NDim());
 
    // get errors from cov matrix 
-   if (fGSLMultiFit->CovarMatrix() ) fCovMatrix.resize(ndim*ndim);
-      
-   if (minFound) { 
+   const double * cov =  fGSLMultiFit->CovarMatrix();
+   if (cov) { 
 
-      if (trFunc.get() != 0) { 
+      fCovMatrix.resize(ndim*ndim);
+      
+      if (trFunc.get() ) { 
          trFunc->MatrixTransformation(x, fGSLMultiFit->CovarMatrix(), &fCovMatrix[0] ); 
       }
       else {
-         const double * m =  fGSLMultiFit->CovarMatrix();
-         std::copy(m, m+ ndim*ndim, fCovMatrix.begin() );
+         std::copy(cov, cov + ndim*ndim, fCovMatrix.begin() );
       }
-   
+         
       for (unsigned int i = 0; i < ndim; ++i)
          fErrors[i] = std::sqrt(fCovMatrix[i*ndim + i]);
+   }
+
+   if (minFound) { 
 
       if (debugLevel >=1 ) { 
          std::cout << "GSLNLSMinimizer: Minimum Found" << std::endl;  

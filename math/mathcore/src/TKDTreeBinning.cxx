@@ -515,6 +515,7 @@ UInt_t TKDTreeBinning::GetBinMinDensity() const {
 
 void TKDTreeBinning::FillBinData(ROOT::Fit::BinData & data) const {
    // Fill the bin data set with the result of the TKDTree binning
+   if (!fDataBins) return; 
    data.Initialize(fNBins, fDim);
    for (unsigned int i = 0; i < fNBins; ++i) {
       data.Add( GetBinMinEdges(i), GetBinDensity(i), std::sqrt(double(GetBinContent(i) ))/ GetBinVolume(i) );
