@@ -212,8 +212,8 @@ void TRandom3::SetSeed(UInt_t seed)
       for (Int_t i = 0; i< 624; i++) {
          fMt[i]   = static_cast<UInt_t> (4294967296.*r.Rndm());
       }
-      // warm up the generator 
-      for (Int_t i = 10; i < 10; ++i) Rndm(); 
+      // warm up the generator calling it 10 times 
+      for (Int_t i = 0; i < 10; ++i) Rndm(); 
    }
 
 
