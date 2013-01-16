@@ -29,6 +29,10 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+ifneq ($(ClingWorkAroundJITandInline),)
+CALLROOTEXE := $(subst root.exe,root.exe -e '\#include <deque>',$(CALLROOTEXE))
+endif
+
 $(FILEDIR):
 	$(CMDECHO)mkdir -p $(FILEDIR)
 
