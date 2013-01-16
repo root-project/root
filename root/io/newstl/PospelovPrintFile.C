@@ -1,6 +1,9 @@
 void PospelovPrintFile(const char * fname = "pospelov.2010.mc10_7TeV.pool.root") 
 {
   TFile * f = new TFile(fname);
+#ifdef ClingWorkAroundMissingDynamicScope
+  TTree *CollectionTree; f->GetObject("CollectionTree",CollectionTree);
+#endif
   TBranch * cbr = CollectionTree->GetBranch("CaloLocalHadCoeff_EMFracClassify");
   gDebug = 0;
   cbr->GetEntry(0);
