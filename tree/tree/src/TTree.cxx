@@ -791,7 +791,7 @@ TTree::~TTree()
       TFile *file = fDirectory->GetFile();
       if (file) {
          TFileCacheRead *pf = file->GetCacheRead(this);
-         pf->WaitFinishPrefetch();
+         if (pf) pf->WaitFinishPrefetch();
          file->SetCacheRead(0,this);
          delete pf;
       }
