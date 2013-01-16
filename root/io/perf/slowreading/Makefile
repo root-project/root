@@ -62,32 +62,34 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 NuEvent_DST.mark: Read.C NuEvent_60_cxx.$(DllSuf) NuEvent_61_cxx.$(DllSuf) NuEvent_62_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'Read.C("NuEvent_60_cxx", "rootfiles/DST_60.root", 1)' > NuEvent_DST.log 2>&1 || handleError.sh --log=NuEvent_DST.log --result=$$?
 
+CALLROOTEXE_ESC :=$(subst ','\'',$(CALLROOTEXE))
+
 readDST.00.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvent_DST.mark
-	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh "$(CALLROOTEXE)" "NuEvent_60_cxx" "rootfiles/DST_60.root" readDST.00.log
+	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh '$(CALLROOTEXE_ESC)' "NuEvent_60_cxx" "rootfiles/DST_60.root" readDST.00.log
 
 readDST.01.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvent_DST.mark
-	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh "$(CALLROOTEXE)" "NuEvent_60_cxx" "rootfiles/DST_61.root" readDST.01.log
+	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh '$(CALLROOTEXE_ESC)' "NuEvent_60_cxx" "rootfiles/DST_61.root" readDST.01.log
 
 readDST.02.log: Read.C NuEvent_60_cxx.$(DllSuf) NuEvent_DST.mark
-	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh "$(CALLROOTEXE)" "NuEvent_60_cxx" "rootfiles/DST_62.root" readDST.02.log
+	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh '$(CALLROOTEXE_ESC)' "NuEvent_60_cxx" "rootfiles/DST_62.root" readDST.02.log
 
 readDST.10.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvent_DST.mark
-	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh "$(CALLROOTEXE)" "NuEvent_61_cxx" "rootfiles/DST_60.root" readDST.10.log
+	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh '$(CALLROOTEXE_ESC)' "NuEvent_61_cxx" "rootfiles/DST_60.root" readDST.10.log
 
 readDST.11.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvent_DST.mark
-	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh "$(CALLROOTEXE)" "NuEvent_61_cxx" "rootfiles/DST_61.root" readDST.11.log
+	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh '$(CALLROOTEXE_ESC)' "NuEvent_61_cxx" "rootfiles/DST_61.root" readDST.11.log
 
 readDST.12.log: Read.C NuEvent_61_cxx.$(DllSuf) NuEvent_DST.mark
-	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh "$(CALLROOTEXE)" "NuEvent_61_cxx" "rootfiles/DST_62.root" readDST.12.log
+	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh '$(CALLROOTEXE_ESC)' "NuEvent_61_cxx" "rootfiles/DST_62.root" readDST.12.log
 
 readDST.20.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvent_DST.mark
-	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh "$(CALLROOTEXE)" "NuEvent_62_cxx" "rootfiles/DST_60.root" readDST.20.log
+	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh '$(CALLROOTEXE_ESC)' "NuEvent_62_cxx" "rootfiles/DST_60.root" readDST.20.log
 
 readDST.21.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvent_DST.mark
-	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh "$(CALLROOTEXE)" "NuEvent_62_cxx" "rootfiles/DST_61.root" readDST.21.log
+	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh '$(CALLROOTEXE_ESC)' "NuEvent_62_cxx" "rootfiles/DST_61.root" readDST.21.log
 
 readDST.22.log: Read.C NuEvent_62_cxx.$(DllSuf) NuEvent_DST.mark
-	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh "$(CALLROOTEXE)" "NuEvent_62_cxx" "rootfiles/DST_62.root" readDST.22.log
+	$(CMDECHO) export CMDECHO="$(CMDECHO)"; ./trytwice.sh '$(CALLROOTEXE_ESC)' "NuEvent_62_cxx" "rootfiles/DST_62.root" readDST.22.log
 
 
 slowreading.log: readDST.00.log readDST.01.log readDST.02.log \

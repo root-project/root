@@ -14,9 +14,13 @@ int Read(TString library, TString rootfilename, Bool_t ref = kFALSE)
    TChain input("s", "s");
    input.AddFile(rootfilename);
    TBranch *branch = input.GetBranch("s");
+#ifdef ClingWorkAroundMissingDynamicScope
+   void *nu = TClass::GetClass("NuEvent")->New();
+#else
    NuEvent *nu = new NuEvent();
+#endif
    branch->SetAddress(&nu);
-   
+
    cout  << endl
          << "************************************************"<<endl
          << "***      Starting main loop                  ***"<<endl
