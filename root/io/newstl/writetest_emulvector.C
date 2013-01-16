@@ -1,5 +1,7 @@
 {
+#ifndef ClingWorkAroundUnnamedInclude
 #include <vector>
+#endif
    TFile *f = TFile::Open("emulvector.root","RECREATE");
    
    TTree * tr = new TTree("tr","testtree");
