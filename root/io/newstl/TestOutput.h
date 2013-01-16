@@ -165,7 +165,7 @@ const char* GetEHelperStringValue(const EHelper &eval) {
       case kZero: return "kZero";
       case kOne:  return "kOne";
       case kTwo:  return "kTwo";
-      case kEnd:  return "kEnd";
+      case kHelperEnd:  return "kEnd";
       default:    return "unknown val";
    }
 }

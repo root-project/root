@@ -145,7 +145,7 @@ public:
 };
 
 enum EHelper { kZero = 0, kOne, kTwo,
-               kEnd = 40 };
+               kHelperEnd = 40 };
 
 bool operator<(const TNamed&lhs, const TNamed&rhs) {
    return strcmp(lhs.GetName(),rhs.GetName()) < 0;

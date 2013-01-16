@@ -1,3 +1,6 @@
+#ifndef VERSION_H
+#define VERSION_H
+
 #include "RVersion.h"
 #include "TFile.h"
 #include "TestOutput.h"
@@ -115,4 +118,4 @@ bool HasVarArrayOfContainers(TFile *file) {
    }
    return result;
 }
-
+#endif

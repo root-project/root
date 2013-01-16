@@ -1,3 +1,6 @@
+#ifndef TESTSETORVERIFY_H
+#define TESTSETORVERIFY_H
+
 #include "TestFill.h"
 #include "TestEquiv.h"
 
@@ -176,3 +179,5 @@ namespace utility {
    }
 
 }
+
+#endif

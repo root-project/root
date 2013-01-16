@@ -1,3 +1,6 @@
+#ifndef TEST_FILL_H
+#define TEST_FILL_H
+
 template <class T> void fill(T& filled, UInt_t seed);
 template <class F, class S> void fill(std::pair<F, S> &filled, UInt_t seed);
 template <class F, class S> void fill(std::pair<F, S*> &filled, UInt_t seed);
@@ -94,7 +97,7 @@ template <> void fill(EHelper& filled, UInt_t seed) {
       case 0: filled = kZero; break;
       case 1: filled = kOne;  break;
       case 2: filled = kTwo;  break;
-      default: filled = kEnd; break;
+      default: filled = kHelperEnd; break;
    }
 }
 
@@ -342,4 +345,5 @@ template <class Key, class T> void fill(std::multimap<Key*, T, PtrCmp<Key> >& fi
 /*       filled.insert(make_pair(key,val)); */
   }  
 }
+#endif
 

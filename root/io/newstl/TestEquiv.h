@@ -1,3 +1,5 @@
+#ifndef TEST_EQUIV_H
+#define TEST_EQUIV_H
 bool IsEquiv(const std::string &, float orig, float copy)   { return IsEquiv(orig,copy); }
 bool IsEquiv(const std::string &, double orig, double copy) { return IsEquiv(orig,copy); }
 bool IsEquiv(const std::string &, int orig, int copy)       { return orig==copy; }
@@ -83,4 +85,5 @@ bool IsEquiv(const std::string &, const TNamed& orig, const TNamed& copy) {
    return name==copy.GetName() && title==copy.GetTitle();
 }
 
+#endif
 
