@@ -59,6 +59,9 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundJITandInline),)
+CALLROOTEXE := $(subst root.exe,root.exe -e '\#include <deque>',$(CALLROOTEXE))
+endif
 
 basicxml.log: test_classes_h.$(DllSuf)
 

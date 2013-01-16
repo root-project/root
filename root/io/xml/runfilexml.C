@@ -1,6 +1,9 @@
 {
 // Fill out the code of the actual test
 #ifndef SECOND_RUN
+#ifdef ClingWorkAroundJITandInline
+   gROOT->ProcessLine("#include <test_classes.h>");
+#endif
    gROOT->ProcessLine(".L test_classes.h+");
 #endif
 

@@ -4,6 +4,9 @@
 #ifdef ClingWorkAroundMissingAutoLoading
    gSystem->Load("libXMLIO");
 #endif
+#ifdef ClingWorkAroundJITandInline
+   gROOT->ProcessLine("#include <test_classes.h>");
+#endif
    gROOT->ProcessLine(".L test_classes.h+");
 #endif
 
