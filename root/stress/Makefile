@@ -138,7 +138,12 @@ $(STRESSFILESCOPIEDTAG): $(STRESSFILESHERE)
 # $(STRESSFLAGS) can be a target-specific variable holding optional
 # arguments to the test; see below for stress-ctest.log
 CALLSTRESSEXE := $(CALLROOTEXE:root.exe=)
-CALLSTRESSEXE := $(CALLSTRESSEXE:rootc7.exe=)
+ifneq ($(FIXCLING),)
+# support for perftrack and valgrind is 'broken' when FixCling is set.
+# and CALLROOTEXE has too much stuff (-e ....)
+CALLSTRESSEXE := 
+endif
+
 $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
 	$(CMDECHO) unset DISPLAY; \
 	   $(CALLSTRESSEXE) test/$*$(ExeSuf) $(STRESSFLAGS) > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<
