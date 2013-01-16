@@ -1,6 +1,4 @@
 Writing Hit
-Warning in <TClass::TClass>: no dictionary for class crap is available
-Warning in <TClass::TClass>: no dictionary for class RootPCnodict is available
 Warning in <Build:>: RootCaloHit: RootPCnodict has no streamer or dictionary, data member "mynocell" will not be saved
 Warning in <Build:>: RootPCellID: base class crap has no streamer or dictionary it will not be saved
 Warning in <TBufferFile::WriteObjectAny>: An object of type class RootPCnodict (from type_info) passed through a RootPCellID pointer was truncated (due a missing dictionary)!!!
@@ -14,6 +12,9 @@ itra                          2
 mycell.id                     3                   
 mycell.base[5]                test                
 index                         2                   
+mynocell.nodict               55                  
+mynocell.id                   7                   
+mynocell.base[5]              nodi                
 *mycellnull                   ->0                 
 myobj.obj                     101                 
 myobj.id                      8                   
@@ -129,6 +130,9 @@ mycell.base[5]                test
 index                         2                   
 *myArrVar                     ->0                 ![index]  WAITING on Vicktor's implementation [index]
 *objVarArr                    ->0                 ![index]  Not implemented yet ... will it ever?
+mynocell.nodict               55                  
+mynocell.id                   7                   
+mynocell.base[5]              nodi                
 *mycellnull                   ->0                 
 myobj.obj                     101                 
 myobj.id                      8                   
@@ -144,9 +148,9 @@ fUniqueID                     0                   object unique identifier
 fBits                         0x03000000          bit field status word
 base 	t e s t 
 id 	3
-base 	n o n e 
-id 	0
-nodict 	0
+base 	n o d i 
+id 	7
+nodict 	55
 base 	f i x 1 
 id 	4
 fix 	33
@@ -234,6 +238,9 @@ itra                          2
 mycell.id                     3                   
 mycell.base[5]                test                
 index                         2                   
+mynocell.nodict               55                  
+mynocell.id                   7                   
+mynocell.base[5]              nodi                
 *mycellnull                   ->0                 
 myobj.obj                     101                 
 myobj.id                      8                   
@@ -349,6 +356,9 @@ mycell.base[5]                test
 index                         2                   
 *myArrVar                     ->0                 ![index]  WAITING on Vicktor's implementation [index]
 *objVarArr                    ->0                 ![index]  Not implemented yet ... will it ever?
+mynocell.nodict               55                  
+mynocell.id                   7                   
+mynocell.base[5]              nodi                
 *mycellnull                   ->0                 
 myobj.obj                     101                 
 myobj.id                      8                   
@@ -364,9 +374,9 @@ fUniqueID                     0                   object unique identifier
 fBits                         0x03000000          bit field status word
 base 	t e s t 
 id 	3
-base 	n o n e 
-id 	0
-nodict 	0
+base 	n o d i 
+id 	7
+nodict 	55
 base 	f i x 1 
 id 	4
 fix 	33
