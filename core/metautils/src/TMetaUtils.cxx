@@ -1072,8 +1072,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
                    << " in include search path!";
          hdrFileEntry = PP.getFileManager().getFile(*hdr, /*OpenFile=*/false,
                                                     /*CacheFailure=*/false);
-      } else {
-#if 0
+      } else if (getenv("ROOT_MODULES")) {
          // Tell HeaderSearch that the header's directory has a module.map
          llvm::StringRef srHdrDir(hdrFileEntry->getName());
          srHdrDir = llvm::sys::path::parent_path(srHdrDir);
@@ -1082,7 +1081,6 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
          if (Dir) {
             HdrSearch.setDirectoryHasModuleMap(Dir);
          }
-#endif
       }
 
       ModuleMap.addHeader(modCreation.first, hdrFileEntry);
