@@ -1,3 +1,6 @@
+#ifndef TEST_C
+#define TEST_C
+
 #include "TFile.h"
 #include "TTree.h"
 #include "TSystem.h"
@@ -230,3 +233,4 @@ template <class HolderClass> bool read(const char *testname, int nEntry = 0, boo
 
    return result;
 }
+#endif
