@@ -1,5 +1,13 @@
 {
+#ifndef SECOND_RUN
   gROOT->ProcessLine(".L sample_bx_classes.C+");
+#endif
+
+#if defined(ClingWorkAroundMissingDynamicScope) && !defined(SECOND_RUN)
+#define SECOND_RUN
+  gROOT->ProcessLine(".x sample_writer.C");
+
+#else
   TFile* p_root_file = new TFile ("samplerootfile.root", "RECREATE");
 
   // create BxEvent
@@ -17,5 +25,6 @@
   p_root_tree->Print ();
   p_root_tree->Write ();
   p_root_file->Close ();
+#endif
 }
 
