@@ -121,7 +121,7 @@ $(LIBDIR)mapHolder_C.$(DllSuf)      : mapHolder.C mapHolder.h | $(ROOTCORELIBS)
 $(LIBDIR)multimapHolder_C.$(DllSuf) : multimapHolder.C multimapHolder.h | $(ROOTCORELIBS)
 
 $(HELPER_DLL) : TestHelpers.C 
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $(*F).build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $(*F).build.log 2>&1
 
 #	$(CMDECHO)touch $@
 
@@ -132,16 +132,16 @@ else
 endif
 
 $(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1  || handleError.sh --log=$*_C.build.log --res=$$?
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllKeep),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1  || handleError.sh --log=$*_C.build.log --res=$$?
 
 $(LIBDIR)sample_bx_classes_C.$(DllSuf) : sample_bx_classes.C directories
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"sample_bx_classes.C\",\"\",\"\")" > sample_bx_classes_C.build.log 2>&1  || handleError.sh --log=sample_bx_classes_C.build.log--res=$$?
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(RULES_DIR)/build.C(\"sample_bx_classes.C\",\"\",\"\")" > sample_bx_classes_C.build.log 2>&1  || handleError.sh --log=sample_bx_classes_C.build.log--res=$$?
 
 $(LIBDIR)runbase_C.$(DllSuf): runbase.C directories
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"runbase.C\",\"\",\"\")" > runbase_C.build.log 2>&1  || handleError.sh --log=runbase_C.build.log --res=$$?
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(RULES_DIR)/build.C(\"runbase.C\",\"\",\"\")" > runbase_C.build.log 2>&1  || handleError.sh --log=runbase_C.build.log --res=$$?
 
 $(LIBDIR)%_cxx.$(DllSuf): %.cxx | directories
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $*_cxx.build.log 2>&1 || handleError.sh --log=$*_cxx.build.log --res=$$?
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $*_cxx.build.log 2>&1 || handleError.sh --log=$*_cxx.build.log --res=$$?
 
 
 
@@ -175,7 +175,7 @@ ifeq ($(FAIL),)
 endif
 
 samplerootfile.root: directories $(LIBDIR)sample_bx_classes_C.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -q -l sample_writer.C > samplerootfile.log
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l sample_writer.C > samplerootfile.log 2>&1 || handleError.sh --log=samplerootfile.log --res=$$?
 
 emptyCollection.log: directories samplerootfile.root $(LIBDIR)sample_bx_classes_C.$(DllSuf) sample_reader.C
 
