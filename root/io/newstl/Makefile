@@ -222,6 +222,6 @@ execMemberWise.clog: $(LIBDIR)execMemberWise_cxx.$(DllSuf) memberwise.root $(ROO
 pospelov/pospelov.$(DllSuf): buildPospelov.C $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q buildPospelov.C > buildPospelov.log 2>&1 || handleError.sh --log=buildPospelov.log --res=$$? 
 
-execPospelovPrintFile.log: pospelov/pospelov.$(DllSuf)
+execPospelovPrintFile.log: pospelov/pospelov.$(DllSuf) PospelovPrintFile.C
 
 # DO NOT DELETE
