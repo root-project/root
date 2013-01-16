@@ -316,7 +316,7 @@ public:
    void               ls(Option_t *opt="") const;
    void               MakeCustomMenuList();
    void               Move(void *arenaFrom, void *arenaTo) const;
-   void              *New(ENewType defConstructor = kClassNew) const;
+   void              *New(ENewType defConstructor = kClassNew, Bool_t quiet = kFALSE) const;
    void              *New(void *arena, ENewType defConstructor = kClassNew) const;
    void              *NewArray(Long_t nElements, ENewType defConstructor = kClassNew) const;
    void              *NewArray(Long_t nElements, void *arena, ENewType defConstructor = kClassNew) const;

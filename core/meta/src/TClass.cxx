@@ -1575,7 +1575,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       } else if (!strcmp(GetName(), "TGQt")) {
          realDataObject = gVirtualX;
       } else {
-         realDataObject = New();
+         realDataObject = New(kClassNew /*default*/, isTransient);
          // The creation of the object might recursively end up calling BuildRealData
          // with a pointer and thus we do not have an infinite recursion but the 
          // inner call, set everything up correctly, so let's test again.
@@ -3759,11 +3759,14 @@ void *TClass::DynamicCast(const TClass *cl, void *obj, Bool_t up)
 }
 
 //______________________________________________________________________________
-void *TClass::New(ENewType defConstructor) const
+void *TClass::New(ENewType defConstructor, Bool_t quiet) const
 {
    // Return a pointer to a newly allocated object of this class.
    // The class must have a default constructor. For meaning of
    // defConstructor, see TClass::IsCallingNew().
+   //
+   // If quiet is true, do no issue a message via Error on case
+   // of problems, just return 0.
    //
    // The constructor actually called here can be customized by
    // using the rootcint pragma:
@@ -3796,7 +3799,7 @@ void *TClass::New(ENewType defConstructor) const
       fgCallingNew = defConstructor;
       p = fNew(0);
       fgCallingNew = kRealNew;
-      if (!p) {
+      if (!p && !quiet) {
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
       }
@@ -3813,7 +3816,7 @@ void *TClass::New(ENewType defConstructor) const
       R__LOCKGUARD2(gClingMutex);
       p = gCling->ClassInfo_New(GetClassInfo());
       fgCallingNew = kRealNew;
-      if (!p) {
+      if (!p && !quiet) {
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
       }
@@ -3824,7 +3827,7 @@ void *TClass::New(ENewType defConstructor) const
       fgCallingNew = defConstructor;
       p = fCollectionProxy->New();
       fgCallingNew = kRealNew;
-      if (!p) {
+      if (!p && !quiet) {
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
       }
@@ -3846,7 +3849,7 @@ void *TClass::New(ENewType defConstructor) const
       SetObjectStat(kFALSE);
 
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
-      if (!sinfo) {
+      if (!sinfo && !quiet) {
          Error("New", "Cannot construct class '%s' version %d, no streamer info available!", GetName(), fClassVersion);
          return 0;
       }
@@ -3864,7 +3867,7 @@ void *TClass::New(ENewType defConstructor) const
          RegisterAddressInRepository("New",p,this);
       }
    } else {
-      Error("New", "This cannot happen!");
+      Fatal("New", "This cannot happen!");
    }
 
    return p;
