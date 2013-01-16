@@ -1,3 +1,5 @@
+#ifndef SAMPLE_BX_CLASS
+#define SAMPLE_BX_CLASS
 #include "TClonesArray.h"
 #include <vector>
 
@@ -102,4 +104,4 @@ BxLaben::~BxLaben() {
 }
 
 BxEvent::~BxEvent() {}
-
+#endif
