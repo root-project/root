@@ -30,12 +30,13 @@ using namespace std;
 ClassImp(TFilePrefetch)
 
 //____________________________________________________________________________________________
-TFilePrefetch::TFilePrefetch(TFile* file)
+TFilePrefetch::TFilePrefetch(TFile* file) :
+  fFile(file),
+  fConsumer(0),
+  fThreadJoined(kTRUE)
 {
    // Constructor.
 
-   fConsumer = 0;
-   fFile = file;
    fPendingBlocks    = new TList();
    fReadBlocks       = new TList();
    fMutexReadList    = new TMutex();
@@ -50,20 +51,12 @@ TFilePrefetch::TFilePrefetch(TFile* file)
 //____________________________________________________________________________________________
 TFilePrefetch::~TFilePrefetch()
 {
-   // Destructor.
+   // Destructor
 
-   //killing consumer thread
-   fSemMasterWorker->Post();
-
-   TMutex *mutexCond = fNewBlockAdded->GetMutex();
-   while ( fSemWorkerMaster->Wait(10) != 0 ) {
-      mutexCond->Lock();
-      fNewBlockAdded->Signal();
-      mutexCond->UnLock();
+   if (!fThreadJoined) {
+     WaitFinishPrefetch();
    }
-
-   fConsumer->Join();
-
+  
    SafeDelete(fConsumer);
    SafeDelete(fPendingBlocks);
    SafeDelete(fReadBlocks);
@@ -75,6 +68,26 @@ TFilePrefetch::~TFilePrefetch()
    SafeDelete(fSemMasterWorker);
    SafeDelete(fSemWorkerMaster);
 }
+
+
+//____________________________________________________________________________________________
+void TFilePrefetch::WaitFinishPrefetch()
+{
+   // Killing the async prefetching thread
+
+   fSemMasterWorker->Post();
+
+   TMutex *mutexCond = fNewBlockAdded->GetMutex();
+   while ( fSemWorkerMaster->Wait(10) != 0 ) {
+      mutexCond->Lock();
+      fNewBlockAdded->Signal();
+      mutexCond->UnLock();
+   }
+
+   fConsumer->Join();
+   fThreadJoined=kTRUE;
+}
+
 
 //____________________________________________________________________________________________
 void TFilePrefetch::ReadAsync(TFPBlock* block, Bool_t &inCache)
@@ -303,9 +316,12 @@ Int_t TFilePrefetch::ThreadStart()
 {
    // Used to start the consumer thread.
    int rc;
-   fConsumer= new TThread((TThread::VoidRtnFunc_t) ThreadProc,
-                          (void*) this);
+   
+   fConsumer = new TThread((TThread::VoidRtnFunc_t) ThreadProc, (void*) this);
    rc = fConsumer->Run();
+   if ( !rc ) {
+      fThreadJoined = kFALSE;
+   }
    return rc;
 }
 

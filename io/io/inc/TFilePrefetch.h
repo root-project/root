@@ -82,6 +82,7 @@ private:
    TSemaphore *fSemWorkerMaster;   // semaphore used to notify the master that worker is killed
    TString     fPathCache;         // path to the cache directory
    TStopwatch  fWaitTime;          // time wating to prefetch a buffer (in usec)
+   Bool_t      fThreadJoined;      // mark if async thread was joined
 
    static TThread::VoidRtnFunc_t ThreadProc(void*);  //create a joinable worker thread
 
@@ -115,6 +116,7 @@ public:
 
    void      SetFile(TFile*);
    TCondition* GetCondNextFile() const { return fCondNextFile; };
+   void      WaitFinishPrefetch();
 
    ClassDef(TFilePrefetch, 0);  // File block prefetcher
 };

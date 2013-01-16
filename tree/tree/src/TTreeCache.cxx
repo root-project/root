@@ -987,12 +987,19 @@ Int_t TTreeCache::ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len){
    }
 
    //keep on prefetching until request is satisfied
+   // try to prefetch a couple of times and if request is still not satisfied then
+   // fall back to normal reading without prefetching for the current request
+   Int_t counter = 0;
    while (1) {
       if(TFileCacheRead::ReadBuffer(buf, pos, len)) {
          break;
       }
       FillBuffer();
       fNReadMiss++;
+      counter++;
+      if (counter>1) {
+        return 0;
+      }
    }
 
    fNReadOk++;

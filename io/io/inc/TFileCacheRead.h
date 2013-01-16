@@ -122,6 +122,7 @@ public:
    virtual void        SecondSort();                          //Method used to sort and merge the chunks in the second block
    virtual void        SecondPrefetch(Long64_t, Int_t);       //Used to add chunks to the second block
    virtual TFilePrefetch* GetPrefetchObj();
+   virtual void        WaitFinishPrefetch();                  //Gracefully join the prefetching thread
 
    ClassDef(TFileCacheRead,2)  //TFile cache when reading
 };

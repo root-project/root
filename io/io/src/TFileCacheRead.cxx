@@ -145,9 +145,9 @@ TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree)
       SetEnablePrefetchingImpl(false);
    }
 
-   fIsSorted    = kFALSE;
-   fIsTransferred = kFALSE;
-   fBIsSorted = kFALSE;
+   fIsSorted       = kFALSE;
+   fIsTransferred  = kFALSE;
+   fBIsSorted      = kFALSE;
    fBIsTransferred = kFALSE;
 
    if (file) file->SetCacheRead(this, tree);
@@ -383,7 +383,7 @@ Int_t TFileCacheRead::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &l
 //_____________________________________________________________________________
 Int_t TFileCacheRead::ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, Int_t &loc)
 {
-   //prefetch the first block                                                                                                                                
+   //prefetch the first block                                                                                                                            
    if (fNseek > 0 && !fIsSorted) {
       Sort();
       loc = -1;
@@ -673,6 +673,16 @@ TFilePrefetch* TFileCacheRead::GetPrefetchObj(){
   
    return this->fPrefetch;
 }
+
+
+//_____________________________________________________________________________
+void TFileCacheRead::WaitFinishPrefetch()
+{
+   if ( fEnablePrefetching && fPrefetch ) {
+      fPrefetch->WaitFinishPrefetch();
+   }
+}           
+
 
 //______________________________________________________________________________
 void TFileCacheRead::SetEnablePrefetching(Bool_t setPrefetching) 
