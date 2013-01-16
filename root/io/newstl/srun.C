@@ -12,7 +12,7 @@
       result = gSystem->CompileMacro("vtest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) vtest(exec-1);
+      if (exec) gROOT->ProcessLine("vtest(exec-1)");
 
    }
 
@@ -24,7 +24,7 @@
       result = gSystem->CompileMacro("dtest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) dtest(exec-1);
+      if (exec) gROOT->ProcessLine("dtest(exec-1)");
 
    }
 
@@ -36,7 +36,7 @@
       result = gSystem->CompileMacro("ltest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) ltest(exec-1);
+      if (exec) gROOT->ProcessLine("ltest(exec-1)");
 
    }
 
@@ -48,7 +48,7 @@
       result = gSystem->CompileMacro("stest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) stest(exec-1);
+      if (exec) gROOT->ProcessLine("stest(exec-1)");
 
    }
 
@@ -60,7 +60,7 @@
       result = gSystem->CompileMacro("ttest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) ttest(exec-1);
+      if (exec) gROOT->ProcessLine("ttest(exec-1)");
 
    }
 
@@ -72,7 +72,7 @@
       result = gSystem->CompileMacro("mtest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) mtest(exec-1);
+      if (exec) gROOT->ProcessLine("mtest(exec-1)");
 
    }
 
@@ -84,7 +84,7 @@
       result = gSystem->CompileMacro("ntest.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) ntest(exec-1);
+      if (exec) gROOT->ProcessLine("ntest(exec-1)");
 
    }
 
