@@ -43,6 +43,9 @@ void build(const char *filename,const char *lib = 0, const char *obj = 0)
 #ifdef ClingWorkAroundCallfuncAndReturnByValue
    r.Append(" -DClingWorkAroundCallfuncAndReturnByValue ");
 #endif
+#ifdef ClingWorkAroundNoPrivateClassIO
+   r.Append(" -DClingWorkAroundNoPrivateClassIO ");
+#endif
    if (r.Length()) {
       r.Append(" $IncludePath");
       TString s = gSystem->GetMakeSharedLib();

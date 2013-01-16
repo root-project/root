@@ -12,7 +12,9 @@ using std::vector;
 
 class TestClass : public TObject {
 protected:  
-
+#ifdef ClingWorkAroundNoPrivateClassIO
+public:
+#endif
    template<typename T = Int_t>
    struct TIE_t { /*IndexElement*/
       public:

@@ -19,6 +19,8 @@ CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
+# Other missing features
+CALLROOTEXE += -e "\#define ClingWorkAroundNoPrivateClassIO"
 # Convenience features, would be nice to have.
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
@@ -47,6 +49,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundJITandInline"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
+CALLROOTEXEBUILD += -e "\#define ClingWorkAroundNoPrivateClassIO"
 
 # variable to be used in Makefiles.
 ClingWorkAroundMissingImplicitAuto = yes
@@ -75,6 +78,7 @@ ClingWorkAroundMultipleInclude = yes           # File are included each time a m
 ClingWorkAroundNoDotOptimization = yes         # See https://savannah.cern.ch/bugs/index.php?99339
 ClingWorkAroundUnnamedDetection = yes          # See https://savannah.cern.ch/bugs/index.php?99341
 ClingWorkAroundIncorrectTearDownOrder = yes    # See https://savannah.cern.ch/bugs/index.php?99266
+ClingWorkAroundNoPrivateClassIO = yes          # See https://savannah.cern.ch/bugs/index.php?99860 
 # Not fully investigated:
 ClingWorkAroundBrokenMakeProject = yes
 ClingWorkAroundEmulatedProxyPair = yes
