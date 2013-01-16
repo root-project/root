@@ -4,7 +4,7 @@
 
 ROOT_USE_PACKAGE(math/mathcore)
 
-include_directories(${GSL_INCLUDE_DIR})
+include_directories(${GSL_INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
 add_definitions(-DUSE_ROOT_ERROR ${GSL_CFLAGS})
 
 set(headers Math/DistFuncMathMore.h Math/SpecFuncMathMore.h Math/PdfFuncMathMore.h
