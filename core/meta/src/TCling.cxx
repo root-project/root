@@ -651,8 +651,11 @@ TCling::TCling(const char *name, const char *title)
 
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
-
-   fMetaProcessor = new cling::MetaProcessor(*fInterpreter);
+   // We need stream that doesn't close its file descriptor, thus we are not
+   // using llvm::outs. Keeping file descriptor open we will be able to use
+   // the results in pipes (Savannah #99234).
+   static llvm::raw_fd_ostream fMPOuts (STDOUT_FILENO, /*ShouldClose*/false);
+   fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
 
    // For the list to also include string, we have to include it now.
    fInterpreter->declare("#include \"Rtypes.h\"\n"
