@@ -1174,6 +1174,7 @@ Generic_GCC::GCCInstallationDetector::GCCInstallationDetector(
     "x86_64-suse-linux",
     "x86_64-manbo-linux-gnu",
     "x86_64-linux-gnu",
+    "x86_64-mageia-linux-gnu",
     "x86_64-slackware-linux"
   };
   static const char *const X86LibDirs[] = { "/lib32", "/lib" };
