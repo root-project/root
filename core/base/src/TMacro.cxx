@@ -56,7 +56,7 @@
 ClassImp(TMacro)
 
 //______________________________________________________________________________
-TMacro::TMacro(): TNamed(), fLines(0)
+TMacro::TMacro(): TNamed(), fLines(0), fExecuted(kFALSE)
 {
    // Create an empty macro, use AddLine() or ReadFile() to fill this macro.
 }
@@ -70,6 +70,7 @@ TMacro::TMacro(const char *name, const char *title): TNamed(name,title)
    // * if the title is empty, it will be set to the name of the file,
    // * the name will be set to the filename without path or extension.
 
+   fExecuted = kFALSE;
    fLines  = new TList();
    if (!name) return;
    Int_t nch = strlen(name);
@@ -100,6 +101,7 @@ TMacro::TMacro(const TMacro &macro): TNamed(macro)
       fLines->Add(new TObjString(obj->GetName()));
    }
    fParams = macro.fParams;
+   fExecuted = macro.fExecuted;
 }
 
 //______________________________________________________________________________
@@ -127,6 +129,7 @@ TMacro& TMacro::operator=(const TMacro &macro)
          fLines->Add(new TObjString(obj->GetName()));
       }
       fParams = macro.fParams;
+      fExecuted = macro.fExecuted;
    }
    return *this;
 }
@@ -134,8 +137,13 @@ TMacro& TMacro::operator=(const TMacro &macro)
 //______________________________________________________________________________
 TObjString *TMacro::AddLine(const char *text)
 {
-   // Add line with text in the list of lines of this macro.
+   // Add line with text in the list of lines of this macro. Returns 0 in
+   // case of error, otherwise the added TObjString.
 
+   if (fExecuted) {
+      Error("AddLine", "cannot extend a macro that has already been executed");
+      return 0;
+   }
    if (!fLines) fLines = new TList();
    TObjString *obj = new TObjString(text);
    fLines->Add(obj);
@@ -241,6 +249,26 @@ Long_t TMacro::Exec(const char *params, Int_t* error)
    // Returns the result of the macro (return value or value of the last
    // expression), cast to a Long_t.
 
+   if (fExecuted) {
+      // if macro has been executed, look for global function with name
+      // of macro and re-execute this global function, if not found then
+      // macro is unnamed macro, which we re-execute from file
+      if (gROOT->GetListOfGlobalFunctions()->FindObject(GetName())) {
+         gROOT->SetExecutingMacro(kTRUE);
+         TString exec = GetName();
+         TString p = params;
+         if (p == "") p = fParams;
+         if (p != "")
+            exec += "(" + p + ")";
+         else
+            exec += "()";
+         Long_t ret = gROOT->ProcessLine(exec, error);
+         //enable gROOT->Reset
+         gROOT->SetExecutingMacro(kFALSE);
+         return ret;
+      }
+      // unnamed macro, fall through
+   }
    //the current implementation uses a file in the current directory.
    //should be replaced by a direct execution from memory by CINT
    TString fname = GetName();
@@ -260,6 +288,7 @@ Long_t TMacro::Exec(const char *params, Int_t* error)
    gROOT->SetExecutingMacro(kFALSE);
    //delete the temporary file
    gSystem->Unlink(fname);
+   fExecuted = kTRUE;
 
    return ret;
 }

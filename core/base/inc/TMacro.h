@@ -35,6 +35,7 @@ class TMacro : public TNamed {
 protected:
    TList         *fLines;      //collection of lines
    TString        fParams;     //default string of macro parameters
+   Bool_t         fExecuted;   //!true if Exec() has been called
 
    void           SaveSource(FILE *fp);
 
@@ -57,7 +58,7 @@ public:
    virtual void         SavePrimitive(ostream &out, Option_t *option = "");
    virtual void         SetParams(const char *params=0); //*MENU*
 
-   ClassDef(TMacro,1)  // Class supporting a collection of lines with C++ code.
+   ClassDef(TMacro,2)  // Class supporting a collection of lines with C++ code.
 };
 
 #endif
