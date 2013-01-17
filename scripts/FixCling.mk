@@ -10,7 +10,7 @@ CALLROOTEXE = root.exe
 # Essential problems, must be fixed before the release.
 # (incorrect behavior of C++ compliant code)
 CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
-CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
+#CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndConversion"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
