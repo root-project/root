@@ -284,7 +284,7 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
    char topdir[20];
    snprintf(topdir,19,"lun%d",fLun);
 
-   Int_t ier;
+   Int_t ier = 0;
 #ifndef WIN32
    hropen(fLun,PASSCHAR(topdir),PASSCHAR(fname),PASSCHAR("p"),lrecl,ier,strlen(topdir),strlen(fname),1);
 #else
@@ -883,7 +883,7 @@ TObject *THbookFile::ConvertProfile(Int_t id)
 
    const Int_t kCON1 = 9;
    Int_t i;
-   Float_t x;
+   Float_t x = 0.;
    Float_t y = 0.5*(ymin+ymax);
    for (i=1;i<=ncx;i++) {
       Int_t n = Int_t(q[ln+i]);
@@ -972,7 +972,7 @@ TObject *THbookFile::Convert2D(Int_t id)
    Int_t lw = lq[lcont];
    if (lw) h2->Sumw2();
 
-   Float_t x,y;
+   Float_t x = 0.,y = 0.;
    for (Int_t j=0;j<=ncy+1;j++) {
       for (Int_t i=0;i<=ncx+1;i++) {
          hijxy(id,i,j,x,y);
