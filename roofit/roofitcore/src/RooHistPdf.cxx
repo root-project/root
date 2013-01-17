@@ -93,6 +93,20 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
 
   _histObsIter = _histObsList.createIterator() ;
   _pdfObsIter = _pdfObsList.createIterator() ;
+
+
+  // Adjust ranges of _histObsList to those of _dataHist 
+  RooFIter oiter = _histObsList.fwdIterator() ;
+  RooAbsArg* hobs ;
+  while ((hobs = oiter.next())) {
+    // Guaranteed to succeed, since checked above in ctor
+    RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
+    RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
+    if (dhreal){
+      ((RooRealVar*)hobs)->setRange(dhreal->getMin(),dhreal->getMax()) ;
+    }
+  }
+  
 }
 
 
@@ -144,6 +158,18 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
 
   _histObsIter = _histObsList.createIterator() ;
   _pdfObsIter = _pdfObsList.createIterator() ;
+
+  // Adjust ranges of _histObsList to those of _dataHist 
+  RooFIter oiter = _histObsList.fwdIterator() ;
+  RooAbsArg* hobs ;
+  while ((hobs = oiter.next())) {
+    // Guaranteed to succeed, since checked above in ctor
+    RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
+    RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
+    if (dhreal){
+      ((RooRealVar*)hobs)->setRange(dhreal->getMin(),dhreal->getMax()) ;
+    }
+  }
 }
 
 
@@ -200,6 +226,9 @@ Double_t RooHistPdf::evaluate() const
       if (harg != parg) {
 	parg->syncCache() ;
 	harg->copyCache(parg,kTRUE) ;
+	if (!harg->inRange(0)) {
+	  return 0 ;
+	}
       }
     }
   }
@@ -207,9 +236,7 @@ Double_t RooHistPdf::evaluate() const
   Double_t ret =  _dataHist->weight(_histObsList,_intOrder,_unitNorm?kFALSE:kTRUE,_cdfBoundaries) ;  
   if (ret<0) {
     ret=0 ;
-  }
-  
-  //cout << "RooHistPdf::evaluate(" << GetName() << ") ret = " << ret << " at " << ((RooAbsReal*)_histObsList.first())->getVal() << endl ;
+  }  
   return ret ;
 }
 
@@ -363,10 +390,10 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) c
 
   Double_t ret =  _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE) ;
 
-//   cout << "intSet = " << intSet << endl ;
-//   cout << "slice position = " << endl ;
-//   _histObsList.Print("v") ;
-//   cout << "RooHistPdf::ai(" << GetName() << ") code = " << code << " ret = " << ret << endl ;
+//    cout << "intSet = " << intSet << endl ;
+//    cout << "slice position = " << endl ;
+//    _histObsList.Print("v") ;
+//    cout << "RooHistPdf::ai(" << GetName() << ") code = " << code << " ret = " << ret << endl ;
 
   return ret ;
 }
