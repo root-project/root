@@ -1746,6 +1746,8 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 
     const char* name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
     RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet,isetRangeName,normRange()) ;
+    partInt->setExpensiveObjectCache(expensiveObjectCache()) ;
+    
     partInt->setStringAttribute("PROD_TERM_TYPE","IVa") ;
     //partInt->setOperMode(operMode()) ;
 

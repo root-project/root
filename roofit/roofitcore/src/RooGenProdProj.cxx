@@ -73,6 +73,9 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
   // Constructor for a normalization projection of the product of p.d.f.s _prodSet
   // integrated over _intSet in range isetRangeName while normalized over _normSet
 
+  // Set expensive object cache to that of first item in prodSet
+  setExpensiveObjectCache(_prodSet.first()->expensiveObjectCache()) ;
+
   // Create owners of components created in ctor
   _compSetOwnedN = new RooArgSet ;
   _compSetOwnedD = new RooArgSet ;
@@ -231,6 +234,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
     prodName = Form("%s_%s",GetName(),name) ;
   }
   RooProduct* prod = new RooProduct(prodName,"product",prodSet) ;
+  prod->setExpensiveObjectCache(expensiveObjectCache()) ;
   prod->setOperMode(_operMode) ;
 
   // Declare owndership of product
