@@ -10,7 +10,6 @@ CALLROOTEXE = root.exe
 # Essential problems, must be fixed before the release.
 # (incorrect behavior of C++ compliant code)
 CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
-#CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndConversion"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
@@ -64,7 +63,6 @@ ClingWorkAroundJITfullSymbolResolution = yes   # See https://savannah.cern.ch/bu
 ClingWorkAroundMissingSmartInclude = yes
 ClingWorkAroundBrokenUnnamedReturn = yes       # See https://savannah.cern.ch/bugs/index.php?99032
 ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://savannah.cern.ch/bugs/index.php?99236
-ClingWorkAroundPrintfIssues = yes              # see https://savannah.cern.ch/bugs/index.php?99234
 ClingWorkAroundCallfuncAndInline = yes         # see https://savannah.cern.ch/bugs/index.php?98425
 ClingWorkAroundCallfuncAndReturnByValue = yes  # See https://savannah.cern.ch/bugs/index.php?98317 and https://savannah.cern.ch/bugs/?98148
 ClingWorkAroundUnnamedInclude = yes            # See https://savannah.cern.ch/bugs/index.php?99246
