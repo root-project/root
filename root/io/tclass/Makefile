@@ -26,4 +26,5 @@ TestTClassGlobalIsA: TestTClassGlobalIsA.log
 	$(CMDECHO) diff -ub  TestTClassGlobalIsA.ref  TestTClassGlobalIsA.log
 
 TestTClassGlobalIsA.log : TestTClassGlobalIsA_C.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l TestTClassGlobalIsA.C+ > TestTClassGlobalIsA.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l TestTClassGlobalIsA.C+ > TestTClassGlobalIsA.log 2>&1 || handleError.sh --log=TestTClassGlobalIsA.log --res=$$?
+
