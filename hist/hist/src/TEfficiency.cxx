@@ -1906,12 +1906,8 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    Int_t nbins_max = vTotal.at(0)->GetNbinsX();
    //check binning of all histograms
    for(UInt_t i=0; i<vTotal.size(); ++i) {
-      try {
-	 TEfficiency::CheckBinning(*vTotal.at(0),*vTotal.at(i));
-      }
-      catch(std::exception&) {
+      if (!TEfficiency::CheckBinning(*vTotal.at(0),*vTotal.at(i)) )
 	 gROOT->Warning("TEfficiency::Combine","histograms have not the same binning -> results may be useless");
-      }
       if(vTotal.at(i)->GetNbinsX() < nbins_max) nbins_max = vTotal.at(i)->GetNbinsX();
    }
 
