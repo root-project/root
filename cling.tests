@@ -3,6 +3,7 @@
 ./root/collection
 ./root/fit
 ./root/hist
+./root/io
 ./root/math
 ./root/meta
 ./root/selector
