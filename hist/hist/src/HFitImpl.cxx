@@ -646,11 +646,8 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
 
    // parse firt the specific options
    if (type == kHistogram) { 
-
       if (opt.Contains("I"))  fitOption.Integral= 1;   // integral of function in the bin (no sense for graph)
-      if (opt.Contains("W"))  fitOption.W1      = 1; // all non-empty bins have weight =1
       if (opt.Contains("WW")) fitOption.W1      = 2; //all bins have weight=1, even empty bins
-
    }
    
    // specific Graph options (need to be parsed before)
@@ -679,12 +676,13 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
    }
 
    if (opt.Contains("U")) fitOption.User    = 1;
+   if (opt.Contains("W")) fitOption.W1     = 1; // all non-empty bins have weight =1
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
    if (opt.Contains("V")){fitOption.Verbose = 1; fitOption.Quiet   = 0;}
    if (opt.Contains("L")) fitOption.Like    = 1;
    if (opt.Contains("X")) fitOption.Chi2    = 1;
    if (opt.Contains("P")) fitOption.PChi2    = 1; 
-   if (opt.Contains("I")) fitOption.Integral= 1;
+
    // likelihood fit options
    if (opt.Contains("L")) { 
       fitOption.Like    = 1;
