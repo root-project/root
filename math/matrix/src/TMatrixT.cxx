@@ -1370,23 +1370,25 @@ void TMatrixT<Element>::Determinant(Double_t &d1,Double_t &d2) const
 }
 
 //______________________________________________________________________________
+template <>
+TMatrixT<Double_t> &TMatrixT<Double_t>::Invert(Double_t *det)
+{
+// Invert the matrix and calculate its determinant
+
+   R__ASSERT(this->IsValid());
+   TDecompLU::InvertLU(*this, Double_t(fTol), det);
+   return *this;
+}
+
+//______________________________________________________________________________
 template<class Element>
 TMatrixT<Element> &TMatrixT<Element>::Invert(Double_t *det)
 {
 // Invert the matrix and calculate its determinant
 
-   R__ASSERT(this->IsValid());
-   if (typeid(Element) == typeid(Double_t))
-      TDecompLU::InvertLU(*dynamic_cast<TMatrixD *>(this),Double_t(this->fTol),det);
-   else {
-      TMatrixD tmp(*this);
-      if (TDecompLU::InvertLU(tmp,Double_t(this->fTol),det)) {
-         const Double_t *p1 = tmp.GetMatrixArray();
-               Element  *p2 = this->GetMatrixArray();
-         for (Int_t i = 0; i < this->GetNoElements(); i++)
-            p2[i] = p1[i];
-      }
-   }
+   TMatrixD tmp(*this);
+   if (TDecompLU::InvertLU(tmp, Double_t(this->fTol),det))
+      std::copy(tmp.GetMatrixArray(), tmp.GetMatrixArray() + this->GetNoElements(), this->GetMatrixArray());
 
    return *this;
 }
@@ -1444,23 +1446,11 @@ TMatrixT<Element> &TMatrixT<Element>::InvertFast(Double_t *det)
          TMatrixTCramerInv::Inv6x6<Element>(*this,det);
          return *this;
       }
-
       default:
       {
-         if(typeid(Element) == typeid(Double_t))
-            TDecompLU::InvertLU(*dynamic_cast<TMatrixD *>(this),Double_t(this->fTol),det);
-         else {
-            TMatrixD tmp(*this);
-            if (TDecompLU::InvertLU(tmp,Double_t(this->fTol),det)) {
-               const Double_t *p1 = tmp.GetMatrixArray();
-                     Element  *p2 = this->GetMatrixArray();
-               for (Int_t i = 0; i < this->GetNoElements(); i++)
-                  p2[i] = p1[i];
-            }
-         }
-         return *this;
+         return Invert(det);
       }
-    }
+   }
 }
 
 //______________________________________________________________________________
