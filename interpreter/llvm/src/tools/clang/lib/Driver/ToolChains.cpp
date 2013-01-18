@@ -1188,6 +1188,7 @@ Generic_GCC::GCCInstallationDetector::GCCInstallationDetector(
     "i386-redhat-linux",
     "i586-suse-linux",
     "i486-slackware-linux",
+    "i586-mageia-linux-gnu",
     "i686-montavista-linux"
   };
 
