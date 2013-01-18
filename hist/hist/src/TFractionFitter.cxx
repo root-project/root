@@ -743,8 +743,8 @@ void TFractionFitter::FindPrediction(int bin, Double_t &t_i, int& k_0, Double_t 
    // 'bin' <=> 'i' (paper)
    // 'par' <=> 'j' (paper)
 
-   Double_t wgtFrac[fNpar]; // weighted fractions (strengths of the sources)
-   Double_t a_ji[fNpar]; // number of observed MC events for bin 'i' and par (source) 'j'
+   std::vector<Double_t> wgtFrac(fNpar); // weighted fractions (strengths of the sources)
+   std::vector<Double_t> a_ji(fNpar); // number of observed MC events for bin 'i' and par (source) 'j'
    Double_t d_i = fData->GetBinContent(bin); // number of events in the real data for bin 'i'
 
    // Cache the weighted fractions and the number of observed MC events
@@ -757,7 +757,6 @@ void TFractionFitter::FindPrediction(int bin, Double_t &t_i, int& k_0, Double_t 
          Error("FindPrediction", "Fraction[%d] = 0!", par);
          return;
       }
-      //std::cout << "intial fraction " << par << " = " << fFractions[par] << " weighted " << wgtFrac[par] << std::endl;
    }
 
    // Case data = 0
@@ -810,7 +809,6 @@ void TFractionFitter::FindPrediction(int bin, Double_t &t_i, int& k_0, Double_t 
    // The equation that needs to be solved:
    //    func(t_i) = \sum\limits_j{\frac{ p_j a_{ji} }{1 + p_j t_i}} - \frac{d_i}{1 - t_i} = 0
    t_i = 0; Double_t step = 0.2;
-   //std::cout << "d_i = " << fData->GetBinContent(bin) << std::endl;
    Int_t maxIter = 100000; // maximum number of iterations 
    for(Int_t i = 0; i < maxIter; ++i) {
       if (t_i >= 1 || t_i < t_min) {
@@ -821,7 +819,6 @@ void TFractionFitter::FindPrediction(int bin, Double_t &t_i, int& k_0, Double_t 
       Double_t deriv = func / (1.0 - t_i);
       for (Int_t par = 0; par < fNpar; ++par) {
          Double_t r = 1.0 / (t_i + 1.0 / wgtFrac[par]);
-         //std::cout << "a_{ji} " << a_ji[par] << " wgtFrac_j " << wgtFrac[par] << " r " << r << std::endl;
          func   += a_ji[par] * r;
          deriv -= a_ji[par] * r * r;
       }
@@ -831,7 +828,6 @@ void TFractionFitter::FindPrediction(int bin, Double_t &t_i, int& k_0, Double_t 
          delta = (delta > 0) ? step : -step; // correct delta if it becomes too large
       t_i += delta;
       if (TMath::Abs(delta) < 1e-13) return; // solution found
-      //std::cout << "delta " << delta << " func " << func << " deriv " << deriv << " t_i " << t_i << std::endl;
    } // the loop breaks when the solution is found, or when the maximum number of iterations is exhausted
 
    Warning("FindPrediction", "Did not find solution for t_i in %d iterations", maxIter);
