@@ -87,7 +87,7 @@ static Int_t R__GetSystemMaxOpenedFiles()
 TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
             : fOutputFile(0), fFastMethod(kTRUE), fNoTrees(kFALSE), fExplicitCompLevel(kFALSE), fCompressionChange(kFALSE),
               fPrintLevel(0), fMsgPrefix("TFileMerger"), fMaxOpenedFiles( R__GetSystemMaxOpenedFiles() ),
-              fLocal(isLocal), fHistoOneGo(histoOneGo)
+              fLocal(isLocal), fHistoOneGo(histoOneGo), fObjectNames()
 {
    // Create file merger object.
 
@@ -122,6 +122,7 @@ void TFileMerger::Reset()
    fFileList->Clear();
    fMergeList->Clear();
    fExcessFiles->Clear();
+   fObjectNames.Clear();
 }
 
 //______________________________________________________________________________
@@ -350,8 +351,10 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    //   kAll          : merge all type of objects (default)
    //   kResetable    : merge only the objects with a MergeAfterReset member function.
    //   kNonResetable : merge only the objects without a MergeAfterReset member function.
-
+   //   kOnlyListed   : merge only objects listed in fObjectNames
+   //   kSkipListed   : skip merging of objects listed in fObjectNames
    Bool_t status = kTRUE;
+   Bool_t onlyListed = kFALSE;
    if (fPrintLevel > 0) {
       Printf("%s Target path: %s",fMsgPrefix.Data(),target->GetPath());
    }
@@ -364,6 +367,14 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    Int_t nguess = sourcelist->GetSize()+1000;
    THashList allNames(nguess);
    allNames.SetOwner(kTRUE);
+   // If the mode is set to skipping list objects, add names to the allNames list
+   if (type & kSkipListed) {
+      TObjArray *arr = fObjectNames.Tokenize(" ");
+      arr->SetOwner(kFALSE);
+      for (Int_t iname=0; iname<arr->GetEntriesFast(); iname++)
+         allNames.Add(arr->At(iname));
+      delete arr;   
+   }
    ((THashList*)target->GetList())->Rehash(nguess);
    ((THashList*)target->GetListOfKeys())->Rehash(nguess);
    
@@ -429,6 +440,15 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                oldkeyname = key->GetName();
                continue;
             }
+            // Check if only the listed objects are to be merged
+            if (type & kOnlyListed) {
+               onlyListed = kFALSE;
+               oldkeyname = key->GetName();
+               oldkeyname += " ";
+               onlyListed = fObjectNames.Contains(oldkeyname);
+               oldkeyname = key->GetName();
+               if ((!onlyListed) && (!cl->InheritsFrom(TDirectory::Class()))) continue;
+            }               
             
             if (!(type&kResetable && type&kNonResetable)) {
                // If neither or both are requested at the same time, we merger both types.
@@ -484,7 +504,11 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                // newdir is now the starting point of another round of merging
                // newdir still knows its depth within the target file via
                // GetPath(), so we can still figure out where we are in the recursion
+
+               // If this folder is a onlyListed object, merge everything inside.
+               if (onlyListed) type &= ~kOnlyListed;
                status = MergeRecursive(newdir, sourcelist, type);
+               if (onlyListed) type |= kOnlyListed;
                if (!status) return status;
             } else if (obj->IsA()->GetMerge()) {
                

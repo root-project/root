@@ -62,6 +62,7 @@ protected:
    Int_t          fMaxOpenedFiles;  // Maximum number of files opened at the same time by the TFileMerger.
    Bool_t         fLocal;           // Makes local copies of merging files if True (default is kTRUE)
    Bool_t         fHistoOneGo;      // Merger histos in one go (default is kTRUE)
+   TString        fObjectNames;     // List of object names to be either merged exclusively or skipped
    TList         *fMergeList;       // list of TObjString containing the name of the files need to be merged
    TList         *fExcessFiles;     //! List of TObjString containing the name of the files not yet added to fFileList due to user or system limitiation on the max number of files opened.
 
@@ -77,7 +78,10 @@ public:
       kNonResetable = BIT(3),        // Only the objects without a MergeAfterReset member function.
 
       kAll            = BIT(2)|BIT(3),      // Merge all type of objects (default)
-      kAllIncremental = kIncremental | kAll // Merge incrementally all type of objects.
+      kAllIncremental = kIncremental | kAll, // Merge incrementally all type of objects.
+      
+      kOnlyListed     = BIT(4),        // Only the objects specified in fObjectNames list
+      kSkipListed     = BIT(5)         // Skip objects specified in fObjectNames list
    };
    TFileMerger(Bool_t isLocal = kTRUE, Bool_t histoOneGo = kTRUE);
    virtual ~TFileMerger();
@@ -92,6 +96,9 @@ public:
    void        SetMaxOpenedFiles(Int_t newmax);
    const char *GetMsgPrefix() const { return fMsgPrefix; }
    void        SetMsgPrefix(const char *prefix);
+   void        AddObjectNames(const char *name) {fObjectNames += name; fObjectNames += " ";}
+   const char *GetObjectNames() const {return fObjectNames.Data();}
+   void        ClearObjectNames() {fObjectNames.Clear();}
 
     //--- file management interface
    virtual Bool_t SetCWD(const char * /*path*/) { MayNotUse("SetCWD"); return kFALSE; }
@@ -113,7 +120,7 @@ public:
    virtual void   SetNotrees(Bool_t notrees=kFALSE) {fNoTrees = notrees;}
    virtual void        RecursiveRemove(TObject *obj);
 
-   ClassDef(TFileMerger,4)  // File copying and merging services
+   ClassDef(TFileMerger,5)  // File copying and merging services
 };
 
 #endif

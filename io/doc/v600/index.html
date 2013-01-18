@@ -2,3 +2,33 @@
 <hr/> 
 <a name="io"></a> 
 <h3>I/O Libraries</h3>
+<h4>TFileMerger</h4>
+<ul>
+<li>Added possibility to merge only a list of objects/folders from the input files, specified by name,  
+<br />or to skip them from merging. This is fully integrated with the new PartialMerge(flags) schema.</li>
+<p>
+	Usage:
+	<br />The names of the objects to be merged or skipped have to be specified using the interface:
+	<pre>
+	   <i>TFileMerger::AddObjectNames(const char *names)</i>
+	</pre>
+	This method can be called several times to add object names. Several names can be added with one
+	<br />call separated by single blancs (no blanc at the end). Directory names are accepted, applying the
+	<br />merging selection to all content.
+</p>
+	Two new options are being supported for partial merging:
+	<pre>
+	   <i>TFileMerger::PartialMerge</i><b>(flags | kOnlyListed)</b>
+	</pre>
+   This will merge only the objects in the files having the names in the specified list. If a folder is 
+   <br />specified, it whole content will be merged	
+   <pre>
+	    <i>TFileMerger::PartialMerge</i><b>(flags | kSkipListed)</b>  
+   </pre>
+   This will skip merging for the specified objects. If a folder is specified, its whole content will be skipped
+<p>
+	<pre><b>Important note:</b></pre>
+	The kOnlyListed and kSkipListed flags have to be bitwise OR-ed 
+	<br />on top of the merging defaults: kAll | kIncremental (as in the example $ROOTSYS/tutorials/io/mergeSelective.C)
+</p>
+</ul>
