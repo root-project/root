@@ -108,6 +108,24 @@
 #include <dlfcn.h>
 #endif
 
+// Fragment copied from LLVM's raw_ostream.cpp
+#if defined(HAVE_UNISTD_H)
+# include <unistd.h>
+#endif
+
+#if defined(_MSC_VER)
+#ifndef STDIN_FILENO
+# define STDIN_FILENO 0
+#endif
+#ifndef STDOUT_FILENO
+# define STDOUT_FILENO 1
+#endif
+#ifndef STDERR_FILENO
+# define STDERR_FILENO 2
+#endif
+#endif
+
+
 using namespace std;
 using namespace clang;
 
