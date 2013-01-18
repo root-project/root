@@ -46,6 +46,8 @@ void TestTClassGlobalIsA() {
    
    bool hasError = kFALSE;
    
+   std::cout << "Running with fIsA\n";
+
    // First the normal test
    if ( cltobj == cltobj->GetActualClass(o) ) {
       std::cerr << "cltobj->IsA(o) returns the pointer class not the object class\n";
@@ -64,9 +66,12 @@ void TestTClassGlobalIsA() {
    SetIsA(cltobj,0);
    SetIsA(cltnam,0);
 
+   std::cout << "Running without fIsA\n";
    if ( cltnam != cltobj->GetActualClass(o) ) {
+#ifndef ClingWorkAroundCallfuncAndVirtual
       std::cerr << "cltobj->IsA(o) does not return the object class\n";
       hasError = true;
+#endif
    }
    if ( cltnam != cltnam->GetActualClass(m) ) {
       std::cerr << "cltnam->IsA(o) does not return the object class\n";
@@ -76,6 +81,7 @@ void TestTClassGlobalIsA() {
    cltobj->SetGlobalIsA(globalIsA);
    cltnam->SetGlobalIsA(globalIsA);
 
+   std::cout << "Running with  fGlobalIsA\n";
    if ( cltnam != cltobj->GetActualClass(o) ) {
       std::cerr << "cltobj->IsA(o) does not return the object class\n";
       hasError = true;
