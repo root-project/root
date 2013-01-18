@@ -211,17 +211,22 @@ public:
       // Don't descend into function bodies.
       return true;
    }
+
+   bool shouldVisitTemplateInstantiations() const { return true; }
+
    bool TraverseClassTemplateDecl(ClassTemplateDecl*) {
       // Don't descend into templates (but only instances thereof).
-      return true;
+      return true; // returning false will abort the in-depth traversal.
    }
+
    bool TraverseClassTemplatePartialSpecializationDecl(ClassTemplatePartialSpecializationDecl*) {
       // Don't descend into templates partial specialization (but only instances thereof).
-      return true;
+      return true; // returning false will abort the in-depth traversal.
    }
 
    bool VisitTypedefDecl(TypedefDecl *TdefD) {
-      fTypedefs.push_back(TdefD);
+      if (!TdefD->getDeclContext()->isDependentContext())
+         fTypedefs.push_back(TdefD);
       return true; // returning false will abort the in-depth traversal.
    }
 };
