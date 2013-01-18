@@ -37,6 +37,9 @@ void build(const char *filename,const char *lib = 0, const char *obj = 0)
 #ifdef  ClingWorkAroundCallfuncAndInline
    r.Append(" -DClingWorkAroundCallfuncAndInline ");
 #endif
+#ifdef  ClingWorkAroundCallfuncAndVirtual
+   r.Append(" -DClingWorkAroundCallfuncAndVirtual ");
+#endif
 #ifdef ClingWorkAroundJITandInline
    r.Append(" -DClingWorkAroundJITandInline ");
 #endif
