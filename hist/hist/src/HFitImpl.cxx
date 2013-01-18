@@ -651,11 +651,12 @@ void ROOT::Fit::FitOptionsMake(const char *option, Foption_t &fitOption) {
    }
 
    if (opt.Contains("U")) fitOption.User    = 1;
+   if (opt.Contains("W")) fitOption.W1     = 1; // all non-empty bins have weight =1
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
    if (opt.Contains("V")){fitOption.Verbose = 1; fitOption.Quiet   = 0;}
    if (opt.Contains("L")) fitOption.Like    = 1;
    if (opt.Contains("X")) fitOption.Chi2    = 1;
-   if (opt.Contains("I")) fitOption.Integral= 1;
+
    // likelihood fit options
    if (opt.Contains("L")) { 
       fitOption.Like    = 1;
