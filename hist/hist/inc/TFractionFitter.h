@@ -82,7 +82,7 @@ public:
 private:
    void CheckParNo(Int_t parm) const;
    void CheckConsistency();
-   void FindPrediction(int bin, double* fractions, double& Ti, int& k0, double& Aki) const;
+   void FindPrediction(int bin, double& t_i, int& k_0, double& A_ki) const;
    void ComputeFCN(Double_t& f, const Double_t* par, Int_t flag);
    void GetRanges(Int_t& minX, Int_t& maxX, Int_t& minY, Int_t& maxY,
                   Int_t& minZ, Int_t& maxZ) const;

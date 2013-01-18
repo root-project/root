@@ -521,8 +521,14 @@ void TFractionFitter::CheckConsistency() {
       for (z = minZ; z <= maxZ; ++z) {
          for (y = minY; y <= maxY; ++y) {
             for (x = minX; x <= maxX; ++x) {
-	       if (IsExcluded(fData->GetBin(x, y, z))) continue;
-               fIntegralMCs[par] += h->GetBinContent(x, y, z);
+               Int_t bin = fData->GetBin(x, y, z);
+	            if (IsExcluded(bin)) continue;
+               Double_t MCEvents = h->GetBinContent(bin);
+               if (MCEvents < 0) {
+                  Error("CheckConsistency", "Number of MC events (bin = %d, par = %d) cannot be negative: " 
+                     " their distribution is binomial (see paper)", bin, par);
+               }
+               fIntegralMCs[par] += MCEvents;
             }
          }
       }
@@ -691,7 +697,7 @@ void TFractionFitter::ComputeFCN(Double_t& f, const Double_t* xx, Int_t flag)
             // Solve for the "predictions"
             int k0;
             Double_t ti; Double_t aki;
-            FindPrediction(bin, fFractions, ti, k0, aki);
+            FindPrediction(bin, ti, k0, aki);
 
             Double_t prediction = 0;
             for (mc = 0; mc < fNpar; ++mc) {
@@ -732,102 +738,103 @@ void TFractionFitter::ComputeFCN(Double_t& f, const Double_t* xx, Int_t flag)
 }
 
 //______________________________________________________________________________
-void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &ti, int& k0, Double_t &aki) const {
+void TFractionFitter::FindPrediction(int bin, Double_t &t_i, int& k_0, Double_t &A_ki) const {
    // Function used internally to obtain the template prediction in the individual bins
+   // 'bin' <=> 'i' (paper)
+   // 'par' <=> 'j' (paper)
 
-   // Sanity check: none of the fractions should be =0
-   Int_t par;
-   TH1 *hw;
-   for (par = 0; par < fNpar; ++par) {
-      hw = (TH1*)fWeights.At(par);
-      Double_t weightedFraction = hw ?
-         hw->GetBinContent(bin) * fractions[par] : fractions[par];
-      if (weightedFraction == 0) {
-         Error("FindPrediction","Fraction[%d] = 0!",par);
+   Double_t wgtFrac[fNpar]; // weighted fractions (strengths of the sources)
+   Double_t a_ji[fNpar]; // number of observed MC events for bin 'i' and par (source) 'j'
+   Double_t d_i = fData->GetBinContent(bin); // number of events in the real data for bin 'i'
+
+   // Cache the weighted fractions and the number of observed MC events
+   // Sanity check: none of the fractions should be == 0
+   for (Int_t par = 0; par < fNpar; ++par) {
+      a_ji[par] = ((TH1*)fMCs.At(par))->GetBinContent(bin);
+      TH1* hw = (TH1*)fWeights.At(par);
+      wgtFrac[par] = hw ? hw->GetBinContent(bin) * fFractions[par] : fFractions[par];
+      if (wgtFrac[par] == 0) {
+         Error("FindPrediction", "Fraction[%d] = 0!", par);
          return;
       }
+      //std::cout << "intial fraction " << par << " = " << fFractions[par] << " weighted " << wgtFrac[par] << std::endl;
    }
 
    // Case data = 0
-   if (TMath::Nint(fData->GetBinContent(bin)) == 0) {
-      ti = 1;
-      k0 = -1;
-      aki=0;
+   if (TMath::Nint(d_i) == 0) {
+      t_i = 1;
+      k_0 = -1;
+      A_ki = 0;
       return;
    }
 
-   // Case one or more of the MC bin contents = 0: find largest fraction
-   k0 = 0;
-   TH1 *hw0 = (TH1*)fWeights.At(0);
-   Double_t refWeightedFraction = hw0 ?
-      hw0->GetBinContent(bin) * fractions[0] : fractions[0];
-   for (par = 1; par < fNpar; ++par) {
-      hw = (TH1*)fWeights.At(par);
-      Double_t weightedFraction = hw ?
-       hw->GetBinContent(bin) * fractions[par] : fractions[par];
-      if (weightedFraction > refWeightedFraction) {
-         k0 = par;
-         refWeightedFraction = weightedFraction;
+   // Case one or more of the MC bin contents == 0 -> find largest fraction
+   // k_0 stores the source index of the largest fraction
+   k_0 = 0;
+   Double_t maxWgtFrac = wgtFrac[0]; 
+   for (Int_t par = 1; par < fNpar; ++par) {
+      if (wgtFrac[par] > maxWgtFrac) {
+         k_0 = par;
+         maxWgtFrac = wgtFrac[par];
       }
-   }
-   int nMax = 1;
-   Double_t contentsMax = ((TH1*)fMCs.At(k0))->GetBinContent(bin);
-   for (par = 0; par < fNpar; ++par) {
-      if (par == k0) continue;
-      hw = (TH1*)fWeights.At(par);
-      Double_t weightedFraction = hw ?
-       hw->GetBinContent(bin) * fractions[par] : fractions[par];
-      if (weightedFraction == refWeightedFraction) {
-         nMax++;
-         contentsMax += ((TH1*)fMCs.At(par))->GetBinContent(bin);
-      }
-   }
-   Double_t tmin = -1/refWeightedFraction;
+   } 
+   Double_t t_min = -1 / maxWgtFrac; // t_i cannot be smaller than this value (see paper, par 5)
 
-   if (contentsMax == 0) {
-      aki = fData->GetBinContent(bin)/(1+refWeightedFraction);
-      for (par = 0; par < fNpar; ++par) {
-         hw = (TH1*)fWeights.At(par);
-         if (par != k0) {
-            Double_t weightedFraction = hw ?
-              hw->GetBinContent(bin) * fractions[par] : fractions[par];
-            if (weightedFraction != refWeightedFraction)
-              aki -= ((TH1*)fMCs.At(par))->GetBinContent(bin)*weightedFraction/ (refWeightedFraction - weightedFraction);
-         }
+   // Determine if there are more sources which have the same maximum contribution (fraction)
+   Int_t nMax = 1; Double_t contentsMax = a_ji[k_0];
+   for (Int_t par = 0; par < fNpar; ++par) {
+      if (par == k_0) continue;
+      if (wgtFrac[par] == maxWgtFrac) {
+         nMax++;
+         contentsMax += a_ji[par];
       }
-      if (aki > 0) {
-         if (nMax) aki /= nMax;
-         ti = tmin;
+   }
+
+   // special action if there is a zero in the number of entries for the MC source with
+   // the largest strength (fraction) -> See Paper, Paragraph 5
+   if (contentsMax == 0) {
+      A_ki = d_i / (1.0 + maxWgtFrac);
+      for (Int_t par = 0; par < fNpar; ++par) {
+         if (par == k_0 || wgtFrac[par] == maxWgtFrac) continue;
+         A_ki -= a_ji[par] * wgtFrac[par] / (maxWgtFrac - wgtFrac[par]);
+      }
+      if (A_ki > 0) {
+         A_ki /= nMax;
+         t_i = t_min;
          return;
       }
    }
-   k0 = -1;
+   k_0 = -1;
 
-   // Case of nonzero histogram contents: solve for Ti using Newton's method
-   ti = 0;
-   for (Double_t step = 0.2;;) {
-      if (ti >= 1 || ti < tmin) {
+   // Case of nonzero histogram contents: solve for t_i using Newton's method
+   // The equation that needs to be solved:
+   //    func(t_i) = \sum\limits_j{\frac{ p_j a_{ji} }{1 + p_j t_i}} - \frac{d_i}{1 - t_i} = 0
+   t_i = 0; Double_t step = 0.2;
+   //std::cout << "d_i = " << fData->GetBinContent(bin) << std::endl;
+   Int_t maxIter = 100000; // maximum number of iterations 
+   for(Int_t i = 0; i < maxIter; ++i) {
+      if (t_i >= 1 || t_i < t_min) {
          step /= 10;
-         ti = 0;
+         t_i = 0;
       }
-      Double_t aFunction   = - fData->GetBinContent(bin)/(1-ti);
-      Double_t aDerivative = aFunction / (1-ti);
-      for (par = 0; par < fNpar; ++par) {
-         TH1 *h = (TH1*)fMCs.At(par);
-         hw = (TH1*)fWeights.At(par);
-         Double_t weightedFraction = hw ?
-           hw->GetBinContent(bin) * fractions[par] : fractions[par];
-         Double_t d = 1/(ti+1/weightedFraction);
-         aFunction   += h->GetBinContent(bin)*d;
-         aDerivative -= h->GetBinContent(bin)*d*d;
+      Double_t func   = - d_i / (1.0 - t_i);
+      Double_t deriv = func / (1.0 - t_i);
+      for (Int_t par = 0; par < fNpar; ++par) {
+         Double_t r = 1.0 / (t_i + 1.0 / wgtFrac[par]);
+         //std::cout << "a_{ji} " << a_ji[par] << " wgtFrac_j " << wgtFrac[par] << " r " << r << std::endl;
+         func   += a_ji[par] * r;
+         deriv -= a_ji[par] * r * r;
       }
-      if (TMath::Abs(aFunction) < 1e-12) break;
-      Double_t delta = -aFunction/aDerivative;
+      if (TMath::Abs(func) < 1e-12) return; // solution found
+      Double_t delta = - func / deriv; // update delta 
       if (TMath::Abs(delta) > step)
-         delta = (delta > 0) ? step : -step;
-      ti += delta;
-      if (TMath::Abs(delta) < 1e-13) break;
-   }
+         delta = (delta > 0) ? step : -step; // correct delta if it becomes too large
+      t_i += delta;
+      if (TMath::Abs(delta) < 1e-13) return; // solution found
+      //std::cout << "delta " << delta << " func " << func << " deriv " << deriv << " t_i " << t_i << std::endl;
+   } // the loop breaks when the solution is found, or when the maximum number of iterations is exhausted
+
+   Warning("FindPrediction", "Did not find solution for t_i in %d iterations", maxIter);
 
    return;
 }
