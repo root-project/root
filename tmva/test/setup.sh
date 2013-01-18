@@ -5,9 +5,31 @@ export HERE=$PWD
 if [ $# -ne 1 ] ; then
   cd .. ; export TMVASYS=$PWD; cd $HERE 
   TMVATESTDIR=1
+  if [[ "$TMVASYS/test" != "$PWD" ]]; then
+      echo
+      echo "!!! please give the directory of your TMVA installation you want to use as argument to  "
+      echo "!!! source setup.sh <the TMVA installation directory>"
+      echo
+      return
+  fi
+  echo "$TMVASYS/test"
+  echo "$PWD"
 else
   export TMVASYS=$1
   TMVATESTDIR=0
+fi
+
+# check if the TMVA directory specified REALLY contains the TMVA libraries, otherwise it
+# might default to the ROOT version causing unnecessary surprises
+
+if [[ ! -f $TMVASYS/lib/libTMVA.so ]]; then
+    echo
+    echo "!!!! please give a PROPER directory of your TMVA installation as argument to  "
+    echo "!!!! source setup.sh <the TMVA installation directory> "
+    echo 
+    echo "!!!! currently I look at $TMVASYS/lib/libTMVA.so  that doesn't exist "
+    echo
+    return
 fi
 
 
