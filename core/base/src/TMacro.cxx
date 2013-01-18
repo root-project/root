@@ -241,6 +241,24 @@ Long_t TMacro::Exec(const char *params, Int_t* error)
    // Returns the result of the macro (return value or value of the last
    // expression), cast to a Long_t.
 
+   // if macro has been executed, look for global function with name
+   // of macro and re-execute this global function, if not found then
+   // macro is unnamed macro, which we re-execute from file
+   if (gROOT->GetListOfGlobalFunctions(kTRUE)->FindObject(GetName())) {
+      gROOT->SetExecutingMacro(kTRUE);
+      TString exec = GetName();
+      TString p = params;
+      if (p == "") p = fParams;
+      if (p != "")
+         exec += "(" + p + ")";
+      else
+         exec += "()";
+      Long_t ret = gROOT->ProcessLine(exec, error);
+      //enable gROOT->Reset
+      gROOT->SetExecutingMacro(kFALSE);
+      return ret;
+   }
+
    //the current implementation uses a file in the current directory.
    //should be replaced by a direct execution from memory by CINT
    TString fname = GetName();
