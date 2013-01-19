@@ -25,8 +25,12 @@
    h->GetListOfFunctions()->Add(na);
    //h->GetListOfFunctions()->Print();
 
-   TFile f("hout.root","recreate");
-   h->Write();
+#ifdef ClingWorkAroundIncorrectTearDownOrder
+  TFile *f = TFile::Open("hout.root","recreate");
+#else
+  TFile f("hout.root","recreate");
+#endif
+  h->Write();
    //f.Close();
 #endif // SECOND_RUN
 
