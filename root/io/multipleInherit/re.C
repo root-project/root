@@ -1,7 +1,11 @@
 {
    gROOT->ProcessLine(".L na.cxx+");
    gSystem->Load("libHistPainter");
+#ifndef ClingWorkAroundIncorrectTearDownOrder
    TFile f("hout.root");
+#else
+   TFile &f = *TFile::Open("hout.root");
+#endif
    TH1 * h = (TH1*)f.Get("hpxpy");
    h->SetDirectory(gROOT);
    f.Close();
