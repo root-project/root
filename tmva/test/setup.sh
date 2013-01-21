@@ -12,11 +12,11 @@ if [ $# -ne 1 ] ; then
       echo
       return
   fi
-  echo "$TMVASYS/test"
-  echo "$PWD"
 else
   export TMVASYS=$1
   TMVATESTDIR=0
+  echo 
+  echo "  you have specified to use TMVA installed in:" $argv[1]
 fi
 
 # check if the TMVA directory specified REALLY contains the TMVA libraries, otherwise it
