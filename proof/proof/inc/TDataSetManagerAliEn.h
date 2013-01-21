@@ -87,7 +87,8 @@ class TDataSetManagerAliEn : public TDataSetManager {
       std::vector<Int_t> *ExpandRunSpec(TString &runSpec);
 
       virtual Bool_t ParseCustomFindUri(TString &uri, TString &basePath,
-         TString &fileName, TString &treeName, TString &regexp);
+         TString &fileName, TString &anchor, TString &treeName,
+         TString &regexp);
 
       virtual Bool_t ParseOfficialDataUri(TString &uri, Bool_t sim,
          TString &period, Int_t &year, std::vector<Int_t> *&runList,
