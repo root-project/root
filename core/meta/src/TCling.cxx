@@ -690,6 +690,9 @@ TCling::TCling(const char *name, const char *title)
    fInterpreter->declare("#include \"TString.h\"\n"
                          "#include \"TMath.h\"\n"
                          "#include <cstring>\n" // for std::strstr for roottest/root/meta/drawing
+#ifdef R__MACOSX
+                         "#include <deque>\n" // this gets added indirectly by one of the module on MacOS
+#endif
                          "#include <iomanip>\n");
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
