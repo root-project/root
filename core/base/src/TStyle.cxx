@@ -1473,11 +1473,11 @@ void TStyle::SetTitleSize(Float_t size, Option_t *axis)
 
 
 //______________________________________________________________________________
-void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
+void TStyle::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
 {
    // See TColor::SetPalette.
 
-   TColor::SetPalette(ncolors,colors);
+   TColor::SetPalette(ncolors,colors,alpha);
 }
 
 

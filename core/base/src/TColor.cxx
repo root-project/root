@@ -208,7 +208,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-<p>The function <tt>TColor::CreateGradientColorTable()</tt> automatically 
+<p>The function <tt>TColor::CreateGradientColorTable()</tt> automatically
 calls </tt>gStyle->SetPalette()</tt>, so there is not need to add one.
 <p>
 After a call to <tt>TColor::CreateGradientColorTable()</tt> it is sometimes
@@ -238,13 +238,13 @@ The following macro illustrate this feature.
 End_Html
 Begin_Macro(source)
 ../../../tutorials/graphs/multipalette.C
-End_Macro 
+End_Macro
 Begin_Html
 
 <a name="C06"></a><h3>Color transparency</h3>
-To make a graphics object transparent it is enough to set its color to a 
-transparent one. The color transparency is defined via its alpha component. The 
-alpha value varies from <tt>0.</tt> (fully transparent) to <tt>1.</tt> (fully 
+To make a graphics object transparent it is enough to set its color to a
+transparent one. The color transparency is defined via its alpha component. The
+alpha value varies from <tt>0.</tt> (fully transparent) to <tt>1.</tt> (fully
 opaque). To set the alpha value of an existing color it is enough to do:
 <pre>
    TColor *col26 = gROOT->GetColor(26);
@@ -256,10 +256,10 @@ A new color can be created transparent the following way:
    TColor *color = new TColor(ci, 0.1, 0.2, 0.3, 0.5); // alpha = 0.5
 </pre>
 An example of tranparency usage with parallel coordinates can be found
-in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>. Right now the 
+in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>. Right now the
 transparency is implemented only for PDF output, SVG output, and for gif,
 jpg and png outputs.
- 
+
 End_Html */
 
 
@@ -1453,7 +1453,7 @@ void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
 //______________________________________________________________________________
 Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
                               Double_t* Red, Double_t* Green,
-                              Double_t* Blue, UInt_t NColors)
+                              Double_t* Blue, UInt_t NColors, Float_t alpha)
 {
    /* Begin_html
    Static function creating a color table with several connected linear gradients.
@@ -1566,6 +1566,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
                     Green[g-1] + c * (Green[g] - Green[g-1])/ nColorsGradient,
                     Blue[g-1] + c * (Blue[g] - Blue[g-1])/ nColorsGradient,
                     "  ");
+         gROOT->GetColor(highestIndex)->SetAlpha(alpha);
          palette[nPalette] = highestIndex;
          nPalette++;
          highestIndex++;
@@ -1580,7 +1581,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
 
 
 //______________________________________________________________________________
-void TColor::SetPalette(Int_t ncolors, Int_t *colors)
+void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
 {
    /* Begin_html
    Static function.
@@ -1607,14 +1608,14 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
    Spectrum Violet->Red is created with 50 colors. That's the default rain bow
    pallette.
    <p>
-   Other prefined palettes with 255 colors are available when <tt>colors == 0</tt>. 
+   Other prefined palettes with 255 colors are available when <tt>colors == 0</tt>.
    The following value of <tt>ncolors</tt> give access to:
    <p>
    <pre>
    if ncolors = 51 and colors=0, a Deep Sea palette is used.
    if ncolors = 52 and colors=0, a Grey Scale palette is used.
    if ncolors = 53 and colors=0, a Dark Body Radiator palette is used.
-   if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright yellow) 
+   if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright yellow)
    if ncolors = 55 and colors=0, a Rain Bow palette is used.
    </pre>
    (see TColor::CreateGradientColorTable for more details)
@@ -1623,8 +1624,8 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
    the item "colors" in the "VIEW" menu of the canvas toolbar.
    The color parameters can be changed via TColor::SetRGB.
    <p>
-   Note that when drawing a 2D histogram <tt>h2</tt> with the option "COL" or 
-   "COLZ" or with any "CONT" options using the color map, the number of colors 
+   Note that when drawing a 2D histogram <tt>h2</tt> with the option "COL" or
+   "COLZ" or with any "CONT" options using the color map, the number of colors
    used is defined by the number of contours <tt>n</tt> specified with:
    <tt>h2->SetContour(n)</tt>
    End_html */
@@ -1663,11 +1664,11 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       Double_t red[nRGBs]   = { 0.00, 0.09, 0.18, 0.09, 0.00 };
       Double_t green[nRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
       Double_t blue[nRGBs]  = { 0.17, 0.39, 0.62, 0.79, 0.97 };
-      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 3;
       return;
    }
-   
+
    // set Grey Scale palette
    if (ncolors == 52 && colors == 0) {
       TColor::InitializeColors();
@@ -1677,11 +1678,11 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00};
       Double_t green[nRGBs] = { 0.00, 0.50, 1.00};
       Double_t blue[nRGBs]  = { 0.00, 0.50, 1.00};
-      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 4;
       return;
    }
-   
+
    // set Dark Body Radiator palette
    if (ncolors == 53 && colors == 0) {
       TColor::InitializeColors();
@@ -1691,11 +1692,11 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00, 1.00, 1.00};
       Double_t green[nRGBs] = { 0.00, 0.00, 0.55, 1.00, 1.00};
       Double_t blue[nRGBs]  = { 0.00, 0.00, 0.00, 0.00, 1.00};
-      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 5;
       return;
    }
-   
+
    // set two-color hue palette (dark blue through neutral gray to bright yellow)
    if (ncolors == 54 && colors == 0) {
       TColor::InitializeColors();
@@ -1705,12 +1706,12 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00};
       Double_t green[nRGBs] = { 0.00, 0.50, 1.00};
       Double_t blue[nRGBs]  = { 0.50, 0.50, 0.00};
-      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 6;
       return;
    }
-   
-   // set Rain Bow palette 
+
+   // set Rain Bow palette
    if (ncolors == 55 && colors == 0) {
       TColor::InitializeColors();
       if (ncolors == fgPalette.fN && paletteType == 7) return;
@@ -1719,7 +1720,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       Double_t red[nRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
       Double_t green[nRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 };
       Double_t blue[nRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
-      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 7;
       return;
    }

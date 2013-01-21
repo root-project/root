@@ -130,6 +130,11 @@ by the C++ standard).</li>
       </ul>
       <p><img src="pal255.png" alt="New 255 colors palettes"/></p>
    </li>
+   <li>
+   Add the optional parameter "alpha" to <tt>TColor::SetPalette</tt> and 
+   <tt>TStyle::SetPalette</tt>. The default value is 1. (opaque palette).
+   Any value between 0. and 1 define the level of transparency. 0. being fully
+   transparent and 1. fully opaque.</li>
 </ul>
 
 <h4>TColor</h4>
