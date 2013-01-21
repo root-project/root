@@ -59,7 +59,7 @@ TGridResult *TAliEnFind::GetGridResult()
       if (!gGrid) return NULL;
    }
 
-   if (gDebug > 0) {
+   if (gDebug >= 1) {
       Info("GetGridResult", "AliEn find %s %s [regexp=%s]",
          fBasePath.Data(), fFileName.Data(), fRegexpRaw.Data());
    }
@@ -113,15 +113,19 @@ TGridResult *TAliEnFind::GetGridResult()
 const char *TAliEnFind::GetSearchId()
 {
   if (fSearchId.IsNull()) {
-    fSearchId.Form("%s_%s_%s_%s", fBasePath.Data(), fFileName.Data(),
-      fTreeName.Data(), fRegexpRaw.Data());
-    TPMERegexp invalid("[^A-Za-z0-9._-]");
-    while (invalid.Substitute(fSearchId, "_")) {}
-    TPMERegexp headTail("(^_|_$)");
-    while (headTail.Substitute(fSearchId, "")) {}
-    TPMERegexp dups("__");
-    while (dups.Substitute(fSearchId, "_")) {}
+    TString searchIdStr;
+    searchIdStr.Form("BasePath=%s FileName=%s Anchor=%s TreeName=%s Regexp=%s",
+      fBasePath.Data(), fFileName.Data(), fAnchor.Data(), fTreeName.Data(),
+      fRegexpRaw.Data());
+    TMD5 *md5 = new TMD5();
+    md5->Update( (const UChar_t *)searchIdStr.Data(),
+      (UInt_t)searchIdStr.Length() );
+    md5->Final();
+    fSearchId = md5->AsString();
+    delete md5;
   }
+  if (gDebug >= 2)
+    Info("GetSearchId", "Returning search ID %s", fSearchId.Data());
   return fSearchId.Data();
 }
 
@@ -140,7 +144,7 @@ TFileCollection *TAliEnFind::GetCollection()
 
     TString tUrl = fGridResult->GetKey(i, "turl");
 
-    if (gDebug > 2)
+    if (gDebug >= 2)
       Info("GetCollection", ">> %s", tUrl.Data());
 
     // Append to TFileCollection: url, size, guid, md5
@@ -184,7 +188,7 @@ void TDataSetManagerAliEn::Init(TString cacheDir, TString urlTpl,
   ResetBit(TDataSetManager::kAllowRegister);  // impossible to register
   ResetBit(TDataSetManager::kCheckQuota);  // quota control off
 
-  if (gDebug > 0) {
+  if (gDebug >= 1) {
     Info("TDataSetManagerAliEn", "Caching on %s", cacheDir.Data());
     Info("TDataSetManagerAliEn", "URL schema: %s", urlTpl.Data());
     Info("TDataSetManagerAliEn", "Cache expires after: %lus", cacheExpire_s);
@@ -272,18 +276,20 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
 
     TString basePath;
     TString fileName;
+    TString anchor;
     TString treeName;
     TString regexp;
 
     // Custom search URI
-    if (!ParseCustomFindUri(uri, basePath, fileName, treeName, regexp) ) {
+    if (!ParseCustomFindUri(uri, basePath, fileName, anchor,
+      treeName, regexp)) {
       Error("GetFindCommandsFromUri", "Malformed AliEn find command");
       return NULL;
     }
 
     findCommands = new TList();
     findCommands->SetOwner();
-    findCommands->Add( new TAliEnFind(basePath, fileName, "", kFALSE,
+    findCommands->Add( new TAliEnFind(basePath, fileName, anchor, kFALSE,
       treeName, regexp) );
 
   }
@@ -387,7 +393,8 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
 
 //______________________________________________________________________________
 Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
-   TString &basePath, TString &fileName, TString &treeName, TString &regexp)
+   TString &basePath, TString &fileName, TString &anchor, TString &treeName,
+   TString &regexp)
 {
 
   // Base path
@@ -405,6 +412,13 @@ Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
     return kFALSE;
   }
   fileName = reFileName[2];
+
+  // Anchor (optional)
+  TPMERegexp reAnchor("(^|;)Anchor=([^; ]+)(;|$)");
+  if (reAnchor.Match(uri) != 4)
+    anchor = "";
+  else
+    anchor = reAnchor[2];
 
   // Tree name (optional)
   TPMERegexp reTreeName("(^|;)Tree=(/[^; ]+)(;|$)");
@@ -585,16 +599,18 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
     now = now/1000 + 788914800;  // magic is secs between Jan 1st 1970 and 1995
 
     if ((mtime > 0) && (now-mtime > fCacheExpire_s)) {
-      if (gDebug > 0)
+      if (gDebug >= 1)
         Info("GetDataSet", "Dataset cache expired");
     }
     else {
+      if (gDebug >= 1)
+        Info("GetDataSet", "Getting file collection from cache");
       newFc = fCache->GetDataSet(cachedUri.Data());
     }
 
     if (!newFc) {
 
-      if (gDebug > 0)
+      if (gDebug >= 1)
         Info("GetDataSet", "Getting file collection from AliEn");
 
       //newFc = AliEnFind(*af, anchor, treeName, archSubst, kFALSE);
@@ -628,7 +644,7 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
       else {
         // Don't make the user waste time: don't cache dataset locality info at
         // this time, and signal our ignorance with a dummy URL
-        if (gDebug > 0)
+        if (gDebug >= 1)
           Info("GetDataSet", "Not caching data locality information now");
         itCache.Reset();
         while ((fi = dynamic_cast<TFileInfo *>(itCache.Next())))
@@ -648,7 +664,7 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
       if (fi) {
         if ((strcmp(fi->GetCurrentUrl()->GetProtocol(), "noop") == 0) &&
             (strcmp(fi->GetCurrentUrl()->GetHost(), "unknown") == 0)) {
-          if (gDebug > 0)
+          if (gDebug >= 1)
             Info("GetDataSet", "No dataset locality information in cache");
           hasEndp = kFALSE;
         }
@@ -697,7 +713,7 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
             delete findCmds;
             return NULL;
           }
-          else if (gDebug > 0) {
+          else if (gDebug >= 1) {
             Info("GetDataSet", "Lookup successful for %d file(s)", rv);
           }
         }
@@ -737,7 +753,6 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
         // Access from redirector, pretend that everything is staged
         fi->SetBit(TFileInfo::kStaged);
         fi->RemoveUrlAt(0);
-        // TODO Remove first URL
       }
       else {  // dataMode == kLocal
         // Remove dummy URLs, trust staged bit
