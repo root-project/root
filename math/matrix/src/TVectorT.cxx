@@ -288,7 +288,7 @@ TVectorT<Element> &TVectorT<Element>::ResizeTo(Int_t lwb,Int_t upb)
 {
 // Resize the vector to [lwb:upb] .
 // New dynamic elemenst are created, the overlapping part of the old ones are
-// copied to the new structures, then the old elements are deleleted.
+// copied to the new structures, then the old elements are deleted.
 
    R__ASSERT(IsValid());
    if (!fIsOwner) {
