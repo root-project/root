@@ -1453,7 +1453,7 @@ void TColor::SetGrayscale(Bool_t set /*= kTRUE*/)
 //______________________________________________________________________________
 Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
                               Double_t* Red, Double_t* Green,
-                              Double_t* Blue, UInt_t NColors)
+                              Double_t* Blue, UInt_t NColors, Float_t alpha)
 {
    /* Begin_html
    Static function creating a color table with several connected linear gradients.
@@ -1566,6 +1566,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
                     Green[g-1] + c * (Green[g] - Green[g-1])/ nColorsGradient,
                     Blue[g-1] + c * (Blue[g] - Blue[g-1])/ nColorsGradient,
                     "  ");
+         gROOT->GetColor(highestIndex)->SetAlpha(alpha);
          palette[nPalette] = highestIndex;
          nPalette++;
          highestIndex++;
@@ -1580,7 +1581,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
 
 
 //______________________________________________________________________________
-void TColor::SetPalette(Int_t ncolors, Int_t *colors)
+void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
 {
    /* Begin_html
    Static function.
@@ -1663,7 +1664,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       Double_t red[nRGBs]   = { 0.00, 0.09, 0.18, 0.09, 0.00 };
       Double_t green[nRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
       Double_t blue[nRGBs]  = { 0.17, 0.39, 0.62, 0.79, 0.97 };
-      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 3;
       return;
    }
@@ -1677,7 +1678,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00};
       Double_t green[nRGBs] = { 0.00, 0.50, 1.00};
       Double_t blue[nRGBs]  = { 0.00, 0.50, 1.00};
-      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 4;
       return;
    }
@@ -1691,7 +1692,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00, 1.00, 1.00};
       Double_t green[nRGBs] = { 0.00, 0.00, 0.55, 1.00, 1.00};
       Double_t blue[nRGBs]  = { 0.00, 0.00, 0.00, 0.00, 1.00};
-      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 5;
       return;
    }
@@ -1705,7 +1706,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00};
       Double_t green[nRGBs] = { 0.00, 0.50, 1.00};
       Double_t blue[nRGBs]  = { 0.50, 0.50, 0.00};
-      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 6;
       return;
    }
@@ -1719,7 +1720,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors)
       Double_t red[nRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
       Double_t green[nRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 };
       Double_t blue[nRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
-      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255);
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 7;
       return;
    }
