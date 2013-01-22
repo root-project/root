@@ -251,7 +251,7 @@ int main(int argc,const char *argv[])
   Bool_t doDump      = kFALSE ;
   Bool_t doTreeStore = kFALSE ;
 
-  string refFileName = "http://root.cern.ch/files/stressRooFit_v530_ref.root" ;
+  string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
 
   // Parse command line arguments 
   for (Int_t i=1 ;  i<argc ; i++) {
