@@ -278,7 +278,8 @@ int   TClassEdit::STLArgs(int kind)
 //      Return number of arguments for STL container before allocator
 
    static const char  stln[] =// min number of container arguments
-   {    1,       1,     1,      1,    3,         3,    2,        2 };
+      //     vector, list, deque, map, multimap, set, multiset, bitset 
+      {    1,     1,    1,     1,   3,        3,   2,        2,      1 };
 
    return stln[kind];
 }
