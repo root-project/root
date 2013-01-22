@@ -153,6 +153,7 @@ void TQCanvasMenu::Execute(int id)
    // Slot defined to execute a method from a selected TObject
    // using TObject::Execute() function.
 
+   if (id < 0) return;
    QString text="";
 
    TVirtualPad  *psave = gROOT->GetSelectedPad();

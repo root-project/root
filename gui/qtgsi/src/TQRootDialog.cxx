@@ -142,9 +142,11 @@ void TQRootDialog::Add(const char* argname, const char* value, const char* /*typ
    s = value;
    new QLabel(argname,fArgBox);
    QLineEdit* lineEdit = new  QLineEdit(fArgBox);
-   fLineEdit->setGeometry(10,10, 130, 30);
-   fLineEdit->setFocus();
-   fLineEdit->setText(s);
+   if (fLineEdit) {
+      fLineEdit->setGeometry(10,10, 130, 30);
+      fLineEdit->setFocus();
+      fLineEdit->setText(s);
+   }
    fList.append( lineEdit );
 }
 
