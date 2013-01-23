@@ -93,7 +93,7 @@ public:
                                         Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
    virtual Double_t GetBinContent(Int_t bin) const { return TH1::GetBinContent(bin); }
    virtual Double_t GetBinContent(Int_t bin, Int_t) const { return TH1::GetBinContent(bin); }
-   virtual Double_t GetBinContent(Int_t binx, Int_t biny, Int_t binz) const { return RetrieveBinContent( GetBin(binx, biny, binz) ); }
+   virtual Double_t GetBinContent(Int_t binx, Int_t biny, Int_t binz) const { return TH1::GetBinContent( GetBin(binx, biny, binz) ); }
    using TH1::GetBinErrorLow;
    using TH1::GetBinErrorUp;
    virtual Double_t GetBinErrorLow(Int_t binx, Int_t biny, Int_t binz) { return TH1::GetBinErrorLow( GetBin(binx, biny, binz) ); }

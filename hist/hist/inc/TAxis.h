@@ -108,7 +108,7 @@ public:
            Bool_t     GetCenterLabels() const { return TestBit(kCenterLabels); }
            Bool_t     GetCenterTitle() const { return TestBit(kCenterTitle); }
            Bool_t     GetDecimals() const { return TestBit(kDecimals); } 
-   THashList         *GetLabels() {return fLabels;}
+   THashList         *GetLabels() const { return fLabels; }
    virtual void       GetLowEdge(Double_t *edge) const;
            Bool_t     GetMoreLogLabels() const { return TestBit(kMoreLogLabels); }
            Int_t      GetNbins() const { return fNbins; }
