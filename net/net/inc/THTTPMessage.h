@@ -106,7 +106,7 @@ public:
    TString CreateDate() const;
    TString CreateAuth() const;
 
-   TString GetRequest();
+   TString GetRequest(Bool_t appendCRLF=kTRUE);
 
    ClassDef(THTTPMessage, 0)  // Create generic HTTP request for Amazon S3 and Google Storage services
 };

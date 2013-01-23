@@ -143,7 +143,7 @@ TString THTTPMessage::Sign()
       sign += "x-goog-api-version:1\n";
    }
 
-   sign += "/"+GetBucket()+GetPath();
+   sign += "/" + GetBucket() + GetPath();
    char digest[SHA_DIGEST_LENGTH] = {0};
    TString key = GetAccessIdKey();
 
@@ -178,27 +178,39 @@ TString THTTPMessage::DatimeToTString() const
    // Generates a Date TString according to:
    //   http://code.google.com/apis/storage/docs/reference-headers.html#date
 
-   time_t date_temp;
-   struct tm *date_format;
-   char date_out[128];
-
-   time(&date_temp);
-   date_format = gmtime(&date_temp);
-   strftime(date_out, 128, "%a, %d %b %Y %H:%M:%S GMT", date_format);
-
-   return TString(date_out);
+   time_t now = time(NULL);
+   {
+      // TODO: remove this block which was introduced to turnaround the
+      // time skew problem of UDS
+      // now -= 16*60;
+   }
+   char result[128];
+   struct tm date_format;
+   strftime(result, sizeof(result), "%a, %d %b %Y %H:%M:%S GMT", gmtime_r(&now, &date_format));
+   return TString(result);
 }
 
 //______________________________________________________________________________
 TString THTTPMessage::CreateHead() const
 {
-   return HTTPVerbToTString() + " " + GetPath() + " HTTP/1.1";
+   // Returns the first line of a HTTP request for this object. Note that since
+   // we don't use the virtual host syntax which is supported by Amazon, we
+   // must include the bucket name in thr resource. For example, we don't use
+   // http://mybucket.s3.amazonaws.com/path/to/my/file but instead
+   // http://s3.amazonaws.com/mybucket/path/to/my/file so the HTTP request
+   // will be of the form "GET /mybucket/path/to/my/file HTTP/1.1"
+   // Also note that the path must include the leading '/'.
+
+   return TString::Format("%s /%s%s HTTP/1.1",
+      (const char*)HTTPVerbToTString(), (const char*)GetBucket(), (const char*)GetPath());
 }
 
 //______________________________________________________________________________
 TString THTTPMessage::CreateHost() const
 {
-   return (fBucket.EqualTo("")) ? "Host: "+GetHost() : "Host: "+GetBucket()+"."+GetHost();
+   // Returns the 'Host' header to include in the HTTP request.
+
+   return "Host: " + GetHost();
 }
 
 //______________________________________________________________________________
@@ -211,7 +223,7 @@ TString THTTPMessage::CreateDate() const
 TString THTTPMessage::CreateAuth() const
 {
    if (GetAuthPrefix() == "AWS") {
-      return "Authorization: " + GetAuthPrefix() + " " + GetAccessId()+":"+GetSignature();
+      return "Authorization: " + GetAuthPrefix() + " " + GetAccessId() + ":" + GetSignature();
    } else {
       return "x-goog-api-version: 1\r\nAuthorization: " + GetAuthPrefix() + " " +
       GetAccessId() + ":" + GetSignature();
@@ -219,17 +231,16 @@ TString THTTPMessage::CreateAuth() const
 }
 
 //______________________________________________________________________________
-TString THTTPMessage::GetRequest()
+TString THTTPMessage::GetRequest(Bool_t appendCRLF)
 {
-   // Generates a TString with the HTTP Request.
+   // Returns the HTTP request
 
-   TString msg;
-   msg  = CreateHead()+"\r\n";
-   msg += CreateHost()+"\r\n";
-   msg += CreateDate()+"\r\n";
+   TString msg = TString::Format("%s\r\n%s\r\n%s\r\n%s\r\n", 
+      (const char*)CreateHead(), (const char*)CreateHost(),
+      (const char*)CreateDate(), (const char*)CreateAuth());
 
-   Int_t n = 0;
-   if(HasRange()){
+   if (HasRange()) {
+      Int_t n = 0;
       msg += "Range: bytes=";
       for (Int_t i = 0; i < fNumBuf; i++) {
          if (n) msg += ",";
@@ -245,8 +256,7 @@ TString THTTPMessage::GetRequest()
       }
       msg += "\r\n";
    }
-
-   msg += CreateAuth()+"\r\n";
-   msg += "\r\n\r\n";;
+   if (appendCRLF)
+      msg += "\r\n";
    return msg;
 }

@@ -890,7 +890,7 @@ Int_t TWebFile::GetHead()
       fMsgGetHead += "\r\n\r\n";
    }
    TString msg = fMsgGetHead;
-
+ 
    TUrl connurl;
    if (fProxy.IsValid())
       connurl = fProxy;
@@ -955,6 +955,7 @@ Int_t TWebFile::GetHead()
          Info("GetHead", "header: %s", line);
 
       TString res = line;
+      ProcessHttpHeader(res);
       if (res.BeginsWith("HTTP/1.")) {
          if (res.BeginsWith("HTTP/1.1")) {
             if (!fHTTP11) {
@@ -1240,6 +1241,13 @@ const char *TWebFile::GetProxy()
    return "";
 }
 
+//______________________________________________________________________________
+void TWebFile::ProcessHttpHeader(const TString&)
+{
+   // Process the HTTP header in the argument. This method is intended to be
+   // overwritten by subclasses that exploit the information contained in the
+   // HTTP headers.
+}
 
 //______________________________________________________________________________
 TWebSystem::TWebSystem() : TSystem("-http", "HTTP Helper System")

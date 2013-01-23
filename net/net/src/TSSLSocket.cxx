@@ -217,6 +217,15 @@ Int_t TSSLSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
         }
         return n;
      }
+
+     // When peeking, just return the available data, don't loop. Otherwise,
+     // we may copy the same chunk of data multiple times into the
+     // output buffer, for instance when there is no more recent data
+     // in the socket's internal reception buffers.
+     // Note that in this case we don't update the counters of data received
+     // through this socket. They will be updated when the data is actually
+     // read. This avoids double counting.
+     if (opt == kPeek) return n;
      
      offset += n;
      remain -= n;
