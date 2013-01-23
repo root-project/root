@@ -357,17 +357,21 @@ E: rhatcher@fnal.gov
 D: class TXTRU and tutorials xtruDraw.C and xtruSamples.C
 D: class TTimeStamp
 
-N: Miroslav Helbich
-E: helbich@mail.desy.de
-D: apply method in the TGraph classes
-
 N: Bill Heintzelman
 E: billh@hep.upenn.edu
 D: TTree::AutoFlush,Autosave improvements
 
+N: Miroslav Helbich
+E: helbich@mail.desy.de
+D: apply method in the TGraph classes
+
 N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
 D: contributions to the thread classes, SapDB interface
+
+N: Fabio Hernandez
+E: fabio@in2p3.fr
+D: TS3WebFile with improved Amazon S3 and Huawei support
 
 N: Andreas Hoecker
 E: Andreas.Hoecker@cern.ch
