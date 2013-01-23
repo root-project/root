@@ -2311,7 +2311,6 @@ Double_t TH1::ComputeIntegral()
    //  has changed since the previous call to GetRandom.
    //  The resulting integral is normalized to 1
 
-   Int_t bin, binx, biny, binz, ibin;
 
    // delete previously computed integral (if any)
    if (fIntegral) delete [] fIntegral;
@@ -2320,18 +2319,16 @@ Double_t TH1::ComputeIntegral()
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
    Int_t nbinsz = GetNbinsZ();
-   Int_t nxy    = nbinsx*nbinsy;
-   Int_t nbins  = nxy*nbinsz;
+   Int_t nbins  = nbinsx * nbinsy * nbinsz;
 
-   fIntegral = new Double_t[nbins+2];
-   ibin = 0;
-   fIntegral[ibin] = 0;
-   for (binz=1;binz<=nbinsz;binz++) {
-      for (biny=1;biny<=nbinsy;biny++) {
-         for (binx=1;binx<=nbinsx;binx++) {
-            ibin++;
-            bin  = GetBin(binx, biny, binz);
-            fIntegral[ibin] = fIntegral[ibin-1] + RetrieveBinContent(bin);
+   fIntegral = new Double_t[nbins + 2];
+   Int_t ibin = 0; fIntegral[ibin] = 0;
+
+   for (Int_t binz=1; binz <= nbinsz; ++binz) {
+      for (Int_t biny=1; biny <= nbinsy; ++biny) {
+         for (Int_t binx=1; binx <= nbinsx; ++binx) {
+            ++ibin;
+            fIntegral[ibin] = fIntegral[ibin - 1] + RetrieveBinContent(GetBin(binx, biny, binz));
          }
       }
    }
@@ -2340,7 +2337,7 @@ Double_t TH1::ComputeIntegral()
    if (fIntegral[nbins] == 0 ) {
       Error("ComputeIntegral", "Integral = zero"); return 0;
    }
-   for (bin=1;bin<=nbins;bin++)  fIntegral[bin] /= fIntegral[nbins];
+   for (Int_t bin=1; bin <= nbins; ++bin)  fIntegral[bin] /= fIntegral[nbins];
    fIntegral[nbins+1] = fEntries;
    return fIntegral[nbins];
 }
@@ -2879,10 +2876,9 @@ void TH1::Eval(TF1 *f1, Option_t *option)
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Double_t x[3];
-   Int_t range,stat,add,bin,binx,biny,binz,nbinsx, nbinsy, nbinsz;
+   Int_t range, stat, add;
    if (!f1) return;
-   Double_t fu;
-   Double_t e=0;
+   
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("a")) add   = 1;
@@ -2895,24 +2891,23 @@ void TH1::Eval(TF1 *f1, Option_t *option)
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   nbinsx  = fXaxis.GetNbins();
-   nbinsy  = fYaxis.GetNbins();
-   nbinsz  = fZaxis.GetNbins();
+   Int_t nbinsx  = fXaxis.GetNbins();
+   Int_t nbinsy  = fYaxis.GetNbins();
+   Int_t nbinsz  = fZaxis.GetNbins();
    if (!add) Reset();
 
-   for (binz=1;binz<=nbinsz;binz++) {
+   for (Int_t binz = 1; binz <= nbinsz; ++binz) {
       x[2]  = fZaxis.GetBinCenter(binz);
-      for (biny=1;biny<=nbinsy;biny++) {
+      for (Int_t biny = 1; biny <= nbinsy; ++biny) {
          x[1]  = fYaxis.GetBinCenter(biny);
-         for (binx=1;binx<=nbinsx;binx++) {
-            bin = GetBin(binx,biny,binz);
+         for (Int_t binx = 1; binx <= nbinsx; ++binx) {
+            Int_t bin = GetBin(binx,biny,binz);
             x[0]  = fXaxis.GetBinCenter(binx);
             if (range && !f1->IsInside(x)) continue;
-            fu = f1->Eval(x[0],x[1],x[2]);
+            Double_t fu = f1->Eval(x[0], x[1], x[2]);
             if (stat) fu = gRandom->PoissonD(fu);
-            if (fSumw2.fN) e = fSumw2.fArray[bin];
-            AddBinContent(bin,fu);
-            if (fSumw2.fN) fSumw2.fArray[bin] = e+ TMath::Abs(fu);
+            AddBinContent(bin, fu);
+            if (fSumw2.fN) fSumw2.fArray[bin] += TMath::Abs(fu);
          }
       }
    }
