@@ -1136,13 +1136,18 @@ uninstall:
 	   echo "To uninstall ROOT just delete directory $$PWD"; \
 	else \
 	   rm -f $(DESTDIR)$(BINDIR)/`basename $(RMKDEP)`; \
+	   rm -f $(DESTDIR)$(BINDIR)/`basename $(RLIBMAP)`; \
 	   if [ "x$(BINDEXP)" != "x" ] ; then \
 	      rm -f $(DESTDIR)$(BINDIR)/`basename $(BINDEXP)`; \
 	   fi; \
 	   rm -f $(DESTDIR)$(BINDIR)/root-config; \
 	   rm -f $(DESTDIR)$(BINDIR)/memprobe; \
-	   rm -f $(DESTDIR)$(BINDIR)/thisroot.sh; \
-	   rm -f $(DESTDIR)$(BINDIR)/thisroot.csh; \
+	   rm -f $(DESTDIR)$(BINDIR)/thisroot.*; \
+	   rm -f $(DESTDIR)$(BINDIR)/setxrd.*; \
+	   rm -f $(DESTDIR)$(BINDIR)/genreflex; \
+	   rm -f $(DESTDIR)$(BINDIR)/genreflex-rootcint; \
+	   rm -f $(DESTDIR)$(BINDIR)/hist2workspace; \
+	   rm -f $(DESTDIR)$(BINDIR)/prepareHistFactory; \
 	   for i in $(ALLEXECS) ; do \
 	      rm -f $(DESTDIR)$(BINDIR)/`basename $$i`; \
 	   done; \
@@ -1153,28 +1158,21 @@ uninstall:
 	   for lib in $(ALLLIBS) $(ALLMAPS); do \
 	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`* ; \
 	   done; \
-	   if test "x$(RFLX_GRFLXPY)" != "x"; then \
-	      rm -f $(DESTDIR)$(LIBDIR)/$(RFLX_GRFLXPY); \
-	   fi; \
-	   if test "x$(RFLX_GRFLXPYC)" != "x"; then \
-	      rm -f $(DESTDIR)$(LIBDIR)/$(RFLX_GRFLXPYC); \
-	   fi; \
-	   if test "x$(RFLX_GRFLXPY)$(RFLX_GRFLXPYC)" != "x"; then \
-	      dir=$(RFLX_GRFLXDD:lib/=); \
-	      while test "x$${dir}" != "x" && \
-	         test -d $(DESTDIR)$(LIBDIR)/$${dir} && \
-	         test "x`ls $(DESTDIR)$(INCDIR)/$${dir}`" = "x"; do \
-	         rm -rf $(DESTDIR)$(INCDIR)/$${dir}; \
-	         dir=$(dirname $${dir}); \
-	      done; \
-	   fi; \
+	   for lib in lib/*.a lib/*.py lib/*.py*; do \
+	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`* ; \
+	   done; \
+	   rm -f $(DESTDIR)$(LIBDIR)/writer.py ; \
+	   rm -f $(DESTDIR)$(LIBDIR)/ROOTwriter.py ; \
 	   if test -d $(DESTDIR)$(LIBDIR) && \
 	      test "x`ls $(DESTDIR)$(LIBDIR)`" = "x"; then \
 	      rm -rf $(DESTDIR)$(LIBDIR); \
 	   fi ; \
+	   for i in include/Math/*.icc ; do \
+	      rm -f $(DESTDIR)$(INCDIR)/Math/`basename $$i`; \
+	   done ; \
 	   for subdir in \
               . \
-              Math/GenVector Math \
+              Math/GenVector Math Fit \
               GL TMVA Minuit2; do \
               if test -d include/$${subdir}; then \
 	         for i in include/$${subdir}/*.h ; do \
@@ -1187,17 +1185,20 @@ uninstall:
               fi; \
 	   done; \
 	   rm -f $(DESTDIR)$(INCDIR)/rmain.cxx; \
-	   for i in icons/*.xpm ; do \
-	      rm -fr $(DESTDIR)$(ICONPATH)/`basename $$i`; \
-	   done; \
-	   for i in icons/*.png ; do \
+	   for i in icons/*.xpm icons/*.png icons/*.gif ; do \
 	      rm -fr $(DESTDIR)$(ICONPATH)/`basename $$i`; \
 	   done; \
 	   if test -d $(DESTDIR)$(ICONPATH) && \
 	      test "x`ls $(DESTDIR)$(ICONPATH)`" = "x" ; then \
 	      rm -rf $(DESTDIR)$(ICONPATH); \
 	   fi ; \
-	   rm -rf $(DESTDIR)$(TTFFONTDIR); \
+	   for i in fonts/LICENSE fonts/*.ttf fonts/*.otf ; do \
+	      rm -fr $(DESTDIR)$(TTFFONTDIR)/`basename $$i`; \
+	   done; \
+	   if test -d $(DESTDIR)$(TTFFONTDIR) && \
+	      test "x`ls $(DESTDIR)$(TTFFONTDIR)`" = "x" ; then \
+	      rm -rf $(DESTDIR)$(TTFFONTDIR); \
+	   fi ; \
 	   rm -rf $(DESTDIR)$(TUTDIR); \
 	   rm -rf $(DESTDIR)$(TESTDIR); \
 	   rm -rf $(DESTDIR)$(DOCDIR); \
@@ -1215,6 +1216,16 @@ uninstall:
 	   if test -d $(DESTDIR)$(ETCDIR) && \
 	      test "x`ls $(DESTDIR)$(ETCDIR)`" = "x" ; then \
 	      rm -rf $(DESTDIR)$(ETCDIR); \
+	   fi ; \
+	   rm -f $(DESTDIR)$(ELISPDIR)/root-help.el; \
+	      if test -d $(DESTDIR)$(ELISPDIR) && \
+	      test "x`ls $(DESTDIR)$(ELISPDIR)`" = "x" ; then \
+	      rm -rf $(DESTDIR)$(ELISPDIR); \
+	   fi ; \
+	   rm -f $(DESTDIR)$(ACLOCALDIR)/root.m4; \
+	   if test -d $(DESTDIR)$(ACLOCALDIR) && \
+	      test "x`ls $(DESTDIR)$(ACLOCALDIR)`" = "x" ; then \
+	      rm -rf $(DESTDIR)$(ACLOCALDIR); \
 	   fi ; \
 	   for i in build/misc/* ; do \
 	      rm -rf $(DESTDIR)$(DATADIR)/`basename $$i`; \
