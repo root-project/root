@@ -46,16 +46,16 @@ class PolygonStippleSet {
    friend class FillAttribSet;
 private:
    std::vector<unsigned char> fStipples;
-   
+
    static const UInt_t fgBitSwap[];
    static UInt_t SwapBits(UInt_t bits);
-      
+
    enum EGeometry {
       kRowSize = 4,//For gl, stipple is a 32x32 pixel pattern. So, 4 GLubyte objects form a single line of a stipple.
       kNRows = 32,
-      kStippleSize = kNRows * kRowSize//4 * 32 == 32 lines.   
+      kStippleSize = kNRows * kRowSize//4 * 32 == 32 lines.
    };
-   
+
    enum EBitMasks {
       kLow4   = 0xf,
       kUp4    = 0xf0,
@@ -70,6 +70,7 @@ RAII class to enable/disable selected stipple.
 */
 class FillAttribSet {
    UInt_t fStipple;
+   Float_t fAlpha;
 public:
    FillAttribSet(const PolygonStippleSet & set, Bool_t ignoreStipple);
    ~FillAttribSet();
@@ -90,6 +91,7 @@ private:
    Bool_t fSmooth;
    UInt_t fStipple;
    Bool_t fSetWidth;
+   Float_t fAlpha;
 public:
    LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, Bool_t setWidth);
    ~LineAttribSet();
@@ -110,14 +112,14 @@ private:
    //Different TArrMarker styles.
    mutable TPoint fStar[8];
    mutable TPoint fCross[4];
-   
+
    mutable std::vector<TPoint> fCircle;
-   
+
    enum {
       kSmallCirclePts = 80,
       kLargeCirclePts = 150
    };
-   
+
 public:
    //Each function draw n markers.
    void DrawDot(UInt_t n, const TPoint *xy)const;
@@ -126,10 +128,10 @@ public:
    void DrawX(UInt_t n, const TPoint *xy)const;
    void DrawFullDotSmall(UInt_t n, const TPoint *xy)const;
    void DrawFullDotMedium(UInt_t n, const TPoint *xy)const;
-   
+
    void DrawCircle(UInt_t n, const TPoint *xy)const;
    void DrawFullDotLarge(UInt_t n, const TPoint *xy)const;
-   
+
    void DrawFullSquare(UInt_t n, const TPoint *xy)const;
    void DrawFullTrianlgeUp(UInt_t n, const TPoint *xy)const;
    void DrawFullTrianlgeDown(UInt_t n, const TPoint *xy)const;
@@ -163,7 +165,7 @@ public:
    Tesselator(Bool_t dump = kFALSE);
 
    ~Tesselator();
-   
+
    void *GetTess()const
    {
       return fTess;
@@ -194,7 +196,7 @@ class OffScreenDevice {
    friend class ::TGLPadPainter;
 public:
    OffScreenDevice(UInt_t w, UInt_t h, UInt_t x, UInt_t y, Bool_t top);
-   
+
 private:
    UInt_t fW;
    UInt_t fH;

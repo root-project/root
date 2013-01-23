@@ -50,46 +50,46 @@ PolygonStippleSet::PolygonStippleSet()
     I have to assume, that gStipple has two chars in a line.
     There in no way to calculate line length and there are no corresponding constants in RStipple.h.
     So, these numbers are hardcode here.
-    Ordering in RStipples completely different from OpenGL. 
+    Ordering in RStipples completely different from OpenGL.
     In OpenGL, if I have, say, 16x2 pattern, GLbytes will be:
-    
+
     [3][4]
     [1][2]
-    
+
     and bits inside them
-    
+
     [7 6 5 4 3 2 1 0][7 6 5 4 3 2 1 0]
     [7 6 5 4 3 2 1 0][7 6 5 4 3 2 1 0].
-    
+
     But for X11 this will be:
-    
+
     [2][1]
     [4][3]
-    
+
     [0 1 2 3 4 5 6 7][0 1 2 3 4 5 6 7]
     [0 1 2 3 4 5 6 7][0 1 2 3 4 5 6 7]
-    
-    So, line 0x7, 0xE from X11 must be 
+
+    So, line 0x7, 0xE from X11 must be
     converted into 0x70, 0xE0 for OpenGL.
-    
+
     As OpenGL expects 32x32 pattern, I have to twice each line.
    */
-   
-   /*If somebody will seriously change gStipples declaration, 
+
+   /*If somebody will seriously change gStipples declaration,
    so, that sizeof gStipples becomes "wrong", change this!*/
    const UInt_t numOfStipples = sizeof gStipples / sizeof gStipples[0];
    fStipples.resize(kStippleSize * numOfStipples);
 
    for (UInt_t i = 0; i < numOfStipples; ++i) {
       const UInt_t baseInd = i * kStippleSize;
-      
+
       for (Int_t j = 15, j1 = 0; j >= 0; --j, ++j1) {//ROOT uses 16x16 stipples.
          const UInt_t rowShift = j1 * kRowSize;
-         
+
          for (Int_t k = 1, k1 = 0; k >= 0; --k, ++k1) {//Two chars form a line.
             const UChar_t pixel = SwapBits(gStipples[i][j * 2 + k]);
             const UInt_t ind = baseInd + rowShift + k1;
-            
+
             fStipples[ind]      = pixel;
             fStipples[ind + 2]  = pixel;
             fStipples[ind + 64] = pixel;
@@ -103,10 +103,10 @@ PolygonStippleSet::PolygonStippleSet()
 UInt_t PolygonStippleSet::SwapBits(UInt_t b)
 {
    b &= k16Bits;
-   
+
    const UInt_t low = fgBitSwap[b & kLow4] << 4;
    const UInt_t up  = fgBitSwap[(b & kUp4) >> 4];
-   
+
    return low | up;
 }
 
@@ -115,11 +115,11 @@ Class to manipulate fill parameters.
 */
 //______________________________________________________________________________
 FillAttribSet::FillAttribSet(const PolygonStippleSet &set, Bool_t ignoreStipple)
-                  : fStipple(0)
+                  : fStipple(0), fAlpha(1.)
 {
    //Polygon stipple, if required.
    const UInt_t style = gVirtualX->GetFillStyle() / 1000;
-   
+
    if (!ignoreStipple) {
       if (style == 3) {
          const UInt_t fasi  = gVirtualX->GetFillStyle() % 1000;
@@ -128,10 +128,15 @@ FillAttribSet::FillAttribSet(const PolygonStippleSet &set, Bool_t ignoreStipple)
          glEnable(GL_POLYGON_STIPPLE);
       }
    }
-   
-   //Color.
+
+   // Color and transparency
    Float_t rgba[] = {0.f, 0.f, 0.f, 1.f};
    ExtractRGB(gVirtualX->GetFillColor(), rgba);
+   fAlpha = rgba[3];
+   if (fAlpha<1.) {
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   }
    glColor4fv(rgba);
 }
 
@@ -140,14 +145,17 @@ FillAttribSet::~FillAttribSet()
 {
    if (fStipple)
       glDisable(GL_POLYGON_STIPPLE);
+
+   if (fAlpha<1.)
+      glDisable(GL_BLEND);
 }
 
 /*
 "ROOT like" line stipples.
 */
 
-const UShort_t gLineStipples[] = {0xffff, 0xffff, 0x3333, 0x5555, 
-                                  0xf040, 0xf4f4, 0xf111, 0xf0f0, 
+const UShort_t gLineStipples[] = {0xffff, 0xffff, 0x3333, 0x5555,
+                                  0xf040, 0xf4f4, 0xf111, 0xf0f0,
                                   0xff11, 0x3fff, 0x08ff};
 
 const UInt_t gMaxStipple = sizeof gLineStipples / sizeof gLineStipples[0];
@@ -157,7 +165,7 @@ Set/unset line attributes.
 */
 //______________________________________________________________________________
 LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, Bool_t setWidth)
-                  : fSmooth(smooth), fStipple(stipple), fSetWidth(setWidth)
+                  : fSmooth(smooth), fStipple(stipple), fSetWidth(setWidth), fAlpha(0.8)
 {
    //Set up line parameters.
    //Smooth.
@@ -167,7 +175,7 @@ LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, B
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
    }
-   
+
    //Stipple.
    if (fStipple > 1) {
       if (fStipple >= gMaxStipple)
@@ -177,11 +185,17 @@ LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, B
          glLineStipple(fStipple == 10 ? 2 : 1, gLineStipples[fStipple]);
       }
    }
-   
-   //Color.
+
+   //Color and transparency
    Float_t rgba[] = {0.f, 0.f, 0.f, 0.8f};
    ExtractRGB(gVirtualX->GetLineColor(), rgba);
+   fAlpha = rgba[3];
+   if (fAlpha<0.8) {
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   }
    glColor4fv(rgba);
+
    //Width.
    if (fSetWidth) {
       const Width_t w = gVirtualX->GetLineWidth();
@@ -192,14 +206,14 @@ LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, B
 //______________________________________________________________________________
 LineAttribSet::~LineAttribSet()
 {
-   if (fSmooth) {
+   if (fSmooth || fAlpha<0.8) {
       glDisable(GL_LINE_SMOOTH);
       glDisable(GL_BLEND);
    }
-   
+
    if (fStipple > 1)
       glDisable(GL_LINE_STIPPLE);
-      
+
    if (fSetWidth)
       glLineWidth(1.f);
 }
@@ -212,7 +226,7 @@ void MarkerPainter::DrawDot(UInt_t n, const TPoint *xy)const
 {
    //Simple 1-pixel dots.
    glBegin(GL_POINTS);
-   
+
    for (UInt_t i = 0; i < n; ++i)
       glVertex2d(xy[i].fX, xy[i].fY);
 
@@ -225,7 +239,7 @@ void MarkerPainter::DrawPlus(UInt_t n, const TPoint *xy)const
    //+ sign. 1 pixel width lines.
    const Double_t im = 4 * gVirtualX->GetMarkerSize() + 0.5;
    glBegin(GL_LINES);
-   
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
@@ -234,7 +248,7 @@ void MarkerPainter::DrawPlus(UInt_t n, const TPoint *xy)const
       glVertex2d(x, -im + y);
       glVertex2d(x, im + y);
    }
-   
+
    glEnd();
 }
 
@@ -252,13 +266,13 @@ void MarkerPainter::DrawStar(UInt_t n, const TPoint *xy)const
    fStar[5].fX =  im;  fStar[5].fY = im;
    fStar[6].fX = -im;  fStar[6].fY = im;
    fStar[7].fX =  im;  fStar[7].fY = -im;
-   
+
    glBegin(GL_LINES);
-   
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-      
+
       glVertex2d(fStar[0].fX + x, fStar[0].fY + y);
       glVertex2d(fStar[1].fX + x, fStar[1].fY + y);
       glVertex2d(fStar[2].fX + x, fStar[2].fY + y);
@@ -268,7 +282,7 @@ void MarkerPainter::DrawStar(UInt_t n, const TPoint *xy)const
       glVertex2d(fStar[6].fX + x, fStar[6].fY + y);
       glVertex2d(fStar[7].fX + x, fStar[7].fY + y);
    }
-   
+
    glEnd();
 }
 
@@ -278,17 +292,17 @@ void MarkerPainter::DrawX(UInt_t n, const TPoint *xy)const
    const Double_t im = 0.707 * (4 * gVirtualX->GetMarkerSize() + 0.5) + 0.5;
 
    glBegin(GL_LINES);
-   
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-      
+
       glVertex2d(-im + x, -im + y);
       glVertex2d(im + x, im + y);
       glVertex2d(-im + x, im + y);
       glVertex2d(im + x, -im + y);
    }
-   
+
    glEnd();
 }
 
@@ -296,17 +310,17 @@ void MarkerPainter::DrawX(UInt_t n, const TPoint *xy)const
 void MarkerPainter::DrawFullDotSmall(UInt_t n, const TPoint *xy)const
 {
    glBegin(GL_LINES);
-   
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-      
+
       glVertex2d(-1. + x, y);
       glVertex2d(x + 1., y);
       glVertex2d(x, -1. + y);
       glVertex2d(x, 1. + y);
    }
-   
+
    glEnd();
 }
 
@@ -328,14 +342,14 @@ void MarkerPainter::DrawCircle(UInt_t n, const TPoint *xy)const
    Double_t r = 4 * gVirtualX->GetMarkerSize() + 0.5;
    if (r > 100.)
       r = 100.;//as in TGX11.
-   
+
    fCircle.clear();
    CalculateCircle(fCircle, r, r < 100. ? kSmallCirclePts : kLargeCirclePts);
-      
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-      
+
       glBegin(GL_LINE_LOOP);
       for (UInt_t j = 0, e = fCircle.size(); j < e; ++j)
          glVertex2d(fCircle[j].fX + x, fCircle[j].fY + y);
@@ -348,17 +362,17 @@ void MarkerPainter::DrawFullDotLarge(UInt_t n, const TPoint *xy)const
 {
    fCircle.clear();
    fCircle.push_back(TPoint(0, 0));
-   
+
    Double_t r = 4 * gVirtualX->GetMarkerSize() + 0.5;
    if (r > 100.)
       r = 100;//as in TGX11.
-      
+
    CalculateCircle(fCircle, r, r < 100 ? kSmallCirclePts : kLargeCirclePts);
-   
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-      
+
       glBegin(GL_TRIANGLE_FAN);
       for (UInt_t j = 0, e = fCircle.size(); j < e; ++j)
          glVertex2d(fCircle[j].fX + x, fCircle[j].fY + y);
@@ -393,7 +407,7 @@ void MarkerPainter::DrawFullTrianlgeUp(UInt_t n, const TPoint *xy)const
 void MarkerPainter::DrawFullTrianlgeDown(UInt_t n, const TPoint *xy)const
 {
    const Int_t im = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
-   
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
@@ -410,11 +424,11 @@ void MarkerPainter::DrawDiamond(UInt_t n, const TPoint *xy)const
 {
    const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
    const Int_t imx = Int_t(2.66 * gVirtualX->GetMarkerSize() + 0.5);
-   
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-      
+
       glBegin(GL_LINE_LOOP);
       glVertex2d(x - imx,  y);
       glVertex2d(x, y - im);
@@ -433,7 +447,7 @@ void MarkerPainter::DrawCross(UInt_t n, const TPoint *xy)const
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-   
+
       glBegin(GL_LINE_LOOP);
       glVertex2d(x - im, y - imx);
       glVertex2d(x - imx, y - imx);
@@ -460,7 +474,7 @@ void MarkerPainter::DrawFullStar(UInt_t n, const TPoint *xy)const
    const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
    const Int_t im3 = Int_t(2.66 * gVirtualX->GetMarkerSize() + 0.5);
    const Int_t im4 = Int_t(1.33 * gVirtualX->GetMarkerSize() + 0.5);
-   
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
@@ -469,35 +483,35 @@ void MarkerPainter::DrawFullStar(UInt_t n, const TPoint *xy)const
       glVertex2d(x - im, y - im4);//0
       glVertex2d(x - im2, y + im1);//1
       glVertex2d(x - im4, y - im4);//9
-      
+
       glVertex2d(x - im2, y + im1);//1
       glVertex2d(x - im3, y + im);//2
       glVertex2d(x, y + im2);//3
-      
+
       glVertex2d(x, y + im2);//3
       glVertex2d(x + im3, y + im);//4
       glVertex2d(x + im2, y + im1);//5
-      
+
       glVertex2d(x + im2, y + im1);//5
       glVertex2d(x + im, y - im4);//6
       glVertex2d(x + im4, y - im4);//7
-      
+
       glVertex2d(x + im4, y - im4);//7
       glVertex2d(x, y - im);//8
       glVertex2d(x - im4, y - im4);//9
-      
+
       glVertex2d(x - im4, y - im4);//9
       glVertex2d(x - im2, y + im1);//1
       glVertex2d(x, y + im2);//3
-      
+
       glVertex2d(x - im4, y - im4);//9
       glVertex2d(x, y + im2);//3
       glVertex2d(x + im2, y + im1);//5
-      
+
       glVertex2d(x - im4, y - im4);//9
       glVertex2d(x + im2, y + im1);//5
       glVertex2d(x + im4, y - im4);//7
-      
+
       glEnd();
 
    }
@@ -512,7 +526,7 @@ void MarkerPainter::DrawOpenStar(UInt_t n, const TPoint *xy)const
    const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
    const Int_t im3 = Int_t(2.66 * gVirtualX->GetMarkerSize() + 0.5);
    const Int_t im4 = Int_t(1.33 * gVirtualX->GetMarkerSize() + 0.5);
-   
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
@@ -542,7 +556,7 @@ Small RAII class for GLU tesselator.
 extern "C" {
 #if defined(__APPLE_CC__) && __APPLE_CC__ > 4000 && __APPLE_CC__ < 5450 && !defined(__INTEL_COMPILER)
     typedef GLvoid (*tess_t)(...);
-#elif defined( __linux__ ) || defined( __FreeBSD__ ) || defined( __OpenBSD__ ) || defined( __sun ) || defined (__CYGWIN__) || defined (__APPLE__)
+#elif defined( __mips ) || defined( __linux__ ) || defined( __FreeBSD__ ) || defined( __OpenBSD__ ) || defined( __sun ) || defined (__CYGWIN__) || defined (__APPLE__)
     typedef GLvoid (*tess_t)();
 #elif defined ( WIN32)
     typedef GLvoid (CALLBACK *tess_t)( );
@@ -634,7 +648,7 @@ Double_t GLLimits::GetMaxLineWidth()const
       glGetDoublev(lineWidthPNAME, lp);//lineWidthPNAME is defined at the top of this file.
       fMaxLineWidth = lp[1];
    }
-   
+
    return fMaxLineWidth;
 }
 
@@ -646,7 +660,7 @@ Double_t GLLimits::GetMaxPointSize()const
       glGetDoublev(pointSizePNAME, lp);//pointSizePNAME is defined at the top of this file.
       fMaxPointSize = lp[1];
    }
-   
+
    return fMaxLineWidth;
 }
 
@@ -655,8 +669,10 @@ Double_t GLLimits::GetMaxPointSize()const
 void ExtractRGB(Color_t colorIndex, Float_t *rgb)
 {
    const TColor *color = gROOT->GetColor(colorIndex);
-   if (color)
+   if (color) {
       color->GetRGB(rgb[0], rgb[1], rgb[2]);
+      rgb[3] = color->GetAlpha();
+   }
 }
 
 namespace {
@@ -668,12 +684,12 @@ void CalculateCircle(std::vector<TPoint> &circle, Double_t r, UInt_t pts)
    const UInt_t first = circle.size();
    Double_t angle = 0.;
    circle.resize(circle.size() + pts + 1);
-   
+
    for (UInt_t i = 0; i < pts; ++i, angle += delta) {
       circle[first + i].fX = SCoord_t(r * TMath::Cos(angle));
       circle[first + i].fY = SCoord_t(r * TMath::Sin(angle));
    }
-   
+
    circle.back().fX = circle[first].fX;
    circle.back().fY = circle[first].fY;
 }
