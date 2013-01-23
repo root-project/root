@@ -73,8 +73,6 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 //
 bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
    Sema &SemaR = m_Interpreter->getSema();
-   ASTContext& C = SemaR.getASTContext();
-   Preprocessor &PP = SemaR.getPreprocessor();
    DeclarationName Name = R.getLookupName();
 
    // Try to autoload first if autoloading is enabled
@@ -84,33 +82,10 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
        return false;
      fIsAutoloadingRecursively = true;
 
-     // Save state of the PP
-     Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-     Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
-     Parser::ParserCurTokRestoreRAII savedCurToken(P);
-     // After we have saved the token reset the current one to something which 
-     // is safe (semi colon usually means empty decl)
-     Token& Tok = const_cast<Token&>(P.getCurToken());
-     Tok.setKind(tok::semi);
-
-     bool oldSuppressDiags = SemaR.getDiagnostics().getSuppressAllDiagnostics();
-     SemaR.getDiagnostics().setSuppressAllDiagnostics();
-      
-     // We can't PushDeclContext, because we go up and the routine that pops 
-     // the DeclContext assumes that we drill down always.
-     // We have to be on the global context. At that point we are in a 
-     // wrapper function so the parent context must be the global.
-     Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
-                                            SemaR.TUScope);
-
      bool lookupSuccess = false;
      if (TCling__AutoLoadCallback(Name.getAsString().c_str())) {
-       pushedDCAndS.pop();
-       cleanupRAII.pop();
        lookupSuccess = SemaR.LookupName(R, S);
      }
-
-     SemaR.getDiagnostics().setSuppressAllDiagnostics(oldSuppressDiags);
 
      fIsAutoloadingRecursively = false;
    

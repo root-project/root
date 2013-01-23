@@ -180,12 +180,9 @@ void TCling__RegisterModule(const char* modulename,
    }
 
    if (gCling) {
-      ((TCling*)gCling)->RegisterModule(modulename,
-                                               headers,
-                                               includePaths,
-                                               macroDefines,
-                                               macroUndefines,
-                                               triggerFunc);
+      ((TCling*)gCling)->RegisterModule(modulename, headers, includePaths,
+                                        macroDefines, macroUndefines,
+                                        triggerFunc);
    } else {
       moduleHeaderInfoBuffer.push_back(ModuleHeaderInfo_t(modulename,
                                                           headers,
@@ -792,12 +789,9 @@ static const char *FindLibraryName(void (*func)())
 }
 
 //______________________________________________________________________________
-void TCling::RegisterModule(const char* modulename,
-                                    const char** headers,
-                                    const char** includePaths,
-                                    const char** macroDefines,
-                                    const char** macroUndefines,
-                                    void (*triggerFunc)())
+void TCling::RegisterModule(const char* modulename, const char** headers,
+                            const char** includePaths, const char** macroDefines,
+                            const char** macroUndefines, void (*triggerFunc)())
 {
    // Inject the module named "modulename" into cling; load all headers.
    // headers is a 0-terminated array of header files to #include after
@@ -820,7 +814,8 @@ void TCling::RegisterModule(const char* modulename,
       if (posAssign != kNPOS) {
          macroPP[posAssign] = ' ';
       }
-      fInterpreter->parseForModule(macroPP.Data());
+      if (!getenv("ROOT_MODULES"))
+         fInterpreter->parseForModule(macroPP.Data());
    }
    for (const char** macroU = macroUndefines; *macroU; ++macroU) {
       TString macroPP("#undef ");
@@ -830,7 +825,8 @@ void TCling::RegisterModule(const char* modulename,
       if (posAssign != kNPOS) {
          macroPP[posAssign] = ' ';
       }
-      fInterpreter->parseForModule(macroPP.Data());
+      if (!getenv("ROOT_MODULES"))
+         fInterpreter->parseForModule(macroPP.Data());
    }
 
    // Assemble search path:   
@@ -886,7 +882,10 @@ void TCling::RegisterModule(const char* modulename,
       if (gDebug > 5) {
          ::Info("TCintWithCling::RegisterModule", "   #including %s...", *hdr);
       }
-      fInterpreter->parseForModule(TString::Format("#include \"%s\"", *hdr).Data());
+      if(!getenv("ROOT_MODULES"))
+         fInterpreter->parseForModule(TString::Format("#include \"%s\"", *hdr).Data());
+      else
+         fInterpreter->loadModuleForHeader(*hdr);
    }
 
    if (fClingCallbacks)
