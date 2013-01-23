@@ -45,6 +45,7 @@ typedef enum { kDataRemote, kDataCache, kDataLocal } EDataMode;
 class TAliEnFind : public TObject {
 
    private:
+
       TString      fBasePath;
       TString      fFileName;
       TString      fTreeName;
@@ -55,23 +56,41 @@ class TAliEnFind : public TObject {
       TString      fSearchId;
       TGridResult *fGridResult;
 
+      inline virtual void InvalidateSearchId();
+      inline virtual void InvalidateGridResult();
+
    public:
 
-      TAliEnFind(const TString &basePath, const TString &fileName,
+      TAliEnFind(const TString &basePath = "", const TString &fileName = "",
          const TString &anchor = "", const Bool_t archSubst = kFALSE,
          const TString &treeName = "", const TString &regexp = "");
 
+      TAliEnFind(const TAliEnFind &src);
+      TAliEnFind &operator=(const TAliEnFind &rhs);
+
       virtual                  ~TAliEnFind();
 
-      virtual TGridResult      *GetGridResult();
-      virtual const TString    &GetBasePath() const { return fBasePath; };
-      virtual const TString    &GetFileName() const { return fFileName; };
-      virtual const TString    &GetTreeName() const { return fTreeName; };
-      virtual const TPMERegexp *GetRegexp()   const { return fRegexp; };
-      virtual const char       *GetSearchId();
-      virtual TFileCollection  *GetCollection();
+      virtual TGridResult      *GetGridResult(Bool_t forceNewQuery = kFALSE);
 
-  ClassDef(TAliEnFind, 0); // Interface to AliEn find command
+      virtual const TString    &GetBasePath()  const { return fBasePath; };
+      virtual const TString    &GetFileName()  const { return fFileName; };
+      virtual const TString    &GetAnchor()    const { return fAnchor; };
+      virtual const TString    &GetTreeName()  const { return fTreeName; };
+      virtual       Bool_t      GetArchSubst() const { return fArchSubst; };
+      virtual const TPMERegexp *GetRegexp()    const { return fRegexp; };
+
+      virtual void              SetBasePath(const char *basePath);
+      virtual void              SetFileName(const char *fileName);
+      virtual void              SetAnchor(const char *anchor);
+      virtual void              SetTreeName(const char *fileName);
+      virtual void              SetArchSubst(Bool_t archSubst);
+      virtual void              SetRegexp(const char *regexp);
+
+      virtual const char       *GetSearchId();
+      virtual TFileCollection  *GetCollection(Bool_t forceNewQuery = kFALSE);
+      virtual void              Print(Option_t* opt = "") const;
+
+  ClassDef(TAliEnFind, 0);  // Interface to the AliEn find command
 
 };
 
