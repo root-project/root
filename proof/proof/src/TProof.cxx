@@ -10953,7 +10953,7 @@ TFileCollection *TProof::GetStagingStatusDataSet(const char *dataset)
    nameMess << Int_t(kStagingStatus);
    nameMess << TString(dataset);
    if (Broadcast(nameMess) < 0) {
-      Error("StagingStatusDataSet", "sending request failed");
+      Error("GetStagingStatusDataSet", "sending request failed");
       return NULL;
    }
 
@@ -10961,7 +10961,7 @@ TFileCollection *TProof::GetStagingStatusDataSet(const char *dataset)
    TFileCollection *fc = NULL;
 
    if (fStatus < 0) {
-      Error("StagingStatusDataSet", "problem processing the request");
+      Error("GetStagingStatusDataSet", "problem processing the request");
    }
    else if (fStatus == 0) {
       TMessage *retMess = (TMessage *)fRecvMessages->First();
@@ -10969,10 +10969,10 @@ TFileCollection *TProof::GetStagingStatusDataSet(const char *dataset)
          fc = (TFileCollection *)(
            retMess->ReadObject(TFileCollection::Class()) );
          if (!fc)
-            Error("StagingStatusDataSet", "error reading list of files");
+            Error("GetStagingStatusDataSet", "error reading list of files");
       }
       else { 
-         Error("StagingStatusDataSet",
+         Error("GetStagingStatusDataSet",
             "response message not found or wrong type (%p)", retMess);
       }
    }

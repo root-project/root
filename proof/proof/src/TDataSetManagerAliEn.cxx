@@ -38,6 +38,45 @@ TAliEnFind::TAliEnFind(const TString &basePath, const TString &fileName,
 }
 
 //______________________________________________________________________________
+TAliEnFind::TAliEnFind(const TAliEnFind &src)
+{
+   // Copy constructor. Cached query result is not copied
+
+   fBasePath = src.fBasePath;
+   fFileName = src.fFileName;
+   fAnchor = src.fAnchor;
+   fArchSubst = src.fArchSubst;
+   fTreeName = src.fTreeName;
+   fRegexpRaw = src.fRegexpRaw;
+
+   if (src.fRegexp)
+      fRegexp = new TPMERegexp( *(src.fRegexp) );
+   else
+      fRegexp = NULL;
+
+   fGridResult = NULL;
+}
+
+//______________________________________________________________________________
+TAliEnFind &TAliEnFind::operator=(const TAliEnFind &rhs)
+{
+   // Assignment operator. Cached query result is not copied
+
+   fBasePath = rhs.fBasePath;
+   fFileName = rhs.fFileName;
+   fAnchor = rhs.fAnchor;
+   fArchSubst = rhs.fArchSubst;
+   fTreeName = rhs.fTreeName;
+
+   SetRegexp(rhs.fRegexpRaw);
+
+   InvalidateSearchId();
+   InvalidateGridResult();
+
+   return *this;
+}
+
+//______________________________________________________________________________
 TAliEnFind::~TAliEnFind()
 {
    // Destructor
@@ -47,12 +86,20 @@ TAliEnFind::~TAliEnFind()
 }
 
 //______________________________________________________________________________
-TGridResult *TAliEnFind::GetGridResult()
+TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
 {
-   // Query the AliEn grid
-   
-   if (fGridResult)
+   // Query the AliEn file catalog
+
+   if (fGridResult && !forceNewQuery) {
+      if (gDebug >= 1)
+         Info("GetGridResult", "Returning cached AliEn find results");
       return fGridResult;
+   }
+   else if (gDebug >= 1) {
+      Info("GetGridResult", "Querying AliEn file catalog");
+   }
+
+   InvalidateGridResult();
 
    if (!gGrid) {
       TGrid::Connect("alien:");
@@ -65,6 +112,7 @@ TGridResult *TAliEnFind::GetGridResult()
    }
 
    fGridResult = gGrid->Query(fBasePath.Data(), fFileName.Data());
+   if (!fGridResult) return NULL;
 
    if (fRegexp || fArchSubst || (fAnchor != "")) {
 
@@ -81,32 +129,33 @@ TGridResult *TAliEnFind::GetGridResult()
       TObjString *os;
       TString tUrl;
 
-    while (( map = dynamic_cast<TMap *>(it.Next()) ) != NULL) {
+      while (( map = dynamic_cast<TMap *>(it.Next()) ) != NULL) {
 
-      os = dynamic_cast<TObjString *>( map->GetValue("turl") );
-      if (!os) continue;
-      tUrl = os->String();
+         os = dynamic_cast<TObjString *>( map->GetValue("turl") );
+         if (!os) continue;
+         tUrl = os->String();
 
-      if (fRegexp && (fRegexp->Match(tUrl) == 0)) {
-        // Remove object if it does not match expression
-        TObject *exmap = fGridResult->Remove(map);
-        if (exmap) delete exmap;  // Remove() does not delete
+         if (fRegexp && (fRegexp->Match(tUrl) == 0)) {
+            // Remove object if it does not match expression
+            TObject *exmap = fGridResult->Remove(map);
+            if (exmap) delete exmap;  // Remove() does not delete
+         }
+
+         if (reArchSubst) {
+            reArchSubst->Substitute(tUrl, substWith, kFALSE);
+            os->SetString(tUrl.Data());
+         }
+         else if (fAnchor) {
+            tUrl.Append("#");
+            tUrl.Append(fAnchor);
+            os->SetString(tUrl.Data());
+         }
       }
 
-      if (reArchSubst) {
-        reArchSubst->Substitute(tUrl, substWith, kFALSE);
-        os->SetString(tUrl.Data());
-      }
-      else if (fAnchor) {
-        tUrl.Append("#");
-        tUrl.Append(fAnchor);
-        os->SetString(tUrl.Data());
-      }
+      if (reArchSubst) delete reArchSubst;
+   }
 
-    }
-  }
-
-  return fGridResult;
+   return fGridResult;
 }
 
 //______________________________________________________________________________
@@ -114,9 +163,10 @@ const char *TAliEnFind::GetSearchId()
 {
   if (fSearchId.IsNull()) {
     TString searchIdStr;
-    searchIdStr.Form("BasePath=%s FileName=%s Anchor=%s TreeName=%s Regexp=%s",
-      fBasePath.Data(), fFileName.Data(), fAnchor.Data(), fTreeName.Data(),
-      fRegexpRaw.Data());
+    searchIdStr.Form("BasePath=%s FileName=%s Anchor=%s ArchSubst=%d "
+      "TreeName=%s Regexp=%s",
+      fBasePath.Data(), fFileName.Data(), fAnchor.Data(), fArchSubst,
+      fTreeName.Data(), fRegexpRaw.Data());
     TMD5 *md5 = new TMD5();
     md5->Update( (const UChar_t *)searchIdStr.Data(),
       (UInt_t)searchIdStr.Length() );
@@ -130,9 +180,9 @@ const char *TAliEnFind::GetSearchId()
 }
 
 //______________________________________________________________________________
-TFileCollection *TAliEnFind::GetCollection()
+TFileCollection *TAliEnFind::GetCollection(Bool_t forceNewQuery)
 {
-  if (!fGridResult) GetGridResult();
+  GetGridResult(forceNewQuery);
   if (!fGridResult) return NULL;
 
   Int_t nEntries = fGridResult->GetEntries();
@@ -163,6 +213,91 @@ TFileCollection *TAliEnFind::GetCollection()
   return fc;
 }
 
+//______________________________________________________________________________
+void TAliEnFind::Print(Option_t* opt) const
+{
+   if (opt) {}  // silence warning
+   Printf("BasePath=%s FileName=%s Anchor=%s ArchSubst=%d "
+      "TreeName=%s Regexp=%s (query %s a result)",
+      fBasePath.Data(), fFileName.Data(), fAnchor.Data(), fArchSubst,
+      fTreeName.Data(), fRegexpRaw.Data(), (fGridResult ? "has" : "has not"));
+}
+
+//______________________________________________________________________________
+void TAliEnFind::SetBasePath(const char *basePath)
+{
+   if (fBasePath.EqualTo(basePath)) return;
+   fBasePath = basePath;
+   InvalidateGridResult();
+   InvalidateSearchId();
+}
+
+//______________________________________________________________________________
+void TAliEnFind::SetFileName(const char *fileName)
+{
+   if (fFileName.EqualTo(fileName)) return;
+   fFileName = fileName;
+   InvalidateGridResult();
+   InvalidateSearchId();
+}
+
+//______________________________________________________________________________
+void TAliEnFind::SetAnchor(const char *anchor)
+{
+   if (fAnchor.EqualTo(anchor)) return;
+   fAnchor = anchor;
+   InvalidateGridResult();
+   InvalidateSearchId();
+}
+
+//______________________________________________________________________________
+void TAliEnFind::SetTreeName(const char *treeName)
+{
+   if (fTreeName.EqualTo(treeName)) return;
+   fTreeName = treeName;
+   InvalidateSearchId();
+}
+
+//______________________________________________________________________________
+void TAliEnFind::SetArchSubst(Bool_t archSubst)
+{
+   if (fArchSubst == archSubst) return;
+   fArchSubst = archSubst;
+   InvalidateGridResult();
+   InvalidateSearchId();
+}
+
+//______________________________________________________________________________
+void TAliEnFind::SetRegexp(const char *regexp)
+{
+   if (fRegexpRaw.EqualTo(regexp)) return;
+
+   fRegexpRaw = regexp;
+   if (fRegexp) delete fRegexp;
+   if (!fRegexpRaw.IsNull())
+      fRegexp = new TPMERegexp(regexp);
+   else
+      fRegexp = NULL;
+
+   InvalidateGridResult();
+   InvalidateSearchId();
+}
+
+//______________________________________________________________________________
+void TAliEnFind::InvalidateSearchId()
+{
+   if (!fSearchId.IsNull())
+      fSearchId = "";
+}
+
+//______________________________________________________________________________
+void TAliEnFind::InvalidateGridResult()
+{
+   if (fGridResult) {
+      delete fGridResult;
+      fGridResult = NULL;
+   }
+}
 
 ClassImp(TDataSetManagerAliEn);
 
@@ -475,19 +610,6 @@ Bool_t TDataSetManagerAliEn::ParseOfficialDataUri(TString &uri, Bool_t sim,
   }
 
   //
-  // Parse run list
-  //
-
-  TPMERegexp reRun("(^|;)Run=([0-9,-]+)(;|$)");
-  if (reRun.Match(uri) != 4) {
-    Error("ParseOfficialDataUri",
-      "Run or run range not specified (e.g., Run=139104-139107,139306)");
-    return kFALSE;
-  }
-  TString runListStr = reRun[2];
-  runList = ExpandRunSpec(runListStr);
-
-  //
   // Parse pass: mandatory on Data, useless on Sim
   //
 
@@ -498,6 +620,19 @@ Bool_t TDataSetManagerAliEn::ParseOfficialDataUri(TString &uri, Bool_t sim,
     return kFALSE;
   }
   pass = rePass[2];
+
+  //
+  // Parse run list
+  //
+
+  TPMERegexp reRun("(^|;)Run=([0-9,-]+)(;|$)");
+  if (reRun.Match(uri) != 4) {
+    Error("ParseOfficialDataUri",
+      "Run or run range not specified (e.g., Run=139104-139107,139306)");
+    return kFALSE;
+  }
+  TString runListStr = reRun[2];
+  runList = ExpandRunSpec(runListStr);  // must be freed by caller
 
   return kTRUE;
 }
@@ -553,14 +688,15 @@ std::vector<Int_t> *TDataSetManagerAliEn::ExpandRunSpec(TString &runSpec) {
 
   // Remove duplicates
   {
-    std::vector<Int_t>::iterator itr, prev;
-    for (itr=runNums.begin(); itr!=runNums.end(); itr++) {
-      if (itr == runNums.begin()) continue;
-      prev = itr;
-      prev--;
-      if (*prev == *itr) {
-        runNums.erase(itr);
-        itr--;
+    std::vector<Int_t>::iterator itr = runNums.begin();
+    Int_t prevVal;
+    while (itr != runNums.end()) {
+      if ((itr == runNums.begin()) || (prevVal != *itr)) {
+        prevVal = *itr;
+        itr++;
+      }
+      else {
+        itr = runNums.erase(itr);
       }
     }
   }
@@ -613,7 +749,6 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
       if (gDebug >= 1)
         Info("GetDataSet", "Getting file collection from AliEn");
 
-      //newFc = AliEnFind(*af, anchor, treeName, archSubst, kFALSE);
       newFc = af->GetCollection();
       if (!newFc) {
         Error("GetDataSet", "Cannot get collection from AliEn");
