@@ -482,7 +482,8 @@ void TClingCallFunc::SetArgs(const char *params)
    }
 }
 
-void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, const char* arglist, long* poffset)
+void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method,
+                             const char* arglist, long* poffset)
 {
    delete fMethod;
    fMethod = new TClingMethodInfo(fInterp);
@@ -491,6 +492,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, co
    if (poffset) {
       *poffset = 0L;
    }
+   ResetArg();
    if (!info->IsValid()) {
       Error("TClingCallFunc::SetFunc", "Class info is invalid!");
       return;
@@ -499,30 +501,21 @@ void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, co
       // CINT accepted a single right paren as meaning no arguments.
       arglist = "";
    }
-   const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   const clang::FunctionDecl* decl =
-      lh.findFunctionArgs(info->GetDecl(), method, arglist);
-   if (!decl) {
+   *fMethod = info->GetMethodWithArgs(method, arglist, poffset);
+   if (!fMethod->IsValid()) {
       //Error("TClingCallFunc::SetFunc", "Could not find method %s(%s)", method,
       //      arglist);
       return;
    }
-   fMethod->Init(decl);
+   const clang::FunctionDecl *decl = fMethod->GetMethodDecl();
    Init(decl);
    if (!IsValid()) {
       //Error("TClingCallFunc::SetFunc", "Method %s(%s) has no body.", method,
       //      arglist);
    }
-   if (poffset) {
-      // We have been asked to return a this pointer adjustment.
-      if (const clang::CXXMethodDecl* md =
-               llvm::dyn_cast<clang::CXXMethodDecl>(decl)) {
-         // This is a class member function.
-         info->GetOffset(md);
-      }
-   }
-   // FIXME: We should eliminate the double parse here!
-   ResetArg();
+   // FIXME: The arglist was already parsed by the lookup, we should
+   //        enhance the lookup to return the resulting expression
+   //        list so we do not need to parse it again here.
    EvaluateArgList(arglist);
    clang::ASTContext& Context = fInterp->getCI()->getASTContext();
    for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
