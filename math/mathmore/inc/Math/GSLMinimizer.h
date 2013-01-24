@@ -172,7 +172,6 @@ private:
    
 
    ROOT::Math::GSLMultiMinimizer * fGSLMultiMin; 
-   const ROOT::Math::IMultiGradFunction * fGradObjFunc; 
    
    double fLSTolerance;  // Line Search Tolerance
 

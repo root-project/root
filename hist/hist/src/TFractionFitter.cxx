@@ -695,8 +695,8 @@ void TFractionFitter::ComputeFCN(Double_t& f, const Double_t* xx, Int_t flag)
 	    if (IsExcluded(bin)) continue;
 
             // Solve for the "predictions"
-            int k0;
-            Double_t ti; Double_t aki;
+            int k0 = 0;
+            Double_t ti = 0.0; Double_t aki = 0.0;
             FindPrediction(bin, ti, k0, aki);
 
             Double_t prediction = 0;
