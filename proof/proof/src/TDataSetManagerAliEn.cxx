@@ -62,16 +62,18 @@ TAliEnFind &TAliEnFind::operator=(const TAliEnFind &rhs)
 {
    // Assignment operator. Cached query result is not copied
 
-   fBasePath = rhs.fBasePath;
-   fFileName = rhs.fFileName;
-   fAnchor = rhs.fAnchor;
-   fArchSubst = rhs.fArchSubst;
-   fTreeName = rhs.fTreeName;
+   if (&rhs != this) {
+      fBasePath = rhs.fBasePath;
+      fFileName = rhs.fFileName;
+      fAnchor = rhs.fAnchor;
+      fArchSubst = rhs.fArchSubst;
+      fTreeName = rhs.fTreeName;
 
-   SetRegexp(rhs.fRegexpRaw);
+      SetRegexp(rhs.fRegexpRaw);
 
-   InvalidateSearchId();
-   InvalidateGridResult();
+      InvalidateSearchId();
+      InvalidateGridResult();
+   }
 
    return *this;
 }
