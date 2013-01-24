@@ -824,12 +824,7 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
                cu  = c1*f1->EvalPar(xx);
             }
             if (TF1::RejectedPoint()) continue;
-            Double_t error1 = GetBinError(bin);
             AddBinContent(bin,cu);
-            if (fSumw2.fN) {
-               //errors are unchanged: error on f1 assumed 0
-               fSumw2.fArray[bin] = error1*error1;
-            }
          }
       }
    }
@@ -908,22 +903,23 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
    SetMaximum();
 
 //   - Loop on bins (including underflows/overflows)
-   Int_t bin;
-   Double_t cu;
-   Double_t factor =1;
+   Double_t factor = 1;
    if (h1->GetNormFactor() != 0) factor = h1->GetNormFactor()/h1->GetSumOfWeights();;
-   for (bin = 0; bin < fNcells; ++bin) {
+   Double_t c1sq = c1 * c1;
+   Double_t factsq = factor * factor;
+
+   for (Int_t bin = 0; bin < fNcells; ++bin) {
       //special case where histograms have the kIsAverage bit set
       if (this->TestBit(kIsAverage) && h1->TestBit(kIsAverage)) {
          Double_t y1 = h1->RetrieveBinContent(bin);
          Double_t y2 = this->RetrieveBinContent(bin);
-         Double_t e1 = h1->GetBinError(bin);
-         Double_t e2 = this->GetBinError(bin);
+         Double_t e1sq = h1->GetBinErrorSqUnchecked(bin);
+         Double_t e2sq = this->GetBinErrorSqUnchecked(bin);
          Double_t w1 = 1., w2 = 1.;
          
          // consider all special cases  when bin errors are zero
          // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
-         if (e1 > 0) w1 = 1./(e1*e1);
+         if (e1sq) w1 = 1. / e1sq;
          else if (h1->fSumw2.fN) { 
             w1 = 1.E200; // use an arbitrary huge value
             if (y1 == 0) { 
@@ -932,7 +928,7 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
                w1 = 1./(sf*sf); 
             }
          }
-         if (e2 > 0) w2 = 1./(e2*e2);
+         if (e2sq) w2 = 1. / e2sq;
          else if (fSumw2.fN) { 
             w2 = 1.E200; // use an arbitrary huge value
             if (y2 == 0) { 
@@ -950,12 +946,8 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
             fSumw2.fArray[bin] = err2;
          }               
       } else { // normal case of addition between histograms
-         cu  = c1*factor*h1->RetrieveBinContent(bin);
-         AddBinContent(bin,cu);
-         if (fSumw2.fN) {
-            Double_t e1 = factor*h1->GetBinError(bin);
-            fSumw2.fArray[bin] += c1*c1*e1*e1;
-         }
+         AddBinContent(bin, c1 * factor * h1->RetrieveBinContent(bin));
+         if (fSumw2.fN) fSumw2.fArray[bin] += c1sq * factsq * h1->GetBinErrorSqUnchecked(bin);
       }
    }
 
@@ -1017,10 +1009,6 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    Bool_t normWidth = kFALSE;
    if (h1 == h2 && c2 < 0) {c2 = 0; normWidth = kTRUE;}
 
-   Int_t nbinsx = GetNbinsX() + 2; // normal bins + underflow, overflow
-   Int_t nbinsy = GetNbinsY() + 2; 
-   Int_t nbinsz = GetNbinsZ() + 2;
-
    if (h1 != h2) { 
       try {
          CheckConsistency(h1,h2);
@@ -1036,9 +1024,6 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
          Warning("Add","Attempt to add histograms with different labels");
       }
    }
-
-   if (fDimension < 2) nbinsy = 1;
-   if (fDimension < 3) nbinsz = 1;
 
 //    Create Sumw2 if h1 or h2 have Sumw2 set
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
@@ -1070,22 +1055,26 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 
    SetMinimum();
    SetMaximum();
-// TODO remove
 
    if (normWidth) { // DEPRECATED CASE: belongs to fitting / drawing modules
+
+      Int_t nbinsx = GetNbinsX() + 2; // normal bins + underflow, overflow
+      Int_t nbinsy = GetNbinsY() + 2; 
+      Int_t nbinsz = GetNbinsZ() + 2;
+
+      if (fDimension < 2) nbinsy = 1;
+      if (fDimension < 3) nbinsz = 1;
+
       Int_t bin, binx, biny, binz;
-      Double_t cu;
       for (binz = 0; binz < nbinsz; ++binz) {
          Double_t wz = h1->GetZaxis()->GetBinWidth(binz);
          for (biny = 0; biny < nbinsy; ++biny) {
             Double_t wy = h1->GetYaxis()->GetBinWidth(biny);
             for (binx = 0; binx < nbinsx; ++binx) {
                Double_t wx = h1->GetXaxis()->GetBinWidth(binx);
-               bin = GetBin(binx, biny, binz);
-               
+               bin = GetBin(binx, biny, binz); 
                Double_t w = wx*wy*wz;
-               cu  = c1*h1->RetrieveBinContent(bin)/w;
-               UpdateBinContent(bin,cu);
+               UpdateBinContent(bin, c1 * h1->RetrieveBinContent(bin) / w);
                if (fSumw2.fN) {
                   Double_t e1 = h1->GetBinError(bin)/w;
                   fSumw2.fArray[bin] = c1*c1*e1*e1;
@@ -1098,13 +1087,13 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
          // special case where histograms have the kIsAverage bit set
          Double_t y1 = h1->RetrieveBinContent(i);
          Double_t y2 = h2->RetrieveBinContent(i);
-         Double_t e1 = h1->GetBinError(i);
-         Double_t e2 = h2->GetBinError(i);
+         Double_t e1sq = h1->GetBinErrorSqUnchecked(i);
+         Double_t e2sq = h2->GetBinErrorSqUnchecked(i);
          Double_t w1 = 1., w2 = 1.;
 
          // consider all special cases  when bin errors are zero
          // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
-         if (e1 > 0) w1 = 1./(e1*e1);
+         if (e1sq) w1 = 1./ e1sq;
          else if (h1->fSumw2.fN) { 
             w1 = 1.E200; // use an arbitrary huge value
             if (y1 == 0 ) { // use an estimated error from the global histogram scale
@@ -1112,7 +1101,7 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
                w1 = 1./(sf*sf); 
             }
          }
-         if (e2 > 0) w2 = 1./(e2*e2);
+         if (e2sq) w2 = 1./ e2sq;
          else if (h2->fSumw2.fN) { 
             w2 = 1.E200; // use an arbitrary huge value
             if (y2 == 0) { // use an estimated error from the global histogram scale
@@ -1133,11 +1122,9 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
       Double_t c1sq = c1 * c1;
       Double_t c2sq = c2 * c2;
       for (Int_t i = 0; i < fNcells; ++i) { // Loop on cells (bins including underflows/overflows)
-         UpdateBinContent(i, c1 * h1->RetrieveBinContent(i) + c2*h2->RetrieveBinContent(i));
+         UpdateBinContent(i, c1 * h1->RetrieveBinContent(i) + c2 * h2->RetrieveBinContent(i));
          if (fSumw2.fN) {
-            Double_t e1 = h1->GetBinError(i);
-            Double_t e2 = h2->GetBinError(i);
-            fSumw2.fArray[i] = c1sq*e1*e1 + c2sq*e2*e2;
+            fSumw2.fArray[i] = c1sq * h1->GetBinErrorSqUnchecked(i) + c2sq * h2->GetBinErrorSqUnchecked(i);
          }
       }
    }
@@ -1327,8 +1314,8 @@ bool TH1::CheckBinLimits(const TAxis* a1, const TAxis * a2)
 bool TH1::CheckBinLabels(const TAxis* a1, const TAxis * a2)
 {
    // check that axis have same labels 
-   THashList *l1 = (const_cast<TAxis*>(a1))->GetLabels();
-   THashList *l2 = (const_cast<TAxis*>(a2))->GetLabels();
+   THashList *l1 = a1->GetLabels();
+   THashList *l2 = a2->GetLabels();
 
    if (!l1 && !l2 )
       return true; 
@@ -1831,28 +1818,24 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    //  - res -  normalized residuals for further analysis
 
 
-   Int_t i = 0, j=0, k = 0;
    Int_t i_start, i_end;
    Int_t j_start, j_end;
    Int_t k_start, k_end;
 
-   Double_t bin1, bin2;
-   Double_t err1,err2;
-   Double_t sum1=0, sum2=0;
-   Double_t sumw1=0, sumw2=0;
+   Double_t sum1 = 0.0, sumw1 = 0.0;
+   Double_t sum2 = 0.0, sumw2 = 0.0;
 
-
-   chi2 = 0;
+   chi2 = 0.0;
    ndf = 0;
 
    TString opt = option;
    opt.ToUpper();
 
-   TAxis *xaxis1 = this->GetXaxis();
+   TAxis *xaxis1 = GetXaxis();
    TAxis *xaxis2 = h2->GetXaxis();
-   TAxis *yaxis1 = this->GetYaxis();
+   TAxis *yaxis1 = GetYaxis();
    TAxis *yaxis2 = h2->GetYaxis();
-   TAxis *zaxis1 = this->GetZaxis();
+   TAxis *zaxis1 = GetZaxis();
    TAxis *zaxis2 = h2->GetZaxis();
 
    Int_t nbinx1 = xaxis1->GetNbins();
@@ -1865,7 +1848,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    //check dimensions
    if (this->GetDimension() != h2->GetDimension() ){
       Error("Chi2TestX","Histograms have different dimensions.");
-      return 0;
+      return 0.0;
    }
 
    //check number of channels
@@ -1900,35 +1883,37 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
 
    if (opt.Contains("OF")) {
-      if (this->GetDimension() == 3) k_end = ++nbinz1;
-      if (this->GetDimension() >= 2) j_end = ++nbiny1;
-      if (this->GetDimension() >= 1) i_end = ++nbinx1;
+      if (GetDimension() == 3) k_end = ++nbinz1;
+      if (GetDimension() >= 2) j_end = ++nbiny1;
+      if (GetDimension() >= 1) i_end = ++nbinx1;
    }
 
    if (opt.Contains("UF")) {
-      if (this->GetDimension() == 3) k_start = 0;
-      if (this->GetDimension() >= 2) j_start = 0;
-      if (this->GetDimension() >= 1) i_start = 0;
+      if (GetDimension() == 3) k_start = 0;
+      if (GetDimension() >= 2) j_start = 0;
+      if (GetDimension() >= 1) i_start = 0;
    }
 
-   ndf = (i_end - i_start + 1)*(j_end - j_start + 1)*(k_end - k_start + 1) - 1;
+   ndf = (i_end - i_start + 1) * (j_end - j_start + 1) * (k_end - k_start + 1) - 1;
 
    Bool_t comparisonUU = opt.Contains("UU");
    Bool_t comparisonUW = opt.Contains("UW");
    Bool_t comparisonWW = opt.Contains("WW");
    Bool_t scaledHistogram  = opt.Contains("NORM");
+
    if (scaledHistogram && !comparisonUU) {
-      Info("Chi2TestX","NORM option should be used together with UU option. It is ignored");
+      Info("Chi2TestX", "NORM option should be used together with UU option. It is ignored");
    }
+
    // look at histo global bin content and effective entries
    Stat_t s[kNstat];
-   this->GetStats(s);// s[1] sum of squares of weights, s[0] sum of weights
-   double sumBinContent1 = s[0];
-   double effEntries1 = (s[1] ? s[0]*s[0]/s[1] : 0.);
+   GetStats(s);// s[1] sum of squares of weights, s[0] sum of weights
+   Double_t sumBinContent1 = s[0];
+   Double_t effEntries1 = (s[1] ? s[0] * s[0] / s[1] : 0.0);
 
    h2->GetStats(s);// s[1] sum of squares of weights, s[0] sum of weights
-   double sumBinContent2 = s[0];
-   double effEntries2 = (s[1] ? s[0]*s[0]/s[1] : 0.);
+   Double_t sumBinContent2 = s[0];
+   Double_t effEntries2 = (s[1] ? s[0] * s[0] / s[1] : 0.0);
 
    if (!comparisonUU && !comparisonUW && !comparisonWW ) {
       // deduce automatically from type of histogram
@@ -1953,142 +1938,116 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
    //get number of events in histogram
    if (comparisonUU && scaledHistogram) {
-      for (i=i_start; i<=i_end; i++) {
-         for (j=j_start; j<=j_end; j++) {
-            for (k=k_start; k<=k_end; k++) {
-               bin1 = this->GetBinContent(i,j,k);
-               bin2 = h2->GetBinContent(i,j,k);
-               err1 = this->GetBinError(i,j,k);
-               err2 = h2->GetBinError(i,j,k);
-               if (err1 > 0 ) {
-                  bin1 *= bin1/(err1*err1);
-                  //avoid rounding errors
-                  bin1 = TMath::Floor(bin1+0.5);
-               }
-               else
-                  bin1 = 0;
+      for (Int_t i = i_start; i <= i_end; ++i) {
+         for (Int_t j = j_start; j <= j_end; ++j) {
+            for (Int_t k = k_start; k <= k_end; ++k) {
 
-               if (err2 > 0) {
-                  bin2 *= bin2/(err2*err2);
-                  //avoid rounding errors
-                  bin2 = TMath::Floor(bin2+0.5);
-               }
-               else
-                  bin2 = 0;
+               Int_t bin = GetBin(i, j, k);
+
+               Double_t cnt1 = RetrieveBinContent(bin);
+               Double_t cnt2 = h2->RetrieveBinContent(bin);
+               Double_t e1sq = GetBinErrorSqUnchecked(bin);
+               Double_t e2sq = h2->GetBinErrorSqUnchecked(bin);
+               
+               if (e1sq > 0.0) cnt1 = TMath::Floor(cnt1 * cnt1 / e1sq + 0.5); // avoid rounding errors
+               else cnt1 = 0.0;
+
+               if (e2sq > 0.0) cnt2 = TMath::Floor(cnt2 * cnt2 / e2sq + 0.5); // avoid rounding errors
+               else cnt2 = 0.0;
 
                // sum contents
-               sum1 += bin1;
-               sum2 += bin2;
-               sumw1 += err1*err1;
-               sumw2 += err2*err2;
+               sum1 += cnt1;
+               sum2 += cnt2;
+               sumw1 += e1sq;
+               sumw2 += e2sq;
             }
          }
       }
-      if (sumw1 <= 0 || sumw2 <= 0) {
-         Error("Chi2TestX","Cannot use option NORM when one histogram has all zero errors");
-         return 0;
+      if (sumw1 <= 0.0 || sumw2 <= 0.0) {
+         Error("Chi2TestX", "Cannot use option NORM when one histogram has all zero errors");
+         return 0.0;
       }
 
    } else {
-      for (i=i_start; i<=i_end; i++) {
-         for (j=j_start; j<=j_end; j++) {
-            for (k=k_start; k<=k_end; k++) {
-               sum1 += this->GetBinContent(i,j,k);
-               sum2 += h2->GetBinContent(i,j,k);
-               if ( comparisonWW ) {
-                  err1 = this->GetBinError(i,j,k);
-                  sumw1 += err1*err1;
-               }
-               if ( comparisonUW || comparisonWW ) {
-                  err2 = h2->GetBinError(i,j,k);
-                  sumw2 += err2*err2;
-               }
+      for (Int_t i = i_start; i <= i_end; ++i) {
+         for (Int_t j = j_start; j <= j_end; ++j) {
+            for (Int_t k = k_start; k <= k_end; ++k) {
+
+               Int_t bin = GetBin(i, j, k);
+
+               sum1 += RetrieveBinContent(bin);
+               sum2 += h2->RetrieveBinContent(bin);
+
+               if ( comparisonWW ) sumw1 += GetBinErrorSqUnchecked(bin);
+               if ( comparisonUW || comparisonWW ) sumw2 += h2->GetBinErrorSqUnchecked(bin);
             }
          }
       }
    }
    //checks that the histograms are not empty
-   if (sum1 == 0 || sum2 == 0) {
+   if (sum1 == 0.0 || sum2 == 0.0) {
       Error("Chi2TestX","one histogram is empty");
-      return 0;
+      return 0.0;
    }
 
-   if ( comparisonWW  && ( sumw1 <= 0 && sumw2 <=0 ) ){
+   if ( comparisonWW  && ( sumw1 <= 0.0 && sumw2 <= 0.0 ) ){
       Error("Chi2TestX","Hist1 and Hist2 have both all zero errors\n");
-      return 0;
+      return 0.0;
    }
 
    //THE TEST
-   Int_t m=0, n=0;
+   Int_t m = 0, n = 0;
 
    //Experiment - experiment comparison
    if (comparisonUU) {
       Double_t sum = sum1 + sum2;
-      for (i=i_start; i<=i_end; i++) {
-         for (j=j_start; j<=j_end; j++) {
-            for (k=k_start; k<=k_end; k++) {
-               bin1 = this->GetBinContent(i,j,k);
-               bin2 = h2->GetBinContent(i,j,k);
-
+      for (Int_t i = i_start; i <= i_end; ++i) {
+         for (Int_t j = j_start; j <= j_end; ++j) {
+            for (Int_t k = k_start; k <= k_end; ++k) {
+               
+               Int_t bin = GetBin(i, j, k);
+               
+               Double_t cnt1 = RetrieveBinContent(bin);
+               Double_t cnt2 = h2->RetrieveBinContent(bin);
 
                if (scaledHistogram) {
                   // scale bin value to effective bin entries
-                  err1 = this->GetBinError(i,j,k);
-                  if (err1 > 0 ) {
-                     bin1 *= bin1/(err1*err1);
-                     //avoid rounding errors
-                     bin1 = TMath::Floor(bin1+0.5);
-                  }
-                  else
-                     bin1 = 0;
-                  
-                  err2 = h2->GetBinError(i,j,k);
-                  if (err2 > 0) {
-                     bin2 *= bin2/(err2*err2);
-                     //avoid rounding errors
-                     bin2 = TMath::Floor(bin2+0.5);
-                  }
-                  else
-                     bin2 = 0;
-                  
+                  Double_t e1sq = GetBinErrorSqUnchecked(bin);
+                  Double_t e2sq = h2->GetBinErrorSqUnchecked(bin);
+                
+                  if (e1sq > 0) cnt1 = TMath::Floor(cnt1 * cnt1 / e1sq + 0.5); // avoid rounding errors
+                  else cnt1 = 0;
+
+                  if (e2sq > 0) cnt2 = TMath::Floor(cnt2 * cnt2 / e2sq + 0.5); // avoid rounding errors
+                  else cnt2 = 0;
                }
 
-               if ( (int(bin1) == 0)  && (int(bin2) == 0) ) {
-                  --ndf;  //no data means one degree of freedom less
-               } else {
+               if (Int_t(cnt1) == 0 && Int_t(cnt2) == 0) --ndf;  // no data means one degree of freedom less
+               else {
 
-
-                  Double_t binsum = bin1 + bin2;
-                  Double_t nexp1 = binsum*sum1/sum;
+                  Double_t cntsum = cnt1 + cnt2;
+                  Double_t nexp1 = cntsum * sum1 / sum;
                   //Double_t nexp2 = binsum*sum2/sum;
 
 //                  if(opt.Contains("P")) printf("bin %d p = %g\t",i,binsum/sum);
 
-                  if (res)
-                     res[i-i_start] = (bin1-nexp1)/TMath::Sqrt(nexp1);
+                  if (res) res[i - i_start] = (cnt1 - nexp1) / TMath::Sqrt(nexp1);
 
-                  if (bin1 < 1) {
-                     m++;
-                  }
-                  if (bin2 < 1) {
-                     n++;
-                  }
+                  if (cnt1 < 1) ++m;
+                  if (cnt2 < 1) ++n;
 
                   //Habermann correction for residuals
-                  Double_t correc = (1-sum1/sum)*(1-binsum/sum);
-                  if (res) {
-                     res[i-i_start] /= TMath::Sqrt(correc);
-                  }
+                  Double_t correc = (1. - sum1 / sum) * (1. - cntsum / sum);
+                  if (res) res[i - i_start] /= TMath::Sqrt(correc);
 
-                  Double_t delta = sum2*bin1-sum1*bin2;
-                  chi2 += delta*delta/binsum;
-
+                  Double_t delta = sum2 * cnt1 - sum1 * cnt2;
+                  chi2 += delta * delta / cntsum;
                }
             }
          }
       }
+      chi2 /= sum1 * sum2;
 
-      chi2 /= (sum1*sum2);
       // flag error only when of the two histogram is zero
       if (m) {
          igood += 1;
@@ -2105,101 +2064,98 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    }
 
 
-   //unweighted - weighted  comparison
-   // case of err2 = 0 and bin2 not zero is treated without problems
-   // by excluding second chi2 sum
-   // and can be considered as a comparison data-theory
+   // unweighted - weighted  comparison
+   // case of error = 0 and content not zero is treated without problems by excluding second chi2 sum
+   // and can be considered as a data-theory comparison
    if ( comparisonUW ) {
-      for (i=i_start; i<=i_end; i++) {
-         for (j=j_start; j<=j_end; j++) {
-            for (k=k_start; k<=k_end; k++) {
-               Int_t x=0;
-               bin1 = this->GetBinContent(i,j,k);
-               bin2 = h2->GetBinContent(i,j,k);
-               err2 = h2->GetBinError(i,j,k);
+      for (Int_t i = i_start; i <= i_end; ++i) {
+         for (Int_t j = j_start; j <= j_end; ++j) {
+            for (Int_t k = k_start; k <= k_end; ++k) {
+               
+               Int_t bin = GetBin(i, j, k);
 
-               err2 *= err2;
+               Double_t cnt1 = RetrieveBinContent(bin);
+               Double_t cnt2 = h2->RetrieveBinContent(bin);
+               Double_t e2sq = h2->GetBinErrorSqUnchecked(bin);
 
                // case both histogram have zero bin contents
-               if ( (int(bin1) == 0) && (bin2*bin2 == 0) ) {
+               if (cnt1 * cnt1 == 0 && cnt2 * cnt2 == 0) {
                   --ndf;  //no data means one degree of freedom less
                   continue;
                }
 
                // case weighted histogram has zero bin content and error
-               if (bin2*bin2 == 0 && err2 == 0) {
+               if (cnt2 * cnt2 == 0 && e2sq == 0) {
                   if (sumw2 > 0) {
                      // use as approximated  error as 1 scaled by a scaling ratio
-                     // estimated from the total sum weight and sum weight squared
-                     err2 = sumw2/sum2;
+                     // estimated from the total sum weight and sum weight squared     
+                     e2sq = sumw2 / sum2;
                   }
                   else {
                      // return error because infinite discrepancy here:
                      // bin1 != 0 and bin2 =0 in a histogram with all errors zero
-                     Error("Chi2TestX","Hist2 has in bin %d,%d,%d zero content and all zero errors\n", i,j,k);
+                     Error("Chi2TestX","Hist2 has in bin (%d,%d,%d) zero content and zero errors\n", i, j, k);
                      chi2 = 0; return 0;
                   }
                }
 
-               if (bin1 < 1)  m++;
-               if (err2 > 0 && bin2*bin2/err2 < 10) n++;
+               if (cnt1 < 1) m++;
+               if (e2sq > 0 && cnt2 * cnt2 / e2sq < 10) n++;
 
-               Double_t var1 = sum2*bin2 - sum1*err2;
-               Double_t var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
-               // if bin1 is zero and bin2=1 and sum1=sum2 var1=0 && var2 ==0
-               // approximate by adding +1 to bin1
+               Double_t var1 = sum2 * cnt2 - sum1 * e2sq;
+               Double_t var2 = var1 * var1 + 4. * sum2 * sum2 * cnt1 * e2sq;
+
+               // if cnt1 is zero and cnt2 = 1 and sum1 = sum2 var1 = 0 && var2 == 0
+               // approximate by incrementing cnt1
                // LM (this need to be fixed for numerical errors)
-               while (var1*var1+bin1 == 0 || var1+var2 == 0) {
+               while (var1 * var1 + cnt1 == 0 || var1 + var2 == 0) {
                   sum1++;
-                  bin1++;
-                  x++;
-                  var1 = sum2*bin2 - sum1*err2;
-                  var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
+                  cnt1++;
+                  var1 = sum2 * cnt2 - sum1 * e2sq;
+                  var2 = var1 * var1 + 4. * sum2 * sum2 * cnt1 * e2sq;
                }
                var2 = TMath::Sqrt(var2);
-               while (var1+var2 == 0) {
+
+               while (var1 + var2 == 0) {
                   sum1++;
-                  bin1++;
-                  x++;
-                  var1 = sum2*bin2 - sum1*err2;
-                  var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
-                  while (var1*var1+bin1 == 0 || var1+var2 == 0) {
+                  cnt1++;
+                  var1 = sum2 * cnt2 - sum1 * e2sq;
+                  var2 = var1 * var1 + 4. * sum2 * sum2 * cnt1 * e2sq;
+                  while (var1 * var1 + cnt1 == 0 || var1 + var2 == 0) {
                      sum1++;
-                     bin1++;
-                     x++;
-                     var1 = sum2*bin2 - sum1*err2;
-                     var2 = var1*var1 + 4*sum2*sum2*bin1*err2;
+                     cnt1++;
+                     var1 = sum2 * cnt2 - sum1 * e2sq;
+                     var2 = var1 * var1 + 4. * sum2 * sum2 * cnt1 * e2sq;
                   }
                   var2 = TMath::Sqrt(var2);
                }
 
-               Double_t probb = (var1+var2)/(2*sum2*sum2);
+               Double_t probb = (var1 + var2) / (2. * sum2 * sum2);
 
                Double_t nexp1 = probb * sum1;
                Double_t nexp2 = probb * sum2;
 
 //               if(opt.Contains("P")) printf("bin %d p = %g\t",i,probb);
 
-               Double_t delta1 = bin1 - nexp1;
-               Double_t delta2 = bin2 - nexp2;
+               Double_t delta1 = cnt1 - nexp1;
+               Double_t delta2 = cnt2 - nexp2;
 
-               chi2 += delta1*delta1/nexp1;
+               chi2 += delta1 * delta1 / nexp1;
 
-               if (err2 > 0) {
-                  chi2 += delta2*delta2/err2;
+               if (e2sq > 0) {
+                  chi2 += delta2 * delta2 / e2sq;
                }
 
                if (res) {
-                  if (err2 > 0) {
-                     Double_t temp1 = sum2*err2/var2;
-                     Double_t temp2 = 1 + (sum1*err2 - sum2*bin2)/var2;
-                     temp2 = temp1*temp1*sum1*probb*(1-probb) + temp2*temp2*err2/4;
+                  if (e2sq > 0) {
+                     Double_t temp1 = sum2 * e2sq / var2;
+                     Double_t temp2 = 1.0 + (sum1 * e2sq - sum2 * cnt2) / var2;
+                     temp2 = temp1 * temp1 * sum1 * probb * (1.0 - probb) + temp2 * temp2 * e2sq / 4.0;
                      // invert sign here
-                     res[i-i_start] = - delta2/TMath::Sqrt(temp2);
+                     res[i - i_start] = - delta2 / TMath::Sqrt(temp2);
                   }
                   else
-                     res[i-i_start] = delta1/TMath::Sqrt(nexp1);
-
+                     res[i - i_start] = delta1 / TMath::Sqrt(nexp1);
                }
             }
          }
@@ -2214,62 +2170,61 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
          Info("Chi2TestX","There is a bin in h2 with less than 10 effective events.\n");
       }
 
-      Double_t prob = TMath::Prob(chi2,ndf);
+      Double_t prob = TMath::Prob(chi2, ndf);
 
       return prob;
    }
 
    // weighted - weighted  comparison
    if (comparisonWW) {
-      for (i=i_start; i<=i_end; i++) {
-         for (j=j_start; j<=j_end; j++) {
-            for (k=k_start; k<=k_end; k++) {
-               bin1 = this->GetBinContent(i,j,k);
-               bin2 = h2->GetBinContent(i,j,k);
-               err1 = this->GetBinError(i,j,k);
-               err2 = h2->GetBinError(i,j,k);
-               err1 *= err1;
-               err2 *= err2;
+      for (Int_t i = i_start; i <= i_end; ++i) {
+         for (Int_t j = j_start; j <= j_end; ++j) {
+            for (Int_t k = k_start; k <= k_end; ++k) {
+               
+               Int_t bin = GetBin(i, j, k);
+               Double_t cnt1 = RetrieveBinContent(bin);
+               Double_t cnt2 = h2->RetrieveBinContent(bin);
+               Double_t e1sq = GetBinErrorSqUnchecked(bin);
+               Double_t e2sq = h2->GetBinErrorSqUnchecked(bin);
 
                // case both histogram have zero bin contents
-               // (use square of bin1 to avoid numerical errors)
-                if ( (bin1*bin1 == 0) && (bin2*bin2 == 0) ) {
+               // (use square of content to avoid numerical errors)
+                if (cnt1 * cnt1 == 0 && cnt2 * cnt2 == 0) {
                    --ndf;  //no data means one degree of freedom less
                    continue;
                 }
 
-                if ( (err1 == 0) && (err2 == 0) ) {
+                if (e1sq == 0 && e2sq == 0) {
                    // cannot treat case of booth histogram have zero zero errors 
                   Error("Chi2TestX","h1 and h2 both have bin %d,%d,%d with all zero errors\n", i,j,k);
                   chi2 = 0; return 0;
                }
 
-               Double_t sigma  = sum1*sum1*err2 + sum2*sum2*err1;
-               Double_t delta = sum2*bin1 - sum1*bin2;
-               chi2 += delta*delta/sigma;
+               Double_t sigma = sum1 * sum1 * e2sq + sum2 * sum2 * e1sq;
+               Double_t delta = sum2 * cnt1 - sum1 * cnt2;
+               chi2 += delta * delta / sigma;
 
-//               if(opt.Contains("P")) printf("bin %d p = %g\t",i, (bin1*sum1/err1 + bin2*sum2/err2)/(sum1*sum1/err1 + sum2*sum2/err2));
+//               if(opt.Contains("P")) printf("bin %d p = %g\t",i, (bin1*sum1/err1 + bin2*sum2/e2sq)/(sum1*sum1/err1 + sum2*sum2/err2));
 
                if (res) {
-                  Double_t temp = bin1*sum1*err2 + bin2*sum2*err1;
-                  Double_t probb = temp/sigma;
+                  Double_t temp = cnt1 * sum1 * e2sq + cnt2 * sum2 * e1sq;
+                  Double_t probb = temp / sigma;
                   Double_t z = 0;
-                  if (err1 > err2 ) {
-                     Double_t d1 = (bin1 - sum1 * probb);
-                     Double_t s1 = err1* ( 1. - err2 * sum1 * sum1 / sigma );
-                     z = d1/ TMath::Sqrt(s1);
+                  if (e1sq > e2sq) {
+                     Double_t d1 = cnt1 - sum1 * probb;
+                     Double_t s1 = e1sq * ( 1. - e2sq * sum1 * sum1 / sigma );
+                     z = d1 / TMath::Sqrt(s1);
                   }
                   else {
-                     Double_t d2 = (bin2 - sum2 * probb);
-                     Double_t s2 = err2* ( 1. - err1 * sum2 * sum2 / sigma );
-                     z = -d2/ TMath::Sqrt(s2);
+                     Double_t d2 = cnt2 - sum2 * probb;
+                     Double_t s2 = e2sq * ( 1. - e1sq * sum2 * sum2 / sigma );
+                     z = -d2 / TMath::Sqrt(s2);
                   }
-
-                  res[i-i_start] = z;
+                  res[i - i_start] = z;
                }
 
-               if (err1 > 0 && bin1*bin1/err1 < 10) m++;
-               if (err2 > 0 && bin2*bin2/err2 < 10) n++;
+               if (e1sq > 0 && cnt1 * cnt1 / e1sq < 10) m++;
+               if (e2sq > 0 && cnt2 * cnt2 / e2sq < 10) n++;
             }
          }
       }
@@ -2281,7 +2236,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
          igood += 2;
          Info("Chi2TestX","There is a bin in h2 with less than 10 effective events.\n");
       }
-      Double_t prob = TMath::Prob(chi2,ndf);
+      Double_t prob = TMath::Prob(chi2, ndf);
       return prob;
    }
    return 0;
@@ -2488,11 +2443,11 @@ Bool_t TH1::Divide(TF1 *f1, Double_t c1)
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY();
-   Int_t nbinsz = GetNbinsZ();
-   if (fDimension < 2) nbinsy = -1;
-   if (fDimension < 3) nbinsz = -1;
+   Int_t nx = GetNbinsX() + 2; // normal bins + uf / of
+   Int_t ny = GetNbinsY() + 2;
+   Int_t nz = GetNbinsZ() + 2;
+   if (fDimension < 2) ny = 1;
+   if (fDimension < 3) nz = 1;
 
 
    SetMinimum();
@@ -2500,27 +2455,26 @@ Bool_t TH1::Divide(TF1 *f1, Double_t c1)
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
-   Double_t cu,w;
+   Double_t cu, w;
    Double_t xx[3];
    Double_t *params = 0;
    f1->InitArgs(xx,params);
-   for (binz=0;binz<=nbinsz+1;binz++) {
+   for (binz = 0; binz < nz; ++binz) {
       xx[2] = fZaxis.GetBinCenter(binz);
-      for (biny=0;biny<=nbinsy+1;biny++) {
+      for (biny = 0; biny < ny; ++biny) {
          xx[1] = fYaxis.GetBinCenter(biny);
-         for (binx=0;binx<=nbinsx+1;binx++) {
+         for (binx = 0; binx < nx; ++binx) {
             xx[0] = fXaxis.GetBinCenter(binx);
             if (!f1->IsInside(xx)) continue;
             TF1::RejectPoint(kFALSE);
-            bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            Double_t error1 = GetBinError(bin);
-            cu  = c1*f1->EvalPar(xx);
+            bin = binx + nx * (biny + ny * binz);
+            cu  = c1 * f1->EvalPar(xx);
             if (TF1::RejectedPoint()) continue;
-            if (cu) w = RetrieveBinContent(bin)/cu;
+            if (cu) w = RetrieveBinContent(bin) / cu;
             else    w = 0;
-            UpdateBinContent(bin,w);
+            UpdateBinContent(bin, w);
             if (fSumw2.fN) {
-               if (cu != 0) fSumw2.fArray[bin] = error1*error1/(cu*cu);
+               if (cu != 0) fSumw2.fArray[bin] = GetBinErrorSqUnchecked(bin) / (cu * cu);
                else         fSumw2.fArray[bin] = 0;
             }
          }
@@ -2558,11 +2512,6 @@ Bool_t TH1::Divide(const TH1 *h1)
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY();
-   Int_t nbinsz = GetNbinsZ();
-
-
    try {
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
@@ -2576,33 +2525,20 @@ Bool_t TH1::Divide(const TH1 *h1)
       Warning("Divide","Dividing histograms with different labels");
    }
 
-
-   if (fDimension < 2) nbinsy = -1;
-   if (fDimension < 3) nbinsz = -1;
-
 //    Create Sumw2 if h1 has Sumw2 set
    if (fSumw2.fN == 0 && h1->GetSumw2N() != 0) Sumw2();
 
 //   - Loop on bins (including underflows/overflows)
-   Int_t bin, binx, biny, binz;
-   Double_t c0,c1,w;
-   for (binz=0;binz<=nbinsz+1;binz++) {
-      for (biny=0;biny<=nbinsy+1;biny++) {
-         for (binx=0;binx<=nbinsx+1;binx++) {
-            bin = GetBin(binx,biny,binz);
-            c0  = RetrieveBinContent(bin);
-            c1  = h1->RetrieveBinContent(bin);
-            if (c1) w = c0/c1;
-            else    w = 0;
-            UpdateBinContent(bin,w);
-            if (fSumw2.fN) {
-               Double_t e0 = GetBinError(bin);
-               Double_t e1 = h1->GetBinError(bin);
-               Double_t c12= c1*c1;
-               if (!c1) { fSumw2.fArray[bin] = 0; continue;}
-               fSumw2.fArray[bin] = (e0*e0*c1*c1 + e1*e1*c0*c0)/(c12*c12);
-            }
-         }
+   for (Int_t i = 0; i < fNcells; ++i) {
+      Double_t c0 = RetrieveBinContent(i);
+      Double_t c1 = h1->RetrieveBinContent(i);
+      if (c1) UpdateBinContent(i, c0 / c1);
+      else UpdateBinContent(i, 0);
+
+      if(fSumw2.fN) {
+         if (c1 == 0) { fSumw2.fArray[i] = 0; continue; }
+         Double_t c1sq = c1 * c1;
+         fSumw2.fArray[i] = (GetBinErrorSqUnchecked(i) * c1sq + h1->GetBinErrorSqUnchecked(i) * c0 * c0) / (c1sq * c1sq);
       }
    }
    ResetStats();
@@ -2650,10 +2586,6 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY();
-   Int_t nbinsz = GetNbinsZ();
-
    try {
       CheckConsistency(h1,h2);
       CheckConsistency(this,h1);
@@ -2674,9 +2606,6 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
       return kFALSE;
    }
 
-   if (fDimension < 2) nbinsy = -1;
-   if (fDimension < 3) nbinsz = -1;
-
 //    Create Sumw2 if h1 or h2 have Sumw2 set
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
 
@@ -2684,41 +2613,33 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    SetMaximum();
 
 //   - Loop on bins (including underflows/overflows)
-   Int_t bin, binx, biny, binz;
-   Double_t b1,b2,w,d1,d2;
-   d1 = c1*c1;
-   d2 = c2*c2;
-   for (binz=0;binz<=nbinsz+1;binz++) {
-      for (biny=0;biny<=nbinsy+1;biny++) {
-         for (binx=0;binx<=nbinsx+1;binx++) {
-            bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            b1  = h1->RetrieveBinContent(bin);
-            b2  = h2->RetrieveBinContent(bin);
-            if (b2) w = c1*b1/(c2*b2);
-            else    w = 0;
-            UpdateBinContent(bin,w);
-            if (fSumw2.fN) {
-               Double_t e1 = h1->GetBinError(bin);
-               Double_t e2 = h2->GetBinError(bin);
-               Double_t b22= b2*b2*d2;
-               if (!b2) { fSumw2.fArray[bin] = 0; continue;}
-               if (binomial) {
-                  if (b1 != b2) {
-                     // in the case of binomial statistics c1 and c2 must be 1 otherwise it does not make sense
-                     w = b1/b2;    // c1 and c2 are ignored
-                     //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
-                     //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);     // old formula from G. Flucke
-                     // formula which works also for weighted histogram (see http://root.cern.ch/phpBB2/viewtopic.php?t=3753 )
-                     fSumw2.fArray[bin] = TMath::Abs( ( (1.-2.*w)*e1*e1 + w*w*e2*e2 )/(b2*b2) );
-                  } else {
-                     //in case b1=b2 error is zero
-                     //use  TGraphAsymmErrors::BayesDivide for getting the asymmetric error not equal to zero
-                     fSumw2.fArray[bin] = 0;
-                  }
-               } else {
-                  fSumw2.fArray[bin] = d1*d2*(e1*e1*b2*b2 + e2*e2*b1*b1)/(b22*b22);
-               }
+   for (Int_t i = 0; i < fNcells; ++i) {
+      Double_t b1 = h1->RetrieveBinContent(i);
+      Double_t b2 = h2->RetrieveBinContent(i);
+      if (b2) UpdateBinContent(i, c1 * b1 / (c2 * b2));
+      else UpdateBinContent(i, 0);
+      
+      if (fSumw2.fN) {
+         if (b2 == 0) { fSumw2.fArray[i] = 0; continue; }
+         Double_t b1sq = b1 * b1; Double_t b2sq = b2 * b2;
+         Double_t c1sq = c1 * c1; Double_t c2sq = c2 * c2;
+         Double_t e1sq = h1->GetBinErrorSqUnchecked(i);
+         Double_t e2sq = h2->GetBinErrorSqUnchecked(i);
+         if (binomial) {
+            if (b1 != b2) {
+               // in the case of binomial statistics c1 and c2 must be 1 otherwise it does not make sense
+               // c1 and c2 are ignored
+               //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
+               //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);     // old formula from G. Flucke
+               // formula which works also for weighted histogram (see http://root.cern.ch/phpBB2/viewtopic.php?t=3753 )
+               fSumw2.fArray[i] = TMath::Abs( ( (1. - 2.* b1 / b2) * e1sq  + b1sq * e2sq / b2sq ) / b2sq );
+            } else {
+               //in case b1=b2 error is zero
+               //use  TGraphAsymmErrors::BayesDivide for getting the asymmetric error not equal to zero
+               fSumw2.fArray[i] = 0;
             }
+         } else {
+            fSumw2.fArray[i] = c1sq * c2sq * (e1sq * b2sq + e2sq * b1sq) / (c2sq * c2sq * b2sq * b2sq);
          }
       }
    }
@@ -5342,18 +5263,17 @@ Long64_t TH1::Merge(TCollection *li)
          for (Int_t i=0;i<kNstat;i++)
             totstats[i] += stats[i];
          nentries += hist->GetEntries();
-
          
          Int_t nx = hist->GetXaxis()->GetNbins();
          // loop on bins of the histogram and do the merge 
          for (Int_t binx = 0; binx <= nx + 1; binx++) {
 
             Double_t cu = hist->RetrieveBinContent(binx);
-            Double_t error1 = 0; 
+            Double_t e1sq = 0.0; 
             Int_t ix = -1; 
-            if (fSumw2.fN) error1= hist->GetBinError(binx);
+            if (fSumw2.fN) e1sq= hist->GetBinErrorSqUnchecked(binx);
             // do only for bins with non null bin content or non-null errors (if Sumw2)
-            if (TMath::Abs(cu) > 0 || (fSumw2.fN && error1 > 0 ) ) {             
+            if (TMath::Abs(cu) > 0 || (fSumw2.fN && e1sq > 0 ) ) {             
                // case  of overflow bins 
                // they do not make sense also in the case of labels
                if (!allHaveLabels) { 
@@ -5413,7 +5333,7 @@ Long64_t TH1::Merge(TCollection *li)
                if (ix >= 0) {               
                   // MERGE here the bin contents
                   AddBinContent(ix,cu);               
-                  if (fSumw2.fN)  fSumw2.fArray[ix] += error1*error1;                  
+                  if (fSumw2.fN) fSumw2.fArray[ix] += e1sq;                  
                }
             }
          }
@@ -5452,38 +5372,35 @@ Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY();
-   Int_t nbinsz = GetNbinsZ();
-   if (fDimension < 2) nbinsy = -1;
-   if (fDimension < 3) nbinsz = -1;
+   Int_t nx = GetNbinsX() + 2; // normal bins + uf / of (cells)
+   Int_t ny = GetNbinsY() + 2;
+   Int_t nz = GetNbinsZ() + 2;
+   if (fDimension < 2) ny = 1;
+   if (fDimension < 3) nz = 1;
 
    // reset min-maximum
    SetMinimum();
    SetMaximum();
 
    //   - Loop on bins (including underflows/overflows)
-   Int_t bin, binx, biny, binz;
-   Double_t cu,w;
    Double_t xx[3];
    Double_t *params = 0;
    f1->InitArgs(xx,params);
-   for (binz=0;binz<=nbinsz+1;binz++) {
+   
+   for (Int_t binz = 0; binz < nz; ++binz) {
       xx[2] = fZaxis.GetBinCenter(binz);
-      for (biny=0;biny<=nbinsy+1;biny++) {
+      for (Int_t biny = 0; biny < ny; ++biny) {
          xx[1] = fYaxis.GetBinCenter(biny);
-         for (binx=0;binx<=nbinsx+1;binx++) {
+         for (Int_t binx = 0; binx < nx; ++binx) {
             xx[0] = fXaxis.GetBinCenter(binx);
             if (!f1->IsInside(xx)) continue;
             TF1::RejectPoint(kFALSE);
-            bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            Double_t error1 = GetBinError(bin);
-            cu  = c1*f1->EvalPar(xx);
+            Int_t bin = binx + nx * (biny + ny *binz);
+            Double_t cu  = c1*f1->EvalPar(xx);
             if (TF1::RejectedPoint()) continue;
-            w = RetrieveBinContent(bin)*cu;
-            UpdateBinContent(bin,w);
+            UpdateBinContent(bin, RetrieveBinContent(bin) * cu);
             if (fSumw2.fN) {
-               fSumw2.fArray[bin] = cu*cu*error1*error1;
+               fSumw2.fArray[bin] = cu * cu * GetBinErrorSqUnchecked(bin);
             }
          }
       }
@@ -5539,15 +5456,12 @@ Bool_t TH1::Multiply(const TH1 *h1)
    SetMaximum();
 
    //   - Loop on bins (including underflows/overflows)
-   Double_t c0, c1;
    for (Int_t i = 0; i < fNcells; ++i) {
-      c0 = RetrieveBinContent(i);
-      c1 = h1->RetrieveBinContent(i);
+      Double_t c0 = RetrieveBinContent(i);
+      Double_t c1 = h1->RetrieveBinContent(i);
       UpdateBinContent(i, c0 * c1);
       if (fSumw2.fN) {
-         Double_t e0 = GetBinError(i);
-         Double_t e1 = h1->GetBinError(i);
-         fSumw2.fArray[i] = (e0 * e0 * c1 * c1 + e1 * e1 * c0 * c0);
+         fSumw2.fArray[i] = GetBinErrorSqUnchecked(i) * c1 * c1 + h1->GetBinErrorSqUnchecked(i) * c0 * c0;
       }
    }
    ResetStats();
@@ -5607,15 +5521,13 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
    SetMaximum();
 
    //   - Loop on bins (including underflows/overflows)
-   Double_t d1 = c1 * c1; Double_t d2 = c2 * c2;
+   Double_t c1sq = c1 * c1; Double_t c2sq = c2 * c2;
    for (Int_t i = 0; i < fNcells; ++i) {
       Double_t b1 = h1->RetrieveBinContent(i);
       Double_t b2 = h2->RetrieveBinContent(i);
       UpdateBinContent(i, c1 * b1 * c2 * b2);
       if (fSumw2.fN) {
-         Double_t e1 = h1->GetBinError(i);
-         Double_t e2 = h2->GetBinError(i);
-         fSumw2.fArray[i] = d1 * d2 * (e1 * e1 * b2 * b2 + e2 * e2 * b1 * b1);
+         fSumw2.fArray[i] = c1sq * c2sq * (h1->GetBinErrorSqUnchecked(i) * b2 * b2 + h2->GetBinErrorSqUnchecked(i) * b1 * b1);
       }
    }
    ResetStats();
@@ -5934,7 +5846,6 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
    Int_t  nbinsz = fZaxis.GetNbins();
 
    //now loop on all bins and refill
-   Double_t err,cu;
    Double_t bx,by,bz;
    Int_t errors = GetSumw2N();
    Int_t ix,iy,iz,ibin,binx,biny,binz,bin;
@@ -5950,11 +5861,9 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
             ix  = fXaxis.FindFixBin(bx);
             bin = hold->GetBin(binx,biny,binz);
             ibin= GetBin(ix,iy,iz);
-            cu  = hold->RetrieveBinContent(bin);
-            AddBinContent(ibin,cu);
+            AddBinContent(ibin, hold->RetrieveBinContent(bin));
             if (errors) {
-               err = hold->GetBinError(bin);
-               fSumw2.fArray[ibin] += err*err;
+               fSumw2.fArray[ibin] += hold->GetBinErrorSqUnchecked(bin);
             }
          }
       }
@@ -5998,7 +5907,7 @@ void TH1::Scale(Double_t c1, Option_t *option)
    TString opt = option; opt.ToLower();
    if (opt.Contains("width")) Add(this, this, c1, -1);
    else {
-      // XXX if (fBuffer) BufferEmpty(1); 
+      if (fBuffer) BufferEmpty(1); 
       for(Int_t i = 0; i < fNcells; ++i) UpdateBinContent(i, c1 * RetrieveBinContent(i));
       if (fSumw2.fN) {
          Double_t c1sq = c1 * c1;
@@ -7245,20 +7154,22 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
    // internal function compute integral and optionally the error  between the limits
    // specified by the bin number values working for all histograms (1D, 2D and 3D)
 
-   Int_t nbinsx = GetNbinsX();
+   Int_t nx = GetNbinsX() + 2;
    if (binx1 < 0) binx1 = 0;
-   if (binx2 > nbinsx+1 || binx2 < binx1) binx2 = nbinsx+1;
+   if (binx2 >= nx || binx2 < binx1) binx2 = nx - 1;
+
    if (GetDimension() > 1) {
-      Int_t nbinsy = GetNbinsY();
+      Int_t ny = GetNbinsY() + 2;
       if (biny1 < 0) biny1 = 0;
-      if (biny2 > nbinsy+1 || biny2 < biny1) biny2 = nbinsy+1;
+      if (biny2 >= ny || biny2 < biny1) biny2 = ny - 1;
    } else {
       biny1 = 0; biny2 = 0;
    }
+
    if (GetDimension() > 2) {
-      Int_t nbinsz = GetNbinsZ();
+      Int_t nz = GetNbinsZ() + 2;
       if (binz1 < 0) binz1 = 0;
-      if (binz2 > nbinsz+1 || binz2 < binz1) binz2 = nbinsz+1;
+      if (binz2 >= nz || binz2 < binz1) binz2 = nz - 1;
    } else {
       binz1 = 0; binz2 = 0;
    }
@@ -7270,9 +7181,7 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
    if (opt.Contains("width")) width = kTRUE;
 
 
-   Double_t dx = 1.;
-   Double_t dy = 1.;
-   Double_t dz = 1.;
+   Double_t dx = 1., dy = .1, dz =.1;
    Double_t integral = 0;
    Double_t igerr2 = 0;
    for (Int_t binx = binx1; binx <= binx2; ++binx) {
@@ -7280,13 +7189,18 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
       for (Int_t biny = biny1; biny <= biny2; ++biny) {
          if (width) dy = fYaxis.GetBinWidth(biny);
          for (Int_t binz = binz1; binz <= binz2; ++binz) {
-            if (width) dz = fZaxis.GetBinWidth(binz);
-            Int_t bin  = GetBin(binx, biny, binz);
-            if (width) integral += RetrieveBinContent(bin)*dx*dy*dz;
-            else       integral += RetrieveBinContent(bin);
+            Int_t bin = GetBin(binx, biny, binz);
+            Double_t dv = 0.0;
+            if (width) { 
+               dz = fZaxis.GetBinWidth(binz);
+               dv = dx * dy * dz;
+               integral += RetrieveBinContent(bin) * dv;
+            } else {
+              integral += RetrieveBinContent(bin);
+            }
             if (doError) {
-               if (width)  igerr2 += GetBinError(bin)*GetBinError(bin)*dx*dx*dy*dy*dz*dz;
-               else        igerr2 += GetBinError(bin)*GetBinError(bin);
+               if (width)  igerr2 += GetBinErrorSqUnchecked(bin) * dv * dv;
+               else        igerr2 += GetBinErrorSqUnchecked(bin);
             }
          }
       }
@@ -8144,12 +8058,9 @@ Double_t TH1::GetBinError(Int_t bin) const
    if (bin < 0) bin = 0;
    if (bin >= fNcells) bin = fNcells-1;
    if (fBuffer) ((TH1*)this)->BufferEmpty();
-   if (fSumw2.fN) {
-      Double_t err2 = fSumw2.fArray[bin];
-      return TMath::Sqrt(err2);
-   }
-   Double_t error2 = TMath::Abs(RetrieveBinContent(bin));
-   return TMath::Sqrt(error2);
+   if (fSumw2.fN) return TMath::Sqrt(fSumw2.fArray[bin]);
+   
+   return TMath::Sqrt(TMath::Abs(RetrieveBinContent(bin)));
 }
 
 //______________________________________________________________________________
