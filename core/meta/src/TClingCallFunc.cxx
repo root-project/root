@@ -548,8 +548,9 @@ void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
    //}
 }
 
-void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
-                                  const char *proto, long *poffset)
+void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
+                                  const char *method, const char *proto,
+                                  long *poffset)
 {
    delete fMethod;
    fMethod = new TClingMethodInfo(fInterp);
@@ -567,14 +568,13 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
    if (!fMethod->IsValid()) {
       //Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
       //      method, proto);
+      return;
    }
-   const clang::FunctionDecl *FD = fMethod->GetMethodDecl();
-   if (FD) {
-      Init(FD);
-      //if (!IsValid()) {
-      //   Error("TClingCallFunc::SetFuncProto", "Method %s(%s) has no body.",
-      //         method, proto);
-      //}
+   const clang::FunctionDecl *decl = fMethod->GetMethodDecl();
+   Init(decl);
+   if (!IsValid()) {
+      //Error("TClingCallFunc::SetFuncProto", "Method %s(%s) has no body.",
+      //      method, proto);
    }
 }
 
