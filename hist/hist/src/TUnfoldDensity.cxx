@@ -342,7 +342,7 @@ void TUnfoldDensity::RegularizeOneDistribution
       fRegularisationConditions->AddBinning(binning->GetName());
 
    // decode steering
-   Int_t isOptionGiven[6];
+   Int_t isOptionGiven[6] = {0};
    binning->DecodeAxisSteering(axisSteering,"uUoObB",isOptionGiven);
    // U implies u
    isOptionGiven[0] |= isOptionGiven[1];

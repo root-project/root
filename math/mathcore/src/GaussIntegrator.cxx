@@ -24,7 +24,7 @@ bool GaussIntegrator::fgAbsValue = false;
 
    if (epsabs <= 0 ) { 
       fEpsAbs = ROOT::Math::IntegratorOneDimOptions::DefaultAbsTolerance();
-      if (epsrel <= 0 ) fEpsRel = ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance();
+      fEpsRel = ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance();
    }
    else { 
       fEpsAbs = epsabs;

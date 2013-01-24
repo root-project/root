@@ -75,12 +75,14 @@ bool GSLSimAnMinimizer::Minimize() {
    assert (xvar.size() == steps.size() );         
 
 
+#ifdef DEBUG
    for (unsigned int i = 0; i < npar ; ++i) {
       std::cout << "x  = " << xvar[i] << " steps " << steps[i] << "  x " << X()[i] << std::endl;
    }
    std::cout << "f(x) = " <<  (*ObjFunction())(&xvar.front() ) << std::endl;
    std::cout << "f(x) not transf = " <<  (*function)( X() ) << std::endl;
    if (trFunc) std::cout << "ftrans(x) = " <<  (*trFunc) (&xvar.front() ) << std::endl;
+#endif
 
    // output vector 
    std::vector<double> xmin(xvar.size() ); 
