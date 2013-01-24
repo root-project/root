@@ -473,7 +473,7 @@ void TGL5DPainter::DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const
    //Draw cloud for selected iso-surface.
    const TGLDisableGuard light(GL_LIGHTING);
 
-   Float_t rgb[3] = {};
+   Float_t rgb[4] = {};
    Rgl::Pad::ExtractRGB(ci, rgb);
 
    glColor3fv(rgb);

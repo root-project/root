@@ -614,7 +614,7 @@ void TGLPadPainter::DrawPolyMarker()
    //
    glMatrixMode(GL_MODELVIEW);
    //
-   Float_t rgba[3] = {};
+   Float_t rgba[4] = {};
    Rgl::Pad::ExtractRGB(gVirtualX->GetMarkerColor(), rgba);
    glColor3fv(rgba);
 
@@ -701,7 +701,7 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode
    //
    glMatrixMode(GL_MODELVIEW);
 
-   Float_t rgba[3] = {};
+   Float_t rgba[4] = {};
    Rgl::Pad::ExtractRGB(gVirtualX->GetTextColor(), rgba);
    glColor3fv(rgba);
 
