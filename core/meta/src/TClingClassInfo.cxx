@@ -228,8 +228,57 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       TClingMethodInfo tmi(fInterp);
       return tmi;
    }
+   if (!strcmp(fname, Name())) {
+      // Constructor.
+      // These must be accessed through a wrapper, since they
+      // may call an operator new(), which can be a member
+      // function or a global function, as well as the actual
+      // constructor function itself.
+   }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const clang::FunctionDecl *fd = lh.findFunctionProto(fDecl, fname, proto);
+   if (!fd) {
+      // Function not found.
+      TClingMethodInfo tmi(fInterp);
+      return tmi;
+   }
+   if (poffset) {
+     // We have been asked to return a this pointer adjustment.
+     if (const clang::CXXMethodDecl *md =
+           llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
+        // This is a class member function.
+        *poffset = GetOffset(md);
+     }
+   }
+   TClingMethodInfo tmi(fInterp);
+   tmi.Init(fd);
+   return tmi;
+}
+
+TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
+      const char *arglist, long *poffset, MatchMode /*mode = ConversionMatch*/,
+      InheritanceMode /* imode = WithInheritance*/) const
+{
+   if (poffset) {
+      *poffset = 0L;
+   }
+   if (!IsValid()) {
+      TClingMethodInfo tmi(fInterp);
+      return tmi;
+   }
+   if (!strcmp(arglist, ")")) {
+      // CINT accepted a single right paren as meaning no arguments.
+      arglist = "";
+   }
+   if (!strcmp(fname, Name())) {
+      // Constructor.
+      // These must be accessed through a wrapper, since they
+      // may call an operator new(), which can be a member
+      // function or a global function, as well as the actual
+      // constructor function itself.
+   }
+   const cling::LookupHelper &lh = fInterp->getLookupHelper();
+   const clang::FunctionDecl *fd = lh.findFunctionArgs(fDecl, fname, arglist);
    if (!fd) {
       // Function not found.
       TClingMethodInfo tmi(fInterp);
@@ -254,11 +303,10 @@ int TClingClassInfo::GetMethodNArg(const char *method, const char *proto) const
    if (!IsValid()) {
       return -1;
    }
+   TClingMethodInfo mi = GetMethod(method, proto, 0);
    int clang_val = -1;
-   const clang::FunctionDecl *decl =
-     fInterp->getLookupHelper().findFunctionProto(fDecl, method, proto);
-   if (decl) {
-      unsigned num_params = decl->getNumParams();
+   if (mi.IsValid()) {
+      unsigned num_params = mi.GetMethodDecl()->getNumParams();
       clang_val = static_cast<int>(num_params);
    }
    return clang_val;
@@ -369,6 +417,16 @@ void TClingClassInfo::Init(const char *name)
    }
 }
 
+void TClingClassInfo::Init(const clang::Decl* decl)
+{
+   fFirstTime = true;
+   fDescend = false;
+   fIter = clang::DeclContext::decl_iterator();
+   fDecl = decl;
+   fType = 0;
+   fIterStack.clear();
+}
+
 void TClingClassInfo::Init(int tagnum)
 {
    Fatal("TClingClassInfo::Init(tagnum)","Should no longer be called");
@@ -446,11 +504,10 @@ bool TClingClassInfo::IsValidMethod(const char *method, const char *proto,
       return false;
    }
    if (offset) {
-      *offset = 0L; // humm suspicious.
+      *offset = 0L;
    }
-   const clang::FunctionDecl *decl =
-      fInterp->getLookupHelper().findFunctionProto(fDecl, method, proto);
-   return (decl != 0);
+   TClingMethodInfo mi = GetMethod(method, proto, offset);
+   return mi.IsValid();
 }
 
 int TClingClassInfo::InternalNext()

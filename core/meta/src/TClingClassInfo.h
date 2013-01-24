@@ -87,12 +87,16 @@ public:
    TClingMethodInfo     GetMethod(const char *fname, const char *proto,
                                   long *poffset, MatchMode mode = ConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
+   TClingMethodInfo     GetMethodWithArgs(const char *fname, const char *arglist,
+                                  long *poffset, MatchMode mode = ConversionMatch,
+                                  InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto) const;
    long                 GetOffset(const clang::CXXMethodDecl* md) const;
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    bool                 HasDefaultConstructor() const;
    bool                 HasMethod(const char *name) const;
    void                 Init(const char *name);
+   void                 Init(const clang::Decl*);
    void                 Init(int tagnum);
    void                 Init(const clang::Type &);
    bool                 IsBase(const char *name) const;
