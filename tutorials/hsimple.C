@@ -10,6 +10,8 @@
 #include <TBenchmark.h>
 #include <TInterpreter.h>
 
+// class TSQLFile;
+
 TFile *hsimple(Int_t get=0)
 {
 //  This program creates :
