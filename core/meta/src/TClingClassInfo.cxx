@@ -228,12 +228,15 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       TClingMethodInfo tmi(fInterp);
       return tmi;
    }
-   if (!strcmp(fname, Name())) {
-      // Constructor.
-      // These must be accessed through a wrapper, since they
-      // may call an operator new(), which can be a member
-      // function or a global function, as well as the actual
-      // constructor function itself.
+   if (llvm::dyn_cast<clang::NamedDecl>(fDecl)) {
+      // We have a name, check if we are being asked for a constructor.
+      if (!strcmp(fname, Name())) {
+         // Constructor.
+         // These must be accessed through a wrapper, since they
+         // may call an operator new(), which can be a member
+         // function or a global function, as well as the actual
+         // constructor function itself.
+      }
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const clang::FunctionDecl *fd = lh.findFunctionProto(fDecl, fname, proto);
@@ -270,12 +273,15 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       // CINT accepted a single right paren as meaning no arguments.
       arglist = "";
    }
-   if (!strcmp(fname, Name())) {
-      // Constructor.
-      // These must be accessed through a wrapper, since they
-      // may call an operator new(), which can be a member
-      // function or a global function, as well as the actual
-      // constructor function itself.
+   if (llvm::dyn_cast<clang::NamedDecl>(fDecl)) {
+      // We have a name, check if we are being asked for a constructor.
+      if (!strcmp(fname, Name())) {
+         // Constructor.
+         // These must be accessed through a wrapper, since they
+         // may call an operator new(), which can be a member
+         // function or a global function, as well as the actual
+         // constructor function itself.
+      }
    }
    const cling::LookupHelper &lh = fInterp->getLookupHelper();
    const clang::FunctionDecl *fd = lh.findFunctionArgs(fDecl, fname, arglist);
