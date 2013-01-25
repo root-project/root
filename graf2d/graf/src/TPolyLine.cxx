@@ -566,10 +566,10 @@ void TPolyLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    char quote = '"';
    out<<"   "<<std::endl;
-   out<<"   Double_t *dum = 0;"<<std::endl;
    if (gROOT->ClassSaved(TPolyLine::Class())) {
       out<<"   ";
    } else {
+      out<<"   Double_t *dum = 0;"<<std::endl;
       out<<"   TPolyLine *";
    }
    out<<"pline = new TPolyLine("<<fN<<",dum,dum,"<<quote<<fOption<<quote<<");"<<std::endl;
