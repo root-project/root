@@ -9,7 +9,7 @@ bool mfunc() {
    TFormula *fabs = new TFormula("fabs","abs(x)");
    TFormula *fmabs = new TFormula("fmabs","TMath::Abs(x)");
    TFormula *f = new TFormula("f","myfunc(x,y,z)");
-#ifndef ClingWorkAroundCallfuncAndInline
+#if !defined(ClingWorkAroundCallfuncAndInline) && !defined(ClingWorkAroundCallfuncAndConversion)
    TFormula *fromcl = new TFormula("f2","testcl::calc(x,y)");
 #endif
 
@@ -26,7 +26,7 @@ bool mfunc() {
       cerr << "myfunc fails with " << f->Eval(3,4.5,50000000) << endl;
       result = false;
    }
-#ifndef ClingWorkAroundCallfuncAndInline
+#if !defined(ClingWorkAroundCallfuncAndInline) && !defined(ClingWorkAroundCallfuncAndConversion)
    if ( fromcl->Eval(3,5) != 3*5 ) {
       cerr << "testcl::calc failed and returned: " << fromcl->Eval(3,5) << endl;
       result = false;

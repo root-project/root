@@ -26,7 +26,7 @@
   htemp = (TH1F*)gROOT->FindObject("htemp");
 #endif
   cout << "Function access: " << htemp->GetMean() << endl;
-#ifdef ClingWorkAroundCallfuncAndInline
+#if defined(ClingWorkAroundCallfuncAndInline) || defined(ClingWorkAroundCallfuncAndReturnByValue)
 #else
    tree->Scan("B.fA.tv.fZ:B.fA.GetV().fZ");
 #endif

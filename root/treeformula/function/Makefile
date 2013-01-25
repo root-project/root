@@ -52,7 +52,7 @@ test.root: write.C all_C.$(DllSuf)
 fullload.log: test.root
 
 fullload: fullload.log
-ifeq ($(ClingWorkAroundCallfuncAndInline),)
+ifeq ($(ClingWorkAroundCallfuncAndInline)$(ClingWorkAroundCallfuncAndReturnByValue),)
 	$(TestDiff)
 else
 	$(TestDiffCintSpecific)
