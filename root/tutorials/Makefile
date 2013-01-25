@@ -10,7 +10,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) $(TUTORIALSLOGS) $(TUTORIALSSTUBS) \
 
 # Set the list of target to make while testing.
 
-ifeq ($(FAST),)
+ifeq ($(FAST)$(FIXCLING),)
 TEST_TARGETS += $(TUTORIALSTESTS) $(TUTORIALSTESTS_CC)
 endif
 
