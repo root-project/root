@@ -94,6 +94,9 @@ STRESSTESTSCOMP_VETO :=  $(STRESSTESTSCOMP_VETO) $(STRESSTESTSINTERP:-itest=-cte
 # STRESSTESTSCOMP_VETO := 
 STRESSTESTSCOMP := $(filter-out $(STRESSTESTSCOMP_VETO),$(STRESSTESTS:-test=-ctest))
 
+ifneq ($(ClingWorkAroundSavePrimitive),)
+STRESSTESTSINTERP := $(filter-out stressGraphics-itest,$(STRESSTESTSINTERP))
+endif
 
 STRESSFILES := \
 	$(filter-out %Dict.cxx,\
@@ -195,18 +198,17 @@ earth.dat: $(ROOT_LOC)/tutorials/graphics/earth.dat
 ifneq ($(ClingWorkAroundMissingDynamicScope),)
 stress-itest.log: CALLROOTEXE += -e 'gSystem->Load("test/libEvent")'
 stressGraphics-itest.log: CALLROOTEXE += -e 'gSystem->Load("libGpad"); gSystem->Load("libTreeViewer");'
+stressGUI-itest.log: CALLROOTEXE += -e 'gSystem->Load("libGpad"); gSystem->Load("libGui");'
 endif
 stress-ctest.log: STRESSFLAGS:=-b 30
 stress-itest.log: STRESSFLAGS:="(30)"
 stressTMVA-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Automatic variable Endl is allocated'
 stressGraphics-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Warning in <TUnixSystem::SetDisplay>'
 
-ifneq ($(FIXCLING),)
-ifeq ($(ClingReinstateRedeclarationAllowed),)
-stressGraphics-itest.log:
+ifneq ($(ClingWorkAroundSavePrimitive),)
+stressGraphics-itest:
 	@echo "Please note: stressGraphics is disabled!!!"
 	@echo "n/a" > stressGraphics-itest.log
-endif
 endif
 
 #### Extra dependencies for some tests ####
