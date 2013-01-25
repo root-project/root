@@ -1,4 +1,5 @@
 ./cint
+./root/stress
 ./root/aclic
 ./root/collection
 ./root/fit
