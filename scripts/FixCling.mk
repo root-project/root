@@ -16,7 +16,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
 CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndVirtual"
-CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
+#CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
@@ -47,7 +47,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundEmulatedProxyPair"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
 
 # Fixes used when building library via ACLiC
-CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndInline"
+#CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndVirtual"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundJITandInline"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
@@ -65,7 +65,7 @@ ClingWorkAroundJITfullSymbolResolution = yes   # See https://savannah.cern.ch/bu
 ClingWorkAroundMissingSmartInclude = yes
 ClingWorkAroundBrokenUnnamedReturn = yes       # See https://savannah.cern.ch/bugs/index.php?99032
 ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://savannah.cern.ch/bugs/index.php?99236
-ClingWorkAroundCallfuncAndInline = yes         # see https://savannah.cern.ch/bugs/index.php?98425
+#ClingWorkAroundCallfuncAndInline = yes         # see https://savannah.cern.ch/bugs/index.php?98425
 ClingWorkAroundCallfuncAndReturnByValue = yes  # See https://savannah.cern.ch/bugs/index.php?98317 and https://savannah.cern.ch/bugs/?98148
 ClingWorkAroundUnnamedInclude = yes            # See https://savannah.cern.ch/bugs/index.php?99246
 ClingWorkAroundBrokenRecovery = yes
