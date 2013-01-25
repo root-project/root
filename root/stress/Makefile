@@ -192,10 +192,22 @@ earth.dat: $(ROOT_LOC)/tutorials/graphics/earth.dat
 
 #### Extra parameters for some tests ####
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+stress-itest.log: CALLROOTEXE += -e 'gSystem->Load("test/libEvent")'
+stressGraphics-itest.log: CALLROOTEXE += -e 'gSystem->Load("libGpad"); gSystem->Load("libTreeViewer");'
+endif
 stress-ctest.log: STRESSFLAGS:=-b 30
 stress-itest.log: STRESSFLAGS:="(30)"
 stressTMVA-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Automatic variable Endl is allocated'
 stressGraphics-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Warning in <TUnixSystem::SetDisplay>'
+
+ifneq ($(FIXCLING),)
+ifeq ($(ClingReinstateRedeclarationAllowed),)
+stressGraphics-itest.log:
+	@echo "Please note: stressGraphics is disabled!!!"
+	@echo "n/a" > stressGraphics-itest.log
+endif
+endif
 
 #### Extra dependencies for some tests ####
 
