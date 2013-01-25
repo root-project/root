@@ -51,9 +51,17 @@
 #include <sstream>
 #include <string>
 
-static std::string FullyQualifiedName(const clang::Decl *decl);
-
 using namespace clang;
+
+static std::string FullyQualifiedName(const clang::Decl *decl) {
+   // Return the fully qualified name without worrying about normalizing it.
+   std::string buf;
+   if (const clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(decl)) {
+      clang::PrintingPolicy Policy(decl->getASTContext().getPrintingPolicy());
+      ND->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+   }
+   return buf;
+}
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
@@ -64,16 +72,18 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
    fIter = TU->decls_begin();
    InternalNext();
    fFirstTime = true;
-   // CINT had this odd behavior where a ClassInfo created without any argument/input
-   // was set as an iterator that was ready to be iterated on but was set an not IsValid
-   // *BUT* a few routine where using this state as representing the global namespace
-   // (Theses routines includes the GetMethod routines and CallFunc::SetFunc .. but
-   // do not includes many of routines (like Property etc).
-   // To be somewhat backward compatible, let make this state actually valid (i.e.
-   // representing both the ready-for-first-iteration iterator *and* the global namespace)
-   // so that code that was working with CINT (grabbing the default initialized ClassInfo
-   // to look at the global namespace work) is working again (and, yes, things that
-   // use to not work like 'asking' the filename on this will go 'further' but oh well).
+   // CINT had this odd behavior where a ClassInfo created without any
+   // argument/input was set as an iterator that was ready to be iterated
+   // on but was set an not IsValid *BUT* a few routine where using this
+   // state as representing the global namespace (These routines include the
+   // GetMethod routines and CallFunc::SetFunc, but do not include many others
+   // (such as Property etc).  To be somewhat backward compatible, let's make
+   // this state actually valid (i.e., representing both the ready-for-first-
+   // iteration iterator *and* the global namespace) so that code that was
+   // working with CINT (grabbing the default initialized ClassInfo
+   // to look at the global namespace) is working again (and, yes, things that
+   // used to not work like 'asking' the filename on this will go 'further'
+   // but oh well).
    fDecl = TU;
    fType = 0;
 }
@@ -228,15 +238,13 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       TClingMethodInfo tmi(fInterp);
       return tmi;
    }
-   if (llvm::dyn_cast<clang::NamedDecl>(fDecl)) {
-      // We have a name, check if we are being asked for a constructor.
-      if (!strcmp(fname, Name())) {
-         // Constructor.
-         // These must be accessed through a wrapper, since they
-         // may call an operator new(), which can be a member
-         // function or a global function, as well as the actual
-         // constructor function itself.
-      }
+   const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(fDecl);
+   if (TD && !TD->isEnum() && !strcmp(fname, Name())) {
+      // Constructor.
+      // These must be accessed through a wrapper, since they
+      // may call an operator new(), which can be a member
+      // function or a global function, as well as the actual
+      // constructor function itself.
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const clang::FunctionDecl *fd = lh.findFunctionProto(fDecl, fname, proto);
@@ -273,15 +281,13 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       // CINT accepted a single right paren as meaning no arguments.
       arglist = "";
    }
-   if (llvm::dyn_cast<clang::NamedDecl>(fDecl)) {
-      // We have a name, check if we are being asked for a constructor.
-      if (!strcmp(fname, Name())) {
-         // Constructor.
-         // These must be accessed through a wrapper, since they
-         // may call an operator new(), which can be a member
-         // function or a global function, as well as the actual
-         // constructor function itself.
-      }
+   const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(fDecl);
+   if (TD && !TD->isEnum() && !strcmp(fname, Name())) {
+      // Constructor.
+      // These must be accessed through a wrapper, since they
+      // may call an operator new(), which can be a member
+      // function or a global function, as well as the actual
+      // constructor function itself.
    }
    const cling::LookupHelper &lh = fInterp->getLookupHelper();
    const clang::FunctionDecl *fd = lh.findFunctionArgs(fDecl, fname, arglist);
@@ -345,24 +351,18 @@ long TClingClassInfo::GetOffset(const clang::CXXMethodDecl* md) const
 bool TClingClassInfo::HasDefaultConstructor() const
 {
    // Return true if there a public constructor taking no argument
-   // (including a constructor that has default for all its argument).
-
+   // (including a constructor that has defaults for all its arguments).
    // Note: This is could enhanced to also know about the ROOT ioctor
    // but this was not the case in CINT.
-
    if (!IsValid()) {
       return false;
    }
-   
    const clang::CXXRecordDecl *CRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(fDecl);
-
    if (!CRD) return true; 
 
-   for(clang::CXXRecordDecl::ctor_iterator iter = CRD->ctor_begin(), end = CRD->ctor_end();
-       iter != end;
-       ++iter)
-   {
+   for (clang::CXXRecordDecl::ctor_iterator iter = CRD->ctor_begin(),
+         end = CRD->ctor_end(); iter != end; ++iter) {
       if (iter->getAccess() == clang::AS_public) {
          // We can reach this constructor.
          if (iter->getNumParams() == 0) {
@@ -374,7 +374,6 @@ bool TClingClassInfo::HasDefaultConstructor() const
          }
       }
    }
-
    return false;
 }
 
@@ -387,7 +386,8 @@ bool TClingClassInfo::HasMethod(const char *name) const
    std::string given_name(name);
    if (!llvm::isa<clang::EnumDecl>(fDecl)) {
       // We are a class, struct, union, namespace, or translation unit.
-      clang::DeclContext *DC = const_cast<clang::DeclContext*>(llvm::cast<clang::DeclContext>(fDecl));
+      clang::DeclContext *DC =
+         const_cast<clang::DeclContext*>(llvm::cast<clang::DeclContext>(fDecl));
       llvm::SmallVector<clang::DeclContext *, 2> fContexts;
       DC->collectAllContexts(fContexts);
       for (unsigned I = 0; !found && (I < fContexts.size()); ++I) {
@@ -435,7 +435,7 @@ void TClingClassInfo::Init(const clang::Decl* decl)
 
 void TClingClassInfo::Init(int tagnum)
 {
-   Fatal("TClingClassInfo::Init(tagnum)","Should no longer be called");
+   Fatal("TClingClassInfo::Init(tagnum)", "Should no longer be called");
    return;
 }
 
@@ -443,16 +443,18 @@ void TClingClassInfo::Init(const clang::Type &tag)
 {
    fType = &tag;
    const clang::TagType *tagtype = fType->getAs<clang::TagType>();
-   if (tagtype) 
+   if (tagtype) {
       fDecl = tagtype->getDecl();
-   else 
+   }
+   else {
       fDecl = 0;
+   }
    if (!fDecl) {
       clang::QualType qType(fType,0);
-      static clang::PrintingPolicy
-         printPol(fInterp->getCI()->getLangOpts());
+      static clang::PrintingPolicy printPol(fInterp->getCI()->getLangOpts());
       printPol.SuppressScope = false;
-      Error("TClingClassInfo::Init(const clang::Type&)","The given type %s does not point to a clang::Decl",
+      Error("TClingClassInfo::Init(const clang::Type&)",
+            "The given type %s does not point to a clang::Decl",
             qType.getAsString(printPol).c_str());
    }
 }
@@ -522,9 +524,14 @@ int TClingClassInfo::InternalNext()
       // Iterator is already invalid.
       if (fFirstTime && fDecl) {
          std::string buf;
-         clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
-         llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(buf, Policy, /*Qualified=*/false);         
-         Error("TClingClassInfo::InternalNext","Next called but iteration not prepared for %s!",buf.c_str());
+         if (const clang::NamedDecl* ND =
+               llvm::dyn_cast<clang::NamedDecl>(fDecl)) {
+            clang::PrintingPolicy Policy(fDecl->getASTContext().
+               getPrintingPolicy());
+            ND->getNameForDiagnostic(buf, Policy, /*Qualified=*/false);         
+         }
+         Error("TClingClassInfo::InternalNext",
+            "Next called but iteration not prepared for %s!", buf.c_str());
       }
       return 0;
    }
@@ -600,8 +607,10 @@ int TClingClassInfo::InternalNext()
          fDecl = *fIter;
          fType = 0;
          if (fDecl) {
-            const clang::RecordDecl *rdecl = llvm::dyn_cast<clang::RecordDecl>(fDecl);
-            if (rdecl) fType = rdecl->getASTContext().getRecordType(rdecl).getTypePtr();
+            if (const clang::RecordDecl *RD =
+                  llvm::dyn_cast<clang::RecordDecl>(fDecl)) {
+               fType = RD->getASTContext().getRecordType(RD).getTypePtr();
+            }
          }
          return 1;
       }
@@ -704,18 +713,19 @@ int TClingClassInfo::NMethods() const
 {
    // Return the number of methods
    fNMethods = 0;
-   clang::DeclContext *DC = const_cast<clang::DeclContext*>(llvm::cast<clang::DeclContext>(fDecl));
+   clang::DeclContext *DC = const_cast<clang::DeclContext*>(
+      llvm::cast<clang::DeclContext>(fDecl));
    llvm::SmallVector<clang::DeclContext *, 2> contexts;
    DC->collectAllContexts(contexts);
-
    bool noUpdate = fLastDeclForNMethods.size() == contexts.size();
    for (unsigned I = 0; noUpdate && I < contexts.size(); ++I) {
-      noUpdate &= (fLastDeclForNMethods[I] && !fLastDeclForNMethods[I]->getNextDeclInContext());
+      noUpdate &= (fLastDeclForNMethods[I] &&
+         !fLastDeclForNMethods[I]->getNextDeclInContext());
    }
-   if (noUpdate)
+   if (noUpdate) {
       return fNMethods;
-
-   // We have a new decl; update the method count.
+   }
+   // We have a new decl, so update the method count.
    fNMethods = 0;
    TClingMethodInfo t(fInterp, const_cast<TClingClassInfo*>(this));
    // This while loop must be identical to TCling::CreateListOfMethods()
@@ -820,22 +830,10 @@ int TClingClassInfo::Size() const
 
 long TClingClassInfo::Tagnum() const
 {
-   // Note: This *must* return a *cint* tagnum for now.
    if (!IsValid()) {
       return -1L;
    }
    return reinterpret_cast<long>(fDecl);
-}
-
-
-static std::string FullyQualifiedName(const clang::Decl *decl) {
-   // returns the fully qualified name without worrying about
-   // normalizing the name.
-   
-   std::string buf;
-   clang::PrintingPolicy Policy(decl->getASTContext().getPrintingPolicy());
-   llvm::dyn_cast<clang::NamedDecl>(decl)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
-   return buf.c_str();
 }
 
 const char *TClingClassInfo::FileName() const
@@ -851,7 +849,6 @@ const char *TClingClassInfo::FileName() const
 const char *TClingClassInfo::FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    // Return QualifiedName.
-   
    if (!IsValid()) {
       return 0;
    }
@@ -859,11 +856,16 @@ const char *TClingClassInfo::FullName(const ROOT::TMetaUtils::TNormalizedCtxt &n
    static std::string buf;
    buf.clear();
    if (fType) {
-      clang::QualType type(fType,0);
+      clang::QualType type(fType, 0);
       ROOT::TMetaUtils::GetNormalizedName(buf, type, *fInterp, normCtxt);
-   } else {
-      clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
-      llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+   }
+   else {
+      if (const clang::NamedDecl* ND =
+            llvm::dyn_cast<clang::NamedDecl>(fDecl)) {
+         clang::PrintingPolicy Policy(fDecl->getASTContext().
+            getPrintingPolicy());
+         ND->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+      }
    }
    return buf.c_str();
 }
@@ -871,15 +873,16 @@ const char *TClingClassInfo::FullName(const ROOT::TMetaUtils::TNormalizedCtxt &n
 const char *TClingClassInfo::Name() const
 {
    // Return unqualified name.
-
    if (!IsValid()) {
       return 0;
    }
    // Note: This *must* be static because we are returning a pointer inside it!
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
-   llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(buf, Policy, /*Qualified=*/false);
+   if (const clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(fDecl)) {
+      clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
+      ND->getNameForDiagnostic(buf, Policy, /*Qualified=*/false);
+   }
    return buf.c_str();
 }
 
@@ -888,14 +891,10 @@ const char *TClingClassInfo::Title()
    if (!IsValid()) {
       return 0;
    }
-
-   //NOTE: We can't use it as a cache due to the "thoughtful" self iterator
-   //if (fTitle.size())
-   //   return fTitle.c_str();
-
-   // Try to get the comment either from the annotation or the header file if present
-
-   // Iterate over the redeclarations, we can have muliple definitions in the 
+   // NOTE: We cannot cache the result, since we are really an iterator.
+   // Try to get the comment either from the annotation or the header
+   // file, if present.
+   // Iterate over the redeclarations, we can have muliple definitions in the
    // redecl chain (came from merging of pcms).
    if (const TagDecl *TD = llvm::dyn_cast<TagDecl>(GetDecl())) {
       if ( (TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(TD)) ) {
@@ -905,13 +904,12 @@ const char *TClingClassInfo::Title()
          }
       }
    }
-
-   // Try to get the comment from the header file if present
+   // Try to get the comment from the header file, if present.
    const clang::CXXRecordDecl *CRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(GetDecl());
-   if (CRD) 
+   if (CRD) {
       fTitle = ROOT::TMetaUtils::GetClassComment(*CRD,0,*fInterp).str();
-
+   }
    return fTitle.c_str();
 }
 
@@ -923,7 +921,10 @@ const char *TClingClassInfo::TmpltName() const
    // Note: This *must* be static because we are returning a pointer inside it!
    static std::string buf;
    buf.clear();
-   // Note: This does *not* include the template arguments!
-   buf = llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameAsString();
+   if (const clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(fDecl)) {
+      // Note: This does *not* include the template arguments!
+      buf = ND->getNameAsString();
+   }
    return buf.c_str();
 }
+
