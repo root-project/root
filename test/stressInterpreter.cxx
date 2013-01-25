@@ -229,10 +229,18 @@ bool InterpreterStress::stressSTLDict() {
          otmp << cmd << endl;
       }
       gInterpreter->ProcessLine(TString(".X ") + tmpfilename, &interpError);
+#ifndef ClingWorkAroundDeletedSourceFile
       gSystem->Unlink(tmpfilename);
+#endif
       allres &= (interpError == TInterpreter::kNoError);
       allres &= (res == 0);
    }
+#ifdef ClingWorkAroundDeletedSourceFile
+   for (Int_t i = 1; i < fNtimes; ++i) {
+      TString tmpfilename = TString::Format("stressInterpreter_tmp%d.C", i);
+      gSystem->Unlink(tmpfilename);
+   }
+#endif
    return allres;
 }
 
