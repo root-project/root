@@ -1644,6 +1644,7 @@ Double_t TMVA::DecisionTree::CheckEvent( const TMVA::Event & e, Bool_t UseYesNoL
       if (UseYesNoLeaf) return Double_t ( current->GetNodeType() );
       else              return current->GetPurity();
    }
+   return current->GetPurity(); // maybe this additional return makes coverity Happy ??
 }
 
 //_______________________________________________________________________
