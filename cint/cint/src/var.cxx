@@ -5955,7 +5955,7 @@ G__value G__getvariable(char* item, int* known, G__var_array* varglobal, G__var_
          G__letint(&result, var->type[ig15], finalval);
          return result;
       }
-      if (G__decl && G__getarraydim && !G__struct_offset && (var->p[ig15] < 100)) {
+      if (G__decl && G__getarraydim && !G__struct_offset && ((unsigned long)var->p[ig15] < 100)) {
          // prevent segv in following example. A bit tricky.
          //  void f(const int n) { int a[n]; }
          G__abortbytecode();
