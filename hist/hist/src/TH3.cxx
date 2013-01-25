@@ -918,6 +918,22 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
    delete hpz;
 }
 
+
+Int_t TH3::GetBin(Int_t binx, Int_t biny, Int_t binz) const
+{
+   // See comments in TH1::GetBin
+   Int_t ofy = fYaxis.GetNbins() + 1; // code duplication unavoidable because TH3 does not inherit from TH2
+   if (biny < 0) biny = 0;
+   if (biny > ofy) biny = ofy;
+
+   Int_t ofz = fZaxis.GetNbins() + 1; // overflow bin
+   if (binz < 0) binz = 0;
+   if (binz > ofz) binz = ofz;
+
+   return TH1::GetBin(binx) + (fXaxis.GetNbins() + 2) * (biny + (fYaxis.GetNbins() + 2) * binz);
+}
+
+
 //______________________________________________________________________________
 Double_t TH3::GetBinWithContent3(Double_t c, Int_t &binx, Int_t &biny, Int_t &binz, Int_t firstx, Int_t lastx, Int_t firsty, Int_t lasty, Int_t firstz, Int_t lastz, Double_t maxdiff) const
 {

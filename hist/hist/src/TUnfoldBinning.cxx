@@ -1140,7 +1140,7 @@ TH1 *TUnfoldBinning::ExtractHistogram
          r->SetBinError(i,TMath::Sqrt(e2));
       }
    }
-   delete binMap;
+   delete [] binMap;
 
    return r;
 }

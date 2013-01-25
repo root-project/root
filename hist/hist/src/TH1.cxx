@@ -3765,19 +3765,22 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
    Int_t   xmax = asym->GetNbinsX();
    Int_t   ymax = asym->GetNbinsY();
    Int_t   zmax = asym->GetNbinsZ();
-   Double_t bot, error, a, b, da, db;
+
+   if (h1->fBuffer) h1->BufferEmpty(1);
+   if (h2->fBuffer) h2->BufferEmpty(1);
+   if (bottom->fBuffer) bottom->BufferEmpty(1);
 
    // now loop over bins to calculate the correct errors
    // the reason this error calculation looks complex is because of c2
    for(Int_t i=1; i<= xmax; i++){
       for(Int_t j=1; j<= ymax; j++){
          for(Int_t k=1; k<= zmax; k++){
-
+            Int_t bin = GetBin(i, j, k);
             // here some bin contents are written into variables to make the error
             // calculation a little more legible:
-            a   = h1->GetBinContent(i,j,k);
-            b   = h2->GetBinContent(i,j,k);
-            bot = bottom->GetBinContent(i,j,k);
+            Double_t a   = h1->RetrieveBinContent(bin);
+            Double_t b   = h2->RetrieveBinContent(bin);
+            Double_t bot = bottom->RetrieveBinContent(bin);
 
             // make sure there are some events, if not, then the errors are set = 0
             // automatically.
@@ -3785,9 +3788,9 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
             if(bot < 1e-6){}
             else{
                // computation of errors by Christos Leonidopoulos
-               da    = h1->GetBinError(i,j,k);
-               db    = h2->GetBinError(i,j,k);
-               error = 2*TMath::Sqrt(a*a*c2*c2*db*db + c2*c2*b*b*da*da+a*a*b*b*dc2*dc2)/(bot*bot);
+               Double_t dasq  = h1->GetBinErrorSqUnchecked(bin);
+               Double_t dbsq  = h2->GetBinErrorSqUnchecked(bin);
+               Double_t error = 2*TMath::Sqrt(a*a*c2*c2*dbsq + c2*c2*b*b*dasq+a*a*b*b*dc2*dc2)/(bot*bot);
                asym->SetBinError(i,j,k,error);
             }
          }
@@ -4278,7 +4281,7 @@ void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k,
 
 
 //______________________________________________________________________________
-Int_t TH1::GetBin(Int_t binx, Int_t biny, Int_t binz) const
+Int_t TH1::GetBin(Int_t binx, Int_t, Int_t) const
 {
    //   -*-*-*-*Return Global bin number corresponding to binx,y,z*-*-*-*-*-*-*
    //           ==================================================
@@ -4304,36 +4307,13 @@ Int_t TH1::GetBin(Int_t binx, Int_t biny, Int_t binz) const
    //      returns a global/linearized bin number. This global bin is useful
    //      to access the bin information independently of the dimension.
    //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   Int_t nx, ny, nz;
-   if (GetDimension() < 2) {
-      nx  = fXaxis.GetNbins()+2;
-      if (binx < 0)   binx = 0;
-      if (binx >= nx) binx = nx-1;
-      return binx;
-   }
-   if (GetDimension() < 3) {
-      nx  = fXaxis.GetNbins()+2;
-      if (binx < 0)   binx = 0;
-      if (binx >= nx) binx = nx-1;
-      ny  = fYaxis.GetNbins()+2;
-      if (biny < 0)   biny = 0;
-      if (biny >= ny) biny = ny-1;
-      return  binx + nx*biny;
-   }
-   if (GetDimension() < 4) {
-      nx  = fXaxis.GetNbins()+2;
-      if (binx < 0)   binx = 0;
-      if (binx >= nx) binx = nx-1;
-      ny  = fYaxis.GetNbins()+2;
-      if (biny < 0)   biny = 0;
-      if (biny >= ny) biny = ny-1;
-      nz  = fZaxis.GetNbins()+2;
-      if (binz < 0)   binz = 0;
-      if (binz >= nz) binz = nz-1;
-      return  binx + nx*(biny +ny*binz);
-   }
-   return -1;
+   Int_t ofx = fXaxis.GetNbins() + 1; // overflow bin
+   if (binx < 0) binx = 0;
+   if (binx > ofx) binx = ofx;
+
+   return binx;
 }
+
 //______________________________________________________________________________
 void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) const
 {

@@ -907,6 +907,17 @@ void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option
 
 }
 
+Int_t TH2::GetBin(Int_t binx, Int_t biny, Int_t) const
+{
+   // See comments in TH1::GetBin
+   Int_t ofy = fYaxis.GetNbins() + 1; // overflow bin
+   if (biny < 0) biny = 0;
+   if (biny > ofy) biny = ofy;
+
+   return TH1::GetBin(binx) + (fXaxis.GetNbins() + 2) * biny;
+}
+
+
 //______________________________________________________________________________
 Double_t TH2::GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t firstxbin, Int_t lastxbin,
                                  Int_t firstybin, Int_t lastybin, Double_t maxdiff) const
