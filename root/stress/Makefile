@@ -96,6 +96,7 @@ STRESSTESTSCOMP := $(filter-out $(STRESSTESTSCOMP_VETO),$(STRESSTESTS:-test=-cte
 
 ifneq ($(ClingWorkAroundSavePrimitive),)
 STRESSTESTSINTERP := $(filter-out stressGraphics-itest,$(STRESSTESTSINTERP))
+STRESSTESTSCOMP   := $(filter-out stressGraphics-ctest,$(STRESSTESTSCOMP))
 endif
 
 STRESSFILES := \
@@ -206,9 +207,15 @@ stressTMVA-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Automatic variable Endl is
 stressGraphics-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Warning in <TUnixSystem::SetDisplay>'
 
 ifneq ($(ClingWorkAroundSavePrimitive),)
+ifeq ($(FAST),)
 stressGraphics-itest:
 	@echo "Please note: stressGraphics is disabled!!!"
 	@echo "n/a" > stressGraphics-itest.log
+else
+stressGraphics-ctest:
+	@echo "Please note: stressGraphics is disabled!!!"
+	@echo "n/a" > stressGraphics-itest.log
+endif
 endif
 
 #### Extra dependencies for some tests ####
