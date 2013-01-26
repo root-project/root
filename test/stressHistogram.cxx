@@ -9949,5 +9949,6 @@ int main(int argc, char** argv)
       theApp = 0;
    }
 
+   gROOT->CloseFiles();
    return ret;
 }
