@@ -75,9 +75,10 @@ Double_t RooGaussian::evaluate() const
 
 
 //_____________________________________________________________________________
-Double_t RooGaussian::getLogVal(const RooArgSet*) const 
+Double_t RooGaussian::getLogVal(const RooArgSet* set) const 
 {
   // calculate and return the negative log-likelihood of the Poisson                                                                                                                                    
+  return RooAbsPdf::getLogVal(set) ;
 //   Double_t prob = getVal(set) ;
 //   return log(prob) ;
 
