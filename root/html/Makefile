@@ -61,3 +61,10 @@ MakeIndex_filtered.log: MakeIndex.log
 
 MakeIndex: MakeIndex_filtered.log
 	$(TestDiff)
+
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
+MakeIndex.log:  CALLROOTEXE += -e 'gSystem->Load("libHtml");'
+endif
+ifneq ($(ClingWorkAroundLackOfModule),)
+MakeIndex.log: CALLROOTEXE += -e 'gSystem->Load("libGX11");gSystem->Load("libRGL"); '
+endif
