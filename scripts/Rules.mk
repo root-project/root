@@ -20,17 +20,8 @@ endif
 
 CALLROOTEXEBUILD:=root.exe
 
-# This is a default value, it can be over-ridden
-# by passing FIXCLING= as a command line argument.
-#
-# So, fixing cling is on by default and is disabled
-# if FIXCLING is explicitly set to empty or is set
-# to: no
-FIXCLING=yes
 ifneq ($(FIXCLING),)
-ifneq ($(FIXCLING),no)
 -include $(ROOTTEST_HOME)/scripts/FixCling.mk
-endif
 endif
 
 # The user directory should define
