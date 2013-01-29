@@ -1,5 +1,16 @@
-#ifndef ROOT_TGLPadPainter
-#define ROOT_TGLPadPainter
+// @(#)root/gl:$Id$
+// Author:  Timur Pocheptsov  06/05/2009
+
+/*************************************************************************
+ * Copyright (C) 1995-2009, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_TPadPainter
+#define ROOT_TPadPainter
 
 #ifndef ROOT_TVirtualPadPainter
 #include "TVirtualPadPainter.h"
