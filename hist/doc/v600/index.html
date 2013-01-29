@@ -36,7 +36,7 @@ each bin. Disable the printing of the bin information for TH3, since it is not c
 </li>
 <li>
 Fit parameters with very long name destroyed the stats display. This is now fixed.
-<br>
+<br/>
 Example:
 <pre>
 {
@@ -56,8 +56,8 @@ Example:
 <h3>TGraphPainter</h3>
 <ul>
 <li>
-Fix http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=8591.
-<br>
+Fix http://root.cern.ch/phpBB3/viewtopic.php?f=3&amp;t=8591.
+<br/>
 When drawn with option SAME the histogram 1st and last bins might be wrong.
 The following macro shows the problem:
 <pre>
@@ -123,12 +123,12 @@ always different.
 <li>
 Implement the possibility to save a <tt>TF1</tt> as C code indenpant from ROOT.
 It is enough to save the function as a ".cc" file.
-<p>
+<br/>
 Example:
 <pre>
 root [0] TF1 *f1 = new TF1("f1","x*x",-10,10)
 root [1] f1->SaveAs("f1.cc");
-Info in <TF1::SaveAs>: cc file: f1.cc has been generated
+Info in &lt;TF1::SaveAs&gt;: cc file: f1.cc has been generated
    root [2] .x f1.cc(9.)
    (double)8.10019368181367980e+01
 </pre>

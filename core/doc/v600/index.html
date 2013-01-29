@@ -37,7 +37,7 @@ of (as Cling now does) issuing a compilation error.
 Cling no longer supports refering to a class template instantiation
 of a class template that has all default template parameter without
 the &lt;&gt;. With:
-<pre>template <typename T = int> class vec {};</pre>.  With Cling
+<pre>template &lt;typename T = int&gt; class vec {};</pre>.  With Cling
 (and any standard compliant compiler), using <em>vec&lt;&gt;</em>
 is allowed (but <em>vec</em> is not).
 
@@ -90,10 +90,9 @@ rootcling may now issue:
 <pre>Error: in this version of ROOT, the option '!' used in a linkdef file
        implies the actual existence of customized operators.
        The following declaration is now required:
-   TBuffer &operator<<(TBuffer &,const THit *);
+   TBuffer &amp;operator&lt;&lt;(TBuffer &amp;,const THit *);
 </pre>if the operator&lt;&lt; declaration is missing.</li>
 </ul>
-</p>
 To steer the parsing done during the execution of rootcling, a new macro:
 <em>__ROOTCLING__</em> is now defined during the parsing.  The macros
 <em>__CINT__</em> and <em>__MAKECINT__</em> are defined only when looking
@@ -112,7 +111,7 @@ by the C++ standard).</li>
 <h4>TUnixSystem</h4>
 <ul>
    <li> Simplify <tt>Setenv</tt> coding.</li>
-   <li> Implement <tt>Unsetenv<//t> using the system function <tt>unsetenv</tt>.
+   <li> Implement <tt>Unsetenv</tt> using the system function <tt>unsetenv</tt>.
    </li>
 </ul>
 
@@ -140,7 +139,7 @@ by the C++ standard).</li>
 <h4>TColor</h4>
 <ul>
    <li>
-      In <tt>SaveAS</t> implement the possibility to save an object as C code
+      In <tt>SaveAS</tt> implement the possibility to save an object as C code
       independant from ROOT. It is enough to save the object in a file with the
       extension ".cc". The code as to save each objet should be implement in
       each <tt>SavePrimitive</tt> function like in <tt>TF1</tt>.

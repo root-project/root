@@ -41,7 +41,7 @@ the modifications in this patch include the improvements below:
 Here are some examples of usages from the end user perspective:
 </p>
 <pre>
-   TFile* f = TFile::Open("s3://s3.amazonaws.com/mybucket/path/to/my/file", "AUTH=<accessKey>:<secretKey> NOPROXY")
+   TFile* f = TFile::Open("s3://s3.amazonaws.com/mybucket/path/to/my/file", "AUTH=&lt;accessKey&gt;:&lt;secretKey&gt; NOPROXY")
    TFile* f = TFile::Open("s3://s3.amazonaws.com/mybucket/path/to/my/file")   // Uses environmental variables for retrieving credentials
 </pre>
 <p>
