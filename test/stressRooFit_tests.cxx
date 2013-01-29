@@ -3484,7 +3484,7 @@ public:
   // NB: Within the usual approximations of a chi2 fit, a chi2 fit to weighted
   // data using sum-of-weights-squared errors does give correct error
   // estimates
-  RooChi2Var chi2("chi2","chi2",p2,*binnedData,DataError(RooAbsData::SumW2)) ;
+  RooChi2Var chi2("chi2","chi2",p2,*binnedData) ;
   RooMinuit m(chi2) ;
   m.migrad() ;
   m.hesse() ;
