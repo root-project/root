@@ -11,6 +11,7 @@ CALLROOTEXE = root.exe
 # (incorrect behavior of C++ compliant code)
 CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndConversion"
+CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundDouble32inDefaultTmpltArg"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
@@ -56,6 +57,7 @@ CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundNoPrivateClassIO"
 
 # variable to be used in Makefiles.
+ClingWorkAroundLackOfModule = yes
 ClingWorkAroundMissingImplicitAuto = yes
 ClingWorkAroundMissingDynamicScope = yes
 ClingWorkAroundMissingUnloading = yes
