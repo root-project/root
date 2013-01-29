@@ -1493,7 +1493,7 @@ public:
     return kFALSE ;
   }
 
-  Double_t ctol() { return 1e-3 ; } // Account for difficult shape of Landau distribution
+  Double_t ctol() { return 1e-2 ; } // Account for difficult shape of Landau distribution
 
   Bool_t testCode() {
 
