@@ -95,6 +95,7 @@ public:
     // Return weight of current bin
     return _curWeight ; 
   }
+  Double_t weightSquared() const ;
   Double_t weight(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE, Bool_t cdfBoundaries=kFALSE, Bool_t oneSafe=kFALSE) ;   
   Double_t binVolume() const { return _curVolume ; }
   Double_t binVolume(const RooArgSet& bin) ; 

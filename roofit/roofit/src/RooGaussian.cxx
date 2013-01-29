@@ -75,6 +75,25 @@ Double_t RooGaussian::evaluate() const
 
 
 //_____________________________________________________________________________
+Double_t RooGaussian::getLogVal(const RooArgSet*) const 
+{
+  // calculate and return the negative log-likelihood of the Poisson                                                                                                                                    
+//   Double_t prob = getVal(set) ;
+//   return log(prob) ;
+
+  Double_t arg= x - mean;  
+  Double_t sig = sigma ;
+  
+  //static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
+  //Double_t extra = -0.5*arg*arg/(sig*sig) - log(2*rootPiBy2*sig) ;
+  Double_t extra = -0.5*arg*arg/(sig*sig) - log(analyticalIntegral(1,0)) ;
+  
+  return extra ; 
+  
+}
+
+
+//_____________________________________________________________________________
 Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
 {
   if (matchArgs(allVars,analVars,x)) return 1 ;

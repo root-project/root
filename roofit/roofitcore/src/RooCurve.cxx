@@ -871,7 +871,7 @@ Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const
       ret=kFALSE ;
     }
   }
-
+      
   return ret ;
 }
 

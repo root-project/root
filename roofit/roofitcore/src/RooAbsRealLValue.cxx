@@ -504,8 +504,9 @@ Bool_t RooAbsRealLValue::fitRangeOKForPlotting() const
 Bool_t RooAbsRealLValue::inRange(const char* name) const 
 {
   // Check if current value is inside range with given name
-
-  return (getVal() >= getMin(name) && getVal() <= getMax(name)) ;
+  Double_t val = getVal() ;
+  Double_t epsilon = 1e-8 * fabs(val) ;
+  return (val >= getMin(name)-epsilon && val <= getMax(name)+epsilon) ;
 }
 
 

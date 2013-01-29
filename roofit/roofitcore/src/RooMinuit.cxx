@@ -1170,6 +1170,7 @@ void RooMinuit::applyCovarianceMatrix(TMatrixDSym& V)
     if (_floatParamList->at(i)->isConstant()) {
       continue ;
     }
+    cout << "setting parameter " << i << " error to " << sqrt((*_extV)(i,i)) << endl ;
     setPdfParamErr(i, sqrt((*_extV)(i,i))) ;
   }
 

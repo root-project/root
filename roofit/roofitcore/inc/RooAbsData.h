@@ -79,8 +79,9 @@ public:
     return &_vars ; 
   } 
   virtual Double_t weight() const = 0 ; // DERIVED
+  virtual Double_t weightSquared() const = 0 ; // DERIVED
   virtual Bool_t valid() const { return kTRUE ; }
-  enum ErrorType { Poisson, SumW2, None, Auto } ;
+  enum ErrorType { Poisson, SumW2, None, Auto, Expected } ;
   virtual Double_t weightError(ErrorType etype=Poisson) const ;
   virtual void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const ; 
   virtual const RooArgSet* get(Int_t index) const ;

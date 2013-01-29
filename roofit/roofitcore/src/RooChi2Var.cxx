@@ -69,15 +69,25 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
   //  Verbose()    -- Verbose output of GOF framework
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
-  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::SumW2) ;  
+  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;  
+  pc.defineInt("extended","Extended",0,kFALSE) ;
   pc.allowUndefined() ;
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
   pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
 
-  _funcMode = Function ;
+  if (func.IsA()->InheritsFrom(RooAbsPdf::Class())) {
+    _funcMode = pc.getInt("extended") ? ExtendedPdf : Pdf ;
+  } else {
+    _funcMode = Function ;
+  }
   _etype = (RooDataHist::ErrorType) pc.getInt("etype") ;
+
+  if (_etype==RooAbsData::Auto) {
+    _etype = hdata.isNonPoissonWeighted()? RooAbsData::SumW2 : RooAbsData::Expected ;
+  }
+
 }
 
 
@@ -108,7 +118,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("extended","Extended",0,kFALSE) ;
-  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::SumW2) ;  
+  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;  
   pc.allowUndefined() ;
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
@@ -117,6 +127,9 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 
   _funcMode = pc.getInt("extended") ? ExtendedPdf : Pdf ;
   _etype = (RooDataHist::ErrorType) pc.getInt("etype") ;
+  if (_etype==RooAbsData::Auto) {
+    _etype = hdata.isNonPoissonWeighted()? RooAbsData::SumW2 : RooAbsData::Expected ;
+  }
 }
 
 
@@ -203,7 +216,7 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
 
 
   // Determine normalization factor depending on type of input function
-  Double_t normFactor(Function) ;
+  Double_t normFactor(1) ;
   switch (_funcMode) {
   case Function: normFactor=1 ; break ;
   case Pdf: normFactor = _dataClone->sumEntries() ; break ;
@@ -227,28 +240,32 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
 
     Double_t eExt = nPdf-nData ;
 
-    // Double_t eIntLo,eIntHi ;
-//     hdata->weightError(eIntLo,eIntHi,_etype) ;
-//     Double_t eInt = (eExt>0) ? eIntHi : eIntLo ;
-    Double_t eInt = sqrt(nPdf) ;
+    Double_t eIntLo,eIntHi ;
+
+    Double_t eInt ;
+    if (_etype != RooAbsData::Expected) {
+      hdata->weightError(eIntLo,eIntHi,_etype) ;
+      eInt = (eExt>0) ? eIntHi : eIntLo ;
+    } else {
+      eInt = sqrt(nPdf) ;
+    }
     
     // Skip cases where pdf=0 and there is no data
     if (eInt==0. && nData==0. && nPdf==0) continue ;
-
+    
     // Return 0 if eInt=0, special handling in MINUIT will follow
     if (eInt==0.) {
       coutE(Eval) << "RooChi2Var::RooChi2Var(" << GetName() << ") INFINITY ERROR: bin " << i 
 		  << " has zero error" << endl ;
       return 0 ;
     }
-
-    //cout << "Chi2Var[" << i << "] nData = " << nData << " nPdf = " << nPdf << " errorExt = " << eExt << " errorInt = " << eInt << " contrib = " << eExt*eExt/(eInt*eInt) << endl ;
-
+    
+//     cout << "Chi2Var[" << i << "] nData = " << nData << " nPdf = " << nPdf << " errorExt = " << eExt << " errorInt = " << eInt << " contrib = " << eExt*eExt/(eInt*eInt) << endl ;
+    
     result += eExt*eExt/(eInt*eInt) ;
-  }
-  
-
-  return result ;
+    }
+    
+    return result ;
 }
 
 

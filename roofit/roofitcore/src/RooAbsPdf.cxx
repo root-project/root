@@ -1431,7 +1431,7 @@ RooFitResult* RooAbsPdf::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdLi
 
   // Pull arguments to be passed to chi2 construction from list
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize,ProjectedObservables,AddCoefRange,SplitRange") ;
+  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize,ProjectedObservables,AddCoefRange,SplitRange,DataError") ;
 
   RooAbsReal* chi2 = createChi2(data,chi2CmdList) ;
   RooFitResult* ret = chi2FitDriver(*chi2,fitCmdList) ;
@@ -1456,7 +1456,8 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  con
   //  Options to control construction of the chi^2
   //  ------------------------------------------
   //  Extended()   -- Use expected number of events of an extended p.d.f as normalization 
-  //  DataError()  -- Choose between Poisson errors and Sum-of-weights errors
+  //  DataError()  -- Choose between Expected error [RooAbsData::Expected] , or Observed error (e.g. Sum-of-weights [RooAbsData:SumW2] or Poisson interval [RooAbsData::Poisson] ) 
+  //                  Default is AUTO : Expected error for unweighted data, Sum-of-weights for weighted data
   //  NumCPU()     -- Activate parallel processing feature
   //  Range()      -- Fit only selected region
   //  SumCoefRange() -- Set the range in which to interpret the coefficients of RooAddPdf components 
@@ -1731,7 +1732,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   // Forward to appropiate implementation
   RooDataSet* data ;
   if (protoData) {
-    data = generate(whatVars,*protoData,nEvents,verbose,randProto,resampleProto) ;
+    data = generate(whatVars,*protoData,Int_t(nEvents),verbose,randProto,resampleProto) ;
   } else {
      data = generate(whatVars,nEvents,verbose,autoBinned,binnedTag,expectedData, extended) ;
   }
@@ -1914,7 +1915,7 @@ RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &what
 
   if (randProtoOrder && prototype && prototype->numEntries()!=nEvents) {
     coutI(Generation) << "RooAbsPdf::generate (Re)randomizing event order in prototype dataset (Nevt=" << nEvents << ")" << endl ;
-    Int_t* newOrder = randomizeProtoOrder(prototype->numEntries(),nEvents,resampleProto) ;
+    Int_t* newOrder = randomizeProtoOrder(prototype->numEntries(),Int_t(nEvents),resampleProto) ;
     context.setProtoDataOrder(newOrder) ;
     delete[] newOrder ;
   }

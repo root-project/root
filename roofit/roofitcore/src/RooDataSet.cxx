@@ -996,6 +996,17 @@ Double_t RooDataSet::weight() const
 
 
 //_____________________________________________________________________________
+Double_t RooDataSet::weightSquared() const 
+{
+  // Return event weight of current event
+
+  return store()->weight()*store()->weight() ; 
+}
+
+
+
+
+//_____________________________________________________________________________
 void RooDataSet::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const 
 {
   store()->weightError(lo,hi,etype) ;

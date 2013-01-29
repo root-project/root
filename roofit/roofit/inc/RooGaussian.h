@@ -36,6 +36,8 @@ public:
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
   void generateEvent(Int_t code);
 
+  Double_t getLogVal(const RooArgSet* set) const ;
+
 protected:
 
   RooRealProxy x ;

@@ -73,6 +73,42 @@ Double_t RooPoisson::evaluate() const
 
 
 
+//_____________________________________________________________________________
+Double_t RooPoisson::getLogVal(const RooArgSet*) const 
+{
+  // calculate and return the negative log-likelihood of the Poisson                                                                                                                                    
+  // Double_t prob = getVal(set) ;
+
+  // Make inputs to naming conventions of RooAbsPdf::extendedTerm
+  Double_t expected=mean ;
+  Double_t observed=x ;
+
+  // Michaels code for log(poisson) in RooAbsPdf::extendedTer with an approximated log(observed!) term
+  Double_t extra=0;
+  if(observed<1000000) {
+    Double_t Delta1 = (expected-observed);
+    Double_t Delta2 = observed*(log(expected)-log(observed+1));
+    Double_t Const3 = 0.5*log(observed+1);
+    extra= Delta1 - Delta2 + Const3;
+  } else {
+    //if many observed events, use Gauss approximation                                                                                                                                                 
+    Double_t sigma_square=expected;
+    Double_t diff=observed-expected;
+    extra=-log(sigma_square)/2 + (diff*diff)/(2*sigma_square);
+  }
+
+//   if (fabs(extra)>100 || log(prob)>100) {
+//     cout << "RooPoisson::getLogVal(" << GetName() << ") mu=" << expected << " x = " << x << " -log(P) = " << extra << " log(evaluate()) = " << log(prob) << endl ;
+//   }
+  
+//   if (fabs(extra+log(prob))>1) {
+//     cout << "RooPoisson::getLogVal(" << GetName() << ") WARNING mu=" << expected << " x = " << x << " -log(P) = " << extra << " log(evaluate()) = " << log(prob) << endl ;
+//   }
+
+  //return log(prob);
+  return -extra ; //log(prob);
+
+}
 
 
 //_____________________________________________________________________________

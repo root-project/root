@@ -1132,6 +1132,13 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
 
 
 //_____________________________________________________________________________
+Double_t RooDataHist::weightSquared() const {
+  return _curSumW2 ;
+}
+
+
+
+//_____________________________________________________________________________
 Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries, Bool_t oneSafe) 
 {
   // Return the weight at given coordinates with optional
@@ -1148,6 +1155,7 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
     coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") ERROR: interpolation order must be positive" << endl ;
     return 0 ;
   }
+
 
   // Handle no-interpolation case
   if (intOrder==0) {    
@@ -1252,7 +1260,11 @@ void RooDataHist::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const
   switch (etype) {
 
   case Auto:
-    throw string(Form("RooDataHist::weightError(%s) weight type Auto not allowed here",GetName())) ;
+    throw string(Form("RooDataHist::weightError(%s) error type Auto not allowed here",GetName())) ;
+    break ;
+
+  case Expected:
+    throw string(Form("RooDataHist::weightError(%s) error type Expected not allowed here",GetName())) ;
     break ;
 
   case Poisson:

@@ -94,6 +94,7 @@ public:
   virtual Bool_t isNonPoissonWeighted() const ;
 
   virtual Double_t weight() const ; 
+  virtual Double_t weightSquared() const ; 
   virtual void weightError(Double_t& lo, Double_t& hi,ErrorType etype=SumW2) const ;
   Double_t weightError(ErrorType etype=SumW2) const ;
 

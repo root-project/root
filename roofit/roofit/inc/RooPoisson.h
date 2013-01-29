@@ -32,6 +32,8 @@ public:
   void setNoRounding(bool flag = kTRUE){_noRounding = flag;}
   void protectNegativeMean(bool flag = kTRUE){_protectNegative = flag;}
 
+  Double_t getLogVal(const RooArgSet* set=0) const ;
+
 protected:
 
   RooRealProxy x ;

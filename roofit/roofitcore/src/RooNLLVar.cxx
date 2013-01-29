@@ -206,8 +206,9 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
 
 
     Double_t eventWeight = _dataClone->weight() ;
-    if (_weightSq) eventWeight *= eventWeight ;
-
+    if (_weightSq) {
+      eventWeight = _dataClone->weightSquared() ;    
+    }
     Double_t term = eventWeight * pdfClone->getLogVal(_normSet);
     //cout << "term = " << term << endl ;
     sumWeight += eventWeight ;
@@ -218,16 +219,13 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
   // include the extended maximum likelihood term, if requested
   if(_extended && firstEvent==0) {
     if (_weightSq) {
-      // Calculate sum of weights-squared here for extended term
 
+      // Calculate sum of weights-squared here for extended term
       Double_t sumW2(0) ;
       for (i=0 ; i<_dataClone->numEntries() ; i++) {
 	_dataClone->get(i) ;
-	Double_t eventWeight = _dataClone->weight() ;
-	sumW2 += eventWeight * eventWeight ;	
+	sumW2 += _dataClone->weightSquared() ;    
       }
-      //cout << "weight squared extended mode: sumW2 = " << sumW2 << " sumentries = " << _dataClone->sumEntries() << endl ;
-      
       result+= pdfClone->extendedTerm(sumW2 , _dataClone->get());
 
     } else {

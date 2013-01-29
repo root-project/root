@@ -648,7 +648,11 @@ void RooVectorDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::Err
     switch (etype) {
       
     case RooAbsData::Auto:
-      throw string(Form("RooDataHist::weightError(%s) weight type Auto not allowed here",GetName())) ;
+      throw string(Form("RooDataHist::weightError(%s) error type Auto not allowed here",GetName())) ;
+      break ;
+      
+    case RooAbsData::Expected:
+      throw string(Form("RooDataHist::weightError(%s) error type Expected not allowed here",GetName())) ;
       break ;
       
     case RooAbsData::Poisson:
