@@ -1119,11 +1119,20 @@ StoredDeclsMap *DeclContext::buildLookup() {
 
   llvm::SmallVector<DeclContext *, 2> Contexts;
   collectAllContexts(Contexts);
+#if AXEL_LOOKUP_CHANGES
+  // Building the lookup will load all decls needed; lookup building
+  // should not recurse, so flag it as "done".
+  LookupPtr.setInt(false);
+  if (LookupPtr.getPointer())
+     LookupPtr.getPointer()->clear();
+#endif
   for (unsigned I = 0, N = Contexts.size(); I != N; ++I)
     buildLookupImpl(Contexts[I]);
 
+#ifndef AXEL_LOOKUP_CHANGES
   // We no longer have any lazy decls.
   LookupPtr.setInt(false);
+#endif
   return LookupPtr.getPointer();
 }
 
@@ -1161,16 +1170,22 @@ DeclContext::lookup(DeclarationName Name) {
   if (PrimaryContext != this)
     return PrimaryContext->lookup(Name);
 
+#if AXEL_LOOKUP_CHANGES
   StoredDeclsMap *Map = LookupPtr.getPointer();
   if (LookupPtr.getInt())
     Map = buildLookup();
+#endif
 
   if (hasExternalVisibleStorage()) {
     // If a PCH has a result for this name, and we have a local declaration, we
     // will have imported the PCH result when adding the local declaration.
     // FIXME: For modules, we could have had more declarations added by module
     // imoprts since we saw the declaration of the local name.
+#if AXEL_LOOKUP_CHANGES
     if (Map) {
+#else
+    if (StoredDeclsMap *Map = LookupPtr.getPointer()) {
+#endif
       StoredDeclsMap::iterator I = Map->find(Name);
       if (I != Map->end())
         return I->second.getLookupResult();
@@ -1179,6 +1194,12 @@ DeclContext::lookup(DeclarationName Name) {
     ExternalASTSource *Source = getParentASTContext().getExternalSource();
     return Source->FindExternalVisibleDeclsByName(this, Name);
   }
+
+#ifndef AXEL_LOOKUP_CHANGES
+  StoredDeclsMap *Map = LookupPtr.getPointer();
+  if (LookupPtr.getInt())
+    Map = buildLookup();
+#endif
 
   if (!Map)
     return lookup_result(lookup_iterator(0), lookup_iterator(0));
@@ -1321,26 +1342,23 @@ void DeclContext::makeDeclVisibleInContextWithFlags(NamedDecl *D, bool Internal,
 
 void DeclContext::makeDeclVisibleInContextImpl(NamedDecl *D, bool Internal) {
   // Find or create the stored declaration map.
+   // AXEL:
+   if (D->getDeclName().getCXXOverloadedOperator() == clang::OO_LessLess
+       && getDeclKind() == Decl::Namespace
+       && ((NamespaceDecl*)this)->getName() == "std"
+       && isa<FunctionDecl>(D)) {
+      llvm::errs() << "AXEL DEBUG: std::op<< @ " << D << '\n';
+      ((clang::FunctionDecl*)D)->getType().dump();
+      //D->dump();
+   }
+#if AXEL_LOOKUP_CHANGES
   bool MustVisitExternalSources = false;
+#endif
   StoredDeclsMap *Map = LookupPtr.getPointer();
   if (!Map) {
     ASTContext *C = &getParentASTContext();
     Map = CreateStoredDeclsMap(*C);
-    MustVisitExternalSources = hasExternalVisibleStorage();
-  } else if (hasExternalVisibleStorage() &&
-             Map->find(D->getDeclName()) == Map->end())
-    MustVisitExternalSources = true;
-
-  // Insert this declaration into the map.
-  StoredDeclsList &DeclNameEntries = (*Map)[D->getDeclName()];
-  if (DeclNameEntries.isNull()) {
-    DeclNameEntries.setOnlyValue(D);
-  } else if (DeclNameEntries.HandleRedeclaration(D)) {
-    // This declaration has replaced an existing one for which
-    // declarationReplaces returns true.
-  } else {
-     // Put this declaration into the appropriate slot.
-     DeclNameEntries.AddSubsequentDecl(D);
+#ifndef AXEL_LOOKUP_CHANGES
   }
 
   // If there is an external AST source, load any declarations it knows about
@@ -1349,8 +1367,53 @@ void DeclContext::makeDeclVisibleInContextImpl(NamedDecl *D, bool Internal) {
   // have already checked the external source.
   if (!Internal)
     if (ExternalASTSource *Source = getParentASTContext().getExternalSource())
+      if (hasExternalVisibleStorage() &&
+          Map->find(D->getDeclName()) == Map->end())
+        Source->FindExternalVisibleDeclsByName(this, D->getDeclName());
+#else
+    MustVisitExternalSources = hasExternalVisibleStorage();
+  } else if (hasExternalVisibleStorage() &&
+             Map->find(D->getDeclName()) == Map->end())
+    MustVisitExternalSources = true;
+#endif
+
+  // Insert this declaration into the map.
+  StoredDeclsList &DeclNameEntries = (*Map)[D->getDeclName()];
+  if (DeclNameEntries.isNull()) {
+    DeclNameEntries.setOnlyValue(D);
+#ifndef AXEL_LOOKUP_CHANGES
+    return;
+  }
+
+  if (DeclNameEntries.HandleRedeclaration(D)) {
+#else
+  } else if (DeclNameEntries.HandleRedeclaration(D)) {
+#endif
+    // This declaration has replaced an existing one for which
+    // declarationReplaces returns true.
+#ifndef AXEL_LOOKUP_CHANGES
+    return;
+#else
+  } else {
+     // Put this declaration into the appropriate slot.
+     DeclNameEntries.AddSubsequentDecl(D);
+#endif
+  }
+
+#ifndef AXEL_LOOKUP_CHANGES
+  // Put this declaration into the appropriate slot.
+  DeclNameEntries.AddSubsequentDecl(D);
+#endif
+#ifdef AXEL_LOOKUP_CHANGES
+  // If there is an external AST source, load any declarations it knows about
+  // with this declaration's name.
+  // If the lookup table contains an entry about this name it means that we
+  // have already checked the external source.
+  if (!Internal)
+    if (ExternalASTSource *Source = getParentASTContext().getExternalSource())
       if (MustVisitExternalSources)
         Source->FindExternalVisibleDeclsByName(this, D->getDeclName());
+#endif
 }
 
 /// Returns iterator range [First, Last) of UsingDirectiveDecls stored within

@@ -179,7 +179,8 @@ void ASTDeclWriter::VisitNamedDecl(NamedDecl *D) {
 
 void ASTDeclWriter::VisitTypeDecl(TypeDecl *D) {
   VisitNamedDecl(D);
-  Writer.AddSourceLocation(D->getLocStart(), Record);
+  if (!NameAlreadyWritten)
+    Writer.AddSourceLocation(D->getLocStart(), Record);
   Writer.AddTypeRef(QualType(D->getTypeForDecl(), 0), Record);
 }
 
@@ -294,7 +295,8 @@ void ASTDeclWriter::VisitRecordDecl(RecordDecl *D) {
 
 void ASTDeclWriter::VisitValueDecl(ValueDecl *D) {
   VisitNamedDecl(D);
-  Writer.AddTypeRef(D->getType(), Record);
+  if (!NameAlreadyWritten)
+    Writer.AddTypeRef(D->getType(), Record);
 }
 
 void ASTDeclWriter::VisitEnumConstantDecl(EnumConstantDecl *D) {
@@ -1284,18 +1286,22 @@ void ASTDeclWriter::VisitDeclContext(DeclContext *DC, uint64_t LexicalOffset,
 
 template <typename T>
 void ASTDeclWriter::VisitRedeclarable(Redeclarable<T> *D) {
-  Writer.AddDeclarationName(static_cast<T *>(D)->getDeclName(), Record);
-  Writer.AddDeclRef(cast_or_null<Decl>(static_cast<T *>(D)
-                                       ->getDeclContext()), Record);
-  Writer.AddDeclRef(cast_or_null<Decl>(static_cast<T *>(D)
-                                       ->getLexicalDeclContext()), Record);
+  T* DDecl = static_cast<T*>(D);
+  Writer.AddDeclarationName(DDecl->getDeclName(), Record);
+  Writer.AddDeclRef(cast_or_null<Decl>(DDecl->getDeclContext()), Record);
+  Writer.AddDeclRef(cast_or_null<Decl>(DDecl->getLexicalDeclContext()),
+                    Record);
 
-  if (TemplateDecl *TD = dyn_cast<TemplateDecl>(static_cast<T *>(D))) {
+  if (TemplateDecl *TD = dyn_cast<TemplateDecl>(DDecl)) {
     Writer.AddDeclRef(TD->getTemplatedDecl(), Record);
     Writer.AddTemplateParameterList(TD->getTemplateParameters(), Record);
   }
-  NameAlreadyWritten = true;
+  if (ValueDecl* VD = dyn_cast<ValueDecl>(DDecl))
+    Writer.AddTypeRef(VD->getType(), Record);
+  if (TypeDecl* TD = dyn_cast<TypeDecl>(DDecl))
+    Writer.AddSourceLocation(TD->getLocStart(), Record);
   Record.push_back(IsCompleteDefinition);
+  NameAlreadyWritten = true;
   T *First = D->getFirstDeclaration();
   if (First->getMostRecentDecl() != First) {
     // There is more than one declaration of this entity, so we will need to 
@@ -1400,6 +1406,7 @@ void ASTWriter::WriteDeclsBlockAbbrevs() {
   // Redeclarable
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // DeclContext
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // LexicalDeclContext
+  Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Source Location
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 1));// isCompleteDefinition
   Abv->Add(BitCodeAbbrevOp(0));                       // No redeclaration
   // Decl
@@ -1413,7 +1420,6 @@ void ASTWriter::WriteDeclsBlockAbbrevs() {
   Abv->Add(BitCodeAbbrevOp(0));                       // ModulePrivate
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // SubmoduleID
   // TypeDecl
-  Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Source Location
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Type Ref
   // TagDecl
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6));   // IdentifierNamespace
@@ -1449,6 +1455,7 @@ void ASTWriter::WriteDeclsBlockAbbrevs() {
   // Redeclarable
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // DeclContext
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // LexicalDeclContext
+  Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Source Location
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 1));// isCompleteDefinition
   Abv->Add(BitCodeAbbrevOp(0));                       // No redeclaration
   // Decl
@@ -1462,7 +1469,6 @@ void ASTWriter::WriteDeclsBlockAbbrevs() {
   Abv->Add(BitCodeAbbrevOp(0));                       // ModulePrivate
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // SubmoduleID
   // TypeDecl
-  Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Source Location
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Type Ref
   // TagDecl
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6));   // IdentifierNamespace
@@ -1492,6 +1498,8 @@ void ASTWriter::WriteDeclsBlockAbbrevs() {
   // Redeclarable
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // DeclContext
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // LexicalDeclContext
+  // ValueDecl
+  Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Type
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 1));// isCompleteDefinition
   Abv->Add(BitCodeAbbrevOp(0));                       // No redeclaration
   // Decl
@@ -1504,8 +1512,6 @@ void ASTWriter::WriteDeclsBlockAbbrevs() {
   Abv->Add(BitCodeAbbrevOp(AS_none));                 // C++ AccessSpecifier
   Abv->Add(BitCodeAbbrevOp(0));                       // ModulePrivate
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // SubmoduleID
-  // ValueDecl
-  Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Type
   // DeclaratorDecl
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // InnerStartLoc
   Abv->Add(BitCodeAbbrevOp(0));                       // hasExtInfo
@@ -1544,6 +1550,7 @@ void ASTWriter::WriteDeclsBlockAbbrevs() {
   // Redeclarable
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // DeclContext
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // LexicalDeclContext
+  Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Source Location
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 1));// isCompleteDefinition
   Abv->Add(BitCodeAbbrevOp(0));                       // No redeclaration
   // Decl
@@ -1557,7 +1564,6 @@ void ASTWriter::WriteDeclsBlockAbbrevs() {
   Abv->Add(BitCodeAbbrevOp(0));                       // ModulePrivate
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // SubmoduleID
   // TypeDecl
-  Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Source Location
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Type Ref
   // TypedefDecl
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Array));
@@ -1573,6 +1579,8 @@ void ASTWriter::WriteDeclsBlockAbbrevs() {
   // Redeclarable
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // DeclContext
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // LexicalDeclContext
+  // ValueDecl
+  Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Type
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::Fixed, 1));// isCompleteDefinition
   Abv->Add(BitCodeAbbrevOp(0));                       // No redeclaration
   // Decl
@@ -1585,8 +1593,6 @@ void ASTWriter::WriteDeclsBlockAbbrevs() {
   Abv->Add(BitCodeAbbrevOp(AS_none));                 // C++ AccessSpecifier
   Abv->Add(BitCodeAbbrevOp(0));                       // ModulePrivate
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // SubmoduleID
-  // ValueDecl
-  Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // Type
   // DeclaratorDecl
   Abv->Add(BitCodeAbbrevOp(BitCodeAbbrevOp::VBR, 6)); // InnerStartLoc
   Abv->Add(BitCodeAbbrevOp(0));                       // hasExtInfo
