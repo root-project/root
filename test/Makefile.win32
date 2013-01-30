@@ -103,6 +103,8 @@ GLIBS         = $(LIBS) $(ROOTSYS)\lib\libGui.lib $(ROOTSYS)\lib\libGraf.lib \
 LIBSALL       = $(ROOTLIBS)
 EVENTLIB      = libEvent.lib
 
+# Tutorials dir needed by stressProof
+TUTDIR        = $(ROOTSYS)/tutorials
 
 #------------------------------------------------------------------------------
 
@@ -600,6 +602,9 @@ stressMathCore.$(ObjSuf): TrackMathCore.h
 TrackMathCoreDict.$(SrcSuf): 	TrackMathCore.h TrackMathCoreLinkDef.h
    @echo "Generating dictionary $@ using rootcint ..."
    @rootcint -f $@ -c TrackMathCore.h TrackMathCoreLinkDef.h
+
+stressProof.$(ObjSuf):	stressProof.$(SrcSuf)
+        $(CXX) $(CXXFLAGS) $(EXTRAFLAGS) $(CXXOPT) -I$(TUTDIR) -c $**
 
 .$(SrcSuf).$(ObjSuf):
         $(CXX) $(CXXFLAGS) $(EXTRAFLAGS) $(CXXOPT) -c $<
