@@ -72,6 +72,7 @@ protected:
    virtual Bool_t      ReadBuffer10(char *buf, Int_t len);
    virtual Bool_t      ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
    virtual void        SetMsgReadBuffer10(const char *redirectLocation = 0, Bool_t tempRedirect = kFALSE);
+   virtual void        ProcessHttpHeader(const TString& headerLine);
 
 public:
    TWebFile(const char *url, Option_t *opt="");

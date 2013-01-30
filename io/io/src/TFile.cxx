@@ -97,6 +97,7 @@
 #include "TPluginManager.h"
 #include "TProcessUUID.h"
 #include "TRegexp.h"
+#include "TPRegexp.h"
 #include "TROOT.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
@@ -4502,9 +4503,7 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
       //
       // Adjust the type according to findings
       type = (localFile) ? kLocal : type;
-   } else if (!strncmp(name, "http:", 5) ||
-              !strncmp(name, "as3:", 4) ||
-              !strncmp(name, "gs:", 3)) {
+   } else if (TPMERegexp("^(http[s]?|s3http[s]?|[a]?s3|gs){1}:", "i").Match(name)) {
       //
       // Web file
       type = kWeb;

@@ -508,6 +508,14 @@ RSA.KeyType:  1
 # of the TFile implementation. By default it is disabled.
 #TFile.AsyncPrefetching:   no
 
+# List of S3 servers known to support multi-range HTTP GET requests.
+# This is the value sent back by the S3 server in the 'Server:' header
+# of the HTTP response.
+# Please note that Amazon S3 servers do not support this feature.
+# Add one line per server type with syntax:
+# +TS3WebFile.Root.MultiRangeServer: Mucura
+TS3WebFile.Root.MultiRangeServer:  Huawei OBS
+
 # Special cases for the TUrl parser, where the special cases are parsed
 # in a protocol + file part, like rfio:host:/path/file.root,
 # castor:/path/file.root or /alien/path/file.root.
