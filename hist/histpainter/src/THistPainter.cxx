@@ -5753,10 +5753,8 @@ void THistPainter::PaintHist(Option_t *)
       chopth[8] = 'N';
    }
 
-   // coverity [Calling risky function]
-   if (Hoption.Fill == 2)    strlcat(chopth,"2",17);
-   // coverity [Calling risky function]
-   if (Hoption.HighRes != 0) strlcat(chopth,"9",17);
+   if (Hoption.Fill == 2)    chopth[13] = '2';
+   if (Hoption.HighRes != 0) chopth[14] = '9';
 
    //         Option LOGX
 
