@@ -130,7 +130,7 @@
 #include "TROOT.h"
 #include "TSelector.h"
 
-#include "../tutorials/proof/getProof.C"
+#include "proof/getProof.C"
 
 #define PT_NUMTEST 28
 
