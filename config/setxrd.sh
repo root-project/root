@@ -25,34 +25,34 @@ drop_from_path()
 
 xrdset="xrdset"
 xrdsys=$1
-binpath=""
-libpath=""
+xrdbinpath=""
+xrdlibpath=""
 manpath=""
 if test "x$xrdsys" = "x"; then
    echo "$xrdset: ERROR, you must specify the path to the xrootd installed"
    return 1;
 fi
-binpath="$xrdsys/bin"
-if test ! -d "$binpath" ; then
-   echo "$xrdset: ERROR, directory $binpath does not exist or not a directory!"
+xrdbinpath="$xrdsys/bin"
+if test ! -d "$xrdbinpath" ; then
+   echo "$xrdset: ERROR, directory $xrdbinpath does not exist or not a directory!"
    return 1;
 fi
-libpath="$xrdsys/lib"
-if test ! -d "$libpath" ; then
-   libemsg="$libpath"
-   libpath="$xrdsys/lib64"
-   if test ! -d "$libpath" ; then
-      echo "$xrdset: ERROR, directory $libemsg nor $libpath do not exist or not directories!"
+xrdlibpath="$xrdsys/lib"
+if test ! -d "$xrdlibpath" ; then
+   libemsg="$xrdlibpath"
+   xrdlibpath="$xrdsys/lib64"
+   if test ! -d "$xrdlibpath" ; then
+      echo "$xrdset: ERROR, directory $libemsg nor $xrdlibpath do not exist or not directories!"
       return 1;
    fi
 fi
-manpath="$xrdsys/man"
-if test ! -d "$manpath" ; then
-   manemsg="$manpath"
-   manpath="$xrdsys/share/man"
-   if test ! -d "$manpath" ; then
-      echo "$xrdset: WARNING, directory $manemsg and $manpath do not exist or not directories; MANPATH unchanged"
-      manpath=""
+xrdmanpath="$xrdsys/man"
+if test ! -d "$xrdmanpath" ; then
+   manemsg="$xrdmanpath"
+   xrdmanpath="$xrdsys/share/man"
+   if test ! -d "$xrdmanpath" ; then
+      echo "$xrdset: WARNING, directory $manemsg and $xrdmanpath do not exist or not directories; MANPATH unchanged"
+      xrdmanpath=""
    fi
 fi
 
@@ -60,25 +60,25 @@ fi
 if test ! "x$XRDSYS" = "x" ; then
    # Trim $PATH
    if [ -n "${PATH}" ]; then
-      drop_from_path $PATH $binpath
+      drop_from_path $PATH $xrdbinpath
       PATH=$newpath
    fi
 
    # Trim $LD_LIBRARY_PATH
    if [ -n "${LD_LIBRARY_PATH}" ]; then
-      drop_from_path $LD_LIBRARY_PATH $libpath
+      drop_from_path $LD_LIBRARY_PATH $xrdlibpath
       LD_LIBRARY_PATH=$newpath
    fi
 
    # Trim $DYLD_LIBRARY_PATH
    if [ -n "${DYLD_LIBRARY_PATH}" ]; then
-      drop_from_path $DYLD_LIBRARY_PATH $libpath
+      drop_from_path $DYLD_LIBRARY_PATH $xrdlibpath
       DYLD_LIBRARY_PATH=$newpath
    fi
 
    # Trim $MANPATH
    if [ -n "${MANPATH}" ]; then
-      drop_from_path $MANPATH $manpath
+      drop_from_path $MANPATH $xrdmanpath
       MANPATH=$newpath
    fi
 fi
@@ -96,22 +96,22 @@ fi
 
 export XRDSYS="$xrdsys"
 if [ -z "${PATH}" ]; then
-   PATH=$binpath; export PATH
+   PATH=$xrdbinpath; export PATH
 else
-   PATH=$binpath:$PATH; export PATH
+   PATH=$xrdbinpath:$PATH; export PATH
 fi
 if [ -z "${LD_LIBRARY_PATH}" ]; then
-   LD_LIBRARY_PATH=$libpath; export LD_LIBRARY_PATH
+   LD_LIBRARY_PATH=$xrdlibpath; export LD_LIBRARY_PATH
 else
-   LD_LIBRARY_PATH=$libpath:$LD_LIBRARY_PATH; export LD_LIBRARY_PATH
+   LD_LIBRARY_PATH=$xrdlibpath:$LD_LIBRARY_PATH; export LD_LIBRARY_PATH
 fi
 if [ -z "${DYLD_LIBRARY_PATH}" ]; then
-   DYLD_LIBRARY_PATH=$libpath; export DYLD_LIBRARY_PATH       
+   DYLD_LIBRARY_PATH=$xrdlibpath; export DYLD_LIBRARY_PATH       
 else
-   DYLD_LIBRARY_PATH=$libpath:$DYLD_LIBRARY_PATH; export DYLD_LIBRARY_PATH
+   DYLD_LIBRARY_PATH=$xrdlibpath:$DYLD_LIBRARY_PATH; export DYLD_LIBRARY_PATH
 fi
 if [ -z "${MANPATH}" ]; then
-   MANPATH=$manpath:${default_manpath}; export MANPATH
+   MANPATH=$xrdmanpath:${default_manpath}; export MANPATH
 else
-   MANPATH=$manpath:$MANPATH; export MANPATH
+   MANPATH=$xrdmanpath:$MANPATH; export MANPATH
 fi
