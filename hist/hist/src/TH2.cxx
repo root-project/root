@@ -1809,7 +1809,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 
       // (0, 0): x - underflow; y - underflow
       hnew->UpdateBinContent(0, oldBins[0]);      
-      if (oldErrors) hnew->SetBinError(0, 0, TMath::Sqrt(oldErrors[0]));         
+      if (oldErrors) hnew->fSumw2[0] = 0;         
  
       // (x, 0): x - regular / overflow; y - underflow
       for(Int_t binx = 1, oldbinx = 1; binx < newnx; ++binx, oldbinx += nxgroup){
@@ -1821,7 +1821,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
          }
          Int_t newbin = binx;
          hnew->UpdateBinContent(newbin, binContent);
-         if(oldErrors) hnew->SetBinError(binx, 0, TMath::Sqrt(binErrorSq));
+         if (oldErrors) hnew->fSumw2[newbin] = binErrorSq;
       }
     
       // (0, y): x - underflow; y - regular / overflow
@@ -1834,7 +1834,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
          }
          Int_t newbin = biny * newnx;
          hnew->UpdateBinContent(newbin, binContent);
-         if(oldErrors) hnew->SetBinError(0, biny, TMath::Sqrt(binErrorSq));
+         if (oldErrors) hnew->fSumw2[newbin] = binErrorSq;
       }
 
       // (x, y): x - regular / overflow; y - regular / overflow 
@@ -1850,7 +1850,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
             }
             Int_t newbin = binx + biny * newnx;
             hnew->UpdateBinContent(newbin, binContent);
-            if (oldErrors) hnew->SetBinError(binx, biny, TMath::Sqrt(binErrorSq));
+            if (oldErrors) hnew->fSumw2[newbin] = binErrorSq;
          }
       }
    }

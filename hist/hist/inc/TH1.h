@@ -424,10 +424,7 @@ public:
 protected: 
    virtual Double_t RetrieveBinContent(Int_t bin) const;
    virtual void     UpdateBinContent(Int_t bin, Double_t content);
-   virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const {
-      if (fSumw2.fN) return fSumw2.fArray[bin];
-      else return RetrieveBinContent(bin);
-   }
+   virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { return fSumw2.fN ? fSumw2.fArray[bin] : RetrieveBinContent(bin); }
 };
 
 //________________________________________________________________________

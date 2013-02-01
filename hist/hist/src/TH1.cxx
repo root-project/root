@@ -5859,13 +5859,9 @@ void TH1::Scale(Double_t c1, Option_t *option)
    TString opt = option; opt.ToLower();
    if (opt.Contains("width")) Add(this, this, c1, -1);
    else {
-      if (fBuffer) BufferEmpty(1); 
+      if (fBuffer) BufferEmpty(1);
       for(Int_t i = 0; i < fNcells; ++i) UpdateBinContent(i, c1 * RetrieveBinContent(i));
-      if (fSumw2.fN) {
-         Double_t c1sq = c1 * c1;
-         //Double_t ersq = GetBinError(); ersq *= ersq; 
-         for(Int_t i = 0; i < fNcells; ++i) fSumw2.fArray[i] *= c1sq; // update errors
-      }
+      if (fSumw2.fN) for(Int_t i = 0; i < fNcells; ++i) fSumw2.fArray[i] *= (c1 * c1); // update errors
       SetMinimum(); SetMaximum(); // minimum and maximum value will be recalculated the next time
    }
 
@@ -5874,7 +5870,6 @@ void TH1::Scale(Double_t c1, Option_t *option)
    if (ncontours == 0) return;
    Double_t* levels = fContour.GetArray();
    for (Int_t i = 0; i < ncontours; ++i) levels[i] *= c1;
-
 }
 
 //______________________________________________________________________________
@@ -7386,7 +7381,9 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 void TH1::SetContent(const Double_t *content)
 {
    // Replace bin contents by the contents of array content
-   for (Int_t i = 0; i < fNcells; ++i) SetBinContent(i, content[i]);
+   fEntries = fNcells;
+   fTsumw = 0;
+   for (Int_t i = 0; i < fNcells; ++i) UpdateBinContent(i, content[i]);
 }
 
 //______________________________________________________________________________
