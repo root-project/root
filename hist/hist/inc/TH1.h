@@ -261,16 +261,14 @@ public:
    virtual Double_t GetBinContent(Int_t bin, Int_t) const { return GetBinContent(bin); }
    virtual Double_t GetBinContent(Int_t bin, Int_t, Int_t) const { return GetBinContent(bin); }
    virtual Double_t GetBinError(Int_t bin) const;
-   virtual Double_t GetBinError(Int_t binx, Int_t biny) const;
-   virtual Double_t GetBinError(Int_t binx, Int_t biny, Int_t binz) const;
+   virtual Double_t GetBinError(Int_t binx, Int_t biny) const { return GetBinError(GetBin(binx, biny)); } // for 2D histograms only
+   virtual Double_t GetBinError(Int_t binx, Int_t biny, Int_t binz) const { return GetBinError(GetBin(binx, biny, binz)); } // for 3D histograms only
    virtual Double_t GetBinErrorLow(Int_t bin) const;
    virtual Double_t GetBinErrorUp(Int_t bin) const;
    virtual EBinErrorOpt  GetBinErrorOption() const { return fBinStatErrOpt; }
    virtual Double_t GetBinLowEdge(Int_t bin) const {return fXaxis.GetBinLowEdge(bin);}
    virtual Double_t GetBinWidth(Int_t bin) const {return fXaxis.GetBinWidth(bin);}
    virtual Double_t GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx=0, Int_t lastx=0,Double_t maxdiff=0) const;
-   virtual Double_t GetCellContent(Int_t binx, Int_t biny) const;
-   virtual Double_t GetCellError(Int_t binx, Int_t biny) const;
    virtual void     GetCenter(Double_t *center) const {fXaxis.GetCenter(center);}
    static  Bool_t   GetDefaultSumw2();
    TDirectory      *GetDirectory() const {return fDirectory;}
@@ -312,9 +310,9 @@ public:
    virtual Double_t GetRMS(Int_t axis=1) const;
    virtual Double_t GetRMSError(Int_t axis=1) const;
    virtual Double_t GetSkewness(Int_t axis=1) const;
-           TAxis   *GetXaxis() const;
-           TAxis   *GetYaxis() const;
-           TAxis   *GetZaxis() const;
+           TAxis*   GetXaxis() const { return &((TH1*)this)->fXaxis; }
+           TAxis*   GetYaxis() const { return &((TH1*)this)->fYaxis; }
+           TAxis*   GetZaxis() const { return &((TH1*)this)->fZaxis; }
    virtual Double_t Integral(Option_t *option="") const;
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Option_t *option="") const;
    virtual Double_t IntegralAndError(Int_t binx1, Int_t binx2, Double_t & err, Option_t *option="") const;
@@ -364,8 +362,6 @@ public:
    virtual void     SetBinErrorOption(EBinErrorOpt type) { fBinStatErrOpt = type; }
    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
    virtual UInt_t   SetCanExtend(UInt_t extendBitMask);
-   virtual void     SetCellContent(Int_t binx, Int_t biny, Double_t content);
-   virtual void     SetCellError(Int_t binx, Int_t biny, Double_t content);
    virtual void     SetContent(const Double_t *content);
    virtual void     SetContour(Int_t nlevels, const Double_t *levels=0);
    virtual void     SetContourLevel(Int_t level, Double_t value);
@@ -378,9 +374,15 @@ public:
    virtual void     SetLabelFont(Style_t font=62, Option_t *axis="X");
    virtual void     SetLabelOffset(Float_t offset=0.005, Option_t *axis="X");
    virtual void     SetLabelSize(Float_t size=0.02, Option_t *axis="X");
+   
+   /*
+    * Set the minimum / maximum value for the Y axis (1-D histograms) or Z axis (2-D histograms)
+    *   By default the maximum / minimum value used in drawing is the maximum / minimum value of the histogram
+    * plus a margin of 10%. If these functions are called, the values are used without any extra margin.
+    */
+   virtual void     SetMaximum(Double_t maximum = -1111) { fMaximum = maximum; };
+   virtual void     SetMinimum(Double_t minimum = -1111) { fMinimum = minimum; }; 
 
-   virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
-   virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void     SetName(const char *name); // *MENU*
    virtual void     SetNameTitle(const char *name, const char *title);
    virtual void     SetNdivisions(Int_t n=510, Option_t *axis="X");
@@ -404,7 +406,18 @@ public:
    void             UseCurrentStyle();
    static  TH1     *TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option);
 
-   virtual void     RebinAxis(Double_t x, TAxis *axis) { Obsolete("RebinAxis", "v6-00", "v6-02"); ExtendAxis(x, axis); } // DEPRECATED / OBSOLETE
+
+   // TODO: Remove obsolete methods in v6-02
+   virtual Double_t GetCellContent(Int_t binx, Int_t biny) const 
+                        { Obsolete("GetCellContent", "v6-00", "v6-02"); return GetBinContent(GetBin(binx, biny)); }
+   virtual Double_t GetCellError(Int_t binx, Int_t biny) const 
+                        { Obsolete("GetCellError", "v6-00", "v6-02"); return GetBinError(binx, biny); }
+   virtual void     RebinAxis(Double_t x, TAxis *axis) 
+                        { Obsolete("RebinAxis", "v6-00", "v6-02"); ExtendAxis(x, axis); } 
+   virtual void     SetCellContent(Int_t binx, Int_t biny, Double_t content) 
+                        { Obsolete("SetCellContent", "v6-00", "v6-02"); SetBinContent(GetBin(binx, biny), content); }
+   virtual void     SetCellError(Int_t binx, Int_t biny, Double_t content)
+                        { Obsolete("SetCellError", "v6-00", "v6-02"); SetBinError(binx, biny, content); }
 
    ClassDef(TH1,7)  //1-Dim histogram base class
 

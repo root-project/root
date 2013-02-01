@@ -4435,30 +4435,6 @@ Double_t TH1::GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx, Int_t las
 }
 
 //______________________________________________________________________________
-TAxis *TH1::GetXaxis() const
-{
-   // return a pointer to the X axis object
-
-   return &((TH1*)this)->fXaxis;
-}
-
-
-//______________________________________________________________________________
-TAxis *TH1::GetYaxis() const
-{
-   // return a pointer to the Y axis object
-
-   return &((TH1*)this)->fYaxis;
-}
-//______________________________________________________________________________
-TAxis *TH1::GetZaxis() const
-{
-   // return a pointer to the Z axis object
-
-   return &((TH1*)this)->fZaxis;
-}
-
-//______________________________________________________________________________
 Double_t TH1::Interpolate(Double_t x)
 {
    // Given a point x, approximates the value via linear interpolation
@@ -4943,13 +4919,9 @@ static Bool_t AlmostInteger(Double_t a, Double_t epsilon = 0.00000001)
 Bool_t TH1::SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2)
 {
    // Same limits and bins.
-
-   if ((axis1.GetNbins() == axis2.GetNbins())
-      && (axis1.GetXmin() == axis2.GetXmin())
-      && (axis1.GetXmax() == axis2.GetXmax()))
-      return kTRUE;
-   else
-      return kFALSE;
+   return axis1.GetNbins() == axis2.GetNbins()
+      && axis1.GetXmin() == axis2.GetXmin()
+      && axis1.GetXmax() == axis2.GetXmax();
 }
 
 //______________________________________________________________________________
@@ -5950,9 +5922,8 @@ void TH1::SetDefaultBufferSize(Int_t buffersize)
    // When an histogram is created with one of its axis lower limit greater
    // or equal to its upper limit, the function SetBuffer is automatically
    // called with the default buffer size.
-
-   if (buffersize < 0) buffersize = 0;
-   fgBufferSize = buffersize;
+   
+   fgBufferSize = buffersize > 0 ? buffersize : 0;
 }
 
 
@@ -7414,15 +7385,8 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 //______________________________________________________________________________
 void TH1::SetContent(const Double_t *content)
 {
-   //   -*-*-*-*-*-*Replace bin contents by the contents of array content*-*-*-*
-   //               =====================================================
-   Int_t bin;
-   Double_t bincontent;
-   int nbins = fNcells; // save value because SetBinContent can change fNCells
-   for (bin=0; bin<nbins; bin++) {
-      bincontent = *(content + bin);
-      SetBinContent(bin, bincontent);
-   }
+   // Replace bin contents by the contents of array content
+   for (Int_t i = 0; i < fNcells; ++i) SetBinContent(i, content[i]);
 }
 
 //______________________________________________________________________________
@@ -7451,11 +7415,9 @@ Int_t TH1::GetContour(Double_t *levels)
 Double_t TH1::GetContourLevel(Int_t level) const
 {
    // Return value of contour number level
-   // see GetContour to return the array of all contour levels
+   // use GetContour to return the array of all contour levels
 
-   if (level <0 || level >= fContour.fN) return 0;
-   Double_t zlevel = fContour.fArray[level];
-   return zlevel;
+   return (level >= 0 && level < fContour.fN) ? fContour.fArray[level] : 0.0;
 }
 
 //______________________________________________________________________________
@@ -7547,7 +7509,7 @@ void TH1::SetContourLevel(Int_t level, Double_t value)
 {
    // Set value for one contour level.
 
-   if (level <0 || level >= fContour.fN) return;
+   if (level < 0 || level >= fContour.fN) return;
    SetBit(kUserContour);
    fContour.fArray[level] = value;
 }
@@ -7869,41 +7831,6 @@ void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBi
 }
 
 //______________________________________________________________________________
-void TH1::SetMaximum(Double_t maximum)
-{
-   // Set the maximum value for the Y axis, in case of 1-D histograms,
-   // or the Z axis in case of 2-D histograms
-   //
-   // By default the maximum value used in drawing is the maximum value of the histogram plus
-   // a margin of 10 per cent. If this function has been called, the value of 'maximum' is
-   // used, with no extra margin.
-   //
-   // TH1::GetMaximum returns the maximum value of the bins in the histogram, unless the
-   // maximum has been set manually by this function or by altering the y/z axis limits.
-   // Use TH1::GetMaximumBin to find the bin with the maximum value of an histogram
-   //
-   fMaximum = maximum;
-}
-
-
-//______________________________________________________________________________
-void TH1::SetMinimum(Double_t minimum)
-{
-   // Set the minimum value for the Y axis, in case of 1-D histograms,
-   // or the Z axis in case of 2-D histograms
-   //
-   // By default the minimum value used in drawing is the minimum value of the histogram plus
-   // a margin of 10 per cent. If this function has been called, the value of 'minimum' is
-   // used, with no extra margin.
-   //
-   // TH1::GetMinimum returns the minimum value of the bins in the histogram, unless the
-   // minimum has been set manually by this function or by altering the y/z axis limits.
-   // Use TH1::GetMinimumBin to find the bin with the minimum value of an histogram
-   //
-   fMinimum = minimum;
-}
-
-//______________________________________________________________________________
 void TH1::SetDirectory(TDirectory *dir)
 {
    // By default when an histogram is created, it is added to the list
@@ -7924,12 +7851,7 @@ void TH1::SetError(const Double_t *error)
 {
    //   -*-*-*-*-*-*-*Replace bin errors by values in array error*-*-*-*-*-*-*-*-*
    //                 ===========================================
-   Int_t bin;
-   Double_t binerror;
-   for (bin=0; bin<fNcells; bin++) {
-      binerror = error[bin];
-      SetBinError(bin, binerror);
-   }
+   for (Int_t i = 0; i < fNcells; ++i) SetBinError(i, error[i]);
 }
 
 //______________________________________________________________________________
@@ -7949,14 +7871,11 @@ void TH1::SetName(const char *name)
 void TH1::SetNameTitle(const char *name, const char *title)
 {
    // Change the name and title of this histogram
-   //
 
    //  Histograms are named objects in a THashList.
    //  We must update the hashlist if we change the name
-   if (fDirectory) fDirectory->Remove(this);
-   fName  = name;
+   SetName(name);
    SetTitle(title);
-   if (fDirectory) fDirectory->Append(this);
 }
 
 //______________________________________________________________________________
@@ -7997,18 +7916,17 @@ void TH1::Sumw2()
    //  This function is automatically called when the histogram is created
    //  if the static function TH1::SetDefaultSumw2 has been called before.
 
-      if (fSumw2.fN == fNcells) {
-         if (!fgDefaultSumw2 )
-            Warning("Sumw2","Sum of squares of weights structure already created");
-         return;
-      }
+   if (fSumw2.fN == fNcells) {
+      if (!fgDefaultSumw2 )
+         Warning("Sumw2","Sum of squares of weights structure already created");
+      return;
+   }
 
    fSumw2.Set(fNcells);
 
-   if ( fEntries > 0 )
-      for (Int_t bin=0; bin<fNcells; bin++) {
-         fSumw2.fArray[bin] = TMath::Abs(RetrieveBinContent(bin));
-      }
+   if (fEntries > 0)
+      for (Int_t i = 0; i < fNcells; ++i) 
+         fSumw2.fArray[i] = TMath::Abs(RetrieveBinContent(i));
 }
 
 //______________________________________________________________________________
@@ -8110,56 +8028,12 @@ Double_t TH1::GetBinErrorUp(Int_t bin) const
 }
 
 //______________________________________________________________________________
-Double_t TH1::GetBinError(Int_t binx, Int_t biny) const
-{
-   //   -*-*-*-*-*Return error of bin number binx, biny
-   //             =====================================
-   // NB: Function to be called for 2-D histograms only
-
-   Int_t bin = GetBin(binx,biny);
-   return GetBinError(bin);
-}
-
-//______________________________________________________________________________
-Double_t TH1::GetBinError(Int_t binx, Int_t biny, Int_t binz) const
-{
-   //   -*-*-*-*-*Return error of bin number binx,biny,binz
-   //             =========================================
-   // NB: Function to be called for 3-D histograms only
-
-   Int_t bin = GetBin(binx,biny,binz);
-   return GetBinError(bin);
-}
-
-//______________________________________________________________________________
-Double_t TH1::GetCellContent(Int_t binx, Int_t biny) const
-{
-   //   -*-*-*-*-*Return content of bin number binx, biny
-   //             =====================================
-   // NB: Function to be called for 2-D histograms only
-
-   Int_t bin = GetBin(binx,biny);
-   return RetrieveBinContent(bin);
-}
-
-//______________________________________________________________________________
-Double_t TH1::GetCellError(Int_t binx, Int_t biny) const
-{
-   //   -*-*-*-*-*Return error of bin number binx, biny
-   //             =====================================
-   // NB: Function to be called for 2-D histograms only
-
-   Int_t bin = GetBin(binx,biny);
-   return GetBinError(bin);
-}
-
-//______________________________________________________________________________
 void TH1::SetBinError(Int_t bin, Double_t error)
 {
    // see convention for numbering bins in TH1::GetBin
    if (!fSumw2.fN) Sumw2();
-   if (bin <0 || bin>= fSumw2.fN) return;
-   fSumw2.fArray[bin] = error*error;
+   if (bin < 0 || bin>= fSumw2.fN) return;
+   fSumw2.fArray[bin] = error * error;
 }
 
 //______________________________________________________________________________
@@ -8186,46 +8060,22 @@ void TH1::SetBinContent(Int_t bin, Double_t content)
 }
 
 //______________________________________________________________________________
-void TH1::SetCellContent(Int_t binx, Int_t biny, Double_t content)
-{
-   // Set cell content.
-
-   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
-   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
-   Int_t bin = GetBin(binx,biny);
-   SetBinContent(bin,content);
-}
-
-//______________________________________________________________________________
 void TH1::SetBinError(Int_t binx, Int_t biny, Double_t error)
 {
    // see convention for numbering bins in TH1::GetBin
-   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
-   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
-   Int_t bin = GetBin(binx,biny);
-   SetBinError(bin,error);
+   if (binx < 0 || binx > fXaxis.GetNbins() + 1) return;
+   if (biny < 0 || biny > fYaxis.GetNbins() + 1) return;
+   SetBinError(GetBin(binx, biny), error);
 }
 
 //______________________________________________________________________________
 void TH1::SetBinError(Int_t binx, Int_t biny, Int_t binz, Double_t error)
 {
    // see convention for numbering bins in TH1::GetBin
-   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
-   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
-   if (binz <0 || binz>fZaxis.GetNbins()+1) return;
-   Int_t bin = GetBin(binx,biny,binz);
-   SetBinError(bin,error);
-}
-
-//______________________________________________________________________________
-void TH1::SetCellError(Int_t binx, Int_t biny, Double_t error)
-{
-   // see convention for numbering bins in TH1::GetBin
-   if (binx <0 || binx>fXaxis.GetNbins()+1) return;
-   if (biny <0 || biny>fYaxis.GetNbins()+1) return;
-   if (!fSumw2.fN) Sumw2();
-   Int_t bin = biny*(fXaxis.GetNbins()+2) + binx;
-   fSumw2.fArray[bin] = error*error;
+   if (binx < 0 || binx > fXaxis.GetNbins() + 1) return;
+   if (biny < 0 || biny > fYaxis.GetNbins() + 1) return;
+   if (binz < 0 || binz > fZaxis.GetNbins() + 1) return;
+   SetBinError(GetBin(binx, biny, binz), error);
 }
 
 //______________________________________________________________________________

@@ -3289,7 +3289,7 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
          snprintf(info,200,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g, bine=%g, binn=%d)", x, y, binx, biny, fH->GetBinContent(bin), fH->GetBinError(bin), (Int_t) tp->GetBinEntries(bin));
       } else {
          biny = fYaxis->FindFixBin(y);
-         snprintf(info,200,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g)",x,y,binx,biny,fH->GetCellContent(binx,biny));
+         snprintf(info,200,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g)",x,y,binx,biny,fH->GetBinContent(binx,biny));
       }
    } else { 
       // 3d case: retrieving the x,y,z bin is not yet implemented 
@@ -3946,18 +3946,18 @@ void THistPainter::PaintArrows(Option_t *)
             xstep = fXaxis->GetBinWidth(i);
             if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
             if (i == Hparam.xfirst) {
-               dx = fH->GetCellContent(i+1, j) - fH->GetCellContent(i, j);
+               dx = fH->GetBinContent(i+1, j) - fH->GetBinContent(i, j);
             } else if (i == Hparam.xlast) {
-               dx = fH->GetCellContent(i, j) - fH->GetCellContent(i-1, j);
+               dx = fH->GetBinContent(i, j) - fH->GetBinContent(i-1, j);
             } else {
-               dx = 0.5*(fH->GetCellContent(i+1, j) - fH->GetCellContent(i-1, j));
+               dx = 0.5*(fH->GetBinContent(i+1, j) - fH->GetBinContent(i-1, j));
             }
             if (j == Hparam.yfirst) {
-               dy = fH->GetCellContent(i, j+1) - fH->GetCellContent(i, j);
+               dy = fH->GetBinContent(i, j+1) - fH->GetBinContent(i, j);
             } else if (j == Hparam.ylast) {
-               dy = fH->GetCellContent(i, j) - fH->GetCellContent(i, j-1);
+               dy = fH->GetBinContent(i, j) - fH->GetBinContent(i, j-1);
             } else {
-               dy = 0.5*(fH->GetCellContent(i, j+1) - fH->GetCellContent(i, j-1));
+               dy = 0.5*(fH->GetBinContent(i, j+1) - fH->GetBinContent(i, j-1));
             }
             if (id == 1) {
                dn = TMath::Max(dn, TMath::Abs(dx));
@@ -8995,10 +8995,10 @@ Int_t THistPainter::TableInit()
    Double_t allchan = 0;
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
-         c1 = fH->GetCellContent(i,j);
+         c1 = fH->GetBinContent(i,j);
          zmax = TMath::Max(zmax,c1);
          if (Hoption.Error) {
-            e1 = fH->GetCellError(i,j);
+            e1 = fH->GetBinError(i,j);
             zmax = TMath::Max(zmax,c1+e1);
          }
          zmin = TMath::Min(zmin,c1);

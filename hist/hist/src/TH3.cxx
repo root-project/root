@@ -908,7 +908,7 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
          if (npfits > npar && npfits >= cut) {
             for (ipar=0;ipar<npar;ipar++) {
                hlist[ipar]->Fill(x,y,f1->GetParameter(ipar));
-               hlist[ipar]->SetCellError(binx,biny,f1->GetParError(ipar));
+               hlist[ipar]->SetBinError(binx,biny,f1->GetParError(ipar));
             }
             hchi2->Fill(x,y,f1->GetChisquare()/(npfits-npar));
          }

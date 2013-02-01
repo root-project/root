@@ -1061,11 +1061,8 @@ void TH2::GetStats(Double_t *stats) const
 
    if (fBuffer) ((TH2*)this)->BufferEmpty();
 
-   Int_t bin, binx, biny;
-   Double_t w,err;
-   Double_t x,y;
    if ((fTsumw == 0 && fEntries > 0) || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
-      for (bin=0;bin<7;bin++) stats[bin] = 0;
+      std::fill(stats, stats + 7, 0);
 
       Int_t firstBinX = fXaxis.GetFirst();
       Int_t lastBinX  = fXaxis.GetLast();
@@ -1082,21 +1079,23 @@ void TH2::GetStats(Double_t *stats) const
             if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1;
          }
       }
-      for (biny = firstBinY; biny <= lastBinY; biny++) {
-         y = fYaxis.GetBinCenter(biny);
-         for (binx = firstBinX; binx <= lastBinX; binx++) {
-            bin = GetBin(binx,biny);
-            x   = fXaxis.GetBinCenter(binx);
+      for (Int_t biny = firstBinY; biny <= lastBinY; ++biny) {
+         Double_t y = fYaxis.GetBinCenter(biny);
+         for (Int_t binx = firstBinX; binx <= lastBinX; ++binx) {
+            Double_t x = fXaxis.GetBinCenter(binx);
             //w   = TMath::Abs(GetBinContent(bin));
-            w   = RetrieveBinContent(bin);
-            err = TMath::Abs(GetBinError(bin));
+            Int_t bin = GetBin(binx,biny);
+            Double_t w = RetrieveBinContent(bin);
+            Double_t wx = w * x; // avoid some extra multiplications at the expense of some clarity
+            Double_t wy = w * y;
+
             stats[0] += w;
-            stats[1] += err*err;
-            stats[2] += w*x;
-            stats[3] += w*x*x;
-            stats[4] += w*y;
-            stats[5] += w*y*y;
-            stats[6] += w*x*y;
+            stats[1] += GetBinErrorSqUnchecked(bin);
+            stats[2] += wx;
+            stats[3] += wx * x;
+            stats[4] += wy;
+            stats[5] += wy * y;
+            stats[6] += wx * y;
          }
       }
    } else {
@@ -1341,7 +1340,7 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
 //    Double_t tsum2 = 0;
 //    for (i=0;i<=ncx1+1;i++) {
 //       for (j=0;j<=ncy1+1;j++) {
-//          hsav = h2->GetCellContent(i,j);
+//          hsav = h2->GetBinContent(i,j);
 //          tsum2 += hsav;
 //          if (i >= ibeg && i <= iend && j >= jbeg && j <= jend) sum2 += hsav;
 //       }
@@ -1394,8 +1393,8 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
    Double_t rsum1=0, rsum2=0;
    for (i=ibeg;i<=iend;i++) {
       for (j=jbeg;j<=jend;j++) {
-         rsum1 += s1*h1->GetCellContent(i,j);
-         rsum2 += s2*h2->GetCellContent(i,j);
+         rsum1 += s1*h1->GetBinContent(i,j);
+         rsum2 += s2*h2->GetBinContent(i,j);
          dfmax1  = TMath::Max(dfmax1, TMath::Abs(rsum1-rsum2));
       }
    }
@@ -1405,8 +1404,8 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
    rsum1=0, rsum2=0;
    for (j=jbeg;j<=jend;j++) {
       for (i=ibeg;i<=iend;i++) {
-         rsum1 += s1*h1->GetCellContent(i,j);
-         rsum2 += s2*h2->GetCellContent(i,j);
+         rsum1 += s1*h1->GetBinContent(i,j);
+         rsum2 += s2*h2->GetBinContent(i,j);
          dfmax2 = TMath::Max(dfmax2, TMath::Abs(rsum1-rsum2));
       }
    }
@@ -1711,70 +1710,62 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    //          the overflow bin.
    //          Statistics will be recomputed from the new bin contents.
 
-   Int_t i,j,xbin,ybin;
-   Int_t nxbins  = fXaxis.GetNbins();
+   Int_t nxbins  = fXaxis.GetNbins(); 
    Int_t nybins  = fYaxis.GetNbins();
+   Int_t nx      = nxbins + 2; // normal bins + underflow and overflow
+   Int_t ny      = nybins + 2;
    Double_t xmin  = fXaxis.GetXmin();
    Double_t xmax  = fXaxis.GetXmax();
    Double_t ymin  = fYaxis.GetXmin();
    Double_t ymax  = fYaxis.GetXmax();
+
+   if (GetDimension() != 2) {
+      Error("Rebin2D", "Histogram must be TH2. This histogram has %d dimensions.", GetDimension());
+      return 0;
+   }
    if ((nxgroup <= 0) || (nxgroup > nxbins)) {
-      Error("Rebin", "Illegal value of nxgroup=%d",nxgroup);
+      Error("Rebin2D", "Illegal value of nxgroup=%d",nxgroup);
       return 0;
    }
    if ((nygroup <= 0) || (nygroup > nybins)) {
-      Error("Rebin", "Illegal value of nygroup=%d",nygroup);
+      Error("Rebin2D", "Illegal value of nygroup=%d",nygroup);
       return 0;
    }
 
-   Int_t newxbins = nxbins/nxgroup;
-   Int_t newybins = nybins/nygroup;
+   Int_t newxbins = nxbins / nxgroup;
+   Int_t newybins = nybins / nygroup;
+   Int_t newnx = newxbins + 2; // regular bins + overflow / underflow
+   Int_t newny = newybins + 2; // regular bins + overflow / underflow
 
    // Save old bin contents into a new array
-   Double_t entries = fEntries;
-   Double_t *oldBins = new Double_t[(nxbins+2)*(nybins+2)];
-   for (xbin = 0; xbin < nxbins+2; xbin++) {
-      for (ybin = 0; ybin < nybins+2; ybin++) {
-         oldBins[ybin*(nxbins+2)+xbin] = GetBinContent(xbin, ybin);
-      }
-   }
-   Double_t *oldErrors = 0;
-   if (fSumw2.fN != 0) {
-      oldErrors = new Double_t[(nxbins+2)*(nybins+2)];
-      for (xbin = 0; xbin < nxbins+2; xbin++) {
-         for (ybin = 0; ybin < nybins+2; ybin++) {
-	    //conventions are the same as in TH1::GetBin(xbin,ybin)
-            oldErrors[ybin*(nxbins+2)+xbin] = GetBinError(xbin, ybin);
-         }
-      }
+   Double_t *oldBins = new Double_t[fNcells];
+   for (Int_t i = 0; i < fNcells; ++i) oldBins[i] = RetrieveBinContent(i);
+   
+   Double_t* oldErrors = NULL;
+   if (fSumw2.fN) {
+      oldErrors = new Double_t[fNcells];
+      for (Int_t i = 0; i < fNcells; ++i) oldErrors[i] = GetBinErrorSqUnchecked(i);
    }
 
    // create a clone of the old histogram if newname is specified
-   TH2 *hnew = this;
+   TH2* hnew = this;
    if (newname && strlen(newname)) {
       hnew = (TH2*)Clone();
       hnew->SetName(newname);
    }
 
-   // disable axis extension to avoid label inflation in SetBinContent
-   Int_t canExtend = hnew->CanExtendAllAxes();
-   hnew->SetCanExtend(TH1::kNoAxis);
-
-   // save original statistics
-   Double_t stat[kNstat];
-   GetStats(stat);
    bool resetStat = false;
 
-
    // change axis specs and rebuild bin contents array
-   if(newxbins*nxgroup != nxbins) {
-      xmax = fXaxis.GetBinUpEdge(newxbins*nxgroup);
-      resetStat = true; //stats must be reset because top bins will be moved to overflow bin
+   if(newxbins * nxgroup != nxbins) {
+      xmax = fXaxis.GetBinUpEdge(newxbins * nxgroup);
+      resetStat = true; // stats must be reset because top bins will be moved to overflow bin
    }
-   if(newybins*nygroup != nybins) {
-      ymax = fYaxis.GetBinUpEdge(newybins*nygroup);
-      resetStat = true; //stats must be reset because top bins will be moved to overflow bin
+   if(newybins * nygroup != nybins) {
+      ymax = fYaxis.GetBinUpEdge(newybins * nygroup);
+      resetStat = true; // stats must be reset because top bins will be moved to overflow bin
    }
+
    // save the TAttAxis members (reset by SetBins) for x axis
    Int_t    nXdivisions  = fXaxis.GetNdivisions();
    Color_t  xAxisColor   = fXaxis.GetAxisColor();
@@ -1805,138 +1796,62 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    if (nxgroup != 1 || nygroup != 1) {
       if(fXaxis.GetXbins()->GetSize() > 0 || fYaxis.GetXbins()->GetSize() > 0){
          // variable bin sizes in x or y, don't treat both cases separately
-         Double_t *xbins = new Double_t[newxbins+1];
-         for(i = 0; i <= newxbins; ++i) xbins[i] = fXaxis.GetBinLowEdge(1+i*nxgroup);
-         Double_t *ybins = new Double_t[newybins+1];
-         for(i = 0; i <= newybins; ++i) ybins[i] = fYaxis.GetBinLowEdge(1+i*nygroup);
-         hnew->SetBins(newxbins,xbins, newybins, ybins);//changes also errors array (if any)
+         Double_t *xbins = new Double_t[newxbins + 1];
+         for(Int_t i = 0; i <= newxbins; ++i) xbins[i] = fXaxis.GetBinLowEdge(1 + i * nxgroup);
+         Double_t *ybins = new Double_t[newybins + 1];
+         for(Int_t i = 0; i <= newybins; ++i) ybins[i] = fYaxis.GetBinLowEdge(1 + i * nygroup);
+         hnew->SetBins(newxbins, xbins, newybins, ybins); // changes also errors array (if any)
          delete [] xbins;
          delete [] ybins;
       } else {
-         hnew->SetBins(newxbins, xmin, xmax, newybins, ymin, ymax);//changes also errors array
+         hnew->SetBins(newxbins, xmin, xmax, newybins, ymin, ymax); //changes also errors array
       }
 
-      Double_t binContent, binError;
-      Int_t oldxbin = 1;
-      Int_t oldybin = 1;
-      Int_t bin;
-      for (xbin = 1; xbin <= newxbins; xbin++) {
-         oldybin = 1;
-         for (ybin = 1; ybin <= newybins; ybin++) {
-            binContent = 0;
-            binError   = 0;
-            for (i = 0; i < nxgroup; i++) {
-               if (oldxbin+i > nxbins) break;
-               for (j =0; j < nygroup; j++) {
-                  if (oldybin+j > nybins) break;
-		  //get global bin (same conventions as in TH1::GetBin(xbin,ybin)
-		  bin = oldxbin + i + (oldybin + j)*(nxbins + 2);
+      // (0, 0): x - underflow; y - underflow
+      hnew->UpdateBinContent(0, oldBins[0]);      
+      if (oldErrors) hnew->SetBinError(0, 0, TMath::Sqrt(oldErrors[0]));         
+ 
+      // (x, 0): x - regular / overflow; y - underflow
+      for(Int_t binx = 1, oldbinx = 1; binx < newnx; ++binx, oldbinx += nxgroup){
+         Double_t binContent = 0.0, binErrorSq = 0.0;
+         for (Int_t i = 0; i < nxgroup && (oldbinx + i) < nx; ++i) {
+            Int_t bin = oldbinx + i;
+	         binContent += oldBins[bin];
+	         if(oldErrors) binErrorSq += oldErrors[bin];
+         }
+         Int_t newbin = binx;
+         hnew->UpdateBinContent(newbin, binContent);
+         if(oldErrors) hnew->SetBinError(binx, 0, TMath::Sqrt(binErrorSq));
+      }
+    
+      // (0, y): x - underflow; y - regular / overflow
+      for(Int_t biny = 1, oldbiny = 1; biny < newny; ++biny, oldbiny += nygroup){
+         Double_t binContent = 0.0, binErrorSq = 0.0;
+         for (Int_t j = 0; j < nygroup && (oldbiny + j) < ny; ++j) {
+	         Int_t bin = (oldbiny + j) * nx;
+	         binContent += oldBins[bin];
+	         if(oldErrors) binErrorSq += oldErrors[bin];
+         }
+         Int_t newbin = biny * newnx;
+         hnew->UpdateBinContent(newbin, binContent);
+         if(oldErrors) hnew->SetBinError(0, biny, TMath::Sqrt(binErrorSq));
+      }
+
+      // (x, y): x - regular / overflow; y - regular / overflow 
+      for (Int_t binx = 1, oldbinx = 1; binx < newnx; ++binx, oldbinx += nxgroup) {
+         for (Int_t biny = 1, oldbiny = 1; biny < newny; ++biny, oldbiny += nygroup) {
+            Double_t binContent = 0.0, binErrorSq = 0.0;
+            for (Int_t i = 0; i < nxgroup && (oldbinx + i) < nx; ++i) {
+               for (Int_t j = 0; j < nygroup && (oldbiny + j) < ny; ++j) {
+		            Int_t bin = oldbinx + i + (oldbiny + j) * nx;
                   binContent += oldBins[bin];
-                  if (oldErrors) binError += oldErrors[bin]*oldErrors[bin];
+                  if (oldErrors) binErrorSq += oldErrors[bin];
                }
             }
-            hnew->SetBinContent(xbin,ybin, binContent);
-            if (oldErrors) hnew->SetBinError(xbin,ybin,TMath::Sqrt(binError));
-            oldybin += nygroup;
+            Int_t newbin = binx + biny * newnx;
+            hnew->UpdateBinContent(newbin, binContent);
+            if (oldErrors) hnew->SetBinError(binx, biny, TMath::Sqrt(binErrorSq));
          }
-         oldxbin += nxgroup;
-      }
-
-      // Recompute correct underflows and overflows.
-
-      //copy old underflow bin in x and y (0,0)
-      hnew->SetBinContent(0,0,oldBins[0]);      
-      if (oldErrors) hnew->SetBinError(0,0,oldErrors[0]);         
-      
-      //calculate new overflow bin in x and y (newxbins+1,newybins+1)
-      binContent = 0;
-      binError = 0;
-      for(xbin = oldxbin; xbin <= nxbins+1; xbin++)
-	 for(ybin = oldybin; ybin <= nybins+1; ybin++){
-	    bin = xbin + (nxbins+2)*ybin;
-	    binContent += oldBins[bin];
-	    if(oldErrors) binError += oldErrors[bin]*oldErrors[bin];
-	 }
-      hnew->SetBinContent(newxbins+1,newybins+1,binContent);
-      if(oldErrors) hnew->SetBinError(newxbins+1,newybins+1,TMath::Sqrt(binError));
-      
-      //calculate new underflow bin in x and overflow in y (0,newybins+1)
-      binContent = 0;
-      binError = 0;
-      for(ybin = oldybin; ybin <= nybins+1; ybin++){
-	 bin = ybin*(nxbins+2);
-	 binContent += oldBins[bin];
-	 if(oldErrors) binError += oldErrors[bin] * oldErrors[bin];
-      }
-      hnew->SetBinContent(0,newybins+1,binContent);
-      if(oldErrors) hnew->SetBinError(0,newybins+1,TMath::Sqrt(binError));
-      
-      //calculate new overflow bin in x and underflow in y (newxbins+1,0)
-      binContent = 0;
-      binError = 0;
-      for(xbin = oldxbin; xbin <= nxbins+1; xbin++){
-	 bin = xbin;
-	 binContent += oldBins[bin];
-	 if(oldErrors) binError += oldErrors[bin] * oldErrors[bin];
-      }
-      hnew->SetBinContent(newxbins+1,0,binContent);
-      if(oldErrors) hnew->SetBinError(newxbins+1,0,TMath::Sqrt(binError));
-
-      //  recompute under/overflow contents in y for the new  x bins
-      Double_t binContent0, binContent2;
-      Double_t binError0, binError2;
-      Int_t oldxbin2, oldybin2;
-      Int_t ufbin, ofbin;
-      oldxbin2 = 1;
-      for (xbin = 1; xbin<=newxbins; xbin++) {
-         binContent0 = binContent2 = 0;
-         binError0 = binError2 = 0;
-         for (i=0; i<nxgroup; i++) {
-            if (oldxbin2+i > nxbins) break;
-	    //old underflow bin (in y)
-	    ufbin = oldxbin2 + i;
-	    binContent0 += oldBins[ufbin];
-	    if(oldErrors) binError0 += oldErrors[ufbin] * oldErrors[ufbin];
-	    for(ybin = oldybin; ybin <= nybins + 1; ybin++){
-	       //old overflow bin (in y)
-	       ofbin = ufbin + ybin*(nxbins+2);
-	       binContent2 += oldBins[ofbin];
-	       if(oldErrors) binError2 += oldErrors[ofbin] * oldErrors[ofbin];
-            }
-         }
-         hnew->SetBinContent(xbin,0,binContent0);
-         hnew->SetBinContent(xbin,newybins+1,binContent2);
-         if (oldErrors) {
-            hnew->SetBinError(xbin,0,TMath::Sqrt(binError0));
-            hnew->SetBinError(xbin,newybins+1,TMath::Sqrt(binError2) );
-         }
-         oldxbin2 += nxgroup;
-      }
-
-      //  recompute under/overflow contents in x for the new y bins
-      oldybin2 = 1;
-      for (ybin = 1; ybin<=newybins; ybin++){
-         binContent0 = binContent2 = 0;
-         binError0 = binError2 = 0;
-         for (i=0; i<nygroup; i++) {
-            if (oldybin2+i > nybins) break;
-	    //old underflow bin (in x)
-	    ufbin = (oldybin2 + i)*(nxbins+2);
-            binContent0 += oldBins[ufbin];
-	    if(oldErrors) binError0 += oldErrors[ufbin] * oldErrors[ufbin];
-	    for(xbin = oldxbin; xbin <= nxbins+1; xbin++){
-	       ofbin = ufbin + xbin;
-	       binContent2 += oldBins[ofbin];
-	       if(oldErrors) binError2 += oldErrors[ofbin] * oldErrors[ofbin];
-            }
-         }
-         hnew->SetBinContent(0,ybin,binContent0);
-         hnew->SetBinContent(newxbins+1,ybin,binContent2);
-         if (oldErrors) {
-            hnew->SetBinError(0,ybin, TMath::Sqrt(binError0));
-            hnew->SetBinError(newxbins+1, ybin, TMath::Sqrt(binError2));
-         }
-         oldybin2 += nygroup;
       }
    }
 
@@ -1965,10 +1880,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    fYaxis.SetTitleColor(yTitleColor);
    fYaxis.SetTitleFont(yTitleFont);
 
-   //restore statistics and entries  modified by SetBinContent
-   hnew->SetEntries(entries);
-   if (!resetStat) hnew->PutStats(stat);
-   hnew->SetCanExtend(canExtend);
+   if (resetStat) hnew->ResetStats();
 
    delete [] oldBins;
    if (oldErrors) delete [] oldErrors;
@@ -2395,9 +2307,9 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
             if (!fPainter->IsInside(binx,biny)) continue;
          }
          // sum bin content and error if needed
-         cont  += GetCellContent(binx,biny);
+         cont  += GetBinContent(binx,biny);
          if (computeErrors) {
-            Double_t exy = GetCellError(binx,biny);
+            Double_t exy = GetBinError(binx,biny);
             err2  += exy*exy;
          }
       }
@@ -3644,7 +3556,7 @@ TH2F::TH2F(const TMatrixFBase &m)
    Int_t jup  = m.GetColUpb();
    for (Int_t i=ilow;i<=iup;i++) {
       for (Int_t j=jlow;j<=jup;j++) {
-         SetCellContent(j-jlow+1,i-ilow+1,m(i,j));
+         SetBinContent(j-jlow+1,i-ilow+1,m(i,j));
       }
    }
 }
@@ -3889,7 +3801,7 @@ TH2D::TH2D(const TMatrixDBase &m)
    Int_t jup  = m.GetColUpb();
    for (Int_t i=ilow;i<=iup;i++) {
       for (Int_t j=jlow;j<=jup;j++) {
-         SetCellContent(j-jlow+1,i-ilow+1,m(i,j));
+         SetBinContent(j-jlow+1,i-ilow+1,m(i,j));
       }
    }
    if (fgDefaultSumw2) Sumw2();
