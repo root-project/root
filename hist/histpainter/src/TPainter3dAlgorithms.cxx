@@ -2224,7 +2224,7 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
    //              Get the content of the table, and loop on the
    //              stack if necessary.
    vv[1] = Hparam.zmin;
-   vv[2] = Hparam.factor*gCurrentHist->GetCellContent(ixt, iyt);
+   vv[2] = Hparam.factor*gCurrentHist->GetBinContent(ixt, iyt);
 
    // In linear scale, 3D boxes all start from 0.
    if (Hparam.zmin<0 && !Hoption.Logz && gStyle->GetHistMinimumZero()) {
@@ -2242,7 +2242,7 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
    if (nids) {
       for (i = 2; i <= nids + 1; ++i) {
          TH1 *hid = (TH1*)stack->At(i-2);
-         vv[i + 1] = Hparam.factor*hid->GetCellContent(ixt, iyt) + vv[i];
+         vv[i + 1] = Hparam.factor*hid->GetBinContent(ixt, iyt) + vv[i];
          vv[i + 1] = TMath::Max(Hparam.zmin, vv[i + 1]);
          //vv[i + 1] = TMath::Min(Hparam.zmax, vv[i + 1]);
       }
@@ -3818,7 +3818,7 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
    //          first channel should be used. */
       icx = ixt + ixa;
       if (icx > Hparam.xlast) icx = 1;
-      f[i*3+3] = Hparam.factor*gCurrentHist->GetCellContent(icx, iyt + iya);
+      f[i*3+3] = Hparam.factor*gCurrentHist->GetBinContent(icx, iyt + iya);
       if (Hoption.Logz) {
          if (f[i*3+3] > 0) f[i*3+3] = TMath::Log10(f[i*3+3]);
          else              f[i*3+3] = Hparam.zmin;
@@ -3830,7 +3830,7 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
       }
 
    // The colors on the surface can represent the content or the errors.
-   // if (fSumw2.fN) t[i] = gCurrentHist->GetCellError(icx, iyt + iya);
+   // if (fSumw2.fN) t[i] = gCurrentHist->GetBinError(icx, iyt + iya);
    // else           t[i] = f[i * 3 + 3];
       t[i] = f[i * 3 + 3];
    }
