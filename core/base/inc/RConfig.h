@@ -32,6 +32,10 @@
 #define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #define R__SSTREAM         /* use sstream or strstream header */
 
+/* Do not #define nullptr if the code is compiled in c++11 mode. */
+#if __cplusplus > 199711L
+#define R__NULLPTR
+#endif
 
 /*---- machines --------------------------------------------------------------*/
 
