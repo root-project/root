@@ -28,6 +28,11 @@
 
 #define R__USE_SHADOW_CLASS
 
+/* Do not #define nullptr if the code is compiled in c++11 mode. */
+#if __cplusplus > 199711L
+#define R__NULLPTR
+#endif
+
 /*---- machines --------------------------------------------------------------*/
 
 #ifdef __hpux
