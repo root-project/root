@@ -1633,6 +1633,18 @@ void THtml::CreateListOfClasses(const char* filter)
                                                 strstr(classPtr->GetDeclFileName(), "include/c++/") || 
                                                 !strncmp(classPtr->GetDeclFileName(), "/usr/include",12)))
                continue;
+            if (classPtr->GetDeclFileName() && (
+                 !strcmp(classPtr->GetDeclFileName(), "vector") ||
+                 !strcmp(classPtr->GetDeclFileName(), "list") ||
+                 !strcmp(classPtr->GetDeclFileName(), "deque") ||
+                 !strcmp(classPtr->GetDeclFileName(), "map") ||
+                 !strcmp(classPtr->GetDeclFileName(), "valarray") ||
+                 !strcmp(classPtr->GetDeclFileName(), "set")||
+                 !strcmp(classPtr->GetDeclFileName(), "stdlib.h") ) )
+            {
+               // Those are STL header, just ignore.
+               continue;
+            }
             if (skipROOTClasses) {
                if (classPtr->GetSharedLibs() && classPtr->GetSharedLibs()[0]) {
                   std::string lib(classPtr->GetSharedLibs());
