@@ -10,8 +10,23 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) $(TUTORIALSLOGS) $(TUTORIALSSTUBS) \
 
 # Set the list of target to make while testing.
 
+# This is a default value, it can be over-ridden
+# by passing FIXCLING= as a command line argument.
+#
+# So, fixing cling is on by default and is disabled
+# if FIXCLING is explicitly set to empty or is set
+# to: no
+# 
+# We need to repeat this here (in addition to Rules.mk)
+# because we need it before we can include Rules.mk.
+FIXCLING=yes
+
 ifeq ($(FAST)$(FIXCLING),)
 TEST_TARGETS += $(TUTORIALSTESTS) $(TUTORIALSTESTS_CC)
+else
+ifeq ($(FAST)-$(FIXCLING),-no)
+TEST_TARGETS += $(TUTORIALSTESTS) $(TUTORIALSTESTS_CC)
+endif
 endif
 
 # don't run these, they will fail and need to be fixed.

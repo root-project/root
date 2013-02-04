@@ -143,9 +143,11 @@ $(STRESSFILESCOPIEDTAG): $(STRESSFILESHERE)
 # arguments to the test; see below for stress-ctest.log
 CALLSTRESSEXE := $(CALLROOTEXE:root.exe=)
 ifneq ($(FIXCLING),)
+ifneq ($(FIXCLING),no)
 # support for perftrack and valgrind is 'broken' when FixCling is set.
 # and CALLROOTEXE has too much stuff (-e ....)
 CALLSTRESSEXE := 
+endif
 endif
 
 $(addsuffix .log,$(STRESSTESTSCOMP)): %-ctest.log: test/%$(ExeSuf)
