@@ -11,10 +11,9 @@ Warning in <TClass::TClass>: no dictionary for class DataHeaderElement_p5 is ava
 Warning in <TClass::TClass>: no dictionary for class EventStreamInfo_p2 is available
 Warning in <TClass::TClass>: no dictionary for class IOVMetaDataContainer_p1 is available
 Warning in <TClass::TClass>: no dictionary for class IOVPayloadContainer_p1 is available
-Warning in <TClass::TClass>: no dictionary for class pair<unsigned int,string> is available
 Warning in <TClass::TClass>: no dictionary for class EventType_p1 is available
 Warning in <TClass::TClass>: no dictionary for class IOVPayloadContainer_p1::CondAttrListCollection_p1 is available
 Warning in <TClass::TClass>: no dictionary for class IOVPayloadContainer_p1::CondAttrListEntry_p1 is available
 Warning in <TClass::TClass>: no dictionary for class IOVPayloadContainer_p1::IOVRange_p1 is available
 Warning in <TClass::TClass>: no dictionary for class AttrListIndexes is available
-(int)0
+(int) 0
