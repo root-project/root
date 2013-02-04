@@ -44,7 +44,7 @@ printhelp()
         echo "                 full local path to source tarball"
         echo "   -v <version>, --version=<version>"
         echo "                 version in the form x.j.w[-hash-or-tag] ;"
-        echo "                 current default 3.2.0"
+        echo "                 current default 3.2.7"
         echo "   --xrdopts=<opts-to-xrootd>"
         echo "                 additional configuration options to xrootd"
         echo "                 (see xrootd web site)"
@@ -192,7 +192,7 @@ else
 fi
 
 if test "x$VERS" =  "x" ; then
-   VERS="3.2.0"
+   VERS="3.2.7"
 fi
 echo "Version: $VERS"
 
