@@ -94,10 +94,16 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const clang::Type *type = 0;
-   const clang::Decl *decl = lh.findScope(name,&type);
+   const clang::Decl *decl = lh.findScope(name,&type, /* intantiateTemplate= */ true );
    if (!decl) {
       std::string buf = TClassEdit::InsertStd(name);
-      decl = lh.findScope(buf,&type);
+      decl = lh.findScope(buf,&type, /* intantiateTemplate= */ true );
+   }
+   if (!decl && type) {
+      const clang::TagType *tagtype =type->getAs<clang::TagType>();
+      if (tagtype) {
+         decl = tagtype->getDecl();
+      }
    }
    fDecl = decl;
    fType = type;
@@ -168,7 +174,7 @@ void TClingClassInfo::Delete(void *arena) const
 {
    // Invoke operator delete on a pointer to an object
    // of this class type.
-   if (!IsValid()) {
+   if (!IsLoaded()) {
       return;
    }
    std::ostringstream os;
@@ -186,7 +192,7 @@ void TClingClassInfo::DeleteArray(void *arena, bool dtorOnly) const
 {
    // Invoke operator delete[] on a pointer to an array object
    // of this class type.
-   if (!IsValid()) {
+   if (!IsLoaded()) {
       return;
    }
    if (dtorOnly) {
@@ -212,7 +218,7 @@ void TClingClassInfo::Destruct(void *arena) const
 {
    // Invoke placement operator delete on a pointer to an array object
    // of this class type.
-   if (!IsValid()) {
+   if (!IsLoaded()) {
       return;
    }
    std::string name( FullyQualifiedName(fDecl) );
@@ -234,7 +240,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
    if (poffset) {
       *poffset = 0L;
    }
-   if (!IsValid()) {
+   if (!IsLoaded()) {
       TClingMethodInfo tmi(fInterp);
       return tmi;
    }
@@ -243,7 +249,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       // Constructor.
       // These must be accessed through a wrapper, since they
       // may call an operator new(), which can be a member
-      // function or a global function, as well as the actual
+      // function or a glo/Users/pcanal/root_working/code/rootclingbal function, as well as the actual
       // constructor function itself.
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
@@ -273,7 +279,7 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
    if (poffset) {
       *poffset = 0L;
    }
-   if (!IsValid()) {
+   if (!IsLoaded()) {
       TClingMethodInfo tmi(fInterp);
       return tmi;
    }
@@ -312,7 +318,7 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
 int TClingClassInfo::GetMethodNArg(const char *method, const char *proto) const
 {
    // Note: Used only by TQObject.cxx:170 and only for interpreted classes.
-   if (!IsValid()) {
+   if (!IsLoaded()) {
       return -1;
    }
    TClingMethodInfo mi = GetMethod(method, proto, 0);
@@ -354,7 +360,7 @@ bool TClingClassInfo::HasDefaultConstructor() const
    // (including a constructor that has defaults for all its arguments).
    // Note: This is could enhanced to also know about the ROOT ioctor
    // but this was not the case in CINT.
-   if (!IsValid()) {
+   if (!IsLoaded()) {
       return false;
    }
    const clang::CXXRecordDecl *CRD =
@@ -379,7 +385,7 @@ bool TClingClassInfo::HasDefaultConstructor() const
 
 bool TClingClassInfo::HasMethod(const char *name) const
 {
-   if (!IsValid()) {
+   if (!IsLoaded()) {
       return false;
    }
    bool found = false;
@@ -416,10 +422,16 @@ void TClingClassInfo::Init(const char *name)
    fType = 0;
    fIterStack.clear();
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   fDecl = lh.findScope(name,&fType);
+   fDecl = lh.findScope(name,&fType, /* intantiateTemplate= */ true );
    if (!fDecl) {
       std::string buf = TClassEdit::InsertStd(name);
-      fDecl = lh.findScope(buf,&fType);
+      fDecl = lh.findScope(buf,&fType, /* intantiateTemplate= */ true );
+   }
+   if (!fDecl && fType) {
+      const clang::TagType *tagtype =fType->getAs<clang::TagType>();
+      if (tagtype) {
+         fDecl = tagtype->getDecl();
+      }
    }
 }
 
@@ -461,7 +473,7 @@ void TClingClassInfo::Init(const clang::Type &tag)
 
 bool TClingClassInfo::IsBase(const char *name) const
 {
-   if (!IsValid()) {
+   if (!IsLoaded()) {
       return false;
    }
    TClingClassInfo base(fInterp, name);
@@ -492,8 +504,26 @@ bool TClingClassInfo::IsEnum(cling::Interpreter *interp, const char *name)
 
 bool TClingClassInfo::IsLoaded() const
 {
+   // IsLoaded in CINT was meaning is known to the interpreter
+   // and has a complete definition.
+   // IsValid in Cling (as in CING) means 'just' is known to the 
+   // interpreter.
    if (!IsValid()) {
       return false;
+   }
+   if (fDecl == 0) {
+      return false;
+   }
+   const clang::CXXRecordDecl *CRD = llvm::dyn_cast<clang::CXXRecordDecl>(fDecl);
+   if ( CRD ) {
+      if (!CRD->hasDefinition()) {
+         return false;
+      }
+   } else {
+      const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(fDecl);
+      if (TD && TD->getDefinition() == 0) {
+         return false;
+      }
    }
    // All clang classes are considered loaded.
    return true;
@@ -508,7 +538,7 @@ bool TClingClassInfo::IsValidMethod(const char *method, const char *proto,
                                     long *offset) const
 {
    // Check if the method with the given prototype exist.
-   if (!IsValid()) {
+   if (!IsLoaded()) {
       return false;
    }
    if (offset) {
@@ -783,7 +813,7 @@ long TClingClassInfo::Property() const
    else if (CRD->isUnion()) {
       property |= kIsUnion;
    }
-   if (CRD->isAbstract()) {
+   if (CRD->hasDefinition() && CRD->isAbstract()) {
       property |= kIsAbstract;
    }
    return property;
@@ -802,6 +832,10 @@ int TClingClassInfo::Size() const
 {
    if (!IsValid()) {
       return -1;
+   }
+   if (!fDecl) {
+      // A forward declared class.
+      return 0;
    }
    clang::Decl::Kind DK = fDecl->getKind();
    if (DK == clang::Decl::Namespace) {

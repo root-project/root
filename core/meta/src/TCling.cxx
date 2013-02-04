@@ -1925,7 +1925,12 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
    int storeAutoload = SetClassAutoloading(autoload);
 
    // First we want to check whether the decl exist, but _without_
-   // generating any template instantiation.
+   // generating any template instantiation. However, the lookup
+   // still will create a forward declaration of the class template instance
+   // if it exist.  In this case, the return value of findScope will still
+   // be zero but the type will be initialized.
+   // Note in the corresponding code in ROOT 5, CINT was not instantiating
+   // this forward declaration.
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    const clang::Type *type = 0;
    const clang::Decl *decl = lh.findScope(classname, &type, /* intantiateTemplate= */ false );
@@ -1935,12 +1940,34 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
    }   
    delete[] classname;
       
-   // Note that when using CINT we explicitly requested
-   // for template to *not* be instantiated as a
-   // consequence to the equivalent call.  
-   // We need to review whether we want to re-add this
-   // distinction ...
-   if (decl && type) {
+   if (type) {
+      // If decl==0 and the type is valid, then we have a forward declaration.
+      if (!decl) {
+         // If we have a forward declaration for a class template instantiation,
+         // we want to ignore it if it was produced/induced by the call to
+         // findScope, however we can not distinguish those from the
+         // instantiation induce by 'soft' use (and thus also induce by the
+         // same underlying code paths)
+         // ['soft' use = use not requiring a complete definition]
+         // So to reduce the amount of disruption to the existing code we
+         // would just ignore those for STL collection, for which we really
+         // need to have the compiled collection proxy (and thus the TClass
+         // bootstrap).
+         clang::ClassTemplateSpecializationDecl *tmpltDecl =
+            llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>
+               (type->getAsCXXRecordDecl());
+         if (tmpltDecl && !tmpltDecl->getPointOfInstantiation().isValid()) {
+            // Since the point of instantiation is invalid, we 'guess' that
+            // the 'instantiation' of the forwarded type appended in
+            // findscope.
+            bool isStd = tmpltDecl->getDeclContext()->Equals(fInterpreter->getSema().getStdNamespace());
+            if (isStd && TClassEdit::STLKind(tmpltDecl->getName().data()) != 0) {
+               // For STL Collection we return false.
+               SetClassAutoloading(storeAutoload);
+               return kFALSE;
+            }
+         }
+      }
       TClingClassInfo tci(fInterpreter, *type);
       if (!tci.IsValid()) {
          SetClassAutoloading(storeAutoload);
