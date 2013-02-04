@@ -1626,6 +1626,9 @@ void THtml::CreateListOfClasses(const char* filter)
                continue;
             }
             // ignore STL
+            if (classPtr->GetClassInfo() &&
+                (gInterpreter->ClassInfo_Property(classPtr->GetClassInfo()) & kIsDefinedInStd))
+              continue;
             if (classPtr->GetDeclFileName() && (!strncmp(classPtr->GetDeclFileName(), "prec_stl/", 9) || 
                                                 strstr(classPtr->GetDeclFileName(), "include/c++/") || 
                                                 !strncmp(classPtr->GetDeclFileName(), "/usr/include",12)))
