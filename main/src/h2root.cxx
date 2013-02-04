@@ -521,7 +521,7 @@ void convert_2d(Int_t id)
    Int_t lw = lq[lcont];
    if (lw) h2->Sumw2();
 
-   Float_t x,y;
+   Float_t x = 0.0, y = 0.0;
    for (Int_t j=0;j<=ncy+1;j++) {
       for (Int_t i=0;i<=ncx+1;i++) {
          hijxy(id,i,j,x,y);

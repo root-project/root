@@ -55,88 +55,88 @@
 #include <map>
 #include <string>
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Math { 
+   namespace Math {
 
-      class GSLMultiFit; 
+      class GSLMultiFit;
 
 
 //________________________________________________________________________________
-/** 
-    LSResidualFunc class description. 
+/**
+    LSResidualFunc class description.
     Internal class used for accessing the residuals of the Least Square function
-    and their derivates which are estimated numerically using GSL numerical derivation. 
-    The class contains a pointer to the fit method function and an index specifying 
+    and their derivates which are estimated numerically using GSL numerical derivation.
+    The class contains a pointer to the fit method function and an index specifying
     the i-th residual and wraps it in a multi-dim gradient function interface
-    ROOT::Math::IGradientFunctionMultiDim. 
+    ROOT::Math::IGradientFunctionMultiDim.
     The class is used by ROOT::Math::GSLNLSMinimizer (GSL non linear least square fitter)
 
     @ingroup MultiMin
 */
-class LSResidualFunc : public IMultiGradFunction { 
-public: 
+class LSResidualFunc : public IMultiGradFunction {
+public:
 
-   //default ctor (required by CINT) 
+   //default ctor (required by CINT)
    LSResidualFunc() : fIndex(0), fChi2(0)
    {}
 
 
-   LSResidualFunc(const ROOT::Math::FitMethodFunction & func, unsigned int i) : 
-      fIndex(i), 
-      fChi2(&func), 
+   LSResidualFunc(const ROOT::Math::FitMethodFunction & func, unsigned int i) :
+      fIndex(i),
+      fChi2(&func),
       fX2(std::vector<double>(func.NDim() ) )
    {}
 
 
    // copy ctor
    LSResidualFunc(const LSResidualFunc & rhs) :
-      IMultiGenFunction(), 
-      IMultiGradFunction() 
-   { 
+      IMultiGenFunction(),
+      IMultiGradFunction()
+   {
       operator=(rhs);
-   } 
+   }
 
    // assignment
-   LSResidualFunc & operator= (const LSResidualFunc & rhs) 
-   { 
+   LSResidualFunc & operator= (const LSResidualFunc & rhs)
+   {
       fIndex = rhs.fIndex;
-      fChi2 = rhs.fChi2; 
+      fChi2 = rhs.fChi2;
       fX2 = rhs.fX2;
       return *this;
-   } 
+   }
 
-   IMultiGenFunction * Clone() const { 
-      return new LSResidualFunc(*fChi2,fIndex); 
+   IMultiGenFunction * Clone() const {
+      return new LSResidualFunc(*fChi2,fIndex);
    }
 
    unsigned int NDim() const { return fChi2->NDim(); }
 
-   void Gradient( const double * x, double * g) const { 
-      double f0 = 0; 
+   void Gradient( const double * x, double * g) const {
+      double f0 = 0;
       FdF(x,f0,g);
    }
 
-   void FdF (const double * x, double & f, double * g) const { 
-      unsigned int n = NDim(); 
+   void FdF (const double * x, double & f, double * g) const {
+      unsigned int n = NDim();
       std::copy(x,x+n,fX2.begin());
       const double kEps = 1.0E-4;
-      f = DoEval(x); 
-      for (unsigned int i = 0; i < n; ++i) { 
+      f = DoEval(x);
+      for (unsigned int i = 0; i < n; ++i) {
          fX2[i] += kEps;
          g[i] =  ( DoEval(&fX2.front()) - f )/kEps;
          fX2[i] = x[i];
       }
-   } 
-   
+   }
 
-private: 
 
-   double DoEval (const double * x) const { 
+private:
+
+   double DoEval (const double * x) const {
       return fChi2->DataElement(x, fIndex);
    }
-   
-   double DoDerivative(const double * x, unsigned int icoord) const { 
+
+   double DoDerivative(const double * x, unsigned int icoord) const {
       //return  ROOT::Math::Derivator::Eval(*this, x, icoord, 1E-8);
       std::copy(x,x+NDim(),fX2.begin());
       const double kEps = 1.0E-4;
@@ -144,117 +144,114 @@ private:
       return ( DoEval(&fX2.front()) - DoEval(x) )/kEps;
    }
 
-   unsigned int fIndex; 
-   const ROOT::Math::FitMethodFunction * fChi2; 
+   unsigned int fIndex;
+   const ROOT::Math::FitMethodFunction * fChi2;
    mutable std::vector<double> fX2;  // cached vector
 };
 
 
 //_____________________________________________________________________________________________________
-/** 
+/**
    GSLNLSMinimizer class for Non Linear Least Square fitting
-   It Uses the Levemberg-Marquardt algorithm from 
+   It Uses the Levemberg-Marquardt algorithm from
    <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Nonlinear-Least_002dSquares-Fitting.html">
    GSL Non Linear Least Square fitting</A>.
 
    @ingroup MultiMin
-*/ 
+*/
 class GSLNLSMinimizer : public  ROOT::Math::BasicMinimizer {
 
-public: 
+public:
 
-   /** 
+   /**
       Default constructor
-   */ 
-   GSLNLSMinimizer (int type = 0); 
+   */
+   GSLNLSMinimizer (int type = 0);
 
-   /** 
+   /**
       Destructor (no operations)
-   */ 
-   ~GSLNLSMinimizer ();  
+   */
+   ~GSLNLSMinimizer ();
 
 private:
    // usually copying is non trivial, so we make this unaccessible
 
-   /** 
+   /**
       Copy constructor
-   */ 
-   GSLNLSMinimizer(const GSLNLSMinimizer &) : ROOT::Math::BasicMinimizer() {} 
+   */
+   GSLNLSMinimizer(const GSLNLSMinimizer &) : ROOT::Math::BasicMinimizer() {}
 
-   /** 
+   /**
       Assignment operator
-   */ 
+   */
    GSLNLSMinimizer & operator = (const GSLNLSMinimizer & rhs)  {
       if (this == &rhs) return *this;  // time saving self-test
       return *this;
    }
 
-public: 
+public:
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func); 
+   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func);
 
    /// set gradient the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func); 
+   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func);
 
- 
+
    /// method to perform the minimization
-   virtual  bool Minimize(); 
+   virtual  bool Minimize();
 
 
    /// return expected distance reached from the minimum
    virtual double Edm() const { return fEdm; } // not impl. }
 
 
-   /// return pointer to gradient values at the minimum 
-   virtual const double *  MinGradient() const; 
+   /// return pointer to gradient values at the minimum
+   virtual const double *  MinGradient() const;
 
-   /// number of function calls to reach the minimum 
-   virtual unsigned int NCalls() const { return (fChi2Func) ? fChi2Func->NCalls() : 0; } 
+   /// number of function calls to reach the minimum
+   virtual unsigned int NCalls() const { return (fChi2Func) ? fChi2Func->NCalls() : 0; }
 
-   /// number of free variables (real dimension of the problem) 
-   /// this is <= Function().NDim() which is the total 
-//   virtual unsigned int NFree() const { return fNFree; }  
+   /// number of free variables (real dimension of the problem)
+   /// this is <= Function().NDim() which is the total
+//   virtual unsigned int NFree() const { return fNFree; }
 
    /// minimizer provides error and error matrix
-   virtual bool ProvidesError() const { return true; } 
+   virtual bool ProvidesError() const { return true; }
 
-   /// return errors at the minimum 
+   /// return errors at the minimum
    virtual const double * Errors() const { return (fErrors.size() > 0) ? &fErrors.front() : 0; }
-//  { 
-//       static std::vector<double> err; 
+//  {
+//       static std::vector<double> err;
 //       err.resize(fDim);
-//       return &err.front(); 
+//       return &err.front();
 //    }
 
-   /** return covariance matrices elements 
+   /** return covariance matrices elements
        if the variable is fixed the matrix is zero
        The ordering of the variables is the same as in errors
-   */ 
+   */
    virtual double CovMatrix(unsigned int , unsigned int ) const;
 
    /// return covariance matrix status
    virtual int CovMatrixStatus() const;
 
-protected: 
+protected:
 
 
-private: 
-   
+private:
 
-   unsigned int fNFree;      // dimension of the internal function to be minimized 
+   unsigned int fNFree;      // dimension of the internal function to be minimized
    unsigned int fSize;        // number of fit points (residuals)
- 
 
-   ROOT::Math::GSLMultiFit * fGSLMultiFit;        // pointer to GSL multi fit solver 
+   ROOT::Math::GSLMultiFit * fGSLMultiFit;        // pointer to GSL multi fit solver
    const ROOT::Math::FitMethodFunction * fChi2Func;      // pointer to Least square function
-   
-   double fMinVal;                                // minimum function value
+
    double fEdm;                                   // edm value
    double fLSTolerance;                           // Line Search Tolerance
-   std::vector<double> fValues;           
+   std::vector<double> fValues;
    std::vector<double> fErrors;
-   std::vector<double> fCovMatrix;              //  cov matrix (stored as cov[ i * dim + j] 
+   std::vector<double> fCovMatrix;              //  cov matrix (stored as cov[ i * dim + j]
    std::vector<double> fSteps;
    std::vector<std::string> fNames;
    std::vector<LSResidualFunc> fResiduals;   //! transient Vector of the residual functions
@@ -263,7 +260,7 @@ private:
    std::map< unsigned int, std::pair<double, double> > fBounds; // map specifying the bound using as key the parameter index
 
 
-}; 
+};
 
    } // end namespace Math
 
