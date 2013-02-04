@@ -27,7 +27,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <signal.h>
 
+#include "Riostream.h"
 #include "TSystem.h"
 #include "TProof.h"
 #include "TString.h"
@@ -39,11 +41,13 @@ int getsocket(struct hostent *h, int);
 void printhelp();
 int recvn(int sock, void *buffer, int length);
 int sendn(int sock, const void *buffer, int length);
-int proof_open(const char *master);
+int proof_open(const char *master, long to = 10);
 int parse_args(int argc, char **argv,
                TString &url, TString &sboxdir, time_t &span, int &test,
-               TString &logfile, bool &keep);
+               TString &logfile, bool &keep, bool &verbose, long &to,
+               TString &pidfile);
 void printhelp();
+int set_timer(bool on = 1, long to = 10);
 
 //______________________________________________________________________________
 // The client request structure
@@ -79,17 +83,20 @@ int main(int argc, char **argv)
    //
    //  Exits 0 on success, 1 on error
 
-   TString url, sboxdir, logfile;
+   TString url, sboxdir, logfile, pidfile;
    time_t span = -1;
    int test = 0;
-   bool keep = 0;
-   int rc = parse_args(argc, argv, url, sboxdir, span, test, logfile, keep);
+   bool keep = 0, verbose = 0;
+   long timeout = -1;
+   int rc = parse_args(argc, argv, url, sboxdir, span, test, logfile, keep,
+                       verbose, timeout, pidfile);
    if (rc < 0) {
       fprintf(stderr, "xpdtest: parse_args failure\n");
       gSystem->Exit(1);
    } else if (rc > 0) {
       gSystem->Exit(0);
    }
+   gDebug = (verbose) ? 1 : 0;
    
    rc = 0;
    
@@ -99,42 +106,74 @@ int main(int argc, char **argv)
       gSystem->RedirectOutput(logfile, "w", &redirH);
    }
 
+   // Extract process ID, if a file has been passed
+   if (!pidfile.IsNull()) {
+      std::fstream infile(pidfile.Data(), std::ios::in);
+      if (infile.is_open()) {
+         TString line;
+         line.ReadToDelim(infile);
+         line.Remove(TString::kTrailing, '\n');
+         if (line.IsDigit()) {
+            pid_t pid = (pid_t) line.Atoi();
+            if (kill(pid, 0) != 0) {
+               fprintf(stderr, "xpdtest: process '%d' does not exist\n", (int) pid);
+               rc = 1;
+            }
+         } else {
+            fprintf(stderr, "xpdtest: pId file does not contain pid in expected form (first line: %s)\n", line.Data());
+            rc = 1;
+         }
+      } else {
+         fprintf(stderr, "xpdtest: pId file '%s' could not be opened\n", pidfile.Data());
+         rc = 1;
+      }
+   }
+
    // Check sandbox dir
    FileStat_t fst;
-   if (gSystem->GetPathInfo(sboxdir, fst) != 0) {
-      fprintf(stderr, "xpdtest: stat failure for '%s'\n", sboxdir.Data());
-      rc = 1;
-   }
-   if (rc == 0 && !R_ISDIR(fst.fMode)) {
-      fprintf(stderr, "xpdtest: '%s' is not a directory\n", sboxdir.Data());
-      rc = 1;
+   if (rc == 0 && test > 1) {
+      if (gSystem->GetPathInfo(sboxdir, fst) != 0) {
+         fprintf(stderr, "xpdtest: stat failure for '%s'\n", sboxdir.Data());
+         rc = 1;
+      }
+      if (rc == 0 && !R_ISDIR(fst.fMode)) {
+         fprintf(stderr, "xpdtest: '%s' is not a directory\n", sboxdir.Data());
+         rc = 1;
+      }
    }
     
    // Setup URL
-   TUrl u(url.Data());
-   TString defusr = u.GetUser();
-   if (defusr.IsNull()) {
-      UserGroup_t *pw = gSystem->GetUserInfo();
-      if (pw) {
-         defusr = pw->fUser;
-         delete pw;
+   TUrl u;
+   TString defusr;
+   if (rc == 0) {
+      u.SetUrl(url.Data());
+      defusr = u.GetUser();
+      if (defusr.IsNull()) {
+         UserGroup_t *pw = gSystem->GetUserInfo();
+         if (pw) {
+            defusr = pw->fUser;
+            delete pw;
+         }
       }
-   }
-   if (!url.BeginsWith(u.GetProtocol())) {
-      if (u.GetPort() == 80 && !strcmp(u.GetProtocol(), "http")) u.SetPort(1093);
-      u.SetProtocol("proof");
+      if (!url.BeginsWith(u.GetProtocol())) {
+         if (u.GetPort() == 80 && !strcmp(u.GetProtocol(), "http")) u.SetPort(1093);
+         u.SetProtocol("proof");
+      }
    }
 
    // Do ping 
-   if (rc == 0)
+   if (rc == 0) {
+      set_timer(1, timeout);
       if ((rc = xpd_ping(u.GetHost(), u.GetPort())) != 0)
          fprintf(stderr, "xpdtest: failure pinging '%s'\n", url.Data());
+      set_timer(0);
+   }
 
    if (test > 0) {
       // Do TProof::Open in "masteronly" mode
       if (rc == 0) {
          if (!logfile.IsNull()) gSystem->RedirectOutput(0, 0, &redirH);
-         rc = proof_open(u.GetUrl());
+         rc = proof_open(u.GetUrl(), timeout);
          if (!logfile.IsNull()) gSystem->RedirectOutput(logfile, "a", &redirH);
          if (rc != 0)
             fprintf(stderr, "xpdtest: TProof::Open failure for default user '%s'\n", u.GetUrl());
@@ -164,7 +203,7 @@ int main(int argc, char **argv)
                   u.SetUser(ent);
                   fprintf(stderr, "proof_open: url: '%s'\n", u.GetUrl());
                   if (!logfile.IsNull()) gSystem->RedirectOutput(0, 0, &redirH);
-                  rc = proof_open(u.GetUrl());
+                  rc = proof_open(u.GetUrl(), timeout);
                   if (!logfile.IsNull()) gSystem->RedirectOutput(logfile, "a", &redirH);
                   if (rc != 0) {
                      fprintf(stderr, "xpdtest: failure scanning sandbox dir '%s'\n", sboxdir.Data());
@@ -188,7 +227,7 @@ int main(int argc, char **argv)
 //______________________________________________________________________________
 int parse_args(int argc, char **argv,
                TString &url, TString &sboxdir, time_t &span, int &test,
-               TString &logfile, bool &keep)
+               TString &logfile, bool &keep, bool &verbose, long &to, TString &pidfile)
 {
    // Extract control info from arguments
    
@@ -221,6 +260,17 @@ int parse_args(int argc, char **argv,
    }
    if (getenv("XPDTEST_KEEP")) {
       keep = 1;
+   }
+   if (getenv("XPDTEST_VERBOSE")) {
+      verbose = 1;
+   }
+   if (getenv("XPDTEST_TIMEOUT")) {
+      errno = 0;
+      long xto = strtol(getenv("XPDTEST_TIMEOUT"), 0, 10);
+      if (errno == 0 && xto > 0) sscanf(getenv("XPDTEST_TIMEOUT"), "%ld", &to);
+   }
+   if (getenv("XPDTEST_PIDFILE")) {
+      pidfile = getenv("XPDTEST_PIDFILE");
    }
 
    // -u url -d sboxdir -s span -t test
@@ -289,6 +339,33 @@ int parse_args(int argc, char **argv,
                printhelp();
                return -1;
             }
+         } else if (!strcmp(argv[i], "-T")) {
+            if (argv[++i]) {
+               errno = 0;
+               long xto = strtol(argv[i], 0, 10);
+               if (errno == 0 && xto > 0) {
+                  to = (time_t) xto;
+               } else {
+                  fprintf(stderr, "parse_args: timeout must be a positive integer! (argv: %s, xto: %ld)\n",
+                                  argv[i], xto);
+                  printhelp();
+                  return -1;
+               }
+            } else {
+               fprintf(stderr, "parse_args: '-T' requires the specification of the timeout (in secs)!\n");
+               printhelp();
+               return -1;
+            }
+         } else if (!strcmp(argv[i], "-p")) {
+            if (argv[++i]) {
+               pidfile = argv[i];
+            } else {
+               fprintf(stderr, "parse_args: '-p' requires the specification of the file with the process ID!\n");
+               printhelp();
+               return -1;
+            }
+         } else if (!strcmp(argv[i], "-v")) {
+            verbose = 1;
          }
       }
    }
@@ -304,7 +381,8 @@ void printhelp()
    fprintf(stderr, "   xpdtest: test xproofd service on (remote) host\n");
    fprintf(stderr, "\n");
    fprintf(stderr, "   Syntax:\n");
-   fprintf(stderr, "            xpdtest [-u url] [-t test] [-d sbdir] [-s span] [-l logfile] [-k] [-h|--help]\n");
+   fprintf(stderr, "            xpdtest [-u url] [-t test] [-d sbdir] [-s span] [-T timeout] [-l logfile]\n");
+   fprintf(stderr, "                    [-p pidfile] [-k] [-v] [-h|--help]\n");
    fprintf(stderr, "\n");
    fprintf(stderr, "   url:     URL where the xproofd under test responds [localhost:1093]\n");
    fprintf(stderr, "   test:    type of test [0]\n");
@@ -316,9 +394,13 @@ void printhelp()
    fprintf(stderr, "   span:    define the time interval to define 'recent' users when test\n");
    fprintf(stderr, "            is 2: only users who connected within this interval are checked;\n");
    fprintf(stderr, "            use -1 for infinite [-1]\n");
+   fprintf(stderr, "   timeout: max time waited for a successful session start in seconds [10 secs]\n");
    fprintf(stderr, "   logfile: log file if not screen; deleted if the test fails unless '-k' is\n");
    fprintf(stderr, "            specified (see below) [terminal]\n");
+   fprintf(stderr, "   pidfile: file with the daemon process id; if specified, an initial test of the\n");
+   fprintf(stderr, "            process existence is done (using kill(pid, 0))\n");
    fprintf(stderr, "   -k:      keep log file at path given via '-l' in all cases [do not keep]\n");
+   fprintf(stderr, "   -v:      set gDebug = 1 for ROOT\n");
    fprintf(stderr, "   -h, --help: print this screen\n");
    fprintf(stderr, "\n");
    fprintf(stderr, "   Return:  0   the required test succeeded\n");
@@ -327,7 +409,7 @@ void printhelp()
 }
 
 //______________________________________________________________________________
-int proof_open(const char *master)
+int proof_open(const char *master, long to)
 {
    // Test proof open.
    // Return 0 on success, 1 on failure
@@ -335,7 +417,9 @@ int proof_open(const char *master)
    RedirectHandle_t rh;
    TString popenfile = TString::Format("%s/xpdtest_popen_file", gSystem->TempDirectory());
    gSystem->RedirectOutput(popenfile, "w", &rh);
+   set_timer(1, to);
    TProof *p = TProof::Open(master, "masteronly");
+   set_timer(0);
    gSystem->RedirectOutput(0, 0, &rh);
    if (!p || (p && !p->IsValid())) {
       TMacro m;
@@ -344,6 +428,43 @@ int proof_open(const char *master)
    }
    if (p) delete p;
    return rc;
+}
+
+//______________________________________________________________________________
+static void handle_sigalarm(int)
+{
+   // If we are called it means that we failed
+   gSystem->Exit(1);
+}
+
+//______________________________________________________________________________
+static void ignore_signal(int)
+{
+   // Do nothing
+}
+
+//______________________________________________________________________________
+int set_timer(bool on, long to)
+{
+   // Start an asynchronous firing after 'to' seconds
+   // Return
+   //        0 on success
+   //        1 otherwise
+
+   struct itimerval itv;
+   bool sett = (on && to > 0) ? 1 : 0;
+   itv.it_value.tv_sec     = (sett) ? time_t(to) : time_t(0);
+   itv.it_value.tv_usec    = 0;
+   itv.it_interval.tv_sec  = 0;
+   itv.it_interval.tv_usec = 0;
+   // Enable/disable handling of the related signal
+   if (sett) {
+      signal(SIGALRM, handle_sigalarm);
+   } else {
+      signal(SIGALRM, ignore_signal);
+   }
+   errno = 0;
+   return setitimer(ITIMER_REAL, &itv, 0);
 }
 
 //______________________________________________________________________________

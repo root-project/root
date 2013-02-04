@@ -31,7 +31,7 @@ Gives a short list of options avaliable, and exit
 .TP
 .B \-t\fP \fR<test>\fP 
 type of test to be run:
-    0       ping the daemon
+    0       ping the daemon (includes process existence check if pid specified; see below)
     1       ping the daemon and check connection for default user
     2       ping the daemon and check connection for the default user and all recent users
 
@@ -56,14 +56,33 @@ it can be also passed via the environment variable
 .B XPDTEST_TIMESPAN
 (default is -1).
 .TP
+.B \-T\fP \fR<timeout>\fP
+define the time, in seconds, waited for the session to start successfully;
+it can be also passed via the environment variable
+.B XPDTEST_TIMESOUT
+(default is 10 seconds).
+.TP
 .B \-l\fP \fR<logfile>\fP
 log file if not screen; deleted if the required test fails unless '-k' is specified (see below);it can be also passed via the environment variable
 .B XPDTEST_LOGFILE.
+.TP
+.B \-p\fP \fR<pidfile>\fP
+file with the process ID as a integer number in the first line; if this file is given a quick test on the process existence is done using kill(\fRpid\fP,0);
+it can be also passed via the environment variable
+.B XPDTEST_PIDFILE.
 .TP
 .B \-k
 keep log file at path given via '-l' in all cases; it can be also passed via the environment variable
 .B XPDTEST_KEEP
 (default is 'no keep').
+.TP
+.B \-v
+set
+.B
+gDebug=1
+for the underline ROOT calls; it can be also passed via the environment variable
+.B XPDTEST_VERBOSE
+(default is 'no verbose').
 .SH RETURN
 .B xpdtest
 returns 0 on success and 1 in case of test failure. Errors are printed on the screen or saved into the specified log file.
