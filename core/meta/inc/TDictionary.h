@@ -83,7 +83,8 @@ enum EProperty {
    kIsExplicit      = 0x04000000,
    kIsNamespace     = 0x08000000,
    kIsConstMethod   = 0x10000000,
-   kIsUsingVariable = 0x20000000
+   kIsUsingVariable = 0x20000000,
+   kIsDefinedInStd  = 0x30000000
 };
 
 enum EClassProperty {
@@ -97,7 +98,7 @@ enum EClassProperty {
    kClassHasImplicitDtor = 0x00000200,
    kClassHasDtor         = 0x00000300,
    kClassHasVirtual      = 0x00001000,
-   kClassIsAbstract      = 0x00002000
+   kClassIsAbstract      = 0x00002000,
 };
 
 enum ERefTypeValues {

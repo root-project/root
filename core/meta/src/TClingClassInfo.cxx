@@ -43,7 +43,8 @@
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
 #include "clang/Frontend/CompilerInstance.h"
- 
+#include "clang/Sema/Sema.h"
+
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
@@ -122,20 +123,20 @@ long TClingClassInfo::ClassProperty() const
    if (!IsValid()) {
       return 0L;
    }
+   long property = 0L;
    const clang::RecordDecl *RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
    if (!RD) {
       // We are an enum or namespace.
       // The cint interface always returns 0L for these guys.
-      return 0L;
+      return property;
    }
    if (RD->isUnion()) {
       // The cint interface always returns 0L for these guys.
-      return 0L;
+      return property;
    }
    // We now have a class or a struct.
    const clang::CXXRecordDecl *CRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(fDecl);
-   long property = 0L;
    property |= kClassIsValid;
    if (CRD->isAbstract()) {
       property |= kClassIsAbstract;
@@ -787,6 +788,9 @@ long TClingClassInfo::Property() const
    }
    long property = 0L;
    property |= kIsCPPCompiled;
+   if (fDecl->getDeclContext()->Equals(fInterp->getSema().getStdNamespace())) {
+      property |= kIsDefinedInStd;
+   }
    clang::Decl::Kind DK = fDecl->getKind();
    if ((DK == clang::Decl::Namespace) || (DK == clang::Decl::TranslationUnit)) {
       property |= kIsNamespace;
