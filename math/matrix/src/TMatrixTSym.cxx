@@ -168,12 +168,14 @@ TMatrixTSym<Element>::TMatrixTSym(const TMatrixTSym<Element> &a,EMatrixCreatorsO
    switch(op) {
       case kPlus:
       {
+         Allocate(a.GetNcols(),a.GetNcols(),a.GetColLwb(),a.GetColLwb(),1);
          Plus(a,b);
          break;
       }
 
       case kMinus:
       {
+         Allocate(a.GetNcols(),a.GetNcols(),a.GetColLwb(),a.GetColLwb(),1);
          Minus(a,b);
          break;
       }
