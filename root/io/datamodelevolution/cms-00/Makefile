@@ -71,7 +71,7 @@ read_test1_cxx.$(DllSuf): DataModelV1.h
 test1.clog: test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l test1.cxx+ > test1.clog 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
 
-ifneq ($(ClingWorkAroundEmulatedProxyPair),)
+ifneq ($(ClingWorkAroundNoPrivateClassIO),)
 test1:
 	@true
 else
@@ -85,7 +85,7 @@ read_test1.clog: read_test1_cxx.$(DllSuf) libDataModelV1_dictcint.$(DllSuf) test
 test1.comp.log: read_test1.clog
 	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 0) > test1.comp.log
 
-ifneq ($(ClingWorkAroundEmulatedProxyPair),)
+ifneq ($(ClingWorkAroundNoPrivateClassIO),)
 read_test1:
 	@true
 else
@@ -104,7 +104,7 @@ test2.clog: test2_cxx.$(DllSuf) test1 libDataModelV2_dictcint.$(DllSuf)
 test2.comp.log: test2.clog
 	$(CMDECHO) (cd ../logs/cms-00; ../../common/compare.sh -s 1) > test2.comp.log 
 
-ifneq ($(ClingWorkAroundEmulatedProxyPair),)
+ifneq ($(ClingWorkAroundNoPrivateClassIO),)
 test2:
 	@true
 else
