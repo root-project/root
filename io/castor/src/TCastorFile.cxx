@@ -73,7 +73,7 @@
 #define RFIO_HSM_CNS       RFIO_HSM_BASETYPE+1
 
 extern "C" { int rfio_HsmIf_reqtoput (char *); }
-extern "C" { int DLL_DECL rfio_parse(char *, char **, char **); }
+extern "C" { int rfio_parse(char *, char **, char **); }
 extern "C" { int rfio_HsmIf_IsHsmFile (const char *); }
 extern "C" { char *getconfent(char *, char *, int); }
 
@@ -82,7 +82,7 @@ extern int tStageHostKey;
 extern int tStagePortKey;
 extern int tSvcClassKey;
 extern int tCastorVersionKey;
-extern "C" { int DLL_DECL use_castor2_api(); }
+extern "C" { int use_castor2_api(); }
 
 //______________________________________________________________________________
 static int UseCastor2API()
