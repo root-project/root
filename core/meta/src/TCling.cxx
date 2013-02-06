@@ -245,8 +245,8 @@ static void TCling__UpdateClassInfo(TagDecl* TD)
       ((TCling*)gInterpreter)->UpdateClassInfoWithDecl(TD);
    } else {
       // If we are called indirectly from within another call to
-      // TCint::UpdateClassInfo, we delay the update until the dictionary loading
-      // is finished (i.e. when we return to the top level TCint::UpdateClassInfo).
+      // TCling::UpdateClassInfo, we delay the update until the dictionary loading
+      // is finished (i.e. when we return to the top level TCling::UpdateClassInfo).
       // This allows for the dictionary to be fully populated when we actually
       // update the TClass object.   The updating of the TClass sometimes
       // (STL containers and when there is an emulated class) forces the building
@@ -453,10 +453,10 @@ void* autoloadCallback(const std::string& mangled_name)
 //
 //
 
-int TCint_GenerateDictionary(const std::vector<std::string> &classes,
-                             const std::vector<std::string> &headers,
-                             const std::vector<std::string> &fwdDecls,
-                             const std::vector<std::string> &unknown)
+int TCling_GenerateDictionary(const std::vector<std::string> &classes,
+                              const std::vector<std::string> &headers,
+                              const std::vector<std::string> &fwdDecls,
+                              const std::vector<std::string> &unknown)
 {
    //This function automatically creates the "LinkDef.h" file for templated
    //classes then executes CompileMacro on it.
@@ -606,10 +606,10 @@ int TCint_GenerateDictionary(const std::vector<std::string> &classes,
    return 0;
 }
 
-int TCint_GenerateDictionary(const std::string& className,
-                             const std::vector<std::string> &headers,
-                             const std::vector<std::string> &fwdDecls,
-                             const std::vector<std::string> &unknown)
+int TCling_GenerateDictionary(const std::string& className,
+                              const std::vector<std::string> &headers,
+                              const std::vector<std::string> &fwdDecls,
+                              const std::vector<std::string> &unknown)
 {
    //This function automatically creates the "LinkDef.h" file for templated
    //classes then executes CompileMacro on it.
@@ -617,7 +617,7 @@ int TCint_GenerateDictionary(const std::string& className,
    //if the file exist.
    std::vector<std::string> classes;
    classes.push_back(className);
-   return TCint_GenerateDictionary(classes, headers, fwdDecls, unknown);
+   return TCling_GenerateDictionary(classes, headers, fwdDecls, unknown);
 }
 
 //______________________________________________________________________________
@@ -864,11 +864,11 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
    }
 
    if (!gSystem->FindFile(searchPath, pcmFileName)) {
-      ::Error("TCintWithCling::RegisterModule", "cannot find dictionary module %s in %s",
+      ::Error("TCling::RegisterModule", "cannot find dictionary module %s in %s",
             ROOT::TMetaUtils::GetModuleFileName(modulename).c_str(), searchPath.Data());
    } else {
       if (gDebug > 5) {
-         ::Info("TCintWithCling::RegisterModule", "Loading PCM %s", pcmFileName.Data());
+         ::Info("TCling::RegisterModule", "Loading PCM %s", pcmFileName.Data());
       }
       clang::CompilerInstance* CI = fInterpreter->getCI();
       ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
@@ -880,7 +880,7 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
 
    for (const char** hdr = headers; *hdr; ++hdr) {
       if (gDebug > 5) {
-         ::Info("TCintWithCling::RegisterModule", "   #including %s...", *hdr);
+         ::Info("TCling::RegisterModule", "   #including %s...", *hdr);
       }
       if(!getenv("ROOT_MODULES"))
          fInterpreter->parseForModule(TString::Format("#include \"%s\"", *hdr).Data());
@@ -2262,7 +2262,7 @@ Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 
       }
    }
    // Generate the temporary dictionary file
-   return TCint_GenerateDictionary(listClasses, listIncludes,
+   return TCling_GenerateDictionary(listClasses, listIncludes,
       std::vector<std::string>(), std::vector<std::string>());
 }
 
@@ -2360,7 +2360,7 @@ const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
    // The 'name' is known to the interpreter, this function returns
    // the internal version of this name (usually just resolving typedefs)
    // This is used in particular to synchronize between the name used
-   // by rootcint and by the run-time enviroment (TClass)
+   // by rootcling and by the run-time enviroment (TClass)
    // Return 0 if the name is not known.
 
    R__LOCKGUARD(gClingMutex);
