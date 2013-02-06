@@ -874,14 +874,13 @@ long TClingClassInfo::Tagnum() const
    return reinterpret_cast<long>(fDecl);
 }
 
-const char *TClingClassInfo::FileName() const
+const char *TClingClassInfo::FileName()
 {
    if (!IsValid()) {
       return 0;
    }
-   static std::string buf;
-   buf = ROOT::TMetaUtils::GetFileName(GetDecl());
-   return buf.c_str();
+   fDeclFileName = ROOT::TMetaUtils::GetFileName(GetDecl());
+   return fDeclFileName.c_str();
 }
 
 const char *TClingClassInfo::FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const

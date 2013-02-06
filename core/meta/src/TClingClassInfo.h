@@ -58,6 +58,8 @@ private:
    std::string           fTitle; // The meta info for the class.
    mutable int           fNMethods; // Number of methods, assuming fNDecls is correct
    mutable llvm::SmallVector<const clang::Decl*, 2> fLastDeclForNMethods; // Last decls in the decl contexts during last update of fNMethods
+   
+   std::string           fDeclFileName; // Name of the file where the underlying entity is declared.
 
    explicit TClingClassInfo() /* = delete */; // NOT IMPLEMENTED
    TClingClassInfo &operator=(const TClingClassInfo &) /* = delete */; // NOT IMPLEMENTED
@@ -115,7 +117,7 @@ public:
    int                  RootFlag() const;
    int                  Size() const;
    long                 Tagnum() const;
-   const char          *FileName() const;
+   const char          *FileName();
    const char          *FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char          *Name() const;
    const char          *Title();
