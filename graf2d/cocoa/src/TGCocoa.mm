@@ -4190,7 +4190,11 @@ bool TGCocoa::MakeProcessForeground()
       ProcessSerialNumber psn = {0, kCurrentProcess};
 
       const OSStatus res1 = TransformProcessType(&psn, kProcessTransformToForegroundApplication);
-      if (res1 != noErr) {
+
+      //When TGCocoa's functions are called from the python (Apple's system version),
+      //TransformProcessType fails with paramErr (looks like process is _already_ foreground),
+      //why is it a paramErr - I've no idea.
+      if (res1 != noErr && res1 != paramErr) {
          Error("MakeProcessForeground", "TransformProcessType failed with code %d", res1);
          return false;
       }
