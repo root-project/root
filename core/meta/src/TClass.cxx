@@ -1060,7 +1060,17 @@ void TClass::Init(const char *name, Version_t cversion,
          }
       }
    }
-   if (fClassInfo) SetTitle(gCling->ClassInfo_Title(fClassInfo));
+   if (fClassInfo) {
+      SetTitle(gCling->ClassInfo_Title(fClassInfo));
+      if ( fDeclFileName == 0 || fDeclFileName[0] == '\0' ) {
+         fDeclFileName = gInterpreter->ClassInfo_FileName( fClassInfo );
+         // Missing interface:
+         // fDeclFileLine = gInterpreter->ClassInfo_FileLine( fClassInfo );
+         
+         // But really do not want to set ImplFileLine as it is currently the
+         // marker of being 'loaded' or not (reminder loaded == has a TClass bootstrap).
+      }
+   }
 
    ResetBit(kLoading);
 
