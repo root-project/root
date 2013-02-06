@@ -367,7 +367,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 
 <para>The symbols used for the type are:</para>
 <itemizedlist>
-<listitem><para><code>C</code>:a character string terminated by the 0 character</para></listitem>
+<listitem><para><code>C</code>: a character string terminated by the 0 character</para></listitem>
 <listitem><para><code>B</code>: an 8 bit signed integer </para></listitem>
 <listitem><para><code>b</code>: an 8 bit unsigned integer </para></listitem>
 <listitem><para><code>S</code>: a 16 bit signed integer</para></listitem>
@@ -378,6 +378,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <listitem><para><code>l</code>: a 64 bit unsigned integer</para></listitem>
 <listitem><para><code>F</code>: a 32 bit floating point </para></listitem>
 <listitem><para><code>D</code>: a 64 bit floating point</para></listitem>
+<listitem><para><code>O</code>: [the letter 'o', not a zero] a boolean (Bool_t)</para></listitem>
 </itemizedlist>
 <para>The type is used for a byte count to decide how much space to allocate. The variable written is simply the block of bytes starting at the starting address given in the second parameter. It may or may not match the leaf list depending on whether or not the programmer is being careful when choosing the leaf address, name, and type. </para>
 <para>By default, a variable will be copied with the number of bytes specified in the type descriptor symbol. However, if the type consists of two characters, the number specifies the number of bytes to be used when copying the variable to the output buffer.  The line below describes <code>ntrack</code> to be written as a 16-bit integer (rather than a 32-bit integer).</para>
