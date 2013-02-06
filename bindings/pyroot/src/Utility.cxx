@@ -15,6 +15,7 @@
 
 // ROOT
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TObject.h"
 #include "TClassEdit.h"
 #include "TClassRef.h"
@@ -885,4 +886,47 @@ PyObject* PyROOT::Utility::PyErr_Occurred_WithGIL()
 #endif
 
    return e;
+}
+
+//____________________________________________________________________________
+namespace {
+
+   static int (*sOldInputHook)() = NULL;
+   static PyThreadState* sInputHookEventThreadState = NULL;
+
+   static int EventInputHook()
+   {
+   // This method is supposed to be called from CPython's command line and
+   // drives the GUI.
+      PyEval_RestoreThread( sInputHookEventThreadState );
+      gSystem->ProcessEvents();
+      PyEval_SaveThread();
+
+      if ( sOldInputHook ) return sOldInputHook();
+         return 0;
+   }
+
+} // unnamed namespace
+
+PyObject* PyROOT::Utility::InstallGUIEventInputHook()
+{
+// Install the method hook for sending events to the GUI
+   if ( PyOS_InputHook && PyOS_InputHook != &EventInputHook )
+      sOldInputHook = PyOS_InputHook;
+
+   sInputHookEventThreadState = PyThreadState_Get();
+
+   PyOS_InputHook = (int (*)())&EventInputHook;
+   Py_INCREF( Py_None );
+   return Py_None;
+}
+
+PyObject* PyROOT::Utility::RemoveGUIEventInputHook()
+{
+// Remove event hook, if it was installed
+   PyOS_InputHook = sOldInputHook;
+   sInputHookEventThreadState = NULL;
+
+   Py_INCREF( Py_None );
+   return Py_None;
 }

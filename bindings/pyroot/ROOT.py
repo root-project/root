@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 11/10/10
+# Last: 02/06/13
 
 """PyROOT user module.
 
@@ -15,7 +15,7 @@ from __future__ import generators
 
 """
 
-__version__ = '6.1.0'
+__version__ = '6.2.0'
 __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 
 
@@ -402,7 +402,7 @@ class ModuleFacade( types.ModuleType ):
       return super( self.__class__, self ).__setattr__( name, value )
 
    def __getattr1( self, name ):             # "start-up" getattr
-    # special case, to allow "from ROOT import gROOT" w/o starting GUI thread
+    # special case, to allow "from ROOT import gROOT" w/o sending GUI events
       if name == '__path__':
          raise AttributeError( name )
 
@@ -510,23 +510,33 @@ class ModuleFacade( types.ModuleType ):
                   appc.ExecuteFile( rootlogon )
             del rootlogon, logons
 
-    # root thread, if needed, to prevent GUIs from starving, as needed
+    # use either the input hook or thread to send events to GUIs
       if self.PyConfig.StartGuiThread and \
             not ( self.keeppolling or _root.gROOT.IsBatch() ):
-         import threading
-         self.__dict__[ 'keeppolling' ] = 1
-         self.__dict__[ 'PyGUIThread' ] = \
-            threading.Thread( None, _processRootEvents, None, ( self, ) )
-
-         def _finishSchedule( ROOT = self ):
+         if self.PyConfig.StartGuiThread == 'inputhook' or\
+               _root.gSystem.InheritsFrom( 'TMacOSXSystem' ):
+          # new, PyOS_InputHook based mechanism
+            if PyConfig.GUIThreadScheduleOnce:
+               for guicall in PyConfig.GUIThreadScheduleOnce:
+                  guicall()
+               PyConfig.GUIThreadScheduleOnce = []
+            _root.InstallGUIEventInputHook()
+         else:
+          # original, threading based approach
             import threading
-            if threading.currentThread() != self.PyGUIThread:
-               while self.PyConfig.GUIThreadScheduleOnce:
-                  self.PyGUIThread.join( 0.1 )
+            self.__dict__[ 'keeppolling' ] = 1
+            self.__dict__[ 'PyGUIThread' ] = \
+               threading.Thread( None, _processRootEvents, None, ( self, ) )
 
-         self.PyGUIThread.finishSchedule = _finishSchedule
-         self.PyGUIThread.setDaemon( 1 )
-         self.PyGUIThread.start()
+            def _finishSchedule( ROOT = self ):
+               import threading
+               if threading.currentThread() != self.PyGUIThread:
+                  while self.PyConfig.GUIThreadScheduleOnce:
+                     self.PyGUIThread.join( 0.1 )
+
+            self.PyGUIThread.finishSchedule = _finishSchedule
+            self.PyGUIThread.setDaemon( 1 )
+            self.PyGUIThread.start()
 
     # store already available ROOT objects to prevent spurious lookups
       for name in self.module.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
@@ -554,7 +564,10 @@ def cleanup():
 
    facade = sys.modules[ __name__ ]
 
- # prevent spurious lookups into ROOT libraries
+ # shutdown GUI thread, as appropriate (always save to call)
+   _root.RemoveGUIEventInputHook()
+
+ # prevent further spurious lookups into ROOT libraries
    del facade.__class__.__getattr__
    del facade.__class__.__setattr__
 

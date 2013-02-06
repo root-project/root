@@ -126,6 +126,10 @@ namespace PyROOT {
    // for threading: save call to PyErr_Occurred()
       PyObject* PyErr_Occurred_WithGIL();
 
+   // for GUI driving; install/remove event callback
+      PyObject* InstallGUIEventInputHook();
+      PyObject* RemoveGUIEventInputHook();
+
    } // namespace Utility
 
 } // namespace PyROOT
