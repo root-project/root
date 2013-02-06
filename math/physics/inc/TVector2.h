@@ -58,7 +58,8 @@ public:
    void Set(const TVector2& v);
    void Set(Double_t x0, Double_t y0);
    void Set(float  x0, float  y0);
-
+   void SetX(Double_t x0);
+   void SetY(Double_t y0);
                                         // ****** other member functions
 
    Double_t Mod2() const { return fX*fX+fY*fY; };
@@ -172,5 +173,8 @@ inline  TVector2 TVector2::Norm(const TVector2& v) const {return *this-Proj(v); 
 inline void TVector2::Set(const TVector2& v   )     { fX = v.fX; fY = v.fY; }
 inline void TVector2::Set(Double_t x0, Double_t y0) { fX = x0  ; fY = y0 ;  }
 inline void TVector2::Set(float  x0, float  y0)     { fX = x0  ; fY = y0 ;  }
+inline void TVector2::SetX(Double_t x0)             { fX = x0 ; }
+inline void TVector2::SetY(Double_t y0)             { fY = y0 ; }
+
 
 #endif
