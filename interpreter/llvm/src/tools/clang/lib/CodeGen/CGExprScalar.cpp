@@ -1446,6 +1446,7 @@ Value *ScalarExprEmitter::VisitUnaryMinus(const UnaryOperator *E) {
     BinOp.LHS = llvm::Constant::getNullValue(BinOp.RHS->getType());
   BinOp.Ty = E->getType();
   BinOp.Opcode = BO_Sub;
+  BinOp.FPContractable = false;
   BinOp.E = E;
   return EmitSub(BinOp);
 }
