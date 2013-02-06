@@ -2585,7 +2585,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
          delete [] modifiable_name;
          return GetClass(altname,load);
       }
-      TClass *ncl = new TClass(name, 1, 0, 0, -1, -1, silent);
+      TClass *ncl = gInterpreter->GenerateTClass(name, silent);
       if (!ncl->IsZombie()) {
          delete [] modifiable_name;
          return ncl;
