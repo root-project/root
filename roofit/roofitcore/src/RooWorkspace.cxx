@@ -607,6 +607,8 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
 
       // Delete clone of incoming node
       nodesToBeDeleted.addOwned(*node) ;
+
+      //cout << "WV: recycling existing node " << existingNode << " = " << existingNode->GetName() << " for imported node " << node << endl ;
       
     } else {
       // Import node
@@ -1595,6 +1597,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   string declfilebase = declfilename.substr(0,dotpos2) ;
   string declfileext = declfilename.substr(dotpos2+1) ;
 
+  list<string> extraHeaders ;
+
   // If file has not beed stored yet, enter stl strings with implementation and declaration in file map
   if (_fmap.find(declfilebase) == _fmap.end()) {
 
@@ -1617,8 +1621,42 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
     // Read entire file into an stl string
     string decl ;
     while(fdecl.getline(buf,1023)) {
-      decl += buf ;
-      decl += '\n' ;
+      
+      // Look for include state of self
+      Bool_t processedInclude = kFALSE ;
+      char* extincfile = 0 ;
+      
+      // Look for include of declaration file corresponding to this implementation file
+      if (strstr(buf,"#include")) {
+	// Process #include statements here
+	char tmp[10240] ;
+	strlcpy(tmp,buf,10240) ;
+	Bool_t stdinclude = strchr(buf,'<') ;
+	strtok(tmp," <\"") ;
+	char* incfile = strtok(0," <>\"") ;	
+	
+	if (!stdinclude) {
+	  // check if it lives in $ROOTSYS/include
+	  TString hpath = gSystem->Getenv("ROOTSYS") ;
+	  hpath += "/include/" ;
+	  hpath += incfile ;
+	  if (gSystem->AccessPathName(hpath.Data())) {
+	    oocoutI(_wspace,ObjectHandling)  << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") scheduling include file " << incfile << " for import" << endl ;
+	    extraHeaders.push_back(incfile) ;
+	    extincfile = incfile ;
+	    processedInclude = kTRUE ;
+	  }
+	  
+	}
+      }
+      
+      if (processedInclude) {
+	decl += "// external include file below retrieved from workspace code storage\n" ;
+	decl += Form("#include \"%s\"\n",extincfile) ; 
+      } else {
+	decl += buf ;
+	decl += '\n' ;
+      }
     }
     
     // Open implementation file
@@ -1639,37 +1677,99 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
       
       // Look for include state of self
       Bool_t foundSelfInclude=kFALSE ;
+      Bool_t processedInclude = kFALSE ;
+      char* extincfile = 0 ;
       
       // Look for include of declaration file corresponding to this implementation file
       if (strstr(buf,"#include")) {
 	// Process #include statements here
 	char tmp[10240] ;
 	strlcpy(tmp,buf,10240) ;
+	Bool_t stdinclude = strchr(buf,'<') ;
 	strtok(tmp," <\"") ;
-	char* incfile = strtok(0," <\"") ;
-	
+	char* incfile = strtok(0," <>\"") ;	
+
 	if (strstr(incfile,declfilename.c_str())) {
 	  foundSelfInclude=kTRUE ;
 	}
-      } 
+
+	if (!stdinclude && !foundSelfInclude) {
+	  // check if it lives in $ROOTSYS/include
+	  TString hpath = gSystem->Getenv("ROOTSYS") ;
+	  hpath += "/include/" ;
+	  hpath += incfile ;
+	  
+	  if (gSystem->AccessPathName(hpath.Data())) {
+	    oocoutI(_wspace,ObjectHandling)  << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") scheduling include file " << incfile << " for import" << endl ;
+	    extraHeaders.push_back(incfile) ;
+	    extincfile = incfile ;
+	    processedInclude = kTRUE ;
+	  }
+	  
+	}
+      }
       
       // Explicitly rewrite include of own declaration file to string
       // any directory prefixes, copy all other lines verbatim in stl string
       if (foundSelfInclude) {
 	// If include of self is found, substitute original include 
 	// which may have directory structure with a plain include
+	impl += "// class declaration include file below retrieved from workspace code storage\n" ;
 	impl += Form("#include \"%s.%s\"\n",declfilebase.c_str(),declfileext.c_str()) ;
+      } else if (processedInclude) {
+	impl += "// external include file below retrieved from workspace code storage\n" ;
+	impl += Form("#include \"%s\"\n",extincfile) ; 
       } else {
 	impl += buf ;
 	impl += '\n' ;
       }
     }
-    
-        
+            
     // Create entry in file map
     _fmap[declfilebase]._hfile = decl ;
     _fmap[declfilebase]._cxxfile = impl ;   
     _fmap[declfilebase]._hext = declfileext ;
+
+    // Process extra includes now
+    for (list<string>::iterator ehiter = extraHeaders.begin() ; ehiter != extraHeaders.end() ; ++ehiter ) {
+      if (_ehmap.find(*ehiter) == _ehmap.end()) {
+
+	ExtraHeader eh ;
+	eh._hname = ehiter->c_str() ;
+	fstream fehdr(ehiter->c_str()) ;
+	string ehimpl ;
+	char buf2[1024] ;
+	while(fehdr.getline(buf2,1023)) {	  
+	  
+	  // Look for include of declaration file corresponding to this implementation file
+	  if (strstr(buf2,"#include")) {
+	    // Process #include statements here
+	    char tmp[10240] ;
+	    strlcpy(tmp,buf2,10240) ;
+	    Bool_t stdinclude = strchr(buf,'<') ;
+	    strtok(tmp," <\"") ;
+	    char* incfile = strtok(0," <>\"") ;	
+
+	    if (!stdinclude) {
+	      // check if it lives in $ROOTSYS/include
+	      TString hpath = gSystem->Getenv("ROOTSYS") ;
+	      hpath += "/include/" ;
+	      hpath += incfile ;
+	      if (gSystem->AccessPathName(hpath.Data())) {
+		oocoutI(_wspace,ObjectHandling)  << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") scheduling recursive include file " << incfile << " for import" << endl ;
+		extraHeaders.push_back(incfile) ;
+	      }	      
+	    }
+	  }
+      
+	  ehimpl += buf2 ;
+	  ehimpl += '\n' ;
+	}
+	eh._hfile = ehimpl.c_str() ;
+
+	_ehmap[ehiter->c_str()] = eh  ;
+      }
+    }
 
   } else {
 
@@ -2223,7 +2323,7 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
 
      UInt_t R__s, R__c;
-     R__b.ReadVersion(&R__s, &R__c); 
+     Version_t R__v =  R__b.ReadVersion(&R__s, &R__c); 
 
      // Stream contents of ClassFiles map
      Int_t count(0) ;
@@ -2240,11 +2340,24 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
      count=0 ;
      R__b >> count ;
      while(count--) {
-       TString name,bname,fbase ;
+       TString name ;
        name.Streamer(R__b) ;       
        _c2fmap[name]._baseName.Streamer(R__b) ;
        _c2fmap[name]._fileBase.Streamer(R__b) ;
      }     
+
+     if (R__v==2) {
+
+       count=0 ;
+       R__b >> count ;
+       while(count--) {
+	 TString name ;
+	 name.Streamer(R__b) ;       
+	 _ehmap[name]._hname.Streamer(R__b) ;
+	 _ehmap[name]._hfile.Streamer(R__b) ;
+       }                  
+     }
+
      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
 
      // Instantiate any classes that are not defined in current session
@@ -2279,6 +2392,18 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
        iter2->second._baseName.Streamer(R__b) ;
        iter2->second._fileBase.Streamer(R__b);
        ++iter2 ;
+     }
+
+     // Stream contents of ExtraHeader map
+     count = _ehmap.size() ;
+     R__b << count ;
+     map<TString,ExtraHeader>::iterator iter3 = _ehmap.begin() ;
+     while(iter3!=_ehmap.end()) {
+       TString key_copy(iter3->first) ;
+       key_copy.Streamer(R__b) ;
+       iter3->second._hname.Streamer(R__b) ;
+       iter3->second._hfile.Streamer(R__b);
+       ++iter3 ;
      }
 
      R__b.SetByteCount(R__c, kTRUE);
@@ -2439,6 +2564,8 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
   // Retrieve name of directory in which to export code files
   string dirName = Form(_classFileExportDir.c_str(),_wspace->uuid().AsString(),_wspace->GetName()) ;
 
+  Bool_t writeExtraHeaders(kFALSE) ;
+
   // Process all class entries in repository
   map<TString,ClassRelInfo>::iterator iter = _c2fmap.begin() ;
   while(iter!=_c2fmap.end()) {
@@ -2471,7 +2598,52 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
 	}
       }
       haveDir=kTRUE ;
+
     }
+
+    // First write any extra header files 
+    if (!writeExtraHeaders) {      
+      writeExtraHeaders = kTRUE ;
+      
+      map<TString,ExtraHeader>::iterator eiter = _ehmap.begin() ;
+      while(eiter!=_ehmap.end()) {
+
+	// Check if identical declaration file (header) is already written
+	Bool_t needEHWrite=kTRUE ;
+	string fdname = Form("%s/%s",dirName.c_str(),eiter->second._hname.Data()) ;
+	ifstream ifdecl(fdname.c_str()) ;
+	if (ifdecl) {
+	  TString contents ;
+	  char buf[10240] ;
+	  while(ifdecl.getline(buf,10240)) {
+	    contents += buf ;
+	    contents += "\n" ;
+	  }      
+	  UInt_t crcFile = RooAbsArg::crc32(contents.Data()) ;
+	  UInt_t crcWS   = RooAbsArg::crc32(eiter->second._hfile.Data()) ;
+	  needEHWrite = (crcFile!=crcWS) ;
+	}
+	
+	// Write declaration file if required 
+	if (needEHWrite) {
+	  oocoutI(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() Extracting extra header file " << fdname << endl ;
+	  
+	  // Extra headers may contain non-existing path - create first to be sure
+	  gSystem->MakeDirectory(gSystem->DirName(fdname.c_str())) ;	  
+
+	  ofstream fdecl(fdname.c_str()) ;
+	  if (!fdecl) {
+	    oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file " 
+					    << fdname << " for writing" << endl ;
+	    return kFALSE ;
+	  }
+	  fdecl << eiter->second._hfile.Data() ;
+	  fdecl.close() ;
+	}	       
+	eiter++ ;
+      }
+    }
+    
 
     // Navigate from class to file
     ClassFiles& cfinfo = _fmap[iter->second._fileBase] ;
@@ -2506,7 +2678,7 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
       oocoutI(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() Extracting declaration code of class " << iter->first << ", file " << fdname << endl ;
       ofstream fdecl(fdname.c_str()) ;
       if (!fdecl) {
-	oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file" 
+	oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file " 
 					<< fdname << " for writing" << endl ;
 	return kFALSE ;
       }

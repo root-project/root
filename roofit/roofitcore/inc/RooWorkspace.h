@@ -165,13 +165,21 @@ public:
       Bool_t _extracted ; 
     } ;    
     
+
+    class ExtraHeader {     
+    public:
+      TString _hname ;
+      TString _hfile ;
+   } ;
+
   protected:
     RooWorkspace* _wspace ; // owning workspace
     std::map<TString,ClassRelInfo> _c2fmap ; // List of contained classes
     std::map<TString,ClassFiles> _fmap ; // List of contained files
+    std::map<TString,ExtraHeader> _ehmap ; // List of extra header files
     Bool_t _compiledOK ; //! Flag indicating that classes compiled OK
 
-    ClassDef(CodeRepo,1) ; // Code repository for RooWorkspace
+    ClassDef(CodeRepo,2) ; // Code repository for RooWorkspace
   } ;
 
 
