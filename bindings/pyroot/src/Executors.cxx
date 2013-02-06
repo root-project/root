@@ -245,6 +245,7 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* s
    }
 
 // TODO: resolve possible ownership issues (old: G__pop_tempobject_nodel();)
+// Can copy over the element, then gInterpreter->ClearStack(); will erase it
 
 // the result can then be bound
    ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( result, fClass );

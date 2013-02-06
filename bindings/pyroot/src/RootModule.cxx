@@ -25,8 +25,6 @@
 // Standard
 #include <string>
 
-#include <iostream>
-
 
 //- data -----------------------------------------------------------------------
 PyObject* gRootModule = 0;
@@ -447,6 +445,10 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_VARARGS, (char*) "Trap signals in safe mode to prevent interpreter abort" },
    { (char*) "SetOwnership", (PyCFunction)SetOwnership,
      METH_VARARGS, (char*) "Modify held C++ object ownership" },
+   { (char*) "InstallGUIEventInputHook", (PyCFunction)PyROOT::Utility::InstallGUIEventInputHook,
+     METH_NOARGS, (char*) "Install input hook to sent GUI events" },
+   { (char*) "RemoveGUIEventInputHook", (PyCFunction)PyROOT::Utility::RemoveGUIEventInputHook,
+     METH_NOARGS, (char*) "Remove input hook to sent GUI events" },
    { NULL, NULL, 0, NULL }
 };
 
