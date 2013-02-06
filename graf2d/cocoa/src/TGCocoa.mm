@@ -4211,7 +4211,7 @@ bool TGCocoa::MakeProcessForeground()
 
       OSErr res = GetCurrentProcess(&psn);
       if (res != noErr) {
-         Error("MapProcessForeground", "GetCurrentProcess failed with code %d", res);
+         Error("MakeProcessForeground", "GetCurrentProcess failed with code %d", res);
          return false;
       }
       
