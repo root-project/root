@@ -125,7 +125,7 @@ Bool_t TPython::Initialize()
    }
 
 // python side class construction, managed by ROOT
-//   gROOT->AddClassGenerator( new TPyClassGenerator );
+   gROOT->AddClassGenerator( new TPyClassGenerator );
 
 // declare success ...
    isInitialized = kTRUE;
