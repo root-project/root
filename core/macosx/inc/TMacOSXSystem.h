@@ -48,6 +48,7 @@ public:
 private:
 
 //   void WaitForGuiEvents(Long_t nextto);
+   bool ProcessPendingEvents();
    void WaitEvents(Long_t nextto);
 
    void AddFileHandler(TFileHandler *fh);

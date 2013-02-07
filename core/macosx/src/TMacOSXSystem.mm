@@ -434,6 +434,17 @@ void TMacOSXSystem::WaitEvents(Long_t nextto)
 }
 
 //______________________________________________________________________________
+bool TMacOSXSystem::ProcessPendingEvents()
+{
+   bool processed = false;
+   while (NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]) {
+      [NSApp sendEvent : event];
+      processed = true;
+   }
+   return processed;
+}
+
+//______________________________________________________________________________
 void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    //Here I try to emulate TUnixSystem's behavior, which is quite twisted.
@@ -442,6 +453,17 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
 
    while (true) {
       const ROOT::MacOSX::Util::AutoreleasePool pool;
+
+      if (ProcessPendingEvents()) {
+         //If we had some events in a system queue, probably,
+         //now we have some events in our own event-queue.
+         if (gXDisplay && gXDisplay->Notify()) {
+            gVirtualX->Update(2);
+            gVirtualX->Update(3);
+            if (!pendingOnly)
+               return;
+         }
+      }
 
       //Check for file descriptors ready for reading/writing.
       if (fNfd > 0 && fFileHandler && fFileHandler->GetSize() > 0)

@@ -1625,6 +1625,14 @@ void print_mask_info(ULong_t mask)
    [tracker release];
 }
 
+//______________________________________________________________________________
+- (void) updateTrackingAreasAfterRaise
+{
+   [self updateTrackingAreas];
+   for (QuartzView *childView in [self subviews])
+      [childView updateTrackingAreasAfterRaise];
+}
+
 //X11Drawable protocol.
 //______________________________________________________________________________
 - (BOOL) fIsPixmap
@@ -2197,6 +2205,9 @@ void print_mask_info(ULong_t mask)
    [self setHidden : NO];
    //
    [fParentView sortSubviewsUsingFunction : CompareViewsToRaise context : (void *)self];
+   //
+   [self updateTrackingAreasAfterRaise];
+   //
    [self setNeedsDisplay : YES];//?
 }
 
