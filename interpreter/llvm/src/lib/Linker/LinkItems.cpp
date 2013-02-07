@@ -80,8 +80,8 @@ bool Linker::LinkInLibrary(StringRef Lib, bool& is_native) {
 
   // If its an archive, try to link it in
   std::string Magic;
-  Pathname.getMagicNumber(Magic, 64);
-  switch (sys::IdentifyFileType(Magic.c_str(), 64)) {
+  Pathname.getMagicNumber(Magic, 512);
+  switch (sys::IdentifyFileType(Magic.c_str(), 512)) {
     default: llvm_unreachable("Bad file type identification");
     case sys::Unknown_FileType:
       return warning("Supposed library '" + Lib.str() + "' isn't a library.");
@@ -178,10 +178,10 @@ bool Linker::LinkInFile(const sys::Path &File, bool &is_native) {
 
   // Determine what variety of file it is.
   std::string Magic;
-  if (!File.getMagicNumber(Magic, 64))
+  if (!File.getMagicNumber(Magic, 512))
     return error("Cannot find linker input '" + File.str() + "'");
 
-  switch (sys::IdentifyFileType(Magic.c_str(), 64)) {
+  switch (sys::IdentifyFileType(Magic.c_str(), 512)) {
     default: llvm_unreachable("Bad file type identification");
     case sys::Unknown_FileType:
       return warning("Ignoring file '" + File.str() + 

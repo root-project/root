@@ -108,6 +108,18 @@
 #include <dlfcn.h>
 #endif
 
+#if defined(__CYGWIN__)
+#include <sys/cygwin.h>
+#endif
+
+#if defined(__CYGWIN__) || defined (R__WIN32)
+extern "C" {
+   __declspec(dllimport) void * __stdcall GetCurrentProcess();
+   __declspec(dllimport) bool __stdcall EnumProcessModules(void *, void **, unsigned long, unsigned long *);
+   __declspec(dllimport) unsigned long __stdcall GetModuleFileNameExW(void *, void *, wchar_t *, unsigned long);
+}
+#endif
+
 // Fragment copied from LLVM's raw_ostream.cpp
 #if defined(_MSC_VER)
 #ifndef STDIN_FILENO
@@ -1389,11 +1401,24 @@ Bool_t TCling::IsLoaded(const char* filename) const
 //______________________________________________________________________________
 void TCling::UpdateListOfLoadedSharedLibraries()
 {
-#ifdef R_WIN32
-   // need to call RegisterLoadedSharedLibrary() here
-   // by calling Win32's EnumerateLoadedModules().
-   Error("TCling::UpdateListOfLoadedSharedLibraries",
-         "Platform not supported!");   
+#if defined(R__WIN32) || defined(__CYGWIN__)
+   void *hModules[1024];
+   void *hProcess;
+   unsigned long cbModules;
+   unsigned int i;
+   hProcess = (void *)::GetCurrentProcess();
+   ::EnumProcessModules(hProcess, hModules, sizeof(hModules), &cbModules);
+   // start at 1 to skip the executable itself
+   for (i = 1; i < (cbModules / sizeof(void *)); i++) {
+      static const int bufsize = 260;
+      wchar_t winname[bufsize];
+      char posixname[bufsize];
+      ::GetModuleFileNameExW(hProcess, hModules[i], winname, bufsize);
+      cygwin_conv_path(CCP_WIN_W_TO_POSIX, winname, posixname, bufsize);
+      if (!fSharedLibs.Contains(posixname)) {
+         RegisterLoadedSharedLibrary(posixname);
+      }
+   }
 #elif defined(R__MACOSX)
    // fPrevLoadedDynLibInfo stores the *next* image index to look at
    uint32_t imageIndex = (uint32_t) (size_t) fPrevLoadedDynLibInfo;
@@ -1457,6 +1482,18 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || !strncmp(filename, "/usr/lib/libc++", 15)
        || !strncmp(filename, "/System/Library/Frameworks/", 27)
        || !strncmp(filename, "/System/Library/PrivateFrameworks/", 34))
+      return;
+#elif defined(__CYGWIN__) || defined(R__WIN32)
+   // Check that this is not a system library
+   static const int bufsize = 260;
+   char posixwindir[bufsize];
+   char *windir = getenv("WINDIR");
+   if (windir)
+      cygwin_conv_path(CCP_WIN_A_TO_POSIX, windir, posixwindir, bufsize);
+   else
+      snprintf(posixwindir, sizeof(posixwindir), "/Windows/");
+   if (strstr(filename, posixwindir) ||
+       strstr(filename, "/usr/bin/cyg"))
       return;
 #endif
    // Update string of available libraries.

@@ -67,3 +67,8 @@ $(call stripsrc,$(patsubst %.cxx,%.o,$(wildcard $(MODDIRS)/TCling*.cxx))): \
 $(call stripsrc,$(MODDIRS)/TClingCallbacks.o): \
    CXXFLAGS += -fno-rtti
 
+ifeq ($(ARCH),win32gcc)
+# for EnumProcessModules():
+CORELIBEXTRA += -lpsapi
+endif
+

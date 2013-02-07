@@ -856,7 +856,7 @@ file_magic identify_magic(StringRef magic) {
 }
 
 error_code identify_magic(const Twine &path, file_magic &result) {
-  SmallString<32> Magic;
+  SmallString<512> Magic;
   error_code ec = get_magic(path, Magic.capacity(), Magic);
   if (ec && ec != errc::value_too_large)
     return ec;
