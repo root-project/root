@@ -62,7 +62,7 @@ public:
    virtual Int_t    GetExitCode() const = 0;
    virtual TEnv    *GetMapfile() const { return 0; }
    virtual Int_t    GetMore() const = 0;
-   virtual TClass  *GenerateTClass(const char *classname, Bool_t silent = kFALSE) = 0; 
+   virtual TClass  *GenerateTClass(const char *classname, Bool_t emulation, Bool_t silent = kFALSE) = 0;
    virtual TClass  *GenerateTClass(ClassInfo_t *classinfo, Bool_t silent = kFALSE) = 0; 
    virtual Int_t    GenerateDictionary(const char *classes, const char *includes = 0, const char *options = 0) = 0; 
    virtual char    *GetPrompt() = 0;

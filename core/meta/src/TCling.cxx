@@ -2149,15 +2149,17 @@ void TCling::CreateListOfMethodArgs(TFunction* m)
 }
 
 //______________________________________________________________________________
-TClass *TCling::GenerateTClass(const char *classname, Bool_t silent /* = kFALSE */)
+TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t silent /* = kFALSE */)
 {
    // Generate a TClass for the given class.
+   // Since the caller has already check the ClassInfo, let it give use the
+   // result (via the value of emulation) rather than recalculate it.
 
 // For now the following line would lead to the (unwanted) instantiation
 // of class template.  This could/would need to be resurrected only if
 // we re-introduce so sort of automatic instantiation.   However this would
 // have to include carefull look at the template parameter to avoid 
-// creating instnace we can not really use (if the parameter are only forward
+// creating instance we can not really use (if the parameter are only forward
 // declaration or do not have all the necessary interfaces).
 
    //   TClingClassInfo tci(fInterpreter, classname);
@@ -2168,7 +2170,7 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t silent /* = kFALSE 
       version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
    }
    TClass *cl = new TClass(classname, version, 0, 0, -1, -1, silent);
-   cl->SetBit(TClass::kIsEmulation);
+   if (emulation) cl->SetBit(TClass::kIsEmulation);
 
    return cl;
    

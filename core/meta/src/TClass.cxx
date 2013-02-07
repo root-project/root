@@ -1398,7 +1398,7 @@ Bool_t TClass::AddRule( const char *rule )
    TClass *cl = TClass::GetClass( ruleobj->GetTargetClass() );
    if (!cl) {
       // Create an empty emulated class for now.
-      cl = gInterpreter->GenerateTClass(ruleobj->GetTargetClass(), /*silent = */ kTRUE);
+      cl = gInterpreter->GenerateTClass(ruleobj->GetTargetClass(), /* emulation = */ kTRUE, /*silent = */ kTRUE);
    }
    ROOT::TSchemaRuleSet* rset = cl->GetSchemaRules( kTRUE );
       
@@ -2595,7 +2595,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
          delete [] modifiable_name;
          return GetClass(altname,load);
       }
-      TClass *ncl = gInterpreter->GenerateTClass(name, silent);
+      TClass *ncl = gInterpreter->GenerateTClass(name, /* emulation = */ kFALSE, silent);
       if (!ncl->IsZombie()) {
          delete [] modifiable_name;
          return ncl;
