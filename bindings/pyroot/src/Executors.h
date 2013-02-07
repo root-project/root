@@ -18,13 +18,13 @@ namespace PyROOT {
    class TExecutor {
    public:
       virtual ~TExecutor() {}
-      virtual PyObject* Execute( CallFunc_t*, void* ) = 0;
+      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil ) = 0;
    };
 
 #define PYROOT_DECLARE_BASIC_EXECUTOR( name )                                 \
    class T##name##Executor : public TExecutor {                               \
    public:                                                                    \
-      virtual PyObject* Execute( CallFunc_t*, void* );                        \
+      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );    \
    }
 
 // executors for built-ins
@@ -58,7 +58,7 @@ namespace PyROOT {
    class TRootObjectExecutor : public TExecutor {
    public:
       TRootObjectExecutor( const TClassRef& klass ) : fClass( klass ) {}
-      virtual PyObject* Execute( CallFunc_t*, void* );
+      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
 
    protected:
       TClassRef fClass;
@@ -67,7 +67,7 @@ namespace PyROOT {
    class TRootObjectByValueExecutor : public TRootObjectExecutor {
    public:
       TRootObjectByValueExecutor( const TClassRef& klass ) : TRootObjectExecutor ( klass ) {}
-      virtual PyObject* Execute( CallFunc_t*, void* );
+      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
    };
 
    class TRefExecutor : public TExecutor {
@@ -87,7 +87,7 @@ namespace PyROOT {
 #define PYROOT_DECLARE_BASIC_REFEXECUTOR( name )                              \
    class T##name##RefExecutor : public TRefExecutor {                         \
    public:                                                                    \
-      virtual PyObject* Execute( CallFunc_t*, void* );                        \
+      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );    \
    }
 
    PYROOT_DECLARE_BASIC_REFEXECUTOR( Short );
@@ -104,7 +104,7 @@ namespace PyROOT {
    class TRootObjectRefExecutor : public TRefExecutor {
    public:
       TRootObjectRefExecutor( const TClassRef& klass ) : fClass( klass ) {}
-      virtual PyObject* Execute( CallFunc_t*, void* );
+      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
 
    protected:
       TClassRef fClass;
@@ -113,7 +113,7 @@ namespace PyROOT {
    class TRootObjectPtrExecutor : public TRootObjectExecutor {
    public:
       TRootObjectPtrExecutor( const TClassRef& klass ) : TRootObjectExecutor ( klass ) {}
-      virtual PyObject* Execute( CallFunc_t*, void* );
+      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
    };
 
 // factories

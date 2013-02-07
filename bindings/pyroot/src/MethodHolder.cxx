@@ -73,7 +73,7 @@ inline void PyROOT::TMethodHolder< T, M >::Destroy_() const
 
 //____________________________________________________________________________
 template< class T, class M >
-inline PyObject* PyROOT::TMethodHolder< T, M >::CallFast( void* self )
+inline PyObject* PyROOT::TMethodHolder< T, M >::CallFast( void* self, Bool_t release_gil )
 {
 // Helper code to prevent some duplication; this is called from CallSafe() as well
 // as directly from TMethodHolder::Execute in fast mode.
@@ -81,7 +81,7 @@ inline PyObject* PyROOT::TMethodHolder< T, M >::CallFast( void* self )
    PyObject* result = 0;
 
    try {       // C++ try block
-      result = fExecutor->Execute( fMethodCall, (void*)((Long_t)self + fOffset) );
+      result = fExecutor->Execute( fMethodCall, (void*)((Long_t)self + fOffset), release_gil );
    } catch ( TPyException& ) {
       result = (PyObject*)TPyExceptionMagic;
    } catch ( std::exception& e ) {
@@ -97,7 +97,7 @@ inline PyObject* PyROOT::TMethodHolder< T, M >::CallFast( void* self )
 
 //____________________________________________________________________________
 template< class T, class M >
-inline PyObject* PyROOT::TMethodHolder< T, M >::CallSafe( void* self )
+inline PyObject* PyROOT::TMethodHolder< T, M >::CallSafe( void* self, Bool_t release_gil )
 {
 // Helper code to prevent some code duplication; this code embeds a ROOT "try/catch"
 // block that saves the stack for restoration in case of an otherwise fatal signal.
@@ -105,7 +105,7 @@ inline PyObject* PyROOT::TMethodHolder< T, M >::CallSafe( void* self )
    PyObject* result = 0;
 
    TRY {       // ROOT "try block"
-      result = CallFast( self );
+      result = CallFast( self, release_gil );
    } CATCH( excode ) {
       PyErr_SetString( PyExc_SystemError, "problem in C++; program state has been reset" );
       result = 0;
@@ -527,7 +527,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args, Long_t user
 
 //____________________________________________________________________________
 template< class T, class M >
-PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )
+PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self, Bool_t release_gil )
 {
 // call the interface method
    R__LOCKGUARD2( gGlobalMutex );
@@ -535,10 +535,10 @@ PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )
 
    if ( Utility::gSignalPolicy == Utility::kFast ) {
    // bypasses ROOT try block (i.e. segfaults will abort)
-      result = CallFast( self );
+      result = CallFast( self, release_gil );
    } else {
    // at the cost of ~10% performance, don't abort the interpreter on any signal
-      result = CallSafe( self );
+      result = CallSafe( self, release_gil );
    }
 
    if ( result && result != (PyObject*)TPyExceptionMagic
@@ -554,7 +554,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self )
 //____________________________________________________________________________
 template< class T, class M >
 PyObject* PyROOT::TMethodHolder< T, M >::operator()(
-      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
+      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user, Bool_t release_gil )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
@@ -597,7 +597,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::operator()(
    }
 
 // actual call; recycle self instead of returning new object for same address objects
-   ObjectProxy* pyobj = (ObjectProxy*)Execute( object );
+   ObjectProxy* pyobj = (ObjectProxy*)Execute( object, release_gil );
    if ( pyobj != (ObjectProxy*)TPyExceptionMagic &&
         ObjectProxy_Check( pyobj ) &&
         pyobj->GetObject() == object &&

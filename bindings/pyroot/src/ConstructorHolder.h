@@ -33,7 +33,8 @@ namespace PyROOT {
       virtual PyCallable* Clone() { return new TConstructorHolder( *this ); }
 
    public:
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t = 0 );
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds,
+                                    Long_t user = 0, Bool_t release_gil = kFALSE );
 
    protected:
       virtual Bool_t InitExecutor_( TExecutor*& );

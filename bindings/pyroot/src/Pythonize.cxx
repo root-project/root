@@ -1278,7 +1278,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
    public:
       virtual PyCallable* Clone() { return new TTreeBranch( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t )
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds,
+                                    Long_t, Bool_t /* release_gil */ )
       {
       // acceptable signatures:
       //   ( const char*, void*, const char*, Int_t = 32000 )
@@ -1402,7 +1403,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
       virtual PyCallable* Clone() { return new TTreeSetBranchAddress( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t )
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds,
+                                    Long_t, Bool_t /* release_gil */ )
       {
       // acceptable signature:
       //   ( const char*, void* )
@@ -1636,7 +1638,7 @@ namespace {
 
       virtual PyCallable* Clone() { return new TF1InitWithPyFunc( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t )
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t, Bool_t )
       {
       // expected signature: ( char* name, pyfunc, double xmin, double xmax, int npar = 0 )
          int argc = PyTuple_GET_SIZE( args );
@@ -1755,7 +1757,7 @@ namespace {
 
       virtual PyCallable* Clone() { return new TMinuitSetFCN( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t )
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t, Bool_t )
       {
       // expected signature: ( pyfunc )
          int argc = PyTuple_GET_SIZE( args );
@@ -1813,7 +1815,8 @@ namespace {
 
       virtual PyCallable* Clone() { return new TMinuitFitterSetFCN( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t )
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*,
+                                    Long_t, Bool_t release_gil )
       {
       // expected signature: ( pyfunc )
          int argc = PyTuple_GET_SIZE( args );
@@ -1824,7 +1827,7 @@ namespace {
             return 0;              // reported as an overload failure
          }
 
-         return TMinuitSetFCN::operator()( self, args, 0, 0 );
+         return TMinuitSetFCN::operator()( self, args, 0, 0, release_gil );
       }
    };
 */
@@ -1882,7 +1885,7 @@ namespace {
 
       virtual PyCallable* Clone() { return new TFitterFitFCN( *this ); }
 
-      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t )
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject*, Long_t, Bool_t )
       {
       // expected signature: ( self, pyfunc, int npar = 0, const double* params = 0, unsigned int dataSize = 0, bool chi2fit = false )
          int argc = PyTuple_GET_SIZE( args );

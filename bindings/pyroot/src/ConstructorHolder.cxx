@@ -57,7 +57,7 @@ PyObject* PyROOT::TConstructorHolder< T, M >::GetDocString()
 //____________________________________________________________________________
 template< class T, class M >
 PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
-      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user )
+      ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user, Bool_t release_gil )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
@@ -89,7 +89,7 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
    TClass* klass = (TClass*)this->GetClass().Id();
 
 // perform the call, 0 makes the other side allocate the memory
-   Long_t address = (Long_t)this->Execute( 0 );
+   Long_t address = (Long_t)this->Execute( 0, release_gil );
 
 // done with filtered args
    Py_DECREF( args );

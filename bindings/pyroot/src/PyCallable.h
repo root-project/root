@@ -33,8 +33,8 @@ namespace PyROOT {
       virtual PyCallable* Clone() = 0;
 
    public:
-      virtual PyObject* operator()(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user = 0 ) = 0;
+      virtual PyObject* operator()( ObjectProxy* self, PyObject* args, PyObject* kwds,
+                                    Long_t user = 0, Bool_t release_gil = kFALSE ) = 0;
    };
 
 } // namespace PyROOT
