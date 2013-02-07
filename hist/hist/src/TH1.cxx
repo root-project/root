@@ -2654,47 +2654,55 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
 //______________________________________________________________________________
 void TH1::Draw(Option_t *option)
 {
-//   -*-*-*-*-*-*-*-*-*Draw this histogram with options*-*-*-*-*-*-*-*-*-*-*-*
-//                     ================================
-//
-//     Histograms are drawn via the THistPainter class. Each histogram has
-//     a pointer to its own painter (to be usable in a multithreaded program).
-//     The same histogram can be drawn with different options in different pads.
-//     When an histogram drawn in a pad is deleted, the histogram is
-//     automatically removed from the pad or pads where it was drawn.
-//     If an histogram is drawn in a pad, then filled again, the new status
-//     of the histogram will be automatically shown in the pad next time
-//     the pad is updated. One does not need to redraw the histogram.
-//     To draw the current version of an histogram in a pad, one can use
-//        h->DrawCopy();
-//     This makes a clone of the histogram. Once the clone is drawn, the original
-//     histogram may be modified or deleted without affecting the aspect of the
-//     clone.
-//     By default, TH1::Draw clears the current pad.
-//
-//     One can use TH1::SetMaximum and TH1::SetMinimum to force a particular
-//     value for the maximum or the minimum scale on the plot.
-//
-//     TH1::UseCurrentStyle can be used to change all histogram graphics
-//     attributes to correspond to the current selected style.
-//     This function must be called for each histogram.
-//     In case one reads and draws many histograms from a file, one can force
-//     the histograms to inherit automatically the current graphics style
-//     by calling before gROOT->ForceStyle();
-//
-//     See THistPainter::Paint for a description of all the drawing options
-//     =======================
-//
-//   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-   TString opt = option;
-   opt.ToLower();
+   // Draw this histogram with options.
+   //
+   // Histograms are drawn via the THistPainter class. Each histogram has
+   // a pointer to its own painter (to be usable in a multithreaded program).
+   // The same histogram can be drawn with different options in different pads.
+   // When an histogram drawn in a pad is deleted, the histogram is
+   // automatically removed from the pad or pads where it was drawn.
+   // If an histogram is drawn in a pad, then filled again, the new status
+   // of the histogram will be automatically shown in the pad next time
+   // the pad is updated. One does not need to redraw the histogram.
+   // To draw the current version of an histogram in a pad, one can use
+   //      h->DrawCopy();
+   // This makes a clone of the histogram. Once the clone is drawn, the original
+   // histogram may be modified or deleted without affecting the aspect of the
+   // clone.
+   // By default, TH1::Draw clears the current pad.
+   //
+   // One can use TH1::SetMaximum and TH1::SetMinimum to force a particular
+   // value for the maximum or the minimum scale on the plot.
+   //
+   // TH1::UseCurrentStyle can be used to change all histogram graphics
+   // attributes to correspond to the current selected style.
+   // This function must be called for each histogram.
+   // In case one reads and draws many histograms from a file, one can force
+   // the histograms to inherit automatically the current graphics style
+   // by calling before gROOT->ForceStyle();
+   //
+   // See the THistPainter class for a description of all the drawing options.
+   
+   TString opt1 = option; opt1.ToLower();
+   TString opt2 = option;
+   Int_t index  = opt1.Index("same");
+   
+   // Check if the string "same" is part of a TCutg name.
+   if (index>=0) {
+      Int_t indb = opt1.Index("[");
+      if (indb>=0) {
+         Int_t indk = opt1.Index("]");
+         if (index>indb && index<indk) index = -1;
+      }
+   }
+   
+   // If there is no pad or an empty pad the the "same" is ignored.
    if (gPad) {
       if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
-      if (opt.Contains("same")) {
+      if (index>=0) {
          if (gPad->GetX1() == 0   && gPad->GetX2() == 1 &&
              gPad->GetY1() == 0   && gPad->GetY2() == 1 &&
-             gPad->GetListOfPrimitives()->GetSize()==0) opt.ReplaceAll("same","");
+             gPad->GetListOfPrimitives()->GetSize()==0) opt2.Remove(index,4);
       } else {
          //the following statement is necessary in case one attempts to draw
          //a temporary histogram already in the current pad
@@ -2702,9 +2710,10 @@ void TH1::Draw(Option_t *option)
          gPad->Clear();
       }
    } else {
-      if (opt.Contains("same")) opt.ReplaceAll("same","");
+      if (index>=0) opt2.Remove(index,4);
    }
-   AppendPad(option);
+   
+   AppendPad(opt2.Data());
 }
 
 //______________________________________________________________________________
