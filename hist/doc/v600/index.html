@@ -102,6 +102,18 @@ Now just set the new correct binning on the previously existing histogram.
 </li>
 </ul>
 
+<h3>TH1</h3>
+<ul>
+<li>
+The following code should produce a plot. It did not.
+<pre>
+   TH1F* h=new TH1F("hist", "histogram", 10, 0, 3); 
+   h->FillRandom("gaus"); 
+   h->Draw("same"); 
+</pre>
+</li>
+</ul>
+
 <h3>TGraph2D</h3>
 <ul>
 <li>
