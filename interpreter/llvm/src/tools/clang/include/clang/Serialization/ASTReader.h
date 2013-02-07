@@ -340,6 +340,16 @@ private:
   /// \brief Updates to the visible declarations of declaration contexts that
   /// haven't been loaded yet.
   DeclContextVisibleUpdatesPending PendingVisibleUpdates;
+
+  /// \brief Global DeclContexts from the modules that need to clear existing
+  /// redeclarations' lookup tables.
+  typedef llvm::SmallVector<std::pair<serialization::DeclID,
+                        serialization::reader::ASTDeclContextNameLookupTable *>,
+                            32>
+    GlobalContextLookupTable;
+  typedef llvm::DenseMap<ModuleFile *, GlobalContextLookupTable>
+    GlobalContextsPending;
+  GlobalContextsPending PendingGlobalContexts;
   
   /// \brief The set of C++ or Objective-C classes that have forward 
   /// declarations that have not yet been linked to their definitions.
@@ -827,6 +837,7 @@ private:
   Decl *ReadDeclRecord(serialization::DeclID ID);
   RecordLocation DeclCursorForID(serialization::DeclID ID,
                                  unsigned &RawLocation);
+  void loadGlobalDeclContextRedecls(ModuleFile& F);
   void loadDeclUpdateRecords(serialization::DeclID ID, Decl *D);
   void loadPendingDeclChain(serialization::GlobalDeclID ID);
   void loadObjCCategories(serialization::GlobalDeclID ID, ObjCInterfaceDecl *D,

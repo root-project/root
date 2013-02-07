@@ -20,6 +20,7 @@
 #include "clang/Sema/SemaDiagnostic.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclContextInternals.h"
 #include "clang/AST/DeclVisitor.h"
 #include "clang/AST/DeclGroup.h"
 #include "clang/AST/DeclCXX.h"
@@ -1262,7 +1263,8 @@ void ASTDeclReader::VisitCXXRecordDecl(CXXRecordDecl *D) {
   }
 }
 
-/// \brief Determine whether the two declarations refer to the same entity.
+/// \brief Determine whether the two declarations refer to the same entity,
+/// assuming valid C++ (i.e. redecls are not conflicting) and not checking ODR.
 static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
   assert(X->getDeclName() == Y->getDeclName() && "Declaration name mismatch!");
   
@@ -1273,18 +1275,15 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
   if (!X->getDeclContext()->getRedeclContext()->Equals(
          Y->getDeclContext()->getRedeclContext()))
     return false;
-
-  // Two typedefs refer to the same entity if they have the same underlying
-  // type.
-  if (TypedefNameDecl *TypedefX = dyn_cast<TypedefNameDecl>(X))
-    if (TypedefNameDecl *TypedefY = dyn_cast<TypedefNameDecl>(Y))
-      return X->getASTContext().hasSameType(TypedefX->getUnderlyingType(),
-                                            TypedefY->getUnderlyingType());
   
   // Must have the same kind.
   if (X->getKind() != Y->getKind())
     return false;
     
+  // Two typedefs with the same name must match.
+  if (isa<TypedefNameDecl>(X))
+    return true;
+
   // Objective-C classes and protocols with the same name always match.
   if (isa<ObjCInterfaceDecl>(X) || isa<ObjCProtocolDecl>(X))
     return true;
@@ -1351,36 +1350,20 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
     return true;
   }
 
-  // Compatible tags match.
-  if (TagDecl *TagX = dyn_cast<TagDecl>(X)) {
-    TagDecl *TagY = cast<TagDecl>(Y);
-    return !TagX->getTypeForDecl() || // still reading
-      !TagY->getTypeForDecl() ||
-      (TagX->getTagKind() == TagY->getTagKind()) ||
-      ((TagX->getTagKind() == TTK_Struct || TagX->getTagKind() == TTK_Class ||
-        TagX->getTagKind() == TTK_Interface) &&
-       (TagY->getTagKind() == TTK_Struct || TagY->getTagKind() == TTK_Class ||
-        TagY->getTagKind() == TTK_Interface));
-  }
+  // Tags with same name match.
+  if (isa<TagDecl>(X))
+    return true;
   
   // Functions with the same type match.
-  // Linkage might not have been read yet.
-  // FIXME: This needs to cope with function templates, merging of 
-  //prototyped/non-prototyped functions, etc.
   if (FunctionDecl *FuncX = dyn_cast<FunctionDecl>(X)) {
     FunctionDecl *FuncY = cast<FunctionDecl>(Y);
     return FuncX->getASTContext().hasSameType(FuncX->getType(),
                                               FuncY->getType());
   }
 
-  // Variables with the same type match.
-  // Linkage might not have been read yet
-  if (VarDecl *VarX = dyn_cast<VarDecl>(X)) {
-    VarDecl *VarY = cast<VarDecl>(Y);
-    return VarX->getType().isNull() || // still reading
-      VarY->getType().isNull() ||
-      (VarX->getASTContext().hasSameType(VarX->getType(), VarY->getType()));
-  }
+  // Variables with the same name match.
+  if (isa<VarDecl>(X))
+    return true;
   
   // Namespaces with the same name and inlinedness match.
   if (NamespaceDecl *NamespaceX = dyn_cast<NamespaceDecl>(X)) {
@@ -1388,7 +1371,6 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
     return NamespaceX->isInline() == NamespaceY->isInline();
   }
 
-  // FIXME: Many other cases to implement.
   return false;
 }
 
@@ -2128,7 +2110,7 @@ ASTDeclReader::FindExistingResult ASTDeclReader::findExisting(NamedDecl *D,
   }
 
   if (DC->isNamespace()) {
-#ifdef AXEL_LOOKUP_CHANGES
+#if AXEL_LOOKUP_CHANGES
     SmallVector<NamedDecl *, 4> Decls;
     DC->getPrimaryContext()->localUncachedLookup(Name, Decls);
     for (SmallVectorImpl<NamedDecl *>::const_iterator I = Decls.begin(),
@@ -2452,6 +2434,7 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
     std::pair<uint64_t, uint64_t> Offsets = Reader.VisitDeclContext(DC);
     if (Offsets.first || Offsets.second) {
       if (Offsets.first != 0)
+#define AXEL_LOOKUP_CHANGES
 #ifdef AXEL_LOOKUP_CHANGES
         DC->getPrimaryContext()->setHasExternalLexicalStorage(true);
 #else
@@ -2463,6 +2446,7 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
 #else
         DC->setHasExternalVisibleStorage(true);
 #endif
+#undef AXEL_LOOKUP_CHANGES
       if (ReadDeclContextStorage(*Loc.F, DeclsCursor, Offsets, 
                                  Loc.F->DeclContextInfos[DC]))
         return 0;
@@ -2521,6 +2505,55 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
 
   return ReadD;
 }
+
+
+void ASTReader::loadGlobalDeclContextRedecls(ModuleFile& F) {
+  GlobalContextsPending::iterator IPending = 
+    PendingGlobalContexts.find(&F);
+  if (IPending == PendingGlobalContexts.end())
+    return;
+  for (GlobalContextLookupTable::const_iterator
+         I = IPending->second.begin(),
+         E = IPending->second.end(); I != E; ++I) {
+    DeclID ID = I->first;
+    if (ID == PREDEF_DECL_TRANSLATION_UNIT_ID) // Is it the TU?
+      continue;
+    DeclContext* DC = cast<DeclContext>(GetDecl(ID));
+    DeclContext* PrimaryDC = DC->getPrimaryContext();
+    StoredDeclsMap *PrimaryMap = PrimaryDC->getLookupPtr();
+    if (PrimaryMap && (PrimaryDC != DC ||
+                       dyn_cast<clang::Decl>(PrimaryDC)->getGlobalID() != ID)) {
+      ModuleFile::DeclContextInfosMap::iterator Info
+        = F.DeclContextInfos.find(DC);
+      if (Info != F.DeclContextInfos.end() && 
+          Info->second.NameLookupTableData) {
+        PrimaryDC->setHasExternalLexicalStorage();
+#ifdef AXEL_FUTURE_OPTIMIZATION
+        ASTDeclContextNameLookupTable *LookupTable =
+          Info->second.NameLookupTableData;
+        for (ASTDeclContextNameLookupTable::key_iterator
+               KI = LookupTable->key_begin(), KE = LookupTable->key_end();
+             KI != KE; ++KI) {
+          get hash value out of KI;
+          invalidate PrimaryMap entry with matching hash (if exists)
+
+            This does not work as KI only stores hash, not DeclName:
+            DeclarationName Name = *KI;
+          StoredDeclsMap::iterator Pos = PrimaryMap->find(Name);
+          // Invalidate the lookup cache if it exists.
+          if (Pos != PrimaryMap->end())
+            PrimaryMap->erase(Pos);
+        }
+#else
+        PrimaryMap->clear();
+        PrimaryDC->setMustBuildLookupTable();
+#endif
+      }
+    }
+  }
+  PendingGlobalContexts.erase(IPending);
+}
+
 
 void ASTReader::loadDeclUpdateRecords(serialization::DeclID ID, Decl *D) {
   // The declaration may have been modified by files later in the chain.
@@ -2605,6 +2638,8 @@ namespace {
     void searchForID(ModuleFile &M, GlobalDeclID GlobalID) {
       // Map global ID of the first declaration down to the local ID
       // used in this module file.
+      if (!M.RedeclarationsMap)
+        return;
       DeclID ID = Reader.mapGlobalIDToModuleFileGlobalID(M, GlobalID);
       if (!ID)
         return;

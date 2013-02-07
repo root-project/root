@@ -1903,12 +1903,16 @@ ASTReader::ReadASTBlock(ModuleFile &F) {
                         (const unsigned char *)BlobStart + Record[Idx++],
                         (const unsigned char *)BlobStart,
                         ASTDeclContextNameLookupTrait(*this, F));
-      if (ID == PREDEF_DECL_TRANSLATION_UNIT_ID) { // Is it the TU?
-        DeclContext *TU = Context.getTranslationUnitDecl();
-        F.DeclContextInfos[TU].NameLookupTableData = Table;
-        TU->setHasExternalVisibleStorage(true);
-      } else
-        PendingVisibleUpdates[ID].push_back(std::make_pair(Table, &F));
+      if (Context.getLangOpts().Modules) {
+        PendingGlobalContexts[&F].push_back(std::make_pair(ID, Table));
+      } else {
+        if (ID == PREDEF_DECL_TRANSLATION_UNIT_ID) { // Is it the TU?
+          DeclContext *TU = Context.getTranslationUnitDecl();
+          F.DeclContextInfos[TU].NameLookupTableData = Table;
+          TU->setHasExternalVisibleStorage(true);
+        } else
+          PendingVisibleUpdates[ID].push_back(std::make_pair(Table, &F));
+      }
       break;
     }
 
@@ -2867,6 +2871,7 @@ ASTReader::ASTReadResult ASTReader::ReadASTCore(StringRef FileName,
     SourceMgr.getLoadedSLocEntryByID(Index);
   }
 
+  loadGlobalDeclContextRedecls(F);
 
   return Success;
 }

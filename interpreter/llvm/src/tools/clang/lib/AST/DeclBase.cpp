@@ -1119,10 +1119,12 @@ StoredDeclsMap *DeclContext::buildLookup() {
 
   llvm::SmallVector<DeclContext *, 2> Contexts;
   collectAllContexts(Contexts);
-#if AXEL_LOOKUP_CHANGES
+//#if AXEL_LOOKUP_CHANGES
   // Building the lookup will load all decls needed; lookup building
   // should not recurse, so flag it as "done".
   LookupPtr.setInt(false);
+//#endif
+#if AXEL_LOOKUP_CHANGES
   if (LookupPtr.getPointer())
      LookupPtr.getPointer()->clear();
 #endif

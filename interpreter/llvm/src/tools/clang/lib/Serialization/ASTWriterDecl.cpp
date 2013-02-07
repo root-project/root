@@ -844,8 +844,10 @@ void ASTDeclWriter::VisitNamespaceDecl(NamespaceDecl *D) {
     Writer.AddDeclRef(D->getAnonymousNamespace(), Record);
   Code = serialization::DECL_NAMESPACE;
 
-  if (Writer.hasChain() && !D->isOriginalNamespace() &&
-      D->getOriginalNamespace()->isFromASTFile()) {
+  if (D->getASTContext().getLangOpts().Modules) {
+    Writer.AddUpdatedDeclContext(D);
+  } else if (Writer.hasChain() && !D->isOriginalNamespace() &&
+             D->getOriginalNamespace()->isFromASTFile()) {
     NamespaceDecl *NS = D->getOriginalNamespace();
     Writer.AddUpdatedDeclContext(NS);
 
