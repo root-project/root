@@ -42,9 +42,6 @@ CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
 # CALLROOTEXE += -e "\#define ClingReinstateRedeclarationAllowed"
 # CALLROOTEXE += -e "\#define ClingReinstateImplicitDynamicCast"
 
-# Not fully investigated:
-CALLROOTEXE += -e "\#define ClingWorkAroundBrokenMakeProject"
-
 # Not for 6.0
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
 
@@ -86,8 +83,6 @@ ClingWorkAroundUnnamedDetection = yes          # See https://savannah.cern.ch/bu
 ClingWorkAroundIncorrectTearDownOrder = yes    # See https://savannah.cern.ch/bugs/index.php?99266
 ClingWorkAroundNoPrivateClassIO = yes          # See https://savannah.cern.ch/bugs/index.php?99860 
 ClingWorkAroundCallfuncAndVirtual = yes        # See https://savannah.cern.ch/bugs/index.php?99910
-# Not fully investigated:
-ClingWorkAroundBrokenMakeProject = yes
 # Most likely no longer supported.
 # ClingReinstateRedeclarationAllowed = yes     # See https://savannah.cern.ch/bugs/index.php?99396 
 # ClingReinstateImplicitDynamicCast = yes      # See https://savannah.cern.ch/bugs/index.php?99395
