@@ -1595,7 +1595,7 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void)updateTrackingAreas
+- (void) updateTrackingAreas
 {
    if (!fID)
       return;
@@ -1623,6 +1623,14 @@ void print_mask_info(ULong_t mask)
    NSTrackingArea * const tracker = [[NSTrackingArea alloc] initWithRect : frame options : trackerOptions owner : self userInfo : nil];
    [self addTrackingArea : tracker];
    [tracker release];
+}
+
+//______________________________________________________________________________
+- (void) updateTrackingAreasAfterRaise
+{
+   [self updateTrackingAreas];
+   for (QuartzView *childView in [self subviews])
+      [childView updateTrackingAreasAfterRaise];
 }
 
 //X11Drawable protocol.
@@ -2197,6 +2205,9 @@ void print_mask_info(ULong_t mask)
    [self setHidden : NO];
    //
    [fParentView sortSubviewsUsingFunction : CompareViewsToRaise context : (void *)self];
+   //
+   [self updateTrackingAreasAfterRaise];
+   //
    [self setNeedsDisplay : YES];//?
 }
 
