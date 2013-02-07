@@ -109,7 +109,7 @@ namespace PyROOT {
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
 
-   private:
+   protected:
       std::string fBuffer;
       UInt_t fMaxSize;
    };
@@ -120,11 +120,12 @@ namespace PyROOT {
 
    public:
       virtual Bool_t SetArg( PyObject*, TParameter_t&, CallFunc_t* = 0, Long_t = 0 );
+      virtual PyObject* FromMemory( void* address );
    };
 
-   class TNonConstUCStringConverter : public TCStringConverter {
+   class TNonConstUCStringConverter : public TNonConstCStringConverter {
    public:
-      TNonConstUCStringConverter( UInt_t maxSize = UINT_MAX ) : TCStringConverter( maxSize ) {}
+      TNonConstUCStringConverter( UInt_t maxSize = UINT_MAX ) : TNonConstCStringConverter( maxSize ) {}
 
    public:
       virtual Bool_t SetArg( PyObject*, TParameter_t&, CallFunc_t* = 0, Long_t = 0 );

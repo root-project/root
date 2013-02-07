@@ -594,6 +594,15 @@ Bool_t PyROOT::TNonConstCStringConverter::SetArg(
 }
 
 //____________________________________________________________________________
+PyObject* PyROOT::TNonConstCStringConverter::FromMemory( void* address )
+{
+// assume this is a buffer access if the size is known; otherwise assume string
+   if ( fMaxSize != UINT_MAX )
+      return PyROOT_PyUnicode_FromStringAndSize( *(char**)address, fMaxSize );
+   return this->TCStringConverter::FromMemory( address );
+}
+
+//____________________________________________________________________________
 Bool_t PyROOT::TNonConstUCStringConverter::SetArg(
       PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
 {
