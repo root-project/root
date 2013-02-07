@@ -88,13 +88,8 @@ else
 aliceesd: aliceesd.log
 	$(TestDiff)
 
-ifneq ($(ClingWorkAroundBrokenMakeProject),)
-cms310:
-	$(CMDECHO) true
-else
 cms310: cms310.log
 	$(TestDiff)
-endif
 
 endif
 

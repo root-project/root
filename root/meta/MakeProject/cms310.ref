@@ -287,8 +287,6 @@ Warning in <TClass::TClass>: no dictionary for class L1MuGMTExtendedCand is avai
 Warning in <TClass::TClass>: no dictionary for class L1MuGMTCand is available
 Warning in <TClass::TClass>: no dictionary for class edm::RefVector<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > is available
 Warning in <TClass::TClass>: no dictionary for class reco::JetExtendedAssociation::JetExtendedData is available
-Warning in <TClass::TClass>: no dictionary for class ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<float> > is available
-Warning in <TClass::TClass>: no dictionary for class ROOT::Math::PtEtaPhiE4D<float> is available
 Warning in <TClass::TClass>: no dictionary for class SiPixelRecHit is available
 Warning in <TClass::TClass>: no dictionary for class BaseSiTrackerRecHit2DLocalPos is available
 Warning in <TClass::TClass>: no dictionary for class RecHit2DLocalPos is available
@@ -350,8 +348,6 @@ Warning in <TClass::TClass>: no dictionary for class reco::PFBlock is available
 Warning in <TClass::TClass>: no dictionary for class edm::OwnVector<reco::PFBlockElement,edm::ClonePolicy<reco::PFBlockElement> > is available
 Warning in <TClass::TClass>: no dictionary for class reco::PFBlockElementTrack is available
 Warning in <TClass::TClass>: no dictionary for class reco::PFBlockElement is available
-Warning in <TClass::TClass>: no dictionary for class ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<float>,ROOT::Math::DefaultCoordinateSystemTag> is available
-Warning in <TClass::TClass>: no dictionary for class ROOT::Math::Cartesian3D<float> is available
 Warning in <TClass::TClass>: no dictionary for class edm::Ref<vector<reco::NuclearInteraction>,reco::NuclearInteraction,edm::refhelper::FindUsingAdvance<vector<reco::NuclearInteraction>,reco::NuclearInteraction> > is available
 Warning in <TClass::TClass>: no dictionary for class edm::Ref<vector<reco::Muon>,reco::Muon,edm::refhelper::FindUsingAdvance<vector<reco::Muon>,reco::Muon> > is available
 Warning in <TClass::TClass>: no dictionary for class edm::Ref<vector<reco::Conversion>,reco::Conversion,edm::refhelper::FindUsingAdvance<vector<reco::Conversion>,reco::Conversion> > is available
@@ -486,6 +482,6 @@ Warning in <TClass::TClass>: no dictionary for class reco::MuonIsolation is avai
 Warning in <TClass::TClass>: no dictionary for class edm::reftobase::RefHolder<edm::Ref<vector<TrajectorySeed>,TrajectorySeed,edm::refhelper::FindUsingAdvance<vector<TrajectorySeed>,TrajectorySeed> > > is available
 Warning in <TClass::TClass>: no dictionary for class reco::VertexCompositeCandidate is available
 Warning in <TClass::TClass>: no dictionary for class reco::RecoChargedCandidate is available
-MakeProject has generated 519 classes in cms310
+MakeProject has generated 515 classes in cms310
 MAKEP file has been generated
 cms310.so has been generated
