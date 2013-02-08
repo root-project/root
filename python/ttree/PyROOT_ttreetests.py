@@ -136,7 +136,8 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
             self.assertEqual( i, int(entry) )
             i += 1
 
-         self.assertEqual( event.Label, str(int(event.NLabel)) )
+         label = event.Label[0:event.Label.find('\0')]
+         self.assertEqual( label, str(int(event.NLabel)) )
 
       f.Close()
 
