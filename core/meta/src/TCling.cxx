@@ -1675,13 +1675,11 @@ void TCling::ResetGlobals()
 {
    // Reset in Cling the list of global variables to the state saved by the last
    // call to TCling::SaveGlobalsContext().
-
-#if defined(R__MUST_REVISIT)
-#if R__MUST_REVISIT(6,2)
+   //
+   // Note: Right now, all we do is run the global destructors.
+   //
    R__LOCKGUARD(gClingMutex);
-   Warning("ResetGlobals","Cling should support the equivalent of scratch_globals_upto(&fDictPosGlobals)");
-#endif
-#endif
+   fInterpreter->runStaticDestructorsOnce();
 }
 
 //______________________________________________________________________________
