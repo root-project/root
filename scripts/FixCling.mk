@@ -9,7 +9,7 @@ CALLROOTEXE = root.exe
 
 # Essential problems, must be fixed before the release.
 # (incorrect behavior of C++ compliant code)
-CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
+#CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndConversion"
 CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
 # Major features/issues
@@ -80,7 +80,7 @@ ClingWorkAroundMultipleInclude = yes           # File are included each time a m
                                                # loaded.  Should go away with the modules
 ClingWorkAroundNoDotOptimization = yes         # See https://savannah.cern.ch/bugs/index.php?99339
 ClingWorkAroundUnnamedDetection = yes          # See https://savannah.cern.ch/bugs/index.php?99341
-ClingWorkAroundIncorrectTearDownOrder = yes    # See https://savannah.cern.ch/bugs/index.php?99266
+#ClingWorkAroundIncorrectTearDownOrder = yes    # See https://savannah.cern.ch/bugs/index.php?99266
 ClingWorkAroundNoPrivateClassIO = yes          # See https://savannah.cern.ch/bugs/index.php?99860 
 ClingWorkAroundCallfuncAndVirtual = yes        # See https://savannah.cern.ch/bugs/index.php?99910
 # Most likely no longer supported.
