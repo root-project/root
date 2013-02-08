@@ -123,7 +123,7 @@ protected:
 private: 
 
    // private member
-   bool                              fOneDim;      // flag to indicate if the function is 1 dimension
+//    bool                              fOneDim;      // flag to indicate if the function is 1 dimension
 //    bool                              fHasMode;     // flag to indicate if a mode is set
 //    bool                              fHasArea;     // flag to indicate if a area is set
 //    double                            fMode;        // mode of dist

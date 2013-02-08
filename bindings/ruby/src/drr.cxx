@@ -650,7 +650,7 @@ VALUE drrAbstractClass;
 static VALUE drr_as(VALUE self, VALUE klass)
 {
    /* Pseudo C++ casting.  */
-   VALUE v;
+   VALUE v = 0;
 
    /* Check if there is a ROOT dict. available.  */
    TClass *c = TClass::GetClass(StringValuePtr(klass));

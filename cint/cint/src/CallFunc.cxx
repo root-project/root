@@ -401,7 +401,7 @@ void Cint::G__CallFunc::SetFunc(G__ClassInfo* cls
 ///////////////////////////////////////////////////////////////////////////
 G__value Cint::G__CallFunc::Execute(void *pobject)
 {
-  int ret;
+  int ret = 0;
   long store_struct_offset;
   G__LockCriticalSection();
   // Set object address

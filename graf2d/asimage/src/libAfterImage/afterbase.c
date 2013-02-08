@@ -705,8 +705,9 @@ double asim_parse_math(const char* str, char** endptr, double size) {
 				num = asim_parse_math(str + 1, &ptr, size);
             else if (*str == '$') 
 			{
-            	for (ptr = (char*)str + 1 ; *ptr && !isspace(*ptr) && *ptr != '+' && *ptr != '-' && *ptr != '*' && *ptr != '!' && *ptr != '/' && *ptr != ')' ; ptr++);
-               	num = asim_asxml_var_nget((char*)str + 1, ptr - (str + 1));
+            	for (ptr = (char*)str + 1 ; *ptr && !isspace(*ptr) && *ptr != '+' && *ptr != '-' && *ptr != '*' && *ptr != '!' && *ptr != '/' && *ptr != ')' ; ptr++)
+            	   ;
+               num = asim_asxml_var_nget((char*)str + 1, ptr - (str + 1));
             }else 
 				num = strtod(str, &ptr);
 			

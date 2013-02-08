@@ -80,7 +80,6 @@ class G__sstream {
   char  *m_str;
   unsigned long m_pos;
   unsigned long m_store_pos;
-  int    m_linenum;
   int    m_c;
  public:
   void Init(G__input_file& /* ifile */) { }

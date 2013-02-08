@@ -85,7 +85,7 @@ ClassImp(TFoamSampler)
 
 */
 TFoamSampler::TFoamSampler() : ROOT::Math::DistSampler(), 
-   fOneDim(false), 
+//    fOneDim(false), 
 //    fDiscrete(false),
 //    fHasMode(false), fHasArea(false),
 //    fMode(0), fArea(0),
