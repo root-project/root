@@ -1348,9 +1348,10 @@ void DeclContext::makeDeclVisibleInContextImpl(NamedDecl *D, bool Internal) {
    if (D->getDeclName().getCXXOverloadedOperator() == clang::OO_LessLess
        && getDeclKind() == Decl::Namespace
        && ((NamespaceDecl*)this)->getName() == "std"
-       && isa<FunctionDecl>(D)) {
-      llvm::errs() << "AXEL DEBUG: std::op<< @ " << D << '\n';
+       && isa<FunctionDecl>(D)
+       && ((FunctionDecl*)D)->isThisDeclarationADefinition()) {
       ((clang::FunctionDecl*)D)->getType().dump();
+      llvm::errs() << "\nAXEL DEBUG: std::op<< @ " << D << '\n';
       //D->dump();
    }
 #if AXEL_LOOKUP_CHANGES

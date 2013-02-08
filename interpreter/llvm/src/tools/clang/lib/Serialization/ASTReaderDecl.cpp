@@ -1315,9 +1315,16 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
     // Instead, compare as much as possible...
     // ClassTemplateDecls are identical (no overloading possible).
     if (FunctionTemplateDecl* FTX = dyn_cast<FunctionTemplateDecl>(TDX)) {
+      FunctionTemplateDecl* FTY = dyn_cast<FunctionTemplateDecl>(TDY);
+      FunctionDecl* FX = FTX->getTemplatedDecl();
+      FunctionDecl* FY = FTY->getTemplatedDecl();
+      // If the describing function decls are identical (modulo redecls) 
+      // then they must have been merged already.
+      if (FX->getCanonicalDecl() != FY->getCanonicalDecl())
+        return false;
+#if 0
       typedef llvm::SmallVector<std::pair<QualType, QualType>, 4> DependentTypesToCheck_t;
       DependentTypesToCheck_t DependentTypesToCheck;
-      FunctionTemplateDecl* FTY = dyn_cast<FunctionTemplateDecl>(TDY);
       const FunctionProtoType* FPTX
         = FTX->getTemplatedDecl()->getType()->getAs<FunctionProtoType>();
       const FunctionProtoType* FPTY
@@ -1345,6 +1352,7 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
             return false;
         }
       }
+#endif
     }
 
     return true;
@@ -1790,6 +1798,7 @@ ASTDeclReader::VisitRedeclarable(Redeclarable<T> *D) {
     if (ExistingDef) {
       assert(ExistingDef->getKind() == DDecl->getKind() && "Found non-matching kind as previous definition!");
       assert(ExistingDef != DDecl && "Existing decl is new decl!");
+      Reader.RedeclsToSkip.insert(DDecl);
       return RedeclarableResult(Reader, 0);
     }
   }
@@ -2628,7 +2637,7 @@ namespace {
     }
     
     void addToChain(Decl *D) {
-      if (!D)
+      if (!D || !Reader.ShouldChainRedecl(D))
         return;
       
       if (Deserialized.erase(D))

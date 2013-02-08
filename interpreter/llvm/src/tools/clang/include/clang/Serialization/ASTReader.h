@@ -706,6 +706,10 @@ private:
   /// not be passed to the ASTConsumers, even if they are InterestignDecls.
   llvm::SmallPtrSet<Decl *, 16> RedeclsAddedToAST;
 
+  /// \brief The set of redeclarable declarations that have existing definitions
+  /// and must thus not be entered into the redecl chain again.
+  llvm::SmallPtrSet<Decl *, 16> RedeclsToSkip;
+  
   /// \brief The set of redeclarable declarations that have been deserialized
   /// since the last time the declaration chains were linked.
   llvm::SmallPtrSet<Decl *, 16> RedeclsDeserialized;
@@ -1172,6 +1176,10 @@ public:
   virtual Decl *GetExternalDecl(uint32_t ID);
 
   bool isDeclInFlight(Decl* D) { return DeclsInFlight.count(D); }
+
+  bool ShouldChainRedecl(Decl* D) {
+    return !RedeclsToSkip.erase(D);
+  }
 
   /// \brief Reads a declaration with the given local ID in the given module.
   Decl *GetLocalDecl(ModuleFile &F, uint32_t LocalID) {
