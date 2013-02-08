@@ -79,7 +79,7 @@ $(LLVMLIB): $(LLVMDEPO) $(FORCELLVMTARGET)
 		@(echo "*** Building $@..."; \
 		cd $(LLVMDIRO) && \
 		$(MAKE) VERBOSE=1 && \
-		rm -rf $(LLVMDIRI)/lib/clang && \
+		rm -rf ../inst/lib/clang && \
 		$(MAKE) install)
 
 $(LLVMGOODO): $(LLVMGOODS) $(LLVMLIB)
