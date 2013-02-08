@@ -136,7 +136,7 @@ namespace ROOT {
          if (fDirector->GetReadEntry()!=fRead) {
             if (!IsInitialized()) {
                if (!Setup()) {
-                  Error("Read","%s",Form("Unable to initialize %s\n",fBranchName.Data()));
+                  ::Error("TBranchProxy::Read","%s",Form("Unable to initialize %s\n",fBranchName.Data()));
                   return kFALSE;
                }
             }
@@ -162,7 +162,7 @@ namespace ROOT {
          if (fDirector->GetReadEntry()!=fRead) {
             if (!IsInitialized()) {
                if (!Setup()) {
-                  Error("Read","%s",Form("Unable to initialize %s\n",fBranchName.Data()));
+                  ::Error("TBranchProxy::ReadEntries","%s",Form("Unable to initialize %s\n",fBranchName.Data()));
                   return false;
                }
             }
