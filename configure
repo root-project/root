@@ -1593,6 +1593,7 @@ with options, prefix with --with-, enables corresponding support
   gviz-incdir        Graphviz support, location of gvc.h
   gviz-libdir        Graphviz support, location of libgvplugin_core
   gfal-incdir        GFAL support, location of gfal_api.h
+  srm-ifce-incdir    GFAL support, location of gfal_srm_ifce_types.h
   gfal-libdir        GFAL support, location of libgfal
   glew-incdir        GLEW support, location of glew.h
   glew-libdir        GLEW support, location of libGLEW
@@ -1925,6 +1926,7 @@ if test $# -gt 0 ; then
       --with-gviz-libdir=*)    gvizlibdir=$optarg    ; enable_gviz="yes"    ;;
       --with-gfal-incdir=*)    gfalincdir=$optarg    ; enable_gfal="yes"    ;;
       --with-gfal-libdir=*)    gfallibdir=$optarg    ; enable_gfal="yes"    ;;
+      --with-srm-ifce-incdir=*) srmifceincdir=$optarg;;
       --with-glew-incdir=*)    glewincdir=$optarg    ; enable_builtin_glew=no;;
       --with-glew-libdir=*)    glewlibdir=$optarg    ; enable_builtin_glew=no;;
       --with-gsl-incdir=*)     gslincdir=$optarg     ; enable_gsl="yes"     ;;
@@ -3492,6 +3494,12 @@ if test ! "x$enable_gfal" = "xno"; then
         /usr/local/gfal/lib
     gfallib=$found_lib
     gfallibdir=$found_dir
+
+    check_header "gfal_srm_ifce_types.h" "$srmifceincdir" \
+        /opt/lcg/include /opt/srm-ifce/include /usr/local/lcg/include \
+        /usr/local/srm-ifce/include
+    srmifceinc=$found_hdr
+    srmifceincdir=$found_dir
 
     if test "x$gfalincdir" = "x" || test "x$gfallib" = "x"; then
         enable_gfal="no"
@@ -6573,6 +6581,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@etcdir@|$etcdir|"                    \
     -e "s|@explicitlink@|$enable_explicitlink|" \
     -e "s|@gfalincdir@|$gfalincdir|"            \
+    -e "s|@srmifceincdir@|$srmifceincdir|"      \
     -e "s|@gfallib@|$gfallib|"                  \
     -e "s|@gfallibdir@|$gfallibdir|"            \
     -e "s|@enable_xft@|$enable_xft|"            \

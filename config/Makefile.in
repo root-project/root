@@ -163,6 +163,7 @@ BUILDGFAL      := @buildgfal@
 GFALLIBDIR     := @gfallibdir@
 GFALCLILIB     := @gfallib@
 GFALINCDIR     := $(filter-out /usr/include, @gfalincdir@)
+SRMIFCEINCDIR  := $(filter-out /usr/include, @srmifceincdir@)
 
 BUILDGLITE     := @buildglite@
 GLITELIBDIR    := @glitelibdir@
