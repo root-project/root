@@ -14,6 +14,8 @@ include $(CLANG_LEVEL)/../../Makefile.config
 ifneq ($(ROOT_BUILDCLANG),)
 DIRS := driver libclang c-index-test arcmt-test c-arcmt-test diagtool \
         clang-check
+else
+DIRS := libclang
 endif
 
 # Recurse into the extra repository of tools if present.
