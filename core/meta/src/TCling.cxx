@@ -3327,6 +3327,8 @@ int TCling::SetClassAutoloading(int autoload) const
 
    assert(fClingCallbacks && "We must have callbacks!");
    bool oldVal =  fClingCallbacks->IsAutoloadingEnabled();
+   // NOTE: Explicitly disable the ability to turn of autoloading
+   autoload = kFALSE;
    fClingCallbacks->SetAutoloadingEnabled(autoload);
    return oldVal;
 }
