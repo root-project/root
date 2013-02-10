@@ -72,7 +72,7 @@ void TGWin32InterpreterProxy::InspectMembers(TMemberInspector& insp, void* obj, 
    DEBUG_PROFILE_PROXY_STOP(InspectMembers)
 }
 
-RETURN_METHOD_ARG2(Interpreter,TClass*,GenerateTClass,const char *,classname,Bool_t,silent); 
+RETURN_METHOD_ARG3(Interpreter,TClass*,GenerateTClass,const char *,classname,Bool_t,emulation,Bool_t,silent);
 RETURN_METHOD_ARG2(Interpreter,TClass*,GenerateTClass,ClassInfo_t *,classinfo,Bool_t,silent); 
 RETURN_METHOD_ARG3(Interpreter,Int_t,GenerateDictionary,const char*,classes,const char*,headers,const char*,options); 
 RETURN_METHOD_ARG0(Interpreter,char*,GetPrompt)
