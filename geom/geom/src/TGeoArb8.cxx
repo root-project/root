@@ -415,7 +415,7 @@ void TGeoArb8::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
    Double_t ax, ay, az, bx, by, bz;
    Double_t fn;
    safc = fDz-TMath::Abs(point[2]);
-   if (safc<TGeoShape::Tolerance()) {
+   if (safc<10.*TGeoShape::Tolerance()) {
       memset(norm,0,3*sizeof(Double_t));
       norm[2] = (dir[2]>0)?1:(-1);
       return;
