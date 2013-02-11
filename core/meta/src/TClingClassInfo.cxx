@@ -671,7 +671,7 @@ void *TClingClassInfo::New() const
    }
    // The ref-counted pointer will get destructed by StoredValueRef,
    // but not the allocation! I.e. the following is fine:
-   return llvm::GVTOP(val.get().value);
+   return llvm::GVTOP(val.get().getGV());
 }
 
 void *TClingClassInfo::New(int n) const
@@ -692,7 +692,7 @@ void *TClingClassInfo::New(int n) const
    }
    // The ref-counted pointer will get destructed by StoredValueRef,
    // but not the allocation! I.e. the following is fine:
-   return llvm::GVTOP(val.get().value);
+   return llvm::GVTOP(val.get().getGV());
 }
 
 void *TClingClassInfo::New(int n, void *arena) const
@@ -715,7 +715,7 @@ void *TClingClassInfo::New(int n, void *arena) const
    }
    // The ref-counted pointer will get destructed by StoredValueRef,
    // but not the allocation! I.e. the following is fine:
-   return llvm::GVTOP(val.get().value);
+   return llvm::GVTOP(val.get().getGV());
 }
 
 void *TClingClassInfo::New(void *arena) const
@@ -737,7 +737,7 @@ void *TClingClassInfo::New(void *arena) const
    }
    // The ref-counted pointer will get destructed by StoredValueRef,
    // but not the allocation! I.e. the following is fine:
-   return llvm::GVTOP(val.get().value);
+   return llvm::GVTOP(val.get().getGV());
 }
 
 int TClingClassInfo::NMethods() const

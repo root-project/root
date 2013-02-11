@@ -1,8 +1,9 @@
 // @(#)root/core/meta:$Id$
 // Author: Paul Russo   30/07/2012
+// Author: Vassil Vassilev   9/02/2013
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -49,6 +50,8 @@
 #include "clang/CodeGen/CodeGenModule.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Sema/Sema.h"
+#include "clang/Sema/Lookup.h"
 
 #include "llvm/ADT/APInt.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
@@ -66,67 +69,96 @@
 // This ought to be declared by the implementer .. oh well...
 extern void unresolvedSymbol();
 
-namespace {
-   static llvm::GenericValue convertIntegralToArg(const llvm::GenericValue& GV,
-                                                  const llvm::Type* targetType) {
-      // Do "extended" integral conversion, at least as CINT's dictionaries
-      // would have done it: everything is a long, then gets cast to whatever
-      // type is expected. "Whatever type" is an llvm type here, thus we do
-      // integral conversion, integral to ptr, integral to floating point.
+llvm::GenericValue TClingCallFunc::convertIntegralToArg(const cling::Value& val,
+                                                        const llvm::Type* targetType) const {
+   // Do "extended" integral conversion, at least as CINT's dictionaries
+   // would have done it: everything is a long, then gets cast to whatever
+   // type is expected. "Whatever type" is an llvm type here, thus we do
+   // integral conversion, integral to ptr, integral to floating point.
 
-      // SetArg() takes a long (i.e. signed) or a longlong or a ulonglong:
-      const llvm::APInt& GVI = GV.IntVal;
-      const unsigned nSourceBits = GVI.getBitWidth();
-      bool sourceIsSigned = true;
-      if (nSourceBits > sizeof(long) * CHAR_BIT) {
-         // SetArg() does not have an interface for setting a ulong,
-         // so only check for [u]longlong
-         sourceIsSigned = GVI.isSignedIntN(nSourceBits);
-      }
-      switch (targetType->getTypeID()) {
-      case llvm::Type::IntegerTyID:
-         {
-            llvm::GenericValue ret;
-            const unsigned nTargetBits = targetType->getIntegerBitWidth();
-            ret.IntVal = (sourceIsSigned) ?
-               GVI.sextOrTrunc(nTargetBits) : GVI.zextOrTrunc(nTargetBits);
-            return ret;
-         }
-         break;
+   assert(val.isValid() && "cling::Value must not be invalid!");
 
-      case llvm::Type::FloatTyID:
-         {
-            llvm::GenericValue ret;
-            ret.FloatVal = GV.FloatVal;
-            return ret;
-         }
-         break;
+   // If both are not builtins but pointers no conversion needed.
+   if (val.getLLVMType()->isPointerTy() && targetType->isPointerTy())
+      return val.getGV();
 
-      case llvm::Type::DoubleTyID:
-         {
-            llvm::GenericValue ret;
-            ret.DoubleVal = GV.DoubleVal;
-            return ret;
-         }
-         break;
+   clang::QualType ClangQT = val.getClangType();
 
-      case llvm::Type::PointerTyID:
-         {
-            void* Ptr = (sourceIsSigned) ?
-               (void*)GVI.getSExtValue() : (void*)GVI.getZExtValue();
-            return llvm::PTOGV(Ptr);
-         }
-         break;
-
-      default:
-         Error("integralXConvertGV()",
-               "Cannot convert to parameter with TypeID %d",
-               targetType->getTypeID());
-      }
-      return GV;
+   // We support primitive array to ptr conversions like:
+   // const char[N] to const char* 
+   if (ClangQT->isArrayType() 
+       && ClangQT->getArrayElementTypeNoTypeQual()->isCharType()) {
+      return val.getGV();
    }
-} // unnamed namespace
 
+   assert((ClangQT->isBuiltinType() || ClangQT->isPointerType())
+          && "Conversions supported only on builtin types!");
+
+   llvm::GenericValue result;
+   switch(val.getLLVMType()->getTypeID()) {
+   case llvm::Type::IntegerTyID : {
+      const llvm::APInt& intVal = val.getGV().IntVal;
+      switch(targetType->getTypeID()) {
+      case llvm::Type::IntegerTyID :
+         // We need to match the bitwidths, because this makes LLVM build 
+         // different types. Eg. BitWidth = 64 -> i64, BitWidth = 32 -> i32. 
+         // If we don't do a bitwidth conversion, later on when making the call 
+         // the types mismatch and we are screwed.
+         if (ClangQT->isSignedIntegerType())
+            result.IntVal
+               = intVal.sextOrTrunc(targetType->getPrimitiveSizeInBits());
+         else
+            result.IntVal 
+               = intVal.zextOrTrunc(targetType->getPrimitiveSizeInBits());
+
+         return result;
+      case llvm::Type::HalfTyID : /*16 bit floating point*/ 
+      case llvm::Type::FloatTyID : 
+         if (ClangQT->isSignedIntegerType())
+            result.FloatVal = (float)intVal.getSExtValue();
+         else
+            result.FloatVal = (float)intVal.getZExtValue();               
+
+         return result;
+         case llvm::Type::DoubleTyID :
+            if (ClangQT->isSignedIntegerType())
+               result.DoubleVal = (double)intVal.getSExtValue();
+            else
+               result.DoubleVal = (double)intVal.getZExtValue();               
+
+            return result;
+      case llvm::Type::PointerTyID :
+         if (ClangQT->isSignedIntegerType())
+            return llvm::PTOGV((void*)intVal.getSExtValue());
+         return llvm::PTOGV((void*)intVal.getZExtValue());
+      default: 
+         return val.getGV();
+      }
+      break;
+   }
+   case llvm::Type::PointerTyID : {
+      switch(targetType->getTypeID()) {
+      case llvm::Type::IntegerTyID: {
+         clang::ASTContext& C = fInterp->getSema().getASTContext();
+         unsigned long res = (unsigned long)val.getGV().PointerVal;
+         llvm::APInt LongAPInt(C.getTypeSize(C.UnsignedLongTy), res);
+         result.IntVal = LongAPInt;
+         return result;
+      }
+      default:
+         return val.getGV();
+      }
+      break;
+   }
+      
+   default : 
+      return val.getGV();
+   }
+
+   llvm_unreachable("Must be able to convert.");
+   // Make the compiler happy:
+   return val.getGV();
+}
 
 std::string TClingCallFunc::ExprToString(const clang::Expr* expr) const
 {
@@ -152,6 +184,7 @@ TClingCallFunc::EvaluateExpression(const clang::Expr* expr) const
 {
    // Evaluate an Expr* and return its cling::StoredValueRef
    cling::StoredValueRef valref;
+   // TODO: Use Sema's evaluate.
    cling::Interpreter::CompilationResult cr 
       = fInterp->evaluate(ExprToString(expr), valref);
    if (cr == cling::Interpreter::kSuccess)
@@ -159,6 +192,81 @@ TClingCallFunc::EvaluateExpression(const clang::Expr* expr) const
    return cling::StoredValueRef();
 }
 
+std::string TClingCallFunc::MangleName(const clang::NamedDecl* ND) {
+   // FIXME: We have mangle interface in cling. We should extend it and use it.
+   //
+   clang::ASTContext& ASTCtx = fInterp->getCI()->getASTContext();
+   llvm::OwningPtr<clang::MangleContext> Mangle(ASTCtx.createMangleContext());
+
+   if (Mangle->shouldMangleDeclName(ND)) {
+      std::string MangledName = "";
+      llvm::raw_string_ostream OS(MangledName);
+      if (const clang::CXXConstructorDecl *D =
+               llvm::dyn_cast<clang::CXXConstructorDecl>(ND)) {
+         //Ctor_Complete,          // Complete object ctor
+         //Ctor_Base,              // Base object ctor
+         //Ctor_CompleteAllocating // Complete object allocating ctor (unused)
+         Mangle->mangleCXXCtor(D, clang::Ctor_Complete, OS);
+      }
+      else if (const clang::CXXDestructorDecl *D =
+                  llvm::dyn_cast<clang::CXXDestructorDecl>(ND)) {
+         //Dtor_Deleting, // Deleting dtor
+         //Dtor_Complete, // Complete object dtor
+         //Dtor_Base      // Base object dtor
+         Mangle->mangleCXXDtor(D, clang::Dtor_Deleting, OS);
+      }
+      else {
+         Mangle->mangleName(ND, OS);
+      }
+      OS.flush();
+      return MangledName;
+   }
+   return ND->getNameAsString();
+}
+
+bool TClingCallFunc::IsMemberFunc() const {
+   using namespace clang;
+
+   // Trampolines are non member functions
+   if (IsTrampolineFunc())
+      return false;
+   const Decl *D = fMethod->GetMethodDecl();
+   if (const CXXMethodDecl* MD = dyn_cast<CXXMethodDecl>(D)) {
+      return !MD->isStatic();
+   }
+
+   return false;
+}
+
+//TODO: Rename to GetOriginalDecl
+const clang::FunctionDecl* TClingCallFunc::GetOrigOrTrampolineDecl() const {
+   return (fMethodAsWritten) ? fMethodAsWritten : fMethod->GetMethodDecl();
+}
+
+void TClingCallFunc::PushArg(const cling::Value& value) const {
+   clang::ASTContext& C = fInterp->getSema().getASTContext();
+   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(C, value));
+}
+
+void TClingCallFunc::PushArg(cling::StoredValueRef value) const {
+   fArgVals.push_back(value);
+}
+
+void TClingCallFunc::SetThisPtr(const clang::CXXMethodDecl* MD, 
+                                void* address) const {
+   clang::ASTContext& C = fInterp->getSema().getASTContext(); 
+   clang::QualType QT = MD->getThisType(C);
+   cling::Value val(llvm::PTOGV(address), QT, fEEFunc->arg_begin()->getType());
+   fArgVals[0] = cling::StoredValueRef::bitwiseCopy(C, val);
+}
+
+void TClingCallFunc::SetReturnPtr(const clang::CXXMethodDecl* MD, 
+                                void* address) const {
+   clang::ASTContext& C = fInterp->getSema().getASTContext(); 
+   clang::QualType QT = MD->getThisType(C);
+   cling::Value val(llvm::PTOGV(address), QT, fEEFunc->arg_begin()->getType());
+   fArgVals[1] = cling::StoredValueRef::bitwiseCopy(C, val);
+}
 
 void TClingCallFunc::Exec(void *address) const
 {
@@ -166,19 +274,23 @@ void TClingCallFunc::Exec(void *address) const
       Error("TClingCallFunc::Exec", "Attempt to execute while invalid.");
       return;
    }
-   const clang::Decl *D = fMethod->GetMethodDecl();
-   const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
-   const clang::DeclContext *DC = D->getDeclContext();
-   if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
+   const clang::FunctionDecl* FD = GetOrigOrTrampolineDecl();
+   if (!IsMemberFunc()) {
       // Free function or static member function.
-      Invoke(fArgs);
+      // For the trampoline we need to insert a fake this ptr, because it
+      // has to be our first argument for the trampoline.
+      if (IsTrampolineFunc()) {
+         SetThisPtr(fMethodAsWritten, address);
+      }
+      Invoke();
       return;
    }
+
    // Member function.
-   if (llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
+   const clang::CXXMethodDecl* MD = llvm::cast<const clang::CXXMethodDecl>(FD);
+   if (llvm::isa<clang::CXXConstructorDecl>(MD)) {
       // Constructor.
-      Error("TClingCallFunc::Exec",
-            "Constructor must be called with ExecInt!");
+      Error("TClingCallFunc::Exec", "Constructor must be called with ExecInt!");
       return;
    }
    if (!address) {
@@ -186,13 +298,8 @@ void TClingCallFunc::Exec(void *address) const
             "calling member function with no object pointer!");
       return;
    }
-   std::vector<llvm::GenericValue> args;
-   llvm::GenericValue this_ptr;
-   this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
-                                 reinterpret_cast<unsigned long>(address));
-   args.push_back(this_ptr);
-   args.insert(args.end(), fArgs.begin(), fArgs.end());
-   Invoke(args);
+   SetThisPtr(MD, address);
+   Invoke();
 }
 
 long TClingCallFunc::ExecInt(void *address) const
@@ -203,18 +310,29 @@ long TClingCallFunc::ExecInt(void *address) const
       Error("TClingCallFunc::ExecInt", "Attempt to execute while invalid.");
       return 0L;
    }
-   const clang::Decl *D = fMethod->GetMethodDecl();
-   const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
-   const clang::DeclContext *DC = D->getDeclContext();
-   if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
+   const clang::FunctionDecl* FD = GetOrigOrTrampolineDecl();
+
+   // Intentionally not initialized, so valgrind can report function calls
+   // that don't set this.
+   long returnStorage;
+
+   if (!IsMemberFunc()) {
       // Free function or static member function.
+      if (IsTrampolineFunc()) {
+         SetThisPtr(fMethodAsWritten, address);
+         // Provide return storage
+         SetReturnPtr(fMethodAsWritten, &returnStorage);
+      }
       cling::Value val;
-      Invoke(fArgs, &val);
+      Invoke(&val);
+      if (IsTrampolineFunc()) {
+        return returnStorage;
+      }
       return val.simplisticCastAs<long>();
    }
-   // Member function.
+
    if (const clang::CXXConstructorDecl *CD =
-            llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
+       llvm::dyn_cast<clang::CXXConstructorDecl>(FD)) {
       //
       // We are simulating evaluating the expression:
       //
@@ -223,7 +341,7 @@ long TClingCallFunc::ExecInt(void *address) const
       // and we return the allocated address.
       //
       clang::ASTContext &Ctx = CD->getASTContext();
-      const clang::RecordDecl *RD = llvm::cast<clang::RecordDecl>(DC);
+      const clang::RecordDecl *RD  = CD->getParent();
       if (!RD->getDefinition()) {
          // Forward-declared class, we do not know what the size is.
          return 0L;
@@ -234,10 +352,11 @@ long TClingCallFunc::ExecInt(void *address) const
       //  the memory for the object.
       //
       if (!address) {
+         // TODO: Use ASTContext::getTypeSize() for the size of a type
         const clang::ASTRecordLayout &Layout = Ctx.getASTRecordLayout(RD);
         int64_t size = Layout.getSize().getQuantity();
         const cling::LookupHelper& LH = fInterp->getLookupHelper();
-        TClingCallFunc cf(fInterp);
+        // TODO: Use Sema::FindAllocationFunctions instead of the lookup.
         const clang::FunctionDecl *newFunc = 0;
         if ((newFunc = LH.findFunctionProto(RD, "operator new",
               "std::size_t"))) {
@@ -255,12 +374,13 @@ long TClingCallFunc::ExecInt(void *address) const
                  "in constructor call and could not find an operator new");
            return 0L;
         }
+        TClingCallFunc cf(fInterp);
         cf.fMethod = new TClingMethodInfo(fInterp, newFunc);
         cf.Init(newFunc);
         cf.SetArg(static_cast<long>(size));
         // Note: This may throw!
         cling::Value val;
-        cf.Invoke(cf.fArgs, &val);
+        cf.Invoke(&val);
         address =
            reinterpret_cast<void*>(val.simplisticCastAs<unsigned long>());
         // Note: address is guaranteed to be non-zero here, otherwise
@@ -270,32 +390,37 @@ long TClingCallFunc::ExecInt(void *address) const
       //  Call the constructor, either passing the address we were given,
       //  or the address we got from the operator new as the this pointer.
       //
-      std::vector<llvm::GenericValue> args;
-      llvm::GenericValue this_ptr;
-      this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
-                                    reinterpret_cast<unsigned long>(address));
-      args.push_back(this_ptr);
-      args.insert(args.end(), fArgs.begin(), fArgs.end());
+      SetThisPtr(CD, address);
+      //fArgVals[0] = cling::StoredValueRef::bitwiseCopy(C, thisPtr);
+
       cling::Value val;
-      Invoke(args, &val);
+      Invoke(&val);
       // And return the address of the object.
       return reinterpret_cast<long>(address);
    }
+
+   // Member function
+   const clang::CXXMethodDecl* MD = llvm::cast<const clang::CXXMethodDecl>(FD);
+
    // FIXME: Need to treat member operator new special, it takes no this ptr.
    if (!address) {
       Error("TClingCallFunc::ExecInt",
             "Calling member function with no object pointer!");
       return 0L;
    }
-   std::vector<llvm::GenericValue> args;
-   llvm::GenericValue this_ptr;
-   this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
-                                 reinterpret_cast<unsigned long>(address));
-   args.push_back(this_ptr);
-   args.insert(args.end(), fArgs.begin(), fArgs.end());
+   SetThisPtr(MD, address);
+   if (IsTrampolineFunc()) {
+      // Provide return storage
+      SetReturnPtr(MD, &returnStorage);
+   }
+
    cling::Value val;
-   Invoke(args, &val);
-   if (val.type->isVoidType()) {
+   Invoke(&val);
+   if (IsTrampolineFunc()) {
+      return returnStorage;
+   }
+   // FIXME: Why don't we use cling::Value::isVoid interface?
+   if (val.getClangType()->isVoidType()) {
       // CINT was silently return 0 in this case,
       // for now emulate this behavior for backward compatibility ...
       return 0;
@@ -309,20 +434,24 @@ long long TClingCallFunc::ExecInt64(void *address) const
       Error("TClingCallFunc::ExecInt64", "Attempt to execute while invalid.");
       return 0LL;
    }
-   const clang::Decl *D = fMethod->GetMethodDecl();
-   const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
-   const clang::DeclContext *DC = D->getDeclContext();
-   if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
+   const clang::FunctionDecl* FD = GetOrigOrTrampolineDecl();
+   if (!IsMemberFunc()) {
       // Free function or static member function.
+      // For the trampoline we need to insert a fake this ptr, because it
+      // has to be our first argument for the trampoline.
+      if (IsTrampolineFunc()) {
+         SetThisPtr(fMethodAsWritten, address);
+      }
       cling::Value val;
-      Invoke(fArgs, &val);
+      Invoke(&val);
       return val.simplisticCastAs<long long>();
    }
+
    // Member function.
-   if (llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
+   const clang::CXXMethodDecl* MD = llvm::cast<const clang::CXXMethodDecl>(FD);
+   if (llvm::dyn_cast<clang::CXXConstructorDecl>(MD)) {
       // Constructor.
-      Error("TClingCallFunc::Exec",
-            "Constructor must be called with ExecInt!");
+      Error("TClingCallFunc::Exec", "Constructor must be called with ExecInt!");
       return 0LL;
    }
    if (!address) {
@@ -330,14 +459,19 @@ long long TClingCallFunc::ExecInt64(void *address) const
             "Calling member function with no object pointer!");
       return 0LL;
    }
-   std::vector<llvm::GenericValue> args;
-   llvm::GenericValue this_ptr;
-   this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
-                                 reinterpret_cast<unsigned long>(address));
-   args.push_back(this_ptr);
-   args.insert(args.end(), fArgs.begin(), fArgs.end());
+
+   SetThisPtr(MD, address);
+
+   // Intentionally not initialized, so valgrind can report function calls
+   // that don't set this.
+   long long returnStorage;
+   if (IsTrampolineFunc()) {
+      // Provide return storage
+      SetReturnPtr(MD, &returnStorage);
+   }
+
    cling::Value val;
-   Invoke(args, &val);
+   Invoke(&val);
    return val.simplisticCastAs<long long>();
 }
 
@@ -347,20 +481,30 @@ double TClingCallFunc::ExecDouble(void *address) const
       Error("TClingCallFunc::ExecDouble", "Attempt to execute while invalid.");
       return 0.0;
    }
-   const clang::Decl *D = fMethod->GetMethodDecl();
-   const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(D);
-   const clang::DeclContext *DC = D->getDeclContext();
-   if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
+   const clang::FunctionDecl *FD = GetOrigOrTrampolineDecl();
+   // Intentionally not initialized, so valgrind can report function calls
+   // that don't set this.
+   double returnStorage;
+   if (!IsMemberFunc()) {
       // Free function or static member function.
+      // For the trampoline we need to insert a fake this ptr, because it
+      // has to be our first argument for the trampoline.
+      if (IsTrampolineFunc()) {
+         SetThisPtr(fMethodAsWritten, address);
+         SetReturnPtr(fMethodAsWritten, &returnStorage);
+      }
       cling::Value val;
-      Invoke(fArgs, &val);
+      Invoke(&val);
+      if (IsTrampolineFunc()) {
+         return returnStorage;
+      }
       return val.simplisticCastAs<double>();
    }
    // Member function.
-   if (llvm::dyn_cast<clang::CXXConstructorDecl>(D)) {
+   const clang::CXXMethodDecl* MD = llvm::cast<const clang::CXXMethodDecl>(FD);
+   if (llvm::isa<clang::CXXConstructorDecl>(FD)) {
       // Constructor.
-      Error("TClingCallFunc::Exec",
-            "Constructor must be called with ExecInt!");
+      Error("TClingCallFunc::Exec", "Constructor must be called with ExecInt!");
       return 0.0;
    }
    if (!address) {
@@ -368,14 +512,14 @@ double TClingCallFunc::ExecDouble(void *address) const
             "Calling member function with no object pointer!");
       return 0.0;
    }
-   std::vector<llvm::GenericValue> args;
-   llvm::GenericValue this_ptr;
-   this_ptr.IntVal = llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
-                                 reinterpret_cast<unsigned long>(address));
-   args.push_back(this_ptr);
-   args.insert(args.end(), fArgs.begin(), fArgs.end());
+
+   SetThisPtr(MD, address);
+
    cling::Value val;
-   Invoke(args, &val);
+   Invoke(&val);
+   if (IsTrampolineFunc()) {
+      return returnStorage;
+   }
    return val.simplisticCastAs<double>();
 }
 
@@ -388,6 +532,7 @@ void TClingCallFunc::Init()
 {
    delete fMethod;
    fMethod = 0;
+   fMethodAsWritten = 0;
    fEEFunc = 0;
    fEEAddr = 0;
    ResetArg();
@@ -398,7 +543,7 @@ void *TClingCallFunc::InterfaceMethod() const
    if (!IsValid()) {
       return 0;
    }
-   return fEEAddr;
+   return (void*) GetOrigOrTrampolineDecl();
 }
 
 bool TClingCallFunc::IsValid() const
@@ -409,44 +554,50 @@ bool TClingCallFunc::IsValid() const
 void TClingCallFunc::ResetArg()
 {
    fArgVals.clear();
-   fArgs.clear();
+   PreallocatePtrs();
 }
 
 void TClingCallFunc::SetArg(long param)
 {
+   clang::ASTContext& C = fInterp->getSema().getASTContext();
    llvm::GenericValue gv;
-   gv.IntVal = llvm::APInt(sizeof(long) * CHAR_BIT, param);
-   fArgs.push_back(gv);
+   clang::QualType QT = C.LongTy;
+   gv.IntVal = llvm::APInt(C.getTypeSize(QT), param);
+   PushArg(cling::Value(gv, QT, fInterp->getLLVMType(QT)));
 }
 
 void TClingCallFunc::SetArg(double param)
 {
+   clang::ASTContext& C = fInterp->getSema().getASTContext();
    llvm::GenericValue gv;
+   clang::QualType QT = C.DoubleTy;
    gv.DoubleVal = param;
-   fArgs.push_back(gv);
+   PushArg(cling::Value(gv, QT, fInterp->getLLVMType(QT)));
 }
 
 void TClingCallFunc::SetArg(long long param)
 {
+   clang::ASTContext& C = fInterp->getSema().getASTContext();
    llvm::GenericValue gv;
-   gv.IntVal = llvm::APInt(sizeof(long long) * CHAR_BIT, param);
-   fArgs.push_back(gv);
+   clang::QualType QT = C.LongLongTy;
+   gv.IntVal = llvm::APInt(C.getTypeSize(QT), param);
+   PushArg(cling::Value(gv, QT, fInterp->getLLVMType(QT)));
 }
 
 void TClingCallFunc::SetArg(unsigned long long param)
 {
+   clang::ASTContext& C = fInterp->getSema().getASTContext();
    llvm::GenericValue gv;
-   gv.IntVal = llvm::APInt(sizeof(unsigned long long) * CHAR_BIT, param);
-   fArgs.push_back(gv);
+   clang::QualType QT = C.UnsignedLongLongTy;
+   gv.IntVal = llvm::APInt(C.getTypeSize(QT), param);
+   PushArg(cling::Value(gv, QT, fInterp->getLLVMType(QT)));
 }
 
 void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
 {
    ResetArg();
    for (int i = 0; i < nparam; ++i) {
-      llvm::GenericValue gv;
-      gv.IntVal = llvm::APInt(sizeof(long) * CHAR_BIT, paramArr[i]);
-      fArgs.push_back(gv);
+      SetArg(paramArr[i]);
    }
 }
 
@@ -462,7 +613,7 @@ void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
          // Bad expression, all done.
          break;
       }
-      fArgVals.push_back(val);
+      PushArg(val);
    }
 }
 
@@ -473,15 +624,16 @@ void TClingCallFunc::SetArgs(const char *params)
    clang::ASTContext &Context = fInterp->getCI()->getASTContext();
    for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
       const cling::Value& val = fArgVals[I].get();
-      if (!val.type->isIntegralType(Context) &&
-            !val.type->isRealFloatingType() && !val.type->isPointerType()) {
+      if (!val.getClangType()->isIntegralType(Context) &&
+          !val.getClangType()->isRealFloatingType() 
+          && !val.getClangType()->isPointerType()) {
          // Invalid argument type.
          Error("TClingCallFunc::SetArgs", "Given arguments: %s", params);
          Error("TClingCallFunc::SetArgs", "Argument number %u is not of "
                "integral, floating, or pointer type!", I);
          break;
       }
-      fArgs.push_back(val.value);
+      PushArg(val);
    }
 }
 
@@ -523,15 +675,22 @@ void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method,
    clang::ASTContext& Context = fInterp->getCI()->getASTContext();
    for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
       const cling::Value& val = fArgVals[I].get();
-      if (!val.type->isIntegralType(Context) &&
-            !val.type->isRealFloatingType() && !val.type->isPointerType()) {
+      // Skip the this ptr if not valid
+      if (I == 0 && !fArgVals[0].isValid())
+         continue;
+      // Skip the return ptr if not valid
+      else if (I == 1 && !fArgVals[1].isValid())
+         continue;
+      if (!val.getClangType()->isIntegralType(Context) &&
+          !val.getClangType()->isRealFloatingType() 
+          && !val.getClangType()->isPointerType()) {
          // Invalid argument type, cint skips it, strange.
          Info("TClingCallFunc::SetFunc", "Invalid value for arg %u of "
               "function %s(%s)", I, method, arglist);
          // FIXME: This really should be an error.
          continue;
       }
-      fArgs.push_back(val.value);
+      PushArg(val);
    }
 }
 
@@ -581,67 +740,226 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
    }
 }
 
-static llvm::Type *getLLVMType(cling::Interpreter *interp, clang::QualType QT)
-{
-   clang::CodeGenerator* CG = interp->getCodeGenerator();
-   clang::CodeGen::CodeGenModule* CGM = CG->GetBuilder();
-   clang::CodeGen::CodeGenTypes& CGT = CGM->getTypes();
-   // Note: The first thing this routine does is getCanonicalType(), so we
-   //       do not need to do that first.
-   llvm::Type* Ty = CGT.ConvertType(QT);
-   //llvm::Type* Ty = CGT.ConvertTypeForMem(QT);
-   return Ty;
-}
-
 void TClingCallFunc::Init(const clang::FunctionDecl *FD)
 {
    fEEFunc = 0;
    fEEAddr = 0;
    bool isMemberFunc = true;
-   const clang::CXXMethodDecl *MD = llvm::dyn_cast<clang::CXXMethodDecl>(FD);
+   clang::CXXMethodDecl *MD 
+      = llvm::dyn_cast<clang::CXXMethodDecl>(const_cast<clang::FunctionDecl*>(FD));
    const clang::DeclContext *DC = FD->getDeclContext();
    if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
       // Free function or static member function.
       isMemberFunc = false;
    }
+
    //
    //  Mangle the function name, if necessary.
    //
-   const char *FuncName = 0;
-   std::string MangledName;
-   llvm::raw_string_ostream OS(MangledName);
-   clang::ASTContext& ASTCtx = fInterp->getCI()->getASTContext();
-   llvm::OwningPtr<clang::MangleContext> Mangle(ASTCtx.createMangleContext());
-   if (!Mangle->shouldMangleDeclName(FD)) {
-      clang::IdentifierInfo *II = FD->getIdentifier();
-      FuncName = II->getNameStart();
-   }
-   else {
-      if (const clang::CXXConstructorDecl *D =
-               llvm::dyn_cast<clang::CXXConstructorDecl>(FD)) {
-         //Ctor_Complete,          // Complete object ctor
-         //Ctor_Base,              // Base object ctor
-         //Ctor_CompleteAllocating // Complete object allocating ctor (unused)
-         Mangle->mangleCXXCtor(D, clang::Ctor_Complete, OS);
-      }
-      else if (const clang::CXXDestructorDecl *D =
-                  llvm::dyn_cast<clang::CXXDestructorDecl>(FD)) {
-         //Dtor_Deleting, // Deleting dtor
-         //Dtor_Complete, // Complete object dtor
-         //Dtor_Base      // Base object dtor
-         Mangle->mangleCXXDtor(D, clang::Dtor_Deleting, OS);
-      }
-      else {
-         Mangle->mangleName(FD, OS);
-      }
-      OS.flush();
-      FuncName = MangledName.c_str();
-   }
+   std::string FuncName = MangleName(FD);
    //
    //  Check the execution engine for the function.
    //
    llvm::ExecutionEngine *EE = fInterp->getExecutionEngine();
-   fEEFunc = EE->FindFunctionNamed(FuncName);
+   fEEFunc = EE->FindFunctionNamed(FuncName.c_str());
+
+   // In many cases if the Decl in unused no code is generated by cling/clang.
+   // In such cases when we have the Decl in the AST but we don't have code 
+   // produced yet we have to force that to happen.
+   using namespace clang;
+   if (!fEEFunc && MD && (MD->isInlined() || !MD->isOutOfLine())) {
+      cling::CompilationOptions CO;
+      CO.DeclarationExtraction = 0;
+      CO.ValuePrinting = cling::CompilationOptions::VPDisabled;
+      CO.ResultEvaluation = 0;
+      CO.DynamicScoping = 0;
+      CO.Debug = 0;
+      CO.CodeGeneration = 1;
+
+      cling::Transaction T(CO, fInterp->getModule());
+      // In case of virtual function we need a trampoline for the vtable 
+      // evaluation like:
+      // void unique_name(CLASS* This, Arg1* a, ...[, CLASSRes* result = 0]) {
+      //   if (result)
+      //     *result = This->Function(*a, b, c);
+      //   or:
+      //   This->Function(*a, b, c);
+      // }
+      //
+      if (MD && MD->isVirtual()) {
+         Sema& S = fInterp->getSema();
+         ASTContext& C = S.getASTContext();
+
+         std::string FunctionName = "__callfunc_vtable_trampoline";
+         fInterp->createUniqueName(FunctionName);
+         IdentifierInfo& II = C.Idents.get(FunctionName);
+         SourceLocation Loc;
+
+         // Copy-pasted and adapted from cling's DeclExtractor.cpp
+         FunctionDecl* TrampolineFD 
+            = dyn_cast_or_null<FunctionDecl>(S.ImplicitlyDefineFunction(Loc, II, S.TUScope));
+         if (TrampolineFD) {
+            TrampolineFD->setImplicit(false); // Better for debugging
+            // We can't PushDeclContext, because we don't have scope.
+            Sema::ContextRAII pushedDC(S, TrampolineFD);
+
+            // NOTE:
+            // We know that our function returns an int, however we are not going
+            // to add a return statement, because we use that function as a 
+            // trampoline to call. Valgrind will be happy because LLVM
+            // generates a return result, which is (false?) initialized.
+            llvm::SmallVector<Stmt*, 2> Stmts;
+            llvm::SmallVector<ParmVarDecl*, 4> Params;
+            // Pass in parameter This
+            QualType ThisQT = MD->getThisType(C);
+            ParmVarDecl* ThisPtrParm 
+               = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc, 
+                                     &C.Idents.get("This"), ThisQT,
+                                     C.getTrivialTypeSourceInfo(ThisQT, Loc),
+                                     SC_None, SC_None, /*DefaultArg*/0);
+            Params.push_back(ThisPtrParm);
+
+            // Recreate the same arg nodes for the trampoline and use them 
+            // instead
+            ParmVarDecl* PVD = 0;
+            Expr* defaultArg = 0;
+            for (FunctionDecl::param_const_iterator I = MD->param_begin(), 
+                    E = MD->param_end(); I != E; ++I) {
+               // For now instead of creating a copy - just forward to the AST 
+               // node of the original function
+               defaultArg = (*I)->getDefaultArg();
+               PVD = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc, 
+                                         (*I)->getIdentifier(), (*I)->getType(),
+                                         C.getTrivialTypeSourceInfo((*I)->getType(), Loc),
+                                         SC_None, SC_None, defaultArg);
+               Params.push_back(PVD);
+            }
+
+            // Create the parameter for the result type
+            ParmVarDecl* ResParm = 0;
+            if (!MD->getResultType()->isVoidType()) {
+               // We must default the parameter to zero.
+               ExprResult Zero = S.ActOnIntegerConstant(Loc, 0);
+               // Since we deref it it always has to be ptr type.
+               QualType ResQT = C.getPointerType(MD->getResultType());
+               ResParm 
+                  = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc,
+                                        &C.Idents.get("__Res"), ResQT,
+                                        C.getTrivialTypeSourceInfo(ResQT, Loc),
+                                        SC_None, SC_None, Zero.take());
+            
+               Params.push_back(ResParm);
+            }
+
+            
+            // Change the type of the function to consider the new paramlist.
+            llvm::SmallVector<QualType, 4> ParamQTs;
+            for(size_t i = 0; i < Params.size(); ++i)
+               ParamQTs.push_back(Params[i]->getType());
+
+            const FunctionProtoType* Proto 
+               = llvm::cast<FunctionProtoType>(TrampolineFD->getType().getTypePtr());
+            QualType NewFDQT = C.getFunctionType(C.VoidTy, ParamQTs.data(), 
+                                                 ParamQTs.size(),
+                                                 Proto->getExtProtoInfo());
+            TrampolineFD->setType(NewFDQT);
+            TrampolineFD->setParams(Params);
+
+            // Copy-pasted and adapted from cling's DynamicLookup.cpp
+            CXXScopeSpec CXXSS;
+            LookupResult MemberLookup(S, MD->getDeclName(),
+                                      Loc, Sema::LookupMemberName);
+            // Add the declaration. No lookup is performed, we know that this
+            // decl doesn't exist yet.
+            MemberLookup.addDecl(MD, AS_public);
+            MemberLookup.resolveKind();
+            Expr* ExprBase 
+               = S.BuildDeclRefExpr(/*ThisPTR*/Params[0], ThisQT, VK_LValue, Loc
+                                    ).take();
+            
+            // Synthesize implicit casts if needed.
+            bool isArrow = true;
+            ExprBase 
+               = S.PerformMemberExprBaseConversion(ExprBase,isArrow).take();
+            Expr* MemberExpr 
+               = S.BuildMemberReferenceExpr(ExprBase, ThisQT, Loc, isArrow, 
+                                            CXXSS, Loc, 
+                                            /*FirstQualifierInScope=*/0,
+                                            MemberLookup, /*TemplateArgs=*/0
+                                            ).take();
+            // Build the arguments as declrefs to the params
+            llvm::SmallVector<Expr*, 4> ExprArgs;
+            ExprResult Arg;
+            DeclarationNameInfo NameInfo;
+            // We need to skip the first argument, it is the artificial this ptr
+            // and the last if exist
+            size_t ParamsSize = (ResParm) ? Params.size() -1 : Params.size();
+            for (size_t i = 1; i < ParamsSize; ++i) {
+               NameInfo = DeclarationNameInfo(Params[i]->getDeclName(), 
+                                              Params[i]->getLocStart());
+               Arg = S.BuildDeclarationNameExpr(CXXSS, NameInfo, Params[i]);
+               ExprArgs.push_back(Arg.take());
+            }
+            // Build the actual call
+            ExprResult theCall = S.ActOnCallExpr(S.TUScope, MemberExpr, Loc,
+                                                  MultiExprArg(ExprArgs.data(), 
+                                                               ExprArgs.size()),
+                                                  Loc
+                                                  );
+            // Create the if stmt
+            if (ResParm) {
+               // if (result)
+               //   *result = This->Function(*a, b, c);
+               NameInfo = DeclarationNameInfo(ResParm->getDeclName(), 
+                                              ResParm->getLocStart());
+               ExprResult DRE, LHS, RHS, BoolCond, BinOp;
+               DRE = S.BuildDeclarationNameExpr(CXXSS, NameInfo, ResParm);
+               LHS = S.BuildUnaryOp(/*Scope*/0, Loc, UO_Deref, DRE.take());
+               RHS = theCall;
+               BinOp = S.BuildBinOp(/*Scope*/0, Loc, BO_Assign, LHS.take(), 
+                                    RHS.take());
+               // Add the needed casts needed for turning the result into bool
+               // condition
+               BoolCond = S.ActOnBooleanCondition(/*Scope*/0, Loc, DRE.get());
+               Sema::FullExprArg FullCond(S.MakeFullExpr(BoolCond.get(), Loc));
+               // Note that here we reuse the call expr from the then part into
+               // the else part of the if stmt. In general that is dangerous if
+               // they are in different decl contexts and so on, but here it 
+               // shouldn't be.
+               StmtResult IfStmt = S.ActOnIfStmt(Loc, FullCond, /*CondVar*/0, 
+                                                 BinOp.take(), Loc, 
+                                                 theCall.take());
+               Stmts.push_back(IfStmt.take()); 
+            }
+            else
+               Stmts.push_back(theCall.take());
+
+            CompoundStmt* CS = new (C) CompoundStmt(C, Stmts.data(), 
+                                                    Stmts.size(), Loc, Loc);
+
+            TrampolineFD->setBody(CS);
+
+            fMethodAsWritten = llvm::cast<clang::CXXMethodDecl>(FD);
+            FD = TrampolineFD;
+            // We also need to update the current method. It should point to 
+            // the trampoline. 
+            fMethod = new TClingMethodInfo(fInterp, TrampolineFD);
+            FuncName = MangleName(FD);
+         }
+      }
+      
+      T.append(const_cast<clang::FunctionDecl*>(FD));
+      T.setCompleted();
+
+      fInterp->codegen(&T);
+      assert(T.getState() == cling::Transaction::kCommitted
+             && "Compilation should never fail!");
+   }
+
+   //
+   //  Check again the execution engine for the function.
+   //
+   fEEFunc = EE->FindFunctionNamed(FuncName.c_str());
    if (fEEFunc) {
       // Execution engine had it, get the mapping.
       fEEAddr = EE->getPointerToFunction(fEEFunc);
@@ -665,17 +983,16 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
 
          // Create a llvm function we can use to call it with later.
          llvm::LLVMContext &Context = *fInterp->getLLVMContext();
-         unsigned NumParams = FD->getNumParams();
          llvm::SmallVector<llvm::Type *, 8> Params;
          if (isMemberFunc) {
             // Force the invisible this pointer arg to pointer to char.
             Params.push_back(llvm::PointerType::getUnqual(
                                 llvm::IntegerType::get(Context, CHAR_BIT)));
          }
-         for (unsigned I = 0U; I < NumParams; ++I) {
+         for (unsigned I = 0U; I < FD->getNumParams(); ++I) {
             const clang::ParmVarDecl *PVD = FD->getParamDecl(I);
             clang::QualType QT = PVD->getType();
-            llvm::Type *argtype = getLLVMType(fInterp, QT);
+            llvm::Type *argtype = const_cast<llvm::Type*>(fInterp->getLLVMType(QT));
             if (argtype == 0) {
                // We are not in good shape, quit while we are still alive.
                return;
@@ -689,7 +1006,7 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
                                                 CHAR_BIT);
          }
          else {
-            ReturnType = getLLVMType(fInterp, FD->getResultType());
+            ReturnType = const_cast<llvm::Type*>(fInterp->getLLVMType(FD->getResultType()));
          }
          if (ReturnType) {
             
@@ -714,55 +1031,23 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
          }
       }
    }
-
-   // In many cases if the Decl in unused no code is generated by cling/clang.
-   // In such cases when we have the Decl in the AST but we don't have code 
-   // produced yet we have to force that to happen.
-   if (!fEEFunc && MD) {
-      cling::CompilationOptions CO;
-      CO.DeclarationExtraction = 0;
-      CO.ValuePrinting = cling::CompilationOptions::VPDisabled;
-      CO.ResultEvaluation = 0;
-      CO.DynamicScoping = 0;
-      CO.Debug = 0;
-      CO.CodeGeneration = 1;
-
-      cling::Transaction T(CO, /*llvm::Module=*/0);
-      T.append(const_cast<clang::CXXMethodDecl*>(MD));
-      T.setCompleted();
-      ((TCling*)gCling)->GetInterpreter()->codegen(&T);
-      assert(T.getState() == cling::Transaction::kCommitted
-             && "Compilation should never fail!");
-
-      fEEFunc = EE->FindFunctionNamed(FuncName);
-      if (fEEFunc) {
-         // Execution engine had it, get the mapping.
-         fEEAddr = EE->getPointerToFunction(fEEFunc);
-      }
-   }
 }
 
-void
-TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues,
-                       cling::Value* result /*= 0*/) const
+void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
 {
-   // FIXME: We need to think about thunks for the this pointer adjustment,
-   //        and the return pointer adjustment for covariant return types.
-   //if (!IsValid()) {
-   //   return;
-   //}
-   if (result) *result = cling::Value();
-   unsigned long num_given_args = static_cast<unsigned long>(ArgValues.size());
-   const clang::FunctionDecl *fd = fMethod->GetMethodDecl();
-   const clang::CXXMethodDecl *md = llvm::dyn_cast<clang::CXXMethodDecl>(fd);
-   const clang::DeclContext *dc = fd->getDeclContext();
-   bool isMemberFunction = true;
-   if (dc->isTranslationUnit() || dc->isNamespace() || (md && md->isStatic())) {
-      isMemberFunction = false;
-   }
-   unsigned num_params = fd->getNumParams();
-   unsigned min_args = fd->getMinRequiredArguments();
-   if (isMemberFunction) {
+   if (result) 
+      *result = cling::Value();
+
+   // It should make no difference if we are working with the trampoline or
+   // the real decl.
+   const clang::FunctionDecl *FD = fMethod->GetMethodDecl();
+     
+   unsigned num_params = FD->getNumParams();
+   unsigned min_args = FD->getMinRequiredArguments();
+   // For trampolines we pass in the first argument as a fake this ptr.
+   unsigned num_given_args = GetArgValsSize();
+
+   if (IsMemberFunc()) {
       // Adjust for the hidden this pointer first argument.
       ++num_params;
       ++min_args;
@@ -770,14 +1055,14 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues,
    if (num_given_args < min_args) {
       // Not all required arguments given.
       Error("TClingCallFunc::Invoke",
-            "Not enough function arguments given to %s (min: %u max:%u, given: %lu)",
+            "Not enough function arguments given to %s (min: %u max:%u, given: %u)",
             fMethod->Name(), min_args, num_params, num_given_args);
       return;
    }
    else if (num_given_args > num_params) {
       if (!fIgnoreExtraArgs) {
          Error("TClingCallFunc::Invoke",
-               "Too many function arguments given to %s (min: %u max: %u, given: %lu)",
+               "Too many function arguments given to %s (min: %u max: %u, given: %u)",
                fMethod->Name(), min_args, num_params, num_given_args);
          return;
       }
@@ -785,52 +1070,97 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues,
 
    // This will be the arguments actually passed to the JIT function.
    std::vector<llvm::GenericValue> Args;
-   std::vector<cling::StoredValueRef> ArgsStorage;
+
    // We are going to loop over the JIT function args.
    llvm::FunctionType *ft = fEEFunc->getFunctionType();
-   clang::ASTContext& context = fd->getASTContext();
-   for (unsigned i = 0U, e = ft->getNumParams(); i < e; ++i) {
-      if (i < num_given_args) {
-         // We have a user-provided argument value.
-         const llvm::Type *ty = ft->getParamType(i);
-         Args.push_back(convertIntegralToArg(ArgValues[i], ty));
+
+   // If there are still arguments to be resolved
+   unsigned num_default_args_to_resolve = num_params - num_given_args;
+   if (num_default_args_to_resolve) {
+      // This means that we have synthesized artificial default arg __Res
+      if (IsTrampolineFunc() && !fMethodAsWritten->getResultType()->isVoidType()) {
+         if (!fArgVals[1].isValid())
+            SetReturnPtr(fMethodAsWritten, /*address*/0);
+         num_given_args = GetArgValsSize();
+         num_default_args_to_resolve = num_params - num_given_args;
       }
-      else {
+
+      unsigned arg_index;
+      const clang::ParmVarDecl* pvd = 0;
+      for (size_t i = 0; i < num_default_args_to_resolve; ++i) {
+         // If this was a member function, skip the this ptr - it has already 
+         // been handled.
+         arg_index = min_args + i - IsMemberFunc();
+        //arg_index = num_given_args - min_args + i;
+        //arg_index = num_given_args + i - IsMemberFunc() + IsTrampolineFunc();
          // Use the default value from the decl.
-         const clang::ParmVarDecl* pvd = 0;
-         if (!isMemberFunction) {
-            pvd = fd->getParamDecl(i);
-         }
-         else {
-            // Compensate for the undeclared added this pointer value.
-            pvd = fd->getParamDecl(i-1);
-         }
-         //assert(pvd->hasDefaultArg() && "No default for argument!");
+         pvd = FD->getParamDecl(arg_index);
+         assert(pvd->hasDefaultArg() && "No default for argument!");
+
+         // TODO: Optimize here.
          const clang::Expr* expr = pvd->getDefaultArg();
          cling::StoredValueRef valref = EvaluateExpression(expr);
          if (valref.isValid()) {
-            ArgsStorage.push_back(valref);
-            const cling::Value& val = valref.get();
-            if (!val.type->isIntegralType(context) &&
-                  !val.type->isRealFloatingType() &&
-                  !val.type->canDecayToPointerType()) {
-               // Invalid argument type.
-               Error("TClingCallFunc::Invoke",
-                     "Default for argument %u: %s", i, ExprToString(expr).c_str());
-               Error("TClingCallFunc::Invoke",
-                     "is not of integral, floating, or pointer type!");
-               return;
-            }
-            const llvm::Type *ty = ft->getParamType(i);
-            Args.push_back(convertIntegralToArg(val.value, ty));
+            // const cling::Value& val = valref.get();
+            // if (!val.getClangType()->isIntegralType(context) &&
+            //       !val.getClangType()->isRealFloatingType() &&
+            //       !val.getClangType()->canDecayToPointerType()) {
+            //    // Invalid argument type.
+            //    Error("TClingCallFunc::Invoke", "Default for argument %lu: %s",
+            //          i, ExprToString(expr).c_str());
+            //    Error("TClingCallFunc::Invoke",
+            //          "is not of integral, floating, or pointer type!");
+            //    return;
+            // }
+            //const llvm::Type *ty = ft->getParamType(arg_index);
+            PushArg(valref.get());
+            //Args.push_back(convertIntegralToArg(val, ty));
          }
          else {
             Error("TClingCallFunc::Invoke",
                   "Could not evaluate default for argument %u: %s",
-                  i, ExprToString(expr).c_str());
+                  arg_index, ExprToString(expr).c_str());
             return;
          }
       }
+   }
+
+   // Add the this ptr if valid.
+   if(fArgVals[0].isValid())
+      Args.push_back(fArgVals[0].get().getGV());
+
+   // If it is a trampoline do not iterate over the last
+   unsigned arg_index;
+   for (size_t i = 2, e = fArgVals.size(); i < e; ++i) {
+      // if (IsTrampolineFunc()) {
+      //    // If it is the last argument of a non-void function, that should be
+      //    // the arg for storing the result.
+      //    if (i == e-1 && !ft->getReturnType()->isVoidTy()) {
+      //       // Add return ptr arg
+      //       if (i == num_given_args)
+      //          // We have a user-provided return value address.
+      //          Args.push_back(fArgVals[e].get().getGV());
+      //       else
+      //          // NULL
+      //          Args.push_back(llvm::PTOGV(0));
+      //       continue;
+      //    }
+      // }
+      // We have a user-provided argument value.
+      // If this was a member function, skip the this ptr - it has already been
+      // handled.
+      arg_index = i - 2 + (IsMemberFunc() || IsTrampolineFunc());
+      const llvm::Type *ty = ft->getParamType(arg_index);
+      if (ty != fArgVals[i].get().getLLVMType())
+         Args.push_back(convertIntegralToArg(fArgVals[i].get(), ty));
+      else
+         Args.push_back(fArgVals[i].get().getGV());
+   }
+
+   // Add the return ptr if valid.
+   if(fArgVals[1].isValid()) {
+      assert(IsTrampolineFunc() && "Should be only valid for trampolines.");
+      Args.push_back(fArgVals[1].get().getGV());
    }
 
    llvm::GenericValue return_val = fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
@@ -838,14 +1168,19 @@ TClingCallFunc::Invoke(const std::vector<llvm::GenericValue> &ArgValues,
       if (ft->getReturnType()->getTypeID() == llvm::Type::PointerTyID) {
          // Note: The cint interface requires pointers to be
          //       returned as unsigned long.
-         llvm::GenericValue converted_return_val;
-         converted_return_val.IntVal =
-            llvm::APInt(sizeof(unsigned long) * CHAR_BIT,
-                        reinterpret_cast<unsigned long>(GVTOP(return_val)));
-         *result = cling::Value(converted_return_val, context.LongTy);
+
+         cling::Value convVal(return_val, FD->getResultType(), 
+                              fEEFunc->getReturnType());
+
+         clang::ASTContext& C = fInterp->getSema().getASTContext();
+         clang::QualType QT = C.UnsignedLongTy;
+         const llvm::Type* ty = fInterp->getLLVMType(QT);
+         llvm::GenericValue ulong_return_val = convertIntegralToArg(convVal, ty);
+         *result = cling::Value(ulong_return_val, QT, ty);
       } else {
-         *result = cling::Value(return_val, fd->getResultType());
+         *result = cling::Value(return_val,
+                                GetOrigOrTrampolineDecl()->getResultType(),
+                                ft->getReturnType());
       }
    }
 }
-
