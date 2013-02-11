@@ -238,8 +238,7 @@ bool TClingCallFunc::IsMemberFunc() const {
    return false;
 }
 
-//TODO: Rename to GetOriginalDecl
-const clang::FunctionDecl* TClingCallFunc::GetOrigOrTrampolineDecl() const {
+const clang::FunctionDecl* TClingCallFunc::GetOriginalDecl() const {
    return (fMethodAsWritten) ? fMethodAsWritten : fMethod->GetMethodDecl();
 }
 
@@ -274,7 +273,7 @@ void TClingCallFunc::Exec(void *address) const
       Error("TClingCallFunc::Exec", "Attempt to execute while invalid.");
       return;
    }
-   const clang::FunctionDecl* FD = GetOrigOrTrampolineDecl();
+   const clang::FunctionDecl* FD = GetOriginalDecl();
    if (!IsMemberFunc()) {
       // Free function or static member function.
       // For the trampoline we need to insert a fake this ptr, because it
@@ -310,7 +309,7 @@ long TClingCallFunc::ExecInt(void *address) const
       Error("TClingCallFunc::ExecInt", "Attempt to execute while invalid.");
       return 0L;
    }
-   const clang::FunctionDecl* FD = GetOrigOrTrampolineDecl();
+   const clang::FunctionDecl* FD = GetOriginalDecl();
 
    // Intentionally not initialized, so valgrind can report function calls
    // that don't set this.
@@ -434,7 +433,7 @@ long long TClingCallFunc::ExecInt64(void *address) const
       Error("TClingCallFunc::ExecInt64", "Attempt to execute while invalid.");
       return 0LL;
    }
-   const clang::FunctionDecl* FD = GetOrigOrTrampolineDecl();
+   const clang::FunctionDecl* FD = GetOriginalDecl();
    if (!IsMemberFunc()) {
       // Free function or static member function.
       // For the trampoline we need to insert a fake this ptr, because it
@@ -481,7 +480,7 @@ double TClingCallFunc::ExecDouble(void *address) const
       Error("TClingCallFunc::ExecDouble", "Attempt to execute while invalid.");
       return 0.0;
    }
-   const clang::FunctionDecl *FD = GetOrigOrTrampolineDecl();
+   const clang::FunctionDecl *FD = GetOriginalDecl();
    // Intentionally not initialized, so valgrind can report function calls
    // that don't set this.
    double returnStorage;
@@ -546,7 +545,7 @@ void *TClingCallFunc::InterfaceMethod() const
    if (!IsValid()) {
       return 0;
    }
-   return const_cast<void*>(reinterpret_cast<const void*>(GetOrigOrTrampolineDecl()));
+   return const_cast<void*>(reinterpret_cast<const void*>(GetOriginalDecl()));
 }
 
 bool TClingCallFunc::IsValid() const
@@ -1181,8 +1180,7 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
          llvm::GenericValue ulong_return_val = convertIntegralToArg(convVal, ty);
          *result = cling::Value(ulong_return_val, QT, ty);
       } else {
-         *result = cling::Value(return_val,
-                                GetOrigOrTrampolineDecl()->getResultType(),
+         *result = cling::Value(return_val, GetOriginalDecl()->getResultType(),
                                 ft->getReturnType());
       }
    }

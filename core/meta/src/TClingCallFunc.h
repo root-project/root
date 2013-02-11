@@ -86,7 +86,7 @@ private:
    std::string MangleName(const clang::NamedDecl* ND);
    bool IsTrampolineFunc() const { return fMethodAsWritten; }
    bool IsMemberFunc() const;
-   const clang::FunctionDecl* GetOrigOrTrampolineDecl() const;
+   const clang::FunctionDecl* GetOriginalDecl() const;
 
    void PushArg(const cling::Value& value) const;
    void PushArg(cling::StoredValueRef value) const;
