@@ -88,6 +88,15 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
    fEnv = 0;
    fConn = 0;
 
+   if (gDebug>0) {
+      // this code is necessary to guarantee, that libclntsh.so will be
+      // linked to libOracle.so.
+      sword  major_version(0), minor_version(0), update_num(0), patch_num(0), port_update_num(0);
+      OCIClientVersion(&major_version, &minor_version, &update_num, &patch_num, &port_update_num);
+      Info("TOracleServer","Oracle Call Interface version %u.%u.%u.%u.%u",
+            (unsigned) major_version, (unsigned) minor_version, (unsigned) update_num, (unsigned) patch_num, (unsigned) port_update_num);
+   }
+
    TUrl url(db);
 
    if (!url.IsValid()) {
