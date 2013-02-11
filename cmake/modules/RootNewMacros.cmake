@@ -330,7 +330,7 @@ function(ROOT_LINKER_LIBRARY library)
                                COMPONENT libraries)
     #install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake/modules) 
   endif()
-  if(WIN32)
+  if(WIN32 AND ARG_TYPE STREQUAL SHARED)
     if(CMAKE_GENERATOR MATCHES "Visual Studio")
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug/lib${library}.pdb 
               CONFIGURATIONS Debug
