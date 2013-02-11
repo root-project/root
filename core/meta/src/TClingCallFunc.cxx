@@ -514,6 +514,9 @@ double TClingCallFunc::ExecDouble(void *address) const
    }
 
    SetThisPtr(MD, address);
+   if (IsTrampolineFunc()) {
+      SetReturnPtr(fMethodAsWritten, &returnStorage);
+   }
 
    cling::Value val;
    Invoke(&val);
@@ -543,7 +546,7 @@ void *TClingCallFunc::InterfaceMethod() const
    if (!IsValid()) {
       return 0;
    }
-   return (void*) GetOrigOrTrampolineDecl();
+   return const_cast<void*>(reinterpret_cast<const void*>(GetOrigOrTrampolineDecl()));
 }
 
 bool TClingCallFunc::IsValid() const
