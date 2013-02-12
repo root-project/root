@@ -16,6 +16,8 @@
 // Standard
 #include <string>
 
+#include <iostream>
+
 
 //- protected members --------------------------------------------------------
 template< class T, class M >
@@ -90,6 +92,13 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
 
 // perform the call, 0 makes the other side allocate the memory
    Long_t address = (Long_t)this->Execute( 0, release_gil );
+
+// CLING WORKAROUND --
+// Due to #100389, the constructor may not be a valid method. This happens if
+// there is no (default) contructor, so just return a right-size bit of memory.
+   if ( ! address )
+      address = (Long_t)klass->New();
+// -- END CLING WORKAROUND
 
 // done with filtered args
    Py_DECREF( args );
