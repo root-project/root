@@ -1137,7 +1137,7 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
       // We have a user-provided argument value.
       // If this was a member function, skip the this ptr - it has already been
       // handled.
-      arg_index = i - 2 + IsMemberFunc());
+      arg_index = i - 2 + IsMemberFunc();
       const llvm::Type *ty = ft->getParamType(arg_index);
       if (ty != fArgVals[i].get().getLLVMType())
          Args.push_back(convertIntegralToArg(fArgVals[i].get(), ty));
