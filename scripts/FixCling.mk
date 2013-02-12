@@ -17,7 +17,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundDouble32inDefaultTmpltArg"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
 CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
-CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndVirtual"
+#CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndVirtual"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
@@ -47,7 +47,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
 
 # Fixes used when building library via ACLiC
 #CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndInline"
-CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndVirtual"
+#CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndVirtual"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundJITandInline"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundNoPrivateClassIO"
@@ -82,7 +82,7 @@ ClingWorkAroundNoDotOptimization = yes         # See https://savannah.cern.ch/bu
 ClingWorkAroundUnnamedDetection = yes          # See https://savannah.cern.ch/bugs/index.php?99341
 #ClingWorkAroundIncorrectTearDownOrder = yes    # See https://savannah.cern.ch/bugs/index.php?99266
 ClingWorkAroundNoPrivateClassIO = yes          # See https://savannah.cern.ch/bugs/index.php?99860 
-ClingWorkAroundCallfuncAndVirtual = yes        # See https://savannah.cern.ch/bugs/index.php?99910
+#ClingWorkAroundCallfuncAndVirtual = yes        # See https://savannah.cern.ch/bugs/index.php?99910
 # Most likely no longer supported.
 # ClingReinstateRedeclarationAllowed = yes     # See https://savannah.cern.ch/bugs/index.php?99396 
 # ClingReinstateImplicitDynamicCast = yes      # See https://savannah.cern.ch/bugs/index.php?99395
