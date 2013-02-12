@@ -88,7 +88,7 @@ llvm::GenericValue TClingCallFunc::convertIntegralToArg(const cling::Value& val,
       return val.getGV();
    }
 
-   assert((ClangQT->isBuiltinType() || ClangQT->isPointerType())
+   assert((ClangQT->isBuiltinType() || ClangQT->isPointerType() || ClangQT->isReferenceType())
           && "Conversions supported only on builtin types!");
 
    llvm::GenericValue result;
@@ -1114,7 +1114,7 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
    llvm::GenericValue return_val = fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
    if (result) {
       if (ft->getReturnType()->getTypeID() == llvm::Type::PointerTyID) {
-         // Note: The cint interface requires pointers to be
+         // Note: The cint interface requires pointers and references to be
          //       returned as unsigned long.
 
          cling::Value convVal(return_val, FD->getResultType(), 
