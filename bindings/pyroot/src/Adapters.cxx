@@ -369,7 +369,8 @@ PyROOT::TScopeAdapter::operator Bool_t() const
    Int_t oldEIL = gErrorIgnoreLevel;
    gErrorIgnoreLevel = 3000;
    TClass* klass = TClass::GetClass( Name( Rflx::QUALIFIED | Rflx::SCOPED ).c_str() );
-   if ( klass ) b = gInterpreter->ClassInfo_IsValid( klass->GetClassInfo() );
+   if ( klass && klass->GetClassInfo() )
+      b = gInterpreter->ClassInfo_IsValid( klass->GetClassInfo() );
    gErrorIgnoreLevel = oldEIL;
    return b;
 }
