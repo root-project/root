@@ -3,7 +3,7 @@
 # Created: 09/24/10
 # Last: 09/30/10
 
-__all__ = [ 'pylong', 'maxvalue', 'MyTestCase' ]
+__all__ = [ 'pylong', 'maxvalue', 'MyTestCase', 'FIXCLING' ]
 
 import os, sys, unittest
 
@@ -27,3 +27,7 @@ else:
 
    class MyTestCase( unittest.TestCase ):
       pass
+
+FIXCLING = '--fixcling' in sys.argv
+if 'FIXCLING' in os.environ:
+   FIXCLING = os.environ['FIXCLING'] == 'yes'

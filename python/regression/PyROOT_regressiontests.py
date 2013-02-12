@@ -72,6 +72,9 @@ class Regression03UserDefinedNewOperatorTestCase( MyTestCase ):
    def test1CreateTemporary( self ):
       """Test handling of a temporary for user defined operator new"""
 
+      if FIXCLING:
+         return
+
       gROOT.LoadMacro( "MuonTileID.C+" )
 
       getID()
@@ -178,6 +181,9 @@ class Regression06Int64ConversionTestCase( MyTestCase ):
    def test1IntToULongTestCase( self ):
       """Test conversion of Int(64) limit values to unsigned long"""
 
+      if FIXCLING:
+         return
+
       gROOT.LoadMacro( 'ULongLong.C+' )
 
       self.assertEqual( self.limit1,  ULongFunc( self.limit1 ) )
@@ -187,6 +193,9 @@ class Regression06Int64ConversionTestCase( MyTestCase ):
 
    def test2IntToULongLongTestCase( self ):
       """Test conversion of Int(64) limit values to unsigned long long"""
+
+      if FIXCLING:
+         return
 
       self.assertEqual( self.limit1,  ULong64Func( self.limit1 ) )
       self.assertEqual( self.limit1L, ULong64Func( self.limit1 ) )
@@ -198,6 +207,9 @@ class Regression06Int64ConversionTestCase( MyTestCase ):
 class Regression07MatchConstWithProperReturn( MyTestCase ):
    def test1OverloadOrderWithProperReturn( self ):
       """Test return type against proper overload w/ const and covariance"""
+
+      if FIXCLING:
+         return
 
       gROOT.LoadMacro( "Scott2.C+" )
 
@@ -219,6 +231,9 @@ class Regression09CheckEnumExactMatch( MyTestCase ):
    def test1CheckEnumCalls( self ):
       """Be able to pass enums as function arguments"""
 
+      if FIXCLING:
+         return
+
       gROOT.LoadMacro( "Till.C+" )
       a = Monkey()
       self.assertEqual( fish, a.testEnum1( fish ) )
@@ -231,6 +246,9 @@ class Regression10BreakSmartPtrCircularLoop( MyTestCase ):
    def test1VerifyNoLoopt( self ):
       """Smart class that returns itself on dereference should not loop"""
 
+      if FIXCLING:
+         return
+
       gROOT.LoadMacro( "Scott3.C+" )
       a = MyTooSmartClass()
       self.assertRaises( AttributeError, getattr, a, 'DoesNotExist' )
@@ -241,6 +259,9 @@ class Regression10TVector3Pythonize( MyTestCase ):
    def test1TVector3( self ):
       """Verify TVector3 pythonization"""
 
+      if FIXCLING:
+         return
+
       v = TVector3( 1., 2., 3.)
       self.assertEqual( list(v), [1., 2., 3. ] )
 
@@ -249,6 +270,9 @@ class Regression10TVector3Pythonize( MyTestCase ):
 class Regression11CoralAttributeListIterators( MyTestCase ):
    def test1IterateWithBaseIterator( self ):
       """Verify that the correct base class iterators is picked up"""
+
+      if FIXCLING:
+         return
 
       gROOT.LoadMacro( "CoralAttributeList.C+" )
 
@@ -273,6 +297,9 @@ class Regression12ImportCout( MyTestCase ):
    def test1ImportCout( self ):
       """Test that ROOT.cout does not cause error messages"""
 
+      if FIXCLING:
+         return
+
       import ROOT
       c = ROOT.cout
 
@@ -295,6 +322,9 @@ class Regression14BaseClassUsing( MyTestCase ):
    def test1AccessUsingBaseClassDataMember( self ):
       """Access a base class data member made availabe by 'using'"""
 
+      if FIXCLING:
+         return
+
       p = TPySelector()
       str( p.fInput )        # segfaults in case of failure
 
@@ -303,6 +333,9 @@ class Regression14BaseClassUsing( MyTestCase ):
 class Regression15TPyException( MyTestCase ):
    def test1PythonAccessToTPyException( self ):
       """Load TPyException into python and make sure its usable"""
+
+      if FIXCLING:
+         return
 
       e = PyROOT.TPyException()
       self.assert_( e )

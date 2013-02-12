@@ -6,7 +6,10 @@
 """CINT compatability tests for PyROOT package."""
 
 import os, sys, unittest
+sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+
 from ROOT import *
+from common import FIXCLING
 
 __all__ = [
    'CINT1ErrorTranslationTestCase'
@@ -17,6 +20,9 @@ __all__ = [
 class CINT1ErrorTranslationTestCase( unittest.TestCase ):
    def test1IndexError( self ):
       """Test CINT index error translation"""
+
+      if FIXCLING:
+         return
 
       self.assertRaises( IndexError, gROOT.ProcessLine, "char aap[5]; aap[6] = \'\\0\';" )
 

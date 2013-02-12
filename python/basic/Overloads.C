@@ -74,7 +74,7 @@ class MyOverloads {
 public:
    MyOverloads() {}
    std::string call( const AA& ) { return "AA"; }
-   std::string call( const BB&, void* n = 0 ) { n = 0; return "BB"; }
+   std::string call( const BB&, void* n = 0 ) { if (n) return "BB"; return "BB"; }
    std::string call( const CC& ) { return "CC"; }
    std::string call( const DD& ) { return "DD"; }
 

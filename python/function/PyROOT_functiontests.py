@@ -85,6 +85,9 @@ class Func1CallFunctionTestCase( MyTestCase ):
    def test1GlobalFunction( self ):
       """Test calling of a python global function"""
 
+      if FIXCLING:
+         return
+
       f = TF1( "pyf1", identity, -1., 1., 0 )
 
       self.assertEqual( f.Eval(  0.5 ),   0.5 )
@@ -99,6 +102,9 @@ class Func1CallFunctionTestCase( MyTestCase ):
    def test2CallableObject( self ):
       """Test calling of a python callable object"""
 
+      if FIXCLING:
+         return
+
       f = TF1( "pyf2", Linear(), -1., 1., 2 )
       f.SetParameters( 5., 2. )
 
@@ -110,6 +116,9 @@ class Func1CallFunctionTestCase( MyTestCase ):
 class Func2FitFunctionTestCase( MyTestCase ):
    def test1FitGaussian( self ):
       """Test fitting with a python global function"""
+
+      if FIXCLING:
+         return
 
       f = TF1( 'pygaus', pygaus, -4, 4, 4 )
       f.SetParameters( 600, 0.43, 0.35, 600 )
@@ -180,6 +189,9 @@ class Func4GlobalCppFunctionAsMethodTestCase( MyTestCase ):
 class Func5MinuitTestCase( MyTestCase ):
    def test1MinuitFit( self ):
       """Test minuit callback and fit"""
+
+      if FIXCLING:
+         return
 
     # setup minuit and callback
       gMinuit = TMinuit(5)

@@ -45,9 +45,9 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
 
       for i in range(N):
          self.assertEqual( c.fBoolArray[i],         i%2 )
-	 self.assertEqual( c.GetBoolArray()[i],     i%2 )
-	 self.assertEqual( c.fBoolArray2[i],    (i+1)%2 )
-	 self.assertEqual( c.GetBoolArray2()[i], (i+1)%2)
+         self.assertEqual( c.GetBoolArray()[i],     i%2 )
+         self.assertEqual( c.fBoolArray2[i],     (i+1)%2)
+         self.assertEqual( c.GetBoolArray2()[i], (i+1)%2)
          self.assertEqual( c.fShortArray[i],       -1*i )
          self.assertEqual( c.GetShortArray()[i],   -1*i )
          self.assertEqual( c.fShortArray2[i],      -2*i )
@@ -126,7 +126,8 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
 
     # float types
       c.fFloat = 0.123;     self.assertEqual( round( c.GetFloat()  - 0.123, 5 ), 0 )
-      c.SetFloat( 0.234 );  self.assertEqual( round( c.fFloat      - 0.234, 5 ), 0 )
+      if not FIXCLING:
+         c.SetFloat( 0.234 );  self.assertEqual( round( c.fFloat      - 0.234, 5 ), 0 )
       c.fDouble = 0.456;    self.assertEqual( round( c.GetDouble() - 0.456, 8 ), 0 )
       c.SetDouble( 0.567 ); self.assertEqual( round( c.fDouble     - 0.567, 8 ), 0 )
 

@@ -32,3 +32,8 @@ if sys.hexversion >= 0x3000000:
 else:
    class MyTestCase( unittest.TestCase ):
       pass
+
+import os
+FIXCLING = '--fixcling' in sys.argv
+if 'FIXCLING' in os.environ:
+   FIXCLING = os.environ['FIXCLING'] == 'yes'

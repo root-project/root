@@ -25,6 +25,9 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
    def test1ClassOverloads( self ):
       """Test functions overloaded on different ROOT clases"""
 
+      if FIXCLING:
+         return
+
       self.assertEqual( MyC().GetInt( MyA() ), 42 )
       self.assertEqual( MyC().GetInt( MyB() ), 13 )
       self.assertEqual( MyD().GetInt( MyA() ), 42 )
@@ -54,6 +57,9 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
    def test2ClassOverloads( self ):
       """Test functions overloaded on void* and non-existing classes"""
 
+      if FIXCLING:
+         return
+
       import ROOT
       oldval = ROOT.gErrorIgnoreLevel
       ROOT.gErrorIgnoreLevel = ROOT.kError
@@ -66,6 +72,9 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
    def test3ClassOverloadsAmongUnknowns( self ):
       """Test that unknown* is preferred over unknown&"""
 
+      if FIXCLING:
+         return
+
       import ROOT
       oldval = ROOT.gErrorIgnoreLevel
       ROOT.gErrorIgnoreLevel = ROOT.kError
@@ -75,6 +84,9 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
 
    def test4ArrayOverloads( self ):
       """Test functions overloaded on different arrays"""
+
+      if FIXCLING:
+         return
 
       ai = array( 'i', [ 525252 ] )
       self.assertEqual( MyC().GetInt( ai ), 525252 )
@@ -89,6 +101,9 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
 class Overloads2TMathTestCase( MyTestCase ):
    def test1MeanOverloads( self ):
       """Test overloads using TMath::Mean(), TMath::Median"""
+
+      if FIXCLING:
+         return
 
       numbers = [ 8, 2, 4, 2, 4, 2, 4, 4, 1, 5, 6, 3, 7 ]
       mean, median = 4.0, 4.0
@@ -119,6 +134,9 @@ class Overloads2TMathTestCase( MyTestCase ):
 
    def test2DoubleIntOverloads( self ):
       """Test overloads on int/doubles"""
+
+      if FIXCLING:
+         return
 
       self.assertEqual( MyOverloads().call( 1 ), "int" )
       self.assertEqual( MyOverloads().call( 1. ), "double" )

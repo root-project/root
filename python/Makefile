@@ -6,8 +6,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 ifeq ($(HAS_PYTHON),)
-#   export HAS_PYTHON := $(shell root-config --has-python)
-   export HAS_PYTHON
+   export HAS_PYTHON := $(shell root-config --has-python)
 endif
 
 ifeq ($(HAS_PYTHON),yes)
