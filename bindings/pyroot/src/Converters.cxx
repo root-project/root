@@ -1055,7 +1055,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType_, Long_
       return (h->second)( user );
 
 // resolve typedefs etc.
-   std::string resolvedType = TClassEdit::ResolveTypedef( fullType.c_str(), true );
+   std::string resolvedType = Utility::ResolveTypedef( fullType );
 
 // a full, qualified matching converter is preferred
    h = gConvFactories.find( resolvedType );

@@ -16,8 +16,6 @@
 // Standard
 #include <string>
 
-#include <iostream>
-
 
 //- protected members --------------------------------------------------------
 template< class T, class M >
