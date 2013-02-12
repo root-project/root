@@ -95,3 +95,4 @@ ifneq ($(ClingWorkAroundMissingAutoLoading),)
 CALLROOTEXE += -e 'gSystem->Load("libTreePlayer"); gSystem->Load("libPhysics");'
 endif
 
+PYROOT_EXTRAFLAGS = --fixcling

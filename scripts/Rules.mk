@@ -749,9 +749,9 @@ $(subst .C,,$(ALL_EXEC_C)) : %: %.success
 
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 ifeq ($(PYTHONPATH),)
-	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib $(PYTHON) $< -b > $@ 2>&1 || cat $@
+	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib $(PYTHON) $< -b - $(PYROOT_EXTRAFLAGS) > $@ 2>&1 || cat $@
 else 
-	$(CMDECHO) $(PYTHON) $< -b > $@ 2>&1 || cat $@
+	$(CMDECHO) $(PYTHON) $< -b - $(PYROOT_EXTRAFLAGS) > $@ 2>&1 || cat $@
 endif
 
 .PRECIOUS: %_C.$(DllSuf) 
