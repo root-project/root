@@ -270,6 +270,201 @@ void TClingCallFunc::SetReturnPtr(const clang::CXXMethodDecl* MD,
    fArgVals[1] = cling::StoredValueRef::bitwiseCopy(C, val);
 }
 
+void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
+   // In case of virtual function we need a trampoline for the vtable 
+   // evaluation like:
+   // void unique_name(CLASS* This, Arg1* a, ...[, CLASSRes* result = 0]) {
+   //   if (result)
+   //     *result = This->Function(*a, b, c);
+   //   or:
+   //   This->Function(*a, b, c);
+   // }
+   //
+   assert(MD && "MD cannot be null.");
+   assert(MD->isVirtual() && "MD has to be virtual.");
+   using namespace clang;
+   Sema& S = fInterp->getSema();
+   ASTContext& C = S.getASTContext();
+
+   std::string FunctionName = "__callfunc_vtable_trampoline";
+   fInterp->createUniqueName(FunctionName);
+   IdentifierInfo& II = C.Idents.get(FunctionName);
+   SourceLocation Loc;
+
+   // Copy-pasted and adapted from cling's DeclExtractor.cpp
+   FunctionDecl* TrampolineFD 
+      = dyn_cast_or_null<FunctionDecl>(S.ImplicitlyDefineFunction(Loc, II, S.TUScope));
+   if (TrampolineFD) {
+      TrampolineFD->setImplicit(false); // Better for debugging
+      // We can't PushDeclContext, because we don't have scope.
+      Sema::ContextRAII pushedDC(S, TrampolineFD);
+
+      // NOTE:
+      // We know that our function returns an int, however we are not going
+      // to add a return statement, because we use that function as a 
+      // trampoline to call. Valgrind will be happy because LLVM
+      // generates a return result, which is (false?) initialized.
+      llvm::SmallVector<Stmt*, 2> Stmts;
+      llvm::SmallVector<ParmVarDecl*, 4> Params;
+      // Pass in parameter This
+      QualType ThisQT = MD->getThisType(C);
+      ParmVarDecl* ThisPtrParm 
+         = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc, 
+                               &C.Idents.get("This"), ThisQT,
+                               C.getTrivialTypeSourceInfo(ThisQT, Loc),
+                               SC_None, SC_None, /*DefaultArg*/0);
+      Params.push_back(ThisPtrParm);
+
+      // Recreate the same arg nodes for the trampoline and use them 
+      // instead
+      ParmVarDecl* PVD = 0;
+      Expr* defaultArg = 0;
+      for (FunctionDecl::param_const_iterator I = MD->param_begin(), 
+              E = MD->param_end(); I != E; ++I) {
+         // For now instead of creating a copy - just forward to the AST 
+         // node of the original function
+         defaultArg = (*I)->getDefaultArg();
+         PVD = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc, 
+                                   (*I)->getIdentifier(), (*I)->getType(),
+                                   C.getTrivialTypeSourceInfo((*I)->getType(), Loc),
+                                   SC_None, SC_None, defaultArg);
+         Params.push_back(PVD);
+      }
+         
+      // Create the parameter for the result type
+      ParmVarDecl* ResParm = 0;
+      if (!MD->getResultType()->isVoidType()) {
+         // We must default the parameter to zero.
+         ExprResult Zero = S.ActOnIntegerConstant(Loc, 0);
+         // Since we deref it it always has to be ptr type.
+         QualType ResQT = C.getPointerType(MD->getResultType());
+         ResParm 
+            = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc,
+                                  &C.Idents.get("__Res"), ResQT,
+                                  C.getTrivialTypeSourceInfo(ResQT, Loc),
+                                  SC_None, SC_None, Zero.take());
+
+         Params.push_back(ResParm);
+      }
+
+            
+      // Change the type of the function to consider the new paramlist.
+      llvm::SmallVector<QualType, 4> ParamQTs;
+      for(size_t i = 0; i < Params.size(); ++i)
+         ParamQTs.push_back(Params[i]->getType());
+
+      const FunctionProtoType* Proto 
+         = llvm::cast<FunctionProtoType>(TrampolineFD->getType().getTypePtr());
+      QualType NewFDQT = C.getFunctionType(C.VoidTy, ParamQTs.data(), 
+                                           ParamQTs.size(),
+                                           Proto->getExtProtoInfo());
+      TrampolineFD->setType(NewFDQT);
+      TrampolineFD->setParams(Params);
+
+      // Copy-pasted and adapted from cling's DynamicLookup.cpp
+      CXXScopeSpec CXXSS;
+      LookupResult MemberLookup(S, MD->getDeclName(),
+                                Loc, Sema::LookupMemberName);
+      // Add the declaration. No lookup is performed, we know that this
+      // decl doesn't exist yet.
+      MemberLookup.addDecl(MD, AS_public);
+      MemberLookup.resolveKind();
+      Expr* ExprBase 
+         = S.BuildDeclRefExpr(/*ThisPTR*/Params[0], ThisQT, VK_LValue, Loc
+                              ).take();
+         
+      // Synthesize implicit casts if needed.
+      bool isArrow = true;
+      ExprBase 
+         = S.PerformMemberExprBaseConversion(ExprBase,isArrow).take();
+      Expr* MemberExpr 
+         = S.BuildMemberReferenceExpr(ExprBase, ThisQT, Loc, isArrow, 
+                                      CXXSS, Loc, 
+                                      /*FirstQualifierInScope=*/0,
+                                      MemberLookup, /*TemplateArgs=*/0
+                                      ).take();
+      // Build the arguments as declrefs to the params
+      llvm::SmallVector<Expr*, 4> ExprArgs;
+      ExprResult Arg;
+      DeclarationNameInfo NameInfo;
+      // We need to skip the first argument, it is the artificial this ptr
+      // and the last if exist
+      size_t ParamsSize = (ResParm) ? Params.size() -1 : Params.size();
+      for (size_t i = 1; i < ParamsSize; ++i) {
+         NameInfo = DeclarationNameInfo(Params[i]->getDeclName(), 
+                                        Params[i]->getLocStart());
+         Arg = S.BuildDeclarationNameExpr(CXXSS, NameInfo, Params[i]);
+         ExprArgs.push_back(Arg.take());
+      }
+      // Build the actual call
+      ExprResult theCall = S.ActOnCallExpr(S.TUScope, MemberExpr, Loc,
+                                           MultiExprArg(ExprArgs.data(), 
+                                                        ExprArgs.size()),
+                                           Loc
+                                           );
+      // Create the if stmt
+      if (ResParm) {
+         // if (result)
+         //   *result = This->Function(*a, b, c);
+         NameInfo = DeclarationNameInfo(ResParm->getDeclName(), 
+                                        ResParm->getLocStart());
+         ExprResult DRE, LHS, RHS, BoolCond, BinOp;
+         DRE = S.BuildDeclarationNameExpr(CXXSS, NameInfo, ResParm);
+         LHS = S.BuildUnaryOp(/*Scope*/0, Loc, UO_Deref, DRE.take());
+         RHS = theCall;
+         BinOp = S.BuildBinOp(/*Scope*/0, Loc, BO_Assign, LHS.take(), 
+                              RHS.take());
+         // Add the needed casts needed for turning the result into bool
+         // condition
+         BoolCond = S.ActOnBooleanCondition(/*Scope*/0, Loc, DRE.get());
+         Sema::FullExprArg FullCond(S.MakeFullExpr(BoolCond.get(), Loc));
+         // Note that here we reuse the call expr from the then part into
+         // the else part of the if stmt. In general that is dangerous if
+         // they are in different decl contexts and so on, but here it 
+         // shouldn't be.
+         StmtResult IfStmt = S.ActOnIfStmt(Loc, FullCond, /*CondVar*/0, 
+                                           BinOp.take(), Loc, 
+                                           theCall.take());
+         Stmts.push_back(IfStmt.take()); 
+      }
+      else
+         Stmts.push_back(theCall.take());
+
+      CompoundStmt* CS = new (C) CompoundStmt(C, Stmts.data(), 
+                                              Stmts.size(), Loc, Loc);
+
+      TrampolineFD->setBody(CS);
+   
+      fMethodAsWritten = llvm::cast<clang::CXXMethodDecl>(MD);
+      // We also need to update the current method. It should point to 
+      // the trampoline. 
+      fMethod = new TClingMethodInfo(fInterp, TrampolineFD);
+      // There is no code generated for the wrapper, force codegen on it
+      CodeGenDecl(TrampolineFD);
+   }
+}
+
+void TClingCallFunc::CodeGenDecl(clang::FunctionDecl* FD) {
+   if (!FD)
+      return;
+   cling::CompilationOptions CO;
+   CO.DeclarationExtraction = 0;
+   CO.ValuePrinting = cling::CompilationOptions::VPDisabled;
+   CO.ResultEvaluation = 0;
+   CO.DynamicScoping = 0;
+   CO.Debug = 0;
+   CO.CodeGeneration = 1;
+
+   cling::Transaction T(CO, fInterp->getModule());
+
+   T.append(FD);
+   T.setCompleted();
+
+   fInterp->codegen(&T);
+   assert(T.getState() == cling::Transaction::kCommitted
+          && "Compilation should never fail!");
+}
+
 void TClingCallFunc::Exec(void *address) const
 {
    if (!IsValid()) {
@@ -735,6 +930,11 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
    bool isMemberFunc = true;
    clang::CXXMethodDecl *MD 
       = llvm::dyn_cast<clang::CXXMethodDecl>(const_cast<clang::FunctionDecl*>(FD));
+
+   // If MD is virual function we will need a trampoline, evaluating the vtable.
+   if (MD && MD->isVirtual())
+      BuildTrampolineFunc(MD);
+
    const clang::DeclContext *DC = FD->getDeclContext();
    if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
       // Free function or static member function.
@@ -745,6 +945,8 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
    //  Mangle the function name, if necessary.
    //
    std::string FuncName = MangleName(FD);
+   if (IsTrampolineFunc())
+      FuncName = MangleName(fMethod->GetMethodDecl());
    //
    //  Check the execution engine for the function.
    //
@@ -754,195 +956,8 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
    // In many cases if the Decl in unused no code is generated by cling/clang.
    // In such cases when we have the Decl in the AST but we don't have code 
    // produced yet we have to force that to happen.
-   using namespace clang;
-   if (!fEEFunc && MD && (MD->isInlined() || !MD->isOutOfLine())) {
-      cling::CompilationOptions CO;
-      CO.DeclarationExtraction = 0;
-      CO.ValuePrinting = cling::CompilationOptions::VPDisabled;
-      CO.ResultEvaluation = 0;
-      CO.DynamicScoping = 0;
-      CO.Debug = 0;
-      CO.CodeGeneration = 1;
-
-      cling::Transaction T(CO, fInterp->getModule());
-      // In case of virtual function we need a trampoline for the vtable 
-      // evaluation like:
-      // void unique_name(CLASS* This, Arg1* a, ...[, CLASSRes* result = 0]) {
-      //   if (result)
-      //     *result = This->Function(*a, b, c);
-      //   or:
-      //   This->Function(*a, b, c);
-      // }
-      //
-      if (MD && MD->isVirtual()) {
-         Sema& S = fInterp->getSema();
-         ASTContext& C = S.getASTContext();
-
-         std::string FunctionName = "__callfunc_vtable_trampoline";
-         fInterp->createUniqueName(FunctionName);
-         IdentifierInfo& II = C.Idents.get(FunctionName);
-         SourceLocation Loc;
-
-         // Copy-pasted and adapted from cling's DeclExtractor.cpp
-         FunctionDecl* TrampolineFD 
-            = dyn_cast_or_null<FunctionDecl>(S.ImplicitlyDefineFunction(Loc, II, S.TUScope));
-         if (TrampolineFD) {
-            TrampolineFD->setImplicit(false); // Better for debugging
-            // We can't PushDeclContext, because we don't have scope.
-            Sema::ContextRAII pushedDC(S, TrampolineFD);
-
-            // NOTE:
-            // We know that our function returns an int, however we are not going
-            // to add a return statement, because we use that function as a 
-            // trampoline to call. Valgrind will be happy because LLVM
-            // generates a return result, which is (false?) initialized.
-            llvm::SmallVector<Stmt*, 2> Stmts;
-            llvm::SmallVector<ParmVarDecl*, 4> Params;
-            // Pass in parameter This
-            QualType ThisQT = MD->getThisType(C);
-            ParmVarDecl* ThisPtrParm 
-               = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc, 
-                                     &C.Idents.get("This"), ThisQT,
-                                     C.getTrivialTypeSourceInfo(ThisQT, Loc),
-                                     SC_None, SC_None, /*DefaultArg*/0);
-            Params.push_back(ThisPtrParm);
-
-            // Recreate the same arg nodes for the trampoline and use them 
-            // instead
-            ParmVarDecl* PVD = 0;
-            Expr* defaultArg = 0;
-            for (FunctionDecl::param_const_iterator I = MD->param_begin(), 
-                    E = MD->param_end(); I != E; ++I) {
-               // For now instead of creating a copy - just forward to the AST 
-               // node of the original function
-               defaultArg = (*I)->getDefaultArg();
-               PVD = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc, 
-                                         (*I)->getIdentifier(), (*I)->getType(),
-                                         C.getTrivialTypeSourceInfo((*I)->getType(), Loc),
-                                         SC_None, SC_None, defaultArg);
-               Params.push_back(PVD);
-            }
-
-            // Create the parameter for the result type
-            ParmVarDecl* ResParm = 0;
-            if (!MD->getResultType()->isVoidType()) {
-               // We must default the parameter to zero.
-               ExprResult Zero = S.ActOnIntegerConstant(Loc, 0);
-               // Since we deref it it always has to be ptr type.
-               QualType ResQT = C.getPointerType(MD->getResultType());
-               ResParm 
-                  = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc,
-                                        &C.Idents.get("__Res"), ResQT,
-                                        C.getTrivialTypeSourceInfo(ResQT, Loc),
-                                        SC_None, SC_None, Zero.take());
-            
-               Params.push_back(ResParm);
-            }
-
-            
-            // Change the type of the function to consider the new paramlist.
-            llvm::SmallVector<QualType, 4> ParamQTs;
-            for(size_t i = 0; i < Params.size(); ++i)
-               ParamQTs.push_back(Params[i]->getType());
-
-            const FunctionProtoType* Proto 
-               = llvm::cast<FunctionProtoType>(TrampolineFD->getType().getTypePtr());
-            QualType NewFDQT = C.getFunctionType(C.VoidTy, ParamQTs.data(), 
-                                                 ParamQTs.size(),
-                                                 Proto->getExtProtoInfo());
-            TrampolineFD->setType(NewFDQT);
-            TrampolineFD->setParams(Params);
-
-            // Copy-pasted and adapted from cling's DynamicLookup.cpp
-            CXXScopeSpec CXXSS;
-            LookupResult MemberLookup(S, MD->getDeclName(),
-                                      Loc, Sema::LookupMemberName);
-            // Add the declaration. No lookup is performed, we know that this
-            // decl doesn't exist yet.
-            MemberLookup.addDecl(MD, AS_public);
-            MemberLookup.resolveKind();
-            Expr* ExprBase 
-               = S.BuildDeclRefExpr(/*ThisPTR*/Params[0], ThisQT, VK_LValue, Loc
-                                    ).take();
-            
-            // Synthesize implicit casts if needed.
-            bool isArrow = true;
-            ExprBase 
-               = S.PerformMemberExprBaseConversion(ExprBase,isArrow).take();
-            Expr* MemberExpr 
-               = S.BuildMemberReferenceExpr(ExprBase, ThisQT, Loc, isArrow, 
-                                            CXXSS, Loc, 
-                                            /*FirstQualifierInScope=*/0,
-                                            MemberLookup, /*TemplateArgs=*/0
-                                            ).take();
-            // Build the arguments as declrefs to the params
-            llvm::SmallVector<Expr*, 4> ExprArgs;
-            ExprResult Arg;
-            DeclarationNameInfo NameInfo;
-            // We need to skip the first argument, it is the artificial this ptr
-            // and the last if exist
-            size_t ParamsSize = (ResParm) ? Params.size() -1 : Params.size();
-            for (size_t i = 1; i < ParamsSize; ++i) {
-               NameInfo = DeclarationNameInfo(Params[i]->getDeclName(), 
-                                              Params[i]->getLocStart());
-               Arg = S.BuildDeclarationNameExpr(CXXSS, NameInfo, Params[i]);
-               ExprArgs.push_back(Arg.take());
-            }
-            // Build the actual call
-            ExprResult theCall = S.ActOnCallExpr(S.TUScope, MemberExpr, Loc,
-                                                  MultiExprArg(ExprArgs.data(), 
-                                                               ExprArgs.size()),
-                                                  Loc
-                                                  );
-            // Create the if stmt
-            if (ResParm) {
-               // if (result)
-               //   *result = This->Function(*a, b, c);
-               NameInfo = DeclarationNameInfo(ResParm->getDeclName(), 
-                                              ResParm->getLocStart());
-               ExprResult DRE, LHS, RHS, BoolCond, BinOp;
-               DRE = S.BuildDeclarationNameExpr(CXXSS, NameInfo, ResParm);
-               LHS = S.BuildUnaryOp(/*Scope*/0, Loc, UO_Deref, DRE.take());
-               RHS = theCall;
-               BinOp = S.BuildBinOp(/*Scope*/0, Loc, BO_Assign, LHS.take(), 
-                                    RHS.take());
-               // Add the needed casts needed for turning the result into bool
-               // condition
-               BoolCond = S.ActOnBooleanCondition(/*Scope*/0, Loc, DRE.get());
-               Sema::FullExprArg FullCond(S.MakeFullExpr(BoolCond.get(), Loc));
-               // Note that here we reuse the call expr from the then part into
-               // the else part of the if stmt. In general that is dangerous if
-               // they are in different decl contexts and so on, but here it 
-               // shouldn't be.
-               StmtResult IfStmt = S.ActOnIfStmt(Loc, FullCond, /*CondVar*/0, 
-                                                 BinOp.take(), Loc, 
-                                                 theCall.take());
-               Stmts.push_back(IfStmt.take()); 
-            }
-            else
-               Stmts.push_back(theCall.take());
-
-            CompoundStmt* CS = new (C) CompoundStmt(C, Stmts.data(), 
-                                                    Stmts.size(), Loc, Loc);
-
-            TrampolineFD->setBody(CS);
-
-            fMethodAsWritten = llvm::cast<clang::CXXMethodDecl>(FD);
-            FD = TrampolineFD;
-            // We also need to update the current method. It should point to 
-            // the trampoline. 
-            fMethod = new TClingMethodInfo(fInterp, TrampolineFD);
-            FuncName = MangleName(FD);
-         }
-      }
-      
-      T.append(const_cast<clang::FunctionDecl*>(FD));
-      T.setCompleted();
-
-      fInterp->codegen(&T);
-      assert(T.getState() == cling::Transaction::kCommitted
-             && "Compilation should never fail!");
-   }
+   if (!fEEFunc)
+      CodeGenDecl(const_cast<clang::FunctionDecl*>(FD));
 
    //
    //  Check again the execution engine for the function.

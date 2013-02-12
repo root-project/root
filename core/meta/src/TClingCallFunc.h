@@ -103,6 +103,9 @@ private:
       fArgVals.push_back(cling::StoredValueRef::invalidValue());
    }
 
+   void BuildTrampolineFunc(clang::CXXMethodDecl* MD);
+   void CodeGenDecl(clang::FunctionDecl* FD);
+
 public:
 
    ~TClingCallFunc() { 
