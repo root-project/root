@@ -227,9 +227,12 @@ std::string TClingCallFunc::MangleName(const clang::NamedDecl* ND) {
 bool TClingCallFunc::IsMemberFunc() const {
    using namespace clang;
 
-   // Trampolines are non member functions
+   // Trampolines are non member functions, however we treat them as they are,
+   // because in their signature we have arg0, which represents the this ptr. 
+   // Plus the this ptr in the trampolines is passed in as the member function's
+   // this ptr.
    if (IsTrampolineFunc())
-      return false;
+      return true;
    const Decl *D = fMethod->GetMethodDecl();
    if (const CXXMethodDecl* MD = dyn_cast<CXXMethodDecl>(D)) {
       return !MD->isStatic();
@@ -278,9 +281,6 @@ void TClingCallFunc::Exec(void *address) const
       // Free function or static member function.
       // For the trampoline we need to insert a fake this ptr, because it
       // has to be our first argument for the trampoline.
-      if (IsTrampolineFunc()) {
-         SetThisPtr(fMethodAsWritten, address);
-      }
       Invoke();
       return;
    }
@@ -311,22 +311,10 @@ long TClingCallFunc::ExecInt(void *address) const
    }
    const clang::FunctionDecl* FD = GetOriginalDecl();
 
-   // Intentionally not initialized, so valgrind can report function calls
-   // that don't set this.
-   long returnStorage;
-
    if (!IsMemberFunc()) {
       // Free function or static member function.
-      if (IsTrampolineFunc()) {
-         SetThisPtr(fMethodAsWritten, address);
-         // Provide return storage
-         SetReturnPtr(fMethodAsWritten, &returnStorage);
-      }
       cling::Value val;
       Invoke(&val);
-      if (IsTrampolineFunc()) {
-        return returnStorage;
-      }
       return val.simplisticCastAs<long>();
    }
 
@@ -408,6 +396,11 @@ long TClingCallFunc::ExecInt(void *address) const
       return 0L;
    }
    SetThisPtr(MD, address);
+
+   // Intentionally not initialized, so valgrind can report function calls
+   // that don't set this.
+   long returnStorage;
+
    if (IsTrampolineFunc()) {
       // Provide return storage
       SetReturnPtr(MD, &returnStorage);
@@ -436,11 +429,6 @@ long long TClingCallFunc::ExecInt64(void *address) const
    const clang::FunctionDecl* FD = GetOriginalDecl();
    if (!IsMemberFunc()) {
       // Free function or static member function.
-      // For the trampoline we need to insert a fake this ptr, because it
-      // has to be our first argument for the trampoline.
-      if (IsTrampolineFunc()) {
-         SetThisPtr(fMethodAsWritten, address);
-      }
       cling::Value val;
       Invoke(&val);
       return val.simplisticCastAs<long long>();
@@ -471,6 +459,10 @@ long long TClingCallFunc::ExecInt64(void *address) const
 
    cling::Value val;
    Invoke(&val);
+   if (IsTrampolineFunc()) {
+      // Provide return storage
+      return returnStorage;
+   }
    return val.simplisticCastAs<long long>();
 }
 
@@ -481,22 +473,10 @@ double TClingCallFunc::ExecDouble(void *address) const
       return 0.0;
    }
    const clang::FunctionDecl *FD = GetOriginalDecl();
-   // Intentionally not initialized, so valgrind can report function calls
-   // that don't set this.
-   double returnStorage;
    if (!IsMemberFunc()) {
       // Free function or static member function.
-      // For the trampoline we need to insert a fake this ptr, because it
-      // has to be our first argument for the trampoline.
-      if (IsTrampolineFunc()) {
-         SetThisPtr(fMethodAsWritten, address);
-         SetReturnPtr(fMethodAsWritten, &returnStorage);
-      }
       cling::Value val;
       Invoke(&val);
-      if (IsTrampolineFunc()) {
-         return returnStorage;
-      }
       return val.simplisticCastAs<double>();
    }
    // Member function.
@@ -513,6 +493,12 @@ double TClingCallFunc::ExecDouble(void *address) const
    }
 
    SetThisPtr(MD, address);
+
+   // Intentionally not initialized, so valgrind can report function calls
+   // that don't set this.
+   double returnStorage;
+   // For the trampoline we need to insert a fake this ptr, because it
+   // has to be our first argument for the trampoline.
    if (IsTrampolineFunc()) {
       SetReturnPtr(fMethodAsWritten, &returnStorage);
    }
@@ -1049,7 +1035,7 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
    // For trampolines we pass in the first argument as a fake this ptr.
    unsigned num_given_args = GetArgValsSize();
 
-   if (IsMemberFunc()) {
+   if (IsMemberFunc() && !IsTrampolineFunc()) {
       // Adjust for the hidden this pointer first argument.
       ++num_params;
       ++min_args;
@@ -1092,7 +1078,7 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
       for (size_t i = 0; i < num_default_args_to_resolve; ++i) {
          // If this was a member function, skip the this ptr - it has already 
          // been handled.
-         arg_index = min_args + i - IsMemberFunc();
+         arg_index = min_args + i - IsMemberFunc() + IsTrampolineFunc();
         //arg_index = num_given_args - min_args + i;
         //arg_index = num_given_args + i - IsMemberFunc() + IsTrampolineFunc();
          // Use the default value from the decl.
@@ -1151,7 +1137,7 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
       // We have a user-provided argument value.
       // If this was a member function, skip the this ptr - it has already been
       // handled.
-      arg_index = i - 2 + (IsMemberFunc() || IsTrampolineFunc());
+      arg_index = i - 2 + IsMemberFunc());
       const llvm::Type *ty = ft->getParamType(arg_index);
       if (ty != fArgVals[i].get().getLLVMType())
          Args.push_back(convertIntegralToArg(fArgVals[i].get(), ty));
