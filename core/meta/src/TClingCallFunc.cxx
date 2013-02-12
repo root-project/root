@@ -176,17 +176,28 @@ std::string TClingCallFunc::ExprToString(const clang::Expr* expr) const
    return buf;
 }
 
-cling::StoredValueRef
-TClingCallFunc::EvaluateExpression(const clang::Expr* expr) const
+cling::StoredValueRef TClingCallFunc::EvaluateExpr(const clang::Expr* E) const
 {
    // Evaluate an Expr* and return its cling::StoredValueRef
    cling::StoredValueRef valref;
-   // TODO: Use Sema's evaluate.
+
+   using namespace clang;
+   ASTContext& C = fInterp->getSema().getASTContext();
+   llvm::APSInt res;
+   if (E->EvaluateAsInt(res, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
+      llvm::GenericValue gv;
+      gv.IntVal = res;
+      cling::Value val(gv, C.IntTy, fInterp->getLLVMType(C.IntTy));
+      return cling::StoredValueRef::bitwiseCopy(C, val);
+   }
+
+   // TODO: Build a wrapper around the expression to avoid decompilation and 
+   // compilation and other string operations.
    cling::Interpreter::CompilationResult cr 
-      = fInterp->evaluate(ExprToString(expr), valref);
+      = fInterp->evaluate(ExprToString(E), valref);
    if (cr == cling::Interpreter::kSuccess)
       return valref;
-   return cling::StoredValueRef();
+   return cling::StoredValueRef::invalidValue();
 }
 
 bool TClingCallFunc::IsMemberFunc() const {
@@ -756,7 +767,7 @@ void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
    fInterp->getLookupHelper().findArgList(ArgList, exprs);
    for (llvm::SmallVector<clang::Expr*, 4>::const_iterator I = exprs.begin(),
          E = exprs.end(); I != E; ++I) {
-      cling::StoredValueRef val = EvaluateExpression(*I);
+      cling::StoredValueRef val = EvaluateExpr(*I);
       if (!val.isValid()) {
          // Bad expression, all done.
          break;
@@ -769,20 +780,6 @@ void TClingCallFunc::SetArgs(const char *params)
 {
    ResetArg();
    EvaluateArgList(params);
-   clang::ASTContext &Context = fInterp->getCI()->getASTContext();
-   for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
-      const cling::Value& val = fArgVals[I].get();
-      if (!val.getClangType()->isIntegralType(Context) &&
-          !val.getClangType()->isRealFloatingType() 
-          && !val.getClangType()->isPointerType()) {
-         // Invalid argument type.
-         Error("TClingCallFunc::SetArgs", "Given arguments: %s", params);
-         Error("TClingCallFunc::SetArgs", "Argument number %u is not of "
-               "integral, floating, or pointer type!", I);
-         break;
-      }
-      PushArg(val);
-   }
 }
 
 void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method,
@@ -820,26 +817,6 @@ void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method,
    //        enhance the lookup to return the resulting expression
    //        list so we do not need to parse it again here.
    EvaluateArgList(arglist);
-   clang::ASTContext& Context = fInterp->getCI()->getASTContext();
-   for (unsigned I = 0U, E = fArgVals.size(); I < E; ++I) {
-      const cling::Value& val = fArgVals[I].get();
-      // Skip the this ptr if not valid
-      if (I == 0 && !fArgVals[0].isValid())
-         continue;
-      // Skip the return ptr if not valid
-      else if (I == 1 && !fArgVals[1].isValid())
-         continue;
-      if (!val.getClangType()->isIntegralType(Context) &&
-          !val.getClangType()->isRealFloatingType() 
-          && !val.getClangType()->isPointerType()) {
-         // Invalid argument type, cint skips it, strange.
-         Info("TClingCallFunc::SetFunc", "Invalid value for arg %u of "
-              "function %s(%s)", I, method, arglist);
-         // FIXME: This really should be an error.
-         continue;
-      }
-      PushArg(val);
-   }
 }
 
 void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
@@ -1031,7 +1008,7 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
       return;
    }
    else if (num_given_args > num_params) {
-      if (!fIgnoreExtraArgs) {
+      if (!fIgnoreExtraArgs) {// FIXME: This should not be an error.
          Error("TClingCallFunc::Invoke",
                "Too many function arguments given to %s (min: %u max: %u, given: %u)",
                fMethod->Name(), min_args, num_params, num_given_args);
@@ -1070,7 +1047,7 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
 
          // TODO: Optimize here.
          const clang::Expr* expr = pvd->getDefaultArg();
-         cling::StoredValueRef valref = EvaluateExpression(expr);
+         cling::StoredValueRef valref = EvaluateExpr(expr);
          if (valref.isValid()) {
             // const cling::Value& val = valref.get();
             // if (!val.getClangType()->isIntegralType(context) &&

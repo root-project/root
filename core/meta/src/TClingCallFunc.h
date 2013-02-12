@@ -82,7 +82,7 @@ private:
                                            const llvm::Type* targetType) const;
    std::string ExprToString(const clang::Expr* expr) const;
    void EvaluateArgList(const std::string &ArgList);
-   cling::StoredValueRef EvaluateExpression(const clang::Expr* expr) const;
+   cling::StoredValueRef EvaluateExpr(const clang::Expr* E) const;
    std::string MangleName(const clang::NamedDecl* ND);
    bool IsTrampolineFunc() const { return fMethodAsWritten; }
    bool IsMemberFunc() const;
