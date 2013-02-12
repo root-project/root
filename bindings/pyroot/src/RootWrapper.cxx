@@ -209,6 +209,12 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
 // get the unscoped class name
    std::string clName = klass.Name();
 
+// CLING WORKAROUND -- #99916
+// With Cling, for templated classes, the names of the contructors and
+// destructors are the short name, not the full template name ...
+   clName = clName.substr( 0, clName.find('<') );
+// -- END CLING WORKAROUND
+
 // some properties that'll affect building the dictionary
    Bool_t isNamespace = klass.IsNamespace();
    Bool_t hasConstructor = kFALSE;
