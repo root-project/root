@@ -42,12 +42,9 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
-#include "clang/AST/Mangle.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
-#include "clang/CodeGen/ModuleBuilder.h"
-#include "clang/CodeGen/CodeGenModule.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
@@ -190,38 +187,6 @@ TClingCallFunc::EvaluateExpression(const clang::Expr* expr) const
    if (cr == cling::Interpreter::kSuccess)
       return valref;
    return cling::StoredValueRef();
-}
-
-std::string TClingCallFunc::MangleName(const clang::NamedDecl* ND) {
-   // FIXME: We have mangle interface in cling. We should extend it and use it.
-   //
-   clang::ASTContext& ASTCtx = fInterp->getCI()->getASTContext();
-   llvm::OwningPtr<clang::MangleContext> Mangle(ASTCtx.createMangleContext());
-
-   if (Mangle->shouldMangleDeclName(ND)) {
-      std::string MangledName = "";
-      llvm::raw_string_ostream OS(MangledName);
-      if (const clang::CXXConstructorDecl *D =
-               llvm::dyn_cast<clang::CXXConstructorDecl>(ND)) {
-         //Ctor_Complete,          // Complete object ctor
-         //Ctor_Base,              // Base object ctor
-         //Ctor_CompleteAllocating // Complete object allocating ctor (unused)
-         Mangle->mangleCXXCtor(D, clang::Ctor_Complete, OS);
-      }
-      else if (const clang::CXXDestructorDecl *D =
-                  llvm::dyn_cast<clang::CXXDestructorDecl>(ND)) {
-         //Dtor_Deleting, // Deleting dtor
-         //Dtor_Complete, // Complete object dtor
-         //Dtor_Base      // Base object dtor
-         Mangle->mangleCXXDtor(D, clang::Dtor_Deleting, OS);
-      }
-      else {
-         Mangle->mangleName(ND, OS);
-      }
-      OS.flush();
-      return MangledName;
-   }
-   return ND->getNameAsString();
 }
 
 bool TClingCallFunc::IsMemberFunc() const {
@@ -944,9 +909,12 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
    //
    //  Mangle the function name, if necessary.
    //
-   std::string FuncName = MangleName(FD);
+   std::string FuncName;
    if (IsTrampolineFunc())
-      FuncName = MangleName(fMethod->GetMethodDecl());
+      fInterp->maybeMangleDeclName(fMethod->GetMethodDecl(), FuncName);
+   else
+      fInterp->maybeMangleDeclName(FD, FuncName);
+      
    //
    //  Check the execution engine for the function.
    //
