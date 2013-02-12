@@ -115,7 +115,10 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
          return scoped_name.substr(class_name.size() + 2 /* for :: */, std::string::npos);
    }
 
-   return fMember->GetName();
+// CLING WORKAROUND -- should not be null, but can be due #100389
+   if ( fMember != 0 )
+      return fMember->GetName();
+   return "<unknown>";
 }
 
 //____________________________________________________________________________
