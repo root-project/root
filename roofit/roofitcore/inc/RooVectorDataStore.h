@@ -205,7 +205,7 @@ public:
     
     void reset() { 
       _vec.clear() ; 
-      _vec0 = &_vec.front() ;
+      _vec0 = 0;//&_vec.front() ;
     }
 
     inline void get(Int_t idx) const { 
@@ -422,7 +422,7 @@ public:
     } ;
     void reset() { 
       _vec.clear() ; 
-      _vec0 = &_vec.front() ;
+      _vec0 = 0;//&_vec.front() ;
     }
     inline void get(Int_t idx) const { 
       _buf->assignFast(*(_vec0+idx)) ;
@@ -581,7 +581,10 @@ public:
 	RealVector* tmp = *iter2 ;
 	_realStoreList.erase(iter2) ;
 	delete tmp ;
-	_firstReal = &_realStoreList.front() ;
+        if (_realStoreList.size() > 0)
+        _firstReal = &_realStoreList.front() ;
+	else
+        _firstReal = 0;
 	_nReal-- ;
 
 	return _realfStoreList.back() ;
