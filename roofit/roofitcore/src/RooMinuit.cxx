@@ -1147,7 +1147,7 @@ void RooMinuit::updateFloatVec()
   _floatParamVec.clear() ;
   RooFIter iter = _floatParamList->fwdIterator() ;
   RooAbsArg* arg ;
-  _floatParamVec.reserve(_floatParamList->getSize()) ;
+  _floatParamVec.resize(_floatParamList->getSize()) ;
   Int_t i(0) ;
   while((arg=iter.next())) {
     _floatParamVec[i++] = arg ;
