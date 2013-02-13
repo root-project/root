@@ -25,9 +25,6 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
    def test1ClassOverloads( self ):
       """Test functions overloaded on different ROOT clases"""
 
-      if FIXCLING:
-         return
-
       self.assertEqual( MyC().GetInt( MyA() ), 42 )
       self.assertEqual( MyC().GetInt( MyB() ), 13 )
       self.assertEqual( MyD().GetInt( MyA() ), 42 )
@@ -84,9 +81,6 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
 
    def test4ArrayOverloads( self ):
       """Test functions overloaded on different arrays"""
-
-      if FIXCLING:
-         return
 
       ai = array( 'i', [ 525252 ] )
       self.assertEqual( MyC().GetInt( ai ), 525252 )

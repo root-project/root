@@ -116,9 +116,6 @@ class Cpp2ConverterOperatorsTestCase( MyTestCase ):
    def test2ApproximateTypes( self ):
       """Test converter operators of approximate types"""
 
-      if FIXCLING:
-         return
-
       o = OperatorShort(); o.m_short = 256
       self.assertEqual( o.m_short,     256 )
       self.assertEqual( int( o ),      256 )

@@ -69,6 +69,9 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
    def test3ReadSomeDataObject( self ):
       """Test reading of a user-defined object from a pickle file"""
 
+      if FIXCLING:
+         return
+
       def __dodtest( self, d ):
          self.assertEqual( d.__class__, SomeDataObject )
 

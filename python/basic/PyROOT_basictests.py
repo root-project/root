@@ -389,7 +389,8 @@ class Basic5PythonizationTestCase( MyTestCase ):
    def test4TObjArray( self ):
       """Test TObjArray iterator-based copying"""
 
-      return # (pending #99196)
+      return # (pending #99196; Actually, that bug is fixed, but GetSize() of an
+             # empty TObjArray returns bogus results)
       a = TObjArray()
       b = list( a )  
 
