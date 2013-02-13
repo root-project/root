@@ -34,7 +34,7 @@ ostream& operator<<(ostream& os, const SEIdAltL& alt)
   }
   else {
      char marker;
-     Int_t seid;
+     //Int_t seid;
      os << "     i | StripEndId (size=" << alt.size() 
         << ",cur=" << alt.fCurrent << ") "
         << "| weight    " 
@@ -50,7 +50,7 @@ ostream& operator<<(ostream& os, const SEIdAltL& alt)
      for (unsigned int i=0; i<alt.size(); ++i) {
         (i==alt.fCurrent) ? marker = '*' : marker = ' ';
         SEIdAltLItem item = alt[i];
-        seid   = item.GetSEId();
+        // seid   = item.GetSEId();
         os << " " << marker << " " << i 
            << " " << item
            << endl;
