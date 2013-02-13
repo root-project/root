@@ -67,7 +67,7 @@ Event.old.split.root : Event_cxx.$(DllSuf) MainEvent_cxx.$(DllSuf) makeEvent.C
 	echo  "$@ made"
 
 $(REFFILE) : dt_MakeRef.C dt_DrawTest.C Event_cxx.$(DllSuf)  Event.h Event.new.split9.root
-	$(CMDECHO) $(CALLROOTEXE) -b -q -e 'gSystem->Load("libTreePlayer"); gSystem->Load("Event_cxx");' 'dt_MakeRef.C("Event.new.split9.root",0);' $(OUTPUT) && \
+	$(CMDECHO) $(CALLROOTEXE) -b -q -e 'gSystem->Load("Event_cxx");' 'dt_MakeRef.C("Event.new.split9.root",0);' $(OUTPUT) && \
 	echo "$@ made"
 
 ClassWarning='Warning in <TClass::TClass>: no dictionary for class'

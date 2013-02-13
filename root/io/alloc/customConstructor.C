@@ -54,14 +54,11 @@ public:
 };
 
 #include "Rtypeinfo.h"
-#include <vector>
 
 class WithTemplate {
 public:
    WithTemplate() { cout << "Called WithTemplate::WithTemplate()\n"; }
    template <class T> WithTemplate(T*) {
       cout << "Called WithTemplate::WithTemplate<T>() T=" << typeid(T*).name() << "\n"; 
-   }
-   template <class R> WithTemplate(std::vector<R>*) {
    }
 };
