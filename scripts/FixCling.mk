@@ -22,11 +22,13 @@ CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
+# Features needed for the tutorials
+CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
+# and See ClingReinstateRedeclarationAllowed
 # Other missing features
 CALLROOTEXE += -e "\#define ClingWorkAroundNoPrivateClassIO"
 # Convenience features, would be nice to have.
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
-CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingSmartInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenUnnamedReturn"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedDetection"
