@@ -666,7 +666,7 @@ namespace HistFactory{
       str<<"_"<<j;
       // repatative, but we need one coeff for each term in the sum
       // maybe can be avoided if we don't use bin width as coefficient
-      command=string(Form("binWidth_%s_%d[%f]",obsNameVecStr.c_str(),j,binWidth));     
+      command=string(Form("binWidth_%s_%d[%e]",obsNameVecStr.c_str(),j,binWidth));     
       proto->factory(command.c_str());
       proto->var(Form("binWidth_%s_%d",obsNameVecStr.c_str(),j))->setConstant();
       coeffList+=prepend+"binWidth_"+obsNameVecStr+str.str();
