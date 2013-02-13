@@ -374,7 +374,7 @@ int unuranDistr() {
 
 }
 
-#ifndef __CINT__
+#ifndef __CLING__
 int main(int argc, char **argv)
 {
    int iret = 0; 
@@ -385,6 +385,6 @@ int main(int argc, char **argv)
    } 
    else 
       iret =  unuranDistr();
-   
+  return iret; 
 }
 #endif
