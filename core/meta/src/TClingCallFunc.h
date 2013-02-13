@@ -83,8 +83,8 @@ private:
    std::string ExprToString(const clang::Expr* expr) const;
    void EvaluateArgList(const std::string &ArgList);
    cling::StoredValueRef EvaluateExpr(const clang::Expr* E) const;
-   std::string MangleName(const clang::NamedDecl* ND);
    bool IsTrampolineFunc() const { return fMethodAsWritten; }
+   bool DoesThatTrampolineFuncReturn() const;
    bool IsMemberFunc() const;
    const clang::FunctionDecl* GetOriginalDecl() const;
 

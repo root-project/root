@@ -200,6 +200,14 @@ cling::StoredValueRef TClingCallFunc::EvaluateExpr(const clang::Expr* E) const
    return cling::StoredValueRef::invalidValue();
 }
 
+bool TClingCallFunc::DoesThatTrampolineFuncReturn() const { 
+   assert (IsTrampolineFunc() && "Cannot be called on non-trampolines.");
+   // If the underlying virtual function returns non void, we have synthesized
+   // a default return storage argument __Res.
+   return !fMethodAsWritten->getResultType()->isVoidType();
+}
+
+
 bool TClingCallFunc::IsMemberFunc() const {
    using namespace clang;
 
@@ -572,14 +580,14 @@ long TClingCallFunc::ExecInt(void *address) const
    // that don't set this.
    long returnStorage;
 
-   if (IsTrampolineFunc()) {
+   if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
       // Provide return storage
       SetReturnPtr(MD, &returnStorage);
    }
 
    cling::Value val;
    Invoke(&val);
-   if (IsTrampolineFunc()) {
+   if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
       return returnStorage;
    }
    // FIXME: Why don't we use cling::Value::isVoid interface?
@@ -623,14 +631,14 @@ long long TClingCallFunc::ExecInt64(void *address) const
    // Intentionally not initialized, so valgrind can report function calls
    // that don't set this.
    long long returnStorage;
-   if (IsTrampolineFunc()) {
+   if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
       // Provide return storage
       SetReturnPtr(MD, &returnStorage);
    }
 
    cling::Value val;
    Invoke(&val);
-   if (IsTrampolineFunc()) {
+   if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
       // Provide return storage
       return returnStorage;
    }
@@ -670,13 +678,13 @@ double TClingCallFunc::ExecDouble(void *address) const
    double returnStorage;
    // For the trampoline we need to insert a fake this ptr, because it
    // has to be our first argument for the trampoline.
-   if (IsTrampolineFunc()) {
+   if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
       SetReturnPtr(fMethodAsWritten, &returnStorage);
    }
 
    cling::Value val;
    Invoke(&val);
-   if (IsTrampolineFunc()) {
+   if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
       return returnStorage;
    }
    return val.simplisticCastAs<double>();
@@ -1026,7 +1034,7 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
    unsigned num_default_args_to_resolve = num_params - num_given_args;
    if (num_default_args_to_resolve) {
       // This means that we have synthesized artificial default arg __Res
-      if (IsTrampolineFunc() && !fMethodAsWritten->getResultType()->isVoidType()) {
+      if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
          if (!fArgVals[1].isValid())
             SetReturnPtr(fMethodAsWritten, /*address*/0);
          num_given_args = GetArgValsSize();
