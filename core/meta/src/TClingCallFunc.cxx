@@ -257,12 +257,16 @@ void TClingCallFunc::SetReturnPtr(const clang::CXXMethodDecl* MD,
 void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
    // In case of virtual function we need a trampoline for the vtable 
    // evaluation like:
-   // void unique_name(CLASS* This, Arg1* a, ...[, CLASSRes* result = 0]) {
-   //   if (result)
-   //     *result = This->Function(*a, b, c);
-   //   or:
-   //   This->Function(*a, b, c);
-   // }
+   // 1. void unique_name(CLASS* This, Arg1* a, ...[, CLASSRes* result = 0]) {
+   // 2.  if (result)
+   // 3.    *result = This->Function(*a, b, c);
+   // 4.  else
+   // 5.    This->Function(*a, b, c);
+   // 6. }
+   //
+   // if the virtual returns a reference the CLASSRes* becomes CLASSRes**
+   // and line 3 becomes:
+   // 3.    *result = &This->Function(*a, b, c);
    //
    assert(MD && "MD cannot be null.");
    assert(MD->isVirtual() && "MD has to be virtual.");
@@ -321,7 +325,12 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
          // We must default the parameter to zero.
          ExprResult Zero = S.ActOnIntegerConstant(Loc, 0);
          // Since we deref it it always has to be ptr type.
-         QualType ResQT = C.getPointerType(MD->getResultType());
+         QualType ResQT = MD->getResultType();
+         // In case the return result is a reference type we have to transform
+         // it to pointer. 
+         if (ResQT->isReferenceType())
+            ResQT = C.getPointerType(ResQT.getNonReferenceType());
+         ResQT = C.getPointerType(ResQT);
          ResParm 
             = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc,
                                   &C.Idents.get("__Res"), ResQT,
@@ -388,14 +397,25 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
                                            );
       // Create the if stmt
       if (ResParm) {
-         // if (result)
-         //   *result = This->Function(*a, b, c);
+         // 1. if (result)
+         // 2.   *result = This->Function(*a, b, c);
+         // 3. else
+         // 4.   This->Function(*a, b, c)
+         // or in case of return by ref:
+         // line 2 becomes:
+         //   *result = &This->Function(*a, b, c)
+         //
          NameInfo = DeclarationNameInfo(ResParm->getDeclName(), 
                                         ResParm->getLocStart());
          ExprResult DRE, LHS, RHS, BoolCond, BinOp;
          DRE = S.BuildDeclarationNameExpr(CXXSS, NameInfo, ResParm);
          LHS = S.BuildUnaryOp(/*Scope*/0, Loc, UO_Deref, DRE.take());
+         // If it was a reference we have made **__Res and we need to take the
+         // address of the call. i.e *__Res = &theCall(...) 
          RHS = theCall;
+         if (MD->getResultType()->isReferenceType())
+            RHS = S.BuildUnaryOp(/*Scope*/0, Loc, UO_AddrOf, RHS.take());
+           
          BinOp = S.BuildBinOp(/*Scope*/0, Loc, BO_Assign, LHS.take(), 
                               RHS.take());
          // Add the needed casts needed for turning the result into bool
