@@ -60,6 +60,8 @@
 #include "llvm/Function.h"
 #include "llvm/Type.h"
 
+#include "clang/Sema/SemaInternal.h"
+
 #include <string>
 #include <vector>
 
@@ -389,6 +391,13 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
          Arg = S.BuildDeclarationNameExpr(CXXSS, NameInfo, Params[i]);
          ExprArgs.push_back(Arg.take());
       }
+      // Set the warning to ignore (they are by definition spurrious
+      // for a trampoline function).
+      DiagnosticsEngine& Diag = fInterp->getCI()->getDiagnostics();
+      Diag.setDiagnosticMapping(clang::diag::warn_format_nonliteral_noargs,
+                                clang::diag::MAP_IGNORE, SourceLocation());
+      Diag.setDiagnosticMapping(clang::diag::warn_format_nonliteral,
+                                clang::diag::MAP_IGNORE, SourceLocation());
       // Build the actual call
       ExprResult theCall = S.ActOnCallExpr(S.TUScope, MemberExpr, Loc,
                                            MultiExprArg(ExprArgs.data(), 
