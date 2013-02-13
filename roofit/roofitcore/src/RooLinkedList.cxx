@@ -97,6 +97,9 @@ RooLinkedListElem* RooLinkedList::createElement(TObject* obj, RooLinkedListElem*
 	anyDel = kTRUE ;
 	delete[] iter->second ;
 	iter = _storeList.erase(iter) ;
+        //LM fix: after deleting last element in list iter = end
+        // and cannot call iter++
+        if (iter == _storeList.end() ) break;
       }
     }
 
