@@ -31,7 +31,9 @@
 #include <qobject.h>
 #else
 class QObject;
+#ifndef Q_OBJECT
 #define Q_OBJECT
+#endif
 #define slots
 #endif
 

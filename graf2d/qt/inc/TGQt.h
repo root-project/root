@@ -25,7 +25,6 @@
 
 #include "TQtRConfig.h"
 
-#ifndef __CINT__
 #include <vector>
 #include <map>
 
@@ -44,11 +43,6 @@
 #include <QtGui/QFontDatabase>
 
 #include "TQtClientGuard.h"
-
-#else
-  class QObject;
-  class QEvent;
-#endif  /* CINT */
 
 class QPainter;
 class QPen;
