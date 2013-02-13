@@ -1,5 +1,10 @@
 
 Processing TestTClassGlobalIsA.C+...
+warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+warning: format string is not a string literal (potentially insecure) [-Wformat-security]
+warning: format string is not a string literal (potentially insecure) [-Wformat-security]
 Running with fIsA
 Running without fIsA
 Running with  fGlobalIsA
