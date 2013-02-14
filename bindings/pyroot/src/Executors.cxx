@@ -155,17 +155,15 @@ Bool_t PyROOT::TRefExecutor::SetAssignable( PyObject* pyobject )
 #define PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( name, type, stype, F1, F2, CF )  \
 PyObject* PyROOT::T##name##RefExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )\
 {                                                                            \
+   type* ref = (type*)PRCallFuncExecInt( func, self, release_gil );          \
    if ( ! fAssignable )                                                      \
-      return F1( (stype)CF( func, self, release_gil ) );                     \
+      return F1( (stype)*ref );                                              \
    else {                                                                    \
- /*      const G__value& result = gInterpreter->CallFunc_Exec( func, self ); \
-      *((type*)result.ref) = (type)F2( fAssignable );                        \
+      *ref = (type)F2( fAssignable );                                        \
       Py_DECREF( fAssignable );                                              \
       fAssignable = 0;                                                       \
       Py_INCREF( Py_None );                                                  \
-      return Py_None;                                       */               \
-      PyErr_SetString( PyExc_TypeError, "CLING DOES NOT SUPPORT GENERIC VALUES!" );\
-      return 0;                                                              \
+      return Py_None;                                                        \
    }                                                                         \
 }
 
@@ -386,12 +384,10 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
    const std::string& cpd = Utility::Compound( resolvedType );
    std::string realType = TClassEdit::ShortType( resolvedType.c_str(), 1 );
 
-// accept ref as by value
-   if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' ) {
-      h = gExecFactories.find( realType + cpd.substr( 0, cpd.size() - 1 ) );
-      if ( h != gExecFactories.end() )
-         return (h->second)();
-   }
+// const-ness (dropped by TClassEdit::ShortType) is in general irrelevant
+   h = gExecFactories.find( realType + cpd );
+   if ( h != gExecFactories.end() )
+      return (h->second)();
 
 // ROOT classes and special cases (enum)
    TExecutor* result = 0;
