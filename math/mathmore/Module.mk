@@ -39,7 +39,7 @@ MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
                 $(MODDIRI)/Math/GSLMCIntegrator.h \
                 $(MODDIRI)/Math/MCParameters.h \
                 $(MODDIRI)/Math/GSLMinimizer1D.h \
-                $(MODDIRI)/Math/Chebyshev.h  \
+                $(MODDIRI)/Math/ChebyshevApprox.h  \
                 $(MODDIRI)/Math/Random.h \
                 $(MODDIRI)/Math/GSLRndmEngines.h \
                 $(MODDIRI)/Math/KelvinFunctions.h \

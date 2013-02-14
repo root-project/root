@@ -99,4 +99,15 @@
 #pragma link C++ function ROOT::Math::uniform_quantile_c(double,double,double);
 #pragma link C++ function ROOT::Math::uniform_quantile(double,double,double);
 
+//Chebyshev functions and polynomials
+#pragma link C++ function ROOT::Math::Chebyshev0(double, double);
+#pragma link C++ function ROOT::Math::Chebyshev1(double, double, double);
+#pragma link C++ function ROOT::Math::Chebyshev2(double, double, double, double);
+#pragma link C++ function ROOT::Math::Chebyshev3(double, double, double, double, double);
+#pragma link C++ function ROOT::Math::Chebyshev4(double, double, double, double, double, double);
+#pragma link C++ function ROOT::Math::Chebyshev5(double, double, double, double, double, double, double);
+#pragma link C++ function ROOT::Math::ChebyshevN(unsigned int,double, const double*);
+#pragma link C++ class ROOT::Math::ChebyshevPol+;
+
+
 #endif

@@ -302,6 +302,9 @@ namespace TMath {
    template <typename T> Double_t RMS(Long64_t n, const T *a);
    template <typename Iterator> Double_t RMS(Iterator first, Iterator last);
 
+   template <typename T> Double_t StdDev(Long64_t n, const T *a) { return RMS<T>(n,a); }
+   template <typename Iterator> Double_t StdDev(Iterator first, Iterator last) { return RMS<Iterator>(first,last); }
+
    template <typename T> Double_t Median(Long64_t n, const T *a,  const Double_t *w=0, Long64_t *work=0);
 
    //k-th order statistic
