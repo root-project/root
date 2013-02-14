@@ -66,5 +66,9 @@ ifneq ($(ClingWorkAroundMissingAutoLoading),)
 MakeIndex.log:  CALLROOTEXE += -e 'gSystem->Load("libHtml");'
 endif
 ifneq ($(ClingWorkAroundLackOfModule),)
+ifeq ($(shell root-config --has-qt),yes)
 MakeIndex.log: CALLROOTEXE += -e 'gSystem->Load("libQtRoot"); gSystem->Load("libGQt.so"); gSystem->Load("libGX11"); gSystem->Load("libRGL"); '
+else
+MakeIndex.log: CALLROOTEXE += -e 'gSystem->Load("libGX11"); gSystem->Load("libRGL"); '
+endif
 endif
