@@ -11,7 +11,6 @@
 
 #include "TClingCallbacks.h"
 
-#include "cling/Interpreter/DynamicLookupExternalSemaSource.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Transaction.h"
@@ -40,7 +39,7 @@ extern "C" {
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
-   : InterpreterCallbacks(interp, new DynamicIDHandler(this)),
+   : InterpreterCallbacks(interp),
      fLastLookupCtx(0), fROOTSpecialNamespace(0),
      fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false) {
    const Decl* D = 0;
