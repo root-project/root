@@ -136,15 +136,19 @@ public:
    TEveVectorT<TT> fV;           // Start vertex from reconstruction.
    TEveVectorT<TT> fP;           // Reconstructed momentum at start vertex.
    TT              fBeta;        // Relativistic beta factor.
-
+   Double32_t      fDcaXY;       // dca xy to the primary vertex
+   Double32_t      fDcaZ;        // dca z to the primary vertex
+   Double32_t      fPVX;         //
+   Double32_t      fPVY;         //
+   Double32_t      fPVZ;         //
    // PID data missing
 
-   TEveRecTrackT() : fLabel(-1), fIndex(-1), fStatus(0), fSign(0), fV(), fP(), fBeta(0) {}
+   TEveRecTrackT() : fLabel(-1), fIndex(-1), fStatus(0), fSign(0), fV(), fP(), fBeta(0), fDcaXY(0), fDcaZ(0), fPVX(0), fPVY(0), fPVZ(0) {}
    virtual ~TEveRecTrackT() {}
 
    Float_t Pt() { return fP.Perp(); }
 
-   ClassDef(TEveRecTrackT, 1); // Template for reconstructed track (also used in VSD).
+   ClassDef(TEveRecTrackT, 2); // Template for reconstructed track (also used in VSD).
 };
 
 typedef TEveRecTrackT<Float_t>  TEveRecTrack;
