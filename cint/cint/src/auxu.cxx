@@ -118,7 +118,7 @@ int G__readline(FILE* fp, char* line, char* argbuf, int* argn, char* arg[])
    }
    else {
       line[0] = '\0';
-      argbuf = '\0';
+      argbuf[0] = '\0';
       *argn = 0;
       arg[0] = line;
    }
