@@ -80,11 +80,6 @@ inline PyObject* PyROOT::TMethodHolder< T, M >::CallFast( void* self, Bool_t rel
 
    PyObject* result = 0;
 
-// CLING WORKAROUND -- (#100390)
-   if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) )
-      return result;
-// -- END CLING WORKAROUND
-
    try {       // C++ try block
       result = fExecutor->Execute( fMethodCall, (void*)((Long_t)self + fOffset), release_gil );
    } catch ( TPyException& ) {
