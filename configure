@@ -6356,7 +6356,7 @@ fi
 rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  lib/libProofGui* bin/libProofGui* \
  lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld* \
- lib/libSQL.* bin/libSQL.* \
+ lib/libSQL.* bin/libSQL.* core/utils/src/rootcint_tmp \
  lib/libASPluginGS.* bin/g2rootold* bin/ptest main/src/ptest.* \
  math/mathcore/src/G__MathCore32.* \
  tmva/src/G__TMVA.* graf3d/eve/src/G__Eve.* \
