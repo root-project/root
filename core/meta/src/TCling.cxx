@@ -2972,7 +2972,15 @@ void TCling::UpdateClassInfoWithDecl(void* vTD)
    // Let's pass the decl to the TClass only if it has a definition.
    if (!tdDef) return;
    td = tdDef;
-   std::string name = td->getName();
+   
+   if (td->getDeclContext()->getDeclKind() == clang::Decl::Function
+       || td->getDeclContext()->getDeclKind() == clang::Decl::CXXMethod) {
+      // Ignore declaration within a function.
+      return;
+   }
+   clang::QualType type( td->getTypeForDecl(), 0 );
+   std::string name;
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(name,type,*fInterpreter);
    
    // Supposedly we are being called being something is being
    // loaded ... let's now tell the autoloader to do the work
