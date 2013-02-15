@@ -185,6 +185,8 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
       &fOffset );
       //, G__ClassInfo::ExactMatch );
 
+   return kTRUE;
+
 // CLING WORKAROUND -- b/c of #100389, checking fMethod remains necessary
    if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) && (Bool_t)fMethod == true ) {
       PyErr_Format( PyExc_RuntimeError, "could not resolve %s::%s(%s)",

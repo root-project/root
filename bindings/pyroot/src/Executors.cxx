@@ -357,7 +357,7 @@ PyObject* PyROOT::TPyObjectExecutor::Execute( CallFunc_t* func, void* self, Bool
 
 
 //- factories -----------------------------------------------------------------
-PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
+PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType_ )
 {
 // The matching of the fulltype to an executor factory goes through up to 4 levels:
 //   1) full, qualified match
@@ -366,6 +366,22 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 //   4) additional special case for enums
 //
 // If all fails, void is used, which will cause the return type to be ignored on use
+
+// CLING WORKAROUND -- see: #100392
+   std::string fullType = fullType_;
+   std::string::size_type pos = fullType.rfind("::size_type");
+   if ( pos != std::string::npos )
+      fullType = "unsigned int";
+
+   pos = fullType.rfind("::value_type");
+   if ( pos != std::string::npos ) {
+      std::string::size_type pos1 = fullType.find( '<' );
+      std::string::size_type pos2 = fullType.find( ",allocator" );
+      if (pos1 != std::string::npos)
+         fullType = fullType.substr( pos1+1, pos2-pos1-1 ) +
+                    fullType.substr( pos + 12, std::string::npos );
+   }
+// -- END CLING WORKAROUND
 
 // an exactly matching executor is best
    ExecFactories_t::iterator h = gExecFactories.find( fullType );
