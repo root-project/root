@@ -1,6 +1,6 @@
 #!/bin/sh
 
-rm -f include/all.h include/all.h.pch
+rm -f include/all.h include/all.h.pch include/allLinkDef.h
 
 # create all.h including all headers from the include directory
 find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
@@ -76,6 +76,10 @@ find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
  -e /TMemStatShow.h/d \
  -e /TMetaUtils.h/d \
  -e /TMonaLisaWriter.h/d \
+ -e /TMySQLResult.h/d \
+ -e /TMySQLStatement.h/d \
+ -e /TMySQLRow.h/d \
+ -e /TMySQLServer.h/d \
  -e /TODBCResult.h/d \
  -e /TODBCRow.h/d \
  -e /TODBCServer.h/d \
@@ -100,11 +104,14 @@ find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
  -e /TXSocket.h/d \
  -e /TXSocketHandler.h/d \
  -e /TXUnixSocket.h/d \
+ -e /TX11GL.h/d \
  -e /Windows4Root.h/d \
  -e /X11Buffer.h/d \
  -e /X11Colors.h/d \
  -e /X11Drawable.h/d \
  -e /X11Events.h/d \
+ -e /x3d.h/d \
+ -e /ZIP.h/d \
  -e /ZDeflate.h/d \
  -e /ZTrees.h/d \
 > all.h
