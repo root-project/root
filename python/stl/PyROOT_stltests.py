@@ -30,10 +30,11 @@ class STL1VectorTestCase( MyTestCase ):
    def test1BuiltinVectorType( self ):
       """Test access to a vector<int> (part of cintdlls)"""
 
+      a = std.vector( int )( self.N )
+
       if FIXCLING:
          return
 
-      a = std.vector( int )( self.N )
       for i in range(self.N):
          a[i] = i
          self.assertEqual( a[i], i )
@@ -61,16 +62,17 @@ class STL1VectorTestCase( MyTestCase ):
    def test3GeneratedVectorType( self ):
       """Test access to a ACLiC generated vector type"""
 
-      if FIXCLING:
-         return
-
       a = std.vector( JustAClass )()
-      return
       self.assert_( hasattr( a, 'size' ) )
       self.assert_( hasattr( a, 'push_back' ) )
       self.assert_( hasattr( a, '__getitem__' ) )
       self.assert_( hasattr( a, 'begin' ) )
       self.assert_( hasattr( a, 'end' ) )
+
+      self.assertEqual( a.size(), 0 )
+
+      if FIXCLING:
+         return
 
       for i in range(self.N):
          a.push_back( JustAClass() )

@@ -218,9 +218,6 @@ class Cpp2ClassNamingTestCase( MyTestCase ):
    def test01Underscore( self ):
       """Test recognition of '_' as part of a valid class name"""
 
-      if FIXCLING:
-         return
-
       z = Z_()
 
       self.assert_( hasattr( z, 'myint' ) )
