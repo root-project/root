@@ -42,6 +42,7 @@ class regular {
    std::vector<std::pair<Char_t, UChar_t> > val4;
 public:
    regular() : val1(0) {}
+   int get() { return val1*sizeof(val2)*val3.size()*val4.size(); }
 };
 
 #ifdef __MAKECINT__
