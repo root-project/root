@@ -3,24 +3,30 @@ class Tdata {
    int myvar_one;
 public:
    Tdata() : myvar_one(0) {}
+   int get() { return myvar_one; }
+   virtual ~Tdata() {}
    ClassDef(Tdata,1);   
 };
 class data {
    int myvar_one;
 public:
    data() : myvar_one(0) {}
+   int get() { return myvar_one; }
 };
 #elif defined(VERSION_TWO)
 class Tdata {
    double mydouble_two;
 public:
    Tdata() : mydouble_two(0) {}
+   double get() { return mydouble_two; }
+   virtual ~Tdata() {}
    ClassDef(Tdata,1);   
 };
 class data {
    double mydouble_two;
 public:
    data() : mydouble_two(0) {}
+   double get() { return mydouble_two; }
 };
 #elif defined(VERSION_THREE) || defined (VERSION_FIVE)
 class Tdata {
@@ -29,6 +35,8 @@ class Tdata {
    int three;
 public:
    Tdata() : mydouble(0),more(0),three(0) {}
+   double get() { return more*three*mydouble; }
+   virtual ~Tdata() {}
 #if defined (VERSION_FIVE)
    ClassDef(Tdata,2);
 #else
@@ -41,6 +49,7 @@ class data {
    int three;
 public:
    data() : mydouble(0),more(0),three(0) {}
+   double get() { return more*three*mydouble; }
 };
 #elif defined(VERSION_FOUR) || defined (VERSION_SIX)
 class Tdata {
@@ -49,6 +58,8 @@ class Tdata {
    int four;
 public:
    Tdata() : mydouble(0),more(0),four(0) {}
+   double get() { return more*four*mydouble; }
+   virtual ~Tdata() {}
 #if defined (VERSION_SIX)
    ClassDef(Tdata,2);
 #else
@@ -61,6 +72,7 @@ class data {
    int four;
 public:
    data() : mydouble(0),more(0),four(0) {}
+   double get() { return more*four*mydouble; }
 };
 #else
 #error missing case
