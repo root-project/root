@@ -43,6 +43,10 @@
 #ifndef ROOT_Math_BinaryOpPolicy
 #include "Math/BinaryOpPolicy.h"
 #endif
+#ifndef ROOT_Math_HelperOps
+#include "Math/HelperOps.h"
+#endif
+
 
 namespace ROOT { 
 

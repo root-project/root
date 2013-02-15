@@ -39,6 +39,10 @@
 #include "Math/CholeskyDecomp.h"
 #endif
 
+#ifndef ROOT_Math_MatrixRepresentationsStatic
+#include "Math/MatrixRepresentationsStatic.h"
+#endif
+
 // #ifndef ROOT_Math_QRDecomposition
 // #include "Math/QRDecomposition.h"
 // #endif
