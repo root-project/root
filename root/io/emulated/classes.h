@@ -131,7 +131,7 @@ public:
    }
    Holder() : fMidLevel(0),fTObjTopLevel(0),fBottom(0),fBottomDoubleTop(0),
               fBottomDoubleSide(0),fTObjFirst(0),fTObjSecond(0),fMarker(new Marker(Class_Name())) {}
-   ~Holder() {
+   virtual ~Holder() {
       delete fMarker;
       // Clear(fVec);
       delete fTObjSecond;

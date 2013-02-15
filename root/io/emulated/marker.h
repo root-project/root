@@ -19,7 +19,7 @@ public:
 
    Marker(TString name = "Marker") : fClassName(name) {}
    
-   ~Marker() {
+   virtual ~Marker() {
       if (fgDebug>=2) fprintf(stdout, "Marker for %s 0x%lx\n", fClassName.Data(), (long)this);
       else if (fgDebug==1) fprintf(stdout, "Marker for %s\n", fClassName.Data());
    }
