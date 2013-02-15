@@ -22,8 +22,7 @@ void hard2StreamStreamer(TBuffer &b, void *objadd) {
    UInt_t R__s, R__c;
    
    if (b.IsReading()) {
-      Version_t v = b.ReadVersion(&R__s, &R__c);
-      v = v;
+      /* Version_t v =  */ b.ReadVersion(&R__s, &R__c);
 
       double val;
       b >> val;
