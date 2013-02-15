@@ -2100,7 +2100,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
             Warning("Bronch", "Using split mode on a class: %s with a custom Streamer", clones->GetClass()->GetName());
       } else {
          if (rootflag & 1) clones->BypassStreamer(kFALSE);
-         TBranchObject *branch = new TBranchObject(this,name,classname,addr,bufsize,0,isptrptr);
+         TBranchObject *branch = new TBranchObject(this,name,classname,addr,bufsize,0,/*compress=*/ -1,isptrptr);
          fBranches.Add(branch);
          return branch;
       }
@@ -2159,7 +2159,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    }
 
    if (splitlevel < 0 || ((splitlevel == 0) && hasCustomStreamer && cl->InheritsFrom(TObject::Class()))) {
-      TBranchObject* branch = new TBranchObject(this, name, classname, addr, bufsize, 0, isptrptr);
+      TBranchObject* branch = new TBranchObject(this, name, classname, addr, bufsize, 0, /*compress=*/ -1, isptrptr);
       fBranches.Add(branch);
       return branch;
    }
