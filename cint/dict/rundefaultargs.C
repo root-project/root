@@ -32,6 +32,7 @@ public:
       return da;
    }
    
+   virtual ~TDefaultArgs() {}
    
 private:
 
