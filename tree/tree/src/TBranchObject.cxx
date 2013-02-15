@@ -83,6 +83,8 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
    if (!isptrptr) {
       fOldObject = (TObject*)addobj;
       addobj = &fOldObject;
+   } else {
+      fOldObject = 0;
    }
 
    char** apointer = (char**) addobj;
@@ -119,7 +121,6 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
    fBasketBytes = new Int_t[fMaxBaskets];
    fBasketEntry = new Long64_t[fMaxBaskets];
    fBasketSeek = new Long64_t[fMaxBaskets];
-   fOldObject = 0;
 
    for (Int_t i = 0; i < fMaxBaskets; ++i) {
       fBasketBytes[i] = 0;
@@ -137,7 +138,7 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
    // in TLeafObject::ReadBasket, the object should be deleted
    // before calling Streamer.
    // It is foreseen to not set this bit in a future version.
-   SetAutoDelete(kTRUE);
+   if (isptrptr) SetAutoDelete(kTRUE);
 
    fDirectory = fTree->GetDirectory();
    fFileName = "";
