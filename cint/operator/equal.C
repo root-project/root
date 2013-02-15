@@ -50,6 +50,7 @@ class withRef : public top  {
    int &ref2;
 public:
    withRef(int &p) : ref(p),ref2(p) {};
+   int get() { return ref + ref2; }
 };
 
 class withHiddenRef : public top {
