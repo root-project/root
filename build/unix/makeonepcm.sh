@@ -13,6 +13,7 @@ rm -f include/allLinkDef.h
 
 # create allLinkDef.h including all LinkDefs
 find . -name \*LinkDef\*.h | \
+  grep -v -e '^./test/' -e '^./roottest/' | \
   sed -e 's|^|#include "|' -e 's|$|"|' > alldefs.h
 
 mv alldefs.h include/allLinkDef.h
