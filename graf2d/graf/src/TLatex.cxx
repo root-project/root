@@ -66,6 +66,12 @@ End_Html
    x^{y}_{1} : Begin_Latex x^{y}_{1} End_Latex x_{1}^{y} : Begin_Latex x_{1}^{y} End_Latex
 
 Begin_Html
+The best way to put the subscipts and superscripts before the character and not
+after, is to use an empty character:
+End_Html
+   {}^{40}_{20}Ca : Begin_Latex {}^{40}_{20}Ca End_Latex
+
+Begin_Html
 The subscripts and superscripts operators apply not only on one character but
 on all the "normal text" preceding them. In the following example the second
 <tt>E</tt> is lower than the first one because the operator <tt>_</tt> is
