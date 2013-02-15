@@ -9,7 +9,8 @@
 #ifndef ROOT_CintLDAP
 #define ROOT_CintLDAP
 
-#if !defined(__CINT__) && !defined(G__DICTIONARY)
+#if 1
+// !defined(__CINT__) && !defined(G__DICTIONARY)
 
 #include <lber.h>   // needed for older versions of ldap.h
 #include <ldap.h>
