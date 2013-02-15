@@ -60,7 +60,7 @@ private:
    const clang::Type           *fRequestedType;   // Same as the record decl but with some of the typedef preserved (Double32_t, Float16_t, etc..)
       
 public:
-   BaseSelectionRule(long index) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0) {} 
+   BaseSelectionRule(long index) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0) {} 
    BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue);
    
    virtual void DebugPrint() const;
