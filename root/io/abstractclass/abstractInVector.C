@@ -61,7 +61,7 @@ public:
 
 private:
     // physically build the modules
-    void MakeModule(const string& /* mName */) {};
+    void MakeModule(const string& /* mName */) { ++fCurrent; };
     void MakeSequence(const string& /* mName */) {};
 
     // modules and sequences
