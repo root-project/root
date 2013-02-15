@@ -23,7 +23,7 @@
 #ifndef ROOT_TPaveLabel
 #include "TPaveLabel.h"
 #endif
-#ifndef ROOT_TTreeViewer
+#ifndef ROOT_TClassTree
 #include "TClassTree.h"
 #endif
 
