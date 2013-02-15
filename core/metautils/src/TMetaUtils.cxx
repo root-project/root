@@ -688,9 +688,16 @@ clang::NestedNameSpecifier* CreateNestedNameSpecifier(const clang::ASTContext& C
       if (cl->getDeclContext()->isNamespace()) {
          outerNNS = CreateNestedNameSpecifier(Ctx,
                                               llvm::dyn_cast<clang::NamespaceDecl>(outer));
-      } else {
+      } else if (cl->getDeclContext()->isRecord() || 
+                 llvm::isa<clang::EnumDecl>(cl->getDeclContext())) {
          outerNNS = CreateNestedNameSpecifier(Ctx,
                                               llvm::dyn_cast<clang::TagDecl>(outer));
+      } else {
+         // Function of the like ... no real name to be use in the prefix ...
+         return clang::NestedNameSpecifier::Create(Ctx, 
+                                                   0, /* no starting '::'*/
+                                                   false /* template keyword wanted */,
+                                                   GetFullyQualifiedLocalType(Ctx, Ctx.getTypeDeclType(cl).getTypePtr()));
       }
       return clang::NestedNameSpecifier::Create(Ctx,outerNNS,
                                                 false /* template keyword wanted */,
@@ -699,7 +706,7 @@ clang::NestedNameSpecifier* CreateNestedNameSpecifier(const clang::ASTContext& C
       return clang::NestedNameSpecifier::Create(Ctx, 
                                                 0, /* no starting '::'*/
                                                 false /* template keyword wanted */,
-                                                GetFullyQualifiedLocalType(Ctx, Ctx.getTypeDeclType(cl).getTypePtr()));        
+                                                GetFullyQualifiedLocalType(Ctx, Ctx.getTypeDeclType(cl).getTypePtr()));     
    }
 }
 
