@@ -2973,8 +2973,7 @@ void TCling::UpdateClassInfoWithDecl(void* vTD)
    if (!tdDef) return;
    td = tdDef;
    
-   if (td->getDeclContext()->getDeclKind() == clang::Decl::Function
-       || td->getDeclContext()->getDeclKind() == clang::Decl::CXXMethod) {
+   if (llvm::isa<clang::FunctionDecl>(td->getDeclContext())) {
       // Ignore declaration within a function.
       return;
    }
