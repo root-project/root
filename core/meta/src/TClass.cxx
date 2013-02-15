@@ -980,8 +980,12 @@ void TClass::Init(const char *name, Version_t cversion,
          // This is because we do not expect the CINT dictionary
          // to be present for all STL classes (and we can handle
          // the lack of CINT dictionary in that cases).
-
-         shouldLoad = ! isStl;
+	 // However, we cling the dictionary no longer carries
+	 // an instantiation with it, unless we request the loading
+	 // here *or* the user explicitly instantiate the template
+	 // we would not have a ClassInfo for the template 
+	 // instantiation.
+         shouldLoad = true; // ! isStl;
       }
 
       if (shouldLoad) {
