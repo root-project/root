@@ -45,9 +45,6 @@ namespace {
    std::vector< JustAClass >  jv2;
 
    std::list< JustAClass >    jl1;
-   std::list< int >           il2;
-
-   std::map< int, int >       iim1;
 
    STLLikeClass< int >       js1;
    STLLikeClass< double>     js2;

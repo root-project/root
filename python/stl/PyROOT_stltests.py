@@ -46,15 +46,13 @@ class STL1VectorTestCase( MyTestCase ):
    def test2BuiltinVectorType( self ):
       """Test access to a vector<double> (part of cintdlls)"""
 
-      if FIXCLING:
-         return
-
       a = std.vector( 'double' )()
       for i in range(self.N):
          a.push_back( i )
          self.assertEqual( a.size(), i+1 )
-         self.assertEqual( a[i], i )
-         self.assertEqual( a.at(i), i )
+         if not FIXCLING:
+            self.assertEqual( a[i], i )
+            self.assertEqual( a.at(i), i )
 
       self.assertEqual( a.size(), self.N )
       self.assertEqual( len(a), self.N )
