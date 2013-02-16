@@ -6,26 +6,26 @@
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/rootcint.            *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // CREDITS                                                              //
 //                                                                      //
-// This program generates the CINT dictionaries needed in order to      //
+// This program generates the Cling dictionaries needed in order to     //
 // get access to your classes via the interpreter.                      //
-// In addition rootcint can generate the Streamer(),                    //
+// In addition rootcling can generate the Streamer(),                   //
 // TBuffer &operator>>() and ShowMembers() methods for ROOT classes,    //
 // i.e. classes using the ClassDef and ClassImp macros.                 //
 //                                                                      //
-// Rootcint can be used like:                                           //
+// Rootcling can be used like:                                          //
 //                                                                      //
-//  rootcint TAttAxis.h[{+,-}][!] ... [LinkDef.h] > AxisDict.cxx        //
+//  rootcling TAttAxis.h[{+,-}][!] ... [LinkDef.h] > AxisDict.cxx       //
 //                                                                      //
 // or                                                                   //
 //                                                                      //
-//  rootcint [-v[0-4]][-l][-f] dict.C [-c] [-p]                         //
+//  rootcling [-v[0-4]][-l][-f] dict.C [-c] [-p]                        //
 //           file.h[{+,-}][!] ... [LinkDef.h]                           //
 //                                                                      //
 // The difference between the two is that in the first case only the    //
@@ -33,7 +33,7 @@
 // latter case a complete compileable file is generated (including      //
 // the include statements). The first method also allows the            //
 // output to be appended to an already existing file (using >>).        //
-// The optional - behind the header file name tells rootcint to not     //
+// The optional - behind the header file name tells rootcling to not    //
 // generate the Streamer() method. A custom method must be provided     //
 // by the user in that case. For the + and ! options see below.         //
 // When using option -c also the interpreter method interface stubs     //
@@ -43,8 +43,8 @@
 // file must have one of the following extensions: .cxx, .C, .cpp,      //
 // .cc, .cp.                                                            //
 // Use the -p option to request the use of the compiler's preprocessor  //
-// instead of CINT's preprocessor.  This is useful to handle header\n"  //
-// files with macro construct not handled by CINT.\n\n"                 //
+// instead of Cling's preprocessor.  This is useful to handle header    //
+// files with macro construct not handled by Cling.                     //
 // Use the -l (long) option to prepend the pathname of the              //
 // dictionary source file to the include of the dictionary header.      //
 // This might be needed in case the dictionary file needs to be         //
@@ -52,13 +52,13 @@
 // of the source file as the first search directory for                 //
 // "#include "file"".                                                   //
 // The flag --lib-list-prefix=xxx can be used to produce a list of      //
-// libraries needed by the header files being parsed. Rootcint will     //
+// libraries needed by the header files being parsed. Rootcling will    //
 // read the content of xxx.in for a list of rootmap files (see          //
-// rlibmap). Rootcint will read these files and use them to deduce a    //
+// rlibmap). Rootcling will read these files and use them to deduce a   //
 // list of libraries that are needed to properly link and load this     //
 // dictionary. This list of libraries is saved in the first line of the //
 // file xxx.out; the remaining lines contains the list of classes for   //
-// which this run of rootcint produced a dictionary.                    //
+// which this run of rootcling produced a dictionary.                   //
 // This feature is used by ACliC (the automatic library generator).     //
 // The verbose flags have the following meaning:                        //
 //      -v   Display all messages                                       //
@@ -67,7 +67,7 @@
 //      -v2  Display error and warning messages.                        //
 //      -v3  Display error, warning and note messages.                  //
 //      -v4  Display all messages                                       //
-// rootcint also support the other CINT options (see 'cint -h)          //
+// rootcling also supports the other Cling options (see 'cling -h).     //
 //                                                                      //
 // Before specifying the first header file one can also add include     //
 // file directories to be searched and preprocessor defines, like:      //
@@ -96,18 +96,18 @@
 //                                                                      //
 // #endif                                                               //
 //                                                                      //
-// This file tells rootcint for which classes the method interface      //
+// This file tells rootcling for which classes the method interface     //
 // stubs should be generated. A trailing - in the class name tells      //
-// rootcint to not generate the Streamer() method. This is necessary    //
+// rootcling to not generate the Streamer() method. This is necessary   //
 // for those classes that need a customized Streamer() method.          //
-// A trailing ! in the class name tells rootcint to not generate the    //
+// A trailing ! in the class name tells rootcling to not generate the   //
 // operator>>(TBuffer &b, MyClass *&obj) function. This is necessary to //
 // be able to write pointers to objects of classes not inheriting from  //
 // TObject. See for an example the source of the TArrayF class.         //
 // If the class contains a ClassDef macro, a trailing + in the class    //
-// name tells rootcint to generate an automatic Streamer(), i.e. a      //
+// name tells rootcling to generate an automatic Streamer(), i.e. a     //
 // streamer that let ROOT do automatic schema evolution. Otherwise, a   //
-// trailing + in the class name tells rootcint to generate a ShowMember //
+// trailing + in the class name tells rootcling to generate a ShowMember//
 // function and a Shadow Class. The + option is mutually exclusive with //
 // the - option. For new classes the + option is the                    //
 // preferred option. For legacy reasons it is not yet the default.      //
@@ -116,13 +116,13 @@
 // is generated.                                                        //
 //                                                                      //
 // *** IMPORTANT ***                                                    //
-// 1) LinkDef.h must be the last argument on the rootcint command line. //
+// 1) LinkDef.h must be the last argument on the rootcling command line.//
 // 2) Note that the LinkDef file name MUST contain the string:          //
 //    LinkDef.h, Linkdef.h or linkdef.h, i.e. NA49_LinkDef.h is fine    //
 //    just like, linkdef1.h. Linkdef.h is case sensitive.               //
 //                                                                      //
 // The default constructor used by the ROOT I/O can be customized by    //
-// using the rootcint pragma:                                           //
+// using the rootcling pragma:                                          //
 //    #pragma link C++ ioctortype UserClass;                            //
 // For example, with this pragma and a class named MyClass,             //
 // this method will called the first of the following 3                 //
@@ -141,22 +141,6 @@
 //    MyClass(TRootIOCtor*);                                            //
 //    MyClass(); // Or a constructor with all its arguments defaulted.  //
 //                                                                      //
-// ----------- historical ---------                                     //
-//                                                                      //
-// Note that the file rootcint.C is constructed in such a way that it   //
-// can also be interpreted by CINT. The above two statements become in  //
-// that case:                                                           //
-//                                                                      //
-// cint -I$ROOTSYS/include +V TAttAxis.h TAxis.h LinkDef.h rootcint.C \ //
-//                            TAttAxis.h TAxis.h > AxisGen.C            //
-//                                                                      //
-// or                                                                   //
-//                                                                      //
-// cint -I$ROOTSYS/include +V TAttAxis.h TAxis.h LinkDef.h rootcint.C \ //
-//                            AxisGen.C TAttAxis.h TAxis.h              //
-//                                                                      //
-// The +V and -I$ROOTSYS/include options are added to the list of       //
-// arguments in the compiled version of rootcint.                       //
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
@@ -216,24 +200,24 @@ const char *help =
 "\n"
 "This program generates the CINT dictionaries needed in order to\n"
 "get access to your classes via the interpreter.\n"
-"In addition rootcint can generate the Streamer(), TBuffer &operator>>()\n"
+"In addition rootcling can generate the Streamer(), TBuffer &operator>>()\n"
 "and ShowMembers() methods for ROOT classes, i.e. classes using the\n"
 "ClassDef and ClassImp macros.\n"
 "\n"
-"Rootcint can be used like:\n"
+"Rootcling can be used like:\n"
 "\n"
-"  rootcint TAttAxis.h[{+,-}][!] ... [LinkDef.h] > AxisDict.cxx\n"
+"  rootcling TAttAxis.h[{+,-}][!] ... [LinkDef.h] > AxisDict.cxx\n"
 "\n"
 "or\n"
 "\n"
-"  rootcint [-v[0-4]] [-l] [-f] dict.C [-c] [-p] TAxis.h[{+,-}][!] ... [LinkDef.h] \n"
+"  rootcling [-v[0-4]] [-l] [-f] dict.C [-c] [-p] TAxis.h[{+,-}][!] ... [LinkDef.h] \n"
 "\n"
 "The difference between the two is that in the first case only the\n"
 "Streamer() and ShowMembers() methods are generated while in the\n"
 "latter case a complete compileable file is generated (including\n"
 "the include statements). The first method also allows the\n"
 "output to be appended to an already existing file (using >>).\n"
-"The optional - behind the header file name tells rootcint\n"
+"The optional - behind the header file name tells rootcling\n"
 "to not generate the Streamer() method. A custom method must be\n"
 "provided by the user in that case. For the + and ! options see below.\n\n"
 "When using option -c also the interpreter method interface stubs\n"
@@ -252,9 +236,9 @@ const char *help =
 "of the source file as the first search directory for\n"
 "\"#include \"file\"\".\n"
 "The flag --lib-list-prefix=xxx can be used to produce a list of\n"
-"libraries needed by the header files being parsed. Rootcint will\n"
+"libraries needed by the header files being parsed. Rootcling will\n"
 "read the content of xxx.in for a list of rootmap files (see\n"
-"rlibmap). Rootcint will read these files and use them to deduce a\n"
+"rlibmap). Rootcling will read these files and use them to deduce a\n"
 "list of libraries that are needed to properly link and load this\n"
 "dictionary. This list of libraries is saved in the file xxx.out.\n"
 "This feature is used by ACliC (the automatic library generator).\n"
@@ -265,7 +249,7 @@ const char *help =
 "      -v2  Display error and warning messages.\n"
 "      -v3  Display error, warning and note messages.\n"
 "      -v4  Display all messages\n"
-"rootcint also support the other CINT options (see 'cint -h)\n"
+"rootcling also support the other CINT options (see 'cint -h)\n"
 "\n"
 "Before specifying the first header file one can also add include\n"
 "file directories to be searched and preprocessor defines, like:\n"
@@ -294,18 +278,18 @@ const char *help =
 "\n"
 "#endif\n"
 "\n"
-"This file tells rootcint for which classes the method interface\n"
+"This file tells rootcling for which classes the method interface\n"
 "stubs should be generated. A trailing - in the class name tells\n"
-"rootcint to not generate the Streamer() method. This is necessary\n"
+"rootcling to not generate the Streamer() method. This is necessary\n"
 "for those classes that need a customized Streamer() method.\n"
-"A trailing ! in the class name tells rootcint to not generate the\n"
+"A trailing ! in the class name tells rootcling to not generate the\n"
 "operator>>(TBuffer &b, MyClass *&obj) method. This is necessary to\n"
 "be able to write pointers to objects of classes not inheriting from\n"
 "TObject. See for an example the source of the TArrayF class.\n"
 "If the class contains a ClassDef macro, a trailing + in the class\n"
-"name tells rootcint to generate an automatic Streamer(), i.e. a\n"
+"name tells rootcling to generate an automatic Streamer(), i.e. a\n"
 "streamer that let ROOT do automatic schema evolution. Otherwise, a\n"
-"trailing + in the class name tells rootcint to generate a ShowMember\n"
+"trailing + in the class name tells rootcling to generate a ShowMember\n"
 "function and a Shadow Class. The + option is mutually exclusive with\n"
 "the - option. For new classes the + option is the\n"
 "preferred option. For legacy reasons it is not yet the default.\n"
@@ -314,7 +298,7 @@ const char *help =
 "is generated.\n"
 "\n"
 "*** IMPORTANT ***\n"
-"1) LinkDef.h must be the last argument on the rootcint command line.\n"
+"1) LinkDef.h must be the last argument on the rootcling command line.\n"
 "2) Note that the LinkDef file name MUST contain the string:\n"
 "   LinkDef.h, Linkdef.h or linkdef.h, i.e. NA49_LinkDef.h is fine,\n"
 "   just like linkdef1.h. Linkdef.h is case sensitive.\n";
@@ -362,7 +346,7 @@ enum {
 
 cling::Interpreter *gInterp = 0;
 
-// NOTE: This belongs in RConversionRules.cxx but can only be moved there if it is not shared with rootcint
+// NOTE: This belongs in RConversionRules.cxx but can only be moved there if it is not shared with rootcling
    void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext);
 
    //--------------------------------------------------------------------------
@@ -445,7 +429,7 @@ static void R__GetCurrentDirectory(std::string &output)
 static std::string R__GetRelocatableHeaderName(const char *header, const std::string &currentDirectory) 
 {
    // Convert to path relative to $PWD
-   // If that's not what the caller wants, she should pass -I to rootcint and a
+   // If that's not what the caller wants, she should pass -I to rootcling and a
    // different relative path to the header files.
 
    std::string result( header );
@@ -454,7 +438,7 @@ static std::string R__GetRelocatableHeaderName(const char *header, const std::st
    size_t lenCurrWorkDir = strlen(currWorkDir);
    if (result.substr(0, lenCurrWorkDir) == currWorkDir) {
       // Convert to path relative to $PWD.
-      // If that's not what the caller wants, she should pass -I to rootcint and a
+      // If that's not what the caller wants, she should pass -I to rootcling and a
       // different relative path to the header files.
       result.erase(0, lenCurrWorkDir);
    }
@@ -1109,7 +1093,7 @@ void SetRootSys()
             delete [] ep;
             return;
          } else {
-            fprintf(stderr, "rootcint: error getting realpath of rootcint, please set ROOTSYS in the shell");
+            fprintf(stderr, "rootcling: error getting realpath of rootcling, please set ROOTSYS in the shell");
             strlcpy(ep, exepath,PATH_MAX);
          }
       }
@@ -1120,10 +1104,10 @@ void SetRootSys()
 #endif
       char *s;
       if ((s = strrchr(ep, '/'))) {
-         // $ROOTSYS/bin/rootcint
+         // $ROOTSYS/bin/rootcling
          int removesubdirs = 2;
-         if (!strncmp(s, "rootcint_tmp", 12))
-            // $ROOTSYS/core/utils/src/rootcint_tmp
+         if (!strncmp(s, "rootcling_tmp", 12))
+            // $ROOTSYS/core/utils/src/rootcling_tmp
             removesubdirs = 4;
          for (int i = 1; s && i < removesubdirs; ++i) {
             *s = 0;
@@ -1355,7 +1339,7 @@ bool CheckClassDef(const clang::RecordDecl *cl)
        && !hasClassDef) {
       Error(R__GetQualifiedName(*cl).c_str(),"CLING: %s inherits from TObject but does not have its own ClassDef\n",R__GetQualifiedName(*cl).c_str());
       // We do want to always output the message (hence the Error level)
-      // but still want rootcint to succeed.
+      // but still want rootcling to succeed.
       result = true;
    }
 
@@ -1593,7 +1577,7 @@ bool HasCustomOperatorNewPlacement(const char *which, const clang::RecordDecl &c
    if (clnew == 0 && clnewPlacement == 0) {
       // They are both in different namespaces, I am not sure of the rules.
       // we probably ought to find which one is closest ... for now bail
-      // (because rootcint was also bailing on that).
+      // (because rootcling was also bailing on that).
       return true;
    }
    if (clnew != 0 && clnewPlacement == 0) {
@@ -2123,7 +2107,7 @@ int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &q
    
    
    if (tcl == 0) {
-      tcl = " internal error in rootcint ";
+      tcl = " internal error in rootcling ";
    }
    //    if (strcmp(objType,"string")==0) RStl::Instance().GenerateTClassFor( "string", interp, normCtxt  );
 
@@ -3112,7 +3096,7 @@ const char *ShortTypeName(const char *typeDesc)
       }
       if (lev==0 && *s==' ' && *(s+1)!='*') { p = t; continue;}
       if (p - t > (long)sizeof(t)) {
-         printf("ERROR (rootcint): type name too long for StortTypeName: %s\n",
+         printf("ERROR (rootcling): type name too long for StortTypeName: %s\n",
                 typeDesc);
          p[0] = 0;
          return t;
@@ -4388,7 +4372,7 @@ int main(int argc, char **argv)
 
       // remove possible pathname to get the dictionary name
       if (strlen(argv[ic]) > (PATH_MAX-1)) {
-         Error(0, "rootcint: dictionary name too long (more than %d characters): %s\n",
+         Error(0, "rootcling: dictionary name too long (more than %d characters): %s\n",
                (PATH_MAX-1),argv[ic]);
          CleanupOnExit(1);
          return 1;
@@ -4622,7 +4606,7 @@ int main(int argc, char **argv)
                header.erase(header.length()-1);
             }
             
-            // We are 'normalizing' the file in two different way.  StrcpyArg (from rootcint)
+            // We are 'normalizing' the file in two different way.  StrcpyArg (from rootcling)
             // strip just the ROOTBUILD part (i.e. $PWD/package/module/inc) while
             // R__GetRelocatableHeaderName also $PWD.
             // R__GetRelocatableHeaderName is likely to be too aggressive and the 
@@ -4675,7 +4659,7 @@ int main(int argc, char **argv)
       fileout.open(dictpathname.c_str());
       dictSrcOut = &fileout;
       if (!(*dictSrcOut)) {
-         Error(0, "rootcint: failed to open %s in main\n",
+         Error(0, "rootcling: failed to open %s in main\n",
                dictpathname.c_str());
          CleanupOnExit(1);
          return 1;
@@ -4683,7 +4667,7 @@ int main(int argc, char **argv)
       headerout.open(dictheader.c_str());
       dictHdrOut = &headerout;
       if (!(*dictHdrOut)) {
-         Error(0, "rootcint: failed to open %s in main\n",
+         Error(0, "rootcling: failed to open %s in main\n",
                dictheader.c_str());
          CleanupOnExit(1);
          return 1;
