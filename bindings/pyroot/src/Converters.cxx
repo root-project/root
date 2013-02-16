@@ -373,18 +373,15 @@ PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( DoubleRef )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TConstDoubleRefConverter::SetArg(
-      PyObject* pyobject, TParameter_t& para, CallFunc_t* /* func */, Long_t )
+      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
 {
 // convert <pyobject> to C++ const double&, set arg for call using buffer
    para.fDouble = fBuffer = PyFloat_AsDouble( pyobject );
    if ( para.fDouble == -1.0 && PyErr_Occurred() )
       return kFALSE;
-   // (CLING) TODO: there's no gInterpreter->CallFunc_SetArgRef ...
-//   else if ( func )
-//    func->SetArgRef( fBuffer );
-//   return kTRUE;
-   PyErr_SetString( PyExc_TypeError, "NO REF SUPPORT IN CLING!" );
-   return kFALSE;
+   else if ( func )
+      gInterpreter->CallFunc_SetArg( func,  (Long_t)&fBuffer );
+   return kTRUE;
 }
 
 //____________________________________________________________________________
@@ -1061,7 +1058,8 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType_, Long_
       std::string::size_type pos1 = fullType.find( '<' );
       std::string::size_type pos2 = fullType.find( ",allocator" );
       if (pos1 != std::string::npos)
-         fullType = fullType.substr( pos1+1, pos2-pos1-1 ) +
+         fullType = (fullType.substr(0, 5) == "const" ? "const " : "") +
+                    fullType.substr( pos1+1, pos2-pos1-1 ) +
                     fullType.substr( pos + 12, std::string::npos );
    }
 // -- END CLING WORKAROUND
@@ -1088,7 +1086,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType_, Long_
       return (h->second)( user );
 
 //-- nothing? collect qualifier information
-   Bool_t isConst = kFALSE; // # TODO: where to get const info?? ti.Property() & G__BIT_ISCONSTANT;
+   Bool_t isConst = resolvedType.substr(0, 5) == "const";
 
 // accept const <type>& as converter by value (as python copies most types)
    if ( isConst && cpd == "&" ) {
