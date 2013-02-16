@@ -10,10 +10,25 @@
 #define ROOT_CintLDAP
 
 #if 1
-// !defined(__CINT__) && !defined(G__DICTIONARY)
+
+#if !defined(__CLING__) 
+// Regular section, the user must make sure explicitly that the
+// correct set of header is included (or not).
 
 #include <lber.h>   // needed for older versions of ldap.h
 #include <ldap.h>
+
+#else
+
+// Loaded inside Cling, we need to mitigate duplication 
+// ourselves.
+
+#include <ldap.h>
+#ifndef LBER_CLASS_UNIVERSAL
+#include <lber.h>   // needed for older versions of ldap.h
+#endif
+
+#endif
 
 #else
 
