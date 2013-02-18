@@ -164,8 +164,13 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
       if (!m_Interpreter->isUniqueWrapper(ND->getNameAsString()))
          return false;
 
+   // Save state of the PP, because TCling__GetObjectAddress may induce nested
+   // lookup.
+   Preprocessor::CleanupAndRestoreCacheRAII cleanupPPRAII(PP);
    TObject *obj = TCling__GetObjectAddress(Name.getAsString().c_str(), 
-                                                   fLastLookupCtx);
+                                           fLastLookupCtx);
+   cleanupPPRAII.pop(); // force restroing the cache
+
    if (obj) {
 
 #if defined(R__MUST_REVISIT)
