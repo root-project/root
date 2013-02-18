@@ -149,7 +149,7 @@ llvm::GenericValue TClingCallFunc::convertIntegralToArg(const cling::Value& val,
       }
       break;
    }
-      
+
    default : 
       return val.getGV();
    }
