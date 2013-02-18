@@ -62,13 +62,17 @@ MakeIndex_filtered.log: MakeIndex.log
 MakeIndex: MakeIndex_filtered.log
 	$(TestDiff)
 
+ifeq ($(ClingWorkAroundLackOfModule)$(PLATFORM),yesmacosx)
+MakeIndex.log:  CALLROOTEXE += -e '\#define _MALLOC_MALLOC_H_ 0'
+endif
 ifneq ($(ClingWorkAroundMissingAutoLoading),)
 MakeIndex.log:  CALLROOTEXE += -e 'gSystem->Load("libHtml");'
 endif
 ifneq ($(ClingWorkAroundLackOfModule),)
 ifeq ($(shell root-config --has-qt),yes)
-MakeIndex.log: CALLROOTEXE += -e 'gSystem->Load("libQtRoot"); gSystem->Load("libGQt.so"); gSystem->Load("libGX11"); '
-else
+MakeIndex.log: CALLROOTEXE += -e 'gSystem->Load("libQtRoot"); gSystem->Load("libGQt.so");
+endif
+ifeq ($(shell root-config --has-x11),yes)
 MakeIndex.log: CALLROOTEXE += -e 'gSystem->Load("libGX11"); '
 endif
 ifeq ($(shell root-config --has-opengl),yes)
