@@ -42,8 +42,6 @@ BASEO        := $(call stripsrc,$(BASES:.cxx=.o))
 
 BASEDEP      := $(BASEO:.o=.d) $(BASEDO:.o=.d)
 
-BASEO        := $(filter-out $(call stripsrc,$(MODDIRS)/precompile.o),$(BASEO))
-
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(BASEH))
 
@@ -77,7 +75,7 @@ $(BASEDS3):     $(BASEH3) $(BASEL3) $(ROOTCINTTMPDEP)
 all-$(MODNAME): $(BASEO) $(BASEDO)
 
 clean-$(MODNAME):
-		@rm -f $(BASEO) $(BASEDO) $(BASEDIRS)/precompile.o
+		@rm -f $(BASEO) $(BASEDO)
 
 clean::         clean-$(MODNAME)
 
