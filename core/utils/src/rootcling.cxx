@@ -3994,7 +3994,7 @@ enum ESourceFileKind {
 };
 
 //______________________________________________________________________________
-static ESourceFileKind GetSourceFileKind(const char* filename)
+static ESourceFileKind GetSourceFileKind(clang::CompilerInstance* CI, const char* filename)
 {
    // Check whether the file's extension is compatible with C or C++.
    // Return whether source, header, Linkdef or nothing.
@@ -4003,7 +4003,21 @@ static ESourceFileKind GetSourceFileKind(const char* filename)
    const size_t len = strlen(filename);
    const char* ext = filename + len - 1;
    while (ext >= filename && *ext != '.') --ext;
-   if (ext < filename || *ext != '.') return kSFKNotC;
+   if (ext < filename || *ext != '.') {
+      // This might still be a system header, let's double check
+      // via the FileManager.
+      clang::Preprocessor& PP = CI->getPreprocessor();
+      clang::HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
+      const clang::DirectoryLookup* CurDir = 0;
+      const clang::FileEntry* hdrFileEntry
+         =  HdrSearch.LookupFile(filename, true /*isAngled*/, 0 /*FromDir*/,
+                                 CurDir, 0 /*CurFileEnt*/, 0 /*SearchPath*/,
+                                 0 /*RelativePath*/, 0 /*SuggestedModule*/);
+      if (hdrFileEntry) {
+         return kSFKHeader;
+      }
+      return kSFKNotC;
+   }
    ++ext;
    const size_t lenExt = filename + len - ext;
 
@@ -4044,7 +4058,8 @@ static ESourceFileKind GetSourceFileKind(const char* filename)
 
 
 //______________________________________________________________________________
-static int GenerateModule(const char* dictSrcFile, const std::vector<std::string>& args,
+static int GenerateModule(clang::CompilerInstance* CI,
+                          const char* dictSrcFile, const std::vector<std::string>& args,
                           const std::string & /* currentDirectory */)
 {
    // Generate the clang module given the arguments.
@@ -4059,7 +4074,7 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
    std::vector<const char*> compU;
    for (size_t iPcmArg = 1 /*skip argv0*/, nPcmArg = args.size();
         iPcmArg < nPcmArg; ++iPcmArg) {
-      ESourceFileKind sfk = GetSourceFileKind(args[iPcmArg].c_str());
+      ESourceFileKind sfk = GetSourceFileKind(CI, args[iPcmArg].c_str());
       if (sfk == kSFKHeader || sfk == kSFKSource) {
          headers.push_back(args[iPcmArg]);
       } else if (sfk == kSFKNotC && args[iPcmArg][0] == '-') {
@@ -4140,8 +4155,6 @@ static int GenerateModule(const char* dictSrcFile, const std::vector<std::string
       "    }\n"
       "  } __TheDictionaryInitializer;\n"
       "}" << std::endl;
-
-   clang::CompilerInstance* CI = gInterp->getCI();
 
    // Note: need to resolve _where_ to create the pcm
    // We default in a lib subdirectory (for the ROOT build)
@@ -4992,7 +5005,7 @@ int main(int argc, char **argv)
    incCurDir += currentDirectory;
    pcmArgs.push_back(incCurDir);
    
-   GenerateModule(dictpathname.c_str(), pcmArgs, currentDirectory);
+   GenerateModule(CI, dictpathname.c_str(), pcmArgs, currentDirectory);
 
    // Now that CINT is not longer there to write the header file,
    // write one and include in there a few things for backward 
