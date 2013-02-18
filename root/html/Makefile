@@ -70,7 +70,7 @@ MakeIndex.log:  CALLROOTEXE += -e 'gSystem->Load("libHtml");'
 endif
 ifneq ($(ClingWorkAroundLackOfModule),)
 ifeq ($(shell root-config --has-qt),yes)
-MakeIndex.log: CALLROOTEXE += -e 'gSystem->Load("libQtRoot"); gSystem->Load("libGQt.so");
+MakeIndex.log: CALLROOTEXE += -e 'gSystem->Load("libQtRoot"); gSystem->Load("libGQt.so"); '
 endif
 ifeq ($(shell root-config --has-x11),yes)
 MakeIndex.log: CALLROOTEXE += -e 'gSystem->Load("libGX11"); '
