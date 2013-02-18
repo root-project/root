@@ -17,7 +17,7 @@
 #endif
 
 
-#ifdef __CINT__
+#ifdef __CLING__
 typedef void *   SQLHSTMT;
 typedef UShort_t SQLUSMALLINT;
 typedef UInt_t   SQLUINTEGER;
@@ -33,7 +33,7 @@ typedef Short_t  SQLRETURN;
 class TODBCStatement : public TSQLStatement {
 
 protected:
-    #ifdef __CINT__
+    #ifdef __CLING__
     struct ODBCBufferRec_t;
     #else
     struct ODBCBufferRec_t {

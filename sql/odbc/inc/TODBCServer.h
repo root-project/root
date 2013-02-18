@@ -16,7 +16,7 @@
 #include "TSQLServer.h"
 #endif
 
-#ifdef __CINT__
+#ifdef __CLING__
 typedef void * SQLHENV;
 typedef void * SQLHDBC;
 typedef short  SQLRETURN;

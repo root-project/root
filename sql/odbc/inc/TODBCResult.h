@@ -21,7 +21,7 @@
 #endif
 
 
-#ifdef __CINT__
+#ifdef __CLING__
 typedef void * SQLHSTMT;
 #else
 #ifdef WIN32
