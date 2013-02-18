@@ -1436,7 +1436,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
    if (!fClassSelectionRules.empty()) {
       for(std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin(); 
           it != fClassSelectionRules.end(); ++it) {
-         if (!it->GetMatchFound() && !GetHasFileNameRule()) {
+         if (!it->GetMatchFound() /* && !GetHasFileNameRule() */ ) {
             std::string name;
             if (it->GetAttributeValue("pattern", name)) {
                // keep it
@@ -1444,17 +1444,24 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
                // keept it
             } else {
                name.clear();
-            }            
-            if (IsSelectionXMLFile()){
-               std::cout<<"Warning - unused class rule: ";
             }
-            else {
-               std::cout<<"Error   - unused class rule: ";
-            }
-            if (name.length() > 0) {
-               std::cout << name << '\n';
+            std::string file_name_value;
+            if (!it->GetAttributeValue("file_name", file_name_value)) file_name_value.clear();
+
+            if (IsSelectionXMLFile()) std::cout<<"Warning - ";
+            else std::cout<<"Error   - ";
+
+            if (file_name_value.length()) {
+               std::cout<< "unused file name rule: \n";
+               //std::cout<< file_name_value << '\n';
+               it->PrintAttributes(std::cout,1);
             } else {
-               it->PrintAttributes(std::cout,29);
+               std::cout<< "unused class rule: ";
+               if (name.length() > 0) {
+                  std::cout << name << '\n';
+               } else {
+                  it->PrintAttributes(std::cout,1);
+               }
             }
          }
       }
