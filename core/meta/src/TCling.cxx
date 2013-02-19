@@ -743,6 +743,7 @@ TCling::TCling(const char *name, const char *title)
 #endif // ROOTINCDIR
    TCling::AddIncludePath(include);
 
+   fInterpreter->enableDynamicLookup();
    // Attach cling callbacks
    fClingCallbacks = new TClingCallbacks(fInterpreter);
    fInterpreter->setCallbacks(fClingCallbacks);
