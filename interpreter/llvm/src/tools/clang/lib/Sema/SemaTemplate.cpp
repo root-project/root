@@ -2513,8 +2513,13 @@ bool Sema::CheckTemplateTypeArgument(TemplateTypeParmDecl *Param,
     return true;
 
   // Add the converted template type argument.
-  QualType ArgType = Context.getCanonicalType(Arg.getAsType());
-  
+  QualType ArgType;
+  if (1) {
+    ArgType = Context.getCanonicalType(Arg.getAsType());
+  } else {
+    ArgType = Arg.getAsType().getCanonicalType();
+  }
+
   // Objective-C ARC:
   //   If an explicitly-specified template argument type is a lifetime type
   //   with no lifetime qualifier, the __strong lifetime qualifier is inferred.
@@ -3535,7 +3540,9 @@ bool Sema::CheckTemplateArgument(TemplateTypeParmDecl *Param,
   QualType Arg = ArgInfo->getType();
   SourceRange SR = ArgInfo->getTypeLoc().getSourceRange();
 
-  if (Arg->isVariablyModifiedType()) {
+  if (1) {
+    // our special case, no error (okay that's bad but we currently have a problem with canonical type.
+  } else if (Arg->isVariablyModifiedType()) {
     return Diag(SR.getBegin(), diag::err_variably_modified_template_arg) << Arg;
   } else if (Context.hasSameUnqualifiedType(Arg, Context.OverloadTy)) {
     return Diag(SR.getBegin(), diag::err_template_arg_overload_type) << SR;

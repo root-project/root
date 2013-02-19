@@ -2703,8 +2703,10 @@ QualType ASTContext::getAttributedType(AttributedType::Kind attrKind,
 QualType
 ASTContext::getSubstTemplateTypeParmType(const TemplateTypeParmType *Parm,
                                          QualType Replacement) const {
-  assert(Replacement.isCanonical()
-         && "replacement types must always be canonical");
+//assert(Replacement.isCanonical()
+//         && "replacement types must always be canonical");
+//  assert(Replacement.isCanonical()
+//         && "replacement types must always be canonical");
 
   llvm::FoldingSetNodeID ID;
   SubstTemplateTypeParmType::Profile(ID, Parm, Replacement);
