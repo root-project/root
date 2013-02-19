@@ -673,6 +673,11 @@ TCling::TCling(const char *name, const char *title)
                                          ROOT::TMetaUtils::GetLLVMResourceDir(false).c_str());
    fInterpreter->installLazyFunctionCreator(autoloadCallback);
 
+   // Add include path to etc/cling. FIXME: This is a short term solution. The
+   // llvm/clang header files shouldn't be there at all. We have to get rid of
+   // that dependency and avoid copying the header files.
+   TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
+
    // Add the current path to the include path
    TCling::AddIncludePath(".");
 
