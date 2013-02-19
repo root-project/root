@@ -661,8 +661,8 @@ clang::NestedNameSpecifier* CreateNestedNameSpecifier(const clang::ASTContext& C
    // Create a nested namespecifier for the given namespace and all
    // its enclosing namespaces.
    
-   clang::NamespaceDecl* outer 
-   = llvm::dyn_cast_or_null<clang::NamespaceDecl>(cl->getDeclContext());
+   clang::NamespaceDecl* outer = 
+      llvm::dyn_cast_or_null<clang::NamespaceDecl>(cl->getDeclContext());
    if (outer && outer->getName().size()) {
       clang::NestedNameSpecifier* outerNNS = CreateNestedNameSpecifier(Ctx,outer);
       return clang::NestedNameSpecifier::Create(Ctx,outerNNS,
@@ -683,31 +683,30 @@ clang::NestedNameSpecifier* CreateNestedNameSpecifier(const clang::ASTContext& C
    // its declaring contexts.
    
    clang::NamedDecl* outer = llvm::dyn_cast_or_null<clang::NamedDecl>(cl->getDeclContext());
-   if (outer && outer->getName().size()) {
-      clang::NestedNameSpecifier *outerNNS;
-      if (cl->getDeclContext()->isNamespace()) {
+
+   clang::NestedNameSpecifier *outerNNS;
+   if (cl->getDeclContext()->isNamespace()) {
+      if (outer && outer->getName().size()) {
          outerNNS = CreateNestedNameSpecifier(Ctx,
                                               llvm::dyn_cast<clang::NamespaceDecl>(outer));
-      } else if (cl->getDeclContext()->isRecord() || 
-                 llvm::isa<clang::EnumDecl>(cl->getDeclContext())) {
+      } else {
+         outerNNS = 0; // Make sure the name does not start with '::'.
+      }
+   } else if (cl->getDeclContext()->isRecord() || 
+              llvm::isa<clang::EnumDecl>(cl->getDeclContext())) {
+      if (outer && outer->getName().size()) {
          outerNNS = CreateNestedNameSpecifier(Ctx,
                                               llvm::dyn_cast<clang::TagDecl>(outer));
       } else {
-         // Function of the like ... no real name to be use in the prefix ...
-         return clang::NestedNameSpecifier::Create(Ctx, 
-                                                   0, /* no starting '::'*/
-                                                   false /* template keyword wanted */,
-                                                   GetFullyQualifiedLocalType(Ctx, Ctx.getTypeDeclType(cl).getTypePtr()));
+         outerNNS = 0; // record without a name ....
       }
-      return clang::NestedNameSpecifier::Create(Ctx,outerNNS,
-                                                false /* template keyword wanted */,
-                                                GetFullyQualifiedLocalType(Ctx, Ctx.getTypeDeclType(cl).getTypePtr()));
    } else {
-      return clang::NestedNameSpecifier::Create(Ctx, 
-                                                0, /* no starting '::'*/
-                                                false /* template keyword wanted */,
-                                                GetFullyQualifiedLocalType(Ctx, Ctx.getTypeDeclType(cl).getTypePtr()));     
+      // Function or the like ... no real name to be use in the prefix ...
+      outerNNS = 0;
    }
+   return clang::NestedNameSpecifier::Create(Ctx,outerNNS,
+                                             false /* template keyword wanted */,
+                                             GetFullyQualifiedLocalType(Ctx, Ctx.getTypeDeclType(cl).getTypePtr()));
 }
 
 static

@@ -4,6 +4,8 @@
 using namespace std;
 #endif
 
+#pragma extra_include "deque";
+
 #pragma create TClass deque<int>;
 #pragma create TClass deque<long>;
 #pragma create TClass deque<float>;
