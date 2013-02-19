@@ -40,8 +40,8 @@ extern "C" {
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
    : InterpreterCallbacks(interp),
-     fLastLookupCtx(0), fROOTSpecialNamespace(0),
-     fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false) {
+     fLastLookupCtx(0), fROOTSpecialNamespace(0), fFirstRun(true), 
+     fIsAutoloading(false), fIsAutoloadingRecursively(false) {
    const Decl* D = 0;
    m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &D);
    fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(const_cast<Decl*>(D));
@@ -64,7 +64,12 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
       return true; // happiness.
 
    // If the autoload wasn't successful try ROOT specials.
-   return tryFindROOTSpecialInternal(R, S);
+   if (tryFindROOTSpecialInternal(R, S))
+      return true;
+
+   // Finally try to resolve this name as a dynamic name, i.e delay its 
+   // resolution for runtime.
+   return tryResolveAtRuntimeInternal(R, S);
 }
 
 // The symbol might be defined in the ROOT class autoloading map so we have to
@@ -160,9 +165,6 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
    // Make sure that the failed lookup comes from the prompt.
    if(!CurDC || !CurDC->isFunctionOrMethod())
       return false;
-   if (NamedDecl* ND = dyn_cast<NamedDecl>(CurDC))
-      if (!m_Interpreter->isUniqueWrapper(ND->getNameAsString()))
-         return false;
 
    // Save state of the PP, because TCling__GetObjectAddress may induce nested
    // lookup.
@@ -186,8 +188,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
 #endif
 #endif
 
-     VarDecl *VD = cast_or_null<VarDecl>(utils::Lookup::Named(&SemaR, 
-                                                              Name, 
+     VarDecl *VD = cast_or_null<VarDecl>(utils::Lookup::Named(&SemaR, Name, 
                                                         fROOTSpecialNamespace));
       if (VD) {
          //TODO: Check for same types.
@@ -245,6 +246,74 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
 
    return false;
 }
+
+bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
+    if (!shouldResolveAtRuntime(R, S))
+      return false;
+
+    DeclarationName Name = R.getLookupName();
+    IdentifierInfo* II = Name.getAsIdentifierInfo();
+    SourceLocation Loc = R.getNameLoc();
+    ASTContext& C = R.getSema().getASTContext();
+    DeclContext* DC = static_cast<DeclContext*>(S->getEntity());
+    VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, C.DependentTy,
+                                      /*TypeSourceInfo*/0, SC_None, SC_None);
+
+    // Annotate the decl to give a hint in cling. FIXME: Current implementation
+    // is a gross hack, because TClingCallbacks shouldn't know about 
+    // EvaluateTSynthesizer at all!
+    
+    SourceRange invalidRange;
+    Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__ResolveAtRuntime"));
+    if (Result) {
+      R.addDecl(Result);
+      DC->addDecl(Result);
+      // Say that we can handle the situation. Clang should try to recover
+      return true;
+    }
+    // We cannot handle the situation. Give up
+    return false;
+
+}
+
+bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
+   if (R.getLookupKind() != Sema::LookupOrdinaryName) 
+      return false;
+
+   if (R.isForRedeclaration()) 
+      return false;
+
+   if (!R.empty())
+      return false;
+
+   // FIXME: Figure out better way to handle:
+   // C++ [basic.lookup.classref]p1:
+   //   In a class member access expression (5.2.5), if the . or -> token is
+   //   immediately followed by an identifier followed by a <, the
+   //   identifier must be looked up to determine whether the < is the
+   //   beginning of a template argument list (14.2) or a less-than operator.
+   //   The identifier is first looked up in the class of the object
+   //   expression. If the identifier is not found, it is then looked up in
+   //   the context of the entire postfix-expression and shall name a class
+   //   or function template.
+   //
+   // We want to ignore object(.|->)member<template>
+   if (R.getSema().PP.LookAhead(0).getKind() == tok::less)
+      // TODO: check for . or -> in the cached token stream
+      return false;
+   
+   for (Scope* DepScope = S; DepScope; DepScope = DepScope->getParent()) {
+      if (DeclContext* Ctx = static_cast<DeclContext*>(DepScope->getEntity())) {
+         if (!Ctx->isDependentContext())
+            // For now we support only the prompt.
+            if (isa<FunctionDecl>(Ctx))
+               return true;
+      }
+   }
+
+   return false;
+}
+
 // The callback is used to update the list of globals in ROOT.
 //
 void TClingCallbacks::TransactionCommitted(const Transaction &T) {
