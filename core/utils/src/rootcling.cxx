@@ -4252,7 +4252,7 @@ int main(int argc, char **argv)
 
    std::string dictname;
    std::string dictpathname;
-   int ic, force;
+   int ic, force = 0, onepcm = 0;
    bool requestAllSymbols = false; // Would be set to true is we decide to support an option like --deep.
 
    std::string currentDirectory;
@@ -4296,7 +4296,9 @@ int main(int argc, char **argv)
    while (ic < argc && strncmp(argv[ic], "-",1)==0
           && strcmp(argv[ic], "-f")!=0 ) {
       if (!strcmp(argv[ic], "-l")) {
-
+         ic++;
+      } else if (!strcmp(argv[ic], "-1")) {
+         onepcm = 1;
          ic++;
       } else if (!strncmp(argv[ic],libprefix,strlen(libprefix))) {
 
@@ -4817,7 +4819,7 @@ int main(int argc, char **argv)
    }
 
    //---------------------------------------------------------------------------
-   // Write schema evolution reelated headers and declarations
+   // Write schema evolution related headers and declarations
    //---------------------------------------------------------------------------
    if( !gReadRules.empty() || !gReadRawRules.empty() ) {
       (*dictSrcOut) << "#include \"TBuffer.h\"" << std::endl;
@@ -4836,10 +4838,12 @@ int main(int argc, char **argv)
    //---------------------------------------------------------------------------
    // Write all the necessary #include
    //---------------------------------------------------------------------------
-   (*dictSrcOut) << "// Header files passed as explicit arguments\n";
-   (*dictSrcOut) << includeForSource;
-   (*dictSrcOut) << "\n// Header files passed via #pragma extra_include\n";
-   (*dictSrcOut) << extraIncludes << endl;
+   if (!onepcm) {
+      (*dictSrcOut) << "// Header files passed as explicit arguments\n";
+      (*dictSrcOut) << includeForSource;
+      (*dictSrcOut) << "\n// Header files passed via #pragma extra_include\n";
+      (*dictSrcOut) << extraIncludes << endl;
+   }
 
    selectionRules.SearchNames(interp);
 
@@ -4881,114 +4885,117 @@ int main(int argc, char **argv)
       exit(1);
    }
 
-   //
-   // We will loop over all the classes several times.
-   // In order we will call
-   //
-   //     WriteClassInit (code to create the TGenericClassInfo)
-   //     check for constructor and operator input
-   //     WriteClassFunctions (declared in ClassDef)
-   //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
-   //
-   
-   // The order of addition to the list of constructor type
-   // is significant.  The list is sorted by with the highest
-   // priority first.
-   AddConstructorType("TRootIOCtor");
-   AddConstructorType("");
-   
-   //
-   // Loop over all classes and create Streamer() & Showmembers() methods
-   //
-   
-   // SELECTION LOOP
-   RScanner::NamespaceColl_t::const_iterator ns_iter = scan.fSelectedNamespaces.begin();
-   RScanner::NamespaceColl_t::const_iterator ns_end = scan.fSelectedNamespaces.end();
-   for( ; ns_iter != ns_end; ++ns_iter) {
-      WriteNamespaceInit(*ns_iter);         
-   }
-   
-   iter = scan.fSelectedClasses.begin();
-   end = scan.fSelectedClasses.end();
-   for( ; iter != end; ++iter) 
-   {
-      if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-         Error(0,"A dictionary has been requested for %s but there is no declaration!\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
-         continue;
+   if (!onepcm) {
+
+      //
+      // We will loop over all the classes several times.
+      // In order we will call
+      //
+      //     WriteClassInit (code to create the TGenericClassInfo)
+      //     check for constructor and operator input
+      //     WriteClassFunctions (declared in ClassDef)
+      //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
+      //
+
+      // The order of addition to the list of constructor type
+      // is significant.  The list is sorted by with the highest
+      // priority first.
+      AddConstructorType("TRootIOCtor");
+      AddConstructorType("");
+
+      //
+      // Loop over all classes and create Streamer() & Showmembers() methods
+      //
+
+      // SELECTION LOOP
+      RScanner::NamespaceColl_t::const_iterator ns_iter = scan.fSelectedNamespaces.begin();
+      RScanner::NamespaceColl_t::const_iterator ns_end = scan.fSelectedNamespaces.end();
+      for( ; ns_iter != ns_end; ++ns_iter) {
+         WriteNamespaceInit(*ns_iter);         
       }
-      if (iter->RequestOnlyTClass()) {
-         // fprintf(stderr,"rootcling: Skipping class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
-         // For now delay those for later.
-         continue;
-      }
-      
-      if (clang::CXXRecordDecl* CXXRD = llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl())))
+
+      iter = scan.fSelectedClasses.begin();
+      end = scan.fSelectedClasses.end();
+      for( ; iter != end; ++iter) 
+      {
+         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+            Error(0,"A dictionary has been requested for %s but there is no declaration!\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
+            continue;
+         }
+         if (iter->RequestOnlyTClass()) {
+            // fprintf(stderr,"rootcling: Skipping class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
+            // For now delay those for later.
+            continue;
+         }
+
+         if (clang::CXXRecordDecl* CXXRD = llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl())))
             R__AnnotateDecl(*CXXRD);
-      const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-      if (CRD) {
-         Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
-         std::string qualname( CRD->getQualifiedNameAsString() );
-         if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
-            // coverity[fun_call_w_exception] - that's just fine.
-            RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
-         } else {
+         const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
+         if (CRD) {
+            Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
+            std::string qualname( CRD->getQualifiedNameAsString() );
+            if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
+               // coverity[fun_call_w_exception] - that's just fine.
+               RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
+            } else {
+               WriteClassInit(*iter, interp, normCtxt);
+            }               
+         }
+      }
+
+      //
+      // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
+      // first to allow template specialisation to occur before template
+      // instantiation (STK)
+      //
+      // SELECTION LOOP
+      iter = scan.fSelectedClasses.begin();
+      end = scan.fSelectedClasses.end();
+      for( ; iter != end; ++iter) 
+      {
+         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+            continue;
+         }                       
+         if (iter->RequestOnlyTClass()) {
+            // For now delay those for later.
+            continue;
+         }
+         const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
+         if (cxxdecl && ClassInfo__HasMethod(*iter,"Class_Name")) {
+            WriteClassFunctions(cxxdecl);
+         }
+      }
+
+      // LINKDEF SELECTION LOOP
+      // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the
+      // STL class which is done via RStl::Instance().WriteClassInit(0);
+      // and the ClassInit
+      iter = scan.fSelectedClasses.begin();
+      end = scan.fSelectedClasses.end();
+      for( ; iter != end; ++iter) 
+      {
+         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+            continue;
+         }
+         if (!iter->RequestOnlyTClass()) {
+            continue;
+         }
+         if (!IsSTLContainer(*iter)) {
             WriteClassInit(*iter, interp, normCtxt);
-         }               
+         }
+      }
+      // Loop to write all the ClassCode
+      iter = scan.fSelectedClasses.begin();
+      end = scan.fSelectedClasses.end();
+      for( ; iter != end; ++iter) 
+      {
+         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+            continue;
+         }
+         WriteClassCode(*iter, interp, normCtxt);
       }
    }
 
-   //
-   // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
-   // first to allow template specialisation to occur before template
-   // instantiation (STK)
-   //
-   // SELECTION LOOP
-   iter = scan.fSelectedClasses.begin();
-   end = scan.fSelectedClasses.end();
-   for( ; iter != end; ++iter) 
-   {
-      if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-         continue;
-      }                       
-      if (iter->RequestOnlyTClass()) {
-         // For now delay those for later.
-         continue;
-      }
-      const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-      if (cxxdecl && ClassInfo__HasMethod(*iter,"Class_Name")) {
-         WriteClassFunctions(cxxdecl);
-      }
-   }
-   
-   // LINKDEF SELECTION LOOP
-   // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the
-   // STL class which is done via RStl::Instance().WriteClassInit(0);
-   // and the ClassInit
-   iter = scan.fSelectedClasses.begin();
-   end = scan.fSelectedClasses.end();
-   for( ; iter != end; ++iter) 
-   {
-      if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-         continue;
-      }
-      if (!iter->RequestOnlyTClass()) {
-         continue;
-      }
-      if (!IsSTLContainer(*iter)) {
-         WriteClassInit(*iter, interp, normCtxt);
-      }
-   }
-   // Loop to write all the ClassCode
-   iter = scan.fSelectedClasses.begin();
-   end = scan.fSelectedClasses.end();
-   for( ; iter != end; ++iter) 
-   {
-      if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-         continue;
-      }
-      WriteClassCode(*iter, interp, normCtxt);
-   }
-   
    // coverity[fun_call_w_exception] - that's just fine.
    RStl::Instance().WriteClassInit(0, interp, normCtxt);
    
