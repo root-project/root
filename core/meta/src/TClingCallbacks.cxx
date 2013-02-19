@@ -277,6 +277,9 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
 }
 
 bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
+   if (m_IsRuntime)
+     return false;
+
    if (R.getLookupKind() != Sema::LookupOrdinaryName) 
       return false;
 
