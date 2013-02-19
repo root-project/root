@@ -4203,16 +4203,18 @@ static int GenerateModule(clang::CompilerInstance* CI,
                              /*RemoveFileOnSignal=*/false, /*InFile*/"",
                              /*Extension=*/"", /*useTemporary=*/false,
                              /*CreateMissingDirectories*/false);
-   // Emit the PCH file
-   CI->getFrontendOpts().RelocatablePCH = true;
-   Writer.WriteAST(CI->getSema(), 0, moduleFile, module, "/DUMMY_ROOTSYS/include/" /*SysRoot*/);
+   if (OS) {
+      // Emit the PCH file
+      CI->getFrontendOpts().RelocatablePCH = true;
+      Writer.WriteAST(CI->getSema(), 0, moduleFile, module, "/DUMMY_ROOTSYS/include/" /*SysRoot*/);
 
-   // Write the generated bitstream to "Out".
-   OS->write((char *)&Buffer.front(), Buffer.size());
+      // Write the generated bitstream to "Out".
+      OS->write((char *)&Buffer.front(), Buffer.size());
 
-   // Make sure it hits disk now.
-   OS->flush();
-   delete OS;
+      // Make sure it hits disk now.
+      OS->flush();
+      delete OS;
+   }
 
    // Free up some memory, in case the process is kept alive.
    Buffer.clear();
