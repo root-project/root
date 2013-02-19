@@ -576,7 +576,7 @@ public:
          }
          if (rootContext.HasValid(QtGContext::kClipOrigin)) {
             // fprintf(stderr," NO special painter  Qt implementation for ClipOrigin option yet\n");
-            // setClipRect ( fClipOrigin , int w, int h, CoordinateMode m = CoordDevice )
+            // setClipRect ( fClipOrigin , int_w, int_h, CoordinateMode_m = CoordDevice )
          }
          if (rootContext.HasValid(QtGContext::kClipMask)) {
             // fprintf(stderr," NO special painter  Qt implementation for ClipMask option yet\n");
@@ -2006,12 +2006,12 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
    // When grab is false, ungrab the mouse button for this button and modifier.
 
     //X11: ButtonPress event is reported if all of the following conditions are true:
-    //   ·    The pointer is not grabbed, and the specified button is logically
+    //   *    The pointer is not grabbed, and the specified button is logically
     //        pressed when the specified modifier keys are logically down,
     //        and no other buttons or modifier keys are logically down.
-    //   ·    The grab_window contains the pointer.
-    //   ·    The confine_to window (if any) is viewable.
-    //   ·    A passive grab on the same button/key combination does not exist
+    //   *    The grab_window contains the pointer.
+    //   *    The confine_to window (if any) is viewable.
+    //   *    A passive grab on the same button/key combination does not exist
     //        on any ancestor of grab_window.
 
 //    fprintf(stderr,"TGQt::GrabButton \"0x%x\" id=%x QWidget = %p\n"
@@ -2037,7 +2037,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
 
     // XGrabPointer(3X11):
        // The XGrabPointer function actively grabs control of the
-       // pointer and returns GrabSuccess if the grab was success­
+       // pointer and returns GrabSuccess if the grab was success-
        // ful.  Further pointer events are reported only to the
        // grabbing client.  XGrabPointer overrides any active
        // pointer grab by this client.  If owner_events is False,
@@ -2467,22 +2467,22 @@ static inline Int_t MapKeySym(int key, bool toQt=true)
        //clients.  Multiple clients can select for the same events
        //on the same window with the following restrictions:
 
-       //·    Multiple clients can select events on the same window
+       //*    Multiple clients can select events on the same window
        //     because their event masks are disjoint.  When the X
        //     server generates an event, it reports it to all
        //     interested clients.
 
-       //·    Only one client at a time can select Circu­
+       //*    Only one client at a time can select Circu-
        //     lateRequest, ConfigureRequest, or MapRequest events,
-       //     which are associated with the event mask Substructur­
+       //     which are associated with the event mask Substructur-
        //     eRedirectMask.
 
-       //·    Only one client at a time can select a ResizeRequest
-       //     event, which is associated with the event mask Resiz­
+       //*    Only one client at a time can select a ResizeRequest
+       //     event, which is associated with the event mask Resiz-
        //     eRedirectMask.
 
-       //·    Only one client at a time can select a ButtonPress
-       //     event, which is associated with the event mask But­
+       //*    Only one client at a time can select a ButtonPress
+       //     event, which is associated with the event mask But-
        //     tonPressMask.
 
        //The server reports the event to all interested clients.

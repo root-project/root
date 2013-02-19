@@ -124,12 +124,12 @@ bool TQtClientWidget::IsGrabbed(Event_t &ev)
 {
    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    // XGrabButton(3X11)         XLIB FUNCTIONS        XGrabButton(3X11)
-   //   ·    The pointer is not grabbed, and the specified button is logically
+   //   *    The pointer is not grabbed, and the specified button is logically
    //        pressed when the specified modifier keys are logically down,
    //        and no other buttons or modifier keys are logically down.
-   //   ·    The grab_window contains the pointer.
-   //   ·    The confine_to window (if any) is viewable.
-   //   ·    A passive grab on the same button/key combination does not exist
+   //   *    The grab_window contains the pointer.
+   //   *    The confine_to window (if any) is viewable.
+   //   *    A passive grab on the same button/key combination does not exist
    //        on any ancestor of grab_window.
    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    bool grab = false;
