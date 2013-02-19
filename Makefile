@@ -466,6 +466,7 @@ STATICOBJLIST := $(ROOT_SRCDIR)/build/unix/staticobjectlist.sh
 MAKESTATICLIB := $(ROOT_SRCDIR)/build/unix/makestaticlib.sh
 MAKESTATIC    := $(ROOT_SRCDIR)/build/unix/makestatic.sh
 RECONFIGURE   := $(ROOT_SRCDIR)/build/unix/reconfigure.sh
+MAKEONEPCM    := $(ROOT_SRCDIR)/build/unix/makeonepcm.sh $(ROOT_SRCDIR)
 ifeq ($(PLATFORM),win32)
 MAKELIB       := $(ROOT_SRCDIR)/build/win/makelib.sh
 MAKECOMPDATA  := $(ROOT_SRCDIR)/build/win/compiledata.sh
@@ -619,7 +620,7 @@ endif
                 clean distclean distclean-xrootd maintainer-clean compiledata \
                 version html changelog install uninstall showbuild \
                 releasenotes staticlib static map debian redhat skip postbin \
-                showit help runtimedirs plugins-ios
+                showit help runtimedirs plugins-ios onepcm
 
 ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
@@ -1007,6 +1008,10 @@ changelog:
 
 releasenotes:
 	@$(MAKERELNOTES)
+
+onepcm: all
+	@$(MAKEONEPCM)
+	@$(MAKE)
 
 ifeq ($(BUILDX11),yes)
 ifeq ($(BUILDASIMAGE),yes)
