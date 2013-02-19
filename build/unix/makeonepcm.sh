@@ -19,7 +19,7 @@ find */inc */*/inc -name \*LinkDef\*.h | \
 mv alldefs.h include/allLinkDef.h
 
 # generate one large pcm
-rm -f allDict.h allDict.cxx lib/allDict_rdict.pcm
-core/utils/src/rootcling_tmp -f allDict.cxx -c include/all.h include/allLinkDef.h
+rm -f core/base/src/allDict.* lib/allDict_rdict.pcm
+core/utils/src/rootcling_tmp -1 -f core/base/src/allDict.cxx -c -Iinclude allHeaders.h include/allLinkDef.h
 
 exit $?

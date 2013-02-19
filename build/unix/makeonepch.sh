@@ -1,8 +1,8 @@
 #!/bin/sh
 
-rm -f include/all.h include/all.h.pch include/allLinkDef.h
+rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h
 
-# create all.h including all headers from the include directory
+# create allHeaders.h including all headers from the include directory
 find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
  -e /Bits.h/d \
  -e /CocoaGuiTypes.h/d \
@@ -116,9 +116,9 @@ find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
  -e /ZTrees.h/d \
 > all.h
 
-mv all.h include/all.h
+mv all.h include/allHeaders.h
 
 # generate the pch
-clang++ -x c++-header -Iinclude include/all.h -o include/all.h.pch
+clang++ -x c++-header -Iinclude include/allHeaders.h -o include/allHeaders.h.pch
 
 exit $?
