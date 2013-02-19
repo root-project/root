@@ -611,7 +611,8 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, co
                   explicit_selector = &(*it);
                } else if (match == BaseSelectionRule::kPattern) {
                   // NOTE: weird ...
-                  if (pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(*it);
+                  if (it->GetAttributeValue("pattern", pattern_value) && 
+                      pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(*it);
                }
             }
          } else if (it->GetSelected() == BaseSelectionRule::kNo) {         
@@ -629,7 +630,8 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, co
             }
             if (match == BaseSelectionRule::kPattern) {
                //this is for the Linkdef selection
-               if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
+               if (it->GetAttributeValue("pattern", pattern_value) && 
+                   (pattern_value == "*" || pattern_value == "*::*")) ++fImplNo;
                else 
                   return 0;
             }
@@ -703,7 +705,8 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
                         explicit_selector = &(*it);
                      } else if (match == BaseSelectionRule::kPattern) {
                         // NOTE: weird ...
-                        if (pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(*it);
+                        if (it->GetAttributeValue("pattern", pattern_value) && 
+                            pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(*it);
                      }
                   }
                } else if (it->GetSelected() == BaseSelectionRule::kNo) {         
@@ -721,7 +724,8 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
                   }
                   if (match == BaseSelectionRule::kPattern) {
                      //this is for the Linkdef selection
-                     if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
+                     if (it->GetAttributeValue("pattern", pattern_value) &&
+                         (pattern_value == "*" || pattern_value == "*::*")) ++fImplNo;
                      else 
                         return 0;
                   }
