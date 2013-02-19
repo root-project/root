@@ -1448,11 +1448,6 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
             std::string file_name_value;
             if (!it->GetAttributeValue("file_name", file_name_value)) file_name_value.clear();
 
-            if (file_name_value.length()) {
-               // don't complain about defined_in rules
-               continue;
-            }
-
             if (IsSelectionXMLFile()) std::cout<<"Warning - ";
             else std::cout<<"Error   - ";
 
@@ -1464,9 +1459,6 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
                std::cout<< "unused class rule: ";
                if (name.length() > 0) {
                   std::cout << name << '\n';
-                  //if (name == "*") {
-                  //   it->DebugPrint();
-                  //}
                } else {
                   it->PrintAttributes(std::cout,1);
                }
