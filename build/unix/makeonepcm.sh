@@ -147,7 +147,7 @@ find $srcdir -path '*/test' -prune -o \
              -path '*/include' -prune -o \
              -follow \
              -name '*LinkDef*.h' -print | \
-  grep -v -e '/RooFitCore_LinkDef.h$' -e "$srcdir/*LinkDef*.h" | \
+  grep -v -e '/RooFitCore_LinkDef.h$' -e "$srcdir/[[:alnum:]]*LinkDef*.h$" | \
   sed -e 's|^|#include "|' -e 's|$|"|' > alldefs.h
 
 mv alldefs.h include/allLinkDef.h
