@@ -119,6 +119,6 @@ find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
 mv all.h include/all.h
 
 # generate the pch
-clang++ -x c++-header -Iinclude include/all.h -o include/all.h.pch
+# clang++ -x c++-header -Iinclude include/all.h -o include/all.h.pch
 
 exit $?
