@@ -1071,7 +1071,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
    }
 
    clang::HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
-   for (const char** hdr = headers; *hdr; ++hdr) {
+   for (const char** hdr = headers; hdr && *hdr; ++hdr) {
       const clang::DirectoryLookup* CurDir;
       const clang::FileEntry* hdrFileEntry
          =  HdrSearch.LookupFile(*hdr, false /*isAngled*/, 0 /*FromDir*/,

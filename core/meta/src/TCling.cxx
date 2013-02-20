@@ -716,6 +716,8 @@ TCling::TCling(const char *name, const char *title)
 
    fHaveSinglePCM = LoadPCM(ROOT::TMetaUtils::GetModuleFileName("allDict").c_str(),
                             0 /*headers*/, 0 /*triggerFunc*/);
+   if (fHaveSinglePCM)
+      TCling::Info("TCling", "Using one PCM.");
 
    // set the gModuleHeaderInfoBuffer pointer
    TCling__RegisterModule(0, 0, 0, 0, 0, 0);
@@ -874,6 +876,8 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
    // libraries.
    // the value of 'triggerFunc' is used to find the shared library location.
 
+   if (fHaveSinglePCM && strncmp(modulename, "G__", 3))
+      modulename = "allDict";
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
@@ -902,12 +906,9 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
       }
    }
 
-   // Don't load any other PCM for ROOT if we have loaded the single ROOT PCM.
-   if (!fHaveSinglePCM || strncmp(modulename, "G__", 3)) {
-      if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
-         ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
+   if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
+      ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
               ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
-      }
    }
 
    bool oldValue = false;
