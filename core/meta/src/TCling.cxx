@@ -659,7 +659,7 @@ ClassImp(TCling)
 TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0), 
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
-   fClingCallbacks(0)
+   fClingCallbacks(0), fHaveSinglePCM(kFALSE)
 {
    // Initialize the CINT+cling interpreter interface.
 
@@ -713,6 +713,9 @@ TCling::TCling(const char *name, const char *title)
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
 
    TClassEdit::Init(*fInterpreter,*fNormalizedCtxt);
+
+   fHaveSinglePCM = LoadPCM(ROOT::TMetaUtils::GetModuleFileName("allDict").c_str(),
+                            0 /*headers*/, 0 /*triggerFunc*/);
 
    // set the gModuleHeaderInfoBuffer pointer
    TCling__RegisterModule(0, 0, 0, 0, 0, 0);
@@ -807,45 +810,12 @@ static const char *FindLibraryName(void (*func)())
 }
 
 //______________________________________________________________________________
-void TCling::RegisterModule(const char* modulename, const char** headers,
-                            const char** includePaths, const char** macroDefines,
-                            const char** macroUndefines, void (*triggerFunc)())
-{
-   // Inject the module named "modulename" into cling; load all headers.
-   // headers is a 0-terminated array of header files to #include after
-   // loading the module. The module is searched for in all $LD_LIBRARY_PATH
-   // entries (or %PATH% on Windows).
-   // This function gets called by the static initialization of dictionary
-   // libraries.
-   // the value of 'triggerFunc' is used to find the shared library location.
+bool TCling::LoadPCM(TString pcmFileName,
+                     const char** headers,
+                     void (*triggerFunc)()) const {
+   // Tries to load a PCM; returns true on success.
 
-   TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
-
-   for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
-      TCling::AddIncludePath(*inclPath);
-   }
-   for (const char** macroD = macroDefines; *macroD; ++macroD) {
-      TString macroPP("#define ");
-      macroPP += *macroD;
-      // comes in as "A=B" from "-DA=B", need "#define A B":
-      Ssiz_t posAssign = macroPP.Index('=');
-      if (posAssign != kNPOS) {
-         macroPP[posAssign] = ' ';
-      }
-      if (!getenv("ROOT_MODULES"))
-         fInterpreter->parseForModule(macroPP.Data());
-   }
-   for (const char** macroU = macroUndefines; *macroU; ++macroU) {
-      TString macroPP("#undef ");
-      macroPP += *macroU;
-      // comes in as "A=B" from "-DA=B", need "#define A B":
-      Ssiz_t posAssign = macroPP.Index('=');
-      if (posAssign != kNPOS) {
-         macroPP[posAssign] = ' ';
-      }
-      if (!getenv("ROOT_MODULES"))
-         fInterpreter->parseForModule(macroPP.Data());
-   }
+   // pcmFileName is an intentional copy; updaed by FindFile() below.
 
    // Assemble search path:   
 #ifdef R__WIN32
@@ -881,15 +851,63 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
       }
    }
 
-   if (!gSystem->FindFile(searchPath, pcmFileName)) {
-      ::Error("TCling::RegisterModule", "cannot find dictionary module %s in %s",
-            ROOT::TMetaUtils::GetModuleFileName(modulename).c_str(), searchPath.Data());
-   } else {
-      if (gDebug > 5) {
-         ::Info("TCling::RegisterModule", "Loading PCM %s", pcmFileName.Data());
+   if (!gSystem->FindFile(searchPath, pcmFileName))
+      return kFALSE;
+
+   if (gDebug > 5)
+      ::Info("TCling::LoadPCM", "Loading PCM %s", pcmFileName.Data());
+   clang::CompilerInstance* CI = fInterpreter->getCI();
+   ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void TCling::RegisterModule(const char* modulename, const char** headers,
+                            const char** includePaths, const char** macroDefines,
+                            const char** macroUndefines, void (*triggerFunc)())
+{
+   // Inject the module named "modulename" into cling; load all headers.
+   // headers is a 0-terminated array of header files to #include after
+   // loading the module. The module is searched for in all $LD_LIBRARY_PATH
+   // entries (or %PATH% on Windows).
+   // This function gets called by the static initialization of dictionary
+   // libraries.
+   // the value of 'triggerFunc' is used to find the shared library location.
+
+   TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
+
+   for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
+      TCling::AddIncludePath(*inclPath);
+   }
+   if (!getenv("ROOT_MODULES")) {
+      for (const char** macroD = macroDefines; *macroD; ++macroD) {
+         TString macroPP("#define ");
+         macroPP += *macroD;
+         // comes in as "A=B" from "-DA=B", need "#define A B":
+         Ssiz_t posAssign = macroPP.Index('=');
+         if (posAssign != kNPOS) {
+            macroPP[posAssign] = ' ';
+         }
+         fInterpreter->declare(macroPP.Data());
       }
-      clang::CompilerInstance* CI = fInterpreter->getCI();
-      ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
+      for (const char** macroU = macroUndefines; *macroU; ++macroU) {
+         TString macroPP("#undef ");
+         macroPP += *macroU;
+         // comes in as "A=B" from "-DA=B", need "#define A B":
+         Ssiz_t posAssign = macroPP.Index('=');
+         if (posAssign != kNPOS) {
+            macroPP[posAssign] = ' ';
+         }
+         fInterpreter->declare(macroPP.Data());
+      }
+   }
+
+   // Don't load any other PCM for ROOT if we have loaded the single ROOT PCM.
+   if (!fHaveSinglePCM || strncmp(modulename, "G__", 3)) {
+      if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
+         ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
+              ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
+      }
    }
 
    bool oldValue = false;

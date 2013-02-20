@@ -97,6 +97,7 @@ private: // Data Members
 
    void*           fPrevLoadedDynLibInfo; // Internal info to mark the last loaded libray.
    TClingCallbacks* fClingCallbacks; // cling::Interpreter owns it.
+   Bool_t          fHaveSinglePCM; // Whether a single ROOT PCM was provided
 
 public: // Public Interface
 
@@ -378,6 +379,9 @@ private: // Private Utility Functions
 
    void UpdateListOfLoadedSharedLibraries();
    void RegisterLoadedSharedLibrary(const char* name);
+
+   bool LoadPCM(TString pcmFileName, const char** headers,
+                void (*triggerFunc)()) const;
 
    ClassDef(TCling, 0) //Interface to CINT C/C++ interpreter
 };
