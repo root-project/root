@@ -1011,7 +1011,6 @@ releasenotes:
 
 onepcm: all
 	@$(MAKEONEPCM)
-	@$(MAKE)
 
 ifeq ($(BUILDX11),yes)
 ifeq ($(BUILDASIMAGE),yes)

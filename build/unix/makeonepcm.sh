@@ -153,7 +153,10 @@ find $srcdir -path '*/test' -prune -o \
 mv alldefs.h include/allLinkDef.h
 
 # generate one large pcm
-rm -f core/base/src/allDict.* lib/allDict_rdict.pcm
-core/utils/src/rootcling_tmp -1 -f core/base/src/allDict.cxx -c -I$srcdir -Iinclude allHeaders.h include/allLinkDef.h
+rm -f allDict.* lib/allDict_rdict.pcm
+core/utils/src/rootcling_tmp -1 -f allDict.cxx -c -I$srcdir -Iinclude allHeaders.h include/allLinkDef.h
+
+# actually we won't need the allDict.[h,cxx] files
+rm -f allDict.*
 
 exit $?
