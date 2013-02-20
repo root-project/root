@@ -126,8 +126,7 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
 
     # float types
       c.fFloat = 0.123;     self.assertEqual( round( c.GetFloat()  - 0.123, 5 ), 0 )
-      if not FIXCLING: # pending #100433
-         c.SetFloat( 0.234 );  self.assertEqual( round( c.fFloat      - 0.234, 5 ), 0 )
+      c.SetFloat( 0.234 );  self.assertEqual( round( c.fFloat      - 0.234, 5 ), 0 )
       c.fDouble = 0.456;    self.assertEqual( round( c.GetDouble() - 0.456, 8 ), 0 )
       c.SetDouble( 0.567 ); self.assertEqual( round( c.fDouble     - 0.567, 8 ), 0 )
 
