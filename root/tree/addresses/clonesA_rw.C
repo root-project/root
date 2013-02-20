@@ -108,7 +108,9 @@ void clonesA_Event_r(bool verify=true)
 }
  
 void clonesA_rw() {
+#ifndef ClingWorkAroundMissingDynamicScope
    if (!gSystem->CompileMacro("clonesA_Event.cxx","k")) gApplication->Terminate(1);  // compile shared lib
+#endif
    clonesA_Event_w();                            // write the tree
    clonesA_Event_r();                            // read back the tree
 }

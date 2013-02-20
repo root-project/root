@@ -45,6 +45,10 @@ headerTest: headerTest.log
 
 clonesA_Event_cxx.$(DllSuf): clonesA_Event.h clonesA_Event.cxx
 
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
+clonesA.log: CALLROOTEXE += -e 'gSystem->Load("clonesA_Event_cxx");' 
+endif
+
 clonesA.log: clonesA_rw.C clonesA_Event_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l clonesA_rw.C > clonesA.log 2>&1
 
