@@ -1062,7 +1062,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
       = ModuleMap.findOrCreateModule(moduleName.str().c_str(),
                                      0 /*ActiveModule*/,
                                      false /*Framework*/, false /*Explicit*/);
-   if (!modCreation.second) {
+   if (!modCreation.second && !strstr(moduleFileName, "/allDict_rdict.pcm")) {
       std::cerr << "TMetaUtils::declareModuleMap: "
          "Duplicate definition of dictionary module "
                 << moduleFileName << std::endl;

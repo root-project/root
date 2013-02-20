@@ -876,7 +876,7 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
    // libraries.
    // the value of 'triggerFunc' is used to find the shared library location.
 
-   if (fHaveSinglePCM && strncmp(modulename, "G__", 3))
+   if (fHaveSinglePCM && !strncmp(modulename, "G__", 3))
       modulename = "allDict";
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
