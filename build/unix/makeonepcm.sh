@@ -102,6 +102,42 @@ find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
  -e /TPythia8.h/d \
  -e /TPythia8Decayer.h/d \
  -e /TResponseTable.h/d \
+ -e /TGQt.h/d \
+ -e /TObjectExecute.h/d \
+ -e /TQMimeTypes.h/d \
+ -e /TQUserEvent.h/d \
+ -e /TQtApplication.h/d \
+ -e /TQtBrush.h/d \
+ -e /TQtCanvasPainter.h/d \
+ -e /TQtClientFilter.h/d \
+ -e /TQtClientGuard.h/d \
+ -e /TQtClientWidget.h/d \
+ -e /TQtEmitter.h/d \
+ -e /TQtEvent.h/d \
+ -e /TQtEventQueue.h/d \
+ -e /TQtLock.h/d \
+ -e /TQtLockGuard.h/d \
+ -e /TQtMarker.h/d \
+ -e /TQtPadFont.h/d \
+ -e /TQtPen.h/d \
+ -e /TQtRConfig.h/d \
+ -e /TQtRootApplication.h/d \
+ -e /TQtRootSlot.h/d \
+ -e /TQtSymbolCodec.h/d \
+ -e /TQtTimer.h/d \
+ -e /TQtUtil.h/d \
+ -e /TQtWidget.h/d \
+ -e /TVirtualX.interface.h/d \
+ -e /TWaitCondition.h/d \
+ -e /TQApplication.h/d \
+ -e /TQCanvasImp.h/d \
+ -e /TQCanvasMenu.h/d \
+ -e /TQRootApplication.h/d \
+ -e /TQRootCanvas.cw/d \
+ -e /TQRootCanvas.h/d \
+ -e /TQRootDialog.h/d \
+ -e /TQRootGuiFactory.h/d \
+ -e /TQtRootGuiFactory.h/d \
  -e /TTable.h/d \
  -e /TTable3Points.h/d \
  -e /TTableDescriptor.h/d \
