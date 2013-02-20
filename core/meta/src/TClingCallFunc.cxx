@@ -119,13 +119,13 @@ llvm::GenericValue TClingCallFunc::convertIntegralToArg(const cling::Value& val,
             result.FloatVal = (float)intVal.getZExtValue();               
 
          return result;
-         case llvm::Type::DoubleTyID :
-            if (ClangQT->isSignedIntegerType())
-               result.DoubleVal = (double)intVal.getSExtValue();
-            else
-               result.DoubleVal = (double)intVal.getZExtValue();               
+      case llvm::Type::DoubleTyID :
+         if (ClangQT->isSignedIntegerType())
+            result.DoubleVal = (double)intVal.getSExtValue();
+         else
+            result.DoubleVal = (double)intVal.getZExtValue();               
 
-            return result;
+         return result;
       case llvm::Type::PointerTyID :
          if (ClangQT->isSignedIntegerType())
             return llvm::PTOGV((void*)intVal.getSExtValue());
@@ -148,6 +148,17 @@ llvm::GenericValue TClingCallFunc::convertIntegralToArg(const cling::Value& val,
          return val.getGV();
       }
       break;
+   }
+
+   case llvm::Type::DoubleTyID: {
+      switch (targetType->getTypeID()) {
+      case llvm::Type::FloatTyID :
+         result.FloatVal = (float)val.getGV().DoubleVal;
+         return result;
+
+      default:
+         return val.getGV();
+      }
    }
 
    default : 
