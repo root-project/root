@@ -128,6 +128,22 @@ private:
    ClassDef(TGLManager, 0)// Interface for OpenGL manager
 };
 
+namespace Rgl {
+
+//I would prefer to use C++11's strong typed enums insted, but ...
+enum EFormatOptions
+{
+   kNone         = 0,
+   kDoubleBuffer = 1,
+   kDepth        = 2,
+   kAccum        = 4,
+   kStencil      = 8,
+   kStereo       = 16,
+   kMultiSample  = 32
+};
+
+}
+
 class TGLContext;
 class TGLFormat;
 

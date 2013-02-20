@@ -56,17 +56,17 @@ TGLFormat::TGLFormat() :
 }
 
 //______________________________________________________________________________
-TGLFormat::TGLFormat(EFormatOptions opt) :
-   fDoubleBuffered(opt & kDoubleBuffer),
+TGLFormat::TGLFormat(Rgl::EFormatOptions opt) :
+   fDoubleBuffered(opt & Rgl::kDoubleBuffer),
    fStereo(kFALSE),
 #ifdef WIN32
-   fDepthSize(opt & kDepth ? 32 : 0),
+   fDepthSize(opt & Rgl::kDepth ? 32 : 0),
 #else
-   fDepthSize(opt & kDepth ? 16 : 0),//FIXFIX
+   fDepthSize(opt & Rgl::kDepth ? 16 : 0),//FIXFIX
 #endif
-   fAccumSize(opt & kAccum ? 8 : 0),     //I've never tested accumulation buffer size.
-   fStencilSize(opt & kStencil ? 8 : 0), //I've never tested stencil buffer size.
-   fSamples(opt & kMultiSample ? GetDefaultSamples() : 0)
+   fAccumSize(opt & Rgl::kAccum ? 8 : 0),     //I've never tested accumulation buffer size.
+   fStencilSize(opt & Rgl::kStencil ? 8 : 0), //I've never tested stencil buffer size.
+   fSamples(opt & Rgl::kMultiSample ? GetDefaultSamples() : 0)
 {
    //Define surface using options.
 }
