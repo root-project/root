@@ -1083,8 +1083,8 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
 
    } else if ( ti.Property() & G__BIT_ISENUM ) {
    // special case (CINT): represent enums as unsigned integers
-      if ( cpd == "&" && !isConst ) {
-         h = gConvFactories.find( "long&" );
+      if ( cpd == "&" ) {
+         h = isConst ? gConvFactories.find( "const long&" ) : gConvFactories.find( "long&" );
       } else
          h = gConvFactories.find( "UInt_t" );
    }
