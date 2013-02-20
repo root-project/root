@@ -12,6 +12,7 @@
 #ifndef ROOT_TGLFormat
 #define ROOT_TGLFormat
 
+#include "TVirtualGL.h"
 #include "Rtypes.h"
 
 #include <vector>
@@ -33,18 +34,6 @@
 
 class TGLFormat
 {
-public:
-   enum EFormatOptions
-   {
-      kNone         = 0,
-      kDoubleBuffer = 1,
-      kDepth        = 2,
-      kAccum        = 4,
-      kStencil      = 8,
-      kStereo       = 16,
-      kMultiSample  = 32
-   };
-
 private:
    Bool_t fDoubleBuffered;
    Bool_t fStereo;
@@ -60,7 +49,7 @@ private:
 
 public:
    TGLFormat();
-   TGLFormat(EFormatOptions options);
+   TGLFormat(Rgl::EFormatOptions options);
 
    //Virtual dtor only to supress warnings from g++ -
    //ClassDef adds virtual functions, so g++ wants virtual dtor.

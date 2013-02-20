@@ -31,9 +31,9 @@
 #include "QuartzText.h"
 #include "CocoaUtils.h"
 #include "MenuLoader.h"
+#include "TVirtualGL.h"
 #include "X11Events.h"
 #include "X11Buffer.h"
-#include "TGLFormat.h"
 #include "TGClient.h"
 #include "TGWindow.h"
 #include "TSystem.h"
@@ -3040,18 +3040,18 @@ Window_t TGCocoa::CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t hei
    for (size_type i = 0, e = formatComponents.size(); i < e; ++i) {
       const component_type &comp = formatComponents[i];
       
-      if (comp.first == TGLFormat::kDoubleBuffer) {
+      if (comp.first == Rgl::kDoubleBuffer) {
          attribs.push_back(NSOpenGLPFADoubleBuffer);
-      } else if (comp.first == TGLFormat::kDepth) {
+      } else if (comp.first == Rgl::kDepth) {
          attribs.push_back(NSOpenGLPFADepthSize);
          attribs.push_back(comp.second > 0 ? comp.second : 32);
-      } else if (comp.first == TGLFormat::kAccum) {
+      } else if (comp.first == Rgl::kAccum) {
          attribs.push_back(NSOpenGLPFAAccumSize);
          attribs.push_back(comp.second > 0 ? comp.second : 1);
-      } else if (comp.first == TGLFormat::kStencil) {
+      } else if (comp.first == Rgl::kStencil) {
          attribs.push_back(NSOpenGLPFAStencilSize);
          attribs.push_back(comp.second > 0 ? comp.second : 8);
-      } else if (comp.first == TGLFormat::kMultiSample) {
+      } else if (comp.first == Rgl::kMultiSample) {
          attribs.push_back(NSOpenGLPFAMultisample);
          attribs.push_back(NSOpenGLPFASampleBuffers);
          attribs.push_back(1);

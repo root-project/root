@@ -74,7 +74,7 @@ TGLWidget* TGLWidget::CreateDummy()
 {
    // Static constructor for creating widget with default pixel format.
 
-   TGLFormat format(TGLFormat::kNone);
+   TGLFormat format(Rgl::kNone);
 
    return Create(format, gClient->GetDefaultRoot(), kFALSE, kFALSE, 0, 1, 1);
 }
@@ -141,7 +141,7 @@ TGLWidget::TGLWidget(Window_t glw, const TGWindow* p, Bool_t selectInput)
    : TGFrame(gClient, glw, p),
      fGLContext(0),
      fWindowIndex(-1),
-     fGLFormat(TGLFormat::kNone),
+     fGLFormat(Rgl::kNone),
      fFromInit(kTRUE),
      fEventHandler(0)
 {
@@ -402,17 +402,17 @@ Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat &format
    std::vector<component_type>formatComponents;
 
    if (format.HasDepth())
-      formatComponents.push_back(component_type(TGLFormat::kDepth, format.GetDepthSize()));
+      formatComponents.push_back(component_type(Rgl::kDepth, format.GetDepthSize()));
    if (format.HasStencil())
-      formatComponents.push_back(component_type(TGLFormat::kStencil, format.GetStencilSize()));
+      formatComponents.push_back(component_type(Rgl::kStencil, format.GetStencilSize()));
    if (format.HasAccumBuffer())
-      formatComponents.push_back(component_type(TGLFormat::kAccum, format.GetAccumSize()));
+      formatComponents.push_back(component_type(Rgl::kAccum, format.GetAccumSize()));
    if (format.IsDoubleBuffered())
-      formatComponents.push_back(component_type(TGLFormat::kDoubleBuffer, 0));
+      formatComponents.push_back(component_type(Rgl::kDoubleBuffer, 0));
    if (format.IsStereo())
-      formatComponents.push_back(component_type(TGLFormat::kStereo, 0));
+      formatComponents.push_back(component_type(Rgl::kStereo, 0));
    if (format.HasMultiSampling())
-      formatComponents.push_back(component_type(TGLFormat::kMultiSample, format.GetSamples()));
+      formatComponents.push_back(component_type(Rgl::kMultiSample, format.GetSamples()));
 
    return gVirtualX->CreateOpenGLWindow(parent->GetId(), width, height, formatComponents);
 }
