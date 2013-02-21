@@ -1855,8 +1855,8 @@ bool SourceManager::isBeforeInTranslationUnit(SourceLocation LHS,
   // built-in is before non-built-in
   if (LIsBuiltins != RIsBuiltins)
     return LIsBuiltins;
-  assert(LIsBuiltins && RIsBuiltins &&
-         "Non-built-in locations must be rooted in the main file");
+  //assert(LIsBuiltins && RIsBuiltins &&
+  //       "Non-built-in locations must be rooted in the main file");
   // Both are in built-in buffers, but from different files. We just claim that
   // lower IDs come first.
   return LOffs.first < ROffs.first;
