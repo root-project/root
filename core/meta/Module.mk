@@ -44,7 +44,7 @@ include/%.h:    $(METADIRI)/%.h
 $(METADS):      $(METAH) $(METAL) $(ROOTCINTTMPDEP) $(LLVMDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(METADCLINGCXXFLAGS) $(METAH) $(METAL)
+		$(ROOTCINTTMP) -f $@ -c -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Ietc -Ietc/cling $(METADCLINGCXXFLAGS) $(METAH) cling/Interpreter/Interpreter.h cling/Interpreter/DynamicLookupRuntimeUniverse.h $(METAL)
 
 all-$(MODNAME): $(METAO) $(METADO)
 
@@ -72,3 +72,7 @@ ifeq ($(ARCH),win32gcc)
 CORELIBEXTRA += -lpsapi
 endif
 
+ifneq ($(CXX:g++=),$(CXX))
+METADOCXXFLAGS := -Wno-shadow -Wno-unused-parameter
+endif
+$(METADO): CXXFLAGS += -D__CLING__ -Ietc -Ietc/cling $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS))) $(METADOCXXFLAGS)

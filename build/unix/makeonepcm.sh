@@ -161,12 +161,17 @@ find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
  -e /ZIP.h/d \
  -e /ZDeflate.h/d \
  -e /ZTrees.h/d \
+ -e /TGX11.h/d \
+ -e /TGX11TTF.h/d \
 > all.h
+
+echo '#include "cling/Interpreter/DynamicLookupRuntimeUniverse.h"' >> all.h
 
 mv all.h include/allHeaders.h
 
+cxxflags="-D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Iinclude -Ietc -Ietc/cling"
 # generate the pch to test if all includes are consistent
-clang++ -x c++-header -Iinclude include/allHeaders.h -o include/allHeaders.h.pch
+clang++ -x c++-header $cxxflags include/allHeaders.h -o include/allHeaders.h.pch
 
 err=$?
 if [ $err -ne 0 ]; then
@@ -190,7 +195,7 @@ mv alldefs.h include/allLinkDef.h
 
 # generate one large pcm
 rm -f allDict.* lib/allDict_rdict.pcm
-core/utils/src/rootcling_tmp -1 -f allDict.cxx -c -I$srcdir -Iinclude allHeaders.h include/allLinkDef.h
+core/utils/src/rootcling_tmp -1 -f allDict.cxx -c $cxxflags -I$srcdir allHeaders.h include/allLinkDef.h
 
 # actually we won't need the allDict.[h,cxx] files
 rm -f allDict.*
