@@ -416,19 +416,16 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType_ )
          result = new TRootObjectPtrExecutor( klass );
       else
          result = new TRootObjectExecutor( klass );
-   } else {
+   } else if ( gInterpreter->ClassInfo_IsEnum( realType.c_str() ) ) {
    // could still be an enum ...
-   //      if ( ti.Property() & G__BIT_ISENUM )
-   //         h = gExecFactories.find( "UInt_t" );
-   //      else {
-      if ( cpd != "" ) {
-         std::stringstream s;
-         s << "creating executor for unknown type \"" << fullType << "\"" << std::ends;
-         PyErr_Warn( PyExc_RuntimeWarning, (char*)s.str().c_str() );
-         h = gExecFactories.find( "void*" );      // "user knows best"
-      } else
-         h = gExecFactories.find( "void" );       // fails on use
-      //      }
+      h = gExecFactories.find( "UInt_t" );
+   } else {
+   // handle (with warning) unknown types
+      std::stringstream s;
+      s << "creating executor for unknown type \"" << fullType << "\"" << std::ends;
+      PyErr_Warn( PyExc_RuntimeWarning, (char*)s.str().c_str() );
+   // void* may work ("user knows best"), void will fail on use of return value
+      h = (cpd == "") ? gExecFactories.find( "void" ) : gExecFactories.find( "void*" );
    }
 
    if ( ! result && h != gExecFactories.end() )

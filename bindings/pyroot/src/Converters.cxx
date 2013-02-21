@@ -183,17 +183,16 @@ PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TConstLongRefConverter::SetArg(
-      PyObject* pyobject, TParameter_t& para, CallFunc_t* /* func */, Long_t )
+      PyObject* pyobject, TParameter_t& para, CallFunc_t* /* func*/, Long_t )
 {
 // convert <pyobject> to C++ const long&, set arg for call using buffer
    para.fLong = fBuffer = PyLong_AsLong( pyobject );
    if ( para.fLong == -1 && PyErr_Occurred() )
       return kFALSE;
 
-// (CLING) TODO: there's no gInterpreter->CallFunc_SetArgRef ...
-//   else if ( func )
-//      func->SetArgRef( fBuffer );
-//   return kTRUE;
+   /*else if ( func )
+      gInterpreter->CallFunc_SetArg( func, fBuffer );
+   return kTRUE;*/
    PyErr_SetString( PyExc_TypeError, "NO REF SUPPORT IN CLING!" );
    return kFALSE;
 }
@@ -1117,13 +1116,12 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType_, Long_
       else if ( cpd == "" )               // by value
          result = new TStrictRootObjectConverter( klass, kTRUE );
 
-   // TODO: figure out enums
-   //   } else if ( ti.Property() & G__BIT_ISENUM ) {
-   //   // special case (CINT): represent enums as unsigned integers
-   //      if ( cpd == "&" && !isConst ) {
-   //         h = gConvFactories.find( "long&" );
-   //      } else
-   //         h = gConvFactories.find( "UInt_t" );
+   } else if ( gInterpreter->ClassInfo_IsEnum( realType.c_str() ) ) {
+   // special case (Cling): represent enums as unsigned integers
+      if ( cpd == "&" )
+         h = isConst ? gConvFactories.find( "const long&" ) : gConvFactories.find( "long&" );
+      else
+         h = gConvFactories.find( "UInt_t" );
    }
 
    if ( ! result && h != gConvFactories.end() )
