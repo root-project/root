@@ -691,20 +691,46 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname )
 // a typedef (if any).
    std::string tclean = TClassEdit::CleanType( tname.c_str() );
 
-// CLING WORKAROUND -- see: #100392
-   std::string::size_type pos = tclean.rfind("::size_type");
-   if ( pos != std::string::npos )
-      tclean = "unsigned int";
+// CLING WORKAROUND -- see: #100392; this does NOT attempt to cover all cases,
+//   as hopefully the bug will be resolved one way or another
 
-   pos = tclean.rfind("::value_type");
-   if ( pos != std::string::npos ) {
-      std::string::size_type pos1 = tclean.find( '<' );
-      std::string::size_type pos2 = tclean.find( ",allocator" );
-      if (pos1 != std::string::npos)
-         tclean = (tclean.substr(0, 5) == "const" ? "const " : "") +
-                   tclean.substr( pos1+1, pos2-pos1-1 ) +
-                   tclean.substr( pos + 12, std::string::npos );
+   if ( 5 < tclean.size() ) { // can't rely on finding std:: as it gets
+                              // stripped in many cases (for CINT history?)
+
+   // size_type is guessed to be an integer unsigned type
+      std::string::size_type pos = tclean.rfind( "::size_type" );
+      if ( pos != std::string::npos )
+         return "unsigned int";
+
+   // determine any of the types that require extraction of the template
+   // parameter type names, and whether a const is needed (const can come
+   // in "implicitly" from the typedef, or explicitly from tname)
+      bool isConst = false, isReference = false;
+      if ( (pos = tclean.rfind( "::const_reference" )) != std::string::npos ) {
+         isConst = true;
+         isReference = true;
+      } else {
+         isConst = tclean.substr(0, 5) == "const";
+         if ( (pos = tclean.rfind( "::value_type" )) == std::string::npos ) {
+            pos = tclean.rfind( "::reference" );
+            if ( pos != std::string::npos ) isReference = true;
+         }
+      }
+
+      if ( pos != std::string::npos ) {
+      // extract the internals of the template name; take care of the extra
+      // default parameters for e.g. std::vector
+         std::string::size_type pos1 = tclean.find( '<' );
+         std::string::size_type pos2 = tclean.find( ",allocator" );
+         if ( pos2 == std::string::npos ) pos2 = tclean.rfind( '>' );
+         if ( pos1 != std::string::npos ) {
+            tclean = (isConst ? "const " : "") +
+                     tclean.substr( pos1+1, pos2-pos1-1 ) +
+                     (isReference ? "&" : Compound( tclean ));
+         }
+      }
    }
+
 // -- END CLING WORKAROUND
 
    return TClassEdit::ResolveTypedef( tclean.c_str(), true );

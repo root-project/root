@@ -144,7 +144,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
          return kFALSE;
       }
 
-   // CLING WORKAROUND --
+   // CLING WORKAROUND -- DOES NOT WORK ...
    // See: #100392. If the template arguments exist in function arguments,
    // they are not filled in and the method won't be found.
       std::string::size_type pos = fullType.find("<_Tp,_Alloc>");
@@ -158,6 +158,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
                        fullType.substr( pos + 12, std::string::npos );
          }
       }
+      fullType = Utility::ResolveTypedef( fullType );
    // -- END CLING WORKAROUND
 
    // setup call string
