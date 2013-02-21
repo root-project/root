@@ -693,6 +693,19 @@ TCling::TCling(const char *name, const char *title)
    static llvm::raw_fd_ostream fMPOuts (STDOUT_FILENO, /*ShouldClose*/false);
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
 
+   if (getenv("ROOT_MODULES")) {
+      fHaveSinglePCM =
+         LoadPCM(ROOT::TMetaUtils::GetModuleFileName("allDict").c_str(),
+                 0 /*headers*/, 0 /*triggerFunc*/);
+   }
+   if (fHaveSinglePCM)
+      ::Info("TCling::TCling", "Using one PCM.");
+
+   // set the gModuleHeaderInfoBuffer pointer
+   TCling__RegisterModule(0, 0, 0, 0, 0, 0);
+
+   TCling::InitializeDictionaries();
+   
    // For the list to also include string, we have to include it now.
    fInterpreter->declare("#include \"Rtypes.h\"\n"
                          "#include <string>\n"
@@ -714,16 +727,6 @@ TCling::TCling(const char *name, const char *title)
 
    TClassEdit::Init(*fInterpreter,*fNormalizedCtxt);
 
-   fHaveSinglePCM = LoadPCM(ROOT::TMetaUtils::GetModuleFileName("allDict").c_str(),
-                            0 /*headers*/, 0 /*triggerFunc*/);
-   if (fHaveSinglePCM)
-      TCling::Info("TCling", "Using one PCM.");
-
-   // set the gModuleHeaderInfoBuffer pointer
-   TCling__RegisterModule(0, 0, 0, 0, 0, 0);
-
-   TCling::InitializeDictionaries();
-   
    // Initialize the CINT interpreter interface.
    fMore      = 0;
    fPrompt[0] = 0;
@@ -749,6 +752,7 @@ TCling::TCling(const char *name, const char *title)
    TCling::AddIncludePath(include);
 
    fInterpreter->enableDynamicLookup();
+
    // Attach cling callbacks
    fClingCallbacks = new TClingCallbacks(fInterpreter);
    fInterpreter->setCallbacks(fClingCallbacks);
