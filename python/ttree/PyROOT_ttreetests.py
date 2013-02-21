@@ -26,9 +26,6 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
    def test1WriteStdVector( self ):
       """Test writing of a single branched TTree with an std::vector<double>"""
 
-      if FIXCLING:
-         return
-
       f = TFile( self.fname, 'RECREATE' )
       t = TTree( self.tname, self.ttitle )
       v = std.vector( 'double' )()

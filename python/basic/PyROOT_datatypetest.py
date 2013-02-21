@@ -31,17 +31,19 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
       c = ClassWithData()
       self.failUnless( isinstance( c, ClassWithData ) )
 
-      self.assertEqual( c.fBool, False )
-      self.assertEqual( c.fChar,   'a' )
-      self.assertEqual( c.fUChar,  'c' )
-      self.assertEqual( c.fShort,  -11 )
-      self.assertEqual( c.fUShort,  11 )
-      self.assertEqual( c.fInt,    -22 )
-      self.assertEqual( c.fUInt,    22 )
-      self.assertEqual( c.fLong,   pylong(-33) )
-      self.assertEqual( c.fULong,  pylong( 33) )
-      self.assertEqual( round( c.fFloat  + 44., 5 ), 0 )
-      self.assertEqual( round( c.fDouble + 55., 8 ), 0 )
+      self.assertEqual( c.fBool,  False )
+      self.assertEqual( c.fChar,    'a' )
+      self.assertEqual( c.fUChar,   'c' )
+      self.assertEqual( c.fShort,   -11 )
+      self.assertEqual( c.fUShort,   11 )
+      self.assertEqual( c.fInt,     -22 )
+      self.assertEqual( c.fUInt,     22 )
+      self.assertEqual( c.fLong,    pylong(-33) )
+      self.assertEqual( c.fULong,   pylong( 33) )
+      self.assertEqual( c.fLong64,  pylong(-44) )
+      self.assertEqual( c.fULong64, pylong( 44) )
+      self.assertEqual( round( c.fFloat  + 55., 5 ), 0 )
+      self.assertEqual( round( c.fDouble + 66., 8 ), 0 )
 
       for i in range(N):
          self.assertEqual( c.fBoolArray[i],         i%2 )
@@ -115,7 +117,7 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
       self.failUnlessRaises( TypeError, c.SetUChar, "string" )
 
     # integer types
-      names = [ 'Short', 'UShort', 'Int', 'UInt', 'Long', 'ULong' ]
+      names = [ 'Short', 'UShort', 'Int', 'UInt', 'Long', 'ULong', 'Long64', 'ULong64' ]
       for i in range(len(names)):
          setattr( c, 'f'+names[i], i )
          self.assertEqual( getattr( c, 'Get'+names[i] )(), i )
@@ -136,7 +138,7 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
     # integer arrays
       a = range(N)
       atypes = [ 'h', 'H', 'i', 'I', 'l', 'L' ]
-      for j in range(len(names)):
+      for j in range(len(names) - 2):   # skip Long64 and ULong64
          b = array( atypes[j], a )
          setattr( c, 'f'+names[j]+'Array', b )    # buffer copies
          for i in range(N):
@@ -156,8 +158,9 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
       c = ClassWithData()
       self.failUnless( isinstance( c, ClassWithData ) )
 
-      self.assertRaises( ValueError, call, c, 'fUInt',  -1  )
-      self.assertRaises( ValueError, call, c, 'fULong', -1  )
+      self.assertRaises( ValueError, call, c, 'fUInt',    -1 )
+      self.assertRaises( ValueError, call, c, 'fULong',   -1 )
+      self.assertRaises( ValueError, call, c, 'fULong64', -1 )
 
    def test4TypeConversions( self ):
       """Test conversions between builtin types"""
@@ -179,32 +182,42 @@ class DataTypes2ClassDataTestCase( MyTestCase ):
 
       c = ClassWithData()
 
-      self.assertEqual( ClassWithData.sChar,    's' )
-      self.assertEqual( c.sChar,                's' )
-      self.assertEqual( c.sUChar,               'u' )
-      self.assertEqual( ClassWithData.sUChar,   'u' )
-      self.assertEqual( ClassWithData.sShort,  -101 )
-      self.assertEqual( c.sShort,              -101 )
-      self.assertEqual( c.sUShort,              255 )
-      self.assertEqual( ClassWithData.sUShort,  255 )
-      self.assertEqual( ClassWithData.sInt,    -202 )
-      self.assertEqual( c.sInt,                -202 )
-      self.assertEqual( c.sUInt,                202 )
-      self.assertEqual( ClassWithData.sUInt,    202 )
-      self.assertEqual( ClassWithData.sLong,   pylong(-303) )
-      self.assertEqual( c.sLong,               pylong(-303) )
-      self.assertEqual( c.sULong,              pylong( 303) )
-      self.assertEqual( ClassWithData.sULong,  pylong( 303) )
-      self.assertEqual( round( ClassWithData.sFloat  + 404., 5 ), 0 )
-      self.assertEqual( round( c.sFloat              + 404., 5 ), 0 )
-      self.assertEqual( round( ClassWithData.sDouble + 505., 8 ), 0 )
-      self.assertEqual( round( c.sDouble             + 505., 8 ), 0 )
+      self.assertEqual( c.sBool,               False )
+      self.assertEqual( ClassWithData.sBool,   False )
+      self.assertEqual( ClassWithData.sChar,     's' )
+      self.assertEqual( c.sChar,                 's' )
+      self.assertEqual( c.sUChar,                'u' )
+      self.assertEqual( ClassWithData.sUChar,    'u' )
+      self.assertEqual( ClassWithData.sShort,   -101 )
+      self.assertEqual( c.sShort,               -101 )
+      self.assertEqual( c.sUShort,               255 )
+      self.assertEqual( ClassWithData.sUShort,   255 )
+      self.assertEqual( ClassWithData.sInt,     -202 )
+      self.assertEqual( c.sInt,                 -202 )
+      self.assertEqual( c.sUInt,                 202 )
+      self.assertEqual( ClassWithData.sUInt,     202 )
+      self.assertEqual( ClassWithData.sLong,    pylong(-303) )
+      self.assertEqual( c.sLong,                pylong(-303) )
+      self.assertEqual( c.sULong,               pylong( 303) )
+      self.assertEqual( ClassWithData.sULong,   pylong( 303) )
+      self.assertEqual( ClassWithData.sLong64,  pylong(-404) )
+      self.assertEqual( c.sLong64,              pylong(-404) )
+      self.assertEqual( c.sULong64,             pylong( 404) )
+      self.assertEqual( ClassWithData.sULong64, pylong( 404) )
+      self.assertEqual( round( ClassWithData.sFloat  + 505., 5 ), 0 )
+      self.assertEqual( round( c.sFloat              + 505., 5 ), 0 )
+      self.assertEqual( round( ClassWithData.sDouble + 606., 8 ), 0 )
+      self.assertEqual( round( c.sDouble             + 606., 8 ), 0 )
 
    def test2WriteAccess( self ):
       """Test write access to class public data and verify values"""
 
       c = ClassWithData()
 
+      ClassWithData.sBool                    = True
+      self.assertEqual( c.sBool,               True )
+      c.sBool                                = False
+      self.assertEqual( ClassWithData.sBool,   False )
       ClassWithData.sChar                    =  'a'
       self.assertEqual( c.sChar,                'a' )
       c.sChar                                =  'b'
@@ -243,6 +256,16 @@ class DataTypes2ClassDataTestCase( MyTestCase ):
       self.assertEqual( ClassWithData.sULong,  pylong( 678) )
       self.assertRaises( ValueError, setattr, ClassWithData, 'sULong', -1 )
       self.assertRaises( ValueError, setattr, c,             'sULong', -1 )
+      ClassWithData.sLong64                    = pylong(-90)
+      self.assertEqual( c.sLong64,               pylong(-90) )
+      c.sLong64                                = pylong( 901)
+      self.assertEqual( ClassWithData.sLong64,   pylong( 901) )
+      ClassWithData.sULong64                   = pylong( 901)
+      self.assertEqual( c.sULong64,              pylong( 901) )
+      c.sULong64                               = pylong( 321)
+      self.assertEqual( ClassWithData.sULong64,  pylong( 321) )
+      self.assertRaises( ValueError, setattr, ClassWithData, 'sULong64', -1 )
+      self.assertRaises( ValueError, setattr, c,             'sULong64', -1 )
       ClassWithData.sFloat                   = -3.1415
       self.assertEqual( round( c.sFloat, 5 ),  -3.1415 )
       c.sFloat                               =  3.1415

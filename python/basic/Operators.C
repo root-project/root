@@ -5,8 +5,6 @@
   Last: 05/20/10
 */
 
-#include <iostream>
-
 class Number  {
 public:
    Number() { m_int = 0; }
