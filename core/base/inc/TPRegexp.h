@@ -53,6 +53,8 @@ protected:
    PCREPriv_t *fPriv;
    UInt_t      fPCREOpts;
 
+   static Bool_t fgThrowAtCompileError;
+
    void     Compile();
    void     Optimize();
    UInt_t   ParseMods(const TString &mods) const;
@@ -73,6 +75,8 @@ public:
    TPRegexp(const TPRegexp &p);
    virtual ~TPRegexp();
 
+   Bool_t     IsValid() const;
+
    Int_t      Match(const TString &s, const TString &mods="",
                     Int_t start=0, Int_t nMaxMatch=10, TArrayI *pos=0);
    TObjArray *MatchS(const TString &s, const TString &mods="",
@@ -88,6 +92,9 @@ public:
    TString GetModifiers() const;
 
    TPRegexp &operator=(const TPRegexp &p);
+
+   static Bool_t GetThrowAtCompileError();
+   static void   SetThrowAtCompileError(Bool_t throwp);
 
    ClassDef(TPRegexp,0)  // Perl Compatible Regular Expression Class
 };

@@ -32,6 +32,7 @@
 #include <pcre.h>
 
 #include <vector>
+#include <stdexcept>
 
 struct PCREPriv_t {
    pcre       *fPCRE;
@@ -42,6 +43,8 @@ struct PCREPriv_t {
 
 
 ClassImp(TPRegexp)
+
+Bool_t TPRegexp::fgThrowAtCompileError = kFALSE;
 
 //______________________________________________________________________________
 TPRegexp::TPRegexp()
@@ -207,8 +210,15 @@ void TPRegexp::Compile()
                                &errstr, &patIndex, 0);
 
    if (!fPriv->fPCRE) {
-      Error("Compile", "compilation of TPRegexp(%s) failed at: %d because %s",
-            fPattern.Data(), patIndex, errstr);
+      if (fgThrowAtCompileError) {
+         throw std::runtime_error
+            (TString::Format("TPRegexp::Compile() compilation of TPRegexp(%s) failed at: %d because %s",
+                             fPattern.Data(), patIndex, errstr).Data());
+      } else {
+         Error("Compile", "compilation of TPRegexp(%s) failed at: %d because %s",
+               fPattern.Data(), patIndex, errstr);
+         return;
+      }
    }
 
    if (fPriv->fPCREExtra || (fPCREOpts & kPCRE_OPTIMIZE))
@@ -471,6 +481,33 @@ Int_t TPRegexp::Substitute(TString &s, const TString &replacePattern,
    return SubstituteInternal(s, replacePattern, start, nMaxMatch, kTRUE);
 }
 
+
+//______________________________________________________________________________
+Bool_t TPRegexp::IsValid() const
+{
+   // Returns true if underlying PCRE structure has been successfully
+   // generated via regexp compilation.
+
+   return fPriv->fPCRE != 0;
+}
+
+//______________________________________________________________________________
+Bool_t TPRegexp::GetThrowAtCompileError()
+{
+   // Get value of static flag controlling whether exception should be thrown upon an
+   // error during regular expression compilation by the PCRE engine.
+
+   return fgThrowAtCompileError;
+}
+
+//______________________________________________________________________________
+void TPRegexp::SetThrowAtCompileError(Bool_t throwp)
+{
+   // Set static flag controlling whether exception should be thrown upon an
+   // error during regular expression compilation by the PCRE engine.
+
+   fgThrowAtCompileError = throwp;
+}
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
