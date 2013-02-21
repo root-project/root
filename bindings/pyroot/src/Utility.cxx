@@ -690,6 +690,23 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname )
 // Helper; captures common code needed to find the real class name underlying
 // a typedef (if any).
    std::string tclean = TClassEdit::CleanType( tname.c_str() );
+
+// CLING WORKAROUND -- see: #100392
+   std::string::size_type pos = tclean.rfind("::size_type");
+   if ( pos != std::string::npos )
+      tclean = "unsigned int";
+
+   pos = tclean.rfind("::value_type");
+   if ( pos != std::string::npos ) {
+      std::string::size_type pos1 = tclean.find( '<' );
+      std::string::size_type pos2 = tclean.find( ",allocator" );
+      if (pos1 != std::string::npos)
+         tclean = (tclean.substr(0, 5) == "const" ? "const " : "") +
+                   tclean.substr( pos1+1, pos2-pos1-1 ) +
+                   tclean.substr( pos + 12, std::string::npos );
+   }
+// -- END CLING WORKAROUND
+
    return TClassEdit::ResolveTypedef( tclean.c_str(), true );
 }
 

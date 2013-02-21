@@ -1033,7 +1033,7 @@ Bool_t PyROOT::TPyObjectConverter::ToMemory( PyObject* value, void* address )
 
 
 //- factories -----------------------------------------------------------------
-PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType_, Long_t user )
+PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t user )
 {
 // The matching of the fulltype to a converter factory goes through up to five levels:
 //   1) full, exact match
@@ -1045,24 +1045,6 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType_, Long_
 // If all fails, void is used, which will generate a run-time warning when used.
 
 // an exactly matching converter is best
-   std::string fullType = TClassEdit::CleanType( fullType_.c_str() );
-
-// CLING WORKAROUND -- see: #100392
-   std::string::size_type pos = fullType.rfind("::size_type");
-   if ( pos != std::string::npos )
-      fullType = "unsigned int";
-
-   pos = fullType.rfind("::value_type");
-   if ( pos != std::string::npos ) {
-      std::string::size_type pos1 = fullType.find( '<' );
-      std::string::size_type pos2 = fullType.find( ",allocator" );
-      if (pos1 != std::string::npos)
-         fullType = (fullType.substr(0, 5) == "const" ? "const " : "") +
-                    fullType.substr( pos1+1, pos2-pos1-1 ) +
-                    fullType.substr( pos + 12, std::string::npos );
-   }
-// -- END CLING WORKAROUND
-
    ConvFactories_t::iterator h = gConvFactories.find( fullType );
    if ( h != gConvFactories.end() )
       return (h->second)( user );
