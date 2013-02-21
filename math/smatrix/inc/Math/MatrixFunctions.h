@@ -46,7 +46,9 @@
 #ifndef ROOT_Math_HelperOps
 #include "Math/HelperOps.h"
 #endif
-
+#ifndef ROOT_Math_CholeskyDecomp
+#include "Math/CholeskyDecomp.h"
+#endif
 
 namespace ROOT { 
 
