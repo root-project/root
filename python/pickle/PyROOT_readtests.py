@@ -32,13 +32,12 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
    def test1ReadTObjectDerived( self ):
       """Test reading of a histogram from a pickle file"""
 
-      if FIXCLING:
-         return
-
       def __doh1test( self, h1 ):
          self.assertEqual( h1.__class__, TH1F )
          self.assertEqual( h1.GetName(),     h1name )
          self.assertEqual( h1.GetTitle(),    h1title )
+         if FIXCLING:
+            return
          self.assertEqual( h1.GetNbinsX(),   h1nbins )
 
       h1 = pickle.load( self.in1 )
@@ -50,12 +49,12 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
    def test2ReadNonTObjectDerived( self ):
       """Test reading of an std::vector<double> from a pickle file"""
 
-      if FIXCLING:
-         return
-
       def __dovtest( self, v ):
          self.assertEqual( v.__class__, std.vector( 'double' ) )
          self.assertEqual( v.size(), Nvec )
+
+         if FIXCLING:
+            return
 
          for i in range( Nvec ):
             self.assertEqual( v[i], i*i )
@@ -69,11 +68,11 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
    def test3ReadSomeDataObject( self ):
       """Test reading of a user-defined object from a pickle file"""
 
-      if FIXCLING:
-         return
-
       def __dodtest( self, d ):
          self.assertEqual( d.__class__, SomeDataObject )
+
+         if FIXCLING:
+            return
 
          i = 0
          for entry in d.GetFloats():

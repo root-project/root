@@ -28,9 +28,6 @@ class PickleWritingSimpleObjectsTestCase( MyTestCase ):
    def test1WriteTObjectDerived( self ):
       """Test writing of a histogram into a pickle file"""
 
-      if FIXCLING:
-         return
-
       h1 = TH1F( h1name, h1title, h1nbins, h1binl, h1binh )
       h1.FillRandom( 'gaus', h1entries )
 
@@ -39,9 +36,6 @@ class PickleWritingSimpleObjectsTestCase( MyTestCase ):
 
    def test2WriteNonTObjectDerived( self ):
       """Test writing of an std::vector<double> into a pickle file"""
-
-      if FIXCLING:
-         return
 
       v = std.vector( 'double' )()
 
