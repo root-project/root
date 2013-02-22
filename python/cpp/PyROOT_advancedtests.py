@@ -146,15 +146,14 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
    def test1SingleInstantiatedTemplate( self ):
       """Test data member access for a templated class"""
 
-      if FIXCLING:
-         return
-
       t1 = T1( int )( 32 )
-      self.assertEqual( t1.value(), 32 )
+      if not FIXCLING:
+         self.assertEqual( t1.value(), 32 )
       self.assertEqual( t1.m_t1, 32 )
 
       t1.m_t1 = 41
-      self.assertEqual( t1.value(), 41 )
+      if not FIXCLING:
+         self.assertEqual( t1.value(), 41 )
       self.assertEqual( t1.m_t1, 41 )
 
    def test2TemplateInstantiatedTemplate( self ):

@@ -50,9 +50,8 @@ class STL1VectorTestCase( MyTestCase ):
       for i in range(self.N):
          a.push_back( i )
          self.assertEqual( a.size(), i+1 )
-         if not FIXCLING:
-            self.assertEqual( a[i], i )
-            self.assertEqual( a.at(i), i )
+         self.assertEqual( a[i], i )
+         self.assertEqual( a.at(i), i )
 
       self.assertEqual( a.size(), self.N )
       self.assertEqual( len(a), self.N )
