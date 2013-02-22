@@ -700,7 +700,7 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname )
    // size_type is guessed to be an integer unsigned type
       std::string::size_type pos = tclean.rfind( "::size_type" );
       if ( pos != std::string::npos )
-         return "unsigned int";
+         return "unsigned long";
 
    // determine any of the types that require extraction of the template
    // parameter type names, and whether a const is needed (const can come
