@@ -1,18 +1,21 @@
 // @(#)root/mathcore:$Id$
 // Author: L. Moneta,    11/2012
 
- /**********************************************************************
-  *                                                                    *
-  * Copyright (c) 2012 ROOT Foundation,  CERN/PH-SFT                   *
-  *                                                                    *
-  *                                                                    *
-  **********************************************************************/
+/*************************************************************************
+ * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
-/** 
-    Header file declaring functions for the evaluation of the Chebyshev polynomials
-    and the ChebyshevPol class which can be used for creating a TF1
-*/
-
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// Header file declaring functions for the evaluation of the Chebyshev  //
+// polynomials and the ChebyshevPol class which can be used for         //
+// creating a TF1.                                                      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_Math_ChebyshevPol
 #define ROOT_Math_ChebyshevPol
@@ -23,59 +26,55 @@ namespace ROOT {
 
    namespace Math { 
 
-      /// template recursive functions for defining evaluation of Chebishev polynomials 
+      /// template recursive functions for defining evaluation of Chebyshev polynomials 
       ///  T_n(x) and the series S(x) = Sum_i c_i* T_i(x)
-      namespace Chebyshev { 
+      namespace Chebyshev {
 
          template<int N> double T(double x) { 
             return  (2.0 * x * T<N-1>(x)) - T<N-2>(x);
          }
 
-         template<> double T<0> (double ) { return 1;}
-
-         template<> double T<1> (double x) { return x;}
-
-         template<> double T<2> (double x) { return 2.0*x*x -1;}
-
-         template<> double T<3> (double x) { return 4.0*x*x*x -3.0*x;}
-         
+         template<> double T<0> (double );
+         template<> double T<1> (double x);
+         template<> double T<2> (double x);
+         template<> double T<3> (double x);
 
          template<int N> double Eval(double x, const double * c) { 
             return c[N]*T<N>(x) + Eval<N-1>(x,c);
          }
       
-         template<> double Eval<0> (double , const double *c) { return c[0];}
-         template<> double Eval<1> (double x, const double *c) { return c[1]*x + c[0];}
-         template<> double Eval<2> (double x, const double *c) { return c[2]*Chebyshev::T<2>(x) + c[1]*x + c[0];}
-         template<> double Eval<3> (double x, const double *c) { return c[3]*Chebyshev::T<3>(x) + Eval<2>(x,c); }
+         template<> double Eval<0> (double , const double *c);
+         template<> double Eval<1> (double x, const double *c);
+         template<> double Eval<2> (double x, const double *c);
+         template<> double Eval<3> (double x, const double *c);
 
       } // end namespace Chebyshev
 
 
       // implementation of Chebyshev polynomials using all coefficients 
       // needed for creating TF1 functions
-      double Chebyshev0(double , double c0) { 
+      inline double Chebyshev0(double , double c0) { 
          return c0; 
       }
-      double Chebyshev1(double x, double c0, double c1) { 
+      inline double Chebyshev1(double x, double c0, double c1) { 
          return c0 + c1*x; 
       }
-      double Chebyshev2(double x, double c0, double c1, double c2) { 
+      inline double Chebyshev2(double x, double c0, double c1, double c2) { 
          return c0 + c1*x + c2*(2.0*x*x - 1.0); 
       }
-      double Chebyshev3(double x, double c0, double c1, double c2, double c3) { 
+      inline double Chebyshev3(double x, double c0, double c1, double c2, double c3) { 
          return c3*Chebyshev::T<3>(x) + Chebyshev2(x,c0,c1,c2);
       }
-      double Chebyshev4(double x, double c0, double c1, double c2, double c3, double c4) { 
+      inline double Chebyshev4(double x, double c0, double c1, double c2, double c3, double c4) { 
          return c4*Chebyshev::T<4>(x) + Chebyshev3(x,c0,c1,c2,c3);
       }
-      double Chebyshev5(double x, double c0, double c1, double c2, double c3, double c4, double c5) { 
+      inline double Chebyshev5(double x, double c0, double c1, double c2, double c3, double c4, double c5) { 
          return c5*Chebyshev::T<5>(x) + Chebyshev4(x,c0,c1,c2,c3,c4);
       }
 
 
       // implementation of Chebyshev polynomial with run time parameter  
-      double ChebyshevN(unsigned int n, double x, const double * c) {
+      inline double ChebyshevN(unsigned int n, double x, const double * c) {
          
          if (n == 0) return Chebyshev0(x,c[0]);
          if (n == 1) return Chebyshev1(x,c[0],c[1]);
@@ -126,7 +125,7 @@ namespace ROOT {
 
    } // end namespace Math
 
-} // end namespace ROOT{ 
+} // end namespace ROOT
 
 
 
