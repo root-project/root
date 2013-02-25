@@ -43,7 +43,8 @@
 
 #include "cling/Interpreter/Interpreter.h"
 
-// #define R__HAS_PATCH_TO_MAKE_EXPANSION_WORK_WITH_NON_CANONICAL_TYPE 1
+// Intentionally access non-public header ...
+#include "../../../interpreter/llvm/src/tools/clang/lib/Sema/HackForDefaultTemplateArg.h"
 
 //////////////////////////////////////////////////////////////////////////
 ROOT::TMetaUtils::TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh)
@@ -171,9 +172,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
       bool wantDefault = !TClassEdit::IsStdClass(TSTdecl->getName().str().c_str()) && 0 == TClassEdit::STLKind(TSTdecl->getName().str().c_str());
 
-#ifdef R__HAS_PATCH_TO_MAKE_EXPANSION_WORK_WITH_NON_CANONICAL_TYPE
       clang::Sema& S = interpreter.getCI()->getSema();
-#endif
       clang::TemplateDecl *Template = TSTdecl->getSpecializedTemplate()->getMostRecentDecl();
       clang::TemplateParameterList *Params = Template->getTemplateParameters();
       clang::TemplateParameterList::iterator Param = Params->begin(); // , ParamEnd = Params->end();
@@ -219,23 +218,21 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
             }
             clang::QualType SubTy = templateArg.getAsType();
 
-#ifdef R__HAS_PATCH_TO_MAKE_EXPANSION_WORK_WITH_NON_CANONICAL_TYPE
             clang::SourceLocation TemplateLoc = Template->getSourceRange ().getBegin(); //NOTE: not sure that this is the 'right' location.
             clang::SourceLocation RAngleLoc = TSTdecl->getSourceRange().getBegin(); // NOTE: most likely wrong, I think this is expecting the location of right angle
  
             clang::TemplateTypeParmDecl *TTP = llvm::dyn_cast<clang::TemplateTypeParmDecl>(*Param);
-            clang::TemplateArgumentLoc ArgType = S.SubstDefaultTemplateArgumentIfAvailable(
+            {
+               clang::sema::HackForDefaultTemplateArg raii;
+               clang::TemplateArgumentLoc ArgType = S.SubstDefaultTemplateArgumentIfAvailable(
                                                              Template,
                                                              TemplateLoc,
                                                              RAngleLoc,
                                                              TTP,
                                                              desArgs);
-            clang::QualType BetterSubTy = ArgType.getArgument().getAsType();
-
-            SubTy = cling::utils::Transform::GetPartiallyDesugaredType(Ctx,BetterSubTy,normCtxt.GetTypeToSkip(),/*fullyQualified=*/ true);
-#else
-            SubTy = cling::utils::Transform::GetPartiallyDesugaredType(Ctx,SubTy,normCtxt.GetTypeToSkip(),/*fullyQualified=*/ true);
-#endif
+               clang::QualType BetterSubTy = ArgType.getArgument().getAsType();
+               SubTy = cling::utils::Transform::GetPartiallyDesugaredType(Ctx,BetterSubTy,normCtxt.GetTypeToSkip(),/*fullyQualified=*/ true);
+            }
             SubTy = AddDefaultParameters(SubTy,interpreter,normCtxt);
             desArgs.push_back(clang::TemplateArgument(SubTy));
          } else {

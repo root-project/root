@@ -32,6 +32,31 @@
 using namespace clang;
 using namespace sema;
 
+bool HackForDefaultTemplateArg::AllowNonCanonicalSubstEnabled = true;
+
+// Default constructor, record the current value
+// of HackForDefaultTemplateArg::AllowNonCanonicalSubst
+// and set it to true.
+HackForDefaultTemplateArg::HackForDefaultTemplateArg() :
+  OldValue(HackForDefaultTemplateArg::AllowNonCanonicalSubstEnabled)
+{
+  AllowNonCanonicalSubstEnabled = true;
+}
+
+// Destructor, restore the previous value of
+// HackForDefaultTemplateArg::AllowNonCanonicalSubst.
+HackForDefaultTemplateArg::~HackForDefaultTemplateArg()
+{
+  AllowNonCanonicalSubstEnabled = OldValue;
+}
+
+// Return the current value of
+// HackForDefaultTemplateArg::AllowNonCanonicalSubst.
+bool HackForDefaultTemplateArg::AllowNonCanonicalSubst()
+{
+  return AllowNonCanonicalSubstEnabled;
+}
+
 // Exported for use by Parser.
 SourceRange
 clang::getTemplateParamsRange(TemplateParameterList const * const *Ps,
@@ -2513,8 +2538,13 @@ bool Sema::CheckTemplateTypeArgument(TemplateTypeParmDecl *Param,
     return true;
 
   // Add the converted template type argument.
-  QualType ArgType = Context.getCanonicalType(Arg.getAsType());
-  
+  QualType ArgType;
+  if (!HackForDefaultTemplateArg::AllowNonCanonicalSubst()) {
+    ArgType = Context.getCanonicalType(Arg.getAsType());
+  } else {
+    ArgType = Arg.getAsType().getCanonicalType();
+  }
+
   // Objective-C ARC:
   //   If an explicitly-specified template argument type is a lifetime type
   //   with no lifetime qualifier, the __strong lifetime qualifier is inferred.
@@ -3537,8 +3567,15 @@ bool Sema::CheckTemplateArgument(TemplateTypeParmDecl *Param,
 
   if (Arg->isVariablyModifiedType()) {
     return Diag(SR.getBegin(), diag::err_variably_modified_template_arg) << Arg;
-  } else if (Context.hasSameUnqualifiedType(Arg, Context.OverloadTy)) {
-    return Diag(SR.getBegin(), diag::err_template_arg_overload_type) << SR;
+  } else if (!HackForDefaultTemplateArg::AllowNonCanonicalSubst()) {
+    if (Context.hasSameUnqualifiedType(Arg, Context.OverloadTy)) {
+      return Diag(SR.getBegin(), diag::err_template_arg_overload_type) << SR;
+    }
+  } else {
+    if (Context.hasSameUnqualifiedType(Arg.getCanonicalType(),
+                                       Context.OverloadTy)) {
+      return Diag(SR.getBegin(), diag::err_template_arg_overload_type) << SR;
+    }
   }
 
   // C++03 [temp.arg.type]p2:
@@ -3555,7 +3592,11 @@ bool Sema::CheckTemplateArgument(TemplateTypeParmDecl *Param,
                                SR.getBegin()) != DiagnosticsEngine::Ignored :
       Arg->hasUnnamedOrLocalType()) {
     UnnamedLocalNoLinkageFinder Finder(*this, SR);
-    (void)Finder.Visit(Context.getCanonicalType(Arg));
+    if (!HackForDefaultTemplateArg::AllowNonCanonicalSubst()) {
+      (void)Finder.Visit(Context.getCanonicalType(Arg));
+    } else {
+      (void)Finder.Visit(Arg.getCanonicalType());
+    }
   }
 
   return false;
