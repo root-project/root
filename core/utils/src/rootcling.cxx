@@ -166,6 +166,7 @@
 #include "cling/Utils/AST.h"
 
 #include "llvm/Bitcode/BitstreamWriter.h"
+#include "llvm/Support/PathV2.h"
 
 #ifdef __APPLE__
 #include <libgen.h> // Needed for basename

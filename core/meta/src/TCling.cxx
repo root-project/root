@@ -84,6 +84,7 @@
 
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/PathV2.h"
 
 #include <iostream>
 #include <cassert>
