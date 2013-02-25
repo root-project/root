@@ -3,16 +3,15 @@
 <a name="net"></a> 
 <h3>Networking Libraries</h3>
 <p>
-The enclosed patch includes a new class and some modifications to existing
-classes. The new class TS3WebFile is an extension of TWebFile and belongs
-to the net module. I deliberately did not modify the existing TAS3File.
-I think that the name TS3WebFile reflects better the fact that this solution
+A new class TS3WebFile has been introduced. The new class TS3WebFile is an
+extension of TWebFile and belongs to the net module.
+The name TS3WebFile reflects better the fact that this solution
 is intended to be generic to several S3 servers and not limited to Amazon's,
 in addition to the fact that it actually extends the capabilities of TWebFile.
 </p>
 <p>
 Compared to the current support of S3 in ROOT (basically the class TAS3File),
-the modifications in this patch include the improvements below:
+the modifications include the improvements below:
 </p>
 <ul>
 <li>
@@ -66,4 +65,7 @@ Limitations:
    is not supported but can be added if this is considered useful.
 </li>
 </ul>
-
+<p>
+The TAS3File class will be removed and should not have been used directly by
+users anyway as it was only accessed via the plugin manager in TFile::Open().
+</p>

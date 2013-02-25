@@ -354,6 +354,8 @@ void TWebFile::CheckProxy()
          return;
       }
       fProxy = p;
+      if (gDebug > 0)
+         Info("CheckProxy", "using HTTP proxy %s", fProxy.GetUrl());
    }
 }
 
@@ -644,6 +646,9 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg)
       return -1;
    }
 
+   if (gDebug > 0)
+      Info("GetFromWeb10", "sending HTTP request:\n%s", msg.Data());
+   
    if (fSocket->SendRaw(msg.Data(), msg.Length()) == -1) {
       Error("GetFromWeb10", "error sending command to host %s", fUrl.GetHost());
       return -1;
@@ -924,6 +929,11 @@ Int_t TWebFile::GetHead()
    }
    if (!s)
       return -1;
+
+   if (gDebug > 0) {
+      Info("GetHead", "connected to host %s", connurl.GetHost());
+      Info("GetHead", "sending HTTP request:\n%s", msg.Data());
+   }
 
    if (s->SendRaw(msg.Data(), msg.Length()) == -1) {
       Error("GetHead", "error sending command to host %s", fUrl.GetHost());

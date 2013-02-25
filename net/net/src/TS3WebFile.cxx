@@ -43,7 +43,7 @@
 // this class for details on the syntax.                                //
 //                                                                      //
 // For generating and signing the HTTP request, this class uses         //
-// THTTPMessage.                                                        //
+// TS3HTTPRequest.                                                      //
 //                                                                      //
 // For more information on the details of S3 protocol please refer to:  //
 // "Amazon Simple Storage Service Developer Guide":                     //
@@ -55,7 +55,6 @@
 
 #include "TS3WebFile.h"
 #include "TROOT.h"
-#include "THTTPMessage.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TPRegexp.h"
@@ -63,8 +62,6 @@
 
 
 ClassImp(TS3WebFile)
-
-const TString TS3WebFile::fgAuthPrefix = "AWS";
 
 //_____________________________________________________________________________
 TS3WebFile::TS3WebFile(const char* path, Option_t* options)
@@ -78,23 +75,38 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
    //    s3https://host.example.com/bucket/path/to/my/file
    //        as3://host.example.com/bucket/path/to/my/file
    // 
-   // The 'as3' schema is accepted for backwards compatibility but its usage is
+   // For files hosted by Google Storage, use the following forms:
+   //
+   //        gs://storage.googleapis.com/bucket/path/to/my/file
+   //    gshttp://storage.googleapis.com/bucket/path/to/my/file
+   //  gsthttps://storage.googleapis.com/bucket/path/to/my/file
+   // 
+   // The 'as3' scheme is accepted for backwards compatibility but its usage is
    // deprecated.
    //
    // The recommended way to create an instance of this class is through
    // TFile::Open, for instance:
    //
-   // TFile* f = TFile::Open("s3://host.example.com/bucket/path/to/my/file")
+   // TFile* f1 = TFile::Open("s3://host.example.com/bucket/path/to/my/file")
+   // TFile* f2 = TFile::Open("gs://storage.googleapis.com/bucket/path/to/my/file")
    //
-   // The specified schema (i.e. s3, s3http or s3https) determines the underlying
-   // protocol to use for downloading the file contents, namely HTTP or HTTPS. The
-   // 's3' and 's3https' schemas imply using HTTPS as the transport protocol.
-   // The 's3http' and 'as3' schema imply using HTTP as the transport protocol.
+   // The specified scheme (i.e. s3, s3http, s3https, ...) determines the underlying
+   // transport protocol to use for downloading the file contents, namely HTTP or HTTPS.
+   // The 's3', 's3https', 'gs' and 'gshttps' schemes imply using HTTPS as the transport
+   // protocol. The 's3http', 'as3' and 'gshttp' schemes imply using HTTP as the transport
+   // protocol.
    //
    // The 'options' argument can contain 'NOPROXY' if you want to bypass
-   // the HTTP proxy when retrieving this file's contents. In addition, you can
-   // provide the access key and secret key to be used for authentication purposes
-   // for this file by using a string of the form "AUTH=myAccessKey:mySecretkey".
+   // the HTTP proxy when retrieving this file's contents. As for any TWebFile-derived
+   // object, the URL of the web proxy can be specified by setting an environmental
+   // variable 'http_proxy'. If this variable is set, we ask that proxy to route our
+   // requests HTTP(S) requests to the file server.
+   //
+   // In addition, you can also use the 'options' argument to provide the access key
+   // and secret key to be used for authentication purposes for this file by using a
+   // string of the form "AUTH=myAccessKey:mySecretkey". This may be useful to
+   // open several files hosted by different providers in the same program/macro,
+   // where the environemntal variables solution is not convenient (see below).
    //
    // If you need to specify both NOPROXY and AUTH separate them by ' '
    // (blank), for instance: 
@@ -111,17 +123,25 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
    // S3_ACCESS_KEY and S3_SECRET_KEY (if set) are expected to contain
    // the access key id and the secret access key, respectively. You have
    // been provided with these credentials by your S3 service provider.
+   //
+   // If neither the AUTH information is provided in the 'options' argument
+   // nor the environmental variables are set, we try to open the file
+   // without providing any authentication information to the server. This
+   // is useful when the file is set an access control that allows for 
+   // any unidentified user to read the file.
 
-   // Make sure this is a valid S3 path. We accept 'as3' as a schema, for
+   // Make sure this is a valid S3 path. We accept 'as3' as a scheme, for
    // backwards compatibility
    Bool_t doMakeZombie = kFALSE;
    TString errorMsg;
-   TPMERegexp rex("^(s3|s3http[s]?|as3){1}://([^/]+)/([^/]+)/([^/].*)", "i");
+   TString accessKey;
+   TString secretKey;
+   TPMERegexp rex("^([a]?s3|s3http[s]?|gs|gshttp[s]?){1}://([^/]+)/([^/]+)/([^/].*)", "i");
    if (rex.Match(TString(path)) != 5) {
       errorMsg = TString::Format("invalid S3 path '%s'", path);
       doMakeZombie = kTRUE;
    }
-   else if (!ParseOptions(options)) {
+   else if (!ParseOptions(options, accessKey, secretKey)) {
       errorMsg = TString::Format("could not parse options '%s'", options);
       doMakeZombie = kTRUE;
    }
@@ -136,34 +156,42 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
 
    // Set this S3 object's URL, the bucket name this file is located in
    // and the object key
-   fBucket = rex[3]; // bucket name
-   fObjectKey.Form("/%s", (const char*)rex[4]); // include '/' as the starting character in object key
-
+   fS3Request.SetBucket(rex[3]);
+   fS3Request.SetObjectKey(TString::Format("/%s", (const char*)rex[4]));
+ 
    // Initialize super-classes data members (fUrl is a data member of
    // super-super class TFile)
    TString protocol = "https";
-   if (rex[1].EqualTo("http", TString::kIgnoreCase) || 
+   if (rex[1].EndsWith("http", TString::kIgnoreCase) || 
        rex[1].EqualTo("as3", TString::kIgnoreCase))
       protocol = "http";
    fUrl.SetUrl(TString::Format("%s://%s/%s/%s", (const char*)protocol,
-                                                (const char*)rex[2], 
-                                                (const char*)rex[3],
-                                                (const char*)rex[4]));
+      (const char*)rex[2], (const char*)rex[3], (const char*)rex[4]));
       
    // Set S3-specific data members. If the access and secret keys are not
    // provided in the 'options' argument we look in the environmental 
    // variables.
-   if (fAccessKey.IsNull()) {
-      const char* kAccessKeyEnv = "S3_ACCESS_KEY";
-      const char* kSecretKeyEnv = "S3_SECRET_KEY";
-      if (!SetCredentialsFromEnv(kAccessKeyEnv, kSecretKeyEnv)) {
-         Error("TS3WebFile", "could not find authentication info in "\
-               "'options' argument and at least one of the environment variables '%s' or '%s' is not set",
-               kAccessKeyEnv, kSecretKeyEnv);
-         MakeZombie();
-         gDirectory = gROOT;
-         return;
-      }
+   const char* kAccessKeyEnv = "S3_ACCESS_KEY";
+   const char* kSecretKeyEnv = "S3_SECRET_KEY";
+   if (accessKey.IsNull())
+      GetCredentialsFromEnv(kAccessKeyEnv, kSecretKeyEnv, accessKey, secretKey);
+
+   // Initialize the S3 HTTP request
+   fS3Request.SetHost(fUrl.GetHost());
+   if (accessKey.IsNull() || secretKey.IsNull()) {
+      // We have no authentication information, neither in the options
+      // nor in the enviromental variables. So may be this is a
+      // world-readable file, so let's continue and see if
+      // we can open it.
+      fS3Request.SetAuthType(TS3HTTPRequest::kNoAuth);
+   } else {
+      // Set the authentication information we need to use
+      // for this file
+      fS3Request.SetAuthKeys(accessKey, secretKey);
+      if (rex[1].BeginsWith("gs"))
+         fS3Request.SetAuthType(TS3HTTPRequest::kGoogle);
+      else
+         fS3Request.SetAuthType(TS3HTTPRequest::kAmazon);
    }
    
    // Assume this server does not serve multi-range HTTP GET requests. We
@@ -173,11 +201,20 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
       
    // Call super-class initializer
    TWebFile::Init(kFALSE);
+
+   // Were there some errors opening this file?
+   if (IsZombie() && (accessKey.IsNull() || secretKey.IsNull())) {
+      // We could not open the file and we have no authentication information
+      // so inform the user so that he can check.
+      Error("TS3WebFile", "could not find authentication info in "\
+         "'options' argument and at least one of the environment variables '%s' or '%s' is not set",
+         kAccessKeyEnv, kSecretKeyEnv);     
+   }
 }
 
 
 //_____________________________________________________________________________
-Bool_t TS3WebFile::ParseOptions(const TString& options)
+Bool_t TS3WebFile::ParseOptions(Option_t* options, TString& accessKey, TString& secretKey)
 {
    // Extracts the S3 authentication key pair (access key and secret key)
    // from the options. The authentication credentials can be specified in
@@ -186,24 +223,27 @@ Bool_t TS3WebFile::ParseOptions(const TString& options)
    // options, for instance "NOPROXY" for not using the HTTP proxy for
    // accessing this file's contents.
    // For instance:
-   // "NOPROXY AUTH=F38XYZABCDeFgH4D0E1F:V+frt4re7J1euSNFnmaf8wwmI4AAAE7kzxZ/TTM+"
+   // "NOPROXY AUTH=F38XYZABCDeFgHiJkLm:V+frt4re7J1euSNFnmaf8wwmI401234E7kzxZ/TTM+"
    
-   if (options.IsNull())
+   TString optStr = (const char*)options;
+   if (optStr.IsNull())
       return kTRUE;
       
    fNoProxy = kFALSE;
-   if (options.Contains("NOPROXY", TString::kIgnoreCase))
+   if (optStr.Contains("NOPROXY", TString::kIgnoreCase))
       fNoProxy = kTRUE;
    CheckProxy();
    
    // Look in the options string for the authentication information.
    TPMERegexp rex("(^AUTH=|^.* AUTH=)([a-z0-9]+):([a-z0-9+/]+)[\\s]*.*$", "i");
-   if (rex.Match(options) < 4) {
+   if (rex.Match(optStr) < 4) {
       Error("ParseOptions", "expecting options of the form \"AUTH=myAccessKey:mySecretKey\"");
       return kFALSE;
    }
-   fAccessKey = rex[2];
-   fSecretKey = rex[3];
+   accessKey = rex[2];
+   secretKey = rex[3];
+   if (gDebug > 0)
+      Info("ParseOptions", "using authentication information from 'options' argument");
    return kTRUE;
 }
 
@@ -212,13 +252,9 @@ Bool_t TS3WebFile::ParseOptions(const TString& options)
 Int_t TS3WebFile::GetHead()
 {
    // Overwrites TWebFile::GetHead() for retrieving the HTTP headers of this
-   // file. Uses THTTPMessage to generate an HTTP HEAD request which includes
+   // file. Uses TS3HTTPRequest to generate an HTTP HEAD request which includes
    // the authorization header expected by the S3 server.
-
-   THTTPMessage s3head = THTTPMessage(kHEAD, fObjectKey, fBucket,
-                                      fUrl.GetHost(), fgAuthPrefix,
-                                      fAccessKey, fSecretKey);
-   fMsgGetHead = s3head.GetRequest();
+   fMsgGetHead = fS3Request.GetRequest(TS3HTTPRequest::kHEAD);
    return TWebFile::GetHead();
 }
 
@@ -233,10 +269,7 @@ void TS3WebFile::SetMsgReadBuffer10(const char* redirectLocation, Bool_t tempRed
    // key.
 
    TWebFile::SetMsgReadBuffer10(redirectLocation, tempRedirect);
-   THTTPMessage s3get = THTTPMessage(kGET, fObjectKey, fBucket,
-                                     fUrl.GetHost(), fgAuthPrefix,
-                                     fAccessKey, fSecretKey);
-   fMsgReadBuffer10 = s3get.GetRequest(kFALSE) + "Range: bytes=";
+   fMsgReadBuffer10 = fS3Request.GetRequest(TS3HTTPRequest::kGET, kFALSE) + "Range: bytes=";
    return;
 }
 
@@ -257,12 +290,9 @@ Bool_t TS3WebFile::ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf)
    // Send multiple GET requests with a single range of bytes
    // Adapted from original version by Wang Lu
    for (Int_t i=0, offset=0; i < nbuf; i++) {
-      THTTPMessage s3get = THTTPMessage(kGET, fObjectKey, fBucket,
-                                        fUrl.GetHost(), fgAuthPrefix,
-                                        fAccessKey, fSecretKey);
-      TString rangeHeader = TString::Format("Range: bytes=%lld-%lld\r\n\r\n", 
-                                             pos[i], pos[i] + len[i] - 1);
-      TString s3Request = s3get.GetRequest(kFALSE) + rangeHeader;
+      TString rangeHeader = TString::Format("Range: bytes=%lld-%lld\r\n\r\n",
+         pos[i], pos[i] + len[i] - 1);
+      TString s3Request = fS3Request.GetRequest(TS3HTTPRequest::kGET, kFALSE) + rangeHeader;
       if (GetFromWeb10(&buf[offset], len[i], s3Request) == -1)
          return kTRUE;
       offset += len[i];
@@ -296,30 +326,36 @@ void TS3WebFile::ProcessHttpHeader(const TString& headerLine)
    fUseMultiRange = multirangeServers.Contains(serverId, TString::kIgnoreCase) ? kTRUE : kFALSE;
 }
 
+
 //_____________________________________________________________________________
-Bool_t TS3WebFile::SetCredentialsFromEnv(const char* accessKeyEnv, const char* secretKeyEnv)
+Bool_t TS3WebFile::GetCredentialsFromEnv(const char* accessKeyEnv, const char* secretKeyEnv,
+                                         TString& outAccessKey, TString& outSecretKey)
 {
    // Sets the access and secret keys from the environmental variables, if
    // they are both set.
 
    // Look first in the recommended environmental variables. Both variables 
    // must be set.
-   TString accessKey = gSystem->Getenv(accessKeyEnv);
-   TString secretKey = gSystem->Getenv(secretKeyEnv);
-   if (!accessKey.IsNull() && !secretKey.IsNull()) {
-      fAccessKey = accessKey;
-      fSecretKey = secretKey;
+   TString accKey = gSystem->Getenv(accessKeyEnv);
+   TString secKey = gSystem->Getenv(secretKeyEnv);
+   if (!accKey.IsNull() && !secKey.IsNull()) {
+      outAccessKey = accKey;
+      outSecretKey = secKey;
+      if (gDebug > 0)
+         Info("GetCredentialsFromEnv", "using authentication information from environmental variables '%s' and '%s'",
+            accessKeyEnv, secretKeyEnv);
       return kTRUE;
    }
 
-   // Look now in the legacy environmental variables
-   accessKey = gSystem->Getenv("S3_ACCESS_ID"); // Legacy access key
-   secretKey = gSystem->Getenv("S3_ACCESS_KEY"); // Legacy secret key
-   if (!accessKey.IsNull() && !secretKey.IsNull()) {
+   // Look now in the legacy environmental variables, for keeping backwards
+   // compatibility.
+   accKey = gSystem->Getenv("S3_ACCESS_ID"); // Legacy access key
+   secKey = gSystem->Getenv("S3_ACCESS_KEY"); // Legacy secret key
+   if (!accKey.IsNull() && !secKey.IsNull()) {
       Warning("SetAuthKeys", "usage of S3_ACCESS_ID and S3_ACCESS_KEY environmental variables is deprecated.");
       Warning("SetAuthKeys", "please use S3_ACCESS_KEY and S3_SECRET_KEY environmental variables.");
-      fAccessKey = accessKey;
-      fSecretKey = secretKey;
+      outAccessKey = accKey;
+      outSecretKey = secKey;
       return kTRUE;
    }
 

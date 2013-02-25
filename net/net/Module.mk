@@ -25,10 +25,12 @@ NETNOCRYPTO  := -DR__NO_CRYPTO
 NETH         := $(filter-out $(MODDIRI)/TAS3File.h,$(NETH))
 NETH         := $(filter-out $(MODDIRI)/TGSFile.h,$(NETH))
 NETH         := $(filter-out $(MODDIRI)/TS3WebFile.h,$(NETH))
+NETH         := $(filter-out $(MODDIRI)/TS3HTTPRequest.h,$(NETH))
 NETH         := $(filter-out $(MODDIRI)/THTTPMessage.h,$(NETH))
 NETS         := $(filter-out $(MODDIRS)/TAS3File.cxx,$(NETS))
 NETS         := $(filter-out $(MODDIRS)/TGSFile.cxx,$(NETS))
 NETS         := $(filter-out $(MODDIRS)/TS3WebFile.cxx,$(NETS))
+NETS         := $(filter-out $(MODDIRS)/TS3HTTPRequest.cxx,$(NETS))
 NETS         := $(filter-out $(MODDIRS)/THTTPMessage.cxx,$(NETS))
 else
 NETNOCRYPTO  :=

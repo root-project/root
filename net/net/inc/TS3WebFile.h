@@ -37,7 +37,7 @@
 // initializing an object of this class by two means:                   //
 // a) by using the environmental variables S3_ACCESS_KEY and            //
 //    S3_SECRET_KEY, or                                                 //
-// b) by specifying them when opening each file.                        //
+// b) by specifying them as an argument when opening each file.         //
 //                                                                      //
 // The first method is convenient if all the S3 files you want to       //
 // access are hosted by a single provider. The second one is more       //
@@ -46,7 +46,7 @@
 // this class for details on the syntax.                                //
 //                                                                      //
 // For generating and signing the HTTP request, this class uses         //
-// THTTPMessage.                                                        //
+// TS3HTTPRequest.                                                      //
 //                                                                      //
 // For more information on the details of S3 protocol please refer to:  //
 // "Amazon Simple Storage Service Developer Guide":                     //
@@ -68,13 +68,18 @@
 #include "TString.h"
 #endif
 
+#ifndef ROOT_TS3HTTPRequest
+#include "TS3HTTPRequest.h"
+#endif
+
 
 class TS3WebFile: public TWebFile {
 
 private:
    TS3WebFile();
-   Bool_t ParseOptions(const TString& options);
-   Bool_t SetCredentialsFromEnv(const char* accessKeyEnv, const char* secretKeyEnv);
+   Bool_t ParseOptions(Option_t* options, TString& accessKey, TString& secretKey);
+   Bool_t GetCredentialsFromEnv(const char* accessKeyEnv, const char* secretKeyEnv,
+                                TString& outAccessKey, TString& outSecretKey);
 
 protected:
    // Super-class methods extended by this class
@@ -83,16 +88,12 @@ protected:
    virtual void ProcessHttpHeader(const TString& headerLine);
    
    // Modifiers of data members (to be used mainly by subclasses)
-   void SetAccessKey(const TString& accessKey) { fAccessKey = accessKey; } 
-   void SetSecretKey(const TString& secretKey) { fSecretKey = secretKey; }
+   void SetAccessKey(const TString& accessKey) { fS3Request.SetAccessKey(accessKey); } 
+   void SetSecretKey(const TString& secretKey) { fS3Request.SetSecretKey(secretKey); }
 
    // Data members
-   static const TString fgAuthPrefix; // Authentication prefix
-   TString fAccessKey;      // Access key ID
-   TString fSecretKey;      // Secret access key
-   TString fBucket;         // Bucket name
-   TString fObjectKey;      // S3 object key (i.e. the file path within the bucket)
-   Bool_t  fUseMultiRange;  // Is the S3 server capable of serving multirange requests?
+   TS3HTTPRequest fS3Request;      // S3 HTTP request
+   Bool_t         fUseMultiRange;  // Is the S3 server capable of serving multirange requests?
 
 public:
    // Constructors & Destructor
@@ -100,12 +101,11 @@ public:
    virtual ~TS3WebFile() {}
 
    // Selectors
-   const TString&  GetAuthPrefix() const { return fgAuthPrefix; }
-   const TString&  GetAccessKey() const { return fAccessKey; }
-   const TString&  GetSecretKey() const { return fSecretKey; }
+   const TString&  GetAccessKey() const { return fS3Request.GetAccessKey(); }
+   const TString&  GetSecretKey() const { return fS3Request.GetSecretKey(); }
+   const TString&  GetBucket() const { return fS3Request.GetBucket(); }
+   const TString&  GetObjectKey() const { return fS3Request.GetObjectKey(); }
    const TUrl&     GetUrl() const { return fUrl; }
-   const TString&  GetBucket() const { return fBucket; }
-   const TString&  GetObjectKey() const { return fObjectKey; }
 
    // Modifiers
    virtual Bool_t	ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf);
