@@ -17,7 +17,7 @@ endif
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS)
+CXXFLAGS      = -fPIC -wd1476 -msse -mfpmath=sse $(EXTRA_CXXFLAGS)
 CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict
 
 # Linker:

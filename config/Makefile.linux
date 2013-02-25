@@ -21,7 +21,7 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -m32 -Wall -W -Woverloaded-virtual \
-                -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS)
+                -fPIC -msse -mfpmath=sse $(EXTRA_CXXFLAGS) $(CXX11FLAGS)
 CFLAGS        = -pipe -m32 -Wall -W -fPIC $(EXTRA_CFLAGS)
 COMPILER      = gnu
 
