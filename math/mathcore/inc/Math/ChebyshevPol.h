@@ -20,6 +20,7 @@
 #ifndef ROOT_Math_ChebyshevPol
 #define ROOT_Math_ChebyshevPol
 
+#include <sys/types.h>
 #include <cstring>
 
 namespace ROOT { 
