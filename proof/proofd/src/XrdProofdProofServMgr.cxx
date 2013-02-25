@@ -32,8 +32,7 @@
 #include "XrdOuc/XrdOucRash.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
-#include "XrdSut/XrdSutAux.hh"
-
+#include "XrdSys/XrdSysPlugin.hh"
 #include "XrdProofdClient.h"
 #include "XrdProofdClientMgr.h"
 #include "XrdProofdManager.h"
@@ -287,6 +286,8 @@ XrdProofdProofServMgr::XrdProofdProofServMgr(XrdProofdManager *mgr,
    fCurrentSessions = 0;
 
    fSeqSessionN = 0;
+   
+   fCredsSaver = 0;
 
    // Defaults can be changed via 'proofservmgr'
    fCheckFrequency = 30;
@@ -3091,22 +3092,13 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
          ev[len] = 0;
          putenv(ev);
          TRACE(DBG, "XrdSecCREDS set");
-
-         // If 'pwd', save AFS key, if any
-         if (!strncmp(p->AuthProt()->Entity.prot, "pwd", 3)) {
+         if (fCredsSaver) {
             XrdOucString credsdir = udir;
             credsdir += "/.creds";
             // Make sure the directory exists
             if (!XrdProofdAux::AssertDir(credsdir.c_str(), p->Client()->UI(), fMgr->ChangeOwn())) {
-               if (SaveAFSkey(creds, credsdir.c_str(), p->Client()->UI()) == 0) {
-                  len = strlen("ROOTPROOFAFSCREDS=")+credsdir.length()+strlen("/.afs")+2;
-                  ev = new char[len];
-                  snprintf(ev, len, "ROOTPROOFAFSCREDS=%s/.afs", credsdir.c_str());
-                  putenv(ev);
-                  fprintf(fenv, "ROOTPROOFAFSCREDS has been set\n");
-                  TRACE(DBG, ev);
-               } else {
-                  TRACE(DBG, "problems in saving AFS key");
+               if ((*fCredsSaver)(creds, credsdir.c_str(), p->Client()->UI()) != 0) {
+                  TRACE(DBG, "problems in saving authentication creds under "<<credsdir);
                }
             } else {
                TRACE(XERR, "unable to create creds dir: "<<credsdir);
@@ -3114,6 +3106,7 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
                return -1;
             }
          }
+         fclose(fenv);
       }
    }
 
@@ -3568,21 +3561,13 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
          PutEnv(ev, in->fOld);
          TRACE(DBG, "XrdSecCREDS set");
 
-         // If 'pwd', save AFS key, if any
-         if (!strncmp(p->AuthProt()->Entity.prot, "pwd", 3)) {
+         if (fCredsSaver) {
             XrdOucString credsdir = p->Client()->Sandbox()->Dir();
             credsdir += "/.creds";
             // Make sure the directory exists
             if (!XrdProofdAux::AssertDir(credsdir.c_str(), p->Client()->UI(), fMgr->ChangeOwn())) {
-               if (SaveAFSkey(creds, credsdir.c_str(), p->Client()->UI()) == 0) {
-                  len = strlen("ROOTPROOFAFSCREDS=")+credsdir.length()+strlen("/.afs")+2;
-                  ev = new char[len];
-                  snprintf(ev, len, "ROOTPROOFAFSCREDS=%s/.afs", credsdir.c_str());
-                  fprintf(fenv, "ROOTPROOFAFSCREDS has been set\n");
-                  TRACE(DBG, ev);
-                  PutEnv(ev, in->fOld);
-               } else {
-                  TRACE(DBG, "problems in saving AFS key");
+               if ((*fCredsSaver)(creds, credsdir.c_str(), p->Client()->UI()) != 0) {
+                  TRACE(DBG, "problems in saving authentication creds under "<<credsdir);
                }
             } else {
                TRACE(XERR, "unable to create creds dir: "<<credsdir);
@@ -3590,6 +3575,7 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
                return -1;
             }
          }
+         fclose(fenv);
       }
    }
 
@@ -4580,76 +4566,6 @@ int XrdProofdProofServMgr::SetUserEnvironment(XrdProofdProtocol *p)
    // We are done
    TRACE(REQ, "done");
    return 0;
-}
-
-//______________________________________________________________________________
-int XrdProofdProofServMgr::SaveAFSkey(XrdSecCredentials *c,
-                                      const char *dir, XrdProofUI ui)
-{
-   // Save the AFS key, if any, for usage in proofserv in file 'dir'/.afs .
-   // Return 0 on success, -1 on error.
-   XPDLOC(SMGR, "ProofServMgr::SaveAFSkey")
-
-   // Check file name
-   if (!dir || strlen(dir) <= 0) {
-      TRACE(XERR, "dir name undefined");
-      return -1;
-   }
-
-   // Check credentials
-   if (!c) {
-      TRACE(XERR, "credentials undefined");
-      return -1;
-   }
-   TRACE(REQ, "dir: "<<dir);
-
-   // Decode credentials
-   int lout = 0;
-   char *out = new char[c->size];
-   if (XrdSutFromHex(c->buffer, out, lout) != 0) {
-      TRACE(XERR, "problems unparsing hex string");
-      delete [] out;
-      return -1;
-   }
-
-   // Locate the key
-   char *key = out + 5;
-   if (strncmp(key, "afs:", 4)) {
-      TRACE(DBG, "string does not contain an AFS key");
-      delete [] out;
-      return 0;
-   }
-   key += 4;
-
-   // Save to file, if not existing already
-   XrdOucString fn = dir;
-   fn += "/.afs";
-   int rc = 0;
-
-   // Open the file, truncating if already existing
-   int fd = open(fn.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
-   if (fd < 0) {
-      TRACE(XERR, "problems creating file - errno: " << errno);
-      delete [] out;
-      return -1;
-   }
-   // Write out the key
-   int lkey = lout - 9;
-   if (XrdProofdAux::Write(fd, key, lkey) != lkey) {
-      TRACE(XERR, "problems writing to file - errno: " << errno);
-      rc = -1;
-   }
-
-   // Cleanup
-   delete [] out;
-   close(fd);
-
-   // Make sure the file is owned by the user
-   if (XrdProofdAux::ChangeOwn(fn.c_str(), ui) != 0) {
-      TRACE(XERR, "can't change ownership of "<<fn);
-   }
-
-   return rc;
 }
 
 //__________________________________________________________________________
