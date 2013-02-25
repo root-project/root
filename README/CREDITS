@@ -372,6 +372,7 @@ D: contributions to the thread classes, SapDB interface
 N: Fabio Hernandez
 E: fabio@in2p3.fr
 D: TS3WebFile with improved Amazon S3 and Huawei support
+D: Extend TS3WebFile to also support Google Storage
 
 N: Andreas Hoecker
 E: Andreas.Hoecker@cern.ch
