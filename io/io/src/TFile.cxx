@@ -4503,7 +4503,7 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
       //
       // Adjust the type according to findings
       type = (localFile) ? kLocal : type;
-   } else if (TPMERegexp("^(http[s]?|s3http[s]?|[a]?s3|gs){1}:", "i").Match(name)) {
+   } else if (TPMERegexp("^(http[s]?|s3http[s]?|[a]?s3|gs|gshttp[s]?){1}:", "i").Match(name)) {
       //
       // Web file
       type = kWeb;
