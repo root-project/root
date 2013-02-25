@@ -90,5 +90,5 @@ ifeq ($(MACOSX_SSL_DEPRECATED),yes)
 $(call stripsrc,$(NETDIRS)/TSSLSocket.o): CXXFLAGS += -Wno-deprecated-declarations
 endif
 $(call stripsrc,$(NETDIRS)/TSSLSocket.o): CXXFLAGS += $(SSLINCDIR:%=-I%)
-$(call stripsrc,$(NETDIRS)/THTTPMessage.o): CXXFLAGS += $(SSLINCDIR:%=-I%)
+$(call stripsrc,$(NETDIRS)/TS3HTTPRequest.o): CXXFLAGS += $(SSLINCDIR:%=-I%)
 $(call stripsrc,$(NETDIRS)/TWebFile.o): CXXFLAGS += $(NETSSL)
