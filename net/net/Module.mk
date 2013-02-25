@@ -22,16 +22,10 @@ NETH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 NETS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 ifeq ($(CRYPTOLIB),)
 NETNOCRYPTO  := -DR__NO_CRYPTO
-NETH         := $(filter-out $(MODDIRI)/TAS3File.h,$(NETH))
-NETH         := $(filter-out $(MODDIRI)/TGSFile.h,$(NETH))
 NETH         := $(filter-out $(MODDIRI)/TS3WebFile.h,$(NETH))
 NETH         := $(filter-out $(MODDIRI)/TS3HTTPRequest.h,$(NETH))
-NETH         := $(filter-out $(MODDIRI)/THTTPMessage.h,$(NETH))
-NETS         := $(filter-out $(MODDIRS)/TAS3File.cxx,$(NETS))
-NETS         := $(filter-out $(MODDIRS)/TGSFile.cxx,$(NETS))
 NETS         := $(filter-out $(MODDIRS)/TS3WebFile.cxx,$(NETS))
 NETS         := $(filter-out $(MODDIRS)/TS3HTTPRequest.cxx,$(NETS))
-NETS         := $(filter-out $(MODDIRS)/THTTPMessage.cxx,$(NETS))
 else
 NETNOCRYPTO  :=
 endif
@@ -96,5 +90,5 @@ ifeq ($(MACOSX_SSL_DEPRECATED),yes)
 $(call stripsrc,$(NETDIRS)/TSSLSocket.o): CXXFLAGS += -Wno-deprecated-declarations
 endif
 $(call stripsrc,$(NETDIRS)/TSSLSocket.o): CXXFLAGS += $(SSLINCDIR:%=-I%)
-$(call stripsrc,$(NETDIRS)/THTTPMessage.o): CXXFLAGS += $(SSLINCDIR:%=-I%)
+$(call stripsrc,$(NETDIRS)/TS3HTTPRequest.o): CXXFLAGS += $(SSLINCDIR:%=-I%)
 $(call stripsrc,$(NETDIRS)/TWebFile.o): CXXFLAGS += $(NETSSL)
