@@ -6342,6 +6342,7 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  core/thread/src/TLockFile.* proof/proofplayer/src/TFileMerger.* \
  graf2d/graf/src/G__Graf1.h graf2d/graf/src/G__Graf1.cxx \
  graf2d/graf/src/G__Graf2.h graf2d/graf/src/G__Graf2.cxx \
+ net/net/src/TAS3File.* net/net/src/TGSFile.* net/net/src/THTTPMessage.* \
  etc/daemons/olbd.rc.d etc/daemons/cmsd.rc.d etc/daemons/xrootd.rc.d \
  bin/cmsd bin/xprep bin/xrd bin/xrdcp bin/xrdgsiproxy bin/xrdpwdadmin \
  bin/xrdsssadmin bin/xrdstagetool bin/xrootd lib/libXrd* \
