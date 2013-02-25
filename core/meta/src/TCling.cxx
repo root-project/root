@@ -1384,7 +1384,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
    R__LOCKGUARD(gClingMutex);
 
    typedef cling::Interpreter::LoadedFileInfo FileInfo_t;
-   typedef llvm::SmallVectorImpl<FileInfo_t*> AllFileInfos_t;
+   typedef std::vector<FileInfo_t*> AllFileInfos_t;
 
    llvm::StringMap<const FileInfo_t*> fileMap;
 
@@ -3418,7 +3418,7 @@ int TCling::UnloadFile(const char* path) const
 
    // Check fInterpreter->getLoadedFiles() to determine whether this is a shared
    // library or code. If it's not in there complain.
-   typedef llvm::SmallVectorImpl<cling::Interpreter::LoadedFileInfo*> LoadedFiles_t;
+   typedef std::vector<cling::Interpreter::LoadedFileInfo*> LoadedFiles_t;
    const LoadedFiles_t& loadedFiles = fInterpreter->getLoadedFiles();
    const cling::Interpreter::LoadedFileInfo* fileInfo = 0;
    for (LoadedFiles_t::const_iterator iF = loadedFiles.begin(),
