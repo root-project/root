@@ -1011,7 +1011,7 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 
-onepcm:
+onepcm: $(ROOTCINTTMPDEP)
 	@$(MAKEONEPCM)
 
 ifeq ($(BUILDX11),yes)
