@@ -54,7 +54,7 @@ ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist distsrc
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(shell which svn 2>&1 | sed -ne "s@.*/svn@svn@p"),svn)
 FORCELLVM := $(shell bash $(ROOT_SRCDIR)/build/unix/svninfollvm.sh $(ROOT_SRCDIR)/interpreter/llvm)
-ENDLLVMBUILD := && $(ROOT_SRCDIR)/build/unix/svninfollvm.sh $(ROOT_SRCDIR)/interpreter/llvm
+ENDLLVMBUILD := && cd ../../.. && ( $(ROOT_SRCDIR)/build/unix/svninfollvm.sh $(ROOT_SRCDIR)/interpreter/llvm > /dev/null )
 endif
 endif
 endif
