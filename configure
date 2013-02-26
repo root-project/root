@@ -5186,7 +5186,15 @@ if test "x$enable_ssl" = "xyes" ; then
      #
      # libssl
      #
-     libssl="libssl"
+     if test "x$platform" = "xwin32"; then
+        if test "x$enable_winrtdebug" = "xyes"; then
+           libssl="libssl ssleay32 ssleay32MDd"
+        else
+           libssl="libssl ssleay32 ssleay32MD"
+        fi
+     else
+        libssl="libssl"
+     fi
      tmpssllibdir=""
      check_library "$libssl" "$sslshared" "$ssllibdir" \
          $SSL ${SSL:+$SSL/lib} \
@@ -5211,7 +5219,16 @@ if test "x$enable_ssl" = "xyes" ; then
          #
          # libcrypto, in the same dir
          #
-         check_library "libcrypto" "$sslshared" "$tmpssllibdir" \
+         if test "x$platform" = "xwin32"; then
+            if test "x$enable_winrtdebug" = "xyes"; then
+               libcrypto="libcrypto libeay32 libeay32MDd"
+            else
+               libcrypto="libcrypto libeay32 libeay32MD"
+            fi
+         else
+            libcrypto="libcrypto"
+         fi
+         check_library "$libcrypto" "$sslshared" "$tmpssllibdir" \
              $SSL ${SSL:+$SSL/lib} \
              ${finkdir:+$finkdir/lib} \
              /usr/lib /opt/lib /usr/local/lib
