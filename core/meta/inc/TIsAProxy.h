@@ -80,7 +80,7 @@ public:
    virtual void SetClass(TClass *cl)                   { fClass = cl; }
    // IsA callback
    virtual TClass* operator()(const void *obj) {
-      return obj==0 ? fClass : ((T*)obj)->IsA();
+      return obj==0 ? fClass : ((const T*)obj)->IsA();
    }
 };
 
