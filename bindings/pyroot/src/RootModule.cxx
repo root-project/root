@@ -41,7 +41,7 @@ namespace {
    using namespace PyROOT;
 
 //____________________________________________________________________________
-   PyObject* gRootModuleResetCallback( PyObject*, PyObject* pyref )
+   PyObject* gRootModuleResetCallback( PyObject*, PyObject* )
    {
       gRootModule = 0;
       Py_XDECREF( gRootModuleReset );
