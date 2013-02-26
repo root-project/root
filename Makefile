@@ -430,7 +430,7 @@ endif
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist distsrc),)
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
 ifeq ($(shell which svn 2>&1 | sed -ne "s@.*/svn@svn@p"),svn)
-SVNREV  := $(shell bash $(ROOT_SRCDIR)/build/unix/svninfo.sh $(ROOT_SRCDIR))
+SVNREV := $(shell bash $(ROOT_SRCDIR)/build/unix/svninfo.sh $(ROOT_SRCDIR))
 endif
 endif
 endif
@@ -450,6 +450,8 @@ endif
 ifeq ($(PLATFORM),ios)
    POSTBIN       += staticlib
 endif
+
+POSTBIN       += onepcm
 
 MAKEDEP        = $(RMKDEP)
 MAKELIB        = $(ROOT_SRCDIR)/build/unix/makelib.sh $(MKLIBOPTIONS)
@@ -1009,7 +1011,7 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 
-onepcm: all
+onepcm:
 	@$(MAKEONEPCM)
 
 ifeq ($(BUILDX11),yes)
