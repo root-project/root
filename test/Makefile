@@ -7,6 +7,7 @@
 # Author: Fons Rademakers, 29/2/2000
 
 RC     := root-config
+ifeq ($(findstring $(MAKECMDTARGET),clean),)
 ifeq ($(shell which $(RC) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
 MKARCH := $(wildcard $(shell $(RC) --etcdir)/Makefile.arch)
 RCONFIG := $(wildcard $(shell $(RC) --incdir)/RConfigure.h)
@@ -18,6 +19,7 @@ ifeq ($(ROOTSYS),)
 ROOTSYS = ..
 endif
 include $(ROOTSYS)/etc/Makefile.arch
+endif
 endif
 # Tutorials dir needed by stressProof
 ifneq ($(RCONFIG),)
