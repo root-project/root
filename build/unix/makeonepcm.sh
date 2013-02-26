@@ -171,7 +171,7 @@ mv all.h include/allHeaders.h
 
 cxxflags="-D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Iinclude -Ietc -Ietc/cling"
 # generate the pch to test if all includes are consistent
-clang++ -x c++-header $cxxflags include/allHeaders.h -o include/allHeaders.h.pch
+# clang++ -x c++-header $cxxflags include/allHeaders.h -o include/allHeaders.h.pch
 
 err=$?
 if [ $err -ne 0 ]; then
@@ -196,10 +196,13 @@ mv alldefs.h include/allLinkDef.h
 # generate one large pcm
 rm -f allDict.* lib/allDict_rdict.pc*
 core/utils/src/rootcling_tmp -1 -f allDict.cxx -c $cxxflags -I$srcdir allHeaders.h include/allLinkDef.h
+res=$?
+if [ $res -eq 0 ] ; then
+  mv lib/allDict_rdict.pch etc/cling/root.pch
+  res=$?
 
-mv lib/allDict_rdict.pch etc/cling/root.pch
+  # actually we won't need the allDict.[h,cxx] files
+  rm -f allDict.*
+fi
 
-# actually we won't need the allDict.[h,cxx] files
-rm -f allDict.*
-
-exit $?
+exit $res
