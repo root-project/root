@@ -71,6 +71,12 @@ EXTRA_RAUTHFLAGS += $(SSLINCDIR:%=-I%)
 EXTRA_RAUTHLIBS  += $(SSLLIBDIR) $(SSLLIB)
 endif
 
+ifeq ($(PLATFORM),win32)
+EXTRA_RAUTHFLAGS += -DOPENSSL_NO_TLSEXT
+# extra libs needed when using some OpenSSL distributions
+EXTRA_RAUTHLIBS  += WSock32.lib Ws2_32.lib
+endif
+
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RAUTHH)) \
                 include/DaemonUtils.h
