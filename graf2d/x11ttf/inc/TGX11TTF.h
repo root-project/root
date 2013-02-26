@@ -42,7 +42,6 @@
 class TXftFontHash;
 #endif
 
-
 class TGX11TTF : public TGX11 {
 
 private:
@@ -54,12 +53,12 @@ private:
    TXftFontHash  *fXftFontHash;        // hash table for Xft fonts
 #endif
 
-   void    Align(void);
-   void    DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, XImage *xim,
-                     Int_t bx, Int_t by);
-   Bool_t  IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   XImage *GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void    RenderString(Int_t x, Int_t y, ETextMode mode);
+   void     Align(void);
+   void     DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, RXImage *xim,
+                      Int_t bx, Int_t by);
+   Bool_t   IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   RXImage *GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void     RenderString(Int_t x, Int_t y, ETextMode mode);
 
 public:
    TGX11TTF(const TGX11 &org);

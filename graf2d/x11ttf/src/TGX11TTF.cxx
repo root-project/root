@@ -32,6 +32,13 @@
 #include "TClass.h"
 #include "TEnv.h"
 
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
+#include <X11/cursorfont.h>
+#include <X11/keysym.h>
+#include <X11/xpm.h>
+
 #ifdef R__HAS_XFT
 
 #include "THashTable.h"
@@ -58,6 +65,10 @@ public:
    }
 };
 
+struct RXGCValues:XGCValues{};
+struct RXColor:XColor{};
+struct RVisual:Visual{};
+struct RXImage:XImage{};
 
 /////////////////// hash table //////////////////////////////////////////////
 class TXftFontHash {
@@ -214,7 +225,7 @@ void TGX11TTF::Align(void)
 
 //______________________________________________________________________________
 void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
-                         XImage *xim, Int_t bx, Int_t by)
+                         RXImage *xim, Int_t bx, Int_t by)
 {
    // Draw FT_Bitmap bitmap to xim image at position bx,by using specified
    // foreground color.
@@ -223,8 +234,9 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
 
    if (TTF::fgSmoothing) {
 
-      static XColor col[5];
-      XColor  *bcol = 0, *bc;
+      static RXColor col[5];
+      RXColor  *bcol = 0;
+      XColor  *bc;
       Int_t    x, y;
 
       // background kClear, i.e. transparent, we take as background color
@@ -236,7 +248,7 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
 
          dots = Int_t(source->width * source->rows);
          dots = dots > maxdots ? maxdots : dots;
-         bcol = new XColor[dots];
+         bcol = new RXColor[dots];
          if (!bcol) return;
          bc = bcol;
          dotcnt = 0;
@@ -373,7 +385,7 @@ void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 }
 
 //______________________________________________________________________________
-XImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
+RXImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Get the background of the current window in an XImage.
 
@@ -395,7 +407,7 @@ XImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (x+w > width)  w = width - x;
    if (y+h > height) h = height - y;
 
-   return XGetImage(fDisplay, cws, x, y, w, h, AllPlanes, ZPixmap);
+   return (RXImage*)XGetImage((Display*)fDisplay, cws, x, y, w, h, AllPlanes, ZPixmap);
 }
 
 //______________________________________________________________________________
@@ -447,7 +459,7 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    // create the XImage that will contain the text
    UInt_t depth = fDepth;
    XImage *xim  = 0;
-   xim = XCreateImage(fDisplay, fVisual,
+   xim = XCreateImage((Display*)fDisplay, fVisual,
                       depth, ZPixmap, 0, 0, w, h,
                       depth == 24 ? 32 : (depth==15?16:depth), 0);
    if (!xim) return;
@@ -458,12 +470,12 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
 
    ULong_t   bg;
    XGCValues values;
-   gc = GetGC(3);
+   gc = (GC*)GetGC(3);
    if (!gc) {
       Error("DrawText", "error getting Graphics Context");
       return;
    }
-   XGetGCValues(fDisplay, *gc, GCForeground | GCBackground, &values);
+   XGetGCValues((Display*)fDisplay, *gc, GCForeground | GCBackground, &values);
 
    // get the background
    if (mode == kClear) {
@@ -506,13 +518,13 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
 
       bx = bitmap->left+Xoff;
       by = h - bitmap->top-Yoff;
-      DrawImage(source, values.foreground, bg, xim, bx, by);
+      DrawImage(source, values.foreground, bg, (RXImage*)xim, bx, by);
    }
 
    // put the Ximage on the screen
    Window_t cws = GetCurrentWindow();
-   gc = GetGC(6);
-   if (gc) XPutImage(fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
+   gc = (GC*)GetGC(6);
+   if (gc) XPutImage((Display*)fDisplay, cws, *gc, xim, 0, 0, x1, y1, w, h);
    XDestroyImage(xim);
 }
 
@@ -588,7 +600,7 @@ FontStruct_t TGX11TTF::LoadQueryFont(const char *font_name)
       return font;
    }
 
-   XftFont *xftfont = XftFontOpenXlfd(fDisplay, fScreenNumber, font_name);
+   XftFont *xftfont = XftFontOpenXlfd((Display*)fDisplay, fScreenNumber, font_name);
 
    data = new TXftFontData(font, xftfont, font_name);
    fXftFontHash->AddFont(data);
@@ -638,7 +650,7 @@ Int_t TGX11TTF::TextWidth(FontStruct_t font, const char *s, Int_t len)
    }
 
    XGlyphInfo glyph_info;
-   XftTextExtents8(fDisplay, xftfont, (XftChar8 *)s, len, &glyph_info);
+   XftTextExtents8((Display*)fDisplay, xftfont, (XftChar8 *)s, len, &glyph_info);
 
    return glyph_info.xOff;
 }
@@ -725,7 +737,7 @@ void TGX11TTF::DrawString(Drawable_t xwindow, GContext_t gc, Int_t x, Int_t y,
    UInt_t bwidth, width, height, depth;
 
    // check if drawable is bitmap
-   XGetGeometry(fDisplay, (Drawable)xwindow, &droot, &dx, &dy,
+   XGetGeometry((Display*)fDisplay, (Drawable)xwindow, &droot, &dx, &dy,
                 &width, &height, &bwidth, &depth);
 
    if (depth <= 1) {
@@ -736,10 +748,10 @@ void TGX11TTF::DrawString(Drawable_t xwindow, GContext_t gc, Int_t x, Int_t y,
    memset(&xcolor, 0, sizeof(xcolor));
    xcolor.pixel = gval.fForeground;
 
-   XQueryColor(fDisplay, fColormap, &xcolor);
+   XQueryColor((Display*)fDisplay, fColormap, &xcolor);
 
    // create  XftDraw
-   xftdraw = XftDrawCreate(fDisplay, (Drawable)xwindow, fVisual, fColormap);
+   xftdraw = XftDrawCreate((Display*)fDisplay, (Drawable)xwindow, fVisual, fColormap);
 
    if (!xftdraw) {
       //Warning("could not create an XftDraw");

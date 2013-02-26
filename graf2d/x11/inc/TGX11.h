@@ -28,13 +28,6 @@
 
 #if !defined(__CINT__)
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/cursorfont.h>
-#include <X11/keysym.h>
-#include <X11/xpm.h>
-
 #ifdef Status
 // Convert Status from a CPP macro to a typedef:
 typedef Status X11Status_t;
@@ -49,7 +42,7 @@ static const unsigned long gX11None = None;
 static const unsigned long None = gX11None;
 #endif
 
-#else
+#endif
 
 typedef unsigned long XID;
 typedef XID Drawable;
@@ -57,20 +50,14 @@ typedef XID Cursor;
 typedef XID Colormap;
 typedef XID Window;
 
-struct GC;
-struct Display;
-struct Visual;
-struct XVisualInfo;
-struct XGCValues;
-struct XSetWindowAttributes;
-struct XColor;
-struct XEvent;
-struct XImage;
-struct XPoint;
-struct XpmAttributes;
-
-#endif
-
+struct RXGCValues;
+struct RXColor;
+struct RXImage;
+struct RXPoint;
+struct RXpmAttributes;
+struct RXSetWindowAttributes;
+struct RXVisualInfo;
+struct RVisual;
 
 struct XWindow_t {
    Int_t    fOpen;                // 1 if the window is open, 0 if not
@@ -110,43 +97,46 @@ private:
    XWindow_t *fWindows;               //List of windows
    TExMap    *fColors;                //Hash list of colors
    Cursor     fCursors[kNumCursors];  //List of cursors
-   XEvent    *fXEvent;                //Current native (X11) event
+   void      *fXEvent;                //Current native (X11) event
 
    void   CloseWindow1();
    void   ClearPixmap(Drawable *pix);
    void   CopyWindowtoPixmap(Drawable *pix, Int_t xpos, Int_t ypos);
    void   FindBestVisual();
-   void   FindUsableVisual(XVisualInfo *vlist, Int_t nitems);
+   void   FindUsableVisual(RXVisualInfo *vlist, Int_t nitems);
    void   PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                    Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                    UChar_t *image, Drawable_t id);
    void   RemovePixmap(Drawable *pix);
-   void   SetColor(GC gc, Int_t ci);
+   void   SetColor(void *gc, Int_t ci);
    void   SetFillStyleIndex(Int_t style, Int_t fasi);
    void   SetInput(Int_t inp);
-   void   SetMarkerType(Int_t type, Int_t n, XPoint *xy);
+   void   SetMarkerType(Int_t type, Int_t n, RXPoint *xy);
    void   CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
                              Int_t &maxcolors);
    void   MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors);
    Int_t  FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors);
-   void   ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
+   void   ImgPickPalette(RXImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
 
    //---- Private methods used for GUI ----
-   void MapGCValues(GCValues_t &gval, ULong_t &xmask, XGCValues &xgval, Bool_t tox = kTRUE);
+   void MapGCValues(GCValues_t &gval, ULong_t &xmask, RXGCValues &xgval, Bool_t tox = kTRUE);
    void MapSetWindowAttributes(SetWindowAttributes_t *attr,
-                               ULong_t &xmask, XSetWindowAttributes &xattr);
+                               ULong_t &xmask, RXSetWindowAttributes &xattr);
    void MapCursor(ECursor cursor, Int_t &xcursor);
-   void MapColorStruct(ColorStruct_t *color, XColor &xcolor);
-   void MapPictureAttributes(PictureAttributes_t &attr, XpmAttributes &xpmattr,
+   void MapColorStruct(ColorStruct_t *color, RXColor &xcolor);
+   void MapPictureAttributes(PictureAttributes_t &attr, RXpmAttributes &xpmattr,
                              Bool_t toxpm = kTRUE);
    void MapModifierState(UInt_t &state, UInt_t &xstate, Bool_t tox = kTRUE);
-   void MapEvent(Event_t &ev, XEvent &xev, Bool_t tox = kTRUE);
+
+   // void MapEvent(Event_t &ev, XEvent &xev, Bool_t tox = kTRUE);
+   void MapEvent(Event_t &ev, void *xev, Bool_t tox = kTRUE);
+
    void MapEventMask(UInt_t &emask, UInt_t &xemask, Bool_t tox = kTRUE);
    void MapKeySym(UInt_t &keysym, UInt_t &xkeysym, Bool_t tox = kTRUE);
 
 protected:
-   Display   *fDisplay;            //Pointer to display
-   Visual    *fVisual;             //Pointer to visual used by all windows
+   void      *fDisplay;            //Pointer to display
+   RVisual   *fVisual;             //Pointer to visual used by all windows
    Drawable   fRootWin;            //Root window used as parent of all windows
    Drawable   fVisRootWin;         //Root window with fVisual to be used to create GC's and XImages
    Colormap   fColormap;           //Default colormap, 0 if b/w
@@ -169,9 +159,9 @@ protected:
    Bool_t     fHasTTFonts;         //True when TrueType fonts are used
 
    // needed by TGX11TTF
-   Bool_t     AllocColor(Colormap cmap, XColor *color);
-   void       QueryColors(Colormap cmap, XColor *colors, Int_t ncolors);
-   GC        *GetGC(Int_t which) const;
+   Bool_t     AllocColor(Colormap cmap, RXColor *color);
+   void       QueryColors(Colormap cmap, RXColor *colors, Int_t ncolors);
+   void      *GetGC(Int_t which) const;
    XColor_t  &GetColor(Int_t cid);
 
 public:
@@ -211,7 +201,7 @@ public:
    Int_t     AddPixmap(ULong_t pixid, UInt_t w, UInt_t h);
    void      RemoveWindow(ULong_t qwid);
    void      MoveWindow(Int_t wid, Int_t x, Int_t y);
-   Int_t     OpenDisplay(Display *display);
+   Int_t     OpenDisplay(void *display);
    Int_t     OpenPixmap(UInt_t w, UInt_t h);
    void      QueryPointer(Int_t &ix, Int_t &iy);
    Pixmap_t  ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t id=0);
