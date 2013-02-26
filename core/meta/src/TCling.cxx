@@ -666,8 +666,10 @@ TCling::TCling(const char *name, const char *title)
 
    fTemporaries = new std::vector<cling::StoredValueRef>();
    std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
+   std::string pchFilename = interpInclude.substr(2) + "/cling/ROOT.pch";
    const char* interpArgs[]
-      = {"cling4root", interpInclude.c_str(), "-Xclang", "-fmodules"};
+      = {"cling4root", interpInclude.c_str(), "-include-pch", pchFilename.c_str()};
+         //"-Xclang", "-fmodules"};
 
    fInterpreter = new cling::Interpreter(sizeof(interpArgs) / sizeof(char*),
                                          interpArgs,

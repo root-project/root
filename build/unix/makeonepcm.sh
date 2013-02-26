@@ -197,6 +197,8 @@ mv alldefs.h include/allLinkDef.h
 rm -f allDict.* lib/allDict_rdict.pcm
 core/utils/src/rootcling_tmp -1 -f allDict.cxx -c $cxxflags -I$srcdir allHeaders.h include/allLinkDef.h
 
+mv lib/allDict.pch etc/cling/
+
 # actually we won't need the allDict.[h,cxx] files
 rm -f allDict.*
 
