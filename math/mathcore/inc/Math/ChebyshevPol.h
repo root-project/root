@@ -20,7 +20,9 @@
 #ifndef ROOT_Math_ChebyshevPol
 #define ROOT_Math_ChebyshevPol
 
+#if !defined(__CINT__)
 #include <sys/types.h>
+#endif
 #include <cstring>
 
 namespace ROOT { 
