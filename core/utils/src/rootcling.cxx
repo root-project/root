@@ -4066,6 +4066,7 @@ static int GenerateModule(clang::CompilerInstance* CI,
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
 
+   bool isPCH = !strcmp(dictSrcFile, "allDict.cxx");
    std::string dictname = llvm::sys::path::stem(dictSrcFile);
 
    // Parse Arguments
@@ -4181,10 +4182,16 @@ static int GenerateModule(clang::CompilerInstance* CI,
    }
 #endif
 
-   CI->getPreprocessor().getHeaderSearchInfo().setModuleCachePath(dictDir.c_str());
+   if (!isPCH) {
+      CI->getPreprocessor().getHeaderSearchInfo().
+         setModuleCachePath(dictDir.c_str());
+   }
    std::string moduleFile = dictDir + ROOT::TMetaUtils::GetModuleFileName(dictname.c_str());
+   // .pcm -> .pch
+   if (isPCH) moduleFile[moduleFile.length() - 1] = 'h';
+
    clang::Module* module = 0;
-   {
+   if (!isPCH) {
       std::vector<const char*> headersCStr;
       for (std::vector<std::string>::const_iterator
               iH = headers.begin(), eH = headers.end();
