@@ -32,12 +32,31 @@
 
 //- data -----------------------------------------------------------------------
 PyObject* gRootModule = 0;
+PyObject* gRootModuleReset = 0;
 
 
 //- private helpers ------------------------------------------------------------
 namespace {
 
    using namespace PyROOT;
+
+//____________________________________________________________________________
+   PyObject* gRootModuleResetCallback( PyObject*, PyObject* pyref )
+   {
+      gRootModule = 0;
+      Py_XDECREF( gRootModuleReset );
+      gRootModuleReset = 0;
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
+   PyMethodDef methoddef_ = {
+      const_cast< char* >( "RootModule_internal_gRootModuleResetCallback" ),
+      (PyCFunction) gRootModuleResetCallback, METH_O,
+      NULL
+   };
+
+   PyObject* gPyRootModuleResetCallback = PyCFunction_New( &methoddef_, NULL );
 
 //____________________________________________________________________________
    PyObject* LookupRootEntity( PyObject* pyname, PyObject* args )
@@ -54,7 +73,8 @@ namespace {
    // block search for privates
       if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
       // 1st attempt: look in myself
-         PyObject* attr = PyObject_GetAttrString( gRootModule, const_cast< char* >( cname ) );
+         PyObject* attr = gRootModule ?
+            NULL : PyObject_GetAttrString( gRootModule, const_cast< char* >( cname ) );
          if ( attr != 0 )
             return attr;
 
@@ -141,6 +161,10 @@ namespace {
       PyDictObject* dict = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyDict_Type, &dict ) )
          return 0;
+
+   // set up a weak reference to gRootModule in case the ROOT module gets dropped
+      if ( ! gRootModuleReset )
+         gRootModuleReset = PyWeakref_NewRef( gRootModule, gPyRootModuleResetCallback );
 
       ((DictLookup_t&)dict->ma_lookup) = RootLookDictString;
 
