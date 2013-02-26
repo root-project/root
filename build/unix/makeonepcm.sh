@@ -198,7 +198,7 @@ rm -f allDict.* lib/allDict_rdict.pc*
 core/utils/src/rootcling_tmp -1 -f allDict.cxx -c $cxxflags -I$srcdir allHeaders.h include/allLinkDef.h
 res=$?
 if [ $res -eq 0 ] ; then
-  mv lib/allDict_rdict.pch etc/cling/root.pch
+  mv lib/allDict_rdict.pch etc/cling/ROOT.pch
   res=$?
 
   # actually we won't need the allDict.[h,cxx] files
