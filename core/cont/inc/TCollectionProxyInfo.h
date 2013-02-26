@@ -99,7 +99,7 @@ namespace ROOT {
    template <class T> struct Address {
       virtual ~Address() {}
       static void* address(T ref) {
-         return (void*)&ref;
+         return (void*)(const void*)&ref;
       }
    };
 
