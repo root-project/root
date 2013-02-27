@@ -564,6 +564,9 @@ def cleanup():
 
    facade = sys.modules[ __name__ ]
 
+ # reset gRootModule on the C++ side to prevent fruther lookups
+   _root._ResetRootModule()
+
  # shutdown GUI thread, as appropriate (always save to call)
    _root.RemoveGUIEventInputHook()
 

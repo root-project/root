@@ -32,7 +32,6 @@
 
 //- data -----------------------------------------------------------------------
 PyObject* gRootModule = 0;
-PyObject* gRootModuleReset = 0;
 
 
 //- private helpers ------------------------------------------------------------
@@ -41,22 +40,12 @@ namespace {
    using namespace PyROOT;
 
 //____________________________________________________________________________
-   PyObject* gRootModuleResetCallback( PyObject*, PyObject* )
+   PyObject* RootModuleResetCallback( PyObject*, PyObject* )
    {
-      gRootModule = 0;
-      Py_XDECREF( gRootModuleReset );
-      gRootModuleReset = 0;
+      gRootModule = 0;   // reference was borrowed
       Py_INCREF( Py_None );
       return Py_None;
    }
-
-   PyMethodDef methoddef_ = {
-      const_cast< char* >( "RootModule_internal_gRootModuleResetCallback" ),
-      (PyCFunction) gRootModuleResetCallback, METH_O,
-      NULL
-   };
-
-   PyObject* gPyRootModuleResetCallback = PyCFunction_New( &methoddef_, NULL );
 
 //____________________________________________________________________________
    PyObject* LookupRootEntity( PyObject* pyname, PyObject* args )
@@ -166,10 +155,6 @@ namespace {
       PyDictObject* dict = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyDict_Type, &dict ) )
          return 0;
-
-   // set up a weak reference to gRootModule in case the ROOT module gets dropped
-      if ( ! gRootModuleReset )
-         gRootModuleReset = PyWeakref_NewRef( gRootModule, gPyRootModuleResetCallback );
 
       ((DictLookup_t&)dict->ma_lookup) = RootLookDictString;
 
@@ -461,6 +446,8 @@ static PyMethodDef gPyROOTMethods[] = {
    { (char*) "MakeRootTemplateClass", (PyCFunction)MakeRootTemplateClass,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "_DestroyPyStrings", (PyCFunction)PyROOT::DestroyPyStrings,
+     METH_NOARGS, (char*) "PyROOT internal function" },
+   { (char*) "_ResetRootModule", (PyCFunction)RootModuleResetCallback,
      METH_NOARGS, (char*) "PyROOT internal function" },
    { (char*) "AddressOf", (PyCFunction)AddressOf,
      METH_VARARGS, (char*) "Retrieve address of held object in a buffer" },
