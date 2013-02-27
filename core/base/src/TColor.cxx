@@ -253,7 +253,7 @@ opaque). To set the alpha value of an existing color it is enough to do:
 A new color can be created transparent the following way:
 <pre>
    Int_t ci = 1756;
-   TColor *color = new TColor(ci, 0.1, 0.2, 0.3, 0.5); // alpha = 0.5
+   TColor *color = new TColor(ci, 0.1, 0.2, 0.3, "", 0.5); // alpha = 0.5
 </pre>
 An example of tranparency usage with parallel coordinates can be found
 in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>. Right now the 
