@@ -55,4 +55,5 @@ private:
    bool tryFindROOTSpecialInternal(clang::LookupResult &R, clang::Scope *S);
    bool tryResolveAtRuntimeInternal(clang::LookupResult &R, clang::Scope *S);
    bool shouldResolveAtRuntime(clang::LookupResult &R, clang::Scope *S);
+   bool tryInjectImplicitAutoKeyword(clang::LookupResult &R, clang::Scope *S);
 };

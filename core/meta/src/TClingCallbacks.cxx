@@ -67,6 +67,18 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
    if (tryFindROOTSpecialInternal(R, S))
       return true;
 
+   // For backward-compatibility with CINT we must support stmts like:
+   // x = 4; y = new MyClass();
+   // I.e we should "inject" a C++11 auto keyword in front of "x" and "y"
+   // This has to have higher precedence than the dynamic scopes. It is claimed
+   // that if one assigns to a name and the lookup of that name fails if *must*
+   // auto keyword must be injected and the stmt evaluation must not be delayed
+   // until runtime.
+   // For now supported only at the prompt.
+   if (tryInjectImplicitAutoKeyword(R, S)) {
+      return true;
+   }
+
    // Finally try to resolve this name as a dynamic name, i.e delay its 
    // resolution for runtime.
    return tryResolveAtRuntimeInternal(R, S);
@@ -162,7 +174,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
    DeclContext *CurDC = SemaR.CurContext;
    DeclarationName Name = R.getLookupName();
 
-   // Make sure that the failed lookup comes from the prompt.
+   // Make sure that the failed lookup comes from a function body.
    if(!CurDC || !CurDC->isFunctionOrMethod())
       return false;
 
@@ -248,32 +260,31 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
 }
 
 bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
-    if (!shouldResolveAtRuntime(R, S))
+   if (!shouldResolveAtRuntime(R, S))
       return false;
 
-    DeclarationName Name = R.getLookupName();
-    IdentifierInfo* II = Name.getAsIdentifierInfo();
-    SourceLocation Loc = R.getNameLoc();
-    ASTContext& C = R.getSema().getASTContext();
-    DeclContext* DC = static_cast<DeclContext*>(S->getEntity());
-    VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, C.DependentTy,
-                                      /*TypeSourceInfo*/0, SC_None, SC_None);
+   DeclarationName Name = R.getLookupName();
+   IdentifierInfo* II = Name.getAsIdentifierInfo();
+   SourceLocation Loc = R.getNameLoc();
+   ASTContext& C = R.getSema().getASTContext();
+   DeclContext* DC = static_cast<DeclContext*>(S->getEntity());
+   VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, C.DependentTy,
+                                     /*TypeSourceInfo*/0, SC_None, SC_None);
 
-    // Annotate the decl to give a hint in cling. FIXME: Current implementation
-    // is a gross hack, because TClingCallbacks shouldn't know about 
-    // EvaluateTSynthesizer at all!
+   // Annotate the decl to give a hint in cling. FIXME: Current implementation
+   // is a gross hack, because TClingCallbacks shouldn't know about 
+   // EvaluateTSynthesizer at all!
     
-    SourceRange invalidRange;
-    Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__ResolveAtRuntime"));
-    if (Result) {
+   SourceRange invalidRange;
+   Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__ResolveAtRuntime"));
+   if (Result) {
       R.addDecl(Result);
       DC->addDecl(Result);
       // Say that we can handle the situation. Clang should try to recover
       return true;
-    }
-    // We cannot handle the situation. Give up
-    return false;
-
+   }
+   // We cannot handle the situation. Give up
+   return false;
 }
 
 bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
@@ -314,6 +325,58 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
       }
    }
 
+   return false;
+}
+
+bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
+   // Make sure that the failed lookup comes the prompt. Currently, we support
+   // only the prompt.
+
+   // Should be disabled with the dynamic scopes.
+   if (m_IsRuntime)
+      return false;
+
+   if (R.isForRedeclaration()) 
+      return false;
+
+   DeclContext* DC = static_cast<DeclContext*>(S->getEntity());
+   if (!DC)
+      return false;
+   if (NamedDecl* ND = dyn_cast<NamedDecl>(DC))
+      if (!m_Interpreter->isUniqueWrapper(ND->getNameAsString()))
+         return false;
+
+   Preprocessor& PP = R.getSema().getPreprocessor();
+   //Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+   //PP.EnableBacktrackAtThisPos();
+   if (PP.LookAhead(0).isNot(tok::equal)) {
+      //PP.Backtrack();
+      return false;
+   }
+   //PP.CommitBacktrackedTokens();
+   //cleanupRAII.pop();
+   DeclarationName Name = R.getLookupName();
+   IdentifierInfo* II = Name.getAsIdentifierInfo();
+   SourceLocation Loc = R.getNameLoc();
+   ASTContext& C = R.getSema().getASTContext();
+   VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, 
+                                     C.getAutoType(QualType()),
+                                     /*TypeSourceInfo*/0, SC_None, SC_None);
+
+   // Annotate the decl to give a hint in cling. FIXME: Current implementation
+   // is a gross hack, because TClingCallbacks shouldn't know about 
+   // EvaluateTSynthesizer at all!
+    
+   SourceRange invalidRange;
+   Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__Auto"));
+
+   if (Result) {
+      R.addDecl(Result);
+      DC->addDecl(Result);
+      // Say that we can handle the situation. Clang should try to recover
+      return true;
+   }
+   // We cannot handle the situation. Give up
    return false;
 }
 
