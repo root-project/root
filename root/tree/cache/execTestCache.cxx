@@ -30,7 +30,6 @@ void execTestCache() {
    // set cache on input file (mimic TEventIterTree::GetTrees)
    TTreeCache *fTreeCache = 0;
    int fCacheSize = 100000;
-   bool fTreeCacheIsLearning = 1;
 
    TTree * main = (TTree*) in_tree;
    TFile *curfile = main->GetCurrentFile();
@@ -43,9 +42,8 @@ void execTestCache() {
       fTreeCache->UpdateBranches(main);
    }
    if (fTreeCache) {
-      fTreeCacheIsLearning = fTreeCache->IsLearning();
-      //~ if (fTreeCacheIsLearning)
-         //~ Info("GetTrees","the tree cache is in learning phase");
+      //if (fTreeCache->IsLearning())
+      //   Info("GetTrees","the tree cache is in learning phase");
    }
 
 
