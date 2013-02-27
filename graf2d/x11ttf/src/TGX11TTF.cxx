@@ -39,6 +39,10 @@
 #include <X11/keysym.h>
 #include <X11/xpm.h>
 
+struct RXColor:XColor{};
+struct RVisual:Visual{};
+struct RXImage:XImage{};
+
 #ifdef R__HAS_XFT
 
 #include "THashTable.h"
@@ -64,11 +68,6 @@ public:
       if (fXftFont) XftFontClose((Display*)gVirtualX->GetDisplay(), fXftFont);
    }
 };
-
-struct RXGCValues:XGCValues{};
-struct RXColor:XColor{};
-struct RVisual:Visual{};
-struct RXImage:XImage{};
 
 /////////////////// hash table //////////////////////////////////////////////
 class TXftFontHash {
