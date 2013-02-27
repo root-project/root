@@ -19,6 +19,7 @@
  */
 #include "Math/StaticCheck.h"
 #include <algorithm>  // required by std::copy
+#include <assert.h>
 
 namespace ROOT { 
 
@@ -29,6 +30,12 @@ namespace Math {
 
    template <class A, class T, unsigned int D1, unsigned int D2, class R>
    class Expr;
+
+   template <class T, unsigned int D>
+   class MatRepSym;
+
+   template <class T, unsigned int D1, unsigned int D2>
+   class MatRepStd;
 
    //=========================================================================
    /** 
