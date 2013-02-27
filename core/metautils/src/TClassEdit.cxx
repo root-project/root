@@ -518,8 +518,13 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
    }
    string full( mode & kLong64 ? TClassEdit::GetLong64_Name( CleanType(type, cleantypeMode) )
                : CleanType(type, cleantypeMode) );
-   if ( mode & kDropStd && strncmp( full.c_str(), "std::", 5) == 0) {
-      full.erase(0,5);
+   
+   
+   if ( mode & kDropStd) {
+      unsigned int offset = (0==strncmp("const ",full.c_str(),6)) ? 6 : 0;
+      if (strncmp( full.c_str() + offset, "std::", 5) == 0) {
+         full.erase(offset,5);
+      }
    }
    const char *t = full.c_str();
    const char *c = strchr(t,'<');
