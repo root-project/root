@@ -68,13 +68,18 @@ namespace {
       else if ( ! ( args && PyArg_ParseTuple( args, const_cast< char* >( "s" ), &cname ) ) )
          return 0;
 
+   // we may have been destroyed if this code is called during shutdown
+      if ( !gRootModule ) {
+         PyErr_Format( PyExc_AttributeError, "%s", cname );
+         return 0;
+      }
+
       std::string name = cname;
 
    // block search for privates
       if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
       // 1st attempt: look in myself
-         PyObject* attr = gRootModule ?
-            NULL : PyObject_GetAttrString( gRootModule, const_cast< char* >( cname ) );
+         PyObject* attr = PyObject_GetAttrString( gRootModule, const_cast< char* >( cname ) );
          if ( attr != 0 )
             return attr;
 
