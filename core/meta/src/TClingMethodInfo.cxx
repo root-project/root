@@ -444,11 +444,14 @@ const char *TClingMethodInfo::GetPrototype() const
    buf.clear();
    buf += Type()->Name();
    buf += ' ';
-   std::string name;
-   clang::PrintingPolicy policy(GetMethodDecl()->getASTContext().getPrintingPolicy());
-   const clang::NamedDecl *nd = GetMethodDecl();
-   nd->getNameForDiagnostic(name, policy, /*Qualified=*/true);
-   buf += name;
+   if (const clang::NamedDecl *nd = llvm::dyn_cast<clang::NamedDecl>(GetMethodDecl()->getDeclContext())) {
+      std::string name;
+      clang::PrintingPolicy policy(GetMethodDecl()->getASTContext().getPrintingPolicy());
+      nd->getNameForDiagnostic(name, policy, /*Qualified=*/true);
+      buf += name;
+      buf += "::";
+   }
+   buf += Name();
    buf += '(';
    TClingMethodArgInfo arg(fInterp, this);
    int idx = 0;
@@ -479,7 +482,20 @@ const char *TClingMethodInfo::Name() const
    static std::string buf;
    buf.clear();
    clang::PrintingPolicy policy(GetMethodDecl()->getASTContext().getPrintingPolicy());
-   GetMethodDecl()->getNameForDiagnostic(buf, policy, /*Qualified=*/false);
+   const clang::FunctionDecl *decl = GetMethodDecl();
+   if (llvm::isa<clang::CXXConstructorDecl>(decl))
+   {
+      const clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(decl->getDeclContext());
+      ND->getNameForDiagnostic(buf, policy, /*Qualified=*/false);
+      
+   } else if (llvm::isa<clang::CXXDestructorDecl>(decl))
+   {
+      const clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(decl->getDeclContext());
+      ND->getNameForDiagnostic(buf, policy, /*Qualified=*/false);
+      buf.insert(buf.begin(),'~');
+   } else {
+      GetMethodDecl()->getNameForDiagnostic(buf, policy, /*Qualified=*/false);
+   }
    return buf.c_str();
 }
 
