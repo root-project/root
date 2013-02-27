@@ -299,6 +299,11 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
    </ul>
    End_Html */
 
+   if (!gPad) {
+      Error("AddEntry", "need to create a canvas first");
+      return 0;
+   }
+
    TObject *obj = gPad->FindObject(name);
 
    // If the object "name" has not been found, the following code tries to
