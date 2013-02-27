@@ -43,6 +43,7 @@
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/IdentifierTable.h"
+#include "clang/Sema/Sema.h"
 
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
@@ -97,6 +98,11 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 {
    if (!ci || !ci->IsValid()) {
       return;
+   }
+   clang::CXXRecordDecl *cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::Decl*>(ci->GetDecl()));
+   if (cxxdecl) {
+      // Make sure we have an entry for all the implicit function.
+      fInterp->getSema().ForceDeclarationOfImplicitMembers(cxxdecl);
    }
    clang::DeclContext *dc =
       llvm::cast<clang::DeclContext>(const_cast<clang::Decl*>(ci->GetDecl()));
