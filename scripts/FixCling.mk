@@ -24,7 +24,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 # Features needed for the tutorials
-CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
+#CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
 # and See ClingReinstateRedeclarationAllowed
 # Other missing features
 CALLROOTEXE += -e "\#define ClingWorkAroundNoPrivateClassIO"
@@ -57,7 +57,7 @@ CALLROOTEXEBUILD += -e "\#define ClingWorkAroundNoPrivateClassIO"
 
 # variable to be used in Makefiles.
 ClingWorkAroundLackOfModule = yes
-ClingWorkAroundMissingImplicitAuto = yes
+#ClingWorkAroundMissingImplicitAuto = yes
 ClingWorkAroundMissingDynamicScope = yes
 ClingWorkAroundMissingUnloading = yes
 ClingWorkAroundDouble32inDefaultTmpltArg = yes
