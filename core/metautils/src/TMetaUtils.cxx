@@ -727,9 +727,30 @@ clang::NestedNameSpecifier *CreateNestedNameSpecifierForScopeOf(const clang::AST
    }
    
    if (decl) {
+      
       clang::NamedDecl* outer  = llvm::dyn_cast_or_null<clang::NamedDecl>(decl->getDeclContext());
       clang::NamespaceDecl* outer_ns = llvm::dyn_cast_or_null<clang::NamespaceDecl>(decl->getDeclContext());
       if (outer && !(outer_ns && outer_ns->isAnonymousNamespace())) {
+         clang::CXXRecordDecl *cxxdecl = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(decl->getDeclContext());
+         if (cxxdecl) {
+            clang::ClassTemplateDecl *clTempl = cxxdecl->getDescribedClassTemplate();
+            if (clTempl) {
+               // We are in the case of a type(def) that was declared in a
+               // class template but is *not* type dependent.  In clang, it gets
+               // attached to the class template declaration rather than any
+               // specific class template instantiation.   This result in 'odd'
+               // fully qualified typename:
+               //    vector<_Tp,_Alloc>::size_type
+               // Make the situation is 'useable' but looking a bit odd by
+               // picking a random instance as the declaring context.
+               if (clTempl->spec_begin() != clTempl->spec_end()) {
+                  decl = *(clTempl->spec_begin());
+                  outer  = llvm::dyn_cast<clang::NamedDecl>(decl);
+                  outer_ns = llvm::dyn_cast<clang::NamespaceDecl>(decl);
+               }
+            }
+         }
+         
          if (outer_ns) {
             return CreateNestedNameSpecifier(Ctx,outer_ns);
          } else {
