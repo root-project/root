@@ -45,6 +45,7 @@
 namespace TMVA {
 
    class MethodRuleFit;
+   class RuleFit;
 
    class RuleFitAPI {
 
