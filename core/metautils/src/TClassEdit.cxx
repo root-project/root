@@ -303,7 +303,8 @@ int   TClassEdit::STLKind(const char *type)
 //      Converts STL container name to number. vector -> 1, etc..
 
    unsigned char offset = 0;
-   if (strncmp(type,"std::",5)==0) { offset = 5; }
+   if (strncmp(type,"const ",6)==0) { offset += 6; }
+   if (strncmp(type,"std::",5)==0) { offset += 5; }
 
    static const char *stls[] =                  //container names
    {"any","vector","list","deque","map","multimap","set","multiset","bitset",0};
