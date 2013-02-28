@@ -279,6 +279,12 @@ int TClingMethodInfo::InternalNext()
          // Iterator is now valid.
          return 1;
       }
+//      if (clang::FunctionDecl *fdecl = llvm::dyn_cast<clang::FunctionDecl>(*fIter)) {
+//         if (fdecl->getAccess() == clang::AS_public || fdecl->getAccess() == clang::AS_none) {
+//            // Iterator is now valid.
+//            return 1;
+//         }
+//      }
    }
 }
 
