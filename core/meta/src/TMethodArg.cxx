@@ -75,8 +75,20 @@ const char *TMethodArg::GetTypeName() const
 const char *TMethodArg::GetFullTypeName() const
 {
    // Get full type description of method argument, e.g.: "class TDirectory*".
-
+   
    return gCint->MethodArgInfo_TypeName(fInfo);
+}
+
+//______________________________________________________________________________
+std::string TMethodArg::GetTypeNormalizedName() const
+{
+   // Get the normalized name of the return type.  A normalized name is fully
+   // qualified and has all typedef desugared except for the 'special' typedef
+   // which include Double32_t, Float16_t, [U]Long64_t and std::string.  It
+   // also has std:: removed [This is subject to change].
+   //
+   
+   return gCint->MethodArgInfo_TypeNormalizedName(fInfo);
 }
 
 //______________________________________________________________________________

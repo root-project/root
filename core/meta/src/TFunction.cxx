@@ -140,6 +140,19 @@ const char *TFunction::GetReturnTypeName() const
 }
 
 //______________________________________________________________________________
+std::string TFunction::GetReturnTypeNormalizedName() const
+{
+   // Get the normalized name of the return type.  A normalized name is fully
+   // qualified and has all typedef desugared except for the 'special' typedef
+   // which include Double32_t, Float16_t, [U]Long64_t and std::string.  It
+   // also has std:: removed [This is subject to change].
+   //
+   
+   if (gCint->MethodInfo_Type(fInfo) == 0) return "Unknown";
+   return gCint->MethodInfo_TypeNormalizedName(fInfo);
+}
+
+//______________________________________________________________________________
 Int_t TFunction::GetNargs() const
 {
    // Number of function arguments.

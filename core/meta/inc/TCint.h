@@ -282,6 +282,7 @@ public:
    virtual const char *MethodInfo_GetPrototype(MethodInfo_t *minfo) const;
    virtual const char *MethodInfo_Name(MethodInfo_t *minfo) const;
    virtual const char *MethodInfo_TypeName(MethodInfo_t *minfo) const;
+   virtual std::string MethodInfo_TypeNormalizedName(MethodInfo_t *minfo) const;
    virtual const char *MethodInfo_Title(MethodInfo_t *minfo) const;
 
    // G__MethodArgInfo interface
@@ -294,7 +295,7 @@ public:
    virtual const char *MethodArgInfo_DefaultValue(MethodArgInfo_t *marginfo) const;
    virtual const char *MethodArgInfo_Name(MethodArgInfo_t *marginfo) const;
    virtual const char *MethodArgInfo_TypeName(MethodArgInfo_t *marginfo) const;
-
+   virtual std::string MethodArgInfo_TypeNormalizedName(MethodArgInfo_t *marginfo) const;
 
    // G__TypeInfo interface
    virtual void   TypeInfo_Delete(TypeInfo_t *tinfo) const;

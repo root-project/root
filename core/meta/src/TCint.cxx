@@ -3265,6 +3265,14 @@ void *TCint::MethodInfo_Type(MethodInfo_t *minfo) const
    return info->Type();
 }
 //______________________________________________________________________________
+std::string TCint::MethodInfo_TypeNormalizedName(MethodInfo_t* minfo) const
+{
+   // Interface to CINT function
+
+   G__MethodInfo *info = (G__MethodInfo*)minfo;
+   return info->Type()->TrueName();
+}
+//______________________________________________________________________________
 const char *TCint::MethodInfo_GetMangledName(MethodInfo_t *minfo) const
 {
    // Interface to CINT function
@@ -3380,6 +3388,12 @@ const char *TCint::MethodArgInfo_TypeName(MethodArgInfo_t *marginfo) const
    return info->Type()->Name();
 }
 
+//______________________________________________________________________________
+std::string TCint::MethodArgInfo_TypeNormalizedName(MethodArgInfo_t* marginfo) const
+{
+   G__MethodArgInfo *info = (G__MethodArgInfo*)marginfo;
+   return info->Type()->TrueName();
+}
 
 //______________________________________________________________________________
 // G__TypeInfo interface

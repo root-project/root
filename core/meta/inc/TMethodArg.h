@@ -49,6 +49,7 @@ public:
    TFunction     *GetMethod() const { return fMethod; }
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
+   std::string    GetTypeNormalizedName() const;
    Long_t         Property() const;
 
    TDataMember   *GetDataMember() const;

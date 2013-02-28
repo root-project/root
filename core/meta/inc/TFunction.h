@@ -49,6 +49,7 @@ public:
    virtual const char *GetPrototype() const;
    const char         *GetSignature();
    const char         *GetReturnTypeName() const;
+   std::string         GetReturnTypeNormalizedName() const;
    TList              *GetListOfMethodArgs();
    Int_t               GetNargs() const;
    Int_t               GetNargsOpt() const;
