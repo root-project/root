@@ -36,6 +36,14 @@ namespace {
    using namespace PyROOT;
 
 //____________________________________________________________________________
+   PyObject* RootModuleResetCallback( PyObject*, PyObject* )
+   {
+      gRootModule = 0;   // reference was borrowed
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
+//____________________________________________________________________________
    PyObject* LookupRootEntity( PyObject* pyname, PyObject* args )
    {
    // Find a match within the ROOT module for something with name 'pyname'.
@@ -44,6 +52,12 @@ namespace {
          cname = PyROOT_PyUnicode_AsString( pyname );
       else if ( ! ( args && PyArg_ParseTuple( args, const_cast< char* >( "s" ), &cname ) ) )
          return 0;
+
+   // we may have been destroyed if this code is called during shutdown
+      if ( !gRootModule ) {
+         PyErr_Format( PyExc_AttributeError, "%s", cname );
+         return 0;
+      }
 
       std::string name = cname;
 
@@ -428,6 +442,8 @@ static PyMethodDef gPyROOTMethods[] = {
    { (char*) "MakeRootTemplateClass", (PyCFunction)MakeRootTemplateClass,
      METH_VARARGS, (char*) "PyROOT internal function" },
    { (char*) "_DestroyPyStrings", (PyCFunction)PyROOT::DestroyPyStrings,
+     METH_NOARGS, (char*) "PyROOT internal function" },
+   { (char*) "_ResetRootModule", (PyCFunction)RootModuleResetCallback,
      METH_NOARGS, (char*) "PyROOT internal function" },
    { (char*) "AddressOf", (PyCFunction)AddressOf,
      METH_VARARGS, (char*) "Retrieve address of held object in a buffer" },
