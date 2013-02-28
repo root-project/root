@@ -3006,6 +3006,7 @@ TList *TClass::GetListOfAllPublicMethods()
       TMethod    *p;
       while ((pB = (TBaseClass*) nextBaseClass())) {
          if (!pB->GetClassPointer()) continue;
+         if (!(pB->Property() & kIsPublic)) continue;
          TIter next(pB->GetClassPointer()->GetListOfAllPublicMethods());
          TList temp;
          while ((p = (TMethod*) next()))
@@ -3043,6 +3044,7 @@ TList *TClass::GetListOfAllPublicDataMembers()
       TBaseClass *pB;
       while ((pB = (TBaseClass*) next_BaseClass())) {
          if (!pB->GetClassPointer()) continue;
+         if (!(pB->Property() & kIsPublic)) continue;
          fAllPubData->AddAll(pB->GetClassPointer()->GetListOfAllPublicDataMembers() );
       }
    }
