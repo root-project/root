@@ -486,25 +486,20 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
       delete [] path; return result;
    }
 
-   TObject *obj;
+   TDirectoryFile *obj;
    char *slash = (char*)strchr(path,'/');
    if (!slash) {                     // we are at the lowest level
       if (!strcmp(path, "..")) {
          result = GetMotherDir();
          delete [] path; return result;
       }
-      obj = Get(path);
+      GetObject(path,obj);
       if (!obj) {
          if (printError) Error(funcname,"Unknown directory %s", path);
          delete [] path; return 0;
       }
 
-      //Check return object is a directory
-      if (!obj->InheritsFrom(TDirectoryFile::Class())) {
-         if (printError) Error(funcname,"Object %s is not a directory", path);
-         delete [] path; return 0;
-      }
-      delete [] path; return (TDirectory*)obj;
+      delete [] path; return obj;
    }
 
    TString subdir(path);
@@ -517,17 +512,12 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
          result = mom->GetDirectory(slash+1,printError,funcname);
       delete [] path; return result;
    }
-   obj = Get(subdir);
+   GetObject(subdir,obj);
    if (!obj) {
       if (printError) Error(funcname,"Unknown directory %s", subdir.Data());
       delete [] path; return 0;
    }
 
-   //Check return object is a directory
-   if (!obj->InheritsFrom(TDirectoryFile::Class())) {
-      if (printError) Error(funcname,"Object %s is not a directory", subdir.Data());
-      delete [] path; return 0;
-   }
    result = ((TDirectory*)obj)->GetDirectory(slash+1,printError,funcname);
    delete [] path; return result;
 }
