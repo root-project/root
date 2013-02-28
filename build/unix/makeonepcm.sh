@@ -99,6 +99,10 @@ find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
  -e /TOracleRow.h/d \
  -e /TOracleServer.h/d \
  -e /TOracleStatement.h/d \
+ -e /TPgSQLResult.h/d \
+ -e /TPgSQLRow.h/d \
+ -e /TPgSQLServer.h/d \
+ -e /TPgSQLStatement.h/d \
  -e /TPythia8.h/d \
  -e /TPythia8Decayer.h/d \
  -e /TResponseTable.h/d \
