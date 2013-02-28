@@ -34,7 +34,7 @@ ClassImp(TH2Poly)
 
 <h3>Overview</h3>
 <tt>TH2Poly</tt> is a 2D Histogram class (TH2) allowing to define polygonal
-bins of arbitary shape.
+bins of arbitrary shape.
 <p>
 Each bin in the <tt>TH2Poly</tt> histogram is a <tt>TH2PolyBin</tt> object.
 <tt>TH2PolyBin</tt> is a very simple class containing the vertices (stored
