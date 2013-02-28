@@ -2734,6 +2734,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
             fInput->Remove(fSelector);
             fOutput->Remove(fSelector);
             if (output) output->Remove(fSelector);
+            fSelector = 0;
          }
 
          // We have transferred copy of the output objects in TQueryResult,
@@ -2747,6 +2748,13 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          fOutput->SetOwner(kFALSE);
          fOutput->Clear("nodelete");
          SafeDelete(fOutput);
+
+      } else {
+
+         // Cleanup
+         fOutput->SetOwner();
+         SafeDelete(fSelector);
+         if (!fCreateSelObj) fSelector = 0;
       }
    }
    PDB(kGlobal,1) Info("Process","exit");
