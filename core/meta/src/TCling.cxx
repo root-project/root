@@ -4136,6 +4136,16 @@ const char* TCling::MethodInfo_TypeName(MethodInfo_t* minfo) const
 }
 
 //______________________________________________________________________________
+std::string TCling::MethodInfo_TypeNormalizedName(MethodInfo_t* minfo) const
+{
+   TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   if (info && info->IsValid())
+      return info->Type()->NormalizedName(*fNormalizedCtxt);
+   else
+      return "";
+}
+
+//______________________________________________________________________________
 const char* TCling::MethodInfo_Title(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
@@ -4215,12 +4225,11 @@ const char* TCling::MethodArgInfo_TypeName(MethodArgInfo_t* marginfo) const
 }
 
 //______________________________________________________________________________
-const char* TCling::MethodArgInfo_TrueTypeName(MethodArgInfo_t* marginfo) const
+std::string TCling::MethodArgInfo_TypeNormalizedName(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
-   return info->Type()->TrueName(*fNormalizedCtxt);
+   return info->Type()->NormalizedName(*fNormalizedCtxt);
 }
-
 
 //______________________________________________________________________________
 //

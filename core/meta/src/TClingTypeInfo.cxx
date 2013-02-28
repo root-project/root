@@ -283,6 +283,9 @@ const char *TClingTypeInfo::StemName() const
 //______________________________________________________________________________
 const char *TClingTypeInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
+   // Return the normalized name of the type (i.e. fully qualified and without
+   // the non-opaque typedefs.
+   
    if (!IsValid()) {
       return 0;
    }
@@ -293,5 +296,21 @@ const char *TClingTypeInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &no
    ROOT::TMetaUtils::GetNormalizedName(buf,fQualType, *fInterp, normCtxt);
 
    return buf.c_str();
+}
+
+//______________________________________________________________________________
+std::string TClingTypeInfo::NormalizedName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
+{
+   // Return the normalized name of the type (i.e. fully qualified and without
+   // the non-opaque typedefs.
+   
+   if (!IsValid()) {
+      return 0;
+   }
+   std::string buf;
+   ROOT::TMetaUtils::GetNormalizedName(buf,fQualType, *fInterp, normCtxt);
+   
+   // in C++11 this will be efficient thanks to the move constructor.
+   return buf;
 }
 

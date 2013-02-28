@@ -66,6 +66,7 @@ public:
    int                  Size() const; // Get size in bytes of type.
    const char          *StemName() const; // Get name of type chain leaf node.
    const char          *TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const; // Get name of type with no typedefs.
+   std::string          NormalizedName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const; // Get name of type with no typedefs.
 
 };
 
