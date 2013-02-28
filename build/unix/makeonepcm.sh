@@ -167,6 +167,17 @@ find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
  -e /ZTrees.h/d \
  -e /TGX11.h/d \
  -e /TGX11TTF.h/d \
+ -e /crc32.h/d \
+ -e /deflate.h/d \
+ -e /inffast.h/d \
+ -e /inffixed.h/d \
+ -e /inflate.h/d \
+ -e /inftrees.h/d \
+ -e /trees.h/d \
+ -e /zconf.h/d \
+ -e /zlib.h/d \
+ -e /gzguts.h/d \
+ -e /zutil.h/d \
 > all.h
 
 echo '#include "cling/Interpreter/DynamicLookupRuntimeUniverse.h"' >> all.h
