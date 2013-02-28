@@ -599,8 +599,7 @@ long TClingCallFunc::ExecInt(void *address) const
       SetThisPtr(CD, address);
       //fArgVals[0] = cling::StoredValueRef::bitwiseCopy(C, thisPtr);
 
-      cling::Value val;
-      Invoke(&val);
+      Invoke();
       // And return the address of the object.
       return reinterpret_cast<long>(address);
    }
