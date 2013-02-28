@@ -31,7 +31,7 @@
 using std::cout; 
 using std::endl; 
 
-int n = 5000000;
+int nsamples = 5000000;
 
 bool useRandomSeed = false;   // to use a random seed different every time
 
@@ -61,7 +61,7 @@ public:
 
       // make ref histo (uniform histo between 0,1
       fHref = new TH1D("Href","uniform ref histo",100,0,1);
-      for (int i = 0; i < n; ++i) 
+      for (int i = 0; i < nsamples; ++i) 
          fHref->Fill(gRandom->Rndm() );
    }
 
@@ -78,16 +78,16 @@ public:
       TStopwatch w; 
 
       w.Start(); 
-      for (int i = 0; i < n; ++i) 
+      for (int i = 0; i < nsamples; ++i) 
          unr.Sample(); 
 
       w.Stop(); 
-      double time = w.CpuTime()*1.E9/n; 
+      double time = w.CpuTime()*1.E9/nsamples; 
 
 
       TH1D htmp("htmp","gaussian generated cdf",100,0,1.);   
       // test quality (use cdf to avoid zero bins)
-      int n2 = n/100;
+      int n2 = nsamples/100;
       double x;
       for (int i = 0; i<n2; ++i) { 
          x =  unr.Sample(); 
@@ -112,17 +112,17 @@ public:
 
       TStopwatch w; 
       w.Start();
-      for (int i = 0; i < n; ++i) {
+      for (int i = 0; i < nsamples; ++i) {
          f->GetRandom(); 
       }
 
       w.Stop(); 
-      double time = w.CpuTime()*1.E9/n; 
+      double time = w.CpuTime()*1.E9/nsamples; 
 
 
       TH1D htmp("htmp","gaussian generated cdf",100,0,1.);   
       // test quality (use cdf to avoid zero bins)
-      int n2 = n/100;
+      int n2 = nsamples/100;
       for (int i = 0; i<n2; ++i) { 
          double x =  f->GetRandom(); 
          htmp.Fill( fCdf->Eval(x) ); 
@@ -232,7 +232,7 @@ int unuranDistr() {
 
    // ninv (needs cdf, pdf is an option) 
    ret = unr.Init(dist,"ninv"); 
-   n/= 10; // method is too slow
+   nsamples /= 10; // method is too slow
    if (!ret) { 
       std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
       iret =  -5;
@@ -262,7 +262,7 @@ int unuranDistr() {
    else 
       iret |= t.testUnuran(unr); 
 
-   n*= 10;
+   nsamples *= 10;
    ret = unr.Init(dist,"utdr"); 
    if (!ret) { 
       std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
@@ -311,7 +311,7 @@ int unuranDistr() {
       std::cerr << "Error initializing unuran with method " << unr.MethodName()  << endl; 
       iret =  -20;
    } 
-   int n2 = n/10;
+   int n2 = nsamples/10;
    for (int i = 0; i < n2; ++i) {
       double x1 = unr.Sample();
       h1->Fill(  x1 ); 
