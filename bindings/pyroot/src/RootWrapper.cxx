@@ -204,10 +204,12 @@ void PyROOT::InitRoot()
 }
 
 //____________________________________________________________________________
+#define TCE_REMOVE_ALL_DEFALLOC 4
 template< class T, class B, class M >
 int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
 // get the unscoped class name
-   std::string clName = klass.Name();
+   std::string clName = TClassEdit::ShortType(
+      klass.Name().c_str(), TCE_REMOVE_ALL_DEFALLOC );
 
 // some properties that'll affect building the dictionary
    Bool_t isNamespace = klass.IsNamespace();
@@ -226,11 +228,13 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
    for ( size_t inm = 0; inm < nMethods; ++inm ) {
       const M& method = klass.FunctionMemberAt( inm );
 
-   // special case tracker
-      Bool_t setupSetItem = kFALSE;
-
    // retrieve method name
       std::string mtName = method.Name();
+
+   // special case trackers
+      Bool_t setupSetItem = kFALSE;
+      Bool_t isConstructor =
+         TClassEdit::ShortType( mtName.c_str(), TCE_REMOVE_ALL_DEFALLOC ) == clName;
 
    // filter empty names (happens for namespaces, is bug?)
       if ( mtName == "" )
@@ -273,7 +277,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
    // note the overload implications which are name based, and note that rootcint
    // does not create the interface methods for private/protected methods ...
       if ( ! method.IsPublic() ) {
-         if ( mtName == clName )             // don't expose private ctors
+         if ( isConstructor )                // don't expose private ctors
             continue;
          else                                // mangle private methods
             mtName = "_" + clName + "__" + mtName;
@@ -283,7 +287,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
       PyCallable* pycall = 0;
       if ( isStatic == kTRUE )               // class method
          pycall = new TClassMethodHolder< T, M >( klass, method );
-      else if ( mtName == clName ) {         // constructor
+      else if ( isConstructor ) {            // constructor
          pycall = new TConstructorHolder< T, M >( klass, method );
          mtName = "__init__";
          hasConstructor = kTRUE;

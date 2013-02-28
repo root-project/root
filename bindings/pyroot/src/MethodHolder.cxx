@@ -80,9 +80,8 @@ inline PyObject* PyROOT::TMethodHolder< T, M >::CallFast( void* self, Bool_t rel
 
    PyObject* result = 0;
 
-// CLING WORKAROUND -- see #100389; this happens for default ctors, which
-// should be allowed to fail here (return 0) rather than blocked from being
-// called at all
+// CLING WORKAROUND -- this happens for various cases, so allow them to fail
+// here (return 0) rather than blocked from being called at all
    if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) )
       return 0;
 // -- CLING WORKAROUND
@@ -188,7 +187,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
 
    return kTRUE;
 
-// CLING WORKAROUND -- b/c of #100389, checking fMethod remains necessary
+// CLING WORKAROUND -- checking (Bool_t)fMethod remains necessary
    if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) && (Bool_t)fMethod == true ) {
       PyErr_Format( PyExc_RuntimeError, "could not resolve %s::%s(%s)",
          fClass.Name().c_str(), fMethod.Name().c_str(), callString.c_str() );
