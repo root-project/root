@@ -43,6 +43,9 @@
 #ifndef ROOT_Math_BinaryOpPolicy
 #include "Math/BinaryOpPolicy.h"
 #endif
+#ifndef ROOT_Math_Expression
+#include "Math/Expression.h"
+#endif
 #ifndef ROOT_Math_HelperOps
 #include "Math/HelperOps.h"
 #endif
@@ -54,7 +57,8 @@ namespace ROOT {
 
   namespace Math { 
 
-
+    template <class T, unsigned int D>
+    class SVector;
 
 #ifdef XXX
 //==============================================================================
