@@ -1069,9 +1069,9 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
    // We are going to loop over the JIT function args.
    llvm::FunctionType *ft = fEEFunc->getFunctionType();
 
-   // If there are still arguments to be resolved
-   unsigned num_default_args_to_resolve = num_params - num_given_args;
-   if (num_default_args_to_resolve) {
+   if (num_given_args < num_params) {
+      // If there are still arguments to be resolved
+      unsigned num_default_args_to_resolve = num_params - num_given_args;
       // This means that we have synthesized artificial default arg __Res
       if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
          if (!fArgVals[1].isValid())
@@ -1086,8 +1086,8 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
          // If this was a member function, skip the this ptr - it has already 
          // been handled.
          arg_index = min_args + i - IsMemberFunc() + IsTrampolineFunc();
-        //arg_index = num_given_args - min_args + i;
-        //arg_index = num_given_args + i - IsMemberFunc() + IsTrampolineFunc();
+         //arg_index = num_given_args - min_args + i;
+         //arg_index = num_given_args + i - IsMemberFunc() + IsTrampolineFunc();
          // Use the default value from the decl.
          pvd = FD->getParamDecl(arg_index);
          assert(pvd->hasDefaultArg() && "No default for argument!");
@@ -1117,8 +1117,8 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
                   arg_index, ExprToString(expr).c_str());
             return;
          }
-      }
-   }
+      } // for default arg
+   } // if less args than params
 
    // Add the this ptr if valid.
    if(fArgVals[0].isValid())
