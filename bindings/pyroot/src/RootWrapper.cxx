@@ -204,12 +204,11 @@ void PyROOT::InitRoot()
 }
 
 //____________________________________________________________________________
-#define TCE_REMOVE_ALL_DEFALLOC 4
 template< class T, class B, class M >
 int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
 // get the unscoped class name
    std::string clName = TClassEdit::ShortType(
-      klass.Name().c_str(), TCE_REMOVE_ALL_DEFALLOC );
+      klass.Name().c_str(), TClassEdit::kDropAlloc );
 
 // some properties that'll affect building the dictionary
    Bool_t isNamespace = klass.IsNamespace();
@@ -234,7 +233,7 @@ int PyROOT::BuildRootClassDict( const T& klass, PyObject* pyclass ) {
    // special case trackers
       Bool_t setupSetItem = kFALSE;
       Bool_t isConstructor =
-         TClassEdit::ShortType( mtName.c_str(), TCE_REMOVE_ALL_DEFALLOC ) == clName;
+         TClassEdit::ShortType( mtName.c_str(), TClassEdit::kDropAlloc ) == clName;
 
    // filter empty names (happens for namespaces, is bug?)
       if ( mtName == "" )
