@@ -84,7 +84,7 @@ enum EProperty {
    kIsNamespace     = 0x08000000,
    kIsConstMethod   = 0x10000000,
    kIsUsingVariable = 0x20000000,
-   kIsDefinedInStd  = 0x30000000
+   kIsDefinedInStd  = 0x40000000
 };
 
 enum EClassProperty {
