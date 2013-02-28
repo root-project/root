@@ -456,7 +456,13 @@ const char *TClingMethodInfo::GetPrototype() const
    buf.clear();
    buf += Type()->Name();
    buf += ' ';
-   if (const clang::NamedDecl *nd = llvm::dyn_cast<clang::NamedDecl>(GetMethodDecl()->getDeclContext())) {
+   if (const clang::TypeDecl *td = llvm::dyn_cast<clang::TypeDecl>(GetMethodDecl()->getDeclContext())) {
+      std::string name;
+      clang::QualType qualType(td->getTypeForDecl(),0);
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(name,qualType,*fInterp);
+      buf += name;
+      buf += "::";
+   } else if (const clang::NamedDecl *nd = llvm::dyn_cast<clang::NamedDecl>(GetMethodDecl()->getDeclContext())) {
       std::string name;
       clang::PrintingPolicy policy(GetMethodDecl()->getASTContext().getPrintingPolicy());
       nd->getNameForDiagnostic(name, policy, /*Qualified=*/true);
@@ -497,13 +503,15 @@ const char *TClingMethodInfo::Name() const
    const clang::FunctionDecl *decl = GetMethodDecl();
    if (llvm::isa<clang::CXXConstructorDecl>(decl))
    {
-      const clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(decl->getDeclContext());
-      ND->getNameForDiagnostic(buf, policy, /*Qualified=*/false);
+      const clang::TypeDecl* td = llvm::dyn_cast<clang::TypeDecl>(decl->getDeclContext());
+      clang::QualType qualType(td->getTypeForDecl(),0);
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(buf,qualType,*fInterp);
       
    } else if (llvm::isa<clang::CXXDestructorDecl>(decl))
    {
-      const clang::NamedDecl* ND = llvm::dyn_cast<clang::NamedDecl>(decl->getDeclContext());
-      ND->getNameForDiagnostic(buf, policy, /*Qualified=*/false);
+      const clang::TypeDecl* td = llvm::dyn_cast<clang::TypeDecl>(decl->getDeclContext());
+      clang::QualType qualType(td->getTypeForDecl(),0);
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(buf,qualType,*fInterp);
       buf.insert(buf.begin(),'~');
    } else {
       GetMethodDecl()->getNameForDiagnostic(buf, policy, /*Qualified=*/false);
