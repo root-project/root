@@ -51,6 +51,7 @@
 #include "TObjArray.h"
 #include "TExMap.h"
 #include "TVirtualMutex.h"
+#include "TError.h"
 
 TObjArray  *TProcessID::fgPIDs   = 0; //pointer to the list of TProcessID
 TProcessID *TProcessID::fgPID    = 0; //pointer to the TProcessID of the current session
@@ -93,6 +94,14 @@ TProcessID *TProcessID::AddProcessID()
 
    R__LOCKGUARD2(gROOTMutex);
 
+   if (fgPIDs && fgPIDs->GetEntriesFast() >= 65534) {
+      if (fgPIDs->GetEntriesFast() == 65534) {
+         ::Warning("TProcessID::AddProcessID","Maximum number of TProcessID (65535) is almost reached (one left).  TRef will stop being functional when the limit is reached.");
+      } else {
+         ::Fatal("TProcessID::AddProcessID","Maximum number of TProcessID (65535) has been reached.  TRef are not longer functional.");
+      }
+   }
+
    TProcessID *pid = new TProcessID();
 
    if (!fgPIDs) {
@@ -104,11 +113,13 @@ TProcessID *TProcessID::AddProcessID()
    pid->IncrementCount();
 
    fgPIDs->Add(pid);
+   // if (apid == 0) for(int incr=0; incr < 65533; ++incr) fgPIDs->Add(0); // NOTE: DEBUGGING ONLY MUST BE REMOVED!
    char name[20];
    snprintf(name,20,"ProcessID%d",apid);
    pid->SetName(name);
+   pid->SetUniqueID((UInt_t)apid);
    TUUID u;
-   apid = fgPIDs->GetEntriesFast();
+   //apid = fgPIDs->GetEntriesFast();
    pid->SetTitle(u.AsString());
    return pid;
 }
@@ -128,10 +139,26 @@ UInt_t TProcessID::AssignID(TObject *obj)
       fgPID->PutObjectWithID(obj,uid);
       return uid;
    }
+   if (fgNumber >= 16777215) {
+      // This process id is 'full', we need to use a new one.
+      fgPID = AddProcessID();
+      fgNumber = 0;
+      for(Int_t i = 0; i < fgPIDs->GetLast()+1; ++i) {
+         TProcessID *pid = (TProcessID*)fgPIDs->At(i);
+         if (pid && pid->fObjects && pid->fObjects->GetEntries() == 0) {
+            pid->Clear();
+         }
+      }
+   }
    fgNumber++;
    obj->SetBit(kIsReferenced);
    uid = fgNumber;
-   obj->SetUniqueID(uid);
+   // if (fgNumber<10) fgNumber = 16777213; // NOTE: DEBUGGING ONLY MUST BE REMOVED!
+   if ( fgPID->GetUniqueID() < 255 ) {
+      obj->SetUniqueID( (uid & 0xffffff) + (fgPID->GetUniqueID()<<24) );
+   } else {
+      obj->SetUniqueID( (uid & 0xffffff) + 0xff000000 /* 255 << 24 */ );
+   }
    fgPID->PutObjectWithID(obj,uid);
    return uid;
 }
@@ -162,6 +189,17 @@ void TProcessID::Clear(Option_t *)
    // delete the TObjArray pointing to referenced objects
    // this function is called by TFile::Close("R")
 
+   if (GetUniqueID()>254 && fObjects && fgObjPIDs) {
+      // We might have many references registered in the map
+      for(Int_t i = 0; i < fObjects->GetSize(); ++i) {
+         TObject *obj = fObjects->UncheckedAt(i);
+         if (obj) {
+            ULong64_t hash = Void_Hash(obj);
+            fgObjPIDs->Remove(hash,(Long64_t)obj);
+            (*fObjects)[i] = 0;
+         }
+      }
+   }
    delete fObjects; fObjects = 0;
 }
 
@@ -323,7 +361,13 @@ void TProcessID::RecursiveRemove(TObject *obj)
    if (!fObjects) return;
    if (!obj->TestBit(kIsReferenced)) return;
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
-   if (obj == GetObjectWithID(uid)) fObjects->RemoveAt(uid);
+   if (obj == GetObjectWithID(uid)) {
+      if (fgObjPIDs) {
+         ULong64_t hash = Void_Hash(obj);
+         fgObjPIDs->Remove(hash,(Long64_t)obj);
+      }
+      (*fObjects)[uid] = 0; // Avoid recalculation of fLast (compared to ->RemoveAt(uid))
+   }
 }
 
 
