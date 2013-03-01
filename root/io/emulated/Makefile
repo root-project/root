@@ -60,12 +60,11 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 ifneq ($(ClingWorkAroundMissingSmartInclude),)
-inherit.root: CALLROOTEXE += -e 'gSystem->Load("classes_h");'
+CALLROOTEXE_INH_EXTRA = -e 'gSystem->Load("classes_h");'
 endif
 
 ifneq ($(ClingWorkAroundMissingSmartInclude),)
-read.log: CALLROOTEXE += -e 'gSystem->Load("marker_h");'
-rewrite.log: CALLROOTEXE += -e 'gSystem->Load("marker_h");'
+CALLROOTEXE_READ_EXTRA = -e 'gSystem->Load("marker_h");'
 endif
 
 ifneq ($(ClingWorkAroundMissingAutoLoading),)
@@ -76,13 +75,13 @@ abstract.root: writeAbstract_cxx.$(DllSuf) abstract.h
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l writeAbstract.cxx+ > writeAbstract.log 2>&1 
 
 inherit.root: write.C marker_h.$(DllSuf) classes_h.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l write.C > write.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) $(CALLROOTEXE_INH_EXTRA) -q -b -l write.C > write.log 2>&1 
 
 read.log: read.C marker_h.$(DllSuf) inherit.root
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l read.C > read.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) $(CALLROOTEXE_READ_EXTRA) -q -b -l read.C > read.log 2>&1 
 
 rewrite.log: rewrite.C marker_h.$(DllSuf) inherit.root
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l rewrite.C > rewrite.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) $(CALLROOTEXE_READ_EXTRA) -q -b -l rewrite.C > rewrite.log 2>&1 
 
 readAbstract.log: readAbstract_cxx.$(DllSuf) abstract.root
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l readAbstract.cxx+ > readAbstract.log 2>&1 
