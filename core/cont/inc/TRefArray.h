@@ -55,6 +55,7 @@ protected:
    Bool_t        OutOfBoundsError(const char *where, Int_t i) const;
    Int_t         GetAbsLast() const;
    TObject      *GetFromTable(Int_t idx) const;
+   Bool_t        GetObjectUID(Int_t &uid, TObject *obj, const char *methodname);
 
 public:
    typedef TRefArrayIter Iterator_t;

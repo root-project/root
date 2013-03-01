@@ -170,7 +170,7 @@ TRefArray::~TRefArray()
 }
 
 //______________________________________________________________________________
-static Bool_t R__GetUID(Int_t &uid, TObject *obj, TProcessID *pid, const char *methodname)
+Bool_t TRefArray::GetObjectUID(Int_t &uid, TObject *obj, const char *methodname)
 {
    // Private/static function, check for validity of pid.
 
@@ -179,21 +179,48 @@ static Bool_t R__GetUID(Int_t &uid, TObject *obj, TProcessID *pid, const char *m
    if (obj->TestBit(kHasUUID)) {
       valid = kFALSE;
    } else if (obj->TestBit(kIsReferenced)) {
-      valid = (pid == TProcessID::GetProcessWithUID(obj));
+      valid = (fPID == TProcessID::GetProcessWithUID(obj));
       if (valid) {
          uid = obj->GetUniqueID();
+      } else {
+         if (GetAbsLast() < 0) {
+            // The container is empty, we can switch the ProcessID.
+            fPID = TProcessID::GetProcessWithUID(obj);
+            valid = kTRUE;
+            Warning(TString::Format("TRefArray::%s",methodname),"The ProcessID for the %p has been switched to %s/%s:%d. There are too many referenced objects.",
+                    this,fPID->GetName(),fPID->GetTitle(),fPID->GetUniqueID()); 
+        }
       }
    } else {
-      valid = (pid == TProcessID::GetSessionProcessID());
-      if (valid) {
-         uid = TProcessID::AssignID(obj);
+      // If we could, we would just add the object to the
+      // TRefArray's ProcessID.  For now, just check the
+      // ProcessID it would be added to, i.e the current one,
+      // is not full.
+      
+      if (!(TProcessID::GetObjectCount() >= 16777215)) {
+         valid = (fPID == TProcessID::GetSessionProcessID());
+         if (valid) {
+            uid = TProcessID::AssignID(obj);
+         }
+      } else {
+         // The AssignID will create a new TProcessID.
+         if (GetAbsLast() < 0) {
+            // If we are empty, we can handle it.
+            uid = TProcessID::AssignID(obj);
+            fPID = TProcessID::GetProcessWithUID(obj);
+            Warning(TString::Format("TRefArray::%s",methodname),"The ProcessID for the %p has been switched to %s/%s:%d. There are too many referenced objects.",
+                    this,fPID->GetName(),fPID->GetTitle(),fPID->GetUniqueID());
+            return kTRUE; 
+        } else {
+            Error(TString::Format("TRefArray::%s",methodname),"The object at %p can not be registered in the process the TRefArray points to (pid = %s/%s) because the ProcessID has too many objects and the TRefArray already contains other objecs.",obj,fPID->GetName(),fPID->GetTitle());
+            return kFALSE;
+         }
       }
    }
 
    if (!valid) {
-      TString name; name.Form("TRefArray::%s",methodname);
-      ::Error(name,
-              "The object at %p is not registered in the process the TRefArray point to (pid = %s/%s)",obj,pid->GetName(),pid->GetTitle());
+      ::Error(TString::Format("TRefArray::%s",methodname),
+              "The object at %p is not registered in the process the TRefArray points to (pid = %s/%s)",obj,fPID->GetName(),fPID->GetTitle());
    }
    return valid;
 }
@@ -209,7 +236,7 @@ void TRefArray::AddFirst(TObject *obj)
 
    // Check if the object can belong here
    Int_t uid;
-   if (R__GetUID(uid, obj, fPID, "AddFirst")) {
+   if (GetObjectUID(uid, obj, "AddFirst")) {
       fUIDs[0] = uid;
       Changed();
    }
@@ -284,7 +311,7 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
 
    // Check if the object can belong here
    Int_t uid;
-   if (R__GetUID(uid, obj, fPID, "AddAtAndExpand")) {
+   if (GetObjectUID(uid, obj, "AddAtAndExpand")) {
       fUIDs[idx-fLowerBound] = uid;
       fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
       Changed();
@@ -302,7 +329,7 @@ void TRefArray::AddAt(TObject *obj, Int_t idx)
 
    // Check if the object can belong here
    Int_t uid;
-   if (R__GetUID(uid, obj, fPID, "AddAt")) {
+   if (GetObjectUID(uid, obj, "AddAt")) {
       fUIDs[idx-fLowerBound] = uid;;
       fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
       Changed();
@@ -322,7 +349,7 @@ Int_t  TRefArray::AddAtFree(TObject *obj)
          if (!fUIDs[i]) {         // Add object at position i
             // Check if the object can belong here
             Int_t uid;
-            if (R__GetUID(uid, obj, fPID, "AddAtFree")) {
+            if (GetObjectUID(uid, obj, "AddAtFree")) {
                fUIDs[i] = uid;
                fLast = TMath::Max(i, GetAbsLast());
                Changed();

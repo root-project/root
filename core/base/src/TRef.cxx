@@ -60,10 +60,13 @@
 // in addition to the TObject part of TRef (fBits,fUniqueID).
 // When the TRef is read, its pointer fPID is set to the value
 // stored in the TObjArray of TFile::fProcessIDs (fProcessIDs[pidf]).
+// The pidf is stored as a UShort_t limiting a file to 65535 distinct
+// ProcessID objects.
 // The pidf is stored in the bits 24->31 of the fUniqueID of the TRef.
-// This implies that the number of TRefs in one process should not
-// exceed 2**23 = 8388608 and that the number of processes (different jobs)
-// writing TRefs to one file should be less than 256.
+// This implies that the number of TRefs in a single ProcessID should not
+// exceed 2**24 = 16777216.   For pidf greater than 254, the value 0xff is
+// stored in those bits and we use the table TProcessID::fgObjPIDs which
+// links the referenced object's address to its ProcessID. 
 // See section "ObjectNumber" below for a recipee to minimize the object count.
 // If the objectnumber exceeds this limit, it could be the sign that:
 //   -The object count is never reset (see below)
@@ -253,11 +256,10 @@ void TRef::operator=(TObject *obj)
       } else {
          if (obj->TestBit(kIsReferenced)) {
             uid = obj->GetUniqueID();
-            fPID = TProcessID::GetProcessWithUID(uid,obj);
          } else {
-            fPID = TProcessID::GetSessionProcessID();
             uid = TProcessID::AssignID(obj);
          }
+         fPID = TProcessID::GetProcessWithUID(uid,obj);
          ResetBit(kHasUUID);
       }
    }
