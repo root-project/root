@@ -194,7 +194,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitExecutor_( TExecutor*& executor )
 // CLING WORKAROUND --- add class to resolve _Tp_alloc_type::
    executor = CreateExecutor( (Bool_t)fMethod == true ?
       fMethod.TypeOf().ReturnType().Name( Rflx::QUALIFIED | Rflx::SCOPED | Rflx::FINAL )
-      : fClass.Name( Rflx::SCOPED | Rflx::FINAL ), (TClass*)fClass.Id() );
+      : fClass.Name( Rflx::SCOPED | Rflx::FINAL ) );
    if ( ! executor )
       return kFALSE;
 

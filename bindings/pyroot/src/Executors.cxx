@@ -356,8 +356,7 @@ PyObject* PyROOT::TPyObjectExecutor::Execute( CallFunc_t* func, void* self, Bool
 
 
 //- factories -----------------------------------------------------------------
-PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType_,
-     TClass* containing_scope /* CLING WORKAROUND */ )
+PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 {
 // The matching of the fulltype to an executor factory goes through up to 4 levels:
 //   1) full, qualified match
@@ -366,14 +365,6 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType_,
 //   4) additional special case for enums
 //
 // If all fails, void is used, which will cause the return type to be ignored on use
-
-// CLING WORKAROUND: properly resolve _Tp_alloc_type::
-   std::string fullType = fullType_;
-   if ( (fullType.find("_Tp_alloc_type::")  == 0) ||
-        (fullType.find("_CharT_alloc_type") == 0) ) {
-      fullType = Utility::ResolveTypedef( fullType_, containing_scope );
-   }
-// -- CLING WORKAROUND
 
 // an exactly matching executor is best
    ExecFactories_t::iterator h = gExecFactories.find( fullType );
