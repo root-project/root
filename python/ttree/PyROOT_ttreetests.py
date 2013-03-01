@@ -78,9 +78,6 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
    def test4ReadSomeDataObject( self ):
       """Test reading of a complex data object"""
 
-      if FIXCLING:
-         return
-
       f = TFile( self.fname )
       mytree = f.Get( self.tname )
 
@@ -129,9 +126,6 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
    def test6ReadSomeDataObjectBranched( self ):
       """Test reading of a complex object across different branches"""
-
-      if FIXCLING:
-         return
 
       f = TFile( self.fname )
       mytree = f.Get( self.tname )

@@ -121,10 +121,10 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
    def test1TStringByValueInterpreted( self ):
       """Test passing a TString by value through an interpreted function"""
 
+      gROOT.LoadMacro( 'ArgumentPassingInterpreted.C' )
+
       if FIXCLING:
          return
-
-      gROOT.LoadMacro( 'ArgumentPassingInterpreted.C' )
 
       f = InterpretedTest.StringValueArguments
 
@@ -265,9 +265,6 @@ class Basic5PythonizationTestCase( MyTestCase ):
    def test2Lists( self ):
       """Test list/TList behavior and compatibility"""
 
-      if FIXCLING:
-         return
-
       l = TList()
       l.Add( TObjString('a') )
       l.Add( TObjString('b') )
@@ -280,9 +277,12 @@ class Basic5PythonizationTestCase( MyTestCase ):
       l.Add( TObjString('i') )
       l.Add( TObjString('j') )
 
-      self.assertEqual( len(l), 10 )
+      if not FIXCLING:
+         self.assertEqual( len(l), 10 )
       self.assertEqual( l[3], 'd' )
       self.assertEqual( l[-1], 'j' )
+      if FIXCLING:
+         return
       self.assertRaises( IndexError, l.__getitem__,  20 )
       self.assertRaises( IndexError, l.__getitem__, -20 )
 
@@ -371,9 +371,6 @@ class Basic5PythonizationTestCase( MyTestCase ):
    def test3TVector( self ):
       """Test TVector2/3/T behavior"""
 
-      if FIXCLING:
-         return
-
       import math
 
       N = 51
@@ -389,8 +386,9 @@ class Basic5PythonizationTestCase( MyTestCase ):
    def test4TObjArray( self ):
       """Test TObjArray iterator-based copying"""
 
-      return # (pending #99196; Actually, that bug is fixed, but GetSize() of an
-             # empty TObjArray returns bogus results)
+      if FIXCLING: # (pending #99196; Actually, that bug is fixed, but GetSize() of an
+         return    # empty TObjArray returns bogus results)
+         
       a = TObjArray()
       b = list( a )  
 

@@ -159,11 +159,10 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
    def test2TemplateInstantiatedTemplate( self ):
       """Test data member access for a templated class instantiated with a template"""
 
-      if FIXCLING:
-         return
-
       t2 = T2( T1( int ) )()
       t2.m_t2.m_t1 = 32
+      if FIXCLING:
+         return
       self.assertEqual( t2.m_t2.value(), 32 )
       self.assertEqual( t2.m_t2.m_t1, 32 )
 
@@ -231,9 +230,6 @@ class Cpp03PassByNonConstRefTestCase( MyTestCase ):
    def test2PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through non-const reference"""
 
-      #if FIXCLING:
-      #   return
-
       l = Long( pylong(42) )
       SetLongThroughRef( l, 41 )
       self.assertEqual( l, 41 )
@@ -279,9 +275,6 @@ class Cpp04HandlingAbstractClassesTestCase( MyTestCase ):
 class Cpp05AssignToRefArbitraryClassTestCase( MyTestCase ):
    def test1AssignToReturnByRef( self ):
       """Test assignment to an instance returned by reference"""
-
-      if FIXCLING:
-         return
 
       a = std.vector( RefTester )()
       a.push_back( RefTester( 42 ) )
@@ -347,12 +340,12 @@ class Cpp09LongExpressionsTestCase( MyTestCase ):
    def test1LongExpressionWithTemporary( self ):
       """Test life time of temporary in long expression"""
 
-      if FIXCLING:
-         return
-
       self.assertEqual( SomeClassWithData.SomeData.s_numData, 0 )
       r = SomeClassWithData()
       self.assertEqual( SomeClassWithData.SomeData.s_numData, 1 )
+
+      if FIXCLING:
+         return
 
     # in this, GimeData() returns a datamember of the temporary result
     # from GimeCopy(); normal ref-counting would let it go too early

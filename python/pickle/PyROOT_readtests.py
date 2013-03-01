@@ -104,9 +104,6 @@ class PickleReadingComplicationsTestCase( MyTestCase ):
    def test2TBufferCheck( self ):
       """Test that a TBufferFile can be pickled"""
 
-      if FIXCLING:
-         return
-
     # the following does not assert anything, but if there is a failure, the
     # ROOT I/O layer will print an error message
       f1 = TBufferFile( TBuffer.kWrite )

@@ -9,7 +9,6 @@ import os, sys, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
 from ROOT import *
-from common import FIXCLING
 
 __all__ = [
    'Memory1TestCase'
@@ -60,9 +59,6 @@ class Memory1TestCase( MyTestCase ):
    def test2ObjectDestructionCallback( self ):
       """Test ROOT notification on object destruction"""
 
-      if FIXCLING:
-         return
-
     # create ROOT traced object
       a = TH1F( 'memtest_th1f', 'title', 100, -1., 1. )
 
@@ -77,9 +73,6 @@ class Memory1TestCase( MyTestCase ):
 
    def test3ObjectCallHeuristics( self ):
       """Test memory mgmt heuristics for object calls"""
-
-      if FIXCLING:
-         return
 
     # reference calls should not give up ownership
       a = MemTester()

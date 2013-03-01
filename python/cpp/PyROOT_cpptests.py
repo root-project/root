@@ -44,15 +44,15 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
    def test03CopyContructor( self ):
       """Test copy constructor"""
 
-      if FIXCLING:
-         return
-
       t1 = TLorentzVector( 1., 2., 3., -4. )
       t2 = TLorentzVector( 0., 0., 0.,  0. )
       t3 = TLorentzVector( t1 )
 
       self.assertEqual( t1, t3 )
       self.assertNotEqual( t1, t2 )
+
+      if FIXCLING:
+         return
 
       for i in range(4):
          self.assertEqual( t1[i], t3[i] )
