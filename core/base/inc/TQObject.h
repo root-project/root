@@ -176,8 +176,6 @@ public:
    static Bool_t  AreAllSignalsBlocked();
    static Bool_t  BlockAllSignals(Bool_t b);
 
-   static void    LoadRQ_OBJECT();
-
    ClassDef(TQObject,1) //Base class for object communication mechanism
 };
 

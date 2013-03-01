@@ -1443,18 +1443,6 @@ Bool_t TQObject::BlockAllSignals(Bool_t b)
    return ret;
 }
 
-//______________________________________________________________________________
-void TQObject::LoadRQ_OBJECT()
-{
-   // Load RQ_OBJECT.h which contains the #define RQ_OBJECT needed to
-   // let interpreted classes connect to signals of compiled classes.
-
-   gCling->LoadText(RQ_OBJECT_STRING1);
-   gCling->LoadText(RQ_OBJECT_STRING2);
-   gCling->LoadText(RQ_OBJECT_STRING);
-
-}
-
 // Global function which simplifies making connection in interpreted
 // ROOT session
 //

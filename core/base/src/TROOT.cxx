@@ -1460,9 +1460,6 @@ void TROOT::InitInterpreter()
    fCleanups->Add(fInterpreter);
    fInterpreter->SetBit(kMustCleanup);
 
-   // Load RQ_OBJECT.h in interpreter (allows signal/slot programming, like Qt)
-   TQObject::LoadRQ_OBJECT();
-
    fgRootInit = kTRUE;
 
    TClass::ReadRules(); // Read the default customization rules ...   
