@@ -93,7 +93,7 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
 
    if ( arg ) {
 
-      std::string name = arg->GetTypeName();
+      std::string name = arg->GetTypeNormalizedName();
       if ( mod & Rflx::QUALIFIED )
          name = arg->GetFullTypeName();
 
@@ -186,7 +186,7 @@ std::string PyROOT::TMemberAdapter::FunctionParameterDefaultAt( size_t nth ) con
       return "";
 
 // special case for strings: "some value" -> ""some value"
-   if ( strstr( Utility::ResolveTypedef( arg->GetTypeName() ).c_str(), "char*" ) ) {
+   if ( strstr( Utility::ResolveTypedef( arg->GetTypeNormalizedName() ).c_str(), "char*" ) ) {
       std::string sdef = "\"";
       sdef += def;
       sdef += "\"";
@@ -200,7 +200,7 @@ std::string PyROOT::TMemberAdapter::FunctionParameterDefaultAt( size_t nth ) con
 PyROOT::TReturnTypeAdapter PyROOT::TMemberAdapter::ReturnType() const
 {
 // get the return type of the wrapped function/method
-   return TReturnTypeAdapter( ((TFunction*)fMember)->GetReturnTypeName() );
+   return TReturnTypeAdapter( ((TFunction*)fMember)->GetReturnTypeNormalizedName() );
 }
 
 //____________________________________________________________________________

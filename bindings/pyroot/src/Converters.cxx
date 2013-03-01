@@ -71,6 +71,18 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject*, void* )               \
    return kFALSE;                                                             \
 }
 
+#define PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( name, type, F1 )          \
+Bool_t PyROOT::TConst##name##RefConverter::SetArg(                            \
+      PyObject* pyobject, TParameter_t& /* para */, CallFunc_t* func, Long_t )\
+{                                                                             \
+   fBuffer = (type)F1( pyobject );                                            \
+   if ( fBuffer == (type)-1 && PyErr_Occurred() )                             \
+      return kFALSE;                                                          \
+   else if ( func )                                                           \
+      gInterpreter->CallFunc_SetArg( func, (Long_t)&fBuffer );                \
+   return kTRUE;                                                              \
+}
+
 
 //_____________________________________________________________________________
 #define PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( name, type, low, high )        \
@@ -182,20 +194,14 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
-Bool_t PyROOT::TConstLongRefConverter::SetArg(
-      PyObject* pyobject, TParameter_t& para, CallFunc_t* /* func*/, Long_t )
-{
-// convert <pyobject> to C++ const long&, set arg for call using buffer
-   para.fLong = fBuffer = PyLong_AsLong( pyobject );
-   if ( para.fLong == -1 && PyErr_Occurred() )
-      return kFALSE;
-
-   /*else if ( func )
-      gInterpreter->CallFunc_SetArg( func, fBuffer );
-   return kTRUE;*/
-   PyErr_SetString( PyExc_TypeError, "NO REF SUPPORT IN CLING!" );
-   return kFALSE;
-}
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Short,     Short_t,   PyInt_AsLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UShort,    UShort_t,  PyInt_AsLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Int,       Int_t,     PyInt_AsLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UInt,      UInt_t,    PyLongOrInt_AsULong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Long,      Long_t,    PyLong_AsLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( ULong,     ULong_t,   PyLongOrInt_AsULong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( LongLong,  Long64_t,  PyLong_AsLongLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( ULongLong, ULong64_t, PyLongOrInt_AsULong64 )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TIntRefConverter::SetArg(
@@ -335,8 +341,8 @@ Bool_t PyROOT::TDoubleConverter::SetArg(
    return kTRUE;
 }
 
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
 PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TDoubleRefConverter::SetArg(
@@ -371,17 +377,8 @@ Bool_t PyROOT::TDoubleRefConverter::SetArg(
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( DoubleRef )
 
 //____________________________________________________________________________
-Bool_t PyROOT::TConstDoubleRefConverter::SetArg(
-      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
-{
-// convert <pyobject> to C++ const double&, set arg for call using buffer
-   para.fDouble = fBuffer = PyFloat_AsDouble( pyobject );
-   if ( para.fDouble == -1.0 && PyErr_Occurred() )
-      return kFALSE;
-   else if ( func )
-      gInterpreter->CallFunc_SetArg( func,  (Long_t)&fBuffer );
-   return kTRUE;
-}
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Float,  Float_t,  PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Double, Double_t, PyFloat_AsDouble )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidConverter::SetArg( PyObject*, TParameter_t&, CallFunc_t*, Long_t )
@@ -1145,22 +1142,30 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( Char )
    PYROOT_BASIC_CONVERTER_FACTORY( UChar )
    PYROOT_BASIC_CONVERTER_FACTORY( Short )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstShortRef )
    PYROOT_BASIC_CONVERTER_FACTORY( UShort )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstUShortRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Int )
    PYROOT_BASIC_CONVERTER_FACTORY( IntRef )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstIntRef )
    PYROOT_BASIC_CONVERTER_FACTORY( UInt )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstUIntRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Long )
    PYROOT_BASIC_CONVERTER_FACTORY( LongRef )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstLongRef )
    PYROOT_BASIC_CONVERTER_FACTORY( ULong )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstULongRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Float )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstFloatRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Double )
    PYROOT_BASIC_CONVERTER_FACTORY( DoubleRef )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstDoubleRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Void )
    PYROOT_BASIC_CONVERTER_FACTORY( Macro )
    PYROOT_BASIC_CONVERTER_FACTORY( LongLong )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstLongLongRef )
    PYROOT_BASIC_CONVERTER_FACTORY( ULongLong )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstULongLongRef )
    PYROOT_ARRAY_CONVERTER_FACTORY( CString )
    PYROOT_ARRAY_CONVERTER_FACTORY( NonConstCString )
    PYROOT_ARRAY_CONVERTER_FACTORY( NonConstUCString )
@@ -1186,61 +1191,71 @@ namespace {
 
    NFp_t factories_[] = {
    // factories for built-ins
-      NFp_t( "bool",               &CreateBoolConverter               ),
-      NFp_t( "char",               &CreateCharConverter               ),
-      NFp_t( "unsigned char",      &CreateUCharConverter              ),
-      NFp_t( "short",              &CreateShortConverter              ),
-      NFp_t( "unsigned short",     &CreateUShortConverter             ),
-      NFp_t( "int",                &CreateIntConverter                ),
-      NFp_t( "int&",               &CreateIntRefConverter             ),
-      NFp_t( "const int&",         &CreateIntConverter                ),
-      NFp_t( "unsigned int",       &CreateUIntConverter               ),
-      NFp_t( "UInt_t", /* enum */  &CreateUIntConverter               ),
-      NFp_t( "long",               &CreateLongConverter               ),
-      NFp_t( "long&",              &CreateLongRefConverter            ),
-      NFp_t( "const long&",        &CreateConstLongRefConverter       ),
-      NFp_t( "unsigned long",      &CreateULongConverter              ),
-      NFp_t( "long long",          &CreateLongLongConverter           ),
-      NFp_t( "Long64_t",           &CreateLongLongConverter           ),
-      NFp_t( "unsigned long long", &CreateULongLongConverter          ),
-      NFp_t( "ULong64_t",          &CreateULongLongConverter          ),
-      NFp_t( "float",              &CreateFloatConverter              ),
-      NFp_t( "double",             &CreateDoubleConverter             ),
-      NFp_t( "double&",            &CreateDoubleRefConverter          ),
-      NFp_t( "const double&",      &CreateConstDoubleRefConverter     ),
-      NFp_t( "void",               &CreateVoidConverter               ),
-      NFp_t( "#define",            &CreateMacroConverter              ),
+      NFp_t( "bool",                      &CreateBoolConverter               ),
+      NFp_t( "char",                      &CreateCharConverter               ),
+      NFp_t( "unsigned char",             &CreateUCharConverter              ),
+      NFp_t( "short",                     &CreateShortConverter              ),
+      NFp_t( "const short &",             &CreateConstShortRefConverter      ),
+      NFp_t( "unsigned short",            &CreateUShortConverter             ),
+      NFp_t( "const unsigned short&",     &CreateConstUShortRefConverter     ),
+      NFp_t( "int",                       &CreateIntConverter                ),
+      NFp_t( "int&",                      &CreateIntRefConverter             ),
+      NFp_t( "const int&",                &CreateConstIntRefConverter        ),
+      NFp_t( "unsigned int",              &CreateUIntConverter               ),
+      NFp_t( "const unsigned int&",       &CreateConstUIntRefConverter       ),
+      NFp_t( "UInt_t", /* enum */         &CreateUIntConverter               ),
+      NFp_t( "long",                      &CreateLongConverter               ),
+      NFp_t( "long&",                     &CreateLongRefConverter            ),
+      NFp_t( "const long&",               &CreateConstLongRefConverter       ),
+      NFp_t( "unsigned long",             &CreateULongConverter              ),
+      NFp_t( "const unsigned long&",      &CreateConstULongRefConverter      ),
+      NFp_t( "long long",                 &CreateLongLongConverter           ),
+      NFp_t( "const long long&",          &CreateConstLongLongRefConverter   ),
+      NFp_t( "Long64_t",                  &CreateLongLongConverter           ),
+      NFp_t( "const Long64_t&",           &CreateConstLongLongRefConverter   ),
+      NFp_t( "unsigned long long",        &CreateULongLongConverter          ),
+      NFp_t( "const unsigned long long&", &CreateConstULongLongRefConverter  ),
+      NFp_t( "ULong64_t",                 &CreateULongLongConverter          ),
+      NFp_t( "const ULong64_t&",          &CreateConstULongLongRefConverter  ),
+      NFp_t( "float",                     &CreateFloatConverter              ),
+      NFp_t( "const float&",              &CreateConstFloatRefConverter      ),
+
+      NFp_t( "double",                    &CreateDoubleConverter             ),
+      NFp_t( "double&",                   &CreateDoubleRefConverter          ),
+      NFp_t( "const double&",             &CreateConstDoubleRefConverter     ),
+      NFp_t( "void",                      &CreateVoidConverter               ),
+      NFp_t( "#define",                   &CreateMacroConverter              ),
 
    // pointer/array factories
-      NFp_t( "bool*",              &CreateBoolArrayConverter          ),
-      NFp_t( "const unsigned char*", &CreateCStringConverter          ),
-      NFp_t( "unsigned char*",     &CreateNonConstUCStringConverter   ),
-      NFp_t( "short*",             &CreateShortArrayConverter         ),
-      NFp_t( "unsigned short*",    &CreateUShortArrayConverter        ),
-      NFp_t( "int*",               &CreateIntArrayConverter           ),
-      NFp_t( "unsigned int*",      &CreateUIntArrayConverter          ),
-      NFp_t( "long*",              &CreateLongArrayConverter          ),
-      NFp_t( "unsigned long*",     &CreateULongArrayConverter         ),
-      NFp_t( "float*",             &CreateFloatArrayConverter         ),
-      NFp_t( "double*",            &CreateDoubleArrayConverter        ),
-      NFp_t( "long long*",         &CreateLongLongArrayConverter      ),
-      NFp_t( "unsigned long long*", &CreateLongLongArrayConverter     ),
-      NFp_t( "void*",              &CreateVoidArrayConverter          ),
+      NFp_t( "bool*",                     &CreateBoolArrayConverter          ),
+      NFp_t( "const unsigned char*",      &CreateCStringConverter            ),
+      NFp_t( "unsigned char*",            &CreateNonConstUCStringConverter   ),
+      NFp_t( "short*",                    &CreateShortArrayConverter         ),
+      NFp_t( "unsigned short*",           &CreateUShortArrayConverter        ),
+      NFp_t( "int*",                      &CreateIntArrayConverter           ),
+      NFp_t( "unsigned int*",             &CreateUIntArrayConverter          ),
+      NFp_t( "long*",                     &CreateLongArrayConverter          ),
+      NFp_t( "unsigned long*",            &CreateULongArrayConverter         ),
+      NFp_t( "float*",                    &CreateFloatArrayConverter         ),
+      NFp_t( "double*",                   &CreateDoubleArrayConverter        ),
+      NFp_t( "long long*",                &CreateLongLongArrayConverter      ),
+      NFp_t( "unsigned long long*",       &CreateLongLongArrayConverter      ),  // TODO: ULongLong
+      NFp_t( "void*",                     &CreateVoidArrayConverter          ),
 
    // factories for special cases
-      NFp_t( "const char*",        &CreateCStringConverter            ),
-      NFp_t( "char*",              &CreateNonConstCStringConverter    ),
-      NFp_t( "TString",            &CreateTStringConverter            ),
-      NFp_t( "const TString&",     &CreateTStringConverter            ),
-      NFp_t( "std::string",        &CreateSTLStringConverter          ),
-      NFp_t( "string",             &CreateSTLStringConverter          ),
-      NFp_t( "const std::string&", &CreateSTLStringConverter          ),
-      NFp_t( "const string&",      &CreateSTLStringConverter          ),
-      NFp_t( "void*&",             &CreateVoidPtrRefConverter         ),
-      NFp_t( "void**",             &CreateVoidPtrPtrConverter         ),
-      NFp_t( "PyObject*",          &CreatePyObjectConverter           ),
-      NFp_t( "_object*",           &CreatePyObjectConverter           ),
-      NFp_t( "FILE*",              &CreateVoidArrayConverter          )
+      NFp_t( "const char*",               &CreateCStringConverter            ),
+      NFp_t( "char*",                     &CreateNonConstCStringConverter    ),
+      NFp_t( "TString",                   &CreateTStringConverter            ),
+      NFp_t( "const TString&",            &CreateTStringConverter            ),
+      NFp_t( "std::string",               &CreateSTLStringConverter          ),
+      NFp_t( "string",                    &CreateSTLStringConverter          ),
+      NFp_t( "const std::string&",        &CreateSTLStringConverter          ),
+      NFp_t( "const string&",             &CreateSTLStringConverter          ),
+      NFp_t( "void*&",                    &CreateVoidPtrRefConverter         ),
+      NFp_t( "void**",                    &CreateVoidPtrPtrConverter         ),
+      NFp_t( "PyObject*",                 &CreatePyObjectConverter           ),
+      NFp_t( "_object*",                  &CreatePyObjectConverter           ),
+      NFp_t( "FILE*",                     &CreateVoidArrayConverter          )
    };
 
    struct InitConvFactories_t {

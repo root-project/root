@@ -122,7 +122,7 @@ namespace PyROOT {
    R__EXTERN ExecFactories_t gExecFactories;
 
 // create executor from fully qualified type
-   TExecutor* CreateExecutor( const std::string& fullType );
+   TExecutor* CreateExecutor( const std::string& fullType, TClass* containing_scope = 0 );
 
 } // namespace PyROOT
 

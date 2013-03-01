@@ -44,6 +44,14 @@ namespace PyROOT {
       virtual Bool_t ToMemory( PyObject*, void* );                            \
    }
 
+#define PYROOT_DECLARE_BASIC_CONST_REFCONVERTER( name, type )                 \
+   class TConst##name##RefConverter : public T##name##Converter {             \
+   public:                                                                    \
+      virtual Bool_t SetArg( PyObject*, TParameter_t&, CallFunc_t* = 0, Long_t = 0 );\
+   private:                                                                   \
+      type fBuffer;                                                           \
+   }
+
 #define PYROOT_DECLARE_ARRAY_CONVERTER( name )                                \
    class T##name##Converter : public TConverter {                             \
    public:                                                                    \
@@ -73,21 +81,16 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_CONVERTER2( Float, Double );
    PYROOT_DECLARE_BASIC_CONVERTER( DoubleRef );
 
-   class TConstLongRefConverter : public TLongConverter {
-   public:
-      virtual Bool_t SetArg( PyObject*, TParameter_t&, CallFunc_t* = 0, Long_t = 0 );
-
-   private:
-      Long_t fBuffer;
-   };
-
-   class TConstDoubleRefConverter : public TDoubleConverter { // required for Cintex only
-   public:
-      virtual Bool_t SetArg( PyObject*, TParameter_t&, CallFunc_t* = 0, Long_t = 0 );
-
-   private:
-      Double_t fBuffer;
-   };
+   PYROOT_DECLARE_BASIC_CONST_REFCONVERTER( Short, Short_t );
+   PYROOT_DECLARE_BASIC_CONST_REFCONVERTER( UShort, UShort_t );
+   PYROOT_DECLARE_BASIC_CONST_REFCONVERTER( Int, Int_t );
+   PYROOT_DECLARE_BASIC_CONST_REFCONVERTER( UInt, UInt_t );
+   PYROOT_DECLARE_BASIC_CONST_REFCONVERTER( Long, Long_t );
+   PYROOT_DECLARE_BASIC_CONST_REFCONVERTER( ULong, ULong_t );
+   PYROOT_DECLARE_BASIC_CONST_REFCONVERTER( LongLong, Long64_t );
+   PYROOT_DECLARE_BASIC_CONST_REFCONVERTER( ULongLong, ULong64_t );
+   PYROOT_DECLARE_BASIC_CONST_REFCONVERTER( Float, Float_t );
+   PYROOT_DECLARE_BASIC_CONST_REFCONVERTER( Double, Double_t );
 
    class TVoidConverter : public TConverter {
    public:

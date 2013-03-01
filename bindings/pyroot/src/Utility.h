@@ -6,11 +6,7 @@
 
 // ROOT
 #include "DllImport.h"
-
-// CINT
-namespace Cint {
-   class G__ClassInfo;
-}
+#include "TClass.h"        // CLING WORKAROUND
 
 // Standard
 #include <map>
@@ -110,7 +106,7 @@ namespace PyROOT {
       EDataType EffectiveType( const std::string& name );
       const std::string Compound( const std::string& name );
       const std::string ClassName( PyObject* pyobj );
-      const std::string ResolveTypedef( const std::string& name );
+      const std::string ResolveTypedef( const std::string& name, TClass* containing_scope = 0 );
 
       Long_t GetObjectOffset( TClass* clCurrent, TClass* clDesired, void* address, Bool_t downcast = true );
 

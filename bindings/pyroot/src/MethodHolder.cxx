@@ -143,21 +143,8 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
          return kFALSE;
       }
 
-   // CLING WORKAROUND -- DOES NOT WORK ...
-   // See: #100392. If the template arguments exist in function arguments,
-   // they are not filled in and the method won't be found.
-      std::string::size_type pos = fullType.find("<_Tp,_Alloc>");
-      if ( pos != std::string::npos ) {
-         std::string klassName = fClass.Name();
-         std::string::size_type pos1 = klassName.find( '<' );
-         std::string::size_type pos2 = klassName.find( ',' );
-         if (pos1 != std::string::npos) {
-            fullType = fullType.substr(0, pos) +
-                       klassName.substr( pos1, pos2-pos1 ) +
-                       fullType.substr( pos + 12, std::string::npos );
-         }
-      }
-      fullType = Utility::ResolveTypedef( fullType );
+   // CLING WORKAROUND -- MAY NO LONGER BE NECESSARY
+      fullType = Utility::ResolveTypedef( fullType, (TClass*)fClass.Id() );
    // -- END CLING WORKAROUND
 
    // setup call string
@@ -204,9 +191,10 @@ template< class T, class M >
 Bool_t PyROOT::TMethodHolder< T, M >::InitExecutor_( TExecutor*& executor )
 {
 // install executor conform to the return type
+// CLING WORKAROUND --- add class to resolve _Tp_alloc_type::
    executor = CreateExecutor( (Bool_t)fMethod == true ?
       fMethod.TypeOf().ReturnType().Name( Rflx::QUALIFIED | Rflx::SCOPED | Rflx::FINAL )
-      : fClass.Name( Rflx::SCOPED | Rflx::FINAL ) );
+      : fClass.Name( Rflx::SCOPED | Rflx::FINAL ), (TClass*)fClass.Id() );
    if ( ! executor )
       return kFALSE;
 

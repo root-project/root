@@ -360,9 +360,9 @@ static inline TFunction* FindAndAddOperator( const std::string& lcname, const st
 
       if ( func->GetName() == opname ) {
          if ( ( lcname == ResolveTypedef( TClassEdit::CleanType(
-                  ((TMethodArg*)func->GetListOfMethodArgs()->At(0))->GetTypeName(), 1 ).c_str() ) ) &&
+                  ((TMethodArg*)func->GetListOfMethodArgs()->At(0))->GetTypeNormalizedName().c_str(), 1 ).c_str() ) ) &&
               ( rcname == ResolveTypedef( TClassEdit::CleanType(
-                  ((TMethodArg*)func->GetListOfMethodArgs()->At(1))->GetTypeName(), 1 ).c_str() ) ) ) {
+                  ((TMethodArg*)func->GetListOfMethodArgs()->At(1))->GetTypeNormalizedName().c_str(), 1 ).c_str() ) ) ) {
 
          // done; break out loop
             return func;
@@ -685,7 +685,8 @@ const std::string PyROOT::Utility::ClassName( PyObject* pyobj )
 }
 
 //____________________________________________________________________________
-const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname )
+const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
+    TClass* containing_scope /* CLING WORKAROUND */ )
 {
 // Helper; captures common code needed to find the real class name underlying
 // a typedef (if any).
@@ -700,7 +701,7 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname )
    // size_type is guessed to be an integer unsigned type
       std::string::size_type pos = tclean.rfind( "::size_type" );
       if ( pos != std::string::npos )
-         return "unsigned long";
+         return containing_scope ? (std::string(containing_scope->GetName()) + "::size_type") : "unsigned long";
 
    // determine any of the types that require extraction of the template
    // parameter type names, and whether a const is needed (const can come
@@ -720,13 +721,14 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname )
       if ( pos != std::string::npos ) {
       // extract the internals of the template name; take care of the extra
       // default parameters for e.g. std::vector
-         std::string::size_type pos1 = tclean.find( '<' );
-         std::string::size_type pos2 = tclean.find( ",allocator" );
-         if ( pos2 == std::string::npos ) pos2 = tclean.rfind( '>' );
+         std::string clName = containing_scope ? containing_scope->GetName() : tclean;
+         std::string::size_type pos1 = clName.find( '<' );
+         std::string::size_type pos2 = clName.find( ",allocator" );
+         if ( pos2 == std::string::npos ) pos2 = clName.rfind( '>' );
          if ( pos1 != std::string::npos ) {
             tclean = (isConst ? "const " : "") +
-                     tclean.substr( pos1+1, pos2-pos1-1 ) +
-                     (isReference ? "&" : Compound( tclean ));
+                     clName.substr( pos1+1, pos2-pos1-1 ) +
+                     (isReference ? "&" : Compound( clName ));
          }
       }
    }

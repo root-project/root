@@ -1998,7 +1998,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       TClass* iklass = 0;
       if ( meth ) {
          Int_t oldl = gErrorIgnoreLevel; gErrorIgnoreLevel = 3000;
-         iklass = TClass::GetClass( meth->GetReturnTypeName() );
+         iklass = TClass::GetClass( meth->GetReturnTypeNormalizedName().c_str() );
          gErrorIgnoreLevel = oldl;
       }
 
