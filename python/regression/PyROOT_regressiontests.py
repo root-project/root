@@ -181,9 +181,6 @@ class Regression06Int64ConversionTestCase( MyTestCase ):
    def test1IntToULongTestCase( self ):
       """Test conversion of Int(64) limit values to unsigned long"""
 
-      if FIXCLING:
-         return
-
       gROOT.LoadMacro( 'ULongLong.C+' )
 
       self.assertEqual( self.limit1,  ULongFunc( self.limit1 ) )
@@ -193,9 +190,6 @@ class Regression06Int64ConversionTestCase( MyTestCase ):
 
    def test2IntToULongLongTestCase( self ):
       """Test conversion of Int(64) limit values to unsigned long long"""
-
-      if FIXCLING:
-         return
 
       self.assertEqual( self.limit1,  ULong64Func( self.limit1 ) )
       self.assertEqual( self.limit1L, ULong64Func( self.limit1 ) )
@@ -332,9 +326,6 @@ class Regression14BaseClassUsing( MyTestCase ):
 class Regression15TPyException( MyTestCase ):
    def test1PythonAccessToTPyException( self ):
       """Load TPyException into python and make sure its usable"""
-
-      if FIXCLING:
-         return
 
       e = PyROOT.TPyException()
       self.assert_( e )
