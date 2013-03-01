@@ -172,10 +172,25 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
       &fOffset );
       //, G__ClassInfo::ExactMatch );
 
-   return kTRUE;
+// CLING WORKAROUND -- (Actually, this may be a feature rather than workaround: the
+//                     question is whether this should live in TClass or here.)
+//                     For some reason this code does not work (crashes) for several
+//                     vector types (but not all) from "cintdlls", so skip on int.
+//                     Note that vector<double> is instantiated at application startup.
+   if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) &&
+        fClass.Name().find( '<' ) != std::string::npos &&
+        fClass.Name().find( "int" ) == std::string::npos ) {
+      gROOT->ProcessLine( ("template class " + fClass.Name() + ";").c_str() );
+   }
+// -- CLING WORKAROUND
 
-// CLING WORKAROUND -- checking (Bool_t)fMethod remains necessary
-   if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) && (Bool_t)fMethod == true ) {
+   if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) ) {
+   // CLING WORKAROUND -- checking (Bool_t)fMethod (i.e. whether this is a method
+   //                     rather than a ctor), remains necessary (for ctors, there
+   //                     is another workaround later using TClass::New())
+      if ( (Bool_t)fMethod == false || fMethod.Name() == fClass.Name() )
+         return kTRUE;
+   // -- CLING WORKAROUND
       PyErr_Format( PyExc_RuntimeError, "could not resolve %s::%s(%s)",
          fClass.Name().c_str(), fMethod.Name().c_str(), callString.c_str() );
       gInterpreter->CallFunc_Delete( fMethodCall );

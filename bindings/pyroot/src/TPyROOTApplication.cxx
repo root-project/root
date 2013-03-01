@@ -67,9 +67,8 @@ PyROOT::TPyROOTApplication::TPyROOTApplication(
 // be done before any partial instantiations, e.g. due to #include-ing a
 // class that has one of these as a data member)
       gROOT->ProcessLine( "template class std::vector<double>;" );
-   }
-
 // -- CLING WORKAROUND
+   }
 
 #ifdef WIN32
    // switch win32 proxy main thread id
