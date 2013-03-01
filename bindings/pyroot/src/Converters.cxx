@@ -168,7 +168,7 @@ PYROOT_IMPLEMENT_BASIC_CONVERTER( Long, Long_t, Long_t, PyLong_FromLong, PyLong_
 
 //____________________________________________________________________________
 Bool_t PyROOT::TLongRefConverter::SetArg(
-      PyObject* pyobject, TParameter_t& para, CallFunc_t* /* func */, Long_t )
+      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
 {
 // convert <pyobject> to C++ long&, set arg for call
    if ( ! TCustomInt_CheckExact( pyobject ) ) {
@@ -179,12 +179,9 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
 
 #if PY_VERSION_HEX < 0x03000000
    para.fLong = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
-// (CLING) TODO: there's no gInterpreter->CallFunc_SetArgRef ...
-//   if ( func )
-//      func->SetArgRef( (Long_t&)((PyIntObject*)pyobject)->ob_ival );
-//   return kTRUE;
-   PyErr_SetString( PyExc_TypeError, "NO REF SUPPORT IN CLING!" );
-   return kFALSE;
+   if ( func )
+       gInterpreter->CallFunc_SetArg( func, (Long_t)&((PyIntObject*)pyobject)->ob_ival );
+   return kTRUE;
 #else
    para.fLong = 0; /* func = 0; */
    return kFALSE; // there no longer is a PyIntObject in p3
@@ -351,23 +348,17 @@ Bool_t PyROOT::TDoubleRefConverter::SetArg(
 // convert <pyobject> to C++ double&, set arg for call
    if ( TCustomFloat_CheckExact( pyobject ) ) {
       para.fLong = (Long_t)&((PyFloatObject*)pyobject)->ob_fval;
-      // (CLING) TODO: there's no gInterpreter->CallFunc_SetArgRef ...
       if ( func ) {
-   //         func->SetArgRef( ((PyFloatObject*)pyobject)->ob_fval );
-   //         return kTRUE;
-         PyErr_SetString( PyExc_TypeError, "NO REF SUPPORT IN CLING!" );
-         return kFALSE;
+         gInterpreter->CallFunc_SetArg( func, (Long_t)&((PyFloatObject*)pyobject)->ob_fval );
+         return kTRUE;
       }
    }
 
 // alternate, pass pointer from buffer
    int buflen = Utility::GetBuffer( pyobject, 'd', sizeof(double), para.fVoidp );
    if ( para.fVoidp && buflen && func ) {
-// (CLING) TODO: there's no gInterpreter->CallFunc_SetArgRef ...
-//      func->SetArgRef( *(double*)para.fVoidp );
-//      return kTRUE;
-      PyErr_SetString( PyExc_TypeError, "NO REF SUPPORT IN CLING!" );
-      return kFALSE;
+      gInterpreter->CallFunc_SetArg( func, (Long_t)para.fVoidp );
+      return kTRUE;
    }
 
    PyErr_SetString( PyExc_TypeError, "use ROOT.Double for pass-by-ref of doubles" );
