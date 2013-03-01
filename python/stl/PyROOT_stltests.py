@@ -68,13 +68,11 @@ class STL1VectorTestCase( MyTestCase ):
 
       self.assertEqual( a.size(), 0 )
 
-      if FIXCLING:
-         return
-
       for i in range(self.N):
          a.push_back( JustAClass() )
-         a[i].m_i = i
-         self.assertEqual( a[i].m_i, i )
+         if not FIXCLING:
+            a[i].m_i = i
+            self.assertEqual( a[i].m_i, i )
 
       self.assertEqual( len(a), self.N )
 
@@ -88,21 +86,22 @@ class STL1VectorTestCase( MyTestCase ):
    def test5PushbackIterablesWithIAdd( self ):
       """Test usage of += of iterable on push_back-able container"""
 
-      if FIXCLING:
-         return
-
       a = std.vector( int )()
       a += [ 1, 2, 3 ]
       self.assertEqual( len(a), 3 )
-      self.assertEqual( a[0], 1 )
-      self.assertEqual( a[1], 2 )
-      self.assertEqual( a[2], 3 )
+
+      if not FIXCLING:
+         self.assertEqual( a[0], 1 )
+         self.assertEqual( a[1], 2 )
+         self.assertEqual( a[2], 3 )
 
       a += ( 4, 5, 6 )
       self.assertEqual( len(a), 6 )
-      self.assertEqual( a[3], 4 )
-      self.assertEqual( a[4], 5 )
-      self.assertEqual( a[5], 6 )
+
+      if not FIXCLING:
+         self.assertEqual( a[3], 4 )
+         self.assertEqual( a[4], 5 )
+         self.assertEqual( a[5], 6 )
 
       self.assertRaises( TypeError, a.__iadd__, ( 7, '8' ) )
 
