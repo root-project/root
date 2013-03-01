@@ -47,6 +47,7 @@ bool read(const char *filename = fname)
    
 
    TRefArray wrong;
+   wrong.Add(new TObject());
    TRefArray good( TProcessID::GetProcessWithUID(obj) );
    
    wrong.Add(obj);
@@ -64,14 +65,14 @@ bool read(const char *filename = fname)
    } else if ( good.At(0)!=obj) {
       cout << "Old file TRefArray does not point to the correct object\n";
    }
-   if ( wrong.GetEntries()!=1 ) {
+   if ( wrong.GetEntries()!=2 ) {
       cout << "New process TRefArray does not have the right number of entries. It is " << wrong.GetEntries() <<
-         " but should be 1\n";
-   } else if ( wrong.At(0)!=obj2) {
+         " but should be 2\n";
+   } else if ( wrong.At(1)!=obj2) {
       cout << "New process TRefArray does not point to the correct object\n";
    }
 
-   return (wrong.GetEntries()==1 && good.GetEntries()==1 && good.At(0)==obj && wrong.At(0)==obj2);
+   return (wrong.GetEntries()==2 && good.GetEntries()==1 && good.At(0)==obj && wrong.At(1)==obj2);
 }
 
 int refarray(int mode = 2, const char *filename = fname)
