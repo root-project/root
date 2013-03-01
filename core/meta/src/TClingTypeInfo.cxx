@@ -305,7 +305,7 @@ std::string TClingTypeInfo::NormalizedName(const ROOT::TMetaUtils::TNormalizedCt
    // the non-opaque typedefs.
    
    if (!IsValid()) {
-      return 0;
+      return "";
    }
    std::string buf;
    ROOT::TMetaUtils::GetNormalizedName(buf,fQualType, *fInterp, normCtxt);
