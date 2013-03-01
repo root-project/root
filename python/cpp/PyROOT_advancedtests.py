@@ -170,9 +170,6 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
    def test3TemplateInstantiationWithVectorOfFloat( self ):
       """Test template instantiation with a std::vector< float >"""
 
-      if FIXCLING:
-         return
-
       gROOT.LoadMacro( "Template.C+" )
 
     # the following will simply fail if there is a naming problem (e.g. std::,
@@ -181,13 +178,11 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
 
       for i in range(5):
          b.m_b.push_back( i )
-         self.assertEqual( round( b.m_b[i], 5 ), float(i) )
+         if not FIXCLING:
+            self.assertEqual( round( b.m_b[i], 5 ), float(i) )
 
    def test4TemplateMemberFunctions( self ):
       """Test template member functions lookup and calls"""
-
-      if FIXCLING:
-         return
 
     # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
 
@@ -199,7 +194,8 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
       self.assertEqual( m.GetSize( float )(),    m.GetFloatSize() )
       self.assertEqual( m.GetSize( 'double' )(), m.GetDoubleSize() )
 
-      self.assertEqual( m.GetSize( 'MyDoubleVector_t' )(), m.GetVectorOfDoubleSize() )
+      if not FIXCLING:
+         self.assertEqual( m.GetSize( 'MyDoubleVector_t' )(), m.GetVectorOfDoubleSize() )
 
    def test5TemplateGlobalFunctions( self ):
       """Test template global function lookup and calls"""
@@ -235,8 +231,8 @@ class Cpp03PassByNonConstRefTestCase( MyTestCase ):
    def test2PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through non-const reference"""
 
-      if FIXCLING:
-         return
+      #if FIXCLING:
+      #   return
 
       l = Long( pylong(42) )
       SetLongThroughRef( l, 41 )
@@ -247,8 +243,9 @@ class Cpp03PassByNonConstRefTestCase( MyTestCase ):
       self.assertEqual( d, 3.1415 )
 
       i = Long( pylong(42) )
-      SetIntThroughRef( i, 13 )
-      self.assertEqual( i, 13 )
+      if not FIXCLING:
+         SetIntThroughRef( i, 13 )
+         self.assertEqual( i, 13 )
 
    def test3PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through const reference"""
