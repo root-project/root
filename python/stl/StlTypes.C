@@ -2,7 +2,7 @@
   File: roottest/python/stl/StlTypes.C
   Author: Wim Lavrijsen@lbl.gov
   Created: 10/25/05
-  Last: 10/25/05
+  Last: 03/01/13
 */
 
 #include <list>
@@ -40,14 +40,13 @@ public:
    std::string m_string;
 };
 
+// explicit instantiations to make all methods available
+template class std::vector< JustAClass >;
+
+// can not instantiate std::list w/o also making available all
+// comparator operators; leave it for now
 namespace {
-   std::vector< std::string > jv1;
-   std::vector< JustAClass >  jv2;
-
    std::list< JustAClass >    jl1;
-
-   STLLikeClass< int >       js1;
-   STLLikeClass< double>     js2;
 }
 
 #ifdef __MAKECINT__

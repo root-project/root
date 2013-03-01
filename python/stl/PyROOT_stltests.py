@@ -70,9 +70,8 @@ class STL1VectorTestCase( MyTestCase ):
 
       for i in range(self.N):
          a.push_back( JustAClass() )
-         if not FIXCLING:
-            a[i].m_i = i
-            self.assertEqual( a[i].m_i, i )
+         a[i].m_i = i
+         self.assertEqual( a[i].m_i, i )
 
       self.assertEqual( len(a), self.N )
 
@@ -112,9 +111,6 @@ class STL2ListTestCase( MyTestCase ):
 
    def test1BuiltinListType( self ):
       """Test access to a list<int> (part of cintdlls)"""
-
-      #if FIXCLING:
-      #   return
 
       a = std.list( int )()
       for i in range(self.N):

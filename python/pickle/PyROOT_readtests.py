@@ -53,9 +53,6 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
          self.assertEqual( v.__class__, std.vector( 'double' ) )
          self.assertEqual( v.size(), Nvec )
 
-         if FIXCLING:
-            return
-
          for i in range( Nvec ):
             self.assertEqual( v[i], i*i )
 
@@ -70,9 +67,6 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
 
       def __dodtest( self, d ):
          self.assertEqual( d.__class__, SomeDataObject )
-
-         if FIXCLING:
-            return
 
          i = 0
          for entry in d.GetFloats():
