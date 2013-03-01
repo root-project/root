@@ -1233,7 +1233,7 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
       if (kept) {
          TString logfiles(glogfile);
          // Save also the logs from the workers
-         TProofMgr *mgr = gProof->GetManager();
+         TProofMgr *mgr = gProof ? gProof->GetManager() : 0;
          if (mgr) {
             TProofLog *pl = mgr->GetSessionLogs();
             if (pl) {
