@@ -113,14 +113,16 @@ class STL2ListTestCase( MyTestCase ):
    def test1BuiltinListType( self ):
       """Test access to a list<int> (part of cintdlls)"""
 
-      if FIXCLING:
-         return
+      #if FIXCLING:
+      #   return
 
       a = std.list( int )()
       for i in range(self.N):
          a.push_back( i )
 
       self.assertEqual( len(a), self.N )
+      if FIXCLING:
+         return
       self.failUnless( 11 in a )
 
       ll = list(a)

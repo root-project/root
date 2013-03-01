@@ -42,9 +42,6 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
    def test2ReadStdVector( self ):
       """Test reading of a single branched TTree with an std::vector<double>"""
 
-      if FIXCLING:
-         return
-
       f = TFile( self.fname )
       mytree = f.Get( self.tname )
 
@@ -103,9 +100,6 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
    def test5WriteSomeDataObjectBranched( self ):
       """Test writing of a complex object across different branches"""
-
-      if FIXCLING:
-         return
 
       f = TFile( self.fname, 'RECREATE' )
       t = TTree( self.tname, self.ttitle )
