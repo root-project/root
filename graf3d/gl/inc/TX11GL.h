@@ -25,7 +25,7 @@
 #include "TVirtualGL.h"
 #endif
 
-#if !defined(__CINT__)
+#if !defined(__CLING__)
 #include <GL/glx.h>
 #else
 struct Display;
