@@ -167,6 +167,9 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
    // User must be able to redefine the names that come from a file.
    if (R.isForRedeclaration())
       return false;
+   // If there is a result abort.
+   if (!R.empty())
+      return false;
 
    Sema &SemaR = m_Interpreter->getSema();
    ASTContext& C = SemaR.getASTContext();
