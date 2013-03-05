@@ -44,7 +44,7 @@ include/%.h:    $(METADIRI)/%.h
 $(METADS):      $(METAH) $(METAL) $(ROOTCINTTMPDEP) $(LLVMDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Ietc -Ietc/cling $(METADCLINGCXXFLAGS) $(METAH) cling/Interpreter/Interpreter.h cling/Interpreter/DynamicLookupRuntimeUniverse.h $(METAL)
+		$(ROOTCINTTMP) -f $@ -c -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Ietc -Ietc/cling $(METADCLINGCXXFLAGS) $(METAH) cling/Interpreter/Interpreter.h cling/Interpreter/DynamicExprInfo.h cling/Interpreter/DynamicLookupLifetimeHandler.h cling/Interpreter/StoredValueRef.h $(METAL)
 
 all-$(MODNAME): $(METAO) $(METADO)
 
