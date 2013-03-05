@@ -252,9 +252,6 @@ class Regression10TVector3Pythonize( MyTestCase ):
    def test1TVector3( self ):
       """Verify TVector3 pythonization"""
 
-      if FIXCLING:
-         return
-
       v = TVector3( 1., 2., 3.)
       self.assertEqual( list(v), [1., 2., 3. ] )
 
