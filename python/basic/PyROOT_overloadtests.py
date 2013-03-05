@@ -96,7 +96,7 @@ class Overloads2TMathTestCase( MyTestCase ):
    def test1MeanOverloads( self ):
       """Test overloads using TMath::Mean(), TMath::Median"""
 
-      if FIXCLING:
+      if FIXCLING: # Mean and Median fail b/c they're templates
          return
 
       numbers = [ 8, 2, 4, 2, 4, 2, 4, 4, 1, 5, 6, 3, 7 ]

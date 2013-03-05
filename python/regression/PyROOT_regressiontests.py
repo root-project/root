@@ -230,9 +230,8 @@ class Regression09CheckEnumExactMatch( MyTestCase ):
       self.assertEqual( fish, a.testEnum1( fish ) )
       self.assertEqual( cow,  a.testEnum2( cow ) )
       self.assertEqual( bird, a.testEnum3( bird ) )
-      if not FIXCLING:
-         self.assertEqual( marsupilami, a.testEnum4( marsupilami ) )
-         self.assertEqual( marsupilami, a.testEnum4( Long(marsupilami) ) )
+      self.assertEqual( marsupilami, a.testEnum4( marsupilami ) )
+      self.assertEqual( marsupilami, a.testEnum4( Long(marsupilami) ) )
 
 ### "smart" classes that return themselves on dereference cause a loop =======
 class Regression10BreakSmartPtrCircularLoop( MyTestCase ):

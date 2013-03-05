@@ -51,9 +51,6 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual( t1, t3 )
       self.assertNotEqual( t1, t2 )
 
-      if FIXCLING:
-         return
-
       for i in range(4):
          self.assertEqual( t1[i], t3[i] )
 
