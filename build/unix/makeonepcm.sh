@@ -14,7 +14,8 @@ fi
 rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h
 
 # create allHeaders.h including all headers from the include directory
-find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
+#find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
+cat build/unix/gminimalHeaders.list | sed -e 's|include/|#include "|' -e 's|$|"|' \
  -e /Bits.h/d \
  -e /CocoaGuiTypes.h/d \
  -e /CocoaPrivate.h/d \
@@ -201,6 +202,7 @@ rm -f include/allLinkDef.h
 find $srcdir -path '*/test' -prune -o \
              -path '*/roottest' -prune -o \
              -path '*/include' -prune -o \
+             -path '*/roofit/*' -prune -o \
              -follow \
              -name '*LinkDef*.h' -print | \
   grep -v -e '/RooFitCore_LinkDef.h$' -e "$srcdir/[[:alnum:]]*LinkDef*.h$" | \
