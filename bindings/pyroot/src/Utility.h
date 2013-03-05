@@ -6,7 +6,7 @@
 
 // ROOT
 #include "DllImport.h"
-#include "TClass.h"        // CLING WORKAROUND
+#include "TClass.h"
 
 // Standard
 #include <map>
@@ -108,7 +108,8 @@ namespace PyROOT {
       const std::string ClassName( PyObject* pyobj );
       const std::string ResolveTypedef( const std::string& name, TClass* containing_scope = 0 );
 
-      Long_t GetObjectOffset( TClass* clCurrent, TClass* clDesired, void* address, Bool_t downcast = true );
+   // the inconsistent interface of the next call is to be fixed once #100740 resolves
+      Long_t GetObjectOffset( const std::string& clCurrent, ClassInfo_t* clDesired, void* obj );
 
    // CINT integration
       void ErrMsgCallback( char* msg );

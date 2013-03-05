@@ -634,7 +634,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::operator()(
    // reset this method's offset for the object as appropriate
       TClass* base = (TClass*)fClass.Id();
       if ( derived != base )
-          fOffset = Utility::GetObjectOffset( derived, base, object, false /* upcast */ );
+         fOffset = Utility::GetObjectOffset( derived->GetName(), base->GetClassInfo(), object );
       else fOffset = 0;
    }
 

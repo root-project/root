@@ -8,6 +8,7 @@
 #include "ObjectProxy.h"
 #include "PyBufferFactory.h"
 #include "RootWrapper.h"
+#include "Utility.h"
 
 // ROOT
 #include "TROOT.h"
@@ -17,8 +18,6 @@
 #include "TDataType.h"
 #include "TClassEdit.h"
 #include "TInterpreter.h"
-
-#include <sstream>
 
 
 namespace PyROOT {
@@ -245,16 +244,8 @@ Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
    }
 
    Long_t offset = 0;
-   if ( fParent != (void*)(pyobj->ObjectIsA()->GetClassInfo()) ) {
-   // TODO: figure out how to do this efficiently with Cling, or lacking that
-   //       at least memoize these results
-      std::ostringstream interpcast;
-      interpcast << "(long)(" << gInterpreter->ClassInfo_FullName( fParent ) << "*)("
-                 << pyobj->ObjectIsA()->GetName() << "*)" << (void*)obj
-                 << "-(long)(" << pyobj->ObjectIsA()->GetName() << "*)" << (void*)obj
-                 << ";" << std::ends;
-      offset = (Long_t)gROOT->ProcessLine(interpcast.str().c_str());
-   }
+   if ( fParent != (void*)(pyobj->ObjectIsA()->GetClassInfo()) )
+      offset = Utility::GetObjectOffset( pyobj->ObjectIsA()->GetName(), fParent, obj );
 
    return (Long_t)obj + offset + fOffset;
 }

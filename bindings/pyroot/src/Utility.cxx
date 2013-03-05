@@ -23,6 +23,7 @@
 #include "TFunction.h"
 #include "TMethodArg.h"
 #include "TError.h"
+#include "TInterpreter.h"
 
 // Standard
 #include <stdlib.h>
@@ -30,6 +31,7 @@
 #include <string.h>
 #include <algorithm>
 #include <list>
+#include <sstream>
 #include <utility>
 
 
@@ -739,20 +741,19 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
 }
 
 //____________________________________________________________________________
-Long_t PyROOT::Utility::GetObjectOffset( TClass* clCurrent, TClass* clDesired, void* /* address */, Bool_t downcast ) {
-// root/meta base class offset fails in the case of virtual inheritance
-   Long_t offset = 0;
+Long_t PyROOT::Utility::GetObjectOffset(
+      const std::string& clCurrent, ClassInfo_t* clDesired, void* obj ) {
+// root/meta base class offset (TClass:GetBaseClassOffset) fails in the case of
+// virtual inheritance, so take this little round-about way
 
-   if ( clDesired && clCurrent != clDesired ) {
-      TClass* clBase    = downcast ? clCurrent : clDesired;
-      TClass* clDerived = downcast ? clDesired : clCurrent;
-      offset = clDerived->GetBaseClassOffset( clBase );
-   }
-
-   if ( offset < 0 ) // error return of GetBaseClassOffset
-      return 0;
-
-   return offset;
+// TODO: figure out how to do this efficiently with Cling, or lacking that
+//       at least memoize these results
+   std::ostringstream interpcast;
+   interpcast << "(long)(" << gInterpreter->ClassInfo_FullName( clDesired ) << "*)("
+              << clCurrent << "*)" << (void*)obj
+              << "-(long)(" << clCurrent << "*)" << (void*)obj
+              << ";" << std::ends;
+   return (Long_t)gInterpreter->ProcessLine( interpcast.str().c_str() );
 }
 
 //____________________________________________________________________________
