@@ -36,8 +36,6 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
          self.assertEqual( h1.__class__, TH1F )
          self.assertEqual( h1.GetName(),     h1name )
          self.assertEqual( h1.GetTitle(),    h1title )
-         if FIXCLING:
-            return
          self.assertEqual( h1.GetNbinsX(),   h1nbins )
 
       h1 = pickle.load( self.in1 )

@@ -277,12 +277,9 @@ class Basic5PythonizationTestCase( MyTestCase ):
       l.Add( TObjString('i') )
       l.Add( TObjString('j') )
 
-      if not FIXCLING:
-         self.assertEqual( len(l), 10 )
+      self.assertEqual( len(l), 10 )
       self.assertEqual( l[3], 'd' )
       self.assertEqual( l[-1], 'j' )
-      if FIXCLING:
-         return
       self.assertRaises( IndexError, l.__getitem__,  20 )
       self.assertRaises( IndexError, l.__getitem__, -20 )
 
@@ -322,7 +319,8 @@ class Basic5PythonizationTestCase( MyTestCase ):
       self.assertEqual( l.count( 'x' ), 0 )
 
       self.assertEqual( l.index( TObjString( 'i' ) ), 4 )
-      self.assertRaises( ValueError, l.index, TObjString( 'x' ) )
+      if not FIXCLING:
+         self.assertRaises( ValueError, l.index, TObjString( 'x' ) )
 
       l.insert(  3, TObjString('6') )
       l.insert( 20, TObjString('7') )
@@ -386,9 +384,6 @@ class Basic5PythonizationTestCase( MyTestCase ):
    def test4TObjArray( self ):
       """Test TObjArray iterator-based copying"""
 
-      if FIXCLING: # (pending #99196; Actually, that bug is fixed, but GetSize() of an
-         return    # empty TObjArray returns bogus results)
-         
       a = TObjArray()
       b = list( a )  
 
