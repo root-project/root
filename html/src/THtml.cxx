@@ -1639,7 +1639,8 @@ void THtml::CreateListOfClasses(const char* filter)
                  !strcmp(classPtr->GetDeclFileName(), "deque") ||
                  !strcmp(classPtr->GetDeclFileName(), "map") ||
                  !strcmp(classPtr->GetDeclFileName(), "valarray") ||
-                 !strcmp(classPtr->GetDeclFileName(), "set")||
+                 !strcmp(classPtr->GetDeclFileName(), "set") ||
+                 !strcmp(classPtr->GetDeclFileName(), "typeinfo") ||
                  !strcmp(classPtr->GetDeclFileName(), "stdlib.h") ) )
             {
                // Those are STL header, just ignore.
