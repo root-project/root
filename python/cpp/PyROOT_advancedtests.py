@@ -32,9 +32,6 @@ class Cpp01InheritenceTestCase( MyTestCase ):
    def test1DataMembers( self ):
       """Test data member access when using virtual inheritence"""
 
-      if FIXCLING:
-         return
-
     #-----
       b = PR_B()
       self.assertEqual( b.m_a,         1 )
@@ -54,7 +51,7 @@ class Cpp01InheritenceTestCase( MyTestCase ):
       self.assertEqual( b.m_a,        11 )
       self.assertEqual( b.m_da,    11.11 )
       self.assertEqual( b.m_b,        22 )
-    # self.assertEqual( b.GetValue(), 22 )
+      self.assertEqual( b.GetValue(), 22 )
 
       b.m_db = 22.22
       self.assertEqual( b.m_db,    22.22 )
@@ -78,7 +75,7 @@ class Cpp01InheritenceTestCase( MyTestCase ):
       self.assertEqual( c.m_a,        11 )
       self.assertEqual( c.m_b,        22 )
       self.assertEqual( c.m_c,        33 )
-    # self.assertEqual( c.GetValue(), 33 )
+      self.assertEqual( c.GetValue(), 33 )
 
       del c
 
@@ -106,15 +103,12 @@ class Cpp01InheritenceTestCase( MyTestCase ):
       self.assertEqual( d.m_b,        22 )
       self.assertEqual( d.m_c,        33 )
       self.assertEqual( d.m_d,        44 )
-    # self.assertEqual( d.GetValue(), 44 )
+      self.assertEqual( d.GetValue(), 44 )
 
       del d
 
    def test2PassByReference( self ):
       """Test reference passing when using virtual inheritance"""
-
-      if FIXCLING:
-         return
 
     #-----
       b = PR_B()
@@ -161,9 +155,8 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
 
       t2 = T2( T1( int ) )()
       t2.m_t2.m_t1 = 32
-      if FIXCLING:
-         return
-      self.assertEqual( t2.m_t2.value(), 32 )
+      if not FIXCLING:
+         self.assertEqual( t2.m_t2.value(), 32 )
       self.assertEqual( t2.m_t2.m_t1, 32 )
 
    def test3TemplateInstantiationWithVectorOfFloat( self ):
@@ -245,9 +238,6 @@ class Cpp03PassByNonConstRefTestCase( MyTestCase ):
 
    def test3PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through const reference"""
-
-      if FIXCLING:
-         return
 
       self.assertEqual( PassLongThroughConstRef( 42 ), 42 )
       self.assertEqual( PassDoubleThroughConstRef( 3.1415 ), 3.1415 )
