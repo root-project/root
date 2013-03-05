@@ -94,8 +94,14 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
    if ( arg ) {
 
       std::string name = arg->GetTypeNormalizedName();
-      if ( mod & Rflx::QUALIFIED )
-         name = arg->GetFullTypeName();
+      if ( mod & Rflx::QUALIFIED ) {
+      // CLING WORKAROUND -- #100729 get const info from old method
+         const std::string& fname = arg->GetFullTypeName();
+         if ( fname.substr(0, 5) == "const" )
+            return "const " + name;
+      // -- CLING WORKAROUND
+         return name;
+      }
 
       if ( mod & Rflx::FINAL )
          name = Utility::ResolveTypedef( name );
