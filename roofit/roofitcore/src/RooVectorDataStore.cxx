@@ -1449,9 +1449,12 @@ void RooVectorDataStore::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(RooVectorDataStore::Class(),this);
 
-      _firstReal = &_realStoreList.front() ;
-      _firstRealF = &_realfStoreList.front() ;
-      _firstCat = &_catStoreList.front() ;
+	  if (_realStoreList.size() > 0)
+	      _firstReal = &_realStoreList.front() ;
+	  if (_realfStoreList.size() > 0)
+	      _firstRealF = &_realfStoreList.front() ;
+	  if (_catStoreList.size() > 0)
+	      _firstCat = &_catStoreList.front() ;
 
       for (vector<RealVector*>::iterator iter1 = _realStoreList.begin() ; iter1!=_realStoreList.end() ; ++iter1) {
 	RooAbsArg* arg = _varsww.find((*iter1)->_nativeReal->GetName()) ;
