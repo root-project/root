@@ -813,6 +813,20 @@ void TCanvas::Draw(Option_t *)
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
                                                 fWindowWidth, fWindowHeight);
       if (!fCanvasImp) return;
+      //This new canvas imp can support OpenGL.
+      if (fGLDevice != -1) {
+         TIter next(GetListOfPrimitives());
+         while (TObject * const obj = next()) {
+            if (obj->InheritsFrom(TPad::Class())) {
+               //I do not think we can have TCanvas inside TCanvas,
+               //so it's a pad.
+               //TODO: check the logic, what if we had
+               //canvas imp/gl device before? Mess.
+               ((TPad *)obj)->SetGLDevice(fGLDevice);
+            }
+         }
+      }
+      //
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
    }
    Build();
