@@ -1306,7 +1306,10 @@ void ASTDeclWriter::VisitRedeclarable(Redeclarable<T> *D) {
   NameAlreadyWritten = true;
   T *First = D->getFirstDeclaration();
   if (First->getMostRecentDecl() != First) {
-    // There is more than one declaration of this entity, so we will need to 
+    assert(isRedeclarableDeclKind(static_cast<T *>(D)->getKind()) &&
+           "Not considered redeclarable?");
+    
+    // There is more than one declaration of this entity, so we will need to
     // write a redeclaration chain.
     Writer.AddDeclRef(First, Record);
     Writer.Redeclarations.insert(First);

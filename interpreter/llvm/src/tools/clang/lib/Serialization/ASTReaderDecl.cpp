@@ -118,29 +118,25 @@ namespace clang {
       ASTReader &Reader;
       GlobalDeclID FirstID;
       mutable bool Owning;
+      Decl::Kind DeclKind;
       
       void operator=(RedeclarableResult &) LLVM_DELETED_FUNCTION;
       
     public:
-      RedeclarableResult(ASTReader &Reader, GlobalDeclID FirstID)
-        : Reader(Reader), FirstID(FirstID), Owning(true) { }
+      RedeclarableResult(ASTReader &Reader, GlobalDeclID FirstID,
+                         Decl::Kind DeclKind)
+        : Reader(Reader), FirstID(FirstID), Owning(true), DeclKind(DeclKind) { }
 
       RedeclarableResult(const RedeclarableResult &Other)
-        : Reader(Other.Reader), FirstID(Other.FirstID), Owning(Other.Owning) 
+        : Reader(Other.Reader), FirstID(Other.FirstID), Owning(Other.Owning) ,
+          DeclKind(Other.DeclKind)
       { 
         Other.Owning = false;
       }
 
       ~RedeclarableResult() {
-        // FIXME: We want to suppress this when the declaration is local to
-        // a function, since there's no reason to search other AST files
-        // for redeclarations (they can't exist). However, this is hard to 
-        // do locally because the declaration hasn't necessarily loaded its
-        // declaration context yet. Also, local externs still have the function
-        // as their (semantic) declaration context, which is wrong and would
-        // break this optimize.
-        
-        if (FirstID && Owning && Reader.PendingDeclChainsKnown.insert(FirstID))
+        if (FirstID && Owning && isRedeclarableDeclKind(DeclKind) &&
+            Reader.PendingDeclChainsKnown.insert(FirstID))
           Reader.PendingDeclChains.push_back(FirstID);
       }
       
@@ -153,7 +149,7 @@ namespace clang {
         Owning = false;
       }
     };
-    
+
     /// \brief Class used to capture the result of searching for an existing
     /// declaration of a specific kind and name, along with the ability
     /// to update the place where this result was found (the declaration
@@ -1318,26 +1314,32 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
       FunctionTemplateDecl* FTY = dyn_cast<FunctionTemplateDecl>(TDY);
       FunctionDecl* FX = FTX->getTemplatedDecl();
       FunctionDecl* FY = FTY->getTemplatedDecl();
+
       // If the describing function decls are identical (modulo redecls) 
       // then they must have been merged already.
-      if (FX->getCanonicalDecl() != FY->getCanonicalDecl())
-        return false;
-#if 0
+      bool CanComp = (FX->getCanonicalDecl() == FY->getCanonicalDecl());
+      if (FX->getType().isNull() || FY->getType().isNull())
+        return CanComp;
+#if 1
       typedef llvm::SmallVector<std::pair<QualType, QualType>, 4> DependentTypesToCheck_t;
       DependentTypesToCheck_t DependentTypesToCheck;
       const FunctionProtoType* FPTX
         = FTX->getTemplatedDecl()->getType()->getAs<FunctionProtoType>();
       const FunctionProtoType* FPTY
         = FTY->getTemplatedDecl()->getType()->getAs<FunctionProtoType>();
-      if (FPTX->getNumArgs() != FPTY->getNumArgs())
+      if (FPTX->getNumArgs() != FPTY->getNumArgs()) {
+        assert(!CanComp || "nargs vs CanComp");
         return false;
+      }
       for (unsigned IArg = 0, NArg = FPTX->getNumArgs(); IArg < NArg; ++IArg) {
         QualType ArgTX = FPTX->getArgType(IArg);
         QualType ArgTY = FPTY->getArgType(IArg);
         if (!FTX->getASTContext().hasSameType(ArgTX, ArgTY)) {
           if (ArgTX->isDependentType()) {
-            if (!ArgTY->isDependentType())
+            if (!ArgTY->isDependentType()) {
+              assert(!CanComp || "argtype vs CanComp");
               return false;
+            }
             DependentTypesToCheck.push_back(std::make_pair(ArgTX, ArgTY));
           }
         }
@@ -1348,13 +1350,15 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
                EArgT = DependentTypesToCheck.end(); IArgT != EArgT; ++IArgT) {
           // FIXME: going via strings is terrible (but quite reliable).
           // Will need to recurse through template args etc.
-          if (IArgT->first.getAsString() != IArgT->second.getAsString())
+          if (IArgT->first.getAsString() != IArgT->second.getAsString()) {
+            assert(!CanComp || "deparg vs CanComp");
             return false;
+          }
         }
       }
+      assert(CanComp || "typecomp vs CanComp");
 #endif
     }
-
     return true;
   }
 
@@ -1799,7 +1803,7 @@ ASTDeclReader::VisitRedeclarable(Redeclarable<T> *D) {
       assert(ExistingDef->getKind() == DDecl->getKind() && "Found non-matching kind as previous definition!");
       assert(ExistingDef != DDecl && "Existing decl is new decl!");
       Reader.RedeclsToSkip.insert(DDecl);
-      return RedeclarableResult(Reader, 0);
+      return RedeclarableResult(Reader, 0, DDecl->getKind());
     }
   }
   
@@ -1824,7 +1828,8 @@ ASTDeclReader::VisitRedeclarable(Redeclarable<T> *D) {
                              
   // The result structure takes care to note that we need to load the 
   // other declaration chains for this ID.
-  return RedeclarableResult(Reader, FirstDeclID);
+  return RedeclarableResult(Reader, FirstDeclID,
+                            static_cast<T *>(D)->getKind());
 }
 
 /// \brief Attempts to merge the given declaration (D) with another declaration
@@ -2118,7 +2123,7 @@ ASTDeclReader::FindExistingResult ASTDeclReader::findExisting(NamedDecl *D,
     }
   }
 
-  if (DC->isNamespace()) {
+  if (DC->isNamespace() && DC->getPrimaryContext() /*currently reading it?*/) {
 #if AXEL_LOOKUP_CHANGES
     SmallVector<NamedDecl *, 4> Decls;
     DC->getPrimaryContext()->localUncachedLookup(Name, Decls);
