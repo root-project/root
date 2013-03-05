@@ -479,12 +479,14 @@ bool TMinuitMinimizer::Minimize() {
       return false; 
    }
 
+   int printlevel = PrintLevel(); 
+
    // total number of free parameter is 0
    if (fMinuit->fNpar <= 0) { 
       // retrieve parameters values  from TMinuit
       RetrieveParams(); 
       fMinuit->fAmin = (*fgFunc)(&fParams.front());
-      Info("TMinuitMinimizer::Minimize","There are no free parameter - just compute the function value");
+      if (printlevel > 0) Info("TMinuitMinimizer::Minimize","There are no free parameter - just compute the function value");
       return true; 
    }
 
@@ -497,7 +499,6 @@ bool TMinuitMinimizer::Minimize() {
    arglist[0] = ErrorDef(); 
    fMinuit->mnexcm("SET Err",arglist,1,ierr);
 
-   int printlevel = PrintLevel(); 
    arglist[0] = printlevel - 1;
    fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
 
