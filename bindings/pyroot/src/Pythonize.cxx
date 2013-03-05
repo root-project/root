@@ -2105,7 +2105,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( IsTemplatedSTLClass( name, "vector" ) ) {
 
-      if ( HasAttrDirect( pyclass, PyStrings::gLen ) ) {
+      if ( HasAttrDirect( pyclass, PyStrings::gLen ) && HasAttrDirect( pyclass, PyStrings::gAt ) ) {
          Utility::AddToClass( pyclass, "_vector__at", "at" );
       // remove iterator that was set earlier (checked __getitem__ will do the trick)
          if ( HasAttrDirect( pyclass, PyStrings::gIter ) )
