@@ -57,6 +57,7 @@
 #include "RooStats/HypoTestInverterResult.h"
 #include "RooStats/HypoTestInverterPlot.h"
 
+
 using namespace RooFit;
 using namespace RooStats;
 
@@ -191,7 +192,7 @@ RooStats::HypoTestInvTool::SetParameter(const char * name, bool value){
    if (s_name.find("GenerateBinned") != std::string::npos) mGenerateBinned = value;
    if (s_name.find("UseProof") != std::string::npos) mUseProof = value;
    if (s_name.find("Rebuild") != std::string::npos) mRebuild = value;
-   if (s_name.find("ReuseAltToys") != std::string::npos) mReUseAltToys = value;
+   if (s_name.find("ReuseAltToys") != std::string::npos) mReuseAltToys = value;
 
    return;
 }
@@ -509,7 +510,7 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
    if (mPlotHypoTestResult) { 
       TCanvas * c2 = new TCanvas();
       if (nEntries > 1) { 
-         int ny = TMath::CeilNint( sqrt(nEntries) );
+         int ny = TMath::CeilNint(TMath::Sqrt(nEntries));
          int nx = TMath::CeilNint(double(nEntries)/ny);
          c2->Divide( nx,ny);
       }
@@ -752,8 +753,10 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    HypoTestCalculatorGeneric *  hc = 0;
    if (type == 0) hc = new FrequentistCalculator(*data, *bModel, *sbModel);
    else if (type == 1) hc = new HybridCalculator(*data, *bModel, *sbModel);
-   else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, false, mAsimovBins);
-   else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true, mAsimovBins);  // for using Asimov data generated with nominal values 
+   // else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, false, mAsimovBins);
+   // else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true, mAsimovBins);  // for using Asimov data generated with nominal values 
+   else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, false );
+   else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true );  // for using Asimov data generated with nominal values 
    else {
       Error("StandardHypoTestInvDemo","Invalid - calculator type = %d supported values are only :\n\t\t\t 0 (Frequentist) , 1 (Hybrid) , 2 (Asymptotic) ",type);
       return 0;
