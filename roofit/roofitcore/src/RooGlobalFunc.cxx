@@ -321,6 +321,14 @@ namespace RooFit {
   RooCmdArg ScanAllCdf() { return RooCmdArg("ScanAllCdf",1,0,0,0,0,0,0,0) ; }
   RooCmdArg ScanNoCdf() { return RooCmdArg("ScanNoCdf",1,0,0,0,0,0,0,0) ; }
 
+
+  RooCmdArg MultiArg(const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,const RooCmdArg& arg4,
+                     const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) {
+    RooCmdArg ret("MultiArg",0,0,0,0,0,0,0,0) ; ret.addArg(arg1) ; ret.addArg(arg2) ; 
+    ret.addArg(arg3) ; ret.addArg(arg4) ; ret.addArg(arg5) ; ret.addArg(arg6) ; ret.addArg(arg7) ; ret.addArg(arg8) ;
+    ret.setProcessRecArgs(kTRUE,kFALSE) ; return ret ;
+  }
+
   RooConstVar& RooConst(Double_t val) { return RooRealConstant::value(val) ; }
 
  

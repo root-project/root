@@ -260,7 +260,6 @@ RooCmdArg OutputStream(std::ostream& os) ;
 RooCmdArg Prefix(Bool_t flag) ;
 RooCmdArg Color(Color_t color) ;
 
-
 // RooWorkspace::import() arguments
 RooCmdArg RenameConflictNodes(const char* suffix) ;
 RooCmdArg RenameAllNodes(const char* suffix) ; 
@@ -284,6 +283,12 @@ RooCmdArg ScanNumCdf() ;
 RooCmdArg ScanAllCdf() ;
 RooCmdArg ScanNoCdf() ;
 
+// Generic container arguments (to be able to supply more command line arguments)
+RooCmdArg MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,
+		   const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
+		   const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
+		   const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
+ 
 RooConstVar& RooConst(Double_t val) ; 
 
 
