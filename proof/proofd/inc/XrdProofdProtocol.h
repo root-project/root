@@ -38,10 +38,10 @@
 #include "XpdSysPthread.h"
 
 #include "Xrd/XrdLink.hh"
-#include "Xrd/XrdObject.hh"
 #include "Xrd/XrdProtocol.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdSec/XrdSecInterface.hh"
+#include "XpdObject.h"
 #include "XProofProtocol.h"
 
 class XrdBuffer;
@@ -131,7 +131,7 @@ public:
    //
    // Protocol variables
 
-   XrdObject<XrdProofdProtocol>  fProtLink;
+   XpdObject                     fProtLink;
    XrdBuffer                    *fArgp;
 
    XrdLink                      *fLink;
@@ -176,7 +176,7 @@ public:
    //
    static bool                   fgConfigDone;
    static int                    fgCount;
-   static XrdObjectQ<XrdProofdProtocol> fgProtStack;
+   static XpdObjectQ             fgProtStack;
    static XrdBuffManager        *fgBPool;        // Buffer manager
    static int                    fgMaxBuffsz;    // Maximum buffer size we can have
    static XrdSysRecMutex         fgBMutex;       // Buffer management mutex

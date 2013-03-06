@@ -55,6 +55,9 @@ NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
 ifneq ($(EXTRA_XRDFLAGS),)
 NETXINCEXTRA += -I$(ROOT_SRCDIR)/proof/proofd/inc
 endif
+ifeq ($(XRDINCPRIVATE),yes)
+NETXINCEXTRA += -I$(XRDINCDIR)/private
+endif
 
 # Xrootd client libs
 ifeq ($(PLATFORM),win32)

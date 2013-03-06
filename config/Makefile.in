@@ -255,6 +255,7 @@ XRDLIBDIR      := @xrdlibdir@
 EXTRA_XRDFLAGS := @extraxrdflags@
 XRDVERSION     := @xrdversion@
 HASXRDUTILS    := @hasxrdutils@
+XRDINCPRIVATE  := @xrdincprivate@
 
 SRPLIBDIR      := @srplibdir@
 SRPLIB         := @srplib@

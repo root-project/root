@@ -7,7 +7,7 @@ ROOT_USE_PACKAGE(proof/proof)
 ROOT_USE_PACKAGE(net/rpdutils)
 ROOT_USE_PACKAGE(net/auth)
 
-include_directories(${XROOTD_INCLUDE_DIR})
+include_directories(${XROOTD_INCLUDE_DIR} ${XROOTD_PRIVATE_INCLUDE_DIR})
 add_definitions(${XROOTD_CFLAGS})
 
 if(WIN32)

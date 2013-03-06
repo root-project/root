@@ -6,7 +6,7 @@
 ROOT_USE_PACKAGE(net/net)
 ROOT_USE_PACKAGE(proof/proofd)
 
-include_directories(${XROOTD_INCLUDE_DIR})
+include_directories(${XROOTD_INCLUDE_DIR} ${XROOTD_PRIVATE_INCLUDE_DIR})
 add_definitions(${XROOTD_CFLAGS})
 #---------------------------------------------------------------------------
 

@@ -32,7 +32,6 @@
 
 #include "XrdClient/XrdClientConnMgr.hh"
 #include "XrdClient/XrdClientConst.hh"
-#include "XrdClient/XrdClientDebug.hh"
 #include "XrdClient/XrdClientEnv.hh"
 #include "XrdClient/XrdClientLogConnection.hh"
 #include "XrdClient/XrdClientPhyConnection.hh"
@@ -41,6 +40,7 @@
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdOuc/XrdOucString.hh"
 #include "XrdSec/XrdSecInterface.hh"
+#include "XrdSys/XrdSysLogger.hh"
 #include "XrdSys/XrdSysPlatform.hh"
 
 // Dynamic libs

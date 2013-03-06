@@ -4577,9 +4577,16 @@ if test "x$enable_xrootd" = "xyes" ; then
 	 fi
       fi
    fi
-   echo "$xrdver"
+   # Protect against 3.3.0, first version with 'include/xrootd/private'
+   if [ $decver -eq 300030000 ] ; then
+      echo "Cannot build against version $xrdver (missing headers)"
+      enable_xrootd="no"
+   else
+      echo "$xrdver"
+   fi
 fi
 
+xrdincprivate="no"
 if test "x$enable_xrootd" = "xyes" ; then
 
    extraxrdflags="-DROOTXRDVERS=$decver"
@@ -4632,6 +4639,15 @@ if test "x$enable_xrootd" = "xyes" ; then
    if test ! "x$xrdlibext" = "x" && test ! "x$xrdlibext" = "xso" && test ! "x$xrdlibext" = "xa"; then
       # The \'s are needed to produce -DLT_MODULE_EXT=\".ext\" in Makefile.config
       extraxrdflags="$extraxrdflags -DLT_MODULE_EXT=\\\\\".$xrdlibext\\\\\""
+   fi
+
+   #
+   # Check also if 'include/private' exists: we need to signal this to the build modules
+   # for correct location of some headers available form the dlevel packages for version >= 3.3.x
+   if test "x$enable_xrootd" = "xyes"; then
+      if test -d "$xrdincdir/private"; then
+         xrdincprivate="yes"
+      fi
    fi
 
    #
@@ -6730,6 +6746,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@xpmlibdir@|$xpmlibdir|"              \
     -e "s|@xrdlibdir@|$xrdlibdir|"              \
     -e "s|@xrdincdir@|$xrdincdir|"              \
+    -e "s|@xrdincprivate@|$xrdincprivate|"      \
     -e "s|@xrdversion@|$decver|"                \
     -e "s|@hasxrdutils@|$hasxrdutils|"          \
     -e "s|@cfitsioincdir@|$cfitsioincdir|"      \

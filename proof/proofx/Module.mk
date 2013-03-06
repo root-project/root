@@ -63,6 +63,9 @@ endif
 PROOFXINCEXTRA := $(PROOFXDIRI:%=-I%)
 PROOFXINCEXTRA += $(XROOTDDIRI:%=-I%)
 PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
+ifeq ($(XRDINCPRIVATE),yes)
+PROOFXINCEXTRA += -I$(XRDINCDIR)/private
+endif
 
 # Xrootd client libs
 ifeq ($(PLATFORM),win32)
