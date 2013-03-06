@@ -127,6 +127,10 @@ XPROOFDEXE     := bin/xproofd
 ifeq ($(HASXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
+ifeq ($(XRDINCPRIVATE),yes)
+XPDINCEXTRA    += -I$(XRDINCDIR)/private
+endif
+
 
 ifeq ($(HASXRDUTILS),no)
 

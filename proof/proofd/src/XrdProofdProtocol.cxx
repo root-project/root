@@ -29,6 +29,7 @@
 
 #include "XrdVersion.hh"
 #include "Xrd/XrdBuffer.hh"
+#include "Xrd/XrdScheduler.hh"
 
 #include "XrdProofdClient.h"
 #include "XrdProofdClientMgr.h"
@@ -54,8 +55,7 @@ static XrdSysLogger   gMainLogger;
 //
 // Static area: general protocol managing section
 int                   XrdProofdProtocol::fgCount    = 0;
-XrdObjectQ<XrdProofdProtocol>
-                      XrdProofdProtocol::fgProtStack("ProtStack",
+XpdObjectQ            XrdProofdProtocol::fgProtStack("ProtStack",
                                                      "xproofd protocol anchor");
 XrdSysRecMutex        XrdProofdProtocol::fgBMutex;    // Buffer management mutex
 XrdBuffManager       *XrdProofdProtocol::fgBPool    = 0;
@@ -542,8 +542,12 @@ int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
    // Schedule protocol object cleanup; the maximum number of objects
    // and the max age are taken from XrdXrootdProtocol: this may need
    // some optimization in the future.
+#if 1
    fgProtStack.Set(pi->Sched, XrdProofdTrace, TRACE_MEM);
    fgProtStack.Set((pi->ConnMax/3 ? pi->ConnMax/3 : 30), 60*60);
+#else
+   fgProtStack.Set(pi->Sched, 3600);
+#endif
 
    // Default tracing options: always trace logins and errors for all
    // domains; if the '-d' option was specified on the command line then
@@ -789,6 +793,13 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
 
    // Push ourselves on the stack
    fgProtStack.Push(&fProtLink);
+#if 0
+   if(fgProtStack.Push(&fProtLink) != 0) {
+      XrdProofdProtocol *xp = fProtLink.objectItem();
+      fProtLink.setItem(0);
+      delete xp;
+   }
+#endif
 }
 
 //______________________________________________________________________________
