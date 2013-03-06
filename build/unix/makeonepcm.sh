@@ -179,6 +179,12 @@ cat $srcdir/build/unix/gminimalHeaders.list | sed -e 's|include/|#include "|' -e
  -e /zlib.h/d \
  -e /gzguts.h/d \
  -e /zutil.h/d \
+ -e /TGCocoa.h/d \
+ -e /TGQuartz.h/d \
+ -e /THbook.*.h/d \
+ -e /TMacOSXSystem.h/d \
+ -e /X11Atoms.h/d \
+ -e /XLFDParser.h/d \
 > all.h
 
 echo '#include "cling/Interpreter/DynamicLookupRuntimeUniverse.h"' >> all.h
