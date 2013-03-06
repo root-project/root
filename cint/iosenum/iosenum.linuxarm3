@@ -1,0 +1,38 @@
+/* include/platform/iosenum.h
+ *  This file contains platform dependent ios enum value.
+ *  Run 'cint iosenum.cxx' to create this file. It is done
+ *  only once at installation. */
+#pragma ifndef G__TMPLTIOS
+#pragma else
+static ios_base::fmtflags ios_base::boolalpha=1;
+static ios_base::fmtflags ios_base::dec=2;
+static ios_base::fmtflags ios_base::fixed=4;
+static ios_base::fmtflags ios_base::hex=8;
+static ios_base::fmtflags ios_base::internal=16;
+static ios_base::fmtflags ios_base::left=32;
+static ios_base::fmtflags ios_base::oct=64;
+static ios_base::fmtflags ios_base::right=128;
+static ios_base::fmtflags ios_base::scientific=256;
+static ios_base::fmtflags ios_base::showbase=512;
+static ios_base::fmtflags ios_base::showpoint=1024;
+static ios_base::fmtflags ios_base::showpos=2048;
+static ios_base::fmtflags ios_base::skipws=4096;
+static ios_base::fmtflags ios_base::unitbuf=8192;
+static ios_base::fmtflags ios_base::uppercase=16384;
+static ios_base::fmtflags ios_base::adjustfield=176;
+static ios_base::fmtflags ios_base::basefield=74;
+static ios_base::fmtflags ios_base::floatfield=260;
+static ios_base::fmtflags ios_base::badbit=1;
+static ios_base::fmtflags ios_base::eofbit=2;
+static ios_base::fmtflags ios_base::failbit=4;
+static ios_base::fmtflags ios_base::goodbit=0;
+static ios_base::fmtflags ios_base::app=1;
+static ios_base::fmtflags ios_base::ate=2;
+static ios_base::fmtflags ios_base::binary=4;
+static ios_base::fmtflags ios_base::in=8;
+static ios_base::fmtflags ios_base::out=16;
+static ios_base::fmtflags ios_base::trunc=32;
+static ios_base::fmtflags ios_base::beg=0;
+static ios_base::fmtflags ios_base::cur=1;
+static ios_base::fmtflags ios_base::end=2;
+#pragma endif
