@@ -3,12 +3,17 @@ void LDAPExample()
    gSystem->Load("libRLDAP.so");
 
    TLDAPServer *server = new TLDAPServer("ldap.cern.ch");
+   if (!server->IsConnected()) {
+      printf("Could not connect to ldap.cern.ch\n");
+      delete server;
+      return;
+   }
 
    TLDAPResult *result = server.Search();
 
    if (result == 0) {
       printf("Search failed\n");
-      exit(1);
+      return;
    }
    result->Print();
    delete result;
@@ -29,7 +34,7 @@ void LDAPExample()
 
    if (result == 0) {
       printf("Search failed\n");
-      exit(1);
+      return;
    }
 
    result->Print();
