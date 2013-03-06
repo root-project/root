@@ -71,6 +71,8 @@
 #include <stdlib.h>
 
 #include "TFileMerger.h"
+#include "TROOT.h"
+#include "TInterpreter.h"
 
 //___________________________________________________________________________
 int main( int argc, char **argv )
@@ -169,7 +171,10 @@ int main( int argc, char **argv )
    }
 
    gSystem->Load("libTreePlayer");
-
+   TClass::GetClass("ROOT::Cintex::Cintex"); // autoload Cintex if it exist.
+   if (gInterpreter->IsLoaded("libCintex")) {
+      gROOT->ProcessLine("ROOT::Cintex::Cintex::Enable();");
+   }
    const char *targetname = 0;
    if (outputPlace) {
       targetname = argv[outputPlace];
