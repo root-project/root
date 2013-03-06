@@ -109,7 +109,6 @@ RooVectorDataStore::RooVectorDataStore(const char* name, const char* title, cons
   delete iter ;
   
   setAllBuffersNative() ;
-  
 }
 
 
@@ -1135,6 +1134,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   RooAbsArg::setDirtyInhibit(kTRUE) ;
 
   vector<RooArgSet*> nsetList ;
+  list<RooArgSet*> argObsList ;
 
   // Now need to attach branch buffers of clones
   TIterator* it = cloneSet.createIterator() ;
@@ -1143,7 +1143,8 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
     arg->attachToVStore(*newCache) ;
     
     RooArgSet* argObs = nset ? arg->getObservables(*nset) : arg->getVariables() ;
-
+    argObsList.push_back(argObs) ;
+    
     RooArgSet* normSet(0) ;
     const char* catNset = arg->getStringAttribute("CATNormSet") ;
     if (catNset) {
@@ -1218,6 +1219,9 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   delete it ;
 
   for (list<RooArgSet*>::iterator iter = vlist.begin() ; iter!=vlist.end() ; ++iter) {
+    delete *iter ;
+  }  
+  for (list<RooArgSet*>::iterator iter = argObsList.begin() ; iter!=argObsList.end() ; ++iter) {
     delete *iter ;
   }  
 
