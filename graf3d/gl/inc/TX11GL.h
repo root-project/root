@@ -28,7 +28,7 @@
 #if !defined(__CLING__)
 #include <GL/glx.h>
 #else
-struct Display;
+typedef struct _XDisplay Display;
 struct XVisualInfo;
 #endif
 
