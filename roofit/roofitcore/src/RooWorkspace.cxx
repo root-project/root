@@ -236,7 +236,10 @@ RooWorkspace::~RooWorkspace()
 
 
 //_____________________________________________________________________________
-Bool_t RooWorkspace::import(const char* fileSpec, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
+Bool_t RooWorkspace::import(const char* fileSpec, 
+			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
+			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6, 
+			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
 {
   // Import a RooAbsArg or RooAbsData set from a workspace in a file. Filespec should be constructed as "filename:wspacename:objectname"
   // The arguments will be passed on to the relevant RooAbsArg& or RooAbsData& import call
@@ -272,13 +275,13 @@ Bool_t RooWorkspace::import(const char* fileSpec, const RooCmdArg& arg1, const R
   // Check that workspace contains object and forward to appropriate import method
   RooAbsArg* warg = w->arg(objname) ;
   if (warg) {
-    Bool_t ret = import(*warg,arg1,arg2,arg3) ;
+    Bool_t ret = import(*warg,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
     delete f ;
     return ret ;    
   }
   RooAbsData* wdata = w->data(objname) ;
   if (wdata) {
-    Bool_t ret = import(*wdata,arg1,arg2,arg3) ;
+    Bool_t ret = import(*wdata,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
     delete f ;
     return ret ;    
   }
@@ -290,7 +293,10 @@ Bool_t RooWorkspace::import(const char* fileSpec, const RooCmdArg& arg1, const R
 
 
 //_____________________________________________________________________________
-Bool_t RooWorkspace::import(const RooArgSet& args, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
+Bool_t RooWorkspace::import(const RooArgSet& args,
+			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
+			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6, 
+			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
 {
   // Import multiple RooAbsArg objects into workspace. For details on arguments see documentation
   // of import() method for single RooAbsArg
@@ -299,7 +305,7 @@ Bool_t RooWorkspace::import(const RooArgSet& args, const RooCmdArg& arg1, const 
   RooAbsArg* oneArg ;
   Bool_t ret(kFALSE) ;
   while((oneArg=(RooAbsArg*)iter->Next())) {
-    ret |= import(*oneArg,arg1,arg2,arg3) ;
+    ret |= import(*oneArg,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
   }
   return ret ;
 }
@@ -307,7 +313,10 @@ Bool_t RooWorkspace::import(const RooArgSet& args, const RooCmdArg& arg1, const 
 
 
 //_____________________________________________________________________________
-Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
+Bool_t RooWorkspace::import(const RooAbsArg& inArg,
+			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
+			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6, 
+			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
 {
   //  Import a RooAbsArg object, e.g. function, p.d.f or variable into the workspace. This import function clones the input argument and will
   //  own the clone. If a composite object is offered for import, e.g. a p.d.f with parameters and observables, the
@@ -336,6 +345,12 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   args.Add((TObject*)&arg1) ;
   args.Add((TObject*)&arg2) ;
   args.Add((TObject*)&arg3) ;
+  args.Add((TObject*)&arg4) ;
+  args.Add((TObject*)&arg5) ;
+  args.Add((TObject*)&arg6) ;
+  args.Add((TObject*)&arg7) ;
+  args.Add((TObject*)&arg8) ;
+  args.Add((TObject*)&arg9) ;
 
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooWorkspace::import(%s)",GetName())) ;
@@ -385,16 +400,16 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
     char tmp[10240] ;
     strlcpy(tmp,varChangeIn,10240) ;
     list<string> tmpIn,tmpOut ;
-    char* ptr = strtok(tmp,",") ;
+    char* ptr = strtok(tmp,", ") ;
     while (ptr) {
       tmpIn.push_back(ptr) ;
-      ptr = strtok(0,",") ;
+      ptr = strtok(0,", ") ;
     }
     strlcpy(tmp,varChangeOut,10240) ;
-    ptr = strtok(tmp,",") ;
+    ptr = strtok(tmp,", ") ;
     while (ptr) {
       tmpOut.push_back(ptr) ;
-      ptr = strtok(0,",") ;
+      ptr = strtok(0,", ") ;
     }    
     list<string>::iterator iin = tmpIn.begin() ;
     list<string>::iterator iout = tmpOut.begin() ;
@@ -409,10 +424,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
   char tmp[10240] ;
   if (exceptVars && strlen(exceptVars)) {
     strlcpy(tmp,exceptVars,10240) ;
-    char* ptr = strtok(tmp,",") ;
+    char* ptr = strtok(tmp,", ") ;
     while(ptr) {
       exceptVarNames.insert(ptr) ;
-      ptr = strtok(0,",") ;
+      ptr = strtok(0,", ") ;
     }
   }
 
@@ -651,7 +666,11 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg, const RooCmdArg& arg1, const
 
 
 //_____________________________________________________________________________
-Bool_t RooWorkspace::import(RooAbsData& inData, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3) 
+Bool_t RooWorkspace::import(RooAbsData& inData, 
+			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
+			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6, 
+			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
+
 {
   //  Import a dataset (RooDataSet or RooDataHist) into the work space. The workspace will contain a copy of the data
   //  The dataset and its variables can be renamed upon insertion with the options below
@@ -667,6 +686,12 @@ Bool_t RooWorkspace::import(RooAbsData& inData, const RooCmdArg& arg1, const Roo
   args.Add((TObject*)&arg1) ;
   args.Add((TObject*)&arg2) ;
   args.Add((TObject*)&arg3) ;
+  args.Add((TObject*)&arg4) ;
+  args.Add((TObject*)&arg5) ;
+  args.Add((TObject*)&arg6) ;
+  args.Add((TObject*)&arg7) ;
+  args.Add((TObject*)&arg8) ;
+  args.Add((TObject*)&arg9) ;
 
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooWorkspace::import(%s)",GetName())) ;
@@ -2806,7 +2831,6 @@ void RooWorkspace::exportToCint(const char* nsname)
     coutE(ObjectHandling) << "RooWorkspace::exportToCint(" << GetName() << ") WARNING: repeated calls to exportToCint() have no effect" << endl ;
     return ;
   }
-
 
   // Set flag so that future import to workspace are automatically exported to CINT
   _doExport = kTRUE ;
