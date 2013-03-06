@@ -15,7 +15,7 @@ rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h
 
 # create allHeaders.h including all headers from the include directory
 #find include -name \*.h | sed -e 's|include/|#include "|' -e 's|$|"|' \
-cat build/unix/gminimalHeaders.list | sed -e 's|include/|#include "|' -e 's|$|"|' \
+cat $srcdir/build/unix/gminimalHeaders.list | sed -e 's|include/|#include "|' -e 's|$|"|' \
  -e /Bits.h/d \
  -e /CocoaGuiTypes.h/d \
  -e /CocoaPrivate.h/d \
