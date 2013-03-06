@@ -371,17 +371,17 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
     _projDeps = (RooArgSet*) projDeps.snapshot(kFALSE) ;
     
-    RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
+    //RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
     _normSet->remove(*_projDeps,kTRUE,kTRUE) ;
 
-    // Delete owned projected dependent copy in _normSet
-    TIterator* ii = tobedel->createIterator() ;
-    RooAbsArg* aa ;
-    while((aa=(RooAbsArg*)ii->Next())) {
-      delete aa ;
-    }
-    delete ii ;
-    delete tobedel ;
+//     // Delete owned projected dependent copy in _normSet
+//     TIterator* ii = tobedel->createIterator() ;
+//     RooAbsArg* aa ;
+//     while((aa=(RooAbsArg*)ii->Next())) {
+//       delete aa ;
+//     }
+//     delete ii ;
+//     delete tobedel ;
 
     // Mark all projected dependents as such
     RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(*_projDeps) ;

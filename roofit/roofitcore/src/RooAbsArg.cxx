@@ -76,8 +76,11 @@ ClassImp(RooAbsArg)
 
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
-
 Bool_t RooAbsArg::inhibitDirty() { return _inhibitDirty ; }
+
+std::map<RooAbsArg*,TRefArray*> RooAbsArg::_ioEvoList ;
+
+
 
 //_____________________________________________________________________________
 RooAbsArg::RooAbsArg() :
@@ -499,6 +502,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
   if ((doBranch&&doLeaf) ||
       (doBranch&&arg->isDerived()) ||
       (doLeaf&&arg->isFundamental()&&(!(recurseFundamental&&arg->isDerived()))) ) {
+
     list->add(*arg,kTRUE) ;
   }
 
@@ -1200,7 +1204,11 @@ void RooAbsArg::registerProxy(RooListProxy& proxy)
   }
 
   // Register proxy itself
+  Int_t nProxyOld = _proxyList.GetEntries() ;
   _proxyList.Add(&proxy) ;
+  if (_proxyList.GetEntries()!=nProxyOld+1) {
+    cout << "RooAbsArg::registerProxy(" << GetName() << ") proxy registration failure! nold=" << nProxyOld << " nnew=" << _proxyList.GetEntries() << endl ;
+  }
 }
 
 
@@ -2291,3 +2299,106 @@ void RooAbsArg::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(RooAbsArg::Class(),this);
    }
 }
+
+//______________________________________________________________________________
+void RooAbsArg::ioStreamerPass2() 
+{
+  // Method called by workspace container to finalize schema evolution issues
+  // that cannot be handled in a single ioStreamer pass.
+  //
+  // A second pass is typically needed when evolving data member of RooAbsArg-derived
+  // classes that are container classes with references to other members, which may
+  // not yet be 'live' in the first ioStreamer() evolution pass.
+  //
+  // Classes may overload this function, but must call the base method in the
+  // overloaded call to ensure base evolution is handled properly
+
+
+  // Handling of v5-v6 migration (TRefArray _proxyList --> RooRefArray _proxyList)
+  map<RooAbsArg*,TRefArray*>::iterator iter = _ioEvoList.find(this) ;
+  if (iter != _ioEvoList.end()) {
+
+    // Transfer contents of saved TRefArray to RooRefArray now
+    for (int i=0 ; i < iter->second->GetEntries() ; i++) {
+      _proxyList.Add(iter->second->At(i)) ;
+    }
+    // Delete TRefArray and remove from list
+    delete iter->second ;
+    _ioEvoList.erase(iter) ;
+  }
+}
+
+
+
+
+//______________________________________________________________________________
+void RooAbsArg::ioStreamerPass2Finalize() 
+{
+  // Method called by workspace container to finalize schema evolution issues
+  // that cannot be handled in a single ioStreamer pass. This static finalize method
+  // is called after ioStreamerPass2() is called on each directly listed object 
+  // in the workspace. It's purpose is to complete schema evolution of any
+  // objects in the workspace that are not directly listed as content elements
+  // (e.g. analytical convolution tokens )
+  
+
+  // Handling of v5-v6 migration (TRefArray _proxyList --> RooRefArray _proxyList)
+  map<RooAbsArg*,TRefArray*>::iterator iter = _ioEvoList.begin() ;
+  while (iter != _ioEvoList.end()) {
+    
+    // Transfer contents of saved TRefArray to RooRefArray now
+    for (int i=0 ; i < iter->second->GetEntries() ; i++) {
+      iter->first->_proxyList.Add(iter->second->At(i)) ;
+    }
+
+    // Save iterator position for deletion after increment
+    map<RooAbsArg*,TRefArray*>::iterator iter_tmp = iter ;
+    
+    iter++ ;
+    
+    // Delete TRefArray and remove from list
+    delete iter_tmp->second ;
+    _ioEvoList.erase(iter_tmp) ;
+    
+  }
+
+}
+
+
+//______________________________________________________________________________
+void RooRefArray::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class RooRefArray.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }      
+
+      // Make temporary refArray and read that from the streamer 
+      TRefArray refArray ;
+      refArray.Streamer(R__b) ;
+      R__b.CheckByteCount(R__s, R__c, refArray.IsA());
+
+      // Transfer contents to ourselves
+      TIterator* iter = refArray.MakeIterator() ; 
+      TObject* tmpObj ; while ((tmpObj = iter->Next())) { Add(tmpObj) ; } 
+      delete iter ; 
+      
+   } else {
+
+     R__c = R__b.WriteVersion(RooRefArray::IsA(), kTRUE);
+
+     // Make a temporary refArray and write that to the streamer
+     TRefArray refArray ;
+     TIterator* iter = MakeIterator() ; 
+     TObject* tmpObj ; while ((tmpObj = iter->Next())) { refArray.Add(tmpObj) ; } 
+     delete iter ; 
+
+     refArray.Streamer(R__b) ;
+     R__b.SetByteCount(R__c, kTRUE) ;
+     
+   }
+}
+
+

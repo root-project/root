@@ -50,6 +50,18 @@ class RooWorkspace ;
 class RooRealProxy ;
 /* class TGraphStruct ; */
 
+class RooRefArray : public TObjArray {
+ public:
+  RooRefArray() : TObjArray() {
+  } ;
+  RooRefArray(const RooRefArray& other) : TObjArray(other) {
+  }     
+  virtual ~RooRefArray() {} ;
+ protected:
+  ClassDef(RooRefArray,1) // Helper class for proxy lists
+} ;
+
+
 class RooAbsArg : public TNamed, public RooPrintable {
 public:
 
@@ -448,7 +460,7 @@ public:
   RooRefCountList _clientList       ; // list of client objects
   RooRefCountList _clientListShape  ; // subset of clients that requested shape dirty flag propagation
   RooRefCountList _clientListValue  ; // subset of clients that requested value dirty flag propagation
-  TRefArray _proxyList        ; // list of proxies
+  RooRefArray _proxyList        ; // list of proxies
   std::deque<RooAbsCache*> _cacheList ; // list of caches
   TIterator* _clientShapeIter ; //! Iterator over _clientListShape 
   TIterator* _clientValueIter ; //! Iterator over _clientListValue 
@@ -546,8 +558,13 @@ public:
   mutable RooExpensiveObjectCache* _eocache ; // Pointer to global cache manager for any expensive components created by this object
 
   mutable TNamed* _namePtr ; //! Do not persist. Pointer to global instance of string that matches object named
+
+ public:  
+  virtual void ioStreamerPass2() ;
+  static void ioStreamerPass2Finalize() ;
+  static std::map<RooAbsArg*,TRefArray*> _ioEvoList ; // temporary holding list for proxies needed in schema evolution  
   
-  ClassDef(RooAbsArg,5) // Abstract variable
+  ClassDef(RooAbsArg,6) // Abstract variable
 };
 
 std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);  

@@ -2425,11 +2425,18 @@ void RooWorkspace::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
 
       R__b.ReadClassBuffer(RooWorkspace::Class(),this);
-
+            
+      // Perform any pass-2 schema evolution here
+      RooFIter fiter = _allOwnedNodes.fwdIterator() ;
+      RooAbsArg* node ;
+      while((node=fiter.next())) {
+	node->ioStreamerPass2() ;
+      }
+      RooAbsArg::ioStreamerPass2Finalize() ;
+      
       // Make expensive object cache of all objects point to intermal copy.
       // Somehow this doesn't work OK automatically
       TIterator* iter = _allOwnedNodes.createIterator() ;
-      RooAbsArg* node ;
       while((node=(RooAbsArg*)iter->Next())) {
 	node->setExpensiveObjectCache(_eocache) ;
 	if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
@@ -2443,7 +2450,6 @@ void RooWorkspace::Streamer(TBuffer &R__b)
 
 
    } else {
-
 
      // Make lists of external clients of WS objects, and remove those links temporarily
 

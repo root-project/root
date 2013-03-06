@@ -624,8 +624,13 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
       anyFound=kTRUE ;
     } else if (matchByNameOnly) {
       if (!name.CompareTo(arg->GetName())) {
+	TObject* contObj = _list.FindObject(arg) ;	  
 	_list.Remove(arg) ;
 	anyFound=kTRUE ;
+	if (_ownCont && contObj) {
+	  //cout << "RooAbsCollection::remove() deleting instance " << contObj << " named " << contObj->GetName() << endl ;
+	  delete contObj ;
+	}
       }
     }
   }
