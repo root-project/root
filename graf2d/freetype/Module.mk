@@ -44,7 +44,11 @@ endif
 else
 FREETYPELIBA := $(call stripsrc,$(MODDIRS)/$(FREETYPEVERS)/objs/.libs/libfreetype.a)
 FREETYPELIBB := $(LPATH)/libfreetype.a
+ifeq ($(PLATFORM),linux-k1om)
+FREETYPELIB  := $(FREETYPELIBB)
+else
 FREETYPELIB  := $(FREETYPELIBB) -lz
+endif
 endif
 FREETYPEINC  := $(FREETYPEDIRI:%=-I%)
 FREETYPEDEP  := $(FREETYPELIBB)
@@ -116,6 +120,11 @@ else
 		if [ $(ARCH) = "linuxx8664icc" ]; then \
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
+		fi; \
+		if [ $(ARCH) = "linuxx8664k1omicc" ]; then \
+			FREECC="$$FREECC -m64 $(MICFLAGS)"; \
+			FREE_CFLAGS="-m64 $(MICFLAGS)"; \
+			FREE_HOST="--host=x86_64-unknown-linux-gnu"; \
 		fi; \
 		if [ $(ARCH) = "macosx" ]; then \
 			FREECC="$$FREECC -m32"; \

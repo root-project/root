@@ -263,6 +263,11 @@ linuxx8664icc)
    auxcflags=
    auxlibs="-limf -lm -ldl"
    ;;
+linuxx8664k1omicc)
+   # Intel Many Integrated Cores Architecture (Knights Corner) Linux with Intel icc
+   auxcflags="-mmic -I/usr/include"
+   auxlibs="-limf -lm -ldl"
+   ;;
 linuxx32gcc)
    # x32 ABI (64 bit mode with 32 bit pointers) Linux with gcc > 4.7
    auxcflags="-mx32"

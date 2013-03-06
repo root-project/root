@@ -19,6 +19,7 @@ linuxppcgcc          for PPC Linux with gcc
 linuxppc64gcc        for PPC 64 Linux with gcc >= 3
 linuxx8664gcc        for x86-64 Linux with gcc >= 3.x
 linuxx8664icc        for x86-64 Linux with Intel icc >=10.x
+linuxx8664k1omicc    for x86-64 Linux for Intel MIC with Intel icc >=13.x
 linuxx32gcc          for x32 Linux ABI with gcc >= 4.7
 lynxos               for LynxOS with gcc
 macosx               for MacOS X >= 10.4 with gcc

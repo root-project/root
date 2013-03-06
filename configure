@@ -1747,6 +1747,15 @@ case $arch in
 linuxppc64*)
    logmsg "Will ONLY check 64bit libraries"
    checkonlylib64="yes" ;;
+linuxx8664k1om*)
+   logmsg "Will not check 64bit libraries"
+   checklinux64="no"
+   checklib64="no"
+   enable_cintex="no"
+   enable_reflex="no"
+   enable_genvector="no"
+   enable_tmva="no"
+   ;;
 linuxx8664*)
    logmsg "Will check 64bit libraries"
    checklinux64="yes"
@@ -2167,9 +2176,9 @@ fi
 
 ######################################################################
 #
-### echo %%% On iOS always disable X11
+### echo %%% On iOS and Intel MIC always disable X11
 #
-if test "x$platform" = "xios"; then
+if test "x$platform" = "xios" || test "x$platform" = "xlinux-k1om"; then
     enable_x11="no"
     if test "x$host" = "x"; then
         savearch=$arch
@@ -2178,7 +2187,7 @@ if test "x$platform" = "xios"; then
         arch=$savearch
     fi
 else
-    # cross compiling only supported for ios for the time being
+    # cross compiling only supported for ios and Intel MIC for the time being
     host=
 fi
 
