@@ -2278,6 +2278,16 @@ if test $found_comp -eq 0 ; then
    altf77=
 fi
 
+# the path for the gcctoolchain in case not the system gcc is used to
+# build clang/LLVM. This path is used to build clang/LLVM and is passed
+# at run-time to cling.
+setgcctoolchain="undef"
+gcctoolchainconf="/**/"
+if test "x$gcctoolchain" != "x"; then
+   setgcctoolchain="define"
+   gcctoolchainconf=$gcctoolchain
+fi
+
 ######################################################################
 #
 ### echo %%% Check host environment in case of cross compiling
@@ -6885,6 +6895,8 @@ sed \
     -e "s|@uselibc++11@|$uselibcxx11|"     \
     -e "s|@hasllvm@|$hasllvm|"             \
     -e "s|@llvmdir@|$llvmdir|"             \
+    -e "s|@setgcctoolchain@|$setgcctoolchain|" \
+    -e "s|@gcctoolchain@|$gcctoolchainconf|"   \
     < RConfigure.tmp > RConfigure-out.tmp
 rm -f RConfigure.tmp
 
