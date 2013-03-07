@@ -508,27 +508,21 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
    // search first for min/max in the given range
    if (xmin >= xmax) {
       
-      // this condition is nor needed: skip it
-      //if ((TMath::IsNaN(fLowerLimit) || fLowerLimit == varmin ) && ( TMath::IsNaN(fUpperLimit) || fUpperLimit == varmax) ) { 
 
-      // search for maximum
-      double ymax = 0; 
-      double xwithymax = varmin;
-      int iymax = 0;
-      for (int i = 0; i < n; ++i) {
-         double xp = 0, yp = 0;
-         graph.GetPoint(i, xp, yp);
-         if (yp > ymax) { 
-            ymax = yp;  
-            xwithymax = xp;
-            iymax = i; 
-         }
-      } 
+      // search for maximum between the point
+      double * itrmax = std::max_element(graph.GetY() , graph.GetY() +n);
+      double ymax = *itrmax; 
+      int iymax = itrmax - graph.GetY(); 
+      double xwithymax = graph.GetX()[iymax];
+
+      //std::cout << " max of y " << iymax << "  " << xwithymax << "  " << ymax << " target is " << target << std::endl;
+
+      // look if maximum is above/belove target
       if (ymax > target) {
          if (lowSearch)  {
             if ( iymax > 0) { 
-                  // low search
-               xmin = varmin; 
+                  // low search (minimmum is first point or minimum range)
+               xmin = ( graph.GetY()[0] <= target ) ? graph.GetX()[0] : varmin;  
                xmax = xwithymax;
                } 
             else { 
@@ -541,7 +535,7 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
             // up search 
             if ( iymax < n-1 ) { 
                xmin = xwithymax; 
-               xmax = varmax;
+               xmax = ( graph.GetY()[n-1] <= target ) ? graph.GetX()[n-1] : varmax;
             }
             else { 
                // no room for upper limit
@@ -564,9 +558,11 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
             fUpperLimit = varmax;
          }
       }
-#ifdef DO_DEBUG
-      std::cout << " found xmin, xmax  = " << xmin << "  " << xmax << " for search " << lowSearch std::endl;
+
+#ifdef DO_DEBUG   
+      std::cout << " found xmin, xmax  = " << xmin << "  " << xmax << " for search " << lowSearch << std::endl;
 #endif
+
       // now come here if I have already found a lower/upper limit 
       // i.e. I am calling routine for the second time
 #ifdef ISNEEDED
