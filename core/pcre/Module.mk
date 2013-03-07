@@ -103,6 +103,10 @@ else
 		if [ $(ARCH) = "linuxx8664icc" ]; then \
 			PCRE_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "linuxx8664k1omicc" ]; then \
+			PCRE_CFLAGS="-m64 $(MICFLAGS)"; \
+			PCRE_HOST="--host=x86_64-unknown-linux-gnu"; \
+		fi; \
 		if [ $(ARCH) = "macosx" ]; then \
 			PCRE_CFLAGS="-m32"; \
 		fi; \

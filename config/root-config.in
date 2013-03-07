@@ -313,6 +313,11 @@ linuxx8664icc)
    auxcflags=
    auxlibs="-limf -lm -ldl"
    ;;
+linuxx8664k1omicc)
+   # Intel Many Integrated Cores Architecture (Knights Corner) Linux with Intel icc
+   auxcflags="-mmic -I/usr/include"
+   auxlibs="-limf -lm -ldl"
+   ;;
 linuxalphagcc)
    # Alpha Linux with gcc
    auxcflags=

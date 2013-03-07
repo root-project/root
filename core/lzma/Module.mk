@@ -128,6 +128,11 @@ else
 			LZMACC="$$LZMACC -m64"; \
 			LZMA_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "linuxx8664k1omicc" ]; then \
+			LZMACC="$$LZMACC -m64 $(MICFLAGS)"; \
+			LZMA_CFLAGS="-m64 $(MICFLAGS)"; \
+			LZMA_HOST="--host=x86_64-unknown-linux-gnu"; \
+		fi; \
 		if [ $(ARCH) = "macosx" ]; then \
 			LZMACC="$$LZMACC -m32"; \
 			LZMA_CFLAGS="-m32"; \
