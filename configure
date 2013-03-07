@@ -2285,7 +2285,7 @@ setgcctoolchain="undef"
 gcctoolchainconf="/**/"
 if test "x$gcctoolchain" != "x"; then
    setgcctoolchain="define"
-   gcctoolchainconf=$gcctoolchain
+   gcctoolchainconf=\"$gcctoolchain\"
 fi
 
 ######################################################################
