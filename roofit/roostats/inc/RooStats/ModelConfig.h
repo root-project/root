@@ -108,10 +108,13 @@ public:
     
    // specify the parameters of interest in the interval
    virtual void SetParameters(const RooArgSet& set) {
-      fPOIName=std::string(GetName()) + "_POI";
-      DefineSetInWS(fPOIName.c_str(), set);
+     if (!SetHasOnlyParameters(set,"ModelConfig::SetParameters")) return ;
+     fPOIName=std::string(GetName()) + "_POI";
+     DefineSetInWS(fPOIName.c_str(), set);
    }
+
    virtual void SetParametersOfInterest(const RooArgSet& set) {
+     if (!SetHasOnlyParameters(set,"ModelConfig::SetParametersOfInterest")) return ;
       SetParameters(set); 
    }
    // specify the parameters of interest 
@@ -126,6 +129,7 @@ public:
     
    // specify the nuisance parameters (e.g. the rest of the parameters)
    virtual void SetNuisanceParameters(const RooArgSet& set) {
+     if (!SetHasOnlyParameters(set,"ModelConfig::SetNuisanceParameters")) return ;
       fNuisParamsName=std::string(GetName()) + "_NuisParams";
       DefineSetInWS(fNuisParamsName.c_str(), set);
    }
@@ -138,6 +142,7 @@ public:
 
    // specify the constraint parameters 
    virtual void SetConstraintParameters(const RooArgSet& set) {
+     if (!SetHasOnlyParameters(set,"ModelConfig::SetConstainedParameters")) return ;
       fConstrParamsName=std::string(GetName()) + "_ConstrainedParams";
       DefineSetInWS(fConstrParamsName.c_str(), set);
    }
@@ -150,6 +155,7 @@ public:
 
    // specify the observables
    virtual void SetObservables(const RooArgSet& set) {
+     if (!SetHasOnlyParameters(set,"ModelConfig::SetObservables")) return ;
       fObservablesName=std::string(GetName()) + "_Observables";
       DefineSetInWS(fObservablesName.c_str(), set);
    }
@@ -162,6 +168,7 @@ public:
 
    // specify the conditional observables
    virtual void SetConditionalObservables(const RooArgSet& set) {
+     if (!SetHasOnlyParameters(set,"ModelConfig::SetConditionalObservables")) return ;
       fConditionalObsName=std::string(GetName()) + "_ConditionalObservables";
       DefineSetInWS(fConditionalObsName.c_str(), set);
    }
@@ -174,6 +181,8 @@ public:
 
    // specify the global observables
    virtual void SetGlobalObservables(const RooArgSet& set) {
+
+     if (!SetHasOnlyParameters(set,"ModelConfig::SetGlobalObservables")) return ;
 
       // make global observables constant
       RooFIter iter = set.fwdIterator();
@@ -275,6 +284,10 @@ public:
    virtual void Print(Option_t* option = "") const;
 
 protected:
+
+   // helper function to check that content of a given set is exclusively parameters
+   Bool_t SetHasOnlyParameters(const RooArgSet& set, const char* errorMsgPrefix=0) ;
+
    // helper functions to define a set in the WS
    void DefineSetInWS(const char* name, const RooArgSet& set);
     
