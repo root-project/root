@@ -27,6 +27,7 @@ altcc=
 altcxx=
 altf77=
 altld=
+gcctoolchain=
 host=
 
 deprecated_options="         \
@@ -1668,6 +1669,8 @@ with compiler options, prefix with --with-, overrides default value
   cxx                alternative C++ compiler and options to be used
   f77                alternative Fortran compiler and options to be used
   ld                 alternative Linker and options to be used
+  gcc-toolchain      directory where gcc is installed (needed for compilation
+                     of clang/LLVM in case not the default gcc is used)
   clang              use clang compiler instead of gcc (mutual exclusive with
                      the cc, cxx and ld options)
 
@@ -2004,6 +2007,7 @@ if test $# -gt 0 ; then
       --with-cxx=*)            altcxx=$optarg        ;;
       --with-f77=*)            altf77=$optarg        ;;
       --with-ld=*)             altld=$optarg         ;;
+      --with-gcc-toolchain=*)  gcctoolchain=$optarg  ;;
       --with-clang) altcc=clang; altcxx=clang++; altld=clang++ ;;
       --with-hostcc=*)         hostcc=$optarg        ;;
       --with-hostcxx=*)        hostcxx=$optarg       ;;
@@ -6848,6 +6852,7 @@ sed -e "s|@altcc@|$altcc|"     \
     -e "s|@altcxx@|$altcxx|"   \
     -e "s|@altf77@|$altf77|"   \
     -e "s|@altld@|$altld|"     \
+    -e "s|@gcctoolchain@|$gcctoolchain|" \
     < Makefile-comp.tmp > $MAKECOMPOUT
 rm -f Makefile-comp.tmp
 

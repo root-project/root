@@ -8,3 +8,4 @@ CC    = @altcc@
 CXX   = @altcxx@
 F77   = @altf77@
 LD    = @altld@
+GCCTOOLCHAIN = @gcctoolchain@

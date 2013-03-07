@@ -147,6 +147,9 @@ $(LLVMDEPO): $(LLVMDEPS)
 		if [ "x$$LLVM_EXTRA_OPTIONS" = "x" ]; then \
 			LLVM_EXTRA_OPTIONS="--with-extra-options="; \
 		fi; \
+		if [ x$(GCCTOOLCHAIN) != "x" ]; then \
+			LLVM_GCC_TOOLCHAIN="--with-gcc-toolchain=$(GCCTOOLCHAIN)"; \
+		fi; \
 		echo "*** Configuring LLVM in $(dir $@) ..."; \
 		mkdir -p $(dir $@) && \
 		cd $(dir $@)  && \
@@ -162,6 +165,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		$(LLVMOPTFLAGS) \
 		--enable-targets=host \
 		"$$LLVM_EXTRA_OPTIONS" \
+		$$LLVM_GCC_TOOLCHAIN \
 		CC=$$LLVMCC CXX=$$LLVMCXX \
 		$$LLVM_BUILD_CC $$LLVM_BUILD_CXX \
 		CFLAGS="$$LLVM_CFLAGS" CXXFLAGS="$$LLVM_CFLAGS" )
