@@ -4470,6 +4470,16 @@ int main(int argc, char **argv)
    clingArgs.push_back(interpInclude);
    clingArgs.push_back("-D__ROOTCLING__");
    clingArgs.push_back("-fsyntax-only");
+#ifdef R__GCC_TOOLCHAIN
+   clingArgs.push_back("-gcc-toolchain");
+   clingArgs.push_back(R__GCC_TOOLCHAIN);
+   clingArgs.push_back("-cxx-isystem");
+   clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include");
+   clingArgs.push_back("-I");
+   clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.7.2");
+   clingArgs.push_back("-I");
+   clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.7.2/i686-unknown-linux-gnu");
+#endif
    
    std::vector<const char*> clingArgsC;
    for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
