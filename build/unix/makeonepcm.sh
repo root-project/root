@@ -218,10 +218,11 @@ mv alldefs.h include/allLinkDef.h
 
 # generate one large pcm
 rm -f allDict.* lib/allDict_rdict.pc*
+touch etc/allDict.cxx.h
 core/utils/src/rootcling_tmp -1 -f allDict.cxx -c $cxxflags -I$srcdir allHeaders.h include/allLinkDef.h
 res=$?
 if [ $res -eq 0 ] ; then
-  mv lib/allDict_rdict.pch etc/cling/ROOT.pch
+  mv lib/allDict_rdict.pch etc/allDict.cxx.pch
   res=$?
 
   # actually we won't need the allDict.[h,cxx] files

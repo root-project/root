@@ -3995,7 +3995,8 @@ enum ESourceFileKind {
 };
 
 //______________________________________________________________________________
-static ESourceFileKind GetSourceFileKind(clang::CompilerInstance* CI, const char* filename)
+static ESourceFileKind GetSourceFileKind(clang::CompilerInstance* CI,
+                                         const char* filename)
 {
    // Check whether the file's extension is compatible with C or C++.
    // Return whether source, header, Linkdef or nothing.
@@ -4061,7 +4062,7 @@ static ESourceFileKind GetSourceFileKind(clang::CompilerInstance* CI, const char
 //______________________________________________________________________________
 static int GenerateModule(clang::CompilerInstance* CI,
                           const char* dictSrcFile, const std::vector<std::string>& args,
-                          const std::string & /* currentDirectory */)
+                          const std::string &currentDirectory)
 {
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
@@ -4214,7 +4215,11 @@ static int GenerateModule(clang::CompilerInstance* CI,
    if (OS) {
       // Emit the PCH file
       CI->getFrontendOpts().RelocatablePCH = true;
-      Writer.WriteAST(CI->getSema(), 0, moduleFile, module, "/DUMMY_ROOTSYS/include/" /*SysRoot*/);
+      const char *ISysRoot = "/DUMMY_SYSROOT/include/";
+#ifdef ROOTBUILD
+      ISysRoot = (currentDirectory + "/").c_str();
+#endif
+      Writer.WriteAST(CI->getSema(), 0, moduleFile, module, ISysRoot);
 
       // Write the generated bitstream to "Out".
       OS->write((char *)&Buffer.front(), Buffer.size());
@@ -4470,6 +4475,10 @@ int main(int argc, char **argv)
    clingArgs.push_back(interpInclude);
    clingArgs.push_back("-D__ROOTCLING__");
    clingArgs.push_back("-fsyntax-only");
+   clingArgs.push_back("-Xclang");
+   clingArgs.push_back("-main-file-name");
+   clingArgs.push_back("-Xclang");
+   clingArgs.push_back((dictname + ".h").c_str());
 #ifdef R__GCC_TOOLCHAIN
    clingArgs.push_back("-gcc-toolchain");
    clingArgs.push_back(R__GCC_TOOLCHAIN);

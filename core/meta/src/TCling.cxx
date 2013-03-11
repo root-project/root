@@ -666,7 +666,7 @@ TCling::TCling(const char *name, const char *title)
 
    fTemporaries = new std::vector<cling::StoredValueRef>();
    std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
-   std::string pchFilename = interpInclude.substr(2) + "/cling/ROOT.pch";
+   std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
 #ifdef R__GCC_TOOLCHAIN
    std::string sysIncludePath = std::string(R__GCC_TOOLCHAIN) + "/include";
    std::string sysIncludePath1 = std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.7.2";
@@ -902,6 +902,8 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
       TCling::AddIncludePath(*inclPath);
    }
+# if 0
+   // superseded by PCH
    if (!getenv("ROOT_MODULES")) {
       for (const char** macroD = macroDefines; *macroD; ++macroD) {
          TString macroPP("#define ");
@@ -924,6 +926,7 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
          fInterpreter->declare(macroPP.Data());
       }
    }
+#endif
 
    if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
       ::Error("TCling::RegisterModule", "cannot find dictionary module %s",

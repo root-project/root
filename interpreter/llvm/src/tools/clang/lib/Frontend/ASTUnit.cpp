@@ -909,7 +909,7 @@ public:
   }
 
   // We're not interested in "interesting" decls.
-  void HandleInterestingDecl(DeclGroupRef) {}
+  void HandleInterestingDecl(DeclGroupRef) { }
 
   void HandleTopLevelDeclInObjCContainer(DeclGroupRef D) {
     for (DeclGroupRef::iterator it = D.begin(), ie = D.end(); it != ie; ++it)

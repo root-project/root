@@ -653,6 +653,7 @@ void ASTDeclReader::VisitFunctionDecl(FunctionDecl *FD) {
     Params.push_back(ReadDeclAs<ParmVarDecl>(Record, Idx));
   FD->setParams(Reader.getContext(), Params);
 
+#if 0
   if (FD->getOverloadedOperator() == clang::OO_LessLess
       && FD->getDeclContext()->getDeclKind()
       == Decl::Namespace
@@ -668,6 +669,7 @@ void ASTDeclReader::VisitFunctionDecl(FunctionDecl *FD) {
      llvm::errs() << "DEBUG: FD at " << FD << '\n';
      FD->dump();
   }
+#endif
 }
 
 void ASTDeclReader::VisitObjCMethodDecl(ObjCMethodDecl *MD) {

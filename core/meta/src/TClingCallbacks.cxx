@@ -390,16 +390,23 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
       return;
    if (fFirstRun) {
       // Before setting up the callbacks register what cling have seen during init.
-      const cling::Transaction* T = m_Interpreter->getFirstTransaction();
+#if 0
+      const cling::Transaction*  T= m_Interpreter->getFirstTransaction();
       while (T) {
          if (T->getState() == cling::Transaction::kCommitted)
             TCling__UpdateListsOnCommitted(*T);
          T = T->getNext();
       }
+#endif
+      
+      cling::Transaction TPrev(T.getCompilationOpts(), T.getModule());
+      clang::DeclGroupRef TDRG = T.getFirstDecl();
+      
+      TPrev.append(TDRG.getSingleDecl()->getASTContext().getTranslationUnitDecl());
+      TCling__UpdateListsOnCommitted(TPrev);
 
       fFirstRun = false;
    }
-
    TCling__UpdateListsOnCommitted(T);
 }
 
