@@ -902,31 +902,32 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
       TCling::AddIncludePath(*inclPath);
    }
-# if 0
-   // superseded by PCH
+
    if (!getenv("ROOT_MODULES")) {
-      for (const char** macroD = macroDefines; *macroD; ++macroD) {
-         TString macroPP("#define ");
-         macroPP += *macroD;
-         // comes in as "A=B" from "-DA=B", need "#define A B":
-         Ssiz_t posAssign = macroPP.Index('=');
-         if (posAssign != kNPOS) {
-            macroPP[posAssign] = ' ';
+      for (int what = 0; what < 2; ++what) {
+         const char** macros = macroDefines;
+         const char* defundef = "#define ";
+         const char* ifdefndef = "#ifndef ";
+         if (what) {
+            macros = macroUndefines;
+            defundef = "#undef ";
+            ifdefndef = "#ifdef ";
          }
-         fInterpreter->declare(macroPP.Data());
-      }
-      for (const char** macroU = macroUndefines; *macroU; ++macroU) {
-         TString macroPP("#undef ");
-         macroPP += *macroU;
-         // comes in as "A=B" from "-DA=B", need "#define A B":
-         Ssiz_t posAssign = macroPP.Index('=');
-         if (posAssign != kNPOS) {
-            macroPP[posAssign] = ' ';
+         for (const char** macro = macros; *macro; ++macro) {
+            TString macroPP(*macro);
+            // comes in as "A=B" from "-DA=B", need "#define A B":
+            Ssiz_t posAssign = macroPP.Index('=');
+            TString ifdef = ifdefndef ;
+            if (posAssign != kNPOS) {
+               ifdef += macroPP(0, posAssign) + '\n';
+               macroPP[posAssign] = ' ';
+            } else {
+               ifdef += macroPP + '\n';
+            }
+            fInterpreter->declare((ifdef + defundef + macroPP + "\n#endif").Data());
          }
-         fInterpreter->declare(macroPP.Data());
       }
    }
-#endif
 
    if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
       ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
