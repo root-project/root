@@ -61,7 +61,7 @@ which set relative size of subscripts and superscripts, and
 subscipts and superscripts.
 <p>Examples:
 End_Html
-   x^{2y} :    Begin_Latex x^{2y}    End_Latex x_{2y} :    Begin_Latex x^{2y}    End_Latex
+   x^{2y} :    Begin_Latex x^{2y}    End_Latex x_{2y} :    Begin_Latex x_{2y}    End_Latex
    x^{y^{2}} : Begin_Latex x^{y^{2}} End_Latex x^{y_{1}} : Begin_Latex x^{y_{1}} End_Latex
    x^{y}_{1} : Begin_Latex x^{y}_{1} End_Latex x_{1}^{y} : Begin_Latex x_{1}^{y} End_Latex
 
