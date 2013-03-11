@@ -4485,9 +4485,9 @@ int main(int argc, char **argv)
    clingArgs.push_back("-cxx-isystem");
    clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include");
    clingArgs.push_back("-I");
-   clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.7.2");
+   clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.6.2");
    clingArgs.push_back("-I");
-   clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.7.2/i686-unknown-linux-gnu");
+   clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.6.2/x86_64-unknown-linux-gnu");
 #endif
    
    std::vector<const char*> clingArgsC;

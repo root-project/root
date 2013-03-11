@@ -669,8 +669,8 @@ TCling::TCling(const char *name, const char *title)
    std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
 #ifdef R__GCC_TOOLCHAIN
    std::string sysIncludePath = std::string(R__GCC_TOOLCHAIN) + "/include";
-   std::string sysIncludePath1 = std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.7.2";
-   std::string sysIncludePath2 = std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.7.2/i686-unknown-linux-gnu";
+   std::string sysIncludePath1 = std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.6.2";
+   std::string sysIncludePath2 = std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.6.2/x86_64-unknown-linux-gnu";
 #endif
    const char* interpArgs[]
       = {"cling4root", interpInclude.c_str(), "-include-pch", pchFilename.c_str()
