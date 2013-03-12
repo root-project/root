@@ -44,6 +44,9 @@ include/%.h:    $(MATHTEXTDIRI)/%.h
 
 $(MATHTEXTLIB): $(MATHTEXTO)
 		$(MATHTEXTAR)$@ $(MATHTEXTO)
+		@(if [ $(PLATFORM) = "macosx" ]; then \
+			ranlib $@; \
+		fi)
 
 all-$(MODNAME): $(MATHTEXTLIB)
 
