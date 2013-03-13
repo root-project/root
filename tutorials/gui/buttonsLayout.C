@@ -18,7 +18,7 @@ public:
    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h);
    virtual ~MyMainFrame();
 
-   ClassDef(MyMainFrame, 0)
+//   ClassDef(MyMainFrame, 0)
 };
 
 

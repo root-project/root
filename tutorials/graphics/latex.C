@@ -6,6 +6,7 @@
 // Also some differences will be seen between Unix servers depending
 // the version of X in use. Results on WindowsNT are also slightly different.
 //Author: Rene Brun
+
 void latex() {
    TCanvas *c1 = new TCanvas("c1","test",600,700);
    // write formulas

@@ -55,7 +55,7 @@ public:
 
    TGSimpleTable *GetTable() { return fSimpleTable; }
 
-   ClassDef(TableTest, 0)
+ //  ClassDef(TableTest, 0)
 };
                           
 TableTest::TableTest(const TGWindow *p,  UInt_t ndrows, UInt_t ndcols, 

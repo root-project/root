@@ -25,7 +25,7 @@ public:
    void ChangeStartLabel();
    void ChangePauseLabel();
 
-   ClassDef(MyMainFrame, 0)
+//   ClassDef(MyMainFrame, 0)
 };
 
 void MyMainFrame::ChangeStartLabel()

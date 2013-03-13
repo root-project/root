@@ -56,7 +56,7 @@ public:
    TGTable *GetTable() { return fTable; }
    TTreeTableInterface *GetInterface() { return fInterface; }
 
-   ClassDef(TableTest, 0)
+  // ClassDef(TableTest, 0)
 };
                           
 TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols, 

@@ -27,8 +27,8 @@ public:
    void DoSelect();
    void HandleButtons();
    void PrintSelected();
-
-   ClassDef(MyMainFrame, 0)
+//Commented for TP
+//   ClassDef(MyMainFrame, 0)
 };
 
 void MyMainFrame::DoSelect()

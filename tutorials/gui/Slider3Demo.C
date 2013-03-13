@@ -43,7 +43,8 @@ public:
    void DoSlider();
    void HandleButtons();
 
-   ClassDef(TTripleSliderDemo, 0)
+//Commented for TP
+//   ClassDef(TTripleSliderDemo, 0)
 };
 
 //______________________________________________________________________________

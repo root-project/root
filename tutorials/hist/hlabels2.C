@@ -4,10 +4,10 @@ void hlabels2()
 {
    const Int_t nx = 12;
    const Int_t ny = 20;
-   char *month[nx]  = {"January","February","March","April","May",
+   const char *month[nx]  = {"January","February","March","April","May",
       "June","July","August","September","October","November",
       "December"};
-   char *people[ny] = {"Jean","Pierre","Marie","Odile","Sebastien",
+   const char *people[ny] = {"Jean","Pierre","Marie","Odile","Sebastien",
       "Fons","Rene","Nicolas","Xavier","Greg","Bjarne","Anton",
       "Otto","Eddy","Peter","Pasha","Philippe","Suzanne","Jeff",
       "Valery"};

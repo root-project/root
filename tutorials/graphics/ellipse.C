@@ -1,7 +1,5 @@
-//Draw ellipses
-//Author: Rene Brun
 {
-   c1 = new TCanvas("c1");
+   TCanvas *c1 = new TCanvas("c1");
    c1->Range(0,0,1,1);
    TPaveLabel pel(0.1,0.8,0.9,0.95,"Examples of Ellipses");
    pel.SetFillColor(42);

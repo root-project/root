@@ -2,7 +2,7 @@
 void DynamicSlice()
 {
    // Create a new canvas.
-   c1 = new TCanvas("c1","Dynamic Slice Example",10,10,700,500);
+   TCanvas *c1 = new TCanvas("c1","Dynamic Slice Example",10,10,700,500);
    c1->SetFillColor(42);
    c1->SetFrameFillColor(33);
   

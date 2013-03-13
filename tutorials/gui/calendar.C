@@ -41,8 +41,8 @@ public:
    virtual ~HtmlDayName() {}
 
    TString Html() const { return fHtml; }
-
-   ClassDef(HtmlDayName, 0);
+//Commented for TP
+//   ClassDef(HtmlDayName, 0);
 };
 
 //______________________________________________________________________________
@@ -87,8 +87,8 @@ public:
 
    void SetDate(Int_t year, Int_t month);
    TString Html() const { return fHtml; }
-
-   ClassDef(HtmlMonthTable, 0);
+//Commented for TP
+//   ClassDef(HtmlMonthTable, 0);
 };
 
 //______________________________________________________________________________
@@ -212,8 +212,8 @@ public:
 
    void SetDate(Int_t year, Int_t month);
    TString Html() const { return fHtml; }
-
-   ClassDef(HtmlCalendar, 0);
+//Commented for TP
+//   ClassDef(HtmlCalendar, 0);
 };
 
 //______________________________________________________________________________
@@ -290,8 +290,8 @@ public:
    virtual ~CalendarWindow();
 
    void UpdateHTML();
-
-   ClassDef(CalendarWindow, 0);
+//Commented for TP
+//   ClassDef(CalendarWindow, 0);
 };
 
 

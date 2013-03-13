@@ -1,0 +1,3 @@
+{
+   gSystem->Load("libGpad.so");
+}

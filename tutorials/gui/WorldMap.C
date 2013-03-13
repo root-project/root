@@ -182,6 +182,6 @@ void WorldMap::PrintCode(Int_t code)
 
 void WorldMap()
 {
-   WorldMap *map = new WorldMap;
+   class WorldMap *map = new class WorldMap;
    map->Show();
 }

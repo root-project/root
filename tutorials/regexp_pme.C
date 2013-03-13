@@ -24,17 +24,17 @@ void regexp_pme()
       printf("\n");
 
       printf("Global matching with back-refs\n%s", underline);
-      TPMERegexp re("(ba[rz])", "g");
-      TString m("foobarbaz");
-      while (re.Match(m))
-         re.Print("all");
+      TPMERegexp re1("(ba[rz])", "g");
+      TString m1("foobarbaz");
+      while (re1.Match(m1))
+         re1.Print("all");
       printf("\n");
 
       printf("Matching with nested back-refs\n%s", underline);
-      TPMERegexp re("([\\w\\.-]+)@((\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+))");
-      TString m("matevz.tadel@137.138.170.210");
-      re.Match(m);
-      re.Print("all");
+      TPMERegexp re2("([\\w\\.-]+)@((\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+))");
+      TString m2("matevz.tadel@137.138.170.210");
+      re2.Match(m2);
+      re2.Print("all");
       printf("\n");
    }
 

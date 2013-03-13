@@ -1,3 +1,7 @@
+ATTENTION: these tutorials are only subset of real ROOT's tutorials
+selected for the TP1. To be extended to the complete/full set in the
+nearest future.
+
 You can execute the scripts in $ROOTSYS/tutorials (or sub-directories)
 by setting your current directory in the script directory or from any
 user directory with write access.

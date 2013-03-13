@@ -1,4 +1,4 @@
-// A simple example that shows the enabled and disabled state
+/// A simple example that shows the enabled and disabled state
 // of a button group with radio and check buttons. 
 //
 // Author: Roel Aaij   4/07/2007
@@ -40,7 +40,7 @@ public:
    void DoExit(void);
    void SetGroupEnabled(Bool_t);
 
-   ClassDef(MyButtonTest, 0)
+  // ClassDef(MyButtonTest, 0)
 };
                           
 MyButtonTest::MyButtonTest(const TGWindow *p, UInt_t w, UInt_t h) 

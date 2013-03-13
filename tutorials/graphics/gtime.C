@@ -19,12 +19,12 @@ void gtime() {
          for (Int_t i=0;i<ng;i++) {
             X[i] = x;
             Y[i] = sin(x);
-            x   += 0.1;
+            x = x+0.1;
          }
          g->Draw("alp");
          cursor = 0;
       } else {
-         x + = 0.1;
+         x = x+0.1;
          X[cursor+ng] = x;
          Y[cursor+ng] = sin(x);
          cursor++;

@@ -24,7 +24,7 @@ public:
    void DoExit();
    void DoSwitch();
 
-   ClassDef(MyMainFrame, 0)
+//   ClassDef(MyMainFrame, 0)
 };
 
 void MyMainFrame::DoSwitch()

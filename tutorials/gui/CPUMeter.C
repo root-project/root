@@ -24,7 +24,8 @@ public:
    Int_t             GetActInfo() const { return fActInfo; }
    void              ToggleInfos();
 
-   ClassDef(TGShapedMain, 0)
+//Commented for TP
+//   ClassDef(TGShapedMain, 0)
 };
 
 

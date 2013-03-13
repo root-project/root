@@ -21,8 +21,8 @@ public:
    virtual ~MyMainFrame();
    void     DoSave();
    void     CloseWindow();
-   
-   ClassDef(MyMainFrame, 0)
+//Commented for TP   
+//   ClassDef(MyMainFrame, 0)
 };
 
 //______________________________________________________________________________

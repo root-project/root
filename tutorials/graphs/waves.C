@@ -66,7 +66,6 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
       ,    pow(i/((colNum)*1.0),0.3)
       ,0.5*(i/((colNum)*1.0)),"");
       palette[i] = 1001+i;
-      if(color);
    }
    gStyle->SetPalette(colNum,palette);
    c1->cd();

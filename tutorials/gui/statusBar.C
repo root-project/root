@@ -35,8 +35,9 @@ public:
    void DoDraw();
    void SetStatusText(const char *txt, Int_t pi);
    void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
-   
-   ClassDef(MyMainFrame, 0)
+  
+   //Commented for TP1. 
+   //ClassDef(MyMainFrame, 0)
 };
 
 void MyMainFrame::DoDraw()

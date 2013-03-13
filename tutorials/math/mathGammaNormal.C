@@ -3,7 +3,7 @@
 void mathGammaNormal(){
   TCanvas *myc = new TCanvas("c1","gamma and lognormal",10,10,600,800);
   myc->Divide(1,2);
-  TPad *pad1 = myc->cd(1);
+  TPad *pad1 = (TPad *)myc->cd(1);
   pad1->SetLogy();
   pad1->SetGrid();
 
@@ -30,7 +30,7 @@ void mathGammaNormal(){
   legend1->Draw();
 
   //TMath::LogNormal
-  TPad *pad2 = myc->cd(2);
+  TPad *pad2 = (TPad *)myc->cd(2);
   pad2->SetLogy();
   pad2->SetGrid();
   TF1 *flog = new TF1("flog", "TMath::LogNormal(x, [0], [1], [2])", 0, 5);

@@ -31,7 +31,8 @@ public:
    }
    TGTextEntry *GetEntry() const { return fEntry->GetNumberEntry(); }
 
-   ClassDef(TextMargin, 0)
+//Commented for TP
+//   ClassDef(TextMargin, 0)
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,8 +49,9 @@ public:
    void DoRightMargin(char*);
    void DoTopMargin(char*);
    void DoBottomMargin(char*);
-   
-   ClassDef(ButtonWindow, 0)
+
+//Commented for TP   
+//   ClassDef(ButtonWindow, 0)
 };
 
 

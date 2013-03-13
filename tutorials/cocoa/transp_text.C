@@ -14,7 +14,7 @@ void transp_text()
    }
 
    const Int_t nx = 20;
-   char *people[nx] = {"Jean","Pierre","Marie","Odile",
+   const char *people[nx] = {"Jean","Pierre","Marie","Odile",
       "Sebastien","Fons","Rene","Nicolas","Xavier","Greg",
       "Bjarne","Anton","Otto","Eddy","Peter","Pasha",
       "Philippe","Suzanne","Jeff","Valery"};
@@ -26,7 +26,7 @@ void transp_text()
       h->Fill(gRandom->Gaus(0.5*nx,0.2*nx));
    }
    h->SetStats(0);
-   for (i=1;i<=nx;i++) {
+   for (Int_t i=1;i<=nx;i++) {
       h->GetXaxis()->SetBinLabel(i,people[i-1]);
    }
    h->Draw();
