@@ -36,6 +36,8 @@ extern "C" {
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    Decl* TCling__GetObjectDecl(TObject *obj);
    int TCling__AutoLoadCallback(const char* className);
+   void TCling__UpdateListsOnDeclDeserialized(const clang::Decl*);
+   void TCling__UpdateListsOnTypeDeserialized(const clang::Type*);
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
@@ -417,4 +419,12 @@ void TClingCallbacks::TransactionUnloaded(const Transaction &T) {
       return;
 
    TCling__UpdateListsOnUnloaded(T);
+}
+
+void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
+   TCling__UpdateListsOnDeclDeserialized(D);
+}
+
+void TClingCallbacks::TypeDeserialized(const clang::Type* T) {
+   TCling__UpdateListsOnTypeDeserialized(T);
 }

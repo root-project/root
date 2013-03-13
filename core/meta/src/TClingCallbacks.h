@@ -50,6 +50,14 @@ public:
    //
    virtual void TransactionUnloaded(const cling::Transaction &T);
 
+   // Used to inform client about a new decl read by the ASTReader.
+   //
+   virtual void DeclDeserialized(const clang::Decl* D);
+
+   // Used to inform client about a new type read by the ASTReader.
+   //
+   virtual void TypeDeserialized(const clang::Type* Y);
+
 private:
    bool tryAutoloadInternal(clang::LookupResult &R, clang::Scope *S);
    bool tryFindROOTSpecialInternal(clang::LookupResult &R, clang::Scope *S);

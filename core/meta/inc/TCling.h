@@ -98,6 +98,7 @@ private: // Data Members
    void*           fPrevLoadedDynLibInfo; // Internal info to mark the last loaded libray.
    TClingCallbacks* fClingCallbacks; // cling::Interpreter owns it.
    Bool_t          fHaveSinglePCM; // Whether a single ROOT PCM was provided
+   std::vector<const void*> fDeserializedDecls; // Decls read from the AST
 
 public: // Public Interface
 
@@ -192,7 +193,7 @@ public: // Public Interface
    static int   AutoLoadCallback(const char* cls, const char* lib);
    static void  UpdateClassInfo(char* name, Long_t tagnum);
    static void  UpdateClassInfoWork(const char* name);
-          void  UpdateClassInfoWithDecl(void* vTD);
+          void  UpdateClassInfoWithDecl(const void* vTD);
    static void  UpdateAllCanvases();
 
    // Misc
@@ -367,6 +368,10 @@ public: // Public Interface
    virtual const char* TypedefInfo_TrueName(TypedefInfo_t* tinfo) const;
    virtual const char* TypedefInfo_Name(TypedefInfo_t* tinfo) const;
    virtual const char* TypedefInfo_Title(TypedefInfo_t* tinfo) const;
+
+   void AddDeserializedDecl(const void* D) { fDeserializedDecls.push_back(D); }
+   std::vector<const void*>& GetDeserializedDecls() { return fDeserializedDecls; }
+   void HandleNewDecl(const void* DV, bool isDeserialized) const;
 
 private: // Private Utility Functions
 

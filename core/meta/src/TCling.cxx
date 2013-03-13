@@ -242,11 +242,11 @@ public:
 };
 
 //______________________________________________________________________________
-static void TCling__UpdateClassInfo(TagDecl* TD)
+static void TCling__UpdateClassInfo(const NamedDecl* TD)
 {
    // Update TClingClassInfo for a class (e.g. upon seeing a definition).
    static Bool_t entered = kFALSE;
-   static vector<TagDecl*> updateList;
+   static vector<const NamedDecl*> updateList;
    Bool_t topLevel;
 
    if (entered) topLevel = kFALSE;
@@ -277,87 +277,140 @@ static void TCling__UpdateClassInfo(TagDecl* TD)
 }
 
 
+void TCling::HandleNewDecl(const void* DV, bool isDeserialized) const {
+   const clang::Decl* D = static_cast<const clang::Decl*>(DV);
+   if (isa<clang::FunctionDecl>(D->getDeclContext()))
+      return;
+   TCollection *listOfSmth = 0;
+   if (!isDeserialized && isa<DeclContext>(D) && !isa<EnumDecl>(D)) {
+      // We have to find all the typedefs contained in that decl context
+      // and add it to the list of types.
+      listOfSmth = gROOT->GetListOfTypes();
+      llvm::SmallVector<TypedefDecl*, 128> Defs;
+      TypedefVisitor V(Defs);
+      V.TraverseDecl(const_cast<Decl*>(D));
+      for (size_t i = 0; i < Defs.size(); ++i)
+         if (!listOfSmth->FindObject(Defs[i]->getNameAsString().c_str())) {
+            listOfSmth->Add(new TDataType(new TClingTypedefInfo(fInterpreter, Defs[i])));
+         }
+
+   }
+   if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
+      if (isDeserialized && isa<CXXMethodDecl>(FD))
+         return;
+      // While classes are read completely, functions in namespaces might
+      // show up at any time.
+      if (const NamespaceDecl* NCtx = dyn_cast<NamespaceDecl>(FD->getDeclContext())){
+         if (NCtx->getIdentifier()) {
+            TClass* cl = TClass::GetClass(NCtx->getNameAsString().c_str());
+            if (cl) {
+               if (cl->fMethod) {
+                  TClingMethodInfo* cmi
+                     = new TClingMethodInfo(fInterpreter,
+                                            (TClingClassInfo*)cl->GetClassInfo());
+                  cl->fMethod->Add(new TMethod(cmi, cl));
+               } else {
+                  ((TCling*)gCling)->CreateListOfMethods(cl);
+               }
+            }
+         }
+      }
+      
+      listOfSmth = gROOT->GetListOfGlobalFunctions();
+      if(FD->isOverloadedOperator() 
+         || cling::utils::Analyze::IsWrapper(FD))
+         return;
+
+      // We skip functions without prototype
+      if (!isa<FunctionNoProtoType>(FD->getType())
+          && !listOfSmth->FindObject(FD->getNameAsString().c_str())) {  
+         listOfSmth->Add(new TFunction(new TClingMethodInfo(fInterpreter, FD)));
+      }
+   }
+   else if (const RecordDecl *TD = dyn_cast<RecordDecl>(D)) {
+      TCling__UpdateClassInfo(TD);
+   }
+   else if (const TypedefDecl* TdefD = dyn_cast<TypedefDecl>(D)) {
+      listOfSmth = gROOT->GetListOfTypes();
+      if (!listOfSmth->FindObject(TdefD->getNameAsString().c_str())) {
+         listOfSmth->Add(new TDataType(new TClingTypedefInfo(fInterpreter, TdefD)));
+      }
+   }
+   else if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
+
+      if (const TagDecl *TD = dyn_cast<TagDecl>(D)) {
+         // Mostly just for EnumDecl (the other TagDecl are handled
+         // by the 'RecordDecl' if statement.
+         TCling__UpdateClassInfo(TD);
+      } else if (const NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(D)) {
+         TCling__UpdateClassInfo(NSD);
+      }
+
+      // We care about declarations on the global scope.
+      if (!isa<TranslationUnitDecl>(ND->getDeclContext()))
+         return;
+
+      // ROOT says that global is enum/var/field declared on the global
+      // scope.
+
+      listOfSmth = gROOT->GetListOfGlobals();
+
+      if (!(isa<EnumDecl>(ND) || isa<VarDecl>(ND)))
+         return;
+
+      // Skip if already in the list.
+      if (listOfSmth->FindObject(ND->getNameAsString().c_str()))
+         return;
+
+      if (const EnumDecl *ED = dyn_cast<EnumDecl>(D)) {
+ 
+         for(EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
+                EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
+            if (!listOfSmth->FindObject((*EDI)->getNameAsString().c_str())) {  
+               listOfSmth->Add(new TGlobal(new TClingDataMemberInfo(fInterpreter, *EDI)));
+            }
+         }
+      }
+      else
+         listOfSmth->Add(new TGlobal(new TClingDataMemberInfo(fInterpreter,
+                                                              cast<ValueDecl>(ND))));
+   }
+}
+
+extern "C" 
+void TCling__UpdateListsOnDeclDeserialized(const clang::Decl* D) {
+   // We cache them because the decls and their types might not have
+   // been completely deserialized; we push them into root/meta once
+   // the transaction is done.
+   if (isa<NamespaceDecl>(D) || isa<FunctionDecl>(D)
+       || (isa<VarDecl>(D) && !isa<ParmVarDecl>(D))
+       || isa<TagDecl>(D) || isa<TypedefDecl>(D)) {
+      ((TCling*)gCling)->AddDeserializedDecl(D);
+   }
+   // all others handled by UpdateListsOnTypeDeserialized()
+}
+
+extern "C" 
+void TCling__UpdateListsOnTypeDeserialized(const clang::Type* T) {
+   return;
+}
 
 extern "C" 
 void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
-   TCollection *listOfSmth = 0;
-   cling::Interpreter* interp = ((TCling*)gCling)->GetInterpreter();
-   for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
-       I != E; ++I)
-      for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(), 
-              DE = I->m_DGR.end(); DI != DE; ++DI) {
-         if (isa<DeclContext>(*DI) && !isa<EnumDecl>(*DI)) {
-            // We have to find all the typedefs contained in that decl context
-            // and add it to the list of types.
-            listOfSmth = gROOT->GetListOfTypes();
-            llvm::SmallVector<TypedefDecl*, 128> Defs;
-            TypedefVisitor V(Defs);
-            V.TraverseDecl(*DI);
-            for (size_t i = 0; i < Defs.size(); ++i)
-            if (!listOfSmth->FindObject(Defs[i]->getNameAsString().c_str())) {
-               listOfSmth->Add(new TDataType(new TClingTypedefInfo(interp, Defs[i])));
-            }
-
-         }
-         if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(*DI)) {
-            listOfSmth = gROOT->GetListOfGlobalFunctions();
-            if (!isa<TranslationUnitDecl>(FD->getDeclContext()))
-               continue;
-            if(FD->isOverloadedOperator() 
-               || cling::utils::Analyze::IsWrapper(FD))
-               continue;
-
-            if (!listOfSmth->FindObject(FD->getNameAsString().c_str())) {  
-               listOfSmth->Add(new TFunction(new TClingMethodInfo(interp, FD)));
-            }            
-         }
-         else if (RecordDecl *TD = dyn_cast<RecordDecl>(*DI)) {
-            TCling__UpdateClassInfo(TD);
-         }
-         else if (const TypedefDecl* TdefD = dyn_cast<TypedefDecl>(*DI)) {
-            listOfSmth = gROOT->GetListOfTypes();
-            if (!listOfSmth->FindObject(TdefD->getNameAsString().c_str())) {
-               listOfSmth->Add(new TDataType(new TClingTypedefInfo(interp, TdefD)));
-            }
-         }
-         else if (const NamedDecl *ND = dyn_cast<NamedDecl>(*DI)) {
-            
-            if (TagDecl *TD = dyn_cast<TagDecl>(*DI)) {
-               // Mostly just for EnumDecl (the other TagDecl are handled
-               // by the 'RecordDecl' if statement.
-               TCling__UpdateClassInfo(TD);
-            }
-
-            // We care about declarations on the global scope.
-            if (!isa<TranslationUnitDecl>(ND->getDeclContext()))
-               continue;
-
-            // ROOT says that global is enum/var/field declared on the global
-            // scope.
-
-            listOfSmth = gROOT->GetListOfGlobals();
-
-            if (!(isa<EnumDecl>(ND) || isa<VarDecl>(ND)))
-               continue;
-
-            // Skip if already in the list.
-            if (listOfSmth->FindObject(ND->getNameAsString().c_str()))
-               continue;
-
-            if (EnumDecl *ED = dyn_cast<EnumDecl>(*DI)) {
- 
-               for(EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
-                      EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
-                  if (!listOfSmth->FindObject((*EDI)->getNameAsString().c_str())) {  
-                     listOfSmth->Add(new TGlobal(new TClingDataMemberInfo(interp, *EDI)));
-                  }
-               }
-            }
-            else
-               listOfSmth->Add(new TGlobal(new TClingDataMemberInfo(interp, 
-                                                                    cast<ValueDecl>(ND))));
+   std::vector<const void*>& DeserDecls = ((TCling*)gCling)->GetDeserializedDecls();
+   if (!DeserDecls.empty()) {
+      for (size_t i = 0; i < DeserDecls.size(); ++i)
+         ((TCling*)gCling)->HandleNewDecl(static_cast<const clang::Decl*>(DeserDecls[i]), true);
+      DeserDecls.clear();
+   } else {
+      for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
+          I != E; ++I) {
+         for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(), 
+                 DE = I->m_DGR.end(); DI != DE; ++DI) {
+            ((TCling*)gCling)->HandleNewDecl(*DI, false);
          }
       }
+   }
 }
 
 extern "C" 
@@ -3012,22 +3065,29 @@ Int_t TCling::AutoLoad(const char* cls)
 }
 
 //______________________________________________________________________________
-void TCling::UpdateClassInfoWithDecl(void* vTD)
+void TCling::UpdateClassInfoWithDecl(const void* vTD)
 {
    // Internal function. Inform a TClass about its new TagDecl.
-   TagDecl* td = (TagDecl*)vTD;
-   TagDecl* tdDef = td->getDefinition();
-   // Let's pass the decl to the TClass only if it has a definition.
-   if (!tdDef) return;
-   td = tdDef;
-   
-   if (llvm::isa<clang::FunctionDecl>(td->getDeclContext())) {
-      // Ignore declaration within a function.
-      return;
-   }
-   clang::QualType type( td->getTypeForDecl(), 0 );
+   const NamedDecl* ND = static_cast<const NamedDecl*>(vTD);
+   const TagDecl* td = dyn_cast<TagDecl>(ND);
    std::string name;
-   ROOT::TMetaUtils::GetFullyQualifiedTypeName(name,type,*fInterpreter);
+   TagDecl* tdDef = 0;
+   if (td) {
+      tdDef = td->getDefinition();
+      // Let's pass the decl to the TClass only if it has a definition.
+      if (!tdDef) return;
+      td = tdDef;
+      ND = td;
+   
+      if (llvm::isa<clang::FunctionDecl>(td->getDeclContext())) {
+         // Ignore declaration within a function.
+         return;
+      }
+      clang::QualType type( td->getTypeForDecl(), 0 );
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(name,type,*fInterpreter);
+   } else {
+      name = ND->getNameAsString();
+   }
    
    // Supposedly we are being called being something is being
    // loaded ... let's now tell the autoloader to do the work
