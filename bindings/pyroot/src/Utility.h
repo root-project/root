@@ -17,8 +17,7 @@ namespace PyROOT {
 
    class PyCallable;
 
-   typedef PyDictEntry* (*DictLookup_t) ( PyDictObject*, PyObject*, Long_t );
-   R__EXTERN DictLookup_t gDictLookupOrg;
+   R__EXTERN dict_lookup_func gDictLookupOrg;
    R__EXTERN Bool_t gDictLookupActive;
 
 // general place holder for function parameters

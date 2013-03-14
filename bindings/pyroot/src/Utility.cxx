@@ -36,7 +36,7 @@
 
 
 //- data _____________________________________________________________________
-PyROOT::DictLookup_t PyROOT::gDictLookupOrg = 0;
+dict_lookup_func PyROOT::gDictLookupOrg = 0;
 Bool_t PyROOT::gDictLookupActive = kFALSE;
 
 PyROOT::Utility::EMemoryPolicy PyROOT::Utility::gMemoryPolicy = PyROOT::Utility::kHeuristics;

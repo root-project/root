@@ -183,8 +183,8 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
        gInterpreter->CallFunc_SetArg( func, (Long_t)&((PyIntObject*)pyobject)->ob_ival );
    return kTRUE;
 #else
-   para.fLong = 0; /* func = 0; */
-   return kFALSE; // there no longer is a PyIntObject in p3
+   para.fLong = 0; func = 0;
+   return (Bool_t)func; // there no longer is a PyIntObject in p3
 #endif
 }
 
