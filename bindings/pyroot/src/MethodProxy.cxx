@@ -290,7 +290,7 @@ namespace {
 #else 	 
 // not important for functioning of most code, so not implemented for p3 for now (TODO) 	 
       pymeth = 0;
-      Py_INCREF( Py_None );
+      if ( pymeth || !pymeth) Py_INCREF( Py_None );
       return Py_None;
 #endif
    }

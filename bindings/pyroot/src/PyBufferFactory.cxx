@@ -10,7 +10,11 @@
 
 #if PY_VERSION_HEX >= 0x03000000
 static PyObject* PyBuffer_FromReadWriteMemory( void* ptr, int size ) {
-   Py_buffer bufinfo = { ptr, NULL, size, 1, 0, 1, NULL, NULL, NULL, NULL, { 0, 0 }, NULL };
+   Py_buffer bufinfo = { ptr, NULL, size, 1, 0, 1, NULL, NULL, NULL, NULL,
+#if PY_VERSION_HEX < 0x03030000
+      { 0, 0 },
+#endif
+      NULL };
    return PyMemoryView_FromBuffer( &bufinfo );
 }
 #endif

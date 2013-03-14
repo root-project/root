@@ -174,7 +174,7 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
    return kTRUE;
 #else
    para.fLong = 0; func = 0;
-   return kFALSE; // there no longer is a PyIntObject in p3
+   return (Bool_t)func; // there no longer is a PyIntObject in p3
 #endif
 }
 
