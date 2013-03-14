@@ -118,7 +118,7 @@ void TEveRGBAPalette::SetupColor(Int_t val, UChar_t* pixel) const
 
    if (fInterpolate) {
       Int_t  bin = (Int_t) f;
-      Float_t f1 = f - bin, f2 = 1.0f - f1;
+      Float_t f2 = f - bin, f1 = 1.0f - f2;
       TEveUtil::ColorFromIdx(f1, gStyle->GetColorPalette(bin),
                              f2, gStyle->GetColorPalette(Min(bin + 1, nCol - 1)),
                              pixel);
