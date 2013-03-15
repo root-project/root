@@ -13,7 +13,7 @@
 #include "Pythonize.h"
 #include "MethodHolder.h"
 #include "ConstructorHolder.h"
-#include "ClassMethodHolder.h"
+#include "TClassMethodHolder.h"
 #include "FunctionHolder.h"
 #include "TSetItemHolder.h"
 #include "MemoryRegulator.h"

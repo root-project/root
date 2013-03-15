@@ -5,7 +5,7 @@
 #include "PyROOT.h"
 #include "PyRootType.h"
 #include "RootWrapper.h"
-#include "ClassMethodHolder.h"
+#include "TClassMethodHolder.h"
 #include "MethodProxy.h"
 #include "PropertyProxy.h"
 #include "Adapters.h"

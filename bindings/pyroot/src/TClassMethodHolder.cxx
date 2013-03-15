@@ -3,7 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
-#include "ClassMethodHolder.h"
+#include "TClassMethodHolder.h"
 #include "Adapters.h"
 
 
