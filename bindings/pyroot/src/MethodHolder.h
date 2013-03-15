@@ -8,11 +8,6 @@
 #include "Utility.h"
 #include "PyCallable.h"
 
-// ROOT
-#include "TClassRef.h"
-#include "TDictionary.h"
-class TMethod;
-
 // Standard
 #include <string>
 #include <vector>

@@ -5,7 +5,6 @@
 #include "PyROOT.h"
 #include "PyStrings.h"
 #include "RootWrapper.h"
-#include "RootWrapper.h"
 #include "PyRootType.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
