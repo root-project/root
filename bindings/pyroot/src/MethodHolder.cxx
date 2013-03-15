@@ -41,8 +41,7 @@ namespace {
 
 
 //- private helpers ----------------------------------------------------------
-template< class T, class M >
-inline void PyROOT::TMethodHolder< T, M >::Copy_( const TMethodHolder& other )
+inline void PyROOT::TMethodHolder::Copy_( const TMethodHolder& other )
 {
 // do not copy caches
    fMethodCall = 0;
@@ -58,8 +57,7 @@ inline void PyROOT::TMethodHolder< T, M >::Copy_( const TMethodHolder& other )
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-inline void PyROOT::TMethodHolder< T, M >::Destroy_() const
+inline void PyROOT::TMethodHolder::Destroy_() const
 {
 // no deletion of fMethod (ROOT responsibility)
    gInterpreter->CallFunc_Delete( fMethodCall );
@@ -72,8 +70,7 @@ inline void PyROOT::TMethodHolder< T, M >::Destroy_() const
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-inline PyObject* PyROOT::TMethodHolder< T, M >::CallFast( void* self, Bool_t release_gil )
+inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, Bool_t release_gil )
 {
 // Helper code to prevent some duplication; this is called from CallSafe() as well
 // as directly from TMethodHolder::Execute in fast mode.
@@ -102,8 +99,7 @@ inline PyObject* PyROOT::TMethodHolder< T, M >::CallFast( void* self, Bool_t rel
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-inline PyObject* PyROOT::TMethodHolder< T, M >::CallSafe( void* self, Bool_t release_gil )
+inline PyObject* PyROOT::TMethodHolder::CallSafe( void* self, Bool_t release_gil )
 {
 // Helper code to prevent some code duplication; this code embeds a ROOT "try/catch"
 // block that saves the stack for restoration in case of an otherwise fatal signal.
@@ -122,8 +118,7 @@ inline PyObject* PyROOT::TMethodHolder< T, M >::CallSafe( void* self, Bool_t rel
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
+Bool_t PyROOT::TMethodHolder::InitCallFunc_()
 {
 // build buffers for argument dispatching
    const size_t nArgs = fMethod.FunctionParameterSize();
@@ -202,8 +197,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitCallFunc_()
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-Bool_t PyROOT::TMethodHolder< T, M >::InitExecutor_( TExecutor*& executor )
+Bool_t PyROOT::TMethodHolder::InitExecutor_( TExecutor*& executor )
 {
 // install executor conform to the return type
 
@@ -230,8 +224,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::InitExecutor_( TExecutor*& executor )
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-void PyROOT::TMethodHolder< T, M >::CreateSignature_()
+void PyROOT::TMethodHolder::CreateSignature_()
 {
 // built a signature a la TFunction::GetSignature as python string, using Adapters
    Int_t ifirst = 0;
@@ -259,8 +252,7 @@ void PyROOT::TMethodHolder< T, M >::CreateSignature_()
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-const std::string& PyROOT::TMethodHolder< T, M >::GetSignatureString()
+const std::string& PyROOT::TMethodHolder::GetSignatureString()
 {
 // construct python string from the method's signature
    if ( fSignature.empty() )
@@ -270,8 +262,7 @@ const std::string& PyROOT::TMethodHolder< T, M >::GetSignatureString()
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-void PyROOT::TMethodHolder< T, M >::SetPyError_( PyObject* msg )
+void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
 {
 // helper to report errors in a consistent format (derefs msg)
    PyObject *etype, *evalue, *etrace;
@@ -301,8 +292,7 @@ void PyROOT::TMethodHolder< T, M >::SetPyError_( PyObject* msg )
 }
 
 //- constructors and destructor ----------------------------------------------
-template< class T, class M >
-PyROOT::TMethodHolder< T, M >::TMethodHolder( const T& klass, const M& method ) :
+PyROOT::TMethodHolder::TMethodHolder( const TScopeAdapter& klass, const TMemberAdapter& method ) :
       fMethod( method ), fClass( klass )
 {
 // constructor; initialization is deferred
@@ -315,8 +305,7 @@ PyROOT::TMethodHolder< T, M >::TMethodHolder( const T& klass, const M& method ) 
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-PyROOT::TMethodHolder< T, M >::TMethodHolder( const TMethodHolder< T, M >& other ) :
+PyROOT::TMethodHolder::TMethodHolder( const TMethodHolder& other ) :
        PyCallable( other ), fMethod( other.fMethod ), fClass( other.fClass )
 {
 // copy constructor
@@ -324,9 +313,7 @@ PyROOT::TMethodHolder< T, M >::TMethodHolder( const TMethodHolder< T, M >& other
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-PyROOT::TMethodHolder< T, M >& PyROOT::TMethodHolder< T, M >::operator=(
-      const TMethodHolder< T, M >& other )
+PyROOT::TMethodHolder& PyROOT::TMethodHolder::operator=( const TMethodHolder& other )
 {
 // assignment operator
    if ( this != &other ) {
@@ -340,8 +327,7 @@ PyROOT::TMethodHolder< T, M >& PyROOT::TMethodHolder< T, M >::operator=(
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-PyROOT::TMethodHolder< T, M >::~TMethodHolder()
+PyROOT::TMethodHolder::~TMethodHolder()
 {
 // destructor
    Destroy_();
@@ -349,16 +335,14 @@ PyROOT::TMethodHolder< T, M >::~TMethodHolder()
 
 
 //- public members -----------------------------------------------------------
-template< class T, class M >
-PyObject* PyROOT::TMethodHolder< T, M >::GetSignature()
+PyObject* PyROOT::TMethodHolder::GetSignature()
 {
 // construct python string from the method's signature
    return PyROOT_PyUnicode_FromString( GetSignatureString().c_str() );
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-PyObject* PyROOT::TMethodHolder< T, M >::GetPrototype()
+PyObject* PyROOT::TMethodHolder::GetPrototype()
 {
 // construct python string from the method's prototype
    return PyROOT_PyUnicode_FromFormat( "%s%s %s::%s%s",
@@ -369,8 +353,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetPrototype()
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
+Int_t PyROOT::TMethodHolder::GetPriority()
 {
 // Method priorities exist (in lieu of true overloading) there to prevent
 // void* or <unknown>* from usurping otherwise valid calls. TODO: extend this
@@ -380,7 +363,7 @@ Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
 
    const size_t nArgs = fMethod.FunctionParameterSize();
    for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
-      const T& arg = fMethod.TypeOf().FunctionParameterAt( iarg );
+      const TScopeAdapter& arg = fMethod.TypeOf().FunctionParameterAt( iarg );
 
    // the following numbers are made up and may cause problems in specific
    // situations: use <obj>.<meth>.disp() for choice of exact dispatch
@@ -415,15 +398,13 @@ Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-Int_t PyROOT::TMethodHolder< T, M >::GetMaxArgs()
+Int_t PyROOT::TMethodHolder::GetMaxArgs()
 {
    return fMethod.FunctionParameterSize();
 }
 
 //____________________________________________________________________________
-template< class T, class M>
-PyObject* PyROOT::TMethodHolder< T, M >::GetArgSpec( Int_t iarg )
+PyObject* PyROOT::TMethodHolder::GetArgSpec( Int_t iarg )
 {
 // Build a string representation of the arguments list.
    if ( iarg >= (int)fMethod.FunctionParameterSize() )
@@ -441,8 +422,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetArgSpec( Int_t iarg )
 }
 
 //____________________________________________________________________________
-template< class T, class M>
-PyObject* PyROOT::TMethodHolder< T, M >::GetArgDefault( Int_t iarg )
+PyObject* PyROOT::TMethodHolder::GetArgDefault( Int_t iarg )
 {
 // get the default value (if any) of argument iarg of this method
    if ( iarg >= (int)fMethod.FunctionParameterSize() )
@@ -466,17 +446,14 @@ PyObject* PyROOT::TMethodHolder< T, M >::GetArgDefault( Int_t iarg )
 }
 
 //____________________________________________________________________________
-template< class T, class M>
-PyObject* PyROOT::TMethodHolder< T, M >::GetScope()
+PyObject* PyROOT::TMethodHolder::GetScope()
 {
 // Get or build the scope of this method.
-   return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >(
-      fMethod.DeclaringScope().Name( Rflx::SCOPED | Rflx::FINAL ) );
+   return MakeRootClassFromString( fMethod.DeclaringScope().Name( Rflx::SCOPED | Rflx::FINAL ) );
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-Bool_t PyROOT::TMethodHolder< T, M >::Initialize()
+Bool_t PyROOT::TMethodHolder::Initialize()
 {
 // done if cache is already setup
    if ( fIsInitialized == kTRUE )
@@ -498,8 +475,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::Initialize()
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-PyObject* PyROOT::TMethodHolder< T, M >::FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* )
+PyObject* PyROOT::TMethodHolder::FilterArgs( ObjectProxy*& self, PyObject* args, PyObject* )
 {
 // verify existence of self, return if ok
    if ( self != 0 ) {
@@ -533,8 +509,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::FilterArgs( ObjectProxy*& self, PyObjec
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args, Long_t user )
+Bool_t PyROOT::TMethodHolder::SetMethodArgs( PyObject* args, Long_t user )
 {
 // clean slate
    if ( fMethodCall )
@@ -568,8 +543,7 @@ Bool_t PyROOT::TMethodHolder< T, M >::SetMethodArgs( PyObject* args, Long_t user
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self, Bool_t release_gil )
+PyObject* PyROOT::TMethodHolder::Execute( void* self, Bool_t release_gil )
 {
 // call the interface method
    R__LOCKGUARD2( gGlobalMutex );
@@ -594,8 +568,7 @@ PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self, Bool_t release_gil
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-PyObject* PyROOT::TMethodHolder< T, M >::operator()(
+PyObject* PyROOT::TMethodHolder::operator()(
       ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user, Bool_t release_gil )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
@@ -651,6 +624,3 @@ PyObject* PyROOT::TMethodHolder< T, M >::operator()(
 
    return (PyObject*)pyobj;
 }
-
-//____________________________________________________________________________
-template class PyROOT::TMethodHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;

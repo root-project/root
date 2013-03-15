@@ -388,8 +388,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
    if ( gnucxx.GetClass() ) {
       func = FindAndAddOperator( lcname, rcname, op, gnucxx->GetListOfMethods() );
       if ( func ) {
-         PyCallable* pyfunc = new TFunctionHolder< TScopeAdapter, TMemberAdapter >(
-            TScopeAdapter::ByName( "__gnu_cxx" ), func );
+         PyCallable* pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "__gnu_cxx" ), func );
          return Utility::AddToClass( pyclass, label ? label : gC2POperatorMapping[ op ].c_str(), pyfunc );
       }
    }
@@ -399,7 +398,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 
    if ( func ) {
    // found a matching overload; add to class
-      PyCallable* pyfunc = new TFunctionHolder< TScopeAdapter, TMemberAdapter >( func );
+      PyCallable* pyfunc = new TFunctionHolder( func );
       return Utility::AddToClass( pyclass, label ? label : gC2POperatorMapping[ op ].c_str(), pyfunc );
    }
 

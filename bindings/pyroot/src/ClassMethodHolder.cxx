@@ -8,16 +8,14 @@
 
 
 //- constructors/destructor -----------------------------------------------------
-template< class T, class M >
-PyROOT::TClassMethodHolder< T, M >::TClassMethodHolder( const T& klass, const M& method ) :
-      TMethodHolder< T, M >( klass, method )
+PyROOT::TClassMethodHolder::TClassMethodHolder( const TScopeAdapter& klass, const TMemberAdapter& method ) :
+      TMethodHolder( klass, method )
 {
 }
 
 
 //- public members --------------------------------------------------------------
-template< class T, class M >
-PyObject* PyROOT::TClassMethodHolder< T, M >::operator()(
+PyObject* PyROOT::TClassMethodHolder::operator()(
       ObjectProxy*, PyObject* args, PyObject* kwds, Long_t user, Bool_t release_gil )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
@@ -37,6 +35,3 @@ PyObject* PyROOT::TClassMethodHolder< T, M >::operator()(
 // execute function
    return this->Execute( 0, release_gil );
 }
-
-//____________________________________________________________________________
-template class PyROOT::TClassMethodHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;

@@ -3,8 +3,8 @@
 // Bindings
 #include "PyROOT.h"
 #include "FunctionHolder.h"
-#include "ObjectProxy.h"
 #include "Adapters.h"
+#include "ObjectProxy.h"
 
 // ROOT
 #include "TClass.h"
@@ -22,21 +22,19 @@ namespace {
 
 
 //- constructor -----------------------------------------------------------------
-template< class T, class M >
-PyROOT::TFunctionHolder< T, M >::TFunctionHolder( const M& function ) :
-      TMethodHolder< T, M >( GetGlobalNamespace().GetClass(), function )
+PyROOT::TFunctionHolder::TFunctionHolder( const TMemberAdapter& function ) :
+      TMethodHolder( GetGlobalNamespace().GetClass(), function )
 {
 }
 
-template< class T, class M >
-PyROOT::TFunctionHolder< T, M >::TFunctionHolder( const T& scope, const M& function ) :
-      TMethodHolder< T, M >( scope, function )
+//____________________________________________________________________________
+PyROOT::TFunctionHolder::TFunctionHolder( const TScopeAdapter& scope, const TMemberAdapter& function ) :
+      TMethodHolder( scope, function )
 {
 }
 
 //- public members --------------------------------------------------------------
-template< class T, class M >
-PyObject* PyROOT::TFunctionHolder< T, M >::FilterArgs(
+PyObject* PyROOT::TFunctionHolder::FilterArgs(
       ObjectProxy*& self, PyObject* args, PyObject* )
 {
 // no self means called as a free function; all ok
@@ -61,8 +59,7 @@ PyObject* PyROOT::TFunctionHolder< T, M >::FilterArgs(
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-PyObject* PyROOT::TFunctionHolder< T, M >::operator()(
+PyObject* PyROOT::TFunctionHolder::operator()(
       ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user, Bool_t release_gil )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
@@ -89,6 +86,3 @@ PyObject* PyROOT::TFunctionHolder< T, M >::operator()(
 // execute function
    return this->Execute( 0, release_gil );
 }
-
-//____________________________________________________________________________
-template class PyROOT::TFunctionHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;

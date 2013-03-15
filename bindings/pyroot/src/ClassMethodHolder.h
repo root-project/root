@@ -4,26 +4,23 @@
 #ifndef PYROOT_TCLASSMETHODHOLDER_H
 #define PYROOT_TCLASSMETHODHOLDER_H
 
-// ROOT
-class TClass;
-class TMethod;
-
 // Bindings
 #include "MethodHolder.h"
 
-
 namespace PyROOT {
+
+   class TMemberAdapter;
+   class TScopeAdapter;
 
 /** Python side ROOT static function
       @author  WLAV
-      @date    08/03/2004
-      @version 3.0
+      @date    15/03/2013
+      @version 4.0
  */
 
-   template< class T, class M >
-   class TClassMethodHolder : public TMethodHolder< T, M > {
+   class TClassMethodHolder : public TMethodHolder {
    public:
-      TClassMethodHolder( const T& klass, const M& method );
+      TClassMethodHolder( const TScopeAdapter& klass, const TMemberAdapter& method );
 
       virtual PyCallable* Clone() { return new TClassMethodHolder( *this ); }
 

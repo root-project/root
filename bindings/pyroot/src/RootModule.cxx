@@ -96,7 +96,7 @@ namespace {
 
       // 2nd attempt: construct name as a class
          PyErr_Clear();
-         attr = MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( name );
+         attr = MakeRootClassFromString( name );
          if ( attr != 0 )
             return attr;
 
@@ -231,7 +231,7 @@ namespace {
       std::string name = PyROOT_PyUnicode_AsString( pyname );
       Py_DECREF( pyname );
 
-      return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( name );
+      return MakeRootClassFromString( name );
    }
 
 //____________________________________________________________________________
@@ -628,8 +628,7 @@ extern "C" void initlibPyROOT()
    Utility::SetSignalPolicy( gROOT->IsBatch() ? Utility::kFast : Utility::kSafe );
 
 // inject ROOT namespace for convenience
-   PyModule_AddObject( gRootModule, (char*)"ROOT",
-      MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( "ROOT" ) );
+   PyModule_AddObject( gRootModule, (char*)"ROOT", MakeRootClassFromString( "ROOT" ) );
 
 #if PY_VERSION_HEX >= 0x03000000
    Py_INCREF( gRootModule );

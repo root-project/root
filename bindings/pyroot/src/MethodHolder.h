@@ -5,8 +5,9 @@
 #define PYROOT_TMETHODHOLDER_H
 
 // Bindings
-#include "Utility.h"
+#include "Adapters.h"
 #include "PyCallable.h"
+#include "Utility.h"
 
 // Standard
 #include <string>
@@ -17,17 +18,16 @@ namespace PyROOT {
 
 /** Python side ROOT method
       @author  WLAV
-      @date    05/06/2004
-      @version 3.0
+      @date    15/03/2013
+      @version 4.0
  */
 
    class TExecutor;
    class TConverter;
 
-   template< class T, class M >
    class TMethodHolder : public PyCallable {
    public:
-      TMethodHolder( const T& klass, const M& method );
+      TMethodHolder( const TScopeAdapter& klass, const TMemberAdapter& method );
       TMethodHolder( const TMethodHolder& );
       TMethodHolder& operator=( const TMethodHolder& );
       virtual ~TMethodHolder();
@@ -54,8 +54,8 @@ namespace PyROOT {
       virtual PyObject* Execute( void* self, Bool_t release_gil = kFALSE );
 
    protected:
-      const M& GetMethod() { return fMethod; }
-      const T& GetClass() { return fClass; }
+      const TMemberAdapter& GetMethod() { return fMethod; }
+      const TScopeAdapter& GetClass() { return fClass; }
       TExecutor* GetExecutor() { return fExecutor; }
       const std::string& GetSignatureString();
 
@@ -75,10 +75,10 @@ namespace PyROOT {
 
    private:
    // representation
-      M fMethod;
-      T fClass;
-      CallFunc_t*  fMethodCall;
-      TExecutor*   fExecutor;
+      TMemberAdapter fMethod;
+      TScopeAdapter  fClass;
+      CallFunc_t*    fMethodCall;
+      TExecutor*     fExecutor;
 
       std::string fSignature;
 

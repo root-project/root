@@ -3,10 +3,6 @@
 #ifndef PYROOT_TSETITEMHOLDER_H
 #define PYROOT_TSETITEMHOLDER_H
 
-// ROOT
-class TClass;
-class TMethod;
-
 // Bindings
 #include "MethodHolder.h"
 
@@ -15,16 +11,17 @@ namespace PyROOT {
 
 /** Special holder to allow byref return as extra argument
       @author  WLAV
-      @date    10/05/2003
-      @version 2.0
+      @date    15/03/2013
+      @version 3.0
  */
 
    class TExecutor;
+   class TMemberAdapter;
+   class TScopeAdapter;
 
-   template< class T, class M >
-   class TSetItemHolder : public TMethodHolder< T, M > {
+   class TSetItemHolder : public TMethodHolder {
    public:
-      TSetItemHolder( const T& klass, const M& method );
+      TSetItemHolder( const TScopeAdapter& klass, const TMemberAdapter& method );
 
    public:
       virtual PyCallable* Clone() { return new TSetItemHolder( *this ); }
