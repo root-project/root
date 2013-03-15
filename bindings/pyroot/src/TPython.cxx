@@ -6,6 +6,7 @@
 #include "PyStrings.h"
 #include "TPython.h"
 #include "ObjectProxy.h"
+#include "MethodProxy.h"
 #include "RootWrapper.h"
 #include "TPyClassGenerator.h"
 
@@ -409,6 +410,33 @@ Bool_t TPython::ObjectProxy_CheckExact( PyObject* pyobject )
 
 // direct pointer comparison of type member
    return PyROOT::ObjectProxy_CheckExact( pyobject );
+}
+
+//____________________________________________________________________________
+Bool_t TPython::MethodProxy_Check( PyObject* pyobject )
+{
+// Test whether the type of the given pyobject is of MethodProxy type or any
+// derived type.
+
+// setup
+   if ( ! Initialize() )
+      return kFALSE;
+
+// detailed walk through inheritance hierarchy
+   return PyROOT::MethodProxy_Check( pyobject );
+}
+
+//____________________________________________________________________________
+Bool_t TPython::MethodProxy_CheckExact( PyObject* pyobject )
+{
+// Test whether the type of the given pyobject is MethodProxy type.
+
+// setup
+   if ( ! Initialize() )
+      return kFALSE;
+
+// direct pointer comparison of type member
+   return PyROOT::MethodProxy_CheckExact( pyobject );
 }
 
 //____________________________________________________________________________

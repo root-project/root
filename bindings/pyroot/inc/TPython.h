@@ -50,6 +50,10 @@ public:
    static Bool_t ObjectProxy_Check( PyObject* pyobject );
    static Bool_t ObjectProxy_CheckExact( PyObject* pyobject );
 
+// type verifiers for MethodProxy
+   static Bool_t MethodProxy_Check( PyObject* pyobject );
+   static Bool_t MethodProxy_CheckExact( PyObject* pyobject );
+
 // object proxy to void* conversion
    static void* ObjectProxy_AsVoidPtr( PyObject* pyobject );
 
