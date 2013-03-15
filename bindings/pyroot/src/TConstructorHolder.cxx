@@ -3,11 +3,11 @@
 
 // Bindings
 #include "PyROOT.h"
-#include "ConstructorHolder.h"
+#include "TConstructorHolder.h"
 #include "Adapters.h"
 #include "Executors.h"
 #include "ObjectProxy.h"
-#include "MemoryRegulator.h"
+#include "TMemoryRegulator.h"
 
 // ROOT
 #include "TClass.h"

@@ -5,7 +5,7 @@
 #include "TPyFitFunction.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
-#include "PyBufferFactory.h"
+#include "TPyBufferFactory.h"
 
 // Standard
 #include <stdexcept>

@@ -6,7 +6,7 @@
 #include "PyStrings.h"
 #include "Converters.h"
 #include "ObjectProxy.h"
-#include "PyBufferFactory.h"
+#include "TPyBufferFactory.h"
 #include "TCustomPyTypes.h"
 #include "Utility.h"
 #include "RootWrapper.h"

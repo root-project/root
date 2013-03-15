@@ -5,7 +5,7 @@
 #define PYROOT_TCONSTRUCTORHOLDER_H
 
 // Bindings
-#include "MethodHolder.h"
+#include "TMethodHolder.h"
 
 
 namespace PyROOT {

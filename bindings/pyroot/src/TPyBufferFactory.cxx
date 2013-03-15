@@ -3,7 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
-#include "PyBufferFactory.h"
+#include "TPyBufferFactory.h"
 
 // Standard
 #include <map>

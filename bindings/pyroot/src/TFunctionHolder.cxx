@@ -2,7 +2,7 @@
 
 // Bindings
 #include "PyROOT.h"
-#include "FunctionHolder.h"
+#include "TFunctionHolder.h"
 #include "Adapters.h"
 #include "ObjectProxy.h"
 

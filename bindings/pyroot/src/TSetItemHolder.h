@@ -4,7 +4,7 @@
 #define PYROOT_TSETITEMHOLDER_H
 
 // Bindings
-#include "MethodHolder.h"
+#include "TMethodHolder.h"
 
 
 namespace PyROOT {

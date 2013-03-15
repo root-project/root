@@ -3,7 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
-#include "MethodHolder.h"
+#include "TMethodHolder.h"
 #include "Converters.h"
 #include "Executors.h"
 #include "ObjectProxy.h"

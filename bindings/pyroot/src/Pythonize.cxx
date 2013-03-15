@@ -10,10 +10,10 @@
 #include "RootWrapper.h"
 #include "Utility.h"
 #include "PyCallable.h"
-#include "PyBufferFactory.h"
-#include "FunctionHolder.h"
+#include "TPyBufferFactory.h"
+#include "TFunctionHolder.h"
 #include "Converters.h"
-#include "MemoryRegulator.h"
+#include "TMemoryRegulator.h"
 #include "Adapters.h"
 #include "Utility.h"
 

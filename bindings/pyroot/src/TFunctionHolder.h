@@ -4,7 +4,7 @@
 #define PYROOT_TFUNCTIONHOLDER_H
 
 // Bindings
-#include "MethodHolder.h"
+#include "TMethodHolder.h"
 
 
 namespace PyROOT {

@@ -7,7 +7,7 @@
 #include "Utility.h"
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
-#include "FunctionHolder.h"
+#include "TFunctionHolder.h"
 #include "TCustomPyTypes.h"
 #include "RootWrapper.h"
 #include "PyCallable.h"

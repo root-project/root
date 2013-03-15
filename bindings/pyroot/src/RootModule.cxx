@@ -9,7 +9,7 @@
 #include "MethodProxy.h"
 #include "TemplateProxy.h"
 #include "PropertyProxy.h"
-#include "PyBufferFactory.h"
+#include "TPyBufferFactory.h"
 #include "TCustomPyTypes.h"
 #include "RootWrapper.h"
 #include "Utility.h"
