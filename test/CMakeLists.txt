@@ -11,8 +11,12 @@ find_package(ROOT REQUIRED)
 include(${ROOT_USE_FILE})
 
 include_directories(${ROOT_INCLUDE_DIRS})
-include_directories(${ROOT_INCLUDE_DIRS}/../tutorials)
-
+if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
+  include_directories(${ROOT_SOURCE_DIR}/tutorials)
+  include_directories(${ROOT_SOURCE_DIR}/tmva/inc)
+else()
+  include_directories(${ROOT_INCLUDE_DIRS}/../tutorials)
+endif()
 
 #---environment-------------------------------------------------------------------------------
 ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
