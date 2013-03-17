@@ -680,6 +680,9 @@ TCling::TCling(const char *name, const char *title)
          , "-I", sysIncludePath1.c_str()
          , "-I", sysIncludePath2.c_str()
 #endif
+#ifdef R__USE_CXX11
+         , "-std=c++11"
+#endif
         };
          //"-Xclang", "-fmodules"};
 
