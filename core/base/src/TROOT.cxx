@@ -1834,7 +1834,7 @@ const char *TROOT::GetSvnDate()
    if (fSvnDate == "") {
       Int_t iday,imonth,iyear, ihour, imin;
       static const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                      "Jul", "Aug", "Sep", "Oct", "Nov", "De" };
+                                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
       Int_t idate = gROOT->GetBuiltDate();
       Int_t itime = gROOT->GetBuiltTime();
       iday   = idate%100;
