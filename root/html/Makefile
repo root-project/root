@@ -58,6 +58,7 @@ MakeIndex_filtered.log: MakeIndex.log
 	| grep -v ' scanning ' \
 	| grep -v ' Times-Roman' \
 	| grep -v 'ldap_initialize() failed:' \
+	| grep -v 'ldap_sasl_bind_s() failed:' \
 	| grep -v '_Index.html' > $@
 
 MakeIndex: MakeIndex_filtered.log
