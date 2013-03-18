@@ -221,7 +221,19 @@ ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 $(CINTDLLDIRL)/G__c_posix.c: MACOSX_UNIX03 = -D__DARWIN_UNIX03
 endif
 
-$(CINTDLLDIRL)/G__c_%.o: CFLAGS := $(filter-out -Iinclude,$(CINTDLLCFLAGS)) -I. -DG__SYSTYPES_H
+ifeq (,$(findstring $(GCC_MAJOR),1 2 3))
+ifneq ($(GCC_MAJOR),4)
+# GCC 5 and up
+CINTDLLCDEPR := -Wdeprecated-declarations
+else
+ifeq (,$(findstring $(GCC_MINOR),0 1 2 3 4 5 6 7))
+# GCC 4.8 and up
+CINTDLLCDEPR := -Wdeprecated-declarations
+endif
+endif
+endif
+
+$(CINTDLLDIRL)/G__c_%.o: CFLAGS := $(filter-out -Iinclude,$(CINTDLLCFLAGS)) -I. -DG__SYSTYPES_H $(CINTDLLCDEPR)
 
 ##### posix special treatment
 $(CINTDLLDIRL)/posix/exten.o: $(CINTDLLDIRL)/posix/exten.c
