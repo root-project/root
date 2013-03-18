@@ -56,6 +56,7 @@ class TEnv;
 class TClingCallbacks;
 class TMethod;
 class TObjArray;
+class TInterpreterValue;
 
 namespace cling {
    class Interpreter;
@@ -223,6 +224,7 @@ public: // Public Interface
    // CallFunc interface
    virtual void   CallFunc_Delete(void* func) const;
    virtual void   CallFunc_Exec(CallFunc_t* func, void* address) const;
+   virtual void   CallFunc_Exec(CallFunc_t* func, void* address, TInterpreterValue& val) const;
    virtual Long_t    CallFunc_ExecInt(CallFunc_t* func, void* address) const;
    virtual Long_t    CallFunc_ExecInt64(CallFunc_t* func, void* address) const;
    virtual Double_t  CallFunc_ExecDouble(CallFunc_t* func, void* address) const;

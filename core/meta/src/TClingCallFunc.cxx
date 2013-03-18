@@ -29,6 +29,7 @@
 
 #include "TClingClassInfo.h"
 #include "TClingMethodInfo.h"
+#include "TInterpreterValue.h"
 
 #include "TError.h"
 #include "TCling.h"
@@ -259,10 +260,14 @@ void TClingCallFunc::SetThisPtr(const clang::CXXMethodDecl* MD,
    fArgVals[0] = cling::StoredValueRef::bitwiseCopy(C, val);
 }
 
-void TClingCallFunc::SetReturnPtr(const clang::CXXMethodDecl* MD, 
-                                void* address) const {
-   clang::ASTContext& C = fInterp->getSema().getASTContext(); 
-   clang::QualType QT = MD->getThisType(C);
+void TClingCallFunc::SetReturnPtr(const clang::FunctionDecl* FD, 
+                                  void* address) const {
+   clang::ASTContext& C = fInterp->getSema().getASTContext();
+   clang::QualType QT;
+   if (IsTrampolineFunc())
+      QT = llvm::cast<clang::CXXMethodDecl>(FD)->getThisType(C);
+   else
+      QT = FD->getResultType();
    cling::Value val(llvm::PTOGV(address), QT, fEEFunc->arg_begin()->getType());
    fArgVals[1] = cling::StoredValueRef::bitwiseCopy(C, val);
 }
@@ -489,18 +494,40 @@ void TClingCallFunc::CodeGenDecl(clang::FunctionDecl* FD) {
           && "Compilation should never fail!");
 }
 
-void TClingCallFunc::Exec(void *address) const
+void TClingCallFunc::Exec(void *address, TInterpreterValue* interpVal /* =0 */) const
 {
    if (!IsValid()) {
       Error("TClingCallFunc::Exec", "Attempt to execute while invalid.");
       return;
    }
+
+   // In case the function we are calling returns a temporary the user needs to
+   // provide proper storage for it.
+   if (fEEFunc->hasStructRetAttr() && !interpVal) {
+      Error("TClingCallFunc::Invoke", 
+            "Trying to invoke a function that returns a temporary without providing a storage.");
+      return;
+   }
+   else if (interpVal && !fEEFunc->hasStructRetAttr()) {
+      Error("TClingCallFunc::Invoke", 
+            "Trying to invoke a function that doesn't return a temporary but storage is provided.");
+      return;
+   }
+
+
    const clang::FunctionDecl* FD = GetOriginalDecl();
    if (!IsMemberFunc()) {
       // Free function or static member function.
       // For the trampoline we need to insert a fake this ptr, because it
       // has to be our first argument for the trampoline.
-      Invoke();
+
+      // If a value is given pass it as an argument to invoke
+      if (interpVal) {
+         Invoke();
+         reinterpret_cast<cling::StoredValueRef&>(interpVal->fValue) = GetReturnPtr();
+      }
+      else
+         Invoke();
       return;
    }
 
@@ -517,10 +544,18 @@ void TClingCallFunc::Exec(void *address) const
       return;
    }
    SetThisPtr(MD, address);
-   Invoke();
+   // If a value is given pass it as an argument to invoke
+   if (interpVal) {
+      assert(!GetReturnPtr().isValid()
+             && "We already have set the return result!?");
+      Invoke();
+      reinterpret_cast<cling::StoredValueRef&>(interpVal->fValue) = GetReturnPtr();
+   }
+   else
+      Invoke();
 }
 
-long TClingCallFunc::ExecInt(void *address) const
+Long_t TClingCallFunc::ExecInt(void *address) const
 {
    // Yes, the function name has Int in it, but it
    // returns a long.  This is a matter of CINT history.
@@ -532,9 +567,9 @@ long TClingCallFunc::ExecInt(void *address) const
 
    if (!IsMemberFunc()) {
       // Free function or static member function.
-      cling::Value val;
+      cling::StoredValueRef val;
       Invoke(&val);
-      return val.simplisticCastAs<long>();
+      return val.get().simplisticCastAs<long>();
    }
 
    if (const clang::CXXConstructorDecl *CD =
@@ -585,10 +620,10 @@ long TClingCallFunc::ExecInt(void *address) const
         cf.Init(newFunc);
         cf.SetArg(static_cast<long>(size));
         // Note: This may throw!
-        cling::Value val;
+        cling::StoredValueRef val;
         cf.Invoke(&val);
         address =
-           reinterpret_cast<void*>(val.simplisticCastAs<unsigned long>());
+           reinterpret_cast<void*>(val.get().simplisticCastAs<unsigned long>());
         // Note: address is guaranteed to be non-zero here, otherwise
         //       the operator new would have thrown a bad_alloc exception.
       }
@@ -624,18 +659,18 @@ long TClingCallFunc::ExecInt(void *address) const
       SetReturnPtr(MD, &returnStorage);
    }
 
-   cling::Value val;
+   cling::StoredValueRef val;
    Invoke(&val);
    if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
       return returnStorage;
    }
    // FIXME: Why don't we use cling::Value::isVoid interface?
-   if (val.getClangType()->isVoidType()) {
+   if (val.get().getClangType()->isVoidType()) {
       // CINT was silently return 0 in this case,
       // for now emulate this behavior for backward compatibility ...
       return 0;
    }
-   return val.simplisticCastAs<long>();
+   return val.get().simplisticCastAs<long>();
 }
 
 long long TClingCallFunc::ExecInt64(void *address) const
@@ -647,9 +682,9 @@ long long TClingCallFunc::ExecInt64(void *address) const
    const clang::FunctionDecl* FD = GetOriginalDecl();
    if (!IsMemberFunc()) {
       // Free function or static member function.
-      cling::Value val;
+      cling::StoredValueRef val;
       Invoke(&val);
-      return val.simplisticCastAs<long long>();
+      return val.get().simplisticCastAs<long long>();
    }
 
    // Member function.
@@ -675,13 +710,13 @@ long long TClingCallFunc::ExecInt64(void *address) const
       SetReturnPtr(MD, &returnStorage);
    }
 
-   cling::Value val;
+   cling::StoredValueRef val;
    Invoke(&val);
    if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
       // Provide return storage
       return returnStorage;
    }
-   return val.simplisticCastAs<long long>();
+   return val.get().simplisticCastAs<long long>();
 }
 
 double TClingCallFunc::ExecDouble(void *address) const
@@ -693,9 +728,9 @@ double TClingCallFunc::ExecDouble(void *address) const
    const clang::FunctionDecl *FD = GetOriginalDecl();
    if (!IsMemberFunc()) {
       // Free function or static member function.
-      cling::Value val;
+      cling::StoredValueRef val;
       Invoke(&val);
-      return val.simplisticCastAs<double>();
+      return val.get().simplisticCastAs<double>();
    }
    // Member function.
    const clang::CXXMethodDecl* MD = llvm::cast<const clang::CXXMethodDecl>(FD);
@@ -721,12 +756,12 @@ double TClingCallFunc::ExecDouble(void *address) const
       SetReturnPtr(fMethodAsWritten, &returnStorage);
    }
 
-   cling::Value val;
+   cling::StoredValueRef val;
    Invoke(&val);
    if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
       return returnStorage;
    }
-   return val.simplisticCastAs<double>();
+   return val.get().simplisticCastAs<double>();
 }
 
 TClingMethodInfo *TClingCallFunc::FactoryMethod() const
@@ -1028,25 +1063,38 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
    }
 }
 
-void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
+void TClingCallFunc::Invoke(cling::StoredValueRef* result /*= 0*/) const
 {
    if (result) 
-      *result = cling::Value();
+      *result = cling::StoredValueRef::invalidValue();
 
    // It should make no difference if we are working with the trampoline or
    // the real decl.
    const clang::FunctionDecl *FD = fMethod->GetMethodDecl();
+
+   // If the function returns a temporary adjust the temporary's lifetime.
+   if (fEEFunc->hasStructRetAttr()) {
+      assert(!GetReturnPtr().isValid()
+             && "We already have set the return result!?");
+      clang::ASTContext& C = fInterp->getSema().getASTContext();
+      llvm::Type* LLVMRetTy = fEEFunc->getReturnType();
+      clang::QualType ClangRetTy = FD->getResultType();
+      SetReturnPtr(cling::StoredValueRef::allocate(C, ClangRetTy, LLVMRetTy));
+   }
+
+   // We are going to loop over the JIT function args.
+   llvm::FunctionType *ft = fEEFunc->getFunctionType();
      
-   unsigned num_params = FD->getNumParams();
+   unsigned num_params = ft->getNumParams();
    unsigned min_args = FD->getMinRequiredArguments();
    // For trampolines we pass in the first argument as a fake this ptr.
    unsigned num_given_args = GetArgValsSize();
 
    if (IsMemberFunc() && !IsTrampolineFunc()) {
       // Adjust for the hidden this pointer first argument.
-      ++num_params;
       ++min_args;
    }
+
    if (num_given_args < min_args) {
       // Not all required arguments given.
       Error("TClingCallFunc::Invoke",
@@ -1066,20 +1114,17 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
    // This will be the arguments actually passed to the JIT function.
    std::vector<llvm::GenericValue> Args;
 
-   // We are going to loop over the JIT function args.
-   llvm::FunctionType *ft = fEEFunc->getFunctionType();
-
    if (num_given_args < num_params) {
-      // If there are still arguments to be resolved
-      unsigned num_default_args_to_resolve = num_params - num_given_args;
       // This means that we have synthesized artificial default arg __Res
       if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
          if (!fArgVals[1].isValid())
             SetReturnPtr(fMethodAsWritten, /*address*/0);
+         // Update the count of given arguments.
          num_given_args = GetArgValsSize();
-         num_default_args_to_resolve = num_params - num_given_args;
       }
 
+      // If there are still arguments to be resolved
+      unsigned num_default_args_to_resolve = num_params - num_given_args;
       unsigned arg_index;
       const clang::ParmVarDecl* pvd = 0;
       for (size_t i = 0; i < num_default_args_to_resolve; ++i) {
@@ -1120,6 +1165,16 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
       } // for default arg
    } // if less args than params
 
+
+   // FIXME: Redesign the Trampoline function to take the return argument __Res
+   // as a first argument and that if statement and few more will disappear.
+   //
+   // LLVM return by-value takes the variable where the result should be stored
+   // as a first argument.
+   if (fEEFunc->hasStructRetAttr())
+      Args.push_back(fArgVals[1].get().getGV());
+
+
    // Add the this ptr if valid.
    if(fArgVals[0].isValid())
       Args.push_back(fArgVals[0].get().getGV());
@@ -1153,28 +1208,30 @@ void TClingCallFunc::Invoke(cling::Value* result /*= 0*/) const
    }
 
    // Add the return ptr if valid.
-   if(fArgVals[1].isValid()) {
+   if(fArgVals[1].isValid() && !fEEFunc->hasStructRetAttr()) {
       assert(IsTrampolineFunc() && "Should be only valid for trampolines.");
       Args.push_back(fArgVals[1].get().getGV());
    }
 
    llvm::GenericValue return_val = fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
-   if (result) {
+   // if fEEFunc->hasStructRetAttr() we already have the return result
+   if (result && !fEEFunc->hasStructRetAttr()) {
+      using namespace cling;
+      const clang::ASTContext& C = fInterp->getSema().getASTContext();
       if (ft->getReturnType()->getTypeID() == llvm::Type::PointerTyID) {
          // Note: The cint interface requires pointers and references to be
          //       returned as unsigned long.
+         Value convVal(return_val, FD->getResultType(), 
+                       fEEFunc->getReturnType());
 
-         cling::Value convVal(return_val, FD->getResultType(), 
-                              fEEFunc->getReturnType());
-
-         clang::ASTContext& C = fInterp->getSema().getASTContext();
          clang::QualType QT = C.UnsignedLongTy;
          const llvm::Type* ty = fInterp->getLLVMType(QT);
          llvm::GenericValue ulong_return_val = convertIntegralToArg(convVal, ty);
-         *result = cling::Value(ulong_return_val, QT, ty);
+         *result = StoredValueRef::bitwiseCopy(C, Value(ulong_return_val, QT, ty));
       } else {
-         *result = cling::Value(return_val, GetOriginalDecl()->getResultType(),
-                                ft->getReturnType());
+         Value V = Value(return_val, GetOriginalDecl()->getResultType(), 
+                         ft->getReturnType());
+         *result = StoredValueRef::bitwiseCopy(C, V);
       }
    }
 }

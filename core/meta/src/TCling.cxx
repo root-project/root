@@ -3492,6 +3492,13 @@ void TCling::CallFunc_Exec(CallFunc_t* func, void* address) const
 }
 
 //______________________________________________________________________________
+void TCling::CallFunc_Exec(CallFunc_t* func, void* address, TInterpreterValue& val) const
+{
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   f->Exec(address, &val);
+}
+
+//______________________________________________________________________________
 Long_t TCling::CallFunc_ExecInt(CallFunc_t* func, void* address) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
