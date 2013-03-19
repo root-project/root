@@ -574,8 +574,13 @@ Long_t TClingCallFunc::ExecInt(void *address) const
       Invoke(&val);
       // In case this is a temporary we need to extend its lifetime by 
       // registering it to the list of temporaries.
-      if (DoesThatFuncReturnsATemporary())
+      if (DoesThatFuncReturnsATemporary()) {
+         std::string s = "The function " + FD->getNameAsString() +
+            "returns a temporary. Consider using Exec with TInterpreterValue!";
+         Info("TClingCallFunc::ExecInt", "%s", s.c_str());
          clingInterp->RegisterTemporary(val);
+      }
+
       return val.get().simplisticCastAs<long>();
    }
 
@@ -668,14 +673,18 @@ Long_t TClingCallFunc::ExecInt(void *address) const
 
    cling::StoredValueRef val;
    Invoke(&val);
-   if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
-      // In case this is a temporary we need to extend its lifetime by 
-      // registering it to the list of temporaries.
-      if (DoesThatFuncReturnsATemporary())
-         clingInterp->RegisterTemporary(val);
-
-      return returnStorage;
+   // In case this is a temporary we need to extend its lifetime by 
+   // registering it to the list of temporaries.
+   if (DoesThatFuncReturnsATemporary()) {
+      std::string s = "The function " + FD->getNameAsString() +
+         "returns a temporary. Consider using Exec with TInterpreterValue!";
+      Info("TClingCallFunc::ExecInt", "%s", s.c_str());
+      clingInterp->RegisterTemporary(val);
    }
+
+   if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn())
+      return returnStorage;
+
    // FIXME: Why don't we use cling::Value::isVoid interface?
    if (val.get().getClangType()->isVoidType()) {
       // CINT was silently return 0 in this case,
@@ -1227,7 +1236,11 @@ void TClingCallFunc::Invoke(cling::StoredValueRef* result /*= 0*/) const
 
    llvm::GenericValue return_val = fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
    // if fEEFunc->hasStructRetAttr() we already have the return result
-   if (result && !fEEFunc->hasStructRetAttr()) {
+   if (result) {
+      if (DoesThatFuncReturnsATemporary()) {
+         *result = GetReturnPtr();
+         return;
+      }
       using namespace cling;
       const clang::ASTContext& C = fInterp->getSema().getASTContext();
       if (ft->getReturnType()->getTypeID() == llvm::Type::PointerTyID) {
