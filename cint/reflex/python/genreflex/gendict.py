@@ -957,7 +957,14 @@ class genDictionary(object) :
       #---------------------------------------------------------------------------
       for member in source:
         if member[0] == '': continue
-        sc += '    ' + member[0] + ' &' + member[1] + ';\n'
+        if member[0][-1] == ']':
+          t = memTypes[0]
+          arraydim = t[t.find('['):]
+          arraytype  = t[:t.find('[')]
+          sc += '  typedef %s onfile_%s_t%s;\n' % (arraytype,member[1],arraydim)
+          sc += '    onfile_%s_t &%s\n' % (member[1],member[1])
+        else:
+          sc += '    ' + member[0] + ' &' + member[1] + ';\n'
 
       #---------------------------------------------------------------------------
       # Generate the constructor
@@ -1016,7 +1023,14 @@ class genDictionary(object) :
     # Write the target members
     #-----------------------------------------------------------------------------
     for member in target:
-      sc += '  %s &%s = *(%s*)(target + OffsetOf(__shadow__::%s, %s));\n' % (memTypes[member], member, memTypes[member], mappedName, member)
+      if memTypes[member][-1] == ']':
+         t = memTypes[member]
+         arraydim = t[t.find('['):]
+         arraytype  = t[:t.find('[')]
+         sc += '  typedef %s %s_t%s;\n' % (arraytype,member,arraydim)
+         sc += '  %s_t &%s = *(%s_t*)(target + OffsetOf(__shadow__::%s, %s));\n' % (member, member, member, mappedName, member)
+      else:
+         sc += '  %s &%s = *(%s*)(target + OffsetOf(__shadow__::%s, %s));\n' % (memTypes[member], member, memTypes[member], mappedName, member)
     return sc + '\n'
 #---------------------------------------------------------------------------------
   def processIoReadFunctions( self, cl, clt, rules, memTypes ):
