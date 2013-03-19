@@ -35,7 +35,8 @@ public:
    TInterpreterValue& operator=(TInterpreterValue Other);
    ~TInterpreterValue();
 
-   void& GetValue() const { return fValue; }
+   void* const& Get() const { return fValue; }
+   void*& Get() { return fValue; }
 
    Bool_t   IsValid() const;
    Double_t GetAsDouble() const;
