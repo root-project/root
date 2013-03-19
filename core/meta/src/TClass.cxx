@@ -2488,8 +2488,13 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       load = kTRUE;
 
       if (splitname.IsSTLCont()) {
-
+         
+         TClassRef clref = cl;
          const char * itypename = gCling->GetInterpreterTypeName(name);
+         // Protect again possible library loading
+         if (clref->IsLoaded()) {
+            return clref;
+         }
          if (itypename) {
             std::string altname( TClassEdit::ShortType(itypename, TClassEdit::kDropStlDefault) );
             if (altname != name) {
