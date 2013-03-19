@@ -1076,7 +1076,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          indent = fMetaProcessor->process(sLine, &result, &compRes);
       }
    }
-   if (result.isValid() && result.needsManagedAllocation())
+   if (result.isValid())
       fTemporaries->push_back(result);
    if (indent) {
       Error("ProcessLine", "Ignoring invalid input.");
