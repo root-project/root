@@ -21,7 +21,11 @@
 
 #include "cling/Interpreter/StoredValueRef.h"
 
-static cling::StoredValueRef& GetAsStoredValueRef(void* value) {
+static const cling::StoredValueRef& GetAsStoredValueRef(void* const& value) {
+   return reinterpret_cast<const cling::StoredValueRef&>(value);
+}
+
+static cling::StoredValueRef& GetAsStoredValueRef(void*& value) {
    return reinterpret_cast<cling::StoredValueRef&>(value);
 }
 
