@@ -221,7 +221,7 @@ bool TClingCallFunc::DoesThatTrampolineFuncReturn() const {
    return !fMethodAsWritten->getResultType()->isVoidType();
 }
 
-bool TClingCallFunc::DoesThatFuncReturnsATemporary() const {
+bool TClingCallFunc::DoesThatFuncReturnATemporary() const {
    return fEEFunc->hasStructRetAttr();
 }
 
@@ -574,7 +574,7 @@ Long_t TClingCallFunc::ExecInt(void *address) const
       Invoke(&val);
       // In case this is a temporary we need to extend its lifetime by 
       // registering it to the list of temporaries.
-      if (DoesThatFuncReturnsATemporary()) {
+      if (DoesThatFuncReturnATemporary()) {
          std::string s = "The function " + FD->getNameAsString() +
             "returns a temporary. Consider using Exec with TInterpreterValue!";
          Info("TClingCallFunc::ExecInt", "%s", s.c_str());
@@ -675,7 +675,7 @@ Long_t TClingCallFunc::ExecInt(void *address) const
    Invoke(&val);
    // In case this is a temporary we need to extend its lifetime by 
    // registering it to the list of temporaries.
-   if (DoesThatFuncReturnsATemporary()) {
+   if (DoesThatFuncReturnATemporary()) {
       std::string s = "The function " + FD->getNameAsString() +
          "returns a temporary. Consider using Exec with TInterpreterValue!";
       Info("TClingCallFunc::ExecInt", "%s", s.c_str());
@@ -1237,7 +1237,7 @@ void TClingCallFunc::Invoke(cling::StoredValueRef* result /*= 0*/) const
    llvm::GenericValue return_val = fInterp->getExecutionEngine()->runFunction(fEEFunc, Args);
    // if fEEFunc->hasStructRetAttr() we already have the return result
    if (result) {
-      if (DoesThatFuncReturnsATemporary()) {
+      if (DoesThatFuncReturnATemporary()) {
          *result = GetReturnPtr();
          return;
       }
