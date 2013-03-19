@@ -221,6 +221,9 @@ bool TClingCallFunc::DoesThatTrampolineFuncReturn() const {
    return !fMethodAsWritten->getResultType()->isVoidType();
 }
 
+bool TClingCallFunc::DoesThatFuncReturnsATemporary() const {
+   return fEEFunc->hasStructRetAttr();
+}
 
 bool TClingCallFunc::IsMemberFunc() const {
    using namespace clang;
@@ -564,11 +567,15 @@ Long_t TClingCallFunc::ExecInt(void *address) const
       return 0L;
    }
    const clang::FunctionDecl* FD = GetOriginalDecl();
-
+   TCling* clingInterp = static_cast<TCling*>(gCling);
    if (!IsMemberFunc()) {
       // Free function or static member function.
       cling::StoredValueRef val;
       Invoke(&val);
+      // In case this is a temporary we need to extend its lifetime by 
+      // registering it to the list of temporaries.
+      if (DoesThatFuncReturnsATemporary())
+         clingInterp->RegisterTemporary(val);
       return val.get().simplisticCastAs<long>();
    }
 
@@ -662,6 +669,11 @@ Long_t TClingCallFunc::ExecInt(void *address) const
    cling::StoredValueRef val;
    Invoke(&val);
    if (IsTrampolineFunc() && DoesThatTrampolineFuncReturn()) {
+      // In case this is a temporary we need to extend its lifetime by 
+      // registering it to the list of temporaries.
+      if (DoesThatFuncReturnsATemporary())
+         clingInterp->RegisterTemporary(val);
+
       return returnStorage;
    }
    // FIXME: Why don't we use cling::Value::isVoid interface?

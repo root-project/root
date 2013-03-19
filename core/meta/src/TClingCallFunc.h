@@ -86,6 +86,7 @@ private:
    cling::StoredValueRef EvaluateExpr(const clang::Expr* E) const;
    bool IsTrampolineFunc() const { return fMethodAsWritten; }
    bool DoesThatTrampolineFuncReturn() const;
+   bool DoesThatFuncReturnsATemporary() const;
    bool IsMemberFunc() const;
    const clang::FunctionDecl* GetOriginalDecl() const;
 
