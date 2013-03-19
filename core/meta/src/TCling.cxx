@@ -31,6 +31,8 @@
 #include "TClingTypedefInfo.h"
 #include "TClingTypeInfo.h"
 
+#include "TInterpreterValue.h"
+
 #include "TROOT.h"
 #include "TApplication.h"
 #include "TGlobal.h"
@@ -1077,7 +1079,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       }
    }
    if (result.isValid())
-      fTemporaries->push_back(result);
+      RegisterTemporary(result);
    if (indent) {
       Error("ProcessLine", "Ignoring invalid input.");
       fMetaProcessor->cancelContinuation();
@@ -3471,6 +3473,18 @@ int TCling::UnloadFile(const char* path) const
    return -1;
 }
 
+//______________________________________________________________________________
+void TCling::RegisterTemporary(const TInterpreterValue& value) 
+{
+   using namespace cling;
+   const StoredValueRef& SVR = reinterpret_cast<const StoredValueRef&>(value.Get());
+   RegisterTemporary(SVR);
+}
+
+void TCling::RegisterTemporary(const cling::StoredValueRef& value) 
+{
+   fTemporaries->push_back(value);
+}
 
 
 //______________________________________________________________________________

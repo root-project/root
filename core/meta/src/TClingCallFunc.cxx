@@ -524,7 +524,7 @@ void TClingCallFunc::Exec(void *address, TInterpreterValue* interpVal /* =0 */) 
       // If a value is given pass it as an argument to invoke
       if (interpVal) {
          Invoke();
-         reinterpret_cast<cling::StoredValueRef&>(interpVal->fValue) = GetReturnPtr();
+         reinterpret_cast<cling::StoredValueRef&>(interpVal->Get()) = GetReturnPtr();
       }
       else
          Invoke();
@@ -549,7 +549,7 @@ void TClingCallFunc::Exec(void *address, TInterpreterValue* interpVal /* =0 */) 
       assert(!GetReturnPtr().isValid()
              && "We already have set the return result!?");
       Invoke();
-      reinterpret_cast<cling::StoredValueRef&>(interpVal->fValue) = GetReturnPtr();
+      reinterpret_cast<cling::StoredValueRef&>(interpVal->Get()) = GetReturnPtr();
    }
    else
       Invoke();

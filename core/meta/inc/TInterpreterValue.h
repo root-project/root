@@ -35,13 +35,13 @@ public:
    TInterpreterValue& operator=(TInterpreterValue Other);
    ~TInterpreterValue();
 
+   void& GetValue() const { return fValue; }
+
    Bool_t   IsValid() const;
    Double_t GetAsDouble() const;
    Long_t   GetAsLong() const;
    ULong_t  GetAsUnsignedLong() const;
    void*    GetAsPointer() const;
-
-   friend class TClingCallFunc;
 };
 
 #endif // ROOT_TInterpreterValue

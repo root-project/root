@@ -219,6 +219,8 @@ public: // Public Interface
    virtual void   SetRTLD_LAZY() const;
    virtual void   SetTempLevel(int val) const;
    virtual int    UnloadFile(const char* path) const;
+   void           RegisterTemporary(const TInterpreterValue& value);
+   void           RegisterTemporary(const cling::StoredValueRef& value);
 
 
    // CallFunc interface
