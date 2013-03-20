@@ -221,14 +221,17 @@ ifeq ($(subst $(MACOSX_MINOR),,1234),1234)
 $(CINTDLLDIRL)/G__c_posix.c: MACOSX_UNIX03 = -D__DARWIN_UNIX03
 endif
 
+ifneq (,$(GCC_MAJOR))
+# gcc
 ifeq (,$(findstring $(GCC_MAJOR),1 2 3))
 ifneq ($(GCC_MAJOR),4)
 # GCC 5 and up
-CINTDLLCDEPR := -Wdeprecated-declarations
+CINTDLLCDEPR := -Wno-deprecated-declarations
 else
-ifeq (,$(findstring $(GCC_MINOR),0 1 2 3 4 5 6 7))
-# GCC 4.8 and up
-CINTDLLCDEPR := -Wdeprecated-declarations
+ifeq (,$(findstring $(GCC_MINOR),0 1 2 3 4 5 6))
+# GCC 4.7 and up
+CINTDLLCDEPR := -Wno-deprecated-declarations
+endif
 endif
 endif
 endif
