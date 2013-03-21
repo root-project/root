@@ -35,7 +35,7 @@ template <class T> bool IsEquiv(const std::string &test, const T& orig, const T&
    const char* classname = cl?cl->GetName():typeid(T).name();
 
    if (orig.size() != copy.size()) {
-      TestError(test,Form("For %s, wrong size! Wrote %ld and read %ld\n",classname,orig.size(),copy.size()));
+      TestError(test,Form("For %s, wrong size! Wrote %ld and read %ld\n",classname,(long)orig.size(),(long)copy.size()));
       // return false;
    }
 
