@@ -1411,6 +1411,8 @@ void TBranchElement::FillLeavesCollection(TBuffer& b)
       fPtrIterators->CreateIterators(fObject);
    } else {
       //NOTE: this does not work for not vectors since the CreateIterators expects a TGenCollectionProxy::TStaging as its argument!
+      //NOTE: and those not work in general yet, since the TStaging object is neither created nor passed.
+      //  We need to review how to avoid the need for a TStaging during the reading.
       fIterators->CreateIterators(fObject);
    }
 
