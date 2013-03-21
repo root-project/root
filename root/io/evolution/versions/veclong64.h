@@ -28,7 +28,11 @@ int writefile(const char *prefix = "veclong") {
    filename.Form("%s-%d.root",prefix,VERSION);
    TFile *f = new TFile(filename,"RECREATE");
    MyClass c;
+#if VERSION==1
+   c.fVec.push_back( (long)( 1LL << 40 | 0x3 ) );
+#else
    c.fVec.push_back( 1LL << 40 | 0x3 );
+#endif
    c.Print();
    f->WriteObject(&c,"veclong");
    delete f;
