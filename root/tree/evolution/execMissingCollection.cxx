@@ -41,7 +41,7 @@ int execMissingCollection() {
       return 3;
    }
    if (obj->fMeans.size() != obj->fValues.size()) {
-      fprintf(stdout,"Error: fValues (%ld) and fMeans (%ld) are not the same size\n",obj->fValues.size(),obj->fMeans.size());
+      fprintf(stdout,"Error: fValues (%ld) and fMeans (%ld) are not the same size\n",(long)obj->fValues.size(),(long)obj->fMeans.size());
    }
    for(unsigned int i = 0; i < obj->fMeans.size(); ++i) {
       if ( TMath::Abs( (i/2.0) - obj->fMeans[i] ) > 0.001 ) {
