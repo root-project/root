@@ -23,7 +23,7 @@ double dude() {
    myfunc2(*myvecvec);
    int x = 0; x = myvecvec[x].size();
    for(unsigned int j=0; j< myvecvec->size(); ++j) {
-      fprintf(stdout,"myvecvec size: %lu\n",myvecvec->size());
+      fprintf(stdout,"myvecvec size: %lu\n",(long)myvecvec->size());
       for(unsigned int i=0; i< myvecvec[j].size(); ++i) {
          double dval = myvecvec[j][i]; 
          fprintf(stdout,"ptrmyvec[%d][%d]==%g\n",j,i,dval);
