@@ -7,10 +7,10 @@ void generateFile(string nameOfChain, size_t numberOfFiles, size_t numberOfEntri
 
    Int_t valueToPlace = numberOfFiles*1000+numberOfEntriesInFile*100;
    for (size_t i=0;i<numberOfFiles;i++) {
-      TFile* newfile = new TFile(Form("%s_%ld.root", nameOfChain.c_str(), i), "RECREATE"); 
+      TFile* newfile = new TFile(Form("%s_%ld.root", nameOfChain.c_str(), (long)i), "RECREATE"); 
       TTree*  outputTree = new TTree(nameOfChain.c_str(), nameOfChain.c_str());
-      TString branchname; branchname.Form("value%ld_%ld",numberOfFiles,numberOfEntriesInFile);
-      TString leafname; leafname.Form("leafvalue%ld_%ld/I",numberOfFiles,numberOfEntriesInFile);
+      TString branchname; branchname.Form("value%ld_%ld",(long)numberOfFiles,(long)numberOfEntriesInFile);
+      TString leafname; leafname.Form("leafvalue%ld_%ld/I",(long)numberOfFiles,(long)numberOfEntriesInFile);
       outputTree->Branch(branchname, &valueToPlace,leafname);
       for (size_t j=0;j<numberOfEntriesInFile;j++) {
          outputTree->Fill();
