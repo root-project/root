@@ -277,23 +277,41 @@ static void TCling__UpdateClassInfo(const NamedDecl* TD)
 }
 
 
-void TCling::HandleNewDecl(const void* DV, bool isDeserialized) const {
+namespace {
+template <typename T>
+static bool IsNonCanonicalRedecl(const clang::Decl* D) {
+   if (const T* Redecl = dyn_cast<const T>(D))
+      return !Redecl->isCanonicalDecl();
+   return false;
+}
+}
+
+void TCling::HandleNewDecl(const void* DV, bool isDeserialized) {
    const clang::Decl* D = static_cast<const clang::Decl*>(DV);
-   if (isa<clang::FunctionDecl>(D->getDeclContext()))
+   if (isa<clang::FunctionDecl>(D->getDeclContext())
+       || isa<clang::TagDecl>(D->getDeclContext()))
       return;
-   TCollection *listOfSmth = 0;
+   if (IsNonCanonicalRedecl<FunctionDecl>(D) ||
+       IsNonCanonicalRedecl<VarDecl>(D) ||
+       IsNonCanonicalRedecl<TypedefNameDecl>(D) ||
+       IsNonCanonicalRedecl<TagDecl>(D) ||
+       IsNonCanonicalRedecl<NamespaceDecl>(D) ||
+       IsNonCanonicalRedecl<RedeclarableTemplateDecl>(D) ||
+       IsNonCanonicalRedecl<ObjCInterfaceDecl>(D) ||
+       IsNonCanonicalRedecl<ObjCProtocolDecl>(D))
+      return;
+
    if (!isDeserialized && isa<DeclContext>(D) && !isa<EnumDecl>(D)) {
       // We have to find all the typedefs contained in that decl context
       // and add it to the list of types.
-      listOfSmth = gROOT->GetListOfTypes();
       llvm::SmallVector<TypedefDecl*, 128> Defs;
       TypedefVisitor V(Defs);
       V.TraverseDecl(const_cast<Decl*>(D));
-      for (size_t i = 0; i < Defs.size(); ++i)
-         if (!listOfSmth->FindObject(Defs[i]->getNameAsString().c_str())) {
-            listOfSmth->Add(new TDataType(new TClingTypedefInfo(fInterpreter, Defs[i])));
+      for (size_t i = 0; i < Defs.size(); ++i) {
+         if (!gROOT->GetListOfTypes()->FindObject(Defs[i]->getNameAsString().c_str())) {
+            gROOT->GetListOfTypes()->Add(new TDataType(new TClingTypedefInfo(fInterpreter, Defs[i])));
          }
-
+      }
    }
    if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
       if (isDeserialized && isa<CXXMethodDecl>(FD))
@@ -304,36 +322,27 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized) const {
          if (NCtx->getIdentifier()) {
             TClass* cl = TClass::GetClass(NCtx->getNameAsString().c_str());
             if (cl) {
-               if (cl->fMethod) {
-                  TClingMethodInfo* cmi
-                     = new TClingMethodInfo(fInterpreter,
-                                            (TClingClassInfo*)cl->GetClassInfo());
-                  cl->fMethod->Add(new TMethod(cmi, cl));
-               } else {
-                  ((TCling*)gCling)->CreateListOfMethods(cl);
-               }
+               fModifiedTClasses.insert(cl);
             }
          }
+         return;
       }
       
-      listOfSmth = gROOT->GetListOfGlobalFunctions();
-      if(FD->isOverloadedOperator() 
-         || cling::utils::Analyze::IsWrapper(FD))
+      if (FD->isOverloadedOperator())
          return;
 
       // We skip functions without prototype
       if (!isa<FunctionNoProtoType>(FD->getType())
-          && !listOfSmth->FindObject(FD->getNameAsString().c_str())) {  
-         listOfSmth->Add(new TFunction(new TClingMethodInfo(fInterpreter, FD)));
+          && !gROOT->GetListOfGlobalFunctions()->FindObject(FD->getNameAsString().c_str())) {  
+         gROOT->GetListOfGlobalFunctions()->Add(new TFunction(new TClingMethodInfo(fInterpreter, FD)));
       }
    }
    else if (const RecordDecl *TD = dyn_cast<RecordDecl>(D)) {
       TCling__UpdateClassInfo(TD);
    }
    else if (const TypedefDecl* TdefD = dyn_cast<TypedefDecl>(D)) {
-      listOfSmth = gROOT->GetListOfTypes();
-      if (!listOfSmth->FindObject(TdefD->getNameAsString().c_str())) {
-         listOfSmth->Add(new TDataType(new TClingTypedefInfo(fInterpreter, TdefD)));
+      if (!gROOT->GetListOfTypes()->FindObject(TdefD->getNameAsString().c_str())) {
+         gROOT->GetListOfTypes()->Add(new TDataType(new TClingTypedefInfo(fInterpreter, TdefD)));
       }
    }
    else if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
@@ -353,26 +362,37 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized) const {
       // ROOT says that global is enum/var/field declared on the global
       // scope.
 
-      listOfSmth = gROOT->GetListOfGlobals();
-
       if (!(isa<EnumDecl>(ND) || isa<VarDecl>(ND)))
          return;
 
+      if (isDeserialized) {
+         // While classes are read completely, functions in namespaces might
+         // show up at any time.
+         if (const NamespaceDecl* NCtx = dyn_cast<NamespaceDecl>(ND->getDeclContext())) {
+            if (NCtx->getIdentifier()) {
+               TClass* cl = TClass::GetClass(NCtx->getNameAsString().c_str());
+               if (cl) {
+                  fModifiedTClasses.insert(cl);
+               }
+            }
+            return;
+         }
+      }
       // Skip if already in the list.
-      if (listOfSmth->FindObject(ND->getNameAsString().c_str()))
+      if (gROOT->GetListOfGlobals()->FindObject(ND->getNameAsString().c_str()))
          return;
 
       if (const EnumDecl *ED = dyn_cast<EnumDecl>(D)) {
  
          for(EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
                 EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
-            if (!listOfSmth->FindObject((*EDI)->getNameAsString().c_str())) {  
-               listOfSmth->Add(new TGlobal(new TClingDataMemberInfo(fInterpreter, *EDI)));
+            if (!gROOT->GetListOfGlobals()->FindObject((*EDI)->getNameAsString().c_str())) {  
+               gROOT->GetListOfGlobals()->Add(new TGlobal(new TClingDataMemberInfo(fInterpreter, *EDI)));
             }
          }
       }
       else
-         listOfSmth->Add(new TGlobal(new TClingDataMemberInfo(fInterpreter,
+         gROOT->GetListOfGlobals()->Add(new TGlobal(new TClingDataMemberInfo(fInterpreter,
                                                               cast<ValueDecl>(ND))));
    }
 }
@@ -382,9 +402,10 @@ void TCling__UpdateListsOnDeclDeserialized(const clang::Decl* D) {
    // We cache them because the decls and their types might not have
    // been completely deserialized; we push them into root/meta once
    // the transaction is done.
-   if (isa<NamespaceDecl>(D) || isa<FunctionDecl>(D)
-       || (isa<VarDecl>(D) && !isa<ParmVarDecl>(D))
-       || isa<TagDecl>(D) || isa<TypedefDecl>(D)) {
+   if (!isa<TagDecl>(D->getDeclContext()) &&
+       (isa<NamespaceDecl>(D) || isa<FunctionDecl>(D)
+        || (isa<VarDecl>(D) && !isa<ParmVarDecl>(D))
+        || isa<TagDecl>(D) || isa<TypedefDecl>(D))) {
       ((TCling*)gCling)->AddDeserializedDecl(D);
    }
    // all others handled by UpdateListsOnTypeDeserialized()
@@ -402,6 +423,14 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
       for (size_t i = 0; i < DeserDecls.size(); ++i)
          ((TCling*)gCling)->HandleNewDecl(static_cast<const clang::Decl*>(DeserDecls[i]), true);
       DeserDecls.clear();
+
+      std::set<TClass*>& modifiedTClasses = ((TCling*)gCling)->GetModifiedTClasses();
+      for (std::set<TClass*>::const_iterator I = modifiedTClasses.begin(),
+              E = modifiedTClasses.end(); I != E; ++I) {
+         ((TCling*)gCling)->UpdateListOfMethods(*I);
+         ((TCling*)gCling)->UpdateListOfDataMembers(*I);
+      }
+      modifiedTClasses.clear();
    } else {
       for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
           I != E; ++I) {
@@ -2157,7 +2186,7 @@ Bool_t TCling::CheckClassTemplate(const char *name)
 }
 
 //______________________________________________________________________________
-void TCling::CreateListOfBaseClasses(TClass* cl)
+void TCling::CreateListOfBaseClasses(TClass* cl) const
 {
    // Create list of pointers to base class(es) for TClass cl.
    R__LOCKGUARD2(gClingMutex);
@@ -2177,7 +2206,7 @@ void TCling::CreateListOfBaseClasses(TClass* cl)
 }
 
 //______________________________________________________________________________
-void TCling::CreateListOfDataMembers(TClass* cl)
+void TCling::CreateListOfDataMembers(TClass* cl) const
 {
    // Create list of pointers to data members for TClass cl.
    R__LOCKGUARD2(gClingMutex);
@@ -2185,6 +2214,7 @@ void TCling::CreateListOfDataMembers(TClass* cl)
       return;
    }
    cl->fData = new TList;
+   cl->fData->SetOwner();
    TClingDataMemberInfo t(fInterpreter, (TClingClassInfo*)cl->GetClassInfo());
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
@@ -2196,7 +2226,7 @@ void TCling::CreateListOfDataMembers(TClass* cl)
 }
 
 //______________________________________________________________________________
-void TCling::CreateListOfMethods(TClass* cl)
+void TCling::CreateListOfMethods(TClass* cl) const
 {
    // Create list of pointers to methods for TClass cl.
    R__LOCKGUARD2(gClingMutex);
@@ -2212,14 +2242,18 @@ void TCling::CreateListOfMethods(TClass* cl)
          cl->fMethod->Add(new TMethod(a, cl));
       }
    }
+   TClingClassInfo *info = (TClingClassInfo*)cl->GetClassInfo();
+   assert(cl->fMethod->GetEntries() == info->NMethods() && "More methods in ROOT/meta than in cling!");
+
 }
 
 //______________________________________________________________________________
-void TCling::UpdateListOfMethods(TClass* cl)
+void TCling::UpdateListOfMethods(TClass* cl) const
 {
    // Update the list of pointers to method for TClass cl, if necessary
    if (cl->fMethod) {
       TClingClassInfo *info = (TClingClassInfo*)cl->GetClassInfo();
+      assert(cl->fMethod->GetEntries() <= info->NMethods() && "More methods in ROOT/meta than in cling!");
       if (!info || cl->fMethod->GetEntries() == info->NMethods()) {
          return;
       }
@@ -2230,7 +2264,16 @@ void TCling::UpdateListOfMethods(TClass* cl)
 }
 
 //______________________________________________________________________________
-void TCling::CreateListOfMethodArgs(TFunction* m)
+void TCling::UpdateListOfDataMembers(TClass* cl) const
+{
+   // Update the list of pointers to data members for TClass cl
+   delete cl->fData;
+   cl->fData = 0;
+   CreateListOfDataMembers(cl);
+}
+
+//______________________________________________________________________________
+void TCling::CreateListOfMethodArgs(TFunction* m) const
 {
    // Create list of pointers to method arguments for TMethod m.
    R__LOCKGUARD2(gClingMutex);

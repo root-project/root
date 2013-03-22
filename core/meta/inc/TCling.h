@@ -28,6 +28,9 @@
 #include "TInterpreter.h"
 #endif
 
+#include <set>
+#include <vector>
+
 #ifndef WIN32
 #define TWin32SendClass char
 #endif
@@ -99,6 +102,7 @@ private: // Data Members
    TClingCallbacks* fClingCallbacks; // cling::Interpreter owns it.
    Bool_t          fHaveSinglePCM; // Whether a single ROOT PCM was provided
    std::vector<const void*> fDeserializedDecls; // Decls read from the AST
+   std::set<TClass*> fModifiedTClasses; // TClasses that require update after this transaction
 
 public: // Public Interface
 
@@ -164,11 +168,12 @@ public: // Public Interface
    Bool_t  CheckClassInfo(const char* name, Bool_t autoload = kTRUE);
    Bool_t  CheckClassTemplate(const char *name);
    Long_t  Calc(const char* line, EErrorCode* error = 0);
-   void    CreateListOfBaseClasses(TClass* cl);
-   void    CreateListOfDataMembers(TClass* cl);
-   void    CreateListOfMethods(TClass* cl);
-   void    CreateListOfMethodArgs(TFunction* m);
-   void    UpdateListOfMethods(TClass* cl);
+   void    CreateListOfBaseClasses(TClass* cl) const;
+   void    CreateListOfDataMembers(TClass* cl) const;
+   void    CreateListOfMethods(TClass* cl) const;
+   void    CreateListOfMethodArgs(TFunction* m) const;
+   void    UpdateListOfMethods(TClass* cl) const;
+   void    UpdateListOfDataMembers(TClass* cl) const;
 
    TString GetMangledName(TClass* cl, const char* method, const char* params);
    TString GetMangledNameWithPrototype(TClass* cl, const char* method, const char* proto);
@@ -371,7 +376,8 @@ public: // Public Interface
 
    void AddDeserializedDecl(const void* D) { fDeserializedDecls.push_back(D); }
    std::vector<const void*>& GetDeserializedDecls() { return fDeserializedDecls; }
-   void HandleNewDecl(const void* DV, bool isDeserialized) const;
+   std::set<TClass*>& GetModifiedTClasses() { return fModifiedTClasses; }
+   void HandleNewDecl(const void* DV, bool isDeserialized);
 
 private: // Private Utility Functions
 
