@@ -398,7 +398,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       break;                                                              \
    }
 
-#define ConvCBasicArray(name,ReadArrayFunc)                                             \
+#define ConvCBasicArray(name,ReadArrayFunc)                               \
    {                                                                      \
       int j, len = fLength[i];                                            \
       name* readbuf = new name[len];                                      \
