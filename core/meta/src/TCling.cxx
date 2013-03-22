@@ -291,15 +291,23 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized) {
    if (isa<clang::FunctionDecl>(D->getDeclContext())
        || isa<clang::TagDecl>(D->getDeclContext()))
       return;
-   if (IsNonCanonicalRedecl<FunctionDecl>(D) ||
-       IsNonCanonicalRedecl<VarDecl>(D) ||
-       IsNonCanonicalRedecl<TypedefNameDecl>(D) ||
-       IsNonCanonicalRedecl<TagDecl>(D) ||
-       IsNonCanonicalRedecl<NamespaceDecl>(D) ||
-       IsNonCanonicalRedecl<RedeclarableTemplateDecl>(D) ||
-       IsNonCanonicalRedecl<ObjCInterfaceDecl>(D) ||
-       IsNonCanonicalRedecl<ObjCProtocolDecl>(D))
-      return;
+   if (const FunctionDecl* FD = dyn_cast<FunctionDecl>(D)) {
+      if (!FD->isCanonicalDecl()) return;
+   } else if (const VarDecl* VD = dyn_cast<VarDecl>(D)) {
+      if (!VD->isCanonicalDecl()) return;
+   } else if (const TypedefNameDecl* TDD = dyn_cast<TypedefNameDecl>(D)) {
+      if (!TDD->isCanonicalDecl()) return;
+   } else if (const TagDecl* TD = dyn_cast<TagDecl>(D)) {
+      if (!TD->isCanonicalDecl()) return;
+   } else if (const NamespaceDecl* ND = dyn_cast<NamespaceDecl>(D)) {
+      if (!ND->isCanonicalDecl()) return;
+   } else if (const RedeclarableTemplateDecl* RTD = dyn_cast<RedeclarableTemplateDecl>(D)) {
+      if (!RTD->isCanonicalDecl()) return;
+   } else if (const ObjCInterfaceDecl* OCID = dyn_cast<ObjCInterfaceDecl>(D)) {
+      if (!OCID->isCanonicalDecl()) return;
+   } else if (const ObjCProtocolDecl* OCPD = dyn_cast<ObjCProtocolDecl>(D)) {
+      if (!OCPD->isCanonicalDecl()) return;
+   }
 
    if (!isDeserialized && isa<DeclContext>(D) && !isa<EnumDecl>(D)) {
       // We have to find all the typedefs contained in that decl context
