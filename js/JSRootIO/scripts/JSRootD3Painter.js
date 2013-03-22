@@ -1887,8 +1887,9 @@ function createFillPatterns(svg, id, color) {
          // if we don't have the user's function
          var nb_points = func['fNpx'];
          for (var i=0;i<nb_points;++i) {
-            if (func['fSave'][i] > hmax) hmax = h;
-            if (func['fSave'][i] < hmin) hmin = h;
+            h = func['fSave'][i];
+            if (h > hmax) hmax = h;
+            if (h < hmin) hmin = h;
          }
          if (hmax > 0.0) hmax *= 1.05;
          if (hmin < 0.0) hmin *= 1.05;
@@ -1906,7 +1907,8 @@ function createFillPatterns(svg, id, color) {
             };
          });
          func['bins'] = bins;
-         interpolate_method = 'monotone';
+         //interpolate_method = 'monotone';
+         interpolate_method = 'cardinal-open';
       }
       else {
          // we don't have the points, so let's try to interpret the function
@@ -2063,12 +2065,12 @@ function createFillPatterns(svg, id, color) {
             }
             if (histo['fFunctions'][i]['_typename'] == 'JSROOTIO.TF1') {
                if (!pad && !histo['fFunctions'][i].TestBit(kNotDraw)) {
-                  if (histo['fFunctions'][i].TestBit(EStatusBits.kObjInCanvas)) {
+                  //if (histo['fFunctions'][i].TestBit(EStatusBits.kObjInCanvas)) {
                      if (typeof(histo['fFunctions'][i]['isDrawn']) == 'undefined' ||
                          histo['fFunctions'][i]['isDrawn'] == false)
                         this.drawFunction(vis, pad, histo['fFunctions'][i], frame);
                      histo['fFunctions'][i]['isDrawn'] = true;
-                  }
+                  //}
                }
                else if (pad && histo['fFunctions'][i].TestBit(EStatusBits.kObjInCanvas)) {
                   if (typeof(histo['fFunctions'][i]['isDrawn']) == 'undefined' ||
@@ -2814,6 +2816,8 @@ function createFillPatterns(svg, id, color) {
          y.domain([ret['ymin'],ret['ymax']]);
       }
       else {
+         ret['xmin'] = histo['fXaxis']['fXmin'],
+         ret['xmax'] = histo['fXaxis']['fXmax'],
          ret['ymin'] = histo['fYaxis']['fXmin'];
          ret['ymax'] = histo['fYaxis']['fXmax'];
       }
@@ -2988,40 +2992,96 @@ function createFillPatterns(svg, id, color) {
          var xfactor = Math.abs(histo['fXaxis']['fXmax']-histo['fXaxis']['fXmin']) / Math.abs(xdom[1]-xdom[0]);
          var yfactor = Math.abs(histo['fYaxis']['fXmax']-histo['fYaxis']['fXmin']) / Math.abs(ydom[1]-ydom[0]);
 
-         g.selectAll("bins")
-            .data(histo.bins)
-            .enter()
-            .append("svg:rect")
-            .attr("class", "bins")
-            .attr("x", function(d) { return histo.x(d.x) + (scalex/2) - (d.z * constx/2);})
-            .attr("y", function(d) { return histo.y(d.y) + (scaley/2) - (d.z * consty/2);})
-            .attr("width", function(d) {
-               if (options.Color > 0)
-                  return (w / histo['fXaxis']['fNbins']) * xfactor;
-               else
-                  return d.z * ((w / histo['fXaxis']['fNbins']) / maxbin) * xfactor;
-            })
-            .attr("height", function(d) {
-               if (options.Color > 0)
-                  return (h / histo['fYaxis']['fNbins']) * yfactor;
-               else
-                  return d.z * ((h / histo['fYaxis']['fNbins']) / maxbin) * yfactor;
-            })
-            .style("stroke", function(d) {
-               if (options.Color > 0)
-                  return JSROOTPainter.getValueColor(histo, d.z, pad);
-               else
-                  return "black";
-            })
-            .style("fill", function(d) {
-               if (options.Color > 0)
-                  return JSROOTPainter.getValueColor(histo, d.z, pad);
-               else
-                  return "none";
-            });
-         g.selectAll("rect")
-            .append("svg:title")
-            .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5) + " \nentries = " + d.z; });
+         if (options.Scat > 0 && histo['fMarkerStyle'] > 1) {
+            /* Add markers */
+            var filled = false;
+            if ((histo['fMarkerStyle'] == 8) ||
+                (histo['fMarkerStyle'] > 19 && histo['fMarkerStyle'] < 24) ||
+                (histo['fMarkerStyle'] == 29))
+               filled = true;
+
+            var info_marker = getRootMarker(root_markers, histo['fMarkerStyle']);
+
+            var shape = info_marker['shape'];
+            var filled = info_marker['toFill'];
+            var toRotate = info_marker['toRotate'];
+            var markerSize = histo['fMarkerSize'];
+            var markerScale = (shape == 0) ? 32 : 64;
+            if (histo['fMarkerStyle'] == 1) markerScale = 1;
+
+            switch (shape) {
+               case 6:
+                  var marker = "M " + (-4 * markerSize) + " " + (-1 * markerSize)
+                              + " L " + 4 * markerSize + " " + (-1 * markerSize)
+                              + " L " + (-2.4 * markerSize) + " " + 4 * markerSize
+                              + " L 0 " + (-4 * markerSize) + " L " + 2.8 * markerSize
+                              + " " + 4 * markerSize + " z";
+                  break;
+               case 7:
+                  var marker = "M " + (- 4 * markerSize) + " " + (-4 * markerSize)
+                              + " L " + 4 * markerSize + " " + 4 * markerSize + " M 0 "
+                              + (-4 * markerSize) + " 0 " + 4 * markerSize + " M "
+                              + 4 * markerSize + " " + (-4 * markerSize) + " L "
+                              + (-4 * markerSize) + " " + 4 * markerSize + " M "
+                              + (-4 * markerSize) + " 0 L " + 4 * markerSize + " 0";
+                  break;
+               default:
+                  var marker = d3.svg.symbol()
+                              .type(d3.svg.symbolTypes[shape])
+                              .size(markerSize * markerScale);
+                  break;
+            }
+            g.selectAll("markers")
+               .data(histo.bins)
+               .enter()
+               .append("svg:path")
+               .attr("class", "marker")
+               .attr("transform", function(d) {
+                  return "translate(" + histo.x(d.x) + "," + histo.y(d.y) + ")"
+               })
+               .style("fill", root_colors[histo['fMarkerColor']])
+               .style("stroke", root_colors[histo['fMarkerColor']])
+               .attr("d", marker)
+               .append("svg:title")
+               .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + 
+                                   d.y.toPrecision(5) + " \nentries = " + d.z; });
+         }
+         else {
+            g.selectAll("bins")
+               .data(histo.bins)
+               .enter()
+               .append("svg:rect")
+               .attr("class", "bins")
+               .attr("x", function(d) { return histo.x(d.x) + (scalex/2) - (d.z * constx/2);})
+               .attr("y", function(d) { return histo.y(d.y) + (scaley/2) - (d.z * consty/2);})
+               .attr("width", function(d) {
+                  if (options.Color > 0)
+                     return (w / histo['fXaxis']['fNbins']) * xfactor;
+                  else
+                     return d.z * ((w / histo['fXaxis']['fNbins']) / maxbin) * xfactor;
+               })
+               .attr("height", function(d) {
+                  if (options.Color > 0)
+                     return (h / histo['fYaxis']['fNbins']) * yfactor;
+                  else
+                     return d.z * ((h / histo['fYaxis']['fNbins']) / maxbin) * yfactor;
+               })
+               .style("stroke", function(d) {
+                  if (options.Color > 0)
+                     return JSROOTPainter.getValueColor(histo, d.z, pad);
+                  else
+                     return "black";
+               })
+               .style("fill", function(d) {
+                  if (options.Color > 0)
+                     return JSROOTPainter.getValueColor(histo, d.z, pad);
+                  else
+                     return "none";
+               });
+            g.selectAll("rect")
+               .append("svg:title")
+               .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5) + " \nentries = " + d.z; });
+         }
       };
       histo['redraw'] = do_redraw;
       do_redraw();
@@ -4360,6 +4420,7 @@ function createFillPatterns(svg, id, color) {
       /* draw the title only if we don't draw from a pad (see Olivier for details) */
       var w = vis.attr("width"), h = vis.attr("height");
       var font_size = Math.round(0.050 * h);
+      var l_title = this.translateLaTeX(histo['fTitle']);
       if (!pad || typeof(pad) == 'undefined') {
          vis.append("text")
             .attr("class", "title")
@@ -4368,7 +4429,7 @@ function createFillPatterns(svg, id, color) {
             .attr("y", 0.07 * vis.attr("height"))
             .attr("font-family", "Arial")
             .attr("font-size", font_size)
-            .text(histo['fTitle']);
+            .text(l_title);
       }
    };
 
@@ -4458,6 +4519,10 @@ function createFillPatterns(svg, id, color) {
             tree_link = "javascript: showDirectory('"+keys[i]['name']+"',"+keys[i]['cycle']+","+(i+1)+");";
             node_img = source_dir+'img/folder.gif';
          }
+         else if (keys[i]['className'] == 'TList' || keys[i]['className'] == 'TObjArray') {
+            tree_link = "javascript: showCollection('"+keys[i]['name']+"',"+keys[i]['cycle']+","+(i+1)+");";
+            node_img = source_dir+'img/folder.gif';
+         }
          else if (keys[i]['className'] == 'TTree' || keys[i]['className'] == 'TNtuple') {
             tree_link = "javascript: readTree('"+keys[i]['name']+"',"+keys[i]['cycle']+","+(i+1)+");";
             node_img = source_dir+'img/tree.png';
@@ -4471,7 +4536,8 @@ function createFillPatterns(svg, id, color) {
             node_title = keys[i]['name'];
          }
          if (keys[i]['name'] != '' && keys[i]['className'] != 'TFile')
-            if (keys[i]['className'] == 'TDirectory')
+            if (keys[i]['className'] == 'TDirectory' || keys[i]['className'] == 'TList' ||
+                keys[i]['className'] == 'TObjArray')
                key_tree.add(k, 0, keys[i]['name']+';'+keys[i]['cycle'], tree_link, keys[i]['name'], '', node_img,
                             source_dir+'img/folderopen.gif');
             else if (keys[i]['className'] == 'TTree' || keys[i]['className'] == 'TNtuple')
@@ -4522,6 +4588,11 @@ function createFillPatterns(svg, id, color) {
             node_img = source_dir+'img/folder.gif';
             node_title = keys[i]['name'];
          }
+         else if (keys[i]['className'] == 'TList' || keys[i]['className'] == 'TObjArray') {
+            tree_link = "javascript: showCollection('"+keys[i]['name']+"',"+keys[i]['cycle']+","+k+");";
+            node_img = source_dir+'img/folder.gif';
+            node_title = keys[i]['name'];
+         }
          else if (keys[i]['className'] == 'TTree' || keys[i]['className'] == 'TNtuple') {
             tree_link = "javascript: readTree('"+keys[i]['name']+"',"+keys[i]['cycle']+","+k+");";
             node_img = source_dir+'img/tree.png';
@@ -4532,13 +4603,53 @@ function createFillPatterns(svg, id, color) {
             node_title = keys[i]['name'];
          }
          if (keys[i]['name'] != '' && keys[i]['className'] != 'TFile') {
-            if (keys[i]['className'] == 'TDirectory')
+            if (keys[i]['className'] == 'TDirectory' || keys[i]['className'] == 'TList' ||
+                keys[i]['className'] == 'TObjArray')
                key_tree.add(k, dir_id, disp_name+';'+keys[i]['cycle'], tree_link, node_title, '', node_img,
                             source_dir+'img/folderopen.gif');
             else if (keys[i]['className'] == 'TNtuple' || keys[i]['className'] == 'TTree')
                key_tree.add(k, dir_id, disp_name+';'+keys[i]['cycle'], tree_link, node_title, '', node_img, node_img);
             else
                key_tree.add(k, dir_id, disp_name+';'+keys[i]['cycle'], tree_link, node_title, '', node_img);
+            k++;
+         }
+      }
+      content += key_tree;
+      $(container).append(content);
+      key_tree.openTo(dir_id, true);
+   };
+
+   JSROOTPainter.addCollectionContents = function(list, container, dir_id) {
+      var pattern_th1 = /TH1/g;
+      var pattern_th2 = /TH2/g;
+      var tree_link = '';
+      var content = "<p><a href='javascript: key_tree.openAll();'>open all</a> | <a href='javascript: key_tree.closeAll();'>close all</a></p>";
+      var k = key_tree.aNodes.length;
+      var dir_name = key_tree.aNodes[dir_id]['title'];
+      for (var i=0; i<list.length; ++i) {
+         var disp_name = list[i]['fName'];
+         list[i]['_name'] = dir_name + '/' + list[i]['fName'];
+         var message = list[i]['_typename']+' is not yet implemented.';
+         tree_link = "javascript:  alert('" + message + "')";
+         var node_img = source_dir+'img/page.gif';
+         var node_title = list[i]['_typename'];
+         if (list[i]['_typename'].match(/\bTH1/) ||
+             list[i]['_typename'].match(/\bTH2/) ||
+             list[i]['_typename'].match(/\bTGraph/) ||
+             list[i]['_typename'].match(/\bRooHist/) ||
+             list[i]['_typename'].match(/\RooCurve/)) {
+            //tree_link = "javascript: displayMappedObject('"+list[i]['_name']+"');";
+            tree_link = "javascript: displayMappedObject('"+list[i]['_name']+"','"+list[i]['_listname']+"',"+list[i]['pos']+");";
+            node_img = source_dir+'img/graphical.png';
+            node_title = list[i]['_name'];
+         }
+         else if (list[i]['_typename'] == 'TList' || list[i]['_typename'] == 'TObjArray') {
+            tree_link = "javascript: showCollection('"+list[i]['_name']+"', 0, "+k+");";
+            node_img = source_dir+'img/folder.gif';
+            node_title = list[i]['_name'];
+         }
+         if (list[i]['fName'] != '' && list[i]['_typename'] != 'TFile') {
+            key_tree.add(k, dir_id, disp_name, tree_link, node_title, '', node_img);
             k++;
          }
       }
