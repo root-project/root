@@ -2450,7 +2450,6 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
     std::pair<uint64_t, uint64_t> Offsets = Reader.VisitDeclContext(DC);
     if (Offsets.first || Offsets.second) {
       if (Offsets.first != 0)
-#define AXEL_LOOKUP_CHANGES
 #ifdef AXEL_LOOKUP_CHANGES
         DC->getPrimaryContext()->setHasExternalLexicalStorage(true);
 #else
