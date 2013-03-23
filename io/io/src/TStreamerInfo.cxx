@@ -1069,7 +1069,9 @@ namespace {
          } else if (newContent) {
             TString oldFlatContent( TMakeProject::UpdateAssociativeToVector(oldContent->GetName()) );
             TString newFlatContent( TMakeProject::UpdateAssociativeToVector(newContent->GetName()) );
-            contentMatch = kTRUE;
+            if (oldFlatContent == newFlatContent) {
+               contentMatch = kTRUE;
+            }
          } else {
             contentMatch = kFALSE;
          }
