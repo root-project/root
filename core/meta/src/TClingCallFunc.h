@@ -129,8 +129,8 @@ public:
 
    TClingCallFunc(const TClingCallFunc &rhs)
       : fInterp(rhs.fInterp), fMethodAsWritten(0), fEEFunc(rhs.fEEFunc), 
-        fEEAddr(rhs.fEEAddr),  fIgnoreExtraArgs(rhs.fIgnoreExtraArgs),
-        fArgVals(rhs.fArgVals)
+        fEEAddr(rhs.fEEAddr), fArgVals(rhs.fArgVals),
+        fIgnoreExtraArgs(rhs.fIgnoreExtraArgs)
    {
       fMethod = new TClingMethodInfo(*rhs.fMethod);
    }
@@ -144,8 +144,8 @@ public:
          fMethodAsWritten = rhs.fMethodAsWritten;
          fEEFunc = rhs.fEEFunc;
          fEEAddr = rhs.fEEAddr;
-         fIgnoreExtraArgs = rhs.fIgnoreExtraArgs;
          fArgVals = rhs.fArgVals;
+         fIgnoreExtraArgs = rhs.fIgnoreExtraArgs;
       }
       return *this;
    }
