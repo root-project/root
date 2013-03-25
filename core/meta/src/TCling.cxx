@@ -336,9 +336,6 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized) {
          return;
       }
       
-      if (FD->isOverloadedOperator())
-         return;
-
       // We skip functions without prototype
       if (!isa<FunctionNoProtoType>(FD->getType())
           && !gROOT->GetListOfGlobalFunctions()->FindObject(FD->getNameAsString().c_str())) {  
@@ -416,12 +413,6 @@ void TCling__UpdateListsOnDeclDeserialized(const clang::Decl* D) {
         || isa<TagDecl>(D) || isa<TypedefDecl>(D))) {
       ((TCling*)gCling)->AddDeserializedDecl(D);
    }
-   // all others handled by UpdateListsOnTypeDeserialized()
-}
-
-extern "C" 
-void TCling__UpdateListsOnTypeDeserialized(const clang::Type* T) {
-   return;
 }
 
 extern "C" 
@@ -444,6 +435,8 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
           I != E; ++I) {
          for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(), 
                  DE = I->m_DGR.end(); DI != DE; ++DI) {
+            if (*DI == T.getWrapperFD())
+               continue;
             ((TCling*)gCling)->HandleNewDecl(*DI, false);
          }
       }
