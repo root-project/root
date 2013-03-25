@@ -86,9 +86,12 @@ void VariadicArguments(const char *fmt, ...)
 
 void runsimpleFunc() {
    runAllThroughTInterpreterInterfaces();
+   printf("======================================================\n");
+   runAllThroughTMethodCall();
 }
 
 void runAllThroughTInterpreterInterfaces() {
+   printf("Running through TInterpreter public interfaces...\n");
    // FIXME: Somebody has to document that gInterpreter->ClassInfo_Factory("")
    // is the global namespace.
    ClassInfo_t* globalNamespace = gInterpreter->ClassInfo_Factory("");
@@ -128,13 +131,58 @@ void runAllThroughTInterpreterInterfaces() {
 
    // Run VariadicArguments
    // FIXME: Dependent on cling/test/Lookup/variadicFunc.C
-   //gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "VariadicArguments", "const char *, ...", &offset);
-   //gInterpreter->CallFunc_SetArgs(mc, "\"dcf\",3, 'a', 1.999");
-   //gInterpreter->CallFunc_Exec( mc, /* void* */0);
+   // gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "VariadicArguments", "const char *, ...", &offset);
+   // gInterpreter->CallFunc_SetArgs(mc, "\"dcf\",3, 'a', 1.999");
+   // gInterpreter->CallFunc_Exec( mc, /* void* */0);
 
 
    // Cleanup
    gInterpreter->CallFunc_Delete(mc);
    gInterpreter->ClassInfo_Delete(globalNamespace);
+}
+
+#include "TMethodCall.h"
+
+void runAllThroughTMethodCall() {
+   printf("Running through TMethodCall...\n");
+   TMethodCall method;
+   Long_t result_long = 0;
+   Double_t result_double;
+
+   // Run VoidFuncNoArgs
+   method = TMethodCall("VoidFuncNoArgs", "");
+   method.Execute();
+
+   // Run IntFuncNoArgs
+   method = TMethodCall("IntFuncNoArgs", "");
+   method.Execute(result_long);
+   printf("Result of IntFuncNoArgs = %ld\n", result_long);
+
+   // Run IntTFuncNoArgs
+   method = TMethodCall("IntTFuncNoArgs", "");
+   method.Execute(result_long);
+   printf("Result of IntFuncNoArgs = %ld\n", result_long);
+
+   // Run DoubleFuncNoArgs
+   method = TMethodCall("DoubleFuncNoArgs", "");
+   method.Execute(result_double);
+   printf("Result of IntFuncNoArgs = %f\n", result_double);
+
+   // Run MyClassReturnNoArgs (ptr return)
+   method = TMethodCall("MyClassReturnNoArgs", "");
+   method.Execute(result_long);
+   printf("Result of MyClassReturnNoArgs = ");
+   reinterpret_cast<MyClassReturn*>(result_long)->Print();
+
+   // Run FloatPtrOneArg (ptr return)
+   method = TMethodCall("FloatPtrOneArg", "1+1");
+   method.Execute(result_long);
+
+   printf("Result of FloatPtrOneArg = %f\n", *reinterpret_cast<float*>(result_long));
+
+   // Run VariadicArguments
+   // FIXME: Dependent on cling/test/Lookup/variadicFunc.C
+   // method = TMethodCall("VariadicArguments", "\"dcf\",3, 'a', 1.999");
+   // method.Execute();
 
 }
