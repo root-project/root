@@ -190,7 +190,7 @@ void TGeoSphere::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
-void TGeoSphere::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoSphere::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
    Double_t rxy2 = point[0]*point[0]+point[1]*point[1];
@@ -246,7 +246,7 @@ void TGeoSphere::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-Int_t TGeoSphere::IsOnBoundary(Double_t *point) const
+Int_t TGeoSphere::IsOnBoundary(const Double_t *point) const
 {
 // Check if a point in local sphere coordinates is close to a boundary within
 // shape tolerance. Return values:
@@ -296,7 +296,7 @@ Int_t TGeoSphere::IsOnBoundary(Double_t *point) const
 }      
 
 //_____________________________________________________________________________
-Bool_t TGeoSphere::IsPointInside(Double_t *point, Bool_t checkR, Bool_t checkTh, Bool_t checkPh) const
+Bool_t TGeoSphere::IsPointInside(const Double_t *point, Bool_t checkR, Bool_t checkTh, Bool_t checkPh) const
 {
 // Check if a point is inside radius/theta/phi ranges for the spherical sector.
    Double_t r2 = point[0]*point[0]+point[1]*point[1]+point[2]*point[2];
@@ -322,7 +322,7 @@ Bool_t TGeoSphere::IsPointInside(Double_t *point, Bool_t checkR, Bool_t checkTh,
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoSphere::Contains(Double_t *point) const
+Bool_t TGeoSphere::Contains(const Double_t *point) const
 {
 // test if point is inside this sphere
    // check Rmin<=R<=Rmax
@@ -360,7 +360,7 @@ Int_t TGeoSphere::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoSphere::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the sphere
 // Check if the bounding box is crossed within the requested distance
@@ -662,7 +662,7 @@ Double_t TGeoSphere::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoSphere::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the sphere
    Double_t saf[6];
@@ -886,7 +886,7 @@ Double_t TGeoSphere::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, 
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoSphere::DistToSphere(Double_t *point, Double_t *dir, Double_t rsph, Bool_t check, Bool_t firstcross) const
+Double_t TGeoSphere::DistToSphere(const Double_t *point, const Double_t *dir, Double_t rsph, Bool_t check, Bool_t firstcross) const
 {
 // compute distance to sphere of radius rsph. Direction has to be a unit vector
    if (rsph<=0) return TGeoShape::Big();
@@ -1420,7 +1420,7 @@ void TGeoSphere::SetSegsAndPols(TBuffer3D & buff) const
 }   
    
 //_____________________________________________________________________________
-Double_t TGeoSphere::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoSphere::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

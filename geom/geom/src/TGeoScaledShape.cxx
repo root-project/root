@@ -104,7 +104,7 @@ void TGeoScaledShape::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
-void TGeoScaledShape::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoScaledShape::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
    Double_t local[3], ldir[3], lnorm[3];
@@ -118,7 +118,7 @@ void TGeoScaledShape::ComputeNormal(Double_t *point, Double_t *dir, Double_t *no
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoScaledShape::Contains(Double_t *point) const
+Bool_t TGeoScaledShape::Contains(const Double_t *point) const
 {
 // Test if point is inside the scaled shape
    Double_t local[3];
@@ -135,7 +135,7 @@ Int_t TGeoScaledShape::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoScaledShape::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoScaledShape::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to surface of the scaled shape.
    Double_t local[3], ldir[3];
@@ -152,7 +152,7 @@ Double_t TGeoScaledShape::DistFromInside(Double_t *point, Double_t *dir, Int_t i
 
 
 //_____________________________________________________________________________
-Double_t TGeoScaledShape::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoScaledShape::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from outside point to surface of the scaled shape.
    Double_t local[3], ldir[3];
@@ -281,7 +281,7 @@ void TGeoScaledShape::SetSegsAndPols(TBuffer3D &buff) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoScaledShape::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoScaledShape::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

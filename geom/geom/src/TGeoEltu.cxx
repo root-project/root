@@ -96,7 +96,7 @@ void TGeoEltu::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
-void TGeoEltu::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoEltu::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
    Double_t a = fRmin;
@@ -116,7 +116,7 @@ void TGeoEltu::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoEltu::Contains(Double_t *point) const
+Bool_t TGeoEltu::Contains(const Double_t *point) const
 {
 // test if point is inside the elliptical tube
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
@@ -135,7 +135,7 @@ Int_t TGeoEltu::DistancetoPrimitive(Int_t px, Int_t py)
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoEltu::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube
    Double_t a2=fRmin*fRmin;
@@ -206,7 +206,7 @@ Double_t TGeoEltu::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 }
 
 //_____________________________________________________________________________
-Double_t TGeoEltu::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoEltu::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube and safe distance
    Double_t safz=TMath::Abs(point[2])-fDz;
@@ -338,7 +338,7 @@ void TGeoEltu::InspectShape() const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoEltu::Safety(Double_t *point, Bool_t /*in*/) const
+Double_t TGeoEltu::Safety(const Double_t *point, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

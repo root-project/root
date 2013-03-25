@@ -430,7 +430,7 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoVoxelFinder::GetIndices(Double_t *point, TGeoStateInfo &td)
+Bool_t TGeoVoxelFinder::GetIndices(const Double_t *point, TGeoStateInfo &td)
 {
 // Getindices for current slices on x, y, z
    td.fVoxSlices[0] = -2; // -2 means 'all daughters in slice'
@@ -587,7 +587,7 @@ Int_t *TGeoVoxelFinder::GetValidExtra(Int_t /*n1*/, UChar_t *array1, Int_t /*n2*
 }      
 
 //_____________________________________________________________________________
-Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck, TGeoStateInfo &td)
+Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, TGeoStateInfo &td)
 {
 // Returns list of new candidates in next voxel. If NULL, nowhere to
 // go next. 
@@ -1148,7 +1148,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(Double_t *point, Int_t &ncheck, TGeoSt
 }
 
 //_____________________________________________________________________________
-void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir, TGeoStateInfo &td)
+void TGeoVoxelFinder::SortCrossedVoxels(const Double_t *point, const Double_t *dir, TGeoStateInfo &td)
 {
 // get the list in the next voxel crossed by a ray
    if (NeedRebuild()) {
@@ -1281,7 +1281,7 @@ void TGeoVoxelFinder::SortCrossedVoxels(Double_t *point, Double_t *dir, TGeoStat
 }   
 
 //_____________________________________________________________________________
-Int_t *TGeoVoxelFinder::GetCheckList(Double_t *point, Int_t &nelem, TGeoStateInfo &td)
+Int_t *TGeoVoxelFinder::GetCheckList(const Double_t *point, Int_t &nelem, TGeoStateInfo &td)
 {
 // get the list of daughter indices for which point is inside their bbox
    if (NeedRebuild()) {
@@ -1439,7 +1439,7 @@ Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &nch
 }     
 
 //_____________________________________________________________________________
-Int_t *TGeoVoxelFinder::GetNextVoxel(Double_t *point, Double_t * /*dir*/, Int_t &ncheck, TGeoStateInfo &td)
+Int_t *TGeoVoxelFinder::GetNextVoxel(const Double_t *point, const Double_t * /*dir*/, Int_t &ncheck, TGeoStateInfo &td)
 {
 // get the list of new candidates for the next voxel crossed by current ray
 //   printf("### GetNextVoxel\n");

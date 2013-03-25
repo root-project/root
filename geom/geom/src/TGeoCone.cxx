@@ -162,7 +162,7 @@ void TGeoCone::ComputeBBox()
 }
 
 //_____________________________________________________________________________
-void TGeoCone::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoCone::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
    Double_t safr,safe,phi;
@@ -204,7 +204,7 @@ void TGeoCone::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-void TGeoCone::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
+void TGeoCone::ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm,
                               Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
 {
 // Compute normal to closest surface from POINT.
@@ -240,7 +240,7 @@ void TGeoCone::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoCone::Contains(Double_t *point) const
+Bool_t TGeoCone::Contains(const Double_t *point) const
 {
 // test if point is inside this cone
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
@@ -252,7 +252,7 @@ Bool_t TGeoCone::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCone::DistFromInsideS(Double_t *point, Double_t *dir, Double_t dz,
+Double_t TGeoCone::DistFromInsideS(const Double_t *point, const Double_t *dir, Double_t dz,
                               Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
 {
 // Compute distance from inside point to surface of the cone (static)
@@ -323,7 +323,7 @@ Double_t TGeoCone::DistFromInsideS(Double_t *point, Double_t *dir, Double_t dz,
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCone::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoCone::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to surface of the cone
 // Boundary safe algorithm.
@@ -338,7 +338,7 @@ Double_t TGeoCone::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCone::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t dz,
+Double_t TGeoCone::DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t dz,
                              Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
 {
 // Compute distance from outside point to surface of the tube
@@ -468,7 +468,7 @@ Double_t TGeoCone::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t dz,
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCone::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoCone::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
    // compute safe radius
@@ -485,7 +485,7 @@ Double_t TGeoCone::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
 }
 
 //_____________________________________________________________________________
-void TGeoCone::DistToCone(Double_t *point, Double_t *dir, Double_t dz, Double_t r1, Double_t r2,
+void TGeoCone::DistToCone(const Double_t *point, const Double_t *dir, Double_t dz, Double_t r1, Double_t r2,
                               Double_t &b, Double_t &delta)
 {
    // Static method to compute distance to a conical surface with :
@@ -832,7 +832,7 @@ void TGeoCone::SetSegsAndPols(TBuffer3D &buffer) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCone::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoCone::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -846,7 +846,7 @@ Double_t TGeoCone::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCone::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
+Double_t TGeoCone::SafetyS(const Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                            Double_t rmin2, Double_t rmax2, Int_t skipz)
 {
 // computes the closest distance from given point to this shape, according
@@ -1225,7 +1225,7 @@ void TGeoConeSeg::ComputeBBox()
 }
 
 //_____________________________________________________________________________
-void TGeoConeSeg::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoConeSeg::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
    Double_t saf[3];
@@ -1280,7 +1280,7 @@ void TGeoConeSeg::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-void TGeoConeSeg::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
+void TGeoConeSeg::ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm,
                                  Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2,
                                  Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
@@ -1326,7 +1326,7 @@ void TGeoConeSeg::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoConeSeg::Contains(Double_t *point) const
+Bool_t TGeoConeSeg::Contains(const Double_t *point) const
 {
 // test if point is inside this sphere
    if (!TGeoCone::Contains(point)) return kFALSE;
@@ -1342,7 +1342,7 @@ Bool_t TGeoConeSeg::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistToCons(Double_t *point, Double_t *dir, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Double_t phi1, Double_t phi2)
+Double_t TGeoConeSeg::DistToCons(const Double_t *point, const Double_t *dir, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Double_t phi1, Double_t phi2)
 {
    // Static method to compute distance to a conical surface with :
    // - r1, z1 - radius and Z position of lower base
@@ -1416,7 +1416,7 @@ Double_t TGeoConeSeg::DistToCons(Double_t *point, Double_t *dir, Double_t r1, Do
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistFromInsideS(Double_t *point, Double_t *dir, Double_t dz, 
+Double_t TGeoConeSeg::DistFromInsideS(const Double_t *point, const Double_t *dir, Double_t dz, 
                        Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
                        Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi)
 {
@@ -1465,7 +1465,7 @@ Double_t TGeoConeSeg::DistFromInsideS(Double_t *point, Double_t *dir, Double_t d
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoConeSeg::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the tube segment
    if (iact<3 && safe) {
@@ -1491,7 +1491,7 @@ Double_t TGeoConeSeg::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t dz, 
+Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t dz, 
                        Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
                        Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi)
 {
@@ -1765,7 +1765,7 @@ Double_t TGeoConeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t 
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoConeSeg::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
    // compute safe radius
@@ -2054,7 +2054,7 @@ void TGeoConeSeg::SetSegsAndPols(TBuffer3D &buffer) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoConeSeg::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -2068,7 +2068,7 @@ Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
+Double_t TGeoConeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                               Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2, Int_t skipz)
 {
 // Static method to compute the closest distance from given point to this shape.

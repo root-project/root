@@ -263,14 +263,14 @@ void TGeoCompositeShape::ComputeBBox()
 }
 
 //_____________________________________________________________________________
-void TGeoCompositeShape::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoCompositeShape::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Computes normal vector in POINT to the composite shape.
    if (fNode) fNode->ComputeNormal(point,dir,norm);
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoCompositeShape::Contains(Double_t *point) const
+Bool_t TGeoCompositeShape::Contains(const Double_t *point) const
 {
 // Tests if point is inside the shape.
    if (fNode) return fNode->Contains(point);
@@ -286,7 +286,7 @@ Int_t TGeoCompositeShape::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCompositeShape::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoCompositeShape::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact,
                                       Double_t step, Double_t *safe) const
 {
 // Compute distance from outside point to this composite shape.
@@ -298,7 +298,7 @@ Double_t TGeoCompositeShape::DistFromOutside(Double_t *point, Double_t *dir, Int
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCompositeShape::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoCompositeShape::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact,
                                       Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to outside of this composite shape.
@@ -453,7 +453,7 @@ void TGeoCompositeShape::RegisterYourself()
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCompositeShape::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoCompositeShape::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

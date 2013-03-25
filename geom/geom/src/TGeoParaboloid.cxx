@@ -114,7 +114,7 @@ void TGeoParaboloid::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
-void TGeoParaboloid::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoParaboloid::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
    norm[0] = norm[1] = 0.0;
@@ -146,7 +146,7 @@ void TGeoParaboloid::ComputeNormal(Double_t *point, Double_t *dir, Double_t *nor
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoParaboloid::Contains(Double_t *point) const
+Bool_t TGeoParaboloid::Contains(const Double_t *point) const
 {
 // test if point is inside the elliptical tube
    if (TMath::Abs(point[2])>fDz) return kFALSE;
@@ -167,7 +167,7 @@ Int_t TGeoParaboloid::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoParaboloid::DistToParaboloid(Double_t *point, Double_t *dir, Bool_t in) const
+Double_t TGeoParaboloid::DistToParaboloid(const Double_t *point, const Double_t *dir, Bool_t in) const
 {
 // Compute distance from a point to the parabola given by:
 //  z = a*rsq + b;   rsq = x*x+y*y
@@ -206,7 +206,7 @@ Double_t TGeoParaboloid::DistToParaboloid(Double_t *point, Double_t *dir, Bool_t
 }      
 
 //_____________________________________________________________________________
-Double_t TGeoParaboloid::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoParaboloid::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the paraboloid
    if (iact<3 && safe) {
@@ -227,7 +227,7 @@ Double_t TGeoParaboloid::DistFromInside(Double_t *point, Double_t *dir, Int_t ia
 }
 
 //_____________________________________________________________________________
-Double_t TGeoParaboloid::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoParaboloid::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the paraboloid and safe distance
    Double_t snxt = TGeoShape::Big();
@@ -397,7 +397,7 @@ void TGeoParaboloid::SetSegsAndPols(TBuffer3D &buff) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoParaboloid::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoParaboloid::Safety(const Double_t *point, Bool_t in) const
 {
 // Computes the closest distance from given point to this shape.
    Double_t safz = fDz-TMath::Abs(point[2]);

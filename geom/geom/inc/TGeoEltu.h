@@ -38,12 +38,12 @@ public:
    // methods
    virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
-   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
-   virtual Bool_t        Contains(Double_t *point) const;
+   virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   virtual Bool_t        Contains(const Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
@@ -57,7 +57,7 @@ public:
    virtual Bool_t        GetPointsOnSegments(Int_t /*npoints*/, Double_t * /*array*/) const {return kFALSE;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
-   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetEltuDimensions(Double_t a, Double_t b, Double_t dz);
    virtual void          SetDimensions(Double_t *param);

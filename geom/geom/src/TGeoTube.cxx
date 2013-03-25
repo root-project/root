@@ -189,7 +189,7 @@ void TGeoTube::ComputeBBox()
 }
 
 //_____________________________________________________________________________
-void TGeoTube::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoTube::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
    Double_t saf[3];
@@ -215,7 +215,7 @@ void TGeoTube::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-void TGeoTube::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
+void TGeoTube::ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm,
                               Double_t /*rmin*/, Double_t /*rmax*/, Double_t /*dz*/)
 {
 // Compute normal to closest surface from POINT.
@@ -230,7 +230,7 @@ void TGeoTube::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoTube::Contains(Double_t *point) const
+Bool_t TGeoTube::Contains(const Double_t *point) const
 {
 // test if point is inside this tube
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
@@ -250,7 +250,7 @@ Int_t TGeoTube::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTube::DistFromInsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz)
+Double_t TGeoTube::DistFromInsideS(const Double_t *point, const Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz)
 {
 // Compute distance from inside point to surface of the tube (static)
 // Boundary safe algorithm.
@@ -296,7 +296,7 @@ Double_t TGeoTube::DistFromInsideS(Double_t *point, Double_t *dir, Double_t rmin
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTube::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTube::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to surface of the tube
 // Boundary safe algorithm.
@@ -310,7 +310,7 @@ Double_t TGeoTube::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTube::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz)
+Double_t TGeoTube::DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz)
 {
 // Static method to compute distance from outside point to a tube with given parameters
 // Boundary safe algorithm.
@@ -397,7 +397,7 @@ Double_t TGeoTube::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmi
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTube::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTube::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from outside point to surface of the tube and safe distance
 // Boundary safe algorithm.
@@ -781,7 +781,7 @@ void TGeoTube::SetSegsAndPols(TBuffer3D &buffer) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTube::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoTube::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -820,7 +820,7 @@ Double_t TGeoTube::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTube::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, Int_t skipz)
+Double_t TGeoTube::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, Int_t skipz)
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -1244,7 +1244,7 @@ void TGeoTubeSeg::ComputeBBox()
 }
 
 //_____________________________________________________________________________
-void TGeoTubeSeg::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoTubeSeg::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
    Double_t saf[3];
@@ -1278,7 +1278,7 @@ void TGeoTubeSeg::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-void TGeoTubeSeg::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
+void TGeoTubeSeg::ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm,
                                  Double_t rmin, Double_t rmax, Double_t /*dz*/,
                                  Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
@@ -1304,7 +1304,7 @@ void TGeoTubeSeg::ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoTubeSeg::Contains(Double_t *point) const
+Bool_t TGeoTubeSeg::Contains(const Double_t *point) const
 {
 // test if point is inside this tube segment
    // first check if point is inside the tube
@@ -1322,7 +1322,7 @@ Int_t TGeoTubeSeg::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTubeSeg::DistFromInsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz,
+Double_t TGeoTubeSeg::DistFromInsideS(const Double_t *point, const Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz,
                                  Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi)
 {
 // Compute distance from inside point to surface of the tube segment (static)
@@ -1370,7 +1370,7 @@ Double_t TGeoTubeSeg::DistFromInsideS(Double_t *point, Double_t *dir, Double_t r
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTubeSeg::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTubeSeg::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to surface of the tube segment
 // Boundary safe algorithm.
@@ -1397,7 +1397,7 @@ Double_t TGeoTubeSeg::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTubeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax,
+Double_t TGeoTubeSeg::DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t rmin, Double_t rmax,
                                 Double_t dz, Double_t c1, Double_t s1, Double_t c2, Double_t s2,
                                 Double_t cm, Double_t sm, Double_t cdfi)
 {
@@ -1653,7 +1653,7 @@ Double_t TGeoTubeSeg::DistFromOutsideS(Double_t *point, Double_t *dir, Double_t 
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTubeSeg::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTubeSeg::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube segment
    // fist localize point w.r.t tube
@@ -1935,7 +1935,7 @@ void TGeoTubeSeg::SetSegsAndPols(TBuffer3D &buff) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTubeSeg::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
@@ -1964,7 +1964,7 @@ Double_t TGeoTubeSeg::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTubeSeg::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz,
+Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz,
                               Double_t phi1, Double_t phi2, Int_t skipz)
 {
 // Static method to compute the closest distance from given point to this shape.
@@ -2405,7 +2405,7 @@ void TGeoCtub::ComputeBBox()
 }
 
 //_____________________________________________________________________________
-void TGeoCtub::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoCtub::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
    Double_t saf[4];
@@ -2459,7 +2459,7 @@ void TGeoCtub::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoCtub::Contains(Double_t *point) const
+Bool_t TGeoCtub::Contains(const Double_t *point) const
 {
 // check if point is contained in the cut tube
    // check the lower cut plane
@@ -2516,7 +2516,7 @@ Double_t TGeoCtub::GetZcoord(Double_t xc, Double_t yc, Double_t zc) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCtub::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoCtub::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the cut tube
    if (iact<3 && safe) {
@@ -2672,7 +2672,7 @@ Double_t TGeoCtub::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, D
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCtub::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoCtub::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the cut tube
    if (iact<3 && safe) *safe = Safety(point, kTRUE);
@@ -2790,7 +2790,7 @@ void TGeoCtub::InspectShape() const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoCtub::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoCtub::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

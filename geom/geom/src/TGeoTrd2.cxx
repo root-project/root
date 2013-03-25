@@ -132,7 +132,7 @@ void TGeoTrd2::ComputeBBox()
 }
 
 //_____________________________________________________________________________   
-void TGeoTrd2::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoTrd2::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
    Double_t safe, safemin;
@@ -182,7 +182,7 @@ void TGeoTrd2::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoTrd2::Contains(Double_t *point) const
+Bool_t TGeoTrd2::Contains(const Double_t *point) const
 {
 // test if point is inside this shape
    // check Z range
@@ -197,7 +197,7 @@ Bool_t TGeoTrd2::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrd2::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrd2::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to surface of the trd2
 // Boundary safe algorithm
@@ -259,7 +259,7 @@ Double_t TGeoTrd2::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrd2::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrd2::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from outside point to surface of the trd2
 // Boundary safe algorithm
@@ -395,7 +395,7 @@ Double_t TGeoTrd2::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 }         
             
 //_____________________________________________________________________________
-void TGeoTrd2::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *normals) const
+void TGeoTrd2::GetVisibleCorner(const Double_t *point, Double_t *vertex, Double_t *normals) const
 {
 // get the most visible corner from outside point and the normals
    Double_t fx = 0.5*(fDx1-fDx2)/fDz;
@@ -441,7 +441,7 @@ void TGeoTrd2::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *nor
 }
 
 //_____________________________________________________________________________
-void TGeoTrd2::GetOppositeCorner(Double_t * /*point*/, Int_t inorm, Double_t *vertex, Double_t *normals) const
+void TGeoTrd2::GetOppositeCorner(const Double_t * /*point*/, Int_t inorm, Double_t *vertex, Double_t *normals) const
 {
 // get the opposite corner of the intersected face
    TGeoTrd2 *trd2 = (TGeoTrd2*)this;
@@ -617,7 +617,7 @@ void TGeoTrd2::InspectShape() const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrd2::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoTrd2::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
