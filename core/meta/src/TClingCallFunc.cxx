@@ -956,8 +956,8 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
    }
    *fMethod = info->GetMethod(method, proto, poffset);
    if (!fMethod->IsValid()) {
-      //Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
-      //      method, proto);
+      Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
+            method, proto);
       return;
    }
    const clang::FunctionDecl *decl = fMethod->GetMethodDecl();
@@ -1220,7 +1220,8 @@ void TClingCallFunc::Invoke(cling::StoredValueRef* result /*= 0*/) const
       // We have a user-provided argument value.
       // If this was a member function, skip the this ptr - it has already been
       // handled.
-      arg_index = i - 2 + IsMemberFunc();
+      arg_index = i - 2 + IsMemberFunc();// - (IsTrampolineFunc() && !DoesThatTrampolineFuncReturn());
+      assert(arg_index < ft->getNumParams() && "Params out of range!");
       const llvm::Type *ty = ft->getParamType(arg_index);
       if (ty != fArgVals[i].get().getLLVMType())
          Args.push_back(convertIntegralToArg(fArgVals[i].get(), ty));
