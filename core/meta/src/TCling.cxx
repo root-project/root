@@ -296,6 +296,8 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized) {
    } else if (const VarDecl* VD = dyn_cast<VarDecl>(D)) {
       if (!VD->isCanonicalDecl()) return;
    } else if (const TypedefNameDecl* TDD = dyn_cast<TypedefNameDecl>(D)) {
+      if (TDD->getIdentifier() && TDD->getName() == "UInt_t")
+         printf("DEBUG AXEL\n");
       if (!TDD->isCanonicalDecl()) return;
    } else if (const TagDecl* TD = dyn_cast<TagDecl>(D)) {
       if (!TD->isCanonicalDecl()) return;
@@ -421,7 +423,6 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
    if (!DeserDecls.empty()) {
       for (size_t i = 0; i < DeserDecls.size(); ++i)
          ((TCling*)gCling)->HandleNewDecl(static_cast<const clang::Decl*>(DeserDecls[i]), true);
-      DeserDecls.clear();
 
       std::set<TClass*>& modifiedTClasses = ((TCling*)gCling)->GetModifiedTClasses();
       for (std::set<TClass*>::const_iterator I = modifiedTClasses.begin(),
@@ -430,17 +431,34 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
          ((TCling*)gCling)->UpdateListOfDataMembers(*I);
       }
       modifiedTClasses.clear();
-   } else {
-      for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
+   }
+
+   if (T.size()) {
+      std::set<const void*> DeserDeclsSet(DeserDecls.begin(),
+                                          DeserDecls.end());
+
+      const clang::Decl* WrapperFD = T.getWrapperFD();
+      for (cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
           I != E; ++I) {
          for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(), 
                  DE = I->m_DGR.end(); DI != DE; ++DI) {
-            if (*DI == T.getWrapperFD())
+            if (*DI == WrapperFD)
                continue;
-            ((TCling*)gCling)->HandleNewDecl(*DI, false);
+            if (DeserDeclsSet.find(*DI) == DeserDeclsSet.end()) {
+               if (clang::TranslationUnitDecl* TU
+                   = dyn_cast<clang::TranslationUnitDecl>(*DI)) {
+                  for (clang::DeclContext::decl_iterator TUI = TU->noload_decls_begin(),
+                          TUE = TU->noload_decls_end(); TUI != TUE; ++TUI)
+                     ((TCling*)gCling)->HandleNewDecl(*TUI, false);
+               } else {
+                  ((TCling*)gCling)->HandleNewDecl(*DI, false);
+               }
+            }
          }
       }
    }
+
+   DeserDecls.clear();
 }
 
 extern "C" 
@@ -3133,14 +3151,16 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
       name = ND->getNameAsString();
    }
    
-   // Supposedly we are being called being something is being
+   // Supposedly we are being called while something is being
    // loaded ... let's now tell the autoloader to do the work
    // yet another time.
    int storedAutoloading = SetClassAutoloading(false);
    TClass* cl = TClass::GetClassOrAlias(name.c_str());
    if (cl) {
       TClingClassInfo* cci = ((TClingClassInfo*)cl->fClassInfo);
-      if (cci) {
+      if (cci && !isa<clang::NamespaceDecl>(TD)) {
+         // It's a tag decl. If we only had a forward declaration then
+         // update the TClingClassInfo with the definition if we have it now.
          const TagDecl* tdOld = llvm::dyn_cast_or_null<TagDecl>(cci->GetDecl());
          if (!tdOld || tdDef) {
             cl->ResetCaches();
@@ -3148,9 +3168,9 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
          }
       } else {
          cl->ResetCaches();
-         // yes, this is alsmost a waste of time, but we do need to lookup
+         // yes, this is almost a waste of time, but we do need to lookup
          // the 'type' corresponding to the TClass anyway in order to
-         // preserver the opaque typedefs (Double32_t)
+         // preserve the opaque typedefs (Double32_t)
          cl->fClassInfo = new TClingClassInfo(fInterpreter, cl->GetName());
       }
    }
