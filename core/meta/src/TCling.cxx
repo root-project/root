@@ -296,8 +296,6 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized) {
    } else if (const VarDecl* VD = dyn_cast<VarDecl>(D)) {
       if (!VD->isCanonicalDecl()) return;
    } else if (const TypedefNameDecl* TDD = dyn_cast<TypedefNameDecl>(D)) {
-      if (TDD->getIdentifier() && TDD->getName() == "UInt_t")
-         printf("DEBUG AXEL\n");
       if (!TDD->isCanonicalDecl()) return;
    } else if (const TagDecl* TD = dyn_cast<TagDecl>(D)) {
       if (!TD->isCanonicalDecl()) return;
@@ -3129,7 +3127,7 @@ Int_t TCling::AutoLoad(const char* cls)
 //______________________________________________________________________________
 void TCling::UpdateClassInfoWithDecl(const void* vTD)
 {
-   // Internal function. Inform a TClass about its new TagDecl.
+   // Internal function. Inform a TClass about its new TagDecl or NamespaceDecl.
    const NamedDecl* ND = static_cast<const NamedDecl*>(vTD);
    const TagDecl* td = dyn_cast<TagDecl>(ND);
    std::string name;
@@ -3158,13 +3156,16 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
    TClass* cl = TClass::GetClassOrAlias(name.c_str());
    if (cl) {
       TClingClassInfo* cci = ((TClingClassInfo*)cl->fClassInfo);
-      if (cci && !isa<clang::NamespaceDecl>(TD)) {
-         // It's a tag decl. If we only had a forward declaration then
-         // update the TClingClassInfo with the definition if we have it now.
+      if (cci) {
+         // If we only had a forward declaration then update the
+         // TClingClassInfo with the definition if we have it now.
          const TagDecl* tdOld = llvm::dyn_cast_or_null<TagDecl>(cci->GetDecl());
          if (!tdOld || tdDef) {
             cl->ResetCaches();
-            cci->Init(*cci->GetType());
+            if (td) {
+               // It's a tag decl, not a namespace decl.
+               cci->Init(*cci->GetType());
+            }
          }
       } else {
          cl->ResetCaches();
