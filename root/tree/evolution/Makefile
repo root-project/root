@@ -116,6 +116,7 @@ ifneq ($(ClingWorkAroundMissingDynamicScope),)
 SimpleOne.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L SimpleOne.C+");'
 
 SimpleTwo.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L SimpleTwo.C+");'
+
 endif
 
 SimpleOne.root: SimpleOne_C.$(DllSuf) SimpleWrite.C $(ROOTCORELIBS)
@@ -131,7 +132,9 @@ SimpleTest: SimpleRead.log
 	$(CMDECHO) diff -u -b -w SimpleRead.ref SimpleRead.log
 
 ifneq ($(ClingWorkAroundMissingDynamicScope),)
-cloning.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L cloningOne.C+");'
+# cloning.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L cloningOne.C+");'
+
+cloning.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L cloningTwo.C+");' 
 endif
 
 cloning.root: cloningOne_C.$(DllSuf)
