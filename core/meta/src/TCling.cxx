@@ -277,37 +277,12 @@ static void TCling__UpdateClassInfo(const NamedDecl* TD)
 }
 
 
-namespace {
-template <typename T>
-static bool IsNonCanonicalRedecl(const clang::Decl* D) {
-   if (const T* Redecl = dyn_cast<const T>(D))
-      return !Redecl->isCanonicalDecl();
-   return false;
-}
-}
-
 void TCling::HandleNewDecl(const void* DV, bool isDeserialized) {
    const clang::Decl* D = static_cast<const clang::Decl*>(DV);
    if (isa<clang::FunctionDecl>(D->getDeclContext())
        || isa<clang::TagDecl>(D->getDeclContext()))
       return;
-   if (const FunctionDecl* FD = dyn_cast<FunctionDecl>(D)) {
-      if (!FD->isCanonicalDecl()) return;
-   } else if (const VarDecl* VD = dyn_cast<VarDecl>(D)) {
-      if (!VD->isCanonicalDecl()) return;
-   } else if (const TypedefNameDecl* TDD = dyn_cast<TypedefNameDecl>(D)) {
-      if (!TDD->isCanonicalDecl()) return;
-   } else if (const TagDecl* TD = dyn_cast<TagDecl>(D)) {
-      if (!TD->isCanonicalDecl()) return;
-   } else if (const NamespaceDecl* ND = dyn_cast<NamespaceDecl>(D)) {
-      if (!ND->isCanonicalDecl()) return;
-   } else if (const RedeclarableTemplateDecl* RTD = dyn_cast<RedeclarableTemplateDecl>(D)) {
-      if (!RTD->isCanonicalDecl()) return;
-   } else if (const ObjCInterfaceDecl* OCID = dyn_cast<ObjCInterfaceDecl>(D)) {
-      if (!OCID->isCanonicalDecl()) return;
-   } else if (const ObjCProtocolDecl* OCPD = dyn_cast<ObjCProtocolDecl>(D)) {
-      if (!OCPD->isCanonicalDecl()) return;
-   }
+   if (!D->isCanonicalDecl()) return;
 
    if (!isDeserialized && isa<DeclContext>(D) && !isa<EnumDecl>(D)) {
       // We have to find all the typedefs contained in that decl context
@@ -417,10 +392,51 @@ void TCling__UpdateListsOnDeclDeserialized(const clang::Decl* D) {
 
 extern "C" 
 void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
+   bool isTUTransaction = false;
+   if (T.size() == 1) {
+      clang::Decl* FirstDecl = *(T.decls_begin()->m_DGR.begin());
+      if (clang::TranslationUnitDecl* TU
+          = dyn_cast<clang::TranslationUnitDecl>(FirstDecl)) {
+         // The is the first transaction, we have to expose to meta
+         // what's already in the AST.
+         isTUTransaction = true;
+
+         // FIXME: don't load the world. Really, don't. Maybe
+         // instead smarten TROOT::GetListOfWhateveros() which
+         // currently is a THashList but could be a
+         // TInterpreterLookupCollection, one that reimplements
+         // TCollection::FindObject(name) and performs a lookup
+         // if not found in its T(Hash)List.
+         for (clang::DeclContext::decl_iterator TUI = TU->decls_begin(),
+                 TUE = TU->decls_end(); TUI != TUE; ++TUI)
+            ((TCling*)gCling)->HandleNewDecl(*TUI, false);
+      }
+   }
+
+   std::set<const void*> TransactionDeclSet;
+   if (!isTUTransaction && T.size()) {
+      const clang::Decl* WrapperFD = T.getWrapperFD();
+      for (cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
+          I != E; ++I) {
+         for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(), 
+                 DE = I->m_DGR.end(); DI != DE; ++DI) {
+            if (*DI == WrapperFD)
+               continue;
+            TransactionDeclSet.insert(*DI);
+            ((TCling*)gCling)->HandleNewDecl(*DI, false);
+         }
+      }
+   }
+
+   // The above might trigger more decls to be deserialized.
+   // Thus the iteration over the deserialized decls must be last.
    std::vector<const void*>& DeserDecls = ((TCling*)gCling)->GetDeserializedDecls();
    if (!DeserDecls.empty()) {
-      for (size_t i = 0; i < DeserDecls.size(); ++i)
-         ((TCling*)gCling)->HandleNewDecl(static_cast<const clang::Decl*>(DeserDecls[i]), true);
+      for (size_t i = 0; i < DeserDecls.size(); ++i) {
+         if (TransactionDeclSet.find(DeserDecls[i])
+             == TransactionDeclSet.end())
+            ((TCling*)gCling)->HandleNewDecl(DeserDecls[i], true);
+      }
 
       std::set<TClass*>& modifiedTClasses = ((TCling*)gCling)->GetModifiedTClasses();
       for (std::set<TClass*>::const_iterator I = modifiedTClasses.begin(),
@@ -429,31 +445,6 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
          ((TCling*)gCling)->UpdateListOfDataMembers(*I);
       }
       modifiedTClasses.clear();
-   }
-
-   if (T.size()) {
-      std::set<const void*> DeserDeclsSet(DeserDecls.begin(),
-                                          DeserDecls.end());
-
-      const clang::Decl* WrapperFD = T.getWrapperFD();
-      for (cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
-          I != E; ++I) {
-         for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(), 
-                 DE = I->m_DGR.end(); DI != DE; ++DI) {
-            if (*DI == WrapperFD)
-               continue;
-            if (DeserDeclsSet.find(*DI) == DeserDeclsSet.end()) {
-               if (clang::TranslationUnitDecl* TU
-                   = dyn_cast<clang::TranslationUnitDecl>(*DI)) {
-                  for (clang::DeclContext::decl_iterator TUI = TU->noload_decls_begin(),
-                          TUE = TU->noload_decls_end(); TUI != TUE; ++TUI)
-                     ((TCling*)gCling)->HandleNewDecl(*TUI, false);
-               } else {
-                  ((TCling*)gCling)->HandleNewDecl(*DI, false);
-               }
-            }
-         }
-      }
    }
 
    DeserDecls.clear();
