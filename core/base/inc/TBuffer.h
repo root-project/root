@@ -214,6 +214,10 @@ public:
    virtual   void     ReadFastArray(Double_t  *d, Int_t n) = 0;
    virtual   void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele=0) = 0;
    virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele=0) = 0;
+   virtual   void     ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue) = 0;
+   virtual   void     ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits) = 0;
+   virtual   void     ReadFastArrayWithFactor(Double_t *ptr, Int_t n, Double_t factor, Double_t minvalue) = 0;
+   virtual   void     ReadFastArrayWithNbits(Double_t *ptr, Int_t n, Int_t nbits) = 0;
    virtual   void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s=0, const TClass *onFileClass=0) = 0;
    virtual   void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0, const TClass *onFileClass=0) = 0;
 

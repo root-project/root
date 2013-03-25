@@ -1544,7 +1544,38 @@ void TBufferSQL2::ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement * 
 }
 
 //______________________________________________________________________________
+void TBufferSQL2::ReadFastArrayWithFactor(Float_t  *f, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
+{
+   // read array of Float16_t from buffer
+
+   TBufferSQL2_ReadFastArray(f);
+}
+
+//______________________________________________________________________________
+void TBufferSQL2::ReadFastArrayWithNbits(Float_t  *f, Int_t n, Int_t /*nbits*/)
+{
+   // read array of Float16_t from buffer
+
+   TBufferSQL2_ReadFastArray(f);
+}
+
+//______________________________________________________________________________
 void TBufferSQL2::ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement * /*ele*/)
+{
+   // read array of Double32_t from buffer
+
+   TBufferSQL2_ReadFastArray(d);
+}
+
+//______________________________________________________________________________
+void TBufferSQL2::ReadFastArrayWithFactor(Double_t  *d, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
+{
+   // read array of Double32_t from buffer
+
+   TBufferSQL2_ReadFastArray(d);
+}
+//______________________________________________________________________________
+void TBufferSQL2::ReadFastArrayWithNbits(Double_t  *d, Int_t n, Int_t /*nbits*/)
 {
    // read array of Double32_t from buffer
 

@@ -1073,6 +1073,10 @@ void TClass::Init(const char *name, Version_t cversion,
       fCollectionProxy = TVirtualStreamerInfo::Factory()->GenEmulatedProxy( GetName(), silent );
       if (fCollectionProxy) {
          fSizeof = fCollectionProxy->Sizeof();
+         
+         // Numeric Collections have implicit conversions:
+         GetSchemaRules(kTRUE);
+
       } else if (!silent) {
          Warning("Init","Collection proxy for %s was not properly initialized!",GetName());
       }

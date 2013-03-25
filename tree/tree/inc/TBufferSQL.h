@@ -119,6 +119,10 @@ public:
    virtual   void     ReadFastArray(Double_t  *, Int_t );
    virtual   void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele=0);
    virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele=0);
+   virtual   void     ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue) ;
+   virtual   void     ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits);
+   virtual   void     ReadFastArrayWithFactor(Double_t *ptr, Int_t n, Double_t factor, Double_t minvalue);
+   virtual   void     ReadFastArrayWithNbits(Double_t *ptr, Int_t n, Int_t nbits) ;
    virtual   void     ReadFastArray(void  *, const TClass *, Int_t n=1, TMemberStreamer *s=0, const TClass *onFileClass=0);
    virtual   void     ReadFastArray(void **, const TClass *, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0, const TClass *onFileClass=0);
 

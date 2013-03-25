@@ -764,6 +764,65 @@ void TGenCollectionStreamer::WriteMap(int nElements, TBuffer &b)
    }
 }
 
+template <typename From, typename To>
+void TGenCollectionStreamer::ConvertBufferVectorPrimitives(TBuffer &b, void *obj, Int_t nElements)
+{
+   From *temp = new From[nElements];
+   b.ReadFastArray(temp, nElements);
+   std::vector<To> *const vec = (std::vector<To>*)(obj);      
+   for(Int_t ind = 0; ind < nElements; ++ind) {
+      (*vec)[ind] = (To)temp[ind];
+   }
+   delete [] temp;
+}
+
+template <typename To>
+void TGenCollectionStreamer::ConvertBufferVectorPrimitivesFloat16(TBuffer &b, void *obj, Int_t nElements)
+{
+   Float16_t *temp = new Float16_t[nElements];
+   b.ReadFastArrayFloat16(temp, nElements);
+   std::vector<To> *const vec = (std::vector<To>*)(obj);      
+   for(Int_t ind = 0; ind < nElements; ++ind) {
+      (*vec)[ind] = (To)temp[ind];
+   }
+   delete [] temp;
+}
+
+template <typename To>
+void TGenCollectionStreamer::ConvertBufferVectorPrimitivesDouble32(TBuffer &b, void *obj, Int_t nElements)
+{
+   Double32_t *temp = new Double32_t[nElements];
+   b.ReadFastArrayDouble32(temp, nElements);
+   std::vector<To> *const vec = (std::vector<To>*)(obj);      
+   for(Int_t ind = 0; ind < nElements; ++ind) {
+      (*vec)[ind] = (To)temp[ind];
+   }
+   delete [] temp;
+}
+
+template <typename To>
+void TGenCollectionStreamer::DispatchConvertBufferVectorPrimitives(TBuffer &b, void *obj, Int_t nElements)
+{
+   switch (fOnFileClass->GetCollectionProxy()->GetType()) {
+      case TStreamerInfo::kBool:     ConvertBufferVectorPrimitives<Bool_t    ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kChar:     ConvertBufferVectorPrimitives<Char_t    ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kShort:    ConvertBufferVectorPrimitives<Short_t   ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kInt:      ConvertBufferVectorPrimitives<Int_t     ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kLong:     ConvertBufferVectorPrimitives<Long_t    ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kLong64:   ConvertBufferVectorPrimitives<Long64_t  ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kFloat:    ConvertBufferVectorPrimitives<Float_t   ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kFloat16:  ConvertBufferVectorPrimitives<Float16_t ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kDouble:   ConvertBufferVectorPrimitives<Double_t  ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kDouble32: ConvertBufferVectorPrimitives<Double32_t,To>(b,obj,nElements); break;
+      case TStreamerInfo::kUChar:    ConvertBufferVectorPrimitives<UChar_t   ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kUShort:   ConvertBufferVectorPrimitives<UShort_t  ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kUInt:     ConvertBufferVectorPrimitives<UInt_t    ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kULong:    ConvertBufferVectorPrimitives<ULong_t   ,To>(b,obj,nElements); break;
+      case TStreamerInfo::kULong64:  ConvertBufferVectorPrimitives<ULong64_t ,To>(b,obj,nElements); break;
+     default: break;
+   }
+}
+
 template <typename basictype>
 void TGenCollectionStreamer::ReadBufferVectorPrimitives(TBuffer &b, void *obj)
 {
@@ -771,9 +830,13 @@ void TGenCollectionStreamer::ReadBufferVectorPrimitives(TBuffer &b, void *obj)
    b >> nElements;
    fResize(obj,nElements);
    
-   TVirtualVectorIterators iterators(fFunctionCreateIterators);
-   iterators.CreateIterators(obj);
-   b.ReadFastArray((basictype*)iterators.fBegin, nElements);
+   if (fOnFileClass) {
+      DispatchConvertBufferVectorPrimitives<basictype>(b,obj,nElements);
+   } else {
+      TVirtualVectorIterators iterators(fFunctionCreateIterators);
+      iterators.CreateIterators(obj);
+      b.ReadFastArray((basictype*)iterators.fBegin, nElements);
+   }
 }
 
 void TGenCollectionStreamer::ReadBufferVectorPrimitivesFloat16(TBuffer &b, void *obj)
@@ -782,9 +845,13 @@ void TGenCollectionStreamer::ReadBufferVectorPrimitivesFloat16(TBuffer &b, void 
    b >> nElements;
    fResize(obj,nElements);
    
-   TVirtualVectorIterators iterators(fFunctionCreateIterators);
-   iterators.CreateIterators(obj);
-   b.ReadFastArrayFloat16((Float16_t*)iterators.fBegin, nElements);
+   if (fOnFileClass) {
+      DispatchConvertBufferVectorPrimitives<Float16_t>(b,obj,nElements);
+   } else {
+      TVirtualVectorIterators iterators(fFunctionCreateIterators);
+      iterators.CreateIterators(obj);
+      b.ReadFastArrayFloat16((Float16_t*)iterators.fBegin, nElements);
+   }
 }
 
 void TGenCollectionStreamer::ReadBufferVectorPrimitivesDouble32(TBuffer &b, void *obj)
@@ -793,9 +860,13 @@ void TGenCollectionStreamer::ReadBufferVectorPrimitivesDouble32(TBuffer &b, void
    b >> nElements;
    fResize(obj,nElements);
    
-   TVirtualVectorIterators iterators(fFunctionCreateIterators);
-   iterators.CreateIterators(obj);
-   b.ReadFastArrayDouble32((Double32_t*)iterators.fBegin, nElements);
+   if (fOnFileClass) {
+      DispatchConvertBufferVectorPrimitives<Double32_t>(b,obj,nElements);
+   } else {
+      TVirtualVectorIterators iterators(fFunctionCreateIterators);
+      iterators.CreateIterators(obj);
+      b.ReadFastArrayDouble32((Double32_t*)iterators.fBegin, nElements);
+   }
 }
 
 
