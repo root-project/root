@@ -97,7 +97,7 @@ struct AnyCollectionStreamer : public TGenCollectionStreamer  {
       fNext.call      = T::next;
       fClear.call     = T::clear;
       fResize         = T::resize;
-      fCollect.call   = T::collect;
+      fCollect        = T::collect;
       fConstruct      = T::construct;
       fDestruct       = T::destruct;
       fFeed           = T::feed;

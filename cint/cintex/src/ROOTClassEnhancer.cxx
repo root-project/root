@@ -442,7 +442,13 @@ namespace ROOT { namespace Cintex {
                                                    m->destruct_func,
                                                    m->feed_func,
                                                    m->collect_func,
-                                                   m->create_env);
+                                                   m->create_env,
+                                                   m->fCreateIterators,
+                                                   m->fCopyIterator,
+                                                   m->fNext,
+                                                   m->fDeleteSingleIterator,
+                                                   m->fDeleteTwoIterators
+                                                   );
                root_class->SetCollectionProxy(cpinfo);
 
                root_class->SetBit(TClass::kIsForeign);

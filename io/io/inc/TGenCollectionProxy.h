@@ -310,6 +310,7 @@ protected:
    mutable TStreamerInfoActions::TActionSequence *fWriteMemberWise;
    typedef void (*Sizing_t)(void *obj, size_t size);
    typedef void* (*Feedfunc_t)(void *from, void *to, size_t size);
+   typedef void* (*Collectfunc_t)(void *from, void *to);
    typedef void* (*ArrIterfunc_t)(void *from, size_t size);
 
    std::string   fName;      // Name of the class being proxied.
@@ -322,7 +323,7 @@ protected:
    ArrIterfunc_t fConstruct; // Container accessors: block construct
    Sizing_t      fDestruct;  // Container accessors: block destruct
    Feedfunc_t    fFeed;      // Container accessors: block feed
-   Method        fCollect;   // Method to collect objects from container
+   Collectfunc_t fCollect;   // Method to collect objects from container
    Method0       fCreateEnv; // Method to allocate an Environment holder.
    Value*        fValue;     // Descriptor of the container value type
    Value*        fVal;       // Descriptor of the Value_type
@@ -338,6 +339,9 @@ protected:
    TClass*       fOnFileClass; // On file class
    
    CreateIterators_t    fFunctionCreateIterators;
+   CopyIterator_t       fFunctionCopyIterator;
+   Next_t               fFunctionNextIterator;
+   DeleteIterator_t     fFunctionDeleteIterator;
    DeleteTwoIterators_t fFunctionDeleteTwoIterators;
 
    // Late initialization of collection proxy
@@ -449,10 +453,11 @@ public:
    // Otherwise the iterators will be allocated via a regular new and their address returned by modifying the value of begin_arena and end_arena.
    
    virtual CopyIterator_t GetFunctionCopyIterator(Bool_t read = kTRUE);
-   // typedef void* (*CopyIterator_t)(void *dest, const void *source);
+   // typedef void* (*CopyIterator_t)(void **dest, const void *source);
    // Copy the iterator source, into dest.   dest should contain the location of a memory arena of size fgIteratorSize.
    // If the collection iterator is of that size or less, the iterator will be constructed in place in this location (new with placement)
-   // Otherwise the iterator will be allocated via a regular new and its address returned by modifying the value of dest.
+   // Otherwise the iterator will be allocated via a regular new.  
+   // The actual address of the iterator is returned in both case.
    
    virtual Next_t GetFunctionNext(Bool_t read = kTRUE);
    // typedef void* (*Next_t)(void *iter, const void *end);
