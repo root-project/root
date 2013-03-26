@@ -417,6 +417,11 @@ class ModuleFacade( types.ModuleType ):
    def __getattr2( self, name ):             # "running" getattr
     # handle "from ROOT import *" ... can be called multiple times
       if name == '__all__':
+         if '__IPYTHON__' in __builtins__:
+            import warnings
+            warnings.warn( '"from ROOT import *" is not supported under IPython' )
+            # continue anyway, just in case it works ...
+
          caller = sys.modules[ sys._getframe( 1 ).f_globals[ '__name__' ] ]
 
        # we may be calling in from __getattr1, verify and if so, go one frame up
