@@ -406,6 +406,65 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
       return list;
    };
 
+   JSROOTIO.ReadTListContent = function(str, o, list_name) {
+      // read the content of list from the I/O buffer
+      var list = {};
+      list['name'] = "";
+      list['array'] = new Array();
+      var ver = JSROOTIO.ReadVersion(str, o);
+      o = ver['off'];
+      if (ver['val'] > 3) {
+         o += 2; // skip version
+         o += 8; // object bits & unique id
+         var so = JSROOTIO.ReadTString(str, o); o = so['off'];
+         list['name'] = so['str'];
+         var nobjects = JSROOTIO.ntou4(str, o); o += 4;
+         var class_name = '';
+         var idx = 0;
+         for (var i = 0; i < nobjects; ++i) {
+            var clRef = gFile.fStreamerInfo.ReadClass(str, o);
+            if (clRef['name'] && clRef['name'] != -1) {
+               class_name = clRef['name'];
+            }
+            else if (!clRef['name'] && clRef['tag']) {
+               class_name = gFile.fStreamerInfo.GetClassMap(clRef['tag']);
+               if (class_name != -1)
+                  clRef['name'] = class_name;
+            }
+            else if (!clRef['name'] && class_name) {
+               clRef['name'] = class_name;
+            }
+            clRef['pos'] = o;
+            var posname = 12;
+            if (clRef['name'] && clRef['name'].match(/\bTH2/))
+               posname += 6;
+            if (clRef['name'] && clRef['name'].match(/\bTH3/))
+               posname += 6;
+            if (clRef['name'] && clRef['name'].match(/\bTList/))
+               posname = 0;
+            var named = JSROOTIO.ReadTNamed(str, clRef['off'] + posname);
+            clRef['fName'] = named['name'];
+            clRef['_typename'] = clRef['name'];
+            clRef['_listname'] = list_name;
+            o +=  clRef['cnt']; o += 4;
+            list['array'][idx] = clRef;
+            ++idx;
+            var nch = str.charCodeAt(o) & 0xff; o++;
+            if (ver['val'] > 4 && nch == 255)  {
+               nbig= JSROOTIO.ntou4(str, o); o += 4;
+            } else {
+               nbig = nch;
+            }
+            if (nbig > 0) {
+               var readOption = JSROOTIO.ReadString(str, o, nbig);
+               o += nbig;
+            }
+         }
+      }
+      list['off'] = o;
+      return list;
+   };
+
    JSROOTIO.ReadTObjArray = function(str, o) {
       var list = {};
       list['name'] = "";
@@ -2268,6 +2327,53 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
             if (objbuf && objbuf['unzipdata']) {
                var directory = new JSROOTIO.TDirectory(file, key['className']);
                directory.Stream(objbuf['unzipdata'], 0, cycle, dir_id);
+               delete objbuf['unzipdata'];
+               objbuf['unzipdata'] = null;
+            }
+         };
+         this.ReadObjBuffer(key, callback);
+      };
+
+      JSROOTIO.RootFile.prototype.ReadCollection = function(name, cycle, id) {
+         // read the collection content from a root file
+         if (obj_list.indexOf(name+cycle) != -1) return;
+         var key = this.GetKey(name, cycle);
+         if (key == null) return null;
+
+         var callback = function(file, objbuf) {
+            if (objbuf && objbuf['unzipdata']) {
+               var list = null;
+               if (key['className'] == "TList") {
+                  // when reading a TList, all objects are actually read, 
+                  // unlike TDirectories where only TKeys are read....
+                  list = JSROOTIO.ReadTListContent(objbuf['unzipdata'], 0, name);
+                  //list = JSROOTIO.ReadTList(objbuf['unzipdata'], 0);
+               }
+               if (list && list['array'])
+                  displayCollection(list['array'], cycle, id);
+               delete objbuf['unzipdata'];
+               objbuf['unzipdata'] = null;
+               obj_list.push(name+cycle);
+               obj_index++;
+            }
+         };
+         this.ReadObjBuffer(key, callback);
+      };
+
+      JSROOTIO.RootFile.prototype.ReadCollectionElement = function(list_name, obj_name, cycle, offset) {
+         // read the collection content from a root file
+         if (obj_list.indexOf(obj_name+cycle) != -1) return;
+         var key = this.GetKey(list_name, cycle);
+         if (key == null) return null;
+         var callback = function(file, objbuf) {
+            if (objbuf && objbuf['unzipdata']) {
+               var class_name = '';
+               var obj = JSROOTIO.ReadObjectAny(objbuf['unzipdata'], offset, class_name);
+               if (obj && obj['obj']) {
+                  displayObject(obj['obj'], cycle, obj_index);
+                  obj_list.push(obj_name+cycle);
+                  obj_index++;
+               }
                delete objbuf['unzipdata'];
                objbuf['unzipdata'] = null;
             }

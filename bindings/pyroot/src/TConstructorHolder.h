@@ -4,29 +4,26 @@
 #ifndef PYROOT_TCONSTRUCTORHOLDER_H
 #define PYROOT_TCONSTRUCTORHOLDER_H
 
-// ROOT
-class TClass;
-class TMethod;
-
 // Bindings
-#include "MethodHolder.h"
+#include "TMethodHolder.h"
 
 
 namespace PyROOT {
 
 /** Python side holder for ROOT constructor
       @author  WLAV
-      @date    09/30/2003
-      @version 3.0
+      @date    15/03/2013
+      @version 4.0
  */
 
    class TExecutor;
+   class TMemberAdapter;
+   class TScopeAdapter;
 
-   template< class T, class M >
-   class TConstructorHolder : public TMethodHolder< T, M > {
+   class TConstructorHolder : public TMethodHolder {
    public:
-      TConstructorHolder( const T& klass, const M& method );
-      TConstructorHolder( const T& klass );
+      TConstructorHolder( const TScopeAdapter& klass );    // pseudo-ctors
+      TConstructorHolder( const TScopeAdapter& klass, const TMemberAdapter& method );
 
    public:
       virtual PyObject* GetDocString();

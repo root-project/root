@@ -482,7 +482,7 @@ void TGeoUnion::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *
 }
 
 //______________________________________________________________________________
-Bool_t TGeoUnion::Contains(Double_t *point) const
+Bool_t TGeoUnion::Contains(const Double_t *point) const
 {
 // Find if a union of two shapes contains a given point
    Double_t local[3];
@@ -495,7 +495,7 @@ Bool_t TGeoUnion::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-void TGeoUnion::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoUnion::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
    ThreadData_t& td = GetThreadData();
@@ -553,7 +553,7 @@ Int_t TGeoUnion::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 }
 
 //______________________________________________________________________________
-Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoUnion::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Computes distance from a given point inside the shape to its boundary.
@@ -665,7 +665,7 @@ Double_t TGeoUnion::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
 }
 
 //______________________________________________________________________________
-Double_t TGeoUnion::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoUnion::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given outside point to the shape.
@@ -733,7 +733,7 @@ Int_t TGeoUnion::GetNpoints()
 }
 
 //______________________________________________________________________________
-Double_t TGeoUnion::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoUnion::Safety(const Double_t *point, Bool_t in) const
 {
 // Compute safety distance for a union node;
    Double_t local1[3], local2[3];
@@ -859,7 +859,7 @@ void TGeoSubtraction::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Doub
 }   
 
 //_____________________________________________________________________________
-void TGeoSubtraction::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoSubtraction::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
    ThreadData_t& td = GetThreadData();
@@ -908,7 +908,7 @@ void TGeoSubtraction::ComputeNormal(Double_t *point, Double_t *dir, Double_t *no
 }
 
 //______________________________________________________________________________
-Bool_t TGeoSubtraction::Contains(Double_t *point) const
+Bool_t TGeoSubtraction::Contains(const Double_t *point) const
 {
 // Find if a subtraction of two shapes contains a given point
    Double_t local[3];
@@ -928,7 +928,7 @@ Int_t TGeoSubtraction::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 }
 
 //______________________________________________________________________________
-Double_t TGeoSubtraction::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoSubtraction::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point inside to the shape boundary.
@@ -958,7 +958,7 @@ Double_t TGeoSubtraction::DistFromInside(Double_t *point, Double_t *dir, Int_t i
 }   
 
 //______________________________________________________________________________
-Double_t TGeoSubtraction::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoSubtraction::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point outside to the shape.
@@ -1050,7 +1050,7 @@ Int_t TGeoSubtraction::GetNpoints()
 }
 
 //______________________________________________________________________________
-Double_t TGeoSubtraction::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoSubtraction::Safety(const Double_t *point, Bool_t in) const
 {
 // Compute safety distance for a union node;
    Double_t local1[3], local2[3];
@@ -1245,7 +1245,7 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
 }   
 
 //_____________________________________________________________________________
-void TGeoIntersection::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoIntersection::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Normal computation in POINT. The orientation is chosen so that DIR.dot.NORM>0.
    ThreadData_t& td = GetThreadData();
@@ -1294,7 +1294,7 @@ void TGeoIntersection::ComputeNormal(Double_t *point, Double_t *dir, Double_t *n
 }
 
 //______________________________________________________________________________
-Bool_t TGeoIntersection::Contains(Double_t *point) const
+Bool_t TGeoIntersection::Contains(const Double_t *point) const
 {
 // Find if a intersection of two shapes contains a given point
    Double_t local[3];
@@ -1314,7 +1314,7 @@ Int_t TGeoIntersection::DistanceToPrimitive(Int_t /*px*/, Int_t /*py*/)
 }
 
 //______________________________________________________________________________
-Double_t TGeoIntersection::DistFromInside(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoIntersection::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point inside to the shape boundary.
@@ -1344,7 +1344,7 @@ Double_t TGeoIntersection::DistFromInside(Double_t *point, Double_t *dir, Int_t 
 }   
 
 //______________________________________________________________________________
-Double_t TGeoIntersection::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact,
+Double_t TGeoIntersection::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact,
                               Double_t step, Double_t *safe) const
 {
 // Compute distance from a given point outside to the shape.
@@ -1458,7 +1458,7 @@ Int_t TGeoIntersection::GetNpoints()
 }
 
 //______________________________________________________________________________
-Double_t TGeoIntersection::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoIntersection::Safety(const Double_t *point, Bool_t in) const
 {
 // Compute safety distance for a union node;
    Double_t local1[3], local2[3];

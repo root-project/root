@@ -256,7 +256,7 @@ Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) c
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
+Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, const Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
 // True if point is closer than epsil to one of the phi planes defined by c1,s1 or c2,s2
    Double_t saf1 = TGeoShape::Big();
@@ -269,7 +269,7 @@ Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Dou
 }   
 
 //_____________________________________________________________________________
-Bool_t TGeoShape::IsInPhiRange(Double_t *point, Double_t phi1, Double_t phi2)
+Bool_t TGeoShape::IsInPhiRange(const Double_t *point, Double_t phi1, Double_t phi2)
 {
 // Static method to check if a point is in the phi range (phi1, phi2) [degrees]
    Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
@@ -280,7 +280,7 @@ Bool_t TGeoShape::IsInPhiRange(Double_t *point, Double_t phi1, Double_t phi2)
 }   
 
 //_____________________________________________________________________________  
-Bool_t TGeoShape::IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy)
+Bool_t TGeoShape::IsCrossingSemiplane(const Double_t *point, const Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy)
 {
 // Compute distance from POINT to semiplane defined by PHI angle along DIR. Computes
 // also radius at crossing point. This might be negative in case the crossing is
@@ -387,7 +387,7 @@ Bool_t TGeoShape::IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t 
 }         
 
 //_____________________________________________________________________________
-Double_t TGeoShape::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
+Double_t TGeoShape::DistToPhiMin(const Double_t *point, const Double_t *dir, Double_t s1, Double_t c1,
                                  Double_t s2, Double_t c2, Double_t sm, Double_t cm, Bool_t in)
 {
 // compute distance from point (inside phi) to both phi planes. Return minimum.
@@ -418,7 +418,7 @@ Double_t TGeoShape::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Do
 }
 
 //_____________________________________________________________________________
-void TGeoShape::NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
+void TGeoShape::NormalPhi(const Double_t *point, const Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
 // Static method to compute normal to phi planes.
    Double_t saf1 = TGeoShape::Big();
@@ -443,7 +443,7 @@ void TGeoShape::NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double
 }           
  
 //_____________________________________________________________________________
-Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_t phi2)
+Double_t TGeoShape::SafetyPhi(const Double_t *point, Bool_t in, Double_t phi1, Double_t phi2)
 {
 // Static method to compute safety w.r.t a phi corner defined by cosines/sines
 // of the angles phi1, phi2.

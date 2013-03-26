@@ -51,12 +51,12 @@ public:
    virtual void          ClearThreadData() const;
    virtual void          CreateThreadData(Int_t nthreads);
    virtual void          ComputeBBox();
-   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
-   virtual Bool_t        Contains(Double_t *point) const;
+   virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   virtual Bool_t        Contains(const Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
@@ -72,7 +72,7 @@ public:
    void                  MakeNode(const char *expression);
    virtual Bool_t        PaintComposite(Option_t *option = "") const;
    void                  RegisterYourself();
-   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void          SetDimensions(Double_t * /*param*/) {;}
    virtual void          SetPoints(Double_t *points) const;

@@ -3,7 +3,7 @@
 
 // Bindings
 #include "PyROOT.h"
-#include "MemoryRegulator.h"
+#include "TMemoryRegulator.h"
 #include "ObjectProxy.h"
 
 // ROOT

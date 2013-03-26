@@ -31,6 +31,8 @@
 #include "TClingTypedefInfo.h"
 #include "TClingTypeInfo.h"
 
+#include "TInterpreterValue.h"
+
 #include "TROOT.h"
 #include "TApplication.h"
 #include "TGlobal.h"
@@ -770,6 +772,9 @@ TCling::TCling(const char *name, const char *title)
          , "-I", sysIncludePath1.c_str()
          , "-I", sysIncludePath2.c_str()
 #endif
+#ifdef R__USE_CXX11
+         , "-std=c++11"
+#endif
         };
          //"-Xclang", "-fmodules"};
 
@@ -1167,8 +1172,8 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          indent = fMetaProcessor->process(sLine, &result, &compRes);
       }
    }
-   if (result.isValid() && result.needsManagedAllocation())
-      fTemporaries->push_back(result);
+   if (result.isValid())
+      RegisterTemporary(result);
    if (indent) {
       Error("ProcessLine", "Ignoring invalid input.");
       fMetaProcessor->cancelContinuation();
@@ -3588,6 +3593,18 @@ int TCling::UnloadFile(const char* path) const
    return -1;
 }
 
+//______________________________________________________________________________
+void TCling::RegisterTemporary(const TInterpreterValue& value) 
+{
+   using namespace cling;
+   const StoredValueRef& SVR = reinterpret_cast<const StoredValueRef&>(value.Get());
+   RegisterTemporary(SVR);
+}
+
+void TCling::RegisterTemporary(const cling::StoredValueRef& value) 
+{
+   fTemporaries->push_back(value);
+}
 
 
 //______________________________________________________________________________
@@ -3606,6 +3623,13 @@ void TCling::CallFunc_Exec(CallFunc_t* func, void* address) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->Exec(address);
+}
+
+//______________________________________________________________________________
+void TCling::CallFunc_Exec(CallFunc_t* func, void* address, TInterpreterValue& val) const
+{
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   f->Exec(address, &val);
 }
 
 //______________________________________________________________________________

@@ -3,26 +3,25 @@
 #ifndef PYROOT_TFUNCTIONHOLDER_H
 #define PYROOT_TFUNCTIONHOLDER_H
 
-// ROOT
-class TFunction;
-
 // Bindings
-#include "MethodHolder.h"
+#include "TMethodHolder.h"
 
 
 namespace PyROOT {
 
 /** Python side ROOT global function
       @author  WLAV
-      @date    08/03/2004
-      @version 4.0
+      @date    15/03/2013
+      @version 5.0
  */
 
-   template< class T, class M >
-   class TFunctionHolder : public TMethodHolder< T, M > {
+   class TMemberAdapter;
+   class TScopeAdapter;
+
+   class TFunctionHolder : public TMethodHolder {
    public:
-      TFunctionHolder( const M& function );
-      TFunctionHolder( const T& scope, const M& function );
+      TFunctionHolder( const TMemberAdapter& function );
+      TFunctionHolder( const TScopeAdapter& scope, const TMemberAdapter& function );
 
       virtual PyCallable* Clone() { return new TFunctionHolder( *this ); }
 

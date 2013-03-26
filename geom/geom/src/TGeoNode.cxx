@@ -565,7 +565,7 @@ void TGeoNode::PrintOverlaps() const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoNode::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoNode::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape
 

@@ -9,7 +9,7 @@
 #include "MethodProxy.h"
 #include "TemplateProxy.h"
 #include "PropertyProxy.h"
-#include "PyBufferFactory.h"
+#include "TPyBufferFactory.h"
 #include "TCustomPyTypes.h"
 #include "RootWrapper.h"
 #include "Utility.h"
@@ -26,9 +26,35 @@
 #include <string>
 
 
+//- from Python's dictobject.c -------------------------------------------------
+#if PY_VERSION_HEX >= 0x03030000
+   typedef struct PyDictKeyEntry {
+      /* Cached hash code of me_key. */
+      Py_hash_t me_hash;
+      PyObject *me_key;
+      PyObject *me_value; /* This field is only meaningful for combined tables */
+   } PyDictEntry;
+
+   typedef struct _dictkeysobject {
+      Py_ssize_t dk_refcnt;
+      Py_ssize_t dk_size;
+      dict_lookup_func dk_lookup;
+      Py_ssize_t dk_usable;
+      PyDictKeyEntry dk_entries[1];
+   } PyDictKeysObject;
+
+#define PYROOT_GET_DICT_LOOKUP( mp )\
+   ((dict_lookup_func&)mp->ma_keys->dk_lookup)
+
+#else
+
+#define PYROOT_GET_DICT_LOOKUP( mp )\
+   ((dict_lookup_func&)mp->ma_lookup)
+
+#endif
+
 //- data -----------------------------------------------------------------------
 PyObject* gRootModule = 0;
-
 
 //- private helpers ------------------------------------------------------------
 namespace {
@@ -70,7 +96,7 @@ namespace {
 
       // 2nd attempt: construct name as a class
          PyErr_Clear();
-         attr = MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( name );
+         attr = MakeRootClassFromString( name );
          if ( attr != 0 )
             return attr;
 
@@ -93,10 +119,32 @@ namespace {
    }
 
 //____________________________________________________________________________
+#if PY_VERSION_HEX >= 0x03030000
+   inline PyDictKeyEntry* OrgDictLookup(
+         PyDictObject* mp, PyObject* key, Py_hash_t hash, PyObject*** value_addr )
+   {
+      return (*gDictLookupOrg)( mp, key, hash, value_addr );
+   }
+
+#define PYROOT_ORGDICT_LOOKUP( mp, key, hash, value_addr )\
+   OrgDictLookup( mp, key, hash, value_addr )
+
+   PyDictKeyEntry* RootLookDictString(
+         PyDictObject* mp, PyObject* key, Py_hash_t hash, PyObject*** value_addr )
+#else
+   inline PyDictEntry* OrgDictLookup( PyDictObject* mp, PyObject* key, Long_t hash )
+   {
+       return (*gDictLookupOrg)( mp, key, hash );
+   }
+
+#define PYROOT_ORGDICT_LOOKUP( mp, key, hash, value_addr )\
+   OrgDictLookup( mp, key, hash )
+
    PyDictEntry* RootLookDictString( PyDictObject* mp, PyObject* key, Long_t hash )
+#endif
    {
    // first search dictionary itself
-      PyDictEntry* ep = (*gDictLookupOrg)( mp, key, hash );
+      PyDictEntry* ep = PYROOT_ORGDICT_LOOKUP( mp, key, hash, value_addr );
       if ( ! ep || ep->me_value != 0 || gDictLookupActive )
          return ep;
 
@@ -121,14 +169,14 @@ namespace {
             ep->me_value = Py_TYPE(val)->tp_descr_get( val, NULL, NULL );
          } else {
          // add reference to ROOT entity in the given dictionary
-            ((DictLookup_t&)mp->ma_lookup) = gDictLookupOrg;     // prevent recursion
+            PYROOT_GET_DICT_LOOKUP( mp ) = gDictLookupOrg;     // prevent recursion
             if ( PyDict_SetItem( (PyObject*)mp, key, val ) == 0 ) {
-               ep = (*gDictLookupOrg)( mp, key, hash );
+               ep = PYROOT_ORGDICT_LOOKUP( mp, key, hash, value_addr );
             } else {
                ep->me_key   = 0;
                ep->me_value = 0;
             }
-            ((DictLookup_t&)mp->ma_lookup) = RootLookDictString; // restore
+            PYROOT_GET_DICT_LOOKUP( mp ) = RootLookDictString; // restore
          }
 
       // done with val
@@ -152,7 +200,7 @@ namespace {
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyDict_Type, &dict ) )
          return 0;
 
-      ((DictLookup_t&)dict->ma_lookup) = RootLookDictString;
+      PYROOT_GET_DICT_LOOKUP( dict ) = RootLookDictString;
 
       Py_INCREF( Py_None );
       return Py_None;
@@ -183,7 +231,7 @@ namespace {
       std::string name = PyROOT_PyUnicode_AsString( pyname );
       Py_DECREF( pyname );
 
-      return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( name );
+      return MakeRootClassFromString( name );
    }
 
 //____________________________________________________________________________
@@ -518,7 +566,11 @@ extern "C" void initlibPyROOT()
 
 // prepare for lazyness
    PyObject* dict = PyDict_New();
-   gDictLookupOrg = (DictLookup_t)((PyDictObject*)dict)->ma_lookup;
+#if PY_VERSION_HEX >= 0x03030000
+   gDictLookupOrg = (dict_lookup_func)((PyDictObject*)dict)->ma_keys->dk_lookup;
+#else
+   gDictLookupOrg = (dict_lookup_func)((PyDictObject*)dict)->ma_lookup;
+#endif
    Py_DECREF( dict );
 
 // setup PyROOT
@@ -576,8 +628,7 @@ extern "C" void initlibPyROOT()
    Utility::SetSignalPolicy( gROOT->IsBatch() ? Utility::kFast : Utility::kSafe );
 
 // inject ROOT namespace for convenience
-   PyModule_AddObject( gRootModule, (char*)"ROOT",
-      MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( "ROOT" ) );
+   PyModule_AddObject( gRootModule, (char*)"ROOT", MakeRootClassFromString( "ROOT" ) );
 
 #if PY_VERSION_HEX >= 0x03000000
    Py_INCREF( gRootModule );

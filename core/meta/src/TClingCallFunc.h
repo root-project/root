@@ -2,7 +2,7 @@
 // Author: Paul Russo   30/07/2012
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -48,6 +48,7 @@ class Function;
 }
 
 class TClingClassInfo;
+class TInterpreterValue;
 
 class TClingCallFunc {
 
@@ -85,13 +86,18 @@ private:
    cling::StoredValueRef EvaluateExpr(const clang::Expr* E) const;
    bool IsTrampolineFunc() const { return fMethodAsWritten; }
    bool DoesThatTrampolineFuncReturn() const;
+   bool DoesThatFuncReturnATemporary() const;
    bool IsMemberFunc() const;
    const clang::FunctionDecl* GetOriginalDecl() const;
 
    void PushArg(const cling::Value& value) const;
    void PushArg(cling::StoredValueRef value) const;
    void SetThisPtr(const clang::CXXMethodDecl* MD, void* address) const;
-   void SetReturnPtr(const clang::CXXMethodDecl* MD, void* address) const;
+   void SetReturnPtr(const clang::FunctionDecl* FD, void* address) const;
+   void SetReturnPtr(cling::StoredValueRef val) const {
+      fArgVals[1] = val;
+   }
+   cling::StoredValueRef& GetReturnPtr() const { return fArgVals[1]; }
    size_t GetArgValsSize() const { 
       return fArgVals.size() - !fArgVals[0].isValid() - !fArgVals[1].isValid();
    }
@@ -123,7 +129,7 @@ public:
 
    TClingCallFunc(const TClingCallFunc &rhs)
       : fInterp(rhs.fInterp), fMethodAsWritten(0), fEEFunc(rhs.fEEFunc), 
-        fEEAddr(rhs.fEEAddr),  
+        fEEAddr(rhs.fEEAddr), fArgVals(rhs.fArgVals),
         fIgnoreExtraArgs(rhs.fIgnoreExtraArgs)
    {
       fMethod = new TClingMethodInfo(*rhs.fMethod);
@@ -138,12 +144,13 @@ public:
          fMethodAsWritten = rhs.fMethodAsWritten;
          fEEFunc = rhs.fEEFunc;
          fEEAddr = rhs.fEEAddr;
+         fArgVals = rhs.fArgVals;
          fIgnoreExtraArgs = rhs.fIgnoreExtraArgs;
       }
       return *this;
    }
 
-   void                Exec(void *address) const;
+   void                Exec(void *address, TInterpreterValue* interpVal = 0) const;
    long                ExecInt(void *address) const;
    long long           ExecInt64(void *address) const;
    double              ExecDouble(void *address) const;
@@ -163,8 +170,7 @@ public:
    void                SetFunc(const TClingMethodInfo *info);
    void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, long *poffset);
    void                Init(const clang::FunctionDecl *);
-   void                Invoke(cling::Value* result = 0) const;
-
+   void                Invoke(cling::StoredValueRef* result = 0) const;
 };
 
 #endif // ROOT_CallFunc

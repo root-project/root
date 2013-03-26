@@ -8,11 +8,10 @@
 
 
 //- protected members --------------------------------------------------------
-template< class T, class M >
-Bool_t PyROOT::TSetItemHolder< T, M >::InitExecutor_( TExecutor*& executor )
+Bool_t PyROOT::TSetItemHolder::InitExecutor_( TExecutor*& executor )
 {
 // basic call will do
-   if ( ! TMethodHolder< T, M >::InitExecutor_( executor ) )
+   if ( ! TMethodHolder::InitExecutor_( executor ) )
       return kFALSE;
 
 // check to make sure we're dealing with a RefExecutor
@@ -28,16 +27,14 @@ Bool_t PyROOT::TSetItemHolder< T, M >::InitExecutor_( TExecutor*& executor )
 
 
 //- constructor --------------------------------------------------------------
-template< class T, class M >
-PyROOT::TSetItemHolder< T, M >::TSetItemHolder( const T& klass, const M& method ) :
-      TMethodHolder< T, M >( klass, method )
+PyROOT::TSetItemHolder::TSetItemHolder( const TScopeAdapter& klass, const TMemberAdapter& method ) :
+      TMethodHolder( klass, method )
 {
 }
 
 
 //____________________________________________________________________________
-template< class T, class M >
-PyObject* PyROOT::TSetItemHolder< T, M >::FilterArgs(
+PyObject* PyROOT::TSetItemHolder::FilterArgs(
       ObjectProxy*& self, PyObject* args, PyObject* kwds )
 {
 // Prepare executor with a buffer for the return value.
@@ -81,11 +78,8 @@ PyObject* PyROOT::TSetItemHolder< T, M >::FilterArgs(
    }
 
 // actual call into C++
-   PyObject* result = TMethodHolder< T, M >::FilterArgs( self, unrolled ? unrolled : subset, kwds );
+   PyObject* result = TMethodHolder::FilterArgs( self, unrolled ? unrolled : subset, kwds );
    Py_XDECREF( unrolled );
    Py_DECREF( subset );
    return result;
 }
-
-//____________________________________________________________________________
-template class PyROOT::TSetItemHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;

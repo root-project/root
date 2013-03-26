@@ -61,7 +61,9 @@ LD            = clang++
 else
 LD            = g++
 endif
-LDFLAGS       = $(OPT) -m64 -mmacosx-version-min=$(MACOSXVERS) $(CXX11LDFLAGS)
+LDFLAGS       = $(OPT) -m64 -mmacosx-version-min=$(MACOSXVERS)
+F77LDFLAGS   := $(LDFLAGS)
+LDFLAGS      += $(CXX11LDFLAGS)
 
 FORCELINK     = yes
 NEEDFINK      = yes

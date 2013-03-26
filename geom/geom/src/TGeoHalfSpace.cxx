@@ -63,7 +63,7 @@ TGeoHalfSpace::~TGeoHalfSpace()
 }
 
 //_____________________________________________________________________________   
-void TGeoHalfSpace::ComputeNormal(Double_t * /*point*/, Double_t *dir, Double_t *norm)
+void TGeoHalfSpace::ComputeNormal(const Double_t * /*point*/, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
    memcpy(norm, fN, 3*sizeof(Double_t));
@@ -75,7 +75,7 @@ void TGeoHalfSpace::ComputeNormal(Double_t * /*point*/, Double_t *dir, Double_t 
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoHalfSpace::Contains(Double_t *point) const
+Bool_t TGeoHalfSpace::Contains(const Double_t *point) const
 {
 // test if point is inside the half-space
    Double_t r[3];
@@ -95,7 +95,7 @@ Int_t TGeoHalfSpace::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoHalfSpace::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoHalfSpace::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to the plane
    Double_t r[3];
@@ -118,7 +118,7 @@ Double_t TGeoHalfSpace::DistFromInside(Double_t *point, Double_t *dir, Int_t iac
 }
 
 //_____________________________________________________________________________
-Double_t TGeoHalfSpace::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoHalfSpace::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to the plane
    Double_t r[3];
@@ -168,7 +168,7 @@ void TGeoHalfSpace::InspectShape() const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoHalfSpace::Safety(Double_t *point, Bool_t /*in*/) const
+Double_t TGeoHalfSpace::Safety(const Double_t *point, Bool_t /*in*/) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

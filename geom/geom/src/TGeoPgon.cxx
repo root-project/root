@@ -198,7 +198,7 @@ void TGeoPgon::ComputeBBox()
 }
 
 //_____________________________________________________________________________   
-void TGeoPgon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
    memset(norm,0,3*sizeof(Double_t));
@@ -290,7 +290,7 @@ void TGeoPgon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoPgon::Contains(Double_t *point) const
+Bool_t TGeoPgon::Contains(const Double_t *point) const
 {
 // test if point is inside this shape
    // check total z range
@@ -336,7 +336,7 @@ Bool_t TGeoPgon::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoPgon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoPgon::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polygone
    // first find out in which Z section the point is in
@@ -432,7 +432,7 @@ Double_t TGeoPgon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 }   
 
 //_____________________________________________________________________________
-void TGeoPgon::LocatePhi(Double_t *point, Int_t &ipsec) const
+void TGeoPgon::LocatePhi(const Double_t *point, Int_t &ipsec) const
 {
 // Locates index IPSEC of the phi sector containing POINT.
    Double_t phi = TMath::ATan2(point[1], point[0])*TMath::RadToDeg();
@@ -442,7 +442,7 @@ void TGeoPgon::LocatePhi(Double_t *point, Int_t &ipsec) const
 }                    
 
 //_____________________________________________________________________________
-Int_t TGeoPgon::GetPhiCrossList(Double_t *point, Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi, Double_t stepmax) const
+Int_t TGeoPgon::GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi, Double_t stepmax) const
 {
 // Returns lists of PGON phi crossings for a ray starting from POINT.
    Double_t rxy, phi, cph, sph;
@@ -517,7 +517,7 @@ Int_t TGeoPgon::GetPhiCrossList(Double_t *point, Double_t *dir, Int_t istart, Do
 }        
 
 //_____________________________________________________________________________
-Bool_t TGeoPgon::SliceCrossingInZ(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
+Bool_t TGeoPgon::SliceCrossingInZ(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
 {
 // Performs ray propagation between Z segments.
    snext = 0.;
@@ -588,7 +588,7 @@ Bool_t TGeoPgon::SliceCrossingInZ(Double_t *point, Double_t *dir, Int_t nphi, In
 }
  
 //_____________________________________________________________________________
-Bool_t TGeoPgon::SliceCrossingZ(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
+Bool_t TGeoPgon::SliceCrossingZ(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
 {
 // Performs ray propagation between Z segments.
    if (!nphi) return kFALSE;
@@ -665,7 +665,7 @@ Bool_t TGeoPgon::SliceCrossingZ(Double_t *point, Double_t *dir, Int_t nphi, Int_
 }  
 
 //_____________________________________________________________________________
-Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
+Bool_t TGeoPgon::SliceCrossingIn(const Double_t *point, const Double_t *dir, Int_t ipl, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
 {
 // Check boundary crossing inside phi slices. Return distance snext to first crossing
 // if smaller than stepmax.
@@ -800,7 +800,7 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_
 }   
                
 //_____________________________________________________________________________
-Bool_t TGeoPgon::SliceCrossing(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
+Bool_t TGeoPgon::SliceCrossing(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *stepphi, Double_t &snext, Double_t stepmax) const
 {
 // Check boundary crossing inside phi slices. Return distance snext to first crossing
 // if smaller than stepmax.
@@ -888,7 +888,7 @@ Bool_t TGeoPgon::SliceCrossing(Double_t *point, Double_t *dir, Int_t nphi, Int_t
    return kFALSE;
 }
 //_____________________________________________________________________________
-Bool_t TGeoPgon::IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Double_t sstart, Int_t &ipl, Double_t &snext, Double_t stepmax) const
+Bool_t TGeoPgon::IsCrossingSlice(const Double_t *point, const Double_t *dir, Int_t iphi, Double_t sstart, Int_t &ipl, Double_t &snext, Double_t stepmax) const
 {
 // Check crossing of a given pgon slice, from a starting point inside the slice
    if (ipl<0 || ipl>fNz-2) return kFALSE;
@@ -986,7 +986,7 @@ Bool_t TGeoPgon::IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Dou
 }           
 
 //_____________________________________________________________________________
-Double_t TGeoPgon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoPgon::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from outside point to surface of the polygone
    if (iact<3 && safe) {
@@ -1544,7 +1544,7 @@ Double_t TGeoPgon::Rpg(Double_t z, Int_t ipl, Bool_t inner, Double_t &a, Double_
 }         
 
 //_____________________________________________________________________________
-Double_t TGeoPgon::Rproj(Double_t z, Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &a, Double_t &b) const
+Double_t TGeoPgon::Rproj(Double_t z, const Double_t *point, const Double_t *dir, Double_t cphi, Double_t sphi, Double_t &a, Double_t &b) const
 {
 // Computes projected distance at a given Z for a given ray inside a given sector 
 // and fills coefficients:
@@ -1560,7 +1560,7 @@ Double_t TGeoPgon::Rproj(Double_t z, Double_t *point, Double_t *dir, Double_t cp
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoPgon::SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_t in, Double_t safphi, Double_t safmin) const
+Double_t TGeoPgon::SafetyToSegment(const Double_t *point, Int_t ipl, Int_t iphi, Bool_t in, Double_t safphi, Double_t safmin) const
 {
 // Compute safety from POINT to segment between planes ipl, ipl+1 within safmin.
    Double_t saf[3];
@@ -1627,7 +1627,7 @@ Double_t TGeoPgon::SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_
 }      
 
 //_____________________________________________________________________________
-Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoPgon::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

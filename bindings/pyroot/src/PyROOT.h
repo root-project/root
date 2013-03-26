@@ -32,11 +32,20 @@
 #undef _XOPEN_SOURCE
 #endif
 
-#endif
+#endif // linux
 
 
 #include "Python.h"
 #include "Rtypes.h"
+
+// for 3.3 support
+#if PY_VERSION_HEX < 0x03030000
+   typedef PyDictEntry* (*dict_lookup_func) ( PyDictObject*, PyObject*, Long_t );
+#else
+   struct PyDictKeyEntry;
+   typedef PyDictKeyEntry* (*dict_lookup_func) ( PyDictObject*, PyObject*, Py_hash_t, PyObject*** );
+#define PyDictEntry PyDictKeyEntry
+#endif
 
 // for 3.0 support (backwards compatibility, really)
 #if PY_VERSION_HEX < 0x03000000

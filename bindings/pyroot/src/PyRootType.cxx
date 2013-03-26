@@ -5,7 +5,7 @@
 #include "PyROOT.h"
 #include "PyRootType.h"
 #include "RootWrapper.h"
-#include "ClassMethodHolder.h"
+#include "TClassMethodHolder.h"
 #include "MethodProxy.h"
 #include "PropertyProxy.h"
 #include "Adapters.h"
@@ -93,7 +93,7 @@ namespace {
          std::string name = PyROOT_PyUnicode_AsString( pyname );
          if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
 
-            attr = MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( name, pyclass );
+            attr = MakeRootClassFromString( name, pyclass );
 
          // namespaces may have seen updates in their list of global functions, which
          // are available as "methods" even though they're not really that
@@ -110,7 +110,7 @@ namespace {
                      // Note: can't re-use Utility::AddClass here, as there's the risk of
                      // a recursive call. Simply add method directly, as we're guaranteed
                      // that it doesn't exist yet.
-                        PyCallable* pyfunc = new TClassMethodHolder< TScopeAdapter, TMemberAdapter >( klass, m );
+                        PyCallable* pyfunc = new TClassMethodHolder( klass, m );
                         attr = (PyObject*)MethodProxy_New( name.c_str(), pyfunc );
                         break;
                      }

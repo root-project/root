@@ -6,7 +6,7 @@
 #include "ObjectProxy.h"
 #include "MethodProxy.h"
 #include "RootWrapper.h"
-#include "MemoryRegulator.h"
+#include "TMemoryRegulator.h"
 
 //- ROOT
 #include "TPython.h"

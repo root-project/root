@@ -10,10 +10,10 @@
 #include "RootWrapper.h"
 #include "Utility.h"
 #include "PyCallable.h"
-#include "PyBufferFactory.h"
-#include "FunctionHolder.h"
+#include "TPyBufferFactory.h"
+#include "TFunctionHolder.h"
 #include "Converters.h"
-#include "MemoryRegulator.h"
+#include "TMemoryRegulator.h"
 #include "Adapters.h"
 #include "Utility.h"
 
@@ -1263,7 +1263,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       virtual PyObject* GetPrototype() { return PyObject_GetAttrString( (PyObject*)fOrg, (char*)"__doc__" ); }
       virtual PyObject* GetScope()
       {
-         return MakeRootClassFromString< TScopeAdapter, TBaseAdapter, TMemberAdapter >( "TTree" );
+         return MakeRootClassFromString( "TTree" );
       }
 
    protected:
@@ -1737,7 +1737,7 @@ namespace {
 
 //- TFunction behavior ---------------------------------------------------------
    PyObject* TFunctionCall( ObjectProxy* self, PyObject* args ) {
-      return TFunctionHolder< TScopeAdapter, TMemberAdapter >( (TFunction*)self->GetObject() )( self, args, 0 );
+      return TFunctionHolder( (TFunction*)self->GetObject() )( self, args, 0 );
    }
 
 

@@ -133,8 +133,18 @@ function displayDirectory(directory, cycle, dir_id) {
    JSROOTPainter.addDirectoryKeys(directory.fKeys, '#status', dir_id);
 };
 
+function displayCollection(cont, cycle, c_id) {
+   var url = $("#urlToLoad").val();
+   $("#status").html("file: " + url + "<br/>");
+   JSROOTPainter.addCollectionContents(cont, '#status', c_id);
+};
+
 function showDirectory(dir_name, cycle, dir_id) {
    gFile.ReadDirectory(dir_name, cycle, dir_id);
+};
+
+function showCollection(name, cycle, id) {
+   gFile.ReadCollection(name, cycle, id);
 };
 
 function readTree(tree_name, cycle, node_id) {
@@ -165,6 +175,39 @@ function displayObject(obj, cycle, idx) {
    $("#report").append(entryInfo);
    JSROOTPainter.drawObject(obj, idx);
    addCollapsible('#'+uid);
+};
+
+function displayMappedObject(obj_name, list_name, offset) {
+   var obj = null;
+   for (var i=0; i<gFile['fObjectMap'].length; ++i) {
+      if (gFile['fObjectMap'][i]['obj']['_name'] == obj_name) {
+         obj = gFile['fObjectMap'][i]['obj'];
+         break;
+      }
+   }
+   if (obj == null) {
+      gFile.ReadCollectionElement(list_name, obj_name, 1, offset);
+      return;
+   }
+   if (!obj['_typename'].match(/\bJSROOTIO.TH1/) &&
+       !obj['_typename'].match(/\bJSROOTIO.TH2/) &&
+       !obj['_typename'].match(/\bJSROOTIO.TGraph/) &&
+       !obj['_typename'].match(/\bRooHist/) &&
+       !obj['_typename'].match(/\RooCurve/) &&
+       obj['_typename'] != 'JSROOTIO.TCanvas' &&
+       obj['_typename'] != 'JSROOTIO.TF1' &&
+       obj['_typename'] != 'JSROOTIO.TProfile') {
+      if (typeof(checkUserTypes) != 'function' || checkUserTypes(obj) == false)
+         return;
+   }
+   var uid = "uid_accordion_"+(++last_index);
+   var entryInfo = "<h5 id=\""+uid+"\"><a> " + obj['fName'] + "</a>&nbsp; </h5>\n";
+   entryInfo += "<div id='histogram" + obj_index + "'>\n";
+   $("#report").append(entryInfo);
+   JSROOTPainter.drawObject(obj, obj_index);
+   addCollapsible('#'+uid);
+   obj_list.push(obj['fName']);
+   obj_index++;
 };
 
 function AssertPrerequisites(andThen) {

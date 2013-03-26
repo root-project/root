@@ -711,7 +711,7 @@ landaun = function(f, x, i) {
             return this['fArray'][this.getBin(x, y)];
          };
          obj['getStats'] = function() {
-            var bin, binx, stats = new Array(0,0,0,0,0,0,0,0,0,0,0,0,0);
+            var bin, binx, biny, stats = new Array(0,0,0,0,0,0,0,0,0,0,0,0,0);
             if ((this['fTsumw'] == 0 && this['fEntries'] > 0) || this['fXaxis'].TestBit(EAxisBits.kAxisRange) || this['fYaxis'].TestBit(EAxisBits.kAxisRange)) {
                var firstBinX = this['fXaxis'].getFirst();
                var lastBinX  = this['fXaxis'].getLast();
@@ -752,6 +752,82 @@ landaun = function(f, x, i) {
                stats[4] = this['fTsumwy'];
                stats[5] = this['fTsumwy2'];
                stats[6] = this['fTsumwxy'];
+            }
+            return stats;
+         };
+      }
+      if (obj['_typename'].indexOf("JSROOTIO.TH3") == 0) {
+         obj['getBin'] = function(x, y, z) {
+            var nx = this['fXaxis']['fNbins']+2;
+            if (x < 0) x = 0;
+            if (x >= nx) x = nx-1;
+            var ny = this['fYaxis']['fNbins']+2;
+            if (y < 0) y = 0;
+            if (y >= ny) y = ny-1;
+            return (x + nx * (y + ny * z));
+         };
+         obj['getBinContent'] = function(x, y, z) {
+            return this['fArray'][this.getBin(x, y, z)];
+         };
+         obj['getStats'] = function() {
+            var bin, binx, biny, binz, stats = new Array(0,0,0,0,0,0,0,0,0,0,0,0,0);
+            if ((obj['fTsumw'] == 0 && obj['fEntries'] > 0) || obj['fXaxis'].TestBit(EAxisBits.kAxisRange) || obj['fYaxis'].TestBit(EAxisBits.kAxisRange) || obj['fZaxis'].TestBit(EAxisBits.kAxisRange)) {
+               var firstBinX = obj['fXaxis'].getFirst();
+               var lastBinX  = obj['fXaxis'].getLast();
+               var firstBinY = obj['fYaxis'].getFirst();
+               var lastBinY  = obj['fYaxis'].getLast();
+               var firstBinZ = obj['fZaxis'].getFirst();
+               var lastBinZ  = obj['fZaxis'].getLast();
+               // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
+               if (obj['fgStatOverflows']) {
+                 if ( !obj['fXaxis'].TestBit(EAxisBits.kAxisRange) ) {
+                     if (firstBinX == 1) firstBinX = 0;
+                     if (lastBinX ==  obj['fXaxis']['fNbins'] ) lastBinX += 1;
+                  }
+                  if ( !obj['fYaxis'].TestBit(EAxisBits.kAxisRange) ) {
+                     if (firstBinY == 1) firstBinY = 0;
+                     if (lastBinY ==  obj['fYaxis']['fNbins'] ) lastBinY += 1;
+                  }
+                  if ( !obj['fZaxis'].TestBit(EAxisBits.kAxisRange) ) {
+                     if (firstBinZ == 1) firstBinZ = 0;
+                     if (lastBinZ ==  obj['fZaxis']['fNbins'] ) lastBinZ += 1;
+                  }
+               }
+               for (binz = firstBinZ; binz <= lastBinZ; binz++) {
+                  z = obj['fZaxis'].getBinCenter(binz);
+                  for (biny = firstBinY; biny <= lastBinY; biny++) {
+                     y = obj['fYaxis'].getBinCenter(biny);
+                     for (binx = firstBinX; binx <= lastBinX; binx++) {
+                        bin = obj.getBin(binx,biny,binz);
+                        x   = obj['fXaxis'].getBinCenter(binx);
+                        w   = obj.GetBinContent(bin);
+                        err = Math.abs(obj.getBinError(bin));
+                        stats[0] += w;
+                        stats[1] += err*err;
+                        stats[2] += w*x;
+                        stats[3] += w*x*x;
+                        stats[4] += w*y;
+                        stats[5] += w*y*y;
+                        stats[6] += w*x*y;
+                        stats[7] += w*z;
+                        stats[8] += w*z*z;
+                        stats[9] += w*x*z;
+                        stats[10] += w*y*z;
+                     }
+                  }
+               }
+            } else {
+               stats[0] = obj['fTsumw'];
+               stats[1] = obj['fTsumw2'];
+               stats[2] = obj['fTsumwx'];
+               stats[3] = obj['fTsumwx2'];
+               stats[4] = obj['fTsumwy'];
+               stats[5] = obj['fTsumwy2'];
+               stats[6] = obj['fTsumwxy'];
+               stats[7] = obj['fTsumwz'];
+               stats[8] = obj['fTsumwz2'];
+               stats[9] = obj['fTsumwxz'];
+               stats[10] =obj['fTsumwyz'];
             }
             return stats;
          };
@@ -846,6 +922,7 @@ landaun = function(f, x, i) {
          };
       }
       if ((obj['_typename'].indexOf("JSROOTIO.TH2") == 0) ||
+          (obj['_typename'].indexOf("JSROOTIO.TH3") == 0) ||
           (obj['_typename'].indexOf("JSROOTIO.TProfile") == 0)) {
          obj['getMean'] = function(axis) {
             if (axis < 1 || (axis > 3 && axis < 11) || axis > 13) return 0;

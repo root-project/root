@@ -14,19 +14,18 @@ class TGlobal;
 
 namespace PyROOT {
 
+   class TScopeAdapter;
+
 // initialize ROOT
    void InitRoot();
 
 // construct the dictionary of the given ROOT class in pyclass
-   template< class T, class B, class M >
-   int BuildRootClassDict( const T& klass, PyObject* pyclass );
+   int BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass );
 
 // construct a tuple of base classes for the given ROOT class
-   template< class T, class B, class M >
-   PyObject* BuildRootClassBases( const T& klass );
+   PyObject* BuildRootClassBases( const TScopeAdapter& klass );
 
 // construct a Python shadow class for the named ROOT class
-   template< class T, class B, class M >
    PyObject* MakeRootClassFromString( const std::string& name, PyObject* scope = 0 );
 
    PyObject* MakeRootClass( PyObject*, PyObject* args );

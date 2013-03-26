@@ -350,7 +350,7 @@ void TGeoXtru::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
-void TGeoXtru::ComputeNormal(Double_t * /*point*/, Double_t *dir, Double_t *norm)
+void TGeoXtru::ComputeNormal(const Double_t * /*point*/, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
    ThreadData_t& td = GetThreadData();
@@ -371,7 +371,7 @@ void TGeoXtru::ComputeNormal(Double_t * /*point*/, Double_t *dir, Double_t *norm
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoXtru::Contains(Double_t *point) const
+Bool_t TGeoXtru::Contains(const Double_t *point) const
 {
 // test if point is inside this shape
    ThreadData_t& td = GetThreadData();
@@ -408,7 +408,7 @@ Int_t TGeoXtru::DistancetoPrimitive(Int_t px, Int_t py)
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 //_____________________________________________________________________________
-Double_t TGeoXtru::DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax, Bool_t in) const
+Double_t TGeoXtru::DistToPlane(const Double_t *point, const Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax, Bool_t in) const
 {
 // Compute distance to a Xtru lateral surface.
    ThreadData_t& td = GetThreadData();
@@ -462,7 +462,7 @@ Double_t TGeoXtru::DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t i
 }
 
 //_____________________________________________________________________________
-Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoXtru::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polycone
    // locate Z segment
@@ -574,7 +574,7 @@ Double_t TGeoXtru::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 }
 
 //_____________________________________________________________________________
-Double_t TGeoXtru::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
 //   Warning("DistFromOutside", "not implemented");
@@ -830,7 +830,7 @@ void TGeoXtru::GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const
    }
 }
 //_____________________________________________________________________________
-Bool_t TGeoXtru::IsPointInsidePlane(Double_t *point, Double_t *vert, Double_t *norm) const
+Bool_t TGeoXtru::IsPointInsidePlane(const Double_t *point, const Double_t *vert, Double_t *norm) const
 {
 // Check if the quadrilateral defined by VERT contains a coplanar POINT.
    Double_t v1[3], v2[3];
@@ -956,7 +956,7 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D &buff) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoXtru::SafetyToSector(Double_t *point, Int_t iz, Double_t safmin, Bool_t in)
+Double_t TGeoXtru::SafetyToSector(const Double_t *point, Int_t iz, Double_t safmin, Bool_t in)
 {
 // Compute safety to sector iz, returning also the closest segment index.
    ThreadData_t& td = GetThreadData();
@@ -1021,7 +1021,7 @@ Double_t TGeoXtru::SafetyToSector(Double_t *point, Int_t iz, Double_t safmin, Bo
 }
 
 //_____________________________________________________________________________
-Double_t TGeoXtru::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoXtru::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

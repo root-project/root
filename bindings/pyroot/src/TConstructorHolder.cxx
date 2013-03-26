@@ -3,14 +3,15 @@
 
 // Bindings
 #include "PyROOT.h"
-#include "ConstructorHolder.h"
+#include "TConstructorHolder.h"
+#include "Adapters.h"
 #include "Executors.h"
 #include "ObjectProxy.h"
-#include "MemoryRegulator.h"
-#include "Adapters.h"
+#include "TMemoryRegulator.h"
 
 // ROOT
 #include "TClass.h"
+#include "TFunction.h"
 #include "TMethod.h"
 
 // Standard
@@ -18,8 +19,7 @@
 
 
 //- protected members --------------------------------------------------------
-template< class T, class M >
-Bool_t PyROOT::TConstructorHolder< T, M >::InitExecutor_( TExecutor*& executor )
+Bool_t PyROOT::TConstructorHolder::InitExecutor_( TExecutor*& executor )
 {
 // pick up special case new object executor
    executor = (gExecFactories[ "__init__" ])();
@@ -27,26 +27,19 @@ Bool_t PyROOT::TConstructorHolder< T, M >::InitExecutor_( TExecutor*& executor )
 }
 
 //- constructors -------------------------------------------------------------
-template< class T, class M >
-PyROOT::TConstructorHolder< T, M >::TConstructorHolder( const T& klass, const M& method ) :
-      TMethodHolder< T, M >( klass, method )
+PyROOT::TConstructorHolder::TConstructorHolder( const TScopeAdapter& klass ) :
+      TMethodHolder( klass, (TFunction*)0 )
 {
 }
 
 //____________________________________________________________________________
-namespace PyROOT {
-
-template<>
-TConstructorHolder< TScopeAdapter, TMemberAdapter >::TConstructorHolder( const TScopeAdapter& klass ) :
-   TMethodHolder< TScopeAdapter, TMemberAdapter >( klass, (TFunction*)0 )
+PyROOT::TConstructorHolder::TConstructorHolder( const TScopeAdapter& klass, const TMemberAdapter& method ) :
+      TMethodHolder( klass, method )
 {
 }
 
-} // namespace PyROOT
-
 //- public members -----------------------------------------------------------
-template< class T, class M >
-PyObject* PyROOT::TConstructorHolder< T, M >::GetDocString()
+PyObject* PyROOT::TConstructorHolder::GetDocString()
 {
 // GetMethod() may return an empty function if this is just a special case place holder
    std::string clName = this->GetClass().Name();
@@ -55,8 +48,7 @@ PyObject* PyROOT::TConstructorHolder< T, M >::GetDocString()
 }
 
 //____________________________________________________________________________
-template< class T, class M >
-PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
+PyObject* PyROOT::TConstructorHolder::operator()(
       ObjectProxy* self, PyObject* args, PyObject* kwds, Long_t user, Bool_t release_gil )
 {
 // preliminary check in case keywords are accidently used (they are ignored otherwise)
@@ -129,6 +121,3 @@ PyObject* PyROOT::TConstructorHolder< T, M >::operator()(
 // different constructor, which if all fails will throw an exception
    return 0;
 }
-
-//____________________________________________________________________________
-template class PyROOT::TConstructorHolder< PyROOT::TScopeAdapter, PyROOT::TMemberAdapter >;

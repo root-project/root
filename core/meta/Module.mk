@@ -62,7 +62,11 @@ distclean::     distclean-$(MODNAME)
 $(METADO): NOOPT = $(OPT)
 $(call stripsrc,$(patsubst %.cxx,%.o,$(wildcard $(MODDIRS)/TCling*.cxx))): \
    $(LLVMDEP)
+$(call stripsrc,$(patsubst %.cxx,%.o,$(wildcard $(MODDIRS)/TInterpreter*.cxx))): \
+   $(LLVMDEP)
 $(call stripsrc,$(patsubst %.cxx,%.o,$(wildcard $(MODDIRS)/TCling*.cxx))): \
+   CXXFLAGS += $(METACLINGCXXFLAGS)
+$(call stripsrc,$(patsubst %.cxx,%.o,$(wildcard $(MODDIRS)/TInterpreter*.cxx))): \
    CXXFLAGS += $(METACLINGCXXFLAGS)
 $(call stripsrc,$(MODDIRS)/TClingCallbacks.o): \
    CXXFLAGS += -fno-rtti

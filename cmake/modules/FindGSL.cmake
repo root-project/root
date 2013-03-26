@@ -25,14 +25,14 @@ if( WIN32 AND NOT CYGWIN AND NOT MSYS )
   # look for headers
   find_path( GSL_INCLUDE_DIR
     NAMES gsl/gsl_cdf.h gsl/gsl_randist.h
-	PATHS $ENV{GSL_DIR}/include
+    PATHS $ENV{GSL_DIR}/include ${GSL_DIR}/include
     )
   if( GSL_INCLUDE_DIR )
     # look for gsl library
     find_library( GSL_LIBRARY
       NAMES gsl
-	  PATHS $ENV{GSL_DIR}/lib
-    )
+      PATHS $ENV{GSL_DIR}/lib ${GSL_DIR}/lib
+      )
     if( GSL_LIBRARY )
       set( GSL_INCLUDE_DIRS ${GSL_INCLUDE_DIR} )
       get_filename_component( GSL_LIBRARY_DIRS ${GSL_LIBRARY} PATH )
@@ -41,15 +41,15 @@ if( WIN32 AND NOT CYGWIN AND NOT MSYS )
  
     # look for gsl cblas library
     find_library( GSL_CBLAS_LIBRARY
-        NAMES gslcblas
-		PATHS $ENV{GSL_DIR}/lib
+      NAMES gslcblas
+      PATHS $ENV{GSL_DIR}/lib ${GSL_DIR}/lib
       )
     if( GSL_CBLAS_LIBRARY )
       set( GSL_CBLAS_FOUND ON )
     endif( GSL_CBLAS_LIBRARY )
  
     set( GSL_LIBRARIES ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} )
-	set( GSL_CFLAGS "-DGSL_DLL")
+    set( GSL_CFLAGS "-DGSL_DLL")
   endif( GSL_INCLUDE_DIR )
  
   mark_as_advanced(
@@ -60,10 +60,10 @@ if( WIN32 AND NOT CYGWIN AND NOT MSYS )
 else( WIN32 AND NOT CYGWIN AND NOT MSYS )
   if( UNIX OR MSYS )
     find_program( GSL_CONFIG_EXECUTABLE gsl-config
-      /usr/bin/
-      /usr/local/bin
       $ENV{GSL_DIR}/bin
       ${GSL_DIR}/bin
+      /usr/bin/
+      /usr/local/bin
     )
  
     if( GSL_CONFIG_EXECUTABLE )

@@ -37,15 +37,15 @@ protected:
    mutable Int_t        *fIntBuffer; //![fNedges+4] temporary int buffer array
    mutable Double_t     *fDblBuffer; //![fNedges+4] temporary double buffer array
    
-   Int_t                 GetPhiCrossList(Double_t *point, Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi, Double_t stepmax=TGeoShape::Big()) const;
-   Bool_t                IsCrossingSlice(Double_t *point, Double_t *dir, Int_t iphi, Double_t sstart, Int_t &ipl, Double_t &snext, Double_t stepmax) const;
-   void                  LocatePhi(Double_t *point, Int_t &ipsec) const;
+   Int_t                 GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi, Double_t stepmax=TGeoShape::Big()) const;
+   Bool_t                IsCrossingSlice(const Double_t *point, const Double_t *dir, Int_t iphi, Double_t sstart, Int_t &ipl, Double_t &snext, Double_t stepmax) const;
+   void                  LocatePhi(const Double_t *point, Int_t &ipsec) const;
    Double_t              Rpg(Double_t z, Int_t ipl, Bool_t inner, Double_t &a, Double_t &b) const;
-   Double_t              Rproj(Double_t z,Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &a, Double_t &b) const; 
-   Bool_t                SliceCrossing(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
-   Bool_t                SliceCrossingIn(Double_t *point, Double_t *dir, Int_t ipl, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
-   Bool_t                SliceCrossingZ(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
-   Bool_t                SliceCrossingInZ(Double_t *point, Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
+   Double_t              Rproj(Double_t z,const Double_t *point, const Double_t *dir, Double_t cphi, Double_t sphi, Double_t &a, Double_t &b) const; 
+   Bool_t                SliceCrossing(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
+   Bool_t                SliceCrossingIn(const Double_t *point, const Double_t *dir, Int_t ipl, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
+   Bool_t                SliceCrossingZ(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
+   Bool_t                SliceCrossingInZ(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
 
 public:
    // constructors
@@ -58,11 +58,11 @@ public:
    // methods
    virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
-   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
-   virtual Bool_t        Contains(Double_t *point) const;
-   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   virtual Bool_t        Contains(const Double_t *point) const;
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
@@ -78,8 +78,8 @@ public:
    virtual Bool_t        GetPointsOnSegments(Int_t npoints, Double_t *array) const {return TGeoBBox::GetPointsOnSegments(npoints,array);}
    virtual void          InspectShape() const;
    virtual TBuffer3D    *MakeBuffer3D() const;
-   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   Double_t              SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_t in, Double_t safphi, Double_t safmin=TGeoShape::Big()) const;
+   virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;
+   Double_t              SafetyToSegment(const Double_t *point, Int_t ipl, Int_t iphi, Bool_t in, Double_t safphi, Double_t safmin=TGeoShape::Big()) const;
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void          SetDimensions(Double_t *param);
    void                  SetNedges(Int_t ne) {if (ne>2) fNedges=ne;}
