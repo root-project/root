@@ -52,11 +52,24 @@ try:
 
          return matches
 
+      def tclass_matches( self, text ):
+         gClassTable = _root.GetRootGlobal( 'gClassTable' )
+         all = [ gClassTable.At(i) for i in xrange(gClassTable.Classes()) ]
+         matches = filter( lambda x: x[:len(text)-5] == text[5:], all )
+         return ['ROOT.' + x for x in matches]
+
       def global_matches( self, text ):
          matches = rlcompleter.Completer.global_matches( self, text )
-         if not matches:
-            matches = []
-         return matches + self.file_matches( text )
+         if not matches: matches = []
+         matches += file_matches( text )
+         return matches
+
+      def attr_matches( self, text ):
+         matches = rlcompleter.Completer.attr_matches( self, text )
+         if not matches: matches = []
+         if text[:5] == 'ROOT.':
+            matches += self.tclass_matches( text )
+         return matches
 
    readline.set_completer( FileNameCompleter().complete )
    readline.set_completer_delims(
