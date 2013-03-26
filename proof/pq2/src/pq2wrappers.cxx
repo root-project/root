@@ -38,6 +38,9 @@ extern TString ferr;
 extern TString fres;
 extern Int_t gverbose;
 
+// How to start PROOF (new VerifyDataSet wants it parallel)
+static bool doParallel = kFALSE;
+
 Int_t getProof(const char *where, Int_t verbose = 1);
 Int_t getDSMgr(const char *where);
 
@@ -46,6 +49,7 @@ void DataSetCache(bool clear, const char *ds)
 {
    // ShowCache wrapper
    if (gIsProof) {
+      doParallel = kFALSE;
       if (!gProof && getProof("DataSetCache", 0) != 0) return;
       return (clear ? gProof->ClearDataSetCache(ds) : gProof->ShowDataSetCache(ds));
    } else {
@@ -64,6 +68,7 @@ void ShowDataSets(const char *ds, const char *opt)
 {
    // ShowDataSets wrapper
    if (gIsProof) {
+      doParallel = kFALSE;
       if (!gProof && getProof("ShowDataSets", 0) != 0) return;
       return gProof->ShowDataSets(ds, opt);
    } else {
@@ -80,6 +85,7 @@ TFileCollection *GetDataSet(const char *ds, const char *server)
    // GetDataSet wrapper
    TFileCollection *fc = 0;
    if (gIsProof) {
+      doParallel = kFALSE;
       if (!gProof && getProof("GetDataSet") != 0) return fc;
       return gProof->GetDataSet(ds, server);
    } else {
@@ -96,6 +102,7 @@ TMap *GetDataSets(const char *owner, const char *server, const char *opt)
    // GetDataSets wrapper
    TMap *dss = 0;
    if (gIsProof) {
+      doParallel = kFALSE;
       if (!gProof && getProof("GetDataSets") != 0) return dss;
       return gProof->GetDataSets(owner, server);
    } else {
@@ -141,6 +148,7 @@ Int_t RemoveDataSet(const char *dsname)
 {
    // RemoveDataSet wrapper
    if (gIsProof) {
+      doParallel = kFALSE;
       if (!gProof && getProof("RemoveDataSet") != 0) return -1;
       return gProof->RemoveDataSet(dsname);
    } else {
@@ -164,6 +172,13 @@ Int_t VerifyDataSet(const char *dsname, const char *opt, const char *redir)
       // Honour the 'redir' if required
       if (!(srvmaps.IsNull())) {
          TProof::AddEnvVar("DATASETSRVMAPS", srvmaps);
+      }
+      TString sopt(opt);
+      doParallel = (sopt.Contains("S")) ? kFALSE : kTRUE;
+      if (gProof && doParallel && gProof->GetParallel() == 0) {
+         gProof->Close();
+         delete gProof;
+         gProof = 0;
       }
       if (!gProof && getProof("VerifyDataSet") != 0) return -1;
       if ((rc = gProof->VerifyDataSet(dsname, opt)) == 0) {
@@ -192,6 +207,7 @@ Bool_t ExistsDataSet(const char *dsname)
 {
    // ExistsDataSet wrapper
    if (gIsProof) {
+      doParallel = kFALSE;
       if (!gProof && getProof("ExistsDataSet") != 0) return kFALSE;
       return gProof->ExistsDataSet(dsname);
    } else {
@@ -206,6 +222,7 @@ Int_t RegisterDataSet(const char *dsname, TFileCollection *fc, const char* opt)
 {
    // RegisterDataSet wrapper
    if (gIsProof) {
+      doParallel = kFALSE;
       if (!gProof && getProof("GetDataSet") != 0) return -1;
       return gProof->RegisterDataSet(dsname, fc, opt);
    } else {
@@ -221,7 +238,8 @@ Int_t getProof(const char *where, Int_t verbose)
    // Open a PROOF session at gUrl
 
    {  redirguard rog(flog.Data(), "a", verbose);
-      TProof::Open(gUrl.GetUrl(), "masteronly");
+      const char *popt = (doParallel) ? "" : "masteronly";
+      TProof::Open(gUrl.GetUrl(), popt);
    }
    if (!gProof || !gProof->IsValid()) {
       Printf("getProof:%s: problems starting a PROOF session at '%s'", where, gUrl.GetUrl());
