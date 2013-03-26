@@ -1169,12 +1169,12 @@ Double_t TMVA::MethodBDT::GetWeightedQuantile(vector<  pair<Double_t, Double_t> 
    //calculates the quantile of the distribution of the first pair entries weighted with the values in the second pair entries
    Double_t temp = 0.0;
    std::sort(vec.begin(), vec.end());
-   Int_t i = 0;
-   while(temp <= norm*quantile){
-      temp += vec[i].second;
-      i++;
+   UInt_t i = 0;
+   while(i<vec.size() && temp <= norm*quantile){
+     temp += vec[i].second;
+     i++;
    }
-      
+   if (i >= vec.size()) return 0.; // prevent uncontrolled memory access in return value calculation 
    return vec[i].first;
 }
 
