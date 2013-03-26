@@ -84,12 +84,6 @@ void VariadicArguments(const char *fmt, ...)
 #include "TClass.h"
 #include "TInterpreter.h"
 
-void runsimpleFunc() {
-   runAllThroughTInterpreterInterfaces();
-   printf("======================================================\n");
-   runAllThroughTMethodCall();
-}
-
 void runAllThroughTInterpreterInterfaces() {
    printf("Running through TInterpreter public interfaces...\n");
    // FIXME: Somebody has to document that gInterpreter->ClassInfo_Factory("")
@@ -184,5 +178,10 @@ void runAllThroughTMethodCall() {
    // FIXME: Dependent on cling/test/Lookup/variadicFunc.C
    // method = TMethodCall("VariadicArguments", "\"dcf\",3, 'a', 1.999");
    // method.Execute();
+}
 
+void runsimpleFunc() {
+   runAllThroughTInterpreterInterfaces();
+   printf("======================================================\n");
+   runAllThroughTMethodCall();
 }
