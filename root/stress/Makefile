@@ -9,10 +9,11 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root *.dat *.ps test files \
 STRESSSRC := $(wildcard $(ROOTSYS)/test/stress*.cxx)
 STRESSTESTS  := $(filter-out stressHepix-test,\
 	$(filter-out stressProof-test,\
+	$(filter-out stressTMVA-test,\
 	$(filter-out stressRooFit_tests-test,\
 	$(filter-out stressRooStats_tests-test,\
 	$(filter-out stressRooStats_models-test,\
-	$(notdir $(STRESSSRC:.cxx=-test)))))))
+	$(notdir $(STRESSSRC:.cxx=-test))))))))
 ifeq ($(ARCH)$(FAIL),win32)
    for_echoing := $(shell echo Known failures: stressMathCore skipped tests in root/stress 1>&2)
 STRESSTESTS  := $(filter-out stressMathCore-test,$(STRESSTEST))
@@ -212,11 +213,11 @@ ifneq ($(ClingWorkAroundSavePrimitive),)
 ifeq ($(FAST),)
 stressGraphics-itest:
 	@echo "Please note: stressGraphics is disabled!!!"
-	@echo "n/a" > stressGraphics-itest.log
+	@echo "n/a" > $@.log
 else
 stressGraphics-ctest:
 	@echo "Please note: stressGraphics is disabled!!!"
-	@echo "n/a" > stressGraphics-itest.log
+	@echo "n/a" > $@.log
 endif
 endif
 
