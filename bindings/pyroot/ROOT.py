@@ -225,6 +225,7 @@ class std( object ):
    string = _root.MakeRootClass( 'string' )
 
 _root.std = std
+sys.modules['ROOT.std'] = std
 
 
 ### special cases for gPad, gVirtualX (are C++ macro's) -------------------------

@@ -645,6 +645,22 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    if ( pyclass )                      // store a ref from ROOT TClass to new python class
       gPyClasses[ klass.Id() ] = PyWeakref_NewRef( pyclass, NULL );
 
+   if ( klass.IsNamespace() && klass.Name() != "ROOT" ) {
+   // add to sys.modules to allow importing from this module
+      std::string pyfullname = lookup;
+      std::string::size_type pos = pyfullname.find( "::" );
+      while ( pos != std::string::npos ) {
+         pyfullname = pyfullname.replace( pos, 2, "." );
+         pos = pyfullname.find( "::", pos );
+      }
+      PyObject* modules = PySys_GetObject( const_cast<char*>("modules") );
+      if ( modules && PyDict_Check( modules) ) {
+         
+         PyDict_SetItemString( modules,
+            const_cast<char*>(("ROOT."+pyfullname).c_str()), pyclass );
+      }
+   }
+
 // all done
    return pyclass;
 }
