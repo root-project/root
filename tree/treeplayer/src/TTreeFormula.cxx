@@ -2304,6 +2304,9 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             strncat(right,params,kMaxLen-1-strlen(right));
             final = kTRUE;
 
+            // Record in 'i' what we consumed
+            i += strlen(params);
+            
             // we reset work
             current = &(work[0]);
             *current = 0;
