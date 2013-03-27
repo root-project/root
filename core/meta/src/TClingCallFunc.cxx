@@ -978,9 +978,6 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
    fEEFunc = 0;
    fEEAddr = 0;
 
-   fInterp->getSema().MarkFunctionReferenced(clang::SourceLocation(),
-                                             const_cast<clang::FunctionDecl*>(FD));
-
    bool isMemberFunc = true;
    
    clang::CXXMethodDecl *MD 
