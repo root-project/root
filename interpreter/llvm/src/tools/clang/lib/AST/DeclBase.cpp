@@ -1345,15 +1345,6 @@ void DeclContext::makeDeclVisibleInContextWithFlags(NamedDecl *D, bool Internal,
 void DeclContext::makeDeclVisibleInContextImpl(NamedDecl *D, bool Internal) {
   // Find or create the stored declaration map.
    // AXEL:
-   if (D->getDeclName().getCXXOverloadedOperator() == clang::OO_LessLess
-       && getDeclKind() == Decl::Namespace
-       && ((NamespaceDecl*)this)->getName() == "std"
-       && isa<FunctionDecl>(D)
-       && ((FunctionDecl*)D)->isThisDeclarationADefinition()) {
-      ((clang::FunctionDecl*)D)->getType().dump();
-      llvm::errs() << "\nAXEL DEBUG: std::op<< @ " << D << '\n';
-      //D->dump();
-   }
 #if AXEL_LOOKUP_CHANGES
   bool MustVisitExternalSources = false;
 #endif

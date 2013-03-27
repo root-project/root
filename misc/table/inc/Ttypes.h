@@ -25,10 +25,12 @@
 
 #include "Rtypes.h"
 
-#ifdef ANSICPP
-#   define _QUOTE2_(name1,name2) _QUOTE_(name1##name2)
+#ifndef _QUOTE2_
+# ifdef ANSICPP
+#  define _QUOTE2_(name1,name2) _QUOTE_(name1##name2)
 #else
-#   define _QUOTE2_(name1,name2) _QUOTE_(_NAME1_(name1)name2)
+#  define _QUOTE2_(name1,name2) _QUOTE_(_NAME1_(name1)name2)
+# endif
 #endif
 
 // #if ROOT_VERSION_CODE >= ROOT_VERSION(3,03,5)

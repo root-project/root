@@ -36,6 +36,7 @@ extern "C" {
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    Decl* TCling__GetObjectDecl(TObject *obj);
    int TCling__AutoLoadCallback(const char* className);
+   void TCling__UpdateListsOnDeclDeserialized(const clang::Decl*);
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
@@ -390,16 +391,14 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
       return;
    if (fFirstRun) {
       // Before setting up the callbacks register what cling have seen during init.
-      const cling::Transaction* T = m_Interpreter->getFirstTransaction();
-      while (T) {
-         if (T->getState() == cling::Transaction::kCommitted)
-            TCling__UpdateListsOnCommitted(*T);
-         T = T->getNext();
-      }
+      cling::Transaction TPrev(T.getCompilationOpts(), T.getModule());
+      clang::DeclGroupRef TDRG = T.getFirstDecl();
+      
+      TPrev.append(TDRG.getSingleDecl()->getASTContext().getTranslationUnitDecl());
+      TCling__UpdateListsOnCommitted(TPrev);
 
       fFirstRun = false;
    }
-
    TCling__UpdateListsOnCommitted(T);
 }
 
@@ -410,4 +409,8 @@ void TClingCallbacks::TransactionUnloaded(const Transaction &T) {
       return;
 
    TCling__UpdateListsOnUnloaded(T);
+}
+
+void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
+   TCling__UpdateListsOnDeclDeserialized(D);
 }

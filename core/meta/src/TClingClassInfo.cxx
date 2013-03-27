@@ -743,15 +743,20 @@ void *TClingClassInfo::New(void *arena) const
 int TClingClassInfo::NMethods() const
 {
    // Return the number of methods
-   fNMethods = 0;
    clang::DeclContext *DC = const_cast<clang::DeclContext*>(
       llvm::cast<clang::DeclContext>(fDecl));
    llvm::SmallVector<clang::DeclContext *, 2> contexts;
    DC->collectAllContexts(contexts);
    bool noUpdate = fLastDeclForNMethods.size() == contexts.size();
    for (unsigned I = 0; noUpdate && I < contexts.size(); ++I) {
-      noUpdate &= (fLastDeclForNMethods[I] &&
-         !fLastDeclForNMethods[I]->getNextDeclInContext());
+      // If there are no decls in the context - even now - then continue.
+      if (contexts[I]->decls_begin()
+          == contexts[I]->decls_end())
+         continue;
+      // If there are decls now, but weren't before: update.
+      // If there is a new next decl: update.
+      noUpdate &= !fLastDeclForNMethods[I] ||
+         !fLastDeclForNMethods[I]->getNextDeclInContext();
    }
    if (noUpdate) {
       return fNMethods;
@@ -772,9 +777,9 @@ int TClingClassInfo::NMethods() const
    for (unsigned I = 0; I < contexts.size(); ++I) {
       DC = contexts[I];
       clang::Decl* lastDecl = 0;
-      for (clang::DeclContext::decl_iterator iter = DC->decls_begin();
-           *iter; ++iter) {
-         lastDecl = *iter;
+      for (clang::DeclContext::decl_iterator iter = DC->decls_begin(),
+              iEnd = DC->decls_end(); iter != iEnd; ++iter) {
+         if (*iter) lastDecl = *iter;
       }
       fLastDeclForNMethods[I] = lastDecl;
    }

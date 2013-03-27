@@ -606,9 +606,12 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
    clang::SourceLocation includeLocation = PLoc.getIncludeLoc();
  
    // Let's try to find out what was the first non system header entry point.
-   while (sourceManager.isInSystemHeader(includeLocation)) {
+   while (includeLocation.isValid()
+          && sourceManager.isInSystemHeader(includeLocation)) {
       clang::PresumedLoc includePLoc = sourceManager.getPresumedLoc(includeLocation);
-      includeLocation = includePLoc.getIncludeLoc();
+      if (includePLoc.getIncludeLoc().isValid())
+         includeLocation = includePLoc.getIncludeLoc();
+      else break;
    }
    
    // If the location is a macro get the expansion location.
@@ -1210,6 +1213,7 @@ llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &de
    
    Sema& sema = interpreter.getCI()->getSema();
 
+   // FIXME: can't we just do a lookup("DeclFileLine")?
    for(CXXRecordDecl::decl_iterator I = decl.decls_begin(), 
        E = decl.decls_end(); I != E; ++I) {
       if (!(*I)->isImplicit() 

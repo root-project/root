@@ -652,22 +652,6 @@ void ASTDeclReader::VisitFunctionDecl(FunctionDecl *FD) {
   for (unsigned I = 0; I != NumParams; ++I)
     Params.push_back(ReadDeclAs<ParmVarDecl>(Record, Idx));
   FD->setParams(Reader.getContext(), Params);
-
-  if (FD->getOverloadedOperator() == clang::OO_LessLess
-      && FD->getDeclContext()->getDeclKind()
-      == Decl::Namespace
-      && FD->getTemplatedKind()
-      == FunctionDecl::TK_FunctionTemplateSpecialization
-      && FD->getTemplateSpecializationArgs()->size() == 1
-      && FD->getTemplateSpecializationArgs()->data()->getKind()
-      == TemplateArgument::Type
-      /*&& FD->getTemplateSpecializationArgs()->data()->getAsType()->isRecordType()
-      && FD->getTemplateSpecializationArgs()->data()->getAsType()
-      ->getAs<clang::RecordType>()->getDecl()->getName()
-      == "char_traits"*/) {
-     llvm::errs() << "DEBUG: FD at " << FD << '\n';
-     FD->dump();
-  }
 }
 
 void ASTDeclReader::VisitObjCMethodDecl(ObjCMethodDecl *MD) {
@@ -1403,6 +1387,7 @@ void ASTDeclReader::VisitCXXMethodDecl(CXXMethodDecl *D) {
              R.first != R.second; ++R.first) {
           if (isSameEntity(*R.first, MD)) {
             MD = dyn_cast<CXXMethodDecl>(*R.first);
+            MD = MD->getCanonicalDecl();
             break;
           }
         }
@@ -2448,7 +2433,6 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
     std::pair<uint64_t, uint64_t> Offsets = Reader.VisitDeclContext(DC);
     if (Offsets.first || Offsets.second) {
       if (Offsets.first != 0)
-#define AXEL_LOOKUP_CHANGES
 #ifdef AXEL_LOOKUP_CHANGES
         DC->getPrimaryContext()->setHasExternalLexicalStorage(true);
 #else

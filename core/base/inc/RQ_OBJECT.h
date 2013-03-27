@@ -101,23 +101,4 @@ private:
    RQ_OBJECT1(sender_class)\
    RQ_OBJECT2(sender_class)
 
-
-//--- Only used in TQObject::Load_RQ_OBJECT()
-
-#define _QUOTE2_(string)\
-   _QUOTE_(string)
-
-#define RQ_OBJECT_STRING1\
-   _QUOTE_(#define RQ_OBJECT1(sender_class))\
-   _QUOTE2_(RQ_OBJECT1(sender_class))
-
-#define RQ_OBJECT_STRING2\
-   _QUOTE_(#define RQ_OBJECT2(sender_class))\
-   _QUOTE2_(RQ_OBJECT2(sender_class))
-
-#define RQ_OBJECT_STRING\
-   _QUOTE_(#define RQ_OBJECT(sender_class)\
-           RQ_OBJECT1(sender_class)\
-           RQ_OBJECT2(sender_class))
-
 #endif

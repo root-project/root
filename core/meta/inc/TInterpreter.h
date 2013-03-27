@@ -104,11 +104,11 @@ public:
    virtual Bool_t   CheckClassInfo(const char *name, Bool_t autoload = kTRUE) = 0;
    virtual Bool_t   CheckClassTemplate(const char *name) = 0;
    virtual Long_t   Calc(const char *line, EErrorCode* error = 0) = 0;
-   virtual void     CreateListOfBaseClasses(TClass *cl) = 0;
-   virtual void     CreateListOfDataMembers(TClass *cl) = 0;
-   virtual void     CreateListOfMethods(TClass *cl) = 0;
-   virtual void     CreateListOfMethodArgs(TFunction *m) = 0;
-   virtual void     UpdateListOfMethods(TClass *cl) = 0;
+   virtual void     CreateListOfBaseClasses(TClass *cl) const = 0;
+   virtual void     CreateListOfDataMembers(TClass *cl) const = 0;
+   virtual void     CreateListOfMethods(TClass *cl) const = 0;
+   virtual void     CreateListOfMethodArgs(TFunction *m) const = 0;
+   virtual void     UpdateListOfMethods(TClass *cl) const = 0;
    virtual TString  GetMangledName(TClass *cl, const char *method, const char *params) = 0;
    virtual TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto) = 0;
    virtual const char *GetInterpreterTypeName(const char *name,Bool_t full = kFALSE) = 0;
