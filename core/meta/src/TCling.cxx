@@ -1024,9 +1024,11 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
       }
    }
 
-   if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
-      ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
-              ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
+   if (getenv("ROOT_MODULES")) {
+      if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
+         ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
+                 ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
+      }
    }
 
    bool oldValue = false;
