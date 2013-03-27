@@ -52,11 +52,12 @@ try:
 
          return matches
 
-      def tclass_matches( self, text ):
+      def root_global_matches( self, text, prefix = '' ):
          gClassTable = _root.GetRootGlobal( 'gClassTable' )
          all = [ gClassTable.At(i) for i in xrange(gClassTable.Classes()) ]
-         matches = filter( lambda x: x[:len(text)-5] == text[5:], all )
-         return ['ROOT.' + x for x in matches]
+         all += [ g.GetName() for g in _root.gROOT.GetListOfGlobals() ]
+         matches = filter( lambda x: x[:len(text)] == text, all )
+         return [prefix + x for x in matches]
 
       def global_matches( self, text ):
          matches = rlcompleter.Completer.global_matches( self, text )
@@ -67,8 +68,9 @@ try:
       def attr_matches( self, text ):
          matches = rlcompleter.Completer.attr_matches( self, text )
          if not matches: matches = []
-         if text[:5] == 'ROOT.':
-            matches += self.tclass_matches( text )
+         b = text.find('.')
+         if 0 <= b and self.namespace[text[:b]].__name__ == 'ROOT':
+            matches += self.root_global_matches( text[b+1:], text[:b+1] )
          return matches
 
    readline.set_completer( FileNameCompleter().complete )
