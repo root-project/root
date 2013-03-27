@@ -1405,6 +1405,7 @@ void ASTDeclReader::VisitCXXMethodDecl(CXXMethodDecl *D) {
              R.first != R.second; ++R.first) {
           if (isSameEntity(*R.first, MD)) {
             MD = dyn_cast<CXXMethodDecl>(*R.first);
+            MD = MD->getCanonicalDecl();
             break;
           }
         }
