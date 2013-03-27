@@ -2591,10 +2591,27 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       return kInternalError;
    }
    if (expectedClass && datatype == kOther_t && ptrClass == 0) {
-      Error("SetBranchAddress", "Unable to determine the type given for the address for \"%s\" (probably due to a missing dictionary).", branch->GetName());
       if (branch->InheritsFrom( TBranchElement::Class() )) {
          TBranchElement* bEl = (TBranchElement*)branch;
          bEl->SetTargetClass( expectedClass->GetName() );
+      }
+      if (expectedClass && expectedClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(expectedClass->GetCollectionProxy())) {
+         Error("SetBranchAddress", "Unable to determine the type given for the address for \"%s\"."
+               "The class expected (%s) refers to an stl collection and do not have a compiled CollectionProxy.  "
+               "Please generate the dictionary for this class (%s)",
+               branch->GetName(), expectedClass->GetName(), expectedClass->GetName());
+         return kMissingCompiledCollectionProxy;
+      }
+      if (!expectedClass->IsLoaded()) {
+         // The originally expected class does not have a dictionary, it is then plausible that the pointer being passed is the right type
+         // (we really don't know).  So let's express that.
+         Error("SetBranchAddress", "Unable to determine the type given for the address for \"%s\"."
+               "The class expected (%s) does not have a dictionary and needs to be emulated for I/O purposes but is being passed a compiled object."
+               "Please generate the dictionary for this class (%s)",
+               branch->GetName(), expectedClass->GetName(), expectedClass->GetName());
+      } else {
+         Error("SetBranchAddress", "Unable to determine the type given for the address for \"%s\"."
+               "This is probably due to a missing dictionary, the original data class for this branch is %s.", branch->GetName(), expectedClass->GetName());
       }
       return kClassMismatch;
    }
