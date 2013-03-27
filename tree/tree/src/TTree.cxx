@@ -2596,7 +2596,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
          bEl->SetTargetClass( expectedClass->GetName() );
       }
       if (expectedClass && expectedClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(expectedClass->GetCollectionProxy())) {
-         Error("SetBranchAddress", "Unable to determine the type given for the address for \"%s\"."
+         Error("SetBranchAddress", "Unable to determine the type given for the address for \"%s\". "
                "The class expected (%s) refers to an stl collection and do not have a compiled CollectionProxy.  "
                "Please generate the dictionary for this class (%s)",
                branch->GetName(), expectedClass->GetName(), expectedClass->GetName());
@@ -2605,12 +2605,12 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       if (!expectedClass->IsLoaded()) {
          // The originally expected class does not have a dictionary, it is then plausible that the pointer being passed is the right type
          // (we really don't know).  So let's express that.
-         Error("SetBranchAddress", "Unable to determine the type given for the address for \"%s\"."
+         Error("SetBranchAddress", "Unable to determine the type given for the address for \"%s\". "
                "The class expected (%s) does not have a dictionary and needs to be emulated for I/O purposes but is being passed a compiled object."
                "Please generate the dictionary for this class (%s)",
                branch->GetName(), expectedClass->GetName(), expectedClass->GetName());
       } else {
-         Error("SetBranchAddress", "Unable to determine the type given for the address for \"%s\"."
+         Error("SetBranchAddress", "Unable to determine the type given for the address for \"%s\". "
                "This is probably due to a missing dictionary, the original data class for this branch is %s.", branch->GetName(), expectedClass->GetName());
       }
       return kClassMismatch;
