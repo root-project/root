@@ -1,7 +1,10 @@
 ////////////////////////////////////////////////////////////////////////////////
-// This test case assures that TCallFunc works used through the               //
-// TInterpreter's interfaces. It tests very simple cases of functions on the  //
-// global scope, which take few argument and return.                          //
+// This test case assures that TCallFunc works used through TInterpreter's    //
+// and TMethodCall's interfaces.                                              //
+//                                                                            //
+// It tests very simple cases of functions on the global scope, which take    //
+// few arguments and return. It covers functions in namespaces and nested     //
+// namespaces.                                                                //
 ////////////////////////////////////////////////////////////////////////////////
 // Author: Vassil Vassilev
 
@@ -80,6 +83,31 @@ void VariadicArguments(const char *fmt, ...)
  
 // End Examples for checking the arguments
 
+// Functions in namespaces
+
+#include "Rtypes.h"
+namespace A {
+   Double32_t* Double32TPtrThreeArgs(int p, float f, double* d) {
+      printf("Double32PtrOneArg(int p, float f, double* d).\n");
+      return new Double32_t(p + f - *d);
+   }
+}
+
+namespace A {
+   namespace A1 {
+      namespace A2 {
+         int Num = 3;
+         namespace A3 {
+            int NestedNamespaceIntOneArg(int a) {
+               return A2::Num + a;
+            }
+         }
+      }
+   }
+}
+
+// End Functions in namespaces
+
 
 #include "TClass.h"
 #include "TInterpreter.h"
@@ -117,18 +145,34 @@ void runAllThroughTInterpreterInterfaces() {
    printf("Result of MyClassReturnNoArgs = ");
    reinterpret_cast<MyClassReturn*>(result_long)->Print();
 
-   // Run FloatPtrOneArg (ptr return)
-   gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "FloatPtrOneArg", "int", &offset);
-   gInterpreter->CallFunc_SetArg(mc, (Long_t)1+1);
-   result_long = gInterpreter->CallFunc_ExecInt( mc, /* void* */0);
-   printf("Result of FloatPtrOneArg = %f\n", *reinterpret_cast<float*>(result_long));
-
    // Run VariadicArguments
    // FIXME: Dependent on cling/test/Lookup/variadicFunc.C
    // gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "VariadicArguments", "const char *, ...", &offset);
    // gInterpreter->CallFunc_SetArgs(mc, "\"dcf\",3, 'a', 1.999");
    // gInterpreter->CallFunc_Exec( mc, /* void* */0);
 
+   // Run FloatPtrOneArg (ptr return)
+   // Find namespace A:
+   gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "FloatPtrOneArg", "int", &offset);
+   gInterpreter->CallFunc_SetArg(mc, (Long_t)1+1);
+   result_long = gInterpreter->CallFunc_ExecInt( mc, /* void* */0);
+   printf("Result of FloatPtrOneArg = %f\n", *reinterpret_cast<float*>(result_long));
+
+   // Run A::Double32TPtrThreeArgs (ptr return)
+   ClassInfo_t* namespaceA = gInterpreter->ClassInfo_Factory("A");
+   gInterpreter->CallFunc_SetFuncProto(mc, namespaceA, "Double32TPtrThreeArgs", "int, float, double *", &offset);
+   gInterpreter->CallFunc_SetArg(mc, (Long_t)1+1);
+   gInterpreter->CallFunc_SetArg(mc, (Double_t)1.-1);
+   gInterpreter->CallFunc_SetArg(mc, (ULong64_t)new double(3.000));
+   result_long = gInterpreter->CallFunc_ExecInt( mc, /* void* */0);
+   printf("Result of A::Double32TPtrThreeArgs = %f\n", *reinterpret_cast<Double32_t*>(result_long));
+
+   // Run A::A1::A2::A3::NestedNamespaceIntOneArg (int return)
+   ClassInfo_t* namespaceA3 = gInterpreter->ClassInfo_Factory("A::A1::A2::A3");
+   gInterpreter->CallFunc_SetFuncProto(mc, namespaceA3, "NestedNamespaceIntOneArg", "int", &offset);
+   gInterpreter->CallFunc_SetArg(mc, (Long_t)11);
+   result_long = gInterpreter->CallFunc_ExecInt( mc, /* void* */0);
+   printf("Result of A::A1::A2::A3::NestedNamespaceIntOneArg = %ld\n", result_long);
 
    // Cleanup
    gInterpreter->CallFunc_Delete(mc);
@@ -178,6 +222,17 @@ void runAllThroughTMethodCall() {
    // FIXME: Dependent on cling/test/Lookup/variadicFunc.C
    // method = TMethodCall("VariadicArguments", "\"dcf\",3, 'a', 1.999");
    // method.Execute();
+
+   // Run A::Double32TPtrThreeArgs (ptr return)
+   method = TMethodCall("A::Double32TPtrThreeArgs", "1+1, 1.-1, new double(3.000)");
+   method.Execute(result_long);
+   printf("Result of A::Double32TPtrThreeArgs = %f\n", *reinterpret_cast<Double32_t*>(result_long));
+
+   // Run A::A1::A2::A3::NestedNamespaceIntOneArg (int return)
+   method.InitWithPrototype("A::A1::A2::A3::NestedNamespaceIntOneArg", "int");
+   method.SetParam((Long_t)11);
+   method.Execute(result_long);
+   printf("Result of A::A1::A2::A3::NestedNamespaceIntOneArg = %ld\n", result_long);
 }
 
 void runsimpleFunc() {
