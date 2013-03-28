@@ -285,15 +285,17 @@ $(MAKECINT):    $(MAKECINTO)
 $(IOSENUM): 
 		$(MAKEDIR)
 		@(if [ ! -r $(IOSENUMA) ]; then \
-			echo "Missing $(IOSENUMA), run: make $IOSENUMA)"; \
-		else \
-			cp $(IOSENUMA) $@; \
-		fi)
+			echo "Missing $(IOSENUMA), run: make $(IOSENUMA)"; \
+			$(MAKE) $(IOSENUMA); \
+		fi; \
+		cp $(IOSENUMA) $@)
 
 $(IOSENUMA):    $(CINTTMP)
 		@(if [ ! -r $@ ]; then \
 			echo "Making $@..."; \
-			$(CINTTMP) $(CINTTMPINC) -Iinclude $(IOSENUMC) > /dev/null; \
+			$(CINTTMP) $(CINTTMPINC) \
+			        -I$(ROOT_SRCDIR)/cint/cint/inc -Iinclude \
+				$(IOSENUMC) > /dev/null; \
 			mv iosenum.h $@; \
 		else \
 			touch $@; \
