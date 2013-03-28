@@ -265,6 +265,23 @@ namespace TStreamerInfoActions
       virtual TConfiguration *Copy() { return new TConfigSTL(*this); }
    };
 
+   class TConfSTLWithFactor : public TConfigSTL {
+      // Configuration object for the Float16/Double32 where a factor has been specified.
+   public:
+      Double_t fFactor;
+      Double_t fXmin;
+      TConfSTLWithFactor(TConfigSTL *orig, Double_t factor, Double_t xmin) : TConfigSTL(*orig),fFactor(factor),fXmin(xmin) {};
+      virtual TConfiguration *Copy() { return new TConfSTLWithFactor(*this); }
+   };
+
+   class TConfSTLNoFactor : public TConfigSTL {
+      // Configuration object for the Float16/Double32 where a factor has been specified.
+   public:
+      Int_t fNbits;
+      TConfSTLNoFactor(TConfigSTL *orig, Int_t nbits) : TConfigSTL(*orig),fNbits(nbits) {};
+      virtual TConfiguration *Copy() { return new TConfSTLNoFactor(*this); }
+   };
+
    class TVectorLoopConfig : public TLoopConfiguration {
       // Base class of the Configurations used in member wise streaming.
    protected:
@@ -1116,54 +1133,58 @@ namespace TStreamerInfoActions
       }
 
       template <typename From, typename To>
-      static INLINE_TEMPLATE_ARGS Int_t ConvertCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
-      {
-         // Collection of numbers.  Memberwise or not, it is all the same.
+      struct ConvertCollectionBasicType {
+         static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *conf)
+         {
+            // Collection of numbers.  Memberwise or not, it is all the same.
+            
+            TConfigSTL *config = (TConfigSTL*)conf;
+            UInt_t start, count;
+            /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
          
-         TConfigSTL *config = (TConfigSTL*)conf;
-         UInt_t start, count;
-         /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
+            std::vector<To> *const vec = (std::vector<To>*)(((char*)addr)+config->fOffset);     
+            Int_t nvalues;
+            buf.ReadInt(nvalues);
+            vec->resize(nvalues);
          
-         std::vector<To> *const vec = (std::vector<To>*)(((char*)addr)+config->fOffset);     
-         Int_t nvalues;
-         buf.ReadInt(nvalues);
-         vec->resize(nvalues);
+            From *temp = new From[nvalues];
+            buf.ReadFastArray(temp, nvalues);
+            for(Int_t ind = 0; ind < nvalues; ++ind) {
+               (*vec)[ind] = (To)temp[ind];
+            }
+            delete [] temp;
          
-         From *temp = new From[nvalues];
-         buf.ReadFastArray(temp, nvalues);
-         for(Int_t ind = 0; ind < nvalues; ++ind) {
-            (*vec)[ind] = (To)temp[ind];
+            buf.CheckByteCount(start,count,config->fTypeName);
+            return 0;
          }
-         delete [] temp;
-         
-         buf.CheckByteCount(start,count,config->fTypeName);
-         return 0;
-      }
-      
-      template <typename To>
-      static INLINE_TEMPLATE_ARGS Int_t ConvertCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
-      {
-         // Collection of numbers.  Memberwise or not, it is all the same.
-         
-         TConfigSTL *config = (TConfigSTL*)conf;
-         UInt_t start, count;
-         /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
-         
-         std::vector<To> *const vec = (std::vector<To>*)(((char*)addr)+config->fOffset);     
-         Int_t nvalues;
-         buf.ReadInt(nvalues);
-         vec->resize(nvalues);
-         
-         Float16_t *temp = new Float16_t[nvalues];
-         buf.ReadFastArrayFloat16(temp, nvalues);
-         for(Int_t ind = 0; ind < nvalues; ++ind) {
+      };
+
+      template <typename From, typename To>
+      struct ConvertCollectionBasicType<NoFactorMarker<From>,To> {
+         static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *conf)
+         {
+            // Collection of numbers.  Memberwise or not, it is all the same.
+            
+            TConfigSTL *config = (TConfigSTL*)conf;
+            UInt_t start, count;
+            /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
+            
+            std::vector<To> *const vec = (std::vector<To>*)(((char*)addr)+config->fOffset);     
+            Int_t nvalues;
+            buf.ReadInt(nvalues);
+            vec->resize(nvalues);
+            
+            From *temp = new From[nvalues];
+            buf.ReadFastArrayWithNbits(temp, nvalues, 0);
+            for(Int_t ind = 0; ind < nvalues; ++ind) {
             (*vec)[ind] = (To)temp[ind];
+            }
+            delete [] temp;
+            
+            buf.CheckByteCount(start,count,config->fTypeName);
+            return 0;
          }
-         delete [] temp;
-         
-         buf.CheckByteCount(start,count,config->fTypeName);
-         return 0;
-      }
+      };
 
       template <typename To>
       static INLINE_TEMPLATE_ARGS Int_t ConvertCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
@@ -1379,58 +1400,55 @@ namespace TStreamerInfoActions
       }
 
       template <typename From, typename To>
-      static INLINE_TEMPLATE_ARGS void ConvertRead(TBuffer &buf, void *addr, Int_t nvalues)
-      {
-         From *temp = new From[nvalues];
-         buf.ReadFastArray(temp, nvalues);
-         To *vec = (To*)addr;
-         for(Int_t ind = 0; ind < nvalues; ++ind) {
-            vec[ind] = (To)temp[ind];
+      struct ConvertRead {
+         static INLINE_TEMPLATE_ARGS void Action(TBuffer &buf, void *addr, Int_t nvalues)
+         {
+            From *temp = new From[nvalues];
+            buf.ReadFastArray(temp, nvalues);
+            To *vec = (To*)addr;
+            for(Int_t ind = 0; ind < nvalues; ++ind) {
+               vec[ind] = (To)temp[ind];
+            }
+            delete [] temp;
          }
-         delete [] temp;
-      }
-
-      template <typename To>
-      static INLINE_TEMPLATE_ARGS void ConvertReadFloat16(TBuffer &buf, void *addr, Int_t nvalues)
-      {
-         Float16_t *temp = new Float16_t[nvalues];
-         buf.ReadFastArrayFloat16(temp, nvalues);
-         To *vec = (To*)addr;
-         for(Int_t ind = 0; ind < nvalues; ++ind) {
-            vec[ind] = (To)temp[ind];
-         }
-         delete [] temp;
-      }
-
-      template <typename To>
-      static INLINE_TEMPLATE_ARGS void ConvertReadDouble32(TBuffer &buf, void *addr, Int_t nvalues)
-      {
-         Double32_t *temp = new Double32_t[nvalues];
-         buf.ReadFastArrayDouble32(temp, nvalues);
-         To *vec = (To*)addr;
-         for(Int_t ind = 0; ind < nvalues; ++ind) {
-            vec[ind] = (To)temp[ind];
-         }
-         delete [] temp;
-      }
+      };
 
       template <typename From, typename To>
-      static INLINE_TEMPLATE_ARGS Int_t ConvertCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
-      {
-         return ReadNumericalCollection<To,ConvertRead<From,To> >(buf,addr,conf);
-      }
-      
-      template <typename To>
-      static INLINE_TEMPLATE_ARGS Int_t ConvertCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
-      {
-         return ReadNumericalCollection<Float_t,ConvertReadFloat16<To> >(buf,addr,conf);
-      }
-      
-      template <typename To>
-      static INLINE_TEMPLATE_ARGS Int_t ConvertCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
-      {
-         return ReadNumericalCollection<Double_t,ConvertReadDouble32<To> >(buf,addr,conf);
-      }
+      struct ConvertRead<NoFactorMarker<From>,To> {
+         static INLINE_TEMPLATE_ARGS void Action(TBuffer &buf, void *addr, Int_t nvalues)
+         {
+            From *temp = new From[nvalues];
+            buf.ReadFastArrayWithNbits(temp, nvalues,0);
+            To *vec = (To*)addr;
+            for(Int_t ind = 0; ind < nvalues; ++ind) {
+               vec[ind] = (To)temp[ind];
+            }
+            delete [] temp;
+         }
+      };
+
+      template <typename From, typename To>
+      struct ConvertRead<WithFactorMarker<From>,To> {
+         static INLINE_TEMPLATE_ARGS void Action(TBuffer &buf, void *addr, Int_t nvalues)
+         {
+            From *temp = new From[nvalues];
+            double factor,min; // needs to be initialized.
+            buf.ReadFastArrayWithFactor(temp, nvalues, factor, min);
+            To *vec = (To*)addr;
+            for(Int_t ind = 0; ind < nvalues; ++ind) {
+               vec[ind] = (To)temp[ind];
+            }
+            delete [] temp;
+         }
+      };
+
+      template <typename From, typename To>
+      struct ConvertCollectionBasicType {
+         static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *conf)
+         {
+            return ReadNumericalCollection<To,ConvertRead<From,To>::Action >(buf,addr,conf);
+         }
+      };
       
     };
 
@@ -1568,7 +1586,7 @@ namespace TStreamerInfoActions
             TVirtualCollectionProxy *proxy = loopconfig->fProxy;
             Int_t nvalues = proxy->Size();
 
-            TConfWithFactor *conf = (TConfWithFactor *)config;
+            TConfSTLWithFactor *conf = (TConfSTLWithFactor *)config;
 
             From *items = new From[nvalues];
             buf.ReadFastArrayWithFactor(items, nvalues, conf->fFactor, conf->fXmin);
@@ -1587,7 +1605,7 @@ namespace TStreamerInfoActions
             TVirtualCollectionProxy *proxy = loopconfig->fProxy;
             Int_t nvalues = proxy->Size();
 
-            TConfNoFactor *conf = (TConfNoFactor *)config;
+            TConfSTLNoFactor *conf = (TConfSTLNoFactor *)config;
 
             From *items = new From[nvalues];
             buf.ReadFastArrayWithNbits(items, nvalues, conf->fNbits);
@@ -1683,14 +1701,14 @@ namespace TStreamerInfoActions
       
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
-         // FIXME: the conf is likely wrong
          return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<float>,float,Numeric > >(buf,addr,conf);
       }
       
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
-         // FIXME: the conf is likely wrong
-         return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<double>,double,Numeric > >(buf,addr,conf);
+         return ReadNumericalCollection<ConvertBasicType<float,double,Numeric > >(buf,addr,conf);
+         // Could also use:
+         // return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<double>,double,Numeric > >(buf,addr,conf);
       }
       
       template <typename T>
@@ -1699,6 +1717,15 @@ namespace TStreamerInfoActions
          return ReadNumericalCollection<ConvertBasicType<T,T,Numeric > >(buf,addr,conf);
       }
 
+      template <typename From, typename To>
+      struct ConvertCollectionBasicType {
+         static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *conf)
+         {
+            // return ReadNumericalCollection<To,ConvertRead<From,To>::Action >(buf,addr,conf);
+            return ReadNumericalCollection<ConvertBasicType<From,To,Numeric > >(buf,addr,conf);
+         }
+      };
+ 
    };
 }
 
@@ -1751,7 +1778,9 @@ static TConfiguredAction GetNumericCollectionReadAction(Int_t type, TConfigSTL *
       case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template ReadCollectionBasicType<ULong_t>,  conf );   break;
       case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template ReadCollectionBasicType<ULong64_t>, conf ); break;
       case TStreamerInfo::kFloat16: {
-         return TConfiguredAction( Looper::ReadCollectionFloat16, conf );
+         TConfigSTL *alternate = new TConfSTLNoFactor(conf,12);
+         delete conf;
+         return TConfiguredAction( Looper::ReadCollectionFloat16, alternate );
          // if (element->GetFactor() != 0) {
          //    return TConfiguredAction( Looper::template ReadAction<ReadBasicType_WithFactor<float> >, new TConfWithFactor(info,i,offset,element->GetFactor(),element->GetXmin()) );
          // } else {
@@ -1762,7 +1791,9 @@ static TConfiguredAction GetNumericCollectionReadAction(Int_t type, TConfigSTL *
          break;
       }
       case TStreamerInfo::kDouble32: {
-         return TConfiguredAction( Looper::ReadCollectionDouble32, conf );
+         TConfigSTL *alternate = new TConfSTLNoFactor(conf,0);
+         delete conf;
+         return TConfiguredAction( Looper::ReadCollectionDouble32, alternate );
          // if (element->GetFactor() != 0) {
          //    return TConfiguredAction( Looper::template ReadAction<ReadBasicType_WithFactor<double> >, new TConfWithFactor(info,i,offset,element->GetFactor(),element->GetXmin()) );
          // } else {
@@ -1784,21 +1815,21 @@ template <typename Looper, typename From>
 static TConfiguredAction GetConvertCollectionReadActionFrom(Int_t newtype, TConfiguration *conf)
 {
    switch (newtype) {
-      case TStreamerInfo::kBool:    return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,bool>, conf ); break;
-      case TStreamerInfo::kChar:    return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,char>, conf ); break;
-      case TStreamerInfo::kShort:   return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,short>, conf );  break;
-      case TStreamerInfo::kInt:     return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,Int_t>, conf ); break;
-      case TStreamerInfo::kLong:    return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,Long_t>, conf ); break;
-      case TStreamerInfo::kLong64:  return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,Long64_t>, conf ); break;
-      case TStreamerInfo::kFloat:   return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,float>, conf ); break;
-      case TStreamerInfo::kFloat16: return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,float>, conf ); break;
-      case TStreamerInfo::kDouble:  return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,double>, conf ); break;
-      case TStreamerInfo::kDouble32:return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,double>, conf ); break;
-      case TStreamerInfo::kUChar:   return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,UChar_t>, conf ); break;
-      case TStreamerInfo::kUShort:  return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,UShort_t>, conf ); break;
-      case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,UInt_t>, conf ); break;
-      case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,ULong_t>, conf ); break;
-      case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,ULong64_t>, conf );  break;
+      case TStreamerInfo::kBool:    return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,bool>::Action, conf ); break;
+      case TStreamerInfo::kChar:    return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,char>::Action, conf ); break;
+      case TStreamerInfo::kShort:   return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,short>::Action, conf );  break;
+      case TStreamerInfo::kInt:     return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,Int_t>::Action, conf ); break;
+      case TStreamerInfo::kLong:    return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,Long_t>::Action, conf ); break;
+      case TStreamerInfo::kLong64:  return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,Long64_t>::Action, conf ); break;
+      case TStreamerInfo::kFloat:   return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,float>::Action, conf ); break;
+      case TStreamerInfo::kFloat16: return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,float>::Action, conf ); break;
+      case TStreamerInfo::kDouble:  return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,double>::Action, conf ); break;
+      case TStreamerInfo::kDouble32:return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,double>::Action, conf ); break;
+      case TStreamerInfo::kUChar:   return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,UChar_t>::Action, conf ); break;
+      case TStreamerInfo::kUShort:  return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,UShort_t>::Action, conf ); break;
+      case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,UInt_t>::Action, conf ); break;
+      case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,ULong_t>::Action, conf ); break;
+      case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,ULong64_t>::Action, conf );  break;
       default:
          break;
    }
@@ -1849,7 +1880,13 @@ static TConfiguredAction GetConvertCollectionReadAction(Int_t oldtype, Int_t new
       case TStreamerInfo::kULong64:
          return GetConvertCollectionReadActionFrom<Looper,ULong64_t>(newtype, conf );
          break;
-         // FIXME: We need to add kFloat16 and kDouble32 and check whether we need something else.
+      case TStreamerInfo::kFloat16:
+         return GetConvertCollectionReadActionFrom<Looper,NoFactorMarker<Float16_t> >( newtype, conf );
+         break;
+      case TStreamerInfo::kDouble32:
+         return GetConvertCollectionReadActionFrom<Looper,NoFactorMarker<Double32_t> >( newtype, conf );
+         break;
+         // FIXME: We need to add kBits and kCounter
       default:
          break;
    }
@@ -2338,10 +2375,8 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
                         case kVectorPtrLooper:
                         case kGenericLooper:
                         default:
-                           // FIXME:
-                           fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase));
                            // For now TBufferXML would force use to allocate the data buffer each time and copy into the real thing.
-                           // fReadObjectWise->AddAction(GetConvertCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
                            break;
                         }
                      }             
@@ -2363,8 +2398,6 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
                         case kVectorPtrLooper:
                         case kGenericLooper:
                         default:
-                           // FIXME:
-                           //fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase));
                            // For now TBufferXML would force use to allocate the data buffer each time and copy into the real thing.
                            fReadObjectWise->AddAction(GetNumericCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
                            break;
