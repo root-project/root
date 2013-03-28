@@ -2985,7 +2985,7 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
    if (readClass) {
       if ((cli = fMap->GetValue(offset)) == 0) {
          // No class found at this location in map. It might have been skipped
-         // as part of a skipped object. Try to explicitely read the class.
+         // as part of a skipped object. Try to explicitly read the class.
 
          // save fBufCur and set to place specified by offset (-kMapOffset-sizeof(bytecount))
          char *bufsav = fBufCur;
@@ -3017,7 +3017,7 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
 
       if ((cli = fMap->GetValue(offset)) == 0) {
          // No object found at this location in map. It might have been skipped
-         // as part of a skipped object. Try to explicitely read the object.
+         // as part of a skipped object. Try to explicitly read the object.
 
          // save fBufCur and set to place specified by offset (-kMapOffset)
          char *bufsav = fBufCur;

@@ -928,7 +928,7 @@ void TXMLFile::SetStoreStreamerInfos(Bool_t iConvert)
 void TXMLFile::SetUsedDtd(Bool_t use)
 {
    // Specify usage of DTD for this file.
-   // Currently this option not avaliable (always false).
+   // Currently this option not available (always false).
    // Can be changed only for newly created file.
 
    if (IsWritable() &&  (GetListOfKeys()->GetSize()==0))

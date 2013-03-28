@@ -34,7 +34,7 @@ ClassImp(THostAuth)
 //______________________________________________________________________________
    THostAuth::THostAuth() : TObject()
 {
-   // Deafult constructor.
+   // Default constructor.
 
    Create(0, 0);
 }

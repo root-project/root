@@ -165,7 +165,7 @@ void TMLPAnalyzer::CheckNetwork()
 //______________________________________________________________________________
 void TMLPAnalyzer::GatherInformations()
 {
-   // Collect informations about what is usefull in the network.
+   // Collect information about what is usefull in the network.
    // This method has to be called first when analyzing a network.
    // Fills the two analysis trees.
 

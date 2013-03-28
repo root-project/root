@@ -164,7 +164,7 @@ void TXMLParser::StopParser()
 void TXMLParser::SetParseCode(Int_t errorcode)
 {
    // Set the parse code:
-   //  0: Parse succesfull
+   //  0: Parse successful
    // -1: Attempt to parse a second file while a parse is in progress
    // -2: Parse context is not created
    // -3: An error occured while parsing file

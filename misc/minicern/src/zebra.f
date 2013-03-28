@@ -672,7 +672,7 @@
       ENDIF
       IF (IPASS.NE.0 .AND. LRECL2.NE.0) THEN
          WRITE(IQPRNT,10600) LRECL2,LRECL
-10600 FORMAT(' RZOPEN:  LRECL inconsistant - ',
+10600 FORMAT(' RZOPEN:  LRECL inconsistent - ',
      + ' file was opened with LRECL = ',I6,
      + ' should be LRECL = ',I6)
       ENDIF

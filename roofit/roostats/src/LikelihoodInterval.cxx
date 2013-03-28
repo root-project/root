@@ -195,7 +195,7 @@ Double_t LikelihoodInterval::LowerLimit(const RooRealVar& param, bool & status)
 {  
    // Compute lower limit, check first if limit has been computed 
    // status is a boolean flag which will b set to false in case of error
-   // and is true if calculation is succesfull
+   // and is true if calculation is successful
    // in case of error return also a lower limit value of zero
 
    double lower = 0; 
@@ -209,7 +209,7 @@ Double_t LikelihoodInterval::UpperLimit(const RooRealVar& param, bool & status)
 {  
    // Compute upper limit, check first if limit has been computed 
    // status is a boolean flag which will b set to false in case of error
-   // and is true if calculation is succesfull
+   // and is true if calculation is successful
    // in case of error return also a lower limit value of zero
 
    double lower = 0; 

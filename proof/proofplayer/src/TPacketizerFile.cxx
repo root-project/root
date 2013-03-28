@@ -109,7 +109,7 @@ TPacketizerFile::TPacketizerFile(TList *workers, Long64_t, TList *input,
       return;
    }
 
-   // Check if the files not explicitely assigned have to be processed
+   // Check if the files not explicitly assigned have to be processed
    Int_t procnotass = 1;
    if (TProof::GetParameter(input, "PROOF_ProcessNotAssigned", procnotass) == 0) {
       if (procnotass == 0) {

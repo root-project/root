@@ -914,7 +914,7 @@ void TFileMerger::RecursiveRemove(TObject *obj)
    // Intercept the case where the output TFile is deleted!
    
    if (obj == fOutputFile) {
-      Fatal("RecursiveRemove","Output file of the TFile Merger (targetting %s) has been deleted (likely due to a TTree larger than 100Gb)", fOutputFilename.Data());
+      Fatal("RecursiveRemove","Output file of the TFile Merger (targeting %s) has been deleted (likely due to a TTree larger than 100Gb)", fOutputFilename.Data());
    }
    
 }

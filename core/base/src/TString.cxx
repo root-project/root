@@ -1939,7 +1939,7 @@ Bool_t TString::IsInBaseN(Int_t base) const
    // string contains other characters.
 
    if (base < 2 || base > 36) {
-      Error("TString::IsInBaseN", "base %d is not supported. Suppported bases are {2,3,...,36}.", base);
+      Error("TString::IsInBaseN", "base %d is not supported. Supported bases are {2,3,...,36}.", base);
       return kFALSE;
    }
    if (Length() == 0) {
@@ -2072,7 +2072,7 @@ TString TString::Itoa(Int_t value, Int_t base)
    std::string buf;
    // check that the base if valid
    if (base < 2 || base > 36) {
-      Error("TString::Itoa", "base %d is not supported. Suppported bases are {2,3,...,36}.",base) ;
+      Error("TString::Itoa", "base %d is not supported. Supported bases are {2,3,...,36}.",base) ;
       return (TString("!"));
    }
    buf.reserve(35); // Pre-allocate enough space (35=kMaxDigits)
@@ -2099,7 +2099,7 @@ TString TString::UItoa(UInt_t value, Int_t base)
    std::string buf;
    // check that the base if valid
    if (base < 2 || base > 36) {
-      Error("TString::UItoa", "base %d is not supported. Suppported bases are {2,3,...,36}.",base);
+      Error("TString::UItoa", "base %d is not supported. Supported bases are {2,3,...,36}.",base);
       return (TString("!"));
    }
    buf.reserve(35); // Pre-allocate enough space (35=kMaxDigits)
@@ -2124,7 +2124,7 @@ TString TString::LLtoa(Long64_t value, Int_t base)
    std::string buf;
    // check that the base if valid
    if (base < 2 || base > 36) {
-      Error("TString::LLtoa", "base %d is not supported. Suppported bases are {2,3,...,36}.",base);
+      Error("TString::LLtoa", "base %d is not supported. Supported bases are {2,3,...,36}.",base);
       return (TString("!"));
    }
    buf.reserve(35); // Pre-allocate enough space (35=kMaxDigits)
@@ -2151,7 +2151,7 @@ TString TString::ULLtoa(ULong64_t value, Int_t base)
    std::string buf;
    // check that the base if valid
    if (base < 2 || base > 36) {
-      Error("TString::ULLtoa", "base %d is not supported. Suppported bases are {2,3,...,36}.",base);
+      Error("TString::ULLtoa", "base %d is not supported. Supported bases are {2,3,...,36}.",base);
       return (TString("!"));
    }
    buf.reserve(35); // Pre-allocate enough space (35=kMaxDigits)

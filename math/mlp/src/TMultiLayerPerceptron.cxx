@@ -50,7 +50,7 @@
 </UL>
 <P>Neural Networks are more and more used in various fields for data
 analysis and classification, both for research and commercial
-institutions. Some randomly choosen examples are:</P>
+institutions. Some randomly chosen examples are:</P>
 <UL>
         <LI><P>image analysis</P>
         <LI><P>financial movements predictions and analysis</P>
@@ -64,7 +64,7 @@ implementation of multilayer perceptrons is inspired from the
 package</A> originaly written by Jerome Schwindling. MLPfit remains
 one of the fastest tool for neural networks studies, and this ROOT
 add-on will not try to compete on that. A clear and flexible Object
-Oriented implementation has been choosen over a faster but more
+Oriented implementation has been chosen over a faster but more
 difficult to maintain code. Nevertheless, the time penalty does not
 exceed a factor 2.</P>
 <UL>
@@ -159,7 +159,7 @@ the direction is reset to the steepes descent.</P>
 </UL>
 <P><FONT SIZE=3>TMLP is build from 3 classes: TNeuron, TSynapse and
 TMultiLayerPerceptron. Only TMultiLayerPerceptron should be used
-explicitely by the user.</FONT></P>
+explicitly by the user.</FONT></P>
 <P><FONT SIZE=3>TMultiLayerPerceptron will take examples from a TTree
 given in the constructor. The network is described by a simple
 string: The input/output layers are defined by giving the expression for
@@ -178,7 +178,7 @@ One defines the training and test datasets by TEventLists.</FONT></P>
 </SPAN>TMultiLayerPerceptron(&quot;x,y:10:5:f&quot;,inputTree);</SPAN></FONT></P>
 <P><FONT SIZE=3>Both the TTree and the TEventLists can be defined in
 the constructor, or later with the suited setter method. The lists
-used for training and test can be defined either explicitely, or via
+used for training and test can be defined either explicitly, or via
 a string containing the formula to be used to define them, exactly as
 for a TCut.</FONT></P>
 <P><FONT SIZE=3>The learning method is defined using the

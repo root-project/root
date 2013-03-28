@@ -58,7 +58,7 @@ static int SortCmpRtn(const void *Entry1, const void *Entry2);
 * ColorMapSize specifies size of color map up to 256 and will be updated to   *
 * real size before returning.                                                 *
 *   Also non of the parameter are allocated by this routine.                  *
-*   This function returns GIF_OK if succesfull, GIF_ERROR otherwise.          *
+*   This function returns GIF_OK if successful, GIF_ERROR otherwise.          *
 ******************************************************************************/
 int GIFquantize(unsigned int Width, unsigned int Height, int *ColorMapSize,
         byte *RedInput, byte *GreenInput, byte *BlueInput,

@@ -232,7 +232,7 @@ private: // data members
    Bool_t fVarIsPointer;                         // frodo: pointer or not flag
    Int_t  fLastIter;                             // frodo: iteration counter for recursive MakeClassFromVarName
 
-   ClassDef(TTabCom,0)  //Perform comand line completion when hitting <TAB>
+   ClassDef(TTabCom,0)  //Perform command line completion when hitting <TAB>
 };
 
 R__EXTERN TTabCom *gTabCom;

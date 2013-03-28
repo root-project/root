@@ -237,7 +237,7 @@ gdk_draw_polygon(GdkDrawable * drawable,
  *
  * Modified by Li-Da Lho to draw 16 bits and Multibyte strings
  *
- * Interface changed: add "GdkFont *font" to specify font or fontset explicitely
+ * Interface changed: add "GdkFont *font" to specify font or fontset explicitly
  */
 void
 gdk_draw_string(GdkDrawable * drawable,
@@ -252,7 +252,7 @@ gdk_draw_string(GdkDrawable * drawable,
  *
  * Modified by Li-Da Lho to draw 16 bits and Multibyte strings
  *
- * Interface changed: add "GdkFont *font" to specify font or fontset explicitely
+ * Interface changed: add "GdkFont *font" to specify font or fontset explicitly
  */
 void
 gdk_draw_text(GdkDrawable * drawable,

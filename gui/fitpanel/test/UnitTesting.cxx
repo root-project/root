@@ -170,7 +170,7 @@ public:
    // This function compares the parameters stored in the TFitEditor
    // with the ones passed by the test functions. Normally, if the
    // function return 0, it means all the parameters are equal up to a
-   // certain limit, thus the test was succesful.
+   // certain limit, thus the test was successful.
    int CompareFuncPars(std::vector<TFitEditor::FuncParamData_t>& pars)
    {
       int status = 0;

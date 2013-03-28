@@ -4617,7 +4617,7 @@ void TStyleManager::DoSelectCanvas(TVirtualPad *pad, TObject *obj, Int_t mouseBu
 
    if ((!samePad) && preview) DoPreview(kFALSE);
 
-   // Update the informations' label about the selected objects.
+   // Update the information' label about the selected objects.
    TString sPad;
    if (fCurPad->GetName() && strlen(fCurPad->GetName())) 
       sPad.Append(fCurPad->GetName());

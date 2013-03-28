@@ -53,7 +53,7 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    //    Configuring unixODBC under Linux: http://www.unixodbc.org/odbcinst.html
    //    Remarks: for variants 1 & 2 it is enough to create/configure
    //    odbcinst.ini file. For variant 3 file odbc.ini should be created.
-   //    Path to this files can be specified in enviromental variables like
+   //    Path to this files can be specified in environmental variables like
    //      export ODBCINI=/home/my/unixODBC/etc/odbc.ini
    //      export ODBCSYSINI=/home/my/unixODBC/etc
    //
@@ -70,7 +70,7 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    //       1) Two additional DLLs are required: mfc71.dll & msver71.dll
    //          They can be found either in MS VC++ 7.1 Free Toolkit or
    //          downloaded from other Internet sites
-   //       2) ORACLE_HOME enviroment variable should be specified and point to
+   //       2) ORACLE_HOME environment variable should be specified and point to
    //           location, where Instant Client files are extracted
    //       3) Run odbc_install.exe from account with administrative rights
    //       3) In $ORACLE_HOME/network/admin/ directory appropriate *.ora files

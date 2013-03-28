@@ -630,7 +630,7 @@ void TGX11TTF::DeleteFont(FontStruct_t fs)
 //______________________________________________________________________________
 Int_t TGX11TTF::TextWidth(FontStruct_t font, const char *s, Int_t len)
 {
-   // Return lenght of string in pixels. Size depends on font
+   // Return length of string in pixels. Size depends on font
 
    if (!fXftFontHash) {
       return TGX11::TextWidth(font, s, len);

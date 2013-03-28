@@ -113,7 +113,7 @@ public:
 
    using IRootFinderMethod::SetFunction;
 
-   /// iterate (return GSL_SUCCESS in case of succesfull iteration)
+   /// iterate (return GSL_SUCCESS in case of successful iteration)
    int Iterate(); 
 
    double Root() const; 

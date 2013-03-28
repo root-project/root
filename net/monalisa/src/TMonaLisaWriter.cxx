@@ -204,7 +204,7 @@ void TMonaLisaWriter::Init(const char *monserver, const char *montag, const char
    // case of process monitoring it can be just an identifier to classify
    // the type of jobs e.g. "PROOF_PROCESSING".
    // If monid is not specified, TMonaLisaWriter tries to set it in this order
-   // from environement variables:
+   // from environment variables:
    // - PROOF_JOB_ID
    // - GRID_JOB_ID
    // - LCG_JOB_ID

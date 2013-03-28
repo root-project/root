@@ -620,7 +620,7 @@ gSystem-&gt;Load("mydir/mylib");
 
 <programlisting language="c++">
 root[] <emphasis role="bold"><code>.L readonly/t.C++</code></emphasis>
-Warning in &lt;ACLiC&gt;: /scratch/aclic/subs/./readonly is not writeable!
+Warning in &lt;ACLiC&gt;: /scratch/aclic/subs/./readonly is not writable!
 Warning in &lt;ACLiC&gt;: Output will be written to /tmp
 Info in &lt;TUnixSystem::ACLiC&gt;: creating shared library
 /tmp//scratch/aclic/subs/./readonly/t_C.so

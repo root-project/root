@@ -163,7 +163,7 @@ changed using SetRecordName() method from the right panel context menu.\n\n\
 const char gTVHelpUserCommands[] = "\
 User commands can be issued directly from the textbox labeled <Command>\n\
 from the upper-left toolbar by typing and pressing Enter at the end.\n\
-An other way is from the right panel context menu: ExecuteCommand.\n\n\
+Another way is from the right panel context menu: ExecuteCommand.\n\n\
 All commands can be interrupted at any time by pressing the STOP button\n\
 from the bottom-left.\n\n\
 You can toggle recording of the current command in the history file by\n\

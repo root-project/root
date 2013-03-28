@@ -27,7 +27,7 @@
 namespace textinput {
   class Color;
 
-  // Base class for ouput to a terminal.
+  // Base class for output to a terminal.
   class TerminalDisplay: public Display {
   public:
     ~TerminalDisplay();

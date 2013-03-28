@@ -228,7 +228,7 @@ TSQLResult *TOracleServer::Query(const char *sql)
 Bool_t TOracleServer::Exec(const char* sql)
 {
    // Execute sql command wich does not produce any result set.
-   // Return kTRUE if succesfull
+   // Return kTRUE if successful
 
    CheckConnect("Exec", kFALSE);
 

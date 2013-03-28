@@ -42,11 +42,11 @@ extern "C" {
    gint gdk_colormap_alloc_colors(GdkColormap * colormap,
                                   GdkColor * colors,
                                   gint ncolors,
-                                  gboolean writeable,
+                                  gboolean writable,
                                   gboolean best_match, gboolean * success);
    gboolean gdk_colormap_alloc_color(GdkColormap * colormap,
                                      GdkColor * color,
-                                     gboolean writeable,
+                                     gboolean writable,
                                      gboolean best_match);
    void gdk_colormap_free_colors(GdkColormap * colormap,
                                  GdkColor * colors, gint ncolors);

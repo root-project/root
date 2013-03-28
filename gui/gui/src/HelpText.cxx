@@ -452,7 +452,7 @@ The username can be specified in two ways, \"-l\" having the priority\n\
 (as in ssh). A \"dbg\" value > 0 gives increasing verbosity.\n\
 The last argument \"script\" allows to specify an alternative script to\n\
 be executed remotely to startup the session, \"roots\" being\n\
-the default. If the script is preceeded by a \"<\" the script will be\n\
+the default. If the script is preceded by a \"<\" the script will be\n\
 sourced, after which \"roots\" is executed. The sourced script can be \n\
 used to change the PATH and other variables, allowing an alternative\n\
 \"roots\" script to be found.\n\

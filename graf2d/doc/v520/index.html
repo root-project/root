@@ -15,7 +15,7 @@
      mode were wrong.
 <li> In FillRectangleInternal when the rectangle to be drawn had its width or
      its height equal to 0, they were set to the current image width or height.
-     This was not a good solution because this obscured completly the picture.
+     This was not a good solution because this obscured completely the picture.
      In particular, some markers being drawn with a filled rectangle, they
      obscured the picture when they were really small because in that case the
      rectangle drawn had width=height=0. Now, when a rectangle has its width or

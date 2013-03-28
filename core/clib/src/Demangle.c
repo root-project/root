@@ -2370,7 +2370,7 @@ demangle_args (work, mangled, declp)
             {
               /* If we have 10 or more types we might have more than a 1 digit
                  index so we'll have to consume the whole count here. This
-                 will loose if the next thing is a type name preceeded by a
+                 will loose if the next thing is a type name preceded by a
                  count but it's impossible to demangle that case properly
                  anyway. Eg if we already have 12 types is T12Pc "(..., type1,
                  anyway. Eg if we already have 12 types is T12Pc "(..., type1,

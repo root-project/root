@@ -367,7 +367,7 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
    // this is to be used by user (thats why we pass the name of the branch).
    // It works in exactly the same way as TTree::SetBranchStatus so you
    // probably want to look over ther for details about the use of bname
-   // with regular expresions.
+   // with regular expressions.
    // The branches are taken with respect to the Owner of this TTreeCache
    // (i.e. the original Tree)
    // NB: if bname="*" all branches are put in the cache and the learning phase stopped

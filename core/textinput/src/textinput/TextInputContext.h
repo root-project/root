@@ -7,7 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 //
-//  This file defines the internal interface for TextInput's auxilliary
+//  This file defines the internal interface for TextInput's auxiliary
 //  objects.
 //
 //  Axel Naumann <axel@cern.ch>, 2011-05-12

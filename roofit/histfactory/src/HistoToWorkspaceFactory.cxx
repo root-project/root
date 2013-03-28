@@ -430,11 +430,11 @@ namespace HistFactory{
     string pdfName(pdfNameChar);
     map<string,string>::iterator it;
     string edit="EDIT::customized("+pdfName+",";
-    string preceed="";
+    string precede="";
     for(it=renameMap.begin(); it!=renameMap.end(); ++it) {
       cout << it->first + "=" + it->second << endl;
-      edit+=preceed + it->first + "=" + it->second;
-      preceed=",";
+      edit+=precede + it->first + "=" + it->second;
+      precede=",";
     }
     edit+=")";
     cout << edit<< endl;
@@ -452,7 +452,7 @@ namespace HistFactory{
     string edit="EDIT::newSimPdf("+pdfName+",";
     string editList;
     string lastPdf=pdfName;
-    string preceed="";
+    string precede="";
     unsigned int numReplacements = 0;
     unsigned int nskipped = 0;
     map<string,double>::iterator it;
@@ -507,10 +507,10 @@ namespace HistFactory{
 
       // replace alphas with alphaOfBeta and replace constraints
       //cout <<         "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint" << endl;
-      editList+=preceed + "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint";
-      preceed=",";
+      editList+=precede + "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint";
+      precede=",";
       //      cout <<         "alpha_"+it->first+"=alphaOfBeta_"+ it->first << endl;
-      editList+=preceed + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
+      editList+=precede + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
 
       /*
       if( proto->pdf(("alpha_"+it->first+"Constraint").c_str()) && proto->var(("alpha_"+it->first).c_str()) )
@@ -524,7 +524,7 @@ namespace HistFactory{
 	edit="EDIT::"+lastPdf+"_("+lastPdf+","+editList+")";
 	lastPdf+="_"; // append an underscore for the edit
 	editList=""; // reset edit list
-	preceed="";
+	precede="";
 	cout << "Going to issue this edit command\n" << edit<< endl;
 	proto->factory( edit.c_str() );
 	RooAbsPdf* newOne = proto->pdf(lastPdf.c_str());
@@ -559,10 +559,10 @@ namespace HistFactory{
 
       // replace alphas with alphaOfBeta and replace constraints
       cout <<         "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint" << endl;
-      editList+=preceed + "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint";
-      preceed=",";
+      editList+=precede + "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint";
+      precede=",";
       cout <<         "alpha_"+it->first+"=alphaOfBeta_"+ it->first << endl;
-      editList+=preceed + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
+      editList+=precede + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
 
       if( proto->pdf(("alpha_"+it->first+"Constraint").c_str()) && proto->var(("alpha_"+it->first).c_str()) )
 	cout << " checked they are there" << proto->pdf(("alpha_"+it->first+"Constraint").c_str()) << " " << proto->var(("alpha_"+it->first).c_str()) << endl;
@@ -574,7 +574,7 @@ namespace HistFactory{
 	edit="EDIT::"+lastPdf+"_("+lastPdf+","+editList+")";
 	lastPdf+="_"; // append an underscore for the edit
 	editList=""; // reset edit list
-	preceed="";
+	precede="";
 	cout << edit<< endl;
 	proto->factory( edit.c_str() );
 	RooAbsPdf* newOne = proto->pdf(lastPdf.c_str());
@@ -626,10 +626,10 @@ namespace HistFactory{
 
       // replace alphas with alphaOfBeta and replace constraints
       cout <<         "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint" << endl;
-      editList+=preceed + "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint";
-      preceed=",";
+      editList+=precede + "alpha_"+it->first+"Constraint=beta_" + it->first+ "Constraint";
+      precede=",";
       cout <<         "alpha_"+it->first+"=alphaOfBeta_"+ it->first << endl;
-      editList+=preceed + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
+      editList+=precede + "alpha_"+it->first+"=alphaOfBeta_"+ it->first;
 
       if( proto->pdf(("alpha_"+it->first+"Constraint").c_str()) && proto->var(("alpha_"+it->first).c_str()) )
 	cout << " checked they are there" << proto->pdf(("alpha_"+it->first+"Constraint").c_str()) << " " << proto->var(("alpha_"+it->first).c_str()) << endl;
@@ -641,7 +641,7 @@ namespace HistFactory{
 	edit="EDIT::"+lastPdf+"_("+lastPdf+","+editList+")";
 	lastPdf+="_"; // append an underscore for the edit
 	editList=""; // reset edit list
-	preceed="";
+	precede="";
 	cout << edit<< endl;
 	proto->factory( edit.c_str() );
 	RooAbsPdf* newOne = proto->pdf(lastPdf.c_str());

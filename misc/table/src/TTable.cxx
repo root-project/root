@@ -53,7 +53,7 @@
 //     float x_last[3];      /* coord. of last measured point (cm)     */
 //     float length;         /* from first to last point (cm)          */
 //     float impact;         /* primary vertex (cm)                    */
-//     unsigned long map[2]; /* extrap. info. (see preceeding comments)*/
+//     unsigned long map[2]; /* extrap. info. (see preceding comments)*/
 //     int id;               /* Primary key (see comments)             */
 //     int iflag;            /* bitmask quality info. (see comments)   */
 //     int det_id;           /* Detector id information                */

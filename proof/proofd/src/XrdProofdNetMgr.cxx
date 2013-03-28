@@ -491,7 +491,7 @@ void * XrdProofdNetMgr::ProcessBonjourUpdate(void * context)
          w++;
          haveit = 0;
          while (w != mgr->fRegWorkers.end()) {
-            TRACE(HDBG,"registerd node: "<< (*w)->fHost <<", port: "<<(*w)->fPort);
+            TRACE(HDBG,"registered node: "<< (*w)->fHost <<", port: "<<(*w)->fPort);
             if ((*w)->fHost == i->GetHostName() && (*w)->fPort == i->GetPort()) {
                (*w)->fActive = true;
                haveit = 1;

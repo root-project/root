@@ -67,7 +67,7 @@ void RooRealConstant::cleanup()
 RooConstVar& RooRealConstant::value(Double_t value) 
 {
   // Return a constant value object with given value.
-  // Return previously created object if avaliable,
+  // Return previously created object if available,
   // otherwise create a new one on the fly.
   
   // Lookup existing constant

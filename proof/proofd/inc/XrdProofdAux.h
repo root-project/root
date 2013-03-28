@@ -18,7 +18,7 @@
 //                                                                      //
 // Authors: G. Ganis, CERN, 2007                                        //
 //                                                                      //
-// Small auxilliary classes used in XrdProof                            //
+// Small auxiliary classes used in XrdProof                            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 #include <list>

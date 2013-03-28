@@ -115,11 +115,11 @@ void Update()
    prev_load = act_load;
    old_memUsage = memUsage;
 
-   // Get CPU informations
+   // Get CPU information
    gSystem->GetCpuInfo(&cpuInfo, 100);
    // actual CPU load
    act_load = cpuInfo.fTotal;
-   // Get Memory informations
+   // Get Memory information
    gSystem->GetMemInfo(&memInfo);
    // choose which value to display
    if (gMainWindow->GetActInfo() == 0)

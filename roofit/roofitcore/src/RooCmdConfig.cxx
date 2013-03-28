@@ -242,7 +242,7 @@ const char* RooCmdConfig::missingArgs() const
 void RooCmdConfig::defineDependency(const char* refArgName, const char* neededArgName) 
 {
   // Define that processing argument name refArgName requires processing
-  // of argument named neededArgName to succesfully complete parsing
+  // of argument named neededArgName to successfully complete parsing
 
   TNamed* dep = new TNamed(refArgName,neededArgName) ;
   _yList.Add(dep) ;
@@ -755,7 +755,7 @@ const RooLinkedList& RooCmdConfig::getObjectList(const char* name)
 //_____________________________________________________________________________
 Bool_t RooCmdConfig::ok(Bool_t verbose) const 
 { 
-  // Return true of parsing was succesfull
+  // Return true of parsing was successful
 
   if (_rList.GetSize()==0 && !_error) return kTRUE ;
 

@@ -41,7 +41,7 @@
 /* from import.c : */
 FILE* open_image_file( const char *path );
 /* from export.c : */
-FILE* open_writeable_image_file( const char *path );
+FILE* open_writable_image_file( const char *path );
 
 void 
 dib_data_to_scanline( ASScanline *buf, 
@@ -364,7 +364,7 @@ ASImage2bmp ( ASImage *im, const char *path,  ASImageExportParams *params )
 	FILE *outfile = NULL ;
 	START_TIME(started);
 
-	if ((outfile = open_writeable_image_file( path )) != NULL)
+	if ((outfile = open_writable_image_file( path )) != NULL)
 	{
 		void *bmbits ;
 		BITMAPINFO *bmi = ASImage2DBI( get_default_asvisual(), im, 0, 0, im->width, im->height, &bmbits, 0 );

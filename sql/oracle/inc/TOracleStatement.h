@@ -41,7 +41,7 @@ protected:
       char* namebuf;
    };
 
-   oracle::occi::Environment *fEnv;         // enviroment 
+   oracle::occi::Environment *fEnv;         // environment 
    oracle::occi::Connection  *fConn;        // connection to Oracle
    oracle::occi::Statement   *fStmt;        // executed statement
    oracle::occi::ResultSet   *fResult;      // query result (rows)

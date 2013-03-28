@@ -172,7 +172,7 @@ bool  TUnuran::SetRandomGenerator()
 
 bool  TUnuran::SetContDistribution(const TUnuranContDist & dist )
 {
-   // internal method to set in unuran the function pointer for a continous univariate distribution 
+   // internal method to set in unuran the function pointer for a continuous univariate distribution 
    if (fUdistr != 0)  unur_distr_free(fUdistr);
    fUdistr = unur_distr_cont_new(); 
    if (fUdistr == 0) return false; 

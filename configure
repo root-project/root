@@ -1255,7 +1255,7 @@ guess_architecture() {
             echo "Attempts at guessing your architecture failed."
             echo "(triplet is $arch:$chip:$rele)"
             echo "Please specify the architecture as the first argument."
-            echo "Do '$0 --help' for a list of avaliable architectures."
+            echo "Do '$0 --help' for a list of available architectures."
             echo "Or file a bug at https://savannah.cern.ch/projects/savroot/"
             echo "including the full config.log and a dump of"
             echo "  touch dummy_file.c; gcc -E -dM dummy_file.c"
@@ -3088,7 +3088,7 @@ if test ! "x$enable_mysql" = "xno"; then
        mysqllib=$found_lib
        mysqllibdir=$found_dir
 
-       # on linux, but maybe also other systems, explicitely add libz
+       # on linux, but maybe also other systems, explicitly add libz
        # (formally only needed when linking against the static libmysqlclient.a)
        if test ! "x$mysqllib" = "x" ; then
            case $platform in

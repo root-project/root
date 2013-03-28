@@ -105,7 +105,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
     infile->Close();
    </PRE></BLOCKQUOTE></p>
    <p></p>
-   <p>More informations can still be found on
+   <p>More information can still be found on
    <a HREF="http://cern.ch/aleph-proj-alphapp/doc/tlimit.html">this</a> page.</p>
    </FONT>
    */

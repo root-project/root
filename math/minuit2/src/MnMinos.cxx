@@ -142,7 +142,7 @@ MnCross MnMinos::FindCrossValue(int direction, unsigned int par, unsigned int ma
    unsigned int ind = upar.IntOfExt(par);
    // get error matrix (methods return a copy)
    MnAlgebraicSymMatrix m = fMinimum.Error().Matrix();  
-   // get internal paramaters 
+   // get internal parameters 
    const MnAlgebraicVector & xt = fMinimum.Parameters().Vec(); 
    //LM:  change to use err**2 (m(i,i) instead of err as in F77 version
    double xunit = sqrt(up/m(ind,ind));
@@ -236,7 +236,7 @@ MnCross MnMinos::Loval(unsigned int par, unsigned int maxcalls, double toler) co
 //    unsigned int ind = upar.IntOfExt(par);
 //    MnAlgebraicSymMatrix m = fMinimum.Error().Matrix();
 //    double xunit = sqrt(up/m(ind,ind));
-//    // get internal paramaters 
+//    // get internal parameters 
 //    const MnAlgebraicVector & xt = fMinimum.Parameters().Vec(); 
 
 //    for(unsigned int i = 0; i < m.Nrow(); i++) {

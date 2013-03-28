@@ -1491,7 +1491,7 @@ L110:
 
                   LabelsLimits(label,first,last);  //Eliminate blanks
 
-                  if (label[first] == '.') { //check if '.' is preceeded by a digit
+                  if (label[first] == '.') { //check if '.' is preceded by a digit
                      strncpy(chtemp, "0",256);
                      strlcat(chtemp, &label[first],256);
                      strncpy(label, chtemp,256);

@@ -341,7 +341,7 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
       // Policy: check first the general directive for groups; a user of a specific group
       // (both UNIX or PROOF groups) can be rejected by prefixing a '-'.
       // The group check fails if active (the allowedgroups directive has entries) and at
-      // least of the two groups (UNIX or PROOF) are explicitely denied.
+      // least of the two groups (UNIX or PROOF) are explicitly denied.
       // The result of the group check is superseeded by any explicit speicification in the
       // allowedusers, either positive or negative.
       //
@@ -355,13 +355,13 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
       //         User 'katy' is allowed because part of PROOF group 'student'; 
       //         users 'jack' and 'john' are denied because not part of PROOF group 'student' (no 'allowedusers' directive)
       //   3.    xpd.allowedgroups alfa,-student
-      //         User 'katy' is denied because part of PROOF group 'student' which is explicitely denied;
+      //         User 'katy' is denied because part of PROOF group 'student' which is explicitly denied;
       //         users 'jack' and 'john' are allowed becasue part of UNIX group 'alfa' (no 'allowedusers' directive)
       //   4.    xpd.allowedgroups alfa,-student
       //         xpd.allowedusers katy,-jack
-      //         User 'katy' is allowed because explicitely allowed by the 'allowedusers' directive;
-      //         user 'jack' is denied because explicitely denied by the 'allowedusers' directive;
-      //         user 'john' is allowed because part of 'alfa' and not explicitely denied by the 'allowedusers' directive
+      //         User 'katy' is allowed because explicitly allowed by the 'allowedusers' directive;
+      //         user 'jack' is denied because explicitly denied by the 'allowedusers' directive;
+      //         user 'john' is allowed because part of 'alfa' and not explicitly denied by the 'allowedusers' directive
       //         (the allowedgroups directive is in this case ignored for users 'katy' and 'jack').
 
       bool grpok = 1;
@@ -431,7 +431,7 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
          usrok = 1;
          e = "";
       }
-      // We fail if either the user is explicitely denied or it is not explicitely allowed
+      // We fail if either the user is explicitly denied or it is not explicitly allowed
       // and the group is denied
       if (usrok == -1 || (!grpok && usrok != 1)) return -1;
    }
@@ -1014,7 +1014,7 @@ int XrdProofdManager::Config(bool rcf)
 
    // Groups
    if (!fGroupsMgr)
-      // Create default group, if none explicitely requested
+      // Create default group, if none explicitly requested
       fGroupsMgr = new XrdProofGroupMgr;
 
    if (fGroupsMgr)

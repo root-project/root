@@ -371,7 +371,7 @@ inline SVector<T,3> Cross(const VecExpr<A,T,3>& lhs, const VecExpr<B,T,3>& rhs) 
 
 
 /** Unit.
-    Return a vector of unit lenght: \f$ \vec{e}_v = \vec{v}/|\vec{v}| \f$.
+    Return a vector of unit length: \f$ \vec{e}_v = \vec{v}/|\vec{v}| \f$.
 
     @ingroup VectFunction
     @author T. Glebe

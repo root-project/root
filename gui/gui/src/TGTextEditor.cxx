@@ -476,7 +476,7 @@ void TGTextEditor::Build()
 //______________________________________________________________________________
 void TGTextEditor::DataDropped(char *fname)
 {
-   // Update file informations when receiving the signal
+   // Update file information when receiving the signal
    // DataDropped from TGTextEdit widget.
 
    TString tmp;

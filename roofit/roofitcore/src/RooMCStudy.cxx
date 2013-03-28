@@ -202,7 +202,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 
     _perExptGenParams = kTRUE ;
 
-    coutI(Generation) << "RooMCStudy::RooMCStudy: INFO have pdf with constraints, will generate paramaters from constraint pdf for each experiment" << endl ;
+    coutI(Generation) << "RooMCStudy::RooMCStudy: INFO have pdf with constraints, will generate parameters from constraint pdf for each experiment" << endl ;
 
 
   } else {

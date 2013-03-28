@@ -41,16 +41,16 @@ class FTGL_EXPORT FTFace
         virtual ~FTFace();
 
         /**
-         * Attach auxilliary file to font (e.g., font metrics).
+         * Attach auxiliary file to font (e.g., font metrics).
          *
-         * @param fontFilePath  auxilliary font file path.
+         * @param fontFilePath  auxiliary font file path.
          * @return          <code>true</code> if file has opened
          *                  successfully.
          */
         bool Attach( const char* fontFilePath);
 
         /**
-         * Attach auxilliary data to font (e.g., font metrics) from memory
+         * Attach auxiliary data to font (e.g., font metrics) from memory
          *
          * @param pBufferBytes  the in-memory buffer
          * @param bufferSizeInBytes  the length of the buffer in bytes

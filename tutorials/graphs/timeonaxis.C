@@ -12,7 +12,7 @@ void timeonaxis()
 // begin_html <a href="http://www.topology.org/sci/time.html">http://www.topology.org/sci/time.html</a> end_html
 //
 // The start time is : almost NOW (the time at which the script is executed)
-// actualy, the nearest preceeding hour beginning.
+// actualy, the nearest preceding hour beginning.
 // The time is in general expressed in UTC time with the C time() function
 // This will obviously most of the time not be the time displayed on your watch
 // since it is universal time. See the C time functions for converting this time

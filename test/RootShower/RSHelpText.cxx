@@ -107,7 +107,7 @@ const char gSimulationHelpText[] =
 "status :\n"
 "     Waiting to start simulation \n"
 "     Done - Total particles : xxx - Waiting for next simulation \n"
-"You can access informations on current event by selecting Infos into the\n"
+"You can access information on current event by selecting Infos into the\n"
 "Event menu.\n"
 "Select 3D View into this same menu to have a 3D view of the event into\n"
 "a new OpenGL window. It is also possible to do this with the context menu\n"

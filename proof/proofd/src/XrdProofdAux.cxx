@@ -15,7 +15,7 @@
 //                                                                      //
 // Authors: G. Ganis, CERN, 2007                                        //
 //                                                                      //
-// Small auxilliary classes used in XrdProof                            //
+// Small auxiliary classes used in XrdProof                            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 #include "XrdProofdPlatform.h"
@@ -1542,7 +1542,7 @@ int XrdProofdAux::ParsePidPath(const char *path,
 {
    // Parse a path in the form of "<before>[.<pid>][.<after>]", filling 'rest'
    // and returning 'pid'.
-   // Return 0 if pid is not defined; 'before' is filled with the string preceeding
+   // Return 0 if pid is not defined; 'before' is filled with the string preceding
    // <pid>, <after> with the string following <pid>.
    XPDLOC(AUX, "ParsePidPath")
 

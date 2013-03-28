@@ -780,7 +780,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    if (enableSchemaEvolution) {
       TMessage::EnableSchemaEvolutionForAll();
    } else {
-      Info("TProofServ", "automatic schema evolution in TMessage explicitely disabled");
+      Info("TProofServ", "automatic schema evolution in TMessage explicitly disabled");
    }
 }
 
@@ -1334,7 +1334,7 @@ void TProofServ::HandleSocketInput()
    Int_t rc = 0;
    TString exmsg;
 
-   // Check log file lenght (before the action, so we have the chance to keep the
+   // Check log file length (before the action, so we have the chance to keep the
    // latest logs)
    TruncateLogFile();
 
@@ -2550,7 +2550,7 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
    fflush(stdout);
 
    // On workers we do not send the logs to masters (to avoid duplication of
-   // text) unless asked explicitely, e.g. after an Exec(...) request.
+   // text) unless asked explicitly, e.g. after an Exec(...) request.
    if (!IsMaster()) {
       if (!fSendLogToMaster) {
          FlushLogFile();

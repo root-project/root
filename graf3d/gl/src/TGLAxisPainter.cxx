@@ -568,7 +568,7 @@ void TGLAxisPainterBox::DrawAxis3D(TGLRnrCtx &rnrCtx)
    glGetDoublev(GL_PROJECTION_MATRIX, pm);
    glGetIntegerv(GL_VIEWPORT, vp);
 
-   // determine bitmap font size from lenght of projected vertical
+   // determine bitmap font size from length of projected vertical
    GLdouble dn[3];
    GLdouble up[3];
    gluProject(fAxisTitlePos[2].X(), fAxisTitlePos[2].Y(), fAxis[2]->GetXmin(), mm.Arr(), pm, vp, &dn[0], &dn[1], &dn[2]);

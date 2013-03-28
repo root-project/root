@@ -127,7 +127,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
    fMain-&gt;MapWindow();
 }
 void MyMainFrame::DoDraw() {
-   <emphasis role="italic">// Draws function graphics in randomly choosen interval</emphasis>
+   <emphasis role="italic">// Draws function graphics in randomly chosen interval</emphasis>
    TF1 *f1 = new TF1("f1","sin(x)/x",0,gRandom-&gt;Rndm()*10);
    f1-&gt;SetLineWidth(3);
    f1-&gt;Draw();

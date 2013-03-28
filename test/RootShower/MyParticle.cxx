@@ -117,7 +117,7 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
 //______________________________________________________________________________
 char *MyParticle::GetObjectInfo(Int_t, Int_t) const
 {
-   // Returns particle informations.
+   // Returns particle information.
 
    static char info[64];
    sprintf(info,"Particle = %s, E = %1.3e", GetName(), Energy());

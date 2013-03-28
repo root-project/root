@@ -45,7 +45,7 @@ public:
   static Bool_t makePdf(const char* name, const char* realArgNames=0, const char* catArgNames=0, 
 			const char* expression="1.0", Bool_t hasAnaInt=kFALSE, Bool_t hasIntGen=kFALSE, const char* intExpression=0) ;
   static Bool_t makeFunction(const char* name, const char* realArgNames=0, const char* catArgNames=0, 
-			     const char* expresion="1.0", Bool_t hasAnaInt=kFALSE, const char* intExpression=0) ;
+			     const char* expression="1.0", Bool_t hasAnaInt=kFALSE, const char* intExpression=0) ;
   static Bool_t makeClass(const char* className, const char* name, const char* realArgNames=0, const char* catArgNames=0, 
 			  const char* expression="1.0", Bool_t hasAnaInt=kFALSE, Bool_t hasIntGen=kFALSE, const char* intExpression=0) ;
 

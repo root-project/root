@@ -240,7 +240,7 @@ XSGui::ProcessMessage(Long_t msg, Long_t param1, Long_t)
 
 //---- Main program ----------------------------------------------------------
 
-TROOT root("GUI", "GUI test environement");
+TROOT root("GUI", "GUI test environment");
 
 /* ----- main ----- */
 int main(int ac, char *av[])

@@ -39,7 +39,7 @@ Monte Carlo inputs:
 <li><tt>bini</tt>: reconstructed spectrum (TH1D, n bins)
 <li><tt>Adet</tt>: response matrix (TH2D, nxn bins)
 </ul>
-Consider the unfolding of a measured spectrum <tt>bdat</tt> with covariance matrix <tt>Bcov</tt> (if not passed explicitely, a diagonal covariance will be built given the errors of <tt>bdat</tt>). The corresponding spectrum in the Monte Carlo is given by <tt>bini</tt>, with the true underlying spectrum given by <tt>xini</tt>. The detector response is described by <tt>Adet</tt>, with <tt>Adet</tt> filled with events (not probabilities) with the true observable on the y-axis and the reconstructed observable on the x-axis.
+Consider the unfolding of a measured spectrum <tt>bdat</tt> with covariance matrix <tt>Bcov</tt> (if not passed explicitly, a diagonal covariance will be built given the errors of <tt>bdat</tt>). The corresponding spectrum in the Monte Carlo is given by <tt>bini</tt>, with the true underlying spectrum given by <tt>xini</tt>. The detector response is described by <tt>Adet</tt>, with <tt>Adet</tt> filled with events (not probabilities) with the true observable on the y-axis and the reconstructed observable on the x-axis.
 <p>
 The measured distribution can be unfolded for any combination of resolution, efficiency and acceptance effects, provided an appropriate definition of <tt>xini</tt> and <tt>Adet</tt>.<br><br>
 <p>

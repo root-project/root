@@ -23,7 +23,7 @@
 #include "TWin32Thread.h"
 
 // Force creation of TWin32ThreadFactory when shared library will be loaded
-// (don't explicitely create a TWin32ThreadFactory).
+// (don't explicitly create a TWin32ThreadFactory).
 static TWin32ThreadFactory gWin32ThreadFactoryCreator;
 
 ClassImp(TWin32ThreadFactory)

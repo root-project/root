@@ -39,7 +39,7 @@ namespace RooStats {
 
   private:
     Double_t fMaxCorrection; // maximum correction factor at any point
-    Double_t fTolerance; // probability to add an unecessary term
+    Double_t fTolerance; // probability to add an unnecessary term
 
    protected:
     ClassDef(BernsteinCorrection,1) // A utility to add polynomial corrrection terms to a model to improve the description of data.

@@ -102,7 +102,7 @@
 //   -noauth           do not require client authentication             //
 //   -p port#          specifies a different port to listen on          //
 //   -s <sshd_port>    specifies the port number for the sshd daemon    //
-//                     (deafult is 22)                                  //
+//                     (default is 22)                                  //
 //   -S keytabfile     use this keytab file, instead of the default     //
 //                     (option only supported when compiled with        //
 //                     Kerberos5 support)                               //

@@ -36,7 +36,7 @@ void rf207_comptools()
   // Declare observable x
   RooRealVar x("x","x",0,10) ;
 
-  // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their paramaters
+  // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
   RooRealVar mean("mean","mean of gaussians",5) ;
   RooRealVar sigma("sigma","width of gaussians",0.5) ;
   RooGaussian sig("sig","Signal component 1",x,mean,sigma) ;  

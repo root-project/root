@@ -331,7 +331,7 @@ bool HypoTestInverterOriginal::RunFixedScan( int nBins, double xMin, double xMax
     
     // check if failed status
     if ( status==false ) {
-      std::cout << "Loop interupted because of failed status\n";
+      std::cout << "Loop interrupted because of failed status\n";
       return false;
     }
   }

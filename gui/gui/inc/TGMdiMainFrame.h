@@ -152,10 +152,10 @@ protected:
    };
 
    Int_t            fCurrentX, fCurrentY, fResizeMode;   // current MDI child XY position and resize mode
-   Int_t            fArrangementMode;                    // MDI childs arrangement mode
-   TGFont          *fFontCurrent, *fFontNotCurrent;      // fonts for active and inactive MDI childs
-   Pixel_t          fBackCurrent, fForeCurrent;          // back and fore colors for active MDI childs
-   Pixel_t          fBackNotCurrent, fForeNotCurrent;    // back and fore colors for inactive MDI childs
+   Int_t            fArrangementMode;                    // MDI children arrangement mode
+   TGFont          *fFontCurrent, *fFontNotCurrent;      // fonts for active and inactive MDI children
+   Pixel_t          fBackCurrent, fForeCurrent;          // back and fore colors for active MDI children
+   Pixel_t          fBackNotCurrent, fForeNotCurrent;    // back and fore colors for inactive MDI children
 
    TGGC            *fBoxGC;                              // GC used to draw resizing box (rectangle)
 

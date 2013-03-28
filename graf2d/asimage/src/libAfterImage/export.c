@@ -184,7 +184,7 @@ ASImage2file( ASImage *im, const char *dir, const char *file,
 /* Some helper functions :                                                         */
 
 FILE*
-open_writeable_image_file( const char *path )
+open_writable_image_file( const char *path )
 {
 	FILE *fp = NULL;
 	if ( path )
@@ -290,7 +290,7 @@ ASImage2xpm ( ASImage *im, const char *path, ASImageExportParams *params )
            params = &defaults ;
         }
 
-	if ((outfile = open_writeable_image_file( path )) == NULL)
+	if ((outfile = open_writable_image_file( path )) == NULL)
 		return False;
 
     mapped_im = colormap_asimage( im, &cmap, params->xpm.max_colors, params->xpm.dither, params->xpm.opaque_threshold );
@@ -648,7 +648,7 @@ ASImage2png ( ASImage *im, const char *path, register ASImageExportParams *param
 	if( im == NULL )
 		return False;
 	
-	if ((outfile = open_writeable_image_file( path )) == NULL)
+	if ((outfile = open_writable_image_file( path )) == NULL)
 		return False;
 
 	res = ASImage2png_int ( im, outfile, NULL, NULL, params );
@@ -765,7 +765,7 @@ ASImage2jpeg( ASImage *im, const char *path,  ASImageExportParams *params )
            params = &defaults ;
         }
 
-	if ((outfile = open_writeable_image_file( path )) == NULL)
+	if ((outfile = open_writable_image_file( path )) == NULL)
 		return False;
 
 	if((imdec = start_image_decoding( NULL /* default visual */ , im,
@@ -1035,7 +1035,7 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 			gif = NULL;
 			fclose (infile);
 			infile = NULL;
-			outfile = open_writeable_image_file( path );
+			outfile = open_writable_image_file( path );
 
 			if (outfile)
 				gif = EGifOpenFileHandle(fileno(outfile));
@@ -1077,7 +1077,7 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 	if (gif == NULL)
 	{
 		if (outfile == NULL)
-			outfile = open_writeable_image_file(path);
+			outfile = open_writable_image_file(path);
 			
 		if (outfile)
 			if ((gif = EGifOpenFileHandle(fileno(outfile))) == NULL)

@@ -485,7 +485,7 @@ void printSeparator()
    fflush(stdout);
 }
 
-// Sets the color of the ouput to red or normal
+// Sets the color of the output to red or normal
 void setColor(int red = 0)
 {
    char command[13];

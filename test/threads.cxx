@@ -35,7 +35,7 @@ void *mhs(void *)
    c1->SetGrid();
    pad1->Draw();
 
-   // creating a histogram is explicitely locked by a global mutex
+   // creating a histogram is explicitly locked by a global mutex
    TThread::Lock();
    TH1F *main   = new TH1F("main","Main contributor",100,-4,4);
    TThread::UnLock();

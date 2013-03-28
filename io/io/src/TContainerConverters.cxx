@@ -119,7 +119,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
                if (b.GetBufferVersion()==0) continue;
 
                // No object found at this location in map. It might have been skipped
-               // as part of a skipped object. Try to explicitely read the object.
+               // as part of a skipped object. Try to explicitly read the object.
                b.MapObject(*(void**)addr, fProxy->GetCollectionClass(), 0);
                Int_t currentpos = b.Length();
                b.SetBufferOffset( tag - kMapOffset );

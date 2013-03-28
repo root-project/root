@@ -110,7 +110,7 @@ private:
    // Interrupts
    TMutex             *fIMtx;          // To protect interrupt queue
    kXR_int32           fILev;          // Highest received interrupt
-   Bool_t              fIForward;      // Wheter the interrupt should be propagated
+   Bool_t              fIForward;      // Whether the interrupt should be propagated
 
    // Process ID of the instatiating process (to signal interrupts)
    Int_t               fPid;

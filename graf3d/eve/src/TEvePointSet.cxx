@@ -227,7 +227,7 @@ Int_t TEvePointSet::GetPointIntId(Int_t p, Int_t i) const
 //______________________________________________________________________________
 void TEvePointSet::SetPointIntIds(Int_t* ids)
 {
-   // Set integer ids for the last point that was registerd (most
+   // Set integer ids for the last point that was registered (most
    // probably via TPolyMarker3D::SetNextPoint(x,y,z)).
 
    SetPointIntIds(fLastPoint, ids);

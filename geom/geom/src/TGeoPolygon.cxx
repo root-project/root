@@ -17,7 +17,7 @@
 // TGeoXtru class for computing Contains() and Safety(). Only the pointers to
 // the actual lists of XY values are used - these are not owned by the class.
 // 
-// To check if a point in XY plane is contained by a polygon, this is splitted
+// To check if a point in XY plane is contained by a polygon, this is split
 // into an outscribed convex polygon and the remaining polygons of its subtracton
 // from the outscribed one. A point is INSIDE if it is 
 // contained by the outscribed polygon but NOT by the remaining ones. Since these
@@ -27,7 +27,7 @@
 //  Pconvex-P = P1 + P2 + ...           where (+) means 'union'
 //
 //  *Note that P1, P2, ... do not intersect each other and they are defined
-//   by subsets of the list of vertices of P. They can be splitted in the same
+//   by subsets of the list of vertices of P. They can be split in the same
 //   way as P*
 //
 // Therefore, if C(P) represents the Boolean : 'does P contains a given point?',

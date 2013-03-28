@@ -1946,7 +1946,7 @@ void TestFileList::DoMenu(Int_t mode)
    if (mode<10) {
       fContents->SetViewMode((EListViewMode)mode);
    } else {
-      delete this;   // Close menu entry choosen
+      delete this;   // Close menu entry chosen
    }
 }
 

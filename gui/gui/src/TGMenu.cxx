@@ -1279,7 +1279,7 @@ Int_t TGPopupMenu::EndMenu(void *&userData)
 
    if (fDelay) fDelay->Remove();
 
-   // destroy any cascaded childs and get any ID
+   // destroy any cascaded children and get any ID
 
    if (fCurrent != 0) {
 

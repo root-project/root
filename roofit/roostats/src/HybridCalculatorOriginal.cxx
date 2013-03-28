@@ -124,7 +124,7 @@ HybridCalculatorOriginal::HybridCalculatorOriginal( RooAbsPdf& sbModel,
 
    // observables are managed by the class (they are copied in) 
   fObservables = new RooArgList(observables);
-  //Try to recover the informations from the pdf's
+  //Try to recover the information from the pdf's
   //fObservables=new RooArgList("fObservables");
   //fNuisanceParameters=new RooArgSet("fNuisanceParameters");
   // if (priorPdf){

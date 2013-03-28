@@ -58,7 +58,7 @@
 //   This represent the union of A, B and C. Both union operators are at the
 // same level. Since:
 //        A+B+C = (A+B)+C = A+(B+C)
-// the first (+) is taken as separator, hence the expression splitted:
+// the first (+) is taken as separator, hence the expression split:
 //        A and B+C
 // A Boolean node of type TGeoUnion("A", "B+C") is created. This tries to replace
 // the 2 expressions by actual pointers to corresponding shapes.

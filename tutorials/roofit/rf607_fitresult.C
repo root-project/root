@@ -39,7 +39,7 @@ void rf607_fitresult()
   // Declare observable x
   RooRealVar x("x","x",0,10) ;
 
-  // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their paramaters
+  // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
   RooRealVar mean("mean","mean of gaussians",5,-10,10) ;
   RooRealVar sigma1("sigma1","width of gaussians",0.5,0.1,10) ;
   RooRealVar sigma2("sigma2","width of gaussians",1,0.1,10) ;
@@ -79,7 +79,7 @@ void rf607_fitresult()
   // Summary printing: Basic info plus final values of floating fit parameters
   r->Print() ;
 
-  // Verbose printing: Basic info, values of constant paramaters, initial and
+  // Verbose printing: Basic info, values of constant parameters, initial and
   // final values of floating parameters, global correlations
   r->Print("v") ;
 

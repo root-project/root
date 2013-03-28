@@ -15,7 +15,7 @@
 //                                                                      //
 // The TRemoteObject class provides protocol for browsing ROOT objects  //
 // from a remote ROOT session.                                          //
-// It contains informations on the real remote object as:               //
+// It contains information on the real remote object as:               //
 //  - Object Properties (i.e. file stat if the object is a TSystemFile) //
 //  - Object Name                                                       //
 //  - Class Name                                                        //

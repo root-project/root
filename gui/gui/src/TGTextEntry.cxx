@@ -328,7 +328,7 @@ void TGTextEntry::Init()
    fSelbackGC   = GetDefaultSelectedBackgroundGC()();
 
    fOffset = 0;
-   // Set default maximum lenght to 4096. Can be changed with SetMaxLength() 
+   // Set default maximum length to 4096. Can be changed with SetMaxLength() 
    fMaxLen = 4096;
    fFrameDrawn = kTRUE;
    fEdited = kFALSE;

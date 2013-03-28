@@ -141,7 +141,7 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
   }
   delete iter ;
 
-  // reconnect any paramaterized ranges to internal dataset observables
+  // reconnect any parameterized ranges to internal dataset observables
   iter = _vars.createIterator() ;
   while((0 != (var= (RooAbsArg*)iter->Next()))) {
     var->attachDataSet(*this) ;
@@ -166,7 +166,7 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   claimVars(this) ;
   _vars.addClone(other._vars) ;
 
-  // reconnect any paramaterized ranges to internal dataset observables
+  // reconnect any parameterized ranges to internal dataset observables
   TIterator* iter = _vars.createIterator() ;
   RooAbsArg* var ;
   while((0 != (var= (RooAbsArg*)iter->Next()))) {

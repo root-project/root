@@ -1356,7 +1356,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
          if ( branch->GetListOfBranches()->GetEntries() == 0 ) {
 
             if (cl) {
-               // We have a non-splitted object!
+               // We have a non-split object!
 
                if (desc) {
                   TVirtualStreamerInfo *cinfo = cl->GetStreamerInfo();
@@ -1384,7 +1384,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 
          } else {
 
-            // We have a splitted object
+            // We have a split object
 
             TIter subnext( branch->GetListOfBranches() );
             if (desc) {

@@ -808,7 +808,7 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
     }
   }
 
-  // Only examine correlations for cases with >1 floating paramater
+  // Only examine correlations for cases with >1 floating parameter
   if (_finalPars->getSize()>1) {
     
     fillLegacyCorrMatrix() ;

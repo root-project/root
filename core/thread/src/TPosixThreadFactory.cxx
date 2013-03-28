@@ -23,7 +23,7 @@
 #include "TPosixThread.h"
 
 // Force creation of TPosixThreadFactory when shared library will be loaded
-// (don't explicitely create a TPosixThreadFactory).
+// (don't explicitly create a TPosixThreadFactory).
 static TPosixThreadFactory gPosixThreadFactoryCreator;
 
 ClassImp(TPosixThreadFactory)

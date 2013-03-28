@@ -12,7 +12,7 @@ The base class class  of this library is TDataSet:
 That defines the hierarchical nature the class and all its subclasses.
 <br>
 The most advanced subclasses of TDataSet are TTable and TGenericTable 
-to create the TDataSet implementations bearing the self-described variable lenght arrays 
+to create the TDataSet implementations bearing the self-described variable length arrays 
 of the C-structures.
 <P>
 See STAR publications:

@@ -1730,7 +1730,7 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TSQLTableData*
    }
 
    if (columntyp==kColSimpleArray) {
-      // number of items should be exactly equal to number of childs
+      // number of items should be exactly equal to number of children
 
       if (NumChilds()!=1) {
          Error("StoreElementInNormalForm","In fixed array %s only array node should be", elem->GetName());

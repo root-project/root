@@ -874,7 +874,7 @@ RooFitResult* RooMinuit::save(const char* userName, const char* userTitle)
 
   RooFitResult* fitRes = new RooFitResult(name,title) ;
 
-  // Move eventual fixed paramaters in floatList to constList
+  // Move eventual fixed parameters in floatList to constList
   Int_t i ;
   RooArgList saveConstList(*_constParamList) ;
   RooArgList saveFloatInitList(*_initFloatParamList) ;

@@ -101,7 +101,7 @@
 //
 // User commands can be issued directly from the textbox labeled "Command"
 // from the upper-left toolbar by typing and pressing Enter at the end.
-//   An other way is from the right panel context menu : ExecuteCommand.
+//   Another way is from the right panel context menu : ExecuteCommand.
 // All commands can be interrupted at any time by pressing the STOP button
 // from the bottom-left
 // You can toggle recording of the current command in the history file by

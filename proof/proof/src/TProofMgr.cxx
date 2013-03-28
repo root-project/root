@@ -1048,7 +1048,7 @@ ClassImp(TProofDesc)
 void TProofDesc::Print(Option_t *) const
 {
    // Dump the content to the screen.
-   const char *st[] = { "unknown", "idle", "processsing", "shutting down"};
+   const char *st[] = { "unknown", "idle", "processing", "shutting down"};
 
    Printf("// # %d", fLocalId);
    Printf("// alias: %s, url: \"%s\"", GetTitle(), GetUrl());

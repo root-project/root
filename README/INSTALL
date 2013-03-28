@@ -213,7 +213,7 @@ packages do:
 
         %_topdir <some where you can write>/redhat
 
-     Then you should make the appropiate directories:
+     Then you should make the appropriate directories:
 
         mkdir <some where you can write>/redhat
         mkdir <some where you can write>/redhat/SOURCES
@@ -688,7 +688,7 @@ libraries from:
 or you can download the source from the same directory. The original
 sources can be found via Lunds FTP server.
 
-More information is avaliable from:
+More information is available from:
 
    http://www.thep.lu.se/~torbjorn/Pythia.html
 
@@ -717,7 +717,7 @@ directory of the ROOT source tree.
 -------------------------
 To build rootd and proofd with support for AFS authentication, you
 first have to install AFS client libraries system. There are a few AFS
-distributions avaliable.
+distributions available.
 
 * OpenAFS
   IBMs OpenSource AFS distribution - see

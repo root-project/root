@@ -1896,7 +1896,7 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
       } else {
          listOfMissingFiles = new TList;
       }
-      // Do the lookup; we only skip it if explicitely requested so.
+      // Do the lookup; we only skip it if explicitly requested so.
       TString lkopt;
       if (TProof::GetParameter(fInput, "PROOF_LookupOpt", lkopt) != 0 || lkopt != "none")
          dset->Lookup(kTRUE, &listOfMissingFiles);
@@ -2811,7 +2811,7 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
    TList *tmp = (TList *) qr->GetOutputList();
    if (!tmp) {
       gSystem->RedirectOutput(0);
-      Info("Finalize(TQueryResult *)", "ouputlist is empty");
+      Info("Finalize(TQueryResult *)", "outputlist is empty");
       return -1;
    }
    TList *out = fOutput;

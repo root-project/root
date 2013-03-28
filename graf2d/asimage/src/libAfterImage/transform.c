@@ -2639,7 +2639,7 @@ static void calc_gauss_double(double radius, double* gauss)
 		gauss[0] = 1.0;
 		return;
 	}
-	/* after radius of 128 - gaussian degrades into something wierd, 
+	/* after radius of 128 - gaussian degrades into something weird, 
 	   since our colors are only 8 bit */
 	if (radius > 128.0) radius = 128.0; 
 	std_dev = (radius - 1) * 0.3003866304;
@@ -2707,7 +2707,7 @@ static void calc_gauss_int(int radius, GAUSS_COEFF_TYPE* gauss, GAUSS_COEFF_TYPE
 		gauss_sums[0] = 1024;
 		return;
 	}
-	/* after radius of 128 - gaussian degrades into something wierd, 
+	/* after radius of 128 - gaussian degrades into something weird, 
 	   since our colors are only 8 bit */
 	if (i > 128) i = 128; 
 #if 1

@@ -122,7 +122,7 @@
 // should be stored in internal buffers with TSQLStatement::StoreResult()
 // method. Information about selected fields (columns)
 // can be obtained with GetNumFields() and GetFieldName() methods. 
-// To recieve data for next result row, NextResultRow() method should be called.
+// To receive data for next result row, NextResultRow() method should be called.
 // Value from each column can be taken with the GetInt(), GetDouble(),
 // GetString() and other methods. 
 // 

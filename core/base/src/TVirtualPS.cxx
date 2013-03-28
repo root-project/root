@@ -106,7 +106,7 @@ void TVirtualPS::PrintFast(Int_t len, const char *str)
          if (fLenBuffer > 0) nWrite = fLenBuffer;
       } else {
          if ((len + fLenBuffer) > nWrite) {
-            // Search for the nearest preceeding space to break a line, if there is no instruction to escape the <end-of-line>.
+            // Search for the nearest preceding space to break a line, if there is no instruction to escape the <end-of-line>.
             while ((nWrite >= fLenBuffer) && (str[nWrite - fLenBuffer] != ' ')) nWrite--;
             if (nWrite < fLenBuffer) {
                while ((nWrite >= 0) && (fBuffer[nWrite] != ' ')) nWrite--;

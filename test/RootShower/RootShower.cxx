@@ -1071,13 +1071,13 @@ void RootShower::OnShowerProduce()
          fHisto_dEdX->Fill(fEvent->GetParticle(i)->GetELoss());
          for (j=0;j<fEvent->GetParticle(i)->GetNTracks();j++)
             fEvent->GetParticle(i)->GetTrack(j)->Draw();
-         // show track by track if "show process" has been choosen
+         // show track by track if "show process" has been chosen
          // into the menu
          if (fShowProcess) {
             fCA->Modified();
             fCA->Update();
             // create one gif image by step if "Animated GIF"
-            // has been choosen into the menu
+            // has been chosen into the menu
             if (fCreateGIFs) {
                fCA->SaveAs("RSEvent.gif+");
             }

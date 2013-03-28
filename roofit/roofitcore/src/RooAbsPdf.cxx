@@ -1712,7 +1712,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   }
 
 
-  // Forward to appropiate implementation
+  // Forward to appropriate implementation
   RooDataSet* data ;
   if (protoData) {
     data = generate(whatVars,*protoData,nEvents,verbose,randProto,resampleProto) ;
@@ -2134,7 +2134,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet& whatVars, const RooCmdAr
 			<< GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< endl ;
   }
 
-  // Forward to appropiate implementation
+  // Forward to appropriate implementation
   RooDataHist* data = generateBinned(whatVars,nEvents,expectedData,extended) ;
 
   // Rename dataset to given name if supplied

@@ -356,7 +356,7 @@ void TUDPSocket::Close(Option_t *option)
    // Close the socket. If option is "force", calls shutdown(id,2) to
    // shut down the connection. This will close the connection also
    // for the parent of this process. Also called via the dtor (without
-   // option "force", call explicitely Close("force") if this is desired).
+   // option "force", call explicitly Close("force") if this is desired).
 
    Bool_t force = option ? (!strcmp(option, "force") ? kTRUE : kFALSE) : kFALSE;
 

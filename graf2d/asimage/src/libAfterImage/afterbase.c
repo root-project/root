@@ -88,7 +88,7 @@ asim_set_application_name (char *argv0)
 	do
 	{	/* Save our program name - for error messages */
 		register int i = 1 ;                   /* we don't use standard strrchr since there
-												* seems to be some wierdness in
+												* seems to be some weirdness in
 												* CYGWIN implementation of it. */
 		asim_ApplicationName =  temp ;
 		while( temp[i] && temp[i] != '/' ) ++i ;

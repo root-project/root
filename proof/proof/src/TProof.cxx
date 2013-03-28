@@ -859,7 +859,7 @@ Int_t TProof::Init(const char *, const char *conffile,
    if (enableSchemaEvolution) {
       TMessage::EnableSchemaEvolutionForAll();
    } else {
-      Info("TProof", "automatic schema evolution in TMessage explicitely disabled");
+      Info("TProof", "automatic schema evolution in TMessage explicitly disabled");
    }
 
    if (IsMaster()) {
@@ -3121,7 +3121,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                } else {
                   PDB(kGlobal,2)
                      Info("HandleInputMessage",
-                          "%s: kPROOF_OUTPUTLIST: ouputlist is empty", sl->GetOrdinal());
+                          "%s: kPROOF_OUTPUTLIST: outputlist is empty", sl->GetOrdinal());
                }
             } else {
                Warning("HandleInputMessage",
@@ -11598,7 +11598,7 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
       if (mgr && mgr->IsValid()) {
 
          // If XProofd we always attempt an attach first (unless
-         // explicitely not requested).
+         // explicitly not requested).
          Bool_t attach = (create || mgr->IsProofd() || mgr->IsLite()) ? kFALSE : kTRUE;
          if (attach) {
             TProofDesc *d = 0;
@@ -11716,7 +11716,7 @@ void TProof::ResetEnvVars()
 //______________________________________________________________________________
 void TProof::SaveWorkerInfo()
 {
-   // Save informations about the worker set in the file .workers in the working
+   // Save information about the worker set in the file .workers in the working
    // dir. Called each time there is a change in the worker setup, e.g. by
    // TProof::MarkBad().
 

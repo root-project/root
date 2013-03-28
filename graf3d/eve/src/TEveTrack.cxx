@@ -527,7 +527,7 @@ namespace
 //______________________________________________________________________________
 void TEveTrack::SortPathMarksByTime()
 {
-   // Sort registerd pat-marks by time.
+   // Sort registered pat-marks by time.
 
    std::sort(fPathMarks.begin(), fPathMarks.end(), Cmp_pathmark_t());
 }

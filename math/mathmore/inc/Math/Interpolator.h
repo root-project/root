@@ -74,7 +74,7 @@ public:
 
    /**
       Constructs an interpolator class from vector of data points \f$ (x_i, y_i )\f$ and with Interpolation::Type type.
-      The method will compute a continous interpolating function \f$ y(x) \f$ such that \f$ y_i = y ( x_i )\f$.
+      The method will compute a continuous interpolating function \f$ y(x) \f$ such that \f$ y_i = y ( x_i )\f$.
       The defult interpolation type is Cubic spline
    */
    Interpolator(const std::vector<double> & x, const std::vector<double> & y, Interpolation::Type type = Interpolation::kCSPLINE);
