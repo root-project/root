@@ -1663,8 +1663,6 @@ namespace TStreamerInfoActions
             // that actions->fConfiguration != null.
             
             TGenericLoopConfig loopconf(oldProxy);
-            //ReadNumericalCollection_Action action = (ReadNumericalCollection_Action)(void*)0x0;
-            //action(buf,begin,end,&loopconf,config);
             ActionHolder::Action(buf,begin,end,&loopconf,config);
             
             if (begin != &(startbuf[0])) {
@@ -2927,7 +2925,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
    return sequence;
 }
  
-#if defined(R__WIN32)
+#if !defined(R__WIN32)
 #include <dlfcn.h>
 #endif
 
