@@ -2257,7 +2257,7 @@ void TCling::CreateListOfMethods(TClass* cl) const
          cl->fMethod->Add(new TMethod(a, cl));
       }
    }
-   if (cl->fMethod->GetEntries() == ((TClingClassInfo*)cl->GetClassInfo())->NMethods())
+   if (cl->fMethod->GetEntries() > ((TClingClassInfo*)cl->GetClassInfo())->NMethods())
       Error("CreateListOfMethods", "More methods in ROOT/meta than in cling!");
 }
 
