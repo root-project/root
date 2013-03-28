@@ -138,6 +138,8 @@ TObject *TMethodCall::Clone(const char *) const
 }
 
 //______________________________________________________________________________
+// FIXME: We don't need to split that into lookup scope and lookup member. 
+// Consider merging the implementation with the new lookup functionality.
 static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinfo)
 {
    // Helper function to find the scope associated with a qualified
