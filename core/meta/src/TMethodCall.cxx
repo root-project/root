@@ -152,7 +152,7 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinf
                       --nested; break;
             case ':':
                if (nested==0) {
-                  if (i>2 && function[i-1]==':') {
+                  if (i>1 && function[i-1]==':') {
                      TString scope(function);
                      scope[i-1] = 0;
                      pos = i+1;
