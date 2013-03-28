@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bibliography xmlns="http://docbook.org/ns/docbook" version="5.0"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>Bibliography</title>
+ 
+<biblioentry>
+<abbrev>ROOT</abbrev>
+<authorgroup>
+ <author><personname><firstname>René</firstname><surname>Brun</surname></personname></author>
+ <author><personname><firstname>Fons</firstname><surname>Rademakers</surname></personname></author>
+</authorgroup>
+<title>ROOT - An Object Oriented Data Analysis Framework</title>
+<phrase>
+Proceedings AIHENP'96 Workshop 
+Lausanne, Sep. 1996, Nucl. Inst. and Meth. in Phys. Res. A 389 (1997) 81-86.
+</phrase>
+<address>
+See also <link xlink:href="http://root.cern.ch">http://root.cern.ch</link>.
+</address>
+</biblioentry>
+ 
+<biblioentry>
+<abbrev>ROOT_Users_Guide</abbrev>
+<address> 
+<link xlink:href="http://root.cern.ch/drupal/content/users-guide">http://root.cern.ch/drupal/content/users-guide</link>
+</address>
+</biblioentry>
+
+<biblioentry>
+<abbrev>ROOT_Class_Reference</abbrev>
+<address> 
+<link xlink:href="http://root.cern.ch/drupal/content/reference-guide">http://root.cern.ch/drupal/content/reference-guide</link>
+</address>
+</biblioentry>
+
+<biblioentry>
+<abbrev>cint</abbrev> 
+<address>
+<link xlink:href="http://root.cern.ch/drupal/content/cint">http://root.cern.ch/drupal/content/cint</link>
+</address>
+</biblioentry>
+
+<biblioentry>
+<abbrev>MersenneTwister</abbrev> 
+<address>
+<link xlink:href="http://www.math.keio.ac.jp/~matumoto/emt.html">http://www.math.keio.ac.jp/~matumoto/emt.html</link>
+</address>
+</biblioentry>
+
+<biblioentry>
+<abbrev>Fumili</abbrev> 
+<title>I.N.Silin: FUMILI, CERN Program Library, D510, 1983</title>
+</biblioentry>
+ 
+</bibliography>

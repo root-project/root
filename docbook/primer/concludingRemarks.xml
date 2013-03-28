@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0"
+         xmlns:mml="http://www.w3.org/1998/Math/MathML"
+         xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<title>Concluding Remarks</title>
+<para>
+This is the end of our guided tour for beginners through ROOT. 
+There is still a lot coming to mind to be said, but by now you 
+are experienced enough to use the ROOT documentation, most importantly 
+the <emphasis role="bold"><link xlink:href="http://root.cern.ch">ROOT home page</link></emphasis> and the
+<emphasis role="bold"><link xlink:href="http://root.cern.ch/drupal/content/reference-guide">
+ROOT reference guide</link></emphasis> with the documentation of all ROOT classes, 
+or the <emphasis role="bold"><link xlink:href="http://root.cern.ch/drupal/content/users-guide">
+ROOT users guide</link></emphasis>. 
+</para>
+<para>
+A very useful way for you to continue exploring ROOT is to study
+the examples in the sub-directory <code>tutorials/</code> of any
+ROOT installation.
+</para>
+<para>  
+There are some powerful features of ROOT which were not treated in this 
+document, e.g. packages named RooFit and RooStats providing an advanced 
+framework for model building, fitting and statistical analysis. 
+The ROOT class <code>TMVA</code>   offers multi-variate analysis tools 
+including an artificial neural network and many other advanced tools 
+for classification problems. 
+The remarkable ability of ROOT to handle large data volumes was 
+already mentioned in this guide, implemented through the 
+class <code>TTree</code>. But there is still much more for you to explore!
+</para>
+<para>
+<emphasis role="bold">End of this guide ... but hopefully not of your interaction with ROOT !</emphasis>
+</para>
+</chapter>
