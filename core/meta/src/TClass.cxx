@@ -5424,6 +5424,10 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
    if( version > -1 && version < clSI->GetSize() )
       info = (TVirtualStreamerInfo*)clSI->At( version );
 
+   if (!info && cl->GetCollectionProxy()) {
+      info = cl->GetStreamerInfo(); // instantiate the StreamerInfo for STL collections.
+   }
+
    if( !info )
       return 0;
 
