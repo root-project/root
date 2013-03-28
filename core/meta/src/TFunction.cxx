@@ -195,7 +195,7 @@ const char *TFunction::GetMangledName() const
    // of the function.  It has to work even if the function has been
    // unloaded by cint (in which case fInfo is actually hold reference to
    // memory that is (likely) not valid anymore.  So we cache the information.
-   // Maybe we should also cache the rest of the informations .. but this might
+   // Maybe we should also cache the rest of the information .. but this might
    // be too much duplication of information.
    if (fInfo)
       return fMangledName;

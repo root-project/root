@@ -70,7 +70,7 @@ Implemented using GSL, for detailed description see:
 <A HREF="http://www.gnu.org/software/gsl/manual/html_node/One-dimensional-Minimization.html">GSL online doc</A>
 
 The algorithms uspported are only bracketing algorithm which do not use derivatives information. 
-The algorithms which can be choosen at construction time are  GOLDENSECTION, whic is the simplest method 
+The algorithms which can be chosen at construction time are  GOLDENSECTION, whic is the simplest method 
 but the slowest and BRENT (the default one) which combines the golden section with a parabolic interpolation. 
 
 

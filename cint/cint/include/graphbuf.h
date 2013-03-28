@@ -391,7 +391,7 @@ graphbuf& graphbuf::operator >>(ISLOG log)
 	return(*this);
 }
 
-// reset ouput pointer
+// reset output pointer
 graphbuf& graphbuf::operator >>(char *s)
 {
 	pout=0;

@@ -641,7 +641,7 @@ std::string RooSimWSTool::makeSplitName(const RooArgSet& splitCatSet)
 //_____________________________________________________________________________
 void RooSimWSTool::SplitRule::splitParameter(const char* paramNameList, const char* categoryNameList) 
 {
-  // Specify that parameters names listed in paramNameList be splitted in (product of) category(s)
+  // Specify that parameters names listed in paramNameList be split in (product of) category(s)
   // listed in categoryNameList
 
   char paramBuf[4096] ;
@@ -669,7 +669,7 @@ void RooSimWSTool::SplitRule::splitParameter(const char* paramNameList, const ch
 //_____________________________________________________________________________
 void RooSimWSTool::SplitRule::splitParameterConstrained(const char* paramNameList, const char* categoryNameList, const char* remainderStateName) 
 {
-  // Specify that parameters names listed in paramNameList be splitted in constrained way in (product of) category(s)
+  // Specify that parameters names listed in paramNameList be split in constrained way in (product of) category(s)
   // listed in categoryNameList and that remainder fraction formula be put in state with name remainderStateName
 
   char paramBuf[4096] ;

@@ -309,7 +309,7 @@ int G__blockscope::compile_core(int openBrace) {
 // expression, 2nd level
 ////////////////////////////////////////////////////////////////////////////
 /***********************************************************************
- * G__blockscope::compile_expresion()
+ * G__blockscope::compile_expression()
  *	func(args);  -> expr
  *	type(args);  -> expr
  *      (expr);      -> expr

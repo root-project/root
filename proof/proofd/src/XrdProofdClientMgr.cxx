@@ -300,7 +300,7 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
 
    TRACEP(p, HDBG, "enter");
 
-   // If this server is explicitely required to be a worker node or a
+   // If this server is explicitly required to be a worker node or a
    // submaster, check whether the requesting host is allowed to connect
    if (p->Request()->login.role[0] != 'i' &&
       (fMgr->SrvType() == kXPD_MasterWorker || fMgr->SrvType() == kXPD_Master)) {

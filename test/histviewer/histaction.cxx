@@ -1007,7 +1007,7 @@ Bool_t HistAction::toDefault(Window_t id)
    // Does not redraw the button.
    // So to visually change the color needs to be followed by
    // the function NeedRedraw(TGWindow *).
-   // Input paramater - ID of the button to which the action must be applied.
+   // Input parameter - ID of the button to which the action must be applied.
    //
    //------------------------------------------------------------------
 

@@ -162,7 +162,7 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
    std::vector<VariableInfo>& varinfos = dsi.GetVariableInfos();
 
    if (varinfos.empty())
-      Log() << kFATAL << "Dynamic data set cannot be built, since no variable informations are present. Apparently no variables have been set. This should not happen, please contact the TMVA authors." << Endl;
+      Log() << kFATAL << "Dynamic data set cannot be built, since no variable information are present. Apparently no variables have been set. This should not happen, please contact the TMVA authors." << Endl;
 
    std::vector<VariableInfo>::iterator it = varinfos.begin(), itEnd=varinfos.end();
    for (;it!=itEnd;++it) {

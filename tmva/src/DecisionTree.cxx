@@ -162,7 +162,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Int_t minSize, 
       fRegType = new RegressionVariance();
       if ( nCuts <=0 ) {
          fNCuts = 200;
-         Log() << kWARNING << " You had choosen the training mode using optimal cuts, not\n"
+         Log() << kWARNING << " You had chosen the training mode using optimal cuts, not\n"
                << " based on a grid of " << fNCuts << " by setting the option NCuts < 0\n"
                << " as this doesn't exist yet, I set it to " << fNCuts << " and use the grid"
                << Endl;

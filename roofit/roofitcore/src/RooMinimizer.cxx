@@ -597,7 +597,7 @@ RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
   title = userTitle ? userTitle : Form("%s", _func->GetTitle()) ;
   RooFitResult* fitRes = new RooFitResult(name,title) ;
 
-  // Move eventual fixed paramaters in floatList to constList
+  // Move eventual fixed parameters in floatList to constList
   Int_t i ;
   RooArgList saveConstList(*(_fcn->GetConstParamList())) ;
   RooArgList saveFloatInitList(*(_fcn->GetInitFloatParamList())) ;

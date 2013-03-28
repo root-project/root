@@ -407,7 +407,7 @@ void TGSplitFrame::HSplit(UInt_t h)
 {
    // Horizontally split the frame.
 
-   // return if already splitted
+   // return if already split
    if ((fSplitter != 0) || (fFirst != 0) || (fSecond != 0) || (fFrame != 0))
       return;
    UInt_t height = (h > 0) ? h : fHeight/2;
@@ -436,7 +436,7 @@ void TGSplitFrame::VSplit(UInt_t w)
 {
    // Vertically split the frame.
 
-   // return if already splitted
+   // return if already split
    if ((fSplitter != 0) || (fFirst != 0) || (fSecond != 0) || (fFrame != 0))
       return;
    UInt_t width = (w > 0) ? w : fWidth/2;

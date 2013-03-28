@@ -560,7 +560,7 @@ int GlbsToolCheckProxy(char **subjname)
       }
 
 #else
-      // Old version: completly different ...
+      // Old version: completely different ...
       char *                proxy_type;
       proxy_cred_desc *     pcd = 0;
       time_t                time_after;

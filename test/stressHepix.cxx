@@ -26,7 +26,7 @@
 //   make
 //
 // The default configuration of ROOT is enough.
-// The ouput of this benchmark looks like:
+// The output of this benchmark looks like:
 //
 /// stressHepix
 ///

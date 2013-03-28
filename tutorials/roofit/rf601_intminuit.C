@@ -64,7 +64,7 @@ void rf601_intminuit()
   // Call MIGRAD to minimize the likelihood
   m.migrad() ;
 
-  // Print values of all paramaters, that reflect values (and error estimates)
+  // Print values of all parameters, that reflect values (and error estimates)
   // that are back propagated from MINUIT
   model.getParameters(x)->Print("s") ;
 

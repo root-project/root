@@ -273,7 +273,7 @@ double  GSLIntegrator::Integral( const std::vector<double> & pts) {
 
 double  GSLIntegrator::Integral( ) {
    // Eval for indefined integrals: use QAGI method
-   // if method was choosen NO_ADAPTIVE WS does not exist create it
+   // if method was chosen NO_ADAPTIVE WS does not exist create it
 
    if (!CheckFunction()) return 0;  
 
@@ -289,7 +289,7 @@ double  GSLIntegrator::Integral( ) {
 
 double  GSLIntegrator::IntegralUp( double a ) {
    // Integral between [a, + inf]
-   // if method was choosen NO_ADAPTIVE WS does not exist create it
+   // if method was chosen NO_ADAPTIVE WS does not exist create it
 
    if (!CheckFunction()) return 0;  
 
@@ -305,7 +305,7 @@ double  GSLIntegrator::IntegralUp( double a ) {
 
 double  GSLIntegrator::IntegralLow( double b ) {
    // Integral between [-inf, + b]
-   // if method was choosen NO_ADAPTIVE WS does not exist create it
+   // if method was chosen NO_ADAPTIVE WS does not exist create it
 
    if (!CheckFunction()) return 0;  
 

@@ -492,7 +492,7 @@ Int_t TDataSetManager::ScanDataSet(const char *uri, const char *opts)
    //    L, locateonly:  only locate the selected files
    //    S, stageonly:   issue a stage request for the selected files not yet staged
    //
-   //  'auxilliary' field
+   //  'auxiliary' field
    //    V, verbose:     notify the actions
    //
    // Returns 0 on success, -1 if any failure occurs.

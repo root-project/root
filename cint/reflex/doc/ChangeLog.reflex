@@ -348,7 +348,7 @@ type                    ->  TypeInfo
 	* stl_hash.h: removed namespace define for icc compilers 
 
 2005-06-17 Pere
-	* CollectionProxy.h: commited changes from Markus
+	* CollectionProxy.h: committed changes from Markus
 
 2005-06-10 Pere
 	* TypeBuilder.cpp(.h) added EnumTypeBuilder() function

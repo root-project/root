@@ -3181,7 +3181,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          ::Warning("ACLiC","Could not create the directory: %s",
                 build_loc.Data());
       } else {
-         ::Warning("ACLiC","%s is not writeable!",
+         ::Warning("ACLiC","%s is not writable!",
                    build_loc.Data());
       }
       if (emergency_loc == build_dir ) {

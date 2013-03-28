@@ -1041,7 +1041,7 @@ void G__make_ifunctable(G__FastAllocString &funcheader)
     * If ANSI style header, rewind file position to
     *       func(int a ,double b )   ANSI
     *            ^
-    * and check type of paramaters and store it into G__ifunc
+    * and check type of parameters and store it into G__ifunc
     ****************************************************************/
    if (G__p_ifunc->ansi[func_now]) {
       // -- ANSI style function header
@@ -6562,7 +6562,7 @@ int G__interpret_func(G__value* result7, const char* funcname, G__param* libp, i
             }
          }
          else {
-            // -- We do not have an argument for the paramater.
+            // -- We do not have an argument for the parameter.
             if ((ipara < p_ifunc->para_nu[ifn]) && p_ifunc->param[ifn][ipara]->pdefault) {
                // -- We have a default value for the parameter, use it.
                if (p_ifunc->param[ifn][ipara]->pdefault->type == G__DEFAULT_FUNCCALL) {

@@ -133,7 +133,7 @@ protected:
    };
    std::vector<FuncParamData_t> fFuncPars; // function parameters (value + limits)
 
-   std::multimap<TObject*, TF1*> fPrevFit; // Previous succesful fits.
+   std::multimap<TObject*, TF1*> fPrevFit; // Previous successful fits.
    std::vector<TF1*> fSystemFuncs;         // functions managed by the fitpanel
 
    TGRadioButton       *fLibMinuit;        // set default minimization library (Minuit)

@@ -19,7 +19,7 @@ TGDMLParse Class
 --------------------------------------------------------------------
 
  This class contains the implementation of the GDML  parser associated to
- all the supported GDML elements. User should never need to explicitely
+ all the supported GDML elements. User should never need to explicitly
  instaciate this class. It is internally used by the TGeoManager.
 
  Each element process has a 'Binding' to ROOT. The 'binding' is specific
@@ -726,7 +726,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
             fracmap[ref.Data()] = n;
          }
          child = gdml->GetNext(child);
-      } // loop on childs
+      } // loop on children
       // Create TGeoElement - note: Object(name, title) corresponds to Element(formula, name)
       TGeoElement *ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
       for (fractions f = fracmap.begin(); f != fracmap.end(); f++) {

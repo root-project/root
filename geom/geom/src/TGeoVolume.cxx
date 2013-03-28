@@ -246,7 +246,7 @@
 // The parameters order and number are the same as in the corresponding shape
 // constructors.
 //
-//   An other particular case where volume families are used is when we want
+//   Another particular case where volume families are used is when we want
 // that a volume positioned inside a container to match one ore more container
 // limits. Suppose we want to position the same box inside 2 different volumes
 // and we want the Z size to match the one of each container:

@@ -17,7 +17,7 @@
 //       1->.. Title     = lTitle bytes with the title of the object <direcory title> TNamed::fTitle
 //	--------DATA----------------
 //       0->0  Modified  = True if directory has been modified			TDirectory::fModified
-//       1->1  Writeable = True if directory is writeable			TDirectory::fWriteable
+//       1->1  Writable = True if directory is writable			TDirectory::fWriteable
 //       2->5  DatimeC   = Date and time when directory was created		TDirectory::fDatimeC
 //                       | (year-1995)<<26|month<<22|day<<17|hour<<12|minute<<6|second
 //       6->9  DatimeM   = Date and time when directory was last modified	TDirectory::fDatimeM

@@ -19,7 +19,7 @@
 #include <cmath>
 
 /** 
-   Free functions adapter needed by UNURAN for onedimensional continous distributions
+   Free functions adapter needed by UNURAN for onedimensional continuous distributions
 */ 
 
 #include "TUnuranContDist.h"

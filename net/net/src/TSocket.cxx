@@ -385,7 +385,7 @@ void TSocket::Close(Option_t *option)
    // Close the socket. If option is "force", calls shutdown(id,2) to
    // shut down the connection. This will close the connection also
    // for the parent of this process. Also called via the dtor (without
-   // option "force", call explicitely Close("force") if this is desired).
+   // option "force", call explicitly Close("force") if this is desired).
 
    Bool_t force = option ? (!strcmp(option, "force") ? kTRUE : kFALSE) : kFALSE;
 
@@ -1304,7 +1304,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
 
    R__LOCKGUARD2(gSocketAuthMutex);
 
-   // Url to be passed to choosen constructor
+   // Url to be passed to chosen constructor
    TString eurl(url);
 
    // Parse protocol, if any

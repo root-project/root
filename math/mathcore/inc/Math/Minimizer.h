@@ -128,7 +128,7 @@ public:
    }
    
 
-   /// add variables  . Return number of variables succesfully added
+   /// add variables  . Return number of variables successfully added
    template<class VariableIterator> 
    int SetVariables(const VariableIterator & begin, const VariableIterator & end) { 
       unsigned int ivar = 0; 

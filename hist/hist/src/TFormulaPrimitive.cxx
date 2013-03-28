@@ -254,7 +254,7 @@ Double_t TFormulaPrimitive::Eval(Double_t *x, Double_t *param)
 namespace TFastFun {
    //
    // Namespace with basic primitive functions registered by TFormulaPrimitive
-   // all function registerd by TFormulaPrimitive can be used in TFormula
+   // all function registered by TFormulaPrimitive can be used in TFormula
    //
    Double_t Pow2(Double_t x){return x*x;}
    Double_t Pow3(Double_t x){return x*x*x;}

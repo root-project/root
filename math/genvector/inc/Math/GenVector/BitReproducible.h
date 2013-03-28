@@ -48,7 +48,7 @@ public:
 
   // dto2longs(d, i1, i2) returns (in i1 and i2) two unsigned ints
   // representation of its double input.  This is byte-ordering
-  // independant, and depends for complete portability ONLY on adherance
+  // independent, and depends for complete portability ONLY on adherance
   // to the IEEE 754 standard for 64-bit floating point representation.
   // The first unsigned int contains the high-order bits in IEEE; thus
   // 1.0 will always be 0x3FF00000, 00000000
@@ -64,7 +64,7 @@ public:
 
   // dtox(d) returns a 16-character string containing the (zero-filled) hex
   // representation of its double input.  This is byte-ordering
-  // independant, and depends for complete portability ONLY on adherance
+  // independent, and depends for complete portability ONLY on adherance
   // to the IEEE 754 standard for 64-bit floating point representation.
   static std::string D2x(double d);
 

@@ -1926,7 +1926,7 @@ G__calc()
 G__value G__calc(const char* expression)    // precompiled library environment
 
  G__calc() API evaluates C/C++ expression and returns its' value. 
-In interpreter enviroment, type of the return value is automatically 
+In interpreter environment, type of the return value is automatically 
 converted to suitable type without explicit type casting.
 In precompiled library environment, it returns G__value object which
 can be converted to long or double type object by G__double() or G__int()
@@ -2571,7 +2571,7 @@ G__exec_text()
 G__value G__exec_text(const char* unmamedmacro);    // from precompiled code
 
  G__exec_text() API evaluates C/C++ statements and returns its' value. 
-In interpreter enviroment, type of the return value is automatically 
+In interpreter environment, type of the return value is automatically 
 converted to suitable type without explicit type casting.
 In compiled code , it returns G__value object which can be converted 
 to long or double type object by G__double() or G__int() API.

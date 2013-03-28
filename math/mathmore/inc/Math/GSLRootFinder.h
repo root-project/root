@@ -104,7 +104,7 @@ namespace Math {
 
     using IRootFinderMethod::SetFunction;
 
-    // iterate to find ROOTS return GSL_CONTINUE if iteration was succesfull or another error
+    // iterate to find ROOTS return GSL_CONTINUE if iteration was successful or another error
     int Iterate(); 
 
     double Root() const; 

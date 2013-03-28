@@ -751,7 +751,7 @@ bool TQtWidget::Save(const char *fileName) const
    //  it saves the double buffer of this object using the default save
    //  format  defined the file extension
    //  If the "fileName" has no extension the "default" format is to be used instead
-   //  The deafult format is "PNG".
+   //  The default format is "PNG".
    //  It can be changed with the TQtWidget::SetSaveFormat method
    //
     return Save(QString(fileName));
@@ -764,7 +764,7 @@ bool TQtWidget::Save(const QString &fileName) const
    //  it saves the double buffer of this object using the default save
    //  format  defined the file extension
    //  If the "fileName" has no extension the "default" format is to be used instead
-   //  The deafult format is "PNG".
+   //  The default format is "PNG".
    //  It can be changed with the TQtWidget::SetSaveFormat method
    //
    QString fileNameExtension = QFileInfo(fileName).suffix().toUpper();

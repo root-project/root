@@ -2085,7 +2085,7 @@ Double_t TMVA::MethodBase::GetRarity( Double_t mvaVal, Types::ESBType reftype ) 
    // where PDF(x) is the PDF of the classifier's signal or background distribution
 
    if ((reftype == Types::kSignal && !fMVAPdfS) || (reftype == Types::kBackground && !fMVAPdfB)) {
-      Log() << kWARNING << "<GetRarity> Required MVA PDF for Signal or Backgroud does not exist: "
+      Log() << kWARNING << "<GetRarity> Required MVA PDF for Signal or Background does not exist: "
             << "select option \"CreateMVAPdfs\"" << Endl;
       return 0.0;
    }

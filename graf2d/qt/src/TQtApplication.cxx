@@ -83,7 +83,7 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
                    << "ATTENTION !!! "
                    << "The env variable \"QT_FATAL_WARNIGNS\" was defined. The special debug option has  been turned on." 
                    << " argc = " << argc << " argv = " << argv[0] << argv[1];
-          qDebug() << " You may want to restart ROOT with " << argC << " paramaters :"
+          qDebug() << " You may want to restart ROOT with " << argC << " parameters :"
                    << " like this: \"" << argV[0] << " " << argV[1];
 //          new QApplication(argC,argV,GUIenabled);
           new QApplication(argc,argv,GUIenabled);

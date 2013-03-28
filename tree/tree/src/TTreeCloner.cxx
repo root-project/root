@@ -156,10 +156,10 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
       fIsValid = kFALSE;
    } else if (! fToTree->GetDirectory()->IsWritable()) {
       if (fToTree->GetDirectory()==fToTree->GetCurrentFile()) {
-         fWarningMsg.Form("The output TTree (%s) must be associated with a writeable file (%s).",
+         fWarningMsg.Form("The output TTree (%s) must be associated with a writable file (%s).",
                           fToTree->GetName(),fToTree->GetCurrentFile()->GetName());         
       } else {
-         fWarningMsg.Form("The output TTree (%s) must be associated with a writeable directory (%s in %s).",
+         fWarningMsg.Form("The output TTree (%s) must be associated with a writable directory (%s in %s).",
                           fToTree->GetName(),fToTree->GetDirectory()->GetName(),fToTree->GetCurrentFile()->GetName());
       }
       if (!(fOptions & kNoWarnings)) {

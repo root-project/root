@@ -492,7 +492,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    fProcessing = (num < (fTotalEntries - fAssigned)) ? num
                                                      : (fTotalEntries - fAssigned);
 
-   // Set the informations of the current slave
+   // Set the information of the current slave
    slstat->fLastProcessed = fProcessing;
    // Set the start time of the current packet
    slstat->fTimeInstant = cTime;

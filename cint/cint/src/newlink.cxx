@@ -2063,7 +2063,7 @@ int G__stub_method_calling(G__value *result7, G__param *libp,
     
       // 27-04-07
       // The actual version of Cint has a limitation with
-      // the array constructor: it cant receive paramaters (or at least,
+      // the array constructor: it cant receive parameters (or at least,
       // it ignores them). Here I will try to pass the parameters of
       // the constructors for every object (to handle something like
       // string *str = new string[10]("strriiiinnnggg")   ).
@@ -4876,7 +4876,7 @@ void G__write_dummy_param(FILE *fp, G__paramfunc *formal_param)
                break;
                
             default:
-               fprintf(fp, " Unkown: %c", formal_param->type);
+               fprintf(fp, " Unknown: %c", formal_param->type);
                G__fprinterr(G__serr,"Type %c not known yet (methodcall)\n", para_type);
          }
          
@@ -4979,7 +4979,7 @@ void G__write_dummy_param(FILE *fp, G__paramfunc *formal_param)
                break;
                
             default:
-               fprintf(fp, " Unkown: %c", formal_param->type);
+               fprintf(fp, " Unknown: %c", formal_param->type);
                G__fprinterr(G__serr,"Type %c not known yet (G__write_dummy_param)\n",formal_param->type);
          }  
          fprintf(fp,"*");
@@ -5123,7 +5123,7 @@ void G__cppif_dummyobj(FILE *fp, struct G__ifunc_table_internal *ifunc, int i,in
  *
  * 25-07-07
  *
- * Create the deafult cons, dests, etc as ifunc entries before writing
+ * Create the default cons, dests, etc as ifunc entries before writing
  * them to the file
  **************************************************************************/
 void G__make_default_ifunc(G__ifunc_table_internal *ifunc_copy)

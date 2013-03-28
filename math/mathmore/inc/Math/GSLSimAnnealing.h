@@ -65,7 +65,7 @@ public:
 protected: 
 
    /**
-      derived classes might need to re-define completly the class 
+      derived classes might need to re-define completely the class 
     */
    GSLSimAnFunc() : 
       fFunc(0)

@@ -41,7 +41,7 @@ double inner_product(const LAVector&, const LAVector&);
 
 FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientCalculator& gc, const MinimumSeed& seed, const MnStrategy& strategy, unsigned int maxfcn, double edmval) const {   
    // top level function to find minimum from a given initial seed 
-   // iterate on a minimum search in case of first attempt is not succesfull
+   // iterate on a minimum search in case of first attempt is not successful
    
    // to be consistent with F77 Minuit
    // in Minuit2 edm is correct and is ~ a factor of 2 smaller than F77Minuit
@@ -399,7 +399,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    //   std::cout<<"result.back().Error().Dcovar()= "<<result.back().Error().Dcovar()<<std::endl;
    
 #ifdef DEBUG
-   std::cout << "Exiting succesfully Variable Metric Builder \n" 
+   std::cout << "Exiting successfully Variable Metric Builder \n" 
              << "NFCalls = " << fcn.NumOfCalls() 
              << "\nFval = " <<  result.back().Fval() 
              << "\nedm = " << edm << " requested = " << edmval << std::endl; 

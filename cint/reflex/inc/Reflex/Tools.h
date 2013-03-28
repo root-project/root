@@ -64,8 +64,8 @@ RFLX_API std::string Demangle(const std::type_info& ti);
 
 
 /**
- * StringSplit will return a vector of splitted strings
- * @param  splitValues returns the vector with splitted strings
+ * StringSplit will return a vector of split strings
+ * @param  splitValues returns the vector with split strings
  * @param  str the input string
  * @param  delim the delimiter on which to split
  */

@@ -55,18 +55,18 @@ class FTGL_EXPORT FTFont
         virtual ~FTFont();
         
         /**
-         * Attach auxilliary file to font e.g font metrics.
+         * Attach auxiliary file to font e.g font metrics.
          *
          * Note: not all font formats implement this function.
          *
-         * @param fontFilePath  auxilliary font file path.
+         * @param fontFilePath  auxiliary font file path.
          * @return          <code>true</code> if file has been attached
          *                  successfully.
          */
         bool Attach( const char* fontFilePath);
 
         /**
-         * Attach auxilliary data to font e.g font metrics, from memory
+         * Attach auxiliary data to font e.g font metrics, from memory
          *
          * Note: not all font formats implement this function.
          *

@@ -33,7 +33,7 @@ void rf205_compplot()
   // Declare observable x
   RooRealVar x("x","x",0,10) ;
 
-  // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their paramaters
+  // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
   RooRealVar mean("mean","mean of gaussians",5) ;
   RooRealVar sigma1("sigma1","width of gaussians",0.5) ;
   RooRealVar sigma2("sigma2","width of gaussians",1) ;

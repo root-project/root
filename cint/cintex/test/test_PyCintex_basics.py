@@ -101,9 +101,9 @@ class BasicsTestCase(unittest.TestCase):
   def test04UnknownTypes(self) :
     calling = self.A.B.C.Calling()
     #---Returning unknown types
-    rp = calling.retUnkownTypePointer()
+    rp = calling.retUnknownTypePointer()
     self.failUnless( rp )
-    rr = calling.retUnkownTypeReference()
+    rr = calling.retUnknownTypeReference()
     self.failUnless( rr )
     #---Passing unknown types
     self.failUnlessEqual( calling.setByUnknownTypePointer(rp), 0x12345678)

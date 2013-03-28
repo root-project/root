@@ -55,11 +55,11 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
 {
 // Add a new free segment to the list of free segments.
 //
-//  If last just preceedes an existing free segment, then first becomes
+//  If last just precedes an existing free segment, then first becomes
 //     the new starting location of the free segment.
 //  if first just follows an existing free segment, then last becomes
 //     the new ending location of the free segment.
-//  if first just follows an existing free segment AND last just preceedes
+//  if first just follows an existing free segment AND last just precedes
 //     an existing free segment, these two segments are merged into
 //     one single segment.
 //

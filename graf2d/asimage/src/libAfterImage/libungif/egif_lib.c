@@ -69,7 +69,7 @@ static int EGifBufferedOutput(GifFileType *GifFile, GifByteType *Buf, int c);
 *   Update a new gif file, given its file handle, which must be opened for    *
 * write in binary mode.							      *
 *   Returns GifFileType pointer dynamically allocated which serves as the gif *
-* info record. _GifError is cleared if succesfull.			      *
+* info record. _GifError is cleared if successful.			      *
 ******************************************************************************/
 GifFileType *EGifOpenFileHandle(int FileHandle)
 {
@@ -732,7 +732,7 @@ static int EGifCompressLine(GifFileType *GifFile, GifPixelType *Line,
 *   The LZ compression output routine:                                        *
 *   This routine is responsible for the compression of the bit stream into    *
 *   8 bits (bytes) packets.                                                   *
-*   Returns GIF_OK if written succesfully.                                    *
+*   Returns GIF_OK if written successfully.                                    *
 ******************************************************************************/
 static int EGifCompressOutput(GifFileType *GifFile, int Code)
 {
@@ -778,7 +778,7 @@ static int EGifCompressOutput(GifFileType *GifFile, int Code)
 *   This routines buffers the given characters until 255 characters are ready *
 * to be output. If Code is equal to -1 the buffer is flushed (EOF).	      *
 *   The buffer is Dumped with first byte as its size, as GIF format requires. *
-*   Returns GIF_OK if written succesfully.				      *
+*   Returns GIF_OK if written successfully.				      *
 ******************************************************************************/
 static int EGifBufferedOutput(GifFileType *GifFile, GifByteType *Buf, int c)
 {

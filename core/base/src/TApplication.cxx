@@ -721,7 +721,7 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
       Printf("(as in ssh). A \"dbg\" value > 0 gives increasing verbosity.");
       Printf("The last argument \"script\" allows to specify an alternative script to");
       Printf("be executed remotely to startup the session, \"roots\" being");
-      Printf("the default. If the script is preceeded by a \"<\" the script will be");
+      Printf("the default. If the script is preceded by a \"<\" the script will be");
       Printf("sourced, after which \"roots\" is executed. The sourced script can be ");
       Printf("used to change the PATH and other variables, allowing an alternative");
       Printf("\"roots\" script to be found.");

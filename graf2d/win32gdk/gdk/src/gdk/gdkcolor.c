@@ -173,11 +173,11 @@ gboolean gdk_color_black(GdkColormap * colormap, GdkColor * color)
 gboolean
 gdk_colormap_alloc_color(GdkColormap * colormap,
                          GdkColor * color,
-                         gboolean writeable, gboolean best_match)
+                         gboolean writable, gboolean best_match)
 {
    gboolean success;
 
-   gdk_colormap_alloc_colors(colormap, color, 1, writeable, best_match,
+   gdk_colormap_alloc_colors(colormap, color, 1, writable, best_match,
                              &success);
 
    return success;

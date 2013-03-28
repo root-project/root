@@ -71,12 +71,12 @@ bool TUnuranSampler::Init(const char * algo) {
          ret =  DoInitDiscrete1D(method);
       }
       else {
-         if (fLevel>1) Info("TUnuranSampler::Init","Initialize one-dim continous distribution with method %s",method.Data());
+         if (fLevel>1) Info("TUnuranSampler::Init","Initialize one-dim continuous distribution with method %s",method.Data());
          ret =  DoInit1D(method); 
       }
    }
    else { 
-      if (fLevel>1) Info("TUnuranSampler::Init","Initialize multi-dim continous distribution with method %s",method.Data());
+      if (fLevel>1) Info("TUnuranSampler::Init","Initialize multi-dim continuous distribution with method %s",method.Data());
       ret = DoInitND(method); 
    }
    // set print level in UNURAN (must be done after having initialized) -

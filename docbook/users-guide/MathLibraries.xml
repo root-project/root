@@ -254,7 +254,7 @@ for (int i = 0; i&lt;N; ++i)
 double x = unr.Sample();
 </programlisting>
 <itemizedlist>
-<listitem><para>For continous 1D distribution object via the class <emphasis role="bold"><code>TUnuranContDist</code></emphasis> that can be created for example from a <emphasis role="bold"><code>TF1</code></emphasis> function providing the pdf (probability density function) . The user can optionally provide additional information via <emphasis role="bold"><code>TUnuranContDist</code></emphasis><code>::SetDomain(min,max)</code>  like the <code>domain()</code> for generating numbers in a restricted region. </para></listitem>
+<listitem><para>For continuous 1D distribution object via the class <emphasis role="bold"><code>TUnuranContDist</code></emphasis> that can be created for example from a <emphasis role="bold"><code>TF1</code></emphasis> function providing the pdf (probability density function) . The user can optionally provide additional information via <emphasis role="bold"><code>TUnuranContDist</code></emphasis><code>::SetDomain(min,max)</code>  like the <code>domain()</code> for generating numbers in a restricted region. </para></listitem>
 </itemizedlist>
 <programlisting language="c++">
 //1D case: create a distribution from two TF1 object pointers pdfFunc

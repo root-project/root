@@ -340,7 +340,7 @@ public:
 // TFormLeafInfoMultiVarDim is a small helper class to implement reading a
 // data member on a variable size array inside a TClonesArray object stored in
 // a TTree.  This is the version used when the data member is inside a
-// non-splitted object.
+// non-split object.
 
 class TFormLeafInfoMultiVarDim : public TFormLeafInfo {
 public:

@@ -1674,10 +1674,10 @@ gdk_colormap_alloc1(GdkColormap * colormap,
 }
 
 static gint
-gdk_colormap_alloc_colors_writeable(GdkColormap * colormap,
+gdk_colormap_alloc_colors_writable(GdkColormap * colormap,
                                     GdkColor * colors,
                                     gint ncolors,
-                                    gboolean writeable,
+                                    gboolean writable,
                                     gboolean best_match,
                                     gboolean * success)
 {
@@ -1706,7 +1706,7 @@ gdk_colormap_alloc_colors_writeable(GdkColormap * colormap,
       return i;
    } else {
       pixels = g_new(gulong, ncolors);
-      /* Allocation of a writeable color cells */
+      /* Allocation of a writable color cells */
 
       status = alloc_color_cells(private->xcolormap, FALSE, NULL,
                                  0, pixels, ncolors);
@@ -1728,7 +1728,7 @@ static gint
 gdk_colormap_alloc_colors_private(GdkColormap * colormap,
                                   GdkColor * colors,
                                   gint ncolors,
-                                  gboolean writeable,
+                                  gboolean writable,
                                   gboolean best_match, gboolean * success)
 {
    GdkColormapPrivateWin32 *private;
@@ -1801,7 +1801,7 @@ static gint
 gdk_colormap_alloc_colors_shared(GdkColormap * colormap,
                                  GdkColor * colors,
                                  gint ncolors,
-                                 gboolean writeable,
+                                 gboolean writable,
                                  gboolean best_match, gboolean * success)
 {
    GdkColormapPrivateWin32 *private;
@@ -1878,7 +1878,7 @@ static gint
 gdk_colormap_alloc_colors_pseudocolor(GdkColormap * colormap,
                                       GdkColor * colors,
                                       gint ncolors,
-                                      gboolean writeable,
+                                      gboolean writable,
                                       gboolean best_match,
                                       gboolean * success)
 {
@@ -1909,11 +1909,11 @@ gdk_colormap_alloc_colors_pseudocolor(GdkColormap * colormap,
    if (nremaining > 0) {
       if (private->private_val)
          return gdk_colormap_alloc_colors_private(colormap, colors,
-                                                  ncolors, writeable,
+                                                  ncolors, writable,
                                                   best_match, success);
       else
          return gdk_colormap_alloc_colors_shared(colormap, colors, ncolors,
-                                                 writeable, best_match,
+                                                 writable, best_match,
                                                  success);
    } else
       return 0;
@@ -1923,7 +1923,7 @@ gint
 gdk_colormap_alloc_colors(GdkColormap * colormap,
                           GdkColor * colors,
                           gint ncolors,
-                          gboolean writeable,
+                          gboolean writable,
                           gboolean best_match, gboolean * success)
 {
    GdkColormapPrivateWin32 *private;
@@ -1944,13 +1944,13 @@ gdk_colormap_alloc_colors(GdkColormap * colormap,
    switch (private->base.visual->type) {
    case GDK_VISUAL_PSEUDO_COLOR:
    case GDK_VISUAL_GRAYSCALE:
-      if (writeable)
-         return gdk_colormap_alloc_colors_writeable(colormap, colors,
-                                                    ncolors, writeable,
+      if (writable)
+         return gdk_colormap_alloc_colors_writable(colormap, colors,
+                                                    ncolors, writable,
                                                     best_match, success);
       else
          return gdk_colormap_alloc_colors_pseudocolor(colormap, colors,
-                                                      ncolors, writeable,
+                                                      ncolors, writable,
                                                       best_match, success);
       break;
 

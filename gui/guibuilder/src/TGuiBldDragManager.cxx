@@ -5473,7 +5473,7 @@ void TGuiBldDragManager::AddClassMenuMethods(TGPopupMenu *menu, TObject *object)
 //______________________________________________________________________________
 void TGuiBldDragManager::DoClassMenu(Int_t id)
 {
-   // Process a method choosen via frame context menu
+   // Process a method chosen via frame context menu
 
    if (!fFrameMenu || ((id != kMethodMenuAct) && (id != kToggleMenuAct))) {
       return;

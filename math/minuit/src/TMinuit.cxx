@@ -3835,7 +3835,7 @@ void TMinuit::mnhelp(TString comd)
       Printf("    reading. Note that this command is implemented in standard");
       Printf("    Fortran 77 and the results may depend on the  system;");
       Printf("    for example, if a filename is given under VM/CMS, it must");
-      Printf("    be preceeded by a slash.");
+      Printf("    be preceded by a slash.");
 
       Printf(" ");
       Printf("   SET INTeractive");

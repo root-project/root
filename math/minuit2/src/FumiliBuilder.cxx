@@ -46,7 +46,7 @@ double inner_product(const LAVector&, const LAVector&);
 
 FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculator& gc, const MinimumSeed& seed, const MnStrategy& strategy, unsigned int maxfcn, double edmval) const {
    // top level function to find minimum from a given initial seed 
-   // iterate on a minimum search in case of first attempt is not succesfull
+   // iterate on a minimum search in case of first attempt is not successful
    
    edmval *= 0.0001;
    //edmval *= 0.1; // use small factor for Fumili
@@ -414,7 +414,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    //   std::cout<<"result.back().Error().Dcovar()= "<<result.back().Error().Dcovar()<<std::endl;
    
 #ifdef DEBUG
-   std::cout << "Exiting succesfully FumiliBuilder \n" 
+   std::cout << "Exiting successfully FumiliBuilder \n" 
       << "NFCalls = " << fcn.NumOfCalls() 
       << "\nFval = " <<  result.back().Fval() 
       << "\nedm = " << edm << " requested = " << edmval << std::endl; 

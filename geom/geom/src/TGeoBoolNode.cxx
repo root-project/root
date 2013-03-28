@@ -202,7 +202,7 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
    TString sleft, sright, stransf;
    Int_t boolop = TGeoManager::Parse(expr, sleft, sright, stransf);
    if (boolop<0) {
-      Error("MakeBranch", "invalid expresion");
+      Error("MakeBranch", "invalid expression");
       return kFALSE;
    }
    TGeoShape *shape = 0;

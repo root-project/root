@@ -147,7 +147,7 @@ template<class VO, class VI>
 void RooCFunction1Ref<VO,VI>::Streamer(TBuffer &R__b)
 {
   // Custom streamer for function pointer reference object. When writing,
-  // the function pointer is substituted by its registerd name. When function
+  // the function pointer is substituted by its registered name. When function
   // is unregistered name 'UNKNOWN' is written and a warning is issues. When
   // reading back, the embedded name is converted back to a function pointer
   // using the mapping service. When name UNKNOWN is encountered a warning is

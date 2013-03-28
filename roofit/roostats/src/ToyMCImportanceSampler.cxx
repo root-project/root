@@ -244,7 +244,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    }
 
    if( fNullDensities.size() == 0 ) {
-      oocoutE((TObject*)NULL,InputArguments) << "ToyMCImportanceSampler: Need to specify the null density explicitely." << endl;
+      oocoutE((TObject*)NULL,InputArguments) << "ToyMCImportanceSampler: Need to specify the null density explicitly." << endl;
       return NULL;
    }
    

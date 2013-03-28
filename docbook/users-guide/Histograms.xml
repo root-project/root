@@ -1064,7 +1064,7 @@ TH1F* h=new TH1F("h",";;Y Axis",100,0,1);
 
 <para>The method <code>SetTitle</code> has the same syntax:</para>
 
-<programlisting language="c++">h-&gt;SetTitle("Histogram title;An other X title Axis");
+<programlisting language="c++">h-&gt;SetTitle("Histogram title;Another X title Axis");
 </programlisting>
 
 </sect1>

@@ -78,8 +78,8 @@ protected:
    Bool_t      fFixDefCenter;    //! use fixed default center
    Bool_t      fWasArcBalled;    //! set when arc-ball rotation is used
    TGLVector3  fExtCenter;       //! external camera center
-   TGLVector3  fDefCenter;       //! deafult camera center
-   TGLVector3  fFDCenter;        //! fixed deafult camera center
+   TGLVector3  fDefCenter;       //! default camera center
+   TGLVector3  fFDCenter;        //! fixed default camera center
    TGLVector3 *fCenter;          //! current camera center
 
    mutable Double_t fNearClip;   //! last applied near-clip

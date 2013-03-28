@@ -1104,7 +1104,7 @@ void SplitGLView::OnMouseOver(TGLPhysicalShape *shape)
    // Slot used to handle "OnMouseOver" signal coming from any GL viewer.
    // We receive a pointer on the physical shape in which the mouse cursor is.
 
-   // display informations on the physical shape in the status bar
+   // display information on the physical shape in the status bar
    if (shape && shape->GetLogical() && shape->GetLogical()->GetExternal())
       fStatusBar->SetText(Form("Mouse Over: \"%s\"", 
          shape->GetLogical()->GetExternal()->GetName()), 0);

@@ -995,7 +995,7 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
                                &PT_H1FileCollection, (void *)&gStd_Old, "1", "h1analysis", kTRUE));
    // H1 analysis over HTTP by dataset name
    testList->Add(new ProofTest("H1: by-name processing", 8, &PT_H1DataSet, 0, "1,4", "h1analysis", kTRUE));
-   // H1 analysis over HTTP by dataset name splitted in two
+   // H1 analysis over HTTP by dataset name split in two
    testList->Add(new ProofTest("H1: multi dataset processing", 9, &PT_H1MultiDataSet, 0, "1,4", "h1analysis", kTRUE));
    // H1 analysis over HTTP by dataset name
    testList->Add(new ProofTest("H1: multi dataset and entry list", 10, &PT_H1MultiDSetEntryList, 0, "1,4", "h1analysis", kTRUE));

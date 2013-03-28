@@ -99,7 +99,7 @@
 // USAGE:                                                                     //
 // gGeoManager->Export("output.gdml");                                        //
 // gGeoManager->Export("output.gdml","","vg"); //the same as previous just    //
-//                                             //options are set explicitely  //
+//                                             //options are set explicitly   //
 // gGeoManager->Export("output.gdml","","vgf");                               //
 // gGeoManager->Export("output.gdml","","gn");                                //
 // gGeoManager->Export("output.gdml","","f");                                 //

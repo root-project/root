@@ -312,7 +312,7 @@ public:
    ClassDef(TMergerInfo,0)          // Basic info on merger, i.e. worker serving as merger
 };
 
-// Small auxilliary class for merging progress notification
+// Small auxiliary class for merging progress notification
 class TProofMergePrg {
 private:
    TString      fExp;

@@ -16,7 +16,7 @@
 //
 //  TQApplication
 //
-//  This class creates ROOT environement that will
+//  This class creates ROOT environment that will
 //  interface with the Qt windowing system eventloop and eventhandlers.
 //  This class will be instantiated once (singleton) in a main()
 //  program.
@@ -39,7 +39,7 @@ public:
    virtual void LoadGraphicsLibs();
    void SetCustomized();
    
-   ClassDef(TQApplication,0) //creates ROOT environement with the Qt windowing system
+   ClassDef(TQApplication,0) //creates ROOT environment with the Qt windowing system
 };
 
 #endif

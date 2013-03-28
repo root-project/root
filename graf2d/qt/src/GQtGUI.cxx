@@ -2242,7 +2242,7 @@ void  TGQt::DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
 //______________________________________________________________________________
 Int_t TGQt::TextWidth(FontStruct_t font, const char *s, Int_t len)
 {
-   // Return lenght of string in pixels. Size depends on font.
+   // Return length of string in pixels. Size depends on font.
 
    Int_t textWidth = 0;
    if (len >0 && s && s[0] != 0 ) {

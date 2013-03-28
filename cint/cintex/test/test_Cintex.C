@@ -101,9 +101,9 @@ bool test_ReturnModes() {
 bool test_UnknownTypes() {
   A::B::C::Calling calling;
   //---Returning unknown types
-  void* rp = calling.retUnkownTypePointer();
+  void* rp = calling.retUnknownTypePointer();
   failUnless( rp );
-  void* rr = (void*)&(calling.retUnkownTypeReference());
+  void* rr = (void*)&(calling.retUnknownTypeReference());
   failUnless( rr );
   //---Passing unknown types
   failUnlessEqual( calling.setByUnknownTypePointer(rp), 0x12345678);

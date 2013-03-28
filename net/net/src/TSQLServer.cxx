@@ -132,7 +132,7 @@ void TSQLServer::SetError(Int_t code, const char* msg, const char* method)
 Bool_t TSQLServer::StartTransaction()
 {
    // submit "START TRANSACTION" query to database
-   // return kTRUE, if succesfull
+   // return kTRUE, if successful
    
    return Exec("START TRANSACTION");
 }
@@ -141,7 +141,7 @@ Bool_t TSQLServer::StartTransaction()
 Bool_t TSQLServer::Commit()
 {
    // submit "COMMIT" query to database
-   // return kTRUE, if succesfull
+   // return kTRUE, if successful
 
    return Exec("COMMIT");
 }
@@ -150,7 +150,7 @@ Bool_t TSQLServer::Commit()
 Bool_t TSQLServer::Rollback()
 {
    // submit "ROLLBACK" query to database
-   // return kTRUE, if succesfull
+   // return kTRUE, if successful
 
    return Exec("ROLLBACK");
 }

@@ -2058,7 +2058,7 @@ void TGX11::DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
 //______________________________________________________________________________
 Int_t TGX11::TextWidth(FontStruct_t font, const char *s, Int_t len)
 {
-   // Return lenght of string in pixels. Size depends on font.
+   // Return length of string in pixels. Size depends on font.
 
    return XTextWidth((XFontStruct*) font, (char*) s, len);
 }

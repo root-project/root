@@ -510,7 +510,7 @@
 	  up wharf's support for look defined folder icon. That should also
 	  speedup repeated changes of look
 	* adding support in Wharf for look-specific folder pixmap - so far
-	  only works 2 times, then stops changing - wierd
+	  only works 2 times, then stops changing - weird
 
 2007-07-19  sasha
 
@@ -1059,7 +1059,7 @@
 
 2005-04-22  sasha
 
-	* Fixed off-by-one bug in ASStorage causing wierd artefact and
+	* Fixed off-by-one bug in ASStorage causing weird artefact and
 	  possibly segfaults, due to occupied slots being reused improperly
 
 2005-04-21  sasha
@@ -1381,7 +1381,7 @@
 	* fixed segfault in asstorage when diff buffer does not gets
 	  reallocated
 	* fixed button ungrabbing on windows withdrawing that was causing
-	  wierd BadAccess errors in Wharf
+	  weird BadAccess errors in Wharf
 
 2004-09-23  sasha
 
@@ -1527,7 +1527,7 @@
 	  calls to storage destruction code
 	* fixed thresholding code in asstorage needed for rectangular shape
 	  stuff
-	* Improved reference counting in ASStorage to accomodate to wierd
+	* Improved reference counting in ASStorage to accomodate to weird
 	  storage states where some blocks have no space left for reference
 
 2004-07-30  sasha
@@ -1738,7 +1738,7 @@
 
 2004-03-18  sasha
 
-	* Found and fixed very wierd heap corruption bug, causing segfault
+	* Found and fixed very weird heap corruption bug, causing segfault
 	  whenever bevelled rectang is drawn
 	* Added builtin libungif to libAfterImage, and enabled support for
 	  it by default in configure
@@ -1839,7 +1839,7 @@
 2004-01-21  sasha
 
 	* fixed bug where empty locale would be specified while starting a
-	  module causing Pager to have 255 desktops and other wierdness
+	  module causing Pager to have 255 desktops and other weirdness
 
 2004-01-13  sasha
 
@@ -1917,7 +1917,7 @@
 
 	* Added ActiveDeskBevel and InActiveDeskBevel to Pager's options;
 	  Debugged bevel drawing when tbar has different bevels for focus
-	  and unfocus states( should get rid of wierd black frame when one
+	  and unfocus states( should get rid of weird black frame when one
 	  of the states is None)
 
 2003-09-25  sasha
@@ -2121,7 +2121,7 @@
 	  TakeFrameShot, as the side effect of debugging root background
 	  handling. Updated feel.DEFAULT to use those
 	* fixed bug in inheritance code where back_icon would get destroyed
-	  even if it was inherited, thus causing wierd things to happen
+	  even if it was inherited, thus causing weird things to happen
 	  when same style is inherited twice; Added code to
 	  mystyle_make_image to ensure that we always produce valid ASImage
 
@@ -3383,7 +3383,7 @@
 	* Completed Pseudo-color support with colormap allocation and
 	  ximage handling.  Added create_asimage and destroy_asimage for
 	  convinience.	Added missing stuff to libAfterImage/afterbase.h to
-	  make it completely independant.  libAfterImage thus should be
+	  make it completely independent.  libAfterImage thus should be
 	  ready for release - only to write up some docs :)
 
 2001-06-13  sasha
@@ -3495,7 +3495,7 @@
 	  it.  That should allow for better library independancy - visual
 	  will go with libAfterImage while ScreenInfo will move into
 	  libAfterStep , or, possibly will split up even more.	Goal is to
-	  make libAfterImage completely independant from everything else.
+	  make libAfterImage completely independent from everything else.
 
 2001-05-23  allanon
 
@@ -3646,7 +3646,7 @@
 	*  minor quality tweaks in rations 1-2 scaling up. Started
 	  implementing ASImageDecoder for automatic tinting/tiling
 	* IMplemented JPEG input filter for ASImage.  Fixed long standing
-	  bug in image scaling causing wierdness in scaling UP with small
+	  bug in image scaling causing weirdness in scaling UP with small
 	  ratios.  Started implemntation of XCF file reader.
 
 2001-04-15  sasha

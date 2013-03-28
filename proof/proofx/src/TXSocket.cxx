@@ -2095,7 +2095,7 @@ Int_t TXSocket::Reconnect()
    Int_t tryreconnect = gEnv->GetValue("TXSocket.Reconnect", 1);
    if (tryreconnect == 0 || fXrdProofdVersion < 1005) {
       if (tryreconnect == 0)
-         Info("Reconnect","%p: reconnection attempts explicitely disabled!", this);
+         Info("Reconnect","%p: reconnection attempts explicitly disabled!", this);
       else
          Info("Reconnect","%p: server does not support reconnections (protocol: %d < 1005)",
                           this, fXrdProofdVersion);

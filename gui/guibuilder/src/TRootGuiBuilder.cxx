@@ -83,7 +83,7 @@
 //
 //   o Click left mouse button or Ctrl-Click to select an object to edit.
 //   o Press right mouse button to activate context menu
-//   o Mutiple selection (grabbing):
+//   o Multiple selection (grabbing):
 //      - draw lasso and press Return key
 //      - press Shift key and draw lasso
 //   o Dropping:
@@ -133,7 +133,7 @@ const char gHelpBuilder[] = "\
 \n\
  o Press left mouse button Click or Ctrl-Click to select an object.\n\
  o Press right mouse button to activate context menu\n\
- o Mutiple selection can be done in two ways (grabbing):\n\
+ o Multiple selection can be done in two ways (grabbing):\n\
       - draw lasso and press Return key\n\
       - press Shift key and draw lasso\n\
  o Dropping:\n\
@@ -166,7 +166,7 @@ const char gHelpBuilder[] = "\
  o Ctrl-Z    - undo last action (not implemented)\n\
  o Shift-Ctrl-Z - redo (not implemented)\n\
 \n\
-                    More informations\n\
+                    More information\n\
      ************************************************\n\
 \n\
 For more information, please see the GuiBuilder Howto page at:\n\

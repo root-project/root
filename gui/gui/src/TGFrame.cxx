@@ -566,7 +566,7 @@ void TGFrame::Move(Int_t x, Int_t y)
 void TGFrame::Resize(UInt_t w, UInt_t h)
 {
    // Resize the frame.
-   // If w=0 && h=0 - Resize to deafult size
+   // If w=0 && h=0 - Resize to default size
 
    if (w != fWidth || h != fHeight) {
       TGDimension siz(0,0);
@@ -590,7 +590,7 @@ void TGFrame::Resize(TGDimension size)
 void TGFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Move and/or resize the frame.
-   // If w=0 && h=0 - Resize to deafult size
+   // If w=0 && h=0 - Resize to default size
 
    // we do it anyway as we don't know if it's only a move or only a resize
    TGDimension siz(0,0);
@@ -2311,7 +2311,7 @@ TGHeaderFrame::TGHeaderFrame(const TGWindow *p, UInt_t w, UInt_t h,
 void TGHeaderFrame::SetColumnsInfo(Int_t nColumns, TGTextButton  **colHeader,
                TGVFileSplitter  **splitHeader)
 {
-   // Set columns informations in the header frame.
+   // Set columns information in the header frame.
 
    fNColumns = nColumns;
    fColHeader = colHeader;

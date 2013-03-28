@@ -297,7 +297,7 @@ public:
 #endif
    
    /** @name --- Expert functions --- */
-   /// transform vector into a vector of lenght 1
+   /// transform vector into a vector of length 1
    SVector<T,D>& Unit();
    /// place a sub-vector starting from the given position
    template <unsigned int D2>

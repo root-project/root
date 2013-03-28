@@ -656,7 +656,7 @@ void stress7()
    helist->Write();
    hcut->Write();
 
-   // now loop on eventlist explicitely and fill helist again
+   // now loop on eventlist explicitly and fill helist again
    Float_t pxr;
    ntuple->SetBranchAddress("px",&pxr);
    TH1F *helistc = (TH1F*)helist->Clone();

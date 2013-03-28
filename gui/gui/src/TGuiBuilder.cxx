@@ -48,7 +48,7 @@
 //
 //   o Click left mouse button or Ctrl-Click to select an object to edit.
 //   o Press right mouse button to activate context menu
-//   o Mutiple selection (grabbing):
+//   o Multiple selection (grabbing):
 //      - draw lasso and press Return key
 //      - press Shift key and draw lasso
 //   o Dropping:

@@ -43,7 +43,7 @@ friend Bool_t operator==(const TUri &u1, const TUri &u2); // comparison operator
 private:
 
    // In order to represent the five basic components of an URI,
-   // we use 7 member variables (authority gets splitted in 3 parts)
+   // we use 7 member variables (authority gets split in 3 parts)
    //
    //   foo://user:pass@example.com:8042/over/there?name=ferret#nose
    //   \_/   \________________________/\_________/ \_________/ \__/

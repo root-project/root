@@ -36,7 +36,7 @@ struct SXmlAttr_t {
 };
 
 enum EXmlNodeType {
-  kXML_NODE = 1,       // normal node with childs
+  kXML_NODE = 1,       // normal node with children
   kXML_COMMENT = 2,    // comment (stored as value of node fName)
   kXML_PI_NODE = 3,    // processing instructions node (like <?name  attr="" ?>
   kXML_RAWLINE = 4     // just one line of xml code
@@ -959,7 +959,7 @@ void TXMLEngine::SkipEmpty(XMLNodePointer_t &xmlnode)
 //______________________________________________________________________________
 void TXMLEngine::CleanNode(XMLNodePointer_t xmlnode)
 {
-   // remove all childs node from xmlnode
+   // remove all children node from xmlnode
 
    if (xmlnode==0) return;
    SXmlNode_t* node = (SXmlNode_t*) xmlnode;
@@ -1483,7 +1483,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
 
    if (*inp->fCurrent!='<') {
       // here should be reading of element content
-      // only one entry for content is supported, only before any other childs
+      // only one entry for content is supported, only before any other children
       if ((parent==0) || (parent->fChild!=0)) { resvalue = -2; return 0; }
       int contlen = inp->LocateContent();
       if (contlen<0) return 0;
@@ -1529,14 +1529,14 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
    }
 
    EXmlNodeType nodetype = kXML_NODE;
-   Bool_t canhaschilds = true;
+   Bool_t canhaschildren = true;
    char endsymbol = '/';
 
    // this is case of processing instructions node
    if (*inp->fCurrent=='?') {
       if (!inp->ShiftCurrent()) return 0;
       nodetype = kXML_PI_NODE;
-      canhaschilds = false;
+      canhaschildren = false;
       endsymbol = '?';
    }
 
@@ -1578,8 +1578,8 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
             return node;
          } else return 0;
       } else
-      if (nextsymb=='>') { // this is end of parent node, lets find all childs
-         if (!canhaschilds) { resvalue = -11; return 0; }
+      if (nextsymb=='>') { // this is end of parent node, lets find all children
+         if (!canhaschildren) { resvalue = -11; return 0; }
 
          if (!inp->ShiftCurrent()) return 0;
 

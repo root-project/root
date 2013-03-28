@@ -80,7 +80,7 @@ void rs_bernsteinCorrection(){
   wks->import(*data, Rename("data"));
   wks->import(nominal);
 
-  // The tolerance sets the probability to add an unecessary term.
+  // The tolerance sets the probability to add an unnecessary term.
   // lower tolerance will add fewer terms, while higher tolerance
   // will add more terms and provide a more flexible function.
   Double_t tolerance = 0.05; 

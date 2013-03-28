@@ -485,7 +485,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 
    if (gDebug > 1)
      Info("Krb5Authenticate",
-          "Sending kerberos authentification to %s",
+          "Sending kerberos authentication to %s",
           serv_host.Data());
 
    retval = krb5_sendauth(context, &auth_context, (krb5_pointer)&sockd,

@@ -38,7 +38,7 @@ friend class TGText;
 
 protected:
    char         *fString;   // line of text
-   ULong_t       fLength;   // lenght of line
+   ULong_t       fLength;   // length of line
    TGTextLine   *fPrev;     // previous line
    TGTextLine   *fNext;     // next line
 

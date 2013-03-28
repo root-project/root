@@ -33,7 +33,7 @@ void xmlreadfile(const char* filename = "example.xml")
 
 void DisplayNode(TXMLEngine* xml, XMLNodePointer_t node, Int_t level) 
 {
-   // this function display all accessible information about xml node and its childs
+   // this function display all accessible information about xml node and its children
    
    printf("%*c node: %s\n",level,' ', xml->GetNodeName(node));
    

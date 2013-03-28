@@ -1046,7 +1046,7 @@ Bool_t TClassDocOutput::CreateDotClassChartLib(const char* filename) {
       }
       outdot << "}" << endl; // dependencies
    } else
-      outdot << "\"No rlibmap information avaliable.\"" << endl;
+      outdot << "\"No rlibmap information available.\"" << endl;
 
    outdot << "}" << endl; // digraph
 

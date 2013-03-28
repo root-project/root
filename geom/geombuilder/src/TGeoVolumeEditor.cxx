@@ -16,7 +16,7 @@
 //////////////////////////////////////////////////////////////////////////
 /* Editor for geometry volumes and assemblies of volumes. Besides the volume
    name and line attributes, a TGeoVolume has the following editable categories 
-   splitted vertically by a shutter:
+   split vertically by a shutter:
    - Properties: one can edit the shape and medium components from here. It is
    also possible to change the existing ones.
    - Daughters: the main category allowing defining, editing, removing or 

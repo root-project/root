@@ -57,7 +57,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
 			     const RooArgList& vars, const RooArgList& paramSet) :
   RooAbsReal(name, title),
   _dataVars("!dataVars","data Vars",       this),
-  _paramSet("!paramSet","bin paramaters",  this),
+  _paramSet("!paramSet","bin parameters",  this),
   _numBins(0),
   _dataSet( (string(name)+"_dataSet").c_str(), "", vars),
   _Normalized( false )
@@ -82,13 +82,13 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   // Set the binning
   // //_binning = var.getBinning().clone() ;
   
-  // Create the set of paramaters
+  // Create the set of parameters
   // controlling the height of each bin
 
   // Get the number of bins
   _numBins = GetNumBins( vars );
 
-  // Add the paramaters (with checking)
+  // Add the parameters (with checking)
   addVarSet( vars );
   addParamSet( paramSet );
 
@@ -103,7 +103,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   RooAbsReal(name, title),
   //  _dataVar("!dataVar","data Var", this, (RooRealVar&) var),
   _dataVars("!dataVars","data Vars",       this),
-  _paramSet("!paramSet","bin paramaters",  this),
+  _paramSet("!paramSet","bin parameters",  this),
   _numBins(0),
   _dataSet( (string(name)+"_dataSet").c_str(), "", vars, Hist),
   _Normalized( false )
@@ -124,7 +124,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   // Get the number of bins
   _numBins = GetNumBins( vars );
 
-  // Add the paramaters (with checking)
+  // Add the parameters (with checking)
   addVarSet( vars );
   addParamSet( paramSet );
  
@@ -648,7 +648,7 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
 
   if( numVarBins != numElements ) {
     std::cout << "ParamHistFunc::addParamSet - ERROR - " 
-	      << "Supplied list of paramaters " << params.GetName()
+	      << "Supplied list of parameters " << params.GetName()
 	      << " has " << numElements << " elements but the ParamHistFunc"
 	      << GetName() << " has " << numVarBins << " bins."
 	      << std::endl;
@@ -666,7 +666,7 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   while((comp = (RooAbsArg*) paramIter.next())) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
       coutE(InputArguments) << "ParamHistFunc::(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " in paramater list is not of type RooRealVar" << std::endl ;
+			    << " in parameter list is not of type RooRealVar" << std::endl ;
       RooErrorHandler::softAbort() ;
       return 1;
     }

@@ -589,7 +589,7 @@ Bool_t TSQLFile::StartTransaction()
 {
    // Start user transaction.
    // This can be usesfull, when big number of objects should be stored in
-   // data base and commitment required only if all operations were succesfull.
+   // data base and commitment required only if all operations were successful.
    // In that case in the end of all operations method Commit() should be
    // called. If operation on user-level is looks like not successfull,
    // method Rollback() will return database data and TSQLFile instance to
@@ -935,7 +935,7 @@ Int_t TSQLFile::StreamKeysForDirectory(TDirectory* dir, Bool_t doupdate, Long64_
 {
    // read keys for specified directory (when update == kFALSE)
    // or update value for modified keys when update == kTRUE
-   // Returns number of succesfully read keys or -1 if error
+   // Returns number of successfully read keys or -1 if error
 
    if (dir==0) return -1;
 

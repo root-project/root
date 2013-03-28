@@ -233,7 +233,7 @@ Bool_t RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
   }
   delete cIter ;
 
-  // Check if all convolutions were succesfully built
+  // Check if all convolutions were successfully built
   if (!allOK) {
     // Delete new basis functions created sofar
     TIterator* iter = newConvSet.createIterator() ;

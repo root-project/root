@@ -32,7 +32,7 @@ xrootd.fslib libXrdOfs.so
 ### to export /tmp.
 ### NB: specifying any of these directives removes the default /tmp
 ###     from the internal list; in such a case a directive needs to
-###     be given explicitely if /tmp needs to be exposed.
+###     be given explicitly if /tmp needs to be exposed.
 xrootd.export /tmp
 xrootd.export /pool/data
 
@@ -63,7 +63,7 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 
 ###
 ### Directives governing the behaviour of the XrdProofd plug-in.
-### Except when explicitely indicated, all the following directives support
+### Except when explicitly indicated, all the following directives support
 ### an optional 'if <pattern>' condition at the end of the line, e.g.
 ###    xpd.rootsys /opt/root   if lxb*.cern.ch
 ###    xpd.rootsys /usr/local  if lxp*.cern.ch
@@ -100,7 +100,7 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 # Format:
 #          xpd.shutdown <opt> <delay>
 # where:
-#          <opt> is the type of action to be taken when a client completly
+#          <opt> is the type of action to be taken when a client completely
 #                disconnets; the options are:
 #                0  remain connected
 #                1  terminate when idle

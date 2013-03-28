@@ -148,7 +148,7 @@
 //   Where /var/spool/rootd must match the rootd home directory as      //
 //   specified in the rootd /etc/passwd entry.                          //
 //                                                                      //
-// - To make writeable directories for anonymous do, for example:       //
+// - To make writable directories for anonymous do, for example:       //
 //                                                                      //
 //   mkdir /var/spool/rootd/pub                                         //
 //   chown rootd:rootd /var/spool/rootd/pub                             //

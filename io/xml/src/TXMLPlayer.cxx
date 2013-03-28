@@ -13,7 +13,7 @@
 //
 // Class for xml code generation
 // It should be used for generation of xml steramers, which could be used outside root
-// enviroment. This means, that with help of such streamers user can read and write
+// environment. This means, that with help of such streamers user can read and write
 // objects from/to xml file, which later can be accepted by ROOT.
 //
 // At the moment supported only classes, which are not inherited from TObject

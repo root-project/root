@@ -26,7 +26,7 @@
 </p></li>
      <li><p>New algorithmic optimization in the caching of pdfs. So far - in the likelihood - two classes of
          objects are identified: those that change with every event (i.e. the pdf) and those that change
-         only with the paramaters (typically pdf normalization integrals). Pdfs are always recalculated
+         only with the parameters (typically pdf normalization integrals). Pdfs are always recalculated
          for every event, whereas integrals are only evaluated when needed. The exception to the first type are pdfs
          that only depend on constant parameters (or no parameters) - these are identified at the beginning, and precalculated once 
          to avoid recalculating an expression with the same outcome for every iteration of the likelihood calculation
@@ -38,7 +38,7 @@
          likelihood evaluation if selected columns need to be updated because parameters have changed. The speed gain
          of this optimization depends much on the structure of the pdf: in models with many free parameters most of the
          likelihood evaluations are executed when MINUIT calculates numerical likelihood derivatives which vary 
-         one paramater at a time and the speedup is potentially larger. In models with few free parameters the
+         one parameter at a time and the speedup is potentially larger. In models with few free parameters the
          effect will be smaller.
 </p><p>
          The new per-component caching strategy is enabled by default for all pdfs that are a component of

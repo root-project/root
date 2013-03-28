@@ -1313,7 +1313,7 @@ void TUploadDataSetDlg::UploadDataSet()
             }
             else {
                new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
-                            "Files have been succesfully uploaded to the cluster",
+                            "Files have been successfully uploaded to the cluster",
                             kMBIconAsterisk, kMBOk, &retval);
             }
             fUploading = kFALSE;
@@ -1338,7 +1338,7 @@ void TUploadDataSetDlg::UploadDataSet()
             }
             else {
                new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
-                            "Files have been succesfully uploaded to the cluster",
+                            "Files have been successfully uploaded to the cluster",
                             kMBIconAsterisk, kMBOk, &retval);
             }
          }
@@ -1347,7 +1347,7 @@ void TUploadDataSetDlg::UploadDataSet()
    }
    else {
       new TGMsgBox(fClient->GetRoot(), this, "Upload DataSet",
-                   "Files have been succesfully uploaded to the cluster",
+                   "Files have been successfully uploaded to the cluster",
                    kMBIconAsterisk, kMBOk, &retval);
    }
    // finally, update list of datasets in session viewer

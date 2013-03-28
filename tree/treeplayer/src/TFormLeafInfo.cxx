@@ -2245,7 +2245,7 @@ Double_t TFormLeafInfoMethod::ReadValue(char *where, Int_t instance)
 // TFormLeafInfoMultiVarDim is a helper class to implement reading a
 // data member on a variable size array inside a TClonesArray object stored in
 // a TTree.  This is the version used when the data member is inside a
-// non-splitted object.
+// non-split object.
 
 //______________________________________________________________________________
 TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim( TClass* classptr,

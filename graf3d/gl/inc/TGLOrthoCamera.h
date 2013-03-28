@@ -36,7 +36,7 @@ class TGLOrthoCamera : public TGLCamera
 {
 public:
    enum EType { kZOY,  kXOZ,  kXOY,    // Pair of world axes aligned to h/v screen.
-                kZnOY, kXnOZ, kXnOY }; // 'n' means preceeding axis is negated.
+                kZnOY, kXnOZ, kXnOY }; // 'n' means preceding axis is negated.
 private:
    // Fields
    EType          fType;         //! camera type

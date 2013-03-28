@@ -150,7 +150,7 @@ struct SHtmlStyle_t {
   signed int   fSubscript : 4;      // Positive for <sup>, negative for <sub>
   unsigned int fAlign     : 2;      // Horizontal alignment
   unsigned int fBgcolor   : 6;      // Background color
-  unsigned int fExpbg     : 1;      // Set to 1 if bgcolor explicitely set
+  unsigned int fExpbg     : 1;      // Set to 1 if bgcolor explicitly set
   unsigned int fFlags     : 7;      // the STY_ flags below
 };
 

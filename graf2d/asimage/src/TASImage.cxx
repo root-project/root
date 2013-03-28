@@ -2630,9 +2630,9 @@ void TASImage::Merge(const TImage *im, const char *op, Int_t x, Int_t y)
    //    dissipate      - randomly alpha-blend images
    //    hue            - hue bottom image same as top image
    //    lighten        - use highest color value from both images
-   //    overlay        - some wierd image overlaying(see GIMP)
+   //    overlay        - some weird image overlaying(see GIMP)
    //    saturate       - saturate bottom image same as top image
-   //    screen         - another wierd image overlaying(see GIMP)
+   //    screen         - another weird image overlaying(see GIMP)
    //    sub            - color substraction with saturation
    //    tint           - tinting image with image
    //    value          - value bottom image same as top image

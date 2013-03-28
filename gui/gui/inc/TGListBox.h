@@ -156,7 +156,7 @@ private:
 protected:
    UInt_t      fLineWidth;       // line width
    Style_t     fLineStyle;       // line style
-   UInt_t      fLineLength;      // line lenght
+   UInt_t      fLineLength;      // line length
    TGGC       *fLineGC;          // line graphics context
 
    virtual void DoRedraw();

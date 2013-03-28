@@ -3721,7 +3721,7 @@ void TFormula::Optimize()
    //
    //          pdata[operand={Var,Par,Const}][offset]
    //          pdata[fOperOffsets0[i]][fOperOffset1[i+1]]
-   // 2.) The fastest evaluation function is choosen at the end
+   // 2.) The fastest evaluation function is chosen at the end
    //     a.) fOptimal := pointer to the fastest function for given evaluation string
    //             switch(GetActionOptimized(0)){
    //               case kData : {fOptimal= (TFormulaPrimitive::TFuncG)&TFormula::EvalPrimitive0; break;}

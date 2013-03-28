@@ -25,68 +25,68 @@ def genName(id) :
     return genName(attrs[u'type'])+'&'
   elif elem == 'FunctionType' :
     s = genName(attrs[u'returns']) + '(*)('
-    childs = xref[id][2]
-    for a in childs :
+    children = xref[id][2]
+    for a in children :
       s += genArgument(a)
-      if a != childs[-1] : s += ', '
+      if a != children[-1] : s += ', '
     s += ')'
     return s
   elif elem == 'ArrayType' :
     return genName(attrs[u'type'])+'['+attrs[u'max']+']'
   else :
     return attrs[u'name']
-def genField(attrs, childs):
+def genField(attrs, children):
   return '%s %s;' % (genName(attrs[u'type']), attrs[u'name'] )
-def genVariable(attrs, childs):
+def genVariable(attrs, children):
   return 'static %s %s;' % (genName(attrs[u'type']), attrs[u'name'] )
 def genArgument(attrs):
   if u'name' in attrs : 
     return '%s %s' % (genName(attrs[u'type']), attrs[u'name'] )
   else :
     return '%s ' % (genName(attrs[u'type']))  
-def genMethod(attrs, childs):
+def genMethod(attrs, children):
   s = ''
   if u'virtual' in attrs : s += 'virtual '
   if u'static' in attrs : s += 'static '
   s += '%s %s(' % (genName(attrs[u'returns']), attrs[u'name'])
-  for a in childs : 
+  for a in children : 
     s += genArgument(a)
-    if a != childs[-1] : s += ', '
+    if a != children[-1] : s += ', '
   s += ')'
   if u'const' in attrs : s += ' const'
   if u'pure_virtual' in attrs : s += ' = 0'
   s += ';'
   return s
-def genConstructor(attrs, childs):
+def genConstructor(attrs, children):
   s = '%s(' % (attrs[u'name'])
-  for a in childs : 
+  for a in children : 
     s += genArgument(a)
-    if a != childs[-1] : s += ', '
+    if a != children[-1] : s += ', '
   s += ');'
   return s
-def genOperatorMethod(attrs, childs):
+def genOperatorMethod(attrs, children):
   s = '%s operator %s(' % ( genName(attrs[u'returns']), attrs[u'name'])
-  for a in childs : 
+  for a in children : 
     s += genArgument(a)
-    if a != childs[-1] : s += ', '
+    if a != children[-1] : s += ', '
   s += ')'
   if u'const' in attrs : s += ' const'
   s += ';'
   return s
-def genDestructor(attrs, childs):
+def genDestructor(attrs, children):
   return '~%s();' % (attrs[u'name'])
-def genConverter(attrs, childs):
+def genConverter(attrs, children):
   return 'operator %s();' % (attrs[u'returns'])
 def genEnumValue(attrs):
   return '%s = %s' % (attrs[u'name'], attrs[u'init'])
-def genEnumeration(attrs, childs):
+def genEnumeration(attrs, children):
   s = 'enum %s { ' % (attrs[u'name'])
-  for a in childs :
+  for a in children :
     s += genEnumValue(a)
-    if a != childs[-1] : s += ', '
+    if a != children[-1] : s += ', '
   s += '};'
   return s
-def genClass(attrs, childs ):
+def genClass(attrs, children ):
   s = 'class %s ' % (attrs[u'name'])
   if u'bases' in attrs :
     bases = string.split(attrs[u'bases'])
@@ -109,7 +109,7 @@ def genClass(attrs, childs ):
         print 'Function '+funcname+' not found'
   s += '};'
   return s
-def genTypedef(attrs, childs):
+def genTypedef(attrs, children):
   return 'typedef %s %s;' % ( genName(attrs[u'type']), attrs[u'name'] )
   
 def start_element(name, attrs):

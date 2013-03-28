@@ -13,7 +13,7 @@
 
 const char gHelpSMTopLevel[] =
 "The Style Manager handles a list of styles in the ROOT session. It loads\n"
-"by default the five styles provided by ROOT: Deafult, Plain, Bold, Video,\n"
+"by default the five styles provided by ROOT: Default, Plain, Bold, Video,\n"
 "and Pub. If this list does not contain a style with the characteristics\n"
 "you want, you can create a new one and than apply it.\n"
 "\n"
@@ -254,7 +254,7 @@ const char gHelpSMAxis[] =
 ;
 
 const char gHelpSMTitle[] =
-"In this tad, the informations related with titles are edited. You can choose\n"
+"In this tad, the information related with titles are edited. You can choose\n"
 "to show or hide the title in your canvases via the check button 'Show title'.\n"
 "\n"
 "'Fill' group: \n"
@@ -279,7 +279,7 @@ const char gHelpSMTitle[] =
 ;
 
 const char gHelpSMStats[] =
-"In this tad, the informations related with stats are edited.\n"
+"In this tad, the information related with stats are edited.\n"
 "\n"
 "'Fill' group: \n"
 "   You can modify here the color and the pattern which is used to fill\n"
@@ -302,18 +302,18 @@ const char gHelpSMStats[] =
 "   the width (W) and the height (H).\n"
 "\n"
 "'Stat Options' group:\n"
-"   You can select the informations you want to see in the stats pave.\n"
+"   You can select the information you want to see in the stats pave.\n"
 "   The paint format is used as an argument in a C++ printf() method: it\n"
 "   describes how the value will be shown.\n"
 "\n"
 "'Fit Options' group:\n"
-"   You can select the way you want to show informations in the pave.\n"
+"   You can select the way you want to show information in the pave.\n"
 "   The paint format is used as an argument in a C++ printf() method: it\n"
 "   describes how the value will be shown.\n"
 ;
 
 const char gHelpSMPSPDF[] =
-"In this tad, the informations related with PS and PDF are edited. These\n"
+"In this tad, the information related with PS and PDF are edited. These\n"
 "settings can't be previewed, but as in the other tabs, any modification in\n"
 "this one will take effect.\n"
 "\n"

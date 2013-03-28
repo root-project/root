@@ -45,7 +45,7 @@
    @defgroup RootFinders One-dimensional Root-Finding algorithms 
    Various implementation esists in MathCore and MathMore
    The user interacts with a proxy class ROOT::Math::RootFinder which creates behing 
-   the choosen algorithms which are implemented using the ROOT::Math::IRootFinderMethod interface
+   the chosen algorithms which are implemented using the ROOT::Math::IRootFinderMethod interface
 
    @ingroup NumAlgo
 */

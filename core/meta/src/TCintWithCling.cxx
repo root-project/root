@@ -4502,7 +4502,7 @@ const char* TCintWithCling::GetInterpreterTypeName(const char* name, Bool_t full
    // The 'name' is known to the interpreter, this function returns
    // the internal version of this name (usually just resolving typedefs)
    // This is used in particular to synchronize between the name used
-   // by rootcint and by the run-time enviroment (TClass)
+   // by rootcint and by the run-time environment (TClass)
    // Return 0 if the name is not known.
    R__LOCKGUARD(gCINTMutex);
    if (!gInterpreter->CheckClassInfo(name)) {

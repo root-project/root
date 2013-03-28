@@ -197,9 +197,9 @@ void hls2rgb (CARD32 hue, CARD32 luminance, CARD32 saturation, CARD32 *red, CARD
  *                        value of top and bottom :
  *                        bottom = (bottom>top)?bottom:top;
  * NAME
- * screen_scanlines()   - some wierd merging algorithm taken from GIMP;
+ * screen_scanlines()   - some weird merging algorithm taken from GIMP;
  * NAME
- * overlay_scanlines()  - some wierd merging algorithm taken from GIMP;
+ * overlay_scanlines()  - some weird merging algorithm taken from GIMP;
  * NAME
  * hue_scanlines()      - substitute hue of bottom scanline with hue of
  *                        top scanline;

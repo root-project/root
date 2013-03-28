@@ -28,7 +28,7 @@ class TF1;
 
 //______________________________________________________________
 /** 
-   TUnuranContDist class describing one dimensional continous distribution. 
+   TUnuranContDist class describing one dimensional continuous distribution. 
    It is used by TUnuran to generate random numbers according to this distribution via 
    TUnuran::Sample()
    

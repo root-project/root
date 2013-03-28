@@ -2248,7 +2248,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             }
 
             // What we have so far might be a member function of one of the
-            // leaves that are not splitted (for example "GetNtrack" for the Event class).
+            // leaves that are not split (for example "GetNtrack" for the Event class).
             TIter next(fTree->GetIteratorOnAllLeaves());
             TLeaf* leafcur = 0;
             while (!leaf && (leafcur = (TLeaf*) next())) {
@@ -2448,7 +2448,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                *current = 0;
             } else {
                // What we have so far might be a data member of one of the
-               // leaves that are not splitted (for example "fNtrack" for the Event class.
+               // leaves that are not split (for example "fNtrack" for the Event class.
                TLeaf *leafcur = GetLeafWithDatamember(first,work,readentry);
                if (leafcur) {
                   leaf = leafcur;

@@ -65,7 +65,7 @@ TAlienFile::TAlienFile(const char *purl, Option_t *option,
    //     "alien:///alice/test.root"
    // If you want to write a file on specific storage element use the syntax
    //     "alien:///alice/test.root?&se=Alice::CERN::Storage"
-   // The default SE is specified by the enviroment variable alien_CLOSE_SE
+   // The default SE is specified by the environment variable alien_CLOSE_SE
    //
    // If you read a file, the closest file image to alien_CLOSE_SE is taken.
    // If the file cannot opened from the closest image, the next image is tried,

@@ -103,7 +103,7 @@ public:
    Bool_t GetVertical() const { return fVertical; }
    void   SetVertical(Bool_t x);
 
-   // For now assume this is always true. Lenght of splitter = 4 pixels.
+   // For now assume this is always true. Length of splitter = 4 pixels.
    Bool_t GetUseSplitters() const { return fUseSplitters; }
    void SetUseSplitters(Bool_t x) { fUseSplitters = x; }
 

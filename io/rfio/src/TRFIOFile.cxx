@@ -544,7 +544,7 @@ Bool_t TRFIOSystem::AccessPathName(const char *path, EAccessMode mode)
 //______________________________________________________________________________
 Int_t TRFIOSystem::Unlink(const char *path)
 {
-   // Unlink, i.e. remove, a file or directory. Returns 0 when succesfull,
+   // Unlink, i.e. remove, a file or directory. Returns 0 when successful,
    // -1 in case of failure.
 
    TUrl url(path);

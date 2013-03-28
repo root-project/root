@@ -421,7 +421,7 @@ function guess_arch {
 #        *)
 #            echo "Attempts at guessing your architecture failed."
 #            echo "Please specify the architecture as the first argument."
-#            echo "Do '$0 --help' for a list of avaliable architectures."
+#            echo "Do '$0 --help' for a list of available architectures."
 #            exit 1
 #            ;;
     esac
@@ -701,7 +701,7 @@ HAVE_CONFIG=1
 EXPORTS=(${EXPORTS[*]} HAVE_CONFIG)
 
 # now set the default values of the installation directories, if
-# they were not set explicitely by the user
+# they were not set explicitly by the user
 
 if [ "x$WITHPREFIX" = "x1" ]; then
   # prefix based build

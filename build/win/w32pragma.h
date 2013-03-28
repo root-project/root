@@ -65,7 +65,7 @@
 #define CRTAPI1 _cdecl 
 #define CRTAPI2 _cdecl
 #define _X86_ 1 
-// #define _DLL  - used to be explicitely defined, 
+// #define _DLL  - used to be explicitly defined, 
 // but it's implicitely defined via /MD(d)
 #define G__REDIRECTIO 1
 #define G__SHAREDLIB 1

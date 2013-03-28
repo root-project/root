@@ -191,11 +191,11 @@
    NULL pointer */
 /* #undef UNUR_ENABLE_CHECKNULL */
 
-/* Define to 1 if you want to use the info routine for printing informations
+/* Define to 1 if you want to use the info routine for printing information
    about UNU.RAN objects */
 #define UNUR_ENABLE_INFO 1
 
-/* Define to 1 if you want to use a logfile for logging informations about
+/* Define to 1 if you want to use a logfile for logging information about
    UNU.RAN objects */
 /* #undef UNUR_ENABLE_LOGGING */
 

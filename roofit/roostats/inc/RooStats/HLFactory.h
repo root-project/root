@@ -96,7 +96,7 @@ namespace RooStats {
     /// Create the category for the combinations
     void fCreateCategory();
 
-    /// Check the lenght of the lists
+    /// Check the length of the lists
     bool fNamesListsConsistent();
 
     /// List of channels names to combine for the signal plus background pdfs

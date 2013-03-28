@@ -635,7 +635,7 @@ int main(int argc, char** argv)
      filename = &filename1;
      */
    } else {
-     fprintf(stderr,"Wrong comand line. Please use\n");
+     fprintf(stderr,"Wrong command line. Please use\n");
      fprintf(stderr,"%s -f <filename> \n",argv[0]);
      return 1;     
    }

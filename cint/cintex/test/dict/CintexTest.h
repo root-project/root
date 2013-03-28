@@ -181,8 +181,8 @@ public:
   MyClass& retByReference() { return m_object; }
   MyClass*& retByRefPointer() { return m_ptr; }
   void* retByVoidPointer() { return &m_object; }
-  UnknownType* retUnkownTypePointer() { return (UnknownType*)0x12345678; }
-  UnknownType& retUnkownTypeReference() { return *(UnknownType*)0x12345678; }
+  UnknownType* retUnknownTypePointer() { return (UnknownType*)0x12345678; }
+  UnknownType& retUnknownTypeReference() { return *(UnknownType*)0x12345678; }
   std::string retStrByValue() { return std::string("value");}
   std::string& retStrByRef() { static std::string s("reference");return s;}
   const std::string& retStrByConstRef() { static std::string s("const reference");return s;}    

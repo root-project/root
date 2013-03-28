@@ -932,7 +932,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
    tf->AddFrame(fFC, new TGLayoutHints(kLHintsTop | kLHintsLeft |
          kLHintsExpandX | kLHintsExpandY));
 
-   // add comand line label and text entry
+   // add command line label and text entry
    TGCompositeFrame* frmCmd = new TGHorizontalFrame(fFC, 350, 100);
    frmCmd->SetCleanup(kDeepCleanup);
    frmCmd->AddFrame(new TGLabel(frmCmd, "Command Line :"),
@@ -1195,7 +1195,7 @@ void TSessionFrame::Build(TSessionViewer *gui)
 //______________________________________________________________________________
 void TSessionFrame::ProofInfos()
 {
-   // Display informations on current session.
+   // Display information on current session.
 
    TString buf;
 
@@ -2383,7 +2383,7 @@ TSessionQueryFrame::~TSessionQueryFrame()
 //______________________________________________________________________________
 void TSessionQueryFrame::Build(TSessionViewer *gui)
 {
-   // Build query informations frame.
+   // Build query information frame.
 
    SetLayoutManager(new TGVerticalLayout(this));
    SetCleanup(kDeepCleanup);
@@ -2636,7 +2636,7 @@ void TSessionQueryFrame::Progress(Long64_t total, Long64_t processed)
       return;
    TString buf;
 
-   // Update informations at first call
+   // Update information at first call
    if (fEntries != total) {
       buf.Form("PROOF cluster : \"%s\" - %d worker nodes",
                fViewer->GetActDesc()->fProof->GetMaster(),
@@ -2785,7 +2785,7 @@ void TSessionQueryFrame::ProgressLocal(Long64_t total, Long64_t processed)
    // if no change since last call, just return
    TString buf;
 
-   // Update informations at first call
+   // Update information at first call
    if (fEntries != total) {
       fLabInfos->SetText("Local Session");
 
@@ -3045,7 +3045,7 @@ void TSessionQueryFrame::OnBtnRetrieve()
             }
          }
       }
-      // update list tree, query frame informations, and buttons state
+      // update list tree, query frame information, and buttons state
       fViewer->GetSessionHierarchy()->ClearViewPort();
       fClient->NeedRedraw(fViewer->GetSessionHierarchy());
       UpdateInfos();
@@ -3087,7 +3087,7 @@ void TSessionQueryFrame::OnBtnSubmit()
    if (!obj || obj->IsA() != TQueryDescription::Class())
       return;
    TQueryDescription *newquery = (TQueryDescription *)obj;
-   // reset progress informations
+   // reset progress information
    ResetProgressDialog(newquery->fSelectorString,
          newquery->fNbFiles, newquery->fFirstEntry, newquery->fNoEntries);
    // set query start time
@@ -3581,7 +3581,7 @@ TSessionInputFrame::~TSessionInputFrame()
 //______________________________________________________________________________
 void TSessionInputFrame::Build(TSessionViewer *gui)
 {
-   // Build query input informations frame.
+   // Build query input information frame.
 
    fViewer = gui;
    SetLayoutManager(new TGVerticalLayout(this));
@@ -3991,7 +3991,7 @@ void TSessionViewer::UpdateListOfProofs()
                }
                if (found) continue;
                newdesc = new TSessionDescription();
-               // and fill informations from Proof session
+               // and fill information from Proof session
                newdesc->fTag       = d->GetName();
                newdesc->fName      = d->GetTitle();
                newdesc->fAddress   = d->GetTitle();
@@ -4076,7 +4076,7 @@ void TSessionViewer::UpdateListOfProofs()
          if (found) continue;
          // create new session description
          newdesc = new TSessionDescription();
-         // and fill informations from Proof session
+         // and fill information from Proof session
          newdesc->fName       = proof->GetMaster();
          newdesc->fConfigFile = proof->GetConfFile();
          newdesc->fUserName   = proof->GetUser();
@@ -4139,7 +4139,7 @@ void TSessionViewer::UpdateListOfSessions()
          if (found) continue;
          // create new session description
          newdesc = new TSessionDescription();
-         // and fill informations from Proof session
+         // and fill information from Proof session
          newdesc->fTag        = pdesc->GetName();
          newdesc->fName       = pdesc->GetTitle();
          proof = pdesc->GetProof();
@@ -4650,7 +4650,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
          obj = (TObject *)entry->GetUserData();
          if (!obj || obj->IsA() != TSessionDescription::Class())
             return;
-         // update server frame informations
+         // update server frame information
          fServerFrame->Update((TSessionDescription *)obj);
          fActDesc = (TSessionDescription*)obj;
          // if Proof valid, update connection infos
@@ -4729,7 +4729,7 @@ void TSessionViewer::OnListTreeClicked(TGListTreeItem *entry, Int_t btn,
       if (obj && obj->IsA() == TQueryDescription::Class()) {
          fActDesc->fActQuery = (TQueryDescription *)obj;
       }
-      // update query informations and buttons state
+      // update query information and buttons state
       fQueryFrame->UpdateInfos();
       fQueryFrame->UpdateButtons(fActDesc->fActQuery);
       if (fActFrame != fQueryFrame) {
@@ -5096,7 +5096,7 @@ void TSessionViewer::QueryResultReady(char *query)
                   if (!fSessionHierarchy->FindChildByName(item2, "OutputList"))
                      fSessionHierarchy->AddItem(item2, "OutputList");
             }
-            // update list tree, query frame informations, and buttons state
+            // update list tree, query frame information, and buttons state
             fSessionHierarchy->ClearViewPort();
             fClient->NeedRedraw(fSessionHierarchy);
             fQueryFrame->UpdateInfos();

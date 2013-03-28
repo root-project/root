@@ -3606,7 +3606,7 @@ int RpdCheckHostsEquiv(const char *host, const char *ruser,
 //______________________________________________________________________________
 int RpdCheckSpecialPass(const char *passwd)
 {
-   // Check recieved user's password against password in $HOME/.rootdpass.
+   // Check received user's password against password in $HOME/.rootdpass.
    // The password is retrieved in RpdUser and temporarly saved in gPasswd.
    // Returns 1 in case of success authentication, 0 otherwise.
 

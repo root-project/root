@@ -1478,7 +1478,7 @@ class genDictionary(object) :
       c += indent + '};\n'
     return c    
 #----------------------------------------------------------------------------------
-  def genTypedefBuild(self, attrs, childs) :
+  def genTypedefBuild(self, attrs, children) :
     if self.no_membertypedefs : return ''
     # access selection doesn't work with gccxml0.6 - typedefs don't have it
     if self.interpreter and 'access' in attrs : return ''
@@ -1486,11 +1486,11 @@ class genDictionary(object) :
     s += '  .AddTypedef(%s, Reflex::Literal("%s::%s"))' % ( self.genTypeID(attrs['type']), self.genTypeName(attrs['context']), attrs['name']) 
     return s  
 #----------------------------------------------------------------------------------
-  def genEnumerationBuild(self, attrs, childs):
+  def genEnumerationBuild(self, attrs, children):
     s = ''
     name = self.genTypeName(attrs['id']) 
     values = ''
-    for child in childs : values += child['name'] + '=' + child['init'] +';'
+    for child in children : values += child['name'] + '=' + child['init'] +';'
     values = values[:-1]
     mod = self.genModifier(attrs, None)
     if self.isUnnamedType(name) :
@@ -1832,7 +1832,7 @@ class genDictionary(object) :
       else                    : pass
     return cnt
 #----------------------------------------------------------------------------------
-  def genFieldBuild(self, attrs, childs):
+  def genFieldBuild(self, attrs, children):
     type   = self.genTypeName(attrs['type'], enum=False, const=False)
     cl     = self.genTypeName(attrs['context'],colon=True)
     cls    = self.genTypeName(attrs['context'])
@@ -1874,7 +1874,7 @@ class genDictionary(object) :
           c += '\n  .AddProperty(Reflex::Literal("%s"),Reflex::Literal("%s"))' % (pname, pval)     
     return c
 #----------------------------------------------------------------------------------
-  def genVariableBuild(self, attrs, childs):
+  def genVariableBuild(self, attrs, children):
     if 'access' in attrs and attrs['access'] in ('private','protected') : return ''
     type   = self.genTypeName(attrs['type'], enum=False, const=False)
     cl     = self.genTypeName(attrs['context'],colon=True)
@@ -2164,7 +2164,7 @@ class genDictionary(object) :
     body += '}\n'
     return head + body
 #----------------------------------------------------------------------------------
-  def genDestructorDef(self, attrs, childs):
+  def genDestructorDef(self, attrs, children):
     cl = self.genTypeName(attrs['context'])
     static = ''
     dtorscope = ''
@@ -2178,7 +2178,7 @@ class genDictionary(object) :
       # unnamed; can't call.
       return dtorimpl + '  // unnamed, cannot call destructor\n}'
 #----------------------------------------------------------------------------------
-  def genDestructorBuild(self, attrs, childs):
+  def genDestructorBuild(self, attrs, children):
     if self.isUnnamedType(self.xref[attrs['context']]['attrs'].get('demangled')) or \
        self.checkAccessibleType(self.xref[attrs['context']]) : return ''
     mod = self.genModifier(attrs,None)
