@@ -2644,8 +2644,16 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
        ptrClass->GetSchemaRules()->HasRuleWithSourceClass( expectedClass->GetName() ) ) {
 
       TBranchElement* bEl = (TBranchElement*)branch;
+      
+      if ( ptrClass->GetCollectionProxy() && expectedClass->GetCollectionProxy() ) {
+         if (gDebug > 7) 
+            Info("SetBranchAddress", "Matching STL colleciton (at least according to the SchemaRuleSet when "
+               "reading a %s into a %s",expectedClass->GetName(),ptrClass->GetName());
 
-      if( !ptrClass->GetConversionStreamerInfo( expectedClass, bEl->GetClassVersion() ) &&
+         bEl->SetTargetClass( ptrClass->GetName() );
+         return kMatchConversion;
+
+      } else if ( !ptrClass->GetConversionStreamerInfo( expectedClass, bEl->GetClassVersion() ) &&
           !ptrClass->FindConversionStreamerInfo( expectedClass, bEl->GetCheckSum() ) ) {
          Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" by the branch: %s", ptrClass->GetName(), bEl->GetClassName(), branch->GetName());
          
