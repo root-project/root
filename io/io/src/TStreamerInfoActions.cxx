@@ -1921,6 +1921,9 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
       case TStreamerInfo::kConv + TStreamerInfo::kShort:
          return GetCollectionReadConvertAction<Looper,Short_t>(element->GetNewType(), new TConfiguration(info,i,offset) );
          break;
+      case TStreamerInfo::kConv + TStreamerInfo::kInt:
+         return GetCollectionReadConvertAction<Looper,Int_t>(element->GetNewType(), new TConfiguration(info,i,offset) );
+         break;
       case TStreamerInfo::kConv + TStreamerInfo::kLong:
          return GetCollectionReadConvertAction<Looper,Long_t>(element->GetNewType(), new TConfiguration(info,i,offset) );
          break;
@@ -2924,7 +2927,10 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
    return sequence;
 }
  
+#if defined(R__WIN32)
 #include <dlfcn.h>
+#endif
+
 typedef void (*voidfunc)();
 static const char *R__GetSymbolName(voidfunc func)
 {
