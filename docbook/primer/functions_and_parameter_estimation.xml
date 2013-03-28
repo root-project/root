@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0"
+         xmlns:mml="http://www.w3.org/1998/Math/MathML"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xml:id="Chapter-Fitting">
+
+
+<title>Functions and Parameter Estimation</title>
+<para>
+After going through the previous chapters, you already know how
+to use analytical functions (class <code>TF1</code>),
+and you got some insight into
+the graph (<code>TGraphErrors</code>) and
+histogram classes (<code>TH1F</code>) for data visualisation.
+In this chapter we will add more detail to
+the previous approximate explanations to face the
+fundamental topic of parameter estimation by fitting
+functions to data. For graphs and histograms, ROOT offers
+an easy-to-use interface to perform fits - either the fit panel
+of the graphical interface, or the <code>Fit</code> method.
+The class <code>TFitResult</code> allows access to the detailed
+results.
+</para>
+
+<para>
+Very often it is necessary to study the statistical properties of
+analysis procedures. This is most easily achieved by applying the
+analysis to many sets of simulated data (or "pseudo data"),
+each representing one possible version of the true experiment.
+If the simulation only deals with the final distributions
+observed in data, and does not perform a full simulation
+of the underlying physics and the experimental apparatus,
+the name "Toy Monte Carlo" is frequently used <footnote><para>
+"Monte Carlo" simulation means that random numbers play a
+role here which is as crucial as in games of pure chance
+in the Casino of Monte Carlo.</para></footnote>.
+Since the true values of all parameters are known in the pseudo-data,
+the differences between the parameter estimates from the analysis procedure
+w.r.t. the true values can be determined, and it is also possible to
+check that the analysis procedure provides correct error estimates.
+</para>
+
+<section>
+<title>Fitting Functions to Pseudo Data</title>
+<para>
+In the example below, a pseudo-data set is produced and a
+model fitted to it.
+</para>
+<para>
+ROOT offers various minimization algorithms to minimize a chi2 or a negative
+log-likelihood function.
+The default minimizer is MINUIT, a package originally implemented in the
+FORTRAN programming language.
+A C++ version is also available, MINUIT2, as well as Fumili <citebiblioid>Fumili</citebiblioid>
+an algorithm optimized for fitting.
+Genetic algorithms and a stochastic minimizer based on simulated annealing
+are also available.
+The minimization algorithms can be selected using the static functions of
+the <code>ROOT::Math::MinimizerOptions</code> class.
+Steering options for the minimizer, such as the convergence tolerance or
+the maximum number of function calls, can also be set using the methods of
+this class.
+All currently implemented minimizers are documented in the reference
+documentation of ROOT: have a look for example to the
+<code>ROOT::Math::Minimizer</code> class documentation.
+</para>
+<para>
+The complication level of the code below is intentionally
+a little higher than in the previous examples. The graphical output
+of the macro is shown in <xref  linkend="Fig-functions"/>:
+</para>
+
+<programlisting language="c++" linenumbering="numbered"><xi:include href="macros/macro8.C" parse="text" /></programlisting>
+
+<para>
+Some step by step explaination is at this point necessary:
+</para>
+
+<itemizedlist>
+<listitem><para> Lines <emphasis>1-3</emphasis>: A simple function to ease the make-up of lines.
+Remember that the class <code>TF1</code> inherits from <code>TAttLine</code>.</para></listitem>
+<listitem><para> Lines <emphasis>5-7</emphasis> : Definition of a customised function, namely a Gaussian
+(the "signal") plus a parabolic function, the "background".</para></listitem>
+<listitem><para> Lines <emphasis>10-12</emphasis>: Some maquillage for the Canvas. In particular we
+want that the parameters of the fit appear very clearly and nicely on the plot.</para></listitem>
+<listitem><para> Lines <emphasis>20-25</emphasis>: Define and initialise an instance of <code>TF1</code>.</para></listitem>
+<listitem><para> Lines <emphasis>27-32</emphasis>: Define and fill a histogram.</para></listitem>
+<listitem><para> Lines <emphasis>34-40</emphasis>: For convenience, the same function as for the generation of
+the pseudo-data is used in the fit; hence, we need to reset the function
+ parameters. This part of the code is very important for each fit procedure,
+ as it sets the initial values of the fit. </para></listitem>
+<listitem><para> Line <emphasis>43</emphasis>: A very simple command, well known by now: fit the function to
+the histogram. </para></listitem>
+<listitem><para> Lines <emphasis>45-49</emphasis>: Retrieve the output from the fit.
+Here, we simply print the fit result and access and print the
+covariance matrix of the parameters.</para></listitem>
+<listitem><para>Lines <emphasis>58-end</emphasis>: Plot the pseudo-data, the fitted function and the
+signal and background components at the best-fit values.</para></listitem>
+</itemizedlist>
+
+<figure xml:id="Fig-functions"><title>Fit of pseudo data: a signal shape over a background trend.
+This plot is another example of how making a plot "self-explanatory"
+can help you better displaying your results.</title>
+<titleabbrev>Fit of pseudo data</titleabbrev>
+<mediaobject>
+<imageobject>
+<imagedata fileref="figures/functions.png" width="400pt"/>
+</imageobject>
+</mediaobject>
+</figure>
+
+</section>
+
+<section>
+<title>Toy Monte Carlo Experiments</title>
+<para>
+Let us look at a simple example of a toy experiment comparing
+two methods to fit a function to a
+histogram, the
+<inlineequation>
+<mml:math>
+<mml:msup>
+<mml:mi>χ</mml:mi>
+<mml:mn>2</mml:mn>
+</mml:msup>
+</mml:math>
+</inlineequation>
+
+
+method and a method called "binned
+log-likelihood fit", both available in ROOT.
+</para>
+<para>
+As a very simple yet powerful quantity to check the quality of the
+fit results, we construct for each pseudo-data set the
+so-called "pull", the difference of the estimated and the true
+value of a parameter, normalised to the estimated error
+on the parameter,
+
+<inlineequation>
+<mml:math>
+<mml:mfrac>
+
+<mml:mrow>
+<mml:mo>(</mml:mo>
+<mml:msub>
+<mml:mi>p</mml:mi>
+<mml:mn>estim</mml:mn>
+</mml:msub>
+<mml:mo>-</mml:mo>
+<mml:msub>
+<mml:mi>p</mml:mi>
+<mml:mn>true</mml:mn>
+</mml:msub>
+<mml:mo>)</mml:mo>
+</mml:mrow>
+
+<mml:mrow>
+<mml:msub>
+<mml:mi>σ</mml:mi>
+<mml:mn>p</mml:mn>
+</mml:msub>
+</mml:mrow>
+
+</mml:mfrac>
+</mml:math>
+</inlineequation>.
+
+
+If everything is OK, the distribution of the pull values is a
+standard normal distribution, i.e. a Gaussian distribution
+centred around zero with a standard deviation of one.
+</para>
+<para>
+The macro performs a rather big number of toy experiments,
+where a histogram is repeatedly filled with Gaussian distributed
+numbers, representing the pseudo-data in this example. Each time,
+a fit is performed according to the selected method, and the
+pull is calculated and filled into a histogram. Here is the code:
+</para>
+
+<programlisting language="c++" linenumbering="numbered"><xi:include href="macros/macro9.C" parse="text" /></programlisting>
+
+<para>
+Your present knowledge of ROOT should be enough to understand all the
+technicalities behind the macro. Note that
+the variable <code>pull</code> in line <emphasis>59</emphasis> is different from the
+definition above: instead of the parameter error on <code>mean</code>,
+the fitted standard deviation of the distribution divided by the
+square root of the number of entries, <code>sig/sqrt(n_tot_entries)</code>,
+is used.
+</para>
+
+<itemizedlist>
+<listitem><para> What method exhibits the better performance with the default
+parameters?</para></listitem>
+<listitem><para>What happens if you increase the number of entries per histogram
+by a factor of ten? Why?</para></listitem>
+</itemizedlist>
+
+<para>
+The answers to these questions are well beyond the scope of this guide.
+Basically all books about statistical methods provide a complete treatement
+of the aforementioned topics.
+</para>
+</section>
+</chapter>

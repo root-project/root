@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0"
+         xmlns:mml="http://www.w3.org/1998/Math/MathML"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xml:id="chap-histos">
+
+<title>Histograms</title>
+
+<para>
+Histograms play a fundamental role in any type of physics analysis, not only
+to visualise measurements but being a powerful form of data reduction.
+ROOT offers many classes that represent histograms, all inheriting from the
+<code>TH1</code> class.
+We will focus in this chapter on uni- and bi- dimensional
+histograms whose bin-contents are represented by floating point numbers
+<footnote><para>To optimise the memory usage you might go for one byte (TH1C),
+short (TH1S), integer (TH1I) or double-precision (TH1D) bin-content.</para></footnote>,
+the <code>TH1F</code> and <code>TH2F</code> classes respectively.
+</para>
+
+<section>
+<title>Your First Histogram</title>
+<para>
+Let's suppose you want to measure the counts of a Geiger detector put
+in proximity of a radioactive source in a given time interval.
+This would give you an idea of the activity of your source.
+The count distribution in this case is a Poisson distribution.
+Let's see how operatively you can fill and draw a histogram with the
+following example macro.
+</para>
+
+<programlisting language="c++" linenumbering="numbered"><xi:include href="macros/macro5.C" parse="text" /></programlisting>
+
+<para>
+Which gives you the following plot (<xref linkend="Fig-poisson_normalised"/>):
+</para>
+
+<figure xml:id="Fig-poisson_normalised"><title>The result of a counting (pseudo) experiment.
+Only bins corresponding to integer values are filled given the discrete
+nature of the poissonian distribution.</title>
+<titleabbrev>Counting experiment</titleabbrev>
+<mediaobject>
+<imageobject>
+<imagedata fileref="figures/poisson.png" width="400pt"/>
+</imageobject>
+</mediaobject>
+</figure>
+
+<para>
+Using histograms is rather simple. The main differences with respect to
+graphs that emerge from the example are:
+</para>
+
+<itemizedlist>
+<listitem><para>line <emphasis>5</emphasis>: The histograms have a name and a title right from the start, no
+predefined number of entries but a number of bins and a lower-upper range.</para></listitem>
+<listitem><para>line <emphasis>15</emphasis>: An entry is stored in the histogram through the
+<code>TH1F::Fill</code> method.</para></listitem>
+<listitem><para> line <emphasis>19</emphasis> and <emphasis>22</emphasis>: The histogram can be drawn also normalised, ROOT
+automatically takes cares of the necessary rescaling.</para></listitem>
+<listitem><para>line <emphasis>25</emphasis> to <emphasis>31</emphasis>: This small snippet shows how easy it is to access the
+moments and associated errors of a histogram.</para></listitem>
+</itemizedlist>
+
+</section>
+
+<section>
+<title>Add and Divide Histograms</title>
+<para>
+Quite a large number of operations can be carried out with histograms.
+The most useful are addition and division.
+In the following macro we will learn how to manage these procedures
+within ROOT.
+</para>
+
+<programlisting language="c++" linenumbering="numbered"><xi:include href="macros/macro6.C" parse="text" /></programlisting>
+
+<para>
+The plots that you will obtain are shown in <xref linkend="Fig-histo_sum_ratio"/>
+</para>
+
+
+<figure xml:id="Fig-histo_sum_ratio"><title>The sum of two histograms and the ratio.</title>
+<titleabbrev>Sum of two histograms</titleabbrev>
+<informaltable frame='none'>
+<tgroup cols='2' align='center' colsep='0' rowsep='0'>
+<tbody>
+<row>
+<entry>
+<mediaobject>
+<imageobject>
+<imagedata fileref="figures/histo_sum.png" width="200pt"/>
+</imageobject>
+</mediaobject>
+</entry>
+<entry>
+<mediaobject>
+<imageobject>
+<imagedata fileref="figures/histo_ratio.png" width="200pt"/>
+</imageobject>
+</mediaobject>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+</figure>
+
+<para>
+Some lines now need a bit of clarification:
+</para>
+
+<itemizedlist>
+<listitem><para> line <emphasis>3</emphasis>: CINT, as we know,
+is also able to interpret more than one function per file.
+In this case the function simply sets up some parameters to conveniently
+set the line of histograms.</para></listitem>
+<listitem><para> line <emphasis>20</emphasis> to <emphasis>22</emphasis>: Some contracted C++ syntax for conditional statements is
+used to fill the histograms with different numbers of entries inside the loop.</para></listitem>
+<listitem><para> line <emphasis>27</emphasis>: This is a crucial step for the sum and ratio of histograms
+to handle errors properly.
+The method <code>TH1::Sumw2</code> makes sure that the squares of weights are
+stored inside the histogram (equivalent to the number of entries per bin if
+weights of 1 are used). This information is needed to correctly calculate
+the errors of each bin entry when the methods <code>TH1::Add</code>
+and <code>TH1::Divide</code> are invoked. </para></listitem>
+<listitem><para> line <emphasis>33</emphasis>: The sum of two histograms. A weight can be assigned to the added
+histogram, for example to comfortably switch to subtraction.</para></listitem>
+<listitem><para> line <emphasis>44</emphasis>: The division of two histograms is rather straightforward.</para></listitem>
+<listitem><para> line <emphasis>53</emphasis> to <emphasis>63</emphasis>: When you draw two quantities and their ratios, it is
+much better if all the information is condensed in one single plot. These
+lines provide a skeleton to perform this operation.</para></listitem>
+</itemizedlist>
+
+</section>
+
+<section>
+<title>Two-dimensional Histograms</title>
+<para>
+Two-dimensional histograms are a very useful tool, for example to inspect
+correlations between variables. You can exploit the bi-dimensional histogram
+classes provided by ROOT in a very simple way. Let's see how in the following
+macro:
+</para>
+
+<programlisting language="c++"><xi:include href="macros/macro7.C" parse="text" /></programlisting>
+
+<para>
+Two kinds of plots are provided within the code, the first one containing
+three-dimensional representations (<xref linkend="Fig-2dhistos"/>)
+and the second one projections and profiles (<xref linkend="Fig-proj_and_prof"/>)
+of the bi-dimensional histogram.
+</para>
+
+<figure xml:id="Fig-2dhistos"><title>Different ways of representing bi-dimensional histograms.</title>
+<titleabbrev>Representing bi-dimensional histograms</titleabbrev>
+<mediaobject>
+<imageobject>
+<imagedata fileref="figures/th2f.png" width="400pt"/>
+</imageobject>
+</mediaobject>
+</figure>
+
+<figure xml:id="Fig-proj_and_prof"><title>The projections and profiles of bi-dimensional histograms.</title>
+<titleabbrev>Projections and profiles</titleabbrev>
+<mediaobject>
+<imageobject>
+<imagedata fileref="figures/proj_and_prof.png" width="400pt"/>
+</imageobject>
+</mediaobject>
+</figure>
+
+<para>
+When a projection is performed along the x (y) direction, for every bin along
+the x (y) axis, all bin contents along the y (x) axis are summed up (upper
+the plots of  <xref linkend="Fig-proj_and_prof"/>).
+When a profile is performed along the x (y) direction, for every bin along
+the x (y) axis, the average of all the bin contents along the y (x) is
+calculated together with their RMS and displayed
+as a symbol with error bar (lower two plots of <xref linkend="Fig-proj_and_prof"/>).
+</para>
+<para>
+Correlations between the variables are quantified by the methods
+<code>Double_t GetCovariance()</code>
+and <code>Double_t GetCorrelationFactor()</code>.
+</para>
+</section>
+
+</chapter>

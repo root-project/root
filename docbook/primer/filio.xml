@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0"
+         xmlns:mml="http://www.w3.org/1998/Math/MathML"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xml:id="Chapter-IO">
+
+<title>File I/O and Parallel Analysis</title>
+
+<section>
+<title>Storing ROOT Objects</title>
+<para>
+ROOT offers the possibility to write the instances of all the classes
+inheriting from the class <code>TObject</code> (basically all classes in ROOT)
+on disk, into what is referred to as
+<emphasis>ROOT-file</emphasis>, a file created by the <code>TFile</code> class.
+One says that the object is made "persistent" by storing it on disk.
+When reading the file back, the object can be restored to memory.
+</para>
+<para>
+We can explore this functionality with histograms and two simple macros.
+</para>
+	
+<programlisting language="c++"><xi:include href="macros/write_to_file.C" parse="text" /></programlisting>
+
+<para>
+Not bad, eh? Especially for a language that does not foresees persistency
+natively like C++.
+The <emphasis>RECREATE</emphasis> option forces ROOT to create a new file even if
+a file with the same name exists on disk.
+</para>
+<para>	
+Now, you may use the CINT command line to access information in the
+file and draw the previously written histogram:
+</para>
+
+<programlisting language="c++">&gt;&gt;&gt;  root my_rootfile.root
+root [0]
+Attaching file my_rootfile.root as _file0...
+root [1] _file0.ls()
+TFile**         my_rootfile.root
+ TFile*         my_rootfile.root
+  KEY: TH1F     my_histogram;1  My Title
+root [2] my_histogram.Draw()
+</programlisting>
+
+<para>
+Alternatively, you can use a simple macro to carry out the job:
+</para>
+	
+<programlisting language="c++"><xi:include href="macros/read_from_file.C" parse="text" /></programlisting>
+
+<para>
+Please note that the order of opening files for write access and creating
+objects determines whether the objects are stored or not. You can avoid this
+behaviour by using the <code>Write()</code> function as shown in the previous example.
+</para>
+<para>
+Although you could be tempted to access an object within a file also with the
+<code>Get</code> function and a C++ type cast, it is advisable to always use
+<code>GetObjectChecked</code>.
+</para>
+</section>
+
+<section>
+<title>N-tuples in ROOT</title>
+
+<section><title>Storing simple N-tuples</title>
+<para>
+Up to now we have seen how to manipulate input read from ASCII files.
+ROOT offers the possibility to do much better than that, with its own
+n-tuple classes. Among the many advantages provided by these classes one
+could cite
+</para>
+
+<itemizedlist>
+	<listitem><para> Optimised disk I/O.</para></listitem>
+	<listitem><para> Possibility to store many n-tuple rows.</para></listitem>
+	<listitem><para> Write the n-tuples in ROOT files.</para></listitem>
+	<listitem><para> Interactive inspection with <code>TBrowser</code>.</para></listitem>
+	<listitem><para> Store not only numbers, but also <emphasis>objects</emphasis> in the columns.</para></listitem>
+</itemizedlist>
+
+<para>
+In this section we will discuss briefly the <code>TNtuple</code> class, which is
+a simplified version of the <code>TTree</code> class.
+A ROOT <code>TNtuple</code> object can store rows of float entries.
+Let's tackle the problem according to the usual strategy commenting a
+minimal example
+</para>
+	
+<programlisting language="c++"><xi:include href="macros/write_ntuple_to_file.C" parse="text" /></programlisting>
+
+<para>
+This data written to this example n-tuple represents, in the statistical
+sense, three independent variables (Potential or Voltage, Pressure and
+Temperature), and one variable (Current) which depends on the
+others according to very simple laws, and an additional Gaussian
+smearing.
+This set of variables mimics a measurement of an electrical resistance
+while varying pressure and temperature.
+</para>
+<para>	
+Imagine your task now consists in finding the relations
+among the variables -- of course without knowing the code used to generate
+them.
+You will see that the possibilities of the <code>NTuple</code> class enable you
+to perform this analysis task. Open the ROOT file (<code>cond_data.root</code>)
+written by the macro above in an interactive section and use a
+<code>TBrowser</code>
+to interactively inspect it:
+</para>
+
+<programlisting language="c++">root[0] new TBrowser()</programlisting>
+
+<para>
+You find the columns of your n-tuple written
+as <emphasis>leafs</emphasis>. Simply clicking on them you can obtain histograms
+of the variables!
+</para>
+<para>	
+Next, try the following commands at the shell prompt and in the
+interactive ROOT shell, respectively:
+</para>
+
+<programlisting language="c++">&gt; root conductivity_experiment.root
+Attaching file conductivity_experiment.root as _file0...
+root [0] cond_data.Draw("Current:Potential")</programlisting>
+
+<para>
+You just produced a correlation plot with one single line of code!
+</para>
+<para>	
+Try to extend the syntax typing for example
+</para>
+	
+<programlisting language="c++">root [1] cond_data.Draw("Current:Potential","Temperature&lt;270")</programlisting>
+
+<para>
+What do you obtain?
+</para>
+<para>	
+Now try
+</para>
+
+<programlisting language="c++">root [2] cond_data.Draw("Current/Potential:Temperature")</programlisting>
+
+<para>
+It should have become clear from these examples how to navigate in such
+a multi-dimensional space of variables and unveil relations between
+variables using n-tuples.
+</para>
+</section>
+	
+<section><title>Reading N-tuples</title>
+<para>
+For completeness, you find here a small macro to read the data back from a ROOT n-tuple
+</para>
+	
+<programlisting language="c++"><xi:include href="macros/read_ntuple_from_file.C" parse="text" /></programlisting>
+
+<para>
+The macro shows the easiest way of accessing the content of a n-tuple: after loading the n-tuple, its branches are
+assigned to variables and <code>GetEntry(long)</code> automatically fills them with the content for a specific row.
+By doing so, the logic for reading the n-tuple and the code to process it can be split and the source code remains clear.
+</para>
+</section>
+
+<section xml:id="sec-storing_arbitrary_ntuples"><title>Storing Arbitrary N-tuples</title>
+
+<para>
+It is also possible to write n-tuples of arbitrary type by using ROOT's
+<code>TBranch</code> class. This is especially important as <code>TNtuple::Fill()</code>
+accepts only floats. The following macro creates the same n-tuple as before
+but the branches are booked directly. The <code>Fill()</code> function then fills
+the current values of the connected variables to the tree.
+</para>
+	
+<programlisting language="c++"><xi:include href="macros/write_ntuple_to_file_advanced.C" parse="text" /></programlisting>
+	
+<para>
+The <code>Branch()</code> function requires a pointer to a variable and a definition
+of the variable type. <xref linkend="ttree_variable_types"/> lists some of the
+possible values. Please note that ROOT is not checking the input and mistakes
+are likely to result in serious problems. This holds especially if values are
+read as another type than they have been written, e.g. when storing a variable
+as float and reading it as double.
+</para>
+	
+<table xml:id="ttree_variable_types">	
+<title>List of variable types that can be used to define the type of a branch in ROOT.</title>
+	<titleabbrev>Variable types</titleabbrev>
+	<tgroup cols='4' align='left' colsep='1' rowsep='1'>		
+	<thead>
+		<row>
+			<entry>type</entry>
+			<entry align='center'>size</entry>
+			<entry>C++</entry>
+			<entry align='center'>identifier</entry>
+		</row>
+	</thead>
+		<tbody>
+			<row>
+				<entry>signed integer</entry>
+				<entry align='center'>32 bit</entry>
+				<entry>int</entry>
+				<entry align='center'>I</entry>
+			</row>
+			<row>
+				<entry> </entry>
+				<entry align='center'>64 bit</entry>
+				<entry>long</entry>
+				<entry align='center'>L</entry>
+			</row>
+			<row>
+				<entry>unsigned integer</entry>
+				<entry align='center'>32 bit</entry>
+				<entry>unsigned int</entry>
+				<entry align='center'>i</entry>
+			</row>
+			<row>
+				<entry> </entry>
+				<entry align='center'>64 bit</entry>
+				<entry>unsigned long</entry>
+				<entry align='center'>l</entry>
+			</row>
+			<row>
+				<entry>floating point</entry>
+				<entry align='center'>32 bit</entry>
+				<entry>float</entry>
+				<entry align='center'>F</entry>
+			</row>
+			<row>
+				<entry> </entry>
+				<entry align='center'>64 bit</entry>
+				<entry>double</entry>
+				<entry align='center'>D</entry>
+			</row>
+			<row>
+				<entry>boolean</entry>
+				<entry align='center'>-</entry>
+				<entry>bool</entry>
+				<entry align='center'>O</entry>
+			</row>
+		</tbody>
+	</tgroup>
+</table>
+	
+</section>
+
+<section><title>Processing N-tuples Spanning over Several Files</title>
+<para>
+Usually n-tuples or trees span over many files and it would be difficult to
+add them manually. ROOT thus kindly provides a helper class in the form of
+<code>TChain</code>. Its usage is shown in the following macro which is very similar
+to the previous example. The constructor of a <code>TChain</code> takes the name of
+the <code>TTree</code> (or <code>TNuple</code>) as an argument. The files are added with
+the function <code>Add(fileName)</code>, where one
+can also use wild-cards as shown in the example.
+</para>
+	
+<programlisting language="c++"><xi:include href="macros/read_ntuple_with_chain.C" parse="text" /></programlisting>
+	
+</section>
+
+<section><title><emphasis> For the advanced user:</emphasis>  Processing trees with a selector script</title>
+<para>
+Another very general and powerful way of processing a <code>TChain</code> is
+provided via the method <code>TChain::Process()</code>. This method takes as
+arguments an instance of a -- user-implemented-- class of type
+<code>TSelector</code>, and -- optionally -- the number of entries and the first
+entry to be processed. A template for the
+class <code>TSelector</code> is provided by the method <code>TTree::MakeSelector</code>,
+as is shown in the little macro <code>makeSelector.C</code> below.
+</para>
+<para>
+It opens the n-tuple
+<code>conductivity_experiment.root</code> from the example above and creates from it
+the header file
+<code>MySelector.h</code> and a template to insert your own analysis code,
+<code>MySelector.C</code>.
+</para>
+	
+<programlisting language="c++"><xi:include href="macros/makeMySelector.C" parse="text" /></programlisting>
+
+<para>
+The template contains the entry points
+<code>Begin()</code> and
+<code>SlaveBegin()</code> called before processing of the <code>TChain</code> starts,
+<code>Process()</code> called for every entry of the chain, and
+<code>SlaveTerminate()</code> and <code>Terminate()</code> called after the last
+entry has been processed. Typically, initialization like booking of histograms
+is performed in <code>SlaveBegin()</code>, the analysis, i.e. the
+selection of entries, calculations and filling of histograms, is done in
+<code>Process()</code>, and final operations like plotting and storing of
+results happen in <code>SlaveTerminate()</code> or <code>Terminate()</code>.
+</para>
+<para>	
+The entry points <code>SlaveBegin()</code> and <code>SlaveTerminate()</code> are called on
+so-called slave nodes only if parallel processing via <code>PROOF</code> or
+<code>PROOF lite</code> is enabled, as will be explained below.
+</para>
+<para>	
+A simple example of a selector class is shown in the macro <code>MySelector.C</code>.
+The example is executed with the following sequence of commands:
+</para>
+	
+<programlisting language="c++">&gt; TChain *ch=new TChain("cond_data", "Chain for Example N-Tuple");
+&gt; ch-&gt;Add("conductivity_experiment*.root");
+&gt; ch-&gt;Process("MySelector.C+");</programlisting>
+
+<para>
+As usual, the "<code>+</code>" appended to the name of the macro to be executed
+initiates the compilation of the <code>MySelector.C</code> with the system compiler
+in order to improve performance.
+</para>
+<para>
+The code in <code>MySelector.C</code>, shown in the listing below, books some histograms in
+<code>SlaveBegin()</code> and adds them to the instance <code>fOutput</code>, which is of the class
+<code>TList</code> <footnote><para>The usage of <code>fOutput</code> is not really needed for this simple
+example, but it allows re-usage of the exact code in parallel processing with <code>PROOF</code>
+(see next section).</para></footnote>. The final processing in <code>Terminate()</code> allows to access histograms and store,
+display or save them as pictures. This is shown in the example via the <code>TList</code>
+<code>fOutput</code>. See the commented listing below for more details; most of the text is actually
+comments generated automatically by <code>TTree::MakeSelector</code>.
+</para>
+	
+<programlisting language="c++"><xi:include href="macros/MySelector.C" parse="text" /></programlisting>
+</section>
+	
+<section><title><emphasis> For power-users:</emphasis>  Multi-core processing with <code>PROOF lite</code></title>
+<para>
+The processing of n-tuples via a selector function of type <code>TSelector</code>
+through <code>TChain::Process()</code>, as described at the end of the previous
+section, offers an additional advantage in particular for very large
+data sets: on distributed systems or multi-core architectures, portions
+of data can be processed in parallel, thus significantly reducing the execution
+time. On modern computers with multi-core CPUs or hyper-threading
+enabled, this allows a much faster turnaround of analyses, since all the
+available CPU power is used.
+</para>
+<para>	
+On distributed systems, a PROOF server and worker nodes have to be set up, as
+described in detail in the ROOT documentation. On a single computer with multiple
+cores, <code>PROOF lite</code> can be used instead. Try the following little macro,
+<code>RunMySelector.C</code>, which contains two extra lines compared to
+the example above (adjust the number of workers according to the number of CPU cores):
+</para>
+	
+<programlisting language="c++"><xi:include href="macros/RunMySelector.C" parse="text" /></programlisting>
+<para>
+The first command, <code>TProof::Open(const char*)</code> starts a local PROOF server
+(if no arguments are specified, all cores will be used), and the
+command <code>ch-&gt;SetProof();</code> enables processing of the chain using PROOF.
+Now, when issuing the command <code>ch-&gt;Process("MySelector.C+);</code>, the
+code in <code>MySelector.C</code> is compiled and executed on each slave node.
+The methods <code>Begin()</code> and <code>Terminate()</code> are executed on
+the master only.
+The list of n-tuple files is analysed, and portions of the data are assigned
+to the available slave processes. Histograms booked in <code>SlaveBegin()</code>
+exist in the processes on the slave nodes, and are filled accordingly. Upon
+termination, the PROOF master collects the histograms from the slaves and
+merges them. In <code>Terminate()</code> all merged histograms are available and
+can be inspected, analysed or stored.
+The histograms are handled via the instances <code>fOutput</code> of class
+<code>TList</code> in each slave process, and can be retrieved from this
+list after merging in <code>Terminate</code>.
+</para>
+<para>	
+To explore the power of this mechanism, generate some very large n-tuples
+using the script from  <xref linkend="sec-storing_arbitrary_ntuples"/> - you could try 10 000 000
+events (this results in a large n-tuple of
+about 160 MByte in size). You could also generate a large number of
+files and use wildcards to add the to the <code>TChain</code>. Now execute:
+<code>&gt; root -l RunMySelector.C</code>
+and watch what happens:
+</para>
+
+<programlisting language="c++">Processing RunMySelector.C...
+ +++ Starting PROOF-Lite with 4 workers +++
+Opening connections to workers: OK (4 workers)
+Setting up worker servers: OK (4 workers)
+PROOF set to parallel mode (4 workers)
+
+Info in &lt;TProofLite::SetQueryRunning&gt;: starting query: 1
+Info in &lt;TProofQueryResult::SetRunning&gt;: nwrks: 4
+Info in &lt;TUnixSystem::ACLiC&gt;: creating shared library
+                             ~/DivingROOT/macros/MySelector_C.so
+*==* ----- Begin of Job ----- Date/Time = Wed Feb 15 23:00:04 2012
+Looking up for exact location of files: OK (4 files)
+Looking up for exact location of files: OK (4 files)
+Info in &lt;TPacketizerAdaptive::TPacketizerAdaptive&gt;:
+                      Setting max number of workers per node to 4
+Validating files: OK (4 files)
+Info in &lt;TPacketizerAdaptive::InitStats&gt;:
+                      fraction of remote files 1.000000
+Info in &lt;TCanvas::Print&gt;:
+       file ResistanceDistribution.png has been created
+*==* ----- End of Job ----- Date/Time = Wed Feb 15 23:00:08 2012
+Lite-0: all output objects have been merged</programlisting>
+
+<para>
+Log files of the whole processing chain are kept in the directory
+<code>~.proof</code> for each worker node. This is very helpful for debugging or if
+something goes wrong. As the method described here also works without
+using PROOF, the development work on an analysis script can be done in the
+standard way on a small subset of the data, and only for the full
+processing one would use parallelism via PROOF.
+</para>
+<para>
+It is worth to remind the reader that the speed of typical data analysis programs
+limited by the I/O speed (for example the latencies implied by reading data
+from a hard drive).
+It is therefore expected that this limitation cannot be eliminated with the usage of
+any parallel analysis toolkit.
+</para>
+</section>
+	
+<section><title>Optimisation Regarding N-tuples</title>
+<para>
+ROOT automatically applies compression algorithms on n-tuples to reduce the memory
+consumption. A value that is in most cases only zero will consume only small space on
+your disk (but it has to be deflated on reading). Nevertheless, you should think about
+the design of your n-tuples and your analyses as soon as the processing time exceeds
+some minutes.
+</para>
+
+<itemizedlist>
+	<listitem><para> Try to keep your n-tuples simple and use appropriate variable types. If your
+	measurement has only a limited precision, it is needless to store it with double precision.</para></listitem>
+	<listitem><para> Experimental conditions that do not change with every single measurement should be
+	stored in a separate tree. Although the compression can handle redundant values, the
+	processing time increase with every variable that has to be filled.</para></listitem>
+	<listitem><para> The function <code>SetCacheSize(long)</code> specifies the size of the cache for reading
+	a <code>TTree</code> object from a file. The default value is 30MB. A manual increase may help
+	in certain situations. Please note that the caching mechanism can cover only one
+	<code>TTree</code> object per <code>TFile</code> object.</para></listitem>
+	<listitem><para> You can select the branches to be covered by the caching algorithm with
+	<code>AddBranchToCache</code> and deactivate unneeded branches with <code>SetBranchStatus</code>.
+	This mechanism can result in a significant speed-up for simple operations on trees with many branches.</para></listitem>
+	<listitem><para> You can measure the performance easily with <code>TTreePerfStats</code>. The ROOT
+	documentation on this class also includes an introductory example. For example,
+	<code>TTreePerfStats</code> can show you that it is beneficial to store meta data and
+	payload data separately, i.e. write the meta data tree in a bulk to a file at
+	the end of your job instead of writing both trees interleaved.</para></listitem>
+</itemizedlist>
+</section>
+</section>
+</chapter>

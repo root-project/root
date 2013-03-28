@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0"
+         xmlns:mml="http://www.w3.org/1998/Math/MathML"
+         xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<title>Motivation and Introduction</title>
+
+<para>
+   <emphasis><emphasis role="bold">Welcome to data analysis!</emphasis></emphasis>
+   <footnote><para>This guide was prepared for the ROOT IRMM Tutorial adapting "A ROOT Guide for Students"
+      <link xlink:href="http://www-ekp.physik.uni-karlsruhe.de/~quast">http://www-ekp.physik.uni-karlsruhe.de/~quast</link>,
+   a document by D. Piparo, G. Quast and M. Zeise.</para></footnote>
+</para>
+<para>
+Comparison of measurements to theoretical models is one of the standard
+tasks in experimental physics. In the most simple case, a "model"
+is just a function providing predictions of measured data. Very often,
+the model depends on parameters. Such a model may simply state
+"the current <emphasis>I</emphasis> is proportional to the voltage
+<emphasis>U</emphasis>", and the task of the experimentalist consists of
+determining the resistance, <emphasis>R</emphasis>, from a set of measurements.
+</para>
+<para>
+As a first step, a visualisation of the data is needed. Next, some
+manipulations typically have to be applied, e.g. corrections or
+parameter transformations. Quite often, these manipulations are
+complex ones, and a powerful library of mathematical functions and
+procedures should be provided - think for example of an integral or
+peak-search or a Fourier transformation applied to an input spectrum
+to obtain the actual measurement described by the model.
+</para>
+<para>
+One specialty of experimental physics are the inevitable errors affecting
+each measurement, and visualisation tools have to include these.
+In subsequent analysis, the statistical nature of the errors must
+be handled properly.
+</para>
+<para>
+As the last step, measurements are compared to models, and free model
+parameters need to be determined in this process. See <xref linkend="fig-examplefit"/>
+for an example of a function (model) fit to data points.
+Several standard methods are available, and a data analysis tool should provide
+easy access to more than one of them. Means to quantify the level of
+agreement between measurements and model must also be available.
+</para>
+
+<figure xml:id="fig-examplefit"><title>Measured data points with error bars and fitted quadratic function.</title>
+<titleabbrev>Measured data points</titleabbrev>
+  <mediaobject>
+      <imageobject>
+         <imagedata fileref="figures/examplefit.png" width="400pt"/>
+      </imageobject>
+   </mediaobject>
+</figure>
+
+<para>
+Quite often, the data volume to be analyzed is large - think of
+fine-granular measurements accumulated with the aid of computers.
+A usable tool therefore must contain easy-to-use and efficient
+methods for data handling.
+</para>
+<para>
+In Quantum mechanics, models typically only predict the probability density
+function ("pdf") of measurements depending on a number of parameters, and
+the aim of the experimental analysis is to extract the parameters from the
+observed distribution of frequencies at which certain values of the
+measurement are observed. Measurements of this kind require means to
+generate and visualize frequency distributions, so-called histograms, and
+stringent statistical treatment to extract the model parameters from
+purely statistical distributions.
+</para>
+<para>
+Simulation of expected data is another important aspect in data analysis.
+By repeated generation of "pseudo-data", which are analysed in the
+same manner as intended for the real data, analysis procedures can be
+validated or compared. In many cases, the distribution of the measurement
+errors is not precisely known, and simulation offers the possibility
+to test the effects of different assumptions.
+</para>
+
+<section>
+<title>
+Welcome to ROOT
+</title>
+<para>
+A powerful software framework addressing all of the above requirements
+is ROOT <citebiblioid>ROOT</citebiblioid>, an open source project
+coordinated by the European Organisation for Nuclear Research, CERN in Geneva.
+ROOT is very flexible and provides both a programming interface to use
+in own applications and a graphical user interface for interactive data
+analysis. The purpose of this document is to serve as a beginners guide
+and provides extendable examples for your own use cases, based on
+typical problems addressed in student labs. This guide will hopefully
+lay the ground for more complex applications in your future scientific
+work building on a modern, state-of the art tool for data analysis.
+</para>
+<para>
+
+This guide in form of a tutorial is intended to introduce you to the
+ROOT package in about <emphasis>30</emphasis> pages.
+This goal will be accomplished using concrete
+examples, according to the "learning by doing" principle. Also because
+of this reason, this guide cannot cover the complexity of the ROOT package.
+Nevertheless, once you feel confident with the concepts presented in the
+following chapters, you will be able to appreciate the ROOT Users
+Guide <citebiblioid>ROOT_Users_Guide</citebiblioid> and
+navigate through the Class Reference <citebiblioid>ROOT_Class_Reference</citebiblioid>
+to find all the details you might be interested in.
+You can even look at the code itself, since ROOT is a free, open-source
+product. Use these documents in parallel to this tutorial!
+</para>
+<para>
+The ROOT Data Analysis Framework itself is written in and heavily relys on
+the programming language <code>C++</code>, and therefore some
+knowledge about <code>C</code> and <code>C++</code> is required.
+Eventually, just profit from the immense
+available literature about <code>C++</code> if you do not have any idea
+of what object oriented programming could be.
+</para>
+<para>
+ROOT is available for many platforms
+(Linux, Mac OS X, Windows...),
+but in this guide we will implicitly assume that
+you are using Linux. The first thing you need to do with ROOT is
+install it, don't you? Obtaining the latest ROOT version is
+straightforward. Just seek the "Pro" version on this webpage
+<link xlink:href="http://root.cern.ch/drupal/content/downloading-root">http://root.cern.ch/drupal/content/downloading-root</link>.
+You will find precompiled versions for the different architectures,
+or the ROOT source code to compile yourself. Just pick up the
+flavour you need and follow the installation instructions.
+</para>
+<para>
+<emphasis role="bold">Let's dive into ROOT!</emphasis>
+</para>
+</section>
+</chapter>
