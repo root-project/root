@@ -1,0 +1,600 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook"
+  xmlns:mml="http://www.w3.org/1998/Math/MathML"
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  version="5.0">
+
+
+<title>ROOT Basics</title>
+<para>
+Now that you have installed ROOT, what's this interactive shell
+thing you're running?
+It's like this: ROOT leads a double life. It has an interpreter for macros
+(CINT <citebiblioid>cint</citebiblioid>) that you can run from the command line or run like
+applications.
+But it is also an interactive shell that can evaluate arbitrary statements and
+expressions.
+This is extremely useful for debugging, quick hacking and testing.
+Let us first have a look at some very simple examples.
+</para>
+
+<section>
+<title>ROOT as calculator</title>
+<para>
+You can even use the ROOT interactive shell in lieu of a calculator!
+Launch the ROOT interactive shell with the command</para>
+<programlisting language="c++"> > root</programlisting>
+  <para>
+on your Linux box. The prompt should appear shortly:
+  </para>
+<programlisting language="c++"> root [1] </programlisting>
+<para>
+and let's dive in with the steps shown here:
+</para>
+<programlisting language="c++">root [0] 1+1
+(const int)2
+root [1] 2*(4+2)/12.
+(const double)1.00000000000000000e+00
+root [2] sqrt(3)
+(const double)1.73205080756887719e+00
+root [3] 1 > 2
+(const int)0
+root [4] TMath::Pi()
+(Double_t)3.14159265358979312e+00
+root [5] TMath::Erf(.2)
+(Double_t)2.22702589210478447e-01</programlisting>
+<para>
+Not bad. You can see that ROOT offers you the possibility not only to type in
+<code>C++</code> statements, but also advanced mathematical functions, which live
+in the <code>TMath</code> namespace.
+  </para>
+  <para>
+Now let's do something more elaborated. A numerical example with the well
+known geometrical series:
+  </para>
+<programlisting language="c++">root [6] double x=.5
+root [7] int N=30
+root [8] double geom_series=0
+root [9] for (int i=0;i&lt;N;++i)geom_series+=TMath::Power(x,i)
+root [10] TMath::Abs(geom_series - (1-TMath::Power(x,N-1))/(1-x))
+(Double_t)1.86264514923095703e-09</programlisting>
+  <para>
+Here we made a step forward. We even declared variables and used a  <emphasis>for</emphasis>
+control structure.
+Note that there are some subtle differences between CINT and the
+standard C++ language. You do not need the ";" at the end of line
+in interactive mode -- try the difference
+e.g. using the command at line <code>root [6]</code>.
+  </para>
+</section>
+
+<section>
+  <title>ROOT as Function Plotter
+  </title>
+  <para>
+Using one of ROOT's powerful classes, here <code>TF1</code>
+<footnote><para>All ROOT classes start with the letter T.</para></footnote>,
+will allow us to display a function of one variable, <emphasis>x</emphasis>. Try the following:
+  </para>
+<programlisting language="c++">root [11] TF1 *f1 = new TF1("f1","sin(x)/x",0.,10.);
+root [12] f1->Draw();</programlisting>
+<para>
+<code>f1</code> is a pointer to an instance of a TF1 class, the arguments are used
+ in the constructor; the first one of type string is a name to be entered
+in the internal ROOT memory management system, the second string type
+parameter defines the function, here <code>sin(x)/x</code>, and the two
+parameters of type double define
+the range of the variable <emphasis>x</emphasis>. The <code>Draw()</code> method, here without any
+parameters, displays the function in a window which should pop up after you
+typed the above two lines. Note again differences between CINT and C++:
+you could have omitted the ";" at the end of lines, CINT woud also have
+accepted the "." to access the method <code>Draw()</code>. However, it is
+best to stick to standard C++ syntax and avoid CINT-specific code,
+as will become clear in a moment.
+</para>
+    <para>
+A slightly extended version of this example is the definition of a function
+with parameters, called <code>[0]</code>, <code>[1]</code> and so on in the ROOT formula
+syntax.
+We now need a way to assign values to these parameters; this is achieved
+with the method
+<code>SetParameter(&lt;parameter_number&gt;,&lt;parameter_value&gt;)</code> of
+class <code>TF1</code>. Here is an example:
+    </para>
+<programlisting language="c++">root [13] TF1 *f1 = new TF1("f2","[0]*sin([1]*x)/x",0.,10.);
+root [14] f1->SetParameter(0,1);
+root [15] f1->SetParameter(1,1);
+root [16] f1->Draw();</programlisting>
+  <para>
+Of course, this version shows the same results as the initial one. Try
+playing with the parameters and plot the function again.
+The class <code>TF1</code> has a large number of very useful methods, including
+integration and differentiation. To make full use of this and other ROOT
+classes, visit the documentation on the Internet under
+<link xlink:href="http://root.cern.ch/drupal/content/reference-guide">http://root.cern.ch/drupal/content/reference-guide</link>.
+Formulae in ROOT are evaluated using the class <code>TFormula</code>,
+so also look up the relevant class documentation for examples,
+implemented functions and syntax.
+  </para>
+  <para>
+You should definitely download this guide to your own system to
+have it at you disposal whenever you need it.
+</para>
+    <para>
+To extend a little bit on the above example, consider a more complex
+function you would like to define. You can also do this using standard <code>C</code>
+or <code>C++</code> code. In many cases this is the only practical way, as the
+ROOT formula interpreter has clear limitations concerning complexity and
+speed of evaluation.
+</para>
+    <para>
+Consider the example below, which calculates and displays
+the interference pattern produced by light falling on a multiple slit.
+Please do not type in the example below at the ROOT command line, there
+is a much simpler way:
+Make sure you have the file <code>slits.C</code> on disk, and
+type <code>root slits.C</code> in the shell. This will start
+root and make it read the "macro" <code>slits.C</code>, i.e. all the
+lines in the file will be executed one after the other.
+    </para>
+
+<programlisting language="c++" linenumbering="numbered"><xi:include href="macros/slits.C" parse="text" /></programlisting>
+
+<figure xml:id="fig-TF1_DoubleSlit"><title>Output of slits.C with parameters 0.2 and 2.</title>
+  <mediaobject>
+    <imageobject>
+      <imagedata fileref="figures/TF1_DoubleSlit.png" width="400pt"/>
+    </imageobject>
+  </mediaobject>
+</figure>
+
+<para>
+The example first asks for user input,
+namely the ratio of slit width over slit distance, and the number
+of slits. After entering this information, you should see
+the graphical output as is shown in <xref linkend="fig-TF1_DoubleSlit"/>.
+</para>
+    <para>
+This is a more complicated example than the ones we have seen before, so
+spend some time analysing it carefully, you should have understood it before
+continuing. Let us go through it in detail:
+</para>
+    <para>
+Lines 6-19 define the necessary functions in <code>C++</code> code, split into
+three separate functions, as suggested by the problem considered.
+The full interference pattern is given by the product of a function
+depending on the ratio of the width and distance of the slits, and a
+second one depending on the number of slits. More important for us
+here is the definition of the interface of these functions to make them
+usable for the ROOT class <code>TF1</code>: the first argument is the pointer
+to <emphasis>x</emphasis>, the second one points to the array of parameters.
+</para>
+    <para>
+The main program starts in line 17 with the definition of a function
+<code>slits()</code> of type <code>void</code>.
+After asking for user input, a ROOT function is defined
+using the C-type function given in the beginning. We can now use all
+methods of the <code>TF1</code> class to control the behaviour of our
+function -- nice, isn't it ?
+</para>
+    <para>
+If you like, you can easily extend the example to also plot the interference
+pattern of a single slit, using function <code>double single</code>, or of
+a grid with narrow slits, function <code>double nslit0</code>, in <code>TF1</code>
+instances.
+</para>
+    <para>
+Here, we used a macro, some sort of lightweight program, that the
+interpreter distributed with ROOT, CINT, is able to execute. This is a
+rather extraordinary situation, since C++ is not natively an interpreted
+language! There is much more to say: chapter  is
+indeed dedicated to macros.
+
+</para>
+</section>
+
+<section><title>Controlling ROOT</title>
+  <para>
+One more remark at this point:
+as every command you type into ROOT is usually interpreted by CINT, an
+"escape character" is needed to pass commands to ROOT directly. This
+character is the dot at the beginning of a line:
+  </para>
+<programlisting language="c++">root [1] .&lt;command&gt;</programlisting>
+<para>To </para>
+
+<itemizedlist>
+<listitem><para> <emphasis role="bold"> quit root</emphasis>, simply type <code>.q</code></para></listitem>
+<listitem><para> obtain a <emphasis role="bold"> list of commands</emphasis>, use <code>.?</code></para></listitem>
+<listitem><para> <emphasis role="bold"> access the shell</emphasis> of the operating system, type
+  <code>.!&lt;OS_command&gt;</code>; try, e.g. <code>.!ls</code> or <code>.!pwd</code> </para></listitem>
+<listitem><para> <emphasis role="bold"> execute a macro</emphasis>, enter <code>.x &lt;file_name&gt;</code>; in the above
+  example, you might have used <code>.x slits.C</code> at the ROOT prompt</para></listitem>
+<listitem><para> <emphasis role="bold"> load a macro</emphasis>, type <code>.L &lt;file_name&gt;</code>; in the above
+  example, you might instead have used the command <code>.L slits.C</code>
+  followed by the function call <code>slits();</code>. Note that after loading a
+  macro all functions and procedures defined therein are available at
+  the ROOT prompt.</para></listitem>
+<listitem><para> <emphasis role="bold"> compile a macro</emphasis>, type <code>.L &lt;file_name&gt;+</code>; ROOT is able to
+  manage for you the C++ compiler behind the scenes and to produce machine
+  code starting from your macro. One could decide to compile a macro in
+  order to obtain better performance or to get nearer to the production
+  environment.</para></listitem>
+</itemizedlist>
+</section>
+
+<section>
+<title>Plotting Measurements</title>
+  <para>
+To display measurements in ROOT, including errors, there exists
+a powerful class <code>TGrapErrors</code> with different types of
+constructors. In the example here, we use data from the file
+<code>ExampleData.txt</code> in text format:
+  </para>
+  <programlisting language="c++">root [0] TGraphErrors *gr=new TGraphErrors("ExampleData.txt");
+root [1] gr->Draw("AP"); </programlisting>
+  <para>
+You should see the output shown in <xref linkend="fig-TGraphErrors_Example"/>.
+  </para>
+
+<figure xml:id="fig-TGraphErrors_Example"><title>Visualisation of data points with errors using the class TGraphErrors.</title>
+  <titleabbrev>Visualisation of data points</titleabbrev>
+  <mediaobject>
+    <imageobject>
+      <imagedata fileref="figures/TGraphErrors_Example.png" width="400pt"/>
+    </imageobject>
+  </mediaobject>
+</figure>
+
+<para>
+Make sure the file <code>ExampleData.txt</code>
+is available in the directory from which you started ROOT.
+Inspect this file now with your favourate editor, or use the command
+<code>less ExampleData.txt</code> to inspect the file, you will see that the
+format is very simple and easy to understand.
+Lines beginning with <code>|</code> are ignored, very convenient to
+add some comments about the type of data. The data itself consist
+of lines with four real numbers each, representing the
+x- and y- coordinates and their errors of each data point.
+</para>
+  <para>
+The argument of the method <code>Draw("AP")</code> is important here. It tells
+the <code>TGraphPainter</code> class to show the axes and to plot markers
+at the <emphasis>x</emphasis> and <emphasis>y</emphasis> positions of the specified data points. Note that this
+simple example relies on
+the default settings of ROOT, concerning the size of the canvas
+holding the plot, the marker type and the line colours and thickness
+used and so on. In a well-written, complete example, all this
+would need to be specified explicitly in order to obtain nice and
+well readable results.
+A full chapter on graphs (chapter ) will explain many
+more of the features of the class <code>TGraphErrors</code> and its relation
+to other ROOT classes in much more detail.
+  </para>
+</section>
+<section>
+<title>Histograms in ROOT</title>
+<para>
+Frequency distributions in ROOT are handled by a set of classes derived
+from the histogram class <code>TH1</code>, in our case <code>TH1F</code>.
+The letter <code>F</code> stands for "float", meaning that the data
+type <code>float</code> is used to store the entries in one histogram bin.
+</para>
+<programlisting language="c++" linenumbering="numbered">root [0] TF1 efunc("efunc","exp([0]+[1]*x)",0.,5.);
+root [1] efunc.SetParameter(0,1);
+root [2] efunc.SetParameter(1,-1);
+root [3] TH1F* h=new TH1F("h","example histogram",100,0.,5.);
+root [4] for (int i=0;i&lt;1000;i++) {h->Fill(efunc.GetRandom());}
+root [5] h->Draw();</programlisting>
+<para>
+The first three lines of this example define a function, an exponential
+in this case, and set its parameters. In Line 4 a histogram is instantiated,
+with a name, a title, a certain number of bins (100 of them, equidistant,
+equally sized) in the range from 0 to 5.
+</para>
+
+  <figure xml:id="fig-TH1F_Example">
+    <title>Visualisation of a histogram filled with exponentially distributed, random  numbers.</title>
+    <titleabbrev>Visualisation of a histogram</titleabbrev>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="figures/TH1F_Example.png" width="400pt"/>
+      </imageobject>
+    </mediaobject>
+  </figure>
+
+<para>
+We use yet another
+new feature of ROOT to fill this histogram with data, namely pseudo-random
+numbers generated with the method <code>TF1::GetRandom</code>, which in turn
+uses an instance of the ROOT class <code>TRandom</code> created when ROOT is
+started. Data is entered in the histogram
+at line 5 using the method <code>TH1F::Fill</code> in a loop construct.
+As a result, the histogram is filled
+with 1000 random numbers distributed according to the defined function.
+The histogram is displayed using the method <code>TH1F::Draw()</code>.
+You may think of this example as repeated measurements of the
+life time of a quantum mechanical state, which are entered into the
+histogram, thus giving a visual impression of the probability density
+distribution. The plot is shown in <xref linkend="fig-TH1F_Example"/>.
+</para>
+    <para>
+Note that you will not obtain an identical plot when executing the
+above lines, depending on how the random number generator is initialised.
+</para>
+    <para>
+The class <code>TH1F</code> does not contain a convenient input format from
+plain text files. The following lines of C++ code do the job.
+One number per line stored in the text file "expo.dat" is read in
+via an input stream and filled in the histogram until end of file
+is reached.
+        </para>
+<programlisting language="c++">root [1] TH1F* h=new TH1F("h","example histogram",100,0.,5.);
+root [2] ifstream inp; double x;
+root [3] inp.open("expo.dat");
+root [4] while(!(inp >> x)==0){h->Fill(x);}
+root [5] h->Draw();
+root [6] inp.close();</programlisting>
+<para>
+Histograms and random numbers are very important tools in statistical
+data analysis, and the whole Chapter  will be dedicated to
+this topic.
+</para>
+</section>
+<section><title>
+Interactive ROOT</title>
+    <para>
+Look at one of your plots again and
+move the mouse across. You will notice that this is much more than a static
+picture, as the mouse pointer changes its shape when touching objects
+on the plot. When the mouse is over an object,
+a right-click opens a pull-down menu displaying in the top line
+the name of the ROOT class you are dealing with, e.g.
+<code>TCanvas</code> for the display window itself,
+<code>TFrame</code> for the frame of the plot,
+<code>TAxis</code> for the axes,
+<code>TPaveText</code> for the plot name.
+Depending on which plot you are investigating, menus for the ROOT
+classes <code>TF1</code>, <code>TGraphErrors</code> or <code>TH1F</code> will show up
+when a right-click is performed on the respective graphical representations.
+The menu items allow direct access to the members of the various
+classes, and you can even modify them, e.g. change colour and
+size of the axis ticks or labels, the function lines, marker types
+and so on. Try it!
+</para>
+
+  <figure xml:id="fig-ROOTPanel_SetParameters">
+    <title>Interactive ROOT panel for setting function parameters.</title>
+    <titleabbrev>Interactive ROOT panel</titleabbrev>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="figures/ROOTPanel_SetParameters.png" width="400pt"/>
+      </imageobject>
+    </mediaobject>
+  </figure>
+
+    <para>
+You will probably like the following: in the output produced
+by the example <code>slits.C</code>, right-click on the
+function line and select "SetLineAttributes", then
+left-click on "Set Parameters". This gives access to a panel
+allowing you to interactively change the parameters of the
+function, as shown in <xref linkend="fig-ROOTPanel_SetParameters"/>.
+Change the slit width, or go from one to two and
+then three or more slits, just as you like. When clicking on
+"Apply", the function plot is updated to reflect the actual
+value of the parameters you have set.
+</para>
+
+  <informaltable frame='none'>
+    <tgroup cols='2'  colsep='0' rowsep='0'>
+      <tbody>
+        <row>
+          <entry>
+            <figure xml:id="fig-ROOT_FitPanel">
+              <title>Fit Panel.</title>
+              <mediaobject>
+                <imageobject>
+                  <imagedata fileref="figures/ROOTPanel_FitPanel.png" width="150pt"/>
+                </imageobject>
+              </mediaobject>
+            </figure>
+          </entry>
+          <entry>
+            <para>
+              Another very useful interactive tool is the <code>FitPanel</code>, available
+              for the classes <code>TGraphErrors</code> and <code>TH1F</code>. Predefined
+              fit functions can be selected from a pull-down menu,
+              including
+              "<code>gaus</code>", "<code>expo</code>" and "<code>pol0</code>" - "<code>pol9</code>"
+              for Gaussian and exponential functions or polynomials of degree 0 to 9,
+              respectively. In addition, user-defined functions using the same syntax
+              as for functions with parameters are possible.
+            </para>
+            <para>
+              After setting the initial
+              parameters, a fit of the selected function to the data of a graph or
+              histogram can be performed and the result displayed on the plot.
+              The fit panel is shown in <xref linkend="fig-ROOT_FitPanel"/>. The fit
+              panel has a number of control options to select the fit method,
+              fix or release individual paramters in the fit, to steer the level of
+              output printed on the console, or to extract and display
+              additional information like contour lines showing parameter
+              correlations.
+              As function fitting is of prime importance in any kind of data analysis,
+              this topic will again show up in chapter .
+            </para>
+          </entry>
+        </row>
+      </tbody>
+    </tgroup>
+  </informaltable>
+
+
+    <para>
+If you are satisfied with your plot, you probably want to save it.
+Just close all selector boxes you opened previously and select
+the menu item <code>Save as...</code> from the menu line of the window. It will
+pop up a file selector box to allow you to choose the format, file
+name and target directory to store the image.
+There is one very noticeable feature here: you can store a plot as a root
+macro! In this macro, you find the C++ representation of all
+methods and classes involved in generating the plot. This is a
+valuable source of information for your own macros, which
+you will hopefully write after having worked through this
+tutorial.
+</para>
+    <para>
+Using ROOT's interactive capabilities is useful for
+a first exploration of possibilities. Other ROOT classes you
+will encounter in this tutorial have such graphical
+interfaces. We will not comment further on this,
+just be aware of the existence of ROOT's interactive features
+and use them if you find convenient.
+Some trial-and-error is certainly necessary
+to find your way through the huge number of menus
+and parameter settings.
+</para>
+</section>
+<section>
+<title>ROOT Beginners' FAQ</title>
+<para>
+At this point of the guide, some basic questions could have already come
+to your mind. We will try to clarify some of them with further
+explanations in the following.
+</para>
+<section>
+<title>ROOT type declarations for basic data types</title>
+<para>
+In the official ROOT documentation, you find special data
+types replacing the normal ones, e.g.
+<code>Double_t</code>, <code>Float_t</code> or <code>Int_t</code> replacing
+the standard <code>double</code>, <code>float</code> or <code>int</code>
+types. Using the ROOT types makes it easier to port code
+between platforms (64/32 bit) or operating systems
+(windows/Linux), as these types are mapped to
+suitable ones in the ROOT header files. If you want
+adaptive code of this type, use the ROOT type declarations.
+However, usually you do not need such adaptive code, and
+you can safely use the standard C type declarations for your
+private code, as
+we did and will do throughout this guide. If you intend to become a
+ROOT developer, however, you better stick to the official
+coding rules!
+    </para>
+</section>
+  <section xml:id="config">
+<title>Configure ROOT at start-up</title>
+  <para>
+The behaviour of a ROOT session can be tailored with the
+options in the <code>.rootrc</code> file.
+Examples of the tunable parameters are the ones related
+to the operating and window system, to the fonts to be used,
+to the location of start-up files.
+At start-up, ROOT looks for a <code>.rootrc</code> file in
+the following order:
+
+<itemizedlist>
+<listitem><para> <code>./.rootrc //local directory</code></para></listitem>
+<listitem><para> <code>$HOME/.rootrc //user directory</code></para></listitem>
+<listitem><para> <code>$ROOTSYS/etc/system.rootrc //global ROOT directory</code></para></listitem>
+</itemizedlist>
+If more than one <code>.rootrc</code> files are found in the search
+paths above, the options are merged, with precedence local,
+user, global.
+The parsing and interpretation of this file is handled by the
+ROOT class <code>TEnv</code>.
+Have a look to its documentation if you need such rather advanced
+features.
+
+The file <code>.rootrc</code> defines the location of two rather
+important files inspected at start-up: <code>rootalias.C</code>
+and <code>rootlogon.C</code>.
+They can contain code that needs to be loaded and executed at ROOT
+startup. <code>rootalias.C</code> is only loaded and best used to define
+some often used functions.
+<code>rootlogon.C</code> contains code that will be
+executed at startup: this file is extremely useful for example
+to pre-load a custom style for the plots created with ROOT.
+This is done most easily by creating a new
+<code>TStyle</code> object with your preferred settings,
+as described in the class reference guide, and then use
+the command <code>gROOT->SetStyle("MyStyleName");</code> to make
+this new style definition the default one.
+As an example, have a look in the file <code>rootlogon.C</code>
+coming with this tutorial.
+Another relevant file is <code>rootlogoff.C</code> that it called when
+the session is finished.
+  </para>
+</section>
+
+<section>
+<title>ROOT command history</title>
+  <para>
+Every command typed at the ROOT prompt is stored in a
+file <code>.root_hist</code> in your home directory. ROOT
+uses this file to allow for navigation in the
+command history with the up-arrow and down-arrow keys.
+It is also convenient to extract successful
+ROOT commands with the help of a text editor for use
+in your own macros.
+  </para>
+</section>
+
+<section>
+<title>ROOT Global Pointers</title>
+<para>
+All global pointers in ROOT begin with a small "g". Some of them
+were already implicitly introduced (for example in <xref linkend="config"/>).
+The most important among them are presented in the following:
+</para>
+
+<itemizedlist>
+  <listitem><para> <emphasis role="bold"><link xlink:href="http://root.cern.ch/root/html/TROOT.html">gROOT</link></emphasis>:
+the <code>gROOT</code> variable is the entry point to the ROOT system.
+Technically it is an instance of the <code>TROOT</code> class.
+Using the <code>gROOT</code> pointer one has access to basically every object created
+in a ROOT based program.
+The <code>TROOT</code> object is essentially a container of several lists pointing
+to the main <code>ROOT</code> objects.</para></listitem>
+
+  <listitem><para> <emphasis role="bold"><link xlink:href="http://root.cern.ch/root/html/TRandom3.html">gRandom</link></emphasis>:
+the gRandom variable is a variable that points to a random number generator
+instance of the type <code>TRandom3</code>.
+Such a variable is useful to access in every point of a program
+the same random number generator, in order to achieve a good quality
+of the random sequence.</para></listitem>
+
+  <listitem><para> <emphasis role="bold"><link xlink:href="http://root.cern.ch/root/html/TStyle.html">gStyle</link></emphasis>:
+By default ROOT creates a default style that can be accessed via the
+<code>gStyle</code> pointer.
+This class includes functions to set some of the following object attributes.</para>
+
+ <itemizedlist>
+    <listitem><para> Canvas </para></listitem>
+    <listitem><para> Pad</para></listitem>
+    <listitem><para> Histogram axis</para></listitem>
+    <listitem><para> Lines</para></listitem>
+    <listitem><para> Fill areas</para></listitem>
+    <listitem><para> Text</para></listitem>
+    <listitem><para> Markers</para></listitem>
+    <listitem><para> Functions</para></listitem>
+    <listitem><para> Histogram Statistics and Titles</para></listitem>
+ </itemizedlist>
+ </listitem>
+  <listitem><para> <emphasis role="bold"><link xlink:href="http://root.cern.ch/root/html/TSystem.html">gSystem</link></emphasis>:
+An instance of a base class defining a generic interface to
+the underlying Operating System, in our case <code>TUnixSystem</code>.</para></listitem>
+</itemizedlist>
+
+<para>
+At this point you have already learnt quite a bit about
+some basic features of ROOT.
+</para>
+<para>
+<emphasis role="bold"><emphasis>Please move on to become an expert!</emphasis></emphasis>
+</para>
+</section>
+</section>
+</chapter>

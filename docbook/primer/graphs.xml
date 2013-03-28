@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0"
+         xmlns:mml="http://www.w3.org/1998/Math/MathML"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xml:id="Graphs">
+
+<title>Graphs</title>
+<para>
+In this Chapter we will learn how to exploit some of the 
+functionalities that ROOT provides to display 
+data exploiting the class <code>TGraphErrors</code>, which you already got
+to know previously. 
+</para>
+
+<section>
+<title>Read Graph Points from File</title>
+<para>
+The fastest way in which you can fill a graph with experimental data
+is to use the constructor which reads data points and their
+errors from a file in ASCII (i.e. standard text) format:
+</para>
+<programlisting language="c++">TGraphErrors(const char *filename,
+const char *format="%lg %lg %lg %lg", Option_t *option="");</programlisting>
+<para>
+The format string can be:
+</para>
+<itemizedlist>
+<listitem> <para><code>"\%lg \%lg"</code>         read only 2 first columns into X,Y</para></listitem>
+<listitem> <para><code>"\%lg \%lg \%lg"</code>     read only 3 first columns into X,Y and EY</para></listitem>
+<listitem> <para><code>"\%lg \%lg \%lg \%lg"</code> read only 4 first columns into X,Y,EX,EY</para></listitem>
+</itemizedlist>
+<para>
+This approach has the nice feature of allowing the user to reuse the 
+macro for many different data sets.
+Here is an example of an input file. The nice graphic result shown 
+is produced by the macro below, which reads two such input files and uses
+different options to display the data points.\\ 
+</para>
+
+
+<informaltable frame='none'>
+<tgroup cols='2' align='center' colsep='0' rowsep='0'>
+<tbody>
+<row>
+<entry>
+<programlisting><xi:include href="macros/macro2_input.txt" parse="text" /></programlisting>
+<para> file: <code>macro2_input.txt</code></para>
+</entry>
+<entry>
+<mediaobject>
+<imageobject>
+<imagedata fileref="figures/graph_with_expectation.png" width="310"/>
+</imageobject>
+</mediaobject>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</informaltable>
+
+<programlisting language="c++"><xi:include href="macros/macro2.C" parse="text" /></programlisting>
+
+<para>
+In addition to the inspection of the plot, you can check the actual contents of 
+the graph with the <code>TGraph::Print()</code> method at 
+any time, obtaining a printout of the coordinates of data 
+points on screen. The macro also shows us how to print a 
+coloured band around a graph instead of error bars, quite 
+useful for example to represent the errors of a 
+theoretical prediction.
+</para>
+</section>
+
+<section>
+<title>Polar Graphs</title>
+<para>
+With ROOT you can profit from rather advanced plotting routines, like the 
+ones implemented in the <code>TPolarGraph</code>, a class to draw graphs in polar 
+coordinates. It is very easy to use, as you see in the example macro and the 
+resulting <xref linkend="macro3_plot"/>:
+</para>
+
+<programlisting language="c++" linenumbering="numbered"><xi:include href="macros/macro3.C" parse="text" /></programlisting>
+
+<para>
+A new element was added on line 4, the size of the canvas: it is sometimes 
+optically better to show plots in specific canvas sizes.
+</para>
+
+<figure xml:id="macro3_plot"><title>The graph of a fan obtained with ROOT.</title>
+<titleabbrev>Graph of a fan</titleabbrev>
+<mediaobject>
+<imageobject>
+<imagedata fileref="figures/polar_graph.png" width="400pt"/>
+</imageobject>
+</mediaobject>
+</figure>
+
+</section>
+
+<section>
+<title>2D Graphs</title>
+<para>
+Under specific circumstances, it might be useful to plot some quantities versus two 
+variables, therefore creating a bi-dimensional graph. Of course ROOT can 
+help you in this task, with the <code>TGraph2DErrors</code> class.
+The following macro produces a bi-dimensional graph representing a 
+hypothetical measurement, fits a bi-dimensional function to it and 
+draws it together with its 
+x and y projections. Some points of the code will be explained in detail.
+This time, the graph is populated with data points using random numbers,
+introducing a new and very important ingredient, the ROOT <code>TRandom3</code> 
+random number generator using the Mersenne Twister 
+algorithm <citebiblioid>MersenneTwister</citebiblioid>.
+</para>
+
+<programlisting language="c++" linenumbering="numbered"><xi:include href="macros/macro4.C" parse="text" /></programlisting>
+
+<para>
+Let's go through the code, step by step to understand what is going on:
+</para>
+
+<itemizedlist>
+ <listitem> <para>Line <emphasis>3</emphasis>: This sets the palette colour code to a much nicer one than 
+the default. Comment this line to give it a try.
+ </para></listitem>
+<listitem> <para>Line <emphasis>7</emphasis>: The instance of the random generator. You can then draw out of 
+this instance random numbers distributed according to different probability 
+density functions, like the Uniform one at lines <emphasis>27-29</emphasis>. 
+See the on-line documentation to appreciate the full power of this ROOT 
+feature.</para>
+</listitem>
+ <listitem> <para>Line <emphasis>12</emphasis>: You are already familiar with the <code>TF1</code> class.
+This is its two-dimensional correspondent. At line <emphasis>24</emphasis> two random numbers distributed 
+according to the <code>TF2</code> formula are drawn with the method
+<code>TF2::GetRandom2(double&amp; a, double&amp;b)</code>.
+ </para></listitem>
+<listitem> <para>Line <emphasis>27-29</emphasis>: Fitting a 2-dimensional function just works like in the
+ one-dimensional case, i.e. initialisation of parameters and calling of the
+ <code>Fit()</code> method.</para>
+</listitem>
+<listitem> <para>Line <emphasis>32</emphasis>: The <emphasis>Surf1</emphasis> option draws the <code>TF2</code> objects (but 
+also bi-dimensional histograms) as coloured surfaces with a wire-frame on 
+three-dimensional canvases. See <xref linkend="macro4_plot"/>
+</para></listitem>
+ <listitem> <para>Line <emphasis>37-41</emphasis>: Here you learn how to create a canvas, partition it in 
+two sub-pads and access them. It is very handy to show multiple plots in 
+the same window or image.
+ </para></listitem>
+</itemizedlist>
+
+<figure xml:id="macro4_plot"><title>A dataset fitted with a bidimensional function visualised as a colored surface.</title>
+<titleabbrev>A dataset fitted</titleabbrev>
+<mediaobject>
+<imageobject>
+<imagedata fileref="figures/fitted2dFunction.png" width="400pt"/>
+</imageobject>
+</mediaobject>
+</figure>
+
+</section>
+</chapter>

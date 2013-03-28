@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter xmlns="http://docbook.org/ns/docbook" version="5.0"
+  xmlns:mml="http://www.w3.org/1998/Math/MathML"
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xml:id="ROOTMacros">
+
+ <title>ROOT Macros</title>
+
+<para>
+You know how other books go on and on about programming
+fundamentals and finally work up to building a complete, working program?
+Let's skip all that. In this guide, we will describe macros executed
+by the ROOT C++ interpreter CINT.
+</para>
+<para>
+It is relatively easy to
+compile a macro, either as a pre-compiled library to load into ROOT,
+or as a stand-alone application, by adding some include statements
+for header file or some "dressing code" to any macro.
+</para>
+
+<section>
+<title>General Remarks on ROOT macros</title>
+<para>
+If you have a number of lines which you were able to execute at the
+ROOT prompt, they can be turned into a ROOT macro by giving them a
+name which corresponds to the file name without extension. The general
+structure for a macro stored in file <code>MacroName.C</code> is
+</para>
+<programlisting language="c++">void MacroName() {
+        &lt;          ...
+          your lines of C++ code
+                   ...             &gt;
+}</programlisting>
+<para>
+The macro is executed by typing
+</para>
+<programlisting language="c++"> &gt; root MacroName.C </programlisting>
+<para>
+at the system prompt, or it can be loaded into a ROOT session
+and then be executed by typing
+</para>
+<programlisting language="c++">root [0].L MacroName.C
+root [1] MacroName();</programlisting>
+<para>
+at the ROOT prompt.
+Note that more than one macro can be loaded this way, as
+each macro has a unique name in the ROOT name space.
+A small set of options can help making your plot nicer.
+</para>
+<programlisting language="c++">gROOT->SetStyle("Plain");   // set plain TStyle
+gStyle->SetOptStat(111111); // draw statistics on plots,
+                            // (0) for no output
+gStyle->SetOptFit(1111);    // draw fit results on plot,
+                            // (0) for no ouput
+gStyle->SetPalette(53);     // set color map
+gStyle->SetOptTitle(0);     // suppress title box
+   ...</programlisting>
+<para>
+Next, you should create a canvas for graphical output,
+with size, subdivisions and format suitable to your needs,
+see documentation of class <code>TCanvas</code>:
+</para>
+<programlisting language="c++">// create a canvas, specify position and size in pixels
+TCanvas c1("c1","&lt;Title&gt;",0,0,400,300);
+c1.Divide(2,2); //set subdivisions, called pads
+c1.cd(1); //change to pad 1 of canvas c1</programlisting>
+<para>
+These parts of a well-written macro are pretty standard,
+and you should remember to include pieces
+of code like in the examples above to make sure
+your output always comes out as you had intended.
+</para>
+<para>
+Below, in <xref linkend="sec-compilation"/>, some more
+code fragments will be shown, allowing you to use
+the system compiler to compile macros for more efficient
+execution, or turn macros into stand-alone
+applications linked against the ROOT libraries.
+</para>
+</section>
+
+<section>
+<title>A more complete example</title>
+<para>
+Let us now look at a rather complete example of a typical task
+in data analysis, a macro that constructs a graph with errors,
+fits a (linear) model to it and saves it as an image.
+To run this macro, simply type in the shell:
+</para>
+<programlisting language="c++"> > root macro1.C </programlisting>
+<para>
+The code is built around the ROOT class
+<code>TGraphErrors</code>, which was already introduced previously.
+Have a look at it in the class reference guide,
+where you will also find further examples. The macro shown below
+uses additional classes, <code>TF1</code> to define a function,
+<code>TCanvas</code> to define size and properties of the window used
+for our plot, and <code>TLegend</code> to add a nice legend.
+For the moment, ignore the commented include statements
+for header files, they will only become
+important at the end (<xref linkend="sec-compilation"/>).
+</para>
+
+<programlisting language="c++" linenumbering="numbered"><xi:include href="macros/macro1.C" parse="text" /></programlisting>
+
+<para>
+Let's comment it in detail:
+</para>
+
+<itemizedlist>
+<listitem><para> Line <emphasis>13</emphasis>: the name of the principal function (it plays the role of
+the "main" function in compiled programs) in the macro file.
+It has to be the same as the file name without extension.</para></listitem>
+  <listitem><para> Line <emphasis>24-25</emphasis>: instance of the <code>TGraphErrors</code> class.
+ The constructor takes the number of points and the pointers to the
+ arrays of $x$~values, $y$~values, $x$~errors (in this case none,
+ represented by the NULL pointer) and $y$~errors.
+ The second line defines in one shot the title of the graph and the
+ titles of the two axes, separated by a ";".</para></listitem>
+  <listitem><para> Line <emphasis>28-30</emphasis>: the first line refers to the style of the plot, set as
+<emphasis>Plain</emphasis>. This is done through a manipulation of the global variable
+<code>gSystem</code> (ROOT global variables begin always with "g").
+The following three lines are rather intuitive right?
+To understand better the enumerators for
+colours and styles see the reference for the <code>TColor</code> and
+<code>TMarker</code> classes.</para></listitem>
+
+  <listitem><para> Line <emphasis>33</emphasis>: the canvas object that will host the drawn objects. The
+"memory leak" is intentional, to make the object existing also out of the
+macro1 scope.</para></listitem>
+  <listitem><para> Line <emphasis>36</emphasis>: the method <emphasis>DrawClone</emphasis> draws a clone of the object
+on the canvas. It <emphasis>has to be</emphasis> a clone, to survive after the scope
+of <code>macro1</code>, and be displayed on screen after the end of the macro
+execution. The string option "APE" stands for:</para>
+  <itemizedlist>
+    <listitem><para> <emphasis>A</emphasis> imposes the drawing of the Axes.</para></listitem>
+    <listitem><para> <emphasis>P</emphasis> imposes the drawing of the graphs markers.</para></listitem>
+    <listitem><para> <emphasis>E</emphasis> imposes the drawing of the graphs error bars.</para></listitem>
+  </itemizedlist>
+     </listitem>
+  <listitem><para> Line <emphasis>39</emphasis>: define a mathematical function. There are several ways to
+accomplish this, but in this case the constructor accepts the name of
+the function, the formula, and the function range.</para></listitem>
+  <listitem><para> Line <emphasis>41</emphasis>: maquillage. Try to give a look to the line
+styles at your disposal visiting the documentation of the <code>TLine</code>
+class.</para></listitem>
+  <listitem><para> Line <emphasis>43</emphasis>: fits the <emphasis>f</emphasis> function to the graph, observe
+that the pointer is passed. It is more interesting to look at the output
+on the screen to see the parameters values and other crucial information
+that we will learn to read at the end of this guide.</para></listitem>
+  <listitem><para> Line <emphasis>44</emphasis>: again draws the clone of the object on the canvas. The
+"Same" option avoids the cancellation of the already drawn objects, in our
+case, the graph.</para></listitem>
+  <listitem><para> Line <emphasis>47-52</emphasis>: completes the plot with a legend, represented by a
+<code>TLegend</code> instance. The constructor takes as parameters the lower left and
+upper right corners coordinates with respect to the total size of the canvas,
+assumed to be 1, and the legend header string.
+You can add to the legend the objects, previously drawn or not drawn, through
+the <code>addEntry</code> method. Observe how the legend is drawn at the end: looks
+familiar now, right?</para></listitem>
+  <listitem><para> Line <emphasis>55-57</emphasis>: defines an arrow with a triangle on the right hand side,
+  a thickness of 2 and draws it.</para></listitem>
+  <listitem><para> Line <emphasis>60-61</emphasis>: interpret a Latex string which hast its lower left corner
+  located in the specified coordinate. The <code>#splitline{}{}</code> construct
+  allows to store multiple lines in the same <code>TLatex</code> object.</para></listitem>
+  <listitem><para> Line <emphasis>63</emphasis>: save the canvas as image. The format is automatically
+inferred from the file extension (it could have been eps, gif, ...).</para></listitem>
+</itemizedlist>
+
+<para>
+Let's give a look to the obtained plot in <xref linkend="macro1_plot"/>.
+Beautiful outcome for such a small bunch of lines, isn't it?
+</para>
+
+
+  <figure xml:id="macro1_plot"><title>Your first plot with data points, a fit of an analytical function, a legend and
+    some additional information in the form of graphics primitives and text.
+    A well formatted plot, clear for the reader is crucial to communicate the
+    relevance of your results to the reader.</title>
+    <titleabbrev>Your first plot</titleabbrev>
+    <mediaobject>
+      <imageobject>
+        <imagedata fileref="figures/graf_with_law.png" width="400pt"/>
+      </imageobject>
+    </mediaobject>
+  </figure>
+
+</section>
+
+<section>
+<title>Summary of Visual effects</title>
+<section>
+<title>Colours and Graph Markers</title>
+<para>
+We have seen that to specify a colour, some identifiers like kWhite, kRed or
+kBlue can be specified for markers, lines, arrows etc.
+The complete summary of colours is represented by the
+ROOT "<link xlink:href="http://root.cern.ch/root/html534/TColor.html#C02">colour wheel</link>".
+To know more about the full story, refer to the online documentation
+of <code>TColor</code>.
+</para>
+<para>
+ROOT provides an analogue of the colour wheel for the
+<link xlink:href="http://root.cern.ch/root/html534/TAttMarker.html#M2">graphics markers</link>.
+Select the most suited symbols for your plot among dots, triangles, crosses
+or stars. An alternative set of names for the markers is available.
+</para>
+</section>
+
+<section>
+<title>Arrows and Lines</title>
+<para>
+The macro line 56 shows how to define an arrow and draw it.
+The class representing arrows is <code>TArrow</code>, which inherits
+from <code>TLine</code>.
+The constructors of lines and arrows always contain the coordinates of
+the endpoints. Arrows also foresee parameters to
+<link xlink:href="http://root.cern.ch/root/html534/TArrow.html">specify their</link> shapes.
+Do not underestimate the role of lines and arrows in your plots.
+Since each plot should contain a message, it is convenient to stress it with
+additional graphics primitives.
+</para>
+</section>
+
+<section>
+<title>Text</title>
+<para>
+Also text plays a fundamental role in making the plots self-explanatory.
+A possibility to add text in your plot is provided by the <code>TLatex</code> class.
+The objects of this class are constructed with the coordinates of the
+bottom-left corner of the text and a string which contains the text itself.
+The real twist is that ordinary
+<link xlink:href="http://root.cern.ch/root/html534/TLatex.html#L5">Latex mathematical symbols</link>
+are automatically interpreted, you just need to replace the "\"
+by a "#".
+</para>
+</section>
+</section>
+
+<section xml:id="sec-compilation">
+<title>Interpretation and Compilation</title>
+<para>
+As you observed, up to now we heavily exploited the capabilities of ROOT for
+interpreting our code, more than compiling and then executing. This is
+sufficient for a wide range of applications, but you might have already asked
+yourself "how can this code be compiled ?". There are two answers.
+</para>
+
+<section>
+<title>Compile a Macro with ACLiC</title>
+<para>
+ACLiC will create for you a compiled dynamic library for your macro, without
+any effort from your side, except the insertion of the appropriate header
+files in lines 3--9. In this example, they are already included. This does
+not harm, as they are not loaded by CINT. To generate an object libary
+from the macro code, from inside the interpreter type (please note the "+"):
+</para>
+<programlisting language="c++"> root [1] .L macro1.C+</programlisting>
+<para>
+Once this operation is accomplished, the macro symbols will be available in
+memory and you will be able to execute it simply by calling from inside the
+interpreter:
+</para>
+<programlisting language="c++"> root [2] macro1()</programlisting>
+</section>
+
+<section>
+<title>Compile a Macro with the Compiler</title>
+<para>
+A plethora of excellent compilers are available, both free and commercial.
+We will refer to the <code>GCC</code> compiler in the following.
+In this case, you have to include the appropriate headers in the code and
+then exploit the <emphasis>root-config</emphasis> tool for the automatic settings of all
+the compiler flags. <emphasis>root-config</emphasis> is a script that comes with ROOT;
+it prints all flags and libraries needed to compile code and link it with
+the ROOT libraries. In order to make the code executable stand-alone,
+an entry point for the operating system is needed, in C++ this is the
+procedure <code>int main();</code>. The easiest way to turn
+a ROOT macro code into a stand-alone application is to add the following
+"dressing code" at the end of the macro file. This defines the
+procedure main, the only purpose of which is to call your macro:
+</para>
+
+<programlisting language="c++">#ifndef __CINT__
+int main() {
+  ExampleMacro();
+  return 0;
+}
+#endif</programlisting>
+<para>
+Within ROOT, the variable <code>__CINT__</code> is defined, and the
+code enclosed by <code>#ifndef __CINT__</code> and <code>#endif</code> is not executed;
+on the contrary, when running the system compiler <code>GCC</code>,
+this symbol is not defined, and the code is compiled. To create a
+stand-alone program from a macro called <code>ExampleMacro.C</code>,
+simply type
+</para>
+<programlisting language="c++"> > g++ -o ExampleMacro.exe ExampleMacro.C \
+  `root-config --cflags --libs`</programlisting>
+<para>
+and execute it by typing
+</para>
+<programlisting language="c++">> ./ExampleMacro.exe</programlisting>
+<para>
+This procedure will, however, not give access to the ROOT graphics,
+as neither control of mouse or keyboard events nor access to the
+graphics windows of ROOT is available. If you want your stand-alone
+application have display graphics output and respond to mouse and
+keyboard, a slightly more complex piece of code can be used. In the
+example below, a macro <code>ExampleMacro_GUI</code> is executed by the ROOT
+class TApplication. As a additional feature, this code example offers access
+to parameters eventually passed to the program when started from the
+command line. Here is the code fragment:
+</para>
+
+<programlisting language="c++">#ifndef __CINT__
+void StandaloneApplication(int argc, char** argv) {
+  // eventually, evaluate the application parameters argc, argv
+  // ==>> here the ROOT macro is called
+  ExampleMacro_GUI();
+}
+  // This is the standard "main" of C++ starting
+  // a ROOT application
+int main(int argc, char** argv) {
+   TApplication app("Root Application", &amp;argc, argv);
+   StandaloneApplication(app.Argc(), app.Argv());
+   app.Run();
+   return 0;
+}
+#endif</programlisting>
+<para>
+Compile the code with
+</para>
+<programlisting language="c++"> &gt; g++ -o ExampleMacro_GUI.exe \
+  ExampleMacro_GUI `root-config --cflags --libs`
+</programlisting>
+<para>
+and execute the program with
+</para>
+<programlisting language="c++">> ./ExampleMacro_GUI.exe</programlisting>
+</section>
+</section>
+</chapter>

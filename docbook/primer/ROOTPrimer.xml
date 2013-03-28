@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book xmlns="http://docbook.org/ns/docbook" 
+      xmlns:xi="http://www.w3.org/2001/XInclude" version="5.0">  
+    
+    <info>
+        <title>ROOT Primer</title>
+        <subtitle>
+            <inlinemediaobject>
+                <imageobject>
+                    <imagedata fileref="pictures/03000003.png" width="332.7pt" depth="196.15pt"/>
+                </imageobject>
+            </inlinemediaobject>
+        </subtitle>
+        <orgname>The ROOT Team</orgname>
+        <date>March 2013</date>
+    </info>
+    
+    <xi:include href="titlepage.xml"/>
+    <xi:include href="Introduction.xml"/>
+    <xi:include href="ROOT_as_calculator.xml"/>
+    <xi:include href="your_first_ROOT_macro.xml"/>
+    <xi:include href="graphs.xml"/>
+    <xi:include href="histograms.xml"/>
+    <xi:include href="functions_and_parameter_estimation.xml"/>
+    <xi:include href="filio.xml"/>
+    <xi:include href="concludingRemarks.xml"/>
+    <xi:include href="bibliography.xml"/>
+    
+</book>
