@@ -2923,11 +2923,46 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
    }
    return sequence;
 }
+ 
+#include <dlfcn.h>
+typedef void (*voidfunc)();
+static const char *R__GetSymbolName(voidfunc func)
+{
+#if defined(R__WIN32)
+   return "not available on this platform";
+#if 0
+   MEMORY_BASIC_INFORMATION mbi;
+   if (!VirtualQuery (func, &mbi, sizeof (mbi)))
+   {
+      return 0;
+   }
+   
+   HMODULE hMod = (HMODULE) mbi.AllocationBase;
+   static char moduleName[MAX_PATH];
+   
+   if (!GetModuleFileNameA (hMod, moduleName, sizeof (moduleName)))
+   {
+      return 0;
+   }
+   return moduleName;
+#endif
+#else
+   Dl_info info;
+   if (dladdr((void*)func,&info)==0) {
+      // Not in a known share library, let's give up
+      return "name not found";
+   } else {
+      //fprintf(stdout,"Found address in %s\n",info.dli_fname);
+      return info.dli_sname;
+   }
+#endif 
+}
 
-void TStreamerInfoActions::TActionSequence::Print(Option_t *) const
+void TStreamerInfoActions::TActionSequence::Print(Option_t *opt) const
 {
    // Add the (potentially negative) delta to all the configuration's offset.  This is used by
    // TTBranchElement in the case of split sub-object.
+   // If opt contains 'func', also print the (mangled) name of the function that will be executed.
 
    if (fLoopConfig) {
       fLoopConfig->Print();
@@ -2938,6 +2973,9 @@ void TStreamerInfoActions::TActionSequence::Print(Option_t *) const
        ++iter) 
    {
       iter->fConfiguration->Print();
+      if (strstr(opt,"func")) {
+         printf("StreamerInfoAction func: %s\n",R__GetSymbolName((voidfunc)iter->fAction));
+      }
    }
 }
 
