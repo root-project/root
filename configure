@@ -4327,10 +4327,14 @@ if test ! "x$enable_ruby" = "xno" ; then
     # Check for Ruby include and library
     myruby=`$cwhich ruby 2> /dev/null`
     if test ! "x$myruby" = "x" && test -x "$myruby" ; then
-       rubysysincdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["includedir"]'`
+       rubysysincdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["rubyhdrdir"]'`
        rubysysarchdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["archdir"]'`
        rubysyslibdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["libdir"]'`
        rubysysarch=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["arch"]'`
+
+       if test "x$rubysysincdir" = "xnil" ; then
+          rubysysincdir=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["includedir"]'`
+       fi
     fi
     rubysysarchdir2=
     if test "x$platform" = "xmacosx" ; then
@@ -4349,9 +4353,9 @@ if test ! "x$enable_ruby" = "xno" ; then
 
     if test "x$arch" = "xwin32" || \
        test "x$enable_shared" = "xno" ; then
-        check_library_options="libruby-static libruby1.8-static libruby1.9-static"
+        check_library_options=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["LIBRUBY_A"]' | sed 's|\.a.*||'`
     else
-        check_library_options="libruby libruby1.8 libruby18 libruby1.9 libruby19"
+        check_library_options=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["LIBRUBY"]' | sed 's|\.so.*||'`
     fi
     check_library "$check_library_options" \
         "$enable_shared" "$rubylibdir" \
