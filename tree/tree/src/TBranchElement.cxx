@@ -4410,13 +4410,16 @@ void TBranchElement::SetAddress(void* addr)
          else if (newProxy && oldProxy && (oldProxy->HasPointers() == newProxy->HasPointers()) && (oldProxy->GetValueClass()!=0) && (newProxy->GetValueClass()!=0)) {
             // Let see if there is a rule to convert the content of the collection into each other.
             if (newType->GetSchemaRules()->HasRuleWithSourceClass( oldProxy->GetCollectionClass()->GetName())) {
+               TClass *oldValueClass = oldProxy->GetValueClass();
                delete fCollProxy;
                Int_t nbranches = GetListOfBranches()->GetEntries();
                fCollProxy = newType->GetCollectionProxy()->Generate();
                for (Int_t i = 0; i < nbranches; ++i) {
                   TBranchElement* br = (TBranchElement*) GetListOfBranches()->UncheckedAt(i);
                   br->fCollProxy = 0;
-                  br->SetTargetClass(fCollProxy->GetValueClass()->GetName());
+                  if (br->fBranchClass == oldValueClass) {
+                     br->SetTargetClass(fCollProxy->GetValueClass()->GetName());
+                  }
                   if (br->fReadActionSequence) {
                      br->SetReadActionSequence();
                   }
