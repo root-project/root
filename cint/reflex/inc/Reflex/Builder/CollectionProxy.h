@@ -214,6 +214,43 @@ namespace Reflex  {
          }
       };
 
+      template <> struct Iterators<std::vector<bool>, false> {
+         typedef std::vector<bool> Cont_t;
+         typedef Cont_t *PCont_t;
+         typedef Cont_t::iterator iterator;
+
+         static void create(void *coll, void **begin_arena, void **end_arena) {
+            PCont_t c = PCont_t(coll);
+            new (*begin_arena) iterator(c->begin());
+            new (*end_arena) iterator(c->end());
+         }
+         static void* copy(void *dest_arena, const void *source_ptr) {
+            iterator *source = (iterator *)(source_ptr);
+            new (dest_arena) iterator(*source);
+            return dest_arena; 
+         }
+         static void* next(void *iter_loc, const void *end_loc) {
+            iterator *end = (iterator *)(end_loc);
+            iterator *iter = (iterator *)(iter_loc);
+            if (*iter != *end) {
+               void *result = IteratorValue<Cont_t, Cont_t::value_type>::get(*iter);
+               ++(*iter);
+               return result;
+            }
+            return 0;
+         }
+         static void destruct1(void *iter_ptr) {
+            iterator *start = (iterator *)(iter_ptr);
+            start->~iterator();
+         }
+         static void destruct2(void *begin_ptr, void *end_ptr) {
+            iterator *start = (iterator *)(begin_ptr);
+            iterator *end = (iterator *)(end_ptr);
+            start->~iterator();
+            end->~iterator();
+         }
+      };
+
       template <typename Cont_t> struct Iterators<Cont_t, /* large= */ true > {
          typedef Cont_t *PCont_t;
          typedef typename Cont_t::iterator iterator;
