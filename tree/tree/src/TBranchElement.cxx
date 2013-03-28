@@ -3171,18 +3171,25 @@ void TBranchElement::Print(Option_t* option) const
       return;
    }
    if (strncmp(option,"debugInfo",strlen("debugInfo"))==0)  {
-      Printf("Branch %s uses:\n",GetName());
+      Printf("Branch %s uses:",GetName());
       if (fID>=0) {
          ULong_t* elems = GetInfoImp()->GetElems();
          ((TStreamerElement*) elems[fID])->ls();
          for(UInt_t i=0; i< fIDs.size(); ++i) {
             ((TStreamerElement*) elems[fIDs[i]])->ls();
          }
+         Printf("   with read actions:");
+         if (fReadActionSequence) fReadActionSequence->Print(option);
+         Printf("   with write actions:");
+         if (fFillActionSequence) fFillActionSequence->Print(option);
       }
+      TString suboption = "debugInfoSub";
+      suboption += (option+strlen("debugInfo"));
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);
-         subbranch->Print("debugInfoSub");
+         subbranch->Print(suboption);
       }
+      Printf(" ");
       return;
    }
    if (nbranches) {
