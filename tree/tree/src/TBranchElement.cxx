@@ -4438,7 +4438,7 @@ void TBranchElement::SetAddress(void* addr)
                   fIterators = new TVirtualCollectionIterators(fCollProxy);
                }
             } else {
-               Error("SetAddress","For %s, we Can not convert %s into %s\n",
+               Error("SetAddress","For %s, we can not convert %s into %s\n",
                      GetName(),oldProxy->GetCollectionClass()->GetName(),newType->GetName());
                fAddress = 0;
                fObject = 0;
