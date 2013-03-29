@@ -850,14 +850,14 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
 }
 
 //______________________________________________________________________________
-TClass *TGenCollectionProxy::GetCollectionClass()
+TClass *TGenCollectionProxy::GetCollectionClass() const
 {
    // Return a pointer to the TClass representing the container
    return fClass ? fClass : Initialize(kFALSE)->fClass;
 }
 
 //______________________________________________________________________________
-Int_t TGenCollectionProxy::GetCollectionType()
+Int_t TGenCollectionProxy::GetCollectionType() const
 {
    // Return the type of collection see TClassEdit::ESTLType
 
@@ -868,7 +868,7 @@ Int_t TGenCollectionProxy::GetCollectionType()
 }
 
 //______________________________________________________________________________
-ULong_t TGenCollectionProxy::GetIncrement() {
+ULong_t TGenCollectionProxy::GetIncrement() const {
    // Return the offset between two consecutive value_types (memory layout).
 
    if (!fValue) {
@@ -900,7 +900,7 @@ Bool_t TGenCollectionProxy::HasPointers() const
 }
 
 //______________________________________________________________________________
-TClass *TGenCollectionProxy::GetValueClass()
+TClass *TGenCollectionProxy::GetValueClass() const
 {
    // Return a pointer to the TClass representing the content.
 
@@ -918,7 +918,7 @@ void TGenCollectionProxy::SetValueClass(TClass *new_Value_type)
 }
 
 //______________________________________________________________________________
-EDataType TGenCollectionProxy::GetType()
+EDataType TGenCollectionProxy::GetType() const
 {
    // If the content is a simple numerical value, return its type (see TDataType)
 

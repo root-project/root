@@ -76,16 +76,16 @@ public:
    virtual TVirtualCollectionProxy* Generate() const = 0; // Returns an object of the actual CollectionProxy class
    virtual ~TVirtualCollectionProxy() {};
 
-   virtual TClass   *GetCollectionClass() { return fClass; } 
+   virtual TClass   *GetCollectionClass() const { return fClass; } 
    // Return a pointer to the TClass representing the container
    
-   virtual Int_t     GetCollectionType() = 0;                
+   virtual Int_t     GetCollectionType() const = 0;                
    // Return the type of collection see TClassEdit::ESTLType
    
-   virtual ULong_t   GetIncrement() = 0;
+   virtual ULong_t   GetIncrement() const = 0;
    // Return the offset between two consecutive value_types (memory layout).
 
-   virtual Int_t     GetProperties() { return fProperties; } 
+   virtual Int_t     GetProperties() const { return fProperties; } 
    // Return miscallenous properties of the proxy see TVirtualCollectionProxy::EProperty
 
    virtual void     *New() const {
@@ -106,13 +106,13 @@ public:
       return fClass.GetClass()==0 ? 0 : fClass->NewArray(nElements, arena);
    }
 
-   virtual void      Destructor(void *p, Bool_t dtorOnly = kFALSE) {
+   virtual void      Destructor(void *p, Bool_t dtorOnly = kFALSE) const {
       // Execute the container destructor
       TClass* cl = fClass.GetClass();
       if (cl) cl->Destructor(p, dtorOnly);
    }
 
-   virtual void      DeleteArray(void *p, Bool_t dtorOnly = kFALSE) { 
+   virtual void      DeleteArray(void *p, Bool_t dtorOnly = kFALSE) const { 
       // Execute the container array destructor
       TClass* cl = fClass.GetClass();
       if (cl) cl->DeleteArray(p, dtorOnly);
@@ -130,10 +130,10 @@ public:
    virtual Bool_t    HasPointers() const = 0;
    // Return true if the content is of type 'pointer to'
 
-   virtual TClass   *GetValueClass() = 0;
+   virtual TClass   *GetValueClass() const = 0;
    // Return a pointer to the TClass representing the content.
 
-   virtual EDataType GetType() = 0;
+   virtual EDataType GetType() const = 0;
    // If the content is a simple numerical value, return its type (see TDataType)
 
    virtual void     *At(UInt_t idx) = 0;

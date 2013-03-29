@@ -63,7 +63,7 @@ TVirtualCollectionProxy* TGenCollectionStreamer::Generate() const
 }
 
 
-void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)
+void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b, const TClass *onFileClass)
 {
    // Primitive input streamer.
    size_t len = fValDiff * nElements;
@@ -152,7 +152,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)
    }
 }
 
-void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
+void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass *onFileClass)
 {
    // Object input streamer.
    Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion() <= 3;
@@ -161,7 +161,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b)
    char   buffer[8096];
    void*  memory = 0;
    
-   TClass* onFileValClass = (fOnFileClass ? fOnFileClass->GetCollectionProxy()->GetValueClass() : 0);
+   TClass* onFileValClass = (onFileClass ? onFileClass->GetCollectionProxy()->GetValueClass() : 0);
 
    fEnv->fSize = nElements;
    switch (fSTL_type)  {
@@ -435,7 +435,7 @@ void TGenCollectionStreamer::ReadMapHelper(StreamHelper *i, Value *v, Bool_t vsn
    }
 }
 
-void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b)
+void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass *onFileClass)
 {
    // Map input streamer.
    Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion() <= 3;
@@ -801,9 +801,9 @@ void TGenCollectionStreamer::ConvertBufferVectorPrimitivesDouble32(TBuffer &b, v
 }
 
 template <typename To>
-void TGenCollectionStreamer::DispatchConvertBufferVectorPrimitives(TBuffer &b, void *obj, Int_t nElements)
+void TGenCollectionStreamer::DispatchConvertBufferVectorPrimitives(TBuffer &b, void *obj, Int_t nElements, const TVirtualCollectionProxy *onFileProxy)
 {
-   switch (fOnFileClass->GetCollectionProxy()->GetType()) {
+   switch (onFileProxy->GetType()) {
       case TStreamerInfo::kBool:     ConvertBufferVectorPrimitives<Bool_t    ,To>(b,obj,nElements); break;
       case TStreamerInfo::kChar:     ConvertBufferVectorPrimitives<Char_t    ,To>(b,obj,nElements); break;
       case TStreamerInfo::kShort:    ConvertBufferVectorPrimitives<Short_t   ,To>(b,obj,nElements); break;
@@ -824,14 +824,14 @@ void TGenCollectionStreamer::DispatchConvertBufferVectorPrimitives(TBuffer &b, v
 }
 
 template <typename basictype>
-void TGenCollectionStreamer::ReadBufferVectorPrimitives(TBuffer &b, void *obj)
+void TGenCollectionStreamer::ReadBufferVectorPrimitives(TBuffer &b, void *obj, const TClass *onFileClass)
 {
    int nElements = 0;
    b >> nElements;
    fResize(obj,nElements);
    
-   if (fOnFileClass) {
-      DispatchConvertBufferVectorPrimitives<basictype>(b,obj,nElements);
+   if (onFileClass) {
+      DispatchConvertBufferVectorPrimitives<basictype>(b,obj,nElements,onFileClass->GetCollectionProxy());
    } else {
       TVirtualVectorIterators iterators(fFunctionCreateIterators);
       iterators.CreateIterators(obj);
@@ -839,14 +839,14 @@ void TGenCollectionStreamer::ReadBufferVectorPrimitives(TBuffer &b, void *obj)
    }
 }
 
-void TGenCollectionStreamer::ReadBufferVectorPrimitivesFloat16(TBuffer &b, void *obj)
+void TGenCollectionStreamer::ReadBufferVectorPrimitivesFloat16(TBuffer &b, void *obj, const TClass *onFileClass)
 {
    int nElements = 0;
    b >> nElements;
    fResize(obj,nElements);
    
-   if (fOnFileClass) {
-      DispatchConvertBufferVectorPrimitives<Float16_t>(b,obj,nElements);
+   if (onFileClass) {
+      DispatchConvertBufferVectorPrimitives<Float16_t>(b,obj,nElements,onFileClass->GetCollectionProxy());
    } else {
       TVirtualVectorIterators iterators(fFunctionCreateIterators);
       iterators.CreateIterators(obj);
@@ -854,14 +854,14 @@ void TGenCollectionStreamer::ReadBufferVectorPrimitivesFloat16(TBuffer &b, void 
    }
 }
 
-void TGenCollectionStreamer::ReadBufferVectorPrimitivesDouble32(TBuffer &b, void *obj)
+void TGenCollectionStreamer::ReadBufferVectorPrimitivesDouble32(TBuffer &b, void *obj, const TClass *onFileClass)
 {
    int nElements = 0;
    b >> nElements;
    fResize(obj,nElements);
    
-   if (fOnFileClass) {
-      DispatchConvertBufferVectorPrimitives<Double32_t>(b,obj,nElements);
+   if (onFileClass) {
+      DispatchConvertBufferVectorPrimitives<Double32_t>(b,obj,nElements,onFileClass->GetCollectionProxy());
    } else {
       TVirtualVectorIterators iterators(fFunctionCreateIterators);
       iterators.CreateIterators(obj);
@@ -876,9 +876,7 @@ void TGenCollectionStreamer::ReadBuffer(TBuffer &b, void *obj, const TClass *onF
    // Call the specialized function.  The first time this call ReadBufferDefault which
    // actually set to fReadBufferFunc to the 'right' specialized version.
    
-   SetOnFileClass((TClass*)onFileClass);
-   (this->*fReadBufferFunc)(b,obj);
-   SetOnFileClass((TClass*)0);
+   (this->*fReadBufferFunc)(b,obj,onFileClass);
 }
 
 void TGenCollectionStreamer::ReadBuffer(TBuffer &b, void *obj)
@@ -886,10 +884,10 @@ void TGenCollectionStreamer::ReadBuffer(TBuffer &b, void *obj)
    // Call the specialized function.  The first time this call ReadBufferDefault which
    // actually set to fReadBufferFunc to the 'right' specialized version.
    
-   (this->*fReadBufferFunc)(b,obj);
+   (this->*fReadBufferFunc)(b,obj,0);
 }
 
-void TGenCollectionStreamer::ReadBufferDefault(TBuffer &b, void *obj)
+void TGenCollectionStreamer::ReadBufferDefault(TBuffer &b, void *obj, const TClass *onFileClass)
 {
  
    fReadBufferFunc = &TGenCollectionStreamer::ReadBufferGeneric;
@@ -958,10 +956,10 @@ void TGenCollectionStreamer::ReadBufferDefault(TBuffer &b, void *obj)
             break;
       }
    }
-   (this->*fReadBufferFunc)(b,obj);
+   (this->*fReadBufferFunc)(b,obj,onFileClass);
 }
 
-void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj)
+void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj, const TClass *onFileClass)
 {
    TVirtualCollectionProxy::TPushPop env(this, obj);
 
@@ -982,7 +980,7 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj)
                   fClear.invoke(fEnv);
                }
             }
-            ReadPrimitives(nElements, b);
+            ReadPrimitives(nElements, b, onFileClass);
             return;
          case TClassEdit::kVector:
             if (obj) {
@@ -996,10 +994,10 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj)
             switch (fVal->fCase) {
                case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
                case G__BIT_ISENUM:
-                  ReadPrimitives(nElements, b);
+                  ReadPrimitives(nElements, b, onFileClass);
                   return;
                default:
-                  ReadObjects(nElements, b);
+                  ReadObjects(nElements, b, onFileClass);
                   return;
             }
             break;
@@ -1017,10 +1015,10 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj)
             switch (fVal->fCase) {
                case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
                case G__BIT_ISENUM:
-                  ReadPrimitives(nElements, b);
+                  ReadPrimitives(nElements, b, onFileClass);
                   return;
                default:
-                  ReadObjects(nElements, b);
+                  ReadObjects(nElements, b, onFileClass);
                   return;
             }
             break;
@@ -1033,7 +1031,7 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj)
                   fClear.invoke(fEnv);
                }
             }
-            ReadMap(nElements, b);
+            ReadMap(nElements, b, onFileClass);
             break;
       }
    }
@@ -1051,7 +1049,7 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
       if (nElements > 0)  {
          switch (fSTL_type)  {
             case TClassEdit::kBitSet:
-               ReadPrimitives(nElements, b);
+               ReadPrimitives(nElements, b, fOnFileClass);
                return;
             case TClassEdit::kVector:
             case TClassEdit::kList:
@@ -1061,16 +1059,16 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
                switch (fVal->fCase) {
                   case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
                   case G__BIT_ISENUM:
-                     ReadPrimitives(nElements, b);
+                     ReadPrimitives(nElements, b, fOnFileClass);
                      return;
                   default:
-                     ReadObjects(nElements, b);
+                     ReadObjects(nElements, b, fOnFileClass);
                      return;
                }
                break;
             case TClassEdit::kMap:
             case TClassEdit::kMultiMap:
-               ReadMap(nElements, b);
+               ReadMap(nElements, b, fOnFileClass);
                break;
          }
       }
@@ -1119,7 +1117,7 @@ void TGenCollectionStreamer::StreamerAsMap(TBuffer &b)
          switch (fSTL_type)  {
             case TClassEdit::kMap:
             case TClassEdit::kMultiMap:
-               ReadMap(nElements, b);
+               ReadMap(nElements, b, fOnFileClass);
                break;
             case TClassEdit::kVector:
             case TClassEdit::kList:

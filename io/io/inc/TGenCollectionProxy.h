@@ -376,13 +376,13 @@ public:
    virtual ~TGenCollectionProxy();
 
    // Return a pointer to the TClass representing the container.
-   virtual TClass *GetCollectionClass();
+   virtual TClass *GetCollectionClass() const;
 
    // Return the type of collection see TClassEdit::ESTLType
-   virtual Int_t   GetCollectionType();
+   virtual Int_t   GetCollectionType() const;
 
    // Return the offset between two consecutive value_types (memory layout).
-   virtual ULong_t   GetIncrement();
+   virtual ULong_t   GetIncrement() const;
 
    // Return the sizeof the collection object.
    virtual UInt_t Sizeof() const;
@@ -397,13 +397,13 @@ public:
    virtual Bool_t HasPointers() const;
 
    // Return a pointer to the TClass representing the content.
-   virtual TClass *GetValueClass();
+   virtual TClass *GetValueClass() const;
 
    // Set pointer to the TClass representing the content.
    virtual void SetValueClass(TClass *newcl);
 
    // If the content is a simple numerical value, return its type (see TDataType).
-   virtual EDataType GetType();
+   virtual EDataType GetType() const;
 
    // Return the address of the value at index 'idx'.
    virtual void *At(UInt_t idx);

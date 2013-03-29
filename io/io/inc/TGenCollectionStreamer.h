@@ -27,29 +27,29 @@ class TGenCollectionStreamer : public TGenCollectionProxy {
 
 protected:
    void ReadMapHelper(StreamHelper *i, Value *v, Bool_t vsn3,  TBuffer &b);
-   void ReadMap(int nElements, TBuffer &b);
+   void ReadMap(int nElements, TBuffer &b, const TClass *onfileClass);
    void ReadPairFromMap(int nElements, TBuffer &b);
-   void ReadObjects(int nElements, TBuffer &b);
-   void ReadPrimitives(int nElements, TBuffer &b);
+   void ReadObjects(int nElements, TBuffer &b, const TClass *onfileClass);
+   void ReadPrimitives(int nElements, TBuffer &b, const TClass *onfileClass);
    void WriteMap(int nElements, TBuffer &b);
    void WriteObjects(int nElements, TBuffer &b);
    void WritePrimitives(int nElements, TBuffer &b);
 
-//   typedef void (TGenCollectionStreamer::*ReadBufferConv_t)(TBuffer &b, void *obj, const TClass *onfileClass);
+//   typedef void (TGenCollectionStreamer::*ReadBufferConv_t)(TBuffer &b, void *obj, const TClass *onFileClass);
 //   ReadBufferConv_t fReadBufferConvFunc;
    
-   typedef void (TGenCollectionStreamer::*ReadBuffer_t)(TBuffer &b, void *obj);
+   typedef void (TGenCollectionStreamer::*ReadBuffer_t)(TBuffer &b, void *obj, const TClass *onFileClass);
    ReadBuffer_t fReadBufferFunc;
    
    template <typename From, typename To> void ConvertBufferVectorPrimitives(TBuffer &b, void *obj, Int_t nElements);
    template <typename To> void ConvertBufferVectorPrimitivesFloat16(TBuffer &b, void *obj, Int_t nElements);
    template <typename To> void ConvertBufferVectorPrimitivesDouble32(TBuffer &b, void *obj, Int_t nElements);
-   template <typename To> void DispatchConvertBufferVectorPrimitives(TBuffer &b, void *obj, Int_t nElements);
-   template <typename basictype> void ReadBufferVectorPrimitives(TBuffer &b, void *obj);
-   void ReadBufferVectorPrimitivesFloat16(TBuffer &b, void *obj);
-   void ReadBufferVectorPrimitivesDouble32(TBuffer &b, void *obj);
-   void ReadBufferDefault(TBuffer &b, void *obj);
-   void ReadBufferGeneric(TBuffer &b, void *obj);
+   template <typename To> void DispatchConvertBufferVectorPrimitives(TBuffer &b, void *obj, Int_t nElements, const TVirtualCollectionProxy *onfileProxy);
+   template <typename basictype> void ReadBufferVectorPrimitives(TBuffer &b, void *obj, const TClass *onFileClass);
+   void ReadBufferVectorPrimitivesFloat16(TBuffer &b, void *obj, const TClass *onFileClass);
+   void ReadBufferVectorPrimitivesDouble32(TBuffer &b, void *obj, const TClass *onFileClass);
+   void ReadBufferDefault(TBuffer &b, void *obj, const TClass *onFileClass);
+   void ReadBufferGeneric(TBuffer &b, void *obj, const TClass *onFileClass);
 
 private:
    TGenCollectionStreamer &operator=(const TGenCollectionStreamer&); // Not implemented.
