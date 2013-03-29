@@ -1463,13 +1463,13 @@ namespace TStreamerInfoActions
          UInt_t start, count;
          /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
 
-         TClass *oldClass = config->fOldClass;
-         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
-         TVirtualCollectionProxy::TPushPop helper( oldProxy, ((char*)addr)+config->fOffset );
+         TClass *newClass = config->fNewClass;
+         TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
+         TVirtualCollectionProxy::TPushPop helper( newProxy, ((char*)addr)+config->fOffset );
 
          Int_t nvalues;
          buf.ReadInt(nvalues);
-         void* alternative = oldProxy->Allocate(nvalues,true);
+         void* alternative = newProxy->Allocate(nvalues,true);
          if (nvalues) {         
             char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
             char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
@@ -1486,7 +1486,7 @@ namespace TStreamerInfoActions
                config->fDeleteTwoIterators(begin,end);
             }
          }
-         oldProxy->Commit(alternative);
+         newProxy->Commit(alternative);
 
          buf.CheckByteCount(start,count,config->fTypeName);
          return 0;
