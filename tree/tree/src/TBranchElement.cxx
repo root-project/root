@@ -2614,6 +2614,7 @@ void TBranchElement::InitializeOffsets()
       TStreamerElement* branchElem = 0;
       Int_t localOffset = 0;
       TClass* branchClass = fBranchClass.GetClass();
+      Bool_t renamed = kFALSE;
       if (fID > -1) {
          // -- Branch is *not* a top-level branch.
          // Instead of the streamer info class, we want the class of our
@@ -2640,6 +2641,8 @@ void TBranchElement::InitializeOffsets()
          branchClass = branchElem->GetClassPointer();
          if (localOffset == TStreamerInfo::kMissing) {
             fObject = 0;
+         } else {
+            renamed = (branchClass != branchElem->GetNewClass());
          }
       }
       if (!branchClass) {
@@ -2672,6 +2675,12 @@ void TBranchElement::InitializeOffsets()
          if (subBranch == 0) {
             // -- Skip sub-branches that are not TBranchElements.
             continue;
+         }
+
+         if (renamed) {
+            if (subBranch->fBranchClass == branchClass) {
+               subBranch->SetTargetClass( branchElem->GetNewClass()->GetName());
+            }
          }
 
          TVirtualStreamerInfo* sinfo = subBranch->GetInfoImp();
@@ -2979,7 +2988,13 @@ void TBranchElement::InitializeOffsets()
                   //Warning("InitializeOffsets", "subBranch: '%s' has no parent class!  Assuming parent class is: '%s'.", subBranch->GetName(), pClass->GetName());
                }
             }
-
+            if (renamed && pClass) {
+               if (pClass == branchClass) {
+                  pClass = branchElem->GetNewClass();
+               } else if (fCollProxy && pClass == branchClass->GetCollectionProxy()->GetValueClass()) {
+                  pClass = fCollProxy->GetValueClass();
+               }
+            }
 
             //------------------------------------------------------------------
             // If we have the are the sub-branch of the TBranchSTL, we need
