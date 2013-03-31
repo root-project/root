@@ -76,16 +76,17 @@ TVirtualCollectionProxy* TEmulatedCollectionProxy::Generate() const
    return new TEmulatedCollectionProxy(*this);
 }
 
-void TEmulatedCollectionProxy::Destructor(void* p, Bool_t dtorOnly)
+void TEmulatedCollectionProxy::Destructor(void* p, Bool_t dtorOnly) const
 {
    // Virtual destructor
 
    if (!p) return;
    if (!fEnv || fEnv->fObject != p) { // Envoid the cost of TPushPop if we don't need it
-      TVirtualCollectionProxy::TPushPop env(this, p);
-      Clear("force");
+      // FIXME: This is not thread safe.
+      TVirtualCollectionProxy::TPushPop env(const_cast<TEmulatedCollectionProxy*>(this), p);
+      const_cast<TEmulatedCollectionProxy*>(this)->Clear("force");
    } else {
-      Clear("force");
+      const_cast<TEmulatedCollectionProxy*>(this)->Clear("force");
    }      
    if (dtorOnly) {
       ((Cont_t*)p)->~Cont_t();
@@ -94,7 +95,7 @@ void TEmulatedCollectionProxy::Destructor(void* p, Bool_t dtorOnly)
    }
 }
 
-void TEmulatedCollectionProxy::DeleteArray(void* p, Bool_t dtorOnly)
+void TEmulatedCollectionProxy::DeleteArray(void* p, Bool_t dtorOnly) const
 {
    // Virtual array destructor
 

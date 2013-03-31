@@ -84,10 +84,10 @@ public:
    virtual void* NewArray(Int_t nElements, void* memory)   const {  return new(memory) Cont_t[nElements]; }
 
    // Virtual destructor
-   virtual void  Destructor(void* p, Bool_t dtorOnly = kFALSE);
+   virtual void  Destructor(void* p, Bool_t dtorOnly = kFALSE) const;
 
    // Virtual array destructor
-   virtual void  DeleteArray(void* p, Bool_t dtorOnly = kFALSE);
+   virtual void  DeleteArray(void* p, Bool_t dtorOnly = kFALSE) const;
 
    // TVirtualCollectionProxy overload: Return the sizeof the collection object.
    virtual UInt_t Sizeof() const           {  return sizeof(Cont_t);     }
