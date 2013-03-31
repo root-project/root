@@ -1818,13 +1818,13 @@ namespace TStreamerInfoActions
          UInt_t start, count;
          /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
 
-         TClass *oldClass = config->fOldClass;
-         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
-         TVirtualCollectionProxy::TPushPop helper( oldProxy, ((char*)addr)+config->fOffset );
+         TClass *newClass = config->fNewClass;
+         TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
+         TVirtualCollectionProxy::TPushPop helper( newProxy, ((char*)addr)+config->fOffset );
 
          Int_t nvalues;
          buf.ReadInt(nvalues);
-         void* alternative = oldProxy->Allocate(nvalues,true);
+         void* alternative = newProxy->Allocate(nvalues,true);
          if (nvalues) {         
             char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
             char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
@@ -1834,7 +1834,7 @@ namespace TStreamerInfoActions
             // We can not get here with a split vector of pointer, so we can indeed assume
             // that actions->fConfiguration != null.
             
-            TGenericLoopConfig loopconf(oldProxy);
+            TGenericLoopConfig loopconf(newProxy);
             ActionHolder::Action(buf,begin,end,&loopconf,config);
             
             if (begin != &(startbuf[0])) {
@@ -1842,7 +1842,7 @@ namespace TStreamerInfoActions
                config->fDeleteTwoIterators(begin,end);
             }
          }
-         oldProxy->Commit(alternative);
+         newProxy->Commit(alternative);
 
          buf.CheckByteCount(start,count,config->fTypeName);
          return 0;
@@ -2531,18 +2531,18 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
                      if (oldClass->GetCollectionProxy() == 0 || oldClass->GetCollectionProxy()->GetValueClass() || oldClass->GetCollectionProxy()->HasPointers() ) {
                         fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetTypeName(),isSTLbase));
                      } else {
-                        switch (SelectLooper(*oldClass->GetCollectionProxy())) {
+                        switch (SelectLooper(*newClass->GetCollectionProxy())) {
                         case kVectorLooper:
-                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<VectorLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<VectorLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetTypeName(),isSTLbase)));
                            break;
                         case kAssociativeLooper:
-                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<AssociativeLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<AssociativeLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetTypeName(),isSTLbase)));
                            break;
                         case kVectorPtrLooper:
                         case kGenericLooper:
                         default:
                            // For now TBufferXML would force use to allocate the data buffer each time and copy into the real thing.
-                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetTypeName(),isSTLbase)));
                            break;
                         }
                      }             
