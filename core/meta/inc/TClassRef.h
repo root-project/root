@@ -51,7 +51,7 @@ public:
    TClassRef(const TClassRef&);
    inline TClassRef &operator=(const TClassRef &rhs) {
       // Inline implementation of operator= to speed the no-op case.
-      if (this != &rhs && fClassPtr != rhs.fClassPtr) {
+      if (this != &rhs && (fClassPtr == 0 || fClassPtr != rhs.fClassPtr)) {
          this->Assign(rhs);
       }
       return *this;
