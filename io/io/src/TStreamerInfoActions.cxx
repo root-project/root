@@ -1499,28 +1499,49 @@ namespace TStreamerInfoActions
       }
       
       template <typename From, typename To>
-      static void ConvertAction(From *items, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config) 
-      {
-         TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
-         
-         const Int_t offset = config->fOffset;
-         Next_t next = loopconfig->fNext;
-         
-         char iterator[TVirtualCollectionProxy::fgIteratorArenaSize];
-         void *iter = loopconfig->fCopyIterator(&iterator,start);
-         void *addr;
-         while( (addr = next(iter,end)) ) {
-            To *x =  (To*)( ((char*)addr) + offset );
-            *x = (To)(*items);
-            ++items;
+      struct Generic {
+         static void ConvertAction(From *items, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config) 
+         {
+            TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
+            
+            const Int_t offset = config->fOffset;
+            Next_t next = loopconfig->fNext;
+            
+            char iterator[TVirtualCollectionProxy::fgIteratorArenaSize];
+            void *iter = loopconfig->fCopyIterator(&iterator,start);
+            void *addr;
+            while( (addr = next(iter,end)) ) {
+               To *x =  (To*)( ((char*)addr) + offset );
+               *x = (To)(*items);
+               ++items;
+            }
+            if (iter != &iterator[0]) {
+               loopconfig->fDeleteIterator(iter);
+            }
          }
-         if (iter != &iterator[0]) {
-            loopconfig->fDeleteIterator(iter);
-         }
-       
-      }
+      };
  
       template <typename From, typename To>
+      struct Numeric {
+         static void ConvertAction(From *items, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration * /* config */) 
+         {
+            // The difference with ConvertAction is that we can modify the start
+            // iterator and skip the copy.  We also never have an offset.
+            
+            TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;         
+            Next_t next = loopconfig->fNext;
+            
+            void *iter = start;
+            void *addr;
+            while( (addr = next(iter,end)) ) {
+               To *x =  (To*)(addr);
+               *x = (To)(*items);
+               ++items;
+            }
+         }
+      };
+
+      template <typename From, typename To, template <typename F, typename T> class Converter = Generic >
       struct ConvertBasicType {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
          {
@@ -1532,13 +1553,13 @@ namespace TStreamerInfoActions
 
             From *items = new From[nvalues];
             buf.ReadFastArray(items, nvalues);
-            ConvertAction<From,To>(items,start,end,loopconfig,config);
+            Converter<From,To>::ConvertAction(items,start,end,loopconfig,config);
             return 0;
          }
       };
 
-      template <typename From, typename To>
-      struct ConvertBasicType<WithFactorMarker<From>,To> {
+      template <typename From, typename To, template <typename F, typename T> class Converter >
+      struct ConvertBasicType<WithFactorMarker<From>,To,Converter > {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
          {
             // Simple conversion from a 'From' on disk to a 'To' in memory.
@@ -1551,13 +1572,13 @@ namespace TStreamerInfoActions
 
             From *items = new From[nvalues];
             buf.ReadFastArrayWithFactor(items, nvalues, conf->fFactor, conf->fXmin);
-            ConvertAction<From,To>(items,start,end,loopconfig,config);
+            Converter<From,To>::ConvertAction(items,start,end,loopconfig,config);
             return 0;
          }
       };
 
-      template <typename From, typename To>
-      struct ConvertBasicType<NoFactorMarker<From>,To> {
+      template <typename From, typename To, template <typename F, typename T> class Converter >
+      struct ConvertBasicType<NoFactorMarker<From>,To,Converter > {
          static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
          {
             // Simple conversion from a 'From' on disk to a 'To' in memory.
@@ -1570,7 +1591,7 @@ namespace TStreamerInfoActions
 
             From *items = new From[nvalues];
             buf.ReadFastArrayWithNbits(items, nvalues, conf->fNbits);
-            ConvertAction<From,To>(items,start,end,loopconfig,config);
+            Converter<From,To>::ConvertAction(items,start,end,loopconfig,config);
             return 0;
          }
       };
@@ -1616,7 +1637,7 @@ namespace TStreamerInfoActions
          *(double*)addr = (Double_t)afloat;
       }
      
-      template <typename T,void (*action)(TBuffer&,void *)>
+      template <Int_t (*action)(TBuffer &,void*,const void*,const TLoopConfiguration*,const TConfiguration*)>
       static INLINE_TEMPLATE_ARGS Int_t ReadNumericalCollection(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
          // Collection of numbers.  Memberwise or not, it is all the same.
@@ -1640,14 +1661,9 @@ namespace TStreamerInfoActions
             config->fCreateIterators(alternative, &begin, &end );
             // We can not get here with a split vector of pointer, so we can indeed assume
             // that actions->fConfiguration != null.
-
-            Next_t next = oldProxy->GetFunctionNext();         
-            void *iter = begin;
-            void *elem_addr;
-            while( (elem_addr = next(iter,end)) ) {
-               T *x =  (T*)( ((char*)elem_addr) );
-               action(buf,x);
-            }
+            
+            TGenericLoopConfig loopconf(oldProxy);
+            action(buf,begin,end,&loopconf,config);
 
             if (begin != &(startbuf[0])) {
                // assert(end != endbuf);
@@ -1662,25 +1678,27 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBool(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
-         return ReadNumericalCollection<bool,SimpleRead<bool> >(buf,addr,conf);
+         return ReadNumericalCollection<ConvertBasicType<bool,bool,Numeric >::Action >(buf,addr,conf);
       }
       
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
-         return ReadNumericalCollection<Float_t,SimpleReadFloat16 >(buf,addr,conf);
+         // FIXME: the conf is likely wrong
+         return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<float>,float,Numeric >::Action >(buf,addr,conf);
       }
       
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
-         return ReadNumericalCollection<Double_t,SimpleReadDouble32 >(buf,addr,conf);
+         // FIXME: the conf is likely wrong
+         return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<double>,double,Numeric >::Action >(buf,addr,conf);
       }
       
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
-         return ReadNumericalCollection<T,SimpleRead<T> >(buf,addr,conf);
+         return ReadNumericalCollection<ConvertBasicType<T,T,Numeric >::Action >(buf,addr,conf);
       }
-      
+
    };
 }
 
@@ -1831,6 +1849,7 @@ static TConfiguredAction GetConvertCollectionReadAction(Int_t oldtype, Int_t new
       case TStreamerInfo::kULong64:
          return GetConvertCollectionReadActionFrom<Looper,ULong64_t>(newtype, conf );
          break;
+         // FIXME: We need to add kFloat16 and kDouble32 and check whether we need something else.
       default:
          break;
    }
@@ -2316,9 +2335,10 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
                         case kVectorPtrLooper:
                         case kGenericLooper:
                         default:
+                           // FIXME:
                            fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase));
                            // For now TBufferXML would force use to allocate the data buffer each time and copy into the real thing.
-                           // fReadObjectWise->AddAction(GetNumericCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           // fReadObjectWise->AddAction(GetConvertCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
                            break;
                         }
                      }             
@@ -2340,9 +2360,10 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
                         case kVectorPtrLooper:
                         case kGenericLooper:
                         default:
-                           fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase));
+                           // FIXME:
+                           //fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase));
                            // For now TBufferXML would force use to allocate the data buffer each time and copy into the real thing.
-                           // fReadObjectWise->AddAction(GetNumericCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           fReadObjectWise->AddAction(GetNumericCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
                            break;
                         }
                      }

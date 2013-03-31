@@ -556,7 +556,7 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)
          }
       default:
          fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
-         fCollect.invoke(fEnv);
+         fCollect(fEnv->fObject,itm);
          break;
    }
    switch (int(fVal->fKind))   {
@@ -878,6 +878,7 @@ void TGenCollectionStreamer::ReadBuffer(TBuffer &b, void *obj, const TClass *onF
    
    SetOnFileClass((TClass*)onFileClass);
    (this->*fReadBufferFunc)(b,obj);
+   SetOnFileClass((TClass*)0);
 }
 
 void TGenCollectionStreamer::ReadBuffer(TBuffer &b, void *obj)
@@ -892,7 +893,9 @@ void TGenCollectionStreamer::ReadBufferDefault(TBuffer &b, void *obj)
 {
  
    fReadBufferFunc = &TGenCollectionStreamer::ReadBufferGeneric;
+
    // We will need this later, so let's make sure it is initialized.
+   if ( !fValue ) InitializeEx(kFALSE);
    if (!GetFunctionCreateIterators()) {
       Fatal("TGenCollectionStreamer::ReadBufferDefault","No CreateIterators function for %s",fName.c_str());
    }

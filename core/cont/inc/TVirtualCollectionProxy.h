@@ -169,7 +169,8 @@ public:
    virtual CopyIterator_t GetFunctionCopyIterator(Bool_t read = kTRUE) = 0;
    // Copy the iterator source, into dest.   dest should contain the location of a memory arena of size fgIteratorSize.
    // If the collection iterator is of that size or less, the iterator will be constructed in place in this location (new with placement)
-   // Otherwise the iterator will be allocated via a regular new and its address returned by modifying the value of dest.
+   // Otherwise the iterator will be allocated via a regular new.
+   // The actual address of the iterator is returned in both case.
    
    typedef void* (*Next_t)(void *iter, const void *end);
    virtual Next_t GetFunctionNext(Bool_t read = kTRUE) = 0;

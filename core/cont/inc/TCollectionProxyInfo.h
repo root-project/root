@@ -42,8 +42,150 @@ namespace ROOT {
       // to create the proper Collection Proxy.
       // This is similar to Reflex's CollFuncTable.
 
-
    public:
+
+      // Same value as TVirtualCollectionProxy.
+      static const UInt_t fgIteratorArenaSize = 16; // greater than sizeof(void*) + sizeof(UInt_t)
+
+   /** @class template TCollectionProxyInfo::IteratorValue 
+    *
+    * Small helper to encapsulate whether to return the value
+    * pointed to by the iterator or its address.
+    *
+    **/
+
+      template <typename Cont_t, typename value> struct IteratorValue {
+         static void* get(typename Cont_t::iterator &iter) {
+            return (void*)&(*iter);
+         }
+      };
+
+      template <typename Cont_t, typename value_ptr> struct IteratorValue<Cont_t, value_ptr*> {
+         static void* get(typename Cont_t::iterator &iter) {
+            return (void*)(*iter);
+         }
+      };
+
+   /** @class template TCollectionProxyInfo::Iterators 
+    *
+    * Small helper to implement the function to create,access and destroy
+    * iterators.
+    *
+    **/
+
+      template <typename Cont_t, bool large = false> 
+      struct Iterators {
+         typedef Cont_t *PCont_t;
+         typedef typename Cont_t::iterator iterator;
+
+         static void create(void *coll, void **begin_arena, void **end_arena) {
+            PCont_t c = PCont_t(coll);
+            new (*begin_arena) iterator(c->begin());
+            new (*end_arena) iterator(c->end());
+         }
+         static void* copy(void *dest_arena, const void *source_ptr) {
+            iterator *source = (iterator *)(source_ptr);
+            new (dest_arena) iterator(*source);
+            return dest_arena; 
+         }
+         static void* next(void *iter_loc, const void *end_loc) {
+            iterator *end = (iterator *)(end_loc);
+            iterator *iter = (iterator *)(iter_loc);
+            if (*iter != *end) {
+               void *result = IteratorValue<Cont_t, typename Cont_t::value_type>::get(*iter);
+               ++(*iter);
+               return result;
+            }
+            return 0;
+         }
+         static void destruct1(void *iter_ptr) {
+            iterator *start = (iterator *)(iter_ptr);
+            start->~iterator();
+         }
+         static void destruct2(void *begin_ptr, void *end_ptr) {
+            iterator *start = (iterator *)(begin_ptr);
+            iterator *end = (iterator *)(end_ptr);
+            start->~iterator();
+            end->~iterator();
+         }
+      };
+
+      // For Vector we take an extra short cut to avoid derefencing
+      // the iterator all the time and redefine the 'address' of the
+      // iterator as the iterator itself.  This requires special handling
+      // in the looper (see TStreamerInfoAction) but is much faster.
+      template <typename T> struct Iterators<std::vector<T>, false> {
+         typedef std::vector<T> Cont_t;
+         typedef Cont_t *PCont_t;
+         typedef typename Cont_t::iterator iterator;
+
+         static void create(void *coll, void **begin_arena, void **end_arena) {
+            PCont_t c = PCont_t(coll);
+            if (c->empty()) {
+               *begin_arena = 0;
+               *end_arena = 0;
+               return;
+            }
+            *begin_arena = &(*c->begin());
+#ifdef R__VISUAL_CPLUSPLUS
+            *end_arena = &(*(c->end()-1)) + 1; // On windows we can not dererence the end iterator at all.
+#else
+            // coverity[past_the_end] Safe on other platforms
+            *end_arena = &(*c->end());
+#endif
+         }
+         static void* copy(void *dest, const void *source) {
+            *(void**)dest = *(void**)source;
+            return dest; 
+         }
+         static void* next(void * /* iter_loc */, const void * /* end_loc */) {
+            // Should not be used.
+            R__ASSERT(0 && "Intentionally not implemented, do not use.");
+            return 0;
+         }
+         static void destruct1(void  */* iter_ptr */) {
+            // Nothing to do
+         }
+         static void destruct2(void * /* begin_ptr */, void * /* end_ptr */) {
+            // Nothing to do
+         }
+      };
+
+      template <typename Cont_t> struct Iterators<Cont_t, /* large= */ true > {
+         typedef Cont_t *PCont_t;
+         typedef typename Cont_t::iterator iterator;
+
+         static void create(void *coll, void **begin_arena, void **end_arena) {
+            PCont_t  c = PCont_t(coll);
+            *begin_arena = new iterator(c->begin());
+            *end_arena = new iterator(c->end());        
+         }
+         static void* copy(void * /*dest_arena*/, const void *source_ptr) {
+            iterator *source = (iterator *)(source_ptr);
+            void *iter = new iterator(*source);
+            return iter;
+         }
+         static void* next(void *iter_loc, const void *end_loc) {
+            iterator *end = (iterator *)(end_loc);
+            iterator *iter = (iterator *)(iter_loc);
+            if (*iter != *end) {
+               void *result = IteratorValue<Cont_t, typename Cont_t::value_type>::get(*iter);
+               ++(*iter);
+               return result;
+            }
+            return 0;
+         }
+         static void destruct1(void *begin_ptr) {
+            iterator *start = (iterator *)(begin_ptr);
+            delete start;
+         }
+         static void destruct2(void *begin_ptr, void *end_ptr) {
+            iterator *start = (iterator *)(begin_ptr);
+            iterator *end = (iterator *)(end_ptr);
+            delete start;
+            delete end;
+         }
+      };
 
   /** @class TCollectionProxyInfo::Environ TCollectionProxyInfo.h TCollectionProxyInfo.h
     *
@@ -165,10 +307,9 @@ namespace ROOT {
             ::new(m) Value_t();
          return 0;
       }
-      static void* collect(void* env)  {
-         PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->fObject);
-         PValue_t m = PValue_t(e->fStart);
+      static void* collect(void *coll, void *array)  {
+         PCont_t  c = PCont_t(coll);
+         PValue_t m = PValue_t(array);
          for (Iter_t i=c->begin(); i != c->end(); ++i, ++m )
             ::new(m) Value_t(*i);
          return 0;
@@ -178,6 +319,10 @@ namespace ROOT {
          for (size_t i=0; i < size; ++i, ++m )
             m->~Value_t();
       }
+
+      static const bool fgLargeIterator = sizeof(typename Cont_t::iterator) > fgIteratorArenaSize;
+      typedef Iterators<Cont_t,fgLargeIterator> Iterators_t;
+
    };
 
    /** @class TCollectionProxyInfo::Map TCollectionProxyInfo.h TCollectionProxyInfo.h
@@ -293,21 +438,21 @@ namespace ROOT {
       void*  (*fConstructFunc)(void*,size_t);
       void   (*fDestructFunc)(void*,size_t);
       void*  (*fFeedFunc)(void*,void*,size_t);
-      void*  (*fCollectFunc)(void*);
+      void*  (*fCollectFunc)(void*,void*);
       void*  (*fCreateEnv)();
       
       // Set of function of direct iteration of the collections.
-      void (*fGetIterators)(void *collection, void *&begin_arena, void *&end_arena); 
+      void (*fCreateIterators)(void *collection, void **begin_arena, void **end_arena); 
       // begin_arena and end_arena should contain the location of memory arena  of size fgIteratorSize. 
       // If the collection iterator are of that size or less, the iterators will be constructed in place in those location (new with placement)
       // Otherwise the iterators will be allocated via a regular new and their address returned by modifying the value of begin_arena and end_arena.
       
-      void (*fCopyIterator)(void *&dest, const void *source);
+      void* (*fCopyIterator)(void *dest, const void *source);
       // Copy the iterator source, into dest.   dest should contain should contain the location of memory arena  of size fgIteratorSize.
       // If the collection iterator are of that size or less, the iterator will be constructed in place in this location (new with placement)
       // Otherwise the iterator will be allocated via a regular new and its address returned by modifying the value of dest.
       
-      void* (*fNext)(void *iter, void *end);
+      void* (*fNext)(void *iter, const void *end);
       // iter and end should be pointer to respectively an iterator to be incremented and the result of colleciton.end()
       // 'Next' will increment the iterator 'iter' and return 0 if the iterator reached the end.
       // If the end is not reached, 'Next' will return the address of the content unless the collection contains pointers in
@@ -331,8 +476,13 @@ namespace ROOT {
                            void*  (*construct_func)(void*,size_t),
                            void   (*destruct_func)(void*,size_t),
                            void*  (*feed_func)(void*,void*,size_t),
-                           void*  (*collect_func)(void*),
-                           void*  (*create_env)()
+                           void*  (*collect_func)(void*,void*),
+                           void*  (*create_env)(),
+                           void   (*getIterators)(void *collection, void **begin_arena, void **end_arena) = 0,
+                           void*  (*copyIterator)(void *dest, const void *source) = 0,
+                           void*  (*next)(void *iter, const void *end) = 0,
+                           void   (*deleteSingleIterator)(void *iter) = 0,
+                           void   (*deleteTwoIterators)(void *begin, void *end) = 0
                            ) :
          fInfo(info), fIterSize(iter_size), fValueDiff(value_diff),
          fValueOffset(value_offset),
@@ -340,7 +490,8 @@ namespace ROOT {
          fFirstFunc(first_func),fNextFunc(next_func),fConstructFunc(construct_func),
          fDestructFunc(destruct_func),fFeedFunc(feed_func),fCollectFunc(collect_func),
          fCreateEnv(create_env),
-         fGetIterators(0),fCopyIterator(0),fNext(0),fDeleteSingleIterator(0),fDeleteTwoIterators(0)
+         fCreateIterators(getIterators),fCopyIterator(copyIterator),fNext(next),
+         fDeleteSingleIterator(deleteSingleIterator),fDeleteTwoIterators(deleteTwoIterators)
       {
       }
  
@@ -366,7 +517,12 @@ namespace ROOT {
                                                T::destruct,
                                                T::feed,
                                                T::collect,
-                                               T::Env_t::Create);
+                                               T::Env_t::Create,
+                                               T::Iterators_t::create,
+                                               T::Iterators_t::copy,
+                                               T::Iterators_t::next,
+                                               T::Iterators_t::destruct1,
+                                               T::Iterators_t::destruct2);
       }
 
       template <class T> static ROOT::TCollectionProxyInfo Get(const T&)  {
@@ -443,10 +599,9 @@ namespace ROOT {
          // Nothing to construct.
          return 0;
       }
-      static void* collect(void* env)  {
-         PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->fObject);
-         PValue_t m = PValue_t(e->fStart); // 'start' is a buffer outside the container.
+      static void* collect(void *coll, void *array)  {
+         PCont_t  c = PCont_t(coll);
+         PValue_t m = PValue_t(array); // 'start' is a buffer outside the container.
          for (Iter_t i=c->begin(); i != c->end(); ++i, ++m )
             ::new(m) Value_t(*i);
          return 0;
@@ -454,6 +609,48 @@ namespace ROOT {
       static void destruct(void*,size_t)  {
          // Nothing to destruct.
       }
+
+      //static const bool fgLargeIterator = sizeof(Cont_t::iterator) > fgIteratorArenaSize;
+      //typedef Iterators<Cont_t,fgLargeIterator> Iterators_t;
+
+      struct Iterators {
+         typedef Cont_t *PCont_t;
+         typedef Cont_t::iterator iterator;
+
+         static void create(void *coll, void **begin_arena, void **end_arena) {
+            PCont_t c = PCont_t(coll);
+            new (*begin_arena) iterator(c->begin());
+            new (*end_arena) iterator(c->end());
+         }
+         static void* copy(void *dest_arena, const void *source_ptr) {
+            iterator *source = (iterator *)(source_ptr);
+            new (dest_arena) iterator(*source);
+            return dest_arena;
+         }
+         static void* next(void *iter_loc, const void *end_loc) {
+            iterator *end = (iterator *)(end_loc);
+            iterator *iter = (iterator *)(iter_loc);
+            if (*iter != *end) {
+               ++(*iter);
+               //if (*iter != *end) {
+               //   return IteratorValue<Cont_t, Cont_t::value_type>::get(*iter);
+               //}
+            }
+            return 0;
+         }
+         static void destruct1(void *iter_ptr) {
+            iterator *start = (iterator *)(iter_ptr);
+            start->~iterator();
+         }
+         static void destruct2(void *begin_ptr, void *end_ptr) {
+            iterator *start = (iterator *)(begin_ptr);
+            iterator *end = (iterator *)(end_ptr);
+            start->~iterator();
+            end->~iterator();
+         }
+      };
+      typedef Iterators Iterators_t;
+
    };
    
    template <> struct TCollectionProxyInfo::Pushback<std::vector<bool> > : public TCollectionProxyInfo::Type<std::vector<Bool_t> > {
@@ -539,10 +736,9 @@ namespace ROOT {
          // Nothing to construct.
          return 0;
       }
-      static void* collect(void* env)  {
-         PEnv_t   e = PEnv_t(env);
-         PCont_t  c = PCont_t(e->fObject);
-         PValue_t m = PValue_t(e->fStart); // 'start' is a buffer outside the container.
+      static void* collect(void *coll, void *array)  {
+         PCont_t  c = PCont_t(coll);
+         PValue_t m = PValue_t(array); // 'start' is a buffer outside the container.
          for (size_t i=0; i != c->size(); ++i, ++m )
             *m = c->test(i);
          return 0;
