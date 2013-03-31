@@ -1633,6 +1633,11 @@ void TStreamerInfo::BuildOld()
             } else if (CollectionMatchULong64(oldClass,newClass)) {
                // Not much to do since both are the same collection of 8 bits unsigned entities on file
                element->Update(oldClass, newClass.GetClass());
+            } else if (newClass->GetSchemaRules()->HasRuleWithSourceClass( oldClass->GetName() )) {
+               //------------------------------------------------------------------------
+               // We can convert one type to another (at least for some of the versions).
+               //------------------------------------------------------------------------
+               element->SetNewClass( newClass );
             } else {
                element->SetNewType(-2);
             }
@@ -1641,9 +1646,9 @@ void TStreamerInfo::BuildOld()
                    newClass.GetClass() &&
                    newClass->GetSchemaRules() &&
                    newClass->GetSchemaRules()->HasRuleWithSourceClass( oldClass->GetName() ) ) {
-            //-----------------------------------------------------------------------
-            // We can convert one type to another (at least for some of the versions.
-            //-----------------------------------------------------------------------
+            //------------------------------------------------------------------------
+            // We can convert one type to another (at least for some of the versions).
+            //------------------------------------------------------------------------
             element->SetNewClass( newClass );
          } else {
             element->SetNewType(-2);

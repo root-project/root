@@ -9,6 +9,9 @@
 #include "TROOT.h"
 #include "Riostream.h"
 
+#include "TVirtualCollectionProxy.h"
+#include "TClassEdit.h"
+
 ClassImp(TSchemaRule)
 
 using namespace ROOT;
@@ -186,6 +189,36 @@ Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
       if( rule->GetSourceClass() == source )
          return kTRUE;
    }
+   // There was no explicit rule, let's see we have implicit rules.
+   if (fClass->GetCollectionProxy()) {
+      if (fClass->GetCollectionProxy()->GetValueClass() == 0) {
+         if (fClass->GetCollectionProxy()->GetCollectionType() == TClassEdit::kVector
+              || (fClass->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated)) {
+            // We have a numeric collection, let see if the target is 
+            // also a numeric collection (humm just a vector for now)
+            TClass *src = TClass::GetClass(source);
+            if (src && src->GetCollectionProxy() &&
+                src->GetCollectionProxy()->HasPointers() == fClass->GetCollectionProxy()->HasPointers()) {
+               TVirtualCollectionProxy *proxy = src->GetCollectionProxy();
+               if (proxy->GetValueClass() == 0) {
+                  return kTRUE;
+               }
+            }
+         }
+      } else {
+         TClass *vTargetClass = fClass->GetCollectionProxy()->GetValueClass();
+         TClass *src = TClass::GetClass(source);
+         if (vTargetClass->GetSchemaRules()) {
+            if (src && src->GetCollectionProxy() &&
+                src->GetCollectionProxy()->HasPointers() == fClass->GetCollectionProxy()->HasPointers()) {
+               TClass *vSourceClass = src->GetCollectionProxy()->GetValueClass();
+               if (vSourceClass) {
+                  return vTargetClass->GetSchemaRules()->HasRuleWithSourceClass( vSourceClass->GetName() );
+               }
+            }
+         }
+      }
+   }
    return kFALSE;
 }
 
@@ -203,6 +236,23 @@ const TObjArray* TSchemaRuleSet::FindRules( const TString &source ) const
       TSchemaRule* rule = (TSchemaRule*)obj;
       if( rule->GetSourceClass() == source )
          arr->Add( rule );
+   }
+   // Le't's see we have implicit rules.
+   if (fClass->GetCollectionProxy()) {
+      if (fClass->GetCollectionProxy()->GetValueClass() == 0
+          && (fClass->GetCollectionProxy()->GetCollectionType() == TClassEdit::kVector
+              || (fClass->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated))) {
+         // We have a numeric collection, let see if the target is 
+         // also a numeric collection (humm just a vector for now)
+         TClass *src = TClass::GetClass(source);
+         if (src && src->GetCollectionProxy()) {
+            TVirtualCollectionProxy *proxy = src->GetCollectionProxy();
+            if (proxy->GetValueClass() == 0) {
+               // ... would need to check if we already have
+               // the rule (or any rule?)
+            }
+         }
+      }
    }
    return arr;
 }

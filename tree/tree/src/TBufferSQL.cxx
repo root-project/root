@@ -716,6 +716,37 @@ void     TBufferSQL::ReadFastArrayFloat16(Float_t  *, Int_t , TStreamerElement *
    Fatal("ReadFastArrayFloat16(Float_t  *, Int_t , TStreamerElement *)","Not implemented yet");
 }
 
+//______________________________________________________________________________
+void TBufferSQL::ReadFastArrayWithFactor(Float_t  *, Int_t , Double_t /* factor */, Double_t /* minvalue */)
+{
+   // read array of Float16_t from buffer
+
+   Fatal("ReadFastArrayWithFactor(Float_t  *, Int_t, Double_t, Double_t)","Not implemented yet");
+}
+
+//______________________________________________________________________________
+void TBufferSQL::ReadFastArrayWithNbits(Float_t  *, Int_t , Int_t /*nbits*/)
+{
+   // read array of Float16_t from buffer
+
+   Fatal("ReadFastArrayWithNbits(Float_t  *, Int_t , Int_t )","Not implemented yet");
+}
+
+//______________________________________________________________________________
+void TBufferSQL::ReadFastArrayWithFactor(Double_t  *, Int_t , Double_t /* factor */, Double_t /* minvalue */)
+{
+   // read array of Double32_t from buffer
+
+   Fatal("ReadFastArrayWithFactor(Double_t  *, Int_t, Double_t, Double_t)","Not implemented yet");
+}
+//______________________________________________________________________________
+void TBufferSQL::ReadFastArrayWithNbits(Double_t  *, Int_t , Int_t /*nbits*/)
+{
+   // read array of Double32_t from buffer
+
+   Fatal("ReadFastArrayWithNbits(Double_t  *, Int_t , Int_t )","Not implemented yet");
+}
+
 //________________________________________________________________________
 void     TBufferSQL::ReadFastArrayDouble32(Double_t  *, Int_t , TStreamerElement *)
 {

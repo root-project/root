@@ -225,6 +225,10 @@ public:
    virtual void     ReadFastArray(Double_t  *d, Int_t n);
    virtual void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele=0);
    virtual void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele=0);
+   virtual void     ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue) ;
+   virtual void     ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits);
+   virtual void     ReadFastArrayWithFactor(Double_t *ptr, Int_t n, Double_t factor, Double_t minvalue);
+   virtual void     ReadFastArrayWithNbits(Double_t *ptr, Int_t n, Int_t nbits) ;
 
    virtual void     WriteArray(const Bool_t    *b, Int_t n);
    virtual void     WriteArray(const Char_t    *c, Int_t n);

@@ -401,7 +401,7 @@ void TBufferFile::ReadDouble32(Double_t *d, TStreamerElement *ele)
 //______________________________________________________________________________
 void TBufferFile::ReadWithFactor(Float_t *ptr, Double_t factor, Double_t minvalue)
 {
-   // Read a Double32_t from the buffer when the factor and minimun value have been specified
+   // Read a Float16_t from the buffer when the factor and minimun value have been specified
    // see comments about Double32_t encoding at TBufferFile::WriteDouble32().
 
    //a range was specified. We read an integer and convert it back to a double.
@@ -1415,6 +1415,48 @@ void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *el
 }
 
 //______________________________________________________________________________
+void TBufferFile::ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue)
+{
+   // Read array of n floats (written as truncated float) from the I/O buffer.
+   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
+   if (n <= 0 || 3*n > fBufSize) return;
+
+   //a range was specified. We read an integer and convert it back to a float
+   for (int j=0;j < n; j++) {
+      UInt_t aint; *this >> aint; ptr[j] = (Float_t)(aint/factor + minvalue);
+   }
+}
+
+//______________________________________________________________________________
+void TBufferFile::ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits)
+{
+   // Read array of n floats (written as truncated float) from the I/O buffer.
+   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
+   if (n <= 0 || 3*n > fBufSize) return;
+
+   if (!nbits) nbits = 12;
+   //we read the exponent and the truncated mantissa of the float
+   //and rebuild the new float.
+   union {
+      Float_t fFloatValue;
+      Int_t   fIntValue;
+   };
+   UChar_t  theExp;
+   UShort_t theMan;
+   for (Int_t i = 0; i < n; i++) {
+      *this >> theExp;
+      *this >> theMan;
+      fIntValue = theExp;
+      fIntValue <<= 23;
+      fIntValue |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
+      if(1<<(nbits+1) & theMan) fFloatValue = -fFloatValue;
+      ptr[i] = fFloatValue;
+   }
+}
+
+//______________________________________________________________________________
 void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *ele)
 {
    // Read array of n doubles (written as float) from the I/O buffer.
@@ -1458,6 +1500,56 @@ void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *
             if (1<<(nbits+1) & theMan) fFloatValue = -fFloatValue;
             d[i] = (Double_t)fFloatValue;
          }
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TBufferFile::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t factor, Double_t minvalue)
+{
+   // Read array of n doubles (written as float) from the I/O buffer.
+   // see comments about Double32_t encoding at TBufferFile::WriteDouble32
+
+   if (n <= 0 || 3*n > fBufSize) return;
+
+   //a range was specified. We read an integer and convert it back to a double.
+   for (int j=0;j < n; j++) {
+      UInt_t aint; *this >> aint; d[j] = (Double_t)(aint/factor + minvalue);
+   }
+}
+
+//______________________________________________________________________________
+void TBufferFile::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t nbits)
+{
+   // Read array of n doubles (written as float) from the I/O buffer.
+   // see comments about Double32_t encoding at TBufferFile::WriteDouble32
+
+   if (n <= 0 || 3*n > fBufSize) return;
+
+   if (!nbits) {
+      //we read a float and convert it to double
+      Float_t afloat;
+      for (Int_t i = 0; i < n; i++) {
+         *this >> afloat;
+         d[i] = (Double_t)afloat;
+      }
+   } else {
+      //we read the exponent and the truncated mantissa of the float
+      //and rebuild the double.
+      union {
+         Float_t fFloatValue;
+         Int_t   fIntValue;
+      };
+      UChar_t  theExp;
+      UShort_t theMan;
+      for (Int_t i = 0; i < n; i++) {
+         *this >> theExp;
+         *this >> theMan;
+         fIntValue = theExp;
+         fIntValue <<= 23;
+         fIntValue |= (theMan & ((1<<(nbits+1))-1)) <<(23-nbits);
+         if (1<<(nbits+1) & theMan) fFloatValue = -fFloatValue;
+         d[i] = (Double_t)fFloatValue;
       }
    }
 }

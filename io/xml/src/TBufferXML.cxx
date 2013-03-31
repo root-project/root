@@ -2065,7 +2065,39 @@ void TBufferXML::ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement * /
 }
 
 //______________________________________________________________________________
+void TBufferXML::ReadFastArrayWithFactor(Float_t  *f, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
+{
+   // read array of Float16_t from buffer
+
+   TBufferXML_ReadFastArray(f);
+}
+
+//______________________________________________________________________________
+void TBufferXML::ReadFastArrayWithNbits(Float_t  *f, Int_t n, Int_t /*nbits*/)
+{
+   // read array of Float16_t from buffer
+
+   TBufferXML_ReadFastArray(f);
+}
+
+//______________________________________________________________________________
 void TBufferXML::ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement * /*ele*/)
+{
+   // read array of Double32_t from buffer
+
+   TBufferXML_ReadFastArray(d);
+}
+
+//______________________________________________________________________________
+void TBufferXML::ReadFastArrayWithFactor(Double_t  *d, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
+{
+   // read array of Double32_t from buffer
+
+   TBufferXML_ReadFastArray(d);
+}
+
+//______________________________________________________________________________
+void TBufferXML::ReadFastArrayWithNbits(Double_t  *d, Int_t n, Int_t /*nbits*/)
 {
    // read array of Double32_t from buffer
 

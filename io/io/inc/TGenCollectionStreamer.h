@@ -41,6 +41,10 @@ protected:
    typedef void (TGenCollectionStreamer::*ReadBuffer_t)(TBuffer &b, void *obj);
    ReadBuffer_t fReadBufferFunc;
    
+   template <typename From, typename To> void ConvertBufferVectorPrimitives(TBuffer &b, void *obj, Int_t nElements);
+   template <typename To> void ConvertBufferVectorPrimitivesFloat16(TBuffer &b, void *obj, Int_t nElements);
+   template <typename To> void ConvertBufferVectorPrimitivesDouble32(TBuffer &b, void *obj, Int_t nElements);
+   template <typename To> void DispatchConvertBufferVectorPrimitives(TBuffer &b, void *obj, Int_t nElements);
    template <typename basictype> void ReadBufferVectorPrimitives(TBuffer &b, void *obj);
    void ReadBufferVectorPrimitivesFloat16(TBuffer &b, void *obj);
    void ReadBufferVectorPrimitivesDouble32(TBuffer &b, void *obj);
