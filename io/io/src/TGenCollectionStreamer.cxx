@@ -654,7 +654,88 @@ void TGenCollectionStreamer::ReadMapHelper(StreamHelper *i, Value *v, Bool_t vsn
    }
 }
 
-void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass * /*onFileClass*/)
+template <typename To>
+To readOneValue(TBuffer &b, int readtype) {
+   TGenCollectionProxy::StreamHelper itm;
+   TGenCollectionProxy::StreamHelper *i = &itm;
+   switch (readtype)   {
+   case kBool_t:
+      b >> i->boolean;
+      return (To)i->boolean;
+      break;
+   case kChar_t:
+      b >> i->s_char;
+      return (To)i->s_char;
+      break;
+   case kShort_t:
+      b >> i->s_short;
+      return (To)i->s_short;
+      break;
+   case kInt_t:
+      b >> i->s_int;
+      return (To)i->s_int;
+      break;
+   case kLong_t:
+      b >> i->s_long;
+      return (To)i->s_long;
+      break;
+   case kLong64_t:
+      b >> i->s_longlong;
+      return (To)i->s_longlong;
+      break;
+   case kFloat_t:
+      b >> i->flt;
+      return (To)i->flt;
+      break;
+   case kFloat16_t:
+      b >> i->flt;
+      return (To)i->flt;
+      break;
+   case kDouble_t:
+      b >> i->dbl;
+      return (To)i->dbl;
+      break;
+   case TGenCollectionProxy::kBOOL_t:
+      b >> i->boolean;
+      return (To)i->boolean;
+      break;
+   case kUChar_t:
+      b >> i->u_char;
+      return (To)i->u_char;
+      break;
+   case kUShort_t:
+      b >> i->u_short;
+      return (To)i->u_short;
+      break;
+   case kUInt_t:
+      b >> i->u_int;
+      return (To)i->u_int;
+      break;
+   case kULong_t:
+      b >> i->u_long;
+      return (To)i->u_long;
+      break;
+   case kULong64_t:
+      b >> i->u_longlong;
+      return (To)i->u_longlong;
+      break;
+   case kDouble32_t: {
+      float f;
+      b >> f;
+      i->dbl = double(f);
+      return (To)i->dbl;
+      break;
+   }
+   case kchar:
+   case kNoType_t:
+   case kOther_t:
+      Error("TGenCollectionStreamer", "fType %d is not supported yet!\n", readtype);
+   }
+   return 0;
+}
+
+
+void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass *onFileClass)
 {
    // Map input streamer.
    Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion() <= 3;
@@ -668,6 +749,14 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass * /
    fEnv->fStart = (len < sizeof(buffer) ? buffer : memory =::operator new(len));
    addr = temp = (char*)fEnv->fStart;
    fConstruct(addr,nElements);
+
+   int onFileValueKind[2];
+   if (onFileClass) {
+      TClass *onFileValueClass = onFileClass->GetCollectionProxy()->GetValueClass();
+      TVirtualStreamerInfo *sourceInfo = onFileValueClass->GetStreamerInfo();
+      onFileValueKind[0] = ((TStreamerElement*)sourceInfo->GetElements()->At(0))->GetType();
+      onFileValueKind[1] = ((TStreamerElement*)sourceInfo->GetElements()->At(1))->GetType();
+   }
    for (int loop, idx = 0; idx < nElements; ++idx)  {
       addr = temp + fValDiff * idx;
       v = fKey;
@@ -676,7 +765,64 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass * /
          switch (v->fCase) {
             case kIsFundamental:  // Only handle primitives this way
             case kIsEnum:
-               switch (int(v->fKind))   {
+               if (onFileClass) {
+                  int readtype = (int)(onFileValueKind[loop]);
+                  switch (int(v->fKind))   {
+                  case kBool_t:
+                     i->boolean = readOneValue<bool>(b,readtype);
+                     break;
+                  case kChar_t:
+                     i->s_char = readOneValue<Char_t>(b,readtype);
+                     break;
+                  case kShort_t:
+                     i->s_short = readOneValue<Short_t>(b,readtype);
+                     break;
+                  case kInt_t:
+                     i->s_int = readOneValue<Int_t>(b,readtype);
+                     break;
+                  case kLong_t:
+                     i->s_long = readOneValue<Long_t>(b,readtype);
+                     break;
+                  case kLong64_t:
+                     i->s_longlong = readOneValue<Long64_t>(b,readtype);
+                     break;
+                  case kFloat_t:
+                     i->flt = readOneValue<Float_t>(b,readtype);
+                     break;
+                  case kFloat16_t:
+                     i->flt = readOneValue<Float16_t>(b,readtype);
+                     break;
+                  case kDouble_t:
+                     i->dbl = readOneValue<Double_t>(b,readtype);
+                     break;
+                  case kBOOL_t:
+                     i->boolean = readOneValue<bool>(b,readtype);
+                     break;
+                  case kUChar_t:
+                     i->u_char = readOneValue<UChar_t>(b,readtype);
+                     break;
+                  case kUShort_t:
+                     i->u_short = readOneValue<UShort_t>(b,readtype);
+                     break;
+                  case kUInt_t:
+                     i->u_int = readOneValue<UInt_t>(b,readtype);
+                     break;
+                  case kULong_t:
+                     i->u_long = readOneValue<ULong_t>(b,readtype);
+                     break;
+                  case kULong64_t:
+                     i->u_longlong = readOneValue<ULong64_t>(b,readtype);
+                     break;
+                  case kDouble32_t:
+                     i->dbl = readOneValue<Double32_t>(b,readtype);
+                     break;
+                  case kchar:
+                  case kNoType_t:
+                  case kOther_t:
+                     Error("TGenCollectionStreamer", "fType %d is not supported yet!\n", v->fKind);
+                  }
+               } else {
+                  switch (int(v->fKind))   {
                   case kBool_t:
                      b >> i->boolean;
                      break;
@@ -731,6 +877,7 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass * /
                   case kNoType_t:
                   case kOther_t:
                      Error("TGenCollectionStreamer", "fType %d is not supported yet!\n", v->fKind);
+                  }
                }
                break;
             case kIsClass:
