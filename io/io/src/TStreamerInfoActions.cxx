@@ -1637,7 +1637,7 @@ namespace TStreamerInfoActions
          *(double*)addr = (Double_t)afloat;
       }
      
-      template <Int_t (*action)(TBuffer &,void*,const void*,const TLoopConfiguration*,const TConfiguration*)>
+      template <typename ActionHolder>
       static INLINE_TEMPLATE_ARGS Int_t ReadNumericalCollection(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
          // Collection of numbers.  Memberwise or not, it is all the same.
@@ -1663,8 +1663,10 @@ namespace TStreamerInfoActions
             // that actions->fConfiguration != null.
             
             TGenericLoopConfig loopconf(oldProxy);
-            action(buf,begin,end,&loopconf,config);
-
+            //ReadNumericalCollection_Action action = (ReadNumericalCollection_Action)(void*)0x0;
+            //action(buf,begin,end,&loopconf,config);
+            ActionHolder::Action(buf,begin,end,&loopconf,config);
+            
             if (begin != &(startbuf[0])) {
                // assert(end != endbuf);
                config->fDeleteTwoIterators(begin,end);
@@ -1678,25 +1680,25 @@ namespace TStreamerInfoActions
 
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBool(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
-         return ReadNumericalCollection<ConvertBasicType<bool,bool,Numeric >::Action >(buf,addr,conf);
+         return ReadNumericalCollection<ConvertBasicType<bool,bool,Numeric > >(buf,addr,conf);
       }
       
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
          // FIXME: the conf is likely wrong
-         return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<float>,float,Numeric >::Action >(buf,addr,conf);
+         return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<float>,float,Numeric > >(buf,addr,conf);
       }
       
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
          // FIXME: the conf is likely wrong
-         return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<double>,double,Numeric >::Action >(buf,addr,conf);
+         return ReadNumericalCollection<ConvertBasicType<NoFactorMarker<double>,double,Numeric > >(buf,addr,conf);
       }
       
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
-         return ReadNumericalCollection<ConvertBasicType<T,T,Numeric >::Action >(buf,addr,conf);
+         return ReadNumericalCollection<ConvertBasicType<T,T,Numeric > >(buf,addr,conf);
       }
 
    };
