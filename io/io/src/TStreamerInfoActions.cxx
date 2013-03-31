@@ -22,6 +22,7 @@
 #include "TError.h"
 #include "TClassEdit.h"
 #include "TVirtualCollectionIterators.h"
+#include "TProcessID.h"
 
 static const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 
@@ -52,6 +53,10 @@ namespace TStreamerInfoActions
       typedef From Value_t;
    };
 
+   struct BitsMarker {
+      typedef UInt_t Value_t;
+   };
+
    void TConfiguration::AddToOffset(Int_t delta)
    {
       // Add the (potentially negative) delta to all the configuration's offset.  This is used by
@@ -72,7 +77,6 @@ namespace TStreamerInfoActions
    {
       // Inform the user what we are about to stream.
 
-      // Idea: We should print the name of the action function.
       TStreamerInfo *info = (TStreamerInfo*)fInfo;
       TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
 
@@ -114,8 +118,41 @@ namespace TStreamerInfoActions
       void PrintDebug(TBuffer &, void *) const {
          // Since we call the old code, it will print the debug statement.
       }
-   };
+ 
+      virtual TConfiguration *Copy() { return new TGenericConfiguration(*this); }
+  };
 
+   struct TBitsConfiguration : TConfiguration {
+      // Configuration of action handling kBits.
+      // In this case we need to know both the location
+      // of the member (fBits) and the start of the object
+      // (its TObject part to be exact).
+
+      Int_t  fObjectOffset;  // Offset of the TObject part within the object
+
+      TBitsConfiguration(TVirtualStreamerInfo *info, UInt_t id, Int_t offset = 0) : TConfiguration(info,id,offset),fObjectOffset(0) {};
+      void PrintDebug(TBuffer &, void *) const {
+         TStreamerInfo *info = (TStreamerInfo*)fInfo;
+         TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
+
+         printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
+                " %s, offset=%d\n",
+                info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetTypes()[fElemId],
+                aElement->ClassName(), fOffset);
+      }
+
+      void AddToOffset(Int_t delta)
+      {
+         // Add the (potentially negative) delta to all the configuration's offset.  This is used by
+         // TBranchElement in the case of split sub-object.
+         
+         fOffset += delta;
+         fObjectOffset = 0;
+      }
+
+      virtual TConfiguration *Copy() { return new TBitsConfiguration(*this); }
+
+   };
 
    Int_t GenericReadAction(TBuffer &buf, void *addr, const TConfiguration *config) 
    {
@@ -137,6 +174,40 @@ namespace TStreamerInfoActions
       T *x = (T*)( ((char*)addr) + config->fOffset );
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
       buf >> *x;
+      return 0;
+   }
+
+   void HandleReferencedTObject(TBuffer &buf, void *addr, const TConfiguration *config) {
+      TBitsConfiguration *conf = (TBitsConfiguration*)config;
+      UShort_t pidf;
+      buf >> pidf;
+      pidf += buf.GetPidOffset();
+      TProcessID *pid = buf.ReadProcessID(pidf);
+      if (pid!=0) {
+         TObject *obj = (TObject*)( ((char*)addr) + conf->fObjectOffset);
+         UInt_t gpid = pid->GetUniqueID();
+         UInt_t uid;
+         if (gpid>=0xff) {
+            uid = obj->GetUniqueID() | 0xff000000;
+         } else {
+            uid = ( obj->GetUniqueID() & 0xffffff) + (gpid<<24);
+         }
+         obj->SetUniqueID(uid);
+         pid->PutObjectWithID(obj);
+      }
+   }
+
+   template <> 
+   INLINE_TEMPLATE_ARGS Int_t ReadBasicType<BitsMarker>(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      UInt_t *x = (UInt_t*)( ((char*)addr) + config->fOffset );
+      // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
+      // Idea: This code really belongs inside TBuffer[File]
+      buf >> *x;
+      
+      if ((*x & kIsReferenced) != 0) {
+         HandleReferencedTObject(buf,addr,config);
+      }
       return 0;
    }
 
@@ -679,6 +750,23 @@ namespace TStreamerInfoActions
       }
    };
 
+   template <typename To>
+   struct ConvertBasicType<BitsMarker,To> {
+      static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *config)
+      {
+         // Simple conversion from a 'From' on disk to a 'To' in memory
+         UInt_t temp;
+         buf >> temp;
+
+         if ((temp & kIsReferenced) != 0) {
+            HandleReferencedTObject(buf,addr,config);
+         }
+
+         *(To*)( ((char*)addr) + config->fOffset ) = (To)temp;
+         return 0;
+      }
+   };
+
    template <typename From, typename To>
    struct ConvertBasicType<WithFactorMarker<From>,To> {
       static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *addr, const TConfiguration *config)
@@ -850,23 +938,6 @@ namespace TStreamerInfoActions
       return 0;
    }
 
-   // Int_t GenericVectorReadAction(TBuffer &buf, void *start, const void *end, const TLoopConfiguration * loopconfig, const TConfiguration *config) 
-   // {
-   //    const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
-   //    for(void *iter = start; iter != end; iter = (char*)iter + incr ) {
-   //       void **iter_ptr = &iter;
-   //       ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, (char**)iter_ptr, config->fElemId, 1, config->fOffset, 1|2 );
-   //    }
-   //    return 0;
-   // }
-
-   // Int_t GenericAssocCollectionReadAction(TBuffer &buf, void *, const void *, const TLoopConfiguration *loopconf, const TConfiguration *config) 
-   // {
-   //    TAssocLoopConfig *loopconfig = (TAssocLoopConfig*)loopconf;
-   //    TVirtualCollectionProxy *proxy = loopconfig->fProxy;
-   //    return ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, *proxy, config->fElemId, proxy->Size(), config->fOffset, 1|2 );
-   // }
-
    enum ESelectLooper { kVectorLooper, kVectorPtrLooper, kAssociativeLooper, kGenericLooper };
 
    ESelectLooper SelectLooper(TVirtualCollectionProxy &proxy)
@@ -907,6 +978,28 @@ namespace TStreamerInfoActions
             end = (char*)end + config->fOffset;
             for(; iter != end; iter = (char*)iter + incr ) {
                buf >> temp;
+               *(To*)( ((char*)iter) ) = (To)temp;
+            }
+            return 0;
+         }
+      };
+
+      template <typename To>
+      struct ConvertBasicType<BitsMarker,To> {
+         static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *iter, const void *end, const TLoopConfiguration *loopconfig, const TConfiguration *config)
+         {
+            // Simple conversion from a 'From' on disk to a 'To' in memory.
+            UInt_t temp;
+            const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
+            iter = (char*)iter + config->fOffset;
+            end = (char*)end + config->fOffset;
+            for(; iter != end; iter = (char*)iter + incr ) {
+               buf >> temp;
+
+               if ((temp & kIsReferenced) != 0) {
+                  HandleReferencedTObject(buf, (char*)iter - config->fOffset, config);
+               }
+
                *(To*)( ((char*)iter) ) = (To)temp;
             }
             return 0;
@@ -1177,7 +1270,7 @@ namespace TStreamerInfoActions
             From *temp = new From[nvalues];
             buf.ReadFastArrayWithNbits(temp, nvalues, 0);
             for(Int_t ind = 0; ind < nvalues; ++ind) {
-            (*vec)[ind] = (To)temp[ind];
+               (*vec)[ind] = (To)temp[ind];
             }
             delete [] temp;
             
@@ -1236,6 +1329,27 @@ namespace TStreamerInfoActions
             const Int_t offset = config->fOffset;
             for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
                buf >> temp;
+               To *x = (To*)( ((char*) (*(void**)iter) ) + offset );
+               *x = (To)temp;
+            }
+            return 0;
+         }
+      };
+
+      template <typename To>
+      struct ConvertBasicType<BitsMarker,To> {
+         static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
+         {
+            // Simple conversion from a 'From' on disk to a 'To' in memory.
+            UInt_t temp;
+            const Int_t offset = config->fOffset;
+            for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
+               buf >> temp;
+
+               if ((temp & kIsReferenced) != 0) {
+                  HandleReferencedTObject(buf,*(void**)iter,config);
+               }   
+
                To *x = (To*)( ((char*) (*(void**)iter) ) + offset );
                *x = (To)temp;
             }
@@ -1572,6 +1686,44 @@ namespace TStreamerInfoActions
             From *items = new From[nvalues];
             buf.ReadFastArray(items, nvalues);
             Converter<From,To>::ConvertAction(items,start,end,loopconfig,config);
+            delete [] items;
+            return 0;
+         }
+      };
+
+      template <typename To>
+      struct ConvertBasicType<BitsMarker, To, Generic> {
+         static INLINE_TEMPLATE_ARGS Int_t Action(TBuffer &buf, void *start, const void *end, const TLoopConfiguration *loopconf, const TConfiguration *config)
+         {
+            // Simple conversion from a 'From' on disk to a 'To' in memory.
+
+            TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
+            TVirtualCollectionProxy *proxy = loopconfig->fProxy;
+            Int_t nvalues = proxy->Size();
+
+            UInt_t *items_storage = new UInt_t[nvalues];
+            UInt_t *items = items_storage;
+           
+            const Int_t offset = config->fOffset;
+            Next_t next = loopconfig->fNext;
+            
+            char iterator[TVirtualCollectionProxy::fgIteratorArenaSize];
+            void *iter = loopconfig->fCopyIterator(&iterator,start);
+            void *addr;
+            while( (addr = next(iter,end)) ) {
+               buf >> (*items);
+               if (((*items) & kIsReferenced) != 0) {
+                  HandleReferencedTObject(buf, addr, config);
+               }
+               To *x =  (To*)( ((char*)addr) + offset );
+               *x = (To)(*items);
+               ++items;
+            }
+            if (iter != &iterator[0]) {
+               loopconfig->fDeleteIterator(iter);
+            }
+            
+            delete [] items_storage;
             return 0;
          }
       };
@@ -1591,6 +1743,7 @@ namespace TStreamerInfoActions
             From *items = new From[nvalues];
             buf.ReadFastArrayWithFactor(items, nvalues, conf->fFactor, conf->fXmin);
             Converter<From,To>::ConvertAction(items,start,end,loopconfig,config);
+            delete [] items;
             return 0;
          }
       };
@@ -1610,6 +1763,7 @@ namespace TStreamerInfoActions
             From *items = new From[nvalues];
             buf.ReadFastArrayWithNbits(items, nvalues, conf->fNbits);
             Converter<From,To>::ConvertAction(items,start,end,loopconfig,config);
+            delete [] items;
             return 0;
          }
       };
@@ -1748,6 +1902,7 @@ static TConfiguredAction GetCollectionReadConvertAction(Int_t newtype, TConfigur
       case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template ConvertBasicType<From,UInt_t>::Action, conf ); break;
       case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template ConvertBasicType<From,ULong_t>::Action, conf ); break;
       case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template ConvertBasicType<From,ULong64_t>::Action, conf );  break;
+      case TStreamerInfo::kBits:    return TConfiguredAction( Looper::template ConvertBasicType<From,UInt_t>::Action, conf ); break;
       default:
          return TConfiguredAction( Looper::GenericRead, conf );
          break;
@@ -1777,6 +1932,7 @@ static TConfiguredAction GetNumericCollectionReadAction(Int_t type, TConfigSTL *
       case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template ReadCollectionBasicType<UInt_t>,   conf );    break;
       case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template ReadCollectionBasicType<ULong_t>,  conf );   break;
       case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template ReadCollectionBasicType<ULong64_t>, conf ); break;
+      case TStreamerInfo::kBits:    Error("GetNumericCollectionReadAction","There is no support for kBits outside of a TObject."); break;
       case TStreamerInfo::kFloat16: {
          TConfigSTL *alternate = new TConfSTLNoFactor(conf,12);
          delete conf;
@@ -1830,6 +1986,7 @@ static TConfiguredAction GetConvertCollectionReadActionFrom(Int_t newtype, TConf
       case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,UInt_t>::Action, conf ); break;
       case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,ULong_t>::Action, conf ); break;
       case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,ULong64_t>::Action, conf );  break;
+      case TStreamerInfo::kBits:    return TConfiguredAction( Looper::template ConvertCollectionBasicType<From,UInt_t>::Action, conf );  break;
       default:
          break;
    }
@@ -1886,7 +2043,9 @@ static TConfiguredAction GetConvertCollectionReadAction(Int_t oldtype, Int_t new
       case TStreamerInfo::kDouble32:
          return GetConvertCollectionReadActionFrom<Looper,NoFactorMarker<Double32_t> >( newtype, conf );
          break;
-         // FIXME: We need to add kBits and kCounter
+      case TStreamerInfo::kBits:
+         Error("GetConvertCollectionReadAction","There is no support for kBits outside of a TObject."); 
+         break;
       default:
          break;
    }
@@ -1912,6 +2071,7 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
       case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template ReadBasicType<UInt_t>,   new TConfiguration(info,i,offset) );    break;
       case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template ReadBasicType<ULong_t>,  new TConfiguration(info,i,offset) );   break;
       case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template ReadBasicType<ULong64_t>, new TConfiguration(info,i,offset) ); break;
+      case TStreamerInfo::kBits: return TConfiguredAction( Looper::template ReadAction<TStreamerInfoActions::ReadBasicType<BitsMarker> > , new TBitsConfiguration(info,i,offset) ); break;
       case TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
             return TConfiguredAction( Looper::template ReadAction<ReadBasicType_WithFactor<float> >, new TConfWithFactor(info,i,offset,element->GetFactor(),element->GetXmin()) );
@@ -1986,6 +2146,9 @@ static TConfiguredAction GetCollectionReadAction(TVirtualStreamerInfo *info, TSt
       case TStreamerInfo::kConv + TStreamerInfo::kULong64:
          return GetCollectionReadConvertAction<Looper,ULong64_t>(element->GetNewType(), new TConfiguration(info,i,offset) );
          break;
+      case TStreamerInfo::kConv + TStreamerInfo::kBits:
+         return GetCollectionReadConvertAction<Looper,BitsMarker>(element->GetNewType(), new TBitsConfiguration(info,i,offset) );
+         break;
       case TStreamerInfo::kConv + TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
             return GetCollectionReadConvertAction<Looper,WithFactorMarker<float> >(element->GetNewType(), new TConfWithFactor(info,i,offset,element->GetFactor(),element->GetXmin()) );
@@ -2034,6 +2197,7 @@ static TConfiguredAction GetCollectionWriteAction(TVirtualStreamerInfo *info, TS
       case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template WriteBasicType<UInt_t>,   new TConfiguration(info,i,offset) ); break;
       case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template WriteBasicType<ULong_t>,  new TConfiguration(info,i,offset) ); break;
       case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template WriteBasicType<ULong64_t>,new TConfiguration(info,i,offset) ); break;
+      // the simple type missing are kBits and kCounter.
       default:
          return TConfiguredAction( Looper::GenericWrite, new TConfiguration(info,i,0 /* 0 because we call the legacy code */) );  
    }
@@ -2286,6 +2450,7 @@ static void AddReadConvertAction(TStreamerInfoActions::TActionSequence *sequence
       case TStreamerInfo::kUInt:    sequence->AddAction( ConvertBasicType<From,UInt_t>::Action,   conf ); break;
       case TStreamerInfo::kULong:   sequence->AddAction( ConvertBasicType<From,ULong_t>::Action,  conf ); break;
       case TStreamerInfo::kULong64: sequence->AddAction( ConvertBasicType<From,ULong64_t>::Action,conf );  break;
+      case TStreamerInfo::kBits:    sequence->AddAction( ConvertBasicType<From,UInt_t>::Action,   conf ); break;
    }
 }
 
@@ -2309,6 +2474,7 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
       case TStreamerInfo::kUInt:    fReadObjectWise->AddAction( ReadBasicType<UInt_t>, new TConfiguration(this,i,fOffset[i]) );    break;
       case TStreamerInfo::kULong:   fReadObjectWise->AddAction( ReadBasicType<ULong_t>, new TConfiguration(this,i,fOffset[i]) );   break;
       case TStreamerInfo::kULong64: fReadObjectWise->AddAction( ReadBasicType<ULong64_t>, new TConfiguration(this,i,fOffset[i]) ); break;
+      case TStreamerInfo::kBits:    fReadObjectWise->AddAction( ReadBasicType<BitsMarker>, new TBitsConfiguration(this,i,fOffset[i]) );     break;
       case TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
             fReadObjectWise->AddAction( ReadBasicType_WithFactor<float>, new TConfWithFactor(this,i,fOffset[i],element->GetFactor(),element->GetXmin()) );
@@ -2479,6 +2645,9 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
       case TStreamerInfo::kConv + TStreamerInfo::kULong64:
          AddReadConvertAction<ULong64_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
          break;
+      case TStreamerInfo::kConv + TStreamerInfo::kBits:
+         AddReadConvertAction<BitsMarker>(fReadObjectWise, fNewType[i], new TBitsConfiguration(this,i,fOffset[i]) );
+         break;
       case TStreamerInfo::kConv + TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
             AddReadConvertAction<WithFactorMarker<float> >(fReadObjectWise, fNewType[i], new TConfWithFactor(this,i,fOffset[i],element->GetFactor(),element->GetXmin()) );
@@ -2541,7 +2710,8 @@ void TStreamerInfo::AddWriteAction(Int_t i, TStreamerElement* /*element*/ )
       case TStreamerInfo::kUInt:    fWriteObjectWise->AddAction( WriteBasicType<UInt_t>, new TConfiguration(this,i,fOffset[i]) );    break;
       case TStreamerInfo::kULong:   fWriteObjectWise->AddAction( WriteBasicType<ULong_t>, new TConfiguration(this,i,fOffset[i]) );   break;
       case TStreamerInfo::kULong64: fWriteObjectWise->AddAction( WriteBasicType<ULong64_t>, new TConfiguration(this,i,fOffset[i]) ); break;
-      /*case TStreamerInfo::kFloat16: {
+       // case TStreamerInfo::kBits:    fWriteObjectWise->AddAction( WriteBasicType<BitsMarker>, new TConfiguration(this,i,fOffset[i]) );    break;
+     /*case TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
             fWriteObjectWise->AddAction( WriteBasicType_WithFactor<float>, new TConfWithFactor(this,i,fOffset[i],element->GetFactor(),element->GetXmin()) );
          } else {
@@ -2838,6 +3008,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
                   case TVirtualStreamerInfo::kUInt:    sequence->AddAction( WriteBasicTypeGenericLoop<UInt_t>, new TConfiguration(info,i,offset) );    break;
                   case TVirtualStreamerInfo::kULong:   sequence->AddAction( WriteBasicTypeGenericLoop<ULong_t>, new TConfiguration(info,i,offset) );   break;
                   case TVirtualStreamerInfo::kULong64: sequence->AddAction( WriteBasicTypeGenericLoop<ULong64_t>, new TConfiguration(info,i,offset) ); break;
+                  // case TVirtualStreamerInfo::kBits:    sequence->AddAction( WriteBasicTypeGenericLoop<BitsMarker>, new TConfiguration(info,i,offset) );    break;
                   case TVirtualStreamerInfo::kFloat16: {
                      if (element->GetFactor() != 0) {
                         sequence->AddAction( GenericLooper<WriteBasicType_WithFactor<float> >, new TConfWithFactor(info,i,offset,element->GetFactor(),element->GetXmin()) );
@@ -2892,7 +3063,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 void TStreamerInfoActions::TActionSequence::AddToOffset(Int_t delta)
 {
    // Add the (potentially negative) delta to all the configuration's offset.  This is used by
-   // TTBranchElement in the case of split sub-object.
+   // TBranchElement in the case of split sub-object.
 
    TStreamerInfoActions::ActionContainer_t::iterator end = fActions.end();
    for(TStreamerInfoActions::ActionContainer_t::iterator iter = fActions.begin();
@@ -2925,7 +3096,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateSubSequence(const std::vector<Int_t> &element_ids, size_t offset)
 {
    // Create a sequence containing the subset of the action corresponding to the SteamerElement whose ids is contained in the vector.
-   // 'offset' is the location of this 'class' within the object (address) that will be pass to ReadBuffer when using this sequence.
+   // 'offset' is the location of this 'class' within the object (address) that will be passed to ReadBuffer when using this sequence.
    
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo,element_ids.size());
    
