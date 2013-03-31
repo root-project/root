@@ -5407,7 +5407,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
    //----------------------------------------------------------------------------
    TObjArray *clSI = cl->GetStreamerInfos();
    TVirtualStreamerInfo* info = 0;
-   if( version > -1 && version < clSI->GetSize() )
+   if( version >= -1 && version < clSI->GetSize() )
       info = (TVirtualStreamerInfo*)clSI->At( version );
 
    if (!info && cl->GetCollectionProxy()) {
