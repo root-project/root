@@ -4379,12 +4379,10 @@ void TBranchElement::SetAddress(void* addr)
          TVirtualCollectionProxy* newProxy = newType->GetCollectionProxy();
          TVirtualCollectionProxy* oldProxy = GetCollectionProxy();
          if (newProxy && (oldProxy->GetValueClass() == newProxy->GetValueClass()) && ((!oldProxy->GetValueClass() && (oldProxy->GetType() == newProxy->GetType())) || (oldProxy->GetValueClass() && (oldProxy->HasPointers() == newProxy->HasPointers())))) {
-            if (fSTLtype == TClassEdit::kNotSTL) {
-               fSTLtype = TMath::Abs(TClassEdit::IsSTLCont(newType->GetName()));
-            }
             delete fCollProxy;
             Int_t nbranches = GetListOfBranches()->GetEntries();
             fCollProxy = newType->GetCollectionProxy()->Generate();
+            fSTLtype = fCollProxy->GetCollectionType();
             for (Int_t i = 0; i < nbranches; ++i) {
                TBranchElement* br = (TBranchElement*) GetListOfBranches()->UncheckedAt(i);
                br->fCollProxy = 0;
@@ -4414,6 +4412,7 @@ void TBranchElement::SetAddress(void* addr)
                delete fCollProxy;
                Int_t nbranches = GetListOfBranches()->GetEntries();
                fCollProxy = newType->GetCollectionProxy()->Generate();
+               fSTLtype = fCollProxy->GetCollectionType();
                for (Int_t i = 0; i < nbranches; ++i) {
                   TBranchElement* br = (TBranchElement*) GetListOfBranches()->UncheckedAt(i);
                   br->fCollProxy = 0;
