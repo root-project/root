@@ -812,6 +812,20 @@ namespace TStreamerInfoActions
    //    return ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, *proxy, config->fElemId, proxy->Size(), config->fOffset, 1|2 );
    // }
 
+   enum ESelectLooper { kVectorLooper, kVectorPtrLooper, kAssociativeLooper, kGenericLooper };
+
+   ESelectLooper SelectLooper(TVirtualCollectionProxy &proxy)
+   {
+      if ( (proxy.GetCollectionType() == TClassEdit::kVector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) {
+         return kVectorLooper;
+      } else if (proxy.GetCollectionType() == TClassEdit::kSet || proxy.GetCollectionType() == TClassEdit::kMultiSet
+                 || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) {
+         return kAssociativeLooper;
+      } else {
+         return kGenericLooper;
+      }
+   }
+
    struct VectorLooper {
 
       template <typename T> 
@@ -917,7 +931,98 @@ namespace TStreamerInfoActions
          ((TStreamerInfo*)config->fInfo)->WriteBufferAux(buf, arrptr, config->fElemId, n, config->fOffset, 1|2 );
          delete [] arrptr;
          return 0;
-      }      
+      }
+
+      template <typename T>
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         // Collection of numbers.  Memberwise or not, it is all the same.
+         
+         TConfigSTL *config = (TConfigSTL*)conf;
+         UInt_t start, count;
+         /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
+         
+         std::vector<T> *vec = (std::vector<T>*)(((char*)addr)+config->fOffset);     
+         Int_t nvalues;
+         buf.ReadInt(nvalues);
+         vec->resize(nvalues);
+         
+         T *begin = &(*vec->begin());
+         buf.ReadFastArray(begin, nvalues);
+         
+         buf.CheckByteCount(start,count,config->fTypeName);
+         return 0;
+      }
+
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBool(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         // Collection of numbers.  Memberwise or not, it is all the same.
+         
+         TConfigSTL *config = (TConfigSTL*)conf;
+         UInt_t start, count;
+         /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
+         
+         std::vector<bool> *vec = (std::vector<bool>*)(((char*)addr)+config->fOffset);     
+         Int_t nvalues;
+         buf.ReadInt(nvalues);
+         vec->resize(nvalues);
+         
+         bool *items = new bool[nvalues];
+         buf.ReadFastArray(items, nvalues);
+         for(Int_t i = 0 ; i < nvalues; ++i) {
+            (*vec)[i] = items[i];
+         }
+            
+         // We could avoid the call to ReadFastArray, we could
+         // the following, however this breaks TBufferXML ...
+         // for(Int_t i = 0 ; i < nvalues; ++i) {
+         //    bool tmp; buf >> tmp;
+         //    (*vec)[i] = tmp;
+         // }
+         
+         buf.CheckByteCount(start,count,config->fTypeName);
+         return 0;
+      }
+
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         // Collection of numbers.  Memberwise or not, it is all the same.
+         
+         TConfigSTL *config = (TConfigSTL*)conf;
+         UInt_t start, count;
+         /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
+         
+         std::vector<float> *vec = (std::vector<float>*)(((char*)addr)+config->fOffset);     
+         Int_t nvalues;
+         buf.ReadInt(nvalues);
+         vec->resize(nvalues);
+         
+         float *begin = &(*vec->begin());
+         buf.ReadFastArrayFloat16(begin, nvalues);
+         
+         buf.CheckByteCount(start,count,config->fTypeName);
+         return 0;
+      }
+
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         // Collection of numbers.  Memberwise or not, it is all the same.
+         
+         TConfigSTL *config = (TConfigSTL*)conf;
+         UInt_t start, count;
+         /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
+         
+         std::vector<double> *vec = (std::vector<double>*)(((char*)addr)+config->fOffset);     
+         Int_t nvalues;
+         buf.ReadInt(nvalues);
+         vec->resize(nvalues);
+         
+         double *begin = &(*vec->begin());
+         buf.ReadFastArrayDouble32(begin, nvalues);
+         
+         buf.CheckByteCount(start,count,config->fTypeName);
+         return 0;
+      }
    };
 
    struct VectorPtrLooper {
@@ -979,6 +1084,84 @@ namespace TStreamerInfoActions
 
    };
 
+   struct AssociativeLooper {
+
+      template <typename T>
+      static INLINE_TEMPLATE_ARGS void SimpleRead(TBuffer &buf, void *addr, Int_t nvalues)
+      {
+         buf.ReadFastArray((T*)addr, nvalues);
+      }
+
+      static INLINE_TEMPLATE_ARGS void SimpleReadFloat16(TBuffer &buf, void *addr, Int_t nvalues)
+      {
+         buf.ReadFastArrayFloat16((float*)addr, nvalues);
+      }
+     
+      static INLINE_TEMPLATE_ARGS void SimpleReadDouble32(TBuffer &buf, void *addr, Int_t nvalues)
+      {
+         buf.ReadFastArrayDouble32((double*)addr, nvalues);
+      }
+     
+      template <typename T,void (*action)(TBuffer&,void *,Int_t)>
+      static INLINE_TEMPLATE_ARGS Int_t ReadNumericalCollection(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         // Collection of numbers.  Memberwise or not, it is all the same.
+
+         TConfigSTL *config = (TConfigSTL*)conf;
+         UInt_t start, count;
+         /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
+
+         TClass *oldClass = config->fOldClass;
+         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         TVirtualCollectionProxy::TPushPop helper( oldProxy, ((char*)addr)+config->fOffset );
+
+         Int_t nvalues;
+         buf.ReadInt(nvalues);
+         void* alternative = oldProxy->Allocate(nvalues,true);
+         if (nvalues) {         
+            char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+            char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+            void *begin = &(startbuf[0]);
+            void *end = &(endbuf[0]);
+            config->fCreateIterators(alternative, &begin, &end );
+            // We can not get here with a split vector of pointer, so we can indeed assume
+            // that actions->fConfiguration != null.
+
+            action(buf,begin,nvalues);
+
+            if (begin != &(startbuf[0])) {
+               // assert(end != endbuf);
+               config->fDeleteTwoIterators(begin,end);
+            }
+         }
+         oldProxy->Commit(alternative);
+
+         buf.CheckByteCount(start,count,config->fTypeName);
+         return 0;
+      }
+
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBool(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         return ReadNumericalCollection<bool,SimpleRead<bool> >(buf,addr,conf);
+      }
+      
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         return ReadNumericalCollection<Float_t,SimpleReadFloat16 >(buf,addr,conf);
+      }
+      
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         return ReadNumericalCollection<Double_t,SimpleReadDouble32 >(buf,addr,conf);
+      }
+      
+      template <typename T>
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         return ReadNumericalCollection<T,SimpleRead<T> >(buf,addr,conf);
+      }
+   };
+
    struct GenericLooper {
 
       template <typename T> 
@@ -986,7 +1169,6 @@ namespace TStreamerInfoActions
       {
          TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
          
-         // const Int_t offset = config->fOffset;
          Next_t next = loopconfig->fNext;
          const Int_t offset = config->fOffset;
          
@@ -1008,7 +1190,6 @@ namespace TStreamerInfoActions
       {
          TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
          
-         // const Int_t offset = config->fOffset;
          Next_t next = loopconfig->fNext;
          const Int_t offset = config->fOffset;
          
@@ -1067,6 +1248,90 @@ namespace TStreamerInfoActions
          return ((TStreamerInfo*)config->fInfo)->WriteBufferAux(buf, *proxy, config->fElemId, proxy->Size(), config->fOffset, 1|2 );
       }
 
+      template <typename T>
+      static INLINE_TEMPLATE_ARGS void SimpleRead(TBuffer &buf, void *addr)
+      {
+         buf >> *(T*)addr;
+      }
+
+      static INLINE_TEMPLATE_ARGS void SimpleReadFloat16(TBuffer &buf, void *addr)
+      {
+         buf.ReadWithNbits((float*)addr,12);
+      }
+     
+      static INLINE_TEMPLATE_ARGS void SimpleReadDouble32(TBuffer &buf, void *addr)
+      {
+         //we read a float and convert it to double
+         Float_t afloat;
+         buf >> afloat;
+         *(double*)addr = (Double_t)afloat;
+      }
+     
+      template <typename T,void (*action)(TBuffer&,void *)>
+      static INLINE_TEMPLATE_ARGS Int_t ReadNumericalCollection(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         // Collection of numbers.  Memberwise or not, it is all the same.
+
+         TConfigSTL *config = (TConfigSTL*)conf;
+         UInt_t start, count;
+         /* Version_t vers = */ buf.ReadVersion(&start, &count, config->fOldClass);
+
+         TClass *oldClass = config->fOldClass;
+         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         TVirtualCollectionProxy::TPushPop helper( oldProxy, ((char*)addr)+config->fOffset );
+
+         Int_t nvalues;
+         buf.ReadInt(nvalues);
+         void* alternative = oldProxy->Allocate(nvalues,true);
+         if (nvalues) {         
+            char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+            char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+            void *begin = &(startbuf[0]);
+            void *end = &(endbuf[0]);
+            config->fCreateIterators(alternative, &begin, &end );
+            // We can not get here with a split vector of pointer, so we can indeed assume
+            // that actions->fConfiguration != null.
+
+            Next_t next = oldProxy->GetFunctionNext();         
+            void *iter = begin;
+            void *elem_addr;
+            while( (elem_addr = next(iter,end)) ) {
+               T *x =  (T*)( ((char*)elem_addr) );
+               action(buf,x);
+            }
+
+            if (begin != &(startbuf[0])) {
+               // assert(end != endbuf);
+               config->fDeleteTwoIterators(begin,end);
+            }
+         }
+         oldProxy->Commit(alternative);
+
+         buf.CheckByteCount(start,count,config->fTypeName);
+         return 0;
+      }
+
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBool(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         return ReadNumericalCollection<bool,SimpleRead<bool> >(buf,addr,conf);
+      }
+      
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionFloat16(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         return ReadNumericalCollection<Float_t,SimpleReadFloat16 >(buf,addr,conf);
+      }
+      
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionDouble32(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         return ReadNumericalCollection<Double_t,SimpleReadDouble32 >(buf,addr,conf);
+      }
+      
+      template <typename T>
+      static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
+      {
+         return ReadNumericalCollection<T,SimpleRead<T> >(buf,addr,conf);
+      }
+      
    };
 }
 
@@ -1092,6 +1357,57 @@ static TConfiguredAction GetCollectionReadConvertAction(Int_t newtype, TConfigur
       default:
          return TConfiguredAction( Looper::GenericRead, conf );
          break;
+   }
+   R__ASSERT(0); // We should never be here
+   return TConfiguredAction();
+}
+
+template <class Looper>
+static TConfiguredAction GetNumericCollectionReadAction(Int_t type, TConfigSTL *conf)
+{
+   // If we ever support std::vector<Double32_t> fValues; //[...] we would get the info from the StreamerElement for fValues.
+
+   switch (type) {
+      // Read basic types.
+      case /* kBOOL_t = */ 21:
+      case TStreamerInfo::kBool:    return TConfiguredAction( Looper::ReadCollectionBool, conf );    break;
+      case TStreamerInfo::kChar:    return TConfiguredAction( Looper::template ReadCollectionBasicType<Char_t>, conf );    break;
+      case TStreamerInfo::kShort:   return TConfiguredAction( Looper::template ReadCollectionBasicType<Short_t>,conf );   break;
+      case TStreamerInfo::kInt:     return TConfiguredAction( Looper::template ReadCollectionBasicType<Int_t>,  conf );     break;
+      case TStreamerInfo::kLong:    return TConfiguredAction( Looper::template ReadCollectionBasicType<Long_t>, conf );    break;
+      case TStreamerInfo::kLong64:  return TConfiguredAction( Looper::template ReadCollectionBasicType<Long64_t>, conf );  break;
+      case TStreamerInfo::kFloat:   return TConfiguredAction( Looper::template ReadCollectionBasicType<Float_t>,  conf );   break;
+      case TStreamerInfo::kDouble:  return TConfiguredAction( Looper::template ReadCollectionBasicType<Double_t>, conf );  break;
+      case TStreamerInfo::kUChar:   return TConfiguredAction( Looper::template ReadCollectionBasicType<UChar_t>,  conf );   break;
+      case TStreamerInfo::kUShort:  return TConfiguredAction( Looper::template ReadCollectionBasicType<UShort_t>, conf );  break;
+      case TStreamerInfo::kUInt:    return TConfiguredAction( Looper::template ReadCollectionBasicType<UInt_t>,   conf );    break;
+      case TStreamerInfo::kULong:   return TConfiguredAction( Looper::template ReadCollectionBasicType<ULong_t>,  conf );   break;
+      case TStreamerInfo::kULong64: return TConfiguredAction( Looper::template ReadCollectionBasicType<ULong64_t>, conf ); break;
+      case TStreamerInfo::kFloat16: {
+         return TConfiguredAction( Looper::ReadCollectionFloat16, conf );
+         // if (element->GetFactor() != 0) {
+         //    return TConfiguredAction( Looper::template ReadAction<ReadBasicType_WithFactor<float> >, new TConfWithFactor(info,i,offset,element->GetFactor(),element->GetXmin()) );
+         // } else {
+         //    Int_t nbits = (Int_t)element->GetXmin();
+         //    if (!nbits) nbits = 12;
+         //    return TConfiguredAction( Looper::template ReadAction<ReadBasicType_NoFactor<float> >, new TConfNoFactor(info,i,offset,nbits) );
+         // }
+         break;
+      }
+      case TStreamerInfo::kDouble32: {
+         return TConfiguredAction( Looper::ReadCollectionDouble32, conf );
+         // if (element->GetFactor() != 0) {
+         //    return TConfiguredAction( Looper::template ReadAction<ReadBasicType_WithFactor<double> >, new TConfWithFactor(info,i,offset,element->GetFactor(),element->GetXmin()) );
+         // } else {
+         //    Int_t nbits = (Int_t)element->GetXmin();
+         //    if (!nbits) {
+         //       return TConfiguredAction( Looper::template ReadAction<ConvertBasicType<float,double> >, new TConfiguration(info,i,offset) );
+         //    } else {
+         //       return TConfiguredAction( Looper::template ReadAction<ReadBasicType_NoFactor<double> >, new TConfNoFactor(info,i,offset,nbits) );
+         //    }
+         // }
+         break;
+      }
    }
    R__ASSERT(0); // We should never be here
    return TConfiguredAction();
@@ -1546,9 +1862,27 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
                   if (element->GetStreamer()) {
                      fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
                   } else {
-                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase));
+                     if (oldClass->GetCollectionProxy() == 0 || oldClass->GetCollectionProxy()->GetValueClass() || oldClass->GetCollectionProxy()->HasPointers() ) {
+                        fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase));
+                     } else {
+                        switch (SelectLooper(*oldClass->GetCollectionProxy())) {
+                        case kVectorLooper:
+                           fReadObjectWise->AddAction(GetNumericCollectionReadAction<VectorLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           break;
+                        case kAssociativeLooper:
+                           fReadObjectWise->AddAction(GetNumericCollectionReadAction<AssociativeLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           break;
+                        case kVectorPtrLooper:
+                        case kGenericLooper:
+                        default:
+                           fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase));
+                           // For now TBufferXML would force use to allocate the data buffer each time and copy into the real thing.
+                           // fReadObjectWise->AddAction(GetNumericCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           break;
+                        }
+                     }
                   }
-               }               
+               }
             }
          } else {
             if (fOldVersion<3){   // case of old TStreamerInfo
@@ -1819,11 +2153,13 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             oldType += TVirtualStreamerInfo::kSkip;
          }
       }
-      if ( (proxy.GetCollectionType() == TClassEdit::kVector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated)  
-            || (proxy.GetCollectionType() == TClassEdit::kSet || proxy.GetCollectionType() == TClassEdit::kMultiSet
-            || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) )
-      {
-
+      switch (SelectLooper(proxy)) {
+      case kAssociativeLooper:
+//         } else if (proxy.GetCollectionType() == TClassEdit::kSet || proxy.GetCollectionType() == TClassEdit::kMultiSet
+//                    || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) {
+//            sequence->AddAction( GenericAssocCollectionAction, new TConfigSTL(info,i,offset,0,proxy.GetCollectionClass(),0,0) );
+      case kVectorLooper:
+      case kVectorPtrLooper:
          // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
          if (element->TestBit(TStreamerElement::kCache)) {
             TConfiguredAction action( GetCollectionReadAction<VectorLooper>(info,element,oldType,i,offset) );
@@ -1831,11 +2167,9 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          } else {
             sequence->AddAction( GetCollectionReadAction<VectorLooper>(info,element,oldType,i,offset));
          }
-         
-//         } else if (proxy.GetCollectionType() == TClassEdit::kSet || proxy.GetCollectionType() == TClassEdit::kMultiSet
-//                    || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) {
-//            sequence->AddAction( GenericAssocCollectionAction, new TConfigSTL(info,i,offset,0,proxy.GetCollectionClass(),0,0) );
-      } else {
+         break;
+      case kGenericLooper:
+      default:
          // The usual collection case.
          if (element->TestBit(TStreamerElement::kCache)) {
             TConfiguredAction action( GetCollectionReadAction<VectorLooper>(info,element,oldType,i,offset) );
@@ -1843,6 +2177,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          } else {
             sequence->AddAction( GetCollectionReadAction<GenericLooper>(info,element,oldType,i,offset) );
          }
+         break;
       }
    }
    return sequence;
