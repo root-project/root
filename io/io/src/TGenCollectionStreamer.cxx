@@ -62,6 +62,156 @@ TVirtualCollectionProxy* TGenCollectionStreamer::Generate() const
    return new TGenCollectionStreamer(*this);
 }
 
+template <typename T>
+static T* getaddress(TGenCollectionProxy::StreamHelper &itm);
+
+template <>
+bool* getaddress<bool>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.boolean;
+}
+
+template <>
+Char_t* getaddress<Char_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.s_char;
+}
+
+template <>
+Short_t* getaddress<Short_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.s_short;
+}
+
+template <>
+Int_t* getaddress<Int_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.s_int;
+}
+
+template <>
+Long_t* getaddress<Long_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.s_long;
+}
+
+template <>
+Long64_t* getaddress<Long64_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.s_longlong;
+}
+
+template <>
+Float_t* getaddress<Float_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.flt;
+}
+
+template <>
+Double_t* getaddress<Double_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.dbl;
+}
+
+template <>
+UChar_t* getaddress<UChar_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.u_char;
+}
+
+template <>
+UShort_t* getaddress<UShort_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.u_short;
+}
+
+template <>
+UInt_t* getaddress<UInt_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.u_int;
+}
+
+template <>
+ULong_t* getaddress<ULong_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.u_long;
+}
+
+template <>
+ULong64_t* getaddress<ULong64_t>(TGenCollectionProxy::StreamHelper &itm)
+{
+   return &itm.u_longlong;
+}
+
+template <typename From, typename To>
+void ConvertArray(TGenCollectionProxy::StreamHelper *read, TGenCollectionProxy::StreamHelper *write, int nElements)
+{
+   From *r = getaddress<From>( *read );
+   To *w = getaddress<To>( *write );
+   for(int i = 0; i < nElements; ++i) {
+      // getvalue<To>( write[i] ) = (To) getvalue<From>( read[i] );
+      w[i] = (To)r[i];
+   }
+}
+
+template <typename From>
+void DispatchConvertArray(int writeType, TGenCollectionProxy::StreamHelper *read, TGenCollectionProxy::StreamHelper *write, int nElements)
+{
+   switch(writeType) {
+      case kBool_t:
+         ConvertArray<From,bool>(read,write,nElements);
+         break;
+      case kChar_t:
+         ConvertArray<From,Char_t>(read,write,nElements);
+         break;
+      case kShort_t:
+         ConvertArray<From,Short_t>(read,write,nElements);
+         break;
+      case kInt_t:
+         ConvertArray<From,Int_t>(read,write,nElements);
+         break;
+      case kLong_t:
+         ConvertArray<From,Long64_t>(read,write,nElements);
+         break;
+      case kLong64_t:
+         ConvertArray<From,Long64_t>(read,write,nElements);
+         break;
+      case kFloat_t:
+         ConvertArray<From,Float_t>(read,write,nElements);
+         break;
+      case kFloat16_t:
+         ConvertArray<From,Float16_t>(read,write,nElements);
+         break;
+      case kDouble_t:
+         ConvertArray<From,Double_t>(read,write,nElements);
+         break;
+      case TGenCollectionProxy::kBOOL_t:
+         ConvertArray<From,bool>(read,write,nElements);
+         break;
+      case kUChar_t:
+         ConvertArray<From,UChar_t>(read,write,nElements);
+         break;
+      case kUShort_t:
+         ConvertArray<From,UShort_t>(read,write,nElements);
+         break;
+      case kUInt_t:
+         ConvertArray<From,UInt_t>(read,write,nElements);
+         break;
+      case kULong_t:
+         ConvertArray<From,ULong_t>(read,write,nElements);
+         break;
+      case kULong64_t:
+         ConvertArray<From,ULong64_t>(read,write,nElements);
+         break;
+      case kDouble32_t:
+         ConvertArray<From,Double32_t>(read,write,nElements);
+         break;
+      case kchar:
+      case kNoType_t:
+      case kOther_t:
+         Error("TGenCollectionStreamer", "fType %d is not supported yet!\n", writeType);
+   }
+}
 
 void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b, const TClass *onFileClass)
 {
@@ -70,7 +220,8 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b, const TCl
    char   buffer[8096];
    Bool_t   feed = false;
    void*  memory = 0;
-   StreamHelper* itm = 0;
+   StreamHelper* itmstore = 0;
+   StreamHelper* itmconv = 0;
    fEnv->fSize = nElements;
    switch (fSTL_type)  {
       case TClassEdit::kVector:
@@ -80,72 +231,140 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b, const TCl
             
             TVirtualVectorIterators iterators(fFunctionCreateIterators);
             iterators.CreateIterators(fEnv->fObject);
-            itm = (StreamHelper*)iterators.fBegin;
-            fEnv->fStart = itm;
+            itmstore = (StreamHelper*)iterators.fBegin;
+            fEnv->fStart = itmstore;
             break;
          }
       default:
          feed = true;
-         itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
+         itmstore = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
          break;
    }
-   fEnv->fStart = itm;
-   switch (int(fVal->fKind))   {
+   fEnv->fStart = itmstore;
+
+   StreamHelper *itmread;
+   int readkind;
+   if (onFileClass) {
+      readkind = onFileClass->GetCollectionProxy()->GetType();
+      itmconv = (StreamHelper*) ::operator new( nElements * onFileClass->GetCollectionProxy()->GetIncrement() );
+      itmread = itmconv;
+   } else {
+      itmread = itmstore;
+      readkind = fVal->fKind;
+   }
+   switch (readkind)   {
       case kBool_t:
-         b.ReadFastArray(&itm->boolean   , nElements);
+         b.ReadFastArray(&itmread->boolean   , nElements);
          break;
       case kChar_t:
-         b.ReadFastArray(&itm->s_char    , nElements);
+         b.ReadFastArray(&itmread->s_char    , nElements);
          break;
       case kShort_t:
-         b.ReadFastArray(&itm->s_short   , nElements);
+         b.ReadFastArray(&itmread->s_short   , nElements);
          break;
       case kInt_t:
-         b.ReadFastArray(&itm->s_int     , nElements);
+         b.ReadFastArray(&itmread->s_int     , nElements);
          break;
       case kLong_t:
-         b.ReadFastArray(&itm->s_long    , nElements);
+         b.ReadFastArray(&itmread->s_long    , nElements);
          break;
       case kLong64_t:
-         b.ReadFastArray(&itm->s_longlong, nElements);
+         b.ReadFastArray(&itmread->s_longlong, nElements);
          break;
       case kFloat_t:
-         b.ReadFastArray(&itm->flt       , nElements);
+         b.ReadFastArray(&itmread->flt       , nElements);
          break;
       case kFloat16_t:
-         b.ReadFastArrayFloat16(&itm->flt, nElements);
+         b.ReadFastArrayFloat16(&itmread->flt, nElements);
          break;
       case kDouble_t:
-         b.ReadFastArray(&itm->dbl       , nElements);
+         b.ReadFastArray(&itmread->dbl       , nElements);
          break;
       case kBOOL_t:
-         b.ReadFastArray(&itm->boolean   , nElements);
+         b.ReadFastArray(&itmread->boolean   , nElements);
          break;
       case kUChar_t:
-         b.ReadFastArray(&itm->u_char    , nElements);
+         b.ReadFastArray(&itmread->u_char    , nElements);
          break;
       case kUShort_t:
-         b.ReadFastArray(&itm->u_short   , nElements);
+         b.ReadFastArray(&itmread->u_short   , nElements);
          break;
       case kUInt_t:
-         b.ReadFastArray(&itm->u_int     , nElements);
+         b.ReadFastArray(&itmread->u_int     , nElements);
          break;
       case kULong_t:
-         b.ReadFastArray(&itm->u_long    , nElements);
+         b.ReadFastArray(&itmread->u_long    , nElements);
          break;
       case kULong64_t:
-         b.ReadFastArray(&itm->u_longlong, nElements);
+         b.ReadFastArray(&itmread->u_longlong, nElements);
          break;
       case kDouble32_t:
-         b.ReadFastArrayDouble32(&itm->dbl, nElements);
+         b.ReadFastArrayDouble32(&itmread->dbl, nElements);
          break;
       case kchar:
       case kNoType_t:
       case kOther_t:
-         Error("TGenCollectionStreamer", "fType %d is not supported yet!\n", fVal->fKind);
+         Error("TGenCollectionStreamer", "fType %d is not supported yet!\n", readkind);
+   }
+   if (onFileClass) {
+      switch (readkind)   {
+         case kBool_t:
+            DispatchConvertArray<bool>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kChar_t:
+            DispatchConvertArray<Char_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kShort_t:
+            DispatchConvertArray<Short_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kInt_t:
+            DispatchConvertArray<Int_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kLong_t:
+            DispatchConvertArray<Long_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kLong64_t:
+            DispatchConvertArray<Long64_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kFloat_t:
+            DispatchConvertArray<Float_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kFloat16_t:
+            DispatchConvertArray<Float16_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kDouble_t:
+            DispatchConvertArray<Double_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kBOOL_t:
+            DispatchConvertArray<bool>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kUChar_t:
+            DispatchConvertArray<UChar_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kUShort_t:
+            DispatchConvertArray<UShort_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kUInt_t:
+            DispatchConvertArray<UInt_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kULong_t:
+            DispatchConvertArray<ULong_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kULong64_t:
+            DispatchConvertArray<ULong64_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kDouble32_t:
+            DispatchConvertArray<Double_t>(fVal->fKind, itmread, itmstore, nElements);
+            break;
+         case kchar:
+         case kNoType_t:
+         case kOther_t:
+            Error("TGenCollectionStreamer", "fType %d is not supported yet!\n", readkind);
+      }
+      ::operator delete((void*)itmconv);
    }
    if (feed)  {      // need to feed in data...
-      fEnv->fStart = fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
+      fEnv->fStart = fFeed(itmstore,fEnv->fObject,fEnv->fSize);
       if (memory)  {
          ::operator delete(memory);
       }
@@ -435,7 +654,7 @@ void TGenCollectionStreamer::ReadMapHelper(StreamHelper *i, Value *v, Bool_t vsn
    }
 }
 
-void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass *onFileClass)
+void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass * /*onFileClass*/)
 {
    // Map input streamer.
    Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion() <= 3;
