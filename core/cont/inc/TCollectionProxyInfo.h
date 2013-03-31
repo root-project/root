@@ -143,7 +143,7 @@ namespace ROOT {
             R__ASSERT(0 && "Intentionally not implemented, do not use.");
             return 0;
          }
-         static void destruct1(void  */* iter_ptr */) {
+         static void destruct1(void  * /* iter_ptr */) {
             // Nothing to do
          }
          static void destruct2(void * /* begin_ptr */, void * /* end_ptr */) {
