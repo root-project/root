@@ -2583,6 +2583,14 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       // Something went wrong, the warning message has already be issued.
       return kInternalError;
    }
+   if (expectedClass && datatype == kOther_t && ptrClass == 0) {
+      Error("SetBranchAddress", "Unable to determine the type given for the address for \"%s\" (probably due to a missing dictionary).", branch->GetName());
+      if (branch->InheritsFrom( TBranchElement::Class() )) {
+         TBranchElement* bEl = (TBranchElement*)branch;
+         bEl->SetTargetClass( expectedClass->GetName() );
+      }
+      return kClassMismatch;
+   }
    if (expectedClass && ptrClass && (branch->GetMother() == branch)) {
       // Top Level branch
       if (!isptr) {
@@ -2616,6 +2624,8 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       if( !ptrClass->GetConversionStreamerInfo( expectedClass, bEl->GetClassVersion() ) &&
           !ptrClass->FindConversionStreamerInfo( expectedClass, bEl->GetCheckSum() ) ) {
          Error("SetBranchAddress", "The pointer type given \"%s\" does not correspond to the type needed \"%s\" by the branch: %s", ptrClass->GetName(), bEl->GetClassName(), branch->GetName());
+         
+         bEl->SetTargetClass( expectedClass->GetName() );
          return kClassMismatch;
       }
       else {
@@ -2647,6 +2657,10 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       }
 
       Error("SetBranchAddress", "The pointer type given (%s) does not correspond to the class needed (%s) by the branch: %s", ptrClass->GetName(), expectedClass->GetName(), branch->GetName());
+      if (branch->InheritsFrom( TBranchElement::Class() )) {
+         TBranchElement* bEl = (TBranchElement*)branch;
+         bEl->SetTargetClass( expectedClass->GetName() );
+      }
       return kClassMismatch;
 
    } else if ((expectedType != kOther_t) && (datatype != kOther_t) && (expectedType != kNoType_t) && (datatype != kNoType_t) && (expectedType != datatype)) {
@@ -2662,6 +2676,10 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       if (expectedClass) {
          Error("SetBranchAddress", "The pointer type given \"%s\" (%d) does not correspond to the type needed \"%s\" by the branch: %s", 
                TDataType::GetTypeName(datatype), datatype, expectedClass->GetName(), branch->GetName());
+         if (branch->InheritsFrom( TBranchElement::Class() )) {
+            TBranchElement* bEl = (TBranchElement*)branch;
+            bEl->SetTargetClass( expectedClass->GetName() );
+         }
       } else {
          // In this case, it is okay if the first data member is of the right type (to support the case where we are being passed
          // a struct).
@@ -2699,7 +2717,15 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       Error("SetBranchAddress", "The class requested (%s) for the branch \"%s\" refer to an stl collection and do not have a compiled CollectionProxy.  "
             "Please generate the dictionary for this class (%s)",
             expectedClass->GetName(), branch->GetName(), expectedClass->GetName());
+      if (branch->InheritsFrom( TBranchElement::Class() )) {
+         TBranchElement* bEl = (TBranchElement*)branch;
+         bEl->SetTargetClass( expectedClass->GetName() );
+      }
       return kMissingCompiledCollectionProxy;
+   }
+   if (expectedClass && branch->InheritsFrom( TBranchElement::Class() )) {
+      TBranchElement* bEl = (TBranchElement*)branch;
+      bEl->SetTargetClass( expectedClass->GetName() );
    }
    return kMatch;
 }
