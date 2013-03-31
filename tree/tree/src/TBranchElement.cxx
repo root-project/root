@@ -47,6 +47,7 @@
 #include "TROOT.h"
 
 #include "TStreamerInfoActions.h"
+#include "TSchemaRuleSet.h"
 
 ClassImp(TBranchElement)
 
@@ -4394,6 +4395,42 @@ void TBranchElement::SetAddress(void* addr)
                fIterators = new TVirtualCollectionIterators(fCollProxy);
             }
          }
+         else if (newProxy && oldProxy && (oldProxy->HasPointers() == newProxy->HasPointers()) && (oldProxy->GetValueClass()!=0) && (newProxy->GetValueClass()!=0)) {
+            // Let see if there is a rule to convert the content of the collection into each other.
+            if (newType->GetSchemaRules()->HasRuleWithSourceClass( oldProxy->GetCollectionClass()->GetName())) {
+               delete fCollProxy;
+               Int_t nbranches = GetListOfBranches()->GetEntries();
+               fCollProxy = newType->GetCollectionProxy()->Generate();
+               for (Int_t i = 0; i < nbranches; ++i) {
+                  TBranchElement* br = (TBranchElement*) GetListOfBranches()->UncheckedAt(i);
+                  br->fCollProxy = 0;
+                  br->SetTargetClass(fCollProxy->GetValueClass()->GetName());
+                  if (br->fReadActionSequence) {
+                     br->SetReadActionSequence();
+                  }
+                  if (br->fFillActionSequence) {
+                     br->SetFillActionSequence();
+                  }
+               }
+               SetReadActionSequence();
+               SetFillActionSequence();
+               SetReadLeavesPtr();
+               SetFillLeavesPtr();
+               delete fIterators;
+               delete fPtrIterators;
+               if(fSTLtype != TClassEdit::kVector && fCollProxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
+                  fPtrIterators = new TVirtualCollectionPtrIterators(fCollProxy);
+               } else {
+                  fIterators = new TVirtualCollectionIterators(fCollProxy);
+               }
+            } else {
+               Error("SetAddress","For %s, we Can not convert %s into %s\n",
+                     GetName(),oldProxy->GetCollectionClass()->GetName(),newType->GetName());
+               fAddress = 0;
+               fObject = 0;
+               return;
+            }
+         }
          else if ((newType == TClonesArray::Class()) && (oldProxy->GetValueClass() && !oldProxy->HasPointers() && oldProxy->GetValueClass()->InheritsFrom(TObject::Class())))
          {
             // The new collection and the old collection are not compatible,
@@ -4440,7 +4477,9 @@ void TBranchElement::SetAddress(void* addr)
             fPtrIterators =0;
          } else {
             // FIXME: We must maintain fObject here as well.
+            Error("SetAddress","For %s can not convert %s into %s\n",GetName(),GetCurrentClass()->GetName(),newType->GetName());
             fAddress = 0;
+            return;
          }
       } else {
          if (!fIterators && !fPtrIterators) {
