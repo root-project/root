@@ -3534,7 +3534,12 @@ void TBranchElement::ReadLeavesMakeClass(TBuffer& b)
                // if (fObject)
                fBranchClass->Streamer(fObject,b);
             } else {
-               GetInfoImp()->ReadBuffer(b, (char**) &fObject, fID);
+               TStreamerInfo *info = GetInfoImp();
+               if (!info) {
+                  return;
+               }
+               // Since info is not null, fReadActionSequence is not null either.
+               b.ApplySequence(*fReadActionSequence, fObject);
             }
             if (fStreamerType == TVirtualStreamerInfo::kCounter) {
                fNdata = (Int_t) GetValue(0, 0);
