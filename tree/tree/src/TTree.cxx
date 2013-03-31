@@ -7161,7 +7161,12 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr, TCla
 
    Int_t res = CheckBranchAddressType(branch, ptrClass, datatype, isptr);
    // This will set the value of *ptr to branch.
-   SetBranchAddressImp(branch,addr,ptr);
+   if (res >= 0) {
+      // The check succeeded.
+      SetBranchAddressImp(branch,addr,ptr);
+   } else {
+      if (ptr) *ptr = 0;
+   }      
    return res;
 }
 
