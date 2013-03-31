@@ -1092,6 +1092,9 @@ void TClass::Init(const char *name, Version_t cversion,
       if (fStreamer==0) {
          fStreamer =  TVirtualStreamerInfo::Factory()->GenEmulatedClassStreamer( GetName(), silent );
       }
+   } else if (!strncmp(GetName(),"std::pair<",10) || !strncmp(GetName(),"pair<",5) ) {
+      // std::pairs have implicit conversions
+      GetSchemaRules(kTRUE);
    }
 
 }
