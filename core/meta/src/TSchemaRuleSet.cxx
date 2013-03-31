@@ -10,6 +10,8 @@
 #include "Riostream.h"
 
 #include "TVirtualCollectionProxy.h"
+#include "TVirtualStreamerInfo.h"
+#include "TStreamerElement.h"
 #include "TClassEdit.h"
 
 ClassImp(TSchemaRule)
@@ -215,6 +217,53 @@ Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
             }
          }
       }
+   } else if (!strncmp(fClass->GetName(),"std::pair<",10) || !strncmp(fClass->GetName(),"pair<",5)) {
+      if (!strncmp(source,"std::pair<",10) || !strncmp(source,"pair<",5)) {
+         // std::pair can be converted into each other if both its parameter can be converted into
+         // each other.
+         TClass *src = TClass::GetClass(source);
+         if (!src) {
+            Error("HasRuleWithSourceClass","Can not find the TClass for %s when matching with %s\n",source.Data(),fClass->GetName());
+            return kFALSE;
+         }
+         TVirtualStreamerInfo *sourceInfo = src->GetStreamerInfo();
+         TVirtualStreamerInfo *targetInfo = fClass->GetStreamerInfo();
+         if (!sourceInfo) {
+            Error("HasRuleWithSourceClass","Can not find the StreamerInfo for %s when matching with %s\n",source.Data(),fClass->GetName());
+            return kFALSE;
+         }
+         if (!targetInfo) {
+            Error("HasRuleWithSourceClass","Can not find the StreamerInfo for target class %s\n",fClass->GetName());
+            return kFALSE;
+         }
+         for(int i = 0 ; i<2 ; ++i) {
+            TStreamerElement *sourceElement = (TStreamerElement*)sourceInfo->GetElements()->At(i);
+            TStreamerElement *targetElement = (TStreamerElement*)sourceInfo->GetElements()->At(i);
+            if (sourceElement->GetClass()) {
+               if (!targetElement->GetClass()) {
+                  return kFALSE;
+               }
+               if (sourceElement->GetClass() == targetElement->GetClass()) {
+                  continue;
+               }
+               TSchemaRuleSet *rules = sourceElement->GetClass()->GetSchemaRules();
+               if (!rules || !rules->HasRuleWithSourceClass( targetElement->GetClass()->GetName() ) ) {
+                  return kFALSE;
+               }
+            } else if (targetElement->GetClass()) {
+               return kFALSE;
+            } else {
+               // both side are numeric element we can deal with it.
+            }
+         }
+         // Both side are pairs and have convertible types, let records this as a renaming rule
+         ROOT::TSchemaRule *ruleobj = new ROOT::TSchemaRule();
+         ruleobj->SetSourceClass(source);
+         ruleobj->SetTargetClass(fClass->GetName());
+         ruleobj->SetVersion("[1-]");
+         const_cast<TSchemaRuleSet*>(this)->AddRule(ruleobj);
+         return kTRUE;
+      }
    }
    return kFALSE;
 }
@@ -234,6 +283,8 @@ const TObjArray* TSchemaRuleSet::FindRules( const TString &source ) const
       if( rule->GetSourceClass() == source )
          arr->Add( rule );
    }
+
+#if 0
    // Le't's see we have implicit rules.
    if (fClass->GetCollectionProxy()) {
       if (fClass->GetCollectionProxy()->GetValueClass() == 0
@@ -251,6 +302,7 @@ const TObjArray* TSchemaRuleSet::FindRules( const TString &source ) const
          }
       }
    }
+#endif
    return arr;
 }
 
