@@ -192,17 +192,14 @@ Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
    // There was no explicit rule, let's see we have implicit rules.
    if (fClass->GetCollectionProxy()) {
       if (fClass->GetCollectionProxy()->GetValueClass() == 0) {
-         if (fClass->GetCollectionProxy()->GetCollectionType() == TClassEdit::kVector
-              || (fClass->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated)) {
-            // We have a numeric collection, let see if the target is 
-            // also a numeric collection (humm just a vector for now)
-            TClass *src = TClass::GetClass(source);
-            if (src && src->GetCollectionProxy() &&
-                src->GetCollectionProxy()->HasPointers() == fClass->GetCollectionProxy()->HasPointers()) {
-               TVirtualCollectionProxy *proxy = src->GetCollectionProxy();
-               if (proxy->GetValueClass() == 0) {
-                  return kTRUE;
-               }
+         // We have a numeric collection, let see if the target is 
+         // also a numeric collection.
+         TClass *src = TClass::GetClass(source);
+         if (src && src->GetCollectionProxy() &&
+             src->GetCollectionProxy()->HasPointers() == fClass->GetCollectionProxy()->HasPointers()) {
+            TVirtualCollectionProxy *proxy = src->GetCollectionProxy();
+            if (proxy->GetValueClass() == 0) {
+               return kTRUE;
             }
          }
       } else {
