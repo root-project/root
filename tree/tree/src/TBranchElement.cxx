@@ -2642,7 +2642,7 @@ void TBranchElement::InitializeOffsets()
          if (localOffset == TStreamerInfo::kMissing) {
             fObject = 0;
          } else {
-            renamed = (branchClass != branchElem->GetNewClass());
+            renamed = branchClass && branchElem->GetNewClass() && (branchClass != branchElem->GetNewClass());
          }
       }
       if (!branchClass) {
