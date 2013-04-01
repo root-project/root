@@ -2577,6 +2577,13 @@ const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
    TClassEdit::TSplitType splitname( cl.Name(), TClassEdit::kDropStd );
    static std::string result;
    splitname.ShortType(result, TClassEdit::kDropStd );
+
+   static const char* basic_string_s = "basic_string<char>";
+   static const unsigned int basic_string_len = strlen(basic_string_s);
+   int pos = 0;
+   while( (pos = result.find( basic_string_s,pos) ) >=0 ) {
+      result.replace(pos,basic_string_len, "string");
+   }
    return result.c_str();
 }
 
