@@ -135,7 +135,7 @@ namespace ROOT {
 #endif
          }
          static void* copy(void *dest, const void *source) {
-            *(void**)dest = *(void**)source;
+            *(void**)dest = *(void**)(const_cast<void*>(source));
             return dest; 
          }
          static void* next(void * /* iter_loc */, const void * /* end_loc */) {
@@ -623,12 +623,12 @@ namespace ROOT {
             new (*end_arena) iterator(c->end());
          }
          static void* copy(void *dest_arena, const void *source_ptr) {
-            iterator *source = (iterator *)(source_ptr);
+            const iterator *source = (const iterator *)(source_ptr);
             new (dest_arena) iterator(*source);
             return dest_arena;
          }
          static void* next(void *iter_loc, const void *end_loc) {
-            iterator *end = (iterator *)(end_loc);
+            const iterator *end = (const iterator *)(end_loc);
             iterator *iter = (iterator *)(iter_loc);
             if (*iter != *end) {
                ++(*iter);
