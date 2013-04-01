@@ -85,7 +85,7 @@ public:
 
    void Fill(int seed = 1) {
       fX = seed + seed/10.0;
-      fSingle.fX = fSingle.fY = 99.9;
+      fSingle.fX = fSingle.fY = 99;
       for(int i = 0; i < 10*seed; ++i) {
          fVec.push_back(-i*0.1);
          fValues.push_back(Values(.1*seed+i,0.01*seed+i));
