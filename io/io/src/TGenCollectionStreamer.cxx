@@ -185,7 +185,7 @@ void DispatchConvertArray(int writeType, TGenCollectionProxy::StreamHelper *read
       case kDouble_t:
          ConvertArray<From,Double_t>(read,write,nElements);
          break;
-      case TGenCollectionProxy::kBOOL_t:
+   case EDataType(TGenCollectionProxy::kBOOL_t):
          ConvertArray<From,bool>(read,write,nElements);
          break;
       case kUChar_t:
@@ -280,7 +280,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b, const TCl
       case kDouble_t:
          b.ReadFastArray(&itmread->dbl       , nElements);
          break;
-      case kBOOL_t:
+      case EDataType(kBOOL_t):
          b.ReadFastArray(&itmread->boolean   , nElements);
          break;
       case kUChar_t:
@@ -335,7 +335,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b, const TCl
          case kDouble_t:
             DispatchConvertArray<Double_t>(fVal->fKind, itmread, itmstore, nElements);
             break;
-         case kBOOL_t:
+         case EDataType(kBOOL_t):
             DispatchConvertArray<bool>(fVal->fKind, itmread, itmstore, nElements);
             break;
          case kUChar_t:
@@ -399,13 +399,13 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
          switch (fVal->fCase) {
             case kIsClass:
                DOLOOP(b.StreamObject(i, fVal->fType, onFileValClass ));
-            case kBIT_ISSTRING:
+            case EProperty(kBIT_ISSTRING):
                DOLOOP(i->read_std_string(b));
-            case kIsPointer | kIsClass:
+            case EProperty(kIsPointer | kIsClass):
                DOLOOP(i->set(b.ReadObjectAny(fVal->fType)));
-            case kIsPointer | kBIT_ISSTRING:
+            case EProperty(kIsPointer | kBIT_ISSTRING):
                DOLOOP(i->read_std_string_pointer(b));
-            case kIsPointer | kBIT_ISTSTRING | kIsClass:
+            case EProperty(kIsPointer | kBIT_ISTSTRING | kIsClass):
                DOLOOP(i->read_tstring_pointer(vsn3, b));
          }
 #undef DOLOOP
@@ -447,20 +447,20 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                fDestruct(fEnv->fStart,fEnv->fSize);
                break;
-            case kBIT_ISSTRING:
+            case EProperty(kBIT_ISSTRING):
                DOLOOP(i->read_std_string(b))
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                fDestruct(fEnv->fStart,fEnv->fSize);
                break;
-            case kIsPointer | kIsClass:
+            case EProperty(kIsPointer | kIsClass):
                DOLOOP(i->set(b.ReadObjectAny(fVal->fType)));
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                break;
-            case kIsPointer | kBIT_ISSTRING:
+            case EProperty(kIsPointer | kBIT_ISSTRING):
                DOLOOP(i->read_std_string_pointer(b))
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                break;
-            case kIsPointer | kBIT_ISTSTRING | kIsClass:
+            case EProperty(kIsPointer | kBIT_ISTSTRING | kIsClass):
                DOLOOP(i->read_tstring_pointer(vsn3, b));
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                break;
@@ -608,7 +608,7 @@ void TGenCollectionStreamer::ReadMapHelper(StreamHelper *i, Value *v, Bool_t vsn
             case kDouble_t:
                b >> i->dbl;
                break;
-            case kBOOL_t:
+            case EDataType(kBOOL_t):
                b >> i->boolean;
                break;
             case kUChar_t:
@@ -695,7 +695,7 @@ To readOneValue(TBuffer &b, int readtype) {
       b >> i->dbl;
       return (To)i->dbl;
       break;
-   case TGenCollectionProxy::kBOOL_t:
+   case EDataType(TGenCollectionProxy::kBOOL_t):
       b >> i->boolean;
       return (To)i->boolean;
       break;
@@ -795,7 +795,7 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass *on
                   case kDouble_t:
                      i->dbl = readOneValue<Double_t>(b,readtype);
                      break;
-                  case kBOOL_t:
+                  case EDataType(kBOOL_t):
                      i->boolean = readOneValue<bool>(b,readtype);
                      break;
                   case kUChar_t:
@@ -851,7 +851,7 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass *on
                   case kDouble_t:
                      b >> i->dbl;
                      break;
-                  case kBOOL_t:
+                  case EDataType(kBOOL_t):
                      b >> i->boolean;
                      break;
                   case kUChar_t:
@@ -883,16 +883,16 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b, const TClass *on
             case kIsClass:
                b.StreamObject(i, v->fType);
                break;
-            case kBIT_ISSTRING:
+            case EProperty(kBIT_ISSTRING):
                i->read_std_string(b);
                break;
-            case kIsPointer | kIsClass:
+            case EProperty(kIsPointer | kIsClass):
                i->set(b.ReadObjectAny(v->fType));
                break;
-            case kIsPointer | kBIT_ISSTRING:
+            case EProperty(kIsPointer | kBIT_ISSTRING):
                i->read_std_string_pointer(b);
                break;
-            case kIsPointer | kBIT_ISTSTRING | kIsClass:
+            case EProperty(kIsPointer | kBIT_ISTSTRING | kIsClass):
                i->read_tstring_pointer(vsn3, b);
                break;
          }
@@ -953,7 +953,7 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)
       case kDouble_t:
          b.WriteFastArray(&itm->dbl       , nElements);
          break;
-      case kBOOL_t:
+      case EDataType(kBOOL_t):
          b.WriteFastArray(&itm->boolean   , nElements);
          break;
       case kUChar_t:
@@ -1081,7 +1081,7 @@ void TGenCollectionStreamer::WriteMap(int nElements, TBuffer &b)
                   case kDouble_t:
                      b << i->dbl;
                      break;
-                  case kBOOL_t:
+                  case EDataType(kBOOL_t):
                      b << i->boolean;
                      break;
                   case kUChar_t:
@@ -1169,7 +1169,7 @@ void TGenCollectionStreamer::ConvertBufferVectorPrimitivesDouble32(TBuffer &b, v
 template <typename To>
 void TGenCollectionStreamer::DispatchConvertBufferVectorPrimitives(TBuffer &b, void *obj, Int_t nElements, const TVirtualCollectionProxy *onFileProxy)
 {
-   switch (onFileProxy->GetType()) {
+   switch ((TStreamerInfo::EReadWrite)onFileProxy->GetType()) {
       case TStreamerInfo::kBool:     ConvertBufferVectorPrimitives<Bool_t    ,To>(b,obj,nElements); break;
       case TStreamerInfo::kChar:     ConvertBufferVectorPrimitives<Char_t    ,To>(b,obj,nElements); break;
       case TStreamerInfo::kShort:    ConvertBufferVectorPrimitives<Short_t   ,To>(b,obj,nElements); break;
@@ -1294,7 +1294,7 @@ void TGenCollectionStreamer::ReadBufferDefault(TBuffer &b, void *obj, const TCla
          case kDouble_t:
             fReadBufferFunc = &TGenCollectionStreamer::ReadBufferVectorPrimitives<Double_t>;
             break;
-//         case kBOOL_t:
+//         case EDataType_t(kBOOL_t):
 //            fReadBufferFunc = &ReadBufferVectorPrimitives<>;
 //            break;
          case kUChar_t:
