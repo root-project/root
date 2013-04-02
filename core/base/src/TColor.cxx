@@ -1617,6 +1617,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    if ncolors = 53 and colors=0, a Dark Body Radiator palette is used.
    if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright yellow)
    if ncolors = 55 and colors=0, a Rain Bow palette is used.
+   if ncolors = 56 and colors=0, an inverted Dark Body Radiator palette is used.
    </pre>
    (see TColor::CreateGradientColorTable for more details)
    <p>
@@ -1722,6 +1723,20 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       Double_t blue[nRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
       TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
       paletteType = 7;
+      return;
+   }
+
+   // set Inverted Dark Body Radiator palette
+   if (ncolors == 56 && colors == 0) {
+      TColor::InitializeColors();
+      if (ncolors == fgPalette.fN && paletteType == 5) return;
+      const Int_t nRGBs = 5;
+      Double_t stops[nRGBs] = { 0.00, 0.25, 0.50, 0.75, 1.00};
+      Double_t red[nRGBs]   = { 1.00, 1.00, 1.00, 0.50, 0.00};
+      Double_t green[nRGBs] = { 1.00, 1.00, 0.55, 0.00, 0.00};
+      Double_t blue[nRGBs]  = { 1.00, 0.00, 0.00, 0.00, 0.00};
+      TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
+      paletteType = 5;
       return;
    }
 
