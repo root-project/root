@@ -1413,8 +1413,12 @@ void TBranchElement::FillLeavesCollection(TBuffer& b)
    } else {
       //NOTE: this does not work for not vectors since the CreateIterators expects a TGenCollectionProxy::TStaging as its argument!
       //NOTE: and those not work in general yet, since the TStaging object is neither created nor passed.
-      //  We need to review how to avoid the need for a TStaging during the reading.
-      fIterators->CreateIterators(fObject);
+      //  We need to review how to avoid the need for a TStaging during the writing.
+      if (proxy->GetProperties() & TVirtualCollectionProxy::kIsAssociative) {
+         // do nothing for now ...
+      } else {
+         fIterators->CreateIterators(fObject);
+      }
    }
 
 }
@@ -2644,6 +2648,8 @@ void TBranchElement::InitializeOffsets()
          } else {
             renamed = branchClass && branchElem->GetNewClass() && (branchClass != branchElem->GetNewClass());
          }
+      } else {
+         renamed = fTargetClass != fBranchClass;
       }
       if (!branchClass) {
          Error("InitializeOffsets", "Could not find class for branch: %s", GetName());
@@ -2679,7 +2685,8 @@ void TBranchElement::InitializeOffsets()
 
          if (renamed) {
             if (subBranch->fBranchClass == branchClass) {
-               subBranch->SetTargetClass( branchElem->GetNewClass()->GetName());
+               if (branchElem) subBranch->SetTargetClass(branchElem->GetNewClass()->GetName());
+               else subBranch->SetTargetClass(fTargetClass->GetName());
             }
          }
 
