@@ -4150,10 +4150,18 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
 void TStreamerInfo::ls(Option_t *option) const
 {
    //  List the TStreamerElement list and also the precomputed tables
-   if (!fClass || fClass->IsVersioned()) {
-      Printf("\nStreamerInfo for class: %s, version=%d, checksum=0x%x",GetName(),fClassVersion,GetCheckSum());
+   if (fClass && (fName != fClass->GetName())) {
+      if (fClass->IsVersioned()) {
+         Printf("\nStreamerInfo for conversion to %s from: %s, version=%d, checksum=0x%x",fClass->GetName(),GetName(),fClassVersion,GetCheckSum());
+      } else {
+         Printf("\nStreamerInfo for conversion to %s from: %s, checksum=0x%x",fClass->GetName(),GetName(),GetCheckSum());
+      }
    } else {
-      Printf("\nStreamerInfo for class: %s, checksum=0x%x",GetName(),GetCheckSum());
+      if (!fClass || fClass->IsVersioned()) {
+         Printf("\nStreamerInfo for class: %s, version=%d, checksum=0x%x",GetName(),fClassVersion,GetCheckSum());
+      } else {
+         Printf("\nStreamerInfo for class: %s, checksum=0x%x",GetName(),GetCheckSum());
+      }
    }
 
    if (fElements) {
