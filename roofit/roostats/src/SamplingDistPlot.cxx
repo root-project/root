@@ -105,25 +105,22 @@ Double_t SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *s
    TString options(drawOptions);
    options.ToUpper();
 
-
-   // sort sampling distribution to find min and max
-   std::sort(fSamplingDistr.begin(), fSamplingDistr.end() );
-   Double_t xmin(0), xmax(0); 
+   Double_t xmin(TMath::Infinity()), xmax(-TMath::Infinity()); 
    // remove cases where xmin and xmax are +/- inf
-   int i = 0;
-   do { 
-      xmin = fSamplingDistr[i];
-      i++;
-   } while ( xmin == -TMath::Infinity() );      
-   size_t n = fSamplingDistr.size();
-   i = 1; 
-   do { 
-      xmax = fSamplingDistr[n - i];
-      i++;
-   } while ( xmax == TMath::Infinity() );
+   for( unsigned int i=0; i < fSamplingDistr.size(); i++ ) {
+      if( fSamplingDistr[i] < xmin  &&  fSamplingDistr[i] != -TMath::Infinity() ) {
+         xmin = fSamplingDistr[i];
+      }
+      if( fSamplingDistr[i] > xmax  &&  fSamplingDistr[i] != TMath::Infinity() ) {
+         xmax = fSamplingDistr[i];
+      }
+   }
+   if( xmin >= xmax ) {
+      coutW(Plotting) << "Could not determine xmin and xmax of sampling distribution that was given to plot." << endl;
+      xmin = -1.0;
+      xmax = 1.0;
+   }
 
-   // Double_t xmin = *(std::min_element(fSamplingDistr.begin(), fSamplingDistr.end()));
-   // Double_t xmax = *(std::max_element(fSamplingDistr.begin(), fSamplingDistr.end()));
    
    // add 1.5 bins left and right
    assert(fBins > 1);
