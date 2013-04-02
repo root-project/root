@@ -19,10 +19,15 @@
 #include <cmath>
 #include <limits>
 
+
+// for defining unused variables in the interfaces
+//  and have still them in the documentation
+#define MATH_UNUSED(var)   (void)var
+
+
 namespace ROOT { 
 
    namespace Math { 
-
 
 
 /** 
@@ -66,6 +71,7 @@ inline double EvalLog(double x) {
    } // end namespace Math
 
 } // end namespace ROOT
+
 
 
 #endif /* ROOT_Math_Util */
