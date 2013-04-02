@@ -2383,7 +2383,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis
             stats[5] = oldst[3];
             stats[6] = oldst[9];
          }
-         if ( projX == GetZaxis() )  { // case ZY
+         if ( projX == GetYaxis() )  { // case ZY
             stats[4] = oldst[4]; 
             stats[5] = oldst[5];
             stats[6] = oldst[10];
