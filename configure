@@ -3648,7 +3648,7 @@ if test ! "x$enable_gviz" = "xno"; then
     gvizlib1=$found_lib
     gvizlib1raw=$found_raw_lib
     gvizlibir=$found_dir
-    check_library "libgraph graph" "no" "$gvizlibdir" \
+    check_library "libgraph graph libcgraph cgraph" "no" "$gvizlibdir" \
         $GVIZ ${GVIZ:+$GVIZ/lib/graphviz} ${GVIZ:+$GVIZ/lib} ${GVIZ:+$GVIZ/.libs} \
         ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib

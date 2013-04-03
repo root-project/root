@@ -226,7 +226,11 @@ Int_t TGraphStruct::Layout()
       gvFreeLayout(fGVC,fGVGraph);
       agclose(fGVGraph);
    }
+#ifdef WITH_CGRAPH
+   fGVGraph = agopen((char*)"GVGraph", Agdirected, 0);
+#else
    fGVGraph = agopen((char*)"GVGraph", AGDIGRAPH);
+#endif
 
    // Put the GV nodes into the GV graph
    if (fNodes) {

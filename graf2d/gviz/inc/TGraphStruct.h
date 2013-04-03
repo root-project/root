@@ -25,7 +25,12 @@
 #include "TList.h"
 #endif
 
+#if !defined(__CINT__)
+#include <types.h>
+#else
 struct Agraph_t;
+#endif
+
 struct GVC_s;
 
 //////////////////////////////////////////////////////////////////////////

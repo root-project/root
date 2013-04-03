@@ -20,8 +20,13 @@
 #include "TAttLine.h"
 #endif
 
+#if !defined(__CINT__)
+#include <types.h>
+#else
 struct Agraph_t;
 struct Agedge_t;
+#endif
+
 class  TGraphNode;
 
 //////////////////////////////////////////////////////////////////////////
