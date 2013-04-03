@@ -102,6 +102,9 @@ void ROOT::RStl::GenerateTClassFor(const clang::QualType &type, const cling::Int
                   if (!clxx->isCompleteDefinition()) {
                      clang::SourceLocation Loc = clxx->getLocation ();
                      clang::Sema& S = interp.getCI()->getSema();
+                     // Here we might not have an active transaction to handle
+                     // the caused instantiation decl.
+                     cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interp));
                      /* bool result = */ S.RequireCompleteType( Loc,  arg.getAsType() , 0);
                   }
                   // Do we need to strip the qualifier?
