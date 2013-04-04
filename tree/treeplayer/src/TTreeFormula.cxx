@@ -285,7 +285,7 @@ void TTreeFormula::Init(const char*name, const char* expression)
 
    // Create a list of uniques branches to load.
    for(k=0; k<fNcodes ; k++) {
-      TLeaf *leaf = k < fLeaves.GetEntries() ? (TLeaf*)fLeaves.At(k) : 0;
+      TLeaf *leaf = k <= fLeaves.GetEntries() ? (TLeaf*)fLeaves.UncheckedAt(k) : 0;
       TBranch *branch = 0;
       if (leaf) {
          branch = leaf->GetBranch();
@@ -5154,7 +5154,7 @@ void TTreeFormula::ResetDimensions() {
          continue;
       }
       
-      TLeaf *leaf = i < fLeaves.GetEntries() ? (TLeaf*)fLeaves.UncheckedAt(i) : 0;
+      TLeaf *leaf = i <= fLeaves.GetLast() ? (TLeaf*)fLeaves.UncheckedAt(i) : 0;
       if (!leaf) continue;
 
       // Reminder of the meaning of fMultiplicity:
