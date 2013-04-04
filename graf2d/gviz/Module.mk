@@ -68,4 +68,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(GVIZO): CXXFLAGS += $(GRAPHVIZINCDIR:%=-I%) $(GRAPHVIZCFLAGS)
+$(GVIZO) $(GVIZDO): CXXFLAGS += $(GRAPHVIZINCDIR:%=-I%) $(GRAPHVIZCFLAGS)

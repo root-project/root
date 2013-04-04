@@ -81,7 +81,11 @@ void TGraphEdge::CreateGVEdge(Agraph_t *gv)
    if (gv) {
       Agnode_t *n1 = fNode1->GetGVNode();
       Agnode_t *n2 = fNode2->GetGVNode();
+#ifdef WITH_CGRAPH
+      fGVEdge = agedge(gv, n1, n2, NULL, 1);
+#else
       fGVEdge = agedge(gv, n1, n2);
+#endif
    } else {
       Error("CreateGVEdge","Invalid graphviz graph");
    }

@@ -65,7 +65,11 @@ void TGraphNode::CreateGVNode(Agraph_t *gv)
    // Create the GraphViz node into the GraphViz data structure gv.
 
    if (gv) {
+#ifdef WITH_CGRAPH
+      fGVNode = agnode(gv, (char *)GetName(), 1);
+#else
       fGVNode = agnode(gv, (char *)GetName());
+#endif
    } else {
       Error("CreateGVNode","Invalid graphviz graph");
    }
