@@ -131,7 +131,7 @@ public:
 
    void Dump() const;
 
-   ClassDef(TGLVertex3,0); // GL 3 component vertex helper/wrapper class
+   ClassDef(TGLVertex3,1); // GL 3 component vertex helper/wrapper class
 };
 
 //______________________________________________________________________________
@@ -265,7 +265,7 @@ public:
    Double_t Mag() const;
    void     Normalise();
 
-   ClassDef(TGLVector3,0); // GL 3 component vector helper/wrapper class
+   ClassDef(TGLVector3,1); // GL 3 component vector helper/wrapper class
 };
 
 // Inline for TGLVertex3 requiring full TGLVector definition
@@ -669,7 +669,7 @@ public:
 
    void Dump() const;
 
-   ClassDef(TGLMatrix,0); // GL matrix helper/wrapper class
+   ClassDef(TGLMatrix,1); // GL matrix helper/wrapper class
 };
 
 //______________________________________________________________________________

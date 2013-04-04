@@ -26,12 +26,13 @@ class TGLPerspectiveCamera : public TGLCamera
 {
 private:
    // Fields
-   Double_t    fFOV;             //!
+   Double_t    fFOV;
 
    static   Double_t fgFOVMin, fgFOVDefault, fgFOVMax;
    static   UInt_t   fgFOVDeltaSens;
 
 public:
+   TGLPerspectiveCamera();
    TGLPerspectiveCamera(const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLPerspectiveCamera();
 
@@ -50,7 +51,7 @@ public:
    virtual void Configure(Double_t fov, Double_t dolly, Double_t center[3],
                           Double_t hRotate, Double_t vRotate);
 
-   ClassDef(TGLPerspectiveCamera,0) // Camera for perspective view.
+   ClassDef(TGLPerspectiveCamera,1) // Camera for perspective view.
 };
 
 #endif // ROOT_TGLPerspectiveCamera

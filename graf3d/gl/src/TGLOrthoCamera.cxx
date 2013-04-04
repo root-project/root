@@ -36,6 +36,20 @@ ClassImp(TGLOrthoCamera)
 UInt_t   TGLOrthoCamera::fgZoomDeltaSens = 500;
 
 //______________________________________________________________________________
+TGLOrthoCamera::TGLOrthoCamera() :
+   TGLCamera(TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)),
+   fType(kXOY),
+   fEnableRotate(kFALSE), fDollyToZoom(kTRUE),
+   fZoomMin(0.001), fZoomDefault(0.78), fZoomMax(1000.0),
+   fVolume(TGLVertex3(-100.0, -100.0, -100.0), TGLVertex3(100.0, 100.0, 100.0)),
+   fZoom(1.0)
+{
+   // Construct kXOY orthographic camera.
+
+   Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
+}
+
+//______________________________________________________________________________
 TGLOrthoCamera::TGLOrthoCamera(EType type, const TGLVector3 & hAxis, const TGLVector3 & vAxis) :
    TGLCamera(hAxis, vAxis),
    fType(type),

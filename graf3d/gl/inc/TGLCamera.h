@@ -15,6 +15,7 @@
 #include "TGLUtil.h"
 #include "TGLBoundingBox.h"
 #include "TPoint.h"
+#include "TObject.h"
 
 #include <cassert>
 #include <cmath>
@@ -39,7 +40,7 @@
 // concrete ortho and prespective classes must implement.               //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLCamera
+class TGLCamera : public TObject
 {
 public:
    enum EFrustumPlane
@@ -71,24 +72,24 @@ private:
    TGLCamera & operator=(const TGLCamera &);
 
 protected:
-   // Fields
-   TGLMatrix   fCamBase;         //! tranformation to center and rotation from up to x vector
-   TGLMatrix   fCamTrans;        //! transformation relative to fCamTrans
-   Bool_t      fExternalCenter;  //! use external center insead of scene center
-   Bool_t      fFixDefCenter;    //! use fixed default center
-   Bool_t      fWasArcBalled;    //! set when arc-ball rotation is used
-   TGLVector3  fExtCenter;       //! external camera center
-   TGLVector3  fDefCenter;       //! default camera center
-   TGLVector3  fFDCenter;        //! fixed default camera center
-   TGLVector3 *fCenter;          //! current camera center
+    // Fields
+    TGLMatrix   fCamBase;         //  tranformation to center and rotation from up to x vector
+    TGLMatrix   fCamTrans;        //  transformation relative to fCamTrans
+    Bool_t      fExternalCenter;  //  use external center insead of scene center
+    Bool_t      fFixDefCenter;    //  use fixed default center
+    Bool_t      fWasArcBalled;    //  set when arc-ball rotation is used
+    TGLVector3  fExtCenter;       //  external camera center
+    TGLVector3  fDefCenter;       //  default camera center
+    TGLVector3  fFDCenter;        //  fixed default camera center
+    TGLVector3 *fCenter;          //! current camera center
 
-   mutable Double_t fNearClip;   //! last applied near-clip
-   mutable Double_t fFarClip;    //! last applied far-clip
+    mutable Double_t fNearClip;   //! last applied near-clip
+    mutable Double_t fFarClip;    //! last applied far-clip
 
-   // Set in Setup()
-   Double_t    fDollyDefault;    //! default distnce from viewing centre
-   Double_t    fDollyDistance;   //! unit distance for camera movement in fwd/bck direction
-   Float_t     fVAxisMinAngle;	 //! minimal allowed angle between up and fCamTrans Z vector
+    // Set in Setup()
+    Double_t    fDollyDefault;    // default distnce from viewing centre
+    Double_t    fDollyDistance;   // unit distance for camera movement in fwd/bck direction
+    Float_t     fVAxisMinAngle;	  // minimal allowed angle between up and fCamTrans Z vector
 
    // Internal cached matrices and frustum planes
    mutable Bool_t    fCacheDirty;                      //! cached items dirty?
@@ -212,7 +213,7 @@ public:
    // Debuging - draw frustum and interest boxes
    void  DrawDebugAids() const;
 
-   ClassDef(TGLCamera,0); // Camera abstract base class.
+   ClassDef(TGLCamera,1); // Camera abstract base class.
 };
 
 inline const TGLPlane & TGLCamera::FrustumPlane(EFrustumPlane plane) const
