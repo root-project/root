@@ -39,23 +39,24 @@ public:
                 kZnOY, kXnOZ, kXnOY }; // 'n' means preceding axis is negated.
 private:
    // Fields
-   EType          fType;         //! camera type
-   Bool_t         fEnableRotate; //! enable rotation
-   Bool_t         fDollyToZoom;  //! zoom when dolly is requested
+   EType          fType;         // camera type
+   Bool_t         fEnableRotate; // enable rotation
+   Bool_t         fDollyToZoom;  // zoom when dolly is requested
 
    // Limits - set in Setup()
-   Double_t       fZoomMin;      //! minimum zoom factor
-   Double_t       fZoomDefault;  //! default zoom factor
-   Double_t       fZoomMax;      //! maximum zoom factor
+   Double_t       fZoomMin;      //  minimum zoom factor
+   Double_t       fZoomDefault;  //  default zoom factor
+   Double_t       fZoomMax;      //  maximum zoom factor
    TGLBoundingBox fVolume;       //! scene volume
 
    // Current interaction
    Double_t       fDefXSize, fDefYSize; //! x, y size of scene from camera view
-   Double_t       fZoom;                //! current zoom
+   Double_t       fZoom;                //  current zoom
 
    static UInt_t  fgZoomDeltaSens;
 
 public:
+   TGLOrthoCamera();
    TGLOrthoCamera(EType type, const TGLVector3 & hAxis, const TGLVector3 & vAxis);
    virtual ~TGLOrthoCamera();
 
@@ -88,7 +89,10 @@ public:
    void     SetDollyToZoom(Bool_t x) { fDollyToZoom = x; }
    Bool_t   GetDollyToZoom()   const { return fDollyToZoom; }
 
-   ClassDef(TGLOrthoCamera,0) // Camera for orthographic view.
+   void     SetZoom(Double_t x) { fZoom = x; }
+   Double_t GetZoom() const { return fZoom; }
+
+   ClassDef(TGLOrthoCamera,1) // Camera for orthographic view.
 };
 
 #endif // ROOT_TGLOrthoCamera

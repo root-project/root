@@ -32,6 +32,16 @@ Double_t TGLPerspectiveCamera::fgFOVMax = 120.0;
 UInt_t   TGLPerspectiveCamera::fgFOVDeltaSens = 500;
 
 //______________________________________________________________________________
+TGLPerspectiveCamera::TGLPerspectiveCamera() :
+   TGLCamera(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)),
+   fFOV(fgFOVDefault)
+{
+   // Construct default XOZ perspective camera
+   Setup(TGLBoundingBox(TGLVertex3(-100,-100,-100), TGLVertex3(100,100,100)));
+   fCamTrans.MoveLF(1, fDollyDefault);
+}
+
+//______________________________________________________________________________
 TGLPerspectiveCamera::TGLPerspectiveCamera(const TGLVector3 & hAxes, const TGLVector3 & vAxes) :
    TGLCamera(hAxes, vAxes),
    fFOV(fgFOVDefault)
