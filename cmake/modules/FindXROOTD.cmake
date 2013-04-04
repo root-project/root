@@ -113,7 +113,8 @@ if(XROOTD_FOUND)
             ${XROOTD_INCLUDE_DIR}
         )
      endif()
-     
+
+     SET(XROOTD_PRIVATE_INCLUDE_DIR FALSE)     
      if (XROOTD_INCLUDE_DIR)
         # Check for additional headers in new directories
         find_path(XROOTD_PRIVATE_INCLUDE_DIR
@@ -171,7 +172,11 @@ if(XROOTD_FOUND)
   if(XROOTD_LIBRARIES)
     set(XROOTD_FOUND TRUE)
     if(NOT XROOTD_FIND_QUIETLY )
-      message(STATUS "             include_dir: ${XROOTD_INCLUDE_DIR} ${XROOTD_PRIVATE_INCLUDE_DIR}")
+      if (XROOTD_PRIVATE_INCLUDE_DIR)
+         message(STATUS "             include_dir: ${XROOTD_INCLUDE_DIR} ${XROOTD_PRIVATE_INCLUDE_DIR}")
+      else ()
+         message(STATUS "             include_dir: ${XROOTD_INCLUDE_DIR}")
+      endif ()
       message(STATUS "             libraries: ${XROOTD_LIBRARIES}")
     endif() 
   else ()
