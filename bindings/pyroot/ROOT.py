@@ -62,7 +62,7 @@ try:
       def global_matches( self, text ):
          matches = rlcompleter.Completer.global_matches( self, text )
          if not matches: matches = []
-         matches += file_matches( text )
+         matches += self.file_matches( text )
          return matches
 
       def attr_matches( self, text ):
