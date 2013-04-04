@@ -450,7 +450,7 @@ Double_t RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) cons
   Double_t sum(0) ;
   Int_t i ;
   for (i=0 ; i<n ; i++) {
-    Double_t tmp = array[i]->getVal() ;
+    Double_t tmp = array[i]->getValV() ;
     // if (tmp==0) return 0 ; WVE no longer needed
     sum += tmp ;
   }

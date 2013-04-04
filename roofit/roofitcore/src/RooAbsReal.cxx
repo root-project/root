@@ -231,9 +231,12 @@ Double_t RooAbsReal::getValV(const RooArgSet* nset) const
     _value = traceEval(nset) ;
     //     clearValueDirty() ; 
   } 
-//   cout << "RooAbsReal::getValV(" << GetName() << ") writing _value = " << _value << endl ;
+  //   cout << "RooAbsReal::getValV(" << GetName() << ") writing _value = " << _value << endl ;
 
-  return _value ;
+  Double_t ret(_value) ;
+  if (hideOffset()) ret += offset() ;    
+
+  return ret ;
 }
 
 

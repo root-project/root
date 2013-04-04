@@ -291,12 +291,10 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     Double_t ret =  evaluatePartition(nFirst,nLast,nStep) ;
     if (numSets()==1) {
-//       cout << "RooAbsTestStatistic::evaluate(" << GetName() << ") B dividing ret= " << ret << " by globalNorm of " << globalNormalization() << endl ;
+      //       cout << "RooAbsTestStatistic::evaluate(" << GetName() << ") B dividing ret= " << ret << " by globalNorm of " << globalNormalization() << endl ;
       ret /= globalNormalization() ;
     }
 
-    if (hideOffset()) ret += offset() ;
-    
     return ret ;
 
   }
