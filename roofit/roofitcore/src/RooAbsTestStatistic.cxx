@@ -74,6 +74,7 @@ RooAbsTestStatistic::RooAbsTestStatistic()
   _nGof = 0 ;
   _numSets = 0 ;
   _setNum = 0 ;
+  _extSet = 0 ;
   _simCount = 0 ;
   _splitRange = 0 ;
   _verbose = kFALSE ;
@@ -145,6 +146,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   }
 
   _setNum = 0 ;
+  _extSet = 0 ;
   _numSets = 1 ;
   _init = kFALSE ;
   _nEvents = data.numEntries() ;
@@ -198,6 +200,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   }
 
   _setNum = 0 ;
+  _extSet = 0 ;
   _numSets = 1 ;
   _init = kFALSE ;
   _nEvents = _data->numEntries() ;
@@ -256,10 +259,11 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     // Only apply global normalization if SimMaster doesn't have MP master
     if (numSets()==1) {
-//       cout << "RooAbsTestStatistic::evaluate(" << GetName() << ") A dividing ret= " << ret << " by globalNorm of " << globalNormalization() << endl ;
+      ///       cout << "RooAbsTestStatistic::evaluate(" << GetName() << ") A dividing ret= " << ret << " by globalNorm of " << globalNormalization() << endl ;
       ret /= globalNormalization() ;
     }
-
+    
+    //cout << "RAT::evaluate(" << GetName() << ") SIM combined = " << ret << endl ;
     return ret ;
 
   } else if (_gofOpMode==MPMaster) {
@@ -270,6 +274,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       _mpfeArray[i]->calculate() ;
     }
     Double_t ret = combinedValue((RooAbsReal**)_mpfeArray,_nCPU)/globalNormalization() ;
+    //cout << "RAT::evaluate(" << GetName() << ") MP combined = " << ret << endl ;
     return ret ;
 
   } else {
@@ -291,10 +296,12 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     Double_t ret =  evaluatePartition(nFirst,nLast,nStep) ;
     if (numSets()==1) {
-      //       cout << "RooAbsTestStatistic::evaluate(" << GetName() << ") B dividing ret= " << ret << " by globalNorm of " << globalNormalization() << endl ;
+      //cout << "RooAbsTestStatistic::evaluate(" << GetName() << ") dividing ret= " << ret << " by globalNorm of " << globalNormalization() << endl ;
       ret /= globalNormalization() ;
     }
-
+    
+    //cout << "RAT::evaluate(" << GetName() << ") FUNC eval = " << ret << endl ;
+    
     return ret ;
 
   }
@@ -404,6 +411,8 @@ void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets)
   // Set MultiProcessor set number identification of this instance
 
   _setNum = inSetNum ; _numSets = inNumSets ;
+  _extSet = crc32(GetName())%_numSets ;
+  //   cout << "RAT::setMPSet(" << GetName() << " EXTSET set to " << _extSet << endl ;
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
     initialize() ;

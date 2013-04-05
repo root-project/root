@@ -210,14 +210,14 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
       eventWeight = _dataClone->weightSquared() ;    
     }
     Double_t term = eventWeight * pdfClone->getLogVal(_normSet);
-    //cout << "term = " << term << endl ;
+    //cout << "NLL::eval(" << GetName() << ") term[" << i << "] = " << term << endl ;
     sumWeight += eventWeight ;
 
     result-= term;
   }
   
   // include the extended maximum likelihood term, if requested
-  if(_extended && firstEvent==0) {
+  if(_extended && _setNum==_extSet) {
     if (_weightSq) {
 
       // Calculate sum of weights-squared here for extended term
@@ -229,6 +229,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
       result+= pdfClone->extendedTerm(sumW2 , _dataClone->get());
 
     } else {
+//       cout << "NLL::eval(" << GetName() << ") SETNUM = " << _setNum << " NSET = " << _numSets << " fe = " << firstEvent << " le = " << lastEvent << " ss = " << stepSize << " extterm = " << pdfClone->extendedTerm(_dataClone->sumEntries(),_dataClone->get()) << endl ;
       result+= pdfClone->extendedTerm(_dataClone->sumEntries(),_dataClone->get());
     }
   }    
@@ -236,6 +237,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
   // If part of simultaneous PDF normalize probability over 
   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n) 
   if (_simCount>1) {
+    //cout << "NLL::eval(" << GetName() << ") simCount = " << _simCount << " sumWeight = " << sumWeight << " adding simCountNorm value of " << sumWeight*log(1.0*_simCount) << endl ;
     result += sumWeight*log(1.0*_simCount) ;
   }
   

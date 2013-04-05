@@ -125,6 +125,7 @@ protected:
   Int_t       _nEvents ;          // Total number of events in test statistic calculation
   Int_t       _setNum ;           // Partition number of this instance in parallel calculation mode
   Int_t       _numSets ;          // Total number of partitions in parallel calculation mode
+  Int_t       _extSet ;           //! Number of designated set to calculated extended term
 
   // Simultaneous mode data
   Int_t          _nGof        ; // Number of sub-contexts 

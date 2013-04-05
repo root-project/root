@@ -108,6 +108,7 @@ public:
     // and all integrals are calculated numerically
     _forceNumInt = flag ; 
   }
+  Bool_t getForceNumInt() const { return _forceNumInt ; }
 
   // Chi^2 fits to histograms
   virtual RooFitResult* chi2FitTo(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),  
