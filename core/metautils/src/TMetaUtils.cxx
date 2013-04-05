@@ -1213,24 +1213,19 @@ llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &de
    
    Sema& sema = interpreter.getCI()->getSema();
 
-   // FIXME: can't we just do a lookup("DeclFileLine")?
-   for(CXXRecordDecl::decl_iterator I = decl.decls_begin(), 
-       E = decl.decls_end(); I != E; ++I) {
-      if (!(*I)->isImplicit() 
-          && (isa<CXXMethodDecl>(*I) || isa<FieldDecl>(*I) || isa<VarDecl>(*I))) {
-         // For now we allow only a special macro (ClassDef) to have meaningful comments
-         SourceLocation maybeMacroLoc = (*I)->getLocation();
-         bool isClassDefMacro = maybeMacroLoc.isMacroID() && sema.findMacroSpelling(maybeMacroLoc, "ClassDef");
-         if (isClassDefMacro) {
-            while (isa<NamedDecl>(*I) && cast<NamedDecl>(*I)->getName() != "DeclFileLine")
-               ++I;
-            comment = ROOT::TMetaUtils::GetComment(**I, &commentSLoc);
-            if (comment.size()) {
-               if (loc) 
-                  *loc = commentSLoc;
-               return comment;
-            }
-         }
+   const Decl* DeclFileLineDecl
+      = interpreter.getLookupHelper().findFunctionProto(&decl, "DeclFileLine", "");
+   if (!DeclFileLineDecl) return llvm::StringRef();
+
+   // For now we allow only a special macro (ClassDef) to have meaningful comments
+   SourceLocation maybeMacroLoc = DeclFileLineDecl->getLocation();
+   bool isClassDefMacro = maybeMacroLoc.isMacroID() && sema.findMacroSpelling(maybeMacroLoc, "ClassDef");
+   if (isClassDefMacro) {
+      comment = ROOT::TMetaUtils::GetComment(*DeclFileLineDecl, &commentSLoc);
+      if (comment.size()) {
+         if (loc) 
+            *loc = commentSLoc;
+         return comment;
       }
    }
    return llvm::StringRef();
