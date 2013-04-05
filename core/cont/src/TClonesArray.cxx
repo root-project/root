@@ -1007,7 +1007,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc)
 //______________________________________________________________________________
 void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
 {
-   // Directly move the rang of object pointers from tc without cloning
+   // Directly move the range of object pointers from tc without cloning
    // (copying).
    // This TClonesArray takes over ownership of all of tc's object pointers
    // from idx1 to idx2. The tc array is re-arranged by return.
@@ -1036,8 +1036,10 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
 
    // move
    for (Int_t i = idx1; i <= idx2; i++) {
-      fCont[oldSize+i -idx1] = tc->fCont[i];
-      (*fKeep)[oldSize+i-idx1] = (*(tc->fKeep))[i];
+      Int_t newindex = oldSize+i -idx1; 
+      fCont[newindex] = tc->fCont[i];
+      ::operator delete(fKeep->fCont[newindex]);
+      (*fKeep)[newindex] = (*(tc->fKeep))[i];
       tc->fCont[i] = 0;
       (*(tc->fKeep))[i] = 0;
    }
