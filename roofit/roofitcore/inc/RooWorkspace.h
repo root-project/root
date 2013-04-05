@@ -90,6 +90,7 @@ public:
   Bool_t saveSnapshot(const char* name, const char* paramNames) ;
   Bool_t saveSnapshot(const char* name, const RooArgSet& params, Bool_t importValues=kFALSE) ;
   Bool_t loadSnapshot(const char* name) ;  
+  const RooArgSet* getSnapshot(const char* name) const ;
 
   void merge(const RooWorkspace& /*other*/) {} ;
 

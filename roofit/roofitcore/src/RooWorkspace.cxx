@@ -1150,6 +1150,25 @@ Bool_t RooWorkspace::loadSnapshot(const char* name)
 }
 
 
+//_____________________________________________________________________________
+const RooArgSet* RooWorkspace::getSnapshot(const char* name) const
+{
+  // Return the RooArgSet containgin a snapshot of variables contained in the workspace
+  //
+  // Note that the variables of the objects in the snapshots are _copies_ of the
+  // variables in the workspace. To load the values of a snapshot in the workspace
+  // variables use loadSnapshot() instead
+
+  RooArgSet* snap = (RooArgSet*) _snapshots.find(name) ;
+  if (!snap) {
+    coutE(ObjectHandling) << "RooWorkspace::loadSnapshot(" << GetName() << ") no snapshot with name " << name << " is available" << endl ;
+    return kFALSE ;
+  }
+
+  return snap ;
+}
+
+
 
 // //_____________________________________________________________________________
 // RooAbsPdf* RooWorkspace::joinPdf(const char* jointPdfName, const char* indexName, const char* inputMapping) 
