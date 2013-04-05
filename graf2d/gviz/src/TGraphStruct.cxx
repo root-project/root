@@ -15,7 +15,6 @@
 
 #include <stdio.h>
 
-#include <gvc.h>
 #include <gvplugin.h>
 
 #ifdef GVIZ_STATIC

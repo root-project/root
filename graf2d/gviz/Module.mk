@@ -49,7 +49,7 @@ $(GVIZLIB):     $(GVIZO) $(GVIZDO) $(ORDER_) $(MAINLIBS) $(GVIZLIBDEP)
 $(GVIZDS):      $(GVIZH) $(GVIZL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GVIZH) $(GVIZL)
+		$(ROOTCINTTMP) -f $@ -c $(GRAPHVIZINCDIR:%=-I%) $(GVIZH) $(GVIZL)
 
 $(GVIZMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GVIZL)
 		$(RLIBMAP) -o $@ -l $(GVIZLIB) \
