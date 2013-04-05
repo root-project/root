@@ -77,7 +77,10 @@ void TRootDialog::Add(const char *argname, const char *value, const char *type)
    // Add a label and text input field.
 
    TGLabel      *l = new TGLabel(this, argname);
-   TGTextBuffer *b = new TGTextBuffer(20); b->AddText(0, value);
+   TString svalue(value);
+   // keep double backslashes (e.g. in case of LateX formatting, like \\gamma)
+   svalue.ReplaceAll("\\", "\\\\");
+   TGTextBuffer *b = new TGTextBuffer(20); b->AddText(0, svalue.Data());
    TGTextEntry  *t = new TGTextEntry(this, b);
 
    t->Connect("TabPressed()", "TRootDialog", this, "TabPressed()");
