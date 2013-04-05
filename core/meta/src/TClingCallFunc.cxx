@@ -490,7 +490,7 @@ void TClingCallFunc::CodeGenDecl(clang::FunctionDecl* FD) {
    cling::Transaction T(CO, fInterp->getModule());
 
    T.append(FD);
-   T.setCompleted();
+   T.setState(cling::Transaction::kCompleted);
 
    // FIXME: move this into the transaction's CompOpts.
    clang::LangOptions& Opts = fInterp->getCI()->getLangOpts();

@@ -249,7 +249,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
 
          cling::Transaction T(CO, /*llvm::Module=*/0);
          T.append(VD);
-         T.setCompleted();
+         T.setState(cling::Transaction::kCompleted);
 
          m_Interpreter->codegen(&T);
          assert(T.getState() == Transaction::kCommitted
