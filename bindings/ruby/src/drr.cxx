@@ -163,36 +163,6 @@ VALUE rr_seqcollection_new (TSeqCollection *sc)
    return arr;
 }
 
-void * rr_parse_void (VALUE o)
-{
-   VALUE *i;
-
-   switch (TYPE(o))
-      {
-      case T_STRING:
-         return (void *) RSTRING_PTR(o);
-      case T_FLOAT:
-         return (void *) &RFLOAT_VALUE(o);
-      case T_FIXNUM:
-         /* FIXME: Memory leak until I find the correct way. Until
-          * then please use integers in TTrees with care. --elathan
-          */
-         i = (VALUE*) malloc (sizeof(VALUE));
-         *i = (int) (o>>1);
-         return (void *) i;
-      case T_OBJECT:
-         RRGRAB(o, void *, res);
-         return res;
-      default:
-         VALUE tmp = CLASS_OF(o);
-         rb_fatal ("Failed convertion of %d to void *.\n", 
-                   StringValuePtr(tmp));
-         break;
-      }
-
-   return (void *) NULL;
-}
-
 VALUE rr_bool (Bool_t q)
 {
    VALUE res = Qnil;
