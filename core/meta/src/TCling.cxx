@@ -411,7 +411,7 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
          // if not found in its T(Hash)List.
          for (clang::DeclContext::decl_iterator TUI = TU->decls_begin(),
                  TUE = TU->decls_end(); TUI != TUE; ++TUI)
-            ((TCling*)gCling)->HandleNewDecl(*TUI, false);
+            ((TCling*)gCling)->HandleNewDecl(*TUI, (*TUI)->isFromASTFile());
       }
    }
 
@@ -440,13 +440,16 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
             ((TCling*)gCling)->HandleNewDecl(DeserDecls[i], true);
       }
 
-      std::set<TClass*>& modifiedTClasses = ((TCling*)gCling)->GetModifiedTClasses();
+      std::set<TClass*> modifiedTClasses;
+      // There might be another TCling__UpdateListsOnCommitted() active
+      // in the call stack; separate responsibilities by resetting gCling's
+      // ModifiedTClasses:
+      modifiedTClasses.swap(((TCling*)gCling)->GetModifiedTClasses());
       for (std::set<TClass*>::const_iterator I = modifiedTClasses.begin(),
               E = modifiedTClasses.end(); I != E; ++I) {
          ((TCling*)gCling)->UpdateListOfMethods(*I);
          ((TCling*)gCling)->UpdateListOfDataMembers(*I);
       }
-      modifiedTClasses.clear();
    }
 
    DeserDecls.clear();
@@ -998,6 +1001,7 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
       TCling::AddIncludePath(*inclPath);
    }
 
+   TString code;
    if (!getenv("ROOT_MODULES")) {
       for (int what = 0; what < 2; ++what) {
          const char** macros = macroDefines;
@@ -1019,12 +1023,14 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
             } else {
                ifdef += macroPP + '\n';
             }
-            fInterpreter->declare((ifdef + defundef + macroPP + "\n#endif").Data());
+            code += ifdef + defundef + macroPP + "\n#endif\n";
          }
       }
    }
 
    if (getenv("ROOT_MODULES")) {
+      fInterpreter->declare(code.Data());
+      code = "";
       if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
@@ -1040,11 +1046,12 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
          ::Info("TCling::RegisterModule", "   #including %s...", *hdr);
       }
       if(!getenv("ROOT_MODULES"))
-         fInterpreter->parseForModule(TString::Format("#include \"%s\"", *hdr).Data());
+         code += TString::Format("#include \"%s\"\n", *hdr);
       else
          fInterpreter->loadModuleForHeader(*hdr);
    }
 
+   fInterpreter->parse(code.Data());
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 }
@@ -2249,6 +2256,7 @@ void TCling::CreateListOfMethods(TClass* cl) const
       return;
    }
    cl->fMethod = new THashList;
+   cl->fMethod->SetOwner();
    TClingMethodInfo t(fInterpreter, (TClingClassInfo*)cl->GetClassInfo());
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
@@ -2257,7 +2265,7 @@ void TCling::CreateListOfMethods(TClass* cl) const
          cl->fMethod->Add(new TMethod(a, cl));
       }
    }
-   if (cl->fMethod->GetEntries() > ((TClingClassInfo*)cl->GetClassInfo())->NMethods())
+   if (cl->fMethod->GetEntries() != ((TClingClassInfo*)cl->GetClassInfo())->NMethods())
       Error("CreateListOfMethods", "More methods in ROOT/meta than in cling!");
 }
 
