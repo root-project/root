@@ -663,6 +663,7 @@ void TH1Editor::SetModel(TObject* obj)
       fAddCombo->Select(kADD_NONE);
       fAddMarker->SetState(kButtonUp);
       fAddB->SetState(kButtonUp);
+      fAddBar->SetState(kButtonUp);
       fAddSimple->SetState(kButtonDisabled);
       ChangeErrorCombo(1);
    // in case of a 2D plot:
