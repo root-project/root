@@ -6946,9 +6946,10 @@ rm -f RConfigOptions.tmp
 
 if test ! "x$enable_ruby" = "xno"; then
    echo "" >> RConfigOptions-out.tmp
-   ruby -rrbconfig -e 'puts RbConfig::CONFIG["ruby_version"]' | \
-   sed 's/^\([0-9]\)\.\([0-9]\).*$/#define R__RUBY_MAJOR \1@#define R__RUBY_MINOR \2/' | \
-   tr '@' '\n' >> RConfigOptions-out.tmp
+   RUBY_MAJOR=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["MAJOR"]'`
+   RUBY_MINOR=`ruby -rrbconfig -e 'puts RbConfig::CONFIG["MINOR"]'`
+   echo "#define R__RUBY_MAJOR $RUBY_MAJOR" >> RConfigOptions-out.tmp
+   echo "#define R__RUBY_MINOR $RUBY_MINOR" >> RConfigOptions-out.tmp
 fi
 
 # only update $CONFIGOPTOUT when different

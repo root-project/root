@@ -97,8 +97,6 @@ VALUE rr_arrayf_new (const TArrayF *a);
 VALUE rr_arrayd_new (const TArrayD *a);
 VALUE rr_seqcollection_new (TSeqCollection *sc);
 
-void * rr_parse_void (VALUE o);
-
 /* mod convertions */
 void rr_tattfill_conv(void **ptr, VALUE klass);
 void rr_tattline_conv(void **ptr, VALUE klass);
