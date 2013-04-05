@@ -386,32 +386,10 @@ bool TClingClassInfo::HasDefaultConstructor() const
 
 bool TClingClassInfo::HasMethod(const char *name) const
 {
-   if (!IsLoaded()) {
-      return false;
+   if (IsLoaded() && !llvm::isa<clang::EnumDecl>(fDecl)) {
+      return fInterp->getLookupHelper().hasFunction(fDecl, name);
    }
-   bool found = false;
-   std::string given_name(name);
-   if (!llvm::isa<clang::EnumDecl>(fDecl)) {
-      // We are a class, struct, union, namespace, or translation unit.
-      clang::DeclContext *DC =
-         const_cast<clang::DeclContext*>(llvm::cast<clang::DeclContext>(fDecl));
-      llvm::SmallVector<clang::DeclContext *, 2> fContexts;
-      DC->collectAllContexts(fContexts);
-      for (unsigned I = 0; !found && (I < fContexts.size()); ++I) {
-         DC = fContexts[I];
-         for (clang::DeclContext::decl_iterator iter = DC->decls_begin();
-               *iter; ++iter) {
-            if (const clang::FunctionDecl *FD =
-                     llvm::dyn_cast<clang::FunctionDecl>(*iter)) {
-               if (FD->getNameAsString() == given_name) {
-                  found = true;
-                  break;
-               }
-            }
-         }
-      }
-   }
-   return found;
+   return false;
 }
 
 void TClingClassInfo::Init(const char *name)
