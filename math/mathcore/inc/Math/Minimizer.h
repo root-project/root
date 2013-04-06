@@ -305,7 +305,6 @@ public:
        values were obtained only to variable parameters
    */ 
    virtual bool GetCovMatrix(double * covMat) const { 
-      MATH_ERROR_MSG("Minimizer::GetCovMatrix","Getting covariance matrix not implemented");      
       MATH_UNUSED(covMat);
       return false; 
    } 
@@ -318,7 +317,6 @@ public:
        The array will be filled as h[i *ndim + j]
    */ 
    virtual bool GetHessianMatrix(double * hMat) const { 
-      MATH_ERROR_MSG("Minimizer::GetHessianMatrix","Getting hessian matrix not implemented");      
       MATH_UNUSED(hMat);
       return false; 
    }
@@ -328,7 +326,6 @@ public:
    /// using Minuit convention {0 not calculated 1 approximated 2 made pos def , 3 accurate}
    /// Minimizer who implements covariance matrix calculation will re-implement the method
    virtual int CovMatrixStatus() const {  
-      MATH_ERROR_MSG("Minimizer::CovMatrixStatus","Getting covariance matrix status not implemented");      
       return 0; 
    }
 
@@ -349,7 +346,6 @@ public:
       Minimizer must overload method if implemented 
     */
    virtual double GlobalCC(unsigned int ivar) const {
-      MATH_ERROR_MSG("Minimizer::GlobalCC","Getting global correlation coefficient not implemented");      
       MATH_UNUSED(ivar);
       return -1; 
    }
@@ -358,7 +354,7 @@ public:
       minos error for variable i, return false if Minos failed or not supported 
       and the lower and upper errors are returned in errLow and errUp
       An extra flag  specifies if only the lower (option=-1) or the upper (option=+1) error calculation is run
-      (This feature isnot yet implemented)
+      (This feature is not yet implemented)
    */
    virtual bool GetMinosError(unsigned int ivar , double & errLow, double & errUp, int option = 0) { 
       MATH_ERROR_MSG("Minimizer::GetMinosError","Minos Error not implemented");      
