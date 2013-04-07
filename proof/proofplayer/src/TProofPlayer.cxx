@@ -2431,7 +2431,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                      outfile += TString::Format("?%s", ddopts.Data());
                   pf->SetOutputFileName(outfile);
                }
-               if ((gProofServ && gProofServ->IsTopMaster()) || fProof->IsLite()) {
+               if ((gProofServ && gProofServ->IsTopMaster()) || (fProof && fProof->IsLite())) {
                   TFile::EFileType ftyp = TFile::kLocal;
                   TString srv;
                   TProofServ::GetLocalServer(srv);
