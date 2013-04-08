@@ -84,8 +84,6 @@ protected:
    Int_t               fNumber;           // HDU number (1=PRIMARY)
    TArrayI            *fSizes;            // Image sizes in each dimension (when fType == kImageHDU)
    TArrayD            *fPixels;           // Image pixels (when fType == kImageHDU)
-   TString            *fColumnNames;      // Array of column names following the order within the FITS file (when fType == kTableHDU)
-   enum EColumnTypes  *fColumnTypes;      // Array of column types following the order within the FITS file (when fType == kTableHDU)
    struct Column      *fColumnsInfo;      // Information about columns (when fType == kTableHDU)
    Int_t               fNColumns;         // Number of columns (when fType == kTableHDU)
    Int_t               fNRows;            // Number of rows (when fType == kTableHDU)
@@ -126,6 +124,7 @@ public:
    Int_t              GetTabNColumns() const { return fNColumns; }
    Int_t              GetTabNRows()    const { return fNRows; }
    Int_t              GetColumnNumber(const char *colname);
+   const TString&     GetColumnName(Int_t colnum);
    TObjArray         *GetTabStringColumn(Int_t colnum);
    TObjArray         *GetTabStringColumn(const char *colname);
    TVectorD          *GetTabRealVectorColumn(Int_t colnum);
