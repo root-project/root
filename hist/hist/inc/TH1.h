@@ -386,7 +386,7 @@ public:
    virtual void     Smooth(Int_t ntimes=1, Option_t *option=""); // *MENU*
    static  void     SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes=1);
    static  void     StatOverflows(Bool_t flag=kTRUE);
-   virtual void     Sumw2();
+   virtual void     Sumw2(Bool_t flag = kTRUE);
    void             UseCurrentStyle();
    static  TH1     *TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option);
 

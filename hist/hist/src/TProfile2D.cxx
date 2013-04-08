@@ -1834,15 +1834,16 @@ void TProfile2D::Streamer(TBuffer &R__b)
 }
 
 //______________________________________________________________________________
-void TProfile2D::Sumw2()
+void TProfile2D::Sumw2(Bool_t flag)
 {
-   // Create structure to store sum of squares of weights per bin  *-*-*-*-*-*-*-*
+   // Create/Delete structure to store sum of squares of weights per bin  *-*-*-*-*-*-*-*
    //   This is needed to compute  the correct statistical quantities  
    //    of a profile filled with weights 
    //  
    //
    //  This function is automatically called when the histogram is created
    //  if the static function TH1::SetDefaultSumw2 has been called before.
+   //  If flag is false the structure is deleted 
 
-   TProfileHelper::Sumw2(this);
+   TProfileHelper::Sumw2(this, flag);
 }

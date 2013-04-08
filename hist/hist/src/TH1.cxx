@@ -8108,7 +8108,7 @@ void TH1::SetStats(Bool_t stats)
 }
 
 //______________________________________________________________________________
-void TH1::Sumw2()
+void TH1::Sumw2(Bool_t flag)
 {
    // Create structure to store sum of squares of weights*-*-*-*-*-*-*-*
    //
@@ -8120,6 +8120,12 @@ void TH1::Sumw2()
    //
    //  This function is automatically called when the histogram is created
    //  if the static function TH1::SetDefaultSumw2 has been called before.
+   //  If flag = false the structure is deleted 
+   
+   if (!flag && fSumw2.fN > 0 ) { 
+      fSumw2.Set(0);
+      return;
+   }
 
       if (fSumw2.fN == fNcells) {
          if (!fgDefaultSumw2 )

@@ -130,7 +130,7 @@ public:
    virtual void     SetBins(Int_t nx, const Double_t *xbins);
    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
    virtual void     SetErrorOption(Option_t *option=""); // *MENU*
-   virtual void     Sumw2(); 
+   virtual void     Sumw2(Bool_t flag = kTRUE); 
 
    ClassDef(TProfile,6)  //Profile histogram class
 };
