@@ -46,7 +46,7 @@ public:
    static void Scale(T* p, Double_t c1, Option_t * option);
 
    template <typename T> 
-   static void Sumw2(T* p);
+   static void Sumw2(T* p, Bool_t flag );
 
    template <typename T>
    static void LabelsDeflate(T* p, Option_t *);
@@ -473,15 +473,20 @@ void TProfileHelper::Scale(T* p, Double_t c1, Option_t *)
 }
 
 template <typename T>
-void TProfileHelper::Sumw2(T* p)
+void TProfileHelper::Sumw2(T* p, Bool_t flag)
 {
-   // Create structure to store sum of squares of weights per bin  *-*-*-*-*-*-*-*
+   // Create/Delete structure to store sum of squares of weights per bin  *-*-*-*-*-*-*-*
    //   This is needed to compute  the correct statistical quantities  
    //    of a profile filled with weights 
    //  
    //
    //  This function is automatically called when the histogram is created
    //  if the static function TH1::SetDefaultSumw2 has been called before.
+   
+   if (!flag &&  p->fBinSumw2.fN > 0 ) { 
+      p->fBinSumw2.Set(0);
+      return;
+   }
 
    if ( p->fBinSumw2.fN == p->fNcells) {
       if (!p->fgDefaultSumw2) 

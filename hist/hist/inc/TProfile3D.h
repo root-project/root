@@ -136,7 +136,7 @@ public:
 			    const Double_t *zBins);
    virtual void      SetBuffer(Int_t buffersize, Option_t *opt="");
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
-   virtual void      Sumw2(); 
+   virtual void      Sumw2(Bool_t flag = kTRUE); 
 
    ClassDef(TProfile3D,7)  //Profile3D histogram class
 };
