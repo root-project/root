@@ -13,7 +13,8 @@ ROOT_USE_PACKAGE(math/mathcore)
 ROOT_GENERATE_DICTIONARY(G__IO *.h  LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef.h )
 
-ROOT_LINKER_LIBRARY(${libname} *.cxx G__IO.cxx DEPENDENCIES Core Thread)
+ROOT_LINKER_LIBRARY(${libname} *.cxx G__IO.cxx LIBRARIES ${CMAKE_DL_LIBS}
+                                               DEPENDENCIES Core Thread)
 ROOT_INSTALL_HEADERS()
 
 #--- Extra rules ----------------------------------------------------------
