@@ -354,7 +354,7 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
       // Allocate column info array     
       fColumnsInfo = new struct Column[table_cols];
             
-      // Retrieve column names and place them into fColumnNames
+      // Read column names
       char colname[80];     
       int colnum;
       
@@ -375,7 +375,6 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
       long repeat, width;
       Int_t cellindex;
       
-      fColumnTypes = new enum EColumnTypes [table_cols];
       
       for (colnum = 0, cellindex = 0; colnum < fNColumns; colnum++) {
          fits_get_coltype(fp, colnum+1, &typecode, &repeat, &width, &status);
@@ -1412,6 +1411,20 @@ TVectorD *TFITSHDU::GetTabRealVectorCell(Int_t rownum, const char *colname)
 }
 
 
-
+//______________________________________________________________________________
+const TString& TFITSHDU::GetColumnName(Int_t colnum)
+{
+   // Get the name of a column given its index (column>=0) 
+   if (fType != kTableHDU) {
+      Warning("GetColumnName", "this is not a table HDU.");
+      return *((const TString*)0);
+   }
+   
+   if ((colnum < 0) || (colnum >= fNColumns)) {
+      Warning("GetColumnName", "column index out of bounds.");
+      return *((const TString*)0);
+   }
+   return fColumnsInfo[colnum].fName;
+}
 
 
