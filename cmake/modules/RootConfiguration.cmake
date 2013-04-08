@@ -329,6 +329,11 @@ set(usec++11 ${has${cxx11}})
 set(uselibc++11 ${has${libcxx11}})
 set(hasllvm undef)
 set(llvmdir /**/)
+if(gcctoolchain)
+  set(setgcctoolchain define)
+else()
+  set(setgcctoolchain undef)
+endif()
 
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_SHOW_OPTIONS(features)
