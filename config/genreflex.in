@@ -1,3 +1,6 @@
-#!/bin/sh
-dir=@libdir@
-python ${dir}/python/genreflex/genreflex.py "$@"
+#!/bin/bash
+if [ "x${ROOTSYS}" = "x" ]; then
+    THIS=$(dirname $0)
+    ROOTSYS=$(cd ${THIS}/..;pwd); export ROOTSYS
+fi
+python ${ROOTSYS}/lib/python/genreflex/genreflex.py "$@"
