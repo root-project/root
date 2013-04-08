@@ -41,6 +41,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundNoDotNamespace"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotOptimization"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
+CALLROOTEXE += -e "\#define ClingWorkAroundTypeinfoToTypename"
 # Most likely no longer supported.
 # CALLROOTEXE += -e "\#define ClingReinstateRedeclarationAllowed"
 # CALLROOTEXE += -e "\#define ClingReinstateImplicitDynamicCast"
@@ -90,6 +91,7 @@ ClingWorkAroundNoPrivateClassIO = yes          # See https://savannah.cern.ch/bu
 # Most likely no longer supported.
 # ClingReinstateRedeclarationAllowed = yes     # See https://savannah.cern.ch/bugs/index.php?99396 
 # ClingReinstateImplicitDynamicCast = yes      # See https://savannah.cern.ch/bugs/index.php?99395
+ClingWorkAroundTypeinfoToTypename = yes        # See https://sft.its.cern.ch/jira/browse/ROOT-186
 
 ifneq ($(ClingReinstateRedeclarationAllowed)-$(ClingWorkAroundMissingImplicitAuto),yes-)
 ClingWorkAroundSavePrimitive = yes             # stressGraphics use of SavePrimitive currently requires at least implicit auto and allowing redeclaration

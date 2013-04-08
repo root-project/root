@@ -24,8 +24,12 @@ mixingGoog.clog: runmixingGood_C.$(DllSuf)
 mixingCompiled: mixing.clog
 	$(TestDiff)
 
+ifneq ($(ClingWorkAroundTypeinfoToTypename),)
+mixingInterp: CINT_VERSION := NoTypeinfo
+endif
+
 mixingInterp: mixing.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 
 mixingGood: mixingGood.clog
 	$(TestDiff)
