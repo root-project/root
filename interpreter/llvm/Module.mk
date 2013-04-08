@@ -47,7 +47,11 @@ LLVMDEP      := $(LLVMLIB) $(LLVMRES)
 ifeq ($(LLVMDEV),)
 LLVMOPTFLAGS := --enable-optimized --disable-assertions
 else
+ifeq (,$(findstring debug,$(ROOTBUILD)))
+LLVMOPTFLAGS := --enable-optimized --enable-debug-symbols
+else
 LLVMOPTFLAGS := --disable-optimized
+endif
 endif
 
 FORCELLVM := 0
