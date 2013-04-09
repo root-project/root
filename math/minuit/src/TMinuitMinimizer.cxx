@@ -704,6 +704,13 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    
    int nargs = 2; 
    fMinuit->mnexcm("MINOS",arglist,nargs,ierr);
+   // check also the status from fCstatu
+   if (ierr == 0 && fMinuit->fCstatu != "SUCCESSFUL") {
+      if (fMinuit->fCstatu == "FAILURE" || 
+          fMinuit->fCstatu == "PROBLEMS") ierr = 5; 
+      ierr = 6; 
+   }
+
    fStatus += 10*ierr;
 
    fMinosRun = true; 
