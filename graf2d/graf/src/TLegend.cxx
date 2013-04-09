@@ -449,6 +449,11 @@ TLegendEntry *TLegend::GetEntry() const
    Get entry pointed to by the mouse.
    This method is mostly a tool for other methods inside this class.
    End_Html */
+   
+   if (!gPad) {
+      Error("GetEntry", "need to create a canvas first");
+      return 0;
+   }
 
    Int_t nRows = GetNRows();
    if ( nRows == 0 ) return 0;
@@ -507,6 +512,11 @@ void TLegend::InsertEntry( const char* objectName, const char* label, Option_t* 
    /* Begin_Html
    Add a new entry before the entry at the mouse position.
    End_Html */
+   
+   if (!gPad) {
+      Error("InsertEntry", "need to create a canvas first");
+      return;
+   }
 
    TLegendEntry* beforeEntry = GetEntry();   // get entry pointed by the mouse
    TObject *obj = gPad->FindObject( objectName );
