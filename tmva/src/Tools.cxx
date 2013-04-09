@@ -634,6 +634,21 @@ TH2F* TMVA::Tools::TransposeHist( const TH2F& h )
          transposedHisto->SetBinContent(iy,ix,h.GetBinContent(ix,iy));
       }
    }
+
+   // copy stats (thanks to Swagato Banerjee for pointing out the missing stats information)
+   Double_t stats_old[7];
+   Double_t stats_new[7];
+
+   h.GetStats(stats_old);
+   stats_new[0] = stats_old[0];
+   stats_new[1] = stats_old[1];
+   stats_new[2] = stats_old[4];
+   stats_new[3] = stats_old[5];
+   stats_new[4] = stats_old[2];
+   stats_new[5] = stats_old[3];
+   stats_new[6] = stats_old[6];
+   transposedHisto->PutStats(stats_new);
+
    return transposedHisto; // ownership returned
 }
 
