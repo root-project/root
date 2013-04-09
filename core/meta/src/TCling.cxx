@@ -281,10 +281,10 @@ static void TCling__UpdateClassInfo(const NamedDecl* TD)
 
 void TCling::HandleNewDecl(const void* DV, bool isDeserialized) {
    const clang::Decl* D = static_cast<const clang::Decl*>(DV);
+   if (!D->isCanonicalDecl()) return;
    if (isa<clang::FunctionDecl>(D->getDeclContext())
        || isa<clang::TagDecl>(D->getDeclContext()))
       return;
-   if (!D->isCanonicalDecl()) return;
 
    if (!isDeserialized && isa<DeclContext>(D) && !isa<EnumDecl>(D)) {
       // We have to find all the typedefs contained in that decl context
@@ -1051,7 +1051,7 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
          fInterpreter->loadModuleForHeader(*hdr);
    }
 
-   fInterpreter->parse(code.Data());
+   fInterpreter->parseForModule(code.Data());
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 }
