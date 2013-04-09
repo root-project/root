@@ -328,7 +328,8 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
       }
    }
 
-   return AddEntry( obj, label, option );
+   if (!obj) return 0;
+   else      return AddEntry( obj, label, option );
 }
 
 
