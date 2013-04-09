@@ -317,12 +317,12 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
             if ( o->InheritsFrom(TMultiGraph::Class() ) ) {
                TList * grlist = ((TMultiGraph *)o)->GetListOfGraphs();
                obj = grlist->FindObject(name);
-               if (obj) continue;
+               if (obj) break;
             }
             if ( o->InheritsFrom(THStack::Class() ) ) {
                TList * hlist = ((THStack *)o)->GetHists();
                obj = hlist->FindObject(name);
-               if (obj) continue;
+               if (obj) break;
             }
          }
       }
