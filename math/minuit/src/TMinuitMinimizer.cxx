@@ -799,11 +799,16 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    
    int nargs = 2; 
    fMinuit->mnexcm("MINOS",arglist,nargs,ierr);
+   bool isValid = (ierr == 0); 
    // check also the status from fCstatu
-   if (ierr == 0 && fMinuit->fCstatu != "SUCCESSFUL") {
-      if (fMinuit->fCstatu == "FAILURE" || 
-          fMinuit->fCstatu == "PROBLEMS") ierr = 5; 
-      ierr = 6; 
+   if (isValid && fMinuit->fCstatu != "SUCCESSFUL") {
+      if (fMinuit->fCstatu == "FAILURE" ) { 
+         // in this case MINOS failed on all prameter, so it is not valid ! 
+         ierr = 5; 
+         isValid = false; 
+      }   
+      if (fMinuit->fCstatu == "PROBLEMS") ierr = 6; 
+      ierr = 7;  // this should be the case UNCHANGED
    }
 
    fStatus += 10*ierr;
@@ -815,8 +820,8 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // what returns if parameter fixed or constant or at limit ? 
    fMinuit->mnerrs(i,errUp,errLow, errParab, gcor); 
 
-   if (fStatus%100 != 0 ) return false; 
-   return true; 
+   // do not flag errors case of PROBLEMS or UNCHANGED (
+   return isValid; 
 
 }
 
