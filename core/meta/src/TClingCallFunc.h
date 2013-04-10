@@ -110,7 +110,7 @@ private:
    }
 
    void BuildTrampolineFunc(clang::CXXMethodDecl* MD);
-   void CodeGenDecl(clang::FunctionDecl* FD);
+   void CodeGenDecl(const clang::FunctionDecl* FD);
 
 public:
 

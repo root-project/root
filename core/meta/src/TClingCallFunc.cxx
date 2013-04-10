@@ -476,9 +476,16 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
    }
 }
 
-void TClingCallFunc::CodeGenDecl(clang::FunctionDecl* FD) {
+void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    if (!FD)
       return;
+   if (!FD->isDefined(FD)) {
+      // Not an error; the caller might just check whether this function can
+      // be called at all.
+      //Error("CodeGenDecl", "Cannot codegen %s: no definition available!",
+      //      FD->getNameAsString().c_str());
+      return;
+   }
    cling::CompilationOptions CO;
    CO.DeclarationExtraction = 0;
    CO.ValuePrinting = cling::CompilationOptions::VPDisabled;
@@ -489,7 +496,7 @@ void TClingCallFunc::CodeGenDecl(clang::FunctionDecl* FD) {
 
    cling::Transaction T(CO, fInterp->getModule());
 
-   T.append(FD);
+   T.append(const_cast<clang::FunctionDecl*>(FD));
    T.setState(cling::Transaction::kCompleted);
 
    // FIXME: move this into the transaction's CompOpts.
