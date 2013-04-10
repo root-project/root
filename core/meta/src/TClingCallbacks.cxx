@@ -387,9 +387,11 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
 // The callback is used to update the list of globals in ROOT.
 //
 void TClingCallbacks::TransactionCommitted(const Transaction &T) {
-   if (!T.size())
-      return;
-   if (fFirstRun) {
+   // Even empty transactions must go through; any transactio even empty
+   // will flush the deserialized decls into Meta.
+   //if (!T.size())
+   //   return;
+   if (fFirstRun && !T.empty()) {
       // Before setting up the callbacks register what cling have seen during init.
       cling::Transaction TPrev(T.getCompilationOpts(), T.getModule());
       clang::DeclGroupRef TDRG = T.getFirstDecl();

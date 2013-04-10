@@ -432,7 +432,10 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
 
    // The above might trigger more decls to be deserialized.
    // Thus the iteration over the deserialized decls must be last.
-   std::vector<const void*>& DeserDecls = ((TCling*)gCling)->GetDeserializedDecls();
+   std::vector<const void*> DeserDecls;
+   // HandleNewDecl() might cause a transaction; prevent it from handling
+   // our DeserDecls.
+   DeserDecls.swap(((TCling*)gCling)->GetDeserializedDecls());
    if (!DeserDecls.empty()) {
       for (size_t i = 0; i < DeserDecls.size(); ++i) {
          if (TransactionDeclSet.find(DeserDecls[i])
@@ -451,8 +454,6 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
          ((TCling*)gCling)->UpdateListOfDataMembers(*I);
       }
    }
-
-   DeserDecls.clear();
 }
 
 extern "C" 
