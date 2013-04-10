@@ -6266,11 +6266,11 @@ L400:
    for (ibk = 1; ibk <= 12; ++ibk) {
       xvalus[ibk-1] = xmin + Double_t(ibk-1)*10*bwidx;
    }
-   printf("           ");
    iten = (nx + 9) / 10;
-   for (ibk = 1; ibk <= iten; ++ibk) {
-      Printf(" %9.4g", xvalus[ibk-1]);
+   for (ibk = 1; ibk <= iten && ibk <= 12; ++ibk) {
+      snprintf(cline + (ibk-1)*10, 11-(ibk == 12), "%#9.3g ", xvalus[ibk-1]);
    }
+   Printf("           %s", cline);
    chmess = " ";
    if (overpr) chmess = "   Overprint character is &";
    Printf("                         ONE COLUMN=%13.7g%s",bwidx,(const char*)chmess);
