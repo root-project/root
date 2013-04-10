@@ -1414,17 +1414,18 @@ TVectorD *TFITSHDU::GetTabRealVectorCell(Int_t rownum, const char *colname)
 //______________________________________________________________________________
 const TString& TFITSHDU::GetColumnName(Int_t colnum)
 {
-   // Get the name of a column given its index (column>=0) 
+   // Get the name of a column given its index (column>=0).
+   // In case of error the column name is "".
+
+   static TString noName;
    if (fType != kTableHDU) {
-      Warning("GetColumnName", "this is not a table HDU.");
-      return *((const TString*)0);
+      Error("GetColumnName", "this is not a table HDU.");
+      return noName;
    }
    
    if ((colnum < 0) || (colnum >= fNColumns)) {
-      Warning("GetColumnName", "column index out of bounds.");
-      return *((const TString*)0);
+      Error("GetColumnName", "column index out of bounds.");
+      return noName;
    }
    return fColumnsInfo[colnum].fName;
 }
-
-
