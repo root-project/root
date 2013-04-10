@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "TargetInfo.h"
-#include "clang/CodeGen/ABIInfo.h"
+#include "ABIInfo.h"
 #include "CodeGenFunction.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/Frontend/CodeGenOptions.h"

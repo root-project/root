@@ -12,7 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "CodeGenFunction.h"
-#include "clang/CodeGen/CodeGenModule.h"
+#include "CodeGenModule.h"
 #include "CGCUDARuntime.h"
 #include "CGCXXABI.h"
 #include "CGDebugInfo.h"

@@ -19,8 +19,8 @@
 #include "clang/AST/DeclObjC.h"
 
 #include "CGBuilder.h"
-#include "clang/CodeGen/CGCall.h"
-#include "clang/CodeGen/CGValue.h"
+#include "CGCall.h"
+#include "CGValue.h"
 
 namespace llvm {
   class Constant;

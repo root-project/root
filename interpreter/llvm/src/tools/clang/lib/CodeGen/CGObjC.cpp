@@ -14,7 +14,7 @@
 #include "CGDebugInfo.h"
 #include "CGObjCRuntime.h"
 #include "CodeGenFunction.h"
-#include "clang/CodeGen/CodeGenModule.h"
+#include "CodeGenModule.h"
 #include "TargetInfo.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclObjC.h"

@@ -14,7 +14,7 @@
 
 #include "CGCUDARuntime.h"
 #include "CodeGenFunction.h"
-#include "clang/CodeGen/CodeGenModule.h"
+#include "CodeGenModule.h"
 #include "clang/AST/Decl.h"
 #include "llvm/BasicBlock.h"
 #include "llvm/Constants.h"

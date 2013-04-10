@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "clang/CodeGen/CGCall.h"
+#include "CGCall.h"
 #include "CGCXXABI.h"
-#include "clang/CodeGen/ABIInfo.h"
+#include "ABIInfo.h"
 #include "CodeGenFunction.h"
-#include "clang/CodeGen/CodeGenModule.h"
+#include "CodeGenModule.h"
 #include "TargetInfo.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/AST/Decl.h"

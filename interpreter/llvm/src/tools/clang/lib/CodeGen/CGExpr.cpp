@@ -12,8 +12,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "CodeGenFunction.h"
-#include "clang/CodeGen/CodeGenModule.h"
-#include "clang/CodeGen/CGCall.h"
+#include "CodeGenModule.h"
+#include "CGCall.h"
 #include "CGCXXABI.h"
 #include "CGDebugInfo.h"
 #include "CGRecordLayout.h"

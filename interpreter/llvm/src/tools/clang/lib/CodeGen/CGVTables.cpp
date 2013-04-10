@@ -11,7 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "clang/CodeGen/CodeGenModule.h"
+#include "CodeGenModule.h"
 #include "CodeGenFunction.h"
 #include "CGCXXABI.h"
 #include "clang/AST/CXXInheritance.h"

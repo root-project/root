@@ -15,7 +15,7 @@
 
 #include "CGCXXABI.h"
 #include "CodeGenFunction.h"
-#include "clang/CodeGen/CodeGenModule.h"
+#include "CodeGenModule.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Decl.h"

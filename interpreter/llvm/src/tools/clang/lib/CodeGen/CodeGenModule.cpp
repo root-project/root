@@ -11,11 +11,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "clang/CodeGen/CodeGenModule.h"
+#include "CodeGenModule.h"
 #include "CGDebugInfo.h"
 #include "CodeGenFunction.h"
 #include "CodeGenTBAA.h"
-#include "clang/CodeGen/CGCall.h"
+#include "CGCall.h"
 #include "CGCUDARuntime.h"
 #include "CGCXXABI.h"
 #include "CGObjCRuntime.h"
@@ -469,7 +469,6 @@ void CodeGenModule::EmitCtorList(CtorList &Fns, const char *GlobalName) {
                              llvm::ConstantArray::get(AT, Ctors),
                              GlobalName);
   }
-
   Fns.clear();
 }
 

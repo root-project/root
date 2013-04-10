@@ -12,7 +12,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/CodeGen/ModuleBuilder.h"
-#include "clang/CodeGen/CodeGenModule.h"
+#include "CodeGenModule.h"
+#include "CodeGenTypes.h"
 #include "clang/Frontend/CodeGenOptions.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclObjC.h"
@@ -49,8 +50,8 @@ namespace {
       return M.take();
     }
 
-    virtual CodeGen::CodeGenModule* GetBuilder() {
-      return Builder.get();
+    virtual llvm::Type* ConvertType(QualType T) {
+      return Builder->getTypes().ConvertType(T);
     }
 
     virtual void Initialize(ASTContext &Context) {

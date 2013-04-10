@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "CGCXXABI.h"
-#include "clang/CodeGen/CodeGenModule.h"
+#include "CodeGenModule.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 

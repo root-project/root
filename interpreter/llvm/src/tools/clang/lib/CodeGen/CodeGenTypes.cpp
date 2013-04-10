@@ -11,8 +11,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "clang/CodeGen/CodeGenTypes.h"
-#include "clang/CodeGen/CGCall.h"
+#include "CodeGenTypes.h"
+#include "CGCall.h"
 #include "CGCXXABI.h"
 #include "CGRecordLayout.h"
 #include "TargetInfo.h"
