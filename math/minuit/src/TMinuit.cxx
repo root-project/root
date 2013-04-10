@@ -2874,6 +2874,7 @@ L500:
 //*-*-         possible loop over new minima
    fEpsi = fUp*.1;
 L510:
+   fCfrom  = cname[i-1]; // ensure that mncuve complains about MINOS not MIGRAD
    mncuve();
    mnmnos();
    if (! fLnewmn) return;
