@@ -7754,7 +7754,7 @@ Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
 //______________________________________________________________________________
 Double_t TH1::GetMinimum(Double_t minval) const
 {
-   //  Return minimum value smaller than maxval of bins in the range,
+   //  Return minimum value larger than minval of bins in the range,
    //  unless the value has been overridden by TH1::SetMinimum,
    //  in which case it returns that value. (This happens, for example,
    //  when the histogram is drawn and the y or z axis limits are changed
