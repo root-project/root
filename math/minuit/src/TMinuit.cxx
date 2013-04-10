@@ -1195,6 +1195,7 @@ void TMinuit::mncntr(Int_t ike1, Int_t ike2, Int_t &ierrf)
    bwidx = (xup - xlo) / Double_t(nx);
    bwidy = (yup - ylo) / Double_t(ny);
    ixmid = Int_t(((xsav - xlo)*Double_t(nx) / (xup - xlo)) + 1);
+   if (ixmid < 1) ixmid = 1;
    if (fAmin == fUndefi) mnamin();
 
    for (i = 1; i <= 20; ++i) {        contur[i-1] = fAmin + fUp*(i-1)*(i-1); }
