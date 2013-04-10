@@ -748,24 +748,34 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
       
    }
 
-   bool isValid = true; 
-   if (runLower && !me.LowerValid() ) isValid = false; 
-   if (runUpper && !me.UpperValid() ) isValid = false; 
-   if ( !isValid ) { 
+   bool lowerInvalid =  (runLower && !me.LowerValid() ); 
+   bool upperInvalid =  (runUpper && !me.UpperValid() );
+   int mstatus = 0; 
+   if (lowerInvalid || upperInvalid ) { 
+      // set status accroding to bit  
+      // bit 1:  lower invalid Minos errors 
+      // bit 2:  uper invalid Minos error
+      // bit 3:   invalid because max FCN
+      // bit 4 : invalid because a new minimum has been found
+      if (lowerInvalid) { 
+         mstatus |= 1;
+         if (me.AtLowerMaxFcn() ) mstatus |= 4; 
+         if (me.LowerNewMin() ) mstatus |= 8; 
+      }
+      if(upperInvalid) { 
+         mstatus |= 3;
+         if (me.AtUpperMaxFcn() ) mstatus |= 4; 
+         if (me.UpperNewMin() ) mstatus |= 8; 
+      }
       //std::cout << "Error running Minos for parameter " << i << std::endl; 
-      int mstatus = 5; 
-      if (me.AtLowerMaxFcn() ) mstatus = 1; 
-      if (me.AtUpperMaxFcn() ) mstatus = 2; 
-      if (me.LowerNewMin() ) mstatus = 3; 
-      if (me.UpperNewMin() ) mstatus = 4; 
       fStatus += 10*mstatus; 
-      return false; 
    }
          
    errLow = me.Lower();
    errUp = me.Upper();
-      
-   return true;
+
+   bool isValid = (runLower && me.LowerValid() ) || (runUpper && me.UpperValid() );    
+   return isValid;  
 } 
 
 bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x, double * y, double xmin, double xmax) { 
