@@ -82,6 +82,8 @@
 #pragma link C++ class RooHistFunc- ;
 #pragma link C++ class RooExpensiveObjectCache+ ;
 #pragma link C++ class RooExpensiveObjectCache::ExpensiveObject+ ;
+// Support for v5.34 and older
+#pragma read sourceClass="ExpensiveObject" targetClass="RooExpensiveObjectCache::ExpensiveObject" version="[1-]";
 #pragma link C++ class std::map<std::string,RooAbsPdf*>+ ;
 // The nomap options excludes the class from the roomap file
 #pragma link C++ options=nomap class std::map<std::string,TH1*>+ ;

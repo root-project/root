@@ -21,7 +21,7 @@ G3DDH        := $(G3DDS:.cxx=.h)
 G3DH1        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 G3DH1        := $(filter-out $(MODDIRI)/X3DBuffer%,$(G3DH1))
 G3DH1        := $(filter-out $(MODDIRI)/X3DDefs%,$(G3DH1))
-G3DH2        := $(MODDIRI)/X3DBuffer.h $(MODDIRI)/X3DDefs.h
+G3DH2        := $(MODDIRI)/X3DBuffer.h 
 G3DH         := $(G3DH1) $(G3DH2)
 G3DS1        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 G3DS2        := $(wildcard $(MODDIRS)/*.c)

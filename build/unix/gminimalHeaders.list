@@ -1089,7 +1089,6 @@ include/X11Colors.h
 include/X11Drawable.h
 include/X11Events.h
 include/X3DBuffer.h
-include/X3DDefs.h
 include/XLFDParser.h
 include/ZDeflate.h
 include/ZIP.h

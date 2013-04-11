@@ -7,9 +7,8 @@ set(libname Graf3d)
 ROOT_USE_PACKAGE(hist/hist)
 
 ROOT_GLOB_HEADERS(headers1 ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
-list(REMOVE_ITEM headers1 ${CMAKE_CURRENT_SOURCE_DIR}/inc/X3DBuffer.h
-                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/X3DDefs.h)
-set(headers2 X3DBuffer.h X3DDefs.h)
+list(REMOVE_ITEM headers1 ${CMAKE_CURRENT_SOURCE_DIR}/inc/X3DBuffer.h)
+set(headers2 X3DBuffer.h )
 
 ROOT_GENERATE_DICTIONARY(G__G3D ${headers1} LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef.h DEPENDENCIES Graf Hist Gpad MathCore)
