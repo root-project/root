@@ -2,7 +2,7 @@
 /* Author: Nenad Buncic   13/12/95*/
 
 #include "X3DBuffer.h"
-#include "X3DDefs.h"
+#include "../../x3d/src/X3DDefs.h"
 #include <stdio.h>
 #include <stdlib.h>
 
