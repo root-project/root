@@ -3136,7 +3136,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 typedef void (*voidfunc)();
 static const char *R__GetSymbolName(voidfunc func)
 {
-#if defined(R__WIN32)
+#if defined(R__WIN32) || defined(__CYGWIN__)
    return "not available on this platform";
 #if 0
    MEMORY_BASIC_INFORMATION mbi;
