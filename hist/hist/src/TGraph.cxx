@@ -197,10 +197,15 @@ TGraph& TGraph::operator=(const TGraph &gr)
 
       fNpoints = gr.fNpoints;
       fMaxSize = gr.fMaxSize;
+
+      if (fFunctions) delete fFunctions; 
       if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
       else fFunctions = new TList;
+
+      if (fHistogram) delete fHistogram; 
       if (gr.fHistogram) fHistogram = new TH1F(*(gr.fHistogram));
       else fHistogram = 0;
+
       fMinimum = gr.fMinimum;
       fMaximum = gr.fMaximum;
       if (fX) delete [] fX;
