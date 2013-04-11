@@ -1427,13 +1427,13 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    Float_t ftsize;
 
    Int_t font  = abs(fTextFont)/10;
-   Int_t ifont = font-1;
    if (font > 42 || font < 1) font = 1;
    if (wh < hh) {
       ftsize = fTextSize*fXsize*gPad->GetAbsWNDC();
    } else {
       ftsize = fTextSize*fYsize*gPad->GetAbsHNDC();
    }
+   Int_t ifont = font-1;
 
    Int_t fontsize = CMtoSVG(ftsize/fontrap);
    if( fontsize <= 0) return;
