@@ -3295,49 +3295,54 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
    Int_t first  = fXaxis.GetFirst();
    Int_t last   = fXaxis.GetLast();
    Int_t nbins = last-first+1;
-   if (CheckConsistency(this,h) && ntimes > 10*nbins) {
-      Double_t sumw = h->Integral(first,last);
-      if (sumw == 0) return;
-      Double_t sumgen = 0;
-      for (Int_t bin=first;bin<=last;bin++) {
-         Double_t mean = h->GetBinContent(bin)*ntimes/sumw;
-         Double_t cont = (Double_t)gRandom->Poisson(mean);
-         sumgen += cont;
-         AddBinContent(bin,cont);
-         if (fSumw2.fN) fSumw2.fArray[bin] += cont;
-      }
-
-      // fix for the fluctations in the total number n
-      // since we use Poisson instead of multinomial
-      // add a correction to have ntimes as generated entries
-      Int_t i;
-      if (sumgen < ntimes) {
-         // add missing entries
-         for (i = Int_t(sumgen+0.5); i < ntimes; ++i)
-         {
-            Double_t x = h->GetRandom();
-            Fill(x);
+   if (ntimes > 10*nbins) { 
+      try {
+         CheckConsistency(this,h);
+         Double_t sumw = h->Integral(first,last);
+         if (sumw == 0) return;
+         Double_t sumgen = 0;
+         for (Int_t bin=first;bin<=last;bin++) {
+            Double_t mean = h->GetBinContent(bin)*ntimes/sumw;
+            Double_t cont = (Double_t)gRandom->Poisson(mean);
+            sumgen += cont;
+            AddBinContent(bin,cont);
+            if (fSumw2.fN) fSumw2.fArray[bin] += cont;
          }
-      }
-      else if (sumgen > ntimes) {
-         // remove extra entries
-         i =  Int_t(sumgen+0.5);
-         while( i > ntimes) {
-            Double_t x = h->GetRandom();
-            Int_t ibin = fXaxis.FindBin(x);
-            Double_t y = GetBinContent(ibin);
-            // skip in case bin is empty
-            if (y > 0) {
-               SetBinContent(ibin, y-1.);
-               i--;
+         
+         // fix for the fluctations in the total number n
+         // since we use Poisson instead of multinomial
+         // add a correction to have ntimes as generated entries
+         Int_t i;
+         if (sumgen < ntimes) {
+            // add missing entries
+            for (i = Int_t(sumgen+0.5); i < ntimes; ++i)
+            {
+               Double_t x = h->GetRandom();
+               Fill(x);
             }
          }
+         else if (sumgen > ntimes) {
+            // remove extra entries
+            i =  Int_t(sumgen+0.5);
+            while( i > ntimes) {
+               Double_t x = h->GetRandom();
+               Int_t ibin = fXaxis.FindBin(x);
+               Double_t y = GetBinContent(ibin);
+               // skip in case bin is empty
+               if (y > 0) {
+                  SetBinContent(ibin, y-1.);
+                  i--;
+               }
+            }
+         }
+
+         ResetStats();
+         return;
       }
-
-      ResetStats();
-      return;
+      catch(std::exception&) {}  // do nothing 
    }
-
+   // case of different axis and not too large ntimes
+   
    if (h->ComputeIntegral() ==0) return;
    Int_t loop;
    Double_t x;
