@@ -84,7 +84,7 @@ TRandom3::~TRandom3()
 Double_t TRandom3::Rndm(Int_t)
 {
 //  Machine independent random number generator.
-//  Produces uniformly-distributed floating points in ]0,1]
+//  Produces uniformly-distributed floating points in (0,1)
 //  Method: Mersenne Twistor
 
    UInt_t y;
@@ -121,6 +121,7 @@ Double_t TRandom3::Rndm(Int_t)
    y ^= ((y << 15) & kTemperingMaskC );
    y ^=  (y >> 18);
 
+   // 2.3283064365386963e-10 == 1./(max<UINt_t>+1)  -> then returned value cannot be = 1.0  
    if (y) return ( (Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
    return Rndm();
 }

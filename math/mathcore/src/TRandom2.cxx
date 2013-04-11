@@ -52,9 +52,11 @@ Double_t TRandom2::Rndm(Int_t)
    //  TausWorth generator from L'Ecuyer, uses as seed 3x32bits integers
    //  Use a mask of 0xffffffffUL to make in work on 64 bit machines
    //  Periodicity of about  10**26
+   //  Generate number in interval (0,1)  : 0 and 1 are not included in the interval
 
 #define TAUSWORTHE(s,a,b,c,d) (((s &c) <<d) & 0xffffffffUL ) ^ ((((s <<a) & 0xffffffffUL )^s) >>b)
 
+   // scale by 1./(Max<UINT> + 1) = 1./4294967296 
    const double kScale = 2.3283064365386963e-10;    // range in 32 bit ( 1/(2**32)
 
    fSeed  = TAUSWORTHE (fSeed, 13, 19, 4294967294UL, 12);
