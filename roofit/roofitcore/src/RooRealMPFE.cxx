@@ -82,7 +82,9 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, B
   _verboseServer(kFALSE),
   _inlineMode(calcInline),
   _remoteEvalErrorLoggingState(RooAbsReal::PrintErrors),
-  _pid(0)
+  _pid(0),
+  _updateMaster(0),
+  _retrieveDispatched(kFALSE)
 {  
   // Construct front-end object for object 'arg' whose evaluation will be calculated
   // asynchronously in a separate process. If calcInline is true the value of 'arg'
@@ -92,6 +94,7 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, B
 #endif
   initVars() ;
   _sentinel.add(*this) ;
+
 }
 
 
@@ -108,7 +111,9 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
   _inlineMode(other._inlineMode),
   _forceCalc(other._forceCalc),
   _remoteEvalErrorLoggingState(other._remoteEvalErrorLoggingState),
-  _pid(0)
+  _pid(0),
+  _updateMaster(0),
+  _retrieveDispatched(kFALSE)
 {
   // Copy constructor. Initializes in clean state so that upon eval
   // this instance will create its own server processes
@@ -128,6 +133,7 @@ RooRealMPFE::~RooRealMPFE()
     standby() ;
   }
   _sentinel.remove(*this) ;
+
 }
 
 
@@ -149,6 +155,8 @@ void RooRealMPFE::initVars()
   // Save in lists 
   _vars.add(varList) ;
   _saveVars.addClone(varList) ;
+  _valueChanged.resize(_vars.getSize()) ;
+  _constChanged.resize(_vars.getSize()) ;
 
   // Force next calculation
   _forceCalc = kTRUE ;
@@ -188,12 +196,15 @@ void RooRealMPFE::initialize()
   if (_pid==0) {
 
     // Start server loop 
+    RooTrace::callgrind_zero() ;
     _state = Server ;
     serverLoop() ;
-   
+
     // Kill server at end of service
     coutI(Minimization) << "RooRealMPFE::initialize(" << GetName() 
 			<< ") server process terminating" << endl ;
+
+    delete _arg.absArg() ;
     _exit(0) ;
 
   } else if (_pid>0) {
@@ -237,25 +248,28 @@ void RooRealMPFE::serverLoop()
     switch (msg) {
     case SendReal:
       {
-      UInt_t tmp1 = read(_pipeToServer[0],&idx,sizeof(Int_t)) ;
-      UInt_t tmp2 = read(_pipeToServer[0],&value,sizeof(Double_t)) ;      
-      UInt_t tmp3 = read(_pipeToServer[0],&isConst,sizeof(Bool_t)) ;      
-      if (tmp1+tmp2+tmp3<sizeof(Int_t)+sizeof(Double_t)+sizeof(Bool_t)) perror("read") ;
-      if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
-			       << ") IPC fromClient> SendReal [" << idx << "]=" << value << endl ;       
-      ((RooRealVar*)_vars.at(idx))->setVal(value) ;
-      ((RooRealVar*)_vars.at(idx))->setConstant(isConst) ;
+	UInt_t tmp1 = read(_pipeToServer[0],&idx,sizeof(Int_t)) ;
+	UInt_t tmp2 = read(_pipeToServer[0],&value,sizeof(Double_t)) ;      
+	UInt_t tmp3 = read(_pipeToServer[0],&isConst,sizeof(Bool_t)) ;      
+	if (tmp1+tmp2+tmp3<sizeof(Int_t)+sizeof(Double_t)+sizeof(Bool_t)) perror("read") ;
+	if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+				 << ") IPC fromClient> SendReal [" << idx << "]=" << value << endl ;       
+	RooRealVar* rvar = (RooRealVar*)_vars.at(idx) ;
+	rvar->setVal(value) ;
+	if (rvar->isConstant() != isConst) {
+	  rvar->setConstant(isConst) ;
+	}
       }
       break ;
 
     case SendCat:
       {
-      UInt_t tmp1 = read(_pipeToServer[0],&idx,sizeof(Int_t)) ;
-      UInt_t tmp2 = read(_pipeToServer[0],&index,sizeof(Int_t)) ;      
-      if (tmp1+tmp2<sizeof(Int_t)+sizeof(Int_t)) perror("read") ;
-      if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
-			       << ") IPC fromClient> SendCat [" << idx << "]=" << index << endl ; 
-      ((RooCategory*)_vars.at(idx))->setIndex(index) ;
+	UInt_t tmp1 = read(_pipeToServer[0],&idx,sizeof(Int_t)) ;
+	UInt_t tmp2 = read(_pipeToServer[0],&index,sizeof(Int_t)) ;      
+	if (tmp1+tmp2<sizeof(Int_t)+sizeof(Int_t)) perror("read") ;
+	if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+				 << ") IPC fromClient> SendCat [" << idx << "]=" << index << endl ; 
+	((RooCategory*)_vars.at(idx))->setIndex(index) ;
       }
       break ;
 
@@ -276,31 +290,40 @@ void RooRealMPFE::serverLoop()
 
     case Retrieve:
       {
-      if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
-			       << ") IPC fromClient> Retrieve" << endl ; 
-      msg = ReturnValue ;
-      UInt_t tmp1 = write(_pipeToClient[1],&msg,sizeof(Message)) ;
-      UInt_t tmp2 = write(_pipeToClient[1],&_value,sizeof(Double_t)) ;
-      numErrors = numEvalErrors() ;
-      UInt_t tmp3 = write(_pipeToClient[1],&numErrors,sizeof(Int_t)) ;
-      if (tmp1+tmp2+tmp3<sizeof(Message)+sizeof(Double_t)+sizeof(Int_t)) perror("write") ;
+	if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+				 << ") IPC fromClient> Retrieve" << endl ; 
+	msg = ReturnValue ;
+	numErrors = numEvalErrors() ;
+	if (1) {
+	  char sendBuf[50] ;
+	  memcpy(sendBuf,&msg,sizeof(Message)) ;
+	  memcpy(sendBuf+sizeof(Message),&_value,sizeof(Double_t)) ;
+	  memcpy(sendBuf+sizeof(Message)+sizeof(Double_t),&numErrors,sizeof(Int_t)) ;
+	  UInt_t tmpx = write(_pipeToClient[1],sendBuf,sizeof(Message)+sizeof(Double_t)+sizeof(Int_t)) ;
+	  if (tmpx<sizeof(Message)+sizeof(Double_t)+sizeof(Int_t)) perror("write") ;	  
+	} else {
+	  UInt_t tmp1 = write(_pipeToClient[1],&msg,sizeof(Message)) ;
+	  UInt_t tmp2 = write(_pipeToClient[1],&_value,sizeof(Double_t)) ;
+	  UInt_t tmp3 = write(_pipeToClient[1],&numErrors,sizeof(Int_t)) ;
+	  if (tmp1+tmp2+tmp3<sizeof(Message)+sizeof(Double_t)+sizeof(Int_t)) perror("write") ;
+	}
 
-      if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
- 			       << ") IPC toClient> ReturnValue " << _value << " NumError " << numErrors << endl ; 
+	if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+				 << ") IPC toClient> ReturnValue " << _value << " NumError " << numErrors << endl ; 
       }
       break ;
 
     case ConstOpt:
       {
-      ConstOpCode code ; 
-      Bool_t doTrack ;
-      UInt_t tmp1 = read(_pipeToServer[0],&code,sizeof(ConstOpCode)) ;
-      UInt_t tmp2 = read(_pipeToServer[0],&doTrack,sizeof(Bool_t)) ;
-      if ((tmp1+tmp2)<sizeof(ConstOpCode)) perror("read") ;
-      if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
-			       << ") IPC fromClient> ConstOpt " << code << " doTrack = " << (doTrack?"T":"F") << endl ; 
-      ((RooAbsReal&)_arg.arg()).constOptimizeTestStatistic(code,doTrack) ;      
-      break ;
+	ConstOpCode code ; 
+	Bool_t doTrack ;
+	UInt_t tmp1 = read(_pipeToServer[0],&code,sizeof(ConstOpCode)) ;
+	UInt_t tmp2 = read(_pipeToServer[0],&doTrack,sizeof(Bool_t)) ;
+	if ((tmp1+tmp2)<sizeof(ConstOpCode)) perror("read") ;
+	if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+				 << ") IPC fromClient> ConstOpt " << code << " doTrack = " << (doTrack?"T":"F") << endl ; 
+	((RooAbsReal&)_arg.arg()).constOptimizeTestStatistic(code,doTrack) ;      
+	break ;
       }
 
     case Verbose:
@@ -349,12 +372,12 @@ void RooRealMPFE::serverLoop()
 
     case LogEvalError:
       {
-      RooAbsReal::ErrorLoggingMode flag2 ;
-      UInt_t tmp1 = read(_pipeToServer[0],&flag2,sizeof(RooAbsReal::ErrorLoggingMode)) ;
-      if (tmp1<sizeof(RooAbsReal::ErrorLoggingMode)) perror("read") ;
-      RooAbsReal::setEvalErrorLoggingMode(flag2) ;
-      if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
-			       << ") IPC fromClient> LogEvalError flag = " << flag2 << endl ;       
+	RooAbsReal::ErrorLoggingMode flag2 ;
+	UInt_t tmp1 = read(_pipeToServer[0],&flag2,sizeof(RooAbsReal::ErrorLoggingMode)) ;
+	if (tmp1<sizeof(RooAbsReal::ErrorLoggingMode)) perror("read") ;
+	RooAbsReal::setEvalErrorLoggingMode(flag2) ;
+	if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
+				 << ") IPC fromClient> LogEvalError flag = " << flag2 << endl ;       
       }
       break ;
 
@@ -416,6 +439,7 @@ void RooRealMPFE::serverLoop()
       break ;
     }
   }
+
 #endif // _WIN32
 }
 
@@ -429,14 +453,16 @@ void RooRealMPFE::calculate() const
   // returns immediately. The calculated value can be retrieved
   // using getVal()
 
+
   // Start asynchronous calculation of arg value
   if (_state==Initialize) {
+    //     cout << "RooRealMPFE::calculate(" << GetName() << ") initializing" << endl ;
     const_cast<RooRealMPFE*>(this)->initialize() ;
   }
 
   // Inline mode -- Calculate value now
   if (_state==Inline) {
-    //cout << "RooRealMPFE::calculate(" << GetName() << ") performing Inline calculation NOW" << endl ;
+    //     cout << "RooRealMPFE::calculate(" << GetName() << ") performing Inline calculation NOW" << endl ;
     _value = _arg ;
     clearValueDirty() ;
   }
@@ -444,16 +470,35 @@ void RooRealMPFE::calculate() const
 #ifndef _WIN32
   // Compare current value of variables with saved values and send changes to server
   if (_state==Client) {
-    Int_t i ;
-    for (i=0 ; i<_vars.getSize() ; i++) {
-      RooAbsArg* var = _vars.at(i) ;
-      RooAbsArg* saveVar = _saveVars.at(i) ;
-      
-      if (!(*var==*saveVar) || (var->isConstant() != saveVar->isConstant()) || _forceCalc) {
+    //     cout << "RooRealMPFE::calculate(" << GetName() << ") state is Client trigger remote calculation" << endl ;
+    Int_t i(0) ;
+    RooFIter viter = _vars.fwdIterator() ;
+    RooFIter siter = _saveVars.fwdIterator() ;
+    
+    //for (i=0 ; i<_vars.getSize() ; i++) {
+    RooAbsArg *var, *saveVar ;
+    while((var = viter.next())) {
+      saveVar = siter.next() ;
+
+      //Bool_t valChanged = !(*var==*saveVar) ;      
+      Bool_t valChanged,constChanged  ;
+      if (!_updateMaster) {
+	valChanged = !var->isIdentical(*saveVar,kTRUE) ;
+	constChanged = (var->isConstant() != saveVar->isConstant()) ;	       
+	_valueChanged[i] = valChanged ; 
+	_constChanged[i] = constChanged ; 
+      } else {
+	valChanged = _updateMaster->_valueChanged[i] ;
+	constChanged = _updateMaster->_constChanged[i] ;
+      }
+
+      if ( valChanged || constChanged || _forceCalc) {	
+	//cout << "RooRealMPFE::calculate(" << GetName() << " variable " << var->GetName() << " changed " << endl ;
 	if (_verboseClient) cout << "RooRealMPFE::calculate(" << GetName()
 				 << ") variable " << _vars.at(i)->GetName() << " changed" << endl ;
-
-	((RooRealVar*)saveVar)->setConstant(var->isConstant()) ;
+	if (constChanged) {
+	  ((RooRealVar*)saveVar)->setConstant(var->isConstant()) ;
+	}
 	saveVar->copyCache(var) ;
 	
 	// send message to server
@@ -480,6 +525,7 @@ void RooRealMPFE::calculate() const
 				   << ") IPC toServer> SendCat [" << i << "]=" << idx << endl ;
 	}
       }
+      i++ ;
     }
 
     Message msg = hideOffset() ? Calculate : CalculateNoOffset;
@@ -493,10 +539,20 @@ void RooRealMPFE::calculate() const
     _calcInProgress = kTRUE ;
     _forceCalc = kFALSE ;
 
+    // Immediately dispatch retrieve request
+    msg = Retrieve ;
+    UInt_t tmp1 = write(_pipeToServer[1],&msg,sizeof(Message)) ;    
+    if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
+			     << ") IPC toServer> Retrieve " << endl ;    
+    if (tmp1<sizeof(Message)) perror("write") ;
+    _retrieveDispatched = kTRUE ;        
+
   } else if (_state!=Inline) {
     cout << "RooRealMPFE::calculate(" << GetName() 
 	 << ") ERROR not in Client or Inline mode" << endl ;
   }
+
+  
 #endif // _WIN32
 }
 
@@ -510,6 +566,7 @@ Double_t RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
   // with a call to calculate() start it now. This function blocks
   // until remote process has finished calculation and returns
   // remote value
+  
 
   if (isValueDirty()) {
     // Cache is dirty, no calculation has been started yet
@@ -525,7 +582,8 @@ Double_t RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
     // Cache is clean and calculated value is in cache
   }
 
-  return _value ;
+//   cout << "RooRealMPFE::getValV(" << GetName() << ") value = " << Form("%5.10f",_value) << endl ;
+  return _value ;  
 }
 
 
@@ -557,31 +615,40 @@ Double_t RooRealMPFE::evaluate() const
       if (tmp1+tmp2<sizeof(Message)+sizeof(RooAbsReal::ErrorLoggingMode)) perror("write") ;
     }
 
-    msg = Retrieve ;
-    UInt_t tmp1 = write(_pipeToServer[1],&msg,sizeof(Message)) ;    
-    if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
-			     << ") IPC toServer> Retrieve " << endl ;    
-    if (tmp1<sizeof(Message)) perror("write") ;
+    if (!_retrieveDispatched) {
+      msg = Retrieve ;
+      UInt_t tmp1 = write(_pipeToServer[1],&msg,sizeof(Message)) ;    
+      if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
+			       << ") IPC toServer> Retrieve " << endl ;    
+      if (tmp1<sizeof(Message)) perror("write") ;
+    }
+    _retrieveDispatched = kFALSE ;
 
-    UInt_t tmp2 = read(_pipeToClient[0],&msg,sizeof(Message)) ;
+
+    Int_t numError ;
+
+    char recvbuf[50] ;
+    const UInt_t recv_msg_size = sizeof(Message) + sizeof(Double_t) + sizeof(Int_t) ;
+    UInt_t tmpx = read(_pipeToClient[0],recvbuf,recv_msg_size) ;
+    if (tmpx<recv_msg_size) perror("read") ;
+    memcpy(&msg,recvbuf,sizeof(Message)) ;
+    memcpy(&value,recvbuf+sizeof(Message),sizeof(Double_t)) ;
+    memcpy(&numError,recvbuf+sizeof(Message)+sizeof(Double_t),sizeof(Int_t)) ;
+    
     if (msg!=ReturnValue) {
       cout << "RooRealMPFE::evaluate(" << GetName() 
 	   << ") ERROR: unexpected message from server process: " << msg << endl ;
       return 0 ;
     }
-    UInt_t tmp3 = read(_pipeToClient[0],&value,sizeof(Double_t)) ;
     if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
 			     << ") IPC fromServer> ReturnValue " << value << endl ;
 
-    Int_t numError ;
-    UInt_t tmp4 = read(_pipeToClient[0],&numError,sizeof(Int_t)) ;
     if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
 			     << ") IPC fromServer> NumErrors " << numError << endl ;
-    if (tmp2+tmp3+tmp4<sizeof(Message)+sizeof(Double_t)+sizeof(Int_t)) perror("read") ;
-
-
+    
     // Retrieve remote errors and feed into local error queue
     if (numError>0) {
+      cout  << "MPFE: there are errors..."<< endl ;
       msg=RetrieveErrors ;
       UInt_t tmp5 = write(_pipeToServer[1],&msg,sizeof(Message)) ;    
       if (tmp5<sizeof(Message)) perror("write") ;
@@ -675,6 +742,7 @@ void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTr
 
 #ifndef _WIN32
   if (_state==Client) {
+
     Message msg = ConstOpt ;
     UInt_t tmp1 = write(_pipeToServer[1],&msg,sizeof(msg)) ;
     UInt_t tmp2 = write(_pipeToServer[1],&opcode,sizeof(ConstOpCode)) ;
@@ -688,7 +756,7 @@ void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTr
 #endif // _WIN32
 
   if (_state==Inline) {
-    ((RooAbsReal&)_arg.arg()).constOptimizeTestStatistic(opcode) ;
+    ((RooAbsReal&)_arg.arg()).constOptimizeTestStatistic(opcode,doAlsoTracking) ;
   }
 }
 

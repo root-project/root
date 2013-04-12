@@ -197,6 +197,17 @@ Bool_t RooAbsReal::operator==(const RooAbsArg& other)
 }
 
 
+//_____________________________________________________________________________
+Bool_t RooAbsReal::isIdentical(const RooAbsArg& other, Bool_t assumeSameType)  
+{
+  if (!assumeSameType) {
+    const RooAbsReal* otherReal = dynamic_cast<const RooAbsReal*>(&other) ;
+    return otherReal ? operator==(otherReal->getVal()) : kFALSE ;
+  } else {
+    return getVal()==((RooAbsReal&)other).getVal() ;
+  }
+}
+
 
 //_____________________________________________________________________________
 TString RooAbsReal::getTitle(Bool_t appendUnit) const 
@@ -685,7 +696,7 @@ void RooAbsReal::findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& in
     if (arglv) {
 
       // Check if range is parameterized
-      RooAbsBinning& binning = arglv->getBinning(rangeName,kTRUE,kTRUE) ;
+      RooAbsBinning& binning = arglv->getBinning(rangeName,kFALSE,kTRUE) ;
       if (binning.isParameterized()) { 
 	RooArgSet* loBoundObs = binning.lowBoundFunc()->getObservables(allObs) ;
 	RooArgSet* hiBoundObs = binning.highBoundFunc()->getObservables(allObs) ;
@@ -1583,7 +1594,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   o.binProjData = pc.getInt("binProjData") ;
   o.projDataSet = (const RooArgSet*) pc.getObject("projDataSet") ;
   o.numCPU = pc.getInt("numCPU") ;
-  o.interleave = pc.getInt("interleave") ;
+  o.interleave = (RooFit::MPSplit) pc.getInt("interleave") ;
   o.eeval      = pc.getDouble("evalErrorVal") ;
   o.doeeval   = pc.getInt("doEvalError") ;
 

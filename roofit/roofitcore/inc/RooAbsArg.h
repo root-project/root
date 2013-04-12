@@ -264,7 +264,7 @@ public:
 
   inline Bool_t isConstant() const { 
     // Returns true if 'Constant' attribute is set
-    return getAttribute("Constant") ; 
+    return _isConstant ; //getAttribute("Constant") ; 
   }
   RooLinkedList getCloningAncestors() const ;
 
@@ -282,6 +282,7 @@ public:
   static void setDirtyInhibit(Bool_t flag) ;
 
   virtual Bool_t operator==(const RooAbsArg& other) = 0 ;
+  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) = 0 ;
 
   // Range management
   virtual Bool_t inRange(const char*) const { 
@@ -558,6 +559,7 @@ public:
   mutable RooExpensiveObjectCache* _eocache ; // Pointer to global cache manager for any expensive components created by this object
 
   mutable TNamed* _namePtr ; //! Do not persist. Pointer to global instance of string that matches object named
+  Bool_t _isConstant ; //! Cached isConstant status 
 
  public:  
   virtual void ioStreamerPass2() ;

@@ -91,7 +91,8 @@ RooAbsArg::RooAbsArg() :
   _ownedComponents(0),
   _prohibitServerRedirect(kFALSE),
   _eocache(0),
-  _namePtr(0)
+  _namePtr(0),
+  _isConstant(kFALSE)
 {
   // Default constructor
 
@@ -114,7 +115,8 @@ RooAbsArg::RooAbsArg(const char *name, const char *title) :
   _ownedComponents(0),
   _prohibitServerRedirect(kFALSE),
   _eocache(0),
-  _namePtr(0)
+  _namePtr(0),
+  _isConstant(kFALSE)
 {
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
@@ -140,7 +142,8 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
     _ownedComponents(0),
     _prohibitServerRedirect(kFALSE),
     _eocache(other._eocache),
-    _namePtr(other._namePtr)
+    _namePtr(other._namePtr),
+    _isConstant(other._isConstant)
 {
   // Copy constructor transfers all boolean and string properties of the original
   // object. Transient properties and client-server links are not copied
@@ -250,12 +253,14 @@ void RooAbsArg::setAttribute(const Text_t* name, Bool_t value)
 {
   // Set (default) or clear a named boolean attribute of this object.
 
+  // Preserve backward compatibility - any strong 
+  if(string("Constant")==name) {
+    _isConstant = value ;
+  }
+  
   if (value) {
-
     _boolAttrib.insert(name) ;
-
-  } else {
-
+  } else {    
     set<string>::iterator iter = _boolAttrib.find(name) ;
     if (iter != _boolAttrib.end()) {
       _boolAttrib.erase(iter) ;
@@ -2295,6 +2300,7 @@ void RooAbsArg::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(RooAbsArg::Class(),this);
       _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;  
+      _isConstant = getAttribute("Constant") ;
    } else {
       R__b.WriteClassBuffer(RooAbsArg::Class(),this);
    }

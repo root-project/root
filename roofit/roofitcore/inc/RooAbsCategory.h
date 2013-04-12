@@ -48,6 +48,7 @@ public:
   Bool_t operator!=(const char* label) { return !operator==(label);}
   virtual Bool_t operator==(const RooAbsArg& other) ;
   Bool_t         operator!=(const RooAbsArg& other) { return !operator==(other);}
+  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE)  ;
   
   Bool_t isValidIndex(Int_t index) const ;
   Bool_t isValidLabel(const char* label) const ;  

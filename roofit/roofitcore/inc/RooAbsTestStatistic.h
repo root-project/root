@@ -20,6 +20,7 @@
 #include "RooAbsReal.h"
 #include "RooSetProxy.h"
 #include "RooRealProxy.h"
+#include "TStopwatch.h"
 #include <string>
 
 class RooArgSet ;
@@ -40,12 +41,12 @@ public:
   RooAbsTestStatistic() ;
   RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 		      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-		      Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
+		      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
   RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name=0);
   virtual ~RooAbsTestStatistic();
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE) = 0 ;
+				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE) = 0 ;
 
   virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
 
@@ -130,16 +131,18 @@ protected:
   // Simultaneous mode data
   Int_t          _nGof        ; // Number of sub-contexts 
   pRooAbsTestStatistic* _gofArray ; //! Array of sub-contexts representing part of the combined test statistic
-
+  std::vector<RooFit::MPSplit> _gofSplitMode ; //! GOF MP Split mode specified by component (when Auto is active)
+  
   // Parallel mode data
   Int_t          _nCPU ;      //  Number of processors to use in parallel calculation mode
   pRooRealMPFE*  _mpfeArray ; //! Array of parallel execution frond ends
 
-  Bool_t         _mpinterl ; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
+  RooFit::MPSplit        _mpinterl ; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
   Bool_t         _doOffset ; // Apply interval value offset to control numeric precision?
   mutable Double_t _offset ; //! Offset
 
   ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
+
 };
 
 #endif

@@ -121,6 +121,7 @@ RooMinimizer::RooMinimizer(RooAbsReal& function)
   _optConst = kFALSE ;
   _verbose = kFALSE ;
   _profile = kFALSE ;
+  _profileStart = kFALSE ;
   _printLevel = 1 ;
   _minimizerType = "Minuit"; // default minimizer
 
@@ -738,7 +739,8 @@ void RooMinimizer::profileStart()
   // Start profiling timer
   if (_profile) {
     _timer.Start() ;
-    _cumulTimer.Start(kFALSE) ;
+    _cumulTimer.Start(_profileStart?kFALSE:kTRUE) ;
+    _profileStart = kTRUE ;
   }
 }
 

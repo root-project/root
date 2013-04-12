@@ -103,6 +103,7 @@ private:
   Bool_t      _verbose ;
   TStopwatch  _timer ;
   TStopwatch  _cumulTimer ;
+  Bool_t      _profileStart ;
 
   TMatrixDSym* _extV ;
 

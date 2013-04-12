@@ -21,6 +21,8 @@
 #include "RooListProxy.h"
 #include "RooArgList.h"
 #include "RooMPSentinel.h"
+#include "TStopwatch.h"
+#include <vector> 
 
 class RooArgSet ;
 
@@ -41,6 +43,8 @@ public:
   void applyNLLWeightSquared(Bool_t flag) ;
 
   void enableOffsetting(Bool_t flag) ;
+
+  void followAsSlave(RooRealMPFE& master) { _updateMaster = &master ; }
   
   protected:
 
@@ -62,7 +66,6 @@ public:
   void doApplyNLLW2(Bool_t flag) ;
 
   RooRealProxy _arg ; // Function to calculate in parallel process
-
   RooListProxy _vars ;   // Variables
   RooArgList _saveVars ;  // Copy of variables
   mutable Bool_t _calcInProgress ;
@@ -75,6 +78,11 @@ public:
 
   Int_t _pipeToClient[2] ; // Pipe to client process
   Int_t _pipeToServer[2] ; // Pipe to server process
+
+  mutable std::vector<Bool_t> _valueChanged ; //! Flags if variable needs update on server-side
+  mutable std::vector<Bool_t> _constChanged ; //! Flags if variable needs update on server-side
+  RooRealMPFE* _updateMaster ; //! Update master
+  mutable Bool_t _retrieveDispatched ; //!
 
   static RooMPSentinel _sentinel ;
 

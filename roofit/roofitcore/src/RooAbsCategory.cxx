@@ -193,6 +193,19 @@ Bool_t RooAbsCategory::operator==(const RooAbsArg& other)
 }
 
 
+//_____________________________________________________________________________
+Bool_t RooAbsCategory::isIdentical(const RooAbsArg& other, Bool_t assumeSameType)  
+{
+  if (!assumeSameType) {
+    const RooAbsCategory* otherCat = dynamic_cast<const RooAbsCategory*>(&other) ;
+    return otherCat ? operator==(otherCat->getIndex()) : kFALSE ;
+  } else {
+    return getIndex()==((RooAbsCategory&)other).getIndex() ;
+  }
+}
+
+
+
 
 //_____________________________________________________________________________
 Bool_t RooAbsCategory::isValidIndex(Int_t index) const

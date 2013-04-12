@@ -109,6 +109,18 @@ Bool_t RooAbsString::operator==(const char* value) const
 }
 
 
+//_____________________________________________________________________________
+Bool_t RooAbsString::isIdentical(const RooAbsArg& other, Bool_t assumeSameType)  
+{
+  if (!assumeSameType) {
+    const RooAbsString* otherString = dynamic_cast<const RooAbsString*>(&other) ;
+    return otherString ? operator==(otherString->getVal()) : kFALSE ;
+  } else {
+    return !TString(getVal()).CompareTo(((RooAbsString&)other).getVal()) ; ;
+  }
+}
+
+
 
 //_____________________________________________________________________________
 Bool_t RooAbsString::operator==(const RooAbsArg& other) 

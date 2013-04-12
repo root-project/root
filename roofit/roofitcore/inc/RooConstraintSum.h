@@ -19,6 +19,7 @@
 #include "RooAbsReal.h"
 #include "RooListProxy.h"
 #include "RooSetProxy.h"
+#include "TStopwatch.h"
 
 class RooRealVar;
 class RooArgList ;

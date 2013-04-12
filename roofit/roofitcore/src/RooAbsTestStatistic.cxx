@@ -47,6 +47,7 @@
 #include "RooRealMPFE.h"
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
+#include "TTimeStamp.h"
 
 #include <string>
 
@@ -68,7 +69,7 @@ RooAbsTestStatistic::RooAbsTestStatistic()
   _mpfeArray = 0 ;
   _projDeps = 0 ;
   _gofOpMode = Slave ;
-  _mpinterl = kFALSE ;
+  _mpinterl = RooFit::BulkPartition ;
   _nCPU = 1 ;
   _nEvents = 0 ; 
   _nGof = 0 ;
@@ -87,7 +88,7 @@ RooAbsTestStatistic::RooAbsTestStatistic()
 //_____________________________________________________________________________
 RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 					 const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
-					 Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange) :
+					 Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange) :
   RooAbsReal(name,title),
   _paramSet("paramSet","Set of parameters",this),
   _func(&real),
@@ -118,7 +119,6 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   // i takes all bins for which (ibin % ncpu == i) which is more likely to result in an even workload.
   // If splitCutRange is true, a different rangeName constructed as rangeName_{catName} will be used
   // as range definition for each index state of a RooSimultaneous
-
 
   // Register all parameters as servers
   RooArgSet* params = real.getParameters(&data) ;
@@ -168,6 +168,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _verbose(other._verbose),
   _nGof(0),
   _gofArray(0),
+  _gofSplitMode(other._gofSplitMode),
   _nCPU(other._nCPU),
   _mpfeArray(0),
   _mpinterl(other._mpinterl),
@@ -234,6 +235,7 @@ RooAbsTestStatistic::~RooAbsTestStatistic()
   if (_projDeps) {
     delete _projDeps ;
   }
+
 }
 
 
@@ -255,52 +257,84 @@ Double_t RooAbsTestStatistic::evaluate() const
   if (_gofOpMode==SimMaster) {
 
     // Evaluate array of owned GOF objects
-    Double_t ret = combinedValue((RooAbsReal**)_gofArray,_nGof) ;
+    Double_t ret(0) ;
+
+    if (_mpinterl == RooFit::BulkPartition || _mpinterl == RooFit::Interleave ) {
+      
+      ret = combinedValue((RooAbsReal**)_gofArray,_nGof) ;
+
+    } else {
+
+      Double_t sum(0) ;
+      Int_t i ;
+      for (i=0 ; i<_nGof ; i++) {
+	if (i % _numSets == _setNum || (_mpinterl==RooFit::Auto && _gofSplitMode[i] != RooFit::SimComponents )) {
+	  Double_t tmp = _gofArray[i]->getValV() ;
+	  sum += tmp ;
+	}
+      }
+      ret = sum ;
+    }
 
     // Only apply global normalization if SimMaster doesn't have MP master
     if (numSets()==1) {
-      ///       cout << "RooAbsTestStatistic::evaluate(" << GetName() << ") A dividing ret= " << ret << " by globalNorm of " << globalNormalization() << endl ;
       ret /= globalNormalization() ;
     }
-    
-    //cout << "RAT::evaluate(" << GetName() << ") SIM combined = " << ret << endl ;
+
     return ret ;
 
   } else if (_gofOpMode==MPMaster) {
-
+    
     // Start calculations in parallel
     Int_t i ;
     for (i=0 ; i<_nCPU ; i++) {
       _mpfeArray[i]->calculate() ;
     }
-    Double_t ret = combinedValue((RooAbsReal**)_mpfeArray,_nCPU)/globalNormalization() ;
-    //cout << "RAT::evaluate(" << GetName() << ") MP combined = " << ret << endl ;
+
+
+    Double_t sum(0) ;
+    for (i=0 ; i<_nCPU ; i++) {
+      Double_t tmp = _mpfeArray[i]->getValV() ;
+      sum += tmp ;
+    }
+
+    Double_t ret = sum ;
     return ret ;
 
   } else {
 
     // Evaluate as straight FUNC
-    Int_t nFirst, nLast, nStep ;
-    if (_mpinterl) {
-      nFirst = _setNum ;
-      nLast  = _nEvents ;
-      nStep  = _numSets ;
-    } else {
+    Int_t nFirst(0), nLast(_nEvents), nStep(1) ;
+    
+    switch (_mpinterl) {
+    case RooFit::BulkPartition:
       nFirst = _nEvents * _setNum / _numSets ;
       nLast  = _nEvents * (_setNum+1) / _numSets ;
       nStep  = 1 ;
+      break;
+      
+    case RooFit::Interleave:
+      nFirst = _setNum ;
+      nLast  = _nEvents ;
+      nStep  = _numSets ;
+      break ;
+      
+    case RooFit::SimComponents:
+      nFirst = 0 ;
+      nLast  = _nEvents ;
+      nStep  = 1 ;
+      break ;
+      
+    case RooFit::Auto:
+      throw(std::string("this should never happen")) ;
+      break ;
     }
-    
-
-    //cout << "nCPU = " << _nCPU << (_mpinterl?"INTERLEAVE":"BULK") << " nFirst = " << nFirst << " nLast = " << nLast << " nStep = " << nStep << endl ;
 
     Double_t ret =  evaluatePartition(nFirst,nLast,nStep) ;
+
     if (numSets()==1) {
-      //cout << "RooAbsTestStatistic::evaluate(" << GetName() << ") dividing ret= " << ret << " by globalNorm of " << globalNormalization() << endl ;
       ret /= globalNormalization() ;
     }
-    
-    //cout << "RAT::evaluate(" << GetName() << ") FUNC eval = " << ret << endl ;
     
     return ret ;
 
@@ -394,7 +428,11 @@ void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t 
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
     for (i=0 ; i<_nGof ; i++) {
-      if (_gofArray[i]) _gofArray[i]->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt) ;
+      // In SimComponents Splitting strategy only constOptimize the terms that are actually used
+      RooFit::MPSplit effSplit = (_mpinterl!=RooFit::Auto) ? _mpinterl : _gofSplitMode[i] ;
+      if ( (i % _numSets == _setNum) || (effSplit != RooFit::SimComponents) ) {
+	if (_gofArray[i]) _gofArray[i]->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt) ;
+      }
     }
   } else if (_gofOpMode==MPMaster) {
     for (i=0 ; i<_nCPU ; i++) {
@@ -411,8 +449,8 @@ void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets)
   // Set MultiProcessor set number identification of this instance
 
   _setNum = inSetNum ; _numSets = inNumSets ;
-  _extSet = crc32(GetName())%_numSets ;
-  //   cout << "RAT::setMPSet(" << GetName() << " EXTSET set to " << _extSet << endl ;
+  _extSet = _mpinterl==RooFit::SimComponents ? _setNum : crc32(Form("%sXXXX",GetName()))%_numSets ;
+  
   if (_gofOpMode==SimMaster) {
     // Forward to slaves
     initialize() ;
@@ -447,9 +485,13 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
     Bool_t doInline = (i==_nCPU-1) ;
     if (!doInline) coutI(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl ;
     _mpfeArray[i] = new RooRealMPFE(Form("%s_%lx_MPFE%d",GetName(),(ULong_t)this,i),Form("%s_%lx_MPFE%d",GetTitle(),(ULong_t)this,i),*gof,doInline) ;
+    //_mpfeArray[i]->setVerbose(kTRUE,kTRUE) ;
     _mpfeArray[i]->initialize() ;
     if (doInline) {
       _mpfeArray[i]->addOwnedComponents(*gof) ;
+    }
+    if (i>0) {
+      _mpfeArray[i]->followAsSlave(*_mpfeArray[0]) ;
     }
   }
   //cout << "initMPMode --- done" << endl ;
@@ -496,6 +538,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
   // Allocate arrays
   _gofArray = new pRooAbsTestStatistic[_nGof] ;
+  _gofSplitMode.resize(_nGof) ;
 
   // Create array of regular fit contexts, containing subset of data and single fitCat PDF
   catIter->Reset() ;
@@ -517,6 +560,19 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 			      rangeName,addCoefRangeName,_nCPU,_mpinterl,_verbose,_splitRange) ;
       }
       _gofArray[n]->setSimCount(_nGof) ;
+
+      // Fill per-component split mode with Bulk Partition for now so that Auto will map to bulk-splitting of all components
+      if (_mpinterl==RooFit::Auto) {
+	if (dset->numEntries()<10) {
+	  cout << "RAT::initSim("<< GetName() << ") MP mode is auto, setting split mode for component "<< n << " to SimComponents"<< endl ;
+	  _gofSplitMode[n] = RooFit::SimComponents ;
+	  _gofArray[n]->_mpinterl = RooFit::SimComponents ;
+	} else {
+	  cout << "RAT::initSim("<< GetName() << ") MP mode is auto, setting split mode for component "<< n << " to BulkPartition"<< endl ;
+	  _gofSplitMode[n] = RooFit::BulkPartition ;
+	  _gofArray[n]->_mpinterl = RooFit::BulkPartition ;
+	}
+      }
 
       // Servers may have been redirected between instantiation and (deferred) initialization
       RooArgSet* actualParams = pdf->getParameters(dset) ;
