@@ -268,7 +268,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       Double_t sum(0) ;
       Int_t i ;
       for (i=0 ; i<_nGof ; i++) {
-	if (i % _numSets == _setNum || (_mpinterl==RooFit::Auto && _gofSplitMode[i] != RooFit::SimComponents )) {
+	if (i % _numSets == _setNum || (_mpinterl==RooFit::Hybrid && _gofSplitMode[i] != RooFit::SimComponents )) {
 	  Double_t tmp = _gofArray[i]->getValV() ;
 	  sum += tmp ;
 	}
@@ -325,7 +325,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       nStep  = 1 ;
       break ;
       
-    case RooFit::Auto:
+    case RooFit::Hybrid:
       throw(std::string("this should never happen")) ;
       break ;
     }
@@ -429,7 +429,7 @@ void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t 
     // Forward to slaves
     for (i=0 ; i<_nGof ; i++) {
       // In SimComponents Splitting strategy only constOptimize the terms that are actually used
-      RooFit::MPSplit effSplit = (_mpinterl!=RooFit::Auto) ? _mpinterl : _gofSplitMode[i] ;
+      RooFit::MPSplit effSplit = (_mpinterl!=RooFit::Hybrid) ? _mpinterl : _gofSplitMode[i] ;
       if ( (i % _numSets == _setNum) || (effSplit != RooFit::SimComponents) ) {
 	if (_gofArray[i]) _gofArray[i]->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt) ;
       }
@@ -562,7 +562,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       _gofArray[n]->setSimCount(_nGof) ;
 
       // Fill per-component split mode with Bulk Partition for now so that Auto will map to bulk-splitting of all components
-      if (_mpinterl==RooFit::Auto) {
+      if (_mpinterl==RooFit::Hybrid) {
 	if (dset->numEntries()<10) {
 	  cout << "RAT::initSim("<< GetName() << ") MP mode is auto, setting split mode for component "<< n << " to SimComponents"<< endl ;
 	  _gofSplitMode[n] = RooFit::SimComponents ;

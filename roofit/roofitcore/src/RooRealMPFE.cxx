@@ -60,6 +60,7 @@
 #include "RooMPSentinel.h"
 #include "RooMsgService.h"
 #include "RooNLLVar.h"
+#include "RooTrace.h"
 
 #include "TSystem.h"
 

@@ -712,8 +712,22 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooCmdArg& arg1, const 
   // Range(const char* name)         -- Fit only data inside range with given name
   // Range(Double_t lo, Double_t hi) -- Fit only data inside given range. A range named "fit" is created on the fly on all observables.
   //                                    Multiple comma separated range names can be specified.
-  // SumCoefRange(const char* name)  -- Set the range in which to interpret the coefficients of RooAddPdf components 
-  // NumCPU(int num)                 -- Parallelize NLL calculation on num CPUs
+  // SumCoefRange(const char* name)  -- Set the range in which to interpret the coefficients of RooAddPdf components  
+  // NumCPU(int num, int strat)      -- Parallelize NLL calculation on num CPUs
+  //
+  //                                    Strategy 0 = RooFit::BulkPartition (Default) --> Divide events in N equal chunks 
+  //                                    Strategy 1 = RooFit::Interleave --> Process event i%N in process N. Recommended for binned data with 
+  //                                                 a substantial number of zero-bins, which will be distributed across processes more equitably in this strategy
+  //                                    Strategy 2 = RooFit::SimComponents --> Process each component likelihood of a RooSimultaneous fully in a single process
+  //                                                 and distribute components over processes. This approach can be benificial if normalization calculation time
+  //                                                 dominates the total computation time of a component (since the normalization calculation must be performed
+  //                                                 in each process in strategies 0 and 1. However beware that if the RooSimultaneous components do not share many
+  //                                                 parameters this strategy is inefficient: as most minuit-induced likelihood calculations involve changing
+  //                                                 a single parameter, only 1 of the N processes will be active most of the time if RooSimultaneous components
+  //                                                 do not share many parameters
+  //                                    Strategy 3 = RooFit::Hybrid --> Follow strategy 0 for all RooSimultaneous components, except those with less than
+  //                                                 30 dataset entries, for which strategy 2 is followed.
+  //
   // Optimize(Bool_t flag)           -- Activate constant term optimization (on by default)
   // SplitRange(Bool_t flag)         -- Use separate fit ranges in a simultaneous fit. Actual range name for each
   //                                    subsample is assumed to by rangeName_{indexState} where indexState
@@ -943,7 +957,21 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const Ro
   // Range(Double_t lo, Double_t hi) -- Fit only data inside given range. A range named "fit" is created on the fly on all observables.
   //                                    Multiple comma separated range names can be specified.
   // SumCoefRange(const char* name)  -- Set the range in which to interpret the coefficients of RooAddPdf components 
-  // NumCPU(int num)                 -- Parallelize NLL calculation on num CPUs
+  // NumCPU(int num, int strat)      -- Parallelize NLL calculation on num CPUs
+  //
+  //                                    Strategy 0 = RooFit::BulkPartition (Default) --> Divide events in N equal chunks 
+  //                                    Strategy 1 = RooFit::Interleave --> Process event i%N in process N. Recommended for binned data with 
+  //                                                 a substantial number of zero-bins, which will be distributed across processes more equitably in this strategy
+  //                                    Strategy 2 = RooFit::SimComponents --> Process each component likelihood of a RooSimultaneous fully in a single process
+  //                                                 and distribute components over processes. This approach can be benificial if normalization calculation time
+  //                                                 dominates the total computation time of a component (since the normalization calculation must be performed
+  //                                                 in each process in strategies 0 and 1. However beware that if the RooSimultaneous components do not share many
+  //                                                 parameters this strategy is inefficient: as most minuit-induced likelihood calculations involve changing
+  //                                                 a single parameter, only 1 of the N processes will be active most of the time if RooSimultaneous components
+  //                                                 do not share many parameters
+  //                                    Strategy 3 = RooFit::Hybrid --> Follow strategy 0 for all RooSimultaneous components, except those with less than
+  //                                                 30 dataset entries, for which strategy 2 is followed.
+  //
   // SplitRange(Bool_t flag)         -- Use separate fit ranges in a simultaneous fit. Actual range name for each
   //                                    subsample is assumed to by rangeName_{indexState} where indexState
   //                                    is the state of the master index category of the simultaneous fit
