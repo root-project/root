@@ -496,7 +496,7 @@ namespace HistFactory{
     // this is sigma(params), a piece-wise linear interpolation
     PiecewiseInterpolation interp(prefix.c_str(),"",*nominalFunc,lowSet,highSet,params);
     interp.setPositiveDefinite();
-    interp.setAllInterpCodes(0); // MB : change default to 1? = piece-wise log interpolation from pice-wise linear (=0)
+    interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise linear to 6th order polynomial interpolation + linear extrapolation )
     // KC: interpo codes 1 etc. don't have proper analytic integral.
     RooArgSet observableSet(observables);
     interp.setBinIntegrator(observableSet);
@@ -625,8 +625,8 @@ namespace HistFactory{
     if(systList.size() > 0){
       // this is epsilon(alpha_j), a piece-wise linear interpolation
       //      LinInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
-      FlexibleInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
-      interp.setAllInterpCodes(1); // changing default to piece-wise log interpolation from pice-wise linear
+      FlexibleInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);      
+      interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise linear to 6th order polynomial interpolation + linear extrapolation )
       proto->import(interp); // params have already been imported in first loop of this function
     } else{
       // some strange behavior if params,lowVec,highVec are empty.  
