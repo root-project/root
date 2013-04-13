@@ -60,5 +60,7 @@
 #pragma read sourceClass=" LHCb::Track" version="[2]" targetClass="LHCb::Track" source="LHCb::RefLeft fLeft; LHCb::RefRight fRight;" target="fRef" \
   code="{ fRef.SetLeft(onfile.fLeft.GetValue()); fRef.SetRight(onfile.fRight.GetValue()); }"
 
+#pragma read sourceClass=" LHCb::Track" version="[1]" targetClass="LHCb::Track" source="" target="m_Array" \
+  code="{ m_Array[0] = 1.0; m_Array[1] = 2.0; m_Array[2] = 3.0; }"
 
 #endif

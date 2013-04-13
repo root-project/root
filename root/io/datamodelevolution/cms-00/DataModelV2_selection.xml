@@ -60,5 +60,9 @@
   <![CDATA[ { fRef.SetLeft(onfile.fLeft.GetValue()); fRef.SetRight(onfile.fRight.GetValue()); } ]]>
   </ioread>
 
+  <ioread sourceClass=" LHCb::Track" version="[1]" targetClass="LHCb::Track" source="" target="m_Array">
+  <![CDATA[ { m_Array[0] = 1.0; m_Array[1] = 2.0; m_Array[2] = 3.0; } ]]>
+  </ioread>
+
 
 </lcgdict>

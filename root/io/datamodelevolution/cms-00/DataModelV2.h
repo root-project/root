@@ -194,6 +194,7 @@ private:
 
    Ref fRef;
 
+   float m_Array[3]; ///< Array of values.
 };
 }
 
