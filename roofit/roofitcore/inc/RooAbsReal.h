@@ -396,6 +396,7 @@ protected:
 
   mutable Float_t _floatValue ; //! Transient cache for floating point values from tree branches 
   mutable Int_t   _intValue   ; //! Transient cache for integer values from tree branches 
+  mutable Bool_t  _boolValue  ; //! Transient cache for bool values from tree branches 
   mutable UChar_t _byteValue  ; //! Transient cache for byte values from tree branches 
   mutable Char_t  _sbyteValue ; //! Transient cache for signed byte values from tree branches 
   mutable UInt_t  _uintValue  ; //! Transient cache for unsigned integer values from tree branches 
