@@ -49,6 +49,7 @@ public:
 protected:
 
   void validateAbsMin() const ;
+  void initializeMinuit() const ;
 
   RooRealProxy _nll ;    // Input -log(L) function
   RooSetProxy _obs ;     // Parameters of profile likelihood

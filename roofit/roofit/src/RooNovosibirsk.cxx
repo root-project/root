@@ -170,7 +170,7 @@ Double_t RooNovosibirsk::analyticalIntegral(Int_t code, const char* rangeName) c
         
     return result;
         
-  }else if (code==2) {
+  } else if (code==2) {
     Double_t A = x.min(rangeName);
     Double_t B = x.max(rangeName);
         
@@ -213,8 +213,11 @@ Double_t RooNovosibirsk::analyticalIntegral(Int_t code, const char* rangeName) c
         
     return result;
         
-  }else{
-    std::cerr << "Error in RooNovosibirsk::analyticalIntegral" << std::endl;
   }
-    
+
+  // Emit fatal error
+  coutF(Eval) << "Error in RooNovosibirsk::analyticalIntegral" << std::endl;  
+
+  // Put dummy return here to avoid compiler warnings
+  return 1.0 ;
 }

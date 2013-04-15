@@ -163,6 +163,23 @@ RooAbsReal* RooProfileLL::createProfile(const RooArgSet& paramsOfInterest)
 
 
 //_____________________________________________________________________________
+void RooProfileLL::initializeMinuit() const
+{
+  coutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") Creating instance of MINUIT" << endl ;
+  
+  Bool_t smode = RooMsgService::instance().silentMode() ;
+  RooMsgService::instance().setSilentMode(kTRUE) ;
+  _minuit = new RooMinuit(const_cast<RooAbsReal&>(_nll.arg())) ;
+  if (!smode) RooMsgService::instance().setSilentMode(kFALSE) ;
+  
+  _minuit->setPrintLevel(-999) ;
+  //_minuit->setNoWarn() ;
+  //_minuit->setVerbose(1) ;
+}
+
+
+
+//_____________________________________________________________________________
 Double_t RooProfileLL::evaluate() const 
 { 
   // Evaluate profile likelihood by minimizing likelihood w.r.t. all
@@ -171,16 +188,7 @@ Double_t RooProfileLL::evaluate() const
 
   // Instantiate minuit if we haven't done that already
   if (!_minuit) {
-    coutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") Creating instance of MINUIT" << endl ;
-    
-    Bool_t smode = RooMsgService::instance().silentMode() ;
-    RooMsgService::instance().setSilentMode(kTRUE) ;
-    _minuit = new RooMinuit(const_cast<RooAbsReal&>(_nll.arg())) ;
-    if (!smode) RooMsgService::instance().setSilentMode(kFALSE) ;
-
-    _minuit->setPrintLevel(-999) ;
-    //_minuit->setNoWarn() ;
-    //_minuit->setVerbose(1) ;
+    initializeMinuit() ;
   }
 
   // Save current value of observables
@@ -246,7 +254,11 @@ void RooProfileLL::validateAbsMin() const
 
     cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << endl ;
 
-
+    
+    if (!_minuit) {
+      initializeMinuit() ;
+    }
+    
     // Save current values of non-marginalized parameters
     RooArgSet* obsStart = (RooArgSet*) _obs.snapshot(kFALSE) ;
 
