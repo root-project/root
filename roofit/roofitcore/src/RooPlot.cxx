@@ -105,11 +105,11 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
 
-  Bool_t sw2 = TH1::GetDefaultSumw2() ;
-  TH1::SetDefaultSumw2(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
-  TH1::SetDefaultSumw2(sw2) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
 
+  
   TH1::AddDirectory(histAddDirStatus) ;
 
 
@@ -130,10 +130,9 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
 
-  Bool_t sw2 = TH1::GetDefaultSumw2() ;
-  TH1::SetDefaultSumw2(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
-  TH1::SetDefaultSumw2(sw2) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
 
   TH1::AddDirectory(histAddDirStatus) ;
 
@@ -154,10 +153,9 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
 
-  Bool_t sw2 = TH1::GetDefaultSumw2() ;
-  TH1::SetDefaultSumw2(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()) ;
-  TH1::SetDefaultSumw2(sw2) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
 
   TH1::AddDirectory(histAddDirStatus) ;
 
@@ -192,10 +190,9 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
 
-  Bool_t sw2 = TH1::GetDefaultSumw2() ;
-  TH1::SetDefaultSumw2(kFALSE) ;
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
-  TH1::SetDefaultSumw2(sw2) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
 
   TH1::AddDirectory(histAddDirStatus) ;
 
@@ -218,10 +215,9 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
 
-  Bool_t sw2 = TH1::GetDefaultSumw2() ;
-  TH1::SetDefaultSumw2(kFALSE) ;
   _hist = new TH1D(name,title,nbins,xmin,xmax) ;
-  TH1::SetDefaultSumw2(sw2) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
 
   TH1::AddDirectory(histAddDirStatus) ;
 
@@ -249,10 +245,9 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
 
-  Bool_t sw2 = TH1::GetDefaultSumw2() ;
-  TH1::SetDefaultSumw2(kFALSE) ;
   _hist = new TH1D(histName(),"RooPlot",nbins,xmin,xmax) ;
-  TH1::SetDefaultSumw2(sw2) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
 
   TH1::AddDirectory(histAddDirStatus) ;
 
