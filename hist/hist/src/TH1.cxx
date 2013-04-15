@@ -7928,8 +7928,9 @@ void TH1::Sumw2(Bool_t flag)
    //  if the static function TH1::SetDefaultSumw2 has been called before.
    //  If flag = false the structure is deleted 
    
-   if (!flag && fSumw2.fN > 0 ) { 
-      fSumw2.Set(0);
+   if (!flag) { 
+      // clear the array if existing - do nothing otherwise
+      if (fSumw2.fN > 0 ) fSumw2.Set(0);
       return;
    }
 
