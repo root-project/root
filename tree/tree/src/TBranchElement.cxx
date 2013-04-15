@@ -2658,12 +2658,11 @@ void TBranchElement::InitializeOffsets()
       }
 
       //------------------------------------------------------------------------
-      // Extract the name of the STL branch in case we're splitting the
-      // collection of pointers
+      // Extract the name of the STL branch in case it has been split.
       //------------------------------------------------------------------------
       TString stlParentName;
       Bool_t stlParentNameUpdated = kFALSE;
-      if( fType == 4 && fSplitLevel > TTree::kSplitCollectionOfPointers )
+      if( fType == 4 )
       {
          TBranch *br = GetMother()->GetSubBranch( this );
          stlParentName = br->GetName();
