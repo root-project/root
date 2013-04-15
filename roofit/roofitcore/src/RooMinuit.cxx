@@ -387,12 +387,18 @@ Int_t RooMinuit::minos()
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1);
+  // check also the status of Minos looking at fCstatu
+  if (_status == 0 && gMinuit->fCstatu != "SUCCESSFUL") {
+    if (gMinuit->fCstatu == "FAILURE" || 
+	gMinuit->fCstatu == "PROBLEMS") _status = 5; 
+    _status = 6; 
+  } 
+  
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
 
   saveStatus("MINOS",_status) ;
-
   return _status ;
 }
 
@@ -436,6 +442,12 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1+nMinosPar);
+  // check also the status of Minos looking at fCstatu
+  if (_status == 0 && gMinuit->fCstatu != "SUCCESSFUL") {
+    if (gMinuit->fCstatu == "FAILURE" || 
+	gMinuit->fCstatu == "PROBLEMS") _status = 5; 
+    _status = 6; 
+  } 
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
