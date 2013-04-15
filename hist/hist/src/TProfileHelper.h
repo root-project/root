@@ -483,8 +483,9 @@ void TProfileHelper::Sumw2(T* p, Bool_t flag)
    //  This function is automatically called when the histogram is created
    //  if the static function TH1::SetDefaultSumw2 has been called before.
    
-   if (!flag &&  p->fBinSumw2.fN > 0 ) { 
-      p->fBinSumw2.Set(0);
+   if (!flag) { 
+      // clear array if existing or do nothing 
+      if (p->fBinSumw2.fN > 0 ) p->fBinSumw2.Set(0);
       return;
    }
 
