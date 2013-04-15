@@ -4217,7 +4217,8 @@ static int GenerateModule(clang::CompilerInstance* CI,
       CI->getFrontendOpts().RelocatablePCH = true;
       const char *ISysRoot = "/DUMMY_SYSROOT/include/";
 #ifdef ROOTBUILD
-      ISysRoot = (currentDirectory + "/").c_str();
+      std::string curdir = currentDirectory + "/";
+      ISysRoot = curdir.c_str();
 #endif
       Writer.WriteAST(CI->getSema(), 0, moduleFile, module, ISysRoot);
 
