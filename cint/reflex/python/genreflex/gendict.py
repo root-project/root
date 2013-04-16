@@ -1023,6 +1023,7 @@ class genDictionary(object) :
     # Write the target members
     #-----------------------------------------------------------------------------
     for member in target:
+      if member == "": continue
       if memTypes[member][-1] == ']':
          t = memTypes[member]
          arraydim = t[t.find('['):]
@@ -1043,7 +1044,9 @@ class genDictionary(object) :
         #--------------------------------------------------------------------------
         # Process the data members
         #--------------------------------------------------------------------------
-        sourceMembers = [member.strip() for member in rule['attrs']['source'].split(';')]
+        sourceMembers = []
+        if rule['attrs'].has_key('source'):
+          sourceMembers = [member.strip() for member in rule['attrs']['source'].split(';')]
         sourceMembersSpl = []
         for member in sourceMembers:
           type = ''
@@ -1057,7 +1060,9 @@ class genDictionary(object) :
             elem = spl[len(spl)-1]
           sourceMembersSpl.append( (type, elem) )
 
-        targetMembers = [member.strip() for member in rule['attrs']['target'].split(';')]
+        targetMembers = []
+        if rule['attrs'].has_key('target'):
+          targetMembers = [member.strip() for member in rule['attrs']['target'].split(';')]
 
         #--------------------------------------------------------------------------
         # Print things out
@@ -1065,6 +1070,8 @@ class genDictionary(object) :
         sc += 'void %s( char *target, TVirtualObject *oldObj )\n' % (funcname,)
         sc += '{\n'
         sc += self.processIOAutoVariables( cl, clt, sourceMembersSpl, targetMembers, memTypes )
+        # Avoid compiler warnings in case the old variables are not used:
+        sc += '  if( oldObj ) {}\n'
         #to avoid compiler warnings about unused variables only declare newObj if user actually uses it
         if -1 != rule['code'].find('newObj'):
            sc += '  %s* newObj = (%s*)target;\n' % (cl, cl)
@@ -1107,6 +1114,7 @@ class genDictionary(object) :
   def removeBrokenIoRules( self, cl, rules, members ):
     for rule in rules:
       if rule['attrs'].has_key( 'target' ):
+        if rule['attrs']['target'] == "": continue
         targets = [target.strip() for target in rule['attrs']['target'].split(';')]
         ok = True
         for t in targets:
