@@ -301,14 +301,14 @@ Begin_Macro(source)
    return ex3;
 }
 End_Macro
- 
+
 Begin_Html
 <a name="L14"></a><h3>Interface to TMathText</h3>
 The class <tt>TMathText</tt> is a TeX math formulae interpreter. It uses plain
 TeX syntax and uses "\" as control instead of "#". If a piece of text containing
 "\" is given to <tt>TLatex</tt> then <tt>TMathText</tt> is automatically invoked.
 Therefore, as histograms' titles, axis titles, labels etc ... are drawn using
-<tt>TLatex</tt>, the <tt>TMathText</tt> syntax can be used for them also. 
+<tt>TLatex</tt>, the <tt>TMathText</tt> syntax can be used for them also.
 End_Html
 */
 
@@ -1886,7 +1886,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       gPad->PaintText(x,y,text1);
       return;
    }
-   
+
    // Paint the text using TMathText if contains a "\"
    if (strstr(text1,"\\")) {
       TMathText tm;
@@ -2379,12 +2379,16 @@ void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
+
    if (gROOT->ClassSaved(TLatex::Class())) {
       out<<"   ";
    } else {
       out<<"   TLatex *";
    }
+
    TString s = GetTitle();
+
+   s.ReplaceAll("\\","\\\\");
    s.ReplaceAll("\"","\\\"");
    out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<std::endl;
    if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<std::endl;
