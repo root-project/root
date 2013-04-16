@@ -144,7 +144,7 @@ private:
   
   std::string GetDirPath( TDirectory* dir );
 
-  ClassDef(RooStats::HistFactory::Measurement, 1);
+  ClassDef(RooStats::HistFactory::Measurement, 2);
 
 };
  
