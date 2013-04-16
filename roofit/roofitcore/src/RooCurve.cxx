@@ -555,7 +555,6 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
     // Check if point is in range of curve
     if (x<xstart || x>xstop) continue ;
 
-    nbin++ ;
     eyl = hist.GetEYlow()[i] ;
     eyh = hist.GetEYhigh()[i] ;
     exl = hist.GetEXlow()[i] ;
@@ -568,6 +567,7 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
     if (y!=0) {      
       Double_t pull = (y>avg) ? ((y-avg)/eyl) : ((y-avg)/eyh) ;
       chisq += pull*pull ;
+      nbin++ ;
     }
   }
 

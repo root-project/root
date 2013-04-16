@@ -152,8 +152,8 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t inMinVal,
 //_____________________________________________________________________________
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) : 
   RooAbsArg(other,name), _plotMin(other._plotMin), _plotMax(other._plotMax), 
-  _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _forceNumInt(other._forceNumInt), 
-  _treeVar(other._treeVar), _selectComp(other._selectComp), _lastNSet(0)
+  _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _label(other._label), 
+  _forceNumInt(other._forceNumInt), _treeVar(other._treeVar), _selectComp(other._selectComp), _lastNSet(0)
 {
   // coverity[UNINIT_CTOR]
   // Copy constructor
