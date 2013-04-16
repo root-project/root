@@ -159,4 +159,32 @@ button.closeButton {
 	overflow: hidden;
 }
 
+/*--------------------------------------------------|
+| tooltip style                                     |
+|--------------------------------------------------*/
+
+#tt {
+   position:absolute;
+   display:block;
+}
+#tttop {
+   display:block;
+   height:5px;
+   margin-left:5px;
+   overflow:hidden;
+}
+#ttcont {
+   display:block;
+   padding:2px 12px 3px 7px;
+   margin-left:5px;
+   font-size: 11px;
+   background:#777;
+   color:#fff;
+}
+#ttbot {
+   display:block;
+   height:5px;
+   margin-left:5px;
+   overflow:hidden;
+}
 

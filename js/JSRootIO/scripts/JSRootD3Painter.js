@@ -170,6 +170,95 @@ var symbols_map = {
    '#odot' : ''
 };
 
+var tooltip = function() {
+   var id = 'tt';
+   var top = 3;
+   var left = 3;
+   var maxw = 150;
+   var speed = 10;
+   var timer = 20;
+   var endalpha = 95;
+   var alpha = 0;
+   var tt,t,c,b,h;
+   var ie = document.all ? true : false;
+   return {
+      show: function(v, w) {
+         if (tt == null) {
+            tt = document.createElement('div');
+            tt.setAttribute('id',id);
+            t = document.createElement('div');
+            t.setAttribute('id',id + 'top');
+            c = document.createElement('div');
+            c.setAttribute('id',id + 'cont');
+            b = document.createElement('div');
+            b.setAttribute('id',id + 'bot');
+            tt.appendChild(t);
+            tt.appendChild(c);
+            tt.appendChild(b);
+            document.body.appendChild(tt);
+            tt.style.opacity = 0;
+            tt.style.filter = 'alpha(opacity=0)';
+            document.onmousemove = this.pos;
+         }
+         tt.style.display = 'block';
+         c.innerHTML = v;
+         tt.style.width = w ? w + 'px' : 'auto';
+         tt.style.width = 'auto'; // let it be automatically resizing...
+         if (!w && ie) {
+            t.style.display = 'none';
+            b.style.display = 'none';
+            tt.style.width = tt.offsetWidth;
+            t.style.display = 'block';
+            b.style.display = 'block';
+         }
+         //if (tt.offsetWidth > maxw) { tt.style.width = maxw + 'px'; }
+         h = parseInt(tt.offsetHeight) + top;
+         clearInterval(tt.timer);
+         tt.timer = setInterval( function() { tooltip.fade(1) }, timer );
+      },
+      pos: function(e) {
+         var u = ie ? event.clientY + document.documentElement.scrollTop : e.pageY;
+         var l = ie ? event.clientX + document.documentElement.scrollLeft : e.pageX;
+         tt.style.top = u + 15 + 'px';//(u - h) + 'px';
+         tt.style.left = (l + left) + 'px';
+      },
+      fade: function(d) {
+         var a = alpha;
+         if ((a != endalpha && d == 1) || (a != 0 && d == -1)) {
+            var i = speed;
+            if (endalpha - a < speed && d == 1) {
+               i = endalpha - a;
+            }
+            else if (alpha < speed && d == -1) {
+               i = a;
+            }
+            alpha = a + (i * d);
+            tt.style.opacity = alpha * .01;
+            tt.style.filter = 'alpha(opacity=' + alpha + ')';
+         }
+         else {
+            clearInterval(tt.timer);
+            if (d == -1) { tt.style.display = 'none'; }
+         }
+      },
+      hide: function() {
+         if (tt == null) return;
+         clearInterval(tt.timer);
+         tt.timer = setInterval( function() { tooltip.fade(-1) }, timer );
+      }
+   };
+}();
+
+/**
+ * @author alteredq / http://alteredqualia.com/
+ * @author mr.doob / http://mrdoob.com/
+ */
+var Detector = {
+   canvas: !! window.CanvasRenderingContext2D,
+   webgl: ( function () { try { return !! window.WebGLRenderingContext && !! document.createElement( 'canvas' ).getContext( 'experimental-webgl' ); } catch( e ) { return false; } } )(),
+   workers: !! window.Worker, fileapi: window.File && window.FileReader && window.FileList && window.Blob
+};
+
 /*
  * Function that generates all root colors
  */
@@ -711,7 +800,7 @@ function createFillPatterns(svg, id, color) {
       if (histo['_typename'].match(/\bJSROOTIO.TH2/)) hdim = 2;
       if (histo['_typename'].match(/\bJSROOTIO.TH3/)) hdim = 3;
       var nch = opt.length;
-      var option = { 'Axis': 0, 'Bar': 0, 'Curve': 0, 'Error': 0, 'Hist': 0, 
+      var option = { 'Axis': 0, 'Bar': 0, 'Curve': 0, 'Error': 0, 'Hist': 0,
          'Line': 0, 'Mark': 0, 'Fill': 0, 'Same': 0, 'Func': 0, 'Scat': 0,
          'Star': 0, 'Arrow': 0, 'Box': 0, 'Text': 0, 'Char': 0, 'Color': 0,
          'Contour': 0, 'Logx': 0, 'Logy': 0, 'Logz': 0, 'Lego': 0, 'Surf': 0,
@@ -774,7 +863,7 @@ function createFillPatterns(svg, id, color) {
       l = chopt.indexOf('LEGO');
       if (l != -1) {
          option.Scat = 0;
-         option.Lego = 1; 
+         option.Lego = 1;
          chopt = chopt.replace('LEGO', '    ');
          if (chopt[l+4] == '1') { option.Lego = 11; chopt[l+4] = ' '; }
          if (chopt[l+4] == '2') { option.Lego = 12; chopt[l+4] = ' '; }
@@ -1262,6 +1351,111 @@ function createFillPatterns(svg, id, color) {
    /**
     * Now the real drawing functions (using d3.js)
     */
+
+   JSROOTPainter.add3DInteraction = function(renderer, scene, camera, toplevel) {
+      // add 3D mouse interactive functions
+      var mouseX, mouseY, mouseDowned = false;
+      var mouse = { x: 0, y: 0 }, INTERSECTED;
+
+      var radius = 100;
+      var theta = 0;
+      var projector = new THREE.Projector();
+      function findIntersection() {
+         // find intersections
+         if ( mouseDowned ) {
+            if ( INTERSECTED ) {
+               INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+               renderer.render( scene, camera );
+            }
+            INTERSECTED = null;
+            tooltip.hide();
+            return;
+         }
+         var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+         projector.unprojectVector( vector, camera );
+         var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+         var intersects = raycaster.intersectObjects( scene.children, true );
+         if ( intersects.length > 0 ) {
+            var pick = null;
+            for (var i=0;i<intersects.length;++i) {
+               if ('emissive' in intersects[ i ].object.material) {
+                  pick = intersects[ i ];
+                  break;
+               }
+            }
+            if (pick && INTERSECTED != pick.object ) {
+               if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+               INTERSECTED = pick.object;
+               INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+               INTERSECTED.material.emissive.setHex( 0x5f5f5f );
+               renderer.render( scene, camera );
+               tooltip.show(INTERSECTED.name.length > 0 ? INTERSECTED.name : INTERSECTED.parent.name, 200);
+            }
+         } else {
+            if ( INTERSECTED ) {
+               INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+               renderer.render( scene, camera );
+            }
+            INTERSECTED = null;
+            tooltip.hide();
+         }
+      };
+
+      $( renderer.domElement ).on('touchstart mousedown',function (e) {
+         //var touch = e.changedTouches[0] || {};
+         tooltip.hide();
+         e.preventDefault();
+         var touch = e;
+         if ('changedTouches' in e) touch = e.changedTouches[0];
+         else if ('touches' in e) touch = e.touches[0];
+         else if ('originalEvent' in e) {
+            if ('changedTouches' in e.originalEvent) touch = e.originalEvent.changedTouches[0];
+            else if ('touches' in e.originalEvent) touch = e.originalEvent.touches[0];
+         }
+         mouseX = touch.pageX;
+         mouseY = touch.pageY;
+         mouseDowned = true;
+      });
+      $( renderer.domElement ).on('touchmove mousemove', function(e) {
+         if ( mouseDowned ) {
+            var touch = e;
+            if ('changedTouches' in e) touch = e.changedTouches[0];
+            else if ('touches' in e) touch = e.touches[0];
+            else if ('originalEvent' in e) {
+               if ('changedTouches' in e.originalEvent) touch = e.originalEvent.changedTouches[0];
+               else if ('touches' in e.originalEvent) touch = e.originalEvent.touches[0];
+            }
+            var moveX = touch.pageX - mouseX;
+            var moveY = touch.pageY - mouseY;
+            // limited X rotate in -45 to 135 deg
+            if ( (moveY > 0 && toplevel.rotation.x < Math.PI*3/4) ||
+                 (moveY < 0 &&  toplevel.rotation.x > -Math.PI/4) ) {
+               toplevel.rotation.x += moveY*0.02;
+            }
+            toplevel.rotation.y += moveX*0.02;
+            renderer.render( scene, camera );
+            mouseX = touch.pageX;
+            mouseY = touch.pageY;
+         }
+         else {
+            e.preventDefault();
+            var mouse_x = 'offsetX' in e.originalEvent ? e.originalEvent.offsetX : e.originalEvent.layerX;
+            var mouse_y = 'offsetY' in e.originalEvent ? e.originalEvent.offsetY : e.originalEvent.layerY;
+            mouse.x = ( mouse_x / renderer.domElement.width ) * 2 - 1;
+            mouse.y = - ( mouse_y / renderer.domElement.height ) * 2 + 1;
+            // enable picking once tootips are available...
+            findIntersection();
+         }
+      });
+      $( renderer.domElement ).on('touchend mouseup', function(e) {
+         mouseDowned = false;
+      });
+      $( renderer.domElement ).on('mousewheel', function(e, d) {
+         e.preventDefault();
+         camera.position.z += d * 20;
+         renderer.render( scene, camera );
+      });
+   };
 
    JSROOTPainter.addInteraction = function(vis, obj) {
       var width = vis.attr("width"), height = vis.attr("height");
@@ -1846,16 +2040,16 @@ function createFillPatterns(svg, id, color) {
             .attr("d", marker)
             .append("svg:title")
             .text(function(d) {
-               return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5) +
-                      " \nerror x = " + d.xerr.toPrecision(5) +
-                      " \nerror y = " + d.yerr.toPrecision(5);
+               return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4) +
+                      " \nerror x = " + d.xerr.toPrecision(4) +
+                      " \nerror y = " + d.yerr.toPrecision(4);
             });
          g.selectAll("line")
             .append("svg:title")
             .text(function(d) {
-               return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5) +
-                      " \nerror x = " + d.xerr.toPrecision(5) +
-                      " \nerror y = " + d.yerr.toPrecision(5);
+               return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4) +
+                      " \nerror x = " + d.xerr.toPrecision(4) +
+                      " \nerror y = " + d.yerr.toPrecision(4);
             });
       };
       histo['redraw'] = do_redraw;
@@ -1883,7 +2077,7 @@ function createFillPatterns(svg, id, color) {
       var interpolate_method = 'basis';
       var h, hmin = 1.0e32, hmax = -1.0e32;
       if (func['fNsave'] > 0) {
-         // in the case where the points have been saved, useful for example 
+         // in the case where the points have been saved, useful for example
          // if we don't have the user's function
          var nb_points = func['fNpx'];
          for (var i=0;i<nb_points;++i) {
@@ -2090,7 +2284,7 @@ function createFillPatterns(svg, id, color) {
           optionBar, optionR, optionOne, optionE, optionFill, optionZ,
           optionCurveFill;
       var draw_errors = true;
-      if ('fOption' in graph) { 
+      if ('fOption' in graph) {
          var opt = graph['fOption'].toUpperCase();
          opt.replace('SAME', '');
       }
@@ -2105,8 +2299,8 @@ function createFillPatterns(svg, id, color) {
       if (opt.indexOf('R') != -1) optionR    = 1;  else optionR    = 0;
       if (opt.indexOf('1') != -1) optionOne  = 1;  else optionOne  = 0;
       if (opt.indexOf('F') != -1) optionFill = 1;  else optionFill = 0;
-      if (opt.indexOf('2') != -1 || opt.indexOf('3') != -1 || 
-          opt.indexOf('4') != -1 || opt.indexOf('5') != -1) optionE = 1;  
+      if (opt.indexOf('2') != -1 || opt.indexOf('3') != -1 ||
+          opt.indexOf('4') != -1 || opt.indexOf('5') != -1) optionE = 1;
       else optionE = 0;
       optionZ = 0;
 
@@ -2155,7 +2349,7 @@ function createFillPatterns(svg, id, color) {
          seriesType = 'line';
 
       if (optionBar == 1) {
-         var binwidth = (graph['fHistogram']['fXaxis']['fXmax'] - graph['fHistogram']['fXaxis']['fXmin']) / 
+         var binwidth = (graph['fHistogram']['fXaxis']['fXmax'] - graph['fHistogram']['fXaxis']['fXmin']) /
                          graph['fNpoints'];
       }
       var bins = d3.range(graph['fNpoints']).map(function(p) {
@@ -2641,7 +2835,7 @@ function createFillPatterns(svg, id, color) {
                .style("stroke", root_colors[graph['fMarkerColor']])
                .attr("d", marker)
                .append("svg:title")
-               .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5); });
+               .text(function(d) { return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4); });
          }
       };
       graph['redraw'] = do_redraw;
@@ -2901,6 +3095,24 @@ function createFillPatterns(svg, id, color) {
                   .style("stroke-dasharray", histo['fLineStyle'] > 1 ? root_line_styles[histo['fLineStyle']] : null)
                   .style("antialias", "false");
             }
+            // add tooltips
+            var selwidth = x(2*binwidth)-x(binwidth);
+            g.selectAll("selections")
+               .data(bins)
+               .enter()
+               .append("svg:line")
+               .attr("x1", function(d) { return x(d.x-d.xerr) } )
+               .attr("y1", function(d) { return y(d.y) } )
+               .attr("x2", function(d) { return x(d.x-d.xerr) } )
+               .attr("y2", function(d) { return y(0) } )
+               .attr("opacity", 0)
+               .style("stroke", "#4572A7")
+               .style("stroke-width", selwidth)
+               .on('mouseover', function() { d3.select(this).transition().duration(100).style("opacity", 0.3) } )
+               .on('mouseout', function() { d3.select(this).transition().duration(100).style("opacity", 0) } )
+               .append("svg:title").text(function(d) { return "x = [ " + (d.x-(2*d.xerr)).toPrecision(4) + 
+                       ", " + d.x.toPrecision(4) + " ] \nentries = " + d.y;
+               });
          };
          histo['redraw'] = do_redraw;
          do_redraw();
@@ -3043,8 +3255,8 @@ function createFillPatterns(svg, id, color) {
                .style("stroke", root_colors[histo['fMarkerColor']])
                .attr("d", marker)
                .append("svg:title")
-               .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + 
-                                   d.y.toPrecision(5) + " \nentries = " + d.z; });
+               .text(function(d) { return "x = " + d.x.toPrecision(4) + " \ny = " +
+                                   d.y.toPrecision(4) + " \nentries = " + d.z; });
          }
          else {
             g.selectAll("bins")
@@ -3078,9 +3290,32 @@ function createFillPatterns(svg, id, color) {
                   else
                      return "none";
                });
-            g.selectAll("rect")
+            g.selectAll("selections")
+               .data(bins)
+               .enter()
+               .append("svg:rect")
+               .attr("x", function(d) { return histo.x(d.x) + (scalex/2) - (d.z * constx/2);})
+               .attr("y", function(d) { return histo.y(d.y) + (scaley/2) - (d.z * consty/2);})
+               .attr("width", function(d) {
+                  if (options.Color > 0)
+                     return (w / histo['fXaxis']['fNbins']) * xfactor;
+                  else
+                     return d.z * ((w / histo['fXaxis']['fNbins']) / maxbin) * xfactor;
+               })
+               .attr("height", function(d) {
+                  if (options.Color > 0)
+                     return (h / histo['fYaxis']['fNbins']) * yfactor;
+                  else
+                     return d.z * ((h / histo['fYaxis']['fNbins']) / maxbin) * yfactor;
+               })
+               .attr("opacity", 0)
+               .style("stroke", "#4572A7")
+               .style("fill", "#4572A7")
+               .on('mouseover', function() { d3.select(this).transition().duration(100).style("opacity", 0.3) } )
+               .on('mouseout', function() { d3.select(this).transition().duration(100).style("opacity", 0) } )
                .append("svg:title")
-               .text(function(d) { return "x = " + d.x.toPrecision(5) + " \ny = " + d.y.toPrecision(5) + " \nentries = " + d.z; });
+               .text(function(d) { return "x = " + d.x.toPrecision(4) + " \ny = " +
+                     d.y.toPrecision(4) + " \nentries = " + d.z; });
          }
       };
       histo['redraw'] = do_redraw;
@@ -3102,6 +3337,500 @@ function createFillPatterns(svg, id, color) {
       if (!pad || typeof(pad) == 'undefined')
          this.drawStat(vis, histo);
    };
+
+   JSROOTPainter.drawHistogram2D3D = function(vis, pad, histo, hframe) {
+      var i, logx = false, logy = false, logz = false, gridx = false, gridy = false, girdz = false;
+      var opt = histo['fOption'].toLowerCase();
+      if (pad && typeof(pad) != 'undefined') {
+         logx = pad['fLogx'];
+         logy = pad['fLogy'];
+         logz = pad['fLogz'];
+         gridx = pad['fGridx'];
+         gridy = pad['fGridy'];
+         gridz = pad['fGridz'];
+      }
+      var fillcolor = root_colors[histo['fFillColor']];
+      var linecolor = root_colors[histo['fLineColor']];
+      if (histo['fFillColor'] == 0) {
+         fillcolor = '#4572A7';
+      }
+      if (histo['fLineColor'] == 0) {
+         linecolor = '#4572A7';
+      }
+      var nbinsx = histo['fXaxis']['fNbins'];
+      var nbinsy = histo['fYaxis']['fNbins'];
+      var scalex = (histo['fXaxis']['fXmax'] - histo['fXaxis']['fXmin']) /
+                    histo['fXaxis']['fNbins'];
+      var scaley = (histo['fYaxis']['fXmax'] - histo['fYaxis']['fXmin']) /
+                    histo['fYaxis']['fNbins'];
+      var maxbin = -1e32, minbin = 1e32;
+      maxbin = d3.max(histo['fArray']);
+      minbin = d3.min(histo['fArray']);
+      var bins = new Array();
+      for (i=0; i<nbinsx; ++i) {
+         for (var j=0; j<nbinsy; ++j) {
+            var bin_content = histo.getBinContent(i, j);
+            if (bin_content > minbin) {
+               var point = {
+                  x:histo['fXaxis']['fXmin'] + (i*scalex),
+                  y:histo['fYaxis']['fXmin'] + (j*scaley),
+                  z:bin_content
+               };
+               bins.push(point);
+            }
+         }
+      }
+      var w = vis.attr("width"), h = vis.attr("height"), size = 100;
+      if (logx) {
+         var tx = d3.scale.log().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([-size, size]);
+         var utx = d3.scale.log().domain([-size, size]).range([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]);
+      } else {
+         var tx = d3.scale.linear().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([-size, size]);
+         var utx = d3.scale.linear().domain([-size, size]).range([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]);
+      }
+      if (logy) {
+         var ty = d3.scale.log().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([-size, size]);
+         var uty = d3.scale.log().domain([-size, size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
+      } else {
+         var ty = d3.scale.linear().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([-size, size]);
+         var uty = d3.scale.linear().domain([-size, size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
+      }
+      if (logz) {
+         var tz = d3.scale.log().domain([minbin, Math.ceil( maxbin/10 )*10]).range([0, size*2]);
+         var utz = d3.scale.log().domain([0, size*2]).range([minbin, Math.ceil( maxbin/10 )*10]);
+      } else {
+         var tz = d3.scale.linear().domain([minbin, Math.ceil( maxbin/10 )*10]).range([0, size*2]);
+         var utz = d3.scale.linear().domain([0, size*2]).range([minbin, Math.ceil( maxbin/10 )*10]);
+      }
+
+      // three.js 3D drawing
+      var scene = new THREE.Scene();
+
+      var toplevel = new THREE.Object3D();
+      toplevel.rotation.x = 30 * Math.PI / 180;
+      toplevel.rotation.y = 30 * Math.PI / 180;
+      scene.add( toplevel );
+
+      var wireMaterial = new THREE.MeshBasicMaterial( {
+         color: 0x000000,
+         wireframe: true,
+         wireframeLinewidth: 0.5,
+         side: THREE.DoubleSide } );
+
+      // create a new mesh with cube geometry
+      var cube = new THREE.Mesh( new THREE.CubeGeometry( size*2, size*2, size*2 ), wireMaterial);
+      cube.position.y = size;
+
+      // add the cube to the scene
+      toplevel.add( cube );
+
+      var textMaterial = new THREE.MeshBasicMaterial( { color: 0x000000 } );
+
+      // add the calibration vectors and texts
+      var geometry = new THREE.Geometry();
+      var imax, istep, len = 3, plen, sin45 = Math.sin(45);
+      var text3d, text;
+      for ( i = tx( histo['fXaxis']['fXmin'] ), imax = tx( histo['fXaxis']['fXmax'] ),
+            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
+         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
+         if ( Math.round(i) % (size/2) == 0 ) {
+            text3d = new THREE.TextGeometry( utx( i ), {
+               size: 7,
+               height: 0,
+               curveSegments: 10
+            });
+
+            text3d.computeBoundingBox();
+            var centerOffset = 0.5 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( i-centerOffset, -13, size+plen );
+            toplevel.add( text );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( i+centerOffset, -13, -size-plen );
+            text.rotation.y = Math.PI;
+            toplevel.add( text );
+         }
+         geometry.vertices.push( new THREE.Vector3( i, 0, size ) );
+         geometry.vertices.push( new THREE.Vector3( i, -plen, size+plen ) );
+         geometry.vertices.push( new THREE.Vector3( i, 0, -size ) );
+         geometry.vertices.push( new THREE.Vector3( i, -plen, -size-plen ) );
+      }
+      for ( i = ty( histo['fYaxis']['fXmin'] ), imax = ty( histo['fYaxis']['fXmax'] ),
+            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
+         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
+         if ( Math.round(i) % (size/2) == 0 ) {
+            text3d = new THREE.TextGeometry( uty( i ), {
+               size: 7,
+               height: 0,
+               curveSegments: 10
+            });
+
+            text3d.computeBoundingBox();
+            var centerOffset = 0.5 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( size+plen, -13, i+centerOffset );
+            text.rotation.y = Math.PI/2;
+            toplevel.add( text );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( -size-plen, -13, i-centerOffset );
+            text.rotation.y = -Math.PI/2;
+            toplevel.add( text );
+         }
+         geometry.vertices.push( new THREE.Vector3( size, 0, i ) );
+         geometry.vertices.push( new THREE.Vector3( size+plen, -plen, i ) );
+         geometry.vertices.push( new THREE.Vector3( -size, 0, i ) );
+         geometry.vertices.push( new THREE.Vector3( -size-plen, -plen, i ) );
+      }
+      for ( i = tz( minbin ), imax = tz( Math.ceil( maxbin/10 )*10 ),
+            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
+         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
+         if ( Math.round(i) % (size/2) == 0 ) {
+            text3d = new THREE.TextGeometry( utz( i ), {
+               size: 7,
+               height: 0,
+               curveSegments: 10
+            });
+
+            text3d.computeBoundingBox();
+            var offset = 0.8 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( size+offset+5, i-2.5, size+offset+5 );
+            text.rotation.y = Math.PI*3/4;
+            toplevel.add( text );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( size+offset+5, i-2.5, -size-offset-5 );
+            text.rotation.y = -Math.PI*3/4;
+            toplevel.add( text );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( -size-offset-5, i-2.5, size+offset+5 );
+            text.rotation.y = Math.PI/4;
+            toplevel.add( text );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( -size-offset-5, i-2.5, -size-offset-5 );
+            text.rotation.y = -Math.PI/4;
+            toplevel.add( text );
+         }
+         geometry.vertices.push( new THREE.Vector3( size, i, size ) );
+         geometry.vertices.push( new THREE.Vector3( size+plen, i, size+plen ) );
+         geometry.vertices.push( new THREE.Vector3( size, i, -size ) );
+         geometry.vertices.push( new THREE.Vector3( size+plen, i, -size-plen ) );
+         geometry.vertices.push( new THREE.Vector3( -size, i, size ) );
+         geometry.vertices.push( new THREE.Vector3( -size-plen, i, size+plen ) );
+         geometry.vertices.push( new THREE.Vector3( -size, i, -size ) );
+         geometry.vertices.push( new THREE.Vector3( -size-plen, i, -size-plen ) );
+      }
+
+      // add the calibration lines
+      var lineMaterial = new THREE.LineBasicMaterial( { color: 0x000000 } );
+      var line = new THREE.Line( geometry, lineMaterial );
+      line.type = THREE.LinePieces;
+      toplevel.add( line );
+
+      // create the bin cubes
+      var constx = (size*2 / histo['fXaxis']['fNbins']) / maxbin;
+      var consty = (size*2 / histo['fYaxis']['fNbins']) / maxbin;
+
+      var optFlag = ( opt.indexOf('colz') != -1 || opt.indexOf('col') != -1 );
+      var fcolor = d3.rgb(root_colors[histo['fFillColor']]);
+      var fillcolor = new THREE.Color( 0xDDDDDD );
+      fillcolor.setRGB(fcolor.r/255, fcolor.g/255, fcolor.b/255);
+      var bin, wei;
+      for ( i = 0; i < bins.length; ++i ) {
+         wei = tz( optFlag ? maxbin : bins[i].z );
+         bin = THREE.SceneUtils.createMultiMaterialObject(
+            new THREE.CubeGeometry( size/20, wei, size/20 ),
+            [ new THREE.MeshLambertMaterial( { color: fillcolor.getHex(), shading: THREE.NoShading } ),
+              wireMaterial ] );
+         bin.position.x = tx( bins[i].x + (scalex/2));
+         bin.position.y = wei/2;
+         bin.position.z = -(ty( bins[i].y + (scaley/2)));
+         bin.name = "binx: " + bins[i].x.toPrecision(2) + " biny: " + bins[i].y.toPrecision(2) + "<br>" +
+                    "entries: " + bins[i].z.toFixed();
+         toplevel.add( bin );
+      }
+      // create a point light
+      var pointLight = new THREE.PointLight( 0xcfcfcf );
+      pointLight.position.set(0, 50, 250);
+      scene.add(pointLight);
+
+      //var directionalLight = new THREE.DirectionalLight( 0x7f7f7f );
+      //directionalLight.position.set( 0, -70, 100 ).normalize();
+      //scene.add( directionalLight );
+
+      var camera = new THREE.PerspectiveCamera( 45, w / h, 1, 1000 );
+      camera.position.set( 0, size/2, 500 );
+      camera.lookat = cube;
+
+      var renderer = Detector.webgl ? new THREE.WebGLRenderer( { antialias: true } ) :
+                     new THREE.CanvasRenderer( { antialias: true } );
+      renderer.setSize( w, h );
+      $( vis[0][0] ).hide().parent().append( renderer.domElement );
+      renderer.render( scene, camera );
+
+      this.add3DInteraction(renderer, scene, camera, toplevel);
+      return renderer;
+   }
+
+   JSROOTPainter.drawHistogram3D = function(vis, pad, histo, hframe) {
+      var i, logx = false, logy = false, logz = false, gridx = false, gridy = false, gridz = false;
+      var opt = histo['fOption'].toLowerCase();
+      if (pad && typeof(pad) != 'undefined') {
+         logx = pad['fLogx'];
+         logy = pad['fLogy'];
+         logz = pad['fLogz'];
+         gridx = pad['fGridx'];
+         gridy = pad['fGridy'];
+         gridz = pad['fGridz'];
+      }
+      var fillcolor = root_colors[histo['fFillColor']];
+      var linecolor = root_colors[histo['fLineColor']];
+      if (histo['fFillColor'] == 0) {
+         fillcolor = '#4572A7';
+      }
+      if (histo['fLineColor'] == 0) {
+         linecolor = '#4572A7';
+      }
+      var nbinsx = histo['fXaxis']['fNbins'];
+      var nbinsy = histo['fYaxis']['fNbins'];
+      var nbinsz = histo['fZaxis']['fNbins'];
+      var scalex = (histo['fXaxis']['fXmax'] - histo['fXaxis']['fXmin']) /
+                    histo['fXaxis']['fNbins'];
+      var scaley = (histo['fYaxis']['fXmax'] - histo['fYaxis']['fXmin']) /
+                    histo['fYaxis']['fNbins'];
+      var scalez = (histo['fZaxis']['fXmax'] - histo['fZaxis']['fXmin']) /
+                    histo['fZaxis']['fNbins'];
+      var maxbin = -1e32, minbin = 1e32;
+      maxbin = d3.max(histo['fArray']);
+      minbin = d3.min(histo['fArray']);
+      var bins = new Array();
+      for (i=0; i<=nbinsx+2; ++i) {
+         for (var j=0; j<nbinsy+2; ++j) {
+            for (var k=0; k<nbinsz+2; ++k) {
+               var bin_content = histo.getBinContent(i, j, k);
+               if (bin_content > minbin) {
+                  var point = {
+                     x:histo['fXaxis']['fXmin'] + (i*scalex),
+                     y:histo['fYaxis']['fXmin'] + (j*scaley),
+                     z:histo['fZaxis']['fXmin'] + (k*scalez),
+                     n:bin_content
+                  };
+                  bins.push(point);
+               }
+            }
+         }
+      }
+      var w = vis.attr("width"), h = vis.attr("height"), size = 100;
+      if (logx) {
+         var tx = d3.scale.log().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([-size, size]);
+         var utx = d3.scale.log().domain([-size, size]).range([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]);
+      } else {
+         var tx = d3.scale.linear().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([-size, size]);
+         var utx = d3.scale.linear().domain([-size, size]).range([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]);
+      }
+      if (logy) {
+         var ty = d3.scale.log().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([-size, size]);
+         var uty = d3.scale.log().domain([-size, size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
+      } else {
+         var ty = d3.scale.linear().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([-size, size]);
+         var uty = d3.scale.linear().domain([-size, size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
+      }
+      if (logz) {
+         var tz = d3.scale.log().domain([histo['fZaxis']['fXmin'], histo['fZaxis']['fXmax']]).range([-size, size]);
+         var utz = d3.scale.log().domain([-size, size]).range([histo['fZaxis']['fXmin'], histo['fZaxis']['fXmax']]);
+      } else {
+         var tz = d3.scale.linear().domain([histo['fZaxis']['fXmin'], histo['fZaxis']['fXmax']]).range([-size, size]);
+         var utz = d3.scale.linear().domain([-size, size]).range([histo['fZaxis']['fXmin'], histo['fZaxis']['fXmax']]);
+      }
+
+      // three.js 3D drawing
+      var scene = new THREE.Scene();
+
+      var toplevel = new THREE.Object3D();
+      toplevel.rotation.x = 30 * Math.PI / 180;
+      toplevel.rotation.y = 30 * Math.PI / 180;
+      scene.add( toplevel );
+
+      var wireMaterial = new THREE.MeshBasicMaterial( {
+         color: 0x000000,
+         wireframe: true,
+         wireframeLinewidth: 0.5,
+         side: THREE.DoubleSide } );
+
+      // create a new mesh with cube geometry
+      var cube = new THREE.Mesh( new THREE.CubeGeometry( size*2, size*2, size*2 ), wireMaterial);
+
+      // add the cube to the scene
+      toplevel.add( cube );
+
+      var textMaterial = new THREE.MeshBasicMaterial( { color: 0x000000 } );
+
+      // add the calibration vectors and texts
+      var geometry = new THREE.Geometry();
+      var imax, istep, len = 3, plen, sin45 = Math.sin(45);
+      var text3d, text;
+      for ( i = tx( histo['fXaxis']['fXmin'] ), imax = tx( histo['fXaxis']['fXmax'] ),
+            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
+         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
+         if ( Math.round(i) % (size/2) == 0 ) {
+            text3d = new THREE.TextGeometry( utx( i ), {
+               size: 7,
+               height: 0,
+               curveSegments: 10
+            });
+
+            text3d.computeBoundingBox();
+            var centerOffset = 0.5 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( i-centerOffset, -size-13, size+plen );
+            toplevel.add( text );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( i+centerOffset, -size-13, -size-plen );
+            text.rotation.y = Math.PI;
+            toplevel.add( text );
+         }
+         geometry.vertices.push( new THREE.Vector3( i, -size, size ) );
+         geometry.vertices.push( new THREE.Vector3( i, -size-plen, size+plen ) );
+         geometry.vertices.push( new THREE.Vector3( i, -size, -size ) );
+         geometry.vertices.push( new THREE.Vector3( i, -size-plen, -size-plen ) );
+      }
+      for ( i = ty( histo['fYaxis']['fXmin'] ), imax = ty( histo['fYaxis']['fXmax'] ),
+            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
+         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
+         if ( Math.round(i) % (size/2) == 0 ) {
+            text3d = new THREE.TextGeometry( uty( -i ), {
+               size: 7,
+               height: 0,
+               curveSegments: 10
+            });
+
+            text3d.computeBoundingBox();
+            var centerOffset = 0.5 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( size+plen, -size-13, i+centerOffset );
+            text.rotation.y = Math.PI/2;
+            toplevel.add( text );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( -size-plen, -size-13, i-centerOffset );
+            text.rotation.y = -Math.PI/2;
+            toplevel.add( text );
+         }
+         geometry.vertices.push( new THREE.Vector3( size, -size, i ) );
+         geometry.vertices.push( new THREE.Vector3( size+plen, -size-plen, i ) );
+         geometry.vertices.push( new THREE.Vector3( -size, -size, i ) );
+         geometry.vertices.push( new THREE.Vector3( -size-plen, -size-plen, i ) );
+      }
+      for ( i = tz( histo['fZaxis']['fXmin'] ), imax = tz( histo['fZaxis']['fXmax'] ),
+            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
+         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
+         if ( Math.round(i) % (size/2) == 0 ) {
+            text3d = new THREE.TextGeometry( utz( i ), {
+               size: 7,
+               height: 0,
+               curveSegments: 10
+            });
+
+            text3d.computeBoundingBox();
+            var offset = 0.6 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( size+offset+7, i-2.5, size+offset+7 );
+            text.rotation.y = Math.PI*3/4;
+            toplevel.add( text );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( size+offset+7, i-2.5, -size-offset-7 );
+            text.rotation.y = -Math.PI*3/4;
+            toplevel.add( text );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( -size-offset-7, i-2.5, size+offset+7 );
+            text.rotation.y = Math.PI/4;
+            toplevel.add( text );
+
+            text = new THREE.Mesh( text3d, textMaterial );
+            text.position.set( -size-offset-7, i-2.5, -size-offset-7 );
+            text.rotation.y = -Math.PI/4;
+            toplevel.add( text );
+         }
+         geometry.vertices.push( new THREE.Vector3( size, i, size ) );
+         geometry.vertices.push( new THREE.Vector3( size+plen, i, size+plen ) );
+         geometry.vertices.push( new THREE.Vector3( size, i, -size ) );
+         geometry.vertices.push( new THREE.Vector3( size+plen, i, -size-plen ) );
+         geometry.vertices.push( new THREE.Vector3( -size, i, size ) );
+         geometry.vertices.push( new THREE.Vector3( -size-plen, i, size+plen ) );
+         geometry.vertices.push( new THREE.Vector3( -size, i, -size ) );
+         geometry.vertices.push( new THREE.Vector3( -size-plen, i, -size-plen ) );
+      }
+
+      // add the calibration lines
+      var lineMaterial = new THREE.LineBasicMaterial( { color: 0x000000 } );
+      var line = new THREE.Line( geometry, lineMaterial );
+      line.type = THREE.LinePieces;
+      toplevel.add( line );
+
+      // create the bin cubes
+      var constx = (size*2 / histo['fXaxis']['fNbins']) / maxbin;
+      var consty = (size*2 / histo['fYaxis']['fNbins']) / maxbin;
+      var constz = (size*2 / histo['fZaxis']['fNbins']) / maxbin;
+
+      var optFlag = ( opt.indexOf('colz') != -1 || opt.indexOf('col') != -1 );
+      var fcolor = d3.rgb(root_colors[histo['fFillColor']]);
+      var fillcolor = new THREE.Color( 0xDDDDDD );
+      fillcolor.setRGB(fcolor.r/255, fcolor.g/255, fcolor.b/255);
+      var bin, wei;
+      for ( i = 0; i < bins.length; ++i ) {
+         wei = ( optFlag ? maxbin : bins[i].n );
+         if (opt.indexOf('box1') != -1) {
+            bin = new THREE.Mesh( new THREE.SphereGeometry( 0.5 * wei * constx /*, 16, 16 */ ),
+                      new THREE.MeshPhongMaterial( { color: fillcolor.getHex(),
+                              specular: 0xbfbfbf /*, shading: THREE.NoShading */ } ) );
+         }
+         else {
+            bin = THREE.SceneUtils.createMultiMaterialObject(
+               new THREE.CubeGeometry( wei * constx, wei * constz, wei * consty ),
+               [ new THREE.MeshLambertMaterial( { color: fillcolor.getHex(), shading: THREE.NoShading } ),
+                 wireMaterial ] );
+         }
+         bin.position.x = tx( bins[i].x - (scalex/2));
+         bin.position.y = tz( bins[i].z - (scalez/2));
+         bin.position.z = -(ty( bins[i].y - (scaley/2)));
+         bin.name = "binx: " + bins[i].x.toPrecision(2) + " biny: " + bins[i].y.toPrecision(2) + "<br>" +
+                    "binz: " + bins[i].z.toPrecision(2) + " entries: " + bins[i].n.toFixed();
+         toplevel.add( bin );
+      }
+      // create a point light
+      var pointLight = new THREE.PointLight( 0xcfcfcf );
+      pointLight.position.set(0, 50, 250);
+      scene.add(pointLight);
+
+      //var directionalLight = new THREE.DirectionalLight( 0x7f7f7f );
+      //directionalLight.position.set( 0, -70, 100 ).normalize();
+      //scene.add( directionalLight );
+
+      var camera = new THREE.PerspectiveCamera( 45, w / h, 1, 1000 );
+      camera.position.set( 0, 0, 500 );
+      camera.lookat = cube;
+
+      var renderer = Detector.webgl ? new THREE.WebGLRenderer( { antialias: true } ) :
+                     new THREE.CanvasRenderer( { antialias: true } );
+      renderer.setSize( w, h );
+      $( vis[0][0] ).hide().parent().append( renderer.domElement );
+      renderer.render( scene, camera );
+
+      this.add3DInteraction(renderer, scene, camera, toplevel);
+   }
 
    JSROOTPainter.drawHStack = function(vis, pad, stack, hframe) {
       // paint the list of histograms
@@ -3239,8 +3968,8 @@ function createFillPatterns(svg, id, color) {
       string = string.replace(' ', '\\: ');
 
       // method using jsMath do display formulae and LateX
-      // unfortunately it works only on FireFox (Chrome displays it, 
-      // but at wrong coordinates, and IE doesn't support foreignObject 
+      // unfortunately it works only on FireFox (Chrome displays it,
+      // but at wrong coordinates, and IE doesn't support foreignObject
       // in SVG...)
       string = '\\displaystyle \\rm ' + string;
       var fo = vis.append("foreignObject")
@@ -3520,14 +4249,14 @@ function createFillPatterns(svg, id, color) {
          var g = graphs[0];
          if (g) {
             var r = g.computeRange();
-            rwxmin = r['xmin']; rwymin = r['ymin']; 
+            rwxmin = r['xmin']; rwymin = r['ymin'];
             rwxmax = r['xmax']; rwymax = r['ymax'];
          }
          for (i=1; i<graphs.length; ++i) {
             var rx1,ry1,rx2,ry2;
             g = graphs[i];
             var r = g.computeRange();
-            rx1 = r['xmin']; ry1 = r['ymin']; 
+            rx1 = r['xmin']; ry1 = r['ymin'];
             rx2 = r['xmax']; ry2 = r['ymax'];
             if (rx1 < rwxmin) rwxmin = rx1;
             if (ry1 < rwymin) rwymin = ry1;
@@ -3695,9 +4424,9 @@ function createFillPatterns(svg, id, color) {
       function draw(init) {
 
          var render_to = '#histogram' + idx;
-         if (typeof($(render_to)[0]) == 'undefined') { 
-            obj = null; 
-            return; 
+         if (typeof($(render_to)[0]) == 'undefined') {
+            obj = null;
+            return;
          }
          $(render_to).empty();
 
@@ -3716,7 +4445,24 @@ function createFillPatterns(svg, id, color) {
             JSROOTPainter.drawHistogram1D(svg, null, obj, null);
          }
          else if (obj['_typename'].match(/\bJSROOTIO.TH2/)) {
+            var renderer = 0;
+            var vid = 'view3d_' + obj['fName'];
+            //$('<div><input type="checkbox" id="view3d" /><label for="view3d">View in 3D</label></div>')
+            $('<div><input type="checkbox" id='+vid+' /><label for='+vid+'>View in 3D</label></div>')
+               .css('padding', '10px').css('position', 'absolute').insertBefore( svg[0][0] );
+            //$('#view3d').click(function(e) {
+            $('#'+vid).click(function(e) {
+               if ( $(this).prop('checked') ) {
+                  renderer = JSROOTPainter.drawHistogram2D3D(svg, null, obj, null);
+               } else {
+                  //$( svg[0][0] ).show().parent().find('canvas').detach();
+                  $( svg[0][0] ).show().parent().find( renderer.domElement ).detach();
+               }
+            });
             JSROOTPainter.drawHistogram2D(svg, null, obj, null);
+         }
+         else if (obj['_typename'].match(/\bJSROOTIO.TH3/)) {
+            JSROOTPainter.drawHistogram3D(svg, null, obj, null);
          }
          else if (obj['_typename'].match(/\bJSROOTIO.THStack/)) {
             JSROOTPainter.drawHStack(svg, null, obj, null)
@@ -4495,6 +5241,7 @@ function createFillPatterns(svg, id, color) {
          var node_img = source_dir+'img/page.gif';
          if (keys[i]['className'].match(/\bTH1/)  ||
              keys[i]['className'].match(/\bTH2/)  ||
+             keys[i]['className'].match(/\bTH3/)  ||
              keys[i]['className'].match(/\bTGraph/) ||
              keys[i]['className'].match(/\bRooHist/) ||
              keys[i]['className'].match(/\RooCurve/)) {
@@ -4566,6 +5313,7 @@ function createFillPatterns(svg, id, color) {
          var node_title = keys[i]['className'];
          if (keys[i]['className'].match(/\bTH1/) ||
              keys[i]['className'].match(/\bTH2/) ||
+             keys[i]['className'].match(/\bTH3/) ||
              keys[i]['className'].match(/\bTGraph/) ||
              keys[i]['className'].match(/\bRooHist/) ||
              keys[i]['className'].match(/\RooCurve/)) {
@@ -4635,6 +5383,7 @@ function createFillPatterns(svg, id, color) {
          var node_title = list[i]['_typename'];
          if (list[i]['_typename'].match(/\bTH1/) ||
              list[i]['_typename'].match(/\bTH2/) ||
+             list[i]['_typename'].match(/\bTH3/) ||
              list[i]['_typename'].match(/\bTGraph/) ||
              list[i]['_typename'].match(/\bRooHist/) ||
              list[i]['_typename'].match(/\RooCurve/)) {

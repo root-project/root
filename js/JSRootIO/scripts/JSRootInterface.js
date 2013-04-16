@@ -160,6 +160,7 @@ function displayTree(tree, cycle, node_id) {
 function displayObject(obj, cycle, idx) {
    if (!obj['_typename'].match(/\bJSROOTIO.TH1/) &&
        !obj['_typename'].match(/\bJSROOTIO.TH2/) &&
+       !obj['_typename'].match(/\bJSROOTIO.TH3/) &&
        !obj['_typename'].match(/\bJSROOTIO.TGraph/) &&
        !obj['_typename'].match(/\bRooHist/) &&
        !obj['_typename'].match(/\RooCurve/) &&
@@ -191,6 +192,7 @@ function displayMappedObject(obj_name, list_name, offset) {
    }
    if (!obj['_typename'].match(/\bJSROOTIO.TH1/) &&
        !obj['_typename'].match(/\bJSROOTIO.TH2/) &&
+       !obj['_typename'].match(/\bJSROOTIO.TH3/) &&
        !obj['_typename'].match(/\bJSROOTIO.TGraph/) &&
        !obj['_typename'].match(/\bRooHist/) &&
        !obj['_typename'].match(/\RooCurve/) &&
@@ -216,9 +218,12 @@ function AssertPrerequisites(andThen) {
       loadScript('http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js', function() {
       loadScript('http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/jquery-ui.min.js', function() {
       loadScript('http://d3js.org/d3.v2.min.js', function() {
+      loadScript(source_dir+'scripts/jquery.mousewheel.js', function() {
       loadScript(source_dir+'scripts/dtree.js', function() {
       loadScript(source_dir+'scripts/rawinflate.js', function() {
       loadScript(source_dir+'scripts/JSRootCore.js', function() {
+      loadScript(source_dir+'scripts/three.min.js', function() {
+      loadScript(source_dir+'fonts/helvetiker_regular.typeface.js', function() {
       loadScript(source_dir+'scripts/JSRootD3Painter.js', function() { 
       loadScript(source_dir+'scripts/JSRootIOEvolution.js', function() {
          if (andThen) {
@@ -235,7 +240,7 @@ function AssertPrerequisites(andThen) {
             $(version).prependTo("body");
          }
          $('#report').addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset");
-      }) }) }) }) }) }) }) });
+      }) }) }) }) }) }) }) }) }) }) });
       return true;
    }
    return false;
