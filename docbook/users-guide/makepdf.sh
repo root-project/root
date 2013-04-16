@@ -4,7 +4,7 @@
 
 oxygendir="/Applications/oxygen"
 
-docbookdirs="/usr/share/sgml/docbook/xsl-stylesheets-1.75.2 \
+docbookdirs="/usr/share/sgml/docbook/xsl-stylesheets \
              /usr/share/xml/docbook/stylesheet/docbook-xsl \
              /sw/share/xml/xsl/docbook-xsl"
 
