@@ -82,26 +82,26 @@ many times.
 The following very simple macro shows how to build and fill a <tt>TH2Poly</tt>:
 <pre>
 {
-   TH2Poly *h2p = new TH2Poly();
+    TH2Poly *h2p = new TH2Poly();
 
-   Double_t x1[] = {0, 5, 5};
-   Double_t y1[] = {0, 0, 5};
-   Double_t x2[] = {0, -1, -1, 0};
-   Double_t y2[] = {0, 0, -1, -1};
-   Double_t x3[] = {4, 3, 0, 1, 2.4};
-   Double_t y3[] = {4, 3.7, 1, 4.7, 3.5};
+    Double_t x1[] = {0, 5, 6};
+    Double_t y1[] = {0, 0, 5};
+    Double_t x2[] = {0, -1, -1, 0};
+    Double_t y2[] = {0, 0, -1, 3};
+    Double_t x3[] = {4, 3, 0, 1, 2.4};
+    Double_t y3[] = {4, 3.7, 1, 3.7, 2.5};
 
-   h2p->AddBin(3, x1, y1);
-   h2p->AddBin(3, x2, y2);
-   h2p->AddBin(3, x3, y3);
+    h2p->AddBin(3, x1, y1);
+    h2p->AddBin(4, x2, y2);
+    h2p->AddBin(5, x3, y3);
 
-   h2p->Fill(   3,    1, 3); // fill bin 1
-   h2p->Fill(-0.5, -0.5, 7); // fill bin 2
-   h2p->Fill(-0.7, -0.5, 1); // fill bin 2
-   h2p->Fill(   1,    3, 5); // fill bin 3
+    h2p->Fill(0.1, 0.01, 3);
+    h2p->Fill(-0.5, -0.5, 7);
+    h2p->Fill(-0.7, -0.5, 1);
+    h2p->Fill(1, 3, 1.5);
 }
 </pre>
-
+<p>
 More examples can bin found in <tt>$ROOTSYS/tutorials/hist/th2poly*.C</tt>
 
 <h3>Partitioning Algorithm</h3>

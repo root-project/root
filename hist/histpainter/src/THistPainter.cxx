@@ -2166,10 +2166,10 @@ Begin_Macro(source)
    Double_t x2[] = {0, -1, -1, 0};
    Double_t y2[] = {0, 0, -1, 3};
    Double_t x3[] = {4, 3, 0, 1, 2.4};
-   Double_t y3[] = {4, 3.7, 1, 4.7, 3.5};
+   Double_t y3[] = {4, 3.7, 1, 3.7, 2.5};
    h2p->AddBin(3, x1, y1);
    h2p->AddBin(4, x2, y2);
-   h2p->AddBin(4, x3, y3);
+   h2p->AddBin(5, x3, y3);
    h2p->Fill(0.1, 0.01, 3);
    h2p->Fill(-0.5, -0.5, 7);
    h2p->Fill(-0.7, -0.5, 1);
