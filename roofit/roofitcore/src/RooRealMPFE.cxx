@@ -649,7 +649,7 @@ Double_t RooRealMPFE::evaluate() const
     
     // Retrieve remote errors and feed into local error queue
     if (numError>0) {
-      cout  << "MPFE: there are errors..."<< endl ;
+      //cout  << "MPFE: there are errors..."<< endl ;
       msg=RetrieveErrors ;
       UInt_t tmp5 = write(_pipeToServer[1],&msg,sizeof(Message)) ;    
       if (tmp5<sizeof(Message)) perror("write") ;

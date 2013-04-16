@@ -564,11 +564,11 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       // Fill per-component split mode with Bulk Partition for now so that Auto will map to bulk-splitting of all components
       if (_mpinterl==RooFit::Hybrid) {
 	if (dset->numEntries()<10) {
-	  cout << "RAT::initSim("<< GetName() << ") MP mode is auto, setting split mode for component "<< n << " to SimComponents"<< endl ;
+	  //cout << "RAT::initSim("<< GetName() << ") MP mode is auto, setting split mode for component "<< n << " to SimComponents"<< endl ;
 	  _gofSplitMode[n] = RooFit::SimComponents ;
 	  _gofArray[n]->_mpinterl = RooFit::SimComponents ;
 	} else {
-	  cout << "RAT::initSim("<< GetName() << ") MP mode is auto, setting split mode for component "<< n << " to BulkPartition"<< endl ;
+	  //cout << "RAT::initSim("<< GetName() << ") MP mode is auto, setting split mode for component "<< n << " to BulkPartition"<< endl ;
 	  _gofSplitMode[n] = RooFit::BulkPartition ;
 	  _gofArray[n]->_mpinterl = RooFit::BulkPartition ;
 	}
