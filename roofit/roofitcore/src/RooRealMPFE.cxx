@@ -382,6 +382,7 @@ void RooRealMPFE::serverLoop()
       }
       break ;
 
+
     case RetrieveErrors:
 
       if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
@@ -398,7 +399,7 @@ void RooRealMPFE::serverLoop()
 	    msg = SendError ;
 	    UInt_t tmp1 = write(_pipeToClient[1],&msg,sizeof(Message)) ;
 	    UInt_t tmp2 = write(_pipeToClient[1],&iter->first,sizeof(RooAbsReal*)) ;
-	    
+	   
 	    UInt_t ntext = strlen(iter2->_msg) ;
 	    UInt_t tmp3 = write(_pipeToClient[1],&ntext,sizeof(Int_t)) ;
 	    UInt_t tmp4 = write(_pipeToClient[1],iter2->_msg,ntext+1) ;
@@ -412,12 +413,26 @@ void RooRealMPFE::serverLoop()
 	    oss2 << "PID" << gSystem->GetPid() << "/" ;
 	    printStream(oss2,kName|kClassName|kArgs,kInline)  ;
 	    UInt_t ntext3 = strlen(oss2.str().c_str()) ;
-	    UInt_t tmp7 = write(_pipeToClient[1],&ntext3,sizeof(Int_t)) ;
-	    UInt_t tmp8 = write(_pipeToClient[1],oss2.str().c_str(),ntext3+1) ;
+	    UInt_t tmp7(0),tmp8(0) ;
+	    if (ntext3>1023) {
+	      ntext3=1023 ;
+	      tmp7 = write(_pipeToClient[1],&ntext3,sizeof(Int_t)) ;
+	      char tmpbuf[1024] ;
+	      strncpy(tmpbuf,oss2.str().c_str(),1023) ;
+	      tmpbuf[1020]='.' ;
+	      tmpbuf[1021]='.' ;
+	      tmpbuf[1022]='.' ;
+	      tmpbuf[1023]=0 ;
+	      tmp8 = write(_pipeToClient[1],tmpbuf,ntext3+1) ;
+	    } else {
+	      tmp7 = write(_pipeToClient[1],&ntext3,sizeof(Int_t)) ;
+	      tmp8 = write(_pipeToClient[1],oss2.str().c_str(),ntext3+1) ;
+	    }
 
 	    if (tmp1+tmp2+tmp3+tmp4+tmp5+tmp6+tmp7+tmp8<
 		sizeof(Message)+sizeof(RooAbsReal*)+sizeof(Int_t)+ntext+1+sizeof(Int_t)+ntext2+1+sizeof(Int_t)+ntext3+1) 
 	      perror("write") ;
+
 	    	    
 	    if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
 				     << ") IPC toClient> SendError Arg " << iter->first << " Msg " << iter2->_msg << endl ; 
@@ -427,7 +442,7 @@ void RooRealMPFE::serverLoop()
 	RooAbsReal* null(0) ;
 	UInt_t tmp1 = write(_pipeToClient[1],&msg,sizeof(Message)) ;
 	UInt_t tmp2 = write(_pipeToClient[1],&null,sizeof(RooAbsReal*)) ;
-	if (tmp1+tmp2<sizeof(Message)+sizeof(RooAbsReal*)) perror("read") ;
+	if (tmp1+tmp2<sizeof(Message)+sizeof(RooAbsReal*)) perror("write") ;
       
       }
       // Clear error list on local side
@@ -653,8 +668,10 @@ Double_t RooRealMPFE::evaluate() const
       msg=RetrieveErrors ;
       UInt_t tmp5 = write(_pipeToServer[1],&msg,sizeof(Message)) ;    
       if (tmp5<sizeof(Message)) perror("write") ;
+
       if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
 			     << ") IPC toServer> RetrieveErrors " << endl ;    
+
 
       while(true) {
 	RooAbsReal* ptr(0) ;
@@ -668,16 +685,19 @@ Double_t RooRealMPFE::evaluate() const
 	if (ptr==0) {
 	  break ;
 	}
-
+	
 	UInt_t tmp6 = read(_pipeToClient[0],&ntext1,sizeof(Int_t)) ;
 	if (ntext1>1023) ntext1=1023 ; if (ntext1<0) ntext1=0 ; 
 	UInt_t tmp7 = read(_pipeToClient[0],msgbuf1,ntext1+1) ;
+
 	UInt_t tmp8 = read(_pipeToClient[0],&ntext2,sizeof(Int_t)) ;
 	if (ntext2>1023) ntext2=1023 ; if (ntext2<0) ntext2=0 ; 
 	UInt_t tmp9 = read(_pipeToClient[0],msgbuf2,ntext2+1) ;
+
 	UInt_t tmp10= read(_pipeToClient[0],&ntext3,sizeof(Int_t)) ;
 	if (ntext3>1023) ntext3=1023 ; if (ntext3<0) ntext3=0 ; 
 	UInt_t tmp11= read(_pipeToClient[0],msgbuf3,ntext3+1) ;
+
 	if (tmp6+tmp7+tmp8+tmp9+tmp10+tmp11<sizeof(Int_t)+ntext1+1+sizeof(Int_t)+ntext2+1+sizeof(Int_t)+ntext3+1) perror("read") ;
 	
 	if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName() 
