@@ -55,7 +55,8 @@
 //            - the same 3 as a tube;
 //            - first phi limit (in degrees)
 //            - second phi limit
-//
+// The segment will be be placed from the first angle (first phi limit)
+// to the second angle (second phi limit)
 //_____________________________________________________________________________
 //Begin_Html
 /*
@@ -557,7 +558,7 @@ void TGeoTube::GetBoundingCylinder(Double_t *param) const
    param[1] = fRmax; // Rmax
    param[1] *= param[1];
    param[2] = 0.;    // Phi1
-   param[3] = 360.;  // Phi1
+   param[3] = 360.;  // Phi2
 }
 
 //_____________________________________________________________________________
@@ -1141,23 +1142,25 @@ TGeoTubeSeg::TGeoTubeSeg()
 
 //_____________________________________________________________________________
 TGeoTubeSeg::TGeoTubeSeg(Double_t rmin, Double_t rmax, Double_t dz,
-                          Double_t phi1, Double_t phi2)
+                          Double_t phiStart, Double_t phiEnd)
             :TGeoTube(rmin, rmax, dz)
 {
-// Default constructor specifying minimum and maximum radius
+   // Default constructor specifying minimum and maximum radius.
+   // The segment will be from phiStart to phiEnd expressed in degree.
    SetShapeBit(TGeoShape::kGeoTubeSeg);
-   SetTubsDimensions(rmin, rmax, dz, phi1, phi2);
+   SetTubsDimensions(rmin, rmax, dz, phiStart, phiEnd);
    ComputeBBox();
 }
 
 //_____________________________________________________________________________
 TGeoTubeSeg::TGeoTubeSeg(const char *name, Double_t rmin, Double_t rmax, Double_t dz,
-                          Double_t phi1, Double_t phi2)
+                          Double_t phiStart, Double_t phiEnd)
             :TGeoTube(name, rmin, rmax, dz)
 {
-// Default constructor specifying minimum and maximum radius
+   // Default constructor specifying minimum and maximum radius 
+   // The segment will be from phiStart to phiEnd expressed in degree.
    SetShapeBit(TGeoShape::kGeoTubeSeg);
-   SetTubsDimensions(rmin, rmax, dz, phi1, phi2);
+   SetTubsDimensions(rmin, rmax, dz, phiStart, phiEnd);
    ComputeBBox();
 }
 
@@ -1190,10 +1193,10 @@ Double_t TGeoTubeSeg::Capacity() const
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoTubeSeg::Capacity(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2)
+Double_t TGeoTubeSeg::Capacity(Double_t rmin, Double_t rmax, Double_t dz, Double_t phiStart, Double_t phiEnd)
 {
 // Computes capacity of the shape in [length^3]
-   Double_t capacity = TMath::Abs(phi2-phi1)*TMath::DegToRad()*(rmax*rmax-rmin*rmin)*dz;
+   Double_t capacity = TMath::Abs(phiEnd-phiStart)*TMath::DegToRad()*(rmax*rmax-rmin*rmin)*dz;
    return capacity;
 }   
 
@@ -2017,15 +2020,16 @@ void TGeoTubeSeg::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
 
 //_____________________________________________________________________________
 void TGeoTubeSeg::SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
-                          Double_t phi1, Double_t phi2)
+                                    Double_t phiStart, Double_t phiEnd)
 {
-// Set dimensions of the tube segment.
+   // Set dimensions of the tube segment.
+   // The segment will be from phiStart to phiEnd expressed in degree.
    fRmin = rmin;
    fRmax = rmax;
    fDz   = dz;
-   fPhi1 = phi1;
-   if (fPhi1 < 0) fPhi1+=360.;
-   fPhi2 = phi2;
+   fPhi1 = phiStart;
+   if (fPhi1 < 0) fPhi1 += 360.;
+   fPhi2 = phiEnd;
    while (fPhi2<=fPhi1) fPhi2+=360.;
    if (TGeoShape::IsSameWithinTolerance(fPhi1,fPhi2)) Error("SetTubsDimensions", "In shape %s invalid phi1=%g, phi2=%g\n", GetName(), fPhi1, fPhi2);
 }

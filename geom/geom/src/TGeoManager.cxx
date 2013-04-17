@@ -2785,10 +2785,11 @@ TGeoVolume *TGeoManager::MakeTube(const char *name, TGeoMedium *medium,
 //_____________________________________________________________________________
 TGeoVolume *TGeoManager::MakeTubs(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz,
-                                     Double_t phi1, Double_t phi2)
+                                     Double_t phiStart, Double_t phiEnd)
 {
-// Make in one step a volume pointing to a tube segment shape with given medium.
-   return TGeoBuilder::Instance(this)->MakeTubs(name, medium, rmin, rmax, dz, phi1, phi2);
+   // Make in one step a volume pointing to a tube segment shape with given medium.
+   // The segment will be from phiStart to phiEnd, the angles are expressed in degree
+   return TGeoBuilder::Instance(this)->MakeTubs(name, medium, rmin, rmax, dz, phiStart, phiEnd);
 }
 
 //_____________________________________________________________________________
