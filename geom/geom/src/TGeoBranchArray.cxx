@@ -228,13 +228,6 @@ void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
    Int_t level = cache->GetLevel();
    if (!fMatrix) fMatrix = new TGeoHMatrix();
    fMatrix->CopyFrom(cache->GetCurrentMatrix());
-   if (!level) {
-//      TThread::Lock();
-      fLevel = 0;
-//      TThread::UnLock();
-      return;
-   }
-//   TThread::Lock();
    if (!fArray || level+1>fMaxLevel) {
       delete [] fArray; 
       fMaxLevel = level+1;
@@ -242,7 +235,6 @@ void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
    }
    fLevel = level;
    memcpy(fArray, branch, (fLevel+1)*sizeof(TGeoNode*));
-//   TThread::UnLock();
 }
 
 //______________________________________________________________________________
