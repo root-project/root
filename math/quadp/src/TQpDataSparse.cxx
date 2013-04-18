@@ -202,11 +202,11 @@ Double_t TQpDataSparse::DataNorm()
    componentNorm = fBa.NormInf();
    if (componentNorm > norm) norm = componentNorm;
 
-   TMatrixDSparse fA_abs(fQ);
+   TMatrixDSparse fA_abs(fA);
    componentNorm = (fA_abs.Abs()).Max();
    if (componentNorm > norm) norm = componentNorm;
 
-   TMatrixDSparse fC_abs(fQ);
+   TMatrixDSparse fC_abs(fC);
    componentNorm = (fC_abs.Abs()).Max();
    if (componentNorm > norm) norm = componentNorm;
 
