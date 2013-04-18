@@ -3156,8 +3156,8 @@ function createFillPatterns(svg, id, color) {
                .style("stroke-width", selwidth)
                .on('mouseover', function() { d3.select(this).transition().duration(100).style("opacity", 0.3) } )
                .on('mouseout', function() { d3.select(this).transition().duration(100).style("opacity", 0) } )
-               .append("svg:title").text(function(d) { return "x = [ " + (d.x-(2*d.xerr)).toPrecision(4) + 
-                       ", " + d.x.toPrecision(4) + " ] \nentries = " + d.y;
+               .append("svg:title").text(function(d) { return "x = [" + (d.x-(2*d.xerr)).toPrecision(4) + 
+                       ", " + d.x.toPrecision(4) + "] \nentries = " + d.y;
                });
          };
          histo['redraw'] = do_redraw;
@@ -3310,8 +3310,12 @@ function createFillPatterns(svg, id, color) {
                .enter()
                .append("svg:rect")
                .attr("class", "bins")
-               .attr("x", function(d) { return histo.x(d.x) + (scalex/2) - (d.z * constx/2);})
-               .attr("y", function(d) { return histo.y(d.y) + (scaley/2) - (d.z * consty/2);})
+               .attr("x", function(d) { 
+                  return histo.x(d.x + (scalex / 2)) - (0.5 * d.z * ((w / histo['fXaxis']['fNbins']) / maxbin) * xfactor);
+               })
+               .attr("y", function(d) { 
+                  return histo.y(d.y + (scaley / 2)) - (0.5 * d.z * ((h / histo['fYaxis']['fNbins']) / maxbin) * yfactor);
+               })
                .attr("width", function(d) {
                   if (options.Color > 0)
                      return (w / histo['fXaxis']['fNbins']) * xfactor;
@@ -3340,8 +3344,12 @@ function createFillPatterns(svg, id, color) {
                .data(bins)
                .enter()
                .append("svg:rect")
-               .attr("x", function(d) { return histo.x(d.x) + (scalex/2) - (d.z * constx/2);})
-               .attr("y", function(d) { return histo.y(d.y) + (scaley/2) - (d.z * consty/2);})
+               .attr("x", function(d) { 
+                  return histo.x(d.x + (scalex / 2)) - (0.5 * d.z * ((w / histo['fXaxis']['fNbins']) / maxbin) * xfactor);
+               })
+               .attr("y", function(d) { 
+                  return histo.y(d.y + (scaley / 2)) - (0.5 * d.z * ((h / histo['fYaxis']['fNbins']) / maxbin) * yfactor);
+               })
                .attr("width", function(d) {
                   if (options.Color > 0)
                      return (w / histo['fXaxis']['fNbins']) * xfactor;
@@ -3360,8 +3368,11 @@ function createFillPatterns(svg, id, color) {
                .on('mouseover', function() { d3.select(this).transition().duration(100).style("opacity", 0.3) } )
                .on('mouseout', function() { d3.select(this).transition().duration(100).style("opacity", 0) } )
                .append("svg:title")
-               .text(function(d) { return "x = " + d.x.toPrecision(4) + " \ny = " +
-                     d.y.toPrecision(4) + " \nentries = " + d.z; });
+               .text(function(d) { 
+                  return "x = [" + d.x.toPrecision(4) + ", " + (d.x + scalex).toPrecision(4) + 
+                  "] \ny = [" + d.y.toPrecision(4) + ", " + (d.y + scaley).toPrecision(4) + 
+                  "] \nentries = " + d.z;
+                });
          }
       };
       histo['redraw'] = do_redraw;
@@ -3436,10 +3447,10 @@ function createFillPatterns(svg, id, color) {
       }
       if (logy) {
          var ty = d3.scale.log().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([-size, size]);
-         var uty = d3.scale.log().domain([-size, size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
+         var uty = d3.scale.log().domain([size, -size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
       } else {
          var ty = d3.scale.linear().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([-size, size]);
-         var uty = d3.scale.linear().domain([-size, size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
+         var uty = d3.scale.linear().domain([size, -size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
       }
       if (logz) {
          var tz = d3.scale.log().domain([minbin, Math.ceil( maxbin/10 )*10]).range([0, size*2]);
@@ -3598,7 +3609,8 @@ function createFillPatterns(svg, id, color) {
          bin.position.x = tx( bins[i].x + (scalex/2));
          bin.position.y = wei/2;
          bin.position.z = -(ty( bins[i].y + (scaley/2)));
-         bin.name = "binx: " + bins[i].x.toPrecision(2) + " biny: " + bins[i].y.toPrecision(2) + "<br>" +
+         bin.name = "x: [" + bins[i].x.toPrecision(4) + "," + (bins[i].x + scalex).toPrecision(4) + "]<br>" +
+                    "y: [" + bins[i].y.toPrecision(4) + "," + (bins[i].y + scaley).toPrecision(4) + "]<br>" + 
                     "entries: " + bins[i].z.toFixed();
          toplevel.add( bin );
       }
@@ -3852,8 +3864,10 @@ function createFillPatterns(svg, id, color) {
          bin.position.x = tx( bins[i].x - (scalex/2));
          bin.position.y = tz( bins[i].z - (scalez/2));
          bin.position.z = -(ty( bins[i].y - (scaley/2)));
-         bin.name = "binx: " + bins[i].x.toPrecision(2) + " biny: " + bins[i].y.toPrecision(2) + "<br>" +
-                    "binz: " + bins[i].z.toPrecision(2) + " entries: " + bins[i].n.toFixed();
+         bin.name = "x: [" + bins[i].x.toPrecision(4) + "," + (bins[i].x + scalex).toPrecision(4) + "]<br>" +
+                    "y: [" + bins[i].y.toPrecision(4) + "," + (bins[i].y + scaley).toPrecision(4) + "]<br>" + 
+                    "z: [" + bins[i].z.toPrecision(4) + "," + (bins[i].z + scalez).toPrecision(4) + "]<br>" + 
+                    "entries: " + bins[i].n.toFixed();
          toplevel.add( bin );
       }
       // create a point light
