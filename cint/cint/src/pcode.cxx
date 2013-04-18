@@ -1535,14 +1535,6 @@ void G__OP2_plus(G__value *bufm1,G__value *bufm2)
     bufm2->obj.ld=G__Longdouble(*bufm2)+G__Longdouble(*bufm1);
     bufm2->type='q';
   }
-  else if('n'==bufm2->type || 'n'==bufm1->type) {
-    bufm2->obj.ll=G__Longlong(*bufm2)+G__Longlong(*bufm1);
-    bufm2->type='n';
-  }
-  else if('m'==bufm2->type || 'm'==bufm1->type) {
-    bufm2->obj.ull=G__ULonglong(*bufm2)+G__ULonglong(*bufm1);
-    bufm2->type='m';
-  }
   else
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
@@ -1558,6 +1550,14 @@ void G__OP2_plus(G__value *bufm1,G__value *bufm2)
     bufm2->obj.d =  G__convertT<double>(bufm2) + bufm1->obj.d;
     bufm2->type = 'd';
     bufm2->tagnum = bufm2->typenum = -1;
+  }
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)+G__Longlong(*bufm1);
+    bufm2->type='n';
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)+G__ULonglong(*bufm1);
+    bufm2->type='m';
   }
   else if(isupper(bufm2->type)) {
     bufm2->obj.i = bufm2->obj.i + bufm1->obj.i*G__sizeof(bufm2);
@@ -1595,14 +1595,6 @@ void G__OP2_minus(G__value *bufm1,G__value *bufm2)
     bufm2->obj.ld=G__Longdouble(*bufm2)-G__Longdouble(*bufm1);
     bufm2->type='q';
   }
-  else if('n'==bufm2->type || 'n'==bufm1->type) {
-    bufm2->obj.ll=G__Longlong(*bufm2)-G__Longlong(*bufm1);
-    bufm2->type='n';
-  }
-  else if('m'==bufm2->type || 'm'==bufm1->type) {
-    bufm2->obj.ull=G__ULonglong(*bufm2)-G__ULonglong(*bufm1);
-    bufm2->type='m';
-  }
   else
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
@@ -1618,6 +1610,14 @@ void G__OP2_minus(G__value *bufm1,G__value *bufm2)
     bufm2->obj.d = G__convertT<double>(bufm2) - bufm1->obj.d;
     bufm2->type = 'd';
     bufm2->tagnum = bufm2->typenum = -1;
+  }
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)-G__Longlong(*bufm1);
+    bufm2->type='n';
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)-G__ULonglong(*bufm1);
+    bufm2->type='m';
   }
   else if(isupper(bufm2->type)) {
     if(isupper(bufm1->type)) {
@@ -1661,14 +1661,6 @@ void G__OP2_multiply(G__value *bufm1,G__value *bufm2)
     bufm2->obj.ld=G__Longdouble(*bufm2)*G__Longdouble(*bufm1);
     bufm2->type='q';
   }
-  else if('n'==bufm2->type || 'n'==bufm1->type) {
-    bufm2->obj.ll=G__Longlong(*bufm2)*G__Longlong(*bufm1);
-    bufm2->type='n';
-  }
-  else if('m'==bufm2->type || 'm'==bufm1->type) {
-    bufm2->obj.ull=G__ULonglong(*bufm2)*G__ULonglong(*bufm1);
-    bufm2->type='m';
-  }
   else
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
@@ -1682,6 +1674,14 @@ void G__OP2_multiply(G__value *bufm1,G__value *bufm2)
   else if(G__isdoubleM(bufm1)) {
     bufm2->obj.d = G__convertT<double>(bufm2) * bufm1->obj.d;
     bufm2->type = 'd';
+  }
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)*G__Longlong(*bufm1);
+    bufm2->type='n';
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)*G__ULonglong(*bufm1);
+    bufm2->type='m';
   }
   else if(G__isunsignedM(bufm1)) {
     if(G__isunsignedM(bufm2))
