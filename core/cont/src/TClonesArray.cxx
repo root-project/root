@@ -434,18 +434,28 @@ void TClonesArray::Delete(Option_t *)
    // memory (e.g. objects inheriting from TNamed or containing TStrings
    // allocate memory). If not you better use Clear() since if is faster.
 
-   Long_t dtoronly = TObject::GetDtorOnly();
-   for (Int_t i = 0; i < fSize; i++) {
-      if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
-         // Tell custom operator delete() not to delete space when
-         // object fCont[i] is deleted. Only destructors are called
-         // for this object.
-         TObject::SetDtorOnly(fCont[i]);
-         delete fCont[i];
+   if ( fClass->TestBit(TClass::kIsEmulation) ) {
+      // In case of emulated class, we can not use the delete operator
+      // directly, it would use the wrong destructor.
+      for (Int_t i = 0; i < fSize; i++) {
+         if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
+            fClass->Destructor(fCont[i],kTRUE);
+         }
       }
+   } else {
+      Long_t dtoronly = TObject::GetDtorOnly();
+      for (Int_t i = 0; i < fSize; i++) {
+         if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
+            // Tell custom operator delete() not to delete space when
+            // object fCont[i] is deleted. Only destructors are called
+            // for this object.
+            TObject::SetDtorOnly(fCont[i]);
+            delete fCont[i];
+         }
+      }
+      // Restore the state.
+      TObject::SetDtorOnly((void*)dtoronly);
    }
-   // Restore the state.
-   TObject::SetDtorOnly((void*)dtoronly);
 
    // Protect against erroneously setting of owner bit.
    SetOwner(kFALSE);
