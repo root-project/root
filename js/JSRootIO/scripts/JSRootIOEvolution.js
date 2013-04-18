@@ -164,11 +164,13 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
       if (array_type == 'D') {
          for (var i = 0; i < n; ++i) {
             array['array'][i] = JSROOTIO.ntod(str, o); o += 8;
+            if (Math.abs(array['array'][i]) < 1e-300) array['array'][i] = 0.0;
          }
       }
       if (array_type == 'F') {
          for (var i = 0; i < n; ++i) {
             array['array'][i] = JSROOTIO.ntof(str, o); o += 4;
+            if (Math.abs(array['array'][i]) < 1e-300) array['array'][i] = 0.0;
          }
       }
       if (array_type == 'L') {
@@ -214,11 +216,13 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
       if (array_type == 'D') {
          for (var i = 0; i < n; ++i) {
             array['array'][i] = JSROOTIO.ntod(str, o); o += 8;
+            if (Math.abs(array['array'][i]) < 1e-300) array['array'][i] = 0.0;
          }
       }
       else if (array_type == 'F') {
          for (var i = 0; i < n; ++i) {
             array['array'][i] = JSROOTIO.ntof(str, o); o += 4;
+            if (Math.abs(array['array'][i]) < 1e-300) array['array'][i] = 0.0;
          }
       }
       else if (array_type == 'L') {
@@ -700,9 +704,11 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
             case kFloat:
             case kDouble32:
                obj[prop] = JSROOTIO.ntof(str, o); o += 4;
+               if (Math.abs(obj[prop]) < 1e-300) obj[prop] = 0.0;
                break;
             case kDouble:
                obj[prop] = JSROOTIO.ntod(str, o); o += 8;
+               if (Math.abs(obj[prop]) < 1e-300) obj[prop] = 0.0;
                break;
             case kUChar:
                obj[prop] = (str.charCodeAt(o) & 0xff) >>> 0; o++;
