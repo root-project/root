@@ -101,12 +101,12 @@ TQpDataSparse::TQpDataSparse(TVectorD       &c_in,   TMatrixDSparse &Q_in,
       fMz = fC.GetNrows();
    } else
    fMz = 0;
-   fQ.Print();
-   fA.Print();
-   fC.Print();
-   printf("fNx: %d\n",fNx);
-   printf("fMy: %d\n",fMy);
-   printf("fMz: %d\n",fMz);
+   // fQ.Print();
+   // fA.Print();
+   // fC.Print();
+   // printf("fNx: %d\n",fNx);
+   // printf("fMy: %d\n",fMy);
+   // printf("fMz: %d\n",fMz);
 }
 
 
