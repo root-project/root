@@ -616,6 +616,12 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
   // a range specification on the data, the cloneData argument is ignore and
   // the data is always cloned.
 
+  // Trigger refresh of likelihood offsets 
+  if (isOffsetting()) {
+    enableOffsetting(kFALSE) ;
+    enableOffsetting(kTRUE) ;
+  }
+
   switch(operMode()) {
 
   case Slave:
@@ -659,6 +665,7 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
     break ;
   }
 
+
   return kTRUE ;
 }
 
@@ -670,7 +677,6 @@ void RooAbsTestStatistic::enableOffsetting(Bool_t flag)
   if (!_init) {
     const_cast<RooAbsTestStatistic*>(this)->initialize() ;
   }
-
   
   switch(operMode()) {
     
@@ -684,12 +690,14 @@ void RooAbsTestStatistic::enableOffsetting(Bool_t flag)
     break ;
 
   case SimMaster:
+    _doOffset = flag ;
     for (Int_t i=0 ; i<_nGof ; i++) {
-      _gofArray[i]->enableOffsetting(flag) ;
+      _gofArray[i]->enableOffsetting(flag) ;      
     }
     break ;
 
   case MPMaster:    
+    _doOffset = flag ;
     for (Int_t i=0 ; i<_nCPU ; i++) {
       _mpfeArray[i]->enableOffsetting(flag) ;
     }

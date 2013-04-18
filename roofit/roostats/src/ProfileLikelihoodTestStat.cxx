@@ -73,15 +73,15 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
           RooStats::RemoveConstantParameters(allParams);
 
           // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-          fNll = fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(fConditionalObs));
+          fNll = fPdf->createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(fConditionalObs), RooFit::Offset(fLOffset));
 
           created = kTRUE ;
           delete allParams;
           if (fPrintLevel > 1) cout << "creating NLL " << fNll << " with data = " << &data << endl ;
        }
        if (reuse && !created) {
-          if (fPrintLevel > 1) cout << "reusing NLL " << fNll << " new data = " << &data << endl ;
-          fNll->setData(data,kFALSE) ;
+	 if (fPrintLevel > 1) cout << "reusing NLL " << fNll << " new data = " << &data << endl ;
+	 fNll->setData(data,kFALSE) ;
        }
 
 
