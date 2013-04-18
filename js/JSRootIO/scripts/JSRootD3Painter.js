@@ -2045,12 +2045,12 @@ function createFillPatterns(svg, id, color) {
                       " \nerror y = " + d.yerr.toPrecision(4);
             });
          g.selectAll("line")
-            .append("svg:title")
-            .text(function(d) {
-               return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4) +
-                      " \nerror x = " + d.xerr.toPrecision(4) +
-                      " \nerror y = " + d.yerr.toPrecision(4);
-            });
+           .append("svg:title")
+           .text(function(d) {
+              return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4) +
+                     " \nerror x = " + d.xerr.toPrecision(4) +
+                     " \nerror y = " + d.yerr.toPrecision(4);
+           });
       };
       histo['redraw'] = do_redraw;
       do_redraw();
@@ -2101,8 +2101,8 @@ function createFillPatterns(svg, id, color) {
             };
          });
          func['bins'] = bins;
-         //interpolate_method = 'monotone';
-         interpolate_method = 'cardinal-open';
+         interpolate_method = 'monotone';
+         //interpolate_method = 'cardinal-open';
       }
       else {
          // we don't have the points, so let's try to interpret the function
@@ -2182,6 +2182,19 @@ function createFillPatterns(svg, id, color) {
             .style("stroke-width", func['fLineWidth'])
             .style("stroke-dasharray", root_line_styles[func['fLineStyle']])
             .style("fill", "none");
+
+         // add tooltips
+         g.selectAll("line") 
+            .data(bins) 
+            .enter() 
+            .append("svg:circle") 
+            .attr("cx", function(d) { return x(d.x); }) 
+            .attr("cy", function(d) { return y(d.y); }) 
+            .attr("r", 3) 
+            .attr("opacity", 0) 
+            .append("svg:title").text(function(d) {
+               return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4);
+            });
       };
       func['redraw'] = do_redraw;
       do_redraw();
@@ -2684,7 +2697,10 @@ function createFillPatterns(svg, id, color) {
                .attr("y", function(d) { return graph.y(d.y)} )
                .attr("width", function(d) { return (w / (xdom[1]-xdom[0]))-1} )
                .attr("height", function(d) { return graph.ys(d.bh)} )
-               .style("fill", fillcolor);
+               .style("fill", fillcolor)
+               .append("svg:title").text(function(d) {
+                  return "x = " + d.x.toPrecision(4) + " \nentries = " + d.y.toPrecision(4);
+               });
          }
          if (exclusionGraph) {
             /* first draw exclusion area, and then the line */
@@ -2716,10 +2732,23 @@ function createFillPatterns(svg, id, color) {
                .style("stroke-width", lw)
                .style("stroke-dasharray", root_line_styles[graph['fLineStyle']])
                .style("fill", (optionFill == 1) ? root_colors[graph['fFillColor']] : "none");
+
+            // add tooltips
+            g.selectAll("line") 
+               .data(bins) 
+               .enter() 
+               .append("svg:circle") 
+               .attr("cx", function(d) { return x(d.x); }) 
+               .attr("cy", function(d) { return y(d.y); }) 
+               .attr("r", 3) 
+               .attr("opacity", 0) 
+               .append("svg:title").text(function(d) {
+                  return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4);
+               });
          }
          if ((graph['_typename'] == 'JSROOTIO.TGraphErrors' ||
               graph['_typename'] == 'JSROOTIO.TGraphAsymmErrors' ||
-              graph['_typename'].match(/\bRooHist/)) && draw_errors) {
+              graph['_typename'].match(/\bRooHist/)) && draw_errors && !optionBar) {
             /* Add x-error indicators */
             g.selectAll("error_x")
                .data(graph.bins)
@@ -2785,7 +2814,16 @@ function createFillPatterns(svg, id, color) {
                .attr("y2", function(d) { return graph.y(d.y+d.eyhigh) })
                .style("stroke", root_colors[graph['fLineColor']])
                .style("stroke-width", graph['fLineWidth']);
+
+            g.selectAll("line")
+              .append("svg:title")
+              .text(function(d) {
+                  return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4) +
+                         "\nerror x = -" + d.exlow.toPrecision(4) + "/+" + d.exhigh.toPrecision(4) +
+                         "\nerror y = -" + d.eylow.toPrecision(4) + "/+" + d.eyhigh.toPrecision(4);
+               });
          }
+         else draw_errors = false;
          if (showMarker) {
             /* Add markers */
             var filled = false;
@@ -2826,7 +2864,7 @@ function createFillPatterns(svg, id, color) {
                   break;
             }
             g.selectAll("markers")
-               .data(bins)
+               .data(graph.bins)
                .enter()
                .append("svg:path")
                .attr("class", "marker")
@@ -2835,7 +2873,15 @@ function createFillPatterns(svg, id, color) {
                .style("stroke", root_colors[graph['fMarkerColor']])
                .attr("d", marker)
                .append("svg:title")
-               .text(function(d) { return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4); });
+               .text(function(d) {
+                  if (draw_errors)
+                     return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4) +
+                            "\nerror x = -" + d.exlow.toPrecision(4) + "/+" + d.exhigh.toPrecision(4) +
+                            "\nerror y = -" + d.eylow.toPrecision(4) + "/+" + d.eyhigh.toPrecision(4);
+                  else 
+                     return "x = " + d.x.toPrecision(4) + " \ny = " + d.y.toPrecision(4);
+               });
+
          }
       };
       graph['redraw'] = do_redraw;
@@ -3967,6 +4013,10 @@ function createFillPatterns(svg, id, color) {
          string = string.replace('#', '\\');
       string = string.replace(' ', '\\: ');
 
+      var parse = new jsMath.Parser(string, null, null, null);
+      parse.Parse();
+      if (parse.error) return false;
+
       // method using jsMath do display formulae and LateX
       // unfortunately it works only on FireFox (Chrome displays it,
       // but at wrong coordinates, and IE doesn't support foreignObject
@@ -3984,6 +4034,7 @@ function createFillPatterns(svg, id, color) {
          .attr("class", "math")
          .html(string);
       jsMath.ProcessElement(math[0][0]);
+      return true;
    };
 
    JSROOTPainter.drawLegend = function(vis, pad, pave) {
