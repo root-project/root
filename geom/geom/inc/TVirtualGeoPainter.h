@@ -123,7 +123,7 @@ public:
    virtual void       PrintOverlaps() const = 0;
    virtual void       PaintVolume(TGeoVolume *vol, Option_t *option="", TGeoMatrix* global=0) = 0;
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="") = 0;
-   virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) = 0;
+   virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol, Bool_t check_norm) = 0;
    virtual void       Raytrace(Option_t *option="") = 0;
    virtual TGeoNode  *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path) = 0;
    virtual void       SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,

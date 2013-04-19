@@ -1243,14 +1243,14 @@ void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)
 }
 
 //_____________________________________________________________________________
-void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz)
+void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol, Bool_t check_norm)
 {
 // Random raytracing method.
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TGeoVolume *old_vol = fGeoManager->GetTopVolume();
    if (old_vol!=this) fGeoManager->SetTopVolume(this);
    else old_vol=0;
-   fGeoManager->RandomRays(nrays, startx, starty, startz);
+   fGeoManager->RandomRays(nrays, startx, starty, startz, target_vol, check_norm);
    if (old_vol) fGeoManager->SetTopVolume(old_vol);
 }
 

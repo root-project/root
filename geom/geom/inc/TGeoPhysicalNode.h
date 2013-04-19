@@ -68,7 +68,7 @@ public:
    // destructor
    virtual ~TGeoPhysicalNode();
 
-   void              Align(TGeoMatrix *newmat=0, TGeoShape *newshape=0, Bool_t check=kFALSE, Double_t ovlp=0.001);
+   Bool_t            Align(TGeoMatrix *newmat=0, TGeoShape *newshape=0, Bool_t check=kFALSE, Double_t ovlp=0.001);
    void              cd() const;
    void              Draw(Option_t *option="");
    Int_t             GetLevel() const {return fLevel;}

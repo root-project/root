@@ -317,6 +317,31 @@ void TGeoBoolNode::RegisterMatrices()
 }
 
 //_____________________________________________________________________________
+Bool_t TGeoBoolNode::ReplaceMatrix(TGeoMatrix *mat, TGeoMatrix *newmat)
+{
+// Replace one of the matrices. Does not work with TGeoIdentity. Returns true
+// if replacement was successful.
+   if (mat==gGeoIdentity || newmat==gGeoIdentity) {
+      Error("ReplaceMatrix", "Matrices should not be gGeoIdentity. Use default matrix constructor to repersent identities.");
+      return kFALSE;
+   }
+   if (!mat || !newmat) {
+      Error("ReplaceMatrix", "Matrices should not be null pointers.");
+      return kFALSE;
+   }
+   Bool_t replaced = kFALSE;
+   if (fLeftMat == mat) {
+      fLeftMat  = newmat;
+      replaced = kTRUE;
+   }
+   if (fRightMat == mat) {
+      fRightMat  = newmat;
+      replaced = kTRUE;
+   }
+   return replaced;
+}
+
+//_____________________________________________________________________________
 void TGeoBoolNode::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
@@ -357,7 +382,15 @@ void TGeoBoolNode::Sizeof3D() const
    fLeft->Sizeof3D();
    fRight->Sizeof3D();
 }
+
 ClassImp(TGeoUnion)
+
+//______________________________________________________________________________
+TGeoBoolNode *TGeoUnion::MakeClone() const
+{
+// Make a clone of this. Pointers are preserved.
+   return new TGeoUnion(fLeft, fRight, fLeftMat, fRightMat);
+}   
 
 //______________________________________________________________________________
 void TGeoUnion::Paint(Option_t *option)
@@ -740,6 +773,13 @@ void TGeoUnion::Sizeof3D() const
 ClassImp(TGeoSubtraction)
 
 //______________________________________________________________________________
+TGeoBoolNode *TGeoSubtraction::MakeClone() const
+{
+// Make a clone of this. Pointers are preserved.
+   return new TGeoSubtraction(fLeft, fRight, fLeftMat, fRightMat);
+}
+
+//______________________________________________________________________________
 void TGeoSubtraction::Paint(Option_t *option)
 {
 // Paint method.
@@ -1047,6 +1087,13 @@ void TGeoSubtraction::Sizeof3D() const
 }
 
 ClassImp(TGeoIntersection)
+
+//______________________________________________________________________________
+TGeoBoolNode *TGeoIntersection::MakeClone() const
+{
+// Make a clone of this. Pointers are preserved.
+   return new TGeoIntersection(fLeft, fRight, fLeftMat, fRightMat);
+}
 
 //______________________________________________________________________________
 void TGeoIntersection::Paint(Option_t *option)

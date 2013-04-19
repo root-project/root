@@ -51,6 +51,8 @@
 #include "TGeoCache.h"
 #include "TGeoMatrix.h"
 #include "TGeoShapeAssembly.h"
+#include "TGeoCompositeShape.h"
+#include "TGeoBoolNode.h"
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 
@@ -133,7 +135,7 @@ TGeoPhysicalNode::~TGeoPhysicalNode()
 }
 
 //_____________________________________________________________________________
-void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t check, Double_t ovlp)
+Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t check, Double_t ovlp)
 {
    // Align a physical node with a new relative matrix/shape.
    // Example: /TOP_1/A_1/B_1/C_1
@@ -144,15 +146,19 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    // *NOTE* The operations will affect ONLY the LAST node in the branch. All
    //   volumes/nodes in the branch represented by this physical node are
    //   CLONED so the operation does not affect other possible replicas.
-   if (!newmat && !newshape) return;
+   if (!newmat && !newshape) return kFALSE;
    if (TGeoManager::IsLocked()) {
       Error("Align", "Not performed. Geometry in LOCKED mode !");
-      return;
+      return kFALSE;
    }
+   if (newmat == gGeoIdentity) {
+      Error("Align", "Cannot align using gGeoIdentity. Use some default matrix constructor to represent identities.");
+      return kFALSE;
+   }   
    TGeoNode *node = GetNode();
    if (node->IsOffset()) {
       Error("Align", "Cannot align division nodes: %s\n",node->GetName());
-      return;
+      return kFALSE;
    }
    TGeoNode *nnode = 0;
    TGeoVolume *vm = GetVolume(0);
@@ -168,7 +174,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
          if (id[i]<0) {
             Error("Align","%s cannot align node %s",GetName(), node->GetName());
             delete [] id;
-            return;
+            return kFALSE;
          }
       }
       for (i=0; i<fLevel; i++) {
@@ -176,7 +182,17 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
          node = GetNode(i+1);
          // Clone daughter volume and node
          vd = node->GetVolume()->CloneVolume();
+         if (!vd) {
+            delete [] id;
+            Fatal("Align", "Cannot clone volume %s", node->GetVolume()->GetName());
+            return kFALSE;
+         }
          nnode = node->MakeCopyNode();
+         if (!nnode) {
+            delete [] id;
+            Fatal("Align", "Cannot make copy node for %s", node->GetName());
+            return kFALSE;
+         }   
          // Correct pointers to mother and volume
          nnode->SetVolume(vd);
          nnode->SetMotherVolume(vm);
@@ -200,14 +216,77 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    vm = nnode->GetMotherVolume();
    vd = nnode->GetVolume();
    if (newmat) {
+      // Check if the old matrix for this node was shared
+      Bool_t shared = kFALSE;
+      Int_t nd = vm->GetNdaughters();
+      TGeoCompositeShape *cs;
+      if (nnode->GetMatrix()->IsShared()) {
+         // Now find the node having a composite shape using this shared matrix
+         for (i=0; i<nd; i++) {
+            node = vm->GetNode(i);
+            if (node==nnode) continue;
+            if (node->IsOffset()) continue;
+            if (!node->GetVolume()->GetShape()->IsComposite()) continue;
+            // We found a node having a composite shape, scan for the shared matrix
+            cs = (TGeoCompositeShape*)node->GetVolume()->GetShape();
+            if (cs->GetBoolNode()->GetRightMatrix() != nnode->GetMatrix()) continue;
+            // The composite uses the matrix -> replace it
+            TGeoCompositeShape *ncs = new TGeoCompositeShape(cs->GetName(), cs->GetBoolNode()->MakeClone());
+            ncs->GetBoolNode()->ReplaceMatrix(nnode->GetMatrix(), newmat);
+            // We have to clone the node/volume having the composite shape
+            TGeoVolume *newvol = node->GetVolume()->CloneVolume();
+            if (!newvol) {
+               Error("Align", "Cannot clone volume %s", node->GetVolume()->GetName());
+               return kFALSE;
+            }
+            newvol->SetShape(ncs);
+            TGeoNode *newnode = node->MakeCopyNode();
+            if (!newnode) {
+               Error("Align", "Cannot clone node %s", node->GetName());
+               return kFALSE;
+            }
+            newnode->SetVolume(newvol);
+            newnode->SetMotherVolume(vm);
+            if (vm->TestBit(TGeoVolume::kVolumeImportNodes)) {
+               gGeoManager->GetListOfGShapes()->Add(newnode);
+            }
+            vm->GetNodes()->RemoveAt(i);
+            vm->GetNodes()->AddAt(newnode,i);
+            shared = kTRUE;
+         }
+         if (!shared) Error("Align", "The matrix replaced for %s is not actually shared", GetName());
+      } else {
+         // The aligned node may have a composite shape containing a shared matrix
+         if (vd->GetShape()->IsComposite()) {
+            cs = (TGeoCompositeShape*)vd->GetShape();
+            if (cs->GetBoolNode()->GetRightMatrix()->IsShared()) {
+               if (!nnode->GetMatrix()->IsIdentity()) {
+                  Error("Align", "The composite shape having a shared matrix on the subtracted branch must be positioned using identity matrix.");
+                  return kFALSE;
+               }
+               // We have to put the alignment matrix on top of the left branch
+               // of the composite shape. The node is already decoupled from logical tree.
+               TGeoCompositeShape *ncs = new TGeoCompositeShape(cs->GetName(), cs->GetBoolNode()->MakeClone());
+               TGeoMatrix *oldmat = ncs->GetBoolNode()->GetLeftMatrix();
+               TGeoHMatrix *newmat1 = new TGeoHMatrix(*newmat);
+               newmat1->Multiply(oldmat);
+               ncs->GetBoolNode()->ReplaceMatrix(oldmat, newmat1);
+               vd->SetShape(ncs);
+               // The right-side matrix pointer is preserved, so no need to update nodes.
+               aligned = 0; // to prevent updating its matrix
+            }
+         }
+      }      
       // Register matrix and make it the active one
       if (!newmat->IsRegistered()) newmat->RegisterYourself();
-      aligned->SetMatrix(newmat);
-      // Update the global matrix for the aligned node
-      TGeoHMatrix *global = GetMatrix();
-      TGeoHMatrix *up = GetMatrix(fLevel-1);
-      *global = up;
-      global->Multiply(newmat);
+      if (aligned) {
+         aligned->SetMatrix(newmat);
+         // Update the global matrix for the aligned node
+         TGeoHMatrix *global = GetMatrix();
+         TGeoHMatrix *up = GetMatrix(fLevel-1);
+         *global = up;
+         global->Multiply(newmat);
+      }   
    }
    // Change the shape for the aligned node
    if (newshape) vd->SetShape(newshape);
@@ -216,6 +295,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    for (i=fLevel-1; i>0; i--) {
       Bool_t dassm = vd->IsAssembly(); // is daughter assembly ?
       vd = GetVolume(i);
+      if (!vd) break;
       Bool_t cassm = vd->IsAssembly(); // is current assembly ?
       if (cassm) ((TGeoShapeAssembly*)vd->GetShape())->NeedsBBoxRecompute();
       if ((cassm || dassm) && vd->GetVoxels()) vd->GetVoxels()->SetNeedRebuild();
@@ -234,6 +314,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
       // Set aligned node to be checked
       i = fLevel;
       node = GetNode(i);
+      if (!node) return kTRUE;
       if (node->IsOverlapping()) {
          Info("Align", "The check for overlaps for node: \n%s\n cannot be performed since the node is declared possibly overlapping",
               GetName());
@@ -255,6 +336,7 @@ void TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t che
    // Clean current matrices from cache
    gGeoManager->CdTop();
    SetAligned(kTRUE);
+   return kTRUE;
 }
 
 //_____________________________________________________________________________

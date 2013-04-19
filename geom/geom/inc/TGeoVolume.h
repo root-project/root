@@ -193,7 +193,7 @@ public:
    TGeoVolume     *MakeReflectedVolume(const char *newname="") const;
    Bool_t          OptimizeVoxels(); // *MENU*
    void            RandomPoints(Int_t npoints=1000000, Option_t *option=""); // *MENU*
-   void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0); // *MENU*
+   void            RandomRays(Int_t nrays=10000, Double_t startx=0, Double_t starty=0, Double_t startz=0, const char *target_vol=0, Bool_t check_norm=kFALSE); // *MENU*
    void            Raytrace(Bool_t flag=kTRUE); // *TOGGLE* *GETTER=IsRaytracing
    void            RegisterYourself(Option_t *option="");
    void            RemoveNode(TGeoNode *node);
