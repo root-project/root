@@ -75,11 +75,14 @@ TDatabasePDG::~TDatabasePDG()
 
    if (fParticleList) {
       fParticleList->Delete();
-      delete fParticleList;
-      delete fPdgMap;
+      delete fParticleList;    // this deletes all objects in the list
+      if (fPdgMap) delete fPdgMap;
    }
                                 // classes do not own particles...
-   if (fListOfClasses) delete fListOfClasses;
+   if (fListOfClasses) { 
+      fListOfClasses->Delete();
+      delete fListOfClasses;
+   }
    gROOT->GetListOfSpecials()->Remove(this);
    fgInstance = 0;
 }

@@ -30,13 +30,15 @@ protected:
    TObjArray           *fListOfClasses;    // list of classes (leptons etc.)
    mutable TExMap      *fPdgMap;           //!hash-map from pdg-code to particle
 
+   // make copy-constructor and assigment protected since class cannot be copied
    TDatabasePDG(const TDatabasePDG& db)
      : TNamed(db), fParticleList(db.fParticleList),
      fListOfClasses(db.fListOfClasses), fPdgMap(0) { }
 
    TDatabasePDG& operator=(const TDatabasePDG& db)
-     {if(this!=&db) {TNamed::operator=(db); fParticleList=db.fParticleList;
-     fListOfClasses=db.fListOfClasses;} return *this;}
+   {if(this!=&db) {TNamed::operator=(db); fParticleList=db.fParticleList;
+         fListOfClasses=db.fListOfClasses; fPdgMap=db.fPdgMap;} 
+      return *this;}
 
    void BuildPdgMap() const;
 
