@@ -3603,7 +3603,7 @@ function createFillPatterns(svg, id, color) {
       for ( i = 0; i < bins.length; ++i ) {
          wei = tz( optFlag ? maxbin : bins[i].z );
          bin = THREE.SceneUtils.createMultiMaterialObject(
-            new THREE.CubeGeometry( size/20, wei, size/20 ),
+            new THREE.CubeGeometry( 2*size/nbinsx, wei, 2*size/nbinsy ),
             [ new THREE.MeshLambertMaterial( { color: fillcolor.getHex(), shading: THREE.NoShading } ),
               wireMaterial ] );
          bin.position.x = tx( bins[i].x + (scalex/2));
@@ -5304,23 +5304,32 @@ function createFillPatterns(svg, id, color) {
          var message = keys[i]['className']+' is not yet implemented.';
          tree_link = "javascript:  alert('" + message + "')";
          var node_img = source_dir+'img/page.gif';
-         if (keys[i]['className'].match(/\bTH1/)  ||
-             keys[i]['className'].match(/\bTH2/)  ||
-             keys[i]['className'].match(/\bTH3/)  ||
-             keys[i]['className'].match(/\bTGraph/) ||
-             keys[i]['className'].match(/\bRooHist/) ||
+         if (keys[i]['className'].match(/\bTH1/) ||
+             keys[i]['className'].match(/\bRooHist/)) {
+            tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
+            node_img = source_dir+'img/histo.png';
+         }
+         else if (keys[i]['className'].match(/\bTH2/)) {
+            tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
+            node_img = source_dir+'img/histo2d.png';
+         }
+         else if (keys[i]['className'].match(/\bTH3/)) {
+            tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
+            node_img = source_dir+'img/histo3d.png';
+         }
+         else if (keys[i]['className'].match(/\bTGraph/) ||
              keys[i]['className'].match(/\RooCurve/)) {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
-            node_img = source_dir+'img/graphical.png';
+            node_img = source_dir+'img/graph.png';
          }
          else if (keys[i]['className'] ==  'TF1') {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
-            node_img = source_dir+'img/graphical.png';
+            node_img = source_dir+'img/graph.png';
             node_title = keys[i]['name'];
          }
          else if (keys[i]['className'] ==  'TProfile') {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
-            node_img = source_dir+'img/graphical.png';
+            node_img = source_dir+'img/profile.png';
             node_title = keys[i]['name'];
          }
          else if (keys[i]['name'] == 'StreamerInfo') {
@@ -5345,6 +5354,7 @@ function createFillPatterns(svg, id, color) {
          }
          else if (keys[i]['className'].match('TCanvas')) {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
+            node_img = source_dir+'img/canvas.png';
             node_title = keys[i]['name'];
          }
          if (keys[i]['name'] != '' && keys[i]['className'] != 'TFile')
@@ -5377,18 +5387,30 @@ function createFillPatterns(svg, id, color) {
          var node_img = source_dir+'img/page.gif';
          var node_title = keys[i]['className'];
          if (keys[i]['className'].match(/\bTH1/) ||
-             keys[i]['className'].match(/\bTH2/) ||
-             keys[i]['className'].match(/\bTH3/) ||
-             keys[i]['className'].match(/\bTGraph/) ||
-             keys[i]['className'].match(/\bRooHist/) ||
+             keys[i]['className'].match(/\bRooHist/)) {
+            tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
+            node_img = source_dir+'img/histo.png';
+            node_title = keys[i]['name'];
+         }
+         else if (keys[i]['className'].match(/\bTH2/)) {
+            tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
+            node_img = source_dir+'img/histo2d.png';
+            node_title = keys[i]['name'];
+         }
+         else if (keys[i]['className'].match(/\bTH3/)) {
+            tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
+            node_img = source_dir+'img/histo3d.png';
+            node_title = keys[i]['name'];
+         }
+         else if (keys[i]['className'].match(/\bTGraph/) ||
              keys[i]['className'].match(/\RooCurve/)) {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
-            node_img = source_dir+'img/graphical.png';
+            node_img = source_dir+'img/graph.png';
             node_title = keys[i]['name'];
          }
          else if (keys[i]['className'] ==  'TProfile') {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
-            node_img = source_dir+'img/graphical.png';
+            node_img = source_dir+'img/profile.png';
             node_title = keys[i]['name'];
          }
          else if (keys[i]['name'] == 'StreamerInfo') {
@@ -5413,6 +5435,7 @@ function createFillPatterns(svg, id, color) {
          }
          else if (keys[i]['className'].match('TCanvas')) {
             tree_link = "javascript: showObject('"+keys[i]['name']+"',"+keys[i]['cycle']+");";
+            node_img = source_dir+'img/canvas.png';
             node_title = keys[i]['name'];
          }
          if (keys[i]['name'] != '' && keys[i]['className'] != 'TFile') {
@@ -5454,7 +5477,7 @@ function createFillPatterns(svg, id, color) {
              list[i]['_typename'].match(/\RooCurve/)) {
             //tree_link = "javascript: displayMappedObject('"+list[i]['_name']+"');";
             tree_link = "javascript: displayMappedObject('"+list[i]['_name']+"','"+list[i]['_listname']+"',"+list[i]['pos']+");";
-            node_img = source_dir+'img/graphical.png';
+            node_img = source_dir+'img/graph.png';
             node_title = list[i]['_name'];
          }
          else if (list[i]['_typename'] == 'TList' || list[i]['_typename'] == 'TObjArray') {
