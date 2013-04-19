@@ -2128,7 +2128,8 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
    Int_t itot=0;
    Int_t n10=nrays/10;
    Double_t theta,phi, step, normlen;
-   const Double_t *normal;
+   Double_t lnorm[3] = {0.,0.,0.};
+   const Double_t *normal = lnorm;
    Double_t ox = ((TGeoBBox*)vol->GetShape())->GetOrigin()[0];
    Double_t oy = ((TGeoBBox*)vol->GetShape())->GetOrigin()[1];
    Double_t oz = ((TGeoBBox*)vol->GetShape())->GetOrigin()[2];
