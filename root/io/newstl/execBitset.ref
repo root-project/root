@@ -1,0 +1,15 @@
+
+Processing execBitset.cxx+...
+i: 0 val: false
+i: 1 val: true
+i: 2 val: false
+i: 3 val: true
+i: 4 val: false
+About to write
+About to read
+Finished reading
+i: 0 val: false
+i: 1 val: true
+i: 2 val: false
+i: 3 val: true
+i: 4 val: false
