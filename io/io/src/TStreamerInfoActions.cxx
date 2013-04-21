@@ -945,7 +945,8 @@ namespace TStreamerInfoActions
       if ( (proxy.GetCollectionType() == TClassEdit::kVector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) {
          return kVectorLooper;
       } else if (proxy.GetCollectionType() == TClassEdit::kSet || proxy.GetCollectionType() == TClassEdit::kMultiSet
-                 || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) {
+                 || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap 
+                 || proxy.GetCollectionType() == TClassEdit::kBitSet) {
          return kAssociativeLooper;
       } else {
          return kGenericLooper;
