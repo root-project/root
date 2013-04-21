@@ -794,6 +794,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
             case TClassEdit::kMultiMap:
             case TClassEdit::kSet:
             case TClassEdit::kMultiSet:
+            case TClassEdit::kBitSet: // not really an associate container but it has no real iterator.
                fProperties |= kIsAssociative;
                break;
          };
@@ -1031,7 +1032,7 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
          case TClassEdit::kSet:
          case TClassEdit::kMultiSet:
          case TClassEdit::kMap:
-         case TClassEdit::kMultiMap:
+         case TClassEdit::kMultiMap: {
             if ( (fProperties & kNeedDelete) )
                Clear("force");
             else
@@ -1058,6 +1059,7 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
             fEnv->fStart = fEnv->fTemp;
 
             return s;
+         }
          case TClassEdit::kVector:
          case TClassEdit::kList:
          case TClassEdit::kDeque:
@@ -1068,9 +1070,23 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
             fResize(fEnv->fObject,n);
             return fEnv->fObject;
             
-         case TClassEdit::kBitSet:
-            // Nothing to do.
-            return fEnv->fObject;
+        case TClassEdit::kBitSet: {
+            TStaging *s;
+            if (fStaged.empty()) {
+               s = new TStaging(n,fValDiff);
+            } else {
+               s = fStaged.back();
+               fStaged.pop_back();
+               s->Resize(n);
+            }
+            s->SetTarget(fEnv->fObject);
+
+            fEnv->fTemp = s->GetContent();
+            fEnv->fUseTemp = kTRUE;
+            fEnv->fStart = fEnv->fTemp;
+
+            return s;
+        }
       }
    }
    return 0;

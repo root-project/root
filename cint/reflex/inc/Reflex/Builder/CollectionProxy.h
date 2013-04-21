@@ -903,6 +903,50 @@ namespace Reflex  {
          // Nothing to destruct.
       }
 
+      struct Iterators {
+         typedef Cont_t *PCont_t;
+         union PtrSize_t { size_t fIndex; void *fAddress; };
+         typedef std::pair<PtrSize_t,bool> iterator;
+         // In the end iterator we store the bitset pointer
+         // and do not use the 'second' part of the pair.
+         // In the other iterator we store the index
+         // and the value.
+
+         static void create(void *coll, void **begin_arena, void **end_arena) {
+            iterator *begin = new (*begin_arena) iterator;
+            begin->first.fIndex = 0;
+            begin->second = false;
+            iterator *end = new (*end_arena) iterator;
+            end->first.fAddress = coll;
+            end->second = false;
+         }
+         static void* copy(void *dest_arena, const void *source_ptr) {
+            const iterator *source = (const iterator *)(source_ptr);
+            new (dest_arena) iterator(*source);
+            return dest_arena;
+         }
+         static void* next(void *iter_loc, const void *end_loc) {
+            const iterator *end = (const iterator *)(end_loc);
+            PCont_t c = (PCont_t)end->first.fAddress;
+            iterator *iter = (iterator *)(iter_loc);
+            if (iter->first.fIndex != c->size()) {
+               iter->second = c->test(iter->first.fIndex);
+               ++(iter->first.fIndex);
+            }
+            return &(iter->second);
+         }
+         static void destruct1(void *iter_ptr) {
+            iterator *start = (iterator *)(iter_ptr);
+            start->~iterator();
+         }
+         static void destruct2(void *begin_ptr, void *end_ptr) {
+            iterator *start = (iterator *)(begin_ptr);
+            iterator *end = (iterator *)(end_ptr);
+            start->~iterator();
+            end->~iterator();
+         }
+      };
+      typedef Iterators Iterators_t;
 
    };
 
