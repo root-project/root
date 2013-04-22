@@ -700,9 +700,9 @@ void THStack::Paint(Option_t *option)
       h = (TH1*)fHists->At(0);
       TAxis *xaxis = h->GetXaxis();
       TAxis *yaxis = h->GetYaxis();
+      const TArrayD *xbins = xaxis->GetXbins();
       if (h->GetDimension() > 1) {
          if (strlen(option) == 0) strlcpy(loption,"lego1",32);
-         const TArrayD *xbins = xaxis->GetXbins();
          const TArrayD *ybins = yaxis->GetXbins();
          if (xbins->fN != 0 && ybins->fN != 0) {
             fHistogram = new TH2F(GetName(),GetTitle(),
@@ -722,7 +722,12 @@ void THStack::Paint(Option_t *option)
                yaxis->GetNbins(), ymin, ymax);
          }
       } else {
-         fHistogram = new TH1F(GetName(),GetTitle(),xaxis->GetNbins(),xmin, xmax);
+         if (xbins->fN != 0) {
+            fHistogram = new TH1F(GetName(),GetTitle(),
+                                  xaxis->GetNbins(), xbins->GetArray());
+         } else {
+            fHistogram = new TH1F(GetName(),GetTitle(),xaxis->GetNbins(),xmin, xmax);
+         }
       }
       fHistogram->SetStats(0);
       TH1::AddDirectory(add);
