@@ -119,17 +119,9 @@ void TKDTreeBinning::SetNBins(UInt_t bins) {
 
 void TKDTreeBinning::SortBinsByDensity(Bool_t sortAsc) {
    // Sorts bins by their density
-   if (fDim == 1) {
-      fIsSortedAsc = kTRUE;
-      std::sort(fBinMinEdges.begin(), fBinMinEdges.end());
-      std::sort(fBinMaxEdges.begin(), fBinMaxEdges.end());
-      // Add also the upper edge to the min
-      fBinMinEdges.push_back(fBinMaxEdges.back());
-      if (!sortAsc) {
-         std::reverse(fBinMinEdges.begin(), fBinMinEdges.end());
-         std::reverse(fBinMaxEdges.begin(), fBinMaxEdges.end());
-         fIsSortedAsc = kFALSE;
-      }
+   if (fDim == 1) { 
+      // in one dim they are already sorted (no need to do anything) 
+      return; 
    } else {
       UInt_t* indices = new UInt_t[fNBins];
       for (UInt_t i = 0; i < fNBins; ++i)
@@ -141,31 +133,37 @@ void TKDTreeBinning::SortBinsByDensity(Bool_t sortAsc) {
          std::sort(indices, indices + fNBins, CompareDesc(this));
          fIsSortedAsc = kFALSE;
       }
-      std::vector<Double_t> binMinEdges; binMinEdges.reserve(fNBins * fDim);
-      std::vector<Double_t> binMaxEdges; binMaxEdges.reserve(fNBins * fDim);
+      std::vector<Double_t> binMinEdges(fNBins * fDim);
+      std::vector<Double_t> binMaxEdges(fNBins * fDim);
+      std::vector<UInt_t> binContent(fNBins );    // reajust also content (not needed bbut better in general!)
       for (UInt_t i = 0; i < fNBins; ++i) {
          for (UInt_t j = 0; j < fDim; ++j) {
             binMinEdges[i * fDim + j] = fBinMinEdges[indices[i] * fDim + j];
             binMaxEdges[i * fDim + j] = fBinMaxEdges[indices[i] * fDim + j];
          }
+         binContent[i] = fBinsContent[indices[i]];
       }
       fBinMinEdges.swap(binMinEdges);
       fBinMaxEdges.swap(binMaxEdges);
+      fBinsContent.swap(binContent); 
+
+      // not needed anymore if readjusting bin content all the time
       // re-adjust content of extra bins if exists
       // since it is different than the others
-      if ( fDataSize % fNBins != 0) {
-         UInt_t k = 0;
-         Bool_t found = kFALSE;
-         while (!found) {
-            if (indices[k] == fNBins - 1) {
-               found = kTRUE;
-               break;
-            }
-            ++k;
-         }
-         fBinsContent[fNBins - 1] = fDataBins->GetBucketSize();
-         fBinsContent[k] = fDataSize % fNBins-1;
-      }
+      // if ( fDataSize % fNBins != 0) {
+      //    UInt_t k = 0;
+      //    Bool_t found = kFALSE;
+      //    while (!found) {
+      //       if (indices[k] == fNBins - 1) {
+      //          found = kTRUE;
+      //          break;
+      //       }
+      //       ++k;
+      //    }
+      //    fBinsContent[fNBins - 1] = fDataBins->GetBucketSize();
+      //    fBinsContent[k] = fDataSize % fNBins-1;
+      // }
+
       delete [] indices;
       fIsSorted = kTRUE;
     }
@@ -442,8 +440,9 @@ Double_t TKDTreeBinning::GetBinVolume(UInt_t bin) const {
 }
 
 const double * TKDTreeBinning::GetOneDimBinEdges() const  {
-   // Returns the sorted minimum edges for one dimensional binning only.
-   // size of the vector is fNBins + 1
+   // Returns the minimum edges for one dimensional binning only.
+   // size of the vector is fNBins + 1 is the vector has been sorted in increasing bin edges
+   // N.B : if one does not call SortOneDimBinEdges the bins are not ordered 
    if (fDim == 1) {
       // no need to sort here because vector is already sorted in one dim
       return &fBinMinEdges.front();
@@ -452,6 +451,39 @@ const double * TKDTreeBinning::GetOneDimBinEdges() const  {
    this->Info("GetOneDimBinEdges", "This method can only be invoked if the data is a one dimensional set");
    return 0;
 }
+
+const Double_t * TKDTreeBinning::SortOneDimBinEdges(Bool_t sortAsc) {
+   if (fDim != 1) { 
+      this->Warning("SortOneDimBinEdges", "Data is multidimensional. Cannot sorted bin edges. Returning null pointer.");
+      this->Info("SortOneDimBinEdges", "This method can only be invoked if the data is a one dimensional set");
+      return 0;
+   }
+   // order bins by increasing (or decreasing ) x positions
+   std::vector<UInt_t> indices( fNBins );
+   TMath::Sort( fNBins, &fBinMinEdges[0], &indices[0], !sortAsc ); 
+
+   std::vector<Double_t> binMinEdges(fNBins );
+   std::vector<Double_t> binMaxEdges(fNBins );
+   std::vector<UInt_t> binContent(fNBins );    // reajust also content (not needed but better in general!)
+   for (UInt_t i = 0; i < fNBins; ++i) {
+      binMinEdges[i ] = fBinMinEdges[indices[i] ];
+      binMaxEdges[i ] = fBinMaxEdges[indices[i] ];
+      binContent[i] = fBinsContent[indices[i] ];
+   }
+   fBinMinEdges.swap(binMinEdges);
+   fBinMaxEdges.swap(binMaxEdges);
+   fBinsContent.swap(binContent); 
+
+   // Add also the upper(lower) edge to the min (max) list
+   if (sortAsc) {
+      fBinMinEdges.push_back(fBinMaxEdges.back());
+      return &fBinMinEdges[0];
+   }
+   fBinMaxEdges.push_back(fBinMinEdges.back());
+   return &fBinMaxEdges[0];
+      
+}
+
 
 const Double_t* TKDTreeBinning::GetBinCenter(UInt_t bin) const {
    // Returns the geometric center of of the bin. 'bin' is between 0 and fNBins - 1

@@ -85,11 +85,12 @@ public:
    Double_t GetDataMax(UInt_t dim) const;
    Double_t GetBinDensity(UInt_t bin) const;
    Double_t GetBinVolume(UInt_t bin) const;
-   const Double_t* GetOneDimBinEdges() const;
    const Double_t* GetBinCenter(UInt_t bin) const;
    const Double_t* GetBinWidth(UInt_t bin) const;
    UInt_t GetBinMaxDensity() const;
    UInt_t GetBinMinDensity() const;
+   const Double_t* GetOneDimBinEdges() const;
+   const Double_t* SortOneDimBinEdges(Bool_t sortAsc = kTRUE); 
    void FillBinData(ROOT::Fit::BinData & data) const;
 
    ClassDef(TKDTreeBinning, 1)
