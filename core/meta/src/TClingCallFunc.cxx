@@ -494,7 +494,7 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    CO.Debug = 0;
    CO.CodeGeneration = 1;
 
-   cling::Transaction T(CO, fInterp->getModule());
+   cling::Transaction T(CO);
 
    T.append(const_cast<clang::FunctionDecl*>(FD));
    T.setState(cling::Transaction::kCompleted);

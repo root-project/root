@@ -247,7 +247,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          CO.Debug = 0;
          CO.CodeGeneration = 1;
 
-         cling::Transaction T(CO, /*llvm::Module=*/0);
+         cling::Transaction T(CO);
          T.append(VD);
          T.setState(cling::Transaction::kCompleted);
 
@@ -393,7 +393,7 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
    //   return;
    if (fFirstRun && !T.empty()) {
       // Before setting up the callbacks register what cling have seen during init.
-      cling::Transaction TPrev(T.getCompilationOpts(), T.getModule());
+      cling::Transaction TPrev(T.getCompilationOpts());
       clang::DeclGroupRef TDRG = T.getFirstDecl();
       
       TPrev.append(TDRG.getSingleDecl()->getASTContext().getTranslationUnitDecl());
