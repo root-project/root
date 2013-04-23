@@ -736,6 +736,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooCmdArg& arg1, const 
   // ExternalConstraints(const RooArgSet& ) -- Include given external constraints to likelihood
   // GlobalObservables(const RooArgSet&) -- Define the set of normalization observables to be used for the constraint terms.
   //                                        If none are specified the constrained parameters are used
+  // GlobalObservablesTag(const char* tagName) -- Define the set of normalization observables to be used for the constraint terms by a string attribute
+  //                                              associated with pdf observables that match he given tagName 
   // Verbose(Bool_t flag)           -- Constrols RooFit informational messages in likelihood construction
   // CloneData(Bool flag)           -- Use clone of dataset in NLL (default is true)
   // Offset(Bool_t)                  -- Offset likelihood by initial value (so that starting value of FCN in minuit is zero). This
@@ -815,15 +817,30 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   if (cloneData==2) {
     cloneData = optConst ;
   }
+
+
   RooArgSet* cPars = pc.getSet("cPars") ;
   RooArgSet* glObs = pc.getSet("glObs") ;
   if (pc.hasProcessed("GlobalObservablesTag")) {
     if (glObs) delete glObs ;
     RooArgSet* allVars = getVariables() ;
     glObs = (RooArgSet*) allVars->selectByAttrib(globsTag,kTRUE) ;
-    //cout << "WVE debug globs from tag " << globsTag << " = " << *glObs << endl ;
+    coutI(Minimization) << "User-defined specification of global observables definition with tag named '" <<  globsTag << "'" << endl ;
     delete allVars ;
+  } else if (!pc.hasProcessed("GlobalObservables")) {
+
+    // Neither GlobalObservables nor GlobalObservablesTag has been processed - try if a default tag is defined in the head node
+    // Check if head not specifies default global observable tag
+    const char* defGlobObsTag = getStringAttribute("DefaultGlobalObservablesTag") ;
+    if (defGlobObsTag) {
+      coutI(Minimization) << "p.d.f. provides built-in specification of global observables definition with tag named '" <<  defGlobObsTag << "'" << endl ;
+      if (glObs) delete glObs ;
+      RooArgSet* allVars = getVariables() ;
+      glObs = (RooArgSet*) allVars->selectByAttrib(defGlobObsTag,kTRUE) ;
+    }
   }
+  
+    
   Bool_t doStripDisconnected=kFALSE ;
 
   // If no explicit list of parameters to be constrained is specified apply default algorithm
@@ -909,7 +926,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   if (allConstraints.getSize()>0 && cPars) {   
 
     coutI(Minimization) << " Including the following contraint terms in minimization: " << allConstraints << endl ;
-    
+    if (glObs) {
+      coutI(Minimization) << "The following global observables have been defined: " << *glObs << endl ;
+    }
     nllCons = new RooConstraintSum(Form("%s_constr",baseName.c_str()),"nllCons",allConstraints,glObs ? *glObs : *cPars) ;
     nllCons->setOperMode(ADirty) ;
     RooAbsReal* orignll = nll ;
