@@ -4,18 +4,25 @@ MDFILES=titlepage.md Introduction.md ROOT_as_calculator.md \
 	concludingRemarks.md 
 
 OPTIONS=-s -S -f markdown --toc --chapters --number-sections
-OPTIONSHTML=-c css/github.css --mathjax
+OPTIONSHTML=-H css/github.css --mathjax
+OPTIONSEPUB=--mathml
 
-all: pdf html tex
+.PHONY: pdf html tex epub
 
-pdf: *.md
+all: pdf html tex epub
+
+pdf: $(MDFILES)
 	pandoc $(OPTIONS) $(MDFILES) -o primer.pdf
 
-html: *.md
+html: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) -o primer.html
 
-tex: *.md
+tex: $(MDFILES)
 	pandoc $(OPTIONS) -t latex $(MDFILES) -o primer.tex
 
+epub: $(MDFILES) metadata.xml title.txt
+	pandoc $(OPTIONS) $(OPTIONSEPUB) --epub-metadata=metadata.xml title.txt \
+	   $(MDFILES) -o primer.epub
+
 clean:
-	rm -f primer.pdf primer.html primer.tex
+	rm -f primer.pdf primer.html primer.tex primer.epub
