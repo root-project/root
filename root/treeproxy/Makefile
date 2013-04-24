@@ -1,4 +1,4 @@
-# %ROOTTEST-duration%:1
+# %ROOTTEST-duration%:8
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
