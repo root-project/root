@@ -1,4 +1,4 @@
-# A Root Guide For Beginners #
+# A ROOT Guide For Beginners #
 
 "Diving Into ROOT"  
 

@@ -35,7 +35,7 @@ Not bad, eh ? Especially for a language that does not foresees
 persistency natively like C++. The *RECREATE* option forces ROOT to
 create a new file even if a file with the same name exists on disk.
 
-Now, you may use the CINT command line to access information in the file
+Now, you may use the Cint command line to access information in the file
 and draw the previously written histogram:
 
 ``` {.cpp}
@@ -420,9 +420,9 @@ text is actually comments generated automatically by
 //
 // To use this file, try the following session on your Tree T:
 //
-// Root > T->Process("MySelector.C")
-// Root > T->Process("MySelector.C","some options")
-// Root > T->Process("MySelector.C+")
+// root> T->Process("MySelector.C")
+// root> T->Process("MySelector.C","some options")
+// root> T->Process("MySelector.C+")
 //
 
 #include "MySelector.h"

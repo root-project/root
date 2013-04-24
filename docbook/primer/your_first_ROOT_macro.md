@@ -372,7 +372,7 @@ void StandaloneApplication(int argc, char** argv) {
   // This is the standard "main" of C++ starting
   // a ROOT application
 int main(int argc, char** argv) {
-   TApplication app("Root Application", &argc, argv);
+   TApplication app("ROOT Application", &argc, argv);
    StandaloneApplication(app.Argc(), app.Argv());
    app.Run();
    return 0;

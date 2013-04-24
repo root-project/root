@@ -31,7 +31,7 @@ to it.
 ROOT offers various minimisation algorithms to minimise a chi2 or a
 negative log-likelihood function. The default minimiser is MINUIT, a
 package originally implemented in the FORTRAN programming language. A
-C++ version is also available, MINUIT2, as well as Fumili Fumili an
+C++ version is also available, MINUIT2, as well as Fumili [@Fumili] an
 algorithm optimised for fitting. Genetic algorithms and a stochastic
 minimiser based on simulated annealing are also available. The
 minimisation algorithms can be selected using the static functions of

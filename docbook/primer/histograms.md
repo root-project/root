@@ -151,7 +151,7 @@ The plots that you will obtain are shown in Figures \ref{macro61} and \ref{macro
 
 Some lines now need a bit of clarification:
 
--   line *3*: CINT, as we know, is also able to interpret more than one
+-   line *3*: Cint, as we know, is also able to interpret more than one
     function per file. In this case the function simply sets up some
     parameters to conveniently set the line of histograms.
 

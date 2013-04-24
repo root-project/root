@@ -132,7 +132,7 @@ it together with its x and y projections. Some points of the code will
 be explained in detail. This time, the graph is populated with data
 points using random numbers, introducing a new and very important
 ingredient, the ROOT `TRandom3` random number generator using the
-Mersenne Twister algorithm MersenneTwister.
+Mersenne Twister algorithm [@MersenneTwister].
 
 ``` {.cpp .numberLines}
  // Create, Draw and fit a TGraph2DErrors

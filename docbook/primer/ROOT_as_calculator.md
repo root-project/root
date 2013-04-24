@@ -2,7 +2,7 @@
 
 Now that you have installed ROOT, what's this interactive shell thing
 you're running ? It's like this: ROOT leads a double life. It has an
-interpreter for macros (CINT cint) that you can run from the command
+interpreter for macros (Cint [@Cint]) that you can run from the command
 line or run like applications. But it is also an interactive shell that
 can evaluate arbitrary statements and expressions. This is extremely
 useful for debugging, quick hacking and testing. Let us first have a
@@ -58,7 +58,7 @@ root [10] TMath::Abs(geom_series - (1-TMath::Power(x,N-1))/(1-x))
 
 Here we made a step forward. We even declared variables and used a *for*
 control structure. Note that there are some subtle differences between
-CINT and the standard C++ language. You do not need the ";" at the end
+Cint and the standard C++ language. You do not need the ";" at the end
 of line in interactive mode -- try the difference e.g. using the command
 at line `root [6]`.
 
@@ -79,10 +79,10 @@ parameter defines the function, here `sin(x)/x`, and the two parameters
 of type double define the range of the variable *x*. The `Draw()`
 method, here without any parameters, displays the function in a window
 which should pop up after you typed the above two lines. Note again
-differences between CINT and C++: you could have omitted the ";" at the
-end of lines, CINT woud also have accepted the "." to access the method
+differences between Cint and C++: you could have omitted the ";" at the
+end of lines, Cint woud also have accepted the "." to access the method
 `Draw()`. However, it is best to stick to standard C++ syntax and avoid
-CINT-specific code, as will become clear in a moment.
+Cint-specific code, as will become clear in a moment.
 
 A slightly extended version of this example is the definition of a
 function with parameters, called `[0]`, `[1]` and so on in the ROOT
@@ -169,7 +169,7 @@ executed one after the other.
  }
 ```
 
-![Output of slits.C with parameters 0.2 and 2. \label{slits}](figures/TF1_DoubleSlit.png)
+![Output of slits.C with parameters 0.2 and 2.\label{slits}](figures/TF1_DoubleSlit.png)
 
 The example first asks for user input, namely the ratio of slit width
 over slit distance, and the number of slits. After entering this
@@ -200,7 +200,7 @@ or of a grid with narrow slits, function `double nslit0`, in `TF1`
 instances.
 
 Here, we used a macro, some sort of lightweight program, that the
-interpreter distributed with ROOT, CINT, is able to execute. This is a
+interpreter distributed with ROOT, Cint, is able to execute. This is a
 rather extraordinary situation, since C++ is not natively an interpreted
 language! There is much more to say: chapter is indeed dedicated to
 macros.
@@ -208,7 +208,7 @@ macros.
 ## Controlling ROOT ##
 
 One more remark at this point: as every command you type into ROOT is
-usually interpreted by CINT, an "escape character" is needed to pass
+usually interpreted by Cint, an "escape character" is needed to pass
 commands to ROOT directly. This character is the dot at the beginning of
 a line:
 
