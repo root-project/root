@@ -395,7 +395,7 @@ void TCling__UpdateListsOnDeclDeserialized(const clang::Decl* D) {
 extern "C" 
 void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
    bool isTUTransaction = false;
-   if (T.size() == 1) {
+   if (T.size() == 1 && !T.hasNestedTransactions()) {
       clang::Decl* FirstDecl = *(T.decls_begin()->m_DGR.begin());
       if (clang::TranslationUnitDecl* TU
           = dyn_cast<clang::TranslationUnitDecl>(FirstDecl)) {
