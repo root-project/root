@@ -222,7 +222,15 @@ bool InterpreterStress::stressSTLDict() {
    for (Int_t i = 1; i < fNtimes; ++i) {
       int res = 3;
       TInterpreter::EErrorCode interpError = TInterpreter::kNoError;
-      TString cmd = TString::Format("#include <vector>\nclass MyClass;\ntypedef MyClass* Klass%d_t;\nstd::vector<Klass%d_t> v%d;\nvoid stressInterpreter_tmp%d() {\n   v%d.push_back((Klass%d_t)0x12);\n   *((int*)0x%lx) = 0;}", i, i, i, i, i, i, (unsigned long) &res);
+      TString cmd
+         = TString::Format("#include <vector>\n"
+                           "class MyClass;\n"
+                           "typedef MyClass* Klass%d_t;\n"
+                           "std::vector<Klass%d_t> v%d;\n"
+                           "void stressInterpreter_tmp%d() {\n"
+                           "   v%d.push_back((Klass%d_t)0x12);\n"
+                           "   *((int*)0x%lx) = 17;}",
+                           i, i, i, i, i, i, (unsigned long) &res);
       TString tmpfilename = TString::Format("stressInterpreter_tmp%d.C", i);
       {
          std::ofstream otmp(tmpfilename.Data());
@@ -232,8 +240,21 @@ bool InterpreterStress::stressSTLDict() {
 #ifndef ClingWorkAroundDeletedSourceFile
       gSystem->Unlink(tmpfilename);
 #endif
+      if (interpError != TInterpreter::kNoError) {
+         printf("InterpreterStress::stressSTLDict(): "
+                "Interpreter error: %d processing file %s:\n%s\n",
+                interpError, tmpfilename.Data(), cmd.Data());
+      } else if (res != 17) {
+         printf("InterpreterStress::stressSTLDict(): "
+                "Error getting correct result (expected %d, got %d) "
+                "while processing file %s:\n%s\n",
+                17, res, tmpfilename.Data(), cmd.Data());
+      }
       allres &= (interpError == TInterpreter::kNoError);
-      allres &= (res == 0);
+      allres &= (res == 17);
+      if (!allres) {
+         break;
+      }
    }
 #ifdef ClingWorkAroundDeletedSourceFile
    for (Int_t i = 1; i < fNtimes; ++i) {
@@ -258,7 +279,7 @@ bool InterpreterStress::stressReflection() {
 #endif
    int numfuncs = Klass::last_klf - Klass::first_klf + 1;
    bool success = true;
-   for (Int_t i = 0; i < ntimes; ++i) {
+   for (Int_t i = 0; success && i < ntimes; ++i) {
       int funcnum = i % (Long64_t)(1.2 * numfuncs);
       TString fname = TString::Format("f%d", funcnum);
       ClassInfo_t* k = gInterpreter->ClassInfo_Factory("Klass");
