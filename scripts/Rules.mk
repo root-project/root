@@ -811,6 +811,17 @@ define TestDiffCintSpecific
 	   diff -u -b $@.ref $< ; \
 	fi
 endef
+define TestDiffCintSpecificW
+	$(CMDECHO) if [ -f $@.ref$(ROOTBITS)-$(CINT_VERSION) ]; then \
+	   diff -u -b -w $@.ref$(ROOTBITS)-$(CINT_VERSION) $< ; \
+	elif  [ -f $@.ref-$(CINT_VERSION) ]; then \
+	   diff -u -b -w $@.ref-$(CINT_VERSION) $< ; \
+	elif [ -f $@.ref$(ROOTBITS) ]; then \
+	   diff -u -b -w $@.ref$(ROOTBITS) $< ; \
+	else \
+	   diff -u -b -w $@.ref $< ; \
+	fi
+endef
 
 define TestDiff
 	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
