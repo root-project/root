@@ -64,13 +64,17 @@ public:
   uint64_t getUnsigned() const { return Value.uval; }
   int64_t getSigned() const { return Value.sval; }
   const char *getAsCString(const DataExtractor *debug_str_data_ptr) const;
+  const char *getIndirectCString(const DataExtractor *,
+                                 const DataExtractor *) const;
+  uint64_t getIndirectAddress(const DataExtractor *,
+                              const DWARFCompileUnit *) const;
   bool skipValue(DataExtractor debug_info_data, uint32_t *offset_ptr,
                  const DWARFCompileUnit *cu) const;
   static bool skipValue(uint16_t form, DataExtractor debug_info_data,
                         uint32_t *offset_ptr, const DWARFCompileUnit *cu);
   static bool isBlockForm(uint16_t form);
   static bool isDataForm(uint16_t form);
-  static const uint8_t *getFixedFormSizesForAddressSize(uint8_t addr_size);
+  static const uint8_t *getFixedFormSizes(uint8_t AddrSize, uint16_t Version);
 };
 
 }

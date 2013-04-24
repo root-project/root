@@ -13,8 +13,8 @@
 
 #define DEBUG_TYPE "jit"
 #include "llvm-c/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <cstring>
 
@@ -239,7 +239,7 @@ void *LLVMRecompileAndRelinkFunction(LLVMExecutionEngineRef EE, LLVMValueRef Fn)
 }
 
 LLVMTargetDataRef LLVMGetExecutionEngineTargetData(LLVMExecutionEngineRef EE) {
-  return wrap(unwrap(EE)->getTargetData());
+  return wrap(unwrap(EE)->getDataLayout());
 }
 
 void LLVMAddGlobalMapping(LLVMExecutionEngineRef EE, LLVMValueRef Global,

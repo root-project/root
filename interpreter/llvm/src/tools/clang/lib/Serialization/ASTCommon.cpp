@@ -12,9 +12,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "ASTCommon.h"
-#include "clang/Serialization/ASTDeserializationListener.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/Basic/IdentifierTable.h"
+#include "clang/Serialization/ASTDeserializationListener.h"
 #include "llvm/ADT/StringExtras.h"
 
 using namespace clang;
@@ -61,6 +61,14 @@ serialization::TypeIdxFromBuiltin(const BuiltinType *BT) {
   case BuiltinType::ObjCId:     ID = PREDEF_TYPE_OBJC_ID;       break;
   case BuiltinType::ObjCClass:  ID = PREDEF_TYPE_OBJC_CLASS;    break;
   case BuiltinType::ObjCSel:    ID = PREDEF_TYPE_OBJC_SEL;      break;
+  case BuiltinType::OCLImage1d:       ID = PREDEF_TYPE_IMAGE1D_ID;      break;
+  case BuiltinType::OCLImage1dArray:  ID = PREDEF_TYPE_IMAGE1D_ARR_ID;  break;
+  case BuiltinType::OCLImage1dBuffer: ID = PREDEF_TYPE_IMAGE1D_BUFF_ID; break;
+  case BuiltinType::OCLImage2d:       ID = PREDEF_TYPE_IMAGE2D_ID;      break;
+  case BuiltinType::OCLImage2dArray:  ID = PREDEF_TYPE_IMAGE2D_ARR_ID;  break;
+  case BuiltinType::OCLImage3d:       ID = PREDEF_TYPE_IMAGE3D_ID;      break;
+  case BuiltinType::OCLSampler:       ID = PREDEF_TYPE_SAMPLER_ID;      break;
+  case BuiltinType::OCLEvent:         ID = PREDEF_TYPE_EVENT_ID;        break;
   case BuiltinType::BuiltinFn:
                                 ID = PREDEF_TYPE_BUILTIN_FN; break;
 
@@ -160,6 +168,7 @@ bool serialization::isRedeclarableDeclKind(unsigned Kind) {
   case Decl::TypeAliasTemplate:
   case Decl::ObjCProtocol:
   case Decl::ObjCInterface:
+  case Decl::Empty:
     return true;
 
   // Never redeclarable.
@@ -195,6 +204,7 @@ bool serialization::isRedeclarableDeclKind(unsigned Kind) {
   case Decl::Block:
   case Decl::ClassScopeFunctionSpecialization:
   case Decl::Import:
+  case Decl::OMPThreadPrivate:
     return false;
   }
 

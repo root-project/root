@@ -151,7 +151,9 @@ const char *TClingMethodArgInfo::Name() const
    static std::string buf;
    buf.clear();
    clang::PrintingPolicy policy(pvd->getASTContext().getPrintingPolicy());
-   pvd->getNameForDiagnostic(buf, policy, /*Qualified=*/true);
+   llvm::raw_string_ostream stream(buf);
+   pvd->getNameForDiagnostic(stream, policy, /*Qualified=*/true);
+   stream.flush();
    return buf.c_str();
 }
 

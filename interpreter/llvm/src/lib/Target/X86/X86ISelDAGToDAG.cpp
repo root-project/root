@@ -19,24 +19,21 @@
 #include "X86RegisterInfo.h"
 #include "X86Subtarget.h"
 #include "X86TargetMachine.h"
-#include "llvm/Instructions.h"
-#include "llvm/Intrinsics.h"
-#include "llvm/Type.h"
-#include "llvm/CodeGen/FunctionLoweringInfo.h"
-#include "llvm/CodeGen/MachineConstantPool.h"
-#include "llvm/CodeGen/MachineFunction.h"
+#include "llvm/ADT/Statistic.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
+#include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/SelectionDAGISel.h"
-#include "llvm/Target/TargetMachine.h"
-#include "llvm/Target/TargetOptions.h"
-#include "llvm/Support/CFG.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/Intrinsics.h"
+#include "llvm/IR/Type.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/ADT/Statistic.h"
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/Target/TargetOptions.h"
 using namespace llvm;
 
 STATISTIC(NumLoadMoved, "Number of loads moved below TokenFactor");
@@ -283,13 +280,13 @@ namespace {
 
     /// getTargetMachine - Return a reference to the TargetMachine, casted
     /// to the target-specific type.
-    const X86TargetMachine &getTargetMachine() {
+    const X86TargetMachine &getTargetMachine() const {
       return static_cast<const X86TargetMachine &>(TM);
     }
 
     /// getInstrInfo - Return a reference to the TargetInstrInfo, casted
     /// to the target-specific type.
-    const X86InstrInfo *getInstrInfo() {
+    const X86InstrInfo *getInstrInfo() const {
       return getTargetMachine().getInstrInfo();
     }
   };
@@ -387,21 +384,12 @@ static void MoveBelowOrigChain(SelectionDAG *CurDAG, SDValue Load,
   CurDAG->UpdateNodeOperands(Load.getNode(), Call.getOperand(0),
                              Load.getOperand(1), Load.getOperand(2));
 
-  bool IsGlued = Call.getOperand(0).getNode()->getGluedUser() == Call.getNode();
   unsigned NumOps = Call.getNode()->getNumOperands();
   Ops.clear();
   Ops.push_back(SDValue(Load.getNode(), 1));
   for (unsigned i = 1, e = NumOps; i != e; ++i)
     Ops.push_back(Call.getOperand(i));
-  if (!IsGlued)
-    CurDAG->UpdateNodeOperands(Call.getNode(), &Ops[0], NumOps);
-  else
-    // If call's chain was glued to the call (tailcall), and now the load
-    // is moved between them. Remove the glue to avoid a cycle (where the
-    // call is glued to its old chain and the load is using the old chain
-    // as its new chain).
-    CurDAG->MorphNodeTo(Call.getNode(), Call.getOpcode(),
-                        Call.getNode()->getVTList(), &Ops[0], NumOps-1);
+  CurDAG->UpdateNodeOperands(Call.getNode(), &Ops[0], NumOps);
 }
 
 /// isCalleeLoad - Return true if call address is a load and it can be
@@ -410,6 +398,10 @@ static void MoveBelowOrigChain(SelectionDAG *CurDAG, SDValue Load,
 /// In the case of a tail call, there isn't a callseq node between the call
 /// chain and the load.
 static bool isCalleeLoad(SDValue Callee, SDValue &Chain, bool HasCallSeq) {
+  // The transformation is somewhat dangerous if the call's chain was glued to
+  // the call. After MoveBelowOrigChain the load is moved between the call and
+  // the chain, this can create a cycle if the load is not folded. So it is
+  // *really* important that we are sure the load will be folded.
   if (Callee.getNode() == Chain.getNode() || !Callee.hasOneUse())
     return false;
   LoadSDNode *LD = dyn_cast<LoadSDNode>(Callee.getNode());
@@ -428,6 +420,11 @@ static bool isCalleeLoad(SDValue Callee, SDValue &Chain, bool HasCallSeq) {
 
   if (!Chain.getNumOperands())
     return false;
+  // Since we are not checking for AA here, conservatively abort if the chain
+  // writes to memory. It's not safe to move the callee (a load) across a store.
+  if (isa<MemSDNode>(Chain.getNode()) &&
+      cast<MemSDNode>(Chain.getNode())->writeMem())
+    return false;
   if (Chain.getOperand(0).getNode() == Callee.getNode())
     return true;
   if (Chain.getOperand(0).getOpcode() == ISD::TokenFactor &&
@@ -439,15 +436,21 @@ static bool isCalleeLoad(SDValue Callee, SDValue &Chain, bool HasCallSeq) {
 
 void X86DAGToDAGISel::PreprocessISelDAG() {
   // OptForSize is used in pattern predicates that isel is matching.
-  OptForSize = MF->getFunction()->getFnAttributes().hasOptimizeForSizeAttr();
+  OptForSize = MF->getFunction()->getAttributes().
+    hasAttribute(AttributeSet::FunctionIndex, Attribute::OptimizeForSize);
 
   for (SelectionDAG::allnodes_iterator I = CurDAG->allnodes_begin(),
        E = CurDAG->allnodes_end(); I != E; ) {
     SDNode *N = I++;  // Preincrement iterator to avoid invalidation issues.
 
     if (OptLevel != CodeGenOpt::None &&
-        (N->getOpcode() == X86ISD::CALL ||
-         N->getOpcode() == X86ISD::TC_RETURN)) {
+        // Only does this when target favors doesn't favor register indirect
+        // call.
+        ((N->getOpcode() == X86ISD::CALL && !Subtarget->callRegIndirect()) ||
+         (N->getOpcode() == X86ISD::TC_RETURN &&
+          // Only does this if load can be folded into TC_RETURN.
+          (Subtarget->is64Bit() ||
+           getTargetMachine().getRelocationModel() != Reloc::PIC_)))) {
       /// Also try moving call address load from outside callseq_start to just
       /// before the call to allow it to be folded.
       ///
@@ -1041,8 +1044,8 @@ bool X86DAGToDAGISel::MatchAddressRecursively(SDValue N, X86ISelAddressMode &AM,
         AM.IndexReg = ShVal;
         return false;
       }
-    break;
     }
+    break;
 
   case ISD::SRL: {
     // Scale must not be used already.
@@ -1303,7 +1306,9 @@ bool X86DAGToDAGISel::SelectAddr(SDNode *Parent, SDValue N, SDValue &Base,
       // that are not a MemSDNode, and thus don't have proper addrspace info.
       Parent->getOpcode() != ISD::INTRINSIC_W_CHAIN && // unaligned loads, fixme
       Parent->getOpcode() != ISD::INTRINSIC_VOID && // nontemporal stores
-      Parent->getOpcode() != X86ISD::TLSCALL) { // Fixme
+      Parent->getOpcode() != X86ISD::TLSCALL && // Fixme
+      Parent->getOpcode() != X86ISD::EH_SJLJ_SETJMP && // setjmp
+      Parent->getOpcode() != X86ISD::EH_SJLJ_LONGJMP) { // longjmp
     unsigned AddrSpace =
       cast<MemSDNode>(Parent)->getPointerInfo().getAddrSpace();
     // AddrSpace 256 -> GS, 257 -> FS.
@@ -2677,85 +2682,6 @@ SDNode *X86DAGToDAGISel::Select(SDNode *Node) {
     ReplaceUses(SDValue(StoredVal.getNode(), 1), SDValue(Result, 0));
 
     return Result;
-  }
-
-  // FIXME: Custom handling because TableGen doesn't support multiple implicit
-  // defs in an instruction pattern
-  case X86ISD::PCMPESTRI: {
-    SDValue N0 = Node->getOperand(0);
-    SDValue N1 = Node->getOperand(1);
-    SDValue N2 = Node->getOperand(2);
-    SDValue N3 = Node->getOperand(3);
-    SDValue N4 = Node->getOperand(4);
-
-    // Make sure last argument is a constant
-    ConstantSDNode *Cst = dyn_cast<ConstantSDNode>(N4);
-    if (!Cst)
-      break;
-
-    uint64_t Imm = Cst->getZExtValue();
-
-    SDValue InFlag = CurDAG->getCopyToReg(CurDAG->getEntryNode(), dl,
-                                          X86::EAX, N1, SDValue()).getValue(1);
-    InFlag = CurDAG->getCopyToReg(CurDAG->getEntryNode(), dl, X86::EDX,
-                                  N3, InFlag).getValue(1);
-
-    SDValue Ops[] = { N0, N2, getI8Imm(Imm), InFlag };
-    unsigned Opc = Subtarget->hasAVX() ? X86::VPCMPESTRIrr :
-                                         X86::PCMPESTRIrr;
-    InFlag = SDValue(CurDAG->getMachineNode(Opc, dl, MVT::Glue, Ops,
-                                            array_lengthof(Ops)), 0);
-
-    if (!SDValue(Node, 0).use_empty()) {
-      SDValue Result = CurDAG->getCopyFromReg(CurDAG->getEntryNode(), dl,
-                                              X86::ECX, NVT, InFlag);
-      InFlag = Result.getValue(2);
-      ReplaceUses(SDValue(Node, 0), Result);
-    }
-    if (!SDValue(Node, 1).use_empty()) {
-      SDValue Result = CurDAG->getCopyFromReg(CurDAG->getEntryNode(), dl,
-                                              X86::EFLAGS, NVT, InFlag);
-      InFlag = Result.getValue(2);
-      ReplaceUses(SDValue(Node, 1), Result);
-    }
-
-    return NULL;
-  }
-
-  // FIXME: Custom handling because TableGen doesn't support multiple implicit
-  // defs in an instruction pattern
-  case X86ISD::PCMPISTRI: {
-    SDValue N0 = Node->getOperand(0);
-    SDValue N1 = Node->getOperand(1);
-    SDValue N2 = Node->getOperand(2);
-
-    // Make sure last argument is a constant
-    ConstantSDNode *Cst = dyn_cast<ConstantSDNode>(N2);
-    if (!Cst)
-      break;
-
-    uint64_t Imm = Cst->getZExtValue();
-
-    SDValue Ops[] = { N0, N1, getI8Imm(Imm) };
-    unsigned Opc = Subtarget->hasAVX() ? X86::VPCMPISTRIrr :
-                                         X86::PCMPISTRIrr;
-    SDValue InFlag = SDValue(CurDAG->getMachineNode(Opc, dl, MVT::Glue, Ops,
-                                                    array_lengthof(Ops)), 0);
-
-    if (!SDValue(Node, 0).use_empty()) {
-      SDValue Result = CurDAG->getCopyFromReg(CurDAG->getEntryNode(), dl,
-                                              X86::ECX, NVT, InFlag);
-      InFlag = Result.getValue(2);
-      ReplaceUses(SDValue(Node, 0), Result);
-    }
-    if (!SDValue(Node, 1).use_empty()) {
-      SDValue Result = CurDAG->getCopyFromReg(CurDAG->getEntryNode(), dl,
-                                              X86::EFLAGS, NVT, InFlag);
-      InFlag = Result.getValue(2);
-      ReplaceUses(SDValue(Node, 1), Result);
-    }
-
-    return NULL;
   }
   }
 

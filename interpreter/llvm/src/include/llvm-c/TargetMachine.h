@@ -20,6 +20,7 @@
 #define LLVM_C_TARGETMACHINE_H
 
 #include "llvm-c/Core.h"
+#include "llvm-c/Target.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -104,7 +105,7 @@ char *LLVMGetTargetMachineCPU(LLVMTargetMachineRef T);
   LLVMDisposeMessage. */
 char *LLVMGetTargetMachineFeatureString(LLVMTargetMachineRef T);
 
-/** Returns the llvm::TargetData used for this llvm:TargetMachine. */
+/** Returns the llvm::DataLayout used for this llvm:TargetMachine. */
 LLVMTargetDataRef LLVMGetTargetMachineData(LLVMTargetMachineRef T);
 
 /** Emits an asm or object file for the given module to the filename. This

@@ -132,6 +132,7 @@ public: // Public Interface
    virtual const char* GetSTLIncludePath() const;
    TObjArray*  GetRootMapFiles() const { return fRootmapFiles; }
    Int_t   InitializeDictionaries();
+   virtual void Initialize();
    void    InspectMembers(TMemberInspector&, void* obj, const TClass* cl);
    Bool_t  IsLoaded(const char* filename) const;
    Int_t   Load(const char* filenam, Bool_t system = kFALSE);

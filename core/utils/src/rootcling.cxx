@@ -633,11 +633,13 @@ void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, co
 
 void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl)
 {
+   llvm::raw_string_ostream stream(qual_name);
    clang::PrintingPolicy policy( cl.getASTContext().getPrintingPolicy() );
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
    policy.SuppressUnwrittenScope = true; // Don't write the inline or anonymous namespace names.
   
-   cl.getNameForDiagnostic(qual_name,policy,true);
+   cl.getNameForDiagnostic(stream,policy,true);
+   stream.flush(); // flush to string.
 
    if ( strncmp(qual_name.c_str(),"<anonymous ",strlen("<anonymous ") ) == 0) {
       size_t pos = qual_name.find(':');
@@ -671,7 +673,9 @@ std::string R__GetQualifiedName(const clang::NamedDecl &cl)
    policy.SuppressUnwrittenScope = true; // Don't write the inline or anonymous namespace names.
 
    std::string result;
-   cl.getNameForDiagnostic(result,policy,true); // qual_name = N->getQualifiedNameAsString();
+   llvm::raw_string_ostream stream(result);
+   cl.getNameForDiagnostic(stream,policy,true); // qual_name = N->getQualifiedNameAsString();
+   stream.flush();
    return result;
 }
 
@@ -882,7 +886,8 @@ bool IsStdClass(const clang::RecordDecl &cl)
 
 void R__GetName(std::string &qual_name, const clang::NamedDecl *cl)
 {
-   cl->getNameForDiagnostic(qual_name,cl->getASTContext().getPrintingPolicy(),false); // qual_name = N->getQualifiedNameAsString();
+   llvm::raw_string_ostream stream(qual_name);
+   cl->getNameForDiagnostic(stream,cl->getASTContext().getPrintingPolicy(),false); // qual_name = N->getQualifiedNameAsString();
 }
 
 inline bool R__IsTemplate(const clang::Decl &cl)
@@ -4067,7 +4072,7 @@ static int GenerateModule(clang::CompilerInstance* CI,
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
 
-   bool isPCH = !strcmp(dictSrcFile, "allDict.cxx");
+   bool isPCH = !strcmp(dictSrcFile, "etc/allDict.cxx");
    std::string dictname = llvm::sys::path::stem(dictSrcFile);
 
    // Parse Arguments
@@ -4215,18 +4220,20 @@ static int GenerateModule(clang::CompilerInstance* CI,
    if (OS) {
       // Emit the PCH file
       CI->getFrontendOpts().RelocatablePCH = true;
-      const char *ISysRoot = "/DUMMY_SYSROOT/include/";
+      std::string ISysRoot("/DUMMY_SYSROOT/include/");
 #ifdef ROOTBUILD
       ISysRoot = (currentDirectory + "/").c_str();
 #endif
-      Writer.WriteAST(CI->getSema(), 0, moduleFile, module, ISysRoot);
+      Writer.WriteAST(CI->getSema(), moduleFile, module, ISysRoot.c_str());
 
       // Write the generated bitstream to "Out".
       OS->write((char *)&Buffer.front(), Buffer.size());
 
       // Make sure it hits disk now.
       OS->flush();
-      delete OS;
+      bool deleteOutputFile =  CI->getDiagnostics().hasErrorOccurred();
+      CI->clearOutputFiles(deleteOutputFile);
+    
    }
 
    // Free up some memory, in case the process is kept alive.

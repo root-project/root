@@ -30,6 +30,7 @@
 #include "TMetaUtils.h"
 #include "TClassEdit.h"
 
+#include "clang/AST/Attr.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
@@ -490,7 +491,9 @@ const char *TClingDataMemberInfo::Name() const
    buf.clear();
    if (const clang::NamedDecl *nd = llvm::dyn_cast<clang::NamedDecl>(GetDecl())) {
       clang::PrintingPolicy policy(GetDecl()->getASTContext().getPrintingPolicy());
-      nd->getNameForDiagnostic(buf, policy, /*Qualified=*/false);
+      llvm::raw_string_ostream stream(buf);
+      nd->getNameForDiagnostic(stream, policy, /*Qualified=*/false);
+      stream.flush();
       return buf.c_str();
    }
    return 0;

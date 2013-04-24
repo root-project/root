@@ -35,6 +35,7 @@
 #include <vector>
 
 namespace clang {
+class Expr;
 class FuncionDecl;
 class CXXMethodDecl;
 }

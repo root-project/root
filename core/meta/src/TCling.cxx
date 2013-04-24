@@ -286,6 +286,15 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized) {
        || isa<clang::TagDecl>(D->getDeclContext()))
       return;
 
+   // Don't list templates.
+   if (const clang::CXXRecordDecl* RD = dyn_cast<clang::CXXRecordDecl>(D)) {
+      if (RD->getDescribedClassTemplate())
+         return;
+   } else if (const clang::FunctionDecl* FD = dyn_cast<clang::FunctionDecl>(D)) {
+      if (FD->getDescribedFunctionTemplate())
+         return;
+   }
+
    if (!isDeserialized && isa<DeclContext>(D) && !isa<EnumDecl>(D)) {
       // We have to find all the typedefs contained in that decl context
       // and add it to the list of types.
@@ -872,6 +881,7 @@ TCling::TCling(const char *name, const char *title)
    fInterpreter->setCallbacks(fClingCallbacks);
 }
 
+
 //______________________________________________________________________________
 TCling::~TCling()
 {
@@ -892,6 +902,13 @@ TCling::~TCling()
 #endif
 #endif
    //--
+}
+
+//______________________________________________________________________________
+void TCling::Initialize()
+{
+   // Initialize the interpreter, once TROOT::fInterpreter is set.
+   fClingCallbacks->Initialize(fInterpreter->getCI()->getASTContext());
 }
 
 //______________________________________________________________________________
@@ -1290,7 +1307,9 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
       clang::QualType memberQT = cling::utils::Transform::GetPartiallyDesugaredType(astContext, iField->getType(), fNormalizedCtxt->GetTypeToSkip(), false /* fully qualify */);
       if (memberQT.isNull()) {
          std::string memberName;
-         iField->getNameForDiagnostic(memberName, printPol, true /*fqi*/);
+         llvm::raw_string_ostream stream(memberName);
+         iField->getNameForDiagnostic(stream, printPol, true /*fqi*/);
+         stream.flush();
          Error("InspectMembers",
                "Cannot retrieve QualType for member %s while inspecting class %s",
                memberName.c_str(), clname);
@@ -1299,7 +1318,9 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
       const clang::Type* memType = memberQT.getTypePtr();
       if (!memType) {
          std::string memberName;
-         iField->getNameForDiagnostic(memberName, printPol, true /*fqi*/);
+         llvm::raw_string_ostream stream(memberName);
+         iField->getNameForDiagnostic(stream, printPol, true /*fqi*/);
+         stream.flush();
          Error("InspectMembers",
                "Cannot retrieve Type for member %s while inspecting class %s",
                memberName.c_str(), clname);
@@ -1315,7 +1336,9 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
          ptrQT = cling::utils::Transform::GetPartiallyDesugaredType(astContext, ptrQT, fNormalizedCtxt->GetTypeToSkip(), false /* fully qualify */);
          if (ptrQT.isNull()) {
             std::string memberName;
-            iField->getNameForDiagnostic(memberName, printPol, true /*fqi*/);
+            llvm::raw_string_ostream stream(memberName);
+            iField->getNameForDiagnostic(stream, printPol, true /*fqi*/);
+            stream.flush();
             Error("InspectMembers",
                   "Cannot retrieve pointee Type for member %s while inspecting class %s",
                   memberName.c_str(), clname);
@@ -1341,7 +1364,9 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
          clang::QualType subArrQT = arrType->getElementType();
          if (subArrQT.isNull()) {
             std::string memberName;
-            iField->getNameForDiagnostic(memberName, printPol, true /*fqi*/);
+            llvm::raw_string_ostream stream(memberName);
+            iField->getNameForDiagnostic(stream, printPol, true /*fqi*/);
+            stream.flush();
             Error("InspectMembers",
                   "Cannot retrieve QualType for array level %d (i.e. element type of %s) for member %s while inspecting class %s",
                   arrLevel, subArrQT.getAsString(printPol).c_str(),
@@ -1414,7 +1439,9 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
          continue;
       }
       std::string sBaseName;
-      baseDecl->getNameForDiagnostic(sBaseName, printPol, true /*fqi*/);
+      llvm::raw_string_ostream stream(sBaseName);
+      baseDecl->getNameForDiagnostic(stream, printPol, true /*fqi*/);
+      stream.flush();
       TClass* baseCl = TClass::GetClass(sBaseName.c_str());
       if (!baseCl) {
          Error("InspectMembers",
@@ -3173,7 +3200,7 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
          // If we only had a forward declaration then update the
          // TClingClassInfo with the definition if we have it now.
          const TagDecl* tdOld = llvm::dyn_cast_or_null<TagDecl>(cci->GetDecl());
-         if (!tdOld || tdDef) {
+         if (!tdOld || (tdDef && tdDef != tdOld)) {
             cl->ResetCaches();
             if (td) {
                // It's a tag decl, not a namespace decl.

@@ -1089,7 +1089,8 @@ bool RScanner::GetDeclQualName(clang::Decl* D, std::string& qual_name) const
    clang::NamedDecl* N = dyn_cast<clang::NamedDecl> (D);
    
    if (N) {
-      N->getNameForDiagnostic(qual_name,D->getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
+      llvm::raw_string_ostream stream(qual_name);
+      N->getNameForDiagnostic(stream,D->getASTContext().getPrintingPolicy(),true); // qual_name = N->getQualifiedNameAsString();
       return true;
    }
    else {

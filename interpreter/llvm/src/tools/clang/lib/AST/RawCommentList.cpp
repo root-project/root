@@ -10,11 +10,11 @@
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Comment.h"
-#include "clang/AST/CommentLexer.h"
 #include "clang/AST/CommentBriefParser.h"
-#include "clang/AST/CommentSema.h"
-#include "clang/AST/CommentParser.h"
 #include "clang/AST/CommentCommandTraits.h"
+#include "clang/AST/CommentLexer.h"
+#include "clang/AST/CommentParser.h"
+#include "clang/AST/CommentSema.h"
 #include "llvm/ADT/STLExtras.h"
 
 using namespace clang;
@@ -63,9 +63,10 @@ bool mergedCommentIsTrailingComment(StringRef Comment) {
 } // unnamed namespace
 
 RawComment::RawComment(const SourceManager &SourceMgr, SourceRange SR,
-                       bool Merged) :
+                       bool Merged, bool ParseAllComments) :
     Range(SR), RawTextValid(false), BriefTextValid(false),
     IsAttached(false), IsAlmostTrailingComment(false),
+    ParseAllComments(ParseAllComments),
     BeginLineValid(false), EndLineValid(false) {
   // Extract raw comment text, if possible.
   if (SR.getBegin() == SR.getEnd() || getRawText(SourceMgr).empty()) {
@@ -253,7 +254,8 @@ void RawCommentList::addComment(const RawComment &RC,
     if (C1EndLine + 1 == C2BeginLine || C1EndLine == C2BeginLine) {
       SourceRange MergedRange(C1.getSourceRange().getBegin(),
                               C2.getSourceRange().getEnd());
-      *Comments.back() = RawComment(SourceMgr, MergedRange, true);
+      *Comments.back() = RawComment(SourceMgr, MergedRange, true,
+                                    RC.isParseAllComments());
       Merged = true;
     }
   }
@@ -262,4 +264,3 @@ void RawCommentList::addComment(const RawComment &RC,
 
   OnlyWhitespaceSeen = true;
 }
-

@@ -28,8 +28,7 @@ ifeq ($(MAKECMDGOALS),libs-only)
   OPTIONAL_DIRS :=
 endif
 ifeq ($(BUILD_CLANG_ONLY),YES)
-  DIRS := $(filter-out tools docs unittests, $(DIRS))
-	tools/driver tools/libclang
+  DIRS := $(filter-out docs unittests, $(DIRS))
   OPTIONAL_DIRS :=
 endif
 
@@ -95,9 +94,6 @@ test::
 
 report::
 	@ $(MAKE) -C test report
-
-clean::
-	@ $(MAKE) -C test clean
 
 libs-only: all
 

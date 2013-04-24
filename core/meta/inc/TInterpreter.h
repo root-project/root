@@ -73,6 +73,7 @@ public:
    virtual const char *GetIncludePath() = 0;
    virtual const char *GetSTLIncludePath() const { return ""; }
    virtual TObjArray  *GetRootMapFiles() const = 0;
+   virtual void     Initialize() = 0;
    virtual Int_t    InitializeDictionaries() = 0;
    virtual void     InspectMembers(TMemberInspector&, void* obj, const TClass* cl) = 0;
    virtual Bool_t   IsLoaded(const char *filename) const = 0;

@@ -14,12 +14,12 @@
 #ifndef LLVM_CLANG_PATH_DIAGNOSTIC_H
 #define LLVM_CLANG_PATH_DIAGNOSTIC_H
 
-#include "clang/Basic/SourceLocation.h"
 #include "clang/Analysis/ProgramPoint.h"
+#include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
-#include "llvm/ADT/PointerUnion.h"
 #include "llvm/ADT/Optional.h"
+#include "llvm/ADT/PointerUnion.h"
 #include <deque>
 #include <iterator>
 #include <string>
@@ -320,6 +320,13 @@ private:
   const std::string str;
   const Kind kind;
   const DisplayHint Hint;
+  
+  /// A constant string that can be used to tag the PathDiagnosticPiece,
+  /// typically with the identification of the creator.  The actual pointer
+  /// value is meant to be an identifier; the string itself is useful for
+  /// debugging.
+  StringRef Tag;
+
   std::vector<SourceRange> ranges;
 
   PathDiagnosticPiece() LLVM_DELETED_FUNCTION;
@@ -334,8 +341,18 @@ protected:
 public:
   virtual ~PathDiagnosticPiece();
 
-  llvm::StringRef getString() const { return str; }
+  StringRef getString() const { return str; }
 
+  /// Tag this PathDiagnosticPiece with the given C-string.
+  void setTag(const char *tag) { Tag = tag; }
+  
+  /// Return the opaque tag (if any) on the PathDiagnosticPiece.
+  const void *getTag() const { return Tag.data(); }
+  
+  /// Return the string representation of the tag.  This is useful
+  /// for debugging.
+  StringRef getTagStr() const { return Tag; }
+  
   /// getDisplayHint - Return a hint indicating where the diagnostic should
   ///  be displayed by the PathDiagnosticConsumer.
   DisplayHint getDisplayHint() const { return Hint; }
@@ -360,10 +377,6 @@ public:
   /// Return the SourceRanges associated with this PathDiagnosticPiece.
   ArrayRef<SourceRange> getRanges() const { return ranges; }
 
-  static inline bool classof(const PathDiagnosticPiece *P) {
-    return true;
-  }
-  
   virtual void Profile(llvm::FoldingSetNodeID &ID) const;
 };
   
@@ -399,6 +412,10 @@ public:
   virtual void flattenLocations() { Pos.flatten(); }
   
   virtual void Profile(llvm::FoldingSetNodeID &ID) const;
+
+  static bool classof(const PathDiagnosticPiece *P) {
+    return P->getKind() == Event || P->getKind() == Macro;
+  }
 };
 
 /// \brief Interface for classes constructing Stack hints.
@@ -444,13 +461,13 @@ public:
 };
 
 class PathDiagnosticEventPiece : public PathDiagnosticSpotPiece {
-  llvm::Optional<bool> IsPrunable;
+  Optional<bool> IsPrunable;
 
   /// If the event occurs in a different frame than the final diagnostic,
   /// supply a message that will be used to construct an extra hint on the
   /// returns from all the calls on the stack from this event to the final
   /// diagnostic.
-  llvm::OwningPtr<StackHintGenerator> CallStackHint;
+  OwningPtr<StackHintGenerator> CallStackHint;
 
 public:
   PathDiagnosticEventPiece(const PathDiagnosticLocation &pos,
@@ -653,13 +670,19 @@ class PathDiagnostic : public llvm::FoldingSetNode {
   std::deque<std::string> OtherDesc;
   PathDiagnosticLocation Loc;
   PathPieces pathImpl;
-  llvm::SmallVector<PathPieces *, 3> pathStack;
+  SmallVector<PathPieces *, 3> pathStack;
   
-  PathDiagnostic(); // Do not implement.
+  /// \brief Important bug uniqueing location.
+  /// The location info is useful to differentiate between bugs.
+  PathDiagnosticLocation UniqueingLoc;
+  const Decl *UniqueingDecl;
+
+  PathDiagnostic() LLVM_DELETED_FUNCTION;
 public:
   PathDiagnostic(const Decl *DeclWithIssue, StringRef bugtype,
                  StringRef verboseDesc, StringRef shortDesc,
-                 StringRef category);
+                 StringRef category, PathDiagnosticLocation LocationToUnique,
+                 const Decl *DeclToUnique);
 
   ~PathDiagnostic();
   
@@ -719,6 +742,16 @@ public:
   PathDiagnosticLocation getLocation() const {
     assert(Loc.isValid() && "No end-of-path location set yet!");
     return Loc;
+  }
+
+  /// \brief Get the location on which the report should be uniqued.
+  PathDiagnosticLocation getUniqueingLoc() const {
+    return UniqueingLoc;
+  }
+
+  /// \brief Get the declaration containing the uniqueing location.
+  const Decl *getUniqueingDecl() const {
+    return UniqueingDecl;
   }
 
   void flattenLocations() {

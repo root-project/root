@@ -19,6 +19,7 @@
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/MC/MCCodeEmitter.h"
+#include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstrInfo.h"
@@ -33,11 +34,13 @@ class MipsMCCodeEmitter : public MCCodeEmitter {
   MipsMCCodeEmitter(const MipsMCCodeEmitter &) LLVM_DELETED_FUNCTION;
   void operator=(const MipsMCCodeEmitter &) LLVM_DELETED_FUNCTION;
   const MCInstrInfo &MCII;
+  MCContext &Ctx;
   bool IsLittleEndian;
 
 public:
-  MipsMCCodeEmitter(const MCInstrInfo &mcii, bool IsLittle) :
-            MCII(mcii), IsLittleEndian(IsLittle) {}
+  MipsMCCodeEmitter(const MCInstrInfo &mcii, MCContext &Ctx_,
+                    const MCSubtargetInfo &sti, bool IsLittle) :
+    MCII(mcii), Ctx(Ctx_), IsLittleEndian(IsLittle) {}
 
   ~MipsMCCodeEmitter() {}
 
@@ -93,7 +96,7 @@ MCCodeEmitter *llvm::createMipsMCCodeEmitterEB(const MCInstrInfo &MCII,
                                                const MCSubtargetInfo &STI,
                                                MCContext &Ctx)
 {
-  return new MipsMCCodeEmitter(MCII, false);
+  return new MipsMCCodeEmitter(MCII, Ctx, STI, false);
 }
 
 MCCodeEmitter *llvm::createMipsMCCodeEmitterEL(const MCInstrInfo &MCII,
@@ -101,7 +104,7 @@ MCCodeEmitter *llvm::createMipsMCCodeEmitterEL(const MCInstrInfo &MCII,
                                                const MCSubtargetInfo &STI,
                                                MCContext &Ctx)
 {
-  return new MipsMCCodeEmitter(MCII, true);
+  return new MipsMCCodeEmitter(MCII, Ctx, STI, true);
 }
 
 /// EncodeInstruction - Emit the instruction.
@@ -139,15 +142,11 @@ EncodeInstruction(const MCInst &MI, raw_ostream &OS,
     llvm_unreachable("unimplemented opcode in EncodeInstruction()");
 
   const MCInstrDesc &Desc = MCII.get(TmpInst.getOpcode());
-  uint64_t TSFlags = Desc.TSFlags;
 
-  // Pseudo instructions don't get encoded and shouldn't be here
-  // in the first place!
-  if ((TSFlags & MipsII::FormMask) == MipsII::Pseudo)
-    llvm_unreachable("Pseudo opcode found in EncodeInstruction()");
-
-  // For now all instructions are 4 bytes
-  int Size = 4; // FIXME: Have Desc.getSize() return the correct value!
+  // Get byte count of instruction
+  unsigned Size = Desc.getSize();
+  if (!Size)
+    llvm_unreachable("Desc.getSize() returns 0");
 
   EmitInstruction(Binary, Size, OS);
 }
@@ -161,8 +160,9 @@ getBranchTargetOpValue(const MCInst &MI, unsigned OpNo,
 
   const MCOperand &MO = MI.getOperand(OpNo);
 
-  // If the destination is an immediate, we have nothing to do.
-  if (MO.isImm()) return MO.getImm();
+  // If the destination is an immediate, divide by 4.
+  if (MO.isImm()) return MO.getImm() >> 2;
+
   assert(MO.isExpr() &&
          "getBranchTargetOpValue expects only expressions or immediates");
 
@@ -180,8 +180,9 @@ getJumpTargetOpValue(const MCInst &MI, unsigned OpNo,
                      SmallVectorImpl<MCFixup> &Fixups) const {
 
   const MCOperand &MO = MI.getOperand(OpNo);
-  // If the destination is an immediate, we have nothing to do.
-  if (MO.isImm()) return MO.getImm();
+  // If the destination is an immediate, divide by 4.
+  if (MO.isImm()) return MO.getImm()>>2;
+
   assert(MO.isExpr() &&
          "getJumpTargetOpValue expects only expressions or an immediate");
 
@@ -198,7 +199,7 @@ getMachineOpValue(const MCInst &MI, const MCOperand &MO,
                   SmallVectorImpl<MCFixup> &Fixups) const {
   if (MO.isReg()) {
     unsigned Reg = MO.getReg();
-    unsigned RegNo = getMipsRegisterNumbering(Reg);
+    unsigned RegNo = Ctx.getRegisterInfo().getEncodingValue(Reg);
     return RegNo;
   } else if (MO.isImm()) {
     return static_cast<unsigned>(MO.getImm());
@@ -284,6 +285,18 @@ getMachineOpValue(const MCInst &MI, const MCOperand &MO,
     break;
   case MCSymbolRefExpr::VK_Mips_HIGHEST:
     FixupKind = Mips::fixup_Mips_HIGHEST;
+    break;
+  case MCSymbolRefExpr::VK_Mips_GOT_HI16:
+    FixupKind = Mips::fixup_Mips_GOT_HI16;
+    break;
+  case MCSymbolRefExpr::VK_Mips_GOT_LO16:
+    FixupKind = Mips::fixup_Mips_GOT_LO16;
+    break;
+  case MCSymbolRefExpr::VK_Mips_CALL_HI16:
+    FixupKind = Mips::fixup_Mips_CALL_HI16;
+    break;
+  case MCSymbolRefExpr::VK_Mips_CALL_LO16:
+    FixupKind = Mips::fixup_Mips_CALL_LO16;
     break;
   } // switch
 

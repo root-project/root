@@ -31,24 +31,24 @@
 
 #define DEBUG_TYPE "regalloc"
 
-#include "Spiller.h"
-#include "VirtRegMap.h"
+#include "llvm/CodeGen/RegAllocPBQP.h"
 #include "RegisterCoalescer.h"
-#include "llvm/Module.h"
+#include "Spiller.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/CodeGen/CalcSpillWeights.h"
 #include "llvm/CodeGen/LiveIntervalAnalysis.h"
 #include "llvm/CodeGen/LiveRangeEdit.h"
 #include "llvm/CodeGen/LiveStackAnalysis.h"
-#include "llvm/CodeGen/RegAllocPBQP.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineLoopInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/CodeGen/PBQP/HeuristicSolver.h"
 #include "llvm/CodeGen/PBQP/Graph.h"
+#include "llvm/CodeGen/PBQP/HeuristicSolver.h"
 #include "llvm/CodeGen/PBQP/Heuristics/Briggs.h"
 #include "llvm/CodeGen/RegAllocRegistry.h"
+#include "llvm/CodeGen/VirtRegMap.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetInstrInfo.h"
@@ -118,7 +118,6 @@ private:
   typedef std::vector<AllowedSet> AllowedSetMap;
   typedef std::pair<unsigned, unsigned> RegPair;
   typedef std::map<RegPair, PBQP::PBQPNum> CoalesceMap;
-  typedef std::vector<PBQP::Graph::NodeItr> NodeVector;
   typedef std::set<unsigned> RegSet;
 
 
@@ -208,8 +207,6 @@ std::auto_ptr<PBQPRAProblem> PBQPBuilder::build(MachineFunction *mf,
     mri->setPhysRegUsed(Reg);
   }
 
-  BitVector reservedRegs = tri->getReservedRegs(*mf);
-
   // Iterate over vregs.
   for (RegSet::const_iterator vregItr = vregs.begin(), vregEnd = vregs.end();
        vregItr != vregEnd; ++vregItr) {
@@ -218,7 +215,7 @@ std::auto_ptr<PBQPRAProblem> PBQPBuilder::build(MachineFunction *mf,
     LiveInterval *vregLI = &LIS->getInterval(vreg);
 
     // Record any overlaps with regmask operands.
-    BitVector regMaskOverlaps(tri->getNumRegs());
+    BitVector regMaskOverlaps;
     LIS->checkRegMaskInterference(*vregLI, regMaskOverlaps);
 
     // Compute an initial allowed set for the current vreg.
@@ -227,7 +224,7 @@ std::auto_ptr<PBQPRAProblem> PBQPBuilder::build(MachineFunction *mf,
     ArrayRef<uint16_t> rawOrder = trc->getRawAllocationOrder(*mf);
     for (unsigned i = 0; i != rawOrder.size(); ++i) {
       unsigned preg = rawOrder[i];
-      if (reservedRegs.test(preg))
+      if (mri->isReserved(preg))
         continue;
 
       // vregLI crosses a regmask operand that clobbers preg.
@@ -357,7 +354,7 @@ std::auto_ptr<PBQPRAProblem> PBQPBuilderWithCoalescing::build(
                                                    loopInfo->getLoopDepth(mbb));
 
       if (cp.isPhys()) {
-        if (!lis->isAllocatable(dst)) {
+        if (!mf->getRegInfo().isAllocatable(dst)) {
           continue;
         }
 
@@ -432,6 +429,7 @@ void RegAllocPBQP::getAnalysisUsage(AnalysisUsage &au) const {
   au.addRequired<SlotIndexes>();
   au.addPreserved<SlotIndexes>();
   au.addRequired<LiveIntervals>();
+  au.addPreserved<LiveIntervals>();
   //au.addRequiredID(SplitCriticalEdgesID);
   if (customPassID)
     au.addRequiredID(*customPassID);
@@ -443,6 +441,7 @@ void RegAllocPBQP::getAnalysisUsage(AnalysisUsage &au) const {
   au.addRequired<MachineLoopInfo>();
   au.addPreserved<MachineLoopInfo>();
   au.addRequired<VirtRegMap>();
+  au.addPreserved<VirtRegMap>();
   MachineFunctionPass::getAnalysisUsage(au);
 }
 
@@ -527,7 +526,7 @@ void RegAllocPBQP::finalizeAlloc() const {
          itr != end; ++itr) {
     LiveInterval *li = &lis->getInterval(*itr);
 
-    unsigned physReg = vrm->getRegAllocPref(li->reg);
+    unsigned physReg = mri->getSimpleHint(li->reg);
 
     if (physReg == 0) {
       const TargetRegisterClass *liRC = mri->getRegClass(li->reg);

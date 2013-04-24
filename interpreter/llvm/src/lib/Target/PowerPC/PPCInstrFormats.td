@@ -94,12 +94,6 @@ class IForm<bits<6> opcode, bit aa, bit lk, dag OOL, dag IOL, string asmstr,
   let Inst{31}    = lk;
 }
 
-class IForm_ext<bits<6> opcode, bits<5> bo, bit aa, bit lk, dag OOL, dag IOL,
-            string asmstr, InstrItinClass itin, list<dag> pattern>
-         : IForm<opcode, aa, lk, OOL, IOL, asmstr, itin, pattern> {
-  let LI{0-4} = bo;
-}
-
 // 1.7.2 B-Form
 class BForm<bits<6> opcode, bit aa, bit lk, dag OOL, dag IOL, string asmstr>
   : I<opcode, OOL, IOL, asmstr, BrB> {
@@ -118,6 +112,25 @@ class BForm<bits<6> opcode, bit aa, bit lk, dag OOL, dag IOL, string asmstr>
   let Inst{31}    = lk;
 }
 
+class BForm_1<bits<6> opcode, bits<5> bo, bit aa, bit lk, dag OOL, dag IOL,
+             string asmstr>
+  : BForm<opcode, aa, lk, OOL, IOL, asmstr> {
+  let BIBO{4-0} = bo;
+  let BIBO{6-5} = 0;
+  let CR = 0;
+}
+
+class BForm_2<bits<6> opcode, bits<5> bo, bits<5> bi, bit aa, bit lk,
+              dag OOL, dag IOL, string asmstr>
+  : I<opcode, OOL, IOL, asmstr, BrB> {
+  bits<14> BD;
+
+  let Inst{6-10}  = bo;
+  let Inst{11-15} = bi;
+  let Inst{16-29} = BD;
+  let Inst{30}    = aa;
+  let Inst{31}    = lk;
+}
 
 // 1.7.4 D-Form
 class DForm_base<bits<6> opcode, dag OOL, dag IOL, string asmstr,
@@ -552,9 +565,9 @@ class XLForm_2_br<bits<6> opcode, bits<10> xo, bit lk,
   bits<7> BIBO;  // 2 bits of BI and 5 bits of BO.
   bits<3>  CR;
   
-  let BO = BIBO{2-6};
-  let BI{0-1} = BIBO{0-1};
-  let BI{2-4} = CR;
+  let BO = BIBO{4-0};
+  let BI{0-1} = BIBO{5-6};
+  let BI{2-4} = CR{0-2};
   let BH = 0;
 }
 
@@ -625,9 +638,9 @@ class XFXForm_5<bits<6> opcode, bits<10> xo, dag OOL, dag IOL, string asmstr,
                 InstrItinClass itin> 
   : I<opcode, OOL, IOL, asmstr, itin> {
   bits<8>  FXM;
-  bits<5>  ST;
+  bits<5>  rS;
    
-  let Inst{6-10}  = ST;
+  let Inst{6-10}  = rS;
   let Inst{11}    = 0;
   let Inst{12-19} = FXM;
   let Inst{20}    = 0;
@@ -663,19 +676,18 @@ class XFXForm_7_ext<bits<6> opcode, bits<10> xo, bits<10> spr,
 // This is probably 1.7.9, but I don't have the reference that uses this
 // numbering scheme...
 class XFLForm<bits<6> opcode, bits<10> xo, dag OOL, dag IOL, string asmstr, 
-                      string cstr, InstrItinClass itin, list<dag>pattern>
+              InstrItinClass itin, list<dag>pattern>
   : I<opcode, OOL, IOL, asmstr, itin> {
   bits<8> FM;
-  bits<5> RT;
+  bits<5> rT;
 
   bit RC = 0;    // set by isDOT
   let Pattern = pattern;
-  let Constraints = cstr;
 
   let Inst{6} = 0;
   let Inst{7-14}  = FM;
   let Inst{15} = 0;
-  let Inst{16-20} = RT;
+  let Inst{16-20} = rT;
   let Inst{21-30} = xo;
   let Inst{31}    = RC;
 }
@@ -756,6 +768,24 @@ class AForm_3<bits<6> opcode, bits<5> xo, dag OOL, dag IOL, string asmstr,
               InstrItinClass itin, list<dag> pattern> 
   : AForm_1<opcode, xo, OOL, IOL, asmstr, itin, pattern> {
   let FRB = 0;
+}
+
+class AForm_4<bits<6> opcode, bits<5> xo, dag OOL, dag IOL, string asmstr, 
+              InstrItinClass itin, list<dag> pattern>
+         : I<opcode, OOL, IOL, asmstr, itin> {
+  bits<5> RT;
+  bits<5> RA;
+  bits<5> RB;
+  bits<5> COND;
+
+  let Pattern = pattern;
+
+  let Inst{6-10}  = RT;
+  let Inst{11-15} = RA;
+  let Inst{16-20} = RB;
+  let Inst{21-25} = COND;
+  let Inst{26-30} = xo;
+  let Inst{31}    = 0;
 }
 
 // 1.7.13 M-Form
@@ -966,6 +996,7 @@ class VXRForm_1<bits<10> xo, dag OOL, dag IOL, string asmstr,
 //===----------------------------------------------------------------------===//
 class Pseudo<dag OOL, dag IOL, string asmstr, list<dag> pattern>
     : I<0, OOL, IOL, asmstr, NoItinerary> {
+  let isCodeGenOnly = 1;
   let PPC64 = 0;
   let Pattern = pattern;
   let Inst{31-0} = 0;

@@ -117,7 +117,7 @@ void VirtRegAuxInfo::CalculateWeightAndHint(LiveInterval &li) {
   float totalWeight = 0;
   SmallPtrSet<MachineInstr*, 8> visited;
 
-  // Find the best physreg hist and the best virtreg hint.
+  // Find the best physreg hint and the best virtreg hint.
   float bestPhys = 0, bestVirt = 0;
   unsigned hintPhys = 0, hintVirt = 0;
 
@@ -164,7 +164,7 @@ void VirtRegAuxInfo::CalculateWeightAndHint(LiveInterval &li) {
       continue;
     float hweight = Hint[hint] += weight;
     if (TargetRegisterInfo::isPhysicalRegister(hint)) {
-      if (hweight > bestPhys && LIS.isAllocatable(hint))
+      if (hweight > bestPhys && mri.isAllocatable(hint))
         bestPhys = hweight, hintPhys = hint;
     } else {
       if (hweight > bestVirt)

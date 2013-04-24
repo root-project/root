@@ -1,8 +1,3 @@
 all:
-	
 clean:
-	
-
 install:
-	
-

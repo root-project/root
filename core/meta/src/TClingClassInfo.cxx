@@ -59,7 +59,8 @@ static std::string FullyQualifiedName(const Decl *decl) {
    std::string buf;
    if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(decl)) {
       PrintingPolicy Policy(decl->getASTContext().getPrintingPolicy());
-      ND->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+      llvm::raw_string_ostream stream(buf);
+      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
    }
    return buf;
 }
@@ -258,7 +259,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       // Constructor.
       // These must be accessed through a wrapper, since they
       // may call an operator new(), which can be a member
-      // function or a glo/Users/pcanal/root_working/code/rootclingbal function, as well as the actual
+      // function or a global function, as well as the actual
       // constructor function itself.
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
@@ -545,7 +546,8 @@ int TClingClassInfo::InternalNext()
                llvm::dyn_cast<NamedDecl>(fDecl)) {
             PrintingPolicy Policy(fDecl->getASTContext().
                getPrintingPolicy());
-            ND->getNameForDiagnostic(buf, Policy, /*Qualified=*/false);         
+            llvm::raw_string_ostream stream(buf);
+            ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
          }
          Error("TClingClassInfo::InternalNext",
             "Next called but iteration not prepared for %s!", buf.c_str());
@@ -892,7 +894,8 @@ const char *TClingClassInfo::FullName(const ROOT::TMetaUtils::TNormalizedCtxt &n
             llvm::dyn_cast<NamedDecl>(fDecl)) {
          PrintingPolicy Policy(fDecl->getASTContext().
             getPrintingPolicy());
-         ND->getNameForDiagnostic(buf, Policy, /*Qualified=*/true);
+         llvm::raw_string_ostream stream(buf);
+         ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
       }
    }
    return buf.c_str();
@@ -909,7 +912,8 @@ const char *TClingClassInfo::Name() const
    buf.clear();
    if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(fDecl)) {
       PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
-      ND->getNameForDiagnostic(buf, Policy, /*Qualified=*/false);
+      llvm::raw_string_ostream stream(buf);
+      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
    }
    return buf.c_str();
 }

@@ -12,16 +12,16 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/CodeGen/IntrinsicLowering.h"
-#include "llvm/Constants.h"
-#include "llvm/DerivedTypes.h"
-#include "llvm/IRBuilder.h"
-#include "llvm/Module.h"
-#include "llvm/Type.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
 #include "llvm/Support/CallSite.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Target/TargetData.h"
 using namespace llvm;
 
 template <class ArgIt>
@@ -457,7 +457,7 @@ void IntrinsicLowering::LowerIntrinsicCall(CallInst *CI) {
     break;   // Strip out annotate intrinsic
     
   case Intrinsic::memcpy: {
-    IntegerType *IntPtr = TD.getIntPtrType(Context);
+    Type *IntPtr = TD.getIntPtrType(Context);
     Value *Size = Builder.CreateIntCast(CI->getArgOperand(2), IntPtr,
                                         /* isSigned */ false);
     Value *Ops[3];
@@ -468,7 +468,7 @@ void IntrinsicLowering::LowerIntrinsicCall(CallInst *CI) {
     break;
   }
   case Intrinsic::memmove: {
-    IntegerType *IntPtr = TD.getIntPtrType(Context);
+    Type *IntPtr = TD.getIntPtrType(Context);
     Value *Size = Builder.CreateIntCast(CI->getArgOperand(2), IntPtr,
                                         /* isSigned */ false);
     Value *Ops[3];
@@ -479,7 +479,7 @@ void IntrinsicLowering::LowerIntrinsicCall(CallInst *CI) {
     break;
   }
   case Intrinsic::memset: {
-    IntegerType *IntPtr = TD.getIntPtrType(Context);
+    Type *IntPtr = TD.getIntPtrType(Context);
     Value *Size = Builder.CreateIntCast(CI->getArgOperand(2), IntPtr,
                                         /* isSigned */ false);
     Value *Ops[3];

@@ -12,14 +12,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "TableGenBackends.h" // Declares all backends.
-
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/PrettyStackTrace.h"
 #include "llvm/Support/Signals.h"
 #include "llvm/TableGen/Error.h"
 #include "llvm/TableGen/Main.h"
 #include "llvm/TableGen/Record.h"
-#include "llvm/TableGen/TableGenAction.h"
 
 using namespace llvm;
 using namespace clang;
@@ -31,10 +29,12 @@ enum ActionType {
   GenClangAttrPCHRead,
   GenClangAttrPCHWrite,
   GenClangAttrSpellingList,
+  GenClangAttrSpellingListIndex,
   GenClangAttrLateParsedList,
   GenClangAttrTemplateInstantiate,
   GenClangAttrParsedAttrList,
   GenClangAttrParsedAttrKinds,
+  GenClangAttrDump,
   GenClangDiagsDefs,
   GenClangDiagGroups,
   GenClangDiagsIndexName,
@@ -44,7 +44,9 @@ enum ActionType {
   GenClangSACheckers,
   GenClangCommentHTMLTags,
   GenClangCommentHTMLTagsProperties,
+  GenClangCommentHTMLNamedCharacterReferences,
   GenClangCommentCommandInfo,
+  GenClangCommentCommandList,
   GenOptParserDefs, GenOptParserImpl,
   GenArmNeon,
   GenArmNeonSema,
@@ -71,6 +73,9 @@ namespace {
                     clEnumValN(GenClangAttrSpellingList,
                                "gen-clang-attr-spelling-list",
                                "Generate a clang attribute spelling list"),
+                    clEnumValN(GenClangAttrSpellingListIndex,
+                               "gen-clang-attr-spelling-index",
+                               "Generate a clang attribute spelling index"),
                     clEnumValN(GenClangAttrLateParsedList,
                                "gen-clang-attr-late-parsed-list",
                                "Generate a clang attribute LateParsed list"),
@@ -83,6 +88,8 @@ namespace {
                     clEnumValN(GenClangAttrParsedAttrKinds,
                                "gen-clang-attr-parsed-attr-kinds",
                                "Generate a clang parsed attribute kinds"),
+                    clEnumValN(GenClangAttrDump, "gen-clang-attr-dump",
+                               "Generate clang attribute dumper"),
                     clEnumValN(GenClangDiagsDefs, "gen-clang-diags-defs",
                                "Generate Clang diagnostics definitions"),
                     clEnumValN(GenClangDiagGroups, "gen-clang-diag-groups",
@@ -106,8 +113,16 @@ namespace {
                                "gen-clang-comment-html-tags-properties",
                                "Generate efficient matchers for HTML tag "
                                "properties"),
+                    clEnumValN(GenClangCommentHTMLNamedCharacterReferences,
+                               "gen-clang-comment-html-named-character-references",
+                               "Generate function to translate named character "
+                               "references to UTF-8 sequences"),
                     clEnumValN(GenClangCommentCommandInfo,
                                "gen-clang-comment-command-info",
+                               "Generate command properties for commands that "
+                               "are used in documentation comments"),
+                    clEnumValN(GenClangCommentCommandList,
+                               "gen-clang-comment-command-list",
                                "Generate list of commands that are used in "
                                "documentation comments"),
                     clEnumValN(GenArmNeon, "gen-arm-neon",
@@ -123,91 +138,100 @@ namespace {
                  cl::desc("Only use warnings from specified component"),
                  cl::value_desc("component"), cl::Hidden);
 
-class ClangTableGenAction : public TableGenAction {
-public:
-  bool operator()(raw_ostream &OS, RecordKeeper &Records) {
-    switch (Action) {
-    case GenClangAttrClasses:
-      EmitClangAttrClass(Records, OS);
-      break;
-    case GenClangAttrImpl:
-      EmitClangAttrImpl(Records, OS);
-      break;
-    case GenClangAttrList:
-      EmitClangAttrList(Records, OS);
-      break;
-    case GenClangAttrPCHRead:
-      EmitClangAttrPCHRead(Records, OS);
-      break;
-    case GenClangAttrPCHWrite:
-      EmitClangAttrPCHWrite(Records, OS);
-      break;
-    case GenClangAttrSpellingList:
-      EmitClangAttrSpellingList(Records, OS);
-      break;
-    case GenClangAttrLateParsedList:
-      EmitClangAttrLateParsedList(Records, OS);
-      break;
-    case GenClangAttrTemplateInstantiate:
-      EmitClangAttrTemplateInstantiate(Records, OS);
-      break;
-    case GenClangAttrParsedAttrList:
-      EmitClangAttrParsedAttrList(Records, OS);
-      break;
-    case GenClangAttrParsedAttrKinds:
-      EmitClangAttrParsedAttrKinds(Records, OS);
-      break;
-    case GenClangDiagsDefs:
-      EmitClangDiagsDefs(Records, OS, ClangComponent);
-      break;
-    case GenClangDiagGroups:
-      EmitClangDiagGroups(Records, OS);
-      break;
-    case GenClangDiagsIndexName:
-      EmitClangDiagsIndexName(Records, OS);
-      break;
-    case GenClangCommentNodes:
-      EmitClangASTNodes(Records, OS, "Comment", "");
-      break;
-    case GenClangDeclNodes:
-      EmitClangASTNodes(Records, OS, "Decl", "Decl");
-      EmitClangDeclContext(Records, OS);
-      break;
-    case GenClangStmtNodes:
-      EmitClangASTNodes(Records, OS, "Stmt", "");
-      break;
-    case GenClangSACheckers:
-      EmitClangSACheckers(Records, OS);
-      break;
-    case GenClangCommentHTMLTags:
-      EmitClangCommentHTMLTags(Records, OS);
-      break;
-    case GenClangCommentHTMLTagsProperties:
-      EmitClangCommentHTMLTagsProperties(Records, OS);
-      break;
-    case GenClangCommentCommandInfo:
-      EmitClangCommentCommandInfo(Records, OS);
-      break;
-    case GenOptParserDefs:
-      EmitOptParser(Records, OS, true);
-      break;
-    case GenOptParserImpl:
-      EmitOptParser(Records, OS, false);
-      break;
-    case GenArmNeon:
-      EmitNeon(Records, OS);
-      break;
-    case GenArmNeonSema:
-      EmitNeonSema(Records, OS);
-      break;
-    case GenArmNeonTest:
-      EmitNeonTest(Records, OS);
-      break;
-    }
-
-    return false;
+bool ClangTableGenMain(raw_ostream &OS, RecordKeeper &Records) {
+  switch (Action) {
+  case GenClangAttrClasses:
+    EmitClangAttrClass(Records, OS);
+    break;
+  case GenClangAttrImpl:
+    EmitClangAttrImpl(Records, OS);
+    break;
+  case GenClangAttrList:
+    EmitClangAttrList(Records, OS);
+    break;
+  case GenClangAttrPCHRead:
+    EmitClangAttrPCHRead(Records, OS);
+    break;
+  case GenClangAttrPCHWrite:
+    EmitClangAttrPCHWrite(Records, OS);
+    break;
+  case GenClangAttrSpellingList:
+    EmitClangAttrSpellingList(Records, OS);
+    break;
+  case GenClangAttrSpellingListIndex:
+    EmitClangAttrSpellingListIndex(Records, OS);
+    break;
+  case GenClangAttrLateParsedList:
+    EmitClangAttrLateParsedList(Records, OS);
+    break;
+  case GenClangAttrTemplateInstantiate:
+    EmitClangAttrTemplateInstantiate(Records, OS);
+    break;
+  case GenClangAttrParsedAttrList:
+    EmitClangAttrParsedAttrList(Records, OS);
+    break;
+  case GenClangAttrParsedAttrKinds:
+    EmitClangAttrParsedAttrKinds(Records, OS);
+    break;
+  case GenClangAttrDump:
+    EmitClangAttrDump(Records, OS);
+    break;
+  case GenClangDiagsDefs:
+    EmitClangDiagsDefs(Records, OS, ClangComponent);
+    break;
+  case GenClangDiagGroups:
+    EmitClangDiagGroups(Records, OS);
+    break;
+  case GenClangDiagsIndexName:
+    EmitClangDiagsIndexName(Records, OS);
+    break;
+  case GenClangCommentNodes:
+    EmitClangASTNodes(Records, OS, "Comment", "");
+    break;
+  case GenClangDeclNodes:
+    EmitClangASTNodes(Records, OS, "Decl", "Decl");
+    EmitClangDeclContext(Records, OS);
+    break;
+  case GenClangStmtNodes:
+    EmitClangASTNodes(Records, OS, "Stmt", "");
+    break;
+  case GenClangSACheckers:
+    EmitClangSACheckers(Records, OS);
+    break;
+  case GenClangCommentHTMLTags:
+    EmitClangCommentHTMLTags(Records, OS);
+    break;
+  case GenClangCommentHTMLTagsProperties:
+    EmitClangCommentHTMLTagsProperties(Records, OS);
+    break;
+  case GenClangCommentHTMLNamedCharacterReferences:
+    EmitClangCommentHTMLNamedCharacterReferences(Records, OS);
+    break;
+  case GenClangCommentCommandInfo:
+    EmitClangCommentCommandInfo(Records, OS);
+    break;
+  case GenClangCommentCommandList:
+    EmitClangCommentCommandList(Records, OS);
+    break;
+  case GenOptParserDefs:
+    EmitOptParser(Records, OS, true);
+    break;
+  case GenOptParserImpl:
+    EmitOptParser(Records, OS, false);
+    break;
+  case GenArmNeon:
+    EmitNeon(Records, OS);
+    break;
+  case GenArmNeonSema:
+    EmitNeonSema(Records, OS);
+    break;
+  case GenArmNeonTest:
+    EmitNeonTest(Records, OS);
+    break;
   }
-};
+
+  return false;
+}
 }
 
 int main(int argc, char **argv) {
@@ -215,6 +239,5 @@ int main(int argc, char **argv) {
   PrettyStackTraceProgram X(argc, argv);
   cl::ParseCommandLineOptions(argc, argv);
 
-  ClangTableGenAction Action;
-  return TableGenMain(argv[0], Action);
+  return TableGenMain(argv[0], &ClangTableGenMain);
 }

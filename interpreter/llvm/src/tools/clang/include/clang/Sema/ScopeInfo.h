@@ -25,6 +25,7 @@ namespace clang {
 class Decl;
 class BlockDecl;
 class CXXMethodDecl;
+class ObjCPropertyDecl;
 class IdentifierInfo;
 class LabelDecl;
 class ReturnStmt;
@@ -34,6 +35,7 @@ class VarDecl;
 class DeclRefExpr;
 class ObjCIvarRefExpr;
 class ObjCPropertyRefExpr;
+class ObjCMessageExpr;
 
 namespace sema {
 
@@ -89,13 +91,13 @@ public:
   /// \brief Whether this function contains any indirect gotos.
   bool HasIndirectGoto;
 
-  /// A flag that is set when parsing a -dealloc method and no [super dealloc]
-  /// call was found yet.
-  bool ObjCShouldCallSuperDealloc;
+  /// \brief Whether a statement was dropped because it was invalid.
+  bool HasDroppedStmt;
 
-  /// A flag that is set when parsing a -finalize method and no [super finalize]
-  /// call was found yet.
-  bool ObjCShouldCallSuperFinalize;
+  /// A flag that is set when parsing a method that must call super's
+  /// implementation, such as \c -dealloc, \c -finalize, or any method marked
+  /// with \c __attribute__((objc_requires_super)).
+  bool ObjCShouldCallSuper;
 
   /// \brief Used to determine if errors occurred in this function or block.
   DiagnosticErrorTrap ErrorTrap;
@@ -166,9 +168,11 @@ public:
 
   public:
     WeakObjectProfileTy(const ObjCPropertyRefExpr *RE);
+    WeakObjectProfileTy(const Expr *Base, const ObjCPropertyDecl *Property);
     WeakObjectProfileTy(const DeclRefExpr *RE);
     WeakObjectProfileTy(const ObjCIvarRefExpr *RE);
 
+    const NamedDecl *getBase() const { return Base.getPointer(); }
     const NamedDecl *getProperty() const { return Property; }
 
     /// Returns true if the object base specifies a known object in memory,
@@ -261,6 +265,9 @@ public:
   template <typename ExprT>
   inline void recordUseOfWeak(const ExprT *E, bool IsRead = true);
 
+  void recordUseOfWeak(const ObjCMessageExpr *Msg,
+                       const ObjCPropertyDecl *Prop);
+
   /// Record that a given expression is a "safe" access of a weak object (e.g.
   /// assigning it to a strong variable.)
   ///
@@ -283,9 +290,14 @@ public:
     HasIndirectGoto = true;
   }
 
+  void setHasDroppedStmt() {
+    HasDroppedStmt = true;
+  }
+
   bool NeedsScopeChecking() const {
-    return HasIndirectGoto ||
-          (HasBranchProtectedScope && HasBranchIntoScope);
+    return !HasDroppedStmt &&
+        (HasIndirectGoto ||
+          (HasBranchProtectedScope && HasBranchIntoScope));
   }
   
   FunctionScopeInfo(DiagnosticsEngine &Diag)
@@ -293,8 +305,8 @@ public:
       HasBranchProtectedScope(false),
       HasBranchIntoScope(false),
       HasIndirectGoto(false),
-      ObjCShouldCallSuperDealloc(false),
-      ObjCShouldCallSuperFinalize(false),
+      HasDroppedStmt(false),
+      ObjCShouldCallSuper(false),
       ErrorTrap(Diag) { }
 
   virtual ~FunctionScopeInfo();
@@ -302,8 +314,6 @@ public:
   /// \brief Clear out the information in this function scope, making it
   /// suitable for reuse.
   void Clear();
-
-  static bool classof(const FunctionScopeInfo *FSI) { return true; }
 };
 
 class CapturingScopeInfo : public FunctionScopeInfo {
@@ -420,11 +430,7 @@ public:
   }
 
   void addThisCapture(bool isNested, SourceLocation Loc, QualType CaptureType,
-                      Expr *Cpy) {
-    Captures.push_back(Capture(Capture::ThisCapture, isNested, Loc, CaptureType,
-                               Cpy));
-    CXXThisCaptureIndex = Captures.size();
-  }
+                      Expr *Cpy);
 
   /// \brief Determine whether the C++ 'this' is captured.
   bool isCXXThisCaptured() const { return CXXThisCaptureIndex != 0; }
@@ -457,7 +463,6 @@ public:
   static bool classof(const FunctionScopeInfo *FSI) { 
     return FSI->Kind == SK_Block || FSI->Kind == SK_Lambda; 
   }
-  static bool classof(const CapturingScopeInfo *BSI) { return true; }
 };
 
 /// \brief Retains information about a block that is currently being parsed.
@@ -485,7 +490,6 @@ public:
   static bool classof(const FunctionScopeInfo *FSI) { 
     return FSI->Kind == SK_Block; 
   }
-  static bool classof(const BlockScopeInfo *BSI) { return true; }
 };
 
 class LambdaScopeInfo : public CapturingScopeInfo {
@@ -516,11 +520,11 @@ public:
   bool ContainsUnexpandedParameterPack;
 
   /// \brief Variables used to index into by-copy array captures.
-  llvm::SmallVector<VarDecl *, 4> ArrayIndexVars;
+  SmallVector<VarDecl *, 4> ArrayIndexVars;
 
   /// \brief Offsets into the ArrayIndexVars array at which each capture starts
   /// its list of array index variables.
-  llvm::SmallVector<unsigned, 4> ArrayIndexStarts;
+  SmallVector<unsigned, 4> ArrayIndexStarts;
   
   LambdaScopeInfo(DiagnosticsEngine &Diag, CXXRecordDecl *Lambda,
                   CXXMethodDecl *CallOperator)
@@ -537,13 +541,12 @@ public:
   void finishedExplicitCaptures() {
     NumExplicitCaptures = Captures.size();
   }
-  
-  static bool classof(const FunctionScopeInfo *FSI) { 
+
+  static bool classof(const FunctionScopeInfo *FSI) {
     return FSI->Kind == SK_Lambda; 
   }
-  static bool classof(const LambdaScopeInfo *BSI) { return true; }
-
 };
+
 
 FunctionScopeInfo::WeakObjectProfileTy::WeakObjectProfileTy()
   : Base(0, false), Property(0) {}
@@ -560,6 +563,17 @@ void FunctionScopeInfo::recordUseOfWeak(const ExprT *E, bool IsRead) {
   assert(E);
   WeakUseVector &Uses = WeakObjectUses[WeakObjectProfileTy(E)];
   Uses.push_back(WeakUseTy(E, IsRead));
+}
+
+inline void
+CapturingScopeInfo::addThisCapture(bool isNested, SourceLocation Loc,
+                                   QualType CaptureType, Expr *Cpy) {
+  Captures.push_back(Capture(Capture::ThisCapture, isNested, Loc, CaptureType,
+                             Cpy));
+  CXXThisCaptureIndex = Captures.size();
+
+  if (LambdaScopeInfo *LSI = dyn_cast<LambdaScopeInfo>(this))
+    LSI->ArrayIndexStarts.push_back(LSI->ArrayIndexVars.size());
 }
 
 } // end namespace sema

@@ -17,11 +17,6 @@
 
 #define DEBUG_TYPE "gvn"
 #include "llvm/Transforms/Scalar.h"
-#include "llvm/GlobalVariable.h"
-#include "llvm/IRBuilder.h"
-#include "llvm/IntrinsicInst.h"
-#include "llvm/LLVMContext.h"
-#include "llvm/Metadata.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/Hashing.h"
@@ -37,11 +32,16 @@
 #include "llvm/Analysis/PHITransAddr.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/Assembly/Writer.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/GlobalVariable.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Metadata.h"
 #include "llvm/Support/Allocator.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/PatternMatch.h"
-#include "llvm/Target/TargetData.h"
 #include "llvm/Target/TargetLibraryInfo.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/SSAUpdater.h"
@@ -503,7 +503,7 @@ namespace {
     bool NoLoads;
     MemoryDependenceAnalysis *MD;
     DominatorTree *DT;
-    const TargetData *TD;
+    const DataLayout *TD;
     const TargetLibraryInfo *TLI;
 
     ValueTable VN;
@@ -535,7 +535,7 @@ namespace {
       InstrsToErase.push_back(I);
     }
 
-    const TargetData *getTargetData() const { return TD; }
+    const DataLayout *getDataLayout() const { return TD; }
     DominatorTree &getDominatorTree() const { return *DT; }
     AliasAnalysis *getAliasAnalysis() const { return VN.getAliasAnalysis(); }
     MemoryDependenceAnalysis &getMemDep() const { return *MD; }
@@ -730,7 +730,7 @@ SpeculationFailure:
 /// CoerceAvailableValueToLoadType will succeed.
 static bool CanCoerceMustAliasedValueToLoad(Value *StoredVal,
                                             Type *LoadTy,
-                                            const TargetData &TD) {
+                                            const DataLayout &TD) {
   // If the loaded or stored value is an first class array or struct, don't try
   // to transform them.  We need to be able to bitcast to integer.
   if (LoadTy->isStructTy() || LoadTy->isArrayTy() ||
@@ -746,7 +746,6 @@ static bool CanCoerceMustAliasedValueToLoad(Value *StoredVal,
   return true;
 }
 
-
 /// CoerceAvailableValueToLoadType - If we saw a store of a value to memory, and
 /// then a load from a must-aliased pointer of a different type, try to coerce
 /// the stored value.  LoadedTy is the type of the load we want to replace and
@@ -756,7 +755,7 @@ static bool CanCoerceMustAliasedValueToLoad(Value *StoredVal,
 static Value *CoerceAvailableValueToLoadType(Value *StoredVal,
                                              Type *LoadedTy,
                                              Instruction *InsertPt,
-                                             const TargetData &TD) {
+                                             const DataLayout &TD) {
   if (!CanCoerceMustAliasedValueToLoad(StoredVal, LoadedTy, TD))
     return 0;
 
@@ -769,24 +768,25 @@ static Value *CoerceAvailableValueToLoadType(Value *StoredVal,
   // If the store and reload are the same size, we can always reuse it.
   if (StoreSize == LoadSize) {
     // Pointer to Pointer -> use bitcast.
-    if (StoredValTy->isPointerTy() && LoadedTy->isPointerTy())
+    if (StoredValTy->getScalarType()->isPointerTy() &&
+        LoadedTy->getScalarType()->isPointerTy())
       return new BitCastInst(StoredVal, LoadedTy, "", InsertPt);
 
     // Convert source pointers to integers, which can be bitcast.
-    if (StoredValTy->isPointerTy()) {
-      StoredValTy = TD.getIntPtrType(StoredValTy->getContext());
+    if (StoredValTy->getScalarType()->isPointerTy()) {
+      StoredValTy = TD.getIntPtrType(StoredValTy);
       StoredVal = new PtrToIntInst(StoredVal, StoredValTy, "", InsertPt);
     }
 
     Type *TypeToCastTo = LoadedTy;
-    if (TypeToCastTo->isPointerTy())
-      TypeToCastTo = TD.getIntPtrType(StoredValTy->getContext());
+    if (TypeToCastTo->getScalarType()->isPointerTy())
+      TypeToCastTo = TD.getIntPtrType(TypeToCastTo);
 
     if (StoredValTy != TypeToCastTo)
       StoredVal = new BitCastInst(StoredVal, TypeToCastTo, "", InsertPt);
 
     // Cast to pointer if the load needs a pointer type.
-    if (LoadedTy->isPointerTy())
+    if (LoadedTy->getScalarType()->isPointerTy())
       StoredVal = new IntToPtrInst(StoredVal, LoadedTy, "", InsertPt);
 
     return StoredVal;
@@ -798,8 +798,8 @@ static Value *CoerceAvailableValueToLoadType(Value *StoredVal,
   assert(StoreSize >= LoadSize && "CanCoerceMustAliasedValueToLoad fail");
 
   // Convert source pointers to integers, which can be manipulated.
-  if (StoredValTy->isPointerTy()) {
-    StoredValTy = TD.getIntPtrType(StoredValTy->getContext());
+  if (StoredValTy->getScalarType()->isPointerTy()) {
+    StoredValTy = TD.getIntPtrType(StoredValTy);
     StoredVal = new PtrToIntInst(StoredVal, StoredValTy, "", InsertPt);
   }
 
@@ -824,7 +824,7 @@ static Value *CoerceAvailableValueToLoadType(Value *StoredVal,
     return StoredVal;
 
   // If the result is a pointer, inttoptr.
-  if (LoadedTy->isPointerTy())
+  if (LoadedTy->getScalarType()->isPointerTy())
     return new IntToPtrInst(StoredVal, LoadedTy, "inttoptr", InsertPt);
 
   // Otherwise, bitcast.
@@ -842,15 +842,15 @@ static Value *CoerceAvailableValueToLoadType(Value *StoredVal,
 static int AnalyzeLoadFromClobberingWrite(Type *LoadTy, Value *LoadPtr,
                                           Value *WritePtr,
                                           uint64_t WriteSizeInBits,
-                                          const TargetData &TD) {
+                                          const DataLayout &TD) {
   // If the loaded or stored value is a first class array or struct, don't try
   // to transform them.  We need to be able to bitcast to integer.
   if (LoadTy->isStructTy() || LoadTy->isArrayTy())
     return -1;
 
   int64_t StoreOffset = 0, LoadOffset = 0;
-  Value *StoreBase = GetPointerBaseWithConstantOffset(WritePtr, StoreOffset,TD);
-  Value *LoadBase = GetPointerBaseWithConstantOffset(LoadPtr, LoadOffset, TD);
+  Value *StoreBase = GetPointerBaseWithConstantOffset(WritePtr,StoreOffset,&TD);
+  Value *LoadBase = GetPointerBaseWithConstantOffset(LoadPtr, LoadOffset, &TD);
   if (StoreBase != LoadBase)
     return -1;
 
@@ -915,7 +915,7 @@ static int AnalyzeLoadFromClobberingWrite(Type *LoadTy, Value *LoadPtr,
 /// memdep query of a load that ends up being a clobbering store.
 static int AnalyzeLoadFromClobberingStore(Type *LoadTy, Value *LoadPtr,
                                           StoreInst *DepSI,
-                                          const TargetData &TD) {
+                                          const DataLayout &TD) {
   // Cannot handle reading from store of first-class aggregate yet.
   if (DepSI->getValueOperand()->getType()->isStructTy() ||
       DepSI->getValueOperand()->getType()->isArrayTy())
@@ -931,7 +931,7 @@ static int AnalyzeLoadFromClobberingStore(Type *LoadTy, Value *LoadPtr,
 /// memdep query of a load that ends up being clobbered by another load.  See if
 /// the other load can feed into the second load.
 static int AnalyzeLoadFromClobberingLoad(Type *LoadTy, Value *LoadPtr,
-                                         LoadInst *DepLI, const TargetData &TD){
+                                         LoadInst *DepLI, const DataLayout &TD){
   // Cannot handle reading from store of first-class aggregate yet.
   if (DepLI->getType()->isStructTy() || DepLI->getType()->isArrayTy())
     return -1;
@@ -945,7 +945,7 @@ static int AnalyzeLoadFromClobberingLoad(Type *LoadTy, Value *LoadPtr,
   // then we should widen it!
   int64_t LoadOffs = 0;
   const Value *LoadBase =
-    GetPointerBaseWithConstantOffset(LoadPtr, LoadOffs, TD);
+    GetPointerBaseWithConstantOffset(LoadPtr, LoadOffs, &TD);
   unsigned LoadSize = TD.getTypeStoreSize(LoadTy);
 
   unsigned Size = MemoryDependenceAnalysis::
@@ -959,7 +959,7 @@ static int AnalyzeLoadFromClobberingLoad(Type *LoadTy, Value *LoadPtr,
 
 static int AnalyzeLoadFromClobberingMemInst(Type *LoadTy, Value *LoadPtr,
                                             MemIntrinsic *MI,
-                                            const TargetData &TD) {
+                                            const DataLayout &TD) {
   // If the mem operation is a non-constant size, we can't handle it.
   ConstantInt *SizeCst = dyn_cast<ConstantInt>(MI->getLength());
   if (SizeCst == 0) return -1;
@@ -1009,7 +1009,7 @@ static int AnalyzeLoadFromClobberingMemInst(Type *LoadTy, Value *LoadPtr,
 /// before we give up.
 static Value *GetStoreValueForLoad(Value *SrcVal, unsigned Offset,
                                    Type *LoadTy,
-                                   Instruction *InsertPt, const TargetData &TD){
+                                   Instruction *InsertPt, const DataLayout &TD){
   LLVMContext &Ctx = SrcVal->getType()->getContext();
 
   uint64_t StoreSize = (TD.getTypeSizeInBits(SrcVal->getType()) + 7) / 8;
@@ -1019,8 +1019,9 @@ static Value *GetStoreValueForLoad(Value *SrcVal, unsigned Offset,
 
   // Compute which bits of the stored value are being used by the load.  Convert
   // to an integer type to start with.
-  if (SrcVal->getType()->isPointerTy())
-    SrcVal = Builder.CreatePtrToInt(SrcVal, TD.getIntPtrType(Ctx));
+  if (SrcVal->getType()->getScalarType()->isPointerTy())
+    SrcVal = Builder.CreatePtrToInt(SrcVal,
+        TD.getIntPtrType(SrcVal->getType()));
   if (!SrcVal->getType()->isIntegerTy())
     SrcVal = Builder.CreateBitCast(SrcVal, IntegerType::get(Ctx, StoreSize*8));
 
@@ -1048,7 +1049,7 @@ static Value *GetStoreValueForLoad(Value *SrcVal, unsigned Offset,
 static Value *GetLoadValueForLoad(LoadInst *SrcVal, unsigned Offset,
                                   Type *LoadTy, Instruction *InsertPt,
                                   GVN &gvn) {
-  const TargetData &TD = *gvn.getTargetData();
+  const DataLayout &TD = *gvn.getDataLayout();
   // If Offset+LoadTy exceeds the size of SrcVal, then we must be wanting to
   // widen SrcVal out to a larger load.
   unsigned SrcValSize = TD.getTypeStoreSize(SrcVal->getType());
@@ -1107,7 +1108,7 @@ static Value *GetLoadValueForLoad(LoadInst *SrcVal, unsigned Offset,
 /// memdep query of a load that ends up being a clobbering mem intrinsic.
 static Value *GetMemInstValueForLoad(MemIntrinsic *SrcInst, unsigned Offset,
                                      Type *LoadTy, Instruction *InsertPt,
-                                     const TargetData &TD){
+                                     const DataLayout &TD){
   LLVMContext &Ctx = LoadTy->getContext();
   uint64_t LoadSize = TD.getTypeSizeInBits(LoadTy)/8;
 
@@ -1231,7 +1232,7 @@ struct AvailableValueInBlock {
     if (isSimpleValue()) {
       Res = getSimpleValue();
       if (Res->getType() != LoadTy) {
-        const TargetData *TD = gvn.getTargetData();
+        const DataLayout *TD = gvn.getDataLayout();
         assert(TD && "Need target data to handle type mismatch case");
         Res = GetStoreValueForLoad(Res, Offset, LoadTy, BB->getTerminator(),
                                    *TD);
@@ -1253,7 +1254,7 @@ struct AvailableValueInBlock {
                      << *Res << '\n' << "\n\n\n");
       }
     } else {
-      const TargetData *TD = gvn.getTargetData();
+      const DataLayout *TD = gvn.getDataLayout();
       assert(TD && "Need target data to handle type mismatch case");
       Res = GetMemInstValueForLoad(getMemIntrinValue(), Offset,
                                    LoadTy, BB->getTerminator(), *TD);
@@ -1301,7 +1302,7 @@ static Value *ConstructSSAForLoadSet(LoadInst *LI,
   Value *V = SSAUpdate.GetValueInMiddleOfBlock(LI->getParent());
 
   // If new PHI nodes were created, notify alias analysis.
-  if (V->getType()->isPointerTy()) {
+  if (V->getType()->getScalarType()->isPointerTy()) {
     AliasAnalysis *AA = gvn.getAliasAnalysis();
 
     for (unsigned i = 0, e = NewPHIs.size(); i != e; ++i)
@@ -1498,7 +1499,7 @@ bool GVN::processNonLocalLoad(LoadInst *LI) {
 
     if (isa<PHINode>(V))
       V->takeName(LI);
-    if (V->getType()->isPointerTy())
+    if (V->getType()->getScalarType()->isPointerTy())
       MD->invalidateCachedPointerInfo(V);
     markInstructionForDeletion(LI);
     ++NumGVNLoad;
@@ -1525,10 +1526,8 @@ bool GVN::processNonLocalLoad(LoadInst *LI) {
   BasicBlock *LoadBB = LI->getParent();
   BasicBlock *TmpBB = LoadBB;
 
-  bool isSinglePred = false;
   bool allSingleSucc = true;
   while (TmpBB->getSinglePredecessor()) {
-    isSinglePred = true;
     TmpBB = TmpBB->getSinglePredecessor();
     if (TmpBB == LoadBB) // Infinite (unreachable) loop.
       return false;
@@ -1546,28 +1545,6 @@ bool GVN::processNonLocalLoad(LoadInst *LI) {
 
   assert(TmpBB);
   LoadBB = TmpBB;
-
-  // FIXME: It is extremely unclear what this loop is doing, other than
-  // artificially restricting loadpre.
-  if (isSinglePred) {
-    bool isHot = false;
-    for (unsigned i = 0, e = ValuesPerBlock.size(); i != e; ++i) {
-      const AvailableValueInBlock &AV = ValuesPerBlock[i];
-      if (AV.isSimpleValue())
-        // "Hot" Instruction is in some loop (because it dominates its dep.
-        // instruction).
-        if (Instruction *I = dyn_cast<Instruction>(AV.getSimpleValue()))
-          if (DT->dominates(LI, I)) {
-            isHot = true;
-            break;
-          }
-    }
-
-    // We are interested only in "hot" instructions. We don't want to do any
-    // mis-optimizations here.
-    if (!isHot)
-      return false;
-  }
 
   // Check to see how many predecessors have the loaded value fully
   // available.
@@ -1730,14 +1707,14 @@ bool GVN::processNonLocalLoad(LoadInst *LI) {
   LI->replaceAllUsesWith(V);
   if (isa<PHINode>(V))
     V->takeName(LI);
-  if (V->getType()->isPointerTy())
+  if (V->getType()->getScalarType()->isPointerTy())
     MD->invalidateCachedPointerInfo(V);
   markInstructionForDeletion(LI);
   ++NumPRELoad;
   return true;
 }
 
-static void patchReplacementInstruction(Value *Repl, Instruction *I) {
+static void patchReplacementInstruction(Instruction *I, Value *Repl) {
   // Patch the replacement so that it is not more restrictive than the value
   // being replaced.
   BinaryOperator *Op = dyn_cast<BinaryOperator>(I);
@@ -1779,8 +1756,8 @@ static void patchReplacementInstruction(Value *Repl, Instruction *I) {
   }
 }
 
-static void patchAndReplaceAllUsesWith(Value *Repl, Instruction *I) {
-  patchReplacementInstruction(Repl, I);
+static void patchAndReplaceAllUsesWith(Instruction *I, Value *Repl) {
+  patchReplacementInstruction(I, Repl);
   I->replaceAllUsesWith(Repl);
 }
 
@@ -1857,7 +1834,7 @@ bool GVN::processLoad(LoadInst *L) {
 
       // Replace the load!
       L->replaceAllUsesWith(AvailVal);
-      if (AvailVal->getType()->isPointerTy())
+      if (AvailVal->getType()->getScalarType()->isPointerTy())
         MD->invalidateCachedPointerInfo(AvailVal);
       markInstructionForDeletion(L);
       ++NumGVNLoad;
@@ -1914,7 +1891,7 @@ bool GVN::processLoad(LoadInst *L) {
 
     // Remove it!
     L->replaceAllUsesWith(StoredVal);
-    if (StoredVal->getType()->isPointerTy())
+    if (StoredVal->getType()->getScalarType()->isPointerTy())
       MD->invalidateCachedPointerInfo(StoredVal);
     markInstructionForDeletion(L);
     ++NumGVNLoad;
@@ -1942,8 +1919,8 @@ bool GVN::processLoad(LoadInst *L) {
     }
 
     // Remove it!
-    patchAndReplaceAllUsesWith(AvailableVal, L);
-    if (DepLI->getType()->isPointerTy())
+    patchAndReplaceAllUsesWith(L, AvailableVal);
+    if (DepLI->getType()->getScalarType()->isPointerTy())
       MD->invalidateCachedPointerInfo(DepLI);
     markInstructionForDeletion(L);
     ++NumGVNLoad;
@@ -2184,7 +2161,7 @@ bool GVN::processInstruction(Instruction *I) {
   // "%z = and i32 %x, %y" becomes "%z = and i32 %x, %x" which we now simplify.
   if (Value *V = SimplifyInstruction(I, TD, TLI, DT)) {
     I->replaceAllUsesWith(V);
-    if (MD && V->getType()->isPointerTy())
+    if (MD && V->getType()->getScalarType()->isPointerTy())
       MD->invalidateCachedPointerInfo(V);
     markInstructionForDeletion(I);
     ++NumGVNSimpl;
@@ -2283,8 +2260,8 @@ bool GVN::processInstruction(Instruction *I) {
   }
 
   // Remove it!
-  patchAndReplaceAllUsesWith(repl, I);
-  if (MD && repl->getType()->isPointerTy())
+  patchAndReplaceAllUsesWith(I, repl);
+  if (MD && repl->getType()->getScalarType()->isPointerTy())
     MD->invalidateCachedPointerInfo(repl);
   markInstructionForDeletion(I);
   return true;
@@ -2295,7 +2272,7 @@ bool GVN::runOnFunction(Function& F) {
   if (!NoLoads)
     MD = &getAnalysis<MemoryDependenceAnalysis>();
   DT = &getAnalysis<DominatorTree>();
-  TD = getAnalysisIfAvailable<TargetData>();
+  TD = getAnalysisIfAvailable<DataLayout>();
   TLI = &getAnalysis<TargetLibraryInfo>();
   VN.setAliasAnalysis(&getAnalysis<AliasAnalysis>());
   VN.setMemDep(MD);
@@ -2370,8 +2347,8 @@ bool GVN::processBlock(BasicBlock *BB) {
          E = InstrsToErase.end(); I != E; ++I) {
       DEBUG(dbgs() << "GVN removed: " << **I << '\n');
       if (MD) MD->removeInstruction(*I);
-      (*I)->eraseFromParent();
       DEBUG(verifyRemoved(*I));
+      (*I)->eraseFromParent();
     }
     InstrsToErase.clear();
 
@@ -2388,7 +2365,7 @@ bool GVN::processBlock(BasicBlock *BB) {
 /// control flow patterns and attempts to perform simple PRE at the join point.
 bool GVN::performPRE(Function &F) {
   bool Changed = false;
-  DenseMap<BasicBlock*, Value*> predMap;
+  SmallVector<std::pair<Value*, BasicBlock*>, 8> predMap;
   for (df_iterator<BasicBlock*> DI = df_begin(&F.getEntryBlock()),
        DE = df_end(&F.getEntryBlock()); DI != DE; ++DI) {
     BasicBlock *CurrentBlock = *DI;
@@ -2444,19 +2421,22 @@ bool GVN::performPRE(Function &F) {
         if (P == CurrentBlock) {
           NumWithout = 2;
           break;
-        } else if (!DT->dominates(&F.getEntryBlock(), P))  {
+        } else if (!DT->isReachableFromEntry(P))  {
           NumWithout = 2;
           break;
         }
 
         Value* predV = findLeader(P, ValNo);
         if (predV == 0) {
+          predMap.push_back(std::make_pair(static_cast<Value *>(0), P));
           PREPred = P;
           ++NumWithout;
         } else if (predV == CurInst) {
+          /* CurInst dominates this predecessor. */
           NumWithout = 2;
+          break;
         } else {
-          predMap[P] = predV;
+          predMap.push_back(std::make_pair(predV, P));
           ++NumWith;
         }
       }
@@ -2503,15 +2483,14 @@ bool GVN::performPRE(Function &F) {
       // the PRE predecessor.  This is typically because of loads which
       // are not value numbered precisely.
       if (!success) {
-        delete PREInstr;
         DEBUG(verifyRemoved(PREInstr));
+        delete PREInstr;
         continue;
       }
 
       PREInstr->insertBefore(PREPred->getTerminator());
       PREInstr->setName(CurInst->getName() + ".pre");
       PREInstr->setDebugLoc(CurInst->getDebugLoc());
-      predMap[PREPred] = PREInstr;
       VN.add(PREInstr, ValNo);
       ++NumGVNPRE;
 
@@ -2519,20 +2498,21 @@ bool GVN::performPRE(Function &F) {
       addToLeaderTable(ValNo, PREInstr, PREPred);
 
       // Create a PHI to make the value available in this block.
-      pred_iterator PB = pred_begin(CurrentBlock), PE = pred_end(CurrentBlock);
-      PHINode* Phi = PHINode::Create(CurInst->getType(), std::distance(PB, PE),
+      PHINode* Phi = PHINode::Create(CurInst->getType(), predMap.size(),
                                      CurInst->getName() + ".pre-phi",
                                      CurrentBlock->begin());
-      for (pred_iterator PI = PB; PI != PE; ++PI) {
-        BasicBlock *P = *PI;
-        Phi->addIncoming(predMap[P], P);
+      for (unsigned i = 0, e = predMap.size(); i != e; ++i) {
+        if (Value *V = predMap[i].first)
+          Phi->addIncoming(V, predMap[i].second);
+        else
+          Phi->addIncoming(PREInstr, PREPred);
       }
 
       VN.add(Phi, ValNo);
       addToLeaderTable(ValNo, Phi, CurrentBlock);
       Phi->setDebugLoc(CurInst->getDebugLoc());
       CurInst->replaceAllUsesWith(Phi);
-      if (Phi->getType()->isPointerTy()) {
+      if (Phi->getType()->getScalarType()->isPointerTy()) {
         // Because we have added a PHI-use of the pointer value, it has now
         // "escaped" from alias analysis' perspective.  We need to inform
         // AA of this.
@@ -2550,8 +2530,8 @@ bool GVN::performPRE(Function &F) {
 
       DEBUG(dbgs() << "GVN PRE removed: " << *CurInst << '\n');
       if (MD) MD->removeInstruction(CurInst);
-      CurInst->eraseFromParent();
       DEBUG(verifyRemoved(CurInst));
+      CurInst->eraseFromParent();
       Changed = true;
     }
   }

@@ -40,6 +40,7 @@
 #include "cling/Interpreter/LookupHelper.h"
 
 #include "llvm/Support/PathV2.h"
+#include "llvm/Support/FileSystem.h"
 
 #include "cling/Interpreter/Interpreter.h"
 
@@ -307,8 +308,10 @@ static bool CXXRecordDecl__FindOrdinaryMember(const clang::CXXBaseSpecifier *Spe
    if (found) {
       // Humm, this is somewhat bad (well really bad), oh well.
       // Let's hope Paths never thinks it owns those (it should not as far as I can tell).
-      Path.Decls.first  = reinterpret_cast<clang::NamedDecl**>(const_cast<clang::FieldDecl*>(found));
-      Path.Decls.second = 0;
+      clang::NamedDecl* NonConstFD = const_cast<clang::FieldDecl*>(found);
+      clang::NamedDecl** BaseSpecFirstHack
+         = reinterpret_cast<clang::NamedDecl**>(NonConstFD);
+      Path.Decls = clang::DeclContextLookupResult(BaseSpecFirstHack, 1);
       return true;
    }
 //   
@@ -345,7 +348,7 @@ static const clang::FieldDecl *R__GetDataMemberFromAllParents(const clang::CXXRe
       clang::CXXBasePaths::paths_iterator iter = Paths.begin();
       if (iter != Paths.end()) {
          // See CXXRecordDecl__FindOrdinaryMember, this is, well, awkward.
-         const clang::FieldDecl *found = (clang::FieldDecl *)iter->Decls.first;
+         const clang::FieldDecl *found = (clang::FieldDecl *)iter->Decls.data();
          return found;
       }
    }
@@ -594,8 +597,9 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
 
    clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
 
+   static const char invalidFilename[] = "invalid";
    if (!sourceLocation.isValid() ) {
-      return "invalid";
+      return invalidFilename;
    }
 
    if (!sourceLocation.isFileID()) {
@@ -608,22 +612,33 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
    // Let's try to find out what was the first non system header entry point.
    while (includeLocation.isValid()
           && sourceManager.isInSystemHeader(includeLocation)) {
-      clang::PresumedLoc includePLoc = sourceManager.getPresumedLoc(includeLocation);
-      if (includePLoc.getIncludeLoc().isValid())
-         includeLocation = includePLoc.getIncludeLoc();
-      else break;
+      if (includeLocation.isFileID()) {
+         clang::SourceLocation incl2
+            = sourceManager.getIncludeLoc(sourceManager.getFileID(includeLocation));
+         if (incl2.isValid())
+            includeLocation = incl2;
+         else return invalidFilename;
+      } else {
+         clang::PresumedLoc includePLoc = sourceManager.getPresumedLoc(includeLocation);
+         if (includePLoc.getIncludeLoc().isValid())
+            includeLocation = includePLoc.getIncludeLoc();
+         else
+            return invalidFilename;
+      }
    }
-   
+
    // If the location is a macro get the expansion location.
    if (!includeLocation.isFileID()) {
       includeLocation = sourceManager.getExpansionRange(includeLocation).second;
    }
-   
-   if (sourceManager.getFilename(includeLocation) == "InteractiveInputLineIncluder.h") {
-      // With cling the 'main' file is a virtual file and can't really be looked into.
-      // (The name of the virtual file is 'InteractiveInputLineIncluder.h').
-      // The included file is an in-memory buffer with a made-up name.
-      // Typically something like: "input_line_4"
+
+   // Ensure that the file is not the ubrella header / input-line pseudo-file.
+   // That file does not have a parent include location.
+   if (!sourceManager.getIncludeLoc(sourceManager.getFileID(includeLocation)).isValid())
+      return invalidFilename;
+
+   if (!llvm::sys::fs::exists(sourceManager.getFilename(includeLocation))) {
+      // We cannot open the including file; return our best bet.
       return PLoc.getFilename();
       // return "Interpreter Statement."; is another option.
    }
@@ -1117,7 +1132,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
          }
       }
 
-      ModuleMap.addHeader(modCreation.first, hdrFileEntry);
+      ModuleMap.addHeader(modCreation.first, hdrFileEntry, /*Excluded=*/ false);
    } // for headers
    return modCreation.first;
 }

@@ -19,6 +19,7 @@
 
 namespace llvm {
 
+class MachineFunction;
 class MachineInstr;
 class SDep;
 class SUnit;
@@ -54,11 +55,12 @@ public:
     return 0;
   }
 
-  /// getSpecialAddressLatency - For targets where it is beneficial to
-  /// backschedule instructions that compute addresses, return a value
-  /// indicating the number of scheduling cycles of backscheduling that
-  /// should be attempted.
-  virtual unsigned getSpecialAddressLatency() const { return 0; }
+  /// \brief True if the subtarget should run MachineScheduler after aggressive
+  /// coalescing.
+  ///
+  /// This currently replaces the SelectionDAG scheduler with the "source" order
+  /// scheduler. It does not yet disable the postRA scheduler.
+  virtual bool enableMachineScheduler() const;
 
   // enablePostRAScheduler - If the target can benefit from post-regalloc
   // scheduling and the specified optimization level meets the requirement
@@ -72,6 +74,9 @@ public:
   // the latency of a schedule dependency.
   virtual void adjustSchedDependency(SUnit *def, SUnit *use,
                                      SDep& dep) const { }
+
+  /// \brief Reset the features for the subtarget.
+  virtual void resetSubtargetFeatures(const MachineFunction *MF) { }
 };
 
 } // End llvm namespace

@@ -230,8 +230,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          
          VD = VarDecl::Create(C, fROOTSpecialNamespace, SourceLocation(), 
                               SourceLocation(), Name.getAsIdentifierInfo(), QT,
-                              /*TypeSourceInfo*/0, SC_None, SC_None
-                              );
+                              /*TypeSourceInfo*/0, SC_None);
          // Build an initializer
          Expr* Init 
            = utils::Synthesize::CStyleCastPtrExpr(&SemaR, QT, (uint64_t)obj);
@@ -273,7 +272,7 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
    ASTContext& C = R.getSema().getASTContext();
    DeclContext* DC = static_cast<DeclContext*>(S->getEntity());
    VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, C.DependentTy,
-                                     /*TypeSourceInfo*/0, SC_None, SC_None);
+                                     /*TypeSourceInfo*/0, SC_None);
 
    // Annotate the decl to give a hint in cling. FIXME: Current implementation
    // is a gross hack, because TClingCallbacks shouldn't know about 
@@ -365,7 +364,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    ASTContext& C = R.getSema().getASTContext();
    VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, 
                                      C.getAutoType(QualType()),
-                                     /*TypeSourceInfo*/0, SC_None, SC_None);
+                                     /*TypeSourceInfo*/0, SC_None);
 
    // Annotate the decl to give a hint in cling. FIXME: Current implementation
    // is a gross hack, because TClingCallbacks shouldn't know about 
@@ -384,23 +383,28 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    return false;
 }
 
-// The callback is used to update the list of globals in ROOT.
-//
-void TClingCallbacks::TransactionCommitted(const Transaction &T) {
-   // Even empty transactions must go through; any transactio even empty
-   // will flush the deserialized decls into Meta.
-   //if (!T.size())
-   //   return;
-   if (fFirstRun && !T.empty()) {
+void TClingCallbacks::Initialize(ASTContext& Ctx) {
+   // Replay existing decls from the AST.
+   if (fFirstRun) {
       // Before setting up the callbacks register what cling have seen during init.
-      cling::Transaction TPrev(T.getCompilationOpts());
-      clang::DeclGroupRef TDRG = T.getFirstDecl();
-      
-      TPrev.append(TDRG.getSingleDecl()->getASTContext().getTranslationUnitDecl());
+      cling::Transaction TPrev((cling::CompilationOptions()));
+      TPrev.append(Ctx.getTranslationUnitDecl());
       TCling__UpdateListsOnCommitted(TPrev);
 
       fFirstRun = false;
    }
+}
+
+// The callback is used to update the list of globals in ROOT.
+//
+void TClingCallbacks::TransactionCommitted(const Transaction &T) {
+   // Even empty transactions must go through; any transaction even empty
+   // will flush the deserialized decls into Meta.
+   //if (!T.size())
+   //   return;
+   if (fFirstRun && !T.empty())
+      Initialize((*(T.getFirstDecl().begin()))->getASTContext());
+
    TCling__UpdateListsOnCommitted(T);
 }
 

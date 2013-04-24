@@ -15,19 +15,21 @@
 #ifndef LLVM_CLANG_BASIC_TARGETINFO_H
 #define LLVM_CLANG_BASIC_TARGETINFO_H
 
+#include "clang/Basic/AddressSpaces.h"
+#include "clang/Basic/TargetCXXABI.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/Specifiers.h"
+#include "clang/Basic/TargetOptions.h"
+#include "clang/Basic/VersionTuple.h"
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/Support/DataTypes.h"
-#include "clang/Basic/AddressSpaces.h"
-#include "clang/Basic/VersionTuple.h"
-#include "clang/Basic/Specifiers.h"
 #include <cassert>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace llvm {
 struct fltSemantics;
@@ -39,29 +41,13 @@ class LangOptions;
 class MacroBuilder;
 class SourceLocation;
 class SourceManager;
-class TargetOptions;
 
 namespace Builtin { struct Info; }
-
-/// \brief The types of C++ ABIs for which we can generate code.
-enum TargetCXXABI {
-  /// The generic ("Itanium") C++ ABI, documented at:
-  ///   http://www.codesourcery.com/public/cxx-abi/
-  CXXABI_Itanium,
-
-  /// The ARM C++ ABI, based largely on the Itanium ABI but with
-  /// significant differences.
-  ///    http://infocenter.arm.com
-  ///                    /help/topic/com.arm.doc.ihi0041c/IHI0041C_cppabi.pdf
-  CXXABI_ARM,
-
-  /// The Visual Studio ABI.  Only scattered official documentation exists.
-  CXXABI_Microsoft
-};
 
 /// \brief Exposes information about the current target.
 ///
 class TargetInfo : public RefCountedBase<TargetInfo> {
+  IntrusiveRefCntPtr<TargetOptions> TargetOpts;
   llvm::Triple Triple;
 protected:
   // Target values set by the ctor of the actual target implementation.  Default
@@ -88,7 +74,7 @@ protected:
   const llvm::fltSemantics *HalfFormat, *FloatFormat, *DoubleFormat,
     *LongDoubleFormat;
   unsigned char RegParmMax, SSERegParmMax;
-  TargetCXXABI CXXABI;
+  TargetCXXABI TheCXXABI;
   const LangAS::Map *AddrSpaceMap;
 
   mutable StringRef PlatformName;
@@ -108,9 +94,19 @@ public:
   /// modify the options to canonicalize the target feature information to match
   /// what the backend expects.
   static TargetInfo* CreateTargetInfo(DiagnosticsEngine &Diags,
-                                      TargetOptions &Opts);
+                                      TargetOptions *Opts);
 
   virtual ~TargetInfo();
+
+  /// \brief Retrieve the target options.
+  TargetOptions &getTargetOpts() const { 
+    assert(TargetOpts && "Missing target options");
+    return *TargetOpts; 
+  }
+
+  void setTargetOpts(TargetOptions *TargetOpts) {
+    this->TargetOpts = TargetOpts;
+  }
 
   ///===---- Target Data Type Query Methods -------------------------------===//
   enum IntType {
@@ -140,6 +136,10 @@ public:
     /// typedef void* __builtin_va_list;
     VoidPtrBuiltinVaList,
 
+    /// __builtin_va_list as defind by the AArch64 ABI
+    /// http://infocenter.arm.com/help/topic/com.arm.doc.ihi0055a/IHI0055A_aapcs64.pdf
+    AArch64ABIBuiltinVaList,
+
     /// __builtin_va_list as defined by the PNaCl ABI:
     /// http://www.chromium.org/nativeclient/pnacl/bitcode-abi#TOC-Machine-Types
     PNaClABIBuiltinVaList,
@@ -151,12 +151,18 @@ public:
 
     /// __builtin_va_list as defined by the x86-64 ABI:
     /// http://www.x86-64.org/documentation/abi.pdf
-    X86_64ABIBuiltinVaList
+    X86_64ABIBuiltinVaList,
+
+    /// __builtin_va_list as defined by ARM AAPCS ABI
+    /// http://infocenter.arm.com
+    //        /help/topic/com.arm.doc.ihi0042d/IHI0042D_aapcs.pdf
+    AAPCSABIBuiltinVaList
   };
 
 protected:
   IntType SizeType, IntMaxType, UIntMaxType, PtrDiffType, IntPtrType, WCharType,
-          WIntType, Char16Type, Char32Type, Int64Type, SigAtomicType;
+          WIntType, Char16Type, Char32Type, Int64Type, SigAtomicType,
+          ProcessIDType;
 
   /// \brief Whether Objective-C's built-in boolean type should be signed char.
   ///
@@ -197,7 +203,7 @@ public:
   IntType getChar32Type() const { return Char32Type; }
   IntType getInt64Type() const { return Int64Type; }
   IntType getSigAtomicType() const { return SigAtomicType; }
-
+  IntType getProcessIDType() const { return ProcessIDType; }
 
   /// \brief Return the width (in bits) of the specified integer type enum.
   ///
@@ -252,6 +258,9 @@ public:
   /// 'unsigned long long' for this target, in bits.
   unsigned getLongLongWidth() const { return LongLongWidth; }
   unsigned getLongLongAlign() const { return LongLongAlign; }
+
+  /// \brief Determine whether the __int128 type is supported on this target.
+  bool hasInt128Type() const { return getPointerWidth(0) >= 64; } // FIXME
 
   /// \brief Return the alignment that is suitable for storing any
   /// object with a fundamental alignment requirement.
@@ -317,6 +326,9 @@ public:
   unsigned getIntMaxTWidth() const {
     return getTypeWidth(IntMaxType);
   }
+
+  // Return the size of unwind_word for this target.
+  unsigned getUnwindWordWidth() const { return getPointerWidth(0); }
 
   /// \brief Return the "preferred" register width on this target.
   uint64_t getRegisterWidth() const {
@@ -501,6 +513,15 @@ public:
   bool validateInputConstraint(ConstraintInfo *OutputConstraints,
                                unsigned NumOutputs,
                                ConstraintInfo &info) const;
+  virtual bool validateInputSize(StringRef /*Constraint*/,
+                                 unsigned /*Size*/) const {
+    return true;
+  }
+  virtual bool validateConstraintModifier(StringRef /*Constraint*/,
+                                          const char /*Modifier*/,
+                                          unsigned /*Size*/) const {
+    return true;
+  }
   bool resolveSymbolicName(const char *&Name,
                            ConstraintInfo *OutputConstraints,
                            unsigned NumOutputs, unsigned &Index) const;
@@ -549,8 +570,6 @@ public:
   /// consistent target-independent semantics for "default" visibility
   /// either; the entire thing is pretty badly mangled.
   virtual bool hasProtectedVisibility() const { return true; }
-
-  virtual bool useGlobalsForAutomaticVariables() const { return false; }
 
   /// \brief Return the section to use for CFString literals, or 0 if no
   /// special section is used.
@@ -602,8 +621,8 @@ public:
   }
 
   /// \brief Get the C++ ABI currently in use.
-  virtual TargetCXXABI getCXXABI() const {
-    return CXXABI;
+  TargetCXXABI getCXXABI() const {
+    return TheCXXABI;
   }
 
   /// \brief Target the specified CPU.
@@ -623,14 +642,9 @@ public:
   /// \brief Use this specified C++ ABI.
   ///
   /// \return False on error (invalid C++ ABI name).
-  bool setCXXABI(const std::string &Name) {
-    static const TargetCXXABI Unknown = static_cast<TargetCXXABI>(-1);
-    TargetCXXABI ABI = llvm::StringSwitch<TargetCXXABI>(Name)
-      .Case("arm", CXXABI_ARM)
-      .Case("itanium", CXXABI_Itanium)
-      .Case("microsoft", CXXABI_Microsoft)
-      .Default(Unknown);
-    if (ABI == Unknown) return false;
+  bool setCXXABI(llvm::StringRef name) {
+    TargetCXXABI ABI;
+    if (!ABI.tryParse(name)) return false;
     return setCXXABI(ABI);
   }
 
@@ -638,7 +652,7 @@ public:
   ///
   /// \return False on error (ABI not valid on this target)
   virtual bool setCXXABI(TargetCXXABI ABI) {
-    CXXABI = ABI;
+    TheCXXABI = ABI;
     return true;
   }
 
@@ -713,13 +727,19 @@ public:
 
   bool isBigEndian() const { return BigEndian; }
 
+  enum CallingConvMethodType {
+    CCMT_Unknown,
+    CCMT_Member,
+    CCMT_NonMember
+  };
+
   /// \brief Gets the default calling convention for the given target and
   /// declaration context.
-  virtual CallingConv getDefaultCallingConv() const {
+  virtual CallingConv getDefaultCallingConv(CallingConvMethodType MT) const {
     // Not all targets will specify an explicit calling convention that we can
     // express.  This will always do the right thing, even though it's not
     // an explicit calling convention.
-    return CC_Default;
+    return CC_C;
   }
 
   enum CallingConvCheckResult {

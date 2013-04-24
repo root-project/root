@@ -13,19 +13,17 @@
 
 #include "llvm/CodeGen/Analysis.h"
 #include "llvm/Analysis/ValueTracking.h"
-#include "llvm/DerivedTypes.h"
-#include "llvm/Function.h"
-#include "llvm/Instructions.h"
-#include "llvm/IntrinsicInst.h"
-#include "llvm/LLVMContext.h"
-#include "llvm/Module.h"
 #include "llvm/CodeGen/MachineFunction.h"
-#include "llvm/CodeGen/SelectionDAG.h"
-#include "llvm/Target/TargetData.h"
-#include "llvm/Target/TargetLowering.h"
-#include "llvm/Target/TargetOptions.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
+#include "llvm/Target/TargetLowering.h"
 using namespace llvm;
 
 /// ComputeLinearIndex - Given an LLVM IR aggregate type and a sequence
@@ -79,7 +77,7 @@ void llvm::ComputeValueVTs(const TargetLowering &TLI, Type *Ty,
                            uint64_t StartingOffset) {
   // Given a struct type, recursively traverse the elements.
   if (StructType *STy = dyn_cast<StructType>(Ty)) {
-    const StructLayout *SL = TLI.getTargetData()->getStructLayout(STy);
+    const StructLayout *SL = TLI.getDataLayout()->getStructLayout(STy);
     for (StructType::element_iterator EB = STy->element_begin(),
                                       EI = EB,
                                       EE = STy->element_end();
@@ -91,7 +89,7 @@ void llvm::ComputeValueVTs(const TargetLowering &TLI, Type *Ty,
   // Given an array type, recursively traverse the elements.
   if (ArrayType *ATy = dyn_cast<ArrayType>(Ty)) {
     Type *EltTy = ATy->getElementType();
-    uint64_t EltSize = TLI.getTargetData()->getTypeAllocSize(EltTy);
+    uint64_t EltSize = TLI.getDataLayout()->getTypeAllocSize(EltTy);
     for (unsigned i = 0, e = ATy->getNumElements(); i != e; ++i)
       ComputeValueVTs(TLI, EltTy, ValueVTs, Offsets,
                       StartingOffset + i * EltSize);
@@ -266,8 +264,7 @@ static const Value *getNoopInput(const Value *V, const TargetLowering &TLI) {
 /// between it and the return.
 ///
 /// This function only tests target-independent requirements.
-bool llvm::isInTailCallPosition(ImmutableCallSite CS, Attributes CalleeRetAttr,
-                                const TargetLowering &TLI) {
+bool llvm::isInTailCallPosition(ImmutableCallSite CS,const TargetLowering &TLI){
   const Instruction *I = CS.getInstruction();
   const BasicBlock *ExitBB = I->getParent();
   const TerminatorInst *Term = ExitBB->getTerminator();
@@ -313,12 +310,16 @@ bool llvm::isInTailCallPosition(ImmutableCallSite CS, Attributes CalleeRetAttr,
   // Conservatively require the attributes of the call to match those of
   // the return. Ignore noalias because it doesn't affect the call sequence.
   const Function *F = ExitBB->getParent();
-  Attributes CallerRetAttr = F->getAttributes().getRetAttributes();
-  if ((CalleeRetAttr ^ CallerRetAttr) & ~Attribute::NoAlias)
+  AttributeSet CallerAttrs = F->getAttributes();
+  if (AttrBuilder(CallerAttrs, AttributeSet::ReturnIndex).
+        removeAttribute(Attribute::NoAlias) !=
+      AttrBuilder(CallerAttrs, AttributeSet::ReturnIndex).
+        removeAttribute(Attribute::NoAlias))
     return false;
 
   // It's not safe to eliminate the sign / zero extension of the return value.
-  if (CallerRetAttr.hasZExtAttr() || CallerRetAttr.hasSExtAttr())
+  if (CallerAttrs.hasAttribute(AttributeSet::ReturnIndex, Attribute::ZExt) ||
+      CallerAttrs.hasAttribute(AttributeSet::ReturnIndex, Attribute::SExt))
     return false;
 
   // Otherwise, make sure the unmodified return value of I is the return value.
@@ -345,22 +346,4 @@ bool llvm::isInTailCallPosition(ImmutableCallSite CS, Attributes CalleeRetAttr,
   }
   
   return true;
-}
-
-bool llvm::isInTailCallPosition(SelectionDAG &DAG, SDNode *Node,
-                                SDValue &Chain, const TargetLowering &TLI) {
-  const Function *F = DAG.getMachineFunction().getFunction();
-
-  // Conservatively require the attributes of the call to match those of
-  // the return. Ignore noalias because it doesn't affect the call sequence.
-  Attributes CallerRetAttr = F->getAttributes().getRetAttributes();
-  if (CallerRetAttr & ~Attribute::NoAlias)
-    return false;
-
-  // It's not safe to eliminate the sign / zero extension of the return value.
-  if (CallerRetAttr.hasZExtAttr() || CallerRetAttr.hasSExtAttr())
-    return false;
-
-  // Check if the only use is a function return node.
-  return TLI.isUsedByReturnOnly(Node, Chain);
 }

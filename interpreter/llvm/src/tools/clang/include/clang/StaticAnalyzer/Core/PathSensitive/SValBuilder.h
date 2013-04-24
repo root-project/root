@@ -17,11 +17,10 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Expr.h"
-#include "clang/AST/ExprCXX.h"
 #include "clang/AST/ExprObjC.h"
-#include "clang/StaticAnalyzer/Core/PathSensitive/SVals.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/BasicValueFactory.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/MemRegion.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/SVals.h"
 
 namespace clang {
 
@@ -79,7 +78,8 @@ public:
     // FIXME: Remove the second disjunct when we support symbolic
     // truncation/extension.
     return (Context.getCanonicalType(Ty1) == Context.getCanonicalType(Ty2) ||
-            (Ty1->isIntegerType() && Ty2->isIntegerType()));
+            (Ty1->isIntegralOrEnumerationType() &&
+             Ty2->isIntegralOrEnumerationType()));
   }
 
   SVal evalCast(SVal val, QualType castTy, QualType originalType);
@@ -124,7 +124,7 @@ public:
   ProgramStateManager &getStateManager() { return StateMgr; }
   
   QualType getConditionType() const {
-    return  getContext().IntTy;
+    return Context.getLangOpts().CPlusPlus ? Context.BoolTy : Context.IntTy;
   }
   
   QualType getArrayIndexType() const {

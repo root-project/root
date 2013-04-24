@@ -21,6 +21,7 @@
 #include "SelectionRules.h"
 #include <iostream>
 #include "TString.h"
+#include "llvm/Support/raw_ostream.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/AST/ASTContext.h"
@@ -404,7 +405,8 @@ bool SelectionRules::GetDeclName(clang::Decl* D, std::string& name, std::string&
       else if (N->isCXXClassMember()) { // for constructors, destructors, operator=, etc. methods 
          name =  N->getNameAsString(); // we use this (unefficient) method to Get the name in that case 
       }
-      N->getNameForDiagnostic(qual_name,N->getASTContext().getPrintingPolicy(),true);
+      llvm::raw_string_ostream stream(qual_name);
+      N->getNameForDiagnostic(stream,N->getASTContext().getPrintingPolicy(),true);
       return true;
    }
    else {

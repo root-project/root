@@ -20,7 +20,7 @@
 #include "clang/AST/Type.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 
-#include "llvm/Module.h"
+#include "llvm/IR/Module.h"
 
 #include "XMLReader.h"
 #include "LinkdefReader.h"

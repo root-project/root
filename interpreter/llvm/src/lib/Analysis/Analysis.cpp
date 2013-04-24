@@ -9,8 +9,8 @@
 
 #include "llvm-c/Analysis.h"
 #include "llvm-c/Initialization.h"
-#include "llvm/InitializePasses.h"
 #include "llvm/Analysis/Verifier.h"
+#include "llvm/InitializePasses.h"
 #include <cstring>
 
 using namespace llvm;
@@ -26,11 +26,12 @@ void llvm::initializeAnalysis(PassRegistry &Registry) {
   initializeBasicAliasAnalysisPass(Registry);
   initializeBlockFrequencyInfoPass(Registry);
   initializeBranchProbabilityInfoPass(Registry);
+  initializeCostModelAnalysisPass(Registry);
   initializeCFGViewerPass(Registry);
   initializeCFGPrinterPass(Registry);
   initializeCFGOnlyViewerPass(Registry);
   initializeCFGOnlyPrinterPass(Registry);
-  initializePrintDbgInfoPass(Registry);
+  initializeDependenceAnalysisPass(Registry);
   initializeDominanceFrontierPass(Registry);
   initializeDomViewerPass(Registry);
   initializeDomPrinterPass(Registry);
@@ -46,7 +47,6 @@ void llvm::initializeAnalysis(PassRegistry &Registry) {
   initializeLazyValueInfoPass(Registry);
   initializeLibCallAliasAnalysisPass(Registry);
   initializeLintPass(Registry);
-  initializeLoopDependenceAnalysisPass(Registry);
   initializeLoopInfoPass(Registry);
   initializeMemDepPrinterPass(Registry);
   initializeMemoryDependenceAnalysisPass(Registry);
@@ -69,6 +69,7 @@ void llvm::initializeAnalysis(PassRegistry &Registry) {
   initializeRegionOnlyPrinterPass(Registry);
   initializeScalarEvolutionPass(Registry);
   initializeScalarEvolutionAliasAnalysisPass(Registry);
+  initializeTargetTransformInfoAnalysisGroup(Registry);
   initializeTypeBasedAliasAnalysisPass(Registry);
 }
 

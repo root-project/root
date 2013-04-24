@@ -1462,7 +1462,9 @@ void TROOT::InitInterpreter()
 
    fgRootInit = kTRUE;
 
-   TClass::ReadRules(); // Read the default customization rules ...   
+   fInterpreter->Initialize();
+
+   TClass::ReadRules(); // Read the default customization rules ...
 }
 
 //______________________________________________________________________________

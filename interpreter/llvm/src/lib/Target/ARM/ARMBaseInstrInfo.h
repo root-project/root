@@ -15,10 +15,10 @@
 #define ARMBASEINSTRUCTIONINFO_H
 
 #include "ARM.h"
-#include "llvm/CodeGen/MachineInstrBuilder.h"
-#include "llvm/Target/TargetInstrInfo.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallSet.h"
+#include "llvm/CodeGen/MachineInstrBuilder.h"
+#include "llvm/Target/TargetInstrInfo.h"
 
 #define GET_INSTRINFO_HEADER
 #include "ARMGenInstrInfo.inc"
@@ -229,10 +229,6 @@ public:
                         SDNode *DefNode, unsigned DefIdx,
                         SDNode *UseNode, unsigned UseIdx) const;
 
-  virtual unsigned getOutputLatency(const InstrItineraryData *ItinData,
-                                    const MachineInstr *DefMI, unsigned DefIdx,
-                                    const MachineInstr *DepMI) const;
-
   /// VFP/NEON execution domains.
   std::pair<uint16_t, uint16_t>
   getExecutionDomain(const MachineInstr *MI) const;
@@ -318,6 +314,10 @@ public:
   bool canCauseFpMLxStall(unsigned Opcode) const {
     return MLxHazardOpcodes.count(Opcode);
   }
+
+  /// Returns true if the instruction has a shift by immediate that can be
+  /// executed in one cycle less.
+  bool isSwiftFastImmShift(const MachineInstr *MI) const;
 };
 
 static inline

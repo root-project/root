@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Rewrite/Frontend/Rewriters.h"
-#include "clang/Lex/Preprocessor.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/PreprocessorOutputOptions.h"
+#include "clang/Lex/Preprocessor.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace clang;
@@ -27,10 +27,11 @@ class InclusionRewriter : public PPCallbacks {
   /// Information about which #includes were actually performed,
   /// created by preprocessor callbacks.
   struct FileChange {
+    const Module *Mod;
     SourceLocation From;
     FileID Id;
     SrcMgr::CharacteristicKind FileType;
-    FileChange(SourceLocation From) : From(From) {
+    FileChange(SourceLocation From, const Module *Mod) : Mod(Mod), From(From) {
     }
   };
   Preprocessor &PP; ///< Used to find inclusion directives.
@@ -39,7 +40,7 @@ class InclusionRewriter : public PPCallbacks {
   bool ShowLineMarkers; ///< Show #line markers.
   bool UseLineDirective; ///< Use of line directives or line markers.
   typedef std::map<unsigned, FileChange> FileChangeMap;
-  FileChangeMap FileChanges; /// Tracks which files were included where.
+  FileChangeMap FileChanges; ///< Tracks which files were included where.
   /// Used transitively for building up the FileChanges mapping over the
   /// various \c PPCallbacks callbacks.
   FileChangeMap::iterator LastInsertedFileChange;
@@ -65,6 +66,7 @@ private:
   void WriteLineInfo(const char *Filename, int Line,
                      SrcMgr::CharacteristicKind FileType,
                      StringRef EOL, StringRef Extra = StringRef());
+  void WriteImplicitModuleImport(const Module *Mod, StringRef EOL);
   void OutputContentUpTo(const MemoryBuffer &FromFile,
                          unsigned &WriteFrom, unsigned WriteTo,
                          StringRef EOL, int &lines,
@@ -117,6 +119,12 @@ void InclusionRewriter::WriteLineInfo(const char *Filename, int Line,
   OS << EOL;
 }
 
+void InclusionRewriter::WriteImplicitModuleImport(const Module *Mod,
+                                                  StringRef EOL) {
+  OS << "@import " << Mod->getFullModuleName() << ";"
+     << " /* clang -frewrite-includes: implicit import */" << EOL;
+}
+
 /// FileChanged - Whenever the preprocessor enters or exits a #include file
 /// it invokes this handler.
 void InclusionRewriter::FileChanged(SourceLocation Loc,
@@ -157,13 +165,14 @@ void InclusionRewriter::InclusionDirective(SourceLocation HashLoc,
                                            const FileEntry * /*File*/,
                                            StringRef /*SearchPath*/,
                                            StringRef /*RelativePath*/,
-                                           const Module * /*Imported*/) {
+                                           const Module *Imported) {
   assert(LastInsertedFileChange == FileChanges.end() && "Another inclusion "
     "directive was found before the previous one was processed");
   std::pair<FileChangeMap::iterator, bool> p = FileChanges.insert(
-    std::make_pair(HashLoc.getRawEncoding(), FileChange(HashLoc)));
+    std::make_pair(HashLoc.getRawEncoding(), FileChange(HashLoc, Imported)));
   assert(p.second && "Unexpected revisitation of the same include directive");
-  LastInsertedFileChange = p.first;
+  if (!Imported)
+    LastInsertedFileChange = p.first;
 }
 
 /// Simple lookup for a SourceLocation (specifically one denoting the hash in
@@ -253,7 +262,7 @@ bool InclusionRewriter::Process(FileID FileId,
   bool Invalid;
   const MemoryBuffer &FromFile = *SM.getBuffer(FileId, &Invalid);
   if (Invalid) // invalid inclusion
-    return true;
+    return false;
   const char *FileName = FromFile.getBufferIdentifier();
   Lexer RawLex(FileId, &FromFile, PP.getSourceManager(), PP.getLangOpts());
   RawLex.SetCommentRetentionState(false);
@@ -264,7 +273,7 @@ bool InclusionRewriter::Process(FileID FileId,
   WriteLineInfo(FileName, 1, FileType, EOL, " 1");
 
   if (SM.getFileIDSize(FileId) == 0)
-    return true;
+    return false;
 
   // The next byte to be copied from the source file
   unsigned NextToWrite = 0;
@@ -289,19 +298,24 @@ bool InclusionRewriter::Process(FileID FileId,
           case tok::pp_import: {
             CommentOutDirective(RawLex, HashToken, FromFile, EOL, NextToWrite,
               Line);
+            StringRef LineInfoExtra;
             if (const FileChange *Change = FindFileChangeLocation(
                 HashToken.getLocation())) {
-              // now include and recursively process the file
-              if (Process(Change->Id, Change->FileType))
+              if (Change->Mod) {
+                WriteImplicitModuleImport(Change->Mod, EOL);
+
+              // else now include and recursively process the file
+              } else if (Process(Change->Id, Change->FileType)) {
                 // and set lineinfo back to this file, if the nested one was
                 // actually included
                 // `2' indicates returning to a file (after having included
                 // another file.
-                WriteLineInfo(FileName, Line, FileType, EOL, " 2");
-            } else
-              // fix up lineinfo (since commented out directive changed line
-              // numbers) for inclusions that were skipped due to header guards
-              WriteLineInfo(FileName, Line, FileType, EOL);
+                LineInfoExtra = " 2";
+              }
+            }
+            // fix up lineinfo (since commented out directive changed line
+            // numbers) for inclusions that were skipped due to header guards
+            WriteLineInfo(FileName, Line, FileType, EOL, LineInfoExtra);
             break;
           }
           case tok::pp_pragma: {

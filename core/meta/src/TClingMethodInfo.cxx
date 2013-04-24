@@ -465,7 +465,9 @@ const char *TClingMethodInfo::GetPrototype() const
    } else if (const clang::NamedDecl *nd = llvm::dyn_cast<clang::NamedDecl>(GetMethodDecl()->getDeclContext())) {
       std::string name;
       clang::PrintingPolicy policy(GetMethodDecl()->getASTContext().getPrintingPolicy());
-      nd->getNameForDiagnostic(name, policy, /*Qualified=*/true);
+      llvm::raw_string_ostream stream(name);
+      nd->getNameForDiagnostic(stream, policy, /*Qualified=*/true);
+      stream.flush();
       buf += name;
       buf += "::";
    }
@@ -512,9 +514,10 @@ const char *TClingMethodInfo::Name() const
       const clang::TypeDecl* td = llvm::dyn_cast<clang::TypeDecl>(decl->getDeclContext());
       clang::QualType qualType(td->getTypeForDecl(),0);
       ROOT::TMetaUtils::GetFullyQualifiedTypeName(buf,qualType,*fInterp);
-      buf.insert(buf.begin(),'~');
+      buf.insert(buf.begin(), '~');
    } else {
-      GetMethodDecl()->getNameForDiagnostic(buf, policy, /*Qualified=*/false);
+      llvm::raw_string_ostream stream(buf);
+      GetMethodDecl()->getNameForDiagnostic(stream, policy, /*Qualified=*/false);
    }
    return buf.c_str();
 }

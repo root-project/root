@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_MC_MCSCHEDMODEL_H
-#define LLVM_MC_MCSCHEDMODEL_H
+#ifndef LLVM_MC_MCSCHEDULE_H
+#define LLVM_MC_MCSCHEDULE_H
 
 #include "llvm/Support/DataTypes.h"
 #include <cassert>
@@ -27,11 +27,18 @@ struct MCProcResourceDesc {
 #ifndef NDEBUG
   const char *Name;
 #endif
-  unsigned Count; // Number of resource of this kind
+  unsigned NumUnits; // Number of resource of this kind
   unsigned SuperIdx; // Index of the resources kind that contains this kind.
 
+  // Buffered resources may be consumed at some indeterminate cycle after
+  // dispatch (e.g. for instructions that may issue out-of-order). Unbuffered
+  // resources always consume their resource some fixed number of cycles after
+  // dispatch (e.g. for instruction interlocking that may stall the pipeline).
+  bool IsBuffered;
+
   bool operator==(const MCProcResourceDesc &Other) const {
-    return Count == Other.Count && SuperIdx == Other.SuperIdx;
+    return NumUnits == Other.NumUnits && SuperIdx == Other.SuperIdx
+      && IsBuffered == Other.IsBuffered;
   }
 };
 
@@ -47,10 +54,12 @@ struct MCWriteProcResEntry {
 };
 
 /// Specify the latency in cpu cycles for a particular scheduling class and def
-/// index. Also identify the WriteResources of this def. When the operand
-/// expands to a sequence of writes, this ID is the last write in the sequence.
+/// index. -1 indicates an invalid latency. Heuristics would typically consider
+/// an instruction with invalid latency to have infinite latency.  Also identify
+/// the WriteResources of this def. When the operand expands to a sequence of
+/// writes, this ID is the last write in the sequence.
 struct MCWriteLatencyEntry {
-  unsigned Cycles;
+  int Cycles;
   unsigned WriteResourceID;
 
   bool operator==(const MCWriteLatencyEntry &Other) const {
@@ -146,7 +155,7 @@ public:
   //      Optional InstrItinerary OperandCycles provides expected latency.
   //      TODO: can't yet specify both min and expected latency per operand.
   int MinLatency;
-  static const unsigned DefaultMinLatency = -1;
+  static const int DefaultMinLatency = -1;
 
   // LoadLatency is the expected latency of load instructions.
   //
@@ -162,6 +171,16 @@ public:
   // If MinLatency >= 0, this may be overriden by InstrItinData OperandCycles.
   unsigned HighLatency;
   static const unsigned DefaultHighLatency = 10;
+
+  // ILPWindow is the number of cycles that the scheduler effectively ignores
+  // before attempting to hide latency. This should be zero for in-order cpus to
+  // always hide expected latency. For out-of-order cpus, it may be tweaked as
+  // desired to roughly approximate instruction buffers. The actual threshold is
+  // not very important for an OOO processor, as long as it isn't too high. A
+  // nonzero value helps avoid rescheduling to hide latency when its is fairly
+  // obviously useless and makes register pressure heuristics more effective.
+  unsigned ILPWindow;
+  static const unsigned DefaultILPWindow = 0;
 
   // MispredictPenalty is the typical number of extra cycles the processor
   // takes to recover from a branch misprediction.
@@ -187,6 +206,7 @@ public:
                   MinLatency(DefaultMinLatency),
                   LoadLatency(DefaultLoadLatency),
                   HighLatency(DefaultHighLatency),
+                  ILPWindow(DefaultILPWindow),
                   MispredictPenalty(DefaultMispredictPenalty),
                   ProcID(0), ProcResourceTable(0), SchedClassTable(0),
                   NumProcResourceKinds(0), NumSchedClasses(0),
@@ -196,12 +216,12 @@ public:
   }
 
   // Table-gen driven ctor.
-  MCSchedModel(unsigned iw, int ml, unsigned ll, unsigned hl, unsigned mp,
-               unsigned pi, const MCProcResourceDesc *pr,
+  MCSchedModel(unsigned iw, int ml, unsigned ll, unsigned hl, unsigned ilp,
+               unsigned mp, unsigned pi, const MCProcResourceDesc *pr,
                const MCSchedClassDesc *sc, unsigned npr, unsigned nsc,
                const InstrItinerary *ii):
     IssueWidth(iw), MinLatency(ml), LoadLatency(ll), HighLatency(hl),
-    MispredictPenalty(mp), ProcID(pi), ProcResourceTable(pr),
+    ILPWindow(ilp), MispredictPenalty(mp), ProcID(pi), ProcResourceTable(pr),
     SchedClassTable(sc), NumProcResourceKinds(npr), NumSchedClasses(nsc),
     InstrItineraries(ii) {}
 
@@ -209,6 +229,10 @@ public:
 
   /// Does this machine model include instruction-level scheduling.
   bool hasInstrSchedModel() const { return SchedClassTable; }
+
+  unsigned getNumProcResourceKinds() const {
+    return NumProcResourceKinds;
+  }
 
   const MCProcResourceDesc *getProcResource(unsigned ProcResourceIdx) const {
     assert(hasInstrSchedModel() && "No scheduling machine model");

@@ -223,6 +223,7 @@ def t_addrmode_sp : Operand<i32>,
 def t_addrmode_pc : Operand<i32> {
   let EncoderMethod = "getAddrModePCOpValue";
   let DecoderMethod = "DecodeThumbAddrModePC";
+  let PrintMethod = "printThumbLdrLabelOperand";
 }
 
 //===----------------------------------------------------------------------===//
@@ -1245,10 +1246,6 @@ def tInt_eh_sjlj_longjmp : XI<(outs), (ins GPR:$src, GPR:$scratch),
                               Pseudo, NoItinerary, "", "",
                               [(ARMeh_sjlj_longjmp GPR:$src, GPR:$scratch)]>,
                              Requires<[IsThumb, IsIOS]>;
-
-let Defs = [ R0,  R1,  R2,  R3,  R4,  R5,  R6,  R7, R12, CPSR ],
-    isBarrier = 1 in
-def tInt_eh_sjlj_dispatchsetup : PseudoInst<(outs), (ins), NoItinerary, []>;
 
 //===----------------------------------------------------------------------===//
 // Non-Instruction Patterns

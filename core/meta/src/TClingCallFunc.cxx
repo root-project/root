@@ -56,10 +56,10 @@
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/LLVMContext.h"
-#include "llvm/DerivedTypes.h"
-#include "llvm/Function.h"
-#include "llvm/Type.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/Type.h"
 
 #include "clang/Sema/SemaInternal.h"
 
@@ -321,7 +321,7 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
          = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc, 
                                &C.Idents.get("This"), ThisQT,
                                C.getTrivialTypeSourceInfo(ThisQT, Loc),
-                               SC_None, SC_None, /*DefaultArg*/0);
+                               SC_None, /*DefaultArg*/0);
       Params.push_back(ThisPtrParm);
 
       // Recreate the same arg nodes for the trampoline and use them 
@@ -336,7 +336,7 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
          PVD = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc, 
                                    (*I)->getIdentifier(), (*I)->getType(),
                                    C.getTrivialTypeSourceInfo((*I)->getType(), Loc),
-                                   SC_None, SC_None, defaultArg);
+                                   SC_None, defaultArg);
          Params.push_back(PVD);
       }
          
@@ -356,7 +356,7 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
             = ParmVarDecl::Create(C, TrampolineFD, Loc, Loc,
                                   &C.Idents.get("__Res"), ResQT,
                                   C.getTrivialTypeSourceInfo(ResQT, Loc),
-                                  SC_None, SC_None, Zero.take());
+                                  SC_None, Zero.take());
 
          Params.push_back(ResParm);
       }
@@ -369,8 +369,7 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
 
       const FunctionProtoType* Proto 
          = llvm::cast<FunctionProtoType>(TrampolineFD->getType().getTypePtr());
-      QualType NewFDQT = C.getFunctionType(C.VoidTy, ParamQTs.data(), 
-                                           ParamQTs.size(),
+      QualType NewFDQT = C.getFunctionType(C.VoidTy, ParamQTs,
                                            Proto->getExtProtoInfo());
       TrampolineFD->setType(NewFDQT);
       TrampolineFD->setParams(Params);
@@ -462,8 +461,7 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
       else
          Stmts.push_back(theCall.take());
 
-      CompoundStmt* CS = new (C) CompoundStmt(C, Stmts.data(), 
-                                              Stmts.size(), Loc, Loc);
+      CompoundStmt* CS = new (C) CompoundStmt(C, Stmts, Loc, Loc);
 
       TrampolineFD->setBody(CS);
    

@@ -32,6 +32,7 @@
 
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Utils/AST.h"
+#include "clang/AST/Attr.h"
 
 using namespace clang;
 
@@ -117,7 +118,10 @@ int TClingTypedefInfo::InternalNext()
       if (fFirstTime && fDecl) {
          std::string buf;
          clang::PrintingPolicy Policy(fDecl->getASTContext().getPrintingPolicy());
-         llvm::dyn_cast<clang::NamedDecl>(fDecl)->getNameForDiagnostic(buf, Policy, /*Qualified=*/false);         
+         llvm::raw_string_ostream stream(buf);
+         llvm::dyn_cast<clang::NamedDecl>(fDecl)
+            ->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
+         stream.flush();
          Error("TClingTypedefInfo::InternalNext","Next called but iteration not prepared for %s!",buf.c_str());
       }
       return 0;

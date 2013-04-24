@@ -12,14 +12,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Target/Mangler.h"
-#include "llvm/DerivedTypes.h"
-#include "llvm/Function.h"
-#include "llvm/Target/TargetData.h"
+#include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/Twine.h"
+#include "llvm/IR/DataLayout.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Function.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/ADT/SmallString.h"
-#include "llvm/ADT/Twine.h"
 using namespace llvm;
 
 static bool isAcceptableChar(char C, bool AllowPeriod, bool AllowUTF8) {
@@ -157,7 +157,7 @@ void Mangler::getNameWithPrefix(SmallVectorImpl<char> &OutName,
 /// a suffix on their name indicating the number of words of arguments they
 /// take.
 static void AddFastCallStdCallSuffix(SmallVectorImpl<char> &OutName,
-                                     const Function *F, const TargetData &TD) {
+                                     const Function *F, const DataLayout &TD) {
   // Calculate arguments size total.
   unsigned ArgWords = 0;
   for (Function::const_arg_iterator AI = F->arg_begin(), AE = F->arg_end();

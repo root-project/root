@@ -89,7 +89,7 @@ namespace ROOT {
       clang::QualType GetFullyQualifiedType(const clang::QualType &type, const cling::Interpreter &interpreter);
 
       // Return the type with all parts fully qualified (most typedefs),
-      // including template arguments.
+      // including template arguments, appended to name.
       void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, const cling::Interpreter &interpreter);
 
       // Return the type name normalized for ROOT,

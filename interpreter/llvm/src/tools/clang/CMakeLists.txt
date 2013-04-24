@@ -66,6 +66,11 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 
   set( CLANG_BUILT_STANDALONE 1 )
+
+  find_package(LibXml2)
+  if (LIBXML2_FOUND)
+    set(CLANG_HAVE_LIBXML 1)
+  endif ()
 endif()
 
 set(CLANG_RESOURCE_DIR "" CACHE STRING
@@ -133,15 +138,16 @@ configure_file(
 # Add appropriate flags for GCC
 if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-common -Woverloaded-virtual -Wcast-qual -fno-strict-aliasing -pedantic -Wno-long-long -Wall -W -Wno-unused-parameter -Wwrite-strings")
+
+  check_cxx_compiler_flag("-Werror -Wnested-anon-types" CXX_SUPPORTS_NO_NESTED_ANON_TYPES_FLAG)
+  if( CXX_SUPPORTS_NO_NESTED_ANON_TYPES_FLAG )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-nested-anon-types" )
+  endif()
 endif ()
 
 if (APPLE)
   set(CMAKE_MODULE_LINKER_FLAGS "-Wl,-flat_namespace -Wl,-undefined -Wl,suppress")
 endif ()
-
-# libxml2 is an optional dependency, required only to run validation
-# tests on XML output.
-find_package(LibXml2)
 
 configure_file(
   ${CLANG_SOURCE_DIR}/include/clang/Config/config.h.cmake
@@ -181,16 +187,26 @@ endfunction(clang_tablegen)
 macro(add_clang_library name)
   llvm_process_sources(srcs ${ARGN})
   if(MSVC_IDE OR XCODE)
-    string( REGEX MATCHALL "/[^/]+" split_path ${CMAKE_CURRENT_SOURCE_DIR})
-    list( GET split_path -1 dir)
-    file( GLOB_RECURSE headers
-      ../../../include/clang/StaticAnalyzer${dir}/*.h
-      ../../../include/clang/StaticAnalyzer${dir}/*.td
-      ../../../include/clang/StaticAnalyzer${dir}/*.def
-      ../../include/clang${dir}/*.h
-      ../../include/clang${dir}/*.td
-      ../../include/clang${dir}/*.def)
-    set(srcs ${srcs} ${headers})
+    # Add public headers
+    file(RELATIVE_PATH lib_path
+      ${CLANG_SOURCE_DIR}/lib/
+      ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    if(NOT lib_path MATCHES "^[.][.]")
+      file( GLOB_RECURSE headers
+        ${CLANG_SOURCE_DIR}/include/clang/${lib_path}/*.h
+        ${CLANG_SOURCE_DIR}/include/clang/${lib_path}/*.def
+      )
+      set_source_files_properties(${headers} PROPERTIES HEADER_FILE_ONLY ON)
+
+      file( GLOB_RECURSE tds
+        ${CLANG_SOURCE_DIR}/include/clang/${lib_path}/*.td
+      )
+      source_group("TableGen descriptions" FILES ${tds})
+      set_source_files_properties(${tds}} PROPERTIES HEADER_FILE_ONLY ON)
+
+      set(srcs ${srcs} ${headers} ${tds})
+    endif()
   endif(MSVC_IDE OR XCODE)
   if (MODULE)
     set(libkind MODULE)
@@ -243,6 +259,9 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
 
 add_definitions( -D_GNU_SOURCE )
 
+# FIXME: They should be options.
+add_definitions(-DCLANG_ENABLE_ARCMT -DCLANG_ENABLE_REWRITER -DCLANG_ENABLE_STATIC_ANALYZER)
+
 # Clang version information
 set(CLANG_EXECUTABLE_VERSION
      "${CLANG_VERSION_MAJOR}.${CLANG_VERSION_MINOR}" CACHE STRING
@@ -262,13 +281,14 @@ add_subdirectory(runtime)
 option(CLANG_BUILD_EXAMPLES "Build CLANG example programs by default." OFF)
 add_subdirectory(examples)
 
+option(CLANG_INCLUDE_TESTS
+       "Generate build targets for the Clang unit tests."
+       ${LLVM_INCLUDE_TESTS})
+
 # TODO: docs.
 
-if( LLVM_INCLUDE_TESTS )
-  add_subdirectory(test)
-  if( NOT CLANG_BUILT_STANDALONE )
-    add_subdirectory(unittests)
-  endif()
+if( CLANG_INCLUDE_TESTS )
+  add_subdirectory(unittests)
 endif()
 
 # Workaround for MSVS10 to avoid the Dialog Hell

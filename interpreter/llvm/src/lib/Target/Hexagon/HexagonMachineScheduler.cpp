@@ -15,8 +15,8 @@
 #define DEBUG_TYPE "misched"
 
 #include "HexagonMachineScheduler.h"
-
-#include <queue>
+#include "llvm/CodeGen/MachineLoopInfo.h"
+#include "llvm/IR/Function.h"
 
 using namespace llvm;
 
@@ -31,8 +31,7 @@ void VLIWMachineScheduler::postprocessDAG() {
       LastSequentialCall = &(SUnits[su]);
     // Look for a compare that defines a predicate.
     else if (SUnits[su].getInstr()->isCompare() && LastSequentialCall)
-      SUnits[su].addPred(SDep(LastSequentialCall, SDep::Order, 0, /*Reg=*/0,
-                              false));
+      SUnits[su].addPred(SDep(LastSequentialCall, SDep::Barrier));
   }
 }
 
@@ -128,7 +127,7 @@ bool VLIWResourceModel::reserveResources(SUnit *SU) {
 
   // If packet is now full, reset the state so in the next cycle
   // we start fresh.
-  if (Packet.size() >= InstrItins->SchedModel->IssueWidth) {
+  if (Packet.size() >= SchedModel->getIssueWidth()) {
     ResourcesModel->clearResources();
     Packet.clear();
     TotalPackets++;
@@ -154,7 +153,16 @@ void VLIWMachineScheduler::schedule() {
   // Postprocess the DAG to add platform specific artificial dependencies.
   postprocessDAG();
 
+  SmallVector<SUnit*, 8> TopRoots, BotRoots;
+  findRootsAndBiasEdges(TopRoots, BotRoots);
+
+  // Initialize the strategy before modifying the DAG.
+  SchedImpl->initialize(this);
+
   // To view Height/Depth correctly, they should be accessed at least once.
+  //
+  // FIXME: SUnit::dumpAll always recompute depth and height now. The max
+  // depth/height could be computed directly from the roots and leaves.
   DEBUG(unsigned maxH = 0;
         for (unsigned su = 0, e = SUnits.size(); su != e; ++su)
           if (SUnits[su].getHeight() > maxH)
@@ -168,7 +176,7 @@ void VLIWMachineScheduler::schedule() {
   DEBUG(for (unsigned su = 0, e = SUnits.size(); su != e; ++su)
           SUnits[su].dumpAll(this));
 
-  initQueues();
+  initQueues(TopRoots, BotRoots);
 
   bool IsTopNode = false;
   while (SUnit *SU = SchedImpl->pickNode(IsTopNode)) {
@@ -186,18 +194,23 @@ void VLIWMachineScheduler::schedule() {
 
 void ConvergingVLIWScheduler::initialize(ScheduleDAGMI *dag) {
   DAG = static_cast<VLIWMachineScheduler*>(dag);
+  SchedModel = DAG->getSchedModel();
   TRI = DAG->TRI;
-  Top.DAG = DAG;
-  Bot.DAG = DAG;
 
-  // Initialize the HazardRecognizers.
+  Top.init(DAG, SchedModel);
+  Bot.init(DAG, SchedModel);
+
+  // Initialize the HazardRecognizers. If itineraries don't exist, are empty, or
+  // are disabled, then these HazardRecs will be disabled.
+  const InstrItineraryData *Itin = DAG->getSchedModel()->getInstrItineraries();
   const TargetMachine &TM = DAG->MF.getTarget();
-  const InstrItineraryData *Itin = TM.getInstrItineraryData();
+  delete Top.HazardRec;
+  delete Bot.HazardRec;
   Top.HazardRec = TM.getInstrInfo()->CreateTargetMIHazardRecognizer(Itin, DAG);
   Bot.HazardRec = TM.getInstrInfo()->CreateTargetMIHazardRecognizer(Itin, DAG);
 
-  Top.ResourceModel = new VLIWResourceModel(TM);
-  Bot.ResourceModel = new VLIWResourceModel(TM);
+  Top.ResourceModel = new VLIWResourceModel(TM, DAG->getSchedModel());
+  Bot.ResourceModel = new VLIWResourceModel(TM, DAG->getSchedModel());
 
   assert((!llvm::ForceTopDown || !llvm::ForceBottomUp) &&
          "-misched-topdown incompatible with -misched-bottomup");
@@ -256,7 +269,8 @@ bool ConvergingVLIWScheduler::SchedBoundary::checkHazard(SUnit *SU) {
   if (HazardRec->isEnabled())
     return HazardRec->getHazardType(SU) != ScheduleHazardRecognizer::NoHazard;
 
-  if (IssueCount + DAG->getNumMicroOps(SU->getInstr()) > DAG->getIssueWidth())
+  unsigned uops = SchedModel->getNumMicroOps(SU->getInstr());
+  if (IssueCount + uops > SchedModel->getIssueWidth())
     return true;
 
   return false;
@@ -278,7 +292,7 @@ void ConvergingVLIWScheduler::SchedBoundary::releaseNode(SUnit *SU,
 
 /// Move the boundary of scheduled code by one cycle.
 void ConvergingVLIWScheduler::SchedBoundary::bumpCycle() {
-  unsigned Width = DAG->getIssueWidth();
+  unsigned Width = SchedModel->getIssueWidth();
   IssueCount = (IssueCount <= Width) ? 0 : IssueCount - Width;
 
   assert(MinReadyCycle < UINT_MAX && "MinReadyCycle uninitialized");
@@ -321,7 +335,7 @@ void ConvergingVLIWScheduler::SchedBoundary::bumpNode(SUnit *SU) {
 
   // Check the instruction group dispatch limit.
   // TODO: Check if this SU must end a dispatch group.
-  IssueCount += DAG->getNumMicroOps(SU->getInstr());
+  IssueCount += SchedModel->getNumMicroOps(SU->getInstr());
   if (startNewCycle) {
     DEBUG(dbgs() << "*** Max instrs at cycle " << CurrCycle << '\n');
     bumpCycle();
@@ -676,4 +690,3 @@ void ConvergingVLIWScheduler::schedNode(SUnit *SU, bool IsTopNode) {
     Bot.bumpNode(SU);
   }
 }
-
