@@ -69,7 +69,7 @@ These parts of a well-written macro are pretty standard, and you should
 remember to include pieces of code like in the examples above to make
 sure your output always comes out as you had intended.
 
-Below, in section "Interpretation and Compilation", some more code fragments 
+Below, in section [Interpretation and Compilation](#interpretation-and-compilation), some more code fragments
 will be shown, allowing you to use the system compiler to compile macros for 
 more efficient execution, or turn macros into stand-alone applications linked 
 against the ROOT libraries.
@@ -92,7 +92,7 @@ uses additional classes, `TF1` to define a function, `TCanvas` to define
 size and properties of the window used for our plot, and `TLegend` to
 add a nice legend. For the moment, ignore the commented include
 statements for header files, they will only become important at the end
-in section "Interpretation and Compilattion".
+in section [Interpretation and Compilation](#interpretation-and-compilation).
 
 ``` {.cpp .numberLines}
  // Builds a graph with errors, displays it and saves it

@@ -459,8 +459,9 @@ editor for use in your own macros.
 ### ROOT Global Pointers ###
 
 All global pointers in ROOT begin with a small "g". Some of them were
-already implicitly introduced (for example in the section "Configure ROOT at start-up"). The most important
-among them are presented in the following:
+already implicitly introduced (for example in the section
+[Configure ROOT at start-up](#configure-root-at-start-up)).
+The most important among them are presented in the following:
 
 -   **[gROOT](http://root.cern.ch/root/html/TROOT.html)**: the `gROOT`
     variable is the entry point to the ROOT system. Technically it is an

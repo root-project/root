@@ -145,7 +145,7 @@ Imagine your task now consists in finding the relations among the
 variables -- of course without knowing the code used to generate them.
 You will see that the possibilities of the `NTuple` class enable you to
 perform this analysis task. Open the ROOT file (`cond_data.root`)
-written by the macro above in an interactive section and use a
+written by the macro above in an interactive session and use a
 `TBrowser` to interactively inspect it:
 
 ``` {.cpp}
@@ -592,7 +592,8 @@ process, and can be retrieved from this list after merging in
 `Terminate`.
 
 To explore the power of this mechanism, generate some very large
-n-tuples using the script from the section "Storing Arbitrary N-tuples" - 
+n-tuples using the script from the section
+[Storing Arbitrary N-tuples](#storing-arbitrary-n-tuples) -
 you could try 10 000 000 events (this
 results in a large n-tuple of about 160 MByte in size). You could also
 generate a large number of files and use wildcards to add the to the
