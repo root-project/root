@@ -698,12 +698,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 // where T is the name of the Tree in file myfile.root
 // and MyClass.h, MyClass.C the name of the files created by this function.
 // In a ROOT session, you can do:
-//    root > .L MyClass.C
-//    root > MyClass t
-//    root > t.GetEntry(12); // Fill t data members with entry number 12
-//    root > t.Show();       // Show values of entry 12
-//    root > t.Show(16);     // Read and show values of entry 16
-//    root > t.Loop();       // Loop on all entries
+//    root> .L MyClass.C
+//    root> MyClass t
+//    root> t.GetEntry(12); // Fill t data members with entry number 12
+//    root> t.Show();       // Show values of entry 12
+//    root> t.Show(16);     // Read and show values of entry 16
+//    root> t.Loop();       // Loop on all entries
 //
 //  NOTE: Do not use the code generated for one Tree in case of a TChain.
 //        Maximum dimensions calculated on the basis of one TTree only
@@ -1375,12 +1375,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"void %s::Loop()\n",classname);
       fprintf(fpc,"{\n");
       fprintf(fpc,"//   In a ROOT session, you can do:\n");
-      fprintf(fpc,"//      Root > .L %s.C\n",classname);
-      fprintf(fpc,"//      Root > %s t\n",classname);
-      fprintf(fpc,"//      Root > t.GetEntry(12); // Fill t data members with entry number 12\n");
-      fprintf(fpc,"//      Root > t.Show();       // Show values of entry 12\n");
-      fprintf(fpc,"//      Root > t.Show(16);     // Read and show values of entry 16\n");
-      fprintf(fpc,"//      Root > t.Loop();       // Loop on all entries\n");
+      fprintf(fpc,"//      root> .L %s.C\n",classname);
+      fprintf(fpc,"//      root> %s t\n",classname);
+      fprintf(fpc,"//      root> t.GetEntry(12); // Fill t data members with entry number 12\n");
+      fprintf(fpc,"//      root> t.Show();       // Show values of entry 12\n");
+      fprintf(fpc,"//      root> t.Show(16);     // Read and show values of entry 16\n");
+      fprintf(fpc,"//      root> t.Loop();       // Loop on all entries\n");
       fprintf(fpc,"//\n");
       fprintf(fpc,"\n//     This is the loop skeleton where:\n");
       fprintf(fpc,"//    jentry is the global entry number in the chain\n");
@@ -1428,9 +1428,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"//\n");
       fprintf(fpc,"// To use this file, try the following session on your Tree T:\n");
       fprintf(fpc,"//\n");
-      fprintf(fpc,"// Root > T->Process(\"%s.C\")\n",classname);
-      fprintf(fpc,"// Root > T->Process(\"%s.C\",\"some options\")\n",classname);
-      fprintf(fpc,"// Root > T->Process(\"%s.C+\")\n",classname);
+      fprintf(fpc,"// root> T->Process(\"%s.C\")\n",classname);
+      fprintf(fpc,"// root> T->Process(\"%s.C\",\"some options\")\n",classname);
+      fprintf(fpc,"// root> T->Process(\"%s.C+\")\n",classname);
       fprintf(fpc,"//\n\n");
       fprintf(fpc,"#include \"%s\"\n",thead.Data());
       fprintf(fpc,"#include <TH2.h>\n");
