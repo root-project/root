@@ -2050,7 +2050,7 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
       TVirtualPad *pad = gROOT->GetSelectedPad();
       if (pad) pad->cd();
       opt.Remove(opt.First("d"),1);
-      if (!gPad->FindObject(h1)) {
+      if (!gPad || !gPad->FindObject(h1)) {
          h1->Draw(opt);
       } else {
          h1->Paint(opt);

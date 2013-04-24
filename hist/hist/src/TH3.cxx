@@ -1800,7 +1800,7 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax, Int_t izmin, 
       TVirtualPad *padsav = gPad;
       TVirtualPad *pad = gROOT->GetSelectedPad();
       if (pad) pad->cd();
-      if (!gPad->FindObject(h1)) {
+      if (!gPad || !gPad->FindObject(h1)) {
          h1->Draw(opt);
       } else {
          h1->Paint(opt);
@@ -1873,7 +1873,7 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax, Int_t izmin, 
       TVirtualPad *padsav = gPad;
       TVirtualPad *pad = gROOT->GetSelectedPad();
       if (pad) pad->cd();
-      if (!gPad->FindObject(h1)) {
+      if (!gPad || !gPad->FindObject(h1)) {
          h1->Draw(opt);
       } else {
          h1->Paint(opt);
@@ -1947,7 +1947,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
       TVirtualPad *padsav = gPad;
       TVirtualPad *pad = gROOT->GetSelectedPad();
       if (pad) pad->cd();
-      if (!gPad->FindObject(h1)) {
+      if (!gPad || !gPad->FindObject(h1)) {
          h1->Draw(opt);
       } else {
          h1->Paint(opt);
@@ -2576,7 +2576,7 @@ TH1 *TH3::Project3D(Option_t *option) const
       TVirtualPad *padsav = gPad;
       TVirtualPad *pad = gROOT->GetSelectedPad();
       if (pad) pad->cd();
-      if (!gPad->FindObject(h)) {
+      if (!gPad || !gPad->FindObject(h)) {
          h->Draw(opt);
       } else {
          h->Paint(opt);
