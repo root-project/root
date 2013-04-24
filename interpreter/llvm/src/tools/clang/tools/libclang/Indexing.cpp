@@ -341,7 +341,7 @@ public:
   /// \brief This is called by the AST reader when deserializing things.
   /// The default implementation forwards to HandleTopLevelDecl but we don't
   /// care about them when indexing, so have an empty definition.
-  virtual void HandleInterestingDecl(DeclGroupRef D) { }
+  virtual void HandleInterestingDecl(DeclGroupRef D) {}
 
   virtual void HandleTagDeclDefinition(TagDecl *D) {
     if (!IndexCtx.shouldIndexImplicitTemplateInsts())
