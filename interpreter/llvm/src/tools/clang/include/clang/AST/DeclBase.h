@@ -1508,9 +1508,6 @@ public:
   /// declarations lexically in this context.
   void setHasExternalLexicalStorage(bool ES = true) {
     ExternalLexicalStorage = ES;
-#ifdef AXEL_LOOKUP_CHANGES
-    setMustBuildLookupTable();
-#endif
   }
 
   /// \brief Whether this DeclContext has external storage containing
