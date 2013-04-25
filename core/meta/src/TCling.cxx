@@ -508,11 +508,11 @@ extern "C" int TCling__AutoLoadCallback(const char* className)
 
 void* autoloadCallback(const std::string& mangled_name)
 {
-   // Autoload a library. Given a mangled function name find the
-   // library which provides the function and load it.
+   // Autoload a library. Given a mangled symbol name find the
+   // library which provides the symbol and load it.
    //--
    //
-   //  Use the C++ ABI provided function to demangle the function name.
+   //  Use the C++ ABI provided function to demangle the symbol name.
    //
    int err = 0;
    char* demangled_name = abi::__cxa_demangle(mangled_name.c_str(), 0, 0, &err);
@@ -528,16 +528,20 @@ void* autoloadCallback(const std::string& mangled_name)
    std::string name(demangled_name);
    free(demangled_name);
 
-   // Remove the function arguments.
-   std::string::size_type pos = name.rfind('(');
-   if (pos != std::string::npos) {
-      name.erase(pos);
-   }
-   // Remove the function name.
-   pos = name.rfind(':');
-   if (pos != std::string::npos) {
-      if ((pos != 0) && (name[pos-1] == ':')) {
-         name.erase(pos-1);
+   if (!strncmp(name.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
+      name.erase(0, sizeof("typeinfo for ")-1);
+   } else {
+      // Remove the function arguments.
+      std::string::size_type pos = name.rfind('(');
+      if (pos != std::string::npos) {
+         name.erase(pos);
+      }
+      // Remove the function name.
+      pos = name.rfind(':');
+      if (pos != std::string::npos) {
+         if ((pos != 0) && (name[pos-1] == ':')) {
+            name.erase(pos-1);
+         }
       }
    }
    //fprintf(stderr, "name: '%s'\n", name.c_str());
