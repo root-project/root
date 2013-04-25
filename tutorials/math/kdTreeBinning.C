@@ -161,12 +161,12 @@ void kdTreeBinning() {
   kdY->SortOneDimBinEdges();
 
   TH1* hX=new TH1F("hX", "X projection", kdX->GetNBins(), kdX->GetOneDimBinEdges());
-  for(int i=0; i<kdX->GetNBins(); ++i){
+  for(UInt_t i=0; i<kdX->GetNBins(); ++i){
     hX->SetBinContent(i+1, kdX->GetBinDensity(i));
   }
 
   TH1* hY=new TH1F("hY", "Y Projection", kdY->GetNBins(), kdY->GetOneDimBinEdges());
-  for(int i=0; i<kdY->GetNBins(); ++i){
+  for(UInt_t i=0; i<kdY->GetNBins(); ++i){
     hY->SetBinContent(i+1, kdY->GetBinDensity(i));
   }
 
