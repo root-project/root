@@ -98,7 +98,7 @@ inline Bool_t TMath::Odd(Long_t a)
 //---- Abs ---------------------------------------------------------------------
 
 inline Short_t TMath::Abs(Short_t d)
-   { return (d >= 0) ? d : -d; }
+{ return (d >= 0) ? d : Short_t(-d); }
 
 inline Int_t TMath::Abs(Int_t d)
    { return (d >= 0) ? d : -d; }
@@ -118,7 +118,7 @@ inline Double_t TMath::Abs(Double_t d)
 //---- Sign --------------------------------------------------------------------
 
 inline Short_t TMath::Sign(Short_t a, Short_t b)
-   { return (b >= 0) ? Abs(a) : -Abs(a); }
+{ return (b >= 0) ? Abs(a) : Short_t(-Abs(a)); }
 
 inline Int_t TMath::Sign(Int_t a, Int_t b)
    { return (b >= 0) ? Abs(a) : -Abs(a); }
