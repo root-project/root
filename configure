@@ -1535,7 +1535,7 @@ enable/disable options, prefix with either --enable- or --disable-
   pgsql              PostgreSQL support, requires libpq
   pythia6            Pythia6 EG support, requires libPythia6
   pythia8            Pythia8 EG support, requires libPythia8
-  python             Python ROOT bindings, requires python >= 2.2
+  python             Python ROOT bindings, requires python >= 2.5
   qt                 Qt graphics backend, requires libqt >= 4.x
   qtgsi              GSI's Qt integration, requires libqt >= 3
   rfio               RFIO support, requires libshift from CASTOR >= 1.5.2
