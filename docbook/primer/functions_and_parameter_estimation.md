@@ -44,7 +44,7 @@ documentation of ROOT: have a look for example to the
 
 The complication level of the code below is intentionally a little
 higher than in the previous examples. The graphical output of the macro
-is shown in Figure \ref{fitp}:
+is shown in Figure [7.1](#f71):
 
 ``` {.cpp .numberLines}
  void format_line(TAttLine* line,int col,int sty){
@@ -145,9 +145,12 @@ Some step by step explanation is at this point necessary:
 -   Lines *58-end*: Plot the pseudo-data, the fitted function and the
     signal and background components at the best-fit values.
 
+[f71]: figures/functions.png "f71"
+<a name="f71"></a>
+
 ![Fit of pseudo data: a signal shape over a background trend. This plot
 is another example of how making a plot "self-explanatory" can help you
-better displaying your results.\label{fitp}](figures/functions.png)
+better displaying your results. \label{f71}][f71]
 
 ## Toy Monte Carlo Experiments ##
 

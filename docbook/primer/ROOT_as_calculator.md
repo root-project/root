@@ -168,12 +168,14 @@ executed one after the other.
    Fnslit->Draw();
  }
 ```
+[f31]: figures/TF1_DoubleSlit.png "f31"
+<a name="f31"></a>
 
-![Output of slits.C with parameters 0.2 and 2.\label{slits}](figures/TF1_DoubleSlit.png)
+![Output of slits.C with parameters 0.2 and 2.\label{f31}][f31]
 
 The example first asks for user input, namely the ratio of slit width
 over slit distance, and the number of slits. After entering this
-information, you should see the graphical output as is shown in Figure \ref{slits}.
+information, you should see the graphical output as is shown in Figure [3.1](#f31).
 
 This is a more complicated example than the ones we have seen before, so
 spend some time analysing it carefully, you should have understood it
@@ -252,9 +254,12 @@ root [0] TGraphErrors *gr=new TGraphErrors("ExampleData.txt");
 root [1] gr->Draw("AP"); 
 ```
 
-You should see the output shown in Figure \ref{graph}.
+You should see the output shown in Figure [3.2](#f32).
 
-![Visualisation of data points with errors using the class TGraphErrors. \label{graph}](figures/TGraphErrors_Example.png)
+[f32]: figures/TGraphErrors_Example.png "f32"
+<a name="f32"></a>
+
+![Visualisation of data points with errors using the class TGraphErrors. \label{f32}][f32]
 
 Make sure the file `ExampleData.txt` is available in the directory from
 which you started ROOT. Inspect this file now with your favourite
@@ -297,8 +302,11 @@ in this case, and set its parameters. In Line 4 a histogram is
 instantiated, with a name, a title, a certain number of bins (100 of
 them, equidistant, equally sized) in the range from 0 to 5.
 
+[f33]: figures/TH1F_Example.png "f33"
+<a name="f33"></a>
+
 ![Visualisation of a histogram filled with exponentially distributed,
-random numbers. \label{vis}](figures/TH1F_Example.png)
+random numbers. \label{f33}][f33]
 
 We use yet another new feature of ROOT to fill this histogram with data,
 namely pseudo-random numbers generated with the method `TF1::GetRandom`,
@@ -310,7 +318,7 @@ function. The histogram is displayed using the method `TH1F::Draw()`.
 You may think of this example as repeated measurements of the life time
 of a quantum mechanical state, which are entered into the histogram,
 thus giving a visual impression of the probability density distribution.
-The plot is shown in Figure \ref{vis}.
+The plot is shown in Figure [3.3](#f33).
 
 Note that you will not obtain an identical plot when executing the above
 lines, depending on how the random number generator is initialised.
@@ -348,18 +356,24 @@ access to the members of the various classes, and you can even modify
 them, e.g. change colour and size of the axis ticks or labels, the
 function lines, marker types and so on. Try it!
 
-![Interactive ROOT panel for setting function parameters.\label{panel}](figures/ROOTPanel_SetParameters.png)
+[f34]: figures/ROOTPanel_SetParameters.png "f34"
+<a name="f34"></a>
+
+![Interactive ROOT panel for setting function parameters.\label{f34}][f34]
 
 You will probably like the following: in the output produced by the
 example `slits.C`, right-click on the function line and select
 "SetLineAttributes", then left-click on "Set Parameters". This gives
 access to a panel allowing you to interactively change the parameters of
-the function, as shown in Figure \ref{panel}. Change the slit width, or go from one to
+the function, as shown in Figure [3.4](#f34). Change the slit width, or go from one to
 two and then three or more slits, just as you like. When clicking on
 "Apply", the function plot is updated to reflect the actual value of the
 parameters you have set.
 
-![Fit Panel.\label{fit}](figures/ROOTPanel_FitPanel.png)
+[f35]: figures/ROOTPanel_FitPanel.png "f35"
+<a name="f35"></a>
+
+![Fit Panel. \label{f35}][f35]
 
 Another very useful interactive tool is the `FitPanel`, available for the 
 classes `TGraphErrors` and `TH1F`. Predefined fit functions can be selected 
@@ -370,7 +384,7 @@ for functions with parameters are possible.
      
 After setting the initial parameters, a fit of the selected function to the 
 data of a graph or histogram can be performed and the result displayed on the plot. 
-The fit panel is shown in \ref{fit}. The fit panel has a number of control options to
+The fit panel is shown in Figure [3.5](#f35). The fit panel has a number of control options to
 select the fit method, fix or release individual parameters in the fit, to steer 
 the level of output printed on the console, or to extract and display additional 
 information like contour lines showing parameter correlations. As function fitting 

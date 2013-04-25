@@ -49,11 +49,14 @@ can fill and draw a histogram with the following example macro.
  }
 ```
 
-Which gives you the following plot (Figure \ref{firsthist}):
+Which gives you the following plot (Figure [6.1](#f61)):
+
+[f61]: figures/poisson.png "f61"
+<a name="f61"></a>
 
 ![The result of a counting (pseudo) experiment. Only bins corresponding
 to integer values are filled given the discrete nature of the poissonian
-distribution.\label{firsthist}](figures/poisson.png)
+distribution. \label{f61}][f61]
 
 Using histograms is rather simple. The main differences with respect to
 graphs that emerge from the example are:
@@ -143,11 +146,17 @@ will learn how to manage these procedures within ROOT.
  }
 ```
 
-The plots that you will obtain are shown in Figures \ref{macro61} and \ref{macro62}.
+The plots that you will obtain are shown in Figures [6.2](#f62) and [6.3](#f63).
 
-![The sum of two histograms.\label{macro61}](figures/histo_sum.png)
+[f62]: figures/histo_sum.png "f62"
+<a name="f62"></a>
 
-![The ratio of two histograms.\label{macro62}](figures/histo_ratio.png)
+![The sum of two histograms.\label{f62}][f62]
+
+[f63]: figures/histo_ratio.png "f63"
+<a name="f63"></a>
+
+![The ratio of two histograms.\label{f63}][f63]
 
 Some lines now need a bit of clarification:
 
@@ -219,21 +228,27 @@ void macro7(){
 ```
 
 Two kinds of plots are provided within the code, the first one
-containing three-dimensional representations (Figure \ref{macro71}) and the second one
-projections and profiles (Figure \ref{macro72}) of the bi-dimensional histogram.
+containing three-dimensional representations (Figure [6.4](#f64)) and the second one
+projections and profiles (Figure [6.5](#f65)) of the bi-dimensional histogram.
+
+[f64]: figures/th2f.png "f64"
+<a name="f64"></a>
 
 ![Different ways of representing bi-dimensional
-histograms.\label{macro71}](figures/th2f.png)
+histograms.\label{f64}][f64]
+
+[f65]: figures/proj_and_prof.png "f65"
+<a name="f65"></a>
 
 ![The projections and profiles of bi-dimensional
-histograms.\label{macro72}](figures/proj_and_prof.png)
+histograms.\label{f65}][f65]
 
 When a projection is performed along the x (y) direction, for every bin
 along the x (y) axis, all bin contents along the y (x) axis are summed
-up (upper the plots of Figure \ref{macro72}). When a profile is performed along the x (y)
+up (upper the plots of Figure [6.5](#f65)). When a profile is performed along the x (y)
 direction, for every bin along the x (y) axis, the average of all the
 bin contents along the y (x) is calculated together with their RMS and
-displayed as a symbol with error bar (lower two plots of Figure \ref{macro72}).
+displayed as a symbol with error bar (lower two plots of Figure [6.5](#f65)).
 
 Correlations between the variables are quantified by the methods
 `Double_t GetCovariance()` and `Double_t GetCorrelationFactor()`.

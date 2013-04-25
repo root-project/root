@@ -237,14 +237,17 @@ Let's comment it in detail:
 -   Line *63*: save the canvas as image. The format is automatically
     inferred from the file extension (it could have been eps, gif, ...).
 
-Let's give a look to the obtained plot in Figure \ref{firstplot}. Beautiful 
+Let's give a look to the obtained plot in Figure [4.1](#f41). Beautiful 
 outcome for such a small bunch of lines, isn't it ?
+
+[f41]: figures/graf_with_law.png "f41"
+<a name="f41"></a>
 
 ![Your first plot with data points, a fit of an analytical function, a
 legend and some additional information in the form of graphics
 primitives and text. A well formatted plot, clear for the reader is
 crucial to communicate the relevance of your results to the
-reader.\label{firstplot}](figures/graf_with_law.png)
+reader.\label{f41}][f41]
 
 ## Summary of Visual effects
 

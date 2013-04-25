@@ -14,3 +14,5 @@ petabytes of data recorded by the Large Hadron Collider experiments.
 This introductory guide illustrates the main features of ROOT, relevant
 for the typical problems of data analysis: input and plotting of data
 from measurements and fitting of analytical functions.
+
+![ ](figures/logo.png) 
