@@ -47,6 +47,7 @@ LLVMDEP      := $(LLVMLIB) $(LLVMRES)
 ifeq ($(LLVMDEV),)
 LLVMOPTFLAGS := --enable-optimized --disable-assertions
 else
+ROOT_BUILDCLANG := yes
 ifeq (,$(findstring debug,$(ROOTBUILD)))
 LLVMOPTFLAGS := --enable-optimized --enable-debug-symbols
 else
