@@ -757,9 +757,14 @@ void *JIT::getOrEmitGlobalVariable(const GlobalVariable *GV) {
       return (void*)&__dso_handle;
 #endif
     Ptr = sys::DynamicLibrary::SearchForAddressOfSymbol(GV->getName());
+
+    // FIXME: Not a lazy function; don't tell anyone...
+    if (!Ptr && LazyFunctionCreator)
+      Ptr = LazyFunctionCreator(GV->getName());
+
     if (Ptr == 0) {
       report_fatal_error("Could not resolve external global address: "
-                        +GV->getName());
+                         +GV->getName());
     }
     addGlobalMapping(GV, Ptr);
   } else {
