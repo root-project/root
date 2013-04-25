@@ -7,7 +7,7 @@ OPTIONS=-s -S -f markdown --toc --chapters --number-sections \
         --bibliography=bibliography.bib
 OPTIONSHTML=-H css/github.css --mathjax
 OPTIONSEPUB=--mathml
-OPTIONSPDF=--variable=geometry:a4paper -V geometry:margin=1in
+OPTIONSPDF=--variable=geometry:a4paper -V geometry:margin=1.5cm
 
 .PHONY: pdf html tex epub
 
