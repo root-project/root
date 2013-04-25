@@ -24,14 +24,14 @@ these. In subsequent analysis, the statistical nature of the errors must
 be handled properly.
 
 As the last step, measurements are compared to models, and free model
-parameters need to be determined in this process. See ? for an example
-of a function (model) fit to data points. Several standard methods are
+parameters need to be determined in this process. See Figure \ref{exfit} for an 
+example of a function (model) fit to data points. Several standard methods are
 available, and a data analysis tool should provide easy access to more
 than one of them. Means to quantify the level of agreement between
 measurements and model must also be available.
 
 ![Measured data points with error bars and fitted quadratic
-function.](figures/examplefit.png)
+function.\label{exfit}](figures/examplefit.png)
 
 Quite often, the data volume to be analyzed is large - think of
 fine-granular measurements accumulated with the aid of computers. A
