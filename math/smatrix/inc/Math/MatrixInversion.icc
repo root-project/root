@@ -35,10 +35,10 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 
 
 
-   unsigned int i, j, k, s;
-   unsigned int pivrow;
+   int i, j, k, s;
+   int pivrow;
 
-   const unsigned int nrow = MatRepSym<T,idim>::kRows;
+   const int nrow = MatRepSym<T,idim>::kRows;
 
    // Establish the two working-space arrays needed:  x and piv are
    // used as pointers to arrays of doubles and ints respectively, each
