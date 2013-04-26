@@ -1,4 +1,4 @@
-// @(#)root/eve:$Id: box.C 32549 2010-03-11 11:44:29Z matevz $
+// @(#)root/eve:$Id$
 // Author: Alja Mrak-Tadel
 
 // Demonstrates usage of TGLAnnotation class.

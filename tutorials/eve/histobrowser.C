@@ -1,4 +1,4 @@
-// @(#)root/eve:$Id: text_test.C 26717 2008-12-07 22:07:55Z matevz $
+// @(#)root/eve:$Id$
 // Author: Matevz Tadel
 
 // Demonstates how to use EVE as a histogram browser.

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: QtPrintDialog.C,v 1.4 2008/09/28 02:22:23 fine Exp $
+// @(#)root/qt:$Name:  $:$Id$
 // Author: Valeri Fine   23/03/2006
 #ifndef __CINT__
 #  include <QPrintDialog>

@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: QtMultiFileDialog.C,v 1.6 2008/09/28 02:22:23 fine Exp $
+// @(#)root/qt:$Name:  $:$Id$
 // Author: Valeri Fine   23/03/2006
 #ifndef __CINT__
 #  include <QApplication>

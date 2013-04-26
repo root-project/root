@@ -1,4 +1,4 @@
-// @(#)root/eve:$Id: quad_test.C 25245 2008-08-25 21:44:09Z matevz $
+// @(#)root/eve:$Id$
 // Author: Matevz Tadel
 
 // Demonstates usage pre-scaling for automatic 2D projections.

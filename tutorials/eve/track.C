@@ -1,4 +1,4 @@
-// @(#)root/eve:$Id: text_test.C 26717 2008-12-07 22:07:55Z matevz $
+// @(#)root/eve:$Id$
 // Author: Alja Mrak-Tadel
 
 // Demonstrates usage of TEveTrackPRopagator with different magnetic

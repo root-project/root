@@ -1,4 +1,4 @@
-// @(#)root/eve:$Id: calorimeters.C 26568 2008-12-01 20:55:50Z matevz $
+// @(#)root/eve:$Id$
 // Author: Alja Mrak-Tadel
 
 // Demonstrates usage of EVE calorimetry classes.

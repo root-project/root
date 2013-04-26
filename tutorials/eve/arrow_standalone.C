@@ -1,4 +1,4 @@
-// @(#)root/eve:$Id: triangleset.C 26568 2008-12-01 20:55:50Z matevz $
+// @(#)root/eve:$Id$
 // Author: Matevz Tadel
 
 // How to use EVE without the standard window.

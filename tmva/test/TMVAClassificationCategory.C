@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id: TMVAClassificationCategory.C,v 1.36 2009-04-14 13:08:13 andreas.hoecker Exp $
+// @(#)root/tmva $Id$
 /**********************************************************************************
  * Project   : TMVA - a Root-integrated toolkit for multivariate data analysis    *
  * Package   : TMVA                                                               *
