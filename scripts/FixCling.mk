@@ -16,6 +16,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundDouble32inDefaultTmpltArg"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
+CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForNamespaces"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForTemplates"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
 CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
