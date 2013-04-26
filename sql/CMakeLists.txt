@@ -7,4 +7,6 @@ endif()
 if(odbc)
   add_subdirectory(odbc)
 endif()
-
+if(pgsql)
+  add_subdirectory(pgsql)
+endif()

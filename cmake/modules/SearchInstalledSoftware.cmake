@@ -432,6 +432,20 @@ if(odbc)
   endif()
 endif()
 
+#---Check for PostgreSQL-------------------------------------------------------------------
+if(pgsql)
+  message(STATUS "Looking for PostgreSQL")
+  find_package(PostgreSQL)
+  if(NOT POSTGRESQL_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "PostgreSQL libraries not found and they are required (pgsql option enabled)")
+    else()
+      message(STATUS "PostgreSQL not found. Switching off pgsql option")
+      set(pgsql OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for Pythia6-------------------------------------------------------------------
 if(pythia6)
   message(STATUS "Looking for Pythia6")
@@ -559,7 +573,7 @@ if(xrootd)
 endif()
 
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs chirp clarens cling dcache gfal glite globus hdfs lzma pch peac pgsql sapdb srp)
+foreach(opt afs chirp clarens cling dcache gfal glite globus hdfs lzma pch peac sapdb srp)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)
