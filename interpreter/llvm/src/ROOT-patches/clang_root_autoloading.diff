@@ -1,8 +1,6 @@
-Index: tools/clang/include/clang/Sema/Sema.h
-===================================================================
---- tools/clang/include/clang/Sema/Sema.h	(revision 47284)
-+++ tools/clang/include/clang/Sema/Sema.h	(working copy)
-@@ -466,6 +466,41 @@
+--- ./home/axel/build/cling/src/./tools/clang/include/clang/Sema/Sema.h	2013-04-24 22:04:01.872840892 +0200
++++ ./tools/clang/include/clang/Sema/Sema.h	2013-04-24 19:40:12.305514003 +0200
+@@ -476,6 +476,41 @@
      }
    };
  
@@ -41,14 +39,12 @@ Index: tools/clang/include/clang/Sema/Sema.h
 +    }
 +  };
 +
-   /// WeakUndeclaredIdentifiers - Identifiers contained in
-   /// \#pragma weak before declared. rare. may alias another
-   /// identifier, declared or undeclared
-Index: tools/clang/include/clang/Lex/Preprocessor.h
-===================================================================
---- tools/clang/include/clang/Lex/Preprocessor.h	(revision 47284)
-+++ tools/clang/include/clang/Lex/Preprocessor.h	(working copy)
-@@ -623,6 +623,72 @@
+   /// \brief RAII object to handle the state changes required to synthesize
+   /// a function body.
+   class SynthesizedFunctionScope {
+--- ./home/axel/build/cling/src/./tools/clang/include/clang/Lex/Preprocessor.h	2013-04-24 22:05:47.691986554 +0200
++++ ./tools/clang/include/clang/Lex/Preprocessor.h	2013-04-24 19:40:12.677511064 +0200
+@@ -672,6 +672,73 @@
    void EnterTokenStream(const Token *Toks, unsigned NumToks,
                          bool DisableMacroExpansion, bool OwnsTokens);
  
@@ -92,6 +88,7 @@ Index: tools/clang/include/clang/Lex/Preprocessor.h
 +      if (SavedCurLexerKind == (enum CurLexerKind)~0U)
 +        return;
 +
++      //ExitCachingLexMode();
 +      PP.CachedLexPos = SavedCachedLexPos;
 +      PP.CachedTokens = SavedCachedTokens;
 +      PP.IncludeMacroStack = SavedStack;
@@ -121,11 +118,37 @@ Index: tools/clang/include/clang/Lex/Preprocessor.h
    /// RemoveTopOfLexerStack - Pop the current lexer/macro exp off the top of the
    /// lexer stack.  This should only be used in situations where the current
    /// state of the top-of-stack lexer is known.
-Index: tools/clang/include/clang/Parse/Parser.h
-===================================================================
---- tools/clang/include/clang/Parse/Parser.h       (revision 47327)
-+++ tools/clang/include/clang/Parse/Parser.h       (working copy)
-@@ -236,6 +236,34 @@
+--- ./home/axel/build/cling/src/./tools/clang/include/clang/Parse/Parser.h	2013-04-24 22:05:47.695986522 +0200
++++ ./tools/clang/include/clang/Parse/Parser.h	2013-04-24 19:40:12.825509895 +0200
+@@ -45,6 +45,7 @@
+   class InMessageExpressionRAIIObject;
+   class PoisonSEHIdentifiersRAIIObject;
+   class VersionTuple;
++  class DestroyTemplateIdAnnotationsRAIIObj;
+ 
+ /// Parser - This implements a parser for the C family of languages.  After
+ /// parsing units of the grammar, productions are invoked to handle whatever has
+@@ -58,6 +59,7 @@
+   friend class ObjCDeclContextSwitch;
+   friend class ParenBraceBracketBalancer;
+   friend class BalancedDelimiterTracker;
++  friend class DestroyTemplateIdAnnotationsRAIIObj;
+ 
+   Preprocessor &PP;
+ 
+@@ -193,8 +195,10 @@
+ 
+   bool SkipFunctionBodies;
+ 
++  bool IsTemporary;
+ public:
+-  Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies);
++  Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies, 
++         bool isTemp = false);
+   ~Parser();
+ 
+   const LangOptions &getLangOpts() const { return PP.getLangOpts(); }
+@@ -204,6 +208,34 @@
    AttributeFactory &getAttrFactory() { return AttrFactory; }
  
    const Token &getCurToken() const { return Tok; }
@@ -160,3 +183,12 @@ Index: tools/clang/include/clang/Parse/Parser.h
    Scope *getCurScope() const { return Actions.getCurScope(); }
  
    Decl  *getObjCDeclContext() const { return Actions.getObjCDeclContext(); }
+@@ -701,7 +733,7 @@
+     return Diag(Tok, DiagID);
+   }
+ 
+-private:
++protected:
+   void SuggestParentheses(SourceLocation Loc, unsigned DK,
+                           SourceRange ParenRange);
+   void CheckNestedObjCContexts(SourceLocation AtLoc);

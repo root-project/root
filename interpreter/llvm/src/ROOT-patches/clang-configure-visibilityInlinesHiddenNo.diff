@@ -1,8 +1,6 @@
-Index: configure
-===================================================================
---- configure	(revision 47359)
-+++ configure	(working copy)
-@@ -21042,7 +21042,7 @@
+--- ./configure	2013-04-11 09:34:49.645209876 +0200
++++ ./configure	2013-04-24 19:40:23.289427215 +0200
+@@ -21765,7 +21765,7 @@
    ac_status=$?
    echo "$as_me:$LINENO: \$? = $ac_status" >&5
    (exit $ac_status); }; }; then

@@ -1,8 +1,6 @@
-Index: tools/clang/lib/AST/VTableBuilder.cpp
-===================================================================
---- tools/clang/lib/AST/VTableBuilder.cpp	(revision 46280)
-+++ tools/clang/lib/AST/VTableBuilder.cpp	(working copy)
-@@ -1160,7 +1160,8 @@
+--- /home/axel/build/llvm-orig/src/./tools/clang/lib/AST/VTableBuilder.cpp	2013-04-11 09:34:54.273161777 +0200
++++ ./tools/clang/lib/AST/VTableBuilder.cpp	2013-04-24 19:40:14.521496495 +0200
+@@ -1165,7 +1165,8 @@
        continue;
      }
  
@@ -12,7 +10,7 @@ Index: tools/clang/lib/AST/VTableBuilder.cpp
        AddThunk(MD, Thunk);
    }
  }
-@@ -1353,7 +1354,8 @@
+@@ -1362,7 +1363,8 @@
    
    // If the overrider is the first base in the primary base chain, we know
    // that the overrider will be used.
@@ -22,7 +20,7 @@ Index: tools/clang/lib/AST/VTableBuilder.cpp
      return true;
    
    VTableBuilder::PrimaryBasesSetVectorTy PrimaryBases;
-@@ -1417,7 +1419,8 @@
+@@ -1426,7 +1428,8 @@
        const CXXMethodDecl *OverriddenMD = *I;
        
        // We found our overridden method.
@@ -32,7 +30,7 @@ Index: tools/clang/lib/AST/VTableBuilder.cpp
          return OverriddenMD;
      }
    }
-@@ -1512,7 +1515,8 @@
+@@ -1521,7 +1524,8 @@
                                    Overrider);
  
            if (ThisAdjustment.VCallOffsetOffset &&

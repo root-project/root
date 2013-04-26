@@ -14,7 +14,7 @@
 #include "clang/AST/ASTConsumer.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Parse/ParseDiagnostic.h"
-#include "clang/Parse/RAIIObjectsForParser.h"
+#include "RAIIObjectsForParser.h"
 using namespace clang;
 
 //===----------------------------------------------------------------------===//

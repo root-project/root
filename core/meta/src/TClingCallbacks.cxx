@@ -121,7 +121,7 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
 
         bool oldSuppressDiags = SemaR.getDiagnostics().getSuppressAllDiagnostics();
         SemaR.getDiagnostics().setSuppressAllDiagnostics();
-      
+
         // We can't PushDeclContext, because we go up and the routine that pops 
         // the DeclContext assumes that we drill down always.
         // We have to be on the global context. At that point we are in a 
@@ -130,7 +130,7 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
                                                SemaR.TUScope);
 
         if (TCling__AutoLoadCallback(Name.getAsString().c_str())) {
-           pushedDCAndS.pop();
+            pushedDCAndS.pop();
            cleanupRAII.pop();
            lookupSuccess = SemaR.LookupName(R, S);
         }

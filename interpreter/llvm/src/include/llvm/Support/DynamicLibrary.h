@@ -96,9 +96,6 @@ namespace sys {
     /// libraries.
     /// @brief Add searchable symbol/value pair.
     static void AddSymbol(StringRef symbolName, void *symbolValue);
-
-    bool operator<(const DynamicLibrary& Other) const { return Data < Other.Data; }
-    bool operator==(const DynamicLibrary& Other) const { return Data == Other.Data; }
   };
 
 } // End sys namespace

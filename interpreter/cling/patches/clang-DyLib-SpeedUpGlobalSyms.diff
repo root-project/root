@@ -1,7 +1,5 @@
-Index: lib/Support/DynamicLibrary.cpp
-===================================================================
---- lib/Support/DynamicLibrary.cpp	(revision 47891)
-+++ lib/Support/DynamicLibrary.cpp	(revision 47892)
+--- /home/axel/build/cling/src/./lib/Support/DynamicLibrary.cpp	2013-04-24 21:58:01.339752276 +0200
++++ ./lib/Support/DynamicLibrary.cpp	2013-04-24 19:40:23.073428922 +0200
 @@ -137,6 +137,10 @@
    }
  

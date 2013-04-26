@@ -13,6 +13,7 @@
 
 CLANG_LEVEL := ../..
 LIBRARYNAME := clangParse
-
+# To find moved RAIIObjectsForParser.h
+CPP.Flags += -I$(PROJ_SRC_DIR)/$(CLANG_LEVEL)/include/clang/Parse
 include $(CLANG_LEVEL)/Makefile
 

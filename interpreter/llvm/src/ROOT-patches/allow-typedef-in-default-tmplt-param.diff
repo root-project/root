@@ -1,0 +1,214 @@
+--- ./tools/clang/include/clang/AST/ASTContext.h	2013-04-11 09:35:12.324974155 +0200
++++ ./tools/clang/include/clang/AST/ASTContext.h	2013-04-24 19:40:12.605511633 +0200
+@@ -1028,7 +1028,8 @@
+                              QualType equivalentType);
+ 
+   QualType getSubstTemplateTypeParmType(const TemplateTypeParmType *Replaced,
+-                                        QualType Replacement) const;
++                                        QualType Replacement,
++                                        bool AllowNonCanonical = false) const;
+   QualType getSubstTemplateTypeParmPackType(
+                                           const TemplateTypeParmType *Replaced,
+                                             const TemplateArgument &ArgPack);
+--- ./tools/clang/lib/Sema/SemaTemplateInstantiate.cpp	2013-04-11 09:34:54.065163939 +0200
++++ ./tools/clang/lib/Sema/SemaTemplateInstantiate.cpp	2013-04-24 19:40:14.329498012 +0200
+@@ -1421,7 +1421,8 @@
+ 
+     // TODO: only do this uniquing once, at the start of instantiation.
+     QualType Result
+-      = getSema().Context.getSubstTemplateTypeParmType(T, Replacement);
++      = getSema().Context.getSubstTemplateTypeParmType(T, Replacement,
++                          HackForDefaultTemplateArg::AllowNonCanonicalSubst());
+     SubstTemplateTypeParmTypeLoc NewTL
+       = TLB.push<SubstTemplateTypeParmTypeLoc>(Result);
+     NewTL.setNameLoc(TL.getNameLoc());
+@@ -1467,7 +1468,8 @@
+   QualType Result = ArgPack.pack_begin()[Index].getAsType();
+   Result = getSema().Context.getSubstTemplateTypeParmType(
+                                       TL.getTypePtr()->getReplacedParameter(),
+-                                                          Result);
++                                                          Result,
++                           HackForDefaultTemplateArg::AllowNonCanonicalSubst());
+   SubstTemplateTypeParmTypeLoc NewTL
+     = TLB.push<SubstTemplateTypeParmTypeLoc>(Result);
+   NewTL.setNameLoc(TL.getNameLoc());
+--- ./tools/clang/lib/Sema/TreeTransform.h	2013-04-11 09:34:54.069163897 +0200
++++ ./tools/clang/lib/Sema/TreeTransform.h	2013-04-24 19:40:14.301498233 +0200
+@@ -36,6 +36,8 @@
+ #include "llvm/Support/ErrorHandling.h"
+ #include <algorithm>
+ 
++#include "HackForDefaultTemplateArg.h"
++
+ namespace clang {
+ using namespace sema;
+ 
+@@ -4587,7 +4589,7 @@
+   Replacement = SemaRef.Context.getCanonicalType(Replacement);
+   QualType Result
+     = SemaRef.Context.getSubstTemplateTypeParmType(T->getReplacedParameter(),
+-                                                   Replacement);
++                                                   Replacement,false);
+ 
+   // Propagate type-source information.
+   SubstTemplateTypeParmTypeLoc NewTL
+--- ./tools/clang/lib/AST/ASTContext.cpp	2013-04-11 09:34:54.289161610 +0200
++++ ./tools/clang/lib/AST/ASTContext.cpp	2013-04-24 19:40:14.533496400 +0200
+@@ -2862,9 +2862,13 @@
+ /// \brief Retrieve a substitution-result type.
+ QualType
+ ASTContext::getSubstTemplateTypeParmType(const TemplateTypeParmType *Parm,
+-                                         QualType Replacement) const {
+-  assert(Replacement.isCanonical()
+-         && "replacement types must always be canonical");
++                                         QualType Replacement,
++                                         bool AllowNonCanonical /* = false */
++                                        ) const {
++  if (!AllowNonCanonical) {
++     assert(Replacement.isCanonical()
++            && "replacement types must always be canonical");
++  }
+ 
+   llvm::FoldingSetNodeID ID;
+   SubstTemplateTypeParmType::Profile(ID, Parm, Replacement);
+--- ./tools/clang/lib/Sema/SemaLookup.cpp	2013-04-11 09:34:54.101163564 +0200
++++ ./tools/clang/lib/Sema/SemaLookup.cpp	2013-04-24 19:40:14.317498106 +0200
+@@ -1250,8 +1250,14 @@
+       }
+   } else {
+     // Perform C++ unqualified name lookup.
+-    if (CppLookupName(R, S))
++    if (CppLookupName(R, S)) {
++      if (R.isSingleResult())
++        if (const TagDecl *TD = dyn_cast<TagDecl>(R.getFoundDecl())) {
++          if (!TD->getDefinition() && ExternalSource)
++            ExternalSource->LookupUnqualified(R, S);
++        }
+       return true;
++    }
+   }
+ 
+   // If we didn't find a use of this identifier, and if the identifier
+--- ./tools/clang/lib/Sema/SemaTemplateInstantiate.cpp	2013-04-11 09:34:54.065163939 +0200
++++ ./tools/clang/lib/Sema/SemaTemplateInstantiate.cpp	2013-04-24 19:40:14.329498012 +0200
+@@ -1421,7 +1421,8 @@
+ 
+     // TODO: only do this uniquing once, at the start of instantiation.
+     QualType Result
+-      = getSema().Context.getSubstTemplateTypeParmType(T, Replacement);
++      = getSema().Context.getSubstTemplateTypeParmType(T, Replacement,
++                          HackForDefaultTemplateArg::AllowNonCanonicalSubst());
+     SubstTemplateTypeParmTypeLoc NewTL
+       = TLB.push<SubstTemplateTypeParmTypeLoc>(Result);
+     NewTL.setNameLoc(TL.getNameLoc());
+@@ -1467,7 +1468,8 @@
+   QualType Result = ArgPack.pack_begin()[Index].getAsType();
+   Result = getSema().Context.getSubstTemplateTypeParmType(
+                                       TL.getTypePtr()->getReplacedParameter(),
+-                                                          Result);
++                                                          Result,
++                           HackForDefaultTemplateArg::AllowNonCanonicalSubst());
+   SubstTemplateTypeParmTypeLoc NewTL
+     = TLB.push<SubstTemplateTypeParmTypeLoc>(Result);
+   NewTL.setNameLoc(TL.getNameLoc());
+--- ./tools/clang/lib/Sema/TreeTransform.h	2013-04-11 09:34:54.069163897 +0200
++++ ./tools/clang/lib/Sema/TreeTransform.h	2013-04-24 19:40:14.301498233 +0200
+@@ -36,6 +36,8 @@
+ #include "llvm/Support/ErrorHandling.h"
+ #include <algorithm>
+ 
++#include "HackForDefaultTemplateArg.h"
++
+ namespace clang {
+ using namespace sema;
+ 
+@@ -4587,7 +4589,7 @@
+   Replacement = SemaRef.Context.getCanonicalType(Replacement);
+   QualType Result
+     = SemaRef.Context.getSubstTemplateTypeParmType(T->getReplacedParameter(),
+-                                                   Replacement);
++                                                   Replacement,false);
+ 
+   // Propagate type-source information.
+   SubstTemplateTypeParmTypeLoc NewTL
+--- /home/axel/build/cling/src/./tools/clang/lib/Sema/SemaTemplate.cpp	2013-04-24 22:05:10.580286169 +0200
++++ ./tools/clang/lib/Sema/SemaTemplate.cpp	2013-04-24 19:40:14.313498138 +0200
+@@ -32,6 +32,31 @@
+ using namespace clang;
+ using namespace sema;
+ 
++bool HackForDefaultTemplateArg::AllowNonCanonicalSubstEnabled = true;
++
++// Default constructor, record the current value
++// of HackForDefaultTemplateArg::AllowNonCanonicalSubst
++// and set it to true.
++HackForDefaultTemplateArg::HackForDefaultTemplateArg() :
++  OldValue(HackForDefaultTemplateArg::AllowNonCanonicalSubstEnabled)
++{
++  AllowNonCanonicalSubstEnabled = true;
++}
++
++// Destructor, restore the previous value of
++// HackForDefaultTemplateArg::AllowNonCanonicalSubst.
++HackForDefaultTemplateArg::~HackForDefaultTemplateArg()
++{
++  AllowNonCanonicalSubstEnabled = OldValue;
++}
++
++// Return the current value of
++// HackForDefaultTemplateArg::AllowNonCanonicalSubst.
++bool HackForDefaultTemplateArg::AllowNonCanonicalSubst()
++{
++  return AllowNonCanonicalSubstEnabled;
++}
++
+ // Exported for use by Parser.
+ SourceRange
+ clang::getTemplateParamsRange(TemplateParameterList const * const *Ps,
+@@ -2514,8 +2539,13 @@
+     return true;
+ 
+   // Add the converted template type argument.
+-  QualType ArgType = Context.getCanonicalType(Arg.getAsType());
+-  
++  QualType ArgType;
++  if (!HackForDefaultTemplateArg::AllowNonCanonicalSubst()) {
++    ArgType = Context.getCanonicalType(Arg.getAsType());
++  } else {
++    ArgType = Arg.getAsType().getCanonicalType();
++  }
++
+   // Objective-C ARC:
+   //   If an explicitly-specified template argument type is a lifetime type
+   //   with no lifetime qualifier, the __strong lifetime qualifier is inferred.
+@@ -3538,8 +3568,15 @@
+ 
+   if (Arg->isVariablyModifiedType()) {
+     return Diag(SR.getBegin(), diag::err_variably_modified_template_arg) << Arg;
+-  } else if (Context.hasSameUnqualifiedType(Arg, Context.OverloadTy)) {
+-    return Diag(SR.getBegin(), diag::err_template_arg_overload_type) << SR;
++  } else if (!HackForDefaultTemplateArg::AllowNonCanonicalSubst()) {
++    if (Context.hasSameUnqualifiedType(Arg, Context.OverloadTy)) {
++      return Diag(SR.getBegin(), diag::err_template_arg_overload_type) << SR;
++    }
++  } else {
++    if (Context.hasSameUnqualifiedType(Arg.getCanonicalType(),
++                                       Context.OverloadTy)) {
++      return Diag(SR.getBegin(), diag::err_template_arg_overload_type) << SR;
++    }
+   }
+ 
+   // C++03 [temp.arg.type]p2:
+@@ -3556,7 +3593,11 @@
+                                SR.getBegin()) != DiagnosticsEngine::Ignored :
+       Arg->hasUnnamedOrLocalType()) {
+     UnnamedLocalNoLinkageFinder Finder(*this, SR);
+-    (void)Finder.Visit(Context.getCanonicalType(Arg));
++    if (!HackForDefaultTemplateArg::AllowNonCanonicalSubst()) {
++      (void)Finder.Visit(Context.getCanonicalType(Arg));
++    } else {
++      (void)Finder.Visit(Arg.getCanonicalType());
++    }
+   }
+ 
+   return false;

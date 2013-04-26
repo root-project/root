@@ -13,7 +13,7 @@
 
 #include "clang/Parse/Parser.h"
 #include "ParsePragma.h"
-#include "clang/Parse/RAIIObjectsForParser.h"
+#include "RAIIObjectsForParser.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/Parse/ParseDiagnostic.h"
@@ -552,7 +552,7 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
     // Late template parsing can begin.
     if (getLangOpts().DelayedTemplateParsing)
       Actions.SetLateTemplateParser(LateTemplateParserCallback, this);
-     Actions.ActOnEndOfTranslationUnit();
+    Actions.ActOnEndOfTranslationUnit();
 
     return true;
   }
