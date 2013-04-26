@@ -1,6 +1,6 @@
 {
 // Fill out the code of the actual test
-#ifndef ClingWorkAroundMissingAutoLoading
+#ifndef ClingWorkAroundMissingAutoLoadingForTemplates
    A<unsigned int> *a; 
 #endif
 }

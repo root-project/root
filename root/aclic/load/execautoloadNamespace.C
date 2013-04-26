@@ -1,5 +1,5 @@
 {
-#ifndef ClingWorkAroundMissingAutoLoading
+#ifndef ClingWorkAroundMissingAutoLoadingForNamespaces
 MyNamespace::MyClass a;
 #else
 TClass::GetClass("MyNamespace::MyClass");
