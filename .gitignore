@@ -59,6 +59,12 @@
 /core/utils/src/RStl_tmp.cxx
 /core/utils/src/RConversionRuleParser_tmp.cxx
 
+# /docbook/primer/
+/docbook/primer/primer.tex
+/docbook/primer/primer.html
+/docbook/primer/primer.pdf
+/docbook/primer/primer.epub
+
 # /docbook/users-guide/
 /docbook/users-guide/ROOTUsersGuide.html
 /docbook/users-guide/ROOTUsersGuide.pdf
