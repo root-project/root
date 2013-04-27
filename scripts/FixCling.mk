@@ -17,7 +17,6 @@ CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
 CALLROOTEXE += -e "\#define ClingWorkAroundDouble32inDefaultTmpltArg"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForNamespaces"
-CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForTemplates"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
 CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndVirtual"
@@ -66,7 +65,6 @@ ClingWorkAroundMissingUnloading = yes
 ClingWorkAroundDouble32inDefaultTmpltArg = yes
 ClingWorkAroundCallfuncReturnInt = yes         # See http://savannah.cern.ch/bugs/?100652 
 #ClingWorkAroundCallfuncAndConversion = yes     # See https://savannah.cern.ch/bugs/index.php?99517
-ClingWorkAroundMissingAutoLoadingForTemplates = yes
 ClingWorkAroundMissingAutoLoadingForNamespaces = yes # See: https://sft.its.cern.ch/jira/browse/ROOT-5068
 #ClingWorkAroundMissingAutoLoading = yes        # See *also* the problem namespace and templates:
                                                #     https://savannah.cern.ch/bugs/index.php?99329
@@ -102,9 +100,6 @@ ClingWorkAroundSavePrimitive = yes             # stressGraphics use of SavePrimi
 endif
 
 ifneq ($(ClingWorkAroundMissingAutoLoading),)
-CALLROOTEXE += -e 'gSystem->Load("libTreePlayer"); gSystem->Load("libPhysics");'
-endif
-ifneq ($(ClingWorkAroundMissingAutoLoadingForTemplates),)
 CALLROOTEXE += -e 'gSystem->Load("libTreePlayer"); gSystem->Load("libPhysics");'
 endif
 ifneq ($(ClingWorkAroundMissingAutoLoadingForNamespaces),)
