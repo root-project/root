@@ -69,7 +69,7 @@ TEST_TARGETS := $(if $(TEST_TARGETS_DISABLED),\
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
-ALL_LIBRARIES += AutoDict_* *_ACLiC_* *.success *.d *.o *.obj *.so *.pcm *.def *.exp *.dll *.lib dummy.C \
+ALL_LIBRARIES += AutoDict_* *_ACLiC_* *.success *.summary *.d *.o *.obj *.so *.pcm *.def *.exp *.dll *.lib dummy.C \
 	*.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log *.elog *.celog *.eclog \
 	*_C.rootmap *_cc.rootmap *_cpp.rootmap *_cxx.rootmap *_h.rootmap
 
@@ -250,9 +250,18 @@ $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
 	@(cd $*; $(TESTTIMEPRE) $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST) ; \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
-         len=`echo Tests in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Tests in %s %*.*s ' $(CALLDIR)/$* $$end $$end $(DOTS); \
+        if [ "x$SUMMARY" != "x" ] ; then \
+           if [ `ls make.*.summary 2>/dev/null | wc -l` -gt 0 ] ; then \
+              cat $(SUMMARY).*.summary > $(SUMMARY).summary; \
+           else \
+              echo "--- FAILING TEST: make -C $* test" > $(SUMMARY).summary; \
+              echo "There is at least one failing test which does not create a summary file in the directory $*." >> $(SUMMARY).summary; \
+           fi; \
+           cat $(SUMMARY).summary > ../$(SUMMARY).$*.summary; \
+        fi; \
+        len=`echo Tests in $(CALLDIR)/$* | wc -c `;end=`expr 68 - $$len`;printf 'Tests in %s %*.*s ' $(CALLDIR)/$* $$end $$end $(DOTS); \
 	      printf 'FAIL\n' ; \
-         false ; \
+        false ; \
      $(TESTTIMEACTION) \
      fi ) 
 
@@ -800,6 +809,11 @@ define WarnFailTest
 	$(CMDECHO)echo Known failures: $@ skipped tests in ./$(CURRENTDIR)
 endef
 
+ifneq ($(SUMMARY),)
+SUMMARYDIFF= > $(SUMMARY).$@.diff.log || handleError.sh --result=$$? --log=$(SUMMARY).$*.diff.log --test=$@
+SUMMARYDIFF_STAR= > $(SUMMARY).$*.diff.log || handleError.sh --result=$$? --log=$(SUMMARY).$*.diff.log --test=$*  
+endif
+
 define TestDiffCintSpecific
 	$(CMDECHO) if [ -f $@.ref$(ROOTBITS)-$(CINT_VERSION) ]; then \
 	   diff -u -b $@.ref$(ROOTBITS)-$(CINT_VERSION) $< ; \
@@ -809,8 +823,9 @@ define TestDiffCintSpecific
 	   diff -u -b $@.ref$(ROOTBITS) $< ; \
 	else \
 	   diff -u -b $@.ref $< ; \
-	fi
+	fi $(SUMMARYDIFF)
 endef
+
 define TestDiffCintSpecificW
 	$(CMDECHO) if [ -f $@.ref$(ROOTBITS)-$(CINT_VERSION) ]; then \
 	   diff -u -b -w $@.ref$(ROOTBITS)-$(CINT_VERSION) $< ; \
@@ -820,7 +835,7 @@ define TestDiffCintSpecificW
 	   diff -u -b -w $@.ref$(ROOTBITS) $< ; \
 	else \
 	   diff -u -b -w $@.ref $< ; \
-	fi
+	fi $(SUMMARYDIFF)
 endef
 
 define TestDiff
@@ -828,7 +843,7 @@ define TestDiff
 	   diff -u -b $@.ref$(ROOTBITS) $< ; \
 	else \
 	   diff -u -b $@.ref $< ; \
-	fi
+	fi $(SUMMARYDIFF)
 endef
 
 define TestDiffW
@@ -836,7 +851,7 @@ define TestDiffW
 	   diff -u -b -w $@.ref$(ROOTBITS) $< ; \
 	else \
 	   diff -u -b -w $@.ref $< ; \
-	fi
+	fi $(SUMMARYDIFF)
 endef
 
 define SuccessTestDiff
@@ -844,7 +859,7 @@ define SuccessTestDiff
 	   diff -u -b $(EXTRA_DIFFOPTS) $(subst .success,.ref$(ROOTBITS),$@) $< ; \
 	else \
 	   diff -u -b $(EXTRA_DIFFOPTS) $(subst .success,.ref,$@) $< ; \
-	fi
+	fi $(SUMMARYDIFF_STAR)
 endef
 
 

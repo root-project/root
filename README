@@ -199,7 +199,53 @@ with the respective extension ref32 and ref64.  For example the test
 TExMap in roottest/root/collection 2 reference files: 
    TExMap.ref64 and TExMap.ref32.
 
+==============================================================================
+Summary files:
 
+Summary will contains a version of the error output that is guaranteed to be linear (but the order is not guaranteed) even when using parallel make.
 
+To enable the creation of summary files pass
+   SUMMARY=prefix
 
+to make.  The result will be set of file in each directory summarizing
+the failure in the directory and any subdirectory.  The summary files
+name will follow the patterns:
 
+   prefix.subdirectory.summary
+or for individual tests:
+
+   prefix.testname.summary
+
+or (if the test name can not be determined)
+
+   prefix.number.summary
+
+For each individual test failure there will be a correponding summary
+file that will contains how to reproduce the failure and what the
+failure output was:
+
+--- FAILING TEST: make -C ./cint/array/test execFail.C
+
+Processing execFail.C...
+This test in failing
+'root.exe -b -l -q execFail.C' exited with error code: 1
+
+The subdirectory.summary files will contains the aggregation of all
+the summary files for that subdirectory and all its subdirectories.
+
+NOTE: to collect all the summary files output for a complete
+run of roottest, you will need to do something like:
+
+  if [ `ls make.*.summary 2>/dev/null | wc -l` -gt 0 ] ; then \
+     cat $(SUMMARY).*.summary > $(SUMMARY).summary; \
+  fi
+
+in the roottest top level directory.
+
+At this point of time roughly 20% of the tests in roottest will not
+produce a summary file upon failure.  If in a subdirectory none of the
+failing test produce a summary file, the subdirectory summary file
+will contain:
+
+  --- FAILING TEST: make -C subdirectory_path test
+  There is at least one failing test which does not create a summary file in the directory subdirectory.

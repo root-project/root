@@ -29,6 +29,20 @@ if test $# -gt 0 ; then
 fi
 
 if [ "x$logfile" != "x" ] ; then
+  if [ "x$SUMMARY" != "x" ] ; then 
+     if [ "x$testname" != "x" ] ; then
+        echo "--- FAILING TEST: make -C $CALLDIR/test $testname" > $SUMMARY.$testname.summary
+        cat $logfile >> $SUMMARY.$testname.summary
+        if [ `grep -c "exited with error code: $result" $logfile` -eq 0 ] ; then 
+           echo "'root.exe -b -l -q $testname' exited with error code: $result" >> $SUMMARY.$testname.summary
+        fi
+     else 
+        pid=$$
+        # --- FAILING TEST: make -C dir/to/test $testname
+        echo "--- FAILING TEST: make -C $CALLDIR/test test" > $SUMMARY.$pid.summary
+        cat $logfile >> $SUMMARY.$pid.summary
+     fi
+  fi
   cat $logfile
   if [ "x$testname" != "x" ] ; then
      echo "'root.exe -b -l -q $testname' exited with error code: $result" >> $logfile
