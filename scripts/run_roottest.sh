@@ -71,11 +71,13 @@ ROOTMARKS=n/a
 FITROOTMARKS=n/a
 
 SHOW_TOP=yes
-UPLOAD_HOST=fnalu.fnal.gov
+UPLOAD_HOST=flxi01.fnal.gov
 UPLOAD_LOCATION=/afs/.fnal.gov/files/expwww/root/html/roottest/
-UPLOAD_SYNC="ssh -x flxi06.fnal.gov bin/flush_webarea"
+UPLOAD_SYNC="ssh -x flxi01.fnal.gov bin/flush_webarea"
 SVN_HOST=http://root.cern.ch
 SVN_BRANCH=trunk
+GIT_HOST=http://root.cern.ch
+GIT_BRANCH=master
 unset ROOTSYS
 
 # The config is expected to set ROOTLOC,
@@ -83,6 +85,10 @@ unset ROOTSYS
 # above (MAKE, etc.)
 # and the method to acquire the `load`
 . $config_filename
+
+if [ "$SVN_BRANCH" != "trunk" ] ; then 
+   GIT_BRANCH=`basename $SVN_BRANCH`
+fi
 
 if [ -z $ROOTSYS ] ; then 
   export ROOTSYS=${ROOTLOC}
@@ -135,10 +141,11 @@ EOF
 
 upload_log() {    
     target_name=$2$1.$host$configname
-    scp -q $1 $UPLOAD_HOST:$UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1
+    echo " scp -o ConnectTimeout=30 -v $UPLOAD_HOST:$UPLOAD_LOCATION/root-today/$target_name " > scp.$target_name.log 2>&1
+    scp -o ConnectTimeout=30 -v $1 $UPLOAD_HOST:$UPLOAD_LOCATION/root-today/$target_name >> scp.$target_name.log 2>&1
     scp_result=$?
     if test $scp_result != 0; then 
-        cat scp.log 
+        cat scp.$target_name.log 
     fi
 }
 
@@ -149,14 +156,25 @@ upload_datafile() {
     fi
     if test -e $1 ; then
        target_name=$host$configname.`basename $1`
-       scp -q $1 $UPLOAD_HOST:$UPLOAD_LOCATION/root-today/$target_name > scp.log 2>&1 
+       scp $1 $UPLOAD_HOST:$UPLOAD_LOCATION/root-today/$target_name > scp.data.log 2>&1 
        scp_result=$?
        if test $scp_result != 0; then 
-          cat scp.log
+          cat scp.data.log
        else
           if test "x$untar" = "xyes" ; then 
              untar_name=$host$configname.data
-             ssh -q $UPLOAD_HOST "cd $UPLOAD_LOCATION/root-today; mkdir -p $untar_name; cd $untar_name ; tar xfz ../$target_name" > untar.log 2>&1  
+             echo "pass 1: " > untar.log
+             ssh -v $UPLOAD_HOST "cd $UPLOAD_LOCATION/root-today; " >> untar.log 2>&1
+             echo "pass 2: " >> untar.log
+             ssh -v $UPLOAD_HOST "cd $UPLOAD_LOCATION/root-today;  mkdir -p $untar_name; " >> untar.log 2>&1
+             echo "pass 3: " >> untar.log
+             ssh -v $UPLOAD_HOST "cd $UPLOAD_LOCATION/root-today; mkdir -p $untar_name; cd $untar_name " >> untar.log 2>&1
+             echo "pass 4: " >> untar.log
+             ssh -v $UPLOAD_HOST "cd $UPLOAD_LOCATION/root-today; mkdir -p $untar_name; cd $untar_name ; tar xfz ../$target_name" >> untar.log 2>&1
+             untar_result=$?
+             if test $untar_result != 0; then 
+                cat untar.log
+             fi
           fi
        fi
     fi
@@ -225,20 +243,39 @@ mainstatus=$na
 teststatus=$na
 rootteststatus=$na
 
-mkdir -p $ROOTSYS
-cd $ROOTSYS/..
-locname=`basename $ROOTSYS`
-svn co $SVN_HOST/svn/root/$SVN_BRANCH $locname > $locname/cvsupdate.log  2>&1
-result=$?
+if [ -e $ROOTSYS/.git ] ; then
+  cd $ROOTSYS
+  git branch > cvsupdate.log  2>&1
+  git pull >> cvsupdate.log  2>&1
+  result=$?
+else
+  dname=`dirname $ROOTSYS`
+  cd $dname
+  rm -rf $ROOTSYS > cvsupdate.log
+  git clone $GIT_HOST/git/root.git $ROOTSYS >> cvsupdate.log 2>&1
+  result=$?
+  if test $result != 0; then
+    cvsstatus=$failure
+    error_handling $result "Unable to clone the source git repository!"
+  fi
+  mv cvsupdate.log $ROOTSYS
+  cd $ROOTSYS
+  git checkout $GIT_BRANCH >> cvsupdate.log 2>&1
+fi   
+#mkdir -p $ROOTSYS
+#cd $ROOTSYS/..
+#locname=`basename $ROOTSYS`
+#svn co $SVN_HOST/svn/root/$SVN_BRANCH $locname > $locname/cvsupdate.log  2>&1
+#result=$?
+
 if test $result != 0; then 
     cvsstatus=$failure
 else
     cvsstatus=$success
 fi
-cd $locname
-upload_log cvsupdate.log
 
 cd $ROOTSYS
+upload_log cvsupdate.log
 
 if test ! -e config.status ; then
     ./configure $CONFIGURE_OPTION > configure.log 2>&1
@@ -300,9 +337,23 @@ echo Going to roottest at: $ROOTTESTLOC
 mkdir -p $ROOTTESTLOC
 cd $ROOTTESTLOC/..
 locname=`basename $ROOTTESTLOC`
-svn co $SVN_HOST/svn/roottest/$SVN_BRANCH $locname > $locname/gmake.log 2>&1
+if [ -e  $locname/.git ] ; then
+  cd $ROOTTESTLOC
+  git branch > gmake.log 2>&1
+  git pull >> gmake.log 2>&1
+else 
+  git clone $GIT_HOST/git/roottest.git $locname > roottest_gmake.log 2>&1
+  result=$?
+  if test $result != 0; then
+     upload_log roottest_gmake.log 
+     error_handling $result "Cloning the roottest repository failed"
+  fi
+  mv roottest_gmake.log $locname/gmake.log
+  cd $ROOTTESTLOC
+  git checkout $GIT_BRANCH >> gmake.log 2>&1
+fi
+# svn co $SVN_HOST/svn/roottest/$SVN_BRANCH $locname > $locname/gmake.log 2>&1
 
-cd $ROOTTESTLOC
 mv gmake.log gmake.keep
 $MAKE clean >> gmake.keep 2>&1 
 mv gmake.keep gmake.log 
