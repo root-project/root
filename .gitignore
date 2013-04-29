@@ -29,6 +29,7 @@ rootmap_*
 *.rootmap
 pt_*.root
 pt_*.gif
+dummy[0-9]*.C
 AutoDict_*.cxx
 *_rflx.cpp
 *_rflxdriver.C
@@ -106,7 +107,7 @@ AutoDict_*.cxx
 # /cint/typedef_global/
 /cint/typedef_global/*dict*
 /cint/typedef_global/*Dict*
-/cint/typedef_global/output
+/cint/typedef_global/output[0-9]
 /cint/typedef_global/*_timestamp
 
 /python/ttree/test.root
@@ -547,6 +548,10 @@ AutoDict_*.cxx
 # /root/math/genvector/
 /root/math/genvector/RotationTraits.h
 /root/math/genvector/CoordinateTraits.h
+/root/math/genvector/coordinates3D.cxx
+/root/math/genvector/coordinates4D.cxx
+/root/math/genvector/rotationApplication.cxx
+/root/math/genvector/testGenVector.cxx
 
 # /root/math/mathcore/
 
