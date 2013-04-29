@@ -250,7 +250,7 @@ $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
 	@(cd $*; $(TESTTIMEPRE) $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST) ; \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
-        if [ "x$SUMMARY" != "x" ] ; then \
+        if [ "x$(SUMMARY)" != "x" ] ; then \
            if [ `ls make.*.summary 2>/dev/null | wc -l` -gt 0 ] ; then \
               cat $(SUMMARY).*.summary > $(SUMMARY).summary; \
            else \
