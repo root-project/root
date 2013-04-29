@@ -141,7 +141,12 @@ void ProofTests::SlaveBegin(TTree * /*tree*/)
       // at this point in the gEnv table
       TNamed *nm = dynamic_cast<TNamed*>(fInput->FindObject("testenv"));
       if (nm) {
-         if (gEnv->Lookup(nm->GetTitle())) fStat->Fill(2.);
+         if (gEnv->Lookup(nm->GetTitle())) {
+            fStat->Fill(2.);
+         } else {
+            Warning("SlaveBegin", "%d: lookup for '%s' failed!", fTestType, nm->GetTitle());
+            gEnv->Print();
+         }
       } else {
          Warning("SlaveBegin", "%d: TNamed with the test env info not found!", fTestType);
       }
