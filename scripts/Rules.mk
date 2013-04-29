@@ -810,7 +810,7 @@ define WarnFailTest
 endef
 
 ifneq ($(SUMMARY),)
-SUMMARYDIFF= > $(SUMMARY).$@.diff.log || handleError.sh --result=$$? --log=$(SUMMARY).$*.diff.log --test=$@
+SUMMARYDIFF= > $(SUMMARY).$@.diff.log || handleError.sh --result=$$? --log=$(SUMMARY).$@.diff.log --test=$@
 SUMMARYDIFF_STAR= > $(SUMMARY).$*.diff.log || handleError.sh --result=$$? --log=$(SUMMARY).$*.diff.log --test=$*  
 endif
 
