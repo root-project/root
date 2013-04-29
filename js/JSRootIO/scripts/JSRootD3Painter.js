@@ -3396,7 +3396,7 @@ function createFillPatterns(svg, id, color) {
    };
 
    JSROOTPainter.drawHistogram2D3D = function(vis, pad, histo, hframe) {
-      var i, logx = false, logy = false, logz = false, gridx = false, gridy = false, girdz = false;
+      var i, j, logx = false, logy = false, logz = false, gridx = false, gridy = false, girdz = false;
       var opt = histo['fOption'].toLowerCase();
       if (pad && typeof(pad) != 'undefined') {
          logx = pad['fLogx'];
@@ -3421,11 +3421,17 @@ function createFillPatterns(svg, id, color) {
       var scaley = (histo['fYaxis']['fXmax'] - histo['fYaxis']['fXmin']) /
                     histo['fYaxis']['fNbins'];
       var maxbin = -1e32, minbin = 1e32;
-      maxbin = d3.max(histo['fArray']);
-      minbin = d3.min(histo['fArray']);
+      for (i=0; i<nbinsx; ++i) {
+         for (j=0; j<nbinsy; ++j) {
+            var bin_content = histo.getBinContent(i, j);
+            if (bin_content < minbin) minbin = bin_content;
+            if (bin_content > maxbin) maxbin = bin_content;
+         }
+      }
+      maxbin *= 1.05;
       var bins = new Array();
       for (i=0; i<nbinsx; ++i) {
-         for (var j=0; j<nbinsy; ++j) {
+         for (j=0; j<nbinsy; ++j) {
             var bin_content = histo.getBinContent(i, j);
             if (bin_content > minbin) {
                var point = {
@@ -4512,16 +4518,13 @@ function createFillPatterns(svg, id, color) {
          else if (obj['_typename'].match(/\bJSROOTIO.TH2/)) {
             var renderer = 0;
             var vid = 'view3d_' + obj['fName'];
-            //$('<div><input type="checkbox" id="view3d" /><label for="view3d">View in 3D</label></div>')
             $('<div><input type="checkbox" id='+vid+' /><label for='+vid+'>View in 3D</label></div>')
                .css('padding', '10px').css('position', 'absolute').insertBefore( svg[0][0] );
-            //$('#view3d').click(function(e) {
             $('#'+vid).click(function(e) {
                if ( $(this).prop('checked') ) {
                   renderer = JSROOTPainter.drawHistogram2D3D(svg, null, obj, null);
                } else {
-                  //$( svg[0][0] ).show().parent().find('canvas').detach();
-                  $( svg[0][0] ).show().parent().find( renderer.domElement ).detach();
+                  $( svg[0][0] ).show().parent().find( renderer.domElement ).remove();
                }
             });
             JSROOTPainter.drawHistogram2D(svg, null, obj, null);
