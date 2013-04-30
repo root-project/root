@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: MinNLLTestStat.h 43035 2012-02-16 16:48:57Z sven $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
 // Additional Contributions: Giovanni Petrucciani 
 /*************************************************************************

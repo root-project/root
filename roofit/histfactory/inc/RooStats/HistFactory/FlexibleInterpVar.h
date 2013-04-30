@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id:  cranmer $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Akira Shibata
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *

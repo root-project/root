@@ -29,7 +29,7 @@ var kBase = 0, kOffsetL = 20, kOffsetP = 40, kCounter = 6, kCharStar = 7,
 
    JSROOTIO = {};
 
-   JSROOTIO.version = "1.8 2012/11/28";
+   JSROOTIO.version = "2.0 2013/04/29";
 
    JSROOTIO.BIT = function(bits, index) {
       var mask = 1 << index;
