@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id: DetailedOutputAggregator.h 37084 2010-11-29 21:37:13Z moneta $
+// @(#)root/roostats:$Id$
 // Author: Sven Kreiss, Kyle Cranmer   Nov 2010
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
@@ -44,8 +44,11 @@ namespace RooStats {
    class DetailedOutputAggregator {
 
    public:
+
       // Translate the given fit result to a RooArgSet in a generic way.
       // Prefix is prepended to all variable names.
+      // Note that the returned set is managed by the user and the user must 
+      // explicitly delete all the set content (the returned set does not own the content)
       static RooArgSet *GetAsArgSet(RooFitResult *result, TString prefix="", bool withErrorsAndPulls=false);
       
       DetailedOutputAggregator() {
@@ -60,7 +63,8 @@ namespace RooStats {
 
       const RooArgList* GetAsArgList() const {
          // Returns this set of detailed output.
-         // and transfer ownership of the set 
+         // Note that the ownership of the returned list is not transfered
+         // It is managed by the DetailedOutputAggregator class 
          return fBuiltSet;
       }
       
