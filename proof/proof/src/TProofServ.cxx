@@ -2683,7 +2683,7 @@ Int_t TProofServ::UnloadPackage(const char *package)
    // does not currently remove entry from interpreter include path.
    // Returns -1 in case of error, 0 otherwise.
 
-   TObjString *pack = (TObjString *) fEnabledPackages->FindObject(package);
+   TPair *pack = (TPair *) fEnabledPackages->FindObject(package);
    if (pack) {
 
       // Remove entry from include path
@@ -2720,8 +2720,8 @@ Int_t TProofServ::UnloadPackages()
 
    // Iterate over packages and remove each package
    TIter nextpackage(fEnabledPackages);
-   while (TObjString* objstr = dynamic_cast<TObjString*>(nextpackage()))
-      if (UnloadPackage(objstr->String()) != 0)
+   while (TPair *pck = dynamic_cast<TPair *>(nextpackage()))
+      if (UnloadPackage(pck->GetName()) != 0)
          return -1;
 
    PDB(kPackage, 1)
@@ -3531,12 +3531,12 @@ void TProofServ::SetQueryRunning(TProofQueryResult *pq)
    // Build the list of loaded PAR packages
    TString parlist = "";
    TIter nxp(fEnabledPackages);
-   TObjString *os= 0;
-   while ((os = (TObjString *)nxp())) {
+   TPair *pck= 0;
+   while ((pck = (TPair *)nxp())) {
       if (parlist.Length() <= 0)
-         parlist = os->GetName();
+         parlist = pck->GetName();
       else
-         parlist += TString::Format(";%s",os->GetName());
+         parlist += TString::Format(";%s", pck->GetName());
    }
 
    if (fProof) {
@@ -5669,7 +5669,9 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
             gROOT->ProcessLine(TString(".include ") + package);
 
             // if successful add to list and propagate to slaves
-            fEnabledPackages->Add(new TObjString(package));
+            TPair *pck = (optls && optls->GetSize() > 0) ? new TPair(new TObjString(package), optls->Clone())
+                                                         : new TPair(new TObjString(package), 0);
+            fEnabledPackages->Add(pck);
             if (IsMaster()) {
                if (optls && optls->GetSize() > 0) {
                   // List argument
@@ -5699,8 +5701,8 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          }
          {
             TIter next(fEnabledPackages);
-            while (TObjString *str = (TObjString*) next())
-               printf("%s\n", str->GetName());
+            while (TPair *pck = (TPair *) next())
+               printf("%s\n", pck->GetName());
          }
          if (IsMaster() && all)
             fProof->ShowEnabledPackages(all);
@@ -5782,8 +5784,17 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          break;
       case TProof::kListEnabledPackages:
          msg.Reset(kPROOF_PACKAGE_LIST);
-         msg << type << fEnabledPackages;
-         fSocket->Send(msg);
+         { TList *epl = new TList;
+           if (fEnabledPackages->GetSize() > 0) {
+              TIter nxp(fEnabledPackages);
+              TObject *o = 0;
+              while ((o = nxp())) { epl->Add(new TObjString(o->GetName()));}
+           }
+           msg << type << epl;
+           fSocket->Send(msg);
+           epl->SetOwner();
+           delete epl;
+         }
          if (slb) slb->Form("%d", type);
          break;
       case TProof::kListPackages:

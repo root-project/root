@@ -765,19 +765,19 @@ void PT_GetLastProofTimes(RunTimes &tt)
 }
 
 // Arguments structures
-typedef struct {            // Open
+typedef struct ptopenargs {            // Open
    const char *url;
    Int_t       nwrks;
 } PT_Open_Args_t;
 
 // Packetizer parameters
-typedef struct {
+typedef struct ptpacketizer {
    const char *fName;
    Int_t fType;
 } PT_Packetizer_t;
 
 // Options
-typedef struct {
+typedef struct ptoption {
    Int_t fOne;
    Int_t fTwo;
 } PT_Option_t;
@@ -837,12 +837,13 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
          printf("*   WARNING: request to run a test with per-job scheduling on    *\n");
          printf("*            an external cluster: %s .\n", url);
          printf("*            Make sure the dynamic option is set.                *\n");
-         printf("******************************************************************\n");
+         printf("*                                                                *\n");
          gDynamicStartup = kFALSE;
       } else {
          printf("*  Runnning in dynamic mode (per-job scheduling)                 *\n");
-         printf("******************************************************************\n");
       }
+      printf("*  Tests #15, #22, #23, #26 skipped in dynamic mode             **\n");
+      printf("******************************************************************\n");
    }
 
    if (dryrun) {
@@ -2182,6 +2183,11 @@ Int_t PT_Open(void *args, RunTimes &tt)
          delete pw;
       }
    }
+   
+   // Check if it is in dynamic startup mode
+   Int_t dyn;
+   p->GetRC("Proof.DynamicStartup", dyn);
+   if (dyn != 0) gDynamicStartup = kTRUE;
 
    // Set debug level, if required
    if (gverbose > 1) {
@@ -2329,6 +2335,11 @@ Int_t PT_OutputHandlingViaFile(void *opts, RunTimes &tt)
       printf("\n >>> Test failure: no PROOF session found\n");
       return -1;
    }
+   // Not yet supported in dynamic mode
+   if (gDynamicStartup) {
+      return 1;
+   }
+   PutPoint();
 
    PT_Option_t *ptopt = (PT_Option_t *) opts;
    
@@ -3350,6 +3361,10 @@ Int_t PT_H1SimpleAsync(void *arg, RunTimes &tt)
    if (gProof->IsLite()) {
       return 1;
    }
+   // Not supported in dynamic mode
+   if (gDynamicStartup) {
+      return 1;
+   }
    PutPoint();
 
    // Set/unset the parallel unzip flag
@@ -4064,6 +4079,12 @@ Int_t PT_Friends(void *sf, RunTimes &tt)
       printf("\n >>> Test failure: no PROOF session found\n");
       return -1;
    }
+
+   // Not supported in dynamic mode
+   if (gDynamicStartup) {
+      return 1;
+   }
+   PutPoint();
 
    // Separate or same file ?
    Bool_t sameFile = (sf) ? kTRUE : kFALSE;
