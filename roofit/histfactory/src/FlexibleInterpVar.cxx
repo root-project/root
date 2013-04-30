@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id:  cranmer $
+// @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Akira Shibata
 // Author: Giovanni Petrucciani (UCSD) (log-interpolation)
 /*************************************************************************
