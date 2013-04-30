@@ -15,6 +15,8 @@
 *.h text ident
 *.hh text ident
 *.inc text ident
+*.js text ident
+*.css text ident
 *.txt text ident
 
 *.sh text ident
@@ -32,3 +34,4 @@ Make.* text ident
 *.png binary
 *.jpg binary
 *.pdf binary
+*.root binary
