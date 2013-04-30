@@ -738,7 +738,7 @@ void TGFileBrowser::AddFSDirectory(const char *entry, const char *path,
    // Add file system directory in the list tree.
 
    TGListTreeItem *item = 0;
-   if ((opt == 0) || (strlen(opt) == 0)) {
+   if ((opt == 0) || (!opt[0])) {
       if (fRootDir == 0 && !fListTree->FindChildByName(0, rootdir))
          item = fRootDir = fListTree->AddItem(0, rootdir);
       return;

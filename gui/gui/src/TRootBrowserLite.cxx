@@ -1604,7 +1604,7 @@ void TRootBrowserLite::DisplayDirectory()
    fLt->GetPathnameFromItem(fListLevel, path, 12);
    p = path;
    while (*p && *(p+1) == '/') ++p;
-   if (strlen(p) == 0)
+   if (!p[0])
       fLbl2->SetText(new TGString("Contents of \".\""));
    else
       fLbl2->SetText(new TGString(Form("Contents of \"%s\"", p)));

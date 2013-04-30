@@ -3027,7 +3027,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
    // UsrPwd
    if (sec == TAuthenticate::kClear) {
-      if (strlen(usr) == 0 || !strncmp(usr,"*",1))
+      if (!usr[0] || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("UsrPwd.Login", "");
       snprintf(temp, kMAXPATHLEN, "pt:%s ru:%s cp:%s us:%s",
                gEnv->GetValue("UsrPwd.LoginPrompt", copt[opt]),
@@ -3036,7 +3036,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
       // SRP
    } else if (sec == TAuthenticate::kSRP) {
-      if (strlen(usr) == 0 || !strncmp(usr,"*",1))
+      if (!usr[0] || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("SRP.Login", "");
       snprintf(temp, kMAXPATHLEN, "pt:%s ru:%s us:%s",
                gEnv->GetValue("SRP.LoginPrompt", copt[opt]),
@@ -3044,7 +3044,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
       // Kerberos
    } else if (sec == TAuthenticate::kKrb5) {
-      if (strlen(usr) == 0 || !strncmp(usr,"*",1))
+      if (!usr[0] || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("Krb5.Login", "");
       snprintf(temp, kMAXPATHLEN, "pt:%s ru:%s us:%s",
                gEnv->GetValue("Krb5.LoginPrompt", copt[opt]),
@@ -3059,7 +3059,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
       // SSH
    } else if (sec == TAuthenticate::kSSH) {
-      if (strlen(usr) == 0 || !strncmp(usr,"*",1))
+      if (!usr[0] || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("SSH.Login", "");
       snprintf(temp, kMAXPATHLEN, "pt:%s ru:%s us:%s",
                gEnv->GetValue("SSH.LoginPrompt", copt[opt]),
@@ -3067,7 +3067,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 
       // Uid/Gid
    } else if (sec == TAuthenticate::kRfio) {
-      if (strlen(usr) == 0 || !strncmp(usr,"*",1))
+      if (!usr[0] || !strncmp(usr,"*",1))
          usr = gEnv->GetValue("UidGid.Login", "");
       snprintf(temp, kMAXPATHLEN, "pt:%s us:%s",
                gEnv->GetValue("UidGid.LoginPrompt", copt[opt]), usr);
@@ -4192,7 +4192,7 @@ Int_t TAuthenticate::ReadRootAuthrc()
          line[strlen(line) - 1] = '\0';
 
       // Skip empty lines
-      if (strlen(line) == 0)
+      if (!line[0])
          continue;
 
       // Now scan

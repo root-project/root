@@ -2040,7 +2040,7 @@ void TGaxis::SetFunction(const char *funcname)
    // Specify a function to map the axis values.
 
    fFunctionName = funcname;
-   if (strlen(funcname) == 0) {
+   if (!funcname[0]) {
       fFunction = 0;
       return;
    }

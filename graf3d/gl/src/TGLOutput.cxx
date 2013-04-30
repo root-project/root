@@ -66,7 +66,7 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
    //                kPDF_BSP    - higher quality PDF
    // 'filePath' - file output name. If null defaults to './viewer.eps' or './viewer.pdf'
    // depending on format requested
-   if (!filePath || strlen(filePath) == 0) {
+   if (!filePath || !filePath[0]) {
       if (format == kEPS_SIMPLE || format == kEPS_BSP) {
          filePath = "viewer.eps";
       } else if (format == kPDF_SIMPLE || format == kPDF_BSP) {

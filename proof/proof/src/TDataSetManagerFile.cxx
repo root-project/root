@@ -754,9 +754,9 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
        (group && fCommonGroup == group)) notCommonUser = kFALSE;
 
    // convert * to "nothing"
-   if (group && (strcmp(group, "*") == 0 || strlen(group) == 0))
+   if (group && (strcmp(group, "*") == 0 || !group[0]))
       group = 0;
-   if (user && (strcmp(user, "*") == 0 || strlen(user) == 0))
+   if (user && (strcmp(user, "*") == 0 || !user[0]))
       user = 0;
 
    Bool_t printing = (option & kPrint) ? kTRUE : kFALSE;

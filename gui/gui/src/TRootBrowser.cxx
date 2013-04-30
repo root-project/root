@@ -791,7 +791,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
 
    TString cmd;
 
-   if ((opt == 0) || (strlen(opt) == 0))
+   if ((opt == 0) || (!opt[0]))
       return;
    // --- Left vertical area
 

@@ -683,7 +683,7 @@ TAlien::CatalogType TAlien::Type(const char* lfn, Option_t* option, Bool_t verbo
    }
 
    const char* typeStr = gridResult->GetKey(0, "type");
-   if (!typeStr || strlen(typeStr) == 0) {
+   if (!typeStr || !typeStr[0]) {
       Error("Type", "Could not get type of %s", lfn);
       delete gridResult;
       return kFailed;

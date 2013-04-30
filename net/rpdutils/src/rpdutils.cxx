@@ -1862,7 +1862,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
                else
                   host[(int)(pcol-host)] = '\0';
             }
-            if (strlen(host) == 0)
+            if (!host[0])
                strlcpy(host, "default", kMAXPATHLEN);
 
             if (gDebug > 2)
@@ -4368,7 +4368,7 @@ int RpdCheckDaemon(const char *daemon)
       ErrorInfo("RpdCheckDaemon: Enter ... %s", daemon);
 
    // Return if empty
-   if (daemon == 0 || strlen(daemon) == 0)
+   if (daemon == 0 || !daemon[0])
       return cnt;
 
    // Build command
@@ -4649,7 +4649,7 @@ int RpdUser(const char *sstr)
       if (rcsp < 0)
          errrdp = (rcsp == -2) ? 3 : 0;
 
-      if (strlen(passw) == 0 || !strcmp(passw, "x")) {
+      if (!passw[0] || !strcmp(passw, "x")) {
 #ifdef R__AFS
          gSaltRequired = 0;
 #else
@@ -4668,7 +4668,7 @@ int RpdUser(const char *sstr)
          passw = pw->pw_passwd;
 #endif
          // Check if successful
-         if (strlen(passw) == 0 || !strcmp(passw, "x")) {
+         if (!passw[0] || !strcmp(passw, "x")) {
             if (gClientProtocol > 11)
                NetSend(gUsrPwdErr[errrdp][errheq], kROOTD_ERR);
             else
@@ -4897,7 +4897,7 @@ int RpdGuessClientProt(const char *buf, EMessageTypes kind)
    }
    // Kerberos authentication
    if (kind == kROOTD_KRB5) {
-      if (strlen(buf) == 0)
+      if (!buf[0])
          proto = 8;
    }
 

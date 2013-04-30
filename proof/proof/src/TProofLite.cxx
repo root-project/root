@@ -158,9 +158,9 @@ Int_t TProofLite::Init(const char *, const char *conffile,
 
    if (TestBit(TProof::kIsMaster)) {
       // Fill default conf file and conf dir
-      if (!conffile || strlen(conffile) == 0)
+      if (!conffile || !conffile[0])
          fConfFile = kPROOF_ConfFile;
-      if (!confdir  || strlen(confdir) == 0)
+      if (!confdir  || !confdir[0])
          fConfDir  = kPROOF_ConfDir;
    } else {
       fConfDir     = confdir;

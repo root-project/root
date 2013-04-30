@@ -243,7 +243,7 @@ Double_t RooHistPdf::totVolume() const
 
 namespace {
     bool fullRange(const RooAbsArg& x ,const char* range)  {
-      if (range == 0 || strlen(range) == 0 ) return true;
+      if (range == 0 || !range[0] ) return true;
       const RooAbsRealLValue *_x = dynamic_cast<const RooAbsRealLValue*>(&x);
       if (!_x) return false;
       return ( _x->getMin(range) == _x->getMin() && _x->getMax(range) == _x->getMax() ) ; 

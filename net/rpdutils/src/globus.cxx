@@ -88,7 +88,7 @@ int GlbsToolCheckCert(char **subjname)
       // Parse the lines: keep the last non empty one
       while (fgets(line, sizeof(line), fconf)) {
          if (line[0] == '#') continue;     // skip comment lines
-         if (strlen(line) == 0) continue;  // skip empty lines
+         if (!line[0]) continue;  // skip empty lines
          if (line[strlen(line)-1] == '\n')
             line[strlen(line)-1] = '\0';
          int i = 0;

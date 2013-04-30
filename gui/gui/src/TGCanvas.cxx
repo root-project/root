@@ -1047,7 +1047,7 @@ const TGPicture *TGContainer::GetObjPicture(TGFrame *f)
             cl = obj->IsA();
          }
          const char *name = obj->GetIconName();
-         if (((name == 0) || (strlen(name) == 0)) && (cl != 0))
+         if (((name == 0) || (!name[0])) && (cl != 0))
             name = cl->GetName();
          iconname = ((name != 0) && (strlen(name) > 0)) ? name : obj->GetName();
 

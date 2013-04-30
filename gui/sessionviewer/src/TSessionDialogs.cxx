@@ -221,7 +221,7 @@ void TNewChainDlg::UpdateList()
       item = 0;
       if (obj->IsA() == TChain::Class()) {
          const char *title = ((TChain *)obj)->GetTitle();
-         if (strlen(title) == 0)
+         if (!title[0])
             ((TChain *)obj)->SetTitle("TChain");
          item = new TGLVEntry(fLVContainer, ((TChain *)obj)->GetName(),
                               ((TChain *)obj)->GetTitle());

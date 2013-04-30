@@ -338,7 +338,7 @@ void TPluginHandler::Print(Option_t *opt) const
    Printf("%-20s %-13s %-18s %s%s", fBase.Data(), fRegexp.Data(),
           fClass.Data(), fPlugin.Data(), exist);
    if (strchr(opt, 'a')) {
-      if (strlen(exist) == 0) {
+      if (!exist[0]) {
          TString lib = fPlugin;
          if (!lib.BeginsWith("lib"))
             lib = "lib" + lib;

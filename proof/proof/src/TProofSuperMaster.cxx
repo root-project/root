@@ -58,11 +58,11 @@ TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile
 
    fUrl = TUrl(masterurl);
 
-   if (!conffile || strlen(conffile) == 0)
+   if (!conffile || !conffile[0])
       conffile = kPROOF_ConfFile;
    else if (!strncasecmp(conffile, "sm:", 3))
       conffile+=3;
-   if (!confdir  || strlen(confdir) == 0)
+   if (!confdir  || !confdir[0])
       confdir = kPROOF_ConfDir;
 
    // Instance type

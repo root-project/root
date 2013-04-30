@@ -2929,7 +2929,7 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
 
       //get include file name if any
       const char *include = element->GetInclude();
-      if (strlen(include) == 0) continue;
+      if (!include[0]) continue;
 
       Bool_t greater = (include[0]=='<');
       include++;

@@ -707,7 +707,7 @@ void THStack::Paint(Option_t *option)
       TAxis *yaxis = h->GetYaxis();
       const TArrayD *xbins = xaxis->GetXbins();
       if (h->GetDimension() > 1) {
-         if (strlen(option) == 0) strlcpy(loption,"lego1",32);
+         if (!option[0]) strlcpy(loption,"lego1",32);
          const TArrayD *ybins = yaxis->GetXbins();
          if (xbins->fN != 0 && ybins->fN != 0) {
             fHistogram = new TH2F(GetName(),GetTitle(),

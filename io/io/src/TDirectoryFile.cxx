@@ -600,7 +600,7 @@ void TDirectoryFile::Delete(const char *namecycle)
    if(strcmp(name,"*") == 0)   deleteall = 1;
    if(strcmp(name,"*T") == 0){ deleteall = 1; deletetree = 1;}
    if(strcmp(name,"T*") == 0){ deleteall = 1; deletetree = 1;}
-   if(namecycle==0 || strlen(namecycle) == 0){ deleteall = 1; deletetree = 1;}
+   if(namecycle==0 || !namecycle[0]){ deleteall = 1; deletetree = 1;}
    TRegexp re(name,kTRUE);
    TString s;
    Int_t deleteOK = 0;
@@ -1430,7 +1430,7 @@ Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Opt
    if (!obj) return 0;
    TDirectory *dirsav = gDirectory;
    TString fname = filename;
-   if (!filename || strlen(filename) == 0) {
+   if (!filename || !filename[0]) {
       fname = Form("%s.root",obj->GetName());
    }
    TFile *local = TFile::Open(fname.Data(),"recreate");

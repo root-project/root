@@ -425,7 +425,7 @@ Bool_t TGDocument::Open(const char *fname)
          fTabEl = fTab->GetTabTab(fTab->GetCurrent());
          fTabEl->ShowClose();
       }
-      if (strlen(fname) == 0) {
+      if (!fname[0]) {
          // no filename provided --> empty (untitled) document
          SetName("Untitled");
          SetTitle("Untitled");
