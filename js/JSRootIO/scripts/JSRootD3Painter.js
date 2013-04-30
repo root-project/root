@@ -3724,10 +3724,10 @@ function createFillPatterns(svg, id, color) {
       }
       if (logy) {
          var ty = d3.scale.log().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([-size, size]);
-         var uty = d3.scale.log().domain([-size, size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
+         var uty = d3.scale.log().domain([size, -size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
       } else {
          var ty = d3.scale.linear().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([-size, size]);
-         var uty = d3.scale.linear().domain([-size, size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
+         var uty = d3.scale.linear().domain([size, -size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
       }
       if (logz) {
          var tz = d3.scale.log().domain([histo['fZaxis']['fXmin'], histo['fZaxis']['fXmax']]).range([-size, size]);
@@ -3799,9 +3799,9 @@ function createFillPatterns(svg, id, color) {
       }
       var ymajors = ty.ticks(5);
       var yminors = ty.ticks(25);
-      for ( i=-size, j=0, k=0; i<=size; ++i ) {
-         var is_major = ( uty( i ) <= ymajors[j] && uty( i+1 ) > ymajors[j] ) ? true : false;
-         var is_minor = ( uty( i ) <= yminors[k] && uty( i+1 ) > yminors[k] ) ? true : false;
+      for ( i=size, j=0, k=0; i>-size; --i ) {
+         var is_major = ( uty( i ) <= ymajors[j] && uty( i-1 ) > ymajors[j] ) ? true : false;
+         var is_minor = ( uty( i ) <= yminors[k] && uty( i-1 ) > yminors[k] ) ? true : false;
          plen = ( is_major ? len + 2 : len) * sin45;
          if ( is_major ) {
             text3d = new THREE.TextGeometry( ymajors[j], {
