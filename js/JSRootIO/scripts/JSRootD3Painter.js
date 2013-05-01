@@ -3396,7 +3396,8 @@ function createFillPatterns(svg, id, color) {
    };
 
    JSROOTPainter.drawHistogram2D3D = function(vis, pad, histo, hframe) {
-      var i, j, logx = false, logy = false, logz = false, gridx = false, gridy = false, girdz = false;
+      var i, j, k, logx = false, logy = false, logz = false, 
+          gridx = false, gridy = false, girdz = false;
       var opt = histo['fOption'].toLowerCase();
       if (pad && typeof(pad) != 'undefined') {
          logx = pad['fLogx'];
@@ -3493,15 +3494,19 @@ function createFillPatterns(svg, id, color) {
       var geometry = new THREE.Geometry();
       var imax, istep, len = 3, plen, sin45 = Math.sin(45);
       var text3d, text;
-      for ( i = tx( histo['fXaxis']['fXmin'] ), imax = tx( histo['fXaxis']['fXmax'] ),
-            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
-         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
-         if ( Math.round(i) % (size/2) == 0 ) {
-            text3d = new THREE.TextGeometry( utx( i ), {
+      var xmajors = tx.ticks(8);
+      var xminors = tx.ticks(50);
+      for ( i=-size, j=0, k=0; i<size; ++i ) {
+         var is_major = ( utx( i ) <= xmajors[j] && utx( i+1 ) > xmajors[j] ) ? true : false;
+         var is_minor = ( utx( i ) <= xminors[k] && utx( i+1 ) > xminors[k] ) ? true : false;
+         plen = ( is_major ? len + 2 : len) * sin45;
+         if ( is_major ) {
+            text3d = new THREE.TextGeometry( xmajors[j], {
                size: 7,
                height: 0,
                curveSegments: 10
             });
+            ++j;
 
             text3d.computeBoundingBox();
             var centerOffset = 0.5 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
@@ -3515,20 +3520,27 @@ function createFillPatterns(svg, id, color) {
             text.rotation.y = Math.PI;
             toplevel.add( text );
          }
-         geometry.vertices.push( new THREE.Vector3( i, 0, size ) );
-         geometry.vertices.push( new THREE.Vector3( i, -plen, size+plen ) );
-         geometry.vertices.push( new THREE.Vector3( i, 0, -size ) );
-         geometry.vertices.push( new THREE.Vector3( i, -plen, -size-plen ) );
+         if ( is_major || is_minor ) {
+            ++k;
+            geometry.vertices.push( new THREE.Vector3( i, 0, size ) );
+            geometry.vertices.push( new THREE.Vector3( i, -plen, size+plen ) );
+            geometry.vertices.push( new THREE.Vector3( i, 0, -size ) );
+            geometry.vertices.push( new THREE.Vector3( i, -plen, -size-plen ) );
+         }
       }
-      for ( i = ty( histo['fYaxis']['fXmin'] ), imax = ty( histo['fYaxis']['fXmax'] ),
-            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
-         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
-         if ( Math.round(i) % (size/2) == 0 ) {
-            text3d = new THREE.TextGeometry( uty( i ), {
+      var ymajors = ty.ticks(8);
+      var yminors = ty.ticks(50);
+      for ( i=size, j=0, k=0; i>-size; --i ) {
+         var is_major = ( uty( i ) <= ymajors[j] && uty( i-1 ) > ymajors[j] ) ? true : false;
+         var is_minor = ( uty( i ) <= yminors[k] && uty( i-1 ) > yminors[k] ) ? true : false;
+         plen = ( is_major ? len + 2 : len) * sin45;
+         if ( is_major ) {
+            text3d = new THREE.TextGeometry( ymajors[j], {
                size: 7,
                height: 0,
                curveSegments: 10
             });
+            ++j;
 
             text3d.computeBoundingBox();
             var centerOffset = 0.5 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
@@ -3543,20 +3555,27 @@ function createFillPatterns(svg, id, color) {
             text.rotation.y = -Math.PI/2;
             toplevel.add( text );
          }
-         geometry.vertices.push( new THREE.Vector3( size, 0, i ) );
-         geometry.vertices.push( new THREE.Vector3( size+plen, -plen, i ) );
-         geometry.vertices.push( new THREE.Vector3( -size, 0, i ) );
-         geometry.vertices.push( new THREE.Vector3( -size-plen, -plen, i ) );
+         if ( is_major || is_minor ) {
+            ++k;
+            geometry.vertices.push( new THREE.Vector3( size, 0, i ) );
+            geometry.vertices.push( new THREE.Vector3( size+plen, -plen, i ) );
+            geometry.vertices.push( new THREE.Vector3( -size, 0, i ) );
+            geometry.vertices.push( new THREE.Vector3( -size-plen, -plen, i ) );
+         }
       }
-      for ( i = tz( minbin ), imax = tz( Math.ceil( maxbin/10 )*10 ),
-            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
-         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
-         if ( Math.round(i) % (size/2) == 0 ) {
-            text3d = new THREE.TextGeometry( utz( i ), {
+      var zmajors = tz.ticks(8);
+      var zminors = tz.ticks(50);
+      for ( i=0, j=0, k=0; i<(size*2); ++i ) {
+         var is_major = ( utz( i ) <= zmajors[j] && utz( i+1 ) > zmajors[j] ) ? true : false;
+         var is_minor = ( utz( i ) <= zminors[k] && utz( i+1 ) > zminors[k] ) ? true : false;
+         plen = ( is_major ? len + 2 : len) * sin45;
+         if ( is_major ) {
+            text3d = new THREE.TextGeometry( zmajors[j], {
                size: 7,
                height: 0,
                curveSegments: 10
             });
+            ++j;
 
             text3d.computeBoundingBox();
             var offset = 0.8 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
@@ -3581,14 +3600,17 @@ function createFillPatterns(svg, id, color) {
             text.rotation.y = -Math.PI/4;
             toplevel.add( text );
          }
-         geometry.vertices.push( new THREE.Vector3( size, i, size ) );
-         geometry.vertices.push( new THREE.Vector3( size+plen, i, size+plen ) );
-         geometry.vertices.push( new THREE.Vector3( size, i, -size ) );
-         geometry.vertices.push( new THREE.Vector3( size+plen, i, -size-plen ) );
-         geometry.vertices.push( new THREE.Vector3( -size, i, size ) );
-         geometry.vertices.push( new THREE.Vector3( -size-plen, i, size+plen ) );
-         geometry.vertices.push( new THREE.Vector3( -size, i, -size ) );
-         geometry.vertices.push( new THREE.Vector3( -size-plen, i, -size-plen ) );
+         if ( is_major || is_minor ) {
+            ++k;
+            geometry.vertices.push( new THREE.Vector3( size, i, size ) );
+            geometry.vertices.push( new THREE.Vector3( size+plen, i, size+plen ) );
+            geometry.vertices.push( new THREE.Vector3( size, i, -size ) );
+            geometry.vertices.push( new THREE.Vector3( size+plen, i, -size-plen ) );
+            geometry.vertices.push( new THREE.Vector3( -size, i, size ) );
+            geometry.vertices.push( new THREE.Vector3( -size-plen, i, size+plen ) );
+            geometry.vertices.push( new THREE.Vector3( -size, i, -size ) );
+            geometry.vertices.push( new THREE.Vector3( -size-plen, i, -size-plen ) );
+         }
       }
 
       // add the calibration lines
@@ -3644,7 +3666,8 @@ function createFillPatterns(svg, id, color) {
    }
 
    JSROOTPainter.drawHistogram3D = function(vis, pad, histo, hframe) {
-      var i, logx = false, logy = false, logz = false, gridx = false, gridy = false, gridz = false;
+      var i, j, k, logx = false, logy = false, logz = false,
+          gridx = false, gridy = false, gridz = false;
       var opt = histo['fOption'].toLowerCase();
       if (pad && typeof(pad) != 'undefined') {
          logx = pad['fLogx'];
@@ -3701,10 +3724,10 @@ function createFillPatterns(svg, id, color) {
       }
       if (logy) {
          var ty = d3.scale.log().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([-size, size]);
-         var uty = d3.scale.log().domain([-size, size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
+         var uty = d3.scale.log().domain([size, -size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
       } else {
          var ty = d3.scale.linear().domain([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]).range([-size, size]);
-         var uty = d3.scale.linear().domain([-size, size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
+         var uty = d3.scale.linear().domain([size, -size]).range([histo['fYaxis']['fXmin'], histo['fYaxis']['fXmax']]);
       }
       if (logz) {
          var tz = d3.scale.log().domain([histo['fZaxis']['fXmin'], histo['fZaxis']['fXmax']]).range([-size, size]);
@@ -3740,15 +3763,19 @@ function createFillPatterns(svg, id, color) {
       var geometry = new THREE.Geometry();
       var imax, istep, len = 3, plen, sin45 = Math.sin(45);
       var text3d, text;
-      for ( i = tx( histo['fXaxis']['fXmin'] ), imax = tx( histo['fXaxis']['fXmax'] ),
-            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
-         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
-         if ( Math.round(i) % (size/2) == 0 ) {
-            text3d = new THREE.TextGeometry( utx( i ), {
+      var xmajors = tx.ticks(5);
+      var xminors = tx.ticks(25);
+      for ( i=-size, j=0, k=0; i<=size; ++i ) {
+         var is_major = ( utx( i ) <= xmajors[j] && utx( i+1 ) > xmajors[j] ) ? true : false;
+         var is_minor = ( utx( i ) <= xminors[k] && utx( i+1 ) > xminors[k] ) ? true : false;
+         plen = ( is_major ? len + 2 : len) * sin45;
+         if ( is_major ) {
+            text3d = new THREE.TextGeometry( xmajors[j], {
                size: 7,
                height: 0,
                curveSegments: 10
             });
+            ++j;
 
             text3d.computeBoundingBox();
             var centerOffset = 0.5 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
@@ -3762,20 +3789,27 @@ function createFillPatterns(svg, id, color) {
             text.rotation.y = Math.PI;
             toplevel.add( text );
          }
-         geometry.vertices.push( new THREE.Vector3( i, -size, size ) );
-         geometry.vertices.push( new THREE.Vector3( i, -size-plen, size+plen ) );
-         geometry.vertices.push( new THREE.Vector3( i, -size, -size ) );
-         geometry.vertices.push( new THREE.Vector3( i, -size-plen, -size-plen ) );
+         if ( is_major || is_minor ) {
+            ++k;
+            geometry.vertices.push( new THREE.Vector3( i, -size, size ) );
+            geometry.vertices.push( new THREE.Vector3( i, -size-plen, size+plen ) );
+            geometry.vertices.push( new THREE.Vector3( i, -size, -size ) );
+            geometry.vertices.push( new THREE.Vector3( i, -size-plen, -size-plen ) );
+         }
       }
-      for ( i = ty( histo['fYaxis']['fXmin'] ), imax = ty( histo['fYaxis']['fXmax'] ),
-            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
-         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
-         if ( Math.round(i) % (size/2) == 0 ) {
-            text3d = new THREE.TextGeometry( uty( -i ), {
+      var ymajors = ty.ticks(5);
+      var yminors = ty.ticks(25);
+      for ( i=size, j=0, k=0; i>-size; --i ) {
+         var is_major = ( uty( i ) <= ymajors[j] && uty( i-1 ) > ymajors[j] ) ? true : false;
+         var is_minor = ( uty( i ) <= yminors[k] && uty( i-1 ) > yminors[k] ) ? true : false;
+         plen = ( is_major ? len + 2 : len) * sin45;
+         if ( is_major ) {
+            text3d = new THREE.TextGeometry( ymajors[j], {
                size: 7,
                height: 0,
                curveSegments: 10
             });
+            ++j;
 
             text3d.computeBoundingBox();
             var centerOffset = 0.5 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
@@ -3790,20 +3824,27 @@ function createFillPatterns(svg, id, color) {
             text.rotation.y = -Math.PI/2;
             toplevel.add( text );
          }
-         geometry.vertices.push( new THREE.Vector3( size, -size, i ) );
-         geometry.vertices.push( new THREE.Vector3( size+plen, -size-plen, i ) );
-         geometry.vertices.push( new THREE.Vector3( -size, -size, i ) );
-         geometry.vertices.push( new THREE.Vector3( -size-plen, -size-plen, i ) );
+         if ( is_major || is_minor ) {
+            ++k;
+            geometry.vertices.push( new THREE.Vector3( size, -size, i ) );
+            geometry.vertices.push( new THREE.Vector3( size+plen, -size-plen, i ) );
+            geometry.vertices.push( new THREE.Vector3( -size, -size, i ) );
+            geometry.vertices.push( new THREE.Vector3( -size-plen, -size-plen, i ) );
+         }
       }
-      for ( i = tz( histo['fZaxis']['fXmin'] ), imax = tz( histo['fZaxis']['fXmax'] ),
-            istep = Math.round( imax/20 ); i <= imax; i+=istep ) {
-         plen = ( ( Math.round(i) % (size/2) ) ? len : len + 2) * sin45;
-         if ( Math.round(i) % (size/2) == 0 ) {
-            text3d = new THREE.TextGeometry( utz( i ), {
+      var zmajors = tz.ticks(5);
+      var zminors = tz.ticks(25);
+      for ( i=-size, j=0, k=0; i<=size; ++i ) {
+         var is_major = ( utz( i ) <= zmajors[j] && utz( i+1 ) > zmajors[j] ) ? true : false;
+         var is_minor = ( utz( i ) <= zminors[k] && utz( i+1 ) > zminors[k] ) ? true : false;
+         plen = ( is_major ? len + 2 : len) * sin45;
+         if ( is_major ) {
+            text3d = new THREE.TextGeometry( zmajors[j], {
                size: 7,
                height: 0,
                curveSegments: 10
             });
+            ++j;
 
             text3d.computeBoundingBox();
             var offset = 0.6 * ( text3d.boundingBox.max.x - text3d.boundingBox.min.x );
@@ -3828,14 +3869,17 @@ function createFillPatterns(svg, id, color) {
             text.rotation.y = -Math.PI/4;
             toplevel.add( text );
          }
-         geometry.vertices.push( new THREE.Vector3( size, i, size ) );
-         geometry.vertices.push( new THREE.Vector3( size+plen, i, size+plen ) );
-         geometry.vertices.push( new THREE.Vector3( size, i, -size ) );
-         geometry.vertices.push( new THREE.Vector3( size+plen, i, -size-plen ) );
-         geometry.vertices.push( new THREE.Vector3( -size, i, size ) );
-         geometry.vertices.push( new THREE.Vector3( -size-plen, i, size+plen ) );
-         geometry.vertices.push( new THREE.Vector3( -size, i, -size ) );
-         geometry.vertices.push( new THREE.Vector3( -size-plen, i, -size-plen ) );
+         if ( is_major || is_minor ) {
+            ++k;
+            geometry.vertices.push( new THREE.Vector3( size, i, size ) );
+            geometry.vertices.push( new THREE.Vector3( size+plen, i, size+plen ) );
+            geometry.vertices.push( new THREE.Vector3( size, i, -size ) );
+            geometry.vertices.push( new THREE.Vector3( size+plen, i, -size-plen ) );
+            geometry.vertices.push( new THREE.Vector3( -size, i, size ) );
+            geometry.vertices.push( new THREE.Vector3( -size-plen, i, size+plen ) );
+            geometry.vertices.push( new THREE.Vector3( -size, i, -size ) );
+            geometry.vertices.push( new THREE.Vector3( -size-plen, i, -size-plen ) );
+         }
       }
 
       // add the calibration lines
