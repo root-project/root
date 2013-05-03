@@ -3177,6 +3177,10 @@ if test ! "x$enable_pgsql" = "xno"; then
 
     if test "x$pgsqlincdir" = "x" || test "x$pgsqllib" = "x"; then
         enable_pgsql="no"
+    else
+        if test "x$arch" = xwin32gcc; then
+            pgsqllib="$pgsqllib -lssl -lldap -lcrypto -lintl"
+        fi
     fi
 fi
 check_explicit "$enable_pgsql" "$enable_pgsql_explicit" \
