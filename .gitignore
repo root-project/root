@@ -10,6 +10,7 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
+*.dll
 
 # Compiled Static libraries
 *.lai
@@ -17,11 +18,13 @@
 *.a
 
 # Dictionary source files
+G__*.c
 G__*.cxx
 G__*.h
 etc/allDict.cxx
 etc/allDict.h
-
+rootcint_*.cxx
+rootcint_*.h
 
 # /
 /bin
@@ -42,6 +45,16 @@ etc/allDict.h
 /.gdb_history
 /buildtools
 /roottest
+/*.mk
+
+# cint/cint
+cint/cint/inc/configcint.h
+cint/cint/include/iosenum.h
+cint/cint/include/sys/types.h
+cint/cint/include/systypes.h
+cint/cint/lib/posix/mktypes
+cint/cint/main/cint_tmp
+cint/cint/src/loadfile_tmp.cxx
 
 # /README/
 /README/ChangeLog
