@@ -503,7 +503,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                         // We have the real dictionary for this class.
 
                         const char *include = cl->GetDeclFileName();
-                        if (include && strlen(include) != 0) {
+                        if (include && include[0]) {
 
                            if (strncmp(include, "include/", 8) == 0) {
                               include += 8;

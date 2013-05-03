@@ -110,7 +110,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
       return;
    }
    TClass *cl = 0;
-   if (strlen(classname) != 0) {
+   if (classname[0]) {
       cl = TClass::GetClass(classname);
       if (!cl) {
          Error("TDirectoryFile","Invalid class name: %s",classname);
