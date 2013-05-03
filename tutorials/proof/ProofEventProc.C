@@ -285,8 +285,8 @@ void ProofEventProc::CheckRanges()
       nout->SetTitle("ProcFileElements for first file not found in the output list");
       return;
    }
-   if (pfef->fFirst != fst) {
-      TString t = TString::Format("First entry differs {found: %lld, expected: %lld}", pfef->fFirst, fst);
+   if (pfef->GetFirst() != fst) {
+      TString t = TString::Format("First entry differs {found: %lld, expected: %lld}", pfef->GetFirst(), fst);
       nout->SetTitle(t.Data());
       return;
    }
@@ -311,7 +311,7 @@ void ProofEventProc::CheckRanges()
       nout->SetTitle("ProcFileElements for last file not found in the output list");
       return;
    }
-   if (pfel->fLast != lst) {
+   if (pfel->GetLast() != lst) {
       nout->SetTitle("Last entry differs");
       return;
    }
