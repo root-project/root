@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/base:$Id: 0daf41ec24086ee7af29fdc2f9f2f848b150dcc8 $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -383,7 +383,7 @@ TEnv::TEnv(const char *name)
 
    fIgnoreDup = kFALSE;
 
-   if (!name || !strlen(name) || !gSystem)
+   if (!name || !name[0] || !gSystem)
       fTable = 0;
    else {
       fTable  = new THashList(1000);
@@ -550,7 +550,7 @@ void TEnv::Print(Option_t *opt) const
 {
    // Print all resources or the global, user or local resources separately.
 
-   if (!opt || !strlen(opt)) {
+   if (!opt || !opt[0]) {
       PrintEnv();
       return;
    }
@@ -586,7 +586,7 @@ Int_t TEnv::ReadFile(const char *fname, EEnvLevel level)
    // Read and parse the resource file for a certain level.
    // Returns -1 on case of error, 0 in case of success.
 
-   if (!fname || !strlen(fname)) {
+   if (!fname || !fname[0]) {
       Error("ReadFile", "no file name specified");
       return -1;
    }
@@ -611,7 +611,7 @@ Int_t TEnv::WriteFile(const char *fname, EEnvLevel level)
    // level kEnvAll to write all resources. Returns -1 on case of error,
    // 0 in case of success.
 
-   if (!fname || !strlen(fname)) {
+   if (!fname || !fname[0]) {
       Error("WriteFile", "no file name specified");
       return -1;
    }

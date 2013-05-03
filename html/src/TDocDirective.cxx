@@ -844,15 +844,15 @@ void TDocLatexDirective::AddParameter(const TString& name, const char* value /*=
    // Parse fParameters, setting fFontSize, fAlignment, and fSeparator
 
    if (!name.CompareTo("fontsize", TString::kIgnoreCase)) {
-      if (!value || !strlen(value))
+      if (!value || !value[0])
          Error("AddParameter", "Option \"fontsize\" needs a value!");
       else fFontSize = atol(value);
    } else if (!name.CompareTo("separator", TString::kIgnoreCase)) {
-      if (!value || !strlen(value))
+      if (!value || !value[0])
          Error("AddParameter", "Option \"separator\" needs a value!");
       else fSeparator = value;
    } else if (!name.CompareTo("align", TString::kIgnoreCase)) {
-      if (!value || !strlen(value))
+      if (!value || !value[0])
          Error("AddParameter", "Option \"align\" needs a value!");
       else fAlignment = value;
    } else

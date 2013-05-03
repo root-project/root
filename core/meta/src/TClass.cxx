@@ -1,4 +1,4 @@
-// @(#)root/meta:$Id$
+// @(#)root/meta:$Id: 7109cb45f1219c2aae6be19906ae5a63e31972ef $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1357,7 +1357,7 @@ Int_t TClass::ReadRules( const char *filename )
    // Returns the number of rules loaded.
    // Returns -1 in case of error.
    
-   if (!filename || !strlen(filename)) {
+   if (!filename || !filename[0]) {
       ::Error("TClass::ReadRules", "no file name specified");
       return -1;
    }
@@ -2463,7 +2463,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    // (typically used for class that are used only for transient members)
    // Returns 0 in case class is not found.
 
-   if (!name || !strlen(name)) return 0;
+   if (!name || !name[0]) return 0;
    if (!gROOT->GetListOfClasses())    return 0;
 
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id$
+// @(#)root/proof:$Id: a2a50e759072c37ccbc65ecbcce735a76de86e95 $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -933,6 +933,12 @@ Int_t TProof::Init(const char *, const char *conffile,
          // Start slaves (the old, static, per-session way)
          if (!StartSlaves(attach))
             return 0;
+         // Client: Is Master in dynamic startup mode?
+         if (!IsMaster()) {
+            Int_t dyn;
+            GetRC("Proof.DynamicStartup", dyn);
+            if (dyn != 0) fDynamicStartup = kTRUE;
+         }
       }
    }
 
@@ -1351,17 +1357,16 @@ Int_t TProof::AddWorkers(TList *workerList)
    // no need to load packages that are only loaded and not enabled (dyn mode)
 
    SetParallel(99999, 0);
-
-   TList *tmpEnabledPackages = gProofServ->GetEnabledPackages();
-
-   if (tmpEnabledPackages && tmpEnabledPackages->GetSize() > 0) {
-      TIter nxp(tmpEnabledPackages);
-      TObjString *os = 0;
-      while ((os = (TObjString *) nxp())) {
+      
+   if (gProofServ && gProofServ->GetEnabledPackages() &&
+       gProofServ->GetEnabledPackages()->GetSize() > 0) {
+      TIter nxp(gProofServ->GetEnabledPackages());      
+      TPair *pck = 0;
+      while ((pck = (TPair *) nxp())) {
          // Upload and Enable methods are intelligent and avoid
          // re-uploading or re-enabling of a package to a node that has it.
-         if (UploadPackage(os->GetName()) >= 0)
-            EnablePackage(os->GetName(), (TList *)0, kTRUE);
+         if (UploadPackage(pck->GetName()) >= 0)
+            EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE);
       }
    }
 
@@ -7307,7 +7312,7 @@ Int_t TProof::ClearPackage(const char *package)
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("ClearPackage", "need to specify a package name");
       return -1;
    }
@@ -7335,7 +7340,7 @@ Int_t TProof::DisablePackage(const char *package)
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("DisablePackage", "need to specify a package name");
       return -1;
    }
@@ -7478,7 +7483,7 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt, Int_t chkv
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("BuildPackage", "need to specify a package name");
       return -1;
    }
@@ -7748,7 +7753,7 @@ Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient, TList *loadop
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("LoadPackage", "need to specify a package name");
       return -1;
    }
@@ -7952,7 +7957,7 @@ Int_t TProof::UnloadPackage(const char *package)
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("UnloadPackage", "need to specify a package name");
       return -1;
    }
@@ -8137,7 +8142,7 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("EnablePackage", "need to specify a package name");
       return -1;
    }
@@ -8310,17 +8315,22 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 
    if (!IsValid()) return -1;
 
-   TString par = pack;
-   if (!par.EndsWith(".par"))
-      // The client specified only the name: add the extension
+   TString par(pack), base, name;
+   if (par.EndsWith(".par")) {
+      base = gSystem->BaseName(par);
+      name = base(0, base.Length() - strlen(".par"));
+   } else {
+      name = gSystem->BaseName(par);
+      base.Form("%s.par", name.Data());
       par += ".par";
+   }
 
    // Default location is the local working dir; then the package dir
    gSystem->ExpandPathName(par);
    if (gSystem->AccessPathName(par, kReadPermission)) {
       TString tried = par;
       // Try the package dir
-      par.Form("%s/%s", fPackageDir.Data(), gSystem->BaseName(par));
+      par.Form("%s/%s", fPackageDir.Data(), base.Data());
       if (gSystem->AccessPathName(par, kReadPermission)) {
          // Is the package a global one
          if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
@@ -8329,7 +8339,7 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
             TNamed *nm = 0;
             TString pdir;
             while ((nm = (TNamed *)nxd())) {
-               pdir.Form("%s/%s", nm->GetTitle(), pack);
+               pdir.Form("%s/%s", nm->GetTitle(), name.Data());
                if (!gSystem->AccessPathName(pdir, kReadPermission)) {
                   // Package found, stop searching
                   break;
@@ -8363,9 +8373,11 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 
    TMD5 *md5 = TMD5::FileChecksum(par);
 
-   if (!md5 || (md5 && UploadPackageOnClient(par, opt, md5) == -1)) {
-      if (md5) delete md5;
-      return -1;
+   if (TestBit(TProof::kIsClient)) {
+      if (!md5 || (md5 && UploadPackageOnClient(par, opt, md5) == -1)) {
+         if (md5) delete md5;
+         return -1;
+      }
    }
 
    // Nothing more to do if we are a Lite-session
@@ -8375,7 +8387,7 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
    }
 
    TString smsg;
-   smsg.Form("+%s", gSystem->BaseName(par));
+   smsg.Form("+%s", base.Data());
 
    TMessage mess(kPROOF_CHECKFILE);
    mess << smsg << (*md5);
@@ -8410,8 +8422,7 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
 
          if (fProtocol > 5) {
             // remote directory is locked, upload file over the open channel
-            smsg.Form("%s/%s/%s", sl->GetProofWorkDir(), kPROOF_PackDir,
-                                  gSystem->BaseName(par));
+            smsg.Form("%s/%s/%s", sl->GetProofWorkDir(), kPROOF_PackDir, base.Data());
             if (SendFile(par, (kBinary | kForce | kCpBin | kForward), smsg.Data(), sl) < 0) {
                Error("UploadPackage", "%s: problems uploading file %s",
                                       sl->GetOrdinal(), par.Data());
@@ -8423,7 +8434,7 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
             if (!ftp.IsZombie()) {
                smsg.Form("%s/%s", sl->GetProofWorkDir(), kPROOF_PackDir);
                ftp.cd(smsg.Data());
-               ftp.put(par, gSystem->BaseName(par));
+               ftp.put(par, base.Data());
             }
          }
 
@@ -8433,7 +8444,7 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
          Collect(sl, fCollectTimeout, kPROOF_CHECKFILE);
          if (fCheckFileStatus == 0) {
             Error("UploadPackage", "%s: unpacking of package %s failed",
-                                   sl->GetOrdinal(), gSystem->BaseName(par));
+                                   sl->GetOrdinal(), base.Data());
             return -1;
          }
       }
@@ -8453,7 +8464,7 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
       if (fCheckFileStatus == 0) {
          // error -> package should have been found
          Error("UploadPackage", "package %s did not exist on submaster %s",
-               par.Data(), ma->GetOrdinal());
+               base.Data(), ma->GetOrdinal());
          return -1;
       }
    }
@@ -8601,7 +8612,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
 
    if (!IsValid()) return -1;
 
-   if (!macro || !strlen(macro)) {
+   if (!macro || !macro[0]) {
       Error("Load", "need to specify a macro name");
       return -1;
    }
@@ -8802,7 +8813,7 @@ Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks)
    // a blank.
    // Return 0 on success, -1 otherwise
 
-   if ((!libpath || !strlen(libpath))) {
+   if ((!libpath || !libpath[0])) {
       if (gDebug > 0)
          Info("AddDynamicPath", "list is empty - nothing to do");
       return 0;
@@ -8839,7 +8850,7 @@ Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks)
    // a blank.
    // Return 0 on success, -1 otherwise
 
-   if ((!incpath || !strlen(incpath))) {
+   if ((!incpath || !incpath[0])) {
       if (gDebug > 0)
          Info("AddIncludePath", "list is empty - nothing to do");
       return 0;
@@ -8876,7 +8887,7 @@ Int_t TProof::RemoveDynamicPath(const char *libpath, Bool_t onClient)
    // a blank.
    // Return 0 on success, -1 otherwise
 
-   if ((!libpath || !strlen(libpath))) {
+   if ((!libpath || !libpath[0])) {
       if (gDebug > 0)
          Info("RemoveDynamicPath", "list is empty - nothing to do");
       return 0;
@@ -8910,7 +8921,7 @@ Int_t TProof::RemoveIncludePath(const char *incpath, Bool_t onClient)
    // a blank.
    // Return 0 on success, -1 otherwise
 
-   if ((!incpath || !strlen(incpath))) {
+   if ((!incpath || !incpath[0])) {
       if (gDebug > 0)
          Info("RemoveIncludePath", "list is empty - nothing to do");
       return 0;
@@ -11082,7 +11093,7 @@ Int_t TProof::VerifyDataSet(const char *uri, const char *optStr)
    }
 
    // Request for parallel verification: can only be done if we have workers
-   if (!IsParallel()) {
+   if (!IsParallel() && !fDynamicStartup) {
       Error("VerifyDataSet", "PROOF is in sequential mode (no workers): cannot do parallel verification.");
       Error("VerifyDataSet", "Either start PROOF with some workers or force sequential adding 'S' as option.");
       return -1;

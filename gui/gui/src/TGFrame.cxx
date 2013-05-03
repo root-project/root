@@ -2791,7 +2791,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
          //if (bc->TestBitNumber(k) == 0) {
          const char *iname;
          iname = c2->GetDeclFileName();
-         if (strlen(iname) != 0 && strstr(iname,".h")) {
+         if (iname[0] && strstr(iname,".h")) {
             const char *lastsl = strrchr(iname,'/');
             if (lastsl) iname = lastsl + 1;
             char *tname = new char[strlen(iname)+1];
@@ -3311,7 +3311,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
          //if (bc->TestBitNumber(k) == 0) {
          const char *iname;
          iname = c2->GetDeclFileName();
-         if (strlen(iname) != 0 && strstr(iname,".h")) {
+         if (iname[0] && strstr(iname,".h")) {
             const char *lastsl = strrchr(iname,'/');
             if (lastsl) iname = lastsl + 1;
             char *tname = new char[strlen(iname)+1];

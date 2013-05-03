@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Id$
+// @(#)root/winnt:$Id: db9b3139b1551a1b4e31a17f57866a276d5cd419 $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2228,7 +2228,7 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
    TString sDrive, sType;
    char    szFs[32];
 
-   if (!opt || !strlen(opt)) {
+   if (!opt || !opt[0]) {
       return 0;
    }
 

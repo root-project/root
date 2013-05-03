@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: 2897f2e70909348e1e18681c5c7b0aee8c027744 $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -2358,14 +2358,14 @@ start:
          fulldir += dirname;
 
          if ((diritem=FindChildByName(0, fulldir.Data()))) {
-            if (!s || !strlen(s)) return diritem;
+            if (!s || !s[0]) return diritem;
             p = ++s;
             item = diritem;
             goto start;
          }
       }
 
-      if (!s || !strlen(s)) return item;
+      if (!s || !s[0]) return item;
       p = ++s;
    }
    return 0;

@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Id$
+// @(#)root/postscript:$Id: 4c9e20215831a232ab6d17c5544a4026c83c9388 $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot, Oleksandr Grebenyuk, Yue Shi Lai
 
 /*************************************************************************
@@ -1735,9 +1735,9 @@ void TPostScript::Initialize()
 
    PrintStr("%%Title: ");
    const char *pstitle = gStyle->GetTitlePS();
-   if (gPad && !strlen(pstitle)) pstitle = gPad->GetMother()->GetTitle();
+   if (gPad && !pstitle[0]) pstitle = gPad->GetMother()->GetTitle();
    if (strlen(GetName())<=80) PrintStr(GetName());
-   if(!strlen(pstitle) && fMode != 3) {;
+   if(!pstitle[0] && fMode != 3) {;
       PrintFast(2," (");
       if ( format <= 99 ) {;
          PrintFast(2," A");

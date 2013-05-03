@@ -110,7 +110,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
       return;
    }
    TClass *cl = 0;
-   if (strlen(classname) != 0) {
+   if (classname[0]) {
       cl = TClass::GetClass(classname);
       if (!cl) {
          Error("TDirectoryFile","Invalid class name: %s",classname);
@@ -1114,8 +1114,8 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title)
    // Note that the directory name may be of the form "a/b/c" to create a hierarchy of directories.
    // In this case, the function returns the pointer to the "a" directory if the operation is successful.
 
-   if (!name || !title || !strlen(name)) return 0;
-   if (!strlen(title)) title = name;
+   if (!name || !title || !name[0]) return 0;
+   if (!title[0]) title = name;
    if (GetKey(name)) {
       Error("mkdir","An object with name %s exists already",name);
       return 0;

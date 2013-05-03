@@ -1,4 +1,4 @@
-// @(#)root/unix:$Id$
+// @(#)root/unix:$Id: 887c618d89c4ed436e4034fc133f468fecad651b $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2686,7 +2686,7 @@ int TUnixSystem::Load(const char *module, const char *entry, Bool_t system)
 
 #ifdef NOCINT
    int i = UnixDynLoad(module);
-   if (!entry || !strlen(entry)) return i;
+   if (!entry || !entry[0]) return i;
 
    Func_t f = UnixDynFindSymbol(module, entry);
    if (f) return 0;

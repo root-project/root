@@ -1,4 +1,4 @@
-// @(#):$Id$
+// @(#):$Id: b94274447e46ae2cf700c562e57c3c38c6612b74 $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -263,7 +263,7 @@ void TGeoNodeEditor::DoNodeName()
 {
 // Change node name.
    const char *name = fNodeName->GetText();
-   if (!strlen(name) || !strcmp(name, fNode->GetName())) return;
+   if (!name[0] || !strcmp(name, fNode->GetName())) return;
    fNode->SetName(name);
 }
 

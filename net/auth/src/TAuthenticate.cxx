@@ -1,4 +1,4 @@
-// @(#)root/auth:$Id$
+// @(#)root/auth:$Id: f2cfa663e232707e1201467b5805ff1d13575326 $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -2478,7 +2478,7 @@ Int_t TAuthenticate::ClearAuth(TString &user, TString &passwd, Bool_t &pwdhash)
                         slen -= 10;
                      }
                   }
-                  if (!strlen(tmpsalt)) {
+                  if (!tmpsalt[0]) {
                      // No salt left
                      needsalt = 0;
                      slen = 0;

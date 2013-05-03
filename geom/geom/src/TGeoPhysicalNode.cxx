@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id$
+// @(#)root/geom:$Id: 899aa33cbb003a4fb9e0ae770afe43a0623c14e1 $
 // Author: Andrei Gheata   17/02/04
 
 /*************************************************************************
@@ -80,7 +80,7 @@ TGeoPhysicalNode::TGeoPhysicalNode() : TNamed()
 TGeoPhysicalNode::TGeoPhysicalNode(const char *path) : TNamed(path,"")
 {
 // Constructor
-   if (!strlen(path)) {
+   if (!path[0]) {
       Error("ctor", "path not valid");
       return;
    }

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Id$
+// @(#)root/xml:$Id: c6d85738bc844c3af55b6d85902df8fc3a014be2 $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -189,7 +189,7 @@ TXMLFile::TXMLFile(const char* filename, Option_t* option, const char* title, In
    Bool_t devnull = kFALSE;
    const char *fname = 0;
 
-   if (!filename || !strlen(filename)) {
+   if (!filename || !filename[0]) {
       Error("TXMLFile", "file name is not specified");
       goto zombie;
    }

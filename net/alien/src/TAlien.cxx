@@ -1,4 +1,4 @@
-// @(#)root/alien:$Id$
+// @(#)root/alien:$Id: db925cce3e3dc34e650f92e7e84655fb84ef04e9 $
 // Author: Andreas Peters   5/5/2005
 
 /*************************************************************************
@@ -114,7 +114,7 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
       fPort = gurl->GetPort();
    }
 
-   if (!strlen(uid)) {
+   if (!uid[0]) {
       if (gSystem->Getenv("alien_API_USER")) {
          fUser = gSystem->Getenv("alien_API_USER");
       } else {
@@ -151,7 +151,7 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
       MakeZombie();
    } else {
       if (passwd) {
-         if (!strlen(passwd)) {
+         if (!passwd[0]) {
             passwd = 0;
          }
       }

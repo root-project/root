@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Id$
+// @(#)root/treeviewer:$Id: c8e226dde2f9b6f39946bfe90cabcb778d63dc4f $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1436,7 +1436,7 @@ void TTreeViewer::ExecuteDraw()
    }
    // send draw command
    fLastOption = fBarOption->GetText();
-   if (!strlen(gopt) && dimension!=3)
+   if (!gopt[0] && dimension!=3)
    //{
    //   gopt = "hist";
    //   fLastOption = "hist";
@@ -2142,7 +2142,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                            // check if this should be pasted into the expression editor
                            if ((*itemType & kLTBranchType) || (*itemType & kLTCutType)) break;
                            fDialogBox = TGSelectBox::GetInstance();
-                           if (!fDialogBox || !strlen(vname)) break;
+                           if (!fDialogBox || !vname[0]) break;
                            if (item == fDialogBox->EditedEntry()) break;
                            // paste it
 //                           char first = (char) vname[0];

@@ -1,4 +1,4 @@
-// @(#)root/io:$Id$
+// @(#)root/io:$Id: 3a19890259ad6443ee313e090166614971ad4296 $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -387,7 +387,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    Bool_t devnull = kFALSE;
 
-   if (!fname1 || !strlen(fname1)) {
+   if (!fname1 || !fname1[0]) {
       Error("TFile", "file name is not specified");
       goto zombie;
    }
@@ -3828,7 +3828,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
       // check if we read through a file cache
       if (!strcasecmp(option, "CACHEREAD") ||
-         ((!strcasecmp(option,"READ") || !strlen(option)) && fgCacheFileForce)) {
+         ((!strcasecmp(option,"READ") || !option[0]) && fgCacheFileForce)) {
          // Try opening the file from the cache
          if ((f = TFile::OpenFromCache(n, option, ftitle, compress, netopt)))
             return f;

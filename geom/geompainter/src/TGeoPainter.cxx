@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Id$
+// @(#)root/geompainter:$Id: 58726ead32989b65bb2cbff2af4235fe9c6b12ae $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -639,7 +639,7 @@ void TGeoPainter::EditGeometry(Option_t *option)
 // Start the geometry editor.
    if (!gPad) return;
    if (!fIsEditable) {
-      if (!strlen(option)) gPad->GetCanvas()->GetCanvasImp()->ShowEditor();
+      if (!option[0]) gPad->GetCanvas()->GetCanvasImp()->ShowEditor();
       else TVirtualPadEditor::ShowEditor();
       CheckEdit();
    }   
