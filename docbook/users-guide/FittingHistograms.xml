@@ -122,12 +122,11 @@ method:</para></listitem>
 <para>The following script <code>$ROOTSYS/tutorials/fit/myfit.C</code> illustrates how to fit a 1D histogram with a user-defined function. First we declare the function. </para>
 
 <programlisting language="c++"><emphasis role="italic"><code>// define a function with 3 parameters</code></emphasis>
-Double_t fitf(Double_t *x,Double_t *par)
-{
-Double_t arg = 0;
-if (par[2] != 0) arg = (x[0] - par[1])/par[2];
-Double_t fitval = par[0]*TMath::Exp(-0.5*arg*arg);
-return fitval;
+Double_t fitf(Double_t *x,Double_t *par) {
+   Double_t arg = 0;
+   if (par[2]!=0) arg = (x[0] - par[1])/par[2];
+   Double_t fitval = par[0]*TMath::Exp(-0.5*arg*arg);
+   return fitval;
 }
 </programlisting>
 
@@ -496,7 +495,10 @@ gr-&gt;Draw("alp");
 <para>
 <code>Pext = a+((b-a)/(2))(sinPint+1)</code></para>
 <para>so that the internal value <code>Pint</code> can take on any value, while the external value Pext can take on values only between the lower limit a and the ext upper limit b. Since the transformation is necessarily non-linear, it would transform a nice linear problem into a nasty non-linear one, which is the reason why limits should be avoided if not necessary. In addition, the transformation does require some computer time, so it slows down the computation a little bit, and more importantly, it introduces additional numerical inaccuracy into the problem in addition to what is introduced in the numerical calculation of the FCN value. The effects of non-linearity and numerical round off both become more important as the external value gets closer to one of the limits (expressed as the distance to nearest limit divided by distance between limits). The user must therefore be aware of the fact that, for example, if he puts limits of (0, 1010) on a parameter, then the values 0.0 and 1. 0 will be indistinguishable to the accuracy of most machines. </para>
-<para>The transformation also affects the parameter error matrix, of course, so Minuit does a transformation of the error matrix (and the ''parabolic'' parameter errors) when there are parameter limits. Users should however realize that the transformation is only a linear approximation, and that it cannot give a meaningful result if one or more parameters is very close to a limit, where partial <code>Pext/</code>partial<code> Pint≠0</code>. Therefore, it is recommended that: </para>
+<para>The transformation also affects the parameter error matrix, of course, so Minuit does a transformation of the error matrix 
+(and the ''parabolic'' parameter errors) when there are parameter limits. Users should however 
+realize that the transformation is only a linear approximation, and that it cannot give a 
+meaningful result if one or more parameters is very close to a limit, where partial <code>Pext/</code>partial <code>Pint!=0</code>. Therefore, it is recommended that: </para>
 <itemizedlist>
 <listitem><para>Limits on variable parameters should be used only when needed in order to prevent the parameter from taking on unphysical values </para></listitem>
 <listitem><para>When a satisfactory minimum has been found using limits, the limits should then be removed if possible, in order to perform or re-perform the error analysis without limits </para></listitem>
@@ -622,8 +624,8 @@ gr-&gt;Draw("alp");
 <para>The multilayer perceptron is a simple feed-forward network with the following structure showed on the left.<inlinemediaobject><imageobject><imagedata fileref="pictures/0300008D.png" width="108pt" depth="115.5pt"/></imageobject></inlinemediaobject></para>
 <para>It is made of neurons characterized by a bias and weighted links in between  - let's call those links synapses. The input neurons receive the inputs, normalize them and forward them to the first hidden layer. Each neuron in any subsequent layer first computes a linear combination of the outputs of the previous layer. The output of the neuron is then function of that combination with f being linear for output neurons or a sigmoid for hidden layers. </para>
 <para>Such a structure is very useful because of two theorems:</para>
-<para>1. A linear combination of <code>sigmoids</code> can approximate any continuous function.</para>
-<para>2. Trained with <code>output=1</code> for the signal and 0 for the background, the approximated function of inputs <code>X</code> is the probability of signal, knowing <code>X</code>.</para>
+<para>1- A linear combination of <code>sigmoids</code> can approximate any continuous function.</para>
+<para>2- Trained with <code>output=1</code> for the signal and 0 for the background, the approximated function of inputs <code>X</code> is the probability of signal, knowing <code>X</code>.</para>
 </sect2>
 
 <sect2>

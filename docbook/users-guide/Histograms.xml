@@ -4773,11 +4773,18 @@ std::cout &lt;&lt; "\tUpper edge: " &lt;&lt; yAxis->GetBinUpEdge(3) &lt;&lt; std
 			</para>
 		</figure>
 		<para />
-		<programlisting language="c++">void hist3d() { TH3D *h3=new
-			TH3D(« h3 », »h3 »,20,-2,2,20,-2,2,20,0,4); Double_t x,y,z; for
-			(Int_t i=0; i&lt;10000; i++) { gRandom-&gt;Rannor(x,y); z=x*x+y*y;
-			h3-&gt;Fill(x,y,z); }
-			h3-&gt;Draw(“iso”); }</programlisting>
+<programlisting language="c++">void hist3d() {
+   TH3D *h3 = new TH3D("h3", "h3", 20, -2, 2, 20, -2, 2, 20, 0, 4);
+   Double_t x,y,z;
+   for (Int_t i=0; i&lt;10000; i++) {
+      gRandom-&gt;
+      Rannor(x,y);
+      z=x*x+y*y;
+      h3-&gt;Fill(x,y,z);
+   }
+   h3-&gt;Draw(“iso”);
+}
+</programlisting>
 	</sect1>
 	<sect1>
 		<title>3D Implicit Functions</title>
@@ -5021,16 +5028,10 @@ std::cout &lt;&lt; "\tUpper edge: " &lt;&lt; yAxis->GetBinUpEdge(3) &lt;&lt; std
 				</inlinemediaobject>
 			</para>
 			<para>To see the differences do:</para>
-			<programlisting language="c++">TFile
-				f(&quot;hsimple.root&quot;); hpx-&gt;Draw(&quot;BAR1&quot;);
-				<emphasis role="italic">
-					<code>// non ntuple histogram</code>
-				</emphasis>ntuple-&gt;Draw(&quot;px&quot;);
-				<emphasis role="italic">
-					<code>// ntuple histogra</code>
-				</emphasis>
-				m
-			</programlisting>
+<programlisting language="c++">TFile f(&quot;hsimple.root&quot;);
+hpx-&gt;Draw(&quot;BAR1&quot;); // non ntuple histogram</code>
+ntuple-&gt;Draw(&quot;px&quot;);// ntuple histogram
+</programlisting>
 			<para>
 				<emphasis role="italic">
 					<code>Non ntuple
@@ -5131,11 +5132,10 @@ std::cout &lt;&lt; "\tUpper edge: " &lt;&lt; yAxis->GetBinUpEdge(3) &lt;&lt; std
 				case, the rebin algorithm can create a rebinned histogram from the
 				original data i.e. the ntuple. To see the differences do for
 				example:</para>
-			<programlisting language="c++">TFile
-				f(&quot;hsimple.root&quot;); hpxpy-&gt;Draw(&quot;Lego2&quot;); //
-				non ntuple histogram
-				ntuple-&gt;Draw(&quot;px:py&quot;,&quot;&quot;,&quot;Lego2&quot;);
-				// ntuple histogram</programlisting>
+<programlisting language="c++">TFile f ("hsimple.root");
+hpxpy-&gt;Draw("Lego2"); // non ntuple histogram
+ntuple-&gt;Draw(&quot;px:py&quot;,&quot;&quot;,&quot;Lego2&quot;); // ntuple histogram
+</programlisting>
 			<para>Non-ntuple histogram:</para>
 			<para>Rebin with sliders (one for the x, one for the y-axis) and the
 				number of bins (shown in the field below them can be changed to any

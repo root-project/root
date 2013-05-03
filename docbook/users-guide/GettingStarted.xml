@@ -57,11 +57,7 @@
 
 <para>If you use the <code>afs</code> version you should set (<emphasis role="bold-italic">vers</emphasis> = version number, <emphasis role="bold-italic">arch</emphasis> = architecture): </para>
 
-<programlisting language="c++">$ export ROOTSYS=/afs/cern.ch/sw/lcg/external/root/
-vers
-/
-arch
-/root
+<programlisting language="c++">$ export ROOTSYS=/afs/cern.ch/sw/lcg/external/root/vers/arch/root
 </programlisting>
 
 <para>If ROOT was installed in <code>$HOME/myroot</code> directory on a local machine, one can do:</para>
