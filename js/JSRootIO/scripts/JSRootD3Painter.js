@@ -3637,8 +3637,8 @@ function createFillPatterns(svg, id, color) {
          bin.position.x = tx( bins[i].x + (scalex/2));
          bin.position.y = wei/2;
          bin.position.z = -(ty( bins[i].y + (scaley/2)));
-         bin.name = "x: [" + bins[i].x.toPrecision(4) + "," + (bins[i].x + scalex).toPrecision(4) + "]<br>" +
-                    "y: [" + bins[i].y.toPrecision(4) + "," + (bins[i].y + scaley).toPrecision(4) + "]<br>" + 
+         bin.name = "x: [" + bins[i].x.toPrecision(4) + ", " + (bins[i].x + scalex).toPrecision(4) + "]<br>" +
+                    "y: [" + bins[i].y.toPrecision(4) + ", " + (bins[i].y + scaley).toPrecision(4) + "]<br>" + 
                     "entries: " + bins[i].z.toFixed();
          toplevel.add( bin );
       }
@@ -3914,9 +3914,9 @@ function createFillPatterns(svg, id, color) {
          bin.position.x = tx( bins[i].x - (scalex/2));
          bin.position.y = tz( bins[i].z - (scalez/2));
          bin.position.z = -(ty( bins[i].y - (scaley/2)));
-         bin.name = "x: [" + bins[i].x.toPrecision(4) + "," + (bins[i].x + scalex).toPrecision(4) + "]<br>" +
-                    "y: [" + bins[i].y.toPrecision(4) + "," + (bins[i].y + scaley).toPrecision(4) + "]<br>" + 
-                    "z: [" + bins[i].z.toPrecision(4) + "," + (bins[i].z + scalez).toPrecision(4) + "]<br>" + 
+         bin.name = "x: [" + bins[i].x.toPrecision(4) + ", " + (bins[i].x + scalex).toPrecision(4) + "]<br>" +
+                    "y: [" + bins[i].y.toPrecision(4) + ", " + (bins[i].y + scaley).toPrecision(4) + "]<br>" + 
+                    "z: [" + bins[i].z.toPrecision(4) + ", " + (bins[i].z + scalez).toPrecision(4) + "]<br>" + 
                     "entries: " + bins[i].n.toFixed();
          toplevel.add( bin );
       }
