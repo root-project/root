@@ -2070,10 +2070,10 @@ root[] <emphasis role="bold"><code>gROOT-&gt;GetClass("ATLFMuon")-&gt;GetStreame
 <sect2>
 <title>Remote Authentication</title>
 <para>Connecting to a <code>rootd</code> daemon requires a remote user id and password. <emphasis role="bold"><code>TNetFile</code></emphasis> supports several ways for you to provide your login information:</para>
-<para>● Setting it globally via the static methods <emphasis role="bold"><code>TNetFile</code></emphasis><code>::SetUser</code> and <emphasis role="bold"><code>TNetFile</code></emphasis><code>::SetPasswd</code> </para>
-<para>● Via the <code>~/.netrc</code> file (same format and file as used by <code>ftp</code>) </para>
-<para>● Via command line prompt </para>
-<para>● Setting the SPR password file via the option <code>–P FILE</code>, i.e. the next line will start the <code>rootd</code> daemon using the files <code>$HOME/.srootdpass2.conf</code> and <code>$HOME/.srootdpass2</code> for SPR authentication:<code> rootd –P $HOME/.srootdpass2</code></para>
+<para>- Setting it globally via the static methods <emphasis role="bold"><code>TNetFile</code></emphasis><code>::SetUser</code> and <emphasis role="bold"><code>TNetFile</code></emphasis><code>::SetPasswd</code> </para>
+<para>- Via the <code>~/.netrc</code> file (same format and file as used by <code>ftp</code>) </para>
+<para>- Via command line prompt </para>
+<para>- Setting the SPR password file via the option <code>–P FILE</code>, i.e. the next line will start the <code>rootd</code> daemon using the files <code>$HOME/.srootdpass2.conf</code> and <code>$HOME/.srootdpass2</code> for SPR authentication:<code> rootd –P $HOME/.srootdpass2</code></para>
 </sect2>
 
 <sect2>

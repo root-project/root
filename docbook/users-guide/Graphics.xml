@@ -641,7 +641,7 @@ coordinates.</para>
 <entry rowsep="1" colsep="1">
 <para>Double_t</para>
 <para>Double_t</para>
-<para>Double_t ux,uy </para>
+<para>Double_t ux,uy</para>
 </entry>
 </row>
 <row>
@@ -998,84 +998,12 @@ root[] <emphasis role="bold">l-&gt;Draw()</emphasis>
 <code>x2,y2</code>. The arrow size is in percentage of the pad height. The
 <code>option</code> parameter has the following meanings:</para>
 
-<informaltable frame="none">
-<tgroup cols="4">
-<colspec colwidth="1321*" colname="column-1" colsep="0"/>
-<colspec colwidth="3052*" colname="column-2" colsep="0"/>
-<colspec colwidth="1216*" colname="column-3" colsep="0"/>
-<colspec colwidth="3434*" colname="column-4" colsep="0"/>
-<tbody>
-<row rowsep="0">
-<entry>
-<para>"&gt;"</para>
-</entry>
-<entry>
-<para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/020000A7.jpg" width="93.1pt" depth="16.75pt"/></imageobject></inlinemediaobject>
-</para>
-</entry>
-<entry>
-<para>"&lt;|"</para>
-</entry>
-<entry>
-<para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/020000A8.jpg" width="76.95pt" depth="16.75pt"/></imageobject></inlinemediaobject>
-</para>
-</entry>
-</row>
-<row rowsep="0">
-<entry>
-<para>"&lt;"</para>
-</entry>
-<entry>
-<para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/020000A9.jpg" width="88.15pt" depth="16.75pt"/></imageobject></inlinemediaobject>
-</para>
-</entry>
-<entry>
-<para>"|&gt;"</para>
-</entry>
-<entry>
-<para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/020000AA.jpg" width="75.7pt" depth="16.75pt"/></imageobject></inlinemediaobject>
-</para>
-</entry>
-</row>
-<row rowsep="0">
-<entry>
-<para>"&lt;&gt;"</para>
-</entry>
-<entry>
-<para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/020000AB.jpg" width="88.15pt" depth="16.75pt"/></imageobject></inlinemediaobject>
-</para>
-</entry>
-<entry>
-<para/>
-</entry>
-<entry>
-<para/>
-</entry>
-</row>
-<row rowsep="0">
-<entry>
-<para>"&lt;|&gt;"</para>
-</entry>
-<entry>
-<para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/020000AC.jpg" width="88.15pt" depth="16.75pt"/></imageobject></inlinemediaobject>
-</para>
-</entry>
-<entry>
-<para/>
-</entry>
-<entry>
-<para/>
-</entry>
-</row>
-</tbody>
-</tgroup>
-</informaltable>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/020000A7.jpg" width="93.1pt" depth="16.75pt"/></imageobject></inlinemediaobject> "&gt;" </para>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/020000A8.jpg" width="76.95pt" depth="16.75pt"/></imageobject></inlinemediaobject> "&lt;|"</para>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/020000A9.jpg" width="88.15pt" depth="16.75pt"/></imageobject></inlinemediaobject> "&lt;"</para>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/020000AA.jpg" width="75.7pt" depth="16.75pt"/></imageobject></inlinemediaobject> "|&gt;"</para>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/020000AB.jpg" width="88.15pt" depth="16.75pt"/></imageobject></inlinemediaobject> "&lt;&gt;"</para>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/020000AC.jpg" width="88.15pt" depth="16.75pt"/></imageobject></inlinemediaobject> "&lt;|&gt;"</para>
 
 <para>Once an arrow is drawn on the screen, one can:</para>
 <itemizedlist>
@@ -1597,7 +1525,7 @@ with the commands as shown in the table above.</para>
     <mml:math>
       <mml:mover>
         <mml:mi>a</mml:mi>
-        <mml:mn>‾</mml:mn>
+        <mml:mn>_</mml:mn>
       </mml:mover>
     </mml:math>
   </inlineequation>
@@ -1607,7 +1535,7 @@ is obtained with <code>#bar{a}</code></para>
     <mml:math>
       <mml:mover>
         <mml:mi>a</mml:mi>
-        <mml:mn>→</mml:mn>
+        <mml:mn>-></mml:mn>
       </mml:mover>
     </mml:math>
   </inlineequation>
@@ -2188,7 +2116,7 @@ automatically.</para>
 time, not the local one), defining the starting date of a histogram axis. This
 date should be greater than 01/01/95 and is given in seconds. There are three
 ways to define the time offset:</para>
-<para>1. By setting the global default time offset:</para>
+<para>1- By setting the global default time offset:</para>
 
 <programlisting language="c++">TDatime da(2003,02,28,12,00,00);
 gStyle-&gt;SetTimeOffset(da.Convert());
@@ -2198,14 +2126,14 @@ gStyle-&gt;SetTimeOffset(da.Convert());
 offset will be used. In the example above, notice the usage of
 <emphasis role="bold"><code>TDatime</code></emphasis> to translate an explicit
 date into the time in seconds required by <code>SetTimeFormat</code>.</para>
-<para>2. By setting a time offset to a particular axis:</para>
+<para>2- By setting a time offset to a particular axis:</para>
 <para/>
 
 <programlisting language="c++">TDatime dh(2001,09,23,15,00,00);
 h-&gt;GetXaxis()-&gt;SetTimeOffset(dh.Convert());
 </programlisting>
 
-<para>3. Together with the time format using <code>SetTimeFormat</code>. The
+<para>3- Together with the time format using <code>SetTimeFormat</code>. The
 time offset can be specified using the control character %F after the normal
 time format. <code>%F</code> is followed by the date in the format:
 <code>yyyy-mm-dd hh:mm:ss</code>.</para>
@@ -4054,13 +3982,13 @@ shape.GetBuffer3D(reqSections, localFrame);
 
 <para>Together these allow clients to publish objects to any one of the 3D viewers free of viewer specific drawing code. They allow our simple x3d viewer, and considerably more sophisticated OpenGL one to both work with both geometry libraries (<code>g3d</code> and <code>geom</code>) efficiently.</para>
 <para>In addition to external viewers, created in separate windows, this architecture is also used by internal <emphasis role="bold"><code>TPad</code></emphasis> drawing when it requires 3D projections. Publishing to a viewer consists of the following steps:</para>
-<para>   1. Create / obtain viewer handle.</para>
-<para>   2. Begin scene on viewer.</para>
-<para>   3. Fill mandatory parts of TBuffer3D describing object.</para>
-<para>   4. Add to viewer.</para>
-<para>   5. Fill optional parts of TBuffer3D as requested by viewer.</para>
+<para>   1- Create / obtain viewer handle.</para>
+<para>   2- Begin scene on viewer.</para>
+<para>   3- Fill mandatory parts of TBuffer3D describing object.</para>
+<para>   4- Add to viewer.</para>
+<para>   5- Fill optional parts of TBuffer3D as requested by viewer.</para>
 <para>        [ .... repeat 3/4/5 as required for other/child objects]</para>
-<para>   6. End scene on viewer.</para>
+<para>   6- End scene on viewer.</para>
 <para>You should attach the top-level node of your external geometry (or the manager) to a <emphasis role="bold"><code>TPad</code></emphasis> object using <emphasis role="bold"><code>TObject</code></emphasis><code>::Draw()</code>, and perform the publishing to the viewer in your object's <emphasis role="bold"><code>TObject</code></emphasis><code>::Paint()</code> overloaded method. See “Scene Rebuilds”, and example scripts, for more details.</para>
 
 <sect3>

@@ -89,21 +89,21 @@ List of base class-------------------------------
 0xc        public: TAttLine //Line attributes
 List of member variable--------------------------
 Defined in TLine
-(compiled) 0x0        protected: Double_t fX1 //X of 1st point
-(compiled) 0x0        protected: Double_t fY1 //Y of 1st point
-(compiled) 0x0        protected: Double_t fX2 //X of 2nd point
-(compiled) 0x0        protected: Double_t fY2 //Y of 2nd point
-(compiled) 0x8a3a718  static const enum TLine:: kLineNDC
-(compiled) 0x0        private: static TClass* fgIsA
+(compiled) 0x0        protected: Double_t fX1 //X of 1st point
+(compiled) 0x0        protected: Double_t fY1 //Y of 1st point
+(compiled) 0x0        protected: Double_t fX2 //X of 2nd point
+(compiled) 0x0        protected: Double_t fY2 //Y of 2nd point
+(compiled) 0x8a3a718  static const enum TLine:: kLineNDC
+(compiled) 0x0        private: static TClass* fgIsA
 List of member function--------------------------
-filename       line:size busy function type and name  (in TLine)
-(compiled) 0:0    0 public: virtual void ~TLine(void);
-(compiled) 0:0    0 public: TLine TLine(void);
-(compiled) 0:0    0 public: TLine TLine(Double_t x1,Double_t y1,Double_t x2,
+filename       line:size busy function type and name  (in TLine)
+(compiled) 0:0    0 public: virtual void ~TLine(void);
+(compiled) 0:0    0 public: TLine TLine(void);
+(compiled) 0:0    0 public: TLine TLine(Double_t x1,Double_t y1,Double_t x2,
 Double_t y2);
-(compiled) 0:0    0 public: TLine TLine(const TLine&amp; line);
-(compiled) 0:0    0 public: virtual void Copy(TObject&amp; line) const;
-(compiled) 0:0    0 public: virtual Int_t DistancetoPrimitive(Int_t px,Int_t py);
+(compiled) 0:0    0 public: TLine TLine(const TLine&amp; line);
+(compiled) 0:0    0 public: virtual void Copy(TObject&amp; line) const;
+(compiled) 0:0    0 public: virtual Int_t DistancetoPrimitive(Int_t px,Int_t py);
 ...
 (compiled) 0:0    0 public: static int ImplFileLine(void);
 (compiled) 0:0    0 public: static const char* ImplFileName(void);
@@ -205,8 +205,8 @@ root[] <emphasis role="bold"><code>.which script1.C</code></emphasis>
 <para>Notice that no surrounding <code>{}</code> are required in this case. To execute function <code>run()</code> in <code>script2.C</code> do:</para>
 
 <programlisting language="c++">
-root[] <emphasis role="bold"><code>.L script2.C</code></emphasis>             <emphasis role="italic"><code>// load script in memory</code></emphasis>
-root[] <emphasis role="bold"><code>run()</code></emphasis>                    <emphasis role="italic"><code>// execute entry point run</code></emphasis>
+root[] <emphasis role="bold"><code>.L script2.C</code></emphasis>             <emphasis role="italic"><code>// load script in memory</code></emphasis>
+root[] <emphasis role="bold"><code>run()</code></emphasis>                    <emphasis role="italic"><code>// execute entry point run</code></emphasis>
 Hello
 x = 3 y = 5 i = 101
 (int)0

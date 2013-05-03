@@ -247,25 +247,25 @@
 <para>where <code>maxEntries</code> is the maximum number of entries to be kept in the buffers. When the number of entries exceeds this value, the first entries in the <emphasis role="bold"><code>Tree</code></emphasis> are deleted and the buffers used again. An example of a script using a circular buffer is shown below:</para>
 
 <programlisting language="c++">void circular() {
-gROOT-&gt;cd(); //make sure that the Tree is memory resident
-TTree *T = new TTree("T","test circular buffers");
-TRandom r;
-Float_t px,py,pz;
-Double_t random;
-UShort_t i;
-T-&gt;Branch("px",&amp;px,"px/F");
-T-&gt;Branch("py",&amp;py,"py/F");
-T-&gt;Branch("pz",&amp;pz,"pz/F");
-T-&gt;Branch("random",&amp;random,"random/D");
-T-&gt;Branch("i",&amp;i,"i/s");
-T-&gt;SetCircular(20000);
-for (i = 0; i &lt; 65000; i++) {
-r.Rannor(px,py);
-pz = px*px + py*py;
-random = r.Rndm();
-T-&gt;Fill();
-}
-T-&gt;Print();
+   gROOT-&gt;cd(); //make sure that the Tree is memory resident
+   TTree *T = new TTree("T","test circular buffers");
+   TRandom r;
+   Float_t px,py,pz;
+   Double_t random;
+   UShort_t i;
+   T-&gt;Branch("px",&amp;px,"px/F");
+   T-&gt;Branch("py",&amp;py,"py/F");
+   T-&gt;Branch("pz",&amp;pz,"pz/F");
+   T-&gt;Branch("random",&amp;random,"random/D");
+   T-&gt;Branch("i",&amp;i,"i/s");
+   T-&gt;SetCircular(20000);
+   for (i = 0; i &lt; 65000; i++) {
+      r.Rannor(px,py);
+      pz = px*px + py*py;
+      random = r.Rndm();
+      T-&gt;Fill();
+   }
+   T-&gt;Print();
 }
 </programlisting>
 
@@ -307,7 +307,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <listitem><para>a pass on all entries is made like in <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw()</code></para></listitem>
 <listitem><para>    <code>var1 = majorname</code></para></listitem>
 <listitem><para>    <code>var2 = minorname</code></para></listitem>
-<listitem><para>    <code>sel  = 2ˆ{31} x majorname + minorname</code></para></listitem>
+<listitem><para>    <code>sel  = 2ˆ{31} x majorname + minorname</code></para></listitem>
 <listitem><para>    for each entry in the tree the sel expression is evaluated and the results array is sorted into <code>fIndexValues</code></para></listitem>
 </itemizedlist>
 <para>Once the index is computed, using the <emphasis role="bold"><code>TTree</code></emphasis><code>::GetEntryWithIndex(majornumber, minornumber)</code>         one entry can be retrieved. Example:</para>
@@ -409,7 +409,10 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 
 <sect1>
 <title>Adding a TBranch to Hold an Object</title>
-<para>To write a branch to hold an event object, we need to load the definition of the <code>Event</code> class, which is in <code>$ROOTSYS/test/libEvent.so</code>         <code>(if it doesn’t exist type make in $ROOTSYS/test). </code>An object can be saved in a tree if a ROOT dictionary for its class has been generated and loaded. </para>
+<para>To write a branch to hold an event object, we need to load the definition of the 
+<code>Event</code> class, which is in <code>$ROOTSYS/test/libEvent.so</code>
+(if it doesn’t exist type make in <code>$ROOTSYS/test</code>). An object can be saved in 
+a tree if a ROOT dictionary for its class has been generated and loaded. </para>
 
 <programlisting language="c++"><code>root[] </code><emphasis role="bold"><code>.L libEvent.so</code></emphasis>
 </programlisting>
@@ -485,7 +488,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <code>deque&lt;pair&lt;float,float&gt; &gt; fDequePair;</code>
 </programlisting>
 <itemizedlist>
-<listitem><para>As of ROOT 4.01/00, only <code>std::vector</code> of objects can be split.  Support for splitting the other type of STL containers will be introduced in the near future.</para></listitem>
+<listitem><para>As of ROOT 4.01/00, only <code>std::vector</code> of objects can be split.  Support for splitting the other type of STL containers will be introduced in the near future.</para></listitem>
 <listitem><para>C-structure data members are not supported in split mode.</para></listitem>
 <listitem><para>An object that is not split may be slow to browse.</para></listitem>
 <listitem><para>A STL container that is not split will not be accessible in the browser.</para></listitem>
@@ -804,12 +807,12 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <code>   enum Evect {kX,kY,kZ,kPX,kPY,kPZ,kPP};</code>
 <code>   vout[kPP] = vect[kPP];</code>
 
-<code>   Float_t h4    = field*2.99792e-4;</code>
-<code>   Float_t rho   = -h4/vect[kPP];</code>
-<code>   Float_t tet   = rho*step;</code>
+<code>   Float_t h4    = field*2.99792e-4;</code>
+<code>   Float_t rho   = -h4/vect[kPP];</code>
+<code>   Float_t tet   = rho*step;</code>
 <code>   Float_t tsint = tet*tet/6;</code>
 <code>   Float_t sintt = 1 - tsint;</code>
-<code>   Float_t sint  = tet*sintt;</code>
+<code>   Float_t sint  = tet*sintt;</code>
 <code>   Float_t cos1t = tet/2;</code>
 <code>   Float_t f1 = step*sintt;</code>
 <code>   Float_t f2 = step*cos1t;</code>
@@ -818,12 +821,12 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <code>   Float_t f5 = sint;</code>
 <code>   Float_t f6 = tet*cos1t*vect[kPZ];</code>
 
-<code>   vout[kX]  = vect[kX]  + (f1*vect[kPX] - f2*vect[kPY]);</code>
-<code>   vout[kY]  = vect[kY]  + (f1*vect[kPY] + f2*vect[kPX]);</code>
-<code>   vout[kZ]  = vect[kZ]  + (f1*vect[kPZ] + f3);</code>
-<code>   vout[kPX] = vect[kPX] + (f4*vect[kPX] - f5*vect[kPY]);</code>
-<code>   vout[kPY] = vect[kPY] + (f4*vect[kPY] + f5*vect[kPX]);</code>
-<code>   vout[kPZ] = vect[kPZ] + (f4*vect[kPZ] + f6); </code>
+<code>   vout[kX]  = vect[kX]  + (f1*vect[kPX] - f2*vect[kPY]);</code>
+<code>   vout[kY]  = vect[kY]  + (f1*vect[kPY] + f2*vect[kPX]);</code>
+<code>   vout[kZ]  = vect[kZ]  + (f1*vect[kPZ] + f3);</code>
+<code>   vout[kPX] = vect[kPX] + (f4*vect[kPX] - f5*vect[kPY]);</code>
+<code>   vout[kPY] = vect[kPY] + (f4*vect[kPY] + f5*vect[kPX]);</code>
+<code>   vout[kPZ] = vect[kPZ] + (f4*vect[kPZ] + f6); </code>
 <code>}</code>
 </programlisting>
 
@@ -852,12 +855,12 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <emphasis role="italic"><code>   //Initialize particle parameters at first point</code></emphasis>
 <code>   Float_t px,py,pz,p,charge=0;</code>
 <code>   Float_t vout[7];</code>
-<code>   Float_t mass  = 0.137;</code>
+<code>   Float_t mass  = 0.137;</code>
 <code>   Bool_t newParticle = kTRUE;                             </code>
-<code>   gstep.step    = 0.1;</code>
-<code>   gstep.destep  = 0;</code>
-<code>   gstep.nmec    = 0;</code>
-<code>   gstep.pid     = 0;</code>
+<code>   gstep.step    = 0.1;</code>
+<code>   gstep.destep  = 0;</code>
+<code>   gstep.nmec    = 0;</code>
+<code>   gstep.pid     = 0;</code>
 
 <emphasis role="italic"><code>   //transport particles </code></emphasis>
 <code>   for (Int_t i=0; i&lt;10000; i++) {</code>
@@ -866,10 +869,10 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <code>px = gRandom-&gt;Gaus(0,.02);</code>
 <code>py = gRandom-&gt;Gaus(0,.02);</code>
 <code>pz = gRandom-&gt;Gaus(0,.02);</code>
-<code>p  = TMath::Sqrt(px*px+py*py+pz*pz);</code>
+<code>p  = TMath::Sqrt(px*px+py*py+pz*pz);</code>
 <code>charge = 1;                                   </code>
 <code>if (gRandom-&gt;Rndm() &lt; 0.5) charge = -1;</code>
-<code>gstep.pid    += 1;</code>
+<code>gstep.pid    += 1;</code>
 <code>gstep.vect[0] = 0;</code>
 <code>gstep.vect[1] = 0;</code>
 <code>gstep.vect[2] = 0;</code>
@@ -877,8 +880,8 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <code>gstep.vect[4] = py/p;</code>
 <code>gstep.vect[5] = pz/p;</code>
 <code>gstep.vect[6] = p*charge;</code>
-<code>gstep.getot   = TMath::Sqrt(p*p + mass*mass);</code>
-<code>gstep.gekin   = gstep.getot - mass;</code>
+<code>gstep.getot   = TMath::Sqrt(p*p + mass*mass);</code>
+<code>gstep.gekin   = gstep.getot - mass;</code>
 <code>newParticle   = kFALSE;</code>
 <code>}</code>
 <emphasis role="italic"><code>// fill the Tree with current step parameters</code></emphasis>
@@ -891,7 +894,7 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <emphasis role="italic"><code>//apply energy loss</code></emphasis>
 <code>gstep.destep   = gstep.step*gRandom-&gt;Gaus(0.0002,0.00001);</code>
 <code>gstep.gekin -= gstep.destep;</code>
-<code>gstep.getot  = gstep.gekin + mass;</code>
+<code>gstep.getot  = gstep.gekin + mass;</code>
 <code>gstep.vect[6]= charge*TMath::Sqrt(gstep.getot*gstep.getot - mass*mass);</code>
 <code>  gstep.vect[0] = vout[0];</code>
 <code>gstep.vect[1] = vout[1];</code>
@@ -899,9 +902,9 @@ other objects (like <emphasis role="bold"><code>TH1</code></emphasis> and <empha
 <code>gstep.vect[3] = vout[3];                              </code>
 <code>gstep.vect[4] = vout[4];                             </code>
 <code>gstep.vect[5] = vout[5];</code>
-<code>gstep.nmec    = (Int_t)(5*gRandom-&gt;Rndm());</code>
+<code>gstep.nmec    = (Int_t)(5*gRandom-&gt;Rndm());</code>
 <code>for (Int_t l=0; l&lt;gstep.nmec; l++) gstep.lmec[l] = l;</code>
-<code>if  (gstep.gekin &lt; 0.001) newParticle = kTRUE;</code>
+<code>if  (gstep.gekin &lt; 0.001) newParticle = kTRUE;</code>
 <code>if  (TMath::Abs(gstep.vect[2]) &gt; 30) newParticle = kTRUE;</code>
 <code>   }</code>
 <emphasis role="italic"><code>   //save the Tree header. The file will be automatically </code></emphasis>
@@ -1627,8 +1630,8 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <code>26  tree-&gt;Draw("fEvtHdr.fEvtNum","fType=="type1" ");</code>
 <code>27  tree-&gt;Draw("fEvtHdr.fEvtNum","strstr(fType,"1" ");</code>
 <code>// Where fPoints is defined in the track class:</code>
-<code>//        Int_t  fNpoint; </code>
-<code>//        Int_t *fPoints; [fNpoint]</code>
+<code>//        Int_t  fNpoint; </code>
+<code>//        Int_t *fPoints; [fNpoint]</code>
 <code>28  tree-&gt;Draw("fTracks.fPoints");</code>
 <code>29  tree-&gt;Draw("fTracks.fPoints – fTracks.fPoints[][fAvgPoints]");</code>
 <code>30  tree-&gt;Draw("fTracks.fPoints[2][]- fTracks.fPoints[][55]");</code>
@@ -1661,65 +1664,65 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <sect3>
 <title>Explanations:</title>
 <para>
-<emphasis role="bold"><code>1. </code></emphasis>
+<emphasis role="bold"><code>1- </code></emphasis>
 <emphasis role="bold"><code>tree-&gt;Draw("fNtrack");</code></emphasis></para>
 <para>It fills the histogram with the number of tracks for each entry. <code>fNtrack</code> is a member of event. </para>
 <para>
-<emphasis role="bold"><code>2.</code></emphasis>
+<emphasis role="bold"><code>2-</code></emphasis>
 <emphasis role="bold"><code> tree-&gt;Draw("event.GetNtrack()");</code></emphasis></para>
 <para>Same as case 1, but use the method of event to get the number of tracks. When using a method, you can include parameters for the method as long as the parameters are literals.</para>
 <para>
-<emphasis role="bold"><code>3. tree-&gt;Draw("GetNtrack()");</code></emphasis></para>
+<emphasis role="bold"><code>3- tree-&gt;Draw("GetNtrack()");</code></emphasis></para>
 <para>Same as case 2, the object of the method is not specified. The command uses the first instance of the <code>GetNtrack</code> method found in the objects stored in the tree. We recommend using this shortcut only if the method name is unique.</para>
 <para>
-<emphasis role="bold"><code>4. tree-&gt;Draw</code></emphasis>
+<emphasis role="bold"><code>4- tree-&gt;Draw</code></emphasis>
 <emphasis role="bold"><code>("fH.fXaxis.fXmax"); </code></emphasis></para>
 <para>Draw the data member of a data member. In the tree, each entry has a histogram. This command draws the maximum value of the X-axis for each histogram.</para>
 <para>
-<emphasis role="bold"><code>5.</code></emphasis>
+<emphasis role="bold"><code>5-</code></emphasis>
 <emphasis role="bold"><code>tree-&gt;Draw("fH.fXaxis.GetXmax()");</code></emphasis></para>
 <para>Same as case 4, but use the method of a data member.</para>
 <para>
-<emphasis role="bold"><code>6.tree-&gt;Draw("fH.GetXaxis().fXmax");</code></emphasis></para>
+<emphasis role="bold"><code>6- tree-&gt;Draw("fH.GetXaxis().fXmax");</code></emphasis></para>
 <para>The same as case 4: a data member of a data member retrieved by a method.</para>
 <para>
-<emphasis role="bold"><code>7. </code></emphasis>
+<emphasis role="bold"><code>7- </code></emphasis>
 <emphasis role="bold"><code>tree-&gt;Draw("GetHis</code></emphasis>
 <emphasis role="bold"><code>togram().GetXaxis().GetXmax()");</code></emphasis></para>
 <para>Same as case 4, but using methods.</para>
 <para>
-<emphasis role="bold"><code>8.tree-&gt;Draw("fTracks.fPx","fEvtHdr.fEvtNum%10 == 0");</code></emphasis></para>
+<emphasis role="bold"><code>8- tree-&gt;Draw("fTracks.fPx","fEvtHdr.fEvtNum%10 == 0");</code></emphasis></para>
 <para>Use data members in the expression and in the selection parameter to plot <code>fPx</code> or all tracks in every 10th entry. Since <code>fTracks</code> is a <emphasis role="bold"><code>TClonesArray</code></emphasis> of <code>Tracks</code>, there will be d values of <code>fPx</code> for each entry.</para>
 <para>
-<emphasis role="bold"><code>9. tree-&gt;Draw("</code></emphasis>
+<emphasis role="bold"><code>9- tree-&gt;Draw("</code></emphasis>
 <emphasis role="bold"><code>fPx</code></emphasis>
 <emphasis role="bold"><code>","fEvtHdr.fEvtNum%10 == 0</code></emphasis>
 <emphasis role="bold"><code>");</code></emphasis></para>
 <para>Same as case 8, use the name of the data member directly.</para>
 <para>
-<emphasis role="bold"><code>10.tree-&gt;Draw("fMatrix</code></emphasis>
+<emphasis role="bold"><code>10- tree-&gt;Draw("fMatrix</code></emphasis>
 <emphasis role="bold"><code>"</code></emphasis>
 <emphasis role="bold"><code>);</code></emphasis></para>
 <para>When the index of the array is left out or when empty brackets are used <code>[]</code>, all values of the array are selected. Draw all values of <code>fMatrix</code> for each entry in the tree. If <code>fMatrix</code> is defined as: <code>Float_t fMatrix[4][4]</code>, all 16 values are used for each entry.</para>
 <para>
-<emphasis role="bold"><code>11. </code></emphasis>
+<emphasis role="bold"><code>11- </code></emphasis>
 <emphasis role="bold"><code>tree-&gt;Draw("fMatrix[ ][ ]");</code></emphasis></para>
 <para>The same as case 10, all values of <code>fMatrix</code> are drawn for each entry.</para>
 <para>
-<emphasis role="bold"><code>12. tree-&gt;Draw("</code></emphasis>
+<emphasis role="bold"><code>12- tree-&gt;Draw("</code></emphasis>
 <emphasis role="bold"><code>fMatrix[2][2]");</code></emphasis></para>
 <para>The single element at <code>fMatrix[2][2]</code> is drawn for each entry.</para>
 <para>
-<emphasis role="bold"><code>13. tree-&gt;Draw("fMatrix[</code></emphasis>
+<emphasis role="bold"><code>13- tree-&gt;Draw("fMatrix[</code></emphasis>
 
 <emphasis role="bold"><code>][0]");</code></emphasis></para>
 <para>Four elements of <code>fMatrix</code> are used: <code>fMatrix[1][0]</code>, <code>fMatrix[2][0]</code>, <code>fMatrix[3][0]</code>, <code>fMatrix[4][0]</code>.</para>
 <para>
-<emphasis role="bold"><code>14. tree-&gt;Draw(</code></emphasis>
+<emphasis role="bold"><code>14- tree-&gt;Draw(</code></emphasis>
 <emphasis role="bold"><code>"fMatrix[1][ ]");</code></emphasis></para>
 <para>Four elements of <code>fMatrix</code> are used: <code>fMatrix[1][0]</code>, <code>fMatrix[1][2]</code>, <code>fMatrix[1][3]</code>, <code>fMatrix[1][4]</code>.</para>
 <para>
-<emphasis role="bold"><code>15. tree-&gt;Draw</code></emphasis>
+<emphasis role="bold"><code>15- tree-&gt;Draw</code></emphasis>
 <emphasis role="bold"><code>("fMatrix - fVertex</code></emphasis>
 <emphasis role="bold"><code>"</code></emphasis>
 <emphasis role="bold"><code>);</code></emphasis></para>
@@ -1750,11 +1753,11 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <para>
 <code>fMatrix[3][2] – fVertex[3][2]</code></para>
 <para>
-<emphasis role="bold"><code>16. tree-&gt;Draw</code></emphasis>
+<emphasis role="bold"><code>16- tree-&gt;Draw</code></emphasis>
 <emphasis role="bold"><code>("fMatrix[2][1] - fVertex[5][1]");</code></emphasis></para>
 <para>This command selects one value per entry.</para>
 <para>
-<emphasis role="bold"><code>17. tree-&gt;Draw</code></emphasis>
+<emphasis role="bold"><code>17- tree-&gt;Draw</code></emphasis>
 <emphasis role="bold"><code>("fMatrix[ ][1] - fVertex[5][1]");</code></emphasis></para>
 <para>The first dimension of the array is taken by the <code>fMatrix</code>. </para>
 <para>
@@ -1766,7 +1769,7 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <para>
 <code>fMatrix[3][1] - fVertex[5][1]</code></para>
 <para>
-<emphasis role="bold"><code>18. tree-&gt;Draw</code></emphasis>
+<emphasis role="bold"><code>18- tree-&gt;Draw</code></emphasis>
 <emphasis role="bold"><code>("("fMatrix[2][ ] - fVertex[5][ ]");</code></emphasis></para>
 <para>The first dimension minimum is 2, and the second dimension minimum is 3 (from <code>fVertex</code>). Three values are selected from each entry:</para>
 <para>
@@ -1776,9 +1779,9 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <para>
 <code>fMatrix[2][2] - fVertex[5][2]</code></para>
 <para>
-<emphasis role="bold"><code>19. tree-&gt;Draw</code></emphasis>
+<emphasis role="bold"><code>19- tree-&gt;Draw</code></emphasis>
 <emphasis role="bold"><code>("fMatrix[ ][2] - fVertex[ ][1]")</code></emphasis></para>
-<para>This is similar to case 18. Four values are selected from each entry:</para>
+<para>This is similar to case 18- Four values are selected from each entry:</para>
 <para>
 <code>fMatrix[0][2] - fVertex[0][1]</code></para>
 <para>
@@ -1788,7 +1791,7 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <para>
 <code>fMatrix[3][2] - fVertex[3][1]</code></para>
 <para>
-<emphasis role="bold"><code>20. tree-&gt;Draw</code></emphasis>
+<emphasis role="bold"><code>20- tree-&gt;Draw</code></emphasis>
 <emphasis role="bold"><code>("fMatrix[ ][2] - fVertex[ ][ ]")</code></emphasis></para>
 <para>This is similar to case 19. Twelve values are selected (4x3) from each entry:</para>
 <para>
@@ -1816,43 +1819,43 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <para>
 <code>fMatrix[3][2] - fVertex[3][2]</code></para>
 <para>
-<emphasis role="bold"><code>21. tree-&gt;Draw</code></emphasis>
+<emphasis role="bold"><code>21- tree-&gt;Draw</code></emphasis>
 <emphasis role="bold"><code>("fMatrix[ ][ ] - fVertex[ ][ ]")</code></emphasis></para>
-<para>This is the same as case 15. The first dimension minimum is 4 (from <code>fMatrix</code>), and the second dimension minimum is 3 (from <code>fVertex</code>). Twelve values are selected from each entry.</para>
+<para>This is the same as case 15- The first dimension minimum is 4 (from <code>fMatrix</code>), and the second dimension minimum is 3 (from <code>fVertex</code>). Twelve values are selected from each entry.</para>
 <para>
-<emphasis role="bold"><code>22. tree-&gt;Draw</code></emphasis>
+<emphasis role="bold"><code>22- tree-&gt;Draw</code></emphasis>
 <emphasis role="bold"><code>("fClosestDistance")</code></emphasis></para>
 <para>This event data member <code>fClosestDistance</code> is a variable length array: </para>
 <para>
 <code>Float_t  *fClosestDistance;   //[fNvertex]</code></para>
 <para>This command selects all elements, but the number per entry depends on the number of vertices of that entry.</para>
 <para>
-<emphasis role="bold"><code>23. tree-&gt;Draw</code></emphasis>
+<emphasis role="bold"><code>23- tree-&gt;Draw</code></emphasis>
 <emphasis role="bold"><code>("fClosestDistance[fNvertex/2]")</code></emphasis></para>
 <para>With this command the element at <code>fNvertex/2</code> of the <code>fClosestDistance </code>array is selected. Only one per entry is selected.</para>
 <para>
-<emphasis role="bold"><code>24. tree-&gt;Draw</code></emphasis>
+<emphasis role="bold"><code>24- tree-&gt;Draw</code></emphasis>
 <emphasis role="bold"><code>("sqrt(fPx*fPx + fPy*fPy + fPz*fPz)")</code></emphasis></para>
 <para>This command shows the use of a mathematical expression. It draws the square root of the sum of the product.</para>
 <para>
-<emphasis role="bold"><code>25. tree-&gt;Draw("TMath::BreitWigner(fPx,3,2)")</code></emphasis></para>
-<para>The formula can contains call to a function that takes numerical arguments and returns a numerical value.  The function needs to be declared to the dictionary and need to be available from the global namespace.  In particular, global functions and public static member functions can be called.</para>
+<emphasis role="bold"><code>25- tree-&gt;Draw("TMath::BreitWigner(fPx,3,2)")</code></emphasis></para>
+<para>The formula can contains call to a function that takes numerical arguments and returns a numerical value.  The function needs to be declared to the dictionary and need to be available from the global namespace.  In particular, global functions and public static member functions can be called.</para>
 <para>
-<emphasis role="bold"><code>26. tree-&gt;Draw("fEvtHdr.fEvtNum","fType=="type1" ")</code></emphasis></para>
-<para>You can compare strings, using the symbols == and !=, in the first two parameters of the <code>Draw</code> command (<emphasis role="bold"><code>TTree</code></emphasis><code>Formula</code>).  In this case, the event number for ‘type1’ events is plotted.</para>
+<emphasis role="bold"><code>26- tree-&gt;Draw("fEvtHdr.fEvtNum","fType=="type1" ")</code></emphasis></para>
+<para>You can compare strings, using the symbols == and !=, in the first two parameters of the <code>Draw</code> command (<emphasis role="bold"><code>TTree</code></emphasis><code>Formula</code>).  In this case, the event number for ‘type1’ events is plotted.</para>
 <para>
-<emphasis role="bold"><code>27. tree-&gt;Draw("fEvtHdr.fEvtNum","strstr(fType,"1") ")</code></emphasis></para>
-<para>To compare strings, you can also use <code>strstr</code>.  In this case, events having a '1' in <code>fType</code> are selected.</para>
+<emphasis role="bold"><code>27- tree-&gt;Draw("fEvtHdr.fEvtNum","strstr(fType,"1") ")</code></emphasis></para>
+<para>To compare strings, you can also use <code>strstr</code>.  In this case, events having a '1' in <code>fType</code> are selected.</para>
 <para>
-<emphasis role="bold"><code>28. tree-&gt;Draw("fTracks.fPoints")</code></emphasis></para>
+<emphasis role="bold"><code>28- tree-&gt;Draw("fTracks.fPoints")</code></emphasis></para>
 <para>If <code>fPoints</code> is a data member of the <code>Track</code> class declared as:</para>
 <para>
-<code>Int_t  fNpoint;</code></para>
+<code>Int_t  fNpoint;</code></para>
 <para>
 <code>Int_t *fPoints; [fNpoint]</code></para>
-<para>The size of the array <code>fPoints</code> varies with each track of each event.  This command draws all the value in the <code>fPoints</code> arrays.</para>
+<para>The size of the array <code>fPoints</code> varies with each track of each event.  This command draws all the value in the <code>fPoints</code> arrays.</para>
 <para>
-<emphasis role="bold"><code>29. tree-&gt;Draw("fTracks.fPoints - fTracks.fPoints[][fAvgPoints]");</code></emphasis></para>
+<emphasis role="bold"><code>29- tree-&gt;Draw("fTracks.fPoints - fTracks.fPoints[][fAvgPoints]");</code></emphasis></para>
 <para><code>When fAvgPoints</code> is a data member of the <code>Event</code> class, this example selects:</para>
 <para>
 <code>fTracks[0].fPoints[0] - fTracks[0].fPoint[fAvgPoints]</code></para>
@@ -1902,7 +1905,7 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <code>fTracks[fNtrack-1].fPoints[maxn] - fTracks[fNtrack-1].fPoint[fAvgPoints]</code></para>
 <para>Where<code> max0</code>, <code>max1</code>,  <code>… max n</code>, is the size of the<code> fPoints </code>array for the respective track<code>.</code></para>
 <para>
-<emphasis role="bold"><code>30. tree-&gt;Draw("fTracks.fPoints[2][]– fTracks.fPoints[][55]") </code></emphasis></para>
+<emphasis role="bold"><code>30- tree-&gt;Draw("fTracks.fPoints[2][]– fTracks.fPoints[][55]") </code></emphasis></para>
 <para>For each event, this expression is selected:</para>
 <para>
 <code>fTracks[2].fPoints[0] - fTracks[0].fPoints[55]</code></para>
@@ -1918,8 +1921,8 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <code>fTracks[2].fPoints[max] - fTracks[max].fPoints[55]</code></para>
 <para>where max is the minimum of <code>fNtrack</code> and <code>fTracks[2].fNpoint</code>.</para>
 <para>
-<emphasis role="bold"><code>31. tree-&gt;Draw("fTracks.fPoints[][] - fTracks.fVertex[][]")</code></emphasis></para>
-<para>For each event and each track, this expression is selected. It is the difference between <code>fPoints</code> and of <code>fVertex</code>.  The number of elements used for each track is the minimum of <code>fNpoint</code> and 3 (the size of the <code>fVertex</code> array).</para>
+<emphasis role="bold"><code>31- tree-&gt;Draw("fTracks.fPoints[][] - fTracks.fVertex[][]")</code></emphasis></para>
+<para>For each event and each track, this expression is selected. It is the difference between <code>fPoints</code> and of <code>fVertex</code>.  The number of elements used for each track is the minimum of <code>fNpoint</code> and 3 (the size of the <code>fVertex</code> array).</para>
 <para>
 <code>fTracks[0].fPoints[0] - fTracks[0].fVertex[0]</code></para>
 <para>
@@ -1955,15 +1958,15 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <para>
 <code>// with fTracks[4].fNpoint==3</code></para>
 <para>
-<emphasis role="bold"><code>32. tree-&gt;Draw("fValid&amp;0x1","(fNvertex&gt;10) &amp;&amp; (fNseg&lt;=6000)")</code></emphasis></para>
+<emphasis role="bold"><code>32- tree-&gt;Draw("fValid&amp;0x1","(fNvertex&gt;10) &amp;&amp; (fNseg&lt;=6000)")</code></emphasis></para>
 <para>You can use bit patterns (<code>&amp;,|,&lt;&lt;</code>) or Boolean operation.</para>
 <para>
-<emphasis role="bold"><code>33. tree-&gt;Draw("fPx","(fBx&gt;.4) || (fBy&lt;=-.4)");</code></emphasis></para>
+<emphasis role="bold"><code>33- tree-&gt;Draw("fPx","(fBx&gt;.4) || (fBy&lt;=-.4)");</code></emphasis></para>
 <para>
-<emphasis role="bold"><code>34. tree-&gt;Draw("fPx","fBx*fBx*(fBx&gt;.4) + fBy*fBy*(fBy&lt;=-.4)");</code></emphasis></para>
-<para>The selection argument is used as a weight. The expression returns a multiplier and in case of a Boolean the multiplier is either 0 (for false) or 1 (for true). The first command draws <code>fPx</code> for the range between 0.4 and –0.4, the second command draws <code>fPx</code> for the same range, but adds a weight using the result of the second expression.</para>
+<emphasis role="bold"><code>34- tree-&gt;Draw("fPx","fBx*fBx*(fBx&gt;.4) + fBy*fBy*(fBy&lt;=-.4)");</code></emphasis></para>
+<para>The selection argument is used as a weight. The expression returns a multiplier and in case of a Boolean the multiplier is either 0 (for false) or 1 (for true). The first command draws <code>fPx</code> for the range between 0.4 and –0.4, the second command draws <code>fPx</code> for the same range, but adds a weight using the result of the second expression.</para>
 <para>
-<emphasis role="bold"><code>35. tree-&gt;Draw("fVertex","fVertex&gt;10")</code></emphasis></para>
+<emphasis role="bold"><code>35- tree-&gt;Draw("fVertex","fVertex&gt;10")</code></emphasis></para>
 <para>When using arrays in the selection and the expression, the selection is applied to each element of the array. </para>
 <para>
 <code>if (fVertex[0]&gt;10) fVertex[0]</code></para>
@@ -1972,42 +1975,42 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <para>
 <code>if (fVertex[2]&gt;10) fVertex[2]</code></para>
 <para>
-<emphasis role="bold"><code>36. tree-&gt;Draw("fPx[600]")</code></emphasis></para>
+<emphasis role="bold"><code>36- tree-&gt;Draw("fPx[600]")</code></emphasis></para>
 <para>
-<emphasis role="bold"><code>37. tree-&gt;Draw("fPx[600]","fNtrack &gt; 600")</code></emphasis></para>
-<para>When using a specific element for a variable length array the entries with fewer elements are ignored. Thus these two commands are equivalent.</para>
+<emphasis role="bold"><code>37- tree-&gt;Draw("fPx[600]","fNtrack &gt; 600")</code></emphasis></para>
+<para>When using a specific element for a variable length array the entries with fewer elements are ignored. Thus these two commands are equivalent.</para>
 <para>
-<emphasis role="bold"><code>38. tree-&gt;Draw("Nation")</code></emphasis></para>
+<emphasis role="bold"><code>38- tree-&gt;Draw("Nation")</code></emphasis></para>
 <para><code>Nation</code> is a <code>char*</code> branch. When drawing a <code>char*</code> it will plot an alphanumeric histogram, of the different value of the string <code>Nation</code>. The axis will have the <code>Nation</code> values. See “Histograms”.</para>
 <para>
-<emphasis role="bold"><code>39. tree-&gt;Draw("MyChar +0")</code></emphasis></para>
+<emphasis role="bold"><code>39- tree-&gt;Draw("MyChar +0")</code></emphasis></para>
 <para>If you want to plot a char* variable as a byte rather than a string, you can use the syntax above. </para>
 <para>
-<emphasis role="bold"><code>40. tree-&gt;Draw("fTracks.fTriggerBits")</code></emphasis></para>
-<para><code>fTriggerBits</code> is a data member of <emphasis role="bold"><code>TTrack</code></emphasis> of type <emphasis role="bold"><code>TBits</code></emphasis>. Objects of class <emphasis role="bold"><code>TBits</code></emphasis> can be drawn directly.  This command will create a 1D histogram from 0 to <code>nbits</code> which is filled for each non-null bit-number. </para>
+<emphasis role="bold"><code>40- tree-&gt;Draw("fTracks.fTriggerBits")</code></emphasis></para>
+<para><code>fTriggerBits</code> is a data member of <emphasis role="bold"><code>TTrack</code></emphasis> of type <emphasis role="bold"><code>TBits</code></emphasis>. Objects of class <emphasis role="bold"><code>TBits</code></emphasis> can be drawn directly.  This command will create a 1D histogram from 0 to <code>nbits</code> which is filled for each non-null bit-number. </para>
 <para>
-<emphasis role="bold"><code>41. tree-&gt;Draw("fMatrix-Alt$(fClosestDistance,0)")</code></emphasis></para>
-<para><code>Alt$(primary,alternate)</code> returns the value of "<code>primary</code>" if it is available for the current iteration; otherwise return the value of "<code>alternate</code>".  Assuming that <code>fClosestDistance</code> is a smaller array than <code>fMatrix</code>. This example will draw <code>fMatrix[i]+fClosestDistance[i]</code> for <code>i</code> less than the size of <code>fClosestDistance</code>, and will draw <code>fMatrix[i]+0</code> for the other value of <code>i</code>.</para>
+<emphasis role="bold"><code>41- tree-&gt;Draw("fMatrix-Alt$(fClosestDistance,0)")</code></emphasis></para>
+<para><code>Alt$(primary,alternate)</code> returns the value of "<code>primary</code>" if it is available for the current iteration; otherwise return the value of "<code>alternate</code>".  Assuming that <code>fClosestDistance</code> is a smaller array than <code>fMatrix</code>. This example will draw <code>fMatrix[i]+fClosestDistance[i]</code> for <code>i</code> less than the size of <code>fClosestDistance</code>, and will draw <code>fMatrix[i]+0</code> for the other value of <code>i</code>.</para>
 <para>
-<emphasis role="bold"><code>42. tree-&gt;Draw("fClosestDistance:Iteration$")</code></emphasis></para>
-<para>This example draws a 2D plot with, for all entries, <code>fClosestDistance[i]:i</code> for each value of <code>i</code> between 0 and the size of <code>fClosestDistance</code>.  <code>Iterations$</code> is one of four special variables giving some indications of the state of the loops implied by the formula:</para>
-<para><code>Entry$    :</code> return the current entry number (<emphasis role="bold"><code>TTree</code></emphasis><code>::GetReadEntry()</code>)</para>
-<para><code>Entries$  :</code> return the total number of entries (<emphasis role="bold"><code>TTree</code></emphasis><code>::GetEntries()</code>)</para>
-<para><code>Length$   :</code> return the total number of element of this formula for this entry</para>
+<emphasis role="bold"><code>42- tree-&gt;Draw("fClosestDistance:Iteration$")</code></emphasis></para>
+<para>This example draws a 2D plot with, for all entries, <code>fClosestDistance[i]:i</code> for each value of <code>i</code> between 0 and the size of <code>fClosestDistance</code>.  <code>Iterations$</code> is one of four special variables giving some indications of the state of the loops implied by the formula:</para>
+<para><code>Entry$    :</code> return the current entry number (<emphasis role="bold"><code>TTree</code></emphasis><code>::GetReadEntry()</code>)</para>
+<para><code>Entries$  :</code> return the total number of entries (<emphasis role="bold"><code>TTree</code></emphasis><code>::GetEntries()</code>)</para>
+<para><code>Length$   :</code> return the total number of element of this formula for this entry</para>
 <para><code>Iteration$:</code> return the current iteration over this formula for this entry (i.e. varies from 0 to <code>Length$</code>).</para>
 <para>
-<emphasis role="bold"><code>43. T-&gt;Draw("fLastTrack.GetPx():fLastTrack.fPx");</code></emphasis></para>
+<emphasis role="bold"><code>43- T-&gt;Draw("fLastTrack.GetPx():fLastTrack.fPx");</code></emphasis></para>
 <para><emphasis role="bold"><code>TRef</code></emphasis> and <emphasis role="bold"><code>TRefArray</code></emphasis> are automatically deferenced and this shows the value of the <code>fPx</code> of the track referenced by <code>fLastTrack</code>. To access the <emphasis role="bold"><code>TRef</code></emphasis> object itself use the '<code>@</code>' notation (see next example). This auto dereferencing can be extended (via an implementation of <emphasis role="bold"><code>TVirtualRefProxy</code></emphasis>) to any reference type.</para>
 <para>
-<emphasis role="bold"><code>44. T-&gt;Scan("((Track*)(fLastTrack@.GetObject())).GetPx()","","");</code></emphasis></para>
+<emphasis role="bold"><code>44- T-&gt;Scan("((Track*)(fLastTrack@.GetObject())).GetPx()","","");</code></emphasis></para>
 <para>Will cast the return value of <code>GetObject()</code> (which happens to be <emphasis role="bold"><code>TObject*</code></emphasis> in this case) before requesting the <code>GetPx()</code> member functions.</para>
 <para>
-<emphasis role="bold"><code>45. tree-&gt;Draw("This-&gt;GetReadEntry()");</code></emphasis></para>
+<emphasis role="bold"><code>45- tree-&gt;Draw("This-&gt;GetReadEntry()");</code></emphasis></para>
 <para>You can refer to the tree (or chain) containing the data by using the string '<code>This</code>'.  You can also call any <emphasis role="bold"><code>TTree</code></emphasis> methods.  Next example will display the name of the first '<code>user info</code>' object:</para>
 <para>
 <code>tree-&gt;Draw("This-&gt;GetUserInfo()-&gt;At(0)-&gt;GetName()");</code></para>
 <para>
-<emphasis role="bold"><code>46.  tree-&gt;Draw("mybr.mystring");</code></emphasis></para>
+<emphasis role="bold"><code>46-  tree-&gt;Draw("mybr.mystring");</code></emphasis></para>
 <para><emphasis role="bold"><code>TString</code></emphasis> and <code>std::string</code> object are plotted directly. The example 45 draws the same results - i.e. an histogram whose labels are the string value of '<code>mystring</code>':</para>
 <para>
 <code>tree-&gt;Draw("mybr.mystring.c_str()");</code></para>
@@ -2015,7 +2018,7 @@ myTree-&gt;Draw("Cost:Age", "","same");
 <para>
 <code>tree-&gt;Draw("mybr.mytstring.Data()");</code></para>
 <para>
-<emphasis role="bold"><code>47.  tree-&gt;Draw("myTimeStamp");</code></emphasis></para>
+<emphasis role="bold"><code>47-  tree-&gt;Draw("myTimeStamp");</code></emphasis></para>
 <para>You can plot plot objects of any class which has either <code>AsDouble</code> or <code>AsString</code> (<code>AsDouble</code> has priority). For such a class (for example <emphasis role="bold"><code>TTimeStamp</code></emphasis>), the line 46 will plot the same as:</para>
 <para>
 <code>tree-&gt;Draw("myTimeStamp.AsDouble");</code></para>
@@ -2134,20 +2137,20 @@ root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt; myList","fNtrack &gt; </
 <sect3>
 <title>Using an Event List</title>
 <para>A <emphasis role="bold"><code>TEventList</code></emphasis> or a <emphasis role="bold"><code>TEntryList</code></emphasis> can be used to limit the <emphasis role="bold"><code>TTree</code></emphasis> to the events in the list. The methods <code>SetEventList</code> and <code>SetEntryList</code> tell the tree to use the list and hence limit all subsequent calls to <code>Draw</code>, <code>Scan</code>, <code>Process</code>, <code>Query</code>, <code>Principal</code> and <code>CopyTree</code> methods to the entries in the list. In general, it affects the <code>GetEntryNumber</code> method and all functions using it for looping over the tree entries. The <code>GetEntry</code> and <code>GetEntries</code> methods are not affected. Note, that in the <code>SetEventList</code> method, the <emphasis role="bold"><code>TEventList</code></emphasis> argument is internally transformed into a <emphasis role="bold"><code>TEntryList</code></emphasis>, and this operation, in case of a <emphasis role="bold"><code>TChain</code></emphasis>, requires loading of all the tree headers. In this example, we create a list with all entries with more than 600 tracks and then set it so that the tree will use this list. To reset the <emphasis role="bold"><code>TTree</code></emphasis> to use all events use <code>SetEventList(0)</code> or <code>SetEntryList(0)</code>.</para>
-<para>1) Let’s look at an example. First, open the file and draw the <code>fNtrack</code>.</para>
+<para>1- Let’s look at an example. First, open the file and draw the <code>fNtrack</code>.</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>TFile *f = new TFile("Event.root")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 root[] <emphasis role="bold"><code>TTree *T = (TTree*)f-&gt;Get("T");</code></emphasis>
 root[] <emphasis role="bold"><code>T-&gt;Draw("fNtrack</code></emphasis><emphasis role="bold"><code>")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 </programlisting>
 
-<para>2) Now, put the entries with over 600 tracks into a <emphasis role="bold"><code>TE</code></emphasis><emphasis role="bold"><code>ntry</code></emphasis><emphasis role="bold"><code>List</code></emphasis> called <code>myList</code>. We get the list from the current directory and assign it to a variable list.</para>
+<para>2- Now, put the entries with over 600 tracks into a <emphasis role="bold"><code>TE</code></emphasis><emphasis role="bold"><code>ntry</code></emphasis><emphasis role="bold"><code>List</code></emphasis> called <code>myList</code>. We get the list from the current directory and assign it to a variable list.</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;Draw("&gt;&gt;myList","</code></emphasis><emphasis role="bold"><code>fNtrack &gt; 600"</code></emphasis><emphasis role="bold"><code>,</code></emphasis><emphasis role="bold"><code>"entrylist"</code></emphasis><emphasis role="bold"><code>)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 root[]<emphasis role="bold"><code>TE</code></emphasis><emphasis role="bold"><code>ntry</code></emphasis><emphasis role="bold"><code>List</code></emphasis> <emphasis role="bold"><code>*list=(</code></emphasis><emphasis role="bold"><code>TE</code></emphasis><emphasis role="bold"><code>ntry</code></emphasis><emphasis role="bold"><code>List</code></emphasis><emphasis role="bold"><code>*)gDirectory</code></emphasis><emphasis role="bold"><code>-&gt;Get("myList")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 </programlisting>
 
-<para>3) Instruct the tree <emphasis role="bold"><code>T</code></emphasis> to use the new list and draw it again. Note that this is exactly the same <code>Draw</code> command. The list limits the entries.</para>
+<para>3- Instruct the tree <emphasis role="bold"><code>T</code></emphasis> to use the new list and draw it again. Note that this is exactly the same <code>Draw</code> command. The list limits the entries.</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>T-&gt;SetE</code></emphasis><emphasis role="bold"><code>ntry</code></emphasis><emphasis role="bold"><code>List(list)</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
 root[] <emphasis role="bold"><code>T-&gt;Draw("fNtrack</code></emphasis><emphasis role="bold"><code>")</code></emphasis><emphasis role="bold"><code>;</code></emphasis>
@@ -2272,7 +2275,7 @@ root[] <emphasis role="bold">T-&gt;Draw("fNtrack&gt;&gt; h1");</emphasis>
 <code>tree.Draw("sqrt(x):sin(y)&gt;&gt;hsqrt(100,10,,50,.1,.5)";</code>
 <emphasis role="italic"><code>// plot sqrt(x) against sin(y) 100 bins in x-direction;</code></emphasis>
 <emphasis role="italic"><code>// lower limit on x-axis is 10; no upper limit</code></emphasis>
-<emphasis role="italic"><code>// 50 bins in y-direction; lower limit on y-axis is .1; upper limit is .5 </code></emphasis>
+<emphasis role="italic"><code>// 50 bins in y-direction; lower limit on y-axis is .1; upper limit is .5 </code></emphasis>
 </programlisting>
 
 <para>When the name is followed by binning information, appending the histogram with a "+", will not reset <code>hsqrt</code>, but will continue to fill it.</para>
@@ -2328,7 +2331,7 @@ root[] <emphasis role="bold"><code>a = T-&gt;GetV1()</code></emphasis>
 <para>By default, <emphasis role="bold"><code>TTree</code></emphasis><code>::Draw</code> creates these arrays with <code>fEstimate</code> words where <code>fEstimate</code> can be set via <emphasis role="bold"><code>TTree</code></emphasis><code>::SetEstimate</code>. If you have more entries than <code>fEstimate</code> only the first <code>fEstimate</code> selected entries will be stored in the arrays. The arrays are used as buffers. When <code>fEstimate</code> entries have been processed, ROOT scans the buffers to compute the minimum and maximum of each coordinate and creates the corresponding histograms. You can use these lines to read all entries into these arrays:</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>Int_t nestimate = (Int_t)T-&gt;GetEntries();</code></emphasis>
- root[] <emphasis role="bold"><code>T-&gt;SetEstimate(nestimate);</code></emphasis>
+ root[] <emphasis role="bold"><code>T-&gt;SetEstimate(nestimate);</code></emphasis>
 </programlisting>
 
 <para>Obviously, this will not work if the number of entries is very large. This technique is useful in several cases, for example if you want to draw a graph connecting all the <code>x</code>, <code>y(or z)</code> points. Note that you may have a tree (or chain) with 1 billion entries, but only a few may survive the cuts and will fit without problems in these arrays.</para>
