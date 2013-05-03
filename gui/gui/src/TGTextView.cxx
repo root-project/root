@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: 1f399bfa44c1323de4c6fe38d6d7a83a4bdf2e32 $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -468,7 +468,7 @@ Bool_t TGTextView::LoadBuffer(const char *txtbuf)
 {
    // Load text from a text buffer. Return false in case of failure.
 
-   if (!txtbuf || !strlen(txtbuf)) {
+   if (!txtbuf || !txtbuf[0]) {
       return kFALSE;
    }
 

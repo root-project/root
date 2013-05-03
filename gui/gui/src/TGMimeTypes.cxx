@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: c44ba45210ec143ec5bf9aa1708855c60088e954 $
 // Author: Fons Rademakers   18/01/98
 
 /*************************************************************************
@@ -70,7 +70,7 @@ TGMimeTypes::TGMimeTypes(TGClient *client, const char *filename)
       s[strlen(line)-1] = 0;       // strip off trailing \n
       while (*s == ' ') s++;       // strip leading blanks
       if (*s == '#') continue;     // skip comments
-      if (!strlen(s)) continue;    // skip empty lines
+      if (!s[0]) continue;    // skip empty lines
 
       if (*s == '[') {
          strlcpy(mime, line, 1024);

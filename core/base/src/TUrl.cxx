@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/base:$Id: a94734bd8505d0a8f1833346da666b196a797388 $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -111,7 +111,7 @@ void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
 
    fOptionsMap = 0;
 
-   if (!url || !strlen(url)) {
+   if (!url || !url[0]) {
       fPort = -1;
       return;
    }

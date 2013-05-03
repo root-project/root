@@ -6942,7 +6942,7 @@ Bool_t TTree::SetAlias(const char* aliasName, const char* aliasFormula)
    if (!aliasName || !aliasFormula) {
       return kFALSE;
    }
-   if (!strlen(aliasName) || !strlen(aliasFormula)) {
+   if (!aliasName[0] || !aliasFormula[0]) {
       return kFALSE;
    }
    if (!fAliases) {

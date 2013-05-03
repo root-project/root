@@ -1,4 +1,4 @@
-// @(#)root/tree:$Id$
+// @(#)root/tree:$Id: c5d87ada87b506444a9d0bc027d622273440b891 $
 // Author: Axel Naumann   14/10/2004
 
 /*************************************************************************
@@ -189,7 +189,7 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
          TBranchObject* bo=(TBranchObject*)branch;
          const char* clonesname=bo->GetClassName();
          contained=0;
-         if (!clonesname || !strlen(clonesname)) return 0;
+         if (!clonesname || !clonesname[0]) return 0;
          type=TClass::GetClass(clonesname);
       }
    } else {

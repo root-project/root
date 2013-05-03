@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Id$
+// @(#)root/x11ttf:$Id: 80028b538e60290371c1c5d73728f78b1c32f09a $
 // Author: Valeriy Onuchin (Xft support)  02/10/07
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
@@ -701,7 +701,7 @@ void TGX11TTF::DrawString(Drawable_t xwindow, GContext_t gc, Int_t x, Int_t y,
       return;
    }
 
-   if (!text || (len < 1) || !strlen(text)) {
+   if (!text || (len < 1) || !text[0]) {
       return;
    }
 

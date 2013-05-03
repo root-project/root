@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id$
+// @(#)root/proof:$Id: 7735e42a1b96a9f40ae76bd884acac883a178dee $
 // Author: G. Ganis March 2008
 
 /*************************************************************************
@@ -1497,7 +1497,7 @@ Int_t TProofLite::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueOnly,
 
    if (!IsValid()) return -1;
 
-   if (!macro || !strlen(macro)) {
+   if (!macro || !macro[0]) {
       Error("Load", "need to specify a macro name");
       return -1;
    }

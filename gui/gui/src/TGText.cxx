@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: ba5caabd5d69c640536a71daaa6968de966be4a8 $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -518,7 +518,7 @@ Bool_t TGText::LoadBuffer(const char *txtbuf)
 
    travel = fFirst;
 
-   if (!tbuf || !strlen(tbuf))
+   if (!tbuf || !tbuf[0])
       return kFALSE;
 
    buf = new char[kMaxLen];

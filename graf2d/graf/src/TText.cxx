@@ -1,4 +1,4 @@
-// @(#)root/graf:$Id$
+// @(#)root/graf:$Id: e854245ebf81bc25442c80bc8a0c2b51ebc4dcf1 $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -444,7 +444,7 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
    // w and h take the angle into account.
 
    const char *text = GetTitle();
-   if (!strlen(text)) {
+   if (!text[0]) {
       w = h = 0;
       return;
    }

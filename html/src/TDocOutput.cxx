@@ -1,4 +1,4 @@
-// @(#)root/html:$Id$
+// @(#)root/html:$Id: 7ff9b72609794c66acf6b369c4eeddfbfc63cf55 $
 // Author: Axel Naumann 2007-01-09
 
 /*************************************************************************
@@ -2215,7 +2215,7 @@ void TDocOutput::WriteHtmlFooter(std::ostream& out, const char* /*dir*/,
    today.Form("%d-%02d-%02d %02d:%02d", dtToday.GetYear(), dtToday.GetMonth(), dtToday.GetDay(), dtToday.GetHour(), dtToday.GetMinute());
 
    TString datimeString;
-   if (!lastUpdate || !strlen(lastUpdate)) {
+   if (!lastUpdate || !lastUpdate[0]) {
       lastUpdate = today;
    }
    const char* siValues[TDocParser::kNumSourceInfos] = { lastUpdate, author, copyright, lastUpdate, today };

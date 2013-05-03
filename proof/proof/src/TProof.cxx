@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id$
+// @(#)root/proof:$Id: a2a50e759072c37ccbc65ecbcce735a76de86e95 $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -7307,7 +7307,7 @@ Int_t TProof::ClearPackage(const char *package)
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("ClearPackage", "need to specify a package name");
       return -1;
    }
@@ -7335,7 +7335,7 @@ Int_t TProof::DisablePackage(const char *package)
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("DisablePackage", "need to specify a package name");
       return -1;
    }
@@ -7478,7 +7478,7 @@ Int_t TProof::BuildPackage(const char *package, EBuildPackageOpt opt, Int_t chkv
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("BuildPackage", "need to specify a package name");
       return -1;
    }
@@ -7748,7 +7748,7 @@ Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient, TList *loadop
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("LoadPackage", "need to specify a package name");
       return -1;
    }
@@ -7952,7 +7952,7 @@ Int_t TProof::UnloadPackage(const char *package)
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("UnloadPackage", "need to specify a package name");
       return -1;
    }
@@ -8137,7 +8137,7 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
 
    if (!IsValid()) return -1;
 
-   if (!package || !strlen(package)) {
+   if (!package || !package[0]) {
       Error("EnablePackage", "need to specify a package name");
       return -1;
    }
@@ -8601,7 +8601,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
 
    if (!IsValid()) return -1;
 
-   if (!macro || !strlen(macro)) {
+   if (!macro || !macro[0]) {
       Error("Load", "need to specify a macro name");
       return -1;
    }
@@ -8802,7 +8802,7 @@ Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks)
    // a blank.
    // Return 0 on success, -1 otherwise
 
-   if ((!libpath || !strlen(libpath))) {
+   if ((!libpath || !libpath[0])) {
       if (gDebug > 0)
          Info("AddDynamicPath", "list is empty - nothing to do");
       return 0;
@@ -8839,7 +8839,7 @@ Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks)
    // a blank.
    // Return 0 on success, -1 otherwise
 
-   if ((!incpath || !strlen(incpath))) {
+   if ((!incpath || !incpath[0])) {
       if (gDebug > 0)
          Info("AddIncludePath", "list is empty - nothing to do");
       return 0;
@@ -8876,7 +8876,7 @@ Int_t TProof::RemoveDynamicPath(const char *libpath, Bool_t onClient)
    // a blank.
    // Return 0 on success, -1 otherwise
 
-   if ((!libpath || !strlen(libpath))) {
+   if ((!libpath || !libpath[0])) {
       if (gDebug > 0)
          Info("RemoveDynamicPath", "list is empty - nothing to do");
       return 0;
@@ -8910,7 +8910,7 @@ Int_t TProof::RemoveIncludePath(const char *incpath, Bool_t onClient)
    // a blank.
    // Return 0 on success, -1 otherwise
 
-   if ((!incpath || !strlen(incpath))) {
+   if ((!incpath || !incpath[0])) {
       if (gDebug > 0)
          Info("RemoveIncludePath", "list is empty - nothing to do");
       return 0;

@@ -1,4 +1,4 @@
-// @(#)root/alien:$Id$
+// @(#)root/alien:$Id: 11fde82f21e66ae11add660ef69f33597f089efb $
 // Author: Fons Rademakers   23/5/2002
 
 /*************************************************************************
@@ -186,11 +186,11 @@ TList *TAlienResult::GetFileInfoList() const
       const char *uuid = GetKey(i, "guid");
       const char *msd = GetKey(i, "msd");
 
-      if (md5 && !strlen(md5))
+      if (md5 && !md5[0])
          md5 = 0;
-      if (uuid && !strlen(uuid))
+      if (uuid && !uuid[0])
          uuid = 0;
-      if (msd && !strlen(msd))
+      if (msd && !msd[0])
          msd = 0;
 
       TString turl = GetKey(i, "turl");

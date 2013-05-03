@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id$
+// @(#)root/geom:$Id: 601078dc44e227355f227975deb639cd63f1476b $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1313,7 +1313,7 @@ void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // check if we need to save shape/volume
    Bool_t mustDraw = kFALSE;
    if (fGeoManager->GetGeomPainter()->GetTopVolume()==this) mustDraw = kTRUE;
-   if (!strlen(option)) {
+   if (!option[0]) {
       fGeoManager->SetAllIndex();
       out << "   new TGeoManager(\"" << fGeoManager->GetName() << "\", \"" << fGeoManager->GetTitle() << "\");" << std::endl << std::endl;
 //      if (mustDraw) out << "   Bool_t mustDraw = kTRUE;" << std::endl;

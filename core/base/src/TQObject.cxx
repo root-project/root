@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/base:$Id: 5d6810ad46b864564f576f88aa9b154789d91d48 $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -305,7 +305,7 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
    if (signalMethod != (TMethod *) -1)   // -1 in case of interpreted class
       comment = signalMethod->GetCommentString();
 
-   if (!comment || !strlen(comment) || strstr(comment,"*SIGNAL")){
+   if (!comment || !comment[0] || strstr(comment,"*SIGNAL")){
       ::Error("TQObject::CheckConnectArgs",
               "signal %s::%s(%s), to declare signal use comment //*SIGNAL*",
       sender_class->GetName(), signal_method, signal_proto);
@@ -434,7 +434,7 @@ Bool_t TQConnectionList::Disconnect(void *receiver, const char *slot_name)
       const char *name = connection->GetName();
       void *obj = connection->GetReceiver();
 
-      if (!slot_name || !strlen(slot_name)
+      if (!slot_name || !slot_name[0]
                      || !strcmp(name,slot_name)) {
 
          if (!receiver || (receiver == obj)) {

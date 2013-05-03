@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/base:$Id: 65b4f3646f4e5b2fa77218ba786b7fe4e16e27be $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -890,8 +890,8 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
    // Note that the directory name may be of the form "a/b/c" to create a hierarchy of directories.
    // In this case, the function returns the pointer to the "a" directory if the operation is successful.
    
-   if (!name || !title || !strlen(name)) return 0;
-   if (!strlen(title)) title = name;
+   if (!name || !title || !name[0]) return 0;
+   if (!title[0]) title = name;
    TDirectory *newdir = 0;
    if (const char *slash = strchr(name,'/')) {
       Long_t size = Long_t(slash-name);

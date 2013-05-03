@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Id$
+// @(#)root/guibuilder:$Id: 99541fed972db7e4279fadcd4c0a0f0ae28a0a4d $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -3302,7 +3302,7 @@ Bool_t TGuiBldDragManager::Save(const char *file)
    }
    img->FromWindow(main->GetId());
 
-   if (!file || !strlen(file)) {
+   if (!file || !file[0]) {
       static TString dir(".");
       static Bool_t overwr = kFALSE;
       TGFileInfo fi;

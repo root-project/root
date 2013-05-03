@@ -1,4 +1,4 @@
-// @(#) root/glite:$Id$
+// @(#) root/glite:$Id: 341cb3fb00aaf4ff088449bebe1b7e95366bd11f $
 // Author: Anar Manafov <A.Manafov@gsi.de> 2006-07-30
 
 /*************************************************************************
@@ -149,11 +149,11 @@ TList *TGLiteResult::GetFileInfoList() const
       const char* uuid = GetKey(i, "guid");
       const char* msd = GetKey(i, "msd");
 
-      if (md5 && !strlen(md5))
+      if (md5 && !md5[0])
          md5 = 0;
-      if (uuid && !strlen(uuid))
+      if (uuid && !uuid[0])
          uuid = 0;
-      if (msd && !strlen(msd))
+      if (msd && !msd[0])
          msd = 0;
 
       TString turl = GetKey(i, "turl");

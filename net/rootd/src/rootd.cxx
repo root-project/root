@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Id$
+// @(#)root/rootd:$Id: 4d5ab379c1d34cf9123e315a1a5153b22cb9f404 $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -890,7 +890,7 @@ void RootdFstat(const char *buf)
 #endif
 
    int rc = -1;
-   if (!buf || !strlen(buf)) {
+   if (!buf || !buf[0]) {
 
       if (RootdIsOpen()) {
 #if defined(R__SEEK64)
