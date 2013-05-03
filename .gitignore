@@ -16,6 +16,13 @@
 *.la
 *.a
 
+# Dictionary source files
+G__*.cxx
+G__*.h
+etc/allDict.cxx
+etc/allDict.h
+
+
 # /
 /bin
 /lib
@@ -34,6 +41,7 @@
 /semantic.cache
 /.gdb_history
 /buildtools
+/roottest
 
 # /README/
 /README/ChangeLog
