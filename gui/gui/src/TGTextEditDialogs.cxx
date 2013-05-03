@@ -265,7 +265,7 @@ Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          switch (GET_SUBMSG(msg)) {
             case kTE_TEXTCHANGED:
                string = fBSearch->GetString();
-               if (strlen(string) == 0) {
+               if (!string[0]) {
                   fSearchButton->SetState(kButtonDisabled);
                } else {
                   fSearchButton->SetState(kButtonUp);
@@ -669,7 +669,7 @@ Bool_t TGGotoDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          switch (GET_SUBMSG(msg)) {
             case kTE_TEXTCHANGED:
                string = fBGoTo->GetString();
-               if (strlen(string) == 0)
+               if (!string[0])
                   fGotoButton->SetState(kButtonDisabled);
                else
                   fGotoButton->SetState(kButtonUp);

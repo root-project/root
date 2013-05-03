@@ -169,7 +169,7 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
       smsg.Form("%s", msg);
    else if (level >= kBreak && level < kSysError)
       smsg.Form("%s %s", type, msg);
-   else if (!location || strlen(location) == 0)
+   else if (!location || !location[0])
       smsg.Form("%s: %s", type, msg);
    else
       smsg.Form("%s in <%s>: %s", type, location, msg);

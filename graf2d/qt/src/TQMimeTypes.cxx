@@ -1,4 +1,4 @@
-// @(#)root/qt:$Id$
+// @(#)root/qt:$Id: 98e9b85f582807ea6469888efd07a1ab980ac70a $
 // Author: Valeri Fine   21/01/2003
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -78,7 +78,7 @@ TQMimeTypes::TQMimeTypes(const char *iconPath, const char *filename)
       s[strlen(line)-1] = 0;       // strip off trailing \n
       while (*s == ' ') s++;       // strip leading blanks
       if (*s == '#') continue;     // skip comments
-      if (!strlen(s)) continue;    // skip empty lines
+      if (!s[0]) continue;    // skip empty lines
 
       if (*s == '[') {
          strlcpy(mime, line,1024);

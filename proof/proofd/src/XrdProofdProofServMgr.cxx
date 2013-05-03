@@ -581,7 +581,7 @@ int XrdProofdProofServMgr::TouchSession(const char *fpid, const char *fpath)
 
    // Path
    XrdOucString path(fpath);
-   if (!fpath || strlen(fpath) == 0)
+   if (!fpath || !fpath[0])
       XPDFORM(path, "%s/%s.status", fActiAdminPath.c_str(), fpid);
 
    // Update file time stamps

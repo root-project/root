@@ -639,7 +639,7 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
    //  works for both histograms and graph depending on the enum FitObjectType defined in HFit
 
    if (option == 0) return;
-   if (strlen(option) == 0) return;
+   if (!option[0]) return;
  
    TString opt = option;
    opt.ToUpper();

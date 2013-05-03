@@ -123,7 +123,7 @@ TCut& TCut::operator+=(const char *rhs)
 {
    // Addition.
    
-   if (!rhs || strlen(rhs) == 0) return *this;
+   if (!rhs || !rhs[0]) return *this;
    if (fTitle.Length() == 0)
       fTitle = rhs;
    else
@@ -149,7 +149,7 @@ TCut& TCut::operator*=(const char *rhs)
 {
    // Multiplication.
 
-if (!rhs || strlen(rhs) == 0) return *this;
+if (!rhs || !rhs[0]) return *this;
    if (fTitle.Length() == 0)
       fTitle = rhs;
    else
@@ -247,9 +247,9 @@ TCut operator||(const TCut& lhs, const char *rhs)
 {
    // Logical or.
 
-   if (lhs.fTitle.Length() == 0 && (!rhs || strlen(rhs) == 0)) return TCut();
+   if (lhs.fTitle.Length() == 0 && (!rhs || !rhs[0])) return TCut();
    if (lhs.fTitle.Length() == 0) return TCut(rhs);
-   if (!rhs || strlen(rhs) == 0) return TCut(lhs);
+   if (!rhs || !rhs[0]) return TCut(lhs);
    TString s = "(" + lhs.fTitle + ")||(" + TString(rhs) + ")";
    return TCut(s.Data());
 }
@@ -259,8 +259,8 @@ TCut operator||(const char *lhs, const TCut& rhs)
 {
    // Logical or.
 
-   if ((!lhs || strlen(lhs) == 0) && rhs.fTitle.Length() == 0) return TCut();
-   if (!lhs || strlen(lhs) == 0) return TCut(rhs);
+   if ((!lhs || !lhs[0]) && rhs.fTitle.Length() == 0) return TCut();
+   if (!lhs || !lhs[0]) return TCut(rhs);
    if (rhs.fTitle.Length() == 0) return TCut(lhs);
    TString s = "(" + TString(lhs) + ")||(" + rhs.fTitle + ")";
    return TCut(s.Data());

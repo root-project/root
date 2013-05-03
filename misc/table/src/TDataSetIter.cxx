@@ -292,7 +292,7 @@ TDataSet *TDataSetIter::FindDataSet(const Char_t *name,const Char_t *path,Option
    //       the first found is returned.
    //
 
-   if (!name || strlen(name) == 0) return 0;
+   if (!name || !name[0]) return 0;
    if (strchr(name,'/')) {
       Error("FindDataSet","The name of the object <%s> can not contain any \"/\"",name);
       return 0;

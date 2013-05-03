@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/base:$Id: 8944840ba34631ec28efc779647618db43c0eee5 $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -943,7 +943,7 @@ Bool_t TSystem::IsFileInIncludePath(const char *name, char **fullpath)
    // If fullpath is != 0, the full path to the file is returned in *fullpath,
    // which must be deleted by the caller.
 
-   if (!name || !strlen(name)) return kFALSE;
+   if (!name || !name[0]) return kFALSE;
 
    TString aclicMode;
    TString arguments;

@@ -6,7 +6,8 @@
    the command line, and explaining the coding conventions, global variables and 
    the environment setup. If you have not installed ROOT, you can do so by 
    following the instructions in the appendix, or on the ROOT web site:  
-   <uri xmlns:xlink="http://root.cern.ch/root/Availability.html">http://root.cern.ch/root/Availability.html</uri></para>
+   <uri xmlns:xlink="http://root.cern.ch/root/Availability.html">http://root.cern.ch/root/Availability.html</uri>
+</para>
 
 <sect1>
 <title>Setting the Environment Variables</title>
@@ -16,17 +17,23 @@
    Please note: the syntax is for <code>bash</code>, if you are running 
    <code>tcsh</code> you will have to use <code>setenv</code> instead of 
    <code>export</code>. </para>
-<para>1. Define the variable $ROOTSYS to the directory where you unpacked the ROOT:</para>
+<para>
+1- Define the variable $ROOTSYS to the directory where you unpacked the ROOT:
+</para>
 
 <programlisting language="c++"><emphasis role="bold"><code>$ export ROOTSYS=$HOME/root</code></emphasis>
 </programlisting>
 
-<para>2. Add ROOTSYS/bin to your PATH: </para>
+<para>
+2- Add ROOTSYS/bin to your PATH:
+</para>
 
 <programlisting language="c++"><emphasis role="bold"><code>$ export PATH=$PATH:$ROOTSYS/bin</code></emphasis>
 </programlisting>
 
-<para>3. Setting the Library Path</para>
+<para>
+3- Setting the Library Path
+</para>
 <para>On HP-UX, before executing the interactive module, you must set the library path:</para>
 
 <programlisting language="c++"><emphasis role="bold"><code>$ export SHLIB_PATH=$SHLIB_PATH:$ROOTSYS/lib</code></emphasis>
@@ -50,11 +57,11 @@
 
 <para>If you use the <code>afs</code> version you should set (<emphasis role="bold-italic">vers</emphasis> = version number, <emphasis role="bold-italic">arch</emphasis> = architecture): </para>
 
-<programlisting language="c++"><emphasis role="bold"><code>$ export ROOTSYS=/afs/cern.ch/sw/lcg/external/root/</code></emphasis>
-<emphasis role="italic"><emphasis role="bold"><code>vers</code></emphasis></emphasis>
-<emphasis role="bold"><code>/</code></emphasis>
-<emphasis role="italic"><emphasis role="bold"><code>arch</code></emphasis></emphasis>
-<emphasis role="bold"><code>/root</code></emphasis> 
+<programlisting language="c++">$ export ROOTSYS=/afs/cern.ch/sw/lcg/external/root/
+vers
+/
+arch
+/root
 </programlisting>
 
 <para>If ROOT was installed in <code>$HOME/myroot</code> directory on a local machine, one can do:</para>
@@ -450,19 +457,25 @@ Print.Directory:          .
 <sect1>
 <title>The ROOT Command Line</title>
 <para>We have briefly touched on how to use the command line. There are different types of commands.</para>
-<para>1. CINT commands start with “<code>.</code>”</para>
+<para>
+1- CINT commands start with “<code>.</code>”
+</para>
 
 <programlisting language="c++">root[] <emphasis role="bold">.?</emphasis>  <emphasis role="italic">//this command will list all the CINT commands</emphasis>
 root[] <emphasis role="bold">.L &lt;filename&gt;</emphasis>  <emphasis role="italic">//load [filename]</emphasis>
 root[] <emphasis role="bold">.x &lt;filename&gt;</emphasis>  <emphasis role="italic">//load and execute [filename]</emphasis>
 </programlisting>
 
-<para>2. SHELL commands start with “<code>.!</code>” for example:</para>
+<para>
+2- SHELL commands start with “<code>.!</code>” for example:
+</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>.! ls</code></emphasis>
 </programlisting>
 
-<para>3. C++ commands follow C++ syntax (almost)</para>
+<para>
+3- C++ commands follow C++ syntax (almost)
+</para>
 
 <programlisting language="c++">root[] <emphasis role="bold"><code>TBrowser</code></emphasis><emphasis role="bold"><code> *b = new TBrowser()</code></emphasis>
 </programlisting>
@@ -707,7 +720,7 @@ root[] <emphasis role="bold"><code>gRandom = new TRandom2(0);</code></emphasis> 
 
 <programlisting language="c++"># Path used by dynamic loader to find shared libraries
 Unix.*.Root.DynamicPath:  .:~/rootlibs:$(ROOTSYS)/lib
-Unix.*.Root.MacroPath:    .:~/rootmacros:$(ROOTSYS)/macros
+Unix.*.Root.MacroPath:    .:~/rootmacros:$(ROOTSYS)/macros
 
 # Path where to look for TrueType fonts
 Unix.*.Root.UseTTFonts:     true
@@ -723,9 +736,18 @@ Rint.Canvas.MoveOpaque:  false
 Rint.Canvas.HighLightColor: 5
 </programlisting>
 
-<para>The various options are explained in <code>$ROOTSYS/etc/system.rootrc</code>. The <code>.rootrc</code> file contents are combined. For example, if the flag to use true type fonts is set to true in the <code>system.rootrc</code> file, you have to set explicitly it false in your local <code>.rootrc</code> file if you do not want to use true type fonts. Removing the <code>UseTTFonts </code>statement in the local <code>.rootrc</code> file will not disable true fonts. The value of the environment variable <code>ROOTDEBUG</code> overrides the value in the <code>.rootrc</code> file at startup. Its value is used to set <emphasis role="italic"><emphasis role="bold"><code>gDebug</code></emphasis></emphasis>         and helps for quick turn on debug mode in <emphasis role="bold"><code>TROOT</code></emphasis> startup.</para>
-<para>ROOT looks for scripts in the path specified in the <code>.rootrc</code> file in the <code>Root.Macro.Path </code>
-variable. You can expand this path to hold your own directories.</para>
+<para>The various options are explained in <code>$ROOTSYS/etc/system.rootrc</code>.
+The <code>.rootrc</code> file contents are combined. For example, if the flag to use true
+type fonts is set to true in the <code>system.rootrc</code> file, you have to set explicitly
+it false in your local <code>.rootrc</code> file if you do not want to use true type fonts.
+Removing the <code>UseTTFonts </code>statement in the local <code>.rootrc</code> file will
+not disable true fonts. The value of the environment variable <code>ROOTDEBUG</code>
+overrides the value in the <code>.rootrc</code> file at startup. Its value is used to set
+<emphasis role="italic"><emphasis role="bold"><code>gDebug</code></emphasis></emphasis>
+and helps for quick turn on debug mode in <emphasis role="bold"><code>TROOT</code></emphasis>
+startup.</para>
+<para>ROOT looks for scripts in the path specified in the <code>.rootrc</code> file in the
+<code>Root.Macro.Path</code> variable. You can expand this path to hold your own directories.</para>
 
 <sect2>
 <title>Logon and Logoff Scripts</title>

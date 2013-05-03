@@ -132,8 +132,8 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    if (size <= 0) size = fArrowSize;
    if (size <= 0) size = 0.05;
    const char* opt = option;
-   if (!opt || strlen(opt) == 0) opt = fOption.Data();
-   if (!opt || strlen(opt) == 0) opt = "|>";
+   if (!opt || !opt[0]) opt = fOption.Data();
+   if (!opt || !opt[0]) opt = "|>";
    TArrow *newarrow = new TArrow(x1,y1,x2,y2,size,opt);
    newarrow->SetAngle(fAngle);
    TAttLine::Copy(*newarrow);

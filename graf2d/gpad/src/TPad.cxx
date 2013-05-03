@@ -5799,7 +5799,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    TObject *obj = 0;
    Bool_t testlast = kFALSE;
    Bool_t hasname = strlen(pname) > 0;
-   if (strlen(pname) == 0 && strlen(emode) == 0) testlast = kTRUE;
+   if (!pname[0] && !emode[0]) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
    while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad()) {
       if (gROOT->GetEditorMode() == 0) {

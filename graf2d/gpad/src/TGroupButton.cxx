@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Id$
+// @(#)root/gpad:$Id: faa839c41a9482cbcb403b991070b15d606c9137 $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -104,7 +104,7 @@ void TGroupButton::ExecuteAction()
    char line[128];
    strlcpy(line,GetMethod(),128); 
    char *method = line;
-   if(!strlen(line)) return;
+   if(!line[0]) return;
    char *params = strchr(method,'(');
    if (params) {
       *params = 0;

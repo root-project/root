@@ -237,17 +237,17 @@ Let's comment it in detail:
 -   Line *63*: save the canvas as image. The format is automatically
     inferred from the file extension (it could have been eps, gif, ...).
 
-Let's give a look to the obtained plot in Figure [4.1](#f41). Beautiful 
+Let's give a look to the obtained plot in Figure [3.1](#f31). Beautiful 
 outcome for such a small bunch of lines, isn't it ?
 
-[f41]: figures/graf_with_law.png "f41"
-<a name="f41"></a>
+[f31]: figures/graf_with_law.png "f31"
+<a name="f31"></a>
 
 ![Your first plot with data points, a fit of an analytical function, a
 legend and some additional information in the form of graphics
 primitives and text. A well formatted plot, clear for the reader is
 crucial to communicate the relevance of your results to the
-reader.\label{f41}][f41]
+reader.\label{f31}][f31]
 
 ## Summary of Visual effects
 

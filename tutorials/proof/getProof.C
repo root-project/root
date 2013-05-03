@@ -105,8 +105,8 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
                  (uu.GetPort() != uref.GetPort())) ? kTRUE : kFALSE;
    Bool_t lite = kFALSE;
    if (ext && url) {
-      if (!strcmp(url, "lite://") || strlen(url) == 0) {
-         if (strlen(url) == 0) uu.SetUrl("lite://");
+      if (!strcmp(url, "lite://") || !url[0]) {
+         if (!url[0]) uu.SetUrl("lite://");
          if (dir && strlen(dir) > 0) gEnv->SetValue("Proof.Sandbox", dir);
          TString swrk("<default> workers");
          if (nwrks > 0) {

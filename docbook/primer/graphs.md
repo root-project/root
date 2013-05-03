@@ -92,7 +92,7 @@ theoretical prediction.
 With ROOT you can profit from rather advanced plotting routines, like
 the ones implemented in the `TPolarGraph`, a class to draw graphs in
 polar coordinates. It is very easy to use, as you see in the example
-macro and the resulting Figure [5.1](#f51):
+macro and the resulting Figure [4.1](#f41):
 
 ``` {.cpp .numberLines}
  // Builds a polar graph in a square Canvas.
@@ -119,10 +119,10 @@ macro and the resulting Figure [5.1](#f51):
 A new element was added on line 4, the size of the canvas: it is
 sometimes optically better to show plots in specific canvas sizes.
 
-[f51]: figures/polar_graph.png "f51"
-<a name="f51"></a>
+[f41]: figures/polar_graph.png "f41"
+<a name="f41"></a>
 
-![The graph of a fan obtained with ROOT.\label{f51}][f51]
+![The graph of a fan obtained with ROOT.\label{f41}][f41]
 
 ## 2D Graphs ##
 
@@ -204,14 +204,14 @@ Let's go through the code, step by step to understand what is going on:
 
 -   Line *32*: The *Surf1* option draws the `TF2` objects (but also
     bi-dimensional histograms) as coloured surfaces with a wire-frame on
-    three-dimensional canvases. See Figure [5.2](#f52).
+    three-dimensional canvases. See Figure [4.2](#f42).
 
 -   Line *37-41*: Here you learn how to create a canvas, partition it in
     two sub-pads and access them. It is very handy to show multiple
     plots in the same window or image.
 
-[f52]: figures/fitted2dFunction.png "f52"
-<a name="f52"></a>
+[f42]: figures/fitted2dFunction.png "f42"
+<a name="f42"></a>
 
 ![A dataset fitted with a bidimensional function visualised as a colored
-surface.\label{f52}][f52]
+surface.\label{f42}][f42]

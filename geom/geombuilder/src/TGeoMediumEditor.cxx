@@ -1,4 +1,4 @@
-// @(#):$Id$
+// @(#):$Id: c816a00a89512fcc6cd4a75fb1343c76ebaa3c24 $
 // Author: M.Gheata 
 
 /*************************************************************************
@@ -318,7 +318,7 @@ void TGeoMediumEditor::DoMedName()
 {
 // Slot for medium name.
    const char *name = fMedName->GetText();
-   if (!strlen(name) || !strcmp(name, fMedium->GetName())) return;
+   if (!name[0] || !strcmp(name, fMedium->GetName())) return;
    fMedium->SetName(name);
 }
 

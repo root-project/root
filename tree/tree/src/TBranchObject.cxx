@@ -438,7 +438,7 @@ void TBranchObject::SetAddress(void* add)
                // this is a basic type we can handle only if
                // he has a dimension:
                const char* index = dm->GetArrayIndex();
-               if (strlen(index) == 0) {
+               if (!index[0]) {
                   if (code == 1) {
                      // Case of a string ... we do not need the size
                      if (isDot) {

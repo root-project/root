@@ -1566,7 +1566,7 @@ TH1F *TGraph::GetHistogram() const
    Int_t npt = 100;
    if (fNpoints > npt) npt = fNpoints;
    const char *gname = GetName();
-   if (strlen(gname) == 0) gname = "Graph";
+   if (!gname[0]) gname = "Graph";
    ((TGraph*)this)->fHistogram = new TH1F(gname, GetTitle(), npt, rwxmin, rwxmax);
    if (!fHistogram) return 0;
    fHistogram->SetMinimum(minimum);

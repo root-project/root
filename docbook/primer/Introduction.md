@@ -24,17 +24,17 @@ these. In subsequent analysis, the statistical nature of the errors must
 be handled properly.
 
 As the last step, measurements are compared to models, and free model
-parameters need to be determined in this process. See Figure [2.1](#f21) for an 
+parameters need to be determined in this process. See Figure [1.1](#f11) for an 
 example of a function (model) fit to data points. Several standard methods are
 available, and a data analysis tool should provide easy access to more
 than one of them. Means to quantify the level of agreement between
 measurements and model must also be available.
 
-[f21]: figures/examplefit.png "f21"
-<a name="f21"></a>
+[f11]: figures/examplefit.png "f11"
+<a name="f11"></a>
 
 ![Measured data points with error bars and fitted quadratic
-function.\label{f21}][f21]
+function.\label{f11}][f11]
 
 Quite often, the data volume to be analyzed is large - think of
 fine-granular measurements accumulated with the aid of computers. A

@@ -981,7 +981,7 @@ void LevelPrint(bool prefix, int level, const char *location,
    if (level >= kFatal)
       type = "Fatal";
 
-   if (!location || strlen(location) == 0) {
+   if (!location || !location[0]) {
       if (prefix) fprintf(stderr, "%s: ", type);
       vfprintf(stderr, (char*)va_(fmt), ap);
    } else {

@@ -1869,7 +1869,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
             //
             // Check the comments in the text of the code for an index specification.
             const char* index = dm->GetArrayIndex();
-            if (strlen(index) != 0) {
+            if (index[0]) {
                // We are a pointer to a varying length array of basic types.
                //check that index is a valid data member name
                //if member is part of an object (e.g. fA and index=fN)
@@ -6942,7 +6942,7 @@ Bool_t TTree::SetAlias(const char* aliasName, const char* aliasFormula)
    if (!aliasName || !aliasFormula) {
       return kFALSE;
    }
-   if (!strlen(aliasName) || !strlen(aliasFormula)) {
+   if (!aliasName[0] || !aliasFormula[0]) {
       return kFALSE;
    }
    if (!fAliases) {

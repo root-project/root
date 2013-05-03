@@ -547,7 +547,7 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
    TString default_name;
    const char *fn;
 
-   if (strlen(FileName) == 0) {
+   if (!FileName[0]) {
 #ifdef ROOTETCDIR
       default_name.Form("%s/pdg_table.txt", ROOTETCDIR);
 #else

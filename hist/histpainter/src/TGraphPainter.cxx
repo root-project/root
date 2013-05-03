@@ -1022,7 +1022,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 
    // If no "drawing" option is selected and if chopt<>' ' nothing is done.
    if (optionLine+optionFill+optionCurve+optionStar+optionMark+optionBar+optionE == 0) {
-      if (strlen(chopt) == 0)  optionLine=1;
+      if (!chopt[0])  optionLine=1;
       else   return;
    }
 
@@ -1731,7 +1731,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
 
    //      Draw a standard Histogram (default)
 
-   if ((optionHist) || strlen(chopt) == 0) {
+   if ((optionHist) || !chopt[0]) {
       if (!optionRot) {
          gxwork[0] = wmin;
          gywork[0] = gPad->GetUymin();

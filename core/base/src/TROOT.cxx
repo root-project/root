@@ -1947,7 +1947,7 @@ void TROOT::SetEditorMode(const char *mode)
    // Set editor mode
 
    fEditorMode = 0;
-   if (strlen(mode) == 0) return;
+   if (!mode[0]) return;
    if (!strcmp(mode,"Arc"))      {fEditorMode = kArc;        return;}
    if (!strcmp(mode,"Line"))     {fEditorMode = kLine;       return;}
    if (!strcmp(mode,"Arrow"))    {fEditorMode = kArrow;      return;}

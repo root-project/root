@@ -1145,7 +1145,7 @@ void TApplicationServer::ErrorHandler(Int_t level, Bool_t abort, const char *loc
    TString node = "server";
    TString buf;
 
-   if (!location || strlen(location) == 0 ||
+   if (!location || !location[0] ||
        (level >= kPrint && level < kInfo) ||
        (level >= kBreak && level < kSysError)) {
       fprintf(stderr, "%s on %s: %s\n", type, node.Data(), msg);

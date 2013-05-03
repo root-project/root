@@ -275,7 +275,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       Warning("Constructor","Deleting canvas with same name: %s",name);
       delete old;
    }
-   if (strlen(name) == 0 || gROOT->IsBatch()) {   //We are in Batch mode
+   if (!name[0] || gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX = fWindowTopY = 0;
       if (form == 1) {
          fWindowWidth  = gStyle->GetCanvasDefW();
@@ -369,7 +369,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       Warning("Constructor","Deleting canvas with same name: %s",name);
       delete old;
    }
-   if (strlen(name) == 0 || gROOT->IsBatch()) {   //We are in Batch mode
+   if (!name[0] || gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
       fWindowWidth  = ww;
       fWindowHeight = wh;
@@ -451,7 +451,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       Warning("Constructor","Deleting canvas with same name: %s",name);
       delete old;
    }
-   if (strlen(name) == 0 || gROOT->IsBatch()) {   //We are in Batch mode
+   if (!name[0] || gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
       fWindowWidth  = ww;
       fWindowHeight = wh;

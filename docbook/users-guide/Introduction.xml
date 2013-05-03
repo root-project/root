@@ -63,9 +63,10 @@ and “PROOF: Parallel Processing”.</para>
 }</programlisting>
 
 <para>
-To show the ROOT command line, we show the ROOT prompt without numbers. In the interactive system, the ROOT prompt has a line number
-(<code>root[12]</code>); for the sake of simplicity, the line numbers are left off. Bold monotype font indicates the ROOT class names as
-<emphasis role="bold"><code>TObject</code></emphasis>, <emphasis role="bold"><code>TClass</code></emphasis>, and text for you to enter at verbatim.</para>
+To show the ROOT command line, we show the ROOT prompt without numbers. In the 
+interactive system, the ROOT prompt has a line number
+(<code>root[12]</code>); for the sake of simplicity, the line numbers are left off. 
+</para>
 
 <programlisting language="c++"
 >root[] <emphasis role="bold"><code>TLine l</code></emphasis>
@@ -76,7 +77,7 @@ TLine  X1=0.000000 Y1=0.000000 X2=0.000000 Y2=0.000000
 <para>Italic bold monotype font indicates a global variable, for example 
 <emphasis role="italic"><emphasis role="bold"><code>gDirectory</code></emphasis></emphasis>.
 <indexterm><primary>gDirectory</primary></indexterm>
-We also used the italic font to <emphasis><code>highlight the comments</code></emphasis> in the code listing. </para>
+</para>
 <para>When a variable term is used, it is shown between angled brackets. In the example below the variable term &lt;library&gt; can be replaced with any library in the
 <code>$ROOTSYS</code> directory: <code>$ROOTSYS/&lt;library&gt;/inc.</code></para>
 </sect1>
@@ -141,7 +142,7 @@ Run Time Type Identification (RTTI), Socket and Network Communication, Threads.
 <listitem><para><code>Sun Solaris for x86 (SUN C++ compiler, KAI/KCC)</code></para> </listitem>
 <listitem><para><code>Compaq Alpha (GCC, KAI/KCC, DEC/CXX)</code> </para> </listitem>
 <listitem><para><code>SGI Irix 32 and 64 bits (GCC, KAI/KCC, SGI C++ compiler) </code></para> </listitem>
-<listitem><para><code>Windows ≥ 95 (Microsoft Visual C++ compiler, Cygwin/GCC) </code></para> </listitem>
+<listitem><para><code>Windows >= 95 (Microsoft Visual C++ compiler, Cygwin/GCC) </code></para> </listitem>
 <listitem><para><code>MacOS X PPC, x86-32, x86-64 (GCC, Intel/ICC, IBM/xl)</code></para> </listitem>
 <listitem><para><code>PowerPC with GNU/Linux and GCC, Debian v2</code></para> </listitem>
 <listitem><para><code>PowerPC64 with GNU/Linux and GCC</code></para> </listitem>

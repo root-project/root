@@ -310,7 +310,7 @@ static Double_t StrToReal(const char *text, RealInfo_t & ri)
    char *minus;
    char buf[256];
 
-   if ((text == 0) || (strlen(text) == 0)) {
+   if ((text == 0) || (!text[0])) {
       ri.fStyle = kRSInt;
       ri.fIntNum = 0;
       ri.fSign = 1;
@@ -426,7 +426,7 @@ static char *IntToHexStr(char *text, ULong_t l)
       *(--p) = digits[l % 16];
       l /= 16;
    }
-   if (strlen(p) == 0) {
+   if (!p[0]) {
       // coverity[secure_coding]
       strcpy(text, "0");
    } else {

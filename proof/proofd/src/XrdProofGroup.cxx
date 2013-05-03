@@ -141,7 +141,7 @@ void XrdProofGroup::Count(const char *usr, int n)
    // Modify the active count
 
    // A username must be defined and an action required
-   if (!usr || strlen(usr) == 0 || n == 0)
+   if (!usr || !usr[0] || n == 0)
       return;
 
    XrdSysMutexHelper mhp(fMutex);
@@ -173,7 +173,7 @@ int XrdProofGroup::Active(const char *usr)
    XrdSysMutexHelper mhp(fMutex);
 
    int na = 0;
-   if (!usr || strlen(usr) == 0) {
+   if (!usr || !usr[0]) {
       na = fActives.Num();
    } else {
       XrdProofGroupMember *m = fActives.Find(usr);

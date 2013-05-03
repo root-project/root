@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Id$
+// @(#)root/winnt:$Id: db9b3139b1551a1b4e31a17f57866a276d5cd419 $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2228,7 +2228,7 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
    TString sDrive, sType;
    char    szFs[32];
 
-   if (!opt || !strlen(opt)) {
+   if (!opt || !opt[0]) {
       return 0;
    }
 
@@ -2418,25 +2418,25 @@ const char *TWinNTSystem::UnixPathName(const char *name)
    // General rules for applications creating names for directories and files or
    // processing names supplied by the user include the following:
    //
-   //  ·  Use any character in the current code page for a name, but do not use
+   //  *  Use any character in the current code page for a name, but do not use
    //     a path separator, a character in the range 0 through 31, or any character
    //     explicitly disallowed by the file system. A name can contain characters
    //     in the extended character set (128-255).
-   //  ·  Use the backslash (\), the forward slash (/), or both to separate
+   //  *  Use the backslash (\), the forward slash (/), or both to separate
    //     components in a path. No other character is acceptable as a path separator.
-   //  ·  Use a period (.) as a directory component in a path to represent the
+   //  *  Use a period (.) as a directory component in a path to represent the
    //     current directory.
-   //  ·  Use two consecutive periods (..) as a directory component in a path to
+   //  *  Use two consecutive periods (..) as a directory component in a path to
    //     represent the parent of the current directory.
-   //  ·  Use a period (.) to separate components in a directory name or filename.
-   //  ·  Do not use the following characters in directory names or filenames, because
+   //  *  Use a period (.) to separate components in a directory name or filename.
+   //  *  Do not use the following characters in directory names or filenames, because
    //     they are reserved for Windows:
    //                      < > : " / \ |
-   //  ·  Do not use reserved words, such as aux, con, and prn, as filenames or
+   //  *  Do not use reserved words, such as aux, con, and prn, as filenames or
    //     directory names.
-   //  ·  Process a path as a null-terminated string. The maximum length for a path
+   //  *  Process a path as a null-terminated string. The maximum length for a path
    //     is given by MAX_PATH.
-   //  ·  Do not assume case sensitivity. Consider names such as OSCAR, Oscar, and
+   //  *  Do not assume case sensitivity. Consider names such as OSCAR, Oscar, and
    //     oscar to be the same.
 
    static char temp[1024];
@@ -2704,12 +2704,12 @@ int TWinNTSystem::Link(const char *from, const char *to)
 
    snprintf(linkname,1024,"%s",to);
    _splitpath(linkname,winDrive,winDir,winName,winExt);
-   if ((strlen(winDrive) == 0 ) &&
-       (strlen(winDir) == 0 ))  {
+   if ((!winDrive[0] ) &&
+       (!winDir[0] ))  {
       _splitpath(szPath,winDrive,winDir,winName,winExt);
       snprintf(linkname,1024,"%s\\%s\\%s", winDrive, winDir, to);
    }
-   else if (strlen(winDrive) == 0)  {
+   else if (!winDrive[0])  {
       _splitpath(szPath,winDrive,winDir,winName,winExt);
       snprintf(linkname,1024,"%s\\%s", winDrive, to);
    }
@@ -2736,8 +2736,8 @@ int TWinNTSystem::Symlink(const char *from, const char *to)
    TCHAR          szPath[MAX_PATH];
 
    hRes = E_INVALIDARG;
-   if ((from == NULL) || (strlen(from) == 0) || (to == NULL) ||
-       (strlen(to) == 0))
+   if ((from == NULL) || (!from[0]) || (to == NULL) ||
+       (!to[0]))
       return -1;
 
    // Make typedefs for some ole32.dll functions so that we can use them

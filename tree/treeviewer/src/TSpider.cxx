@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Id$
+// @(#)root/treeviewer:$Id: 2bb6def14de16b049d4c979e73ad2b08d0936520 $
 // Author: Bastien Dalla Piazza  20/07/07
 
 /*************************************************************************
@@ -212,7 +212,7 @@ void TSpider::AddVariable(const char* varexp)
 {
    // Add a variable to the plot from its expression.
 
-   if(!strlen(varexp)) return;
+   if(!varexp[0]) return;
    TTreeFormula *fvar = new TTreeFormula("Var1",varexp,fTree);
    if(fvar->GetNdim() <= 0) return;
 

@@ -1,4 +1,4 @@
-// @(#)root/sql:$Id$
+// @(#)root/sql:$Id: 6f6608219c30ddefdf8e25d7cf170d5e69704cd3 $
 // Author: Sergey Linev  20/11/2005
 
 /*************************************************************************
@@ -402,7 +402,7 @@ TSQLFile::TSQLFile(const char* dbname, Option_t* option, const char* user, const
       fOption = "READ";
    }
 
-   if (!dbname || !strlen(dbname)) {
+   if (!dbname || !dbname[0]) {
       Error("TSQLFile", "Database not specified");
       goto zombie;
    }
