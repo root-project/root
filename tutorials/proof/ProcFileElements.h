@@ -30,9 +30,7 @@
 
 class ProcFileElements : public TObject {
 
-private:
-
-   TString     fName;          // File name 
+public:
    class ProcFileElement : public TObject {
    public:
       Long64_t    fFirst;   // Lower bound of this range
@@ -51,6 +49,9 @@ private:
 
       ClassDef(ProcFileElement, 1); // ProcFileElement class
    };
+
+private:
+   TString     fName;          // File name 
    TSortedList   *fElements;      // List of processed elements
 
    Long64_t    fFirst;   // Overall lower bound 
