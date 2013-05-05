@@ -1,7 +1,3 @@
-
-# Other Stuff
-*.d
-
 # Compiled Object files
 *.slo
 *.lo
@@ -22,6 +18,8 @@ G__*.h
 etc/allDict.cxx
 etc/allDict.h
 
+# Other Stuff
+*.d
 
 # /
 /bin
