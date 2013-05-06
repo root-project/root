@@ -3131,7 +3131,43 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 }
  
 #if !defined(R__WIN32)
+#if !defined(_AIX)
 #include <dlfcn.h>
+
+#else // _AIX
+
+#include "sys/ldr.h"
+
+struct Dl_info {
+  const char* dli_fname;
+};
+int dladdr(void* s, Dl_info* i) {
+   static const size_t bufSize = 4096;
+   G__FastAllocString buf(bufSize);
+   char* pldi = buf;
+   int r = loadquery(L_GETINFO,  pldi,  bufSize);
+   if (r == -1) {
+      i->dli_fname = 0;
+      return 0;
+   }
+   // First is main(), skip.
+   ld_info* ldi = (ld_info*)pldi;
+   while (ldi->ldinfo_next) {
+     pldi += ldi->ldinfo_next;
+     ldi = (ld_info*)pldi;
+     char* textBegin = (char*)ldi->ldinfo_textorg;
+     if (textBegin < s) {
+        char* textEnd = textBegin + ldi->ldinfo_textsize;
+        if (textEnd > s) {
+           i->dli_fname = ldi->ldinfo_filename;
+           return 1;
+        }
+     }
+   }
+   i->dli_fname = 0;
+   return 0;
+}
+#endif
 #endif
 
 typedef void (*voidfunc)();
