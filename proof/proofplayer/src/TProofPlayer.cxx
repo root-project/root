@@ -970,6 +970,7 @@ void TProofPlayer::UpdateProgressInfo()
       fProgressStatus->IncEntries(fProcessedRun);
       fProgressStatus->SetBytesRead(TFile::GetFileBytesRead()-fReadBytesRun);
       fProgressStatus->SetReadCalls(TFile::GetFileReadCalls()-fReadCallsRun);
+      fProgressStatus->SetLastUpdate();
       if (gMonitoringWriter)
          gMonitoringWriter->SendProcessingProgress(fProgressStatus->GetEntries(),
                                                    fReadBytesRun, kFALSE);
