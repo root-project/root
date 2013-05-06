@@ -209,6 +209,59 @@ find $srcdir -path '*/test' -prune -o \
              -path '*/roottest' -prune -o \
              -path '*/include' -prune -o \
              -path '*/roofit/*' -prune -o \
+             -path '*/io/castor/*' -prune -o \
+             -path '*/io/xmlparser/*' -prune -o \
+             -path '*/io/chirp/*' -prune -o \
+             -path '*/io/dcache/*' -prune -o \
+             -path '*/io/gfal/*' -prune -o \
+             -path '*/io/hdfs/*' -prune -o \
+             -path '*/io/rfio/*' -prune -o \
+             -path '*/net/alien/*' -prune -o \
+             -path '*/proof/proofx/*' -prune -o \
+             -path '*/core/winnt/*' -prune -o \
+             -path '*/sql/*' -prune -o \
+             -path '*/bindings/pyroot/*' -prune -o \
+             -path '*/bindings/ruby/*' -prune -o \
+             -path '*/core/macosx/*' -prune -o \
+             -path '*/geom/gdml/*' -prune -o \
+             -path '*/geom/geocad/*' -prune -o \
+             -path '*/graf2d/asimage/*' -prune -o \
+             -path '*/graf2d/cocoa/*' -prune -o \
+             -path '*/graf2d/gviz/*' -prune -o \
+             -path '*/graf2d/qt/*' -prune -o \
+             -path '*/graf2d/fitsio/*' -prune -o \
+             -path '*/graf2d/win32gdk/*' -prune -o \
+             -path '*/graf2d/x11/*' -prune -o \
+             -path '*/graf2d/x11ttf/*' -prune -o \
+             -path '*/graf3d/eve/*' -prune -o \
+             -path '*/graf3d/g3d/*' -prune -o \
+             -path '*/graf3d/gl/*' -prune -o \
+             -path '*/graf3d/gviz3d/*' -prune -o \
+             -path '*/graf3d/x3d/*' -prune -o \
+             -path '*/gui/qtgsi/*' -prune -o \
+             -path '*/gui/qtroot/*' -prune -o \
+             -path '*/hist/hbook/*' -prune -o \
+             -path '*/math/fftw/*' -prune -o \
+             -path '*/math/genetic/*' -prune -o \
+             -path '*/math/genvector/*' -prune -o \
+             -path '*/math/mathmore/*' -prune -o \
+             -path '*/math/minuit2/*' -prune -o \
+             -path '*/math/unuran/*' -prune -o \
+             -path '*/misc/memstat/*' -prune -o \
+             -path '*/misc/table/*' -prune -o \
+             -path '*/montecarlo/pythia6/*' -prune -o \
+             -path '*/montecarlo/pythia8/*' -prune -o \
+             -path '*/montecarlo/vmc/*' -prune -o \
+             -path '*/net/auth/*' -prune -o \
+             -path '*/net/bonjour/*' -prune -o \
+             -path '*/net/glite/*' -prune -o \
+             -path '*/net/krb5auth/*' -prune -o \
+             -path '*/net/ldap/*' -prune -o \
+             -path '*/net/monalisa/*' -prune -o \
+             -path '*/net/net/*' -prune -o \
+             -path '*/net/netx/*' -prune -o \
+             -path '*/tree/treeviewer/*' -prune -o \
+             -path '*/tmva/*' -prune -o \
              -follow \
              -name '*LinkDef*.h' -print | \
   grep -v -e '/RooFitCore_LinkDef.h$' -e "$srcdir/[[:alnum:]]*LinkDef*.h$" | \

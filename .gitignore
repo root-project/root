@@ -6,6 +6,7 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
+*.dll
 
 # Compiled Static libraries
 *.lai
@@ -40,6 +41,7 @@ etc/allDict.h
 /.gdb_history
 /buildtools
 /roottest
+/*.mk
 
 # /README/
 /README/ChangeLog
