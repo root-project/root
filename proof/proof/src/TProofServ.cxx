@@ -3276,8 +3276,7 @@ Int_t TProofServ::SetupCommon()
    // Send "ROOTversion|ArchCompiler" flag
    if (fProtocol > 12) {
       TString vac = gROOT->GetVersion();
-      if (gROOT->GetSvnRevision() > 0)
-         vac += TString::Format(":r%d", gROOT->GetSvnRevision());
+      vac += TString::Format(":%s", gROOT->GetGitCommit());
       TString rtag = gEnv->GetValue("ProofServ.RootVersionTag", "");
       if (rtag.Length() > 0)
          vac += TString::Format(":%s", rtag.Data());
@@ -5391,28 +5390,25 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                // not the same do a "BUILD.sh clean"
                Bool_t goodver = kTRUE;
                Bool_t savever = kFALSE;
-               TString v;
-               Int_t rev = -1;
+               TString v, r;
                FILE *f = fopen("PROOF-INF/proofvers.txt", "r");
                if (f) {
-                  TString r;
                   v.Gets(f);
                   r.Gets(f);
-                  rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
                   fclose(f);
                   if (chkveropt == TProof::kCheckROOT || chkveropt == TProof::kCheckSVN) {
                      if (v != gROOT->GetVersion()) goodver = kFALSE;
                      if (goodver && chkveropt == TProof::kCheckSVN)
-                        if (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision()) goodver = kFALSE;
+                        if (r != gROOT->GetGitCommit()) goodver = kFALSE;
                   }
                }
                if (!f || !goodver) {
                   if (!fromglobal || !gSystem->AccessPathName(pdir, kWritePermission)) {
                      savever = kTRUE;
-                     SendAsynMessage(TString::Format("%s: %s: version change (current: %s:%d,"
-                                          " build: %s:%d): cleaning ... ",
+                     SendAsynMessage(TString::Format("%s: %s: version change (current: %s:%s,"
+                                          " build: %s:%s): cleaning ... ",
                                           noth.Data(), package.Data(), gROOT->GetVersion(),
-                                          gROOT->GetSvnRevision(), v.Data(), rev));
+                                          gROOT->GetGitCommit(), v.Data(), r.Data()));
                      // Hard cleanup: go up the dir tree
                      gSystem->ChangeDirectory(packagedir);
                      // remove package directory
@@ -5475,7 +5471,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                         f = fopen("PROOF-INF/proofvers.txt", "w");
                         if (f) {
                            fputs(gROOT->GetVersion(), f);
-                           fputs(TString::Format("\n%d",gROOT->GetSvnRevision()), f);
+                           fputs(TString::Format("\n%s", gROOT->GetGitCommit()), f);
                            fclose(f);
                         }
                      }
@@ -6236,21 +6232,18 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
    vername += ".binversion";
 
    // Check binary version
-   TString v;
-   Int_t rev = -1;
+   TString v, r;
    Bool_t okfil = kFALSE;
    FILE *f = fopen(TString::Format("%s/%s", fCacheDir.Data(), vername.Data()), "r");
    if (f) {
-      TString r;
       v.Gets(f);
       r.Gets(f);
-      rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
       fclose(f);
       okfil = kTRUE;
    }
 
    Bool_t okver = (v != gROOT->GetVersion()) ? kFALSE : kTRUE;
-   Bool_t okrev = (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision()) ? kFALSE : kTRUE;
+   Bool_t okrev = (r != gROOT->GetGitCommit()) ? kFALSE : kTRUE;
    if (!okfil || !okver || !okrev) {
    PDB(kCache,1)
       Info("CopyFromCache",
@@ -6416,7 +6409,7 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
             FILE *f = fopen(TString::Format("%s/%s", fCacheDir.Data(), vername.Data()), "w");
             if (f) {
                fputs(gROOT->GetVersion(), f);
-               fputs(TString::Format("\n%d",gROOT->GetSvnRevision()), f);
+               fputs(TString::Format("\n%s", gROOT->GetGitCommit()), f);
                fclose(f);
             }
          }

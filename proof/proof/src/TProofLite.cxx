@@ -923,10 +923,9 @@ void TProofLite::Print(Option_t *option) const
    }
    Printf("User:                       %s", GetUser());
    TString ver(gROOT->GetVersion());
-   if (gROOT->GetSvnRevision() > 0)
-      ver += Form("|r%d", gROOT->GetSvnRevision());
+   ver += TString::Format("|%s", gROOT->GetGitCommit());
    if (gSystem->Getenv("ROOTVERSIONTAG"))
-      ver += Form("|%s", gSystem->Getenv("ROOTVERSIONTAG"));
+      ver += TString::Format("|%s", gSystem->Getenv("ROOTVERSIONTAG"));
    Printf("ROOT version|rev|tag:       %s", ver.Data());
    Printf("Architecture-Compiler:      %s-%s", gSystem->GetBuildArch(),
                                                gSystem->GetBuildCompilerVersion());
@@ -1621,18 +1620,14 @@ Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
 
    // Check binary version
    if (useCacheBinaries) {
-      TString v;
-      Int_t rev = -1;
+      TString v, r;
       FILE *f = fopen(Form("%s/%s", cacheDir.Data(), vername.Data()), "r");
       if (f) {
-         TString r;
          v.Gets(f);
          r.Gets(f);
-         rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
          fclose(f);
       }
-      if (!f || v != gROOT->GetVersion() ||
-          (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision()))
+      if (!f || v != gROOT->GetVersion() || r != gROOT->GetGitCommit())
          useCacheBinaries = kFALSE;
    }
 
@@ -1719,7 +1714,7 @@ Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
       FILE *f = fopen(Form("%s/%s", cacheDir.Data(), vername.Data()), "w");
       if (f) {
          fputs(gROOT->GetVersion(), f);
-         fputs(Form("\n%d",gROOT->GetSvnRevision()), f);
+         fputs(Form("\n%s", gROOT->GetGitCommit()), f);
          fclose(f);
       }
    }

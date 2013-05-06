@@ -98,7 +98,7 @@ etc/allDict.h
 /etc/system.rootauthrc
 /etc/system.rootdaemonrc
 /etc/root.mimes
-/etc/svninfo.txt
+/etc/gitinfo.txt
 /etc/cling
 /etc/allDict.cxx.pch
 /etc/allDict.cxx.h

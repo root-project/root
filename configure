@@ -6418,7 +6418,7 @@ if test ! "x$macosx106" = "x"; then
    rm -f bin/python64 bin/ruby64
 fi
 rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
- lib/libProofGui* bin/libProofGui* \
+ etc/svninfo.txt lib/libProofGui* bin/libProofGui* \
  lib/libMySQL* bin/libMySQL* lib/libGedOld* bin/libGedOld* \
  lib/libSQL.* bin/libSQL.* core/utils/src/rootcint_tmp \
  lib/libASPluginGS.* bin/g2rootold* bin/ptest main/src/ptest.* \
