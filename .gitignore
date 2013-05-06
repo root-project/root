@@ -1,7 +1,3 @@
-
-# Other Stuff
-*.d
-
 # Compiled Object files
 *.slo
 *.lo
@@ -25,6 +21,9 @@ etc/allDict.cxx
 etc/allDict.h
 rootcint_*.cxx
 rootcint_*.h
+
+# Other Stuff
+*.d
 
 # /
 /bin
@@ -53,6 +52,7 @@ cint/cint/include/iosenum.h
 cint/cint/include/sys/types.h
 cint/cint/include/systypes.h
 cint/cint/lib/posix/mktypes
+cint/cint/lib/posix/mktypes.dSYM
 cint/cint/main/cint_tmp
 cint/cint/src/loadfile_tmp.cxx
 
@@ -113,7 +113,7 @@ cint/cint/src/loadfile_tmp.cxx
 /etc/system.rootauthrc
 /etc/system.rootdaemonrc
 /etc/root.mimes
-/etc/svninfo.txt
+/etc/gitinfo.txt
 /etc/cling
 /etc/allDict.cxx.pch
 /etc/allDict.cxx.h

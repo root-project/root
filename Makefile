@@ -449,12 +449,12 @@ F77LIBS      := $(LIBFRTBEGIN) $(F77LIBS)
 endif
 endif
 
-##### Store SVN revision number #####
+##### Store Git SHA1 of this version #####
 
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist),)
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
-ifeq ($(shell which svn 2>&1 | sed -ne "s@.*/svn@svn@p"),svn)
-SVNREV  := $(shell bash $(ROOT_SRCDIR)/build/unix/svninfo.sh $(ROOT_SRCDIR))
+ifeq ($(shell which git 2>&1 | sed -ne "s@.*/git@git@p"),git)
+GITREV  := $(shell bash $(ROOT_SRCDIR)/build/unix/gitinfo.sh $(ROOT_SRCDIR))
 endif
 endif
 endif
@@ -904,7 +904,7 @@ redhat-tar:
 	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` && \
 	  rm -f root_v$$vers.source.tar.gz && \
 	  (cd ../ && tar 		\
-		--exclude=\\.svn 	\
+		--exclude=\\.git 	\
 		--exclude=root/debian 	\
 		--exclude=root/bin	\
 		--exclude=root/lib	\
@@ -1047,7 +1047,7 @@ endif
 	@rm -f $(CINTDIR)/lib/posix/a.out $(CINTDIR)/lib/posix/mktypes
 	@rm -f README/ChangeLog build/dummy.d
 	@rm -rf README/ReleaseNotes
-	@rm -f etc/svninfo.txt
+	@rm -f etc/gitinfo.txt
 	@(find . -path '*/daemons' -prune -o -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find . -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)
 	-@([ -d test ] && (cd test && $(MAKE) distclean); true)
@@ -1158,8 +1158,6 @@ install: all
 	   $(INSTALLDATA) cint/cint/include     $(DESTDIR)$(CINTINCDIR)/cint; \
 	   $(INSTALLDATA) cint/cint/lib         $(DESTDIR)$(CINTINCDIR)/cint; \
 	   $(INSTALLDATA) cint/cint/stl         $(DESTDIR)$(CINTINCDIR)/cint; \
-	   find $(DESTDIR)$(CINTINCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
-	   find $(DESTDIR)$(CINTINCDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing icons in $(DESTDIR)$(ICONPATH)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ICONPATH); \
 	   $(INSTALLDATA) icons/*.xpm           $(DESTDIR)$(ICONPATH); \
@@ -1168,40 +1166,26 @@ install: all
 	   echo "Installing fonts in $(DESTDIR)$(TTFFONTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TTFFONTDIR); \
 	   $(INSTALLDATA) fonts/*               $(DESTDIR)$(TTFFONTDIR); \
-	   find $(DESTDIR)$(TTFFONTDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
-	   find $(DESTDIR)$(TTFFONTDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing misc docs in $(DESTDIR)$(DOCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) LICENSE               $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) README/*              $(DESTDIR)$(DOCDIR); \
-	   find $(DESTDIR)$(DOCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
-	   find $(DESTDIR)$(DOCDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing tutorials in $(DESTDIR)$(TUTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TUTDIR); \
 	   $(INSTALLDATA) tutorials/*           $(DESTDIR)$(TUTDIR); \
-	   find $(DESTDIR)$(TUTDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
-	   find $(DESTDIR)$(TUTDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing tests in $(DESTDIR)$(TESTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TESTDIR); \
 	   $(INSTALLDATA) test/*                $(DESTDIR)$(TESTDIR); \
-	   find $(DESTDIR)$(TESTDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
-	   find $(DESTDIR)$(TESTDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing macros in $(DESTDIR)$(MACRODIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MACRODIR); \
 	   $(INSTALLDATA) macros/*              $(DESTDIR)$(MACRODIR); \
-	   find $(DESTDIR)$(MACRODIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
-	   find $(DESTDIR)$(MACRODIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing man(1) pages in $(DESTDIR)$(MANDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MANDIR); \
 	   $(INSTALLDATA) man/man1/*            $(DESTDIR)$(MANDIR); \
-	   find $(DESTDIR)$(MANDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
-	   find $(DESTDIR)$(MANDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing config files in $(DESTDIR)$(ETCDIR)"; \
 	   rm -f                                $(DESTDIR)$(ETCDIR)/system.rootmap; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
 	   $(INSTALLDATA) etc/*                 $(DESTDIR)$(ETCDIR); \
-	   find $(DESTDIR)$(ETCDIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
-	   find $(DESTDIR)$(ETCDIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	   echo "Installing Autoconf macro in $(DESTDIR)$(ACLOCALDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ACLOCALDIR); \
 	   $(INSTALLDATA) $(ROOT_SRCDIR)/build/misc/root.m4 $(DESTDIR)$(ACLOCALDIR); \
@@ -1210,8 +1194,6 @@ install: all
 	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDATA) $(ROOT_SRCDIR)/geom/gdml/*.py $(DESTDIR)$(LIBDIR); \
-	   find $(DESTDIR)$(DATADIR) -name CVS -exec rm -rf {} \; >/dev/null 2>&1; \
-	   find $(DESTDIR)$(DATADIR) -name .svn -exec rm -rf {} \; >/dev/null 2>&1; \
 	fi
 
 uninstall:
@@ -1350,7 +1332,6 @@ ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 runtimedirs:
 	@echo "Rsync'ing $(ROOT_SRCDIR)/etc..."; \
 	$(RSYNC) \
-		--exclude '.svn' \
 		--exclude root.mimes \
 		--exclude system.rootauthrc \
 		--exclude system.rootdaemonrc \
@@ -1359,17 +1340,15 @@ runtimedirs:
 		--exclude proofd.xinetd \
 		--exclude rootd.rc.d \
 		--exclude rootd.xinetd \
-		--exclude svninfo.txt \
+		--exclude gitinfo.txt \
 		$(ROOT_SRCDIR)/etc . ; \
 	echo "Rsync'ing $(ROOT_SRCDIR)/macros..."; \
 	$(RSYNC) \
-		--exclude '.svn' \
 		--exclude html.C \
 		$(ROOT_SRCDIR)/macros . ; \
 	for d in icons fonts README tutorials test man; do \
 		echo "Rsync'ing $(ROOT_SRCDIR)/$$d..."; \
 		$(RSYNC) \
-			--exclude '.svn' \
 			--exclude '*.o' \
 			--exclude '*.so' \
 			--exclude '*.lib' \
@@ -1380,7 +1359,7 @@ endif
 
 showbuild:
 	@echo "ROOTSYS            = $(ROOTSYS)"
-	@echo "SVNREV             = $(SVNREV)"
+	@echo "GITREV             = $(GITREV)"
 	@echo "PLATFORM           = $(PLATFORM)"
 	@echo "OPT                = $(OPT)"
 	@echo ""

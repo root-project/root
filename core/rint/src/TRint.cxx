@@ -486,8 +486,8 @@ void TRint::PrintLogo(Bool_t lite)
       Printf("  *******************************************\n");
    }
 
-   Printf("ROOT %s (%s@%d, %s on %s)", root_version, gROOT->GetSvnBranch(),
-          gROOT->GetSvnRevision(), gROOT->GetSvnDate(),
+   Printf("ROOT %s (%s@%s, %s on %s)", root_version, gROOT->GetGitBranch(),
+          gROOT->GetGitCommit(), gROOT->GetGitDate(),
           gSystem->GetBuildArch());
 
    if (!lite)
