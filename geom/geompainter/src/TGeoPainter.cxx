@@ -24,6 +24,7 @@
 #include "TCanvas.h"
 #include "TH2F.h"
 #include "TF1.h"
+#include "TGraph.h"
 #include "TPluginManager.h"
 #include "TVirtualPadEditor.h"
 #include "TStopwatch.h"
@@ -39,6 +40,7 @@
 #include "TGeoOverlap.h"
 #include "TGeoChecker.h"
 #include "TGeoPhysicalNode.h"
+#include "TGeoPolygon.h"
 #include "TGeoCompositeShape.h"
 #include "TGeoShapeAssembly.h"
 #include "TGeoPainter.h"
@@ -139,6 +141,7 @@ void TGeoPainter::AddTrackPoint(Double_t *point, Double_t *box, Bool_t reset)
       for (i=0; i<3; i++) xmin[i]=xmax[i]=0;
       npoints++;
    }
+
    npoints++;
    Double_t  ninv = 1./Double_t(npoints); 
    for (i=0; i<3; i++) {
@@ -693,6 +696,54 @@ void TGeoPainter::DrawBatemanSol(TGeoBatemanSol *sol, Option_t *option)
    func->SetMarkerSize(sol->GetMarkerSize());
    func->Draw(option);
 }   
+
+//______________________________________________________________________________
+void TGeoPainter::DrawPolygon(const TGeoPolygon *poly)
+{
+// Draw a polygon in 3D.
+   Int_t nvert = poly->GetNvert();
+   if (!nvert) {
+      Error("DrawPolygon", "No vertices defined");
+      return;
+   }   
+   Int_t nconv = poly->GetNconvex();
+   Double_t *x = new Double_t[nvert+1];
+   Double_t *y = new Double_t[nvert+1];
+   poly->GetVertices(x,y);
+   x[nvert] = x[0];
+   y[nvert] = y[0];
+   TGraph *g1 = new TGraph(nvert+1, x,y);
+   g1->SetTitle(Form("Polygon with %d vertices (outscribed %d)",nvert, nconv));
+   g1->SetLineColor(kRed);
+   g1->SetMarkerColor(kRed);
+   g1->SetMarkerStyle(4);
+   g1->SetMarkerSize(0.8);
+   delete [] x;
+   delete [] y;
+   Double_t *xc = 0;
+   Double_t *yc = 0;
+   TGraph *g2 = 0;
+   if (nconv && !poly->IsConvex()) {
+      xc = new Double_t[nconv+1];
+      yc = new Double_t[nconv+1];
+      poly->GetConvexVertices(xc,yc);
+      xc[nconv] = xc[0];
+      yc[nconv] = yc[0];
+      g2 = new TGraph(nconv+1, xc,yc);
+      g2->SetLineColor(kBlue);
+      g2->SetLineColor(kBlue);
+      g2->SetMarkerColor(kBlue);
+      g2->SetMarkerStyle(21);
+      g2->SetMarkerSize(0.4);
+      delete [] xc;
+      delete [] yc;
+   }
+   if (!gPad) {
+      gROOT->MakeDefCanvas();
+   }
+   g1->Draw("ALP");
+   if (g2) g2->Draw("LP");
+}
 
 //______________________________________________________________________________
 void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)

@@ -39,6 +39,7 @@ class TGeoChecker;
 class TGeoOverlap;
 class TH2F;
 class TGeoBatemanSol;
+class TGeoPolygon;
 
 class TGeoPainter : public TVirtualGeoPainter {
 private:
@@ -107,6 +108,7 @@ public:
    virtual void       DrawOnly(Option_t *option="");
    virtual void       DrawPanel();
    virtual void       DrawPath(const char *path);
+   virtual void       DrawPolygon(const TGeoPolygon *poly);
    virtual void       DrawShape(TGeoShape *shape, Option_t *option="");
    virtual void       DrawVolume(TGeoVolume *vol, Option_t *option="");
    virtual void       EditGeometry(Option_t *option="");
