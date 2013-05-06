@@ -45,6 +45,8 @@
 #include "TGeoPolygon.h"
 #include "TMath.h"
 #include "TGeoShape.h"
+#include "TGeoManager.h"
+#include "TVirtualGeoPainter.h"
 
 ClassImp(TGeoPolygon)
 
@@ -147,6 +149,14 @@ void TGeoPolygon::ConvexCheck()
 }   
 
 //_____________________________________________________________________________
+void TGeoPolygon::Draw(Option_t *option)
+{
+// Draw the polygon.
+   if (!gGeoManager) return;
+   gGeoManager->GetGeomPainter()->DrawPolygon(this);
+}      
+
+//_____________________________________________________________________________
 void TGeoPolygon::FinishPolygon()
 {
 // Decompose polygon in a convex outscribed part and a list of daughter
@@ -198,13 +208,31 @@ void TGeoPolygon::FinishPolygon()
 }
 
 //_____________________________________________________________________________
+void TGeoPolygon::GetVertices(Double_t *x, Double_t *y) const
+{
+// Fill list of vertices into provided arrays.
+   memcpy(x, fX, fNvert*sizeof(Double_t));
+   memcpy(y, fY, fNvert*sizeof(Double_t));
+}
+
+//_____________________________________________________________________________
+void TGeoPolygon::GetConvexVertices(Double_t *x, Double_t *y) const
+{
+// Fill list of vertices of the convex outscribed polygon into provided arrays.
+   for (Int_t ic=0; ic<fNconvex; ic++) {
+      x[ic] = fX[fIndc[ic]];
+      y[ic] = fY[fIndc[ic]];
+   }
+}
+
+//_____________________________________________________________________________
 Bool_t TGeoPolygon::IsRightSided(const Double_t *point, Int_t ind1, Int_t ind2) const
 {
 // Check if POINT is right-sided with respect to the segment defined by IND1 and IND2.
    Double_t dot = (point[0]-fX[ind1])*(fY[ind2]-fY[ind1]) -
                   (point[1]-fY[ind1])*(fX[ind2]-fX[ind1]);
    if (!IsClockwise()) dot = -dot;
-   if (dot<0) return kFALSE;
+   if (dot<-1.E-10) return kFALSE;
    return kTRUE;
 }
 
@@ -276,6 +304,7 @@ void TGeoPolygon::OutscribedConvex()
             ivnew = (ivnew+1)%fNvert;  
          } 
          if (!conv) {
+//            Error("OutscribedConvex","NO convex line connection to vertex %d\n", iseg);
             iseg++;
             continue;
          }   

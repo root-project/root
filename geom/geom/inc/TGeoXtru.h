@@ -91,6 +91,7 @@ public:
    virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
+   void                  DrawPolygon(Option_t *option="");
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
 //   virtual Int_t         GetByteCount() const {return 60+12*fNz;}
    Int_t                 GetNz() const    {return fNz;}

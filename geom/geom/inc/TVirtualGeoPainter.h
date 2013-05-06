@@ -38,6 +38,7 @@ class TH2F;
 class TStopwatch;
 class TGeoBatemanSol;
 class TGeoIteratorPlugin;
+class TGeoPolygon;
 
 class TVirtualGeoPainter : public TObject {
 
@@ -89,6 +90,7 @@ public:
    virtual void       DrawCurrentPoint(Int_t color) = 0;
    virtual void       DrawPanel() = 0;
    virtual void       DrawPath(const char *path) = 0;
+   virtual void       DrawPolygon(const TGeoPolygon *poly) = 0;
    virtual void       DrawVolume(TGeoVolume *vol, Option_t *option="") = 0;
    virtual void       EditGeometry(Option_t *option="") = 0;
    virtual void       EstimateCameraMove(Double_t /*tmin*/, Double_t /*tmax*/, Double_t *, Double_t * ) {;}

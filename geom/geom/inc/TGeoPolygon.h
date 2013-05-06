@@ -59,10 +59,14 @@ public:
    // methods
    Double_t            Area() const;
    Bool_t              Contains(const Double_t *point) const;
+   virtual void        Draw(Option_t *option="");
    void                FinishPolygon();
    Int_t               GetNvert() const {return fNvert;}
+   Int_t               GetNconvex() const {return fNconvex;}
    Double_t           *GetX() {return fX;}
    Double_t           *GetY() {return fY;}
+   void                GetVertices(Double_t *x, Double_t *y) const;
+   void                GetConvexVertices(Double_t *x, Double_t *y) const;
    Bool_t              IsClockwise() const {return !TObject::TestBit(kGeoACW);}
    Bool_t              IsConvex() const {return TObject::TestBit(kGeoConvex);}
    Bool_t              IsFinished() const {return TObject::TestBit(kGeoFinishPolygon);}
