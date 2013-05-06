@@ -4496,9 +4496,6 @@ int main(int argc, char **argv)
    clingArgs.push_back("-I");
    clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.6.2/x86_64-unknown-linux-gnu");
 #endif
-#ifdef R__USE_CXX11
-   clingArgs.push_back("-std=c++11");
-#endif
    
    std::vector<const char*> clingArgsC;
    for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
