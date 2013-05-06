@@ -808,24 +808,24 @@ methods are listed in next table:
 +-----------------------------------------------------+-----------------------------------+
 | `void Invert(TMatrixD &inv)`                        | call to `MultiSolve` with as      |
 |                                                     | input argument the unit matrix.   |
-|                                                     | Note that for a matrix (`m x n`)  |
+|                                                     | Note that for a matrix (`m` x `n`)|
 |                                                     | - $A$   with `m > n`, a           |
 |                                                     | pseudo-inverse is calculated      |
 +-----------------------------------------------------+-----------------------------------+
 | `TMatrixD Invert()`                                 | call to `MultiSolve` with as      |
 |                                                     | input argument the unit matrix.   |
-|                                                     | Note that for a matrix (`m x n`)  |
+|                                                     | Note that for a matrix (`m` x `n`)|
 |                                                     | - $A$   with `m > n`, a           |
 |                                                     | pseudo-inverse is calculated      |
 +-----------------------------------------------------+-----------------------------------+
 
-Through **`TDecompSVD`** and **`TDecompQRH`** one can solve systems for a (`m x n`) 
-− $A$ with `m>n`. However, care has to be taken for
+Through **`TDecompSVD`** and **`TDecompQRH`** one can solve systems for a (`m` x `n`) 
+ - $A$ with `m>n`. However, care has to be taken for
 methods where the input vector/matrix is replaced by the solution. For
 instance in the method **`Solve(b)`**, the input vector should have
 length m but only the first n entries of the output contain the
 solution. For the **`Invert(B)`** method, the input matrix B should have
-size (`m x n`) so that the returned (`m x n`) pseudo-inverse can fit
+size (`m` x `n`) so that the returned (`m` x `n`) pseudo-inverse can fit
 in it.
 
 The classes store the state of the decomposition process of matrix $A$ in the 
@@ -947,8 +947,8 @@ estimated by calculating the condition number `k` of matrix $A$, which is define
 
 $k = ||A||_{1}||A^{-1}||_{1}$ where $||A||_{1} = max_{j}(\sum_{i}|A_{ij}|)$
 
-A good rule of thumb is that if the matrix condition number is 10n, the
-accuracy in `x `is `15−n` digits for double precision.
+A good rule of thumb is that if the matrix condition number is 10n,
+the accuracy in `x` is `15` - `n` digits for double precision.
 
 Hager devised an iterative method (W.W. Hager, Condition estimators,
 SIAM J. Sci. Stat. Comp., 5 (1984), pp. 311-316) to
@@ -960,9 +960,11 @@ is a (10x10) *Hilbert* matrix that is badly
 conditioned as its determinant shows. We construct a vector `b` by
 summing the matrix rows. Therefore, the components of the solution
 vector `x` should be exactly 1. Our rule of thumb to the 2.1012
-condition number predicts that the solution accuracy should be around
-15−12 = 3 digits. Indeed, the largest deviation is 0.00055 in component
-6.
+condition number predicts that the solution accuracy should be around 
+
+`15 - 12 = 3` 
+
+digits. Indeed, the largest deviation is 0.00055 in component 6.
 
 ``` {.cpp}
 TMatrixDSym H = THilbertMatrixDSym(10);
@@ -1032,18 +1034,18 @@ A = UDUT
 
 *U*is product of permutation and unit upper triangular matrices:
 
-*U = Pn-1Un-1· · ·PkUk· · ·*where*k* decreases from *n* − 1 to 0 in
+*U = Pn-1Un-1· · ·PkUk· · ·* where *k* decreases from *n* - 1 to 0 in
 steps of 1 or 2. Permutation matrix *Pk* is stored in `fIpiv`. *Uk* is a
 unit upper triangular matrix, such that if the diagonal block *Dk* is of
 order *s* (*s* = 1, 2), then
 
 ![](pictures/08000181.png)
 
-If *s* = 1, `Dk` overwrites $A$*(k, k)*, and v overwrites $A$*(0: k − 1, k)*.
+If *s* = 1, `Dk` overwrites $A$*(k, k)*, and v overwrites $A$*(0: k - 1, k)*.
 
 If *s* = 2, the upper triangle of `Dk` overwrites
-$A$*(k−1, k−1)*, $A$*(k−1,k)*, and $A$*(k, k)*, and v overwrites
-$A$*(0 : k − 2, k − 1 : k)*.
+$A$*(k-1, k-1)*, $A$*(k-1,k)*, and $A$*(k, k)*, and v overwrites
+$A$*(0 : k - 2, k - 1 : k)*.
 
 ### Cholesky
 
@@ -1054,11 +1056,11 @@ A = UTU
 ```
 
 *U* is an upper triangular matrix. The decomposition fails if a diagonal
-element of `fU≤0`, the matrix is not positive negative.
+element of `fU<=0`, the matrix is not positive negative.
 
 ### QRH
 
-Decompose a (*m* x*n*) - matrix $A$ with *m ≥ n.*
+Decompose a (*m* x*n*) - matrix $A$ with *m >= n.*
 
 ``` {.cpp}
 A = QRH
@@ -1079,7 +1081,7 @@ appears, i.e. singularity.
 
 ### SVD
 
-Decompose a (*m* x *n*) - matrix $A$ with *m ≥ n*.
+Decompose a (*m* x *n*) - matrix $A$ with *m >= n*.
 
 ``` {.cpp}
 A = USVT
@@ -1094,7 +1096,7 @@ in vector `fSig` which is ordered so that
 *V* (*n* x *n*) orthogonal matrix, stored in `fV`.
 
 The singular value decomposition always exists, so the decomposition
-will (as long as m ≥ n) never fail. If *m* \< *n*, the user should add
+will (as long as m >= n) never fail. If *m* \< *n*, the user should add
 sufficient zero rows to $A$, so that *m* == *n*.
 In the `SVD`, `fTol` is used to set the threshold on the minimum allowed
 value of the singular values: `min singular = fTol maxi(Sii)`.
@@ -1111,7 +1113,7 @@ The columns of $V$ represent the
 eigenvectors in the sense that $A.V = V.D$. If $A$ is not
 symmetric, the eigenvalue matrix $D$ is block
 diagonal with the real eigenvalues in 1-by-1 blocks and any complex
-eigenvalues, `a+i*b`, in 2-by-2 blocks, `[a,b;−b,a]`. That is, if the
+eigenvalues, `a+i*b`, in 2-by-2 blocks, `[a,b;-b,a]`. That is, if the
 complex eigenvalues look like:
 
 ![](pictures/08000196.png) then $D$ looks like ![](pictures/08000198.png)
@@ -1169,7 +1171,7 @@ libraries, `GSL` `CLHEP`, `ROOT v3.10` and `ROOT v4.0`. Next figure
 shows the `CPU` time for these four operations as a function of the
 matrix size:
 
-​1. `A*B` The execution time is measured for the sum of A \* Bsym,
+1. `A*B` The execution time is measured for the sum of A \* Bsym,
 Bsym\* A and A \* B. Notice the matrix\_size3 dependence of execution
 time. `CLHEP` results are hampered by a poor implementation of symmetric
 matrix multiplications. For instance, for general matrices of size
@@ -1182,7 +1184,7 @@ PowerPC. The improvement becomes clearly visible around sizes of (50x50)
 were the execution speed improvement of the Altivec processor becomes
 more significant than the overhead of filling its pipe.
 
-​2. `A-1` Here, the time is measured for an in-place matrix inversion.
+2. `A-1` Here, the time is measured for an in-place matrix inversion.
 
 Except for `ROOT v3.10`, the algorithms are all based on an
 `LU `factorization followed by forward/back-substitution. `ROOT v3.10`
@@ -1207,7 +1209,7 @@ matrix has errors 10 times larger than the `LU Crout` result. In
 `IvertFast()` routines, where the latter is using the Cramer algorithm
 for `sizes<7x7`. The speed graph shows the result for `InvertFast()`.
 
-​3. `A*x=b` the execution time is measured for solving the linear
+3. `A*x=b` the execution time is measured for solving the linear
 equation `A*x=b`. The same factorizations are used as in the matrix
 inversion. However, only 1 forward/back-substitution has to be used
 instead of msize as in the inversion of (msize x msize) matrix. As a
@@ -1216,7 +1218,7 @@ shows the same numerical issues as in step the matrix inversion. Since
 ROOT3.10 has no dedicated equation solver, the solution is calculated
 through `x=A-1*b`. This will be slower and numerically not as stable.
 
-​4. `(AT*A)-1*AT` timing results for calculation of the pseudo inverse
+4. `(AT*A)-1*AT` timing results for calculation of the pseudo inverse
 of matrix a. The sequence of operations measures the impact of several
 calls to constructors and destructors in the `C++` packages versus a `C`
 library like `GSL`.
