@@ -1,4 +1,4 @@
-/* @(#)root/meta:$Id$ */
+/* @(#)root/meta:$Id: 4660ec009138a70261265c65fc5a10398706fbd1 $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -59,10 +59,6 @@
 #pragma link C++ class std::vector<std::pair<Int_t, Int_t> >+;
 #pragma link C++ class TFileMergeInfo;
 
-#ifdef R__WITH_CLING
 #pragma link C++ class TCling;
-#else
-#pragma link C++ class TCint;
-#endif
 
 #endif

@@ -323,6 +323,11 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
       evtrti = GetCurrentRate(all);
       Double_t xall = (all) ? 1. : 0.;
       GetEstEntriesProcessed(0, estent, estmb, estrc);
+      if (estent >= fTotalEntries) {
+         estent = GetEntriesProcessed();
+         estmb = GetBytesRead();
+         estrc = GetReadCalls();
+      }
       // Fill entry
       Double_t evts = (Double_t) estent;
       Double_t mbs = (estmb > 0) ? estmb / TMath::Power(2.,20.) : 0.; //--> MB

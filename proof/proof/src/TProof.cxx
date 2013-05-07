@@ -4427,10 +4427,7 @@ void TProof::Print(Option_t *option) const
                                              IsValid() ? "valid" : "invalid");
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
-      if (gROOT->GetSvnRevision() > 0)
-         Printf("ROOT version|rev:         %s|r%d", gROOT->GetVersion(), gROOT->GetSvnRevision());
-      else
-         Printf("ROOT version:             %s", gROOT->GetVersion());
+      Printf("ROOT version|rev:         %s|%s", gROOT->GetVersion(), gROOT->GetGitCommit());
       Printf("Architecture-Compiler:    %s-%s", gSystem->GetBuildArch(),
                                                 gSystem->GetBuildCompilerVersion());
       TSlave *sl = (TSlave *)fActiveSlaves->First();
@@ -4468,8 +4465,7 @@ void TProof::Print(Option_t *option) const
          Printf("User:                       %s", GetUser());
       }
       TString ver;
-      if (gROOT->GetSvnRevision() > 0)
-         ver.Form("%s|r%d", gROOT->GetVersion(), gROOT->GetSvnRevision());
+      ver.Form("%s|%s", gROOT->GetVersion(), gROOT->GetGitCommit());
       if (gSystem->Getenv("ROOTVERSIONTAG"))
          ver.Form("%s|%s", gROOT->GetVersion(), gSystem->Getenv("ROOTVERSIONTAG"));
       Printf("ROOT version|rev|tag:       %s", ver.Data());
@@ -7669,26 +7665,23 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path, I
             // not the same do a "BUILD.sh clean"
             Bool_t goodver = kTRUE;
             Bool_t savever = kFALSE;
-            Int_t rev = -1;
-            TString v;
+            TString v, r;
             FILE *f = fopen("PROOF-INF/proofvers.txt", "r");
             if (f) {
-               TString r;
                v.Gets(f);
                r.Gets(f);
-               rev = (!r.IsNull() && r.IsDigit()) ? r.Atoi() : -1;
                fclose(f);
                if (chkveropt == kCheckROOT || chkveropt == kCheckSVN) {
                   if (v != gROOT->GetVersion()) goodver = kFALSE;
                   if (goodver && chkveropt == kCheckSVN)
-                     if (gROOT->GetSvnRevision() > 0 && rev != gROOT->GetSvnRevision()) goodver = kFALSE;
+                     if (r != gROOT->GetGitCommit()) goodver = kFALSE;
                }
             }
             if (!f || !goodver) {
                savever = kTRUE;
                Info("BuildPackageOnClient",
-                  "%s: version change (current: %s:%d, build: %s:%d): cleaning ... ",
-                  pack, gROOT->GetVersion(), gROOT->GetSvnRevision(), v.Data(), rev);
+                  "%s: version change (current: %s:%s, build: %s:%s): cleaning ... ",
+                  pack, gROOT->GetVersion(), gROOT->GetGitCommit(), v.Data(), r.Data());
                // Hard cleanup: go up the dir tree
                gSystem->ChangeDirectory(fPackageDir);
                // remove package directory
@@ -7722,7 +7715,7 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path, I
                f = fopen("PROOF-INF/proofvers.txt", "w");
                if (f) {
                   fputs(gROOT->GetVersion(), f);
-                  fputs(TString::Format("\n%d",gROOT->GetSvnRevision()), f);
+                  fputs(TString::Format("\n%s", gROOT->GetGitCommit()), f);
                   fclose(f);
                }
             }
@@ -8073,7 +8066,7 @@ Int_t TProof::EnablePackage(const char *package, const char *loadopts,
    // plugin version checking during building: possible choices are:
    //     off         no check; failure may occur at loading
    //     on          check ROOT version [default]
-   //     svn         check ROOT version and SVN revision number.
+   //     svn         check ROOT version and Git commit SHA1.
    // (Use ';', ' ' or '|' to separate 'chkv=<o>' from the rest.) 
    // Returns 0 in case of success and -1 in case of error.
 

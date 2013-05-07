@@ -483,7 +483,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
       Int_t est = (pst) ? pst->GetExitStatus() : -1;
       values.Add(new TParameter<int>("status", est));
       // Root version
-      TString rver = TString::Format("%s|r%d", gROOT->GetVersion(), gROOT->GetSvnRevision());
+      TString rver = TString::Format("%s|%s", gROOT->GetVersion(), gROOT->GetGitCommit());
       values.Add(new TNamed("rootver", rver.Data()));
 
       for (Int_t i = 0; i < fMonSenders.GetEntries(); i++) {
@@ -680,7 +680,7 @@ void TPerfStats::WriteQueryLog()
       Int_t est = (pst) ? pst->GetExitStatus() : -1;
       values.Add(new TParameter<int>("status", est));
       // Root version
-      TString rver = TString::Format("%s|r%d", gROOT->GetVersion(), gROOT->GetSvnRevision());
+      TString rver = TString::Format("%s|%s", gROOT->GetVersion(), gROOT->GetGitCommit());
       values.Add(new TNamed("rootver", rver.Data()));
 
       for (Int_t i = 0; i < fMonSenders.GetEntries(); i++) {
