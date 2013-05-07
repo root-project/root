@@ -1744,6 +1744,9 @@ void TROOT::ReadGitInfo()
    // etc/gitinfo.txt file.
 
    fSvnRevision = 0;
+#ifdef ROOT_SVN_REVISION
+   fSvnRevision = ROOT_SVN_REVISION;
+#endif
 #ifdef ROOT_GIT_COMMIT
    fGitCommit = ROOT_GIT_COMMIT;
 #endif
@@ -1778,10 +1781,6 @@ void TROOT::ReadGitInfo()
       // read commit SHA1
       s.Gets(fp);
       fGitCommit = s;
-      Int_t r;
-      sscanf(s.Data(), "%x", &r);
-      if (r > 0)
-         fSvnRevision = r;
       // read date/time make was run
       s.Gets(fp);
       fGitDate = s;

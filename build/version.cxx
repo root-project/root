@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
    fprintf(fp, "#define ROOT_RELEASE \"%s\"\n", vers);
    fprintf(fp, "#define ROOT_RELEASE_DATE \"%s\"\n", __DATE__);
    fprintf(fp, "#define ROOT_RELEASE_TIME \"%s\"\n", __TIME__);
+   fprintf(fp, "#define ROOT_SVN_REVISION 49361\n");
    fprintf(fp, "#define ROOT_GIT_COMMIT \"%s\"\n", revs);
    fprintf(fp, "#define ROOT_GIT_BRANCH \"%s\"\n", branch);
    fprintf(fp, "#define ROOT_VERSION_CODE %d\n", vers_code);
