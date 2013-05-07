@@ -609,6 +609,7 @@ unit2.SetMatrixArray(data.GetArray());
 <sect1>
 <title>Matrix Operators and Methods</title>
 <para>It is common to classify matrix/vector operations according to BLAS (Basic Linear Algebra Subroutines) levels, see following table:</para>
+
 <informaltable frame="all">
 <tgroup cols="4">
 <colspec colwidth="1428*" colname="column-1"/>
@@ -659,7 +660,7 @@ unit2.SetMatrixArray(data.GetArray());
 </entry>
 <entry rowsep="1" colsep="1">
 <para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/0800012E.png" width="11.8pt" depth="13.05pt"/></imageobject></inlinemediaobject>
+A
 <code> x</code>
 </para>
 </entry>
@@ -676,9 +677,7 @@ unit2.SetMatrixArray(data.GetArray());
 </entry>
 <entry rowsep="1" colsep="1">
 <para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/0800012F.png" width="11.8pt" depth="13.05pt"/></imageobject></inlinemediaobject>
-
-<inlinemediaobject><imageobject><imagedata fileref="pictures/08000130.png" width="11.8pt" depth="13.05pt"/></imageobject></inlinemediaobject>
+A  B
 </para>
 </entry>
 <entry rowsep="1" colsep="1">
@@ -688,7 +687,9 @@ unit2.SetMatrixArray(data.GetArray());
 </tbody>
 </tgroup>
 </informaltable>
-<para>Most level 1, 2 and 3 BLAS are implemented. However, we will present them not according to that classification scheme it is already boring enough.</para>
+
+<para>Most level 1, 2 and 3 BLAS are implemented. However, we will present them not 
+according to that classification scheme it is already boring enough.</para>
 
 <sect2>
 <title>Arithmetic Operations between Matrices</title>
@@ -741,11 +742,10 @@ unit2.SetMatrixArray(data.GetArray());
 </code>
 <code>overwrites</code>
 
-<inlinemediaobject><imageobject><imagedata fileref="pictures/08000131.png" width="11.8pt" depth="13.05pt"/></imageobject></inlinemediaobject>
-
+A
 </para>
 <para>
-<code>A += α B </code>
+<code>A += \alpha B </code>
 <code>constructor</code>
 </para>
 </entry>
@@ -775,7 +775,7 @@ unit2.SetMatrixArray(data.GetArray());
 <para>
 <code>overwrites</code>
 
-<inlinemediaobject><imageobject><imagedata fileref="pictures/08000132.png" width="11.8pt" depth="13.05pt"/></imageobject></inlinemediaobject>
+A
 </para>
 <para>
 <code>constructor</code>
@@ -805,7 +805,7 @@ unit2.SetMatrixArray(data.GetArray());
 <para>
 <code>overwrites</code>
 
-<inlinemediaobject><imageobject><imagedata fileref="pictures/08000133.png" width="11.8pt" depth="13.05pt"/></imageobject></inlinemediaobject>
+A
 </para>
 </entry>
 </row>
@@ -821,7 +821,7 @@ unit2.SetMatrixArray(data.GetArray());
 <entry rowsep="1" colsep="1">
 <para>
 <code>constructor of </code>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/08000134.png" width="27.3pt" depth="13.05pt"/></imageobject></inlinemediaobject>
+A.B
 </para>
 </entry>
 </row>
@@ -838,8 +838,7 @@ unit2.SetMatrixArray(data.GetArray());
 <entry rowsep="1" colsep="1">
 <para>
 <code>constructor of </code>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/08000135.png" width="32.9pt" depth="14.9pt"/></imageobject></inlinemediaobject>
-
+A^T.B
 </para>
 </entry>
 </row>
@@ -856,7 +855,7 @@ unit2.SetMatrixArray(data.GetArray());
 <entry rowsep="1" colsep="1">
 <para>
 <code>constructor of </code>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/08000136.png" width="29.8pt" depth="14.3pt"/></imageobject></inlinemediaobject>
+A.B^T
 </para>
 </entry>
 </row>
@@ -895,6 +894,7 @@ unit2.SetMatrixArray(data.GetArray());
 </tbody>
 </tgroup>
 </informaltable>
+
 </sect2>
 
 <sect2>
@@ -1346,7 +1346,7 @@ The following table shows element wise comparisons between matrix and real:</par
 </para>
 <para>number of elements unequal zero</para>
 <para>
-<inlinemediaobject><imageobject><imagedata fileref="pictures/0800013F.png" width="45.95pt" depth="19.85pt"/></imageobject></inlinemediaobject>
+$\sum_{ji}(A_{ij})$
 </para>
 <para>min<emphasis role="italic">ij</emphasis> <inlinemediaobject><imageobject><imagedata fileref="pictures/08000140.png" width="22.95pt" depth="19.85pt"/></imageobject></inlinemediaobject></para>
 <para>max<emphasis role="italic">ij</emphasis> <inlinemediaobject><imageobject><imagedata fileref="pictures/08000141.png" width="22.95pt" depth="19.85pt"/></imageobject></inlinemediaobject></para>
@@ -1554,7 +1554,7 @@ The following table shows element wise comparisons between matrix and real:</par
 </para>
 </entry>
 <entry rowsep="1" colsep="1">
-<para><inlinemediaobject><imageobject><imagedata fileref="pictures/08000149.png" width="117.3pt" depth="19.25pt"/></imageobject></inlinemediaobject>, a random matrix is generated with elements uniformly distributed between α and β</para>
+<para><inlinemediaobject><imageobject><imagedata fileref="pictures/08000149.png" width="117.3pt" depth="19.25pt"/></imageobject></inlinemediaobject>, a random matrix is generated with elements uniformly distributed between \alpha and \beta</para>
 </entry>
 </row>
 <row>
