@@ -1584,7 +1584,7 @@ int stressMathCore(double nscale = 1) {
    const double reftime = 7.1; // needs to be updated // ref time on  pcbrun4
    double rootmarks = 860 * reftime / bm.GetCpuTime("stressMathCore");
    std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
-             << gROOT->GetSvnBranch() << "@" << gROOT->GetSvnRevision() << std::endl;
+             << gROOT->GetGitBranch() << "@" << gROOT->GetGitCommit() << std::endl;
    std::cout <<"*******************************************************************************\n";
 
 

@@ -1159,7 +1159,7 @@ int stressHistoFit()
    const double reftime = 124; // ref time on  pcbrun4
    double rootmarks = 800 * reftime / bm.GetCpuTime("stressHistoFit");
    std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
-             << gROOT->GetSvnBranch() << "@" << gROOT->GetSvnRevision() << std::endl;
+             << gROOT->GetGitBranch() << "@" << gROOT->GetGitCommit() << std::endl;
    std::cout <<"****************************************************************************\n";
 
    return iret; 

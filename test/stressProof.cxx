@@ -1278,9 +1278,9 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
       // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 4 workers.
       const double reftime = 70.169;
       double glbmarks = (gProof->GetRealTime() > 0) ? 1000 * reftime / gProof->GetRealTime() : -1;
-      printf(" ROOTMARKS = %.2f (overall: %.2f) ROOT version: %s\t%s@%d\n",
+      printf(" ROOTMARKS = %.2f (overall: %.2f) ROOT version: %s\t%s@%s\n",
              avgmarks, glbmarks, gROOT->GetVersion(),
-             gROOT->GetSvnBranch(), gROOT->GetSvnRevision());
+             gROOT->GetGitBranch(), gROOT->GetGitCommit());
       // Average from the single tests
       printf("******************************************************************\n");
    }
