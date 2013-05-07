@@ -1210,9 +1210,43 @@ void TClingCallFunc::Invoke(cling::StoredValueRef* result /*= 0*/) const
    if(fArgVals[0].isValid())
       Args.push_back(fArgVals[0].get().getGV());
 
+   unsigned numPassedArgs = fArgVals.size();
+   assert(numPassedArgs >= 2 && "Too few actual parameters.");
+   numPassedArgs -= 2;
+   unsigned trampolineRetArg = 0;
+   if (IsTrampolineFunc() && fArgVals[1].isValid()
+       && !fEEFunc->hasStructRetAttr())
+      trampolineRetArg = 1;
+
+   // After the following loop we would have numPassedArgs more arguments
+   // in Args than we have now. Complain now if that's too much or not
+   // enough.
+   if (numPassedArgs + Args.size() + trampolineRetArg > ft->getNumParams()) {
+      if (!fIgnoreExtraArgs) {
+         Error("TClingCallFunc::Invoke",
+               "Passed %d parameters to ExecutionEngine's function"
+               " taking %d parameters!", numPassedArgs, ft->getNumParams());
+         return;
+      } else {
+         if (ft->getNumParams() < Args.size()) {
+            Error("TClingCallFunc::Invoke",
+                  "Passed %d special parameters to ExecutionEngine's function"
+                  " taking %d parameters!", (int)Args.size(),
+                  ft->getNumParams());
+            return;
+         }
+         numPassedArgs = ft->getNumParams() - Args.size();
+      }
+   } else if (numPassedArgs + Args.size() + trampolineRetArg
+              < ft->getNumParams()) {
+      Error("TClingCallFunc::Invoke",
+            "Passed only %d parameters to ExecutionEngine's function"
+            " taking %d parameters!", numPassedArgs, ft->getNumParams());
+      return;
+   }
+
    // If it is a trampoline do not iterate over the last
-   unsigned arg_index;
-   for (size_t i = 2, e = fArgVals.size(); i < e; ++i) {
+   for (size_t i = 2, e = numPassedArgs + 2; i < e; ++i) {
       // if (IsTrampolineFunc()) {
       //    // If it is the last argument of a non-void function, that should be
       //    // the arg for storing the result.
@@ -1230,8 +1264,8 @@ void TClingCallFunc::Invoke(cling::StoredValueRef* result /*= 0*/) const
       // We have a user-provided argument value.
       // If this was a member function, skip the this ptr - it has already been
       // handled.
-      arg_index = i - 2 + IsMemberFunc();
-      const llvm::Type *ty = ft->getParamType(arg_index);
+      unsigned eearg_index = i - 2 + IsMemberFunc();
+      const llvm::Type *ty = ft->getParamType(eearg_index);
       if (ty != fArgVals[i].get().getLLVMType())
          Args.push_back(convertIntegralToArg(fArgVals[i].get(), ty));
       else
