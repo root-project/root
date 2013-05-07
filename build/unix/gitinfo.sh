@@ -23,8 +23,8 @@ fi
 
 OUT=etc/gitinfo.txt
 
-git describe --all > $OUT
-git describe --always >> $OUT
+git --git-dir=$dotgit describe --all > $OUT
+git --git-dir=$dotgit describe --always >> $OUT
 date "+%b %d %Y, %H:%M:%S" >> $OUT
 
 exit 0
