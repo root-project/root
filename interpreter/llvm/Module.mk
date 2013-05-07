@@ -58,9 +58,9 @@ endif
 FORCELLVM := 0
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist distsrc),)
 ifeq ($(findstring clean-,$(MAKECMDGOALS)),)
-ifeq ($(shell which svn 2>&1 | sed -ne "s@.*/svn@svn@p"),svn)
-FORCELLVM := $(shell bash $(ROOT_SRCDIR)/build/unix/svninfollvm.sh $(ROOT_SRCDIR)/interpreter/llvm)
-ENDLLVMBUILD := && cd ../../.. && ( $(ROOT_SRCDIR)/build/unix/svninfollvm.sh $(ROOT_SRCDIR)/interpreter/llvm > /dev/null )
+ifeq ($(shell which git 2>&1 | sed -ne "s@.*/git@git@p"),git)
+FORCELLVM := $(shell bash $(ROOT_SRCDIR)/build/unix/gitinfollvm.sh $(ROOT_SRCDIR))
+ENDLLVMBUILD := && cd ../../.. && ( $(ROOT_SRCDIR)/build/unix/gitinfollvm.sh $(ROOT_SRCDIR) > /dev/null )
 endif
 endif
 endif
