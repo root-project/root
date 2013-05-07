@@ -71,7 +71,7 @@ HISTFACTORYO    := $(call stripsrc,$(HISTFACTORYS:.cxx=.o))
 ## look for Windows in $ROOTSYS/include (don't know why?)
 #HISTFACTORYDICTI    := include
 #else
-HISTFACTORYDICTI    := $(call stripsrc,$(MODDIRI))
+HISTFACTORYDICTI    := $(MODDIRI)
 #endif	
 
 HISTFACTORYDEP  := $(HISTFACTORYO:.o=.d) $(HISTFACTORYDO:.o=.d)
