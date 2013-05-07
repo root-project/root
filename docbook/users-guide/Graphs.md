@@ -1,13 +1,13 @@
-Graphs
-======
+# Graphs
+
 
 A graph is a graphics object made of two arrays X and Y, holding the x,
 y coordinates of `n` points. There are several graph classes; they are
 **`TGraph`**, **`TGraphErrors`**, **`TGraphAsymmErrors`**, and
 **`TMultiGraph`**.
 
-TGraph
-======
+## TGraph
+
 
 The **`TGraph`** class supports the general case with non-equidistant
 points, and the special case with equidistant points. Graphs are created
@@ -39,8 +39,8 @@ will extend the internal vectors.
 TGraph *gr3 = new TGraph();
 ```
 
-Graph Draw Options
-------------------
+### Graph Draw Options
+
 
 The various draw options for a graph are explained in
 `TGraph::PaintGraph`. They are:
@@ -72,7 +72,7 @@ The various draw options for a graph are explained in
 The options are not case sensitive and they can be concatenated in most
 cases. Let us look at some examples.
 
-### Continuous Line, Axis and Stars (AC\*)
+#### Continuous Line, Axis and Stars (AC\*)
 
 ![A graph drawn with axis, \* markers and continuous line (option
 AC\*)](pictures/0300004B.png)
@@ -93,7 +93,7 @@ gr->Draw("AC*");
 }
 ```
 
-### Bar Graphs (AB)
+#### Bar Graphs (AB)
 
 ![A graph drawn with axis and bar (option AB)](pictures/0300004C.png)
 
@@ -109,7 +109,7 @@ fill color is white and will not be visible on a white canvas. You also
 need to give it an axis, or the bar chart will not be displayed
 properly.
 
-### Filled Graphs (AF)
+#### Filled Graphs (AF)
 
 ![A graph drawn with axis and fill (option AF)](pictures/0300004D.png)
 
@@ -125,7 +125,7 @@ fill color is white and will not be visible on a white canvas. You also
 need to give it an axis, or the bar chart will not be displayed
 properly. Currently one cannot specify the "`CF`" option.
 
-### Marker Options
+#### Marker Options
 
 ![Graph markers created in different ways](pictures/0300004E.png)
 
@@ -162,8 +162,8 @@ m->Draw();
 }
 ```
 
-Superimposing Two Graphs
-========================
+## Superimposing Two Graphs
+
 
 To super impose two graphs you need to draw the axis only once, and
 leave out the "A" in the draw options for the second graph. Next is an
@@ -187,8 +187,8 @@ gr2->Draw("CP");
 }
 ```
 
-Graphs with Error Bars
-======================
+## Graphs with Error Bars
+
 
 A **`TGraphErrors`** is a **`TGraph`** with error bars. The various draw
 format options of `TGraphErrors::Paint()` are derived from **`TGraph`**.
@@ -248,8 +248,8 @@ c1->Update();
 }
 ```
 
-Graphs with Asymmetric Error Bars
-=================================
+## Graphs with Asymmetric Error Bars
+
 
 A **`TGraphAsymmErrors`** is a **`TGraph`** with asymmetric error bars.
 It inherits the various draw format options from **`TGraph`**. Its
@@ -301,8 +301,8 @@ gr->Draw("ALP");
 }
 ```
 
-Graphs with Asymmetric Bent Errors
-==================================
+## Graphs with Asymmetric Bent Errors
+
 
 A **`TGraphBentErrors`** is a **`TGraph`** with bent, asymmetric error
 bars. The various format options to draw a **`TGraphBentErrors`** are
@@ -351,8 +351,8 @@ gr->Draw("ALP");
 }
 ```
 
-TGraphPolar
-===========
+## TGraphPolar
+
 
 The **`TGraphPolar`** class creates a polar graph (including error
 bars). A **`TGraphPolar`** is a **`TGraphErrors`** represented in polar
@@ -391,8 +391,8 @@ The TGraphPolar drawing options are:
 
 "A"Force axis redrawing even if a polagram already exists.
 
-TGraph Exclusion Zone
-=====================
+## TGraph Exclusion Zone
+
 
 When a graph is painted with the option "`C`" or "`L`", it is possible
 to draw a filled area on one side of the line. This is useful to show
@@ -440,15 +440,15 @@ mg->Draw("AC");
 }
 ```
 
-TGraphQQ
-========
+## TGraphQQ
+
 
 A **`TGraphQQ`** allows drawing quantile-quantile plots. Such plots can
 be drawn for two datasets, or for one dataset and a theoretical
 distribution function.
 
-Two Datasets
-------------
+### Two Datasets
+
 
 Quantile-quantile plots are used to determine whether two samples come
 from the same distribution. A qq-plot draws the quantiles of one dataset
@@ -471,8 +471,8 @@ distributions are different, but, unlike the analytical methods, it also
 gives information on the nature of this difference: heavier tails,
 different location/scale, different shape, etc.
 
-One Dataset
------------
+### One Dataset
+
 
 Quantile-quantile plots are used to determine if the dataset comes from
 the specified theoretical distribution, such as normal. A qq-plot draws
@@ -488,8 +488,8 @@ parameters are estimates of the distribution mean and sigma.
 
 ![Examples of qq-plots of 1 dataset](pictures/03000057.png)
 
-TMultiGraph
-===========
+## TMultiGraph
+
 
 A **`TMultiGraph`** is a collection of **`TGraph`** (or derived)
 objects. Use `TMultiGraph::Add `to add a new graph to the list. The
@@ -520,8 +520,8 @@ mg->Draw("ALP");
 
 ![A multigraph example](pictures/03000058.png)
 
-TGraph2D
-========
+## TGraph2D
+
 
 This class is a set of `N` points `x[i]`, `y[i]`, `z[i]` in a
 non-uniform grid. Several visualization techniques are implemented,
@@ -642,21 +642,21 @@ produces the next figure.
 
 ![Output of macro graph2dfit.C](pictures/0300005C.png)
 
-TGraph2DErrors
-==============
+## TGraph2DErrors
+
 
 A **`TGraph2DErrors`** is a **`TGraph2D`** with errors. It is useful to
 perform fits with errors on a 2D graph. An example is the macro
 `$ROOTSYS/tutorials/graphs/graph2derrorsfit.C`.
 
-Fitting a Graph
-===============
+## Fitting a Graph
+
 
 The graph `Fit` method in general works the same way as the `TH1::Fit`.
 See “Fitting Histograms”.
 
-Setting the Graph's Axis Title
-==============================
+## Setting the Graph's Axis Title
+
 
 To give the axis of a graph a title you need to draw the graph first,
 only then does it actually have an axis object. Once drawn, you set the
@@ -683,8 +683,8 @@ For more graph examples see the scripts: `$ROOTSYS/tutorials` directory
 
 ![A graph with axis titles](pictures/0300005D.png)
 
-Zooming a Graph
-===============
+## Zooming a Graph
+
 
 To zoom a graph you can create a histogram with the desired axis range
 first. Draw the empty histogram and then draw the graph using the
@@ -711,8 +711,8 @@ directions.
 
 ![A zoomed graph](pictures/0300005E.png)
 
-The User Interface for Graphs
-=============================
+## The User Interface for Graphs
+
 
 ![](pictures/0300005F.png)
 

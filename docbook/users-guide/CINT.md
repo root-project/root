@@ -1,5 +1,5 @@
-CINT the C++ Interpreter
-========================
+# CINT the C++ Interpreter
+
 
 The subject of this chapter is CINT, ROOT command line interpreter and
 script processor. First, we explain what CINT is and why ROOT uses it.
@@ -7,8 +7,8 @@ Then we discuss CINT as the command line interpreter, the CINT commands,
 and CINT extensions to C++ are discussed. CINT as the script interpreter
 is explained and illustrated with several examples.
 
-What is CINT?
-=============
+## What is CINT?
+
 
 CINT, which is pronounced `['sint]`, is a C++ interpreter. An
 interpreter takes a program, in this case a C++ program, and carries it
@@ -96,8 +96,8 @@ CINT main features:
     `NEC` `EWS4800`, `NewsOS`, `BeBox`, `WindowsNT`, `Windows9x`,
     `MS-DOS`, `MacOS`, `VMS`, `NextStep`, `Convex`.
 
-The ROOT Command Line Interface
-===============================
+## The ROOT Command Line Interface
+
 
 Start up a ROOT session by typing `root` at the system prompt.
 
@@ -229,15 +229,15 @@ Here we note:
 
 -   Use **`.q`** to exit root.
 
-The ROOT Script Processor
-=========================
+## The ROOT Script Processor
+
 
 ROOT script files contain pure C++ code. They can contain a simple
 sequence of statements like in the multi command line example given
 above, but also arbitrarily complex class and function definitions.
 
-Un-named Scripts
-----------------
+### Un-named Scripts
+
 
 Let us start with a script containing a simple list of statements (like
 the multi-command line example given in the previous section). This type
@@ -272,8 +272,8 @@ root[] .which script1.C
 /home/rdm/root/./script1.C
 ```
 
-Named Scripts
--------------
+### Named Scripts
+
 
 Let us change the un-named script to a named script. Copy the file
 `script1.C` to `script2.C` and add a function statement:
@@ -372,8 +372,8 @@ In addition, histograms and trees are automatically deleted when the
 current directory is closed. This will automatically take care of the
 clean up. See “Input/Output”.
 
-Executing a Script from a Script
---------------------------------
+### Executing a Script from a Script
+
 
 You may want to execute a script conditionally inside another script. To
 do it you need to call the interpreter and you can do that with
@@ -393,8 +393,8 @@ void cernstaff() {
 after an attempt to interpret. This will contain the CINT error as
 defined in `enum` `TInterpreter::EErrorCode`.
 
-Resetting the Interpreter Environment
-=====================================
+## Resetting the Interpreter Environment
+
 
 Variables created on the command line and in un-named scripts are in the
 interpreter's global scope, which makes the variables created in
@@ -472,8 +472,8 @@ memory.
 Note `gROOT->Reset()` should be never called in a named script or a
 compiled program.
 
-A Script Containing a Class Definition
-======================================
+## A Script Containing a Class Definition
+
 
 Lets create a small class **`TMyClass`** and a derived class
 **`TChild`**. The virtual method `TMyClass::Print() `is overridden in
@@ -554,8 +554,8 @@ There are some limitations for a class created in a script:
 See “Adding a Class” for ways how to add a class with a shared library
 and with ACLiC.
 
-Debugging Scripts
-=================
+## Debugging Scripts
+
 
 A powerful feature of CINT is the ability to debug interpreted functions
 by means of setting breakpoints and being able to single step through
@@ -600,8 +600,8 @@ fX = 10, fY = 12
 root[] .q
 ```
 
-Inspecting Objects
-==================
+## Inspecting Objects
+
 
 An object of a class inheriting from **`TObject`** can be inspected,
 with the `Inspect()` method. The `TObject::Inspect` method creates a
@@ -623,8 +623,8 @@ page are the navigation buttons to see the previous and next screen.
 ![The object inspector of `fKeys`, the list of keys in the
 memory](pictures/03000093.png)
 
-ROOT/CINT Extensions to C++
-===========================
+## ROOT/CINT Extensions to C++
+
 
 In the next example, we demonstrate three of the most important
 extensions ROOT/CINT makes to C++. Start ROOT in the directory
@@ -680,8 +680,8 @@ interpreter. Your code will not compile, hence when writing large
 scripts, it is best to stay away from these shortcuts. It will save you
 from having problems compiling your scripts using a real C++ compiler.
 
-ACLiC - The Automatic Compiler of Libraries for CINT
-====================================================
+## ACLiC - The Automatic Compiler of Libraries for CINT
+
 
 Instead of having CINT interpret your script there is a way to have your
 scripts compiled, linked and dynamically loaded using the C++ compiler
@@ -698,8 +698,8 @@ compile the ROOT executable. You do not have to write a `makefile`
 remembering the correct compiler options, and you do not have to exit
 ROOT.
 
-Usage
------
+### Usage
+
 
 Before you can compile your interpreted script you need to add include
 statements for the classes used in the script. Once you did that, you
@@ -794,8 +794,8 @@ gROOT->ProcessLine(".L MyScript.C+")
 gROOT->ProcessLine(".L MyScript.C++")
 ```
 
-Setting the Include Path
-------------------------
+### Setting the Include Path
+
 
 You can get the include path by typing:
 
@@ -864,8 +864,8 @@ let users select an alternative 'root' for building of the ACLiC
 libraries. For `filename``/full/path/name/macro.C`, the library is
 created as `fBuildDir``/full/path/name/macro_C.so.`
 
-Dictionary Generation
----------------------
+### Dictionary Generation
+
 
 You can direct what is added to the dictionary generated by ACLiC in two
 ways. The simplest way is to add at the end of script (i.e. after the
@@ -928,8 +928,8 @@ and the ROOT header files. It will result in duplicate entries at best
 and crashes at worst, because some classes in ROOT need special
 attention before they can be added to the dictionary.
 
-Intermediate Steps and Files
-----------------------------
+### Intermediate Steps and Files
+
 
 ACLiC executes two steps and a third one if needed. These are:
 
@@ -954,8 +954,8 @@ can raise the ROOT debug level: gDebug=3 and ACLiC will print these
 steps. If you need to keep the intermediate files around, for example
 when debugging the script using gdb, use gDebug=7.
 
-Moving between Interpreter and Compiler
----------------------------------------
+### Moving between Interpreter and Compiler
+
 
 The best way to develop portable scripts is to make sure you can always
 run them with both, the interpreter and with ACLiC. To do so, do not use
@@ -1062,8 +1062,8 @@ instantiating a `subTree` object from the CINT command line will cause a
 fatal error. In general, it is recommended to let `rootcint` see as many
 header files as possible.
 
-Reflex
-======
+## Reflex
+
 
 Reflection is the ability of a programming language to introspect its
 data structures and interact with them at runtime without prior
@@ -1072,8 +1072,8 @@ ROOT v5.08, Reflex is an optional package. It will become a mandatory
 package (loaded by default) with the next ROOT versions. In order to
 build it you have to `./configure --enable-reflex`
 
-Overview
---------
+### Overview
+
 
 Inside ROOT Reflex is thought to replace the current reflection system,
 which is inherent to CINT. This is an ongoing work and not part of this
@@ -1109,8 +1109,8 @@ module/inc/TMod2.h module/inc/Linkdef.h
 Note: an installation of Python and `gccxml` is required for using this
 option.
 
-Selecting Types And Members
----------------------------
+### Selecting Types And Members
+
 
 You can use selection files to tell genreflex what it should generate a
 dictionary for. If you do not use it, it will generate a dictionary for
@@ -1148,8 +1148,8 @@ It is an XML file with the following structure:
 </lcgdict>
 ```
 
-Genreflex and Templates
------------------------
+### Genreflex and Templates
+
 
 The program parsing the header files and providing genreflex with the
 information what's in them is called GCCXML. It only sees templates if
@@ -1160,7 +1160,7 @@ class then it probably does not happen in that templated class's header.
 So you need to help GCCXML. There are two common approaches: the struct
 member, and the "proper" C++ way.
 
-### Explicit Template Instantiation
+#### Explicit Template Instantiation
 
 This is the preferred method, but it is not widely used. Suppose you
 have a templated template class C and a templated function template T
@@ -1179,7 +1179,7 @@ You can even put this into your regular header file: it is surrounded by
 an \#ifdef \_\_GCCXML\_\_ and will thus be invisible to any other
 compiler.
 
-### Template Instantiation by struct Members
+#### Template Instantiation by struct Members
 
 Suppose you have a templated template class C and a templated function
 template T f(const T&) const; defined in file C.h. For the templated
@@ -1201,8 +1201,8 @@ Often people put these instantiations into a separate header which in
 turn \#includes the actual header, such that the C++ sources do not see
 the GCCXML\_DUMMY\_INSTANTIATION.
 
-GCCXML Installation
--------------------
+### GCCXML Installation
+
 
 Gccxml is a front-end to the gcc compiler suite, which generates xml
 code out of parsed C++ definitions. Gccxml needs to be installed in
@@ -1217,8 +1217,8 @@ information can be used via the Reflex API. For this purpose, Reflex
 provides eight classes, which exploit the whole functionality of the
 system.
 
-Reflex API
-----------
+### Reflex API
+
 
 Reflex offers a simple yet powerful API to access Reflex reflection
 database. The following classes are defined in the namespace
@@ -1399,8 +1399,8 @@ the destructor and of the object type and deallocate the memory.
 o1.Destruct();
 ```
 
-Cintex
-------
+### Cintex
+
 
 Cintex is an optional package inside ROOT. In order to build it you have
 to

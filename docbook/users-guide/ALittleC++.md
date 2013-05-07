@@ -1,12 +1,12 @@
-A Little C++
-============
+# A Little C++
+
 
 This chapter introduces you to some useful insights into C++, to allow
 you to use of the most advanced features in ROOT. It is in no case a
 full course in C++.
 
-Classes, Methods and Constructors
-=================================
+## Classes, Methods and Constructors
+
 
 C++ extends C with the notion of class. If you’re used to structures in
 C, a class is a `struct` that is a group of related variables, which is
@@ -74,8 +74,8 @@ object l, which knows the coordinates of the line. These are internal
 variables `x1`, `y1`, `x2`, `y2` that were initialized by the
 constructor.
 
-Inheritance and Data Encapsulation
-==================================
+## Inheritance and Data Encapsulation
+
 
 We have defined a **`TLine`** class that contains everything necessary
 to draw a line. If we want to draw an arrow, is it so different from
@@ -98,8 +98,8 @@ it. The Draw method of **`TArrow`** will draw the head and call the draw
 method of **`TLine`**. We just have to write the code for drawing the
 head!
 
-Method Overriding
------------------
+### Method Overriding
+
 
 Giving the same name to a method (remember: method = member function of
 a class) in the child class (**`TArrow`**) as in the parent
@@ -122,8 +122,8 @@ a.Draw()
 
 `Draw()` from **`TArrow`** is called and the arrow `a` is drawn.
 
-Data Encapsulation
-------------------
+### Data Encapsulation
+
 
 We have seen previously the keyword "`public`". This keyword means that
 every name declared public is seen by the outside world. This is opposed
@@ -201,8 +201,8 @@ root[] myarrow->SetArrowSize(10);
 root[] myarrow->Draw();
 ```
 
-Creating Objects on the Stack and Heap
-======================================
+## Creating Objects on the Stack and Heap
+
 
 To explain how objects are created on the stack and on the heap we will
 use the `Quad` class. You can find the definition in

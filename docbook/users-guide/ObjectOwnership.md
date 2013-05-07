@@ -1,5 +1,5 @@
-Object Ownership
-================
+# Object Ownership
+
 
 An object has ownership of another object if it has permission to delete
 it. Usually a collection or a parent object such as a pad holds
@@ -27,8 +27,8 @@ The following rules apply to the ROOT classes.
 If an object fits none of these cases, the user has ownership. The next
 paragraphs describe each rule and user ownership in more detail.
 
-Ownership by Current Directory (gDirectory)
-===========================================
+## Ownership by Current Directory (gDirectory)
+
 
 When a histogram, tree, or event list (**`TEventList`**) is created, it
 is added to the list of objects in the current directory by default. You
@@ -70,8 +70,8 @@ created as described above.
 Note that, when a file goes out of scope or is closed all objects on its
 object list are deleted.
 
-Ownership by the Master TROOT Object (gROOT)
-============================================
+## Ownership by the Master TROOT Object (gROOT)
+
 
 The master object ***`gROOT`***`,` maintains several collections of
 objects. For example, a canvas is added to the collection of canvases
@@ -96,8 +96,8 @@ These collections are also displayed in the root folder of the
 `Object Browser`. Most of these collections are self explanatory. The
 special cases are the collections of specials and cleanups.
 
-The Collection of Specials
---------------------------
+### The Collection of Specials
+
 
 This collection contains objects of the following classes:
 **`TCut``G`**, **`TMultiDimFit`**, **`TPrincipal`**, **`TChains`. In
@@ -105,8 +105,8 @@ addition it contains the *`gHtml`*** object, ***`gMinuit`*** objects,
 and the array of contours graphs (**`TGraph`**) created when calling the
 `Draw` method of a histogram with the `"CONT`, `LIST"` option.
 
-Access to the Collection Contents
----------------------------------
+### Access to the Collection Contents
+
 
 The current content for a collection listed above can be accessed with
 the corresponding `gROOT->GetListOf` method (for example
@@ -116,8 +116,8 @@ the browser. See the image of the Object Browser in the next figure.
 
 ![The ROOT Object Browser](pictures/03000094.png)
 
-Ownership by Other Objects
-==========================
+## Ownership by Other Objects
+
 
 When an object creates another, the creating object is the owner of the
 created one. For example:
@@ -134,8 +134,8 @@ bit set are deleted automatically. Currently the objects created by the
 `DrawCopy` methods, have the `kCanDelete` bit set and are therefore
 owned by the pad.
 
-Ownership by the User
-=====================
+## Ownership by the User
+
 
 The user owns all objects not described in one of the above cases.
 **`TObject`** has two bits, `kCanDelete` and `kMustCleanup`, that
@@ -150,8 +150,8 @@ MyObject->SetBit(kMustCleanup)
 The bits can be reset and tested with the `TObject::ResetBit` and
 **`TObject::TestBit` methods.**
 
-The kCanDelete Bit
-------------------
+### The kCanDelete Bit
+
 
 The ***`gROOT`*** collections (see above) own their members and will
 delete them regardless of the `kCanDelete` bit. In all other
@@ -209,8 +209,8 @@ Canvas Name=MyCanvas …
 TPaveStats  … stats
 ```
 
-The kMustCleanup Bit
---------------------
+### The kMustCleanup Bit
+
 
 When the `kMustCleanup` bit is set, the object destructor will remove
 the object and its references from all collections in the clean up

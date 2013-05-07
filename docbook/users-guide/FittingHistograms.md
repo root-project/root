@@ -1,5 +1,5 @@
-Fitting Histograms
-==================
+# Fitting Histograms
+
 
 To fit a histogram you can use the Fit Panel on a visible histogram via
 the context menu, or you can use the **`TH1`**`::Fit` method. The Fit
@@ -7,8 +7,8 @@ Panel, which is limited, is best for prototyping. The histogram needs to
 be drawn in a pad before the Fit Panel is invoked. The method `TH1::Fit`
 is more powerful and is used in scripts and programs.
 
-The Fit Method
-==============
+## The Fit Method
+
 
 To fit a histogram programmatically, you can use the `TH1::Fit` method.
 Here is the signature of `TH1::Fit` and an explanation of the
@@ -89,8 +89,8 @@ Axis_t xxmin, Axis_t  xxmax)
 By default, the fitting function object is added to the histogram and is
 drawn in the current pad.
 
-Fit with a Predefined Function
-==============================
+## Fit with a Predefined Function
+
 
 To fit a histogram with a predefined function, simply pass the name of
 the function in the first parameter of **`TH1`**`::Fit`. For example,
@@ -103,8 +103,8 @@ root[] hist.Fit("gaus");
 The initial parameter values for pre-defined functions are set
 automatically.
 
-Fit with a User-Defined Function
-================================
+## Fit with a User-Defined Function
+
 
 You can create a **`TF1`** object and use it in the call the
 **`TH1`**`::Fit`. The parameter in to the `Fit` method is the NAME of
@@ -117,8 +117,8 @@ the **`TF1`** object. There are three ways to create a **`TF1`**.
 
 -   Using a function that you have defined
 
-Creating a TF1 with a Formula
------------------------------
+### Creating a TF1 with a Formula
+
 
 Let's look at the first case. Here we call the **`TF1`** constructor by
 giving it the formula: `sin(x)/x`.
@@ -134,8 +134,8 @@ You can also use a **`TF1`** object in the constructor of another
 root[] TF1  *f2 = new TF1("f2","f1*2",0,10)
 ```
 
-Creating a TF1 with Parameters
-------------------------------
+### Creating a TF1 with Parameters
+
 
 The second way to construct a **`TF1`** is to add parameters to the
 expression. Here we use two parameters:
@@ -167,8 +167,8 @@ This sets parameter 0 to 10 and parameter 1 to 5. We can now draw the
 root[] f1->Draw()
 ```
 
-Creating a TF1 with a User Function
------------------------------------
+### Creating a TF1 with a User Function
+
 
 The third way to build a **`TF1`** is to define a function yourself and
 then give its name to the constructor. A function for a **`TF1`**
@@ -229,8 +229,8 @@ void fitexample() {
 }
 ```
 
-Fixing and Setting Parameters’ Bounds
-=====================================
+## Fixing and Setting Parameters’ Bounds
+
 
 Parameters must be initialized before invoking the `Fit` method. The
 setting of the parameter initial values is automatic for the predefined
@@ -275,8 +275,8 @@ With this setup, parameters 0`->`2 can vary freely, parameter 3 has
 boundaries [-10, 4] with initial value –1.5, and parameter 4 is fixed to
 0.
 
-Fitting Sub Ranges
-==================
+## Fitting Sub Ranges
+
 
 By default, `TH1::Fit` will fit the function on the defined histogram
 range. You can specify the option "`R`" in the second parameter of
@@ -298,8 +298,8 @@ root[] hist->Fit("f1","","",-2,2)
 See macros `$ROOTSYS/tutorials/fit/myfit.C` and `multifit.C `as more
 completed examples.
 
-The Fit Panel
-=============
+## The Fit Panel
+
 
 ![](pictures/03000061.png)To display the Fit Panel right click on a
 histogram to pop up the context menu, and then select the menu entry Fit
@@ -322,8 +322,8 @@ on it. If the selected object is suitable for fitting, the fit panel is
 connected with this object and users can perform fits by setting
 different parameters and options.
 
-Function Choice and Settings
-----------------------------
+### Function Choice and Settings
+
 
 *‘Predefined’ combo box* - contains a list of predefined functions in
 ROOT. You have a choice of several polynomials, a Gaussian, a Landau,
@@ -346,8 +346,8 @@ string is not accepted.
 ‘*Set Parameters*’ button opens a dialog for parameters settings, which
 will be explaned later.
 
-Fitter Settings
----------------
+### Fitter Settings
+
 
 *‘Method’ combo box* currently provides only two fit model choices:
 Chi-square and Binned Likelihood. The default one is Chi-square. The
@@ -395,8 +395,8 @@ functions for the histogram. Note that the fitted functions are saved
 with the histogram when it is written to a ROOT file. By default, the
 function is drawn on the pad displaying the histogram.
 
-Draw Options
-------------
+### Draw Options
+
 
 *‘SAME’* sets On/Off function drawing on the same pad. When a fit is
 executed, the image of the function is drawn on the current pad.
@@ -407,8 +407,8 @@ results.
 *‘Do not store/draw’* sets On/Off option “`N`”- do not store the
 function and do not draw it.
 
-Print Options
--------------
+### Print Options
+
 
 This set of options specifies the amount of feedback printed on the root
 command line after performed fits.
@@ -419,8 +419,8 @@ command line after performed fits.
 
 *‘Default’* - between Verbose and Quiet.
 
-Command Buttons
----------------
+### Command Buttons
+
 
 *Fit button* - performs a fit taking different option settings via the
 Fit Panel interface.
@@ -430,8 +430,8 @@ ones.
 
 *Close* - closes the Fit panel window.
 
-Fitting Multiple Sub Ranges
-===========================
+## Fitting Multiple Sub Ranges
+
 
 The script for this example is `$ROOTSYS/tutorials/fit/multifit.C`. It
 shows how to use several Gaussian functions with different parameters on
@@ -488,8 +488,8 @@ total->SetParameters(par);
 h->Fit(total,"R+");
 ```
 
-Adding Functions to the List
-============================
+## Adding Functions to the List
+
 
 The example `$ROOTSYS/tutorials/fit/multifit.C` also illustrates how to
 fit several functions on the same histogram. By default a Fit command
@@ -504,8 +504,8 @@ root[] hist->Fit("f1","+","",-2,2)
 Note that the fitted function(s) are saved with the histogram when it is
 written to a ROOT file.
 
-Combining Functions
-===================
+## Combining Functions
+
 
 You can combine functions to fit a histogram with their sum as it is
 illustrated in the macro `FitDemo.C`
@@ -586,8 +586,8 @@ For another example see:
 
 ![The output of the FittingDemo() example](pictures/03000070.png)
 
-Associated Function
-===================
+## Associated Function
+
 
 One or more objects (typically a **`TF1`**\*) can be added to the list
 of functions (`fFunctions`) associated to each histogram. A call to
@@ -598,8 +598,8 @@ one can retrieve the associated function with:
 TF1 *myfunc = h->GetFunction("myfunc");
 ```
 
-Access to the Fit Parameters and Results
-========================================
+## Access to the Fit Parameters and Results
+
 
 If the histogram (or graph) is made persistent, the list of associated
 functions is also persistent. Retrieve a pointer to the function with
@@ -615,8 +615,8 @@ root[] Double_t p1 = fit->GetParameter(0);
 root[] Double_t e1 = fit->GetParError(0);
 ```
 
-Associated Errors
-=================
+## Associated Errors
+
 
 By default, for each bin, the sum of weights is computed at fill time.
 One can also call `TH1::Sumw2` to force the storage and computation of
@@ -633,8 +633,8 @@ Empty bins are excluded in the fit when using the Chi-square fit method.
 When fitting the histogram with the low statistics, it is recommended to
 use the Log-Likelihood method (option ‘`L`’ or “`LL`”).
 
-Fit Statistics
-==============
+## Fit Statistics
+
 
 You can change the statistics box to display the fit parameters with the
 `TStyle::SetOptFit(mode)` method. This parameter has four digits:
@@ -655,8 +655,8 @@ errors, use:
 gStyle->SetOptFit(1011);
 ```
 
-The Minimization Package
-========================
+## The Minimization Package
+
 
 This package was originally written in FORTRAN by Fred James and part of
 `PACKLIB` (patch D506). It has been converted to a C++ class by Rene
@@ -715,8 +715,8 @@ gr->Draw("alp");
 gMinuit->SetGraphicsMode(kFALSE);
 ```
 
-Basic Concepts of Minuit
-------------------------
+### Basic Concepts of Minuit
+
 
 The `Minuit` package acts on a multi parameter FORTRAN function to which
 one must give the generic name `FCN`. In the ROOT implementation, the
@@ -733,8 +733,8 @@ polynomial, user defined, etc) and the data for given values of the
 parameters. It is the task of `Minuit` to find those values of the
 parameters which give the lowest value of chi-square.
 
-The Transformation of Limited Parameters
-----------------------------------------
+### The Transformation of Limited Parameters
+
 
 For variable parameters with limits, `Minuit` uses the following
 transformation:
@@ -775,8 +775,8 @@ more parameters is very close to a limit, where partial `Pext/`partial
     should then be removed if possible, in order to perform or
     re-perform the error analysis without limits
 
-How to Get the Right Answer from Minuit
----------------------------------------
+### How to Get the Right Answer from Minuit
+
 
 `Minuit` offers the user a choice of several minimization algorithms.
 The `MIGRAD` algorithm is in general the best minimized for nearly all
@@ -789,7 +789,7 @@ If parameter limits are needed, in spite of the side effects, then the
 user should be aware of the following techniques to alleviate problems
 caused by limits:
 
-### Getting the Right Minimum with Limits
+#### Getting the Right Minimum with Limits
 
 If MIGRAD converges normally to a point where no parameter is near one
 of its limits, then the existence of limits has probably not prevented
@@ -810,7 +810,7 @@ a limit, because at a limit the derivative seen by the minimized
 
 `                               ((partial F)/(partial Pext)) = 0 `
 
-### Getting the Right Parameter Errors with Limits
+#### Getting the Right Parameter Errors with Limits
 
 In the best case, where the minimum is far from any limits, `Minuit`
 will correctly transform the error matrix, and the parameter errors it
@@ -822,13 +822,13 @@ absolute constraint on the parameter, a parameter at its limit has no
 error, at least in one direction. The error matrix, which can assign
 only symmetric errors, then becomes essentially meaningless.
 
-### Interpretation of Parameter Errors
+#### Interpretation of Parameter Errors
 
 There are two kinds of problems that can arise: the reliability of
 `Minuit`’s error estimates, and their statistical interpretation,
 assuming they are accurate.
 
-### Statistical Interpretation
+#### Statistical Interpretation
 
 For discussion of basic concepts, such as the meaning of the elements of
 the error matrix, or setting of exact confidence levels see the
@@ -840,8 +840,8 @@ articles:
 -   W.T.Eadie, D.Drijard, F.James, M.Roos, and B.Sadoulet. *Statistical
     Methods in Experimental Physics. North-Holland, 1971*
 
-Reliability of Minuit Error Estimates
--------------------------------------
+### Reliability of Minuit Error Estimates
+
 
 `Minuit` always carries around its own current estimates of the
 parameter errors, which it will print out on request, no matter how
@@ -888,13 +888,13 @@ minimum, even for a well-determined physical problem. Therefore, if
 `MIGRAD` reports that it has found a non-positive-definite covariance
 matrix, this may be a sign of one or more of the following:
 
-### A Non-physical Region
+#### A Non-physical Region
 
 On its way to the minimum, `MIGRAD` may have traversed a region that has
 unphysical behavior, which is of course not a serious problem as long as
 it recovers and leaves such a region.
 
-### An Underdetermined Problem
+#### An Underdetermined Problem
 
 If the matrix is not positive-definite even at the minimum, this may
 mean that the solution is not well defined, for example that there are
@@ -905,7 +905,7 @@ error matrix will necessarily be largely meaningless, so the user must
 remove the under determinedness by reformulating the parameterization.
 `Minuit` cannot do this itself.
 
-### Numerical Inaccuracies
+#### Numerical Inaccuracies
 
 It is possible that the apparent lack of positive-definiteness is due to
 excessive round off errors in numerical calculations (in the user
@@ -917,7 +917,7 @@ non-positive-definiteness is real or only numerical is largely
 irrelevant, since in both cases the error matrix will be unreliable and
 the minimum suspicious.
 
-### An Ill-posed Problem
+#### An Ill-posed Problem
 
 For questions of parameter dependence, see the discussion above on
 positive-definiteness. Possible other mathematical problems are the
@@ -930,8 +930,8 @@ following:
 -   Starting too far from the solution - the function may have
     unphysical local minima, especially at infinity in some variables.
 
-FUMILI Minimization Package
-===========================
+## FUMILI Minimization Package
+
 
 FUMILI is used to minimize Chi-square function or to search maximum of
 likelihood function. Experimentally measured
@@ -990,11 +990,11 @@ They form parallelepiped ![](pictures/0800008A.png)
 FUMILI for negative logarithm of the likelihood function with the same
 idea - linearization of functional argument.
 
-Neural Networks
-===============
+## Neural Networks
 
-Introduction
-------------
+
+### Introduction
+
 
 Neural Networks are used in various fields for data analysis and
 classification, both for research and commercial institutions. Some
@@ -1007,8 +1007,8 @@ This implementation of multilayer perceptrons is inspired from the
 `MLPfit` package, which remains one of the fastest tools for neural
 networks studies.
 
-The MLP
--------
+### The MLP
+
 
 The multilayer perceptron is a simple feed-forward network with the
 following structure showed on the left.![](pictures/0300008D.png)
@@ -1030,8 +1030,8 @@ function.
 approximated function of inputs `X` is the probability of signal,
 knowing `X`.
 
-Learning Methods
-----------------
+### Learning Methods
+
 
 The aim of all learning methods is to minimize the total error on a set
 of weighted examples. The error is defined as the sum in quadrate,
@@ -1045,7 +1045,7 @@ value with the local partial derivative of the output neuron (for a
 synapse). This computation is called "back-propagation of the errors".
 Six learning methods are implemented.
 
-### Stochastic Minimization
+#### Stochastic Minimization
 
 This is the most trivial learning method. The Robbins-Monro stochastic
 approximation is applied to multilayer perceptrons. The weights are
@@ -1056,41 +1056,41 @@ updated after each example according to the formula:
 The parameters for this method are `Eta`, `EtaDecay`, `Delta` and
 `Epsilon`.
 
-### Steepest Descent With Fixed Step Size (Batch Learning)
+#### Steepest Descent With Fixed Step Size (Batch Learning)
 
 It is the same as the stochastic minimization, but the weights are
 updated after considering all the examples, with the total derivative
 `dEdw`. The parameters for this method are `Eta`, `EtaDecay`, `Delta`
 and `Epsilon`.
 
-### Steepest Descent Algorithm
+#### Steepest Descent Algorithm
 
 Weights are set to the minimum along the line defined by the gradient.
 The only parameter for this method is `Tau`. Lower `Tau` = higher
 precision = slower search. A value `Tau=3` seems reasonable.
 
-### Conjugate Gradients With the Polak-Ribiere Updating Formula
+#### Conjugate Gradients With the Polak-Ribiere Updating Formula
 
 Weights are set to the minimum along the line defined by the conjugate
 gradient. Parameters are `Tau` and `Reset`, which defines the epochs
 where the direction is reset to the steepest descent (estimated by using
 the Polak-Ribiere formula).
 
-### Conjugate Gradients With the Fletcher-Reeves Updating Formula
+#### Conjugate Gradients With the Fletcher-Reeves Updating Formula
 
 Weights are set to the minimum along the line defined by the conjugate
 gradient. Parameters are `Tau` and `Reset`, which defines the epochs
 where the direction is reset to the steepest descent (estimated by using
 the Fletcher-Reeves formula).
 
-### The Broyden, Fletcher, Goldfarb, Shanno (BFGS) Method
+#### The Broyden, Fletcher, Goldfarb, Shanno (BFGS) Method
 
 It implies the computation of a `NxN` matrix, but seems more powerful at
 least for less than 300 weights. Parameters are `Tau` and `Reset`, which
 defines the epochs where the direction is reset to the steepest descent.
 
-Using the Network
------------------
+### Using the Network
+
 
 Neural network are build from a set of "samples". A sample is a set of
 values defining the inputs and the corresponding output that the network
@@ -1167,8 +1167,8 @@ input parameters or the network can be exported (`Export`) as a
 standalone code. Up to now, this is only as a C++ or PYTHON class, but
 other languages could be implemented.
 
-Examples
---------
+### Examples
+
 
 An example of how to use **`TMultiLayerPerceptron`** is the macro
 `mlpHiggs.C` in \$ROOTSYS/tutorials. Using some standard simulated
