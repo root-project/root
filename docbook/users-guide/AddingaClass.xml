@@ -159,7 +159,7 @@ ClassImp(myc_i_f);
 <programlisting language="c++">// in header file MyClass.h
 template &lt;typename T&gt; class MyClass1 {
 private:
-      T  fA;
+      T  fA;
       ...
 public:
       ...
@@ -167,17 +167,17 @@ public:
 };
 template &lt;typename T1, typename T2&gt; class MyClass2 {
 private:
-      T1  fA;
-      T2  fB;
+      T1  fA;
+      T2  fB;
 public:
       ...
       ClassDef(MyClass2,1)
 };
 template &lt;typename T1, typename T2, typename T3&gt; class MyClass3 {
 private:
-      T1  fA;
-      T2  fB;
-      T3  fC;
+      T1  fA;
+      T2  fB;
+      T3  fC;
       ...
 public:
       ...
@@ -308,7 +308,7 @@ Float_t  fPx;       <code>//x part of track momentum</code>
 Float_t  fPy;       <code>//y part of track momentum</code>
 Float_t  fPz;       <code>//z part of track momentum</code>
 public:
- TTrack() { fId = 0; fEvent = 0; fPx = fPy = fPz = 0; }
+TTrack() { fId = 0; fEvent = 0; fPx = fPy = fPz = 0; }
 TTrack(Int_t id, Event *ev, Float_t px,Float_t py,Float_t pz);
 Float_t  Momentum() const;
 TEvent  *GetEvent() const { return fEvent; }

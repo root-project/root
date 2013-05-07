@@ -15,7 +15,7 @@
 *                                         *
 *        W E L C O M E  to  R O O T       *
 *                                         *
-*   Version   5.16/00      27 June 2006   *
+*   Version   5.16/00      27 June 2006   *
 *                                         *
 *  You are welcome to visit our Web site  *
 *          http://root.cern.ch            *
@@ -389,7 +389,7 @@ You write 2.974096 Mbytes/Realtime seconds
 You write 4.764473 Mbytes/Cputime seconds
 
 &gt; <emphasis role="bold"><code>ls -l Event.root</code></emphasis>
-…     17728188 Feb 23 18:28 Event.root
+…     17728188 Feb 23 18:28 Event.root
 
 &gt; <emphasis role="bold"><code>Event 400 1 1 20</code></emphasis>
 400 events and 19153182 bytes processed.
@@ -410,7 +410,7 @@ You write 1.688993 Mbytes/Realtime seconds
 You write 2.014004 Mbytes/Cputime seconds
 
 &gt; <emphasis role="bold"><code>ls -l Event.root</code></emphasis>
-…     13783799 Feb 23 18:29 Event.root
+…     13783799 Feb 23 18:29 Event.root
 
 &gt; <emphasis role="bold"><code>Event 400 2 1 20</code></emphasis>
 400 events and 19153182 bytes processed.

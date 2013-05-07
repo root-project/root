@@ -165,7 +165,7 @@ TGeoMaterial(const char* name, Double_t a, Double_t z,
     Double_t weigth);
 void TGeoMixture::DefineElement(Int_t iel, TGeoElement *elem, 
     Double_t weight);
-void TGeoMixture ::DefineElement(Int_t iel, Int_t z, Int_t natoms);
+void TGeoMixture::DefineElement(Int_t iel, Int_t z, Int_t natoms);
 </programlisting>
 
 <para>or:</para>
@@ -248,7 +248,7 @@ TGeoMixture::AddElement(TGeoElement *elem,
 </programlisting>
 
 <para>Once defined, one can retrieve the time evolution for the radioactive materials/mixtures by using one of the next two methods:</para>
-<para>1. <emphasis role="bold"><code>TGeoMaterial</code></emphasis><code>::FillMaterialEvolution(TObjArray *population,</code>         </para>
+<para>1- <emphasis role="bold"><code>TGeoMaterial</code></emphasis><code>::FillMaterialEvolution(TObjArray *population,</code>         </para>
 <para><code>                                      Double_t   precision=0.001)</code> </para>
 <para>To use this method, one has to provide an empty <emphasis role="bold"><code>TObjArray</code></emphasis> object that will be filled with all elements coming from the decay chain of the initial radionuclides contained by the material/mixture. The precision represent the cumulative branching ratio for which decay products are still considered.</para>
 
@@ -270,7 +270,7 @@ void TGeoBatemanSol::Draw();
 </programlisting>
 
 <para>Another method allows to create the evolution of a given radioactive material/mixture at a given moment in time:</para>
-<para>2. <emphasis role="bold"><code>TGeoMaterial</code></emphasis><code>::DecayMaterial(Double_t time, Double_t precision=0.001)</code></para>
+<para>2- <emphasis role="bold"><code>TGeoMaterial</code></emphasis><code>::DecayMaterial(Double_t time, Double_t precision=0.001)</code></para>
 <para>The method will create the mixture that result from the decay of a initial material/mixture at time, while all resulting elements having a fractional weight less than precision are excluded.</para>
 <para>A demo macro for radioactive material features is <code>$ROOTSYS/tutorials/geom/RadioNuclides.C</code> It demonstrates also the decay of a mixture made of radionuclides.</para>
 
@@ -702,7 +702,7 @@ Double_t Dphi);
 <sect3>
 <title>Polycone :  TGeoPcon Class</title>
 <para>A polycone is represented by a sequence of tubes/cones, glued together at defined Z planes. The polycone might have a phi segmentation, which globally applies to all the pieces. It has to be defined in two steps:</para>
-<para>1. First call the <emphasis role="bold"><code>TGeoPcon</code></emphasis> constructor to define a polycone:</para>
+<para>1- First call the <emphasis role="bold"><code>TGeoPcon</code></emphasis> constructor to define a polycone:</para>
 
 <programlisting language="c++">TGeoPcon(Double_t phi1,Double_t dphi,Int_t nz
 </programlisting>
@@ -711,7 +711,7 @@ Double_t Dphi);
 <listitem><para><code>dphi:</code> total phi range</para></listitem>
 <listitem><para><code>nz:</code>     number of Z planes defining polycone sections (minimum 2)</para></listitem>
 </itemizedlist>
-<para>  2. Define one by one all sections [0, nz-1]</para>
+<para>2- Define one by one all sections [0, nz-1]</para>
 
 <programlisting language="c++">void TGeoPcon::DefineSection(Int_t i,Double_t z,
 Double_t rmin, Double_t rmax);
@@ -780,7 +780,7 @@ The lists of X and Y positions for all vertices have to be provided for the “b
 </para>
 
 <programlisting language="c++">TGeoXtru::DefinePolygon (Int_t nvertices, Double_t *xv, 
-Double_t *yv) ;
+Double_t *yv);
 </programlisting>
 <itemizedlist>
 <listitem><para><code>nvertices:  </code>number of vertices of the polygon</para></listitem>
@@ -839,7 +839,7 @@ Double_t *norm[3]);
 </figure>
 
 <para>Suppose that A, B, C and D represent basic shapes, we will illustrate how the internal representation of few combinations look like. We do this only for understanding how to create them in a proper way, since the user interface for this purpose is in fact very simple. We will ignore for the time being the positioning of components. The definition of a composite shape takes an expression where the identifiers are shape names. The expression is parsed and decomposed in 2 sub-expressions and the top-level Boolean operator.</para>
-<para>1. Union: <code>A+B+C</code></para>
+<para>1- Union: <code>A+B+C</code></para>
 <para>Just to illustrate the Boolean expression parsing and the composite shape structure, let’s take a simple example. We will describe the union of A, B and C. Both union operators are at the same level. Since:</para>
 <para><code>A+B+C = (A+B)+C = A+(B+C)</code> </para>
 <para>The first<code> (+)</code> is taken as separator, hence the expression split in: <code>A</code> and <code>(B+C)</code>. A Boolean node of type <emphasis role="bold"><code>TGeoUnion</code></emphasis><code>("A","B+C")</code> is created. This tries to replace the 2 expressions by actual pointers to corresponding shapes. The first expression (A) contains no operators therefore is interpreted as representing a shape. The shape named "A" is searched into the list of shapes handled by the manager class and stored as the "left" shape in the Boolean union node. Since the second expression is not yet fully decomposed, the "right" shape in the combination is created as a new composite shape. This will split at its turn B+C into B and C and create a <emphasis role="bold"><code>TGeoUnion</code></emphasis><code>("B","C")</code>. The B and C identifiers will be looked for and replaced by the pointers to the actual shapes into the new node. Finally, the composite "<code>A+B+C</code>" will be represented as shown in Fig.17-23.</para>
@@ -864,7 +864,7 @@ mat-&gt;RegisterYourself();  <code>// see Geometrical transformations</code>
 </programlisting>
 
 <para>An identifier <code>shape:matrix</code> have the meaning: <code>shape</code> is translated or rotated with <code>matrix</code> with respect to the Boolean combination it enters as operand. Note that in the expression A+B+C no matrix identifier was provided, therefore the identity matrix was used for positioning the shape components. The next example will illustrate a more complex case. </para>
-<para>2. <code>(A:m1+B):m2-(C:m3*D:m4):m5</code></para>
+<para>2- <code>(A:m1+B):m2-(C:m3*D:m4):m5</code></para>
 <para>Let’s try to understand the expression above. This expression means: subtract the intersection of <emphasis role="bold">C</emphasis> and <emphasis role="bold">D</emphasis> from the union of <emphasis role="bold">A</emphasis> and <emphasis role="bold">B</emphasis>. The usage of parenthesis to force the desired precedence is always recommended. One can see that not only the primitive shapes have some geometrical transformations, but also their intermediate compositions. </para>
 
 <figure><title>Internal representation for composite shapes</title>
@@ -1213,10 +1213,10 @@ ptrAL);
 <para>This will instruct the modeller that the daughter ROW inside CAL overlaps with something else. The modeller will check this at closure time and build a list of possibly overlapping candidates. This option is equivalent with the option MANY in GEANT3.</para>
 <para>The modeller supports such cases only if user declares the overlapping nodes. In order to do that, one should use <emphasis role="bold"><code>TGeoVolume</code></emphasis><code>::AddNodeOverlap()</code> instead of <emphasis role="bold"><code>TGeoVolume</code></emphasis><code>::AddNode()</code>. When two or more positioned volumes are overlapping, not all of them have to be declared so, but at least one. A point inside an overlapping region equally belongs to all overlapping nodes, but the way these are defined can enforce the modeller to give priorities.</para>
 <para>The general rule is that the deepest node in the hierarchy containing a point has the highest priority. For the same geometry level, non-overlapping is prioritized over overlapping. In order to illustrate this, we will consider few examples. We will designate non-overlapping nodes as ONLY and the others MANY as in GEANT3, where this concept was introduced:</para>
-<para>1. The part of a MANY node B extruding its container A will never be "seen"  during navigation, as if B was in fact the result of the intersection of A and B.</para>
-<para>2. If we have two nodes A (ONLY) and B (MANY) inside the same container, all points in the overlapping region of A and B will be designated as belonging to A.</para>
-<para>3. If A an B in the above case were both MANY, points in the overlapping part will be designated to the one defined first. Both nodes must have the same medium.</para>
-<para>4. The slices of a divided MANY will be as well MANY.</para>
+<para>1- The part of a MANY node B extruding its container A will never be "seen"  during navigation, as if B was in fact the result of the intersection of A and B.</para>
+<para>2- If we have two nodes A (ONLY) and B (MANY) inside the same container, all points in the overlapping region of A and B will be designated as belonging to A.</para>
+<para>3- If A an B in the above case were both MANY, points in the overlapping part will be designated to the one defined first. Both nodes must have the same medium.</para>
+<para>4- The slices of a divided MANY will be as well MANY.</para>
 <para>One needs to know that navigation inside geometry parts MANY nodes is much slower. Any overlapping part can be defined based on composite shapes – might be in some cases a better way out. </para>
 </sect3>
 
@@ -1864,7 +1864,7 @@ ptrTrack-&gt;AddTrack(secondId,pdg,secondParticle);
 
 <programlisting language="c++">TGeoManager::DrawTracks(Option_t *option);
 TGeoManager::AnimateTracks(Double_t tmin=0.,Double_t tmax=1E-8,
-Int_t nframes=200,Option_t *option=””) ;
+Int_t nframes=200,Option_t *option=””);
 </programlisting>
 
 <para>The drawing/animation time range is a global variable that can be directly set:</para>
@@ -2389,8 +2389,8 @@ to get the normal vector to the crossed surface, after propagating the current p
 value. This propagation can be done like:</para>
 
 <programlisting language="c++">Double_t *current_point = gGeoManager-&gt;GetCurrentPoint();
-Double_t *current_dir = gGeoManager-&gt;GetCurrentDirection() ;
-for (Int_t i=0 ; i&lt;3 ; i++) 
+Double_t *current_dir = gGeoManager-&gt;GetCurrentDirection();
+for (Int_t i=0; i&lt;3; i++) 
     current_point[i] += step * current_dir[I];
 </programlisting>
 
@@ -2517,12 +2517,12 @@ root[] geom-&gt;Edit(Option_t *option=””);
 
 <sect2>
 <title>How to Create a Valid Geometry with Geometry Editors</title>
-<para>1. Create a new geometry manager and start the editor as described at the beginning.</para>
-<para>2. Create at least one material from the "<emphasis role="italic">Materials</emphasis>" shutter item category. Generally, for creating objects, the interface is always in the <emphasis role="bold"><code>TGeoManagerEditor</code></emphasis> in different categories - one should just provide a name and requested parameters.</para>
-<para>3. Create a shape that will be used for the top volume within the "<emphasis role="italic">Shapes</emphasis>" category. For the moment, the shapes that have editors are Box, Para, Trd1, Trd2, Tube, Tube segment, Cone, Cone segment, Hype, Pcon, Torus and Sphere.</para>
-<para>4. Create a medium from one of the existing materials from the "<emphasis role="italic">Medium</emphasis>" category. You will notice that some categories as "<emphasis role="italic">Volume</emphasis>" and "<emphasis role="italic">Medium</emphasis>" are inactive at the beginning because at that time there is no material yet (for making a medium) and no shape (for making a volume). These categories are dynamically activated once all the required components are defined.</para>
-<para>5. Create a volume from the "<emphasis role="italic">Volumes</emphasis>" category. You will notice that contrary to the other editors, the volume editor is opened in a tab, not transient - this is because it is more complex.</para>
-<para>6. Go back to "<emphasis role="italic">General</emphasis>" category and select the newly created volume as the top one (you can do it also from the volume category). This is just for starting. To create some hierarchy, one has to create several other volumes and the matrices to position them. Once this is done, use the volume editor interface to:</para>
+<para>1- Create a new geometry manager and start the editor as described at the beginning.</para>
+<para>2- Create at least one material from the "<emphasis role="italic">Materials</emphasis>" shutter item category. Generally, for creating objects, the interface is always in the <emphasis role="bold"><code>TGeoManagerEditor</code></emphasis> in different categories - one should just provide a name and requested parameters.</para>
+<para>3- Create a shape that will be used for the top volume within the "<emphasis role="italic">Shapes</emphasis>" category. For the moment, the shapes that have editors are Box, Para, Trd1, Trd2, Tube, Tube segment, Cone, Cone segment, Hype, Pcon, Torus and Sphere.</para>
+<para>4- Create a medium from one of the existing materials from the "<emphasis role="italic">Medium</emphasis>" category. You will notice that some categories as "<emphasis role="italic">Volume</emphasis>" and "<emphasis role="italic">Medium</emphasis>" are inactive at the beginning because at that time there is no material yet (for making a medium) and no shape (for making a volume). These categories are dynamically activated once all the required components are defined.</para>
+<para>5- Create a volume from the "<emphasis role="italic">Volumes</emphasis>" category. You will notice that contrary to the other editors, the volume editor is opened in a tab, not transient - this is because it is more complex.</para>
+<para>6- Go back to "<emphasis role="italic">General</emphasis>" category and select the newly created volume as the top one (you can do it also from the volume category). This is just for starting. To create some hierarchy, one has to create several other volumes and the matrices to position them. Once this is done, use the volume editor interface to:</para>
 <itemizedlist>
 <listitem><para>add/remove daughters, change shape, edit position of daughters</para></listitem>
 <listitem><para>change visualization settings</para></listitem>

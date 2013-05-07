@@ -199,7 +199,7 @@ v1.RotateUz(direction);      <code>// direction must be TVector3 of unit length 
 <inlinemediaobject><imageobject><imagedata fileref="pictures/080001AA.png" width="54pt" depth="46.55pt"/></imageobject></inlinemediaobject>
 
 </para>
-<para>It describes a so-called active rotation, i.e. a rotation of objects inside a static system of coordinates. In case you want to rotate the frame and want to know the coordinates of objects in the rotated system, you should apply the inverse rotation to the objects. If you want to transform coordinates from the rotated frame to the original frame you have to apply the direct transformation. A rotation around a specified axis means counterclockwise rotation around the positive direction of the axis.   </para>
+<para>It describes a so-called active rotation, i.e. a rotation of objects inside a static system of coordinates. In case you want to rotate the frame and want to know the coordinates of objects in the rotated system, you should apply the inverse rotation to the objects. If you want to transform coordinates from the rotated frame to the original frame you have to apply the direct transformation. A rotation around a specified axis means counterclockwise rotation around the positive direction of the axis.   </para>
 
 <sect2>
 <title>Declaration, Access, Comparisons</title>
@@ -388,7 +388,7 @@ v.SetT(1.);v.SetE(1.);
 v.SetVect(TVector3(1,2,3));
 v.SetXYZT(x,y,z,t);
 v.SetPxPyPzE(px,py,pz,e);
-v.SetXYZM(x,y,z,m);   <code>// v = (x,y,z,e = Sqrt(x*x+y*y+z*z+m*m))</code>
+v.SetXYZM(x,y,z,m);   <code>// v = (x,y,z,e = Sqrt(x*x+y*y+z*z+m*m))</code>
 </programlisting>
 
 </sect2>
@@ -563,10 +563,10 @@ TLorentzRotation lb2(b);
 
 <para>The Matrix for a Lorentz boosts is: </para>
 
-<para>    <code> │1+gamma'*bx*bx     gamma'*bx*by     gamma'*bx*bz   gamma*bx │ </code></para>
-<para>    <code> │  gamma'*bx*bz   1+gamma'*by*by     gamma'*by*by   gamma*by │ </code></para>
-<para>    <code> │  gamma'*bz*bx     gamma'*bz*by   1+gamma'*bz*bz   gamma*bz │ </code></para>
-<para>     <code>│  gamma*bx         gamma*by         gamma*bz       gamma    │ </code></para>
+<para>    <code> |1+gamma'*bx*bx     gamma'*bx*by     gamma'*bx*bz   gamma*bx | </code></para>
+<para>    <code> |  gamma'*bx*bz   1+gamma'*by*by     gamma'*by*by   gamma*by | </code></para>
+<para>    <code> |  gamma'*bz*bx     gamma'*bz*by   1+gamma'*bz*bz   gamma*bz | </code></para>
+<para>    <code> |  gamma*bx         gamma*by         gamma*bz       gamma    | </code></para>
 
 <para>with the boost vector <code>b=(bx,by,bz)</code>; <code>gamma=1/Sqrt(1-beta*beta)</code>;<code> gamma’=(gamma-1)/beta*beta.</code></para>
 </sect2>
@@ -621,7 +621,7 @@ l.Rotate(.5,axis);<code>// rotation around specified</code> vector
 
 <programlisting language="c++">
 l1 = l2.Inverse();<code>// l1 is inverse of l2, l2 unchanged</code>
-l1 = l2.Invert();<code>// invert l2, then  l1=l2</code>
+l1 = l2.Invert();<code>// invert l2, then  l1=l2</code>
 </programlisting>
 
 <para/>
@@ -642,7 +642,7 @@ TLorentzRotation l;
 v=l.VectorMultiplication(v);
 v = l * v;
 v.Transform(l);
-v *= l;            <code>// v = l*v</code>
+v *= l;            <code>// v = l*v</code>
 </programlisting>
 
 </sect2>

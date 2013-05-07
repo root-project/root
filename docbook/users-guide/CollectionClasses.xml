@@ -333,8 +333,8 @@ if ((track = (TTrack*)fArr[i]))     <emphasis role="italic"><code>// or fArr.At(
 
 <programlisting language="c++">
 TObjArray a(10000);
-while (TEvent *ev = (TEvent *)next()) {        <emphasis role="italic"><code>// O(100000)</code></emphasis>
-   for (int i = 0; i &lt; ev-&gt;Ntracks; i++) {     <emphasis role="italic"><code>// O(10000)</code></emphasis>
+while (TEvent *ev = (TEvent *)next()) {        <emphasis role="italic"><code>// O(100000)</code></emphasis>
+   for (int i = 0; i &lt; ev-&gt;Ntracks; i++) {     <emphasis role="italic"><code>// O(10000)</code></emphasis>
       a[i] = new TTrack(x,y,z,...);
       ...
    }
@@ -359,7 +359,7 @@ while (TEvent *ev = (TEvent *)next()) {      <code>// O(100000</code><emphasis r
 }
 </programlisting>
 
-<para>Considering that a pair of new/delete calls on average cost about 70 s, O(109) new/deletes will save about 19 hours. For the other collections, see the class reference guide on the web and the test program <code>$ROOTSYS/test/tcollex.cxx.</code></para>
+<para>Considering that a pair of new/delete calls on average cost about 70 ms, O(109) new/deletes will save about 19 hours. For the other collections, see the class reference guide on the web and the test program <code>$ROOTSYS/test/tcollex.cxx.</code></para>
 </sect2>
 </sect1>
 
