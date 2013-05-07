@@ -1,8 +1,8 @@
-Trees
-=====
+# Trees
 
-Why Should You Use a Tree?
-==========================
+
+## Why Should You Use a Tree?
+
 
 In the “Input/Output” chapter, we saw how objects can be saved in ROOT
 files. In case you want to store large quantities of same-class objects,
@@ -58,8 +58,8 @@ containing `Py`, we can read all values of `Px` and `Py` by only reading
 the `Px` and `Py` branches. This makes the use of the **`TTree`** very
 attractive.
 
-A Simple TTree
-==============
+## A Simple TTree
+
 
 This script builds a **`TTree`** from an ASCII file containing
 statistics about the staff at CERN. This script, `staff.C` and its input
@@ -126,8 +126,8 @@ to disk saving the `tree`. Remember, trees and histograms are created in
 the current directory, which is the file in our example. Hence an
 `f->Write() `saves the tree.
 
-Show an Entry with TTree::Show
-==============================
+## Show an Entry with TTree::Show
+
 
 An easy way to access one entry of a tree is the use the `TTree::Show`
 method. For example to look at the 10th entry in the `staff.root` tree:
@@ -149,8 +149,8 @@ root[] T->Show(10)
  Nation          = FR 
 ```
 
-Print the Tree Structure with TTree::Print
-==========================================
+## Print the Tree Structure with TTree::Print
+
 
 A helpful command to see the tree structure meaning the number of
 entries, the branches and the leaves, is **`TTree`**`::Print`.
@@ -168,8 +168,8 @@ root[] T->Print()
 *Baskets :   3 : Basket Size =  32000 bytes  Compression= 2.97              *
 ```
 
-Scan a Variable the Tree with TTree::Scan
-=========================================
+## Scan a Variable the Tree with TTree::Scan
+
 
 The `TTree::Scan` method shows all values of the list of leaves
 separated by a colon.
@@ -190,8 +190,8 @@ root[] T->Scan("Cost:Age:Children")</emphasis>
 …
 ```
 
-The Tree Viewer
-===============
+## The Tree Viewer
+
 
 The tree viewer is a quick and easy way to examine a tree. To start the
 tree viewer, open a file and object browser. Right click on a
@@ -314,8 +314,8 @@ age leaf into the Y-box and the cost leaf into the X-box, and pressing
 the Draw button. By default, this will generate a scatter plot. Select a
 different option, for example `"lego"` to create a 2D histogram.
 
-Creating and Saving Trees
-=========================
+## Creating and Saving Trees
+
 
 This picture shows the **`TTree`** class:
 
@@ -329,8 +329,8 @@ title:
 TTree t("MyTree","Example Tree")
 ```
 
-Creating a Tree from a Folder Hierarchy
----------------------------------------
+### Creating a Tree from a Folder Hierarchy
+
 
 An alternative way to create a tree and organize it is to use folders
 (see “Folders and Tasks”). You can build a folder structure and create a
@@ -345,8 +345,8 @@ the **`TTree`** constructor that this is a folder not just the title.
 You fill the tree by placing the data into the folder structure and
 calling **`TTree`**`::Fill`.
 
-Tree and TRef Objects
----------------------
+### Tree and TRef Objects
+
 
 ``` {.cpp}
 MyTree->BranchRef();
@@ -363,8 +363,8 @@ referenced objects. Enabling this optional table, allow
 **`TTree`**`::Draw` to automatically load the branches needed to
 dereference a **`TRef`** (or **`TRefArray`**) object.
 
-Autosave
---------
+### Autosave
+
 
 `Autosave` gives the option to save all branch buffers every `n` byte.
 We recommend using `Autosave` for large acquisitions. If the acquisition
@@ -373,8 +373,8 @@ the last `Autosave`. To set the number of bytes between `Autosave` you
 can use the `TTree::SetAutosave()` method. You can also call
 **`TTree::Autosave` in the acquisition loop every `n `entry.**
 
-Trees with Circular Buffers
----------------------------
+### Trees with Circular Buffers
+
 
 When a **`TTree`** is memory resident, you set it up so that it retains
 retain only the last few entries. For example, this can be very useful
@@ -413,8 +413,8 @@ void circular() {
 }
 ```
 
-Size of TTree in the File
--------------------------
+### Size of TTree in the File
+
 
 When writing a **`TTree`** to a file, if the file size reaches the value
 stored in the `TTree::GetMaxTreeSize()`, the current file is closed and
@@ -438,8 +438,8 @@ maximum tree size can be set via the static function
 GB. If the current file contains other objects (like **`TH1`** and
 **`TTree`**), these objects are automatically moved to the new file.
 
-User Info Attached to a TTree Object
-------------------------------------
+### User Info Attached to a TTree Object
+
 
 The function `TTree::GetUserInfo()` allows adding any object defined by
 a user to the tree that is not depending on the entry number. For
@@ -449,8 +449,8 @@ example:
 tree->GetUserInfo()->Add(myruninfo);
 ```
 
-Indexing a Tree
----------------
+### Indexing a Tree
+
 
 Use `TTree::BuildIndex()`, to build an index table using expressions
 depending on the value in the leaves.
@@ -504,8 +504,8 @@ Note that this function can also be applied to a **`TChain`**. The
 return value is the number of entries in the Index (\< 0 indicates
 failure).
 
-Branches
-========
+## Branches
+
 
 The organization of branches allows the designer to optimize the data
 for the anticipated use. The class for a branch is called **`TBranch`**.
@@ -528,8 +528,8 @@ along you will need the shared library `libEvent.so`. First, check if it
 is in `$ROOTSYS/test`. If it is, copy it to your own area. If it is not
 there, you have to build it by typing make in `$ROOTSYS/test`.
 
-Adding a Branch to Hold a List of Variables
-===========================================
+## Adding a Branch to Hold a List of Variables
+
 
 ![](pictures/030000F9.png)As in the very first example (`staff.root`)
 the data we want to save is a list of simple variables, such as integers
@@ -654,8 +654,8 @@ See “Example 2: A Tree with a C Structure” below
 (`$ROOTSYS/tutorials/tree/tree2.C`) and `staff.C` at the beginning of
 this chapter.
 
-Adding a TBranch to Hold an Object
-==================================
+## Adding a TBranch to Hold an Object
+
 
 To write a branch to hold an event object, we need to load the
 definition of the `Event` class, which is in `$ROOTSYS/test/libEvent.so`
@@ -700,8 +700,8 @@ them separately by collecting these values in a special "status" object
 and write it to the file outside of the tree. If it makes sense to store
 them for each object, make them a regular data member.
 
-Setting the Split-level
------------------------
+### Setting the Split-level
+
 
 To split a branch means to create a sub-branch for each data member in
 the object. The split-level can be set to 0 to disable splitting or it
@@ -724,7 +724,7 @@ split-level increases so does the splitting depth. The ROOT default for
 the split-level is 99. This means the object will be split to the
 maximum.
 
-### Memory Considerations when Splitting a Branch
+#### Memory Considerations when Splitting a Branch
 
 Splitting a branch can quickly generate many branches. Each branch has
 its own buffer in memory. In case of many branches (say more than 100),
@@ -736,7 +736,7 @@ ranging from 32MB to 256MB. If you have more memory, you should specify
 larger buffer sizes. However, in this case, do not forget that your file
 might be used on another machine with a smaller memory configuration.
 
-### Performance Considerations when Splitting a Branch
+#### Performance Considerations when Splitting a Branch
 
 A split branch is faster to read, but slightly slower to write. The
 reading is quicker because variables of the same type are stored
@@ -747,7 +747,7 @@ above. See “
 Performance Benchmarks” for performance impact of split and non-split
 mode.
 
-### Rules for Splitting
+#### Rules for Splitting
 
 When splitting a branch, variables of different types are handled
 differently. Here are the rules that apply when splitting a branch.
@@ -801,8 +801,8 @@ deque<pair<float,float> > fDequePair;
 -   A STL container that is not split will not be accessible in the
     browser.
 
-Exempt a Data Member from Splitting
------------------------------------
+### Exempt a Data Member from Splitting
+
 
 If you are creating a branch with an object and in general you want the
 data members to be split, but you want to exempt a data member from the
@@ -814,8 +814,8 @@ private:
    EventHeader    fEvtHdr;      //|| Don't split the header
 ```
 
-Adding a Branch to Hold a TClonesArray
---------------------------------------
+### Adding a Branch to Hold a TClonesArray
+
 
 ROOT has two classes to manage arrays of objects. The **`TObjArray`**
 can manage objects of different classes, and the **`TClonesArray`** that
@@ -838,8 +838,8 @@ use a **`TClonesArray`** for same-class objects arrays. Branches with
 object described above. If splitting is specified the objects in the
 **`TClonesArray`** are split, not the **`TClonesArray`** itself.
 
-Identical Branch Names
-----------------------
+### Identical Branch Names
+
 
 When a top-level object (say `event`), has two data members of the same
 class the sub branches end up with identical names. To distinguish the
@@ -859,8 +859,8 @@ If `Trigger` has three members, `T1`, `T2`, `T3`, the two instructions
 above will generate sub branches called: `Trigger.T1`, `Trigger.T2`,
 `Trigger.T3`, `MuonTrigger.T1`, `MuonTrigger.T2`, and` MuonTrigger.T3`.
 
-Adding a Branch with a Folder
-=============================
+## Adding a Branch with a Folder
+
 
 Use the syntax below to add a branch from a folder:
 
@@ -871,8 +871,8 @@ tree->Branch("/aFolder");
 This method creates one branch for each element in the folder. The
 method returns the total number of branches created.
 
-Adding a Branch with a Collection
-=================================
+## Adding a Branch with a Collection
+
 
 This `Branch` method creates one branch for each element in the
 collection.
@@ -911,8 +911,8 @@ branch names. By default collections have a name equal to the
 corresponding class name, e.g. the default name of **`TList`** is
 “`TList`”.
 
-Examples for Writing and Reading Trees
-======================================
+## Examples for Writing and Reading Trees
+
 
 The following sections are examples of writing and reading trees
 increasing in complexity from a simple tree with a few variables to a
@@ -954,14 +954,14 @@ root[]     tree1w()
 root[]     tree1r()
 ```
 
-Example 1: A Tree with Simple Variables
-=======================================
+## Example 1: A Tree with Simple Variables
+
 
 This example shows how to write, view, and read a tree with several
 simple (integers and floating-point) variables.
 
-Writing the Tree
-----------------
+### Writing the Tree
+
 
 Below is the function that writes the tree (`tree1w`). First, the
 variables are defined (`px, py, pz,` `random` and `ev`). Then we add a
@@ -995,7 +995,7 @@ t1.Fill();
 }
 ```
 
-### Creating Branches with A single Variable
+#### Creating Branches with A single Variable
 
 This is the signature of `TTree::Branch` to create a branch with a list
 of variables:
@@ -1015,7 +1015,7 @@ one floating point type leaf also called `px`.
 t1.Branch("px",&px,"px/F");
 ```
 
-### Filling the Tree
+#### Filling the Tree
 
 First we find some random values for the variables. We assign `px` and
 `py` a Gaussian with mean = 0 and sigma = 1 by calling
@@ -1030,8 +1030,8 @@ method. The entries can be set by **`TTree`**`::SetEntries(Double_t n)`.
 Calling this method makes sense only if the number of existing entries
 is null.
 
-Viewing the Tree
-----------------
+### Viewing the Tree
+
 
 ![The tree1.root file and its tree in the
 browser](pictures/030000FC.png)
@@ -1048,8 +1048,8 @@ example, we can plot a two dimensional histogram.
 
 ![The tree viewer](pictures/030000FE.png)
 
-Reading the Tree
-----------------
+### Reading the Tree
+
 
 The `tree1r` function shows how to read the tree and access each entry
 and each leaf. We first define the variables to hold the read values.
@@ -1069,7 +1069,7 @@ branch name is `px`. This name was given when the tree was written (see
 t1->SetBranchAddress("px",&px);
 ```
 
-### GetEntry
+#### GetEntry
 
 Once the branches have been given the address, a specific entry can be
 read into the variables with the method **`TTree`**`::GetEntry(n)`. It
@@ -1188,8 +1188,8 @@ void tree1r(){
 }
 ```
 
-Example 2: A Tree with a C Structure
-====================================
+## Example 2: A Tree with a C Structure
+
 
 The executable script for this example is
 `$ROOTSYS/tutorials/tree/tree2.C. `In this example we show:
@@ -1282,8 +1282,8 @@ void helixStep(Float_t step, Float_t *vect, Float_t *vout)
 }
 ```
 
-Writing the Tree
-----------------
+### Writing the Tree
+
 
 ``` {.cpp}
 void tree2w() {
@@ -1366,7 +1366,7 @@ if  (TMath::Abs(gstep.vect[2]) > 30) newParticle = kTRUE;
 }
 ```
 
-### Adding a Branch with a Fixed Length Array
+#### Adding a Branch with a Fixed Length Array
 
 At first, we create a tree and create branches for a subset of variables
 in the C structure` Gctrak_t`. Then we add several types of branches.
@@ -1381,7 +1381,7 @@ t2.Branch("getot",&gstep.getot,"getot/F");
 t2.Branch("gekin",&gstep.gekin,"gekin/F");
 ```
 
-### Adding a Branch with a Variable Length Array
+#### Adding a Branch with a Variable Length Array
 
 The next two branches are dependent on each other. The first holds the
 length of the variable length array and the second holds the variable
@@ -1399,14 +1399,14 @@ The variable `nmec` is a random number and is reset for each entry.
 gstep.nmec = (Int_t)(5*gRandom->Rndm());
 ```
 
-### Filling the Tree
+#### Filling the Tree
 
 In this emulation of Geant3, we generate and transport particles in a
 magnetic field and store the particle parameters at each tracking step
 in a ROOT tree.
 
-Analysis
---------
+### Analysis
+
 
 In this analysis, we do not read the entire entry we only read one
 branch. First, we set the address for the branch to the file `dstep`,
@@ -1463,14 +1463,14 @@ gPad->GetViewer3D(“x3d”);
 
 ![](pictures/030000FF.png) ![](pictures/03000100.png)
 
-Example 3: Adding Friends to Trees
-==================================
+## Example 3: Adding Friends to Trees
+
 
 In this example, we will show how to extend a tree with a branch from
 another tree with the Friends feature.
 
-Adding a Branch to an Existing Tree
------------------------------------
+### Adding a Branch to an Existing Tree
+
 
 You may want to add a branch to an existing tree. For example, if one
 variable in the tree was computed with a certain algorithm, you may want
@@ -1509,8 +1509,8 @@ reasons, ROOT offers the concept of friends for trees (and chains). We
 encourage you to use `TTree::AddFriend` rather than adding a branch
 manually.
 
-TTree::AddFriend
-----------------
+### TTree::AddFriend
+
 
 A tree keeps a list of friends. In the context of a tree (or a chain),
 friendship means unrestricted access to the friends data. In this way it
@@ -1674,8 +1674,8 @@ tree3r();
 }
 ```
 
-Example 4: A Tree with an Event Class
-=====================================
+## Example 4: A Tree with an Event Class
+
 
 This example is a simplified version of `$ROOTSYS/test/MainEvent.cxx`
 and where Event objects are saved in a tree. The full definition of
@@ -1692,8 +1692,8 @@ In this example we will show
 
 -   how to print a selected entry
 
-The Event Class
----------------
+### The Event Class
+
 
 `Event` is a descendent of **`TObject`**. As such it inherits the data
 members of **`TObject`** and its methods such as `Dump()` and
@@ -1739,8 +1739,8 @@ private:
 };
 ```
 
-The EventHeader Class
----------------------
+### The EventHeader Class
+
 
 The `EventHeader` class (also defined in `Event.h`) does not inherit
 from **`TObject`**. Beginning with ROOT 3.0, an object can be placed on
@@ -1762,8 +1762,8 @@ private:
 };
 ```
 
-The Track Class
----------------
+### The Track Class
+
 
 The `Track` class descends from **`TObject`** since tracks are in a
 **`TClonesArray`** (i.e. a ROOT collection class) and contains a
@@ -1797,8 +1797,8 @@ private:
 };
 ```
 
-Writing the Tree
-----------------
+### Writing the Tree
+
 
 We create a simple tree with two branches both holding `Event` objects.
 One is split and the other is not. We also create a pointer to an
@@ -1857,8 +1857,8 @@ t4.Print();           // Print the tree contents
 }
 ```
 
-Reading the Tree
-----------------
+### Reading the Tree
+
 
 First, we check if the shared library with the class definitions is
 loaded. If not we load it. Then we read two branches, one for the number
@@ -1945,8 +1945,8 @@ the split level to 2. The output on the command line is the result of
 …
 ```
 
-Example 5: Import an ASCII File into a TTree
-============================================
+## Example 5: Import an ASCII File into a TTree
+
 
 The method `TTree::ReadFile` can be used to automatic define the
 structure of the **`TTree`** and read the data from a formatted ascii
@@ -1980,8 +1980,8 @@ in the input file starting with "\#" are ignored. A **`TBranch`** object
 is created for each variable in the expression. The total number of rows
 read from the file is returned.
 
-Trees in Analysis
-=================
+## Trees in Analysis
+
 
 The methods `TTree::Draw`, **`TTree`**`::MakeClass` and
 `TTree::MakeSelector` are available for data analysis using trees. The
@@ -2000,8 +2000,8 @@ processors and you can specify which entries to send to each processor.
 With `MakeClass` the user has control over the event loop, with
 `MakeSelector `the tree is in control of the event loop.
 
-Simple Analysis Using TTree::Draw
-=================================
+## Simple Analysis Using TTree::Draw
+
 
 We will use the tree in `staff.root` that was made by the macro in
 `$ROOTSYS/tutorials/tree/staff.C`.
@@ -2081,8 +2081,8 @@ a string that contains up to three expressions, one for each dimension,
 separated by a colon (“`e1:e2:e3`”). A list of examples follows this
 introduction.
 
-Using Selection with TTree:Draw
--------------------------------
+### Using Selection with TTree:Draw
+
 
 Change the active pad to 3, and add a selection to the list of
 parameters of the draw command.
@@ -2127,8 +2127,8 @@ tree for variables. This means that any variable used in the selection
 must be defined in the tree. You cannot use an arbitrary global variable
 in the `TTree::Draw` method.
 
-Using TCut Objects in TTree::Draw
----------------------------------
+### Using TCut Objects in TTree::Draw
+
 
 The `TTree::Draw` method also accepts **`TCut``G`** objects. A
 **`TCut`** is a specialized string object used for **`TTree`**
@@ -2162,8 +2162,8 @@ root[]     MyTree.Draw("x", c1 && c2)
 root[]     MyTree.Draw("x", "(x + y)" * (c1 && c2))
 ```
 
-Accessing the Histogram in Batch Mode
--------------------------------------
+### Accessing the Histogram in Batch Mode
+
 
 The `TTree::Draw` method creates a histogram called `htemp` and puts it
 on the active pad. In a batch program, the histogram `htemp` created by
@@ -2190,8 +2190,8 @@ TH1F *hnew = (TH1F*)gDirectory->Get("hnew");
 TH1F *hnew = (TH1F*)gPad->GetPrimitive("hnew");
 ```
 
-Using Draw Options in TTree::Draw
----------------------------------
+### Using Draw Options in TTree::Draw
+
 
 The next parameter is the draw option for the histogram:
 
@@ -2215,8 +2215,8 @@ The '`profs`' generates a **`TProfile`** with error on the spread. The
 draw options in a list separated by commas. After typing the lines
 above, you should now have a canvas that looks this.
 
-Superimposing Two Histograms
-----------------------------
+### Superimposing Two Histograms
+
 
 When superimposing two 2-D histograms inside a script with `TTree::Draw`
 and using the "`same`" option, you will need to update the pad between
@@ -2249,8 +2249,8 @@ been computed. Calling `pad->Update``()` forces the painting of the pad
 and allows `TTree::Draw` to compute the right limits for the
 intermediate histogram.
 
-Setting the Range in TTree::Draw
---------------------------------
+### Setting the Range in TTree::Draw
+
 
 There are two more optional parameters to the `TTree::Draw` method: one
 is the number of entries and the second one is the entry to start with.
@@ -2260,8 +2260,8 @@ For example, this command draws 1000 entries starting with entry 100:
 myTree->Draw("Cost:Age", "","",1000,100);
 ```
 
-TTree::Draw Examples
---------------------
+### TTree::Draw Examples
+
 
 The examples below use the `Event.root` file generated by the
 `$ROOTSYS/test/Event` executable and the `Event`, `Track`, and
@@ -2338,84 +2338,84 @@ examples.
 47  tree->Draw("myTimeStamp");
 ```
 
-### Explanations:
+#### Explanations:
 
-**`1- `** **`tree->Draw("fNtrack");`**
+**`1. `** **`tree->Draw("fNtrack");`**
 
 It fills the histogram with the number of tracks for each entry.
 `fNtrack` is a member of event.
 
-**`2-`** **` tree->Draw("event.GetNtrack()");`**
+**`2. `** **` tree->Draw("event.GetNtrack()");`**
 
 Same as case 1, but use the method of event to get the number of tracks.
 When using a method, you can include parameters for the method as long
 as the parameters are literals.
 
-**`3- tree->Draw("GetNtrack()");`**
+**`3. tree->Draw("GetNtrack()");`**
 
 Same as case 2, the object of the method is not specified. The command
 uses the first instance of the `GetNtrack` method found in the objects
 stored in the tree. We recommend using this shortcut only if the method
 name is unique.
 
-**`4- tree->Draw`** **`("fH.fXaxis.fXmax"); `**
+**`4. tree->Draw`** **`("fH.fXaxis.fXmax"); `**
 
 Draw the data member of a data member. In the tree, each entry has a
 histogram. This command draws the maximum value of the X-axis for each
 histogram.
 
-**`5-`** **`tree->Draw("fH.fXaxis.GetXmax()");`**
+**`5. `** **`tree->Draw("fH.fXaxis.GetXmax()");`**
 
 Same as case 4, but use the method of a data member.
 
-**`6- tree->Draw("fH.GetXaxis().fXmax");`**
+**`6. tree->Draw("fH.GetXaxis().fXmax");`**
 
 The same as case 4: a data member of a data member retrieved by a
 method.
 
-**`7- `** **`tree->Draw("GetHis`**
+**`7. `** **`tree->Draw("GetHis`**
 **`togram().GetXaxis().GetXmax()");`**
 
 Same as case 4, but using methods.
 
-**`8- tree->Draw("fTracks.fPx","fEvtHdr.fEvtNum%10 == 0");`**
+**`8. tree->Draw("fTracks.fPx","fEvtHdr.fEvtNum%10 == 0");`**
 
 Use data members in the expression and in the selection parameter to
 plot `fPx` or all tracks in every 10th entry. Since `fTracks` is a
 **`TClonesArray`** of `Tracks`, there will be d values of `fPx` for each
 entry.
 
-**`9- tree->Draw("`** **`fPx`** **`","fEvtHdr.fEvtNum%10 == 0`**
+**`9. tree->Draw("`** **`fPx`** **`","fEvtHdr.fEvtNum%10 == 0`**
 **`");`**
 
 Same as case 8, use the name of the data member directly.
 
-**`10- tree->Draw("fMatrix`** **`"`** **`);`**
+**`10. tree->Draw("fMatrix`** **`"`** **`);`**
 
 When the index of the array is left out or when empty brackets are used
 `[]`, all values of the array are selected. Draw all values of `fMatrix`
 for each entry in the tree. If `fMatrix` is defined as:
 `Float_t fMatrix[4][4]`, all 16 values are used for each entry.
 
-**`11- `** **`tree->Draw("fMatrix[ ][ ]");`**
+**`11. `** **`tree->Draw("fMatrix[ ][ ]");`**
 
 The same as case 10, all values of `fMatrix` are drawn for each entry.
 
-**`12- tree->Draw("`** **`fMatrix[2][2]");`**
+**`12. tree->Draw("`** **`fMatrix[2][2]");`**
 
 The single element at `fMatrix[2][2]` is drawn for each entry.
 
-**`13- tree->Draw("fMatrix[`** **`][0]");`**
+**`13. tree->Draw("fMatrix[`** **`][0]");`**
 
 Four elements of `fMatrix` are used: `fMatrix[1][0]`, `fMatrix[2][0]`,
 `fMatrix[3][0]`, `fMatrix[4][0]`.
 
-**`14- tree->Draw(`** **`"fMatrix[1][ ]");`**
+**`14. tree->Draw(`** **`"fMatrix[1][ ]");`**
 
 Four elements of `fMatrix` are used: `fMatrix[1][0]`, `fMatrix[1][2]`,
 `fMatrix[1][3]`, `fMatrix[1][4]`.
 
-**`15- tree->Draw`** **`("fMatrix - fVertex`** **`"`** **`);`**
+**`15. tree->Draw`** **`("fMatrix - fVertex`** **`"`** **`);`**
 
 With two arrays and unspecified element numbers, the number of selected
 values is the minimum of the first dimension times the minimum of the
@@ -2450,11 +2450,11 @@ elements per entry. The selected values for each entry are:
 
 `fMatrix[3][2] – fVertex[3][2]`
 
-**`16- tree->Draw`** **`("fMatrix[2][1] - fVertex[5][1]");`**
+**`16. tree->Draw`** **`("fMatrix[2][1] - fVertex[5][1]");`**
 
 This command selects one value per entry.
 
-**`17- tree->Draw`** **`("fMatrix[ ][1] - fVertex[5][1]");`**
+**`17. tree->Draw`** **`("fMatrix[ ][1] - fVertex[5][1]");`**
 
 The first dimension of the array is taken by the `fMatrix`.
 
@@ -2466,7 +2466,7 @@ The first dimension of the array is taken by the `fMatrix`.
 
 `fMatrix[3][1] - fVertex[5][1]`
 
-**`18- tree->Draw`** **`("("fMatrix[2][ ] - fVertex[5][ ]");`**
+**`18. tree->Draw`** **`("("fMatrix[2][ ] - fVertex[5][ ]");`**
 
 The first dimension minimum is 2, and the second dimension minimum is 3
 (from `fVertex`). Three values are selected from each entry:
@@ -2477,9 +2477,9 @@ The first dimension minimum is 2, and the second dimension minimum is 3
 
 `fMatrix[2][2] - fVertex[5][2]`
 
-**`19- tree->Draw`** **`("fMatrix[ ][2] - fVertex[ ][1]")`**
+**`19. tree->Draw`** **`("fMatrix[ ][2] - fVertex[ ][1]")`**
 
-This is similar to case 18- Four values are selected from each entry:
+This is similar to case 18. Four values are selected from each entry:
 
 `fMatrix[0][2] - fVertex[0][1]`
 
@@ -2489,7 +2489,7 @@ This is similar to case 18- Four values are selected from each entry:
 
 `fMatrix[3][2] - fVertex[3][1]`
 
-**`20- tree->Draw`** **`("fMatrix[ ][2] - fVertex[ ][ ]")`**
+**`20. tree->Draw`** **`("fMatrix[ ][2] - fVertex[ ][ ]")`**
 
 This is similar to case 19. Twelve values are selected (4x3) from each
 entry:
@@ -2518,13 +2518,13 @@ entry:
 
 `fMatrix[3][2] - fVertex[3][2]`
 
-**`21- tree->Draw`** **`("fMatrix[ ][ ] - fVertex[ ][ ]")`**
+**`21. tree->Draw`** **`("fMatrix[ ][ ] - fVertex[ ][ ]")`**
 
-This is the same as case 15- The first dimension minimum is 4 (from
+This is the same as case 15. The first dimension minimum is 4 (from
 `fMatrix`), and the second dimension minimum is 3 (from `fVertex`).
 Twelve values are selected from each entry.
 
-**`22- tree->Draw`** **`("fClosestDistance")`**
+**`22. tree->Draw`** **`("fClosestDistance")`**
 
 This event data member `fClosestDistance` is a variable length array:
 
@@ -2533,17 +2533,17 @@ This event data member `fClosestDistance` is a variable length array:
 This command selects all elements, but the number per entry depends on
 the number of vertices of that entry.
 
-**`23- tree->Draw`** **`("fClosestDistance[fNvertex/2]")`**
+**`23. tree->Draw`** **`("fClosestDistance[fNvertex/2]")`**
 
 With this command the element at `fNvertex/2` of the
 `fClosestDistance `array is selected. Only one per entry is selected.
 
-**`24- tree->Draw`** **`("sqrt(fPx*fPx + fPy*fPy + fPz*fPz)")`**
+**`24. tree->Draw`** **`("sqrt(fPx*fPx + fPy*fPy + fPz*fPz)")`**
 
 This command shows the use of a mathematical expression. It draws the
 square root of the sum of the product.
 
-**`25- tree->Draw("TMath::BreitWigner(fPx,3,2)")`**
+**`25. tree->Draw("TMath::BreitWigner(fPx,3,2)")`**
 
 The formula can contains call to a function that takes numerical
 arguments and returns a numerical value. The function needs to be
@@ -2551,18 +2551,18 @@ declared to the dictionary and need to be available from the global
 namespace. In particular, global functions and public static member
 functions can be called.
 
-**`26- tree->Draw("fEvtHdr.fEvtNum","fType=="type1" ")`**
+**`26. tree->Draw("fEvtHdr.fEvtNum","fType=="type1" ")`**
 
 You can compare strings, using the symbols == and !=, in the first two
 parameters of the `Draw` command (**`TTree`**`Formula`). In this case,
 the event number for ‘type1’ events is plotted.
 
-**`27- tree->Draw("fEvtHdr.fEvtNum","strstr(fType,"1") ")`**
+**`27. tree->Draw("fEvtHdr.fEvtNum","strstr(fType,"1") ")`**
 
 To compare strings, you can also use `strstr`. In this case, events
 having a '1' in `fType` are selected.
 
-**`28- tree->Draw("fTracks.fPoints")`**
+**`28. tree->Draw("fTracks.fPoints")`**
 
 If `fPoints` is a data member of the `Track` class declared as:
 
@@ -2573,7 +2573,7 @@ If `fPoints` is a data member of the `Track` class declared as:
 The size of the array `fPoints` varies with each track of each event.
 This command draws all the value in the `fPoints` arrays.
 
-**`29- tree->Draw("fTracks.fPoints - fTracks.fPoints[][fAvgPoints]");`**
+**`29. tree->Draw("fTracks.fPoints - fTracks.fPoints[][fAvgPoints]");`**
 
 `When fAvgPoints` is a data member of the `Event` class, this example
 selects:
@@ -2627,7 +2627,7 @@ selects:
 Where` max0`, `max1`, `… max n`, is the size of the` fPoints `array for
 the respective track`.`
 
-**`30- tree->Draw("fTracks.fPoints[2][]– fTracks.fPoints[][55]") `**
+**`30. tree->Draw("fTracks.fPoints[2][]– fTracks.fPoints[][55]") `**
 
 For each event, this expression is selected:
 
@@ -2645,7 +2645,7 @@ For each event, this expression is selected:
 
 where max is the minimum of `fNtrack` and `fTracks[2].fNpoint`.
 
-**`31- tree->Draw("fTracks.fPoints[][] - fTracks.fVertex[][]")`**
+**`31. tree->Draw("fTracks.fPoints[][] - fTracks.fVertex[][]")`**
 
 For each event and each track, this expression is selected. It is the
 difference between `fPoints` and of `fVertex`. The number of elements
@@ -2686,13 +2686,13 @@ used for each track is the minimum of `fNpoint` and 3 (the size of the
 
 `// with fTracks[4].fNpoint==3`
 
-**`32- tree->Draw("fValid&0x1","(fNvertex>10) && (fNseg<=6000)")`**
+**`32. tree->Draw("fValid&0x1","(fNvertex>10) && (fNseg<=6000)")`**
 
 You can use bit patterns (`&,|,<<`) or Boolean operation.
 
-**`33- tree->Draw("fPx","(fBx>.4) || (fBy<=-.4)");`**
+**`33. tree->Draw("fPx","(fBx>.4) || (fBy<=-.4)");`**
 
-**`34- tree->Draw("fPx","fBx*fBx*(fBx>.4) + fBy*fBy*(fBy<=-.4)");`**
+**`34. tree->Draw("fPx","fBx*fBx*(fBx>.4) + fBy*fBy*(fBy<=-.4)");`**
 
 The selection argument is used as a weight. The expression returns a
 multiplier and in case of a Boolean the multiplier is either 0 (for
@@ -2700,7 +2700,7 @@ false) or 1 (for true). The first command draws `fPx` for the range
 between 0.4 and –0.4, the second command draws `fPx` for the same range,
 but adds a weight using the result of the second expression.
 
-**`35- tree->Draw("fVertex","fVertex>10")`**
+**`35. tree->Draw("fVertex","fVertex>10")`**
 
 When using arrays in the selection and the expression, the selection is
 applied to each element of the array.
@@ -2711,32 +2711,32 @@ applied to each element of the array.
 
 `if (fVertex[2]>10) fVertex[2]`
 
-**`36- tree->Draw("fPx[600]")`**
+**`36. tree->Draw("fPx[600]")`**
 
-**`37- tree->Draw("fPx[600]","fNtrack > 600")`**
+**`37. tree->Draw("fPx[600]","fNtrack > 600")`**
 
 When using a specific element for a variable length array the entries
 with fewer elements are ignored. Thus these two commands are equivalent.
 
-**`38- tree->Draw("Nation")`**
+**`38. tree->Draw("Nation")`**
 
 `Nation` is a `char*` branch. When drawing a `char*` it will plot an
 alphanumeric histogram, of the different value of the string `Nation`.
 The axis will have the `Nation` values. See “Histograms”.
 
-**`39- tree->Draw("MyChar +0")`**
+**`39. tree->Draw("MyChar +0")`**
 
 If you want to plot a char\* variable as a byte rather than a string,
 you can use the syntax above.
 
-**`40- tree->Draw("fTracks.fTriggerBits")`**
+**`40. tree->Draw("fTracks.fTriggerBits")`**
 
 `fTriggerBits` is a data member of **`TTrack`** of type **`TBits`**.
 Objects of class **`TBits`** can be drawn directly. This command will
 create a 1D histogram from 0 to `nbits` which is filled for each
 non-null bit-number.
 
-**`41- tree->Draw("fMatrix-Alt$(fClosestDistance,0)")`**
+**`41. tree->Draw("fMatrix-Alt$(fClosestDistance,0)")`**
 
 `Alt$(primary,alternate)` returns the value of "`primary`" if it is
 available for the current iteration; otherwise return the value of
@@ -2745,7 +2745,7 @@ available for the current iteration; otherwise return the value of
 `i` less than the size of `fClosestDistance`, and will draw
 `fMatrix[i]+0` for the other value of `i`.
 
-**`42- tree->Draw("fClosestDistance:Iteration$")`**
+**`42. tree->Draw("fClosestDistance:Iteration$")`**
 
 This example draws a 2D plot with, for all entries,
 `fClosestDistance[i]:i` for each value of `i` between 0 and the size of
@@ -2763,7 +2763,7 @@ this entry
 `Iteration$:` return the current iteration over this formula for this
 entry (i.e. varies from 0 to `Length$`).
 
-**`43- T->Draw("fLastTrack.GetPx():fLastTrack.fPx");`**
+**`43. T->Draw("fLastTrack.GetPx():fLastTrack.fPx");`**
 
 **`TRef`** and **`TRefArray`** are automatically deferenced and this
 shows the value of the `fPx` of the track referenced by `fLastTrack`. To
@@ -2771,13 +2771,13 @@ access the **`TRef`** object itself use the '`@`' notation (see next
 example). This auto dereferencing can be extended (via an implementation
 of **`TVirtualRefProxy`**) to any reference type.
 
-**`44- T->Scan("((Track*)(fLastTrack@.GetObject())).GetPx()","","");`**
+**`44. T->Scan("((Track*)(fLastTrack@.GetObject())).GetPx()","","");`**
 
 Will cast the return value of `GetObject()` (which happens to be
 **`TObject*`** in this case) before requesting the `GetPx()` member
 functions.
 
-**`45- tree->Draw("This->GetReadEntry()");`**
+**`45. tree->Draw("This->GetReadEntry()");`**
 
 You can refer to the tree (or chain) containing the data by using the
 string '`This`'. You can also call any **`TTree`** methods. Next example
@@ -2785,7 +2785,7 @@ will display the name of the first '`user info`' object:
 
 `tree->Draw("This->GetUserInfo()->At(0)->GetName()");`
 
-**`46-  tree->Draw("mybr.mystring");`**
+**`46.  tree->Draw("mybr.mystring");`**
 
 **`TString`** and `std::string` object are plotted directly. The example
 45 draws the same results - i.e. an histogram whose labels are the
@@ -2797,7 +2797,7 @@ or
 
 `tree->Draw("mybr.mytstring.Data()");`
 
-**`47-  tree->Draw("myTimeStamp");`**
+**`47.  tree->Draw("myTimeStamp");`**
 
 You can plot plot objects of any class which has either `AsDouble` or
 `AsString` (`AsDouble` has priority). For such a class (for example
@@ -2808,8 +2808,8 @@ You can plot plot objects of any class which has either `AsDouble` or
 `AsString` can be returning either a `char*`, or a **`TString`** or an
 `std::string`.
 
-Using TTree::Scan
------------------
+### Using TTree::Scan
+
 
 `TTree::Scan` can be used to print the content of the tree's entries
 optional passing a selection.
@@ -2917,8 +2917,8 @@ the third columns will be 20 characters long. The printf format for the
 columns (assuming they are numbers) will be respectively: `%30.3g`
 `%30.3g` `%20.10g`.
 
-TEventList and TEntryList
--------------------------
+### TEventList and TEntryList
+
 
 The `TTree::Draw `method can also be used to build a list of the
 entries. When the first argument is preceded by `">>"` ROOT knows that
@@ -2965,7 +2965,7 @@ This command does not add any new entries to the list because all
 entries with more than 610 tracks have already been found by the
 previous command for entries with more than 600 tracks.
 
-### Main Differences between TEventList and TEntryList
+#### Main Differences between TEventList and TEntryList
 
 The functionality is essentialy the same: both are used to store entry
 numbers. **`TEntryList`**, however, uses considerably less memory for
@@ -2987,7 +2987,7 @@ and then be used to construct a new **`TEntryList`** for a new
 for **`TTre``e`**(s). This modularity makes **`TEntryList`** much better
 suited for PROOF processing than the **`TEventList`**.
 
-### Using an Event List
+#### Using an Event List
 
 A **`TEventList`** or a **`TEntryList`** can be used to limit the
 **`TTree`** to the events in the list. The methods `SetEventList` and
@@ -3004,7 +3004,7 @@ than 600 tracks and then set it so that the tree will use this list. To
 reset the **`TTree`** to use all events use `SetEventList(0)` or
 `SetEntryList(0)`.
 
-1- Let’s look at an example. First, open the file and draw the
+1. Let's look at an example. First, open the file and draw the
 `fNtrack`.
 
 ``` {.cpp}
@@ -3013,7 +3013,7 @@ root[] TTree *T = (TTree*)f->Get("T");
 root[] T->Draw("fNtrack");</emphasis>
 ```
 
-2- Now, put the entries with over 600 tracks into a **`TE``ntry``List`**
+2. Now, put the entries with over 600 tracks into a **`TEntry``List`**
 called `myList`. We get the list from the current directory and assign
 it to a variable list.
 
@@ -3022,7 +3022,7 @@ root[] T->Draw(">>myList","fNtrack > 600"</code>,"entrylist")</emphasis>;
 root[]TEntryList 
 ```
 
-3- Instruct the tree **`T`** to use the new list and draw it again. Note
+3. Instruct the tree **`T`** to use the new list and draw it again. Note
 that this is exactly the same `Draw` command. The list limits the
 entries.
 
@@ -3034,7 +3034,7 @@ You should now see a canvas similar to this one.
 
 ![](pictures/03000105.png)
 
-### Operations on TEntryLists
+#### Operations on TEntryLists
 
 If you have entry lists that were created using different cuts, you can
 combine the lists to get a new list, with entries passing at least one
@@ -3060,8 +3060,8 @@ list and not present in the second list.
 
 To add some individual entries, use `TEntryList::Enter()` function. To
 remove the entries you don't like, use `TEntryList::Remove()`. To see if
-the entry is in the list, use **`TEntryList::Contains()`. Remember, that
-all operation in a `TEntryList`** for a **`TChain`** are on the
+the entry is in the list, use **`TEntryList::Contains()`**. Remember, that
+all operation in a **`TEntryList`** for a **`TChain`** are on the
 **`TTree`** level. This is illustrated by the following example:
 
 ``` {.cpp}
@@ -3101,7 +3101,7 @@ tree2 file2
 3
 ```
 
-### TEntryListFromFile
+#### TEntryListFromFile
 
 This is a special kind of **`TEntryList`**, used only when processing
 **`TChain`** objects (see the method `TChain::SetEntryListFile()`). It
@@ -3115,8 +3115,8 @@ For more details on entry lists, see **`TEntryList`**,
 functions **`TChain`**`::SetEntryList()`, `TChain::SetEntryListFile()`,
 and the macro `$ROOTSYS/test/stressEntryList.C`.
 
-Filling a Histogram
--------------------
+### Filling a Histogram
+
 
 The `TTree::Draw` method can also be used to fill a specific histogram.
 The syntax is:
@@ -3211,7 +3211,7 @@ tree.Draw("sqrt(x)>>+hsqrt","y>0");
 
 This works for 1-D, 2-D and 3-D histograms.
 
-### Projecting a Histogram
+#### Projecting a Histogram
 
 If you would like to fill a histogram, but not draw it you can use the
 `TTree::Project()` method.
@@ -3220,7 +3220,7 @@ If you would like to fill a histogram, but not draw it you can use the
 root[] T->Project("quietHisto","fNtrack")
 ```
 
-### Making a Profile Histogram
+#### Making a Profile Histogram
 
 In case of a two dimensional expression, you can generate a
 **`TProfile`** histogram instead of a two dimensional histogram by
@@ -3229,7 +3229,7 @@ automatically selected when the output is redirected into a
 **`TProfile`**. For example `y:x>>pf` where `pf `is an existing
 **`TProfile`** histogram.
 
-### Tree Information
+#### Tree Information
 
 Once we have drawn a tree, we can get information about the tree. These
 are the methods used to get information from a drawn tree **`TTree`**:
@@ -3294,8 +3294,8 @@ draw a graph connecting all the `x`, `y(or z)` points. Note that you may
 have a tree (or chain) with 1 billion entries, but only a few may
 survive the cuts and will fit without problems in these arrays.
 
-Using TTree::MakeClass
-======================
+## Using TTree::MakeClass
+
 
 The `TTree::Draw` method is convenient and easy to use; however it falls
 short if you need to do some programming with the variable.
@@ -3339,8 +3339,8 @@ see the definition of the classes. You can locate `Event.h` in
 the instructions of how to build it (typing make in \$ROOTSYS/test is
 enough). If you have already built it, you can now use it again.
 
-Creating a Class with MakeClass
--------------------------------
+### Creating a Class with MakeClass
+
 
 First, we load the shared library and open `Event.root`.
 
@@ -3390,8 +3390,8 @@ imagine deriving several classes from `MyClass.h`, each with a specific
 algorithm. To understand both files, let’s start with `MyClass.h` and
 the class declaration:
 
-MyClass.h
----------
+### MyClass.h
+
 
 ``` {.cpp}
 class MyClass {
@@ -3473,25 +3473,25 @@ of `MyClass` are:
     entry of the tree. This is interesting to us, because we will need
     to customize it for our analysis.
 
-MyClass.C
----------
+### MyClass.C
+
 
 `MyClass::Loop` consists of a for-loop calling `GetEntry` for each
 entry. In the template, the numbers of bytes are added up, but it does
 nothing else. If we were to execute it now, there would be no output.
 
 ``` {.cpp}
-void MyClass::Loop()         {
-if (fChain == 0) return;
+void MyClass::Loop() {
+   if (fChain == 0) return;
 
-Int_t nentries = Int_t(fChain->GetEntries());
-Int_t nbytes = 0, nb = 0;
-for (Int_t jentry=0; jentry<nentries;jentry++) {
-Int_t ientry = LoadTree(jentry);
-// in case of a TChain   , ientry is the entry number in the current file
-nb = fChain->GetEntry(jentry);   nbytes += nb;
+   Int_t nentries = Int_t(fChain->GetEntries());
+   Int_t nbytes = 0, nb = 0;
+   for (Int_t jentry=0; jentry<nentries;jentry++) {
+      Int_t ientry = LoadTree(jentry);
+      // in case of a TChain   , ientry is the entry number in the current file
+      nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
-}
+   }
 }
 ```
 
@@ -3499,8 +3499,8 @@ At the beginning of the file are instructions about reading selected
 branches. They are not reprinted here, but please read them from your
 own file
 
-Modifying MyClass::Loop
------------------------
+### Modifying MyClass::Loop
+
 
 Let us continue with the goal of going through the first 100 tracks of
 each entry and plot `Px`. To do this we change the Loop method.
@@ -3523,12 +3523,12 @@ it is in the first 100.
 ``` {.cpp}
 …
 for (Int_t jentry=0; jentry<nentries;jentry++) {
-GetEntry(jentry);
-for (Int_t j = 0; j < 100; j++){
-myHisto->Fill(fTracks_fPx[j]);
-if (j < 100){
-smallHisto->Fill(fTracks_fPx[j]);
-}
+   GetEntry(jentry);
+   for (Int_t j = 0; j < 100; j++){
+      myHisto->Fill(fTracks_fPx[j]);
+      if (j < 100){
+      smallHisto->Fill(fTracks_fPx[j]);
+   }
 }
 }
 …
@@ -3546,8 +3546,8 @@ smallHisto->Draw("Same");
 Save these changes to `MyClass.C` and start a fresh root session. We
 will now load `MyClass` and experiment with its methods.
 
-Loading MyClass
----------------
+### Loading MyClass
+
 
 The first step is to load the library and the class file. Then we can
 instantiate a `MyClass` object.
@@ -3594,8 +3594,8 @@ got us here.
 
 -   Load and instantiate `MyClass`, and run `MyClass::Loop()`.
 
-Using TTree::MakeSelector
-=========================
+## Using TTree::MakeSelector
+
 
 With a **`TTree`** we can make a selector and use it to process a
 limited set of entries. This is especially important in a parallel
@@ -3704,8 +3704,8 @@ T->Process(selector);
 `TTree::Process()` is aware of PROOF, ROOT parallel processing facility.
 If PROOF is setup, it divides the processing amongst the slave CPUs.
 
-Performance Benchmarks
-----------------------
+### Performance Benchmarks
+
 
 ![](pictures/03000107.png)
 
@@ -3715,16 +3715,16 @@ It creates trees with and without compression for the following cases:
 `vector<THit>`, `vector<THit*>`, `TClonesArray(`**`TObjHit`**`)`
 `not split ``TClonesArray(`**`TObjHit`**`)` `split.`
 
-`The next graphs show the two columns on the right which represent the split and non-split `**`TClonesArray`**`, `are
-significantly lower than the vectors. The most significant difference is
-in reading a file without compression.
+The next graphs show the two columns on the right which represent the split and 
+non-split **`TClonesArray`**, are significantly lower than the vectors. The most
+significant difference is in reading a file without compression.
 
 The file size with compression, write times with and without compression
 and the read times with and without compression all favor the
 **`TClonesArray`**.
 
-Impact of Compression on I/O
-============================
+## Impact of Compression on I/O
+
 
 This benchmark illustrates the pros and cons of the compression option.
 We recommend using compression when the time spent in I/O is small
@@ -3809,8 +3809,8 @@ performance by executing the scripts `eventa` and `eventb`. The
 performance depends not only of the processor type, but also of the disk
 devices (local, NFS, AFS, etc.).
 
-Chains
-======
+## Chains
+
 
 A **`TChain`** object is a list of ROOT files containing the same tree.
 As an example, assume we have three files called
@@ -3882,8 +3882,8 @@ hnseg->Draw();
 }
 ```
 
-TChain::AddFriend
------------------
+### TChain::AddFriend
+
 
 `A `**`TChain`** has a list of friends similar to a tree (see
 **`TTree`**`::AddFriend)`. You can add a friend to a chain with the

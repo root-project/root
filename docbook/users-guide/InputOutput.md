@@ -1,5 +1,5 @@
-Input/Output
-============
+# Input/Output
+
 
 This chapter covers the saving and reading of objects to and from ROOT
 files. It begins with an explanation of the physical layout of a ROOT
@@ -11,8 +11,8 @@ responsible to capture an objects current state to save it to disk or
 send it over the network. At the end of the chapter is a discussion on
 the two specialized ROOT files: **`TNetFile`** and **`TWebFile`**.
 
-The Physical Layout of ROOT Files
-=================================
+## The Physical Layout of ROOT Files
+
 
 A ROOT file is like a UNIX file directory. It can contain directories
 and objects organized in unlimited number of levels. It also is stored
@@ -101,8 +101,8 @@ starting at byte 148. We also see an entry **`TFile`**. You may notice
 that the first entry starts at byte 100. The first 100 bytes are taken
 by the file header.
 
-The File Header
----------------
+### The File Header
+
 
 This table shows the file header information. When fVersion is greater
 than 1000000, the file is a large file (\> 2 GB) and the offsets will be
@@ -158,8 +158,8 @@ value is the number of free records. This variable along with
 bytes. This count also includes the deleted records, which are available
 again.
 
-The Top Directory Description
------------------------------
+### The Top Directory Description
+
 
 The 84 bytes after the file header contain the top directory
 description, including the name, the date and time it was created, and
@@ -169,8 +169,8 @@ the date and time of the last modification.
 20010404/092347  At:64        N=84        TFile
 ```
 
-The Histogram Records
----------------------
+### The Histogram Records
+
 
 What follows are the 15 histograms, in records of variable length.
 
@@ -233,8 +233,8 @@ is located past the 32 bit file limit (\> 2 GB) then some fields will be
 You see a reference to **`TKey`**. It is explained in detail in the next
 section.
 
-The Class Description List (StreamerInfo List)
-----------------------------------------------
+### The Class Description List (StreamerInfo List)
+
 
 The histogram records are followed by the `StreamerInfo` list of class
 descriptions. The list contains the description of each class that has
@@ -320,8 +320,8 @@ multiple versions of the same class, for example objects of old and new
 versions of a class can be in the same file. The `StreamerInfo`is
 described in detail in the section on Streamers.
 
-The List of Keys and the List of Free Blocks
---------------------------------------------
+### The List of Keys and the List of Free Blocks
+
 
 The last three entries on the output of `TFile::Map()` are the list of
 keys, the list of free segments, and the address where the data ends..
@@ -341,8 +341,8 @@ starts 8976 and is not very long, only 53 bytes, since we have not
 deleted any objects. The last entry is the address of the last byte in
 the file.
 
-File Recovery
--------------
+### File Recovery
+
 
 A file may become corrupted or it may be impossible to write it to disk
 and close it properly. For example if the file is too large and exceeds
@@ -372,8 +372,8 @@ root[] TFile f("demo.root")
 Warning in <TFile::TFile>: file demo.root probably not closed, trying to recover successfully recovered 15 keys
 ```
 
-The Logical ROOT File: TFile and TKey
-=====================================
+## The Logical ROOT File: TFile and TKey
+
 
 We saw that the `TFile::Map()` method reads the file sequentially and
 prints information about each record while scanning the file. It is not
@@ -459,8 +459,8 @@ in memory. The diagram below illustrates the logical view of the
 
 ![ROOT File/Directory/Key description](pictures/030000E7.png)
 
-Viewing the Logical File Contents
----------------------------------
+### Viewing the Logical File Contents
+
 
 **`TFile`** is a descendent of **`TDirectory`**, which means it behaves
 like a **`TDirectory`**. We can list the contents, print the name, and
@@ -514,8 +514,8 @@ twice with two different cycle numbers. It also shows four objects in
 memory (`mObjE`, `mObjeF`, `mObjM`, `mObjL`). It also shows several
 subdirectories.
 
-The Current Directory
----------------------
+### The Current Directory
+
 
 When you create a **`TFile`** object, it becomes the current directory.
 Therefore, the last file to be opened is always the current directory.
@@ -575,8 +575,8 @@ root[] gROOT->pwd()
 Rint:/
 ```
 
-Objects in Memory and Objects on Disk
--------------------------------------
+### Objects in Memory and Objects on Disk
+
 
 The `TFile::ls()` method has an option to list the objects on disk
 ("`-d`") or the objects in memory ("`-m`"). If no option is given it
@@ -717,8 +717,8 @@ OBJ: TProfile   hprof   Profile of pz versus px : 0
 OBJ: TH1F       hpx     This is the px distribution : 0
 ```
 
-Saving Histograms to Disk
--------------------------
+### Saving Histograms to Disk
+
 
 At this time, the objects in memory (OBJ) are identical to the objects
 on disk (KEY). Let's change that by adding a fill to the `hpx` we have
@@ -810,8 +810,8 @@ Error: No symbol hpx in current scope
 This is important to remember, do not close the file until you are done
 with the objects or any attempt to reference the objects will fail.
 
-Histograms and the Current Directory
-------------------------------------
+### Histograms and the Current Directory
+
 
 When a histogram is created, it is added by default to the list of
 objects in the current directory. You can get the list of histograms in
@@ -850,8 +850,8 @@ TH1::AddDirectory(kFALSE);
 In this case, you will need to do all the bookkeeping for all the
 created histograms.
 
-Saving Objects to Disk
-----------------------
+### Saving Objects to Disk
+
 
 In addition to histograms and trees, you can save any object in a ROOT
 file. For example to save a canvas to the ROOT file you can use either
@@ -893,8 +893,8 @@ KEY: TNtuple  ntuple;1   Demo ntuple
 KEY: TCanvas  c1;1    c1
 ```
 
-Saving Collections to Disk
---------------------------
+### Saving Collections to Disk
+
 
 All collection classes inherit from **`TCollection`** and hence inherit
 the **`TCollection::Write()` method. When you call
@@ -913,8 +913,8 @@ root[] list->Add(n2);
 root[] gFile->WriteObject(list,"list",TObject::kSingleKey);
 ```
 
-A TFile Object Going Out of Scope
----------------------------------
+### A TFile Object Going Out of Scope
+
 
 There is another important point to remember about `TFile::Close` and
 **`TFile::Write`. When a variable is declared on the stack in a function
@@ -956,8 +956,8 @@ void foo() {
 }
 ```
 
-Retrieving Objects from Disk
-----------------------------
+### Retrieving Objects from Disk
+
 
 If you have a ROOT session running, please quit and start fresh.
 
@@ -976,8 +976,8 @@ root[] TH1F *hpx1; f1->GetObject("hpx;1",hpx)
 root[] hpx1->Draw()
 ```
 
-Subdirectories and Navigation
------------------------------
+### Subdirectories and Navigation
+
 
 The **`TDirectory`** class lets you organize its contents into
 subdirectories, and **`TFile`** being a descendent of **`TDirectory`**
@@ -1139,8 +1139,8 @@ Some other examples of `namecycle` format are:
 -   `T*;*`: delete all objects from memory and from the file including
     all subdirectories
 
-Streamers
-=========
+## Streamers
+
 
 To follow the discussion on `Streamers`, you need to know what a
 *simple* data type is. A variable is of a simple data type if it cannot
@@ -1169,8 +1169,8 @@ particular object. Data members that are references (as
 `MyClass &fObj;`) are never saved, it is always the responsibility of
 the object's constructor to set them properly.
 
-Automatically Generated Streamers
----------------------------------
+### Automatically Generated Streamers
+
 
 A `Streamer `usually calls other `Streamers`: the `Streamer `of its
 parents and data members. This architecture depends on all classes
@@ -1234,8 +1234,8 @@ and its contents into the buffer `R__b`. The `Streamer `calls
 method reads the information from buffer `R__b` into the `Event`
 object.**
 
-Transient Data Members (//!)
-----------------------------
+### Transient Data Members (//!)
+
 
 To prevent a data member from being written to the file, insert a "`!`"
 as the first character after the comment marks. It tells ROOT not to
@@ -1251,8 +1251,8 @@ TDirectory    *fTransient;        //! current directory
 …
 ```
 
-The Pointer to Objects (//-\>)
-------------------------------
+### The Pointer to Objects (//-\>)
+
 
 The string "`->`" in the comment field of the members `*fH` and
 `*fTracks` instruct the automatic `Streamer` to assume these will point
@@ -1267,8 +1267,8 @@ TClonesArray  *fTracks;            //->
 TH1F          *fH;                 //->
 ```
 
-Variable Length Array
----------------------
+### Variable Length Array
+
 
 When the `Streamer `comes across a pointer to a simple type, it assumes
 it is an array. Somehow, it has to know how many elements are in the
@@ -1308,8 +1308,8 @@ MyObject *obj; //[fNojbs]
 MyObject **objs; //[fDatas]
 ```
 
-Double32\_t
------------
+### Double32\_t
+
 
 Math operations very often require double precision, but on saving
 single usually precision is sufficient. For this purpose we support the
@@ -1334,8 +1334,8 @@ more details see the io tutorials `double32.C`.
 
 ![Compression and precision of Double32\_t](pictures/030000EA.png)
 
-Prevent Splitting (//|| )
--------------------------
+### Prevent Splitting (//|| )
+
 
 If you want to prevent a data member from being split when writing it to
 a tree, append the characters || right after the comment string. This
@@ -1345,8 +1345,8 @@ only makes sense for object data members. For example:
 EventHeader    fEvtHdr;       //|| do not split the header
 ```
 
-Streamers with Special Additions
---------------------------------
+### Streamers with Special Additions
+
 
 Most of the time you can let `rootcint` generate a `Streamer` for you.
 However if you want to write your own `Streamer `you can do so. For some
@@ -1401,8 +1401,8 @@ void Event::Streamer(TBuffer &R__b) {
 }  
 ```
 
-Writing Objects
----------------
+### Writing Objects
+
 
 The `Streamer` decomposes the objects into data members and writes them
 to a buffer. It does not write the buffer to a file, it simply populates
@@ -1442,8 +1442,8 @@ part is released. The key part of the **`TKey`** is kept.
 The key consumes about 60 bytes, whereas the buffer, since it contains
 the object data, can be very large.
 
-Ignore Object Streamers
------------------------
+### Ignore Object Streamers
+
 
 Your class can ignore the **`TObject`** `Streamer `with the
 `MyClass->Class::IgnoreObjectStreamer()` method. When the class
@@ -1456,8 +1456,8 @@ space on the file, and you do not loose functionality if you do not use
 the `fBits` and `fUniqueID. `See “The Role of TObject” on the use of
 `fBits` and `fUniqueID`.
 
-Streaming a TClonesArray
-------------------------
+### Streaming a TClonesArray
+
 
 When writing a **`TClonesArray`** it bypasses by default the
 `Streamer `of the member class and uses a more efficient internal
@@ -1495,8 +1495,8 @@ case, the normal `Bar::Streamer` function will be called. The
 `Bar::Streamer` function works OK independently if the `Bar`
 `StreamerInfo `had been generated in optimized mode or not.
 
-Pointers and References in Persistency
-======================================
+## Pointers and References in Persistency
+
 
 An object pointer as a data member presents a challenge to the streaming
 software. If the object pointed to is saved every time, it could create
@@ -1510,8 +1510,8 @@ example that compares disk space, memory usage, and I/O times of C++
 pointers and **`TRef`**`s`. In general, a **`TRef`** is faster than C++
 but the advantage of a C++ pointer is that it is already C++.
 
-Streaming C++ Pointers
-----------------------
+### Streaming C++ Pointers
+
 
 When ROOT encounters a pointer data member it calls the `Streamer` of
 the object and labels it with a unique object identifier. The object
@@ -1529,8 +1529,8 @@ object (as opposed to being pointed to by a pointer), the object will be
 duplicate at read time. To avoid this, make the pointer a transient data
 member.
 
-Motivation for the TRef Class
------------------------------
+### Motivation for the TRef Class
+
 
 If the object is split into several files or into several branches of
 one or more `TTrees`, standard C++ pointers cannot be used because each
@@ -1548,8 +1548,8 @@ it. In addition, one can specify an action to be taken by **`TRef`** in
 the case it is read before its reference object (see”Action on Demand”
 below).
 
-Using TRef
-----------
+### Using TRef
+
 
 A **`TRef`** is a lightweight object pointing to any **`TObject`**. This
 object can be used instead of normal C++ pointers in case:
@@ -1579,8 +1579,8 @@ referenced object has not yet been read, **`TRef`** will return a null
 pointer. As soon as the referenced object will be read, **`TRef`** will
 point to it.
 
-How Does It Work?
------------------
+### How Does It Work?
+
 
 A **`TRef`** is itself a **`TObject`** with an additional transient
 pointer `fPID`. When a **`TRef`** is used to point to a
@@ -1629,7 +1629,7 @@ WARNING: If `MyClass` is the class of the referenced object, The
 **`TObject`** part of `MyClass` must be streamed. One should not call
 `MyClass::Class()->IgnoreTObjectStreamer()`.
 
-### TProccessID and TUUID
+#### TProccessID and TUUID
 
 A **`TProcessID`** uniquely identifies a ROOT job. The **`TProcessID`**
 title consists of a **`TUUID`** object, which provides a globally unique
@@ -1660,7 +1660,7 @@ is called, `GetObject` uses its own `fUniqueID` to find the pointer to
 the referenced object. See `TProcessID::GetObjectWithID` and
 `PutObjectWithID`.**
 
-### Object Number
+#### Object Number
 
 When an object is referenced, a unique identifier is computed and stored
 in both the `fUniqueID` of the referenced and referencing object. This
@@ -1683,8 +1683,8 @@ saveNumber = TProcessID::GetObjectCount();
 TProcessID::SetObjectCount(savedNumber);
 ```
 
-Action on Demand
-----------------
+### Action on Demand
+
 
 The normal behavior of a **`TRef`** has been described above. In
 addition, **`TRef`** supports "Actions on Demand". It may happen that
@@ -1698,7 +1698,7 @@ automatically an action:
 
 -   Execution of a CINT script
 
-### How to Select This Option?
+#### How to Select This Option?
 
 In the definition of the **`TRef`** data member in the original class,
 do:
@@ -1791,8 +1791,8 @@ Note that if the definition of the `TRef fWebHistogram` had been changed
 the compiled or interpreted function `GetWebHistogram()` would have been
 called instead of the CINT script `GetWebHistogram.C.`
 
-Array of TRef
--------------
+### Array of TRef
+
 
 When storing multiple **`TRef`**s, it is more efficient to use a
 **`TRefArray`**. The efficiency is due to having a single pointer `fPID`
@@ -1814,8 +1814,8 @@ Example:
 
 The 3 arrays `mytracks`,` pions` and `muons` may be written separately.
 
-Schema Evolution
-================
+## Schema Evolution
+
 
 Schema evolution is a problem faced by long-lived data. When a schema
 changes, existing persistent data can become inaccessible unless the
@@ -1883,8 +1883,8 @@ it writes an object to file, it also writes the description of the
 current class version along with it. This description is implemented in
 the `StreamerInfo `class.
 
-The TStreamerInfo Class
------------------------
+### The TStreamerInfo Class
+
 
 Each class has a list of `StreamerInfo` objects, one for each version of
 the class if that version was written to disk at least once. When
@@ -1900,8 +1900,8 @@ a **`TH1`** is not persistent:
 TVirtualHistPainter* fPainter //!pointer to histogram painter
 ```
 
-The TStreamerElement Class
---------------------------
+### The TStreamerElement Class
+
 
 A **`TStreamerElement`** describes a data member of a simple type,
 object, array, pointer, or container. The offset in the
@@ -1936,8 +1936,8 @@ the `StreamerInfo`, it computes the offsets. The type field is the type
 of the **`TStreamerElement`**. It is specific to the `StreamerInfo`
 definition.
 
-Example: TH1 StreamerInfo
--------------------------
+### Example: TH1 StreamerInfo
+
 
 In the `StreamerInfo` of the **`TH1`** class we see the four base
 classes: **`TNamed`**, **`TAttLine`**, **`TAttFill`**,
@@ -1986,8 +1986,8 @@ i=12, fOption      type= 65, offset=540, len=1, method=1081288044
 i=13, fFunctions   type= 63, offset=548, len=1, method=1081288164
 ```
 
-Optimized StreamerInfo
-----------------------
+### Optimized StreamerInfo
+
 
 The entries starting with "`i = 0`" is the optimized format of the
 `StreamerInfo`. Consecutive data members of the same simple type and
@@ -2013,8 +2013,8 @@ Only simple type data members are combined, object data members are not
 combined. For example the three axis data members remain separate. The
 "method" is a handle to the method that reads the object.
 
-Automatic Schema Evolution
---------------------------
+### Automatic Schema Evolution
+
 
 When a class is defined in ROOT, it must include the `ClassDef` macro as
 the last line in the header file inside the class definition. The syntax
@@ -2033,8 +2033,8 @@ is written to the file in the `Streamer` by the call
 to do any manual modification in the `Streamer`. ROOT schema evolution
 mechanism is automatic and handled by the `StreamerInfo`.
 
-Manual Schema Evolution
------------------------
+### Manual Schema Evolution
+
 
 If you have written your own `Streamer` as described in the section
 "Streamers with Special Additions", you will have to manually add code
@@ -2070,8 +2070,8 @@ and increase as the number of classes increase. We recommend you use
 `rootcint` generated `Streamers` whenever you can, and profit from the
 automatic schema evolution.
 
-Building Class Definitions with the StreamerInfo
-------------------------------------------------
+### Building Class Definitions with the StreamerInfo
+
 
 A ROOT file's `StreamerInfo `list contains the description of all
 versions of all classes in the file. When a file is opened the
@@ -2082,8 +2082,8 @@ This is done with the `TFile::MakeProject` method. It creates a
 directory with the header files for the named classes and a `makefile`
 to compile a shared library with the class definitions.
 
-Example: MakeProject
---------------------
+### Example: MakeProject
+
 
 To explain the details, we use the example of the `ATLFast` project that
 is a fast simulation for the ATLAS experiment. The complete source for
@@ -2249,8 +2249,8 @@ public:
 #endif
 ```
 
-Migrating to ROOT 3
-===================
+## Migrating to ROOT 3
+
 
 We will distinguish the following cases:
 
@@ -2305,8 +2305,8 @@ automatic `Streamer` does not contain any statement using the function
 regenerate the new form of the `Streamer` function, otherwise proceed
 like for case B.
 
-Compression and Performance
-===========================
+## Compression and Performance
+
 
 ROOT uses a compression algorithm based on the well-known `gzip`
 algorithm. It supports nine levels of compression. The default for ROOT
@@ -2358,8 +2358,8 @@ the macro was modified to create 1000 histograms. We have included two
 more examples to show the impact of compression on Trees in the next
 chapter.
 
-Remotely Access to ROOT Files via a rootd
-=========================================
+## Remotely Access to ROOT Files via a rootd
+
 
 Reading and writing ROOT files over the net can be done by creating a
 **`TNetFile`** object instead of a **`TFile`** object. Since the
@@ -2367,8 +2367,8 @@ Reading and writing ROOT files over the net can be done by creating a
 the same interface and behavior. The only difference is that it reads
 and writes to a remote `rootd` daemon.
 
-TNetFile URL
-------------
+### TNetFile URL
+
 
 **`TNetFile`** file names are in standard URL format with protocol
 "`root`". The following are valid **`TNetFile`** URL's:
@@ -2390,8 +2390,8 @@ default port on which the remote `rootd` listens is 1094 and
 assumes this default port. The port number has been allocated by the
 IANA and is reserved for ROOT.
 
-Remote Authentication
----------------------
+### Remote Authentication
+
 
 Connecting to a `rootd` daemon requires a remote user id and password.
 **`TNetFile`** supports several ways for you to provide your login
@@ -2409,8 +2409,8 @@ line will start the `rootd` daemon using the files
 `$HOME/.srootdpass2.conf` and `$HOME/.srootdpass2` for SPR
 authentication:` rootd –P $HOME/.srootdpass2`
 
-A Simple Session
-----------------
+### A Simple Session
+
 
 ``` {.cpp}
 root[] TFile *f1 = TFile::Open("local/file.root","update")
@@ -2428,8 +2428,8 @@ KEY: TNtuple ntuple;1 Demo ntuple
 root[] hpx.Draw()
 ```
 
-The rootd Daemon
-----------------
+### The rootd Daemon
+
 
 The `rootd` daemon works with the **`TNetFile`** class. It allows remote
 access to ROOT database files in read or read/write mode. The `rootd`
@@ -2487,8 +2487,8 @@ At the end of a ROOT, session when all **`TNetFile`**s are closed only
 the original `rootd` will stay alive ready to service future
 **`TNetFile`**s.
 
-Starting rootd via inetd
-------------------------
+### Starting rootd via inetd
+
 
 If you expect to often connect via **`TNetFile`** to a remote machine,
 it is more efficient to install `rootd` as a service of the `inetd`
@@ -2506,8 +2506,8 @@ in the URL given to **`TNetFile`** when the setup done this way.
 **`TNetFile`** assumes the default port to be 1094 as specified above in
 the `/etc/services` file.
 
-Command Line Arguments for rootd
---------------------------------
+### Command Line Arguments for rootd
+
 
 `rootd` supports the following arguments:
 
@@ -2523,8 +2523,8 @@ Command Line Arguments for rootd
 
 `2 = medium3 = maximum `
 
-Reading ROOT Files via Apache Web Server
-========================================
+## Reading ROOT Files via Apache Web Server
+
 
 By adding one ROOT specific module to your Apache web server, you can
 distribute ROOT files to any ROOT user. There is no longer a need to
@@ -2575,8 +2575,8 @@ server ROOT aware:
 
 -   Restart the `httpd` server
 
-Using the General Open Function of TFile
-----------------------------------------
+### Using the General Open Function of TFile
+
 
 To make life simple we provide a general function to open any type of
 file (except shared memory files of class **`TMapFile`**). This
@@ -2606,8 +2606,8 @@ RECREATE, UPDATE to READ. Thus the mode argument can be either "READ" or
 -   -1 in case of failure. In the last case the file cannot be used
     anymore.
 
-XML Interface
-=============
+## XML Interface
+
 
 A new module `xml` as implemented by Sergey Linev (GSI). It is an
 optional package that can be used to save a canvas into `file.xml` file

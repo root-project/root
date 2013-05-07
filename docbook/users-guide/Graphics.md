@@ -1,13 +1,13 @@
-Graphics and the Graphical User Interface
-=========================================
+# Graphics and the Graphical User Interface
+
 
 Graphical capabilities of ROOT range from 2D objects (lines, polygons,
 arrows) to various plots, histograms, and 3D graphical objects. In this
 chapter, we are going to focus on principals of graphics and 2D objects.
 Plots and histograms are discussed in a chapter of their own.
 
-Drawing Objects
-===============
+## Drawing Objects
+
 
 In ROOT, most objects derive from a base class **`TObject`**. This class
 has a virtual method `Draw()` so all objects are supposed to be able to
@@ -32,8 +32,8 @@ root[] a.Draw()
 The first statement defines a line and the second one draws it. A
 default canvas is drawn since there was no opened one.
 
-Interacting with Graphical Objects
-==================================
+## Interacting with Graphical Objects
+
 
 When an object is drawn, one can interact with it. For example, the line
 drawn in the previous paragraph may be moved or transformed. One very
@@ -60,13 +60,13 @@ You do not obtain the same result as before, the coordinates of '`a`'
 have changed. As said, interacting with an object on the screen changes
 the object in memory.
 
-Moving, Resizing and Modifying Objects
---------------------------------------
+### Moving, Resizing and Modifying Objects
+
 
 Changing the graphic objects attributes can be done with the GUI or
 programmatically. First, let's see how it is done in the GUI.
 
-### The Left Mouse Button
+#### The Left Mouse Button
 
 As was just seen moving or resizing an object is done with the left
 mouse button. The cursor changes its shape to indicate what may be done:
@@ -89,7 +89,7 @@ Moving: ![](pictures/0200009C.jpg) Resizing: ![](pictures/0200009D.jpg)
 
 Rotating: ![](pictures/0200009E.jpg) ![](pictures/0300009F.png)
 
-### With C++ Statements (Programmatically)
+#### With C++ Statements (Programmatically)
 
 How would one move an object in a script? Since there is a tight
 correspondence between what is seen on the screen and the object in
@@ -104,10 +104,10 @@ This should change one of the coordinates of our line, but nothing
 happens on the screen. Why is that? In short, the canvas is not updated
 with each change for performance reasons. See "Updating the Pad".
 
-Selecting Objects
------------------
+### Selecting Objects
 
-### The Middle Mouse Button
+
+#### The Middle Mouse Button
 
 Objects in a canvas, as well as in a pad, are stacked on top of each
 other in the order they were drawn. Some objects may become “active”
@@ -116,7 +116,7 @@ interactively make an object "active", you can use the middle mouse
 button. In case of canvases or pads, the border becomes highlighted when
 it is active.
 
-### With C++ Statements (Programmatically)
+#### With C++ Statements (Programmatically)
 
 Frequently we want to draw in different canvases or pads. By default,
 the objects are drawn in the active canvas. To activate a canvas you can
@@ -126,14 +126,14 @@ use the `TPad::cd()` method.
 root[] c1->cd()
 ```
 
-Context Menus: the Right Mouse Button
--------------------------------------
+### Context Menus: the Right Mouse Button
+
 
 The context menus are a way to interactively call certain methods of an
 object. When designing a class, the programmer can add methods to the
 context menu of the object by making minor changes to the header file.
 
-### Using Context Menus
+#### Using Context Menus
 
 On a ROOT canvas, you can right-click on any object and see the context
 menu for it. The script `hsimple.C` draws a histogram. The image below
@@ -146,7 +146,7 @@ string to use for the axis title.
 
 ![Context menus of different objects in a canvas](pictures/030000A0.png)
 
-### Structure of the Context Menus
+#### Structure of the Context Menus
 
 The curious reader will have noticed that each entry in the context menu
 corresponds to a method of the class. Look for example to the menu named
@@ -164,7 +164,7 @@ example, see the `TPaveText::title context
 menu.` A **`TPaveText`** inherits from **`TAttLine`**, which has the
 method `SetLineAttributes()`.
 
-### Adding Context Menus for a Class
+#### Adding Context Menus for a Class
 
 For a method to appear in the context menu of the object it has to be
 marked by `// *MENU*` in the header file. Below is the line from
@@ -243,8 +243,8 @@ selecting `SetXXX field` will show the values of variables. We indicate
 to the system which argument corresponds to which data member of the
 class.
 
-Executing Events when a Cursor Passes on Top of an Object
----------------------------------------------------------
+### Executing Events when a Cursor Passes on Top of an Object
+
 
 This paragraph is for class designers. When a class is designed, it is
 often desirable to include drawing methods for it. We will have a more
@@ -340,8 +340,8 @@ convention in windowing systems. Note that user coordinates in a canvas
 This is all explained in the paragraph "The Coordinate Systems of a
 Pad".
 
-Graphical Containers: Canvas and Pad
-====================================
+## Graphical Containers: Canvas and Pad
+
 
 We have talked a lot about canvases, which may be seen as windows. More
 generally, a graphical entity that contains graphical objects is called
@@ -374,8 +374,8 @@ object, thus re-painting the whole pad on the screen. If the object is a
 sub-pad, its `Paint()` method will call the `Paint()` method of the
 objects attached, recursively calling `Paint()` for all the objects.
 
-The Global Pad: gPad
---------------------
+### The Global Pad: gPad
+
 
 When an object is drawn, it is always in the so-called active pad. For
 every day use, it is comfortable to be able to access the active pad,
@@ -392,7 +392,7 @@ To get the list of colors, go to the paragraph "Color and color
 palettes" or if you have an opened canvas, click on the `View` menu,
 selecting the `Colors` item.
 
-### Finding an Object in a Pad
+#### Finding an Object in a Pad
 
 Now that we have a pointer to the active pad, ***`gPad`*** and that we
 know this pad contains some objects, it is sometimes interesting to
@@ -432,7 +432,7 @@ the class that was first created. To retrieve a later instance you can
 use `GetListOfPrimitives()`, which returns a list of all the objects on
 the pad. From the list you can select the object you need.
 
-### Hiding an Object
+#### Hiding an Object
 
 Hiding an object in a pad can be made by removing it from the list of
 objects owned by that pad. This list is accessible by the
@@ -463,15 +463,15 @@ Caution, this will not work with composed objects, for example many
 histograms drawn on the same plot (with the option "`same`"). There are
 other ways! Try to use the method described here for simple objects.
 
-The Coordinate Systems of a Pad
--------------------------------
+### The Coordinate Systems of a Pad
+
 
 There are coordinate systems in a **`TPad`**: user coordinates,
 normalized coordinates (NDC), and pixel coordinates.
 
 ![Pad coordinate systems](pictures/080000A3.png)
 
-### The User Coordinate System
+#### The User Coordinate System
 
 The most common is the user coordinate system. Most methods of
 **`TPad`** use the user coordinates, and all graphic primitives have
@@ -505,7 +505,7 @@ status bar select Event Status entry in the View canvas menu.
 
 ![The status bar](pictures/020000A4.jpg)
 
-### The Normalized Coordinate System (NDC)
+#### The Normalized Coordinate System (NDC)
 
 Normalized coordinates are independent of the window size and of the
 user system. The coordinates range from 0 to 1 and (0, 0) corresponds to
@@ -514,7 +514,7 @@ the NDC system (3D primitives, PostScript, log scale mapping to linear
 scale). You may want to use this system if the user coordinates are not
 known ahead of time.
 
-### The Pixel Coordinate System
+#### The Pixel Coordinate System
 
 The least common is the pixel coordinate system, used by functions such
 as `DistanceToPrimitive()` and `ExecuteEvent()`. Its primary use is for
@@ -523,7 +523,7 @@ cursor position, which is always given in pixel coordinates. If
 top-left corner of the pad, which is the standard convention in
 windowing systems.
 
-### Using NDC for a particular Object
+#### Using NDC for a particular Object
 
 Most of the time, you will be using the user coordinate system. But
 sometimes, you will want to use NDC. For example, if you want to draw
@@ -535,8 +535,8 @@ line (**`TLine`**) may be drawn in NDC by using `DrawLineNDC()`. A latex
 formula or a text may use `TText::SetNDC()` to be drawn in NDC
 coordinates.
 
-Converting between Coordinate Systems
--------------------------------------
+### Converting between Coordinate Systems
+
 
 There are a few utility functions in **`TPad`** to convert from one
 system of coordinates to another. In the following table, a point is
@@ -586,15 +586,15 @@ used the following way (`p` is a pointer to a **`TPad`**):
 p->PixeltoY(py – p->GetWh());
 ```
 
-Dividing a Pad into Sub-pads
-----------------------------
+### Dividing a Pad into Sub-pads
+
 
 Dividing a pad into sub pads in order for instance to draw a few
 histograms, may be done in two ways. The first is to build pad objects
 and to draw them into a parent pad, which may be a canvas. The second is
 to automatically divide a pad into horizontal and vertical sub pads.
 
-### Creating a Single Sub-pad
+#### Creating a Single Sub-pad
 
 The simplest way to divide a pad is to build sub-pads in it. However,
 this forces the user to explicitly indicate the size and position of
@@ -619,7 +619,7 @@ root[] spad1->Draw()
 If you want more sub-pads, you have to repeat this procedure as many
 times as necessary.
 
-### Dividing a Canvas into Sub-Pads
+#### Dividing a Canvas into Sub-Pads
 
 The manual way of dividing a pad into sub-pads is sometimes very
 tedious. There is a way to automatically generate horizontal and
@@ -656,8 +656,8 @@ root[] pad1->Divide(3,2,0.1,0.1)
 
 The margins are here set to 10% of the parent pad width.
 
-Updating the Pad
-----------------
+### Updating the Pad
+
 
 For performance reasons, a pad is not updated with every change. For
 example, changing the coordinates of the pad does not automatically
@@ -703,8 +703,8 @@ will not be updated. Also note that a call to `pad->Update()` where pad
 is a sub pad of canvas, calls `canvas->Update()` and recursively updates
 all the pads on the canvas.
 
-Making a Pad Transparent
-------------------------
+### Making a Pad Transparent
+
 
 As we will see in the paragraph "Fill Attributes", a fill style (type of
 hatching) may be set for a pad.
@@ -731,8 +731,8 @@ root[] newpad->cd();
 root[] // create some primitives, etc
 ```
 
-Setting the Log Scale
----------------------
+### Setting the Log Scale
+
 
 Setting the scale to logarithmic or linear is an attribute of the pad,
 not the axis or the histogram. The scale is an attribute of the pad
@@ -779,8 +779,8 @@ root[] MyCanvas->cd(3)
 root[] gPad->SetLogx()
 ```
 
-WaitPrimitive method
---------------------
+### WaitPrimitive method
+
 
 When the `TPad::WaitPrimitive()` method is called with no arguments, it
 will wait until a double click or any key pressed is executed in the
@@ -796,8 +796,8 @@ You can monitor the progress of a running macro, stop it at convenient
 places with the possibility to interact with the canvas and resume the
 execution with a double click or a key press.
 
-Locking the Pad
----------------
+### Locking the Pad
+
 
 You can make the **`TPad`** non-editable. Then no new objects can be
 added, and the existing objects and the pad can not be changed with the
@@ -807,8 +807,8 @@ mouse or programmatically. By default the **`TPad`** is editable.
 TPad::SetEditable(kFALSE)
 ```
 
-Graphical Objects
-=================
+## Graphical Objects
+
 
 In this paragraph, we describe the various simple 2D graphical objects
 defined in ROOT. Usually, one defines these objects with their
@@ -821,8 +821,8 @@ especially true for functions and methods that set and get internal
 values of the objects described here. By default 2D graphical objects
 are created in User Coordinates with (0, 0) in the lower left corner.
 
-Lines, Arrows and Polylines
----------------------------
+### Lines, Arrows and Polylines
+
 
 The simplest graphical object is a line. It is implemented in the
 **`TLine`** class. The line constructor is:
@@ -897,8 +897,8 @@ elements with the coordinates of the points. **`TPolyLine`** can be used
 by it self, but is also a base class for other objects, such as curly
 arcs.
 
-Circles and Ellipses
---------------------
+### Circles and Ellipses
+
 
 An ellipse can be truncated and rotated. It is defined by its center
 `(x1,y1)` and two radii `r1` and `r2`. A minimum and maximum angle may
@@ -929,8 +929,8 @@ root[] e = new TEllipse(0.2,0.2,0.8,0.3)
 root[] e->Draw()
 ```
 
-Rectangles
-----------
+### Rectangles
+
 
 The class **`TBox`** defines a rectangle. It is a base class for many
 different higher-level graphical primitives. Its bottom left coordinates
@@ -955,8 +955,8 @@ A **`TWbox`** is a rectangle (**`TBox`**) with a border size and a
 border mode. The attributes of the outline line and of the fill area are
 described in “Graphical Objects Attributes”
 
-Markers
--------
+### Markers
+
 
 A marker is a point with a fancy shape! The possible markers are shown
 in the next figure.
@@ -1007,8 +1007,8 @@ TPolyMarker(Int_t n,Double_t *x,Double_t *y,Option_t *option)
 Where `x` and `y` are arrays of coordinates for the `n` points that form
 the poly-marker.
 
-Curly and Wavy Lines for Feynman Diagrams
------------------------------------------
+### Curly and Wavy Lines for Feynman Diagrams
+
 
 This is a peculiarity of particle physics, but we do need sometimes to
 draw Feynman diagrams. Our friends working in banking can skip this
@@ -1049,8 +1049,8 @@ of the arc (given in degrees). Refer to
 `$ROOTSYS/tutorials/graphics/feynman.C` for the script that built the
 figure above.
 
-Text and Latex Mathematical Expressions
----------------------------------------
+### Text and Latex Mathematical Expressions
+
 
 Text displayed in a pad may be embedded into boxes, called paves
 (**`TPaveLabel`**), or titles of graphs or many other objects but it can
@@ -1060,7 +1060,7 @@ of class **`TText`**. For a physicist, it will be most of the time a
 has been conceived to draw mathematical formulas or equations. Its
 syntax is very similar to the Latex in mathematical mode.
 
-### Subscripts and Superscripts
+#### Subscripts and Superscripts
 
 Subscripts and superscripts are made with the `_` and `^` commands.
 These commands can be combined to make complex subscript and superscript
@@ -1078,7 +1078,7 @@ subscripts and superscripts:
 | **`x_{2y}`**    | x 2y    | **`x^{y_{1}}`**  | x y 1   | **`x_{1}^{y}`**  | x 1 y    |
 +-----------------+---------+------------------+---------+------------------+----------+
 
-### Fractions
+#### Fractions
 
 Fractions denoted by the / symbol are made in the obvious way. The
 `#frac` command is used for large fractions in displayed formula; it has
@@ -1086,14 +1086,14 @@ two arguments: the numerator and the denominator. For example, the
 equation x = y + z 2 y 2 + 1 is obtained by following expression
 `x=#frac{y+z/2}{y^{2}+1}`.
 
-### Roots
+#### Roots
 
 The `#sqrt` command produces the square ROOT of its argument; it has an
 optional first argument for other roots.
 
 Example: `#sqrt{10}  #sqrt[3]{10}` ![](pictures/030000BC.png)
 
-### Delimiters
+#### Delimiters
 
 You can produce three kinds of proportional delimiters.
 
@@ -1107,13 +1107,13 @@ You can produce three kinds of proportional delimiters.
 
 `#(){....} or#left(.....#right)`big parenthesis
 
-### Changing Style in Math Mode
+#### Changing Style in Math Mode
 
 You can change the font and the text color at any moment using:
 
 `#font[font-number]{...}` and `#color[color-number]{...}`
 
-### Line Splitting
+#### Line Splitting
 
 A **`TLatex`** string may be split in two with the following command:
 `#splitline{top}{bottom}`. **`TAxis`** and **`TGaxis`** objects can take
@@ -1121,8 +1121,8 @@ advantage of this feature. For example, the date and time could be shown
 in the time axis over two lines with:
 `#splitline{21 April 2003}{14:23:56}`
 
-Greek Letters
--------------
+### Greek Letters
+
 
 The command to produce a lowercase Greek letter is obtained by adding
 `#` to the name of the letter. For an uppercase Greek letter, just
@@ -1142,8 +1142,8 @@ capitalize the first letter of the command name.
 
 ![](pictures/030000BD.png)
 
-Mathematical Symbols
---------------------
+### Mathematical Symbols
+
 
 ![](pictures/030000BE.png)
 
@@ -1152,7 +1152,7 @@ such as `+` and `>`, are produced by typing the corresponding keyboard
 character. Others are obtained with the commands as shown in the table
 above.
 
-### Accents, Arrows and Bars
+#### Accents, Arrows and Bars
 
 Symbols in a formula are sometimes placed one above another.
 **`TLatex`** provides special commands for that.
@@ -1180,7 +1180,7 @@ a \_ is obtained with `#bar{a}`
 
 a -\> is obtained with `#vec{a}`
 
-### Example 1
+#### Example 1
 
 The script `$ROOTSYS/tutorials/graphics/latex.C:`
 
@@ -1206,7 +1206,7 @@ The script `$ROOTSYS/tutorials/graphics/latex.C:`
 ![The picture generated by the tutorial macro
 latex.C](pictures/020000C1.jpg)
 
-### Example 2
+#### Example 2
 
 The script `$ROOTSYS/tutorials/graphics/latex2.C:`
 
@@ -1232,7 +1232,7 @@ The script `$ROOTSYS/tutorials/graphics/latex2.C:`
 ![The picture generated by the tutorial macro
 latex2.C](pictures/020000C2.jpg)
 
-### Example 3
+#### Example 3
 
 The script `$ROOTSYS/tutorials/graphics/latex3.C`:
 
@@ -1257,8 +1257,8 @@ The script `$ROOTSYS/tutorials/graphics/latex3.C`:
 ![The picture generated by the tutorial macro
 latex3.C](pictures/020000C3.jpg)
 
-Text in a Pad
--------------
+### Text in a Pad
+
 
 Text displayed in a pad may be embedded into boxes, called paves, or may
 be drawn alone. In any case, it is recommended to use a Latex
@@ -1332,8 +1332,8 @@ Int_t npaves, Option_t* option)
 
 ![A PaveText example](pictures/030000C6.png)
 
-The TeX Processor TMathText
----------------------------
+### The TeX Processor TMathText
+
 
 TMathText's purpose is to write mathematical equations, exactly as TeX
 would do it. The syntax is the same as the TeX's one.
@@ -1350,8 +1350,8 @@ gives the following output:
 axis titles, labels etc ... are drawn using `TLatex`, the `TMathText`
 syntax can be used for them also.
 
-Axis
-====
+## Axis
+
 
 The axis objects are automatically built by various high level objects
 such as histograms or graphs. Once build, one may access them and change
@@ -1373,8 +1373,8 @@ representation of an axis is done with the **`TGaxis`** class. The
 histogram classes and **`TGraph`** generate instances of this class.
 This is internal and the user should not have to see it.
 
-Axis Title
-----------
+### Axis Title
+
 
 The axis title is set, as with all named objects, by
 
@@ -1389,8 +1389,8 @@ extract the axis object:
 h->GetXaxis()->SetTitle("Whatever title you want")
 ```
 
-Axis Options and Characteristics
---------------------------------
+### Axis Options and Characteristics
+
 
 The axis options are most simply set with the styles. The available
 style options controlling specific axis options are the following:
@@ -1414,8 +1414,8 @@ The general options, not specific to axis, as for instance
 `SetTitleTextColor()` are valid and do have an effect on axis
 characteristics.
 
-Setting the Number of Divisions
--------------------------------
+### Setting the Number of Divisions
+
 
 Use `TAxis::SetNdivisions(ndiv,optim)` to set the number of divisions
 for an axis. The `ndiv` and `optim` are as follows:
@@ -1444,8 +1444,8 @@ For example:
 
 `ndiv = -10`: exactly 10 primary divisions
 
-Zooming the Axis
-----------------
+### Zooming the Axis
+
 
 You can use `TAxis::SetRange` or `TAxis::SetRangeUser` to zoom the axis.
 
@@ -1469,8 +1469,8 @@ any axis and can be used interactively. In addition, you can zoom an
 axis interactively: click on the axis on the start, drag the cursor to
 the end, and release the mouse button.
 
-Drawing Axis Independently of Graphs or Histograms
---------------------------------------------------
+### Drawing Axis Independently of Graphs or Histograms
+
 
 An axis may be drawn independently of a histogram or a graph. This may
 be useful to draw for example a supplementary axis for a graph. In this
@@ -1511,8 +1511,8 @@ TGaxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
 In such a way, it is possible to obtain exponential evolution of the
 tick marks position, or even decreasing. In fact, anything you like.
 
-Orientation of Tick Marks on Axis
----------------------------------
+### Orientation of Tick Marks on Axis
+
 
 Tick marks are normally drawn on the positive side of the axis, however,
 if `xmin = xmax`, then negative.
@@ -1525,10 +1525,10 @@ if `xmin = xmax`, then negative.
 
 -   `chopt = ‘U’: ` unlabeled axis, default is labeled.
 
-Labels
-------
+### Labels
 
-### Position
+
+#### Position
 
 Labels are normally drawn on side opposite to tick marks. However,
 `chopt = '='`: on Equal side. The function `TAxis::CenterLabels()` sets
@@ -1537,13 +1537,13 @@ It centers the bin labels and it makes sense only when the number of
 bins is equal to the number of tick marks. The class responsible for
 drawing the axis **`TGaxis`** inherits this property.
 
-### Orientation
+#### Orientation
 
 Labels are normally drawn parallel to the axis. However, if
 `xmin = xmax`, then they are drawn orthogonal, and if `ymin=ymax` they
 are drawn parallel.
 
-### Labels for Exponents
+#### Labels for Exponents
 
 By default, an exponent of the form 10\^N is used when the label values
 are either all very small or very large. One can disable the exponent by
@@ -1562,7 +1562,7 @@ property `SetNoExponent` was set in **`TAxis`** (via
 
 ![Y-axis with and without exponent labels](pictures/030000C7.png)
 
-### Number of Digits in Labels
+#### Number of Digits in Labels
 
 `TGaxis::fgMaxDigits` is the maximum number of digits permitted for the
 axis labels above which the notation with 10\^N is used. It must be
@@ -1574,7 +1574,7 @@ accept 6 digits and accept numbers like 900000 on an axis call:
 TGaxis::SetMaxDigits(6)
 ```
 
-### Tick Mark Positions
+#### Tick Mark Positions
 
 Labels are centered on tick marks. However, if `xmin = xmax`, then they
 are right adjusted.
@@ -1588,7 +1588,7 @@ are right adjusted.
 
 -   `chopt = 'M'`: In the Middle of the divisions.
 
-### Label Formatting
+#### Label Formatting
 
 Blank characters are stripped, and then the label is correctly aligned.
 The dot, if last character of the string, is also stripped. In the
@@ -1606,7 +1606,7 @@ coordinates). The default values are as follows:
 
 -   Labels offset: 1.0 %
 
-### Stripping Decimals
+#### Stripping Decimals
 
 Use the `TStyle::SetStripDecimals` to strip decimals when drawing axis
 labels. By default, the option is set to true, and `TGaxis::PaintAxis`
@@ -1621,11 +1621,11 @@ If this function is called with `strip=kFALSE`, `TGaxis::PaintAxis()`
 will draw labels with the same number of digits after the dot, e.g.
 {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, etc.}
 
-### Optional Grid
+#### Optional Grid
 
 `chopt = 'W'`: cross-Wire
 
-### Axis Binning Optimization
+#### Axis Binning Optimization
 
 By default, the axis binning is optimized.
 
@@ -1633,8 +1633,8 @@ By default, the axis binning is optimized.
 
 -   `chopt = 'I'`: Integer labeling
 
-Axis with Time Units
---------------------
+### Axis with Time Units
+
 
 Histograms' axis can be defined as "time axis". To do that it is enough
 to activate the `SetTimeDisplay` attribute on a given axis. If `h` is a
@@ -1647,7 +1647,7 @@ h->GetXaxis()->SetTimeDisplay(1);    // X axis is a time axis
 Two parameters can be adjusted in order to define time axis: the time
 format and the time offset.
 
-### Time Format
+#### Time Format
 
 It defines the format of the labels along the time axis. It can be
 changed using the **`TAxis`** method `SetTimeFormat`. The time format is
@@ -1690,7 +1690,7 @@ h->GetXaxis()->SetTimeFormat("%d/%m/%Y");
 If the time format is not defined, a default one will be computed
 automatically.
 
-### Time Offset
+#### Time Offset
 
 This is a time in seconds in the UNIX standard UTC format (the universal
 time, not the local one), defining the starting date of a histogram
@@ -1869,8 +1869,8 @@ will produce the following axis:
 
 ![](pictures/030000CB.png)
 
-Axis Examples
--------------
+### Axis Examples
+
 
 To illustrate what was said, we provide two scripts. The first one
 creates the picture shown in the next figure.
@@ -1999,11 +1999,11 @@ void seism() {
 }
 ```
 
-Graphical Objects Attributes
-============================
+## Graphical Objects Attributes
 
-Text Attributes
----------------
+
+### Text Attributes
+
 
 When a class contains text or derives from a text class, it needs to be
 able to set text attributes like font type, size, and color. To do so,
@@ -2011,7 +2011,7 @@ the class inherits from the **`TAttText`** class (a secondary
 inheritance), which defines text attributes. **`TLatex`** and
 **`TText`** inherit from **`TAttText`**.
 
-### Setting Text Alignment
+#### Setting Text Alignment
 
 Text alignment may be set by a method call. What is said here applies to
 all objects deriving from **`TAttText`**, and there are many. We will
@@ -2045,7 +2045,7 @@ For vertical alignment, the following convention applies:
 For example, align: 11 = left adjusted and bottom adjusted; 32 = right
 adjusted and vertically centered.
 
-### Setting Text Angle
+#### Setting Text Angle
 
 Use `TAttText::SetTextAngle` to set the text angle. The `angle` is the
 degrees of the horizontal.
@@ -2054,7 +2054,7 @@ degrees of the horizontal.
 root[] la->SetTextAngle(angle)
 ```
 
-### Setting Text Color
+#### Setting Text Color
 
 Use `TAttText::SetTextColor` to set the text color. The `color` is the
 color index. The colors are described in "Color and Color Palettes".
@@ -2063,7 +2063,7 @@ color index. The colors are described in "Color and Color Palettes".
 root[] la->SetTextColor(color)
 ```
 
-### Setting Text Font
+#### Setting Text Font
 
 Use `TAttText::SetTextFont` to set the font. The parameter font is the
 font code, combining the font and precision:
@@ -2160,7 +2160,7 @@ This script makes the image of the different fonts:
 }
 ```
 
-### How to use True Type Fonts
+#### How to use True Type Fonts
 
 You can activate the True Type Fonts by adding the following line in
 your `.rootrc` file.
@@ -2178,7 +2178,7 @@ also check with the command:
 gEnv->Print()
 ```
 
-### Setting Text Size
+#### Setting Text Size
 
 Use `TAttText::SetTextSize` to set the text size.
 
@@ -2202,8 +2202,8 @@ color, size, font and allignment looks like shown in this picture. It
 takes place in the editor frame anytime the selected object inherits the
 class **`TAttText`**.
 
-Line Attributes
----------------
+### Line Attributes
+
 
 All classes manipulating lines have to deal with line attributes: color,
 style and width. This is done by using secondary inheritance of the
@@ -2249,8 +2249,8 @@ color, line width and style looks like shown in this picture. It takes
 place in the editor frame anytime the selected object inherits the class
 **`TAttLine`**.
 
-Fill Attributes
----------------
+### Fill Attributes
+
 
 Almost all graphics classes have a fill area somewhere. These classes
 have to deal with fill attributes. This is done by using secondary
@@ -2299,8 +2299,8 @@ the `FillStyle=3ijk` value as follows:
 
 ![The various patterns](pictures/030000D2.png)
 
-Color and Color Palettes
-------------------------
+### Color and Color Palettes
+
 
 At initialization time, a table of basic colors is generated when the
 first Canvas constructor is called. This table is a linked list, which
@@ -2351,7 +2351,7 @@ color and style looks like shown in this picture. It takes place in the
 editor frame anytime the selected object inherits the class
 **`TAttFill`**.
 
-### Color Palette (for Histograms)
+#### Color Palette (for Histograms)
 
 Defining one color at a time may be tedious. The histogram classes (see
 Draw Options) use the color palette. For example, `TH1::Draw("col")`
@@ -2409,8 +2409,8 @@ void palette() {
 }
 ```
 
-The Graphics Editor
-===================
+## The Graphics Editor
+
 
 A new graphics editor took place in ROOT v4.0. The editor can be
 activated by selecting the Editor menu entry in the canvas View menu or
@@ -2418,8 +2418,8 @@ one of the context menu entries for setting line, fill, marker or text
 attributes. The following object editors are available for the current
 ROOT version.
 
-TAxisEditor
------------
+### TAxisEditor
+
 
 ![](pictures/030000D5.png)
 
@@ -2444,8 +2444,8 @@ axis attributes:
     addition, there is a check box for no exponent choice, and another
     one for setting the same decimal part for all labels.
 
-TPadEditor
-----------
+### TPadEditor
+
 
 ![](pictures/030000D6.png)
 
@@ -2470,8 +2470,8 @@ TPadEditor
 
 -   selected; no border mode can be set too.
 
-Copy and Paste
-==============
+## Copy and Paste
+
 
 You can make a copy of a canvas using `TCanvas::DrawClonePad`. This
 method is unique to **`TCanvas`**. It clones the entire canvas to the
@@ -2480,8 +2480,8 @@ all objects descendent of **`TObject`**, specifically all graphic
 objects inherit. Below are two examples, one to show the use of
 `DrawClonePad` and the other to show the use of `DrawClone`.
 
-Using the GUI
--------------
+### Using the GUI
+
 
 In this example we will copy an entire canvas to a new one with
 `DrawClonePad`. Run the script `draw2dopt.C`.
@@ -2545,8 +2545,8 @@ The option in the `DrawClone` method argument is the Draw option for a
 histogram or graph. A call to `TH1::DrawClone` can clone the histogram
 with a different draw option.
 
-Programmatically
-----------------
+### Programmatically
+
 
 To copy and paste the four pads from the command line or in a script you
 would execute the following statements:
@@ -2575,8 +2575,8 @@ the old canvas. For example if you were to copy the third pad of `surf`
 to the top left corner of the target canvas you would have to reset the
 coordinates of the cloned pad.
 
-Legends
-=======
+## Legends
+
 
 Legends for a graph are obtained with a **`TLegend`** object. This
 object points to markers, lines, boxes, histograms, graphs and represent
@@ -2664,8 +2664,8 @@ graphs. You can edit the **`TLegend`** by right clicking on it.
 
 ![A legend example](pictures/030000D8.png)
 
-The PostScript Interface
-========================
+## The PostScript Interface
+
 
 To generate a PostScript (or encapsulated PostScript) file for a single
 image in a canvas, you can:
@@ -2766,8 +2766,8 @@ you may have several Post Script files opened simultaneously. Use
 method writes the string in quotes into a PostScript file at position
 `x, y` in world coordinates.
 
-Special Characters
-------------------
+### Special Characters
+
 
 The following characters have a special action on the PostScript file:
 
@@ -2793,8 +2793,8 @@ the escape character "@". The use of these special characters is
 illustrated in several scripts referenced by the **`TPostScript`**
 constructor.
 
-Writing Several Canvases to the Same PostScript File
-----------------------------------------------------
+### Writing Several Canvases to the Same PostScript File
+
 
 The following sequence writes the canvas to "`c1.ps`" and closes the
 postscript file:
@@ -2939,8 +2939,8 @@ gSystem->Exec("gs file.ps");  // invoke PostScript  viewer
 }
 ```
 
-Create or Modify a Style
-========================
+## Create or Modify a Style
+
 
 All objects that can be drawn in a pad inherit from one or more
 attribute classes like **`TAttLine`**, **`TAttFill`**, **`TAttText`**,
@@ -3066,8 +3066,8 @@ description, in particular:
 
 -   `format = 2` date format is: "2002-09-25 17:10:35"
 
-3D Viewers
-==========
+## 3D Viewers
+
 
 ROOT provides several viewers capable of displaying 3D content:
 
@@ -3096,8 +3096,8 @@ comprehensive, high level functionality to create and place objects into
 complex 3D scenes, and uses the viewer architecture internally to show
 the result in your chosen viewer.
 
-Invoking a 3D viewer
---------------------
+### Invoking a 3D viewer
+
 
 A 3D viewer can be created in a script by passing the appropriate option
 to `Draw() `when attaching the drawn object(s) to a pad. For a fuller
@@ -3127,8 +3127,8 @@ Note: A current limitation means that when an external viewer is created
 the pad is no longer redrawn. When the external viewer is closed,
 clicking in the pad will refresh.
 
-The GL Viewer
--------------
+### The GL Viewer
+
 
 The GL Viewer uses <OpenGL®> (or compliant libraries such as <Mesa3D>)
 to generate high quality, high-performance 3D renderings, with
@@ -3150,7 +3150,7 @@ You can manipulate the viewer via the GUI or via the base
 **`TGLViewer`** object behind the interface. These are detailed below -
 see also `$ROOTSYS/tutorials/gl/glViewerExercise.C`.
 
-### Projections Modes (Cameras)
+#### Projections Modes (Cameras)
 
 The GL Viewer supports two basic types of camera, which affect how the
 3D world is projected onto the 2D render area:
@@ -3210,7 +3210,7 @@ v->SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
 
 See also `$ROOTSYS/tutorials/gl/glViewerExercise.C`.
 
-### Adjusting Cameras
+#### Adjusting Cameras
 
 The interactions with the camera are summarized above. In each case the
 interaction is listed, along with description and user actions required
@@ -3272,7 +3272,7 @@ v->SetPerspectiveCamera (camera,fov,dolly,center,hRotate,vRotate);
 Note – you can configure any of the six cameras in the viewer at any
 time, but you will not see the result until the camera is made current.
 
-### Draw Styles
+#### Draw Styles
 
 The GL Viewer supports three different rendering modes, which are
 applied to all the objects in your scene, but not Clip Shapes and Guides
@@ -3295,7 +3295,7 @@ Call method `TGLViewer::SetStyle` with one of
 v->SetStyle(TGLRnrCtx::kFill);
 ```
 
-### Lighting / Style
+#### Lighting / Style
 
 The GL viewer creates five diffuse lights (left, right, top, bottom, and
 front) arranged around the 3D scene. These lights are carried with the
@@ -3311,7 +3311,7 @@ Each light has a checkbox to enable/disable it. Set lights on/off with
 v->GetLightSet()->SetLight(TGLLightSet</emphasis>::kLightBottom, kFALSE);
 ```
 
-### Clipping
+#### Clipping
 
 The GL viewer supports interactive clipping, enabling you to remove
 sections of your 3D scene and the shapes, revealing internal details.
@@ -3380,7 +3380,7 @@ v->GetClipSet()->SetClipState(TGLClipSet::kClipPlane, planeEq);
 As with cameras, any clip can be configured at any time, but you must
 set the clip current to see the effect.
 
-### Manipulators
+#### Manipulators
 
 *Manipulators* are GUI ‘widgets’ or controls attached to a 3D object in
 the viewer, allowing a direct manipulation of the object's geometry.
@@ -3398,7 +3398,7 @@ Toggle between the *manipulator* types using the ‘x’, ‘c’, ‘v’ keys
 while the mouse cursoris above the manipulator. Note: Manipulators
 cannot be controlled via the API at present.
 
-### Guides
+#### Guides
 
 Guides are visual aids drawn into the viewer world. Controls for these
 are under the “Guides” tab:
@@ -3438,7 +3438,7 @@ Double_t refPos[3] = {50.0,60.0,100.0};
 v->SetGuideState(TGLUtil::kAxesEdge, kTRUE, refPos);
 ```
 
-### Selecting Scene Shapes
+#### Selecting Scene Shapes
 
 You can select a single shape from your scene by pressing ‘Shift’ key,
 pointing and left clicking anywhere on the shape in the viewer.
@@ -3450,7 +3450,7 @@ deselect a shape, either select another, or shift/click anywhere on the
 background (empty space) in the viewer. You cannot select Manipulators
 or Guides (Axes / Reference Marker).
 
-### Editing Shapes
+#### Editing Shapes
 
 When a shape is selected, the viewer's control pane shows the user
 interface that allows you to review and adjust the color and geometry
@@ -3463,7 +3463,7 @@ closed. In some cases, this will never be feasible as there is not a
 one-to-one correspondence between a shape in the viewer and a single
 external object in which the modification could be stored.
 
-### Colors / Style
+#### Colors / Style
 
 Viewer Controls Pane ‘Style’ tab.
 
@@ -3491,7 +3491,7 @@ family have external objects with the same **`TObject`** name string.
 You can also adjust the ‘Opacity’ and ‘Shine’ for the shapes materials
 via the sliders.
 
-### Geometry
+#### Geometry
 
 Viewer Controls Pane ‘Geometry’ tab.
 
@@ -3499,15 +3499,15 @@ Review and modify the shapes X/Y/Z center and scaling factors via the
 edit boxes. Selection and editing of shapes is not available via the API
 at present.
 
-### Outputting Viewer Contents
+#### Outputting Viewer Contents
 
 The current viewer rendering can be output to an external `EPS` or
 `PDF`, using the options under the ‘File’ menu on the top menu bar. The
 file is named ‘`viewer.eps`’ or ‘`viewer.pdf`’ and written to the
 current ROOT directory.
 
-The X3D Viewer
---------------
+### The X3D Viewer
+
 
 The X3D viewer is a fairly simple and limited viewer, capable of showing
 basic lines and polygons. It lacks the quality, performance and more
@@ -3540,8 +3540,8 @@ Adjust focus (stereo mode) [ ] { }Toggle double bufferf
 
 Rotate object Left mouse button down + move.
 
-Common 3D Viewer Architecture
------------------------------
+### Common 3D Viewer Architecture
+
 
 The 3D Viewer Architecture provides a common mechanism for viewer
 clients to publish 3D objects to it. It enables:
@@ -3622,7 +3622,7 @@ the publishing to the viewer in your object's `TObject::Paint()`
 overloaded method. See “Scene Rebuilds”, and example scripts, for more
 details.**
 
-### Creating / Obtaining Viewer Handle
+#### Creating / Obtaining Viewer Handle
 
 External viewers are bound to a **`TPad`** object (this may be removed
 as a requirement in the future). You can create or obtain the current
@@ -3649,7 +3649,7 @@ it can be obtained elsewhere by:
 TVirtualViewer3D * v = gPad->GetViewer3D();
 ```
 
-### Opening / Closing Scenes
+#### Opening / Closing Scenes
 
 Objects must be added to viewer between `BeginScene()` and `EndScene()`
 calls e.g.
@@ -3675,7 +3675,7 @@ viewer->BuildingScene();
 Note: the x3d viewer does not support rebuilding of scenes - objects
 added after the first Open/Close Scene pair will be ignored.
 
-### Describing Objects - Filling TBuffer3D
+#### Describing Objects - Filling TBuffer3D
 
 The viewers behind the **`TVirtualViewer3D`** interface differ greatly
 in their capabilities e.g.
@@ -3815,7 +3815,7 @@ Note:
     actually add them. Splitting avoids having to do the expensive
     tessellation on the first pass.
 
-### Shape Specific TBuffer3D Derived Classes
+#### Shape Specific TBuffer3D Derived Classes
 
 Currently we provide the following shape specific classes, which the GL
 Viewer can take advantage of (see `TBuffer3D.h` and `TBuffer3DTypes.h`)
@@ -3838,7 +3838,7 @@ advantage of them. Hence we only provide classes which existing viewers
 can benefit from. The number of native shapes in GL Viewer will be
 expanded in the future.
 
-### Master / Local Reference Frames
+#### Master / Local Reference Frames
 
 The Core section of **`TBuffer3D`** contains two members relating to
 reference frames:
@@ -3853,7 +3853,7 @@ If `fLocalFrame` is false, `fLocalMaster` should contain an identity
 matrix. This is set by default, and can be reset using the
 **`TBuffer3D::SetLocalMasterIdentity()` method.**
 
-### Bounding Boxes
+#### Bounding Boxes
 
 You are not obliged to complete the `kBoundingBox` section, as any
 viewer requiring one internally (GL Viewer) will build it if you do not
@@ -3880,7 +3880,7 @@ buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
 }
 ```
 
-### Logical and Physical Objects
+#### Logical and Physical Objects
 
 Some viewers can support two types of object placement:
 
@@ -3932,7 +3932,7 @@ Conversely viewers must always be capable of displaying the object
 described by this buffer. If either does not meet this requirement the
 object may not be displayed.
 
-### Scene Rebuilds
+#### Scene Rebuilds
 
 `TBuffer3D::AddObject` is not an explicit command to the viewer - it may
 for various reasons decide to ignore it:
@@ -3955,7 +3955,7 @@ repaint on the attached **`TPad`** object – hence you should attach you
 master geometry object to the pad (via `TObject::Draw()`), and perform
 the publishing to the viewer in response to **`TObject::Paint()`**.
 
-### Physical IDs
+#### Physical IDs
 
 TVirtualViewer3D provides for two methods of object addition:
 
@@ -3977,7 +3977,7 @@ child geometry branches. In this case the viewer can safely cache the
 physical objects across scene rebuilds, discarding those no longer of
 interest.
 
-### Child Objects
+#### Child Objects
 
 In many geometries there is a rigid containment hierarchy, and so if the
 viewer is not interested in a certain object due to limits/size then it
@@ -3986,13 +3986,13 @@ Both `TBuffer3D::AddObject()` methods have an `addChildren` return
 parameter. The viewer will complete this (if passed) indicating if
 children of the object just sent are worth sending.
 
-### Recycling TBuffer3D
+#### Recycling TBuffer3D
 
 Once add `TBuffer3D::AddObject()` has been called, the contents are
 copied to the viewer’s internal data structures. You are free to destroy
 this **`TBuffer3D`**, or recycle it for the next object if suitable.
 
-### Examples
+#### Examples
 
 For an example of a simple geometry, working in master reference frame
 examine the code under `$ROOTSYS/g3d`. For a more complex example, which

@@ -1,8 +1,8 @@
-Folders and Tasks
-=================
+# Folders and Tasks
 
-Folders
-=======
+
+## Folders
+
 
 ![](pictures/030000E1.png)A **`TFolder`** is a collection of objects
 visible and expandable in the ROOT object browser. Folders have a name
@@ -13,8 +13,8 @@ folders under `//root`.
 
 New folders can be added and removed to/from a folder.
 
-Why Use Folders?
-================
+## Why Use Folders?
+
 
 One reason to use folders is to reduce class dependencies and improve
 modularity. Each set of data has a producer class and one or many
@@ -56,15 +56,15 @@ organization. This is useful when discussing data design issues or when
 learning the data organization. The example below illustrates this
 point.
 
-How to Use Folders
-==================
+## How to Use Folders
+
 
 Using folders means to build a hierarchy of folders, posting the
 reference to the data in the folder by the producer, and creating a
 reference to the folder by the user.
 
-Creating a Folder Hierarchy
----------------------------
+### Creating a Folder Hierarchy
+
 
 To create a folder hierarchy you add the top folder of your hierarchy to
 `//root`. Then you add a folder to an existing folder with the
@@ -105,8 +105,8 @@ TFolder *configuration_mc = run_mc->AddFolder("Configuration",
 }
 ```
 
-Posting Data to a Folder (Producer)
------------------------------------
+### Posting Data to a Folder (Producer)
+
 
 ![](pictures/030000E4.png)
 
@@ -120,8 +120,8 @@ TObjArray *array;
 run_mc->Add(array);
 ```
 
-Reading Data from a Folder (Consumer)
--------------------------------------
+### Reading Data from a Folder (Consumer)
+
 
 One can search for a folder or an object in a folder using the
 `TROOT::FindObjectAny` method. It analyzes the string passed as its
@@ -167,8 +167,8 @@ TFile *myFile = (TFile*)gROOT->FindObjectAny("/ROOTFiles/myFile.root"); //or
 TFile *myFile = (TFile*)gROOT->FindObjectAny("myFile.root");
 ```
 
-Tasks
-=====
+## Tasks
+
 
 Tasks can be organized into a hierarchy and displayed in the browser.
 The **`TTask`** class is the base class from which the tasks are
@@ -297,8 +297,8 @@ is left out, the name of the task is used.
 After executing, the script above the browser will look like in this
 figure.
 
-Execute and Debug Tasks
-=======================
+## Execute and Debug Tasks
+
 
 The browser can be used to start a task, set break points at the
 beginning of a task or when the task has completed. At a breakpoint,

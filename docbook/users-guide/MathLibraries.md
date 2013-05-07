@@ -1,5 +1,5 @@
-Math Libraries in ROOT
-======================
+# Math Libraries in ROOT
+
 
 The aim of Math libraries in ROOT is to provide and to support a
 coherent set of mathematical and statistical functions. The latest
@@ -13,8 +13,8 @@ and vector with fixed sizes and their operation has been developed
 
 ![Math libraries and packages](pictures/02000109.jpg)
 
-TMath
-=====
+## TMath
+
 
 In the namespace, **`TMath`** a collection of free functions is provided
 for the following functionality:
@@ -37,8 +37,8 @@ for the following functionality:
 For more details, see the reference documentation of **`TMath`** at
 <http://root.cern.ch/root/htmldoc/TMath.html>.
 
-Random Numbers
-==============
+## Random Numbers
+
 
 In ROOT pseudo-random numbers can be generated using the **`TRandom`**
 classes. 4 different types exist: **`TRandom`**, **`TRandom1`**,
@@ -47,8 +47,8 @@ of random generators. **`TRandom`** is the base class used by others. It
 implements methods for generating random numbers according to
 pre-defined distributions, such as Gaussian or Poisson.
 
-TRandom
--------
+### TRandom
+
 
 Pseudo-random numbers are generated using a linear congruential random
 generator. The multipliers used are the same of the BSD `rand()` random
@@ -62,8 +62,8 @@ a very short period, 2^31^,about 10^9^, which can be exhausted in just
 few seconds. The quality of this generator is therefore BAD and it is
 strongly recommended to NOT use for any statistical study.
 
-TRandom1
---------
+### TRandom1
+
 
 This random number generator is based on the Ranlux engine, developed by
 M. Lüsher and implemented in Fortran by F. James. This engine has
@@ -81,8 +81,8 @@ For more information on the generator see the following article:
     pseudo-random number generator of Lüscher”, Computer Physics
     Communication, 79 (1994) 111.
 
-TRandom2
---------
+### TRandom2
+
 
 This generator is based on the maximally equidistributed combined
 Tausworthe generator by L'Ecuyer. It uses only 3 32-bits words for the
@@ -94,8 +94,8 @@ following article:
 -   P. L’Ecuyer, “Maximally Equidistributed Combined Tausworthe
     Generators”, Mathematics of Computation, 65, 213 (1996), 203-213.
 
-TRandom3
---------
+### TRandom3
+
 
 This is based on the Mersenne and Twister pseudo-random number
 generator, developed in 1997 by Makoto Matsumoto and Takuji Nishimura.
@@ -114,8 +114,8 @@ following article:
 used by default in ROOT using the global ***`gRandom`*** object (see
 chapter gRandom).
 
-Seeding the Generators
-----------------------
+### Seeding the Generators
+
 
 The seeds for the generators can be set in the constructor or by using
 the `SetSeed` method. When no value is given the generator default seed
@@ -127,8 +127,8 @@ seed is generated using only the machine clock, which has a resolution
 of about 1 sec. Therefore identical sequences will be generated if the
 elapsed time is less than a second.
 
-Examples of Using the Generators
---------------------------------
+### Examples of Using the Generators
+
 
 The method `Rndm()` is used for generating a pseudo-random number
 distributed between 0 and 1 as shown in the following example:
@@ -148,8 +148,8 @@ TRandom3 r3(0);
 TRandom r0(0);
 ```
 
-Random Number Distributions
----------------------------
+### Random Number Distributions
+
 
 The **`TRandom`** base class provides functions, which can be used by
 all the other derived classes for generating random variates according
@@ -224,8 +224,8 @@ generated in a very efficient way using **`TF1::`**GetRandom() or
 |                                           | `sigma=1`                      |
 +-------------------------------------------+--------------------------------+
 
-UNURAN
-------
+### UNURAN
+
 
 An interface to a new package, UNU.RAN, (Universal Non Uniform Random
 number generator for generating non-uniform pseudo-random numbers) was
@@ -342,8 +342,8 @@ random number generator by passing a TRandom pointer when constructing
 the **`TUnuran`** class (by default the ROOT ***`gRandom`*** is passed
 to UNURAN).
 
-Performances of Random Numbers
-------------------------------
+### Performances of Random Numbers
+
 
 Here are the CPU times obtained using the four random classes on an
 lxplus machine with an Intel 64 bit architecture and compiled using gcc
@@ -368,8 +368,8 @@ lxplus machine with an Intel 64 bit architecture and compiled using gcc
 | `UNURAN`           |               |               |               |               |
 +--------------------+---------------+---------------+---------------+---------------+
 
-MathCore Library
-================
+## MathCore Library
+
 
 `MathCore` provides a collection of functions and C++ classes for
 numerical computing. This library includes only the basic mathematical
@@ -404,8 +404,8 @@ also be built as an independent package using `configure/make`. In this
 case the library will not contain the dictionary information and cannot
 be used interactively in ROOT.
 
-Generic Vectors for 2, 3 and 4 Dimensions (GenVector)
-=====================================================
+## Generic Vectors for 2, 3 and 4 Dimensions (GenVector)
+
 
 `GenVector` is a package intended to represent vectors and their
 operations and transformations, such as rotations and Lorentz
@@ -435,10 +435,10 @@ provided. In the following paragraphs, the main characteristics of
 `GenVector` classes is available also at
 <http://seal.cern.ch/documents/mathlib/GenVector.pdf>
 
-Main Characteristics
---------------------
+### Main Characteristics
 
-### Optimal Runtime Performances
+
+#### Optimal Runtime Performances
 
 We try to minimize any overhead in the run-time performance. We have
 deliberately avoided the use of any virtual function and even virtual
@@ -449,7 +449,7 @@ base classes and virtual functions. It is then recommended to avoid
 using the `GenVector` classes polymorphically and developing classes
 inheriting from them.
 
-### Points and Vector Concept
+#### Points and Vector Concept
 
 Mathematically vectors and points are two distinct concepts. They have
 different transformations, as vectors only rotate while points rotate
@@ -471,7 +471,7 @@ For the 4D space-time vectors, we use the same class to model them,
 `ROOT::Math::`**`LorentzVector`**, since we have recognized a limited
 need for modeling the functionality of a 4D point.
 
-### Generic Coordinate System
+#### Generic Coordinate System
 
 The vector classes are based on a generic type of coordinate system,
 expressed as a template parameter of the class. Various classes exist to
@@ -514,7 +514,7 @@ defined for all types of vectors based on doubles. See in the examples
 for all the possible types of vector classes, which can be constructed
 by users with the available coordinate system types.
 
-### Coordinate System Tag
+#### Coordinate System Tag
 
 The 2D and 3D points and vector classes can be associated to a tag
 defining the coordinate system. This can be used to distinguish between
@@ -525,7 +525,7 @@ The coordinate system tag is a template parameter of the
 exists for users who do not need this functionality,
 `ROOT::Math::DefaultCoordinateSystemTag`.
 
-### Transformations
+#### Transformations
 
 The transformations are modeled using simple (non-template) classes,
 using double as the scalar type to avoid too large numerical errors. The
@@ -575,7 +575,7 @@ similar to the one used in the CLHEP Geometry package (class
 -   boost along the axis:` x `(**`ROOT::Math::BoostX`**),
     `y `(**`ROOT::Math::BoostY`**) and `z `(**`ROOT::Math::BoostZ`**).
 
-### Minimal Vector Classes Interface
+#### Minimal Vector Classes Interface
 
 We have tried to keep the interface to a minimal level by:
 
@@ -596,7 +596,7 @@ We have tried to keep the interface to a minimal level by:
     advantage that the basic interface will remain more stable with time
     while additional functions can be added easily.
 
-### Naming Convention
+#### Naming Convention
 
 As part of ROOT, the `GenVector` package adheres to the prescribed ROOT
 naming convention, with some (approved) exceptions, as described here:
@@ -606,7 +606,7 @@ naming convention, with some (approved) exceptions, as described here:
 -   Member function names start with upper-case letter, apart some
     exceptions (see the next section about CLHEP compatibility).
 
-### Compatibility with CLHEP Vector Classes
+#### Compatibility with CLHEP Vector Classes
 
 -   For backward compatibility with CLHEP the vector classes can be
     constructed from a CLHEP `HepVector` or **`HepLorentzVector`**, by
@@ -617,7 +617,7 @@ naming convention, with some (approved) exceptions, as described here:
 -   We provide vector member function with the same naming convention as
     CLHEP for the most used functions like `x()`, `y()` and `z()`.
 
-### Connection to Linear Algebra Package
+#### Connection to Linear Algebra Package
 
 In some use cases, like in track reconstruction, it is needed to use the
 content of the vector and rotation classes in conjunction with linear
@@ -635,8 +635,8 @@ template free functions `ROOT::Math::VectorUtil::Mult`. This function
 works for any linear algebra matrix, which implements the operator
 (`i,j`) and with first matrix element at `i=j=0`.
 
-Example: 3D Vector Classes
---------------------------
+### Example: 3D Vector Classes
+
 
 To avoid exposing template parameter to the users, typedef's are defined
 for all types of vectors based on double's and float's. To use them, one
@@ -671,7 +671,7 @@ different instantiations of the template class
     coordinates (cylindrical using `eta` instead of `z`) in float
     precision
 
-### Constructors and Assignment
+#### Constructors and Assignment
 
 The following declarations are available:
 
@@ -697,7 +697,7 @@ CLHEP::HepThreeVector  q(1,2,3);
 XYZVector    v3(q);
 ```
 
-### Coordinate Accessors
+#### Coordinate Accessors
 
 All coordinate accessors are available through the class
 `ROOT::Math::`**`DisplacementVector3D`**:
@@ -727,7 +727,7 @@ See the reference documentation of
 `ROOT::Math::`**`DisplacementVector3D`** for more details on all the
 coordinate accessors.
 
-### Setter Methods
+#### Setter Methods
 
 One can set only all the three coordinates via:
 
@@ -764,7 +764,7 @@ std::vector w(3);
 v.SetCoordinates(w.begin(),w.end());
 ```
 
-### Arithmetic Operations
+#### Arithmetic Operations
 
 The following operations are possible between vector classes, even of
 different coordinate system types: (`v1,v2` are any type of
@@ -784,7 +784,7 @@ v3 = v1 + v2;
 v3 = v1 - v2;
 ```
 
-### Comparison
+#### Comparison
 
 For `v1` and `v2` of the same type (same coordinate system and same
 scalar type):
@@ -794,7 +794,7 @@ v1 == v2;
 v1 != v2;
 ```
 
-### Dot and Cross Product
+#### Dot and Cross Product
 
 We support the dot and cross products, through the `Dot()` and `Cross()`
 method, with any vector (`q`) implementing `x()`, `y()` and `z()`.
@@ -808,14 +808,14 @@ XYZVector v2 = v1.Cross(q);
 Note that the multiplication between two vectors using the operator `*`
 is not supported because it is ambiguous.
 
-### Other Methods
+#### Other Methods
 
 ``` {.cpp}
 XYZVector u = v1.Unit();               //return unit vector parallel to v1
 ```
 
-Example: 3D Point Classes
--------------------------
+### Example: 3D Point Classes
+
 
 To use all possible types of 3D points one must include the header file
 `Math/Point3D.h`. The following typedef’s defined in the header file
@@ -848,7 +848,7 @@ template class **`ROOT::Math`**`::`**`PositionVector3D`**:
     `phi` coordinates (cylindrical using eta instead of `z`) in float
     precision
 
-### Constructors and Assignment
+#### Constructors and Assignment
 
 The following declarations are available:
 
@@ -872,12 +872,12 @@ CLHEP::HepThreePoint q(1,2,3);
 XYZPoint             p3(q);
 ```
 
-### Coordinate Accessors and Setter Methods
+#### Coordinate Accessors and Setter Methods
 
 For the points classes we have the same getter and setter methods as for
 the vector classes. See “Example: 3D Vector Classes”.
 
-### Point-Vector Operations
+#### Point-Vector Operations
 
 The following operations are possible between points and vector classes:
 (`p1`, `p2` and `p3` are instantiations of the
@@ -899,7 +899,7 @@ v2 = p1 - p2;    //difference between points returns a vector v2 based on the
 Note that the addition between two points is **NOT** possible and the
 difference between points returns a vector.
 
-### Other Operations
+#### Other Operations
 
 Exactly as for the 3D Vectors, the following operations are allowed:
 
@@ -909,8 +909,8 @@ Exactly as for the 3D Vectors, the following operations are allowed:
 
 -   dot and cross product with any type of vector
 
-Example: LorentzVector Classes
-------------------------------
+### Example: LorentzVector Classes
+
 
 As in the 3D case, typedef’s are defined for user convenience. and can
 be used by including the header file `Math/Vector4D.h`. The following
@@ -935,7 +935,7 @@ available for the different instantiations of the template class
 
 The metric used for all the LorentzVector is (`-,-,-,+`) .
 
-### Constructors and Assignment
+#### Constructors and Assignment
 
 The following declarations are available:
 
@@ -962,7 +962,7 @@ CLHEP::HepLorentzVector q(1,2,3,4);
 XYZTVector              v3(q);
 ```
 
-### Coordinate Accessors
+#### Coordinate Accessors
 
 All the same coordinate accessors are available through the interface of
 `ROOT::Math::`**`LorentzVector`**. For example:
@@ -991,7 +991,7 @@ v1.GetCoordinates(w.begin(),w.end()); //fill std::vector with (x,y,z,t)
 To get information on all the coordinate accessors see the
 `ROOT::Math::`**`LorentzVector`** reference documentation.
 
-### Setter Methods
+#### Setter Methods
 
 One can set only all the three coordinates via:
 
@@ -1029,7 +1029,7 @@ std::vector w(4);
 v.SetCoordinates(w.begin(),w.end());
 ```
 
-### Arithmetic Operations
+#### Arithmetic Operations
 
 The following operations are possible between Lorentz vectors classes,
 even of different coordinate system types: (`v` and` w` are two Lorentz
@@ -1050,14 +1050,14 @@ w = a * v;
 w = v / a;
 ```
 
-### Comparison
+#### Comparison
 
 ``` {.cpp}
 v == w;
 v != w;
 ```
 
-### Other Methods
+#### Other Methods
 
 ``` {.cpp}
 a =  v.Dot(q);               //dot product in metric(+,+,+,-) of 2 LorentzVectors
@@ -1068,8 +1068,8 @@ XYZVector b = v.BoostToCM(); //return boost vector which will bring the Vector
 //in its mas frame (P=0)
 ```
 
-Example: Vector Transformations
--------------------------------
+### Example: Vector Transformations
+
 
 Transformation classes are grouped in rotations (in three dimensions),
 Lorentz transformations and Poincarre transformations, which are
@@ -1126,7 +1126,7 @@ Lorentz rotations and boosts
 
 -   `ROOT::Math::`**`BoostZ`**, a boost in the Z axis direction
 
-### Constructors
+#### Constructors
 
 All rotations and transformations are default constructible (giving the
 identity transformation). All rotations are constructible taking a
@@ -1178,7 +1178,7 @@ Transform3D t3(r);     //construct from only a rotation (zero translation)
 Transform3D t4(v);     //construct from only translation (identity rotation)
 ```
 
-### Operations
+#### Operations
 
 All transformations can be applied to vector and points using the
 operator \* or using the operator()
@@ -1224,7 +1224,7 @@ Rotation3D  r2 =r1.Inverse();  //return the inverse in a new rotation class
 We have used rotation as examples, but all these operations can be
 applied to all the transformation classes.
 
-### Set/GetComponents Methods
+#### Set/GetComponents Methods
 
 Common methods to all transformations are `Get` and `SetComponents`.
 They can be used to retrieve all the scalar values on which the
@@ -1250,10 +1250,10 @@ implements the `operator(i,j)` or a different signatures depending on
 the transformation type. For more details on all methods see the
 reference documentation of any specific transformation class.
 
-Example with External Packages
-------------------------------
+### Example with External Packages
 
-### Connection to Linear Algebra Classes
+
+#### Connection to Linear Algebra Classes
 
 It is possible to use the vector and rotation classes together with the
 linear algebra classes and to set and get the contents of any 3D or 4D
@@ -1296,7 +1296,7 @@ TMatrixD(4,4)   m;
 LorentzRotation r(m);       //create Lorentz r
 ```
 
-### Connection to Other Vector Classes
+#### Connection to Other Vector Classes
 
 The 3D and 4D vectors of the `GenVector` package can be constructed and
 assigned from any vector which satisfies the following requisites:
@@ -1313,8 +1313,8 @@ HepGeom::Point3D  hp;
 XYZPoint          p1(hp);      //create a 3D p
 ```
 
-MathMore Library
-================
+## MathMore Library
+
 
 The `MathMore` library provides an advanced collection of functions and
 C++ classes for numerical computing. This is an extension of the
@@ -1372,8 +1372,8 @@ More information on the classes and functions present in `MathMore` is
 available in the
 [online reference documentation](online reference documentation).
 
-Mathematical Functions
-======================
+## Mathematical Functions
+
 
 The mathematical functions are present in both `MathCore` and `MathMore`
 libraries. All mathematical functions are implemented as free functions
@@ -1385,8 +1385,8 @@ same defined in the C++
 [Technical Report on Standard Library extensions](Technical Report on Standard Library extensions).
 The special functions are defined in the header file `Math/SpecFunc.h`.
 
-Special Functions in MathCore
------------------------------
+### Special Functions in MathCore
+
 
 -   `ROOT::Math::beta(double x,double y) - `evaluates the beta function:
     ![](pictures/0600010E.png)
@@ -1401,8 +1401,8 @@ Special Functions in MathCore
 -   `double ``ROOT::Math::tgamma(double x)` - calculates the gamma
     function: ![](pictures/06000111.png)
 
-Special Functions in MathMore
------------------------------
+### Special Functions in MathMore
+
 
 -   `double ``ROOT::Math::assoc_legendre(unsigned l,unsigned m,double x) -`computes
     the associated Legendre polynomials (with *`m>=0`, `l>=m` and
@@ -1476,8 +1476,8 @@ Special Functions in MathMore
     irregular spherical Bessel functions or spherical Neumann
     functions):![](pictures/06000124.png)
 
-Probability Density Functions (PDF)
------------------------------------
+### Probability Density Functions (PDF)
+
 
 Probability density functions of various distributions. All the
 functions, apart from the discrete ones, have the extra location
@@ -1506,8 +1506,8 @@ double ROOT::Math::tdistribution_pdf(double x,double r,double x0=0);
 double ROOT::Math::uniform_pdf(double x,double a,double b,double x0=0);
 ```
 
-Cumulative Distribution Functions (CDF)
----------------------------------------
+### Cumulative Distribution Functions (CDF)
+
 
 For all the probability density functions, we have the corresponding
 cumulative distribution functions and their complements. The functions
@@ -1543,7 +1543,7 @@ The cumulative distributions functions are defined in the header file
 `MathCore`, apart from the `chisquared`, `fdistribution`, `gamma` and
 `tdistribution`, which are in the `MathMore` library.
 
-### Inverse of the Cumulative Distribution Functions(Quantiles)
+#### Inverse of the Cumulative Distribution Functions(Quantiles)
 
 For almost all the cumulative distribution functions (`_cdf`) and their
 complements (`_cdf_c`) present in the library, we provide the inverse
@@ -1562,8 +1562,8 @@ The following picture illustrates the available statistical functions
 ![PDF, CDF and quantiles in the case of the normal
 distribution](pictures/03000128.png)
 
-Linear Algebra: SMatrix Package
-===============================
+## Linear Algebra: SMatrix Package
+
 
 The ROOT Linear algebra package is documented in a separate chapter (see
 “Linear Algebra in ROOT”). `SMatrix` is a C++ package, for high
@@ -1616,8 +1616,8 @@ classes. More detailed information about the `SMatrix` classes API is
 available in the
 [online reference documentation](online reference documentation).
 
-Example: Vector Class (SVector)
--------------------------------
+### Example: Vector Class (SVector)
+
 
 The template class **`ROOT::Math::SVector`** represents `n`-dimensional
 vectors for objects of arbitrary type. This class has 2 template
@@ -1626,7 +1626,7 @@ contained elements (for example *float* or *double*); 2) size of the
 vector. The use of this dictionary is mandatory if one want to use
 `Smatrix` in CINT and with I/O.
 
-### Creating a Vector
+#### Creating a Vector
 
 The following constructors are available to create a vector:
 
@@ -1654,7 +1654,7 @@ double d[3] = {1,2,3};
 SVector<double,3> v(d,3);  //create a vector from a C array
 ```
 
-### Accessing and Setting Methods
+#### Accessing and Setting Methods
 
 The single vector elements can be set or retrieved using the
 `operator[i]`, `operator(i)` or the iterator interface. Notice that the
@@ -1691,8 +1691,8 @@ w = v.Sub < SVector>double,M> > (ioff);
 For the vector functions see later in the Matrix and Vector Operators
 and Functions paragraph.
 
-Example: Matrix Class (SMatrix)
--------------------------------
+### Example: Matrix Class (SMatrix)
+
 
 The template class **`ROOT::Math::SMatrix`** represents a matrix of
 arbitrary type with `nrows` `x` `ncol` dimension. The class has 4
@@ -1728,7 +1728,7 @@ template parameters, which define at compile time, its properties:
 
 -   ![](pictures/0600012A.png)
 
-### Creating a Matrix
+#### Creating a Matrix
 
 The following constructors are available to create a matrix:
 
@@ -1794,7 +1794,7 @@ SMatrixSym3  s(v.begin(),v.end())   // this will produce the symmetric  matrix
 SMatrix33    m2 = s;
 ```
 
-### Accessing and Setting Methods
+#### Accessing and Setting Methods
 
 The matrix elements can be set using the `operator()(irow,icol)`, where
 `irow` and `icol` are the row and column indexes or by using the
@@ -1868,7 +1868,7 @@ SVector6 vub = m.UpperBlock();        //  vub = [ 1, 2, 3, 5, 6, 9 ]
 SVector6 vlb = m.LowerBlock();        //  vlb = [ 1, 4, 5, 7, 8, 9 ]
 ```
 
-### Linear Algebra Matrix Functions (Inversion, Determinant)
+#### Linear Algebra Matrix Functions (Inversion, Determinant)
 
 Only limited linear algebra functionality is available for `SMatrix`. It
 is possible for squared matrices `NxN`, to find the inverse or to
@@ -1897,10 +1897,10 @@ bool ret = m.Det(det);
 bool ret = n.Det2(det);
 ```
 
-Example: Matrix and Vector Functions and Operators
---------------------------------------------------
+### Example: Matrix and Vector Functions and Operators
 
-### Matrix and Vector Operators
+
+#### Matrix and Vector Operators
 
 The **`ROOT::Math::SVector`** and **`ROOT::Math::SMatrix`** classes
 define the following operators described below. The `m1`, `m2`, `m3` are
@@ -1957,8 +1957,8 @@ The operation compiles only if the matrices have the right size. In the
 case that `A` and `B` are symmetric matrices, `C` is a general one,
 since their product is not guaranteed to be symmetric.
 
-Matrix and Vector Functions
----------------------------
+### Matrix and Vector Functions
+
 
 The most used matrix functions are:
 
@@ -1994,7 +1994,7 @@ The major vector functions are:
 For a list of all the available matrix and vector functions see the
 `SMatrix` online reference documentation.
 
-### Matrix and Vector I/O
+#### Matrix and Vector I/O
 
 One can print (or write in an output stream) Vectors and Matrices) using
 the `Print` method or the `<<` operator:
@@ -2010,8 +2010,8 @@ and `SVector` for for **`Double_t`**, **`Float_t`** and **`Double32_t`**
 up to dimension 7. This allows the possibility to store them in a ROOT
 file.
 
-Minuit2 Package
-===============
+## Minuit2 Package
+
 
 `Minuit2` is a new object-oriented implementation, written in C++, of
 the popular `MINUIT` minimization package. Compared with the
@@ -2074,11 +2074,11 @@ F. James, *Minuit Tutorial on Function Minimization* (
 Interpretation of Errors in Minuit* (
 <http://seal.cern.ch/documents/minuit/mnerror.pdf>);
 
-ROOT Statistics Classes
-=======================
+## ROOT Statistics Classes
 
-Classes for Computing Limits and Confidence Levels
---------------------------------------------------
+
+### Classes for Computing Limits and Confidence Levels
+
 
 **`TFeldmanCousins`** class calculates the `CL` upper/lower limit for a
 Poisson process using the Feldman-Cousins method (as described in PRD
@@ -2100,8 +2100,8 @@ in a `TLimitDataSource` as input, and runs a set of Monte Carlo
 experiments in order to compute the limits. If needed, inputs are
 fluctuated according to systematic.
 
-Specialized Classes for Fitting
--------------------------------
+### Specialized Classes for Fitting
+
 
 **`TFractionFitter`** fits Monte Carlo (MC) fractions to data histogram
 (a la HMCMLL, R. Barlow and C. Beeston, Comp. Phys. Comm. 77 (1993)
@@ -2134,8 +2134,8 @@ validity of the fit producing distributions for the control variables.
 (see M. Pivk and F.R. Le Diberder, Nucl. Inst. Meth.A 555, 356-369,
 2005).
 
-Multi-variate Analysis Classes
-------------------------------
+### Multi-variate Analysis Classes
+
 
 **`TMultiLayerPerceptron`** is a Neural Network class (see for more
 details the chapter “Neural Networks”).

@@ -1,8 +1,8 @@
-Adding a Class
-==============
+# Adding a Class
 
-The Role of TObject
-===================
+
+## The Role of TObject
+
 
 The light-weight **`TObject`** class provides the default behavior and
 protocol for the objects in the ROOT system. Specifically, it is the
@@ -10,8 +10,8 @@ primary interface to classes providing object I/O, error handling,
 inspection, introspection, and drawing. The interface to this service is
 via abstract classes.
 
-Introspection, Reflection and Run Time Type Identification
-----------------------------------------------------------
+### Introspection, Reflection and Run Time Type Identification
+
 
 Introspection, which is also referred to as reflection, or run time type
 identification (RTTI) is the ability of a class to reflect upon itself
@@ -55,8 +55,8 @@ obj->DrawClass(); // Draws the class inheritance tree
 
 For an example of `obj->Inspect()`, see "Inspecting Objects".
 
-Collections
------------
+### Collections
+
 
 To store an object in a ROOT collection, it must be a descendent of
 **`TObject`**. This is convenient if you want to store objects of
@@ -67,16 +67,16 @@ the canvas is drawn, the `Paint` method is executed on the entire
 collection. Each member may be a different class, and if the `Paint`
 method is not implemented, **`TObject::Paint` will be executed.**
 
-Input/Output
-------------
+### Input/Output
+
 
 The `TObject::Write` method is the interface to the ROOT I/O system. It
 streams the object into a buffer using the `Streamer` method. It
 supports cycle numbers and automatic schema evolution. See
 “Input/Output”.
 
-Paint/Draw
-----------
+### Paint/Draw
+
 
 These graphics methods are defaults; their implementation in
 **`TObject`** does not use the graphics subsystem. The `TObject::Draw`
@@ -86,16 +86,16 @@ method `GetDrawOption` returns the draw option that was used when the
 object was drawn on the canvas. This is especially relevant with
 histograms and graphs.
 
-Clone/DrawClone
----------------
+### Clone/DrawClone
+
 
 Two useful methods are `Clone` and `DrawClone`. The `Clone` method takes
 a snapshot of the object with the `Streamer` and creates a new object.
 The `DrawClone` method does the same thing and in addition draws the
 clone.
 
-Browse
-------
+### Browse
+
 
 This method is called if the object is browse-able and is to be
 displayed in the object browser. For example the **`TTree`**
@@ -105,8 +105,8 @@ object's `Browse` method to be called, the `IsFolder()` method must be
 overridden to return true. This does not mean it has to be a folder, it
 just means that it is browse-able.
 
-SavePrimitive
--------------
+### SavePrimitive
+
 
 This method is called by a canvas on its list of primitives, when the
 canvas is saved as a script. The purpose of `SavePrimitve` is to save a
@@ -116,8 +116,8 @@ implemented in user defined classes if it is to be drawn on a canvas.
 Such that the command `TCanvas::SaveAs(Canvas.C)` will preserve the
 user-class object in the resulting script.
 
-GetObjectInfo
--------------
+### GetObjectInfo
+
 
 This method is called when displaying the event status in a canvas. To
 show the event status window, select the `Options` menu and the
@@ -129,8 +129,8 @@ shown in the status bar. There is a default implementation in
 report peculiarities for different cursor positions (for example the bin
 contents in a TH1).
 
-IsFolder
---------
+### IsFolder
+
 
 By default an object inheriting from **`TObject`** is not brows-able,
 because **`TObject::IsFolder()` returns `kFALSE`. To make a class
@@ -138,8 +138,8 @@ browse-able, the `IsFolder` method needs to be overridden to return
 `kTRUE`. In general, this method returns `kTRUE` if the object contains
 browse-able objects (like containers or lists of other objects).**
 
-Bit Masks and Unique ID
------------------------
+### Bit Masks and Unique ID
+
 
 A **`TObject`** descendent inherits two data members: `fBits` and
 `fUniqueID`. `fBits `is 32-bit data member used with a bit mask to get
@@ -191,8 +191,8 @@ to` IgnoreTObjectStreamer` also prevents the creation of two additional
 branches when splitting the object. If left alone, two branches called
 `fBits` and `fUniqueID` will appear.
 
-Motivation
-==========
+## Motivation
+
 
 If you want to integrate and use your classes with ROOT, to enjoy
 features like, extensive RTTI (Run Time Type Information) and ROOT
@@ -238,8 +238,8 @@ Default Constructor” paragraph in this chapter. The `ClassDef` and
 referenced by all ROOT include files, so you will automatically get them
 if you use a ROOT include file.
 
-Template Support
-----------------
+### Template Support
+
 
 In ROOT version 3.03 and older, ROOT provided special `ClassDef` and
 `ClassImp` macros for classes with two and three template arguments. In
@@ -314,8 +314,8 @@ public:
 #endif
 ```
 
-The Default Constructor
-=======================
+## The Default Constructor
+
 
 ROOT object I/O requires every class to have either a default
 constructor or an I/O constructor. A default constructor is a
@@ -388,8 +388,8 @@ MyClass(TRootIoCtor*);
 MyClass();   // Or a constructor with all its arguments defaulted.
 ```
 
-rootcint: The CINT Dictionary Generator
-=======================================
+## rootcint: The CINT Dictionary Generator
+
 
 In the following example, we walk through the steps necessary to
 generate a dictionary, I/O, and inspect member functions. Let's start
@@ -553,8 +553,8 @@ ClassDef(TEvent,0);
 If you want to prevent the generation of` Streamer()`, see the chapter
 "Adding a Class with a Shared Library".
 
-Dictionaries for STL
---------------------
+### Dictionaries for STL
+
 
 Usually, headers are passed to rootcint at the command line. To generate
 a dictionary for a class from the STL, e.g.
@@ -572,8 +572,8 @@ any template combination (e.g. **vector\<myClass\>**) when it is needed,
 by generating files starting with **AutoDict\***. You can toggle this
 feature on or off at the ROOT prompt by executing **.autodict**.
 
-Adding a Class with a Shared Library
-====================================
+## Adding a Class with a Shared Library
+
 
 **Step 1:**Define your own class in `SClass.h` and implement it in
 `SClass.cxx`. You must provide a default constructor or an I/O
@@ -625,8 +625,8 @@ add a `!` as the first character in the comments of the field:
 Int_t     fTempValue; //! temporary state value
 ```
 
-The LinkDef.h File
-------------------
+### The LinkDef.h File
+
 
 **Step 3:**The `LinkDef.h` file tells `rootcint` for which classes to
 generate the method interface stubs.
@@ -678,7 +678,7 @@ run-time performance. We strongly recommend using it.
 For information on `Streamers` see “Input/Output”. To get help on
 `rootcint` type on the UNIX command line: **`rootcint -h`**
 
-### The Order Matters
+#### The Order Matters
 
 When using template classes, the order of the pragma statements matters.
 For example, here is a template class `Tmpl` and a normal class `Norm`,
@@ -724,7 +724,7 @@ causes the error. However, if the `Linkdef.h` order is reversed then
 `rootcint` can generate the specialized `Tmpl<int>::Streamer()` before
 it is needed (and thus never instantiated by the compiler).
 
-### Other Useful Pragma Statements
+#### Other Useful Pragma Statements
 
 The complete list of pragma statements currently supported by CINT is:
 
@@ -1100,7 +1100,7 @@ double e;
 #endif
 ```
 
-### Compilation
+##### Compilation
 
 **Step 4:** Compile the class using the `Makefile. `In the `Makefile`
 call `rootcint` to make the dictionary for the class. Call it
@@ -1109,7 +1109,7 @@ call `rootcint` to make the dictionary for the class. Call it
 classes.
 
 ``` {.cpp}
-gmake –f Makefile
+gmake -f Makefile
 ```
 
 Load the shared library:
@@ -1125,8 +1125,8 @@ For more information on `rootcint` see the `$ROOTSYS/test` directory
 `Makefile`, `Event.cxx`, and `Event.h` for an example, or follow this
 link: <http://root.cern.ch/root/RootCintMan.html>
 
-Adding a Class with ACLiC
-=========================
+## Adding a Class with ACLiC
+
 
 **Step 1:** Define your class
 
