@@ -1,5 +1,5 @@
-Getting Started
-===============
+# Getting Started
+
 
 We begin by showing you how to use ROOT interactively. There are two
 examples to click through and learn how to use the GUI. We continue by
@@ -8,8 +8,8 @@ variables and the environment setup. If you have not installed ROOT, you
 can do so by following the instructions in the appendix, or on the ROOT
 web site: <http://root.cern.ch/root/Availability.html>
 
-Setting the Environment Variables
-=================================
+## Setting the Environment Variables
+
 
 Before you can run ROOT you need to set the environment variable
 `ROOTSYS` and change your path to include `root/bin` and library path
@@ -79,8 +79,8 @@ The new `$ROOTSYS/bin/thisroot.[c]sh` scripts will set correctly the
 `ROOTSYS`, `LD_LIBRARY_PATH` or other paths depending on the platform
 and the `MANPATH`. To run the program just type: `root`.
 
-Start and Quit a ROOT Session
-=============================
+## Start and Quit a ROOT Session
+
 
 ``` {.cpp}
 % root
@@ -188,8 +188,8 @@ To exit the ROOT session, type `.q`.
 root[] .q
 ```
 
-Using the GUI
-=============
+## Using the GUI
+
 
 The basic whiteboard on which an object is drawn in ROOT is called a
 canvas (defined by the class **`TCanvas`**). Every object in the canvas
@@ -242,13 +242,13 @@ The following components comprise the canvas window:
 -   Editor frame - responds dynamically and presents the user interface
     according to the selected object in the canvas.
 
-Main Menus and Toolbar
-----------------------
+### Main Menus and Toolbar
+
 
 At the top of the canvas window are File, Edit, View, Options, Inspect,
 Classes and Help menus.
 
-### File Menu
+#### File Menu
 
 ![](pictures/0300000B.png)
 
@@ -271,7 +271,7 @@ Classes and Help menus.
 
 -   *Quit ROOT*: exit the ROOT session
 
-### Edit Menu
+#### Edit Menu
 
 There is only one active menu entry in the Edit menu. The others menu
 entries will be implemented and will become active in the near future.
@@ -280,7 +280,7 @@ entries will be implemented and will become active in the near future.
     or in the selected pad according to the selected entry in the
     submenu.
 
-### View Menu
+#### View Menu
 
 -   *Editor*: toggles the view of the editor. If it is selected
     activates and shows up the editor on the left side of the canvas
@@ -311,7 +311,7 @@ entries will be implemented and will become active in the near future.
     interactively rotated, zoomed in wire-frame, solid, hidden line or
     stereo mode.
 
-### Options Menu
+#### Options Menu
 
 ![](pictures/0300000D.png)
 
@@ -349,7 +349,7 @@ entries will be implemented and will become active in the near future.
 -   *Can Edit Histogram*: enables/disables the possibility to edit
     histogram bin contents.
 
-### Inspect Menu
+#### Inspect Menu
 
 ![](pictures/0300000E.png)
 
@@ -361,12 +361,12 @@ entries will be implemented and will become active in the near future.
 -   *GUI Builder*: starts the GUI builder application (in a separate
     window).
 
-### Classes Menu
+#### Classes Menu
 
 -   *Classes*: starts the ClassTree viewer that draws inheritance tree
     for a list of classes.
 
-### Help Menu
+#### Help Menu
 
 ![](pictures/0300000F.png)
 
@@ -385,7 +385,7 @@ entries will be implemented and will become active in the near future.
 
 -   *About ROOT*: pops up the ROOT Logo with the version number.
 
-### Toolbar
+#### Toolbar
 
 The following menu shortcuts and utilities are available from the
 toolbar:
@@ -496,8 +496,8 @@ generate a script with the C++ statements corresponding to the picture.
 This facility also works if you have other objects not drawn with the
 graphics editor (histograms for example).
 
-The Editor Frame
-----------------
+### The Editor Frame
+
 
 The ROOT graphics editor loads the corresponding object editor
 `objEditor` according to the selected object `obj` in the canvas
@@ -533,8 +533,8 @@ v.4.04: **`TAttLine`**, **`TAttFill`**, **`TAttMarker`**,
 Graphics Editor”, “The User Interface for Histograms”, “The User
 Interface for Graphs”.
 
-Classes, Methods and Constructors
----------------------------------
+### Classes, Methods and Constructors
+
 
 Object oriented programming introduces objects, which have data members
 and methods. The next line creates an object named `f1` of the class
@@ -594,8 +594,8 @@ root[] f1.SetNpx(2000);
 Note that while the ROOT framework is an object-oriented framework, this
 does not prevent the user from calling plain functions.
 
-User Interaction
-----------------
+### User Interaction
+
 
 Now we will look at some interactive capabilities. Try to draw the
 function `sin(x)/x` again. Every object in a window (which is called a
@@ -630,8 +630,8 @@ ROOT format (`.root `file). This will enable you to open it again and to
 change whatever you like. All objects associated to the canvas
 (histograms, graphs) are saved at the same time.
 
-Building a Multi-pad Canvas
----------------------------
+### Building a Multi-pad Canvas
+
 
 Let us now try to build a canvas with several pads.
 
@@ -679,8 +679,8 @@ root[] MyC_3->cd()
     object `MyC_3`. ROOT will find the pad that was named` MyC_3 `when
     you typed it on the command line (see ROOT/CINT Extensions to C++).
 
-Saving the Canvas
------------------
+### Saving the Canvas
+
 
 ![](pictures/0300002B.png)
 
@@ -698,8 +698,8 @@ If the Ovewrite check box is not selected, a message dialog appears
 asking the user to overwrite the file (Yes/No). The user choice is saved
 for the next time the Save As… dialog shows up.
 
-Printing the Canvas
--------------------
+### Printing the Canvas
+
 
 The Print command in the canvas File menu pops-up a print dialog where
 the user can specify a preferred print command and the printer name.
@@ -722,8 +722,8 @@ will be replaced by the specified printer name and the file name. All
 other parameters will be kept as they are written. A print button is
 available in the canvas toolbar (activated via View menu/Toolbar).
 
-The ROOT Command Line
-=====================
+## The ROOT Command Line
+
 
 We have briefly touched on how to use the command line. There are
 different types of commands.
@@ -748,8 +748,8 @@ root[] .! ls
 root[] TBrowser *b = new TBrowser()
 ```
 
-Multi-line Commands
--------------------
+### Multi-line Commands
+
 
 You can use the command line to execute multi-line commands. To begin a
 multi-line command you must type a single left curly bracket `{`, and to
@@ -773,14 +773,14 @@ It is more convenient to edit a script than the command line, and if
 your multi line commands are getting unmanageable, you may want to start
 with a script instead.
 
-CINT Extensions
----------------
+### CINT Extensions
+
 
 We should say that some things are not standard C++. The CINT
 interpreter has several extensions. See “ROOT/CINT Extensions to C++”.
 
-Helpful Hints for Command Line Typing
--------------------------------------
+### Helpful Hints for Command Line Typing
+
 
 The interpreter knows all the classes, functions, variables, and user
 defined types. This enables ROOT to help users to complete the command
@@ -808,8 +808,8 @@ TLine TLine(Double_t x1,Double_t y1,Double_t x2,Double_t y2)
 TLine TLine(const TLine& line)
 ```
 
-Regular Expression
-------------------
+### Regular Expression
+
 
 The meta-characters below can be used in a regular expression:
 
@@ -878,14 +878,14 @@ Ssiz_t Index(const TString& string,Ssiz_t* len,Ssiz_t i) const
 The method finds the first occurrence of the regular expression in the
 `string` and returns its position.
 
-Conventions
-===========
+## Conventions
+
 
 In this paragraph, we will explain some of the conventions used in ROOT
 source and examples.
 
-Coding Conventions
-------------------
+### Coding Conventions
+
 
 From the first days of ROOT development, it was decided to use a set of
 coding conventions. This allows a consistency throughout the source
@@ -918,8 +918,8 @@ These are the coding conventions:
 -   Getters and setters begin with **`Get`** and **`Set`**:`SetLast`(),
     `GetFirst`()
 
-Machine Independent Types
--------------------------
+### Machine Independent Types
+
 
 Different machines may have different lengths for the same type. The
 most famous example is the `int` type. It may be 16 bits on some old
@@ -955,8 +955,8 @@ If you do not want to save a variable on disk, you can use `int` or
 `Int_t`, the result will be the same and the interpreter or the compiler
 will treat them in exactly the same way.
 
-TObject
--------
+### TObject
+
 
 In ROOT, almost all classes inherit from a common base class called
 **`TObject`**. This kind of architecture is also used in the Java
@@ -988,16 +988,16 @@ Role of TObject".
 
 -   Object browsing (`Browse()`, `IsFolder())`
 
-Global Variables
-================
+## Global Variables
+
 
 ROOT has a set of global variables that apply to the session. For
 example, ***`gDirectory`*** always holds the current directory, and
 ***`gStyle`*** holds the current style. All global variables begin with
 “*g*” followed by a capital letter.
 
-gROOT
------
+### gROOT
+
 
 The single instance of **`TROOT`** is accessible via the global
 ***`gROOT`*** and holds information relative to the current session. By
@@ -1039,20 +1039,20 @@ root[]gROOT->GetListOfCanvases()->FindObject("c1")
 This returns a pointer to a **`TObject`**, and before you can use it as
 a canvas you need to cast it to a **`TCanvas*`.**
 
-gFile
------
+### gFile
+
 
 ***`gFile`*** is the pointer to the current opened file in the ROOT
 session.
 
-gDirectory
-----------
+### gDirectory
+
 
 ***`gDirectory`*** is a pointer to the current directory. The concept
 and role of a directory is explained in the chapter “Input/Output”.
 
-gPad
-----
+### gPad
+
 
 A graphic object is always drawn on the active pad. It is convenient to
 access the active pad, no matter what it is. For that, we have
@@ -1067,8 +1067,8 @@ root[] gPad->SetFillColor(38)
 To get the list of colors, if you have an open canvas, click in the
 "View" menu, selecting the "Colors" entry.
 
-gRandom
--------
+### gRandom
+
 
 ***`gRandom`*** is a pointer to the current random number generator. By
 default, it points to a **`TRandom``3`** object, based on the
@@ -1091,8 +1091,8 @@ root[] gRandom = new TRandom2(0); //seed=0
 **`TRandom``2`** is another generator, which is also very fast and uses
 only three words for its state.
 
-gEnv
-----
+### gEnv
+
 
 **`gEnv`** is the global variable (of type **`TEnv`**) with all the
 environment settings for the current session. This variable is set by
@@ -1100,8 +1100,8 @@ reading the contents of a `.rootrc` file (or
 `$ROOTSYS/etc/system.rootrc`) at the beginning of the root session. See
 Environment Setup below for more information.
 
-Environment Setup
-=================
+## Environment Setup
+
 
 The behavior of a ROOT session can be tailored with the options in the
 .`rootrc` file. At start-up, ROOT looks for a .`rootrc` file in the
@@ -1156,8 +1156,8 @@ ROOT looks for scripts in the path specified in the `.rootrc` file in
 the `Root.Macro.Path` variable. You can expand this path to hold your
 own directories.
 
-Logon and Logoff Scripts
-------------------------
+### Logon and Logoff Scripts
+
 
 The `rootlogon.C` and `rootlogoff.C` files are scripts loaded and
 executed at start-up and shutdown. The `rootalias.C` file is loaded but
@@ -1174,8 +1174,8 @@ root[0] edit("c1.C")
 
 For more details, see `$ROOTSYS/tutorials/rootalias.C`.
 
-History File
-------------
+### History File
+
 
 You can use the up and down arrow at the command line, to access the
 previous and next command. The commands are recorded in the history file
@@ -1199,8 +1199,8 @@ the above values can be overriden - the first value corresponds to
 `HistSize`, the (optional) second one to `HistSave`. You can set
 `ROOT_HIST=0` to disable the history.
 
-Tracking Memory Leaks
----------------------
+### Tracking Memory Leaks
+
 
 You can track memory usage and detect leaks by monitoring the number of
 objects that are created and deleted (see **`TObjectTable`**). To use
@@ -1224,8 +1224,8 @@ see objects that you forgot to delete. Note that this method cannot show
 leaks coming from the allocation of non-objects or classes unknown to
 ROOT.
 
-Memory Checker
---------------
+### Memory Checker
+
 
 A memory checking system was developed by D.Bertini and M.Ivanov and
 added in ROOT version 3.02.07. To activate the memory checker you can
@@ -1239,8 +1239,8 @@ of a file. The memory information will be written to that file. The
 contents of this `memcheck.out` can be analyzed and transformed into
 printable text via the `memprobe` program (in `$ROOTSYS/bin`).
 
-Converting from PAW to ROOT
-===========================
+## Converting from PAW to ROOT
+
 
 The web page at:
 <http://root.cern.ch/root/HowtoConvertFromPAW.html#TABLE> gives the
@@ -1249,8 +1249,8 @@ move the mouse cursor over the picture at:
 <http://root.cern.ch/root/HowtoConvertFromPAW.html#SET>, you will get
 the corresponding ROOT commands as tooltips.
 
-Converting HBOOK/PAW Files
---------------------------
+### Converting HBOOK/PAW Files
+
 
 ROOT has a utility called `h2root` that you can use to convert your
 HBOOK/PAW histograms or ntuple files into ROOT files. To use this
