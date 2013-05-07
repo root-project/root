@@ -1,5 +1,4 @@
-Introduction
-============
+# Introduction
 
 In the mid 1990's, René Brun and Fons Rademakers had many years of
 experience developing interactive tools and simulation packages. They
@@ -47,8 +46,8 @@ looking for, and if you have found a hole, you are encouraged to
 participate in the dialog and post your suggestion or even
 implementation on `roottalk`, the ROOT mailing list.
 
-The ROOT Mailing Lists
-======================
+## The ROOT Mailing Lists
+
 
 The `roottalk` was the very first active ROOT mailing list. mailing list
 People can subscribe to it by registering at the ROOT web site:
@@ -67,8 +66,8 @@ You can browse the `roottalk` archives at:
 <http://root.cern.ch/root/roottalk/AboutRootTalk.html>. You can send
 your question without subscribing to: <roottalk@cern.ch>
 
-Contact Information
-===================
+## Contact Information
+
 
 Several authors wrote this book and you may see a "change of voice" from
 one chapter to the next. We felt we could accept this in order to have
@@ -86,8 +85,8 @@ user looking for special topics may find these chapters useful: see
 “Networking”, “Writing a Graphical User Interface”, “Threads”, and
 “PROOF: Parallel Processing”.
 
-Conventions Used in This Book
-=============================
+## Conventions Used in This Book
+
 
 We tried to follow a style convention for the sake of clarity. The
 styles in used are described below.
@@ -121,16 +120,16 @@ When a variable term is used, it is shown between angled brackets. In
 the example below the variable term \<library\> can be replaced with any
 library in the `$ROOTSYS` directory: `$ROOTSYS/<library>/inc.`
 
-The Framework
-=============
+## The Framework
+
 
 ROOT is an object-oriented framework aimed at solving the data analysis
 challenges of high-energy physics. There are two key words in this
 definition, object oriented and framework. First, we explain what we
 mean by a framework and then why it is an object-oriented framework.
 
-What Is a Framework?
---------------------
+### What Is a Framework?
+
 
 framework
 components
@@ -172,7 +171,7 @@ There are also less commonly used components, as: 3D Graphics, Parallel
 Processing (PROOF), Run Time Type Identification (RTTI), Socket and
 Network Communication, Threads. RTTI
 
-### Advantages of Frameworks
+#### Advantages of Frameworks
 
 The benefits of frameworks can be summarized as follows:
 
@@ -195,8 +194,8 @@ The benefits of frameworks can be summarized as follows:
     user interfaces, graphics, or networking to use the frameworks that
     provide those services.
 
-Why Object-Oriented?
---------------------
+### Why Object-Oriented?
+
 
 Object-Oriented Programming offers considerable benefits compared to
 Procedure-Oriented Programming:
@@ -219,8 +218,8 @@ Procedure-Oriented Programming:
     remains relatively static, increases opportunity for reuse of
     design.
 
-Installing ROOT
-===============
+## Installing ROOT
+
 
 install ROOT
 To install ROOT you will need to go to the ROOT website at:
@@ -274,8 +273,8 @@ platforms
 
 -   `LynxOS`
 
-The Organization of the ROOT Framework
-======================================
+## The Organization of the ROOT Framework
+
 
 framework
 organization
@@ -302,8 +301,8 @@ directories.
 
 ![ROOT framework directories](pictures/02000004.jpg)
 
-\$ROOTSYS/bin
--------------
+### \$ROOTSYS/bin
+
 
 The `bin` directory contains several executables.
 
@@ -339,8 +338,8 @@ The `bin` directory contains several executables.
 |               | **`TNetFile`**)                                            |
 +---------------+------------------------------------------------------------+
 
-\$ROOTSYS/lib
--------------
+### \$ROOTSYS/lib
+
 
 There are several ways to use ROOT, one way is to run the executable by
 typing `root` at the system prompt another way is to link with the ROOT
@@ -446,7 +445,7 @@ marked with a \* are only installed when the options specified them.
 
 -   `libTreeViewer` is the graphical TTree query interface
 
-### Library Dependencies
+#### Library Dependencies
 
 ![ROOT libraries dependencies](pictures/03000005.png)
 
@@ -471,7 +470,7 @@ Library dependencies have different consequences; depending on whether
 you try to build a binary, or you just try to access a class that is
 defined in a library.
 
-### Linktime Library Dependencies
+#### Linktime Library Dependencies
 
 When building your own executable you will have to link against the
 libraries that contain the classes you use. The ROOT reference guide
@@ -504,7 +503,7 @@ histograms you need to link `libHist.so`. If the code has a call to fit
 the histogram, the "fitter" will dynamically load libMinuit if it is not
 yet loaded.
 
-### Plugins: Runtime Library Dependencies for Linking
+#### Plugins: Runtime Library Dependencies for Linking
 
 plugin manager The Plugin Manager **`TPluginManager`** allows postponing
 library dependencies to runtime: a plugin library will only be loaded
@@ -518,7 +517,7 @@ constructor to be called (e.g. “`TRFIOFile()`”). This can be specified
 in the `.rootrc` which already contains many plugin definitions, or by
 calls to `gROOT->GetPluginManager()->AddHandler()`.
 
-### Library Autoloading
+#### Library Autoloading
 
 When using a class in CINT, e.g. in an interpreted source file, ROOT
 will automatically load the library that defines this class. On
@@ -533,8 +532,8 @@ determine which libraries `libALib.so` depends on. It will load these
 libraries first. Otherwise, loading the requested library could cause a
 system (dynamic loader) error due to unresolved symbols.
 
-\$ROOTSYS/tutorials
--------------------
+### \$ROOTSYS/tutorials
+
 
 tutorials The tutorials directory contains many example example scripts.
 They assume some basic knowledge of ROOT, and for the new user we
@@ -572,8 +571,8 @@ you have write access to the tutorials directory, the new files will be
 created in the tutorials directory, otherwise they will be created in
 the user directory.
 
-\$ROOTSYS/test
---------------
+### \$ROOTSYS/test
+
 
 The test directory contains a set of examples example that represent all
 areas of the framework. When a new release is cut, the examples in this
@@ -587,14 +586,14 @@ to read the chapter “Getting Started”. The chapter “The Tutorials and
 Tests” has instructions on how to build all the programs and it goes
 over the examples `Event` and `stress`.
 
-\$ROOTSYS/include
------------------
+### \$ROOTSYS/include
+
 
 The `include` directory contains all header files. It is especially
 important because the header files contain the class definitions.
 
-\$ROOTSYS/\<library\>
----------------------
+### \$ROOTSYS/\<library\>
+
 
 The directories we explored above are available when downloading the
 binaries. When downloading the source you also get a directory for each
@@ -610,8 +609,8 @@ CVS,LinkDef.h,TLorentzRotation.h,TLorentzVector.h,TRotation.h,
 TVector2.h,TVector3.h
 ```
 
-How to Find More Information
-============================
+## How to Find More Information
+
 
 website The ROOT web site has up to date documentation. The ROOT source
 code automatically generates this documentation, so each class is
@@ -629,8 +628,8 @@ on the next page what a typical class documentation web page looks like.
 The ROOT web site also contains in addition to this Reference Guide,
 "How To's", a list of publications and example applications.
 
-Class Reference Guide
----------------------
+### Class Reference Guide
+
 
 reference guide
 The top of any class reference page lets you jump to different parts of
