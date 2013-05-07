@@ -889,7 +889,16 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
    // Returns 0 if a directory with the same name already exists.
    // Note that the directory name may be of the form "a/b/c" to create a hierarchy of directories.
    // In this case, the function returns the pointer to the "a" directory if the operation is successful.
-   
+   //
+   // For example the step to the steps to create first a/b/c and then a/b/d without receiving
+   // and errors are:
+   //    TFile * file = new TFile("afile","RECREATE");
+   //    file->mkdir("a");
+   //    file->cd("a");
+   //    gDirectory->mkdir("b");
+   //    gDirectory->cd("b");
+   //    gDirectory->mkdir("d");
+   //
    if (!name || !title || !strlen(name)) return 0;
    if (!strlen(title)) title = name;
    TDirectory *newdir = 0;
