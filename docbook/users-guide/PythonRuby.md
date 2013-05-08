@@ -213,7 +213,7 @@ Windows) will be created in the
 `$ROOTSYS/lib `(`$ROOTSYS/bin on Windows`) directory and a top Python
 module, `ROOT.py`, will be copied into the same place. The final step is
 to setup the shell environment, which is similar to what is described in
-the chapter ‘Environment Settings’. Note that the `$ROOTSYS` entries are
+the chapter ‘Environment Settings'. Note that the `$ROOTSYS` entries are
 probably already there if you followed the standard instructions, and
 that the `PYTHONDIR` entries should be replaced as appropriate by your
 choice at configuration time, or be left out if you had the
@@ -444,7 +444,7 @@ possible, to the type of the local variable to which they are assigned.
 CINT to the Python interpreter, where it will be referenced with a
 variable called "`label`".
 
-`Prompt()` – Transfer the interactive prompt to Python.
+`Prompt()` - Transfer the interactive prompt to Python.
 
 With the ROOT v4.00/06 and later, the **`TPython`** class will be loaded
 automatically on use, for older editions, the `libPyROOT.so` needs to be

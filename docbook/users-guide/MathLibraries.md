@@ -91,7 +91,7 @@ small states, it is recommended for applications, which require a very
 small random number size. For more information on the generator see the
 following article:
 
--   P. L’Ecuyer, "Maximally Equidistributed Combined Tausworthe
+-   P. L'Ecuyer, "Maximally Equidistributed Combined Tausworthe
     Generators", Mathematics of Computation, 65, 213 (1996), 203-213.
 
 ### TRandom3
@@ -818,7 +818,7 @@ XYZVector u = v1.Unit();               //return unit vector parallel to v1
 
 
 To use all possible types of 3D points one must include the header file
-`Math/Point3D.h`. The following typedef’s defined in the header file
+`Math/Point3D.h`. The following typedef's defined in the header file
 `Math/Point3Dfwd.h`, are available for different instantiations of the
 template class **`ROOT::Math`**`::`**`PositionVector3D`**:
 
@@ -912,7 +912,7 @@ Exactly as for the 3D Vectors, the following operations are allowed:
 ### Example: LorentzVector Classes
 
 
-As in the 3D case, typedef’s are defined for user convenience. and can
+As in the 3D case, typedef's are defined for user convenience. and can
 be used by including the header file `Math/Vector4D.h`. The following
 typedef's, defined in the header file `Math/Vector4Dfwd.h`, are
 available for the different instantiations of the template class
@@ -1395,7 +1395,7 @@ The special functions are defined in the header file `Math/SpecFunc.h`.
     encountered in integrating the normal
     distribution:![](pictures/0600010F.png)
 
--   `double ``ROOT::Math::erfc(double x)` – evaluates the complementary
+-   `double ``ROOT::Math::erfc(double x)` - evaluates the complementary
     error function: ![](pictures/06000110.png)
 
 -   `double ``ROOT::Math::tgamma(double x)` - calculates the gamma
@@ -1713,7 +1713,7 @@ template parameters, which define at compile time, its properties:
     number of rows and the number of columns. Its data member is an
     array `T[nrows*ncols]` containing the matrix data. The data are
     stored in the row-major C convention. For example, for a matrix `M`,
-    of size `3x3`, the data `{a0,a1,…,a8}` are stored in the following
+    of size `3x3`, the data `{a0,a1,...,a8}` are stored in the following
     order:
 
 -   ![](pictures/06000129.png)
@@ -1724,7 +1724,7 @@ template parameters, which define at compile time, its properties:
     `N*(N+1)/2`, containing the lower diagonal block of the matrix. The
     order follows the lower diagonal block, still in a row-major
     convention. For example for a symmetric `3x3` matrix the order of
-    the `6` independent elements `{a0,a1,…,a5}` is:
+    the `6` independent elements `{a0,a1,...,a5}` is:
 
 -   ![](pictures/0600012A.png)
 
@@ -2058,7 +2058,7 @@ interface. In this case one must use directly the **`TFitterMinuit`**
 class via the method `SetMinuitFCN`.
 
 Examples on how to use the `Minuit2` and `Fumili2` plug-ins are provided
-in the tutorials’ directory \$ROOTSYS/`tutorials/fit`:
+in the tutorials' directory \$ROOTSYS/`tutorials/fit`:
 `minuit2FitBench.C`, `minuit2FitBench2D.C` and `minuit2GausFit.C`. More
 information on the classes and functions present in `Minuit2` is
 available at
@@ -2146,4 +2146,4 @@ details the chapter "Neural Networks").
 determinant estimator (MCD).
 
 **`TMVA`** is a package for multivariate data analysis (see
-<http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf> the User’s Guide).
+<http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf> the User's Guide).

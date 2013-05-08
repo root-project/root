@@ -70,7 +70,7 @@ system, in particular the improved support for STL collections
 **Nenad Buncic** developed the HTML documentation generation system and
 integrated the X3D viewer inside ROOT (1995-1997).
 
-**Suzanne Panacek** was the author of the first version of this User’s
+**Suzanne Panacek** was the author of the first version of this User's
 Guide and very active in preparing tutorials and giving lectures about
 ROOT (1999-2002).
 

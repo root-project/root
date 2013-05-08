@@ -628,7 +628,7 @@ The Matrix for a Lorentz boosts is:
 ` |  gamma*bx         gamma*by         gamma*bz       gamma    | `
 
 with the boost vector `b=(bx,by,bz)`;
-`gamma=1/Sqrt(1-beta*beta)`;` gamma’=(gamma-1)/beta*beta.`
+`gamma=1/Sqrt(1-beta*beta)`;` gamma'=(gamma-1)/beta*beta.`
 
 ### Access to the Matrix Components/Comparisons
 

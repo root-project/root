@@ -566,7 +566,7 @@ tessellation.
 
 The **`TGraph2D`** class has the following constructors:
 
--   With an arrays’ dimension `n` and three arrays `x`, `y`, and `z`
+-   With an arrays' dimension `n` and three arrays `x`, `y`, and `z`
     (can be arrays of doubles, floats, or integers):
 
 ``` {.cpp}
@@ -745,9 +745,9 @@ directions.
 The class **`TGraphEditor`** provides the user interface for setting the
 following graph attributes interactively:
 
-Title text entry field – sets the title of the graph.
+Title text entry field ... sets the title of the graph.
 
-Shape radio button group – sets the graph shapes:
+Shape radio button group - sets the graph shapes:
 
 *No Line*:draw unconnected points;
 
@@ -761,9 +761,9 @@ Shape radio button group – sets the graph shapes:
 
 Show Marker - sets markers as visible or invisible.
 
-Exclusion Zone – specifies the exclusion zone parameters :
+Exclusion Zone - specifies the exclusion zone parameters :
 
-*’+-‘ check button*: sets on which side of the line the exclusion zone
+*'+-‘ check button*: sets on which side of the line the exclusion zone
 will be drawn;
 
 *Width combo box*: defines the width of the zone.

@@ -63,7 +63,7 @@ Object ownership is important when it comes to deleting objects; if
 nobody owns the object it could end up as wasted memory (i.e. a memory
 leak) when no longer needed. If a collection is deleted, its objects are
 not. The user can force a collection to delete its objects, but that is
-the user’s choice.
+the user's choice.
 
 ### Determining the Class of Contained Objects
 
@@ -239,7 +239,7 @@ functions, you can change the behavior of objects in collections:
 -   `IsEqual()`is used by the `FindObject() `collection method. By
     default, `IsEqual()` compares the two object pointers.
 
--   `Compare()`returns –1, 0 or 1 depending if the object is smaller,
+-   `Compare()`returns -1, 0 or 1 depending if the object is smaller,
     equal or larger than the other object. By default, a **`TObject`**
     has not a valid `Compare()` method.
 

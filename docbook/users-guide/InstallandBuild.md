@@ -1,14 +1,14 @@
-Appendix A: Install and Build ROOT
-==================================
+# Appendix A: Install and Build ROOT
 
-License
-=======
+
+## License
+
 
 ROOT is made available under the LGPL v2.1 license. For full details see
 the file LICENSE in the ROOT distribution.
 
-Installing ROOT
-===============
+## Installing ROOT
+
 
 To install ROOT you will need to go to the ROOT website at:
 <http://root.cern.ch/drupal/content/downloading-root>
@@ -18,13 +18,13 @@ quicker to transfer since it is only 31 MB, but you will need to compile
 and link it. The binaries range from 50 MB to 100 MB depending on the
 target platform.
 
-Choosing a Version
-==================
+## Choosing a Version
+
 
 The ROOT developers follow the principle of "release early and release
 often", however a very large portion of a user base requires a stable
 product therefore generally three versions of the system is available
-for download – new, old and pro:
+for download - new, old and pro:
 
 -   The *new* version evolves quickly, with weekly or bi-weekly
     releases. Use this to get access to the latest and greatest, but it
@@ -42,13 +42,13 @@ for download – new, old and pro:
     for some time before switching the new pro version. The old change
     rate is the same as for pro.
 
-Installing Precompiled Binaries
-===============================
+## Installing Precompiled Binaries
+
 
 The binaries are available for downloading from
 <http://root.cern.ch/drupal/content/downloading-root>. Once downloaded
 you need to unzip and de-tar the file. For example, if you have
-downloaded ROOT v2.25 for HPUX:
+downloaded ROOT v5.30 for Linux-SLC5:
 
 ``` {.cpp}
 % gunzip root_v5.30.00.Linux-slc5-gcc4.3.tar.gz
@@ -59,8 +59,8 @@ This will create the directory root. Before getting started read the
 file README/README. Also, read the Introduction chapter for an
 explanation of the directory structure.
 
-Installing the Source
-=====================
+## Installing the Source
+
 
 You have a choice to download a compressed (tar ball) file containing
 the source, or you can use the Subversion (svn) source code change
@@ -70,13 +70,13 @@ need to download the entire new version. Choosing the CVS option will
 allow you to get changes as they are submitted by the developers and you
 can stay up to date.
 
-Installing and Building the Source from a Compressed File
----------------------------------------------------------
+### Installing and Building the Source from a Compressed File
+
 
 To install the ROOT source you can download the tar file containing all
 the source files from the ROOT website. The first thing you should do is
 to get the latest version as a tar file. Unpack the source tar file,
-this creates directory ‘root’:
+this creates directory ‘root':
 
 ``` {.cpp}
 % tar zxvf root_v5.30.xx.source.tar.gz
@@ -113,32 +113,32 @@ Try running root:
 It is also possible to setup and build ROOT in a fixed location. Please
 check README/INSTALL for more a detailed description of this procedure.
 
-### Target directory
+#### Target directory
 
 By default, ROOT will be built in the `$ROOTSYS` directory. In that case
 the whole system (binaries, sources, tutorials, etc.) will be located
 under the `$ROOTSYS` directory.
 
-### `Makefile` targets
+#### `Makefile` targets
 
 The `Makefile` is documented in details in the README/BUILDSYSTEM file.
 It explains the build options and targets.
 
-More Build Options
-------------------
+### More Build Options
+
 
 To build the library providing thread support you need to define either
-the environment variable ‘`THREAD``=-``lpthread’ `or the configure flag
-`‘--with-thread=-lpthread`’ (it is the default for the `linuxegcs`
+the environment variable ‘`THREAD``=-``lpthread' `or the configure flag
+`‘--with-thread=-lpthread`' (it is the default for the `linuxegcs`
 architecture). [Note: this is only tested on Linux for the time being.]
 To build the library providing CERN RFIO (remote I/O) support you need
-to define either the environment variable `‘ RFIO=<path>/libshift.a`’ or
-the configure flag `‘--with-rfio=<path>/libshift.a’`. For pre-built
+to define either the environment variable `‘ RFIO=<path>/libshift.a`' or
+the configure flag `‘--with-rfio=<path>/libshift.a'`. For pre-built
 version of `libshift.a` see <ftp://root.cern.ch/root/shift/>
 
 To build the PAW and Geant3 conversion programs h2root and g2root you
-need to define either the environment variable `‘CERNLIB=<cernlibpath>`’
-or the configure flag `‘--with-cern-libdir=<cernlibpath>`’.
+need to define either the environment variable `‘CERNLIB=<cernlibpath>`'
+or the configure flag `‘--with-cern-libdir=<cernlibpath>`'.
 
 To build the `MySQL` interface library you need to install `MySQL`
 first. Visit <http://www.mysql.com/> for the latest versions.
@@ -148,17 +148,17 @@ have to install the SRP (Secure Remote Password) system. Visit
 <http://srp.stanford.edu>
 
 To use the library you have to define either the environment variable
-‘`SRP=<``srpdir``>`’ or the configure flag `‘--with-srp=<srpdir>’.`
+‘`SRP=<``srpdir``>`' or the configure flag `‘--with-srp=<srpdir>'.`
 
 To build the event generator interfaces for Pythia and Pythia6, you
 first have to get the Pythia libraries available from ftp:
 <ftp://root.cern.ch/root/pythia6.tar.gz>.
 
 To use the libraries you have to define either
-‘`PYTHIA=<``pythiadir``>`’ or the configure flag
-`‘--with-pythia=<pythiadir>`’. The same applies for Pythia6.
+‘`PYTHIA=<``pythiadir``>`' or the configure flag
+`‘--with-pythia=<pythiadir>`'. The same applies for Pythia6.
 
-### Installing the Source from Subversion
+#### Installing the Source from Subversion
 
 This paragraph describes how to checkout and build ROOT from Subversion
 for Unix systems. For description of a checkout for other platforms,
@@ -167,10 +167,10 @@ please see ROOT installation web page:
 
 ``` {.cpp}
 % svn co http://root.cern.ch/svn/root/trunk root
-U root/…
-U …
+U root/...
+U ...
 % cd root
-% ./configure –-help
+% ./configure --help
 % ./configure [<arch>]
 % (g)make
 ```
@@ -180,7 +180,7 @@ specific to the particular development environment prior to running
 `(g)make`. For more install instructions and options, see the file
 README/INSTALL.
 
-### Subversion for Windows
+#### Subversion for Windows
 
 Although there exists a native version of Subversion for Windows, we
 only support the build process under the `Cygwin` environment. You must
@@ -188,7 +188,7 @@ have svn version 1.6 or newer. The checkout and build procedure is
 similar to that for UNIX. For detailed install instructions, see the
 file REAMDE/INSTALL.
 
-### Staying up-to-date
+#### Staying up-to-date
 
 To keep your local ROOT source up-to-date with the Subversion repository
 you should regularly run the command:
@@ -197,8 +197,8 @@ you should regularly run the command:
 % svn up
 ```
 
-File system.rootrc
-==================
+## File system.rootrc
+
 
 ROOT Environment settings are handled via the class **`TEnv`**.
 `gEnv->Print()`shows which values are active. Any settings can be
@@ -321,8 +321,8 @@ ignore.
 TabCom.FileIgnore:          .cpp:.h:.cmz
 ```
 
-TCanvas Specific Settings
--------------------------
+### TCanvas Specific Settings
+
 
 Opaque move and resize show full pad during the operation instead of
 only the outline. Especially for resize you will need serious CPU power.
@@ -410,8 +410,8 @@ Hist.Stats.KurtosisX       Kurtosis x
 Hist.Stats.KurtosisY       Kurtosis y
 ```
 
-THtml Specific Settings
------------------------
+### THtml Specific Settings
+
 
 See the reference guide documentation of **`THtml`** class at
 <http://root.cern.ch/root/htmldoc/THtml.html> for more details.
@@ -532,8 +532,8 @@ Tag for detecting "Copyright" comment (default value is set below).
 Root.Html.Copyright:        * Copyright
 ```
 
-GUI Specific Settings
----------------------
+### GUI Specific Settings
+
 
 Set the "`native`" ROOT GUI interface to be used in a ROOT session. If
 set to "`qt`", the "`native`" GUI interface is replaced with one based
@@ -602,8 +602,8 @@ If `$(HOME)/.root.mimes` does not exists, defaults to this:
 #Gui.MimeTypeFile:            $(ROOTSYS)/etc/root.mimes
 ```
 
-TBrowser Settings
------------------
+### TBrowser Settings
+
 
 Current icon style selection - can be either `small`, `big`, `list`,
 `details`:
@@ -637,8 +637,8 @@ Create a thumbnail view after executing the macro (default is `yes`).
 Browser.AutoThumbnail:       yes
 ```
 
-TRint Specific Settings
------------------------
+### TRint Specific Settings
+
 
 Rint (interactive ROOT executable) specific alias, logon and logoff
 macros.
@@ -668,8 +668,8 @@ Rint.HistSize:         500
 Rint.HistSave:         400
 ```
 
-ACLiC Specific Settings
------------------------
+### ACLiC Specific Settings
+
 
 `ACLiC.Linkdef` specifies the suffix that will be added to the script
 name to try to locate a custom linkdef file when generating the
@@ -691,8 +691,8 @@ The additional include directives for ACLiC compilations are set by:
 ACLiC.IncludePaths:     -I/where/the/includes/are
 ```
 
-PROOF Related Variables
------------------------
+### PROOF Related Variables
+
 
 PROOF debug options.
 
@@ -740,7 +740,7 @@ Clarens.CertFile:     $(HOME)/.globus/usercert.pem
 Clarens.KeyFile:      $(HOME)/.globus/userkey.pem
 ```
 
-### Settings Related to Authentication for rootd and proofd
+#### Settings Related to Authentication for rootd and proofd
 
 Default authentication method for `rootd` and `proofd`. These are
 supported for backward compatibility but have a very low priority.
@@ -901,7 +901,7 @@ default - 256, minimum - 128, maximum - 15912.
 SSL.BFBits:              256
 ```
 
-### Server Authentication in TServerSocket
+#### Server Authentication in TServerSocket
 
 General setting: file with server access rules
 
@@ -958,7 +958,7 @@ Url.Special:             file: rfio: hpss: castor: gfal: dcache:
 +Url.Special:            /alien/- /castor/
 ```
 
-### PROOF XRD Client Variables
+#### PROOF XRD Client Variables
 
 Debug level (if \<=0 : none, 1 : low, 2 : medium, 3 : high)
 
@@ -1039,8 +1039,8 @@ is yellow.
 Rint.Canvas.HighLightColor:      5
 ```
 
-Documentation to Download
-=========================
+## Documentation to Download
+
 
 -   The latest ROOT Users Guide
 

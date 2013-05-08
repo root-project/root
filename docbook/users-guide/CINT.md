@@ -54,7 +54,7 @@ CINT main features:
 -   Interprets Large C/C++ source code
 
 -   CINT can handle huge C/C++ source code, and loads source files
-    quickly. It can interpret its own, over 70,000 lines source code –
+    quickly. It can interpret its own, over 70,000 lines source code -
     more than 150,000 lines.
 
 -   Enables mixing Interpretation & Native Code
@@ -709,7 +709,7 @@ use the command **`.L`** and append the file name with a "+".
 ``` {.cpp}
 root[] .L MyScript.C+
 root[] .files
-…
+...
 *file="/home/./MyScript_C.so"
 ```
 
@@ -723,7 +723,7 @@ the newly created shared library is in the list of loaded files.
 The + command rebuild the library only if the script or any of the files
 it includes are newer than the library. When checking the timestamp,
 ACLiC generates a dependency file which name is the same as the library
-name, just replacing the 'so' extension by the extension ’`d`’. For
+name, just replacing the 'so' extension by the extension '`d`'. For
 example on most platforms, `hsimple.cxx` will generate `hsimple_cxx.d`.
 
 To ensure that the shared library is rebuilt you can use the ++ syntax:

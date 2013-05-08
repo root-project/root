@@ -8,7 +8,7 @@ full course in C++.
 ## Classes, Methods and Constructors
 
 
-C++ extends C with the notion of class. If you’re used to structures in
+C++ extends C with the notion of class. If you're used to structures in
 C, a class is a `struct` that is a group of related variables, which is
 extended with functions and routines specific to this structure (class).
 What is the interest? Consider a `struct` that is defined this way:
@@ -69,7 +69,7 @@ l.Draw();
 
 The first line builds the object `l `by calling its constructor. The
 second line calls the **`TLine`**`::Draw()` method of this object. You
-don’t need to pass any parameters to this method since it applies to the
+don't need to pass any parameters to this method since it applies to the
 object l, which knows the coordinates of the line. These are internal
 variables `x1`, `y1`, `x2`, `y2` that were initialized by the
 constructor.

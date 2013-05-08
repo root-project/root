@@ -156,7 +156,7 @@ is to make a complex object by using elementary building blocks that
 have known shapes (called ***`primitive shapes`***). Gluing these
 together in the appropriate way is the user responsibility.
 
-***`Q: "I am getting the global picture but not making much out of it… There are also a lot of calls to TGeoVolume::AddNode() that I do not understand."`***
+***`Q: "I am getting the global picture but not making much out of it... There are also a lot of calls to TGeoVolume::AddNode() that I do not understand."`***
 
 ***`A:`*** A volume is positioned inside another one by using this
 method. The relative geometrical transformation as well as a copy number
@@ -239,40 +239,40 @@ be performed both at view (no volume selected) and volume level.
 
 -   Pressing some keys perform different actions:
 
--   J/K – zoom / unzoom
+-   J/K - zoom / unzoom
 
--   H, L, U, I – move the viewpoint
+-   H, L, U, I - move the viewpoint
 
--   Right click + `SetParallel` `()/SetPerspective` `()` – switch from
+-   Right click + `SetParallel` `()/SetPerspective` `()` - switch from
     parallel to perspective view.
 
--   Right click + `ShowAxis()` – show coordinate axes.
+-   Right click + `ShowAxis()` - show coordinate axes.
 
--   Right click + `Centered/Left/Side/Top` – change view direction.
+-   Right click + `Centered/Left/Side/Top` - change view direction.
 
 **`TGeoVolume`** (mouse selecting a volume):
 
 -   Double click will focus the corresponding volume.
 
--   Right click + `CheckOverlaps()` – run overlap checker on current
+-   Right click + `CheckOverlaps()` - run overlap checker on current
     volume.
 
--   Right click + `Draw` `()` – draw that volume according current
+-   Right click + `Draw` `()` - draw that volume according current
     global visualization options
 
--   Right click + `DrawOnly()`***` – `***draw only the selected volume.
+-   Right click + `DrawOnly()`***` - `***draw only the selected volume.
 
--   Right click + `InspectShape/Material()` – print info about shape or
+-   Right click + `InspectShape/Material()` - print info about shape or
     material.
 
--   Right click + `Raytrace()` – initiate a ray tracing algorithm on
+-   Right click + `Raytrace()` - initiate a ray tracing algorithm on
     current view.
 
--   Right click + `RandomPoints/Rays()` – shoot random points or rays
+-   Right click + `RandomPoints/Rays()` - shoot random points or rays
     inside the bounding box of the clicked volume and display only those
     inside visible volumes.
 
--   Right click + `Weight()` – estimates the weight of a volume within a
+-   Right click + `Weight()` - estimates the weight of a volume within a
     given precision.
 
 Note that there are several additional methods for visibility and line
@@ -634,8 +634,8 @@ have a look and run the tutorial:
 Shapes are named objects and all primitives have constructors like:
 
 ``` {.cpp}
-TGeoXXX(const char *name,<type> param1,<type> param2, …);
-TGeoXXX(<type> param1,<type> param2, …);
+TGeoXXX(const char *name,<type> param1,<type> param2, ...);
+TGeoXXX(<type> param1,<type> param2, ...);
 ```
 
 Naming shape primitive is mandatory only for the primitives used in
@@ -657,7 +657,7 @@ expressed in [**g/cm3**].
 
 ### Primitive Shapes
 
-#### Boxes – TGeoBBox Class
+#### Boxes - TGeoBBox Class
 
 Normally a box has to be build only with 3 parameters: `DX,DY,DZ`
 representing the half-lengths on X, Y and Z-axes. In this case, the
@@ -682,7 +682,7 @@ TGeoBBox(Double_t dx,Double_t dy,Double_t dz,Double_t *origin=0);
 
 ![TGeoBBox class](pictures/060001B6.png)
 
-#### Parallelepiped – TGeoPara class
+#### Parallelepiped - TGeoPara class
 
 A parallelepiped is a shape having 3 pairs of parallel faces out of
 which one is parallel with the XY plane (Z faces). All faces are
@@ -740,7 +740,7 @@ TGeoTrd2(Double_t dx1,Double_t dx2,Double_t dy1,Double_t dy2, Double_t dz);
 
 ![TGeoTrd2 class](pictures/060001B9.png)
 
-#### General Trapezoid – TGeoTrap Class
+#### General Trapezoid - TGeoTrap Class
 
 A general trapezoid is one for which the faces perpendicular to z are
 trapezes but their centers are not necessary at the same x, y
@@ -762,7 +762,7 @@ Double_t h1,Double_t bl1,Double_t tl1,Double_t alpha1,
 Double_t h2,Double_t bl2,Double_t tl2,Double_t alpha2);
 ```
 
-#### Twisted Trapezoid – TGeoGtra class
+#### Twisted Trapezoid - TGeoGtra class
 
 A twisted trapezoid is a general trapezoid defined in the same way but
 that is twisted along the Z-axis. The twist is defined as the rotation
@@ -786,7 +786,7 @@ both `-dZ` and `+dZ`. If M and M' are the middles of the segments
 `(i,i+1)` at `-dZ` and `+dZ`, a lateral surface is obtained by sweeping
 the edge at `-dZ` along MM' so that it will match the corresponding one
 at `+dZ`. Since the points defining the edges are arbitrary, the lateral
-surfaces are not necessary planes – but twisted planes having a twist
+surfaces are not necessary planes - but twisted planes having a twist
 angle linear-dependent on Z.
 
 ``` {.cpp}
@@ -798,7 +798,7 @@ TGeoArb8::TGeoArb8(Double_t dz,Double_t ivert);
 -   `ivert = [0,7]`
 
 Vertices have to be defined clockwise in the XY pane, both at `+dz` and
-`–dz`. The quadrilateral at `-dz` is defined by indices [0,3], whereas
+`-dz`. The quadrilateral at `-dz` is defined by indices [0,3], whereas
 the one at `+dz` by vertices [4,7]. The vertex with `index=7` has to be
 defined last, since it triggers the computation of the bounding box of
 the shape. Any two or more vertices in each Z plane can have the same
@@ -810,7 +810,7 @@ as long as at one of the end-caps is at least a triangle.
 
 ![TGeoArb8 class](pictures/080001BC.png)
 
-#### Tubes – TGeoTube Class
+#### Tubes - TGeoTube Class
 
 Tubes have Z as their symmetry axis. They have a range in Z, a minimum
 and a maximum radius:
@@ -823,7 +823,7 @@ The full Z range is from `-dz` to `+dz`.
 
 ![TGeoTube Class](pictures/060001BD.png)
 
-#### Tube Segments – TGeoTubeSeg Class
+#### Tube Segments - TGeoTubeSeg Class
 
 A tube segment is a tube having a range in phi. The tube segment class
 derives from **`TGeoTube`**, having 2 extra parameters: `phi1` and
@@ -842,7 +842,7 @@ converted to `[0,360]` and `phi2 > phi1`.
 
 ![TGeoTubeSeg Class](pictures/060001BE.png)
 
-#### Cut Tubes – TGeoCtub Class
+#### Cut Tubes - TGeoCtub Class
 
 The cut tubes constructor has the form:
 
@@ -860,12 +860,12 @@ sections are positioned at `dZ`. Each cut plane is therefore defined by
 a point `(0,0,dZ)` and its normal unit vector pointing outside the
 shape:
 
-`Nlow=(Nx,Ny,Nz<0)`, `Nhigh=(Nx’,Ny’,Nz’>0)`.
+`Nlow=(Nx,Ny,Nz<0)`, `Nhigh=(Nx',Ny',Nz'>0)`.
 
-#### Elliptical Tubes – TGeoEltu Class
+#### Elliptical Tubes - TGeoEltu Class
 
 An elliptical tube is defined by the two semi-axes A and B. It ranges
-from `–dZ` to `+dZ` as all other tubes:
+from `-dZ` to `+dZ` as all other tubes:
 
 ``` {.cpp}
 TGeoEltu(Double_t a,Double_t b,Double_t dz);
@@ -873,7 +873,7 @@ TGeoEltu(Double_t a,Double_t b,Double_t dz);
 
 ![TGeoEltu Class](pictures/060001C0.png)
 
-#### Hyperboloids – TGeoHype Class
+#### Hyperboloids - TGeoHype Class
 
 A hyperboloid is represented as a solid limited by two planes
 perpendicular to the Z axis (top and bottom planes) and two hyperbolic
@@ -890,7 +890,7 @@ Double_t stout,Double_t dz);
 The hyperbolic surface equation is taken in the form:
 
 ``` {.cpp}
-r2 – z2tan2() = r2min
+r2 - z2tan2() = r2min
 ```
 
 -   `r,z:` cylindrical coordinates for a point on the surface
@@ -924,7 +924,7 @@ Particular cases:
 
 -   `stin=0 / stout=0:` cylindrical surface(s)
 
-#### Cones – TGeoCone Class
+#### Cones - TGeoCone Class
 
 The cones are defined by 5 parameters:
 
@@ -941,13 +941,13 @@ Double_t rmin2,Double_t rmax2);
 
 -   `rmax2:` external radius at Z is `+dz`
 
--   `dz:` half length in Z (a cone ranges from `–dz` to +`dz`)
+-   `dz:` half length in Z (a cone ranges from `-dz` to +`dz`)
 
 A cone has Z-axis as its symmetry axis.
 
 ![TGeoCone Class](pictures/060001C2.png)
 
-#### Cone Segments – TGeoConeSeg Class
+#### Cone Segments - TGeoConeSeg Class
 
 A cone segment is a cone having a range in `phi.` The cone segment class
 derives from **`TGeoCone`**, having two extra parameters: `phi1` and
@@ -963,7 +963,7 @@ tube segments.
 
 ![TGeoConeSeg Class](pictures/060001C3.png)
 
-#### Sphere – TGeoSphere Class
+#### Sphere - TGeoSphere Class
 
 Spheres in **`TGeo`** are not just balls having internal and external
 radii, but sectors of a sphere having defined theta and phi ranges. The
@@ -1221,7 +1221,7 @@ the top-level Boolean operator.
 1. Union: `A+B+C`
 
 Just to illustrate the Boolean expression parsing and the composite
-shape structure, let’s take a simple example. We will describe the union
+shape structure, let's take a simple example. We will describe the union
 of A, B and C. Both union operators are at the same level. Since:
 
 `A+B+C = (A+B)+C = A+(B+C)`
@@ -1255,7 +1255,7 @@ defined:
 
 ``` {.cpp}
 TGeoMatrix *mat;
-// … code creating some geometrical transformation
+// ... code creating some geometrical transformation
 mat->SetName("mat1");
 mat->RegisterYourself();  // see Geometrical transformations
 ```
@@ -1268,7 +1268,7 @@ shape components. The next example will illustrate a more complex case.
 
 2. `(A:m1+B):m2-(C:m3*D:m4):m5`
 
-Let’s try to understand the expression above. This expression means:
+Let's try to understand the expression above. This expression means:
 subtract the intersection of **C** and **D** from the union of **A** and
 **B**. The usage of parenthesis to force the desired precedence is
 always recommended. One can see that not only the primitive shapes have
@@ -1460,7 +1460,7 @@ but this operation can be done only via `TGeoVolume::Divide()` method.
 In other words, the algorithm for dividing a specific shape is known by
 the shape object, but is always invoked in a generic way from the volume
 level. Details on how to do that can be found in the paragraph ‘Dividing
-volumes’. One can see how all division options are interpreted and which
+volumes'. One can see how all division options are interpreted and which
 their result inside specific shape classes is.
 
 ### Parametric Shapes
@@ -1471,7 +1471,7 @@ geometry is closed, all constituent shapes `MUST`**have well defined and
 valid parameters. In order to ease-up geometry creation, some
 parameterizations are however allowed.
 
-For instance let’s suppose that we need to define several volumes having
+For instance let's suppose that we need to define several volumes having
 exactly the same properties but different sizes. A way to do this would
 be to create as many different volumes and shapes. The modeller allows
 however the definition of a single volume having undefined shape
@@ -1495,7 +1495,7 @@ geometry, but whenever positioned will require a list of actual
 parameters for the current shape that will be created in this process.
 Such volumes having shape parameters known only when used have to be
 positioned only with **`TGeoManager::Node()` method (see ‘Creating and
-Positioning Volumes’).**
+Positioning Volumes').**
 
 Other case when shape parameterizations are quite useful is scaling
 geometry structures. Imagine that we would like to enlarge/shrink a
@@ -1567,7 +1567,7 @@ A hierarchical element is not fully defined by a node since nodes are
 not directly linked to each other, but through volumes (a node points to
 a volume, which at its turn points to a list of nodes):
 
-`NodeTop ` ` VolTop ` ` NodeA ` ` VolA ` `…`
+`NodeTop ` ` VolTop ` ` NodeA ` ` VolA ` `...`
 
 One can therefore talk about "the node or volume hierarchy", but in
 fact, an element is made by a pair volume-node. In the line above is
@@ -1622,7 +1622,7 @@ a starting state for later use.
 
 Nodes can be declared as `overlapping` in case they do overlap with
 other nodes inside the same container or extrude this container (see
-also ‘Checking the Geometry’). Non-overlapping nodes can be created
+also ‘Checking the Geometry'). Non-overlapping nodes can be created
 with:
 
 ``` {.cpp}
@@ -1699,12 +1699,12 @@ npar);
 
 Geometrical modeling is a difficult task when the number of different
 geometrical objects is 106-108. This is more or less the case for
-detector geometries of complex experiments, where a ‘flat’ CSG model
+detector geometries of complex experiments, where a ‘flat' CSG model
 description cannot scale with the current CPU performances. This is the
 reason why models like GEANT [1] introduced an additional dimension
 (depth) in order to reduce the complexity of the problem. This concept
 is also preserved by the ROOT modeller and introduces a pure geometrical
-constraint between objects (volumes in our case) – containment. This
+constraint between objects (volumes in our case) - containment. This
 means in fact that any positioned volume has to be contained by another.
 Now what means contained and positioned?
 
@@ -1791,10 +1791,10 @@ holding `A` and `B`, then position `C` in the other volumes.
 
 Note that `C` is a volume having a determined medium. Since it is not a
 real volume, we need to manually set its medium the same as that of
-`D,E` or `F` in order to make it ‘invisible’ (same physics properties).
+`D,E` or `F` in order to make it ‘invisible' (same physics properties).
 In other words, the limitation in proceeding this way is that `D,E,` and
 `F` must point to the same medium. If this was not the case, we would
-have to define different virtual volumes for each placement: `C`, `C’`
+have to define different virtual volumes for each placement: `C`, `C'`
 and `C"`, having the same shape but different media matching the
 corresponding containers. This might not happen so often, but when it
 does, it forces the creation of several extra virtual volumes. Other
@@ -1819,7 +1819,7 @@ the assembly into `D,E` and `F` will actually position only `A` and
 `B `directly into these volumes, taking into account their combined
 transformations `A/B` to `C` and `C` to `D/E/F`. This looks much nicer,
 is it? In fact, it is and it is not. Of course, we managed to get rid of
-the ‘unnecessary’ volume `C` in our geometry, but we end-up with a more
+the ‘unnecessary' volume `C` in our geometry, but we end-up with a more
 flat structure for `D,E` and `F` (more daughters inside). This can get
 much worse when extensively used, as in the case: assemblies of
 assemblies.
@@ -1941,7 +1941,7 @@ will illustrate them by examples.
     row-beside-row inside the container, making life much easier for its
     navigation algorithms. The problem is that in order to reproduce the
     honeycomb structure out of rows of cells, we have to overlap row
-    containers. Woops – we have not obeyed rule No. 2 in positioning.
+    containers. Woops - we have not obeyed rule No. 2 in positioning.
     The way out is to position our rows with a special prototype:
 
 ``` {.cpp}
@@ -1984,7 +1984,7 @@ the same medium.
 
 One needs to know that navigation inside geometry parts MANY nodes is
 much slower. Any overlapping part can be defined based on composite
-shapes – might be in some cases a better way out.
+shapes - might be in some cases a better way out.
 
 #### Replicating Volumes
 
@@ -2227,10 +2227,10 @@ out of this:
 -   Defining the container for the structure as "overlapping" (see also
     " Overlapping Volumes **"**)
 
--   Representing the container as a composite shape – the Boolean union
+-   Representing the container as a composite shape - the Boolean union
     of all components (see also " Composite Shapes ")
 
--   Using an assembly volume – this will be described in the following.
+-   Using an assembly volume - this will be described in the following.
 
 The first two approaches have the disadvantage of penalizing the
 navigation performance with a factor increasing more than linear of the
@@ -2410,8 +2410,8 @@ Generally, it is advisable to create all intermediate transformations
 used for making the final combined one on the heap:
 
 ``` {.cpp}
-TGeoRotation r1(…);
-TGeoRotation r2(…);
+TGeoRotation r1(...);
+TGeoRotation r2(...);
 TGeoHMatrix *mat = new TGeoHMatrix("name"); // we want to use only
                         // this one in geometry
 *mat = r1 * r2;
@@ -2629,7 +2629,7 @@ location, the modeller will consider that the point is located inside
 `B_1`, which will be considered as the representative object (node) for
 the current state. This is stored as: **`TGeoNode`**
 \*`TGeoManager::fCurrentNode `and can be asked from the manager class
-only after the `’Where am I?’` was completed:
+only after the `'Where am I?'` was completed:
 
 ``` {.cpp}
 TGeoNode *current = gGeoManager->GetCurrentNode();
@@ -2637,7 +2637,7 @@ TGeoNode *current = gGeoManager->GetCurrentNode();
 
 In order to find the location of the current point inside the hierarchy
 of nodes, after setting this point it is mandatory to call the
-`‘Where am I?’` method:
+`‘Where am I?'` method:
 
 ``` {.cpp}
 gGeoManager->FindNode();
@@ -2657,7 +2657,7 @@ gGeoManager->InitTrack(Double_t *point[3],Double_t *dir[3]);
 ```
 
 Note that the current point coordinates can be changed and the state
-re-initialized at any time. This represents the `‘Where am I?’`
+re-initialized at any time. This represents the `‘Where am I?'`
 geometrical query representing the basic navigation functionality
 provided by the modeller.
 
@@ -2670,7 +2670,7 @@ from **`TGeoManager`** interface:
 
 -   The `current path`. This represents a string containing the names
     and copy numbers of all positioned objects in the current `branch`
-    written in the /folder/folder/…/folder/file fashion. The final node
+    written in the /folder/folder/.../folder/file fashion. The final node
     pointed by the path is the deepest object containing the current
     point and is representative for the current state. All intermediate
     `folders` in the path are in fact also nodes "touched" by the
@@ -2707,11 +2707,11 @@ In order to take decisions in such case one needs always to test:
 ``` {.cpp}
 if (gGeoManager->IsOutside()) {
    // current point is actually outside
-   … // corresponding action
+   ... // corresponding action
 }
 ```
 
-Specific information related to the current volume/node like ID’s or
+Specific information related to the current volume/node like ID's or
 shape can be then retrieved from the corresponding objects.
 
 -   Current state `index`. The number of possible different states of
@@ -2728,7 +2728,7 @@ shape can be then retrieved from the corresponding objects.
     case each state automatically gets an index that can be retrieved
     after any state initialization. These indices can prove to be quite
     useful for being able to keep track of the navigation history and
-    force certain states. Let’s illustrate how this works with a simple
+    force certain states. Let's illustrate how this works with a simple
     example:
 
 -   Suppose we have a simple geometry with a volume B positioned twice
@@ -2756,7 +2756,7 @@ shape can be then retrieved from the corresponding objects.
 gGeoManager->InitTrack(pt,dir); // anything to initialize a state
 Int_t istate = gGeoManager->GetCurrentNodeId(); // in fact state Id
 {
-   //… code changing the current state
+   //... code changing the current state
 }
 gGeoManager->CdNode(istate); // forces state's re-initialization
 ```
@@ -2818,7 +2818,7 @@ gGeoManager->PopPath(Int_t index);
 ### Navigation Queries
 
 After initializing the current state related to a given point and
-direction defined in `MARS` `(‘Where am I?’)`, one can query for several
+direction defined in `MARS` `(‘Where am I?')`, one can query for several
 geometrical quantities. All the related algorithms work in the
 assumption that the current point has been localized inside the geometry
 (by the methods `TGeoManager::FindNode()` or
@@ -2843,11 +2843,11 @@ the new point or its location has changed in the geometry hierarchy. If
 the new location is different, two actions are possible according to the
 value of `change`:
 
--   `change = kFALSE` (default) – the modeller does not change the
+-   `change = kFALSE` (default) - the modeller does not change the
     current state but just inform the caller about this change.
 
--   `change = kTRUE` – the modeller will actually perform a new
-    `‘Where am I?’ `search after finding out that the location has
+-   `change = kTRUE` - the modeller will actually perform a new
+    `‘Where am I?' `search after finding out that the location has
     changed. The current state will be actualized accordingly.
 
 Note that even when performing a normal search on the current state
@@ -2982,7 +2982,7 @@ wants to cross or not the boundary. The returned node represents the new
 current node after the step was made.
 
 -   Making a geometrically contained step with boundary crossing
-    (`is_geom=kTRUE`, `cross=kTRUE`) – This is the default method
+    (`is_geom=kTRUE`, `cross=kTRUE`) - This is the default method
     behavior. In this case, the step size is supposed to be already set
     by a previous `TGeoManager::FindNextBoundary()` call. Due to
     floating-point boundary uncertainties, making a step corresponding
@@ -3371,7 +3371,7 @@ successfully closed, one should draw it starting from the top-level
 volume:
 
 ``` {.cpp}
-//… code for geometry building
+//... code for geometry building
 root[] gGeoManager->CloseGeometry();
 root[] gGeoManager->GetMasterVolume()->Draw();
 ```
@@ -3396,7 +3396,7 @@ display as well as changing top or side viewpoints can be activated from
 the **`TView`** context menu: right-click on the picture when no object
 is selected;
 
--   ***`Q: "Every line is black! I cannot figure out what is what…"`***
+-   ***`Q: "Every line is black! I cannot figure out what is what..."`***
 
 ***`A:`*** Volumes can have different colors (those known by ROOT of
 course). Think at using them after each volume creation:
@@ -3417,9 +3417,9 @@ a given volume three levels down. You can change this by using:
 ***`gGeoManager`***`::SetVisLevel(n);`
 
 Not only that, but none of the volumes at intermediate levels (0-2) are
-visible on the drawing unless they are final ‘leaves’ on their branch
+visible on the drawing unless they are final ‘leaves' on their branch
 (e.g. have no other volumes positioned inside). This behavior is the
-default one and corresponds to ‘leaves’ global visualization mode
+default one and corresponds to ‘leaves' global visualization mode
 (**`TGeoManager::fVisOption = 1`). In order to see on the screen the
 intermediate containers, one can change this mode:
 `gGeoManager->SetVisOption(0)`.**
@@ -3478,7 +3478,7 @@ myVolumeContainer->SetVisibility(kFALSE);
 ```
 
 As described before, the drawing package supports two main global
-options: 1 (default) – only final volume leaves; 0 – all volumes down
+options: 1 (default) - only final volume leaves; 0 - all volumes down
 the drawn one appear on the screen. The global visible level put a
 limitation on the maximum applied depth. Combined with visibility
 settings per volume, these can tune quite well what should appear on the
@@ -3527,7 +3527,7 @@ This means that the region inside the clipping shape is subtracted from
 the current drawn geometry (become invisible). In order to activate
 clipping, one has to first define the clipping shape(s):
 
-`1. TGeoShape *clip1, *clip2, …`
+`1. TGeoShape *clip1, *clip2, ...`
 
 One might switch between several clipping shapes. Note that these shapes
 are considered defined in the current `MARS`. Composite shapes may be
@@ -3644,8 +3644,8 @@ TGeoPhysicalNode *pn1 =
 gGeoManager->MakePhysicalNode("/A_1/B_1/C_2");
 TGeoPhysicalNode *pn2 = 
 gGeoManager->MakePhysicalNode("/A_1/B_1/C_3");
-…
-pn1->Align(…);
+...
+pn1->Align(...);
 ```
 
 The call to `pn1->Align()` will invalidate the pointer to the node `B_1`
@@ -3780,7 +3780,7 @@ queries and optimization mechanisms.
 
 ### Finding the State Corresponding to a Location (x,y,z)
 
-For reminder, a geometry state is a ‘touchable’ object in the geometry
+For reminder, a geometry state is a ‘touchable' object in the geometry
 hierarchy. It is represented by a path like: **/TOP\_1/A\_1/B\_3/C\_1**,
 where **B\_3** for instance is a copy of volume **B** positioned inside
 volume **A**. A state is always associated to a transformation matrix
@@ -3789,7 +3789,7 @@ volume **A**. A state is always associated to a transformation matrix
 with respect to their containers). The current state and the
 corresponding global matrix are updated whenever the geometry depth is
 modified. The global transformations corresponding to all nodes in the
-current branch are kept in an array: (**MTOP\_1, MA\_1, MB\_3, …**).
+current branch are kept in an array: (**MTOP\_1, MA\_1, MB\_3, ...**).
 
 ![Navigation in the geometry hierarchy](pictures/080001E6.png)
 
@@ -3841,7 +3841,7 @@ The main actions performed are:
     node/volume
 
 -   checking whether the local position lies within the geometrical
-    shape of the current volume – if this is the case continue the
+    shape of the current volume - if this is the case continue the
     search downwards for the daughters of the current node, otherwise
     search upwards its containers until the top level is reached.
 
@@ -4132,7 +4132,7 @@ pressed, the changes are applied to the edited shape and drawn. The
 applied. It allows restoring the initial parameters of the shape.
 
 NOTE: In this version the "*Undo*" does not allow restoring an
-intermediate state of the parameters that was applied – it will always
+intermediate state of the parameters that was applied - it will always
 restore the parameters at the moment the shape was edited.
 
 All material properties changes are undoable. The mixture editor

@@ -1,11 +1,11 @@
-Networking
-==========
+# Networking
+
 
 In this chapter, you will learn how to send data over the network using
 the ROOT socket classes.
 
-Setting-up a Connection
-=======================
+## Setting-up a Connection
+
 
 *On the serverside*, we create a **`TServerSocket`** to wait for a
 connection request over the network. If the request is accepted, it
@@ -15,10 +15,10 @@ communicate to the client that we are ready to go by sending the string
 
 ``` {.cpp}
 { // server
-TServerSocket *ss = new TServerSocket(9090,kTRUE);
-TSocket *socket = ss->Accept();
-socket->Send("go");
-ss->Close();
+   TServerSocket *ss = new TServerSocket(9090,kTRUE);
+   TSocket *socket = ss->Accept();
+   socket->Send("go");
+   ss->Close();
 }
 ```
 
@@ -27,17 +27,17 @@ input.
 
 ``` {.cpp}
 { // client
-TSocket *socket = new TSocket("localhost",9090);
-Char str[32];
-socket->Recv(str,32);
+   TSocket *socket = new TSocket("localhost",9090);
+   Char str[32];
+   socket->Recv(str,32);
 }
 ```
 
-Sending Objects over the Network
-================================
+## Sending Objects over the Network
+
 
 We have just established a connection and you just saw how to send and
-receive a string with the example "go". Now let’s send a histogram.
+receive a string with the example "go". Now let's send a histogram.
 
 *To send an object (in our case on the client side*) it has to derive
 from **`TObject`** class because it uses the `Streamers` to fill a
@@ -51,7 +51,7 @@ and fill the histogram and write it into the message. Then we call
 **`TSocket`**`::Send` to send the message with the histogram.
 
 ``` {.cpp}
-…
+...
 // create an object to be sent
 TH1F *hpx = new TH1F("hpx","px distribution",100,-4,4);
 hpx->FillRandom("gaus",1000);
@@ -64,7 +64,7 @@ message.WriteObject(hpx);
 
 // send the message  
 socket->Send(message);
-…
+...
 ```
 
 On the receiving end (in our case the server side), we write a while
@@ -76,15 +76,15 @@ another one is created at the beginning.
 
 ``` {.cpp}
 while (1) {
-TMessage *message;
-socket->Recv(message);
-TH1 *h = (TH1*)message->ReadObject(message->GetClass());
-delete message;
+   TMessage *message;
+   socket->Recv(message);
+   TH1 *h = (TH1*)message->ReadObject(message->GetClass());
+   delete message;
 }
 ```
 
-Closing the Connection
-======================
+## Closing the Connection
+
 
 Once we are done sending objects, we close the connection by closing the
 sockets at both ends.
@@ -95,11 +95,10 @@ Socket->Close();
 
 This diagram summarizes the steps we just covered:
 
-![Server - Client setting-up and closing the
-connection](pictures/080001FF.png)
+![Server - Client setting-up and closing the connection](pictures/080001FF.png)
 
-A Server with Multiple Sockets
-==============================
+## A Server with Multiple Sockets
+
 
 Chances are that your server has to be able to receive data from
 multiple clients. The class we need for this is **`TMonitor`**. It lets
@@ -110,30 +109,31 @@ manage multiple sockets:
 
 ``` {.cpp}
 {
-TServerSocket *ss = new TServerSocket (9090, kTRUE);
+   TServerSocket *ss = new TServerSocket (9090, kTRUE);
 
    // Accept a connection and return a full-duplex communication socket.
-TSocket *s0 = ss->Accept();
-TSocket *s1 = ss->Accept();
+   TSocket *s0 = ss->Accept();
+   TSocket *s1 = ss->Accept();
 
    // tell the clients to start
-s0->Send("go 0");
-s1->Send("go 1");
+   s0->Send("go 0");
+   s1->Send("go 1");
 
    // Close the server socket (unless we will use it
    // later to wait for another connection).
-ss->Close();
+   ss->Close();
 
-TMonitor *mon = new TMonitor;
-mon->Add(s0);
-mon->Add(s1);
+   TMonitor *mon = new TMonitor;
+   mon->Add(s0);
+   mon->Add(s1);
 
-while (1) {
-TMessage *mess;
-TSocket  *s;
-s = mon->Select();
-s->Recv(mess);
-…
+   while (1) {
+      TMessage *mess;
+      TSocket  *s;
+      s = mon->Select();
+      s->Recv(mess);
+      ...
+   }
 }
 ```
 

@@ -357,7 +357,7 @@ Look for example at the code of `TH1::Draw()`. It is merely ten lines of
 code. The last statement is `AppendPad()`. This statement calls method
 of **`TObject`** that just adds the pointer of the object, here a
 histogram, to the list of objects attached to the current pad. Since
-this is a **`TObject`**’s method, every object may be "drawn", which
+this is a **`TObject`**'s method, every object may be "drawn", which
 means attached to a pad. We can illustrate this by the Figure 9-2. This
 image corresponds to the following structure:
 
@@ -545,7 +545,7 @@ coordinates, `(ndcx,ndcy)` in normalized coordinates, (`apx`, `apy`) are
 in absolute pixel coordinates.
 
 +-----------------------+----------------------------------+--------------------+
-| Conversion            | TPad’s Methods                   | Returns            |
+| Conversion            | TPad's Methods                   | Returns            |
 +-----------------------+----------------------------------+--------------------+
 | NDC to Pixel          | `UtoPixel(ndcx)`                 | Int\_t             |
 |                       |                                  |                    |
@@ -583,7 +583,7 @@ converting the same way as the other conversion functions, it should be
 used the following way (`p` is a pointer to a **`TPad`**):
 
 ``` {.cpp}
-p->PixeltoY(py – p->GetWh());
+p->PixeltoY(py - p->GetWh());
 ```
 
 ### Dividing a Pad into Sub-pads
@@ -636,7 +636,7 @@ root[] pad1->Divide(3,2)
 If `pad1` is a pad then, it will divide the pad into 3 columns of 2
 sub-pads. The generated sub-pads get names `pad1_i` where the index
 `i=1` to `nxm` (in our case `pad1_1`, `pad1_2`...`pad1_6)`. The names
-`pad1_1 `etc… correspond to new variables in CINT, so you may use them
+`pad1_1 `etc... correspond to new variables in CINT, so you may use them
 as soon as the executed method was `pad->Divide()`. However, in a
 compiled program, one has to access these objects. Remember that a pad
 contains other objects and that these objects may themselves be pads. So
@@ -882,7 +882,7 @@ ar.SetFillColor(icolor);
 Where `icolor` is the color defined in "Color and Color Palettes".
 
 The default-opening angle between the two sides of the arrow is 60
-degrees. It can be changed with the method `ar–>SetAngle(angle)`, where
+degrees. It can be changed with the method `ar->SetAngle(angle)`, where
 angle is expressed in degrees.
 
 A poly-line is a set of joint segments. It is defined by a set of N
@@ -904,7 +904,7 @@ An ellipse can be truncated and rotated. It is defined by its center
 `(x1,y1)` and two radii `r1` and `r2`. A minimum and maximum angle may
 be specified `(phimin,phimax)`. The ellipse may be rotated with an angle
 `theta`. All these angles are in degrees. The attributes of the outline
-line are set via **`TAttLine`**, of the fill area – via **`TAttFill`**
+line are set via **`TAttLine`**, of the fill area - via **`TAttFill`**
 class. They are described in "Graphical Objects Attributes".
 
 ![Different types of ellipses](pictures/030000AE.png)
@@ -1030,7 +1030,7 @@ TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
            Double_t wavelength, Double_t amplitude)
 ```
 
-The coordinates `(x1`, `y1)` define the starting point, `(x2`, `y2)` –
+The coordinates `(x1`, `y1)` define the starting point, `(x2`, `y2)` -
 the end-point. The `wavelength` and the `amplitude` are given in percent
 of the pad height.
 
@@ -1428,7 +1428,7 @@ for an axis. The `ndiv` and `optim` are as follows:
 
 -   `N3 =` number of tertiary divisions.
 
--   `optim = kTRUE ` (default), the divisions’ number will be optimized
+-   `optim = kTRUE ` (default), the divisions' number will be optimized
     around the specified value.
 
 -   `optim = kFALSE, ` or n \< 0, the axis will be forced to use exactly
@@ -1517,13 +1517,13 @@ tick marks position, or even decreasing. In fact, anything you like.
 Tick marks are normally drawn on the positive side of the axis, however,
 if `xmin = xmax`, then negative.
 
--   `chopt = '+’: ` tick marks are drawn on Positive side. (Default)
+-   `chopt = '+': ` tick marks are drawn on Positive side. (Default)
 
--   `chopt = '-’: ` tick marks are drawn on the negative side.
+-   `chopt = '-': ` tick marks are drawn on the negative side.
 
--   `chopt = '+-’:` tick marks are drawn on both sides of the axis.
+-   `chopt = '+-':` tick marks are drawn on both sides of the axis.
 
--   `chopt = ‘U’: ` unlabeled axis, default is labeled.
+-   `chopt = ‘U': ` unlabeled axis, default is labeled.
 
 ### Labels
 
@@ -2101,7 +2101,7 @@ different behavior for PostScript in case of **`TLatex`** objects:
 
 For example: `font = 62` is the font with ID `6` and precision `2`.
 
-![Font’s examples](pictures/030000CF.png)
+![Font's examples](pictures/030000CF.png)
 
 The available fonts are:
 
@@ -2426,7 +2426,7 @@ ROOT version.
 This user interface gives the possibility for changing the following
 axis attributes:
 
--   color of the selected axis, the axis’ title and labels;
+-   color of the selected axis, the axis' title and labels;
 
 -   the length of thick parameters and the possibility to set them on
     both axis sides (if `+-` is selected);
@@ -2437,7 +2437,7 @@ axis attributes:
 -   primary, secondary and tertiary axis divisions can be set via the
     three number fields;
 
--   the axis title can be added or edited and the title’s color,
+-   the axis title can be added or edited and the title's color,
     position, offset, size and font can be set interactively;
 
 -   the color, size, and offset of axis labels can be set similarly. In
@@ -2451,19 +2451,19 @@ axis attributes:
 
 -   It provides the following user interface:
 
--   Fixed aspect ratio – can be set for pad resizing.
+-   Fixed aspect ratio - can be set for pad resizing.
 
--   Edit – sets pad or canvas as editable.
+-   Edit - sets pad or canvas as editable.
 
--   Cross-hair – sets a cross hair on the pad.
+-   Cross-hair - sets a cross hair on the pad.
 
--   TickX – set ticks along the X axis.
+-   TickX - set ticks along the X axis.
 
--   TickY – set ticks along the Y axis.
+-   TickY - set ticks along the Y axis.
 
--   GridX – set a grid along the X axis.
+-   GridX - set a grid along the X axis.
 
--   GridY – set a grid along the Y axis.
+-   GridY - set a grid along the Y axis.
 
 -   The pad or canvas border size can be set if a sunken or a raised
     border mode is
@@ -3071,20 +3071,20 @@ description, in particular:
 
 ROOT provides several viewers capable of displaying 3D content:
 
--   the Pad – simple line drawing using **`TPad`** and associated
+-   the Pad - simple line drawing using **`TPad`** and associated
     projection class **`TView`**;
 
--   GL Viewer – high quality and performance viewer(See "The GL
+-   GL Viewer - high quality and performance viewer(See "The GL
     Viewer");
 
--   X3D viewer – simple legacy viewer (See "The X3D Viewer");
+-   X3D viewer - simple legacy viewer (See "The X3D Viewer");
 
--   GL-in-pad – combination of basic GL viewer in **`TPad`**, with no
+-   GL-in-pad - combination of basic GL viewer in **`TPad`**, with no
     hardware acceleration.
 
 The X3D and GL viewers are created as external windows, associated with
 a pad, and displaying the same content as it. Only these external
-viewers are detailed here – for Pad (**`TPad`**, **`TView`** classes)
+viewers are detailed here - for Pad (**`TPad`**, **`TView`** classes)
 you should refer to "Graphical Containers: Canvas and Pad" and the class
 definitions.
 
@@ -3135,13 +3135,13 @@ to generate high quality, high-performance 3D renderings, with
 sophisticated lighting, materials and rendering styles for 3D scenes.
 Many users will be able to take advantage of hardware acceleration of
 the underlying OpenGL commands by their computer's video card, resulting
-is considerable performance gains – up to interactive manipulation of
-1000’s of complex shapes in real-time.
+is considerable performance gains - up to interactive manipulation of
+1000's of complex shapes in real-time.
 
 The GL Viewer is supported on all official ROOT platforms (assuming you
 have suitable <OpenGL®> libraries), and is the main 3D viewer, which
 development effort is concentrated upon. As OpenGL® is a trademark we
-refer to our viewer built on this technology as the ‘GL Viewer’. The
+refer to our viewer built on this technology as the ‘GL Viewer'. The
 code for it can be found under `$ROOTSYS/gl`.
 
 ![The GL 3D Viewer](pictures/020000DA.jpg)
@@ -3155,11 +3155,11 @@ see also `$ROOTSYS/tutorials/gl/glViewerExercise.C`.
 The GL Viewer supports two basic types of camera, which affect how the
 3D world is projected onto the 2D render area:
 
--   Perspective: Objects are drawn with characteristic ‘foreshortening’
+-   Perspective: Objects are drawn with characteristic ‘foreshortening'
     effect, where distant objects appear smaller than near ones. This is
-    useful for obtaining a ‘real world’ views. The degree of
+    useful for obtaining a ‘real world' views. The degree of
     foreshortening is affected by the current camera field of view
-    (focal length of its ‘lens’) – see "Adjusting Cameras".
+    (focal length of its ‘lens') - see "Adjusting Cameras".
 
 -   Orthographic: Distance from camera does not affect object size.
     These projections are useful for measurement or checking alignments,
@@ -3176,7 +3176,7 @@ top menu bar. There are three perspective camera choices:
 
 In each case the perspective camera is constrained to keep the chosen
 floor plane, defined by a pair of world axes, appearing level at all
-times – i.e. there is no banking of the ‘horizon’ that you experience
+times - i.e. there is no banking of the ‘horizon' that you experience
 when a plane rolls. There are also three orthographic camera choices:
 
 -   Orthographic (XOY)
@@ -3190,7 +3190,7 @@ the global axes of the world, with the other two axes lying
 horizontal/vertical on the viewer window. Therefore, XOY has the X-axis
 horizontal, the Y-axis vertical. You can always confirm the orientation
 and constraints of the camera in the world by enabling axis drawing in
-the "Guides" tab – see sections "Guides" and "Clipping" below. For
+the "Guides" tab - see sections "Guides" and "Clipping" below. For
 orthographic camera a ruler-depicting current scene units is also
 available.
 
@@ -3233,10 +3233,10 @@ mouse button is down).
 
 Note for orthographic cameras:
 
--   There is no field of view of view/focal length – dollying and
+-   There is no field of view of view/focal length - dollying and
     zooming producing an identical scaling action.
 
--   There is a fixed eye direction – so the ‘Orbit’ action is disabled.
+-   There is a fixed eye direction - so the ‘Orbit' action is disabled.
 
 Note for perspective cameras:
 
@@ -3246,16 +3246,16 @@ Note for perspective cameras:
 -   When you dolly the camera the lens focal length does not change,
     hence the distortions associated with the projections are
     unaffected. However the movement can result in objects coming
-    ‘through the front’ of the camera and disappearing.
+    ‘through the front' of the camera and disappearing.
 
--   When you zoom, the camera does not move – hence clipping of near
+-   When you zoom, the camera does not move - hence clipping of near
     objects is unaffected. However with extremely small zooms (FOV
     large/focal length short) noticeable distortions, causing straight
-    lines to become curved, can be seen with objects near the camera –
-    the ‘fisheye’ lens effect.
+    lines to become curved, can be seen with objects near the camera -
+    the ‘fisheye' lens effect.
 
--   Generally dollying is more ‘natural’, but you may need to use both
-    to achieve the desired perspective and eye position – particularly
+-   Generally dollying is more ‘natural', but you may need to use both
+    to achieve the desired perspective and eye position - particularly
     when you are working inside or very close to 3D objects.
 
 Configure the camera by calling the methods `SetPerspectiveCamera(`) or
@@ -3269,7 +3269,7 @@ v->SetOrthoCamera(TGLViewer::kCameraOrthoXOY,
 v->SetPerspectiveCamera (camera,fov,dolly,center,hRotate,vRotate);
 ```
 
-Note – you can configure any of the six cameras in the viewer at any
+Note - you can configure any of the six cameras in the viewer at any
 time, but you will not see the result until the camera is made current.
 
 #### Draw Styles
@@ -3281,8 +3281,8 @@ the key used to activate the style.
 
 ![GL Viewer draw styles](pictures/020000DC.jpg)
 
-**Filled Polygons** **Wireframe** **Outline** Enable with ‘r’ key Enable
-with ‘w’ key Enable with ‘t’ key Solid polygons, with hidden surface
+**Filled Polygons** **Wireframe** **Outline** Enable with ‘r' key Enable
+with ‘w' key Enable with ‘t' key Solid polygons, with hidden surface
 Object edges in color, with Combination of Filled Polygons removal,
 color surface materials, no surface filling/hiding. and Outline styles.
 Solid opacity, specular reflection etc. shapes with edges. Black
@@ -3299,10 +3299,10 @@ v->SetStyle(TGLRnrCtx::kFill);
 
 The GL viewer creates five diffuse lights (left, right, top, bottom, and
 front) arranged around the 3D scene. These lights are carried with the
-camera – that is they are always in same position relative to your eye –
+camera - that is they are always in same position relative to your eye -
 the left light always shines from the left.
 
-Light controls are located: Viewer Controls Pane ‘Style’.
+Light controls are located: Viewer Controls Pane ‘Style'.
 
 Each light has a checkbox to enable/disable it. Set lights on/off with
 **`TGLLightSet::SetLight` e.g.**
@@ -3319,15 +3319,15 @@ sections of your 3D scene and the shapes, revealing internal details.
 ![GL Viewer interactive box clipping](pictures/020000DD.jpg)
 
 The controls for clipping can be found under: Viewer Controls Pane
-‘Clipping’ tab.
+‘Clipping' tab.
 
-Two clipping ‘shapes’ are currently supported:
+Two clipping ‘shapes' are currently supported:
 
 -   Single plane
 
 -   Box
 
-Pick the type from the radio buttons – only one (or none) may be active
+Pick the type from the radio buttons - only one (or none) may be active
 at one time.
 
 The clip object can be adjusted by:
@@ -3337,29 +3337,29 @@ The clip object can be adjusted by:
 -   Directly manipulating the clip object in the viewer
 
 To show and/or directly manipulate the object check the ‘Show / Edit in
-Viewer’ checkbox. The clip object is drawn in semi-transparent light
+Viewer' checkbox. The clip object is drawn in semi-transparent light
 brown. The current manipulator is attached to it, allowing you direct
 control over its position, scale and rotation. See "Manipulators"
 section below for details on using viewer manipulators.
 
 The clip plane is described by the standard plane equation:
 **`ax+by+cz+d=``0`**, where the factors **`a`**, **`b`**, **`c`**,
-**`d`** are entered into the edit boxes, and applied using the ‘Apply’
+**`d`** are entered into the edit boxes, and applied using the ‘Apply'
 button.
 
 The clip box is described by its center position, entered in the ‘Center
-X’, ‘Center Y’ and ‘Center Z’ edit boxes, and its lengths (extents)
-entered in the ‘Length X’, ‘Length Y’ and ‘Length Z’ edit boxes.
+X', ‘Center Y' and ‘Center Z' edit boxes, and its lengths (extents)
+entered in the ‘Length X', ‘Length Y' and ‘Length Z' edit boxes.
 
 This clipping is achieved using OpenGL clip plane support; as such,
 there are certain limitations:
 
--   Solid shapes are not capped – they appear hollow.
+-   Solid shapes are not capped - they appear hollow.
 
 -   Only shapes, which can be described with combination of planes, can
-    be rendered in this fashion – e.g. a clipping tube is not possible.
+    be rendered in this fashion - e.g. a clipping tube is not possible.
 
--   Each additional clipping plane requires an additional render pass –
+-   Each additional clipping plane requires an additional render pass -
     so the more active planes the more time the render will take.
 
 Set the current clip object with **`TGLClipSet::SetClipType`**
@@ -3380,7 +3380,7 @@ set the clip current to see the effect.
 
 #### Manipulators
 
-*Manipulators* are GUI ‘widgets’ or controls attached to a 3D object in
+*Manipulators* are GUI ‘widgets' or controls attached to a 3D object in
 the viewer, allowing a direct manipulation of the object's geometry.
 There are three manipulators for the three basic geometries
 transformations. In each case, the *manipulator* consists of three
@@ -3392,7 +3392,7 @@ colors: red (X), green (Y) and blue (Z).
 Activate the *manipulator* by moving the mouse over one of these
 components (which turns yellow to indicate active state). Click with
 left mouse and drag this active component to perform the manipulation.
-Toggle between the *manipulator* types using the ‘x’, ‘c’, ‘v’ keys
+Toggle between the *manipulator* types using the ‘x', ‘c', ‘v' keys
 while the mouse cursoris above the manipulator. Note: Manipulators
 cannot be controlled via the API at present.
 
@@ -3407,24 +3407,24 @@ Axes show the world (global) frame *coordinate*directions: X (red), Y
 (green) and Z (blue). The negative portion of the *axis* line is shown
 in dark color, the positive in bright. The *axis* name and minimum /
 maximum values are labeled in the same color. There are three options
-for *axes* drawing – selected by radio buttons:
+for *axes* drawing - selected by radio buttons:
 
--   None – not drawn (default).
+-   None - not drawn (default).
 
--   Edge – draw axes on the (minimum) edge of the scene extents box.
+-   Edge - draw axes on the (minimum) edge of the scene extents box.
 
--   Origin – drawn axes through the origin.
+-   Origin - drawn axes through the origin.
 
 For *edge axes*, the zero value for each axis is marked on the axis line
 with a colored sphere. For *origin axes,* a single white sphere is shown
 at the origin.
 
-*Edge axes* are depth clipped – i.e. are obscured by 3D objects in front
+*Edge axes* are depth clipped - i.e. are obscured by 3D objects in front
 of them. *Origin axes* (which generally pass through the middle of the
-3D scene) are not depth clipped – so always visible.
+3D scene) are not depth clipped - so always visible.
 
 A single orange sphere of fixed view port (window) size can be shown at
-any arbitrary position. Enable / disable the drawing with ‘*Show’*
+any arbitrary position. Enable / disable the drawing with ‘*Show'*
 checkbox. Enter X/Y/Z position in the edit boxes to set position.
 Initial position is at the center of the scene.
 
@@ -3438,7 +3438,7 @@ v->SetGuideState(TGLUtil::kAxesEdge, kTRUE, refPos);
 
 #### Selecting Scene Shapes
 
-You can select a single shape from your scene by pressing ‘Shift’ key,
+You can select a single shape from your scene by pressing ‘Shift' key,
 pointing and left clicking anywhere on the shape in the viewer.
 Selection is currently shown by drawing the shape-bounding box (not
 depth clipped) in white (polygon or wire frame render styles) or red
@@ -3454,7 +3454,7 @@ When a shape is selected, the viewer's control pane shows the user
 interface that allows you to review and adjust the color and geometry
 properties of the shape.
 
-Note: At present modifications to the shapes are local to the viewer –
+Note: At present modifications to the shapes are local to the viewer -
 they are not propagated back to external objects/client that published
 to the viewer. The changes are preserved only until the viewer is
 closed. In some cases, this will never be feasible as there is not a
@@ -3463,7 +3463,7 @@ external object in which the modification could be stored.
 
 #### Colors / Style
 
-Viewer Controls Pane ‘Style’ tab.
+Viewer Controls Pane ‘Style' tab.
 
 A full description of OpenGL materials, colors and lighting is beyond
 the scope of this document. You should refer to the OpenGL programming
@@ -3484,14 +3484,14 @@ A shape has four-color materials (components):
 For each of these you can select the component via the radio buttons.
 Each component can have the red, green and blue values for the component
 adjusted via the sliders. You can apply this adjustment to the shape
-itself, or to all shapes sharing a common ‘family’. Shapes of the same
+itself, or to all shapes sharing a common ‘family'. Shapes of the same
 family have external objects with the same **`TObject`** name string.
-You can also adjust the ‘Opacity’ and ‘Shine’ for the shapes materials
+You can also adjust the ‘Opacity' and ‘Shine' for the shapes materials
 via the sliders.
 
 #### Geometry
 
-Viewer Controls Pane ‘Geometry’ tab.
+Viewer Controls Pane ‘Geometry' tab.
 
 Review and modify the shapes X/Y/Z center and scaling factors via the
 edit boxes. Selection and editing of shapes is not available via the API
@@ -3500,8 +3500,8 @@ at present.
 #### Outputting Viewer Contents
 
 The current viewer rendering can be output to an external `EPS` or
-`PDF`, using the options under the ‘File’ menu on the top menu bar. The
-file is named ‘`viewer.eps`’ or ‘`viewer.pdf`’ and written to the
+`PDF`, using the options under the ‘File' menu on the top menu bar. The
+file is named ‘`viewer.eps`' or ‘`viewer.pdf`' and written to the
 current ROOT directory.
 
 ### The X3D Viewer
@@ -3512,7 +3512,7 @@ basic lines and polygons. It lacks the quality, performance and more
 advanced features of the GL Viewer, and additionally is not supported on
 Windows. It is not actively developed and you are encouraged to use the
 GL Viewer out of preference. The below table presents the main
-interactions – these are repeated in the Help dialog of the viewer.
+interactions - these are repeated in the Help dialog of the viewer.
 
 Action KeyActionKey
 
@@ -3630,7 +3630,7 @@ viewer handle via the method:
 TVirtualViewer3D * v = gPad->GetViewer3D("type");
 ```
 
-Here the "type" string defines the viewer type – currently one of:
+Here the "type" string defines the viewer type - currently one of:
 
 -   "`ogl`" : External GL viewer
 
@@ -3640,7 +3640,7 @@ Here the "type" string defines the viewer type – currently one of:
 
 If no type is passed (null string), and there is no current viewer, then
 the type is defaulted to "`pad`". If no type is passed and there is a
-current viewer, then this is returned – hence once a viewer is created
+current viewer, then this is returned - hence once a viewer is created
 it can be obtained elsewhere by:
 
 ``` {.cpp}
@@ -3680,14 +3680,14 @@ in their capabilities e.g.
 
 -   Some support native shape (e.g. spheres/tubes in OpenGL) and can
     draw these based on an abstract description. Others always require a
-    tessellation description based on **`TBuffer3D`**’s `kRaw` /
+    tessellation description based on **`TBuffer3D`**'s `kRaw` /
     `kRawSizes` points/lines/segments sections.
 
 -   Some need the 3D object positions in the master (world) frame,
     others can cope with local frames and a translation matrix to place
     the object.
 
--   Some require bounding boxes for objects – others do not.
+-   Some require bounding boxes for objects - others do not.
 
 Similarly some viewer clients are only capable of providing positions in
 master frame, cannot provide bounding boxes etc. Additionally we do not
@@ -3698,16 +3698,16 @@ viewer does not require them. To cope with these variations the
 ![TBuffer3D class hierarchy](pictures/030000E0.png)
 
 **`TBuffer3D`** classes are conceptually divided into enumerated
-sections: `kCore`, `kBoundingBox`, `kRaw` – see the class diagram and
+sections: `kCore`, `kBoundingBox`, `kRaw` - see the class diagram and
 the file `TBuffer3D.h` for more details. The **`TBuffer3D`** methods
 `SectionsValid()`, `SetSectionsValid()`, `ClearSectionsValid()` are used
 to test, set, clear these section validity flags e.g.
 
 ``` {.cpp}
 buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
-…
+...
 if (buffer.SectionsValid(TBuffer3D:: kShapeSpecific)) {
-   …
+   ...
 }
 ```
 
@@ -3776,12 +3776,12 @@ Bool_t localFrame) const {
    if (reqSections & TBuffer3D::kShapeSpecific) {
       buffer.fRadiusInner  = fRmin;
       buffer.fRadiusOuter  = fRmax;
-      …
+      ...
       buffer.SetSectionsValid(TBuffer3D::kShapeSpecific);
    }
    // Complete kRawSizes section
    if (reqSections & TBuffer3D::kRawSizes) {
-      …
+      ...
       buffer.SetSectionsValid(TBuffer3D::kRawSizes);
    }
 }
@@ -3803,12 +3803,12 @@ Bool_t localFrame) const {
 
 Note:
 
--   we use a static **`TBuffer3D`** derived object for efficiency – once
+-   we use a static **`TBuffer3D`** derived object for efficiency - once
     the object is added the buffer can be reused.
 
 -   `kRawSize` (the calculation of tessellation sizing required in
     buffer) and `kRaw` (the actual filling of tessellation) is split, as
-    the X3D viewer requires two publication passes – one to establish
+    the X3D viewer requires two publication passes - one to establish
     the full tessellation capacity for all shapes, and another to
     actually add them. Splitting avoids having to do the expensive
     tessellation on the first pass.
@@ -3819,10 +3819,10 @@ Currently we provide the following shape specific classes, which the GL
 Viewer can take advantage of (see `TBuffer3D.h` and `TBuffer3DTypes.h`)
 
 -   **`TBuffer3DSphere`** - solid, hollow and cut spheres (GL Viewer
-    only supports solid spheres at present – cut / hollow ones will be
+    only supports solid spheres at present - cut / hollow ones will be
     requested as tessellated objects by client.)
 
--   **`TBuffer3DTube`** – basic tube with inner/outer radius and length.
+-   **`TBuffer3DTube`** - basic tube with inner/outer radius and length.
 
 -   **`TBuffer3DTubeSeg`** - angle tube segment.
 
@@ -3883,14 +3883,14 @@ buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
 Some viewers can support two types of object placement:
 
 -   Add object as a single independent entity in the world reference
-    frame – e.g. a sphere, radius `r`, at `x`, `y`, `z`.
+    frame - e.g. a sphere, radius `r`, at `x`, `y`, `z`.
 
 -   Repeated placement (copying) in world frame of this locally unique
     piece of geometry (described in local reference frame) e.g. define a
     sphere `S` (radius `r`), place copy at `x1`, `y1`, `z1`, another
     copy at `x2`, `y2`, `z2` etc.
 
-The second case is very typical in geometry packages, e.g. ROOT’s
+The second case is very typical in geometry packages, e.g. ROOT's
 **`TGeo`** package, GEANT4 etc, where we have very large number repeated
 placements of relatively few unique "shapes".
 
@@ -3949,7 +3949,7 @@ assumptions about what the viewer did with the object. The viewer may
 decide to force the client to rebuild (republish) the scene, obtaining a
 different collection of objects, if the internal viewer state changes
 .e.g. significant camera move. It does this presently by forcing a
-repaint on the attached **`TPad`** object – hence you should attach you
+repaint on the attached **`TPad`** object - hence you should attach you
 master geometry object to the pad (via `TObject::Draw()`), and perform
 the publishing to the viewer in response to **`TObject::Paint()`**.
 
@@ -3969,7 +3969,7 @@ If you use the first (simple) case a viewer using logical/physical pairs
 will generate sequential IDs for each physical object internally. Scene
 rebuilds will require destruction and recreation of all physical
 objects. For the second you can specify an identifier from the client
-side, which must be unique and stable – i.e. the IDs of a published
+side, which must be unique and stable - i.e. the IDs of a published
 object is consistent, regardless of changes in termination of contained
 child geometry branches. In this case the viewer can safely cache the
 physical objects across scene rebuilds, discarding those no longer of
@@ -3987,7 +3987,7 @@ children of the object just sent are worth sending.
 #### Recycling TBuffer3D
 
 Once add `TBuffer3D::AddObject()` has been called, the contents are
-copied to the viewer’s internal data structures. You are free to destroy
+copied to the viewer's internal data structures. You are free to destroy
 this **`TBuffer3D`**, or recycle it for the next object if suitable.
 
 #### Examples
@@ -3996,6 +3996,6 @@ For an example of a simple geometry, working in master reference frame
 examine the code under `$ROOTSYS/g3d`. For a more complex example, which
 works in both master and local frames, and uses logical`/`physical
 division of shape geometry and placement, examine the code under
-`$ROOTSYS/geom` – in particular **`TGeoShape`** hierarchy, and the
+`$ROOTSYS/geom` - in particular **`TGeoShape`** hierarchy, and the
 painter object **`TGeoPainter`** (under geopainter) where the
 negotiation with the viewer is performed.

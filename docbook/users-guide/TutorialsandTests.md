@@ -1,12 +1,12 @@
-The Tutorials and Tests
-=======================
+# The Tutorials and Tests
+
 
 This chapter is a guide to the examples that come with the installation
 of ROOT. They are located in two directories: `$ROOTSYS/tutorials` and
 `$ROOTSYS/test`.
 
-\$ROOTSYS/tutorials
-===================
+## \$ROOTSYS/tutorials
+
 
 ![](pictures/030001F9.png)The tutorials directory contains many example
 scripts. *To have all examples working you must have write permission
@@ -50,8 +50,8 @@ root[] .x demos.C
 root[] .q
 ```
 
-\$ROOTSYS/test
-==============
+## \$ROOTSYS/test
+
 
 The test directory contains a set of examples that represent all areas
 of the framework. When a new release is cut, the examples in this
@@ -137,8 +137,8 @@ Now compile all programs:
 This will build several applications and shared libraries. We are
 especially interested in Event, stress, and `guitest`.
 
-Event – An Example of a ROOT Application
-----------------------------------------
+### Event - An Example of a ROOT Application
+
 
 Event is created by compiling `MainEvent.cxx`, and `Event.cxx`. It
 creates a ROOT file with a tree and two histograms. When running `Event`
@@ -163,7 +163,7 @@ we have four optional arguments with defaults:
 |     | level is set to 1, all non floating point leaves are    |              |
 |     | compressed according to the `gzip` level 2 and the      |              |
 |     | floating point leaves are compressed according to the   |              |
-|     | `gzip` level 1 (`gzip` level –1).                       |              |
+|     | `gzip` level 1 (`gzip` level -1).                       |              |
 |     |                                                         |              |
 |     | Floating point numbers are compressed differently       |              |
 |     | because the gain when compressing them is about 20 -    |              |
@@ -183,7 +183,7 @@ we have four optional arguments with defaults:
 |     |                                                         | fill)        |
 |     | 1: write the file, but don't fill the histograms        |              |
 |     |                                                         |              |
-|     | 2: don't write, don’t fill the histograms               |              |
+|     | 2: don't write, don't fill the histograms               |              |
 |     |                                                         |              |
 |     | 10: fill the histograms, don't write the file           |              |
 |     |                                                         |              |
@@ -194,7 +194,7 @@ we have four optional arguments with defaults:
 |     | 25: read the file at random                             |              |
 +-----+---------------------------------------------------------+--------------+
 
-### Effect of Compression on File Size and Write Times
+#### Effect of Compression on File Size and Write Times
 
 You may have noticed that a ROOT file has up to nine compression level,
 but here only levels 0, 1, and 2 are described. Compression levels above
@@ -213,7 +213,7 @@ You write 2.800173 Mbytes/Realtime seconds
 You write 5.380107 Mbytes/Cputime seconds
 
 > ls -l Event.root
-… 19752171 Feb 23 18:26 Event.root
+... 19752171 Feb 23 18:26 Event.root
 
 > Event 400 0 1 20
 400 events and 19153182 bytes processed.
@@ -236,7 +236,7 @@ You write 2.974096 Mbytes/Realtime seconds
 You write 4.764473 Mbytes/Cputime seconds
 
 > ls -l Event.root
-…     17728188 Feb 23 18:28 Event.root
+...     17728188 Feb 23 18:28 Event.root
 
 > Event 400 1 1 20
 400 events and 19153182 bytes processed.
@@ -259,7 +259,7 @@ You write 1.688993 Mbytes/Realtime seconds
 You write 2.014004 Mbytes/Cputime seconds
 
 > ls -l Event.root
-…     13783799 Feb 23 18:29 Event.root
+...     13783799 Feb 23 18:29 Event.root
 
 > Event 400 2 1 20
 400 events and 19153182 bytes processed.
@@ -283,7 +283,7 @@ This table summarizes the findings on the impact of compressions:
 | 2                   | 13.78 MB             | 11.34 sec.        | 2.17 sec.     |
 +---------------------+----------------------+-------------------+---------------+
 
-### Setting the Split Level
+#### Setting the Split Level
 
 ![](pictures/080001FA.png)Split Level = 0:
 
@@ -317,8 +317,8 @@ root[] TBrowser browser
 
 ![](pictures/080001FB.png)
 
-stress - Test and Benchmark
----------------------------
+### stress - Test and Benchmark
+
 
 The executable stress is created by compiling `stress.cxx`. It completes
 sixteen tests covering the following capabilities of the ROOT framework.
@@ -393,7 +393,7 @@ reference machine.
 Here is a sample run:
 
 ``` {.cpp}
-% root –b
+% root -b
 root[] .x stress.cxx(30)
 
 Test  1 : Functions, Random Numbers, Histogram Fits............. OK
@@ -422,8 +422,8 @@ stress    : Real Time = 307.61 seconds Cpu Time = 292.82 seconds
 *  ROOTMARKS =  53.7   *  Root2.25/00   20000710/1022
 ```
 
-guitest – A Graphical User Interface
-------------------------------------
+### guitest - A Graphical User Interface
+
 
 The `guitest` example, created by compiling `guitest.cxx`, tests and
 illustrates the use of the native GUI widgets such as cascading menus,

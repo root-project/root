@@ -1,5 +1,5 @@
-Threads
-=======
+# Threads
+
 
 A thread is an independent flow of control that operates within the same
 address space as other independent flows of controls within a process.
@@ -9,15 +9,15 @@ into a single entity called a process. Sometimes, threads are called
 
 Note: This introduction is adapted from the AIX 4.3 Programmer's Manual.
 
-Threads and Processes
-=====================
+## Threads and Processes
+
 
 In traditional single-threaded process systems, a process has a set of
 properties. In multi-threaded systems, these properties are divided
 between processes and threads.
 
-Process Properties
-------------------
+### Process Properties
+
 
 A process in a multi-threaded system is the changeable entity. It must
 be considered as an execution frame. It has all traditional process
@@ -41,8 +41,8 @@ resources:
 -   Inter-process communication tools (such as message queues, pipes,
     semaphores, or shared memory)
 
-Thread Properties
------------------
+### Thread Properties
+
 
 A thread is the schedulable entity. It has only those properties that
 are required to ensure its independent flow of control. These include
@@ -73,8 +73,8 @@ shared system resources, all threads within the process are affected.
 For example, if a thread closes a file, the file is closed for all
 threads.
 
-The Initial Thread
-------------------
+### The Initial Thread
+
 
 When a process is created, one thread is automatically created. This
 thread is called the initial thread or the main thread. The initial
@@ -82,14 +82,14 @@ thread executes the main routine in multi-threaded programs.
 
 Note: At the end of this chapter is a glossary of thread specific terms
 
-Implementation of Threads in ROOT
-=================================
+## Implementation of Threads in ROOT
+
 
 The **`TThread`** class has been developed to provide a platform
 independent interface to threads for ROOT.
 
-Installation
-------------
+### Installation
+
 
 For the time being, it is still necessary to compile a threaded version
 of ROOT to enable some very special treatments of the canvas operations.
@@ -112,8 +112,8 @@ This enables the thread specific treatment of *`gPad`*, and creates
 Note: The parameter linuxdeb2 has to be replaced with the appropriate
 ROOT keyword for your platform.
 
-Classes
--------
+### Classes
+
 
 **`TThread`** class implements threads . The platform dependent
 implementation is in the **`TThreadImp`** class and its descendant
@@ -132,8 +132,8 @@ the **`TConditionImp`** and **`TPosixCondition`** classes .
 to synchronize threads. The platform dependent implementation is in the
 **`TMutexImp`** and **`TConditionImp`** classes.
 
-TThread for Pedestrians
------------------------
+### TThread for Pedestrians
+
 
 To run a thread in ROOT, follow these steps:
 
@@ -143,11 +143,11 @@ Add these lines to your `rootlogon.C`:
 
 ``` {.cpp}
 {
-…
+...
    // The next line may be unnecessary on some platforms
 gSystem->Load("/usr/lib/libpthread.so");
 gSystem->Load("$ROOTSYS/lib/libThread.so");
-…
+...
 }
 ```
 
@@ -208,13 +208,13 @@ different threads. With the `CalcPi` example, you should be able to see
 two threads calculating Pi with the given number of intervals as
 precision.
 
-TThread in More Details
------------------------
+### TThread in More Details
+
 
 CINT is not thread safe yet, and it will block the execution of the
 threads until it has finished executing.
 
-### Asynchronous Actions
+#### Asynchronous Actions
 
 Different threads can work simultaneously with the same object. Some
 actions can be dangerous. For example, when two threads create a
@@ -239,7 +239,7 @@ The user may also define his own **`TMutex`** `MyMutex` instance and may
 locally protect his asynchronous actions by calling `MyMutex.Lock()` and
 `MyMutex.UnLock().`
 
-### Synchronous Actions: TCondition
+#### Synchronous Actions: TCondition
 
 To synchronize the actions of different threads you can use the
 **`TCondition`** class, which provides a signaling mechanism. The
@@ -304,7 +304,7 @@ synchronized using **`TCondition`**: a ROOT script `condstart.C` starts
 the threads, which are defined in a shared library
 (`conditions.cxx, conditions.h`).
 
-### Xlib Connections
+#### Xlib Connections
 
 Usually `Xlib` is not thread safe. This means that calls to the X could
 fail, when it receives X-messages from different threads. The actual
@@ -323,14 +323,14 @@ pointer. This mechanism works currently only for ***`gPad`***,
 ***`gDirectory`***, ***`gFile`*** and will be implemented soon for other
 global Objects as e.g. ***`gVirtualX`***.
 
-### Canceling a TThread
+#### Canceling a TThread
 
 Canceling of a thread is a rather dangerous action. In **`TThread`**
 canceling is forbidden by default. The user can change this default by
 calling `TThread::SetCancelOn()`. There are two cancellation modes:
 deferred and asynchronous.
 
-### Deferred
+#### Deferred
 
 Set by `TThread::SetCancelDeferred()` (default): When the user knows
 safe places in his code where a thread can be canceled without risk for
@@ -342,7 +342,7 @@ There are some default cancel points for `pthreads` implementation, e.g.
 any call of the `TCondition::Wait()`, **`TCondition`**`::TimedWait()`,
 `TThread::Join()`.
 
-### Asynchronous
+#### Asynchronous
 
 Set by `TThread::SetCancelAsynchronous``()`: If the user is sure that
 his application is cancel safe, he could call:
@@ -403,7 +403,7 @@ Note: `CleanUpPush` and `CleanUpPop` should be used as corresponding
 pairs like brackets; unlike `pthreads` cleanup stack (which is *not*
 implemented here), **`TThread`** does not force this usage.
 
-### Finishing thread
+#### Finishing thread
 
 When a thread returns from a user function the thread is finished. It
 also can be finished by `TThread::Exit()`. Then, in case of
@@ -411,8 +411,8 @@ also can be finished by `TThread::Exit()`. Then, in case of
 finishing **`TThread`** executes the most recent cleanup function
 (`CleanUpPop(1)` is called automatically once).
 
-Advanced TThread: Launching a Method in a Thread
-================================================
+## Advanced TThread: Launching a Method in a Thread
+
 
 Consider a class `Myclass` with a member function that shall be launched
 as a thread.
@@ -503,8 +503,8 @@ example builds the shared libraries `libTThreadframe.so` and
 `libTMhs3.so`. These are either loaded or executed by the ROOT script
 `TMhs3demo.C,` or are linked against an executable: `TMhs3run.cxx`.
 
-Known Problems
---------------
+### Known Problems
+
 
 Parts of the ROOT framework, like the interpreter, are not yet
 thread-safe. Therefore, you should use this package with caution. If you
@@ -523,8 +523,8 @@ of ROOT.
 memory allocation and global ROOT lists. The user has to explicitly
 protect his code when using them.
 
-The Signals of ROOT
-===================
+## The Signals of ROOT
+
 
 The list of default signals handled by ROOT is:
 
@@ -564,8 +564,8 @@ desired, you should use `GetSignalHandler()` of **`TApplication`** to
 get the interrupt handler and to remove it by `RemoveSignalHandler()`of
 **`TSystem`** .
 
-Glossary
-========
+## Glossary
+
 
 The following glossary is adapted from the description of the Rogue Wave
 `Threads.h`++ package.

@@ -1072,9 +1072,9 @@ A = QRH
 
 *H* (*n* x *n*) - Householder matrix, stored through;
 
-`fUp` n - vector with Householder up’s;
+`fUp` n - vector with Householder up's;
 
-`fW` n - vector with Householder beta’s.
+`fW` n - vector with Householder beta's.
 
 The decomposition fails if in the formation of reflectors a zero
 appears, i.e. singularity.

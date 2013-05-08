@@ -1,8 +1,8 @@
-ROOT/Qt Integration Interfaces
-==============================
+# ROOT/Qt Integration Interfaces
 
-Qt-ROOT Implementation of TVirtualX Interface (BNL)
-===================================================
+
+## Qt-ROOT Implementation of TVirtualX Interface (BNL)
+
 
 Qt-ROOT implementation of **`TVirtualX`** (Qt-layer) is to provide a
 convenient way of creating the complex end-user applications that
@@ -15,10 +15,10 @@ component. The implementation was developed and is supported by the
 <STAR> collaboration at
 [Brookhaven National Laboratory](Brookhaven National Laboratory).
 
-Installation
-------------
+### Installation
 
-### Qt Package Installation and Configuration
+
+#### Qt Package Installation and Configuration
 
 ROOT Qt-layer requires a "good" properly configured Qt package version.
 To install it, one has to:
@@ -34,7 +34,7 @@ by TrollTech to back the ROOT applications).
 consistent with those used to compile and install ROOT alone. For Qt
 3.x, we recommend configuring Qt as follows:
 
-`./configure –thread –no-xft –qt-gif –no-exeptions `
+`./configure -thread -no-xft -qt-gif -no-exeptions `
 
 I.e. one is required to build the Qt version with the "`thread`" support
 and with "`no exceptions`". Generally, you are free to select the
@@ -50,7 +50,7 @@ No special flag for Qt 4.3 build and higher have been set yet to make QtRoot wor
 experimental one. Most examples in this manual are for Qt version 3.3 and they need 
 to be adjusted for Qt 4.3.x.
 
-### Qt-layer Installation
+#### Qt-layer Installation
 
 The Qt-layer is included into the ROOT distribution kit. To install it
 one has to configure ROOT. The installation does not change any other
@@ -69,7 +69,7 @@ May sure you are not going to pick the obsolete version.
 % gmake install
 ```
 
-### Qt Main C++ Classes CINT Dictionary
+#### Qt Main C++ Classes CINT Dictionary
 
 The ROOT CINT dictionary allows to call the Qt main classes directly
 from the ROOT command prompt is an optional component and it is not
@@ -87,7 +87,7 @@ TrollTech on the Web page:
 loaded automatically and it should be loaded by the user ROOT macro as
 needed.
 
-### Qt-layer Configuration
+#### Qt-layer Configuration
 
 Any ROOT-based application should be configured to use Qt-layer using
 ROOT "Environment Setup". The correct **`QTDIR`** environment variable
@@ -140,11 +140,11 @@ Gui.Style:                windows
 The default style is so-called "native" style. That is defined by the
 current application environment.
 
-Applications
-------------
+### Applications
+
 
 As soon as you customize ROOT "Environment Setup" to use Qt-layer you
-can start any ROOT session or stand-alone ROOT-based applications and …
+can start any ROOT session or stand-alone ROOT-based applications and ...
 even though your applications will be using the Qt package you should
 not see any difference. This merely means if the only thing you want to
 do is just use ROOT or some ROOT-based stand-alone application "as is"
@@ -153,7 +153,7 @@ section entirely. It is recommended you communicate the lower graphical
 layer via the generic **`TVirtualX`** interface provided by the global
 ***`gVirtualX`***.
 
-### Qt-based ROOT Applications
+#### Qt-based ROOT Applications
 
 "ROOT application" is the application that either instantiates the ROOT
 **`TApplication`** / **`TRint`** class and enters the ROOT event loop or
@@ -169,7 +169,7 @@ instantiate the Qt object of your choice and to keep playing ROOT rules.
 int main( int argc, char **argv ) {
    // Create an interactive ROOT application
    TRint *theApp = new TRint("Rint", &argc, argv);
-      // Create Qt object within ROOT application
+   // Create Qt object within ROOT application
    QPushButton hello( "Hello world!", 0 );
    hello.resize( 100, 30 );
    hello.show();
@@ -181,11 +181,12 @@ int main( int argc, char **argv ) {
 Under UNIX, you can build the stand-alone ROOT HelloWord Qt-based
 application with the command
 
-`` g++ `root-config --cflags --glibs` -I$QTDIR/include -L$QTDIR/lib  ``
+```  {.cpp}
+g++ `root-config --cflags --glibs` -I$QTDIR/include -L$QTDIR/lib 
+                                   -lqt-mt HelloWord.cxx -o HelloWord
+```
 
-`                                   -lqt-mt HelloWord.cxx -o HelloWord`
-
-### ROOT-based Qt Applications
+#### ROOT-based Qt Applications
 
 "Qt application" is the application that either instantiates the Qt
 `QApplication` and enters the Qt event loop or is the shared library
@@ -257,7 +258,7 @@ make
 HelloCanvas
 ```
 
-### Qt Project for Creation of ROOT Shared Libraries with Qt Components and ROOT Dictionaries
+#### Qt Project for Creation of ROOT Shared Libraries with Qt Components and ROOT Dictionaries
 
 It is possible and desirable to create the ROOT-based Qt application
 with TrollTech provided qmake utility. To do that one should include one
@@ -343,7 +344,7 @@ void TMyQButton::SetOn(Bool_t on) {
    fMyButton->setOn(on);
 }
 void TMyQButton::SetStyle(const char * style) { 
-   // Set button’s look and feel
+   // Set button's look and feel
    // The possible styles are defined by the local Qt installation.
    // For example the possible style can be: "window","motif",
    // "cde","sgi","motifplus","platinum","compact","windowsxp",
@@ -386,9 +387,9 @@ application, do not forget, one needs the `.rootrc` file to assign
 Note: Do not mix the ROOT GUI and Qt GUI API within the same class
 implementation.
 
-### Using Qt "Designer" to Create Qt GUI with Embedded ROOT Objects
+#### Using Qt "Designer" to Create Qt GUI with Embedded ROOT Objects
 
-Qt package is equipped with [Qt designer](Qt designer) – a powerful tool
+Qt package is equipped with [Qt designer](Qt designer) - a powerful tool
 to create the high quality, robust GUI interfaces for your applications.
 It is possible and desirable to use this utility to create the
 ROOT-based Qt GUI. To do that one should add the
@@ -421,7 +422,7 @@ projects including all examples of this section as well as the list of
 the references and publications on the Qt project Web site
 <http://root.bnl.gov>
 
-### Using Qt Class Library from the ROOT C++ Interpreter
+#### Using Qt Class Library from the ROOT C++ Interpreter
 
 Since the Qt package is a regular C++ class library to use it within
 ROOT C++ interpreter environment one should either load the dedicated
@@ -450,7 +451,7 @@ root[] pnt.drawPixmap(0,0,*pix);
 
 is to display the Qt "Setup Printer" dialog and use QPrinter object to
 print the current **`TPad`** image to the selected printer. To use the
-more complex Qt-related code one is advised to apply "ACLiC – Automatic
+more complex Qt-related code one is advised to apply "ACLiC - Automatic
 Compiler of Libraries for CINT" (see CINT the C++ Interpreter). For
 example:
 
@@ -491,8 +492,8 @@ Next file selected: macros/QtPrintDialog_C.so
 the Qt generated "Open File Dialog" pops up and prints out the list of
 the selected files.
 
-TQtWidget Class, Qt Signals / Slots and TCanvas Interface
----------------------------------------------------------
+### TQtWidget Class, Qt Signals / Slots and TCanvas Interface
+
 
 **`TQtWidget`** is a `QWidget` with the `QPixmap` double buffer. It is
 designed to back the ROOT **`TCanvasImp`** class interface and it can be
@@ -504,7 +505,7 @@ utility.
 To do that **`TQtWidget`** class can emit the set of the "Qt signals"
 and it is equipped with the collection of the dedicated "Qt slots".
 
-### TQtWidget Public Qt Slots
+#### TQtWidget Public Qt Slots
 
 **`TQtWidget`** class inherits all slots of its base QWidget class (see:
 <http://doc.trolltech.com/3.3/qwidget.html>). In addition, it is in
@@ -536,7 +537,7 @@ format.
 The default format can be changed by `TQtWidget::SetSaveFormat` method
 and it is set to be "`PNG`" at the class constructor.
 
-### TQtWidget Qt Signals
+#### TQtWidget Qt Signals
 
 The class object emits the different signals that can be used to create
 the sophisticated GUI applications.
@@ -594,8 +595,8 @@ void qtrootexample1::CanvasEvent(TObject *obj, unsigned int event,
 }
 ```
 
-GSI QtROOT
-==========
+## GSI QtROOT
+
 
 The Qt Interface developed at Darmstadt GSI is a lightweight interface
 that enables the user to write a Qt 3 application, which can use ROOT.
@@ -631,8 +632,8 @@ also see all other parameters, signals, slots and properties of the
 
 Now we are ready use the **`TQRootCanvas`** within the Qt 3.x designer.
 
-Create a New Project in the Designer
-------------------------------------
+### Create a New Project in the Designer
+
 
 1). Choose "File-\>New"
 
@@ -659,8 +660,8 @@ project.
 
 ![](pictures/0200022C.jpg)
 
-main()
-------
+### main()
+
 
 The `main` file should look like:
 

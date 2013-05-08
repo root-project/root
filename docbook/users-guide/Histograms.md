@@ -356,7 +356,7 @@ get a random number distributed according the contents of a histogram.
             TH1F *final = new TH1F("final","final
                 hist",100,-3,3);
             
-                // continued…
+                // continued...
             
             for (Int_t i=0;i<10000;i++) {
             final->Fill(source->GetRandom());
@@ -776,7 +776,7 @@ contents. The size of the box is proportional to the absolute value of
 the cell contents. The cells with negative contents are drawn with an X
 on top of the boxes. With option `
                         BOX1` a button is drawn for each cell with
-surface proportional to contents’ absolute value. A sunken button is
+surface proportional to contents' absolute value. A sunken button is
 drawn for negative values, a raised one for positive values.
 
 #### The ERRor Bars Options
@@ -1327,7 +1327,7 @@ Using a **`
                         TCutG`** object, it is possible to draw a 2D
 histogram sub-range. One must create a graphical cut (mouse or C++) and
 specify the name of the cut between ‘ `[` ‘ and ‘ `
-                    ]` ’ in the Draw option.
+                    ]` ' in the Draw option.
 
 For example, with a **`
                         TCutG`**named " `cutg` ", one can call:
@@ -1728,7 +1728,7 @@ h3 = h1->GetAsymmetry(h2)
 -   Then `h3` is created and filled with the asymmetry between `h1` and
     `h2` ; `h1` and `h2` are left Intact.
 
--   Note that the user’s responsibility is to ménage the created
+-   Note that the user's responsibility is to ménage the created
     histograms.
 
 -   **`TH1`** `
@@ -2019,7 +2019,7 @@ points; N = number of data points.
 
 -   `0` for no data points
 
--   ‘ `s` ’ - errors are:
+-   ‘ `s` ' - errors are:
 
 -   `spread` for a non-zero spread
 
@@ -2027,7 +2027,7 @@ points; N = number of data points.
 
 -   `0` for no data points
 
--   ‘ `i` ’ - errors are:
+-   ‘ `i` ' - errors are:
 
 -   `spread/SQRT(N)` for a non-zero spread
 
@@ -2035,7 +2035,7 @@ points; N = number of data points.
 
 -   `0` for no data points
 
--   ‘ `G` ’ - errors are:
+-   ‘ `G` ' - errors are:
 
 -   `spread/SQRT(N)` for a non-zero spread
 
@@ -2273,7 +2273,7 @@ piechart.C](pictures/03000042.png)
 
 The classes **`T`** **`H1`** **`Editor`** and **`T`** **`H2`** **`
                     Editor`** provides the user interface for setting
-histogram’s attributes and rebinning interactively.
+histogram's attributes and rebinning interactively.
 
 ### TH1Editor
 
@@ -2311,7 +2311,7 @@ percentage and the possibility to draw horizontal bars.
 *`3`* *`-D Plot:`*
 
 Addset histogram type Lego-Plot or Surface draw (Lego, Lego1.2, Surf,
-Surf1…5).
+Surf1...5).
 
 Coordsset the coordinate system (Cartesian, Spheric, etc.).
 
@@ -2403,7 +2403,7 @@ Palette the color palette is drawn.
 *`3`* *`-D Plot:`*
 
 Type set histogram type to Lego or surface plot; draw (Lego, Lego1.2,
-Surf, Surf1…5)
+Surf, Surf1...5)
 
 Coords set the coordinate system (Cartesian, Spheric, etc.);
 

@@ -87,7 +87,7 @@ file `staff.dat` are in `$ROOTSYS/tutorials/tree`.
                 Int_t cost;
    };
    staff_t staff;
-// continued…
+// continued...
 // open the ASCII file
 FILE *fp = fopen("staff.dat","r");
 char line[81];
@@ -187,7 +187,7 @@ root[] T->Scan("Cost:Age:Children")
 *        5 *      7599 *        60 *         0 *
 *        6 *      9868 *        53 *         1 *
 *        7 *      8012 *        60 *         1 *
-…
+...
 ```
 
 ## The Tree Viewer
@@ -659,7 +659,7 @@ this chapter.
 
 To write a branch to hold an event object, we need to load the
 definition of the `Event` class, which is in `$ROOTSYS/test/libEvent.so`
-(if it doesn’t exist type make in `$ROOTSYS/test`). An object can be
+(if it doesn't exist type make in `$ROOTSYS/test`). An object can be
 saved in a tree if a ROOT dictionary for its class has been generated
 and loaded.
 
@@ -1451,7 +1451,7 @@ hdestep->SetFillColor(45);
 hdestep->Fit("gaus");
 
 c1->cd(2);
-gPad->SetFillColor(37);                                  // continued…
+gPad->SetFillColor(37);                                  // continued...
 t2->SetMarkerColor(kRed);
 t2->Draw("vect[0]:vect[1]:vect[2]");
 if (gROOT->IsBatch()) return;
@@ -1734,7 +1734,7 @@ private:
    Float_t       *fClosestDistance;   //[fNvertex] 
    static TClonesArray *fgTracks;
    static TH1F         *fgHist; 
-// … list of methods
+// ... list of methods
    ClassDef(Event,1)  //Event structure
 };
 ```
@@ -1757,7 +1757,7 @@ private:
    Int_t   fEvtNum;
    Int_t   fRun;
    Int_t   fDate;
-   // … list of methods
+   // ... list of methods
    ClassDef(EventHeader,1)      //Event Header
 };
 ```
@@ -1792,7 +1792,7 @@ private:
    Float_t   fVertex[3];  //Track vertex position
    Int_t     fNpoint;     //Number of points for this track
    Short_t   fValid;      //Validity criterion
-// method definitions …
+// method definitions ...
    ClassDef(Track,1)          //A track segment
 };
 ```
@@ -1840,7 +1840,7 @@ event->SetTemperature(random+20.);
 for(UChar_t m = 0; m < 10; m++) {
 event->SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
 }
-// continued…
+// continued...
 // fill the matrix
 for(UChar_t i0 = 0; i0 < 4; i0++) {
 for(UChar_t i1 = 0; i1 < 4; i1++) {
@@ -1942,7 +1942,7 @@ the split level to 2. The output on the command line is the result of
  fEvtHdr.fDate   = 960312
  fTracks         = 585
  fTracks.fUniqueID = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-…
+...
 ```
 
 ## Example 5: Import an ASCII File into a TTree
@@ -2017,7 +2017,7 @@ KEY: TTree    T;1     staff data from ascii file
 ```
 
 We can see the **`TTree `**"`T`" in the file. We will use it to
-experiment with the **`TTree::Draw`** method, so let’s create a pointer to it:
+experiment with the **`TTree::Draw`** method, so let's create a pointer to it:
 
 ``` {.cpp}
 root[] TTree *MyTree = T
@@ -2287,7 +2287,7 @@ examples.
 12  tree->Draw("fMatrix[2][2]");
 13  tree->Draw("fMatrix[ ][0]");
 14  tree->Draw("fMatrix[1][ ]");
-// using two arrays… Float_t  fVertex[3];  in Track class
+// using two arrays... Float_t  fVertex[3];  in Track class
 15  tree->Draw("fMatrix - fVertex");
 16  tree->Draw("fMatrix[2][1]  - fVertex[5][1]");
 17  tree->Draw("fMatrix[ ][1]  - fVertex[5][1]");
@@ -2309,7 +2309,7 @@ examples.
 //        Int_t  fNpoint; 
 //        Int_t *fPoints; [fNpoint]
 28  tree->Draw("fTracks.fPoints");
-29  tree->Draw("fTracks.fPoints – fTracks.fPoints[][fAvgPoints]");
+29  tree->Draw("fTracks.fPoints - fTracks.fPoints[][fAvgPoints]");
 30  tree->Draw("fTracks.fPoints[2][]- fTracks.fPoints[][55]");
 31  tree->Draw("fTracks.fPoints[][] - fTracks.fVertex[][]");
 // selections
@@ -2425,29 +2425,29 @@ elements. `fMatrix` has 4 x 4 elements. This case, draws 4 (the smaller
 of `fNtrack` and 4) times 3 (the smaller of 4 and 3), meaning 12
 elements per entry. The selected values for each entry are:
 
-`fMatrix[0][0] – fVertex[0][0]`
+`fMatrix[0][0] - fVertex[0][0]`
 
-`fMatrix[0][1] – fVertex[0][1]`
+`fMatrix[0][1] - fVertex[0][1]`
 
-`fMatrix[0][2] – fVertex[0][2]`
+`fMatrix[0][2] - fVertex[0][2]`
 
-`fMatrix[1][0] – fVertex[1][0]`
+`fMatrix[1][0] - fVertex[1][0]`
 
-`fMatrix[1][1] – fVertex[1][1]`
+`fMatrix[1][1] - fVertex[1][1]`
 
-`fMatrix[1][2] – fVertex[1][2]`
+`fMatrix[1][2] - fVertex[1][2]`
 
-`fMatrix[2][0] – fVertex[2][0]`
+`fMatrix[2][0] - fVertex[2][0]`
 
-`fMatrix[2][1] – fVertex[2][1]`
+`fMatrix[2][1] - fVertex[2][1]`
 
-`fMatrix[2][2] – fVertex[2][2]`
+`fMatrix[2][2] - fVertex[2][2]`
 
-`fMatrix[3][0] – fVertex[3][0]`
+`fMatrix[3][0] - fVertex[3][0]`
 
-`fMatrix[3][1] – fVertex[3][1]`
+`fMatrix[3][1] - fVertex[3][1]`
 
-`fMatrix[3][2] – fVertex[3][2]`
+`fMatrix[3][2] - fVertex[3][2]`
 
 **`16. tree->Draw`** **`("fMatrix[2][1] - fVertex[5][1]");`**
 
@@ -2554,7 +2554,7 @@ functions can be called.
 
 You can compare strings, using the symbols == and !=, in the first two
 parameters of the `Draw` command (**`TTree`**`Formula`). In this case,
-the event number for ‘type1’ events is plotted.
+the event number for ‘type1' events is plotted.
 
 **`27. tree->Draw("fEvtHdr.fEvtNum","strstr(fType,"1") ")`**
 
@@ -2587,11 +2587,11 @@ selects:
 
 `fTracks[0].fPoints[4] - fTracks[0].fPoint[fAvgPoints]`
 
-`…`
+`...`
 
 `fTracks[0].fPoints[max0]- fTracks[0].fPoint[fAvgPoints]`
 
-`…`
+`...`
 
 `fTracks[1].fPoints[0] - fTracks[1].fPoint[fAvgPoints]`
 
@@ -2603,11 +2603,11 @@ selects:
 
 `fTracks[1].fPoints[4] - fTracks[1].fPoint[fAvgPoints]`
 
-`…`
+`...`
 
 `fTracks[1].fPoints[max1]- fTracks[1].fPoint[fAvgPoints]`
 
-`…`
+`...`
 
 `fTracks[fNtrack-1].fPoints[0] - fTracks[fNtrack-1].fPoint[fAvgPoints]`
 
@@ -2619,14 +2619,14 @@ selects:
 
 `fTracks[fNtrack-1].fPoints[4] - fTracks[fNtrack-1].fPoint[fAvgPoints]`
 
-`…`
+`...`
 
 `fTracks[fNtrack-1].fPoints[maxn] - fTracks[fNtrack-1].fPoint[fAvgPoints]`
 
-Where` max0`, `max1`, `… max n`, is the size of the` fPoints `array for
+Where` max0`, `max1`, `... max n`, is the size of the` fPoints `array for
 the respective track`.`
 
-**`30. tree->Draw("fTracks.fPoints[2][]– fTracks.fPoints[][55]") `**
+**`30. tree->Draw("fTracks.fPoints[2][]- fTracks.fPoints[][55]") `**
 
 For each event, this expression is selected:
 
@@ -2696,7 +2696,7 @@ You can use bit patterns (`&,|,<<`) or Boolean operation.
 The selection argument is used as a weight. The expression returns a
 multiplier and in case of a Boolean the multiplier is either 0 (for
 false) or 1 (for true). The first command draws `fPx` for the range
-between 0.4 and –0.4, the second command draws `fPx` for the same range,
+between 0.4 and -0.4, the second command draws `fPx` for the same range,
 but adds a weight using the result of the second expression.
 
 **`35. tree->Draw("fVertex","fVertex>10")`**
@@ -3386,7 +3386,7 @@ implement a derived class, for example `MyRealClass` deriving from
 `MyClass` such that a change in your `Tree `or regeneration of
 `MyClass.h` does not force you to change `MyRealClass.h`. You can
 imagine deriving several classes from `MyClass.h`, each with a specific
-algorithm. To understand both files, let’s start with `MyClass.h` and
+algorithm. To understand both files, let's start with `MyClass.h` and
 the class declaration:
 
 ### MyClass.h
@@ -3419,7 +3419,7 @@ TBranch        *b_fNvertex;
 TBranch        *b_fFlag;
 TBranch        *b_fTemperature;
 TBranch        *b_fEvtHdr_fEvtNum;
-…
+...
 MyClass(TTree *tree=0);
 ~MyClass();
 Int_t  Cut(Int_t entry);
@@ -3447,7 +3447,7 @@ of `MyClass` are:
     for a parameter. If you pass a tree, `MyClass` will use it rather
     than the tree from which it was created.
 
--   `void  Init(``TTree *tree) –` it is called by the constructor to
+-   `void  Init(``TTree *tree) -` it is called by the constructor to
     initialize the tree for reading. It associates each branch with the
     corresponding leaf data member.
 
@@ -3505,12 +3505,12 @@ Let us continue with the goal of going through the first 100 tracks of
 each entry and plot `Px`. To do this we change the Loop method.
 
 ``` {.cpp}
-…
+...
 if (fChain == 0) return;
 Int_t nentries = Int_t(fChain->GetEntries());
 TH1F *myHisto  = new TH1F("myHisto","fPx", 100, -5,5);
 TH1F *smallHisto = new TH1F("small","fPx", 100, -5,5);
-…
+...
 ```
 
 In the for-loop, we need to add another for-loop to go over all the
@@ -3520,7 +3520,7 @@ with all tracks and the small histogram (`smallHisto`) with the track if
 it is in the first 100.
 
 ``` {.cpp}
-…
+...
 for (Int_t jentry=0; jentry<nentries;jentry++) {
    GetEntry(jentry);
    for (Int_t j = 0; j < 100; j++){
@@ -3530,16 +3530,16 @@ for (Int_t jentry=0; jentry<nentries;jentry++) {
    }
 }
 }
-…
+...
 ```
 
 Outside of the for-loop, we draw both histograms on the same canvas.
 
 ``` {.cpp}
-…
+...
 myHisto->Draw();
 smallHisto->Draw("Same");
-…
+...
 ```
 
 Save these changes to `MyClass.C` and start a fresh root session. We
@@ -3781,7 +3781,7 @@ The **Total Time** is the real time in seconds to run the program.
 operations (essentially the random number generator). The program
 `Event` generates in average 600 tracks per event. Each track has 17
 data members. The read benchmark runs in the interactive version of
-ROOT. The ‘Total Time to Read All’ is the real time reported by the
+ROOT. The ‘Total Time to Read All' is the real time reported by the
 execution of the script `&ROOTSYS/test/eventa`.
 
 We did not correct this time for the overhead coming from the
@@ -3839,13 +3839,13 @@ chain.Draw("x");
 When using a **`TChain`**, the branch address(es) must be set with:
 
 ``` {.cpp}
-chain.SetBranchAdress(branchname,…)  // use this for TChain
+chain.SetBranchAdress(branchname,...)  // use this for TChain
 ```
 
 rather than:
 
 ``` {.cpp}
-branch->SetAddress(…);  // this will not work
+branch->SetAddress(...);  // this will not work
 ```
 
 The second form returns the pointer to the branch of the current

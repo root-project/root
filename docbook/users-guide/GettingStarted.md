@@ -121,11 +121,11 @@ Usage: root [-l] [-b] [-n] [-q] [file1.C ... fileN.C]
    -l : do not show the image logo (splash screen)
 ```
 
--   –bROOT session runs in batch mode, without graphics display. This
+-   -bROOT session runs in batch mode, without graphics display. This
     mode is useful in case one does not want to set the DISPLAY or
     cannot do it for some reason.
 
--   –nusually, launching a ROOT session will execute a logon script and
+-   -nusually, launching a ROOT session will execute a logon script and
     quitting will execute a logoff script. This option prevents the
     execution of these two scripts.
 
@@ -134,7 +134,7 @@ Usage: root [-l] [-b] [-n] [-q] [file1.C ... fileN.C]
     command. Be warned: after finishing the execution of the script,
     ROOT will normally enter a new session.
 
--   –qprocess command line script files and exit.
+-   -qprocess command line script files and exit.
 
 For example if you would like to run a script `myMacro.C` in the
 background, redirect the output into a file `myMacro.log`, and exit
@@ -147,14 +147,14 @@ root -b -q myMacro.C > myMacro.log
 If you need to pass a parameter to the script use:
 
 ``` {.cpp}
-root -b -q ’myMacro.C(3)’ > myMacro.log
+root -b -q 'myMacro.C(3)' > myMacro.log
 ```
 
 Be mindful of the quotes, i.e. if you need to pass a string as a
 parameter, the syntax is:
 
 ``` {.cpp}
-root -b -q ’myMacro.C("text")’ > myMacro.log
+root -b -q 'myMacro.C("text")' > myMacro.log
 ```
 
 You can build a shared library with ACLiC and then use this shared
@@ -228,15 +228,15 @@ root[] f1.Draw()
 
 The following components comprise the canvas window:
 
--   Menu bar – contains main menus for global operations with files,
+-   Menu bar - contains main menus for global operations with files,
     print, clear canvas, inspect, etc.
 
--   Tool bar – has buttons for global and drawing operations; such as
+-   Tool bar - has buttons for global and drawing operations; such as
     arrow, ellipse, latex, pad, etc.
 
--   Canvas – an area to draw objects.
+-   Canvas - an area to draw objects.
 
--   Status bar – displays descriptive messages about the selected
+-   Status bar - displays descriptive messages about the selected
     object.
 
 -   Editor frame - responds dynamically and presents the user interface
@@ -255,7 +255,7 @@ Classes and Help menus.
 -   *New Canvas*: creates a new canvas window in the current ROOT
     session.
 
--   *Open…*: popup a dialog to open a file.
+-   *Open...*: popup a dialog to open a file.
 
 -   *Close Canvas*: close the canvas window.
 
@@ -264,7 +264,7 @@ Classes and Help menus.
     file name for various formats such as PostScript, GIF, JPEG, C macro
     file, root file.
 
--   *Save As…*: popup a dialog for saving the current canvas drawing in
+-   *Save As...*: popup a dialog for saving the current canvas drawing in
     a new filename.
 
 -   *Print*: popup a dialog to print the current canvas drawing
@@ -285,7 +285,7 @@ entries will be implemented and will become active in the near future.
 -   *Editor*: toggles the view of the editor. If it is selected
     activates and shows up the editor on the left side of the canvas
     window. According to the selected object, the editor loads the
-    corresponding user interface for easy change of the object’s
+    corresponding user interface for easy change of the object's
     attributes.
 
 -   *Toolbar*: toggles the view of the toolbar. If it is selected
@@ -296,7 +296,7 @@ entries will be implemented and will become active in the near future.
 -   *Status Bar*: toggles the view of the status bar. If it is selected,
     the status bar below the canvas window shows up. There the
     identification of the objects is displayed when moving the mouse
-    (such as the object’s name, the object’s type, its coordinates,
+    (such as the object's name, the object's type, its coordinates,
     etc.).
 
 -   *Colors*: creates a new canvas showing the color palette.
@@ -317,9 +317,9 @@ entries will be implemented and will become active in the near future.
 
 -   *Auto Resize Canvas*: turns auto-resize of the canvas on/off:
 
--   ON – the canvas fits to the window when changing the window size;
+-   ON - the canvas fits to the window when changing the window size;
 
--   OFF – the canvas stays fixed when changing the window size.
+-   OFF - the canvas stays fixed when changing the window size.
 
 -   *Resize Canvas*: resizes and fits the canvas to the window size.
 
@@ -374,9 +374,9 @@ entries will be implemented and will become active in the near future.
 
 -   *Menus*: help on canvas menus.
 
--   *Graphics Editor*: help on primitives’ drawing and objects’ editor.
+-   *Graphics Editor*: help on primitives' drawing and objects' editor.
 
--   *Browser*: help on the ROOT objects’ and files’ browser.
+-   *Browser*: help on the ROOT objects' and files' browser.
 
 -   *Objects*: help on DrawClass, Inspect and Dump context menu items.
 
@@ -394,7 +394,7 @@ toolbar:
 
 ![](pictures/03000011.png) Popup the Open File dialog.
 
-![](pictures/03000012.png) Popup the Save As… dialog.
+![](pictures/03000012.png) Popup the Save As... dialog.
 
 ![](pictures/03000013.png) Popup the Print dialog.
 
@@ -404,7 +404,7 @@ toolbar:
 
 ![](pictures/03000016.png) Inspect the ***`gROOT`*** object.
 
-![](pictures/03000017.png) Create a new objects’ browser.
+![](pictures/03000017.png) Create a new objects' browser.
 
 You can create the following graphical objects using the toolbar buttons
 for primitive drawing. Tool tips are provided for helping your choice.
@@ -507,7 +507,7 @@ after the left mouse click on it. For example, if the selected object is
 giving the possibility for changing different axis attributes. The
 graphics editor can be:
 
-Embedded – connected only with the canvas in the application window that
+Embedded - connected only with the canvas in the application window that
 appears on the left of the canvas window after been activated via View
 menu / Editor. It appears on the left side if the canvas window allowing
 users to edit the attributes of the selected object via provided user
@@ -518,7 +518,7 @@ easer navigation.
 
 ![](pictures/03000027.png)
 
-Global – has own application window and can be connected to any created
+Global - has own application window and can be connected to any created
 canvas in a ROOT session. It can be activated via the context menu
 entries for setting line, fill, text and marker attributes for backward
 compatibility, but there will be a unique entry in the near future.
@@ -688,7 +688,7 @@ Using the File menu / Save cascade menu users can save the canvas as one
 of the files from the list. Please note that saving the canvas this way
 will overwrite the file with the same name without a warning.
 
-All supported file types can be saved via File menu / SaveAs… This
+All supported file types can be saved via File menu / SaveAs... This
 dialog gives a choice to show or suppress the confirmation message for
 overwriting an existing file.
 
@@ -696,7 +696,7 @@ overwriting an existing file.
 
 If the Ovewrite check box is not selected, a message dialog appears
 asking the user to overwrite the file (Yes/No). The user choice is saved
-for the next time the Save As… dialog shows up.
+for the next time the Save As... dialog shows up.
 
 ### Printing the Canvas
 
@@ -821,15 +821,15 @@ The meta-characters below can be used in a regular expression:
 
 -   '`[`' start a character class
 
--   '`]`’end a character class
+-   '`]`'end a character class
 
--   '`^`’negates character class if first character
+-   '`^`'negates character class if first character
 
--   '`*`’`Kleene` closure (matches 0 or more)
+-   '`*`'`Kleene` closure (matches 0 or more)
 
--   '`+`’Positive closure (1 or more)
+-   '`+`'Positive closure (1 or more)
 
--   '`?`’ Optional closure (0 or 1)
+-   '`?`' Optional closure (0 or 1)
 
 When using wildcards the regular expression is assumed to be preceded by
 a '`^`' (BOL) and terminated by '`$`' (EOL). All '`*`' (closures) are
@@ -1005,7 +1005,7 @@ using the ***`gROOT`*** pointer, you get the access to every object
 created in a ROOT program. The **`TROOT`** object has several lists
 pointing to the main ROOT objects. During a ROOT session, the
 ***`gROOT`*** keeps a series of collections to manage objects. They can
-be accessed via ***`gROOT`***`::GetListOf…` methods.
+be accessed via ***`gROOT`***`::GetListOf...` methods.
 
 ``` {.cpp}
 gROOT->GetListOfClasses()
@@ -1131,13 +1131,13 @@ Unix.*.Root.MacroPath:    .:~/rootmacros:$(ROOTSYS)/macros
 # Path where to look for TrueType fonts
 Unix.*.Root.UseTTFonts:     true
 Unix.*.Root.TTFontPath:
-…
+...
 # Activate memory statistics
 Rint.Root.MemStat:       1
 Rint.Load:               rootalias.C
 Rint.Logon:              rootlogon.C
 Rint.Logoff:             rootlogoff.C
-…
+...
 Rint.Canvas.MoveOpaque:  false
 Rint.Canvas.HighLightColor: 5
 ```

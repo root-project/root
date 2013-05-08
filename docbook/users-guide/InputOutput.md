@@ -24,21 +24,21 @@ writes them to the file.
 
 ``` {.cpp}
 {
-char name[10], title[20];
-TObjArray Hlist(0);       // create an array of Histograms
-TH1F* h;                 // create a pointer to a histogram
+   char name[10], title[20];
+   TObjArray Hlist(0);      // create an array of Histograms
+   TH1F* h;                 // create a pointer to a histogram
    // make and fill 15 histograms and add them to the object array
-for (Int_t i = 0; i < 15; i++) {
-sprintf(name,"h%d",i);
-sprintf(title,"histo nr:%d",i);
-h = new TH1F(name,title,100,-4,4);
-Hlist.Add(h);
-h->FillRandom("gaus",1000);
-}
+   for (Int_t i = 0; i < 15; i++) {
+      sprintf(name,"h%d",i);
+      sprintf(title,"histo nr:%d",i);
+      h = new TH1F(name,title,100,-4,4);
+      Hlist.Add(h);
+      h->FillRandom("gaus",1000);
+   }
    // open a file and write the array to the file
-TFile f("demo.root","recreate");
-Hlist->Write();
-f.Close();
+   TFile f("demo.root","recreate");
+   Hlist->Write();
+   f.Close();
 }
 ```
 
@@ -58,13 +58,13 @@ root[] TBrowser browser;
 You can check if the file is correctly opened by:
 
 ``` {.cpp}
-TFile f("demo.root");
-if (f.IsZombie()) {
-cout << "Error opening file" << endl;
-exit(-1);
-} else {
-…
-}
+   TFile f("demo.root");
+   if (f.IsZombie()) {
+      cout << "Error opening file" << endl;
+      exit(-1);
+   } else {
+      ...
+   }
 ```
 
 Once we have the `TFile` object, we can call the
@@ -216,18 +216,18 @@ is located past the 32 bit file limit (\> 2 GB) then some fields will be
 | 27 `->` 27         | `lname`           | Number of bytes in the class name    |
 | [35-\>35]          |                   |                                      |
 +--------------------+-------------------+--------------------------------------+
-| 28 `->` … [36-\>…] | `ClassName`       | Object Class Name                    |
+| 28 `->` ... [36-\>...] | `ClassName`       | Object Class Name                    |
 +--------------------+-------------------+--------------------------------------+
-| … `->` …           | `lname`           | Number of bytes in the object name   |
+| ... `->` ...           | `lname`           | Number of bytes in the object name   |
 +--------------------+-------------------+--------------------------------------+
-| … `->` …           | `Name`            | `lName` bytes with the name of the   |
+| ... `->` ...           | `Name`            | `lName` bytes with the name of the   |
 |                    |                   | object                               |
 +--------------------+-------------------+--------------------------------------+
-| … `->` …           | `lTitle`          | Number of bytes in the object title  |
+| ... `->` ...           | `lTitle`          | Number of bytes in the object title  |
 +--------------------+-------------------+--------------------------------------+
-| … `->` …           | `Title`           | Title of the object                  |
+| ... `->` ...           | `Title`           | Title of the object                  |
 +--------------------+-------------------+--------------------------------------+
-| … `->` …           | `DATA`            | Data bytes associated to the object  |
+| ... `->` ...           | `DATA`            | Data bytes associated to the object  |
 +--------------------+-------------------+--------------------------------------+
 
 You see a reference to **`TKey`**. It is explained in detail in the next
@@ -281,7 +281,7 @@ StreamerInfo for class: TH1, version=3
   TAxis    fZaxis      offset=0 type=61 Z axis descriptor   
   Short_t  fBarOffset  offset=0 type=2  (1000*offset) for barcharts or legos
   Short_t  fBarWidth   offset=0 type=2  (1000*width) for bar charts or legos
-  Stat_t   fEntries    offset=0 type=8  Number of entries//continued…
+  Stat_t   fEntries    offset=0 type=8  Number of entries//continued...
   Stat_t   fTsumw      offset=0 type=8  Total Sum of weights
   Stat_t   fTsumw2     offset=0 type=8  Total Sum of squares of weights
   Stat_t   fTsumwx     offset=0 type=8  Total Sum of weight*X
@@ -295,21 +295,21 @@ StreamerInfo for class: TH1, version=3
   TList*   fFunctions  offset=0 type=63 ->Pointer to list of functions(fits,user)
 
 StreamerInfo for class: TNamed, version=1
-…
+...
 StreamerInfo for class: TAttLine, version=1
-…
+...
 StreamerInfo for class: TAttFill, version=1
-…
+...
 StreamerInfo for class: TAttMarker, version=1
-…
+...
 StreamerInfo for class: TArrayF, version=1
-…
+...
 StreamerInfo for class: TArray, version=1
-…
+...
 StreamerInfo for class: TAxis, version=6
-…
+...
 StreamerInfo for class: TAttAxis, version=4
-…
+...
 ```
 
 ROOT allows a class to have multiple versions, and each version has its
@@ -940,7 +940,7 @@ before the exit of the function.
 ``` {.cpp}
 void foo() {
    TFile f("AFile.root","RECREATE");
-   … stuff …
+   ... stuff ...
    f.Write();
 }
 ```
@@ -1202,7 +1202,7 @@ TH1F          *fH;                //->
 Int_t          fMeasures[10];
 Float_t        fMatrix[4][4];
 Float_t       *fClosestDistance;  //[fNvertex] 
-…
+...
 ```
 
 The Event class is added to the CINT dictionary by the `rootcint`
@@ -1248,7 +1248,7 @@ class Event : public TObject {
 private:
 TDirectory    *fTransient;        //! current directory
    Float_t fPt;             //! transient value
-…
+...
 ```
 
 ### The Pointer to Objects (//-\>)
@@ -1283,7 +1283,7 @@ char           fType[20];
 Int_t          fNtrack;
 Int_t          fNseg;
 Int_t          fNvertex;
-…
+...
 Float_t       *fClosestDistance;   //[fNvertex]
 ```
 
@@ -1565,7 +1565,7 @@ Below is a line from the example in `$ROOTSYS/test/Event.cxx.`
 
 ``` {.cpp}
 TRef   fLastTrack;             //pointer to last track
-…
+...
 Track *track = (Track*)fTracks->ConstructedAt(fNtrack++);
 track->Set(random);
 // Save reference to last Track in the collection of Tracks
@@ -1679,7 +1679,7 @@ nested.
 
 ``` {.cpp}
 saveNumber = TProcessID::GetObjectCount();
-…
+...
 TProcessID::SetObjectCount(savedNumber);
 ```
 
@@ -2103,7 +2103,7 @@ We can see the `StreamerInfo `for the classes:
 
 ``` {.cpp}
 root[] f.ShowStreamerInfo()
-…
+...
 StreamerInfo for class: ATLFMuon, version=1
 BASE  TObject      offset=  0 type=66 Basic ROOT object
 BASE  TAtt3D       offset=  0 type= 0 3D attributes
@@ -2115,7 +2115,7 @@ Int_t m_Isolated   offset=  0 type= 3 Muon isolation (1 for isolated)
 Float_t m_Eta      offset=  0 type= 5 Eta coordinate
 Float_t m_Phi      offset=  0 type= 5 Phi coordinate
 Float_t m_PT       offset=  0 type= 5 Transverse energy
-Int_t   m_Trigger  offset=  0 type= 3 Result of trigger…
+Int_t   m_Trigger  offset=  0 type= 3 Result of trigger...
 ```
 
 However, when we try to use a specific class we get a warning because
@@ -2409,10 +2409,10 @@ information:
 
 - Via command line prompt
 
-- Setting the SPR password file via the option `–P FILE`, i.e. the next
+- Setting the SPR password file via the option `-P FILE`, i.e. the next
 line will start the `rootd` daemon using the files
 `$HOME/.srootdpass2.conf` and `$HOME/.srootdpass2` for SPR
-authentication:` rootd –P $HOME/.srootdpass2`
+authentication:` rootd -P $HOME/.srootdpass2`
 
 ### A Simple Session
 
@@ -2446,7 +2446,7 @@ The simplest way to start `rootd` is by starting it from the command
 line while being logged in to the remote machine. Once started `rootd`
 goes immediately in the background (does not need `&`) and you can log
 out from the remote node. The only required argument is the range of
-ports (specified using `–p port1-port2`). `rootd` will listen on the
+ports (specified using `-p port1-port2`). `rootd` will listen on the
 first available port in this range. You can also specify `-p 0-N` to
 search relative to the service port specified in `/etc/services.` If a
 single port is specified (`rootd -p 1094)` then no search is made.
@@ -2642,16 +2642,16 @@ open in write mode, one can use the normal `TObject::Write` to write an
 object in the file.
 
 ``` {.cpp}
-// example of a session saving a histogram to a XML file
-TFile *f = TFile::Open("Example.xml","recreate");
-TH1F *h = new TH1F("h","test",1000,-2,2)
-h->FillRandom("gaus");
-h->Write();
-delete f;   
-// example of a session saving a histogram to a XML file
-TFile *f = TFile::Open("Example.xml");
-TH1F *h = (TH1F*)f->Get("h");
-h->Draw();               
+   // example of a session saving a histogram to a XML file
+   TFile *f = TFile::Open("Example.xml","recreate");
+   TH1F *h = new TH1F("h","test",1000,-2,2)
+   h->FillRandom("gaus");
+   h->Write();
+   delete f;   
+   // example of a session saving a histogram to a XML file
+   TFile *f = TFile::Open("Example.xml");
+   TH1F *h = (TH1F*)f->Get("h");
+   h->Draw();               
 ```
 
 The canvas can be saved as a XML file format via File menu / Save or

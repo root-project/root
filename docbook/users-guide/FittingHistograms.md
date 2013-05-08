@@ -229,7 +229,7 @@ void fitexample() {
 }
 ```
 
-## Fixing and Setting Parameters’ Bounds
+## Fixing and Setting Parameters' Bounds
 
 
 Parameters must be initialized before invoking the `Fit` method. The
@@ -272,7 +272,7 @@ func->FixParameter(4,0);
 ```
 
 With this setup, parameters 0`->`2 can vary freely, parameter 3 has
-boundaries [-10, 4] with initial value –1.5, and parameter 4 is fixed to
+boundaries [-10, 4] with initial value -1.5, and parameter 4 is fixed to
 0.
 
 ## Fitting Sub Ranges
@@ -281,7 +281,7 @@ boundaries [-10, 4] with initial value –1.5, and parameter 4 is fixed to
 By default, `TH1::Fit` will fit the function on the defined histogram
 range. You can specify the option "`R`" in the second parameter of
 `TH1::Fit` to restrict the fit to the range specified in the **`TF1`**
-constructor. In this example, the fit will be limited to –3 to 3, the
+constructor. In this example, the fit will be limited to -3 to 3, the
 range specified in the **`TF1`** constructor.
 
 ``` {.cpp}
@@ -325,67 +325,67 @@ different parameters and options.
 ### Function Choice and Settings
 
 
-*‘Predefined’ combo box* - contains a list of predefined functions in
+*‘Predefined' combo box* - contains a list of predefined functions in
 ROOT. You have a choice of several polynomials, a Gaussian, a Landau,
 and an Exponential function. The default one is Gaussian.
 
-*‘Operation’ radio button group* defines the selected operational mode
+*‘Operation' radio button group* defines the selected operational mode
 between functions:
 
 *Nop* - no operation (default);
 
-*Add* – addition;
+*Add* - addition;
 
 *Conv* - convolution (will be implemented in the future).
 
 Users can enter the function expression into the text entry field below
-the ‘Predefined’ combo box. The entered string is checked after the
+the ‘Predefined' combo box. The entered string is checked after the
 Enter key was pressed and an error message shows up, if the function
 string is not accepted.
 
-‘*Set Parameters*’ button opens a dialog for parameters settings, which
+‘*Set Parameters*' button opens a dialog for parameters settings, which
 will be explaned later.
 
 ### Fitter Settings
 
 
-*‘Method’ combo box* currently provides only two fit model choices:
+*‘Method' combo box* currently provides only two fit model choices:
 Chi-square and Binned Likelihood. The default one is Chi-square. The
 Binned Likelihood is recomended for bins with low statistics.
 
-*‘Linear Fit’ check button* sets the use of Linear fitter when is
+*‘Linear Fit' check button* sets the use of Linear fitter when is
 selected. Otherwise the minimization is done by Minuit, i.e. fit option
 "`F`" is applied. The Linear fitter can be selected only for functions
 linears in parameters (for example - `polN)`.
 
-*‘Robust’ number entry* sets the robust value when fitting graphs.
+*‘Robust' number entry* sets the robust value when fitting graphs.
 
-*‘No Chi-square’ check button* switch On/Off the fit option "`C`" - do
+*‘No Chi-square' check button* switch On/Off the fit option "`C`" - do
 not calculate Chi-square (for Linear fitter).
 
-*‘Integral’ check button* switch On/Off the option "`I`" - use integral
+*‘Integral' check button* switch On/Off the option "`I`" - use integral
 of function instead of value in bin center.
 
-*‘Best Errors’* sets On/Off the option "`E`" - better errors estimation
+*‘Best Errors'* sets On/Off the option "`E`" - better errors estimation
 by using Minos technique.
 
-*‘All weights = 1’* sets On/Off the option "`W`"- all weights set to 1
+*‘All weights = 1'* sets On/Off the option "`W`"- all weights set to 1
 excluding empty bins; error bars ignored.
 
-*‘Empty bins, weights=1’* sets On/Off the option "`WW`" - all weights
+*‘Empty bins, weights=1'* sets On/Off the option "`WW`" - all weights
 equal to 1 including empty bins; error bars ignored.
 
-*‘Use range’* sets On/Off the option "`R`" - fit only data within the
+*‘Use range'* sets On/Off the option "`R`" - fit only data within the
 specified function range. Sliders settings are used if this option is
 set to On. Users can change the function range values by pressing the
 left mouse button near to the left/right slider edges. It is possible to
 change both values simultaneously by pressing the left mouse button near
 to the slider center and moving it to a new position.
 
-*‘Improve fit results’* sets On/Off the option "`M`"- after minimum is
+*‘Improve fit results'* sets On/Off the option "`M`"- after minimum is
 found, search for a new one.
 
-*‘Add to list’* sets On/Off the option "`+`"- add function to the list
+*‘Add to list'* sets On/Off the option "`+`"- add function to the list
 without deleting the previous one. When fitting a histogram, the
 function is attached to the histogram's list of functions. By default,
 the previously fitted function is deleted and replaced with the most
@@ -398,13 +398,13 @@ function is drawn on the pad displaying the histogram.
 ### Draw Options
 
 
-*‘SAME’* sets On/Off function drawing on the same pad. When a fit is
+*‘SAME'* sets On/Off function drawing on the same pad. When a fit is
 executed, the image of the function is drawn on the current pad.
 
-*‘No drawing’* sets On/Off the option "`0`"- do not draw the fit
+*‘No drawing'* sets On/Off the option "`0`"- do not draw the fit
 results.
 
-*‘Do not store/draw’* sets On/Off option "`N`"- do not store the
+*‘Do not store/draw'* sets On/Off option "`N`"- do not store the
 function and do not draw it.
 
 ### Print Options
@@ -413,11 +413,11 @@ function and do not draw it.
 This set of options specifies the amount of feedback printed on the root
 command line after performed fits.
 
-*‘Verbose’* - prints fit results after each iteration.
+*‘Verbose'* - prints fit results after each iteration.
 
-*‘Quiet’* - no fit information is printed.
+*‘Quiet'* - no fit information is printed.
 
-*‘Default’* - between Verbose and Quiet.
+*‘Default'* - between Verbose and Quiet.
 
 ### Command Buttons
 
@@ -442,7 +442,7 @@ other ROOT built in function, on a sub range you need to define a new
 ![Fitting a histogram with several Gaussian
 functions](pictures/03000062.png)
 
-First, four TF1 objects are created – one for each sub-range:
+First, four TF1 objects are created - one for each sub-range:
 
 ``` {.cpp}
 g1 = new TF1("m1","gaus",85,95);
@@ -631,7 +631,7 @@ Double_t error = h->GetBinError(bin);
 
 Empty bins are excluded in the fit when using the Chi-square fit method.
 When fitting the histogram with the low statistics, it is recommended to
-use the Log-Likelihood method (option ‘`L`’ or "`LL`").
+use the Log-Likelihood method (option ‘`L`' or "`LL`").
 
 ## Fit Statistics
 
@@ -667,7 +667,7 @@ of the original FORTRAN version. The main changes are:
     been changed to the **`TMinuit`** class data members
 
 -   The internal arrays with a maximum dimension depending on the
-    maximum number of parameters are now data members’ arrays with a
+    maximum number of parameters are now data members' arrays with a
     dynamic dimension such that one can fit very large problems by
     simply initializing the **`TMinuit`** constructor with the maximum
     number of parameters
@@ -825,7 +825,7 @@ only symmetric errors, then becomes essentially meaningless.
 #### Interpretation of Parameter Errors
 
 There are two kinds of problems that can arise: the reliability of
-`Minuit`’s error estimates, and their statistical interpretation,
+`Minuit`'s error estimates, and their statistical interpretation,
 assuming they are accurate.
 
 #### Statistical Interpretation
@@ -998,7 +998,7 @@ idea - linearization of functional argument.
 
 Neural Networks are used in various fields for data analysis and
 classification, both for research and commercial institutions. Some
-randomly chosen examples are image analysis, financial movements’
+randomly chosen examples are image analysis, financial movements'
 predictions and analysis, or sales forecast and product shipping
 optimization. In particles physics neural networks are mainly used for
 classification tasks (signal over background discrimination). A vast

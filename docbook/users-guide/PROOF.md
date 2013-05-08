@@ -1,5 +1,5 @@
-PROOF: Parallel Processing
-==========================
+# PROOF: Parallel Processing
+
 
 The Parallel ROOT Facility, PROOF, is an extension of ROOT allowing
 transparent analysis of large sets of ROOT files in parallel on remote
@@ -22,7 +22,7 @@ objects in ROOT data stores, though, for the time being, it mainly
 addresses the case of **`TTree`** based object collections.
 
 PROOF is primarily meant as an interactive alternative to batch systems
-for Central Analysis Facilities and departmental workgroups (Tier-2’s).
+for Central Analysis Facilities and departmental workgroups (Tier-2's).
 However, thanks to a multi-tier architecture allowing multiple levels of
 masters, it can be easily adapted to wide range virtual clusters
 distributed over geographically separated domains and heterogeneous

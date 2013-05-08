@@ -143,7 +143,7 @@ browse-able objects (like containers or lists of other objects).
 
 A **`TObject`** descendent inherits two data members: `fBits` and
 `fUniqueID`. `fBits `is 32-bit data member used with a bit mask to get
-object information. Bits 0 – 13 are reserved as global bits, bits 14 –
+object information. Bits 0 - 13 are reserved as global bits, bits 14 -
 23 can be used in different class hierarchies.
 
 ``` {.cpp}

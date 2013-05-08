@@ -175,21 +175,21 @@ Network Communication, Threads. RTTI
 
 The benefits of frameworks can be summarized as follows:
 
--   Less code to write – the programmer should be able to use and reuse
+-   Less code to write - the programmer should be able to use and reuse
     the majority of the existing code. Basic functionality, such as
     fitting and histogramming are implemented and ready to use and
     customize.
 
--   More reliable and robust code – the code inherited from a framework
+-   More reliable and robust code - the code inherited from a framework
     has already been tested and integrated with the rest of the
     framework.
 
--   More consistent and modular code – the code reuse provides
+-   More consistent and modular code - the code reuse provides
     consistency and common capabilities between programs, no matter who
     writes them. Frameworks make it easier to break programs into
     smaller pieces.
 
--   More focus on areas of expertise – users can concentrate on their
+-   More focus on areas of expertise - users can concentrate on their
     particular problem domain. They do not have to be experts at writing
     user interfaces, graphics, or networking to use the frameworks that
     provide those services.
@@ -476,7 +476,7 @@ When building your own executable you will have to link against the
 libraries that contain the classes you use. The ROOT reference guide
 states the library a class is reference guide defined in. Almost all
 relevant classes can be found in libraries returned by
-`root-config –glibs`; the graphics libraries are retuned by
+`root-config -glibs`; the graphics libraries are retuned by
 `root-config --libs`. These commands are commonly used in `Makefiles`.
 Using `root-config` instead of enumerating the libraries by hand allows
 you to link them in a platform independent way. Also, if ROOT library
@@ -488,7 +488,7 @@ libraries (`libCore`, `libCint`, `libRIO`), `libHist` and `libTree`. If
 ROOT needs access to other libraries, it loads them dynamically. For
 example, if the **`TreeViewer`** is used, `libTreePlayer` and all
 libraries `libTreePlayer` depends on are loaded also. The dependent
-libraries are shown in the ROOT reference guide’s library dependency
+libraries are shown in the ROOT reference guide's library dependency
 graph. The difference between reference guide `libHist` and
 `libHistPainter` is that the former needs to be explicitly linked and
 the latter will be loaded automatically at runtime when ROOT needs it,
@@ -636,7 +636,7 @@ The top of any class reference page lets you jump to different parts of
 the documentation. The first line links to the class index and the index
 for the current module (a group of classes, often a library). The second
 line links to the ROOT homepage and the class overviews. The third line
-links the source information – a HTML version of the source and header
+links the source information - a HTML version of the source and header
 file as well as the CVS (the source management system used for the ROOT
 development) information of the files. The last line links the different
 parts of the current pages.
@@ -654,6 +654,6 @@ current class derives from, and which classes inherit from it:
 ![](pictures/03000008.png)
 
 The HTML version of the source file links all types and most functions
-so you can study what’s happening inside ROOT itself:
+so you can study what's happening inside ROOT itself:
 
 ![](pictures/03000009.png)
