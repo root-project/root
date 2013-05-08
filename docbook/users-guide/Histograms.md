@@ -8,7 +8,7 @@ instructions and examples on the histogram features.
 We have put this chapter ahead of the graphics chapter so that you can
 begin working with histograms as soon as possible. Some of the examples
 have graphics commands that may look unfamiliar to you. These are
-covered in the chapter “Input/Output”.
+covered in the chapter "Input/Output".
 
 ## The Histogram Classes
 
@@ -506,7 +506,7 @@ histograms in the current directory in memory. It is the user's
 responsibility to delete this histogram. The `
                 kCanDelete` bit is set for the returned object. If a pad
 containing this copy is cleared, the histogram will be automatically
-deleted. See “Draw Options” for the list of options.
+deleted. See "Draw Options" for the list of options.
 
 ### Setting the Style
 
@@ -533,8 +533,8 @@ to a previously created histogram you can call **`TH1`** `
 many histograms from a file and you wish to update them to the current
 style, you can use ***`gROOT`*** `
                     ::ForceStyle` and all histograms read after this
-call will be updated to use the current style. See “Graphics and the
-Graphical User Interface”. When a histogram is automatically created as
+call will be updated to use the current style. See "Graphics and the
+Graphical User Interface". When a histogram is automatically created as
 a result of a **`TTree`** `::Draw` , the style of the histogram is
 inherited from the tree attributes and the current style is ignored. The
 tree attributes are the ones set in the current **`TStyle`** at the time
@@ -583,7 +583,7 @@ The following draw options are supported on all histogram classes:
 
 -   " `SURF4` ": Draw a surface plot using `Gouraud` shading.
 
--   “ `SURF5` ”:Same as `SURF3` but only the colored contour is drawn.
+-   " `SURF5` ":Same as `SURF3` but only the colored contour is drawn.
     Used with option `CYL` , `
                                 SPH` or `PSR` it allows to draw colored
     contours on a sphere, a cylinder or in a pseudo rapidly space. In
@@ -623,14 +623,14 @@ The following options are supported for 1-D histogram classes:
 -   " `*H` ": Draw histogram with a \* at each bin
 
 -   " `LF2` ":Draw histogram as with option " `L` " but with a fill
-    area. Note that " `L` ” also draws a fill area if the histogram fill
+    area. Note that " `L` " also draws a fill area if the histogram fill
     color is set but the fill area corresponds to the histogram contour.
 
--   " `9` ”:Force histogram to be drawn in high resolution mode. By
+-   " `9` ":Force histogram to be drawn in high resolution mode. By
     default, the histogram is drawn in low resolution in case the number
     of bins is greater than the number of pixels in the current pad
 
--   “ `][` “:Draw histogram without the vertical lines for the first and
+-   " `][` ":Draw histogram without the vertical lines for the first and
     the last bin. Use it when superposing many histograms on the same
     picture.
 
@@ -686,7 +686,7 @@ The following options are supported for 2-D histogram classes:
 
 -   " `SCAT` ": Draw a scatter-plot (default)
 
--   “ `SPEC` ”Use **`
+-   " `SPEC` "Use **`
                                     TSpectrum2Painter`** tool for
     drawing
 
@@ -781,19 +781,19 @@ drawn for negative values, a raised one for positive values.
 
 #### The ERRor Bars Options
 
--   `”E”` Default. Draw only error bars, without markers
+-   `"E"` Default. Draw only error bars, without markers
 
--   `”E0”` Draw also bins with 0 contents (turn off the symbols
+-   `"E0"` Draw also bins with 0 contents (turn off the symbols
     clipping).
 
--   `”E1”` Draw small lines at the end of error bars
+-   `"E1"` Draw small lines at the end of error bars
 
--   `”E2”` Draw error rectangles
+-   `"E2"` Draw error rectangles
 
--   `”E3”` Draw a fill area through the end points of vertical error
+-   `"E3"` Draw a fill area through the end points of vertical error
     bars
 
--   `”E4”` Draw a smoothed filled area through the end points of error
+-   `"E4"` Draw a smoothed filled area through the end points of error
     bars
 
 ![The "E1" bars' option](pictures/0300002F.png)
@@ -886,7 +886,7 @@ TGraph *gr1 =
 
 -   " `MERCATOR` ": Draw a contour via a Mercator projection
 
--   “ `SINUSOIDAL` ": Draw a contour via a Sinusoidal projection
+-   " `SINUSOIDAL` ": Draw a contour via a Sinusoidal projection
 
 -   " `PARABOLIC` ": Draw a contour via a Parabolic projection
 
@@ -1118,7 +1118,7 @@ the axis, to set the min/max in z.
 
 #### The SPEC Option
 
-The “SPEC” option offers a large set of options/attributes to visualize
+The "SPEC" option offers a large set of options/attributes to visualize
 2D histograms thanks to "operators" following the "SPEC" keyword. For
 example, to draw the 2-D histogram `h2` using all default attributes
 except the viewing angles, one can do:
@@ -1237,7 +1237,7 @@ this function one can change the color increments between two
 neighboring color levels. The function does not apply on the Simple
 Display Modes Group. The default values are: (1,1,1).
 
-The operator “ `ca(color_algorithm)` " allows to choose the Color
+The operator " `ca(color_algorithm)` " allows to choose the Color
 Algorithm. To define the colors one can use one of the following color
 algorithms (RGB, CMY, CIE, YIQ, HVS models). When the level of a
 component reaches the limit value one can choose either smooth
@@ -1641,7 +1641,7 @@ One can save all histograms in memory to the file by:
 file->Write();
 ```
 
-For a more detailed explanation, see “Input/Output”.
+For a more detailed explanation, see "Input/Output".
 
 ## Miscellaneous Operations
 
@@ -1872,7 +1872,7 @@ the list.
 
 By default, **`
                     THStack`** `::Draw` draws the histograms stacked as
-shown in the left pad in the picture above. If the option `"nostack” is`
+shown in the left pad in the picture above. If the option `"nostack" is`
 used, the histograms are superimposed as if they were drawn one at a
 time using the `
                 "same"` draw option `.` The right pad in this picture
@@ -1959,7 +1959,7 @@ bin j. When you fill a profile histogram with **`TProfile`** `
 -   `L[j]` contains the number of entries in the bin `j`
 
 -   `e[j]` or `s[j]` will be the resulting error depending on the
-    selected option. See “Build Options“.
+    selected option. See "Build Options".
 
 ``` {.cpp}
 E[j] = sum Y**2 L[j] = number
@@ -2121,7 +2121,7 @@ The `'prof'` and `
                         TTree`** `::Draw` method generate a profile
 histogram ( **`TProfile`** ), given a two dimensional expression in the
 tree, or a **`TProfile2D`** given a three dimensional expression. See
-“Trees”. Note that you can specify `'prof'` or `'profs'` : `'prof'`
+"Trees". Note that you can specify `'prof'` or `'profs'` : `'prof'`
 generates a **`
                         TProfile`** with error on the mean, `
                     'profs'` generates a **`
@@ -2151,7 +2151,7 @@ When you fill a profile histogram with **`TProfile2D`** `.Fill` `
 -   `L[i,j]` contains the number of entries in the bin j
 
 -   `e[j]` or `s[j]` will be the resulting error depending on the
-    selected option. See “Build Options“.
+    selected option. See "Build Options".
 
 ``` {.cpp}
                 E[i,j] = sum z
@@ -2212,7 +2212,7 @@ void hist3d() {
       z=x*x+y*y;
       h3->Fill(x,y,z);
    }
-   h3->Draw(“iso”);
+   h3->Draw("iso");
 }
 ```
 
@@ -2220,8 +2220,8 @@ void hist3d() {
 
 
 ``` {.cpp}
-            TF3 *fun3 = new TF3(“fun3”,
-                “sin(x*x+y*y+z*z-36”,-2,2,-2,2,-2,2);
+            TF3 *fun3 = new TF3("fun3",
+                "sin(x*x+y*y+z*z-36",-2,2,-2,2,-2,2);
             Fun3->Draw();
         
 ```

@@ -15,7 +15,7 @@ The following rules apply to the ROOT classes.
 
 -   The `TROOT` master object (***`gROOT`***) has several collections of
     objects. Objects that are members of these collections are owned by
-    ***`gROOT`*** see "Ownership by the Master TROOT Object (gROOT)”.
+    ***`gROOT`*** see "Ownership by the Master TROOT Object (gROOT).
 
 -   Objects created by another object, for example the function object
     (e.g.**`TF1`**) created by the **`TH1::Fit `method is owned by the
@@ -192,7 +192,7 @@ root[] MyCanvas.Divide(2,1)
 root[] MyCanvas->cd(MyCanvas_1)
 root[] hstat.Draw()             // hstat is an existing TH1F
 root[] MyCanvas->cd(MyCanvas_2)
-root[] hstat.DrawCopy()         // DrawCopy sets the kCanDelete bit</emphasis>
+root[] hstat.DrawCopy()         // DrawCopy sets the kCanDelete bit
 (class TH1*)0x88e73f8
 root[] MyCanvas.ls()
 Canvas Name=MyCanvas …
@@ -237,7 +237,8 @@ The `kMustCleanup` bit is set:
 -   When painting a frame for a pad, the frame's `kMustCleanup` is set
     in `TPad::PaintPadFrame`
 
-`The user can add his own collection to the collection of clean ups, to take advantage of the automatic garbage collection. For example:`
+The user can add his own collection to the collection of clean ups, to take advantage of 
+the automatic garbage collection. For example:
 
 ``` {.cpp}
 // create two list

@@ -113,10 +113,10 @@ and vise-versa.
 With the ROOT v4.00/06 and later, the **`TPython`** class will be loaded
 automatically on use, for older editions, the `libPyROOT.so` needs to be
 loaded first before use. It is possible to switch between interpreters
-by calling **`TPython::Prompt()` on the ROOT side, while returning with
+by calling **`TPython::Prompt()`** on the ROOT side, while returning with
 `^D` (`EOF`). State is preserved between successive switches, and string
 based cross calls can nest as long as shared resources are properly
-handled.**
+handled.
 
 ``` {.cpp}
 // Example: accessing the Python interpreter from ROOT 
@@ -126,12 +126,12 @@ root[] TPython::Exec("print1+1");
 2
 
 // create a TBrowser on the Python side, and transfer it back and forth
-root[] TBrowser* b = (void*)</emphasis>TPython::Eval("ROOT.TBrowser()");
+root[] TBrowser* b = (void*)TPython::Eval("ROOT.TBrowser()");
 (class TObject*)0x8d1daa0
 root[] TPython::Bind(b,"b");
 
 // builtin variables can cross-over (after the call i==2)
-root[] int i = TPython::Eval( “1+1” );
+root[] int i = TPython::Eval( "1+1" );
 root[] i
 (int)2
 ```
@@ -283,7 +283,7 @@ Access to class static functions, public data members, enums, etc. is as
 expected. Many more example uses of ROOT classes from Python can be
 found in the tutorials directory in the ROOT distribution. The recipes
 section contains a description on working with your own classes (see
-“Using Your Own Classes”).
+"Using Your Own Classes").
 
 #### Access to STL Classes
 
@@ -449,8 +449,8 @@ variable called "`label`".
 With the ROOT v4.00/06 and later, the **`TPython`** class will be loaded
 automatically on use, for older editions, the `libPyROOT.so` needs to be
 loaded first with `gSystem->Load()` before use. Refer back to the other
-example of the use of **`TPython`** that was given in “Access to Python
-from ROOT”.
+example of the use of **`TPython`** that was given in "Access to Python
+from ROOT".
 
 To show in detail how Python access can be used, an example Python
 module is needed, as follows:
@@ -827,7 +827,7 @@ f.Close()
 ```
 
 The use of arrays is needed, because the pointer to the address of the
-object that is used for filling must be given to the **`TTree::Branch()`
+object that is used for filling must be given to the **`TTree::Branch()`**
 call, even though the formal argument is declared a '`void*'`. In the
 case of ROOT objects, similar pointer manipulation is unnecessary,
 because the full type information is available, and `TTree::Branch()`
@@ -835,14 +835,14 @@ has been Pythonized to take care of the call details. However, data
 members of such objects that are of built-in types, still require
 something extra since they are normally translated to Python primitive
 types on access and hence their address cannot be taken. For that
-purpose, there is the `AddressOf()` function. As an example:**
+purpose, there is the `AddressOf()` function. As an example:
 
 ``` {.cpp}
 from ROOT import TFile, TTree
 from ROOT import gROOT, AddressOf
 
 gROOT.ProcessLine(
-"struct MyStruct {     Int_t     fMyInt1;     Int_t     fMyInt2;     Int_t     fMyInt3;     Char_t    fMyCode[4];  };" );
+"struct MyStruct { Int_t fMyInt1; Int_t fMyInt2; Int_t fMyInt3; Char_t fMyCode[4]; };" );
 
 from ROOT import MyStruct
 mystruct = MyStruct()

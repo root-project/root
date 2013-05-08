@@ -70,14 +70,14 @@ Axis_t xxmin, Axis_t  xxmax)
 -   "`B`"Use this option when you want to fix one or more parameters and
     the fitting function is like `polN`, `expo`, `landau`, `gaus`.
 
--   “`LL`”An improved Log Likelihood fit in case of very low statistics
+-   "`LL`"An improved Log Likelihood fit in case of very low statistics
     and when bincontentsare not integers. Do not use this option if bin
     contents are large (greater than 100).
 
--   “`C`”In case of linear fitting, don't calculate the chisquare (saves
+-   "`C`"In case of linear fitting, don't calculate the chisquare (saves
     time).
 
--   “`F`”If fitting a `polN`, switch to `Minuit` fitter (by default,
+-   "`F`"If fitting a `polN`, switch to `Minuit` fitter (by default,
     `polN` functions are fitted by the linear fitter).
 
 -   `*goption: `The third parameter is the graphics option that is the
@@ -309,8 +309,8 @@ The new Fit Panel GUI is available in ROOT v5.14. Its goal is to replace
 the old Fit Panel and to provide more user friendly way for performing,
 exploring and comparing fits.
 
-By design, this user interface is planned to contain two tabs: “General”
-and “Minimization”. Currently, the “General” tab provides user interface
+By design, this user interface is planned to contain two tabs: "General"
+and "Minimization". Currently, the "General" tab provides user interface
 elements for setting the fit function, fit method and different fit,
 draw, print options.
 
@@ -360,32 +360,32 @@ linears in parameters (for example - `polN)`.
 
 *‘Robust’ number entry* sets the robust value when fitting graphs.
 
-*‘No Chi-square’ check button* switch On/Off the fit option “`C`” - do
+*‘No Chi-square’ check button* switch On/Off the fit option "`C`" - do
 not calculate Chi-square (for Linear fitter).
 
-*‘Integral’ check button* switch On/Off the option “`I`” - use integral
+*‘Integral’ check button* switch On/Off the option "`I`" - use integral
 of function instead of value in bin center.
 
-*‘Best Errors’* sets On/Off the option “`E`” - better errors estimation
+*‘Best Errors’* sets On/Off the option "`E`" - better errors estimation
 by using Minos technique.
 
-*‘All weights = 1’* sets On/Off the option “`W`”- all weights set to 1
+*‘All weights = 1’* sets On/Off the option "`W`"- all weights set to 1
 excluding empty bins; error bars ignored.
 
 *‘Empty bins, weights=1’* sets On/Off the option "`WW`" - all weights
 equal to 1 including empty bins; error bars ignored.
 
-*‘Use range’* sets On/Off the option “`R`” - fit only data within the
+*‘Use range’* sets On/Off the option "`R`" - fit only data within the
 specified function range. Sliders settings are used if this option is
 set to On. Users can change the function range values by pressing the
 left mouse button near to the left/right slider edges. It is possible to
 change both values simultaneously by pressing the left mouse button near
 to the slider center and moving it to a new position.
 
-*‘Improve fit results’* sets On/Off the option “`M`”- after minimum is
+*‘Improve fit results’* sets On/Off the option "`M`"- after minimum is
 found, search for a new one.
 
-*‘Add to list’* sets On/Off the option “`+`”- add function to the list
+*‘Add to list’* sets On/Off the option "`+`"- add function to the list
 without deleting the previous one. When fitting a histogram, the
 function is attached to the histogram's list of functions. By default,
 the previously fitted function is deleted and replaced with the most
@@ -401,10 +401,10 @@ function is drawn on the pad displaying the histogram.
 *‘SAME’* sets On/Off function drawing on the same pad. When a fit is
 executed, the image of the function is drawn on the current pad.
 
-*‘No drawing’* sets On/Off the option “`0`”- do not draw the fit
+*‘No drawing’* sets On/Off the option "`0`"- do not draw the fit
 results.
 
-*‘Do not store/draw’* sets On/Off option “`N`”- do not store the
+*‘Do not store/draw’* sets On/Off option "`N`"- do not store the
 function and do not draw it.
 
 ### Print Options
@@ -631,7 +631,7 @@ Double_t error = h->GetBinError(bin);
 
 Empty bins are excluded in the fit when using the Chi-square fit method.
 When fitting the histogram with the low statistics, it is recommended to
-use the Log-Likelihood method (option ‘`L`’ or “`LL`”).
+use the Log-Likelihood method (option ‘`L`’ or "`LL`").
 
 ## Fit Statistics
 

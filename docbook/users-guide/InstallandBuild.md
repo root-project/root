@@ -535,8 +535,8 @@ Root.Html.Copyright:        * Copyright
 GUI Specific Settings
 ---------------------
 
-Set the “`native`” ROOT GUI interface to be used in a ROOT session. If
-set to “`qt`”, the “`native`” GUI interface is replaced with one based
+Set the "`native`" ROOT GUI interface to be used in a ROOT session. If
+set to "`qt`", the "`native`" GUI interface is replaced with one based
 on Qt by the regular ROOT plug-in mechanism.
 
 ``` {.cpp}
@@ -711,7 +711,7 @@ Proof.GdbHook:    0
 ```
 
 On the master to enable the parallel startup of workers using threads
-set next to “`yes`” (default is “`no`”):
+set next to "`yes`" (default is "`no`"):
 
 ``` {.cpp}
 Proof.ParallelStartup: no

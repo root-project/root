@@ -48,8 +48,8 @@ some methods that use Introspection to help you see the data in the
 object or class. For instance:
 
 ``` {.cpp}
-obj->Dump(); // lists all data members and their current valsue
-obj->Inspect(); // opens a window to browse data members
+obj->Dump();      // lists all data members and their current valsue
+obj->Inspect();   // opens a window to browse data members
 obj->DrawClass(); // Draws the class inheritance tree
 ```
 
@@ -65,7 +65,7 @@ same name on all members of the collection. For example, the list of
 graphics primitives are in a ROOT collection called **`TList`**. When
 the canvas is drawn, the `Paint` method is executed on the entire
 collection. Each member may be a different class, and if the `Paint`
-method is not implemented, **`TObject::Paint` will be executed.**
+method is not implemented, **`TObject::Paint`** will be executed.
 
 ### Input/Output
 
@@ -73,7 +73,7 @@ method is not implemented, **`TObject::Paint` will be executed.**
 The `TObject::Write` method is the interface to the ROOT I/O system. It
 streams the object into a buffer using the `Streamer` method. It
 supports cycle numbers and automatic schema evolution. See
-“Input/Output”.
+"Input/Output".
 
 ### Paint/Draw
 
@@ -133,10 +133,10 @@ contents in a TH1).
 
 
 By default an object inheriting from **`TObject`** is not brows-able,
-because **`TObject::IsFolder()` returns `kFALSE`. To make a class
+because **`TObject::IsFolder()`** returns `kFALSE`. To make a class
 browse-able, the `IsFolder` method needs to be overridden to return
 `kTRUE`. In general, this method returns `kTRUE` if the object contains
-browse-able objects (like containers or lists of other objects).**
+browse-able objects (like containers or lists of other objects).
 
 ### Bit Masks and Unique ID
 
@@ -148,22 +148,19 @@ object information. Bits 0 – 13 are reserved as global bits, bits 14 –
 
 ``` {.cpp}
 enum EObjBits {
-   kCanDelete     = BIT(0),  //if can be deleted
-   kMustCleanup   = BIT(3),  //if destructor must call 
-                             // RecursiveRemove()
-   kObjInCanvas   = BIT(3),  //for backward compatibility only
-   kIsReferenced  = BIT(4),  //if referenced by TRef or TRefArray
-   kHasUUID       = BIT(5),  //if has a TUUID, fUniqueID=UUIDNumber
-   kCannotPick    = BIT(6),  //if cannot be picked in a pad
-   kNoContextMenu = BIT(8),  //if does not want a context menu
-   kInvalidObject = BIT(13)  //object ctor succeeded but the object
-                             // should not be used
-
+   kCanDelete     = BIT(0), // if can be deleted
+   kMustCleanup   = BIT(3), // if destructor must call RecursiveRemove()
+   kObjInCanvas   = BIT(3), // for backward compatibility only
+   kIsReferenced  = BIT(4), // if referenced by TRef or TRefArray
+   kHasUUID       = BIT(5), // if has a TUUID, fUniqueID=UUIDNumber
+   kCannotPick    = BIT(6), // if cannot be picked in a pad
+   kNoContextMenu = BIT(8), // if does not want a context menu
+   kInvalidObject = BIT(13) // object ctor succeeded but the object should not be used
 };
 ```
 
 For example, the bits `kMustCleanup` and `kCanDelete` are used in
-**`TObject`**. See “The kCanDelete Bit” and “The kMustCleanup Bit”. They
+**`TObject`**. See "The kCanDelete Bit" and "The kMustCleanup Bit". They
 can be set by any object and should not be reused. Make sure to no
 overlap in any given hierarchy them. The bit 13 (`kInvalidObject`) is
 set when an object could not be read from a ROOT file. It will check
@@ -212,7 +209,7 @@ ClassDef(TLine,1);                   //A line segment
 The **`ClassVersionID`** is used by the ROOT I/O system. It is written
 on the output stream and during reading you can check this version ID
 and take appropriate action depending on the value of the ID. See
-“Streamers”. Every time you change the data members of a class, you
+"Streamers". Every time you change the data members of a class, you
 should increase its `ClassVersionID` by one. The `ClassVersionID` should
 be `>=1`. Set `ClassVersionID=0` in case you don't need object I/O. To
 be able to generate properly documentation for your classes using
@@ -232,8 +229,8 @@ Note that you should provide a default constructor for your classes,
 i.e. a constructor with zero parameters or with one or more parameters
 all with default values in case you want to use object I/O. If do not
 provide such a default contructor, you MUST implement an I/O
-constructor. If not you will get a compile time error. See the “The
-Default Constructor” paragraph in this chapter. The `ClassDef` and
+constructor. If not you will get a compile time error. See the "The
+Default Constructor" paragraph in this chapter. The `ClassDef` and
 `ClassImp` macros are defined in the file `Rtypes.h`. This file is
 referenced by all ROOT include files, so you will automatically get them
 if you use a ROOT include file.
@@ -447,18 +444,18 @@ The `TTrack.h` header is:
 
 class TEvent;
 class TTrack : public TObject {
-private:
-Int_t    fId;       //track sequential id
-TEvent  *fEvent;    //event to which track belongs
-Float_t  fPx;       //x part of track momentum
-Float_t  fPy;       //y part of track momentum
-Float_t  fPz;       //z part of track momentum
-public:
-TTrack() { fId = 0; fEvent = 0; fPx = fPy = fPz = 0; }
-TTrack(Int_t id, Event *ev, Float_t px,Float_t py,Float_t pz);
-Float_t  Momentum() const;
-TEvent  *GetEvent() const { return fEvent; }
-void     Print(Option_t *opt="");
+   private:
+      Int_t    fId;       //track sequential id
+      TEvent  *fEvent;    //event to which track belongs
+      Float_t  fPx;       //x part of track momentum
+      Float_t  fPy;       //y part of track momentum
+      Float_t  fPz;       //z part of track momentum
+   public:
+      TTrack() { fId = 0; fEvent = 0; fPx = fPy = fPz = 0; }
+      TTrack(Int_t id, Event *ev, Float_t px,Float_t py,Float_t pz);
+      Float_t  Momentum() const;
+      TEvent  *GetEvent() const { return fEvent; }
+      void     Print(Option_t *opt="");
 
    ClassDef (TTrack,1);  //Simple track class
 };
@@ -515,19 +512,19 @@ the` Streamer()` and` ShowMembers() `methods for the two classes.
 ``` {.cpp}
 void TEvent::Streamer(TBuffer &R__b) {
    // Stream an object of class TEvent.
-if (R__b.IsReading()) {
-Version_t R__v = R__b.ReadVersion();
-TObject::(R__b);
-R__b >> fId;
-R__b >> fTotalMom;
-R__b >> fTracks;
-} else {
-R__b.WriteVersion(TEvent::IsA());
-TObject::Streamer(R__b);
-R__b << fId;
-R__b << fTotalMom;
-R__b << fTracks;
-}
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion();
+      TObject::(R__b);
+      R__b >> fId;
+      R__b >> fTotalMom;
+      R__b >> fTracks;
+   } else {
+      R__b.WriteVersion(TEvent::IsA());
+      TObject::Streamer(R__b);
+      R__b << fId;
+      R__b << fTotalMom;
+      R__b << fTracks;
+   }
 }
 ```
 
@@ -575,7 +572,7 @@ feature on or off at the ROOT prompt by executing **.autodict**.
 ## Adding a Class with a Shared Library
 
 
-**Step 1:**Define your own class in `SClass.h` and implement it in
+**Step 1:** Define your own class in `SClass.h` and implement it in
 `SClass.cxx`. You must provide a default constructor or an I/O
 constructor for your class. See the "The Default Constructor" paragraph
 in this chapter.
@@ -584,21 +581,21 @@ in this chapter.
 #include <iostream.h>
 #include "TObject.h"
 class SClass : public TObject {
-private:
-Float_t   fX;         //x position in centimeters
-Float_t   fY;         //y position in centimeters
-Int_t     fTempValue; //! temporary state value
-public:
-SClass()             { fX = fY = -1; }
-void Print() const;
-void SetX(float x) { fX = x; }
-void SetY(float y) { fY = y; }
+   private:
+      Float_t   fX;         //x position in centimeters
+      Float_t   fY;         //y position in centimeters
+      Int_t     fTempValue; //! temporary state value
+   public:
+      SClass()             { fX = fY = -1; }
+      void Print() const;
+      void SetX(float x) { fX = x; }
+      void SetY(float y) { fY = y; }
 
 ClassDef(SClass, 1)
 };
 ```
 
-**Step 2:**Add a call to the `ClassDef` macro to at the end of the class
+**Step 2:** Add a call to the `ClassDef` macro to at the end of the class
 definition (in the `SClass.h` file). `ClassDef(SClass,1)`. Add a call to
 the `ClassImp` macro in the implementation file (`SClass.cxx`):
 `ClassImp(SClass)`.
@@ -608,7 +605,7 @@ the `ClassImp` macro in the implementation file (`SClass.cxx`):
 #include "SClass.h"
 ClassImp(SClass);
 void SClass::Print() const {
-cout << "fX = " << fX << ", fY = " << fY << endl;
+   cout << "fX = " << fX << ", fY = " << fY << endl;
 }
 ```
 
@@ -628,7 +625,7 @@ Int_t     fTempValue; //! temporary state value
 ### The LinkDef.h File
 
 
-**Step 3:**The `LinkDef.h` file tells `rootcint` for which classes to
+**Step 3:** The `LinkDef.h` file tells `rootcint` for which classes to
 generate the method interface stubs.
 
 ``` {.cpp}
@@ -675,7 +672,7 @@ run-time performance. We strongly recommend using it.
 #pragma link C++ class SClass+; // add byte count
 ```
 
-For information on `Streamers` see “Input/Output”. To get help on
+For information on `Streamers` see "Input/Output". To get help on
 `rootcint` type on the UNIX command line: **`rootcint -h`**
 
 #### The Order Matters
@@ -687,7 +684,7 @@ which holds a specialized instance of a `Tmpl`:
 ``` {.cpp}
 class Norm {
 private:
-  Tmpl<int>* fIntTmpl;
+   Tmpl<int>* fIntTmpl;
 public:
   ...
 };
@@ -886,9 +883,9 @@ int g(double x);
 #define max(a,b) (a>b?a:b)
 
 class A {
-public:
-int h(double y);
-int h(int a,double b);
+   public:
+      int h(double y);
+      int h(int a,double b);
 };
 ```
 
@@ -918,9 +915,8 @@ follows:
 ``` {.cpp}
 // A.h
 template<class T> class A {
-
-public:
-template<class E> void f(E& x) { ... }
+   public:
+      template<class E> void f(E& x) { ... }
 };
 ```
 
@@ -1037,8 +1033,8 @@ Example:
 
 ``` {.cpp}
 namespace ns {
-int a;
-double b;
+   int a;
+   double b;
 };
 ```
 
@@ -1086,13 +1082,13 @@ From 5.15.57, you can omit them. Example:
 #endif
 
 class A {
-int a;
-double b;
+   int a;
+   double b;
 };
 
 class B {
-int d;
-double e;
+   int d;
+   double e;
 };
 
 #ifdef __MAKECINT__
@@ -1137,12 +1133,12 @@ link: <http://root.cern.ch/root/RootCintMan.html>
 // we can write ABC to a ROOT file
 class ABC : public TObject {
 
-public:
-Float_t a, b, c, p;
-ABC() : a(0), b(0), c(0), p(0){};
+   public:
+      Float_t a, b, c, p;
+      ABC() : a(0), b(0), c(0), p(0){};
 
 // Define the class for the cint dictionary
-ClassDef (ABC,1)
+   ClassDef (ABC,1)
 };
 
 // Call the ClassImp macro to give the ABC class RTTI and 

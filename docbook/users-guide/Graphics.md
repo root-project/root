@@ -110,7 +110,7 @@ with each change for performance reasons. See "Updating the Pad".
 #### The Middle Mouse Button
 
 Objects in a canvas, as well as in a pad, are stacked on top of each
-other in the order they were drawn. Some objects may become “active”
+other in the order they were drawn. Some objects may become "active"
 objects, which mean they are reordered to be on top of the others. To
 interactively make an object "active", you can use the middle mouse
 button. In case of canvases or pads, the border becomes highlighted when
@@ -814,8 +814,8 @@ In this paragraph, we describe the various simple 2D graphical objects
 defined in ROOT. Usually, one defines these objects with their
 constructor and draws them with their `Draw()` method. Therefore, the
 examples will be very brief. Most graphical objects have line and fill
-attributes (color, width) that will be described in “Graphical objects
-attributes”. If the user wants more information, the class names are
+attributes (color, width) that will be described in "Graphical objects
+attributes". If the user wants more information, the class names are
 given and he may refer to the online developer documentation. This is
 especially true for functions and methods that set and get internal
 values of the objects described here. By default 2D graphical objects
@@ -879,7 +879,7 @@ is set with:
 ar.SetFillColor(icolor);
 ```
 
-Where `icolor` is the color defined in “Color and Color Palettes”.
+Where `icolor` is the color defined in "Color and Color Palettes".
 
 The default-opening angle between the two sides of the arrow is 60
 degrees. It can be changed with the method `ar–>SetAngle(angle)`, where
@@ -905,13 +905,13 @@ An ellipse can be truncated and rotated. It is defined by its center
 be specified `(phimin,phimax)`. The ellipse may be rotated with an angle
 `theta`. All these angles are in degrees. The attributes of the outline
 line are set via **`TAttLine`**, of the fill area – via **`TAttFill`**
-class. They are described in “Graphical Objects Attributes”.
+class. They are described in "Graphical Objects Attributes".
 
 ![Different types of ellipses](pictures/030000AE.png)
 
 When an ellipse sector is drawn only, the lines between the center and
 the end points of the sector are drawn by default. By specifying the
-drawn option “`only`”, these lines can be avoided. Alternatively, the
+drawn option "`only`", these lines can be avoided. Alternatively, the
 method `SetNoEdges()` can be called. To remove completely the ellipse
 outline, specify zero (0) as a line style.
 
@@ -953,7 +953,7 @@ root[] b->Draw()
 
 A **`TWbox`** is a rectangle (**`TBox`**) with a border size and a
 border mode. The attributes of the outline line and of the fill area are
-described in “Graphical Objects Attributes”
+described in "Graphical Objects Attributes"
 
 ### Markers
 
@@ -997,8 +997,8 @@ the two on the top appear further apart from the next example.
 A **`TPolyMaker`** is defined by an array on N points in a 2D space. At
 each point `x[i]`, `y[i]` a marker is drawn. The list of marker types is
 shown in the previous paragraph. The marker attributes are managed by
-the class **`TAttMarker`** and are described in “Graphical Objects
-Attributes”. The **`TPolyMarker`** constructor is:
+the class **`TAttMarker`** and are described in "Graphical Objects
+Attributes". The **`TPolyMarker`** constructor is:
 
 ``` {.cpp}
 TPolyMarker(Int_t n,Double_t *x,Double_t *y,Option_t *option)
@@ -1293,19 +1293,19 @@ TPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 ```
 
 Where (`x1`, `y1`) are the coordinates of the bottom left corner,
-`(x2,y2)` - coordinates of the upper right corner. “`label`” is the text
-to be displayed and “`option`” is the drawing option, described above.
-By default, the border size is 5 and the option is “`br`”. If one wants
+`(x2,y2)` - coordinates of the upper right corner. "`label`" is the text
+to be displayed and "`option`" is the drawing option, described above.
+By default, the border size is 5 and the option is "`br`". If one wants
 to set the border size to some other value, one may use the method
 `SetBorderSize()`. For example, suppose we have a histogram, which
 limits are (-100,100) in the x direction and (0, 1000) in the y
 direction. The following lines will draw a label in the center of the
 histogram, with no border. If one wants the label position to be
 independent of the histogram coordinates, or user coordinates, one can
-use the option “`NDC`”. See “The Coordinate Systems of a Pad”.
+use the option "`NDC`". See "The Coordinate Systems of a Pad".
 
 ``` {.cpp}
-root[] pl = new TPaveLabel(-50,0,50,200,”Some text”)
+root[] pl = new TPaveLabel(-50,0,50,200,"Some text")
 root[] pl->SetBorderSize(0)
 root[] pl->Draw()
 ```
@@ -1323,7 +1323,7 @@ the context menu with the mouse.
 A **`TPavesText`** is a stack of text panels (see **`TPaveText`**). One
 can set the number of stacked panels at building time. It has the
 following constructor: By default, the number of stacked panels is 5,
-`option=`”`br`”.
+`option=`"`br`".
 
 ``` {.cpp}
 TPavesText(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
@@ -1488,7 +1488,7 @@ The arguments `xmin, ymin` are the coordinates of the axis' start in the
 user coordinates system, `and xmax, ymax` are the end coordinates. The
 arguments `wmin` and `wmax` are the minimum (at the start) and maximum
 (at the end) values to be represented on the axis; `ndiv` is the number
-of divisions. The options, given by the “`chopt`” string are the
+of divisions. The options, given by the "`chopt`" string are the
 following:
 
 -   `chopt = 'G'`: logarithmic scale, default is linear.
@@ -1816,7 +1816,7 @@ one of the three methods described before. The time axis will spread
 around the time offset value. Actually, it will go from
 `TimeOffset+wmin` to `TimeOffset+wmax` where `wmin` and `wmax` are the
 minimum and maximum values (in seconds) of the axis. Let us take again
-an example. Having defined "2003, February 28 at 12h”, we would like to
+an example. Having defined "2003, February 28 at 12h", we would like to
 see the axis a day before and a day after.
 
 ![A histogram with time axis X](pictures/030000C9.png)
@@ -2374,7 +2374,7 @@ coloring pads, labels, and other graphic objects. If `ncolors > 0` and
 If `ncolors == 1 && colors == 0`, then a pretty palette with a spectrum
 `Violet->Red` is created. It is recommended to use this pretty palette
 when drawing lego(s), surfaces or contours. For example, to set the
-current palette to the “`pretty`” one, do:
+current palette to the "`pretty`" one, do:
 
 ``` {.cpp}
 root[] gStyle->SetPalette(1)
@@ -2625,13 +2625,13 @@ The parameters are:
 
 -   `option`:
 
--   ”L” draw line associated with line attributes of `obj`, if `obj`
+-   "L" draw line associated with line attributes of `obj`, if `obj`
     inherits from **`TAttLine`**.
 
--   ”P” draw poly-marker associated with marker attributes of `obj`, if
+-   "P" draw poly-marker associated with marker attributes of `obj`, if
     `obj` inherits **`TAttMarker`**.
 
--   ”F” draw a box with fill associated with fill attributes of `obj`,
+-   "F" draw a box with fill associated with fill attributes of `obj`,
     if `obj` inherits **`TAttFill`**.
 
 One may also use the other form of the method `AddEntry`:
@@ -2727,7 +2727,7 @@ can be:
 
 -   "`tiff`" a Tagged-Image File Format
 
--   “`root`”a ROOT binary file is produced
+-   "`root`"a ROOT binary file is produced
 
 You do not need to specify this second parameter; you can indicate by
 the filename extension what format you want to save a canvas in (i.e.
@@ -2876,11 +2876,11 @@ TCanvas c1("c1","canvas",800,600);
 
    //draw 3 histograms from file hsimple.root on separate pages
    hpx->Draw();
-   c1->Print(“test1.ps(“, “Portrait”);
+   c1->Print("test1.ps(", "Portrait");
    hprof->Draw();
-   c1->Print(“test1.ps”);
-   hpx->Draw(“lego1”);
-   c1->Print(“test1.ps)“);
+   c1->Print("test1.ps");
+   hpx->Draw("lego1");
+   c1->Print("test1.ps)");
 }
 ```
 
@@ -2928,13 +2928,13 @@ c1->cd(1);
 hpx->Draw();
 c1->cd(2);
 hprof->Draw();
-c1->Print(“test2.ps(”, “Landscape”);
+c1->Print("test2.ps(", "Landscape");
    // picture 2
 c1->cd(1);
 hpxpy->Draw();
 c1->cd(2);
-ntuple->Draw(“px”);
-c1->Print(“test2.ps)”);
+ntuple->Draw("px");
+c1->Print("test2.ps)");
 gSystem->Exec("gs file.ps");  // invoke PostScript  viewer
 }
 ```
@@ -3074,10 +3074,10 @@ ROOT provides several viewers capable of displaying 3D content:
 -   the Pad – simple line drawing using **`TPad`** and associated
     projection class **`TView`**;
 
--   GL Viewer – high quality and performance viewer(See “The GL
-    Viewer”);
+-   GL Viewer – high quality and performance viewer(See "The GL
+    Viewer");
 
--   X3D viewer – simple legacy viewer (See “The X3D Viewer”);
+-   X3D viewer – simple legacy viewer (See "The X3D Viewer");
 
 -   GL-in-pad – combination of basic GL viewer in **`TPad`**, with no
     hardware acceleration.
@@ -3085,13 +3085,13 @@ ROOT provides several viewers capable of displaying 3D content:
 The X3D and GL viewers are created as external windows, associated with
 a pad, and displaying the same content as it. Only these external
 viewers are detailed here – for Pad (**`TPad`**, **`TView`** classes)
-you should refer to “Graphical Containers: Canvas and Pad” and the class
+you should refer to "Graphical Containers: Canvas and Pad" and the class
 definitions.
 
 All viewers use a common architecture to publish 3D objects to the
-viewer - described in “Common 3D Viewer Architecture” below. In most
+viewer - described in "Common 3D Viewer Architecture" below. In most
 cases, you will **not** need to use this, working instead with a
-package, such as the “The Geometry Package”, which provides
+package, such as the "The Geometry Package", which provides
 comprehensive, high level functionality to create and place objects into
 complex 3D scenes, and uses the viewer architecture internally to show
 the result in your chosen viewer.
@@ -3102,21 +3102,21 @@ the result in your chosen viewer.
 A 3D viewer can be created in a script by passing the appropriate option
 to `Draw() `when attaching the drawn object(s) to a pad. For a fuller
 explanation of pads, attaching objects with `Draw()` etc. refer to
-“Graphical Containers: Canvas and Pad”.
+"Graphical Containers: Canvas and Pad".
 
 ``` {.cpp}
-root[] myShapes->Draw(“ogl”);
+root[] myShapes->Draw("ogl");
 ```
 
 Valid option strings are:
 
--   “`ogl`” : external GL viewer
+-   "`ogl`" : external GL viewer
 
--   “`x3d`”: external X3D viewer
+-   "`x3d`": external X3D viewer
 
--   “`pad`”: pad viewer
+-   "`pad`": pad viewer
 
-If no option is passed to `Draw()` then the “`pad`” is used by default.
+If no option is passed to `Draw()` then the "`pad`" is used by default.
 If you already have content in a pad, which you would like to display in
 one of the external viewers you can select from the canvas View menu /
 View With, and pick the viewer type.
@@ -3159,7 +3159,7 @@ The GL Viewer supports two basic types of camera, which affect how the
     effect, where distant objects appear smaller than near ones. This is
     useful for obtaining a ‘real world’ views. The degree of
     foreshortening is affected by the current camera field of view
-    (focal length of its ‘lens’) – see “Adjusting Cameras”.
+    (focal length of its ‘lens’) – see "Adjusting Cameras".
 
 -   Orthographic: Distance from camera does not affect object size.
     These projections are useful for measurement or checking alignments,
@@ -3190,7 +3190,7 @@ the global axes of the world, with the other two axes lying
 horizontal/vertical on the viewer window. Therefore, XOY has the X-axis
 horizontal, the Y-axis vertical. You can always confirm the orientation
 and constraints of the camera in the world by enabling axis drawing in
-the “Guides” tab – see sections “Guides” and “Clipping” below. For
+the "Guides" tab – see sections "Guides" and "Clipping" below. For
 orthographic camera a ruler-depicting current scene units is also
 available.
 
@@ -3276,7 +3276,7 @@ time, but you will not see the result until the camera is made current.
 
 The GL Viewer supports three different rendering modes, which are
 applied to all the objects in your scene, but not Clip Shapes and Guides
-(See “Clipping” and “Manipulators”). These are shown below, along with
+(See "Clipping" and "Manipulators"). These are shown below, along with
 the key used to activate the style.
 
 ![GL Viewer draw styles](pictures/020000DC.jpg)
@@ -3289,7 +3289,7 @@ Solid opacity, specular reflection etc. shapes with edges. Black
 background. Black background. White background.
 
 Call method `TGLViewer::SetStyle` with one of
-**`TGL``RnrCtx::EDrawStyle `flags `kFill`, `kOutline`, `kWireFrame`:**
+**`TGLRnrCtx::EDrawStyle `flags `kFill`, `kOutline`, `kWireFrame`:**
 
 ``` {.cpp}
 v->SetStyle(TGLRnrCtx::kFill);
@@ -3305,10 +3305,10 @@ the left light always shines from the left.
 Light controls are located: Viewer Controls Pane ‘Style’.
 
 Each light has a checkbox to enable/disable it. Set lights on/off with
-**`TGL``LightSet::SetLight` e.g.**
+**`TGLLightSet::SetLight` e.g.**
 
 ``` {.cpp}
-v->GetLightSet()->SetLight(TGLLightSet</emphasis>::kLightBottom, kFALSE);
+v->GetLightSet()->SetLight(TGLLightSet::kLightBottom, kFALSE);
 ```
 
 #### Clipping
@@ -3339,7 +3339,7 @@ The clip object can be adjusted by:
 To show and/or directly manipulate the object check the ‘Show / Edit in
 Viewer’ checkbox. The clip object is drawn in semi-transparent light
 brown. The current manipulator is attached to it, allowing you direct
-control over its position, scale and rotation. See “Manipulators”
+control over its position, scale and rotation. See "Manipulators"
 section below for details on using viewer manipulators.
 
 The clip plane is described by the standard plane equation:
@@ -3362,15 +3362,13 @@ there are certain limitations:
 -   Each additional clipping plane requires an additional render pass –
     so the more active planes the more time the render will take.
 
-Set the current clip object with
-`TGL`\</emphasis\>**`ClipSet::SetClipType`**
+Set the current clip object with **`TGLClipSet::SetClipType`**
 
 ``` {.cpp}
-v->GetClipSet()->SetClipType(TGLClipSet</emphasis>::kClipPlane);
+v->GetClipSet()->SetClipType(TGLClipSet::kClipPlane);
 ```
 
-Configure the clip object with
-`TGL`\</emphasis\>**`ClipSet::SetClipState`**
+Configure the clip object with **`TGLClipSet::SetClipState`**
 
 ``` {.cpp}
 Double_t planeEq[4] = {0.5,1.0,-1.0, 2.0};
@@ -3401,7 +3399,7 @@ cannot be controlled via the API at present.
 #### Guides
 
 Guides are visual aids drawn into the viewer world. Controls for these
-are under the “Guides” tab:
+are under the "Guides" tab:
 
 Viewer Controls Pane Guides Tab
 
@@ -3619,7 +3617,7 @@ following steps:
 You should attach the top-level node of your external geometry (or the
 manager) to a **`TPad`** object using **`TObject::Draw()`, and perform
 the publishing to the viewer in your object's `TObject::Paint()`
-overloaded method. See “Scene Rebuilds”, and example scripts, for more
+overloaded method. See "Scene Rebuilds", and example scripts, for more
 details.**
 
 #### Creating / Obtaining Viewer Handle
@@ -3632,16 +3630,16 @@ viewer handle via the method:
 TVirtualViewer3D * v = gPad->GetViewer3D("type");
 ```
 
-Here the “type” string defines the viewer type – currently one of:
+Here the "type" string defines the viewer type – currently one of:
 
--   “`ogl`” : External GL viewer
+-   "`ogl`" : External GL viewer
 
--   “`x3d`”: External X3D viewer
+-   "`x3d`": External X3D viewer
 
--   “`pad`”: Pad viewer
+-   "`pad`": Pad viewer
 
 If no type is passed (null string), and there is no current viewer, then
-the type is defaulted to “`pad`”. If no type is passed and there is a
+the type is defaulted to "`pad`". If no type is passed and there is a
 current viewer, then this is returned – hence once a viewer is created
 it can be obtained elsewhere by:
 
@@ -3894,7 +3892,7 @@ Some viewers can support two types of object placement:
 
 The second case is very typical in geometry packages, e.g. ROOT’s
 **`TGeo`** package, GEANT4 etc, where we have very large number repeated
-placements of relatively few unique “shapes”.
+placements of relatively few unique "shapes".
 
 Some viewers (GL Viewer only at present) are able to take advantage of
 this by identifying unique logical shapes from the `fID` logical ID

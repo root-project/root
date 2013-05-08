@@ -143,8 +143,8 @@ see what `MyMainFrame` is. The three arguments pass to the
 The first thing to note is the inclusion of the `RQ_OBJECT` macro in the
 class declaration of `MyMainFrame`. It is necessary to provide a
 standalone class signal/slot capability. The signal/slot communication
-mechanism is described in a separate chapter. See “Event Processing:
-Signals and Slots”.
+mechanism is described in a separate chapter. See "Event Processing:
+Signals and Slots".
 
 ``` {.cpp}
 // example.C
@@ -296,12 +296,12 @@ hframe ->AddFrame(exit,new TGLayoutHints(kLHintsCenterX,5,5,3,4));
 They are created as objects of the **`TGTextButton`** class that
 represent the command buttons with a text label. When you click on a
 command button it performs the action shown on its label. These buttons
-are well known as “push buttons” or just “buttons”. The parent address
+are well known as "push buttons" or just "buttons". The parent address
 `hframe` is passed as first parameter. The second one defines the button
 label and normally indicates the action to be taken when the button is
 clicked. It is possible to define a hot key for the button at that point
 using the hot string for its label. A hot string is a string with a
-“hot” character underlined. This character we call the button hot key.
+"hot" character underlined. This character we call the button hot key.
 It shows the assigned keyboard mnemonic for the button choice. Following
 our example, this means that you can use `Alt+D` to click on Draw button
 and `Alt+E` to click on Exit. There is a possibility to specify a
@@ -330,7 +330,7 @@ code is called a slot. Think about slots as normal C++ functions or
 class methods. The line above specifies that the slot
 `MyMainFrame::DoDraw()` will be executed when the draw button is
 clicked. Our slot draws the graphics of `sin(x)/x` in randomly chosen
-interval every time the draw button sends a signal “I am clicked”. The
+interval every time the draw button sends a signal "I am clicked". The
 signal/slot communication mechanism originally featured in Qt by
 TrollTech(see <http://doc.trolltech.com/3.1/signalsandslots.html>). ROOT
 supports its own version of signals/slots. We will return to that point
@@ -625,8 +625,8 @@ The method `IsEnabled()` – returns `kTRUE` if the widget has flag
 `kWidgetIsEnabled` and it accepts user events. This method is very
 important for creating a good user interface because it allows you to
 disable or enable a widget depending on the situation of your
-application. As a standard all disabled widgets are displayed “grayed
-out”. `HasFocus()` – returns `kTRUE` if the widget has the input focus
+application. As a standard all disabled widgets are displayed "grayed
+out". `HasFocus()` – returns `kTRUE` if the widget has the input focus
 (i.e. flag `kWidgetHasFocus` is set). Remember that only one item in a
 complex widget as a dialog can have the value of `HasFocus()` sets as
 true. `WantFocus()` – returns `kTRUE` if the flag `kWidgetWantFocus` is
@@ -684,8 +684,8 @@ TGFrame(TGClient *c,Window_t id,const TGWindow *parent = 0);
 ```
 
 For example, it can register the root window (called by **`TGClient`**),
-or a window created via **`TVirtualX::InitWindow()` (window id is
-obtained by `TVirtualX`**`::GetWindowID()` method). The other
+or a window created via **`TVirtualX::InitWindow()`** (window id is
+obtained by `TVirtualX::GetWindowID()` method). The other
 **`TGFrame`** constructor is:
 
 ``` {.cpp}
@@ -841,8 +841,8 @@ groupFrame->SetTitlePos(TGGroupFrame::kLeft);
 ```
 
 The second line sets the title position on the left. You can change it
-to be centered or right aligned if you use **`TGGroupFrame::kCenter` or
-`TGGroupFrame`**`::kRight` as a parameter.
+to be centered or right aligned if you use **`TGGroupFrame::kCenter`** or
+`TGGroupFrame::kRight` as a parameter.
 
 ![](pictures/02000208.jpg)
 
@@ -873,7 +873,7 @@ layout functionality.
 
 ![The layout classes hierarchy](pictures/02000209.jpg)
 
-The base “container” class is**` TGCmpositeFrame`**. You can easily
+The base "container" class is **`TGCmpositeFrame`**. You can easily
 change the layout manager using the
 `SetLayoutManager(TGLayoutManager *l)` method. Setting the proper layout
 manager for each container is the first step you have to do. The
@@ -952,14 +952,14 @@ between the hints:
 |                  | the container frame. If the container frame is a        |
 |                  | vertical frame – it will fit the whole width. If it is  |
 |                  | a horizontal frame – after the positioning of all       |
-|                  | frames the available “free” width space is shared       |
+|                  | frames the available "free" width space is shared       |
 |                  | between the frames having this hint                     |
 +------------------+---------------------------------------------------------+
 | `kLHintsExpandY` | specifies the frame to be expanded up to the height of  |
 |                  | the container frame. If the container frame is a        |
 |                  | horizontal frame – it will fit the whole height. If the |
 |                  | container frame is a vertical frame – after the         |
-|                  | arrangement of all frames the available “free” height   |
+|                  | arrangement of all frames the available "free" height   |
 |                  | space is shared between the frames having this hint     |
 +------------------+---------------------------------------------------------+
 | `kLHintsNormal`  | = `kLHintsLeft | kLHintsTop` – default hints            |
@@ -1002,7 +1002,7 @@ the other side there might be an object waiting for that signal and
 ready to react to it. This object disposes of special instruments to
 listen to the sent out signals. To have a communication we need a
 message transmission between the objects. In this simple example we use
-signals and slots. The code of the method **`TGButton::Clicked()` is:**
+signals and slots. The code of the method **`TGButton::Clicked()`** is:
 
 ``` {.cpp}
 virtual void Clicked()  { Emit("Clicked()"); }   // *SIGNAL*
@@ -1047,11 +1047,11 @@ Here is an abstract view of the signal/slots connections in `example.C`:
 
 To benefit from this mechanism your classes must inherit from
 **`TQObject`** or otherwise the class definition must start with
-`RQ_OBJECT(“ClassName”) `macro. This macro allows the signals/slots
+`RQ_OBJECT("ClassName") `macro. This macro allows the signals/slots
 communication mechanism to be applied between compiled and interpreted
 classes in an interactive ROOT session without having the class derive
 from **`TQObject`**. Every signal method declaration is followed by a
-comment `“*SIGNAL*”.` Only instances of a class that defines a signal or
+comment `"*SIGNAL*".` Only instances of a class that defines a signal or
 instances of its subclasses can emit the signal. The ROOT implementation
 of a popular example presenting signals and slots is the next. Let’s
 have a minimal class declaration:
@@ -1082,7 +1082,7 @@ public:
 ```
 
 Both class declarations have the same data member and public methods to
-access the value. By placing the `RQ_OBJECT(“MyClass”)` macro inside the
+access the value. By placing the `RQ_OBJECT("MyClass")` macro inside the
 `MyClass` body (`MyClass` is not inherited from **`TQObject`**) we allow
 this class to use the signal/slot communication. Any instance of this
 class can tell the outside world that the state of its data member has
@@ -1100,8 +1100,8 @@ void MyClass::SetValue(Int_t v) {
 
 The line `Emit("SetValue(Int_t)",v)` activates the signal
 `SetValue(Int_t)` with argument v. You can use any of the methods
-**`TQObject::Emit(“full_method_name”,arguments)` to emit a signal. We
-create two instances of `MyClass` and connect them together:**
+**`TQObject::Emit("full_method_name",arguments)`** to emit a signal. We
+create two instances of `MyClass` and connect them together:
 
 ``` {.cpp}
 MyClass *objA = new MyClass();
@@ -1242,8 +1242,8 @@ Disconnect(myObgect,0,myReceiver,0);      // case 3
 ```
 
 Three parameters of these methods could be replaced by 0. The meaning in
-these cases would be “any signal”, “any receiving object”, “any slot of
-the receiving object”, i.e. 0 is used as a wildcard. The sender
+these cases would be "any signal", "any receiving object", "any slot of
+the receiving object", i.e. 0 is used as a wildcard. The sender
 parameter cannot be 0, because you can disconnect signals from one given
 object. If the signal parameter is 0, the receiver and the slot are
 disconnected from any signal. Giving the name of the signal you
@@ -1360,7 +1360,7 @@ action as soon as they are clicked. It can be opening/closing a dialog
 box or invoking a specific function in an application. Remember the Draw
 button from the example. The radio and check buttons from the second
 group are used to select an option. There is a visual difference between
-these two groups: the text buttons appear “pressed in” only while they
+these two groups: the text buttons appear "pressed in" only while they
 are clicked, while the radio and check buttons change their appearance
 when they are selected and keep that appearance afterwards.
 
@@ -1376,7 +1376,7 @@ ellipsis (…).
 ![](pictures/0300020D.png)
 
 As we saw the hot strings "&Draw" and "&Exit" define the text labels
-“Draw” and “Exit” and keyboard mnemonics `Alt+D`, `Alt+E` for their
+"Draw" and "Exit" and keyboard mnemonics `Alt+D`, `Alt+E` for their
 selection. The letter D and E appear underlined on the screen. All text
 buttons should have a unique shortcut key with the exception of OK and
 Cancel.
@@ -1450,7 +1450,7 @@ fPicture->SetPicture("h2_s.xpm");
 The advantage of command buttons is that they are always visible,
 providing a reminder of their existence. They can be inscribed with a
 meaningful description of what they do by
-`TGToolTip(“Some describing text”).` Their activation is much easier and
+`TGToolTip("Some describing text").` Their activation is much easier and
 faster than using a two-step menu bar/pull-down sequence. The only
 disadvantage of the text and picture buttons is that they consume
 considerable screen space if they are many. Having no more than six
@@ -1518,7 +1518,7 @@ Do not use a radio button to indicate the presence or absence of a state
 
 ![](pictures/03000212.png)
 
-To have the check button “Event Status” and to set it as selected we
+To have the check button "Event Status" and to set it as selected we
 need to write:
 
 ``` {.cpp}
@@ -1532,7 +1532,7 @@ properties or values; also for data or choices that are discrete, small
 and fixed in number, not easily remembered. With check boxes all
 alternatives are visible: it is easy to access and compare choices
 because they can all be seen together. Each option acts as a switch and
-can be either “on” or “off”. It is never changed in contents. Checkboxes
+can be either "on" or "off". It is never changed in contents. Checkboxes
 differ from radio buttons in that they permit selection of more than one
 alternative. Each box can be switched on or off independently. These
 buttons can be used alone or grouped in sets. It is good practice to
@@ -1630,7 +1630,7 @@ up-down buttons. Its purpose is to make a selection by either scrolling
 through a small set of meaningful predefined choices or typing numbers.
 The **`TGNumberFormat`** class contains `enum` types to specify the
 numeric format. The number entry widget is based on
-**`TGTextEntry``. It`** allows only numerical input. The widget supports
+**`TGTextEntry`**. It allows only numerical input. The widget supports
 numerous formats including integers, hex numbers, real numbers, fixed
 fraction real and time/date formats. It also allows to restrict input
 values to non-negative or positive numbers and to specify explicit
@@ -1745,7 +1745,7 @@ with text, graphics or a combination of both. Each of them should have a
 character defined as its unique key for access. Grouped logically by
 their functionality, they are separated visually by menu separators in
 groups. For example, The `File` menu is a common menu title for tasks
-that apply to a file, as `Open`**,**`Save`**,**`Close`**,**`Print`…
+that apply to a file, as **`Open`**,**`Save`**,**`Close`**,**`Print`**…
 
 ``` {.cpp}
 // a popup menu
@@ -1915,7 +1915,7 @@ This sample code creates the following three toolbar buttons:
 First we need to complete a `ToolBarData_t` structure for each tool bar
 button before adding it to the tool bar. This structure contains:
 
--   the icon file name “`filename.xpm`”
+-   the icon file name "`filename.xpm`"
 
 -   the tool tip text – a short help message explaining the button
     purpose
@@ -2290,9 +2290,9 @@ with this class because all manipulations go through **`TGClient`**
 class.
 
 Once you have finished with using of the **`TGPicture`** object, you
-should call the method **`TGClient::FreePicture(const TGPicture *pic)`
+should call the method **`TGClient::FreePicture(const TGPicture *pic)`**
 to free it. The usage counter of the picture object will be decreased
-and when it reaches zero – the **`TGPicture`** object will be deleted.**
+and when it reaches zero – the **`TGPicture`** object will be deleted.
 
 Status Bar
 ----------

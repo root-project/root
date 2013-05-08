@@ -181,7 +181,7 @@ with:
 root[] TThread *th = new TThread(UserFun,UserArgs);
 ```
 
-When called from the interpreter, this gives the name “`UserFun`” to the
+When called from the interpreter, this gives the name "`UserFun`" to the
 thread. This name can be used to retrieve the thread later. However,
 when called from compiled code, this method does not give any name to
 the thread. So give a name to the thread in compiled use:
@@ -232,8 +232,8 @@ TThread::UnLock()  // Unlocking
 The code between `Lock()` and `UnLock()` will be performed
 uninterrupted. No other threads can perform actions or access
 objects/collections while it is being executed. The methods
-`TThread::Lock() `and **`TThread::UnLock() `internally use a global
-`TMutex`** instance for locking.
+`TThread::Lock() `and **`TThread::UnLock()`** internally use a global
+`TMutex` instance for locking.
 
 The user may also define his own **`TMutex`** `MyMutex` instance and may
 locally protect his asynchronous actions by calling `MyMutex.Lock()` and
@@ -392,7 +392,7 @@ void UserCleanUp(void *arg){
 ...
 }
 TThread::CleanUpPush(&UserCleanUp,arg);
-       // push user function into cleanup stack“last in, first out”
+       // push user function into cleanup stack"last in, first out"
 TThread::CleanUpPop(1); // pop user function out of stack and execute it,
 // thread resumes after this call
 TThread::CleanUpPop(0); // pop user function out of stack
@@ -554,10 +554,10 @@ back to the ROOT command prompt. If no **`TRint`** object is created,
 there will be no `kSigInterrupt` handling. All signals can be reset to
 their default UNIX behavior via the call of
 **`TSytem`**`::ResetSignal()`. All signals can be ignored via
-`TSytem::IgnoreSignal()`. The **`TSytem::IgnoreInterrupt()` is a method
+`TSytem::IgnoreSignal()`. The **`TSytem::IgnoreInterrupt()`** is a method
 to toggle the handling of the interrupt signal. Typically it is called
 to prevent a `SIGINT` to interrupt some important call (like writing to
-a ROOT file).**
+a ROOT file).
 
 If **`TRint`** is used and the default ROOT interrupt handler is not
 desired, you should use `GetSignalHandler()` of **`TApplication`** to

@@ -4,7 +4,7 @@
 ## Why Should You Use a Tree?
 
 
-In the “Input/Output” chapter, we saw how objects can be saved in ROOT
+In the "Input/Output" chapter, we saw how objects can be saved in ROOT
 files. In case you want to store large quantities of same-class objects,
 ROOT has designed the **`TTree`** and **`TNtuple`** classes specifically
 for that purpose. The **`TTree`** class is optimized to reduce disk
@@ -175,7 +175,7 @@ The `TTree::Scan` method shows all values of the list of leaves
 separated by a colon.
 
 ``` {.cpp}
-root[] T->Scan("Cost:Age:Children")</emphasis>
+root[] T->Scan("Cost:Age:Children")
 ************************************************
 *    Row   *      Cost *       Age *  Children *
 ************************************************
@@ -245,8 +245,8 @@ witch is marked with the purple icon on the bottom left.
 
 All commands can be interrupted at any time by pressing this button.
 
-![](pictures/030000F3.png)The method **`TTree::Refresh` is called by
-pressing the refresh button in `TTreeViewer`**. It redraws the current
+![](pictures/030000F3.png)The method **`TTree::Refresh`** is called by
+pressing the refresh button in `TTreeViewer`. It redraws the current
 exposed expression. Calling `TTree::Refresh` is useful when a tree is
 produced by a writer process and concurrently analyzed by one or more
 readers.
@@ -292,7 +292,7 @@ recorded in the history file and echoed on the command line. The
 "Histogram" text box contains the name of the resulting histogram. By
 default it is `htemp`. You can type any name, if the histogram does not
 exist it will create one. The Option text box contains the list of Draw
-options. See “Draw Options”. You can select the options with the Options
+options. See "Draw Options". You can select the options with the Options
 menu. The Command box lets you enter any command that you could also
 enter on the command line. The vertical slider on the far left side can
 be used to select the minimum and maximum of an event range. The actual
@@ -333,7 +333,7 @@ TTree t("MyTree","Example Tree")
 
 
 An alternative way to create a tree and organize it is to use folders
-(see “Folders and Tasks”). You can build a folder structure and create a
+(see "Folders and Tasks"). You can build a folder structure and create a
 tree with branches for each of the sub-folders:
 
 ``` {.cpp}
@@ -517,7 +517,7 @@ on it. A variable on a **`TBranch`** is called a leaf (yes -
 **`TLeaf`**). Another point to keep in mind when designing trees is that
 branches of the same **`TTree`** can be written to separate files. To
 add a **`TBranch`** to a **`TTree`** we call the
-method**` TTree::Branch()`. Note that we DO NOT use the `TBranch`**
+method **`TTree::Branch()`**. Note that we DO NOT use the `TBranch`
 constructor.
 
 The `TTree::Branch` method has several signatures. The branch type
@@ -542,7 +542,7 @@ tree->Branch("Ev_Branch",&event,"temp/F:ntrack/I:nseg:nvtex:flag/i ");
 The first parameter is the branch name.
 
 The second parameter is the address from which the first variable is to
-be read. In the code above, “event” is a structure with one float and
+be read. In the code above, "event" is a structure with one float and
 three integers and one unsigned integer. You should not assume that the
 compiler aligns the elements of a structure without gaps. To avoid
 alignment problems, you need to use structures with same length members.
@@ -650,7 +650,7 @@ You can also add an array of variable length:
 }
 ```
 
-See “Example 2: A Tree with a C Structure” below
+See "Example 2: A Tree with a C Structure" below
 (`$ROOTSYS/tutorials/tree/tree2.C`) and `staff.C` at the beginning of
 this chapter.
 
@@ -742,9 +742,9 @@ A split branch is faster to read, but slightly slower to write. The
 reading is quicker because variables of the same type are stored
 consecutively and the type does not have to be read each time. It is
 slower to write because of the large number of buffers as described
-above. See “
+above. See "
 
-Performance Benchmarks” for performance impact of split and non-split
+Performance Benchmarks" for performance impact of split and non-split
 mode.
 
 #### Rules for Splitting
@@ -760,7 +760,7 @@ differently. Here are the rules that apply when splitting a branch.
 
 -   A data member can be a pointer to an array of basic types. The
     length can vary, and must be specified in the comment field of the
-    data member in the class definition. See “Input/Output”.
+    data member in the class definition. See "Input/Output".
 
 -   Pointer data member are not split, except for pointers to a
     **`TClonesArray`**. The **`TClonesArray`** (pointed to) is split if
@@ -844,7 +844,7 @@ object described above. If splitting is specified the objects in the
 When a top-level object (say `event`), has two data members of the same
 class the sub branches end up with identical names. To distinguish the
 sub branch we must associate them with the master branch by including a
-“`.`” (a dot) at the end of the master branch name. This will force the
+"`.`" (a dot) at the end of the master branch name. This will force the
 name of the sub branch to be `master.sub` branch instead of simply `sub`
 branch. For example, a tree has two branches `Trigger` and
 `MuonTrigger`, each containing an object of the same class (`Trigger`).
@@ -903,13 +903,13 @@ constructor for **`TClonesArray`** is called. The collection itself
 cannot be a **`TClonesArray`**. If `name` is given, all branch names
 will be prefixed with `name_`.
 
-*IMPORTANT NOTE1*: This function should not be called if `splitlevel<1`.
+*IMPORTANT NOTE1:* This function should not be called if `splitlevel<1`.
 *IMPORTANT NOTE2:* The branches created by this function will have names
 corresponding to the collection or object names. It is important to give
 names to collections to avoid misleading branch names or identical
 branch names. By default collections have a name equal to the
 corresponding class name, e.g. the default name of **`TList`** is
-“`TList`”.
+"`TList`".
 
 ## Examples for Writing and Reading Trees
 
@@ -1043,7 +1043,7 @@ In the right panel of the ROOT object browse are the branches: `ev`,
 because they are "end" branches with only one leaf. To histogram a leaf,
 we can simply double click on it in the browser. This is how the tree
 `t1` looks in the Tree Viewer. Here we can add a cut and add other
-operations for histogramming the leaves. See “The Tree Viewer”. For
+operations for histogramming the leaves. See "The Tree Viewer". For
 example, we can plot a two dimensional histogram.
 
 ![The tree viewer](pictures/030000FE.png)
@@ -1110,12 +1110,12 @@ internal members will not be deleted if the characters "`->`" are
 specified as the first characters in the comment field of the data
 member declaration.
 
-The pointer member is read via the `pointer->Streamer(buf)` if “`->`“ is
+The pointer member is read via the `pointer->Streamer(buf)` if "`->`" is
 specified. In this case, it is assumed that the pointer is never null
 (see pointer `TClonesArray *fTracks` in the `$ROOTSYS/test/Event`
-example). If “`->`" is not specified, the pointer member is read via
+example). If "`->`" is not specified, the pointer member is read via
 `buf >> pointer`. In this case the pointer may be null. Note that the
-option with “`->`" is faster to read or write and it also consumes less
+option with "`->`" is faster to read or write and it also consumes less
 space in the file.
 
 Option 2 - the option `AutoDelete` is set:
@@ -1413,8 +1413,8 @@ branch. First, we set the address for the branch to the file `dstep`,
 and then we use the `TBranch::GetEntry` method. Then we fill a histogram
 with the `dstep` branch entries, draw it and fit it with a Gaussian. In
 addition, we draw the particle's path using the three values in the
-vector. Here we use the **`TTree::Draw` method. It automatically creates
-a histogram and plots the 3 expressions (see Trees in Analysis).**
+vector. Here we use the **`TTree::Draw`** method. It automatically creates
+a histogram and plots the 3 expressions (see Trees in Analysis).
 
 ``` {.cpp}
 void tree2r() {
@@ -1457,7 +1457,7 @@ t2->Draw("vect[0]:vect[1]:vect[2]");
 if (gROOT->IsBatch()) return;
 
    // invoke the x3d viewer
-gPad->GetViewer3D(“x3d”);
+gPad->GetViewer3D("x3d");
 }
 ```
 
@@ -1985,13 +1985,13 @@ read from the file is returned.
 
 The methods `TTree::Draw`, **`TTree`**`::MakeClass` and
 `TTree::MakeSelector` are available for data analysis using trees. The
-**`TTree::Draw` method is a powerful yet simple way to look and draw the
+**`TTree::Draw`** method is a powerful yet simple way to look and draw the
 trees contents. It enables you to plot a variable (a leaf) with just one
 line of code. However, the Draw method falls short once you want to look
 at each entry and design more sophisticated acceptance criteria for your
 analysis. For these cases, you can use `TTree::MakeClass`. It creates a
 class that loops over the trees entries one by one. You can then expand
-it to do the logic of your analysis.**
+it to do the logic of your analysis.
 
 The `TTree::MakeSelector` is the recommended method for ROOT data
 analysis. It is especially important for large data set in a parallel
@@ -2017,8 +2017,7 @@ KEY: TTree    T;1     staff data from ascii file
 ```
 
 We can see the **`TTree `**"`T`" in the file. We will use it to
-experiment with the **`TTree::Draw` method, so let’s create a pointer to
-it:**
+experiment with the **`TTree::Draw`** method, so let’s create a pointer to it:
 
 ``` {.cpp}
 root[] TTree *MyTree = T
@@ -2033,14 +2032,14 @@ previously been used to declare a variable or function).
 In contrast, in compiled code, you can use:
 
 ``` {.cpp}
-TTree *MyTree;f.GetObject("T",MyTree);</emphasis>
+TTree *MyTree;f.GetObject("T",MyTree);
 ```
 
 To show the different `Draw` options, we create a canvas with four
 sub-pads. We will use one sub-pad for each `Draw` command.
 
 ``` {.cpp}
-root[] TCanvas *myCanvas = new TCanvas()</emphasis>
+root[] TCanvas *myCanvas = new TCanvas()
 root[] myCanvas->Divide(2,2)
 ```
 
@@ -2063,22 +2062,22 @@ inherited from the **`TTree`** attributes and the current style
 (***`gStyle`***) is ignored. The **`TTree`** gets its attributes from
 the current **`TStyle`** at the time it was created. You can call the
 method `TTree::UseCurrentStyle` to change to the current style rather
-than the **`TTree`** style. (See ***`gStyle`***; see also “Graphics and
-the Graphical User Interface” )
+than the **`TTree`** style. (See ***`gStyle`***; see also "Graphics and
+the Graphical User Interface" )
 
 In the next segment, we activate the second pad and draw a scatter plot
 variables:
 
 ``` {.cpp}
 root[] myCanvas->cd(2)
-root[] MyTree->Draw("Cost:</emphasis>Age")
+root[] MyTree->Draw("Cost:Age")
 ```
 
 This signature still only has one parameter, but it now has two
-dimensions separated by a colon `(“x:y”)`. The item to be plotted can be
+dimensions separated by a colon `("x:y")`. The item to be plotted can be
 an expression not just a simple variable. In general, this parameter is
 a string that contains up to three expressions, one for each dimension,
-separated by a colon (“`e1:e2:e3`”). A list of examples follows this
+separated by a colon ("`e1:e2:e3`"). A list of examples follows this
 introduction.
 
 ### Using Selection with TTree:Draw
@@ -2093,7 +2092,7 @@ root[] MyTree->Draw("Cost:Age","Nation == "FR"")
 ```
 
 This will draw the `Cost `vs. `Age` for the entries where the nation is
-equal to “`FR`”. You can use any C++ operator, and some functions
+equal to "`FR`". You can use any C++ operator, and some functions
 defined in **`TFormula`**, in the selection parameter. The value of the
 selection is used as a weight when filling the histogram. If the
 expression includes only Boolean operations as in the example above, the
@@ -2197,12 +2196,12 @@ The next parameter is the draw option for the histogram:
 
 ``` {.cpp}
 root[] myCanvas->cd(4)
-root[] MyTree->Draw("Cost:</emphasis>Age","N
+root[] MyTree->Draw("Cost:Age","N
 ```
 
 ![Using draw options in trees](pictures/03000104.png)
 
-The draw options are the same as for `TH1::Draw`. See “Draw Options”
+The draw options are the same as for `TH1::Draw`. See "Draw Options"
 where they are listed. In addition to the draw options defined in
 **`TH1`**, there are three more. The `'prof'` and `'profs'` draw a
 profile histogram (**`TProfile`**) rather than a regular 2D histogram
@@ -2722,7 +2721,7 @@ with fewer elements are ignored. Thus these two commands are equivalent.
 
 `Nation` is a `char*` branch. When drawing a `char*` it will plot an
 alphanumeric histogram, of the different value of the string `Nation`.
-The axis will have the `Nation` values. See “Histograms”.
+The axis will have the `Nation` values. See "Histograms".
 
 **`39. tree->Draw("MyChar +0")`**
 
@@ -2929,7 +2928,7 @@ directory. For example, to create a **`TEventList`** of all entries with
 more than 600 tracks, do:
 
 ``` {.cpp}
-root[] TFile *f = new TFile("Event.root"</emphasis>);
+root[] TFile *f = new TFile("Event.root");
 root[] T->Draw(">> myList","fNtrack > 600")
 ```
 
@@ -2951,7 +2950,7 @@ can be grown by using the "`>>+`" syntax. For example to add the
 entries, with exactly 600 tracks:
 
 ``` {.cpp}
-root[] T->Draw(">>+ myList","fNtrack == 600"</code>, "entrylist")</emphasis>;
+root[] T->Draw(">>+ myList","fNtrack == 600"</code>, "entrylist");
 ```
 
 If the `Draw` command generates duplicate entries, they are not added to
@@ -3008,9 +3007,9 @@ reset the **`TTree`** to use all events use `SetEventList(0)` or
 `fNtrack`.
 
 ``` {.cpp}
-root[] TFile *f = new TFile("Event.root");</emphasis>
+root[] TFile *f = new TFile("Event.root");
 root[] TTree *T = (TTree*)f->Get("T");
-root[] T->Draw("fNtrack");</emphasis>
+root[] T->Draw("fNtrack");
 ```
 
 2. Now, put the entries with over 600 tracks into a **`TEntry``List`**
@@ -3018,7 +3017,7 @@ called `myList`. We get the list from the current directory and assign
 it to a variable list.
 
 ``` {.cpp}
-root[] T->Draw(">>myList","fNtrack > 600"</code>,"entrylist")</emphasis>;
+root[] T->Draw(">>myList","fNtrack > 600"</code>,"entrylist");
 root[]TEntryList 
 ```
 
@@ -3151,7 +3150,7 @@ When you project a **`TTree`** into a histogram, the histogram inherits
 the **`TTree`** attributes and not the current style attributes. This
 allows you to project two Trees with different attributes into the same
 picture. You can call the method `TTree::UseCurrentStyle` to change the
-histogram to use the current style ***`gStyle`***. See “Graphics and the
+histogram to use the current style ***`gStyle`***. See "Graphics and the
 Graphical User Interface.
 
 The binning of the newly created histogram can be specified in two ways.
@@ -3354,7 +3353,7 @@ KEY: TH1F     htime;1 Real-Time to write versus time
 KEY: TTree    T;1     An example of a ROOT tree
 ```
 
-We can see there is a tree “`T`”, and just to verify that we are working
+We can see there is a tree "`T`", and just to verify that we are working
 with the correct one, we print the tree, which will show us the header
 and branches.
 
@@ -3364,9 +3363,9 @@ root[] T->Print();
 
 From the output of print we can see that the tree has one branch for
 each data member of `Event`, `Track`, and `EventHeader`. Now we can use
-`TTree::MakeClass` on our tree “`T`”. `MakeClass` takes one parameter, a
+`TTree::MakeClass` on our tree "`T`". `MakeClass` takes one parameter, a
 string containing the name of the class to be made. In the command
-below, the name of our class will be “`MyClass`”.
+below, the name of our class will be "`MyClass`".
 
 ``` {.cpp}
 root[] T->MakeClass("MyClass")
@@ -3436,7 +3435,7 @@ void   Show(Int_t entry = -1);
 We can see data members in the generated class. The first data member is
 `fChain`. Once this class is instantiated, `fChain` will point to the
 original tree or chain this class was made from. In our case, this is
-“T” in “`Event.root`”. If the class is instantiated with a tree as a
+"T" in "`Event.root`". If the class is instantiated with a tree as a
 parameter to the constructor, `fChain` will point to the tree named in
 the parameter. Next is `fCurrent`, which is also a pointer to the
 current tree/chain. Its role is only relevant when we have multiple
@@ -3602,8 +3601,8 @@ limited set of entries. This is especially important in a parallel
 processing configuration where the analysis is distributed over several
 processors and we can specify which entries to send to each processor.
 The `TTree::Process` method is used to specify the selector and the
-entries. Before we can use **`TTree::Process` we need to make a
-selector. We can call the `TTree`**`::MakeSelector` method. It creates
+entries. Before we can use **`TTree::Process`** we need to make a
+selector. We can call the `TTree::MakeSelector` method. It creates
 two files similar to `TTree::MakeClass`.
 
 In the resulting files is a class that is a descendent of
@@ -3658,8 +3657,8 @@ root[] T->MakeSelector("MySelector");
 
 Where `T` is the **`TTree`** and `MySelector` is the name of created
 class and the name of the `.h` and `.C` files. The resulting
-**`TSelector`** is the argument to **`TTree::Process`. The argument can
-be the file name or a pointer to the selector object.**
+**`TSelector`** is the argument to **`TTree::Process`**. The argument can
+be the file name or a pointer to the selector object.
 
 ``` {.cpp}
 root[] T->Process("MySelector.C","",1000,100);
@@ -3687,7 +3686,7 @@ loads the existing library. The next example shows how to create a
 selector with a pointer:
 
 ``` {.cpp}
-MySelector *selector = (MySelector *)TSelector::GetSelector(“MySelector.C+”);
+MySelector *selector = (MySelector *)TSelector::GetSelector("MySelector.C+");
 T->Process(selector);
 ```
 
@@ -3840,7 +3839,7 @@ chain.Draw("x");
 When using a **`TChain`**, the branch address(es) must be set with:
 
 ``` {.cpp}
-chain.SetBranchAdress(branchname,…)  // use this for TChain</emphasis>
+chain.SetBranchAdress(branchname,…)  // use this for TChain
 ```
 
 rather than:
@@ -3869,7 +3868,7 @@ Event *event = new Event();
 chain.SetBranchAddress("event", &event);
 
    // Start main loop on all events In case you want to read only a few 
-   // branches, use TChain::SetBranchStatus to activate a branch.</emphasis>
+   // branches, use TChain::SetBranchStatus to activate a branch.
 Int_t nevent = chain.GetEntries();
 for (Int_t i=0;i<nevent;i++) {
 // read complete accepted event in memory

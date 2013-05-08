@@ -77,8 +77,8 @@ detected. This generator uses a state of 24 32-bits words. Its main
 disadvantage is that is much slower than the others (see timing table).
 For more information on the generator see the following article:
 
--   F. James, “RANLUX: A Fortran implementation of the high quality
-    pseudo-random number generator of Lüscher”, Computer Physics
+-   F. James, "RANLUX: A Fortran implementation of the high quality
+    pseudo-random number generator of Lüscher", Computer Physics
     Communication, 79 (1994) 111.
 
 ### TRandom2
@@ -91,8 +91,8 @@ small states, it is recommended for applications, which require a very
 small random number size. For more information on the generator see the
 following article:
 
--   P. L’Ecuyer, “Maximally Equidistributed Combined Tausworthe
-    Generators”, Mathematics of Computation, 65, 213 (1996), 203-213.
+-   P. L’Ecuyer, "Maximally Equidistributed Combined Tausworthe
+    Generators", Mathematics of Computation, 65, 213 (1996), 203-213.
 
 ### TRandom3
 
@@ -105,9 +105,9 @@ period of 10^6000^. The disadvantage of this generator is that it uses a
 state of 624 words. For more information on the generator see the
 following article:
 
--   M. M. Matsumoto and T. Nishimura, “Mersenne twister: A
+-   M. M. Matsumoto and T. Nishimura, "Mersenne twister: A
     623-dimensionally equidistributed uniform pseudorandom number
-    generator”, ACM Trans. on Modeling and Computer Simulations, 8, 1,
+    generator", ACM Trans. on Modeling and Computer Simulations, 8, 1,
     (1998), 3-20.
 
 **`TRandom3`` `**is the recommended random number generator, and it is
@@ -415,7 +415,7 @@ physics vectors representing relativistic particles. These 3D and 4D
 vectors are different from vectors of the linear algebra package, which
 describe generic N-dimensional vectors. Similar functionality is
 currently provided by the CLHEP <Vector> and <Geometry> packages and the
-ROOT Physics vector classes (See “Physics Vectors”). It also re-uses
+ROOT Physics vector classes (See "Physics Vectors"). It also re-uses
 concepts and ideas from the CMS
 [Common Vector package](Common Vector package). In contrast to CLHEP or
 the ROOT physics libraries, `GenVector` provides class templates for
@@ -875,7 +875,7 @@ XYZPoint             p3(q);
 #### Coordinate Accessors and Setter Methods
 
 For the points classes we have the same getter and setter methods as for
-the vector classes. See “Example: 3D Vector Classes”.
+the vector classes. See "Example: 3D Vector Classes".
 
 #### Point-Vector Operations
 
@@ -942,7 +942,7 @@ The following declarations are available:
 ``` {.cpp}
 XYZTVector      v1;               //create an empty vector (x=0, y=0, z=0, t=0) 
 XYZTVector      v2(1,2,3,4);      //vector with x=1, y=2, z=3, t=4
-PtEtaPhiEVector v3(1,2,PI,5);     //vector with pt=1, eta=2, phi=PI, E=5</emphasis>
+PtEtaPhiEVector v3(1,2,PI,5);     //vector with pt=1, eta=2, phi=PI, E=5
 ```
 
 Note that each type of vector is constructed by passing its coordinate
@@ -1209,7 +1209,7 @@ returns a `Rotation3D`:
 ``` {.cpp}
 RotationX   rx(1.);
 RotationY   ry(2.);
-Rotation3D  r = ry * rx;       //rotation along X and then Y axis </emphasis>
+Rotation3D  r = ry * rx;       //rotation along X and then Y axis 
 ```
 
 It is also possible to invert all the transformation or return their
@@ -1308,7 +1308,7 @@ assigned from any vector which satisfies the following requisites:
 
 ``` {.cpp}
 CLHEP::Hep3Vector hv;
-XYZVector         v1(hv);      //create  3D vector from  CLHEP 3D Vector</emphasis>
+XYZVector         v1(hv);      //create  3D vector from  CLHEP 3D Vector
 HepGeom::Point3D  hp;
 XYZPoint          p1(hp);      //create a 3D p
 ```
@@ -1566,7 +1566,7 @@ distribution](pictures/03000128.png)
 
 
 The ROOT Linear algebra package is documented in a separate chapter (see
-“Linear Algebra in ROOT”). `SMatrix` is a C++ package, for high
+"Linear Algebra in ROOT"). `SMatrix` is a C++ package, for high
 performance vector and matrix computations. It has been introduced in
 ROOT v5.08. It is optimized for describing small matrices and vectors
 and It can be used only in problems when the size of the matrices is
@@ -1818,7 +1818,7 @@ x = m.apply(7);                 // return the 8-th element (row=2,col=1)
 x = *(m.begin()+7);             // return the 8-th element (row=2,col=1)
 // symmetric matrices 
 //(note the difference in behavior between apply and the iterators)
-x = *(m.begin()+4)              // return the element (row=2,col=1)</emphasis>
+x = *(m.begin()+4)              // return the element (row=2,col=1)
 x = m.apply(7);                 // returns again the (row=2,col=1) element
 ```
 
@@ -2021,7 +2021,7 @@ This new version provides all the functionality present in the old
 FORTRAN version, with almost equivalent numerical accuracy and
 computational performances. Furthermore, it contains new functionality,
 like the possibility to set single side parameter limits or the FUMILI
-algorithm (see “FUMILI Minimization Package” in “Fitting Histograms”
+algorithm (see "FUMILI Minimization Package" in "Fitting Histograms"
 chapter), which is an optimized method for least square and log
 likelihood minimizations. Minuit2 has been originally developed by M.
 Winkler and F. James in the SEAL project. More information can be found
@@ -2138,7 +2138,7 @@ validity of the fit producing distributions for the control variables.
 
 
 **`TMultiLayerPerceptron`** is a Neural Network class (see for more
-details the chapter “Neural Networks”).
+details the chapter "Neural Networks").
 
 **`TPrincipal`** provides the Principal Component Analysis.
 
