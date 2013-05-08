@@ -3849,7 +3849,10 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //     Making a Profile histogram
    //     ==========================
    //  In case of a 2-Dim expression, one can generate a TProfile histogram
-   //  instead of a TH2F histogram by specyfying option=prof or option=profs.
+   //  instead of a TH2F histogram by specyfying option=prof or option=profs
+   //  or option=profi or option=profg ; the trailing letter select the way
+   //  the bin error are computed, See TProfile2D::SetErrorOption for
+   //  details on the differences.
    //  The option=prof is automatically selected in case of y:x>>pf
    //  where pf is an existing TProfile histogram.
    //
@@ -3857,6 +3860,9 @@ Long64_t TTree::Draw(const char* varexp, const char* selection, Option_t* option
    //     ==========================
    //  In case of a 3-Dim expression, one can generate a TProfile2D histogram
    //  instead of a TH3F histogram by specifying option=prof or option=profs.
+   //  or option=profi or option=profg ; the trailing letter select the way
+   //  the bin error are computed, See TProfile2D::SetErrorOption for
+   //  details on the differences.
    //  The option=prof is automatically selected in case of z:y:x>>pf
    //  where pf is an existing TProfile2D histogram.
    //
