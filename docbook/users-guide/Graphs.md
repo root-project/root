@@ -16,13 +16,13 @@ coordinates and then create the graph. The coordinates can be arrays of
 doubles or floats.
 
 ``` {.cpp}
-Int_t n = 20;
-Double_t x[n], y[n];
-for (Int_t i=0; i<n; i++) {
-x[i] = i*0.1;
-y[i] = 10*sin(x[i]+0.2);
-}
-TGraph *gr1 = new TGraph (n, x, y);
+   Int_t n = 20;
+   Double_t x[n], y[n];
+   for (Int_t i=0; i<n; i++) {
+      x[i] = i*0.1;
+      y[i] = 10*sin(x[i]+0.2);
+   }
+   TGraph *gr1 = new TGraph (n, x, y);
 ```
 
 An alternative constructor takes only the number of points `n`. It is
@@ -42,14 +42,14 @@ TGraph *gr3 = new TGraph();
 ### Graph Draw Options
 
 
-The various draw options for a graph are explained in
-`TGraph::PaintGraph`. They are:
+The various drawing options for a graph are explained in `TGraph::PaintGraph`. 
+They are:
 
 -   "`L`"A simple poly-line between every points is drawn
 
 -   "`F`"A fill area is drawn
 
--   “`F1`”Idem as "`F`" but fill area is no more repartee around X=0 or
+-   "`F1`"Idem as "`F`" but fill area is no more repartee around X=0 or
     Y=0
 
 -   "`F2`"draw a fill area poly line connecting the center of bins
@@ -74,22 +74,23 @@ cases. Let us look at some examples.
 
 #### Continuous Line, Axis and Stars (AC\*)
 
-![A graph drawn with axis, \* markers and continuous line (option
-AC\*)](pictures/0300004B.png)
+![A graph drawn with axis, \* markers and continuous line (option AC\*)](pictures/0300004B.png)
 
 ``` {.cpp}
 {  
-  Int_t n = 20;
-  Double_t x[n], y[n];
-  for (Int_t i=0;i<n;i++) {
-    x[i] = i*0.1;
-    y[i] = 10*sin(x[i]+0.2);
-  }
-  // create graph
-  TGraph *gr  = new TGraph(n,x,y);
-  TCanvas *c1 = new TCanvas("c1","Graph Draw Options",200,10,600,400);
-  // draw the graph with axis, contineous line, and put a * at each point</emphasis>
-gr->Draw("AC*");
+   Int_t n = 20;
+   Double_t x[n], y[n];
+   for (Int_t i=0;i<n;i++) {
+      x[i] = i*0.1;
+      y[i] = 10*sin(x[i]+0.2);
+   }
+  
+   // create graph
+   TGraph *gr  = new TGraph(n,x,y);
+   TCanvas *c1 = new TCanvas("c1","Graph Draw Options",200,10,600,400);
+  
+   // draw the graph with axis, contineous line, and put a * at each point
+   gr->Draw("AC*");
 }
 ```
 
@@ -131,34 +132,36 @@ properly. Currently one cannot specify the "`CF`" option.
 
 ``` {.cpp}
 {
-  Int_t n = 20;
-  Double_t x[n], y[n];
-// build the arrays with the coordinate of points 
-  for (Int_t i=0; i<n; i++) {
-     x[i] = i*0.1;
-     y[i] = 10*sin(x[i]+0.2);
-  }
- // create graphs
-TGraph *gr3  = new TGraph(n,x,y);
-TCanvas *c1 = new TCanvas ("c1","Graph Draw Options",200,10,600,400);
+   Int_t n = 20;
+   Double_t x[n], y[n];
+  
+   // build the arrays with the coordinate of points 
+   for (Int_t i=0; i<n; i++) {
+      x[i] = i*0.1;
+      y[i] = 10*sin(x[i]+0.2);
+   }
 
-  // draw the graph with the axis,contineous line, and put 
-  // a marker using the graph's marker style at each point
-gr3->SetMarkerStyle(21);
-c1->cd(4);
-gr3->Draw("APL");
+   // create graphs
+   TGraph *gr3  = new TGraph(n,x,y);
+   TCanvas *c1 = new TCanvas ("c1","Graph Draw Options",200,10,600,400);
 
-// get the points in the graph and put them into an array  
-Double_t *nx = gr3->GetX();
-Double_t *ny = gr3->GetY();
+   // draw the graph with the axis,contineous line, and put 
+   // a marker using the graph's marker style at each point
+   gr3->SetMarkerStyle(21);
+   c1->cd(4);
+   gr3->Draw("APL");
 
-// create markers of different colors 
-for (Int_t j=2; j<n-1; j++) {
-TMarker *m = new TMarker(nx[j], 0.5*ny[j], 22);
-m->SetMarkerSize(2);
-m->SetMarkerColor(31+j);
-m->Draw();
-}
+   // get the points in the graph and put them into an array  
+   Double_t *nx = gr3->GetX();
+   Double_t *ny = gr3->GetY();
+
+   // create markers of different colors 
+   for (Int_t j=2; j<n-1; j++) {
+      TMarker *m = new TMarker(nx[j], 0.5*ny[j], 22);
+      m->SetMarkerSize(2);
+      m->SetMarkerColor(31+j);
+      m->Draw();
+   }
 }
 ```
 
@@ -173,17 +176,18 @@ example:
 
 ``` {.cpp}
 {
-Int_t n = 20;
-Double_t x[n], y[n], x1[n], y1[n];
+   Int_t n = 20;
+   Double_t x[n], y[n], x1[n], y1[n];
 
-// create a blue graph with a cos function
-gr1->SetLineColor(4);
-gr1->Draw("AC*");
-  // superimpose the second graph by leaving out the axis option "A"
-gr2->SetLineWidth(3);
-gr2->SetMarkerStyle(21);
-gr2->SetLineColor(2);
-gr2->Draw("CP");
+   // create a blue graph with a cos function
+   gr1->SetLineColor(4);
+   gr1->Draw("AC*");
+
+   // superimpose the second graph by leaving out the axis option "A"
+   gr2->SetLineWidth(3);
+   gr2->SetMarkerStyle(21);
+   gr2->SetLineColor(2);
+   gr2->Draw("CP");
 }
 ```
 
@@ -197,9 +201,8 @@ format options of `TGraphErrors::Paint()` are derived from **`TGraph`**.
 void TGraphErrors::Paint(Option_t *option)
 ```
 
-![Graphs with different draw options of error
-bars](pictures/03000050.png) ![Graphs with different draw options of
-error bars](pictures/03000051.png)
+![Graphs with different draw options of error bars](pictures/03000050.png) 
+![Graphs with different draw options of error bars](pictures/03000051.png)
 
 In addition, it can be drawn with the "`Z`" option to leave off the
 small lines at the end of the error bars. If option contains "`>`", an
@@ -207,7 +210,7 @@ arrow is drawn at the end of the error bars. If option contains "`|>`",
 a full arrow is drawn at the end of the error bars. The size of the
 arrow is set to 2/3 of the marker size.
 
-The option “`[]`” is interesting to superimpose systematic errors on top
+The option "`[]`" is interesting to superimpose systematic errors on top
 of the graph with the statistical errors. When it is specified, only the
 end vertical/horizontal lines of the error bars are drawn.
 
@@ -226,25 +229,28 @@ the `x` and `y` direction. Next example is
 
 ``` {.cpp}
 {
-c1 = new TCanvas("c1","A Simple Graph with error bars",200,10,700,500);
-c1->SetFillColor(42);
-c1->SetGrid();
-c1->GetFrame()->SetFillColor(21);
-c1->GetFrame()->SetBorderSize(12);
-  // create the coordinate arrays
-Int_t n = 10;
-  Float_t x[n]  = {-.22,.05,.25,.35,.5,.61,.7,.85,.89,.95};
-  Float_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
-// create the error arrays
-  Float_t ex[n] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
-  Float_t ey[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
-// create the TGraphErrors and draw it
-gr = new TGraphErrors(n,x,y,ex,ey);
-gr->SetTitle("TGraphErrors Example");
-gr->SetMarkerColor(4);
-gr->SetMarkerStyle(21);
-gr->Draw("ALP");
-c1->Update();
+   c1 = new TCanvas("c1","A Simple Graph with error bars",200,10,700,500);
+   c1->SetFillColor(42);
+   c1->SetGrid();
+   c1->GetFrame()->SetFillColor(21);
+   c1->GetFrame()->SetBorderSize(12);
+
+   // create the coordinate arrays
+   Int_t n = 10;
+   Float_t x[n]  = {-.22,.05,.25,.35,.5,.61,.7,.85,.89,.95};
+   Float_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+
+   // create the error arrays
+   Float_t ex[n] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
+   Float_t ey[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+
+   // create the TGraphErrors and draw it
+   gr = new TGraphErrors(n,x,y,ex,ey);
+   gr->SetTitle("TGraphErrors Example");
+   gr->SetMarkerColor(4);
+   gr->SetMarkerStyle(21);
+   gr->Draw("ALP");
+   c1->Update();
 }
 ```
 
@@ -257,15 +263,15 @@ method `Paint(Option_t *option)` paints the **`TGraphAsymmErrors`** with
 the current attributes. You can set the following additional options for
 drawing:
 
--   "`z`" or “`Z`”the horizontal and vertical small lines are not drawn
+-   "`z`" or "`Z`"the horizontal and vertical small lines are not drawn
     at the end of error bars
 
--   “`>`”an arrow is drawn at the end of the error bars
+-   "`>`"an arrow is drawn at the end of the error bars
 
--   “`|>`”a full arrow is drawn at the end of the error bar; its size is
+-   "`|>`"a full arrow is drawn at the end of the error bar; its size is
     2/3 of the marker size
 
--   “`[]`”only the end vertical/horizontal lines of the error bars are
+-   "`[]`"only the end vertical/horizontal lines of the error bars are
     drawn; this option is interesting to superimpose systematic errors
     on top of a graph with statistical errors.
 
@@ -278,26 +284,29 @@ value is the length of the error bar to the right and up.
 
 ``` {.cpp}
 {
-c1 = new TCanvas("c1","A Simple Graph with error bars",200,10,700,500);
-c1->SetFillColor(42);
-c1->SetGrid();
-c1->GetFrame()->SetFillColor(21);
-c1->GetFrame()->SetBorderSize(12);
+   c1 = new TCanvas("c1","A Simple Graph with error bars",200,10,700,500);
+   c1->SetFillColor(42);
+   c1->SetGrid();
+   c1->GetFrame()->SetFillColor(21);
+   c1->GetFrame()->SetBorderSize(12);
+
    // create the arrays for the points 
-Int_t n = 10;
-Double_t x[n]  = {-.22,.05,.25,.35,.5, .61,.7,.85,.89,.95};
-Double_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+   Int_t n = 10;
+   Double_t x[n]  = {-.22,.05,.25,.35,.5, .61,.7,.85,.89,.95};
+   Double_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+
    // create the arrays with high and low errors
-Double_t exl[n] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
-Double_t eyl[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
-Double_t exh[n] = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
-Double_t eyh[n] = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
-// create TGraphAsymmErrors with the arrays
-gr = new TGraphAsymmErrors(n,x,y,exl,exh,eyl,eyh);
-gr->SetTitle("TGraphAsymmErrors Example");
-gr->SetMarkerColor(4);
-gr->SetMarkerStyle(21);
-gr->Draw("ALP");
+   Double_t exl[n] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
+   Double_t eyl[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+   Double_t exh[n] = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
+   Double_t eyh[n] = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
+
+   // create TGraphAsymmErrors with the arrays
+   gr = new TGraphAsymmErrors(n,x,y,exl,exh,eyl,eyh);
+   gr->SetTitle("TGraphAsymmErrors Example");
+   gr->SetMarkerColor(4);
+   gr->SetMarkerStyle(21);
+   gr->Draw("ALP");
 }
 ```
 
@@ -332,22 +341,22 @@ This figure has been generated by the following macro:
 
 ``` {.cpp}
 {
-Int_t n = 10;
-Double_t x[n]   = {-0.22,0.05,0.25,0.35,0.5,0.61,0.7,0.85,0.89,0.95};
-Double_t y[n]   = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
-Double_t exl[n] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
-Double_t eyl[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
-Double_t exh[n] = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
-Double_t eyh[n] = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
-Double_t exld[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
-Double_t eyld[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
-Double_t exhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
-Double_t eyhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
-gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
-gr->SetTitle("TGraphBentErrors Example");
-gr->SetMarkerColor(4);
-gr->SetMarkerStyle(21);
-gr->Draw("ALP");
+   Int_t n = 10;
+   Double_t x[n]    = {-0.22,0.05,0.25,0.35,0.5,0.61,0.7,0.85,0.89,0.95};
+   Double_t y[n]    = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+   Double_t exl[n]  = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
+   Double_t eyl[n]  = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+   Double_t exh[n]  = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
+   Double_t eyh[n]  = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
+   Double_t exld[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Double_t eyld[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Double_t exhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Double_t eyhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
+   gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
+   gr->SetTitle("TGraphBentErrors Example");
+   gr->SetMarkerColor(4);
+   gr->SetMarkerStyle(21);
+   gr->Draw("ALP");
 }
 ```
 
@@ -363,19 +372,19 @@ axis.
 
 ``` {.cpp}
 {
-TCanvas *CPol = new TCanvas("CPol","TGraphPolar Examples",600,600);
-Double_t rmin=0;
-Double_t rmax=TMath::Pi()*2;
-Double_t r[1000];
-Double_t theta[1000];
-TF1 * fp1 = new TF1("fplot","cos(x)",rmin,rmax);
-for (Int_t ipt = 0; ipt < 1000; ipt++) {
-r[ipt] = ipt*(rmax-rmin)/1000+rmin;
-theta[ipt] = fp1->Eval(r[ipt]);
-}
-TGraphPolar * grP1 = new TGraphPolar(1000,r,theta);
-grP1->SetLineColor(2);
-grP1->Draw("AOL");
+   TCanvas *CPol = new TCanvas("CPol","TGraphPolar Examples",600,600);
+   Double_t rmin=0;
+   Double_t rmax=TMath::Pi()*2;
+   Double_t r[1000];
+   Double_t theta[1000];
+   TF1 * fp1 = new TF1("fplot","cos(x)",rmin,rmax);
+   for (Int_t ipt = 0; ipt < 1000; ipt++) {
+      r[ipt] = ipt*(rmax-rmin)/1000+rmin;
+      theta[ipt] = fp1->Eval(r[ipt]);
+   }
+   TGraphPolar * grP1 = new TGraphPolar(1000,r,theta);
+   grP1->SetLineColor(2);
+   grP1->Draw("AOL");
 }
 ```
 
@@ -408,35 +417,49 @@ The current fill area attributes are used to draw the hatched zone.
 
 ``` {.cpp}
 {
-c1 = new TCanvas("c1","Exclusion graphs examples",200,10,700,500);
-c1->SetGrid();
-TMultiGraph *mg = new TMultiGraph();
-mg->SetTitle("Exclusion graphs");
-const Int_t n = 35;
-Double_t x1[n], x2[n], x3[n], y1[n], y2[n], y3[n];
-for (Int_t i=0;i<n;i++) {
-x1[i] = i*0.1; y1[i] = 10*sin(x1[i]);
-x2[i] = x1[i]; y2[i] = 10*cos(x1[i]);
-x3[i] = x1[i]+.5; y3[i] = 10*sin(x1[i])-2;
-}
-gr1 = new TGraph(n,x1,y1);
-gr1->SetLineColor(2);
-gr1->SetLineWidth(1504);
-gr1->SetFillStyle(3005);
-gr2 = new TGraph(n,x2,y2);
-gr2->SetLineColor(4);
-gr2->SetLineWidth(-2002);
-gr2->SetFillStyle(3004);
-gr2->SetFillColor(9);
-gr3 = new TGraph(n,x3,y3);
-gr3->SetLineColor(5);
-gr3->SetLineWidth(-802);
-gr3->SetFillStyle(3002);
-gr3->SetFillColor(2);
-mg->Add(gr1);
-mg->Add(gr2);
-mg->Add(gr3);
-mg->Draw("AC");
+   c1 = new TCanvas("c1","Exclusion graphs examples",200,10,700,500);
+   c1->SetGrid();
+   
+   // create the multigraph
+   TMultiGraph *mg = new TMultiGraph();
+   mg->SetTitle("Exclusion graphs");
+   
+   // create the graphs points
+   const Int_t n = 35;
+   Double_t x1[n], x2[n], x3[n], y1[n], y2[n], y3[n];
+   for (Int_t i=0;i<n;i++) {
+      x1[i] = i*0.1; y1[i] = 10*sin(x1[i]);
+      x2[i] = x1[i]; y2[i] = 10*cos(x1[i]);
+      x3[i] = x1[i]+.5; y3[i] = 10*sin(x1[i])-2;
+   }
+
+   // create the 1st TGraph
+   gr1 = new TGraph(n,x1,y1);
+   gr1->SetLineColor(2);
+   gr1->SetLineWidth(1504);
+   gr1->SetFillStyle(3005);
+
+   // create the 2nd TGraph
+   gr2 = new TGraph(n,x2,y2);
+   gr2->SetLineColor(4);
+   gr2->SetLineWidth(-2002);
+   gr2->SetFillStyle(3004);
+   gr2->SetFillColor(9);
+   
+   // create the 3rd TGraph
+   gr3 = new TGraph(n,x3,y3);
+   gr3->SetLineColor(5);
+   gr3->SetLineWidth(-802);
+   gr3->SetFillStyle(3002);
+   gr3->SetFillColor(2);
+   
+   // put the graphs in the multigraph
+   mg->Add(gr1);
+   mg->Add(gr2);
+   mg->Add(gr3);
+   
+   // draw the multigraph
+   mg->Draw("AC");
 }
 ```
 
@@ -498,23 +521,26 @@ options are the same as for **`TGraph`**.
 
 ``` {.cpp}
 {
-// create the points
-Int_t n = 10;
-Double_t x[n]  = {-.22,.05,.25,.35,.5,.61,.7,.85,.89,.95};
-Double_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
-Double_t x2[n]  = {-.12,.15,.35,.45,.6,.71,.8,.95,.99,1.05};
-Double_t y2[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
-// create the width of errors in x and y direction
-Double_t ex[n] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
-Double_t ey[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
-// create two graphs
-TGraph *gr1 = new TGraph(n,x2,y2);
-TGraphErrors *gr2 = new TGraphErrors(n,x,y,ex,ey);
+   // create the points
+   Int_t n = 10;
+   Double_t x[n]  = {-.22,.05,.25,.35,.5,.61,.7,.85,.89,.95};
+   Double_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+   Double_t x2[n]  = {-.12,.15,.35,.45,.6,.71,.8,.95,.99,1.05};
+   Double_t y2[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+
+   // create the width of errors in x and y direction
+   Double_t ex[n] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
+   Double_t ey[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+
+   // create two graphs
+   TGraph *gr1 = new TGraph(n,x2,y2);
+   TGraphErrors *gr2 = new TGraphErrors(n,x,y,ex,ey);
+
    // create a multigraph and draw it
-TMultiGraph  *mg  = new TMultiGraph();
-mg->Add(gr1);
-mg->Add(gr2);
-mg->Draw("ALP");
+   TMultiGraph  *mg  = new TMultiGraph();
+   mg->Add(gr1);
+   mg->Add(gr2);
+   mg->Draw("ALP");
 }
 ```
 
@@ -633,8 +659,8 @@ p0"](pictures/0300005A.png) ![Graph2D drawn with option "surfl" and
       dt->SetPoint(N,x,y,z);
    }
    gStyle->SetPalette(1);
-   dt->Draw("surf1");       // use “surf1” to generate the left picture
-}                           // use “tri1 p0” to generate the right one
+   dt->Draw("surf1");       // use "surf1" to generate the left picture
+}                           // use "tri1 p0" to generate the right one
 ```
 
 A more complete example is `$ROOTSYS/tutorials/fit/graph2dfit.C` that
@@ -653,7 +679,7 @@ perform fits with errors on a 2D graph. An example is the macro
 
 
 The graph `Fit` method in general works the same way as the `TH1::Fit`.
-See “Fitting Histograms”.
+See "Fitting Histograms".
 
 ## Setting the Graph's Axis Title
 
@@ -675,7 +701,7 @@ root[] gr5->GetXaxis()->SetTitle("X-Axis")
 root[] gr5->GetYaxis()->SetTitle("Y-Axis")
 root[] gr5->GetXaxis()->CenterTitle()
 root[] gr5->GetYaxis()->CenterTitle()
-root[] gr5->Draw(“ALP”) 
+root[] gr5->Draw("ALP") 
 ```
 
 For more graph examples see the scripts: `$ROOTSYS/tutorials` directory
@@ -691,18 +717,18 @@ first. Draw the empty histogram and then draw the graph using the
 existing axis from the histogram.
 
 ``` {.cpp}
-{ gROOT->Reset();
-c1 = new TCanvas("c1","A Zoomed Graph",200,10,700,500);
-hpx = new TH2F("hpx","Zoomed Graph Example",10,0,0.5,10,1.0,8.0); // axis range
-hpx->SetStats(kFALSE);   // no statistics
-hpx->Draw();
-Int_t n = 10;
-Double_t x[n] = {-.22,.05,.25,.35,.5,.61,.7,.85,.89,.95};
-Double_t y[n] = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
-gr = new TGraph(n,x,y);
-gr->SetMarkerColor(4);
-gr->SetMarkerStyle(20);
-gr->Draw("LP");// and draw it without an axis
+{
+   c1 = new TCanvas("c1","A Zoomed Graph",200,10,700,500);
+   hpx = new TH2F("hpx","Zoomed Graph Example",10,0,0.5,10,1.0,8.0); // axis range
+   hpx->SetStats(kFALSE);   // no statistics
+   hpx->Draw();
+   Int_t n = 10;
+   Double_t x[n] = {-.22,.05,.25,.35,.5,.61,.7,.85,.89,.95};
+   Double_t y[n] = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+   gr = new TGraph(n,x,y);
+   gr->SetMarkerColor(4);
+   gr->SetMarkerStyle(20);
+   gr->Draw("LP");// and draw it without an axis
 }
 ```
 

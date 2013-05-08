@@ -144,8 +144,8 @@ root[] .g
 
 Here we note:
 
--   Terminating with ‘`;`‘ is not required, see “ROOT/CINT Extensions to
-    C++”.
+-   Terminating with ‘`;`‘ is not required, see "ROOT/CINT Extensions to
+    C++".
 
 -   `Emacs` style command line editing.
 
@@ -305,7 +305,7 @@ root[] run()                    // execute run() again
 Hello
 x = 3 y = 5 i = 101
 (int)0
-root[] .func                    // list all functions known by CINT</emphasis>
+root[] .func                    // list all functions known by CINT
 filename       line:size busy function type and name
 ...
 script2.C          4:9   0 public: int run();
@@ -365,21 +365,21 @@ directory, you can always retrieve them to delete them if needed.
 
 ``` {.cpp}
 root[] TH1F *h = (TH1F*)gDirectory->Get("myHist");              // or
-root[] TH1F *h = (TH1F*)gDirectory->GetList()->FindObject("myHist");</emphasis>
+root[] TH1F *h = (TH1F*)gDirectory->GetList()->FindObject("myHist");
 ```
 
 In addition, histograms and trees are automatically deleted when the
 current directory is closed. This will automatically take care of the
-clean up. See “Input/Output”.
+clean up. See "Input/Output".
 
 ### Executing a Script from a Script
 
 
 You may want to execute a script conditionally inside another script. To
 do it you need to call the interpreter and you can do that with
-**`TROOT::ProcessLine()`. The example
+**`TROOT::ProcessLine()`**. The example
 `$ROOTSYS/tutorials/tree/cernstaff.C` calls a script to build the root
-file if it does not exist:**
+file if it does not exist:
 
 ``` {.cpp}
 void cernstaff() {
@@ -551,7 +551,7 @@ There are some limitations for a class created in a script:
     in a script cannot inherit from **`TObject`**, it cannot be written
     to a ROOT file.
 
-See “Adding a Class” for ways how to add a class with a shared library
+See "Adding a Class" for ways how to add a class with a shared library
 and with ACLiC.
 
 ## Debugging Scripts
@@ -1079,7 +1079,7 @@ Inside ROOT Reflex is thought to replace the current reflection system,
 which is inherent to CINT. This is an ongoing work and not part of this
 release. Nevertheless, Reflex dictionaries can be used inside ROOT while
 populating the current CINT data structures via a special gateway called
-Cintex (see “Cintex”).
+Cintex (see "Cintex").
 
 In order to use reflection a dictionary of the data structures involved
 has to be generated. Before generating the dictionaries, the source code

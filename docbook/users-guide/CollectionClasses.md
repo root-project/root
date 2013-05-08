@@ -1,5 +1,5 @@
-Collection Classes
-==================
+# Collection Classes
+
 
 Collections are a key feature of the ROOT system. Many, if not most, of
 the applications you write will use collections. If you have used
@@ -29,8 +29,8 @@ this chapter, you will know
 
 -   How collection elements are hashed (`Hash()`) in hash tables
 
-Understanding Collections
-=========================
+## Understanding Collections
+
 
 A collection is a group of related objects. You will find it easier to
 manage a large number of items as a collection. For example, a diagram
@@ -41,8 +41,8 @@ and rotation matrices. Collections can themselves be placed in
 collections. Collections act as flexible alternatives to traditional
 data structures of computers science such as arrays, lists and trees.
 
-General Characteristics
------------------------
+### General Characteristics
+
 
 The ROOT collections are polymorphic containers that hold pointers to
 `TObjects`, so:
@@ -65,8 +65,8 @@ leak) when no longer needed. If a collection is deleted, its objects are
 not. The user can force a collection to delete its objects, but that is
 the user’s choice.
 
-Determining the Class of Contained Objects
-------------------------------------------
+### Determining the Class of Contained Objects
+
 
 Most containers may hold heterogeneous collections of objects and then
 it is left to the user to correctly cast the **`TObject`** pointer to
@@ -76,7 +76,7 @@ Often a container only contains one class of objects, but if it really
 contains a mixture, it is possible to ask each object about its class
 using the `InheritsFrom` method.
 
-For example if `myObject` is a **`TObject `**pointer:
+For example if `myObject` is a **`TObject`** pointer:
 
 ``` {.cpp}
 if (myObject->InheritsFrom("TParticle") {
@@ -90,8 +90,8 @@ of **`TParticle`**. The member function `IsA()` can be used instead of
 methods use the extensive Run Time Type Information (RTTI) available via
 the ROOT meta-classes.
 
-Types of Collections
---------------------
+### Types of Collections
+
 
 The ROOT system implements the following basic types of collections:
 unordered collections, ordered collections and sorted collections. Next
@@ -99,11 +99,10 @@ figure shows the inheritance hierarchy for the primary collection
 classes. All primary collection classes derive from the abstract base
 class **`TCollection`**.
 
-![The inheritance hierarchy of the primary collection
-classes](pictures/020001A3.jpg)
+![The inheritance hierarchy of the primary collection classes](pictures/020001A3.jpg)
 
-Ordered Collections (Sequences)
--------------------------------
+### Ordered Collections (Sequences)
+
 
 Sequences are collections that are externally ordered because they
 maintain internal elements according to the order in which they were
@@ -141,8 +140,8 @@ collection. The following unordered collections are available:
 
 -   **`TMap`**
 
-Iterators: Processing a Collection
-==================================
+## Iterators: Processing a Collection
+
 
 The concept of processing all the members of a collection is generic,
 i.e. independent of any specific representation of a collection. To
@@ -163,8 +162,8 @@ example:
 
 -   **`TMap`** **`TMapIter`**
 
-Foundation Classes
-==================
+## Foundation Classes
+
 
 All collections are based on the fundamental classes: **`TCollection`**
 and **`TIterator`**. They are so generic that it is not possible to
@@ -225,8 +224,8 @@ that all iterators must support. These include:
 -   `Reset` `Resets the iterator so that ` `Next`
     ` returns the first object.`
 
-A Collectable Class
-===================
+## A Collectable Class
+
 
 By default, all objects of **`TObject`** derived classes can be stored
 in ROOT containers. However, the **`TObject`** class provides some
@@ -278,8 +277,8 @@ public:
 };
 ```
 
-The TIter Generic Iterator
-==========================
+## The TIter Generic Iterator
+
 
 As stated above, the **`TIterator`** class is abstract; it is not
 possible to create **`TIterator`** objects. However, it should be
@@ -360,8 +359,8 @@ is written as `next()`. This works because the function `operator()` is
 defined for the **`TIter`** class to be equivalent to the `Next()`
 method.
 
-The TList Collection
-====================
+## The TList Collection
+
 
 A **`TList`** is a doubly linked list. Before being inserted into the
 list the object pointer is wrapped in a **`TObjLink`** object that
@@ -385,8 +384,8 @@ Next figure shows the internal data structure of a **`TList`**.
 
 ![The internal data structure of a TList](pictures/020001A6.jpg)
 
-Iterating Over a TList
-----------------------
+### Iterating Over a TList
+
 
 There are four ways to iterate over a **`TList`**:
 
@@ -437,8 +436,8 @@ Methods 2, 3 and 4 can also easily iterate backwards using either a
 backward **`TIter`** (using argument `kIterBackward`) or by using
 `LastLink()` and `lnk>Prev`() or by using the `Before()` method.
 
-The TObjArray Collection
-========================
+## The TObjArray Collection
+
 
 A **`TObjArray`** is a collection which supports traditional array
 semantics via the overloading of `operator[]`. Objects can be directly
@@ -468,8 +467,8 @@ if ((track = (TTrack*)fArr[i]))     // or fArr.At(i)
 Main features of **`TObjArray`** are simple, well-known array semantics.
 **Overhead per element**: none, except possible over sizing of `fCont`.
 
-TClonesArray – An Array of Identical Objects
-============================================
+## TClonesArray An Array of Identical Objects
+
 
 A **`TClonesArray`** is an array of identical (clone) objects. The
 memory for the objects stored in the array is allocated only once in the
@@ -486,8 +485,8 @@ and deleted. The only supported way to add objects to a
 `Add()` methods of **`TObjArray`** and its base classes are not
 supported.
 
-The Idea Behind TClonesArray
-----------------------------
+### The Idea Behind TClonesArray
+
 
 To reduce the very large number of new and delete calls in large loops
 like this (O(100000) x O(10000) times new/delete):
@@ -525,11 +524,11 @@ O(109) new/deletes will save about 19 hours. For the other collections,
 see the class reference guide on the web and the test program
 `$ROOTSYS/test/tcollex.cxx.`
 
-Template Containers and STL
-===========================
+## Template Containers and STL
+
 
 Some people dislike polymorphic containers because they are not truly
-“type safe”. In the end, the compiler leaves it the user to ensure that
+"type safe". In the end, the compiler leaves it the user to ensure that
 the types are correct. This only leaves the other alternative: creating
 a new class each time a new (container organization) / (contained
 object) combination is needed. To say the least this could be very

@@ -8,7 +8,7 @@ navigation features provided by the package are designed to optimize
 particle transport through complex geometries, working in correlation
 with simulation packages such as GEANT3, GEANT4 and FLUKA.
 
-## Quick Start: Creating the “world”
+## Quick Start: Creating the "world"
 
 This chapter will provide a detailed description on how to build valid
 geometries as well as the ways to optimize them. There are several
@@ -22,17 +22,17 @@ is not defined by neighbors, but by `containment`. In other words,
 volumes are put one inside another making an in-depth hierarchy. From
 outside, the whole thing looks like a big pack that you can open finding
 out other smaller packs nicely arranged waiting to be opened at their
-turn. The biggest one containing all others defines the “`world`” of the
+turn. The biggest one containing all others defines the "`world`" of the
 model. We will often call this `master reference system (MARS)`. Going
 on and opening our packs, we will obviously find out some empty ones,
 otherwise, something is very wrong... We will call these leaves (by
 analogy with a tree structure).
 
-On the other hand, any volume is a small world by itself – what we need
+On the other hand, any volume is a small world by itself - what we need
 to do is to take it out and to ignore all the rest since it is a
 self-contained object. In fact, the modeller can act like this,
 considering a given volume as temporary MARS, but we will describe this
-feature later on. Let us focus on the biggest pack – it is mandatory to
+feature later on. Let us focus on the biggest pack - it is mandatory to
 define one. Consider the simplest geometry that is made of a single box.
 Here is an example on how to build it:
 
@@ -42,7 +42,7 @@ We first need to load the geometry library. This is not needed if one
 does `make map` in root folder.
 
 ``` {.cpp}
-root[] gSystem->Load(“libGeom”);
+root[] gSystem->Load("libGeom");
 ```
 
 Second, we have to create an instance of the geometry manager class.
@@ -53,7 +53,7 @@ geometry manager class can be accessed with the global
 ***`gGeoManager`***:
 
 ``` {.cpp}
-root[] new TGeoManager(“world”, “the simplest geometry”);
+root[] new TGeoManager("world", "the simplest geometry");
 ```
 
 We want to create a single volume in our geometry, but since any volume
@@ -62,8 +62,8 @@ safely ignore the following lines for the time being, since materials
 and media will be explained in detail later on.
 
 ``` {.cpp}
-root[] TGeoMaterial *mat = new TGeoMaterial(“Vacuum”,0,0,0);
-root[] TGeoMedium   *med = new TGeoMedium(“Vacuum”,1,mat);
+root[] TGeoMaterial *mat = new TGeoMaterial("Vacuum",0,0,0);
+root[] TGeoMedium   *med = new TGeoMedium("Vacuum",1,mat);
 ```
 
 We can finally make our volume having a box shape. Note that the world
@@ -72,7 +72,7 @@ boxes and tubes are the most recommendable shapes for this purpose due
 to their fast navigation algorithms.
 
 ``` {.cpp}
-root[] TGeoVolume *top=gGeoManager->MakeBox(“Top”,med,10.,10.,10.);
+root[] TGeoVolume *top=gGeoManager->MakeBox("Top",med,10.,10.,10.);
 ```
 
 The default units are in centimeters. Now we want to make this volume
@@ -108,7 +108,7 @@ modeller. For this, we will use one of the examples illustrating the
 geometry package. To get an idea on the geometry structure created in
 this example, just look at the link:
 <http://root.cern.ch/root/html/tutorials/geom/rootgeom.C.html>. You will
-notice that this is a bit more complex that just creating the “world”
+notice that this is a bit more complex that just creating the "world"
 since several other volumes are created and put together in a hierarchy.
 The purpose here is just to learn how to interact with a geometry that
 is already built, but just few hints on the building steps in this
@@ -116,7 +116,7 @@ example might be useful. The geometry here represents the word ROOT that
 is replicated in some symmetric manner. You might for instance ask some
 questions after having a first look:
 
-***`Q: “OK, I understand the first lines that load the libGeom library and create a geometry manager object. I also recognize from the previous example the following lines creating some materials and media, but what about the geometrical transformations below?”`***
+***`Q: "OK, I understand the first lines that load the libGeom library and create a geometry manager object. I also recognize from the previous example the following lines creating some materials and media, but what about the geometrical transformations below?"`***
 
 ***`A:`*** As explained before, the model that we are trying to create
 is a hierarchy of volumes based on ***`containment`***. This is
@@ -129,26 +129,26 @@ accomplished by defining a ***`local geometrical transformation`*** of
 the daughter with respect to the mother coordinate system. These
 transformations will be subsequently used in the example.
 
-***`Q: “I see the lines defining the top level volume as in the previous example, but what about the other volumes named REPLICA and ROOT?”`***
+***`Q: "I see the lines defining the top level volume as in the previous example, but what about the other volumes named REPLICA and ROOT?"`***
 
 ***`A:`*** You will also notice that several other volumes are created
 by using lines like:
 
 ``` {.cpp}
-TGeoVolume *someVolume = gGeoManager->MakeXXX(“someName”,
+TGeoVolume *someVolume = gGeoManager->MakeXXX("someName",
 ptrMedium, /* parameters coresponding to 
 ```
 
 In the method above ***`XXX`*** represent some shape name (Box, Tube,
 etc.). This is just a simple way of creating a volume having a given
-shape in one-step (see also section: “Creating and Positioning
-Volumes”). As for REPLICA and ROOT volumes, they are just some
+shape in one-step (see also section: "Creating and Positioning
+Volumes"). As for REPLICA and ROOT volumes, they are just some
 ***`virtual volumes`*** used for grouping and positioning together other
-***`real volumes`***. See “Positioned Volumes (Nodes)”. The same
+***`real volumes`***. See "Positioned Volumes (Nodes)". The same
 structure represented by (a real or) a virtual volume can be
 ***`replicated`*** several times in the geometry.
 
-***`Q: “Fine, so probably the real volumes are the ones composing the letters R, O and T. Why one have to define so many volumes to make an R?”`***
+***`Q: "Fine, so probably the real volumes are the ones composing the letters R, O and T. Why one have to define so many volumes to make an R?"`***
 
 ***`A:`*** Well, in real life some objects have much more complex shapes
 that an ***`R`***. The modeller cannot just know all of them; the idea
@@ -156,7 +156,7 @@ is to make a complex object by using elementary building blocks that
 have known shapes (called ***`primitive shapes`***). Gluing these
 together in the appropriate way is the user responsibility.
 
-***`Q: “I am getting the global picture but not making much out of it… There are also a lot of calls to TGeoVolume::AddNode() that I do not understand.”`***
+***`Q: "I am getting the global picture but not making much out of it… There are also a lot of calls to TGeoVolume::AddNode() that I do not understand."`***
 
 ***`A:`*** A volume is positioned inside another one by using this
 method. The relative geometrical transformation as well as a copy number
@@ -169,7 +169,7 @@ performing similar actions, but let us keep things simple for the time
 being. In addition, notice that there are some visualization-related
 calls in the example followed by a final `TGeoVolume::Draw() `call for
 the top volume. These are explained in details in the section
-“Visualization Settings and Attributes”. At this point, you will
+"Visualization Settings and Attributes". At this point, you will
 probably like to see how this geometry looks like. You just need to run
 the example and you will get the following picture that you can rotate
 using the mouse; or you can zoom / move it around (see what the Help
@@ -195,11 +195,11 @@ root[] new TBrowser;
 The folders `Materials`, `Media` and `Local transformations` are in fact
 the containers where the geometry manager stores the corresponding
 objects. The `Illegal overlaps` folder is empty but can be filled after
-performing a geometry validity check (see section: “Checking the
-Geometry”). If tracking is performed using **`TGeo`**, the folder
+performing a geometry validity check (see section: "Checking the
+Geometry"). If tracking is performed using **`TGeo`**, the folder
 `Tracks` might contain user-defined tracks that can be
-visualized/animated in the geometry context (see section: “Creating and
-Visualizing Tracks”). Since for the time being we are interested more in
+visualized/animated in the geometry context (see section: "Creating and
+Visualizing Tracks"). Since for the time being we are interested more in
 the geometrical hierarchy, we will focus on the last two displayed items
 `TOP `and `TOP_1`. These are the top volume and the corresponding top
 node in the hierarchy.
@@ -303,7 +303,7 @@ pre-built table of elements owned by **`TGeoManager`** class:
 ``` {.cpp}
 TGeoElementTable *table = gGeoManager->GetElementTable();
 TGeoElement *element1 = table->GetElement(Int_t Z);
-TGeoElement *element2 = table->FindElement(“Copper”);
+TGeoElement *element2 = table->FindElement("Copper");
 ```
 
 Materials made of single elements can be defined by their atomic mass
@@ -639,7 +639,7 @@ TGeoXXX(<type> param1,<type> param2, …);
 ```
 
 Naming shape primitive is mandatory only for the primitives used in
-Boolean composites (see “Composite Shapes”). For the sake of simplicity,
+Boolean composites (see "Composite Shapes"). For the sake of simplicity,
 we will describe only the constructors in the second form.
 
 ### Units
@@ -1104,7 +1104,7 @@ polygons, between `phi1` and `phi1+dphi.`
 
 A **`TGeoXtru`** shape is represented by the extrusion of an arbitrary
 polygon with fixed outline between several Z sections. Each Z section is
-a scaled version of the same “blueprint” polygon. Different global XY
+a scaled version of the same "blueprint" polygon. Different global XY
 translations are allowed from section to section. Corresponding polygon
 vertices from consecutive sections are connected.
 
@@ -1119,7 +1119,7 @@ TGeoXtru::TGeoXtru(Int_t nplanes);
 ![TGeoXtru Class](pictures/030001C9.png)
 
 The lists of X and Y positions for all vertices have to be provided for
-the “blueprint” polygon:
+the "blueprint" polygon:
 
 ``` {.cpp}
 TGeoXtru::DefinePolygon (Int_t nvertices, Double_t *xv, 
@@ -1166,7 +1166,7 @@ Double_t y0, Double_t scale);
     normal direction. The point lies on the plane and the normal vector
     points outside the half space. The half space is the only shape
     which is infinite and can be used only in Boolean operations that
-    result in non-infinite composite shapes (see also “Composite Shapes”
+    result in non-infinite composite shapes (see also "Composite Shapes"
     below). A half space has to be defined using the constructor:
 
 ``` {.cpp}
@@ -1256,7 +1256,7 @@ defined:
 ``` {.cpp}
 TGeoMatrix *mat;
 // … code creating some geometrical transformation
-mat->SetName(“mat1”);
+mat->SetName("mat1");
 mat->RegisterYourself();  // see Geometrical transformations
 ```
 
@@ -1485,7 +1485,7 @@ TGeoManager::Volume(const char *name,const char *shape,Int_t nmed);
 
 -   `shape:`the type of the associated shape. This has to contain the
     case-insensitive first 4 letters of the corresponding class name
-    (e.g. “`tubs`” will match **`TGeoTubeSeg`**, “`bbox`” will match
+    (e.g. "`tubs`" will match **`TGeoTubeSeg`**, "`bbox`" will match
     **`TGeoBBox`**)
 
 -   `nmed:` the medium number.
@@ -1500,7 +1500,7 @@ Positioning Volumes’).**
 Other case when shape parameterizations are quite useful is scaling
 geometry structures. Imagine that we would like to enlarge/shrink a
 detector structure on one or more axes. This happens quite often in real
-life and is handled by “fitting mother” parameters. This is accomplished
+life and is handled by "fitting mother" parameters. This is accomplished
 by defining shapes with one or more invalid (negative) parameters. For
 instance, defining a box having `dx=10.`, `dy=10.`, and `dz=-1` will not
 generate an error but will be interpreted in a different way: A special
@@ -1528,7 +1528,7 @@ explained later, here are few general rules:
 
 -   Visibility or tracking properties of volumes can be provided both at
     build time or after geometry is closed, but global visualization
-    settings (see section: “The Drawing Package”) should not be provided
+    settings (see section: "The Drawing Package") should not be provided
     at build time, otherwise the drawing package will be loaded.
 
 There is also a list of specific rules:
@@ -1569,7 +1569,7 @@ a volume, which at its turn points to a list of nodes):
 
 `NodeTop ` ` VolTop ` ` NodeA ` ` VolA ` `…`
 
-One can therefore talk about “the node or volume hierarchy”, but in
+One can therefore talk about "the node or volume hierarchy", but in
 fact, an element is made by a pair volume-node. In the line above is
 represented just a single branch, but of course from any volume other
 branches can also emerge. The index of a node in such a branch (counting
@@ -1672,19 +1672,19 @@ step.
 
 ``` {.cpp}
 // Making a volume out of a shape and a medium.
-TGeoVolume *vol = new TGeoVolume(“VNAME”,ptrShape,ptrMed);
+TGeoVolume *vol = new TGeoVolume("VNAME",ptrShape,ptrMed);
 
 // Making a volume out of a shape but without a defined medium.
-TGeoVolume *vol = new TGeoVolume(“VNAME”,ptrShape);
+TGeoVolume *vol = new TGeoVolume("VNAME",ptrShape);
 
 // Making a volume with a given shape in one step
-TGeoVolume *vol = gGeoManager->MakeBox(“VNAME”,ptrMed,dx,dy,dz);
-TGeoVolume *vol = gGeoManager->MakeTubs(“VNAME”,ptrMed,rmin,rmax,
+TGeoVolume *vol = gGeoManager->MakeBox("VNAME",ptrMed,dx,dy,dz);
+TGeoVolume *vol = gGeoManager->MakeTubs("VNAME",ptrMed,rmin,rmax,
 dz,phi1,phi2);
 
 // See class TGeoManager for the rest of shapes.
 // Making a volume with a given shape with a unique prototype
-TGeoVolume *vol = gGeoManager->Volume(“VNAME”,“XXXX”,nmed,upar,
+TGeoVolume *vol = gGeoManager->Volume("VNAME","XXXX",nmed,upar,
 npar);
 
 // Where XXXX stands for the first 4 letters of the specific shape 
@@ -1782,7 +1782,7 @@ they are needed for grouping and positioning together other volumes.
 Such grouping helps not only geometry creation, but also optimizes
 tracking performance; therefore, it is highly recommended. Virtual
 volumes need to inherit material/medium properties from the volume they
-are placed into in order to be “invisible” at tracking time.
+are placed into in order to be "invisible" at tracking time.
 
 Let us suppose that we need to group together two volumes `A` and `B`
 into a structure and position this into several other volumes `D,E,` and
@@ -1795,7 +1795,7 @@ real volume, we need to manually set its medium the same as that of
 In other words, the limitation in proceeding this way is that `D,E,` and
 `F` must point to the same medium. If this was not the case, we would
 have to define different virtual volumes for each placement: `C`, `C’`
-and `C”`, having the same shape but different media matching the
+and `C"`, having the same shape but different media matching the
 corresponding containers. This might not happen so often, but when it
 does, it forces the creation of several extra virtual volumes. Other
 limitation comes from the fact that any container is directly used by
@@ -1913,7 +1913,7 @@ their container is sometimes quite strong constraint. Having a limited
 set of geometric shapes might force sometimes overlaps. Since
 overlapping is contradictory to containment, a point belonging to an
 overlapping region will naturally belong to all overlapping partners.
-The answer provided by the modeller to “Where am I?” is no longer
+The answer provided by the modeller to "Where am I?" is no longer
 deterministic if there is no priority assigned.
 
 There are two ways out provided by the modeller in such cases and we
@@ -1945,7 +1945,7 @@ will illustrate them by examples.
     The way out is to position our rows with a special prototype:
 
 ``` {.cpp}
-ptrCAL->AddNodeOverlap(“ROW”,nRow,matrixRow);
+ptrCAL->AddNodeOverlap("ROW",nRow,matrixRow);
 ```
 
 This will instruct the modeller that the daughter ROW inside CAL
@@ -2224,11 +2224,11 @@ such a container is not straightforward or even possible without
 generating overlaps with the rest of the geometry. There are few ways
 out of this:
 
--   Defining the container for the structure as “overlapping” (see also
-    “ Overlapping Volumes **”**)
+-   Defining the container for the structure as "overlapping" (see also
+    " Overlapping Volumes **"**)
 
 -   Representing the container as a composite shape – the Boolean union
-    of all components (see also “ Composite Shapes ”)
+    of all components (see also " Composite Shapes ")
 
 -   Using an assembly volume – this will be described in the following.
 
@@ -2261,7 +2261,7 @@ vol->AddNode(vdaughter1, cpy1, matrix1);
 vol->AddNode(vdaughter2, cpy2, matrix2);
 ```
 
-Note that components cannot be declared as “overlapping” and that a
+Note that components cannot be declared as "overlapping" and that a
 component can be an assembly volume. For existing flat volume
 structures, one can define assemblies to force a hierarchical structure
 therefore optimizing the performance. Usage of assemblies does NOT imply
@@ -2412,7 +2412,7 @@ used for making the final combined one on the heap:
 ``` {.cpp}
 TGeoRotation r1(…);
 TGeoRotation r2(…);
-TGeoHMatrix *mat = new TGeoHMatrix(“name”); // we want to use only
+TGeoHMatrix *mat = new TGeoHMatrix("name"); // we want to use only
                         // this one in geometry
 *mat = r1 * r2;
 ```
@@ -2673,14 +2673,14 @@ from **`TGeoManager`** interface:
     written in the /folder/folder/…/folder/file fashion. The final node
     pointed by the path is the deepest object containing the current
     point and is representative for the current state. All intermediate
-    `folders` in the path are in fact also nodes “touched” by the
-    current point, but having some “touched” containment. The current
+    `folders` in the path are in fact also nodes "touched" by the
+    current point, but having some "touched" containment. The current
     path can be retrieved only after the state was initialized and is
     useful for getting an idea of the current point location.
 
 ``` {.cpp}
 const char *path = gGeoManager->GetPath();
-cout << “Current path is: “ << path << endl;
+cout << "Current path is: " << path << endl;
 /A_1/B_34/C_3/D_1
 ```
 
@@ -3158,7 +3158,7 @@ from **`TGeoManager`** context menu:
 ``` {.cpp}
 TGeoManager::DrawTracks(Option_t *option);
 TGeoManager::AnimateTracks(Double_t tmin=0.,Double_t tmax=1E-8,
-Int_t nframes=200,Option_t *option=””);
+Int_t nframes=200,Option_t *option="");
 ```
 
 The drawing/animation time range is a global variable that can be
@@ -3186,14 +3186,14 @@ track selections:
 `/Ntype:` All tracks having `name=type` are drawn
 
 Generally several options can be concatenated in the same string (E.g.
-`“/D /Npion-“`).
+`"/D /Npion-"`).
 
 For animating tracks, additional options can be added:
 
 `/G:`Geometry animate. Generally when drawing or animating tracks, one
 has to first perform a normal drawing of the geometry as convenient. The
 tracks will be drawn over the geometry. The geometryitself will be
-animated (camera moving and rotating in order to “catch” the majority of
+animated (camera moving and rotating in order to "catch" the majority of
 current track segments.)
 
 `/S:`Save all frames in gif format in the current folder. This option
@@ -3382,7 +3382,7 @@ suppose you already did that with your simple geometry and immediately
 noticed a new ROOT canvas popping-up and having some more or less
 strange picture inside. Here are few questions that might come:
 
--   ***`Q: “The picture is strangely rotated; where are the coordinate axes?”`***
+-   ***`Q: "The picture is strangely rotated; where are the coordinate axes?"`***
 
 ***`A:`*** If drawn in a new canvas, any view has some default
 viewpoint, center of view and size. One can then perform mouse/keyboard
@@ -3396,21 +3396,21 @@ display as well as changing top or side viewpoints can be activated from
 the **`TView`** context menu: right-click on the picture when no object
 is selected;
 
--   ***`Q: “Every line is black! I cannot figure out what is what…”`***
+-   ***`Q: "Every line is black! I cannot figure out what is what…"`***
 
 ***`A:`*** Volumes can have different colors (those known by ROOT of
 course). Think at using them after each volume creation:
 `myvolume->SetLineColor(Int_t color);` otherwise everything is by
 default black.
 
--   ***`Q: “The top volume of my geometry is a box but I see only its content.”`***
+-   ***`Q: "The top volume of my geometry is a box but I see only its content."`***
 
 ***`A:`*** By default the drawn volume is not displayed just because we
 do not want to hide its content when changing the view to HLR or solid
 mode. In order to see it in the default wire frame picture one has to
 call **`TGeoManager::SetTopVisible()`.**
 
--   ***`Q: “I do not see all volumes in my tree but just something inside.”`***
+-   ***`Q: "I do not see all volumes in my tree but just something inside."`***
 
 ***`A:`*** By default, **`TGeoVolume`**`::Draw()` paints the content of
 a given volume three levels down. You can change this by using:
@@ -3424,7 +3424,7 @@ default one and corresponds to ‘leaves’ global visualization mode
 intermediate containers, one can change this mode:
 `gGeoManager->SetVisOption(0)`.**
 
--   ***`Q: “Volumes are highlighted when moving the mouse over their vertices. What does it mean?”`***
+-   ***`Q: "Volumes are highlighted when moving the mouse over their vertices. What does it mean?"`***
 
 ***`A:`*** Indeed, moving the mouse close to some volume vertices
 selects it. By checking the `Event Status` entry in the root canvas
@@ -3432,14 +3432,14 @@ selects it. By checking the `Event Status` entry in the root canvas
 bottom right. Right-clicking when a volume is selected will open its
 context menu where several actions can be performed (e.g. drawing it).
 
--   ***`Q: “OK, but now I do not want to see all the geometry, but just a particular volume and its content. How can I do this?”`***
+-   ***`Q: "OK, but now I do not want to see all the geometry, but just a particular volume and its content. How can I do this?"`***
 
 ***`A:`*** Once you have set a convenient global visualization option
 and level, what you need is just call the `Draw()` method of your
 interesting volume. You can do this either by interacting with the
 expanded tree of volumes in a ROOT browser (where the context menu of
 any volume is available), either by getting a pointer to it (e.g. by
-name): `gGeoManager->GetVolume(“vol_name”)->Draw();`
+name): `gGeoManager->GetVolume("vol_name")->Draw();`
 
 ### Visualization Settings and Attributes
 
@@ -3560,7 +3560,7 @@ misalignment information.
 
 ### Physical Nodes
 
-Physical nodes are the actual “touchable” objects in the geometry,
+Physical nodes are the actual "touchable" objects in the geometry,
 representing actually a path of positioned volumes starting witrh the
 top node: `path=/TOP/A_1/B_4/C_3` , where `A`, `B`, `C` represent names
 of volumes. The number of physical nodes is given by the total number of
@@ -3577,7 +3577,7 @@ TGeoPhysicalNode(const char* path)
 
 The knowledge of the path to the objects that need to be misaligned is
 essential since there is no other way of identifying them. One can
-however create “symbolic links” to any complex path to make it more
+however create "symbolic links" to any complex path to make it more
 representable for the object it designates:
 
 ``` {.cpp}
@@ -3641,9 +3641,9 @@ path will be invalid. Example:
 
 ``` {.cpp}
 TGeoPhysicalNode *pn1 = 
-gGeoManager->MakePhysicalNode(“/A_1/B_1/C_2”);
+gGeoManager->MakePhysicalNode("/A_1/B_1/C_2");
 TGeoPhysicalNode *pn2 = 
-gGeoManager->MakePhysicalNode(“/A_1/B_1/C_3”);
+gGeoManager->MakePhysicalNode("/A_1/B_1/C_3");
 …
 pn1->Align(…);
 ```
@@ -3708,15 +3708,15 @@ root[] gGeoManager->CloseGeometry();
 // geometry is ready
 root[] gGeoManager->Export("MyGeom.root");
 // file MyGeom.root produced
-root[] gGeoManager->Export(“MyGeom.C”);
+root[] gGeoManager->Export("MyGeom.C");
  // C++ macro MyGeom.C produced
-root[] gGeoManager->Export(“MyGeom.gdml”);
+root[] gGeoManager->Export("MyGeom.gdml");
  // GDML file MyGeom.gdml produced
-root[] myVolume->SaveAs(“MyVolume.C”);
+root[] myVolume->SaveAs("MyVolume.C");
  // C++ macro for the branch starting
  // with MyVolume
 // Reading from a file
-root[] gSystem->Load(“libGeom”);
+root[] gSystem->Load("libGeom");
 root[] TGeoManager::Import("MyGeom.root");  // geometry is ready
 ```
 
@@ -3898,7 +3898,7 @@ Double_t TGeoManager::GetStep()
     search for boundaries further than this distance. In case no
     boundary is found the returned node will be the current one and the
     computed step to boundary will be equal to abs (`stepmax`) having
-    the meaning *“step approved”*. The default value for `stepmax` is
+    the meaning *"step approved"*. The default value for `stepmax` is
     `TGeoShape::Big `with the meaning that boundaries are looked for
     without limitation.
 
@@ -3985,7 +3985,7 @@ value is again updated if `step<stepmax` .
 A special case is when the current node is declared as possibly
 overlapping with something else. If this is the case, the distance is
 computed for all possibly overlapping candidates, taking into account
-the overlapping priorities (see also: “ Overlapping volumes ”).
+the overlapping priorities (see also: " Overlapping volumes ").
 
 The global matrix describing the next crossed physical node is
 systematically computed in case the value of t he proposed step is
@@ -4008,7 +4008,7 @@ the boundary is not determined. In order to find out this new state, one
 has to propagate the point with a distance slightly bigger that the
 computed step value (which is accurate within numerical precision). A
 method that performs this task finding the next location is
-`TGeoManager::Step()`, described in “ Making a Step ”, but users may
+`TGeoManager::Step()`, described in " Making a Step ", but users may
 implement more precise methods to insure post-step boundary crossing.
 
 ## Geometry Graphical User Interface
@@ -4032,9 +4032,9 @@ scratch and using the builder functionality to create new geometry
 objects. In this case, one should use the sequence:
 
 ``` {.cpp}
-root[] TGeoManager *geom = new TGeoManager(“MyGeom”, 
-“Test builder”);
-root[] geom->Edit(Option_t *option=””);
+root[] TGeoManager *geom = new TGeoManager("MyGeom", 
+"Test builder");
+root[] geom->Edit(Option_t *option="");
 ```
 
 The lines above will create a new **`TGeoManager`** class, create an
@@ -4125,13 +4125,13 @@ editor is attached to, since these will be destroyed together.
 For most editors, the functionalities Apply and Undo are provided.
 
 For shapes, changing any of the shape parameters will activate the
-“*Apply*” button only if the check button “*Delayed draw*” is checked,
+"*Apply*" button only if the check button "*Delayed draw*" is checked,
 otherwise the changes are immediately applied. Once the apply button is
 pressed, the changes are applied to the edited shape and drawn. The
-“*Undo*” button becomes active after the first modification has been
+"*Undo*" button becomes active after the first modification has been
 applied. It allows restoring the initial parameters of the shape.
 
-NOTE: In this version the “*Undo*” does not allow restoring an
+NOTE: In this version the "*Undo*" does not allow restoring an
 intermediate state of the parameters that was applied – it will always
 restore the parameters at the moment the shape was edited.
 
@@ -4164,7 +4164,7 @@ editor is more complex. It provides the following functionalities:
     selecting other shape or medium among existing ones.
 
 -   *Daughters*. The category allows removing existing daughter nodes or
-    adding new ones. The button “*Position*” allows editing the
+    adding new ones. The button "*Position*" allows editing the
     positioning matrix of a given node.
 
 ![Setting volume properties and modifying volume hierarchy](pictures/020001F5.jpg) 
@@ -4172,11 +4172,11 @@ editor is more complex. It provides the following functionalities:
 
 -   *Visualization*. This category allows changing the visibility of the
     edited volume or for its daughters, as well as other visualization
-    settings. The radio button “*All*” allows viewing all volumes down
-    to the selected depth. “*Leaves*” will draw only the deepest nodes
+    settings. The radio button "*All*" allows viewing all volumes down
+    to the selected depth. "*Leaves*" will draw only the deepest nodes
     that have the selected depth or lower level ones that have no
-    daughters inside. “*Only*” will allow drawing only the edited
-    volume. The check button “*Raytrace*” will just draw the current
+    daughters inside. "*Only*" will allow drawing only the edited
+    volume. The check button "*Raytrace*" will just draw the current
     selection in solid mode using the ray-tracing algorithm provided by
     TGeo.
 
@@ -4185,8 +4185,8 @@ editor is more complex. It provides the following functionalities:
 
 -   *Division*. Allows dividing the edited volume according a given
     pattern. The division axes that are allowed are presented in a
-    radio-button group. The number entries labeled “*From*”, “*Step*”
-    and “*Nslices*” correspond to the divisioning parameters on the
+    radio-button group. The number entries labeled "*From*", "*Step*"
+    and "*Nslices*" correspond to the divisioning parameters on the
     selected axis. The range of the division is between `start` and
     `start+ndiv*step` values and its validity is checked upon changing
     one of the values.
@@ -4233,4 +4233,4 @@ the volume editor interface to:
 
 -   divide the volume (only if there are no daughters yet)
 
-7. Close the geometry from the “*General*” category.
+7. Close the geometry from the "*General*" category.

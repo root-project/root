@@ -43,7 +43,7 @@ f.Close();
 ```
 
 The example begins with a call to the **`TFile`** constructor. This
-class is describing the ROOT file (that has the extension "`.root`”). In
+class is describing the ROOT file (that has the extension "`.root`"). In
 the next section, we will cover **`TFile`** in details. The last line of
 the example closes the file. To view its contents we need to open it
 again, and to create a **`TBrowser`** object by:
@@ -58,19 +58,19 @@ root[] TBrowser browser;
 You can check if the file is correctly opened by:
 
 ``` {.cpp}
-TFile f(“demo.root”);
+TFile f("demo.root");
 if (f.IsZombie()) {
-cout << “Error opening file” << endl;
+cout << "Error opening file" << endl;
 exit(-1);
 } else {
 …
 }
 ```
 
-Once we have the `TFile`\</emphasis\> object, we can call the
-**`TFile::Map()` method to view the physical layout. The output prints
+Once we have the `TFile` object, we can call the
+**`TFile::Map()`** method to view the physical layout. The output prints
 the date/time, the start record address, the number of bytes in the
-record, the class name of the record and the compression factor.**
+record, the class name of the record and the compression factor.
 
 ``` {.cpp}
 root[] f.Map()
@@ -379,11 +379,11 @@ We saw that the `TFile::Map()` method reads the file sequentially and
 prints information about each record while scanning the file. It is not
 feasible to support only sequential access and hence ROOT provides
 random or direct access, i.e. reading a specified object at a time. To
-do so, `TFile`\</emphasis\> keeps a list of **`TKeys`, which is
+do so, `TFile` keeps a list of **`TKeys`**, which is
 essentially an index to the objects in the file. The **`TKey`** class
 describes the record headers of objects in the file. For example, we can
 get the list of keys and print them. To find a specific object on the
-file we can use the **`TFile::Get()` method.****
+file we can use the **`TFile::Get()` method.**
 
 ``` {.cpp}
 root[] TFile f("demo.root")
@@ -696,11 +696,11 @@ object. The implementation of the `ls` method is specific to the class
 of the object, all of these objects are descendants of **`TObject`** and
 inherit the **`TObject`**`::ls()` implementation. The histogram classes
 are descendants of **`TNamed`** that in turn is a descent of
-`TObject`\</emphasis\>. In this case, **`TNamed::ls()` is executed, and
+`TObject`. In this case, **`TNamed::ls()`** is executed, and
 it prints the name of the class, and the name and title of the object.
 Each directory keeps a list of its objects in the memory. You can get
-this list by **`TDirectory::GetList()` . To see the lists in memory
-contents you can do:****
+this list by **`TDirectory::GetList()`**. To see the lists in memory
+contents you can do:
 
 ``` {.cpp}
 root[]f->GetList()->ls()
@@ -917,9 +917,9 @@ root[] gFile->WriteObject(list,"list",TObject::kSingleKey);
 
 
 There is another important point to remember about `TFile::Close` and
-**`TFile::Write`. When a variable is declared on the stack in a function
+**`TFile::Write`**. When a variable is declared on the stack in a function
 such as in the code below, it will be deleted when it goes out of
-scope.**
+scope.
 
 ``` {.cpp}
 void foo() { 
@@ -1012,7 +1012,7 @@ root[] gDirectory->pwd()
 AFile.root:/Wed011003
 ```
 
-In addition to ***`gDirectory `***we have ***`gFile`***, another global
+In addition to ***`gDirectory`*** we have ***`gFile`***, another global
 that points to the current file. In our example, ***`gDirectory`***
 points to the subdirectory, and ***`gFile`*** points to the file (i.e.
 the files' top directory).
@@ -1094,8 +1094,8 @@ root[] h
 ```
 
 To remove a subdirectory you need to use `TDirectory::Delete`. There is
-no **`TDirectory::rmdir`. The Delete method takes a string containing
-the variable name and cycle number as a parameter.**
+no **`TDirectory::rmdir`**. The Delete method takes a string containing
+the variable name and cycle number as a parameter.
 
 ``` {.cpp}
 void Delete(const char *namecycle)
@@ -1230,9 +1230,9 @@ void Event::Streamer(TBuffer &R__b){
 When writing an `Event` object, `TClass::WriteBuffer` is called.
 `WriteBuffer` writes the current version number of the `Event class,`
 and its contents into the buffer `R__b`. The `Streamer `calls
-**`TClass::ReadBuffer` when reading an `Event` object. The `ReadBuffer`
+**`TClass::ReadBuffer`** when reading an `Event` object. The `ReadBuffer`
 method reads the information from buffer `R__b` into the `Event`
-object.**
+object.
 
 ### Transient Data Members (//!)
 
@@ -1453,7 +1453,7 @@ Your class can ignore the **`TObject`** `Streamer `with the
 of the class is not streamed to the file. This is useful in case you do
 not use the **`TObject`** `fBits` and `fUniqueID `data members. You gain
 space on the file, and you do not loose functionality if you do not use
-the `fBits` and `fUniqueID. `See “The Role of TObject” on the use of
+the `fBits` and `fUniqueID. `See "The Role of TObject" on the use of
 `fBits` and `fUniqueID`.
 
 ### Streaming a TClonesArray
@@ -1471,7 +1471,7 @@ fTracks->BypassStreamer(kFALSE);    // use the member Streamer
 ```
 
 When the `kBypassStreamer` bit is set, the automatically generated
-`Streamer `can call directly the method **`TClass::WriteBuffer`.
+`Streamer `can call directly the method **`TClass::WriteBuffer`**.
 Bypassing the `Streamer` improves the performance when writing/reading
 the objects in the **`TClonesArray`**. However, the drawback is when a
 **`TClonesArray`** is written with `split=0` bypassing the `Streamer`,
@@ -1483,7 +1483,7 @@ a problem with the following scenario: a class `Foo` has a
 `Bar` is created in optimized mode in such a way that data members of
 the same type are written as an array improving the I/O performance. In
 a new program, `T1` is read and a new `Tree` `T2` is created with the
-object `Foo` in `split > 1`.**
+object `Foo` in `split > 1`.
 
 When the `T2 `branch is created, the `StreamerInfo` for the class `Bar`
 is created with no optimization (mandatory for the split mode). The
@@ -1545,7 +1545,7 @@ a different file. **`TRef`** also supports the complex situation where a
 machine. When a **`TRef`** is read before its referenced object, it is
 null. As soon as the referenced object is read, the **`TRef`** points to
 it. In addition, one can specify an action to be taken by **`TRef`** in
-the case it is read before its reference object (see”Action on Demand”
+the case it is read before its reference object (see"Action on Demand"
 below).
 
 ### Using TRef
@@ -1655,10 +1655,10 @@ table via the cleanup mechanism invoked by the **`TObject`** destructor.
 Each **`TProcessID`** has a table (`TObjArray *fObjects`) that keeps
 track of all referenced objects. If a referenced object has a
 `fUniqueID`, a pointer to this unique object may be found using
-`fObjects->At(fUniqueID)`. In the same way, when a **`TRef::GetObject`
+`fObjects->At(fUniqueID)`. In the same way, when a **`TRef::GetObject`**
 is called, `GetObject` uses its own `fUniqueID` to find the pointer to
 the referenced object. See `TProcessID::GetObjectWithID` and
-`PutObjectWithID`.**
+`PutObjectWithID`.
 
 #### Object Number
 
@@ -1668,8 +1668,8 @@ in both the `fUniqueID` of the referenced and referencing object. This
 `TProcessID::fgNumber`. The `fUniqueID` is the serial object number in
 the current session. One can retrieve the current `fgNumber` value by
 calling the static function `TProcessID::GetObjectCount` at any time or
-can set this number by **`TProcessID::SetObjectCount`. To avoid a
-growing table of `fObjects` in `TProcessID`**, in case, for example, one
+can set this number by **`TProcessID::SetObjectCount`**. To avoid a
+growing table of `fObjects` in `TProcessID`, in case, for example, one
 processes many events in a loop, it might be necessary to reset the
 object number at the end of processing of one event. See an example in
 `$ROOTSYS/test/Event.cxx` (look at function `Build`). The value of
@@ -1739,7 +1739,7 @@ myExec->SetAction("LoadHits()");
 myExec->SetAction(".x script.C");
 ```
 
-When a `TRef`\</emphasis\> is de-referenced via **`TRef::GetObject`, its
+When a `TRef` is de-referenced via **`TRef::GetObject`, its
 **`TExec`** is automatically executed. The **`TExec`** function/script
 can do one or more of the following:**
 
@@ -1874,8 +1874,7 @@ This allows you to change the class definition at will, for example:
 
 -   Add or remove a base class
 
-![The schema evolution for objects written on disk and in
-memory](pictures/020000EE.jpg)
+![The schema evolution for objects written on disk and in memory](pictures/020000EE.jpg)
 
 ROOT supports schema evolution by keeping a class description of each
 version of the class that was ever written to disk, with the class. When
@@ -1893,7 +1892,7 @@ to decode an object into the current version. The `StreamerInfo` is made
 up of **`TStreamerElements`** . Each describes one persistent data
 member of the class. By default, all data members of a class are
 persistent. To exclude a data member (i.e. make it not persistent), add
-a “`!`" after the comment marks. For example the pointer \*`fPainter` of
+a "`!`" after the comment marks. For example the pointer \*`fPainter` of
 a **`TH1`** is not persistent:
 
 ``` {.cpp}
@@ -2207,7 +2206,13 @@ The contents of `MyProject`:
 
 ``` {.cpp}
 root[]     .! ls MyProject
-ATLFCluster.h      ATLFJet.h           ATLFMiscMaker.h     ATLFTrack.h      TMCParticle.h      ATLFClusterMaker.h  ATLFJetMaker.h      ATLFMuon.h    ATLFElectron.h     ATLFMCMaker.h       ATLFMuonMaker.h     ATLFElectronMaker.h             ATLFMaker.h        ATLFPhoton.h        ATLFHistBrowser.h   ATLFMisc.h        ATLFPhotonMaker.h  ATLFTrackMaker.h    ATLFTrigger.h       ATLFTriggerMaker.h      LinkDef.h          MAKE                MyProject.so        MyProjectProjectDict.h MyProjectProjectDict.cxx               MyProjectProjectDict.o
+ATLFCluster.h      ATLFJet.h           ATLFMiscMaker.h     ATLFTrack.h      
+TMCParticle.h      ATLFClusterMaker.h  ATLFJetMaker.h      ATLFMuon.h    
+ATLFElectron.h     ATLFMCMaker.h       ATLFMuonMaker.h     ATLFElectronMaker.h
+ATLFMaker.h        ATLFPhoton.h        ATLFHistBrowser.h   ATLFMisc.h        
+ATLFPhotonMaker.h  ATLFTrackMaker.h    ATLFTrigger.h       ATLFTriggerMaker.h      
+LinkDef.h          MAKE                MyProject.so        MyProjectProjectDict.h 
+MyProjectProjectDict.cxx               MyProjectProjectDict.o
 ```
 
 Now you can load the shared library in any consecutive root session to

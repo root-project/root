@@ -82,8 +82,8 @@ We attempt to give the user insight into the many capabilities of ROOT.
 The book begins with the elementary functionality and progresses in
 complexity reaching the specialized topics at the end. The experienced
 user looking for special topics may find these chapters useful: see
-“Networking”, “Writing a Graphical User Interface”, “Threads”, and
-“PROOF: Parallel Processing”.
+"Networking", "Writing a Graphical User Interface", "Threads", and
+"PROOF: Parallel Processing".
 
 ## Conventions Used in This Book
 
@@ -513,7 +513,7 @@ loaded at start-up. Plugins are defined by a base class (e.g.
 identify the plugin (e.g. `^rfio:` as part of the protocol string), the
 plugin class of which an object will be created (e.g. **`TRFIOFile`**),
 the library to be loaded (in short `libRFIO.so` to RFIO), and the
-constructor to be called (e.g. “`TRFIOFile()`”). This can be specified
+constructor to be called (e.g. "`TRFIOFile()`"). This can be specified
 in the `.rootrc` which already contains many plugin definitions, or by
 calls to `gROOT->GetPluginManager()->AddHandler()`.
 
@@ -537,9 +537,9 @@ system (dynamic loader) error due to unresolved symbols.
 
 tutorials The tutorials directory contains many example example scripts.
 They assume some basic knowledge of ROOT, and for the new user we
-recommend reading the chapters: “Histograms” and “Input/Output” before
-trying the examples. The more experienced user can jump to chapter “The
-Tutorials and Tests” to find more explicit and specific information
+recommend reading the chapters: "Histograms" and "Input/Output" before
+trying the examples. The more experienced user can jump to chapter "The
+Tutorials and Tests" to find more explicit and specific information
 about how to build and run the examples.
 
 The `$ROOTSYS/tutorials/` directory include the following
@@ -577,13 +577,13 @@ the user directory.
 The test directory contains a set of examples example that represent all
 areas of the framework. When a new release is cut, the examples in this
 directory are compiled and run to test the new release's backward
-compatibility. The list of source files is described in chapter “The
-Tutorials and Tests”.
+compatibility. The list of source files is described in chapter "The
+Tutorials and Tests".
 
 The `$ROOTSYS/test` directory is a gold mine of ROOT-wisdom nuggets, and
 we encourage you to explore and exploit it. We recommend the new users
-to read the chapter “Getting Started”. The chapter “The Tutorials and
-Tests” has instructions on how to build all the programs and it goes
+to read the chapter "Getting Started". The chapter "The Tutorials and
+Tests" has instructions on how to build all the programs and it goes
 over the examples `Event` and `stress`.
 
 ### \$ROOTSYS/include

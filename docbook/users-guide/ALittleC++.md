@@ -419,5 +419,5 @@ memory leak; the heap object exists but we have lost our way to access
 it. In general, this is not a problem. If any object will outlive the
 compound statement in which it was created then a more permanent pointer
 will point to it, which frequently is part of another heap object. See
-Resetting the Interpreter Environment in the chapter “CINT the C++
-Interpreter”.
+Resetting the Interpreter Environment in the chapter "CINT the C++
+Interpreter".

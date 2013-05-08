@@ -432,7 +432,7 @@ study when designing a GUI. Some examples of the output of `guitest` are
 shown next. To run it type `guitest` at the system prompt in the
 `$ROOTSYS/test` directory. We have included an entire chapter on this
 subject where we explore `guitest` in detail and use it to explain how
-to build our own ROOT application with a GUI. See “Writing a Graphical
-User Interface”.
+to build our own ROOT application with a GUI. See "Writing a Graphical
+User Interface".
 
 ![Native GUI widgets](pictures/030001FC.png)

@@ -1,5 +1,5 @@
-Physics Vectors
-===============
+# Physics Vectors
+
 
 The physics vector classes describe vectors in three and four dimensions
 and their rotation algorithms. The classes were ported to root from
@@ -7,8 +7,8 @@ CLHEP see:
 
 <http://wwwinfo.cern.ch/asd/lhc++/clhep/manual/UserGuide/Vector/vector.html>
 
-The Physics Vector Classes
-==========================
+## The Physics Vector Classes
+
 
 In order to use the physics vector classes you will have to load the
 Physics library:
@@ -36,8 +36,8 @@ boosts and rotations. In addition, a **`TVector2`** is a basic
 implementation of a vector in two dimensions and is not part of the
 CLHEP translation.
 
-TVector3
-========
+## TVector3
+
 
 ![](pictures/030001A9.png)**`TVector3`** is a general three-vector
 class, which can be used for description of different vectors in 3D.
@@ -58,8 +58,8 @@ only common features of three vectors and lacks methods specific for
 some particular vector values. For example, it has no translated
 function because translation has no meaning for vectors.
 
-Declaration / Access to the Components
---------------------------------------
+### Declaration / Access to the Components
+
 
 **`TVector3`** has been implemented as a vector of three `Double_t`
 variables, representing the Cartesian coordinates. By default the values
@@ -90,8 +90,8 @@ v1.SetX(1.); v1.SetY(2.); v1.SetZ(3.);
 v1.SetXYZ(1.,2.,3.);
 ```
 
-Other Coordinates
------------------
+### Other Coordinates
+
 
 To get information on the **`TVector3`** in spherical (`rho`, `phi`,
 `theta`) or cylindrical (`z`, `r`, `theta`) coordinates, the following
@@ -132,8 +132,8 @@ v.SetMag(10.);   // keeping theta and phi
 v.SetPerp(3.);   // keeping z and phi
 ```
 
-Arithmetic / Comparison
------------------------
+### Arithmetic / Comparison
+
 
 The **`TVector3`** class has operators to add, subtract, scale and
 compare vectors:
@@ -150,16 +150,16 @@ if(v1 == v2) {...}
 if(v1 != v2) {...}
 ```
 
-Related Vectors
----------------
+### Related Vectors
+
 
 ``` {.cpp}
 v2 = v1.Unit();        // get unit vector parallel to v1
 v2 = v1.Orthogonal();  // get vector orthogonal to v1
 ```
 
-Scalar and Vector Products
---------------------------
+### Scalar and Vector Products
+
 
 ``` {.cpp}
 s = v1.Dot(v2);// scalar product
@@ -167,15 +167,15 @@ s = v1 * v2;// scalar product
 v = v1.Cross(v2);// vector product
 ```
 
-Angle between Two Vectors
--------------------------
+### Angle between Two Vectors
+
 
 ``` {.cpp}
 Double_t a = v1.Angle(v2);
 ```
 
-Rotation around Axes
---------------------
+### Rotation around Axes
+
 
 ``` {.cpp}
 v.RotateX(.5);
@@ -183,15 +183,15 @@ v.RotateY(TMath::Pi());
 v.RotateZ(angle);
 ```
 
-Rotation around a Vector
-------------------------
+### Rotation around a Vector
+
 
 ``` {.cpp}
 v1.Rotate(TMath::Pi()/4, v2); // rotation around v2
 ```
 
-Rotation by TRotation Class
----------------------------
+### Rotation by TRotation Class
+
 
 **`TVector3`** objects can be rotated by **`TRotation`** objects using
 the `Transform()` method, the `operator ``*=, `or the `operator ``*` of
@@ -205,8 +205,8 @@ v1 = m*v1;
 v1 *= m;                          // v1 = m*v1
 ```
 
-Transformation from Rotated Frame
----------------------------------
+### Transformation from Rotated Frame
+
 
 This code transforms v1 from the rotated frame (z' parallel to
 direction, x' in the theta plane and y' in the `xy` plane as well as
@@ -217,8 +217,8 @@ TVector3 direction = v.Unit()
 v1.RotateUz(direction);      // direction must be TVector3 of unit length 
 ```
 
-TRotation
-=========
+## TRotation
+
 
 The **`TRotation`** class describes a rotation of **`TVector3`** object.
 It is a 3 \* 3 matrix of `Double_t`:
@@ -234,8 +234,8 @@ have to apply the direct transformation. A rotation around a specified
 axis means counterclockwise rotation around the positive direction of
 the axis.
 
-Declaration, Access, Comparisons
---------------------------------
+### Declaration, Access, Comparisons
+
 
 ``` {.cpp}
 TRotation r;        // r initialized as identity
@@ -254,8 +254,8 @@ if (r!=m) {..}// test for inequality
 if (r.IsIdentity()) {...}       // test for identity
 ```
 
-Rotation around Axes
---------------------
+### Rotation around Axes
+
 
 The following matrices describe counter-clockwise rotations around the
 coordinate axes and are implemented in: `RotateX()`,` RotateY()` and
@@ -268,8 +268,8 @@ coordinate axes and are implemented in: `RotateX()`,` RotateY()` and
 r.RotateX(TMath::Pi()); // rotation around the x-axis
 ```
 
-Rotation around Arbitrary Axis
-------------------------------
+### Rotation around Arbitrary Axis
+
 
 The `Rotate(``)` method allows you to rotate around an arbitrary vector
 (not necessary a unit one) and returns the result.
@@ -287,8 +287,8 @@ TVector3 axis;
 r.GetAngleAxis(angle,axis);
 ```
 
-Rotation of Local Axes
-----------------------
+### Rotation of Local Axes
+
 
 The `RotateAxes()method` adds a rotation of local axes to the current
 rotation and returns the result:
@@ -310,8 +310,8 @@ tx= a.ThetaX();
 pz= a.PhiZ();
 ```
 
-Inverse Rotation
-----------------
+### Inverse Rotation
+
 
 ``` {.cpp}
 TRotation a,b;
@@ -320,8 +320,8 @@ b = a.Inverse();// b is inverse of a, a is unchanged
 b = a.Invert();// invert a and set b = a
 ```
 
-Compound Rotations
-------------------
+### Compound Rotations
+
 
 The `operator *` has been implemented in a way that follows the
 mathematical notation of a product of the two matrices which describe
@@ -332,8 +332,8 @@ placed first:
 r = r2 * r1;
 ```
 
-Rotation of TVector3
---------------------
+### Rotation of TVector3
+
 
 The **`TRotation`** class provides an `operator *` which allows
 expressing a rotation of a **`TVector3`** analog to the mathematical
@@ -356,15 +356,15 @@ TRotation r;
 v.Transform(r);
 ```
 
-TLorentzVector
-==============
+## TLorentzVector
+
 
 **`TLorentzVector`** is a general four-vector class, which can be used
 either for the description of position and time (`x`, `y`, `z`, `t`) or
 momentum and energy (`px`, `py`, `pz`, `E`).
 
-Declaration
------------
+### Declaration
+
 
 **`TLorentzVector`** has been implemented as a set a **`TVector3`** and
 a `Double_t` variable. By default, all components are initialized by
@@ -380,8 +380,8 @@ TLorentzVector v4(TVector3(1.,2.,3.),4.);
 For backward compatibility there are two constructors from a `Double_t`
 and `Float_t` array.
 
-Access to Components
---------------------
+### Access to Components
+
 
 There are two sets of access functions to the components of a
 **`T``LorentzVector`**: `X()`, `Y()`, `Z()`, `T()` and `Px()`, `Py()`,
@@ -434,8 +434,8 @@ v.SetPxPyPzE(px,py,pz,e);
 v.SetXYZM(x,y,z,m);   // v = (x,y,z,e = Sqrt(x*x+y*y+z*z+m*m))
 ```
 
-Vector Components in Non-Cartesian Coordinates
-----------------------------------------------
+### Vector Components in Non-Cartesian Coordinates
+
 
 There are a couple of methods to get and set the **`TVector3`** part of
 the parameters in `spherical` coordinate systems:
@@ -464,8 +464,8 @@ pp2v2 = v.Perp(v1);
 there are two more set functions `SetPtEtaPhiE(pt,eta,phi,e)` and
 `S``etPtEtaPhiM``(pt,eta,phi,m)` for convenience.
 
-Arithmetic and Comparison Operators
------------------------------------
+### Arithmetic and Comparison Operators
+
 
 The **`TLorentzVector`** class provides operators to add subtract or
 compare four-vectors:
@@ -480,8 +480,8 @@ if(v1 == v2) {...}
 if(v1 != v3) {...}
 ```
 
-Magnitude/Invariant mass, beta, gamma, scalar product
------------------------------------------------------
+### Magnitude/Invariant mass, beta, gamma, scalar product
+
 
 The scalar product of two four-vectors is calculated with the
 `(-,-,-,+) `metric:
@@ -507,8 +507,8 @@ invariant mass **`TLorentzVector`** provides the more meaningful aliases
 `M2()` and `M()`. The methods `Beta()` and `Gamma()` returns `beta` and
 `gamma = 1/Sqrt(1-beta*beta)`.
 
-Lorentz Boost
--------------
+### Lorentz Boost
+
 
 A boost in a general direction can be parameterized with three
 parameters which can be taken as the components of a three vector
@@ -532,8 +532,8 @@ v.Boost(b);
 b = v.BoostVector();// b=(x/t,y/t,z/t)
 ```
 
-Rotations
----------
+### Rotations
+
 
 There are four sets of functions to rotate the **`TVector3`** component
 of a **`TLorentzVector`**:
@@ -565,8 +565,8 @@ TRotation r;
 v.Transform(r);//or v *= r;  (v = r*v)
 ```
 
-Miscellaneous
--------------
+### Miscellaneous
+
 
 Angle between two vectors:
 
@@ -592,16 +592,16 @@ v.Transform(l);
 v = l*v;orv *= l;// v = l*v
 ```
 
-TLorentzRotation
-================
+## TLorentzRotation
+
 
 The **`TLorentzRotation`** class describes Lorentz transformations
 including Lorentz boosts and rotations (see **`TRotation`**)
 
 ![](pictures/080001AF.png)
 
-Declaration
------------
+### Declaration
+
 
 By default it is initialized to the identity matrix, but it may also be
 initialized by other **`TLorentzRotation`**, by a pure **`TRotation`**
@@ -630,8 +630,8 @@ The Matrix for a Lorentz boosts is:
 with the boost vector `b=(bx,by,bz)`;
 `gamma=1/Sqrt(1-beta*beta)`;` gamma’=(gamma-1)/beta*beta.`
 
-Access to the Matrix Components/Comparisons
--------------------------------------------
+### Access to the Matrix Components/Comparisons
+
 
 The access to the matrix components is possible with the methods `XX()`,
 `XY()` ... `TT()`, and with the operator` (int,int)`:
@@ -646,8 +646,8 @@ if (l != m) {...}// test for inequality
 if (l.IsIdentity()) {...} // test for identity
 ```
 
-Transformations of a Lorentz Rotation
--------------------------------------
+### Transformations of a Lorentz Rotation
+
 
 There are four possibilities to find the product of two
 **`TLorentzRotation`** transformations:
@@ -692,8 +692,8 @@ as follows:
 
 ![](pictures/080001B0.png)
 
-Transformation of a TLorentzVector
-----------------------------------
+### Transformation of a TLorentzVector
+
 
 To apply **`TLorentzRotation`** to **`TLorentzVector`** you can use
 either the `VectorMultiplication()` method or the `* operator`. You can
@@ -710,8 +710,8 @@ v.Transform(l);
 v *= l;            // v = l*v
 ```
 
-Physics Vector Example
-----------------------
+### Physics Vector Example
+
 
 The test file `$ROOTSYS/test/TestVectors.cxx is` an example of using
 physics vectors. The vector classes are not loaded by default, and to

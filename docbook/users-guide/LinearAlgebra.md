@@ -38,14 +38,14 @@ user can define customized matrix operations through the classes
 ![Overview of matrix classes](pictures/0300012D.png)
 
 Reference to different views of the matrix can be created through the
-classes on the right-hand side, see “Matrix Views”. These references
+classes on the right-hand side, see "Matrix Views". These references
 provide a natural connection to vectors.
 
 Matrix decompositions (used in equation solving and matrix inversion)
-are available through the classes on the left-hand side (see “Matrix
-Decompositions”). They inherit from the **`TDecompBase`** class. The
-Eigen Analysis is performed through the classes at the top, see “Matrix
-Eigen Analysis”. In both cases, only some matrix types can be analyzed.
+are available through the classes on the left-hand side (see "Matrix
+Decompositions"). They inherit from the **`TDecompBase`** class. The
+Eigen Analysis is performed through the classes at the top, see "Matrix
+Eigen Analysis". In both cases, only some matrix types can be analyzed.
 For instance, **`TDecompChol`** will only accept symmetric matrices as
 defined **`TMatrixDSym`**. The assignment operator behaves somewhat
 different than of most other classes. The following lines will result in
@@ -204,8 +204,8 @@ matrix.
 The second half of the table is only relevant for sparse matrices. These
 methods define the sparse structure. It should be clear that a call to
 any of these methods has to be followed by a **`SetMatrixArray`** (...)
-which will supply the matrix data, see the next chapter “Creating and
-Filling a Matrix”.
+which will supply the matrix data, see the next chapter "Creating and
+Filling a Matrix".
 
 ## Creating and Filling a Matrix
 
@@ -249,8 +249,8 @@ that will allow arithmetic operations.
 +--------------------------------------------------------------------------+
 
 If only the matrix shape is defined in the constructor, matrix data has
-to be supplied and possibly the sparse structure. In “Setting
-Properties” was discussed how to set the sparse structure.
+to be supplied and possibly the sparse structure. In "Setting
+Properties" was discussed how to set the sparse structure.
 
 Several methods exist to fill a matrix with data:
 
@@ -503,12 +503,12 @@ The following table shows element wise comparisons between matrix and real:
 +----------------------+--------------+----------------------------------------+
 | `A.NormByColumn`     | `TMatrixD`   | $A_{ij}/= \nu_i$, divide               |
 | `(v,"D") `           |              | each matrix column by vector v. If the |
-|                      | `TMatrixD`   | second argument is “`M`“, the column   |
+|                      | `TMatrixD`   | second argument is "`M`", the column   |
 | `A.NormByRow`        |              | is multiplied.                         |
 | `(v,"D")`            |              |                                        |
 |                      |              | $A_{ij}/= \nu_j$, divide               |
 |                      |              | each matrix row by vector v. If the    |
-|                      |              | second argument is “`M`“, the row is   |
+|                      |              | second argument is "`M`", the row is   |
 |                      |              | multiplied.                            |
 +----------------------+--------------+----------------------------------------+
 
@@ -772,7 +772,7 @@ methods are listed in next table:
 | `Bool_t Decompose()`                                | perform the matrix decomposition  |
 +-----------------------------------------------------+-----------------------------------+
 | `Double_t Condition()`                              | calculate ||*A*||1 ||*A*-1||1,    |
-|                                                     | see “Condition number“            |
+|                                                     | see "Condition number"            |
 +-----------------------------------------------------+-----------------------------------+
 | `void Det(Double_t &d1,Double_t &d2)`               | the determinant is `d1` $2^{d2}$. |
 |                                                     | Expressing the determinant this   |

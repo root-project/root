@@ -159,8 +159,8 @@ root -b -q ’myMacro.C("text")’ > myMacro.log
 
 You can build a shared library with ACLiC and then use this shared
 library on the command line for a quicker execution (i.e. the compiled
-speed rather than the interpreted speed). See also “CINT the C++
-Interpreter”.
+speed rather than the interpreted speed). See also "CINT the C++
+Interpreter".
 
 ``` {.cpp}
 root -b -q myMacro.so > myMacro.log
@@ -529,9 +529,9 @@ The user interface for the following classes is available since ROOT
 v.4.04: **`TAttLine`**, **`TAttFill`**, **`TAttMarker`**,
 **`TAttText`**, **`TArrow`**, **`TAxis`**, **`TCurlyArc`**,
 **`TCurlyLine`**, **`TFrame`**, **`TH1`**, **`TH2`**, **`TGraph`**,
-**`TPad`**, **`TCanvas`**, **`TPaveStats`**. For more details, see “The
-Graphics Editor”, “The User Interface for Histograms”, “The User
-Interface for Graphs”.
+**`TPad`**, **`TCanvas`**, **`TPaveStats`**. For more details, see "The
+Graphics Editor", "The User Interface for Histograms", "The User
+Interface for Graphs".
 
 ### Classes, Methods and Constructors
 
@@ -559,7 +559,7 @@ object to do something is:
 object.method_name(parameters)
 ```
 
-The dot can be replaced by “`->`" if `object` is a pointer. In compiled
+The dot can be replaced by "`->`" if `object` is a pointer. In compiled
 code, the dot MUST be replaced by a "`->`" if object is a pointer.
 
 ``` {.cpp}
@@ -567,8 +567,8 @@ object_ptr->method_name(parameters)
 ```
 
 So now, we understand the two lines of code that allowed us to draw our
-function. `f1.Draw()` stands for “call the method `Draw()` associated
-with the object `f1` of the class **`TF1`**”. Other methods can be
+function. `f1.Draw()` stands for "call the method `Draw()` associated
+with the object `f1` of the class **`TF1`**". Other methods can be
 applied to the object `f1` of the class **`TF1`**. For example, the
 evaluating and calculating the derivative and the integral are what one
 would expect from a function.
@@ -728,7 +728,7 @@ available in the canvas toolbar (activated via View menu/Toolbar).
 We have briefly touched on how to use the command line. There are
 different types of commands.
 
-1- CINT commands start with “`.`”
+1- CINT commands start with "`.`"
 
 ``` {.cpp}
 root[] .?  //this command will list all the CINT commands
@@ -736,7 +736,7 @@ root[] .L <filename>  //load [filename]
 root[] .x <filename>  //load and execute [filename]
 ```
 
-2- SHELL commands start with “`.!`” for example:
+2- SHELL commands start with "`.!`" for example:
 
 ``` {.cpp}
 root[] .! ls
@@ -777,7 +777,7 @@ with a script instead.
 
 
 We should say that some things are not standard C++. The CINT
-interpreter has several extensions. See “ROOT/CINT Extensions to C++”.
+interpreter has several extensions. See "ROOT/CINT Extensions to C++".
 
 ### Helpful Hints for Command Line Typing
 
@@ -897,7 +897,7 @@ will need to use these.
 
 These are the coding conventions:
 
--   Classes begin with `T`\</emphasis\>: **`TLine, `**`TTree`****
+-   Classes begin with `T`: **`TLine, `**`TTree`****
 
 -   Non-class types end with **`_t`**: `Int_t`
 
@@ -994,7 +994,7 @@ Role of TObject".
 ROOT has a set of global variables that apply to the session. For
 example, ***`gDirectory`*** always holds the current directory, and
 ***`gStyle`*** holds the current style. All global variables begin with
-“*g*” followed by a capital letter.
+"*g*" followed by a capital letter.
 
 ### gROOT
 
@@ -1049,7 +1049,7 @@ session.
 
 
 ***`gDirectory`*** is a pointer to the current directory. The concept
-and role of a directory is explained in the chapter “Input/Output”.
+and role of a directory is explained in the chapter "Input/Output".
 
 ### gPad
 
@@ -1266,7 +1266,7 @@ ROOT file will be called `file.root`. This utility converts HBOOK
 histograms into ROOT histograms of the class **`TH1F`**. HBOOK profile
 histograms are converted into ROOT profile histograms (see class
 **`TProfile`**). HBOOK row-wise and column-wise ntuples are
-automatically converted to ROOT Trees. See “Trees”. Some HBOOK
+automatically converted to ROOT Trees. See "Trees". Some HBOOK
 column-wise ntuples may not be fully converted if the columns are an
 array of fixed dimension (e.g. `var[6]`) or if they are a
 multi-dimensional array.
@@ -1291,7 +1291,7 @@ file.
 
 The chapter on trees explains how to read a tree. ROOT includes a
 function `TTree::MakeClass` to generate automatically the code for a
-skeleton analysis function. See “Example Analysis”.
+skeleton analysis function. See "Example Analysis".
 
 In case one of the ntuple columns has a variable length (e.g.
 `px(ntrack)`), `h.Draw("px")` will histogram the `px `column for all

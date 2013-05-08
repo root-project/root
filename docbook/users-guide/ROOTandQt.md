@@ -7,7 +7,7 @@ Qt-ROOT Implementation of TVirtualX Interface (BNL)
 Qt-ROOT implementation of **`TVirtualX`** (Qt-layer) is to provide a
 convenient way of creating the complex end-user applications that
 require both Qt GUI and ROOT features. The primary goal is to allow
-“embedding” the ROOT classes like **`TCanvas`** and **`TPad`** into the
+"embedding" the ROOT classes like **`TCanvas`** and **`TPad`** into the
 arbitrary Qt widgets and using it seamlessly with other Qt-based
 components and Qt-based third party libraries. **`TGQt`** ROOT class, a
 Qt-based implementation of **`TVirtualX`** interface is an optional ROOT
@@ -20,7 +20,7 @@ Installation
 
 ### Qt Package Installation and Configuration
 
-ROOT Qt-layer requires a “good” properly configured Qt package version.
+ROOT Qt-layer requires a "good" properly configured Qt package version.
 To install it, one has to:
 
 1. Make sure the adequate version of Qt system. Even though Qt ROOT
@@ -37,16 +37,18 @@ consistent with those used to compile and install ROOT alone. For Qt
 `./configure –thread –no-xft –qt-gif –no-exeptions `
 
 I.e. one is required to build the Qt version with the "`thread`" support
-and with “`no exceptions`". Generally, you are free to select the
+and with "`no exceptions`". Generally, you are free to select the
 remaining Qt options like the types of the different image formats
 provided etc. You can check the Qt installation parameters by looking up
 the file:
 
 `more $QTDIR/config.status`
 
-`No special flag for Qt 4.3 build and higher have been set yet to make QtRoot working.`
+No special flag for Qt 4.3 build and higher have been set yet to make QtRoot working.
 
-`3. Attention. The Qt port for 4.3 and above versions should be considered as an experimental one. Most examples in this manual are for Qt version 3.3 and they need to be adjusted for Qt 4.3.x.`
+3. Attention. The Qt port for 4.3 and above versions should be considered as an 
+experimental one. Most examples in this manual are for Qt version 3.3 and they need 
+to be adjusted for Qt 4.3.x.
 
 ### Qt-layer Installation
 
@@ -54,7 +56,7 @@ The Qt-layer is included into the ROOT distribution kit. To install it
 one has to configure ROOT. The installation does not change any other
 components of the ROOT package. It produces several extra-shared
 libraries that may be dynamically loaded into the ROOT session at start
-time with the regular ROOT plug-in mechanism to replace the “native” GUI
+time with the regular ROOT plug-in mechanism to replace the "native" GUI
 interface. To install Qt-layer one should follow the ROOT installation
 procedure providing the QTDIR environment variable points to the proper
 version of Qt system. Many Linux flavors come with the pre-installed Qt.
@@ -71,7 +73,7 @@ May sure you are not going to pick the obsolete version.
 
 The ROOT CINT dictionary allows to call the Qt main classes directly
 from the ROOT command prompt is an optional component and it is not
-created during the “Qt-layer installation”. To build / re-build the Qt
+created during the "Qt-layer installation". To build / re-build the Qt
 main classes ROOT dictionary one can invoke the make
 
 ``` {.cpp}
@@ -88,7 +90,7 @@ needed.
 ### Qt-layer Configuration
 
 Any ROOT-based application should be configured to use Qt-layer using
-ROOT “Environment Setup”. The correct **`QTDIR`** environment variable
+ROOT "Environment Setup". The correct **`QTDIR`** environment variable
 to locate the proper version of Qt package should be provided as well.
 There are several ways to customize the ROOT setup environment to
 activate Qt-layer.
@@ -123,29 +125,29 @@ Gui.Factory:                $(GUI)
 
 The last step is to make sure your `LD_LIBRARY_PATH` variable point to
 the `$QTDIR/lib` directory. Optionally, you can define the Qt Widget
-“look and feel” using the option `Gui.Style` option. The number of
+"look and feel" using the option `Gui.Style` option. The number of
 different styles to choose from is defined by your local Qt
-installation. Usually you can choose from “`window`”, “`motif`”,
-“`cde`”, “`motifplus`”, “`platinum`”, “`sgi`”, “`compact`”,
-“`windowsxp`”, “`aqua`” or “`macintosh`”. For example, the option
-defined below will force the “windows” look and feel on any platform.
+installation. Usually you can choose from "`window`", "`motif`",
+"`cde`", "`motifplus`", "`platinum`", "`sgi`", "`compact`",
+"`windowsxp`", "`aqua`" or "`macintosh`". For example, the option
+defined below will force the "windows" look and feel on any platform.
 
 ``` {.cpp}
 # Qt GUI style setting
 Gui.Style:                windows
 ```
 
-The default style is so-called “native” style. That is defined by the
+The default style is so-called "native" style. That is defined by the
 current application environment.
 
 Applications
 ------------
 
-As soon as you customize ROOT “Environment Setup” to use Qt-layer you
+As soon as you customize ROOT "Environment Setup" to use Qt-layer you
 can start any ROOT session or stand-alone ROOT-based applications and …
 even though your applications will be using the Qt package you should
 not see any difference. This merely means if the only thing you want to
-do is just use ROOT or some ROOT-based stand-alone application “as is”
+do is just use ROOT or some ROOT-based stand-alone application "as is"
 then you probably do not need to switch to Qt-layer and should skip this
 section entirely. It is recommended you communicate the lower graphical
 layer via the generic **`TVirtualX`** interface provided by the global
@@ -153,7 +155,7 @@ layer via the generic **`TVirtualX`** interface provided by the global
 
 ### Qt-based ROOT Applications
 
-“ROOT application” is the application that either instantiates the ROOT
+"ROOT application" is the application that either instantiates the ROOT
 **`TApplication`** / **`TRint`** class and enters the ROOT event loop or
 is the shared library that can be loaded into the already running ROOT
 application via `TSystem::Load` method or via ROOT plug-in mechanism.
@@ -185,15 +187,15 @@ application with the command
 
 ### ROOT-based Qt Applications
 
-“Qt application” is the application that either instantiates the Qt
+"Qt application" is the application that either instantiates the Qt
 `QApplication` and enters the Qt event loop or is the shared library
 that can be loaded into the already running Qt application via Qt
 plug-in mechanism. You must neither initialize ROOT **`TApplication`** /
 **`TRint`** nor enter the ROOT event loop. Qt-layer takes care about
 both of these steps. What you need is just to instantiate the embedded
 and regular ROOT objects of your choice and keep playing Qt rules.
-ROOT-based Qt applications treat the “native” style of the ROOT
-**`Gui.Backend`** and **`Gui.Factory`** parameters as “qt”. For example,
+ROOT-based Qt applications treat the "native" style of the ROOT
+**`Gui.Backend`** and **`Gui.Factory`** parameters as "qt". For example,
 
 ``` {.cpp}
 // Minimal ROOT based Qt example
@@ -379,28 +381,28 @@ root[] gSystem->Load("lib
 Please, pay your attention that class implementation does not contain
 any Qt system initialization call. Since the above example is a ROOT
 application, do not forget, one needs the `.rootrc` file to assign
-“`qt`” value for the options` Gui.Backend` and `Gui.Factory`.
+"`qt`" value for the options` Gui.Backend` and `Gui.Factory`.
 
 Note: Do not mix the ROOT GUI and Qt GUI API within the same class
 implementation.
 
-### Using Qt “Designer” to Create Qt GUI with Embedded ROOT Objects
+### Using Qt "Designer" to Create Qt GUI with Embedded ROOT Objects
 
 Qt package is equipped with [Qt designer](Qt designer) – a powerful tool
 to create the high quality, robust GUI interfaces for your applications.
 It is possible and desirable to use this utility to create the
 ROOT-based Qt GUI. To do that one should add the
 `$ROOTSYS/include/rootcint.pri` in the project file generated by
-designer and configure Qt designer to use the so-called “custom widget”
+designer and configure Qt designer to use the so-called "custom widget"
 defined by `$ROOTSYS/include/TQtWidget.cw`. The file defines the custom
 **`TQtWidget`** Qt widget to back the embedded **`TCanvas`** objects. To
-customize your designer start `designer` and select “Edit Custom Widget”
+customize your designer start `designer` and select "Edit Custom Widget"
 menu:
 
 ![](pictures/03000224.png)
 
-Open “Edit Custom Widget” dialog and load the **`TQtWidget`**
-(“embedded” **`TCanvas`**) widget definition into the designer. One
+Open "Edit Custom Widget" dialog and load the **`TQtWidget`**
+("embedded" **`TCanvas`**) widget definition into the designer. One
 should do this at once. Designer will remember the last configuration
 and will be restoring it for all subsequent designer sessions.
 
@@ -412,7 +414,7 @@ classes.
 
 ![](pictures/03000226.png)
 
-We strongly recommend you to read the “Quick Start” section of the Qt
+We strongly recommend you to read the "Quick Start" section of the Qt
 designer manual <http://doc.trolltech.com/3.3/designer-manual.html>. One
 can find further information, the examples of the working ROOT-based Qt
 projects including all examples of this section as well as the list of
@@ -426,7 +428,7 @@ ROOT C++ interpreter environment one should either load the dedicated
 RootCint dictionary or apply ACLiC mode.
 
 For example, the following ROOT interactive session is to popup the
-“Open File” Qt dialog box and print out the file name selected by the
+"Open File" Qt dialog box and print out the file name selected by the
 user via the dialog.
 
 ``` {.cpp}
@@ -439,17 +441,17 @@ The ROOT session:
 ``` {.cpp}
 root[] gSystem->Load("qtcint");
 root[] QPrinter p;
-root[] p.setup();  // Display the Qt “Setup printer” dialog box
+root[] p.setup();  // Display the Qt "Setup printer" dialog box
 root[] Int_t id = gPad->GetPixmapID();
 root[] QPixmap *pix = (QPixmap *)(TGQt::iwid(id));
 root[] QPainter pnt(&p);
 root[] pnt.drawPixmap(0,0,*pix);
 ```
 
-is to display the Qt “Setup Printer” dialog and use QPrinter object to
+is to display the Qt "Setup Printer" dialog and use QPrinter object to
 print the current **`TPad`** image to the selected printer. To use the
-more complex Qt-related code one is advised to apply “ACLiC – Automatic
-Compiler of Libraries for CINT” (see CINT the C++ Interpreter). For
+more complex Qt-related code one is advised to apply "ACLiC – Automatic
+Compiler of Libraries for CINT" (see CINT the C++ Interpreter). For
 example:
 
 ``` {.cpp}
@@ -486,7 +488,7 @@ Next file selected: macros/QtPrintDialog_C.so
 
 ![](pictures/03000227.png)
 
-the Qt generated “Open File Dialog” pops up and prints out the list of
+the Qt generated "Open File Dialog" pops up and prints out the list of
 the selected files.
 
 TQtWidget Class, Qt Signals / Slots and TCanvas Interface
@@ -495,12 +497,12 @@ TQtWidget Class, Qt Signals / Slots and TCanvas Interface
 **`TQtWidget`** is a `QWidget` with the `QPixmap` double buffer. It is
 designed to back the ROOT **`TCanvasImp`** class interface and it can be
 used as a regular Qt Widget to create Qt-based GUI with the embedded
-**`TCanvas`** objects. It was mentioned the class can used as a “custom
-widget” to create the advanced GUI with the TrollTech “designer”
+**`TCanvas`** objects. It was mentioned the class can used as a "custom
+widget" to create the advanced GUI with the TrollTech "designer"
 utility.
 
-To do that **`TQtWidget`** class can emit the set of the “Qt signals”
-and it is equipped with the collection of the dedicated “Qt slots”.
+To do that **`TQtWidget`** class can emit the set of the "Qt signals"
+and it is equipped with the collection of the dedicated "Qt slots".
 
 ### TQtWidget Public Qt Slots
 
@@ -528,11 +530,11 @@ virtual bool Save(const char *fileName,const char *format,
 
 The slots are to save the double buffer of the **`TQtWidget`** object
 using the default or specified save format. The default save format is
-defined either by the “known” file extension or by the “default” file
+defined either by the "known" file extension or by the "default" file
 format.
 
 The default format can be changed by `TQtWidget::SetSaveFormat` method
-and it is set to be “`PNG`” at the class constructor.
+and it is set to be "`PNG`" at the class constructor.
 
 ### TQtWidget Qt Signals
 

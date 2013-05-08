@@ -68,9 +68,9 @@ reference to the folder by the user.
 
 To create a folder hierarchy you add the top folder of your hierarchy to
 `//root`. Then you add a folder to an existing folder with the
-**`TFolder::AddFolder` method. This method takes two parameters: the
+**`TFolder::AddFolder`** method. This method takes two parameters: the
 name and title of the folder to be added. It returns a pointer of the
-newly created folder.**
+newly created folder.
 
 The code below creates the folder hierarchy shown in the browser. In
 this macro, the folder is also added to the list of browsable. This way,
@@ -226,7 +226,7 @@ above, and creates a hierarchy of tasks.
 
 ``` {.cpp}
 // Show the tasks in a browser. To execute a Task, select 
-// “ExecuteTask” in the context menu see also other functions in the
+// "ExecuteTask" in the context menu see also other functions in the
 // TTask context menu, such as:
 //           -setting a breakpoint in one or more tasks
 //           -enabling/disabling one task, etc
