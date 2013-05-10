@@ -67,12 +67,12 @@ HISTFACTORYH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/RooSta
 HISTFACTORYS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTFACTORYO    := $(call stripsrc,$(HISTFACTORYS:.cxx=.o))
 #location of header files for rootcint (cannot use absolute path for win32)
-#ifeq ($(PLATFORM),win32)
-## look for Windows in $ROOTSYS/include (don't know why?)
-#HISTFACTORYDICTI    := include
-#else
+ifeq ($(PLATFORM),win32)
+# convert mingw's /x/ to x:/ such that rootcint can handle it.
+HISTFACTORYDICTI    := $(shell echo $(MODDIRI) | sed 's,^/\(.\)/,\1:/,')
+else
 HISTFACTORYDICTI    := $(MODDIRI)
-#endif	
+endif
 
 HISTFACTORYDEP  := $(HISTFACTORYO:.o=.d) $(HISTFACTORYDO:.o=.d)
 
