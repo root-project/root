@@ -29,11 +29,11 @@ else
 	RCFILEICON=
 fi
 
-# Use svninfo.txt: more precise than the info in Rversion.h
-SVNBRANCH=`cat etc/svninfo.txt|head -n1`
-SVNREV=`cat etc/svninfo.txt|head -n2|tail -n1`
-SVNDATE="`cat etc/svninfo.txt|tail -n1`"
-SVNYEARCOMMA=`echo $SVNDATE|cut -d' ' -f3`
+# Use gitinfo.txt: more precise than the info in Rversion.h
+GITBRANCH=`cat etc/gitinfo.txt|head -n1`
+GITREV=`cat etc/gitinfo.txt|head -n2|tail -n1`
+GITDATE="`cat etc/gitinfo.txt|tail -n1`"
+GITYEARCOMMA=`echo $GITDATE|cut -d' ' -f3`
 
 # Can't do that inside the .rc file: FILEVERSION doesn't evaluate a>>b
 VERSION=`grep "ROOT_RELEASE " include/RVersion.h | sed 's,^.*"\([^"]*\)".*$,\1,' | sed 's,[^[:digit:]], ,g'`
@@ -43,9 +43,9 @@ VER3=`echo $VERSION| cut -d ' ' -f 3| sed 's,^0,,'`
 
 # 0: tag, 1: trunk, 2: branch
 VERBRANCHFLAG=1
-if [ "x${SVNBRANCH/tag/}" != "x${SVNBRANCH}" ]; then
+if [ "x${GITBRANCH/tag/}" != "x${GITBRANCH}" ]; then
    VERBRANCHFLAG=0
-elif [ "x${SVNBRANCH/branch/}" != "x${SVNBRANCH}" ]; then
+elif [ "x${GITBRANCH/branch/}" != "x${GITBRANCH}" ]; then
    VERBRANCHFLAG=2
 fi
 
@@ -66,7 +66,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 ${RCFILEICON}
 #endif
 
-#define ROOT_VERSION_STR ROOT_RELEASE " (r${SVNREV}@${SVNBRANCH}, ${SVNDATE})\0"
+#define ROOT_VERSION_STR ROOT_RELEASE " (${GITREV}@${GITBRANCH}, ${GITDATE})\0"
 
 #if (${VERBRANCHFLAG} != 0)
 # define ROOT_IS_PRERELEASE VS_FF_PRERELEASE
@@ -105,7 +105,7 @@ BEGIN
          VALUE "FileDescription", "ROOT ${RCFILETITLE} ${FILESTEM}\0"
          VALUE "FileVersion",      ROOT_VERSION_STR
          VALUE "InternalName",     "${FILESTEM}\0"
-         VALUE "LegalCopyright",  "Copyright (C) 1995-${SVNYEARCOMMA} Rene Brun and Fons Rademakers.\0"
+         VALUE "LegalCopyright",  "Copyright (C) 1995-${GITYEARCOMMA} Rene Brun and Fons Rademakers.\0"
          VALUE "OriginalFilename","${FILENAME}\0"
          VALUE "ProductName",     "ROOT\0"
          VALUE "ProductVersion",  ROOT_VERSION_STR
