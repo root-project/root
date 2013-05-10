@@ -4085,8 +4085,8 @@ Bool_t TProof::CreateMerger(TSlave *sl, Int_t port)
       workers = (fWorkersToMerge / mergersToCreate) + rest;
    } else {
       Int_t workersOnHost = 0;
-      for (Int_t i = 0; i < fSlaves->GetSize(); i++) {
-         if(!strcmp(sl->GetName(), fSlaves->At(i)->GetName())) workersOnHost++;
+      for (Int_t i = 0; i < fActiveSlaves->GetSize(); i++) {
+         if(!strcmp(sl->GetName(), fActiveSlaves->At(i)->GetName())) workersOnHost++;
       }
       workers = workersOnHost - 1;
    }
