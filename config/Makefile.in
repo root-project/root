@@ -51,6 +51,7 @@ TUTDIR         := @tutdir@
 ACLOCALDIR     := @aclocaldir@
 
 BUILDX11       := @buildx11@
+X11INCDIR      := $(filter-out /usr/include, @x11incdir@)
 X11LIBDIR      := @x11libdir@
 XPMLIBDIR      := @xpmlibdir@
 XPMLIB         := @xpmlib@

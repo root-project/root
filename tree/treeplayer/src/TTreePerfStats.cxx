@@ -161,12 +161,14 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fCompress      = (T->GetTotBytes()+0.00001)/T->GetZipBytes();
    
    Bool_t isUNIX = strcmp(gSystem->GetName(), "Unix") == 0;
-   if (isUNIX) fHostInfo = gSystem->GetFromPipe("uname -a");
-   else      fHostInfo = "Windows ";
+   if (isUNIX)
+      fHostInfo = gSystem->GetFromPipe("uname -a");
+   else
+      fHostInfo = "Windows ";
    fHostInfo.Resize(20);
-   fHostInfo += Form("Root%s, SVN :%d",gROOT->GetVersion(),gROOT->GetSvnRevision());
+   fHostInfo += TString::Format("Root %s, Git: %s",gROOT->GetVersion(),gROOT->GetGitCommit());
    TDatime dt;
-   fHostInfo += Form(" %s",dt.AsString());
+   fHostInfo += TString::Format(" %s",dt.AsString());
    fHostInfoText   = 0;
 
    gPerfStats = this;

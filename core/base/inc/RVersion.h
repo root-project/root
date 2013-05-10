@@ -18,7 +18,8 @@
 #define ROOT_RELEASE_DATE "Jul 13 2012"
 #define ROOT_RELEASE_TIME "11:06:55"
 #define ROOT_SVN_REVISION 45011
-#define ROOT_SVN_BRANCH "branches/v5-32-00-patches"
+#define ROOT_GIT_COMMIT "994d885"
+#define ROOT_GIT_BRANCH "branches/v5-32-00-patches"
 #define ROOT_VERSION_CODE 335876
 #define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 

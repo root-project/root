@@ -44,7 +44,7 @@ double gaus2D(double *x, double *p)
 
 double gaus3D(double *x, double *p)
 {
-   return p[0] * TMath::Gaus(x[0],p[1],p[2]) 
+   return p[0] * TMath::Gaus(x[0],p[1],p[2])
                * TMath::Gaus(x[1],p[3],p[4])
                * TMath::Gaus(x[2],p[5],p[6]);
 }
@@ -128,20 +128,20 @@ bool operator ==(ROOT::Fit::BinData& bd1, ROOT::Fit::BinData& bd2)
 
       cout << " bd1: ";
       std::copy(x1, &x1[ndim], ostream_iterator<double>(cout, " "));
-      cout << " value:" << value1; 
-      cout << " error:" << error1; 
+      cout << " value:" << value1;
+      cout << " error:" << error1;
 
       cout << " bd2: ";
       std::copy(x2, &x2[ndim], ostream_iterator<double>(cout, " "));
-      cout << " value:" << value2; 
-      cout << " error:" << error2; 
+      cout << " value:" << value2;
+      cout << " error:" << error2;
 
       cout << " equals: " << equals;
 
-      cout << endl; 
+      cout << endl;
    }
 
-   return equals;   
+   return equals;
 }
 
 void fillSparse(THnSparse* s, TF1* f, int nEvents = 5)
@@ -184,8 +184,8 @@ void DoFit(THnSparse* s, TF1* f, ROOT::Fit::BinData& bd)
    ROOT::Fit::BinData bdNoCeros;
    d.GetBinDataNoZeros(bdNoCeros);
    ret = fitter.LikelihoodFit(bdNoCeros, if2);
-   fitter.Result().Print(std::cout); 
-   if (!ret)  
+   fitter.Result().Print(std::cout);
+   if (!ret)
       std::cout << "Fit Failed " << std::endl;
 
    /////////////////////////////////////////////////////////////////////////
@@ -193,8 +193,8 @@ void DoFit(THnSparse* s, TF1* f, ROOT::Fit::BinData& bd)
    ROOT::Fit::BinData bdWithCeros(opt);
    d.GetBinDataIntegral(bdWithCeros);
    ret = fitter.LikelihoodFit(bdWithCeros, if2);
-   fitter.Result().Print(std::cout); 
-   if (!ret)  
+   fitter.Result().Print(std::cout);
+   if (!ret)
       std::cout << "Fit Failed " << std::endl;
 
    /////////////////////////////////////////////////////////////////////////
@@ -210,7 +210,7 @@ void fitSparse1D()
    f->SetParameters(10., 5., 2.);
 
    fillSparse(s1,f,5);
-   
+
    cout << "Retrieving the Sparse Data Structure" << endl;
    //ROOT::Fit::SparseData d(s1);
    ROOT::Fit::SparseData d(ndim, xmin, xmax);
@@ -226,8 +226,8 @@ void fitSparse2D()
    TF2* f = new TF2("func2D", gaus2D, xmin[0],xmax[0], xmin[1], xmax[1], 5);
    f->SetParameters(40,5,2,5,1);
 
-   for (int ix=1; ix <= bsize[0]; ++ix) { 
-      for (int iy=1; iy <= bsize[1]; ++iy) { 
+   for (int ix=1; ix <= bsize[0]; ++ix) {
+      for (int iy=1; iy <= bsize[1]; ++iy) {
          double x = s1->GetAxis(0)->GetBinCenter(ix);
          double y = s1->GetAxis(1)->GetBinCenter(iy);
 
@@ -243,8 +243,8 @@ void fitSparse2D()
    ROOT::Fit::BinData bd;
    DoFit(s1, f, bd);
 
-   TH2D* h2 = new TH2D("2D Blanked Hist Fit", "h1-title",  
-                       bsize[0], xmin[0], xmax[0], 
+   TH2D* h2 = new TH2D("2D Blanked Hist Fit", "h1-title",
+                       bsize[0], xmin[0], xmax[0],
                        bsize[1], xmin[1], xmax[1]);
    cout << "Filling second histogram" << endl;
    for ( unsigned int i = 0; i < bd.NPoints(); ++i )
@@ -265,21 +265,21 @@ void fitSparse3D()
 
    THnSparseD* s1 = new THnSparseD("mfND-s1", "s1-Title", ndim, bsize, xmin, xmax);
 
-   TF3* f = new TF3("func3D", gaus3D, 
-                    xmin[0],xmax[0], 
+   TF3* f = new TF3("func3D", gaus3D,
+                    xmin[0],xmax[0],
                     xmin[1],xmax[1],
                     xmin[2],xmax[2],
                     7);
    f->SetParameters(100,5,2,5,1,5,2);
 
-   for (int ix=1; ix <= bsize[0]; ++ix) { 
-      for (int iy=1; iy <= bsize[1]; ++iy) { 
-         for (int iz=1; iz <= bsize[2]; ++iz) { 
+   for (int ix=1; ix <= bsize[0]; ++ix) {
+      for (int iy=1; iy <= bsize[1]; ++iy) {
+         for (int iz=1; iz <= bsize[2]; ++iz) {
             double x = s1->GetAxis(0)->GetBinCenter(ix);
             double y = s1->GetAxis(1)->GetBinCenter(iy);
             double z = s1->GetAxis(2)->GetBinCenter(iz);
             double value = gRandom->Poisson( f->Eval(x,y,z) );
-        
+
             if ( value )
             {
                double points[] = {x,y,z};
@@ -304,7 +304,7 @@ int main(int argc, char** argv)
    fitSparse1D();
    fitSparse2D();
    fitSparse3D();
-  
+
    cout << "C'est fini!" << endl;
 
    if ( __DRAW__ ) {
@@ -312,7 +312,7 @@ int main(int argc, char** argv)
       delete theApp;
       theApp = 0;
    }
-   
+
    return 0;
 }
 
