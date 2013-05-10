@@ -12,6 +12,7 @@
 #ifndef ROOT_TDatime
 #define ROOT_TDatime
 
+#include <string>
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -109,5 +110,11 @@ inline Bool_t operator> (const TDatime &d1, const TDatime &d2)
    { return d1.fDatime > d2.fDatime; }
 inline Bool_t operator>=(const TDatime &d1, const TDatime &d2)
    { return d1.fDatime >= d2.fDatime; }
+
+namespace cling {
+   class ValuePrinterInfo;
+   std::string printValue(const TDatime* const p, const TDatime* const u,
+                          const ValuePrinterInfo& VPI);
+}
 
 #endif
