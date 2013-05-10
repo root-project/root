@@ -11761,17 +11761,22 @@ void TProof::SaveWorkerInfo()
    // Loop over the list of workers (active is any worker not flagged as bad)
    TIter nxa(fSlaves);
    TSlave *wrk = 0;
+   TString logfile;
+   Ssiz_t dash;
    while ((wrk = (TSlave *) nxa())) {
       Int_t status = (fBadSlaves && fBadSlaves->FindObject(wrk)) ? 0 : 1;
+      logfile = wrk->GetWorkDir();
+      dash = logfile.Last('-');
+      if (dash != -1) logfile = logfile(0, dash);
       // Write out record for this worker
       fprintf(fwrk,"%s@%s:%d %d %s %s.log\n",
                    wrk->GetUser(), wrk->GetName(), wrk->GetPort(), status,
-                   wrk->GetOrdinal(), wrk->GetWorkDir());
+                   wrk->GetOrdinal(), logfile.Data());
       // Additional line, if required
       if (addlogext.Length() > 0) {
          fprintf(fwrk,"%s@%s:%d %d %s %s.%s\n",
                      wrk->GetUser(), wrk->GetName(), wrk->GetPort(), status,
-                     wrk->GetOrdinal(), wrk->GetWorkDir(), addlogext.Data());
+                     wrk->GetOrdinal(), logfile.Data(), addlogext.Data());
       }
    }
    
@@ -11779,11 +11784,13 @@ void TProof::SaveWorkerInfo()
    // the overall list)
    TIter nxb(fBadSlaves);
    while ((wrk = (TSlave *) nxb())) {
+      dash = logfile.Last('-');
+      if (dash != -1) logfile = logfile(0, dash);
       if (!fSlaves->FindObject(wrk)) {
          // Write out record for this worker
          fprintf(fwrk,"%s@%s:%d 0 %s %s.log\n",
                      wrk->GetUser(), wrk->GetName(), wrk->GetPort(),
-                     wrk->GetOrdinal(), wrk->GetWorkDir());
+                     wrk->GetOrdinal(), logfile.Data());
       }
    }
 
