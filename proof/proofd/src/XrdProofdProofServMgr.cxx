@@ -1841,9 +1841,10 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
       if (fLogger) fLogger->Bind(in.fLogFile.c_str());
       TRACE(FORK, "log file: "<<in.fLogFile);
 
-      XrdOucString pmsg = "child process ";
+      XrdOucString pmsg = "*** spawned child process ";
       pmsg += (int) getpid();
-      TRACE(FORK, pmsg);
+      pmsg += " ***";
+      TRACE(ALL, pmsg);
 
       // These files belongs to the client
       if (chown(in.fLogFile.c_str(), p->Client()->UI().fUid, p->Client()->UI().fGid) != 0)
