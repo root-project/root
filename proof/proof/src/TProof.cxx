@@ -85,6 +85,7 @@
 #include "TDataSetManagerFile.h"
 #include "TMacro.h"
 #include "TSelector.h"
+#include "TPRegexp.h"
 
 TProof *gProof = 0;
 TVirtualMutex *gProofMutex = 0;
@@ -184,6 +185,17 @@ Int_t TSlaveInfo::Compare(const TObject *obj) const
    if (myord) return -1;
    if (otherord) return 1;
    return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TSlaveInfo::IsEqual(const TObject* obj) const
+{
+   // Used to compare slaveinfos by ordinal.
+
+   if (!obj) return kFALSE;
+   const TSlaveInfo *si = dynamic_cast<const TSlaveInfo*>(obj);
+   if (!si) return kFALSE;
+   return (strcmp(GetOrdinal(), si->GetOrdinal()) == 0);
 }
 
 //______________________________________________________________________________
@@ -651,6 +663,7 @@ TProof::~TProof()
    SafeDelete(fUniqueSlaves);
    SafeDelete(fAllUniqueSlaves);
    SafeDelete(fNonUniqueMasters);
+   SafeDelete(fTerminatedSlaveInfos);
    SafeDelete(fBadSlaves);
    SafeDelete(fAllMonitor);
    SafeDelete(fActiveMonitor);
@@ -846,6 +859,9 @@ Int_t TProof::Init(const char *, const char *conffile,
    fUniqueMonitor    = new TMonitor;
    fAllUniqueMonitor = new TMonitor;
    fCurrentMonitor   = 0;
+
+   fTerminatedSlaveInfos = new TList;
+   fTerminatedSlaveInfos->SetOwner(kTRUE);
 
    fPackageLock             = 0;
    fEnabledPackagesOnClient = 0;
@@ -1251,6 +1267,7 @@ Int_t TProof::AddWorkers(TList *workerList)
    TListIter next(workerList);
    TObject *to;
    TProofNodeInfo *worker;
+   TSlaveInfo *dummysi = new TSlaveInfo();
    while ((to = next())) {
       // Get the next worker from the list
       worker = (TProofNodeInfo *)to;
@@ -1270,6 +1287,11 @@ Int_t TProof::AddWorkers(TList *workerList)
       } else {
          fullord.Form("%s.%d", gProofServ->GetOrdinal(), ord);
       }
+
+      // Remove worker from the list of workers terminated gracefully
+      dummysi->SetOrdinal(fullord);
+      TSlaveInfo *rmsi = (TSlaveInfo *)fTerminatedSlaveInfos->Remove(dummysi);
+      if (rmsi) SafeDelete(rmsi);
 
       // Create worker server
       TString wn(worker->GetNodeName());
@@ -1315,6 +1337,7 @@ Int_t TProof::AddWorkers(TList *workerList)
 
       ord++;
    } //end of the worker loop
+   SafeDelete(dummysi);
 
    // Cleanup
    SafeDelete(workerList);
@@ -1391,6 +1414,9 @@ Int_t TProof::AddWorkers(TList *workerList)
 
    // Cleanup
    delete addedWorkers;
+
+   // Update list of current workers
+   SaveWorkerInfo();
 
    // Inform the client that the number of workers is changed
    if (fDynamicStartup && gProofServ)
@@ -4256,6 +4282,16 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
          fUniqueSlaves->Remove(wrk);
          fAllUniqueSlaves->Remove(wrk);
          fNonUniqueMasters->Remove(wrk);
+
+         // we add it to the list of terminated slave infos instead, so that it
+         // stays available in the .workers persistent file
+         TSlaveInfo *si = new TSlaveInfo(
+            wrk->GetOrdinal(),
+            Form("%s@%s:%d", wrk->GetUser(), wrk->GetName(), wrk->GetPort()),
+            0, "", wrk->GetWorkDir());
+         if (!fTerminatedSlaveInfos->Contains(si)) fTerminatedSlaveInfos->Add(si);
+         else delete si;
+
          delete wrk;
       } else {
          fBadSlaves->Add(wrk);
@@ -11758,6 +11794,9 @@ void TProof::SaveWorkerInfo()
          Info("SaveWorkerInfo", "request for additional line with ext: '%s'",  addlogext.Data());
    }
 
+   // Used to eliminate datetime and PID from workdir to obtain log file name
+   TPMERegexp re("(.*?)-[0-9]+-[0-9]+$");
+
    // Loop over the list of workers (active is any worker not flagged as bad)
    TIter nxa(fSlaves);
    TSlave *wrk = 0;
@@ -11766,8 +11805,8 @@ void TProof::SaveWorkerInfo()
    while ((wrk = (TSlave *) nxa())) {
       Int_t status = (fBadSlaves && fBadSlaves->FindObject(wrk)) ? 0 : 1;
       logfile = wrk->GetWorkDir();
-      dash = logfile.Last('-');
-      if (dash != -1) logfile = logfile(0, dash);
+      if (re.Match(logfile) == 2) logfile = re[1];
+      else continue;  // invalid (should not happen)
       // Write out record for this worker
       fprintf(fwrk,"%s@%s:%d %d %s %s.log\n",
                    wrk->GetUser(), wrk->GetName(), wrk->GetPort(), status,
@@ -11778,20 +11817,35 @@ void TProof::SaveWorkerInfo()
                      wrk->GetUser(), wrk->GetName(), wrk->GetPort(), status,
                      wrk->GetOrdinal(), logfile.Data(), addlogext.Data());
       }
+
    }
-   
+  
    // Loop also over the list of bad workers (if they failed to startup they are not in
-   // the overall list)
+   // the overall list
    TIter nxb(fBadSlaves);
    while ((wrk = (TSlave *) nxb())) {
-      dash = logfile.Last('-');
-      if (dash != -1) logfile = logfile(0, dash);
+      logfile = wrk->GetWorkDir();
+      if (re.Match(logfile) == 2) logfile = re[1];
+      else continue;  // invalid (should not happen)
       if (!fSlaves->FindObject(wrk)) {
          // Write out record for this worker
          fprintf(fwrk,"%s@%s:%d 0 %s %s.log\n",
                      wrk->GetUser(), wrk->GetName(), wrk->GetPort(),
                      wrk->GetOrdinal(), logfile.Data());
       }
+   }
+
+   // Eventually loop over the list of gracefully terminated workers: we'll get
+   // logfiles from those workers as well. They'll be shown with a special
+   // status of "2"
+   TIter nxt(fTerminatedSlaveInfos);
+   TSlaveInfo *sli;
+   while (( sli = (TSlaveInfo *)nxt() )) {
+      logfile = sli->GetDataDir();
+      if (re.Match(logfile) == 2) logfile = re[1];
+      else continue;  // invalid (should not happen)
+      fprintf(fwrk, "%s 2 %s %s.log\n",
+              sli->GetName(), sli->GetOrdinal(), logfile.Data());
    }
 
    // Close file
