@@ -3315,7 +3315,6 @@ void XrdProofdProofServMgr::GetLogFile(XrdProofdProtocol *p, XrdProofdProofServ 
                                        XrdOucString &sessiondir, XrdOucString &logfile)
 {
    XrdOucString host   = fMgr->Host();
-   int          datime = (int)time(0);
    XrdOucString ord    = xps->Ordinal();
    XrdOucString role;
 
@@ -3327,14 +3326,13 @@ void XrdProofdProofServMgr::GetLogFile(XrdProofdProtocol *p, XrdProofdProofServ 
    else role = "master";
 
    // Log file name format:
-   // <sessiondir>/[master|worker]-<ordinal>-<host>-<datetime>.log
+   // <sessiondir>/[master|worker]-<ordinal>-<host>.log
    // No PID is contained
-   XPDFORM(logfile, "%s/%s-%s-%s-%d.log",
+   XPDFORM(logfile, "%s/%s-%s-%s.log",
       sessiondir.c_str(),
       role.c_str(),
       ord.c_str(),
-      host.c_str(),
-      datime
+      host.c_str()
    );
 }
 
