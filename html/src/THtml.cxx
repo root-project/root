@@ -1635,6 +1635,7 @@ void THtml::CreateListOfClasses(const char* filter)
                continue;
             if (classPtr->GetDeclFileName() && (
                  !strcmp(classPtr->GetDeclFileName(), "vector") ||
+                 !strcmp(classPtr->GetDeclFileName(), "string") ||
                  !strcmp(classPtr->GetDeclFileName(), "list") ||
                  !strcmp(classPtr->GetDeclFileName(), "deque") ||
                  !strcmp(classPtr->GetDeclFileName(), "map") ||

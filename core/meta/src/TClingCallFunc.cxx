@@ -991,6 +991,8 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
       BuildTrampolineFunc(MD);
 
    const clang::DeclContext *DC = FD->getDeclContext();
+   while (DC->getDeclKind() == clang::Decl::LinkageSpec)
+      DC = DC->getParent();
    if (DC->isTranslationUnit() || DC->isNamespace() || (MD && MD->isStatic())) {
       // Free function or static member function.
       isMemberFunc = false;
