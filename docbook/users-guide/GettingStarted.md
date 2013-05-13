@@ -121,11 +121,11 @@ Usage: root [-l] [-b] [-n] [-q] [file1.C ... fileN.C]
    -l : do not show the image logo (splash screen)
 ```
 
--   -bROOT session runs in batch mode, without graphics display. This
+-   -b ROOT session runs in batch mode, without graphics display. This
     mode is useful in case one does not want to set the DISPLAY or
     cannot do it for some reason.
 
--   -nusually, launching a ROOT session will execute a logon script and
+-   -n usually, launching a ROOT session will execute a logon script and
     quitting will execute a logoff script. This option prevents the
     execution of these two scripts.
 
@@ -134,7 +134,7 @@ Usage: root [-l] [-b] [-n] [-q] [file1.C ... fileN.C]
     command. Be warned: after finishing the execution of the script,
     ROOT will normally enter a new session.
 
--   -qprocess command line script files and exit.
+-   -q process command line script files and exit.
 
 For example if you would like to run a script `myMacro.C` in the
 background, redirect the output into a file `myMacro.log`, and exit
@@ -250,12 +250,13 @@ Classes and Help menus.
 
 #### File Menu
 
-![](pictures/0300000B.png)
 
 -   *New Canvas*: creates a new canvas window in the current ROOT
     session.
 
 -   *Open...*: popup a dialog to open a file.
+
+![](pictures/0300000B.png)
 
 -   *Close Canvas*: close the canvas window.
 
@@ -276,11 +277,14 @@ Classes and Help menus.
 There is only one active menu entry in the Edit menu. The others menu
 entries will be implemented and will become active in the near future.
 
--   ![](pictures/0300000C.png)*Clear:* delete all objects in the canvas
+-   *Clear:* delete all objects in the canvas
     or in the selected pad according to the selected entry in the
     submenu.
 
 #### View Menu
+
+
+![](pictures/0300000C.png)
 
 -   *Editor*: toggles the view of the editor. If it is selected
     activates and shows up the editor on the left side of the canvas
@@ -409,7 +413,7 @@ toolbar:
 You can create the following graphical objects using the toolbar buttons
 for primitive drawing. Tool tips are provided for helping your choice.
 
-![](pictures/03000018.png)**An Arc or circle**: Click on the center of
+![](pictures/03000018.png) **An Arc or circle**: Click on the center of
 the arc, and then move the mouse. A rubber band circle is shown. Click
 again with the left button to freeze the arc.
 
@@ -417,48 +421,48 @@ again with the left button to freeze the arc.
 point where you want to start the line, then move the mouse and click
 again with the left button to freeze the line.
 
-![](pictures/0300001A.png)**An Arrow:**Click with the left button at the
+![](pictures/0300001A.png) **An Arrow:**Click with the left button at the
 point where you want to start the arrow, then move the mouse and click
 again with the left button to freeze the arrow.
 
-![](pictures/0300001B.png)**A Diamond**: Click with the left button and
+![](pictures/0300001B.png) **A Diamond**: Click with the left button and
 freeze again with the left button. The editor draws a rubber band box to
 suggest the outline of the diamond.
 
-![](pictures/0300001C.png)**An Ellipse**: Proceed like for an arc. You
+![](pictures/0300001C.png) **An Ellipse**: Proceed like for an arc. You
 can grow/shrink the ellipse by pointing to the sensitive points. They
 are highlighted. You can move the ellipse by clicking on the ellipse,
 but not on the sensitive points. If, with the ellipse context menu, you
 have selected a fill area color, you can move a filled-ellipse by
 pointing inside the ellipse and dragging it to its new position.
 
-![](pictures/0300001D.png)**A Pad**: Click with the left button and
+![](pictures/0300001D.png) **A Pad**: Click with the left button and
 freeze again with the left button. The editor draws a rubber band box to
 suggest the outline of the pad.
 
-![](pictures/0300001E.png)**A PaveLabel**: Proceed like for a pad. Type
+![](pictures/0300001E.png) **A PaveLabel**: Proceed like for a pad. Type
 the text of label and finish with a carriage return. The text will
 appear in the box.
 
-![](pictures/0300001F.png)**A Pave Text**: Proceed like for a pad. You
+![](pictures/0300001F.png) **A Pave Text**: Proceed like for a pad. You
 can then click on the **`TPaveText`** object with the right mouse button
 and select the option `InsertText`.
 
-![](pictures/03000020.png)**Paves Text**: Proceed like for a
+![](pictures/03000020.png) **Paves Text**: Proceed like for a
 **`TPaveText`**.
 
-![](pictures/03000021.png)**A Poly Line**: Click with the left button
+![](pictures/03000021.png) **A Poly Line**: Click with the left button
 for the first point, move the moose, click again with the left button
 for a new point. Close the poly-line with a double click. To edit one
 vertex point, pick it with the left button and drag to the new point
 position.
 
-![](pictures/03000022.png)**A Curly Line**: Proceed as for the arrow or
+![](pictures/03000022.png) **A Curly Line**: Proceed as for the arrow or
 line. Once done, click with the third button to change the
 characteristics of the curly line, like transform it to wave, change the
 wavelength, etc.
 
-![](pictures/03000023.png)**A Curly Arc**: Proceed like for an ellipse.
+![](pictures/03000023.png) **A Curly Arc**: Proceed like for an ellipse.
 The first click is located at the position of the center, the second
 click at the position of the arc beginning. Once done, one obtains a
 curly ellipse, for which one can click with the third button to change
@@ -466,7 +470,7 @@ the characteristics, like transform it to wavy, change the wavelength,
 set the minimum and maximum angle to make an arc that is not closed,
 etc.
 
-![](pictures/03000024.png)**A Text/Latex string**: Click with the left
+![](pictures/03000024.png) **A Text/Latex string**: Click with the left
 button where you want to draw the text and then type in the text
 terminated by carriage return. All **`TLatex`** expressions are valid.
 To move the text or formula, point on it keeping the left mouse button
@@ -476,11 +480,11 @@ string, then move the mouse up or down to grow or shrink the text
 respectively. If you position the mouse near the bottom-end of the text,
 you can rotate it.
 
-![](pictures/03000025.png)**A Marker**: Click with the left button where
+![](pictures/03000025.png) **A Marker**: Click with the left button where
 to place the marker. The marker can be modified by using the method
 `SetMarkerStyle()` of **`TSystem`**.
 
-![](pictures/03000026.png)**A Graphical Cut**: Click with the left
+![](pictures/03000026.png) **A Graphical Cut**: Click with the left
 button on each point of a polygon delimiting the selected area. Close
 the cut by double clicking on the last point. A **`TCutG`** object is
 created. It can be used as a selection for a **`TTree`**`::Draw`. You
@@ -523,7 +527,7 @@ canvas in a ROOT session. It can be activated via the context menu
 entries for setting line, fill, text and marker attributes for backward
 compatibility, but there will be a unique entry in the near future.
 
-![](pictures/03000028.png) ![](pictures/03000029.png)
+![](pictures/03000028.png)
 
 The user interface for the following classes is available since ROOT
 v.4.04: **`TAttLine`**, **`TAttFill`**, **`TAttMarker`**,
@@ -532,6 +536,8 @@ v.4.04: **`TAttLine`**, **`TAttFill`**, **`TAttMarker`**,
 **`TPad`**, **`TCanvas`**, **`TPaveStats`**. For more details, see "The
 Graphics Editor", "The User Interface for Histograms", "The User
 Interface for Graphs".
+
+![](pictures/03000029.png)
 
 ### Classes, Methods and Constructors
 
@@ -839,27 +845,27 @@ example, `_*.root_` will match `_aap.root_`, but not `_pipo/aap.root_`.
 
 The escape characters are:
 
--   `\`backslash
+-   `\` backslash
 
--   `b`backspace
+-   `b` backspace
 
--   `f`form feed
+-   `f` form feed
 
--   `n`new line
+-   `n` new line
 
--   `r`carriage return
+-   `r` carriage return
 
--   `s`space
+-   `s` space
 
--   `t`tab
+-   `t` tab
 
--   `e`ASCII ESC character ('033')
+-   `e` ASCII ESC character ('033')
 
--   `DDD`number formed of 1-3 octal digits
+-   `DDD` number formed of 1-3 octal digits
 
--   `xDD`number formed of 1-2 hex digits
+-   `xDD` number formed of 1-2 hex digits
 
--   `^C`C = any letter. Control code
+-   `^C` C = any letter. Control code
 
 The class **`TRegexp`** can be used to create a regular expression from
 an input string. If `wildcard` is true then the input string contains a
@@ -897,25 +903,25 @@ will need to use these.
 
 These are the coding conventions:
 
--   Classes begin with `T`: **`TLine, `**`TTree`****
+-   Classes begin with **`T`**: **`TLine`**, **`TTree`**
 
 -   Non-class types end with **`_t`**: `Int_t`
 
--   Data members begin with**` f`**: `fTree `
+-   Data members begin with **`f`**: `fTree`
 
 -   Member functions begin with a capital: `Loop()`
 
 -   Constants begin with **`k`**: `kInitialSize`, `kRed `
 
--   Global variables begin with**` g`**: ***`gEnv`***
+-   Global variables begin with **`g`**: ***`gEnv`***
 
--   Static data members begin with**` fg`**: `fgTokenClient `
+-   Static data members begin with **`fg`**: `fgTokenClient `
 
--   Enumeration types begin with **`E`**:`EColorLevel`
+-   Enumeration types begin with **`E`**: `EColorLevel`
 
 -   Locals and parameters begin with a lower case: `nbytes`
 
--   Getters and setters begin with **`Get`** and **`Set`**:`SetLast`(),
+-   Getters and setters begin with **`Get`** and **`Set`**: `SetLast`(),
     `GetFirst`()
 
 ### Machine Independent Types
@@ -928,7 +934,7 @@ variables, use these pre defined types in ROOT:
 
 -   **`Char_t`** Signed Character 1 byte
 
--   **`UC``har_t`** Unsigned Character 1 byte
+-   **`UChar_t`** Unsigned Character 1 byte
 
 -   **`Short_t`** Signed Short integer 2 bytes
 
@@ -940,16 +946,16 @@ variables, use these pre defined types in ROOT:
 
 -   **`Long64_t`** Portable signed long integer 8 bytes
 
--   **`ULong64_t `** Portable unsigned long integer 8 bytes
+-   **`ULong64_t`** Portable unsigned long integer 8 bytes
 
 -   **`Float_t`** Float 4 bytes
 
--   **`Double_t `**Float 8 bytes
+-   **`Double_t`** Float 8 bytes
 
 -   **`Double32_t`** Double 8 bytes in memory, written as a Float 4
     bytes
 
--   **`Bool_t `** Boolean (0=false, 1=true)
+-   **`Bool_t`** Boolean (0=false, 1=true)
 
 If you do not want to save a variable on disk, you can use `int` or
 `Int_t`, the result will be the same and the interpreter or the compiler
@@ -992,9 +998,13 @@ Role of TObject".
 
 
 ROOT has a set of global variables that apply to the session. For
-example, ***`gDirectory`*** always holds the current directory, and
-***`gStyle`*** holds the current style. All global variables begin with
-"*g*" followed by a capital letter.
+example, 
+***`gDirectory`*** always holds the current directory, and ***`gStyle`*** 
+holds the current style.
+
+All global variables begin with "*g*" followed by a capital letter.
+
+
 
 ### gROOT
 
@@ -1033,7 +1043,7 @@ methods supported for a collection. For example, to find a canvas called
 `c1 `you can do`:`
 
 ``` {.cpp}
-root[]gROOT->GetListOfCanvases()->FindObject("c1")
+root[] gROOT->GetListOfCanvases()->FindObject("c1")
 ```
 
 This returns a pointer to a **`TObject`**, and before you can use it as
@@ -1075,12 +1085,12 @@ default, it points to a **`TRandom``3`** object, based on the
 "Mersenne-Twister" generator. This generator is very fast and has very
 good random proprieties (a very long period of 10^600^). Setting the
 seed to 0 implies that the seed will be uniquely generated using the
-**`T``UUID`**. Any other value will be used as a constant. The following
+**`TUUID`**. Any other value will be used as a constant. The following
 basic random distributions are provided: `Rndm()` or `Uniform(min,max)`,
 `Gaus(mean,sigma)`, `Exp(tau)`, `BreitWigner(mean,sigma)`,
 `Landau(mean,sigma)`, `Poisson(mean)`, `Binomial(ntot,prob)`. You can
 customize your ROOT session by replacing the random number generator.
-You can delete ***`gRandom `***and recreate it with your own. For
+You can delete ***`gRandom `*** and recreate it with your own. For
 example:
 
 ``` {.cpp}
@@ -1088,7 +1098,7 @@ root[] delete gRandom;
 root[] gRandom = new TRandom2(0); //seed=0
 ```
 
-**`TRandom``2`** is another generator, which is also very fast and uses
+**`TRandom2`** is another generator, which is also very fast and uses
 only three words for its state.
 
 ### gEnv
@@ -1283,17 +1293,23 @@ below:
 
 ``` {.cpp}
 // this connects the file hbookconverted.root
-root[] TFile f("hbookconverted.root"); 
+root[] TFile f("hbookconverted.root");
+
+// display histogram named h10 (was HBBOK id 10)
+root[] h10.Draw();
+
+// display column "var" from ntuple h30 
+root[] h30.Draw("var");
 ```
 
 You can also use the ROOT browser (see **`TBrowser`**) to inspect this
 file.
 
 The chapter on trees explains how to read a tree. ROOT includes a
-function `TTree::MakeClass` to generate automatically the code for a
+function **`TTree`**`::MakeClass` to generate automatically the code for a
 skeleton analysis function. See "Example Analysis".
 
 In case one of the ntuple columns has a variable length (e.g.
-`px(ntrack)`), `h.Draw("px")` will histogram the `px `column for all
+`px(ntrack)`), `h.Draw("px")` will histogram the `px` column for all
 tracks in the same histogram. Use the script quoted above to generate
 the skeleton function and create/fill the relevant histogram yourself.
