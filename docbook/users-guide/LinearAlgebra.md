@@ -389,7 +389,7 @@ enough.
 |                         |                                    |                    |
 |                         | `C.Mult(A,B)`                      |                    |
 +-------------------------+------------------------------------+--------------------+
-|                         | `TMatrixD(A,TMatrixD::kMult,B)` | `constructor of `  |
+|                         | `TMatrixD(A,TMatrixD::kMult,B)`    | `constructor of `  |
 |                         |                                    | $A.B$              |
 +-------------------------+------------------------------------+--------------------+
 |                         | `TMatrixD(A,`                      | `constructor of `  |
