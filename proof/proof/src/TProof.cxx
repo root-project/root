@@ -569,6 +569,7 @@ void TProof::InitMembers()
 
    fProtocol = -1;
    fSlaves = 0;
+   fTerminatedSlaveInfos = 0;
    fBadSlaves = 0;
    fAllMonitor = 0;
    fDataReady = kFALSE;
@@ -11801,7 +11802,6 @@ void TProof::SaveWorkerInfo()
    TIter nxa(fSlaves);
    TSlave *wrk = 0;
    TString logfile;
-   Ssiz_t dash;
    while ((wrk = (TSlave *) nxa())) {
       Int_t status = (fBadSlaves && fBadSlaves->FindObject(wrk)) ? 0 : 1;
       logfile = wrk->GetWorkDir();
