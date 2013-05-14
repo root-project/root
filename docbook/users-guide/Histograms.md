@@ -1,22 +1,22 @@
 # Histograms
 
 
-This chapter covers the functionality of the histogram classes. We begin
-with an overview of the histogram classes, after which we provide
-instructions and examples on the histogram features.
+This chapter covers the functionality of the histogram classes. We
+begin with an overview of the histogram classes, after which we
+provide instructions and examples on the histogram features.
 
 We have put this chapter ahead of the graphics chapter so that you can
-begin working with histograms as soon as possible. Some of the examples
-have graphics commands that may look unfamiliar to you. These are
-covered in the chapter "Input/Output".
+begin working with histograms as soon as possible. Some of the
+examples have graphics commands that may look unfamiliar to you. These
+are covered in the chapter "Input/Output".
 
 ## The Histogram Classes
 
 
 ROOT supports histograms up to three dimensions. Separate concrete
 classes are provided for one-dimensional, two-dimensional and
-three-dimensional classes. The histogram classes are split into further
-categories, depending on the set of possible bin values:
+three-dimensional classes. The histogram classes are split into
+further categories, depending on the set of possible bin values:
 
 -   **`TH1C, TH2C and TH3C`** contain one byte per bin (maximum bin
     content = 255)
@@ -73,7 +73,7 @@ created by:
 
 ``` {.cpp}
    // using various constructors
-   TH1* h1 = new TH1I("h1", "h1 title", 100, 0.0, 4.0); 
+   TH1* h1 = new TH1I("h1", "h1 title", 100, 0.0, 4.0);
    TH2* h2 = new TH2F("h2", "h2 title", 40, 0.0, 2.0, 30, -1.5, 3.5);
    TH3* h3 = new TH3D("h3", "h3 title", 80, 0.0, 1.0, 100, -2.0, 2.0,
                        50, 0.0, 3.0);
@@ -93,76 +93,77 @@ created by:
 The histogram classes provide a variety of ways to construct a
 histogram, but the most common way is to provide the name and title of
 histogram and for each dimension: the number of bins, the minimum x
-(lower edge of the first bin) and the maximum x (upper edge of the last
-bin).
+(lower edge of the first bin) and the maximum x (upper edge of the
+last bin).
 
 ``` {.cpp}
    TH2* h = new TH2D(
-      /* name */ "h2",  
-      /* title */ "Hist with constant bin width", 
-      /* X-dimension */ 100, 0.0, 4.0, 
+      /* name */ "h2",
+      /* title */ "Hist with constant bin width",
+      /* X-dimension */ 100, 0.0, 4.0,
       /* Y-dimension */ 200, -3.0, 1.5);
 ```
 
 When employing his constructor, you will create a histogram with
 constant (fixed) bin width on each axis. For the example above, the
-interval [0.0, 4.0] is divided into 100 bins of the same width w X = 4.0
-- 0.0 100 = 0.04 for the X axis (dimension). Likewise, for the Y axis
-(dimension), we have bins of equal width w Y = 1.5 - (-3.0) 200 =
-0.0225.
+interval `[0.0, 4.0]` is divided into 100 bins of the same width `w`
+`X = 4.0 - 0.0 100 = 0.04` for the X axis (dimension). Likewise, for
+the Y axis (dimension), we have bins of equal width `w`
+`Y = 1.5 - (-3.0) 200 = 0.0225`.
 
-If you want to create histograms with variable bin widths, ROOT provides
-another constructor suited for this purpose. Instead of passing the data
-interval and the number of bins, you have to pass an array (single or
-double precision) of bin edges. When the histogram has `n` bins, then
-there are `n+1` distinct edges, so the array you pass must be of size
-`n+1`.
+If you want to create histograms with variable bin widths, ROOT
+provides another constructor suited for this purpose. Instead of
+passing the data interval and the number of bins, you have to pass an
+array (single or double precision) of bin edges. When the histogram
+has `n` bins, then there are `n+1` distinct edges, so the array you
+pass must be of size `n+1`.
 
 ``` {.cpp}
    const Int_t NBINS = 5;
-   Double_t edges[NBINS + 1] = {0.0, 0.2, 0.3, 0.6, 0.8, 1.0}; 
+   Double_t edges[NBINS + 1] = {0.0, 0.2, 0.3, 0.6, 0.8, 1.0};
    // Bin 1 corresponds to range [0.0, 0.2]
    // Bin 2 corresponds to range [0.2, 0.3] etc...
 
    TH1* h = new TH1D(
-      /* name */ "h1", 
+      /* name */ "h1",
       /* title */ "Hist with variable bin width",
-      /* number of bins */ NBINS, 
+      /* number of bins */ NBINS,
       /* edge array */ edges
     );
 ```
 
 Each histogram object contains three **`TAxis`** objects: `fXaxis` ,
 `fYaxis,` and `fZaxis`, but for one-dimensional histograms only the
-X-axis is relevant, while for two-dimensional histograms the X-axis and
-Y-axis are relevant. See the class **` TAxis`** for a description of all
-the access methods. The bin edges are always stored internally in double
-precision.
+X-axis is relevant, while for two-dimensional histograms the X-axis
+and Y-axis are relevant. See the class **` TAxis`** for a description
+of all the access methods. The bin edges are always stored internally
+in double precision.
 
 You can examine the actual edges / limits of the histogram bins by
 accessing the axis parameters, like in the example below:
 
 ``` {.cpp}
    const Int_t XBINS = 5; const Int_t YBINS = 5;
-   Double_t xEdges[XBINS + 1] = {0.0, 0.2, 0.3, 0.6, 0.8, 1.0}; 
+   Double_t xEdges[XBINS + 1] = {0.0, 0.2, 0.3, 0.6, 0.8, 1.0};
    Double_t yEdges[YBINS + 1] = {-1.0, -0.4, -0.2, 0.5, 0.7, 1.0};
 
    TH2* h = new TH2D("h2", "h2", XBINS, xEdges, YBINS, yEdges);
    TAxis* xAxis = h->GetXaxis(); TAxis* yAxis = h->GetYaxis();
 
-   std::cout << "Third bin on Y-dimension: " << std::endl; // corresponds to [-0.2, 0.5]
-   std::cout << "\tLower edge: " << yAxis->GetBinLowEdge(3) << std::endl; 
-   std::cout << "\tCenter: " << yAxis->GetBinCenter(3) << std::endl;
-   std::cout << "\tUpper edge: " << yAxis->GetBinUpEdge(3) << std::endl;
+   cout << "Third bin on Y-dimension: " << endl; // corresponds to
+                                                 // [-0.2, 0.5]
+   cout << "\tLower edge: " << yAxis->GetBinLowEdge(3) << endl;
+   cout << "\tCenter: " << yAxis->GetBinCenter(3) << endl;
+   cout << "\tUpper edge: " << yAxis->GetBinUpEdge(3) << endl;
 ```
 
 ## Bin Numbering
 
 
-All histogram types support fixed or variable bin sizes. 2-D histograms
-may have fixed size bins along X and variable size bins along Y or
-vice-versa. The functions to fill, manipulate, draw, or access
-histograms are identical in both cases.
+All histogram types support fixed or variable bin sizes. 2-D
+histograms may have fixed size bins along X and variable size bins
+along Y or vice-versa. The functions to fill, manipulate, draw, or
+access histograms are identical in both cases.
 
 ### Convention
 
@@ -173,27 +174,28 @@ Bin\# 0 contains the underflow.
 
 Bin\# 1 contains the first bin with low-edge ( `xlow` INCLUDED).
 
-The second to last bin (bin\# `nbins`) contains the upper-edge (`xup` EXCLUDED).
+The second to last bin (bin\# `nbins`) contains the upper-edge
+(`xup` EXCLUDED).
 
 The Last bin (bin\# `nbins+1)` contains the overflow.
 
-In case of 2-D or 3-D histograms, a "global bin" number is defined. For
-example, assuming a 3-D histogram `h` with `binx`, `biny`, `binz`, the function 
-returns a global/linear bin number.
+In case of 2-D or 3-D histograms, a "global bin" number is defined.
+For example, assuming a 3-D histogram `h` with `binx`, `biny`, `binz`,
+the function  returns a global/linear bin number.
 
 ``` {.cpp}
    Int_t bin = h->GetBin(binx, biny, binz);
 ```
 
-This global bin is useful to access the bin information independently of
-the dimension.
+This global bin is useful to access the bin information independently
+of the dimension.
 
 ### Re-binning
 
 
-At any time, a histogram can be re-binned via the **`TH1`**`::Rebin()` method.
-It returns a new histogram with the re-binned contents. If bin errors were 
-stored, they are recomputed during the re-binning.
+At any time, a histogram can be re-binned via the **`TH1`**`::Rebin()`
+method. It returns a new histogram with the re-binned contents. If bin
+errors were stored, they are recomputed during the re-binning.
 
 ## Filling Histograms
 
@@ -206,17 +208,18 @@ A histogram is typically filled with statements like:
    h2->Fill(x,y);
    h2->Fill(x,y,w);
    h3->Fill(x,y,z);
-   h3->Fill(x,y,z,w);     
+   h3->Fill(x,y,z,w);
 ```
 
-The `Fill` method computes the bin number corresponding to the given x,
-y or z argument and increments this bin by the given weight. The
-`Fill()` method returns the bin number for 1-D histograms or global bin
-number for 2-D and 3-D histograms. If **`TH1`**`::Sumw2()` has been
-called before filling, the sum of squares is also stored. One can
-increment a bin number directly by calling **`TH1`**`::AddBinContent()`,
-replace the existing content via **`TH1`**`::SetBinContent()` , and access 
-the bin content of a given bin via **`TH1`**`::GetBinContent()` .
+The `Fill` method computes the bin number corresponding to the given
+x, y or z argument and increments this bin by the given weight. The
+`Fill()` method returns the bin number for 1-D histograms or global
+bin number for 2-D and 3-D histograms. If **`TH1`**`::Sumw2()` has
+been called before filling, the sum of squares is also stored. One can
+increment a bin number directly by calling
+**`TH1`**`::AddBinContent()`, replace the existing content via
+**`TH1`**`::SetBinContent()` , and access the bin content of a given
+bin via **`TH1`**`::GetBinContent()` .
 
 ``` {.cpp}
    Double_t binContent = h->GetBinContent(bin);
@@ -225,57 +228,58 @@ the bin content of a given bin via **`TH1`**`::GetBinContent()` .
 ### Automatic Re-binning Option
 
 
-By default, the number of bins is computed using the range of the axis.
-You can change this to re-bin automatically by setting the automatic
-re-binning option:
+By default, the number of bins is computed using the range of the
+axis. You can change this to re-bin automatically by setting the
+automatic re-binning option:
 
 ``` {.cpp}
-   h->SetBit(TH1::kCanRebin);        
+   h->SetBit(TH1::kCanRebin);
 ```
 
-Once this is set, the `Fill()` method will automatically extend the axis
-range to accommodate the new value specified in the `Fill()` argument.
-The used method is to double the bin size until the new value fits in
-the range, merging bins two by two. The **`TTree`** `::Draw()` method
-extensively uses this automatic binning option when drawing histograms of
-variables in **`TTree`** with an unknown range. The automatic binning option is
-supported for 1-D, 2-D and 3-D histograms. During filling, some statistics
-parameters are incremented to compute the mean value and root mean square 
-with the maximum precision. In case of histograms of type **`TH1C`**, 
-**`TH1S`**, **`TH2C`**, **`TH2S`**, **`TH3C`**, **`TH3S`** a check is made
-that the bin contents do not exceed the maximum positive capacity 
-(127 or 65 535). Histograms of all types may have positive or/and negative
-bin contents.
+Once this is set, the `Fill()` method will automatically extend the
+axis range to accommodate the new value specified in the `Fill()`
+argument. The used method is to double the bin size until the new
+value fits in the range, merging bins two by two. The
+**`TTree`**`::Draw()` method extensively uses this automatic binning
+option when drawing histograms of variables in **`TTree`** with an
+unknown range. The automatic binning option is supported for 1-D, 2-D
+and 3-D histograms. During filling, some statistics parameters are
+incremented to compute the mean value and root mean square with the
+maximum precision. In case of histograms of type **`TH1C`**,
+**`TH1S`**, **`TH2C`**, **`TH2S`**, **`TH3C`**, **`TH3S`** a check is
+made that the bin contents do not exceed the maximum positive capacity
+(127 or 65 535). Histograms of all types may have positive or/and
+negative bin contents.
 
 ## Random Numbers and Histograms
 
 
 **`TH1`**`::FillRandom()` can be used to randomly fill a histogram
-using the contents of an existing **`TF1`** function or another **`TH1`** 
-histogram (for all dimensions). For example, the following two statements 
-create and fill a histogram 10 000 times with a default Gaussian distribution 
-of `mean` `0` and `sigma` `1` :
+using the contents of an existing **`TF1`** function or another
+**`TH1`** histogram (for all dimensions). For example, the following
+two statements create and fill a histogram 10 000 times with a default
+Gaussian distribution of `mean` `0` and `sigma` `1` :
 
 ``` {.cpp}
 root[] TH1F h1("h1","Histo from a Gaussian",100,-3,3);
 root[] h1.FillRandom("gaus",10000);
 ```
 
-**`TH1`**`::GetRandom()` can be used to get a random number distributed 
-according the contents of a histogram. To fill a histogram following the 
-distribution in an existing histogram you can use the second signature of
-**`TH1`**`::FillRandom()`. Next code snipped assumes that `h` is an existing 
-histogram (**`TH1`** ).
+**`TH1`**`::GetRandom()` can be used to get a random number
+distributed according the contents of a histogram. To fill a histogram
+following the distribution in an existing histogram you can use the
+second signature of **`TH1`**`::FillRandom()`. Next code snipped
+assumes that `h` is an existing histogram (**`TH1`** ).
 
 ``` {.cpp}
 root[] TH1F h2("h2","Histo from existing histo",100,-3,3);
-root[] h2.FillRandom(&h1, 1000);  
-        
+root[] h2.FillRandom(&h1, 1000);
 ```
 
 The distribution contained in the histogram `h1` ( **`TH1`** ) is
 integrated over the channel contents. It is normalized to one. The
-second parameter (1000) indicates how many random numbers are generated.
+second parameter (1000) indicates how many random numbers are
+generated.
 
 Getting 1 random number implies:
 
@@ -294,9 +298,9 @@ void getrandomh() {
    TH1F *source = new TH1F("source","source hist",100,-3,3);
    source->FillRandom("gaus",1000);
    TH1F *final = new TH1F("final","final hist",100,-3,3);
-            
+
              // continued...
-            
+
    for (Int_t i=0;i<10000;i++) {
       final->Fill(source->GetRandom());
    }
@@ -324,74 +328,78 @@ histograms:
 -   Multiplications and divisions are supported in the same way as
     additions.
 
--   The `Add` , `Divide` and ` Multiply` methods also exist to add, divide
-    or multiply a histogram by a function.
+-   The `Add` , `Divide` and ` Multiply` methods also exist to add,
+    divide or multiply a histogram by a function.
 
-Histograms objects (not pointers) **`TH1F`** `h1` can be multiplied by a
-constant using:
+Histograms objects (not pointers) **`TH1F`** `h1` can be multiplied by
+a constant using:
 
 ``` {.cpp}
-h1.Scale(const)
+   h1.Scale(const)
 ```
 
 A new histogram can be created without changing the original one by
 doing:
 
 ``` {.cpp}
-TH1F h3 = 8*h1;
+   TH1F h3 = 8*h1;
 ```
 
 To multiply two histogram objects and put the result in a 3rd one do:
 
 ``` {.cpp}
-TH1F h3 = h1*h2;
+   TH1F h3 = h1*h2;
 ```
 
-The same operations can be done with histogram pointers **`TH1F`** `*h1`, 
-**`*h2`** following way:
+The same operations can be done with histogram pointers
+**`TH1F`** `*h1`, **`*h2`** following way:
 
 ``` {.cpp}
-h1->Scale(const) TH1F h3 = 8*(*h1); TH1F h3 = (*h1)*(*h2);
+   h1->Scale(const) TH1F h3 = 8*(*h1); TH1F h3 = (*h1)*(*h2);
 ```
 
-Of course, the **`TH1`** methods `Add` , `Multiply` and `Divide` can be used 
-instead of these operators.
+Of course, the **`TH1`** methods `Add` , `Multiply` and `Divide` can
+be used instead of these operators.
 
-If a histogram has associated error bars ( **`TH1`** `::Sumw2()` has been 
-called), the resulting error bars are also computed assuming independent 
-histograms. In case of divisions, binomial errors are also supported.
+If a histogram has associated error bars ( **`TH1`**`::Sumw2()` has
+been called), the resulting error bars are also computed assuming
+independent histograms. In case of divisions, binomial errors are also
+supported.
 
 ## Projections
 
 
 One can make:
 
--   a 1-D projection of a 2-D histogram or profile. See **`TH2`**`::ProfileX`,
-    **`TH2`**`::ProfileY, `**`TProfile`**`::ProjectionX`, 
+-   a 1-D projection of a 2-D histogram or profile. See
+    **`TH2`**`::ProfileX`,
+    **`TH2`**`::ProfileY, `**`TProfile`**`::ProjectionX`,
     **`TProfile2D`**`::ProjectionXY`, **`TH2`**`::ProjectionX`,
     **`TH2`**`::ProjectionY` .
 
--   a 1-D, 2-D or profile out of a 3-D histogram see **`TH3`** `::ProjectionZ`,
-    **`TH3`**`::Project3D`.
+-   a 1-D, 2-D or profile out of a 3-D histogram see
+    **`TH3`**`::ProjectionZ`, **`TH3`**`::Project3D`.
 
-These projections can be fit via: **`TH2`** `::FitSlicesX`, 
-**`TH2`** `::FitSlicesY`, **`TH3`** `::FitSlicesZ`.
+These projections can be fit via: **`TH2`**`::FitSlicesX`,
+**`TH2`**`::FitSlicesY`, **`TH3`**`::FitSlicesZ`.
 
 ## Drawing Histograms
 
 
-When you call the `Draw` method of a histogram ( **`TH1`**` ::Draw` ) for
-the first time, it creates a **`THistPainter`** object and saves a pointer
-to painter as a data member of the histogram. The **`THistPainter`** class
-specializes in the drawing of histograms. It allows logarithmic axes (x, y, z)
-when the CONT drawing option is using. The **`THistPainter`** class is
-separated from the histogram so that one can have histograms without the
-graphics overhead, for example in a batch program. The choice to give each
-histogram has its own painter rather than a central singleton painter, allows 
-two histograms to be drawn in two threads without overwriting the painter's 
-values. When a displayed histogram is filled again, you do not have to call 
-the `Draw` method again. The image is refreshed the next time the pad is 
-updated. A pad is updated after one of these three actions:
+When you call the `Draw` method of a histogram ( **`TH1`**` ::Draw` )
+for the first time, it creates a **`THistPainter`** object and saves a
+pointer to painter as a data member of the histogram. The
+**`THistPainter`** class specializes in the drawing of histograms. It
+allows logarithmic axes (x, y, z) when the CONT drawing option is
+using. The **`THistPainter`** class is separated from the histogram so
+that one can have histograms without the graphics overhead, for
+example in a batch program. The choice to give each histogram has its
+own painter rather than a central singleton painter, allows two
+histograms to be drawn in two threads without overwriting the
+painter's values. When a displayed histogram is filled again, you do
+not have to call the `Draw` method again. The image is refreshed the
+next time the pad is updated. A pad is updated after one of these
+three actions:
 
 -   A carriage control on the ROOT command line
 
@@ -399,39 +407,41 @@ updated. A pad is updated after one of these three actions:
 
 -   A call to **`TPad`**`::Update()`
 
-By default, the **`TH1`** `::Draw` clears the pad before drawing the
-new image of the histogram. You can use the `"SAME"` option to leave the
-previous display in tact and superimpose the new histogram. The same
-histogram can be drawn with different graphics options in different pads. 
-When a displayed histogram is deleted, its image is automatically removed 
-from the pad. To create a copy of the histogram when drawing it, you can use
-**`TH1`**`::DrawClone()`. This will clone the histogram and allow
-you to change and delete the original one without affecting the clone.
-You can use **`TH1`**`::DrawNormalized()` to draw a normalized copy of a
-histogram.
+By default, the **`TH1`**`::Draw` clears the pad before drawing the
+new image of the histogram. You can use the `"SAME"` option to leave
+thevprevious display in tact and superimpose the new histogram. The
+same histogram can be drawn with different graphics options in
+different pads. When a displayed histogram is deleted, its image is
+automatically removed from the pad. To create a copy of the histogram
+when drawing it, you can use **`TH1`**`::DrawClone()`. This will clone
+the histogram and allow you to change and delete the original one
+without affecting the clone. You can use **`TH1`**`::DrawNormalized()`
+to draw a normalized copy of a histogram.
 
 ``` {.cpp}
 TH1 *TH1::DrawNormalized(Option_t *option,Double_t norm) const
 ```
 
-A clone of this histogram is normalized to norm and drawn with option. A
-pointer to the normalized histogram is returned. The contents of the
+A clone of this histogram is normalized to norm and drawn with option.
+A pointer to the normalized histogram is returned. The contents of the
 histogram copy are scaled such that the new sum of weights (excluding
 under and overflow) is equal to `norm` .
 
-Note that the returned normalized histogram is not added to the list of
-histograms in the current directory in memory. It is the user's
-responsibility to delete this histogram. The `kCanDelete` bit is set for the 
-returned object. If a pad containing this copy is cleared, the histogram will
-be automatically deleted. See "Draw Options" for the list of options.
+Note that the returned normalized histogram is not added to the list
+of histograms in the current directory in memory. It is the user's
+responsibility to delete this histogram. The `kCanDelete` bit is set
+for the returned object. If a pad containing this copy is cleared, the
+histogram will be automatically deleted. See "Draw Options" for the
+list of options.
 
 ### Setting the Style
 
 
-Histograms use the current style ***`gStyle`***, which is the global object of
-class **`TStyle`**. To change the current style for histograms, the
-**`TStyle`** class provides a multitude of methods ranging from setting
-the fill color to the axis tick marks. Here are a few examples:
+Histograms use the current style ***`gStyle`***, which is the global
+object of class **`TStyle`**. To change the current style for
+histograms, the **`TStyle`** class provides a multitude of methods
+ranging from setting the fill color to the axis tick marks. Here are
+a few examples:
 
 ``` {.cpp}
    void SetHistFillColor(Color_t color = 1)
@@ -441,18 +451,19 @@ the fill color to the axis tick marks. Here are a few examples:
    void SetHistLineWidth(Width_t width = 1)
 ```
 
-When you change the current style and would like to propagate the change
-to a previously created histogram you can call **`TH1`**`::UseCurrentStyle()`.
-You will need to call `UseCurrentStyle()` on each histogram. When reading
-many histograms from a file and you wish to update them to the current
-style, you can use ***`gROOT`***`::ForceStyle` and all histograms read after
-this call will be updated to use the current style. See "Graphics and the
-Graphical User Interface". When a histogram is automatically created as
-a result of a **`TTree`**`::Draw` , the style of the histogram is
-inherited from the tree attributes and the current style is ignored. The
-tree attributes are the ones set in the current **`TStyle`** at the time
-the tree was created. You can change the existing tree to use the
-current style, by calling **`TTree`**`::UseCurrentStyle()` .
+When you change the current style and would like to propagate the
+change to a previously created histogram you can call
+**`TH1`**`::UseCurrentStyle()`. You will need to call
+`UseCurrentStyle()` on each histogram. When reading many histograms
+from a file and you wish to update them to the current style, you can
+use ***`gROOT`***`::ForceStyle` and all histograms read after this
+call will be updated to use the current style. See "Graphics and the
+Graphical User Interface". When a histogram is automatically created
+as a result of a **`TTree`**`::Draw` , the style of the histogram is
+inherited from the tree attributes and the current style is ignored.
+The tree attributes are the ones set in the current **`TStyle`** at
+the time the tree was created. You can change the existing tree to use
+the current style, by calling **`TTree`**`::UseCurrentStyle()` .
 
 ### Draw Options
 
@@ -462,8 +473,8 @@ The following draw options are supported on all histogram classes:
 -   "`AXIS`": Draw only the axis.
 
 -   "`HIST`": When a histogram has errors, it is visualized by default
-    with error bars. To visualize it without errors use `HIST` together
-    with the required option (e.g. "`HIST SAME C`").
+    with error bars. To visualize it without errors use `HIST`
+    together with the required option (e.g. "`HIST SAME C`").
 
 -   "`SAME`": Superimpose on previous picture in the same pad.
 
@@ -479,13 +490,15 @@ The following draw options are supported on all histogram classes:
 
 -   "`LEGO1`": Draw a lego plot with hidden surface removal.
 
--   "`LEGO2`": Draw a lego plot using colors to show the cell contents.
+-   "`LEGO2`": Draw a lego plot using colors to show the cell
+               contents.
 
 -   "`SURF`": Draw a surface plot with hidden line removal.
 
 -   "`SURF1`": Draw a surface plot with hidden surface removal.
 
--   "`SURF2`": Draw a surface plot using colors to show the cell contents.
+-   "`SURF2`": Draw a surface plot using colors to show the cell
+               contents.
 
 -   "`SURF3`": Same as `SURF` with a contour view on the top.
 
@@ -512,15 +525,16 @@ The following options are supported for 1-D histogram classes:
 
 -   "`E2`": Draw the error bars with rectangles
 
--   "`E3`": Draw a fill area through the end points of the vertical error bars
+-   "`E3`": Draw a fill area through the end points of the vertical
+            error bars
 
 -   "`E4`": Draw a smoothed filled area through the end points of the
-            error bars
+    error bars
 
 -   "`L`": Draw a line through the bin contents
 
--   "`P`": Draw a (poly)marker at each bin using the histogram's current marker
-    style
+-   "`P`": Draw a (poly)marker at each bin using the histogram's
+    current marker style
 
 -   "`P0`": Draw current marker at each bin including empty bins
 
@@ -530,21 +544,24 @@ The following options are supported for 1-D histogram classes:
 
 -   "`LF2`": Draw histogram as with option "`L`" but with a fill
     area. Note that "`L`" also draws a fill area if the histogram fill
-    color is set but the fill area corresponds to the histogram contour.
+    color is set but the fill area corresponds to the histogram
+    contour.
 
 -   "`9`": Force histogram to be drawn in high resolution mode. By
-    default, the histogram is drawn in low resolution in case the number
-    of bins is greater than the number of pixels in the current pad
+    default, the histogram is drawn in low resolution in case the
+    number of bins is greater than the number of pixels in the current
+    pad
 
--   "`][`": Draw histogram without the vertical lines for the first and
-    the last bin. Use it when superposing many histograms on the same
-    picture.
+-   "`][`": Draw histogram without the vertical lines for the first
+    and the last bin. Use it when superposing many histograms on the
+    same picture.
 
 The following options are supported for 2-D histogram classes:
 
 -   "`ARR`": Arrow mode. Shows gradient between adjacent cells
 
--   "`BOX`": Draw a box for each cell with surface proportional to contents
+-   "`BOX`": Draw a box for each cell with surface proportional to
+    contents
 
 -   "`BOX1`": A sunken button is drawn for negative values, a raised
     one for positive values
@@ -576,9 +593,11 @@ The following options are supported for 2-D histogram classes:
 
 -   "`LIST`": Generate a list of **`TGraph`** objects for each contour
 
--   "`FB`": To be used with `LEGO` or `SURFACE` , suppress the Front-Box
+-   "`FB`": To be used with `LEGO` or `SURFACE` , suppress the
+    Front-Box
 
--   "`BB`": To be used with `LEGO` or `SURFACE` , suppress the Back-Box
+-   "`BB`": To be used with `LEGO` or `SURFACE` , suppress the
+    Back-Box
 
 -   "`A`": To be used with `LEGO` or `SURFACE` , suppress the axis
 
@@ -594,16 +613,17 @@ The following options are supported for 2-D histogram classes:
 -   "`[cutg]`": Draw only the sub-range selected by the **`TCutG`**
     name "`cutg`".
 
--   "`Z`": The "`Z`" option can be specified with the options: `BOX`, `COL`,
-    `CONT`, `SURF`, and `LEGO` to display the color palette with an axis
-    indicating the value of the corresponding color on the right side of
-    the picture.
+-   "`Z`": The "`Z`" option can be specified with the options: `BOX`,
+    `COL`, `CONT`, `SURF`, and `LEGO` to display the color palette
+    with an axis indicating the value of the corresponding color on
+    the right side ofthe picture.
 
 The following options are supported for 3-D histogram classes:
 
 -   " " : Draw a 3D scatter plot.
 
--   "`BOX`": Draw a box for each cell with volume proportional to contents
+-   "`BOX`": Draw a box for each cell with volume proportional to
+    contents
 
 -   "`LEGO`": Same as "`BOX`"
 
@@ -623,12 +643,13 @@ if `h` is a histogram pointer:
   h->Draw("e1same");
 ```
 
-The options are not case sensitive. The options `BOX` , `COL` and `COLZ` use
-the color palette defined in the current style (see **`TStyle`**`::SetPalette`).
-The options `CONT` , `SURF` , and `LEGO` have by default 20 equidistant contour
-levels, you can change the number of levels with **`TH1`** `::SetContour`. You
-can also set the default drawing option with **`TH1`** `::SetOption` . To see
-the current option use **`TH1`**`::GetOption` . For example:
+The options are not case sensitive. The options `BOX` , `COL` and
+`COLZ` use the color palette defined in the current style (see
+**`TStyle`**`::SetPalette`). The options `CONT` , `SURF` , and `LEGO`
+have by default 20 equidistant contour levels, you can change the
+number of levels with **`TH1`**`::SetContour`. You can also set the
+default drawing option with **`TH1`**`::SetOption` . To see the
+current option use **`TH1`**`::GetOption` . For example:
 
 ``` {.cpp}
    h->SetOption("lego");
@@ -638,57 +659,62 @@ the current option use **`TH1`**`::GetOption` . For example:
 
 #### The SCATter Plot Option
 
-By default, 2D histograms are drawn as scatter plots. For each cell `(i,j)`
-a number of points proportional to the cell content are drawn. A maximum of 500
-points per cell are drawn. If the maximum is above 500 contents are normalized to 500.
+By default, 2D histograms are drawn as scatter plots. For each cell
+`(i,j)` a number of points proportional to the cell content are drawn.
+A maximum of 500 points per cell are drawn. If the maximum is above
+500 contents are normalized to 500.
 
 #### The ARRow Option
 
-The `ARR` option shows the gradient between adjacent cells. For each cell
-`(i,j)` an arrow is drawn. The orientation of the arrow follows the cell
-gradient.
+The `ARR` option shows the gradient between adjacent cells. For each
+cell `(i,j)` an arrow is drawn. The orientation of the arrow follows
+the cell gradient.
 
 #### The BOX Option
 
 For each cell `(i,j)` a box is drawn with surface proportional to
 contents. The size of the box is proportional to the absolute value of
-the cell contents. The cells with negative contents are drawn with an X
-on top of the boxes. With option `BOX1` a button is drawn for each cell with
-surface proportional to contents' absolute value. A sunken button is
-drawn for negative values, a raised one for positive values.
+the cell contents. The cells with negative contents are drawn with an
+X on top of the boxes. With option `BOX1` a button is drawn for each
+cell with surface proportional to contents' absolute value. A sunken
+button is drawn for negative values, a raised one for positive values.
 
 #### The ERRor Bars Options
 
 -   `"E"` Default. Draw only error bars, without markers
 
--   `"E0"` Draw also bins with 0 contents (turn off the symbols clipping).
+-   `"E0"` Draw also bins with 0 contents (turn off the symbols
+    clipping).
 
 -   `"E1"` Draw small lines at the end of error bars
 
 -   `"E2"` Draw error rectangles
 
--   `"E3"` Draw a fill area through the end points of vertical error bars
+-   `"E3"` Draw a fill area through the end points of vertical error
+    bars
 
--   `"E4"` Draw a smoothed filled area through the end points of error bars
+-   `"E4"` Draw a smoothed filled area through the end points of error
+    bars
 
 ![The "E1" bars' option](pictures/0300002F.png)
 
-Note that for all options, the line and fill attributes of the histogram
-are used for the errors or errors contours. Use `gStyle->SetErrorX(dx)` to
-control the size of the error along x. The parameter `dx` is a percentage of
-bin width for errors along `X`. Set `dx=0` to suppress the error along `X`. 
-Use `gStyle->SetEndErrorSize(np)` to control the size of the lines at the end
-of the error bars (when option 1 is used). By default `np=1` (`np` represents
-the number of pixels).
+Note that for all options, the line and fill attributes of the
+histogram are used for the errors or errors contours. Use
+`gStyle->SetErrorX(dx)` to control the size of the error along x. The
+parameter `dx` is a percentage of bin width for errors along `X`. Set
+`dx=0` to suppress the error along `X`. Use
+`gStyle->SetEndErrorSize(np)` to control the size of the lines at the
+end of the error bars (when option 1 is used). By default `np=1`
+(`np` represents the number of pixels).
 
 #### The Color Option
 
 For each cell `(i,j)` a box is drawn with a color proportional to the
-cell content. The color table used is defined in the current style 
-(***`gStyle`*** ). The color palette in **`TStyle`** can be modified with
-**`TStyle`**`::SetPalette` .
+cell content. The color table used is defined in the current style
+(***`gStyle`*** ). The color palette in **`TStyle`** can be modified
+with **`TStyle`**`::SetPalette` .
 
-![Different draw options](pictures/02000030.jpg)
+![Different draw options](pictures/02000030.png)
 
 #### The TEXT Option
 
@@ -701,7 +727,7 @@ are:
 
 -   Text color= marker color
 
-![The TEXT option](pictures/02000031.jpg)
+![The TEXT option](pictures/02000031.png)
 
 #### The CONTour Options
 
@@ -709,36 +735,43 @@ The following contour options are supported:
 
 -   `"CONT":` Draw a contour plot (same as CONT0)
 
--   `"CONT0":` Draw a contour plot using surface colors to distinguish contours
+-   `"CONT0":` Draw a contour plot using surface colors to distinguish
+    contours
 
--   `"CONT1":` Draw a contour plot using line styles to distinguish contours
+-   `"CONT1":` Draw a contour plot using line styles to distinguish
+    contours
 
--   `"CONT2":` Draw a contour plot using the same line style for all contours
+-   `"CONT2":` Draw a contour plot using the same line style for all
+    contours
 
 -   `"CONT3":` Draw a contour plot using fill area colors
 
--   `"CONT4":`Draw a contour plot using surface colors (SURF2 option at
-    theta = 0); see also options "`AITOFF`", "`MERCATOR`", etc. below
+-   `"CONT4":`Draw a contour plot using surface colors (SURF2 option
+    at theta = 0); see also options "`AITOFF`", "`MERCATOR`", etc.
+    below
 
 -   `"CONT5":` Use Delaunay triangles to compute the contours
 
-![Different contour options](pictures/02000032.jpg)
+![Different contour options](pictures/02000032.png)
 
-The default number of contour levels is 20 equidistant levels. It can be
-changed with **`TH1`** `::SetContour`. When option "`LIST`" is specified
-together with option "`CONT`", all points used for contour drawing, are
-saved in the **`TGraph`** object and are accessible in the following way:
+The default number of contour levels is 20 equidistant levels. It can
+be changed with **`TH1`**`::SetContour`. When option "`LIST`" is
+specified together with option "`CONT`", all points used for contour
+drawing, are saved in the **`TGraph`** object and are accessible in
+the following way:
 
 ``` {.cpp}
-   TObjArray *contours = gROOT->GetListOfSpecials()->FindObject("contours");
+   TObjArray *contours =
+      gROOT->GetListOfSpecials()->FindObject("contours");
    Int_t ncontours = contours->GetSize(); TList *list =
    (TList*)contours->At(i);
 ```
 
-Where "`i`" is a contour number and list contains a list of **`TGraph`**
-objects. For one given contour, more than one disjoint poly-line may be
-generated. The **`TGraph`** numbers per contour are given by `list->GetSize()`.
-Here we show how to access the first graph in the list.
+Where "`i`" is a contour number and list contains a list of
+**`TGraph`** objects. For one given contour, more than one disjoint
+poly-line may be generated. The **`TGraph`** numbers per contour are
+given by `list->GetSize()`. Here we show how to access the first graph
+in the list.
 
 ``` {.cpp}
    TGraph *gr1 = (TGraph*)list->First();
@@ -759,10 +792,10 @@ following picture:
 
 #### The LEGO Options
 
-In a lego plot, the cell contents are drawn as 3D boxes, with the height
-of the box proportional to the cell content.
+In a lego plot, the cell contents are drawn as 3D boxes, with the
+height of the box proportional to the cell content.
 
-!["LEGO" and "SURF" options](pictures/02000034.jpg)
+!["LEGO" and "SURF" options](pictures/02000034.png)
 
 -   "`LEGO`": Draw a lego plot with hidden line removal
 
@@ -783,9 +816,10 @@ systems are `CYL` , `POL` , `SPH` , and `PSR` .
 -   "`SPH`": Spherical coordinates: x-coordinate is mapped on the
     latitude; y-coordinate - on the longitude.
 
--   "`PSR`": PseudoRapidity/Phi coordinates: x-coordinate is mapped on Phi.
+-   "`PSR`": PseudoRapidity/Phi coordinates: x-coordinate is mapped on
+    Phi.
 
-With **`TStyle`** `::SetPalette` the color palette can be changed. We
+With **`TStyle`**`::SetPalette` the color palette can be changed. We
 suggest you use palette 1 with the call:
 
 ``` {.cpp}
@@ -806,93 +840,81 @@ We suggest you use palette 1 with the call:
    gStyle->SetPalette(1);
 ```
 
-![Different surface options](pictures/02000035.jpg)
+![Different surface options](pictures/02000035.png)
 
 -   "`SURF`": Draw a surface plot with hidden line removal
 
 -   "`SURF1`": Draw a surface plot with hidden surface removal
 
--   "`SURF2`": Draw a surface plot using colors to show the cell contents
+-   "`SURF2`": Draw a surface plot using colors to show the cell
+    contents
 
 -   "`SURF3`": Same as `SURF` with a contour view on the top
 
 -   "`SURF4`": Draw a surface plot using `Gouraud` shading
 
--   "`SURF5`": Same as `SURF3` but only the colored contour is drawn. Used
-    with options `CYL` , `SPH` or `PSR` it allows to draw colored contours on
-    a sphere, a cylinder or in a pseudo rapidly space. In Cartesian or polar
-    coordinates, option `SURF3` is used.
+-   "`SURF5`": Same as `SURF3` but only the colored contour is drawn.
+    Used with options `CYL` , `SPH` or `PSR` it allows to draw colored
+    contours on a sphere, a cylinder or in a pseudo rapidly space. In
+    Cartesian or polar coordinates, option `SURF3` is used.
 
 #### The BAR Options
 
-When the option "`bar`" or "`hbar`" is specified, a bar chart is drawn.
+When the option "`bar`" or "`hbar`" is specified, a bar chart is
+drawn.
 
 The options for vertical bar chart are "`bar`", "`bar0`", "`
 bar1`", "`bar2`", "`bar3`", "`bar4`".
 
-![Vertical bar charts](pictures/02000036.jpg)
+![Vertical bar charts](pictures/02000036.png)
 
 -   The bar is filled with the histogram fill color.
-
 -   The left side of the bar is drawn with a light fill color.
-
 -   The right side of the bar is drawn with a dark fill color.
+-   The percentage of the bar drawn with either the light or dark
+    color is:
+    -   0 per cent for option `"bar"` or `"bar0"`
+    -   10 per cent for option `"bar1"`
+    -   20 per cent for option `"bar2"`
+    -   30 per cent for option `"bar3"`
+    -   40 per cent for option `"bar4"`
 
--   The percentage of the bar drawn with either the light or dark color
-    is:
+Use **`TH1`**`::SetBarWidth()` to control the bar width (default is
+the bin width). Use **`TH1`**`::SetBarOffset` to control the bar
+offset (default is 0). See the example
+`$ROOTSYS/tutorials/hist/hbars.C`
 
--   0 per cent for option `"bar"` or `"bar0"`
-
--   10 per cent for option `"bar1"`
-
--   20 per cent for option `"bar2"`
-
--   30 per cent for option `"bar3"`
-
--   40 per cent for option `"bar4"`
-
-Use **`TH1`** `::SetBarWidth()` to control the bar width (default is the bin
-width). Use **`TH1`**`::SetBarOffset` to control the bar offset (default is 0).
-See the example `$ROOTSYS/tutorials/hist/hbars.C`
-
-The options for the horizontal bar chart are "`hbar`", "`hbar0`", "`hbar1`",
-"`hbar2`", "`hbar3`", and "`hbar4`".
+The options for the horizontal bar chart are "`hbar`", "`hbar0`",
+"`hbar1`", "`hbar2`", "`hbar3`", and "`hbar4`".
 
 -   A horizontal bar is drawn for each bin.
-
 -   The bar is filled with the histogram fill color.
-
 -   The bottom side of the bar is drawn with a light fill color.
-
 -   The top side of the bar is drawn with a dark fill color.
+-   The percentage of the bar drawn with either the light or dark
+    color is:
+    -   0 per cent for option "`hbar`" or "`hbar0`"
+    -   10 per cent for option "`hbar1`"
+    -   20 per cent for option "`hbar2`"
+    -   30 per cent for option "`hbar3`"
+    -   40 per cent for option "`hbar4`"
 
--   The percentage of the bar drawn with either the light or dark color is:
+Use **`TH1`**`::SetBarWidth` to control the bar width (default is the
+bin width). Use **`TH1`**`::SetBarOffset` to control the bar offset
+(default is 0). See the example `$ROOTSYS/tutorials/hist/hbars.C`
 
--   0 per cent for option "`hbar`" or "`hbar0`"
-
--   10 per cent for option "`hbar1`"
-
--   20 per cent for option "`hbar2`"
-
--   30 per cent for option "`hbar3`"
-
--   40 per cent for option "`hbar4`"
-
-Use **`TH1`**`::SetBarWidth` to control the bar width (default is the bin
-width). Use **`TH1`**`::SetBarOffset` to control the bar offset (default is 0).
-See the example `$ROOTSYS/tutorials/hist/hbars.C`
-
-![Horizontal bar charts](pictures/02000037.jpg)
+![Horizontal bar charts](pictures/02000037.png)
 
 #### The Z Option: Display the Color Palette on the Pad
 
-The "`Z`" option can be specified with the options: `COL`, `CONT`, `SURF`, and
-`LEGO` to display the color palette with an axis indicating the value of the
-corresponding color on the right side of the picture. If there is not enough
-space on the right side, you can increase the size of the right margin by
-calling **`TPad`**`::SetRightMargin()`. The attributes used to display the
-palette axis values are taken from the Z axis of the object. For example, you
-can set the labels size on the palette axis with:
+The "`Z`" option can be specified with the options: `COL`, `CONT`,
+`SURF`, and `LEGO` to display the color palette with an axis
+indicating the value of the corresponding color on the right side of
+the picture. If there is not enough space on the right side, you can
+increase the size of the right margin by calling
+**`TPad`**`::SetRightMargin()`. The attributes used to display the
+palette axis values are taken from the Z axis of the object. For
+example, you can set the labels size on the palette axis with:
 
 ``` {.cpp}
    hist->GetZaxis()->SetLabelSize();
@@ -908,43 +930,37 @@ You can set the color palette with **`TStyle`**`::SetPalette` , e.g.
 
 For example, the option `COL` draws a 2-D histogram with cells
 represented by a box filled with a color index, which is a function of
-the cell content. If the cell content is N, the color index used will be
-the color number in `colors[N]` . If the maximum cell content is greater
-than `ncolors` , all cell contents are scaled to `ncolors` . If `ncolors<=0`,
-a default palette of 50 colors is defined. This palette is recommended for pads,
-labels. It defines:
+the cell content. If the cell content is N, the color index used will
+be the color number in `colors[N]` . If the maximum cell content is
+greater than `ncolors` , all cell contents are scaled to `ncolors`. If
+`ncolors<=0`, a default palette of 50 colors is defined. This palette
+is recommended for pads, labels. It defines:
 
 -   Index 0 to 9: shades of gray
-
 -   Index 10 to 19:shades of brown
-
 -   Index 20 to 29:shades of blue
-
 -   Index 30 to 39: shades of red
-
 -   Index 40 to 49:basic colors
 
 The color numbers specified in this palette can be viewed by selecting
 the menu entry Colors in the View menu of the canvas menu bar. The
-color's red, green, and blue values can be changed via **`TColor`**`::SetRGB`. 
+color's red, green, and blue values can be changed via
+**`TColor`**`::SetRGB`.
 
-If `ncolors == 1 && colors == 0`, then a Pretty Palette with a spectrum 
-violet to red is created with 50 colors. That's the default rain bow palette.
+If `ncolors == 1 && colors == 0`, then a Pretty Palette with a
+spectrum violet to red is created with 50 colors. That's the default
+rain bow palette.
 
-Other prefined palettes with 255 colors are available when `colors == 0`.
-The following value of `ncolors` (with `colors = 0`) give access to:
+Other prefined palettes with 255 colors are available when
+`colors == 0`. The following value of `ncolors` (with `colors = 0`)
+give access to:
 
 - `ncolors = 51` : Deep Sea palette.
-
 - `ncolors = 52` : Grey Scale palette.
-
 - `ncolors = 53` : Dark Body Radiator palette.
-
-- `ncolors = 54` : Two-color hue palette palette. (dark blue through neutral
-   gray to bright yellow)
-  
+- `ncolors = 54` : Two-color hue palette palette. (dark blue through
+   neutral gray to bright yellow)
 - `ncolors = 55` : Rain Bow palette.
-
 - `ncolors = 56` : Inverted Dark Body Radiator palette.
 
 The color numbers specified in the palette can be viewed by selecting
@@ -952,94 +968,115 @@ the item "colors" in the "VIEW" menu of the canvas toolbar.
 The color parameters can be changed via `TColor::SetRGB`.
 
 Note that when drawing a 2D histogram `h2` with the option "`COL`" or
-"`COLZ`" or with any "`CONT`" options using the color map, the number of colors
-used is defined by the number of contours `n` specified with: `h2->SetContour(n)`
+"`COLZ`" or with any "`CONT`" options using the color map, the number
+of colors used is defined by the number of contours `n` specified
+with: `h2->SetContour(n)`
 
 #### TPaletteAxis
 
 A **`TPaletteAxis`**object is used to display
 the color palette when drawing 2D histograms. The object is
-automatically created when drawing a 2D histogram when the option "`z`" is
-specified. It is added to the histogram list of functions. It can be retrieved
-and its attributes can be changed with:
+automatically created when drawing a 2D histogram when the option
+"`z`" is specified. It is added to the histogram list of functions.
+It can be retrieved and its attributes can be changed with:
 
 ``` {.cpp}
    TPaletteAxis *palette=(TPaletteAxis*)h->FindObject("palette");
 ```
 
-The palette can be interactively moved and resized. The context menu can
-be used to set the axis attributes. It is possible to select a range on
-the axis, to set the min/max in z.
+The palette can be interactively moved and resized. The context menu
+can be used to set the axis attributes. It is possible to select a
+range on the axis, to set the min/max in z.
 
 #### The SPEC Option
 
-The "SPEC" option offers a large set of options/attributes to visualize
-2D histograms thanks to "operators" following the "SPEC" keyword. For
-example, to draw the 2-D histogram `h2` using all default attributes
-except the viewing angles, one can do:
+The "SPEC" option offers a large set of options/attributes to
+visualize 2D histograms thanks to "operators" following the "SPEC"
+keyword. For example, to draw the 2-D histogram `h2` using all default
+attributes except the viewing angles, one can do:
 
 ``` {.cpp}
    h2->Draw("SPEC a(30,30,0)");
 ```
 
-The operators' names are case unsensitive (i.e. one can use "a" or "A")
-and their parameters are seperated by coma ",". Operators can be put in
-any order in the option and must be separated by a space " ". No space
-characters should be put in an operator. All the available operators are
-described below.
+The operators' names are case unsensitive (i.e. one can use "a" or
+"A") and their parameters are seperated by coma ",". Operators can be
+put in any order in the option and must be separated by a space " ".
+No space characters should be put in an operator. All the available
+operators are described below.
 
-The way how a 2D histogram will be painted is controled by 2 parameters:
-the "Display modes groups" and the "Display Modes". "Display modes
-groups" can take the following values:
+The way how a 2D histogram will be painted is controled by two
+parameters: the "Display modes groups" and the "Display Modes".
+"Display modes groups" can take the following values:
 
 -   0 = Simple - simple display modes using one color only
-
--   1 = Light - the shading is carried out according to the position of
-    the fictive light source
-
+-   1 = Light - the shading is carried out according to the position
+    of the fictive light source
 -   2 = Height - the shading is carried out according to the channel
     contents
-
 -   3 = LightHeight - combination of two previous shading algorithms
     (one can control the weight between both algorithms).
 
 "Display modes" can take the following values:
 
-1 = Points2 = Grid3 = Contours4 = Bars5 = LinesX6 = LinesY
+- 1 = Points
+- 2 = Grid
+- 3 = Contours
+- 4 = Bars
+- 5 = LinesX
+- 6 = LinesY
+- 7 = BarsX
+- 8 = BarsY
+- 9 = Needles
+- 10 = Surface
+- 11 = Triangles
 
-7 = BarsX8 = BarsY9 = Needles10 = Surface11 = Triangles
-
-These parameters can be set by using the "`dm`" operator in the option.
+These parameters can be set by using the "`dm`" operator in the
+option.
 
 ``` {.cpp}
    h2->Draw("SPEC dm(1,2)");
 ```
 
 The above example draws the histogram using the "Light Display mode
-group" and the "Grid Display mode". The following table summarizes all
+group" and the "Grid Display mode". The following tables summarize all
 the possible combinations of both groups:
 
-+-----------+------+----+--------+----+------+------+-----+-----+-------+-------+----------+
-|           |Points|Grid|Contours|Bars|LinesX|LinesY|BarsX|BarsY|Needles|Surface|Triangles |
-+-----------+------+----+--------+----+------+------+-----+-----+-------+-------+----------+
-|Simple     | x    | x  | x      |x   |x     |x     |x    |x    |x      |-      |x         |
-+-----------+------+----+--------+----+------+------+-----+-----+-------+-------+----------+
-|Light      | x    | x  | -      |-   |x     |x     |-    |-    |-      |x      |x         |
-+-----------+------+----+--------+----+------+------+-----+-----+-------+-------+----------+
-|Height     | x    | x  | x      |x   |x     |x     |x    |x    |-      |x      |x         |
-+-----------+------+----+--------+----+------+------+-----+-----+-------+-------+----------+
-|LightHeight| x    | x  | -      |-   |x     |x     |-    |-    |-      |x      |x         |
-+-----------+------+----+--------+----+------+------+-----+-----+-------+-------+----------+
++-----------+------+----+--------+----+------+------+
+|           |Points|Grid|Contours|Bars|LinesX|LinesY|
++-----------+------+----+--------+----+------+------+
+|Simple     | x    | x  | x      |x   |x     |x     |
++-----------+------+----+--------+----+------+------+
+|Light      | x    | x  | -      |-   |x     |x     |
++-----------+------+----+--------+----+------+------+
+|Height     | x    | x  | x      |x   |x     |x     |
++-----------+------+----+--------+----+------+------+
+|LightHeight| x    | x  | -      |-   |x     |x     |
++-----------+------+----+--------+----+------+------+
 
-The "Pen Attributes" can be changed using `pa(color,style,width)`. Next example
-sets line color to 2, line type to 1 and line width to 2. Note that if `pa()` 
-is not specified, the histogram line attributes are used:
+
++------------+-----+-----+-------+-------+----------+
+|            |BarsX|BarsY|Needles|Surface|Triangles |
++------------+-----+-----+-------+-------+----------+
+|Simple      |x    |x    |x      |-      |x         |
++------------+-----+-----+-------+-------+----------+
+|Light       |-    |-    |-      |x      |x         |
++------------+-----+-----+-------+-------+----------+
+|Height      |x    |x    |-      |x      |x         |
++------------+-----+-----+-------+-------+----------+
+|LightHeight |-    |-    |-      |x      |x         |
++------------+-----+-----+-------+-------+----------+
+
+The "Pen Attributes" can be changed using `pa(color,style,width)`.
+Next example sets line color to 2, line type to 1 and line width to 2.
+Note that if `pa()` is not specified, the histogram line attributes
+are used:
 
 ``` {.cpp}
    h2->Draw("SPEC dm(1,2) pa(2,1,2)");
 ```
 
-The number of "Nodes" can be changed with `n(nodesx,nodesy)` . Example:
+The number of "Nodes" can be changed with `n(nodesx,nodesy)`. Example:
 
 ``` {.cpp}
    h2->Draw("SPEC n(40,40)");
@@ -1052,37 +1089,44 @@ to change the density of displayed channels. Only the channels
 coinciding with given nodes are displayed.
 
 The visualization "Angles" can be changed with "`a(alpha,beta,view)`":
-"`alpha`" is the angle between the bottom horizontal screen line and the
-displayed space on the right side of the picture and "`beta`" on the left
-side, respectively. One can rotate the 3-d space around the vertical axis
-using the "`view`" parameter. Allowed values are 0, 90, 180 and 270 degrees.
+"`alpha`" is the angle between the bottom horizontal screen line and
+the displayed space on the right side of the picture and "`beta`" on
+the left side, respectively. One can rotate the 3-d space around the
+vertical axis using the "`view`" parameter. Allowed values are 0, 90,
+180 and 270 degrees.
 
 ``` {.cpp}
    h2->Draw("SPEC n(40,40) dm(0,1) a(30,30,0)");
 ```
 
 The operator "`zs(scale)`" changes the scale of the Z-axis. The
-possible values are: 0 = Linear (default), 1 = Log, 2 = Sqrt. If
-`gPad->SetLogz()` has been set, the log scale on Z-axis is set
-automatically, i.e. there is no need for using the `zs()` operator. Note
-that the X and Y axis are always linear.
+possible values are:
 
-The operator "`ci(r,g,b`)" defines the colors increments (`r`, `g` and `b` are 
-floats). For sophisticated shading (Light, Height and LightHeight Display Modes
-Groups) the color palette starts from the basic pen color (see `pa()` function).
-There is a predefined number of color levels (256). Color in every level is
-calculated by adding the increments of the `r` , `g` , `b` components to the
-previous level. Using this function one can change the color increments between
-two neighboring color levels. The function does not apply on the Simple
+- 0 = Linear (default),
+- 1 = Log,
+- 2 = Sqrt.
+
+If `gPad->SetLogz()` has been set, the log scale on Z-axis is set
+automatically, i.e. there is no need for using the `zs()` operator.
+Note that the X and Y axis are always linear.
+
+The operator "`ci(r,g,b`)" defines the colors increments (`r`, `g`
+and `b` are floats). For sophisticated shading (Light, Height and
+LightHeight Display Modes Groups) the color palette starts from the
+basic pen color (see `pa()` function). There is a predefined number of
+color levels (256). Color in every level is calculated by adding the
+increments of the `r` , `g` , `b` components to the previous level.
+Using this function one can change the color increments between two
+neighboring color levels. The function does not apply on the Simple
 Display Modes Group. The default values are: (1,1,1).
 
 The operator "`ca(color_algorithm)`" allows to choose the Color
 Algorithm. To define the colors one can use one of the following color
 algorithms (RGB, CMY, CIE, YIQ, HVS models). When the level of a
 component reaches the limit value one can choose either smooth
-transition (by decreasing the limit value) or a sharp modulo transition
-(continuing with 0 value). This allows various visual effects. One can
-choose from the following set of the algorithms:
+transition (by decreasing the limit value) or a sharp modulo
+transition (continuing with 0 value). This allows various visual
+effects. One can choose from the following set of the algorithms:
 
 - 0 = RGB Smooth,
 - 1 = RGB Modulo,
@@ -1104,28 +1148,37 @@ value is 0. Example choosing CMY Modulo to paint the 2D histogram:
 
 The operator "`lp(x,y,z)`" sets the light position. In Light and
 LightHeight display modes groups the color palette is calculated
-according to the fictive light source position in 3-d space. Using this
-function one can change the source's position and thus achieve various
-graphical effects. This function does not apply for Simple and Height
-display modes groups. Default is: `lp(1000,1000,100)` .
+according to the fictive light source position in 3-d space. Using
+this function one can change the source's position and thus achieve
+various graphical effects. This function does not apply for Simple and
+Height display modes groups. Default is: `lp(1000,1000,100)` .
 
 The operator "`s(shading,shadow)`" allows to set the shading. The
 surface picture is composed of triangles. The edges of the neighboring
 triangles can be smoothed (shaded). The shadow can be painted as well.
-The function does not apply on Simple display modes group. The possible
-values for shading are: 0 = Not Shaded, 1 = Shaded. The possible values
-for shadow are: 0 = Shadows are not painted, 1 = Shadows are painted.
+The function does not apply on Simple display modes group. The
+possible values for shading are:
+
+- 0 = Not Shaded,
+- 1 = Shaded.
+
+The possible values for shadow are:
+
+- 0 = Shadows are not painted,
+- 1 = Shadows are painted.
+
 Default values: `s(1,0)` .
 
 The operator "`b(bezier)`" sets the Bezier smoothing. For Simple
 display modes group and for Grid, LinesX and LinesY display modes one
-can smooth data using Bezier smoothing algorithm. The function does not
-apply on other display modes groups and display modes. Possible values
-are: 0 = No bezier smoothing, 1 = Bezier smoothing. Default value is: `b(0)`.
+can smooth data using Bezier smoothing algorithm. The function does
+not apply on other display modes groups and display modes. Possible
+values are: 0 = No bezier smoothing, 1 = Bezier smoothing. Default
+value is: `b(0)`.
 
 The operator "`cw(width)`" sets the contour width. This function
-applies only on for the Contours display mode. One can change the width
-between horizontal slices and thus their density. Default value:
+applies only on for the Contours display mode. One can change the
+width between horizontal slices and thus their density. Default value:
 `cw(50)` .
 
 The operator "`lhw(weight)`" sets the light height weight. For
@@ -1135,12 +1188,12 @@ groups. Default value is `lhw(0.5)` .
 
 The operator "`cm(enable,color,width,height,style)`" allows to
 draw a marker on each node. In addition to the surface drawn using any
-above given algorithm one can display channel marks. One can control the
-color as well as the width, height (in pixels) and the style of the
-marks. The parameter `enable` can be set to 0 = Channel marks are not
-drawn or 1 = Channel marks drawn. The possible styles are:
+above given algorithm one can display channel marks. One can control
+the color as well as the width, height (in pixels) and the style of
+the marks. The parameter `enable` can be set to 0 = Channel marks are
+not drawn or 1 = Channel marks drawn. The possible styles are:
 
-- 1 = Dot, 
+- 1 = Dot,
 - 2 = Cross,
 - 3 = Star,
 - 4 = Rectangle,
@@ -1149,9 +1202,11 @@ drawn or 1 = Channel marks drawn. The possible styles are:
 - 7 = Triangle.
 
 The operator "`cg(enable,color)`" channel grid. In addition to the
-surface drawn using any above given algorithm one can display grid using
-the color parameter. The parameter enable can be set to: 0 = Grid not
-drawn, 1 = Grid drawn.
+surface drawn using any above given algorithm one can display grid
+using the color parameter. The parameter enable can be set to:
+
+- 0 = Grid not drawn,
+- 1 = Grid drawn.
 
 See the example in `$ROOTSYS/tutorials/spectrum/spectrumpainter.C` .
 
@@ -1159,17 +1214,19 @@ See the example in `$ROOTSYS/tutorials/spectrum/spectrumpainter.C` .
 
 #### 3-D Histograms
 
-By default a 3D scatter plot is drawn. If the "BOX" option is specified,
-a 3D box with a volume proportional to the cell content is drawn.
+By default a 3D scatter plot is drawn. If the "BOX" option is
+specified, a 3D box with a volume proportional to the cell content is
+drawn.
 
 ### Drawing a Sub-range of a 2-D Histogram
 
 
-![The picture produced by fit2a.C macro](pictures/02000039.jpg)
+![The picture produced by fit2a.C macro](pictures/02000039.png)
 
 Using a **`TCutG`** object, it is possible to draw a 2D
-histogram sub-range. One must create a graphical cut (mouse or C++) and
-specify the name of the cut between "`[`" and "`]`" in the Draw option.
+histogram sub-range. One must create a graphical cut (mouse or C++)
+and specify the name of the cut between "`[`" and "`]`" in the Draw
+option.
 
 For example, with a **`TCutG`**named "`cutg`", one can call:
 
@@ -1177,7 +1234,8 @@ For example, with a **`TCutG`**named "`cutg`", one can call:
    myhist->Draw("surf1 [cutg]");
 ```
 
-Or, assuming two graphical cuts with name "`cut1`" and "`cut2`", one can do:
+Or, assuming two graphical cuts with name "`cut1`" and "`cut2`", one
+can do:
 
 ``` {.cpp}
    h1.Draw("lego");
@@ -1188,21 +1246,20 @@ The second `Draw` will superimpose on top of the first lego plot a
 subset of `h2`using the "`surf`" option with:
 
 -   all the bins inside `cut1`
-
 -   all the bins outside `cut2`
 
-Up to 16 cuts may be specified in the cut string delimited by `"[..]"` .
-Currently only the following drawing options are sensitive to the cuts
-option: `col` , `box` , `scat` , `hist` , `lego` , `surf` and
-`cartesian` coordinates only. See a complete example in the tutorial
-`$ROOTSYS/tutorials/fit/fit2a.C` .
+Up to 16 cuts may be specified in the cut string delimited by 
+`"[..]"`. Currently only the following drawing options are sensitive
+to the cuts option: `col` , `box` , `scat` , `hist` , `lego` , `surf`
+and `cartesian` coordinates only. See a complete example in the
+tutorial `$ROOTSYS/tutorials/fit/fit2a.C` .
 
 ### Superimposing Histograms with Different Scales
 
 
-The following script creates two histograms; the second histogram is the
-bins integral of the first one. It shows a procedure to draw the two
-histograms in the same pad and it draws the scale of the second
+The following script creates two histograms; the second histogram is
+the bins integral of the first one. It shows a procedure to draw the
+two histograms in the same pad and it draws the scale of the second
 histogram using a new vertical axis on the right side.
 
 ![Superimposed histograms with different scales](pictures/0300003A.png)
@@ -1244,72 +1301,50 @@ void twoscales() {
 
 By default, a histogram drawing includes the statistics box. Use
 **`TH1`**`::SetStats(kFALSE)` to eliminate the statistics box. If the
-statistics box is drawn, `gStyle->SetOptStat(mode)` allow you to select the
-type of displayed information `.` The parameter `mode` has up to nine digits
-that can be set OFF (0) or ON as follows:
+statistics box is drawn, `gStyle->SetOptStat(mode)` allow you to
+select the type of displayed information `.` The parameter `mode` has
+up to nine digits that can be set OFF (0) or ON as follows:
 
 `mode = ksiourmen` (`default =000001111`)
 
 -   `n` = 1 the name of histogram is printed
-
 -   `e` = 1 the number of entries
-
 -   `m` = 1 the mean value
-
 -   `m` = 2 the mean and mean error values
-
 -   `r` = 1 the root mean square (RMS)
-
 -   `r` = 2 the RMS and RMS error
-
 -   `u` = 1 the number of underflows
-
 -   `o` = 1 the number of overflows
-
 -   `i` = 1 the integral of bins
-
 -   `s` = 1 the skewness
-
 -   `s` = 2 the skewness and the skewness error
-
 -   `k` = 1 the kurtosis
-
 -   `k` = 2 the kurtosis and the kurtosis error
 
-Never call `SetOptStat(0001111)` , but `SetOptStat(1111)` , because `0001111`
-will be taken as an octal number.
+Never call `SetOptStat(0001111)` , but `SetOptStat(1111)` , because
+`0001111` will be taken as an octal number.
 
-The method **`TStyle`** `::SetOptStat(Option_t*option)` can also be called with
-a character string as a parameter. The parameter `option` can contain:
+The method **`TStyle`**`::SetOptStat(Option_t*option)` can also be
+called with a character string as a parameter. The parameter `option`
+can contain:
 
 -   `n` for printing the name of histogram
-
 -   `e` the number of entries
-
 -   `m` the mean value
-
 -   `M` the mean and mean error values
-
 -   `r` the root mean square (RMS)
-
 -   `R` the RMS and RMS error
-
 -   `u` the number of underflows
-
 -   `o` the number of overflows
-
 -   `i` the integral of bins
-
 -   `s` the skewness
-
 -   `S` the skewness and the skewness error
-
 -   `k` the kurtosis
-
 -   `K` the kurtosis and the kurtosis error
 
 ``` {.cpp}
-   gStyle->SetOptStat("ne");   // prints the histogram name and number of entries
+   gStyle->SetOptStat("ne");   // prints the histogram name and number
+                               // of entries
    gStyle->SetOptStat("n");    // prints the histogram name
    gStyle->SetOptStat("nemr"); // the default value
 ```
@@ -1320,7 +1355,8 @@ box, you can change its position with the next lines (where `h` is the
 histogram pointer):
 
 ``` {.cpp}
-root[] TPaveStats *s = (TPaveStats*)h->GetListOfFunctions()->FindObject("stats");
+root[] TPaveStats *s =
+            (TPaveStats*)h->GetListOfFunctions()->FindObject("stats");
 root[] s->SetX1NDC (newx1); // new x start position
 root[] s->SetX2NDC (newx2); // new x end position
 ```
@@ -1328,25 +1364,23 @@ root[] s->SetX2NDC (newx2); // new x end position
 ### Setting Line, Fill, Marker, and Text Attributes
 
 
-The histogram classes inherit from the attribute classes: **`TAttLine`**,
-**`TAttFill`**, **`TAttMarker`** and **`TAttText`**. See the description of
-these classes for the list of options.
+The histogram classes inherit from the attribute classes:
+**`TAttLine`**, **`TAttFill`**, **`TAttMarker`** and **`TAttText`**.
+See the description of these classes for the list of options.
 
 ### Setting Tick Marks on the Axis
 
 
 The **`TPad`**`::SetTicks()` method specifies the type of tick
-marks on the axis. Let `tx=gPad->GetTickx()` and `ty=gPad->GetTicky()` .
+marks on the axis. Let `tx=gPad->GetTickx()` and
+`ty=gPad->GetTicky()`.
 
 -   `tx` = 1; tick marks on top side are drawn (inside)
-
 -   `tx` = 2; tick marks and labels on top side are drawn
-
 -   `ty` = 1; tick marks on right side are drawn (inside)
-
 -   `ty` = 2; tick marks and labels on right side are drawn
-
--   `tx=ty=0` by default only the left Y axis and X bottom axis are drawn
+-   `tx=ty=0` by default only the left Y axis and X bottom axis are
+     drawn
 
 Use **`TPad`**`::SetTicks(tx,ty)` to set these options. See also
 the methods of **`TAxis`** that set specific axis attributes. If
@@ -1361,8 +1395,8 @@ all the histograms by calling:
 ### Giving Titles to the X, Y and Z Axis
 
 
-Because the axis title is an attribute of the axis, you have to get the
-axis first and then call **`TAxis`**`::SetTitle`.
+Because the axis title is an attribute of the axis, you have to get
+the axis first and then call **`TAxis`**`::SetTitle`.
 
 ``` {.cpp}
    h->GetXaxis()->SetTitle("X axis title");
@@ -1492,7 +1526,7 @@ For a more detailed explanation, see "Input/Output".
 
 -   **`TH1`**`::GetEntries()` - returns the number of entries.
 
--   **`TH1`**`::GetAsymmetry(`**`TH1`** `*` `h2,Double_t c2,Double_tdc2)` - 
+-   **`TH1`**`::GetAsymmetry(`**`TH1`** `*` `h2,Double_t c2,Double_tdc2)` -
     returns an histogram containing the asymmetry of this histogram with `h2`,
     where the asymmetry is defined as:
 
@@ -1559,7 +1593,7 @@ string:
 ### Option 3: TTree::Draw
 
 
-You can use a char\* variable type to histogram strings with 
+You can use a char\* variable type to histogram strings with
 **`TTree`**`::Draw()`.
 
 ``` {.cpp}
@@ -1634,7 +1668,7 @@ The **`THStack`** does not own the objects in the list.
 
 ![Stacked histograms](pictures/0300003D.png)
 
-By default, **`THStack`** `::Draw` draws the histograms stacked as
+By default, **`THStack`**`::Draw` draws the histograms stacked as
 shown in the left pad in the picture above. If the option `"nostack" is`
 used, the histograms are superimposed as if they were drawn one at a
 time using the `"same"` draw option `.` The right pad in this picture
@@ -1654,7 +1688,7 @@ Next is a simple example, for a more complex one see
    TH1F *h1 = new TH1F("h1","test hstack",100,-4,4);
    h1->FillRandom("gaus",20000);
    h1->SetFillColor(kRed);
-   hs.Add(h1); 
+   hs.Add(h1);
    TH1F *h2 = new TH1F("h2","test hstack",100,-4,4);
    h2->FillRandom("gaus",15000);
    h2->SetFillColor(kBlue);
@@ -1722,21 +1756,22 @@ displayed by a profile histogram with much better precision than by a
 scatter-plot. Profile histograms display the mean value of Y and its RMS
 for each bin in X. The following shows the contents [capital letters]
 and the values shown in the graphics [small letters] of the elements for
-bin j. When you fill a profile histogram with **`TProfile`** `
-                .Fill[x,y]` :
+bin j. When you fill a profile histogram with **`TProfile`**`.Fill[x,y]` :
 
--   `H[j]` will contain for each bin `j` the sum of the y values for
-    this bin
+-   `H[j]` will contain for each bin `j` the sum of the y values for this bin
 
 -   `L[j]` contains the number of entries in the bin `j`
 
--   `e[j]` or `s[j]` will be the resulting error depending on the
-    selected option. See "Build Options".
+-   `e[j]` or `s[j]` will be the resulting error depending on the selected
+    option. See "Build Options".
 
 ``` {.cpp}
-E[j] = sum Y**2 L[j] = number
-            of entries in bin J H[j] = sum Y h[j] = H[j] / L[j] s[j] = sqrt[E[j]
-            / L[j] - h[j]**2] e[j] = s[j] / sqrt[L[j]]
+E[j] = sum Y**2
+L[j] = number of entries in bin J
+H[j] = sum Y
+h[j] = H[j] / L[j]
+s[j] = sqrt[E[j] / L[j] - h[j]**2]
+e[j] = s[j] / sqrt[L[j]]
 ```
 
 In the special case where `s[j]` is zero, when there is only one entry
@@ -1746,20 +1781,17 @@ This approximation is used to keep the bin during a fit operation. The
 parameters are similar to **`TH1D`** constructor.
 
 ``` {.cpp}
-            TProfile(const char *name,const char *title,Int_t nbinsx,
-            Double_t xlow, Double_t xup, Double_t ylow, Double_t yup,
-            Option_t *option)
-        
+TProfile(const char *name,const char *title,Int_t nbinsx,
+         Double_t xlow, Double_t xup, Double_t ylow, Double_t yup,
+         Option_t *option)
 ```
 
 All values of `y` are accepted at filling time. To fill a profile
-histogram, you must use **`
-                    TProfile`** `::Fill` function. Note that when
-filling the profile histogram the method **`TProfile`** `::Fill` checks
-if the variable `y` is between `fYmin` and `
-                fYmax` . If a minimum or maximum value is set for the Y
-scale before filling, then all values below `ylow` or above `
-                yup` will be discarded. Setting the minimum or maximum
+histogram, you must use **`TProfile`**`::Fill` function. Note that when
+filling the profile histogram the method **`TProfile`**`::Fill` checks
+if the variable `y` is between `fYmin` and `fYmax` . If a minimum or maximum
+value is set for the Y scale before filling, then all values below `ylow` or
+above `yup` will be discarded. Setting the minimum or maximum
 value for the Y scale before filling has the same effect as calling the
 special **`TProfile`** constructor above where `ylow` and `yup` are
 specified.
@@ -1774,14 +1806,12 @@ zero, and the bin is ignored in making subsequent fits. If `SQRT(Y)` was
 the correct error in the case above, then `SQRT(Y)/SQRT(N)` would be the
 correct error here. In fact, any bin with non-zero number of entries N
 but with zero spread ( `spread = s[j]` ) should have an uncertainty
-`SQRT(Y)/SQRT(N)` . Now, is `
-                    SQRT(Y)/SQRT(N)` really the correct uncertainty?
+`SQRT(Y)/SQRT(N)`. Now, is `SQRT(Y)/SQRT(N)` really the correct uncertainty ?
 That it is only in the case where the Y variable is some sort of
 counting statistics, following a Poisson distribution. This is the
-default case. However, Y can be any variable from an original `
-                    NTUPLE` , and does not necessarily follow a Poisson
-distribution. The computation of errors is based on Y = values of data
-points; N = number of data points.
+default case. However, Y can be any variable from an original `NTUPLE`, and
+does not necessarily follow a Poisson distribution. The computation of errors
+is based on Y = values of data points; N = number of data points.
 
 -   `' '` - the default is blank, the errors are:
 
@@ -1826,29 +1856,27 @@ Sigma. The next figure shows the graphic output of this simple example
 of a profile histogram.
 
 ``` {.cpp}
-                {
-                // Create a canvas giving the coordinates
-                    and the sizeTCanvas
-                *c1 = new TCanvas("c1", "Profile
-                example",200,10,700,500);
-                // Create a profile with the name, title,
-                    the number of bins,
-                // the low and high limit of the x-axis and
-                    the low and high
-                // limit of the y-axis.
-                // No option is given so the default is
-                    used.hprof
-                = new TProfile("hprof", "Profile of pz versus
-                px",100,-4,4,0,20);
-                // Fill the profile 25000 times with random
-                    numbersFloat_t
-                px, py, pz; for ( Int_t i=0; i<25000; i++) {
-                // Use the random number generator to get
-                    two numbers following
-                // a gaussian distribution with mean=0 and
-                    sigma=1gRandom->Rannor(px,py);
-                pz = px*px + py*py; hprof->Fill(px,pz,1); } hprof->Draw(); }
-            
+{
+   // Create a canvas giving the coordinates and the size
+   TCanvas *c1 = new TCanvas("c1", "Profile example",200,10,700,500);
+
+   // Create a profile with the name, title, the number of bins,
+   // the low and high limit of the x-axis and the low and high
+   // limit of the y-axis.
+   // No option is given so the default is used.
+   hprof = new TProfile("hprof", "Profile of pz versus px",100,-4,4,0,20);
+
+   // Fill the profile 25000 times with random numbers
+   Float_t px, py, pz;
+   for ( Int_t i=0; i<25000; i++) {
+      // Use the random number generator to get two numbers following
+      // a gaussian distribution with mean=0 and sigma=1
+      gRandom->Rannor(px,py);
+      pz = px*px + py*py;
+      hprof->Fill(px,pz,1);
+   }
+   hprof->Draw();
+}
 ```
 
 ![A profile histogram example](pictures/0300003E.png)
@@ -1857,47 +1885,38 @@ of a profile histogram.
 
 
 To draw a profile histogram and not show the error bars use the "`HIST`
-" option in the **`TProfile`** `
-                    ::Draw` method. This will draw the outline of the
-**`TProfile`** .
+" option in the **`TProfile`**`::Draw` method. This will draw the outline of the
+**`TProfile`**.
 
 ### Create a Profile from a 2D Histogram
 
 
-You can make a profile from a histogram using the methods **`TH2`** `
-                    ::ProfileX` and **`
-                        TH2`** `::ProfileY` .
+You can make a profile from a histogram using the methods
+**`TH2`**`::ProfileX` and **`TH2`**`::ProfileY`.
 
 ### Create a Histogram from a Profile
 
 
 To create a regular histogram from a profile histogram, use the method
-**`TProfile`** `::ProjectionX` .This example instantiates a **`TH1D`**
-object by copying the `TH1D` piece of **`
-                        TProfile`** .
+**`TProfile`**`::ProjectionX` .This example instantiates a **`TH1D`**
+object by copying the `TH1D` piece of **`TProfile`**.
 
 ``` {.cpp}
-                TH1D *sum = myProfile.ProjectionX()
-            
+   TH1D *sum = myProfile.ProjectionX();
 ```
 
-You can do the same with a 2D profile using the method **`TProfile2D`**
-`
-                    ::ProjectionXY` .
+You can do the same with a 2D profile using the method
+**`TProfile2D`**`::ProjectionXY` .
 
 ### Generating a Profile from a TTree
 
 
-The `'prof'` and `
-                    'profs'` options in the **`
-                        TTree`** `::Draw` method generate a profile
-histogram ( **`TProfile`** ), given a two dimensional expression in the
-tree, or a **`TProfile2D`** given a three dimensional expression. See
+The `'prof'` and `'profs'` options in the **`TTree`**`::Draw` method generate
+a profile histogram ( **`TProfile`** ), given a two dimensional expression in
+the tree, or a **`TProfile2D`** given a three dimensional expression. See
 "Trees". Note that you can specify `'prof'` or `'profs'` : `'prof'`
-generates a **`
-                        TProfile`** with error on the mean, `
-                    'profs'` generates a **`
-                        TProfile`** with error on the spread.
+generates a **`TProfile`** with error on the mean, `'profs'` generates a
+**`TProfile`** with error on the spread.
 
 ### 2D Profiles
 
@@ -1914,8 +1933,7 @@ in X, Y. The following shows the cumulated contents (capital letters)
 and the values displayed (small letters) of the elements for cell `i,j`
 .
 
-When you fill a profile histogram with **`TProfile2D`** `.Fill` `
-                    [x,y,z]` :
+When you fill a profile histogram with **`TProfile2D`**`.Fill(x,y,z)`:
 
 -   `E[i,j]` contains for each bin `i,j` the sum of the z values for
     this bin
@@ -1923,15 +1941,14 @@ When you fill a profile histogram with **`TProfile2D`** `.Fill` `
 -   `L[i,j]` contains the number of entries in the bin j
 
 -   `e[j]` or `s[j]` will be the resulting error depending on the
-    selected option. See "Build Options".
+     selected option. See "Build Options".
 
 ``` {.cpp}
-                E[i,j] = sum z
-                L[i,j] = sum l
-                h[i,j] = H[i,j ] / L[i,j]
-                s[i,j] = sqrt[E[i,j] / L[i,j]- h[i,j]**2]
-                e[i,j] = s[i,j] / sqrt[L[i,j]]
-            
+E[i,j] = sum z
+L[i,j] = sum l
+h[i,j] = H[i,j ] / L[i,j]
+s[i,j] = sqrt[E[i,j] / L[i,j]- h[i,j]**2]
+e[i,j] = s[i,j] / sqrt[L[i,j]]
 ```
 
 In the special case where `s[i,j]` is zero, when there is only one entry
@@ -1939,40 +1956,32 @@ per cell, `e[i,j]` is computed from the average of the `s[i,j]` for all
 cells. This approximation is used to keep the cell during a fit
 operation.
 
-``` {.cpp}
-                {
-                
-                    // Creating a Canvas and a TProfile2D
-                
-                TCanvas *c1 = new TCanvas("c1","Profile
-                    histogram example", 200,10,700,500);
-                hprof2d = new TProfile2D("hprof2d", "Profile of
-                    pz versus px and py",40,-4,4,40,-4,4,0,20);
-                
-                    // Filling the TProfile2D with 25000 points
-                
-                Float_t px, py, pz;
-                for (Int_t i=0; i<25000; i++) {
-                gRandom->Rannor(px,py);
-                pz = px*px + py*py;
-                hprof2d->Fill(px,py,pz,1);
-                }
-                hprof2d->Draw();
-                }
-            
-```
-
 ![A TProfile2D histogram example](pictures/0800003F.png)
+
+``` {.cpp}
+{
+   // Creating a Canvas and a TProfile2D
+   TCanvas *c1 = new TCanvas("c1","Profile histogram example", 200,10,700,500);
+   hprof2d = new TProfile2D("hprof2d", "Profile of pz versus px and py",
+                             40,-4,4,40,-4,4,0,20);
+
+   // Filling the TProfile2D with 25000 points
+   Float_t px, py, pz;
+   for (Int_t i=0; i<25000; i++) {
+      gRandom->Rannor(px,py);
+      pz = px*px + py*py;
+      hprof2d->Fill(px,py,pz,1);
+   }
+   hprof2d->Draw();
+}
+```
 
 ## Iso Surfaces
 
 
 Paint one Gouraud shaded 3d iso surface though a 3d histogram at the
 value computed as follow:
-
 `SumOfWeights/(NbinsX*NbinsY*NbinsZ)` .
-
-![Iso surfaces](pictures/03000040.png)
 
 ``` {.cpp}
 void hist3d() {
@@ -1988,14 +1997,14 @@ void hist3d() {
 }
 ```
 
+![Iso surfaces](pictures/03000040.png)
+
 ## 3D Implicit Functions
 
 
 ``` {.cpp}
-            TF3 *fun3 = new TF3("fun3",
-                "sin(x*x+y*y+z*z-36",-2,2,-2,2,-2,2);
-            Fun3->Draw();
-        
+   TF3 *fun3 = new TF3("fun3","sin(x*x+y*y+z*z-36)",-2,2,-2,2,-2,2);
+   fun3->Draw();
 ```
 
 ![3D implicit function](pictures/03000041.png)
@@ -2030,7 +2039,7 @@ format string must contain one of these modifiers:
 -   - `%perc` : to print the % of this slice
 
 ``` {.cpp}
-mypie->SetLabelFormat("%txt (%frac)");
+   mypie->SetLabelFormat("%txt (%frac)");
 ```
 
 See the macro `$ROOTSYS/tutorials/graphics/piechart.C` .
@@ -2047,48 +2056,63 @@ interactively.
 ### TH1Editor
 
 
-![](pictures/03000043.png) ![](pictures/03000044.png)
+![](pictures/03000043.png)![](pictures/03000044.png)
 
-Style Tab:
+#### The Style Tab
 
-Titlesets the title of the histogram.
+##### Title
 
-Plotdraw a 2D or 3D plot; according to the dimension, different drawing
+sets the title of the histogram.
+
+##### Plot
+
+draw a 2D or 3D plot; according to the dimension, different drawing
 possibilities can be set.
 
-Erroradd different error bars to the histogram (no errors, simple, etc.).
+##### Error
+add different error bars to the histogram (no errors, simple, etc.).
 
-Addfurther things which can be added to the histogram (None,
-simple/smooth line, fill area, etc.)
+##### Add
+further things which can be added to the histogram (None, simple/smooth line, fill
+area, etc.)
 
-*`2-D Plot`* :
+#### 2-D Plot
 
-Simple Drawingdraw a simple histogram without errors (= "HIST" draw
+##### Simple Drawing
+draw a simple histogram without errors (= "HIST" draw
 option). In combination with some other draw options an outer line is
 drawn on top of the histogram
 
-Show markersdraw a marker on to of each bin (="P" draw option).
+##### Show markers
+draw a marker on to of each bin (="P" draw option).
 
-Draw bar chartdraw a bar chart (="B" draw option).
+##### Draw bar chart
+draw a bar chart (="B" draw option).
 
-Bar optiondraw a bar chart (="BAR" draw option); if selected, it will
+##### Bar option
+draw a bar chart (="BAR" draw option); if selected, it will
 show an additional interface elements for bars: width, offset,
 percentage and the possibility to draw horizontal bars.
 
-*`3`* *`-D Plot:`*
+#### 3-D Plot
 
-Addset histogram type Lego-Plot or Surface draw (Lego, Lego1.2, Surf,
-Surf1...5).
+##### Add
+set histogram type Lego-Plot or Surface draw (Lego, Lego1.2, Surf, Surf1...5).
 
-Coordsset the coordinate system (Cartesian, Spheric, etc.).
+##### Coords
+set the coordinate system (Cartesian, Spheric, etc.).
 
-Errorsame as for 2D plot.
+##### Error
+same as for 2D plot.
 
-Barset the bar attributes: width and offset.
+##### Bar
+set the bar attributes: width and offset.
 
-Horizontal Bar draw a horizontal bar chart.
+##### Horizontal Bar
+draw a horizontal bar chart.
 
-The Binning tab has two different layouts. One is for a histogram, which
+#### The Binning tab
+The binning tab has two different layouts. One is for a histogram, which
 is not drawn from an ntuple. The other one is available for a histogram,
 which is drawn from an ntuple. In this case, the rebin algorithm can
 create a rebinned histogram from the original data i.e. the ntuple.
@@ -2098,12 +2122,12 @@ create a rebinned histogram from the original data i.e. the ntuple.
 To see the differences do:
 
 ``` {.cpp}
-TFile f("hsimple.root");
-hpx->Draw("BAR1"); // non ntuple histogram
-ntuple->Draw("px");// ntuple histogram
+   TFile f("hsimple.root");
+   hpx->Draw("BAR1"); // non ntuple histogram
+   ntuple->Draw("px");// ntuple histogram
 ```
 
-*`Non ntuple histogram:`*
+#### Non ntuple histogram
 
 Rebin with a slider and the number of bins (shown in the field below the
 slider). The number of bins can be changed to any number, which divides
@@ -2112,21 +2136,25 @@ button will delete the origin histogram and will replace it by the
 rebinned one on the screen. A click on the Ignore button will restore
 the origin histogram.
 
-*`Histogram drawn from an ntuple:`*
+#### Histogram drawn from an ntuple
 
-Rebin - With the slider, the number of bins can be enlarged by a factor
-of 2,3,4,5 (moving to the right) or reduced by a factor of 1/2, 1/3,
-1/4, 1/5.
+##### Rebin
+with the slider, the number of bins can be enlarged by a factor
+of 2, 3, 4, 5 (moving to the right) or reduced by a factor of $\frac{1}{2}$,
+$\frac{1}{3}$, $\frac{1}{4}$, $\frac{1}{5}$.
 
-BinOffset with a BinOffset slider - the origin of the histogram can be
+##### BinOffset with a BinOffset slider
+the origin of the histogram can be
 changed within one binwidth. Using this slider the effect of binning the
 data into bins can be made visible (statistical fluctuations).
 
-Axis Range - with a double slider it is possible to zoom into the
+##### Axis Range
+with a double slider it is possible to zoom into the
 specified axis range. It is also possible to set the upper and lower
 limit in fields below the slider.
 
-Delayed drawing - all the Binning sliders can set to delay draw mode.
+##### Delayed drawing
+all the Binning sliders can set to delay draw mode.
 Then the changes on the histogram are only updated, when the Slider is
 released. This should be activated if the redrawing of the histogram is
 time consuming.
@@ -2136,54 +2164,71 @@ time consuming.
 
 ![](pictures/03000047.png) ![](pictures/03000048.png)
 
-Style Tab:
+#### Style Tab:
 
-Titleset the title of the histogram
+##### Title
+set the title of the histogram
 
-Histogramchange the draw options of the histogram.
+##### Histogram
+change the draw options of the histogram.
 
-Plotdraw a 2D or 3D plot of the histogram; according to the dimension,
+##### Plot
+draw a 2D or 3D plot of the histogram; according to the dimension,
 the drawing possibilities are different.
 
-*`2-D Plot`* :
+#### 2-D Plot
 
-Contour draw a contour plot (None, Cont0...5)
+##### Contour
+draw a contour plot (None, Cont0...5)
 
-Cont \# set the number of Contours;
+##### Cont \#
+set the number of Contours;
 
-Arrow set the arrow mode and shows the gradient between adjacent cells;
+##### Arrow
+set the arrow mode and shows the gradient between adjacent cells;
 
-Col a box is drawn for each cell with a color scale varying with
-contents;
+##### Col
+a box is drawn for each cell with a color scale varying with contents;
 
-Text draw bin contents as text;
+##### Text
+draw bin contents as text;
 
-Boxa box is drawn for each cell with surface proportional to contents;
+##### Box
+a box is drawn for each cell with surface proportional to contents;
 
-Scat draw a scatter-plot (default);
+##### Scat
+draw a scatter-plot (default);
 
-Palette the color palette is drawn.
+##### Palette
+the color palette is drawn.
 
-*`3`* *`-D Plot:`*
+#### 3-D Plot
 
-Type set histogram type to Lego or surface plot; draw (Lego, Lego1.2,
-Surf, Surf1...5)
+##### Type
+set histogram type to Lego or surface plot; draw (Lego, Lego1.2, Surf, Surf1...5)
 
-Coords set the coordinate system (Cartesian, Spheric, etc.);
+##### Coords
+set the coordinate system (Cartesian, Spheric, etc.);
 
-Cont \# set the number of Contours (for e.g. Lego2 draw option);
+##### Cont \#
+set the number of Contours (for e.g. Lego2 draw option);
 
-Errors draw errors in a Cartesian lego plot;
+##### Errors
+draw errors in a Cartesian lego plot;
 
-Palette draw the color palette;
+##### Palette
+draw the color palette;
 
-Front draw the front box of a Cartesian lego plot;
+##### Front
+draw the front box of a Cartesian lego plot;
 
-Back draw the back box of a Cartesian lego plot;
+##### Back
+draw the back box of a Cartesian lego plot;
 
-Bar change the bar attributes: the width and offset.
+##### Bar
+change the bar attributes: the width and offset.
 
-Rebinning Tab:
+#### Rebinning Tab
 
 The Rebinning tab has two different layouts. One is for a histogram that
 is not drawn from an ntuple; the other one is available for a histogram,
@@ -2192,12 +2237,12 @@ create a rebinned histogram from the original data i.e. the ntuple. To
 see the differences do for example:
 
 ``` {.cpp}
-TFile f ("hsimple.root");
-hpxpy->Draw("Lego2"); // non ntuple histogram
-ntuple->Draw("px:py","","Lego2"); // ntuple histogram
+   TFile f ("hsimple.root");
+   hpxpy->Draw("Lego2"); // non ntuple histogram
+   ntuple->Draw("px:py","","Lego2"); // ntuple histogram
 ```
 
-Non-ntuple histogram:
+#### Non-ntuple histogram:
 
 Rebin with sliders (one for the x, one for the y-axis) and the number of
 bins (shown in the field below them can be changed to any number, which
@@ -2208,19 +2253,25 @@ will be restored.
 
 ![](pictures/03000049.png) ![](pictures/0300004A.png)
 
-Histogram drawn from an ntuple:
+#### Histogram drawn from an ntuple
 
-Rebin with the sliders the number of bins can be enlarged by a factor of
-2,3,4,5 (moving to the right) or reduced by a factor of 1/2, 1/3, 1/4,
-1/5. BinOffset with the BinOffset slider the origin of the histogram can
+##### Rebin
+with the sliders the number of bins can be enlarged by a factor of
+2,3,4,5 (moving to the right) or reduced by a factor of $\frac{1}{2}$,
+$\frac{1}{3}$, $\frac{1}{4}$, $\frac{1}{5}$.
+
+##### BinOffset
+with the BinOffset slider the origin of the histogram can
 be changed within one binwidth. Using this slider the effect of binning
 the data into bins can be made visible (=\> statistical fluctuations).
 
-Axis Range - with a double slider that gives the possibility for
+##### Axis Range
+with a double slider that gives the possibility for
 zooming. It is also possible to set the upper and lower limit in fields
 below the slider.
 
-Delayed drawing - all the binning sliders can be set to delay draw mode.
+##### Delayed drawing
+all the binning sliders can be set to delay draw mode.
 Then the changes on the histogram are only updated, when the Slider is
 released. This should be activated if the redrawing of the histogram is
 too time consuming.

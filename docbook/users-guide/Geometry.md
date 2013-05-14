@@ -3945,8 +3945,8 @@ not) on a boundary within `TGeoShape::Tolerance()`.
 The algorithm checks first if the computation of safety was required. If
 this is the case and the global point coordinates did not change from
 the last query, the last computed safety is taken. Otherwise, the method
-**`TGeoManager`** `::Safety ()` is invoked. A safety value less than
-**`TGeoShape`** `::Tolerance()` will set the flag IsOnBoundary to true.
+**`TGeoManager`**`::Safety ()` is invoked. A safety value less than
+**`TGeoShape`**`::Tolerance()` will set the flag IsOnBoundary to true.
 On the other hand, a safety value bigger than the proposed step will
 stop the computation of the distance to next boundary, returning the
 current geometry location with the meaning that the proposed step is
@@ -3974,7 +3974,7 @@ particles starting very close to the current volume boundary (less than
 
 After computing the distance to exit the current node, the distance to
 the daughter of the current volume which is crossed next is computed by
-**`TGeoManager`** `::FindNextDaughterBoundary().` This computes the
+**`TGeoManager`**`::FindNextDaughterBoundary().` This computes the
 distance to all daughter candidates that can be possibly crossed by
 using volume voxelization. The algorithm is efficient in average only in
 case the number of daughters is greater than 4. For fewer nodes, a
