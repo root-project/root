@@ -198,7 +198,22 @@ TGraph& TGraph::operator=(const TGraph &gr)
       fNpoints = gr.fNpoints;
       fMaxSize = gr.fMaxSize;
 
-      if (fFunctions) delete fFunctions; 
+      // delete list of functions and their contents before copying it
+      if (fFunctions) { 
+         // delete previous lists of functions
+         if (!fFunctions->IsEmpty()) {
+            fFunctions->SetBit(kInvalidObject);
+            // use TList::Remove to take into account the case the same object is 
+            // added multiple times in the list
+            TObject *obj;
+            while ((obj  = fFunctions->First())) {
+               while (fFunctions->Remove(obj)) { }
+               delete obj;
+            }
+         }
+         delete fFunctions;
+      }
+
       if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
       else fFunctions = new TList;
 
