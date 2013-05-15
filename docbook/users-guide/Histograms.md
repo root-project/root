@@ -1385,8 +1385,8 @@ marks on the axis. Let `tx=gPad->GetTickx()` and
 Use **`TPad`**`::SetTicks(tx,ty)` to set these options. See also
 the methods of **`TAxis`** that set specific axis attributes. If
 multiple color-filled histograms are drawn on the same pad, the fill
-area may hide the axis tick marks. One can force the axis redrawing over
-all the histograms by calling:
+area may hide the axis tick marks. One can force the axis redrawing
+over all the histograms by calling:
 
 ``` {.cpp}
    gPad->RedrawAxis();
@@ -1404,9 +1404,9 @@ the axis first and then call **`TAxis`**`::SetTitle`.
    h->GetZaxis()->SetTitle("Z axis title");
 ```
 
-The histogram title and the axis titles can be any **`TLatex`** string.
-The titles are part of the persistent histogram. For example if you
-wanted to write E with a subscript (T) you could use this:
+The histogram title and the axis titles can be any **`TLatex`**
+string. The titles are part of the persistent histogram. For example
+if you wanted to write E with a subscript (T) you could use this:
 
 ``` {.cpp}
    h->GetXaxis()->SetTitle("E_{T}");
@@ -1414,12 +1414,13 @@ wanted to write E with a subscript (T) you could use this:
 
 For a complete explanation of the Latex mathematical expressions, see
 "Graphics and the Graphical User Interface". It is also possible to
-specify the histogram title and the axis titles at creation time. These
-titles can be given in the "title" parameter. They must be separated by
-"**;**":
+specify the histogram title and the axis titles at creation time.
+These titles can be given in the "title" parameter. They must be
+separated by "**;**":
 
 ``` {.cpp}
-   TH1F* h=new TH1F("h","Histogram title;X Axis;Y Axis;Z Axis",100,0,1);
+   TH1F* h=new TH1F("h","Histogram title;X Axis;Y Axis;Z Axis",
+                    100,0,1);
 ```
 
 Any title can be omitted:
@@ -1438,38 +1439,40 @@ The method `SetTitle` has the same syntax:
 ## Making a Copy of an Histogram
 
 
-Like for any other ROOT object derived from **`TObject`** , the `Clone` method
-can be used. This makes an identical copy of the original histogram including
-all associated errors and functions:
+Like for any other ROOT object derived from **`TObject`** , the
+`Clone` method can be used. This makes an identical copy of the
+original histogram including all associated errors and functions:
 
 ``` {.cpp}
-   TH1F *hnew = (TH1F*)h->Clone(); // renaming is recommended, because otherwise
-   hnew->SetName("hnew");          // you will have two histograms with the same
+   TH1F *hnew = (TH1F*)h->Clone(); // renaming is recommended, 
+   hnew->SetName("hnew");          // because otherwise you will have 
+                                   // two histograms with the same 
                                    // name
 ```
 
 ## Normalizing Histograms
 
 
-You can scale a histogram ( **`TH1`** `*h` ) such that the bins integral is
-equal to the normalization parameter norm:
+You can scale a histogram ( **`TH1`** `*h` ) such that the bins
+integral is equal to the normalization parameter norm:
 
 ``` {.cpp}
-   Double_t scale = norm/h->Integral(); h->Scale(scale);
+   Double_t scale = norm/h->Integral();
+   h->Scale(scale);
 ```
 
 ## Saving/Reading Histograms to/from a File
 
 
-The following statements create a ROOT file and store a histogram on the
-file. Because **`TH1`** derives from **`TNamed`** , the key identifier on the
-file is the histogram name:
+The following statements create a ROOT file and store a histogram on
+the file. Because **`TH1`** derives from **`TNamed`** , the key
+identifier on the file is the histogram name:
 
 ``` {.cpp}
-TFile
-            f("histos.root","new"); TH1F
-            h1("hgaus","histo from a gaussian",100,-3,3);
-            h1.FillRandom("gaus",10000); h1->Write();
+   TFile f("histos.root","new");
+   TH1F h1("hgaus","histo from a gaussian",100,-3,3);
+   h1.FillRandom("gaus",10000);
+   h1->Write();
 ```
 
 To read this histogram in another ROOT session, do:
@@ -1491,8 +1494,8 @@ For a more detailed explanation, see "Input/Output".
 
 
 -   **`TH1`**`::KolmogorovTest(` **`TH1`**`* h2,Option_t *option)` is
-    statistical test of compatibility in shape between two histograms. The
-    parameter `option` is a character string that specifies:
+    statistical test of compatibility in shape between two histograms.
+    The parameter `option` is a character string that specifies:
 
 -   "`U`" include Underflows in test (also for 2-dim)
 
@@ -1508,52 +1511,56 @@ For a more detailed explanation, see "Input/Output".
     procedure: it makes pseudo experiments based on random values from
     the parent distribution and compare the KS distance of the pseudo
     experiment to the parent distribution. Bin the KS distances in a
-    histogram, and then take the integral of all the KS values above the
-    value obtained from the original data to Monte Carlo distribution.
-    The number of pseudo-experiments NEXPT is currently fixed at 1000.
-    The function returns the integral. Note that this option "`X`" is much
-    slower.
+    histogram, and then take the integral of all the KS values above
+    the value obtained from the original data to Monte Carlo
+    distribution. The number of pseudo-experiments NEXPT is currently
+    fixed at 1000. The function returns the integral. Note that this
+    option "`X`" is much slower.
 
 -   **`TH1`**`::Smooth` - smoothes the bin contents of a 1D histogram.
 
--   **`TH1`**`::Integral(Option_t *opt)-`returns the integral of bin contents
-    in a given bin range. If the option "`width`" is specified, the integral is
-    the sum of the bin contents multiplied by the bin width in `x` .
+-   **`TH1`**`::Integral(Option_t *opt)-`returns the integral of bin
+    contents in a given bin range. If the option "`width`" is
+    specified, the integral is the sum of the bin contents multiplied
+    by the bin width in `x` .
 
 -   **`TH1`**`::GetMean(int axis)` - returns the mean value along axis.
 
--   **`TH1`**`::GetRMS(int axis)` - returns the Root Mean Square along axis.
+-   **`TH1`**`::GetRMS(int axis)` - returns the Root Mean Square
+    along axis.
 
 -   **`TH1`**`::GetEntries()` - returns the number of entries.
 
--   **`TH1`**`::GetAsymmetry(`**`TH1`** `*` `h2,Double_t c2,Double_tdc2)` -
-    returns an histogram containing the asymmetry of this histogram with `h2`,
-    where the asymmetry is defined as:
+-   **`TH1`**`::GetAsymmetry(`**`TH1`** `*h2,Double_t c2,Double_tdc2)`
+    - returns an histogram containing the asymmetry of this histogram
+    with `h2`, where the asymmetry is defined as:
 
 ``` {.cpp}
    Asymmetry = (h1 - h2)/(h1 + h2); //where h1 = this
 ```
 
--   It works for `1D` , `2D` , etc. histograms. The parameter `c2` is an
-    optional argument that gives a relative weight between the two
+-   It works for `1D` , `2D` , etc. histograms. The parameter `c2` is
+    an optional argument that gives a relative weight between the two
     histograms, and `dc` `2` is the error on this weight. This is
     useful, for example, when forming an asymmetry between two
     histograms from two different data sets that need to be normalized
     to each other in some way. The function calculates the errors
-    assuming Poisson statistics on `h1` and `h2` (that is, `dh=sqrt(h)` ).
-    In the next example we assume that `h1` and `h2` are already filled:
+    assuming Poisson statistics on `h1` and `h2`
+    (that is, `dh=sqrt(h)`). In the next example we assume that `h1`
+    and `h2` are already filled:
 
 ``` {.cpp}
    h3 = h1->GetAsymmetry(h2);
 ```
 
--   Then `h3` is created and filled with the asymmetry between `h1` and
-    `h2` ; `h1` and `h2` are left Intact.
+-   Then `h3` is created and filled with the asymmetry between `h1`
+    and `h2` ; `h1` and `h2` are left intact.
 
--   Note that the user's responsibility is to ménage the created
+-   Note that the user's responsibility is to manage the created
     histograms.
 
--   **`TH1`**`::Reset()` - resets the bin contents and errors of a histogram
+-   **`TH1`**`::Reset()` - resets the bin contents and errors of a
+    histogram
 
 ## Alphanumeric Bin Labels
 
@@ -1580,8 +1587,8 @@ See example in `$ROOTSYS/tutorials/hist/hlabels1.C` , `hlabels2.C`
 ### Option 2: Fill
 
 
-You can also call a `Fill()` function with one of the arguments being a
-string:
+You can also call a `Fill()` function with one of the arguments being
+a string:
 
 ``` {.cpp}
    hist1->Fill(somename,weigth);
@@ -1598,32 +1605,32 @@ You can use a char\* variable type to histogram strings with
 
 ``` {.cpp}
    // here "Nation" and "Division" are two char* branches of a Tree
-   tree.Draw("Nation::Division");
+   tree.Draw("Nation::Division", "", "text");
 ```
 
-![Using a \*char variable type in TTree::Draw](pictures/0200003C.jpg)
+![Using a \*char variable type in TTree::Draw](pictures/0200003C.png)
 
 There is an example in `$ROOTSYS/tutorials/tree/cernstaff.C.`
 
 If a variable is defined as `char*` it is drawn as a string by default.
-You change that and draw the value of `char[0]` as an integer by adding an
-arithmetic operation to the expression as shown below.
+You change that and draw the value of `char[0]` as an integer by
+adding an arithmetic operation to the expression as shown below.
 
 ``` {.cpp}
+   // draw the integer value of MyChar[0] where "MyChar" is char[5]
    tree.Draw("MyChar + 0");
-   //this will draw the integer value of MyChar[0] where "MyChar" is char[5]
 ```
 
 ### Sort Options
 
 
-When using the options 2 or 3 above, the labels are automatically added
-to the list (**`THashList`**) of labels for a given axis. By
+When using the options 2 or 3 above, the labels are automatically
+added to the list (**`THashList`**) of labels for a given axis. By
 default, an axis is drawn with the order of bins corresponding to the
 filling sequence. It is possible to reorder the axis alphabetically or
-by increasing or decreasing values. The reordering can be triggered via
-the **`TAxis`** context menu by selecting the menu item "`LabelsOption`
-" or by calling directly.
+by increasing or decreasing values. The reordering can be triggered
+via the **`TAxis`** context menu by selecting the menu item
+"`LabelsOption` " or by calling directly.
 
 ``` {.cpp}
    TH1::LabelsOption(option,axis);
@@ -1632,32 +1639,26 @@ the **`TAxis`** context menu by selecting the menu item "`LabelsOption`
 Here `axis` may be X, Y, or Z. The parameter `option` may be:
 
 -   "`a`" sort by alphabetic order
-
 -   "`>`" sort by decreasing values
-
 -   "`<`" sort by increasing values
-
 -   "`h`" draw labels horizontal
-
 -   "`v`" draw labels vertical
-
 -   "`u`" draw labels up (end of label right adjusted)
-
 -   "`d`" draw labels down (start of label left adjusted)
 
-When using the option second above, new labels are added by doubling the
-current number of bins in case one label does not exist yet. When the
-filling is terminated, it is possible to trim the number of bins to
-match the number of active labels by calling:
+When using the option second above, new labels are added by doubling
+the current number of bins in case one label does not exist yet. When
+the filling is terminated, it is possible to trim the number of bins
+to match the number of active labels by calling:
 
 ``` {.cpp}
    TH1::LabelsDeflate(axis);
 ```
 
 Here `axis` may be X, Y, or Z. This operation is automatic when using
-**`TTree`**`::Draw` . Once bin labels have been created, they become persistent
-if the histogram is written to a file or when generating the C++ code via
-`SavePrimitive` .
+**`TTree`**`::Draw` . Once bin labels have been created, they become
+persistent if the histogram is written to a file or when generating
+the C++ code via `SavePrimitive` .
 
 ## Histogram Stacks
 
@@ -1669,14 +1670,14 @@ The **`THStack`** does not own the objects in the list.
 ![Stacked histograms](pictures/0300003D.png)
 
 By default, **`THStack`**`::Draw` draws the histograms stacked as
-shown in the left pad in the picture above. If the option `"nostack" is`
-used, the histograms are superimposed as if they were drawn one at a
-time using the `"same"` draw option `.` The right pad in this picture
-illustrates the **`THStack`** drawn with the `"nostack"` option.
+shown in the left pad in the picture above. If the option `"nostack"`
+is used, the histograms are superimposed as if they were drawn one at
+a time using the `"same"` draw option `.` The right pad in this
+picture illustrates the **`THStack`** drawn with the `"nostack"`
+option.
 
 ``` {.cpp}
    hs->Draw("nostack");
-
 ```
 
 Next is a simple example, for a more complex one see
@@ -1712,14 +1713,15 @@ Next is a simple example, for a more complex one see
 `TH2Poly` is a 2D Histogram class allowing to define polygonal bins of
 arbitary shape.
 
-Each bin in the `TH2Poly` histogram is a `TH2PolyBin` object. `TH2PolyBin` is
-a very simple class containing the vertices and contents of the polygonal bin
-as well as several related functions.
+Each bin in the `TH2Poly` histogram is a `TH2PolyBin` object.
+`TH2PolyBin` is a very simple class containing the vertices and
+contents of the polygonal bin as well as several related functions.
 
-Bins are defined using one of the `AddBin()` methods. The bin definition
-should be done before filling.
+Bins are defined using one of the `AddBin()` methods. The bin
+definition should be done before filling.
 
-The following very simple macro shows how to build and fill a `TH2Poly`:
+The following very simple macro shows how to build and fill a
+`TH2Poly`:
 
 ``` {.cpp}
 {
@@ -1749,21 +1751,23 @@ More examples can bin found in `$ROOTSYS/tutorials/hist/th2poly*.C`
 
 Profile histograms are in many cases an elegant replacement of
 two-dimensional histograms. The relationship of two quantities X and Y
-can be visualized by a two-dimensional histogram or a scatter-plot; its
-representation is not particularly satisfactory, except for sparse data.
-If Y is an unknown [but single-valued] function of X, it can be
+can be visualized by a two-dimensional histogram or a scatter-plot;
+its representation is not particularly satisfactory, except for sparse
+data. If Y is an unknown [but single-valued] function of X, it can be
 displayed by a profile histogram with much better precision than by a
-scatter-plot. Profile histograms display the mean value of Y and its RMS
-for each bin in X. The following shows the contents [capital letters]
-and the values shown in the graphics [small letters] of the elements for
-bin j. When you fill a profile histogram with **`TProfile`**`.Fill[x,y]` :
+scatter-plot. Profile histograms display the mean value of Y and its
+RMS for each bin in X. The following shows the contents
+[capital letters] and the values shown in the graphics [small letters]
+of the elements for bin j. When you fill a profile histogram with
+**`TProfile`**`.Fill(x,y)` :
 
--   `H[j]` will contain for each bin `j` the sum of the y values for this bin
+-   `H[j]` will contain for each bin `j` the sum of the y values for
+    this bin
 
 -   `L[j]` contains the number of entries in the bin `j`
 
--   `e[j]` or `s[j]` will be the resulting error depending on the selected
-    option. See "Build Options".
+-   `e[j]` or `s[j]` will be the resulting error depending on the
+    selected option. See "Build Options".
 
 ``` {.cpp}
 E[j] = sum Y**2
@@ -1775,10 +1779,10 @@ e[j] = s[j] / sqrt[L[j]]
 ```
 
 In the special case where `s[j]` is zero, when there is only one entry
-per bin, `e[j]` is computed from the average of the `s[j]` for all bins.
-This approximation is used to keep the bin during a fit operation. The
-**`TProfile`** constructor takes up to eight arguments. The first five
-parameters are similar to **`TH1D`** constructor.
+per bin, `e[j]` is computed from the average of the `s[j]` for all
+bins. This approximation is used to keep the bin during a fit
+operation. The **`TProfile`** constructor takes up to eight arguments.
+The first five parameters are similar to **`TH1D`** constructor.
 
 ``` {.cpp}
 TProfile(const char *name,const char *title,Int_t nbinsx,
@@ -1787,30 +1791,31 @@ TProfile(const char *name,const char *title,Int_t nbinsx,
 ```
 
 All values of `y` are accepted at filling time. To fill a profile
-histogram, you must use **`TProfile`**`::Fill` function. Note that when
-filling the profile histogram the method **`TProfile`**`::Fill` checks
-if the variable `y` is between `fYmin` and `fYmax` . If a minimum or maximum
-value is set for the Y scale before filling, then all values below `ylow` or
-above `yup` will be discarded. Setting the minimum or maximum
-value for the Y scale before filling has the same effect as calling the
-special **`TProfile`** constructor above where `ylow` and `yup` are
-specified.
+histogram, you must use **`TProfile`**`::Fill` function. Note that
+when filling the profile histogram the method **`TProfile`**`::Fill`
+checks if the variable `y` is between `fYmin` and `fYmax`. If a
+minimum or maximum value is set for the Y scale before filling, then
+all values below `ylow` or above `yup` will be discarded. Setting the
+minimum or maximum value for the Y scale before filling has the same
+effect as calling the special **`TProfile`** constructor above where
+`ylow` and `yup` are specified.
 
 ### Build Options
 
 
 The last parameter is the build option. If a bin has N data points all
-with the same value Y, which is the case when dealing with integers, the
-spread in Y for that bin is zero, and the uncertainty assigned is also
-zero, and the bin is ignored in making subsequent fits. If `SQRT(Y)` was
-the correct error in the case above, then `SQRT(Y)/SQRT(N)` would be the
-correct error here. In fact, any bin with non-zero number of entries N
-but with zero spread ( `spread = s[j]` ) should have an uncertainty
-`SQRT(Y)/SQRT(N)`. Now, is `SQRT(Y)/SQRT(N)` really the correct uncertainty ?
-That it is only in the case where the Y variable is some sort of
-counting statistics, following a Poisson distribution. This is the
-default case. However, Y can be any variable from an original `NTUPLE`, and
-does not necessarily follow a Poisson distribution. The computation of errors
+with the same value Y, which is the case when dealing with integers,
+the spread in Y for that bin is zero, and the uncertainty assigned is
+also zero, and the bin is ignored in making subsequent fits. If
+`SQRT(Y)` was the correct error in the case above, then
+`SQRT(Y)/SQRT(N)` would be the correct error here. In fact, any bin
+with non-zero number of entries N but with zero spread
+(`spread = s[j]`) should have an uncertainty `SQRT(Y)/SQRT(N)`. Now,
+is `SQRT(Y)/SQRT(N)` really the correct uncertainty ? That it is only
+in the case where the Y variable is some sort of counting statistics,
+following a Poisson distribution. This is the default case. However, Y
+can be any variable from an original `NTUPLE`, and does not
+necessarily follow a Poisson distribution. The computation of errors
 is based on Y = values of data points; N = number of data points.
 
 -   `' '` - the default is blank, the errors are:
@@ -1845,15 +1850,15 @@ is based on Y = values of data points; N = number of data points.
 
 -   `0` for no data points
 
-The option ' `i` ' is used for integer Y values with the uncertainty of
-±0.5, assuming the probability that Y takes any value between Y-0.5 and
-Y+0.5 is uniform (the same argument for Y uniformly distributed between
-Y and Y+1). An example is an ADC measurement. The ' `G` ' option is
-useful, if all Y variables are distributed according to some known
+The option ' `i` ' is used for integer Y values with the uncertainty
+of ±0.5, assuming the probability that Y takes any value between Y-0.5
+and Y+0.5 is uniform (the same argument for Y uniformly distributed
+between Y and Y+1). An example is an ADC measurement. The '`G`' option
+is useful, if all Y variables are distributed according to some known
 Gaussian of standard deviation Sigma. For example when all Y's are
-experimental quantities measured with the same instrument with precision
-Sigma. The next figure shows the graphic output of this simple example
-of a profile histogram.
+experimental quantities measured with the same instrument with
+precision Sigma. The next figure shows the graphic output of this
+simple example of a profile histogram.
 
 ``` {.cpp}
 {
@@ -1864,7 +1869,8 @@ of a profile histogram.
    // the low and high limit of the x-axis and the low and high
    // limit of the y-axis.
    // No option is given so the default is used.
-   hprof = new TProfile("hprof", "Profile of pz versus px",100,-4,4,0,20);
+   hprof = new TProfile("hprof",
+                        "Profile of pz versus px",100,-4,4,0,20);
 
    // Fill the profile 25000 times with random numbers
    Float_t px, py, pz;
@@ -1884,9 +1890,9 @@ of a profile histogram.
 ### Drawing a Profile without Error Bars
 
 
-To draw a profile histogram and not show the error bars use the "`HIST`
-" option in the **`TProfile`**`::Draw` method. This will draw the outline of the
-**`TProfile`**.
+To draw a profile histogram and not show the error bars use the
+"`HIST`" option in the **`TProfile`**`::Draw` method. This will draw
+the outline of the **`TProfile`**.
 
 ### Create a Profile from a 2D Histogram
 
@@ -1911,12 +1917,13 @@ You can do the same with a 2D profile using the method
 ### Generating a Profile from a TTree
 
 
-The `'prof'` and `'profs'` options in the **`TTree`**`::Draw` method generate
-a profile histogram ( **`TProfile`** ), given a two dimensional expression in
-the tree, or a **`TProfile2D`** given a three dimensional expression. See
-"Trees". Note that you can specify `'prof'` or `'profs'` : `'prof'`
-generates a **`TProfile`** with error on the mean, `'profs'` generates a
-**`TProfile`** with error on the spread.
+The `'prof'` and `'profs'` options in the **`TTree`**`::Draw` method
+generate a profile histogram ( **`TProfile`** ), given a two
+dimensional expression in the tree, or a **`TProfile2D`** given a
+three dimensional expression. See "Trees". Note that you can specify
+`'prof'` or `'profs'` : `'prof'` generates a **`TProfile`** with error
+on the mean, `'profs'` generates a **`TProfile`** with error on the
+spread.
 
 ### 2D Profiles
 
@@ -1924,14 +1931,14 @@ generates a **`TProfile`** with error on the mean, `'profs'` generates a
 The class for a 2D Profile is called **`TProfile2D`** . It is in many
 cases an elegant replacement of a three-dimensional histogram. The
 relationship of three measured quantities X, Y and Z can be visualized
-by a three-dimensional histogram or scatter-plot; its representation is
-not particularly satisfactory, except for sparse data. If Z is an
-unknown (but single-valued) function of (X,Y), it can be displayed with
-a **`TProfile2D`** with better precision than by a scatter-plot. A
-**`TProfile2D`** displays the mean value of Z and its RMS for each cell
-in X, Y. The following shows the cumulated contents (capital letters)
-and the values displayed (small letters) of the elements for cell `i,j`
-.
+by a three-dimensional histogram or scatter-plot; its representation
+is not particularly satisfactory, except for sparse data. If Z is an
+unknown (but single-valued) function of (X,Y), it can be displayed
+with a **`TProfile2D`** with better precision than by a scatter-plot.
+A **`TProfile2D`** displays the mean value of Z and its RMS for each
+cell in X, Y. The following shows the cumulated contents (capital
+letters) and the values displayed (small letters) of the elements for
+cell `i,j`.
 
 When you fill a profile histogram with **`TProfile2D`**`.Fill(x,y,z)`:
 
@@ -1951,18 +1958,21 @@ s[i,j] = sqrt[E[i,j] / L[i,j]- h[i,j]**2]
 e[i,j] = s[i,j] / sqrt[L[i,j]]
 ```
 
-In the special case where `s[i,j]` is zero, when there is only one entry
-per cell, `e[i,j]` is computed from the average of the `s[i,j]` for all
-cells. This approximation is used to keep the cell during a fit
-operation.
+In the special case where `s[i,j]` is zero, when there is only one
+entry per cell, `e[i,j]` is computed from the average of the `s[i,j]`
+for all cells. This approximation is used to keep the cell during a
+fit operation.
 
 ![A TProfile2D histogram example](pictures/0800003F.png)
 
 ``` {.cpp}
 {
    // Creating a Canvas and a TProfile2D
-   TCanvas *c1 = new TCanvas("c1","Profile histogram example", 200,10,700,500);
-   hprof2d = new TProfile2D("hprof2d", "Profile of pz versus px and py",
+   TCanvas *c1 = new TCanvas("c1",
+                             "Profile histogram example",
+                              200, 10,700,500);
+   hprof2d = new TProfile2D("hprof2d",
+                            "Profile of pz versus px and py",
                              40,-4,4,40,-4,4,0,20);
 
    // Filling the TProfile2D with 25000 points
@@ -1980,8 +1990,7 @@ operation.
 
 
 Paint one Gouraud shaded 3d iso surface though a 3d histogram at the
-value computed as follow:
-`SumOfWeights/(NbinsX*NbinsY*NbinsZ)` .
+value computed as follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`.
 
 ``` {.cpp}
 void hist3d() {
@@ -2013,9 +2022,9 @@ void hist3d() {
 
 
 The **`TPie`** class allows to create a Pie Chart representation of a
-one dimensional data set. The data can come from an array of `Double_t`
-(or `Float_t` ) or from a 1D-histogram. The possible options to draw a
-**`TPie`** are:
+one dimensional data set. The data can come from an array of
+`Double_t` (or `Float_t` ) or from a 1D-histogram. The possible
+options to draw a **`TPie`** are:
 
 -   "`R`" Paint the labels along the central "`R`"adius of slices.
 
@@ -2027,8 +2036,8 @@ one dimensional data set. The data can come from an array of `Double_t`
 -   "`NOL`" No OutLine: do not draw the slices' outlines; any property
     over the slices' line is ignored.
 
-The method `SetLabelFormat()` is used to customize the label format. The
-format string must contain one of these modifiers:
+The method `SetLabelFormat()` is used to customize the label format.
+The format string must contain one of these modifiers:
 
 -   - `%txt` : to print the text label associated with the slice
 
@@ -2049,14 +2058,14 @@ See the macro `$ROOTSYS/tutorials/graphics/piechart.C` .
 ## The User Interface for Histograms
 
 
-The classes **`T`** **`H1`** **`Editor`** and **`T`** **`H2`** **`Editor`**
-provides the user interface for setting histogram's attributes and rebinning
-interactively.
+The classes **`T`** **`H1`** **`Editor`** and **`T`** **`H2`**
+**`Editor`** provides the user interface for setting histogram's
+attributes and rebinning interactively.
 
 ### TH1Editor
 
 
-![](pictures/03000043.png)![](pictures/03000044.png)
+![](pictures/03000043.png)
 
 #### The Style Tab
 
@@ -2073,8 +2082,8 @@ possibilities can be set.
 add different error bars to the histogram (no errors, simple, etc.).
 
 ##### Add
-further things which can be added to the histogram (None, simple/smooth line, fill
-area, etc.)
+further things which can be added to the histogram (None,
+simple/smooth line, fill area, etc.)
 
 #### 2-D Plot
 
@@ -2097,7 +2106,8 @@ percentage and the possibility to draw horizontal bars.
 #### 3-D Plot
 
 ##### Add
-set histogram type Lego-Plot or Surface draw (Lego, Lego1.2, Surf, Surf1...5).
+set histogram type Lego-Plot or Surface draw (Lego, Lego1.2, Surf,
+Surf1...5).
 
 ##### Coords
 set the coordinate system (Cartesian, Spheric, etc.).
@@ -2112,12 +2122,13 @@ set the bar attributes: width and offset.
 draw a horizontal bar chart.
 
 #### The Binning tab
-The binning tab has two different layouts. One is for a histogram, which
-is not drawn from an ntuple. The other one is available for a histogram,
-which is drawn from an ntuple. In this case, the rebin algorithm can
-create a rebinned histogram from the original data i.e. the ntuple.
+The binning tab has two different layouts. One is for a histogram,
+which is not drawn from an ntuple. The other one is available for a
+histogram, which is drawn from an ntuple. In this case, the rebin
+algorithm can create a rebinned histogram from the original data i.e.
+the ntuple.
 
-![](pictures/03000045.png) ![](pictures/03000046.png)
+![](pictures/03000045.png)
 
 To see the differences do:
 
@@ -2129,24 +2140,24 @@ To see the differences do:
 
 #### Non ntuple histogram
 
-Rebin with a slider and the number of bins (shown in the field below the
-slider). The number of bins can be changed to any number, which divides
-the number of bins of the original histogram. A click on the Apply
-button will delete the origin histogram and will replace it by the
-rebinned one on the screen. A click on the Ignore button will restore
-the origin histogram.
+Rebin with a slider and the number of bins (shown in the field below
+the slider). The number of bins can be changed to any number, which
+divides the number of bins of the original histogram. A click on the
+Apply button will delete the origin histogram and will replace it by
+the rebinned one on the screen. A click on the Ignore button will
+restore the origin histogram.
 
 #### Histogram drawn from an ntuple
 
 ##### Rebin
 with the slider, the number of bins can be enlarged by a factor
-of 2, 3, 4, 5 (moving to the right) or reduced by a factor of $\frac{1}{2}$,
-$\frac{1}{3}$, $\frac{1}{4}$, $\frac{1}{5}$.
+of 2, 3, 4, 5 (moving to the right) or reduced by a factor of
+$\frac{1}{2}$, $\frac{1}{3}$, $\frac{1}{4}$, $\frac{1}{5}$.
 
 ##### BinOffset with a BinOffset slider
 the origin of the histogram can be
-changed within one binwidth. Using this slider the effect of binning the
-data into bins can be made visible (statistical fluctuations).
+changed within one binwidth. Using this slider the effect of binning
+the data into bins can be made visible (statistical fluctuations).
 
 ##### Axis Range
 with a double slider it is possible to zoom into the
@@ -2156,13 +2167,13 @@ limit in fields below the slider.
 ##### Delayed drawing
 all the Binning sliders can set to delay draw mode.
 Then the changes on the histogram are only updated, when the Slider is
-released. This should be activated if the redrawing of the histogram is
-time consuming.
+released. This should be activated if the redrawing of the histogram
+is time consuming.
 
 ### TH2Editor
 
 
-![](pictures/03000047.png) ![](pictures/03000048.png)
+![](pictures/03000047.png)
 
 #### Style Tab:
 
@@ -2205,7 +2216,8 @@ the color palette is drawn.
 #### 3-D Plot
 
 ##### Type
-set histogram type to Lego or surface plot; draw (Lego, Lego1.2, Surf, Surf1...5)
+set histogram type to Lego or surface plot; draw (Lego, Lego1.2, Surf,
+Surf1...5)
 
 ##### Coords
 set the coordinate system (Cartesian, Spheric, etc.);
@@ -2230,11 +2242,11 @@ change the bar attributes: the width and offset.
 
 #### Rebinning Tab
 
-The Rebinning tab has two different layouts. One is for a histogram that
-is not drawn from an ntuple; the other one is available for a histogram,
-which is drawn from an ntuple. In this case, the rebin algorithm can
-create a rebinned histogram from the original data i.e. the ntuple. To
-see the differences do for example:
+The Rebinning tab has two different layouts. One is for a histogram
+that is not drawn from an ntuple; the other one is available for a
+histogram, which is drawn from an ntuple. In this case, the rebin
+algorithm can create a rebinned histogram from the original data i.e.
+the ntuple. To see the differences do for example:
 
 ``` {.cpp}
    TFile f ("hsimple.root");
@@ -2244,14 +2256,14 @@ see the differences do for example:
 
 #### Non-ntuple histogram:
 
-Rebin with sliders (one for the x, one for the y-axis) and the number of
-bins (shown in the field below them can be changed to any number, which
-divides the number of bins of the original histogram. Selecting the
-Apply button will delete the origin histogram and will replace it by the
-rebinned one on the screen. Selecting the Ignore the origin histogram
-will be restored.
+Rebin with sliders (one for the x, one for the y-axis) and the number
+of bins (shown in the field below them can be changed to any number,
+which divides the number of bins of the original histogram. Selecting
+the Apply button will delete the origin histogram and will replace it
+by the rebinned one on the screen. Selecting the Ignore the origin
+histogram will be restored.
 
-![](pictures/03000049.png) ![](pictures/0300004A.png)
+![](pictures/03000049.png)
 
 #### Histogram drawn from an ntuple
 
@@ -2262,16 +2274,17 @@ $\frac{1}{3}$, $\frac{1}{4}$, $\frac{1}{5}$.
 
 ##### BinOffset
 with the BinOffset slider the origin of the histogram can
-be changed within one binwidth. Using this slider the effect of binning
-the data into bins can be made visible (=\> statistical fluctuations).
+be changed within one binwidth. Using this slider the effect of
+binning the data into bins can be made visible (=\> statistical
+fluctuations).
 
 ##### Axis Range
 with a double slider that gives the possibility for
-zooming. It is also possible to set the upper and lower limit in fields
-below the slider.
+zooming. It is also possible to set the upper and lower limit in
+fields below the slider.
 
 ##### Delayed drawing
 all the binning sliders can be set to delay draw mode.
 Then the changes on the histogram are only updated, when the Slider is
-released. This should be activated if the redrawing of the histogram is
-too time consuming.
+released. This should be activated if the redrawing of the histogram
+is too time consuming.
