@@ -175,7 +175,14 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
    if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) &&
         fClass.Name().find( '<' ) != std::string::npos &&
         fClass.Name().find( "int" ) == std::string::npos ) {
-      gROOT->ProcessLine( ("template class " + fClass.Name() + ";").c_str() );
+      const std::string& cName = fClass.Name();
+      if ( TClassEdit::IsSTLCont( cName.c_str() ) ) {
+         gROOT->ProcessLine( (std::string("template class ") +
+            (cName.find( "std::", 0, 5 ) == std::string::npos ? "std::" : "") +
+            fClass.Name() + ";").c_str() );
+      } else {
+         gROOT->ProcessLine( ("template class " + fClass.Name() + ";").c_str() );
+      }
    }
 // -- CLING WORKAROUND
 
