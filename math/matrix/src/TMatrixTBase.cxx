@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Id$
+// @(#)root/matrix:$Id: 2d00df45ce4c38c7ea0930d6b520cbf4cfb9152e $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -434,9 +434,10 @@ void TMatrixTBase<Element>::GetMatrix2Array(Element *data,Option_t *option) cons
       for (Int_t irow = 0; irow < fNrows; irow++) {
          const Int_t off1 = irow*fNcols;
          Int_t off2 = 0;
-         for (Int_t icol = 0; icol < fNcols; icol++)
+         for (Int_t icol = 0; icol < fNcols; icol++) {
             data[off2+irow] = elem[off1+icol];
-         off2 += fNrows;
+            off2 += fNrows;
+         }
       }
    }
    else
