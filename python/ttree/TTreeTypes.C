@@ -9,10 +9,9 @@
 
 
 #ifdef __MAKECINT__
-using namespace std;
-#pragma link C++ class vector< vector< float > >;
-#pragma link C++ class vector< vector< float > >::iterator;
-#pragma link C++ class vector< vector< float > >::const_iterator;
+#pragma link C++ class std::vector< vector< float > >;
+#pragma link C++ class std::vector< vector< float > >::iterator;
+#pragma link C++ class std::vector< vector< float > >::const_iterator;
 #endif
 
 
