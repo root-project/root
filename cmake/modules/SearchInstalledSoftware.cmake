@@ -566,8 +566,8 @@ if(xrootd)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
     )
-    set(XROOTD_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/xrootd)
-    set(XROOTD_LIBRARIES -L${CMAKE_BINARY_DIR}/lib64 -lXrdMain -lXrdUtils -lXrdClient)
+    set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd)
+    set(XROOTD_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -lXrdMain -lXrdUtils -lXrdClient)
     set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
   endif()
 endif()
