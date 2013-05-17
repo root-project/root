@@ -246,10 +246,14 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
 
    // operator[]/() returning a reference type will be used for __setitem__
       if ( mtName == "__call__" || mtName == "__getitem__" ) {
-         std::string cpd = Utility::Compound(
-            method.TypeOf().ReturnType().Name( Rflx::QUALIFIED | Rflx::SCOPED | Rflx::FINAL ) );
-         if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' )
-            setupSetItem = kTRUE;
+         std::string qual_return = method.TypeOf().ReturnType().Name(
+            Rflx::QUALIFIED | Rflx::SCOPED | Rflx::FINAL );
+         if ( qual_return.find( "const", 0, 5 ) == std::string::npos ) {
+            std::string cpd = Utility::Compound( qual_return );
+            if ( ! cpd.empty() && cpd[ cpd.size() - 1 ] == '&' ) {
+               setupSetItem = kTRUE;
+            }
+         }
       }
 
    // decide on method type: member or static (which includes globals)
