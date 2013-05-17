@@ -1149,9 +1149,15 @@ namespace TStreamerInfoActions
          buf.ReadInt(nvalues);
          vec->resize(nvalues);
          
+#ifdef R__VISUAL_CPLUSPLUS
+         if (nvalues <= 0) {
+            buf.CheckByteCount(start,count,config->fTypeName);
+            return 0;
+         }
+#endif
          T *begin = &(*vec->begin());
          buf.ReadFastArray(begin, nvalues);
-         
+
          buf.CheckByteCount(start,count,config->fTypeName);
          return 0;
       }
@@ -1199,6 +1205,12 @@ namespace TStreamerInfoActions
          buf.ReadInt(nvalues);
          vec->resize(nvalues);
          
+#ifdef R__VISUAL_CPLUSPLUS
+         if (nvalues <= 0) {
+            buf.CheckByteCount(start,count,config->fTypeName);
+            return 0;
+         }
+#endif
          float *begin = &(*vec->begin());
          buf.ReadFastArrayFloat16(begin, nvalues);
          
@@ -1219,6 +1231,12 @@ namespace TStreamerInfoActions
          buf.ReadInt(nvalues);
          vec->resize(nvalues);
          
+#ifdef R__VISUAL_CPLUSPLUS
+         if (nvalues <= 0) {
+            buf.CheckByteCount(start,count,config->fTypeName);
+            return 0;
+         }
+#endif
          double *begin = &(*vec->begin());
          buf.ReadFastArrayDouble32(begin, nvalues);
          
