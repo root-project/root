@@ -424,20 +424,27 @@ void TProfile::Copy(TObject &obj) const
 //*-*-*-*-*-*-*-*Copy a Profile histogram to a new profile histogram*-*-*-*-*
 //*-*            ===================================================
 
-   TH1D::Copy(((TProfile&)obj));
-   fBinEntries.Copy(((TProfile&)obj).fBinEntries);
-   fBinSumw2.Copy(((TProfile&)obj).fBinSumw2);
-   for (int bin=0;bin<fNcells;bin++) {
-      ((TProfile&)obj).fArray[bin]        = fArray[bin];
-      ((TProfile&)obj).fSumw2.fArray[bin] = fSumw2.fArray[bin];
+   try { 
+      TProfile & pobj = dynamic_cast<TProfile&>(obj);
+      TH1D::Copy(pobj);
+      fBinEntries.Copy(pobj.fBinEntries);
+      fBinSumw2.Copy(pobj.fBinSumw2);
+      for (int bin=0;bin<fNcells;bin++) {
+         pobj.fArray[bin]        = fArray[bin];
+         pobj.fSumw2.fArray[bin] = fSumw2.fArray[bin];
+      }
+      
+      pobj.fYmin = fYmin;
+      pobj.fYmax = fYmax;
+      pobj.fScaling   = fScaling;
+      pobj.fErrorMode = fErrorMode;
+      pobj.fTsumwy    = fTsumwy;
+      pobj.fTsumwy2   = fTsumwy2;
+      
+   } catch(...) {
+      Fatal("Copy","Cannot copy a TProfile in a %s",obj.IsA()->GetName());
    }
-
-   ((TProfile&)obj).fYmin = fYmin;
-   ((TProfile&)obj).fYmax = fYmax;
-   ((TProfile&)obj).fScaling   = fScaling;
-   ((TProfile&)obj).fErrorMode = fErrorMode;
-   ((TProfile&)obj).fTsumwy    = fTsumwy;
-   ((TProfile&)obj).fTsumwy2   = fTsumwy2;
+      
 }
 
 
