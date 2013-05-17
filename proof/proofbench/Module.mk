@@ -7,7 +7,7 @@ MODNAME      := proofbench
 MODDIR       := $(ROOT_SRCDIR)/proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
-PBPARDIR     := $(ROOT_SRCDIR)/etc/proof/proofbench
+PBPARDIR     := etc/proof/proofbench
 
 PROOFBENCHDIR  := $(MODDIR)
 PROOFBENCHDIRS := $(PROOFBENCHDIR)/src
@@ -40,7 +40,7 @@ PBDPARS     += $(wildcard $(MODDIRS)/TSel*.cxx)
 PBDPARH     := $(filter-out $(MODDIRI)/TSelHist%, $(PBDPARH))
 PBDPARS     := $(filter-out $(MODDIRS)/TSelHist%, $(PBDPARS))
 
-PBDPAR      := $(call stripsrc,$(PBPARDIR)/ProofBenchDataSel.par)
+PBDPAR      := $(PBPARDIR)/ProofBenchDataSel.par
 
 ##### ProofBenchCPUSel PAR file #####
 PBCPARDIR   := $(call stripsrc,$(PROOFBENCHDIRS)/ProofBenchCPUSel)
@@ -48,7 +48,7 @@ PBCPARINF   := $(PBCPARDIR)/PROOF-INF
 PBCPARH     := $(MODDIRI)/TProofBenchTypes.h $(MODDIRI)/TSelHist.h
 PBCPARS     := $(MODDIRS)/TSelHist.cxx
 
-PBCPAR      := $(call stripsrc,$(PBPARDIR)/ProofBenchCPUSel.par)
+PBCPAR      := $(PBPARDIR)/ProofBenchCPUSel.par
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFBENCHH))
@@ -81,6 +81,7 @@ $(PROOFBENCHMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFBENCHL)
 		   -d $(PROOFBENCHLIBDEPM) -c $(PROOFBENCHL)
 
 $(PBDPAR):   $(PBDPARH) $(PBDPARS)
+		$(MAKEDIR)
 		@echo "Generating PAR file $@..."
 		@(if test -d $(PBDPARDIR); then \
 		   rm -fr $(PBDPARDIR); \
@@ -111,6 +112,7 @@ $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		rm -fr $(PBDPARDIR))
 
 $(PBCPAR):   $(PBCPARH) $(PBCPARS)
+		$(MAKEDIR)
 		@echo "Generating PAR file $@..."
 		@(if test -d $(PBCPARDIR); then \
 		   rm -fr $(PBCPARDIR); \
