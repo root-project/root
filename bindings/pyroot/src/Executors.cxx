@@ -42,7 +42,7 @@ Long_t PRCallFuncExecInt( CallFunc_t* func, void* self, Bool_t release_gil ) {
    Long_t result;
    if ( release_gil ) {
       Py_BEGIN_ALLOW_THREADS
-         result = (Long_t)gInterpreter->CallFunc_ExecInt( func, self );
+      result = (Long_t)gInterpreter->CallFunc_ExecInt( func, self );
       Py_END_ALLOW_THREADS
    } else
       result = (Long_t)gInterpreter->CallFunc_ExecInt( func, self );
@@ -98,7 +98,7 @@ PyObject* PyROOT::TCharExecutor::Execute( CallFunc_t* func, void* self, Bool_t r
 PyObject* PyROOT::TIntExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python int return value
-   return PyInt_FromLong( (Long_t)PRCallFuncExecInt( func, self, release_gil ) );
+   return PyInt_FromLong( (Int_t)PRCallFuncExecInt( func, self, release_gil ) );
 }
 
 //____________________________________________________________________________
