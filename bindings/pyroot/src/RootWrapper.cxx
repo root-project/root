@@ -230,8 +230,15 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
 
    // special case trackers
       Bool_t setupSetItem = kFALSE;
-      Bool_t isConstructor =
-         TClassEdit::ShortType( mtName.c_str(), TClassEdit::kDropAlloc ) == clName;
+   // CLING WORKAROUND --
+      Bool_t isConstructor = kFALSE;
+      if ( clName == "string" ) {
+         isConstructor = mtName == "basic_string<char>";
+      } else {
+   // -- CLING WORKAROUND
+         isConstructor =
+            TClassEdit::ShortType( mtName.c_str(), TClassEdit::kDropAlloc ) == clName;
+      }
 
    // filter empty names (happens for namespaces, is bug?)
       if ( mtName == "" )
