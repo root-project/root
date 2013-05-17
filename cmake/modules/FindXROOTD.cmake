@@ -4,6 +4,7 @@
 #
 #  XROOTD_FOUND - system has XROOTD
 #  XROOTD_INCLUDE_DIR - the XROOTD include directory
+#  XROOTD_INCLUDE_DIRS - with additonal include directories (non cached)
 #  XROOTD_LIBRARIES - The libraries needed to use XROOTD
 #  XROOTD_CFLAGS - Additional compilation flags (defines)
 #  XROOTD_OLDPACK - old-style packaging for XROOTD libraries
@@ -13,18 +14,11 @@ if(XROOTD_XrdClient_LIBRARY AND XROOTD_INCLUDE_DIR)
   set(XROOTD_FIND_QUIETLY TRUE)
 endif()
 
-find_path(XROOTD_INCLUDE_DIR
-  NAMES
-  XrdVersion.hh
-  PATHS 
-  $ENV{XRDSYS}/include/xrootd
-  $ENV{XRDSYS}/include
-  /opt/xrootd/include/xrootd
-  /opt/xrootd/include
-  /usr/local/include/xrootd
-  /usr/local/include
-  /usr/include/xrootd
-  /usr/include
+set(searchpath ${XROOTD_ROOT_DIR} $ENV{XRDSYS} /opt/xrootd)
+
+find_path(XROOTD_INCLUDE_DIR NAMES XrdVersion.hh
+  HINTS ${searchpath}
+  PATH_SUFFIXES include include/xrootd
 )
 
 if (XROOTD_INCLUDE_DIR)
@@ -52,86 +46,21 @@ if (XROOTD_INCLUDE_DIR)
 endif()
 
 if(XROOTD_FOUND)
-  # This we used as a compiler macro variable
+  # Set include dirs and compiler macro variable
+
   if(NOT XROOTD_FIND_QUIETLY )
     message(STATUS "Found Xrootd version num: ${xrdvers} (setting -DROOTXRDVERS=${xrdversnum})")
   endif()
-  SET(XROOTD_CFLAGS "-DROOTXRDVERS=${xrdversnum}")
+  set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrdversnum}")
 
   if ( ${xrdversnum} LESS 300010000 AND ${xrdversnum} LESS 20111022)
-     SET(XROOTD_OLDPACK TRUE)
+     set(XROOTD_OLDPACK TRUE)
+     set(XROOTD_INCLUDE_DIRS ${XROOTD_ROOT_DIR})
      message(STATUS "Setting OLDPACK TRUE")
   else()
-     SET(XROOTD_OLDPACK FALSE)
+     set(XROOTD_OLDPACK FALSE)
+     set(XROOTD_INCLUDE_DIRS ${XROOTD_INCLUDE_DIR} ${XROOTD_INCLUDE_DIR}/private)
   endif()
-
-  # Check for additional headers
-  if ( ${xrdversnum} LESS 20070723 )
-     # Check for additional headers in old directories
-     find_path(XROOTD_INCLUDE_DIR
-        NAMES
-        XrdNet/XrdNetDNS.hh
-        XrdOuc/XrdOucError.hh
-        XrdOuc/XrdOucLogger.hh
-        XrdOuc/XrdOucPlugin.hh
-        XrdOuc/XrdOucPthread.hh
-        XrdOuc/XrdOucSemWait.hh
-        XrdOuc/XrdOucTimer.hh
-        PATHS 
-        ${XROOTD_INCLUDE_DIR}
-     )
-  else()
-     if ( ${xrdversnum} LESS 300010000 AND ${xrdversnum} LESS 20111022)
-        # DNS stuff was under XrdNet
-        find_path(XROOTD_INCLUDE_DIR
-           NAMES
-           XrdNet/XrdNetDNS.hh
-           PATHS 
-           ${XROOTD_INCLUDE_DIR}
-        )
-     else ()
-        # DNS stuff is under XrdSys
-        find_path(XROOTD_INCLUDE_DIR
-           NAMES
-           XrdSys/XrdSysDNS.hh
-           PATHS 
-           ${XROOTD_INCLUDE_DIR}
-        )
-     endif ()
-
-     if (XROOTD_INCLUDE_DIR)
-        # Check for additional headers in new directories
-        find_path(XROOTD_INCLUDE_DIR
-            NAMES
-            XrdSys/XrdSysError.hh
-            XrdSys/XrdSysLogger.hh
-            XrdSys/XrdSysPlugin.hh
-            XrdSys/XrdSysPthread.hh
-            XrdSys/XrdSysSemWait.hh
-            XrdSys/XrdSysTimer.hh
-            PATHS 
-            ${XROOTD_INCLUDE_DIR}
-        )
-     endif()
-
-     SET(XROOTD_PRIVATE_INCLUDE_DIR FALSE)     
-     if (XROOTD_INCLUDE_DIR)
-        # Check for additional headers in new directories
-        find_path(XROOTD_PRIVATE_INCLUDE_DIR
-            NAMES
-            XrdSys/XrdSysPriv.hh
-            PATHS 
-            ${XROOTD_INCLUDE_DIR}/private
-        )
-     endif()
-  endif()
-  if (XROOTD_INCLUDE_DIR)
-     SET(XROOTD_FOUND TRUE)
-  else ()
-     SET(XROOTD_FOUND FALSE)
-  endif ()
-else()
-  SET(XROOTD_FOUND FALSE)
 endif()
 
 if(XROOTD_FOUND)
@@ -141,30 +70,24 @@ if(XROOTD_FOUND)
     foreach(l XrdNet XrdOuc XrdSys XrdClient Xrd)
       find_library(XROOTD_${l}_LIBRARY
          NAMES ${l} 
-         PATHS $ENV{XRDSYS}/lib
-               /opt/xrootd/lib
-               /usr/local/lib
-               /usr/lib)
+         HINTS ${searchpath}
+         PATH_SUFFIXES lib)
       list(APPEND XROOTD_LIBRARIES ${XROOTD_${l}_LIBRARY})
     endforeach()
 
     if(${xrdversnum} GREATER 20100729)
       find_library(XROOTD_XrdNetUtil_LIBRARY
         NAMES XrdNetUtil
-        PATHS $ENV{XRDSYS}/lib
-              /opt/xrootd/lib
-              /usr/local/lib
-              /usr/lib)
+        HINTS ${searchpath}
+        PATH_SUFFIXES lib)
       list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdNetUtil_LIBRARY})
     endif ()
   else()
     foreach(l XrdMain XrdUtils XrdClient)
       find_library(XROOTD_${l}_LIBRARY
-         NAMES ${l} 
-         PATHS $ENV{XRDSYS}/lib
-               /opt/xrootd/lib
-               /usr/local/lib
-               /usr/lib)
+         NAMES ${l}
+         HINTS ${searchpath}
+         PATH_SUFFIXES lib)
       list(APPEND XROOTD_LIBRARIES ${XROOTD_${l}_LIBRARY})
     endforeach()
   endif()
@@ -172,20 +95,16 @@ if(XROOTD_FOUND)
   if(XROOTD_LIBRARIES)
     set(XROOTD_FOUND TRUE)
     if(NOT XROOTD_FIND_QUIETLY )
-      if (XROOTD_PRIVATE_INCLUDE_DIR)
-         message(STATUS "             include_dir: ${XROOTD_INCLUDE_DIR} ${XROOTD_PRIVATE_INCLUDE_DIR}")
-      else ()
-         message(STATUS "             include_dir: ${XROOTD_INCLUDE_DIR}")
-      endif ()
+      message(STATUS "             include_dirs: ${XROOTD_INCLUDE_DIRS}")
       message(STATUS "             libraries: ${XROOTD_LIBRARIES}")
     endif() 
   else ()
+    message("Herre")
     set(XROOTD_FOUND FALSE)
   endif ()
 endif()
 
 mark_as_advanced(XROOTD_INCLUDE_DIR
-                 XROOTD_PRIVATE_INCLUDE_DIR
                  XROOTD_XrdMain_LIBRARY
                  XROOTD_XrdUtils_LIBRARY
                  XROOTD_XrdClient_LIBRARY
