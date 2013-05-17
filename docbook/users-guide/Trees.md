@@ -2950,7 +2950,7 @@ can be grown by using the "`>>+`" syntax. For example to add the
 entries, with exactly 600 tracks:
 
 ``` {.cpp}
-root[] T->Draw(">>+ myList","fNtrack == 600"</code>, "entrylist");
+root[] T->Draw(">>+ myList","fNtrack == 600", "entrylist");
 ```
 
 If the `Draw` command generates duplicate entries, they are not added to
@@ -3017,7 +3017,7 @@ called `myList`. We get the list from the current directory and assign
 it to a variable list.
 
 ``` {.cpp}
-root[] T->Draw(">>myList","fNtrack > 600"</code>,"entrylist");
+root[] T->Draw(">>myList","fNtrack > 600","entrylist");
 root[]TEntryList 
 ```
 
@@ -3064,7 +3064,7 @@ all operation in a **`TEntryList`** for a **`TChain`** are on the
 **`TTree`** level. This is illustrated by the following example:
 
 ``` {.cpp}
-root[] TEntryList *list1 = new TEntryList("list1",</code>"list1");
+root[] TEntryList *list1 = new TEntryList("list1","list1");
 root[] list1->SetTree("tree1","file1")
 root[] list1->Enter(0);
 root[] list1->Enter(2);
@@ -3269,7 +3269,7 @@ Loop through the first 10 entries and print the values of `fNtrack`:
 
 ``` {.cpp}
 root[] for (int i = 0; i < 10; i++) 
-root[] cout << a[i] << " " << endl    // need an endl to see the values</code>
+root[] cout << a[i] << " " << endl    // need an endl to see the values
 594 597 606 595 604 610 604 602 603 596
 ```
 
