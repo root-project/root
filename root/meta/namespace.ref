@@ -10,3 +10,6 @@ StreamerInfo for class: MySpace::MyClass, checksum=0xda58546c
 StreamerInfo for class: MySpace::MyClass, checksum=0xda58546c
   int            a               offset=  0 type= 3                     
    i= 0, a               type=  3, offset=  0, len=1, method=0
+OBJ: TMethod	funcInNS	
+OBJ: TFunction	globalFunc	
+OBJ: TFunction	globalFuncInline	;
