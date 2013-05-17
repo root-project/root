@@ -85,6 +85,7 @@ $(PROOFBENCHMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFBENCHL)
 
 $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		$(DMAKEDIR)
+		stat $(dir $@)
 		@echo "Generating PAR file $@..."
 		@(if test -d $(PBDPARDIR); then \
 		   rm -fr $(PBDPARDIR); \
@@ -116,6 +117,7 @@ $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 
 $(PBCPAR):   $(PBCPARH) $(PBCPARS)
 		$(DMAKEDIR)
+		stat $(dir $@)
 		@echo "Generating PAR file $@..."
 		@(if test -d $(PBCPARDIR); then \
 		   rm -fr $(PBCPARDIR); \
