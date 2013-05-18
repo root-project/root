@@ -1,5 +1,9 @@
 class A{};
-class B{ public: virtual int getid() {return 0;}};
+class B{ 
+public: 
+  virtual ~B(){}
+  virtual int getid() {return 0;}
+};
 class C : public B {};
 class D : public A {};
 
