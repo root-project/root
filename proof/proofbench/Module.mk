@@ -58,9 +58,6 @@ ALLMAPS      += $(PROOFBENCHMAP)
 # include all dependency files
 INCLUDEFILES += $(PROOFBENCHDEP)
 
-# For debugging
-DMAKEDIR      = +[ -d $(dir $@) ] || mkdir -p $(dir $@)
-
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
@@ -84,9 +81,7 @@ $(PROOFBENCHMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFBENCHL)
 		   -d $(PROOFBENCHLIBDEPM) -c $(PROOFBENCHL)
 
 $(PBDPAR):   $(PBDPARH) $(PBDPARS)
-		$(DMAKEDIR)
-		pwd
-		stat $(dir $@)
+		$(MAKEDIR)
 		@echo "Generating PAR file $@..."
 		@(if test -d $(PBDPARDIR); then \
 		   rm -fr $(PBDPARDIR); \
@@ -112,14 +107,12 @@ $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		par=`basename $(PBDPAR)`; \
 		pardir=`basename $(PBDPARDIR)`; \
 		tar cf - $$pardir | gzip > $$par || exit 1; \
-		pwd; echo "$$builddir/$(PBPARDIR)"; stat "$$builddir/$(PBPARDIR)"; mv $$par $$builddir/$(PBPARDIR) || exit 1; \
+		mv $$par $$builddir/$(PBPARDIR) || exit 1; \
 		cd $$builddir; \
 		rm -fr $(PBDPARDIR))
 
 $(PBCPAR):   $(PBCPARH) $(PBCPARS)
-		$(DMAKEDIR)
-		pwd
-		stat $(dir $@)
+		$(MAKEDIR)
 		@echo "Generating PAR file $@..."
 		@(if test -d $(PBCPARDIR); then \
 		   rm -fr $(PBCPARDIR); \
@@ -145,7 +138,7 @@ $(PBCPAR):   $(PBCPARH) $(PBCPARS)
 		par=`basename $(PBCPAR)`; \
 		pardir=`basename $(PBCPARDIR)`; \
 		tar cf - $$pardir | gzip > $$par || exit 1; \
-		pwd; echo "$$builddir/$(PBPARDIR)"; stat "$$builddir/$(PBPARDIR)"; mv $$par $$builddir/$(PBPARDIR) || exit 1; \
+		mv $$par $$builddir/$(PBPARDIR) || exit 1; \
 		cd $$builddir; \
 		rm -fr $(PBCPARDIR))
 
