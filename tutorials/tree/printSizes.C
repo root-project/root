@@ -161,3 +161,14 @@ void printTreeSummary(TTree *t)
       cout << "  It's branch \"" << br->GetName() << "\" takes " << sizeOnDisk(br,true) << " bytes on disk\n";
    }
 }
+
+int printSizes()
+{
+   TFile *f = TFile::Open("$ROOTSYS/tutorials/hsimple.root");
+   if (!f) return 1;
+   TTree *t; f->GetObject("ntuple",t);
+   if (!t) return 1;
+
+   printTreeSummary(t);
+   return 0;
+}
