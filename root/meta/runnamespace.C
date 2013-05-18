@@ -12,5 +12,7 @@ gROOT->GetClass("MySpace::MyClass")->Print();
 gROOT->GetClass("MyClass")->Print();
 gROOT->GetClass("MySpace::MyClass")->GetStreamerInfo()->ls();
 gROOT->GetClass("MyClass")->GetStreamerInfo()->ls();
+gROOT->GetClass("MySpace")->GetListOfMethods()->FindObject("funcInNS")->Print();
+gROOT->GetListOfGlobalFunctions()->FindObject("globalFunc")->Print();
+gROOT->GetListOfGlobalFunctions()->FindObject("globalFuncInline")->Print();
 };
-

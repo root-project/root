@@ -85,6 +85,7 @@ Double_t PassDoubleThroughConstRef( const Double_t& d ) { return d; }
 // abstract class should not be instantiatable
 class MyAbstractClass {
 public:
+   virtual ~MyAbstractClass() {}
    virtual void MyVirtualMethod() = 0;
 };
 

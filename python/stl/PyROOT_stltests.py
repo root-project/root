@@ -89,18 +89,16 @@ class STL1VectorTestCase( MyTestCase ):
       a += [ 1, 2, 3 ]
       self.assertEqual( len(a), 3 )
 
-      if not FIXCLING:
-         self.assertEqual( a[0], 1 )
-         self.assertEqual( a[1], 2 )
-         self.assertEqual( a[2], 3 )
+      self.assertEqual( a[0], 1 )
+      self.assertEqual( a[1], 2 )
+      self.assertEqual( a[2], 3 )
 
       a += ( 4, 5, 6 )
       self.assertEqual( len(a), 6 )
 
-      if not FIXCLING:
-         self.assertEqual( a[3], 4 )
-         self.assertEqual( a[4], 5 )
-         self.assertEqual( a[5], 6 )
+      self.assertEqual( a[3], 4 )
+      self.assertEqual( a[4], 5 )
+      self.assertEqual( a[5], 6 )
 
       self.assertRaises( TypeError, a.__iadd__, ( 7, '8' ) )
 

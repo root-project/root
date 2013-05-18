@@ -251,7 +251,7 @@ $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
         if [ "x$(SUMMARY)" != "x" ] ; then \
-           if [ `ls make.*.summary 2>/dev/null | wc -l` -gt 0 ] ; then \
+           if [ `ls $(SUMMARY).*.summary 2>/dev/null | wc -l` -gt 0 ] ; then \
               cat $(SUMMARY).*.summary > $(SUMMARY).summary; \
            else \
               echo "--- FAILING TEST: make -C $* test" > $(SUMMARY).summary; \

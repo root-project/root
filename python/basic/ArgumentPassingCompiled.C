@@ -57,7 +57,7 @@ TLorentzVector LorentzVectorRefArguments( const TLorentzVector& arg1,
 }
 
 unsigned int UnsignedIntByRef( unsigned int& a ) {
-   *(unsigned int*)a = 3;
+   a = 3;
    return 3;
 }
 
