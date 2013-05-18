@@ -35,6 +35,7 @@ public:
 
 struct IInterface  {
 public:
+  virtual ~IInterface() {}
   virtual void release() = 0;
 };
 
