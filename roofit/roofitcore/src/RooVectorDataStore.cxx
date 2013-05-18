@@ -1153,7 +1153,6 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
       rns.setNameList(catNset) ;
       anset = rns.select(nset?*nset:RooArgSet()) ;
       normSet = (RooArgSet*) anset->selectCommon(*argObs) ;
-      delete argObs ;
       
     }
     const char* catCset = arg->getStringAttribute("CATCondSet") ;
