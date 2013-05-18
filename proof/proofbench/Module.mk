@@ -85,6 +85,7 @@ $(PROOFBENCHMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFBENCHL)
 
 $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		$(DMAKEDIR)
+		pwd
 		stat $(dir $@)
 		@echo "Generating PAR file $@..."
 		@(if test -d $(PBDPARDIR); then \
@@ -106,7 +107,7 @@ $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		done; \
 		echo "   return 0;" >> $(PBDPARINF)/SETUP.C ; \
 		echo "}" >> $(PBDPARINF)/SETUP.C ; \
-		builddir=$(PWD); \
+		builddir=`pwd`; \
 		cd $(call stripsrc,$(PROOFBENCHDIRS)); \
 		par=`basename $(PBDPAR)`; \
 		pardir=`basename $(PBDPARDIR)`; \
@@ -117,6 +118,7 @@ $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 
 $(PBCPAR):   $(PBCPARH) $(PBCPARS)
 		$(DMAKEDIR)
+		pwd
 		stat $(dir $@)
 		@echo "Generating PAR file $@..."
 		@(if test -d $(PBCPARDIR); then \
@@ -138,7 +140,7 @@ $(PBCPAR):   $(PBCPARH) $(PBCPARS)
 		done; \
 		echo "   return 0;" >> $(PBCPARINF)/SETUP.C ; \
 		echo "}" >> $(PBCPARINF)/SETUP.C ; \
-		builddir=$(PWD); \
+		builddir=`pwd`; \
 		cd $(call stripsrc,$(PROOFBENCHDIRS)); \
 		par=`basename $(PBCPAR)`; \
 		pardir=`basename $(PBCPARDIR)`; \
