@@ -13,7 +13,7 @@ void doit()
    printf(" a: created@ %p  found@ %p\n", a,base->FindObjectAny("a"));
    printf("ha: created@ %p  found@ %p\n",ha,base->FindObjectAny("ha"));
    printf("ha: created@ %p  --found@ %p\n",ha,base->FindObjectAny("a/ha"));
-#ifdef ClingWorkAroundMissingImplicitAuto
+#ifdef ClingWorkAroundMissingDynamicScope
    TDirectory *k = (TDirectory*)base->FindObjectAny("a");
 #else
    k = (TDirectory*)base->FindObjectAny("a");
@@ -29,7 +29,7 @@ void doit()
    printf("haa: created@ %p  --found@ %p\n",haa,base->FindObjectAny("a/aa/haa"));
    printf("haa: created@ %p  found@ %p\n",haa,k->FindObjectAny("haa"));
    printf("haa: created@ %p  --found@ %p\n",haa,k->FindObjectAny("aa/haa"));
-#ifdef ClingWorkAroundMissingImplicitAuto
+#ifdef ClingWorkAroundMissingDynamicScope
    TDirectory *kk = (TDirectory*)k->FindObjectAny("aa");
 #else
    kk = (TDirectory*)k->FindObjectAny("aa");
@@ -55,7 +55,7 @@ void doit2()
    printf(" a: created@ %p  found@ %p\n", a,base->FindObjectAny("a"));
    printf("ha: created@ %p  found@ %p\n",ha,base->FindObjectAny("ha"));
    printf("ha: created@ %p  --found@ %p\n",ha,base->FindObjectAny("a/ha"));
-#ifdef ClingWorkAroundMissingImplicitAuto
+#ifdef ClingWorkAroundMissingDynamicScope
    TDirectory *k = (TDirectory*)base->FindObjectAny("a");
 #else
    k = (TDirectory*)base->FindObjectAny("a");
@@ -71,7 +71,7 @@ void doit2()
    printf("haa: created@ %p  --found@ %p\n",haa,base->FindObjectAny("a/aa/haa"));
    printf("haa: created@ %p  found@ %p\n",haa,k->FindObjectAny("haa"));
    printf("haa: created@ %p  --found@ %p\n",haa,k->FindObjectAny("aa/haa"));
-#ifdef ClingWorkAroundMissingImplicitAuto
+#ifdef ClingWorkAroundMissingDynamicScope
    TDirectory *kk = (TDirectory*)k->FindObjectAny("aa");
 #else
    kk = (TDirectory*)k->FindObjectAny("aa");
