@@ -105,7 +105,7 @@ bool typeidtest() {
  
 
   void * p = b2;
-  p = p;
+  // p = p;
   cerr << "Expect C++'s B*: "; 
   cerr << typeid(b2).name() << endl;
   cerr << "Expect C++'s C: "; 

@@ -61,7 +61,7 @@ void createvec(const char *filename = "vec.root")
 #ifdef NOTYET
    t->Branch("myvecvecvec.",&tvec);
 #endif
-   t->Branch("top.",&top);
+   t->Branch("topobj.",&top);
    t->Fill();
    f->Write();
 }
