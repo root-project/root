@@ -3855,9 +3855,14 @@ Double_t TH1::GetEntries() const
 Double_t TH1::GetEffectiveEntries() const
 {
    // number of effective entries of the histogram,
-   // i.e. the number of unweighted entries a histogram would need to
-   // have the same statistical power as this histogram with possibly
-   // weighted entries (i.e. <= TH1::GetEntries())
+   // neff = (Sum of weights )^2 / (Sum of weight^2 )
+   // In case of an unweighted histogram this number is equivalent to the
+   // number of entries of the histogram. 
+   // For a weighted histogram, this number corresponds to the hypotetical number of unweighted entries 
+   // a histogram would need to have the same statistical power as this weighted histogram.
+   // Note: The underflow/overflow are included if one has set the TH1::StatOverFlows flag
+   // and if the statistics has been computed at filling time. 
+   // If a range is set in the histogram the number is computed from the given range. 
 
    Stat_t s[kNstat];
    this->GetStats(s);// s[1] sum of squares of weights, s[0] sum of weights
