@@ -3696,7 +3696,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
                tagfile += ".ROOT.cachefile";
                tagurl.SetFile(tagfile);
                // we symlink this file as a ROOT cached file
-               gSystem->Symlink(cachefilepath, tagfile);
+               gSystem->Symlink(gSystem->BaseName(cachefilepath), tagfile);
                return TFile::Open(fileurl.GetUrl(), "READ", ftitle, compress, netopt);
             }
          }
