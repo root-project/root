@@ -10,4 +10,7 @@ endif()
 if(rfio)
   add_subdirectory(rfio)
 endif()
+if(gfal)
+  add_subdirectory(gfal)
+endif()
 

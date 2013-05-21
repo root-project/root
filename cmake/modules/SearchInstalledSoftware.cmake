@@ -572,8 +572,24 @@ if(xrootd)
   endif()
 endif()
 
+#---Check for gfal-------------------------------------------------------------------
+if(gfal)
+  find_package(GFAL)
+  if(NOT GFAL_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Gfal library not found and is required (gfal option enabled)")
+    else()
+      message(STATUS "GFAL library not found. Set variable GFAL_DIR to point to your gfal installation
+                      and the variable SRM_IFCE_DIR to the srm_ifce installation")
+      message(STATUS "For the time being switching OFF 'gfal' option")
+      set(gfal OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs chirp clarens cling dcache gfal glite globus hdfs lzma pch peac sapdb srp)
+foreach(opt afs chirp clarens cling dcache glite globus hdfs lzma pch peac sapdb srp)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)
