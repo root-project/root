@@ -1292,7 +1292,6 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       }
       if (!obj->InheritsFrom("TObjString") ||
           gSystem->AccessPathName(fullpath.Data())) {
-         char action[512];
          fBrowser->SetDrawOption(GetDrawOption());
          fDblClick = kTRUE;
          if (gClient->GetMimeTypeList()->GetAction(obj->IsA()->GetName(), action)) {
