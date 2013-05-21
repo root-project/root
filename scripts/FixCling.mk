@@ -15,7 +15,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncReturnInt"
 CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundDouble32inDefaultTmpltArg"
-CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
+#CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForNamespaces"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForTemplates"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
@@ -27,6 +27,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 # Features needed for the tutorials
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
+CALLROOTEXE += -e "\#define ClingWorkAroundExtraParensWithImplicitAuto"
 # and See ClingReinstateRedeclarationAllowed
 # Other missing features
 CALLROOTEXE += -e "\#define ClingWorkAroundNoPrivateClassIO"
@@ -61,7 +62,8 @@ CALLROOTEXEBUILD += -e "\#define ClingWorkAroundNoPrivateClassIO"
 # variable to be used in Makefiles.
 ClingWorkAroundLackOfModule = yes
 #ClingWorkAroundMissingImplicitAuto = yes
-ClingWorkAroundMissingDynamicScope = yes
+ClingWorkAroundExtraParensWithImplicitAuto = yes
+#ClingWorkAroundMissingDynamicScope = yes
 ClingWorkAroundMissingUnloading = yes
 ClingWorkAroundDouble32inDefaultTmpltArg = yes
 ClingWorkAroundCallfuncReturnInt = yes         # See http://savannah.cern.ch/bugs/?100652 
