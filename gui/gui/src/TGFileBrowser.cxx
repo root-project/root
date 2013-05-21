@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: f96f197fc1b35e846c5be5b3f6b655200f0b4efc $
 // Author: Bertrand Bellenot   26/09/2007
 
 /*************************************************************************
@@ -1292,12 +1292,33 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       }
       if (!obj->InheritsFrom("TObjString") ||
           gSystem->AccessPathName(fullpath.Data())) {
+         char action[512];
+         fBrowser->SetDrawOption(GetDrawOption());
          fDblClick = kTRUE;
-         obj->Browse(fBrowser);
+         if (gClient->GetMimeTypeList()->GetAction(obj->IsA()->GetName(), action)) {
+            TString act = action;
+            if (act.Contains("%s")) act.ReplaceAll("%s", obj->GetName());
+            else if (act.Contains("->Browse()")) obj->Browse(fBrowser);
+            else {
+               act.Prepend(obj->GetName());
+               gInterpreter->SaveGlobalsContext();
+               if (act[0] == '!') {
+                  act.Remove(0, 1);
+                  gSystem->Exec(act.Data());
+               } else {
+                  // special case for remote object: remote process
+                  if (obj->InheritsFrom("TRemoteObject"))
+                     gApplication->SetBit(TApplication::kProcessRemotely);
+                  gApplication->ProcessLine(act.Data());
+               }
+            }
+         }
+         else obj->Browse(fBrowser);
          fDblClick = kFALSE;
          fNKeys = 0;
          fCnt = 0;
          fListTree->ClearViewPort();
+         if (gPad) gPad->Update();
          return;
       }
    }
