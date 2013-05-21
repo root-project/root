@@ -13,4 +13,6 @@ endif()
 if(gfal)
   add_subdirectory(gfal)
 endif()
-
+if(dcache)
+  add_subdirectory(dcache)
+endif()

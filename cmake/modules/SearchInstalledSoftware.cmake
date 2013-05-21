@@ -647,8 +647,23 @@ if(gfal)
 endif()
 
 
+#---Check for dCache-------------------------------------------------------------------
+if(dcache)
+  find_package(DCAP)
+  if(NOT DCAP_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "dCap library not found and is required (dcache option enabled)")
+    else()
+      message(STATUS "dCap library not found. Set variable DCAP_DIR to point to your dCache installation")
+      message(STATUS "For the time being switching OFF 'dcache' option")
+      set(dcache OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs chirp clarens cling dcache glite globus hdfs lzma pch peac sapdb srp)
+foreach(opt afs chirp clarens cling glite globus hdfs lzma pch peac sapdb srp)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)
