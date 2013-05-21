@@ -1295,7 +1295,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          fBrowser->SetDrawOption(GetDrawOption());
          fDblClick = kTRUE;
          if (gClient->GetMimeTypeList()->GetAction(obj->IsA()->GetName(), action)) {
-            TString act = action;
+            act = action;
             if (act.Contains("%s")) act.ReplaceAll("%s", obj->GetName());
             else if (act.Contains("->Browse()")) obj->Browse(fBrowser);
             else {
