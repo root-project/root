@@ -71,4 +71,5 @@ distclean::     distclean-$(MODNAME)
 $(GFALO) $(GFALDO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
 $(GFALO): CXXFLAGS += $(GFALINCDIR:%=-I%)
 $(GFALO): CXXFLAGS += $(SRMIFCEINCDIR:%=-I%)
+$(GFALO): CXXFLAGS += $(GLIB2INCDIR:%=-I%)
 $(GFALO): CXXFLAGS += -D_FILE_OFFSET_BITS=64
