@@ -12,7 +12,6 @@ find_library(DCAP_LIBRARY NAMES dcap HINTS ${DCAP_DIR}/lib $ENV{DCAP_DIR}/lib)
 set(DCAP_INCLUDE_DIRS ${DCAP_INCLUDE_DIR})
 set(DCAP_LIBRARIES ${DCAP_LIBRARY})
 
-add_definitions(-pthread)
 
 # handle the QUIETLY and REQUIRED arguments and set DCAP_FOUND to TRUE if
 # all listed variables are TRUE

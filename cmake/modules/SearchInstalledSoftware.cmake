@@ -661,6 +661,20 @@ if(dcache)
   endif()
 endif()
 
+#---Check for Ldap--------------------------------------------------------------------
+if(ldap)
+  find_package(Ldap)
+  if(NOT LDAP_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "ldap library not found and is required (ldap option enabled)")
+    else()
+      message(STATUS "ldap library not found. Set variable LDAP_DIR to point to your ldap installation")
+      message(STATUS "For the time being switching OFF 'ldap' option")
+      set(ldap OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 
 #---Report non implemented options---------------------------------------------------
 foreach(opt afs chirp clarens cling glite globus hdfs lzma pch peac sapdb srp)
