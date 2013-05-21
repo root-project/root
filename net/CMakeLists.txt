@@ -23,5 +23,7 @@ if(monalisa)
   add_subdirectory(monalisa)
 endif()
 
-
+if(ldap)
+   add_subdirectory(ldap)
+endif()
 
