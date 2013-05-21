@@ -1598,6 +1598,7 @@ with options, prefix with --with-, enables corresponding support
   gviz-libdir        Graphviz support, location of libgvplugin_core
   gfal-incdir        GFAL support, location of gfal_api.h
   srm-ifce-incdir    GFAL support, location of gfal_srm_ifce_types.h
+  glib2-incdir       GFAL support, location of glib-2.0 headers
   gfal-libdir        GFAL support, location of libgfal
   glew-incdir        GLEW support, location of glew.h
   glew-libdir        GLEW support, location of libGLEW
@@ -1938,6 +1939,7 @@ if test $# -gt 0 ; then
       --with-gfal-incdir=*)    gfalincdir=$optarg    ; enable_gfal="yes"    ;;
       --with-gfal-libdir=*)    gfallibdir=$optarg    ; enable_gfal="yes"    ;;
       --with-srm-ifce-incdir=*) srmifceincdir=$optarg;;
+      --with-glib2-incdir=*)    glib2incdir=$optarg;;
       --with-glew-incdir=*)    glewincdir=$optarg    ; enable_builtin_glew=no;;
       --with-glew-libdir=*)    glewlibdir=$optarg    ; enable_builtin_glew=no;;
       --with-gsl-incdir=*)     gslincdir=$optarg     ; enable_gsl="yes"     ;;
@@ -3616,6 +3618,14 @@ if test ! "x$enable_gfal" = "xno"; then
         /usr/local/srm-ifce/include
     srmifceinc=$found_hdr
     srmifceincdir=$found_dir
+
+    # check if we have pkg-config
+    glib2incdir=
+    if `$cwhich pkg-config > /dev/null 2>&1` ; then
+        if pkg-config --exists glib-2.0 ; then
+            glib2incdir=`pkg-config --cflags-only-I glib-2.0 | sed 's/-I//g'`
+        fi
+    fi
 
     if test "x$gfalincdir" = "x" || test "x$gfallib" = "x"; then
         enable_gfal="no"
@@ -6672,6 +6682,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@explicitlink@|$enable_explicitlink|" \
     -e "s|@gfalincdir@|$gfalincdir|"            \
     -e "s|@srmifceincdir@|$srmifceincdir|"      \
+    -e "s|@glib2incdir@|$glib2incdir|"          \
     -e "s|@gfallib@|$gfallib|"                  \
     -e "s|@gfallibdir@|$gfallibdir|"            \
     -e "s|@enable_xft@|$enable_xft|"            \
