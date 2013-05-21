@@ -590,9 +590,6 @@ function:
    // the non-linear part (Lorentzian
 ```
 
-For another example see:
-<http://root.cern.ch/root/html/examples/backsig.C.html>
-
 ![The output of the FittingDemo() example](pictures/03000070.png)
 
 ## Associated Function
