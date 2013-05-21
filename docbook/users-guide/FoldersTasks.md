@@ -78,30 +78,33 @@ it is visible in the browser on the top level.
 
 ``` {.cpp}
 {
-// Add the top folder of my hierary to //root
-TFolder *aliroot=gROOT->GetRootFolder()->AddFolder("aliroot",
-                                                   "aliroot top level folders");
-// Add the hierarchy to the list of browsables
-gROOT->GetListOfBrowsables()->Add(aliroot,"aliroot");
+   // Add the top folder of my hierary to //root
+   TFolder *aliroot=gROOT->GetRootFolder()->AddFolder("aliroot",
+                                   "aliroot top level folders");
+   // Add the hierarchy to the list of browsables
+   gROOT->GetListOfBrowsables()->Add(aliroot,"aliroot");
 
-// Create and add the constants folder
-TFolder *constants=aliroot->AddFolder("Constants","Detector constants");
+   // Create and add the constants folder
+   TFolder *constants=aliroot->AddFolder("Constants",
+                                         "Detector constants");
 
-// Create and add the pdg folder to pdg
-TFolder *pdg = constants->AddFolder("DatabasePDG","PDG database");
+   // Create and add the pdg folder to pdg
+   TFolder *pdg = constants->AddFolder("DatabasePDG","PDG database");
 
-// Create and add the run folder
-TFolder *run = aliroot->AddFolder("Run","Run dependent folders");
+   // Create and add the run folder
+   TFolder *run = aliroot->AddFolder("Run","Run dependent folders");
 
-// Create and add the configuration folder to run
-TFolder *configuration = run->AddFolder("Configuration","Run configuration");
+   // Create and add the configuration folder to run
+   TFolder *configuration = run->AddFolder("Configuration",
+                                           "Run configuration");
 
-// Create and add the run_mc folder
-TFolder *run_mc = aliroot->AddFolder("RunMC","MonteCarlo run dependent folders");
+   // Create and add the run_mc folder
+   TFolder *run_mc = aliroot->AddFolder("RunMC",
+                     "MonteCarlo run dependent folders");
 
-// Create and add the configuration_mc folder to run_mc
-TFolder *configuration_mc = run_mc->AddFolder("Configuration", 
-                                              "MonteCarlo run configuration");
+   // Create and add the configuration_mc folder to run_mc
+   TFolder *configuration_mc = run_mc->AddFolder("Configuration", 
+                                    "MonteCarlo run configuration");
 }
 ```
 
@@ -136,8 +139,9 @@ consumer class. When a folder is deleted, any reference to it in the
 parent or other folder is deleted also.
 
 ``` {.cpp}
-conf=(TFolder*)gROOT->FindObjectAny("/aliroot/Run/Configuration");  // or
-conf=(TFolder*)gROOT->FindObjectAny("Configuration");
+   conf=(TFolder*)gROOT->FindObjectAny("/aliroot/Run/Configuration");
+   // or ...
+   conf=(TFolder*)gROOT->FindObjectAny("Configuration");
 ```
 
 By default, a folder does not own the object it contains. You can
@@ -163,8 +167,10 @@ can retrieve a pointer to the corresponding **`TFile`** object with a
 statement like:
 
 ``` {.cpp}
-TFile *myFile = (TFile*)gROOT->FindObjectAny("/ROOTFiles/myFile.root"); //or
-TFile *myFile = (TFile*)gROOT->FindObjectAny("myFile.root");
+   TFile *myFile = (TFile*)gROOT->FindObjectAny(
+      "/ROOTFiles/myFile.root");
+   //or...
+   TFile *myFile = (TFile*)gROOT->FindObjectAny("myFile.root");
 ```
 
 ## Tasks
@@ -230,40 +236,43 @@ above, and creates a hierarchy of tasks.
 // TTask context menu, such as:
 //           -setting a breakpoint in one or more tasks
 //           -enabling/disabling one task, etc
-void tasks()
-{
-gROOT->ProcessLine(".L MyTasks.cxx+");
+void tasks() {
+   gROOT->ProcessLine(".L MyTasks.cxx+");
 
-TTask *run = new MyRun("run","Process one run");
-TTask *event = new MyEvent("event","Process one event");
-TTask *geomInit = new MyGeomInit("geomInit", "Geometry Initialisation");
-TTask *matInit    = new MyMaterialInit("matInit","MaterialsInitialisation");
-TTask *tracker = new MyTracker("tracker","Tracker manager");
-TTask *tpc     = new MyRecTPC("tpc","TPC Reconstruction");
-TTask *its     = new MyRecITS("its","ITS Reconstruction");
-TTask *muon    = new MyRecMUON("muon","MUON Reconstruction");
-TTask *phos    = new MyRecPHOS("phos","PHOS Reconstruction");
-TTask *rich    = new MyRecRICH("rich","RICH Reconstruction");
-TTask *trd     = new MyRecTRD("trd","TRD Reconstruction");
-TTask *global  = new MyRecGlobal("global","Global Reconstruction");
+   TTask *run = new MyRun("run","Process one run");
+   TTask *event = new MyEvent("event","Process one event");
+   TTask *geomInit = new MyGeomInit("geomInit",
+                         "Geometry Initialisation");
+   TTask *matInit    = new MyMaterialInit("matInit",
+                         "MaterialsInitialisation");
+   TTask *tracker = new MyTracker("tracker","Tracker manager");
+   TTask *tpc     = new MyRecTPC("tpc","TPC Reconstruction");
+   TTask *its     = new MyRecITS("its","ITS Reconstruction");
+   TTask *muon    = new MyRecMUON("muon","MUON Reconstruction");
+   TTask *phos    = new MyRecPHOS("phos","PHOS Reconstruction");
+   TTask *rich    = new MyRecRICH("rich","RICH Reconstruction");
+   TTask *trd     = new MyRecTRD("trd","TRD Reconstruction");
+   TTask *global  = new MyRecGlobal("global","Global Reconstruction");
 
    // Create a hierarchy by adding sub tasks
-run->Add(geomInit);
-run->Add(matInit);
-run->Add(event);
-event->Add(tracker);
-event->Add(global);
-tracker->Add(tpc);
-tracker->Add(its);
-tracker->Add(muon);
-tracker->Add(phos);
-tracker->Add(rich);
-tracker->Add(trd);
+   run->Add(geomInit);
+   run->Add(matInit);
+   run->Add(event);
+   event->Add(tracker);
+   event->Add(global);
+   tracker->Add(tpc);
+   tracker->Add(its);
+   tracker->Add(muon);
+   tracker->Add(phos);
+   tracker->Add(rich);
+   tracker->Add(trd);
+
    // Add the top level task   
-gROOT->GetListOfTasks()->Add(run);
+   gROOT->GetListOfTasks()->Add(run);
+
    // Add the task to the browser
-gROOT->GetListOfBrowsables()->Add(run);
-new TBrowser;
+   gROOT->GetListOfBrowsables()->Add(run);
+   new TBrowser;
 }
 ```
 
