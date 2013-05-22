@@ -31,6 +31,7 @@ class STL1VectorTestCase( MyTestCase ):
       """Test access to a vector<int> (part of cintdlls)"""
 
       a = std.vector( int )( self.N )
+      self.assertEqual( len(a), self.N )
 
       if FIXCLING:
          return
@@ -319,6 +320,8 @@ class STL6IteratorComparisonTestCase( MyTestCase ):
 
       v = std.vector( int )()
       v.resize( 1 )
+
+      self.assertEqual( len(v), 1 )
 
       b1, e1 = v.begin(), v.end()
       b2, e2 = v.begin(), v.end()

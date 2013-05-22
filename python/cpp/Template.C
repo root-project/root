@@ -20,11 +20,11 @@ T MyTemplatedFunction( T t ) { return t; }
 #pragma link C++ class MyTemplatedClass< vector< float > >;
 #pragma link C++ function MyTemplatedFunction< int >( int );
 #pragma link C++ function MyTemplatedFunction< double >( double );
-#else
+#endif
+
 template class MyTemplatedClass< vector< float > >;
 template int MyTemplatedFunction< int >( int );
 template double MyTemplatedFunction< double >( double );
-#endif
 
 class MyTemplatedMethodClass {
 public:
@@ -52,3 +52,7 @@ template long MyTemplatedMethodClass::GetSize< double >();
 
 typedef std::vector< double > MyDoubleVector_t;
 template long MyTemplatedMethodClass::GetSize< MyDoubleVector_t >();
+
+#ifdef __CINT__
+#pragma link C++ class MyTemplatedMethodClass;
+#endif

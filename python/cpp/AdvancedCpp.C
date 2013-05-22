@@ -69,10 +69,8 @@ public:
    T m_t2;
 };
 
-namespace {
-   T1< int > tt1;
-   T2< T1< int > > tt2;
-}
+template class T1<int>;
+template class T2< T1< int > >;
 
 // helpers for checking pass-by-ref
 void SetIntThroughRef( Int_t& i, Int_t val ) { i = val; }

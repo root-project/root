@@ -141,13 +141,11 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
       """Test data member access for a templated class"""
 
       t1 = T1( int )( 32 )
-      if not FIXCLING:
-         self.assertEqual( t1.value(), 32 )
+      self.assertEqual( t1.value(), 32 )
       self.assertEqual( t1.m_t1, 32 )
 
       t1.m_t1 = 41
-      if not FIXCLING:
-         self.assertEqual( t1.value(), 41 )
+      self.assertEqual( t1.value(), 41 )
       self.assertEqual( t1.m_t1, 41 )
 
    def test2TemplateInstantiatedTemplate( self ):
@@ -155,8 +153,7 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
 
       t2 = T2( T1( int ) )()
       t2.m_t2.m_t1 = 32
-      if not FIXCLING:
-         self.assertEqual( t2.m_t2.value(), 32 )
+      self.assertEqual( t2.m_t2.value(), 32 )
       self.assertEqual( t2.m_t2.m_t1, 32 )
 
    def test3TemplateInstantiationWithVectorOfFloat( self ):
@@ -170,8 +167,7 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
 
       for i in range(5):
          b.m_b.push_back( i )
-         if not FIXCLING:
-            self.assertEqual( round( b.m_b[i], 5 ), float(i) )
+         self.assertEqual( round( b.m_b[i], 5 ), float(i) )
 
    def test4TemplateMemberFunctions( self ):
       """Test template member functions lookup and calls"""
