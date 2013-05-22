@@ -122,26 +122,26 @@ void runAllThroughTInterpreterInterfaces() {
 
    // Run VoidFuncNoArgs
    gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "VoidFuncNoArgs", "", &offset);
-   gInterpreter->CallFunc_Exec( mc, /* void* */0);
+   gInterpreter->CallFunc_Exec(mc, /* void* */0);
 
    // Run IntFuncNoArgs
    gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "IntFuncNoArgs", "", &offset);
-   Long_t result_long = gInterpreter->CallFunc_ExecInt( mc, /* void* */0);
+   Long_t result_long = gInterpreter->CallFunc_ExecInt(mc, /* void* */0);
    printf("Result of IntFuncNoArgs = %ld\n", result_long);
 
    // Run IntTFuncNoArgs
    gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "IntTFuncNoArgs", "", &offset);
-   result_long = gInterpreter->CallFunc_ExecInt( mc, /* void* */0);
+   result_long = gInterpreter->CallFunc_ExecInt(mc, /* void* */0);
    printf("Result of IntFuncNoArgs = %ld\n", result_long);
 
    // Run DoubleFuncNoArgs
    gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "DoubleFuncNoArgs", "", &offset);
-   Double_t result_double = gInterpreter->CallFunc_ExecDouble( mc, /* void* */0);
+   Double_t result_double = gInterpreter->CallFunc_ExecDouble(mc, /* void* */0);
    printf("Result of IntFuncNoArgs = %f\n", result_double);
 
    // Run MyClassReturnNoArgs (ptr return)
    gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "MyClassReturnNoArgs", "", &offset);
-   result_long = gInterpreter->CallFunc_ExecInt( mc, /* void* */0);
+   result_long = gInterpreter->CallFunc_ExecInt(mc, /* void* */0);
    printf("Result of MyClassReturnNoArgs = ");
    reinterpret_cast<MyClassReturn*>(result_long)->Print();
 
@@ -149,13 +149,13 @@ void runAllThroughTInterpreterInterfaces() {
    // FIXME: Dependent on cling/test/Lookup/variadicFunc.C
    // gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "VariadicArguments", "const char *, ...", &offset);
    // gInterpreter->CallFunc_SetArgs(mc, "\"dcf\",3, 'a', 1.999");
-   // gInterpreter->CallFunc_Exec( mc, /* void* */0);
+   // gInterpreter->CallFunc_Exec(mc, /* void* */0);
 
    // Run FloatPtrOneArg (ptr return)
    // Find namespace A:
    gInterpreter->CallFunc_SetFuncProto(mc, globalNamespace, "FloatPtrOneArg", "int", &offset);
    gInterpreter->CallFunc_SetArg(mc, (Long_t)1+1);
-   result_long = gInterpreter->CallFunc_ExecInt( mc, /* void* */0);
+   result_long = gInterpreter->CallFunc_ExecInt(mc, /* void* */0);
    printf("Result of FloatPtrOneArg = %f\n", *reinterpret_cast<float*>(result_long));
 
    // Run A::Double32TPtrThreeArgs (ptr return)
@@ -164,14 +164,14 @@ void runAllThroughTInterpreterInterfaces() {
    gInterpreter->CallFunc_SetArg(mc, (Long_t)1+1);
    gInterpreter->CallFunc_SetArg(mc, (Double_t)1.-1);
    gInterpreter->CallFunc_SetArg(mc, (ULong64_t)new double(3.000));
-   result_long = gInterpreter->CallFunc_ExecInt( mc, /* void* */0);
+   result_long = gInterpreter->CallFunc_ExecInt(mc, /* void* */0);
    printf("Result of A::Double32TPtrThreeArgs = %f\n", *reinterpret_cast<Double32_t*>(result_long));
 
    // Run A::A1::A2::A3::NestedNamespaceIntOneArg (int return)
    ClassInfo_t* namespaceA3 = gInterpreter->ClassInfo_Factory("A::A1::A2::A3");
    gInterpreter->CallFunc_SetFuncProto(mc, namespaceA3, "NestedNamespaceIntOneArg", "int", &offset);
    gInterpreter->CallFunc_SetArg(mc, (Long_t)11);
-   result_long = gInterpreter->CallFunc_ExecInt( mc, /* void* */0);
+   result_long = gInterpreter->CallFunc_ExecInt(mc, /* void* */0);
    printf("Result of A::A1::A2::A3::NestedNamespaceIntOneArg = %ld\n", result_long);
 
    // Cleanup
