@@ -39,7 +39,9 @@ CLHEP translation.
 ## TVector3
 
 
-![](pictures/030001A9.png)**`TVector3`** is a general three-vector
+![](pictures/030001A9.png)
+
+**`TVector3`** is a general three-vector
 class, which can be used for description of different vectors in 3D.
 Components of three vectors:
 

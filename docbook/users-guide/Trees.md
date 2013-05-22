@@ -43,11 +43,8 @@ If we had saved the million events without a **`TTree`** we would have
 to:
 
 -   read each event in its entirety into memory
-
 -   extract the `Px` and `Py` from the event
-
 -   compute the sum of the squares
-
 -   fill a histogram
 
 We would have to do that a million times! This is very time consuming,
@@ -67,49 +64,51 @@ file `staff.dat` are in `$ROOTSYS/tutorials/tree`.
 
 ``` {.cpp}
 {
-// example of macro to read data from an ascii file and
-// create a root file with an histogram and a TTree
+   // example of macro to read data from an ascii file and
+   // create a root file with an histogram and a TTree
    gROOT->Reset();
 
-// the structure to hold the variables for the branch
+   // the structure to hold the variables for the branch
 
-  struct staff_t {
-                Int_t cat;
-                Int_t division;
-                Int_t flag;
-                Int_t age;
-                Int_t service;
-                Int_t children;
-                Int_t grade;
-                Int_t step;
-                Int_t nation;
-                Int_t hrweek;
-                Int_t cost;
+   struct staff_t {
+      Int_t cat;
+      Int_t division;
+      Int_t flag;
+      Int_t age;
+      Int_t service;
+      Int_t children;
+      Int_t grade;
+      Int_t step;
+      Int_t nation;
+      Int_t hrweek;
+      Int_t cost;
    };
    staff_t staff;
-// continued...
-// open the ASCII file
-FILE *fp = fopen("staff.dat","r");
-char line[81];
-// create a new ROOT file
-TFile *f = new TFile("staff.root","RECREATE");
-// create a TTree
-TTree *tree = new TTree("T","staff data from ascii file");
-// create one branch with all information from the stucture
-tree->Branch("staff",&staff.cat,"cat/I:division:flag:age:service:
+   // continued...
+   // open the ASCII file
+   FILE *fp = fopen("staff.dat","r");
+   char line[81];
+   // create a new ROOT file
+   TFile *f = new TFile("staff.root","RECREATE");
+   // create a TTree
+   TTree *tree = new TTree("T","staff data from ascii file");
+   // create one branch with all information from the stucture
+   tree->Branch("staff",&staff.cat,"cat/I:division:flag:age:service:
                            children:grade:step:nation:hrweek:cost");
-// fill the tree from the values in ASCII file
-while (fgets(&line,80,fp)) {
-   sscanf(&line[0],"%d%d%d%d",&staff.cat,&staff.division,&staff.flag,&staff.age);
-   sscanf(&line[13],"%d%d%d%d",&staff.service,&staff.children,&staff.grade,
-          &staff.step);
-   sscanf(&line[24],"%d%d%d",&staff.nation,&staff.hrweek, &staff.cost);
-   tree->Fill();
-}
-// check what the tree looks like
-tree->Print();
-fclose(fp);
-f->Write();
+   // fill the tree from the values in ASCII file
+   while (fgets(&line,80,fp)) {
+      sscanf(&line[0],"%d%d%d%d",&staff.cat,&staff.division,
+          &staff.flag,&staff.age);
+      sscanf(&line[13],"%d%d%d%d",&staff.service,&staff.children,
+          &staff.grade,&staff.step);
+      sscanf(&line[24],"%d%d%d",&staff.nation,&staff.hrweek,
+          &staff.cost);
+      tree->Fill();
+   }
+   // check what the tree looks like
+   tree->Print();
+   fclose(fp);
+   f->Write();
 }
 ```
 
@@ -157,15 +156,15 @@ entries, the branches and the leaves, is **`TTree`**`::Print`.
 
 ``` {.cpp}
 root[] T->Print()
-*****************************************************************************
-*Tree    :T         : staff data from ascii file                            *
-*Entries :3354      : Total = 245417 bytes  File  Size =              59945*
-*                     Tree compression factor =   2.90                      *
-*****************************************************************************
-*Br    0 :staff     :Category/I:Flag:Age:Service:Children:Grade:Step:Hrweek:*
-*         | Cost                                                            *
-*Entries :3354 : Total Size  = 154237 bytes  File Size = 32316              *
-*Baskets :   3 : Basket Size =  32000 bytes  Compression= 2.97              *
+**********************************************************************
+*Tree    :T         : staff data from ascii file                     *
+*Entries :3354      : Total = 245417 bytes  File  Size =        59945*
+*                     Tree compression factor =   2.90               *
+**********************************************************************
+*Br    0 :staff     :Category/I:Flag:Age:Service:Children:Grade:...  *
+*         | Cost                                                     *
+*Entries :3354 : Total Size  = 154237 bytes  File Size = 32316       *
+*Baskets :   3 : Basket Size =  32000 bytes  Compression= 2.97       *
 ```
 
 ## Scan a Variable the Tree with TTree::Scan
@@ -192,13 +191,13 @@ root[] T->Scan("Cost:Age:Children")
 
 ## The Tree Viewer
 
+![Activating the tree viewer](pictures/030000EF.png)
 
 The tree viewer is a quick and easy way to examine a tree. To start the
 tree viewer, open a file and object browser. Right click on a
 **`TTree`** and select `StartViewer`. You can also start the tree viewer
 from the command line. First load the viewer library.
 
-![Activating the tree viewer](pictures/030000EF.png)
 
 ``` {.cpp}
 root[] TFile f("staff.root")
@@ -213,7 +212,7 @@ root[] gSystem->Load("libTreeViewer.so")
 root[] new TTreeViewer()
 ```
 
-Below is what the tree viewer looks like for the example file
+The figure above shows how the tree viewer looks like for the example file
 `staff.root`. The left panel contains the list of trees and their
 branches; in this case there is only one tree. You can add more trees
 with the File-Open command to open the file containing the new tree,
@@ -227,7 +226,6 @@ the drawing option and the histogram name. The lower part contains three
 picture buttons that draw a histogram, stop the current command, and
 refresh the tree.
 
-![The TreeViewer](pictures/030000F0.png)
 
 The three check buttons toggle the following:
 
@@ -237,21 +235,20 @@ The three check buttons toggle the following:
 
 `Rec` - enables recording of the last issued command.
 
-![](pictures/020000F1.jpg)To draw more than one dimension you can drag
+- ![](pictures/020000F1.jpg) To draw more than one dimension you can drag
 and drop any leaf to the `X,Y,Z` boxes". Then push the Draw button,
 witch is marked with the purple icon on the bottom left.
 
-![](pictures/030000F2.png)
+- ![](pictures/030000F2.png) All commands can be interrupted at any time
+by pressing this button.
 
-All commands can be interrupted at any time by pressing this button.
-
-![](pictures/030000F3.png)The method **`TTree::Refresh`** is called by
+- ![](pictures/030000F3.png) The method **`TTree::Refresh`** is called by
 pressing the refresh button in `TTreeViewer`. It redraws the current
 exposed expression. Calling `TTree::Refresh` is useful when a tree is
 produced by a writer process and concurrently analyzed by one or more
 readers.
 
-![](pictures/030000F4.png)To add a cut/weight to the histogram, enter an
+- ![](pictures/030000F4.png) To add a cut/weight to the histogram, enter an
 expression in the "cut box". The cut box is the one with the scissor
 icon.
 
@@ -305,8 +302,7 @@ a name for the output list respectively. Both need to be of type
 described below in the paragraph "**Error! Reference source not
 found.**".
 
-![A couple of graphs](pictures/030000F6.png) ![A couple of
-graphs](pictures/030000F7.png)
+![A couple of graphs](pictures/030000F6.png) 
 
 The first one is a plot of the age distribution, the second a scatter
 plot of the cost vs. age. The second one was generated by dragging the
@@ -326,7 +322,7 @@ layout and add the branches. A tree can be created by giving a name and
 title:
 
 ``` {.cpp}
-TTree t("MyTree","Example Tree")
+   TTree t("MyTree","Example Tree");
 ```
 
 ### Creating a Tree from a Folder Hierarchy
@@ -337,7 +333,7 @@ An alternative way to create a tree and organize it is to use folders
 tree with branches for each of the sub-folders:
 
 ``` {.cpp}
-TTree folder_tree("MyFolderTree","/MyFolder")
+   TTree folder_tree("MyFolderTree","/MyFolder");
 ```
 
 The second argument `"/MyFolder" `is the top folder, and the "/" signals
@@ -349,7 +345,7 @@ calling **`TTree`**`::Fill`.
 
 
 ``` {.cpp}
-MyTree->BranchRef();
+   MyTree->BranchRef();
 ```
 
 This call requests the construction of an optional branch supporting
@@ -381,7 +377,7 @@ retain only the last few entries. For example, this can be very useful
 for monitoring purpose.
 
 ``` {.cpp}
-void TTree::SetCircular(Long64_t maxEntries)
+   void TTree::SetCircular(Long64_t maxEntries);
 ```
 
 where `maxEntries` is the maximum number of entries to be kept in the
@@ -446,7 +442,7 @@ a user to the tree that is not depending on the entry number. For
 example:
 
 ``` {.cpp}
-tree->GetUserInfo()->Add(myruninfo);
+   tree->GetUserInfo()->Add(myruninfo);
 ```
 
 ### Indexing a Tree
@@ -462,13 +458,9 @@ tree->BuildIndex(majorname, minorname);
 The index is built in the following way:
 
 -   a pass on all entries is made like in `TTree::Draw()`
-
 -   `var1 = majorname`
-
 -   `var2 = minorname`
-
--   `sel  = 2ˆ{31} x majorname + minorname`
-
+-   `sel  = ` $2^{31} \times majorname + minorname$ 
 -   for each entry in the tree the sel expression is evaluated and the
     results array is sorted into `fIndexValues`
 
@@ -477,10 +469,10 @@ Once the index is computed, using the
 retrieved. Example:
 
 ``` {.cpp}
-// to create an index using leaves Run and Event
-tree.BuildIndex("Run","Event");
-// to read entry corresponding to Run=1234 and Event=56789
-tree.GetEntryWithIndex(1234,56789);
+   // to create an index using leaves Run and Event
+   tree.BuildIndex("Run","Event");
+   // to read entry corresponding to Run=1234 and Event=56789
+   tree.GetEntryWithIndex(1234,56789);
 ```
 
 Note that `majorname` and `minorname` may be expressions using original
@@ -493,7 +485,7 @@ Note that once the index is built, it can be saved with the **`TTree`**
 object with:
 
 ``` {.cpp}
-tree.Write();     //if the file has been open in "update" mode
+   tree.Write();     //if the file has been open in "update" mode
 ```
 
 The most convenient place to create the index is at the end of the
@@ -531,12 +523,13 @@ there, you have to build it by typing make in `$ROOTSYS/test`.
 ## Adding a Branch to Hold a List of Variables
 
 
-![](pictures/030000F9.png)As in the very first example (`staff.root`)
+As in the very first example (`staff.root`)
 the data we want to save is a list of simple variables, such as integers
 or floats. In this case, we use the following `TTree::Branch` signature:
 
 ``` {.cpp}
-tree->Branch("Ev_Branch",&event,"temp/F:ntrack/I:nseg:nvtex:flag/i ");
+   tree->Branch("Ev_Branch",&event,
+                "temp/F:ntrack/I:nseg:nvtex:flag/i");
 ```
 
 The first parameter is the branch name.
@@ -588,27 +581,16 @@ it becomes a `float` (F). This leaf list has three floats called `temp`,
 The symbols used for the type are:
 
 -   `C`: a character string terminated by the 0 character
-
 -   `B`: an 8 bit signed integer
-
 -   `b`: an 8 bit unsigned integer
-
 -   `S`: a 16 bit signed integer
-
 -   `s`: a 16 bit unsigned integer
-
 -   `I`: a 32 bit signed integer
-
 -   `i`: a 32 bit unsigned integer
-
 -   `L`: a 64 bit signed integer
-
 -   `l`: a 64 bit unsigned integer
-
 -   `F`: a 32 bit floating point
-
 -   `D`: a 64 bit floating point
-
 -   `O`: [the letter 'o', not a zero] a boolean (Bool\_t)
 
 The type is used for a byte count to decide how much space to allocate.
@@ -633,8 +615,8 @@ array of variables. To add an array of floats use the `f[n]` notation
 when describing the leaf.
 
 ``` {.cpp}
-Float_t  f[10];
-tree->Branch("fBranch",f,"f[10]/F");
+   Float_t  f[10];
+   tree->Branch("fBranch",f,"f[10]/F");
 ```
 
 You can also add an array of variable length:
@@ -712,10 +694,7 @@ If the split-level is set to zero, the whole object is written in its
 entirety to one branch. The **`TTree`** will look like the one on the
 right, with one branch and one leaf holding the entire event object.
 
-+-----------------------------------+----------------------------------------+
-| ![](pictures/030000FA.png)A tree  | ![](pictures/030000FB.png)A tree that  |
-| that is split                     | is not split                           |
-+-----------------------------------+----------------------------------------+
+![A split and not split tree](pictures/030000FA.png)
 
 When the split-level is 1, an object data member is assigned a branch.
 If the split-level is 2, the data member objects will be split also, and
@@ -782,12 +761,12 @@ differently. Here are the rules that apply when splitting a branch.
 -   All STL containers are supported.
 
 ``` {.cpp}
-// STL vector of vectors of TAxis*
-vector<vector<TAxis *> >  fVectAxis;   
-// STL map of string/vector
-map<string,vector<int> >  fMapString;  
-// STL deque of pair 
-deque<pair<float,float> > fDequePair;
+   // STL vector of vectors of TAxis*
+   vector<vector<TAxis *> >  fVectAxis;   
+   // STL map of string/vector
+   map<string,vector<int> >  fMapString;  
+   // STL deque of pair 
+   deque<pair<float,float> > fDequePair;
 ```
 
 -   As of ROOT 4.01/00, only `std::vector` of objects can be split.
@@ -810,8 +789,8 @@ split. You can specify this in the comment field of the data member:
 
 ``` {.cpp}
 class Event : public TObject {
-private:
-   EventHeader    fEvtHdr;      //|| Don't split the header
+   private:
+      EventHeader    fEvtHdr;      //|| Don't split the header
 ```
 
 ### Adding a Branch to Hold a TClonesArray
@@ -851,8 +830,8 @@ branch. For example, a tree has two branches `Trigger` and
 To identify uniquely the sub branches we add the dot:
 
 ``` {.cpp}
-tree->Branch("Trigger.","Trigger",&b1,8000,1);
-tree->Branch("MuonTrigger.","Trigger",&b2,8000,1);
+   tree->Branch("Trigger.","Trigger",&b1,8000,1);
+   tree->Branch("MuonTrigger.","Trigger",&b2,8000,1);
 ```
 
 If `Trigger` has three members, `T1`, `T2`, `T3`, the two instructions
@@ -865,7 +844,7 @@ above will generate sub branches called: `Trigger.T1`, `Trigger.T2`,
 Use the syntax below to add a branch from a folder:
 
 ``` {.cpp}
-tree->Branch("/aFolder");
+   tree->Branch("/aFolder");
 ```
 
 This method creates one branch for each element in the folder. The
@@ -878,9 +857,9 @@ This `Branch` method creates one branch for each element in the
 collection.
 
 ``` {.cpp}
-tree->Branch(*aCollection, 8000, 99);
-// Int_t TTree::Branch(TCollection *list, Int_t bufsize,Int_t splitlevel,
-//                     const char *name)
+   tree->Branch(*aCollection, 8000, 99);
+   // Int_t TTree::Branch(TCollection *list, Int_t bufsize,
+   //                     Int_t splitlevel, const char *name)
 ```
 
 The method returns the total number of branches created. Each entry in
@@ -971,7 +950,8 @@ branch for each of the variables to the tree, by calling the
 ``` {.cpp}
 void tree1w(){
 
- //create a tree file tree1.root - create the file, the Tree and a few branches
+   // create a tree file tree1.root - create the file, the Tree and 
+   // a few branches
    TFile f("tree1.root","recreate");
    TTree t1("t1","a simple Tree with simple variables");
    Float_t px, py, pz;
@@ -979,18 +959,19 @@ void tree1w(){
    Int_t ev;
    t1.Branch("px",&px,"px/F");
    t1.Branch("py",&py,"py/F");
-   t1.Branch("pz",&pz,"pz/F");   t1.Branch("ev",&ev,"ev/I");
+   t1.Branch("pz",&pz,"pz/F");
+   t1.Branch("ev",&ev,"ev/I");
 
-//fill the tree
+   // fill the tree
    for (Int_t i=0; i<10000; i++) {
-gRandom->Rannor(px,py);                             
-pz = px*px + py*py;
-random = gRandom->Rndm();
- ev = i;
-t1.Fill();
+      gRandom->Rannor(px,py);                             
+      pz = px*px + py*py;
+      random = gRandom->Rndm();
+      ev = i;
+      t1.Fill();
    }
-   //save the Tree heade; the file will be automatically closed
-   //when going out of the function scope
+   // save the Tree heade; the file will be automatically closed
+   // when going out of the function scope
    t1.Write();
 }
 ```
@@ -1001,8 +982,9 @@ This is the signature of `TTree::Branch` to create a branch with a list
 of variables:
 
 ``` {.cpp}
-TBranch* TTree::Branch(const char* name,void* address, const char* leaflist,
-                       Int_t bufsize = 32000)
+   TBranch* TTree::Branch(const char* name,void* address,
+                          const char* leaflist,
+                          Int_t bufsize = 32000)
 ```
 
 The first parameter is the branch name. The second parameter is the
@@ -1012,7 +994,7 @@ has only one leaf. In the box below, the branch is named `px` and has
 one floating point type leaf also called `px`.
 
 ``` {.cpp}
-t1.Branch("px",&px,"px/F");
+   t1.Branch("px",&px,"px/F");
 ```
 
 #### Filling the Tree
@@ -1033,10 +1015,7 @@ is null.
 ### Viewing the Tree
 
 
-![The tree1.root file and its tree in the
-browser](pictures/030000FC.png)
-
-![A leaf histogram](pictures/030000FD.png)
+![The tree1.root file and its tree in the browser and a leaf histogram](pictures/030000FC.png)
 
 In the right panel of the ROOT object browse are the branches: `ev`,
 `px`, `py`, `pz`, and `random`. Note that these are shown as leaves
@@ -1055,7 +1034,7 @@ The `tree1r` function shows how to read the tree and access each entry
 and each leaf. We first define the variables to hold the read values.
 
 ``` {.cpp}
-Float_t px, py, pz;
+   Float_t px, py, pz;
 ```
 
 Then we tell the tree to populate these variables when reading an entry.
@@ -1066,7 +1045,7 @@ branch name is `px`. This name was given when the tree was written (see
 `tree1w`). The second parameter is the address of the variable `px`.
 
 ``` {.cpp}
-t1->SetBranchAddress("px",&px);
+   t1->SetBranchAddress("px",&px);
 ```
 
 #### GetEntry
@@ -1083,9 +1062,10 @@ Consider the example in `$ROOTSYS/test/Event.h`. The top-level branch in
 the tree `T` is declared with:
 
 ``` {.cpp}
-Event *event = 0;
-//event must be null or point to a valid object; it must be initialized
-T.SetBranchAddress("event",&event);
+   Event *event = 0;
+   // event must be null or point to a valid object;
+   // it must be initialized
+   T.SetBranchAddress("event",&event);
 ```
 
 When reading the Tree, one can choose one of these 3 options:
@@ -1093,10 +1073,10 @@ When reading the Tree, one can choose one of these 3 options:
 Option 1:
 
 ``` {.cpp}
-for (Int_t i = 0; i<nentries; i++) {
- T.GetEntry(i);
-   //the object event has been filled at this point
- }
+   for (Int_t i = 0; i<nentries; i++) {
+      T.GetEntry(i);
+      //the object event has been filled at this point
+   }
 ```
 
 This is the default and recommended way to create an object of the class
@@ -1121,12 +1101,12 @@ space in the file.
 Option 2 - the option `AutoDelete` is set:
 
 ``` {.cpp}
-TBranch *branch = T.GetBranch("event");
-branch->SetAddress(&event);
-branch->SetAutoDelete(kTRUE);
-for (Int_t i=0; i<nentries; i++) {
-    T.GetEntry(i);   // the object event has been filled at this point
-}
+   TBranch *branch = T.GetBranch("event");
+   branch->SetAddress(&event);
+   branch->SetAutoDelete(kTRUE);
+   for (Int_t i=0; i<nentries; i++) {
+      T.GetEntry(i); // the object event has been filled at this point
+   }
 ```
 
 At any iteration, the `GetEntry` deletes the object `event` and a new
@@ -1135,12 +1115,12 @@ instance of `Event` is created and filled.
 Option 3 - same as option 1, but you delete the event yourself:
 
 ``` {.cpp}
-for (Int_t i=0; i<nentries; i++) {
-    delete event;
-    event = 0;      //EXTREMELY IMPORTANT
-    T.GetEntry(i);
-    // the objrect event has been filled at this point
-}
+   for (Int_t i=0; i<nentries; i++) {
+      delete event;
+      event = 0;      //EXTREMELY IMPORTANT
+      T.GetEntry(i);
+      // the objrect event has been filled at this point
+   }
 ```
 
 It is strongly recommended to use the default option 1. It has the
@@ -1153,38 +1133,38 @@ Here is the script `tree1r`:
 
 ``` {.cpp}
 void tree1r(){
-  //read the Tree generated by tree1w and fill two histograms
-  //note that we use "new" to create the TFile and TTree objects,
-  //to keep them alive after leaving this function.
-  TFile *f = new TFile("tree1.root");
-  TTree *t1 = (TTree*)f->Get("t1");
-  Float_t px, py, pz;
-  Double_t random;
-  Int_t ev;
-  t1->SetBranchAddress("px",&px);
-  t1->SetBranchAddress("py",&py);
-  t1->SetBranchAddress("pz",&pz);
-  t1->SetBranchAddress("random",&random);
-  t1->SetBranchAddress("ev",&ev);
-//create two histograms
-  TH1F *hpx   = new TH1F("hpx","px distribution",100,-3,3);
-  TH2F *hpxpy = new TH2F("hpxpy","py vs px",30,-3,3,30,-3,3);
-  //read all entries and fill the histograms
-  Int_t nentries = (Int_t)t1->GetEntries();
-  for (Int_t i=0; i<nentries; i++) {
-    t1->GetEntry(i);
-    hpx->Fill(px);
-    hpxpy->Fill(px,py);
-  }
-  //We do not close the file. We want to keep the generated histograms
-  //we open a browser and the TreeViewer
-  if (gROOT->IsBatch()) return;
-  new TBrowser ();
-  t1->StartViewer();
+   // read the Tree generated by tree1w and fill two histograms
+   // note that we use "new" to create the TFile and TTree objects,
+   // to keep them alive after leaving this function.
+   TFile *f = new TFile("tree1.root");
+   TTree *t1 = (TTree*)f->Get("t1");
+   Float_t px, py, pz;
+   Double_t random;
+   Int_t ev;
+   t1->SetBranchAddress("px",&px);
+   t1->SetBranchAddress("py",&py);
+   t1->SetBranchAddress("pz",&pz);
+   t1->SetBranchAddress("random",&random);
+   t1->SetBranchAddress("ev",&ev);
+   // create two histograms
+   TH1F *hpx   = new TH1F("hpx","px distribution",100,-3,3);
+   TH2F *hpxpy = new TH2F("hpxpy","py vs px",30,-3,3,30,-3,3);
+   //read all entries and fill the histograms
+   Int_t nentries = (Int_t)t1->GetEntries();
+   for (Int_t i=0; i<nentries; i++) {
+      t1->GetEntry(i);
+      hpx->Fill(px);
+      hpxpy->Fill(px,py);
+   }
+   // We do not close the file. We want to keep the generated
+   // histograms we open a browser and the TreeViewer
+   if (gROOT->IsBatch()) return;
+   new TBrowser ();
+   t1->StartViewer();
 
-  //In the browser, click on "ROOT Files", then on "tree1.root"
-  //You can click on the histogram icons in the right panel to draw
-  //them in the TreeViewer, follow the instructions in the Help.
+   //In the browser, click on "ROOT Files", then on "tree1.root"
+   //You can click on the histogram icons in the right panel to draw
+   //them in the TreeViewer, follow the instructions in the Help.
 }
 ```
 
@@ -1195,15 +1175,10 @@ The executable script for this example is
 `$ROOTSYS/tutorials/tree/tree2.C. `In this example we show:
 
 -   how to build branches from a C structure
-
 -   how to make a branch with a fixed length array
-
 -   how to make a branch with a variable length array
-
 -   how to read selective branches
-
 -   how to fill a histogram from a branch
-
 -   how to use `TTree::Draw` to show a 3D plot
 
 A C structure (`struct`) is used to build a ROOT tree. In general we
@@ -1223,25 +1198,25 @@ const Int_t MAXMEC = 30;
 //     + ,STEP,SNEXT,SFIELD,TOFG,GEKRAT,UPWGHT
 
 typedef struct { 
-  Float_t  vect[7];
-  Float_t  getot; 
-  Float_t  gekin;
-  Float_t  vout[7]; 
-  Int_t    nmec; 
-  Int_t    lmec[MAXMEC]; 
-  Int_t    namec[MAXMEC]; 
-  Int_t    nstep; 
-  Int_t    pid;
-  Float_t  destep; 
-  Float_t  destel; 
-  Float_t  safety; 
-  Float_t  sleng; 
-  Float_t  step; 
-  Float_t  snext; 
-  Float_t  sfield; 
-  Float_t  tofg; 
-  Float_t  gekrat; 
-  Float_t  upwght; 
+   Float_t  vect[7];
+   Float_t  getot; 
+   Float_t  gekin;
+   Float_t  vout[7]; 
+   Int_t    nmec; 
+   Int_t    lmec[MAXMEC]; 
+   Int_t    namec[MAXMEC]; 
+   Int_t    nstep; 
+   Int_t    pid;
+   Float_t  destep; 
+   Float_t  destel; 
+   Float_t  safety; 
+   Float_t  sleng; 
+   Float_t  step; 
+   Float_t  snext; 
+   Float_t  sfield; 
+   Float_t  tofg; 
+   Float_t  gekrat; 
+   Float_t  upwght; 
 } Gctrak_t;
 ```
 
@@ -1254,7 +1229,7 @@ to the `Branch` methods are the same as if Geant3 were used.
 ``` {.cpp}
 void helixStep(Float_t step, Float_t *vect, Float_t *vout)
 {
-  // extrapolate track in constant field
+   // extrapolate track in constant field
    Float_t field = 20; // field in kilogauss
    enum Evect {kX,kY,kZ,kPX,kPY,kPZ,kPP};
    vout[kPP] = vect[kPP];
@@ -1317,48 +1292,49 @@ void tree2w() {
 
    //transport particles 
    for (Int_t i=0; i<10000; i++) {
-//generate a new particle if necessary (Geant3 emulation)
-if (newParticle) {
-px = gRandom->Gaus(0,.02);
-py = gRandom->Gaus(0,.02);
-pz = gRandom->Gaus(0,.02);
-p  = TMath::Sqrt(px*px+py*py+pz*pz);
-charge = 1;                                   
-if (gRandom->Rndm() < 0.5) charge = -1;
-gstep.pid    += 1;
-gstep.vect[0] = 0;
-gstep.vect[1] = 0;
-gstep.vect[2] = 0;
-gstep.vect[3] = px/p;
-gstep.vect[4] = py/p;
-gstep.vect[5] = pz/p;
-gstep.vect[6] = p*charge;
-gstep.getot   = TMath::Sqrt(p*p + mass*mass);
-gstep.gekin   = gstep.getot - mass;
-newParticle   = kFALSE;
-}
-// fill the Tree with current step parameters
-t2.Fill();
+      //generate a new particle if necessary (Geant3 emulation)
+      if (newParticle) {
+      px = gRandom->Gaus(0,.02);
+      py = gRandom->Gaus(0,.02);
+      pz = gRandom->Gaus(0,.02);
+      p  = TMath::Sqrt(px*px+py*py+pz*pz);
+      charge = 1;                                   
+      if (gRandom->Rndm() < 0.5) charge = -1;
+         gstep.pid    += 1;
+         gstep.vect[0] = 0;
+         gstep.vect[1] = 0;
+         gstep.vect[2] = 0;
+         gstep.vect[3] = px/p;
+         gstep.vect[4] = py/p;
+         gstep.vect[5] = pz/p;
+         gstep.vect[6] = p*charge;
+         gstep.getot   = TMath::Sqrt(p*p + mass*mass);
+         gstep.gekin   = gstep.getot - mass;
+         newParticle   = kFALSE;
+      }
+      // fill the Tree with current step parameters
+      t2.Fill();
 
 
-//transport particle in magnetic field (Geant3 emulation)
-    helixStep(gstep.step, gstep.vect, vout);   
- //make one step
-//apply energy loss
-gstep.destep   = gstep.step*gRandom->Gaus(0.0002,0.00001);
-gstep.gekin -= gstep.destep;
-gstep.getot  = gstep.gekin + mass;
-gstep.vect[6]= charge*TMath::Sqrt(gstep.getot*gstep.getot - mass*mass);
-  gstep.vect[0] = vout[0];
-gstep.vect[1] = vout[1];
-gstep.vect[2] = vout[2];
-gstep.vect[3] = vout[3];                              
-gstep.vect[4] = vout[4];                             
-gstep.vect[5] = vout[5];
-gstep.nmec    = (Int_t)(5*gRandom->Rndm());
-for (Int_t l=0; l<gstep.nmec; l++) gstep.lmec[l] = l;
-if  (gstep.gekin < 0.001) newParticle = kTRUE;
-if  (TMath::Abs(gstep.vect[2]) > 30) newParticle = kTRUE;
+      //transport particle in magnetic field (Geant3 emulation)
+      helixStep(gstep.step, gstep.vect, vout);   
+      //make one step
+      //apply energy loss
+      gstep.destep   = gstep.step*gRandom->Gaus(0.0002,0.00001);
+      gstep.gekin -= gstep.destep;
+      gstep.getot  = gstep.gekin + mass;
+      gstep.vect[6]= charge*TMath::Sqrt(gstep.getot*gstep.getot 
+                      - mass*mass);
+      gstep.vect[0] = vout[0];
+      gstep.vect[1] = vout[1];
+      gstep.vect[2] = vout[2];
+      gstep.vect[3] = vout[3];                              
+      gstep.vect[4] = vout[4];                             
+      gstep.vect[5] = vout[5];
+      gstep.nmec    = (Int_t)(5*gRandom->Rndm());
+      for (Int_t l=0; l<gstep.nmec; l++) gstep.lmec[l] = l;
+      if  (gstep.gekin < 0.001) newParticle = kTRUE;
+      if  (TMath::Abs(gstep.vect[2]) > 30) newParticle = kTRUE;
    }
    //save the Tree header. The file will be automatically 
    // closed when going out of the function scope
@@ -1376,9 +1352,9 @@ because in C and C++ the array variable holds the address of the first
 element.
 
 ``` {.cpp}
-t2.Branch("vect",gstep.vect,"vect[7]/F");
-t2.Branch("getot",&gstep.getot,"getot/F");
-t2.Branch("gekin",&gstep.gekin,"gekin/F");
+   t2.Branch("vect",gstep.vect,"vect[7]/F");
+   t2.Branch("getot",&gstep.getot,"getot/F");
+   t2.Branch("gekin",&gstep.gekin,"gekin/F");
 ```
 
 #### Adding a Branch with a Variable Length Array
@@ -1389,14 +1365,14 @@ length array. The `lmec` branch reads `nmec` number of integers
 beginning at the address `gstep.lmec`.
 
 ``` {.cpp}
-t2.Branch("nmec",&gstep.nmec,"nmec/I");
-t2.Branch("lmec",gstep.lmec,"lmec[nmec]/I");
+   t2.Branch("nmec",&gstep.nmec,"nmec/I");
+   t2.Branch("lmec",gstep.lmec,"lmec[nmec]/I");
 ```
 
 The variable `nmec` is a random number and is reset for each entry.
 
 ``` {.cpp}
-gstep.nmec = (Int_t)(5*gRandom->Rndm());
+   gstep.nmec = (Int_t)(5*gRandom->Rndm());
 ```
 
 #### Filling the Tree
@@ -1416,6 +1392,8 @@ addition, we draw the particle's path using the three values in the
 vector. Here we use the **`TTree::Draw`** method. It automatically creates
 a histogram and plots the 3 expressions (see Trees in Analysis).
 
+![](pictures/030000FF.png)
+
 ``` {.cpp}
 void tree2r() {
 
@@ -1424,44 +1402,42 @@ void tree2r() {
 
    // note that we use "new" to create the TFile and TTree objects because we
    // want to keep these objects alive when we leave this function
-TFile *f = new TFile("tree2.root");
-TTree *t2 = (TTree*)f->Get("t2");
-static Float_t destep;
-TBranch *b_destep = t2->GetBranch("destep");
-b_destep->SetAddress(&destep);
+   TFile *f = new TFile("tree2.root");
+   TTree *t2 = (TTree*)f->Get("t2");
+   static Float_t destep;
+   TBranch *b_destep = t2->GetBranch("destep");
+   b_destep->SetAddress(&destep);
 
    //create one histogram
-TH1F *hdestep = new TH1F("hdestep","destep in Mev",100,1e-5,3e-5);
+   TH1F *hdestep = new TH1F("hdestep","destep in Mev",100,1e-5,3e-5);
    //read only the destep branch for all entries
-Int_t nentries = (Int_t)t2->GetEntries();
-for (Int_t i=0;i<nentries;i++) {
-b_destep->GetEntry(i);
+   Int_t nentries = (Int_t)t2->GetEntries();
+   for (Int_t i=0;i<nentries;i++) {
+      b_destep->GetEntry(i);
       // fill the histogram with the destep entry 
-hdestep->Fill(destep);
-}
+      hdestep->Fill(destep);
+   }
 
-// we do not close the file; we want to keep the generated histograms;
+   // we do not close the file; we want to keep the generated histograms;
    // we fill a 3-d scatter plot with the particle step coordinates
-TCanvas *c1 = new TCanvas("c1","c1",600,800);
-c1->SetFillColor(42);
-c1->Divide(1,2);
+   TCanvas *c1 = new TCanvas("c1","c1",600,800);
+   c1->SetFillColor(42);
+   c1->Divide(1,2);
 
-c1->cd(1);
-hdestep->SetFillColor(45);
-hdestep->Fit("gaus");
+   c1->cd(1);
+   hdestep->SetFillColor(45);
+   hdestep->Fit("gaus");
 
-c1->cd(2);
-gPad->SetFillColor(37);                                  // continued...
-t2->SetMarkerColor(kRed);
-t2->Draw("vect[0]:vect[1]:vect[2]");
-if (gROOT->IsBatch()) return;
+   c1->cd(2);
+   gPad->SetFillColor(37);                       // continued...
+   t2->SetMarkerColor(kRed);
+   t2->Draw("vect[0]:vect[1]:vect[2]");
+   if (gROOT->IsBatch()) return;
 
    // invoke the x3d viewer
-gPad->GetViewer3D("x3d");
+   gPad->GetViewer3D("x3d");
 }
 ```
-
-![](pictures/030000FF.png) ![](pictures/03000100.png)
 
 ## Example 3: Adding Friends to Trees
 
@@ -1482,17 +1458,18 @@ copies of the tree headers are saved.
 
 ``` {.cpp}
 void tree3AddBranch() {
-TFile f("tree3.root","update");
-Float_t new_v;
-TTree *t3 = (TTree*)f->Get("t3");
-TBranch *newBranch = t3-> Branch("new_v",&new_v,"new_v/F");
-//read the number of entries in the t3
-Int_t nentries = (Int_t)t3->GetEntries();
-for (Int_t i = 0; i < nentries; i++){
-new_v= gRandom->Gaus(0,1);
-newBranch->Fill();
-}
-t3->Write("",TObject::kOverwrite);     // save only the new version of the tree
+   TFile f("tree3.root","update");
+   Float_t new_v;
+   TTree *t3 = (TTree*)f->Get("t3");
+   TBranch *newBranch = t3-> Branch("new_v",&new_v,"new_v/F");
+   //read the number of entries in the t3
+   Int_t nentries = (Int_t)t3->GetEntries();
+   for (Int_t i = 0; i < nentries; i++){
+      new_v= gRandom->Gaus(0,1);
+      newBranch->Fill();
+   }
+   t3->Write("",TObject::kOverwrite); // save only the new version of
+                                      // the tree
 }
 ```
 
@@ -1529,14 +1506,14 @@ is given, the tree called `ft1` is assumed to be in the same file as the
 original tree.
 
 ``` {.cpp}
-tree.AddFriend("ft1","friendfile1.root");
+   tree.AddFriend("ft1","friendfile1.root");
 ```
 
 If the friend tree has the same name as the original tree, you can give
 it an alias in the context of the friendship:
 
 ``` {.cpp}
-tree.AddFriend("tree1 = tree","friendfile1.root");
+   tree.AddFriend("tree1 = tree","friendfile1.root");
 ```
 
 Once the tree has friends, we can use `TTree::Draw` as if the friend's
@@ -1555,9 +1532,9 @@ For example, these commands generate a 3-d scatter plot of variable
 versus variable `v2` in **`TTree`** `ft2`.
 
 ``` {.cpp}
-tree.AddFriend("ft1","friendfile1.root");
-tree.AddFriend("ft2","friendfile2.root");
-tree.Draw("var:ft1.v1:ft2.v2");
+   tree.AddFriend("ft1","friendfile1.root");
+   tree.AddFriend("ft2","friendfile2.root");
+   tree.Draw("var:ft1.v1:ft2.v2");
 ```
 
 ![](pictures/02000102.jpg)The picture illustrates the access of the tree
@@ -1582,7 +1559,7 @@ possible to declare a friend tree that has the same internal structure
 values by specifying the tree.
 
 ``` {.cpp}
-tree.Draw("var:ft1.var:ft2.var")
+   tree.Draw("var:ft1.var:ft2.var");
 ```
 
 The example code is in `$ROOTSYS/tutorials/tree/tree3.C`. Here is the
@@ -1590,87 +1567,86 @@ script:
 
 ``` {.cpp}
 void tree3w() {
-
-// Example of a Tree where branches are variable length arrays
-// A second Tree is created and filled in parallel.
-// Run this script with .x tree3.C 
-// In the function treer, the first Tree is open. 
-// The second Tree is declared friend of the first tree.
-// TTree::Draw is called with variables from both Trees.
-const Int_t kMaxTrack = 500;
-Int_t ntrack;
-Int_t stat[kMaxTrack];
-Int_t sign[kMaxTrack];
-Float_t px[kMaxTrack];
-Float_t py[kMaxTrack];
-Float_t pz[kMaxTrack];
-Float_t pt[kMaxTrack];
-Float_t zv[kMaxTrack];
-Float_t chi2[kMaxTrack];
-Double_t sumstat;
+   // Example of a Tree where branches are variable length arrays
+   // A second Tree is created and filled in parallel.
+   // Run this script with .x tree3.C 
+   // In the function treer, the first Tree is open. 
+   // The second Tree is declared friend of the first tree.
+   // TTree::Draw is called with variables from both Trees.
+   const Int_t kMaxTrack = 500;
+   Int_t ntrack;
+   Int_t stat[kMaxTrack];
+   Int_t sign[kMaxTrack];
+   Float_t px[kMaxTrack];
+   Float_t py[kMaxTrack];
+   Float_t pz[kMaxTrack];
+   Float_t pt[kMaxTrack];
+   Float_t zv[kMaxTrack];
+   Float_t chi2[kMaxTrack];
+   Double_t sumstat;
 
    // create the first root file with a tree  
-TFile f("tree3.root","recreate");
-TTree *t3 = new TTree("t3","Reconst ntuple");
-t3->Branch("ntrack",&ntrack,"ntrack/I");
-t3->Branch("stat",stat,"stat[ntrack]/I");
-t3->Branch("sign",sign,"sign[ntrack]/I");
-t3->Branch("px",px,"px[ntrack]/F");
-t3->Branch("py",py,"py[ntrack]/F");
-t3->Branch("pz",pz,"pz[ntrack]/F");
-t3->Branch("zv",zv,"zv[ntrack]/F");
-t3->Branch("chi2",chi2,"chi2[ntrack]/F");
+   TFile f("tree3.root","recreate");
+   TTree *t3 = new TTree("t3","Reconst ntuple");
+   t3->Branch("ntrack",&ntrack,"ntrack/I");
+   t3->Branch("stat",stat,"stat[ntrack]/I");
+   t3->Branch("sign",sign,"sign[ntrack]/I");
+   t3->Branch("px",px,"px[ntrack]/F");
+   t3->Branch("py",py,"py[ntrack]/F");
+   t3->Branch("pz",pz,"pz[ntrack]/F");
+   t3->Branch("zv",zv,"zv[ntrack]/F");
+   t3->Branch("chi2",chi2,"chi2[ntrack]/F");
 
-// create the second root file with a different tree
-TFile fr("tree3f.root","recreate");
-TTree *t3f = new TTree("t3f","a friend Tree");
-t3f->Branch("ntrack",&ntrack,"ntrack/I");
-t3f->Branch("sumstat",&sumstat,"sumstat/D");
-t3f->Branch("pt",pt,"pt[ntrack]/F");
+   // create the second root file with a different tree
+   TFile fr("tree3f.root","recreate");
+   TTree *t3f = new TTree("t3f","a friend Tree");
+   t3f->Branch("ntrack",&ntrack,"ntrack/I");
+   t3f->Branch("sumstat",&sumstat,"sumstat/D");
+   t3f->Branch("pt",pt,"pt[ntrack]/F");
 
-// Fill the trees
-for (Int_t i=0;i<1000;i++) {
-Int_t nt = gRandom->Rndm()*(kMaxTrack-1);
-ntrack = nt;
-sumstat = 0;
- // set the values in each track
-for (Int_t n=0;n<nt;n++) {
-stat[n] = n%3;
-sign[n] = i%2;
-px[n]   = gRandom->Gaus(0,1);
-py[n]   = gRandom->Gaus(0,2);
-pz[n]   = gRandom->Gaus(10,5);
-zv[n]   = gRandom->Gaus(100,2);
-chi2[n] = gRandom->Gaus(0,.01);
-sumstat += chi2[n];
-pt[n]   = TMath::Sqrt(px[n]*px[n] + py[n]*py[n]);
-}
-t3->Fill();
-t3f->Fill();
-}
-  // Write the two files  
-t3->Print();
-f.cd();
-t3->Write();
-fr.cd();
-t3f->Write();
+   // Fill the trees
+   for (Int_t i=0;i<1000;i++) {
+      Int_t nt = gRandom->Rndm()*(kMaxTrack-1);
+      ntrack = nt;
+      sumstat = 0;
+      // set the values in each track
+      for (Int_t n=0;n<nt;n++) {
+         stat[n] = n%3;
+         sign[n] = i%2;
+         px[n]   = gRandom->Gaus(0,1);
+         py[n]   = gRandom->Gaus(0,2);
+         pz[n]   = gRandom->Gaus(10,5);
+         zv[n]   = gRandom->Gaus(100,2);
+         chi2[n] = gRandom->Gaus(0,.01);
+         sumstat += chi2[n];
+         pt[n]   = TMath::Sqrt(px[n]*px[n] + py[n]*py[n]);
+      }
+      t3->Fill();
+      t3f->Fill();
+   }
+   // Write the two files  
+   t3->Print();
+   f.cd();
+   t3->Write();
+   fr.cd();
+   t3f->Write();
 }
 
 // Function to read the two files and add the friend
 void tree3r()         {
-TFile *f = new TFile("tree3.root");
-TTree *t3 = (TTree*)f->Get("t3");
+   TFile *f = new TFile("tree3.root");
+   TTree *t3 = (TTree*)f->Get("t3");
    // Add the second tree to the first tree as a friend
-t3->AddFriend("t3f","tree3f.root");
+   t3->AddFriend("t3f","tree3f.root");
    // Draw pz which is in the first tree and use pt 
    // in the condition. pt is in the friend tree.
-t3->Draw("pz","pt>3");
+   t3->Draw("pz","pt>3");
 }
 
 // This is executed when typing .x tree3.C
-void tree3()         {
-tree3w();
-tree3r();
+void tree3() {
+   tree3w();
+   tree3r();
 }
 ```
 
@@ -1687,9 +1663,7 @@ in the `$ROOTSYS/test/README` file.
 In this example we will show
 
 -   the difference in splitting or not splitting a branch
-
 -   how to read selected branches of the tree,
-
 -   how to print a selected entry
 
 ### The Event Class
@@ -1702,9 +1676,7 @@ members of **`TObject`** and its methods such as `Dump()` and
 advantages of inheriting from a **`TObject`** are:
 
 -   Inherit the `Write`, `Inspect`, and `Dump` methods
-
 -   Enables a class to be a member of a ROOT collection
-
 -   Enables RTTI
 
 Below is the list of the `Event` data members. It contains a character
@@ -1719,23 +1691,23 @@ form `R__b << fTracks`.
 
 ``` {.cpp}
 class Event : public TObject {
-private:
-   char            fType[20];
-   Int_t           fNtrack;
-   Int_t           fNseg;
-   Int_t           fNvertex;
-   UInt_t          fFlag;
-   Float_t         fTemperature;
-   EventHeader     fEvtHdr;
-   TClonesArray  *fTracks;            //->
-   TH1F          *fH;                 //->
-   Int_t           fMeasures[10];
-   Float_t         fMatrix[4][4];
-   Float_t       *fClosestDistance;   //[fNvertex] 
-   static TClonesArray *fgTracks;
-   static TH1F         *fgHist; 
-// ... list of methods
-   ClassDef(Event,1)  //Event structure
+   private:
+      char                 fType[20];
+      Int_t                fNtrack;
+      Int_t                fNseg;
+      Int_t                fNvertex;
+      UInt_t               fFlag;
+      Float_t              fTemperature;
+      EventHeader          fEvtHdr;
+      TClonesArray        *fTracks;            //->
+      TH1F                *fH;                 //->
+      Int_t                fMeasures[10];
+      Float_t              fMatrix[4][4];
+      Float_t             *fClosestDistance;   //[fNvertex] 
+      static TClonesArray *fgTracks;
+      static TH1F         *fgHist; 
+      // ... list of methods
+      ClassDef(Event,1)  //Event structure
 };
 ```
 
@@ -1753,12 +1725,12 @@ inheriting from **`TObject`** to a tree by encapsulating it in a
 
 ``` {.cpp}
 class EventHeader {
-private:
-   Int_t   fEvtNum;
-   Int_t   fRun;
-   Int_t   fDate;
-   // ... list of methods
-   ClassDef(EventHeader,1)      //Event Header
+   private:
+      Int_t   fEvtNum;
+      Int_t   fRun;
+      Int_t   fDate;
+      // ... list of methods
+      ClassDef(EventHeader,1)      //Event Header
 };
 ```
 
@@ -1773,27 +1745,28 @@ inheritance enables `Track` to be in a collection and in `Event` is a
 
 ``` {.cpp}
 class Track : public TObject {
-private:
-   Float_t   fPx;         //X component of the momentum
-   Float_t   fPy;         //Y component of the momentum
-   Float_t   fPz;         //Z component of the momentum
-   Float_t   fRandom;     //A random track quantity
-   Float_t   fMass2;      //The mass square of this particle
-   Float_t   fBx;         //X intercept at the vertex
-   Float_t   fBy;         //Y intercept at the vertex
-   Float_t   fMeanCharge; //Mean charge deposition of all hits 
-   Float_t   fXfirst;     //X coordinate of the first point
-   Float_t   fXlast;      //X coordinate of the last point
-   Float_t   fYfirst;     //Y coordinate of the first point
-   Float_t   fYlast;      //Y coordinate of the last point
-   Float_t   fZfirst;     //Z coordinate of the first point
-   Float_t   fZlast;      //Z coordinate of the last point
-   Float_t   fCharge;     //Charge of this track
-   Float_t   fVertex[3];  //Track vertex position
-   Int_t     fNpoint;     //Number of points for this track
-   Short_t   fValid;      //Validity criterion
-// method definitions ...
-   ClassDef(Track,1)          //A track segment
+   private:
+      Float_t   fPx;         //X component of the momentum
+      Float_t   fPy;         //Y component of the momentum
+      Float_t   fPz;         //Z component of the momentum
+      Float_t   fRandom;     //A random track quantity
+      Float_t   fMass2;      //The mass square of this particle
+      Float_t   fBx;         //X intercept at the vertex
+      Float_t   fBy;         //Y intercept at the vertex
+      Float_t   fMeanCharge; //Mean charge deposition of all hits 
+      Float_t   fXfirst;     //X coordinate of the first point
+      Float_t   fXlast;      //X coordinate of the last point
+      Float_t   fYfirst;     //Y coordinate of the first point
+      Float_t   fYlast;      //Y coordinate of the last point
+      Float_t   fZfirst;     //Z coordinate of the first point
+      Float_t   fZlast;      //Z coordinate of the last point
+      Float_t   fCharge;     //Charge of this track
+      Float_t   fVertex[3];  //Track vertex position
+      Int_t     fNpoint;     //Number of points for this track
+      Short_t   fValid;      //Validity criterion
+
+      // method definitions ...
+      ClassDef(Track,1)          //A track segment
 };
 ```
 
@@ -1808,52 +1781,52 @@ One is split and the other is not. We also create a pointer to an
 void tree4w() {
    // check to see if the event class is in the dictionary
    // if it is not load the definition in libEvent.so
-if (!TClassTable::GetDict("Event")) {
-gSystem->Load("$ROOTSYS/test/libEvent.so");
-}
-  // create a Tree file tree4.root
-TFile f("tree4.root","RECREATE");
-// create a ROOT Tree
-TTree t4("t4","A Tree with Events");
-  // create a pointer to an Event object
-Event *event = new Event();
- // create two branches, split one
-t4.Branch("event_branch", "Event", &event,16000,2);
-t4.Branch("event_not_split", "Event", &event,16000,0);
+   if (!TClassTable::GetDict("Event")) {
+      gSystem->Load("$ROOTSYS/test/libEvent.so");
+   }
+   // create a Tree file tree4.root
+   TFile f("tree4.root","RECREATE");
+   // create a ROOT Tree
+   TTree t4("t4","A Tree with Events");
+   // create a pointer to an Event object
+   Event *event = new Event();
+   // create two branches, split one
+   t4.Branch("event_branch", "Event", &event,16000,2);
+   t4.Branch("event_not_split", "Event", &event,16000,0);
 
-  // a local variable for the event type 
-char etype[20];
+   // a local variable for the event type 
+   char etype[20];
 
- // fill the tree
-for (Int_t ev = 0; ev <100; ev++) {
-Float_t sigmat, sigmas;
-gRandom->Rannor(sigmat,sigmas);
-Int_t ntrack   = Int_t(600 + 600 *sigmat/120.);
-Float_t random = gRandom->Rndm(1);
-sprintf(etype,"type%d",ev%5);
-event->SetType(etype);
-event->SetHeader(ev, 200, 960312, random);
-event->SetNseg(Int_t(10*ntrack+20*sigmas));
-event->SetNvertex(Int_t(1+20*gRandom->Rndm()));
-event->SetFlag(UInt_t(random+0.5));
-event->SetTemperature(random+20.);
-for(UChar_t m = 0; m < 10; m++) {
-event->SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
-}
-// continued...
-// fill the matrix
-for(UChar_t i0 = 0; i0 < 4; i0++) {
-for(UChar_t i1 = 0; i1 < 4; i1++) {
-event->SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
-}
-}
+   // fill the tree
+   for (Int_t ev = 0; ev <100; ev++) {
+      Float_t sigmat, sigmas;
+      gRandom->Rannor(sigmat,sigmas);
+      Int_t ntrack   = Int_t(600 + 600 *sigmat/120.);
+      Float_t random = gRandom->Rndm(1);
+      sprintf(etype,"type%d",ev%5);
+      event->SetType(etype);
+      event->SetHeader(ev, 200, 960312, random);
+      event->SetNseg(Int_t(10*ntrack+20*sigmas));
+      event->SetNvertex(Int_t(1+20*gRandom->Rndm()));
+      event->SetFlag(UInt_t(random+0.5));
+      event->SetTemperature(random+20.);
+      for(UChar_t m = 0; m < 10; m++) {
+         event->SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
+      }
+                                                  // continued...
+      // fill the matrix
+      for(UChar_t i0 = 0; i0 < 4; i0++) {
+         for(UChar_t i1 = 0; i1 < 4; i1++) {
+            event->SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
+         }
+      }
       // create and fill the Track objects
-for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);
-t4.Fill();      // Fill the tree
-event->Clear(); // Clear before reloading event
-}
-f.Write();            // Write the file header
-t4.Print();           // Print the tree contents
+      for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);
+      t4.Fill();      // Fill the tree
+      event->Clear(); // Clear before reloading event
+   }
+   f.Write();            // Write the file header
+   t4.Print();           // Print the tree contents
 }
 ```
 
@@ -1868,48 +1841,48 @@ the fist entry that meets the condition.
 
 ``` {.cpp}
 void tree4r() {
-  // check if the event class is in the dictionary
-  // if it is not load the definition in libEvent.so
-if (!TClassTable::GetDict("Event")) {
-gSystem->Load("$ROOTSYS/test/libEvent.so");
-}
-// read the tree generated with tree4w 
+   // check if the event class is in the dictionary
+   // if it is not load the definition in libEvent.so
+   if (!TClassTable::GetDict("Event")) {
+      gSystem->Load("$ROOTSYS/test/libEvent.so");
+   }
+   // read the tree generated with tree4w 
 
-  // note that we use "new" to create the TFile and TTree objects, because we
-  // want to keep these objects alive when we leave this function.
-TFile *f = new TFile("tree4.root");
-TTree *t4 = (TTree*)f->Get("t4");
+   // note that we use "new" to create the TFile and TTree objects, because we
+   // want to keep these objects alive when we leave this function.
+   TFile *f = new TFile("tree4.root");
+   TTree *t4 = (TTree*)f->Get("t4");
 
-  // create a pointer to an event object for reading the branch values.
-Event *event = new Event();
-  // get two branches and set the branch address
-TBranch *bntrack = t4->GetBranch("fNtrack");
-TBranch *branch  = t4->GetBranch("event_split");
-branch->SetAddress(&event);
+   // create a pointer to an event object for reading the branch values.
+   Event *event = new Event();
+   // get two branches and set the branch address
+   TBranch *bntrack = t4->GetBranch("fNtrack");
+   TBranch *branch  = t4->GetBranch("event_split");
+   branch->SetAddress(&event);
 
-Int_t nevent = t4->GetEntries();
-Int_t nselected = 0;
-Int_t nb = 0;
-  for (Int_t i=0; i<nevent; i++) {
-    //read branch "fNtrack"only
-    bntrack->GetEntry(i);  
+   Int_t nevent = t4->GetEntries();
+   Int_t nselected = 0;
+   Int_t nb = 0;
+   for (Int_t i=0; i<nevent; i++) {
+      //read branch "fNtrack"only
+      bntrack->GetEntry(i);  
 
-    //reject events with more than 587 tracks
-    if (event->GetNtrack() > 587)continue;
+      // reject events with more than 587 tracks
+      if (event->GetNtrack() > 587)continue;
 
-    //read complete accepted event in memory 
-    nb += t4->GetEntry(i);
-    nselected++;
+      // read complete accepted event in memory 
+      nb += t4->GetEntry(i);
+      nselected++;
 
-    //print the first accepted event
-    if (nselected == 1) t4->Show();
-    //clear tracks array
-    event->Clear();
-  }
+     // print the first accepted event
+     if (nselected == 1) t4->Show();
+     // clear tracks array
+     event->Clear();
+   }
 
-  if (gROOT->IsBatch()) return;
-  new TBrowser();
-  t4->StartViewer();
+   if (gROOT->IsBatch()) return;
+   new TBrowser();
+   t4->StartViewer();
 }   
 ```
 
@@ -1953,14 +1926,16 @@ structure of the **`TTree`** and read the data from a formatted ascii
 file.
 
 ``` {.cpp}
-Long64_t TTree::ReadFile(const char *filename, const char *branchDescriptor)
+Long64_t TTree::ReadFile(const char *filename, 
+                         const char *branchDescriptor)
 ```
 
 Creates or simply read branches from the file named whose name is passed
 in `'filename'`.
 
 ``` {.cpp}
-{  gROOT->Reset();
+{
+   gROOT->Reset();
    TFile *f = new TFile("basic2.root","RECREATE");
    TH1F *h1 = new TH1F("h1","x distribution",100,-4,4);
    TTree *T = new TTree("ntuple","data from ascii file");
@@ -3705,8 +3680,6 @@ If PROOF is setup, it divides the processing amongst the slave CPUs.
 
 ### Performance Benchmarks
 
-
-![](pictures/03000107.png)
 
 The program `$ROOTSYS/test/bench.cxx` compares the I/O performance of
 STL vectors to the ROOT native **`TClonesArray`**`s` collection class.

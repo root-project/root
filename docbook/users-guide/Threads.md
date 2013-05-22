@@ -97,7 +97,7 @@ We hope that this will become the default later.
 
 To compile ROOT, just do (for example on a debian Linux):
 
-``` {.cpp}
+```
 ./configure linuxdeb2 --with-thread=/usr/lib/libpthread.so
 gmake depend
 gmake
@@ -143,11 +143,11 @@ Add these lines to your `rootlogon.C`:
 
 ``` {.cpp}
 {
-...
+   ...
    // The next line may be unnecessary on some platforms
-gSystem->Load("/usr/lib/libpthread.so");
-gSystem->Load("$ROOTSYS/lib/libThread.so");
-...
+   gSystem->Load("/usr/lib/libpthread.so");
+   gSystem->Load("$ROOTSYS/lib/libThread.so");
+   ...
 }
 ```
 
@@ -224,9 +224,9 @@ undetermined. To avoid this problem, the user has to synchronize these
 actions with:
 
 ``` {.cpp}
-TThread::Lock()    // Locking the following part of code
-...                // Create an object, etc...
-TThread::UnLock()  // Unlocking
+   TThread::Lock()    // Locking the following part of code
+   ...                // Create an object, etc...
+   TThread::UnLock()  // Unlocking
 ```
 
 The code between `Lock()` and `UnLock()` will be performed
@@ -251,15 +251,15 @@ Wait and `TimedWait` locking methods. One can pass the address of an
 external mutex to the **`TCondition`** constructor:
 
 ``` {.cpp}
-TMutex MyMutex;
-TCondition MyCondition(&MyMutex);
+   TMutex MyMutex;
+   TCondition MyCondition(&MyMutex);
 ```
 
 If zero is passed, **`TCondition`** creates and uses its own internal
 mutex:
 
 ``` {.cpp}
-TCondition MyCondition(0);
+   TCondition MyCondition(0);
 ```
 
 You can now use the following methods of synchronization:
@@ -289,10 +289,10 @@ been signaled before).
     beginning of waiting ‘‘now''; for example:
 
 ``` {.cpp}
-Ulong_t now,then,delta;                   // seconds
-TDatime myTime;                           // root daytime class
-myTime.Set();                             // myTime set to "now"
-now=myTime.Convert();                     // to seconds since 1970
+   Ulong_t now,then,delta;                   // seconds
+   TDatime myTime;                           // root daytime class
+   myTime.Set();                             // myTime set to "now"
+   now=myTime.Convert();                     // to seconds since 1970
 ```
 
 -   Return value wait of `MyCondition.TimedWait` should be 0, if
@@ -348,37 +348,37 @@ Set by `TThread::SetCancelAsynchronous``()`: If the user is sure that
 his application is cancel safe, he could call:
 
 ``` {.cpp}
-TThread::SetCancelAsynchronous();
-TThread::SetCancelOn();
-// Now cancelation in any point is allowed.
-...  
-// Return to default  
-TThread::SetCancelOff();
-TThread::SetCancelDeferred();
+   TThread::SetCancelAsynchronous();
+   TThread::SetCancelOn();
+   // Now cancelation in any point is allowed.
+   ...  
+   // Return to default  
+   TThread::SetCancelOff();
+   TThread::SetCancelDeferred();
 ```
 
 To cancel a thread `TThread* th` call:
 
 ``` {.cpp}
-th->Kill();
+   th->Kill();
 ```
 
 To cancel by thread name:
 
 ``` {.cpp}
-TThread::Kill(name);
+   TThread::Kill(name);
 ```
 
 To cancel a thread by ID:
 
 ``` {.cpp}
-TThread::Kill(tid);
+   TThread::Kill(tid);
 ```
 
 To cancel a thread and delete `th` when cancel finished:
 
 ``` {.cpp}
-th->Delete();
+   th->Delete();
 ```
 
 Deleting of the thread instance by the operator delete is dangerous. Use
@@ -387,16 +387,16 @@ running. Often during the canceling, some clean up actions must be
 taken. To define clean up functions use:
 
 ``` {.cpp}
-void UserCleanUp(void *arg){
-// here the user cleanup is done
-...
-}
-TThread::CleanUpPush(&UserCleanUp,arg);
-       // push user function into cleanup stack"last in, first out"
-TThread::CleanUpPop(1); // pop user function out of stack and execute it,
-// thread resumes after this call
-TThread::CleanUpPop(0); // pop user function out of stack
-// _without_ executing it
+   void UserCleanUp(void *arg) {
+      // here the user cleanup is done
+      ...
+   }
+   TThread::CleanUpPush(&UserCleanUp,arg);
+          // push user function into cleanup stack"last in, first out"
+   TThread::CleanUpPop(1); // pop user function out of stack and
+                        // execute it, thread resumes after this call
+   TThread::CleanUpPop(0); // pop user function out of stack
+   // _without_ executing it
 ```
 
 Note: `CleanUpPush` and `CleanUpPop` should be used as corresponding
@@ -418,7 +418,7 @@ Consider a class `Myclass` with a member function that shall be launched
 as a thread.
 
 ``` {.cpp}
-void* Myclass::Thread0((void* arg)
+   void* Myclass::Thread0((void* arg)
 ```
 
 To start Thread0 as a **`TThread`**, class `Myclass` may provide a
@@ -426,12 +426,13 @@ method:
 
 ``` {.cpp}
 Int_t Myclass::Threadstart(){
-if(!mTh){
-mTh= new TThread("memberfunction",(void(*)(void *))&Thread0,(void*) this);
-mTh->Run();
-return 0;
-}
-return 1;
+   if(!mTh){
+      mTh= new TThread("memberfunction",
+                 (void(*)(void *))&Thread0,(void*) this);
+      mTh->Run();
+      return 0;
+   }
+   return 1;
 }
 ```
 
@@ -445,7 +446,8 @@ First, the member function Thread0 requires an explicit cast to
 warning:
 
 ``` {.cpp}
-Myclass.cxx:98: warning: converting from "void (Myclass::*)(void *)"to "void *" )
+Myclass.cxx:98: warning:
+              converting from "void (Myclass::*)(void *)"to "void *" )
 ```
 
 Strictly speaking, `Thread0` must be a static member function to be
@@ -460,8 +462,8 @@ pointer, non static members can still be read and written from
 these members. For example:
 
 ``` {.cpp}
-Bool_t state = arg->GetRunStatus();
-arg->SetRunStatus(state);
+   Bool_t state = arg->GetRunStatus();
+   arg->SetRunStatus(state);
 ```
 
 Second, the pointer to the current instance of `Myclass`, i.e. (void\*)
@@ -483,14 +485,14 @@ then can be overridden in a derived class of `Myclass`. (See example
 Class `Myclass` may also provide a method to stop the running thread:
 
 ``` {.cpp}
-Int_t Myclass::Threadstop(){
-if(mTh){
-TThread::Delete(mTh);
-delete mTh;
-mTh=0;
-return 0;
-}
-return 1;
+Int_t Myclass::Threadstop() {
+   if (mTh) {
+      TThread::Delete(mTh);
+      delete mTh;
+      mTh=0;
+      return 0;
+   }
+   return 1;
 }
 ```
 
@@ -538,7 +540,7 @@ kSigSystemkSigWindowChanged
 
 The signals ***`kSigFloatingException`***,
 ***`kSigSegmentationViolation`***, ***`kSigIllegalInstruction`***, and
-***`kSigBus`*** cause the printing of the ***`*** Break *** `***message
+***`kSigBus`*** cause the printing of the ***`*** Break *** `*** message
 and make a long jump back to the ROOT prompt. No other custom
 **`TSignalHandler`** can be added to these signals.
 
