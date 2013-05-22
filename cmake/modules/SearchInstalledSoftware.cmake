@@ -616,9 +616,22 @@ if(ldap)
   endif()
 endif()
 
+#---Check for globus--------------------------------------------------------------------
+if(globus)
+  find_package(Globus)
+  if(NOT GLOBUS_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "globus libraries not found and is required ('globus' option enabled)")
+    else()
+      message(STATUS "globus libraries not found. Set environment var GLOBUS_LOCATION or varibale GLOBUS_DIR to point to your globus installation")
+      message(STATUS "For the time being switching OFF 'globus' option")
+      set(globus OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
 
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs chirp clarens cling glite globus hdfs lzma pch peac sapdb srp)
+foreach(opt afs chirp clarens glite hdfs pch peac sapdb srp)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)

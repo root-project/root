@@ -1,3 +1,4 @@
+
 add_subdirectory(net)
 add_subdirectory(auth)  # special CMakeListst.txt
 
@@ -27,3 +28,6 @@ if(ldap)
    add_subdirectory(ldap)
 endif()
 
+if(globus)
+   add_subdirectory(globusauth)
+endif()
