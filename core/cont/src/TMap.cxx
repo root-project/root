@@ -405,6 +405,47 @@ void TMap::Streamer(TBuffer &b)
    }
 }
 
+//______________________________________________________________________________
+Int_t TMap::Write(const char *name, Int_t option, Int_t bsize) const
+{
+   // Write all objects in this map. By default all objects in
+   // the collection are written individually (each object gets its
+   // own key). Note, this is recursive, i.e. objects in collections
+   // in the collection are also written individually. To write all
+   // objects using a single key specify a name and set option to
+   // TObject::kSingleKey (i.e. 1).
+
+   if ((option & kSingleKey)) {
+      return TObject::Write(name, option, bsize);
+   } else {
+      option &= ~kSingleKey;
+      Int_t nbytes = 0;
+      TIter next(fTable);
+      TPair *a;
+      while ((a = (TPair*) next())) {
+         if (a->Key())
+            nbytes += a->Key()->Write(name, option, bsize);
+         if (a->Value())
+            nbytes += a->Value()->Write(name, option, bsize);
+      }
+      return nbytes;
+   }
+}
+
+//______________________________________________________________________________
+Int_t TMap::Write(const char *name, Int_t option, Int_t bsize)
+{
+   // Write all objects in this map. By default all objects in
+   // the collection are written individually (each object gets its
+   // own key). Note, this is recursive, i.e. objects in collections
+   // in the collection are also written individually. To write all
+   // objects using a single key specify a name and set option to
+   // TObject::kSingleKey (i.e. 1).
+
+   return ((const TMap*)this)->Write(name,option,bsize);
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TPair                                                                //
