@@ -15,7 +15,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncReturnInt"
 CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundDouble32inDefaultTmpltArg"
-#CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
+CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForNamespaces"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForTemplates"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
@@ -63,7 +63,7 @@ CALLROOTEXEBUILD += -e "\#define ClingWorkAroundNoPrivateClassIO"
 ClingWorkAroundLackOfModule = yes
 #ClingWorkAroundMissingImplicitAuto = yes
 ClingWorkAroundExtraParensWithImplicitAuto = yes
-#ClingWorkAroundMissingDynamicScope = yes
+ClingWorkAroundMissingDynamicScope = yes
 ClingWorkAroundMissingUnloading = yes
 ClingWorkAroundDouble32inDefaultTmpltArg = yes
 ClingWorkAroundCallfuncReturnInt = yes         # See http://savannah.cern.ch/bugs/?100652 
