@@ -88,6 +88,8 @@ public:
    TPair            *RemoveEntry(TObject *key);
    virtual void      SetOwnerValue(Bool_t enable = kTRUE);
    virtual void      SetOwnerKeyValue(Bool_t ownkeys = kTRUE, Bool_t ownvals = kTRUE);
+   virtual Int_t     Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
+   virtual Int_t     Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
 
    ClassDef(TMap,3)  //A (key,value) map
 };
