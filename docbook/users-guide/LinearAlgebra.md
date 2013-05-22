@@ -1268,5 +1268,3 @@ calls to constructors and destructors in the `C++` packages versus a `C`
 library like `GSL`.
 
 ![Speed comparison between the different matrix packages](pictures/030001A1.png)
-
-![Speed comparison between the different matrix packages](pictures/030001A2.png)

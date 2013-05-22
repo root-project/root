@@ -54,8 +54,8 @@ Pseudo-random numbers are generated using a linear congruential random
 generator. The multipliers used are the same of the BSD `rand()` random
 generator. Its sequence is:
 
-![](pictures/0600010A.png) with ![](pictures/0600010B.png)`=1103515245`,
-![](pictures/0600010C.png)= 12345 and ![](pictures/0600010D.png)=2^31^.
+$x_{n+1} = (ax_n + c) \bmod{m}$ with $a =1103515245$,
+$c = 12345$ and $m =2^{31}$.
 
 This type of generator uses a state of only a 32 bit integer and it has
 a very short period, 2^31^,about 10^9^, which can be exhausted in just
@@ -134,18 +134,19 @@ The method `Rndm()` is used for generating a pseudo-random number
 distributed between 0 and 1 as shown in the following example:
 
 ``` {.cpp}
-// use default seed (same random numbers will be generated each time)
-TRandom3 r; // generate a number in interval ]0,1] (0 is excluded)
-r.Rndm();
-double x[100];
-r.RndmArray(100,x);     // generate an array of random numbers in ]0,1]
-TRandom3 rdm(111);      // construct with a user-defined seed
-// use 0: a unique seed will be automatically generated using TUUID
-TRandom1 r1(0);
-TRandom2 r2(0);
-TRandom3 r3(0);
-// use a seed generated using machine clock (different every second)
-TRandom r0(0);
+   // use default seed 
+   // (same random numbers will be generated each time)
+   TRandom3 r; // generate a number in interval ]0,1] (0 is excluded)
+   r.Rndm();
+   double x[100];
+   r.RndmArray(100,x); // generate an array of random numbers in ]0,1]
+   TRandom3 rdm(111);      // construct with a user-defined seed
+   // use 0: a unique seed will be automatically generated using TUUID
+   TRandom1 r1(0);
+   TRandom2 r2(0);
+   TRandom3 r3(0);
+   // seed generated using machine clock (different every second)
+   TRandom r0(0);
 ```
 
 ### Random Number Distributions
@@ -161,9 +162,10 @@ require several random numbers.
 
 ``` {.cpp}
 TRandom3 r;
-// generate a gaussian distributed number with mu=0, sigma=1 (default values)
-double x1 = r.Gaus();
-double x2 = r.Gaus(10,3);    // use mu = 10, sigma = 3;
+   // generate a gaussian distributed number with:
+   // mu=0, sigma=1 (default values)
+   double x1 = r.Gaus();
+   double x2 = r.Gaus(10,3);    // use mu = 10, sigma = 3;
 ```
 
 The following table shows the various distributions that can be
@@ -247,13 +249,14 @@ can be used as following:
     <http://statistik.wu-wien.ac.at/unuran/doc/unuran.html> ):
 
 ``` {.cpp}
-TUnuran unr;
-//initialize unuran to generate normal random numbers using a "arou" method
-unr.Init("normal()","method=arou");
-...
-// sample distributions N times (generate N random numbers)
-for (int i = 0; i<N; ++i)
-double x = unr.Sample();
+   TUnuran unr;
+   // initialize unuran to generate normal random numbers using
+   // a "arou" method
+   unr.Init("normal()","method=arou");
+   ...
+   // sample distributions N times (generate N random numbers)
+   for (int i = 0; i<N; ++i)
+      double x = unr.Sample();
 ```
 
 -   For continuous 1D distribution object via the class
@@ -264,13 +267,15 @@ double x = unr.Sample();
     generating numbers in a restricted region.
 
 ``` {.cpp}
-//1D case: create a distribution from two TF1 object pointers pdfFunc
-TUnuranContDist  dist( pdfFunc);
-//initialize unuran passing the distribution and a string defining the method
-unr.Init(dist, "method=hinv");
-// sample distribution  N times (generate N random numbers)
-for (int i = 0; i < N; ++i)
-double x = unr.Sample();
+   // 1D case: create a distribution from two TF1 object
+   // pointers pdfFunc
+   TUnuranContDist  dist( pdfFunc);
+   // initialize unuran passing the distribution and a string
+   // defining the method
+   unr.Init(dist, "method=hinv");
+   // sample distribution  N times (generate N random numbers)
+   for (int i = 0; i < N; ++i)
+      double x = unr.Sample();
 ```
 
 -   For multi-dimensional distribution via the class
@@ -278,14 +283,14 @@ double x = unr.Sample();
     multi-dimensional pdf.
 
 ``` {.cpp}
-// Multi- dimensional case from a TF1 (TF2 or TF3) objects
-TUnuranMultiContDist  dist( pdfFuncMulti);
-// the recommended method for multi-dimensional function is "hitro"
-unr.Init(dist,"method=hitro");
-// sample distribution  N times (generate N random numbers)
-double x[NDIM];
-for (int i = 0; i<N; ++i)
-unr.SampleMulti(x);
+   // Multi- dimensional case from a TF1 (TF2 or TF3) objects
+   TUnuranMultiContDist  dist( pdfFuncMulti);
+   // the recommended method for multi-dimensional function is "hitro"
+   unr.Init(dist,"method=hitro");
+   // sample distribution  N times (generate N random numbers)
+   double x[NDIM];
+   for (int i = 0; i<N; ++i)
+      unr.SampleMulti(x);
 ```
 
 -   For discrete distribution via the class **`TUnuranDiscrDist`**,
@@ -293,14 +298,14 @@ unr.SampleMulti(x);
     probabilities.
 
 ``` {.cpp}
-// Create distribution from a vector of probabilities
-double pv[NSize] = {0.1,0.2,...};
-TUnuranDiscrDist dist(pv,pv+NSize);
-// the recommended method for discrete distribution is
-unr.Init(dist, "method=dgt");
-// sample N times (generate N random numbers)
-for (int i = 0; i < N; ++i)
-int k = unr.SampleDiscr();
+   // Create distribution from a vector of probabilities
+   double pv[NSize] = {0.1,0.2,...};
+   TUnuranDiscrDist dist(pv,pv+NSize);
+   // the recommended method for discrete distribution is
+   unr.Init(dist, "method=dgt");
+   // sample N times (generate N random numbers)
+   for (int i = 0; i < N; ++i)
+      int k = unr.SampleDiscr();
 ```
 
 -   For empirical distribution via the class **`TUnuranEmpDist`**. In
@@ -312,13 +317,13 @@ int k = unr.SampleDiscr();
     un-binned data).
 
 ``` {.cpp}
-// Create distribution from a set of data
-// vdata is an std::vector containing the data
-TUnuranEmpDist  dist(vdata.begin(),vdata.end());
-unr.Init(dist);
-// sample N times (generate N random numbers)
-for (int i = 0; i<N; ++i)
-double x = unr.Sample();
+   // Create distribution from a set of data
+   // vdata is an std::vector containing the data
+   TUnuranEmpDist  dist(vdata.begin(),vdata.end());
+   unr.Init(dist);
+   // sample N times (generate N random numbers)
+   for (int i = 0; i<N; ++i)
+      double x = unr.Sample();
 ```
 
 -   For some predefined distributions, like `Poisson` and `Binomial`,
@@ -327,14 +332,14 @@ double x = unr.Sample();
     directly the string interface.
 
 ``` {.cpp}
-TUnuran unr;
-// Initialize unuran to generate normal random numbers from the Poisson
-// distribution with parameter mu
-unr.InitPoisson(mu);
-...
-// Sample distributions N times (generate N random numbers)
-for (int i = 0; i<N; ++i)
-int k = unr.SampleDiscr();
+   TUnuran unr;
+   // Initialize unuran to generate normal random numbers from the
+   // Poisson distribution with parameter mu
+   unr.InitPoisson(mu);
+   ...
+   // Sample distributions N times (generate N random numbers)
+   for (int i = 0; i<N; ++i)
+      int k = unr.SampleDiscr();
 ```
 
 Functionality is also provided via the C++ classes for using a different
@@ -346,7 +351,7 @@ to UNURAN).
 
 
 Here are the CPU times obtained using the four random classes on an
-lxplus machine with an Intel 64 bit architecture and compiled using gcc
+`lxplus` machine with an Intel 64 bit architecture and compiled using gcc
 3.4:
 
 +--------------------+---------------+---------------+---------------+---------------+
@@ -691,10 +696,10 @@ system type. It can be even any vector of a different package, like the
 CLHEP **`HepThreeVector`** that implements the required signature.
 
 ``` {.cpp}
-XYZVector    v1(1,2,3);
-RhoEtaPhiVector    r2(v1);
-CLHEP::HepThreeVector  q(1,2,3);
-XYZVector    v3(q);
+   XYZVector    v1(1,2,3);
+   RhoEtaPhiVector    r2(v1);
+   CLHEP::HepThreeVector  q(1,2,3);
+   XYZVector    v3(q);
 ```
 
 #### Coordinate Accessors
@@ -703,24 +708,26 @@ All coordinate accessors are available through the class
 `ROOT::Math::`**`DisplacementVector3D`**:
 
 ``` {.cpp}
-//returns cartesian components for the cartesian vector v1
-v1.X(); v1.Y(); v1.Z();
-//returns cylindrical components for the cartesian vector v1
-v1.Rho(); v1.Eta(); v1.Phi();
-//returns cartesian components for the cylindrical vector r2               
-r2.X(); r2.Y(); r2.Z()
+   //returns cartesian components for the cartesian vector v1
+   v1.X(); v1.Y(); v1.Z();
+   //returns cylindrical components for the cartesian vector v1
+   v1.Rho(); v1.Eta(); v1.Phi();
+   //returns cartesian components for the cylindrical vector r2               
+   r2.X(); r2.Y(); r2.Z()
 ```
 
 In addition, all the 3 coordinates of the vector can be retrieved with
 the `GetCoordinates` method:
 
 ``` {.cpp}
-double d[3];
-v1.GetCoordinates(d);       //fill d array with (x,y,z) components of v1
-r2.GetCoordinates(d);       //fill d array with (r,eta,phi) components of r2
-std::vector vc(3);
-//fill std::vector with (x,y,z) components of v1
-v1.GetCoordinates(vc.begin(),vc.end());
+   double d[3];
+   //fill d array with (x,y,z) components of v1
+   v1.GetCoordinates(d);
+   //fill d array with (r,eta,phi) components of r2
+   r2.GetCoordinates(d);
+   std::vector vc(3);
+   //fill std::vector with (x,y,z) components of v1
+   v1.GetCoordinates(vc.begin(),vc.end());
 ```
 
 See the reference documentation of
@@ -732,9 +739,9 @@ coordinate accessors.
 One can set only all the three coordinates via:
 
 ``` {.cpp}
-v1.SetCoordinates(c1,c2,c3);  //sets the (x,y,z) for a XYZVector
-r2.SetCoordinates(c1,c2,c3);  //sets r,theta,phi for a Polar3DVector
-r2.SetXYZ(x,y,z);             //sets the 3 cartesian components for Polar3DVector
+   v1.SetCoordinates(c1,c2,c3);  // (x,y,z) for a XYZVector
+   r2.SetCoordinates(c1,c2,c3);  // r,theta,phi for a Polar3DVector
+   r2.SetXYZ(x,y,z);   // 3 cartesian components for Polar3DVector
 ```
 
 Single coordinate setter methods are available for the basic vector
@@ -742,26 +749,29 @@ coordinates, like `SetX()` for a **`XYZVector`** or `SetR()` for a polar
 vector. Attempting to do a `SetX()` on a polar vector will not compile.
 
 ``` {.cpp}
-XYZVector v1;      v1.SetX(1);   //OK setting x for a Cartesian vector
-Polar3DVector v2;  v2.SetX(1);   //ERROR: cannot set X for a Polar vector.
-//Method will not compile
-v2.SetR(1);                      //OK setting r for a Polar vector
+   XYZVector v1;
+   v1.SetX(1);   //OK setting x for a Cartesian vector
+   Polar3DVector v2;
+   v2.SetX(1);   //ERROR: cannot set X for a Polar vector.
+   //Method will not compile
+   v2.SetR(1);   //OK setting r for a Polar vector
 ```
 
 In addition, there are setter methods from C arrays or iterator
 
 ``` {.cpp}
-double d[3] = {1.,2.,3.};
-XYZVector v;
-v.SetCoordinates(d);            //set (x,y,z) components of v using values from d
+   double d[3] = {1.,2.,3.};
+   XYZVector v;
+   // set (x,y,z) components of v using values from d
+   v.SetCoordinates(d);
 ```
 
 or, for example, from an `std::vector` using the iterator
 
 ``` {.cpp}
-std::vector w(3);
-// set (x,y,z) components of v using values from w
-v.SetCoordinates(w.begin(),w.end());
+   std::vector w(3);
+   // set (x,y,z) components of v using values from w
+   v.SetCoordinates(w.begin(),w.end());
 ```
 
 #### Arithmetic Operations
@@ -772,16 +782,16 @@ different coordinate system types: (`v1,v2` are any type of
 of `v1`; `a` is a scalar value)
 
 ``` {.cpp}
-v1 += v2;
-v1 -= v2;
-v1 = - v2;
-v1 *= a;
-v1 /= a;
-v2 = a * v1;
-v2 = v1 / a;
-v2 = v1 * a;
-v3 = v1 + v2;
-v3 = v1 - v2;
+   v1 += v2;
+   v1 -= v2;
+   v1 = - v2;
+   v1 *= a;
+   v1 /= a;
+   v2 = a * v1;
+   v2 = v1 / a;
+   v2 = v1 * a;
+   v3 = v1 + v2;
+   v3 = v1 - v2;
 ```
 
 #### Comparison
@@ -790,8 +800,8 @@ For `v1` and `v2` of the same type (same coordinate system and same
 scalar type):
 
 ``` {.cpp}
-v1 == v2;
-v1 != v2;
+   v1 == v2;
+   v1 != v2;
 ```
 
 #### Dot and Cross Product
@@ -800,9 +810,9 @@ We support the dot and cross products, through the `Dot()` and `Cross()`
 method, with any vector (`q`) implementing `x()`, `y()` and `z()`.
 
 ``` {.cpp}
-XYZVector v1(x,y,z);
-double s = v1.Dot(q);
-XYZVector v2 = v1.Cross(q);
+   XYZVector v1(x,y,z);
+   double s = v1.Dot(q);
+   XYZVector v2 = v1.Cross(q);
 ```
 
 Note that the multiplication between two vectors using the operator `*`
@@ -811,7 +821,7 @@ is not supported because it is ambiguous.
 #### Other Methods
 
 ``` {.cpp}
-XYZVector u = v1.Unit();               //return unit vector parallel to v1
+   XYZVector u = v1.Unit(); //return unit vector parallel to v1
 ```
 
 ### Example: 3D Point Classes
@@ -853,8 +863,8 @@ template class **`ROOT::Math`**`::`**`PositionVector3D`**:
 The following declarations are available:
 
 ``` {.cpp}
-XYZPoint         p1;             //an empty vector (x=0, y=0, z=0)
-XYZPoint         p2(1,2,3);      //
+   XYZPoint         p1;             //an empty vector (x=0, y=0, z=0)
+   XYZPoint         p2(1,2,3);      //
 ```
 
 Note that each point type is constructed by passing its coordinate
@@ -866,10 +876,10 @@ or even any vector of a different package, like the CLHEP
 **`HepThreePoint`** that implements the required signatures.
 
 ``` {.cpp}
-XYZPoint             p1(1,2,3);
-RhoEtaPHiPoint       r2(v1);
-CLHEP::HepThreePoint q(1,2,3);
-XYZPoint             p3(q);
+   XYZPoint             p1(1,2,3);
+   RhoEtaPHiPoint       r2(v1);
+   CLHEP::HepThreePoint q(1,2,3);
+   XYZPoint             p3(q);
 ```
 
 #### Coordinate Accessors and Setter Methods
@@ -886,14 +896,15 @@ same type; `v1` and `v2` are `ROOT::Math::`**`DisplacementVector3D`**
 objects).
 
 ``` {.cpp}
-p1 += v1;
-p1 -= v1;
-p3 = p1 + v1;    //p1 and p3 are the same type 
-p3 = v1 + p1;    //p3 is based on the same coordinate system as v1
-p3 = p1 - v1;
-p3 = v1 - p1;
-v2 = p1 - p2;    //difference between points returns a vector v2 based on the
-//same coordinate system as p1
+   p1 += v1;
+   p1 -= v1;
+   p3 = p1 + v1;    // p1 and p3 are the same type 
+   p3 = v1 + p1;    // p3 is based on the same coordinate system as v1
+   p3 = p1 - v1;
+   p3 = v1 - p1;
+   v2 = p1 - p2;    // difference between points returns a 
+                    // vector v2 based on the
+   //same coordinate system as p1
 ```
 
 Note that the addition between two points is **NOT** possible and the
@@ -940,9 +951,12 @@ The metric used for all the LorentzVector is (`-,-,-,+`) .
 The following declarations are available:
 
 ``` {.cpp}
-XYZTVector      v1;               //create an empty vector (x=0, y=0, z=0, t=0) 
-XYZTVector      v2(1,2,3,4);      //vector with x=1, y=2, z=3, t=4
-PtEtaPhiEVector v3(1,2,PI,5);     //vector with pt=1, eta=2, phi=PI, E=5
+   // create an empty vector (x=0, y=0, z=0, t=0)
+   XYZTVector      v1;
+   // vector with x=1, y=2, z=3, t=4
+   XYZTVector      v2(1,2,3,4);
+   // vector with pt=1, eta=2, phi=PI, E=5
+   PtEtaPhiEVector v3(1,2,PI,5);
 ```
 
 Note that each type of vector is constructed by passing its coordinate
@@ -956,10 +970,10 @@ different coordinate system or any vector of a different package, like
 the CLHEP **`HepLorentzVector`** that implements the required signature.
 
 ``` {.cpp}
-XYZTVector              v1(1,2,3,4); 
-PtEtaPhiEVector         v2(v1);
-CLHEP::HepLorentzVector q(1,2,3,4);
-XYZTVector              v3(q);
+   XYZTVector              v1(1,2,3,4); 
+   PtEtaPhiEVector         v2(v1);
+   CLHEP::HepLorentzVector q(1,2,3,4);
+   XYZTVector              v3(q);
 ```
 
 #### Coordinate Accessors
@@ -968,24 +982,27 @@ All the same coordinate accessors are available through the interface of
 `ROOT::Math::`**`LorentzVector`**. For example:
 
 ``` {.cpp}
-//returns cartesian components for the cartesian vector v1
-v1.X(); v1.X(); v1.Z(); v1.T();
-//returns cartesian components for the cylindrical vector v2
-v2.Px(); v2.Py(); v2.Pz(); v2.E();
-//returns other components for the cartesian vector v1
-v1.Pt(); v1.Eta(); v1.Phi(); v1.M()
+   //returns cartesian components for the cartesian vector v1
+   v1.X(); v1.X(); v1.Z(); v1.T();
+   //returns cartesian components for the cylindrical vector v2
+   v2.Px(); v2.Py(); v2.Pz(); v2.E();
+   //returns other components for the cartesian vector v1
+   v1.Pt(); v1.Eta(); v1.Phi(); v1.M()
 ```
 
 In addition, all 4 vector coordinates can be retrieved with the
 `GetCoordinates` method:
 
 ``` {.cpp}
-double d[4];
-v1.GetCoordinates(d);        //fill d array with (x,y,z,t) components of v1
-v2.GetCoordinates(d);        //fill d array with (pt,eta,phi,e) components of v2
-std::vector w(4);
-v1.GetCoordinates(w.begin(),w.end()); //fill std::vector with (x,y,z,t)
-//components of v1
+   double d[4];
+   //fill d array with (x,y,z,t) components of v1
+   v1.GetCoordinates(d);
+   //fill d array with (pt,eta,phi,e) components of v2
+   v2.GetCoordinates(d);
+   std::vector w(4);
+   //fill std::vector with (x,y,z,t)
+   v1.GetCoordinates(w.begin(),w.end());
+   //components of v1
 ```
 
 To get information on all the coordinate accessors see the
@@ -996,9 +1013,12 @@ To get information on all the coordinate accessors see the
 One can set only all the three coordinates via:
 
 ``` {.cpp}
-v1.SetCoordinates(c1,c2,c3,c4);  //sets the (x,y,z,t) for a XYZTVector
-v2.SetCoordinates(c1,c2,c3,c4);  //sets pt,eta,phi,e for a PtEtaPhiEVector
-v2.SetXYZ(x,y,z,t);              //sets cartesian components for PtEtaPhiEVector
+   //sets the (x,y,z,t) for a XYZTVector
+   v1.SetCoordinates(c1,c2,c3,c4);
+   //sets pt,eta,phi,e for a PtEtaPhiEVector
+   v2.SetCoordinates(c1,c2,c3,c4);
+   //sets cartesian components for PtEtaPhiEVector
+   v2.SetXYZ(x,y,z,t);
 ```
 
 Single coordinate setter methods are available for the basic vector
@@ -1007,26 +1027,29 @@ coordinates, like `SetX()` for a `XYZTVector` or `SetPt()` for a
 vector will not compile.
 
 ``` {.cpp}
-XYZTVector      v1; v1.SetX(1);  //OK setting x for a cartesian vector
-PtEtaPhiEVector v2; v2.SetX(1);  //ERROR: cannot set X for a non-cartesian 
-//vector. Method will not compile.
-v2.SetR(1)                       // OK setting Pt for a  PtEtaPhiEVector vector
+   XYZTVector      v1;
+   v1.SetX(1);  //OK setting x for a cartesian vector
+   PtEtaPhiEVector v2;
+   v2.SetX(1);  //ERROR: cannot set X for a non-cartesian 
+   //vector. Method will not compile.
+   v2.SetR(1)   // OK setting Pt for a  PtEtaPhiEVector vector
 ```
 
 In addition, there are setter methods from C arrays or iterators.
 
 ``` {.cpp}
-double d[4] = {1.,2.,3.,4.};
-XYZTVector v;
-v.SetCoordinates(d);         //set (x,y,z,t) components of v using values from d
+   double d[4] = {1.,2.,3.,4.};
+   XYZTVector v;
+   //set (x,y,z,t) components of v using values from d
+   v.SetCoordinates(d); 
 ```
 
 or for example from an `std::vector `using the iterators
 
 ``` {.cpp}
-std::vector w(4);
-//set (x,y,z,t) components of v using values from w
-v.SetCoordinates(w.begin(),w.end());
+   std::vector w(4);
+   //set (x,y,z,t) components of v using values from w
+   v.SetCoordinates(w.begin(),w.end());
 ```
 
 #### Arithmetic Operations
@@ -1038,34 +1061,35 @@ vector of the same type, `q `is a generic Lorentz vector implementing
 float, int, etc.) .
 
 ``` {.cpp}
-v += q;
-v -= q;
-v  = -q;
-v *= a;
-v /= a;
-w = v + q;
-w = v - q;
-w = v * a;
-w = a * v;
-w = v / a;
+   v += q;
+   v -= q;
+   v  = -q;
+   v *= a;
+   v /= a;
+   w = v + q;
+   w = v - q;
+   w = v * a;
+   w = a * v;
+   w = v / a;
 ```
 
 #### Comparison
 
 ``` {.cpp}
-v == w;
-v != w;
+   v == w;
+   v != w;
 ```
 
 #### Other Methods
 
 ``` {.cpp}
-a =  v.Dot(q);               //dot product in metric(+,+,+,-) of 2 LorentzVectors
-XYZVector s = v.Vect()       //return the spatial components (x,y,z)
-v.Beta();                    //return beta and gamma value (vector must
-v.Gamma()                    // be time-like otherwise result is meaningless)
-XYZVector b = v.BoostToCM(); //return boost vector which will bring the Vector
-//in its mas frame (P=0)
+   a =  v.Dot(q); //dot product in metric(+,+,+,-) of 2 LorentzVectors
+   XYZVector s = v.Vect() //return the spatial components (x,y,z)
+   v.Beta(); //return beta and gamma value (vector must
+   v.Gamma() // be time-like otherwise result is meaningless)
+   XYZVector b = v.BoostToCM(); //return boost vector which will bring
+                                //the Vector
+   //in its mas frame (P=0)
 ```
 
 ### Example: Vector Transformations
@@ -1074,9 +1098,9 @@ XYZVector b = v.BoostToCM(); //return boost vector which will bring the Vector
 Transformation classes are grouped in rotations (in three dimensions),
 Lorentz transformations and Poincarre transformations, which are
 translation`/`rotation combinations. Each group has several members
-which may model physically equivalent transformations but with different
-internal representations. All the classes are non-template and use
-double precision as the scalar type. The following types of
+which may model physically equivalent transformations but with
+different internal representations. All the classes are non-template
+and use double precision as the scalar type. The following types of
 transformation classes are defined:
 
 3D rotations:
@@ -1134,11 +1158,13 @@ number of scalar arguments matching the number (and order of
 components).
 
 ``` {.cpp}
-Rotation3D  rI;                 //a summy rotation (Identity matrix)
-RotationX   rX(PI);             //a RotationX with an angle PI
-EulerAngles rE(phi,theta,psi);  //an Euler rotation with phi,theta,psi angles
-XYZVector   u(ux,uy,uz);
-AxisAngle   rA(u,delta);        //a rotation based on direction u, angle delta
+   Rotation3D  rI;                 //a summy rotation (Identity matrix)
+   RotationX   rX(PI);             //a RotationX with an angle PI
+   EulerAngles rE(phi,theta,psi);  //an Euler rotation with phi,
+                                   //theta,psi angles
+   XYZVector   u(ux,uy,uz);
+   AxisAngle   rA(u,delta);        //a rotation based on direction u,
+                                   //angle delta
 ```
 
 In addition, all rotations and transformations (other than the axial
@@ -1146,36 +1172,42 @@ rotations) and transformations are constructible from (`begin`,`end`)
 iterators or from pointers behave like iterators.
 
 ``` {.cpp}
-double      data[9];
-Rotation3D  r(data,data+9);       //create a rotation from a rotation matrix
-std::vector w(12);
-Transform3D t(w.begin(),w.end()); //create Transform3D from std::vector content
+   double      data[9];
+   //create a rotation from a rotation matrix
+   Rotation3D  r(data,data+9);
+   std::vector w(12);
+   //create Transform3D from std::vector content
+   Transform3D t(w.begin(),w.end());
 ```
 
 All rotations, except the axial rotations, are constructible and
 assigned from any other type of rotation (including the axial):
 
 ``` {.cpp}
-//create a rotation 3D from a rotation along X axis of angle PI
-Rotation3D  r(ROOT::Math::RotationX(PI));
+   //create a rotation 3D from a rotation along X axis of angle PI
+   Rotation3D  r(ROOT::Math::RotationX(PI));
 
-//construct an Euler rotation from A Rotation3D
-EulerAngles r2(r);
+   //construct an Euler rotation from A Rotation3D
+   EulerAngles r2(r);
 
-//assign an Axis rotation from an Euler Rotation
-AxisAngle   r3; r3 = r2;
+   //assign an Axis rotation from an Euler Rotation
+   AxisAngle   r3; r3 = r2;
 ```
 
 **`Transform3D`** (rotation + translation) can be constructed from a
 rotation and a translation vector:
 
 ``` {.cpp}
-Rotation3D  r;
-XYZVector   v;
-Transform3D t1(r,v);   //construct from rotation and then translation
-Transform3D t2(v,r);   //construct inverse from first translation then rotation
-Transform3D t3(r);     //construct from only a rotation (zero translation)
-Transform3D t4(v);     //construct from only translation (identity rotation)
+   Rotation3D  r;
+   XYZVector   v;
+   Transform3D t1(r,v);   //construct from rotation and then
+                          //translation
+   Transform3D t2(v,r);   //construct inverse from first translation
+                          //then rotation
+   Transform3D t3(r);     //construct from only a rotation
+                          //(zero translation)
+   Transform3D t4(v);     //construct from only translation
+                          //(identity rotation)
 ```
 
 #### Operations
@@ -1184,10 +1216,10 @@ All transformations can be applied to vector and points using the
 operator \* or using the operator()
 
 ``` {.cpp}
-XYZVector  v1(...);
-Rotation3D r(...);
-XYZVector  v2 = r*v1;       //rotate vector v1 using r
-v2 = r(v1);                 //equivalent
+   XYZVector  v1(...);
+   Rotation3D r(...);
+   XYZVector  v2 = r*v1;       //rotate vector v1 using r
+   v2 = r(v1);                 //equivalent
 ```
 
 Transformations can be combined using the operator `*`. Rotation,
@@ -1197,9 +1229,10 @@ will be a **`Transform3D`** class. Note that the rotations are not
 commutative, the order is then important.
 
 ``` {.cpp}
-Rotation3D  r1(...);
-Rotation3D  r2(...);
-Rotation3D  r3 = r2*r1;      //a combine rotation r3 by applying first r1 then r2
+   Rotation3D  r1(...);
+   Rotation3D  r2(...);
+   Rotation3D  r3 = r2*r1; //a combine rotation r3 by
+                           //applying first r1 then r2
 ```
 
 We can combine rotations of different types, like `Rotation3D` with any
@@ -1207,18 +1240,19 @@ other type of rotations. The product of two different axial rotations
 returns a `Rotation3D`:
 
 ``` {.cpp}
-RotationX   rx(1.);
-RotationY   ry(2.);
-Rotation3D  r = ry * rx;       //rotation along X and then Y axis 
+   RotationX   rx(1.);
+   RotationY   ry(2.);
+   Rotation3D  r = ry * rx;       //rotation along X and then Y axis 
 ```
 
 It is also possible to invert all the transformation or return their
 inverse:
 
 ``` {.cpp}
-Rotation3D  r1(...);
-r1.Invert();       //invert the rotation modifying its content
-Rotation3D  r2 =r1.Inverse();  //return the inverse in a new rotation class
+   Rotation3D  r1(...);
+   r1.Invert(); //invert the rotation modifying its content
+   Rotation3D  r2 =r1.Inverse(); //return the inverse in a new
+                                 //rotation class
 ```
 
 We have used rotation as examples, but all these operations can be
@@ -1231,17 +1265,17 @@ They can be used to retrieve all the scalar values on which the
 transformation is based.
 
 ``` {.cpp}
-RotationX  rx;
-rx.SetComponents(1.);          //set agle of the X rotation
-double d[9] = {........};
-Rotation3D r;
-r.SetComponents(d,d+9);        //set 9 components of 3D rotation
-double d[16];
-LorentzRotation lr;
-lr.GetComponents(d,d+16);      //get 16 components of a LorentzRotation
-TMatrixD(3,4) m;
-Transform3D t;
-t.GetComponens(m);            //fill 3x4 matrix with components of t
+   RotationX  rx;
+   rx.SetComponents(1.);      //set agle of the X rotation
+   double d[9] = {........};
+   Rotation3D r;
+   r.SetComponents(d,d+9);    //set 9 components of 3D rotation
+   double d[16];
+   LorentzRotation lr;
+   lr.GetComponents(d,d+16);  //get 16 components of a LorentzRotation
+   TMatrixD(3,4) m;
+   Transform3D t;
+   t.GetComponens(m);         //fill 3x4 matrix with components of t
 ```
 
 The` GetComponents` and `SetComponents` methods can be used with a
@@ -1263,27 +1297,29 @@ C array (double`*`) behaves like an iterator. It is then assumed that
 the coordinates, like (`x,y,z`) will be stored contiguously.
 
 ``` {.cpp}
-TVectorD   r2(N);           //ROOT Linear Algebra Vector containing many vectors
-XYZVector  v2;
-//construct vector from x=r[INDEX], y=r[INDEX+1], z=r[INDEX+2]
-v2.SetCoordinates(&r2[INDEX],&r2[index]+3);
+   TVectorD   r2(N); //ROOT Linear Algebra Vector containing
+                     //many vectors
+   XYZVector  v2;
+   //construct vector from x=r[INDEX], y=r[INDEX+1], z=r[INDEX+2]
+   v2.SetCoordinates(&r2[INDEX],&r2[index]+3);
 ```
 
 To fill a linear algebra vector from a 3D or 4D vector, with
 `GetCoordinates()` one can get the internal coordinate data.
 
 ``` {.cpp}
-HepVector      c(3);        //CLHEP Linear algebra vector
-//fill HepVector c with c[0]=x, c[1]=y, c[2]=z
-v2.GetCoordinates(&c[0],&c[index]+3)
+   HepVector      c(3);        //CLHEP Linear algebra vector
+   //fill HepVector c with c[0]=x, c[1]=y, c[2]=z
+   v2.GetCoordinates(&c[0],&c[index]+3)
 ```
 
 or using **`TVectorD`**:
 
 ``` {.cpp}
-double   *data[3];
-v2.GetCoordinates(data,data+3);
-TVectorD  r1(3,data);       //create a new Linear Algebra vector copying the data
+   double   *data[3];
+   v2.GetCoordinates(data,data+3);
+   TVectorD  r1(3,data); //create a new Linear Algebra vector
+                         //copying the data
 ```
 
 In the case of transformations, constructor and method to set`/`get
@@ -1292,8 +1328,8 @@ matrix data are stored, for example in the case of a Lorentz rotation,
 from (`0,0`) thru (`3,3`)
 
 ``` {.cpp}
-TMatrixD(4,4)   m;
-LorentzRotation r(m);       //create Lorentz r
+   TMatrixD(4,4)   m;
+   LorentzRotation r(m);       //create Lorentz r
 ```
 
 #### Connection to Other Vector Classes
@@ -1307,10 +1343,11 @@ assigned from any vector which satisfies the following requisites:
     methods.
 
 ``` {.cpp}
-CLHEP::Hep3Vector hv;
-XYZVector         v1(hv);      //create  3D vector from  CLHEP 3D Vector
-HepGeom::Point3D  hp;
-XYZPoint          p1(hp);      //create a 3D p
+   CLHEP::Hep3Vector hv;
+   XYZVector         v1(hv);      //create  3D vector from 
+                                  //CLHEP 3D Vector
+   HepGeom::Point3D  hp;
+   XYZPoint          p1(hp);      //create a 3D p
 ```
 
 ## MathMore Library
@@ -1361,7 +1398,11 @@ License.
 `MathMore` (and its ROOT CINT dictionary) can be built within ROOT
 whenever a GSL library is found in the system. The GSL library and
 header file location can be specified in the ROOT configure script, by
-doing: `./configure --with-gsl-incdir=... --with-gsl-libdir=...`
+doing: 
+
+```
+./configure --with-gsl-incdir=... --with-gsl-libdir=...
+```
 
 `MathMore` can be built also a stand-alone library (without requiring
 ROOT) downloding the tar file from the Web at this link. In this case
@@ -1382,99 +1423,156 @@ in the namespace **`ROOT::Math`**. The most used functions are in the
 functions in `MathMore` are all using the implementation of the GNU
 Scientific Library (GSL). The naming of the special functions is the
 same defined in the C++
-[Technical Report on Standard Library extensions](Technical Report on Standard Library extensions).
+[Technical Report on Standard Library extensions](Technical Report on
+Standard Library extensions).
 The special functions are defined in the header file `Math/SpecFunc.h`.
 
 ### Special Functions in MathCore
 
 
 -   `ROOT::Math::beta(double x,double y) - `evaluates the beta function:
-    ![](pictures/0600010E.png)
+    $$B(x,y) = \frac{\Gamma(x) \Gamma(y)}{\Gamma(x+y)}$$
 
--   `double ``ROOT::Math::erf(double x)` - evaluates the error function
+-   `double ROOT::Math::erf(double x)` - evaluates the error function
     encountered in integrating the normal
-    distribution:![](pictures/0600010F.png)
+    distribution:
+    $$erf(x) = \frac{2}{\sqrt{\pi}} \int_{0}^{x} e^{-t^2} dt$$
 
--   `double ``ROOT::Math::erfc(double x)` - evaluates the complementary
-    error function: ![](pictures/06000110.png)
+-   `double ROOT::Math::erfc(double x)` - evaluates the complementary
+    error function:
+    $$erfc(x) = 1 - erf(x) = \frac{2}{\sqrt{\pi}} \int_{x}^{\infty} e^{-t^2} dt$$
 
--   `double ``ROOT::Math::tgamma(double x)` - calculates the gamma
-    function: ![](pictures/06000111.png)
+-   `double ROOT::Math::tgamma(double x)` - calculates the gamma
+    function:
+    $$\Gamma(x) = \int_{0}^{\infty} t^{x-1} e^{-t} dt$$
 
 ### Special Functions in MathMore
 
 
--   `double ``ROOT::Math::assoc_legendre(unsigned l,unsigned m,double x) -`computes
-    the associated Legendre polynomials (with *`m>=0`, `l>=m` and
-    `|x|<1)`:![](pictures/06000112.png)*
+-   `double ROOT::Math::assoc_legendre(unsigned l,unsigned m,double x) -`computes
+    the associated Legendre polynomials (with `m>=0`, `l>=m` and
+    `|x|<1)`:
+    $$P_{l}^{m}(x) = (1-x^2)^{m/2} \frac{d^m}{dx^m} P_{l}(x)$$
 
--   `double ``ROOT::Math::comp_ellint_1(double k)` - calculates the
-    complete elliptic integral of the first kind (with `0code>:`
+-   `double ROOT::Math::comp_ellint_1(double k)` - calculates the
+    complete elliptic integral of the first kind (with $0 \le k^2 \le 1$:
+    $$
+    K(k) = F(k, \pi / 2) = \int_{0}^{\pi /2} \frac{d \theta}{\sqrt{1 - k^2 \sin^2{\theta}}}
+    $$
 
--   `double ``ROOT::Math::comp_ellint_2(double k)` - calculates the
-    complete elliptic integral of the second kind (with `0code>): `
+-   `double ROOT::Math::comp_ellint_2(double k)` - calculates the
+    complete elliptic integral of the second kind (with $0 \le k^2 \le 1$):
+    $$
+    E(k) = E(k , \pi / 2) = \int_{0}^{\pi /2} \sqrt{1 - k^2 \sin^2{\theta}} d \theta
+    $$
 
--   `double ``ROOT::Math::comp_ellint_3(double n,double k)` - calculates
-    the complete elliptic integral of the third kind (with `0code>):  `
+-   `double ROOT::Math::comp_ellint_3(double n,double k)` - calculates
+    the complete elliptic integral of the third kind (with $0 \le k^2 \le 1$):
+    $$
+    \Pi (n, k, \pi / 2) = \int_{0}^{\pi /2} \frac{d \theta}{(1 - n \sin^2{\theta})\sqrt{1 - k^2 \sin^2{\theta}}}
+    $$
 
--   `double ``ROOT::Math::conf_hyperg(double a,double b,double z)` -
+-   `double ROOT::Math::conf_hyperg(double a,double b,double z)` -
     calculates the confluent hyper-geometric functions of the first
-    kind: ![](pictures/06000116.png)
+    kind:
+    $$
+     _{1}F_{1}(a;b;z) = \frac{\Gamma(b)}{\Gamma(a)} \sum_{n=0}^{\infty} \frac{\Gamma(a+n)}{\Gamma(b+n)} \frac{z^n}{n!} 
+    $$  
 
--   `double `**`ROOT::Math::`**
-    `conf_hypergU(double a,double b,double z) - calculates the confluent hyper-geometric functions of the second kind, known also as Kummer function of the second type. It is related to the confluent hyper-geometric function of the first kind:`
+-   `double ROOT::Math::conf_hypergU(double a,double b,double z)` -
+    calculates the confluent hyper-geometric
+    functions of the second kind, known also as Kummer function of the second type. It is
+    related to the confluent hyper-geometric function of the first kind:
+    $$
+    U(a,b,z) = \frac{ \pi}{ \sin{\pi b } } \left[ \frac{ _{1}F_{1}(a,b,z) } {\Gamma(a-b+1) } - \frac{ z^{1-b} { _{1}F_{1}}(a-b+1,2-b,z)}{\Gamma(a)} \right] 
+    $$
 
--   ![](pictures/06000117.png)
-
--   `double ``ROOT::Math::cyl_bessel_i(double nu,double x)` - calculates
+-   `double ROOT::Math::cyl_bessel_i(double nu,double x)` - calculates
     the modified Bessel function of the first kind, also called regular
-    modified (cylindrical) Bessel function: ![](pictures/06000118.png)
+    modified (cylindrical) Bessel function:
+    $$
+    I_{\nu} (x) = i^{-\nu} J_{\nu}(ix) = \sum_{k=0}^{\infty} \frac{(\frac{1}{2}x)^{\nu + 2k}}{k! \Gamma(\nu + k + 1)}
+    $$
 
--   `double ``ROOT::Math::cyl_bessel_j(double nu,double x)` - calculates
+-   `double ROOT::Math::cyl_bessel_j(double nu,double x)` - calculates
     the (cylindrical) Bessel function of the first kind, also called
-    regular (cylindrical) Bessel function: ![](pictures/06000119.png)
+    regular (cylindrical) Bessel function:
+    $$
+    J_{\nu} (x) = \sum_{k=0}^{\infty} \frac{(-1)^k(\frac{1}{2}x)^{\nu + 2k}}{k! \Gamma(\nu + k + 1)}
+    $$
 
--   `double ``ROOT::Math::cyl_bessel_k(double nu,double x)` - calculates
+-   `double ROOT::Math::cyl_bessel_k(double nu,double x)` - calculates
     the modified Bessel function of the second kind, also called
-    irregular modified (cylindrical) Bessel function for `x>0`, `v>0`:
-    ![](pictures/0600011A.png)
+    irregular modified (cylindrical) Bessel function for $x > 0$, $v > 0$:
+    $$
+    K_{\nu} (x) = \frac{\pi}{2} i^{\nu + 1} (J_{\nu} (ix) + iN(ix)) = \left\{ \begin{array}{cl} \frac{\pi}{2} \frac{I_{-\nu}(x) - I_{\nu}(x)}{\sin{\nu \pi}} & \mbox{for non-integral $\nu$} \\ \frac{\pi}{2} \lim{\mu \to \nu} \frac{I_{-\mu}(x) - I_{\mu}(x)}{\sin{\mu \pi}} & \mbox{for integral $\nu$} \end{array} \right.
+    $$
 
--   `double ``ROOT::Math::cyl_neumann(double nu,double x)` - calculates
+-   `double ROOT::Math::cyl_neumann(double nu,double x)` - calculates
     the (cylindrical) Bessel function of the second kind, also called
     irregular (cylindrical) Bessel function or (cylindrical) Neumann
-    function: ![](pictures/0600011B.png)
+    function: 
+    $$
+    N_{\nu} (x) = Y_{\nu} (x) = \left\{ \begin{array}{cl} \frac{J_{\nu} \cos{\nu \pi}-J_{-\nu}(x)}{\sin{\nu \pi}} & \mbox{for non-integral $\nu$} \\ \lim{\mu \to \nu} \frac{J_{\mu} \cos{\mu \pi}-J_{-\mu}(x)}{\sin{\mu \pi}} & \mbox{for integral $\nu$} \end{array} \right.
+    $$
 
--   `double ``ROOT::Math::ellint_1(double k,double phi)` - calculates
-    incomplete elliptic integral of the first kind (with `0code>):  `
+-   `double ROOT::Math::ellint_1(double k,double phi)` - calculates
+    incomplete elliptic integral of the first kind (with $0 \le k^2 \le 1$):
+    $$
+    K(k) = F(k, \pi / 2) = \int_{0}^{\pi /2} \frac{d \theta}{\sqrt{1 - k^2 \sin^2{\theta}}}
+    $$
 
--   `double ``ROOT::Math::ellint_2(double k,double phi)` - calculates
-    the complete elliptic integral of the second kind (with `0code>):  `
+-   `double ROOT::Math::ellint_2(double k,double phi)` - calculates
+    the complete elliptic integral of the second kind (with $0 \le k^2 \le 1$):
+    $$
+    E(k) = E(k , \pi / 2) = \int_{0}^{\pi /2} \sqrt{1 - k^2 \sin^2{\theta}} d \theta
+    $$
 
--   `double ``ROOT::Math::ellint_3(double n,double k,double phi) - `calculates
-    the complete elliptic integral of the third kind (with `0code>):  `
+-   `double ROOT::Math::ellint_3(double n,double k,double phi)` - calculates
+    the complete elliptic integral of the third kind (with $0 \le k^2 \le 1$):
+    $$
+    \Pi (n, k, \pi / 2) = \int_{0}^{\pi /2} \frac{d \theta}{(1 - n \sin^2{\theta})\sqrt{1 - k^2 \sin^2{\theta}}}
+    $$
 
--   `double ``ROOT::Math::expint(double x)` - calculates the exponential
-    integral: ![](pictures/0600011F.png)
+-   `double ROOT::Math::expint(double x)` - calculates the exponential
+    integral:
+    $$
+    Ei(x) = - \int_{-x}^{\infty} \frac{e^{-t}}{t} dt
+    $$
 
--   `double ``ROOT::Math::hyperg(double a,double b,double c,double x)` -
+-   `double ROOT::Math::hyperg(double a,double b,double c,double x)` -
     calculates Gauss' hyper-geometric function:
-    ![](pictures/06000120.png)
+    $$
+    _{2}F_{1}(a,b;c;x) = \frac{\Gamma(c)}{\Gamma(a) \Gamma(b)} \sum_{n=0}^{\infty} \frac{\Gamma(a+n)\Gamma(b+n)}{\Gamma(c+n)} \frac{x^n}{n!}
+    $$
 
--   `double ``ROOT::Math::legendre(unsigned l,double x)` - calculates
-    the Legendre polynomials for `l>=0`,
-    `|x|code>  in the Rodrigues representation:  `
+-   `double ROOT::Math::legendre(unsigned l,double x)` - calculates
+    the Legendre polynomials for $l \ge 0$, $|x| \le 1$  in the Rodrigues
+    representation:
+    $$
+    P_{l}(x) = \frac{1}{2^l l!} \frac{d^l}{dx^l} (x^2 - 1)^l
+    $$
 
--   `double ``ROOT::Math::riemann_zeta(double x)` - calculates the
-    Riemann zeta function: ![](pictures/06000122.png)
+-   `double ROOT::Math::riemann_zeta(double x)` - calculates the
+    Riemann zeta function:
+    $$
+    \zeta (x) = \left\{ \begin{array}{cl} \sum_{k=1}^{\infty}k^{-x} & \mbox{for $x > 1$} \\ 2^x \pi^{x-1} \sin{(\frac{1}{2}\pi x)} \Gamma(1-x) \zeta (1-x) & \mbox{for $x < 1$} \end{array} \right.
+    $$
 
--   `double ``ROOT::Math::sph_bessel(unsigned n,double x)` - calculates
+-   `double ROOT::Math::sph_bessel(unsigned n,double x)` - calculates
     the spherical Bessel functions of the first kind (also called
-    regular spherical Bessel functions): ![](pictures/06000123.png)
+    regular spherical Bessel functions):
+    $$
+    j_{n}(x) = \sqrt{\frac{\pi}{2x}} J_{n+1/2}(x)
+    $$
 
--   `double ``ROOT::Math::sph_neumann(unsigned n,double x)` - calculates
+-   `double ROOT::Math::sph_neumann(unsigned n,double x)` - calculates
     the spherical Bessel functions of the second kind (also called
     irregular spherical Bessel functions or spherical Neumann
-    functions):![](pictures/06000124.png)
+    functions):
+    $$
+    n_n(x) = y_n(x) = \sqrt{\frac{\pi}{2x}} N_{n+1/2}(x)
+    $$
 
 ### Probability Density Functions (PDF)
 
@@ -1514,7 +1612,9 @@ cumulative distribution functions and their complements. The functions
 with extension `_cdf` calculate the lower tail integral of the
 probability density function:
 
-![](pictures/06000125.png)
+$$
+D(x) = \int_{-\infty}^{x} p(x') dx'
+$$
 
 while those with the `cdf_c` extension calculate the upper tail of the
 probability density function, so-called in statistics the survival
@@ -1523,20 +1623,20 @@ function. For example, the function:
 ``` {.cpp}
 double ROOT::Math::gaussian_cdf(double x,double sigma,double x0=0);
 ```
-
 evaluates the lower tail of the Gaussian distribution:
-
-![](pictures/06000126.png)
+$$
+D(x) = \int_{-\infty}^{x} {1 \over \sqrt{2 \pi \sigma^2}} e^{-(x'-x_0)^2 / 2\sigma^2} dx'
+$$
 
 while the function:
 
 ``` {.cpp}
 double ROOT::Math::gaussian_cdf_c(double x, double sigma, double x0=0);
 ```
-
 evaluates the upper tail of the Gaussian distribution:
-
-![](pictures/06000127.png)
+$$
+D(x) = \int_{x}^{+\infty} {1 \over \sqrt{2 \pi \sigma^2}} e^{-(x'-x_0)^2 / 2\sigma^2} dx'
+$$
 
 The cumulative distributions functions are defined in the header file
 `Math/ProbFunc.h`. The majority of the CDF's are present in the
@@ -1559,8 +1659,7 @@ the header file `Math/ProbFuncInv.h`.
 The following picture illustrates the available statistical functions
 (PDF, CDF and quantiles) in the case of the normal distribution.
 
-![PDF, CDF and quantiles in the case of the normal
-distribution](pictures/03000128.png)
+![PDF, CDF and quantiles in the case of the normal distribution](pictures/03000128.png)
 
 ## Linear Algebra: SMatrix Package
 
@@ -1649,9 +1748,10 @@ In the following example we assume that we are using the namespace
 **`ROOT::Math`**
 
 ``` {.cpp}
-SVector<double,3> v;       //create an empty vector of size 3 ( v[0]=v[1]=v[2]=0)
-double d[3] = {1,2,3};
-SVector<double,3> v(d,3);  //create a vector from a C array
+   //create an empty vector of size 3 ( v[0]=v[1]=v[2]=0)
+   SVector<double,3> v;
+   double d[3] = {1,2,3};
+   SVector<double,3> v(d,3);  //create a vector from a C array
 ```
 
 #### Accessing and Setting Methods
@@ -1663,15 +1763,15 @@ performed on the passed index. The full vector elements can be set also
 by using the SetElements function passing a generic iterator.
 
 ``` {.cpp}
-double x = m(i);          // return the i-th element
-x = *(m.begin()+i);       // return the i-th element
-v[0] = 1;                 // set the first element
-v(1) = 2;                 // set the second element
-*(v.begin()+3) = 3;       // set the third element
-std::vector<double> w(3);
+   double x = m(i);          // return the i-th element
+   x = *(m.begin()+i);       // return the i-th element
+   v[0] = 1;                 // set the first element
+   v(1) = 2;                 // set the second element
+   *(v.begin()+3) = 3;       // set the third element
+   std::vector<double> w(3);
 
-// set vector elements from a std::vector<double>::iterator
-v.SetElements(w.begin(),w.end());
+   // set vector elements from a std::vector<double>::iterator
+   v.SetElements(w.begin(),w.end());
 ```
 
 In addition there are methods to place a sub-vector in a vector. If the
@@ -1679,13 +1779,15 @@ size of the sub-vector is larger than the vector size a static assert (a
 compilation error) is produced.
 
 ``` {.cpp}
-SVector>double,N>  v;
-SVector>double,M>  w;
-// M <= N otherwise a compilation error is obtained later    
-// place a vector of size M starting from element ioff, v[ioff+i]=w[i]
-v.Place_at(w,ioff);
-// return a sub-vector of size M starting from v[ioff]: w[i]=v[ioff+i]
-w = v.Sub < SVector>double,M> > (ioff);
+   SVector>double,N>  v;
+   SVector>double,M>  w;
+   // M <= N otherwise a compilation error is obtained later    
+   // place a vector of size M starting from
+   // element ioff, v[ioff+i]=w[i]
+   v.Place_at(w,ioff);
+   // return a sub-vector of size M starting from
+   // v[ioff]: w[i]=v[ioff+i]
+   w = v.Sub < SVector>double,M> > (ioff);
 ```
 
 For the vector functions see later in the Matrix and Vector Operators
@@ -1716,7 +1818,14 @@ template parameters, which define at compile time, its properties:
     of size `3x3`, the data `{a0,a1,...,a8}` are stored in the following
     order:
 
--   ![](pictures/06000129.png)
+$$
+M =
+         \left(\begin{array}{ccc}
+         a_0 &  a_1  & a_2 \\ 
+         a_3 &  a_4  & a_5 \\ 
+         a_6 &  a_7  & a_8    
+         \end{array}\right)
+$$
 
 -   **`ROOT::Math::MatRepSym`** for a symmetric matrix of size `NxN`.
     This class is a template on the contained type and on the symmetric
@@ -1726,7 +1835,14 @@ template parameters, which define at compile time, its properties:
     convention. For example for a symmetric `3x3` matrix the order of
     the `6` independent elements `{a0,a1,...,a5}` is:
 
--   ![](pictures/0600012A.png)
+$$
+M =
+         \left(\begin{array}{ccc}
+         a_0 &  a_1  & a_3 \\ 
+         a_1 &  a_2  & a_4 \\ 
+         a_3 &  a_4  & a_5    
+         \end{array}\right)
+$$
 
 #### Creating a Matrix
 
@@ -1762,36 +1878,38 @@ specified. Furthermore, for a general square matrix, the number of
 column may be as well omitted.
 
 ``` {.cpp}
-// typedef definitions used in the following declarations 
-typedef ROOT::Math::SMatrix<double,3>       SMatrix33;
-typedef ROOT::Math::SMatrix<double,2>       SMatrix22;
-typedef ROOT::Math::SMatrix<double,3,3,
-ROOT::Math::MatRepSym<double,3>> SMatrixSym3;
-typedef ROOT::Math::SVector>double,2>       SVector2;
-typedef ROOT::Math::SVector>double,3>       SVector3;
-typedef ROOT::Math::SVector>double,6>       SVector6;
-SMatrix33   m0;                         // create a zero 3x3 matrix
-// create an 3x3 identity matrix 
-SMatrix33   i = ROOT::Math::SMatrixIdentity();
-double   a[9] = {1,2,3,4,5,6,7,8,9};    // input matrix data
-// create a matrix using the a[] data
-SMatrix33   m(a,9);                     // this will produce the 3x3 matrix
-                                        //    (  1    2    3  )
-                                        //    (  4    5    6  )
-                                        //    (  7    8    9  )
+   // typedef definitions used in the following declarations 
+   typedef ROOT::Math::SMatrix<double,3>       SMatrix33;
+   typedef ROOT::Math::SMatrix<double,2>       SMatrix22;
+   typedef ROOT::Math::SMatrix<double,3,3,
+   ROOT::Math::MatRepSym<double,3>> SMatrixSym3;
+   typedef ROOT::Math::SVector>double,2>       SVector2;
+   typedef ROOT::Math::SVector>double,3>       SVector3;
+   typedef ROOT::Math::SVector>double,6>       SVector6;
+   SMatrix33   m0;                         // create a zero 3x3 matrix
+   // create an 3x3 identity matrix 
+   SMatrix33   i = ROOT::Math::SMatrixIdentity();
+   double   a[9] = {1,2,3,4,5,6,7,8,9};    // input matrix data
+   // create a matrix using the a[] data
+   SMatrix33   m(a,9);             // this will produce the 3x3 matrix
+                                   //    (  1    2    3  )
+                                   //    (  4    5    6  )
+                                   //    (  7    8    9  )
 ```
 
 Example to fill a symmetric matrix from an `std::vector`:
 
 ``` {.cpp}
-std::vector<double> v(6);
-for (int i = 0; i<6; ++i) v[i] = double(i+1);
-SMatrixSym3  s(v.begin(),v.end())   // this will produce the symmetric  matrix
-//    (  1    2    4  )
-                                    //    (  2    3    5  )
-                                    //    (  4    5    6  )
-//create a general matrix from a symmetric matrix (the opposite will not compile)
-SMatrix33    m2 = s;
+   std::vector<double> v(6);
+   for (int i = 0; i<6; ++i) v[i] = double(i+1);
+   SMatrixSym3  s(v.begin(),v.end())   // this will produce the
+                                       // symmetric  matrix
+                                       //    (  1    2    4  )
+                                       //    (  2    3    5  )
+                                       //    (  4    5    6  )
+   //create a general matrix from a symmetric matrix (the opposite 
+   // will not compile)
+   SMatrix33    m2 = s;
 ```
 
 #### Accessing and Setting Methods
@@ -1808,18 +1926,18 @@ iterator access methods which behave differently (it follows the data
 order).
 
 ``` {.cpp}
-SMatrix33   m;
-m(0,0) = 1;                     // set the element in first row and first column
-*(m.begin()+1) = 2;             // set the second element (0,1)
-double d[9]={1,2,3,4,5,6,7,8,9};
-m.SetElements(d,d+9);           // set the d[] values in m
-double x = m(2,1);              // return the element in 3
-x = m.apply(7);                 // return the 8-th element (row=2,col=1)
-x = *(m.begin()+7);             // return the 8-th element (row=2,col=1)
-// symmetric matrices 
-//(note the difference in behavior between apply and the iterators)
-x = *(m.begin()+4)              // return the element (row=2,col=1)
-x = m.apply(7);                 // returns again the (row=2,col=1) element
+   SMatrix33   m;
+   m(0,0) = 1;        // set the element in first row and first column
+   *(m.begin()+1) = 2;      // set the second element (0,1)
+   double d[9]={1,2,3,4,5,6,7,8,9};
+   m.SetElements(d,d+9);    // set the d[] values in m
+   double x = m(2,1);       // return the element in 3
+   x = m.apply(7);          // return the 8-th element (row=2,col=1)
+   x = *(m.begin()+7);      // return the 8-th element (row=2,col=1)
+   // symmetric matrices 
+   //(note the difference in behavior between apply and the iterators)
+   x = *(m.begin()+4)       // return the element (row=2,col=1)
+   x = m.apply(7);          // returns again the (row=2,col=1) element
 ```
 
 There are methods to place and/or retrieve **`ROOT::Math::SVector`**
@@ -1830,42 +1948,48 @@ matrix size a static assert (a compilation error) is produced. The
 non-const methods are:
 
 ``` {.cpp}
-SMatrix33 m;
-SVector2  v2(1,2);
-// place a vector in the first row from element (0,1) : m(0,1)=v2[0]
-m.Place_in_row(v2,0,1);
-// place the vector in the second column from (0,1) : m(0,1) = v2[0]                
-m.Place in_col(v2,0,1);
-SMatrix22 m2;
-// place m2 in m starting from the element (1,1) : m(1,1) = m2(0,0)   
-m.Place_at(m2,1,1);
-SVector3 v3(1,2,3);
-// set v3 as the diagonal elements of m  : m(i,i) = v3[i] for i=0,1,2
-m.SetDiagonal(v3)
+   SMatrix33 m;
+   SVector2  v2(1,2);
+   // place a vector in the first row from
+   // element (0,1) : m(0,1)=v2[0]
+   m.Place_in_row(v2,0,1);
+   // place the vector in the second column from
+   // (0,1) : m(0,1) = v2[0]                
+   m.Place in_col(v2,0,1);
+   SMatrix22 m2;
+   // place m2 in m starting from the
+   // element (1,1) : m(1,1) = m2(0,0)   
+   m.Place_at(m2,1,1);
+   SVector3 v3(1,2,3);
+   // set v3 as the diagonal elements
+   // of m  : m(i,i) = v3[i] for i=0,1,2
+   m.SetDiagonal(v3)
 ```
 
 The const methods retrieving contents (getting slices of a matrix) are:
 
 ``` {.cpp}
-a = {1,2,3,4,5,6,7,8,9};
-SMatrix33       m(a,a+9);
-SVector3 irow = m.Row(0);       // return as vector the first row 
-SVector3 jcol = m.Col(1);       // return as vector the second column
+   a = {1,2,3,4,5,6,7,8,9};
+   SMatrix33       m(a,a+9);
+   SVector3 irow = m.Row(0);     // return as vector the first row 
+   SVector3 jcol = m.Col(1);     // return as vector the second column
 
-// return a slice of the first row from (0,1): r2[0]= m(0,1); r2[1]=m(0,2)
-SVector2 r2   =  m.SubRow<SVector2> (0,1);
-// return a slice of the second column from (0,1): c2[0] = m(0,1); c2[1] = m(1,1)
-SVector2 c2   =  m.SubCol<SVector2> (1,0);
+   // return a slice of the first row from
+   // (0,1): r2[0]= m(0,1); r2[1]=m(0,2)
+   SVector2 r2   =  m.SubRow<SVector2> (0,1);
+   // return a slice of the second column from
+   // (0,1): c2[0] = m(0,1); c2[1] = m(1,1)
+   SVector2 c2   =  m.SubCol<SVector2> (1,0);
 
-// return a sub-matrix 2x2 with the upper left corner at(1,1)
-SMatrix22 subM = m.Sub<SMatrix22>   (1,1);
+   // return a sub-matrix 2x2 with the upper left corner at(1,1)
+   SMatrix22 subM = m.Sub<SMatrix22>   (1,1);
 
-// return the diagonal element in a SVector
-SVector3  diag = m.Diagonal();
+   // return the diagonal element in a SVector
+   SVector3  diag = m.Diagonal();
 
-// return the upper(lower) block of the matrix m
-SVector6 vub = m.UpperBlock();        //  vub = [ 1, 2, 3, 5, 6, 9 ]
-SVector6 vlb = m.LowerBlock();        //  vlb = [ 1, 4, 5, 7, 8, 9 ]
+   // return the upper(lower) block of the matrix m
+   SVector6 vub = m.UpperBlock();       //  vub = [ 1, 2, 3, 5, 6, 9 ]
+   SVector6 vlb = m.LowerBlock();       //  vlb = [ 1, 4, 5, 7, 8, 9 ]
 ```
 
 #### Linear Algebra Matrix Functions (Inversion, Determinant)
@@ -1880,21 +2004,24 @@ used while for a large `(N>6)` general matrix an LU factorization is
 performed using the same algorithm as in the CERNLIB routine `dinv`.
 
 ``` {.cpp}
-// Invert a NxN matrix. 
-// The inverted matrix replaces the existing one if the result is successful
-bool ret = m.Invert();               // return the inverse matrix of m. 
+   // Invert a NxN matrix. 
+   // The inverted matrix replaces the existing one if the
+   // result is successful
+   bool ret = m.Invert();               // return the inverse matrix of m. 
 
-// If the inversion fails ifail is different than zero  ???
-int ifail = 0;
-ifail = m.Inverse(ifail);
+   // If the inversion fails ifail is different than zero  ???
+   int ifail = 0;
+   ifail = m.Inverse(ifail);
 
-// determinant of a square matrix - calculate the determinant modyfing the 
-// matrix content and returns it if the calculation was successful
-double det;
-bool ret = m.Det(det);
+   // determinant of a square matrix - calculate the determinant
+   // modyfing the matrix content and returns it if the calculation
+   // was successful
+   double det;
+   bool ret = m.Det(det);
 
-// calculate determinant by using a temporary matrix; preserves matrix content 
-bool ret = n.Det2(det);
+   // calculate determinant by using a temporary matrix; preserves
+   // matrix content 
+   bool ret = n.Det2(det);
 ```
 
 ### Example: Matrix and Vector Functions and Operators
@@ -1908,21 +2035,26 @@ vectors or matrices of the same type (and size) and `a` is a scalar
 value:
 
 ``` {.cpp}
-m1 == m2  //returns whether m1 is equal to m2 (element by element comparison)
-m1 != m2  //returns whether m1 is NOT equal to m2 (element by element comparison)
-m1 < m2   //returns whether m1 is less than m2 (element wise comparison)
-m1 > m2   //returns whether m1 is greater than m2 (element wise comparison)
+   m1 == m2  // returns whether m1 is equal to m2
+             // (element by element comparison)
+   m1 != m2  // returns whether m1 is NOT equal to m2
+             // (element by element comparison)
+   m1 < m2   // returns whether m1 is less than m2
+             // (element wise comparison)
+   m1 > m2   // returns whether m1 is greater than m2
+             // (element wise comparison)
 
-//in the following m1 and m3 can be general and m2 symmetric, but not vice-versa
+   // in the following m1 and m3 can be general and m2 symmetric,
+   // but not vice-versa
 
-m1 += m2           // add m2 to m1
-m1 -= m2           // subtract m2 to m1
-m3 = m1 + m2       // addition
-m1 - m2            // subtraction
+   m1 += m2           // add m2 to m1
+   m1 -= m2           // subtract m2 to m1
+   m3 = m1 + m2       // addition
+   m1 - m2            // subtraction
 
-// Multiplication and division via a scalar value a 
-
-m3 = a*m1; m3 = m1*a; m3 = m1/a;
+   // Multiplication and division via a scalar value a 
+ 
+   m3 = a*m1; m3 = m1*a; m3 = m1/a;
 ```
 
 **Vector-Vector multiplication:** The operator `*` defines an element by
@@ -1934,23 +2066,21 @@ for vector sizes of 3), `ROOT::Math::`**`Cross`, and the Tensor product,
 
 **Matrix - Vector multiplication:** The operator `*` defines the
 matrix-vector multiplication:
-
-![](pictures/0600012B.png). The operation compiles only if the matrix
+$y_i = \sum_j M_{i,j} x_j$. The operation compiles only if the matrix
 and the vectors have the right sizes.
 
 ``` {.cpp}
-// M is a N1xN2 matrix, x is a N2 size vector, y is a N1 size vector
-y = M * x
+   //M is a N1xN2 matrix, x is a N2 size vector, y is a N1 size vector
+   y = M * x
 ```
 
 **Matrix - Matrix multiplication:** The operator `*` defines the
 matrix-matrix multiplication:
-
-![](pictures/0600012C.png).
+$C_{i,j} = \sum_k A_{i,k} B_{k,j}$.
 
 ``` {.cpp}
-// A is a N1xN2 matrix, B is a N2xN3 matrix and C is a N1xN3 matrix
-C = A * B
+   // A is a N1xN2 matrix, B is a N2xN3 matrix and C is a N1xN3 matrix
+   C = A * B
 ```
 
 The operation compiles only if the matrices have the right size. In the
@@ -2000,9 +2130,9 @@ One can print (or write in an output stream) Vectors and Matrices) using
 the `Print` method or the `<<` operator:
 
 ``` {.cpp}
-// m is a SMatrix or a SVector object
-m.Print(std::cout);
-std::cout << m << std::endl;
+   // m is a SMatrix or a SVector object
+   m.Print(std::cout);
+   std::cout << m << std::endl;
 ```
 
 In the ROOT distribution, the CINT dictionary is generated for `SMatrix`
@@ -2039,15 +2169,16 @@ plug-in. For example for using it in histogram fitting, one only needs
 to do:
 
 ``` {.cpp}
-TVirtualFitter::SetDefaultFitter("Minuit2");  //or Fumili2 for the FUMILI algorithmhistogram->Fit();
+   TVirtualFitter::SetDefaultFitter("Minuit2"); //or Fumili2 for the
+                                 // FUMILI algorithmhistogram->Fit();
 ```
 
 For minimization problem, providing an FCN function to minimize, one can
 do:
 
 ``` {.cpp}
-TVirtualFitter::SetDefaultFitter("Minuit2");
-TVirtualFitter * minuit2 = TVirtualFitter::Fitter(0,2);
+   TVirtualFitter::SetDefaultFitter("Minuit2");
+   TVirtualFitter * minuit2 = TVirtualFitter::Fitter(0,2);
 ```
 
 Then set the parameters, the FCN and minimize using the
@@ -2058,7 +2189,7 @@ interface. In this case one must use directly the **`TFitterMinuit`**
 class via the method `SetMinuitFCN`.
 
 Examples on how to use the `Minuit2` and `Fumili2` plug-ins are provided
-in the tutorials' directory \$ROOTSYS/`tutorials/fit`:
+in the tutorials' directory `$ROOTSYS/tutorials/fit`:
 `minuit2FitBench.C`, `minuit2FitBench2D.C` and `minuit2GausFit.C`. More
 information on the classes and functions present in `Minuit2` is
 available at
