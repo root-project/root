@@ -969,7 +969,7 @@ Int_t TProof::Init(const char *, const char *conffile,
    fAllMonitor->DeActivateAll();
 
    // By default go into parallel mode
-   GoParallel(9999, attach);
+   GoParallel(-1, attach);
 
    // Send relevant initial state to slaves
    if (!attach)
@@ -6698,8 +6698,12 @@ Int_t TProof::SetParallelSilent(Int_t nodes, Bool_t random)
       GoParallel(nodes, kFALSE, random);
       return SendCurrentState();
    } else {
-      PDB(kGlobal,1) Info("SetParallelSilent", "request %d node%s", nodes,
-          nodes == 1 ? "" : "s");
+      if (nodes < 0) {
+         PDB(kGlobal,1) Info("SetParallelSilent", "request all nodes");
+      } else {
+         PDB(kGlobal,1) Info("SetParallelSilent", "request %d node%s", nodes,
+                                                  nodes == 1 ? "" : "s");
+      }
       TMessage mess(kPROOF_PARALLEL);
       mess << nodes << random;
       Broadcast(mess);
@@ -6716,6 +6720,10 @@ Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
    // Tell PROOF how many slaves to use in parallel. Returns the number of
    // parallel slaves. Returns -1 in case of error.
 
+   // If delayed startup reset settings, if required 
+   if (fDynamicStartup && nodes < 0)
+      if (gSystem->Getenv("PROOF_NWORKERS")) gSystem->Unsetenv("PROOF_NWORKERS");
+
    Int_t n = SetParallelSilent(nodes, random);
    if (TestBit(TProof::kIsClient)) {
       if (n < 1) {
@@ -6726,6 +6734,10 @@ Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
             subfix += ", randomly selected";
          Printf("PROOF set to parallel mode (%d worker%s)", n, subfix.Data());
       }
+   } else {
+      // Save for delayed startup 
+      if (fDynamicStartup && nodes > 0)
+	 gSystem->Setenv("PROOF_NWORKERS", TString::Format("%d", nodes));
    }
    return n;
 }
@@ -6742,7 +6754,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
 
    if (!IsValid()) return -1;
 
-   if (nodes < 0) nodes = 0;
+//   if (nodes < 0) nodes = 0;
 
    fActiveSlaves->Clear();
    fActiveMonitor->RemoveAll();
@@ -6768,7 +6780,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
          sl->SetStatus(TSlave::kInactive);
       }
    }
-   Int_t nwrks = (nodes > wlst->GetSize()) ? wlst->GetSize() : nodes;
+   Int_t nwrks = (nodes < 0 || nodes > wlst->GetSize()) ? wlst->GetSize() : nodes;
    int cnt = 0;
    fEndMaster = TestBit(TProof::kIsMaster) ? kTRUE : kFALSE;
    while (nwrks--) {
@@ -6798,7 +6810,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
          fEndMaster = kFALSE;
          TMessage mess(kPROOF_PARALLEL);
          if (!attach) {
-            mess << nodes-cnt;
+            mess << nwrks-cnt;
          } else {
             // To get the number of slaves
             mess.SetWhat(kPROOF_LOGFILE);
