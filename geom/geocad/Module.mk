@@ -72,7 +72,8 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(GEOCADO): CXXFLAGS += $(OCCINCDIR:%=-I%)
+$(GEOCADO): CXXFLAGS := $(filter-out -Iinclude,$(CXXFLAGS))
+$(GEOCADO): CXXFLAGS += -DHAVE_CONFIG_H $(OCCINCDIR:%=-I%) -Iinclude
 $(GEOCADO) $(GEOCADDO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
 $(GEOCADO) $(GEOCADDO): CXXFLAGS := $(filter-out -Woverloaded-virtual,$(CXXFLAGS))
 $(GEOCADO) $(GEOCADDO): CXXFLAGS := $(filter-out -Wall,$(CXXFLAGS))
