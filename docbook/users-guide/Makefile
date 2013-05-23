@@ -1,4 +1,4 @@
-MDFILES=Preface.md Introduction.md GettingStarted.md Histograms.md \
+MDFILES=Cover.md Preface.md Introduction.md GettingStarted.md Histograms.md \
 	Graphs.md FittingHistograms.md ALittleC++.md CINT.md \
 	ObjectOwnership.md Graphics.md FoldersTasks.md InputOutput.md \
 	Trees.md MathLibraries.md LinearAlgebra.md AddingaClass.md \
