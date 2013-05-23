@@ -14,17 +14,17 @@ OPTIONSPDF=--variable=geometry:a4paper -V geometry:margin=1.5cm
 all: pdf html tex epub
 
 pdf: $(MDFILES) bibliography.bib
-	pandoc $(OPTIONS) $(OPTIONSPDF) $(MDFILES) -o primer.pdf
+	pandoc $(OPTIONS) $(OPTIONSPDF) $(MDFILES) -o ROOTPrimer.pdf
 
 html: $(MDFILES) bibliography.bib
-	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) -o primer.html
+	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) -o ROOTPrimer.html
 
 tex: $(MDFILES) bibliography.bib
-	pandoc $(OPTIONS) -t latex $(MDFILES) -o primer.tex
+	pandoc $(OPTIONS) -t latex $(MDFILES) -o ROOTPrimer.tex
 
 epub: $(MDFILES) metadata.xml title.txt bibliography.bib
 	pandoc $(OPTIONS) $(OPTIONSEPUB) --epub-metadata=metadata.xml \
-	   title.txt $(MDFILES) -o primer.epub
+	   title.txt $(MDFILES) -o ROOTPrimer.epub
 
 clean:
-	rm -f primer.pdf primer.html primer.tex primer.epub
+	rm -f ROOTPrimer.pdf ROOTPrimer.html ROOTPrimer.tex ROOTPrimer.epub
