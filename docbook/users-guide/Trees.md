@@ -1839,6 +1839,7 @@ of tracks and one for the entire event. We check the number of tracks
 first, and if it meets our condition, we read the entire event. We show
 the fist entry that meets the condition.
 
+
 ``` {.cpp}
 void tree4r() {
    // check if the event class is in the dictionary
@@ -1886,7 +1887,7 @@ void tree4r() {
 }   
 ```
 
-Now, let's see how the tree looks like in the tree viewer.
+Now, let's see how the tree looks like in the tree viewer. 
 
 ![The tree viewer with tree4 example](pictures/03000103.png)
 
@@ -2007,7 +2008,7 @@ previously been used to declare a variable or function).
 In contrast, in compiled code, you can use:
 
 ``` {.cpp}
-TTree *MyTree;f.GetObject("T",MyTree);
+   TTree *MyTree;f.GetObject("T",MyTree);
 ```
 
 To show the different `Draw` options, we create a canvas with four
@@ -2127,13 +2128,13 @@ Operators =, +=, +, \*, !, &&, || are overloaded, here are some
 examples:
 
 ``` {.cpp}
-root[]     TCut c1 = "x < 1"
-root[]     TCut c2 = "y < 0"
-root[]     TCut c3 = c1 && c2
-root[]     MyTree.Draw("x", c1)
-root[]     MyTree.Draw("x", c1 || "x>0")
-root[]     MyTree.Draw("x", c1 && c2)
-root[]     MyTree.Draw("x", "(x + y)" * (c1 && c2))
+root[] TCut c1 = "x < 1"
+root[] TCut c2 = "y < 0"
+root[] TCut c3 = c1 && c2
+root[] MyTree.Draw("x", c1)
+root[] MyTree.Draw("x", c1 || "x>0")
+root[] MyTree.Draw("x", c1 && c2)
+root[] MyTree.Draw("x", "(x + y)" * (c1 && c2))
 ```
 
 ### Accessing the Histogram in Batch Mode
@@ -2144,24 +2145,24 @@ on the active pad. In a batch program, the histogram `htemp` created by
 default, is reachable from the current pad.
 
 ``` {.cpp}
-// draw the histogram
-nt->Draw("x", "cuts");
-// get the histogram from the current pad
-TH1F *htemp = (TH1F*)gPad->GetPrimitive("htemp");
-// now we have full use of the histogram
-htemp->GetEntries();
+   // draw the histogram
+   nt->Draw("x", "cuts");
+   // get the histogram from the current pad
+   TH1F *htemp = (TH1F*)gPad->GetPrimitive("htemp");
+   // now we have full use of the histogram
+   htemp->GetEntries();
 ```
 
 If you pipe the result of the `TTree::Draw` into a histogram, the
 histogram is also available in the current directory. You can do:
 
 ``` {.cpp}
-// Draw the histogram and fill hnew with it
-nt->Draw("x>>hnew","cuts");
-// get hnew from the current directory
-TH1F *hnew = (TH1F*)gDirectory->Get("hnew");
-// or get hnew from the current Pad
-TH1F *hnew = (TH1F*)gPad->GetPrimitive("hnew");
+   // Draw the histogram and fill hnew with it
+   nt->Draw("x>>hnew","cuts");
+   // get hnew from the current directory
+   TH1F *hnew = (TH1F*)gDirectory->Get("hnew");
+   // or get hnew from the current Pad
+   TH1F *hnew = (TH1F*)gPad->GetPrimitive("hnew");
 ```
 
 ### Using Draw Options in TTree::Draw
@@ -2170,8 +2171,7 @@ TH1F *hnew = (TH1F*)gPad->GetPrimitive("hnew");
 The next parameter is the draw option for the histogram:
 
 ``` {.cpp}
-root[] myCanvas->cd(4)
-root[] MyTree->Draw("Cost:Age","N
+root[] MyTree->Draw("Cost:Age","Nation == \"FR\"","surf2");
 ```
 
 ![Using draw options in trees](pictures/03000104.png)
@@ -2197,20 +2197,21 @@ and using the "`same`" option, you will need to update the pad between
 `Draw` commands.
 
 ``` {.cpp}
-{ // superimpose two 2D scatter plots
-  // Create a 2D histogram and fill it with random numbers
-TH2 *h2 = new TH2D ("h2","2D histo",100,0,70,100,0,20000);
-for (Int_t i = 0; i < 10000; i++)
-h2->Fill(gRandom->Gaus(40,10),gRandom->Gaus(10000,3000));
-// set the color to differentiate it visually
-h2->SetMarkerColor(kGreen);
-h2->Draw();
-  // Open the example file and get the tree
-TFile f("staff.root");
-TTree *myTree = (TTree*)f.Get("T");
-  // the update is needed for the next draw command to work properly
-gPad->Update();
-myTree->Draw("Cost:Age", "","same");
+{
+   // superimpose two 2D scatter plots
+   // Create a 2D histogram and fill it with random numbers
+   TH2 *h2 = new TH2D ("h2","2D histo",100,0,70,100,0,20000);
+   for (Int_t i = 0; i < 10000; i++)
+      h2->Fill(gRandom->Gaus(40,10),gRandom->Gaus(10000,3000));
+   // set the color to differentiate it visually
+   h2->SetMarkerColor(kGreen);
+   h2->Draw();
+   // Open the example file and get the tree
+   TFile f("staff.root");
+   TTree *myTree = (TTree*)f.Get("T");
+   // the update is needed for the next draw command to work properly
+   gPad->Update();
+   myTree->Draw("Cost:Age", "","same");
 }
 ```
 
@@ -2245,7 +2246,7 @@ is numbered and referenced by the explanations immediately following the
 examples.
 
 ``` {.cpp}
-// Data members and methods
+    // Data members and methods
 1   tree->Draw("fNtrack");
 2   tree->Draw("event.GetNtrack()");
 3   tree->Draw("GetNtrack()");
@@ -2253,16 +2254,17 @@ examples.
 5   tree->Draw("fH.fXaxis.GetXmax()");
 6   tree->Draw("fH.GetXaxis().fXmax");
 7   tree->Draw("GetHistogram().GetXaxis().GetXmax()");
-// Expressions in the selection paramter
+    // Expressions in the selection parameter
 8   tree->Draw("fTracks.fPx","fEvtHdr.fEvtNum%10 == 0");
 9   tree->Draw("fPx","fEvtHdr.fEvtNum%10 == 0");
-// Two dimensional arrays defined as: Float_t  fMatrix[4][4] in Event class
+    // Two dimensional arrays defined as:
+    //   Float_t fMatrix[4][4] in Event class
 10  tree->Draw("fMatrix");
 11  tree->Draw("fMatrix[ ][ ]");
 12  tree->Draw("fMatrix[2][2]");
 13  tree->Draw("fMatrix[ ][0]");
 14  tree->Draw("fMatrix[1][ ]");
-// using two arrays... Float_t  fVertex[3];  in Track class
+    // using two arrays... Float_t  fVertex[3];  in Track class
 15  tree->Draw("fMatrix - fVertex");
 16  tree->Draw("fMatrix[2][1]  - fVertex[5][1]");
 17  tree->Draw("fMatrix[ ][1]  - fVertex[5][1]");
@@ -2270,40 +2272,40 @@ examples.
 19  tree->Draw("fMatrix[ ][2]  - fVertex[ ][1]");
 20  tree->Draw("fMatrix[ ][2]  - fVertex[ ][ ]");
 21  tree->Draw("fMatrix[ ][ ]  - fVertex[ ][ ]");
-// variable length arrays
+    // variable length arrays
 22  tree->Draw("fClosestDistance");
 23  tree->Draw("fClosestDistance[fNvertex/2]");
-// mathematical expressions
+    // mathematical expressions
 24  tree->Draw("sqrt(fPx*fPx + fPy*fPy + fPz*fPz))");
-// external function call
+    // external function call
 25  tree->Draw("TMath::BreitWigner(fPx,3,2)");
-// strings
+    // strings
 26  tree->Draw("fEvtHdr.fEvtNum","fType=="type1" ");
 27  tree->Draw("fEvtHdr.fEvtNum","strstr(fType,"1" ");
-// Where fPoints is defined in the track class:
-//        Int_t  fNpoint; 
-//        Int_t *fPoints; [fNpoint]
+    // Where fPoints is defined in the track class:
+    //        Int_t  fNpoint; 
+    //        Int_t *fPoints; [fNpoint]
 28  tree->Draw("fTracks.fPoints");
 29  tree->Draw("fTracks.fPoints - fTracks.fPoints[][fAvgPoints]");
 30  tree->Draw("fTracks.fPoints[2][]- fTracks.fPoints[][55]");
 31  tree->Draw("fTracks.fPoints[][] - fTracks.fVertex[][]");
-// selections
+    // selections
 32  tree->Draw("fValid&0x1","(fNvertex>10) && (fNseg<=6000)");
 33  tree->Draw("fPx","(fBx>.4) || (fBy<=-.4)");
 34  tree->Draw("fPx","fBx*fBx*(fBx>.4) + fBy*fBy*(fBy<=-.4)");
 35  tree->Draw("fVertex","fVertex>10");
 36  tree->Draw("fPx[600]");
 37  tree->Draw("fPx[600]","fNtrack>600");
-// alphanumeric bin histogram
-// where Nation is a char* indended to be used as a string
+    // alphanumeric bin histogram
+    // where Nation is a char* indended to be used as a string
 38  tree->Draw("Nation");
-// where MyByte is a char* intended to be used as a byte
+    // where MyByte is a char* intended to be used as a byte
 39  tree->Draw("MyByte + 0");
-// where fTriggerBits is a data member of TTrack of type TBits
+    // where fTriggerBits is a data member of TTrack of type TBits
 40  tree->Draw("fTracks.fTriggerBits");
-// using alternate values
+    // using alternate values
 41  tree->Draw("fMatrix-Alt$(fClosestDistance,0)");
-// using meta information about the formula
+    // using meta information about the formula
 42  tree->Draw("fMatrix:Iteration$")
 43 T->Draw("fLastTrack.GetPx():fLastTrack.fPx");
 44 T->Scan("((Track*)(fLastTrack@.GetObject())).GetPx()","","");
@@ -2314,82 +2316,80 @@ examples.
 
 #### Explanations:
 
-**`1. `** **`tree->Draw("fNtrack");`**
+1. **`tree->Draw("fNtrack");`**
 
 It fills the histogram with the number of tracks for each entry.
 `fNtrack` is a member of event.
 
-**`2. `** **` tree->Draw("event.GetNtrack()");`**
+2. **`tree->Draw("event.GetNtrack()");`**
 
 Same as case 1, but use the method of event to get the number of tracks.
 When using a method, you can include parameters for the method as long
 as the parameters are literals.
 
-**`3. tree->Draw("GetNtrack()");`**
+3. **`tree->Draw("GetNtrack()");`**
 
 Same as case 2, the object of the method is not specified. The command
 uses the first instance of the `GetNtrack` method found in the objects
 stored in the tree. We recommend using this shortcut only if the method
 name is unique.
 
-**`4. tree->Draw`** **`("fH.fXaxis.fXmax"); `**
+4. **`tree->Draw("fH.fXaxis.fXmax");`**
 
 Draw the data member of a data member. In the tree, each entry has a
 histogram. This command draws the maximum value of the X-axis for each
 histogram.
 
-**`5. `** **`tree->Draw("fH.fXaxis.GetXmax()");`**
+5. **`tree->Draw("fH.fXaxis.GetXmax()");`**
 
 Same as case 4, but use the method of a data member.
 
-**`6. tree->Draw("fH.GetXaxis().fXmax");`**
+6. **`tree->Draw("fH.GetXaxis().fXmax");`**
 
 The same as case 4: a data member of a data member retrieved by a
 method.
 
-**`7. `** **`tree->Draw("GetHis`**
-**`togram().GetXaxis().GetXmax()");`**
+7. `**tree->Draw("GetHistogram().GetXaxis().GetXmax()");`**
 
 Same as case 4, but using methods.
 
-**`8. tree->Draw("fTracks.fPx","fEvtHdr.fEvtNum%10 == 0");`**
+8. **`tree->Draw("fTracks.fPx","fEvtHdr.fEvtNum%10 == 0");`**
 
 Use data members in the expression and in the selection parameter to
 plot `fPx` or all tracks in every 10th entry. Since `fTracks` is a
 **`TClonesArray`** of `Tracks`, there will be d values of `fPx` for each
 entry.
 
-**`9. tree->Draw("`** **`fPx`** **`","fEvtHdr.fEvtNum%10 == 0`**
-**`");`**
+9. **`tree->Draw("fPx","fEvtHdr.fEvtNum%10 == 0");`**
 
 Same as case 8, use the name of the data member directly.
 
-**`10. tree->Draw("fMatrix`** **`"`** **`);`**
+10. **`tree->Draw("fMatrix");`**
 
 When the index of the array is left out or when empty brackets are used
 `[]`, all values of the array are selected. Draw all values of `fMatrix`
 for each entry in the tree. If `fMatrix` is defined as:
 `Float_t fMatrix[4][4]`, all 16 values are used for each entry.
 
-**`11. `** **`tree->Draw("fMatrix[ ][ ]");`**
+11. **`tree->Draw("fMatrix[ ][ ]");`**
 
 The same as case 10, all values of `fMatrix` are drawn for each entry.
 
-**`12. tree->Draw("`** **`fMatrix[2][2]");`**
+12. **`tree->Draw("fMatrix[2][2]");`**
 
 The single element at `fMatrix[2][2]` is drawn for each entry.
 
-**`13. tree->Draw("fMatrix[`** **`][0]");`**
+13. **`tree->Draw("fMatrix[][0]");`**
 
 Four elements of `fMatrix` are used: `fMatrix[1][0]`, `fMatrix[2][0]`,
 `fMatrix[3][0]`, `fMatrix[4][0]`.
 
-**`14. tree->Draw(`** **`"fMatrix[1][ ]");`**
+14. **`tree->Draw("fMatrix[1][ ]");`**
 
 Four elements of `fMatrix` are used: `fMatrix[1][0]`, `fMatrix[1][2]`,
 `fMatrix[1][3]`, `fMatrix[1][4]`.
 
-**`15. tree->Draw`** **`("fMatrix - fVertex`** **`"`** **`);`**
+15. **`tree->Draw("fMatrix - fVertex");`**
 
 With two arrays and unspecified element numbers, the number of selected
 values is the minimum of the first dimension times the minimum of the
@@ -2424,11 +2424,11 @@ elements per entry. The selected values for each entry are:
 
 `fMatrix[3][2] - fVertex[3][2]`
 
-**`16. tree->Draw`** **`("fMatrix[2][1] - fVertex[5][1]");`**
+16. **`tree->Draw("fMatrix[2][1] - fVertex[5][1]");`**
 
 This command selects one value per entry.
 
-**`17. tree->Draw`** **`("fMatrix[ ][1] - fVertex[5][1]");`**
+17. **`tree->Draw("fMatrix[ ][1] - fVertex[5][1]");`**
 
 The first dimension of the array is taken by the `fMatrix`.
 
@@ -2440,7 +2440,7 @@ The first dimension of the array is taken by the `fMatrix`.
 
 `fMatrix[3][1] - fVertex[5][1]`
 
-**`18. tree->Draw`** **`("("fMatrix[2][ ] - fVertex[5][ ]");`**
+18. **`tree->Draw("("fMatrix[2][ ] - fVertex[5][ ]");`**
 
 The first dimension minimum is 2, and the second dimension minimum is 3
 (from `fVertex`). Three values are selected from each entry:
@@ -2451,7 +2451,7 @@ The first dimension minimum is 2, and the second dimension minimum is 3
 
 `fMatrix[2][2] - fVertex[5][2]`
 
-**`19. tree->Draw`** **`("fMatrix[ ][2] - fVertex[ ][1]")`**
+19. **`tree->Draw("fMatrix[ ][2] - fVertex[ ][1]")`**
 
 This is similar to case 18. Four values are selected from each entry:
 
@@ -2463,7 +2463,7 @@ This is similar to case 18. Four values are selected from each entry:
 
 `fMatrix[3][2] - fVertex[3][1]`
 
-**`20. tree->Draw`** **`("fMatrix[ ][2] - fVertex[ ][ ]")`**
+20. **`tree->Draw("fMatrix[ ][2] - fVertex[ ][ ]")`**
 
 This is similar to case 19. Twelve values are selected (4x3) from each
 entry:
@@ -2492,13 +2492,13 @@ entry:
 
 `fMatrix[3][2] - fVertex[3][2]`
 
-**`21. tree->Draw`** **`("fMatrix[ ][ ] - fVertex[ ][ ]")`**
+21. **`tree->Draw("fMatrix[ ][ ] - fVertex[ ][ ]")`**
 
 This is the same as case 15. The first dimension minimum is 4 (from
 `fMatrix`), and the second dimension minimum is 3 (from `fVertex`).
 Twelve values are selected from each entry.
 
-**`22. tree->Draw`** **`("fClosestDistance")`**
+22. **`tree->Draw("fClosestDistance")`**
 
 This event data member `fClosestDistance` is a variable length array:
 
@@ -2507,17 +2507,17 @@ This event data member `fClosestDistance` is a variable length array:
 This command selects all elements, but the number per entry depends on
 the number of vertices of that entry.
 
-**`23. tree->Draw`** **`("fClosestDistance[fNvertex/2]")`**
+23. **`tree->Draw("fClosestDistance[fNvertex/2]")`**
 
 With this command the element at `fNvertex/2` of the
 `fClosestDistance `array is selected. Only one per entry is selected.
 
-**`24. tree->Draw`** **`("sqrt(fPx*fPx + fPy*fPy + fPz*fPz)")`**
+24. **`tree->Draw("sqrt(fPx*fPx + fPy*fPy + fPz*fPz)")`**
 
 This command shows the use of a mathematical expression. It draws the
 square root of the sum of the product.
 
-**`25. tree->Draw("TMath::BreitWigner(fPx,3,2)")`**
+25. **`tree->Draw("TMath::BreitWigner(fPx,3,2)")`**
 
 The formula can contains call to a function that takes numerical
 arguments and returns a numerical value. The function needs to be
@@ -2525,18 +2525,18 @@ declared to the dictionary and need to be available from the global
 namespace. In particular, global functions and public static member
 functions can be called.
 
-**`26. tree->Draw("fEvtHdr.fEvtNum","fType=="type1" ")`**
+26. **`tree->Draw("fEvtHdr.fEvtNum","fType=="type1" ")`**
 
 You can compare strings, using the symbols == and !=, in the first two
 parameters of the `Draw` command (**`TTree`**`Formula`). In this case,
 the event number for ‘type1' events is plotted.
 
-**`27. tree->Draw("fEvtHdr.fEvtNum","strstr(fType,"1") ")`**
+27. **`tree->Draw("fEvtHdr.fEvtNum","strstr(fType,"1") ")`**
 
 To compare strings, you can also use `strstr`. In this case, events
 having a '1' in `fType` are selected.
 
-**`28. tree->Draw("fTracks.fPoints")`**
+28. **`tree->Draw("fTracks.fPoints")`**
 
 If `fPoints` is a data member of the `Track` class declared as:
 
@@ -2547,7 +2547,7 @@ If `fPoints` is a data member of the `Track` class declared as:
 The size of the array `fPoints` varies with each track of each event.
 This command draws all the value in the `fPoints` arrays.
 
-**`29. tree->Draw("fTracks.fPoints - fTracks.fPoints[][fAvgPoints]");`**
+29. **`tree->Draw("fTracks.fPoints - fTracks.fPoints[][fAvgPoints]");`**
 
 `When fAvgPoints` is a data member of the `Event` class, this example
 selects:
@@ -2601,7 +2601,7 @@ selects:
 Where` max0`, `max1`, `... max n`, is the size of the` fPoints `array for
 the respective track`.`
 
-**`30. tree->Draw("fTracks.fPoints[2][]- fTracks.fPoints[][55]") `**
+30. **`tree->Draw("fTracks.fPoints[2][]- fTracks.fPoints[][55]") `**
 
 For each event, this expression is selected:
 
@@ -2619,7 +2619,7 @@ For each event, this expression is selected:
 
 where max is the minimum of `fNtrack` and `fTracks[2].fNpoint`.
 
-**`31. tree->Draw("fTracks.fPoints[][] - fTracks.fVertex[][]")`**
+31. **`tree->Draw("fTracks.fPoints[][] - fTracks.fVertex[][]")`**
 
 For each event and each track, this expression is selected. It is the
 difference between `fPoints` and of `fVertex`. The number of elements
@@ -2660,13 +2660,13 @@ used for each track is the minimum of `fNpoint` and 3 (the size of the
 
 `// with fTracks[4].fNpoint==3`
 
-**`32. tree->Draw("fValid&0x1","(fNvertex>10) && (fNseg<=6000)")`**
+32. **`tree->Draw("fValid&0x1","(fNvertex>10) && (fNseg<=6000)")`**
 
 You can use bit patterns (`&,|,<<`) or Boolean operation.
 
-**`33. tree->Draw("fPx","(fBx>.4) || (fBy<=-.4)");`**
+33. **`tree->Draw("fPx","(fBx>.4) || (fBy<=-.4)");`**
 
-**`34. tree->Draw("fPx","fBx*fBx*(fBx>.4) + fBy*fBy*(fBy<=-.4)");`**
+34. **`tree->Draw("fPx","fBx*fBx*(fBx>.4) + fBy*fBy*(fBy<=-.4)");`**
 
 The selection argument is used as a weight. The expression returns a
 multiplier and in case of a Boolean the multiplier is either 0 (for
@@ -2674,7 +2674,7 @@ false) or 1 (for true). The first command draws `fPx` for the range
 between 0.4 and -0.4, the second command draws `fPx` for the same range,
 but adds a weight using the result of the second expression.
 
-**`35. tree->Draw("fVertex","fVertex>10")`**
+35. **`tree->Draw("fVertex","fVertex>10")`**
 
 When using arrays in the selection and the expression, the selection is
 applied to each element of the array.
@@ -2685,32 +2685,32 @@ applied to each element of the array.
 
 `if (fVertex[2]>10) fVertex[2]`
 
-**`36. tree->Draw("fPx[600]")`**
+36. **`tree->Draw("fPx[600]")`**
 
-**`37. tree->Draw("fPx[600]","fNtrack > 600")`**
+37. **`tree->Draw("fPx[600]","fNtrack > 600")`**
 
 When using a specific element for a variable length array the entries
 with fewer elements are ignored. Thus these two commands are equivalent.
 
-**`38. tree->Draw("Nation")`**
+38. **`tree->Draw("Nation")`**
 
 `Nation` is a `char*` branch. When drawing a `char*` it will plot an
 alphanumeric histogram, of the different value of the string `Nation`.
 The axis will have the `Nation` values. See "Histograms".
 
-**`39. tree->Draw("MyChar +0")`**
+39. **`tree->Draw("MyChar +0")`**
 
 If you want to plot a char\* variable as a byte rather than a string,
 you can use the syntax above.
 
-**`40. tree->Draw("fTracks.fTriggerBits")`**
+40. **`tree->Draw("fTracks.fTriggerBits")`**
 
 `fTriggerBits` is a data member of **`TTrack`** of type **`TBits`**.
 Objects of class **`TBits`** can be drawn directly. This command will
 create a 1D histogram from 0 to `nbits` which is filled for each
 non-null bit-number.
 
-**`41. tree->Draw("fMatrix-Alt$(fClosestDistance,0)")`**
+41. **`tree->Draw("fMatrix-Alt$(fClosestDistance,0)")`**
 
 `Alt$(primary,alternate)` returns the value of "`primary`" if it is
 available for the current iteration; otherwise return the value of
@@ -2719,7 +2719,7 @@ available for the current iteration; otherwise return the value of
 `i` less than the size of `fClosestDistance`, and will draw
 `fMatrix[i]+0` for the other value of `i`.
 
-**`42. tree->Draw("fClosestDistance:Iteration$")`**
+42. **`tree->Draw("fClosestDistance:Iteration$")`**
 
 This example draws a 2D plot with, for all entries,
 `fClosestDistance[i]:i` for each value of `i` between 0 and the size of
@@ -2737,7 +2737,7 @@ this entry
 `Iteration$:` return the current iteration over this formula for this
 entry (i.e. varies from 0 to `Length$`).
 
-**`43. T->Draw("fLastTrack.GetPx():fLastTrack.fPx");`**
+43. T->Draw("fLastTrack.GetPx():fLastTrack.fPx");`**
 
 **`TRef`** and **`TRefArray`** are automatically deferenced and this
 shows the value of the `fPx` of the track referenced by `fLastTrack`. To
@@ -2745,13 +2745,13 @@ access the **`TRef`** object itself use the '`@`' notation (see next
 example). This auto dereferencing can be extended (via an implementation
 of **`TVirtualRefProxy`**) to any reference type.
 
-**`44. T->Scan("((Track*)(fLastTrack@.GetObject())).GetPx()","","");`**
+44. T->Scan("((Track*)(fLastTrack@.GetObject())).GetPx()","","");`**
 
 Will cast the return value of `GetObject()` (which happens to be
 **`TObject*`** in this case) before requesting the `GetPx()` member
 functions.
 
-**`45. tree->Draw("This->GetReadEntry()");`**
+45. **`tree->Draw("This->GetReadEntry()");`**
 
 You can refer to the tree (or chain) containing the data by using the
 string '`This`'. You can also call any **`TTree`** methods. Next example
@@ -2759,7 +2759,7 @@ will display the name of the first '`user info`' object:
 
 `tree->Draw("This->GetUserInfo()->At(0)->GetName()");`
 
-**`46.  tree->Draw("mybr.mystring");`**
+46.  **`tree->Draw("mybr.mystring");`**
 
 **`TString`** and `std::string` object are plotted directly. The example
 45 draws the same results - i.e. an histogram whose labels are the
@@ -2771,7 +2771,7 @@ or
 
 `tree->Draw("mybr.mytstring.Data()");`
 
-**`47.  tree->Draw("myTimeStamp");`**
+47.  **`tree->Draw("myTimeStamp");`**
 
 You can plot plot objects of any class which has either `AsDouble` or
 `AsString` (`AsDouble` has priority). For such a class (for example
@@ -2883,7 +2883,7 @@ of the table:
 For example:
 
 ``` {.cpp}
-tree->Scan("a:b:c","","colsize=30 precision=3 col=::20.10");
+   tree->Scan("a:b:c","","colsize=30 precision=3 col=::20.10");
 ```
 
 will print 3 columns, the first 2 columns will be 30 characters long,
@@ -2904,13 +2904,13 @@ more than 600 tracks, do:
 
 ``` {.cpp}
 root[] TFile *f = new TFile("Event.root");
-root[] T->Draw(">> myList","fNtrack > 600")
+root[] T->Draw(">> myList","fNtrack > 600");
 ```
 
 To create a **`TEntryList`**, use the option "`entrylist`".
 
 ``` {.cpp}
-root[] T->Draw(">>myList", "fNtrack>600", "entrylist")
+root[] T->Draw(">>myList", "fNtrack>600", "entrylist");
 ```
 
 This list contains the entry number of all entries with more than 600
@@ -2932,7 +2932,7 @@ If the `Draw` command generates duplicate entries, they are not added to
 the list.
 
 ``` {.cpp}
-root[] T->Draw(">>+ myList"," fNtrack > 610"
+root[] T->Draw(">>+ myList"," fNtrack > 610", "entrylist");
 ```
 
 This command does not add any new entries to the list because all
@@ -2993,7 +2993,7 @@ it to a variable list.
 
 ``` {.cpp}
 root[] T->Draw(">>myList","fNtrack > 600","entrylist");
-root[]TEntryList 
+root[] TEntryList *list=(TEntryList*)gDirectory->Get("myList");
 ```
 
 3. Instruct the tree **`T`** to use the new list and draw it again. Note
@@ -3001,7 +3001,8 @@ that this is exactly the same `Draw` command. The list limits the
 entries.
 
 ``` {.cpp}
-root[] T->SetEntry
+root[] T->SetEntryList(list);
+root[] T->Draw("fNtrack");
 ```
 
 You should now see a canvas similar to this one.
@@ -3017,7 +3018,9 @@ of the cuts. Example:
 ``` {.cpp}
 root[] T->Draw(">>list1","fNtrack>600","entrylist");
 root[] TEntryList *list1 = (TEntryList*)gDirectory->Get("list1");
-root[] T->Draw(">>list2","fNtrack<59
+root[] T->Draw(">>list2","fNtrack<590","entrylist");
+root[] TEntryList *list2 = (TEntryList*)gDirectory->Get("list2");
+root[] list1->Add(list2);
 ```
 
 `list1` now contains entries with more than 600 or less than 590 tracks.
@@ -3135,7 +3138,7 @@ information in the `TTree::Draw` command.
 To set number of bins default for the 1-D, 2-D, 3-D histograms can be
 specified in the `.rootrc` file via the environment variables, e.g.:
 
-``` {.cpp}
+```
 # default binnings   Hist.Binning.1D.x: 100
 
 Hist.Binning.2D.x: 40
@@ -3167,12 +3170,13 @@ When a bin number is specified, the value becomes the default. Any of
 the numbers can be skipped. For example:
 
 ``` {.cpp}
-tree.Draw("sqrt(x)>>hsqrt(500,10,20)";
-// plot sqrt(x) between 10 and 20 using 500 bins
-tree.Draw("sqrt(x):sin(y)>>hsqrt(100,10,,50,.1,.5)";
-// plot sqrt(x) against sin(y) 100 bins in x-direction;
-// lower limit on x-axis is 10; no upper limit
-// 50 bins in y-direction; lower limit on y-axis is .1; upper limit is .5 
+   tree.Draw("sqrt(x)>>hsqrt(500,10,20)";
+   // plot sqrt(x) between 10 and 20 using 500 bins
+   tree.Draw("sqrt(x):sin(y)>>hsqrt(100,10,,50,.1,.5)";
+   // plot sqrt(x) against sin(y) 100 bins in x-direction;
+   // lower limit on x-axis is 10; no upper limit
+   // 50 bins in y-direction; lower limit on y-axis is .1;
+   // upper limit is .5 
 ```
 
 When the name is followed by binning information, appending the
@@ -3180,7 +3184,7 @@ histogram with a "+", will not reset `hsqrt`, but will continue to fill
 it.
 
 ``` {.cpp}
-tree.Draw("sqrt(x)>>+hsqrt","y>0");
+   tree.Draw("sqrt(x)>>+hsqrt","y>0");
 ```
 
 This works for 1-D, 2-D and 3-D histograms.
@@ -3244,7 +3248,7 @@ Loop through the first 10 entries and print the values of `fNtrack`:
 
 ``` {.cpp}
 root[] for (int i = 0; i < 10; i++) 
-root[] cout << a[i] << " " << endl    // need an endl to see the values
+root[] cout << a[i] << " " << endl   // need an endl to see the values
 594 597 606 595 604 610 604 602 603 596
 ```
 
@@ -3259,7 +3263,7 @@ into these arrays:
 
 ``` {.cpp}
 root[] Int_t nestimate = (Int_t)T->GetEntries();
- root[] T->SetEstimate(nestimate);
+root[] T->SetEstimate(nestimate);
 ```
 
 Obviously, this will not work if the number of entries is very large.
@@ -3369,41 +3373,41 @@ the class declaration:
 
 ``` {.cpp}
 class MyClass {
-public :
-//pointer to the analyzed TTree or TChain
-TTree          *fChain;
-   //current Tree number in a TChain
-Int_t           fCurrent;
-   //Declaration of leaves types
-UInt_t          fUniqueID;
-UInt_t          fBits;
-Char_t          fType[20];
-Int_t           fNtrack;
-Int_t           fNseg;
-Int_t           fNvertex;
-UInt_t          fFlag;
-Float_t         fTemperature;
-Int_t           fEvtHdr_fEvtNum;
-   //List of branches
-TBranch        *b_fUniqueID;
-TBranch        *b_fBits;
-TBranch        *b_fType;
-TBranch        *b_fNtrack;
-TBranch        *b_fNseg;
-TBranch        *b_fNvertex;
-TBranch        *b_fFlag;
-TBranch        *b_fTemperature;
-TBranch        *b_fEvtHdr_fEvtNum;
+   public :
+      // Pointer to the analyzed TTree or TChain
+      TTree          *fChain;
+      // Current Tree number in a TChain
+      Int_t           fCurrent;
+      // Declaration of leaves types
+      UInt_t          fUniqueID;
+      UInt_t          fBits;
+      Char_t          fType[20];
+      Int_t           fNtrack;
+      Int_t           fNseg;
+      Int_t           fNvertex;
+      UInt_t          fFlag;
+      Float_t         fTemperature;
+      Int_t           fEvtHdr_fEvtNum;
+      // List of branches
+      TBranch        *b_fUniqueID;
+      TBranch        *b_fBits;
+      TBranch        *b_fType;
+      TBranch        *b_fNtrack;
+      TBranch        *b_fNseg;
+      TBranch        *b_fNvertex;
+      TBranch        *b_fFlag;
+      TBranch        *b_fTemperature;
+      TBranch        *b_fEvtHdr_fEvtNum;
 ...
-MyClass(TTree *tree=0);
-~MyClass();
-Int_t  Cut(Int_t entry);
-Int_t  GetEntry(Int_t entry);
-Int_t  LoadTree(Int_t entry);
-void   Init(TTree *tree);
-void   Loop();
-Bool_t Notify();
-void   Show(Int_t entry = -1);
+             MyClass(TTree *tree=0);
+            ~MyClass();
+      Int_t  Cut(Int_t entry);
+      Int_t  GetEntry(Int_t entry);
+      Int_t  LoadTree(Int_t entry);
+      void   Init(TTree *tree);
+      void   Loop();
+      Bool_t Notify();
+      void   Show(Int_t entry = -1);
 };
 ```
 
@@ -3462,7 +3466,8 @@ void MyClass::Loop() {
    Int_t nbytes = 0, nb = 0;
    for (Int_t jentry=0; jentry<nentries;jentry++) {
       Int_t ientry = LoadTree(jentry);
-      // in case of a TChain   , ientry is the entry number in the current file
+      // in case of a TChain   , ientry is the entry number in the
+      // current file
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
    }
@@ -3481,10 +3486,10 @@ each entry and plot `Px`. To do this we change the Loop method.
 
 ``` {.cpp}
 ...
-if (fChain == 0) return;
-Int_t nentries = Int_t(fChain->GetEntries());
-TH1F *myHisto  = new TH1F("myHisto","fPx", 100, -5,5);
-TH1F *smallHisto = new TH1F("small","fPx", 100, -5,5);
+   if (fChain == 0) return;
+   Int_t nentries = Int_t(fChain->GetEntries());
+   TH1F *myHisto  = new TH1F("myHisto","fPx", 100, -5,5);
+   TH1F *smallHisto = new TH1F("small","fPx", 100, -5,5);
 ...
 ```
 
@@ -3496,15 +3501,15 @@ it is in the first 100.
 
 ``` {.cpp}
 ...
-for (Int_t jentry=0; jentry<nentries;jentry++) {
-   GetEntry(jentry);
-   for (Int_t j = 0; j < 100; j++){
-      myHisto->Fill(fTracks_fPx[j]);
-      if (j < 100){
-      smallHisto->Fill(fTracks_fPx[j]);
+   for (Int_t jentry=0; jentry<nentries;jentry++) {
+      GetEntry(jentry);
+      for (Int_t j = 0; j < 100; j++) {
+         myHisto->Fill(fTracks_fPx[j]);
+         if (j < 100) {
+            smallHisto->Fill(fTracks_fPx[j]);
+         }
+      }
    }
-}
-}
 ...
 ```
 
@@ -3512,8 +3517,8 @@ Outside of the for-loop, we draw both histograms on the same canvas.
 
 ``` {.cpp}
 ...
-myHisto->Draw();
-smallHisto->Draw("Same");
+   myHisto->Draw();
+   smallHisto->Draw("Same");
 ...
 ```
 
@@ -3621,7 +3626,7 @@ In the resulting files is a class that is a descendent of
     being processed, use
 
 ``` {.cpp}
-fChain->GetTree()->GetEntry(entry);
+   fChain->GetTree()->GetEntry(entry);
 ```
 
 To create a selector call:
@@ -3668,11 +3673,12 @@ T->Process(selector);
 `Using this form, you can do things like:`
 
 ``` {.cpp}
-selector->public_attribute1 = init_value;
-for (int i=0; i<limit; i++) {
-T->Process(selector);
-   selector->public_attribute1 = function(selector->public_attribute2);
-}
+   selector->public_attribute1 = init_value;
+   for (int i=0; i<limit; i++) {
+      T->Process(selector);
+      selector->public_attribute1 = 
+         function(selector->public_attribute2);
+   }
 ```
 
 `TTree::Process()` is aware of PROOF, ROOT parallel processing facility.
@@ -3714,16 +3720,11 @@ Event 400 comp split
 ```
 
 -   comp = 0 means: no compression at all.
-
 -   comp = 1 means: compress everything if split = 0.
-
 -   comp = 1 means: compress only the tree branches with integers if
     split = 1.
-
 -   comp = 2 means: compress everything if split=1.
-
 -   split = 0 : the full event is serialized into one single buffer.
-
 -   split = 1 : the event is split into branches. One branch for each
     data member of the Event class. The list of tracks (a
     **`TClonesArray`**) has the data members of the Track class also
@@ -3790,10 +3791,10 @@ As an example, assume we have three files called
 "`T`". We can create a chain with the following statements:
 
 ``` {.cpp}
-TChain chain("T");   // name of the tree is the argument
-chain.Add("file1.root");
-chain.Add("file2.root");
-chain.Add("file3.root");
+   TChain chain("T");   // name of the tree is the argument
+   chain.Add("file1.root");
+   chain.Add("file2.root");
+   chain.Add("file3.root");
 ```
 
 The name of the **`TChain`** will be the same as the name of the tree;
@@ -3806,19 +3807,19 @@ by processing sequentially the three files of this chain, we can use the
 `TChain::Draw` method.
 
 ``` {.cpp}
-chain.Draw("x");
+   chain.Draw("x");
 ```
 
 When using a **`TChain`**, the branch address(es) must be set with:
 
 ``` {.cpp}
-chain.SetBranchAdress(branchname,...)  // use this for TChain
+   chain.SetBranchAdress(branchname,...)  // use this for TChain
 ```
 
 rather than:
 
 ``` {.cpp}
-branch->SetAddress(...);  // this will not work
+   branch->SetAddress(...);  // this will not work
 ```
 
 The second form returns the pointer to the branch of the current
@@ -3829,28 +3830,29 @@ loop on all events of all files of the chain.
 
 ``` {.cpp}
 {
-TChain chain("T");  // create the chain with tree "T"
-chain.Add("file1.root");  // add the files
-chain.Add("file2.root");
-chain.Add("file3.root");
-TH1F *hnseg = new TH1F("hnseg","Number of segments for selected tracks",
-5000,0,5000);
-// create an object before setting the branch address
-Event *event = new Event();
-// Specify the address where to read the event object
-chain.SetBranchAddress("event", &event);
-
+   TChain chain("T"); // create the chain with tree "T"
+   chain.Add("file1.root"); // add the files
+   chain.Add("file2.root");
+   chain.Add("file3.root");
+   TH1F *hnseg = new TH1F("hnseg",
+                          "Number of segments for selected tracks",
+                          5000,0,5000);
+   // create an object before setting the branch address
+   Event *event = new Event(); 
+   // Specify the address where to read the event object
+   chain.SetBranchAddress("event", &event);
+   
    // Start main loop on all events In case you want to read only a few 
    // branches, use TChain::SetBranchStatus to activate a branch.
-Int_t nevent = chain.GetEntries();
-for (Int_t i=0;i<nevent;i++) {
-// read complete accepted event in memory
-chain.GetEvent(i);
-// Fill histogram with number of segments
-hnseg->Fill(event->GetNseg());
-}
+   Int_t nevent = chain.GetEntries();
+   for (Int_t i=0;i<nevent;i++) {
+      // read complete accepted event in memory
+      chain.GetEvent(i); 
+      // Fill histogram with number of segments
+      hnseg->Fill(event->GetNseg()); 
+   }
    // Draw the histogram
-hnseg->Draw();
+   hnseg->Draw();
 }
 ```
 
@@ -3864,18 +3866,18 @@ retrieve the list of friends. The next example has four chains each has
 20 ROOT trees from 20 ROOT files.
 
 ``` {.cpp}
-TChain ch("t");    // a chain with 20 trees from 20 files
-TChain ch1("t1");  
-TChain ch2("t2");
-TChain ch3("t3");
+   TChain ch("t");    // a chain with 20 trees from 20 files
+   TChain ch1("t1");  
+   TChain ch2("t2");
+   TChain ch3("t3");
 ```
 
 Now we can add the friends to the first chain.
 
 ``` {.cpp}
-ch.AddFriend("t1")
-ch.AddFriend("t2")
-ch.AddFriend("t3")
+   ch.AddFriend("t1");
+   ch.AddFriend("t2");
+   ch.AddFriend("t3");
 ```
 
 The parameter is the name of friend chain (the name of a chain is always
@@ -3894,7 +3896,7 @@ a 3-d scatter plot of variable "`var`" in the `TChain ch` versus
 variable `v1 in `**`TChain t1` versus variable `v2` in `TChain`**` t2`.
 
 ``` {.cpp}
-ch.Draw("var:t1.v1:t2.v2");
+   ch.Draw("var:t1.v1:t2.v2");
 ```
 
 When a `TChain::Draw` is executed, an automatic call to
