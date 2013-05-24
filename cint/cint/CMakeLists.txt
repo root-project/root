@@ -117,6 +117,17 @@ endforeach()
 
 include_directories(src)
 
+#---Add defines for CINT limits------------------------------------------------------------------------------
+if(DEFINED CINTMAXSTRUCT)
+  add_definitions(-DG__MAXSTRUCT=${CINTMAXSTRUCT})
+endif()
+if(DEFINED CINTMAXTYPEDEF)
+  add_definitions(-DG__MAXTYPEDEF=${CINTMAXTYPEDEF})
+endif()
+if(DEFINED CINTLONGLINE)
+  add_definitions(-DG__LONGLINE=${CINTLONGLINE})
+endif()
+
 #---Define libraries and executables to be build------------------------------------------------------------
 
 add_definitions(-DG__HAVE_CONFIG -DG__NOMAKEINFO -DG__CINTBODY)
