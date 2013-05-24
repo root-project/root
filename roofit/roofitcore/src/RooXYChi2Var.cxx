@@ -381,7 +381,7 @@ Double_t RooXYChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_
 {
   // Calculate chi^2 in partition from firstEvent to lastEvent using given stepSize
 
-  Double_t result(0) ;
+  Double_t result(0), carry(0);
 
   // Loop over bins of dataset
   RooDataSet* xydata = (RooDataSet*) _dataClone ;
@@ -435,7 +435,11 @@ Double_t RooXYChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_
     }
 
     // Add chi2 term
-    result += eExt*eExt/(eInt*eInt+ eIntX2) ;
+    Double_t term = eExt*eExt/(eInt*eInt+ eIntX2);
+    Double_t y = term - carry;
+    Double_t t = result + y;
+    carry = (t - result) - y;
+    result = t;
   }
 
   return result ;

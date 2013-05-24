@@ -26,10 +26,10 @@ class RooLinkedListElem {
 public:
   // Initial element ctor
   RooLinkedListElem() :
-    _prev(0), _next(0), _arg(0), _refCount(0), _suc(0) {
+    _prev(0), _next(0), _arg(0), _refCount(0) {
   }
    
-  void init(TObject* arg, RooLinkedListElem* after=0, Int_t* suc=0) {
+  void init(TObject* arg, RooLinkedListElem* after=0) {
    _arg = arg ;
    _refCount = 1 ;
 
@@ -41,8 +41,6 @@ public:
        _next->_prev = this ;
      }     
    }
-   _suc = suc ;
-   (*_suc)++ ;
  }
  
  void release() {
@@ -50,17 +48,16 @@ public:
    if (_next) _next->_prev = _prev ;   
    _prev = 0 ;
    _next = 0 ;
-   (*_suc)-- ;
  }
 
   RooLinkedListElem(TObject* arg) : 
     // Constructor with payload
-    _prev(0), _next(0), _arg(arg), _refCount(1), _suc(0) {
+    _prev(0), _next(0), _arg(arg), _refCount(1) {
   }
 
   RooLinkedListElem(TObject* arg, RooLinkedListElem* after) : 
     // Constructor with payload and next chain element
-    _prev(after), _next(after->_next), _arg(arg), _refCount(1), _suc(0) {
+    _prev(after), _next(after->_next), _arg(arg), _refCount(1) {
 
     // Insert self in link
     after->_next = this ;
@@ -87,14 +84,13 @@ protected:
   RooLinkedListElem* _next ; // Link to next element in list
   TObject*   _arg ;          // Link to contents
   Int_t      _refCount ;     //! Reference count
-  Int_t*     _suc ; //! Store use count
 
 protected:
 
   // Forbidden
   RooLinkedListElem(const RooLinkedListElem&) ;
 
-  ClassDef(RooLinkedListElem,0) // Element of RooLinkedList container class
+  ClassDef(RooLinkedListElem,1) // Element of RooLinkedList container class
 } ;
 
 

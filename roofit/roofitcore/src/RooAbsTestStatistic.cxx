@@ -81,6 +81,7 @@ RooAbsTestStatistic::RooAbsTestStatistic()
   _verbose = kFALSE ;
   _doOffset = kFALSE ;
   _offset = 0 ;
+  _offsetCarry = 0;
 }
 
 
@@ -105,7 +106,8 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _mpfeArray(0),
   _mpinterl(interleave),
   _doOffset(kFALSE),
-  _offset(0)
+  _offset(0),
+  _offsetCarry(0)
 {
   // Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If
   // rangeName is not null, only events in the dataset inside the range will be used in the test
@@ -173,7 +175,8 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _mpfeArray(0),
   _mpinterl(other._mpinterl),
   _doOffset(other._doOffset),
-  _offset(other._offset)
+  _offset(other._offset),
+  _offsetCarry(other._offsetCarry)
 {
   // Copy constructor
 
@@ -685,6 +688,7 @@ void RooAbsTestStatistic::enableOffsetting(Bool_t flag)
     // Clear offset if feature is disabled to that it is recalculated next time it is enabled
     if (!_doOffset) {
       _offset = 0 ;
+      _offsetCarry = 0;
     }
     setValueDirty() ;
     break ;

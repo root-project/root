@@ -59,6 +59,9 @@ public:
   // Write current row
   virtual Int_t fill() ;
 
+  // reserve storage for nEvt entries
+  virtual void reserve(Int_t nEvt);
+
   // Retrieve a row
   using RooAbsDataStore::get ;
   virtual const RooArgSet* get(Int_t index) const ;
@@ -128,18 +131,18 @@ public:
 
   class RealVector {
   public:
-    RealVector(UInt_t initialCapacity=100) : 
+    RealVector(UInt_t initialCapacity=(4096 / sizeof(Double_t))) : 
       _nativeReal(0), _real(0), _buf(0), _nativeBuf(0), _vec0(0), _tracker(0), _nset(0) { 
-      _vec.reserve(initialCapacity) ; 
+      _vec.reserve(initialCapacity);
     }
 
-    RealVector(RooAbsReal* arg, UInt_t initialCapacity=100) : 
+    RealVector(RooAbsReal* arg, UInt_t initialCapacity=(4096 / sizeof(Double_t))) : 
       _nativeReal(arg), _real(0), _buf(0), _nativeBuf(0), _vec0(0), _tracker(0), _nset(0) { 
-      _vec.reserve(initialCapacity) ; 
+      _vec.reserve(initialCapacity);
     }
 
     virtual ~RealVector() {
-      if (_tracker) delete _tracker ;
+      delete _tracker;
       if (_nset) delete _nset ;
     }
 
@@ -157,14 +160,21 @@ public:
     }
 
     RealVector& operator=(const RealVector& other) {
-      if (&other==this) return *this ;
-      _nativeReal = other._nativeReal ;
-      _real = other._real ;
-      _buf = other._buf ;
-      _nativeBuf = other._nativeBuf ;
-      _vec = other._vec ;
-      _vec0 = _vec.size()>0 ? &_vec.front() : 0 ;
-      return *this ;
+      if (&other==this) return *this;
+      _nativeReal = other._nativeReal;
+      _real = other._real;
+      _buf = other._buf;
+      _nativeBuf = other._nativeBuf;
+      if (other._vec.size() <= _vec.capacity() / 2 && _vec.capacity() > (4096 / sizeof(Double_t))) {
+	std::vector<Double_t> tmp;
+	tmp.reserve(std::max(other._vec.size(), 4096 / sizeof(Double_t)));
+	tmp.assign(other._vec.begin(), other._vec.end());
+	_vec.swap(tmp);
+      } else {
+	_vec = other._vec;
+      }
+      _vec0 = _vec.size()>0 ? &_vec.front() : 0;
+      return *this;
     }
     
     void setNset(RooArgSet* newNset) { _nset = newNset ? new RooArgSet(*newNset) : 0 ; }
@@ -209,8 +219,10 @@ public:
     }
     
     void reset() { 
-      _vec.clear() ; 
-      _vec0 = 0;//&_vec.front() ;
+      // make sure the vector releases the underlying memory
+      std::vector<Double_t> tmp;
+      _vec.swap(tmp);
+      _vec0 = 0;
     }
 
     inline void get(Int_t idx) const { 
@@ -224,8 +236,24 @@ public:
     Int_t size() const { return _vec.size() ; }
 
     void resize(Int_t siz) {
-      _vec.resize(siz) ;
-      _vec0 = &_vec.front() ;
+      if (siz < Int_t(_vec.capacity()) / 2 && _vec.capacity() > (4096 / sizeof(Double_t))) {
+	// do an expensive copy, if we save at least a factor 2 in size
+	std::vector<Double_t> tmp;
+	tmp.reserve(std::max(siz, Int_t(4096 / sizeof(Double_t))));
+	if (!_vec.empty())
+	    tmp.assign(_vec.begin(), std::min(_vec.end(), _vec.begin() + siz));
+	if (Int_t(tmp.size()) != siz) 
+	    tmp.resize(siz);
+	_vec.swap(tmp);
+      } else {
+	_vec.resize(siz);
+      }
+      _vec0 = &_vec.front();
+    }
+
+    void reserve(Int_t siz) {
+      _vec.reserve(siz);
+      _vec0 = &_vec.front();
     }
 
   protected:
@@ -246,13 +274,13 @@ public:
 
   class RealFullVector : public RealVector {
   public:
-    RealFullVector(UInt_t initialCapacity=100) : RealVector(initialCapacity),
+    RealFullVector(UInt_t initialCapacity=(4096 / sizeof(Double_t))) : RealVector(initialCapacity),
       _bufE(0), _bufEL(0), _bufEH(0), 
       _nativeBufE(0), _nativeBufEL(0), _nativeBufEH(0), 
       _vecE(0), _vecEL(0), _vecEH(0) { 
     }
 
-    RealFullVector(RooAbsReal* arg, UInt_t initialCapacity=100) : 
+    RealFullVector(RooAbsReal* arg, UInt_t initialCapacity=(4096 / sizeof(Double_t))) : 
       RealVector(arg,initialCapacity), 
       _bufE(0), _bufEL(0), _bufEH(0), 
       _nativeBufE(0), _nativeBufEL(0), _nativeBufEH(0), 
@@ -282,18 +310,37 @@ public:
     }
 
     RealFullVector& operator=(const RealFullVector& other) {
-      if (&other==this) return *this ;
-      RealVector::operator=(other) ;
-      _bufE = other._bufE ;
-      _bufEL = other._bufEL ;
-      _bufEH = other._bufEH ;
-      _nativeBufE = other._nativeBufE ;
-      _nativeBufEL = other._nativeBufEL ;
-      _nativeBufEH = other._nativeBufEH ;
-      _vecE = other._vecE ? new std::vector<Double_t>(*other._vecE) : 0 ;
-      _vecEL = other._vecEL ? new std::vector<Double_t>(*other._vecEL) : 0 ;
-      _vecEH = other._vecEH ? new std::vector<Double_t>(*other._vecEH) : 0 ;
-      return *this ;
+      if (&other==this) return *this;
+      RealVector::operator=(other);
+      _bufE = other._bufE;
+      _bufEL = other._bufEL;
+      _bufEH = other._bufEH;
+      _nativeBufE = other._nativeBufE;
+      _nativeBufEL = other._nativeBufEL;
+      _nativeBufEH = other._nativeBufEH;
+      std::vector<Double_t>* src[3] = { other._vecE, other._vecEL, other._vecEH };
+      std::vector<Double_t>* dst[3] = { _vecE, _vecEL, _vecEH };
+      for (unsigned i = 0; i < 3; ++i) {
+	if (src[i]) {
+	  if (dst[i]) {
+	    if (dst[i]->size() <= src[i]->capacity() / 2 &&
+		src[i]->capacity() > (4096 / sizeof(Double_t))) {
+	      std::vector<Double_t> tmp;
+	      tmp.reserve(std::max(src[i]->size(), 4096 / sizeof(Double_t)));
+	      tmp.assign(src[i]->begin(), src[i]->end());
+	      dst[i]->swap(tmp);
+	    } else {
+	      *dst[i] = *src[i];
+	    }
+	  } else {
+	    dst[i] = new std::vector<Double_t>(*src[i]);
+	  }
+	} else {
+	  delete dst[i];
+	  dst[i] = 0;
+	}
+      }
+      return *this;
     }
     
     void setErrorBuffer(Double_t* newBuf) { 
@@ -343,10 +390,19 @@ public:
     }
     
     void reset() { 
-      RealVector::reset() ;
-      if (_vecE) _vecE->clear() ;
-      if (_vecEL) _vecEL->clear() ;
-      if (_vecEH) _vecEH->clear() ;
+      RealVector::reset();
+      if (_vecE) {
+	std::vector<Double_t> tmp;
+	_vecE->swap(tmp);
+      }
+      if (_vecEL) {
+	std::vector<Double_t> tmp;
+	_vecEL->swap(tmp);
+      }
+      if (_vecEH) {
+	std::vector<Double_t> tmp;
+	_vecEH->swap(tmp);
+      }
     }
 
     inline void get(Int_t idx) const { 
@@ -357,10 +413,33 @@ public:
     }
 
     void resize(Int_t siz) {
-      RealVector::resize(siz) ;
-      if (_vecE) _vecE->resize(siz) ;
-      if (_vecEL) _vecEL->resize(siz) ;
-      if (_vecEH) _vecEH->resize(siz) ;
+      RealVector::resize(siz);
+      std::vector<Double_t>* vlist[3] = { _vecE, _vecEL, _vecEH };
+      for (unsigned i = 0; i < 3; ++i) {
+	if (!vlist[i]) continue;
+	if (vlist[i]) {
+	  if (siz < Int_t(vlist[i]->capacity()) / 2 && vlist[i]->capacity() > (4096 / sizeof(Double_t))) {
+	    // if we gain a factor of 2 in memory, we copy and swap
+	    std::vector<Double_t> tmp;
+	    tmp.reserve(std::max(siz, Int_t(4096 / sizeof(Double_t))));
+	    if (!vlist[i]->empty())
+		tmp.assign(vlist[i]->begin(),
+			std::min(_vec.end(), _vec.begin() + siz));
+	    if (Int_t(tmp.size()) != siz) 
+		tmp.resize(siz);
+	    vlist[i]->swap(tmp);
+	  } else {
+	    vlist[i]->resize(siz);
+	  }
+	}
+      }
+    }
+
+    void reserve(Int_t siz) {
+      RealVector::reserve(siz);
+      if (_vecE) _vecE->reserve(siz);
+      if (_vecEL) _vecEL->reserve(siz);
+      if (_vecEH) _vecEH->reserve(siz);
     }
 
   private:
@@ -378,16 +457,16 @@ public:
 
   class CatVector {
   public:
-    CatVector(UInt_t initialCapacity=100) : 
+    CatVector(UInt_t initialCapacity=(4096 / sizeof(RooCatType))) : 
       _cat(0), _buf(0), _nativeBuf(0), _vec0(0)
     {
-      _vec.reserve(initialCapacity) ;
+      _vec.reserve(initialCapacity);
     }
 
-    CatVector(RooAbsCategory* cat, UInt_t initialCapacity=100) : 
+    CatVector(RooAbsCategory* cat, UInt_t initialCapacity=(4096 / sizeof(RooCatType))) : 
       _cat(cat), _buf(0), _nativeBuf(0), _vec0(0)
     {
-      _vec.reserve(initialCapacity) ;
+      _vec.reserve(initialCapacity);
     }
 
     virtual ~CatVector() {
@@ -400,13 +479,20 @@ public:
       }
 
     CatVector& operator=(const CatVector& other) {
-      if (&other==this) return *this ;
-      _cat = other._cat ;
-      _buf = other._buf ;
-      _nativeBuf = other._nativeBuf ;
-      _vec = other._vec ;
-      _vec0 = _vec.size()>0 ? &_vec.front() : 0 ;
-      return *this ;
+      if (&other==this) return *this;
+      _cat = other._cat;
+      _buf = other._buf;
+      _nativeBuf = other._nativeBuf;
+      if (other._vec.size() <= _vec.capacity() / 2 && _vec.capacity() > (4096 / sizeof(RooCatType))) {
+	std::vector<RooCatType> tmp;
+	tmp.reserve(std::max(other._vec.size(), 4096 / sizeof(RooCatType)));
+	tmp.assign(other._vec.begin(), other._vec.end());
+	_vec.swap(tmp);
+      } else {
+	_vec = other._vec;
+      }
+      _vec0 = _vec.size()>0 ? &_vec.front() : 0;
+      return *this;
     }
 
     void setBuffer(RooCatType* newBuf) { 
@@ -426,8 +512,10 @@ public:
       _vec[i]=*_buf ; 
     } ;
     void reset() { 
-      _vec.clear() ; 
-      _vec0 = 0;//&_vec.front() ;
+      // make sure the vector releases the underlying memory
+      std::vector<RooCatType> tmp;
+      _vec.swap(tmp);
+      _vec0 = 0;
     }
     inline void get(Int_t idx) const { 
       _buf->assignFast(*(_vec0+idx)) ;
@@ -438,13 +526,28 @@ public:
     Int_t size() const { return _vec.size() ; }
 
     void resize(Int_t siz) {
-      _vec.resize(siz) ;
-      _vec0 = &_vec.front() ;
+      if (siz < Int_t(_vec.capacity()) / 2 && _vec.capacity() > (4096 / sizeof(RooCatType))) {
+	// do an expensive copy, if we save at least a factor 2 in size
+	std::vector<RooCatType> tmp;
+	tmp.reserve(std::max(siz, Int_t(4096 / sizeof(RooCatType))));
+	if (!_vec.empty())
+	    tmp.assign(_vec.begin(), std::min(_vec.end(), _vec.begin() + siz));
+	if (Int_t(tmp.size()) != siz) 
+	    tmp.resize(siz);
+	_vec.swap(tmp);
+      } else {
+	_vec.resize(siz);
+      }
+      _vec0 = &_vec.front();
     }
 
-    void setBufArg(RooAbsCategory* arg) { _cat = arg ; }
-    const RooAbsCategory* bufArg() const { return _cat ; }
+    void reserve(Int_t siz) {
+      _vec.reserve(siz);
+      _vec0 = &_vec.front();
+    }
 
+    void setBufArg(RooAbsCategory* arg) { _cat = arg; }
+    const RooAbsCategory* bufArg() const { return _cat; }
 
   private:
     friend class RooVectorDataStore ;
@@ -625,6 +728,7 @@ public:
   RealFullVector** _firstRealF ; //! do not persist
   CatVector** _firstCat ; //! do not persist
   Double_t _sumWeight ; 
+  Double_t _sumWeightCarry;
 
   Double_t* _extWgtArray ;         //! External weight array
   Double_t* _extWgtErrLoArray ;    //! External weight array - low error
@@ -639,7 +743,7 @@ public:
   RooVectorDataStore* _cache ; //! Optimization cache
   RooAbsArg* _cacheOwner ; //! Cache owner
 
-  ClassDef(RooVectorDataStore,1) // STL-vector-based Data Storage class
+  ClassDef(RooVectorDataStore,2) // STL-vector-based Data Storage class
 };
 
 
