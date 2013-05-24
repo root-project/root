@@ -14,7 +14,7 @@ if(CASTOR_INCLUDE_DIR)
 endif()
 
 find_path(CASTOR_INCLUDE_DIR NAMES rfio_api.h PATHS 
-  $ENV{CASTOR_DIR}/include
+  $ENV{CASTOR_DIR}/include  ${CASTOR_DIR}/include
   /cern/pro/include
   /cern/new/include
   /cern/old/include
@@ -31,7 +31,7 @@ if(CASTOR_INCLUDE_DIR)
   string(REGEX REPLACE "BASEVERSION[ ]*[\"][ ]*([^ \"]+)" "\\1" CASTOR_VERSION ${cont})
 endif()
 
-set(locations  $ENV{CASTOR_DIR}/lib /cern/pro/lib /cern/new/lib /cern/old/lib 
+set(locations  $ENV{CASTOR_DIR}/lib ${CASTOR_DIR}/lib /cern/pro/lib /cern/new/lib /cern/old/lib
               /opt/shift/lib /usr/local/shift/lib
               /usr/lib/shift /usr/local/lib/shift /usr/lib64 /usr/lib /usr/local/lib)
 

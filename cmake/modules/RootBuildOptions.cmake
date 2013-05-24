@@ -76,7 +76,7 @@ ROOT_BUILD_OPTION(castor ON "CASTOR support, requires libshift from CASTOR >= 1.
 ROOT_BUILD_OPTION(chirp ON "Chirp support (Condor remote I/O), requires libchirp_client")
 ROOT_BUILD_OPTION(cintex ON "Build the libCintex Reflex interface library")
 ROOT_BUILD_OPTION(clarens ON "Clarens RPC support, optionally used by PROOF")
-ROOT_BUILD_OPTION(cling ON "Enable new CLING C++ interpreter")
+ROOT_BUILD_OPTION(cling OFF "Enable new CLING C++ interpreter")
 ROOT_BUILD_OPTION(cocoa OFF "Use native Cocoa/Quartz graphics backend (MacOS X only)")
 ROOT_BUILD_OPTION(dcache ON "dCache support, requires libdcap from DESY")
 ROOT_BUILD_OPTION(exceptions ON "Turn on compiler exception handling capability")
