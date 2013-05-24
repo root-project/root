@@ -1,5 +1,3 @@
-% User's Guide: ![](pictures/03000003.png)
-% 
-% June 2011
-
-
+% ROOT User's Guide
+% ![](pictures/03000003.png)
+% May 2013
