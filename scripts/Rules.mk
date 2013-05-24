@@ -651,10 +651,10 @@ ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 UTILS_LIBS =  $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf)
 
 $(ROOTTEST_LOC)scripts/utils_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/utils.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 || handleError.sh --result=$$?  --log=$(ROOTTEST_LOC)scripts/utils_cc.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/utils.cc\"\) > $(ROOTTEST_LOC)scripts/utils_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$?  --log=$(ROOTTEST_LOC)scripts/utils_cc.build.log
 
 $(ROOTTEST_LOC)scripts/recordtiming_cc.$(DllSuf) : $(ROOTTEST_LOC)scripts/recordtiming.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1 || handleError.sh --result=$$?  --log=$(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$(ROOTTEST_HOME)scripts/recordtiming.cc\"\) > $(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$?  --log=$(ROOTTEST_LOC)scripts/recordtiming_cc.build.log 
 
 override ROOTMAP = $(ROOT_LOC)/etc/system.rootmap
 
@@ -675,60 +675,60 @@ ifeq ($(PLATFORM),win32)
 endif
 
 %.o: %.C
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_C.build.log 2>&1 || handleError.sh --result=$$? --log=$*_o_C.build.log --test=$<  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_C.build.log --test=$<  
 
 %.o: %.cc
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cc.build.log 2>&1 || handleError.sh --result=$$? --log=$*_o_cc.build.log --test=$<  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cc.build.log --test=$<  
 
 %.o: %.cxx
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cxx.build.log 2>&1 || handleError.sh --result=$$? --log=$*_o_cxx.build.log --test=$<  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cxx.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cxx.build.log --test=$<  
 
 %.o: %.cpp
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cpp.build.log 2>&1 || handleError.sh --result=$$? --log=$*_o_cpp.build.log --test=$<  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cpp.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cpp.build.log --test=$<  
 
 %.$(ObjSuf): %.cc
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cc.build.log 2>&1 || handleError.sh --result=$$? --log=$*_o_cc.build.log --test=$<  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cc.build.log --test=$<  
 
 %.obj: %.C
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_C.build.log 2>&1 || handleError.sh --result=$$? --log=$*_obj_C.build.log --test=$<  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_C.build.log --test=$<  
 
 %.obj: %.cc
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cc.build.log 2>&1 || handleError.sh --result=$$? --log=$*_obj_cc.build.log --test=$<  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cc.build.log --test=$<  
 
 %.obj: %.cxx
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cxx.build.log 2>&1 || handleError.sh --result=$$? --log=$*_obj_cxx.build.log --test=$<  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cxx.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cxx.build.log --test=$<  
 
 %.obj: %.cpp
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log 2>&1 || handleError.sh --result=$$? --log=$*_obj_cpp.build.log --test=$<  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cpp.build.log --test=$<  
 
 %_cpp.$(DllSuf) : %.cpp $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || handleError.sh --result=$$? --log=$*_cpp.build.log 
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cpp.build.log 
 
 %_C.$(DllSuf) : %.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1 || handleError.sh --result=$$? --log=$*_C.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_C.build.log
 
 %_cxx.$(DllSuf) : %.cxx $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1 || handleError.sh --result=$$? --log=$*_cxx.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cxx.build.log
 
 %_cc.$(DllSuf) : %.cc $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cc.build.log 2>&1 || handleError.sh --result=$$? --log=$*_cc.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cc.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cc.build.log
 
 %_h.$(DllSuf) : %.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1 || handleError.sh --result=$$? --log=$*_h.build.log
+	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_h.build.log
 
    #( result=$$? ; cat $*_h.build.log ; exit $$result )
 
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=$<
 
 %.elog : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $*.log 2>$@ || handleError.sh --result=$$? --log=$@ --test=$<
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $*.log 2>$@ || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=$<
 
 assert%.elog : assert%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > assert$*.log 2>$@ || handleError.sh --result=$$? --log=$@ --test=$<
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > assert$*.log 2>$@ || handleError.sh --cmd='Execution of $<' --result=$$? --log=$@ --test=$<
 
 assert%.eclog : assert%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b assert$*.cxx+ > assert$*.log 2> $@ || handleError.sh --result=$$? --log=$@ --test=$<+ 
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b assert$*.cxx+ > assert$*.log 2> $@ || handleError.sh --cmd='Execution of assert$*.cxx+' --result=$$? --log=$@ --test=$<+ 
 
 $(subst .cxx,.success,$(ALL_ASSERT_CXX)) : assert%.success: assert%.eclog assert%.ref 
 	$(SuccessTestDiff) && touch $@
@@ -741,10 +741,10 @@ $(subst .cxx,,$(ALL_ASSERT_CXX)) : assert%: assert%.success
 $(subst .C,,$(ALL_ASSERT_C)) : assert%: assert%.success 
 
 exec%.log : exec%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$<  
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b $< > $@ 2>&1 || handleError.sh --cmd='Execution of $< > $@' --result=$$? --log=$@ --test=$<  
 
 exec%.clog : exec%_cxx.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b exec$*.cxx+ > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=exec$*.cxx+
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b exec$*.cxx+ > $@ 2>&1 || handleError.sh --cmd='Execution of exec$*.cxx+' --result=$$? --log=$@ --test=exec$*.cxx+
 
 $(subst .cxx,.success,$(ALL_EXEC_CXX)) : %.success: %.clog %.ref 
 	$(SuccessTestDiff) && touch $@
@@ -766,13 +766,13 @@ endif
 .PRECIOUS: %_C.$(DllSuf) 
 
 %.clog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=run$*.C+
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $@ 2>&1 || handleError.sh --cmd='Execution of run$*.C+' --result=$$? --log=$@ --test=run$*.C+
 
 %.celog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ || handleError.sh --result=$$? --log=$@ --test=run$*.C+
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ || handleError.sh --cmd='Execution of run$*.C+' --result=$$? --log=$@ --test=run$*.C+
 
 %.eclog : run%_C.$(DllSuf) $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ || handleError.sh --result=$$? --log=$@ --test=run$*.C+
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ || handleError.sh --cmd='Execution of run$*.C+' --result=$$? --log=$@ --test=run$*.C+
 
 %.neutral.clog: %.clog
 	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
@@ -810,8 +810,8 @@ define WarnFailTest
 endef
 
 ifneq ($(SUMMARY),)
-SUMMARYDIFF= > $(SUMMARY).$@.diff.log || handleError.sh --result=$$? --log=$(SUMMARY).$@.diff.log --test=$@
-SUMMARYDIFF_STAR= > $(SUMMARY).$*.diff.log || handleError.sh --result=$$? --log=$(SUMMARY).$*.diff.log --test=$*  
+SUMMARYDIFF= > $(SUMMARY).$@.diff.log || handleError.sh --cmd=diff --result=$$? --log=$(SUMMARY).$@.diff.log --test=$@
+SUMMARYDIFF_STAR= > $(SUMMARY).$*.diff.log || handleError.sh --cmd=diff --result=$$? --log=$(SUMMARY).$*.diff.log --test=$*  
 endif
 
 define TestDiffCintSpecific

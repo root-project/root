@@ -22,6 +22,7 @@ if test $# -gt 0 ; then
       --log=*) logfile=$optarg  ;;
       --test=*) testname=$optarg  ;;
       --rm=*) toremove=$optarg  ;;
+      --cmd=*) cmd=$optarg ;;
       *)  echo "Invalid option '$1'. Try $0 --help" ; exit 1 ;;
       esac
       shift
@@ -34,7 +35,15 @@ if [ "x$logfile" != "x" ] ; then
         echo "--- FAILING TEST: make -C $CALLDIR $testname" > $SUMMARY.$testname.summary
         cat $logfile >> $SUMMARY.$testname.summary
         if [ `grep -c "exited with error code: $result" $logfile` -eq 0 ] ; then 
-           echo "'root.exe -b -l -q $testname' exited with error code: $result" >> $SUMMARY.$testname.summary
+          if [ "$cmd" == "diff" ] ; then 
+            echo "diff command exited with error code: $result" >> $SUMMARY.$testname.summary
+          else 
+            if [ "x$cmd" != "x" ] ; then 
+              echo "'$cmd' exited with error code: $result" >> $SUMMARY.$testname.summary
+            else 
+              echo "'A command like root.exe -b -l -q $testname' exited with error code: $result" >> $SUMMARY.$testname.summary
+            fi
+          fi
         fi
      else 
         pid=$$
@@ -45,7 +54,15 @@ if [ "x$logfile" != "x" ] ; then
   fi
   cat $logfile
   if [ "x$testname" != "x" ] ; then
-     echo "'root.exe -b -l -q $testname' exited with error code: $result" >> $logfile
+     if [ "$cmd" == "diff" ] ; then 
+       echo "diff command exited with error code: $result" >> $logfile
+     else 
+       if [ "x$cmd" != "x" ] ; then 
+         echo "'$cmd' exited with error code: $result" >> $logfile
+       else 
+         echo "'A command like root.exe -b -l -q $testname' exited with error code: $result" >> $logfile
+       fi
+     fi
   fi
 fi
 if [ "x$toremove" != "x" ] ; then
