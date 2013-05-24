@@ -9,14 +9,18 @@ MDFILES=Cover.md Preface.md Introduction.md GettingStarted.md Histograms.md \
 OPTIONS=-s -S -f markdown --toc --chapters --number-sections
 OPTIONSHTML=-H css/github.css --mathjax
 OPTIONSEPUB=--mathml
-OPTIONSPDF=--variable=geometry:a4paper -V geometry:margin=1.5cm
+OPTIONSPDFA4=--variable=geometry:a4paper -V geometry:margin=1.5cm
+OPTIONSPDFLETTER=--variable=geometry:letterpaper -V geometry:margin=1.5cm
 
-.PHONY: pdf html tex epub
+.PHONY: pdfa4 html tex epub
 
-all: pdf html tex epub
+all: pdfa4 pdfletter html tex epub
 
-pdf: $(MDFILES)
-	pandoc $(OPTIONS) $(OPTIONSPDF) $(MDFILES) -o ROOTUsersGuide.pdf
+pdfa4: $(MDFILES)
+	pandoc $(OPTIONS) $(OPTIONSPDFA4) $(MDFILES) -o ROOTUsersGuide.pdf
+
+pdfletter: $(MDFILES)
+	pandoc $(OPTIONS) $(OPTIONSPDFLETTER) $(MDFILES) -o ROOTUsersGuideLetter.pdf
 
 html: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) -o ROOTUsersGuide.html
@@ -29,4 +33,4 @@ epub: $(MDFILES) metadata.xml title.txt
 	   title.txt $(MDFILES) -o ROOTUsersGuide.epub
 
 clean:
-	rm -f ROOTUsersGuide.pdf ROOTUsersGuide.html ROOTUsersGuide.tex ROOTUsersGuide.epub
+	rm -f ROOTUsersGuide.pdf ROOTUsersGuideLetter.pdf ROOTUsersGuide.html ROOTUsersGuide.tex ROOTUsersGuide.epub
