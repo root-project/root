@@ -7,14 +7,18 @@ OPTIONS=-s -S -f markdown --toc --chapters --number-sections \
         --bibliography=bibliography.bib
 OPTIONSHTML=-H css/github.css --mathjax
 OPTIONSEPUB=--mathml --epub-cover-image=figures/cover.png
-OPTIONSPDF=--variable=geometry:a4paper -V geometry:margin=1.5cm
+OPTIONSPDFA4=--variable=geometry:a4paper -V geometry:margin=1.5cm
+OPTIONSPDFLETTER=--variable=geometry:letterpaper -V geometry:margin=1.5cm
 
-.PHONY: pdf html tex epub
+.PHONY: pdfa4 pdfletter html tex epub
 
-all: pdf html tex epub
+all: pdfa4 pdfletter html tex epub
 
-pdf: $(MDFILES) bibliography.bib
-	pandoc $(OPTIONS) $(OPTIONSPDF) $(MDFILES) -o ROOTPrimer.pdf
+pdfa4: $(MDFILES) bibliography.bib
+	pandoc $(OPTIONS) $(OPTIONSPDFA4) $(MDFILES) -o ROOTPrimer.pdf
+
+pdfletter: $(MDFILES) bibliography.bib
+	pandoc $(OPTIONS) $(OPTIONSPDFLETTER) $(MDFILES) -o ROOTPrimerLetter.pdf
 
 html: $(MDFILES) bibliography.bib
 	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) -o ROOTPrimer.html

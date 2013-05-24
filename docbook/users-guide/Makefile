@@ -12,7 +12,7 @@ OPTIONSEPUB=--mathml
 OPTIONSPDFA4=--variable=geometry:a4paper -V geometry:margin=1.5cm
 OPTIONSPDFLETTER=--variable=geometry:letterpaper -V geometry:margin=1.5cm
 
-.PHONY: pdfa4 html tex epub
+.PHONY: pdfa4 pdfletter html tex epub
 
 all: pdfa4 pdfletter html tex epub
 
