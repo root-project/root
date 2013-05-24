@@ -2983,7 +2983,7 @@ graphical editor facility provides dedicated GUI.
 Tranparency is very useful with parallel coordinates plots. It alows to 
 show cleraly the clusters.
 
-![Parallel Coordinates graphical and transparency.](pictures/para14.png)
+![Parallel Coordinates with transparency.](pictures/para14.png)
 
 
 

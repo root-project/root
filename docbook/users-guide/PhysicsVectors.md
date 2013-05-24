@@ -45,15 +45,15 @@ CLHEP translation.
 class, which can be used for description of different vectors in 3D.
 Components of three vectors:
 
-`x`, `y`, `z` - basic components
+- $x$, $y$, $z$ = basic components
 
-= azimuth angle
+- $\theta$ = azimuth angle
 
-= polar angle
+- $\phi$ = polar angle
 
-`magnitude` = `mag` = `sqrt`(`x`2 + `y`2 + `z`2)
+- magnitude = $mag$ = $\sqrt{x^2 + y^2 + z^2}$
 
-`transverse component` = `perp` = `sqrt`(`x`2 + `y`2)
+- transverse component = $perp$ = $\sqrt{x^2 + y^2}$
 
 Using the **`TVector3`** class, you should remember that it contains
 only common features of three vectors and lacks methods specific for
@@ -164,9 +164,9 @@ v2 = v1.Orthogonal();  // get vector orthogonal to v1
 
 
 ``` {.cpp}
-s = v1.Dot(v2);// scalar product
-s = v1 * v2;// scalar product
-v = v1.Cross(v2);// vector product
+s = v1.Dot(v2);   // scalar product
+s = v1 * v2;      // scalar product
+v = v1.Cross(v2); // vector product
 ```
 
 ### Angle between Two Vectors
@@ -225,7 +225,13 @@ v1.RotateUz(direction);      // direction must be TVector3 of unit length
 The **`TRotation`** class describes a rotation of **`TVector3`** object.
 It is a 3 \* 3 matrix of `Double_t`:
 
-![](pictures/080001AA.png)
+$$\left|
+\begin{array}{ccc}
+         xx &  xy  & xz \\ 
+         yx &  yy  & yz \\ 
+         zx &  zy  & zz    
+         \end{array}
+\right|$$
 
 It describes a so-called active rotation, i.e. a rotation of objects
 inside a static system of coordinates. In case you want to rotate the
@@ -241,7 +247,7 @@ the axis.
 
 ``` {.cpp}
 TRotation r;        // r initialized as identity
-TRotation m(r); // m = r
+TRotation m(r);     // m = r
 ```
 
 There is no direct way to set the matrix elements - to ensure that a
@@ -249,10 +255,10 @@ There is no direct way to set the matrix elements - to ensure that a
 values by with the methods `XX()..ZZ()` or the `(,)` operator:
 
 ``` {.cpp}
-Double_t xx = r.XX();// the same as xx=r(0,0)
+Double_t xx = r.XX();           // the same as xx=r(0,0)
 xx = r(0,0);
-if (r==m) {...}// test for equality
-if (r!=m) {..}// test for inequality
+if (r==m) {...}                 // test for equality
+if (r!=m) {..}                  // test for inequality
 if (r.IsIdentity()) {...}       // test for identity
 ```
 
