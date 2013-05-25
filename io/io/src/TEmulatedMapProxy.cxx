@@ -80,7 +80,7 @@ UInt_t TEmulatedMapProxy::Size() const
    return 0;
 }
 
-void TEmulatedMapProxy::ReadMap(int nElements, TBuffer &b)
+void TEmulatedMapProxy::ReadMap(UInt_t nElements, TBuffer &b)
 {
    // Map input streamer.
    Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
@@ -144,7 +144,7 @@ void TEmulatedMapProxy::ReadMap(int nElements, TBuffer &b)
    }
 }
 
-void TEmulatedMapProxy::WriteMap(int nElements, TBuffer &b)
+void TEmulatedMapProxy::WriteMap(UInt_t nElements, TBuffer &b)
 {
    // Map output streamer.
    Value  *v, *val[2] = { fKey, fVal };
@@ -231,7 +231,7 @@ void TEmulatedMapProxy::Streamer(TBuffer &b)
 {
    // TClassStreamer IO overload.
    if ( b.IsReading() ) {  //Read mode
-      int nElements = 0;
+      UInt_t nElements = 0;
       b >> nElements;
       if ( fEnv->fObject )  {
          Resize(nElements,true);
@@ -241,7 +241,7 @@ void TEmulatedMapProxy::Streamer(TBuffer &b)
       }
    }
    else {     // Write case
-      int nElements = fEnv->fObject ? Size() : 0;
+      UInt_t nElements = fEnv->fObject ? Size() : 0;
       b << nElements;
       if ( nElements > 0 )  {
          WriteMap(nElements, b);
