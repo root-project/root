@@ -84,7 +84,8 @@ void TEmulatedMapProxy::ReadMap(UInt_t nElements, TBuffer &b)
 {
    // Map input streamer.
    Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion()<=3;
-   int    idx, loop, off[2] = {0, fValOffset };
+   UInt_t idx, loop;
+   Int_t off[2] = {0, fValOffset };
    Value  *v, *val[2] = { fKey, fVal };
    StreamHelper* helper;
    float f;
@@ -152,7 +153,7 @@ void TEmulatedMapProxy::WriteMap(UInt_t nElements, TBuffer &b)
    StreamHelper* i;
    char* addr = 0;
    char* temp = (char*)At(0);
-   for (int loop, idx = 0; idx < nElements; ++idx )  {
+   for (UInt_t loop, idx = 0; idx < nElements; ++idx )  {
       addr = temp + idx*fValDiff;
       for ( loop = 0; loop<2; ++loop )  {
          addr += off[loop];
