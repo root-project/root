@@ -246,8 +246,8 @@ the axis.
 
 
 ``` {.cpp}
-TRotation r;        // r initialized as identity
-TRotation m(r);     // m = r
+   TRotation r;        // r initialized as identity
+   TRotation m(r);     // m = r
 ```
 
 There is no direct way to set the matrix elements - to ensure that a
@@ -255,11 +255,11 @@ There is no direct way to set the matrix elements - to ensure that a
 values by with the methods `XX()..ZZ()` or the `(,)` operator:
 
 ``` {.cpp}
-Double_t xx = r.XX();           // the same as xx=r(0,0)
-xx = r(0,0);
-if (r==m) {...}                 // test for equality
-if (r!=m) {..}                  // test for inequality
-if (r.IsIdentity()) {...}       // test for identity
+   Double_t xx = r.XX();           // the same as xx=r(0,0)
+   xx = r(0,0);
+   if (r==m) {...}                 // test for equality
+   if (r!=m) {..}                  // test for inequality
+   if (r.IsIdentity()) {...}       // test for identity
 ```
 
 ### Rotation around Axes
@@ -269,11 +269,32 @@ The following matrices describe counter-clockwise rotations around the
 coordinate axes and are implemented in: `RotateX()`,` RotateY()` and
 `RotateZ()`:
 
-![](pictures/080001AB.png) ![](pictures/080001AC.png)
-![](pictures/080001AD.png)
+$$
+Rx(a) = \left|
+\begin{array}{ccc}
+         1 &  0       & 0 \\ 
+         0 &  cos(a)  & -sin(a) \\ 
+         0 &  sin(a)  & cos(a)    
+         \end{array}
+\right|
+Ry(a) = \left|
+\begin{array}{ccc}
+         cos(a)  &  0  & sin(a) \\ 
+              0  &  1  & 0 \\ 
+         -sin(a) &  0  & cos(a)    
+         \end{array}
+\right|
+Rz(a) = \left|
+\begin{array}{ccc}
+         cos(a)  &  -sin(a)  & 0 \\ 
+         sin(a)  &   cos(a)  & 0 \\ 
+              0  &  0        & 1    
+         \end{array}
+\right|
+$$
 
 ``` {.cpp}
-r.RotateX(TMath::Pi()); // rotation around the x-axis
+   r.RotateX(TMath::Pi()); // rotation around the x-axis
 ```
 
 ### Rotation around Arbitrary Axis
@@ -283,16 +304,16 @@ The `Rotate(``)` method allows you to rotate around an arbitrary vector
 (not necessary a unit one) and returns the result.
 
 ``` {.cpp}
-r.Rotate(TMath::Pi()/3,TVector3(3,4,5));
+   r.Rotate(TMath::Pi()/3,TVector3(3,4,5));
 ```
 
 It is possible to find a unit vector and an angle, which describe the
 same rotation as the current one:
 
 ``` {.cpp}
-Double_t angle;
-TVector3 axis;
-r.GetAngleAxis(angle,axis);
+   Double_t angle;
+   TVector3 axis;
+   r.GetAngleAxis(angle,axis);
 ```
 
 ### Rotation of Local Axes
@@ -302,30 +323,30 @@ The `RotateAxes()method` adds a rotation of local axes to the current
 rotation and returns the result:
 
 ``` {.cpp}
-TVector3 newX(0,1,0);
-TVector3 newY(0,0,1);
-TVector3 newZ(1,0,0);
-a.RotateAxes(newX,newX,newZ);
+   TVector3 newX(0,1,0);
+   TVector3 newY(0,0,1);
+   TVector3 newZ(1,0,0);
+   a.RotateAxes(newX,newX,newZ);
 ```
 
 Methods `ThetaX()`, `ThetaY()`, `ThetaZ()`, `PhiX()`, `PhiY()`, `PhiZ()`
 return azimuth and polar angles of the rotated axes:
 
 ``` {.cpp}
-Double_t tx,ty,tz,px,py,pz;
-tx= a.ThetaX();
+   Double_t tx,ty,tz,px,py,pz;
+   tx= a.ThetaX();
 ...
-pz= a.PhiZ();
+   pz= a.PhiZ();
 ```
 
 ### Inverse Rotation
 
 
 ``` {.cpp}
-TRotation a,b;
+   TRotation a,b;
 ...
-b = a.Inverse();// b is inverse of a, a is unchanged
-b = a.Invert();// invert a and set b = a
+   b = a.Inverse();// b is inverse of a, a is unchanged
+   b = a.Invert();// invert a and set b = a
 ```
 
 ### Compound Rotations
@@ -337,7 +358,7 @@ the two consecutive rotations. Therefore, the second rotation should be
 placed first:
 
 ``` {.cpp}
-r = r2 * r1;
+   r = r2 * r1;
 ```
 
 ### Rotation of TVector3
@@ -347,21 +368,46 @@ The **`TRotation`** class provides an `operator *` which allows
 expressing a rotation of a **`TVector3`** analog to the mathematical
 notation:
 
-![](pictures/080001AE.png)
+$$
+\left|
+\begin{array}{c}
+         x' \\
+         y' \\ 
+         z'   
+         \end{array}
+\right|
+=
+\left|
+\begin{array}{ccc}
+         xx  &  xy  & xz \\ 
+         yx  &  yy  & yz \\ 
+         zx  &  zy  & zz    
+         \end{array}
+\right|
+\times
+\left|
+\begin{array}{c}
+         x \\
+         y \\ 
+         z   
+         \end{array}
+\right|
+$$
+
 
 ``` {.cpp}
-TRotation r;
-TVector3 v(1,1,1);
-v = r * v;
+   TRotation r;
+   TVector3 v(1,1,1);
+   v = r * v;
 ```
 
 You can also use the `Transform()` method or the `operator *=` of the
 **`TVector3`** class:
 
 ``` {.cpp}
-TVector3 v;
-TRotation r;
-v.Transform(r);
+   TVector3 v;
+   TRotation r;
+   v.Transform(r);
 ```
 
 ## TLorentzVector
@@ -399,36 +445,36 @@ of position and time and the second set is more relevant where
 **`TLorentzVector`** describes momentum and energy:
 
 ``` {.cpp}
-Double_t xx =v.X();
+   Double_t xx =v.X();
 ...
-Double_t tt = v.T();
-Double_t px = v.Px();
+   Double_t tt = v.T();
+   Double_t px = v.Px();
 ...
-Double_t ee = v.E();
+   Double_t ee = v.E();
 ```
 
 The components of **`TLorentzVector`** can also accessed by index:
 
 ``` {.cpp}
-xx = v(0);orxx = v[0];
-yy = v(1);yy = v[1];
-zz = v(2);zz = v[2];
-tt = v(3);tt = v[3];
+   xx = v(0);orxx = v[0];
+   yy = v(1);yy = v[1];
+   zz = v(2);zz = v[2];
+   tt = v(3);tt = v[3];
 ```
 
 You can use the `Vect()` method to get the vector component of
 **`TLorentzVector`**:
 
 ``` {.cpp}
-TVector3 p = v.Vect();
+   TVector3 p = v.Vect();
 ```
 
 For setting components there are two methods: `SetX(),.., SetPx(),..:`
 
 ``` {.cpp}
-v.SetX(1.); orv.SetPx(1.);
+   v.SetX(1.); orv.SetPx(1.);
 ......
-v.SetT(1.);v.SetE(1.);
+   v.SetT(1.);v.SetE(1.);
 ```
 
 To set more the one component by one call you can use the `SetVect()`
@@ -436,10 +482,10 @@ function for the **`TVector3`** part or `SetXYZT()`, `SetPxPyPzE()`. For
 convenience there is also a `SetXYZM()`:
 
 ``` {.cpp}
-v.SetVect(TVector3(1,2,3));
-v.SetXYZT(x,y,z,t);
-v.SetPxPyPzE(px,py,pz,e);
-v.SetXYZM(x,y,z,m);   // v = (x,y,z,e = Sqrt(x*x+y*y+z*z+m*m))
+   v.SetVect(TVector3(1,2,3));
+   v.SetXYZT(x,y,z,t);
+   v.SetPxPyPzE(px,py,pz,e);
+   v.SetXYZM(x,y,z,m);   // v = (x,y,z,e = Sqrt(x*x+y*y+z*z+m*m))
 ```
 
 ### Vector Components in Non-Cartesian Coordinates
@@ -449,24 +495,25 @@ There are a couple of methods to get and set the **`TVector3`** part of
 the parameters in `spherical` coordinate systems:
 
 ``` {.cpp}
-Double_t m, theta, cost, phi, pp, pp2, ppv2, pp2v2;
-m = v.Rho();
-t = v.Theta();
-cost = v.CosTheta();
-phi  = v.Phi();
-v.SetRho(10.);
-v.SetTheta(TMath::Pi()*.3);
-v.SetPhi(TMath::Pi());
+   Double_t m, theta, cost, phi, pp, pp2, ppv2, pp2v2;
+   m = v.Rho();
+   t = v.Theta();
+   cost = v.CosTheta();
+   phi  = v.Phi();
+   v.SetRho(10.);
+   v.SetTheta(TMath::Pi()*.3);
+   v.SetPhi(TMath::Pi());
 ```
 
 or get information about the r-coordinate in cylindrical systems:
 
 ``` {.cpp}
-Double_t pp, pp2, ppv2, pp2v2;
-pp   = v.Perp();   // get transverse component
-pp2  = v.Perp2();   // get transverse component squared
-ppv2 = v.Perp(v1);   // get transverse component with respect to another vector
-pp2v2 = v.Perp(v1);
+   Double_t pp, pp2, ppv2, pp2v2;
+   pp   = v.Perp();     // get transverse component
+   pp2  = v.Perp2();    // get transverse component squared
+   ppv2 = v.Perp(v1);   // get transverse component with respect
+                        // to another vector
+   pp2v2 = v.Perp(v1);
 ```
 
 there are two more set functions `SetPtEtaPhiE(pt,eta,phi,e)` and
@@ -479,13 +526,13 @@ The **`TLorentzVector`** class provides operators to add subtract or
 compare four-vectors:
 
 ``` {.cpp}
-v3 = -v1;
-v1 = v2+v3;
-v1+= v3;
-v1 = v2 + v3;
-v1-= v3;
-if(v1 == v2) {...}
-if(v1 != v3) {...}
+   v3 = -v1;
+   v1 = v2+v3;
+   v1+= v3;
+   v1 = v2 + v3;
+   v1-= v3;
+   if (v1 == v2) {...}
+   if (v1 != v3) {...}
 ```
 
 ### Magnitude/Invariant mass, beta, gamma, scalar product
@@ -503,11 +550,11 @@ The magnitude squared `mag2` of a four-vector is therefore:
 If `mag2` is negative: **`mag = -Sqrt(-mag*mag)`**. The methods are:
 
 ``` {.cpp}
-Double_t s, s2;
-s  = v1.Dot(v2);// scalar product
-s  = v1*v2;// scalar product
-s2 = v.Mag2();ors2 = v.M2();
-s  = v.Mag();s  = v.M();
+   Double_t s, s2;
+   s  = v1.Dot(v2);// scalar product
+   s  = v1*v2;// scalar product
+   s2 = v.Mag2();ors2 = v.M2();
+   s  = v.Mag();s  = v.M();
 ```
 
 Since in case of momentum and energy the magnitude has the meaning of
@@ -534,10 +581,10 @@ to the original frame. `BoostVector()` returns a **`TVector3`** of the
 spatial components divided by the time component:
 
 ``` {.cpp}
-TVector3 b;
-v.Boost(bx,by,bz);
-v.Boost(b);
-b = v.BoostVector();// b=(x/t,y/t,z/t)
+   TVector3 b;
+   v.Boost(bx,by,bz);
+   v.Boost(b);
+   b = v.BoostVector();// b=(x/t,y/t,z/t)
 ```
 
 ### Rotations
@@ -549,28 +596,28 @@ of a **`TLorentzVector`**:
 Around Axes:
 
 ``` {.cpp}
-v.RotateX(TMath::Pi()/2.);
-v.RotateY(.5);
-v.RotateZ(.99);
+   v.RotateX(TMath::Pi()/2.);
+   v.RotateY(.5);
+   v.RotateZ(.99);
 ```
 
 Around an arbitrary axis:
 
 ``` {.cpp}
-v.Rotate(TMath::Pi()/4., v1); // rotation around v1
+   v.Rotate(TMath::Pi()/4., v1); // rotation around v1
 ```
 
 Transformation from rotated frame:
 
 ``` {.cpp}
-v.RotateUz(direction); // direction must be a unit TVector3
+   v.RotateUz(direction); // direction must be a unit TVector3
 ```
 
 Rotation by **`TRotation`**:
 
 ``` {.cpp}
-TRotation r;
-v.Transform(r);//or v *= r;  (v = r*v)
+   TRotation r;
+   v.Transform(r);//or v *= r;  (v = r*v)
 ```
 
 ### Miscellaneous
@@ -579,15 +626,15 @@ v.Transform(r);//or v *= r;  (v = r*v)
 Angle between two vectors:
 
 ``` {.cpp}
-Double_t a = v1.Angle(v2);// get angle between v1 and v2
+   Double_t a = v1.Angle(v2);// get angle between v1 and v2
 ```
 
 Methods `Plus()` and `Minus()` return the positive and negative
 light-cone components:
 
 ``` {.cpp}
-Double_t pcone = v.Plus();
-Double_t mcone = v.Minus();
+   Double_t pcone = v.Plus();
+   Double_t mcone = v.Minus();
 ```
 
 A general Lorentz transformation (see class `TLorentzRotation)` can be
@@ -595,9 +642,9 @@ used by the `Transform()` method, the `*=, or *` operator of the
 **`TLorentzRotation`** class:
 
 ``` {.cpp}
-TLorentzRotation l;
-v.Transform(l);
-v = l*v;orv *= l;// v = l*v
+   TLorentzRotation l;
+   v.Transform(l);
+   v = l*v;orv *= l;// v = l*v
 ```
 
 ## TLorentzRotation
@@ -606,7 +653,17 @@ v = l*v;orv *= l;// v = l*v
 The **`TLorentzRotation`** class describes Lorentz transformations
 including Lorentz boosts and rotations (see **`TRotation`**)
 
-![](pictures/080001AF.png)
+$$
+lambda =
+\left|
+\begin{array}{cccc}
+         xx  &  xy  & xz & xt \\ 
+         yx  &  yy  & yz & yt \\ 
+         zx  &  zy  & zz & zt \\
+         tx  &  ty  & tz & tt
+\end{array}
+\right|
+$$
 
 ### Declaration
 
@@ -616,24 +673,27 @@ initialized by other **`TLorentzRotation`**, by a pure **`TRotation`**
 or by a boost:
 
 ``` {.cpp}
-TLorentzRotation l;   // l is initialized as identity
-TLorentzRotation m(l);// m = l
-TRotation r;
-TLorentzRotation lr(r);
-TLorentzRotation lb1(bx,by,bz);
-TVector3 b;
-TLorentzRotation lb2(b);
+   TLorentzRotation l;   // l is initialized as identity
+   TLorentzRotation m(l);// m = l
+   TRotation r;
+   TLorentzRotation lr(r);
+   TLorentzRotation lb1(bx,by,bz);
+   TVector3 b;
+   TLorentzRotation lb2(b);
 ```
 
 The Matrix for a Lorentz boosts is:
 
-` |1+gamma'*bx*bx     gamma'*bx*by     gamma'*bx*bz   gamma*bx | `
-
-` |  gamma'*bx*bz   1+gamma'*by*by     gamma'*by*by   gamma*by | `
-
-` |  gamma'*bz*bx     gamma'*bz*by   1+gamma'*bz*bz   gamma*bz | `
-
-` |  gamma*bx         gamma*by         gamma*bz       gamma    | `
+$$
+\left|
+\begin{array}{cccc}
+1+gamma'*bx*bx &    gamma'*bx*by &    gamma'*bx*bz  & gamma*bx \\
+  gamma'*bx*bz &  1+gamma'*by*by &    gamma'*by*by  & gamma*by \\
+  gamma'*bz*bx &    gamma'*bz*by &  1+gamma'*bz*bz  & gamma*bz \\
+  gamma*bx     &    gamma*by     &    gamma*bz      & gamma
+\end{array}
+\right|
+$$
 
 with the boost vector `b=(bx,by,bz)`;
 `gamma=1/Sqrt(1-beta*beta)`;` gamma'=(gamma-1)/beta*beta.`
@@ -645,13 +705,13 @@ The access to the matrix components is possible with the methods `XX()`,
 `XY()` ... `TT()`, and with the operator` (int,int)`:
 
 ``` {.cpp}
-Double_t xx;
-TLorentzRotation l;
-xx = l.XX();// gets the xx component
-xx = l(0,0);// gets the xx component
-if (l == m) {...}// test for equality
-if (l != m) {...}// test for inequality
-if (l.IsIdentity()) {...} // test for identity
+   Double_t xx;
+   TLorentzRotation l;
+   xx = l.XX();              // gets the xx component
+   xx = l(0,0);              // gets the xx component
+   if (l == m) {...}         // test for equality
+   if (l != m) {...}         // test for inequality
+   if (l.IsIdentity()) {...} // test for identity
 ```
 
 ### Transformations of a Lorentz Rotation
@@ -661,29 +721,29 @@ There are four possibilities to find the product of two
 **`TLorentzRotation`** transformations:
 
 ``` {.cpp}
-TLorentzRotation a,b,c;
-c = b*a;// product
-c = a.MatrixMultiplication(b);// a is unchanged
-a *= b;// a=a*b
-c = a.Transform(b)// a=b*a then c=a
+   TLorentzRotation a,b,c;
+   c = b*a;                       // product
+   c = a.MatrixMultiplication(b); // a is unchanged
+   a *= b;                        // a=a*b
+   c = a.Transform(b)             // a=b*a then c=a
 ```
 
 Lorentz boosts:
 
 ``` {.cpp}
-Double_t bx, by, bz;
-TVector3 v(bx,by,bz);
-TLorentzRotation l;
-l.Boost(v);
-l.Boost(bx,by,bz);
+   Double_t bx, by, bz;
+   TVector3 v(bx,by,bz);
+   TLorentzRotation l;
+   l.Boost(v);
+   l.Boost(bx,by,bz);
 ```
 
 Rotations:
 
 ``` {.cpp}
-TVector3 axis;
-l.RotateX(TMath::Pi());// rotation around x-axis
-l.Rotate(.5,axis);// rotation around specified vector
+   TVector3 axis;
+   l.RotateX(TMath::Pi()); // rotation around x-axis
+   l.Rotate(.5,axis);      // rotation around specified vector
 ```
 
 Inverse transformation: use the method `Inverse() `to return the inverse
@@ -691,14 +751,23 @@ transformation keeping the current one unchanged`.` The method
 `Invert()` inverts the current **`TLorentzRotation`**:
 
 ``` {.cpp}
-l1 = l2.Inverse();// l1 is inverse of l2, l2 unchanged
-l1 = l2.Invert();// invert l2, then  l1=l2
+   l1 = l2.Inverse(); // l1 is inverse of l2, l2 unchanged
+   l1 = l2.Invert();  // invert l2, then  l1=l2
 ```
 
 The matrix for the inverse transformation of a **`TLorentzRotation`** is
 as follows:
 
-![](pictures/080001B0.png)
+$$
+\left|
+\begin{array}{cccc}
+         xx  &  xy  & xz & -tx \\ 
+         yx  &  yy  & yz & -ty \\ 
+         zx  &  zy  & zz & -tz \\
+         -xt  &  -yt  & -zt & tt
+\end{array}
+\right|
+$$
 
 ### Transformation of a TLorentzVector
 
@@ -709,13 +778,13 @@ also use the `Transform()` function and the `*= `operator of the class
 **`TLorentzVector`**.
 
 ``` {.cpp}
-TLorentzVector v;
-TLorentzRotation l;
+   TLorentzVector v;
+   TLorentzRotation l;
 ...
-v=l.VectorMultiplication(v);
-v = l * v;
-v.Transform(l);
-v *= l;            // v = l*v
+   v = l.VectorMultiplication(v);
+   v = l * v;
+   v.Transform(l);
+   v *= l;            // v = l*v
 ```
 
 ### Physics Vector Example
@@ -733,7 +802,7 @@ root[] .x TestVectors.cxx
 To load the physics vector library in a ROOT application use:
 
 ``` {.cpp}
-gSystem->Load("libPhysics");
+   gSystem->Load("libPhysics");
 ```
 
 The example `$ROOTSYS/test/TestVectors.cxx` does not return much,
