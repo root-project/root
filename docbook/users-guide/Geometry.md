@@ -136,10 +136,10 @@ by using lines like:
 
 ``` {.cpp}
 TGeoVolume *someVolume = gGeoManager->MakeXXX("someName",
-ptrMedium, /* parameters coresponding to 
+ptrMedium, /* parameters coresponding to XXX ...*/)
 ```
 
-In the method above ***`XXX`*** represent some shape name (Box, Tube,
+In the method above **`XXX`** represent some shape name (Box, Tube,
 etc.). This is just a simple way of creating a volume having a given
 shape in one-step (see also section: "Creating and Positioning
 Volumes"). As for REPLICA and ROOT volumes, they are just some
@@ -236,42 +236,29 @@ be performed both at view (no volume selected) and volume level.
 **`TView`** (mouse not selecting any volume):
 
 -   Click-and-drag rotates the view.
-
 -   Pressing some keys perform different actions:
-
 -   J/K - zoom / unzoom
-
 -   H, L, U, I - move the viewpoint
-
 -   Right click + `SetParallel` `()/SetPerspective` `()` - switch from
     parallel to perspective view.
-
 -   Right click + `ShowAxis()` - show coordinate axes.
-
 -   Right click + `Centered/Left/Side/Top` - change view direction.
 
 **`TGeoVolume`** (mouse selecting a volume):
 
 -   Double click will focus the corresponding volume.
-
 -   Right click + `CheckOverlaps()` - run overlap checker on current
     volume.
-
 -   Right click + `Draw` `()` - draw that volume according current
     global visualization options
-
 -   Right click + `DrawOnly()`***` - `***draw only the selected volume.
-
 -   Right click + `InspectShape/Material()` - print info about shape or
     material.
-
 -   Right click + `Raytrace()` - initiate a ray tracing algorithm on
     current view.
-
 -   Right click + `RandomPoints/Rays()` - shoot random points or rays
     inside the bounding box of the clicked volume and display only those
     inside visible volumes.
-
 -   Right click + `Weight()` - estimates the weight of a volume within a
     given precision.
 
@@ -338,7 +325,6 @@ TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen);
 
 -   `radlen:` radiation length. If `radlen<=0` the value is computed
     using GSMATE algorithm in GEANT3
-
 -   `intlen:` absorption length
 
 Material state, temperature and pressure can be changed via setters.
@@ -383,11 +369,8 @@ void AddElement(Double_t a, Double_t z, Double_t weight)
 ```
 
 -   `iel:` index of the element` [0,nel-1]`
-
--   `a `and `z:` the atomic mass and charge
-
+-   `a` and `z:` the atomic mass and charge
 -   `weight:` proportion by mass of the elements
-
 -   `natoms`: number of atoms of the element in the molecule making the
     mixture
 
@@ -413,11 +396,8 @@ root[] TGeoManager *geom = new TGeoManager("geom","radionuclides");
 root[] TGeoElementTable *table = geom->GetElementTable();
 root[] TGeoElementRN *c14 = table->GetElementRN(14,6);  // A,Z
 root[] c14->Print();
-6-C-014      ENDF=60140; A=14; Z=6; Iso=0; Level=0[MeV]; 
-Dmass=3.0199[MeV];
-Hlife=1.81e+11[s]    J/P=0+;
-Abund=0; Htox=5.8e-10;
-Itox=5.8e-10; Stat=0
+6-C-014 ENDF=60140; A=14; Z=6; Iso=0; Level=0[MeV]; Dmass=3.0199[MeV];
+Hlife=1.81e+11[s]  J/P=0+; Abund=0; Htox=5.8e-10; Itox=5.8e-10; Stat=0
 Decay modes:
 BetaMinus            Diso:   0 BR:   100.000% Qval: 0.1565
 ```
@@ -434,19 +414,12 @@ getters in the **`TGeoElementRN`** class:
 Atomic number and charge (from the base class **`TGeoElement`**)
 
 -   Isomeric number (`ISO`)
-
 -   ENDF code - following the convention: `ENDF=10000*Z+100*A+ISO`
-
 -   Isomeric energy level [`MeV`]
-
 -   Mass excess [`MeV`]
-
 -   Half life [`s`]
-
 -   Spin/Parity - can be retrieved with: `TGeoElementRN::GetTitle()`
-
 -   Hynalation and ingestion toxicities
-
 -   List of decays - `TGeoElementRN::GetDecays()`
 
 The radioactive decays of a radionuclide are represented by the class
@@ -454,13 +427,9 @@ The radioactive decays of a radionuclide are represented by the class
 provides:
 
 -   Decay mode
-
 -   Variation of isomeric number
-
 -   `Q` value for the decay [`GeV`]
-
 -   Parent element
-
 -   Daughter element
 
 Radionuclides are linked one to each other via their decays, until the
@@ -475,8 +444,8 @@ root[] while ((elem=next())) next.Print();
 7-N-014 stable
 ```
 
-To create a radioactive material based on a radionuclide, one should use
-the constructor:
+To create a radioactive material based on a radionuclide, one should
+use the constructor:
 
 ``` {.cpp}
 TGeoMaterial(const char *name, TGeoElement *elem, Double_t density)
@@ -495,7 +464,6 @@ Once defined, one can retrieve the time evolution for the radioactive
 materials/mixtures by using one of the next two methods:
 
 1. `TGeoMaterial::FillMaterialEvolution(TObjArray *population,`
-
 `                                      Double_t   precision=0.001)`
 
 To use this method, one has to provide an empty **`TObjArray`** object
@@ -548,13 +516,11 @@ properties related to tracking.
 
 ``` {.cpp}
 TGeoMedium(const char *name,Int_t numed,TGeoMaterial *mat,
-    Double_t *params=0);
+           Double_t *params=0);
 ```
 
 -   `name:` name assigned to the medium
-
 -   `mat:` pointer to a material
-
 -   `params:` array of additional parameters
 
 Another constructor allows effectively defining tracking parameters in
@@ -570,9 +536,7 @@ This constructor is reserved for creating tracking media from the VMC
 interface [...]:
 
 -   `numed:` user-defined medium index
-
 -   `imat:` unique ID of the material
-
 -   `others:` see G3 documentation
 
 Looking at our simple world example, one can see that for creating
@@ -600,14 +564,11 @@ providing methods for:
 
 -   Finding out if a point defined in their local frame is contained or
     not by the shape;
-
 -   Computing the distance to enter/exit the shape from a local point,
     given a known direction;
-
 -   Computing the maximum distance in any direction from a local point
     that does NOT result in a boundary crossing of the shape (safe
     distance);
-
 -   Computing the cosines of the normal vector to the crossed shape
     surface, given a starting local point and an ongoing direction.
 
@@ -617,7 +578,6 @@ to implement additional specific abstract methods:
 
 -   Computation of the minimal box bounding the shape, given that this
     box have to be aligned with the local coordinates;
-
 -   Algorithms for dividing the shape along a given axis.
 
 The modeller currently provides a set of 20 basic shapes, which we will
@@ -696,13 +656,10 @@ The shape has the center in the origin and it is defined by:
 -   `dX, dY, dZ:` half-lengths of the projections of the edges on X, Y
     and Z. The lower Z face is positioned at `-dZ`, while the upper at
     `+dZ`.
-
 -   `alpha:` angle between the segment defined by the centers of the
     X-parallel edges and Y axis `[-90,90]` in degrees
-
 -   `theta:` theta angle of the segment defined by the centers of the Z
     faces;
-
 -   `phi:` phi angle of the same segment
 
 ``` {.cpp}
@@ -794,7 +751,6 @@ TGeoArb8::TGeoArb8(Double_t dz,Double_t ivert);
 ```
 
 -   `dz:` half-length in Z;
-
 -   `ivert = [0,7]`
 
 Vertices have to be defined clockwise in the XY pane, both at `+dz` and
@@ -894,34 +850,27 @@ r2 - z2tan2() = r2min
 ```
 
 -   `r,z:` cylindrical coordinates for a point on the surface
-
 -   `:` stereo angle between the hyperbola asymptotic lines and Z axis
-
 -   `r2min:` minimum distance between hyperbola and Z axis (at `z=0`)
 
 The input parameters represent:
 
 -   `rin, stin:` minimum radius and tangent of stereo angle for inner
     surface
-
 -   `rout, stout:` minimum radius and tangent of stereo angle for outer
     surface
-
 -   `dz:` half length in Z (bounding planes positions at `+/-dz`)
 
 The following conditions are mandatory in order to avoid intersections
 between the inner and outer hyperbolic surfaces in the range `+/-dz`:
 
 -   `rin<rout`
-
 -   `rout>0`
-
 -   `rin2 + dz2*stin2 > rout2 + dz2*stout2`
 
 Particular cases:
 
 -   `rin=0, stin0:` the inner surface is conical
-
 -   `stin=0 / stout=0:` cylindrical surface(s)
 
 #### Cones - TGeoCone Class
@@ -934,13 +883,9 @@ Double_t rmin2,Double_t rmax2);
 ```
 
 -   `rmin1:` internal radius at Z is `-dz`
-
 -   `rmax1:` external radius at Z is `-dz`
-
 -   `rmin2:` internal radius at Z is `+dz`
-
 -   `rmax2:` external radius at Z is `+dz`
-
 -   `dz:` half length in Z (a cone ranges from `-dz` to +`dz`)
 
 A cone has Z-axis as its symmetry axis.
@@ -977,11 +922,8 @@ Double_t theta2,Double_t phi1, Double_t phi2);
 ```
 
 -   `rmin: ` internal radius of the spherical sector
-
 -   `rmax:` external radius
-
 -   `theta1:` starting theta value [0, 180) in degrees
-
 -   `theta2:` ending theta value (0, 180] in degrees (`theta1<theta2`)
 
 #### Torus : TGeoTorus Class
@@ -998,13 +940,9 @@ Double_t Dphi);
 ```
 
 -   `R:` axial radius of the torus
-
 -   `Rmin:` inner radius
-
 -   `Rmax:` outer radius
-
 -   `Phi1:` starting phi angle
-
 -   `Dphi:` total phi range
 
 #### Paraboloid : TGeoParaboloid Class
@@ -1019,7 +957,6 @@ The coefficients a and b are computed from the input values which are
 the radii of the circular sections cut by the planes at `+/-dz`:
 
 -   `-dz = a*r2low  + b`
-
 -   ` dz = a*r2high + b`
 
 ``` {.cpp}
@@ -1041,9 +978,7 @@ TGeoPcon(Double_t phi1,Double_t dphi,Int_t nz
 ```
 
 -   `phi1:` starting phi angle in degrees
-
 -   `dphi:` total phi range
-
 -   `nz:` number of Z planes defining polycone sections (minimum 2)
 
 2. Define one by one all sections [0, nz-1]
@@ -1054,11 +989,8 @@ Double_t rmin, Double_t rmax);
 ```
 
 -   `i:` section index [0, nz-1]
-
 -   `z:` z coordinate of the section
-
 -   `rmin:` minimum radius corresponding too this section
-
 -   `rmax:` maximum radius.
 
 The first section (`i=0`) has to be positioned always the lowest Z
@@ -1127,7 +1059,6 @@ Double_t *yv);
 ```
 
 -   `nvertices:  `number of vertices of the polygon
-
 -   `xv,yv:  `arrays of X and Y coordinates for polygon vertices
 
 The method creates an object of the class **`TGeoPolygon`** for which
@@ -1145,19 +1076,14 @@ Double_t y0, Double_t scale);
 -   `snum: `Z section index (0, nplanes-1). The section with
     `snum = nplanes-1` must be defined last and triggers the computation
     of the bounding box for the whole shape
-
 -   `zsection: `Z position of section `snum`. Sections must be defined
     in increasing order of Z (e.g. `snum=0` correspond to the minimum Z
     and `snum=nplanes-1` to the maximum one).
-
 -   `x0,y0: `offset of section `snum` with respect to the local shape
     reference frame `T`
-
 -   `scale: `factor that multiplies the X/Y coordinates of each vertex
     of the polygon at section `snum`:
-
 -   `x[ivert] = x0 + scale*xv[ivert]`
-
 -   `y[ivert] = y0 + scale*yv[ivert]`
 
 #### Half Spaces: TGeoHalfSpace Class
@@ -1383,16 +1309,13 @@ input parameter:
 
 -   `iact = 0`computes only safe distance and fill it at the location
     given by SAFE;
-
 -   `iact = 1`a proposed STEP is supplied. The safe distance is computed
     first. If this is bigger than STEP than the proposed step is
     approved and returned by the method since it does not cross the
     shape boundaries. Otherwise, the distance to exiting the shape is
     computed and returned;
-
 -   `iact = 2`computes both safe distance and distance to exiting,
     ignoring the proposed step;
-
 -   `iact > 2`computes only the distance to exiting, ignoring anything
     else
 
@@ -1482,12 +1405,10 @@ TGeoManager::Volume(const char *name,const char *shape,Int_t nmed);
 ```
 
 -   `name:` the name of the newly created volume;
-
 -   `shape:`the type of the associated shape. This has to contain the
     case-insensitive first 4 letters of the corresponding class name
     (e.g. "`tubs`" will match **`TGeoTubeSeg`**, "`bbox`" will match
     **`TGeoBBox`**)
-
 -   `nmed:` the medium number.
 
 This will create a special volume that will not be directly used in the
@@ -1518,14 +1439,11 @@ some mandatory steps. Even if we might use some terms that will be
 explained later, here are few general rules:
 
 -   Volumes need media and shapes in order to be created.
-
 -   Both containers and contained volumes must be created before linking
     them together, and the relative transformation matrix must be
     provided.
-
 -   Any volume have to be positioned somewhere otherwise it will not be
     considered as part of the geometry.
-
 -   Visibility or tracking properties of volumes can be provided both at
     build time or after geometry is closed, but global visualization
     settings (see section: "The Drawing Package") should not be provided
@@ -1536,11 +1454,9 @@ There is also a list of specific rules:
 -   Positioned volumes should not extrude their container or intersect
     with others within this unless it is specified (see section:
     Overlapping Volumes).
-
 -   The top volume (containing all geometry trees) must be specified
     before closing the geometry and must not be positioned - it
     represents the global reference frame.
-
 -   After building the full geometry tree, the geometry must be closed
     (see the method **`TGeoManager`**`::CloseGeometry()`). Voxelization
     can be redone per volume after this process.
@@ -1714,7 +1630,6 @@ Now what means contained and positioned?
     `Abs(Pi)dXi`. The points on the shape boundaries are considered as
     inside the volume. The volume contains a daughter if it contains all
     the points contained by the daughter.
-
 -   The definition of containment works of course only with points
     defined in the local coordinate system of the considered volume.
     `Positioning` a volume inside another have to introduce a
@@ -1755,7 +1670,6 @@ for building a valid geometry.
 
 -   The daughter volume(s) must not extrude the mother shape. They are
     allowed however to have a common boundaries.
-
 -   The volumes positioned in the same container must not overlap with
     each other. They may touch on one boundaries or shape vertex.
 
@@ -1925,9 +1839,7 @@ will illustrate them by examples.
     composite shapes. What we have to do is to define as shapes the
     inner and outer parts of the tubes (tubes having
     `Rmin=0`,` Rmax=`inner/outer radius), then to make a composite:
-
 -   `C = (Tub1out+Tub2out)-(Tub1in+Tub2in)`
-
 -   On the other hand, if we have an EM calorimeter having a honeycomb
     structure, Boolean combinations do not help anymore. Here the
     problem is that we usually have a very large number of cells that
@@ -2042,27 +1954,16 @@ Where: `vname` is the family name, `nmed` is the medium number and
 `shape` is the shape type that can be:
 
 -   `box`for **`TGeoBBox`**
-
 -   `trd1`for **`TGeoTrd1`**
-
 -   `trd2`for **`TGeoTrd2`**
-
 -   `trap`for **`TGeoTrap`**
-
 -   `gtra`for **`TGeoGtra`**
-
 -   `para`for **`TGeoPara`**
-
 -   `tube`, `tubs `for **`TGeoTube`**, **`TGeoTubeSeg`**
-
 -   ` cone`, `cons `for **`TGeoCone`**, **`TGeoCons`**
-
 -   `eltu`for **`TGeoEltu`**
-
 -   `ctub`for **`TGeoCtub`**
-
 -   `pcon`for **`TGeoPcon`**
-
 -   `pgon`for **`TGeoPgon`**
 
 Volumes are then added to a given family upon adding the generic name as
@@ -2077,17 +1978,11 @@ Double_t *upar,Int_t npar);
 ```
 
 -   `BOXES`- name of the family of boxes
-
 -   `copy_no`- user node number for the created node
-
 -   `mother_name`- name of the volume to which we want to add the node
-
 -   `x,y,z`- translation components
-
 -   `rot_index`- index of a rotation matrix in the list of matrices
-
 -   `upar`- array of actual shape parameters
-
 -   `npar`- number of parameters
 
 The parameters order and number are the same as in the corresponding
@@ -2199,14 +2094,11 @@ The behavior of the division operation can be triggered using `OPTION`
 
 -   `N`divide all range in `NDIV` cells (same effect as `STEP<=0`)
     (GSDVN in G3)
-
 -   `NX`divide range starting with `START` in `NDIV` cells (GSDVN2 in
     G3)
-
 -   `S`divide all range with given `STEP`; `NDIV` is computed and
     divisions will be centered in full range (same effect as `NDIV<=0`)
     (GSDVS, GSDVT in G3)
-
 -   `SX`same as `DVS`, but from `START` position (GSDVS2, GSDVT2 in G3)
 
 #### Volume Assemblies
@@ -2226,10 +2118,8 @@ out of this:
 
 -   Defining the container for the structure as "overlapping" (see also
     " Overlapping Volumes **"**)
-
 -   Representing the container as a composite shape - the Boolean union
     of all components (see also " Composite Shapes ")
-
 -   Using an assembly volume - this will be described in the following.
 
 The first two approaches have the disadvantage of penalizing the
@@ -2298,21 +2188,59 @@ a rotation, a translation and a scale. The advantage of this description
 is that each basic transformation can be represented as a homogenous
 matrix, composition being performed as simple matrix multiplication.
 
-Rotation: Translation: Scale
+Rotation:
+$\left|\begin{array}{cccc}
+         r_{11}  &  r_{12}  & r_{13} & 0 \\ 
+         r_{21}  &  r_{22}  & r_{23} & 0 \\ 
+         r_{31}  &  r_{32}  & r_{33} & 0 \\
+              0  &       0  &      0 & 1
+\end{array}
+\right|$
+Translation:
+$\left|\begin{array}{cccc}
+         1    &  0    & 0   & 0 \\ 
+         0    &  1    & 0   & 0 \\ 
+         0    &  0    & 1   & 0 \\
+         t_x  &  t_y  & t_z & 1
+\end{array}
+\right|$
+Scale:
+$\left|\begin{array}{cccc}
+         s_x &  0   & 0   & 0 \\ 
+         0   &  s_y & 0   & 0 \\ 
+         0   &  0   & s_z & 0 \\
+         0   &  0   & 0   & 1
+\end{array}
+\right|$
 
-![](pictures/080001D0.png) ![](pictures/080001D1.png)
-![](pictures/080001D2.png)
+Inverse rotation:
+$\left|\begin{array}{cccc}
+         r_{11}  &  r_{21}  & r_{31} & 0 \\ 
+         r_{12}  &  r_{22}  & r_{32} & 0 \\ 
+         r_{13}  &  r_{23}  & r_{33} & 0 \\
+              0  &       0  &      0 & 1
+\end{array}
+\right|$
+Inverse translation:
+$\left|\begin{array}{cccc}
+         1    &  0    & 0   & 0 \\ 
+         0    &  1    & 0   & 0 \\ 
+         0    &  0    & 1   & 0 \\
+         -t_x  &  -t_y  & -t_z & 1
+\end{array}
+\right|$
+Inverse scale:
+$\left|\begin{array}{cccc}
+         \frac{1}{s_x} &  0   & 0   & 0 \\ 
+         0   &  \frac{1}{s_y} & 0   & 0 \\ 
+         0   &  0   & \frac{1}{s_z} & 0 \\
+         0   &  0   & 0   & 1
+\end{array}
+\right|$
 
-Inverse rotation:Inverse translation:Inverse scale:
-
-![](pictures/080001D3.png) ![](pictures/080001D4.png)
-![](pictures/080001D5.png)
-
--   `rij` are the 3x3 rotation matrix components
-
--   `tx,ty,tz` are the translation components
-
--   `sx,sy,sz` are arbitrary scale constants on each axis
+-   $r_{ij}$ are the 3x3 rotation matrix components
+-   $t_x$,$t_y$,$t_z$ are the translation components
+-   $s_x$, $s_y$, $s_z$ are arbitrary scale constants on each axis
 
 The disadvantage in using this approach is that computation for 4x4
 matrices is expensive. Even combining two translations would become a
@@ -2458,7 +2386,6 @@ Specific utilities: determinant, inverse.
 -   Scale transformations (**`TGeoScale`** class) - represent a scaled
     shrinking/enlargement, possibly different on all axes. Data members:
     `Double_t fScale[3]`. Not implemented yet.
-
 -   Combined transformations - represent a rotation followed by a
     translation. Data members:
     `Double_t fTranslation[3], `**`TGeoRotation *fRotation`.**
@@ -2473,7 +2400,6 @@ TGeoCombiTrans *c2 = new TGeoCombiTrans("somename",10,20,30,rot)
 
 -   General transformations: (**`TGeoHMatrix`** class) represent
     combined transformations in any order.
-
 -   Identity transformation: (**`TGeoIdentity`** class) is a generic
     identity transformation represented by a singleton class object
     **`gGeoIdentity`**.
@@ -2730,20 +2656,15 @@ shape can be then retrieved from the corresponding objects.
     useful for being able to keep track of the navigation history and
     force certain states. Let's illustrate how this works with a simple
     example:
-
 -   Suppose we have a simple geometry with a volume B positioned twice
     inside a container A. Then A is positioned twice in a top container
     T. The complete list of logical nodes is: `T_1`, `A_1`, `A_2`,
     `B_1`, `B_2`. On the other hand we will have more states than
     logical nodes:
-
 -   `/T_1`- 1 state at level = 0
-
 -   `/T_1/A_1,/T_1/A_2`- 2 states at level = 1
-
 -   `/T_1/A_1/B_1,/T_1/A_1/B_2,/T_1/A_2/B_1,/T_1/A_2/B_2` - 4 states at
     level = 2
-
 -   All these states will get automatic numbers, starting with 0
     corresponding to the top-level state and ending with an integer
     corresponding to Ntotal\_states-1. The mapping from a given logical
@@ -2845,7 +2766,6 @@ value of `change`:
 
 -   `change = kFALSE` (default) - the modeller does not change the
     current state but just inform the caller about this change.
-
 -   `change = kTRUE` - the modeller will actually perform a new
     `‘Where am I?' `search after finding out that the location has
     changed. The current state will be actualized accordingly.
@@ -2900,7 +2820,6 @@ According the step value, two use cases are possible:
     the current point is outside geometry and the top node is not
     crossed, the corresponding distance will be set to `kBig` and a
     `NULL` pointer returned. No additional quantity will be computed.
-
 -   `step < kBig`. In this case, the progressive search starting from
     the current point will be stopped after a distance equal with the
     supplied step. In addition to the distance to the first crossed
@@ -3288,7 +3207,6 @@ An extrusion A) is declared in any of the following cases:
 -   At least one of the vertices of the daughter mesh representation is
     outside the mother volume (in fact its shape) and having a safety
     distance to the mother greater than the desired value;
-
 -   At least one of the mother vertices is contained also by one of its
     daughters, in the same conditions.
 
@@ -3674,9 +3592,7 @@ Option_t *opt="vg")
     Depending on the extension of the file, the geometry is exported
     either as ,root file or .C(.cxx) macro or GDML file in case
     extension is .gdml.
-
 -   `keyname`is the name of the key in the file (default "")
-
 -   `opt` = `"v"` is an export voxelization (default), otherwise
     voxelization is recomputed after loading the geometry, `"g"` this
     option (default) is taken into account only for exporting to gdml
@@ -3836,34 +3752,26 @@ The main actions performed are:
 
 -   moving up and down in the logical node tree while updating the
     current node and its global matrix
-
 -   converting the global position into the local frame of the current
     node/volume
-
 -   checking whether the local position lies within the geometrical
     shape of the current volume - if this is the case continue the
     search downwards for the daughters of the current node, otherwise
     search upwards its containers until the top level is reached.
-
 -   the number of candidate nodes to be checked at a given level is
     minimized by an additional optimization structure: voxels. This is
     effective even in case there is only one daughter of the current
     volume.
-
 -   in case the current node is declared as possibly overlapping, the
     method FindInCluster() is invoked. This method checks all different
     possibilities within the cluster of overlapping candidates. One of
     the candidates is prioritized if one of the following conditions id
     fulfilled (in order):
-
 -   Is declared as non-overlapping (these are anyway searched first)
-
 -   Has at least one daughter that contains the current point
-
 -   Was already declared as containing the point at a previous step
 
-![Finding the location of a point in the geometry
-hierarchy](pictures/080001E7.png)
+![Finding the location of a point in the geometry hierarchy](pictures/080001E7.png)
 
 ### Finding the Distance to Next Crossed Boundary
 
@@ -3875,7 +3783,6 @@ The relevant state parameters used for this task are:
 
 -   Current particle position and direction `(x,y,z,nx,ny,nz)`, where ni
     is the direction cosine with axis (`i`).
-
 -   Current node (and path) in geometry must be set by calling
     `TGeoManager::FindNode(x,y,z) `beforehand The method computing the
     distance to next boundary is:
@@ -4074,23 +3981,18 @@ widget:
     in a file. The file name is formed by `geometry_name.C` or `.root`
     depending if the geometry need to be saved as a `C` macro or a
     `.root` file.
-
 -   *Shapes.* The category provides buttons for creation of all
     supported shapes. The new shape name is chosen by the interface, but
     can be changed from the shape editor GUI. Existing shapes can be
     browsed and edited from the same category.
-
 -   *Volumes.* The category allows the creation of a new volume having a
     given name, shape and medium. For creating a volume assembly only
     the name is relevant. Existing volumes can be browsed or edited from
     this category.
-
 -   *Materials.* Allows creation of new materials/mixtures or editing
     existing ones.
-
 -   *Media.* The same for creation/editing of tracking media (materials
     having a set of properties related to tracking)
-
 -   *Matrices.* Allows creation of translations, rotations or combined
     transformations. Existing matrices can also be browser/edited.
 
@@ -4226,11 +4128,8 @@ as the top one (you can do it also from the volume category). This is
 just for starting. To create some hierarchy, one has to create several
 other volumes and the matrices to position them. Once this is done, use
 the volume editor interface to:
-
--   add/remove daughters, change shape, edit position of daughters
-
--   change visualization settings
-
--   divide the volume (only if there are no daughters yet)
+    - add/remove daughters, change shape, edit position of daughters
+    - change visualization settings
+    - divide the volume (only if there are no daughters yet)
 
 7. Close the geometry from the "*General*" category.

@@ -27,7 +27,7 @@ particular use to HEP, like pseudo-rapidity, projections, and transverse
 part of a **`TVector3`**, and kinetic methods on 4-vectors such as
 Invariant Mass of pairs or containers of particles`.`
 
-**`TLorentzVector `**is a general four-vector class, which can be used
+**`TLorentzVector`** is a general four-vector class, which can be used
 either for the description of position and time (`x`, `y`, `z`, `t`) or
 momentum and energy (`px`, `py`, `pz`, `E`). **`TRotation`** is a class
 describing a rotation of a **`TVector3`** object. **`TLorentzRotation`**
