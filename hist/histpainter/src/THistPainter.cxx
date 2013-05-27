@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Id: f214dfbd83a9d1a7da8998366700a0751875b419 $
+// @(#)root/histpainter:$Id$
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -6451,6 +6451,7 @@ void THistPainter::PaintLego(Option_t *)
    }
 
    fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
+   fLego->SetEdgeAtt(fH->GetLineColor(),fH->GetLineStyle(),fH->GetLineWidth());
    
    // LEGO3 is like LEGO1 except that the black lines around each lego are not drawn.
    if (Hoption.Lego == 13) {
@@ -6506,7 +6507,7 @@ void THistPainter::PaintLego(Option_t *)
    Double_t psideg = view->GetPsi();
    view->SetView(phideg, thedeg, psideg, irep);
 
-   fLego->SetLineColor(fH->GetLineColor());
+   fLego->SetLineColor(kBlack);  /// zgrid color for lego1 & lego2
    fLego->SetFillStyle(fH->GetFillStyle());
 
    //     Set color/style for back box

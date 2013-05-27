@@ -72,6 +72,9 @@ private:
    Int_t       *fColorDark;        //
    Int_t        fColorTop;         //
    Int_t        fColorBottom;      //
+   Int_t        fEdgeColor;        //
+   Int_t        fEdgeStyle;        //
+   Int_t        fEdgeWidth;        //
    Int_t        fMesh;             //(=1 if mesh to draw, o otherwise)
    Int_t        fNlines;           //
    Int_t        fLevelLine[200];   //
@@ -168,6 +171,7 @@ public:
    void    SetSurfaceFunction(SurfaceFunc_t pointer);
    void    SetColorDark(Color_t color, Int_t n=0);
    void    SetColorMain(Color_t color, Int_t n=0);
+   void    SetEdgeAtt(Color_t color=1, Style_t style=1, Width_t width=1);
    void    SideVisibilityDecode(Double_t val, Int_t &iv1, Int_t &iv2, Int_t &iv3, Int_t &iv4, Int_t &iv5, Int_t &iv6, Int_t &ir);
    void    SideVisibilityEncode(Int_t iopt, Double_t phi1, Double_t phi2, Double_t &val);
    void    Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_t ic, Int_t idc, Int_t &irep);
