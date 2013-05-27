@@ -1040,6 +1040,7 @@ void TClingCallFunc::Init(const clang::FunctionDecl *FD)
          fEEAddr = FP;
 
          // Create a llvm function we can use to call it with later.
+         //FIXME: No need of LLVMContext for doing such.
          llvm::LLVMContext &Context = *fInterp->getLLVMContext();
          llvm::SmallVector<llvm::Type *, 8> Params;
          if (isMemberFunc) {
