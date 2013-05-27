@@ -645,7 +645,14 @@ RooLinkedListElem* RooLinkedList::mergesort_impl(
   }
   if (sz <= 16) {
     // for short lists, we sort in an array
+#ifndef _WIN32
     RooLinkedListElem *arr[sz];
+#else // _WIN32
+    // apparently, MSVC is not clever enough to figure out that sz cannot be
+    // zero and is at most sixteen, so we allocate a fixed size array on the
+    // stack instead
+    RooLinkedListElem *arr[16];
+#endif // _WIN32
     for (int i = 0; l1; l1 = l1->_next, ++i) arr[i] = l1;
     // straight insertion sort
     {
