@@ -1600,6 +1600,8 @@ When used with any LEGO option, the empty bins are not drawn.
 </table>
 See the limitations with <a href="#HP060a">the option "SAME"</a>.
 
+<p>Line attributes can be used in lego plots to change the edges' style.
+
 <p>The following example shows a 2D histogram plotted with the option
 <tt>"LEGO"</tt>. The option <tt>"LEGO"</tt> draws a lego plot using the hidden
 lines removal technique.
