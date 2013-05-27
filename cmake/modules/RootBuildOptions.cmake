@@ -167,6 +167,18 @@ endif()
 #  set(CMAKE_INSTALL_PREFIX ${ROOTSYS})
 #endif()
 
+#---Add defines for CINT limits-----------------------------------------------------------------
+if(DEFINED CINTMAXSTRUCT)
+  add_definitions(-DG__MAXSTRUCT=${CINTMAXSTRUCT})
+endif()
+if(DEFINED CINTMAXTYPEDEF)
+  add_definitions(-DG__MAXTYPEDEF=${CINTMAXTYPEDEF})
+endif()
+if(DEFINED CINTLONGLINE)
+  add_definitions(-DG__LONGLINE=${CINTLONGLINE})
+endif()
+
+
 set(ROOT_INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
 set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)

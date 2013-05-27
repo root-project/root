@@ -26,10 +26,10 @@ class TEmulatedMapProxy : public TEmulatedCollectionProxy  {
 
 protected:
    // Map input streamer
-   void ReadMap(int nElements, TBuffer &b);
+   void ReadMap(UInt_t nElements, TBuffer &b);
 
    // Map output streamer
-   void WriteMap(int nElements, TBuffer &b);
+   void WriteMap(UInt_t nElements, TBuffer &b);
 private:
    TEmulatedMapProxy &operator=(const TEmulatedMapProxy &rhs); // Not implemented.
 
