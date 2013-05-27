@@ -590,7 +590,7 @@ if(cling)
     #---The list of libraires is optatined by runnning 'llvm-config --libs'
     set(LLVM_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LLVM-install/include)
     set(LLVM_LIBRARIES -L${CMAKE_BINARY_DIR}/LLVM-install/lib -lclangFrontend -lclangSerialization -lclangDriver -lclangCodeGen
-                       -lclangParse -lclangSema -lclangAnalysis  -lclangRewriteCore -lclangAST -lclangLex -lclangBasic -lclangEdit
+                       -lclangParse -lclangSema -lclangAnalysis  -lclangRewriteCore -lclangAST -lclangBasic -lclangEdit -lclangLex
                        -lLLVMInstrumentation -lLLVMArchive -lLLVMLinker -lLLVMIRReader -lLLVMBitReader -lLLVMAsmParser 
                        -lLLVMDebugInfo -lLLVMOption -lLLVMipo -lLLVMVectorize -lLLVMBitWriter -lLLVMTableGen
                        -lLLVMXCoreDisassembler -lLLVMXCoreCodeGen -lLLVMXCoreDesc -lLLVMXCoreInfo -lLLVMXCoreAsmPrinter
