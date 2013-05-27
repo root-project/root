@@ -1824,7 +1824,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                (*mess) >> nodes;
                if ((mess->BufferSize() > mess->Length()))
                   (*mess) >> random;
-               if (fProof) fProof->SetParallel(nodes, random);
+               if (fProof) fProof->GoParallel(nodes, kFALSE, random);
                rc = 1;
             }
          } else {

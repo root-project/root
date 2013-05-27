@@ -1337,7 +1337,7 @@ Int_t TProof::AddWorkers(TList *workerList)
    // gSystem->GetDynamicPath() and gSystem->GetIncludePath()
    // no need to load packages that are only loaded and not enabled (dyn mode)
 
-   SetParallel(99999, 0);
+   GoParallel(99999, kFALSE, 0);
       
    if (gProofServ && gProofServ->GetEnabledPackages() &&
        gProofServ->GetEnabledPackages()->GetSize() > 0) {
@@ -6673,6 +6673,10 @@ Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
    // Tell PROOF how many slaves to use in parallel. Returns the number of
    // parallel slaves. Returns -1 in case of error.
 
+   if (fDynamicStartup && nodes < 0) {
+      if (gSystem->Getenv("PROOF_NWORKERS")) gSystem->Unsetenv("PROOF_NWORKERS");
+   }
+   
    Int_t n = SetParallelSilent(nodes, random);
    if (TestBit(TProof::kIsClient)) {
       if (n < 1) {
@@ -6683,6 +6687,8 @@ Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
             subfix += ", randomly selected";
          Printf("PROOF set to parallel mode (%d worker%s)", n, subfix.Data());
       }
+   } else if (fDynamicStartup && nodes >= 0) {
+      gSystem->Setenv("PROOF_NWORKERS", TString::Format("%d", nodes));
    }
    return n;
 }
