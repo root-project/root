@@ -386,6 +386,13 @@ void TStreamerInfo::Build()
             element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
          } else if (dm->IsSTLContainer()) {
             element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
+            if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != TClassEdit::kVector) {
+               if (!element->GetClassPointer()->IsLoaded()) {
+                  Error("Build","The class \"%s\" is compiled and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
+                  delete element;
+                  continue;
+               }
+            }
          } else {
             TClass* clm = TClass::GetClass(dmType);
             if (!clm) {
@@ -1453,6 +1460,20 @@ void TStreamerInfo::BuildOld()
             offset = GetDataMemberOffset(dm, streamer);
             element->SetOffset(offset);
             element->Init(this);
+            // We have a loaded class, let's make sure that if we have a collection
+            // it is also loaded.
+            TString dmClassName = TClassEdit::ShortType(dm->GetTypeName(),TClassEdit::kDropStlDefault).c_str();
+            dmClassName = dmClassName.Strip(TString::kTrailing, '*');
+            if (dmClassName.Index("const ")==0) dmClassName.Remove(0,6);
+            TClass *elemDm = TClass::GetClass(dmClassName.Data());
+            if (elemDm && elemDm->GetCollectionProxy()
+                && !elemDm->IsLoaded() 
+                && elemDm->GetCollectionProxy()->GetCollectionType() != TClassEdit::kVector) {
+               Error("BuildOld","The class %s is compiled and for its data member %s, we do not have a dictionary for the collection '%s', we will not be able to read or write this data member.",GetName(),dm->GetName(),elemDm->GetName());
+               offset = kMissing;
+               element->SetOffset(kMissing);
+               element->SetNewType(-1);
+            }
             element->SetStreamer(streamer);
             int narr = element->GetArrayLength();
             if (!narr) {
