@@ -386,6 +386,13 @@ void TStreamerInfo::Build()
             element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
          } else if (dm->IsSTLContainer()) {
             element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
+            if (fClass->IsLoaded()) {
+               if (!element->GetClassPointer()->IsLoaded()) {
+                  Error("Build","The class \"%s\" is compiled and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
+                  delete element;
+                  continue;
+               }
+            }
          } else {
             TClass* clm = TClass::GetClass(dmType);
             if (!clm) {
@@ -1453,6 +1460,15 @@ void TStreamerInfo::BuildOld()
             offset = GetDataMemberOffset(dm, streamer);
             element->SetOffset(offset);
             element->Init(this);
+            // We have a loaded class, let's make sure that if we have a collection
+            // it is also loaded.
+            TClass *elemCl = element->GetClassPointer();
+            if (elemCl && elemCl->GetCollectionProxy() && !elemCl->IsLoaded()) {
+               Error("BuildOld","The class %s is compiled and for its data member %s, we do not have a dictionary for the collection '%s', we will not be able to read or write this data member.",GetName(),element->GetName(),element->GetClassPointer()->GetName());
+               offset = kMissing;
+               element->SetOffset(kMissing);
+               element->SetNewType(-1);
+            }
             element->SetStreamer(streamer);
             int narr = element->GetArrayLength();
             if (!narr) {
