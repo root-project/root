@@ -3868,14 +3868,14 @@ inaccordance with `fLocalFrame` flag.
 A typical example from TGeoBBox::FillBuffer3D:
 
 ``` {.cpp}
-if (reqSections & TBuffer3D::kBoundingBox) {
-Double_t halfLengths[3] = { fDX, fDY, fDZ };
-buffer.SetAABoundingBox(fOrigin, halfLengths);
-if (!buffer.fLocalFrame) {
-TransformPoints(buffer.fBBVertex[0], 8);
-}
-buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
-}
+   if (reqSections & TBuffer3D::kBoundingBox) {
+      Double_t halfLengths[3] = { fDX, fDY, fDZ };
+      buffer.SetAABoundingBox(fOrigin, halfLengths);
+      if (!buffer.fLocalFrame) {
+         TransformPoints(buffer.fBBVertex[0], 8);
+      }
+      buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
+   }
 ```
 
 #### Logical and Physical Objects

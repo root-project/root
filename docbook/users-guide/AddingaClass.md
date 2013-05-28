@@ -1152,12 +1152,12 @@ ClassImp(ABC);
 **Step 2:** Load the ABC class in the script.
 
 ``` {.cpp}
-// Check if ABC is already loaded
-if (!TClass::GetDict("ABC")) {
-gROOT->ProcessLine(".L ABCClass.C++");
-}
+   // Check if ABC is already loaded
+   if (!TClass::GetDict("ABC")) {
+      gROOT->ProcessLine(".L ABCClass.C++");
+   }
 
-// Use the Class
-ABC *v = new ABC;
-v->p = (sqrt((v->a * v->a)+ (v->b * v->b)+(v->c * v->c)));
+   // Use the Class
+   ABC *v = new ABC;
+   v->p = (sqrt((v->a * v->a)+ (v->b * v->b)+(v->c * v->c)));
 ```
