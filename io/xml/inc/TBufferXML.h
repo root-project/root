@@ -1,4 +1,4 @@
-// @(#)root/xml:$Id$
+// @(#)root/xml:$Id: d90d66e8fd2aa9daa4b05bcba9166aee1e2b2e7f $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -49,8 +49,8 @@ public:
    TBufferXML(TBuffer::EMode mode, TXMLFile* file);
    virtual ~TBufferXML();
 
-   static TString   ConvertToXML(TObject* obj, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
-   static TString   ConvertToXML(void* obj, TClass* cl, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
+   static TString   ConvertToXML(const TObject* obj, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
+   static TString   ConvertToXML(const void* obj, const TClass* cl, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
    
    static TObject*  ConvertFromXML(const char* str, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);   
    static void*     ConvertFromXMLAny(const char* str, TClass** cl = 0, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
