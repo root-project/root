@@ -790,7 +790,7 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
    //                       (not used in this routine)
 
    Double_t xdel, ydel;
-   Int_t i, k, icol, i1, i2, it;
+   Int_t i, k, i1, i2, it;
    Double_t x[2], y[2];
    Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
    TView *view = 0;
