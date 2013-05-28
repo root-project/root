@@ -579,9 +579,9 @@ Double_t TGeoUnion::DistFromInside(const Double_t *point, const Double_t *dir, I
    Bool_t inside2 = fRight->Contains(local);
    if (inside2) d2 = fRight->DistFromInside(local, rdir, 3);
    if (!(inside1 | inside2)) {
-   // May be a pathological case when the point is on the boundary
+   // This is a pathological case when the point is on the boundary
       d1 = fLeft->DistFromOutside(local1, ldir, 3);
-      if (d1<2.*TGeoShape::Tolerance()) {
+      if (d1<1.E-3) {
          eps = d1+TGeoShape::Tolerance();
          for (i=0; i<3; i++) local1[i] += eps*ldir[i];
          inside1 = kTRUE;
@@ -589,7 +589,7 @@ Double_t TGeoUnion::DistFromInside(const Double_t *point, const Double_t *dir, I
          d1 += eps;
       } else {      
          d2 = fRight->DistFromOutside(local, rdir, 3);
-         if (d2<2.*TGeoShape::Tolerance()) {
+         if (d2<1.E-3) {
            eps = d2+TGeoShape::Tolerance();
            for (i=0; i<3; i++) local[i] += eps*rdir[i];
            inside2 = kTRUE;
@@ -1370,10 +1370,12 @@ Double_t TGeoIntersection::DistFromOutside(const Double_t *point, const Double_t
    node->SetSelected(0);
    Double_t snext = 0.0;
    if (inleft && inright) {
+      // It is vey likely to have a numerical issue and the point should
+      // be logically outside one of the shapes
       d1 = fLeft->DistFromInside(lpt,ldir,3);
       d2 = fRight->DistFromInside(rpt,rdir,3);
-      if (d1<2*tol) inleft = kFALSE;
-      if (d2<2*tol) inright = kFALSE;
+      if (d1<1.E-3) inleft = kFALSE;
+      if (d2<1.E-3) inright = kFALSE;
       if (inleft && inright) return snext;
    }   
 
