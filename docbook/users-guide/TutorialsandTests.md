@@ -426,7 +426,7 @@ stress    : Real Time = 307.61 seconds Cpu Time = 292.82 seconds
 ```
 
 ### guitest - A Graphical User Interface
-
+\index{GUI application}
 
 The `guitest` example, created by compiling `guitest.cxx`, tests and
 illustrates the use of the native GUI widgets such as cascading menus,

@@ -11,7 +11,7 @@ examples have graphics commands that may look unfamiliar to you. These
 are covered in the chapter "Input/Output".
 
 ## The Histogram Classes
-
+\index{histogram}
 
 ROOT supports histograms up to three dimensions. Separate concrete
 classes are provided for one-dimensional, two-dimensional and
@@ -191,7 +191,7 @@ This global bin is useful to access the bin information independently
 of the dimension.
 
 ### Re-binning
-
+\index{histogram!rebin}
 
 At any time, a histogram can be re-binned via the **`TH1`**`::Rebin()`
 method. It returns a new histogram with the re-binned contents. If bin
@@ -235,6 +235,8 @@ automatic re-binning option:
 ``` {.cpp}
    h->SetBit(TH1::kCanRebin);
 ```
+\index{histogram!rebin}
+
 
 Once this is set, the `Fill()` method will automatically extend the
 axis range to accommodate the new value specified in the `Fill()`
@@ -2150,6 +2152,7 @@ restore the origin histogram.
 #### Histogram drawn from an ntuple
 
 ##### Rebin
+\index{histogram!rebin}
 with the slider, the number of bins can be enlarged by a factor
 of 2, 3, 4, 5 (moving to the right) or reduced by a factor of
 $\frac{1}{2}$, $\frac{1}{3}$, $\frac{1}{4}$, $\frac{1}{5}$.
@@ -2268,6 +2271,7 @@ histogram will be restored.
 #### Histogram drawn from an ntuple
 
 ##### Rebin
+\index{histogram!rebin}
 with the sliders the number of bins can be enlarged by a factor of
 2,3,4,5 (moving to the right) or reduced by a factor of $\frac{1}{2}$,
 $\frac{1}{3}$, $\frac{1}{4}$, $\frac{1}{5}$.

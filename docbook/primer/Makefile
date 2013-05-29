@@ -31,4 +31,4 @@ epub: $(MDFILES) metadata.xml title.txt bibliography.bib
 	   title.txt $(MDFILES) -o ROOTPrimer.epub
 
 clean:
-	rm -f ROOTPrimer.pdf ROOTPrimer.html ROOTPrimer.tex ROOTPrimer.epub
+	rm -f ROOTPrimer.pdf ROOTPrimerLetter.pdf ROOTPrimer.html ROOTPrimer.tex ROOTPrimer.epub

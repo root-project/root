@@ -1,5 +1,5 @@
 # Writing a Graphical User Interface
-
+\index{Graphical User Interface}
 
 The ROOT GUI classes support an extensive and rich set of widgets with
 the Windows 95 look and feel. The widget classes interface to the

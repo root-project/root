@@ -547,7 +547,7 @@ changing this line in the source file:
 ClassDef(TEvent,0);
 ```
 
-If you want to prevent the generation of` Streamer()`, see the chapter
+If you want to prevent the generation of `Streamer()`, see the section
 "Adding a Class with a Shared Library".
 
 ### Dictionaries for STL
@@ -571,7 +571,7 @@ feature on or off at the ROOT prompt by executing **.autodict**.
 
 ## Adding a Class with a Shared Library
 
-
+\index{adding a class!shared library}
 **Step 1:** Define your own class in `SClass.h` and implement it in
 `SClass.cxx`. You must provide a default constructor or an I/O
 constructor for your class. See the "The Default Constructor" paragraph
@@ -1123,7 +1123,7 @@ link: <http://root.cern.ch/root/RootCintMan.html>
 
 ## Adding a Class with ACLiC
 
-
+\index{adding a class!ACLiC}
 **Step 1:** Define your class
 
 ``` {.cpp}

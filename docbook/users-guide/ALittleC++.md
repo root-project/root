@@ -1,5 +1,5 @@
 # A Little C++
-
+\index{C++}
 
 This chapter introduces you to some useful insights into C++, to allow
 you to use of the most advanced features in ROOT. It is in no case a

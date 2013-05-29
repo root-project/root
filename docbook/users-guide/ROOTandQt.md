@@ -1,5 +1,5 @@
 # ROOT/Qt Integration Interfaces
-
+\index{Qt}
 
 ## Qt-ROOT Implementation of TVirtualX Interface (BNL)
 

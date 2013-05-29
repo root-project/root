@@ -2813,6 +2813,7 @@ the spider plots’ output: the tab “Style” defining the spider layout
 and the tab “Browse” to navigate in the tree.
 
 #### Parallel Coordinates Plots
+\index{parallel poordinates}
 
 The Parallel Coordinates Plots are a common way of studying and
 visualizing multiple variables data sets. They were proposed by in
@@ -2982,12 +2983,16 @@ graphical editor facility provides dedicated GUI.
 
 Tranparency is very useful with parallel coordinates plots. It alows to 
 show cleraly the clusters.
+\index{transparency!parallel coordinates}
 
 ![Parallel Coordinates with transparency.](pictures/para14.png)
 
 
 
 #### Box (Candle) Plots
+\index{candle plot}
+\index{candle stick plot}
+\index{box-and whisker plot}
 
 A Box Plot (also known as a “box-and whisker” plot or “candle stick” plot)
 is a convenient way to describe graphically a data distribution (D) with only
@@ -3011,7 +3016,7 @@ In ROOT Box Plots (Candle Plots) can be produced from a TTree using the
 
 
 ### Using TTree::Scan
-
+\index{tree!scan}
 
 `TTree::Scan` can be used to print the content of the tree's entries
 optional passing a selection.
@@ -3120,7 +3125,8 @@ columns (assuming they are numbers) will be respectively: `%30.3g`
 `%30.3g` `%20.10g`.
 
 ### TEventList and TEntryList
-
+\index{list!event}
+\index{list!entry}
 
 The `TTree::Draw `method can also be used to build a list of the
 entries. When the first argument is preceded by `">>"` ROOT knows that
@@ -3427,6 +3433,7 @@ root[] T->Project("quietHisto","fNtrack")
 ```
 
 #### Making a Profile Histogram
+\index{histogram!profile}
 
 In case of a two dimensional expression, you can generate a
 **`TProfile`** histogram instead of a two dimensional histogram by
@@ -3501,7 +3508,7 @@ have a tree (or chain) with 1 billion entries, but only a few may
 survive the cuts and will fit without problems in these arrays.
 
 ## Using TTree::MakeClass
-
+\index{tree!MakeClass}
 
 The `TTree::Draw` method is convenient and easy to use; however it falls
 short if you need to do some programming with the variable.
@@ -3802,7 +3809,7 @@ got us here.
 -   Load and instantiate `MyClass`, and run `MyClass::Loop()`.
 
 ## Using TTree::MakeSelector
-
+\index{tree!MakeSelector}
 
 With a **`TTree`** we can make a selector and use it to process a
 limited set of entries. This is especially important in a parallel
@@ -3913,7 +3920,7 @@ T->Process(selector);
 If PROOF is setup, it divides the processing amongst the slave CPUs.
 
 ### Performance Benchmarks
-
+\index{benchmarks}
 
 The program `$ROOTSYS/test/bench.cxx` compares the I/O performance of
 STL vectors to the ROOT native **`TClonesArray`**`s` collection class.
@@ -4011,7 +4018,7 @@ performance depends not only of the processor type, but also of the disk
 devices (local, NFS, AFS, etc.).
 
 ## Chains
-
+\index{tree!chains}
 
 A **`TChain`** object is a list of ROOT files containing the same tree.
 As an example, assume we have three files called
@@ -4085,7 +4092,7 @@ loop on all events of all files of the chain.
 ```
 
 ### TChain::AddFriend
-
+\index{tree!friend}
 
 `A `**`TChain`** has a list of friends similar to a tree (see
 **`TTree`**`::AddFriend)`. You can add a friend to a chain with the

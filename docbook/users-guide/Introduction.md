@@ -220,9 +220,8 @@ Procedure-Oriented Programming:
     design.
 
 ## Installing ROOT
+\index{install ROOT}
 
-
-install ROOT
 To install ROOT you will need to go to the ROOT website at:
 <http://root.cern.ch/root/Availability.html>. You have a choice to
 download the binaries or the source. The source is quicker to transfer

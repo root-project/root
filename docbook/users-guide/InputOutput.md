@@ -1,5 +1,5 @@
 # Input/Output
-
+\index{I/O}
 
 This chapter covers the saving and reading of objects to and from ROOT
 files. It begins with an explanation of the physical layout of a ROOT

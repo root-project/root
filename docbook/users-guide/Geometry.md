@@ -1,4 +1,5 @@
 # The Geometry Package
+\index{Geometry}
 
 The new ROOT geometry package is a tool for building, browsing,
 navigating and visualizing detector geometries. The code works

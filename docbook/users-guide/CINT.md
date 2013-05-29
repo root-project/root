@@ -8,7 +8,7 @@ commands, and CINT extensions to C++ are discussed. CINT as the script
 interpreter is explained and illustrated with several examples.
 
 ## What is CINT?
-
+\index{CINT}
 
 CINT, which is pronounced `['sint]`, is a C++ interpreter. An
 interpreter takes a program, in this case a C++ program, and carries

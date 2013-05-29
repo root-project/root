@@ -1,4 +1,6 @@
 # Python and Ruby Interfaces
+\index{Python}
+\index{Ruby}
 
 Python is a popular, open-source, dynamic programming language with an
 interactive interpreter. Its interoperability with other programming
