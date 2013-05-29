@@ -2435,9 +2435,8 @@ control visualization actions.
 
 Tracking is the feature allowing the transport of a given particle
 knowing its kinematics. A state is determined by any combination of the
-position ![](pictures/080001D6.png) and direction
-![](pictures/080001D7.png) with respect to the world reference frame.
-The direction ![](pictures/080001D8.png) must be a unit vector having as
+position $\vec{r}$ and direction $\vec{n}$  with respect to the world
+reference frame. The direction $\vec{n}$  must be a unit vector having as
 components the director cosines. The full classification of a given
 state will provide the following information: the deepest physical node
 containing the position vector, the distance to the closest boundary
@@ -2458,8 +2457,8 @@ directly a geometry described with ROOT.
 The interface methods related to tracking are incorporated into
 **`TGeoManager`** class and implemented in the navigator class
 **`TGeoNavigator`**. In order to be able to start tracking, one has to
-define the initial state providing the starting point
-![](pictures/080001D9.png) and direction![](pictures/080001DA.png).
+define the initial state providing the starting point $\vec{r_0}$ 
+ and direction $\vec{n_0}$ .
 There are several ways of doing that.
 
 ### TGeoNavigator Class
@@ -2953,9 +2952,9 @@ problems. These have to be properly handled by the stepping code.
 Supposing we have found out that a particle will cross a boundary during
 the next step, it is sometimes useful to compute the normal to the
 crossed surface. The modeller uses the following convention: we define
-as `normal` (![](pictures/080001DB.png)) the unit vector perpendicular
+as `normal` ($\vec{n}$) the unit vector perpendicular
 to a surface in the `next crossing point`, having the orientation such
-that: ![](pictures/080001DC.png). Here ![](pictures/080001DD.png)
+that: $\vec{n}.\vec{d}>0$. Here $\vec{d}$
 represents the current direction. The next crossing point represents the
 point where a ray shot from the current point along the current
 direction crosses the surface.
