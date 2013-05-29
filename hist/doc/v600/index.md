@@ -47,7 +47,7 @@
 
 ### TGraphPainter
 
--   Fix http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=8591. \
+-   Fix the problem described [here](http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=8591).
     When drawn with option SAME the histogram 1st and last bins might
     be wrong. The following macro shows the problem:
 
