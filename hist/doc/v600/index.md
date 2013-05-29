@@ -15,12 +15,14 @@
     these options is now drawn with the default 1D plotting option. This
     is useful when the default option in the TBrowser is, for instance,
     COL. Before this change the 1D histogram appeared as blank.
--   New plotting option `"LEGO3"`.cw Like the option `"LEGO1"`, the
+-   New plotting option `"LEGO3"`. Like the option `"LEGO1"`, the
     option `"LEGO3"` draws a lego plot using the hidden surface removal
     technique but doesn't draw the border lines of each individual
     lego-bar. This is very useful for histograms having many bins. With
     such histograms the option `"LEGO1"` gives a black image because of
     the border lines. This option also works with stacked legos.
+-   New plotting option `"LEGO4"`. Draw a lego plot with hidden surface
+    removal, like LEGO1, but without the shadow effect on each lego-bar.
 -   Line attributes can be used in lego plots to change the edges'
     style.
 -   Implement in THistPainter::GetObjectInfo the case of TProfile and
