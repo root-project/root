@@ -355,6 +355,7 @@
 #include "TGeoScaledShape.h"
 #include "TGeoCompositeShape.h"
 #include "TGeoVoxelFinder.h"
+#include "TGeoExtension.h"
 
 ClassImp(TGeoVolume)
 
@@ -378,14 +379,16 @@ TGeoVolume::TGeoVolume()
 // dummy constructor
    fNodes    = 0;
    fShape    = 0;
+   fMedium   = 0;
    fFinder   = 0;
    fVoxels   = 0;
+   fGeoManager = gGeoManager;
    fField    = 0;
-   fMedium   = 0;
+   fOption   = "";
    fNumber   = 0;
    fNtotal   = 0;
-   fOption   = "";
-   fGeoManager = gGeoManager;
+   fUserExtension = 0;
+   fFWExtension = 0;
    TObject::ResetBit(kVolumeImportNodes);
 }
 
@@ -405,17 +408,17 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
          Fatal("ctor", "Shape of volume %s invalid. Aborting!", fName.Data());
       }   
    }      
+   fMedium   = (TGeoMedium*)med;
+   if (fMedium && fMedium->GetMaterial()) fMedium->GetMaterial()->SetUsed();
    fFinder   = 0;
    fVoxels   = 0;
+   fGeoManager = gGeoManager;
    fField    = 0;
    fOption   = "";
-   fMedium   = (TGeoMedium*)med;
-   if (fMedium) {
-      if (fMedium->GetMaterial()) fMedium->GetMaterial()->SetUsed();
-   }   
    fNumber   = 0;
    fNtotal   = 0;
-   fGeoManager = gGeoManager;
+   fUserExtension = 0;
+   fFWExtension = 0;
    if (fGeoManager) fNumber = fGeoManager->AddVolume(this);
    TObject::ResetBit(kVolumeImportNodes);
 }
@@ -436,7 +439,9 @@ TGeoVolume::TGeoVolume(const TGeoVolume& gv) :
   fField(gv.fField),
   fOption(gv.fOption),
   fNumber(gv.fNumber),
-  fNtotal(gv.fNtotal)
+  fNtotal(gv.fNtotal),
+  fUserExtension(gv.fUserExtension->Grab()),
+  fFWExtension(gv.fFWExtension->Grab())
 { 
    //copy constructor
 }
@@ -461,6 +466,8 @@ TGeoVolume& TGeoVolume::operator=(const TGeoVolume& gv)
       fOption=gv.fOption;
       fNumber=gv.fNumber;
       fNtotal=gv.fNtotal;
+      fUserExtension = gv.fUserExtension->Grab();
+      fFWExtension = gv.fFWExtension->Grab();
    } 
    return *this;
 }
@@ -478,6 +485,8 @@ TGeoVolume::~TGeoVolume()
    }
    if (fFinder && !TObject::TestBit(kVolumeImportNodes | kVolumeClone) ) delete fFinder;
    if (fVoxels) delete fVoxels;
+   if (fUserExtension) {fUserExtension->Release(); fUserExtension=0;}
+   if (fFWExtension) {fFWExtension->Release(); fFWExtension=0;}
 }
 
 //_____________________________________________________________________________
@@ -1295,6 +1304,56 @@ void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
 }   
 
 //______________________________________________________________________________
+void TGeoVolume::SetUserExtension(TGeoExtension *ext)
+{
+// Connect user-defined extension to the volume. The volume "grabs" a copy, so
+// the original object can be released by the producer. Release the previously 
+// connected extension if any.
+//==========================================================================
+// NOTE: This interface is intended for user extensions and is guaranteed not
+// to be used by TGeo
+//==========================================================================
+   if (fUserExtension) fUserExtension->Release();
+   fUserExtension = 0;
+   if (ext) fUserExtension = ext->Grab();
+}   
+
+//_____________________________________________________________________________
+void TGeoVolume::SetFWExtension(TGeoExtension *ext)
+{
+// Connect framework defined extension to the volume. The volume "grabs" a copy,
+// so the original object can be released by the producer. Release the previously 
+// connected extension if any.
+//==========================================================================
+// NOTE: This interface is intended for the use by TGeo and the users should
+//       NOT connect extensions using this method
+//==========================================================================
+   if (fFWExtension) fFWExtension->Release();
+   fFWExtension = 0;
+   if (ext) fFWExtension = ext->Grab();
+}   
+
+//_____________________________________________________________________________
+TGeoExtension *TGeoVolume::GrabUserExtension() const
+{
+// Get a copy of the user extension pointer. The user must call Release() on
+// the copy pointer once this pointer is not needed anymore (equivalent to
+// delete() after calling new())
+   if (fUserExtension) return fUserExtension->Grab();
+   return 0;
+}   
+   
+//_____________________________________________________________________________
+TGeoExtension *TGeoVolume::GrabFWExtension() const
+{
+// Get a copy of the framework extension pointer. The user must call Release() on
+// the copy pointer once this pointer is not needed anymore (equivalent to
+// delete() after calling new())
+   if (fFWExtension) return fFWExtension->Grab();
+   return 0;
+}   
+   
+//_____________________________________________________________________________
 void TGeoVolume::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
@@ -1593,6 +1652,9 @@ TGeoVolume *TGeoVolume::CloneVolume() const
    vol->SetOption(fOption);
    vol->SetNumber(fNumber);
    vol->SetNtotal(fNtotal);
+   // copy extensions
+   vol->SetUserExtension(fUserExtension);
+   vol->SetFWExtension(fFWExtension);
    return vol;
 }
 
@@ -1652,6 +1714,9 @@ TGeoVolume *TGeoVolume::MakeCopyVolume(TGeoShape *newshape)
 //       Error("MakeCopyVolume", "volume %s divided", GetName());
       vol->SetFinder(fFinder);
    }   
+   // Copy extensions
+   vol->SetUserExtension(fUserExtension);
+   vol->SetFWExtension(fFWExtension);  
    CloneNodesAndConnect(vol);
 //   ((TObject*)vol)->SetBit(kVolumeImportNodes);
    ((TObject*)vol)->SetBit(kVolumeClone);
@@ -2367,6 +2432,9 @@ TGeoVolume *TGeoVolumeMulti::MakeCopyVolume(TGeoShape *newshape)
    vol->SetFillStyle(GetFillStyle());
    // copy field
    vol->SetField(fField);
+   // Copy extensions
+   vol->SetUserExtension(fUserExtension);
+   vol->SetFWExtension(fFWExtension);
    // if divided, copy division object
 //    if (fFinder) {
 //       Error("MakeCopyVolume", "volume %s divided", GetName());

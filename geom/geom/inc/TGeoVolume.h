@@ -49,6 +49,7 @@ class TGeoMatrix;
 class TGeoPatternFinder;
 class TGeoVoxelFinder;
 class TGeoManager;
+class TGeoExtension;
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -75,6 +76,8 @@ protected :
    TString            fOption;         //! option - if any
    Int_t              fNumber;         //  volume serial number in the list of volumes
    Int_t              fNtotal;         // total number of physical nodes
+   TGeoExtension     *fUserExtension;  //! Transient user-defined extension to volumes
+   TGeoExtension     *fFWExtension;    //! Transient framework-defined extension to volumes
 
    TGeoVolume(const TGeoVolume&); 
    TGeoVolume& operator=(const TGeoVolume&);
@@ -136,6 +139,10 @@ public:
    void            PrintNodes() const;
    void            PrintVoxels() const; // *MENU*
    void            ReplayCreation(const TGeoVolume *other);
+   void            SetUserExtension(TGeoExtension *ext);
+   void            SetFWExtension(TGeoExtension *ext);
+   TGeoExtension  *GrabUserExtension() const;
+   TGeoExtension  *GrabFWExtension() const;
    virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
 
    Bool_t          IsActive() const {return TGeoAtt::IsActive();}

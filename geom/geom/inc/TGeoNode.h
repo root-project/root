@@ -39,6 +39,7 @@ class TGeoShape;
 class TGeoMedium;
 class TGeoMatrix;
 class TGeoHMatrix;
+class TGeoExtension;
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -56,6 +57,8 @@ protected:
    Int_t             fNumber;         // copy number
    Int_t             fNovlp;          // number of overlaps
    Int_t            *fOverlaps;       //[fNovlp] list of indices for overlapping brothers
+   TGeoExtension    *fUserExtension;  //! Transient user-defined extension to volumes
+   TGeoExtension    *fFWExtension;    //! Transient framework-defined extension to volumes
 
    TGeoNode(const TGeoNode&);
    TGeoNode& operator=(const TGeoNode&);
@@ -125,6 +128,10 @@ public:
    void              SetAllInvisible()                   {VisibleDaughters(kFALSE);} // *MENU*
    void              SetMotherVolume(TGeoVolume *mother) {fMother = mother;}
    void              SetOverlaps(Int_t *ovlp, Int_t novlp);
+   void              SetUserExtension(TGeoExtension *ext);
+   void              SetFWExtension(TGeoExtension *ext);
+   TGeoExtension    *GrabUserExtension() const;
+   TGeoExtension    *GrabFWExtension() const;
 
    virtual void      MasterToLocal(const Double_t *master, Double_t *local) const;
    virtual void      MasterToLocalVect(const Double_t *master, Double_t *local) const;

@@ -36,10 +36,13 @@ GEOMH1       := TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h \
                 TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h \
                 TGeoBuilder.h TGeoNavigator.h
 GEOMH2       := TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h \
-                TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h
+                TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h \
+                TGeoExtension.h 
+GEOMH3       := TGeoRCPtr.h
 GEOMH1       := $(patsubst %,$(MODDIRI)/%,$(GEOMH1))
 GEOMH2       := $(patsubst %,$(MODDIRI)/%,$(GEOMH2))
-GEOMH        := $(GEOMH1) $(GEOMH2)
+GEOMH3       := $(patsubst %,$(MODDIRI)/%,$(GEOMH3))
+GEOMH        := $(GEOMH1) $(GEOMH2) $(GEOMH3)
 GEOMS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GEOMO        := $(call stripsrc,$(GEOMS:.cxx=.o))
 
