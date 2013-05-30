@@ -149,7 +149,7 @@ void TGeoPolygon::ConvexCheck()
 }   
 
 //_____________________________________________________________________________
-void TGeoPolygon::Draw(Option_t *option)
+void TGeoPolygon::Draw(Option_t *)
 {
 // Draw the polygon.
    if (!gGeoManager) return;
