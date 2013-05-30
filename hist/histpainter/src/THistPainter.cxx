@@ -6464,8 +6464,9 @@ void THistPainter::PaintLego(Option_t *)
    }
 
    fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
-   fLego->SetEdgeAtt(fH->GetLineColor(),fH->GetLineStyle(),fH->GetLineWidth());
-   
+
+   Int_t nids = -1;
+   TH1 * hid = NULL;
    Color_t colormain = -1, colordark = -1 ;
    Bool_t drawShadowsInLego1=kTRUE ;
 
@@ -6493,15 +6494,20 @@ void THistPainter::PaintLego(Option_t *)
    Int_t ndivz  = TMath::Abs(ndiv);
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
 
-   //     Initialize colors for the lighting model (option Lego1 only)
-   if (Hoption.Lego == 1) {
-         colormain = fH->GetLineColor();
-         fLego->SetColorMain(colormain,0);
+   //     Initialize colors
+   if (!fStack) { 
+      fLego->SetEdgeAtt(fH->GetLineColor(),fH->GetLineStyle(),fH->GetLineWidth(),0);
+   } else {
+      for (Int_t id=0;id<=fStack->GetSize();id++) {
+         hid = (TH1*)fStack->At((id==0)?id:id-1);
+         fLego->SetEdgeAtt(hid->GetLineColor(),hid->GetLineStyle(),hid->GetLineWidth(),id);
+      }
    }
+
    if (Hoption.Lego == 11) {
-      Int_t nids = 1;
+      nids = 1 ;
       if (fStack) nids = fStack->GetSize();
-      TH1 *hid = fH;
+      hid = fH;
       for (Int_t id=0;id<=nids;id++) {
          if (id > 0 && fStack) hid = (TH1*)fStack->At(id-1);
          colormain = hid->GetFillColor();
@@ -6510,7 +6516,7 @@ void THistPainter::PaintLego(Option_t *)
          else                    colordark = colormain ; 
          fLego->SetColorMain(colormain,id);
          fLego->SetColorDark(colordark,id);
-         if (id == 0)    fLego->SetColorMain(colormain,-1);  // Set Bottom color
+         if (id <= 1)    fLego->SetColorMain(colormain,-1);  // Set Bottom color
          if (id == nids) fLego->SetColorMain(colormain,99);  // Set Top color
       }
    }
@@ -6795,7 +6801,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
       axis->PaintAxis(z1[0], z1[1], z2[0], z2[1], bmin, bmax, ndivz, chopaz);
    }
 
-   fH->SetLineStyle(1);
+   //fH->SetLineStyle(1);  /// otherwise fEdgeStyle[i] gets overwritten!
 }
 
 
