@@ -370,19 +370,27 @@ void TProfile2D::Copy(TObject &obj) const
 //*-*-*-*-*-*-*-*Copy a Profile2D histogram to a new profile2D histogram*-*-*-*
 //*-*            =======================================================
 
-   TH2D::Copy(((TProfile2D&)obj));
-   fBinEntries.Copy(((TProfile2D&)obj).fBinEntries);
-   fBinSumw2.Copy(((TProfile2D&)obj).fBinSumw2);
-   for (int bin=0;bin<fNcells;bin++) {
-      ((TProfile2D&)obj).fArray[bin]        = fArray[bin];
-      ((TProfile2D&)obj).fSumw2.fArray[bin] = fSumw2.fArray[bin];
+   try { 
+      TProfile2D & pobj = dynamic_cast<TProfile2D&>(obj);
+
+      TH2D::Copy(pobj);
+      fBinEntries.Copy(pobj.fBinEntries);
+      fBinSumw2.Copy(pobj.fBinSumw2);
+      for (int bin=0;bin<fNcells;bin++) {
+         pobj.fArray[bin]        = fArray[bin];
+         pobj.fSumw2.fArray[bin] = fSumw2.fArray[bin];
+      }
+      pobj.fZmin = fZmin;
+      pobj.fZmax = fZmax;
+      pobj.fScaling   = fScaling;
+      pobj.fErrorMode = fErrorMode;
+      pobj.fTsumwz    = fTsumwz;
+      pobj.fTsumwz2   = fTsumwz2;
+      
+   } catch(...) {
+      Fatal("Copy","Cannot copy a TProfile2D in a %s",obj.IsA()->GetName());
    }
-   ((TProfile2D&)obj).fZmin = fZmin;
-   ((TProfile2D&)obj).fZmax = fZmax;
-   ((TProfile2D&)obj).fScaling   = fScaling;
-   ((TProfile2D&)obj).fErrorMode = fErrorMode;
-   ((TProfile2D&)obj).fTsumwz    = fTsumwz;
-   ((TProfile2D&)obj).fTsumwz2   = fTsumwz2;
+
 }
 
 

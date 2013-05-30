@@ -1149,9 +1149,15 @@ namespace TStreamerInfoActions
          buf.ReadInt(nvalues);
          vec->resize(nvalues);
          
+#ifdef R__VISUAL_CPLUSPLUS
+         if (nvalues <= 0) {
+            buf.CheckByteCount(start,count,config->fTypeName);
+            return 0;
+         }
+#endif
          T *begin = &(*vec->begin());
          buf.ReadFastArray(begin, nvalues);
-         
+
          buf.CheckByteCount(start,count,config->fTypeName);
          return 0;
       }
@@ -1199,6 +1205,12 @@ namespace TStreamerInfoActions
          buf.ReadInt(nvalues);
          vec->resize(nvalues);
          
+#ifdef R__VISUAL_CPLUSPLUS
+         if (nvalues <= 0) {
+            buf.CheckByteCount(start,count,config->fTypeName);
+            return 0;
+         }
+#endif
          float *begin = &(*vec->begin());
          buf.ReadFastArrayFloat16(begin, nvalues);
          
@@ -1219,6 +1231,12 @@ namespace TStreamerInfoActions
          buf.ReadInt(nvalues);
          vec->resize(nvalues);
          
+#ifdef R__VISUAL_CPLUSPLUS
+         if (nvalues <= 0) {
+            buf.CheckByteCount(start,count,config->fTypeName);
+            return 0;
+         }
+#endif
          double *begin = &(*vec->begin());
          buf.ReadFastArrayDouble32(begin, nvalues);
          
@@ -3130,50 +3148,16 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
    return sequence;
 }
  
-#if !defined(R__WIN32)
-#if !defined(_AIX)
+#if !defined(R__WIN32) && !defined(_AIX)
+
 #include <dlfcn.h>
 
-#else // _AIX
-
-#include "sys/ldr.h"
-
-struct Dl_info {
-  const char* dli_fname;
-};
-int dladdr(void* s, Dl_info* i) {
-   static const size_t bufSize = 4096;
-   G__FastAllocString buf(bufSize);
-   char* pldi = buf;
-   int r = loadquery(L_GETINFO,  pldi,  bufSize);
-   if (r == -1) {
-      i->dli_fname = 0;
-      return 0;
-   }
-   // First is main(), skip.
-   ld_info* ldi = (ld_info*)pldi;
-   while (ldi->ldinfo_next) {
-     pldi += ldi->ldinfo_next;
-     ldi = (ld_info*)pldi;
-     char* textBegin = (char*)ldi->ldinfo_textorg;
-     if (textBegin < s) {
-        char* textEnd = textBegin + ldi->ldinfo_textsize;
-        if (textEnd > s) {
-           i->dli_fname = ldi->ldinfo_filename;
-           return 1;
-        }
-     }
-   }
-   i->dli_fname = 0;
-   return 0;
-}
-#endif
 #endif
 
 typedef void (*voidfunc)();
 static const char *R__GetSymbolName(voidfunc func)
 {
-#if defined(R__WIN32) || defined(__CYGWIN__)
+#if defined(R__WIN32) || defined(__CYGWIN__) || defined(_AIX)
    return "not available on this platform";
 #if 0
    MEMORY_BASIC_INFORMATION mbi;

@@ -1830,18 +1830,21 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
    TRACEP(p, FORK,"Forking external proofsrv");
    if (!(pid = fMgr->Sched()->Fork("proofsrv"))) {
 
-      // Finalize unique tag and relevant dirs for this session and create log file path
+      // Finalize unique tag and relevant dirs for this session
       GetTagDirs((int)getpid(),
                  p, xps, in.fSessionTag, in.fTopSessionTag, in.fSessionDir, in.fWrkDir);
-      XPDFORM(in.fLogFile, "%s.log", in.fWrkDir.c_str());
+
+      // Create log file path
+      GetLogFile(p, xps, in.fSessionDir, in.fLogFile);
 
       // Log to the session log file from now on
       if (fLogger) fLogger->Bind(in.fLogFile.c_str());
       TRACE(FORK, "log file: "<<in.fLogFile);
 
-      XrdOucString pmsg = "child process ";
+      XrdOucString pmsg = "*** spawned child process ";
       pmsg += (int) getpid();
-      TRACE(FORK, pmsg);
+      pmsg += " ***";
+      TRACE(ALL, pmsg);
 
       // These files belongs to the client
       if (chown(in.fLogFile.c_str(), p->Client()->UI().fUid, p->Client()->UI().fGid) != 0)
@@ -3325,6 +3328,32 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdManager *mgr, XrdROOT *r)
    // Bad input
    TRACE(XERR, "XrdROOT instance undefined!");
    return -1;
+}
+
+//______________________________________________________________________________
+void XrdProofdProofServMgr::GetLogFile(XrdProofdProtocol *p, XrdProofdProofServ *xps,
+                                       XrdOucString &sessiondir, XrdOucString &logfile)
+{
+   XrdOucString host   = fMgr->Host();
+   XrdOucString ord    = xps->Ordinal();
+   XrdOucString role;
+
+   // Shorten host name
+   if (host.find(".") != STR_NPOS)
+      host.erase(host.find("."));
+
+   if (p->ConnType() == kXPD_MasterWorker) role = "worker";
+   else role = "master";
+
+   // Log file name format:
+   // <sessiondir>/[master|worker]-<ordinal>-<host>.log
+   // No PID is contained
+   XPDFORM(logfile, "%s/%s-%s-%s.log",
+      sessiondir.c_str(),
+      role.c_str(),
+      ord.c_str(),
+      host.c_str()
+   );
 }
 
 //______________________________________________________________________________

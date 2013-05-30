@@ -55,7 +55,7 @@
 //                                                                      //
 //    3d Plot:                                                          //
 //      'Type'    : ComboBox: set histogram type Lego or Surface-Plot   //
-//                  draw(Lego, Lego1.2, Surf, Surf1..5)                 //
+//                  draw(Lego, Lego1..4, Surf, Surf1..5)                //
 //                  see THistPainter::Paint                             //
 //      'Coords'  : ComboBox: set the coordinate system (Cartesian, ..  //
 //                  Spheric) see THistPainter::Paint                    //
@@ -153,7 +153,7 @@ ClassImp(TH2Editor)
 enum ETH2Wid {
    kTH2_TITLE,
    kDIM_SIMPLE, kDIM_COMPLEX, kHIST_TYPE,
-   kTYPE_LEGO,  kTYPE_LEGO1,  kTYPE_LEGO2,
+   kTYPE_LEGO,  kTYPE_LEGO1,  kTYPE_LEGO2, kTYPE_LEGO3, kTYPE_LEGO4,
    kTYPE_SURF,  kTYPE_SURF1,  kTYPE_SURF2, kTYPE_SURF3, kTYPE_SURF4, kTYPE_SURF5,
    kCOORD_TYPE, kCOORDS_CAR,  kCOORDS_CYL, kCOORDS_POL, kCOORDS_PSR, kCOORDS_SPH,
    kCONT_TYPE,  kERROR_ONOFF, kPALETTE_ONOFF, kPALETTE_ONOFF1,
@@ -874,7 +874,9 @@ void TH2Editor::SetModel(TObject* obj)
       ShowFrame(f38);
       fDimGroup->SetButton(kDIM_COMPLEX, kTRUE);
       fDimGroup->SetButton(kDIM_SIMPLE, kFALSE);
-      if (str.Contains("LEGO2")) fTypeCombo->Select(kTYPE_LEGO2);
+      if (str.Contains("LEGO4")) fTypeCombo->Select(kTYPE_LEGO4);
+      else if (str.Contains("LEGO3")) fTypeCombo->Select(kTYPE_LEGO3);
+      else if (str.Contains("LEGO2")) fTypeCombo->Select(kTYPE_LEGO2);
       else if (str.Contains("LEGO1")) fTypeCombo->Select(kTYPE_LEGO1);
       else if (str.Contains("LEGO"))  fTypeCombo->Select(kTYPE_LEGO);
       else if (str.Contains("SURF5")) fTypeCombo->Select(kTYPE_SURF5);
@@ -922,6 +924,8 @@ void TH2Editor::SetModel(TObject* obj)
       }
       if ((fTypeCombo->GetSelected()==kTYPE_LEGO) ||
           (fTypeCombo->GetSelected()==kTYPE_LEGO1)||
+          (fTypeCombo->GetSelected()==kTYPE_LEGO3)||
+          (fTypeCombo->GetSelected()==kTYPE_LEGO4)||
           (fTypeCombo->GetSelected()==kTYPE_SURF) ||
           (fTypeCombo->GetSelected()==kTYPE_SURF4))
          fAddPalette1->SetState(kButtonDisabled);
@@ -1183,6 +1187,8 @@ void TH2Editor::DoHistChanges()
       }
       if ((fTypeCombo->GetSelected()==kTYPE_LEGO) ||
           (fTypeCombo->GetSelected()==kTYPE_LEGO1)||
+          (fTypeCombo->GetSelected()==kTYPE_LEGO3)||
+          (fTypeCombo->GetSelected()==kTYPE_LEGO4)||
           (fTypeCombo->GetSelected()==kTYPE_SURF) ||
           (fTypeCombo->GetSelected()==kTYPE_SURF4))
          fAddPalette1->SetState(kButtonDisabled);
@@ -2694,7 +2700,7 @@ void TH2Editor::DoFillPattern(Style_t pattern)
 //______________________________________________________________________________
 TString TH2Editor::GetHistTypeLabel()
 {
-   // Return the immediate histogram type (HIST, LEGO1-2, SURF1-5).
+   // Return the immediate histogram type (HIST, LEGO1-4, SURF1-5).
 
    TString s="";
    switch (fTypeCombo->GetSelected()){
@@ -2702,6 +2708,8 @@ TString TH2Editor::GetHistTypeLabel()
       case (kTYPE_LEGO ): {s = "LEGO"; break;}
       case (kTYPE_LEGO1): {s = "LEGO1"; break;}
       case (kTYPE_LEGO2): {s = "LEGO2"; break;}
+      case (kTYPE_LEGO3): {s = "LEGO3"; break;}
+      case (kTYPE_LEGO4): {s = "LEGO4"; break;}
       case (kTYPE_SURF ): {s = "SURF";  break;}
       case (kTYPE_SURF1): {s = "SURF1"; break;}
       case (kTYPE_SURF2): {s = "SURF2"; break;}
@@ -2798,6 +2806,8 @@ TGComboBox* TH2Editor::BuildHistTypeComboBox(TGFrame* parent, Int_t id)
    c->AddEntry("Lego" , kTYPE_LEGO);
    c->AddEntry("Lego1", kTYPE_LEGO1);
    c->AddEntry("Lego2", kTYPE_LEGO2);
+   c->AddEntry("Lego3", kTYPE_LEGO3);
+   c->AddEntry("Lego4", kTYPE_LEGO4);
    c->AddEntry("Surf" , kTYPE_SURF);
    c->AddEntry("Surf1", kTYPE_SURF1);
    c->AddEntry("Surf2", kTYPE_SURF2);

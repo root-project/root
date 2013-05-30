@@ -504,7 +504,7 @@ Bool_t PyROOT::TCStringConverter::SetArg(
 
 // set the value and declare success
    if ( func )
-      gInterpreter->CallFunc_SetArg( func,  reinterpret_cast< Long_t >( fBuffer.c_str() ) );
+      gInterpreter->CallFunc_SetArg( func, (Long_t)fBuffer.c_str() );
    return kTRUE;
 }
 

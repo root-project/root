@@ -38,32 +38,32 @@ user can define customized matrix operations through the classes
 ![Overview of matrix classes](pictures/0300012D.png)
 
 Reference to different views of the matrix can be created through the
-classes on the right-hand side, see “Matrix Views”. These references
+classes on the right-hand side, see "Matrix Views". These references
 provide a natural connection to vectors.
 
 Matrix decompositions (used in equation solving and matrix inversion)
-are available through the classes on the left-hand side (see “Matrix
-Decompositions”). They inherit from the **`TDecompBase`** class. The
-Eigen Analysis is performed through the classes at the top, see “Matrix
-Eigen Analysis”. In both cases, only some matrix types can be analyzed.
+are available through the classes on the left-hand side (see "Matrix
+Decompositions"). They inherit from the **`TDecompBase`** class. The
+Eigen Analysis is performed through the classes at the top, see "Matrix
+Eigen Analysis". In both cases, only some matrix types can be analyzed.
 For instance, **`TDecompChol`** will only accept symmetric matrices as
 defined **`TMatrixDSym`**. The assignment operator behaves somewhat
 different than of most other classes. The following lines will result in
 an error:
 
 ``` {.cpp}
-TMatrixD a(3,4);
-TMatrixD b(5,6);
-b = a;
+   TMatrixD a(3,4);
+   TMatrixD b(5,6);
+   b = a;
 ```
 
 It required to first resize matrix b to the shape of `a`.
 
 ``` {.cpp}
-TMatrixD a(3,4);
-TMatrixD b(5,6);
-b.ResizeTo(a);
-b = a;
+   TMatrixD a(3,4);
+   TMatrixD b(5,6);
+   b.ResizeTo(a);
+   b = a;
 ```
 
 ## Matrix Properties
@@ -135,20 +135,20 @@ besides the usual shape/size descriptors of the matrix like `fNrows`,
 The code to print all matrix elements unequal zero would look like:
 
 ``` {.cpp}
-TMatrixDSparse a;
-const Int_t *rIndex = a.GetRowIndexArray();
-const Int_t *cIndex = a.GetColIndexArray();
-const Double_t *pData = a.GetMatrixArray();
-for (Int_t irow = 0; irow < a.getNrows(); irow++) {
-const Int_t sIndex = rIndex[irow];
-const Int_t eIndex = rIndex[irow+1];
-for (Int_t index = sIndex; index < eIndex; index++) {
-const Int_t icol = cIndex[index];
-const Double_t data = pData[index];
-printf("data(%d,%d) = %.4en",irow+a.GetfRowLwb(),
-icol+a.GetColLwb(),data);
-}
-}
+   TMatrixDSparse a;
+   const Int_t *rIndex = a.GetRowIndexArray();
+   const Int_t *cIndex = a.GetColIndexArray();
+   const Double_t *pData = a.GetMatrixArray();
+   for (Int_t irow = 0; irow < a.getNrows(); irow++) {
+      const Int_t sIndex = rIndex[irow];
+      const Int_t eIndex = rIndex[irow+1];
+      for (Int_t index = sIndex; index < eIndex; index++) {
+         const Int_t icol = cIndex[index];
+         const Double_t data = pData[index];
+         printf("data(%d,%d) = %.4en",irow+a.GetfRowLwb(),
+         icol+a.GetColLwb(),data);
+      }
+   }
 ```
 
 ### Setting Properties
@@ -162,17 +162,17 @@ old matrix, only the first (row-wise)` nr_zeros` are copied to the new
 matrix.
 
 +-----------------------------------------+----------------------------------+
-| Method                                  | Descriptions                     |
-+-----------------------------------------+----------------------------------+
+|               Method                    |            Descriptions          |
++=========================================+==================================+
 | `SetTol` `(Double_t tol)`               | set the tolerance number         |
 +-----------------------------------------+----------------------------------+
-| `ResizeTo` `(Int_t nrows,Int_t ncols,`  | change matrix shape to `nrows` × |
+| `ResizeTo` `(Int_t nrows,Int_t ncols,`  | change matrix shape to `nrows` x |
 |                                         | `ncols`. Index will start at     |
 | `         Int_t nr_nonzeros=-1)`        | zero                             |
 +-----------------------------------------+----------------------------------+
 | `ResizeTo(Int_t row_lwb,Int_t row_upb,` | change matrix shape to           |
 |                                         |                                  |
-| `Int_t col_lwb,Int_t col_upb,`          | `row_lwb:row_upb` ×              |
+| `Int_t col_lwb,Int_t col_upb,`          | `row_lwb:row_upb` x              |
 |                                         | `col_lwb:col_upb`                |
 | `Int_t nr_nonzeros=-1)`                 |                                  |
 +-----------------------------------------+----------------------------------+
@@ -204,8 +204,8 @@ matrix.
 The second half of the table is only relevant for sparse matrices. These
 methods define the sparse structure. It should be clear that a call to
 any of these methods has to be followed by a **`SetMatrixArray`** (...)
-which will supply the matrix data, see the next chapter “Creating and
-Filling a Matrix”.
+which will supply the matrix data, see the next chapter "Creating and
+Filling a Matrix".
 
 ## Creating and Filling a Matrix
 
@@ -249,8 +249,8 @@ that will allow arithmetic operations.
 +--------------------------------------------------------------------------+
 
 If only the matrix shape is defined in the constructor, matrix data has
-to be supplied and possibly the sparse structure. In “Setting
-Properties” was discussed how to set the sparse structure.
+to be supplied and possibly the sparse structure. In "Setting
+Properties" was discussed how to set the sparse structure.
 
 Several methods exist to fill a matrix with data:
 
@@ -310,39 +310,39 @@ Below follow a few examples of creating and filling a matrix. First we
 create a Hilbert matrix by copying an array.
 
 ``` {.cpp}
-TMatrixD h(5,5);
-TArrayD data(25);
-for (Int_t = 0; i < 25; i++) {
-const Int_t ir = i/5;
-const Int_t ic = i%5;
-data[i] = 1./(ir+ic);
-}
-h.SetMatrixArray(data.GetArray());
+   TMatrixD h(5,5);
+   TArrayD data(25);
+   for (Int_t = 0; i < 25; i++) {
+      const Int_t ir = i/5;
+      const Int_t ic = i%5;
+      data[i] = 1./(ir+ic);
+   }
+   h.SetMatrixArray(data.GetArray());
 ```
 
 We also could assign the data array to the matrix without actually
 copying it.
 
 ``` {.cpp}
-TMatrixD h; h.Use(5,5,data.GetArray());
-h.Invert();
+   TMatrixD h; h.Use(5,5,data.GetArray());
+   h.Invert();
 ```
 
 The array `data` now contains the inverted matrix. Finally, create a
 unit matrix in sparse format.
 
 ``` {.cpp}
-TMatrixDSparse unit1(5,5);
-TArrayI row(5),col(5);
-for (Int_t i = 0; i < 5; i++) row[i] = col[i] = i;
-TArrayD data(5); data.Reset(1.);
-unit1.SetMatrixArray(5,row.GetArray(),col.GetArray(),data.GetArray());
+   TMatrixDSparse unit1(5,5);
+   TArrayI row(5),col(5);
+   for (Int_t i = 0; i < 5; i++) row[i] = col[i] = i;
+   TArrayD data(5); data.Reset(1.);
+   unit1.SetMatrixArray(5,row.GetArray(),col.GetArray(),data.GetArray());
 
-TMatrixDSparse unit2(5,5);
-unit2.SetSparseIndex(5);
-unit2.SetRowIndexArray(row.GetArray());
-unit2.SetColIndexArray(col.GetArray());
-unit2.SetMatrixArray(data.GetArray());
+   TMatrixDSparse unit2(5,5);
+   unit2.SetSparseIndex(5);
+   unit2.SetRowIndexArray(row.GetArray());
+   unit2.SetColIndexArray(col.GetArray());
+   unit2.SetMatrixArray(data.GetArray());
 ```
 
 ## Matrix Operators and Methods
@@ -353,12 +353,12 @@ It is common to classify matrix/vector operations according to BLAS
 +-------------+---------------------+-----------------+---------------------------+
 | BLAS level  | operations          | example         | floating-point operations |
 +-------------+---------------------+-----------------+---------------------------+
-| 1           | vector-vector       | `x` `T` `y`     | *n*                       |
+| 1           | vector-vector       | $x T y$         | $n$                       |
 +-------------+---------------------+-----------------+---------------------------+
-| 2           | matrix-vector       | A ` x`          | *n*2                      |
+| 2           | matrix-vector       | $A x$           | $n2$                      |
 |             | matrix              |                 |                           |
 +-------------+---------------------+-----------------+---------------------------+
-| 3           | matrix-matrix       | A B             | *n*3                      |
+| 3           | matrix-matrix       | $A B$           | $n3$                      |
 +-------------+---------------------+-----------------+---------------------------+
 
 Most level 1, 2 and 3 BLAS are implemented. However, we will present
@@ -367,45 +367,42 @@ enough.
 
 ### Arithmetic Operations between Matrices
 
-+---------------------+------------------------------------+--------------------+
-| Description         | Format                             | Comment            |
-+---------------------+------------------------------------+--------------------+
-| `element `          | `C=A+B`                            | `                  |
-|                     |                                    | ` `overwrites` A   |
-| `wise sum`          | `A+=B `                            |                    |
-|                     |                                    | `A += \alpha B `   |
-|                     | `Add` `(A,alpha,B) `               | `constructor`      |
-|                     |                                    |                    |
-|                     | `TMatrixD(A,TMatrixD::kPlus,B) `   |                    |
-+---------------------+------------------------------------+--------------------+
-| `element wise subtr | `C=A-B`                            | `overwrites` A     |
-| action`             |                                    |                    |
-|                     | `A-=B `                            | `constructor`      |
-|                     |                                    |                    |
-|                     | `TMatrixD(A,TMatrixD::kMinus,B) `  |                    |
-+---------------------+------------------------------------+--------------------+
-| `matrix multiplicat | `C=A*B`                            | `overwrites` A     |
-| ion`                |                                    |                    |
-|                     | `A*=B `                            |                    |
-|                     |                                    |                    |
-|                     | `C.Mult(A,B)`                      |                    |
-+---------------------+------------------------------------+--------------------+
-|                     | `TMatrixD(A,` `TMatrixD::kMult,B)` | `constructor of `  |
-|                     |                                    | A.B                |
-+---------------------+------------------------------------+--------------------+
-|                     | `TMatrixD(A,`                      | `constructor of `  |
-|                     | `TMatrixD::kTransposeMult` `,B)`   | A\^T.B             |
-+---------------------+------------------------------------+--------------------+
-|                     | `TMatrixD(A,`                      | `constructor of `  |
-|                     | `TMatrixD::kMultTranspose` `,B)`   | A.B\^T             |
-+---------------------+------------------------------------+--------------------+
-| `element wise`      | `ElementMult(A,B) `                | `A(i,j)*= B(i,j)`  |
-|                     |                                    |                    |
-| `multiplication`    | `ElementDiv(A,B)`                  | `A(i,j)/= B(i,j)`  |
-|                     |                                    |                    |
-| `element wise divis |                                    |                    |
-| ion`                |                                    |                    |
-+---------------------+------------------------------------+--------------------+
++-------------------------+------------------------------------+--------------------+
+|        Description      |               Format               |       Comment      |
++-------------------------+------------------------------------+--------------------+
+| `element`               | `C=A+B`                            |                    |
+|                         |                                    | `overwrites` $A$   |
+| `wise sum`              | `A+=B `                            |                    |
+|                         |                                    | $A = A+\alpha B$   |
+|                         | `Add` `(A,alpha,B) `               | `constructor`      |
+|                         |                                    |                    |
+|                         | `TMatrixD(A,TMatrixD::kPlus,B) `   |                    |
++-------------------------+------------------------------------+--------------------+
+| `element wise`          | `C=A-B`                            | `overwrites` $A$   |
+| `subtraction`           | `A-=B `                            | `constructor`      |
+|                         |                                    |                    |
+|                         | `TMatrixD(A,TMatrixD::kMinus,B) `  |                    |
++-------------------------+------------------------------------+--------------------+
+| `matrix multiplication` | `C=A*B`                            | `overwrites` $A$   |
+|                         |                                    |                    |
+|                         | `A*=B `                            |                    |
+|                         |                                    |                    |
+|                         | `C.Mult(A,B)`                      |                    |
++-------------------------+------------------------------------+--------------------+
+|                         | `TMatrixD(A,TMatrixD::kMult,B)`    | `constructor of `  |
+|                         |                                    | $A.B$              |
++-------------------------+------------------------------------+--------------------+
+|                         | `TMatrixD(A,`                      | `constructor of `  |
+|                         | `TMatrixD::kTransposeMult,B)`      | $A^{T}.B$          |
++-------------------------+------------------------------------+--------------------+
+|                         | `TMatrixD(A,`                      | `constructor of `  |
+|                         | `TMatrixD::kMultTranspose,B)`      | $A.B^{T}$          |
++-------------------------+------------------------------------+--------------------+
+| `element wise`          | `ElementMult(A,B) `                | `A(i,j)*= B(i,j)`  |
+| `multiplication`        |                                    |                    |
+|                         |                                    |                    |
+| `element wise division` | `ElementDiv(A,B)`                  | `A(i,j)/= B(i,j)`  |
++-------------------------+------------------------------------+--------------------+
 
 ### Arithmetic Operations between Matrices and Real Numbers
 
@@ -503,12 +500,12 @@ The following table shows element wise comparisons between matrix and real:
 +----------------------+--------------+----------------------------------------+
 | `A.NormByColumn`     | `TMatrixD`   | $A_{ij}/= \nu_i$, divide               |
 | `(v,"D") `           |              | each matrix column by vector v. If the |
-|                      | `TMatrixD`   | second argument is “`M`“, the column   |
+|                      | `TMatrixD`   | second argument is "`M`", the column   |
 | `A.NormByRow`        |              | is multiplied.                         |
 | `(v,"D")`            |              |                                        |
 |                      |              | $A_{ij}/= \nu_j$, divide               |
 |                      |              | each matrix row by vector v. If the    |
-|                      |              | second argument is “`M`“, the row is   |
+|                      |              | second argument is "`M`", the row is   |
 |                      |              | multiplied.                            |
 +----------------------+--------------+----------------------------------------+
 
@@ -649,26 +646,39 @@ The next two tables show the possible operations with real numbers, and
 the operations between the matrix views:
 
 +--------------------+-------------------------------+-----------------+
-| Description        | Format                        | Comment         |
+|    Description     |      Format                   |    Comment      |
 +--------------------+-------------------------------+-----------------+
 | assign real        | `TMatrixDRow(A,i) = r`        | row $i$         |
++--------------------+-------------------------------+-----------------+
 |                    | `TMatrixDColumn(A,j) = r`     | column $j$      |
++--------------------+-------------------------------+-----------------+
 |                    | `TMatrixDDiag(A) = r`         | matrix diagonal |
++--------------------+-------------------------------+-----------------+
 |                    | `TMatrixDSub(A,i,l,j,k) = r`  | sub matrix      |
 +--------------------+-------------------------------+-----------------+
+
++--------------------+-------------------------------+-----------------+
 | add real           | `TMatrixDRow(A,i) += r`       | row $i$         |
++--------------------+-------------------------------+-----------------+
 |                    | `TMatrixDColumn(A,j) += r`    | column $j$      |
++--------------------+-------------------------------+-----------------+
 |                    | `TMatrixDDiag(A) += r`        | matrix diagonal |
++--------------------+-------------------------------+-----------------+
 |                    | `TMatrixDSub(A,i,l,j,k) +=r`  | sub matrix      |
 +--------------------+-------------------------------+-----------------+
+
++--------------------+-------------------------------+-----------------+
 | multiply with real | `TMatrixDRow(A,i) *= r`       | row $i$         |
++--------------------+-------------------------------+-----------------+
 |                    | `TMatrixDColumn(A,j) *= r`    | column $j$      |
++--------------------+-------------------------------+-----------------+
 |                    | `TMatrixDDiag(A) *= r`        | matrix diagonal |
++--------------------+-------------------------------+-----------------+
 |                    | `TMatrixDSub(A,i,l,j,k) *= r` | sub matrix      |
 +--------------------+-------------------------------+-----------------+
 
 +-----------------------+---------------------------------+---------------------------------------+
-| Description           | Format                          | Comment                               |
+|       Description     |       Format                    |        Comment                        |
 +-----------------------+---------------------------------+---------------------------------------+
 |                       | `TMatrixDRow(A,i1) +=`          | add row $i2$ to row $i1$              |
 |                       | `TMatrixDRow const(B,i2)`       |                                       |
@@ -703,10 +713,10 @@ checking is done. For instance, the following code violates the
 symmetry.
 
 ``` {.cpp}
-TMatrixDSym A(5);
-A.UnitMatrix();
-TMatrixDRow(A,1)[0] = 1;
-TMatrixDRow(A,1)[2] = 1;
+   TMatrixDSym A(5);
+   A.UnitMatrix();
+   TMatrixDRow(A,1)[0] = 1;
+   TMatrixDRow(A,1)[2] = 1;
 ```
 
 ### View Examples
@@ -715,42 +725,41 @@ Inserting row `i1 `into row` i2` of matrix $A$
 can easily accomplished through:
 
 ``` {.cpp}
-TMatrixDRow(A,i1) = TMatrixDRow(A,i2)
+   TMatrixDRow(A,i1) = TMatrixDRow(A,i2)
 ```
 
 Which more readable than:
 
 ``` {.cpp}
-const Int_t ncols = A.GetNcols();
-Double_t *start = A.GetMatrixArray();
-Double_t *rp1 = start+i*ncols;
-const Double_t *rp2 = start+j*ncols;
-while (rp1 < start+ncols)
-*rp1++ = *rp2++;
+   const Int_t ncols = A.GetNcols();
+   Double_t *start = A.GetMatrixArray();
+   Double_t *rp1 = start+i*ncols;
+   const Double_t *rp2 = start+j*ncols;
+   while (rp1 < start+ncols) *rp1++ = *rp2++;
 ```
 
 Check that the columns of a Haar -matrix of order `order` are indeed
 orthogonal:
 
 ``` {.cpp}
-const TMatrixD haar = THaarMatrixD(order);
-TVectorD colj(1<<order);
-TVectorD coll(1<<order);
-for (Int_t j = haar.GetColLwb(); j <= haar.GetColUpb(); j++) {
-   colj = TMatrixDColumn_const(haar,j);
-   Assert(TMath::Abs(colj*colj-1.0) <= 1.0e-15);
+   const TMatrixD haar = THaarMatrixD(order);
+   TVectorD colj(1<<order);
+   TVectorD coll(1<<order);
+   for (Int_t j = haar.GetColLwb(); j <= haar.GetColUpb(); j++) {
+      colj = TMatrixDColumn_const(haar,j);
+      Assert(TMath::Abs(colj*colj-1.0) <= 1.0e-15);
 
-   for (Int_t l = j+1; l <= haar.GetColUpb(); l++) {
-      coll = TMatrixDColumn_const(haar,l);
-      Assert(TMath::Abs(colj*coll) <= 1.0e-15);
+      for (Int_t l = j+1; l <= haar.GetColUpb(); l++) {
+         coll = TMatrixDColumn_const(haar,l);
+         Assert(TMath::Abs(colj*coll) <= 1.0e-15);
+      }
    }
-}
 ```
 
 Multiplying part of a matrix with another part of that matrix (they can overlap)
 
 ``` {.cpp}
-TMatrixDSub(m,1,3,1,3) *= m.GetSub(5,7,5,7);
+   TMatrixDSub(m,1,3,1,3) *= m.GetSub(5,7,5,7);
 ```
 
 ## Matrix Decompositions
@@ -766,58 +775,58 @@ Bunch-Kaufman, Cholesky, QR and SVD decompositions. All of these classes
 are derived from the base class **`TDecompBase`** of which the important
 methods are listed in next table:
 
-+-----------------------------------------------------+-----------------------------------+
-| Method                                              | Action                            |
-+-----------------------------------------------------+-----------------------------------+
-| `Bool_t Decompose()`                                | perform the matrix decomposition  |
-+-----------------------------------------------------+-----------------------------------+
-| `Double_t Condition()`                              | calculate ||*A*||1 ||*A*-1||1,    |
-|                                                     | see “Condition number“            |
-+-----------------------------------------------------+-----------------------------------+
-| `void Det(Double_t &d1,Double_t &d2)`               | the determinant is `d1` $2^{d2}$. |
-|                                                     | Expressing the determinant this   |
-|                                                     | way makes under/over-flow very    |
-|                                                     | unlikely                          |
-+-----------------------------------------------------+-----------------------------------+
-| `Bool_t Solve(TVectorD &b)`                         | solve `Ax=b`; vector` b` is       |
-|                                                     | supplied through the argument and |
-|                                                     | replaced with solution `x`        |
-+-----------------------------------------------------+-----------------------------------+
-| `TVectorD Solve(const TVectorD &b,Bool_t &ok)`      | solve `Ax=b; x` is returned       |
-+-----------------------------------------------------+-----------------------------------+
-| `Bool_t Solve(TMatrixDColumn &b)`                   | solve                             |
-|                                                     | `Ax=column(B,j)`;` column(B,j)`   |
-|                                                     | is supplied through the argument  |
-|                                                     | and replaced with solution `x`    |
-+-----------------------------------------------------+-----------------------------------+
-| `Bool_t TransSolve(TVectorD &b)`                    | solve `ATx=b;` vector `b` is      |
-|                                                     | supplied through the argument and |
-|                                                     | replaced with solution `x`        |
-+-----------------------------------------------------+-----------------------------------+
-| `TVectorD TransSolve(const TVectorD b, Bool_t &ok)` | solve `ATx=b;` vector `x` is      |
-|                                                     | returned                          |
-+-----------------------------------------------------+-----------------------------------+
-| `Bool_t TransSolve(TMatrixDColumn &b)`              | solve                             |
-|                                                     | `ATx=column(B,j); column(B,j)` is |
-|                                                     | supplied through the argument and |
-|                                                     | replaced with solution `x`        |
-+-----------------------------------------------------+-----------------------------------+
-| `Bool_t MultiSolve(TMatrixD &B)`                    | solve `AX=B`. matrix `B` is       |
-|                                                     | supplied through the argument and |
-|                                                     | replaced with solution `X`        |
-+-----------------------------------------------------+-----------------------------------+
-| `void Invert(TMatrixD &inv)`                        | call to `MultiSolve` with as      |
-|                                                     | input argument the unit matrix.   |
-|                                                     | Note that for a matrix (`m` x `n`)|
-|                                                     | - $A$   with `m > n`, a           |
-|                                                     | pseudo-inverse is calculated      |
-+-----------------------------------------------------+-----------------------------------+
-| `TMatrixD Invert()`                                 | call to `MultiSolve` with as      |
-|                                                     | input argument the unit matrix.   |
-|                                                     | Note that for a matrix (`m` x `n`)|
-|                                                     | - $A$   with `m > n`, a           |
-|                                                     | pseudo-inverse is calculated      |
-+-----------------------------------------------------+-----------------------------------+
++-----------------------------------------------------+--------------------------------------+
+|                    Method                           |          Action                      |
++-----------------------------------------------------+--------------------------------------+
+| `Bool_t Decompose()`                                | perform the matrix decomposition     |
++-----------------------------------------------------+--------------------------------------+
+| `Double_t Condition()`                              | calculate ||*A*||1 ||*A*-1||1,       |
+|                                                     | see "Condition number"               |
++-----------------------------------------------------+--------------------------------------+
+| `void Det(Double_t &d1,Double_t &d2)`               | the determinant is `d1` $2^{d_{2}}$. |
+|                                                     | Expressing the determinant this      |
+|                                                     | way makes under/over-flow very       |
+|                                                     | unlikely                             |
++-----------------------------------------------------+--------------------------------------+
+| `Bool_t Solve(TVectorD &b)`                         | solve `Ax=b`; vector` b` is          |
+|                                                     | supplied through the argument and    |
+|                                                     | replaced with solution `x`           |
++-----------------------------------------------------+--------------------------------------+
+| `TVectorD Solve(const TVectorD &b,Bool_t &ok)`      | solve `Ax=b; x` is returned          |
++-----------------------------------------------------+--------------------------------------+
+| `Bool_t Solve(TMatrixDColumn &b)`                   | solve                                |
+|                                                     | `Ax=column(B,j)`;` column(B,j)`      |
+|                                                     | is supplied through the argument     |
+|                                                     | and replaced with solution `x`       |
++-----------------------------------------------------+--------------------------------------+
+| `Bool_t TransSolve(TVectorD &b)`                    | solve $A^Tx=b;$ vector `b` is        |
+|                                                     | supplied through the argument and    |
+|                                                     | replaced with solution `x`           |
++-----------------------------------------------------+--------------------------------------+
+| `TVectorD TransSolve(const TVectorD b, Bool_t &ok)` | solve $A^Tx=b;$ vector `x` is        |
+|                                                     | returned                             |
++-----------------------------------------------------+--------------------------------------+
+| `Bool_t TransSolve(TMatrixDColumn &b)`              | solve                                |
+|                                                     | `ATx=column(B,j); column(B,j)` is    |
+|                                                     | supplied through the argument and    |
+|                                                     | replaced with solution `x`           |
++-----------------------------------------------------+--------------------------------------+
+| `Bool_t MultiSolve(TMatrixD &B)`                    | solve $A^Tx=b;$. matrix `B` is       |
+|                                                     | supplied through the argument and    |
+|                                                     | replaced with solution `X`           |
++-----------------------------------------------------+--------------------------------------+
+| `void Invert(TMatrixD &inv)`                        | call to `MultiSolve` with as         |
+|                                                     | input argument the unit matrix.      |
+|                                                     | Note that for a matrix (`m` x `n`)   |
+|                                                     | - $A$   with `m > n`, a              |
+|                                                     | pseudo-inverse is calculated         |
++-----------------------------------------------------+--------------------------------------+
+| `TMatrixD Invert()`                                 | call to `MultiSolve` with as         |
+|                                                     | input argument the unit matrix.      |
+|                                                     | Note that for a matrix (`m` x `n`)   |
+|                                                     | - $A$   with `m > n`, a              |
+|                                                     | pseudo-inverse is calculated         |
++-----------------------------------------------------+--------------------------------------+
 
 Through **`TDecompSVD`** and **`TDecompQRH`** one can solve systems for a (`m` x `n`) 
  - $A$ with `m>n`. However, care has to be taken for
@@ -832,25 +841,23 @@ The classes store the state of the decomposition process of matrix $A$ in the
 user-definable part of **`TObject::fBits`**, see the next table. This guarantees the 
 correct order of the operations:
 
-+---------------+------------------------------------------------------------+
-| `kMatrixSet`  | $A$ `assigned`                                             |
-|               |                                                            |
-| `kDecomposed` | $A$ decomposed, bit `kMatrixSet`                           |
-|               | must have been set.                                        |
-| `kDetermined` |                                                            |
-|               | `det` $A$ calculated, bit                                  |
-| `kCondition`  | `kDecomposed` must have been set.                          |
-|               |                                                            |
-| `kSingular`   | ||*A*||1 ||*A*-1||1 is calculated bit `kDecomposed` must   |
-|               | have been set.                                             |
-|               |                                                            |
-|               | $A$ is singular                                            |
-+---------------+------------------------------------------------------------+
++---------------+-------------------------------------------------------------------------+
+| `kMatrixSet`  | $A$ `assigned`                                                          |
+|               |                                                                         |
+| `kDecomposed` | $A$ decomposed, bit `kMatrixSet` must have been set.                    |
+|               |                                                                         |
+| `kDetermined` | `det` $A$ calculated, bit `kDecomposed` must have been set.             |
+|               |                                                                         |
+| `kCondition`  | ||*A*||1 ||*A*-1||1 is calculated bit `kDecomposed` must have been set. |
+|               |                                                                         |
+| `kSingular`   | $A$ is singular                                                         |
++---------------+-------------------------------------------------------------------------+
+
 
 The state is reset by assigning a new matrix through
 `SetMatrix(TMatrixD &A)` for **`TDecompBK`** and **`TDecompChol`**
-(actually` SetMatrix(`**`TMatrixDSym &A)` and
-`SetMatrix(``TMatrixDSparse`**` &A)` for **`TMatrixDSparse`**).
+(actually `SetMatrix(`**`TMatrixDSym &A)`** and
+`SetMatrix(`**`TMatrixDSparse`** `&A)` for **`TMatrixDSparse`**).
 
 As the code example below shows, the user does not have to worry about
 the decomposition step before calling a solve method, because the
@@ -858,12 +865,12 @@ decomposition class checks before invoking `Solve` that the matrix has
 been decomposed.
 
 ``` {.cpp}
-TVectorD b = ..;
-TMatrixD a = ..;
-.
-TDecompLU lu(a);
-Bool_t ok;
-lu.Solve(b,ok);
+   TVectorD b = ..;
+   TMatrixD a = ..;
+   .
+   TDecompLU lu(a);
+   Bool_t ok;
+   lu.Solve(b,ok);
 ```
 
 In the next example, we show again the same decomposition but now
@@ -876,17 +883,17 @@ constant. If we would have replaced `lu.SetMatrix(a)` by **`TDecompLU`**
 the stack*.*
 
 ``` {.cpp}
-TVectorD b(n);
-TMatrixD a(n,n);
-TDecompLU lu(n);
-Bool_t ok;
-for (....) {
-   b = ..;
-   a = ..;
-   lu.SetMatrix(a);
-   lu.Decompose();
-   lu.Solve(b,ok);
-}
+   TVectorD b(n);
+   TMatrixD a(n,n);
+   TDecompLU lu(n);
+   Bool_t ok;
+   for (....) {
+      b = ..;
+      a = ..;
+      lu.SetMatrix(a);
+      lu.Decompose();
+      lu.Solve(b,ok);
+   }
 ```
 
 ### Tolerances and Scaling
@@ -916,23 +923,23 @@ have the code stop in case of a number smaller than `fTol`, one could
 proceed as follows:
 
 ``` {.cpp}
-TVectorD b = ..;
-TMatrixD a = ..;
-.
-TDecompLU lu(a);
-Bool_t ok;
-TVectorD x = lu.Solve(b,ok);
-Int_t nr = 0;
-while (!ok) {
-   lu.SetMatrix(a);
-   lu.SetTol(0.1*lu.GetTol());
-   if (nr++ > 10) break;
-   x = lu.Solve(b,ok);
-}
-if (x.IsValid())
-cout << "solved with tol =" << lu.GetTol() << endl;
-else
-cout << "solving failed " << endl;
+   TVectorD b = ..;
+   TMatrixD a = ..;
+   .
+   TDecompLU lu(a);
+   Bool_t ok;
+   TVectorD x = lu.Solve(b,ok);
+   Int_t nr = 0;
+   while (!ok) {
+      lu.SetMatrix(a);
+      lu.SetTol(0.1*lu.GetTol());
+      if (nr++ > 10) break;
+      x = lu.Solve(b,ok);
+   }
+   if (x.IsValid())
+   cout << "solved with tol =" << lu.GetTol() << endl;
+   else
+   cout << "solving failed " << endl;
 ```
 
 The observant reader will notice that by scaling the complete matrix by
@@ -945,7 +952,7 @@ factor. (For CPU time saving we decided not to make this an automatic procedure)
 The numerical accuracy of the solution `x` in `Ax = b` can be accurately
 estimated by calculating the condition number `k` of matrix $A$, which is defined as:
 
-$k = ||A||_{1}||A^{-1}||_{1}$ where $||A||_{1} = max_{j}(\sum_{i}|A_{ij}|)$
+$k = ||A||_{1}||A^{-1}||_{1}$ where $||A||_{1} = \underset{j}{max}(\sum_{i}|A_{ij}|)$
 
 A good rule of thumb is that if the matrix condition number is 10n,
 the accuracy in `x` is `15` - `n` digits for double precision.
@@ -967,56 +974,56 @@ condition number predicts that the solution accuracy should be around
 digits. Indeed, the largest deviation is 0.00055 in component 6.
 
 ``` {.cpp}
-TMatrixDSym H = THilbertMatrixDSym(10);
-TVectorD rowsum(10);
-for (Int_t irow = 0; irow < 10; irow++)
-for (Int_t icol = 0; icol < 10; icol++)
-rowsum(irow) += H(irow,icol);
-TDecompLU lu(H);
-Bool_t ok;
-TVectorD x = lu.Solve(rowsum,ok);
-Double_t d1,d2;
-lu.Det(d1,d2);
-cout << "cond:" << lu.Condition() << endl;
-cout << "det :" << d1*TMath:Power(2.,d2) << endl;
-cout << "tol :" << lu.GetTol() << endl;
-x.Print();
-cond:3.9569e+12
-det :2.16439e-53
-tol :2.22045e-16
-Vector 10 is as follows
-|          1   |
-------------------
-0 |1
-1 |1
-2 |0.999997
-3 |1.00003
-4 |0.999878
-5 |1.00033
-6 |0.999452
-7 |1.00053
-8 |0.999723
-9 |1.00006
+   TMatrixDSym H = THilbertMatrixDSym(10);
+   TVectorD rowsum(10);
+   for (Int_t irow = 0; irow < 10; irow++)
+   for (Int_t icol = 0; icol < 10; icol++)
+   rowsum(irow) += H(irow,icol);
+   TDecompLU lu(H);
+   Bool_t ok;
+   TVectorD x = lu.Solve(rowsum,ok);
+   Double_t d1,d2;
+   lu.Det(d1,d2);
+   cout << "cond:" << lu.Condition() << endl;
+   cout << "det :" << d1*TMath:Power(2.,d2) << endl;
+   cout << "tol :" << lu.GetTol() << endl;
+   x.Print();
+   cond:3.9569e+12
+   det :2.16439e-53
+   tol :2.22045e-16
+   Vector 10 is as follows
+     |          1   |
+   ------------------
+   0 |1
+   1 |1
+   2 |0.999997
+   3 |1.00003
+   4 |0.999878
+   5 |1.00033
+   6 |0.999452
+   7 |1.00053
+   8 |0.999723
+   9 |1.00006
 ```
 
 ### LU
 
-Decompose an `n×n` matrix $A$.
+Decompose an `nxn` matrix $A$.
 
 ``` {.cpp}
-PA = LU
+   PA = LU
 ```
 
-*P*permutation matrix stored in the index array `fIndex`: `j=fIndex[i]`
+*P* permutation matrix stored in the index array `fIndex`: `j=fIndex[i]`
 indicates that row j and row` i `should be swapped. Sign of the
-permutation, `-1n`, where `n` is the number of interchanges in the
+permutation, $-1^n$, where `n` is the number of interchanges in the
 permutation, stored in `fSign`.
 
-*L*is lower triangular matrix, stored in the strict lower triangular
+*L* is lower triangular matrix, stored in the strict lower triangular
 part of `fLU.` The diagonal elements of *L* are unity and are not
 stored.
 
-*U*is upper triangular matrix, stored in the diagonal and upper
+*U* is upper triangular matrix, stored in the diagonal and upper
 triangular part of `fU`.
 
 The decomposition fails if a diagonal element of `fLU` equals 0.
@@ -1026,20 +1033,37 @@ The decomposition fails if a diagonal element of `fLU` equals 0.
 Decompose a real symmetric matrix $A$
 
 ``` {.cpp}
-A = UDUT
+   A = UDUT
 ```
 
-*D*is a block diagonal matrix with 1-by-1 and 2-by-2 diagonal blocks
+*D* is a block diagonal matrix with 1-by-1 and 2-by-2 diagonal blocks
 *Dk*.
 
-*U*is product of permutation and unit upper triangular matrices:
+*U* is product of permutation and unit upper triangular matrices:
 
 *U = Pn-1Un-1· · ·PkUk· · ·* where *k* decreases from *n* - 1 to 0 in
 steps of 1 or 2. Permutation matrix *Pk* is stored in `fIpiv`. *Uk* is a
 unit upper triangular matrix, such that if the diagonal block *Dk* is of
 order *s* (*s* = 1, 2), then
 
-![](pictures/08000181.png)
+$$ U_k = \underset{
+         \begin{array}{ccc}
+         k-s & s & n-k
+         \end{array}
+         }
+         {
+         \left(\begin{array}{ccc}
+         1 &  v  & 0 \\ 
+         0 &  1  & 0 \\ 
+         0 &  0  & 1    
+         \end{array}\right)
+         }
+         \begin{array}{c}
+         k-s \\ 
+         s \\ 
+         n-k
+         \end{array}
+$$                    
 
 If *s* = 1, `Dk` overwrites $A$*(k, k)*, and v overwrites $A$*(0: k - 1, k)*.
 
@@ -1052,7 +1076,7 @@ $A$*(0 : k - 2, k - 1 : k)*.
 Decompose a symmetric, positive definite matrix $A$
 
 ``` {.cpp}
-A = UTU
+   A = UTU
 ```
 
 *U* is an upper triangular matrix. The decomposition fails if a diagonal
@@ -1063,7 +1087,7 @@ element of `fU<=0`, the matrix is not positive negative.
 Decompose a (*m* x*n*) - matrix $A$ with *m >= n.*
 
 ``` {.cpp}
-A = QRH
+   A = QRH
 ```
 
 *Q* orthogonal (*m* x *n*) - matrix, stored in `fQ`;
@@ -1072,9 +1096,9 @@ A = QRH
 
 *H* (*n* x *n*) - Householder matrix, stored through;
 
-`fUp` n - vector with Householder up’s;
+`fUp` n - vector with Householder up's;
 
-`fW` n - vector with Householder beta’s.
+`fW` n - vector with Householder beta's.
 
 The decomposition fails if in the formation of reflectors a zero
 appears, i.e. singularity.
@@ -1084,7 +1108,7 @@ appears, i.e. singularity.
 Decompose a (*m* x *n*) - matrix $A$ with *m >= n*.
 
 ``` {.cpp}
-A = USVT
+   A = USVT
 ```
 
 *U* (*m* x *m*) orthogonal matrix, stored in `fU`;
@@ -1116,7 +1140,27 @@ diagonal with the real eigenvalues in 1-by-1 blocks and any complex
 eigenvalues, `a+i*b`, in 2-by-2 blocks, `[a,b;-b,a]`. That is, if the
 complex eigenvalues look like:
 
-![](pictures/08000196.png) then $D$ looks like ![](pictures/08000198.png)
+$$
+   \left(\begin{array}{cccccc}
+   u+iv &   .  &   .  &   .  &   .  &   .  \\ 
+     .  & u-iv &   .  &   .  &   .  &   .  \\ 
+     .  &   .  & a+ib &   .  &   .  &   .  \\ 
+     .  &   .  &   .  & a-ib &   .  &   .  \\ 
+     .  &   .  &   .  &   .  &   x  &   .  \\ 
+     .  &   .  &   .  &   .  &   .  &   y 
+   \end{array}\right)
+$$
+then $D$ looks like: 
+$$
+   \left(\begin{array}{cccccc}
+     u  &   v  &   .  &   .  &   .  &   .  \\ 
+    -v  &   u  &   .  &   .  &   .  &   .  \\ 
+     .  &   .  &   a  &   b  &   .  &   .  \\ 
+     .  &   .  &   .  &  -b  &   a  &   .  \\ 
+     .  &   .  &   .  &   .  &   x  &   .  \\ 
+     .  &   .  &   .  &   .  &   .  &   y 
+   \end{array}\right)
+$$
 
 This keeps $V$ a real matrix in both symmetric
 and non-symmetric cases, and $A.V = V.D$. The matrix $V$ may be badly conditioned,
@@ -1154,14 +1198,14 @@ $c$ are identical to the eigenvalues
 of $c^{T}$. $c$:
 
 ``` {.cpp}
-const TMatrixD m = THilbertMatrixD(10,10);
-TDecompSVD svd(m);
-TVectorD sig = svd.GetSig(); sig.Sqr();
-// Symmetric matrix EigenVector algorithm
-TMatrixDSym mtm(TMatrixDBase::kAtA,m);
-const TMatrixDSymEigen eigen(mtm);
-const TVectorD eigenVal = eigen.GetEigenValues();
-const Bool_t ok = VerifyVectorIdentity(sig,eigenVal,1,1.-e-14);
+   const TMatrixD m = THilbertMatrixD(10,10);
+   TDecompSVD svd(m);
+   TVectorD sig = svd.GetSig(); sig.Sqr();
+   // Symmetric matrix EigenVector algorithm
+   TMatrixDSym mtm(TMatrixDBase::kAtA,m);
+   const TMatrixDSymEigen eigen(mtm);
+   const TVectorD eigenVal = eigen.GetEigenValues();
+   const Bool_t ok = VerifyVectorIdentity(sig,eigenVal,1,1.-e-14);
 ```
 
 ## Speed Comparisons
@@ -1184,7 +1228,7 @@ PowerPC. The improvement becomes clearly visible around sizes of (50x50)
 were the execution speed improvement of the Altivec processor becomes
 more significant than the overhead of filling its pipe.
 
-2. `A-1` Here, the time is measured for an in-place matrix inversion.
+2. $A^{-1}$ Here, the time is measured for an in-place matrix inversion.
 
 Except for `ROOT v3.10`, the algorithms are all based on an
 `LU `factorization followed by forward/back-substitution. `ROOT v3.10`
@@ -1193,7 +1237,7 @@ of the `CLHEP` routine is poor:
 
 - up to 6x6 the numerical imprecise Cramer multiplication is hard-coded.
 For instance, calculating `U=H*H-1`, where `H` is a (5x5) Hilbert
-matrix, results in off-diagonal elements of 10-7 instead of the 10-13
+matrix, results in off-diagonal elements of $10^{-7}$ instead of the $10^{-13}$
 using an `LU `according to `Crout`.
 
 - scaling protection is non-existent and limits are hard-coded, as a
@@ -1218,10 +1262,9 @@ shows the same numerical issues as in step the matrix inversion. Since
 ROOT3.10 has no dedicated equation solver, the solution is calculated
 through `x=A-1*b`. This will be slower and numerically not as stable.
 
-4. `(AT*A)-1*AT` timing results for calculation of the pseudo inverse
+4. $(A^{T}*A)^{-1}*A^{T}$ timing results for calculation of the pseudo inverse
 of matrix a. The sequence of operations measures the impact of several
 calls to constructors and destructors in the `C++` packages versus a `C`
 library like `GSL`.
 
 ![Speed comparison between the different matrix packages](pictures/030001A1.png)
-![Speed comparison between the different matrix packages](pictures/030001A2.png)

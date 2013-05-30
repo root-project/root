@@ -99,6 +99,12 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
      // Avoid tail chasing.
      if (fIsAutoloadingRecursively)
        return false;
+
+     // We should try autoload only for special lookup failures. 
+     Sema::LookupNameKind kind = R.getLookupKind();
+     if (kind != Sema::LookupTagName) 
+        return false;
+
      fIsAutoloadingRecursively = true;
 
      bool lookupSuccess = false;
@@ -269,8 +275,10 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
    DeclarationName Name = R.getLookupName();
    IdentifierInfo* II = Name.getAsIdentifierInfo();
    SourceLocation Loc = R.getNameLoc();
-   ASTContext& C = R.getSema().getASTContext();
-   DeclContext* DC = static_cast<DeclContext*>(S->getEntity());
+   Sema& SemaRef = R.getSema();
+   ASTContext& C = SemaRef.getASTContext();
+   DeclContext* DC = C.getTranslationUnitDecl();
+   assert(DC && "Must not be null.");
    VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, C.DependentTy,
                                      /*TypeSourceInfo*/0, SC_None);
 
@@ -281,8 +289,11 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
    SourceRange invalidRange;
    Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__ResolveAtRuntime"));
    if (Result) {
+      // Here we have the scope but we cannot do Sema::PushDeclContext, because
+      // on pop it will try to go one level up, which we don't want.
+      Sema::ContextRAII pushedDC(SemaRef, DC);
       R.addDecl(Result);
-      DC->addDecl(Result);
+      SemaRef.PushOnScopeChains(Result, SemaRef.TUScope, /*Add to ctx*/true);
       // Say that we can handle the situation. Clang should try to recover
       return true;
    }
@@ -342,12 +353,17 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    if (R.isForRedeclaration()) 
       return false;
 
-   DeclContext* DC = static_cast<DeclContext*>(S->getEntity());
-   if (!DC)
+   if (R.getLookupKind() != Sema::LookupOrdinaryName) 
       return false;
-   if (NamedDecl* ND = dyn_cast<NamedDecl>(DC))
-      if (!m_Interpreter->isUniqueWrapper(ND->getNameAsString()))
-         return false;
+
+   if (!isa<FunctionDecl>(R.getSema().CurContext))
+      return false;
+
+   Sema& SemaRef = R.getSema();
+   ASTContext& C = SemaRef.getASTContext();
+   DeclContext* DC = C.getTranslationUnitDecl();
+   assert(DC && "Must not be null.");
+
 
    Preprocessor& PP = R.getSema().getPreprocessor();
    //Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
@@ -361,7 +377,6 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    DeclarationName Name = R.getLookupName();
    IdentifierInfo* II = Name.getAsIdentifierInfo();
    SourceLocation Loc = R.getNameLoc();
-   ASTContext& C = R.getSema().getASTContext();
    VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, 
                                      C.getAutoType(QualType()),
                                      /*TypeSourceInfo*/0, SC_None);
@@ -375,11 +390,14 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
 
    if (Result) {
       R.addDecl(Result);
-      DC->addDecl(Result);
+      // Here we have the scope but we cannot do Sema::PushDeclContext, because
+      // on pop it will try to go one level up, which we don't want.
+      Sema::ContextRAII pushedDC(SemaRef, DC);
+      SemaRef.PushOnScopeChains(Result, SemaRef.TUScope, /*Add to ctx*/true);
       // Say that we can handle the situation. Clang should try to recover
       return true;
    }
-   // We cannot handle the situation. Give up
+   // We cannot handle the situation. Give up.
    return false;
 }
 

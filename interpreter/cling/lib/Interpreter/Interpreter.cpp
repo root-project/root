@@ -679,6 +679,9 @@ namespace cling {
   Interpreter::DeclareInternal(const std::string& input, 
                                const CompilationOptions& CO,
                                const clang::Decl** D /* = 0 */) {
+    // Disable warnings which doesn't make sense when using the prompt
+    // This gets reset with the clang::Diagnostics().Reset()
+    ignoreFakeDiagnostics();
 
     const Transaction* lastT = m_IncrParser->Compile(input, CO);
     if (lastT->getIssuedDiags() != Transaction::kErrors) {
@@ -867,10 +870,12 @@ namespace cling {
   StoredValueRef Interpreter::Evaluate(const char* expr, DeclContext* DC,
                                        bool ValuePrinterReq) {
     Sema& TheSema = getCI()->getSema();
-    if (!DC)
-      DC = TheSema.getASTContext().getTranslationUnitDecl();
+    // The evaluation should happen on the global scope, because of the wrapper
+    // that is created. 
+    //
     // We can't PushDeclContext, because we don't have scope.
-    Sema::ContextRAII pushedDC(TheSema, DC);
+    Sema::ContextRAII pushDC(TheSema, 
+                             TheSema.getASTContext().getTranslationUnitDecl());
 
     StoredValueRef Result;
     getCallbacks()->SetIsRuntime(true);

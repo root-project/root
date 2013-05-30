@@ -25,7 +25,7 @@ drop_from_path()
 }
 
 if [ -n "${ROOTSYS}" ] ; then
-   OLD_ROOTSYS=${ROOTSYS}
+   old_rootsys=${ROOTSYS}
 fi
 
 if [ "x${BASH_ARGV[0]}" = "x" ]; then
@@ -37,43 +37,43 @@ if [ "x${BASH_ARGV[0]}" = "x" ]; then
     ROOTSYS="$PWD"; export ROOTSYS
 else
     # get param to "."
-    THIS=$(dirname ${BASH_ARGV[0]})
-    ROOTSYS=$(cd ${THIS}/..;pwd); export ROOTSYS
+    thisroot=$(dirname ${BASH_ARGV[0]})
+    ROOTSYS=$(cd ${thisroot}/..;pwd); export ROOTSYS
 fi
 
-if [ -n "${OLD_ROOTSYS}" ] ; then
+if [ -n "${old_rootsys}" ] ; then
    if [ -n "${PATH}" ]; then
-      drop_from_path $PATH ${OLD_ROOTSYS}/bin
+      drop_from_path $PATH ${old_rootsys}/bin
       PATH=$newpath
    fi
    if [ -n "${LD_LIBRARY_PATH}" ]; then
-      drop_from_path $LD_LIBRARY_PATH ${OLD_ROOTSYS}/lib
+      drop_from_path $LD_LIBRARY_PATH ${old_rootsys}/lib
       LD_LIBRARY_PATH=$newpath
    fi
    if [ -n "${DYLD_LIBRARY_PATH}" ]; then
-      drop_from_path $DYLD_LIBRARY_PATH ${OLD_ROOTSYS}/lib
+      drop_from_path $DYLD_LIBRARY_PATH ${old_rootsys}/lib
       DYLD_LIBRARY_PATH=$newpath
    fi
    if [ -n "${SHLIB_PATH}" ]; then
-      drop_from_path $SHLIB_PATH ${OLD_ROOTSYS}/lib
+      drop_from_path $SHLIB_PATH ${old_rootsys}/lib
       SHLIB_PATH=$newpath
    fi
    if [ -n "${LIBPATH}" ]; then
-      drop_from_path $LIBPATH ${OLD_ROOTSYS}/lib
+      drop_from_path $LIBPATH ${old_rootsys}/lib
       LIBPATH=$newpath
    fi
    if [ -n "${PYTHONPATH}" ]; then
-      drop_from_path $PYTHONPATH ${OLD_ROOTSYS}/lib
+      drop_from_path $PYTHONPATH ${old_rootsys}/lib
       PYTHONPATH=$newpath
    fi
    if [ -n "${MANPATH}" ]; then
-      drop_from_path $MANPATH ${OLD_ROOTSYS}/man
+      drop_from_path $MANPATH ${old_rootsys}/man
       MANPATH=$newpath
    fi
 fi
 
 if [ -z "${MANPATH}" ]; then
-   # Grab the default man path before setting the path to avoid duplicates 
+   # Grab the default man path before setting the path to avoid duplicates
    if `which manpath > /dev/null 2>&1` ; then
       default_manpath=`manpath`
    else
@@ -126,3 +126,7 @@ fi
 if [ "x`root-config --arch | grep -v win32gcc | grep -i win32`" != "x" ]; then
   ROOTSYS="`cygpath -w $ROOTSYS`"
 fi
+
+unset old_rootsys
+unset thisroot
+

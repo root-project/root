@@ -88,6 +88,9 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFi
    fLegoFunction    = 0;
    fSurfaceFunction = 0;
 
+   fEdgeColor       = 1;
+   fEdgeStyle       = 1;
+   fEdgeWidth       = 1;
 
    TList *stack = 0;
    if (gCurrentHist) stack = gCurrentHist->GetPainter()->GetStack();
@@ -166,6 +169,10 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    fDrawFace        = 0;
    fLegoFunction    = 0;
    fSurfaceFunction = 0;
+
+   fEdgeColor       = 1;
+   fEdgeStyle       = 1;
+   fEdgeWidth       = 1;
 
    TList *stack = gCurrentHist->GetPainter()->GetStack();
    fNStack = 0;
@@ -521,7 +528,7 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np,
    //          D R A W   F A C E   &   B O R D E R
    FillPolygon(np, p3, &t[1]);
    if (fMesh == 1) {
-      SetFillColor(1);
+      SetFillColor(fEdgeColor);
       SetFillStyle(0);
       TAttFill::Modify();
       gPad->PaintFillArea(np, x, y);
@@ -584,7 +591,7 @@ void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np,
    gPad->PaintFillArea(np, x, y);
    if (fMesh) {
       SetFillStyle(0);
-      SetFillColor(1);
+      SetFillColor(fEdgeColor);
       TAttFill::Modify();
       gPad->PaintFillArea(np, x, y);
    }
@@ -783,7 +790,7 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
    //                       (not used in this routine)
 
    Double_t xdel, ydel;
-   Int_t i, k, icol, i1, i2, it;
+   Int_t i, k, i1, i2, it;
    Double_t x[2], y[2];
    Double_t p1[3], p2[3], p3[36]        /* was [3][12] */;
    TView *view = 0;
@@ -806,9 +813,9 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
    }
 
    //          D R A W   F A C E
-   icol = icodes[3];
-   if (icol) SetLineColor(fColorMain[icol - 1]);
-   else      SetLineColor(1);
+   SetLineColor(fEdgeColor);
+   SetLineStyle(fEdgeStyle);
+   SetLineWidth(fEdgeWidth);
    TAttLine::Modify();
    for (i = 1; i <= np; ++i) {
       i1 = i;
@@ -827,6 +834,9 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
          gPad->PaintPolyLine(2, x, y);
       }
    }
+   SetLineColor(1);
+   SetLineStyle(1);
+   SetLineWidth(1);
 
    //          M O D I F Y    S C R E E N
    for (i = 1; i <= np; ++i) {
@@ -3492,6 +3502,17 @@ void TPainter3dAlgorithms::SetColorMain(Color_t color, Int_t n)
    if (n < 0 ) {fColorBottom = color; return;}
    if (n > fNStack ) {fColorTop = color; return;}
    fColorMain[n] = color;
+}
+
+
+//______________________________________________________________________________
+void TPainter3dAlgorithms::SetEdgeAtt(Color_t color, Style_t style, Width_t width)
+{
+   // Store edge attributes
+
+   fEdgeColor = color;
+   fEdgeStyle = style;
+   fEdgeWidth = width;
 }
 
 

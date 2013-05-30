@@ -567,8 +567,8 @@ if(xrootd)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
     )
-    set(XROOTD_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/xrootd)
-    set(XROOTD_LIBRARIES -L${CMAKE_BINARY_DIR}/lib64 -lXrdMain -lXrdUtils -lXrdClient)
+    set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd)
+    set(XROOTD_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -lXrdMain -lXrdUtils -lXrdClient)
     set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
   endif()
 endif()
@@ -590,19 +590,24 @@ if(cling)
     #---The list of libraires is optatined by runnning 'llvm-config --libs'
     set(LLVM_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LLVM-install/include)
     set(LLVM_LIBRARIES -L${CMAKE_BINARY_DIR}/LLVM-install/lib -lclangFrontend -lclangSerialization -lclangDriver -lclangCodeGen
-                       -lclangParse -lclangSema -lclangAnalysis  -lclangRewriteCore -lclangAST -lclangLex -lclangBasic -lclangEdit
-                       -lLLVMAsmParser -lLLVMInstrumentation -lLLVMLinker -lLLVMArchive -lLLVMBitReader -lLLVMDebugInfo -lLLVMJIT
-                       -lLLVMipo -lLLVMVectorize -lLLVMBitWriter -lLLVMTableGen -lLLVMXCoreCodeGen -lLLVMXCoreDesc -lLLVMXCoreInfo
-                       -lLLVMX86AsmParser -lLLVMX86CodeGen -lLLVMX86Desc -lLLVMX86Info -lLLVMX86AsmPrinter -lLLVMX86Utils -lLLVMSparcCodeGen
-                       -lLLVMSparcDesc -lLLVMSparcInfo -lLLVMPowerPCCodeGen -lLLVMPowerPCDesc -lLLVMPowerPCAsmPrinter -lLLVMPowerPCInfo
-                       -lLLVMNVPTXCodeGen -lLLVMNVPTXDesc -lLLVMNVPTXInfo -lLLVMNVPTXAsmPrinter -lLLVMMSP430CodeGen -lLLVMMSP430Desc
-                       -lLLVMMSP430Info -lLLVMMSP430AsmPrinter -lLLVMMBlazeAsmParser -lLLVMMBlazeCodeGen -lLLVMMBlazeDesc -lLLVMMBlazeInfo
-                       -lLLVMMBlazeAsmPrinter -lLLVMMipsAsmParser -lLLVMMipsCodeGen -lLLVMMipsDesc -lLLVMMipsInfo -lLLVMMipsAsmPrinter
-                       -lLLVMHexagonCodeGen -lLLVMHexagonDesc -lLLVMHexagonInfo -lLLVMHexagonAsmPrinter -lLLVMCppBackendCodeGen
-                       -lLLVMCppBackendInfo -lLLVMCellSPUCodeGen -lLLVMCellSPUDesc -lLLVMCellSPUInfo -lLLVMARMAsmParser -lLLVMARMCodeGen
-                       -lLLVMSelectionDAG -lLLVMAsmPrinter -lLLVMARMDesc -lLLVMARMInfo -lLLVMARMAsmPrinter -lLLVMMCParser -lLLVMInterpreter
-                       -lLLVMCodeGen -lLLVMScalarOpts -lLLVMInstCombine -lLLVMTransformUtils -lLLVMAnalysis -lLLVMMCJIT -lLLVMRuntimeDyld
-                       -lLLVMExecutionEngine -lLLVMTarget -lLLVMMC -lLLVMObject -lLLVMCore -lLLVMSupport)
+                       -lclangParse -lclangSema -lclangAnalysis  -lclangRewriteCore -lclangAST -lclangBasic -lclangEdit -lclangLex
+                       -lLLVMInstrumentation -lLLVMArchive -lLLVMLinker -lLLVMIRReader -lLLVMBitReader -lLLVMAsmParser 
+                       -lLLVMDebugInfo -lLLVMOption -lLLVMipo -lLLVMVectorize -lLLVMBitWriter -lLLVMTableGen
+                       -lLLVMXCoreDisassembler -lLLVMXCoreCodeGen -lLLVMXCoreDesc -lLLVMXCoreInfo -lLLVMXCoreAsmPrinter
+                       -lLLVMX86Disassembler -lLLVMX86AsmParser -lLLVMX86CodeGen -lLLVMX86Desc -lLLVMX86Info -lLLVMX86AsmPrinter
+                       -lLLVMX86Utils -lLLVMSparcCodeGen -lLLVMSparcDesc -lLLVMSparcInfo -lLLVMPowerPCCodeGen -lLLVMPowerPCDesc
+                       -lLLVMPowerPCInfo -lLLVMPowerPCAsmPrinter -lLLVMNVPTXCodeGen -lLLVMNVPTXDesc -lLLVMNVPTXInfo
+                       -lLLVMNVPTXAsmPrinter -lLLVMMSP430CodeGen -lLLVMMSP430Desc -lLLVMMSP430Info -lLLVMMSP430AsmPrinter
+                       -lLLVMMBlazeDisassembler -lLLVMMBlazeCodeGen -lLLVMMBlazeDesc -lLLVMMBlazeAsmPrinter -lLLVMMBlazeAsmParser
+                       -lLLVMMBlazeInfo -lLLVMMipsDisassembler -lLLVMMipsCodeGen -lLLVMMipsAsmParser -lLLVMMipsDesc -lLLVMMipsInfo 
+                       -lLLVMMipsAsmPrinter -lLLVMHexagonCodeGen -lLLVMHexagonAsmPrinter -lLLVMHexagonDesc -lLLVMHexagonInfo 
+                       -lLLVMCppBackendCodeGen -lLLVMCppBackendInfo -lLLVMARMDisassembler -lLLVMARMCodeGen -lLLVMARMAsmParser 
+                       -lLLVMARMDesc -lLLVMARMInfo -lLLVMARMAsmPrinter -lLLVMAArch64Disassembler -lLLVMAArch64CodeGen 
+                       -lLLVMSelectionDAG -lLLVMAsmPrinter -lLLVMAArch64AsmParser -lLLVMAArch64Desc -lLLVMAArch64Info 
+                       -lLLVMAArch64AsmPrinter -lLLVMAArch64Utils -lLLVMMCDisassembler -lLLVMMCParser -lLLVMInterpreter 
+                       -lLLVMMCJIT -lLLVMJIT -lLLVMCodeGen -lLLVMObjCARCOpts -lLLVMScalarOpts -lLLVMInstCombine 
+                       -lLLVMTransformUtils -lLLVMipa -lLLVMAnalysis -lLLVMRuntimeDyld -lLLVMExecutionEngine -lLLVMTarget -lLLVMMC 
+                       -lLLVMObject -lLLVMCore -lLLVMSupport)
     file(READ ${LLVM_SOURCE_DIR}/configure _filestr)
     string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+).*" "\\1" LLVM_VERSION ${_filestr})
   else()
@@ -625,8 +630,67 @@ if(cling)
     add_dependencies(CLING LLVM)
 endif()
 
+
+#---Check for gfal-------------------------------------------------------------------
+if(gfal)
+  find_package(GFAL)
+  if(NOT GFAL_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Gfal library not found and is required (gfal option enabled)")
+    else()
+      message(STATUS "GFAL library not found. Set variable GFAL_DIR to point to your gfal installation
+                      and the variable SRM_IFCE_DIR to the srm_ifce installation")
+      message(STATUS "For the time being switching OFF 'gfal' option")
+      set(gfal OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+
+#---Check for dCache-------------------------------------------------------------------
+if(dcache)
+  find_package(DCAP)
+  if(NOT DCAP_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "dCap library not found and is required (dcache option enabled)")
+    else()
+      message(STATUS "dCap library not found. Set variable DCAP_DIR to point to your dCache installation")
+      message(STATUS "For the time being switching OFF 'dcache' option")
+      set(dcache OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+#---Check for Ldap--------------------------------------------------------------------
+if(ldap)
+  find_package(Ldap)
+  if(NOT LDAP_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "ldap library not found and is required (ldap option enabled)")
+    else()
+      message(STATUS "ldap library not found. Set variable LDAP_DIR to point to your ldap installation")
+      message(STATUS "For the time being switching OFF 'ldap' option")
+      set(ldap OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+#---Check for globus--------------------------------------------------------------------
+if(globus)
+  find_package(Globus)
+  if(NOT GLOBUS_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "globus libraries not found and is required ('globus' option enabled)")
+    else()
+      message(STATUS "globus libraries not found. Set environment var GLOBUS_LOCATION or varibale GLOBUS_DIR to point to your globus installation")
+      message(STATUS "For the time being switching OFF 'globus' option")
+      set(globus OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs chirp clarens dcache gfal glite globus hdfs lzma pch peac sapdb srp)
+foreach(opt afs chirp clarens glite hdfs pch peac sapdb srp)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)

@@ -9501,7 +9501,7 @@ int stressHistogram()
    const double reftime = 123; // needs to be updated // ref time on  pcbrun4
    double rootmarks = 900 * reftime / bm.GetCpuTime("stressHistogram");
    std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
-             << gROOT->GetSvnBranch() << "@" << gROOT->GetSvnRevision() << std::endl;
+             << gROOT->GetGitBranch() << "@" << gROOT->GetGitCommit() << std::endl;
    std::cout <<"****************************************************************************\n";
 
    return GlobalStatus;

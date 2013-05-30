@@ -343,21 +343,27 @@ void TProfile3D::Copy(TObject &obj) const
 //*-*-*-*-*-*-*-*Copy a Profile3D histogram to a new profile2D histogram*-*-*-*
 //*-*            =======================================================
 
-   TH3D::Copy(((TProfile3D&)obj));
-   fBinEntries.Copy(((TProfile3D&)obj).fBinEntries);
-   fBinSumw2.Copy(((TProfile3D&)obj).fBinSumw2);
-   for (int bin=0;bin<fNcells;bin++) {
-      ((TProfile3D&)obj).fArray[bin]        = fArray[bin];
-      ((TProfile3D&)obj).fSumw2.fArray[bin] = fSumw2.fArray[bin];
-   }
-   ((TProfile3D&)obj).fTmin = fTmin;
-   ((TProfile3D&)obj).fTmax = fTmax;
-   ((TProfile3D&)obj).fScaling = fScaling;
-   ((TProfile3D&)obj).fErrorMode = fErrorMode;
-   ((TProfile3D&)obj).fTsumwt  = fTsumwt;
-   ((TProfile3D&)obj).fTsumwt2 = fTsumwt2;
-}
+   try { 
+      TProfile3D & pobj = dynamic_cast<TProfile3D&>(obj);
 
+      TH3D::Copy(pobj);
+      fBinEntries.Copy(pobj.fBinEntries);
+      fBinSumw2.Copy(pobj.fBinSumw2);
+      for (int bin=0;bin<fNcells;bin++) {
+         pobj.fArray[bin]        = fArray[bin];
+         pobj.fSumw2.fArray[bin] = fSumw2.fArray[bin];
+      }
+      pobj.fTmin = fTmin;
+      pobj.fTmax = fTmax;
+      pobj.fScaling = fScaling;
+      pobj.fErrorMode = fErrorMode;
+      pobj.fTsumwt  = fTsumwt;
+      pobj.fTsumwt2 = fTsumwt2;
+
+   } catch(...) {
+      Fatal("Copy","Cannot copy a TProfile3D in a %s",obj.IsA()->GetName());
+   }
+}
 
 //______________________________________________________________________________
 Bool_t TProfile3D::Divide(TF1 *, Double_t )

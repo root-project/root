@@ -86,8 +86,10 @@ PyObject* PyROOT::TConstructorHolder::operator()(
 // CLING WORKAROUND --
 // Due to #100389, the constructor may not be a valid method. This happens if
 // there is no (default) contructor, so just return a right-size bit of memory.
-   if ( ! address )
+   if ( ! address ) {
+      PyErr_Clear();
       address = (Long_t)klass->New();
+   }
 // -- END CLING WORKAROUND
 
 // done with filtered args

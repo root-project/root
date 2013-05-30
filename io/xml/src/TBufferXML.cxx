@@ -1,4 +1,4 @@
-// @(#)root/:$Id$
+// @(#)root/:$Id: 5400e36954e1dc109fcfc306242c30234beb7312 $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -156,7 +156,7 @@ TXMLFile* TBufferXML::XmlFile()
 }
 
 //______________________________________________________________________________
-TString TBufferXML::ConvertToXML(TObject* obj, Bool_t GenericLayout, Bool_t UseNamespaces)
+TString TBufferXML::ConvertToXML(const TObject* obj, Bool_t GenericLayout, Bool_t UseNamespaces)
 {
    // converts object, inherited from TObject class, to XML string
    // fmt contains configuration of XML layout. See TXMLSetup class for detatils
@@ -165,7 +165,7 @@ TString TBufferXML::ConvertToXML(TObject* obj, Bool_t GenericLayout, Bool_t UseN
 }
 
 //______________________________________________________________________________
-TString TBufferXML::ConvertToXML(void* obj, TClass* cl, Bool_t GenericLayout, Bool_t UseNamespaces)
+TString TBufferXML::ConvertToXML(const void* obj, const TClass* cl, Bool_t GenericLayout, Bool_t UseNamespaces)
 {
    // converts any type of object to XML string
    // fmt contains configuration of XML layout. See TXMLSetup class for detatils

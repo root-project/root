@@ -7,7 +7,7 @@ MODNAME      := proofbench
 MODDIR       := $(ROOT_SRCDIR)/proof/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/inc
-PBPARDIR     := $(ROOT_OBJDIR)/etc/proof/proofbench
+PBPARDIR     := etc/proof/proofbench
 
 PROOFBENCHDIR  := $(MODDIR)
 PROOFBENCHDIRS := $(PROOFBENCHDIR)/src
@@ -40,7 +40,7 @@ PBDPARS     += $(wildcard $(MODDIRS)/TSel*.cxx)
 PBDPARH     := $(filter-out $(MODDIRI)/TSelHist%, $(PBDPARH))
 PBDPARS     := $(filter-out $(MODDIRS)/TSelHist%, $(PBDPARS))
 
-PBDPAR      := $(call stripsrc,$(PBPARDIR)/ProofBenchDataSel.par)
+PBDPAR      := $(PBPARDIR)/ProofBenchDataSel.par
 
 ##### ProofBenchCPUSel PAR file #####
 PBCPARDIR   := $(call stripsrc,$(PROOFBENCHDIRS)/ProofBenchCPUSel)
@@ -48,7 +48,7 @@ PBCPARINF   := $(PBCPARDIR)/PROOF-INF
 PBCPARH     := $(MODDIRI)/TProofBenchTypes.h $(MODDIRI)/TSelHist.h
 PBCPARS     := $(MODDIRS)/TSelHist.cxx
 
-PBCPAR      := $(call stripsrc,$(PBPARDIR)/ProofBenchCPUSel.par)
+PBCPAR      := $(PBPARDIR)/ProofBenchCPUSel.par
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFBENCHH))
@@ -81,6 +81,7 @@ $(PROOFBENCHMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFBENCHL)
 		   -d $(PROOFBENCHLIBDEPM) -c $(PROOFBENCHL)
 
 $(PBDPAR):   $(PBDPARH) $(PBDPARS)
+		$(MAKEDIR)
 		@echo "Generating PAR file $@..."
 		@(if test -d $(PBDPARDIR); then \
 		   rm -fr $(PBDPARDIR); \
@@ -101,16 +102,17 @@ $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		done; \
 		echo "   return 0;" >> $(PBDPARINF)/SETUP.C ; \
 		echo "}" >> $(PBDPARINF)/SETUP.C ; \
-		builddir=$(PWD); \
+		builddir=`pwd`; \
 		cd $(call stripsrc,$(PROOFBENCHDIRS)); \
 		par=`basename $(PBDPAR)`; \
 		pardir=`basename $(PBDPARDIR)`; \
-		tar cf - $$pardir | gzip > $$par; \
-		mv $$par $(PBPARDIR); \
+		tar cf - $$pardir | gzip > $$par || exit 1; \
+		mv $$par $$builddir/$(PBPARDIR) || exit 1; \
 		cd $$builddir; \
 		rm -fr $(PBDPARDIR))
 
 $(PBCPAR):   $(PBCPARH) $(PBCPARS)
+		$(MAKEDIR)
 		@echo "Generating PAR file $@..."
 		@(if test -d $(PBCPARDIR); then \
 		   rm -fr $(PBCPARDIR); \
@@ -131,12 +133,12 @@ $(PBCPAR):   $(PBCPARH) $(PBCPARS)
 		done; \
 		echo "   return 0;" >> $(PBCPARINF)/SETUP.C ; \
 		echo "}" >> $(PBCPARINF)/SETUP.C ; \
-		builddir=$(PWD); \
+		builddir=`pwd`; \
 		cd $(call stripsrc,$(PROOFBENCHDIRS)); \
 		par=`basename $(PBCPAR)`; \
 		pardir=`basename $(PBCPARDIR)`; \
-		tar cf - $$pardir | gzip > $$par; \
-		mv $$par $(PBPARDIR); \
+		tar cf - $$pardir | gzip > $$par || exit 1; \
+		mv $$par $$builddir/$(PBPARDIR) || exit 1; \
 		cd $$builddir; \
 		rm -fr $(PBCPARDIR))
 

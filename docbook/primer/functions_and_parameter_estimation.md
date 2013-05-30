@@ -164,7 +164,8 @@ results, we construct for each pseudo-data set the so-called "pull", the
 difference of the estimated and the true value of a parameter,
 normalised to the estimated error on the parameter, 
 $\frac{(p_{estim} - p_{true})}{\sigma_{p}}$. If everything is OK, the 
-distribution of the pull values is a standard normal distribution, i.e. a Gaussian distribution centred around zero with a standard deviation of one.
+distribution of the pull values is a standard normal distribution, i.e.
+a Gaussian distribution centred around zero with a standard deviation of one.
 
 The macro performs a rather big number of toy experiments, where a
 histogram is repeatedly filled with Gaussian distributed numbers,
@@ -269,4 +270,5 @@ The answers to these questions are well beyond the scope of this guide.
 Basically all books about statistical methods provide a complete
 treatment of the aforementioned topics.
 
-[^4]: "Monte Carlo" simulation means that random numbers play a role here which is as crucial as in games of pure chance in the Casino of Monte Carlo.
+[^4]: "Monte Carlo" simulation means that random numbers play a role here
+which is as crucial as in games of pure chance in the Casino of Monte Carlo.

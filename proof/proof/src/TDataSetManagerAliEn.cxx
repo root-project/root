@@ -38,7 +38,7 @@ TAliEnFind::TAliEnFind(const TString &basePath, const TString &fileName,
 }
 
 //______________________________________________________________________________
-TAliEnFind::TAliEnFind(const TAliEnFind &src)
+TAliEnFind::TAliEnFind(const TAliEnFind &src) : TObject()
 {
    // Copy constructor. Cached query result is not copied
 
@@ -691,7 +691,7 @@ std::vector<Int_t> *TDataSetManagerAliEn::ExpandRunSpec(TString &runSpec) {
   // Remove duplicates
   {
     std::vector<Int_t>::iterator itr = runNums.begin();
-    Int_t prevVal;
+    Int_t prevVal = 0;  // unneeded but silences uninitialized warning
     while (itr != runNums.end()) {
       if ((itr == runNums.begin()) || (prevVal != *itr)) {
         prevVal = *itr;

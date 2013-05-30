@@ -88,13 +88,6 @@ namespace {
           else
             OS << '*';
 
-          if (!Node->getType().isNull()) {
-            // If the type is sugared, also dump a (shallow) desugared type.
-            SplitQualType D_split = Node->getType().getSplitDesugaredType();
-            assert(T_split == D_split && "Trying to print shallow type!");
-            if (T_split != D_split)
-              OS << ":" << QualType::getAsString(D_split);
-          }
           // end
 
           OS <<")@";
@@ -199,7 +192,8 @@ namespace cling {
     R.setLookupName(Name);
 
     m_Sema->LookupQualifiedName(R, NSD);
-    assert(!R.empty() && "Cannot find PrintValue(...)");
+    assert(!R.empty()
+           && "Cannot find InterpreterGeneratedCodeDiagnosticsMaybeIncorrect");
 
     NamedDecl* ND = R.getFoundDecl();
     m_NoRange = ND->getSourceRange();
@@ -225,7 +219,7 @@ namespace cling {
         if (ShouldVisit(*J) && (*J)->hasBody()) {
           if (FunctionDecl* FD = dyn_cast<FunctionDecl>(*J)) {
             // Set the decl context, which is needed by Evaluate.
-            m_CurDeclContext = FD->getDeclContext();
+            m_CurDeclContext = FD;
             ASTNodeInfo NewBody = Visit((*J)->getBody());
             FD->setBody(NewBody.getAsSingleNode());
           }
@@ -314,7 +308,7 @@ namespace cling {
             if (Expr* E = NewNode.getAs<Expr>()) {
               // Check whether value printer has been requested
               bool valuePrinterReq = false;
-              if ((it+1) == Children.end() || !isa<NullStmt>(*(it+1)))
+              if ((it+2) == Children.end() && !isa<NullStmt>(*(it+1)))
                 valuePrinterReq = true;
 
               // Assume void if still not escaped
@@ -492,6 +486,11 @@ namespace cling {
     return ASTNodeInfo(Node, 0);
   }
 
+  ASTNodeInfo EvaluateTSynthesizer::VisitCXXDeleteExpr(CXXDeleteExpr* Node) {
+    ASTNodeInfo deleteArg = Visit(Node->getArgument());
+    return ASTNodeInfo(Node, /*needs eval*/deleteArg.isForReplacement());
+  }
+
   ASTNodeInfo EvaluateTSynthesizer::VisitExpr(Expr* Node) {
     for (Stmt::child_iterator
            I = Node->child_begin(), E = Node->child_end(); I != E; ++I) {
@@ -512,17 +511,26 @@ namespace cling {
     return ASTNodeInfo(Node, 0);
   }
 
-  ASTNodeInfo EvaluateTSynthesizer::VisitBinaryOperator(BinaryOperator* Node) {
+  ASTNodeInfo EvaluateTSynthesizer::VisitBinaryOperator(BinaryOperator* Node) {    
     ASTNodeInfo rhs = Visit(Node->getRHS());
-    ASTNodeInfo lhs = Visit(Node->getLHS());
+    ASTNodeInfo lhs;
+
+    if (const DeclRefExpr* DRE = dyn_cast<DeclRefExpr>(Node->getLHS())) {
+      const Decl* D = DRE->getDecl();
+      if (const AnnotateAttr* A = D->getAttr<AnnotateAttr>())
+        if (A->getAnnotation().equals("__Auto"))
+          return ASTNodeInfo(Node, /*needs eval*/false);
+    }
+
+    lhs = Visit(Node->getLHS());
+
     assert((lhs.hasSingleNode() || rhs.hasSingleNode()) &&
            "1:N replacements are not implemented yet!");
 
     // Try find out the type of the left-hand-side of the operator
     // and give the hint to the right-hand-side in order to replace the
     // dependent symbol
-    if (Node->isAssignmentOp() &&
-        rhs.isForReplacement() &&
+    if (Node->isAssignmentOp() && rhs.isForReplacement() &&
         !lhs.isForReplacement()) {
       if (Expr* LHSExpr = lhs.getAs<Expr>())
         if (!IsArtificiallyDependent(LHSExpr)) {
@@ -586,6 +594,11 @@ namespace cling {
 
   Expr* EvaluateTSynthesizer::BuildDynamicExprInfo(Expr* SubTree,
                                                    bool ValuePrinterReq) {
+    // We need to evaluate it in its own context. Evaluation on the global
+    // scope per se can break for example the compound literals, which have
+    // to be constants (see [C99 6.5.2.5])
+    Sema::ContextRAII pushedDC(*m_Sema, m_CurDeclContext);
+
     // 1. Get the expression containing @-s and get the variable addresses
     std::string Template;
     llvm::SmallVector<DeclRefExpr*, 4> Addresses;
@@ -719,7 +732,8 @@ namespace cling {
 
     // Create template arguments
     Sema::InstantiatingTemplate Inst(*m_Sema, m_NoSLoc, m_EvalDecl);
-    TemplateArgument Arg(InstTy);
+    // Before instantiation we need the canonical type
+    TemplateArgument Arg(InstTy.getCanonicalType());
     TemplateArgumentList TemplateArgs(TemplateArgumentList::OnStack, &Arg, 1U);
 
     // Substitute the declaration of the templated function, with the
@@ -777,29 +791,36 @@ namespace cling {
 
     bool getShouldVisitSubTree() const { return m_ShouldVisitSubTree; }
 
-    bool VisitDecl(Decl* D) {
+    bool isCandidate(Decl* D) {
       // FIXME: Here we should have our custom attribute.
       if (AnnotateAttr* A = D->getAttr<AnnotateAttr>())
-        if (A->getAnnotation().equals("__ResolveAtRuntime")) {
-          m_ShouldVisitSubTree = true;
-          return false; // returning false will abort the in-depth traversal.
+        if (A->getAnnotation().equals("__ResolveAtRuntime")
+            || A->getAnnotation().equals("__Auto")) {
+          return true;
         }
 
-      TraverseStmt(D->getBody());
-      return true;  // returning false will abort the in-depth traversal.
+      return false;
     }
 
     bool VisitDeclStmt(DeclStmt* DS) {
       DeclGroupRef DGR = DS->getDeclGroup();
       for (DeclGroupRef::const_iterator I = DGR.begin(), 
-             E = DGR.end(); I != E; ++I)
-        TraverseDecl(*I);
+             E = DGR.end(); I != E; ++I) {
+        if (isCandidate(*I)) {
+          m_ShouldVisitSubTree = true;
+          return false; // returning false will abort the in-depth traversal.
+        }
+      }
       return true;
     }
 
+    // In cases when there is no decl stmt, like dep->Call();
     bool VisitDeclRefExpr(DeclRefExpr* DRE) {
-      TraverseDecl(DRE->getDecl());
-      return false;
+      if (isCandidate(DRE->getDecl())) {
+        m_ShouldVisitSubTree = true;
+        return false; // returning false will abort the in-depth traversal.
+      }
+      return true;
     }
   };
 

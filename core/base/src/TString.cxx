@@ -2621,3 +2621,11 @@ int strncasecmp(const char *str1, const char *str2, Ssiz_t n)
    return 0;
 }
 #endif
+
+//______________________________________________________________________________
+std::string cling::printValue(const TString* const /*p*/, const TString* const u,
+                              const cling::ValuePrinterInfo& /*VPI*/) {
+   // Print a TString in the cling interpreter:
+   TString s = TString::Format("\"%s\"[%d]", u->Data(), (int)u->Length());
+   return s.Data();
+}

@@ -769,4 +769,15 @@ inline Bool_t operator!=(const TString &s1, const TSubString &s2)
 inline Bool_t operator!=(const char *s1, const TSubString &s2)
 { return !(s2 == s1); }
 
+namespace llvm {
+   class raw_ostream;
+}
+
+namespace cling {
+   // cling ValuePrinting
+   class ValuePrinterInfo;
+   std::string printValue(const TString* const p, const TString* const u,
+                          const ValuePrinterInfo& VPI);
+}
+
 #endif

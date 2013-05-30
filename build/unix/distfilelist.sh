@@ -73,5 +73,6 @@ echo `echo ${FILES} | tr ' ' '\n' | sed \
   -e 's,^.*.cvsignore$,,' \
   -e 's,^.*/CVS/.*$,,' \
   -e 's,^.*/.svn/.*$,,' \
+  -e 's,^.*/.git/.*$,,' \
   -e 's,^.*/.*.dSYM/.*$,,' \
    | grep -v '^$'` | tr ' ' '\n' | sort | uniq | sed -e 's,^,'${PREPENDDIR}','

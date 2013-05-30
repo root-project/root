@@ -14,8 +14,10 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TInterpreter.h"
+#include "TInterpreterValue.h"
 
 // Standard
+#include <cstring>
 #include <utility>
 #include <sstream>
 
@@ -32,7 +34,7 @@ void PRCallFuncExec( CallFunc_t* func, void* self, Bool_t release_gil ) {
       gInterpreter->CallFunc_Exec( func, self );
       Py_END_ALLOW_THREADS
    } else
-      gInterpreter->CallFunc_ExecInt( func, self );
+      gInterpreter->CallFunc_Exec( func, self );
 }
 
 static inline
@@ -40,7 +42,7 @@ Long_t PRCallFuncExecInt( CallFunc_t* func, void* self, Bool_t release_gil ) {
    Long_t result;
    if ( release_gil ) {
       Py_BEGIN_ALLOW_THREADS
-         result = (Long_t)gInterpreter->CallFunc_ExecInt( func, self );
+      result = (Long_t)gInterpreter->CallFunc_ExecInt( func, self );
       Py_END_ALLOW_THREADS
    } else
       result = (Long_t)gInterpreter->CallFunc_ExecInt( func, self );
@@ -59,6 +61,15 @@ Double_t PRCallFuncExecDouble( CallFunc_t* func, void* self, Bool_t release_gil 
    return result;
 }
 
+static inline
+void PRCallFuncExecValue(  CallFunc_t* func, void* self, TInterpreterValue& value, Bool_t release_gil ) {
+   if ( release_gil ) {
+      Py_BEGIN_ALLOW_THREADS
+      gInterpreter->CallFunc_Exec( func, self, value );
+      Py_END_ALLOW_THREADS
+   } else
+      gInterpreter->CallFunc_Exec( func, self, value );
+}
 
 //- executors for built-ins ---------------------------------------------------
 PyObject* PyROOT::TBoolExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
@@ -87,7 +98,7 @@ PyObject* PyROOT::TCharExecutor::Execute( CallFunc_t* func, void* self, Bool_t r
 PyObject* PyROOT::TIntExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python int return value
-   return PyInt_FromLong( (Long_t)PRCallFuncExecInt( func, self, release_gil ) );
+   return PyInt_FromLong( (Int_t)PRCallFuncExecInt( func, self, release_gil ) );
 }
 
 //____________________________________________________________________________
@@ -282,23 +293,36 @@ PyObject* PyROOT::TRootObjectExecutor::Execute( CallFunc_t* func, void* self, Bo
 //____________________________________________________________________________
 PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
-// TODO: Cling can not handle return by value for now
-   PyErr_SetString(PyExc_NotImplementedError, "CLING DOES NOT SUPPORT RETURN BY VALUE!" );
-   return 0;
-
 // execution will bring a temporary in existence
-   void* result = (void*)PRCallFuncExecInt( func, self, release_gil );
+   void* result = 0;
+
+// CLING WORKAROUND (ROOT-5202): it's not clear when an object is returned as
+// struct, and when as a builtin value; for 64b, the cut-off appears to be 16 bytes
+   if ( fClass->Size() <= 16 ) {   // return by value
+      result = (void*)PRCallFuncExecInt( func, self, release_gil );
+   } else {
+// -- CLING WORKAROUND
+      TInterpreterValue value;
+      PRCallFuncExecValue( func, self, value, release_gil );
+      result = value.GetAsPointer();
+   }
+
    if ( ! result ) {
       if ( ! PyErr_Occurred() )         // callee may have set a python error itself
          PyErr_SetString( PyExc_ValueError, "NULL result where temporary expected" );
       return 0;
    }
 
-// TODO: resolve possible ownership issues (old: G__pop_tempobject_nodel();)
-// Can copy over the element, then gInterpreter->ClearStack(); will erase it
+// TODO: there's no guarantee that bit-wise copy is correct ...
+   void* fresh = malloc( fClass->Size() );
+   std::memcpy( fresh, result, fClass->Size() );
 
+// TODO: there's no guarantee that we're the only user of temp objects; this as well as
+// the bitwise-copy issue means that it'd be better if the ownership could be transferred
+   gInterpreter->ClearStack();     // currently a no-op for Cling (?)
+                            
 // the result can then be bound
-   ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( result, fClass );
+   ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( fresh, fClass );
    if ( ! pyobj )
       return 0;
 
