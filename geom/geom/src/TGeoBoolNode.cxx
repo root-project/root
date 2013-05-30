@@ -36,7 +36,7 @@
 // node shape components were defined.
 //
 // The positioned shape components may or may not be disjoint. The specific 
-// implementations for Boolean nodes are:
+// implementations for Boolean nodes are: 
 //
 //    TGeoUnion - representing the Boolean  union of two positioned shapes
 //
