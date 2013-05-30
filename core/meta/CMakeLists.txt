@@ -5,7 +5,7 @@
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 
-if(BuildCling)
+if(cling)
   add_definitions(-DR__WITH_CLING)
 else()
   list(REMOVE_ITEM headers TCintWithCling.h)

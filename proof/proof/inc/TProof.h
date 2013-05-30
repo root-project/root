@@ -257,10 +257,12 @@ public:
    SysInfo_t   GetSysInfo() const { return fSysInfo; }
    void        SetStatus(ESlaveStatus stat) { fStatus = stat; }
    void        SetSysInfo(SysInfo_t si);
+   void        SetOrdinal(const char *ord) { fOrdinal = ord; }
 
    Int_t  Compare(const TObject *obj) const;
    Bool_t IsSortable() const { return kTRUE; }
    void   Print(Option_t *option="") const;
+   Bool_t IsEqual(const TObject* obj) const;
 
    ClassDef(TSlaveInfo,4) //basic info on workers
 };
@@ -599,6 +601,7 @@ protected:
    TString         fImage;          //master's image name
    Int_t           fProtocol;       //remote PROOF server protocol version number
    TList          *fSlaves;         //list of all slave servers as in config file
+   TList          *fTerminatedSlaveInfos; //list of unique infos of terminated slaves
    TList          *fBadSlaves;      //dead slaves (subset of all slaves)
    TMonitor       *fAllMonitor;     //monitor activity on all valid slave sockets
    Bool_t          fDataReady;      //true if data is ready to be analyzed

@@ -80,6 +80,7 @@ echo `echo ${FILES} | tr ' ' '\n' | sed \
   -e 's,^.*.cvsignore$,,' \
   -e 's,^.*/CVS/.*$,,' \
   -e 's,^.*/.svn/.*$,,' \
+  -e 's,^.*/.git/.*$,,' \
   -e 's,^.*/.*.dSYM/.*$,,' \
   -e 's,^cint/.*/G__c_.*$',, \
   -e 's,^cint/.*/G__cpp_.*$',, \

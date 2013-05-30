@@ -140,6 +140,7 @@ protected:
   RooFit::MPSplit        _mpinterl ; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
   Bool_t         _doOffset ; // Apply interval value offset to control numeric precision?
   mutable Double_t _offset ; //! Offset
+  mutable Double_t _offsetCarry; //! avoids loss of precision
 
   ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
 

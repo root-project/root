@@ -211,8 +211,12 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
 {
   // Calculate chi^2 in partition from firstEvent to lastEvent using given stepSize
 
+  // Throughout the calculation, we use Kahan's algorithm for summing to
+  // prevent loss of precision - this is a factor four more expensive than
+  // straight addition, but since evaluating the PDF is usually much more
+  // expensive than that, we tolerate the additional cost...
   Int_t i ;
-  Double_t result(0) ;
+  Double_t result(0), carry(0);
 
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize ) ;
 
@@ -227,25 +231,23 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
 
   // Loop over bins of dataset
   RooDataHist* hdata = (RooDataHist*) _dataClone ;
-    for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
+  for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
     
     // get the data values for this event
     hdata->get(i);
 
-    if (!hdata->valid()) {
-      continue ;
-    }
+    if (!hdata->valid()) continue;
 
-    Double_t nData = hdata->weight() ;
+    const Double_t nData = hdata->weight() ;
 
-    Double_t nPdf = _funcClone->getVal(_normSet) * normFactor * hdata->binVolume() ;
+    const Double_t nPdf = _funcClone->getVal(_normSet) * normFactor * hdata->binVolume() ;
 
-    Double_t eExt = nPdf-nData ;
+    const Double_t eExt = nPdf-nData ;
 
-    Double_t eIntLo,eIntHi ;
 
     Double_t eInt ;
     if (_etype != RooAbsData::Expected) {
+      Double_t eIntLo,eIntHi ;
       hdata->weightError(eIntLo,eIntHi,_etype) ;
       eInt = (eExt>0) ? eIntHi : eIntLo ;
     } else {
@@ -253,21 +255,25 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
     }
     
     // Skip cases where pdf=0 and there is no data
-    if (eInt==0. && nData==0. && nPdf==0) continue ;
+    if (0. == eInt * eInt && 0. == nData * nData && 0. == nPdf * nPdf) continue ;
     
     // Return 0 if eInt=0, special handling in MINUIT will follow
-    if (eInt==0.) {
+    if (0. == eInt * eInt) {
       coutE(Eval) << "RooChi2Var::RooChi2Var(" << GetName() << ") INFINITY ERROR: bin " << i 
 		  << " has zero error" << endl ;
-      return 0 ;
+      return 0.;
     }
     
 //     cout << "Chi2Var[" << i << "] nData = " << nData << " nPdf = " << nPdf << " errorExt = " << eExt << " errorInt = " << eInt << " contrib = " << eExt*eExt/(eInt*eInt) << endl ;
     
-    result += eExt*eExt/(eInt*eInt) ;
-    }
+    Double_t term = eExt*eExt/(eInt*eInt) ;
+    Double_t y = term - carry;
+    Double_t t = result + y;
+    carry = (t - result) - y;
+    result = t;
+  }
     
-    return result ;
+  return result ;
 }
 
 

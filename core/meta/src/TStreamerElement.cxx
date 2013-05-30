@@ -521,7 +521,8 @@ TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
    if (strcmp(name,"TNamed")  == 0) fType = TVirtualStreamerInfo::kTNamed;
    fNewType = fType;
    fBaseClass = TClass::GetClass(GetName());
-   fBaseVersion = fBaseClass->GetClassVersion();
+   if (fBaseClass) fBaseVersion = fBaseClass->GetClassVersion();
+   else fBaseVersion = 0;
    fNewBaseClass = 0;
    Init();
 }

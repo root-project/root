@@ -257,6 +257,13 @@ void TStreamerInfo::Build()
          element = new TStreamerSTLstring(bname, btitle, offset, bname, kFALSE);
       } else if (base->IsSTLContainer()) {
          element = new TStreamerSTL(bname, btitle, offset, bname, 0, kFALSE);
+         if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != TClassEdit::kVector) {
+            if (!element->GetClassPointer()->IsLoaded()) {
+               Error("Build","The class \"%s\" is compiled and its base class \"%s\" is a collection and we do not have a dictionary for it, we will not be able to read or write this base class.",GetName(),bname);
+               delete element;
+               continue;
+            }
+         }
       } else {
          element = new TStreamerBase(bname, btitle, offset);
          TClass* clm = element->GetClassPointer();
@@ -383,6 +390,13 @@ void TStreamerInfo::Build()
             element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
          } else if (dm->IsSTLContainer()) {
             element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
+            if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != TClassEdit::kVector) {
+               if (!element->GetClassPointer()->IsLoaded()) {
+                  Error("Build","The class \"%s\" is compiled and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
+                  delete element;
+                  continue;
+               }
+            }
          } else {
             TClass* clm = TClass::GetClass(dmType);
             if (!clm) {
@@ -1370,6 +1384,14 @@ void TStreamerInfo::BuildOld()
                if (!bc) {
                   Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
                   continue;
+               } else if (bc->GetClassPointer()->GetCollectionProxy()
+                          && !bc->GetClassPointer()->IsLoaded() 
+                          && bc->GetClassPointer()->GetCollectionProxy()->GetCollectionType() != TClassEdit::kVector) {
+                  Error("BuildOld","The class \"%s\" is compiled and its base class \"%s\" is a collection and we do not have a dictionary for it, we will not be able to read or write this base class.",GetName(),bc->GetName());
+                  offset = kMissing;
+                  element->SetOffset(kMissing);
+                  element->SetNewType(-1);
+                  continue;
                }
                baseOffset = bc->GetDelta();
                asize = bc->GetClassPointer()->Size();
@@ -1453,6 +1475,20 @@ void TStreamerInfo::BuildOld()
             offset = GetDataMemberOffset(dm, streamer);
             element->SetOffset(offset);
             element->Init(this);
+            // We have a loaded class, let's make sure that if we have a collection
+            // it is also loaded.
+            TString dmClassName = TClassEdit::ShortType(dm->GetTypeName(),TClassEdit::kDropStlDefault).c_str();
+            dmClassName = dmClassName.Strip(TString::kTrailing, '*');
+            if (dmClassName.Index("const ")==0) dmClassName.Remove(0,6);
+            TClass *elemDm = TClass::GetClass(dmClassName.Data());
+            if (elemDm && elemDm->GetCollectionProxy()
+                && !elemDm->IsLoaded() 
+                && elemDm->GetCollectionProxy()->GetCollectionType() != TClassEdit::kVector) {
+               Error("BuildOld","The class \"%s\" is compiled and for its data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dm->GetName(),elemDm->GetName());
+               offset = kMissing;
+               element->SetOffset(kMissing);
+               element->SetNewType(-1);
+            }
             element->SetStreamer(streamer);
             int narr = element->GetArrayLength();
             if (!narr) {

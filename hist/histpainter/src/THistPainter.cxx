@@ -5710,6 +5710,9 @@ void THistPainter::PaintH3(Option_t *option)
       cmd = Form("TPolyMarker3D::PaintH3((TH1 *)0x%lx,\"%s\");",(Long_t)fH,option);
    }
 
+   if (strstr(opt,"fb")) Hoption.FrontBox = 0;
+   if (strstr(opt,"bb")) Hoption.BackBox = 0;
+
    TView *view = gPad->GetView();
    if (!view) return;
    Double_t thedeg =  90 - gPad->GetTheta();
@@ -5725,10 +5728,10 @@ void THistPainter::PaintH3(Option_t *option)
    // Draw axis
    view->SetOutlineToCube();
    TSeqCollection *ol = view->GetOutline();
-   if (ol) ol->Paint(option);
+   if (ol && Hoption.BackBox && Hoption.FrontBox) ol->Paint(option);
    Hoption.System = kCARTESIAN;
    TGaxis *axis = new TGaxis();
-   PaintLegoAxis(axis,90);
+   if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
    delete axis;
 
    // Draw palette. In case of 4D plot with TTree::Draw() the palette should

@@ -177,8 +177,12 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
   // and the zero event is processed the extended term is added to the return
   // likelihood.
 
+  // Throughout the calculation, we use Kahan's algorithm for summing to
+  // prevent loss of precision - this is a factor four more expensive than
+  // straight addition, but since evaluating the PDF is usually much more
+  // expensive than that, we tolerate the additional cost...
   Int_t i ;
-  Double_t result(0) ;
+  Double_t result(0), carry(0);
   
   RooAbsPdf* pdfClone = (RooAbsPdf*) _funcClone ;
 
@@ -186,7 +190,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
 
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize ) ;
 
-  Double_t sumWeight(0) ;
+  Double_t sumWeight(0), sumWeightCarry(0);
   for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
     
     // get the data values for this event
@@ -198,22 +202,23 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
 //     _funcObsSet->Print("v") ;
     
 
-    if (!_dataClone->valid()) {
-      continue ;
-    }
+    if (!_dataClone->valid()) continue;
 
-    if (_dataClone->weight()==0) continue ;
+    Double_t eventWeight = _dataClone->weight();
+    if (0. == eventWeight * eventWeight) continue ;
+    if (_weightSq) eventWeight = _dataClone->weightSquared() ;
 
+    Double_t term = -eventWeight * pdfClone->getLogVal(_normSet);
 
-    Double_t eventWeight = _dataClone->weight() ;
-    if (_weightSq) {
-      eventWeight = _dataClone->weightSquared() ;    
-    }
-    Double_t term = eventWeight * pdfClone->getLogVal(_normSet);
-    //cout << "NLL::eval(" << GetName() << ") term[" << i << "] = " << term << endl ;
-    sumWeight += eventWeight ;
+    Double_t y = eventWeight - sumWeightCarry;
+    Double_t t = sumWeight + y;
+    sumWeightCarry = (t - sumWeight) - y;
+    sumWeight = t;
 
-    result-= term;
+    y = term - carry;
+    t = result + y;
+    carry = (t - result) - y;
+    result = t;
   }
   
   // include the extended maximum likelihood term, if requested
@@ -221,24 +226,33 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     if (_weightSq) {
 
       // Calculate sum of weights-squared here for extended term
-      Double_t sumW2(0) ;
+      Double_t sumW2(0), sumW2carry(0);
       for (i=0 ; i<_dataClone->numEntries() ; i++) {
-	_dataClone->get(i) ;
-	sumW2 += _dataClone->weightSquared() ;    
+	_dataClone->get(i);
+	Double_t y = _dataClone->weightSquared() - sumW2carry;
+	Double_t t = sumW2 + y;
+	sumW2carry = (t - sumW2) - y;
+	sumW2 = t;
       }
-      result+= pdfClone->extendedTerm(sumW2 , _dataClone->get());
-
+      Double_t y = pdfClone->extendedTerm(sumW2 , _dataClone->get()) - carry;
+      Double_t t = result + y;
+      carry = (t - result) - y;
+      result = t;
     } else {
-//       cout << "NLL::eval(" << GetName() << ") SETNUM = " << _setNum << " NSET = " << _numSets << " fe = " << firstEvent << " le = " << lastEvent << " ss = " << stepSize << " extterm = " << pdfClone->extendedTerm(_dataClone->sumEntries(),_dataClone->get()) << endl ;
-      result+= pdfClone->extendedTerm(_dataClone->sumEntries(),_dataClone->get());
+      Double_t y = pdfClone->extendedTerm(_dataClone->sumEntries(), _dataClone->get()) - carry;
+      Double_t t = result + y;
+      carry = (t - result) - y;
+      result = t;
     }
   }    
 
   // If part of simultaneous PDF normalize probability over 
   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n) 
   if (_simCount>1) {
-    //cout << "NLL::eval(" << GetName() << ") simCount = " << _simCount << " sumWeight = " << sumWeight << " adding simCountNorm value of " << sumWeight*log(1.0*_simCount) << endl ;
-    result += sumWeight*log(1.0*_simCount) ;
+    Double_t y = sumWeight*log(1.0*_simCount) - carry;
+    Double_t t = result + y;
+    carry = (t - result) - y;
+    result = t;
   }
 
   //timer.Stop() ;
@@ -258,10 +272,14 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     if (_offset==0 && result !=0 ) {
       coutI(Minimization) << "RooNLLVar::evaluatePartition(" << GetName() << ") first = "<< firstEvent << " last = " << lastEvent << " Likelihood offset now set to " << result << endl ;
       _offset = result ;
+      _offsetCarry = carry;
     }
 
     // Substract offset
-    result -= _offset ;
+    Double_t y = -_offset - (carry + _offsetCarry);
+    Double_t t = result + y;
+    carry = (t - result) - y;
+    result = t;
   }
     
   return result ;

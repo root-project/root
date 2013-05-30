@@ -33,7 +33,7 @@ public:
 
   void refill(const RooArgSet& argSet) ;
   RooArgSet* select(const RooArgSet& list) const ;
-  Bool_t operator==(const RooNameSet& other) ;  
+  Bool_t operator==(const RooNameSet& other) const;  
   RooNameSet& operator=(const RooNameSet&) ;
   Bool_t operator<(const RooNameSet& other) const ;
 
@@ -47,14 +47,16 @@ public:
   }
 
   void setNameList(const char* givenList) ;
-  const char* content() const { return _nameList ; }
+  const char* content() const { return _nameList ? _nameList : ""; }
 
+private:
   Int_t _len ;
   char* _nameList ; //[_len]
 
 protected:
 
   void extendBuffer(Int_t inc) ;
+  static void strdup(Int_t& dstlen, char* &dstbuf, const char* str);
 
   ClassDef(RooNameSet,1) // A sterile version of RooArgSet, containing only the names of the contained RooAbsArgs
 };

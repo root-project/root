@@ -8,27 +8,27 @@
 # Author: Fons Rademakers, 18/8/2006
 
 if ($?ROOTSYS) then
-   setenv OLD_ROOTSYS "$ROOTSYS"
+   set old_rootsys="$ROOTSYS"
 endif
 
 # $_ should be source .../thisroot.csh
 set ARGS=($_)
 if ("$ARGS" != "") then
-   set THIS="`dirname ${ARGS[2]}`"
+   set thisroot="`dirname ${ARGS[2]}`"
 else
    # But $_ might not be set if the script is source non-interactively.
    # In [t]csh the sourced file is inserted 'in place' inside the
    # outer script, so we need an external source of information
    # either via the current directory or an extra parameter.
    if ( -e thisroot.csh ) then
-      set THIS=${PWD}
+      set thisroot=${PWD}
    else if ( -e bin/thisroot.csh ) then 
-      set THIS=${PWD}/bin
+      set thisroot=${PWD}/bin
    else if ( "$1" != "" ) then
       if ( -e ${1}/bin/thisroot.csh ) then
-         set THIS=${1}/bin
+         set thisroot=${1}/bin
       else if ( -e ${1}/thisroot.csh ) then
-         set THIS=${1}
+         set thisroot=${1}
       else 
          echo "thisroot.csh: ${1} does not contain a ROOT installation"
       endif 
@@ -42,56 +42,56 @@ else
    endif
 endif
 
-if ($?THIS) then 
+if ($?thisroot) then 
 
-setenv ROOTSYS "`(cd ${THIS}/..;pwd)`"
+setenv ROOTSYS "`(cd ${thisroot}/..;pwd)`"
 
-if ($?OLD_ROOTSYS) then
-   setenv PATH `echo $PATH | sed -e "s;:$OLD_ROOTSYS/bin:;:;g" \
-                                 -e "s;:$OLD_ROOTSYS/bin;;g"   \
-                                 -e "s;$OLD_ROOTSYS/bin:;;g"   \
-                                 -e "s;$OLD_ROOTSYS/bin;;g"`
+if ($?old_rootsys) then
+   setenv PATH `echo $PATH | sed -e "s;:$old_rootsys/bin:;:;g" \
+                                 -e "s;:$old_rootsys/bin;;g"   \
+                                 -e "s;$old_rootsys/bin:;;g"   \
+                                 -e "s;$old_rootsys/bin;;g"`
    if ($?LD_LIBRARY_PATH) then
       setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | \
-                             sed -e "s;:$OLD_ROOTSYS/lib:;:;g" \
-                                 -e "s;:$OLD_ROOTSYS/lib;;g"   \
-                                 -e "s;$OLD_ROOTSYS/lib:;;g"   \
-                                 -e "s;$OLD_ROOTSYS/lib;;g"`
+                             sed -e "s;:$old_rootsys/lib:;:;g" \
+                                 -e "s;:$old_rootsys/lib;;g"   \
+                                 -e "s;$old_rootsys/lib:;;g"   \
+                                 -e "s;$old_rootsys/lib;;g"`
    endif
    if ($?DYLD_LIBRARY_PATH) then
       setenv DYLD_LIBRARY_PATH `echo $DYLD_LIBRARY_PATH | \
-                             sed -e "s;:$OLD_ROOTSYS/lib:;:;g" \
-                                 -e "s;:$OLD_ROOTSYS/lib;;g"   \
-                                 -e "s;$OLD_ROOTSYS/lib:;;g"   \
-                                 -e "s;$OLD_ROOTSYS/lib;;g"`
+                             sed -e "s;:$old_rootsys/lib:;:;g" \
+                                 -e "s;:$old_rootsys/lib;;g"   \
+                                 -e "s;$old_rootsys/lib:;;g"   \
+                                 -e "s;$old_rootsys/lib;;g"`
    endif
    if ($?SHLIB_PATH) then
       setenv SHLIB_PATH `echo $SHLIB_PATH | \
-                             sed -e "s;:$OLD_ROOTSYS/lib:;:;g" \
-                                 -e "s;:$OLD_ROOTSYS/lib;;g"   \
-                                 -e "s;$OLD_ROOTSYS/lib:;;g"   \
-                                 -e "s;$OLD_ROOTSYS/lib;;g"`
+                             sed -e "s;:$old_rootsys/lib:;:;g" \
+                                 -e "s;:$old_rootsys/lib;;g"   \
+                                 -e "s;$old_rootsys/lib:;;g"   \
+                                 -e "s;$old_rootsys/lib;;g"`
    endif
    if ($?LIBPATH) then
       setenv LIBPATH `echo $LIBPATH | \
-                             sed -e "s;:$OLD_ROOTSYS/lib:;:;g" \
-                                 -e "s;:$OLD_ROOTSYS/lib;;g"   \
-                                 -e "s;$OLD_ROOTSYS/lib:;;g"   \
-                                 -e "s;$OLD_ROOTSYS/lib;;g"`
+                             sed -e "s;:$old_rootsys/lib:;:;g" \
+                                 -e "s;:$old_rootsys/lib;;g"   \
+                                 -e "s;$old_rootsys/lib:;;g"   \
+                                 -e "s;$old_rootsys/lib;;g"`
    endif
    if ($?PYTHONPATH) then
       setenv PYTHONPATH `echo $PYTHONPATH | \
-                             sed -e "s;:$OLD_ROOTSYS/lib:;:;g" \
-                                 -e "s;:$OLD_ROOTSYS/lib;;g"   \
-                                 -e "s;$OLD_ROOTSYS/lib:;;g"   \
-                                 -e "s;$OLD_ROOTSYS/lib;;g"`
+                             sed -e "s;:$old_rootsys/lib:;:;g" \
+                                 -e "s;:$old_rootsys/lib;;g"   \
+                                 -e "s;$old_rootsys/lib:;;g"   \
+                                 -e "s;$old_rootsys/lib;;g"`
    endif
    if ($?MANPATH) then
       setenv MANPATH `echo $MANPATH | \
-                             sed -e "s;:$OLD_ROOTSYS/man:;:;g" \
-                                 -e "s;:$OLD_ROOTSYS/man;;g"   \
-                                 -e "s;$OLD_ROOTSYS/man:;;g"   \
-                                 -e "s;$OLD_ROOTSYS/man;;g"`
+                             sed -e "s;:$old_rootsys/man:;:;g" \
+                                 -e "s;:$old_rootsys/man;;g"   \
+                                 -e "s;$old_rootsys/man:;;g"   \
+                                 -e "s;$old_rootsys/man;;g"`
    endif
 endif
 
@@ -145,4 +145,8 @@ else
    setenv MANPATH `dirname @mandir@`:$default_manpath
 endif
 
-endif # if ("$THIS" != "")
+endif # if ("$thisroot" != "")
+
+set thisroot=
+set old_rootsys=
+

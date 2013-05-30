@@ -16,10 +16,12 @@
 #ifndef ROO_LINKED_LIST
 #define ROO_LINKED_LIST
 
+#include <map>
+#include <list>
+
 #include "TNamed.h"
 #include "RooLinkedListElem.h"
 #include "RooHashTable.h"
-#include <list>
 class RooLinkedListIter ;
 class RooFIter ;
 class TIterator ;
@@ -89,8 +91,6 @@ protected:
 
   virtual void Add(TObject* arg, Int_t refCount) ;
 
-  void swapWithNext(RooLinkedListElem* elem) ;
-
   RooLinkedListElem* findLink(const TObject* arg) const ;
     
   Int_t _hashThresh ;          //  Size threshold for hashing
@@ -100,14 +100,53 @@ protected:
   RooHashTable*       _htableName ; //! Hash table by name 
   RooHashTable*       _htableLink ; //! Hash table by link pointer
 
-  Int_t _curStoreSize ; //!
-  Int_t _curStoreUsed ; //!
-  std::list<std::pair<Int_t,RooLinkedListElem*> > _storeList ; //!
-  RooLinkedListElem* _curStore ; //!
-
   TString             _name ; 
 
-  ClassDef(RooLinkedList,2) // Doubly linked list for storage of RooAbsArg objects
+private:
+  template <bool ascending>
+  static RooLinkedListElem* mergesort_impl(RooLinkedListElem* l1,
+	  const unsigned sz, RooLinkedListElem** tail = 0);
+  /// memory pool for quick allocation of RooLinkedListElems
+  class Pool {
+    private:
+      enum {
+	minsz = 7, ///< minimum chunk size (just below 1 << minsz bytes)
+	maxsz = 20, ///< maximum chunk size (just below 1 << maxsz bytes)
+	szincr = 1 ///< size class increment (sz = 1 << (minsz + k * szincr))
+      };
+      /// a chunk of memory in the pool
+      class Chunk;
+      typedef std::list<Chunk*> ChunkList;
+      typedef std::map<const void*, Chunk*> AddrMap;
+    public:
+      /// constructor
+      Pool();
+      /// destructor
+      ~Pool();
+      /// acquire the pool
+      inline void acquire() { ++_refCount; }
+      /// release the pool, return true if the pool is unused
+      inline bool release() { return 0 == --_refCount; }
+      /// pop a free element out of the pool
+      RooLinkedListElem* pop_free_elem();
+      /// push a free element back into the pool
+      void push_free_elem(RooLinkedListElem* el);
+    private:
+      AddrMap _addrmap;
+      ChunkList _freelist;
+      UInt_t _szmap[(maxsz - minsz) / szincr];
+      Int_t _cursz;
+      UInt_t _refCount;
+
+      /// adjust _cursz to current largest block
+      void updateCurSz(Int_t sz, Int_t incr);
+      /// find size of next chunk to allocate (in a hopefully smart way)
+      Int_t nextChunkSz() const;
+  };
+  /// shared memory pool for allocation of RooLinkedListElems
+  static Pool* _pool; //!
+
+  ClassDef(RooLinkedList,3) // Doubly linked list for storage of RooAbsArg objects
 };
 
 

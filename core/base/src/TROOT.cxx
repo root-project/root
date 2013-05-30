@@ -319,7 +319,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBuiltDate       = IDATQQ(__DATE__);
    fBuiltTime       = ITIMQQ(__TIME__);
 
-   ReadSvnInfo();
+   ReadGitInfo();
 
    fClasses         = new THashTable(800,3);
    //fIdMap           = new IdMap_t;
@@ -1738,23 +1738,26 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 }
 
 //______________________________________________________________________________
-void TROOT::ReadSvnInfo()
+void TROOT::ReadGitInfo()
 {
-   // Read Subversion revision information and branch name from the
-   // etc/svnrev.txt file.
+   // Read Git commit information and branch name from the
+   // etc/gitinfo.txt file.
 
    fSvnRevision = 0;
 #ifdef ROOT_SVN_REVISION
    fSvnRevision = ROOT_SVN_REVISION;
 #endif
-#ifdef ROOT_SVN_BRANCH
-   fSvnBranch = ROOT_SVN_BRANCH;
+#ifdef ROOT_GIT_COMMIT
+   fGitCommit = ROOT_GIT_COMMIT;
+#endif
+#ifdef ROOT_GIT_BRANCH
+   fGitBranch = ROOT_GIT_BRANCH;
 #endif
 
-   TString svninfo = "svninfo.txt";
+   TString gitinfo = "gitinfo.txt";
    char *filename = 0;
 #ifdef ROOTETCDIR
-   filename = gSystem->ConcatFileName(ROOTETCDIR, svninfo);
+   filename = gSystem->ConcatFileName(ROOTETCDIR, gitinfo);
 #else
    TString etc = gRootDir;
 #ifdef WIN32
@@ -1763,10 +1766,10 @@ void TROOT::ReadSvnInfo()
    etc += "/etc";
 #endif
 #if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-   // on iOS etc does not exist and svninfo resides in $ROOTSYS
+   // on iOS etc does not exist and gitinfo resides in $ROOTSYS
    etc = gRootDir;
 #endif
-   filename = gSystem->ConcatFileName(etc, svninfo);
+   filename = gSystem->ConcatFileName(etc, gitinfo);
 #endif
 
    FILE *fp = fopen(filename, "r");
@@ -1774,26 +1777,24 @@ void TROOT::ReadSvnInfo()
       TString s;
       // read branch name
       s.Gets(fp);
-      fSvnBranch = s;
-      // read revision number
+      fGitBranch = s;
+      // read commit SHA1
       s.Gets(fp);
-      Int_t r = s.Atoi();
-      if (r > 0)
-         fSvnRevision = r;
+      fGitCommit = s;
       // read date/time make was run
       s.Gets(fp);
-      fSvnDate = s;
+      fGitDate = s;
       fclose(fp);
    }
    delete [] filename;
 }
 
 //______________________________________________________________________________
-const char *TROOT::GetSvnDate()
+const char *TROOT::GetGitDate()
 {
    // Return date/time make was run.
 
-   if (fSvnDate == "") {
+   if (fGitDate == "") {
       Int_t iday,imonth,iyear, ihour, imin;
       static const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
@@ -1804,9 +1805,9 @@ const char *TROOT::GetSvnDate()
       iyear  = idate/10000;
       ihour  = itime/100;
       imin   = itime%100;
-      fSvnDate.Form("%s %02d %4d, %02d:%02d:00", months[imonth-1], iday, iyear, ihour, imin);
+      fGitDate.Form("%s %02d %4d, %02d:%02d:00", months[imonth-1], iday, iyear, ihour, imin);
    }
-   return fSvnDate;
+   return fGitDate;
 }
 
 //______________________________________________________________________________
