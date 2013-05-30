@@ -6,6 +6,7 @@ arrows) to various plots, histograms, and 3D graphical objects. In this
 chapter, we are going to focus on principals of graphics and 2D objects.
 Plots and histograms are discussed in a chapter of their own.
 
+
 ## Drawing Objects
 
 
@@ -341,6 +342,7 @@ This is all explained in the paragraph "The Coordinate Systems of a
 Pad".
 
 ## Graphical Containers: Canvas and Pad
+\index{TPad}
 
 
 We have talked a lot about canvases, which may be seen as windows. More
@@ -349,8 +351,10 @@ a Pad. A Canvas is a special kind of Pad. From now on, when we say
 something about pads, this also applies to canvases. A pad (class
 **`TPad`**) is a graphical container in the sense it contains other
 graphical objects like histograms and arrows. It may contain other pads
-(sub-pads) as well. More technically, each pad has a linked list of
-pointers to the objects it holds.
+(sub-pads) as well. A Pad is a linked list of primitives of any type 
+(graphs, histograms, shapes, tracks, etc.). It is a kind of display list.
+
+![The pad display list](pictures/pad_01.png)
 
 Drawing an object is nothing more than adding its pointer to this list.
 Look for example at the code of `TH1::Draw()`. It is merely ten lines of
@@ -358,14 +362,9 @@ code. The last statement is `AppendPad()`. This statement calls method
 of **`TObject`** that just adds the pointer of the object, here a
 histogram, to the list of objects attached to the current pad. Since
 this is a **`TObject`**'s method, every object may be "drawn", which
-means attached to a pad. We can illustrate this by the Figure 9-2. This
-image corresponds to the following structure:
+means attached to a pad. 
 
-![](pictures/060000A1.png)
-
-![A histogram drawn in a pad](pictures/020000A2.jpg)
-
-When is the painting done then? The answer is: when needed. Every object
+When is the painting done then ? The answer is: when needed. Every object
 that derives from **`TObject`** has a `Paint()` method. It may be empty,
 but for graphical objects, this routine contains all the instructions to
 paint effectively it in the active pad. Since a Pad has the list of
@@ -373,6 +372,14 @@ objects it owns, it will call successively the `Paint()` method of each
 object, thus re-painting the whole pad on the screen. If the object is a
 sub-pad, its `Paint()` method will call the `Paint()` method of the
 objects attached, recursively calling `Paint()` for all the objects.
+
+![Pad painting](pictures/pad_02.png)
+
+In some cases a pad need to be painted during a macro execution. To 
+force the pad painting `gPad->Update()` (see next section) should be performed.
+
+The list of primitives stored in the pad is also used to pick objects 
+and to interact with them.
 
 ### The Global Pad: gPad
 
