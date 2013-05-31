@@ -645,9 +645,9 @@ RooLinkedListElem* RooLinkedList::mergesort_impl(
   }
   if (sz <= 16) {
     // for short lists, we sort in an array
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(R__SOLARIS_CC50)
     RooLinkedListElem *arr[sz];
-#else // _WIN32
+#else // _WIN32 && Solaris
     // apparently, MSVC is not clever enough to figure out that sz cannot be
     // zero and is at most sixteen, so we allocate a fixed size array on the
     // stack instead

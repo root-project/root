@@ -153,7 +153,7 @@ void RooNameSet::refill(const RooArgSet& argSet)
   // figure out the length of the array we need
   RooAbsArg* arg = 0;
   for (RooFIter it = tmp.fwdIterator(); 0 != (arg = it.next());
-      _len += 1 + std::strlen(arg->GetName()));
+      _len += 1 + std::strlen(arg->GetName())) { }
   if (_len <= 1) _len = 0;
   // allocate it
   _nameList = _len ? new char[_len] : 0;
