@@ -34,5 +34,7 @@
 #pragma link C++ class TGeoUniformMagField+;
 #pragma link C++ class TGeoGlobalMagField;
 #pragma link C++ class TGeoBranchArray+;
+#pragma link C++ class TGeoExtension+;
+#pragma link C++ class TGeoRCExtension+;
 
 #endif
