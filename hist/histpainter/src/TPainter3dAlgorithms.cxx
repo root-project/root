@@ -540,10 +540,11 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np,
    //          D R A W   F A C E   &   B O R D E R
    FillPolygon(np, p3, &t[1]);
    if (fMesh == 1) {
-      SetFillColor(fEdgeColor[fEdgeIdx]);
-      SetFillStyle(0);
-      TAttFill::Modify();
-      gPad->PaintFillArea(np, x, y);
+      SetLineColor(fEdgeColor[fEdgeIdx]);
+      SetLineStyle(fEdgeStyle[fEdgeIdx]);
+      SetLineWidth(fEdgeWidth[fEdgeIdx]);
+      TAttLine::Modify();
+      gPad->PaintPolyLine(np, x, y);
    }
 }
 
@@ -602,10 +603,11 @@ void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np,
    TAttFill::Modify();
    gPad->PaintFillArea(np, x, y);
    if (fMesh) {
-      SetFillStyle(0);
-      SetFillColor(fEdgeColor[fEdgeIdx]);
-      TAttFill::Modify();
-      gPad->PaintFillArea(np, x, y);
+      SetLineColor(fEdgeColor[fEdgeIdx]);
+      SetLineStyle(fEdgeStyle[fEdgeIdx]);
+      SetLineWidth(fEdgeWidth[fEdgeIdx]);
+      TAttLine::Modify();
+      gPad->PaintPolyLine(np, x, y);
    }
 }
 
