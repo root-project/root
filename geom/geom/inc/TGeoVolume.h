@@ -141,6 +141,8 @@ public:
    void            ReplayCreation(const TGeoVolume *other);
    void            SetUserExtension(TGeoExtension *ext);
    void            SetFWExtension(TGeoExtension *ext);
+   TGeoExtension  *GetUserExtension() const {return fUserExtension;}
+   TGeoExtension  *GetFWExtension() const   {return fFWExtension;}
    TGeoExtension  *GrabUserExtension() const;
    TGeoExtension  *GrabFWExtension() const;
    virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
