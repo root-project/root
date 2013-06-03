@@ -35,6 +35,7 @@ namespace clang {
   public:
     virtual llvm::Module* GetModule() = 0;
     virtual llvm::Module* ReleaseModule() = 0;
+    virtual void SetModule(llvm::Module* Module) = 0;
     virtual llvm::Type* ConvertType(QualType T) = 0;
   };
 
