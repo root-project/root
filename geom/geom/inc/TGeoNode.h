@@ -130,6 +130,8 @@ public:
    void              SetOverlaps(Int_t *ovlp, Int_t novlp);
    void              SetUserExtension(TGeoExtension *ext);
    void              SetFWExtension(TGeoExtension *ext);
+   TGeoExtension    *GetUserExtension() const {return fUserExtension;}
+   TGeoExtension    *GetFWExtension() const   {return fFWExtension;}
    TGeoExtension    *GrabUserExtension() const;
    TGeoExtension    *GrabFWExtension() const;
 
