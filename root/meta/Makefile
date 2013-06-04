@@ -60,7 +60,7 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-
+autoload.log: Event_cxx.$(DllSuf)
 
 autoload: autoload.log
 	$(TestDiff)
