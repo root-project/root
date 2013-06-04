@@ -31,7 +31,7 @@ ClassImp(TFunction)
 TFunction::TFunction(MethodInfo_t *info) : TDictionary()
 {
    // Default TFunction ctor. TFunctions are constructed in TROOT via
-   // a call to TCint::UpdateListOfGlobalFunctions().
+   // a call to TCling::UpdateListOfGlobalFunctions().
 
    fInfo       = info;
    fMethodArgs = 0;

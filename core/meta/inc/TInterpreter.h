@@ -127,7 +127,7 @@ public:
    virtual const char *TypeName(const char *s) = 0;
 
    // All the functions below must be virtual with a dummy implementation
-   // These functions are redefined in TCint.
+   // These functions are redefined in TCling.
    //The dummy implementation avoids an implementation in TGWin32InterpreterProxy
 
    // Misc

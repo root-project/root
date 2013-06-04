@@ -69,7 +69,7 @@
 //   TSignalHandler              1          1       20            20           20
 //   TOrdCollection              3          3       40           120          120
 //   TEnv                        1          1       24            24           24
-//   TCint                       1          1      208           208          208
+//   TCling                      1          1      208           208          208
 //   TBenchmark                  1          1       52            52           52
 //   TClassTable                 1          1       12            12           12
 //   TObjectTable                1          1       12            12           12

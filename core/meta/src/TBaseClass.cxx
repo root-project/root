@@ -18,7 +18,7 @@
 //  Each class (see TClass) has a linked list of its base class(es).    //
 //  This class describes one single base class.                         //
 //  The base class info is obtained via the CINT api.                   //
-//     see class TCint.                                                 //
+//     see class TCling.                                                 //
 //                                                                      //
 //  The base class information is used a.o. in to find all inherited    //
 //  methods.                                                            //
@@ -32,7 +32,7 @@ ClassImp(TBaseClass)
 TBaseClass::TBaseClass(BaseClassInfo_t *info, TClass *cl) : TDictionary()
 {
    // Default TBaseClass ctor. TBaseClasses are constructed in TClass
-   // via a call to TCint::CreateListOfBaseClasses().
+   // via a call to TCling::CreateListOfBaseClasses().
 
    fInfo     = info;
    fClass    = cl;

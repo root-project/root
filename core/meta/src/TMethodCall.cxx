@@ -482,7 +482,7 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
 
       TypedefInfo_t *atype = gCling->TypedefInfo_Factory();
       gCling->TypedefInfo_Init(atype,gCling->TypeName(rettype));
-      //be careful, below this point rettype cannot be reused (point to a static in TCint)
+      //be careful, below this point rettype cannot be reused (point to a static in TCling)
       
       const char *name = gCling->TypedefInfo_TrueName(atype);
 
