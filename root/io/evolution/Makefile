@@ -48,10 +48,17 @@ ClassConv.log: ClassConv.root ClassConvNew.root ClassConvNew_cxx.$(DllSuf)  Clas
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvReadNew.cxx > ClassConv.log 2>&1 
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvReadOther.cxx >> ClassConv.log 2>&1 
 
-typedef.root : $(ROOTCORELIBS) typedefWrite_C.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l typedefWrite.C+ > typedefWrite.log
+ifneq ($(ClingWorkAroundMissingSTLdict),)
+typedefWriteFilter = 2>&1 | grep -v TStreamerInfo::Build 
+endif
 
-typedef.log: typedef.root
+typedefWrite.log : $(ROOTCORELIBS) typedefWrite_C.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l typedefWrite.C+ $(typedefWriteFilter) > typedefWrite.log 2>&1
+
+typedefWrite : typedefWrite.log
+	$(TestDiff)
+
+typedef.log: typedefWrite.log
 
 typedef: typedef.log
 	$(TestDiff)
