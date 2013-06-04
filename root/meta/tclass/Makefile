@@ -10,7 +10,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog myclass.root pairs.root
 TEST_TARGETS += classref tempParse pairs
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

@@ -7,7 +7,7 @@ CLEAN_TARGETS += dict* *.o $(ALL_LIBRARIES) *.log
 TEST_TARGETS += mapTest badOperatorTest stringMapTest badstringMapTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 

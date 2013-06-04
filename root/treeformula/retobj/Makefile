@@ -4,7 +4,7 @@ CLEAN_TARGETS += $(local_clean) *.log
 TEST_TARGETS += enum retobjTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

@@ -3,7 +3,7 @@ CLEAN_TARGETS += file.root memory.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllS
 TEST_TARGETS +=  check Memory ucharshow
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

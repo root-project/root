@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
 TEST_TARGETS += mytest testLoadingSelector
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
@@ -33,7 +33,7 @@ else
 endif
 	$(CMDECHO)mv testLoadingSelector.temp testLoadingSelector.log
 
-# ..... | sed -s/$(PWD)//g > testLoadingSelector.log
+# ..... | sed -s/$(CURDIR)//g > testLoadingSelector.log
 
 
 testLoadingSelector: testLoadingSelector.log removepwd

@@ -8,7 +8,7 @@ TEST_TARGETS += templateSingleton longlong usingtemplate operator1 simpleSeparat
 SHELL = /bin/bash
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

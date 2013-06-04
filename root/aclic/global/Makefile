@@ -2,7 +2,7 @@ TEST_TARGETS += GlobalAclicTest
 CLEAN_TARGETS += *Dict* output *.o $(ALL_LIBRARIES) *.log
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 

@@ -26,7 +26,7 @@ TEST_TARGETS += test1 read_test1 test2 reflex_test1 reflex_test2
 #  the home directory.
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME:=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME:=$(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

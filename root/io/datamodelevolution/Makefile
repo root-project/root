@@ -10,7 +10,7 @@
 # TEST_TARGETS += 
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME:=$(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME:=$(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
 # Note that not-yet release test directory are listed in

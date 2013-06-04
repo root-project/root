@@ -5,7 +5,7 @@ TEST_TARGETS += friendInChain treefriend ChainFriend unevenFriend treeChainFrien
                 FriendsIndices chainBranchStatus localfriend circular UnevenChain Unaligned
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

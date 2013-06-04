@@ -2,7 +2,7 @@ TEST_TARGETS = SelectorTest SelectorCintTest
 CLEAN_TARGETS += *.log $(ALL_LIBRARIES)
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

@@ -2,7 +2,7 @@ CLEAN_TARGETS += main *Dict* Event.root *~  *.log $(ALL_LIBRARIES)
 TEST_TARGETS += ptrArr ArraySave
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

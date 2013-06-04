@@ -2,7 +2,7 @@ TEST_TARGETS += sepDictLibs
 CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.$(ObjSuf) *.$(DllSuf) *Dict*.h *Dict*.C run.log *.build.log
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

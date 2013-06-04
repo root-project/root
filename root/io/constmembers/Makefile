@@ -2,13 +2,13 @@ TEST_TARGETS = FileInfoTest
 CLEAN_TARGETS = dict.* dictold.*
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(PWD) : '\(.*/roottest/\)')
+	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 #test:
-#	$(CMDECHO)echo $(PWD) has a failing test FileInfoTest
+#	$(CMDECHO)echo $(CURDIR) has a failing test FileInfoTest
 
 
 ifeq ($(FAIL),)
