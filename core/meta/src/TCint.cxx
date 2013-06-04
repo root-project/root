@@ -1936,9 +1936,22 @@ Int_t TCint::AutoLoad(const char *cls)
                     lib, cls);
       }
       delete tokens;
+      G__set_class_autoloading(oldvalue);
+   } else {
+      G__set_class_autoloading(oldvalue);
+      // Try the cint only autoloading
+      const char *lib = G__get_class_autoloading_table((char*)cls);
+      if (lib && lib[0]) {
+        if (gROOT->LoadClass(cls, lib) == 0) {
+            if (gDebug > 0)
+               ::Info("TCint::AutoLoad", "loaded library %s for class %s",
+                      lib, cls);
+            status = 1;
+         } else
+            ::Error("TCint::AutoLoad", "failure loading library %s for class %s",
+                    lib, cls);
+      }
    }
-
-   G__set_class_autoloading(oldvalue);
    return status;
 }
 
