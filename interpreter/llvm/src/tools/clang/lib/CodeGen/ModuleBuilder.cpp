@@ -53,12 +53,6 @@ namespace {
       return M.take();
     }
 
-    virtual void SetModule(llvm::Module* Module) {
-      assert(!M && "Prev module must be released before calling set.");
-      M.reset(Module);
-      Initialize(*Ctx);
-    }
-
     virtual llvm::Type* ConvertType(QualType T) {
       return Builder->getTypes().ConvertType(T);
     }
