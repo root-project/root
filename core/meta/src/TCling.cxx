@@ -3118,6 +3118,35 @@ Int_t TCling::UnloadLibraryMap(const char* library)
    return ret;
 }
 
+Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
+{
+   // Register the autoloading information for a class.
+   // libs is a space separated list of libraries.
+   
+   if (!cls || !*cls)
+      return 0;
+
+   TString key = TString("Library.") + cls;
+   // convert "::" to "@@", we used "@@" because TEnv
+   // considers "::" a terminator
+   key.ReplaceAll("::", "@@");
+   // convert "-" to " ", since class names may have
+   // blanks and TEnv considers a blank a terminator
+   key.ReplaceAll(" ", "-");
+
+   R__LOCKGUARD(gClingMutex);
+   if (!fMapfile) {
+      fMapfile = new TEnv(".rootmap");
+      fMapfile->IgnoreDuplicates(kTRUE);
+
+      fRootmapFiles = new TObjArray;
+      fRootmapFiles->SetOwner();
+
+   }
+   fMapfile->SetValue(key,libs);
+   return 1;
+}
+
 //______________________________________________________________________________
 Int_t TCling::AutoLoad(const char* cls)
 {

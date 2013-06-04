@@ -61,6 +61,7 @@ public:
    Long_t   ProcessLine(const char *line, EErrorCode *error = 0);
    Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0);
    void     PrintIntro();
+   Int_t    SetClassSharedLibs(const char *cls, const char *libs);
    void     SetGetline(const char*(*getlineFunc)(const char* prompt),
                        void (*histaddFunc)(const char* line));
    void     Reset();
