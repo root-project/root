@@ -1894,6 +1894,41 @@ Int_t TCint::UnloadLibraryMap(const char *library)
 }
 
 //______________________________________________________________________________
+Int_t TCint::SetClassSharedLibs(const char *cls, const char *libs)
+{
+   // Register the autoloading information for a class.
+   // libs is a space separated list of libraries.
+   
+   if (!cls || !*cls)
+      return 0;
+
+   G__set_class_autoloading_table((char*)cls,(char*)libs);
+
+   TString key = TString("Library.") + cls;
+   // convert "::" to "@@", we used "@@" because TEnv
+   // considers "::" a terminator
+   key.ReplaceAll("::", "@@");
+   // convert "-" to " ", since class names may have
+   // blanks and TEnv considers a blank a terminator
+   key.ReplaceAll(" ", "-");
+
+   R__LOCKGUARD(gCINTMutex);
+   if (!fMapfile) {
+      fMapfile = new TEnv(".rootmap");
+      fMapfile->IgnoreDuplicates(kTRUE);
+
+      fRootmapFiles = new TObjArray;
+      fRootmapFiles->SetOwner();
+
+      // Make sure that this information will be useable by inserting our
+      // autoload call back!
+      G__set_class_autoloading_callback(&TCint_AutoLoadCallback);
+   }
+   fMapfile->SetValue(key,libs);
+   return 1;
+}
+
+//______________________________________________________________________________
 Int_t TCint::AutoLoad(const char *cls)
 {
    // Load library containing the specified class. Returns 0 in case of error
