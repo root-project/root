@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/base:$Id: 6da0b5b613bbcfaa3a5cd4074e7b2be2448dfb31 $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -277,6 +277,11 @@ void TBuffer::SetReadMode()
 {
    // Set buffer in read mode.
 
+   if ( (fMode&kWrite)!=0 ) {
+      // We had reserved space for the free block count,
+      // release it,
+      fBufSize += kExtraSpace;
+   }
    fMode = kRead;
 }
 
@@ -285,6 +290,11 @@ void TBuffer::SetWriteMode()
 {
    // Set buffer in write mode.
 
+   if ( (fMode&kWrite)==0 ) {
+      // We had not yet reserved space for the free block count,
+      // reserve it now.
+      fBufSize -= kExtraSpace;
+   }
    fMode = kWrite;
 }
 
