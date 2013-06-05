@@ -6,10 +6,9 @@ if (gROOT->GetClass("NotReal")!=0) {
 if (gROOT->GetClass("TVector3")==0) {
    fprintf(stderr,"Error: Failed to load TVector3\n");
 } 
-//gInterpreter->SetClassSharedLibs("Event","libByHand.so");
-gInterpreter->SetClassSharedLibs("Event","Event_cxx.so");
+gInterpreter->SetClassSharedLibs("Event","Event_cxx");
 TString res = gInterpreter->GetClassSharedLibs("Event");
-if (res != "Event_cxx.so") {
+if (res != "Event_cxx") {
    fprintf(stderr,"Error: hand registration of library did not work, found %s\n",res.Data());
 }
 if (TClass::GetClass("Event")==0) {
