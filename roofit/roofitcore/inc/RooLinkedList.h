@@ -27,6 +27,11 @@ class RooFIter ;
 class TIterator ;
 class RooAbsArg ;
 
+namespace RooLinkedListImplDetails {
+    class Chunk;
+    class Pool;
+}
+
 class RooLinkedList : public TObject {
 public:
   // Constructor
@@ -107,42 +112,7 @@ private:
   static RooLinkedListElem* mergesort_impl(RooLinkedListElem* l1,
 	  const unsigned sz, RooLinkedListElem** tail = 0);
   /// memory pool for quick allocation of RooLinkedListElems
-  class Pool {
-    private:
-      enum {
-	minsz = 7, ///< minimum chunk size (just below 1 << minsz bytes)
-	maxsz = 20, ///< maximum chunk size (just below 1 << maxsz bytes)
-	szincr = 1 ///< size class increment (sz = 1 << (minsz + k * szincr))
-      };
-      /// a chunk of memory in the pool
-      class Chunk;
-      typedef std::list<Chunk*> ChunkList;
-      typedef std::map<const void*, Chunk*> AddrMap;
-    public:
-      /// constructor
-      Pool();
-      /// destructor
-      ~Pool();
-      /// acquire the pool
-      inline void acquire() { ++_refCount; }
-      /// release the pool, return true if the pool is unused
-      inline bool release() { return 0 == --_refCount; }
-      /// pop a free element out of the pool
-      RooLinkedListElem* pop_free_elem();
-      /// push a free element back into the pool
-      void push_free_elem(RooLinkedListElem* el);
-    private:
-      AddrMap _addrmap;
-      ChunkList _freelist;
-      UInt_t _szmap[(maxsz - minsz) / szincr];
-      Int_t _cursz;
-      UInt_t _refCount;
-
-      /// adjust _cursz to current largest block
-      void updateCurSz(Int_t sz, Int_t incr);
-      /// find size of next chunk to allocate (in a hopefully smart way)
-      Int_t nextChunkSz() const;
-  };
+  typedef RooLinkedListImplDetails::Pool Pool;
   /// shared memory pool for allocation of RooLinkedListElems
   static Pool* _pool; //!
 

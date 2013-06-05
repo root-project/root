@@ -41,166 +41,204 @@ using namespace std;
 
 ClassImp(RooLinkedList)
 ;
+namespace RooLinkedListImplDetails {
+  /// a chunk of memory in a pool for quick allocation of RooLinkedListElems
+  class Chunk {
+    public:
+      /// constructor
+      Chunk(Int_t sz) :
+	_sz(sz), _free(capacity()),
+	_chunk(new RooLinkedListElem[_free]), _freelist(_chunk)
+      {
+	// initialise free list
+	for (Int_t i = 0; i < _free; ++i)
+	  _chunk[i]._next = (i + 1 < _free) ? &_chunk[i + 1] : 0;
+      }
+      /// destructor
+      ~Chunk() { delete[] _chunk; }
+      /// chunk capacity
+      Int_t capacity() const
+      { return (1 << _sz) / sizeof(RooLinkedListElem); }
+      /// chunk free elements
+      Int_t free() const { return _free; }
+      /// chunk occupied elements
+      Int_t size() const { return capacity() - free(); }
+      /// return size class
+      int szclass() const { return _sz; }
+      /// chunk full?
+      bool full() const { return !free(); }
+      /// chunk empty?
+      bool empty() const { return capacity() == free(); }
+      /// return address of chunk
+      const void* chunkaddr() const { return _chunk; }
+      /// check if el is in this chunk
+      bool contains(RooLinkedListElem* el) const
+      { return _chunk <= el && el < &_chunk[capacity()]; }
+      /// pop a free element off the free list
+      RooLinkedListElem* pop_free_elem()
+      {
+	if (!_freelist) return 0;
+	RooLinkedListElem* retVal = _freelist;
+	_freelist = retVal->_next;
+	retVal->_arg = 0; retVal->_refCount = 0;
+	retVal->_prev = retVal->_next = 0;
+	--_free;
+	return retVal;
+      }
+      /// push a free element back onto the freelist
+      void push_free_elem(RooLinkedListElem* el)
+      {
+	el->_next = _freelist;
+	_freelist = el;
+	++_free;
+      }
+    private:
+      Int_t _sz;				///< chunk capacity
+      Int_t _free;			///< length of free list
+      RooLinkedListElem* _chunk;		///< chunk from which elements come
+      RooLinkedListElem* _freelist;	///< list of free elements
 
-RooLinkedList::Pool* RooLinkedList::_pool = 0;
+      /// forbid copying
+      Chunk(const Chunk&);
+      // forbid assignment
+      Chunk& operator=(const Chunk&);
+  };
 
-/// a chunk of memory in a pool for quick allocation of RooLinkedListElems
-class RooLinkedList::Pool::Chunk {
-  public:
-    /// constructor
-    Chunk(Int_t sz) :
-      _sz(sz), _free(capacity()),
-      _chunk(new RooLinkedListElem[_free]), _freelist(_chunk)
-    {
-      // initialise free list
-      for (Int_t i = 0; i < _free; ++i)
-	_chunk[i]._next = (i + 1 < _free) ? &_chunk[i + 1] : 0;
-    }
-    /// destructor
-    ~Chunk() { delete[] _chunk; }
-    /// chunk capacity
-    Int_t capacity() const
-    { return (1 << _sz) / sizeof(RooLinkedListElem); }
-    /// chunk free elements
-    Int_t free() const { return _free; }
-    /// chunk occupied elements
-    Int_t size() const { return capacity() - free(); }
-    /// return size class
-    int szclass() const { return _sz; }
-    /// chunk full?
-    bool full() const { return !free(); }
-    /// chunk empty?
-    bool empty() const { return capacity() == free(); }
-    /// return address of chunk
-    const void* chunkaddr() const { return _chunk; }
-    /// check if el is in this chunk
-    bool contains(RooLinkedListElem* el) const
-    { return _chunk <= el && el < &_chunk[capacity()]; }
-    /// pop a free element off the free list
-    RooLinkedListElem* pop_free_elem()
-    {
-      if (!_freelist) return 0;
-      RooLinkedListElem* retVal = _freelist;
-      _freelist = retVal->_next;
-      retVal->_arg = 0; retVal->_refCount = 0;
-      retVal->_prev = retVal->_next = 0;
-      --_free;
-      return retVal;
-    }
-    /// push a free element back onto the freelist
-    void push_free_elem(RooLinkedListElem* el)
-    {
-      el->_next = _freelist;
-      _freelist = el;
-      ++_free;
-    }
-  private:
-    Int_t _sz;				///< chunk capacity
-    Int_t _free;			///< length of free list
-    RooLinkedListElem* _chunk;		///< chunk from which elements come
-    RooLinkedListElem* _freelist;	///< list of free elements
+  class Pool {
+    private:
+      enum {
+	minsz = 7, ///< minimum chunk size (just below 1 << minsz bytes)
+	maxsz = 20, ///< maximum chunk size (just below 1 << maxsz bytes)
+	szincr = 1 ///< size class increment (sz = 1 << (minsz + k * szincr))
+      };
+      /// a chunk of memory in the pool
+      typedef RooLinkedListImplDetails::Chunk Chunk;
+      typedef std::list<Chunk*> ChunkList;
+      typedef std::map<const void*, Chunk*> AddrMap;
+    public:
+      /// constructor
+      Pool();
+      /// destructor
+      ~Pool();
+      /// acquire the pool
+      inline void acquire() { ++_refCount; }
+      /// release the pool, return true if the pool is unused
+      inline bool release() { return 0 == --_refCount; }
+      /// pop a free element out of the pool
+      RooLinkedListElem* pop_free_elem();
+      /// push a free element back into the pool
+      void push_free_elem(RooLinkedListElem* el);
+    private:
+      AddrMap _addrmap;
+      ChunkList _freelist;
+      UInt_t _szmap[(maxsz - minsz) / szincr];
+      Int_t _cursz;
+      UInt_t _refCount;
 
-    /// forbid copying
-    Chunk(const Chunk&);
-    // forbid assignment
-    Chunk& operator=(const Chunk&);
-};
-
-RooLinkedList::Pool::Pool() : _cursz(minsz), _refCount(0)
-{
-  std::fill(_szmap, _szmap + ((maxsz - minsz) / szincr), 0);
-}
-
-RooLinkedList::Pool::~Pool()
-{
-  _freelist.clear();
-  for (AddrMap::iterator it = _addrmap.begin(); _addrmap.end() != it; ++it)
-    delete it->second;
-  _addrmap.clear();
-}
-
-RooLinkedListElem* RooLinkedList::Pool::pop_free_elem()
-{
-  if (_freelist.empty()) {
-    // allocate and register new chunk and put it on the freelist
-    const Int_t sz = nextChunkSz();
-    Chunk *c = new Chunk(sz);
-    _addrmap[c->chunkaddr()] = c;
-    _freelist.push_back(c);
-    updateCurSz(sz, +1);
+      /// adjust _cursz to current largest block
+      void updateCurSz(Int_t sz, Int_t incr);
+      /// find size of next chunk to allocate (in a hopefully smart way)
+      Int_t nextChunkSz() const;
+  };
+  
+  Pool::Pool() : _cursz(minsz), _refCount(0)
+  {
+    std::fill(_szmap, _szmap + ((maxsz - minsz) / szincr), 0);
   }
-  // get free element from first chunk on _freelist
-  Chunk* c = _freelist.front();
-  RooLinkedListElem* retVal = c->pop_free_elem();
-  // full chunks are removed from _freelist
-  if (c->full()) _freelist.pop_front();
-  return retVal;
-}
 
-void RooLinkedList::Pool::push_free_elem(RooLinkedListElem* el)
-{
-  // find from which chunk el came
-  AddrMap::iterator ci = _addrmap.lower_bound(el);
-  if (!_addrmap.empty() && _addrmap.begin() != ci && ci->first != el) --ci;
-  // ci should now point to the chunk which might contain el
-  if (_addrmap.empty() || !ci->second->contains(el)) {
-    // el is not in any chunk we know about, so just delete it
-    delete el;
-    return;
+  Pool::~Pool()
+  {
+    _freelist.clear();
+    for (AddrMap::iterator it = _addrmap.begin(); _addrmap.end() != it; ++it)
+      delete it->second;
+    _addrmap.clear();
   }
-  Chunk *c = ci->second;
-  const bool moveToFreelist = c->full();
-  c->push_free_elem(el);
-  if (c->empty()) {
-    // delete chunk if all empty
-    ChunkList::iterator it = std::find( _freelist.begin(), _freelist.end(), c);
-    if (_freelist.end() != it) _freelist.erase(it);
-    _addrmap.erase(ci->first);
-    updateCurSz(c->szclass(), -1);
-    delete c;
-  } else if (moveToFreelist) {
-    _freelist.push_back(c);
-  }
-}
 
-void RooLinkedList::Pool::updateCurSz(Int_t sz, Int_t incr)
-{
-  _szmap[(sz - minsz) / szincr] += incr;
-  _cursz = minsz;
-  for (int i = (maxsz - minsz) / szincr; i--; ) {
-    if (_szmap[i]) {
-      _cursz += i * szincr;
-      break;
+  RooLinkedListElem* Pool::pop_free_elem()
+  {
+    if (_freelist.empty()) {
+      // allocate and register new chunk and put it on the freelist
+      const Int_t sz = nextChunkSz();
+      Chunk *c = new Chunk(sz);
+      _addrmap[c->chunkaddr()] = c;
+      _freelist.push_back(c);
+      updateCurSz(sz, +1);
+    }
+    // get free element from first chunk on _freelist
+    Chunk* c = _freelist.front();
+    RooLinkedListElem* retVal = c->pop_free_elem();
+    // full chunks are removed from _freelist
+    if (c->full()) _freelist.pop_front();
+    return retVal;
+  }
+
+  void Pool::push_free_elem(RooLinkedListElem* el)
+  {
+    // find from which chunk el came
+    AddrMap::iterator ci = _addrmap.lower_bound(el);
+    if (!_addrmap.empty() && _addrmap.begin() != ci && ci->first != el) --ci;
+    // ci should now point to the chunk which might contain el
+    if (_addrmap.empty() || !ci->second->contains(el)) {
+      // el is not in any chunk we know about, so just delete it
+      delete el;
+      return;
+    }
+    Chunk *c = ci->second;
+    const bool moveToFreelist = c->full();
+    c->push_free_elem(el);
+    if (c->empty()) {
+      // delete chunk if all empty
+      ChunkList::iterator it = std::find( _freelist.begin(), _freelist.end(), c);
+      if (_freelist.end() != it) _freelist.erase(it);
+      _addrmap.erase(ci->first);
+      updateCurSz(c->szclass(), -1);
+      delete c;
+    } else if (moveToFreelist) {
+      _freelist.push_back(c);
     }
   }
-}
 
-Int_t RooLinkedList::Pool::nextChunkSz() const
-{
-  // no chunks with space available, figure out chunk size
-  Int_t sz = _cursz;
-  if (_addrmap.empty()) {
-    // if we start allocating chunks, we start from minsz
-    sz = minsz;
-  } else {
-    if (minsz >= sz) {
-      // minimal sized chunks are always grown
-      sz = minsz + szincr;
-    } else {
-      if (1 != _addrmap.size()) {
-	// if we have more than one completely filled chunk, grow
-	sz += szincr;
-      } else {
-	// just one chunk left, try shrinking chunk size
-	sz -= szincr;
+  void Pool::updateCurSz(Int_t sz, Int_t incr)
+  {
+    _szmap[(sz - minsz) / szincr] += incr;
+    _cursz = minsz;
+    for (int i = (maxsz - minsz) / szincr; i--; ) {
+      if (_szmap[i]) {
+	_cursz += i * szincr;
+	break;
       }
     }
   }
-  // clamp size to allowed range
-  if (sz > maxsz) sz = maxsz;
-  if (sz < minsz) sz = minsz;
-  return sz;
+
+  Int_t Pool::nextChunkSz() const
+  {
+    // no chunks with space available, figure out chunk size
+    Int_t sz = _cursz;
+    if (_addrmap.empty()) {
+      // if we start allocating chunks, we start from minsz
+      sz = minsz;
+    } else {
+      if (minsz >= sz) {
+	// minimal sized chunks are always grown
+	sz = minsz + szincr;
+      } else {
+	if (1 != _addrmap.size()) {
+	  // if we have more than one completely filled chunk, grow
+	  sz += szincr;
+	} else {
+	  // just one chunk left, try shrinking chunk size
+	  sz -= szincr;
+	}
+      }
+    }
+    // clamp size to allowed range
+    if (sz > maxsz) sz = maxsz;
+    if (sz < minsz) sz = minsz;
+    return sz;
+  }
 }
+
+RooLinkedList::Pool* RooLinkedList::_pool = 0;
 
 //_____________________________________________________________________________
 RooLinkedList::RooLinkedList(Int_t htsize) : 

@@ -16,15 +16,18 @@ ROOFITCOREDIRI := $(ROOFITCOREDIR)/inc
 ROOFITCOREL1   := $(MODDIRI)/LinkDef1.h
 ROOFITCOREL2   := $(MODDIRI)/LinkDef2.h
 ROOFITCOREL3   := $(MODDIRI)/LinkDef3.h
+ROOFITCOREL4   := $(MODDIRI)/LinkDef4.h
 ROOFITCOREDS1  := $(call stripsrc,$(MODDIRS)/G__RooFitCore1.cxx)
 ROOFITCOREDS2  := $(call stripsrc,$(MODDIRS)/G__RooFitCore2.cxx)
 ROOFITCOREDS3  := $(call stripsrc,$(MODDIRS)/G__RooFitCore3.cxx)
+ROOFITCOREDS4  := $(call stripsrc,$(MODDIRS)/G__RooFitCore4.cxx)
 ROOFITCOREDO1  := $(ROOFITCOREDS1:.cxx=.o)
 ROOFITCOREDO2  := $(ROOFITCOREDS2:.cxx=.o)
 ROOFITCOREDO3  := $(ROOFITCOREDS3:.cxx=.o)
-ROOFITCOREL    := $(ROOFITCOREL1) $(ROOFITCOREL2) $(ROOFITCOREL3)
-ROOFITCOREDS   := $(ROOFITCOREDS1) $(ROOFITCOREDS2) $(ROOFITCOREDS3)
-ROOFITCOREDO   := $(ROOFITCOREDO1) $(ROOFITCOREDO2) $(ROOFITCOREDO3)
+ROOFITCOREDO4  := $(ROOFITCOREDS4:.cxx=.o)
+ROOFITCOREL    := $(ROOFITCOREL1) $(ROOFITCOREL2) $(ROOFITCOREL3) $(ROOFITCOREL4)
+ROOFITCOREDS   := $(ROOFITCOREDS1) $(ROOFITCOREDS2) $(ROOFITCOREDS3) $(ROOFITCOREDS4)
+ROOFITCOREDO   := $(ROOFITCOREDO1) $(ROOFITCOREDO2) $(ROOFITCOREDO3) $(ROOFITCOREDO4)
 ROOFITCOREDH   := $(ROOFITCOREDS:.cxx=.h)
 
 ROOFITCOREH1   := Roo1DTable.h RooAbsArg.h RooAbsBinning.h RooAbsCategory.h \
@@ -79,7 +82,9 @@ ROOFITCOREH3   := RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic
                   RooProjectedPdf.h RooWorkspace.h RooProfileLL.h RooAbsCachedPdf.h RooAbsSelfCachedPdf.h \
                   RooHistPdf.h RooCachedPdf.h RooFFTConvPdf.h RooDataHistSliceIter.h RooCacheManager.h \
                   RooAbsCache.h RooAbsCacheElement.h RooObjCacheManager.h RooExtendedTerm.h RooSentinel.h \
-                  RooParamBinning.h RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h \
+                  RooParamBinning.h 
+
+ROOFITCOREH4   := RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h \
                   RooSimWSTool.h RooFracRemainder.h RooAbsCachedReal.h \
                   RooAbsSelfCachedReal.h RooCachedReal.h RooNumCdf.h RooChangeTracker.h \
                   RooNumRunningInt.h RooHistFunc.h RooExpensiveObjectCache.h \
@@ -94,7 +99,8 @@ ROOFITCOREH3   := RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic
 ROOFITCOREH1   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH1))
 ROOFITCOREH2   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH2))
 ROOFITCOREH3   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH3))
-ROOFITCOREH    := $(ROOFITCOREH1) $(ROOFITCOREH2) $(ROOFITCOREH3)
+ROOFITCOREH4   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH4))
+ROOFITCOREH    := $(ROOFITCOREH1) $(ROOFITCOREH2) $(ROOFITCOREH3)  $(ROOFITCOREH4)
 ROOFITCORES    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 ROOFITCOREO    := $(call stripsrc,$(ROOFITCORES:.cxx=.o))
 
@@ -139,6 +145,11 @@ $(ROOFITCOREDS3): $(ROOFITCOREH3) $(ROOFITCOREL3) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(ROOFITCOREH3) $(ROOFITCOREL3)
 
+$(ROOFITCOREDS4): $(ROOFITCOREH4) $(ROOFITCOREL4) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(ROOFITCOREH4) $(ROOFITCOREL4)
+
 $(ROOFITCOREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(ROOFITCOREL)
 		$(RLIBMAP) -o $@ -l $(ROOFITCORELIB) \
 		   -d $(ROOFITCORELIBDEPM) -c $(ROOFITCOREL)
@@ -160,3 +171,4 @@ distclean::     distclean-$(MODNAME)
 $(ROOFITCOREDO1): NOOPT = $(OPT)
 $(ROOFITCOREDO2): NOOPT = $(OPT)
 $(ROOFITCOREDO3): NOOPT = $(OPT)
+$(ROOFITCOREDO4): NOOPT = $(OPT)

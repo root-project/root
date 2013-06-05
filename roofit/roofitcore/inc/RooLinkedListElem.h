@@ -22,6 +22,11 @@ class TObject ;
 class RooLinkedListElem ;
 class TBuffer ;
 
+namespace RooLinkedListImplDetails {
+    class Chunk;
+    class Pool;
+};
+
 class RooLinkedListElem {
 public:
   // Initial element ctor
@@ -78,6 +83,8 @@ public:
 protected:
   friend class RooHashTable ;
   friend class RooLinkedList ;
+  friend class RooLinkedListImplDetails::Pool;
+  friend class RooLinkedListImplDetails::Chunk;
   friend class RooLinkedListIter ;
   friend class RooFIter ;
   RooLinkedListElem* _prev ; // Link to previous element in list

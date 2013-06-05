@@ -31,7 +31,8 @@ set(headers3 RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic.h Ro
              RooProjectedPdf.h RooWorkspace.h RooProfileLL.h RooAbsCachedPdf.h RooAbsSelfCachedPdf.h
              RooHistPdf.h RooCachedPdf.h RooFFTConvPdf.h RooDataHistSliceIter.h RooCacheManager.h
              RooAbsCache.h RooAbsCacheElement.h RooObjCacheManager.h RooExtendedTerm.h RooSentinel.h
-             RooParamBinning.h RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
+             RooParamBinning.h)
+set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
              RooSimWSTool.h RooFracRemainder.h RooAbsCachedReal.h RooAbsSelfCachedReal.h RooCachedReal.h RooNumCdf.h RooChangeTracker.h
              RooNumRunningInt.h RooHistFunc.h RooExpensiveObjectCache.h
              RooBinningCategory.h RooCintUtils.h RooFactoryWSTool.h RooTFoamBinding.h RooFunctor.h
@@ -45,10 +46,11 @@ set(headers3 RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic.h Ro
 ROOT_GENERATE_DICTIONARY(G__RooFitCore1 ${headers1} LINKDEF LinkDef1.h)
 ROOT_GENERATE_DICTIONARY(G__RooFitCore2 ${headers2} LINKDEF LinkDef2.h)
 ROOT_GENERATE_DICTIONARY(G__RooFitCore3 ${headers3} LINKDEF LinkDef3.h)
+ROOT_GENERATE_DICTIONARY(G__RooFitCore4 ${headers4} LINKDEF LinkDef4.h)
 
-ROOT_GENERATE_ROOTMAP(RooFitCore LINKDEF LinkDef1.h LinkDef2.h LinkDef3.h
+ROOT_GENERATE_ROOTMAP(RooFitCore LINKDEF LinkDef1.h LinkDef2.h LinkDef3.h LinkDef4.h
                                  DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam )
-ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore1.cxx G__RooFitCore2.cxx G__RooFitCore3.cxx LIBRARIES Core Cint 
+ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore1.cxx G__RooFitCore2.cxx G__RooFitCore3.cxx G__RooFitCore4.cxx LIBRARIES Core Cint 
                     DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam)
 ROOT_INSTALL_HEADERS()
 
