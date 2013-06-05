@@ -90,6 +90,8 @@ void ROOT::RStl::GenerateTClassFor(const clang::QualType &type, const cling::Int
    
    fList.insert( RScanner::AnnotatedRecordDecl(++fgCount,type.getTypePtr(),stlclass,"",false /* for backward compatibility rather than 'true' .. neither really make a difference */,false,false,false,-1, interp, normCtxt) );
    
+   // fprintf(stderr,"Registered the STL class %s as needing a dictionary\n",R__GetQualifiedName(*stlclass).c_str());
+
    for(unsigned int i=0; i <  templateCl->getTemplateArgs().size(); ++i) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(i) );
       if (arg.getKind() == clang::TemplateArgument::Type) {
@@ -113,8 +115,6 @@ void ROOT::RStl::GenerateTClassFor(const clang::QualType &type, const cling::Int
             }
       }
    }
-
-   //    fprintf(stderr,"ROOT::RStl registered %s as %s\n",stlclassname.c_str(),registername.c_str());
 }
 
 void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlclass, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)

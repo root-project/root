@@ -745,8 +745,6 @@ const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type**
    return result;
 }
 
-
-
 clang::RecordDecl *R__GetUnderlyingRecordDecl(clang::QualType type)
 {
    const clang::Type *rawtype = ROOT::TMetaUtils::GetUnderlyingType(type);
@@ -864,24 +862,6 @@ bool InheritsFromTSelector(const clang::RecordDecl *cl)
    static const clang::CXXRecordDecl *TObject_decl = R__ScopeSearch("TSelector");
 
    return R__IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
-}
-
-bool IsStdClass(const clang::RecordDecl &cl)
-{
-   // Return true, if the decl is part of the std namespace.
-
-   const clang::DeclContext *ctx = cl.getDeclContext();
-
-   if (ctx->isNamespace())
-   {
-      const clang::NamedDecl *parent = llvm::dyn_cast<clang::NamedDecl> (ctx);
-      if (parent) {
-         if (parent->getQualifiedNameAsString()=="std") {
-            return true;
-         }
-      }
-   }
-   return false;
 }
 
 void R__GetName(std::string &qual_name, const clang::NamedDecl *cl)
@@ -1493,7 +1473,7 @@ string GetNonConstMemberName(const clang::FieldDecl &m, const string &prefix = "
 //______________________________________________________________________________
 bool NeedExternalShowMember(const RScanner::AnnotatedRecordDecl &cl_input)
 {
-   if (IsStdClass(*cl_input.GetRecordDecl())) {
+   if (TMetaUtils::IsStdClass(*cl_input.GetRecordDecl())) {
       // getName() return the template name without argument!
       llvm::StringRef name = (*cl_input).getName();
       
@@ -1871,43 +1851,29 @@ int IsSTLContainer(const RScanner::AnnotatedRecordDecl &annotated)
 {
    // Is this an STL container.
    
-   const char *name = annotated.GetRequestedName()[0] ? annotated.GetRequestedName() : annotated.GetNormalizedName();
-   
-   int k = TClassEdit::IsSTLCont(name,1);
-   
-   return k;   
+   return TMetaUtils::IsSTLCont(*annotated.GetRecordDecl());
 }
 
 //______________________________________________________________________________
-int IsSTLContainer(const clang::FieldDecl &m)
+TClassEdit::ESTLType IsSTLContainer(const clang::FieldDecl &m)
 {
    // Is this an STL container?
 
    clang::QualType type = m.getType();
-   std::string type_name = type.getAsString(m.getASTContext().getPrintingPolicy()); // m.Type()->TrueName();
+   clang::RecordDecl *decl = R__GetUnderlyingRecordDecl(type);
 
-   int k = TClassEdit::IsSTLCont(type_name.c_str(),1);
-
-   //    if (k) printf(" %s==%d\n",type.c_str(),k);
-
-   return k;
+   if (decl) return TMetaUtils::IsSTLCont(*decl);
+   else return TClassEdit::kNotSTL;
 }
-
 
 //______________________________________________________________________________
 int IsSTLContainer(const clang::CXXBaseSpecifier &base)
 {
    // Is this an STL container?
 
-   if (!IsStdClass(*base.getType()->getAsCXXRecordDecl())) {
-      return kNotSTL;
-   }
-
-   int k = TClassEdit::IsSTLCont(R__GetQualifiedName(*base.getType()->getAsCXXRecordDecl()).c_str(),1);
-   //   if (k) printf(" %s==%d\n",type.c_str(),k);
-   return k;
+   clang::QualType type = base.getType();
+   return TMetaUtils::IsSTLCont(*R__GetUnderlyingRecordDecl(type));
 }
-
 
 //______________________________________________________________________________
 bool IsStreamableObject(const clang::FieldDecl &m)
@@ -3686,7 +3652,7 @@ void WriteBodyShowMembers(const RScanner::AnnotatedRecordDecl &cl, bool outside)
    string csymbol;
    R__GetQualifiedName(csymbol,*cl);
 
-   if ( ! IsStdClass(*cl) ) {
+   if ( !TMetaUtils::IsStdClass(*cl) ) {
 
       // Prefix the full class name with '::' except for the STL
       // containers and std::string.  This is to request the
@@ -4968,7 +4934,7 @@ int main(int argc, char **argv)
          if (CRD) {
             Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
             std::string qualname( CRD->getQualifiedNameAsString() );
-            if (IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
+            if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
                // coverity[fun_call_w_exception] - that's just fine.
                RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
             } else {
