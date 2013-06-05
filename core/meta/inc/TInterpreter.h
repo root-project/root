@@ -83,6 +83,7 @@ public:
    virtual Long_t   ProcessLine(const char *line, EErrorCode *error = 0) = 0;
    virtual Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
    virtual void     PrintIntro() = 0;
+   virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0; 
    virtual void     SetGetline(const char*(*getlineFunc)(const char* prompt),
                                void (*histaddFunc)(const char* line)) = 0;
    virtual void     Reset() = 0;
