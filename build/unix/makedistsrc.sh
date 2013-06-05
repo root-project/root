@@ -8,13 +8,16 @@ TARFILE=root_v$ROOTVERS.$TYPE.tar
 # generate etc/gitinfo.txt
 build/unix/gitinfo.sh
 
-prefix=`basename $PWD`
+git archive -v -o ../$TARFILE --prefix=root/ master
+#git archive -v -o ../$TARFILE --prefix=root/ $CURVERS
 
-git archive -v -o ../$TARFILE --prefix=$prefix/ master
-#git archive -v -o ../$TARFILE --prefix=$prefix/ $CURVERS
-
+mkdir -p etc/root/etc
+cp etc/gitinfo.txt etc/root/etc/
+cd etc
+tar -r -vf ../../$TARFILE root/etc/gitinfo.txt
 cd ..
-tar -r -f $TARFILE $prefix/etc/gitinfo.txt
+rm -rf etc/root
+cd ..
 gzip $TARFILE
 
 exit 0
