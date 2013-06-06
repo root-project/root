@@ -1,0 +1,18 @@
+
+Processing execCMSobj.cxx+...
+Writing
+Printing Outside
+Element 0 name= 0 object=0
+Element 1 name= 0 object=1
+Printing Outside
+Element 0 name= 1 object=100
+Element 1 name= 1 object=101
+Element 2 name= 1 object=102
+Reading
+Printing Outside
+Element 0 name= 0 object=0
+Element 1 name= 0 object=1
+Printing Outside
+Element 0 name= 1 object=100
+Element 1 name= 1 object=101
+Element 2 name= 1 object=102
