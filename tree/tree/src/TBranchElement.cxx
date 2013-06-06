@@ -3001,7 +3001,8 @@ void TBranchElement::InitializeOffsets()
             //-----------------------------------------------------------------
             if( stlParentName.Length() )
             {
-               if( !strncmp( stlParentName.Data(), dataName.Data(), stlParentName.Length()-1 ))
+               if( !strncmp( stlParentName.Data(), dataName.Data(), stlParentName.Length()-1 )
+                   && dataName[ stlParentName.Length() ] == '.' )
                   dataName.Remove( 0, stlParentName.Length()+1 );
             }
 
