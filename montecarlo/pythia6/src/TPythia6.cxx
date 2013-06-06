@@ -431,14 +431,20 @@ void TPythia6::Initialize(const char *frame, const char *beam, const char *targe
    char  ctarget[8];
    strlcpy(ctarget,target,8);
 
+   // For frames "3MOM", "4MOM" and "5MOM" see p. 181-182 of the version 6 manual,
+   // http://home.thep.lu.se/~torbjorn/pythia/lutp0613man2.pdf
+   // their usage may depend on the version of Pythia6 used
    if ( (!strncmp(frame, "CMS"  ,3)) &&
         (!strncmp(frame, "FIXT" ,4)) &&
         (!strncmp(frame, "USER" ,4)) &&
         (!strncmp(frame, "FOUR" ,4)) &&
         (!strncmp(frame, "FIVE" ,4)) &&
+        (!strncmp(frame, "3MOM" ,4)) &&
+        (!strncmp(frame, "4MOM" ,4)) &&
+        (!strncmp(frame, "5MOM" ,4)) &&
         (!strncmp(frame, "NONE" ,4)) ) {
       printf("WARNING! In TPythia6:Initialize():\n");
-      printf(" specified frame=%s is neither of CMS,FIXT,USER,FOUR,FIVE,NONE\n",frame);
+      printf(" specified frame=%s is neither of CMS,FIXT,USER,FOUR,FIVE,NONE,3MOM,4MOM,5MOM\n",frame);
       printf(" resetting to \"CMS\" .");
       snprintf(cframe,4,"CMS");
    }
@@ -487,14 +493,11 @@ void TPythia6::Initialize(const char *frame, const char *beam, const char *targe
       snprintf(ctarget,8,"p+");
    }
 
-
-
    Pyinit(cframe, cbeam ,ctarget, win);
 
    char atitle[32];
    snprintf(atitle,32," %s-%s at %g GeV",cbeam,ctarget,win);
    SetTitle(atitle);
-
 }
 
 
