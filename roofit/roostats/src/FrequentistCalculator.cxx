@@ -15,7 +15,7 @@ MLEs.
 
 #include "RooStats/FrequentistCalculator.h"
 #include "RooStats/ToyMCSampler.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "RooProfileLL.h"
 
 
@@ -84,7 +84,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
 
       // Hack to extract a RooFitResult
       if (fStoreFitInfo) {
-         RooFitResult *result = profile->minuit()->save();
+         RooFitResult *result = profile->minimizer()->save();
          RooArgSet * detOutput = DetailedOutputAggregator::GetAsArgSet(result, "fitNull_");
          fFitInfo->addOwned(*detOutput);
          delete detOutput; 
@@ -178,7 +178,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
 
       // Hack to extract a RooFitResult
       if (fStoreFitInfo) {
-         RooFitResult *result = profile->minuit()->save();
+         RooFitResult *result = profile->minimizer()->save();
          RooArgSet * detOutput =  DetailedOutputAggregator::GetAsArgSet(result, "fitAlt_");
          fFitInfo->addOwned(*detOutput);
          delete detOutput;

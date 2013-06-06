@@ -18,7 +18,7 @@
 #include <map>
 #include <string>
 
-class RooMinuit ;
+class RooMinimizer ;
  
 class RooProfileLL : public RooAbsReal {
 public:
@@ -32,7 +32,7 @@ public:
   void setAlwaysStartFromMin(Bool_t flag) { _startFromMin = flag ; }
   Bool_t alwaysStartFromMin() const { return _startFromMin ; }
 
-  RooMinuit* minuit() { return _minuit ; }
+  RooMinimizer* minimizer() { return _minimizer ; }
   RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
   const RooArgSet& bestFitParams() const ;
   const RooArgSet& bestFitObs() const ;
@@ -49,7 +49,7 @@ public:
 protected:
 
   void validateAbsMin() const ;
-  void initializeMinuit() const ;
+  void initializeMinimizer() const ;
 
   RooRealProxy _nll ;    // Input -log(L) function
   RooSetProxy _obs ;     // Parameters of profile likelihood
@@ -59,7 +59,7 @@ protected:
   TIterator* _piter ; //! Iterator over profile likelihood parameters to be minimized 
   TIterator* _oiter ; //! Iterator of profile likelihood output parameter(s)
 
-  mutable RooMinuit* _minuit ; //! Internal minuit instance
+  mutable RooMinimizer* _minimizer ; //! Internal minuit instance
 
   mutable Bool_t _absMinValid ; // flag if absmin is up-to-date
   mutable Double_t _absMin ; // absolute minimum of -log(L)

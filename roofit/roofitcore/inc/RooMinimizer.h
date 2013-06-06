@@ -79,6 +79,9 @@ public:
   static RooFitResult* lastMinuitFit(const RooArgList& varList=RooArgList()) ;
 
   void saveStatus(const char* label, Int_t status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
+
+  Int_t evalCounter() const { return _fcn->evalCounter() ; }
+  void zeroEvalCount() { _fcn->zeroEvalCount() ; }
   
 protected:
 

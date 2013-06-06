@@ -26,7 +26,7 @@
 #include "RooFit.h"
 #include "RooProfileLL.h" 
 #include "RooAbsReal.h" 
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 #include "RooMsgService.h"
@@ -43,7 +43,7 @@ ClassImp(RooProfileLL)
    _obs("paramOfInterest","Parameters of interest",this), 
    _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE), 
    _startFromMin(kTRUE), 
-   _minuit(0), 
+   _minimizer(0), 
    _absMinValid(kFALSE), 
    _absMin(0),
    _neval(0)
@@ -63,7 +63,7 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
   _obs("paramOfInterest","Parameters of interest",this),
   _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE),
   _startFromMin(kTRUE),
-  _minuit(0),
+  _minimizer(0),
   _absMinValid(kFALSE),
   _absMin(0),
   _neval(0)
@@ -96,7 +96,7 @@ RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
   _obs("obs",this,other._obs),
   _par("par",this,other._par),
   _startFromMin(other._startFromMin),
-  _minuit(0),
+  _minimizer(0),
   _absMinValid(kFALSE),
   _absMin(0),
   _paramFixed(other._paramFixed),
@@ -120,8 +120,8 @@ RooProfileLL::~RooProfileLL()
   // Destructor
 
   // Delete instance of minuit if it was ever instantiated
-  if (_minuit) {
-    delete _minuit ;
+  if (_minimizer) {
+    delete _minimizer ;
   }
 
   delete _piter ;
@@ -163,18 +163,18 @@ RooAbsReal* RooProfileLL::createProfile(const RooArgSet& paramsOfInterest)
 
 
 //_____________________________________________________________________________
-void RooProfileLL::initializeMinuit() const
+void RooProfileLL::initializeMinimizer() const
 {
   coutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") Creating instance of MINUIT" << endl ;
   
   Bool_t smode = RooMsgService::instance().silentMode() ;
   RooMsgService::instance().setSilentMode(kTRUE) ;
-  _minuit = new RooMinuit(const_cast<RooAbsReal&>(_nll.arg())) ;
+  _minimizer = new RooMinimizer(const_cast<RooAbsReal&>(_nll.arg())) ;
   if (!smode) RooMsgService::instance().setSilentMode(kFALSE) ;
   
-  _minuit->setPrintLevel(-999) ;
-  //_minuit->setNoWarn() ;
-  //_minuit->setVerbose(1) ;
+  //_minimizer->setPrintLevel(-999) ;
+  //_minimizer->setNoWarn() ;
+  //_minimizer->setVerbose(1) ;
 }
 
 
@@ -186,9 +186,9 @@ Double_t RooProfileLL::evaluate() const
   // parameters that are not considered observables of this profile
   // likelihood object.
 
-  // Instantiate minuit if we haven't done that already
-  if (!_minuit) {
-    initializeMinuit() ;
+  // Instantiate minimizer if we haven't done that already
+  if (!_minimizer) {
+    initializeMinimizer() ;
   }
 
   // Save current value of observables
@@ -206,9 +206,16 @@ Double_t RooProfileLL::evaluate() const
     const_cast<RooProfileLL&>(*this)._par = _paramAbsMin ;
   }
 
-  _minuit->zeroEvalCount() ;
-  _minuit->migrad() ;
-  _neval = _minuit->evalCounter() ;
+  _minimizer->zeroEvalCount() ;
+
+
+  TString minim=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+  TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
+  if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad                                                                                                                                                                                                       
+  _minimizer->minimize(minim.Data(),algorithm.Data());
+  
+  //_minimizer->migrad() ;
+  _neval = _minimizer->evalCounter() ;
 
   // Restore original values and constant status of observables
   TIterator* iter = obsSetOrig->createIterator() ;
@@ -255,8 +262,8 @@ void RooProfileLL::validateAbsMin() const
     cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << endl ;
 
     
-    if (!_minuit) {
-      initializeMinuit() ;
+    if (!_minimizer) {
+      initializeMinimizer() ;
     }
     
     // Save current values of non-marginalized parameters
@@ -272,7 +279,11 @@ void RooProfileLL::validateAbsMin() const
 
     // Find minimum with all observables floating
     const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",kFALSE) ;  
-    _minuit->migrad() ;
+
+    TString minim=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+    TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
+    if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
+    _minimizer->minimize(minim.Data(),algorithm.Data());
 
     // Save value and remember
     _absMin = _nll ;
@@ -321,9 +332,9 @@ void RooProfileLL::validateAbsMin() const
 Bool_t RooProfileLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
 					 Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 { 
-  if (_minuit) {
-    delete _minuit ;
-    _minuit = 0 ;
+  if (_minimizer) {
+    delete _minimizer ;
+    _minimizer = 0 ;
   }
   return kFALSE ;
 } 

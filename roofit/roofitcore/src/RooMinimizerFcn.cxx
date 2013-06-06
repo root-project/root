@@ -50,6 +50,8 @@ RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
   _verbose(verbose)
 { 
 
+  _evalCounter = 0 ;
+  
   // Examine parameter list
   RooArgSet* paramSet = _funct->getParameters(RooArgSet());
   RooArgList paramList(*paramSet);
@@ -90,6 +92,28 @@ RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
 
 }
 
+
+
+RooMinimizerFcn::RooMinimizerFcn(const RooMinimizerFcn& other) : ROOT::Math::IBaseFunctionMultiDim(other), 
+  _evalCounter(other._evalCounter),
+  _funct(other._funct),
+  _context(other._context),
+  _maxFCN(other._maxFCN),
+  _numBadNLL(other._numBadNLL),
+  _printEvalErrors(other._printEvalErrors),
+  _doEvalErrorWall(other._doEvalErrorWall),
+  _nDim(other._nDim),
+  _logfile(other._logfile),
+  _verbose(other._verbose),
+  _floatParamVec(other._floatParamVec)
+{  
+  _floatParamList = new RooArgList(*other._floatParamList) ;
+  _constParamList = new RooArgList(*other._constParamList) ;
+  _initFloatParamList = (RooArgList*) other._initFloatParamList->snapshot(kFALSE) ;
+  _initConstParamList = (RooArgList*) other._initConstParamList->snapshot(kFALSE) ;  
+}
+
+
 RooMinimizerFcn::~RooMinimizerFcn()
 {
   delete _floatParamList;
@@ -98,10 +122,12 @@ RooMinimizerFcn::~RooMinimizerFcn()
   delete _initConstParamList;
 }
 
+
 ROOT::Math::IBaseFunctionMultiDim* RooMinimizerFcn::Clone() const 
 {  
-  return new RooMinimizerFcn(_funct,_context,_verbose);
+  return new RooMinimizerFcn(*this) ;
 }
+
 
 Bool_t RooMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& parameters, 
 				 Bool_t optConst, Bool_t verbose)
@@ -549,6 +575,8 @@ double RooMinimizerFcn::DoEval(const double *x) const
          << fvalue << setprecision(4) << "  " ;
     cout.flush() ;
   }
+
+  _evalCounter++ ;
 
   return fvalue;
 }

@@ -309,6 +309,11 @@ namespace HistFactory{
     // Configure the workspace
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement( "simPdf", ws, measurement );
 
+    // Delete channel workspaces
+    for (vector<RooWorkspace*>::iterator iter = channel_workspaces.begin() ; iter != channel_workspaces.end() ; ++iter) {
+      delete *iter ;
+    }
+
     // Done.  Return the pointer
     return ws;
 
