@@ -1872,7 +1872,10 @@ int IsSTLContainer(const clang::CXXBaseSpecifier &base)
    // Is this an STL container?
 
    clang::QualType type = base.getType();
-   return TMetaUtils::IsSTLCont(*R__GetUnderlyingRecordDecl(type));
+   clang::RecordDecl *decl = R__GetUnderlyingRecordDecl(type);
+
+   if (decl) return TMetaUtils::IsSTLCont(*decl);
+   else return TClassEdit::kNotSTL;
 }
 
 //______________________________________________________________________________
