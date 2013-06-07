@@ -265,9 +265,9 @@ int G__difffile(char *file1,char *file2);
 int G__copyfile(FILE *to,FILE *from);
 
 #ifdef __cplusplus
-} // extern "C" 
 struct stat;
-int G__statfilename(const char *filename, struct stat* buf, class G__FastAllocString* fullPath);
+} // extern "C" 
+int G__statfilename(const char *filename, struct stat* buf, G__FastAllocString* fullPath);
 extern "C" {
 #endif
 int G__matchfilename(int i1,const char* filename);
