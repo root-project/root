@@ -26,6 +26,7 @@
 #include "RooFit.h"
 #include "RooProfileLL.h" 
 #include "RooAbsReal.h" 
+#include "RooMinuit.h"
 #include "RooMinimizer.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
@@ -169,7 +170,7 @@ void RooProfileLL::initializeMinimizer() const
   
   Bool_t smode = RooMsgService::instance().silentMode() ;
   RooMsgService::instance().setSilentMode(kTRUE) ;
-  _minimizer = new RooMinimizer(const_cast<RooAbsReal&>(_nll.arg())) ;
+  _minimizer = new MINIMIZER(const_cast<RooAbsReal&>(_nll.arg())) ;
   if (!smode) RooMsgService::instance().setSilentMode(kFALSE) ;
   
   //_minimizer->setPrintLevel(-999) ;
@@ -208,13 +209,12 @@ Double_t RooProfileLL::evaluate() const
 
   _minimizer->zeroEvalCount() ;
 
-
-  TString minim=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-  TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
-  if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad                                                                                                                                                                                                       
-  _minimizer->minimize(minim.Data(),algorithm.Data());
+  //TString minim=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+  //TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
+  //if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
+  //_minimizer->minimize(minim.Data(),algorithm.Data());
   
-  //_minimizer->migrad() ;
+  _minimizer->migrad() ;
   _neval = _minimizer->evalCounter() ;
 
   // Restore original values and constant status of observables
@@ -279,11 +279,12 @@ void RooProfileLL::validateAbsMin() const
 
     // Find minimum with all observables floating
     const_cast<RooSetProxy&>(_obs).setAttribAll("Constant",kFALSE) ;  
-
-    TString minim=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-    TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
-    if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
-    _minimizer->minimize(minim.Data(),algorithm.Data());
+    
+    //TString minim=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+    //TString algorithm = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str();
+    //if (algorithm == "Migrad") algorithm = "Minimize"; // prefer to use Minimize instead of Migrad
+    //_minimizer->minimize(minim.Data(),algorithm.Data());
+    _minimizer->migrad() ;
 
     // Save value and remember
     _absMin = _nll ;
