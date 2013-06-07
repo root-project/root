@@ -254,8 +254,8 @@ $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
            if [ `ls $(SUMMARY).*.summary 2>/dev/null | wc -l` -gt 0 ] ; then \
               cat $(SUMMARY).*.summary > $(SUMMARY).summary; \
            else \
-              echo "--- FAILING TEST: make -C $* test" > $(SUMMARY).summary; \
-              echo "There is at least one failing test which does not create a summary file in the directory $*." >> $(SUMMARY).summary; \
+              echo "--- FAILING TEST: make -C $(CALLDIR)/$* test" > $(SUMMARY).summary; \
+              echo "There is at least one failing test which does not create a summary file in the directory $(CALLDIR)/$*." >> $(SUMMARY).summary; \
            fi; \
            cat $(SUMMARY).summary > ../$(SUMMARY).$*.summary; \
         fi; \
