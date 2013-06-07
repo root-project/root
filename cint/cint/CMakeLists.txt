@@ -37,7 +37,6 @@ elseif(ROOT_PLATFORM STREQUAL win32)
   else()
     list(APPEND CINT_CXX_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/iccstrm.cxx)
   endif()
-  #---TODO the rest of the cases....
 endif()  
 
 #---Add/remove sourcefiles depending on the platform---------------------------------------------------
