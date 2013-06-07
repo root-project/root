@@ -251,6 +251,33 @@ Double_t Roo1DTable::get(const char* label, Bool_t silent) const
 
 
 //_____________________________________________________________________________
+Double_t Roo1DTable::get(const int index, Bool_t silent) const 
+{
+  // Return the table entry named 'label'. Zero is returned if given
+  // label doesn't occur in table.
+
+  const RooCatType* cat = 0;
+  int i = 0;
+  for (; i < _types.GetEntries(); ++i) {
+     cat = static_cast<const RooCatType*>(_types[i]);
+     if (cat->getVal() == index) {
+        break;
+     } else {
+        cat = 0;
+     }
+  }
+  if (!cat) {
+    if (!silent) {
+      coutE(InputArguments) << "Roo1DTable::get: ERROR: no such entry: " << index << endl ;
+    }
+    return 0 ;
+  }
+  return _count[i] ;
+}
+
+
+
+//_____________________________________________________________________________
 Double_t Roo1DTable::getOverflow() const 
 {
   // Return the number of overflow entries in the table.
@@ -269,6 +296,23 @@ Double_t Roo1DTable::getFrac(const char* label, Bool_t silent) const
 
   if (_total) {
     return get(label,silent) / _total ;
+  } else {
+    if (!silent) coutW(Contents) << "Roo1DTable::getFrac: WARNING table empty, returning 0" << endl ;
+    return 0. ;
+  }
+}
+
+
+
+//_____________________________________________________________________________
+Double_t Roo1DTable::getFrac(const int index, Bool_t silent) const 
+{
+  // Return the fraction of entries in the table contained in the slot named 'label'. 
+  // The normalization includes the number of overflows.
+  // Zero is returned if given label doesn't occur in table.   
+
+  if (_total) {
+    return get(index, silent) / _total ;
   } else {
     if (!silent) coutW(Contents) << "Roo1DTable::getFrac: WARNING table empty, returning 0" << endl ;
     return 0. ;

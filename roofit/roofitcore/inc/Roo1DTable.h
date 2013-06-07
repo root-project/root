@@ -37,6 +37,8 @@ public:
   virtual void fill(RooAbsCategory& cat, Double_t weight=1.0) ;
   Double_t get(const char* label, Bool_t silent=kFALSE) const ;
   Double_t getFrac(const char* label, Bool_t silent=kFALSE) const ;
+  Double_t get(const int index, Bool_t silent=kFALSE) const ;
+  Double_t getFrac(const int index, Bool_t silent=kFALSE) const ;
   Double_t getOverflow() const ;
 
   // Printing interface (human readable)

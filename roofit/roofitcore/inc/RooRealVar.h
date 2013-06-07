@@ -16,6 +16,8 @@
 #ifndef ROO_REAL_VAR
 #define ROO_REAL_VAR
 
+#include <list>
+#include <string>
 #include "Riosfwd.h"
 #include <math.h>
 #include <float.h>
@@ -79,6 +81,7 @@ public:
   Bool_t hasBinning(const char* name) const ;
   const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const ;
   RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) ; 
+  std::list<std::string> getBinningNames() const ;
 
   // Set infinite fit range limits
   inline void removeMin(const char* name=0) { getBinning(name).setMin(-RooNumber::infinity()) ; }

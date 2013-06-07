@@ -83,6 +83,7 @@ public:
   const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const ;
   RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) ;
   Bool_t hasBinning(const char* name) const ;
+  std::list<std::string> getBinningNames() const ;
 
   // Set infinite fit range limits
   inline void removeMin(const char* name=0) { 

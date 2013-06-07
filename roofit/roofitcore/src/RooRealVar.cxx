@@ -301,7 +301,30 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t c
   return *binning ;
 }
 
+//_____________________________________________________________________________
+std::list<std::string> RooRealVar::getBinningNames() const
+{
+  // Get a list of all binning names. An empty name implies the default binning and
+  // a NULL pointer should be passed to getBinning in this case.
+  std::list<std::string> binningNames;
+  if (_binning) {
+    binningNames.push_back("");
+  }
 
+  RooFIter iter = _altNonSharedBinning.fwdIterator();
+  const RooAbsArg* binning = 0;
+  while((binning = iter.next())) {
+    const char* name = binning->GetName();
+    binningNames.push_back(string(name));
+  }
+  iter = sharedProp()->_altBinning.fwdIterator();
+  binning = 0;
+  while((binning = iter.next())) {
+    const char* name = binning->GetName();
+    binningNames.push_back(string(name));
+  }
+  return binningNames;
+}
 
 //_____________________________________________________________________________
 void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name) 

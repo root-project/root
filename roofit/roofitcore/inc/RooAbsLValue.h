@@ -16,6 +16,9 @@
 #ifndef ROO_ABS_LVALUE
 #define ROO_ABS_LVALUE
 
+#include <list>
+#include <string>
+
 #include "Riosfwd.h"
 #include "Rtypes.h"
 
@@ -36,6 +39,7 @@ public:
   virtual void randomize(const char* rangeName=0) = 0 ;
 
   virtual const RooAbsBinning* getBinningPtr(const char* rangeName) const = 0 ;
+  virtual std::list<std::string> getBinningNames() const = 0;
   virtual Int_t getBin(const RooAbsBinning*) const = 0 ;		       
 
 protected:
