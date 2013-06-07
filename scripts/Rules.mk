@@ -18,6 +18,8 @@ else
    CMDECHO=
 endif
 
+export SUMMARY=make
+
 CALLROOTEXEBUILD:=root.exe
 
 # This is a default value, it can be over-ridden

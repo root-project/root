@@ -204,8 +204,11 @@ Summary files:
 
 Summary will contains a version of the error output that is guaranteed to be linear (but the order is not guaranteed) even when using parallel make.
 
-To enable the creation of summary files pass
-   SUMMARY=prefix
+The creation of summary files is enabled by default.  The default
+prefix is 'make'.  To change the prefix use: 
+   make SUMMARY=prefix
+To disable the summary file generation use:
+   make SUMMARY=
 
 to make.  The result will be set of file in each directory summarizing
 the failure in the directory and any subdirectory.  The summary files
