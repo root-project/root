@@ -100,6 +100,11 @@ STRESSTESTSINTERP := $(filter-out stressGraphics-itest,$(STRESSTESTSINTERP))
 STRESSTESTSCOMP   := $(filter-out stressGraphics-ctest,$(STRESSTESTSCOMP))
 endif
 
+ifneq ($(ClingWorkAroundJITfullSymbolResolution)$(ClingWorkAroundMissingDynamicScope),)
+STRESSTESTSINTERP := $(filter-out stressGUI-itest,$(STRESSTESTSINTERP))
+STRESSTESTSCOMP   := $(filter-out stressGUI-ctest,$(STRESSTESTSCOMP))
+endif
+
 STRESSFILES := \
 	$(filter-out %Dict.cxx,\
 	$(filter-out %/TrackMathCoreDict.cxx,\
@@ -208,6 +213,12 @@ stress-ctest.log: STRESSFLAGS:=-b 30
 stress-itest.log: STRESSFLAGS:="(30)"
 stressTMVA-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Automatic variable Endl is allocated'
 stressGraphics-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Warning in <TUnixSystem::SetDisplay>'
+
+ifneq ($(ClingWorkAroundJITfullSymbolResolution)$(ClingWorkAroundMissingDynamicScope),)
+stressGUI-itest:
+	@echo "Please note: stressGUI is disabled!!!"
+	@echo "n/a" > $@.log
+endif
 
 ifneq ($(ClingWorkAroundSavePrimitive),)
 ifeq ($(FAST),)
