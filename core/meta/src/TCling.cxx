@@ -1164,7 +1164,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             }
             const char *function = gSystem->BaseName(fname);
             mod_line = function + arguments + io;
-            indent = fMetaProcessor->process(mod_line, &result, &compRes);
+            indent = fMetaProcessor->process(mod_line, result, compRes);
          }
       } else {
          // not ACLiC
@@ -1185,10 +1185,10 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             }
          }
          if (unnamedMacro) {
-            compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
+            compRes = fMetaProcessor->readInputFromFile(fname.Data(), result,
                                                         true /*ignoreOutmostBlock*/);
          } else {
-            indent = fMetaProcessor->process(mod_line, &result, &compRes);
+            indent = fMetaProcessor->process(mod_line, result, compRes);
          }
       }
    } // .L / .X / .x
@@ -1197,7 +1197,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          // explicitly ignore .autodict without having to support it
          // in cling.
 
-         indent = fMetaProcessor->process(sLine, &result, &compRes);
+         indent = fMetaProcessor->process(sLine, result, compRes);
       }
    }
    if (result.isValid())
