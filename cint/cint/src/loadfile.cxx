@@ -1178,15 +1178,18 @@ int G__loadfile_tmpfile(FILE *fp)
   G__UnlockCriticalSection();
   return(fentry+2);
 }
+} // extern "C"
    
 // *****************************************************************
 // * G__statfilename(filename)
 // *
 // * Use the same search algorithm as G__loadfile to do a 'stat' on the file
+// * If fullPath != 0, strdup the full path as found (must be deleted by caller).
 // *
 // *****************************************************************
 
-int G__statfilename(const char *filenamein, struct stat *statBuf)
+int G__statfilename(const char *filenamein, struct stat *statBuf,
+                    G__FastAllocString* fullPath /*= 0*/)
 {
    G__FastAllocString filename(filenamein);
    G__FastAllocString workname(G__ONELINE);
@@ -1271,7 +1274,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
          
          res = stat( workname, statBuf );
          
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }
       /**********************************************
        * try ./filename
@@ -1279,7 +1285,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
       if(G__USERHEADER==G__kindofheader) {
          workname.Format("%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }  else {
          // Do we need that or not?
          // G__kindofheader = G__USERHEADER;
@@ -1294,7 +1303,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
          res = stat( workname, statBuf );         
          ipath = ipath->next;
       }
-      if (res==0) return res;
+      if (res==0) {
+         if (fullPath) fullPath->Swap(workname);
+         return res;
+      }
       
       G__getcintsysdir();
 
@@ -1305,7 +1317,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
          workname.Format("%s%s%s%sstl%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
                          ,G__psep,G__psep,filename(),addpost[i2]);
          res = stat( workname, statBuf );         
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }
 
       /**********************************************
@@ -1316,7 +1331,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
          workname.Format("%s%s%s%slib%s%s%s",G__cintsysdir,G__psep,G__CFG_COREVERSION
                          ,G__psep,G__psep,filename(),addpost[i2]);
          res = stat( workname, statBuf );         
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }
 
 #ifdef G__EDU_VERSION
@@ -1327,7 +1345,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
          workname.Format("include%s%s%s"
                          ,G__psep,filename(),addpost[i2]);
          res = stat( workname, statBuf );         
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }
       /**********************************************
        * try stl
@@ -1337,7 +1358,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
          workname.Format("stl%s%s%s"
                          ,G__psep,filename(),addpost[i2]);
          res = stat( workname, statBuf );         
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }         
 #endif /* G__EDU_VERSION */
       
@@ -1348,7 +1372,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
       if('\0'!=G__cintsysdir[0]) {
          workname.Format("/msdev/include/%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }
 #endif /* G__VISUAL */
          
@@ -1359,7 +1386,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
       if('\0'!=G__cintsysdir[0]) {
          workname.Format("/sc/include/%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }
 #endif // G__SYMANTEC
          
@@ -1370,7 +1400,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
       if('\0'!=G__cintsysdir[0]) {
          workname.Format("/usr/include/%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }
 #endif
       
@@ -1381,7 +1414,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
       if('\0'!=G__cintsysdir[0]) {
          workname.Format("/usr/include/g++/%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }
 #endif /* __GNUC__ */
       
@@ -1393,7 +1429,10 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
       if('\0'!=G__cintsysdir[0]) {
          workname.Format("/usr/include/CC/%s%s",filename(),addpost[i2]);
          res = stat( workname, statBuf );         
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }         
 #endif
          
@@ -1405,12 +1444,17 @@ int G__statfilename(const char *filenamein, struct stat *statBuf)
          workname.Format("/usr/include/codelibs/%s%s"
                          ,filename(),addpost[i2]);
          res = stat( workname, statBuf );         
-         if (res==0) return res;
+         if (res==0) {
+            if (fullPath) fullPath->Swap(workname);
+            return res;
+         }
       }
 #endif
    }
    return -1;
 }
+
+extern "C" {
 
 /******************************************************************
 * G__loadfile(filename)
