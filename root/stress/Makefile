@@ -215,9 +215,15 @@ stressTMVA-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Automatic variable Endl is
 stressGraphics-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Warning in <TUnixSystem::SetDisplay>'
 
 ifneq ($(ClingWorkAroundJITfullSymbolResolution)$(ClingWorkAroundMissingDynamicScope),)
+ifeq ($(FAST),)
 stressGUI-itest:
 	@echo "Please note: stressGUI is disabled!!!"
 	@echo "n/a" > $@.log
+else
+stressGUI-ctest:
+	@echo "Please note: stressGUI is disabled!!!"
+	@echo "n/a" > $@.log
+endif
 endif
 
 ifneq ($(ClingWorkAroundSavePrimitive),)
