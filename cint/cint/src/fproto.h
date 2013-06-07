@@ -264,8 +264,12 @@ int G__preprocessor(char *outname,const char *inname,int cppflag,const char *mac
 int G__difffile(char *file1,char *file2);
 int G__copyfile(FILE *to,FILE *from);
 
+#ifdef __cplusplus
 struct stat;
-int G__statfilename(const char *filename, struct stat* buf);
+} // extern "C" 
+int G__statfilename(const char *filename, struct stat* buf, G__FastAllocString* fullPath);
+extern "C" {
+#endif
 int G__matchfilename(int i1,const char* filename);
 int G__cleardictfile(int flag);
 

@@ -25,7 +25,7 @@ class TBuffer ;
 namespace RooLinkedListImplDetails {
     class Chunk;
     class Pool;
-};
+}
 
 class RooLinkedListElem {
 public:

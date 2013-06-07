@@ -12784,11 +12784,12 @@ void G__specify_link(int link_stub)
          buf[buflen-1]='\0';
       }
     }
+    G__FastAllocString fullPath(G__ONELINE);
     if (
         0==tagflag &&
-        0 == G__statfilename( buf, & statBufItem ) ) {
+        0 == G__statfilename( buf, & statBufItem, &fullPath ) ) {
 #ifdef G__WIN32
-      _fullpath( fullItem, buf, _MAX_PATH );
+      _fullpath( fullItem, fullPath, _MAX_PATH );
 #endif
       for(ifile=0;ifile<G__nfile;ifile++) {
         if (0 == stat( G__srcfile[ifile].filename, & statBuf ) ) {
