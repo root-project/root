@@ -15,24 +15,24 @@ mapTest: dict.o testing.o
 	$(CMDECHO) echo mytest > /dev/null
 
 stringMap.log :stringMap.cxx
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l stringMap.cxx  > stringMap.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l stringMap.cxx  > stringMap.log 2>&1 ||  handleError.sh --result=$$? --log=stringMap.log --test=stringMapTest
 
 stringMap.log: stringMapLoad_cxx.$(DllSuf)
 
 stringMapTest: stringMap.log
-	$(CMDECHO) diff -b stringMap.log stringMap.ref
+	$(TestDiff)
 
 badstringMap.log : stringMapLoad_cxx.$(DllSuf) badstringMap.cxx MyClass_C.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l badstringMap.cxx  > badstringMap.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l badstringMap.cxx  > badstringMap.log 2>&1 || handleError.sh --result=$$? --log=badstringMap.log --test=badstringMapTest
 
 badstringMapTest: badstringMap.log
-	$(CMDECHO) diff -b badstringMap.log badstringMap.ref
+	$(TestDiff)
 
 badOperator.log: badOperator.C MyOpClass_C.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q badOperator.C > badOperator.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q badOperator.C > badOperator.log 2>&1 || handleError.sh --result=$$? --log=badOperator.log --test=badOperatorTest
 
 badOperatorTest: badOperator.log
-	$(CMDECHO) diff -b badOperator.log badOperator.ref
+	$(TestDiff)
 
 testWithFailure:
 ifeq ($(FAIL),)

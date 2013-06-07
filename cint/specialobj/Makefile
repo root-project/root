@@ -12,7 +12,7 @@ argtwice:
 	@$(CALLROOTEXE) -b -l -q 'argeval.C' | grep -v 'root[0]' > argeval.log
 
 tmp.root: AthIndex_h.$(DllSuf)  T0Result_h.$(DllSuf)  calib_h.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q write.C > tmp_root.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q write.C > tmp_root.log 2>&1 ||  handleError.sh --result=$$? --log=tmp_root.log --test=tmp.root 
 
 T0Result_h.$(DllSuf): T0Result.h AthIndex_h.$(DllSuf)
 	$(BuildWithLib)
