@@ -14,7 +14,6 @@ CALLROOTEXE = root.exe
 CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncReturnInt"
 CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
 # Major features/issues
-CALLROOTEXE += -e "\#define ClingWorkAroundDouble32inDefaultTmpltArg"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForNamespaces"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForTemplates"
@@ -65,7 +64,6 @@ ClingWorkAroundLackOfModule = yes
 ClingWorkAroundExtraParensWithImplicitAuto = yes
 ClingWorkAroundMissingDynamicScope = yes
 ClingWorkAroundMissingUnloading = yes
-ClingWorkAroundDouble32inDefaultTmpltArg = yes
 ClingWorkAroundCallfuncReturnInt = yes         # See http://savannah.cern.ch/bugs/?100652 
 #ClingWorkAroundCallfuncAndConversion = yes     # See https://savannah.cern.ch/bugs/index.php?99517
 ClingWorkAroundMissingAutoLoadingForNamespaces = yes # See: https://sft.its.cern.ch/jira/browse/ROOT-4779
