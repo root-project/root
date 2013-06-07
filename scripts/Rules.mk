@@ -1,10 +1,19 @@
 #
-# $Id$
+# Rules.mk
+# Contains most of the infrastructure for the roottest makefiles.
 #
 
 all: tests
 
 test: tests ;
+
+summary:
+	CALLDIR= ; make --no-print-directory  tests || \
+	if [ `ls $(SUMMARY).*.summary 2>/dev/null | wc -l` -gt 0 ] ; then \
+          res=`grep FAILING $(SUMMARY).*.summary  | wc -l` ; \
+	  echo "There is at least $$res failings test:" ; \
+	  grep -h FAILING $(SUMMARY).*.summary; \
+	fi
 
 # The previous line contains just ';' in order to disable the implicit 
 # rule building an executable 'test' from test.C

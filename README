@@ -202,7 +202,10 @@ TExMap in roottest/root/collection 2 reference files:
 ==============================================================================
 Summary files:
 
-Summary will contains a version of the error output that is guaranteed to be linear (but the order is not guaranteed) even when using parallel make.
+Summary will contains a version of the error output that is guaranteed
+to be linear (but the order is not guaranteed) even when using
+parallel make.  When using the summary target, a list of the failing
+test is printed at the end of a (failing) make invocation.
 
 The creation of summary files is enabled by default.  The default
 prefix is 'make'.  To change the prefix use: 
