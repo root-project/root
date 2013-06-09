@@ -454,24 +454,24 @@ Bool_t TPgSQLStatement::GetLargeObject(Int_t npar, void* &mem, Long_t& size)
    PGresult *res=PQexec(fStmt->fConn,"BEGIN");
    stat = PQresultStatus(fStmt->fRes);
    if (!pgsql_success(stat)) {
-   	Error("GetLargeObject", "SQL Error on begin transaction: %s", PQerrorMessage(fStmt->fConn));
-   	PQclear(res);
-   	return kFALSE;
+      Error("GetLargeObject", "SQL Error on begin transaction: %s", PQerrorMessage(fStmt->fConn));
+      PQclear(res);
+      return kFALSE;
    }
    PQclear(res);
 
    Int_t lObjFD = lo_open(fStmt->fConn, objID, INV_READ);
 
    if (lObjFD<0) {
-   	Error("GetLargeObject", "SQL Error on lo_open: %s", PQerrorMessage(fStmt->fConn));
-   	res=PQexec(fStmt->fConn,"COMMIT");
-   	if (!pgsql_success(stat)) {
-   		Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-   		PQclear(res);
-   		return kFALSE;
-   	}
-   	PQclear(res);
-   	return kFALSE;
+      Error("GetLargeObject", "SQL Error on lo_open: %s", PQerrorMessage(fStmt->fConn));
+      res=PQexec(fStmt->fConn,"COMMIT");
+      if (!pgsql_success(stat)) {
+         Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+         PQclear(res);
+         return kFALSE;
+      }
+      PQclear(res);
+      return kFALSE;
    }
    // Object size is not known beforehand.
    // Possible fast ways to get it are:
@@ -488,42 +488,42 @@ Bool_t TPgSQLStatement::GetLargeObject(Int_t npar, void* &mem, Long_t& size)
    lo_lseek(fStmt->fConn, lObjFD, 0, SEEK_SET);
 
    if ((Long_t)sz>size) {
-   	delete [] (unsigned char*) mem;
-   	mem = (void*) new unsigned char[sz];
-   	size=sz;
+      delete [] (unsigned char*) mem;
+      mem = (void*) new unsigned char[sz];
+      size=sz;
    }
 
    Int_t readBytes = lo_read(fStmt->fConn, lObjFD, (char*)mem, size);
 
    if (readBytes != sz) {
-   	Error("GetLargeObject", "SQL Error on lo_read: %s", PQerrorMessage(fStmt->fConn));
-   	res=PQexec(fStmt->fConn,"COMMIT");
-   	if (!pgsql_success(stat)) {
-   		Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-   		PQclear(res);
-   		return kFALSE;
-   	}
-   	PQclear(res);
-   	return kFALSE;
+      Error("GetLargeObject", "SQL Error on lo_read: %s", PQerrorMessage(fStmt->fConn));
+      res=PQexec(fStmt->fConn,"COMMIT");
+      if (!pgsql_success(stat)) {
+         Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+         PQclear(res);
+         return kFALSE;
+      }
+      PQclear(res);
+      return kFALSE;
    }
 
    if (lo_close(fStmt->fConn, lObjFD) != 0) {
-   	Error("GetLargeObject", "SQL Error on lo_close: %s", PQerrorMessage(fStmt->fConn));
-   	res=PQexec(fStmt->fConn,"COMMIT");
-   	if (!pgsql_success(stat)) {
-   		Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-   		PQclear(res);
-   		return kFALSE;
-   	}
-   	PQclear(res);
-   	return kFALSE;
+      Error("GetLargeObject", "SQL Error on lo_close: %s", PQerrorMessage(fStmt->fConn));
+      res=PQexec(fStmt->fConn,"COMMIT");
+      if (!pgsql_success(stat)) {
+         Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+         PQclear(res);
+         return kFALSE;
+      }
+      PQclear(res);
+      return kFALSE;
    }
 
    res=PQexec(fStmt->fConn,"COMMIT");
    if (!pgsql_success(stat)) {
-   	Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-   	PQclear(res);
-   	return kFALSE;
+      Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+      PQclear(res);
+      return kFALSE;
    }
    PQclear(res);
 
@@ -708,68 +708,68 @@ Bool_t TPgSQLStatement::SetLargeObject(Int_t npar, void* mem, Long_t size, Long_
    PGresult *res=PQexec(fStmt->fConn,"BEGIN");
    stat = PQresultStatus(fStmt->fRes);
    if (!pgsql_success(stat)) {
-   	Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
-   	return kFALSE;
+      Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
+      return kFALSE;
    }
    PQclear(res);
 
    Int_t lObjID = lo_creat(fStmt->fConn, INV_READ | INV_WRITE);
    if (lObjID<0) {
-   	Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
-   	res=PQexec(fStmt->fConn,"COMMIT");
-   	if (!pgsql_success(stat)) {
-   		Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-   		PQclear(res);
-   		return kFALSE;
-   	}
-   	PQclear(res);
-   	return kFALSE;
+      Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
+      res=PQexec(fStmt->fConn,"COMMIT");
+      if (!pgsql_success(stat)) {
+         Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+         PQclear(res);
+         return kFALSE;
+      }
+      PQclear(res);
+      return kFALSE;
    }
 
    Int_t lObjFD = lo_open(fStmt->fConn, lObjID, INV_READ | INV_WRITE);
    if (lObjFD<0) {
-   	Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
-   	res=PQexec(fStmt->fConn,"COMMIT");
-   	if (!pgsql_success(stat)) {
-   		Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-   		PQclear(res);
-   		return kFALSE;
-   	}
-   	PQclear(res);
-   	return kFALSE;
+      Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
+      res=PQexec(fStmt->fConn,"COMMIT");
+      if (!pgsql_success(stat)) {
+         Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+         PQclear(res);
+         return kFALSE;
+      }
+      PQclear(res);
+      return kFALSE;
    }
 
    Int_t writtenBytes = lo_write(fStmt->fConn, lObjFD, (char*)mem, size);
 
    if (writtenBytes != size) {
-   	Error("SetLargeObject", "SQL Error on lo_write: %s", PQerrorMessage(fStmt->fConn));
-   	res=PQexec(fStmt->fConn,"COMMIT");
-   	if (!pgsql_success(stat)) {
-   		Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-   		PQclear(res);
-   		return kFALSE;
-   	}
-   	PQclear(res);
-   	return kFALSE;
+      Error("SetLargeObject", "SQL Error on lo_write: %s", PQerrorMessage(fStmt->fConn));
+      res=PQexec(fStmt->fConn,"COMMIT");
+      if (!pgsql_success(stat)) {
+         Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+         PQclear(res);
+         return kFALSE;
+      }
+      PQclear(res);
+      return kFALSE;
    }
 
    if (lo_close(fStmt->fConn, lObjFD) != 0) {
-   	Error("SetLargeObject", "SQL Error on lo_close: %s", PQerrorMessage(fStmt->fConn));
-   	res=PQexec(fStmt->fConn,"COMMIT");
-   	if (!pgsql_success(stat)) {
-   		Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-   		PQclear(res);
-   		return kFALSE;
-   	}
-   	PQclear(res);
-   	return kFALSE;
+      Error("SetLargeObject", "SQL Error on lo_close: %s", PQerrorMessage(fStmt->fConn));
+      res=PQexec(fStmt->fConn,"COMMIT");
+      if (!pgsql_success(stat)) {
+         Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+         PQclear(res);
+         return kFALSE;
+      }
+      PQclear(res);
+      return kFALSE;
    }
 
    res=PQexec(fStmt->fConn,"COMMIT");
    if (!pgsql_success(stat)) {
-   	Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-   	PQclear(res);
-   	return kFALSE;
+      Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+      PQclear(res);
+      return kFALSE;
    }
    PQclear(res);
 
