@@ -1,6 +1,6 @@
 ## Platform Support
 
-Temorarily for version 6.00/00, ROOT has a reduced set of supported
+Temporarily for version 6.00/00, ROOT has a reduced set of supported
 platforms. Most notably Windows is not supported until at least 6.02.
 6.00/00 supports only
 
@@ -52,7 +52,7 @@ allowed (but `*vec*` is not).
 
 ### Cling not yet implemented features
 
-In this release Cling does not support the following (but we intended to
+In this release Cling does not support the following (but we intend to
 re-introduce them soon) features:
 
 -   Unloading of script and shared libraries
