@@ -62,6 +62,7 @@ public:
            Bool_t      SetTimestamp(Int_t, const TDatime&);
    virtual void        SetTimeFormating(const char*) {}
    virtual Bool_t      SetBinary(Int_t, void*, Long_t, Long_t = 0x1000) { return kFALSE; }
+   virtual Bool_t      SetLargeObject(Int_t col, void* mem, Long_t size, Long_t maxsize = 0x1000) { return SetBinary(col, mem, size, maxsize); }
 #ifndef __MAKECINT__
    virtual Bool_t      SetVInt(Int_t, const std::vector<Int_t>, const char*, const char*) { return kFALSE; }
    virtual Bool_t      SetVUInt(Int_t, const std::vector<UInt_t>, const char*, const char*) { return kFALSE; }
@@ -89,6 +90,7 @@ public:
    virtual Double_t    GetDouble(Int_t) { return 0.; }
    virtual const char *GetString(Int_t) { return 0; }
    virtual Bool_t      GetBinary(Int_t, void* &, Long_t&) { return kFALSE; }
+   virtual Bool_t      GetLargeObject(Int_t col, void* &mem, Long_t& size) { return GetBinary(col, mem, size); }
 
    virtual Bool_t      GetDate(Int_t, Int_t&, Int_t&, Int_t&) { return kFALSE; }
    virtual Bool_t      GetTime(Int_t, Int_t&, Int_t&, Int_t&) { return kFALSE; }
