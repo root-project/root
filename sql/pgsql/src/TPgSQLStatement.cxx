@@ -611,7 +611,7 @@ Bool_t TPgSQLStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
    TDatime d =TDatime(year,month,day,0,0,0);
    snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
 
-   return kFALSE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
