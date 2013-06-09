@@ -352,7 +352,7 @@ TSQLStatement* TPgSQLServer::Statement(const char *, Int_t)
       return 0;
    }
    stmt->fConn = fPgSQL;
-   stmt->fRes  = PQprepare(fPgSQL, "", sql, 0, (const Oid*)0);
+   stmt->fRes  = PQprepare(fPgSQL, "preparedstmt", sql, 0, (const Oid*)0);
 
    ExecStatusType stat = PQresultStatus(stmt->fRes);
    if (pgsql_success(stat)) {

@@ -23,6 +23,8 @@
 
 #include <stdlib.h>
 
+#include "libpq/libpq-fs.h"
+
 ClassImp(TPgSQLStatement)
 
 #ifdef PG_VERSION_NUM
@@ -46,7 +48,7 @@ TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t* stmt, Bool_t errout):
    // Normal constructor.
    // Checks if statement contains parameters tags.
 
-   fStmt->fRes = PQdescribePrepared(fStmt->fConn,"");
+   fStmt->fRes = PQdescribePrepared(fStmt->fConn,"preparedstmt");
    unsigned long paramcount = PQnparams(fStmt->fRes);
    fNumResultCols = PQnfields(fStmt->fRes);
    fIterationCount = -1;
@@ -77,6 +79,9 @@ void TPgSQLStatement::Close(Option_t *)
       PQclear(fStmt->fRes);
 
    fStmt->fRes = 0;
+
+   PGresult *res=PQexec(fStmt->fConn,"DEALLOCATE preparedstmt;");
+   PQclear(res);
 
    FreeBuffers();
    //TPgSQLServers responsibility to free connection
@@ -128,13 +133,13 @@ Bool_t TPgSQLStatement::Process()
    CheckStmt("Process",kFALSE);
 
    if (IsSetParsMode()) {
-      fStmt->fRes= PQexecPrepared(fStmt->fConn,"",fNumBuffers,
+      fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",fNumBuffers,
                                  (const char* const*)fBind,
                                  0,0,0);
 
    } else { //result set mode
 
-      fStmt->fRes= PQexecPrepared(fStmt->fConn,"",0,(const char* const*) 0,0,0,0);
+      fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",0,(const char* const*) 0,0,0,0);
    }
    ExecStatusType stat = PQresultStatus(fStmt->fRes);
    if (!pgsql_success(stat))
@@ -242,7 +247,7 @@ Bool_t TPgSQLStatement::NextIteration()
 
    if (fIterationCount==0) return kTRUE;
 
-   fStmt->fRes= PQexecPrepared(fStmt->fConn,"",fNumBuffers,
+   fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",fNumBuffers,
                                (const char* const*)fBind,
                                0,//fParamLengths,
                                0,//fParamFormats,
@@ -437,6 +442,95 @@ Bool_t TPgSQLStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 }
 
 //______________________________________________________________________________
+Bool_t TPgSQLStatement::GetLargeObject(Int_t npar, void* &mem, Long_t& size)
+{
+   // Return large object whose oid is in the given field.
+
+   Int_t objID = atoi(PQgetvalue(fStmt->fRes,fIterationCount,npar));
+
+   ExecStatusType stat;
+
+   // All this needs to happen inside a transaction, or it will NOT work.
+   PGresult *res=PQexec(fStmt->fConn,"BEGIN");
+   stat = PQresultStatus(fStmt->fRes);
+   if (!pgsql_success(stat)) {
+   	Error("GetLargeObject", "SQL Error on begin transaction: %s", PQerrorMessage(fStmt->fConn));
+   	PQclear(res);
+   	return kFALSE;
+   }
+   PQclear(res);
+
+   Int_t lObjFD = lo_open(fStmt->fConn, objID, INV_READ);
+
+   if (lObjFD<0) {
+   	Error("GetLargeObject", "SQL Error on lo_open: %s", PQerrorMessage(fStmt->fConn));
+   	res=PQexec(fStmt->fConn,"COMMIT");
+   	if (!pgsql_success(stat)) {
+   		Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+   		PQclear(res);
+   		return kFALSE;
+   	}
+   	PQclear(res);
+   	return kFALSE;
+   }
+   // Object size is not known beforehand.
+   // Possible fast ways to get it are:
+   // (1) Create a function that does fopen, fseek, ftell on server
+   // (2) Query large object table with size()
+   // Both can not be expected to work in general,
+   // as  (1) needs permissions and changes DB,
+   // and (2) needs permission.
+   // So we use
+   // (3) fopen, fseek and ftell locally.
+
+   lo_lseek(fStmt->fConn, lObjFD, 0, SEEK_END);
+   Long_t sz = lo_tell(fStmt->fConn, lObjFD);
+   lo_lseek(fStmt->fConn, lObjFD, 0, SEEK_SET);
+
+   if ((Long_t)sz>size) {
+   	delete [] (unsigned char*) mem;
+   	mem = (void*) new unsigned char[sz];
+   	size=sz;
+   }
+
+   Int_t readBytes = lo_read(fStmt->fConn, lObjFD, (char*)mem, size);
+
+   if (readBytes != sz) {
+   	Error("GetLargeObject", "SQL Error on lo_read: %s", PQerrorMessage(fStmt->fConn));
+   	res=PQexec(fStmt->fConn,"COMMIT");
+   	if (!pgsql_success(stat)) {
+   		Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+   		PQclear(res);
+   		return kFALSE;
+   	}
+   	PQclear(res);
+   	return kFALSE;
+   }
+
+   if (lo_close(fStmt->fConn, lObjFD) != 0) {
+   	Error("GetLargeObject", "SQL Error on lo_close: %s", PQerrorMessage(fStmt->fConn));
+   	res=PQexec(fStmt->fConn,"COMMIT");
+   	if (!pgsql_success(stat)) {
+   		Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+   		PQclear(res);
+   		return kFALSE;
+   	}
+   	PQclear(res);
+   	return kFALSE;
+   }
+
+   res=PQexec(fStmt->fConn,"COMMIT");
+   if (!pgsql_success(stat)) {
+   	Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+   	PQclear(res);
+   	return kFALSE;
+   }
+   PQclear(res);
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 Bool_t TPgSQLStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
 {
    // Return field value as date.
@@ -600,6 +694,87 @@ Bool_t TPgSQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t max
    fBind[npar]= new char[mxsz+1];
    memcpy(fBind[npar],mptr,mxsz);
    free(mptr);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TPgSQLStatement::SetLargeObject(Int_t npar, void* mem, Long_t size, Long_t /*maxsize*/)
+{
+   // Set parameter value to large object and immediately insert the large object into DB.
+
+   ExecStatusType stat;
+
+   // All this needs to happen inside a transaction, or it will NOT work.
+   PGresult *res=PQexec(fStmt->fConn,"BEGIN");
+   stat = PQresultStatus(fStmt->fRes);
+   if (!pgsql_success(stat)) {
+   	Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
+   	return kFALSE;
+   }
+   PQclear(res);
+
+   Int_t lObjID = lo_creat(fStmt->fConn, INV_READ | INV_WRITE);
+   if (lObjID<0) {
+   	Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
+   	res=PQexec(fStmt->fConn,"COMMIT");
+   	if (!pgsql_success(stat)) {
+   		Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+   		PQclear(res);
+   		return kFALSE;
+   	}
+   	PQclear(res);
+   	return kFALSE;
+   }
+
+   Int_t lObjFD = lo_open(fStmt->fConn, lObjID, INV_READ | INV_WRITE);
+   if (lObjFD<0) {
+   	Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
+   	res=PQexec(fStmt->fConn,"COMMIT");
+   	if (!pgsql_success(stat)) {
+   		Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+   		PQclear(res);
+   		return kFALSE;
+   	}
+   	PQclear(res);
+   	return kFALSE;
+   }
+
+   Int_t writtenBytes = lo_write(fStmt->fConn, lObjFD, (char*)mem, size);
+
+   if (writtenBytes != size) {
+   	Error("SetLargeObject", "SQL Error on lo_write: %s", PQerrorMessage(fStmt->fConn));
+   	res=PQexec(fStmt->fConn,"COMMIT");
+   	if (!pgsql_success(stat)) {
+   		Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+   		PQclear(res);
+   		return kFALSE;
+   	}
+   	PQclear(res);
+   	return kFALSE;
+   }
+
+   if (lo_close(fStmt->fConn, lObjFD) != 0) {
+   	Error("SetLargeObject", "SQL Error on lo_close: %s", PQerrorMessage(fStmt->fConn));
+   	res=PQexec(fStmt->fConn,"COMMIT");
+   	if (!pgsql_success(stat)) {
+   		Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+   		PQclear(res);
+   		return kFALSE;
+   	}
+   	PQclear(res);
+   	return kFALSE;
+   }
+
+   res=PQexec(fStmt->fConn,"COMMIT");
+   if (!pgsql_success(stat)) {
+   	Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
+   	PQclear(res);
+   	return kFALSE;
+   }
+   PQclear(res);
+
+   snprintf(fBind[npar],kBindStringSize,"%d",lObjID);
+
    return kTRUE;
 }
 
