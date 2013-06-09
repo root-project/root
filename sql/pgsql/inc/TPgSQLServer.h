@@ -28,6 +28,7 @@ class TPgSQLServer : public TSQLServer {
 
 private:
    PGconn  *fPgSQL;    // connection to PgSQL server
+   TString  fSrvInfo;  // Server info
 
 public:
    TPgSQLServer(const char *db, const char *uid, const char *pw);

@@ -26,6 +26,7 @@ TPgSQLServer::TPgSQLServer(const char *db, const char *uid, const char *pw)
    // the password that should be used for the connection.
 
    fPgSQL = 0;
+   fSrvInfo="";
 
    TUrl url(db);
 
@@ -48,15 +49,28 @@ TPgSQLServer::TPgSQLServer(const char *db, const char *uid, const char *pw)
       TString port;
       port += url.GetPort();
       fPgSQL = PQsetdbLogin(url.GetHost(), port, 0, 0, dbase, uid, pw);
-   } else
+   } else {
       fPgSQL = PQsetdbLogin(url.GetHost(), 0, 0, 0, dbase, uid, pw);
-
+   }
 
    if (PQstatus(fPgSQL) != CONNECTION_BAD) {
       fType = "PgSQL";
       fHost = url.GetHost();
       fDB   = dbase;
       fPort = url.GetPort();
+
+      // Populate server-info
+      fSrvInfo = "postgres ";
+      static const char *sql = "select setting from pg_settings where name='server_version'";
+      PGresult *res = PQexec(fPgSQL, sql);
+      int stat = PQresultStatus(res);
+      if (stat == PGRES_TUPLES_OK && PQntuples(res)) {
+         char *vers = PQgetvalue(res,0,0);
+         fSrvInfo += vers;
+         PQclear(res);
+      } else {
+         fSrvInfo += "unknown version number";
+      }
    } else {
       Error("TPgSQLServer", "connection to %s failed", url.GetHost());
       MakeZombie();
@@ -295,22 +309,12 @@ const char *TPgSQLServer::ServerInfo()
 {
    // Return server info.
 
-   TString svrinfo = "postgres ";
    if (!IsConnected()) {
       Error("ServerInfo", "not connected");
       return 0;
    }
 
-   static const char *sql = "select setting from pg_settings where name='server_version'";
-   PGresult *res = PQexec(fPgSQL, sql);
-   int stat = PQresultStatus(res);
-   if (stat == PGRES_TUPLES_OK && PQntuples(res)) {
-      char *vers = PQgetvalue(res,0,0);
-      svrinfo += vers;
-   } else
-      svrinfo += "unknown version number";
-
-   return svrinfo;
+   return fSrvInfo.Data();
 }
 
 //______________________________________________________________________________
