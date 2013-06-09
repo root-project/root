@@ -159,11 +159,11 @@ Int_t TPgSQLStatement::GetNumParameters()
 
    CheckStmt("GetNumParameters", -1);
 
-   Int_t res = PQnparams(fStmt->fRes);
-
-   CheckErrNo("GetNumParameters", kFALSE, -1);
-
-   return res;
+   if (IsSetParsMode()) {
+      return fNumBuffers;
+   } else {
+      return 0;
+   }
 }
 
 //______________________________________________________________________________
