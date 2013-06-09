@@ -1000,6 +1000,11 @@ const char *TSystem::DirName(const char *pathname)
       // Then skip duplicate slashes
       // Note the 'r>buf' is a strict comparison to allows '/topdir' to return '/'
       while ( r>buf && *(r)=='/') { --r; }
+      // If all was cut away, we encountered a rel. path like 'subdir/'
+      // and ended up at '.'.
+      if (r==buf && *(r)!='/') {
+         return ".";
+      }
       // And finally terminate the string to drop off the filename
       *(r+1) = '\0';
 
