@@ -4410,7 +4410,13 @@ int main(int argc, char **argv)
       ic++;
    }
 
+   std::vector<std::string> baseModules;
    while (ic < argc && (*argv[ic] == '-' || *argv[ic] == '+')) {
+      if (strcmp("-m", argv[ic]) == 0 && (ic+1) < argc) {
+         // precompiled modules
+         baseModules.push_back(argv[ic+1]);
+         ++ic;
+      }
       if (strcmp("+P", argv[ic]) == 0 ||
           strcmp("+V", argv[ic]) == 0 ||
           strcmp("+STUB", argv[ic]) == 0) {
@@ -4585,6 +4591,12 @@ int main(int argc, char **argv)
    int firstInputFile = 0;
    int linkdefLoc = 0;
    for (int i = ic; i < argc; i++) {
+      if (strcmp("-m", argv[i]) == 0 && (i+1) < argc) {
+         // precompiled modules
+         baseModules.push_back(argv[ic+1]);
+         ++i;
+         continue;
+      }
       if (!firstInputFile && *argv[i] != '-' && *argv[i] != '+') {
          firstInputFile = i;
       }
