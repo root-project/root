@@ -25,7 +25,7 @@
 //                                                                      //
 // or                                                                   //
 //                                                                      //
-//  rootcling [-v[0-4]][-l][-f] dict.C [-c] [-p]                        //
+//  rootcling [-v[0-4]][-f] dict.C [-c]                                 //
 //           file.h[{+,-}][!] ... [LinkDef.h]                           //
 //                                                                      //
 // The difference between the two is that in the first case only the    //
@@ -42,15 +42,6 @@
 // Use the -f (force) option to overwite the output file. The output    //
 // file must have one of the following extensions: .cxx, .C, .cpp,      //
 // .cc, .cp.                                                            //
-// Use the -p option to request the use of the compiler's preprocessor  //
-// instead of Cling's preprocessor.  This is useful to handle header    //
-// files with macro construct not handled by Cling.                     //
-// Use the -l (long) option to prepend the pathname of the              //
-// dictionary source file to the include of the dictionary header.      //
-// This might be needed in case the dictionary file needs to be         //
-// compiled with the -I- option that inhibits the use of the directory  //
-// of the source file as the first search directory for                 //
-// "#include "file"".                                                   //
 // The flag --lib-list-prefix=xxx can be used to produce a list of      //
 // libraries needed by the header files being parsed. Rootcling will    //
 // read the content of xxx.in for a list of rootmap files (see          //
@@ -67,8 +58,8 @@
 //      -v2  Display error and warning messages.                        //
 //      -v3  Display error, warning and note messages.                  //
 //      -v4  Display all messages                                       //
-// rootcling also supports the other Cling options (see 'cling -h).     //
-//                                                                      //
+// The option -p and -l are deprecated and currently ignored.           //
+//                                                                      // 
 // Before specifying the first header file one can also add include     //
 // file directories to be searched and preprocessor defines, like:      //
 //   -I$MYPROJECT/include -DDebug=1                                     //
@@ -211,7 +202,7 @@ const char *help =
 "\n"
 "or\n"
 "\n"
-"  rootcling [-v[0-4]] [-l] [-f] dict.C [-c] [-p] TAxis.h[{+,-}][!] ... [LinkDef.h] \n"
+"  rootcling [-v[0-4]] [-f] dict.C [-c] [-m pcmfile] TAxis.h[{+,-}][!] ... [LinkDef.h] \n"
 "\n"
 "The difference between the two is that in the first case only the\n"
 "Streamer() and ShowMembers() methods are generated while in the\n"
@@ -227,15 +218,6 @@ const char *help =
 "Use the -f (force) option to overwite the output file. The output\n"
 "file must have one of the following extensions: .cxx, .C, .cpp,\n"
 ".cc, .cp.\n\n"
-"Use the -p option to request the use of the compiler's preprocessor\n"
-"instead of CINT's preprocessor.  This is useful to handle header\n"
-"files with macro construct not handled by CINT.\n\n"
-"Use the -l (long) option to prepend the pathname of the\n"
-"dictionary source file to the include of the dictionary header.\n"
-"This might be needed in case the dictionary file needs to be\n"
-"compiled with the -I- option that inhibits the use of the directory\n"
-"of the source file as the first search directory for\n"
-"\"#include \"file\"\".\n"
 "The flag --lib-list-prefix=xxx can be used to produce a list of\n"
 "libraries needed by the header files being parsed. Rootcling will\n"
 "read the content of xxx.in for a list of rootmap files (see\n"
@@ -250,7 +232,8 @@ const char *help =
 "      -v2  Display error and warning messages.\n"
 "      -v3  Display error, warning and note messages.\n"
 "      -v4  Display all messages\n"
-"rootcling also support the other CINT options (see 'cint -h)\n"
+"\n"
+"The option -p and -l are deprecated and currently ignored"
 "\n"
 "Before specifying the first header file one can also add include\n"
 "file directories to be searched and preprocessor defines, like:\n"
@@ -4233,7 +4216,7 @@ int main(int argc, char **argv)
 {
    if (argc < 2) {
       fprintf(stderr,
-              "Usage: %s [-v][-v0-4] [-cint|-reflex|-gccxml] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+              "Usage: %s [-v][-v0-4] [-cint|-reflex|-gccxml] [-f] [out.cxx] [-c] [-m pcmfile] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
       return 1;
