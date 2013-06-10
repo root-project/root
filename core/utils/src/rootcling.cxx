@@ -25,7 +25,7 @@
 //                                                                      //
 // or                                                                   //
 //                                                                      //
-//  rootcling [-v[0-4]][-f] dict.C [-c] [-m pcm]                        //
+//  rootcling [-v[0-4]][-f] dict.C [-m pcm]                             //
 //           file.h[{+,-}][!] ... [LinkDef.h]                           //
 //                                                                      //
 // The difference between the two is that in the first case only the    //
@@ -36,8 +36,6 @@
 // The optional - behind the header file name tells rootcling to not    //
 // generate the Streamer() method. A custom method must be provided     //
 // by the user in that case. For the + and ! options see below.         //
-// When using option -c also the interpreter method interface stubs     //
-// will be written to the output file (AxisDict.cxx in the above case). //
 // By default the output file will not be overwritten if it exists.     //
 // Use the -f (force) option to overwite the output file. The output    //
 // file must have one of the following extensions: .cxx, .C, .cpp,      //
@@ -63,7 +61,8 @@
 //      -v2  Display error and warning messages.                        //
 //      -v3  Display error, warning and note messages.                  //
 //      -v4  Display all messages                                       //
-// The option -p and -l are deprecated and currently ignored.           //
+// The option -p, -c, -l, -cint, -reflex and -gccxml are deprecated     //
+// and currently ignored.                                               //
 //                                                                      // 
 // Before specifying the first header file one can also add include     //
 // file directories to be searched and preprocessor defines, like:      //
@@ -207,7 +206,7 @@ const char *help =
 "\n"
 "or\n"
 "\n"
-"  rootcling [-v[0-4]] [-f] dict.C [-c] [-m pcmfile] TAxis.h[{+,-}][!] ... [LinkDef.h] \n"
+"  rootcling [-v[0-4]] [-f] dict.C [-m pcmfile] TAxis.h[{+,-}][!] ... [LinkDef.h] \n"
 "\n"
 "The difference between the two is that in the first case only the\n"
 "Streamer() and ShowMembers() methods are generated while in the\n"
@@ -217,8 +216,6 @@ const char *help =
 "The optional - behind the header file name tells rootcling\n"
 "to not generate the Streamer() method. A custom method must be\n"
 "provided by the user in that case. For the + and ! options see below.\n\n"
-"When using option -c also the interpreter method interface stubs\n"
-"will be written to the output file (AxisDict.cxx in the above case).\n"
 "By default the output file will not be overwritten if it exists.\n"
 "Use the -f (force) option to overwite the output file. The output\n"
 "file must have one of the following extensions: .cxx, .C, .cpp,\n"
@@ -227,7 +224,7 @@ const char *help =
 "path) of a pcm file which will be loaded before any header files.\n"
 "The pcm file (module) produced by this invocation of rootcling will\n"
 "not include any of the declaration already included in the pcm files\n"
-"loaded via -m.  There can be more than one -m.\n\n";
+"loaded via -m.  There can be more than one -m.\n\n"
 "The flag --lib-list-prefix=xxx can be used to produce a list of\n"
 "libraries needed by the header files being parsed. Rootcling will\n"
 "read the content of xxx.in for a list of rootmap files (see\n"
@@ -243,7 +240,8 @@ const char *help =
 "      -v3  Display error, warning and note messages.\n"
 "      -v4  Display all messages\n"
 "\n"
-"The option -p and -l are deprecated and currently ignored"
+"The option -p, -c, -l, -cint, -reflex and -gccxml are deprecated\n"
+"and currently ignored.\n"
 "\n"
 "Before specifying the first header file one can also add include\n"
 "file directories to be searched and preprocessor defines, like:\n"
@@ -4226,7 +4224,7 @@ int main(int argc, char **argv)
 {
    if (argc < 2) {
       fprintf(stderr,
-              "Usage: %s [-v][-v0-4] [-cint|-reflex|-gccxml] [-f] [out.cxx] [-c] [-m pcmfile] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+              "Usage: %s [-v][-v0-4] [-f] [out.cxx] [-m pcmfile] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
       return 1;
@@ -4307,7 +4305,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "%s\n", help);
       return 1;
    } else if (ic < argc && !strncmp(argv[ic], "-",1)) {
-      fprintf(stderr,"Usage: %s [-v][-v0-4] [-reflex] [-l] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+      fprintf(stderr,"Usage: %s [-v][-v0-4] [-f] [out.cxx] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr,"Only one verbose flag is authorized (one of -v, -v0, -v1, -v2, -v3, -v4)\n"
               "and must be before the -f flags\n");
@@ -4598,8 +4596,9 @@ int main(int argc, char **argv)
          }
       }
       if (!strcmp(argv[i], "-c")) {
-         Error(0, "%s: option -c must come directly after the output file\n", argv[0]);
-         return 1;
+         // Simply ignore the -c options.
+         // Error(0, "%s: option -c must come directly after the output file\n", argv[0]);
+         // return 1;
       }
       if (strcmp("-pipe", argv[ic])!=0) {
          // filter out undesirable options
