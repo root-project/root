@@ -50,6 +50,7 @@ namespace {
     }
 
     virtual llvm::Module* ReleaseModule() {
+      assert(M && "Releasing 0?");
       return M.take();
     }
 
