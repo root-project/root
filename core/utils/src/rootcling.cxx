@@ -25,7 +25,7 @@
 //                                                                      //
 // or                                                                   //
 //                                                                      //
-//  rootcling [-v[0-4]][-f] dict.C [-c]                                 //
+//  rootcling [-v[0-4]][-f] dict.C [-c] [-m pcm]                        //
 //           file.h[{+,-}][!] ... [LinkDef.h]                           //
 //                                                                      //
 // The difference between the two is that in the first case only the    //
@@ -42,6 +42,11 @@
 // Use the -f (force) option to overwite the output file. The output    //
 // file must have one of the following extensions: .cxx, .C, .cpp,      //
 // .cc, .cp.                                                            //
+// The flag -m must be following by the name (relative to the current   //
+// path) of a pcm file which will be loaded before any header files.    //
+// The pcm file (module) produced by this invocation of rootcling will  //
+// not include any of the declaration already included in the pcm files //
+// loaded via -m.  There can be more than one -m.                       //
 // The flag --lib-list-prefix=xxx can be used to produce a list of      //
 // libraries needed by the header files being parsed. Rootcling will    //
 // read the content of xxx.in for a list of rootmap files (see          //
@@ -218,6 +223,11 @@ const char *help =
 "Use the -f (force) option to overwite the output file. The output\n"
 "file must have one of the following extensions: .cxx, .C, .cpp,\n"
 ".cc, .cp.\n\n"
+"The flag -m must be following by the name (relative to the current\n"
+"path) of a pcm file which will be loaded before any header files.\n"
+"The pcm file (module) produced by this invocation of rootcling will\n"
+"not include any of the declaration already included in the pcm files\n"
+"loaded via -m.  There can be more than one -m.\n\n";
 "The flag --lib-list-prefix=xxx can be used to produce a list of\n"
 "libraries needed by the header files being parsed. Rootcling will\n"
 "read the content of xxx.in for a list of rootmap files (see\n"
