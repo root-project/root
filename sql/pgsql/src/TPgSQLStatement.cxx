@@ -1008,6 +1008,13 @@ Bool_t TPgSQLStatement::GetBinary(Int_t, void* &, Long_t&)
    return kFALSE;
 }
 
+//______________________________________________________________________________
+Bool_t TPgSQLStatement::GetLargeObject(Int_t, void* &, Long_t&)
+{
+   // Return large object whose oid is in the given field.
+   
+   return kFALSE;
+}
 
 //______________________________________________________________________________
 Bool_t TPgSQLStatement::GetDate(Int_t, Int_t&, Int_t&, Int_t&)
@@ -1126,6 +1133,14 @@ Bool_t TPgSQLStatement::SetBinary(Int_t, void*, Long_t, Long_t)
 {
    // Set parameter value as binary data.
 
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TPgSQLStatement::SetLargeObject(Int_t, void*, Long_t, Long_t)
+{
+   // Set parameter value to large object and immediately insert the large object into DB.
+   
    return kFALSE;
 }
 
