@@ -1715,6 +1715,9 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       topx = 1;    topy = 1;
    }
 
+   TString mname(filename);
+   Int_t p = mname.Index(".");
+   out <<"void " << mname(0,p) << "()" <<std::endl;
    out <<"{"<<std::endl;
    out <<"//=========Macro generated from canvas: "<<GetName()<<"/"<<GetTitle()<<std::endl;
    out <<"//=========  ("<<t.AsString()<<") by ROOT version"<<gROOT->GetVersion()<<std::endl;
