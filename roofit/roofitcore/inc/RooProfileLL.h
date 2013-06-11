@@ -21,7 +21,7 @@
 class RooMinimizer ;
 class RooMinuit ; 
 
-#define MINIMIZER RooMinuit
+#define MINIMIZER RooMinimizer
 
 class RooProfileLL : public RooAbsReal {
 public:
