@@ -11,6 +11,10 @@
 -   A coverity fix in `Rotated.cxx` had a side effect on rotated text
     drawn with X11 fonts.
 
+### TCanvas
+
+- 'TPad::SaveAs' produces named macros in .C files.
+
 ### TGaxis and TAxis
 
 -   The time axis behavior should now be correct along time zone and
