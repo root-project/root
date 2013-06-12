@@ -8,7 +8,7 @@ all: tests
 test: tests ;
 
 summary:
-	CALLDIR= ; make --no-print-directory  tests || \
+	@CALLDIR= ; $(MAKE) --no-print-directory  tests || \
 	if [ `ls $(SUMMARY).*.summary 2>/dev/null | wc -l` -gt 0 ] ; then \
           res=`grep FAILING $(SUMMARY).*.summary  | wc -l` ; \
 	  echo "There is at least $$res failings test:" ; \
