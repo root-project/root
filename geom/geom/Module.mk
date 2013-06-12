@@ -68,7 +68,7 @@ $(GEOMLIB):     $(GEOMO) $(GEOMDO) $(ORDER_) $(MAINLIBS) $(GEOMLIBDEP)
 $(GEOMDS):      $(GEOMH) $(GEOML) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOMLIB) -c $(GEOMH1) $(GEOMH2) $(GEOML)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOMLIB) -c -I$(ROOT_SRCDIR) $(GEOMH1) $(GEOMH2) $(GEOML)
 
 $(GEOMMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GEOML1) $(GEOML2)
 		$(RLIBMAP) -o $@ -l $(GEOMLIB) \

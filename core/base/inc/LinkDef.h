@@ -12,6 +12,7 @@
 #include "core/winnt/inc/LinkDef.h"
 #elif defined(SYSTEM_TYPE_macosx)
 #include "core/macosx/inc/LinkDef.h"
+#include "core/unix/inc/LinkDef.h"
 #else
 #include "core/unix/inc/LinkDef.h"
 #endif

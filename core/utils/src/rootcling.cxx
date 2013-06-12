@@ -4423,35 +4423,39 @@ int main(int argc, char **argv)
 
    std::vector<std::string> baseModules;
    std::string sharedLibraryPathName;
-   while (ic < argc && (*argv[ic] == '-' || *argv[ic] == '+')) {
-      if (strcmp("-s", argv[ic]) == 0 && (ic+1) < argc) {
-         // precompiled modules
-         sharedLibraryPathName = argv[ic+1];
-         ++ic;
+   int nextStart = 0;
+   while (ic < argc) {
+      if (*argv[ic] == '-' || *argv[ic] == '+') {
+         if (strcmp("-s", argv[ic]) == 0 && (ic+1) < argc) {
+            // precompiled modules
+            sharedLibraryPathName = argv[ic+1];
+            ++ic;
+         }
+         if (strcmp("-m", argv[ic]) == 0 && (ic+1) < argc) {
+            // precompiled modules
+            baseModules.push_back(argv[ic+1]);
+            ++ic;
+         }
+         if (strcmp("+P", argv[ic]) == 0 ||
+             strcmp("+V", argv[ic]) == 0 ||
+             strcmp("+STUB", argv[ic]) == 0) {
+            // Ignore CINT arguments.
+            continue;
+         }
+         if (strcmp("-pipe", argv[ic])!=0 && strcmp("-pthread", argv[ic])!=0) {
+            // filter out undesirable options
+            if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
+                && strcmp("-p", argv[ic])) 
+               {    
+                  clingArgs.push_back(argv[ic]);
+               }
+         }
+      } else if (nextStart == 0) {
+         nextStart = ic;
       }
-      if (strcmp("-m", argv[ic]) == 0 && (ic+1) < argc) {
-         // precompiled modules
-         baseModules.push_back(argv[ic+1]);
-         ++ic;
-      }
-      if (strcmp("+P", argv[ic]) == 0 ||
-          strcmp("+V", argv[ic]) == 0 ||
-          strcmp("+STUB", argv[ic]) == 0) {
-         // break when we see positional options
-         break;
-      }
-      if (strcmp("-pipe", argv[ic])!=0 && strcmp("-pthread", argv[ic])!=0) {
-         // filter out undesirable options
-         if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
-             && strcmp("-p", argv[ic])) 
-            {    
-               clingArgs.push_back(argv[ic]);
-            }
-         ic++;
-      } else {
-         ic++;
-      }
+      ic++;
    }
+   ic = nextStart;
    clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(ROOTBUILDVAL));
 
    std::vector<std::string> pcmArgs;
