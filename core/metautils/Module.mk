@@ -29,11 +29,8 @@ METAUTILSO     := $(call stripsrc,$(METAUTILSS:.cxx=.o))
 METAUTILSTO    := $(call stripsrc,$(METAUTILSTS:.cxx=.o))
 
 METAUTILSL     := $(MODDIRI)/LinkDef.h
-METAUTILSDS    := $(call stripsrc,$(MODDIRS)/G__MetaUtils.cxx)
-METAUTILSDO    := $(METAUTILSDS:.cxx=.o)
-METAUTILSDH    := $(METAUTILSDS:.cxx=.h)
 
-METAUTILSDEP   := $(METAUTILSO:.o=.d) $(METAUTILSDO:.o=.d) $(METAUTILSTO:.o=.d)
+METAUTILSDEP   := $(METAUTILSO:.o=.d) $(METAUTILSTO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAUTILSH) $(METAUTILSTH))
@@ -88,21 +85,16 @@ ALLMAPS    += $(STLDICTSMAPS)
 include/%.h:    $(METAUTILSDIRI)/%.h
 		cp $< $@
 
-$(METAUTILSDS): $(METAUTILSH) $(METAUTILSL) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(METAUTILSH) $(METAUTILSL)
-
-all-$(MODNAME): $(METAUTILSO) $(METAUTILSDO) $(STLDICTS)
+all-$(MODNAME): $(METAUTILSO) $(STLDICTS)
 
 clean-$(MODNAME):
-		@rm -f $(METAUTILSO) $(METAUTILSDO) $(STLDICTS_OBJ) \
+		@rm -f $(METAUTILSO) $(STLDICTS_OBJ) \
 		   $(STLDICTS_DEP)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(METAUTILSDEP) $(METAUTILSDS) $(METAUTILSDH) \
+		@rm -f $(METAUTILSDEP) \
 		   $(STLDICTS_OBJ) $(STLDICTS_DEP) $(STLDICTS_SRC) \
 		   $(STLDICTSMAPS)
 
