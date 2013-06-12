@@ -377,6 +377,29 @@ bool TClingClassInfo::HasDefaultConstructor() const
       llvm::dyn_cast<CXXRecordDecl>(fDecl);
    if (!CRD) return true; 
 
+   // For now make the object of non-public class, not createable ...
+   // It would be better to find away to 'break' through
+   // the privacy.
+   if (CRD->getAccess() != AS_public && CRD->getAccess() != AS_none)
+      return false;
+   if (CRD->getName().equals("pair")) {
+      // Very special case ... oh well ...
+      const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (CRD);
+      if (tmplt_specialization) {
+         for(unsigned int i = 0; i <  tmplt_specialization->getTemplateArgs().size(); ++i) {
+            const clang::TemplateArgument &arg( tmplt_specialization->getTemplateArgs().get(i) );
+            clang::QualType tmplti = arg.getAsType();
+            const clang::Type *type = ROOT::TMetaUtils::GetUnderlyingType(tmplti);
+            if (type->isFundamentalType() || type->isEnumeralType()) {
+               continue;
+            }
+            clang::RecordDecl *tdecl = type->getAsCXXRecordDecl();
+            if (tdecl->getAccess() != AS_public && tdecl->getAccess() != AS_none)
+               return false;
+         }
+      }
+   }
+
    for (CXXRecordDecl::ctor_iterator iter = CRD->ctor_begin(),
          end = CRD->ctor_end(); iter != end; ++iter) {
       if (iter->getAccess() == AS_public) {
