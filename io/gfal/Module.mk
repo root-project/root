@@ -49,7 +49,7 @@ $(GFALLIB):     $(GFALO) $(GFALDO) $(ORDER_) $(MAINLIBS) $(GFALLIBDEP)
 $(GFALDS):      $(GFALH) $(GFALL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GFALH) $(GFALL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GFALLIB) -c $(GFALH) $(GFALL)
 
 $(GFALMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GFALL)
 		$(RLIBMAP) -o $@ -l $(GFALLIB) \

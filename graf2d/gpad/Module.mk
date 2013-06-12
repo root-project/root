@@ -49,7 +49,7 @@ $(GPADLIB):     $(GPADO) $(GPADDO) $(ORDER_) $(MAINLIBS) $(GPADLIBDEP)
 $(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GPADH) $(GPADL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GPADLIB) -c $(GPADH) $(GPADL)
 
 $(GPADMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GPADL)
 		$(RLIBMAP) -o $@ -l $(GPADLIB) \

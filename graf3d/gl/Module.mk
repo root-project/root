@@ -83,7 +83,7 @@ $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
 $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(CINTFLAGS) $(GLH2) $(GLL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GLLIB) -c $(CINTFLAGS) $(GLH2) $(GLL)
 
 $(GLMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(GLL)
 		$(RLIBMAP) -o $@ -l $(GLLIB) \

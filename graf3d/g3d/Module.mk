@@ -54,7 +54,7 @@ $(G3DLIB):      $(G3DO) $(G3DDO) $(ORDER_) $(MAINLIBS) $(G3DLIBDEP)
 $(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(G3DH1) $(G3DL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,G3DLIB) -c $(G3DH1) $(G3DL)
 
 $(G3DMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(G3DL)
 		$(RLIBMAP) -o $@ -l $(G3DLIB) \

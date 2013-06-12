@@ -59,7 +59,7 @@ $(ALIENLIB):    $(ALIENO) $(ALIENDO) $(ORDER_) $(MAINLIBS) $(ALIENLIBDEP)
 $(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(ALIENINCEXTRA) $(ALIENH) $(ALIENL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,ALIENLIB) -c $(ALIENINCEXTRA) $(ALIENH) $(ALIENL)
 
 $(ALIENMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(ALIENL)
 		$(RLIBMAP) -o $@ -l $(ALIENLIB) \

@@ -49,7 +49,7 @@ $(IOLIB):       $(IOO) $(IODO) $(ORDER_) $(MAINLIBS) $(IOLIBDEP)
 $(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(IOH) $(IOL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,IOLIB) -c $(IOH) $(IOL)
 
 $(IOMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(IOL)
 		$(RLIBMAP) -o $@ -l $(IOLIB) -d $(IOLIBDEPM) -c $(IOL)

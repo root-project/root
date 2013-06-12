@@ -89,7 +89,7 @@ $(GUILIB):      $(GUIO) $(GUIDO) $(ORDER_) $(MAINLIBS) $(GUILIBDEP)
 $(GUIDS1):      $(GUIH1) $(GUIL1) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GUIH1) $(GUIL1)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GUILIB) -c $(GUIH1) $(GUIL1)
 $(GUIDS2):      $(GUIH2) $(GUIL2) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."

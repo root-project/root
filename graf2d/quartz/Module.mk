@@ -54,7 +54,7 @@ $(QUARTZLIB):   $(QUARTZO) $(QUARTZOBJCPPO) $(QUARTZDO) $(ORDER_) $(MAINLIBS) \
 $(QUARTZDS):    $(QUARTZH1) $(QUARTZL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(QUARTZH1) $(QUARTZL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,QUARTZLIB) -c $(QUARTZH1) $(QUARTZL)
 
 $(QUARTZMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(QUARTZL)
 		$(RLIBMAP) -o $@ -l $(QUARTZLIB) \
