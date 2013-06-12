@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: f3cd439bd51d763ffd53693e89c42b2eaa27c520 $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -325,7 +325,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    const char *wname = (dlg_type == kFDSave) ? "Save As..." : "Open";
    SetWindowName(wname);
    SetIconName(wname);
-   SetClassHints("FileDialog", "FileDialog");
+   SetClassHints("ROOT", "FileDialog");
 
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
                               kMWMDecorMinimize | kMWMDecorMenu,

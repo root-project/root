@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: 7cf312b9bc9940a03d7c0cee95eea0085dc9898c $
 // Author: Bertrand Bellenot   26/09/2007
 
 /*************************************************************************
@@ -96,6 +96,7 @@ protected:
    Int_t              fCrTab[3];                   // Actual (active) tab elements (for each Tab)
    Int_t              fPid;                        // Current process id
    Bool_t             fShowCloseTab;               // kTRUE to show close icon on tab elements
+   const TGPicture   *fIconPic;                    // icon picture
 
 public:
    enum ENewBrowserMessages {

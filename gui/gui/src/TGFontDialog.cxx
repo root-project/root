@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: bcc7b53cab203466d39a6f17445d822d6fc19610 $
 // Author: Bertrand Bellenot + Fons Rademakers + Valeriy Onuchin  23/04/03
 
 /*************************************************************************
@@ -366,7 +366,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
 
    SetWindowName("Font Selection");
    SetIconName("Font Selection");
-   SetClassHints("FontDialog", "FontDialog");
+   SetClassHints("ROOT", "FontDialog");
 
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
                               kMWMDecorMinimize | kMWMDecorMenu,

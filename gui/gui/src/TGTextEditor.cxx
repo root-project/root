@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: ca18aae7f02ae8574b0c5414c78ede465425855d $
 // Author: Bertrand Bellenot   20/06/06
 
 /*************************************************************************
@@ -439,7 +439,7 @@ void TGTextEditor::Build()
    fStatusBar->SetParts(parts, 2);
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 3, 0));
 
-   SetClassHints("TGTextEditor", "TGTextEditor");
+   SetClassHints("ROOT", "TGTextEditor");
    SetWindowName("Untitled - TGTextEditor");
 
    fMacro = 0;

@@ -1214,7 +1214,7 @@ void TRootBrowserLite::CreateBrowser(const char *name)
    SetWindowName(bname.Data());
    SetIconName(bname.Data());
    fIconPic = SetIconPixmap("rootdb_s.xpm");
-   SetClassHints("Browser", "Browser");
+   SetClassHints("ROOT", "Browser");
 
    SetWMSizeHints(600, 350, 10000, 10000, 2, 2);
 
