@@ -14,7 +14,7 @@ POSTSCRIPTDIRI := $(POSTSCRIPTDIR)/inc
 
 ##### libPostscript #####
 POSTSCRIPTL  := $(MODDIRI)/LinkDef.h
-POSTSCRIPTDS := $(call stripsrc,$(MODDIRS)/G__PostScript.cxx)
+POSTSCRIPTDS := $(call stripsrc,$(MODDIRS)/G__Postscript.cxx)
 POSTSCRIPTDO := $(POSTSCRIPTDS:.cxx=.o)
 POSTSCRIPTDH := $(POSTSCRIPTDS:.cxx=.h)
 

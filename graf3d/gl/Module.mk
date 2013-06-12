@@ -14,7 +14,7 @@ GLDIRI       := $(GLDIR)/inc
 
 ##### libRGL #####
 GLL          := $(MODDIRI)/LinkDef.h
-GLDS         := $(call stripsrc,$(MODDIRS)/G__GL.cxx)
+GLDS         := $(call stripsrc,$(MODDIRS)/G__RGL.cxx)
 GLDO         := $(GLDS:.cxx=.o)
 GLDH         := $(GLDS:.cxx=.h)
 

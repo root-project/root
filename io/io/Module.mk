@@ -14,7 +14,7 @@ IODIRI       := $(IODIR)/inc
 
 ##### libRIO #####
 IOL          := $(MODDIRI)/LinkDef.h
-IODS         := $(call stripsrc,$(MODDIRS)/G__IO.cxx)
+IODS         := $(call stripsrc,$(MODDIRS)/G__RIO.cxx)
 IODO         := $(IODS:.cxx=.o)
 IODH         := $(IODS:.cxx=.h)
 

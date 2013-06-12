@@ -14,7 +14,7 @@ GPADDIRI     := $(GPADDIR)/inc
 
 ##### libGpad #####
 GPADL        := $(MODDIRI)/LinkDef.h
-GPADDS       := $(call stripsrc,$(MODDIRS)/G__GPad.cxx)
+GPADDS       := $(call stripsrc,$(MODDIRS)/G__Gpad.cxx)
 GPADDO       := $(GPADDS:.cxx=.o)
 GPADDH       := $(GPADDS:.cxx=.h)
 

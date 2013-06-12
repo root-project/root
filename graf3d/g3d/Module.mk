@@ -14,7 +14,7 @@ G3DDIRI      := $(G3DDIR)/inc
 
 ##### libGraf3d #####
 G3DL         := $(MODDIRI)/LinkDef.h
-G3DDS        := $(call stripsrc,$(MODDIRS)/G__G3D.cxx)
+G3DDS        := $(call stripsrc,$(MODDIRS)/G__Graf3d.cxx)
 G3DDO        := $(G3DDS:.cxx=.o)
 G3DDH        := $(G3DDS:.cxx=.h)
 

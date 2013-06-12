@@ -14,7 +14,7 @@ X11DIRI      := $(X11DIR)/inc
 
 ##### libGX11 #####
 X11L         := $(MODDIRI)/LinkDef.h
-X11DS        := $(call stripsrc,$(MODDIRS)/G__X11.cxx)
+X11DS        := $(call stripsrc,$(MODDIRS)/G__GX11.cxx)
 X11DO        := $(X11DS:.cxx=.o)
 X11DH        := $(X11DS:.cxx=.h)
 

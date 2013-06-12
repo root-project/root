@@ -14,7 +14,7 @@ SQLDIRI      := $(SQLDIR)/inc
 
 ##### libSQL #####
 SQLL         := $(MODDIRI)/LinkDef.h
-SQLDS        := $(call stripsrc,$(MODDIRS)/G__SQL.cxx)
+SQLDS        := $(call stripsrc,$(MODDIRS)/G__SQLIO.cxx)
 SQLDO        := $(SQLDS:.cxx=.o)
 SQLDH        := $(SQLDS:.cxx=.h)
 

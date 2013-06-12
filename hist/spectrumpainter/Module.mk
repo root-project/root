@@ -14,7 +14,7 @@ SPECTRUMPAINTERDIRI := $(SPECTRUMPAINTERDIR)/inc
 
 ##### libSpectrumPainter #####
 SPECTRUMPAINTERL  := $(MODDIRI)/LinkDef.h
-SPECTRUMPAINTERDS := $(call stripsrc,$(MODDIRS)/G__Spectrum2Painter.cxx)
+SPECTRUMPAINTERDS := $(call stripsrc,$(MODDIRS)/G__SpectrumPainter.cxx)
 SPECTRUMPAINTERDO := $(SPECTRUMPAINTERDS:.cxx=.o)
 SPECTRUMPAINTERDH := $(SPECTRUMPAINTERDS:.cxx=.h)
 

@@ -14,7 +14,7 @@ X11TTFDIRI   := $(X11TTFDIR)/inc
 
 ##### libGX11TTF #####
 X11TTFL      := $(MODDIRI)/LinkDef.h
-X11TTFDS     := $(call stripsrc,$(MODDIRS)/G__X11TTF.cxx)
+X11TTFDS     := $(call stripsrc,$(MODDIRS)/G__GX11TTF.cxx)
 X11TTFDO     := $(X11TTFDS:.cxx=.o)
 X11TTFDH     := $(X11TTFDS:.cxx=.h)
 

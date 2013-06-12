@@ -14,7 +14,7 @@ X3DDIRI      := $(X3DDIR)/inc
 
 ##### libX3d #####
 X3DL         := $(MODDIRI)/LinkDef.h
-X3DDS        := $(call stripsrc,$(MODDIRS)/G__X3D.cxx)
+X3DDS        := $(call stripsrc,$(MODDIRS)/G__X3d.cxx)
 X3DDO        := $(X3DDS:.cxx=.o)
 X3DDH        := $(X3DDS:.cxx=.h)
 

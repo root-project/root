@@ -14,7 +14,7 @@ XMLDIRI      := $(XMLDIR)/inc
 
 ##### libXMLIO #####
 XMLL         := $(MODDIRI)/LinkDef.h
-XMLDS        := $(call stripsrc,$(MODDIRS)/G__XML.cxx)
+XMLDS        := $(call stripsrc,$(MODDIRS)/G__XMLIO.cxx)
 XMLDO        := $(XMLDS:.cxx=.o)
 XMLDH        := $(XMLDS:.cxx=.h)
 
