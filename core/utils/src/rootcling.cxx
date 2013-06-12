@@ -4621,6 +4621,7 @@ int main(int argc, char **argv)
          linkdefLoc = i;
          if (i != argc-1) {
             Error(0, "%s: %s must be last file on command line\n", argv[0], argv[i]);
+            CleanupOnExit(1);
             return 1;
          }
       }
