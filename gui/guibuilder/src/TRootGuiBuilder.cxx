@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Id$
+// @(#)root/guibuilder:$Id: d2f0a1966f9911570cafe9d356f2158a2773edd1 $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -906,7 +906,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    SetWindowName("ROOT GuiBuilder");
    SetIconName("ROOT GuiBuilder");
    fIconPic = SetIconPixmap("bld_rgb.xpm");
-   SetClassHints("GuiBuilder", "GuiBuilder");
+   SetClassHints("ROOT", "GuiBuilder");
 
    fSelected = 0;
    Update();

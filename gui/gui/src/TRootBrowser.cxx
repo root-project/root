@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: 4ed8aea02c288ef2cae232094ae0b155c9a799df $
 // Author: Bertrand Bellenot   26/09/2007
 
 /*************************************************************************
@@ -113,6 +113,7 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width,
 
    fShowCloseTab = kTRUE;
    fActBrowser = 0;
+   fIconPic = 0;
    CreateBrowser(name);
    Resize(width, height);
    if (initshow) {
@@ -132,6 +133,7 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y,
 
    fShowCloseTab = kTRUE;
    fActBrowser = 0;
+   fIconPic = 0;
    CreateBrowser(name);
    MoveResize(x, y, width, height);
    SetWMPosition(x, y);
@@ -279,7 +281,8 @@ void TRootBrowser::CreateBrowser(const char *name)
    // Set a name to the main frame
    SetWindowName(name);
    SetIconName(name);
-   SetClassHints("Browser", "Browser");
+   fIconPic = SetIconPixmap("rootdb_s.xpm");
+   SetClassHints("ROOT", "Browser");
 
    if (!strcmp(gROOT->GetDefCanvasName(), "c1"))
       gROOT->SetDefCanvasName("Canvas_1");
@@ -297,6 +300,7 @@ TRootBrowser::~TRootBrowser()
 {
    // Clean up all widgets, frames and layouthints that were used
 
+   if (fIconPic) gClient->FreePicture(fIconPic);
    delete fLH0;
    delete fLH1;
    delete fLH2;

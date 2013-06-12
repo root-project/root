@@ -578,7 +578,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    SetWindowName(name);
    SetIconName(name);
    fIconPic = SetIconPixmap("macro_s.xpm");
-   SetClassHints("Canvas", "Canvas");
+   SetClassHints("ROOT", "Canvas");
 
    SetEditDisabled(kEditDisable);
    MapSubwindows();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: b9c0b7354930d42a39f3e13f72c5f3f75313a2c6 $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -1214,7 +1214,7 @@ void TRootBrowserLite::CreateBrowser(const char *name)
    SetWindowName(bname.Data());
    SetIconName(bname.Data());
    fIconPic = SetIconPixmap("rootdb_s.xpm");
-   SetClassHints("Browser", "Browser");
+   SetClassHints("ROOT", "Browser");
 
    SetWMSizeHints(600, 350, 10000, 10000, 2, 2);
 

@@ -439,7 +439,7 @@ void TGTextEditor::Build()
    fStatusBar->SetParts(parts, 2);
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 3, 0));
 
-   SetClassHints("TGTextEditor", "TGTextEditor");
+   SetClassHints("ROOT", "TGTextEditor");
    SetWindowName("Untitled - TGTextEditor");
 
    fMacro = 0;

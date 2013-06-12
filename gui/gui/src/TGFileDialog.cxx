@@ -321,7 +321,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    const char *wname = (dlg_type == kFDSave) ? "Save As..." : "Open";
    SetWindowName(wname);
    SetIconName(wname);
-   SetClassHints("FileDialog", "FileDialog");
+   SetClassHints("ROOT", "FileDialog");
 
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
                               kMWMDecorMinimize | kMWMDecorMenu,

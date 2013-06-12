@@ -439,7 +439,7 @@ TFitEditor::TFitEditor(TVirtualPad* pad, TObject *obj) :
    TGDimension size = GetDefaultSize();
    SetWindowName("Fit Panel");
    SetIconName("Fit Panel");
-   SetClassHints("Fit Panel", "Fit Panel");
+   SetClassHints("ROOT", "Fit Panel");
 
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
                               kMWMDecorMinimize | kMWMDecorMenu,
