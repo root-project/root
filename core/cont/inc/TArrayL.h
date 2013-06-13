@@ -76,7 +76,7 @@ template <>
 inline TBuffer &operator<<(TBuffer &buf, const TArrayL *obj)
 {
    // Write a TArrayL object into buffer
-   return buf << (TArray*)obj;
+   return buf << (const TArray*)obj;
 }
 
 inline Long_t TArrayL::At(Int_t i) const
