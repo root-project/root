@@ -375,7 +375,12 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
       break ;
     }
     x2= *iter2 ;
-    addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx,numee,doEEVal,eeVal);
+    if (prec<0) {
+      // If precision is <0, no attempt at recursive interpolation is made
+      addPoint(x2,yval[step]) ;
+    } else {
+      addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx,numee,doEEVal,eeVal);
+    }
     step++ ;
   }
   addPoint(xhi,yval[minPoints-1]) ;
