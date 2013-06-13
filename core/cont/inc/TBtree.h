@@ -418,7 +418,7 @@ inline Int_t TBtInnerNode::DecNofKeys(Int_t i, Int_t n)
 
 inline Int_t TBtInnerNode::Vsize() const
 {
-   R__ASSERT(fParent != 0 && fParent->GetTree(0) != (TBtNode *)this);
+   R__ASSERT(fParent != 0 && fParent->GetTree(0) != (const TBtNode *)this);
    return Psize()+1;
 }
 
