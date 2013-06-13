@@ -433,7 +433,7 @@ inline TObject *TBtLeafNode::operator[](Int_t i) const
 
 inline Int_t TBtLeafNode::Vsize() const
 {
-   R__ASSERT(fParent != 0 && fParent->GetTree(0) != (TBtNode *)this);
+   R__ASSERT(fParent != 0 && fParent->GetTree(0) != (const TBtNode *)this);
    return Psize()+1;
 }
 
