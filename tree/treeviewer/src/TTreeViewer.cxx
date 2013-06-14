@@ -346,7 +346,7 @@ TTreeViewer::TTreeViewer(const TTree *tree) :
    TDirectory *cdir = tree->GetDirectory();
    if (cdir) cdir->cd();
 
-   SetTreeName(tree->GetName());
+   SetTree((TTree *)tree);
    // If the tree is a chain, the tree directory will be changed by SwitchTree
    // (called by SetTreeName)
    cdir = tree->GetDirectory();
@@ -446,6 +446,43 @@ void TTreeViewer::SetScanRedirect(Bool_t mode)
       fBarScan->SetState(kButtonDown);
    else
       fBarScan->SetState(kButtonUp);
+}
+//______________________________________________________________________________
+void TTreeViewer::SetTree(TTree *tree)
+{
+   // Assign the fTree member from existing tree, e.g. when calling
+   // tree->StartViewer() from the browser, or even from the command line.
+
+   if (!tree) return;
+   if (fTree != tree) {
+      fTree = tree;
+      // load the tree via the interpreter
+      // define a global "tree" variable for the same tree
+      TString command = TString::Format("tv__tree = (TTree *)0x%lx;", tree);
+      ExecuteCommand(command.Data());
+   }
+   //--- add the tree to the list if it is not already in
+   if (fTreeList) fTreeList->Add(fTree);
+   ExecuteCommand("tv__tree_list->Add(tv__tree);");
+   //--- map this tree
+   TGListTreeItem *base = 0;
+   TGListTreeItem *parent = fLt->FindChildByName(base, "TreeList");
+   if (!parent) parent = fLt->AddItem(base, "TreeList", new ULong_t(kLTNoType));
+   ULong_t *itemType = new ULong_t((fTreeIndex << 8) | kLTTreeType);
+   fTreeIndex++;
+   TGListTreeItem *lTreeItem = fLt->AddItem(parent, tree->GetName(), itemType,
+               gClient->GetPicture("tree_t.xpm"), gClient->GetPicture("tree_t.xpm"));
+   MapTree(fTree, lTreeItem, kFALSE);
+   fLt->OpenItem(parent);
+   fLt->HighlightItem(lTreeItem);
+   fClient->NeedRedraw(fLt);
+
+   //--- map slider and list view
+   SwitchTree(fTreeIndex-1);
+   fLVContainer->RemoveNonStatic();
+   MapTree(fTree);
+   fListView->Layout();
+   SetFile();
 }
 //______________________________________________________________________________
 void TTreeViewer::SetTreeName(const char* treeName)
