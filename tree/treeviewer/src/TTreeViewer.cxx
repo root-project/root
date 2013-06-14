@@ -458,7 +458,7 @@ void TTreeViewer::SetTree(TTree *tree)
       fTree = tree;
       // load the tree via the interpreter
       // define a global "tree" variable for the same tree
-      TString command = TString::Format("tv__tree = (TTree *)0x%lx;", tree);
+      TString command = TString::Format("tv__tree = (TTree *)0x%lx;", (ULong_t)tree);
       ExecuteCommand(command.Data());
    }
    //--- add the tree to the list if it is not already in
