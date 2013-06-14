@@ -23,11 +23,11 @@
 
 #include <stdlib.h>
 
-#include "libpq/libpq-fs.h"
-
 ClassImp(TPgSQLStatement)
 
 #ifdef PG_VERSION_NUM
+
+#include "libpq/libpq-fs.h"
 
 static const Int_t kBindStringSize = 25;
 
@@ -109,6 +109,24 @@ void TPgSQLStatement::Close(Option_t *)
          SetError(stmterrno, stmterrmsg, method);               \
          return wtf;                                    \
       }                                                 \
+   }
+
+#define CheckErrResult(method, pqresult, retVal)         \
+   {                                                     \
+      ExecStatusType stmterrno=PQresultStatus(pqresult); \
+      if (!pgsql_success(stmterrno)) {                   \
+       const char* stmterrmsg = PQresultErrorMessage(fStmt->fRes);  \
+       SetError(stmterrno, stmterrmsg, method);                     \
+       PQclear(res);                                     \
+       return retVal;                                    \
+     }                                                   \
+   }
+
+#define RollBackTransaction(method)                          \
+   {                                                         \
+      PGresult *resnum=PQexec(fStmt->fConn,"COMMIT");        \
+      CheckErrResult("RollBackTransaction", resnum, kFALSE); \
+      PQclear(res);                                          \
    }
 
 // check last pgsql statement error code
@@ -448,29 +466,17 @@ Bool_t TPgSQLStatement::GetLargeObject(Int_t npar, void* &mem, Long_t& size)
 
    Int_t objID = atoi(PQgetvalue(fStmt->fRes,fIterationCount,npar));
 
-   ExecStatusType stat;
-
    // All this needs to happen inside a transaction, or it will NOT work.
    PGresult *res=PQexec(fStmt->fConn,"BEGIN");
-   stat = PQresultStatus(fStmt->fRes);
-   if (!pgsql_success(stat)) {
-      Error("GetLargeObject", "SQL Error on begin transaction: %s", PQerrorMessage(fStmt->fConn));
-      PQclear(res);
-      return kFALSE;
-   }
+
+   CheckErrResult("GetLargeObject", res, kFALSE);
    PQclear(res);
 
    Int_t lObjFD = lo_open(fStmt->fConn, objID, INV_READ);
 
    if (lObjFD<0) {
       Error("GetLargeObject", "SQL Error on lo_open: %s", PQerrorMessage(fStmt->fConn));
-      res=PQexec(fStmt->fConn,"COMMIT");
-      if (!pgsql_success(stat)) {
-         Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-         PQclear(res);
-         return kFALSE;
-      }
-      PQclear(res);
+      RollBackTransaction("GetLargeObject");
       return kFALSE;
    }
    // Object size is not known beforehand.
@@ -497,32 +503,22 @@ Bool_t TPgSQLStatement::GetLargeObject(Int_t npar, void* &mem, Long_t& size)
 
    if (readBytes != sz) {
       Error("GetLargeObject", "SQL Error on lo_read: %s", PQerrorMessage(fStmt->fConn));
-      res=PQexec(fStmt->fConn,"COMMIT");
-      if (!pgsql_success(stat)) {
-         Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-         PQclear(res);
-         return kFALSE;
-      }
-      PQclear(res);
+      RollBackTransaction("GetLargeObject");
       return kFALSE;
    }
 
    if (lo_close(fStmt->fConn, lObjFD) != 0) {
       Error("GetLargeObject", "SQL Error on lo_close: %s", PQerrorMessage(fStmt->fConn));
-      res=PQexec(fStmt->fConn,"COMMIT");
-      if (!pgsql_success(stat)) {
-         Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-         PQclear(res);
-         return kFALSE;
-      }
-      PQclear(res);
+      RollBackTransaction("GetLargeObject");
       return kFALSE;
    }
 
    res=PQexec(fStmt->fConn,"COMMIT");
+
+   ExecStatusType stat = PQresultStatus(res);
    if (!pgsql_success(stat)) {
       Error("GetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-      PQclear(res);
+      RollBackTransaction("GetLargeObject");
       return kFALSE;
    }
    PQclear(res);
@@ -702,40 +698,23 @@ Bool_t TPgSQLStatement::SetLargeObject(Int_t npar, void* mem, Long_t size, Long_
 {
    // Set parameter value to large object and immediately insert the large object into DB.
 
-   ExecStatusType stat;
-
    // All this needs to happen inside a transaction, or it will NOT work.
    PGresult *res=PQexec(fStmt->fConn,"BEGIN");
-   stat = PQresultStatus(fStmt->fRes);
-   if (!pgsql_success(stat)) {
-      Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
-      return kFALSE;
-   }
+
+   CheckErrResult("GetLargeObject", res, kFALSE);
    PQclear(res);
 
    Int_t lObjID = lo_creat(fStmt->fConn, INV_READ | INV_WRITE);
    if (lObjID<0) {
       Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
-      res=PQexec(fStmt->fConn,"COMMIT");
-      if (!pgsql_success(stat)) {
-         Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-         PQclear(res);
-         return kFALSE;
-      }
-      PQclear(res);
+      RollBackTransaction("GetLargeObject");
       return kFALSE;
    }
 
    Int_t lObjFD = lo_open(fStmt->fConn, lObjID, INV_READ | INV_WRITE);
    if (lObjFD<0) {
       Error("SetLargeObject", "Error in SetLargeObject: %s", PQerrorMessage(fStmt->fConn));
-      res=PQexec(fStmt->fConn,"COMMIT");
-      if (!pgsql_success(stat)) {
-         Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-         PQclear(res);
-         return kFALSE;
-      }
-      PQclear(res);
+      RollBackTransaction("GetLargeObject");
       return kFALSE;
    }
 
@@ -743,29 +722,18 @@ Bool_t TPgSQLStatement::SetLargeObject(Int_t npar, void* mem, Long_t size, Long_
 
    if (writtenBytes != size) {
       Error("SetLargeObject", "SQL Error on lo_write: %s", PQerrorMessage(fStmt->fConn));
-      res=PQexec(fStmt->fConn,"COMMIT");
-      if (!pgsql_success(stat)) {
-         Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-         PQclear(res);
-         return kFALSE;
-      }
-      PQclear(res);
+      RollBackTransaction("GetLargeObject");
       return kFALSE;
    }
 
    if (lo_close(fStmt->fConn, lObjFD) != 0) {
       Error("SetLargeObject", "SQL Error on lo_close: %s", PQerrorMessage(fStmt->fConn));
-      res=PQexec(fStmt->fConn,"COMMIT");
-      if (!pgsql_success(stat)) {
-         Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
-         PQclear(res);
-         return kFALSE;
-      }
-      PQclear(res);
+      RollBackTransaction("GetLargeObject");
       return kFALSE;
    }
 
    res=PQexec(fStmt->fConn,"COMMIT");
+   ExecStatusType stat = PQresultStatus(res);
    if (!pgsql_success(stat)) {
       Error("SetLargeObject", "SQL Error on COMMIT: %s", PQerrorMessage(fStmt->fConn));
       PQclear(res);
