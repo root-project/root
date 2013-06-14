@@ -222,6 +222,7 @@ public:
    void          SetScanRedirect(Bool_t mode);
    void          SetSession(TTVSession *session);
    void          SetUserCode(const char *code, Bool_t autoexec=kTRUE); // *MENU*
+   void          SetTree(TTree* tree);
    void          SetTreeName(const char* treeName);              // *MENU*
    Bool_t        SwitchTree(Int_t index);
    void          UpdateCombo();
