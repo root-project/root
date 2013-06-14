@@ -459,6 +459,10 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
       modifiedTClasses.swap(((TCling*)gCling)->GetModifiedTClasses());
       for (std::set<TClass*>::const_iterator I = modifiedTClasses.begin(),
               E = modifiedTClasses.end(); I != E; ++I) {
+         // Make sure the TClass has not been deleted.
+         if (!gROOT->GetListOfClasses()->FindObject(*I)) {
+            continue;
+         }
          ((TCling*)gCling)->UpdateListOfMethods(*I);
          ((TCling*)gCling)->UpdateListOfDataMembers(*I);
       }
