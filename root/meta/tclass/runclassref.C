@@ -6,11 +6,11 @@
 
    bool success = true;
 
-   TClassRef ref("MyClass");
+   TClassRef clref("MyClass");
 #ifdef __CINT__
-   TClass *cl = ref.GetClass(); // CINT does not properly handle operrator Cast
+   TClass *cl = clref.GetClass(); // CINT does not properly handle operrator Cast
 #else
-   TClass *cl = ref;
+   TClass *cl = clref;
 #endif
    if (cl!=0) {
       success = false;
@@ -18,9 +18,9 @@
    }
    TFile *f = TFile::Open("myclass.root");
 #ifdef __CINT__
-   cl = ref.GetClass(); // CINT does not properly handle operrator Cast
+   cl = clref.GetClass(); // CINT does not properly handle operrator Cast
 #else
-   cl = ref;
+   cl = clref;
 #endif
    if (cl==0) {
       success = false;
@@ -32,9 +32,9 @@
    TClass *cl2;
    gROOT->ProcessLine(".L RunMyClass.C+");
 #ifdef __CINT__
-   cl2 = ref.GetClass(); // CINT does not properly handle operrator Cast
+   cl2 = clref.GetClass(); // CINT does not properly handle operrator Cast
 #else
-   cl2 = ref;
+   cl2 = clref;
 #endif
    if (cl2==0) {
       success = false;
