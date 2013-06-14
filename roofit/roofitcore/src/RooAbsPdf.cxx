@@ -2594,6 +2594,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
   // Append overriding scale factor command at end of original command list
   RooCmdArg tmp = RooFit::Normalization(scaleFactor,Raw) ;
+  tmp.setInt(1,1) ; // Flag this normalization command as created for internal use (so that VisualizeError can strip it)
   cmdList.Add(&tmp) ;
 
   // Was a component selected requested
