@@ -14,7 +14,7 @@ XMLDIRI      := $(XMLDIR)/inc
 
 ##### libXMLIO #####
 XMLL         := $(MODDIRI)/LinkDef.h
-XMLDS        := $(call stripsrc,$(MODDIRS)/G__XML.cxx)
+XMLDS        := $(call stripsrc,$(MODDIRS)/G__XMLIO.cxx)
 XMLDO        := $(XMLDS:.cxx=.o)
 XMLDH        := $(XMLDS:.cxx=.h)
 
@@ -49,7 +49,7 @@ $(XMLLIB):      $(XMLO) $(XMLDO) $(ORDER_) $(MAINLIBS) $(XMLLIBDEP)
 $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(XMLH) $(XMLL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,XMLLIB) -c $(XMLH) $(XMLL)
 
 $(XMLMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(XMLL)
 		$(RLIBMAP) -o $@ -l $(XMLLIB) \

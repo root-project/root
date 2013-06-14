@@ -14,16 +14,13 @@ MACOSXDIRI   := $(MACOSXDIR)/inc
 
 ##### libMacOSX  (part of libCore) #####
 MACOSXL	     := $(MODDIRI)/LinkDef.h
-MACOSXDS     := $(call stripsrc,$(MODDIRS)/G__Macosx.cxx)
-MACOSXDO     := $(MACOSXDS:.cxx=.o)
-MACOSXDH     := $(MACOSXDS:.cxx=.h)
 
 MACOSXH1     := $(wildcard $(MODDIRI)/T*.h)
 MACOSXH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MACOSXS      := $(wildcard $(MODDIRS)/*.mm)
 MACOSXO      := $(call stripsrc,$(MACOSXS:.mm=.o))
 
-MACOSXDEP    := $(MACOSXO:.o=.d) $(MACOSXDO:.o=.d)
+MACOSXDEP    := $(MACOSXO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MACOSXH))
@@ -37,19 +34,14 @@ INCLUDEFILES += $(MACOSXDEP)
 include/%.h:    $(MACOSXDIRI)/%.h
 		cp $< $@
 
-$(MACOSXDS):    $(MACOSXH1) $(MACOSXL) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(MACOSXH1) $(MACOSXL)
-
-all-$(MODNAME): $(MACOSXO) $(MACOSXDO)
+all-$(MODNAME): $(MACOSXO)
 
 clean-$(MODNAME):
-		@rm -f $(MACOSXO) $(MACOSXDO)
+		@rm -f $(MACOSXO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(MACOSXDEP) $(MACOSXDS) $(MACOSXDH)
+		@rm -f $(MACOSXDEP)
 
 distclean::     distclean-$(MODNAME)

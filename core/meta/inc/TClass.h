@@ -40,9 +40,9 @@ class TBaseClass;
 class TBrowser;
 class TDataMember;
 class TClassRef;
+class TCling;
 class TMethod;
 class TRealData;
-class TCint;
 class TBuffer;
 class TVirtualStreamerInfo;
 class TVirtualCollectionProxy;
@@ -68,7 +68,6 @@ typedef ROOT::TMapTypeToTClass IdMap_t;
 
 class TClass : public TDictionary {
 
-friend class TCint;
 friend class TCling;
 friend void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 friend class ROOT::TGenericClassInfo;

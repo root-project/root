@@ -60,7 +60,7 @@ $(HISTLIB):     $(HISTO) $(HISTDO) $(ORDER_) $(MAINLIBS) $(HISTLIBDEP)
 $(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(HISTHH) $(HISTL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,HISTLIB) -c $(HISTHH) $(HISTL)
 
 $(HISTMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HISTL)
 		$(RLIBMAP) -o $@ -l $(HISTLIB) \

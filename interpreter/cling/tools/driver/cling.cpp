@@ -5,6 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/StoredValueRef.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/UserInterface/UserInterface.h"
 
@@ -53,7 +54,8 @@ int main( int argc, char **argv ) {
      for (size_t I = 0, N = Inputs.size(); I < N; ++I) {
        std::string line(".x ");
        line += Inputs[I].getFile();
-       ui.getMetaProcessor()->process(line.c_str());
+       cling::Interpreter::CompilationResult compRes;
+       ui.getMetaProcessor()->process(line.c_str(), compRes, 0);
        ret = !CI->getDiagnostics().getClient()->getNumErrors();
      }
    }

@@ -74,7 +74,7 @@ template <>
 inline TBuffer &operator<<(TBuffer &buf, const TArrayF *obj)
 {
    // Write a TArrayF object into buffer
-   return buf << (TArray*)obj;
+   return buf << (const TArray*)obj;
 }
 
 inline Float_t TArrayF::At(Int_t i) const

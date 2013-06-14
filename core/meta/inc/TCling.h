@@ -152,6 +152,7 @@ public: // Public Interface
                           const char** macroDefines,
                           const char** macroUndefines,
                           void (*triggerFunc)());
+   Int_t   SetClassSharedLibs(const char *cls, const char *libs);
    void    SetGetline(const char * (*getlineFunc)(const char* prompt),
                       void (*histaddFunc)(const char* line));
    void    Reset();

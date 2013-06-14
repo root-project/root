@@ -33,7 +33,7 @@ TDataType* TDataType::fgBuiltins[kNumDataTypes] = {0};
 TDataType::TDataType(TypedefInfo_t *info) : TDictionary()
 {
    // Default TDataType ctor. TDataTypes are constructed in TROOT via
-   // a call to TCint::UpdateListOfTypes().
+   // a call to TCling::UpdateListOfTypes().
 
    fInfo = info;
 

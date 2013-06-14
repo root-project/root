@@ -91,6 +91,7 @@ RETURN_METHOD_ARG2(Interpreter,Long_t,ProcessLineSynch,const char*,line,TInterpr
 VOID_METHOD_ARG0(Interpreter,PrintIntro,1)
 typedef const char* (*GetlineFunc_t)(const char* prompt);
 typedef void (*HistaddFunc_t)(const char* line);
+RETURN_METHOD_ARG2(Interpreter,Int_t,SetClassSharedLibs,const char*,cls,const char*,libs);
 VOID_METHOD_ARG2(Interpreter,SetGetline,GetlineFunc_t, getlineFunc,\
                  HistaddFunc_t, histaddFunc, 1)
 VOID_METHOD_ARG0(Interpreter,Reset,1)

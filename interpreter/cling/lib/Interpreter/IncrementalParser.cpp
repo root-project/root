@@ -6,6 +6,7 @@
 
 #include "IncrementalParser.h"
 #include "ASTDumper.h"
+#include "IRDumper.h"
 #include "ASTNodeEraser.h"
 #include "AutoSynthesizer.h"
 #include "DeclCollector.h"
@@ -75,9 +76,10 @@ namespace cling {
 
     m_TTransformers.push_back(new AutoSynthesizer(TheSema));
     m_TTransformers.push_back(new ValuePrinterSynthesizer(TheSema, 0));
-    m_TTransformers.push_back(new ReturnSynthesizer(TheSema));
     m_TTransformers.push_back(new ASTDumper());
+    m_TTransformers.push_back(new IRDumper());
     m_TTransformers.push_back(new DeclExtractor(TheSema));
+    m_TTransformers.push_back(new ReturnSynthesizer(TheSema));
   }
   void IncrementalParser::Initialize() {
     // pull in PCHs
@@ -223,6 +225,8 @@ namespace cling {
           commitTransaction(*I);
     }
 
+    if (hasCodeGenerator())
+      T->setModule(getCodeGenerator()->GetModule());
     // We are sure it's safe to pipe it through the transformers
     bool success = true;
     for (size_t i = 0; i < m_TTransformers.size(); ++i) {
@@ -282,7 +286,6 @@ namespace cling {
       }
 
       getCodeGenerator()->HandleTranslationUnit(getCI()->getASTContext());
-      T->setModule(getCodeGenerator()->GetModule());
 
       // The static initializers might run anything and can thus cause more
       // decls that need to end up in a transaction. But this one is done

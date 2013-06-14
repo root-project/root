@@ -1312,6 +1312,51 @@ ReSubstTemplateArgNNS(const clang::ASTContext &Ctxt,
 }
 
 //////////////////////////////////////////////////////////////////////////
+bool ROOT::TMetaUtils::IsStdClass(const clang::RecordDecl &cl)
+{
+   // Return true, if the decl is part of the std namespace.
+
+   const clang::DeclContext *ctx = cl.getDeclContext();
+
+   if (ctx->isNamespace())
+   {
+      const clang::NamedDecl *parent = llvm::dyn_cast<clang::NamedDecl> (ctx);
+      if (parent) {
+         if (parent->getQualifiedNameAsString()=="std") {
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+TClassEdit::ESTLType ROOT::TMetaUtils::IsSTLCont(const clang::RecordDecl &cl)
+{
+   //  type     : type name: vector<list<classA,allocator>,allocator>
+   //  result:    0          : not stl container
+   //             abs(result): code of container 1=vector,2=list,3=deque,4=map
+   //                           5=multimap,6=set,7=multiset
+
+   // This routine could be enhanced to also support:
+   // 
+   //  testAlloc: if true, we test allocator, if it is not default result is negative
+   //  result:    0          : not stl container
+   //             abs(result): code of container 1=vector,2=list,3=deque,4=map
+   //                           5=multimap,6=set,7=multiset
+   //             positive val: we have a vector or list with default allocator to any depth
+   //                   like vector<list<vector<int>>>
+   //             negative val: STL container other than vector or list, or non default allocator
+   //                           For example: vector<deque<int>> has answer -1
+   
+   if (!IsStdClass(cl)) {
+      return TClassEdit::kNotSTL;
+   }
+
+   return STLKind(cl.getName());
+}
+
+//////////////////////////////////////////////////////////////////////////
 clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, const clang::Type *instance)
 {
    // Check if 'input' or any of its template parameter was substituted when
@@ -1428,4 +1473,23 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
    }
 
    return input;
+}
+
+//////////////////////////////////////////////////////////////////////////
+TClassEdit::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
+{
+   // Converts STL container name to number. vector -> 1, etc..
+
+   static const char *stls[] =                  //container names
+      {"any","vector","list","deque","map","multimap","set","multiset","bitset",0};
+   static TClassEdit::ESTLType values[] =
+      {TClassEdit::kNotSTL, TClassEdit::kVector,
+       TClassEdit::kList, TClassEdit::kDeque,
+       TClassEdit::kMap, TClassEdit::kMultiMap,
+       TClassEdit::kSet, TClassEdit::kMultiSet,
+       TClassEdit::kBitSet, TClassEdit::kEnd
+      };
+   //              kind of stl container
+   for(int k=1;stls[k];k++) {if (type.equals(stls[k])) return values[k];}
+   return TClassEdit::kNotSTL;
 }

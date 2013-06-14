@@ -1,5 +1,5 @@
 # Input/Output
-
+\index{I/O}
 
 This chapter covers the saving and reading of objects to and from ROOT
 files. It begins with an explanation of the physical layout of a ROOT
@@ -415,14 +415,14 @@ later section. Since the keys are available in a **`TList`** of
 
 ``` {.cpp}
 {
-TFile f("demo.root");
-TIter next(f.GetListOfKeys());
-TKey *key;
-while ((key=(TKey*)next())) {
-printf("key: %s points to an object of class: %s at %dn",
-key->GetName(),
-key->GetClassName(),key->GetSeekKey());
-}
+   TFile f("demo.root");
+   TIter next(f.GetListOfKeys());
+   TKey *key;
+   while ((key=(TKey*)next())) {
+      printf("key: %s points to an object of class: %s at %dn",
+      key->GetName(),
+      key->GetClassName(),key->GetSeekKey());
+   }
 }
 ```
 
@@ -818,8 +818,8 @@ objects in the current directory. You can get the list of histograms in
 a directory and retrieve a pointer to a specific histogram.
 
 ``` {.cpp}
-TH1F *h = (TH1F*)gDirectory->Get("myHist"); // or
-TH1F *h = (TH1F*)gDirectory->GetList()->FindObject("myHist");
+   TH1F *h = (TH1F*)gDirectory->Get("myHist"); // or
+   TH1F *h = (TH1F*)gDirectory->GetList()->FindObject("myHist");
 ```
 
 The method `TDirectory::GetList()` returns a **`TList`** of objects in
@@ -827,14 +827,14 @@ the directory. You can change the directory of a histogram with the
 `SetDirectory` method.
 
 ``` {.cpp}
-h->SetDirectory(newDir);
+   h->SetDirectory(newDir);
 ```
 
 If the parameter is 0, the histogram is no longer associated with a
 directory.
 
 ``` {.cpp}
-h->SetDirectory(0);
+   h->SetDirectory(0);
 ```
 
 Once a histogram is removed from the directory, it will no longer be
@@ -844,7 +844,7 @@ the default that automatically adds the histogram to the current
 directory, you can call the static function:
 
 ``` {.cpp}
-TH1::AddDirectory(kFALSE);
+   TH1::AddDirectory(kFALSE);
 ```
 
 In this case, you will need to do all the bookkeeping for all the
@@ -1246,8 +1246,8 @@ not persistent.
 ``` {.cpp}
 class Event : public TObject {
 private:
-TDirectory    *fTransient;        //! current directory
-   Float_t fPt;             //! transient value
+   TDirectory    *fTransient; //! current directory
+   Float_t fPt;               //! transient value
 ...
 ```
 
@@ -1279,12 +1279,12 @@ For example:
 ``` {.cpp}
 class Event : public TObject {
 private:
-char           fType[20];
-Int_t          fNtrack;
-Int_t          fNseg;
-Int_t          fNvertex;
+   char           fType[20];
+   Int_t          fNtrack;
+   Int_t          fNseg;
+   Int_t          fNvertex;
 ...
-Float_t       *fClosestDistance;   //[fNvertex]
+   Float_t       *fClosestDistance;   //[fNvertex]
 ```
 
 The array `fClosestDistance` is defined as a pointer of floating point
@@ -1466,8 +1466,8 @@ and specify that the member class `Streamer `is used by setting the
 `TClonesArray::BypassStreamer` bit to false:
 
 ``` {.cpp}
-TClonesArray *fTracks;
-fTracks->BypassStreamer(kFALSE);    // use the member Streamer
+   TClonesArray *fTracks;
+   fTracks->BypassStreamer(kFALSE);    // use the member Streamer
 ```
 
 When the `kBypassStreamer` bit is set, the automatically generated
@@ -1564,12 +1564,12 @@ object can be used instead of normal C++ pointers in case:
 Below is a line from the example in `$ROOTSYS/test/Event.cxx.`
 
 ``` {.cpp}
-TRef   fLastTrack;             //pointer to last track
+   TRef   fLastTrack;             //pointer to last track
 ...
-Track *track = (Track*)fTracks->ConstructedAt(fNtrack++);
-track->Set(random);
-// Save reference to last Track in the collection of Tracks
-fLastTrack = track;
+   Track *track = (Track*)fTracks->ConstructedAt(fNtrack++);
+   track->Set(random);
+   // Save reference to last Track in the collection of Tracks
+   fLastTrack = track;
 ```
 
 The `track` and its reference `fLastTrack` can be written with two
@@ -1587,13 +1587,13 @@ pointer `fPID`. When a **`TRef`** is used to point to a
 **`TObject`**` *R`, for example in a class with
 
 ``` {.cpp}
-TRef  P;
+   TRef  P;
 ```
 
 one can do:
 
 ``` {.cpp}
-P = R;      //to set the pointer
+   P = R;      //to set the pointer
 ```
 
 When the statement `P = R `is executed, the following happens:
@@ -1678,9 +1678,9 @@ this original value at the end of the event. These actions may be
 nested.
 
 ``` {.cpp}
-saveNumber = TProcessID::GetObjectCount();
+   saveNumber = TProcessID::GetObjectCount();
 ...
-TProcessID::SetObjectCount(savedNumber);
+   TProcessID::SetObjectCount(savedNumber);
 ```
 
 ### Action on Demand
@@ -1704,7 +1704,7 @@ In the definition of the **`TRef`** data member in the original class,
 do:
 
 ``` {.cpp}
-TRef fRef;   //EXEC:execName points to something
+    TRef fRef;   //EXEC:execName points to something
 ```
 
 When the special keyword `"EXEC:"` is found in the comment field of the
@@ -1727,16 +1727,16 @@ The action to be executed via `this` **`TExec`** can be specified with:
 One can compute a pointer to an existing **`TExec`** with a name with:
 
 ``` {.cpp}
-TExec *myExec = gROOT->GetExec(execName);
-myExec->SetAction(actionCommand); 
+   TExec *myExec = gROOT->GetExec(execName);
+   myExec->SetAction(actionCommand); 
 ```
 
 The parameter `actionCommand` is a string containing a CINT instruction.
 Examples:
 
 ``` {.cpp}
-myExec->SetAction("LoadHits()");
-myExec->SetAction(".x script.C");
+   myExec->SetAction("LoadHits()");
+   myExec->SetAction(".x script.C");
 ```
 
 When a `TRef` is de-referenced via **`TRef::GetObject`, its
@@ -1750,7 +1750,7 @@ can do one or more of the following:**
     pointer back to the calling function **`TRef`**`::SetObject` via:
 
 ``` {.cpp}
-TRef::SetObject(object)
+   TRef::SetObject(object)
 ```
 
 As soon as an object is returned to `GetObject`, the `fUniqueID` of the
@@ -1760,7 +1760,7 @@ next call to `GetObject`, the pointer stored in
 action on demand is in `$ROOTSYS/test/Event.h`:
 
 ``` {.cpp}
-TRef    fWebHistogram;       //EXEC:GetWebHistogram
+   TRef    fWebHistogram;       //EXEC:GetWebHistogram
 ```
 
 When calling `fWebHistogram.GetObject()`, the function `GetObject` will
@@ -1769,12 +1769,12 @@ An example of a `GetWebHistogram.C` script is shown below:
 
 ``` {.cpp}
 void GetWebHistogram() {
-  TFile *f=TFile::Open("http://root.cern.ch/files/pippa.root");
-  f->cd("DM/CJ");
-  TH1 *h6 = (TH1*)gDirectory->Get("h6");
-  h6->SetDirectory(0);
-  delete f;
-  TRef::SetObject(h6);
+   TFile *f=TFile::Open("http://root.cern.ch/files/pippa.root");
+   f->cd("DM/CJ");
+   TH1 *h6 = (TH1*)gDirectory->Get("h6");
+   h6->SetDirectory(0);
+   delete f;
+   TRef::SetObject(h6);
 }
 ```
 
@@ -1784,7 +1784,7 @@ with histograms: `pippa.root` on the ROOT Web site and returns the
 object `h6` to **`TRef`**`::GetObject`.
 
 ``` {.cpp}
-TRef    fWebHistogram;           //EXEC:GetWebHistogram()
+ TRef    fWebHistogram;           //EXEC:GetWebHistogram()
 ```
 
 Note that if the definition of the `TRef fWebHistogram` had been changed
@@ -1896,7 +1896,7 @@ a "`!`" after the comment marks. For example the pointer \*`fPainter` of
 a **`TH1`** is not persistent:
 
 ``` {.cpp}
-TVirtualHistPainter* fPainter //!pointer to histogram painter
+   TVirtualHistPainter* fPainter //!pointer to histogram painter
 ```
 
 ### The TStreamerElement Class
@@ -2047,8 +2047,8 @@ should be changed to `ClassDef(Event,2)` and the following lines should
 be added to the read part of the `Streamer`:
 
 ``` {.cpp}
-if (R__v > 1) R__b >> fNew;
-else fNew = 0;        // set to some default value
+   if (R__v > 1) R__b >> fNew;
+   else fNew = 0;        // set to some default value
 ```
 
 If, in the same new version 2 you remove the member `fH`, you must add
@@ -2057,9 +2057,9 @@ object and delete it:
 
 ``` {.cpp}
 if (R__v) < 2 {
-    TH1F *dummy = 0;
-    R__b >> dummy;
-    delete dummy;
+   TH1F *dummy = 0;
+   R__b >> dummy;
+   delete dummy;
 }
 ```
 
@@ -2195,7 +2195,7 @@ to build a shared library are also created, and since the '++' is
 appended, the shared library is also loaded.
 
 ``` {.cpp}
-root[]f.MakeProject("MyProject","*", "recreate++") 
+root[] f.MakeProject("MyProject","*", "recreate++") 
 MakeProject has generated 0 classes in MyProject
 MyProject/MAKE file has been generated
 Shared lib MyProject/MyProject.so has been generated
@@ -2275,20 +2275,20 @@ in the `LinkDef.h` file.
 
 ``` {.cpp}
  void MyClass::Streamer(TBuffer &R__b) {
-    // Stream an object of class MyClass.
-    if (R__b.IsReading()) {
-       UInt_t R__s, R__c;
-       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-       if (R__v > 1) {
+   // Stream an object of class MyClass.
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
          MyClass::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
          return;
-       }
-       // process old versions before automatic schema evolution
-       R__b >> xxxx;
-       R__b >> .. etc
-       R__b.CheckByteCount(R__s, R__c, MyClass::IsA()); // end of old versions
-    } else 
-         MyClass::Class()->WriteBuffer(R__b,this);
+      }
+      // process old versions before automatic schema evolution
+      R__b >> xxxx;
+      R__b >> .. etc
+      R__b.CheckByteCount(R__s, R__c, MyClass::IsA()); // end of old versions
+   } else 
+      MyClass::Class()->WriteBuffer(R__b,this);
 }
 ```
 
@@ -2658,5 +2658,5 @@ The canvas can be saved as a XML file format via File menu / Save or
 Save As menu entries. One can do also:
 
 ``` {.cpp}
-canvas->Print("Example.xml");
+   canvas->Print("Example.xml");
 ```

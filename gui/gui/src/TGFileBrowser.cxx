@@ -1298,6 +1298,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             act = action;
             if (act.Contains("%s")) act.ReplaceAll("%s", obj->GetName());
             else if (act.Contains("->Browse()")) obj->Browse(fBrowser);
+            else if (act.Contains("->Draw()")) obj->Draw(GetDrawOption());
             else {
                act.Prepend(obj->GetName());
                gInterpreter->SaveGlobalsContext();

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Id: f214dfbd83a9d1a7da8998366700a0751875b419 $
+// @(#)root/histpainter:$Id$
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -262,6 +262,11 @@ used with any LEGO option, the empty bins are not drawn.
 <tr><th valign=top>"LEGO3"</th><td>
 Draw a lego plot with hidden surface removal, like LEGO1 but the border lines
 of each lego-bar are not drawn.
+</td></tr>
+
+<tr><th valign=top>"LEGO4"</th><td>
+Draw a lego plot with hidden surface removal, like LEGO1 but without the
+shadow effect on each lego-bar.
 </td></tr>
 
 <tr><th valign=top>"TEXT"</th><td>
@@ -1593,12 +1598,19 @@ Draw a lego plot with hidden surface removal, like LEGO1 but the border lines
 of each lego-bar are not drawn.
 </td></tr>
 
+<tr><th valign=top>"LEGO4"</th><td>
+Draw a lego plot with hidden surface removal, like LEGO1 but without the
+shadow effect on each lego-bar.
+</td></tr>
+
 <tr><th valign=top>"0"</th><td>
 When used with any LEGO option, the empty bins are not drawn.
 </td></tr>
 
 </table>
 See the limitations with <a href="#HP060a">the option "SAME"</a>.
+
+<p>Line attributes can be used in lego plots to change the edges' style.
 
 <p>The following example shows a 2D histogram plotted with the option
 <tt>"LEGO"</tt>. The option <tt>"LEGO"</tt> draws a lego plot using the hidden
@@ -3443,6 +3455,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '1') { Hoption.Lego = 11; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Lego = 12; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Lego = 13; l[4] = ' '; }
+      if (l[4] == '4') { Hoption.Lego = 14; l[4] = ' '; }
       l = strstr(chopt,"FB"); if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB"); if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
       l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
@@ -6451,11 +6464,21 @@ void THistPainter::PaintLego(Option_t *)
    }
 
    fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
-   
+
+   Int_t nids = -1;
+   TH1 * hid = NULL;
+   Color_t colormain = -1, colordark = -1 ;
+   Bool_t drawShadowsInLego1=kTRUE ;
+
    // LEGO3 is like LEGO1 except that the black lines around each lego are not drawn.
    if (Hoption.Lego == 13) {
       Hoption.Lego = 11;
       fLego->SetMesh(0);
+   }
+   // LEGO4 is like LEGO1 except no shadows are drawn.
+   if (Hoption.Lego == 14) {
+      Hoption.Lego = 11;
+      drawShadowsInLego1=kFALSE ;
    }
 
    //          Create axis object
@@ -6471,23 +6494,29 @@ void THistPainter::PaintLego(Option_t *)
    Int_t ndivz  = TMath::Abs(ndiv);
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
 
-   //     Initialize colors for the lighting model (option Lego1 only)
-   if (Hoption.Lego == 1) {
-         Color_t colormain = fH->GetLineColor();
-         fLego->SetColorMain(colormain,0);
+   //     Initialize colors
+   if (!fStack) { 
+      fLego->SetEdgeAtt(fH->GetLineColor(),fH->GetLineStyle(),fH->GetLineWidth(),0);
+   } else {
+      for (Int_t id=0;id<=fStack->GetSize();id++) {
+         hid = (TH1*)fStack->At((id==0)?id:id-1);
+         fLego->SetEdgeAtt(hid->GetLineColor(),hid->GetLineStyle(),hid->GetLineWidth(),id);
+      }
    }
+
    if (Hoption.Lego == 11) {
-      Int_t nids = 1;
+      nids = 1 ;
       if (fStack) nids = fStack->GetSize();
-      TH1 *hid = fH;
+      hid = fH;
       for (Int_t id=0;id<=nids;id++) {
          if (id > 0 && fStack) hid = (TH1*)fStack->At(id-1);
-         Color_t colormain = hid->GetFillColor();
+         colormain = hid->GetFillColor();
          if (colormain == 1) colormain = 17; //avoid drawing with black
-         Color_t colordark = TColor::GetColorDark(colormain);
+         if (drawShadowsInLego1) colordark = TColor::GetColorDark(colormain);
+         else                    colordark = colormain ; 
          fLego->SetColorMain(colormain,id);
          fLego->SetColorDark(colordark,id);
-         if (id == 0)    fLego->SetColorMain(colormain,-1);  // Set Bottom color
+         if (id <= 1)    fLego->SetColorMain(colormain,-1);  // Set Bottom color
          if (id == nids) fLego->SetColorMain(colormain,99);  // Set Top color
       }
    }
@@ -6506,7 +6535,7 @@ void THistPainter::PaintLego(Option_t *)
    Double_t psideg = view->GetPsi();
    view->SetView(phideg, thedeg, psideg, irep);
 
-   fLego->SetLineColor(fH->GetLineColor());
+   fLego->SetLineColor(kBlack);  /// zgrid color for lego1 & lego2
    fLego->SetFillStyle(fH->GetFillStyle());
 
    //     Set color/style for back box
@@ -6772,7 +6801,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
       axis->PaintAxis(z1[0], z1[1], z2[0], z2[1], bmin, bmax, ndivz, chopaz);
    }
 
-   fH->SetLineStyle(1);
+   //fH->SetLineStyle(1);  /// otherwise fEdgeStyle[i] gets overwritten!
 }
 
 

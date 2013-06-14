@@ -49,7 +49,7 @@ $(QTROOTLIB):   $(QTROOTO) $(QTROOTDO) $(ORDER_) $(MAINLIBS) $(QTROOTLIBDEP)
 $(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(QTROOTH) $(QTROOTL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,QTROOTLIB) -c $(QTROOTH) $(QTROOTL)
 
 $(QTROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(QTROOTL)
 		$(RLIBMAP) -o $@ -l $(QTROOTLIB) \

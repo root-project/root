@@ -22,7 +22,7 @@
 //  Each ROOT method (see TMethod) has a linked list of its arguments.  //
 //  This class describes one single method argument.                    //
 //  The method argument info is obtained via the CINT api.              //
-//  See class TCint.                                                    //
+//  See class TCling.                                                    //
 //                                                                      //
 //  The method argument information is used a.o. in the TContextMenu    //
 //  and THtml classes.                                                  //
@@ -35,7 +35,7 @@ ClassImp(TMethodArg)
 TMethodArg::TMethodArg(MethodArgInfo_t *info, TFunction *method) : TDictionary()
 {
    // Default TMethodArg ctor. TMethodArgs are constructed in TFunction
-   // via a call to TCint::CreateListOfMethodArgs().
+   // via a call to TCling::CreateListOfMethodArgs().
 
    fDataMember = 0;
    fInfo       = info;

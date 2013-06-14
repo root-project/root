@@ -24,7 +24,7 @@ void gtime() {
          g->Draw("alp");
          cursor = 0;
       } else {
-         x + = 0.1;
+         x += 0.1;
          X[cursor+ng] = x;
          Y[cursor+ng] = sin(x);
          cursor++;

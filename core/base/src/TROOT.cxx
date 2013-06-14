@@ -314,8 +314,8 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    TDirectory::Build();
 
    // Initialize interface to CINT C++ interpreter
-   fVersionInt      = 0;  // check in TROOT dtor in case TCint fails
-   fClasses         = 0;  // might be checked via TCint ctor
+   fVersionInt      = 0;  // check in TROOT dtor in case TCling fails
+   fClasses         = 0;  // might be checked via TCling ctor
 
    fConfigOptions   = R__CONFIGUREOPTIONS;
    fConfigFeatures  = R__CONFIGUREFEATURES;
@@ -488,7 +488,7 @@ TROOT::~TROOT()
       // already been deleted during the destruction phase
       gGlobalMutex = 0;
 
-      // Return when error occured in TCint, i.e. when setup file(s) are
+      // Return when error occured in TCling, i.e. when setup file(s) are
       // out of date
       if (!fVersionInt) return;
 
@@ -1070,7 +1070,7 @@ TDataType *TROOT::GetType(const char *name, Bool_t load) const
    // Return pointer to type with name.
 
    // First try without loading.  We can do that because nothing is
-   // ever removed from the list of types. (See TCint::UpdateListOfTypes).
+   // ever removed from the list of types. (See TCling::UpdateListOfTypes).
    TDataType* type = (TDataType*)gROOT->GetListOfTypes(kFALSE)->FindObject(name);
    if (type || !load)
       return type;

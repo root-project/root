@@ -14,7 +14,7 @@ X3DDIRI      := $(X3DDIR)/inc
 
 ##### libX3d #####
 X3DL         := $(MODDIRI)/LinkDef.h
-X3DDS        := $(call stripsrc,$(MODDIRS)/G__X3D.cxx)
+X3DDS        := $(call stripsrc,$(MODDIRS)/G__X3d.cxx)
 X3DDO        := $(X3DDS:.cxx=.o)
 X3DDH        := $(X3DDS:.cxx=.h)
 
@@ -52,7 +52,7 @@ $(X3DLIB):      $(X3DO) $(X3DDO) $(ORDER_) $(MAINLIBS) $(X3DLIBDEP)
 $(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(X3DH1) $(X3DL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,X3DLIB) -c $(X3DH1) $(X3DL)
 
 $(X3DMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(X3DL)
 		$(RLIBMAP) -o $@ -l $(X3DLIB) \

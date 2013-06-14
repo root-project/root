@@ -1,5 +1,6 @@
 # PROOF: Parallel Processing
-
+\index{PROOF}
+\index{parallel processing}
 
 The Parallel ROOT Facility, PROOF, is an extension of ROOT allowing
 transparent analysis of large sets of ROOT files in parallel on remote

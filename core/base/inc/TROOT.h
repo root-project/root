@@ -64,7 +64,6 @@ namespace ROOT {
 
 class TROOT : public TDirectory {
 
-friend class TCint;
 friend class TCling;
 friend TROOT *ROOT::GetROOT2();
 

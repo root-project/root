@@ -14,9 +14,6 @@ CONTDIRI     := $(CONTDIR)/inc
 
 ##### libCont (part of libCore) #####
 CONTL        := $(MODDIRI)/LinkDef.h
-CONTDS       := $(call stripsrc,$(MODDIRS)/G__Cont.cxx)
-CONTDO       := $(CONTDS:.cxx=.o)
-CONTDH       := $(CONTDS:.cxx=.h)
 
 CONTH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 CONTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
@@ -36,22 +33,17 @@ INCLUDEFILES += $(CONTDEP)
 include/%.h:    $(CONTDIRI)/%.h
 		cp $< $@
 
-$(CONTDS):      $(CONTH) $(CONTL) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(CONTH) $(CONTL)
-
-all-$(MODNAME): $(CONTO) $(CONTDO)
+all-$(MODNAME): $(CONTO)
 
 clean-$(MODNAME):
-		@rm -f $(CONTO) $(CONTDO)
+		@rm -f $(CONTO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(CONTDEP) $(CONTDS) $(CONTDH)
+		@rm -f $(CONTDEP)
 
 distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
-$(CONTDO): NOOPT = $(OPT)
+$(COREDO): NOOPT = $(OPT)

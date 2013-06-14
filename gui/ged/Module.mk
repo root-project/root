@@ -49,7 +49,7 @@ $(GEDLIB):      $(GEDO) $(GEDDO) $(ORDER_) $(MAINLIBS) $(GEDLIBDEP)
 $(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GEDH) $(GEDL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GEDLIB) -c $(GEDH) $(GEDL)
 
 $(GEDMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GEDL)
 		$(RLIBMAP) -o $@ -l $(GEDLIB) \

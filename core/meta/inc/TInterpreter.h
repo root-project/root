@@ -87,6 +87,7 @@ public:
    virtual Long_t   ProcessLine(const char *line, EErrorCode *error = 0) = 0;
    virtual Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
    virtual void     PrintIntro() = 0;
+   virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0; 
    virtual void     SetGetline(const char*(*getlineFunc)(const char* prompt),
                                void (*histaddFunc)(const char* line)) = 0;
    virtual void     Reset() = 0;
@@ -126,7 +127,7 @@ public:
    virtual const char *TypeName(const char *s) = 0;
 
    // All the functions below must be virtual with a dummy implementation
-   // These functions are redefined in TCint.
+   // These functions are redefined in TCling.
    //The dummy implementation avoids an implementation in TGWin32InterpreterProxy
 
    // Misc

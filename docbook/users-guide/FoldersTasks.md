@@ -4,7 +4,9 @@
 ## Folders
 
 
-![](pictures/030000E1.png)A **`TFolder`** is a collection of objects
+![](pictures/030000E1.png)
+
+A **`TFolder`** is a collection of objects
 visible and expandable in the ROOT object browser. Folders have a name
 and a title and are identified in the folder hierarchy by an "UNIX-like"
 naming convention. The base of all folders is `//root`. It is visible at
@@ -296,7 +298,7 @@ browser, get the list of browseable objects first and add it to the
 collection.
 
 ``` {.cpp}
-gROOT->GetListOfBrowsables()->Add(run);
+   gROOT->GetListOfBrowsables()->Add(run);
 ```
 
 The first parameter of the `Add` method is a pointer to a **`TTask`**,

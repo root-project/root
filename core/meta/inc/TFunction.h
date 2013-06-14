@@ -28,7 +28,6 @@
 
 class TFunction : public TDictionary {
 
-friend class TCint;
 friend class TCling;
 
 protected:

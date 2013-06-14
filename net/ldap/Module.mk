@@ -14,7 +14,7 @@ LDAPDIRI     := $(LDAPDIR)/inc
 
 ##### libRLDAP #####
 LDAPL        := $(MODDIRI)/LinkDef.h
-LDAPDS       := $(call stripsrc,$(MODDIRS)/G__LDAP.cxx)
+LDAPDS       := $(call stripsrc,$(MODDIRS)/G__RLDAP.cxx)
 LDAPDO       := $(LDAPDS:.cxx=.o)
 LDAPDH       := $(LDAPDS:.cxx=.h)
 
@@ -49,7 +49,7 @@ $(LDAPLIB):     $(LDAPO) $(LDAPDO) $(ORDER_) $(MAINLIBS)
 $(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(LDAPH) $(LDAPL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,LDAPLIB) -c $(LDAPH) $(LDAPL)
 
 $(LDAPMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(LDAPL)
 		$(RLIBMAP) -o $@ -l $(LDAPLIB) \

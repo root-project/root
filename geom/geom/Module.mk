@@ -13,14 +13,9 @@ GEOMDIRS     := $(GEOMDIR)/src
 GEOMDIRI     := $(GEOMDIR)/inc
 
 ##### libGeom #####
-GEOML1       := $(MODDIRI)/LinkDef1.h
-GEOML2       := $(MODDIRI)/LinkDef2.h
-GEOMDS1      := $(call stripsrc,$(MODDIRS)/G__Geom1.cxx)
-GEOMDS2      := $(call stripsrc,$(MODDIRS)/G__Geom2.cxx)
-GEOMDO1      := $(GEOMDS1:.cxx=.o)
-GEOMDO2      := $(GEOMDS2:.cxx=.o)
-GEOMDS       := $(GEOMDS1) $(GEOMDS2)
-GEOMDO       := $(GEOMDO1) $(GEOMDO2)
+GEOML        := $(MODDIRI)/LinkDef.h
+GEOMDS       := $(call stripsrc,$(MODDIRS)/G__Geom.cxx)
+GEOMDO       := $(GEOMDS:.cxx=.o)
 GEOMDH       := $(GEOMDS:.cxx=.h)
 
 GEOMH1       := TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h \
@@ -36,10 +31,13 @@ GEOMH1       := TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h \
                 TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h \
                 TGeoBuilder.h TGeoNavigator.h
 GEOMH2       := TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h \
-                TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h
+                TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h \
+                TGeoExtension.h 
+GEOMH3       := TGeoRCPtr.h
 GEOMH1       := $(patsubst %,$(MODDIRI)/%,$(GEOMH1))
 GEOMH2       := $(patsubst %,$(MODDIRI)/%,$(GEOMH2))
-GEOMH        := $(GEOMH1) $(GEOMH2)
+GEOMH3       := $(patsubst %,$(MODDIRI)/%,$(GEOMH3))
+GEOMH        := $(GEOMH1) $(GEOMH2) $(GEOMH3)
 GEOMS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GEOMO        := $(call stripsrc,$(GEOMS:.cxx=.o))
 
@@ -67,15 +65,10 @@ $(GEOMLIB):     $(GEOMO) $(GEOMDO) $(ORDER_) $(MAINLIBS) $(GEOMLIBDEP)
 		   "$(SOFLAGS)" libGeom.$(SOEXT) $@ "$(GEOMO) $(GEOMDO)" \
 		   "$(GEOMLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB)"
 
-$(GEOMDS1):     $(GEOMH1) $(GEOML1) $(ROOTCINTTMPDEP)
+$(GEOMDS):      $(GEOMH) $(GEOML) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GEOMH1) $(GEOML1)
-
-$(GEOMDS2):     $(GEOMH2) $(GEOML2) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GEOMH2) $(GEOML2)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOMLIB) -c -I$(ROOT_SRCDIR) $(GEOMH1) $(GEOMH2) $(GEOML)
 
 $(GEOMMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GEOML1) $(GEOML2)
 		$(RLIBMAP) -o $@ -l $(GEOMLIB) \

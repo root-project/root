@@ -13,18 +13,9 @@ GUIDIRS      := $(GUIDIR)/src
 GUIDIRI      := $(GUIDIR)/inc
 
 ##### libGui #####
-GUIL1        := $(MODDIRI)/LinkDef1.h
-GUIL2        := $(MODDIRI)/LinkDef2.h
-GUIL3        := $(MODDIRI)/LinkDef3.h
-GUIDS1       := $(call stripsrc,$(MODDIRS)/G__Gui1.cxx)
-GUIDS2       := $(call stripsrc,$(MODDIRS)/G__Gui2.cxx)
-GUIDS3       := $(call stripsrc,$(MODDIRS)/G__Gui3.cxx)
-GUIDO1       := $(GUIDS1:.cxx=.o)
-GUIDO2       := $(GUIDS2:.cxx=.o)
-GUIDO3       := $(GUIDS3:.cxx=.o)
-GUIL         := $(GUIL1) $(GUIL2) $(GUIL3)
-GUIDS        := $(GUIDS1) $(GUIDS2) $(GUIDS3)
-GUIDO        := $(GUIDO1) $(GUIDO2) $(GUIDO3)
+GUIL         := $(MODDIRI)/LinkDef.h
+GUIDS        := $(call stripsrc,$(MODDIRS)/G__Gui.cxx)
+GUIDO        := $(GUIDS:.cxx=.o)
 GUIDH        := $(GUIDS:.cxx=.h)
 
 GUIH1        := TGObject.h TGClient.h TGWindow.h TGPicture.h TGDimension.h \
@@ -86,18 +77,10 @@ $(GUILIB):      $(GUIO) $(GUIDO) $(ORDER_) $(MAINLIBS) $(GUILIBDEP)
 		   "$(SOFLAGS)" libGui.$(SOEXT) $@ "$(GUIO) $(GUIDO)" \
 		   "$(GUILIBEXTRA)"
 
-$(GUIDS1):      $(GUIH1) $(GUIL1) $(ROOTCINTTMPDEP)
+$(GUIDS):       $(GUIH) $(GUIL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GUIH1) $(GUIL1)
-$(GUIDS2):      $(GUIH2) $(GUIL2) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GUIH2) $(GUIL2)
-$(GUIDS3):      $(GUIH3) $(GUIL3) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GUIH3) $(GUIL3)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GUILIB) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL)
 
 $(GUIMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GUIL)
 		$(RLIBMAP) -o $@ -l $(GUILIB) \

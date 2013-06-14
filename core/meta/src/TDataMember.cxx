@@ -16,7 +16,7 @@
 // All ROOT classes may have RTTI (run time type identification) support
 // added. The data is stored in so called DICTIONARY (look at TDictionary).
 // Information about a class is stored in TClass.
-// This information may be obtained via the CINT api - see class TCint.
+// This information may be obtained via the cling api - see class TCling.
 // TClass has a list of TDataMember objects providing information about all
 // data members of described class.
 //Begin_Html
@@ -185,7 +185,7 @@ ClassImp(TDataMember)
 TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 {
    // Default TDataMember ctor. TDataMembers are constructed in TClass
-   // via a call to TCint::CreateListOfDataMembers(). It parses the comment
+   // via a call to TCling::CreateListOfDataMembers(). It parses the comment
    // string, initializes optionlist and getter/setter methods.
 
    fInfo        = info;

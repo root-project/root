@@ -49,7 +49,7 @@ $(MATRIXLIB):   $(MATRIXO) $(MATRIXDO) $(ORDER_) $(MAINLIBS) $(MATRIXLIBDEP)
 $(MATRIXDS):    $(MATRIXH) $(MATRIXL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(MATRIXH) $(MATRIXL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,MATRIXLIB) -c $(MATRIXH) $(MATRIXL)
 
 $(MATRIXMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(MATRIXL)
 		$(RLIBMAP) -o $@ -l $(MATRIXLIB) \

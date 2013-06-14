@@ -77,7 +77,7 @@ inline TBuffer &operator<<(TBuffer &buf, const TArrayL64 *obj)
 {
    // Write a TArrayL64 object into buffer.
 
-   return buf << (TArray*)obj;
+   return buf << (const TArray*)obj;
 }
 
 inline Long64_t TArrayL64::At(Int_t i) const

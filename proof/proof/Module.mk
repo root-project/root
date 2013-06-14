@@ -59,7 +59,7 @@ $(PROOFLIB):    $(PROOFO) $(PROOFDO) $(ORDER_) $(MAINLIBS) $(PROOFLIBDEP)
 $(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(ALIENDSMGR) $(PROOFH) $(PROOFL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,PROOFLIB) -c $(ALIENDSMGR) $(PROOFH) $(PROOFL)
 
 $(PROOFMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(PROOFL)
 		$(RLIBMAP) -o $@ -l $(PROOFLIB) \

@@ -52,8 +52,7 @@
 TGClient *gClient = 0;
 
 // Initialize gClient in case libGui is loaded in batch mode
-extern "C" void G__cpp_setup_tagtableG__Gui1();
-void TriggerDictionaryInitalization_G__Gui1();
+void TriggerDictionaryInitalization_libGui();
 class TGClientInit {
 public:
    TGClientInit() { 
@@ -63,7 +62,7 @@ public:
          // This is required because the dictionaries must be initialized 
          // __before__ the TGClient creation which will induce the creation 
          // of a TClass object which will need the dictionary for TGClient!
-         TriggerDictionaryInitalization_G__Gui1();
+         TriggerDictionaryInitalization_libGui();
          new TGClient();
       }
       TApplication::NeedGraphicsLibs(); 

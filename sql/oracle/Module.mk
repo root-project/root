@@ -49,7 +49,7 @@ $(ORACLELIB):   $(ORACLEO) $(ORACLEDO) $(ORDER_) $(MAINLIBS) $(ORACLELIBDEP)
 $(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(ORACLEINCDIR:%=-I%) $(ORACLEH) $(ORACLEL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,ORACLELIB) -c $(ORACLEINCDIR:%=-I%) $(ORACLEH) $(ORACLEL)
 
 $(ORACLEMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(ORACLEL)
 		$(RLIBMAP) -o $@ -l $(ORACLELIB) \

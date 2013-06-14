@@ -10,16 +10,16 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-//                                                                      
-// TSQLStatement                                                        
-//                                                                      
+//
+// TSQLStatement
+//
 // Abstract base class defining SQL statements, which can be submitted
 // in bulk to DB server.
-//                                                                      
+//
 // This is alternative to TSQLServer::Query() method, which allows only pure
 // text queries and pure text result in TSQLResult classes.
 // TSQLStatement is designed to support following features:
-//   - usage of basic data type (like int or double) as parameters 
+//   - usage of basic data type (like int or double) as parameters
 //     in SQL statements
 //   - bulk operation when inserting/updating/selecting data in data base
 //   - uasge of basic data types when accessing result set of executed query
@@ -30,7 +30,7 @@
 // To create instance of TSQLStatement class, TSQLServer::Statement() method
 // should be used. Depending of the driver, used for connection to ODBC,
 // appropriate object instance will be created. For the moment there are
-// three different implementation of TSQLStatement class: for MySQL, 
+// three different implementation of TSQLStatement class: for MySQL,
 // Oracle and ODBC. Hopefully, support of ODBC will allows usage of
 // statements for most existing RDBMS.
 //
@@ -39,7 +39,7 @@
 //                                          "user", "pass");
 //   // check if connection is ok
 //   if ((serv!=0) && serv->IsConnected()) {
-//       // create statement instance     
+//       // create statement instance
 //       TSQLStatement* stmt = serv->Statement("CREATE TABLE TESTTABLE (ID1 INT, ID2 INT, FFIELD VARCHAR(255), FVALUE VARCHAR(255))";
 //       // process statement
 //       stmt->Process();
@@ -53,11 +53,11 @@
 // ===============================================
 // There is a special syntax of SQL queries, which allow to use values,
 // provided as parameters. For instance, insert one row in TESTTABLE, created
-// with previous example, one can simply execute query like: 
-// 
+// with previous example, one can simply execute query like:
+//
 //    serv->Query("INSERT INTO TESTTABLE VALUES (1, 2, \"name1\", \"value1\"");
 //
-// But when many (100-1000) rows should be inserted, each call of 
+// But when many (100-1000) rows should be inserted, each call of
 // TSQLServer::Query() method will cause communication loop with database
 // server. As a result, insertion of data will takes too much time.
 //
@@ -75,21 +75,21 @@
 // SetInt(), for all other rows should be specified as integer. At the end,
 // TSQLStatement::Process() should be called. Here a small example:
 //
-//    // first, create statement  
+//    // first, create statement
 //    TSQLStatement* stmt = serv->Statement("INSERT INTO TESTTABLE (ID1, ID2, FFIELD, FVALUE) VALUES (?, ?, ?, ?)", 100);
 //
-//    for (int n=0;n<357;n++) 
+//    for (int n=0;n<357;n++)
 //       if (stmt->NextIteration()) {
 //          stmt->SetInt(0, 123);
 //          stmt->SetUInt(1, n+10);
 //          stmt->SetString(2, Form("name %d",n), 200);
 //          stmt->SetString(3, Form("value %d", n+10), 200);
 //      }
-//   
+//
 //     stmt->Process();
 //     delete stmt;
 //
-// Second argument in TSQLServer::Statement() method specifies depth of 
+// Second argument in TSQLServer::Statement() method specifies depth of
 // of buffers, used to keep parameter values (100 in example). It is not
 // a limitation of rows number, which can be inserted with the statement.
 // When buffers are filled, they will be submitted to database and can be
@@ -108,7 +108,7 @@
 // Therefore, similar to example query will look like:
 //
 //    TSQLStatement* stmt = serv->Statement("INSERT INTO TESTTABLE (ID1, ID2, FFIELD, FVALUE) VALUES (:1, :2, :3, :4)", 100);
-//  
+//
 // There is a possibility to set parameter value to NULL with SetNull() method.
 // If this method called for first iteration, before one should call other Set...
 // to identify actual parameter type, which will be used for parameter later.
@@ -121,14 +121,14 @@
 // (with TSQLStatement::Process()) method and result of statement
 // should be stored in internal buffers with TSQLStatement::StoreResult()
 // method. Information about selected fields (columns)
-// can be obtained with GetNumFields() and GetFieldName() methods. 
+// can be obtained with GetNumFields() and GetFieldName() methods.
 // To receive data for next result row, NextResultRow() method should be called.
 // Value from each column can be taken with the GetInt(), GetDouble(),
-// GetString() and other methods. 
-// 
+// GetString() and other methods.
+//
 // There are no strict limitation which method should be used
-// to get column values. GetString() can be used as generic method, 
-// which should always return correct result, but also convertion between most 
+// to get column values. GetString() can be used as generic method,
+// which should always return correct result, but also convertion between most
 // basic data types are supported. For instance, if column contains integer
 // values, GetInt(), GetLong64(), GetDouble() and GetString() methods can be used.
 // If column has float point format, GetDouble() and GetString() methods can
@@ -144,12 +144,12 @@
 //    stmt = serv->Statement("SELECT * FROM TESTTABLE", 100);
 //    // process statement
 //    if (stmt->Process()) {
-//       // store result of statement in buffer    
+//       // store result of statement in buffer
 //       stmt->StoreResult();
-//         
-//       // display info about selected field 
+//
+//       // display info about selected field
 //       std::cout << "NumFields = " << stmt->GetNumFields() << std::endl;
-//       for (int n=0;n<stmt->GetNumFields();n++) 
+//       for (int n=0;n<stmt->GetNumFields();n++)
 //          std::cout << "Field " << n << "  = " << stmt->GetFieldName(n) << std::endl;
 //
 //       // extract rows one after another
@@ -160,16 +160,16 @@
 //          const char* name2 = stmt->GetString(3);
 //          std::cout << id1 << " - " << id2 << "  " << name1 << "  " << name2 << std::endl;
 //       }
-//    }    
+//    }
 //
 // 4. Working with date/time parameters
 // ====================================
-// Current implementation supports date, time, date&time and timestamp 
+// Current implementation supports date, time, date&time and timestamp
 // data (all time intervals not supported yet). To set or get date/time values,
 // following methods should be used:
-//   SetTime()/GetTime() - only time (hour:min:sec), 
-//   SetDate()/GetDate() - only date (year-month-day), 
-//   SetDatime()/GetDatime() - date and time 
+//   SetTime()/GetTime() - only time (hour:min:sec),
+//   SetDate()/GetDate() - only date (year-month-day),
+//   SetDatime()/GetDatime() - date and time
 //   SetTimestamp()/GetTimestamp() - timestamp with seconds fraction
 // For some of these methods TDatime type can be used as parameter / return value.
 // Be aware, that TDatime supports only dates after 1995-01-01.
@@ -180,22 +180,26 @@
 // Oracle native driver supports only DATE (which is actually date and time) and TIMESTAMP
 // ODBC interface provides access for time, date and timestamps.
 // Therefore, one should use correct methods to access such data.
-// For instance, in MySQL SQL type 'DATE' is only date (one should use GetDate() to 
-// access such data), while in Oracle it is date and time. Therefore, 
+// For instance, in MySQL SQL type 'DATE' is only date (one should use GetDate() to
+// access such data), while in Oracle it is date and time. Therefore,
 // to get complete data from 'DATE' column in Oracle, one should use GetDatime() method.
 //
 // The only difference of timestamp from date/time, that it has fractional
-// seconds part. Be aware, that fractional part can has different meaning 
+// seconds part. Be aware, that fractional part can has different meaning
 // (actual value) in different SQL plugins.
 //
 // 5. Binary data
 // ==============
 // Most of modern data bases support just binary data, which is
 // typically has SQL type name 'BLOB'. To access data in such
-// columns, GetBinary()/SetBinary() methods should be used. 
-// Current implementation supposed, that complete content of the 
-// column must be retrieved at once. Therefore very big data of 
+// columns, GetBinary()/SetBinary() methods should be used.
+// Current implementation supposed, that complete content of the
+// column must be retrieved at once. Therefore very big data of
 // gigabytes size may cause a problem.
+// In addition, for PostgresSQL, the methods GetLargeObject()/SetLargeObject()
+// are implemented with similar syntax. They retrieve a large object for the OID
+// given in the column of the statement. For non-PostgreSQL databases,
+// calling GetLargeObject()/SetLargeObject() is redirected to GetBinary()/SetBinary().
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -209,7 +213,7 @@ Int_t TSQLStatement::GetErrorCode() const
    // returns error code of last operation
    // if res==0, no error
    // Each specific implementation of TSQLStatement provides its own error coding
-   
+
    return fErrorCode;
 }
 
@@ -219,7 +223,7 @@ const char* TSQLStatement::GetErrorMsg() const
    //  returns error message of last operation
    // if no errors, return 0
    // Each specific implementation of TSQLStatement provides its own error messages
-   
+
    return GetErrorCode()==0 ? 0 : fErrorMsg.Data();
 }
 
@@ -227,7 +231,7 @@ const char* TSQLStatement::GetErrorMsg() const
 void TSQLStatement::ClearError()
 {
    // reset error fields
-   
+
    fErrorCode = 0;
    fErrorMsg = "";
 }
@@ -237,7 +241,7 @@ void TSQLStatement::SetError(Int_t code, const char* msg, const char* method)
 {
    // set new values for error fields
    // if method specified, displays error message
-   
+
    fErrorCode = code;
    fErrorMsg = msg;
    if ((method!=0) && fErrorOut)
@@ -248,7 +252,7 @@ void TSQLStatement::SetError(Int_t code, const char* msg, const char* method)
 Bool_t TSQLStatement::SetDate(Int_t npar, const TDatime& tm)
 {
    // set only date value for specified parameter from TDatime object
-   
+
    return SetDate(npar, tm.GetYear(), tm.GetMonth(), tm.GetDay());
 }
 
@@ -256,7 +260,7 @@ Bool_t TSQLStatement::SetDate(Int_t npar, const TDatime& tm)
 Bool_t TSQLStatement::SetTime(Int_t npar, const TDatime& tm)
 {
    // set only time value for specified parameter from TDatime object
-   
+
    return SetTime(npar, tm.GetHour(), tm.GetMinute(), tm.GetSecond());
 }
 
@@ -264,7 +268,7 @@ Bool_t TSQLStatement::SetTime(Int_t npar, const TDatime& tm)
 Bool_t TSQLStatement::SetDatime(Int_t npar, const TDatime& tm)
 {
    // set date & time value for specified parameter from TDatime object
-   
+
    return SetDatime(npar, tm.GetYear(), tm.GetMonth(), tm.GetDay(),
                           tm.GetHour(), tm.GetMinute(), tm.GetSecond());
 }
@@ -273,7 +277,7 @@ Bool_t TSQLStatement::SetDatime(Int_t npar, const TDatime& tm)
 Bool_t TSQLStatement::SetTimestamp(Int_t npar, const TDatime& tm)
 {
    // set timestamp value for specified parameter from TDatime object
-   
+
    return SetTimestamp(npar, tm.GetYear(), tm.GetMonth(), tm.GetDay(),
                              tm.GetHour(), tm.GetMinute(), tm.GetSecond(), 0);
 }
@@ -282,26 +286,26 @@ Bool_t TSQLStatement::SetTimestamp(Int_t npar, const TDatime& tm)
 TDatime TSQLStatement::GetDatime(Int_t npar)
 {
    // return value of parameter in form of TDatime
-   // Be aware, that TDatime does not allow dates before 1995-01-01 
-   
+   // Be aware, that TDatime does not allow dates before 1995-01-01
+
    Int_t year, month, day, hour, min, sec;
-   
+
    if (!GetDatime(npar, year, month, day, hour, min, sec))
      return TDatime();
-   
+
    if (year<1995) {
       SetError(-1, "Date before year 1995 does not supported by TDatime type", "GetDatime");
       return TDatime();
    }
-   
+
    return TDatime(year, month, day, hour, min, sec);
 }
 
 //______________________________________________________________________________
 Int_t TSQLStatement::GetYear(Int_t npar)
 {
-   // return year value for parameter (if applicable) 
-   
+   // return year value for parameter (if applicable)
+
    Int_t year, month, day, hour, min, sec, frac;
    if (GetDate(npar, year, month, day)) return year;
    if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return year;
@@ -311,7 +315,7 @@ Int_t TSQLStatement::GetYear(Int_t npar)
 //______________________________________________________________________________
 Int_t TSQLStatement::GetMonth(Int_t npar)
 {
-   // return month value for parameter (if applicable) 
+   // return month value for parameter (if applicable)
 
    Int_t year, month, day, hour, min, sec, frac;
    if (GetDate(npar, year, month, day)) return month;
@@ -322,7 +326,7 @@ Int_t TSQLStatement::GetMonth(Int_t npar)
 //______________________________________________________________________________
 Int_t TSQLStatement::GetDay(Int_t npar)
 {
-   // return day value for parameter (if applicable) 
+   // return day value for parameter (if applicable)
 
    Int_t year, month, day, hour, min, sec, frac;
    if (GetDate(npar, year, month, day)) return day;
@@ -333,7 +337,7 @@ Int_t TSQLStatement::GetDay(Int_t npar)
 //______________________________________________________________________________
 Int_t TSQLStatement::GetHour(Int_t npar)
 {
-   // return hours value for parameter (if applicable) 
+   // return hours value for parameter (if applicable)
 
    Int_t year, month, day, hour, min, sec, frac;
    if (GetTime(npar, hour, min, sec)) return hour;
@@ -344,7 +348,7 @@ Int_t TSQLStatement::GetHour(Int_t npar)
 //______________________________________________________________________________
 Int_t TSQLStatement::GetMinute(Int_t npar)
 {
-   // return minutes value for parameter (if applicable) 
+   // return minutes value for parameter (if applicable)
 
    Int_t year, month, day, hour, min, sec, frac;
    if (GetTime(npar, hour, min, sec)) return min;
@@ -355,7 +359,7 @@ Int_t TSQLStatement::GetMinute(Int_t npar)
 //______________________________________________________________________________
 Int_t TSQLStatement::GetSecond(Int_t npar)
 {
-   // return seconds value for parameter (if applicable) 
+   // return seconds value for parameter (if applicable)
 
    Int_t year, month, day, hour, min, sec, frac;
    if (GetTime(npar, hour, min, sec)) return sec;
@@ -367,18 +371,18 @@ Int_t TSQLStatement::GetSecond(Int_t npar)
 TDatime TSQLStatement::GetTimestamp(Int_t npar)
 {
    // return value of parameter in form of TDatime
-   // Be aware, that TDatime does not allow dates before 1995-01-01 
-   
+   // Be aware, that TDatime does not allow dates before 1995-01-01
+
    Int_t year, month, day, hour, min, sec, frac;
-   
+
    if (!GetTimestamp(npar, year, month, day, hour, min, sec, frac))
      return TDatime();
-   
+
    if (year<1995) {
       SetError(-1, "Date before year 1995 does not supported by TDatime type", "GetTimestamp");
       return TDatime();
    }
-   
+
    return TDatime(year, month, day, hour, min, sec);
 }
 

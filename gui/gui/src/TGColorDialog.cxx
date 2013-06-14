@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: c1ecfb3a4b91442ae3b6fe3059ae838e463f2f56 $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 // Author: Ilka Antcheva (color wheel support)   16/03/07
 
@@ -1267,7 +1267,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    SetWindowName("Color Selector");
    SetIconName("Color Selector");
-   SetClassHints("ColorSelector", "ColorSelector");
+   SetClassHints("ROOT", "ColorSelector");
 
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH | kMWMDecorMaximize |
                               kMWMDecorMinimize | kMWMDecorMenu,

@@ -49,7 +49,7 @@ $(MLPLIB):      $(MLPO) $(MLPDO) $(ORDER_) $(MAINLIBS) $(MLPLIBDEP)
 $(MLPDS):       $(MLPH) $(MLPL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(MLPH) $(MLPL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,MLPLIB) -c $(MLPH) $(MLPL)
 
 $(MLPMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(MLPL)
 		$(RLIBMAP) -o $@ -l $(MLPLIB) -d $(MLPLIBDEPM) -c $(MLPL)

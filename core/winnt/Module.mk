@@ -14,16 +14,13 @@ WINNTDIRI    := $(WINNTDIR)/inc
 
 ##### libWinNT (part of libCore) #####
 WINNTL       := $(MODDIRI)/LinkDef.h
-WINNTDS      := $(call stripsrc,$(MODDIRS)/G__WinNT.cxx)
-WINNTDO      := $(WINNTDS:.cxx=.o)
-WINNTDH      := $(WINNTDS:.cxx=.h)
 
 WINNTH1      := $(MODDIRI)/TWinNTSystem.h
 WINNTH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 WINNTS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 WINNTO       := $(call stripsrc,$(WINNTS:.cxx=.o))
 
-WINNTDEP     := $(WINNTO:.o=.d) $(WINNTDO:.o=.d)
+WINNTDEP     := $(WINNTO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(WINNTH))
@@ -37,19 +34,14 @@ INCLUDEFILES += $(WINNTDEP)
 include/%.h:    $(WINNTDIRI)/%.h
 		cp $< $@
 
-$(WINNTDS):     $(WINNTH1) $(WINNTL) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(WINNTH1) $(WINNTL)
-
-all-$(MODNAME): $(WINNTO) $(WINNTDO)
+all-$(MODNAME): $(WINNTO)
 
 clean-$(MODNAME):
-		@rm -f $(WINNTO) $(WINNTDO)
+		@rm -f $(WINNTO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(WINNTDEP) $(WINNTDS) $(WINNTDH)
+		@rm -f $(WINNTDEP)
 
 distclean::     distclean-$(MODNAME)

@@ -248,11 +248,7 @@ void stress2(Int_t np2) {
           nfound,npeaks,ngood,nghost,sok);
 }
    
-#ifndef __CINT__
-void stressSpectrum(Int_t ntimes) {
-#else
 void stressSpectrum(Int_t ntimes=100) {
-#endif
    std::cout << "****************************************************************************" <<std::endl;
    std::cout << "*  Starting  stress S P E C T R U M                                        *" <<std::endl;
    std::cout << "****************************************************************************" <<std::endl;

@@ -1,4 +1,5 @@
 # Automatic HTML Documentation
+\index{documentation!class}
 
 
 **`THtml`** is ROOT's documentation engine. It can be used to document

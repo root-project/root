@@ -34,6 +34,8 @@ namespace cling {
    class LookupHelper;
 }
 
+// For TClassEdit::ESTLType
+#include "TClassEdit.h"
 
 namespace ROOT {
    namespace TMetaUtils {
@@ -158,11 +160,19 @@ namespace ROOT {
          return TND;
       }
 
+      // Return true if the decl is part of the std namespace.
+      bool IsStdClass(const clang::RecordDecl &cl);
+      
+      // Return which kind of STL container the decl is, if any.
+      TClassEdit::ESTLType IsSTLCont(const clang::RecordDecl &cl);
+
       // Check if 'input' or any of its template parameter was substituted when
       // instantiating the class template instance and replace it with the 
       // partially sugared type we have from 'instance'.
       clang::QualType ReSubstTemplateArg(clang::QualType input, const clang::Type *instance);
  
+      // Kind of stl container
+      TClassEdit::ESTLType STLKind(const llvm::StringRef type);
 
    } // namespace TMetaUtils
 

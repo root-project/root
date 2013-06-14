@@ -60,7 +60,6 @@ namespace {
           m_Addresses.push_back(Node);
 
           QualType T = Node->getType();
-          SplitQualType T_split = T.split();
           if (!T->isArrayType())
             OS << '*';
 
@@ -115,8 +114,8 @@ namespace cling {
   EvaluateTSynthesizer::EvaluateTSynthesizer(Sema* S)
     : TransactionTransformer(S), m_EvalDecl(0), m_LifetimeHandlerDecl(0),
       m_LHgetMemoryDecl(0), m_DynamicExprInfoDecl(0), m_DeclContextDecl(0), 
-      m_gCling(0),
-      m_CurDeclContext(0), m_Context(&S->getASTContext()), m_UniqueNameCounter(0)
+      m_gCling(0), m_CurDeclContext(0), m_Context(&S->getASTContext()), 
+      m_UniqueNameCounter(0), m_NestedCompoundStmts(0)
   { }
 
   // pin the vtable here.
@@ -287,6 +286,7 @@ namespace cling {
   }
 
   ASTNodeInfo EvaluateTSynthesizer::VisitCompoundStmt(CompoundStmt* Node) {
+    ++m_NestedCompoundStmts;
     ASTNodes Children;
     ASTNodes NewChildren;
     if (GetChildren(Children, Node)) {
@@ -308,8 +308,14 @@ namespace cling {
             if (Expr* E = NewNode.getAs<Expr>()) {
               // Check whether value printer has been requested
               bool valuePrinterReq = false;
-              if ((it+2) == Children.end() && !isa<NullStmt>(*(it+1)))
-                valuePrinterReq = true;
+              // If this was the last or the last is not null stmt, means that 
+              // we need to value print.
+              // If this is in a wrapper function's body then look for VP.
+              if (FunctionDecl* FD = dyn_cast<FunctionDecl>(m_CurDeclContext))
+                valuePrinterReq 
+                  = m_NestedCompoundStmts < 2  && utils::Analyze::IsWrapper(FD) 
+                  && ((it+1) == Children.end() || ((it+2) == Children.end() 
+                                                   && !isa<NullStmt>(*(it+1))));
 
               // Assume void if still not escaped
               NewChildren.push_back(SubstituteUnknownSymbol(m_Context->VoidTy,E,
@@ -324,8 +330,8 @@ namespace cling {
 
     Node->setStmts(*m_Context, NewChildren.data(), NewChildren.size());
 
+    --m_NestedCompoundStmts;
     return ASTNodeInfo(Node, 0);
-
   }
 
   ASTNodeInfo EvaluateTSynthesizer::VisitDeclStmt(DeclStmt* Node) {

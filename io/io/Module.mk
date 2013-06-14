@@ -14,7 +14,7 @@ IODIRI       := $(IODIR)/inc
 
 ##### libRIO #####
 IOL          := $(MODDIRI)/LinkDef.h
-IODS         := $(call stripsrc,$(MODDIRS)/G__IO.cxx)
+IODS         := $(call stripsrc,$(MODDIRS)/G__RIO.cxx)
 IODO         := $(IODS:.cxx=.o)
 IODH         := $(IODS:.cxx=.h)
 
@@ -49,7 +49,7 @@ $(IOLIB):       $(IOO) $(IODO) $(ORDER_) $(MAINLIBS) $(IOLIBDEP)
 $(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(IOH) $(IOL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,IOLIB) -c $(IOH) $(IOL)
 
 $(IOMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(IOL)
 		$(RLIBMAP) -o $@ -l $(IOLIB) -d $(IOLIBDEPM) -c $(IOL)

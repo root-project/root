@@ -53,7 +53,7 @@ $(GEOCADLIB):   $(GEOCADO) $(GEOCADDO) $(ORDER_) $(MAINLIBS) $(GEOCADLIBDEP)
 $(GEOCADDS):    $(GEOCADH1) $(GEOCADH2) $(GEOCADL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GEOCADH2) $(GEOCADL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOCADLIB) -c $(GEOCADH2) $(GEOCADL)
 
 $(GEOCADMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(GEOCADL) 
 		$(RLIBMAP) -o $@ -l $(GEOCADLIB) \

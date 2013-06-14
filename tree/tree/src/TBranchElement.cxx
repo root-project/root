@@ -3001,7 +3001,8 @@ void TBranchElement::InitializeOffsets()
             //-----------------------------------------------------------------
             if( stlParentName.Length() )
             {
-               if( !strncmp( stlParentName.Data(), dataName.Data(), stlParentName.Length()-1 ))
+               if( !strncmp( stlParentName.Data(), dataName.Data(), stlParentName.Length()-1 )
+                   && dataName[ stlParentName.Length() ] == '.' )
                   dataName.Remove( 0, stlParentName.Length()+1 );
             }
 
@@ -3013,7 +3014,24 @@ void TBranchElement::InitializeOffsets()
                // -- Data member exists in the dictionary meta info, get the offset.
                offset = rd->GetThisOffset();
             } else {
-               // -- No dictionary meta info for this data member, it must no longer exist.
+               // -- No dictionary meta info for this data member, it must no
+               // longer exist 
+               if (fEntries == 0) {
+                  // ... unless we creating the branch in which case
+                  // we have an internal error.
+                  if (pClass->GetListOfRealData()->GetEntries() == 0) {
+                     // We are probably missing the ShowMember, let's
+                     // just issue an error.
+                     Error("InitializeOffsets",
+                           "Could not find the real data member '%s' when constructing the branch '%s' [Likely missing ShowMember].",
+                           dataName.Data(),GetName());
+                  } else {
+                     // Something really bad happen.
+                     Fatal("InitializeOffsets",
+                           "Could not find the real data member '%s' when constructing the branch '%s' [Likely an internal error, please report to the developers].",
+                           dataName.Data(),GetName());
+                  }
+               }
                localOffset = TStreamerInfo::kMissing;
             }
          } else {

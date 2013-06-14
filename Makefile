@@ -88,17 +88,23 @@ MODULES       = build interpreter/llvm interpreter/cling core/metautils \
 ifeq ($(ARCH),win32)
 MODULES      += core/winnt graf2d/win32gdk
 MODULES      := $(filter-out core/newdelete,$(MODULES))
+SYSTEMDH      = $(WINNTH1)
+SYSTEMDICTH   = -DSYSTEM_TYPE_winnt $(SYSTEMDH)
 SYSTEML       = $(WINNTL)
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
 ifeq ($(ARCH),win32gcc)
 MODULES      += core/unix
+SYSTEMDH      = $(UNIXH)
+SYSTEMDICTH   = -DSYSTEM_TYPE_unix $(SYSTEMDH)
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
 MODULES      += core/unix
+SYSTEMDH      = $(UNIXH)
+SYSTEMDICTH   = -DSYSTEM_TYPE_unix $(SYSTEMDH)
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
@@ -112,6 +118,8 @@ MODULES      += graf2d/quartz
 MODULES      += graf2d/cocoa
 MODULES      += core/macosx
 MODULES      += rootx
+SYSTEMDH     += $(MACOSXH1)
+SYSTEMDICTH   = -DSYSTEM_TYPE_macosx $(SYSTEMDH)
 SYSTEML      += $(MACOSXL)
 SYSTEMO      += $(MACOSXO)
 SYSTEMDO     += $(MACOSXDO)
@@ -497,12 +505,21 @@ endif
 
 ##### libCore #####
 
+COREBASEDIRS := $(ROOT_SRCDIR)/core/base/src
+COREBASEDIRI := $(ROOT_SRCDIR)/core/base/inc
+COREL0        = -I$(ROOT_SRCDIR) $(COREBASEDIRI)/LinkDef.h 
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
                 $(SYSTEML) $(CLIBL) $(METAUTILSL) $(TEXTINPUTL)
+COREDS       := $(call stripsrc,$(COREBASEDIRS)/G__Core.cxx)
+COREDO       := $(COREDS:.cxx=.o)
+COREDH       := $(COREDS:.cxx=.h)
+COREDICTCXXFLAGS = $(METADICTCXXFLAGS)
+COREDICTHDEP  = $(BASEH1) $(BASEH3) $(CONTH) $(METAH) $(SYSTEMH) $(ZIPDICTH) \
+		$(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
+COREDICTH     = $(BASEH1) $(BASEH3) $(CONTH) $(METADICTH) $(SYSTEMDICTH) $(ZIPDICTH) \
+		$(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
                 $(CLIBO) $(METAUTILSO) $(METAUTILSTO) $(TEXTINPUTO)
-COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(METACDO) $(SYSTEMDO) $(ZIPDO) \
-                $(CLIBDO) $(METAUTILSDO) $(TEXTINPUTDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
@@ -750,6 +767,11 @@ endif
 	@(if [ ! -f $@ ] ; then \
 	   touch $@; \
 	fi)
+
+$(COREDS):      $(COREDICTHDEP) $(COREL) $(ROOTCINTTMPDEP) $(LLVMDEP)
+		$(MAKEDIR)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -s lib/libCore.so -c $(COREDICTCXXFLAGS) $(COREDICTH) $(COREL0)
 
 $(CORELIB): $(CLINGO) $(COREO) $(COREDO) $(PCREDEP) $(CORELIBDEP)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \

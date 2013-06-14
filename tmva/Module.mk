@@ -97,7 +97,7 @@ $(TMVALIB):     $(TMVAO) $(TMVADO) $(ORDER_) $(MAINLIBS) $(TMVALIBDEP)
 $(TMVADS1):     $(TMVAH1) $(TMVAL1) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVAH1) $(TMVAL1)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,TMVALIB) -c $(TMVAH1) $(TMVAL1)
 $(TMVADS2):     $(TMVAH2) $(TMVAL2) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."

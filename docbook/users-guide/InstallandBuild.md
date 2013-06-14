@@ -1,5 +1,5 @@
 # Appendix A: Install and Build ROOT
-
+\index{install ROOT}
 
 ## License
 

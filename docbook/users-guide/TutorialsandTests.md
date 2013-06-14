@@ -8,7 +8,9 @@ of ROOT. They are located in two directories: `$ROOTSYS/tutorials` and
 ## \$ROOTSYS/tutorials
 
 
-![](pictures/030001F9.png)The tutorials directory contains many example
+![](pictures/030001F9.png)
+
+The tutorials directory contains many example
 scripts. *To have all examples working you must have write permission
 and you will need to execute`hsimple.C` first*. If you do not have write
 permission in the directory` $ROOTSYS/tutorials`, copy the entire
@@ -285,8 +287,9 @@ This table summarizes the findings on the impact of compressions:
 
 #### Setting the Split Level
 
-![](pictures/080001FA.png)Split Level = 0:
+![](pictures/080001FA.png)
 
+Split Level = 0: \
 Now we execute Event with the split parameter set to 0:
 
 ``` {.cpp}
@@ -423,7 +426,7 @@ stress    : Real Time = 307.61 seconds Cpu Time = 292.82 seconds
 ```
 
 ### guitest - A Graphical User Interface
-
+\index{GUI application}
 
 The `guitest` example, created by compiling `guitest.cxx`, tests and
 illustrates the use of the native GUI widgets such as cascading menus,

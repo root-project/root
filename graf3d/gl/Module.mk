@@ -14,7 +14,7 @@ GLDIRI       := $(GLDIR)/inc
 
 ##### libRGL #####
 GLL          := $(MODDIRI)/LinkDef.h
-GLDS         := $(call stripsrc,$(MODDIRS)/G__GL.cxx)
+GLDS         := $(call stripsrc,$(MODDIRS)/G__RGL.cxx)
 GLDO         := $(GLDS:.cxx=.o)
 GLDH         := $(GLDS:.cxx=.h)
 
@@ -83,7 +83,7 @@ $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
 $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(CINTFLAGS) $(GLH2) $(GLL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GLLIB) -c $(CINTFLAGS) $(GLH2) $(GLL)
 
 $(GLMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(GLL)
 		$(RLIBMAP) -o $@ -l $(GLLIB) \

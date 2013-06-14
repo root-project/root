@@ -10,10 +10,6 @@
 
 #ifdef __CINT__
 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
-
 #pragma link C++ class TGeoPatternFinder+;
 #pragma link C++ class TGeoPatternX+;
 #pragma link C++ class TGeoPatternY+;
@@ -34,5 +30,7 @@
 #pragma link C++ class TGeoUniformMagField+;
 #pragma link C++ class TGeoGlobalMagField;
 #pragma link C++ class TGeoBranchArray+;
+#pragma link C++ class TGeoExtension+;
+#pragma link C++ class TGeoRCExtension+;
 
 #endif

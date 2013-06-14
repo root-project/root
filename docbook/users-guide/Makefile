@@ -1,4 +1,4 @@
-MDFILES=Cover.md Preface.md Introduction.md GettingStarted.md Histograms.md \
+MDFILES=ROOTUsersGuide.md Preface.md Introduction.md GettingStarted.md Histograms.md \
 	Graphs.md FittingHistograms.md ALittleC++.md CINT.md \
 	ObjectOwnership.md Graphics.md FoldersTasks.md InputOutput.md \
 	Trees.md MathLibraries.md LinearAlgebra.md AddingaClass.md \
@@ -9,28 +9,58 @@ MDFILES=Cover.md Preface.md Introduction.md GettingStarted.md Histograms.md \
 OPTIONS=-s -S -f markdown --toc --chapters --number-sections
 OPTIONSHTML=-H css/github.css --mathjax
 OPTIONSEPUB=--mathml
-OPTIONSPDFA4=--variable=geometry:a4paper -V geometry:margin=1.5cm
-OPTIONSPDFLETTER=--variable=geometry:letterpaper -V geometry:margin=1.5cm
+OPTIONSLATEXA4=--template=./template.tex --variable=geometry:a4paper -V geometry:margin=1.5cm
+OPTIONSLATEXLETTER=--template=./template.tex --variable=geometry:letterpaper -V geometry:margin=1.5cm
 
-.PHONY: pdfa4 html tex epub
+.PHONY: pdfa4 pdfletter html epub \
+	ROOTUsersGuideA4.tex ROOTUsersGuideA4.toc ROOTUsersGuideA4.ind \
+	ROOTUsersGuideLetter.tex ROOTUsersGuideLetter.toc ROOTUsersGuideLetter.ind
 
-all: pdfa4 pdfletter html tex epub
+all: pdfa4 pdfletter html epub \
+	ROOTUsersGuideA4.tex ROOTUsersGuideA4.toc ROOTUsersGuideA4.ind \
+	ROOTUsersGuideLetter.tex ROOTUsersGuideLetter.toc ROOTUsersGuideLetter.ind
 
-pdfa4: $(MDFILES)
-	pandoc $(OPTIONS) $(OPTIONSPDFA4) $(MDFILES) -o ROOTUsersGuide.pdf
+ROOTUsersGuideA4.tex: $(MDFILES)
+	pandoc $(OPTIONS) $(OPTIONSLATEXA4) -t latex $(MDFILES) \
+	-o ROOTUsersGuideA4.tex
 
-pdfletter: $(MDFILES)
-	pandoc $(OPTIONS) $(OPTIONSPDFLETTER) $(MDFILES) -o ROOTUsersGuideLetter.pdf
+ROOTUsersGuideA4.toc: ROOTUsersGuideA4.tex
+	pdflatex -interaction=batchmode ROOTUsersGuideA4.tex
+
+ROOTUsersGuideA4.ind: ROOTUsersGuideA4.toc ROOTUsersGuide.ist
+	pdflatex -interaction=batchmode ROOTUsersGuideA4.tex
+	makeindex -s ROOTUsersGuide.ist ROOTUsersGuideA4.idx
+
+pdfa4: $(MDFILES) ROOTUsersGuideA4.toc ROOTUsersGuideA4.ind
+	pdflatex -interaction=batchmode ROOTUsersGuideA4.tex
+
+ROOTUsersGuideLetter.tex: $(MDFILES)
+	pandoc $(OPTIONS) $(OPTIONSLATEXLETTER) -t latex $(MDFILES) \
+	-o ROOTUsersGuideLetter.tex
+
+ROOTUsersGuideLetter.toc: ROOTUsersGuideLetter.tex
+	pdflatex -interaction=batchmode ROOTUsersGuideLetter.tex
+
+ROOTUsersGuideLetter.ind: ROOTUsersGuideLetter.toc ROOTUsersGuide.ist
+	pdflatex -interaction=batchmode ROOTUsersGuideLetter.tex
+	makeindex -s ROOTUsersGuide.ist ROOTUsersGuideLetter.idx
+
+pdfletter: $(MDFILES) ROOTUsersGuideLetter.toc ROOTUsersGuideLetter.ind
+	pdflatex -interaction=batchmode ROOTUsersGuideLetter.tex
 
 html: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) -o ROOTUsersGuide.html
 
-tex: $(MDFILES)
-	pandoc $(OPTIONS) -t latex $(MDFILES) -o ROOTUsersGuide.tex
-
 epub: $(MDFILES) metadata.xml title.txt
 	pandoc $(OPTIONS) $(OPTIONSEPUB) --epub-metadata=metadata.xml \
-	   title.txt $(MDFILES) -o ROOTUsersGuide.epub
+	title.txt $(MDFILES) -o ROOTUsersGuide.epub
 
 clean:
-	rm -f ROOTUsersGuide.pdf ROOTUsersGuideLetter.pdf ROOTUsersGuide.html ROOTUsersGuide.tex ROOTUsersGuide.epub
+	rm -f ROOTUsersGuideA4.pdf ROOTUsersGuideLetter.pdf \
+	ROOTUsersGuide.html ROOTUsersGuide.epub \
+	ROOTUsersGuideA4.tex ROOTUsersGuideA4.dvi ROOTUsersGuideA4.ind \
+	ROOTUsersGuideA4.toc ROOTUsersGuideA4.out ROOTUsersGuideA4.log \
+	ROOTUsersGuideA4.idx ROOTUsersGuideA4.aux ROOTUsersGuideA4.ilg \
+	ROOTUsersGuideLetter.tex ROOTUsersGuideLetter.dvi ROOTUsersGuideLetter.ind \
+	ROOTUsersGuideLetter.toc ROOTUsersGuideLetter.out ROOTUsersGuideLetter.log \
+	ROOTUsersGuideLetter.idx ROOTUsersGuideLetter.aux ROOTUsersGuideLetter.ilg

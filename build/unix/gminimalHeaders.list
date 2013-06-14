@@ -426,6 +426,7 @@ include/TGeoConeEditor.h
 include/TGeoElement.h
 include/TGeoEltu.h
 include/TGeoEltuEditor.h
+include/TGeoExtension.h
 include/TGeoGedFrame.h
 include/TGeoGlobalMagField.h
 include/TGeoHalfSpace.h

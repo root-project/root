@@ -49,7 +49,7 @@ $(ROOFITLIB):   $(ROOFITO) $(ROOFITDO) $(ORDER_) $(MAINLIBS) $(ROOFITLIBDEP)
 $(ROOFITDS):    $(ROOFITH) $(ROOFITL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(ROOFITH) $(ROOFITL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,ROOFITLIB) -c $(ROOFITH) $(ROOFITL)
 
 $(ROOFITMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(ROOFITL)
 		$(RLIBMAP) -o $@ -l $(ROOFITLIB) \

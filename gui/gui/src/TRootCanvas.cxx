@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: b4c21444ab4f787f65b2b44199fc0440c3c2ce81 $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -578,7 +578,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    SetWindowName(name);
    SetIconName(name);
    fIconPic = SetIconPixmap("macro_s.xpm");
-   SetClassHints("Canvas", "Canvas");
+   SetClassHints("ROOT", "Canvas");
 
    SetEditDisabled(kEditDisable);
    MapSubwindows();

@@ -108,7 +108,7 @@ $(RAUTHLIB):    $(RAUTHO) $(RAUTHDO) $(ORDER_) $(MAINLIBS) $(RAUTHLIBDEP)
 $(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(RAUTHH) $(RAUTHL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,RAUTHLIB) -c $(RAUTHH) $(RAUTHL)
 
 $(RAUTHMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(RAUTHL)
 		$(RLIBMAP) -o $@ -l $(RAUTHLIB) \
@@ -123,7 +123,7 @@ $(AFSAUTHLIB):  $(AFSAUTHO) $(AFSAUTHDO) $(ORDER_) $(MAINLIBS) $(AFSAUTHLIBDEP)
 $(AFSAUTHDS):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(AFSAUTHH) $(AFSAUTHL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,AFSAUTHLIB) -c $(AFSAUTHH) $(AFSAUTHL)
 
 $(AFSAUTHMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(AFSAUTHL)
 		$(RLIBMAP) -o $(AFSAUTHMAP) -l $(AFSAUTHLIB) \

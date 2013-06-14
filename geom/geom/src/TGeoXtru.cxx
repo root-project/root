@@ -407,6 +407,15 @@ Int_t TGeoXtru::DistancetoPrimitive(Int_t px, Int_t py)
    const Int_t numPoints = fNvert*fNz;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
+
+//_____________________________________________________________________________
+void TGeoXtru::DrawPolygon(Option_t *option)
+ {
+// Draw the section polygon.
+   ThreadData_t& td = GetThreadData();
+   if (td.fPoly) td.fPoly->Draw(option);
+}
+   
 //_____________________________________________________________________________
 Double_t TGeoXtru::DistToPlane(const Double_t *point, const Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax, Bool_t in) const
 {

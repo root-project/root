@@ -14,7 +14,7 @@ GPADDIRI     := $(GPADDIR)/inc
 
 ##### libGpad #####
 GPADL        := $(MODDIRI)/LinkDef.h
-GPADDS       := $(call stripsrc,$(MODDIRS)/G__GPad.cxx)
+GPADDS       := $(call stripsrc,$(MODDIRS)/G__Gpad.cxx)
 GPADDO       := $(GPADDS:.cxx=.o)
 GPADDH       := $(GPADDS:.cxx=.h)
 
@@ -49,7 +49,7 @@ $(GPADLIB):     $(GPADO) $(GPADDO) $(ORDER_) $(MAINLIBS) $(GPADLIBDEP)
 $(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GPADH) $(GPADL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GPADLIB) -c $(GPADH) $(GPADL)
 
 $(GPADMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GPADL)
 		$(RLIBMAP) -o $@ -l $(GPADLIB) \

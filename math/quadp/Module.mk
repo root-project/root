@@ -49,7 +49,7 @@ $(QUADPLIB):    $(QUADPO) $(QUADPDO) $(ORDER_) $(MAINLIBS) $(QUADPLIBDEP)
 $(QUADPDS):     $(QUADPH) $(QUADPL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(QUADPH) $(QUADPL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,QUADPLIB) -c $(QUADPH) $(QUADPL)
 
 $(QUADPMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(QUADPL)
 		$(RLIBMAP) -o $@ -l $(QUADPLIB) \

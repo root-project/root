@@ -49,7 +49,7 @@ $(HBOOKLIB):    $(HBOOKO) $(HBOOKDO) $(ORDER_) $(MAINLIBS) $(HBOOKLIBDEP)
 $(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(HBOOKH) $(HBOOKL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,HBOOKLIB) -c $(HBOOKH) $(HBOOKL)
 
 $(HBOOKMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(HBOOKL)
 		$(RLIBMAP) -o $@ -l $(HBOOKLIB) \

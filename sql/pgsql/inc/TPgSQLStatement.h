@@ -39,7 +39,6 @@ struct PGresult;
 #endif
 
 
-
 struct PgSQL_Stmt_t {
    PGconn   *fConn;
    PGresult *fRes;
@@ -89,6 +88,7 @@ public:
    virtual Bool_t      SetDouble(Int_t npar, Double_t value);
    virtual Bool_t      SetString(Int_t npar, const char* value, Int_t maxsize = 256);
    virtual Bool_t      SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize = 0x1000);
+   virtual Bool_t      SetLargeObject(Int_t npar, void* mem, Long_t size, Long_t maxsize = 0x1000);
    virtual Bool_t      SetDate(Int_t npar, Int_t year, Int_t month, Int_t day);
    virtual Bool_t      SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec);
    virtual Bool_t      SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec);
@@ -113,6 +113,7 @@ public:
    virtual Double_t    GetDouble(Int_t npar);
    virtual const char *GetString(Int_t npar);
    virtual Bool_t      GetBinary(Int_t npar, void* &mem, Long_t& size);
+   virtual Bool_t      GetLargeObject(Int_t npar, void* &mem, Long_t& size);
    virtual Bool_t      GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day);
    virtual Bool_t      GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec);
    virtual Bool_t      GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec);

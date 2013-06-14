@@ -1164,7 +1164,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             }
             const char *function = gSystem->BaseName(fname);
             mod_line = function + arguments + io;
-            indent = fMetaProcessor->process(mod_line, &result, &compRes);
+            indent = fMetaProcessor->process(mod_line, compRes, &result);
          }
       } else {
          // not ACLiC
@@ -1188,7 +1188,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
                                                         true /*ignoreOutmostBlock*/);
          } else {
-            indent = fMetaProcessor->process(mod_line, &result, &compRes);
+            indent = fMetaProcessor->process(mod_line, compRes, &result);
          }
       }
    } // .L / .X / .x
@@ -1197,7 +1197,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          // explicitly ignore .autodict without having to support it
          // in cling.
 
-         indent = fMetaProcessor->process(sLine, &result, &compRes);
+         indent = fMetaProcessor->process(sLine, compRes, &result);
       }
    }
    if (result.isValid())
@@ -2284,6 +2284,9 @@ void TCling::CreateListOfMethods(TClass* cl) const
    if (cl->fMethod) {
       return;
    }
+   if (cl->GetClassInfo() == 0) {
+      return;
+   }
    cl->fMethod = new THashList;
    cl->fMethod->SetOwner();
    TClingMethodInfo t(fInterpreter, (TClingClassInfo*)cl->GetClassInfo());
@@ -3116,6 +3119,35 @@ Int_t TCling::UnloadLibraryMap(const char* library)
       fRootmapFiles->Compress();
    }
    return ret;
+}
+
+Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
+{
+   // Register the autoloading information for a class.
+   // libs is a space separated list of libraries.
+   
+   if (!cls || !*cls)
+      return 0;
+
+   TString key = TString("Library.") + cls;
+   // convert "::" to "@@", we used "@@" because TEnv
+   // considers "::" a terminator
+   key.ReplaceAll("::", "@@");
+   // convert "-" to " ", since class names may have
+   // blanks and TEnv considers a blank a terminator
+   key.ReplaceAll(" ", "-");
+
+   R__LOCKGUARD(gClingMutex);
+   if (!fMapfile) {
+      fMapfile = new TEnv(".rootmap");
+      fMapfile->IgnoreDuplicates(kTRUE);
+
+      fRootmapFiles = new TObjArray;
+      fRootmapFiles->SetOwner();
+
+   }
+   fMapfile->SetValue(key,libs);
+   return 1;
 }
 
 //______________________________________________________________________________

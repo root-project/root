@@ -14,9 +14,6 @@ CLIBDIRI     := $(CLIBDIR)/inc
 
 ##### libClib (part of libCore) #####
 CLIBL        := $(MODDIRI)/LinkDef.h
-CLIBDS       := $(call stripsrc,$(MODDIRS)/G__Clib.cxx)
-CLIBDO       := $(CLIBDS:.cxx=.o)
-CLIBDH       := $(CLIBDS:.cxx=.h)
 
 CLIBH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 CLIBHH       := $(CLIBDIRI)/strlcpy.h $(CLIBDIRI)/snprintf.h 
@@ -27,7 +24,7 @@ CLIBO        := $(call stripsrc,$(CLIBS1:.c=.o) $(CLIBS2:.cxx=.o))
 SNPRINTFO    := $(call stripsrc,$(CLIBDIRS)/snprintf.o)
 STRLCPYO     := $(call stripsrc,$(CLIBDIRS)/strlcpy.o $(CLIBDIRS)/strlcat.o)
 
-CLIBDEP      := $(CLIBO:.o=.d) $(CLIBDO:.o=.d)
+CLIBDEP      := $(CLIBO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CLIBH))
@@ -41,20 +38,15 @@ INCLUDEFILES += $(CLIBDEP)
 include/%.h:    $(CLIBDIRI)/%.h
 		cp $< $@
 
-$(CLIBDS):      $(CLIBHH) $(CLIBL) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(CLIBHH) $(CLIBL)
-
-all-$(MODNAME): $(CLIBO) $(CLIBDO)
+all-$(MODNAME): $(CLIBO)
 
 clean-$(MODNAME):
-		@rm -f $(CLIBO) $(CLIBDO)
+		@rm -f $(CLIBO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(CLIBDEP) $(CLIBDS) $(CLIBDH)
+		@rm -f $(CLIBDEP)
 
 distclean::     distclean-$(MODNAME)
 

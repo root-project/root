@@ -68,7 +68,7 @@ $(NETLIB):      $(NETO) $(NETDO) $(ORDER_) $(MAINLIBS) $(NETLIBDEP)
 $(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,NETLIB) -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
 
 $(NETMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(NETL)
 		$(RLIBMAP) -o $@ -l $(NETLIB) -d $(NETLIBDEPM) -c $(NETL)

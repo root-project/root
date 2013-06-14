@@ -1,4 +1,4 @@
-// @(#)root/gui:$Id$
+// @(#)root/gui:$Id: d25b6f3b0b2546fe028288bd22c21588bdd1b8c1 $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -301,7 +301,7 @@ void TGMsgBox::PMsgBox(const char *title, const char *msg,
 
    SetWindowName(title);
    SetIconName(title);
-   SetClassHints("MsgBox", "MsgBox");
+   SetClassHints("ROOT", "MsgBox");
 
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
                               kMWMDecorMinimize | kMWMDecorMenu,
