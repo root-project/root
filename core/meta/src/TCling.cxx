@@ -2284,6 +2284,9 @@ void TCling::CreateListOfMethods(TClass* cl) const
    if (cl->fMethod) {
       return;
    }
+   if (cl->GetClassInfo() == 0) {
+      return;
+   }
    cl->fMethod = new THashList;
    cl->fMethod->SetOwner();
    TClingMethodInfo t(fInterpreter, (TClingClassInfo*)cl->GetClassInfo());
