@@ -5,11 +5,10 @@
 #include <iostream>
 #include <typeinfo>
 
-#ifdef _MSC_VER
-// MSVC2010 pulls in std::tr1::shared_ptr, CINT pulls in std,
+// MSVC2010 pulls in std::tr1::shared_ptr, C++11 has std::shared_ptr
+// and Cling pulls in std,
 // which combined creates ambiguities.
 # define shared_ptr not_tr1_shared_ptr
-#endif
 
 class Parent{ public: static const char *ClassName() { return "Parent"; } };
 
