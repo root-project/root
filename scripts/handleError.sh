@@ -29,19 +29,23 @@ if test $# -gt 0 ; then
    done
 fi
 
+if [ "x$SUMMARY" != "x" ] ; then
+   SUMMARY_FILE=`echo $SUMMARY.$testname.summary | sed -e 's:/:_:g' `
+fi
+
 if [ "x$logfile" != "x" ] ; then
   if [ "x$SUMMARY" != "x" ] ; then 
      if [ "x$testname" != "x" ] ; then
-        echo "--- FAILING TEST: make -C $CALLDIR $testname" > $SUMMARY.$testname.summary
-        cat $logfile >> $SUMMARY.$testname.summary
+        echo "--- FAILING TEST: make -C $CALLDIR $testname" > $SUMMARY_FILE
+        cat $logfile >> $SUMMARY_FILE
         if [ `grep -c "exited with error code: $result" $logfile` -eq 0 ] ; then 
           if [ "x$cmd" == "xdiff" ] ; then 
-            echo "diff command exited with error code: $result" >> $SUMMARY.$testname.summary
+            echo "diff command exited with error code: $result" >> $SUMMARY_FILE
           else 
             if [ "x$cmd" != "x" ] ; then 
-              echo "'$cmd' exited with error code: $result" >> $SUMMARY.$testname.summary
+              echo "'$cmd' exited with error code: $result" >> $SUMMARY_FILE
             else 
-              echo "'A command like root.exe -b -l -q $testname' exited with error code: $result" >> $SUMMARY.$testname.summary
+              echo "'A command like root.exe -b -l -q $testname' exited with error code: $result" >> $SUMMARY_FILE
             fi
           fi
         fi
