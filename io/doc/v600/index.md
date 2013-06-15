@@ -39,4 +39,3 @@
    The kOnlyListed and kSkipListed flags have to be bitwise OR-ed 
    on top of the merging defaults: kAll | kIncremental (as in the example $ROOTSYS/tutorials/io/mergeSelective.C)
 
-
