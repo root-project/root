@@ -27,21 +27,21 @@
 
     // We know all 3 are TNuple and pz is the 3rd 'arguments'
     
-    TNtuple *tuple = dynamic_cast<TNtuple*>(chain->GetTree());
-    if ( (&(tuple->GetArgs()[2])) != origleaf->GetValuePointer()) {
+    TNtuple *ntuple = dynamic_cast<TNtuple*>(chain->GetTree());
+    if ( (&(ntuple->GetArgs()[2])) != origleaf->GetValuePointer()) {
        cerr << "Error: the original should own the memory\n";
        result = false;
     }
 
   
-    tuple = dynamic_cast<TNtuple*>(tupleClone1);
-    if ( (&(tuple->GetArgs()[2])) == clone1leaf->GetValuePointer() ) {
+    ntuple = dynamic_cast<TNtuple*>(tupleClone1);
+    if ( (&(ntuple->GetArgs()[2])) == clone1leaf->GetValuePointer() ) {
        cerr << "Error: the 1st clone should NOT own the memory\n";
        result = false;
     }
 
-    tuple = dynamic_cast<TNtuple*>(tupleClone2);
-    if ( (&(tuple->GetArgs()[2])) == clone2leaf->GetValuePointer() ) {
+    ntuple = dynamic_cast<TNtuple*>(tupleClone2);
+    if ( (&(ntuple->GetArgs()[2])) == clone2leaf->GetValuePointer() ) {
        cerr << "Error: the 2nd clone should NOT own the memory\n";
        result = false;
     }
@@ -85,14 +85,14 @@
     
     clone2leaf = tupleClone2->GetLeaf("pz");
     
-    tuple = dynamic_cast<TNtuple*>(tupleClone1);
-    if ( (&(tuple->GetArgs()[2])) != clone1leaf->GetValuePointer() ) {
+    ntuple = dynamic_cast<TNtuple*>(tupleClone1);
+    if ( (&(ntuple->GetArgs()[2])) != clone1leaf->GetValuePointer() ) {
        cerr << "Error: the 1st clone should own the memory\n";
        result = false;
     }
     
-    tuple = dynamic_cast<TNtuple*>(tupleClone2);
-    if ( (&(tuple->GetArgs()[2])) != clone2leaf->GetValuePointer() ) {
+    ntuple = dynamic_cast<TNtuple*>(tupleClone2);
+    if ( (&(ntuple->GetArgs()[2])) != clone2leaf->GetValuePointer() ) {
        cerr << "Error: the 2nd clone should own the memory\n";
        result = false;
     }
