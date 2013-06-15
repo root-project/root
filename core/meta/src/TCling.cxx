@@ -451,21 +451,21 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
              == TransactionDeclSet.end())
             ((TCling*)gCling)->HandleNewDecl(DeserDecls[i], true);
       }
+   }
 
-      std::set<TClass*> modifiedTClasses;
-      // There might be another TCling__UpdateListsOnCommitted() active
-      // in the call stack; separate responsibilities by resetting gCling's
-      // ModifiedTClasses:
-      modifiedTClasses.swap(((TCling*)gCling)->GetModifiedTClasses());
-      for (std::set<TClass*>::const_iterator I = modifiedTClasses.begin(),
-              E = modifiedTClasses.end(); I != E; ++I) {
-         // Make sure the TClass has not been deleted.
-         if (!gROOT->GetListOfClasses()->FindObject(*I)) {
-            continue;
-         }
-         ((TCling*)gCling)->UpdateListOfMethods(*I);
-         ((TCling*)gCling)->UpdateListOfDataMembers(*I);
+   std::set<TClass*> modifiedTClasses;
+   // There might be another TCling__UpdateListsOnCommitted() active
+   // in the call stack; separate responsibilities by resetting gCling's
+   // ModifiedTClasses:
+   modifiedTClasses.swap(((TCling*)gCling)->GetModifiedTClasses());
+   for (std::set<TClass*>::const_iterator I = modifiedTClasses.begin(),
+           E = modifiedTClasses.end(); I != E; ++I) {
+      // Make sure the TClass has not been deleted.
+      if (!gROOT->GetListOfClasses()->FindObject(*I)) {
+         continue;
       }
+      ((TCling*)gCling)->UpdateListOfMethods(*I);
+      ((TCling*)gCling)->UpdateListOfDataMembers(*I);
    }
 }
 
