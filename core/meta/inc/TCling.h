@@ -103,7 +103,6 @@ private: // Data Members
    TClingCallbacks* fClingCallbacks; // cling::Interpreter owns it.
    Bool_t          fHaveSinglePCM; // Whether a single ROOT PCM was provided
    std::vector<const void*> fDeserializedDecls; // Decls read from the AST
-   std::set<TClass*> fModifiedTClasses; // TClasses that require update after this transaction
 
 public: // Public Interface
 
@@ -382,8 +381,7 @@ public: // Public Interface
 
    void AddDeserializedDecl(const void* D) { fDeserializedDecls.push_back(D); }
    std::vector<const void*>& GetDeserializedDecls() { return fDeserializedDecls; }
-   std::set<TClass*>& GetModifiedTClasses() { return fModifiedTClasses; }
-   void HandleNewDecl(const void* DV, bool isDeserialized);
+   void HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*>& modifiedClasses);
 
 private: // Private Utility Functions
 

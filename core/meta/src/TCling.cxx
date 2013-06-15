@@ -279,7 +279,10 @@ static void TCling__UpdateClassInfo(const NamedDecl* TD)
 }
 
 
-void TCling::HandleNewDecl(const void* DV, bool isDeserialized) {
+void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*> &modifiedTClasses) {
+   // Handle new declaration.
+   // Record the modified class, struct and namespaces in 'modifiedTClasses'.
+
    const clang::Decl* D = static_cast<const clang::Decl*>(DV);
    if (!D->isCanonicalDecl()) return;
    if (isa<clang::FunctionDecl>(D->getDeclContext())
@@ -316,7 +319,7 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized) {
          if (NCtx->getIdentifier()) {
             TClass* cl = TClass::GetClass(NCtx->getNameAsString().c_str());
             if (cl) {
-               fModifiedTClasses.insert(cl);
+               modifiedTClasses.insert(cl);
             }
          }
          return;
@@ -363,7 +366,7 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized) {
             if (NCtx->getIdentifier()) {
                TClass* cl = TClass::GetClass(NCtx->getNameAsString().c_str());
                if (cl) {
-                  fModifiedTClasses.insert(cl);
+                  modifiedTClasses.insert(cl);
                }
             }
             return;
@@ -403,6 +406,9 @@ void TCling__UpdateListsOnDeclDeserialized(const clang::Decl* D) {
 
 extern "C" 
 void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
+
+   std::set<TClass*> modifiedTClasses; // TClasses that require update after this transaction
+
    bool isTUTransaction = false;
    if (T.size() == 1 && !T.hasNestedTransactions()) {
       clang::Decl* FirstDecl = *(T.decls_begin()->m_DGR.begin());
@@ -420,7 +426,7 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
          // if not found in its T(Hash)List.
          for (clang::DeclContext::decl_iterator TUI = TU->decls_begin(),
                  TUE = TU->decls_end(); TUI != TUE; ++TUI)
-            ((TCling*)gCling)->HandleNewDecl(*TUI, (*TUI)->isFromASTFile());
+            ((TCling*)gCling)->HandleNewDecl(*TUI, (*TUI)->isFromASTFile(),modifiedTClasses);
       }
    }
 
@@ -434,7 +440,7 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
             if (*DI == WrapperFD)
                continue;
             TransactionDeclSet.insert(*DI);
-            ((TCling*)gCling)->HandleNewDecl(*DI, false);
+            ((TCling*)gCling)->HandleNewDecl(*DI, false, modifiedTClasses);
          }
       }
    }
@@ -449,15 +455,10 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
       for (size_t i = 0; i < DeserDecls.size(); ++i) {
          if (TransactionDeclSet.find(DeserDecls[i])
              == TransactionDeclSet.end())
-            ((TCling*)gCling)->HandleNewDecl(DeserDecls[i], true);
+            ((TCling*)gCling)->HandleNewDecl(DeserDecls[i], true, modifiedTClasses);
       }
    }
 
-   std::set<TClass*> modifiedTClasses;
-   // There might be another TCling__UpdateListsOnCommitted() active
-   // in the call stack; separate responsibilities by resetting gCling's
-   // ModifiedTClasses:
-   modifiedTClasses.swap(((TCling*)gCling)->GetModifiedTClasses());
    for (std::set<TClass*>::const_iterator I = modifiedTClasses.begin(),
            E = modifiedTClasses.end(); I != E; ++I) {
       // Make sure the TClass has not been deleted.
