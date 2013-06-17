@@ -455,7 +455,7 @@ bool  Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & mi
    bool validMinimum = min.IsValid();
    if (validMinimum) { 
       // print a warning message in case something is not ok
-      if (fStatus != 0)  MN_INFO_MSG2("Minuit2Minimizer::Minimize",txt);
+      if (fStatus != 0 && debugLevel > 0)  MN_INFO_MSG2("Minuit2Minimizer::Minimize",txt);
    }
    else { 
       // minimum is not valid when state is not valid and edm is over max or has passed call limits
@@ -827,7 +827,7 @@ bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
    // what to do if a new minimum has been found ? 
    // use that as new minimum
    if (scan.Fval() < amin ) { 
-      MN_INFO_MSG2("Minuit2Minimizer::Scan","A new minimum has been found");
+      if (PrintLevel() > 0) MN_INFO_MSG2("Minuit2Minimizer::Scan","A new minimum has been found");
       fState.SetValue(ipar, scan.Parameters().Value(ipar) );
          
    }
