@@ -492,6 +492,12 @@ void TCanvas::Init()
    if (!gApplication)
       TApplication::CreateApplication();
 
+   // Load and initialize graphics libraries if
+   // TApplication::NeedGraphicsLibs() has been called by a
+   // library static initializer.
+   if (gApplication)
+      gApplication->InitializeGraphics();
+
    // Get some default from .rootrc. Used in fCanvasImp->InitWindow().
    fHighLightColor     = gEnv->GetValue("Canvas.HighLightColor", kRed);
    SetBit(kMoveOpaque,   gEnv->GetValue("Canvas.MoveOpaque", 0));

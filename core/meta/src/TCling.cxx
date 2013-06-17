@@ -568,6 +568,7 @@ void* autoloadCallback(const std::string& mangled_name)
          return 0;
       }
    }
+
    //fprintf(stderr, "load succeeded.\n");
    // Get the address of the function being called.
    void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
