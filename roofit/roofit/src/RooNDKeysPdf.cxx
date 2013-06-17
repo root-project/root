@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooNDKeysPdf.cxx 31258 2009-11-17 22:41:06Z wouter $
  * Authors:                                                                  *
  *   Max Baak, CERN, mbaak@cern.ch *
  *                                                                           *
@@ -102,6 +102,50 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
   createPdf();
 }
 
+//_____________________________________________________________________________
+RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
+			   const RooArgList& varList, RooDataSet& data, const TVectorD& rho,
+			   TString options, Double_t nSigma, Bool_t rotate) : 
+  RooAbsPdf(name,title),
+  _varList("varList","List of variables",this),
+  _data(data),
+  _options(options),
+  _widthFactor(-1.0),
+  _nSigma(nSigma),
+  _weights(&_weights0),
+  _rotate(rotate)
+{
+  // Constructor
+  _varItr    = _varList.createIterator() ;
+
+  TIterator* varItr = varList.createIterator() ;
+  RooAbsArg* var ;
+  for (Int_t i=0; (var = (RooAbsArg*)varItr->Next()); ++i) {
+    if (!dynamic_cast<RooAbsReal*>(var)) {
+      coutE(InputArguments) << "RhhNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName() 
+			    << " is not of type RooAbsReal" << endl ;
+      assert(0) ;
+    }
+    _varList.add(*var) ;
+    _varName.push_back(var->GetName());
+  }
+  delete varItr ;
+
+  // copy rho widths
+  if( _varList.getSize() != rho.GetNrows() ) {
+    coutE(InputArguments) << "ERROR:  RhhNDKeysPdf::RhhNDKeysPdf() : The vector-size of rho is different from that of varList."
+			  << "Unable to create the PDF." << endl;
+    assert ( _varList.getSize()==rho.GetNrows() );
+  }
+
+  // negative width factor will serve as a switch in initialize()
+  // negative value means that a vector has been provided as input,
+  // and that _rho has already been set ...
+  _rho.resize( rho.GetNrows() );
+  for  (Int_t j=0; j<rho.GetNrows(); j++) { _rho[j]=rho[j]; /*cout<<"RooNDKeysPdf c'tor, _rho["<<j<<"]="<<_rho[j]<<endl;*/ }
+
+  createPdf(); // calls initialize ...
+}
 
 
 //_____________________________________________________________________________
@@ -281,12 +325,16 @@ RooNDKeysPdf::createPdf(Bool_t firstCall) const
     initialize();
   }
 
+
   // copy dataset, calculate sigma_i's, determine min and max event weight
   loadDataSet(firstCall);
+
   // mirror dataset around dataset boundaries -- does not depend on event weights
   if (_mirror) mirrorDataSet();
+
   // store indices and weights of events with high enough weights
   loadWeightSet();
+
 
   // store indices of events in variable boundaries and box shell.
 //calculateShell(&_fullBoxInfo);
@@ -298,6 +346,7 @@ RooNDKeysPdf::createPdf(Bool_t firstCall) const
 
   // determine static and/or adaptive bandwidth
   calculateBandWidth();
+
 }
 
 
@@ -366,7 +415,10 @@ RooNDKeysPdf::initialize() const
   //_sortIdcs.resize(_nDim);
   _sortTVIdcs.resize(_nDim);
 
-  _rho.resize(_nDim,_widthFactor);
+  //rdh _rho.resize(_nDim,_widthFactor);
+
+  if (_widthFactor>0) { _rho.resize(_nDim,_widthFactor); }
+  // else: _rho has been provided as external input
 
   _x.resize(_nDim,0.);
   _x0.resize(_nDim,0.);
@@ -412,11 +464,13 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
 
   // first some initialization
   _nEventsW=0.;
+
   TMatrixD mat(_nDim,_nDim); 
   if (!_covMat)  _covMat = new TMatrixDSym(_nDim);    
   if (!_corrMat) _corrMat= new TMatrixDSym(_nDim);    
   if (!_rotMat)  _rotMat = new TMatrixD(_nDim,_nDim); 
-  if (!_sigmaR)  _sigmaR = new TVectorD(_nDim);       
+  if (!_sigmaR)  _sigmaR = new TVectorD(_nDim);
+      
   mat.Zero();
   _covMat->Zero();
   _corrMat->Zero();
@@ -432,6 +486,7 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
 
   _idx.clear();
   for (Int_t i=0; i<_nEvents; i++) {
+
     _data.get(i); // fills dVars
     _idx.push_back(i);
     vector<Double_t>& point  = _dataPts[i];
@@ -442,9 +497,9 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
     _nEventsW += myweight;
 
     for (Int_t j=0; j<_nDim; j++) {
-      for (Int_t k=0; k<_nDim; k++) 
+      for (Int_t k=0; k<_nDim; k++) {
 	mat(j,k) += dVars[j]->getVal() * dVars[k]->getVal() * myweight;
-
+      }
       // only need to do once
       if (firstCall) 
 	point[j] = pointV[j] = dVars[j]->getVal();
@@ -452,6 +507,7 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
       _x0[j] += 1. * myweight; 
       _x1[j] += point[j] * myweight ; 
       _x2[j] += point[j] * point[j] * myweight ;
+      if (_x2[j]!=_x2[j]) exit(3);
 
       // only need to do once
       if (firstCall) {
@@ -469,17 +525,25 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
     _mean[j]  = _x1[j]/_x0[j];
     _sigma[j] = sqrt(_x2[j]/_x0[j]-_mean[j]*_mean[j]);
   }
- 
-  for (Int_t j=0; j<_nDim; j++) {
-    for (Int_t k=0; k<_nDim; k++) 
-      (*_covMat)(j,k) = mat(j,k)/_x0[j] - _mean[j]*_mean[k] ;
-  }
 
+  TMatrixDSym covMatRho(_nDim); // covariance matrix times rho parameters
+  for (Int_t j=0; j<_nDim; j++) {
+    for (Int_t k=0; k<_nDim; k++) { 
+      (*_covMat)(j,k) = mat(j,k)/_x0[j] - _mean[j]*_mean[k];
+      covMatRho(j,k) = (mat(j,k)/_x0[j] - _mean[j]*_mean[k]) * _rho[j] * _rho[k];
+    }
+  }
+      
   // find decorrelation matrix and eigenvalues (R)
-  TMatrixDSymEigen evCalculator(*_covMat);
-  *_rotMat = evCalculator.GetEigenVectors();
+  TMatrixDSymEigen evCalculatorRho(covMatRho);
+  *_rotMat = evCalculatorRho.GetEigenVectors();
   *_rotMat = _rotMat->T(); // transpose
-  *_sigmaR = evCalculator.GetEigenValues();
+  *_sigmaR = evCalculatorRho.GetEigenValues();
+
+  
+  // set rho = 1 because sigmaR now contains rho
+  for (Int_t j=0; j<_nDim; j++) { _rho[j] = 1.; }
+
   for (Int_t j=0; j<_nDim; j++) { (*_sigmaR)[j] = sqrt((*_sigmaR)[j]); }
 
   for (Int_t j=0; j<_nDim; j++) {
@@ -505,11 +569,18 @@ RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
     _sigmaR->Print();
   }
 
+  // use raw sigmas (without rho) for sigmaAvgR
+  TMatrixDSymEigen evCalculator(*_covMat);
+  TVectorD sigmaRraw = evCalculator.GetEigenValues();
+  for (Int_t j=0; j<_nDim; j++) { sigmaRraw[j] = sqrt(sigmaRraw[j]); }
+
   _sigmaAvgR=1.;
-  for (Int_t j=0; j<_nDim; j++) { _sigmaAvgR *= (*_sigmaR)[j]; }
+  //for (Int_t j=0; j<_nDim; j++) { _sigmaAvgR *= (*_sigmaR)[j]; }
+  for (Int_t j=0; j<_nDim; j++) { _sigmaAvgR *= sigmaRraw[j]; }
   _sigmaAvgR = TMath::Power(_sigmaAvgR, 1./_d) ;
 
   for (Int_t i=0; i<_nEvents; i++) {
+
     TVectorD& pointR = _dataPtsR[i];
     pointR *= *_rotMat;
   }
@@ -535,6 +606,9 @@ RooNDKeysPdf::mirrorDataSet() const
   for (Int_t j=0; j<_nDim; j++) {
     _xDatLo3s[j] = _xDatLo[j] + _nSigma * (_rho[j] * _n * _sigma[j]);
     _xDatHi3s[j] = _xDatHi[j] - _nSigma * (_rho[j] * _n * _sigma[j]);
+
+    //cout<<"xDatLo3s["<<j<<"]="<<_xDatLo3s[j]<<endl;
+    //cout<<"xDatHi3s["<<j<<"]="<<_xDatHi3s[j]<<endl;
   }
 
   vector<Double_t> dummy(_nDim,0.);
@@ -648,6 +722,11 @@ RooNDKeysPdf::calculateShell(BoxInfo* bi) const
     bi->xVarLoP3s[j] = bi->xVarLo[j] + _nSigma * (_rho[j] * _n * _sigma[j]);
     bi->xVarHiM3s[j] = bi->xVarHi[j] - _nSigma * (_rho[j] * _n * _sigma[j]);
     bi->xVarHiP3s[j] = bi->xVarHi[j] + _nSigma * (_rho[j] * _n * _sigma[j]);
+
+    //cout<<"bi->xVarLoM3s["<<j<<"]="<<bi->xVarLoM3s[j]<<endl;
+    //cout<<"bi->xVarLoP3s["<<j<<"]="<<bi->xVarLoP3s[j]<<endl;
+    //cout<<"bi->xVarHiM3s["<<j<<"]="<<bi->xVarHiM3s[j]<<endl;
+    //cout<<"bi->xVarHiM3s["<<j<<"]="<<bi->xVarHiM3s[j]<<endl;
   }
 
   map<Int_t,Double_t>::iterator wMapItr = _wMap.begin();
@@ -767,13 +846,20 @@ RooNDKeysPdf::calculateBandWidth() const
   
   for (Int_t i=0; i<_nEvents; i++) {
     vector<Double_t>& weight = _weights0[i];
-    for (Int_t j=0; j<_nDim; j++) { weight[j] = _rho[j] * _n * (*_sigmaR)[j] ; }
+    for (Int_t j=0; j<_nDim; j++) { 
+      weight[j] = _rho[j] * _n * (*_sigmaR)[j] ; 
+      //cout<<"j: "<<j<<", rho="<<_rho[j]<<", _n: "<<_n<<", sigmaR="<<(*_sigmaR)[j]<<", weight="<<weight[j]<<endl;
+    }
   }
+
 
   // adaptive width
   if(_options.Contains("a")) {
     cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth() Using adaptive bandwidth." << endl;
-      
+
+    double sqrt12=sqrt(12.);
+    double sqrtSigmaAvgR=sqrt(_sigmaAvgR);
+    
     vector<Double_t> dummy(_nDim,0.);
     _weights1.resize(_nEvents,dummy);
 
@@ -784,8 +870,9 @@ RooNDKeysPdf::calculateBandWidth() const
 
       vector<Double_t>& weight = _weights1[i];
       for (Int_t j=0; j<_nDim; j++) {
-	Double_t norm = (_rho[j]*_n*(*_sigmaR)[j]) / sqrt(_sigmaAvgR) ; 
-	weight[j] = norm * f / sqrt(12.) ;  //  note additional factor of sqrt(12) compared with HEP-EX/0011057
+	Double_t norm = (_rho[j]*_n*(*_sigmaR)[j]) / sqrtSigmaAvgR ; 
+	//cout<<"norm["<<j<<"]="<<norm<<endl;
+	weight[j] = norm * f / sqrt12 ;  //  note additional factor of sqrt(12) compared with HEP-EX/0011057
       }
     }
     _weights = &_weights1;
@@ -857,6 +944,8 @@ RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const
   for (Int_t j=0; j<_nDim; j++) {
     xRm[j] -= _nSigma * (_rho[j] * _n * (*_sigmaR)[j]);
     xRp[j] += _nSigma * (_rho[j] * _n * (*_sigmaR)[j]);
+    //cout<<"xRm["<<j<<"]="<<xRm[j]<<endl;
+    //cout<<"xRp["<<j<<"]="<<xRp[j]<<endl;
   }
 
   vector<TVectorD> xvecRm(1,xRm);
@@ -936,6 +1025,7 @@ RooNDKeysPdf::evaluate() const
   }
 
   Double_t val = gauss(_x,*_weights);
+  //cout<<"returning "<<val<<endl;
 
   if (val>=1E-20)
     return val ;
