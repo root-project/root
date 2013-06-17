@@ -332,7 +332,7 @@ and filled in the histogram until end of file is reached.
 root [1] TH1F* h=new TH1F("h","example histogram",100,0.,5.);
 root [2] ifstream inp; double x;
 root [3] inp.open("expo.dat");
-root [4] while(!(inp >> x)==0){h->Fill(x);}
+root [4] while (inp >> x) { h->Fill(x); }
 root [5] h->Draw();
 root [6] inp.close();
 ```
