@@ -1720,7 +1720,7 @@ void TBranch::Print(Option_t*) const
    }
 
    if (fLeaves.GetEntries() == 1) {
-      if (titleContent[titleContent.Length()-2]=='/' && isalpha(titleContent[titleContent.Length()-1])) {
+      if (titleContent.Length()>=2 && titleContent[titleContent.Length()-2]=='/' && isalpha(titleContent[titleContent.Length()-1])) {
          // The type is already encoded.  Nothing to do.
       } else {
          TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);

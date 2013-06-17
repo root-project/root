@@ -24,9 +24,9 @@ class TIndArray
          delete [] fArr;
       }
 
-      void Reserve( UInt_t size )
+      void ClearAndResize( UInt_t size )
       {
-         delete fArr;
+         delete [] fArr;
          fElems = 0;
          fArr = new UChar_t[size];
          fCapacity = size;

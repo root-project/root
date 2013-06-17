@@ -216,7 +216,7 @@ Int_t TBranchSTL::Fill()
    // Set up the container of indices
    //---------------------------------------------------------------------------
    if( fInd.GetCapacity() < size )
-      fInd.Reserve( size );
+      fInd.ClearAndResize( size );
 
    fInd.SetNumItems( size );
 
