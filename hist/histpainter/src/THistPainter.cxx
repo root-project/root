@@ -713,6 +713,7 @@ The "<tt>mode</tt>" has up to nine digits that can be set to on(1 or 2), off(0).
       s = 1;  skewness printed
       s = 2;  skewness and skewness error printed
       i = 1;  integral of bins printed
+      i = 2;  integral of bins with option "width" printed
       o = 1;  number of overflows printed
       u = 1;  number of underflows printed
       r = 1;  rms printed
@@ -759,13 +760,14 @@ To print only the name of the histogram do:
 of underflow/overflows and not just one single number.
 
 <p>The parameter mode can be any combination of the letters
-<tt>kKsSiourRmMen</tt>
+<tt>kKsSiIourRmMen</tt>
 <pre>
       k :  kurtosis printed
       K :  kurtosis and kurtosis error printed
       s :  skewness printed
       S :  skewness and skewness error printed
       i :  integral of bins printed
+      I :  integral of bins with option "width" printed
       o :  number of overflows printed
       u :  number of underflows printed
       r :  rms printed
@@ -837,6 +839,12 @@ and activate it again with:
 <pre>
       h->SetStats(1).
 </pre>
+
+<p>Labels used in the statistics box ("Mean", "RMS", ...) can be changed from 
+<a href="http://root.cern.ch/download/doc/primer/ROOTPrimer.html#configure-root-at-start-up">$ROOTSYS/etc/system.rootrc</a> or 
+<a href="http://root.cern.ch/download/doc/primer/ROOTPrimer.html#configure-root-at-start-up">.rootrc</a> 
+(look for the string <tt>"Hist.Stats."</tt>).
+</p>
 
 
 <a name="HP08"></a><h3>Fit Statistics</h3>
@@ -2801,6 +2809,7 @@ static TString gStringRMSZ;
 static TString gStringUnderflow;
 static TString gStringOverflow;
 static TString gStringIntegral;
+static TString gStringIntegralBinWidth;
 static TString gStringSkewness;
 static TString gStringSkewnessX;
 static TString gStringSkewnessY;
@@ -2839,26 +2848,27 @@ THistPainter::THistPainter()
       fCutsOpt[i] = 0;
    }
 
-   gStringEntries   = gEnv->GetValue("Hist.Stats.Entries",   "Entries");
-   gStringMean      = gEnv->GetValue("Hist.Stats.Mean",      "Mean");
-   gStringMeanX     = gEnv->GetValue("Hist.Stats.MeanX",     "Mean x");
-   gStringMeanY     = gEnv->GetValue("Hist.Stats.MeanY",     "Mean y");
-   gStringMeanZ     = gEnv->GetValue("Hist.Stats.MeanZ",     "Mean z");
-   gStringRMS       = gEnv->GetValue("Hist.Stats.RMS",       "RMS");
-   gStringRMSX      = gEnv->GetValue("Hist.Stats.RMSX",      "RMS x");
-   gStringRMSY      = gEnv->GetValue("Hist.Stats.RMSY",      "RMS y");
-   gStringRMSZ      = gEnv->GetValue("Hist.Stats.RMSZ",      "RMS z");
-   gStringUnderflow = gEnv->GetValue("Hist.Stats.Underflow", "Underflow");
-   gStringOverflow  = gEnv->GetValue("Hist.Stats.Overflow",  "Overflow");
-   gStringIntegral  = gEnv->GetValue("Hist.Stats.Integral",  "Integral");
-   gStringSkewness  = gEnv->GetValue("Hist.Stats.Skewness",  "Skewness");
-   gStringSkewnessX = gEnv->GetValue("Hist.Stats.SkewnessX", "Skewness x");
-   gStringSkewnessY = gEnv->GetValue("Hist.Stats.SkewnessY", "Skewness y");
-   gStringSkewnessZ = gEnv->GetValue("Hist.Stats.SkewnessZ", "Skewness z");
-   gStringKurtosis  = gEnv->GetValue("Hist.Stats.Kurtosis",  "Kurtosis");
-   gStringKurtosisX = gEnv->GetValue("Hist.Stats.KurtosisX", "Kurtosis x");
-   gStringKurtosisY = gEnv->GetValue("Hist.Stats.KurtosisY", "Kurtosis y");
-   gStringKurtosisZ = gEnv->GetValue("Hist.Stats.KurtosisZ", "Kurtosis z");
+   gStringEntries          = gEnv->GetValue("Hist.Stats.Entries",          "Entries");
+   gStringMean             = gEnv->GetValue("Hist.Stats.Mean",             "Mean");
+   gStringMeanX            = gEnv->GetValue("Hist.Stats.MeanX",            "Mean x");
+   gStringMeanY            = gEnv->GetValue("Hist.Stats.MeanY",            "Mean y");
+   gStringMeanZ            = gEnv->GetValue("Hist.Stats.MeanZ",            "Mean z");
+   gStringRMS              = gEnv->GetValue("Hist.Stats.RMS",              "RMS");
+   gStringRMSX             = gEnv->GetValue("Hist.Stats.RMSX",             "RMS x");
+   gStringRMSY             = gEnv->GetValue("Hist.Stats.RMSY",             "RMS y");
+   gStringRMSZ             = gEnv->GetValue("Hist.Stats.RMSZ",             "RMS z");
+   gStringUnderflow        = gEnv->GetValue("Hist.Stats.Underflow",        "Underflow");
+   gStringOverflow         = gEnv->GetValue("Hist.Stats.Overflow",         "Overflow");
+   gStringIntegral         = gEnv->GetValue("Hist.Stats.Integral",         "Integral");
+   gStringIntegralBinWidth = gEnv->GetValue("Hist.Stats.IntegralBinWidth", "Integral(w)");
+   gStringSkewness         = gEnv->GetValue("Hist.Stats.Skewness",         "Skewness");
+   gStringSkewnessX        = gEnv->GetValue("Hist.Stats.SkewnessX",        "Skewness x");
+   gStringSkewnessY        = gEnv->GetValue("Hist.Stats.SkewnessY",        "Skewness y");
+   gStringSkewnessZ        = gEnv->GetValue("Hist.Stats.SkewnessZ",        "Skewness z");
+   gStringKurtosis         = gEnv->GetValue("Hist.Stats.Kurtosis",         "Kurtosis");
+   gStringKurtosisX        = gEnv->GetValue("Hist.Stats.KurtosisX",        "Kurtosis x");
+   gStringKurtosisY        = gEnv->GetValue("Hist.Stats.KurtosisY",        "Kurtosis y");
+   gStringKurtosisZ        = gEnv->GetValue("Hist.Stats.KurtosisZ",        "Kurtosis z");
 }
 
 
@@ -7155,8 +7165,13 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       stats->AddText(t);
    }
    if (print_integral) {
-      snprintf(textstats,50,"%s = %s%s",gStringIntegral.Data(),"%",stats->GetStatFormat());
-      snprintf(t,100,textstats,fH->Integral());
+      if (print_integral == 1) {
+         snprintf(textstats,50,"%s = %s%s",gStringIntegral.Data(),"%",stats->GetStatFormat());
+         snprintf(t,100,textstats,fH->Integral());
+      } else {
+         snprintf(textstats,50,"%s = %s%s",gStringIntegralBinWidth.Data(),"%",stats->GetStatFormat());
+         snprintf(t,100,textstats,fH->Integral("width"));
+      }
       stats->AddText(t);
    }
    if (print_skew) {

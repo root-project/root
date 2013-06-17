@@ -44,6 +44,22 @@
        hist->Fit(fit);
     }
     ```
+-   The statistics display has a new option: "I"=2 (the default one
+    remains "i"=1). The value displayed for integral is
+    `TH1::Integral("width")` instead of `TH1::Integral()`.
+    Example:
+
+    ``` {.cpp}
+    {
+       TH1D * histo1D = new TH1D ("histo1D","",2,0.,4.) ; 
+       histo1D->SetBinContent( 1,1.) ;
+       histo1D->SetBinContent( 2,2.) ;
+       TCanvas * canvas = new TCanvas () ;
+       canvas->Divide(2,1) ;
+       canvas->cd(1) ; gStyle->SetOptStat("nemruoi") ; histo1D->DrawClone() ;
+       canvas->cd(2) ; gStyle->SetOptStat("nemruoI") ; histo1D->DrawClone() ;
+    }
+    ```
 
 ### TGraphPainter
 

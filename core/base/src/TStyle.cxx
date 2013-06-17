@@ -1331,6 +1331,7 @@ void TStyle::SetOptStat(Option_t *stat)
    if (opt.Contains("u")) mode+=10000;
    if (opt.Contains("o")) mode+=100000;
    if (opt.Contains("i")) mode+=1000000;
+   if (opt.Contains("I")) mode+=2000000;
    if (opt.Contains("s")) mode+=10000000;
    if (opt.Contains("S")) mode+=20000000;
    if (opt.Contains("k")) mode+=100000000;
