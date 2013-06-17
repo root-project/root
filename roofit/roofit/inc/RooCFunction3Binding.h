@@ -31,9 +31,6 @@ typedef Double_t (*CFUNCD3UDU)(UInt_t,Double_t,UInt_t) ;
 typedef Double_t (*CFUNCD3UDD)(UInt_t,Double_t,Double_t) ;
 typedef Double_t (*CFUNCD3UUD)(UInt_t,UInt_t,Double_t) ;
 
-RooAbsReal* bindFunction(const char* name,void* func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) ;
-RooAbsPdf* bindPdf(const char* name,void* func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) ;
-#ifndef __CINT__
 RooAbsReal* bindFunction(const char* name,CFUNCD3DDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) ;
 RooAbsReal* bindFunction(const char* name,CFUNCD3DDB func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) ;
 RooAbsReal* bindFunction(const char* name,CFUNCD3DII func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) ;
@@ -46,7 +43,6 @@ RooAbsPdf* bindPdf(const char* name,CFUNCD3DII func,RooAbsReal& x, RooAbsReal& y
 RooAbsPdf* bindPdf(const char* name,CFUNCD3UDU func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) ;
 RooAbsPdf* bindPdf(const char* name,CFUNCD3UDD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) ;
 RooAbsPdf* bindPdf(const char* name,CFUNCD3UUD func,RooAbsReal& x, RooAbsReal& y, RooAbsReal& z) ;
-#endif
 
 }
 

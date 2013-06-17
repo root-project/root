@@ -242,6 +242,7 @@ public:
    virtual void   MethodInfo_CreateSignature(MethodInfo_t * /* minfo */, TString & /* signature */) const {;}
    virtual void   MethodInfo_Delete(MethodInfo_t * /* minfo */) const {;}
    virtual MethodInfo_t  *MethodInfo_Factory() const {return 0;}
+   virtual MethodInfo_t  *MethodInfo_Factory(ClassInfo_t * /*clinfo*/) const {return 0;}
    virtual MethodInfo_t  *MethodInfo_FactoryCopy(MethodInfo_t * /* minfo */) const {return 0;}
    virtual MethodInfo_t  *MethodInfo_InterfaceMethod(MethodInfo_t * /* minfo */) const {return 0;}
    virtual Bool_t MethodInfo_IsValid(MethodInfo_t * /* minfo */) const {return 0;}
@@ -260,6 +261,7 @@ public:
    // G__MethodArgInfo interface            
    virtual void   MethodArgInfo_Delete(MethodArgInfo_t * /* marginfo */) const {;}
    virtual MethodArgInfo_t  *MethodArgInfo_Factory() const {return 0;}
+   virtual MethodArgInfo_t  *MethodArgInfo_Factory(MethodInfo_t * /*minfo*/) const {return 0;}
    virtual MethodArgInfo_t  *MethodArgInfo_FactoryCopy(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual Bool_t MethodArgInfo_IsValid(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual int    MethodArgInfo_Next(MethodArgInfo_t * /* marginfo */) const {return 0;}
@@ -289,6 +291,7 @@ public:
    virtual TypedefInfo_t  *TypedefInfo_FactoryCopy(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual void   TypedefInfo_Init(TypedefInfo_t * /* tinfo */, const char * /* funcname */) const {;}
    virtual Bool_t TypedefInfo_IsValid(TypedefInfo_t * /* tinfo */) const {return 0;}
+   virtual int    TypedefInfo_Next(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual Long_t TypedefInfo_Property(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual int    TypedefInfo_Size(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual const char *TypedefInfo_TrueName(TypedefInfo_t * /* tinfo */) const {return 0;}

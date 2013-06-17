@@ -24,8 +24,6 @@ namespace RooCintUtils {
   std::pair<std::list<std::string>,unsigned int> ctorArgs(const char* classname, UInt_t nMinArgs=0) ;
   Bool_t isEnum(const char* typeName) ;
   Bool_t isValidEnumValue(const char* typeName, const char* value) ;
-  const char* functionName(void* func) ;
-  Bool_t matchFuncPtrArgs(void* func, const char* args) ;
   Bool_t isTypeDef(const char* trueName, const char* aliasName) ;
   std::string trueName(const char* typeDefName) ;
   
