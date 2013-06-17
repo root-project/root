@@ -2848,6 +2848,9 @@ int G__fundamental_conversion_operator(int type, int tagnum, int typenum, int re
    //
    // Note: Bytecode compilation is alive after conversion operator is used.
    //
+   if (presult->tagnum == -1) {
+      return 0;
+   }
    G__FastAllocString tmp(G__ONELINE);
    G__value conv_result;
    int conv_done = 0;
@@ -3062,7 +3065,7 @@ inline void G__alloc_var_ref(int SIZE, CONVFUNC f, const char* item, G__var_arra
             /* Namespace member variable. */
             (var->statictype[ig15] == G__LOCALSTATIC) ||
             /* Namespace member variable. */
-            (G__struct.type[G__def_tagnum] == 'n')
+            (G__def_tagnum != -1 && G__struct.type[G__def_tagnum] == 'n')
          ) &&
          /* Initialize const, static, and enumerator variables before running. */
          (!G__static_alloc || G__prerun) &&
@@ -3170,7 +3173,7 @@ inline void G__alloc_var_ref(int SIZE, CONVFUNC f, const char* item, G__var_arra
             /* Namespace member. */
             (var->statictype[ig15] == G__LOCALSTATIC) ||
             /* Namespace member variable. */
-            (G__struct.type[G__def_tagnum] == 'n')
+            (G__def_tagnum != -1 && G__struct.type[G__def_tagnum] == 'n')
          ) &&
          /* Initialize const and static variables before running. */
          (!G__static_alloc || G__prerun) &&
