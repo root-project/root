@@ -5500,7 +5500,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    Double_t temp1[3],temp2[3];
    Double_t xyerror;
    if (Hoption.Error == 110) {
-      xyerror = 0 ;
+      xyerror = 0;
    } else {
       xyerror = gStyle->GetErrorX();
    }
@@ -6477,8 +6477,8 @@ void THistPainter::PaintLego(Option_t *)
 
    Int_t nids = -1;
    TH1 * hid = NULL;
-   Color_t colormain = -1, colordark = -1 ;
-   Bool_t drawShadowsInLego1=kTRUE ;
+   Color_t colormain = -1, colordark = -1;
+   Bool_t drawShadowsInLego1 = kTRUE;
 
    // LEGO3 is like LEGO1 except that the black lines around each lego are not drawn.
    if (Hoption.Lego == 13) {
@@ -6488,7 +6488,7 @@ void THistPainter::PaintLego(Option_t *)
    // LEGO4 is like LEGO1 except no shadows are drawn.
    if (Hoption.Lego == 14) {
       Hoption.Lego = 11;
-      drawShadowsInLego1=kFALSE ;
+      drawShadowsInLego1 = kFALSE;
    }
 
    //          Create axis object
@@ -6515,7 +6515,7 @@ void THistPainter::PaintLego(Option_t *)
    }
 
    if (Hoption.Lego == 11) {
-      nids = 1 ;
+      nids = 1;
       if (fStack) nids = fStack->GetSize();
       hid = fH;
       for (Int_t id=0;id<=nids;id++) {
@@ -6604,7 +6604,6 @@ void THistPainter::PaintLego(Option_t *)
    }
 
    if (Hoption.Lego == 1 || Hoption.Lego == 11) {
-      fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
          fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
@@ -6658,10 +6657,10 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
       r[2] = 0;
       view->WCtoNDC(r, x2);
       gPad->PaintLine(x1[0],x1[1],x2[0],x2[1]);
-      return ;
+      return;
    }
 
-   if (Hoption.System != kCARTESIAN) return ;
+   if (Hoption.System != kCARTESIAN) return;
 
    rad = TMath::ATan(1.) * 4. /180.;
    cosa = TMath::Cos(ang*rad);
@@ -7769,7 +7768,7 @@ void THistPainter::PaintSurface(Option_t *)
    }
 
    fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
-   fLego->SetLineColor(fH->GetLineColor());
+   fLego->SetEdgeAtt(fH->GetLineColor(),fH->GetLineStyle(),fH->GetLineWidth(),0);
    fLego->SetFillColor(fH->GetFillColor());
 
    //          Create axis object
@@ -7846,7 +7845,6 @@ void THistPainter::PaintSurface(Option_t *)
 
    if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 14 || Hoption.Surf == 17) {
       fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
-      fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
          fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
@@ -7931,7 +7929,6 @@ void THistPainter::PaintSurface(Option_t *)
 
    if ((!Hoption.Same) &&
        (Hoption.Surf == 1 || Hoption.Surf == 13 || Hoption.Surf == 16)) {
-      fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
          fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);

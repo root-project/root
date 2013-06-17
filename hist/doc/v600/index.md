@@ -24,7 +24,9 @@
 -   New plotting option `"LEGO4"`. Draw a lego plot with hidden surface
     removal, like LEGO1, but without the shadow effect on each lego-bar.
 -   Line attributes can be used in lego plots to change the edges'
-    style.
+    style. It works when drawing a `TH2` in LEGO or SURF mode whatever
+    the coordinate system used (car, pol, cyl, sph, and psr). It also
+    handles `THStack` (lego only).
 -   Implement in THistPainter::GetObjectInfo the case of TProfile and
     TProfile2D to print the tooltip information on each bin. Disable the
     printing of the bin information for TH3, since it is not currently
