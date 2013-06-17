@@ -281,9 +281,16 @@ Also text plays a fundamental role in making the plots self-explanatory.
 A possibility to add text in your plot is provided by the `TLatex`
 class. The objects of this class are constructed with the coordinates of
 the bottom-left corner of the text and a string which contains the text
-itself. The real twist is that ordinary [Latex mathematical
-symbols](http://root.cern.ch/root/html534/TLatex.html#L5) are
-automatically interpreted, you just need to replace the "\\" by a "\#".
+itself. The real twist is that ordinary 
+[Latex mathematical symbols](http://root.cern.ch/root/html534/TLatex.html#L5)
+are automatically interpreted, you just need to replace the "\\" by a "\#".
+
+If 
+["\\" is used as control character](http://root.cern.ch/root/html534/TLatex.html#L14)
+, then the
+[TMathText interface](http://root.cern.ch/root/html534/TMathText.html)
+is invoked. It provides the plain TeX syntax and allow to access character's
+set like Russian and Japenese.
 
 ## Interpretation and Compilation
 
