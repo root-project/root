@@ -55,6 +55,7 @@ protected:
    TPBReadType *fReadType;       // Type of read (partial, full)
    TString fDataSet;             // Name of the dataset
    Int_t   fNFilesWrk;           // Number of files generated files per worker
+   Int_t   fNumWrkMax;           // Max number of workers (required for dynamic setups)
 
    TString fCPUSel;              // Selector to be used for CPU benchmarks
    TString fCPUPar;              // List of par files to be loaded for CPU benchmarks

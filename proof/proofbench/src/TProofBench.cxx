@@ -110,6 +110,33 @@ TProofBench::TProofBench(const char *url, const char *outfile, const char *proof
       Error("TProofBench", "could not open a valid PROOF session - cannot continue");
       return;
    }
+   // Get the size of the cluster
+   fNumWrkMax = fProof->GetParallel();
+   if (fProof->UseDynamicStartup() && TProof::GetEnvVars()) {
+      // It must be passed as PROOF option 'workers=N' and recorded in the envs vars
+      TNamed *n = (TNamed *) TProof::GetEnvVars()->FindObject("PROOF_NWORKERS");
+      if (!n) {
+         Error("TProofBench", "dynamic mode: you must specify the max number of workers");
+         fProof->Close();
+         SafeDelete(fProof);
+         return;
+      }
+      TString sn(n->GetTitle());
+      if (sn.IsDigit()) fNumWrkMax = sn.Atoi();
+      if (!sn.IsDigit()) {
+         Error("TProofBench", "dynamic mode: wrong specification of the max number of"
+                              " workers ('%s')", n->GetTitle());
+         fProof->Close();
+         SafeDelete(fProof);
+         return;
+      }
+   }
+   if (fNumWrkMax <= 0) {
+      Error("TProofBench", "wrong max number of workers ('%d')", fNumWrkMax);
+      fProof->Close();
+      SafeDelete(fProof);
+      return;
+   }
    // By default we use the same instance for dataset actions
    fProofDS = fProof;
    // The object is now valid
@@ -119,7 +146,7 @@ TProofBench::TProofBench(const char *url, const char *outfile, const char *proof
    TString host(TString::Format("PROOF at %s", u.GetHost()));
    if (!strcmp(u.GetProtocol(), "lite")) host.Form("PROOF-Lite on %s", gSystem->HostName());
    fDescription = new TNamed("PB_description",
-                             TString::Format("%s, %d workers", host.Data(), fProof->GetParallel()).Data());
+                             TString::Format("%s, %d workers", host.Data(), fNumWrkMax).Data());
    Printf(" Run description: %s", fDescription->GetTitle());
    // Set output file
    if (SetOutFile(outfile, kFALSE) != 0)
@@ -193,7 +220,7 @@ Int_t TProofBench::SetOutFile(const char *outfile, Bool_t verbose)
       TDatime dat;
       const char *lite = (fProof->IsLite()) ? "-lite" : "";
       fOutFileName.Form("proofbench-%s%s-%dw-%d-%.2d%.2d.root",
-                        fProof->GetMaster(), lite, fProof->GetParallel(),
+                        fProof->GetMaster(), lite, fNumWrkMax,
                         dat.GetDate(), dat.GetHour(), dat.GetMinute());
       Info("SetOutFile", "using default output file: '%s'", fOutFileName.Data());
       fUnlinkOutfile = kTRUE;
