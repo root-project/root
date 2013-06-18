@@ -413,11 +413,22 @@ list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo
   }
 
   // Check that observable is in dataset, if not no hint is generated
-  RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(obs.GetName())) ;
+  _histObsIter->Reset() ;
+  _pdfObsIter->Reset() ;
+  RooAbsRealLValue* lvarg ;
+  RooAbsArg *pdfObs, *histObs ;
+  while ((pdfObs = (RooAbsArg*)_pdfObsIter->Next())) {
+    histObs = (RooAbsArg*) _histObsIter->Next() ;
+    if (TString(obs.GetName())==pdfObs->GetName()) {
+      RooAbsArg* dhobs = _dataHist->get()->find(histObs->GetName()) ;
+      lvarg = dynamic_cast<RooAbsRealLValue*>(dhobs) ;
+      if (lvarg) break ;
+    }
+  }
   if (!lvarg) {
     return 0 ;
   }
-
+  
   // Retrieve position of all bin boundaries
   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
   Double_t* boundaries = binning->array() ;
