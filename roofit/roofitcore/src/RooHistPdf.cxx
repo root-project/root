@@ -33,6 +33,7 @@
 #include "RooRealVar.h"
 #include "RooCategory.h"
 #include "RooWorkspace.h"
+#include "RooGlobalFunc.h"
 
 
 
@@ -523,6 +524,23 @@ Double_t RooHistPdf::maxVal(Int_t code) const
 }
 
 
+
+
+//_____________________________________________________________________________
+Bool_t RooHistPdf::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) 
+{
+  if (fabs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return kFALSE ;
+  if (dh1.numEntries() != dh2.numEntries()) return kFALSE ;
+  for (int i=0 ; i < dh1.numEntries() ; i++) {
+    dh1.get(i) ;
+    dh2.get(i) ;
+    if (fabs(dh1.weight()-dh2.weight())>1e-8) return kFALSE ;
+  }
+  return kTRUE ;
+}
+
+
+
 //_____________________________________________________________________________
 Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws) 
 {  
@@ -538,24 +556,46 @@ Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
 
   // Check if dataset with given name already exists
   RooAbsData* wsdata = ws.data(_dataHist->GetName()) ;
+
   if (wsdata) {
+
+    // Yes it exists - now check if it is identical to our internal histogram 
     if (wsdata->InheritsFrom(RooDataHist::Class())) {
-      // Exists and is of correct type -- adjust internal pointer
-      _dataHist = (RooDataHist*) wsdata ;
-      return kFALSE ;
+
+      // Check if histograms are identical
+      if (areIdentical((RooDataHist&)*wsdata,*_dataHist)) {
+
+	// Exists and is of correct type, and identical -- adjust internal pointer to WS copy
+	_dataHist = (RooDataHist*) wsdata ;
+      } else {
+
+	// not identical, clone rename and import
+	TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
+	Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data())) ;
+	if (flag) {
+	  coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
+	  return kTRUE ;
+	}
+	_dataHist = (RooDataHist*) ws.data(uniqueName.Data()) ;
+      }
+
     } else {
-      // Exists and is NOT of correct type -- abort
+
+      // Exists and is NOT of correct type: clone rename and import
+      TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
+      Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data())) ;
+      if (flag) {
+	coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
+	return kTRUE ;
+      }
+      _dataHist = (RooDataHist*) ws.data(uniqueName.Data()) ;
       
     }
+    return kFALSE ;
   }
-
+  
   // We need to import our datahist into the workspace
-  Bool_t flag = ws.import(*_dataHist) ;
-  if (flag) {
-    coutE(ObjectHandling) << "RooHistPdf::importWorkspaceHook(" << GetName() 
-			  << ") error importing RooDataHist into workspace: dataset of different type with same name already exists." << endl ;
-    return kTRUE ;
-  }
+  ws.import(*_dataHist) ;
 
   // Redirect our internal pointer to the copy in the workspace
   _dataHist = (RooDataHist*) ws.data(_dataHist->GetName()) ;
