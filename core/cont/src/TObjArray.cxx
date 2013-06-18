@@ -330,11 +330,23 @@ void TObjArray::Delete(Option_t *)
 {
    // Remove all objects from the array AND delete all heap based objects.
 
-   for (Int_t i = 0; i < fSize; i++)
+   // In some case, for example TParallelCoord, a list (the pad's list of 
+   // primitives) will contain both the container and the containees
+   // (the TParallelCoorVar) but if the Clear is being called from
+   // the destructor of the container of this list, one of the first
+   // thing done will be the remove the container (the pad) for the
+   // list (of Primitives of the canvas) that was connecting it 
+   // (indirectly) to the list of cleanups.
+   // So let's temporarily add the current list and remove it later.
+   bool needRegister = fSize && TROOT::Initialized() && !gROOT->GetListOfCleanups()->FindObject(this);
+   if (needRegister) gROOT->GetListOfCleanups()->Add(this);
+   for (Int_t i = 0; i < fSize; i++) {
       if (fCont[i] && fCont[i]->IsOnHeap()) {
          TCollection::GarbageCollect(fCont[i]);
          fCont[i] = 0;
       }
+   }
+   if (needRegister) ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
 
    Init(fSize, fLowerBound);
 }
