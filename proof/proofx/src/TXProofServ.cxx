@@ -840,35 +840,42 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
                SafeDelete(master);
             }
             // Now the workers
-            while (fl.Tokenize(tok, from, "&") && (nwrks == -1 || nwrks > 0)) {
+            while (fl.Tokenize(tok, from, "&")) {
                if (!tok.IsNull()) {
-                  // We have the minimal set of information to start
-                  rc = kQueryOK;
-                  if (pernode && nodecnt) {
-                     TProofNodeInfo *ni = new TProofNodeInfo(tok);
-                     TParameter<Int_t> *p = 0;
-                     Int_t nw = 0;
-                     if (!(p = (TParameter<Int_t> *) nodecnt->FindObject(ni->GetNodeName().Data()))) {
-                        p = new TParameter<Int_t>(ni->GetNodeName().Data(), nw);
-                        nodecnt->Add(p);
-                     }
-                     nw = p->GetVal();
-                     if (gDebug > 0)
-                        Info("GetWorkers","%p: name: %s (%s) val: %d (nwrks: %d)",
-                                          p, p->GetName(), ni->GetNodeName().Data(),  nw, nwrks);
-                     if (nw < nwrks) {
-                        if (workers) workers->Add(ni);
-                        nw++;
-                        p->SetVal(nw);
+                  if (nwrks == -1 || nwrks > 0) {
+                     // We have the minimal set of information to start
+                     rc = kQueryOK;
+                     if (pernode && nodecnt) {
+                        TProofNodeInfo *ni = new TProofNodeInfo(tok);
+                        TParameter<Int_t> *p = 0;
+                        Int_t nw = 0;
+                        if (!(p = (TParameter<Int_t> *) nodecnt->FindObject(ni->GetNodeName().Data()))) {
+                           p = new TParameter<Int_t>(ni->GetNodeName().Data(), nw);
+                           nodecnt->Add(p);
+                        }
+                        nw = p->GetVal();
+                        if (gDebug > 0)
+                           Info("GetWorkers","%p: name: %s (%s) val: %d (nwrks: %d)",
+                                             p, p->GetName(), ni->GetNodeName().Data(),  nw, nwrks);
+                        if (nw < nwrks) {
+                           if (workers) workers->Add(ni);
+                           nw++;
+                           p->SetVal(nw);
+                        } else {
+                           // Two many workers on this machine already
+                           SafeDelete(ni);
+                        }
                      } else {
-                        // Two many workers on this machine already
-                        SafeDelete(ni);
+                        if (workers)
+                           workers->Add(new TProofNodeInfo(tok));
+                        // Count down
+                        if (nwrks != -1) nwrks--;
                      }
                   } else {
-                     if (workers)
-                        workers->Add(new TProofNodeInfo(tok));
-                     // Count down
-                     if (nwrks != -1) nwrks--;
+                     // Release this worker (to cleanup the session list in the coordinator and get a fresh
+                     // and correct list next call) 
+                     TProofNodeInfo *ni = new TProofNodeInfo(tok);
+                     ReleaseWorker(ni->GetOrdinal().Data());
                   }
                }
             }

@@ -1508,7 +1508,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             TString fn;
             if (TProof::GetFileInCmd(str, fn))
                CopyFromCache(fn, 1);
-            if (IsParallel()) {
+            if (IsParallel() && fProof && !fProof->UseDynamicStartup()) {
                fProof->SendCommand(str);
             } else {
                PDB(kGlobal, 1)
@@ -1824,7 +1824,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                (*mess) >> nodes;
                if ((mess->BufferSize() > mess->Length()))
                   (*mess) >> random;
-               if (fProof) fProof->GoParallel(nodes, kFALSE, random);
+               if (fProof) fProof->SetParallel(nodes, random);
                rc = 1;
             }
          } else {
@@ -1867,10 +1867,34 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          if (all) {
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETSLAVEINFO", "Enter");
             if (IsMaster()) {
-               TList *info = fProof->GetListOfSlaveInfos();
-               TMessage answ(kPROOF_GETSLAVEINFO);
-               answ << info;
-               fSocket->Send(answ);
+
+               Bool_t ok = kTRUE;
+               // if the session does not have workers and is in the dynamic mode
+               if (fProof->UseDynamicStartup()) {
+                  ok = kFALSE;
+                  // get the a list of workers and start them
+                  Int_t pc = 0;
+                  TList* workerList = new TList();
+                  EQueryAction retVal = GetWorkers(workerList, pc);
+                  if (retVal != TProofServ::kQueryStop && retVal != TProofServ::kQueryEnqueued) {
+                     if (Int_t ret = fProof->AddWorkers(workerList) < 0) {
+                        Error("HandleSocketInput:kPROOF_GETSLAVEINFO",
+                              "adding a list of worker nodes returned: %d", ret);
+                     }
+                  } else {
+                     Error("HandleSocketInput:kPROOF_GETSLAVEINFO",
+                           "getting list of worker nodes returned: %d", retVal);
+                  }
+                  ok = kTRUE;
+               }
+               if (ok) {
+                  TList *info = fProof->GetListOfSlaveInfos();
+                  TMessage answ(kPROOF_GETSLAVEINFO);
+                  answ << info;
+                  fSocket->Send(answ);
+                  // stop the workers
+                  if (IsMaster() && fProof->UseDynamicStartup()) fProof->RemoveWorkers(0);
+               }
             } else {
                TMessage answ(kPROOF_GETSLAVEINFO);
                TList *info = new TList;
@@ -2382,7 +2406,7 @@ Bool_t TProofServ::IsParallel() const
    // True if in parallel mode.
 
    if (IsMaster() && fProof)
-      return fProof->IsParallel();
+      return fProof->IsParallel() || fProof->UseDynamicStartup() ;
 
    // false in case we are a slave
    return kFALSE;
