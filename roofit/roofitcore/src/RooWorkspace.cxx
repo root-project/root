@@ -45,6 +45,7 @@
 #include "RooConstVar.h"
 #include "RooResolutionModel.h"
 #include "RooPlot.h"
+#include "RooRandom.h"
 #include "TInterpreter.h"
 #include "TClassTable.h"
 #include "TBaseClass.h"
@@ -167,7 +168,7 @@ RooWorkspace::RooWorkspace(const char* name, Bool_t doCINTExport)  :
 
 //_____________________________________________________________________________
 RooWorkspace::RooWorkspace(const RooWorkspace& other) : 
-  TNamed(other), _uuid(other._uuid), _classes(this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
+  TNamed(other), _uuid(other._uuid), _classes(other._classes,this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
 {
   // Workspace copy constructor
 
@@ -1075,6 +1076,7 @@ Bool_t RooWorkspace::importClassCode(const char* pat, Bool_t doReplace)
     }
   }  
   delete iter ;
+
   return ret ;
 }
 
@@ -1864,6 +1866,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   if (declpath) {
     delete[] declpath ;
   }
+
 
   return kTRUE ;
 }

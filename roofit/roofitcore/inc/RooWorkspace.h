@@ -154,6 +154,14 @@ public:
   class CodeRepo : public TObject {
   public:
     CodeRepo(RooWorkspace* wspace=0) : _wspace(wspace), _compiledOK(kTRUE) {} ;
+
+    CodeRepo(const CodeRepo& other, RooWorkspace* wspace=0) : TObject(other) ,
+          _wspace(wspace?wspace:other._wspace), 
+          _c2fmap(other._c2fmap),
+          _fmap(other._fmap),
+          _ehmap(other._ehmap),
+          _compiledOK(other._compiledOK) {} ;
+
     virtual ~CodeRepo() {} ;
 
     Bool_t autoImportClass(TClass* tc, Bool_t doReplace=kFALSE) ;
@@ -162,6 +170,8 @@ public:
     Bool_t compiledOK() const { return _compiledOK ; }
 
     std::string listOfClassNames() const ;
+
+       
 
     class ClassRelInfo {
     public:
