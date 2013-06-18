@@ -90,11 +90,11 @@ TPythia8::TPythia8():
     fNumberOfParticles(0)
 {
    // Constructor
-   if (fgInstance) 
+   if (fgInstance)
       Fatal("TPythia8", "There's already an instance of TPythia8");
-  
+
    delete fParticles; // was allocated as TObjArray in TGenerator
-    
+
    fParticles = new TClonesArray("TParticle",50);
    fPythia    = new Pythia8::Pythia();
 }
@@ -106,11 +106,11 @@ TPythia8::TPythia8(const char *xmlDir):
     fNumberOfParticles(0)
 {
    // Constructor with an xmlDir (eg "../xmldoc"
-   if (fgInstance) 
+   if (fgInstance)
       Fatal("TPythia8", "There's already an instance of TPythia8");
-  
+
    delete fParticles; // was allocated as TObjArray in TGenerator
-    
+
    fParticles = new TClonesArray("TParticle",50);
    fPythia    = new Pythia8::Pythia(xmlDir);
 }
@@ -150,7 +150,6 @@ void TPythia8::GenerateEvent()
    fNumberOfParticles  = fPythia->event.size() - 1;
    ImportParticles();
 }
-
 //___________________________________________________________________________
 Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
 {
@@ -160,19 +159,23 @@ Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
    clonesParticles.Clear();
    Int_t nparts=0;
    Int_t i;
-   fNumberOfParticles  = fPythia->event.size() - 1;
+   Int_t ioff = 0;
+   fNumberOfParticles  = fPythia->event.size();
+   if (fPythia->event[0].id() == 90) {
+     ioff = -1;
+   }
 
    if (!strcmp(option,"") || !strcmp(option,"Final")) {
-      for (i = 0; i <= fNumberOfParticles; i++) {
+      for (i = 0; i < fNumberOfParticles; i++) {
 	if (fPythia->event[i].id() == 90) continue;
          if (fPythia->event[i].isFinal()) {
             new(clonesParticles[nparts]) TParticle(
                 fPythia->event[i].id(),
-                fPythia->event[i].status(),
-                fPythia->event[i].mother1() - 1,
-                fPythia->event[i].mother2() - 1,
-                fPythia->event[i].daughter1() - 1, 
-                fPythia->event[i].daughter2() - 1,
+                fPythia->event[i].isFinal(),
+                fPythia->event[i].mother1() + ioff,
+                fPythia->event[i].mother2() + ioff,
+                fPythia->event[i].daughter1() + ioff,
+                fPythia->event[i].daughter2() + ioff,
                 fPythia->event[i].px(),     // [GeV/c]
                 fPythia->event[i].py(),     // [GeV/c]
                 fPythia->event[i].pz(),     // [GeV/c]
@@ -180,20 +183,20 @@ Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
                 fPythia->event[i].xProd(),  // [mm]
                 fPythia->event[i].yProd(),  // [mm]
                 fPythia->event[i].zProd(),  // [mm]
-                fPythia->event[i].tProd()); // [mm/c] 
+                fPythia->event[i].tProd()); // [mm/c]
 		nparts++;
 	    } // final state partice
 	} // particle loop
     } else if (!strcmp(option,"All")) {
-	for (i = 0; i <= fNumberOfParticles; i++) {
+	for (i = 0; i < fNumberOfParticles; i++) {
 	  if (fPythia->event[i].id() == 90) continue;
 	    new(clonesParticles[nparts]) TParticle(
 		fPythia->event[i].id(),
-		fPythia->event[i].status(),
-		fPythia->event[i].mother1() - 1,
-		fPythia->event[i].mother2() - 1,
-		fPythia->event[i].daughter1() - 1,
-		fPythia->event[i].daughter2() - 1,
+		fPythia->event[i].isFinal(),
+		fPythia->event[i].mother1() + ioff,
+		fPythia->event[i].mother2() + ioff,
+		fPythia->event[i].daughter1() + ioff,
+		fPythia->event[i].daughter2() + ioff,
 		fPythia->event[i].px(),       // [GeV/c]
 		fPythia->event[i].py(),       // [GeV/c]
 		fPythia->event[i].pz(),       // [GeV/c]
@@ -202,9 +205,10 @@ Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
 		fPythia->event[i].yProd(),    // [mm]
 		fPythia->event[i].zProd(),    // [mm]
 		fPythia->event[i].tProd());   // [mm/c]
-	    nparts++;
-	} // particle loop	
+     	        nparts++;
+	} // particle loop
     }
+    if(ioff==-1)     fNumberOfParticles--;
     return nparts;
 }
 
@@ -213,16 +217,23 @@ TObjArray* TPythia8::ImportParticles(Option_t* /* option */)
 {
    // Import particles from Pythia stack
    fParticles->Clear();
-   Int_t numpart   = fPythia->event.size() - 1;
+   Int_t ioff = 0;
+   Int_t numpart   = fPythia->event.size();
+   if (fPythia->event[0].id() == 90) {
+     numpart--;
+     ioff = -1;
+   }
+
+
    TClonesArray &a = *((TClonesArray*)fParticles);
    for (Int_t i = 1; i <= numpart; i++) {
       new(a[i]) TParticle(
          fPythia->event[i].id(),
-         fPythia->event[i].status(),
-         fPythia->event[i].mother1()  - 1,
-         fPythia->event[i].mother2()  - 1,
-         fPythia->event[i].daughter1() - 1,
-         fPythia->event[i].daughter2() - 1,
+         fPythia->event[i].isFinal(),
+         fPythia->event[i].mother1()   + ioff,
+         fPythia->event[i].mother2()   + ioff,
+         fPythia->event[i].daughter1() + ioff,
+         fPythia->event[i].daughter2() + ioff,
          fPythia->event[i].px(),       // [GeV/c]
          fPythia->event[i].py(),       // [GeV/c]
          fPythia->event[i].pz(),       // [GeV/c]
@@ -273,7 +284,7 @@ void TPythia8::EventListing() const
 //___________________________________________________________________________
 void TPythia8::AddParticlesToPdgDataBase()
 {
-   // Add some pythia specific particle code to the data base    
+   // Add some pythia specific particle code to the data base
 
    TDatabasePDG *pdgDB = TDatabasePDG::Instance();
    pdgDB->AddParticle("string","string", 0, kTRUE,
