@@ -465,9 +465,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    atexit(CleanUpROOTAtExit);
 
-   fgRootInit = kTRUE;
-
    TClass::ReadRules(); // Read the default customization rules ...
+
+   fgRootInit = kTRUE;
 }
 
 //______________________________________________________________________________
