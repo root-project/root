@@ -195,6 +195,7 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    }
 
    for (i=0;i<fNStack;i++) { fColorMain[i] = 1; fColorDark[i] = 1; fEdgeColor[i] = 1; fEdgeStyle[i] = 1; fEdgeWidth[i] = 1; }
+   for (i=0;i<3;i++)       { fRmin[i] = rmin[i], fRmax[i] = rmax[i]; }
    for (i=0;i<4;i++)       { fYls[i] = 0; }
 
    for (i=0;i<30;i++)      { fJmask[i] = 0; }
