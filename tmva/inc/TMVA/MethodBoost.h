@@ -114,7 +114,9 @@ namespace TMVA {
 
       // the option handling methods
       void DeclareOptions();
+      void DeclareCompatibilityOptions();
       void ProcessOptions();
+
 
       MethodBoost* SetStage( Types::EBoostStage stage ) { fBoostStage = stage; return this; }
 

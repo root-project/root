@@ -210,13 +210,14 @@ void TMVA::MethodBoost::DeclareOptions()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodBase::DeclareCompatibilityOptions()
+void TMVA::MethodBoost::DeclareCompatibilityOptions()
 {
    // options that are used ONLY for the READER to ensure backward compatibility
    //   they are hence without any effect (the reader is only reading the training 
    //   options that HAD been used at the training of the .xml weightfile at hand
 
-   DeclareOptionRef( fMethodWeightType = "ByError", "Boost_MethodWeightType",
+   TString tmp;
+   DeclareOptionRef( tmp = "ByError", "Boost_MethodWeightType",
                      "How to set the final weight of the boosted classifiers" );
    AddPreDefVal(TString("ByError"));
    AddPreDefVal(TString("Average"));
@@ -224,7 +225,7 @@ void TMVA::MethodBase::DeclareCompatibilityOptions()
    AddPreDefVal(TString("ByOverlap"));
    AddPreDefVal(TString("LastMethod"));
 
-   DeclareOptionRef( fTransformString = "step", "Boost_Transform",
+   DeclareOptionRef( tmp = "step", "Boost_Transform",
                      "Type of transform applied to every boosted method linear, log, step" );
    AddPreDefVal(TString("step"));
    AddPreDefVal(TString("linear"));
@@ -238,7 +239,7 @@ void TMVA::MethodBase::DeclareCompatibilityOptions()
    AddPreDefVal(TString("HighEdgeCoPara"));
    // have been deleted .. hope that works :)
 
-
+}
 //_______________________________________________________________________
 Bool_t TMVA::MethodBoost::BookMethod( Types::EMVA theMethod, TString methodTitle, TString theOption )
 {
