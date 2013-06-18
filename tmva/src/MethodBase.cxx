@@ -581,6 +581,10 @@ void TMVA::MethodBase::CreateVariableTransforms( const TString& trafoDefinitionI
 //_______________________________________________________________________
 void TMVA::MethodBase::DeclareCompatibilityOptions()
 {
+   // options that are used ONLY for the READER to ensure backward compatibility
+   //   they are hence without any effect (the reader is only reading the training 
+   //   options that HAD been used at the training of the .xml weightfile at hand
+
    DeclareOptionRef( fNormalise=kFALSE, "Normalise", "Normalise input variables" ); // don't change the default !!!
    DeclareOptionRef( fUseDecorr=kFALSE, "D", "Use-decorrelated-variables flag" );
    DeclareOptionRef( fVariableTransformTypeString="Signal", "VarTransformType",
