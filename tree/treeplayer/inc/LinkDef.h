@@ -24,6 +24,7 @@
 #pragma link C++ class TTreeFormulaManager;
 #pragma link C++ class TTreeDrawArgsParser+;
 #pragma link C++ class TTreePerfStats+;
+#pragma link C++ class TTreeReader+;
 #pragma link C++ class TTreeTableInterface;
 
 #pragma link C++ namespace ROOT;
@@ -96,4 +97,9 @@
 #pragma link C++ class ROOT::TClaArrayProxy<ROOT::TArrayType<Long64_t> >+;
 #endif
 
+#pragma link C++ class ROOT::TTreeReaderValueBase+;
+#pragma link C++ class ROOT::TTreeReaderArrayBase+;
+#pragma link C++ class ROOT::TNamedBranchProxy+;
+
 #endif
+

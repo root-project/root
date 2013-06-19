@@ -91,6 +91,18 @@ ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *paren
    boss->Attach(this);
 }
 
+ROOT::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername) :
+   fDirector(boss), fInitialized(false),  fBranchName(branch->GetName()), fParent(0),
+   fDataMember(membername), fIsMember(membername != 0 && membername[0]), fIsClone(false), fIsaPointer(false),
+   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
+   fBranch(0), fBranchCount(0),
+   fLastTree(0), fRead(-1), fWhere(0),fCollection(0)
+{
+   // Constructor.
+
+   boss->Attach(this);
+}
+
 ROOT::TBranchProxy::~TBranchProxy()
 {
    // Typical Destructor
