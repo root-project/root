@@ -1190,7 +1190,7 @@ void TXProofServ::ReleaseWorker(const char *ord)
    // Send message to intermediate coordinator to release worker of last ordinal
    // ord.
 
-   Info("ReleaseWorker","releasing: %s", ord);
+   if (gDebug > 2) Info("ReleaseWorker","releasing: %s", ord);
 
    ((TXSocket *)fSocket)->SendCoordinator(kReleaseWorker, ord);
 }

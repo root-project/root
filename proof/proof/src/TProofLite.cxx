@@ -346,7 +346,7 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    fAllMonitor->DeActivateAll();
 
    // By default go into parallel mode
-   GoParallel(9999, kFALSE);
+   GoParallel(-1, kFALSE);
 
    // Send relevant initial state to slaves
    SendInitialState();
@@ -659,7 +659,7 @@ Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
       // Update group view
       SendGroupView();
       // By default go into parallel mode
-      SetParallel(9999, 0);
+      SetParallel(-1, 0);
    }
    // Done
    return 0;
