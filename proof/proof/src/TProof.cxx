@@ -968,7 +968,7 @@ Int_t TProof::Init(const char *, const char *conffile,
    fAllMonitor->DeActivateAll();
 
    // By default go into parallel mode
-   Int_t nwrk = 99999;
+   Int_t nwrk = -1;
    TNamed *n = 0;
    if (TProof::GetEnvVars() &&
       (n = (TNamed *) TProof::GetEnvVars()->FindObject("PROOF_NWORKERS"))) {
@@ -1343,7 +1343,7 @@ Int_t TProof::AddWorkers(TList *workerList)
    // use fEnabledPackages, fLoadedMacros,
    // gSystem->GetDynamicPath() and gSystem->GetIncludePath()
    // no need to load packages that are only loaded and not enabled (dyn mode)
-   Int_t nwrk = 99999;
+   Int_t nwrk = -1;
    TNamed *n = 0;
    if (TProof::GetEnvVars() &&
       (n = (TNamed *) TProof::GetEnvVars()->FindObject("PROOF_NWORKERS"))) {
@@ -6719,8 +6719,6 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
 
    if (!IsValid()) return -1;
 
-   if (nodes < 0) nodes = 0;
-
    fActiveSlaves->Clear();
    fActiveMonitor->RemoveAll();
 
@@ -6745,7 +6743,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
          sl->SetStatus(TSlave::kInactive);
       }
    }
-   Int_t nwrks = (nodes > wlst->GetSize()) ? wlst->GetSize() : nodes;
+   Int_t nwrks = (nodes < 0 || nodes > wlst->GetSize()) ? wlst->GetSize() : nodes;
    int cnt = 0;
    fEndMaster = TestBit(TProof::kIsMaster) ? kTRUE : kFALSE;
    while (cnt < nwrks) {

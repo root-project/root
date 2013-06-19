@@ -862,7 +862,7 @@ public:
    void        StopProcess(Bool_t abort, Int_t timeout = -1);
    void        Browse(TBrowser *b);
 
-   Int_t       SetParallel(Int_t nodes = 9999, Bool_t random = kFALSE);
+   Int_t       SetParallel(Int_t nodes = -1, Bool_t random = kFALSE);
    void        SetLogLevel(Int_t level, UInt_t mask = TProofDebug::kAll);
 
    void        Close(Option_t *option="");
