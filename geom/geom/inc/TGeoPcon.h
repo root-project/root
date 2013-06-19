@@ -102,7 +102,7 @@ public:
    Double_t             &Z(Int_t ipl) {return fZ[ipl];}
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    Double_t              SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in=kTRUE, Double_t safmin=TGeoShape::Big()) const;
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;

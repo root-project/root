@@ -388,15 +388,15 @@ Double_t TGeoEltu::Safety(Double_t *point, Bool_t /*in*/) const
 }
 
 //_____________________________________________________________________________
-void TGeoEltu::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoEltu::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   a  = " << fRmin << ";" << endl;
-   out << "   b  = " << fRmax << ";" << endl;
-   out << "   dz = " << fDz << ";" << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoEltu(\"" << GetName() << "\",a,b,dz);" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   a  = " << fRmin << ";" << std::endl;
+   out << "   b  = " << fRmax << ";" << std::endl;
+   out << "   dz = " << fDz << ";" << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoEltu(\"" << GetName() << "\",a,b,dz);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

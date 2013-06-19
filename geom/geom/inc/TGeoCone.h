@@ -91,7 +91,7 @@ public:
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                                  Double_t rmin2, Double_t rmax2, Int_t skipz=0);
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2);
    virtual void          SetDimensions(Double_t *param);
@@ -168,7 +168,7 @@ public:
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                                  Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2, Int_t skipz=0);
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param);

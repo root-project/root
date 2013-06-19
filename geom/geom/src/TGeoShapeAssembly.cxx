@@ -405,7 +405,7 @@ Double_t TGeoShapeAssembly::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoShapeAssembly::SavePrimitive(ostream & /*out*/, Option_t * /*option*/ /*= ""*/)
+void TGeoShapeAssembly::SavePrimitive(std::ostream & /*out*/, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
 }

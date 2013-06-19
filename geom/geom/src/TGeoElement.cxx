@@ -505,33 +505,33 @@ TGeoElementRN *TGeoElementRN::ReadElementRN(const char *line, Int_t &ndecays)
 }
 
 //______________________________________________________________________________
-void TGeoElementRN::SavePrimitive(ostream &out, Option_t *option)
+void TGeoElementRN::SavePrimitive(std::ostream &out, Option_t *option)
 {
 // Save primitive for RN elements.
    if (!strcmp(option,"h")) {
       // print a header if requested
-      out << "#====================================================================================================================================" << endl;
-      out << "#   Name      A    Z   ISO    LEV[MeV]  DM[MeV]   T1/2[s]        J/P     ABUND[%]    HTOX      ITOX      HTOX      ITOX    STAT NDCY" << endl;
-      out << "#====================================================================================================================================" << endl;
+      out << "#====================================================================================================================================" << std::endl;
+      out << "#   Name      A    Z   ISO    LEV[MeV]  DM[MeV]   T1/2[s]        J/P     ABUND[%]    HTOX      ITOX      HTOX      ITOX    STAT NDCY" << std::endl;
+      out << "#====================================================================================================================================" << std::endl;
    }
-   out << setw(11) << fName.Data();
-   out << setw(5) << (Int_t)fA;
-   out << setw(5) << fZ;
-   out << setw(5) << fIso;
-   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fLevel;
-   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fDeltaM;
-   out << setw(10) << setiosflags(ios::scientific) << setprecision(3) << fHalfLife;
-   out << setw(13) << fTitle.Data();
-   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fNatAbun;
-   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fTH_F;
-   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fTG_F;
-   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fTH_S;
-   out << setw(10) << setiosflags(ios::fixed) << setprecision(5) << fTG_S;
-   out << setw(5) << fStatus;
+   out << std::setw(11) << fName.Data();
+   out << std::setw(5) << (Int_t)fA;
+   out << std::setw(5) << fZ;
+   out << std::setw(5) << fIso;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fLevel;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fDeltaM;
+   out << std::setw(10) << std::setiosflags(std::ios::scientific) << std::setprecision(3) << fHalfLife;
+   out << std::setw(13) << fTitle.Data();
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fNatAbun;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fTH_F;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fTG_F;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fTH_S;
+   out << std::setw(10) << std::setiosflags(std::ios::fixed) << std::setprecision(5) << fTG_S;
+   out << std::setw(5) << fStatus;
    Int_t ndecays = 0;
    if (fDecays) ndecays = fDecays->GetEntries();
-   out << setw(5) << ndecays;
-   out << endl;
+   out << std::setw(5) << ndecays;
+   out << std::endl;
    if (fDecays) {
       TIter next(fDecays);
       TGeoDecayChannel *dc;
@@ -638,17 +638,17 @@ TGeoDecayChannel *TGeoDecayChannel::ReadDecay(const char *line)
 }
 
 //______________________________________________________________________________
-void TGeoDecayChannel::SavePrimitive(ostream &out, Option_t *)
+void TGeoDecayChannel::SavePrimitive(std::ostream &out, Option_t *)
 {
 // Save primitive for decays.
    TString decayName;
    DecayName(fDecay, decayName);
-   out << setw(50) << decayName.Data();
-   out << setw(10) << fDecay;
-   out << setw(10) << fDiso;
-   out << setw(12) << setiosflags(ios::fixed) << setprecision(6) << fBranchingRatio;
-   out << setw(12) << setiosflags(ios::fixed) << setprecision(6) << fQvalue;
-   out << endl;
+   out << std::setw(50) << decayName.Data();
+   out << std::setw(10) << fDecay;
+   out << std::setw(10) << fDiso;
+   out << std::setw(12) << std::setiosflags(std::ios::fixed) << std::setprecision(6) << fBranchingRatio;
+   out << std::setw(12) << std::setiosflags(std::ios::fixed) << std::setprecision(6) << fQvalue;
+   out << std::endl;
 }
 
 //______________________________________________________________________________
@@ -1094,8 +1094,8 @@ void TGeoElementTable::ExportElementsRN(const char *filename)
    if (!HasRNElements()) return;
    TString sname = filename;
    if (!sname.Length()) sname = "RadioNuclides.txt";
-   ofstream out;
-   out.open(sname.Data(), ios::out);
+   std::ofstream out;
+   out.open(sname.Data(), std::ios::out);
    if (!out.good()) {
       Error("ExportElementsRN", "Cannot open file %s", sname.Data());
       return;

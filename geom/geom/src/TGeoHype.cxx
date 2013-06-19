@@ -742,17 +742,17 @@ Double_t TGeoHype::SafetyToHype(Double_t *point, Bool_t inner, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoHype::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoHype::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   rin   = " << fRmin << ";" << endl;
-   out << "   stin  = " << fStIn << ";" << endl;
-   out << "   rout  = " << fRmax << ";" << endl;
-   out << "   stout = " << fStOut << ";" << endl;
-   out << "   dz    = " << fDz << ";" << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoHype(\"" << GetName() << "\",rin,stin,rout,stout,dz);" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   rin   = " << fRmin << ";" << std::endl;
+   out << "   stin  = " << fStIn << ";" << std::endl;
+   out << "   rout  = " << fRmax << ";" << std::endl;
+   out << "   stout = " << fStOut << ";" << std::endl;
+   out << "   dz    = " << fDz << ";" << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoHype(\"" << GetName() << "\",rin,stin,rout,stout,dz);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);  
 }
 

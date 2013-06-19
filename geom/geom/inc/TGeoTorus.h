@@ -84,7 +84,7 @@ public:
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetTorusDimensions(Double_t r, Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *points) const;

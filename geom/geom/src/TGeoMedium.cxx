@@ -122,22 +122,22 @@ char *TGeoMedium::GetPointerName() const
 }    
 
 //_____________________________________________________________________________
-void TGeoMedium::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGeoMedium::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(TGeoMedium::kMedSavePrimitive)) return;
    fMaterial->SavePrimitive(out,option);
-   out << "// Medium: " << GetName() << endl;
-   out << "   numed   = " << fId << ";  // medium number" << endl;
-   out << "   par[0]  = " << fParams[0] << "; // isvol" << endl;
-   out << "   par[1]  = " << fParams[1] << "; // ifield" << endl;
-   out << "   par[2]  = " << fParams[2] << "; // fieldm" << endl;
-   out << "   par[3]  = " << fParams[3] << "; // tmaxfd" << endl;
-   out << "   par[4]  = " << fParams[4] << "; // stemax" << endl;
-   out << "   par[5]  = " << fParams[5] << "; // deemax" << endl;
-   out << "   par[6]  = " << fParams[6] << "; // epsil" << endl;
-   out << "   par[7]  = " << fParams[7] << "; // stmin" << endl;
+   out << "// Medium: " << GetName() << std::endl;
+   out << "   numed   = " << fId << ";  // medium number" << std::endl;
+   out << "   par[0]  = " << fParams[0] << "; // isvol" << std::endl;
+   out << "   par[1]  = " << fParams[1] << "; // ifield" << std::endl;
+   out << "   par[2]  = " << fParams[2] << "; // fieldm" << std::endl;
+   out << "   par[3]  = " << fParams[3] << "; // tmaxfd" << std::endl;
+   out << "   par[4]  = " << fParams[4] << "; // stemax" << std::endl;
+   out << "   par[5]  = " << fParams[5] << "; // deemax" << std::endl;
+   out << "   par[6]  = " << fParams[6] << "; // epsil" << std::endl;
+   out << "   par[7]  = " << fParams[7] << "; // stmin" << std::endl;
    
-   out << "   " << GetPointerName() << " = new TGeoMedium(\"" << GetName() << "\", numed," << fMaterial->GetPointerName() << ", par);" << endl;
+   out << "   " << GetPointerName() << " = new TGeoMedium(\"" << GetName() << "\", numed," << fMaterial->GetPointerName() << ", par);" << std::endl;
    SetBit(TGeoMedium::kMedSavePrimitive);
 }

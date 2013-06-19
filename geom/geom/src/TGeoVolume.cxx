@@ -1286,8 +1286,8 @@ void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
 {
 //  Save geometry having this as top volume as a C++ macro.
    if (!filename) return;
-   ofstream out;
-   out.open(filename, ios::out);
+   std::ofstream out;
+   out.open(filename, std::ios::out);
    if (out.bad()) {
       Error("SavePrimitive", "Bad file name: %s", filename);
       return;
@@ -1297,10 +1297,10 @@ void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
    TString fname(filename);
    Int_t ind = fname.Index(".");
    if (ind>0) fname.Remove(ind);
-   out << "void "<<fname<<"() {" << endl;
-   out << "   gSystem->Load(\"libGeom\");" << endl;
+   out << "void "<<fname<<"() {" << std::endl;
+   out << "   gSystem->Load(\"libGeom\");" << std::endl;
    ((TGeoVolume*)this)->SavePrimitive(out,option);
-   out << "}" << endl;
+   out << "}" << std::endl;
 }   
 
 //______________________________________________________________________________
@@ -1354,11 +1354,11 @@ TGeoExtension *TGeoVolume::GrabFWExtension() const
 }   
    
 //_____________________________________________________________________________
-void TGeoVolume::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
+void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    out.precision(6);
-   out.setf(ios::fixed);
+   out.setf(std::ios::fixed);
    Int_t i,icopy;
    Int_t nd = GetNdaughters();
    TGeoVolume *dvol;
@@ -1370,48 +1370,48 @@ void TGeoVolume::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    if (fGeoManager->GetGeomPainter()->GetTopVolume()==this) mustDraw = kTRUE;
    if (!strlen(option)) {
       fGeoManager->SetAllIndex();
-      out << "   new TGeoManager(\"" << fGeoManager->GetName() << "\", \"" << fGeoManager->GetTitle() << "\");" << endl << endl;
-//      if (mustDraw) out << "   Bool_t mustDraw = kTRUE;" << endl;
-//      else          out << "   Bool_t mustDraw = kFALSE;" << endl;
-      out << "   Double_t dx,dy,dz;" << endl;
-      out << "   Double_t dx1, dx2, dy1, dy2;" << endl;
-      out << "   Double_t vert[20], par[20];" << endl;
-      out << "   Double_t theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2;" << endl;
-      out << "   Double_t twist;" << endl;
-      out << "   Double_t origin[3];" << endl;
-      out << "   Double_t rmin, rmax, rmin1, rmax1, rmin2, rmax2;" << endl;
-      out << "   Double_t r, rlo, rhi;" << endl;
-      out << "   Double_t phi1, phi2;" << endl;
-      out << "   Double_t a,b;" << endl;
-      out << "   Double_t point[3], norm[3];" << endl;
-      out << "   Double_t rin, stin, rout, stout;" << endl;
-      out << "   Double_t thx, phx, thy, phy, thz, phz;" << endl;
-      out << "   Double_t alpha, theta1, theta2, phi1, phi2, dphi;" << endl;
-      out << "   Double_t tr[3], rot[9];" << endl;
-      out << "   Double_t z, density, radl, absl, w;" << endl;
-      out << "   Double_t lx,ly,lz,tx,ty,tz;" << endl;
-      out << "   Double_t xvert[50], yvert[50];" << endl;
-      out << "   Double_t zsect,x0,y0,scale0;" << endl;
-      out << "   Int_t nel, numed, nz, nedges, nvert;" << endl;
-      out << "   TGeoBoolNode *pBoolNode = 0;" << endl << endl;
+      out << "   new TGeoManager(\"" << fGeoManager->GetName() << "\", \"" << fGeoManager->GetTitle() << "\");" << std::endl << std::endl;
+//      if (mustDraw) out << "   Bool_t mustDraw = kTRUE;" << std::endl;
+//      else          out << "   Bool_t mustDraw = kFALSE;" << std::endl;
+      out << "   Double_t dx,dy,dz;" << std::endl;
+      out << "   Double_t dx1, dx2, dy1, dy2;" << std::endl;
+      out << "   Double_t vert[20], par[20];" << std::endl;
+      out << "   Double_t theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2;" << std::endl;
+      out << "   Double_t twist;" << std::endl;
+      out << "   Double_t origin[3];" << std::endl;
+      out << "   Double_t rmin, rmax, rmin1, rmax1, rmin2, rmax2;" << std::endl;
+      out << "   Double_t r, rlo, rhi;" << std::endl;
+      out << "   Double_t phi1, phi2;" << std::endl;
+      out << "   Double_t a,b;" << std::endl;
+      out << "   Double_t point[3], norm[3];" << std::endl;
+      out << "   Double_t rin, stin, rout, stout;" << std::endl;
+      out << "   Double_t thx, phx, thy, phy, thz, phz;" << std::endl;
+      out << "   Double_t alpha, theta1, theta2, phi1, phi2, dphi;" << std::endl;
+      out << "   Double_t tr[3], rot[9];" << std::endl;
+      out << "   Double_t z, density, radl, absl, w;" << std::endl;
+      out << "   Double_t lx,ly,lz,tx,ty,tz;" << std::endl;
+      out << "   Double_t xvert[50], yvert[50];" << std::endl;
+      out << "   Double_t zsect,x0,y0,scale0;" << std::endl;
+      out << "   Int_t nel, numed, nz, nedges, nvert;" << std::endl;
+      out << "   TGeoBoolNode *pBoolNode = 0;" << std::endl << std::endl;
       // first save materials/media
-      out << "   // MATERIALS, MIXTURES AND TRACKING MEDIA" << endl;
+      out << "   // MATERIALS, MIXTURES AND TRACKING MEDIA" << std::endl;
       SavePrimitive(out, "m");
       // then, save matrices
-      out << endl << "   // TRANSFORMATION MATRICES" << endl;
+      out << std::endl << "   // TRANSFORMATION MATRICES" << std::endl;
       SavePrimitive(out, "x");
       // save this volume and shape
       SavePrimitive(out, "s");
-      out << endl << "   // SET TOP VOLUME OF GEOMETRY" << endl;
-      out << "   gGeoManager->SetTopVolume(" << GetPointerName() << ");" << endl;
+      out << std::endl << "   // SET TOP VOLUME OF GEOMETRY" << std::endl;
+      out << "   gGeoManager->SetTopVolume(" << GetPointerName() << ");" << std::endl;
       // save daughters
-      out << endl << "   // SHAPES, VOLUMES AND GEOMETRICAL HIERARCHY" << endl;
+      out << std::endl << "   // SHAPES, VOLUMES AND GEOMETRICAL HIERARCHY" << std::endl;
       SavePrimitive(out, "d");
-      out << endl << "   // CLOSE GEOMETRY" << endl;
-      out << "   gGeoManager->CloseGeometry();" << endl;
+      out << std::endl << "   // CLOSE GEOMETRY" << std::endl;
+      out << "   gGeoManager->CloseGeometry();" << std::endl;
       if (mustDraw) {
-         if (!IsRaytracing()) out << "   gGeoManager->GetTopVolume()->Draw();" << endl;
-         else                 out << "   gGeoManager->GetTopVolume()->Raytrace();" << endl;
+         if (!IsRaytracing()) out << "   gGeoManager->GetTopVolume()->Draw();" << std::endl;
+         else                 out << "   gGeoManager->GetTopVolume()->Raytrace();" << std::endl;
       }
       return;
    }
@@ -1421,19 +1421,19 @@ void TGeoVolume::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
       if (TestAttBit(TGeoAtt::kSavePrimitiveAtt)) return;
       if (!IsAssembly()) {
          fShape->SavePrimitive(out,option);      
-         out << "   // Volume: " << GetName() << endl;
-         out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\"," << fShape->GetPointerName() << ", "<< fMedium->GetPointerName() << ");" << endl;
+         out << "   // Volume: " << GetName() << std::endl;
+         out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\"," << fShape->GetPointerName() << ", "<< fMedium->GetPointerName() << ");" << std::endl;
       } else {
-         out << "   // Assembly: " << GetName() << endl;
-         out << "   " << GetPointerName() << " = new TGeoVolumeAssembly(\"" << GetName() << "\"" << ");" << endl;
+         out << "   // Assembly: " << GetName() << std::endl;
+         out << "   " << GetPointerName() << " = new TGeoVolumeAssembly(\"" << GetName() << "\"" << ");" << std::endl;
       }           
-      if (fLineColor != 1) out << "   " << GetPointerName() << "->SetLineColor(" << fLineColor << ");" << endl;
-      if (fLineWidth != 1) out << "   " << GetPointerName() << "->SetLineWidth(" << fLineWidth << ");" << endl;
-      if (fLineStyle != 1) out << "   " << GetPointerName() << "->SetLineStyle(" << fLineStyle << ");" << endl;
-      if (!IsVisible() && !IsAssembly()) out << "   " << GetPointerName() << "->SetVisibility(kFALSE);" << endl;
-      if (!IsVisibleDaughters()) out << "   " << GetPointerName() << "->VisibleDaughters(kFALSE);" << endl;
-      if (IsVisContainers()) out << "   " << GetPointerName() << "->SetVisContainers(kTRUE);" << endl;
-      if (IsVisLeaves()) out << "   " << GetPointerName() << "->SetVisLeaves(kTRUE);" << endl;
+      if (fLineColor != 1) out << "   " << GetPointerName() << "->SetLineColor(" << fLineColor << ");" << std::endl;
+      if (fLineWidth != 1) out << "   " << GetPointerName() << "->SetLineWidth(" << fLineWidth << ");" << std::endl;
+      if (fLineStyle != 1) out << "   " << GetPointerName() << "->SetLineStyle(" << fLineStyle << ");" << std::endl;
+      if (!IsVisible() && !IsAssembly()) out << "   " << GetPointerName() << "->SetVisibility(kFALSE);" << std::endl;
+      if (!IsVisibleDaughters()) out << "   " << GetPointerName() << "->VisibleDaughters(kFALSE);" << std::endl;
+      if (IsVisContainers()) out << "   " << GetPointerName() << "->SetVisContainers(kTRUE);" << std::endl;
+      if (IsVisLeaves()) out << "   " << GetPointerName() << "->SetVisLeaves(kTRUE);" << std::endl;
       SetAttBit(TGeoAtt::kSavePrimitiveAtt);
    }   
    // check if we need to save the media
@@ -1475,7 +1475,7 @@ void TGeoVolume::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          if (fMedium != dvol->GetMedium()) {
             out << ", " << dvol->GetMedium()->GetId();
          }
-         out << ");" << endl;   
+         out << ");" << std::endl;   
          dvol->SavePrimitive(out,"d");   
          return;
       }
@@ -1490,7 +1490,7 @@ void TGeoVolume::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
          if (dnode->IsOverlapping()) out << "Overlap";
          out << "(" << dvol->GetPointerName() << ", " << icopy;
          if (!matrix->IsIdentity()) out << ", " << matrix->GetPointerName();
-         out << ");" << endl;
+         out << ");" << std::endl;
       }
       // Recursive loop to daughters
       for (i=0; i<nd; i++) {

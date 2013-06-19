@@ -532,15 +532,15 @@ Int_t TGeoParaboloid::GetNmeshVertices() const
 }   
    
 //_____________________________________________________________________________
-void TGeoParaboloid::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoParaboloid::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   rlo = " << fRlo << ";" << endl;
-   out << "   rhi = " << fRhi << ";" << endl;
-   out << "   dz  = " << fDZ << ";" << endl;  
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoParaboloid(\"" << GetName() << "\", rlo,rhi,dz);" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   rlo = " << fRlo << ";" << std::endl;
+   out << "   rhi = " << fRhi << ";" << std::endl;
+   out << "   dz  = " << fDZ << ";" << std::endl;  
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoParaboloid(\"" << GetName() << "\", rlo,rhi,dz);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 

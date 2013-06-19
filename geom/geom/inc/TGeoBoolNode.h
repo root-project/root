@@ -92,7 +92,7 @@ public:
    void              RegisterMatrices();
    Bool_t            ReplaceMatrix(TGeoMatrix *mat, TGeoMatrix *newmat);
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      SetPoints(Double_t *points) const;
    virtual void      SetPoints(Float_t *points)  const;
    void              SetSelected(Int_t sel);
@@ -129,7 +129,7 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoUnion;}
    virtual Int_t     GetNpoints();
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      Sizeof3D() const;
 
    //CS specific
@@ -168,7 +168,7 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoIntersection;}
    virtual Int_t     GetNpoints();
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      Sizeof3D() const;
 
    //CS specific
@@ -206,7 +206,7 @@ public:
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoSubtraction;}
    virtual Int_t     GetNpoints();
    virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void      SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      Sizeof3D() const;
 
    //CS specific

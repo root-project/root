@@ -65,7 +65,7 @@ public:
    virtual TBuffer3D    *MakeBuffer3D() const;
    static  TGeoShape    *MakeScaledShape(const char *name, TGeoShape *shape, TGeoScale *scale);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetScale(TGeoScale *scale) {fScale = scale;}
    virtual void          SetPoints(Double_t *points) const;
    virtual void          SetPoints(Float_t *points) const;

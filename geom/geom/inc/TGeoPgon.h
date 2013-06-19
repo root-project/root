@@ -80,7 +80,7 @@ public:
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    Double_t              SafetyToSegment(Double_t *point, Int_t ipl, Int_t iphi, Bool_t in, Double_t safphi, Double_t safmin=TGeoShape::Big()) const;
-   virtual void          SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void          SetDimensions(Double_t *param);
    void                  SetNedges(Int_t ne) {if (ne>2) fNedges=ne;}
    virtual void          SetPoints(Double_t *points) const;

@@ -1071,28 +1071,28 @@ Double_t TGeoXtru::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoXtru::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoXtru::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;   
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   nz       = " << fNz << ";" << endl;
-   out << "   nvert    = " << fNvert << ";" << endl;
-   out << "   TGeoXtru *xtru = new TGeoXtru(nz);" << endl;
-   out << "   xtru->SetName(\"" << GetName() << "\");" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   nz       = " << fNz << ";" << std::endl;
+   out << "   nvert    = " << fNvert << ";" << std::endl;
+   out << "   TGeoXtru *xtru = new TGeoXtru(nz);" << std::endl;
+   out << "   xtru->SetName(\"" << GetName() << "\");" << std::endl;
    Int_t i;
    for (i=0; i<fNvert; i++) {
-      out << "   xvert[" << i << "] = " << fX[i] << ";   yvert[" << i << "] = " << fY[i] << ";" << endl;
+      out << "   xvert[" << i << "] = " << fX[i] << ";   yvert[" << i << "] = " << fY[i] << ";" << std::endl;
    }
-   out << "   xtru->DefinePolygon(nvert,xvert,yvert);" << endl;
+   out << "   xtru->DefinePolygon(nvert,xvert,yvert);" << std::endl;
    for (i=0; i<fNz; i++) {
-      out << "   zsect  = " << fZ[i] << ";" << endl; 
-      out << "   x0     = " << fX0[i] << ";" << endl; 
-      out << "   y0     = " << fY0[i] << ";" << endl; 
-      out << "   scale0 = " << fScale[i] << ";" << endl; 
-      out << "   xtru->DefineSection(" << i << ",zsect,x0,y0,scale0);" << endl;
+      out << "   zsect  = " << fZ[i] << ";" << std::endl; 
+      out << "   x0     = " << fX0[i] << ";" << std::endl; 
+      out << "   y0     = " << fY0[i] << ";" << std::endl; 
+      out << "   scale0 = " << fScale[i] << ";" << std::endl; 
+      out << "   xtru->DefineSection(" << i << ",zsect,x0,y0,scale0);" << std::endl;
    }
-   out << "   TGeoShape *" << GetPointerName() << " = xtru;" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = xtru;" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 

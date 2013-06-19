@@ -325,20 +325,20 @@ void TGeoMaterial::Print(const Option_t * /*option*/) const
 }
 
 //_____________________________________________________________________________
-void TGeoMaterial::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoMaterial::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(TGeoMaterial::kMatSavePrimitive)) return;
    char *name = GetPointerName();
-   out << "// Material: " << GetName() << endl;
-   out << "   a       = " << fA << ";" << endl;
-   out << "   z       = " << fZ << ";" << endl;
-   out << "   density = " << fDensity << ";" << endl;
-   out << "   radl    = " << fRadLen << ";" << endl;
-   out << "   absl    = " << fIntLen << ";" << endl;
+   out << "// Material: " << GetName() << std::endl;
+   out << "   a       = " << fA << ";" << std::endl;
+   out << "   z       = " << fZ << ";" << std::endl;
+   out << "   density = " << fDensity << ";" << std::endl;
+   out << "   radl    = " << fRadLen << ";" << std::endl;
+   out << "   absl    = " << fIntLen << ";" << std::endl;
    
-   out << "   " << name << " = new TGeoMaterial(\"" << GetName() << "\", a,z,density,radl,absl);" << endl;
-   out << "   " << name << "->SetIndex(" << GetIndex() << ");" << endl;
+   out << "   " << name << " = new TGeoMaterial(\"" << GetName() << "\", a,z,density,radl,absl);" << std::endl;
+   out << "   " << name << "->SetIndex(" << GetIndex() << ");" << std::endl;
    SetBit(TGeoMaterial::kMatSavePrimitive);
 }
 
@@ -835,21 +835,21 @@ void TGeoMixture::Print(const Option_t * /*option*/) const
 }
 
 //_____________________________________________________________________________
-void TGeoMixture::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoMixture::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(TGeoMaterial::kMatSavePrimitive)) return;
    char *name = GetPointerName();
-   out << "// Mixture: " << GetName() << endl;
-   out << "   nel     = " << fNelements << ";" << endl;
-   out << "   density = " << fDensity << ";" << endl;
-   out << "   " << name << " = new TGeoMixture(\"" << GetName() << "\", nel,density);" << endl;
+   out << "// Mixture: " << GetName() << std::endl;
+   out << "   nel     = " << fNelements << ";" << std::endl;
+   out << "   density = " << fDensity << ";" << std::endl;
+   out << "   " << name << " = new TGeoMixture(\"" << GetName() << "\", nel,density);" << std::endl;
    for (Int_t i=0; i<fNelements; i++) {
       TGeoElement *el = GetElement(i);
-      out << "      a = " << fAmixture[i] << ";   z = "<< fZmixture[i] << ";   w = " << fWeights[i] << ";  // " << el->GetName() << endl;
-      out << "   " << name << "->DefineElement(" << i << ",a,z,w);" << endl;
+      out << "      a = " << fAmixture[i] << ";   z = "<< fZmixture[i] << ";   w = " << fWeights[i] << ";  // " << el->GetName() << std::endl;
+      out << "   " << name << "->DefineElement(" << i << ",a,z,w);" << std::endl;
    }         
-   out << "   " << name << "->SetIndex(" << GetIndex() << ");" << endl;
+   out << "   " << name << "->SetIndex(" << GetIndex() << ");" << std::endl;
    SetBit(TGeoMaterial::kMatSavePrimitive);
 }
 

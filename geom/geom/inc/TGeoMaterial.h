@@ -120,7 +120,7 @@ public:
    Bool_t                   IsUsed() const {return TObject::TestBit(kMatUsed);}
    virtual Bool_t           IsMixture() const {return kFALSE;}
    virtual void             Print(const Option_t *option="") const;
-   virtual void             SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
    void                     SetA(Double_t a) {fA = a; SetRadLen(0);}
    void                     SetZ(Double_t z) {fZ = z; SetRadLen(0);}
    void                     SetDensity(Double_t density) {fDensity = density; SetRadLen(0);}
@@ -194,7 +194,7 @@ public:
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    virtual Bool_t           IsMixture() const {return kTRUE;}
    virtual void             Print(const Option_t *option="") const;
-   virtual void             SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
    void                     SetA(Double_t a) {fA = a;}
    void                     SetZ(Double_t z) {fZ = z;}
 

@@ -200,7 +200,7 @@ public:
    void                     FillPopulation(TObjArray *population, Double_t precision=0.001, Double_t factor=1.);
    virtual void             Print(Option_t *option = "") const;
    static TGeoElementRN    *ReadElementRN(const char *record, Int_t &ndecays);
-   virtual void             SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
   
    ClassDef(TGeoElementRN, 2)           // radionuclides class
 };
@@ -264,7 +264,7 @@ public:
    // Services
    virtual void             Print(Option_t *opt = " ") const;
    static TGeoDecayChannel *ReadDecay(const char *record);
-   virtual void             SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void             DecayShift(Int_t &dA, Int_t &dZ, Int_t &dI) const ;
 
    ClassDef(TGeoDecayChannel,1)    // Decay channel for Elements

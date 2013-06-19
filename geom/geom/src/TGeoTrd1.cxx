@@ -619,16 +619,16 @@ Double_t TGeoTrd1::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoTrd1::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoTrd1::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   dx1 = " << fDx1 << ";" << endl;
-   out << "   dx2 = " << fDx2 << ";" << endl;
-   out << "   dy  = " << fDy  << ";" << endl;
-   out << "   dz  = " << fDZ  << ";" << endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTrd1(\"" << GetName() << "\", dx1,dx2,dy,dz);" << endl;  
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   dx1 = " << fDx1 << ";" << std::endl;
+   out << "   dx2 = " << fDx2 << ";" << std::endl;
+   out << "   dy  = " << fDy  << ";" << std::endl;
+   out << "   dz  = " << fDZ  << ";" << std::endl;
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTrd1(\"" << GetName() << "\", dx1,dx2,dy,dz);" << std::endl;  
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }         
 

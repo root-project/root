@@ -459,7 +459,7 @@ TGeoExtension *TGeoNode::GrabFWExtension() const
 }   
 
 //_____________________________________________________________________________
-void TGeoNode::SaveAttributes(ostream &out)
+void TGeoNode::SaveAttributes(std::ostream &out)
 {
 // save attributes for this node
    if (IsVisStreamed()) return;
@@ -468,21 +468,21 @@ void TGeoNode::SaveAttributes(ostream &out)
    Bool_t voldef = kFALSE;
    if ((fVolume->IsVisTouched()) && (!fVolume->IsVisStreamed())) {
       fVolume->SetVisStreamed(kTRUE);
-      out << "   vol = gGeoManager->GetVolume("<<quote<<fVolume->GetName()<<quote<<");"<<endl;
+      out << "   vol = gGeoManager->GetVolume("<<quote<<fVolume->GetName()<<quote<<");"<<std::endl;
       voldef = kTRUE;
       if (!fVolume->IsVisDaughters())
-         out << "   vol->SetVisDaughters(kFALSE);"<<endl;
+         out << "   vol->SetVisDaughters(kFALSE);"<<std::endl;
       if (fVolume->IsVisible()) {
 /*
          if (fVolume->GetLineColor() != gStyle->GetLineColor())
-            out<<"   vol->SetLineColor("<<fVolume->GetLineColor()<<");"<<endl;
+            out<<"   vol->SetLineColor("<<fVolume->GetLineColor()<<");"<<std::endl;
          if (fVolume->GetLineStyle() != gStyle->GetLineStyle())
-            out<<"   vol->SetLineStyle("<<fVolume->GetLineStyle()<<");"<<endl;
+            out<<"   vol->SetLineStyle("<<fVolume->GetLineStyle()<<");"<<std::endl;
          if (fVolume->GetLineWidth() != gStyle->GetLineWidth())
-            out<<"   vol->SetLineWidth("<<fVolume->GetLineWidth()<<");"<<endl;
+            out<<"   vol->SetLineWidth("<<fVolume->GetLineWidth()<<");"<<std::endl;
 */
       } else {
-         out <<"   vol->SetVisibility(kFALSE);"<<endl;
+         out <<"   vol->SetVisibility(kFALSE);"<<std::endl;
       }
    }
    if (!IsVisDaughters()) return;
@@ -494,15 +494,15 @@ void TGeoNode::SaveAttributes(ostream &out)
       if (node->IsVisStreamed()) continue;
       if (node->IsVisTouched()) {
          if (!voldef)
-            out << "   vol = gGeoManager->GetVolume("<<quote<<fVolume->GetName()<<quote<<");"<<endl;
-         out<<"   node = vol->GetNode("<<i<<");"<<endl;
+            out << "   vol = gGeoManager->GetVolume("<<quote<<fVolume->GetName()<<quote<<");"<<std::endl;
+         out<<"   node = vol->GetNode("<<i<<");"<<std::endl;
          if (!node->IsVisDaughters()) {
-            out<<"   node->VisibleDaughters(kFALSE);"<<endl;
+            out<<"   node->VisibleDaughters(kFALSE);"<<std::endl;
             node->SetVisStreamed(kTRUE);
             continue;
          }
          if (!node->IsVisible()) 
-            out<<"   node->SetVisibility(kFALSE);"<<endl;
+            out<<"   node->SetVisibility(kFALSE);"<<std::endl;
       }         
       node->SaveAttributes(out);
       node->SetVisStreamed(kTRUE);

@@ -208,7 +208,7 @@ public:
    void            RemoveNode(TGeoNode *node);
    TGeoNode       *ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape=0, TGeoMatrix *newpos=0, TGeoMedium *newmed=0);
    void            SaveAs(const char *filename,Option_t *option="") const; // *MENU*
-   virtual void    SavePrimitive(ostream &out, Option_t *option = "");
+   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
    void            SelectVolume(Bool_t clear = kFALSE);
    void            SetActivity(Bool_t flag=kTRUE) {TGeoAtt::SetActivity(flag);}
    void            SetActiveDaughters(Bool_t flag=kTRUE) {TGeoAtt::SetActiveDaughters(flag);}

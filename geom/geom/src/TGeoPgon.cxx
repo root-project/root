@@ -1702,23 +1702,23 @@ Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-void TGeoPgon::SavePrimitive(ostream &out, Option_t * /*option*/ /*= ""*/)
+void TGeoPgon::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
-   out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;
-   out << "   phi1    = " << fPhi1 << ";" << endl;
-   out << "   dphi    = " << fDphi << ";" << endl;
-   out << "   nedges = " << fNedges << ";" << endl;
-   out << "   nz      = " << fNz << ";" << endl;
-   out << "   TGeoPgon *pgon = new TGeoPgon(\"" << GetName() << "\",phi1,dphi,nedges,nz);" << endl;
+   out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
+   out << "   phi1    = " << fPhi1 << ";" << std::endl;
+   out << "   dphi    = " << fDphi << ";" << std::endl;
+   out << "   nedges = " << fNedges << ";" << std::endl;
+   out << "   nz      = " << fNz << ";" << std::endl;
+   out << "   TGeoPgon *pgon = new TGeoPgon(\"" << GetName() << "\",phi1,dphi,nedges,nz);" << std::endl;
    for (Int_t i=0; i<fNz; i++) {
-      out << "      z     = " << fZ[i] << ";" << endl;
-      out << "      rmin  = " << fRmin[i] << ";" << endl;
-      out << "      rmax  = " << fRmax[i] << ";" << endl;
-      out << "   pgon->DefineSection(" << i << ", z,rmin,rmax);" << endl;
+      out << "      z     = " << fZ[i] << ";" << std::endl;
+      out << "      rmin  = " << fRmin[i] << ";" << std::endl;
+      out << "      rmax  = " << fRmax[i] << ";" << std::endl;
+      out << "   pgon->DefineSection(" << i << ", z,rmin,rmax);" << std::endl;
    }
-   out << "   TGeoShape *" << GetPointerName() << " = pgon;" << endl;
+   out << "   TGeoShape *" << GetPointerName() << " = pgon;" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
