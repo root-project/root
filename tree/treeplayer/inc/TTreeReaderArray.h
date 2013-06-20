@@ -34,7 +34,7 @@ namespace ROOT {
    public:
       TTreeReaderArrayBase(TTreeReader* reader, const char* branchname,
                            TDictionary* dict):
-         TTreeReaderValueBase(reader, branchname, dict) {}
+         TTreeReaderValueBase(reader, branchname, dict), fImpl(0) {}
 
       size_t GetSize() const { return fImpl->GetSize(GetProxy()); }
       Bool_t IsEmpty() const { return !GetSize(); }
