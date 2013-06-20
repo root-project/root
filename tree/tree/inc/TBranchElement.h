@@ -222,6 +222,13 @@ public:
    virtual void             SetType(Int_t btype) { fType = btype; }
    virtual void             UpdateFile();
 
+   enum TBranchElementType {
+      kLeafNode = 0,
+      kBranchNode = 2,
+      kClonesNode = 3,
+      kRootNode = 4,
+   };
+
    ClassDef(TBranchElement,9)  // Branch in case of an object
 };
 
