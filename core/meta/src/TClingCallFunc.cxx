@@ -497,12 +497,7 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    T.append(const_cast<clang::FunctionDecl*>(FD));
    T.setState(cling::Transaction::kCompleted);
 
-   // FIXME: move this into the transaction's CompOpts.
-   clang::LangOptions& Opts = fInterp->getCI()->getLangOpts();
-   int EmitAllDeclsPrev = Opts.EmitAllDecls;
-   Opts.EmitAllDecls = 1;
    fInterp->codegen(&T);
-   Opts.EmitAllDecls = EmitAllDeclsPrev;
    assert(T.getState() == cling::Transaction::kCommitted
           && "Compilation should never fail!");
 }
