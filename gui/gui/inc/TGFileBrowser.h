@@ -34,6 +34,7 @@ class TString;
 class TRootBrowser;
 class TSystemDirectory;
 class TSystemFile;
+class TGPictureButton;
 
 class TGFileBrowser : public TGMainFrame, public TBrowserImp {
 
