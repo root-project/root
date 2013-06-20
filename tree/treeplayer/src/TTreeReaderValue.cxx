@@ -168,10 +168,12 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
    dict = 0;
    if (branch->IsA() == TBranchElement::Class()) {
       TBranchElement* brElement = (TBranchElement*)branch;
-      if (brElement->GetType() == 4 || brElement->GetType() == 0 || brElement->GetType() == 2) {
+      if (brElement->GetType() == TBranchElementType.kRootNode || 
+            brElement->GetType() == TBranchElementType.kLeafNode || 
+            brElement->GetType() == TBranchElementType.kBranchNode) {
          dict = brElement->GetClass();
          return brElement->GetClassName();
-      } else if (brElement->GetType() == 3) {
+      } else if (brElement->GetType() == TBranchElementType.kClonesNode) {
          dict = TClonesArray::Class();
          return "TClonesArray";
       } else if (brElement->GetType() == 31
