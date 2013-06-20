@@ -112,6 +112,11 @@ TTreeReader::EEntryStatus TTreeReader::SetEntry(Long64_t entry)
       ROOT::TTreeReaderValueBase* valueReader = 0;
       while ((valueReader = (ROOT::TTreeReaderValueBase*)iValue())) {
          valueReader->CreateProxy();
+
+         if (!valueReader->GetProxy()){
+            fEntryStatus = kEntryDictionaryError;
+            return fEntryStatus;
+         }
       }
    }
    fDirector->SetReadEntry(entry);

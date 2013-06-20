@@ -54,7 +54,8 @@ public:
       kEntryNoTree, // the tree does not exist
       kEntryNotFound, // the tree entry number does not exist
       kEntryChainSetupError, // problem in accessing a chain element, e.g. file without the tree
-      kEntryChainFileError // problem in opening a chain's file
+      kEntryChainFileError, // problem in opening a chain's file
+      kEntryDictionaryError, // problem reading dictionary info from tree
    };
 
    TTreeReader():
@@ -64,13 +65,13 @@ public:
 
    TTreeReader(TTree* tree);
    TTreeReader(const char* keyname, TDirectory* dir = NULL);
-   TTreeReader(const char* keyname, TFileCollection* files);
+   TTreeReader(const char* keyname, TFileCollection* files) { printf("Not Implemented!\n");};
 
    ~TTreeReader();
 
    void SetTree(TTree* tree);
-   void SetTree(const char* keyname, TDirectory* dir = NULL);
-   void SetChain(const char* keyname, TFileCollection* files);
+   void SetTree(const char* keyname, TDirectory* dir = NULL) { printf("Not Implemented!\n");};
+   void SetChain(const char* keyname, TFileCollection* files) { printf("Not Implemented!\n");};
 
    Bool_t IsChain() const { return TestBit(kBitIsChain); }
 

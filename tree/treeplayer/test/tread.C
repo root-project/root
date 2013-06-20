@@ -4,11 +4,12 @@
 #include "TSystem.h"
 #include "MyParticle.h"
 #include "TTreeReaderValue.h"
+#include "TTreeReaderArray.h"
 #include <vector>
 
 #ifdef __CINT__
-#pragma link C++ class TTreeReaderValuePtr<std::vector<MyParticle*>>+;
-#pragma link C++ class TTreeReaderValuePtr<MyParticle>+;
+#pragma link C++ class TTreeReaderValue<std::vector<MyParticle*>>+;
+#pragma link C++ class TTreeReaderValue<MyParticle>+;
 #pragma link C++ class TTreeReaderArray<double>+;
 #endif
 
@@ -16,9 +17,9 @@ void tread_obj() {
    // Reading object branches:
    TFile* f = TFile::Open("tr.root");
    TTreeReader tr("T");
-   TTreeReaderValuePtr< MyParticle > p(tr, "p");
-   while (tr.GetNextEntry()) {
-      printf("Particle momentum: %g\n", p->GetP());
+   TTreeReaderValue< MyParticle > p(tr, "p");
+   while (tr.SetNextEntry()) {
+      printf("Particle momentum: %g\n", *p->P());
    }
    delete f;
 }
@@ -28,7 +29,7 @@ void tread_makeclass() {
    TFile* f = TFile::Open("tr.root");
    TTreeReader tr("T");
    TTreeReaderArray<double> e(tr, "v.fPos.fY");
-   while (tr.GetNextEntry()) {
+   while (tr.SetNextEntry()) {
       if (!e.IsEmpty())
          printf("lead muon energy: %g\n", e.At(0));
    }

@@ -128,6 +128,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
    if (fDict != branchActualType) {
       Error("CreateProxy()", "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderValue<%s>",
             fBranchName.Data(), branchActualType->GetName(), fDict->GetName());
+      //return;
    }
 
    // Update named proxy's dictionary
@@ -167,7 +168,7 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
    dict = 0;
    if (branch->IsA() == TBranchElement::Class()) {
       TBranchElement* brElement = (TBranchElement*)branch;
-      if (brElement->GetType() == 4) {
+      if (brElement->GetType() == 4 || brElement->GetType() == 0) {
          dict = brElement->GetClass();
          return brElement->GetClassName();
       } else if (brElement->GetType() == 3) {
@@ -177,6 +178,9 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
                  || brElement->GetType() == 41) {
          // it's a member, extract from GetClass()'s streamer info
          Error("GetBranchDataType()", "Must use TTreeReaderValueArray to access a member of an object that is stored in a collection.");
+      }
+      else {
+         Error("GetBranchDataType()", "Unknown type and class combination: %i, %s", brElement->GetType(), brElement->GetClassName());
       }
       return 0;
    } else if (branch->IsA() == TBranch::Class()
