@@ -168,7 +168,7 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
    dict = 0;
    if (branch->IsA() == TBranchElement::Class()) {
       TBranchElement* brElement = (TBranchElement*)branch;
-      if (brElement->GetType() == 4 || brElement->GetType() == 0) {
+      if (brElement->GetType() == 4 || brElement->GetType() == 0 || brElement->GetType() == 2) {
          dict = brElement->GetClass();
          return brElement->GetClassName();
       } else if (brElement->GetType() == 3) {
