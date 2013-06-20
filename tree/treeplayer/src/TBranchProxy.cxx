@@ -403,9 +403,6 @@ Bool_t ROOT::TBranchProxy::Setup()
 
                TString member;
 
-               Bool_t forgotWhenThisHappens = false;
-               R__ASSERT(forgotWhenThisHappens);
-
                member += fDataMember;
                fMemberOffset = fClass->GetDataMemberOffset(member);
 
