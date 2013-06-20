@@ -15,7 +15,9 @@
 #pragma link C++ class TTreeReaderValue<Int_t>+;
 #pragma link C++ class TTreeReaderValue<B>+;
 #pragma link C++ class TTreeReaderValue<A>+;
+#pragma link C++ class TTreeReaderValue<std::vector<B>>+;
 #pragma link C++ class TTreeReaderArray<double>+;
+#pragma link C++ class TTreeReaderArray<B>+;
 #endif
 
 #define TREE_ENTRIES 10
@@ -172,7 +174,7 @@ void readNum(){
 	TFile *myFile = TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
-	TTreeReaderValue<Int_t> myNum (myTreeReader, "A1.num");
+	TTreeReaderValue<Int_t> myNum (myTreeReader, "A99.num");
 
 	while (myTreeReader.SetNextEntry()){
 		printf("Num: %i\n", *myNum);
@@ -183,10 +185,55 @@ void readBObject(){
 	TFile *myFile = TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
-	TTreeReaderValue<B> myBObject (myTreeReader, "A1.BObject");
+	TTreeReaderValue<B> myBObject (myTreeReader, "A99.BObject");
 
 	while (myTreeReader.SetNextEntry()){
 		printf("Dummy: %i\n", myBObject->dummy);
+	}
+}
+
+void readBObjectDummy(){
+	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TTreeReaderValue<Int_t> myDummy (myTreeReader, "A99.BObject.dummy");
+
+	while (myTreeReader.SetNextEntry()){
+		printf("Dummy: %i\n", *myDummy);
+	}
+}
+
+void readVectorBValue(){
+	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TTreeReaderValue<std::vector<B> > myVectorB (myTreeReader, "A99.vectorB");
+
+	while (myTreeReader.SetNextEntry()){
+		printf("vectorB dummies:");
+
+		for (int i = 0; i < LIST_ENTRIES; ++i){
+			printf(" %i", myVectorB->at(i).dummy);
+		}
+
+		printf("\n");
+	}
+}
+
+void readVectorBArray(){
+	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TTreeReaderArray<B> myVectorB (myTreeReader, "A99.vectorB");
+
+	while (myTreeReader.SetNextEntry()){
+		printf("vectorB dummies:");
+
+		for (int i = 0; i < LIST_ENTRIES && i < myVectorB.GetSize(); ++i){
+			printf(" %i", myVectorB.At(i).dummy);
+		}
+
+		printf("\n");
 	}
 }
 
@@ -194,7 +241,7 @@ void readAObject(){
 	TFile *myFile = TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
-	TTreeReaderValue<A> myAObject (myTreeReader, "A1.");
+	TTreeReaderValue<A> myAObject (myTreeReader, "A99.");
 
 	while (myTreeReader.SetNextEntry()){
 		printf("Num: %i\n", myAObject->num);
