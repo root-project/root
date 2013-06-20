@@ -24,6 +24,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 class TGeoHMatrix;
+class TGeoMatrix;
 class TGeoNavigator;
 class TGeoNode;
 
@@ -60,6 +61,7 @@ public:
    TGeoNode         *GetNode(Int_t level) const {return fArray[level];}
    TGeoNode         *GetCurrentNode() const {return fArray[fLevel];}
    void              GetPath(TString &path) const;
+   void              Init(TGeoNode **branch, TGeoMatrix *global, Int_t level);
    void              InitFromNavigator(TGeoNavigator *nav);
    virtual Bool_t    IsSortable() const {return kTRUE;}
    virtual Bool_t    Notify() {return (fClient)?fClient->Notify():kFALSE;}
