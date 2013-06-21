@@ -115,6 +115,23 @@ macro: *\_\_ROOTCLING\_\_* is now defined during the parsing. The macros
 *\_\_CINT\_\_* and *\_\_MAKECINT\_\_* are defined only when looking for
 `#pragma` statement.
 
+*Warning*
+
+It is important to note that during the parsing of the header files,
+rootcint no longer defines *\_\_CINT\_\_* and genreflex no longer defines
+*\_\_GCCXML\_\_*.  This means in particular that data members that where
+made transient by hiding them from rootcint or genreflex now *must* be 
+*explicitly* marked as transient.  For rootcint or rootcling use:
+``` {.cpp}
+   sometype datamember; //! The exclamation mark signals the transientness
+```
+and for genreflex
+``` {.cpp}
+   <class name="edm::Particle" >
+      <field name="m_calculated" transient="true" />
+   </class>
+```
+
 ### ACliC
 
 ACLiC has the following backward incompatibilities:
