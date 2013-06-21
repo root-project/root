@@ -255,6 +255,7 @@ public:
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
    Version_t          GetClassVersion() const { fVersionUsed = kTRUE; return fClassVersion; }
+   Int_t              GetClassSize() const { return fSizeof; }
    TDataMember       *GetDataMember(const char *datamember) const;
    Long_t              GetDataMemberOffset(const char *membername) const;
    const char        *GetDeclFileName() const { return fDeclFileName; }
