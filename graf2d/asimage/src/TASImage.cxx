@@ -51,6 +51,9 @@ dimensional array of values. A palette defines the color of each value.
 The image can be zoomed by defining a rectangle with the mouse. The color
 palette can be modified with a GUI, just select StartPaletteEditor() from the
 context menu.
+<p>
+Several examples showing how to use this class are available in the
+ROOT tutorials: <tt>$ROOTSYS/tutorials/image/</tt> 
 End_Html */
 
 #include "TASImage.h"
