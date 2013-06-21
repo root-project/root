@@ -33,7 +33,7 @@
 
 
 // forward declarations
-
+class TGeoExtension;
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -73,6 +73,8 @@ protected:
    TObject                 *fShader;     // shader with optical properties
    TObject                 *fCerenkov;   // pointer to class with Cerenkov properties
    TGeoElement             *fElement;    // pointer to element composing the material
+   TGeoExtension           *fUserExtension;  //! Transient user-defined extension to materials
+   TGeoExtension           *fFWExtension;    //! Transient framework-defined extension to materials
 
 // methods
    TGeoMaterial(const TGeoMaterial&);
@@ -116,6 +118,10 @@ public:
    Double_t                 GetPressure() const {return fPressure;}
    EGeoMaterialState        GetState() const {return fState;}
    virtual Double_t         GetSpecificActivity(Int_t) const {return 0.;}
+   TGeoExtension           *GetUserExtension() const {return fUserExtension;}
+   TGeoExtension           *GetFWExtension() const   {return fFWExtension;}
+   TGeoExtension           *GrabUserExtension() const;
+   TGeoExtension           *GrabFWExtension() const;
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    Bool_t                   IsUsed() const {return TObject::TestBit(kMatUsed);}
    virtual Bool_t           IsMixture() const {return kFALSE;}
@@ -132,6 +138,8 @@ public:
    void                     SetTemperature(Double_t temperature) {fTemperature = temperature;}
    void                     SetPressure(Double_t pressure) {fPressure = pressure;}
    void                     SetState(EGeoMaterialState state) {fState = state;}
+   void                     SetUserExtension(TGeoExtension *ext);
+   void                     SetFWExtension(TGeoExtension *ext);
    static  Double_t         ScreenFactor(Double_t z);
 
    

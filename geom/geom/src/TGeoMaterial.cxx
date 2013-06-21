@@ -22,6 +22,7 @@
 #include "TStyle.h"
 #include "TList.h"
 #include "TGeoManager.h"
+#include "TGeoExtension.h"
 #include "TGeoMaterial.h"
 
 // statics and globals
@@ -42,7 +43,9 @@ TGeoMaterial::TGeoMaterial()
               fState(kMatStateUndefined),
               fShader(NULL),
               fCerenkov(NULL),
-              fElement(NULL)
+              fElement(NULL),
+              fUserExtension(0),
+              fFWExtension(0)
 {
 // Default constructor
    SetUsed(kFALSE);
@@ -66,7 +69,9 @@ TGeoMaterial::TGeoMaterial(const char *name)
               fState(kMatStateUndefined),
               fShader(NULL),
               fCerenkov(NULL),
-              fElement(NULL)
+              fElement(NULL),
+              fUserExtension(0),
+              fFWExtension(0)
 {
 // constructor
    fName = fName.Strip();
@@ -97,7 +102,9 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
               fState(kMatStateUndefined),
               fShader(NULL),
               fCerenkov(NULL),
-              fElement(NULL)
+              fElement(NULL),
+              fUserExtension(0),
+              fFWExtension(0)
 {
 // constructor
    fName = fName.Strip();
@@ -134,7 +141,9 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
               fState(state),
               fShader(NULL),
               fCerenkov(NULL),
-              fElement(NULL)
+              fElement(NULL),
+              fUserExtension(0),
+              fFWExtension(0)
 {
 // Constructor with state, temperature and pressure.
    fName = fName.Strip();
@@ -164,7 +173,9 @@ TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
               fState(kMatStateUndefined),
               fShader(NULL),
               fCerenkov(NULL),
-              fElement(elem)
+              fElement(elem),
+              fUserExtension(0),
+              fFWExtension(0)
 {
 // constructor
    fName = fName.Strip();
@@ -200,7 +211,10 @@ TGeoMaterial::TGeoMaterial(const TGeoMaterial& gm) :
               fState(gm.fState),
               fShader(gm.fShader),
               fCerenkov(gm.fCerenkov),
-              fElement(gm.fElement)
+              fElement(gm.fElement),
+              fUserExtension(gm.fUserExtension->Grab()),
+              fFWExtension(gm.fFWExtension->Grab())
+              
 { 
    //copy constructor
 }
@@ -224,6 +238,8 @@ TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm)
       fShader=gm.fShader;
       fCerenkov=gm.fCerenkov;
       fElement=gm.fElement;
+      fUserExtension = gm.fUserExtension->Grab();
+      fFWExtension = gm.fFWExtension->Grab();
    } 
    return *this;
 }
@@ -232,8 +248,60 @@ TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm)
 TGeoMaterial::~TGeoMaterial()
 {
 // Destructor
+   if (fUserExtension) {fUserExtension->Release(); fUserExtension=0;}
+   if (fFWExtension) {fFWExtension->Release(); fFWExtension=0;}
 }
 
+//_____________________________________________________________________________
+void TGeoMaterial::SetUserExtension(TGeoExtension *ext)
+{
+// Connect user-defined extension to the material. The material "grabs" a copy, so
+// the original object can be released by the producer. Release the previously 
+// connected extension if any.
+//==========================================================================
+// NOTE: This interface is intended for user extensions and is guaranteed not
+// to be used by TGeo
+//==========================================================================
+   if (fUserExtension) fUserExtension->Release();
+   fUserExtension = 0;
+   if (ext) fUserExtension = ext->Grab();
+}   
+
+//_____________________________________________________________________________
+void TGeoMaterial::SetFWExtension(TGeoExtension *ext)
+{
+// Connect framework defined extension to the material. The material "grabs" a copy,
+// so the original object can be released by the producer. Release the previously 
+// connected extension if any.
+//==========================================================================
+// NOTE: This interface is intended for the use by TGeo and the users should
+//       NOT connect extensions using this method
+//==========================================================================
+   if (fFWExtension) fFWExtension->Release();
+   fFWExtension = 0;
+   if (ext) fFWExtension = ext->Grab();
+}   
+
+//_____________________________________________________________________________
+TGeoExtension *TGeoMaterial::GrabUserExtension() const
+{
+// Get a copy of the user extension pointer. The user must call Release() on
+// the copy pointer once this pointer is not needed anymore (equivalent to
+// delete() after calling new())
+   if (fUserExtension) return fUserExtension->Grab();
+   return 0;
+}   
+   
+//_____________________________________________________________________________
+TGeoExtension *TGeoMaterial::GrabFWExtension() const
+{
+// Get a copy of the framework extension pointer. The user must call Release() on
+// the copy pointer once this pointer is not needed anymore (equivalent to
+// delete() after calling new())
+   if (fFWExtension) return fFWExtension->Grab();
+   return 0;
+}   
+   
 //_____________________________________________________________________________
 char *TGeoMaterial::GetPointerName() const
 {
