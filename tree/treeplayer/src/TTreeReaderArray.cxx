@@ -225,6 +225,9 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
          else if (element->IsA() == TStreamerObject::Class()){
             fImpl = new TLeafListReader();
          }
+         else if (element->IsA() == TStreamerLoop::Class()) {
+            fImpl = new TLeafListReader();
+         }
       }
       else { // We are at root node?
 
