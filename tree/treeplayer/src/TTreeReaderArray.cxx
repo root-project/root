@@ -76,14 +76,23 @@ namespace {
    public:
       ~TLeafListReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
-         proxy->GetClass();
+         if (!proxy->Read()) return 0;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
+         TVirtualCollectionProxy *collectionProxy = (TVirtualCollectionProxy*)proxy->GetCollection();
+         if (!collectionProxy){
+            Error("GetSize()", "Statically sized array does not provide size.");
+            return -1;
+         }
          return GetCP(proxy)->Size();
       }
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
-         return GetCP(proxy)->At(idx);
+         if (!proxy->Read()) return 0;
+
+         void *array = (void*)proxy->GetStart();
+         Int_t objectSize = proxy->GetClass()->GetClassSize();
+         return (void*)(array + (objectSize * idx));
       }
    };
 }
@@ -199,7 +208,6 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
    // fProxies before calling this function!)
 
    if (branch->IsA() == TBranchElement::Class()) {
-      printf("TBranchElement\n"); // TODO: Remove (necessary because of gdb bug)
       TBranchElement* branchElement = ((TBranchElement*)branch);
 
       TStreamerInfo *streamerInfo = branchElement->GetInfo();
@@ -212,8 +220,10 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
          TClass *classPointer = element->GetClassPointer();
 
          if (element->IsA() == TStreamerSTL::Class()){
-            printf("STL!\n"); // TODO: Remove (necessary because of gdb bug)
             fImpl = new TSTLReader();
+         }
+         else if (element->IsA() == TStreamerObject::Class()){
+            fImpl = new TLeafListReader();
          }
       }
       else { // We are at root node?
@@ -331,6 +341,11 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
          // The streamer info entry cannot be found.
          // TBranchElement::GetExpectedType() has already complained.
          return "{CANNOT DETERMINE TBranchElement DATA TYPE}";
+      }
+      else if (brElement->GetType() == TBranchElement::kLeafNode){
+         dict = brElement->GetCurrentClass();
+         contentTypeName = brElement->GetTypeName();
+         return 0;
       }
       return 0;
    } else if (branch->IsA() == TBranch::Class()

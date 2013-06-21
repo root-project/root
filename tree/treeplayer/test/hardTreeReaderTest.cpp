@@ -237,6 +237,23 @@ void readVectorBArray(){
 	}
 }
 
+void readBArray(){
+	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TTreeReaderArray<B> myBArray (myTreeReader, "A99.BArray[12]");
+
+	while (myTreeReader.SetNextEntry()){
+		printf("BArray dummies:");
+
+		for (int i = 0; i < LIST_ENTRIES; ++i){
+			printf(" %i", myBArray.At(i).dummy);
+		}
+
+		printf("\n");
+	}
+}
+
 void readAObject(){
 	TFile *myFile = TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
