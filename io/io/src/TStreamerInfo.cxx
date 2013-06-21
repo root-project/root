@@ -1227,10 +1227,20 @@ void TStreamerInfo::BuildOld()
 
    int nBaze = 0;
 
-   if (fClass->GetCollectionProxy() && (fElements->GetEntries() == 1) && !strcmp(fElements->At(0)->GetName(), "This")) {
-      element = (TStreamerElement*)next();
-      element->SetNewType( element->GetType() );
-      element->SetNewClass( fClass );
+   if ((fElements->GetEntries() == 1) && !strcmp(fElements->At(0)->GetName(), "This")) {
+      if (fClass->GetCollectionProxy())  {
+         element = (TStreamerElement*)next();
+         element->SetNewType( element->GetType() );
+         element->SetNewClass( fClass );
+      } else if (((TStreamerElement*)fElements->At(0))->GetType() == TStreamerInfo::kSTL && 
+                 !strcmp( ((TStreamerElement*)fElements->At(0))->GetTypeName(),GetName()) == 0) {
+         // We have a collection that was proxied but does not have a collection proxy,
+         // let's put one in place just for fun ... humm however we have no clue what is the value
+         // type ....
+         
+         // For now wild guess ....
+         
+      }
    }
 
    TClass *allocClass = 0;
@@ -1807,10 +1817,23 @@ void TStreamerInfo::BuildOld()
       }
 
       if (offset != kMissing && fClass->GetDeclFileLine() < 0) {
-         // Note the initilization in this case are
+         // Note the initialization in this case are
          // delayed until __after__ the schema evolution
          // section, just in case the info has changed.
-         Int_t asize = element->GetSize();
+
+         Int_t asize;
+         if (element->GetType() == TStreamerInfo::kSTL &&
+             strcmp(element->GetName(),"This") == 0 &&
+             strcmp(element->GetTypeName(),GetName()) == 0 &&
+             !fClass->GetCollectionProxy()) {
+            // Humm .. we are missing the collection Proxy
+            // for a proxied (custom) collection ... avoid
+            // an infinite recursion and take a wild guess
+            asize = sizeof(std::vector<int>);
+         } else {
+            // Regular case
+            asize = element->GetSize();
+         }
          // align the non-basic data types (required on alpha and IRIX!!)
          if ((offset % sp) != 0) {
             offset = offset - (offset % sp) + sp;
@@ -3741,9 +3764,20 @@ void* TStreamerInfo::New(void *obj)
          case kTObject:
          case kTString:
          case kTNamed:
-         case kSTL:
          {
             cle->New(eaddr);
+         }
+         break;
+
+         case kSTL:
+         {
+            if (strcmp(element->GetName(),"This")==0 &&
+                !cle->GetCollectionProxy()) {
+               // missing information, avoid infinite loop
+               // by doing nothing ....
+            } else {
+               cle->New(eaddr);
+            }
          }
          break;
 
@@ -3915,7 +3949,12 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
          // A data member is destroyed, but not deleted.
          TVirtualCollectionProxy *pr = cle->GetCollectionProxy();
          if (!pr) {
-            cle->Destructor(eaddr, kTRUE);
+            if (strcmp(ele->GetName(),"This")==0) {
+               // missing information, avoid infinite loop
+               // by doing nothing ....
+            } else {
+               cle->Destructor(eaddr, kTRUE);
+            }
          } else {
             if (ele->TestBit(TStreamerElement::kDoNotDelete)) {
                TVirtualCollectionProxy::TPushPop env(cle->GetCollectionProxy(), eaddr); // used for both this 'clear' and the 'clear' inside destructor.

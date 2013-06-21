@@ -465,10 +465,14 @@ namespace TStreamerInfoActions
 
          TClass *oldClass = config->fOldClass;   
 
-         TClass *valueClass = oldClass->GetCollectionProxy()->GetValueClass();
+         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         if (!oldProxy) {
+            // Missing information, broken file ... give up
+            return;
+         }
+         TClass *valueClass = oldProxy->GetValueClass();
          Version_t vClVersion = buf.ReadVersionForMemberWise( valueClass );
 
-         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
          TVirtualCollectionProxy::TPushPop helper( oldProxy, (char*)addr );
          Int_t nobjects;
          buf.ReadInt(nobjects);
@@ -496,6 +500,10 @@ namespace TStreamerInfoActions
          TClass *oldClass = config->fOldClass;
 
          TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         if (!oldProxy) {
+            // Missing information, broken file ... give up
+            return;
+         }
 
          TVirtualCollectionProxy::TPushPop helper( oldProxy, (char*)addr );
          Int_t nobjects;
@@ -527,10 +535,14 @@ namespace TStreamerInfoActions
 
          TClass *oldClass = config->fOldClass;   
 
-         TClass *valueClass = oldClass->GetCollectionProxy()->GetValueClass();
+         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         if (!oldProxy) {
+            // Missing information, broken file ... give up
+            return;
+         }
+         TClass *valueClass = oldProxy->GetValueClass();
          Version_t vClVersion = buf.ReadVersionForMemberWise( valueClass );
 
-         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
          TActionSequence *actions = oldProxy->GetReadMemberWiseActions( vClVersion );
 
          int objectSize = oldClass->Size();
@@ -562,8 +574,12 @@ namespace TStreamerInfoActions
       } else {
 
          TClass *oldClass = config->fOldClass;
-
+         
          TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         if (!oldProxy) {
+            // Missing information, broken file ... give up
+            return;
+         }
 
          int objectSize = oldClass->Size();
          char *obj = (char*)addr;
