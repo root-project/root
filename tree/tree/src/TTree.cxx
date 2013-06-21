@@ -1733,6 +1733,17 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
       Error("BranchOld", "Cannot find class: '%s'", classname);
       return 0;
    }
+   if (!cl->InheritsFrom(TObject::Class())) {
+      if (fgBranchStyle == 0) {
+        Fatal("BranchOld", "The requested class ('%s') does not inherit from TObject.\n"
+              "\tfgBranchStyle is set to zero requesting by default to use BranchOld.\n"
+              "\tIf this is intentional use Bronch instead of Branch or BranchOld.", classname);
+      } else {
+        Fatal("BranchOld", "The requested class ('%s') does not inherit from TObject.\n"
+              "\tYou can not use BranchOld to store objects of this type.",classname);
+      }
+      return 0;
+   }
    TBranch* branch = new TBranchObject(this, name, classname, addobj, bufsize, splitlevel);
    fBranches.Add(branch);
    if (!splitlevel) {
