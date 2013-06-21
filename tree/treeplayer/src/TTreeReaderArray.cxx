@@ -32,6 +32,7 @@ namespace {
    public:
       ~TClonesReader() {}
       TClonesArray* GetCA(ROOT::TBranchProxy* proxy) {
+         proxy->GetClass();
          return (TClonesArray*) proxy->GetWhere();
       }
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
@@ -47,13 +48,24 @@ namespace {
    public:
       ~TSTLReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
+         if (!proxy->Read()) return 0;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
+      // virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
+      //    return GetCP(proxy)->Size();
+      // }
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
+         if (!proxy->ReadEntries()) return -1;
          return GetCP(proxy)->Size();
       }
+      // virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
+      //    return GetCP(proxy)->At(idx);
+      // }
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
-         return GetCP(proxy)->At(idx);
+         if (!proxy->Read()) return 0;
+         if (!proxy->GetWhere()) return 0;
+
+         return proxy->GetCollection()->At(idx);
       }
    };
 
@@ -64,6 +76,7 @@ namespace {
    public:
       ~TLeafListReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
+         proxy->GetClass();
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
@@ -186,11 +199,36 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
    // fProxies before calling this function!)
 
    if (branch->IsA() == TBranchElement::Class()) {
-   } else if (branch->IsA() == TBranch::Class()) {
-   } else if (branch->IsA() == TBranchClones::Class()) {
-   } else if (branch->IsA() == TBranchObject::Class()) {
-   } else if (branch->IsA() == TBranchSTL::Class()) {
-   } else if (branch->IsA() == TBranchRef::Class()) {
+      printf("TBranchElement\n"); // TODO: Remove (necessary because of gdb bug)
+      TBranchElement* branchElement = ((TBranchElement*)branch);
+
+      TStreamerInfo *streamerInfo = branchElement->GetInfo();
+      Int_t id = branchElement->GetID();
+
+      if (id >= 0){ // Not root node?
+         Int_t offset = streamerInfo->GetOffsets()[id];
+         TStreamerElement *element = (TStreamerElement*)streamerInfo->GetElements()->At(id);
+         Bool_t isPointer = element->IsaPointer();
+         TClass *classPointer = element->GetClassPointer();
+
+         if (element->IsA() == TStreamerSTL::Class()){
+            printf("STL!\n"); // TODO: Remove (necessary because of gdb bug)
+            fImpl = new TSTLReader();
+         }
+      }
+      else { // We are at root node?
+
+      }
+   }  if (branch->IsA() == TBranch::Class()) {
+      printf("TBranch\n"); // TODO: Remove (necessary because of gdb bug)
+   }  if (branch->IsA() == TBranchClones::Class()) {
+      printf("TBranchClones\n"); // TODO: Remove (necessary because of gdb bug)
+   }  if (branch->IsA() == TBranchObject::Class()) {
+      printf("TBranchObject\n"); // TODO: Remove (necessary because of gdb bug)
+   }  if (branch->IsA() == TBranchSTL::Class()) {
+      printf("TBranchSTL\n"); // TODO: Remove (necessary because of gdb bug)
+   }  if (branch->IsA() == TBranchRef::Class()) {
+      printf("TBranchRef\n"); // TODO: Remove (necessary because of gdb bug)
    }
 
    TString membername;

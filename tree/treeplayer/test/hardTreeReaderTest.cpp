@@ -227,7 +227,7 @@ void readVectorBArray(){
 	TTreeReaderArray<B> myVectorB (myTreeReader, "A99.vectorB");
 
 	while (myTreeReader.SetNextEntry()){
-		printf("vectorB dummies:");
+		printf("vectorB dummies(%i):", myVectorB.GetSize());
 
 		for (int i = 0; i < LIST_ENTRIES && i < myVectorB.GetSize(); ++i){
 			printf(" %i", myVectorB.At(i).dummy);
