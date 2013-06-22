@@ -1875,8 +1875,7 @@ void TStreamerInfo::BuildOld()
             // The data member exist in the onfile StreamerInfo and there is a rule
             // that has the same member 'only' has a target ... so this means we are
             // asked to ignore the input data ...
-            // However for now we are ignoring the rule instead (see Warning in
-            // InsertArtificialElements.
+            element->SetOffset(kMissing);
          }
       }
 
@@ -3556,13 +3555,9 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
       if( rule->IsRenameRule() || rule->IsAliasRule() )
          continue;
       next.Reset();
-      Bool_t match = kFALSE;
       TStreamerElement *element;
       while ((element = (TStreamerElement*) next())) {
          if ( rule->HasTarget( element->GetName() ) ) {
-            // If the rule targets an existing member but it is also a source,
-            // we still need to insert the rule.
-            match = ! ((ROOT::TSchemaMatch*)rules)->HasRuleWithSource( element->GetName(), kTRUE );
 
             // Check whether this is an 'attribute' rule.
             if ( rule->GetAttributes()[0] != 0 ) {
@@ -3580,57 +3575,49 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
             break;
          }
       }
-      if (match) {
-         TString err; rule->AsString(err);
-         Warning("InsertArtificialElements",
-                 "A rule is targetting a data member that exists onfile but is not used as a source:\n\t%s\n"
-                 "  This rule is ignored!",
-                 err.Data());
+      TStreamerArtificial *newel;
+      if (rule->GetTarget()==0) {
+         TString newName;
+         newName.Form("%s_rule%d",fClass->GetName(),count);
+         newel = new TStreamerArtificial(newName,"",
+                                         fClass->GetDataMemberOffset(newName),
+                                         TStreamerInfo::kArtificial,
+                                         "void");
+         newel->SetReadFunc( rule->GetReadFunctionPointer() );
+         newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
+         fElements->Add(newel);
       } else {
-         TStreamerArtificial *newel;
-         if (rule->GetTarget()==0) {
-            TString newName;
-            newName.Form("%s_rule%d",fClass->GetName(),count);
-            newel = new TStreamerArtificial(newName,"",
-                                            fClass->GetDataMemberOffset(newName),
-                                            TStreamerInfo::kArtificial,
-                                            "void");
-            newel->SetReadFunc( rule->GetReadFunctionPointer() );
-            newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
-            fElements->Add(newel);
-         } else {
-            TObjString * objstr = (TObjString*)(rule->GetTarget()->At(0));
-            if (objstr) {
-               TString newName = objstr->String();
-               if ( fClass->GetDataMember( newName ) ) {
-                  newel = new TStreamerArtificial(newName,"",
-                                                  fClass->GetDataMemberOffset(newName),
-                                                  TStreamerInfo::kArtificial,
-                                                  fClass->GetDataMember( newName )->GetTypeName());
-                  newel->SetReadFunc( rule->GetReadFunctionPointer() );
-                  newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
-                  fElements->Add(newel);
-               } else {
-                  // This would be a completely new member (so it would need to be cached)
-                  // TOBEDONE
-               }
-               for(Int_t other = 1; other < rule->GetTarget()->GetEntries(); ++other) {
-                  objstr = (TObjString*)(rule->GetTarget()->At(other));
-                  if (objstr) {
-                     newName = objstr->String();
-                     if ( fClass->GetDataMember( newName ) ) {
-                        newel = new TStreamerArtificial(newName,"",
-                                                        fClass->GetDataMemberOffset(newName),
-                                                        TStreamerInfo::kArtificial,
-                                                        fClass->GetDataMember( newName )->GetTypeName());
-                        fElements->Add(newel);
-                     }
+         TObjString * objstr = (TObjString*)(rule->GetTarget()->At(0));
+         if (objstr) {
+            TString newName = objstr->String();
+            if ( fClass->GetDataMember( newName ) ) {
+               newel = new TStreamerArtificial(newName,"",
+                                               fClass->GetDataMemberOffset(newName),
+                                               TStreamerInfo::kArtificial,
+                                               fClass->GetDataMember( newName )->GetTypeName());
+               newel->SetReadFunc( rule->GetReadFunctionPointer() );
+               newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
+               fElements->Add(newel);
+            } else {
+               // This would be a completely new member (so it would need to be cached)
+               // TOBEDONE
+            }
+            for(Int_t other = 1; other < rule->GetTarget()->GetEntries(); ++other) {
+               objstr = (TObjString*)(rule->GetTarget()->At(other));
+               if (objstr) {
+                  newName = objstr->String();
+                  if ( fClass->GetDataMember( newName ) ) {
+                     newel = new TStreamerArtificial(newName,"",
+                                                     fClass->GetDataMemberOffset(newName),
+                                                     TStreamerInfo::kArtificial,
+                                                     fClass->GetDataMember( newName )->GetTypeName());
+                     fElements->Add(newel);
                   }
                }
-            } // For each target of the rule
-         }
-      } // None of the target of the rule are on file.
-   }
+            }
+         } // For each target of the rule
+      }
+   } // None of the target of the rule are on file.
 }
 
 //______________________________________________________________________________
