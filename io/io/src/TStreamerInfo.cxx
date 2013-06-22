@@ -1842,34 +1842,42 @@ void TStreamerInfo::BuildOld()
          offset += asize;
       }
 
-      if ( !wasCompiled && rules && rules->HasRuleWithSource( element->GetName(), kTRUE ) ) {
+      if (!wasCompiled && rules) {
+         if (rules->HasRuleWithSource( element->GetName(), kTRUE ) ) {
 
-         if (allocClass == 0) {
-            infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()));
-            if (!infoalloc) {
-               Error("BuildOld","Unable to create the StreamerInfo for %s.",TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()).Data());
-            } else {
-               infoalloc->BuildCheck();
-               infoalloc->BuildOld();
-               allocClass = infoalloc->GetClass();
+            if (allocClass == 0) {
+               infoalloc  = (TStreamerInfo *)Clone(TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()));
+               if (!infoalloc) {
+                  Error("BuildOld","Unable to create the StreamerInfo for %s.",TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()).Data());
+               } else {
+                  infoalloc->BuildCheck();
+                  infoalloc->BuildOld();
+                  allocClass = infoalloc->GetClass();
+               }
             }
-         }
 
-         // Now that we are caching the unconverted element, we do not assign it to the real type even if we could have!
-         if (element->GetNewType()>0 /* intentionally not including base class for now */
-             && !rules->HasRuleWithTarget( element->GetName(), kTRUE ) )
-         {
-            TStreamerElement *copy = (TStreamerElement*)element->Clone();
-            R__TObjArray_InsertBefore( fElements, copy, element );
-            next(); // move the cursor passed the insert object.
-            copy->SetBit(TStreamerElement::kRepeat);
-            element = copy;
+            // Now that we are caching the unconverted element, we do not assign it to the real type even if we could have!
+            if (element->GetNewType()>0 /* intentionally not including base class for now */
+                && !rules->HasRuleWithTarget( element->GetName(), kTRUE ) )
+               {
+                  TStreamerElement *copy = (TStreamerElement*)element->Clone();
+                  R__TObjArray_InsertBefore( fElements, copy, element );
+                  next(); // move the cursor passed the insert object.
+                  copy->SetBit(TStreamerElement::kRepeat);
+                  element = copy;
 
-            // Warning("BuildOld","%s::%s is not set from the version %d of %s (You must add a rule for it)\n",GetName(), element->GetName(), GetClassVersion(), GetName() );
+                  // Warning("BuildOld","%s::%s is not set from the version %d of %s (You must add a rule for it)\n",GetName(), element->GetName(), GetClassVersion(), GetName() );
+               }
+            element->SetBit(TStreamerElement::kCache);
+            element->SetNewType( element->GetType() );
+            element->SetOffset(infoalloc ? infoalloc->GetOffset(element->GetName()) : 0);
+         } else if (rules->HasRuleWithTarget( element->GetName(), kTRUE ) ) {
+            // The data member exist in the onfile StreamerInfo and there is a rule
+            // that has the same member 'only' has a target ... so this means we are
+            // asked to ignore the input data ...
+            // However for now we are ignoring the rule instead (see Warning in
+            // InsertArtificialElements.
          }
-         element->SetBit(TStreamerElement::kCache);
-         element->SetNewType( element->GetType() );
-         element->SetOffset(infoalloc ? infoalloc->GetOffset(element->GetName()) : 0);
       }
 
       if (element->GetNewType() == -2) {
@@ -3540,7 +3548,13 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
             break;
          }
       }
-      if (!match) {
+      if (match) {
+         TString err; rule->AsString(err);
+         Warning("InsertArtificialElements",
+                 "A rule is targetting a data member that exists onfile but is not used as a source:\n\t%s\n"
+                 "  This rule is ignored!",
+                 err.Data());
+      } else {
          TStreamerArtificial *newel;
          if (rule->GetTarget()==0) {
             TString newName;
