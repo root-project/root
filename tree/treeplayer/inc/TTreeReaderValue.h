@@ -115,7 +115,9 @@ public:
    TTreeReaderValue(TTreeReader& tr, const char* branchname):
       TTreeReaderValueBase(&tr, branchname, TDictionary::GetDictionary(typeid(T))) {}
 
-   T* Get() { return (T*)GetAddress(); }
+   T* Get() { 
+      void *address = GetAddress(); // Needed to figure out if it's a pointer
+      return fProxy->IsaPointer() ? *(T**)address : (T*)address; }
    T* operator->() { return Get(); }
    T& operator*() { return *Get(); }
 
