@@ -290,7 +290,7 @@ void readBArray(){
 	TTreeReaderArray<B> myBArray (myTreeReader, "A99.BArray[12]");
 
 	while (myTreeReader.SetNextEntry()){
-		printf("BArray dummies:");
+		printf("BArray dummies(%i):", myBArray.GetSize());
 
 		for (int i = 0; i < LIST_ENTRIES; ++i){
 			printf(" %i", myBArray.At(i).dummy);
@@ -307,9 +307,9 @@ void readBStarArray(){
 	TTreeReaderArray<B> myBStarArray (myTreeReader, "A99.BStarArray");
 
 	while (myTreeReader.SetNextEntry()){
-		printf("BStarArray dummies:");
+		printf("BStarArray dummies(%i):", myBStarArray.GetSize());
 
-		for (int i = 0; i < LIST_ENTRIES; ++i){
+		for (int i = 0; i < myBStarArray.GetSize(); ++i){
 			printf(" %i", myBStarArray.At(i).dummy);
 		}
 

@@ -95,6 +95,25 @@ namespace {
          return (void*)(array + (objectSize * idx));
       }
    };
+
+   class TArrayParameterSizeReader : public TLeafListReader {
+   private:
+      TTreeReaderValue<Int_t> *indexReader;
+   public:
+      TArrayParameterSizeReader(TTreeReaderValue<Int_t> *indexReaderArg) : indexReader(indexReaderArg) {}
+
+      virtual size_t GetSize(ROOT::TBranchProxy* proxy){ return **indexReader; }
+   };
+
+   class TArrayFixedSizeReader : public TLeafListReader {
+   private:
+      Int_t size;
+
+   public:
+      TArrayFixedSizeReader(Int_t sizeArg) : size(sizeArg) {}
+
+      virtual size_t GetSize(ROOT::TBranchProxy* proxy) { return size; }
+   };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,7 +200,7 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
    }
 
    if (fDict != branchActualType) {
-      Error("CreateContentProxy()", "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderValue<%s>",
+      Error("CreateContentProxy()", "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderArray<%s>",
             fBranchName.Data(), branchActualType->GetName(), fDict->GetName());
 
       // Update named proxy's dictionary
@@ -189,8 +208,8 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
          namedProxy->SetContentDict(fDict);
       }
 
-      fProxy = 0;
-      return;
+      // fProxy = 0;
+      // return;
    }
 
    // Update named proxy's dictionary
@@ -223,10 +242,13 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
             fImpl = new TSTLReader();
          }
          else if (element->IsA() == TStreamerObject::Class()){
-            fImpl = new TLeafListReader();
+            //fImpl = new TLeafListReader(); // BArray[12]
+            fImpl = new TArrayFixedSizeReader(element->GetArrayLength());
          }
          else if (element->IsA() == TStreamerLoop::Class()) {
-            fImpl = new TLeafListReader();
+            //fImpl = new TLeafListReader(); // BStarArray[num]
+            TTreeReaderValue<Int_t> *indexReader = new TTreeReaderValue<Int_t>(*fTreeReader, branchElement->GetBranchCount()->GetName());
+            fImpl = new TArrayParameterSizeReader(indexReader);
          }
       }
       else { // We are at root node?
@@ -346,6 +368,13 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
          return "{CANNOT DETERMINE TBranchElement DATA TYPE}";
       }
       else if (brElement->GetType() == TBranchElement::kLeafNode){
+         TStreamerInfo *streamerInfo = brElement->GetInfo();
+         Int_t id = brElement->GetID();
+
+         Int_t offset = streamerInfo->GetOffsets()[id];
+         TStreamerElement *element = (TStreamerElement*)streamerInfo->GetElements()->At(id);
+         Bool_t isPointer = element->IsaPointer();
+
          dict = brElement->GetCurrentClass();
          contentTypeName = brElement->GetTypeName();
          return 0;

@@ -29,6 +29,10 @@
 #include "TTreeReaderUtils.h"
 #endif
 
+#ifdef __CINT__
+#pragma link C++ class TTreeReaderValue<Int_t>+; // For the automatic array size reader
+#endif
+
 namespace ROOT {
    class TTreeReaderArrayBase: public TTreeReaderValueBase {
    public:
