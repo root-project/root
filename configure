@@ -6444,6 +6444,32 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  core/base/src/ManualBase4.* tree/tree/src/ManualTree2.* \
  graf2d/graf/src/G__Graf1.h graf2d/graf/src/G__Graf1.cxx \
  graf2d/graf/src/G__Graf2.h graf2d/graf/src/G__Graf2.cxx \
+ core/base/src/G__Base1.h core/base/src/G__Base2.h \
+ core/base/src/G__Base3.h core/clib/src/G__Clib.h \
+ core/cont/src/G__Cont.h core/macosx/src/G__Macosx.h \
+ core/meta/src/G__Meta.h core/metautils/src/G__MetaUtils.h \
+ core/textinput/src/G__TextInput.h core/unix/src/G__Unix.h \
+ core/zip/src/G__Zip.h geom/geom/src/G__Geom1.h \
+ geom/geom/src/G__Geom2.h graf3d/g3d/src/G__G3D.h \
+ graf3d/gl/src/G__GL.h gui/gui/src/G__Gui1.h \
+ gui/gui/src/G__Gui2.h gui/gui/src/G__Gui3.h \
+ hist/spectrumpainter/src/G__Spectrum2Painter.h \
+ io/io/src/G__IO.h io/sql/src/G__SQL.h io/xml/src/G__XML.h \
+ math/mathcore/src/G__Math.h math/mathcore/src/G__MathFit.h \
+ net/ldap/src/G__LDAP.h core/winnt/src/G__WinNT.h \
+ core/base/src/G__Base1.cxx core/base/src/G__Base2.cxx \
+ core/base/src/G__Base3.cxx core/clib/src/G__Clib.cxx \
+ core/cont/src/G__Cont.cxx core/macosx/src/G__Macosx.cxx \
+ core/meta/src/G__Meta.cxx core/metautils/src/G__MetaUtils.cxx \
+ core/textinput/src/G__TextInput.cxx core/unix/src/G__Unix.cxx \
+ core/zip/src/G__Zip.cxx geom/geom/src/G__Geom1.cxx \
+ geom/geom/src/G__Geom2.cxx graf3d/g3d/src/G__G3D.cxx \
+ graf3d/gl/src/G__GL.cxx gui/gui/src/G__Gui1.cxx \
+ gui/gui/src/G__Gui2.cxx gui/gui/src/G__Gui3.cxx \
+ hist/spectrumpainter/src/G__Spectrum2Painter.cxx \
+ io/io/src/G__IO.cxx io/sql/src/G__SQL.cxx io/xml/src/G__XML.cxx \
+ math/mathcore/src/G__Math.cxx math/mathcore/src/G__MathFit.cxx \
+ net/ldap/src/G__LDAP.cxx core/winnt/src/G__WinNT.cxx \
  net/net/src/TAS3File.* net/net/src/TGSFile.* net/net/src/THTTPMessage.* \
  etc/daemons/olbd.rc.d etc/daemons/cmsd.rc.d etc/daemons/xrootd.rc.d \
  bin/cmsd bin/xprep bin/xrd bin/xrdcp bin/xrdgsiproxy bin/xrdpwdadmin \
