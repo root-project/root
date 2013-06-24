@@ -85,7 +85,7 @@ $(TMVALIB):     $(TMVAO) $(TMVADO) $(ORDER_) $(MAINLIBS) $(TMVALIBDEP)
 $(TMVADS):      $(TMVAH) $(TMVAL0) $(TMVALS) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,TMVALIB) -c $(TMVAH) $(TMVAL0)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,TMVALIB) -c -I$(ROOT_SRCDIR) $(TMVAH) $(TMVAL0)
 
 $(TMVAMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TMVALS) $(TMVAL0)
 		$(RLIBMAP) -o $@ -l $(TMVALIB) \
