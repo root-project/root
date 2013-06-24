@@ -49,7 +49,7 @@ $(HTMLLIB):     $(HTMLO) $(HTMLDO) $(ORDER_) $(MAINLIBS) $(HTMLLIBDEP)
 $(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(HTMLH) $(HTMLL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,HTMLLIB) -c $(HTMLH) $(HTMLL)
 
 $(HTMLMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HTMLL)
 		$(RLIBMAP) -o $@ -l $(HTMLLIB) \

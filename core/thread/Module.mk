@@ -84,7 +84,7 @@ $(THREADLIB):   $(THREADO) $(THREADDO) $(ORDER_) $(MAINLIBS) $(THREADLIBDEP)
 $(THREADDS):    $(THREADH) $(THREADL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(THREADH) $(THREADL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,THREADLIB) -c $(THREADH) $(THREADL)
 
 $(THREADMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(THREADL)
 		$(RLIBMAP) -o $@ -l $(THREADLIB) \

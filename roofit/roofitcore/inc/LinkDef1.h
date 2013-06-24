@@ -1,7 +1,5 @@
 #ifdef __CINT__ 
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
+
 #pragma link C++ class Roo1DTable+ ;
 #pragma link C++ class RooAbsArg- ;
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-4]" source="TList _proxyList" target="_proxyList" \
@@ -64,7 +62,7 @@
 #pragma link C++ class RooEfficiency+ ; 
 #pragma link C++ class RooEffProd+ ;
 #pragma link C++ class RooExtendPdf+ ;
-#pragma link off class RooErrorHandler+ ;
+// # pragma link off class RooErrorHandler+ ;
 #endif 
  
 

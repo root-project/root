@@ -60,7 +60,7 @@ STLDICTS_OBJ := $(patsubst %.cxx,%.o,$(STLDICTS_SRC))
 STLDICTS_DEP := $(patsubst %.cxx,%.d,$(STLDICTS_SRC))
 
 $(call stripsrc,$(METAUTILSDIRS)/G__std__%.cxx): $(METAUTILSDIRS)/%Linkdef.h $(ROOTCINTTMPDEP)
-	$(ROOTCINTTMP) -f $@ -c $(subst multi,,${*:2=}) \
+	$(ROOTCINTTMP) -f $@ -s lib/lib$*Dict.pcm -m lib/libCore.pcm -c $(subst multi,,${*:2=}) \
 	   $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
 
 $(STLDICTS): lib/lib%Dict.$(SOEXT): $(call stripsrc,$(METAUTILSDIRS)/G__std__%.o) $(ORDER_) $(MAINLIBS)

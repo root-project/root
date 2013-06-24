@@ -9,10 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#pragma link off all functions;
-#pragma link off all globals;
-#pragma link off all classes;
-
 //==============================================================================
 // LinkDef1.h - Core EVE objects and services.
 //==============================================================================

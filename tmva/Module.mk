@@ -13,22 +13,10 @@ TMVADIRS     := $(TMVADIR)/src
 TMVADIRI     := $(TMVADIR)/inc
 
 ##### libTMVA #####
-TMVAL1       := $(MODDIRI)/LinkDef1.h
-TMVAL2       := $(MODDIRI)/LinkDef2.h
-TMVAL3       := $(MODDIRI)/LinkDef3.h
-TMVAL4       := $(MODDIRI)/LinkDef4.h
-TMVADS1      := $(call stripsrc,$(MODDIRS)/G__TMVA1.cxx)
-TMVADS2      := $(call stripsrc,$(MODDIRS)/G__TMVA2.cxx)
-TMVADS3      := $(call stripsrc,$(MODDIRS)/G__TMVA3.cxx)
-TMVADS4      := $(call stripsrc,$(MODDIRS)/G__TMVA4.cxx)
-TMVADO1      := $(TMVADS1:.cxx=.o)
-TMVADO2      := $(TMVADS2:.cxx=.o)
-TMVADO3      := $(TMVADS3:.cxx=.o)
-TMVADO4      := $(TMVADS4:.cxx=.o)
-
-TMVAL        := $(TMVAL1) $(TMVAL2) $(TMVAL3) $(TMVAL4)
-TMVADS       := $(TMVADS1) $(TMVADS2) $(TMVADS3) $(TMVADS4)
-TMVADO       := $(TMVADO1) $(TMVADO2) $(TMVADO3) $(TMVADO4)
+TMVAL0       := $(MODDIRI)/LinkDef.h
+TMVALS       := $(MODDIRI)/LinkDef1.h $(MODDIRI)/LinkDef2.h $(MODDIRI)/LinkDef3.h $(MODDIRI)/LinkDef4.h
+TMVADS       := $(call stripsrc,$(MODDIRS)/G__TMVA.cxx)
+TMVADO       := $(TMVADS:.cxx=.o)
 TMVADH       := $(TMVADS:.cxx=.h)
 
 TMVAH1       := Configurable.h Event.h Factory.h MethodBase.h MethodCompositeBase.h \
@@ -94,26 +82,14 @@ $(TMVALIB):     $(TMVAO) $(TMVADO) $(ORDER_) $(MAINLIBS) $(TMVALIBDEP)
 		   "$(SOFLAGS)" libTMVA.$(SOEXT) $@ "$(TMVAO) $(TMVADO)" \
 		   "$(TMVALIBEXTRA)"
 
-$(TMVADS1):     $(TMVAH1) $(TMVAL1) $(ROOTCINTTMPDEP)
+$(TMVADS):      $(TMVAH) $(TMVAL0) $(TMVALS) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,TMVALIB) -c $(TMVAH1) $(TMVAL1)
-$(TMVADS2):     $(TMVAH2) $(TMVAL2) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVAH2) $(TMVAL2)
-$(TMVADS3):     $(TMVAH3) $(TMVAL3) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVAH3) $(TMVAL3)
-$(TMVADS4):     $(TMVAH4) $(TMVAL4) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(TMVAH4) $(TMVAL4)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,TMVALIB) -c $(TMVAH) $(TMVAL0)
 
-$(TMVAMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TMVAL)
+$(TMVAMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TMVALS) $(TMVAL0)
 		$(RLIBMAP) -o $@ -l $(TMVALIB) \
-		   -d $(TMVALIBDEPM) -c $(TMVAL)
+		   -d $(TMVALIBDEPM) -c $(TMVALS)
 
 all-$(MODNAME): $(TMVALIB) $(TMVAMAP)
 

@@ -50,7 +50,6 @@ $(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,TREELIB) -c $(TREEH) $(TREEL)
-#		$(ROOTCINTTMP) -f $@ -lib $(TREELIB) $(call pcmfiles,$(TREELIBDEPM)) -c $(TREEH) $(TREEL)
 
 $(TREEMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TREEL)
 		$(RLIBMAP) -o $@ -l $(TREELIB) \

@@ -13,7 +13,8 @@ GEOMDIRS     := $(GEOMDIR)/src
 GEOMDIRI     := $(GEOMDIR)/inc
 
 ##### libGeom #####
-GEOML        := $(MODDIRI)/LinkDef.h
+GEOML0       := $(MODDIRI)/LinkDef.h
+GEOMLS       := $(MODDIRI)/LinkDef1.h $(MODDIRI)/LinkDef2.h
 GEOMDS       := $(call stripsrc,$(MODDIRS)/G__Geom.cxx)
 GEOMDO       := $(GEOMDS:.cxx=.o)
 GEOMDH       := $(GEOMDS:.cxx=.h)
@@ -65,14 +66,14 @@ $(GEOMLIB):     $(GEOMO) $(GEOMDO) $(ORDER_) $(MAINLIBS) $(GEOMLIBDEP)
 		   "$(SOFLAGS)" libGeom.$(SOEXT) $@ "$(GEOMO) $(GEOMDO)" \
 		   "$(GEOMLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB)"
 
-$(GEOMDS):      $(GEOMH) $(GEOML) $(ROOTCINTTMPDEP)
+$(GEOMDS):      $(GEOMH) $(GEOML0) $(GEOMLS) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOMLIB) -c -I$(ROOT_SRCDIR) $(GEOMH1) $(GEOMH2) $(GEOML)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOMLIB) -c -I$(ROOT_SRCDIR) $(GEOMH1) $(GEOMH2) $(GEOML0)
 
-$(GEOMMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GEOML1) $(GEOML2)
+$(GEOMMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GEOMLS) $(GEOML0) 
 		$(RLIBMAP) -o $@ -l $(GEOMLIB) \
-		   -d $(GEOMLIBDEPM) -c $(GEOML1) $(GEOML2)
+		   -d $(GEOMLIBDEPM) -c $(GEOMLS)
 
 all-$(MODNAME): $(GEOMLIB) $(GEOMMAP)
 

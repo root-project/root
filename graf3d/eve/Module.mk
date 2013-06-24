@@ -13,16 +13,10 @@ EVEDIRS   := $(EVEDIR)/src
 EVEDIRI   := $(EVEDIR)/inc
 
 ##### libEve #####
-EVEL1     := $(MODDIRI)/LinkDef1.h
-EVEL2     := $(MODDIRI)/LinkDef2.h
-EVEDS1    := $(call stripsrc,$(MODDIRS)/G__Eve1.cxx)
-EVEDS2    := $(call stripsrc,$(MODDIRS)/G__Eve2.cxx)
-EVEDO1    := $(EVEDS1:.cxx=.o)
-EVEDO2    := $(EVEDS2:.cxx=.o)
-EVEDH     := $(EVEDS:.cxx=.h)
-EVEL      := $(EVEL1) $(EVEL2)
-EVEDS     := $(EVEDS1) $(EVEDS2)
-EVEDO     := $(EVEDO1) $(EVEDO2)
+EVEL0     := $(MODDIRI)/LinkDef.h
+EVELS     := $(MODDIRI)/LinkDef1.h $(MODDIRI)/LinkDef2.h
+EVEDS     := $(call stripsrc,$(MODDIRS)/G__Eve.cxx)
+EVEDO     := $(EVEDS:.cxx=.o)
 EVEDH     := $(EVEDS:.cxx=.h)
 
 EVEH1     := TEveBrowser TEveChunkManager TEveCompound \
@@ -74,18 +68,14 @@ $(EVELIB):      $(EVEO) $(EVEDO) $(ORDER_) $(MAINLIBS) $(EVELIBDEP) \
 		   "$(EVELIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) \
 		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
 
-$(EVEDS1):      $(EVEH1) $(EVEL1) $(ROOTCINTTMPDEP)
+$(EVEDS):       $(EVEH) $(EVEL0) $(EVELS) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,EVELIB) -c $(EVEH1) $(EVEDIRS)/SolarisCCDictHack.h $(EVEL1)
-$(EVEDS2):      $(EVEH2) $(EVEL2) $(ROOTCINTTMPDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(EVEH2) $(EVEDIRS)/SolarisCCDictHack.h $(EVEL2)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,EVELIB) -c $(EVEH) $(EVEDIRS)/SolarisCCDictHack.h $(EVEL0)
 
-$(EVEMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(EVEL)
+$(EVEMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(EVEL0) $(EVELS)
 		$(RLIBMAP) -o $@ -l $(EVELIB) \
-		   -d $(EVELIBDEPM) -c $(EVEL)
+		   -d $(EVELIBDEPM) -c $(EVELS)
 
 all-$(MODNAME): $(EVELIB) $(EVEMAP)
 

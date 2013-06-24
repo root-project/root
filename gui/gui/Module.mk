@@ -13,7 +13,8 @@ GUIDIRS      := $(GUIDIR)/src
 GUIDIRI      := $(GUIDIR)/inc
 
 ##### libGui #####
-GUIL         := $(MODDIRI)/LinkDef.h
+GUIL0        := $(MODDIRI)/LinkDef.h
+GUILS        := $(MODDIRI)/LinkDef1.h $(MODDIRI)/LinkDef2.h $(MODDIRI)/LinkDef3.h
 GUIDS        := $(call stripsrc,$(MODDIRS)/G__Gui.cxx)
 GUIDO        := $(GUIDS:.cxx=.o)
 GUIDH        := $(GUIDS:.cxx=.h)
@@ -77,14 +78,14 @@ $(GUILIB):      $(GUIO) $(GUIDO) $(ORDER_) $(MAINLIBS) $(GUILIBDEP)
 		   "$(SOFLAGS)" libGui.$(SOEXT) $@ "$(GUIO) $(GUIDO)" \
 		   "$(GUILIBEXTRA)"
 
-$(GUIDS):       $(GUIH) $(GUIL) $(ROOTCINTTMPDEP)
+$(GUIDS):       $(GUIH) $(GUIL0) $(GUILS) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GUILIB) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GUILIB) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)
 
-$(GUIMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GUIL)
+$(GUIMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GUIL0) $(GUILS)
 		$(RLIBMAP) -o $@ -l $(GUILIB) \
-		   -d $(GUILIBDEPM) -c $(GUIL)
+		   -d $(GUILIBDEPM) -c $(GUILS)
 
 all-$(MODNAME): $(GUILIB) $(GUIMAP)
 
