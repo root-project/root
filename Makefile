@@ -943,12 +943,8 @@ rootdrpm:
 	fi
 
 clean::
-	@rm -f __compiledata *~ core.*
+	@rm -f __compiledata *~ core.* $(COREDO)
 
-ifeq ($(CXX),KCC)
-clean::
-	@(find . -name "ti_files" -exec rm -rf {} \; >/dev/null 2>&1;true)
-endif
 ifeq ($(SUNCC5),true)
 clean::
 	@(find . -name "SunWS_cache" -exec rm -rf {} \; >/dev/null 2>&1;true)
@@ -963,7 +959,7 @@ distclean:: clean
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
                lib/*.so.* *.def .def
-	@rm -f lib/*.pcm
+	@rm -f lib/*.pcm $(COREDS) $(COREDH)
 ifeq ($(PLATFORM),macosx)
 	@rm -f lib/*.dylib
 	@rm -f lib/*.so
