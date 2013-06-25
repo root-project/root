@@ -12,8 +12,6 @@
 
 namespace ROOT
 {
-   typedef std::list<std::pair<ROOT::TSchemaType,std::string> > SourceTypeList_t;
-
    //--------------------------------------------------------------------------
    // Allocate global variables
    //--------------------------------------------------------------------------
@@ -325,22 +323,6 @@ namespace ROOT
       }
 
       //-----------------------------------------------------------------------
-      // Check the source contains proper declarations.
-      //-----------------------------------------------------------------------
-      {
-         SourceTypeList_t source;
-         TSchemaRuleProcessor::SplitDeclaration( rule.find("source")->second, source );
-         SourceTypeList_t::const_iterator it;
-         for( it = source.begin(); it != source.end(); ++it ) {
-            if ( ( it->first.fType == "" && it->second != "") || 1) {
-               error_string = warning + " - type required when listing a rule's source: ";
-               error_string += "source=\""+ rule.find("source")->second +"\"";
-               return false;
-            }
-         }
-      }
-
-      //-----------------------------------------------------------------------
       // Check if we have an embed aparameter and if so if it has been set to
       // the right value
       //-----------------------------------------------------------------------
@@ -431,6 +413,7 @@ namespace ROOT
       return true;
    }
 
+   typedef std::list<std::pair<ROOT::TSchemaType,std::string> > SourceTypeList_t;
    //--------------------------------------------------------------------------
    static void WriteAutoVariables( const std::list<std::string>& target,
                                    const SourceTypeList_t& source,
