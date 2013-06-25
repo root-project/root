@@ -497,7 +497,7 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    T.append(const_cast<clang::FunctionDecl*>(FD));
    T.setState(cling::Transaction::kCompleted);
 
-   fInterp->codegen(&T);
+   fInterp->emitAllDecls(&T);
    assert(T.getState() == cling::Transaction::kCommitted
           && "Compilation should never fail!");
 }
