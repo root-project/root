@@ -32,7 +32,7 @@ namespace {
    public:
       ~TClonesReader() {}
       TClonesArray* GetCA(ROOT::TBranchProxy* proxy) {
-         proxy->GetClass();
+         if (!proxy->Read()) return 0;
          return (TClonesArray*) proxy->GetWhere();
       }
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
@@ -243,7 +243,13 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
          }
          else if (element->IsA() == TStreamerObject::Class()){
             //fImpl = new TLeafListReader(); // BArray[12]
-            fImpl = new TArrayFixedSizeReader(element->GetArrayLength());
+
+            if (element->GetClass() == TClonesArray::Class()){
+               fImpl = new TClonesReader();
+            }
+            else {
+               fImpl = new TArrayFixedSizeReader(element->GetArrayLength());
+            }
          }
          else if (element->IsA() == TStreamerLoop::Class()) {
             //fImpl = new TLeafListReader(); // BStarArray[num]
@@ -301,13 +307,16 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
       if (brElement->GetType() == 4
           || brElement->GetType() == 3) {
          TVirtualCollectionProxy* collProxy = brElement->GetCollectionProxy();
-         dict = collProxy->GetValueClass();
-         if (!dict) dict = TDataType::GetDataType(collProxy->GetType());
+         if (collProxy) {
+            dict = collProxy->GetValueClass();
+            if (!dict) dict = TDataType::GetDataType(collProxy->GetType());
+         }
          if (!dict) {
             // We don't know the dictionary, thus we need the content's type name.
             // Determine it.
             if (brElement->GetType() == 3) {
                contentTypeName = brElement->GetClonesName();
+               dict = TDictionary::GetDictionary("TClonesArray");
                return 0;
             }
             // STL:

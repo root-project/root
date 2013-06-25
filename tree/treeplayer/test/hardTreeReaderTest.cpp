@@ -17,6 +17,7 @@
 #pragma link C++ class TTreeReaderValue<A>+;
 #pragma link C++ class TTreeReaderValue<std::vector<B>>+;
 #pragma link C++ class TTreeReaderValue<B*>+;
+#pragma link C++ class TTreeReaderValue<TClonesArray>+;
 #pragma link C++ class TTreeReaderArray<double>+;
 #pragma link C++ class TTreeReaderArray<B>+;
 #endif
@@ -311,6 +312,44 @@ void readBStarArray(){
 
 		for (int i = 0; i < myBStarArray.GetSize(); ++i){
 			printf(" %i", myBStarArray.At(i).dummy);
+		}
+
+		printf("\n");
+	}
+}
+
+void readBClonesArrayValue(){
+	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TTreeReaderValue<TClonesArray> myBClonesArray (myTreeReader, "A99.BClonesArray");
+
+	while (myTreeReader.SetNextEntry()){
+		printf("BClonesArray dummies(%i):", myBClonesArray->GetSize());
+
+		for (int i = 0; i < LIST_ENTRIES && i < myBClonesArray->GetSize(); ++i){
+			// B &BObject = (B&)((*myBClonesArray)[i]);
+			// printf(" %i", BObject.dummy);
+			printf(" %i", ((B*)myBClonesArray->At(i))->dummy);
+		}
+
+		printf("\n");
+	}
+}
+
+void readBClonesArrayArray(){
+	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TTreeReaderArray<B> myBClonesArray (myTreeReader, "A99.BClonesArray");
+
+	while (myTreeReader.SetNextEntry()){
+		printf("BClonesArray dummies(%i):", myBClonesArray.GetSize());
+
+		for (int i = 0; i < LIST_ENTRIES && i < myBClonesArray.GetSize(); ++i){
+			// B &BObject = (B&)((*myBClonesArray)[i]);
+			// printf(" %i", BObject.dummy);
+			printf(" %i", myBClonesArray.At(i).dummy);
 		}
 
 		printf("\n");
