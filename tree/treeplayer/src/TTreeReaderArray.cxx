@@ -65,7 +65,12 @@ namespace {
          if (!proxy->Read()) return 0;
          if (!proxy->GetWhere()) return 0;
 
-         return proxy->GetCollection()->At(idx);
+         if (proxy->GetCollection()->HasPointers()){
+            return *(void**)proxy->GetCollection()->At(idx);
+         }
+         else {
+            return proxy->GetCollection()->At(idx);
+         }
       }
    };
 
