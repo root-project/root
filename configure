@@ -6453,10 +6453,17 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  geom/geom/src/G__Geom2.h graf3d/g3d/src/G__G3D.h \
  graf3d/gl/src/G__GL.h gui/gui/src/G__Gui1.h \
  gui/gui/src/G__Gui2.h gui/gui/src/G__Gui3.h \
+ graf2d/x11ttf/src/G__X11TTF.h graf2d/x11/src/G__X11.cxx \
+ graf2d/postscript/src/G__PostScript.h \
+ graf2d/gpad/src/G__GPad.h graf3d/x3d/src/G__X3D.h \
  hist/spectrumpainter/src/G__Spectrum2Painter.h \
  io/io/src/G__IO.h io/sql/src/G__SQL.h io/xml/src/G__XML.h \
  math/mathcore/src/G__Math.h math/mathcore/src/G__MathFit.h \
  net/ldap/src/G__LDAP.h core/winnt/src/G__WinNT.h \
+ graf3d/eve/src/G__Eve1.h  graf3d/eve/src/G__Eve2.h \
+ tmva/src/G__TMVA1.h  tmva/src/G__TMVA2.h  tmva/src/G__TMVA3.h  tmva/src/G__TMVA4.h \
+ roofit/roofitcore/src/G__RooFitCore1.h  roofit/roofitcore/src/G__RooFitCore3.h \
+ roofit/roofitcore/src/G__RooFitCore2.h  roofit/roofitcore/src/G__RooFitCore4.h \
  core/base/src/G__Base1.cxx core/base/src/G__Base2.cxx \
  core/base/src/G__Base3.cxx core/clib/src/G__Clib.cxx \
  core/cont/src/G__Cont.cxx core/macosx/src/G__Macosx.cxx \
@@ -6470,6 +6477,13 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  io/io/src/G__IO.cxx io/sql/src/G__SQL.cxx io/xml/src/G__XML.cxx \
  math/mathcore/src/G__Math.cxx math/mathcore/src/G__MathFit.cxx \
  net/ldap/src/G__LDAP.cxx core/winnt/src/G__WinNT.cxx \
+ graf3d/eve/src/G__Eve1.cxx  graf3d/eve/src/G__Eve2.cxx \
+ graf2d/x11ttf/src/G__X11TTF.cxx graf2d/x11/src/G__X11.cxx \
+ graf2d/postscript/src/G__PostScript.cxx \
+ graf2d/gpad/src/G__GPad.cxx graf3d/x3d/src/G__X3D.cxx \
+ roofit/roofitcore/src/G__RooFitCore1.cxx  roofit/roofitcore/src/G__RooFitCore3.cxx \
+ roofit/roofitcore/src/G__RooFitCore2.cxx  roofit/roofitcore/src/G__RooFitCore4.cxx \
+ tmva/src/G__TMVA1.cxx  tmva/src/G__TMVA2.cxx  tmva/src/G__TMVA3.cxx  tmva/src/G__TMVA4.cxx \
  net/net/src/TAS3File.* net/net/src/TGSFile.* net/net/src/THTTPMessage.* \
  etc/daemons/olbd.rc.d etc/daemons/cmsd.rc.d etc/daemons/xrootd.rc.d \
  bin/cmsd bin/xprep bin/xrd bin/xrdcp bin/xrdgsiproxy bin/xrdpwdadmin \
