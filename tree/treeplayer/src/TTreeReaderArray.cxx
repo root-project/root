@@ -56,7 +56,7 @@ namespace {
       }
 
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
-         CheckProxy(proxy);
+         if (!CheckProxy(proxy)) return -1;
          if (!proxy->ReadEntries()) return -1;
          return GetCP(proxy)->Size();
       }
@@ -68,12 +68,13 @@ namespace {
                ((TGenCollectionProxy*)proxy->GetCollection())->PushProxy(*(void**)proxy->GetWhere());
                proxySet = true;
             }
+            else return false;
          }
          return true;
       }
 
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
-         CheckProxy(proxy);
+         if (!CheckProxy(proxy)) return 0;
          if (!proxy->Read()) return 0;
          if (!proxy->GetWhere()) return 0;
 
@@ -301,8 +302,6 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
    namedProxy = new ROOT::TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
    fTreeReader->GetProxies()->Add(namedProxy);
    fProxy = namedProxy->GetProxy();
-
-   fImpl->CheckProxy(fProxy);
 }
 
 //______________________________________________________________________________

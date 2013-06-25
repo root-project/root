@@ -64,7 +64,6 @@ namespace ROOT {
    public:
       virtual ~TCollectionReaderABC();
       virtual size_t GetSize(TBranchProxy*) = 0;
-      virtual Bool_t CheckProxy(TBranchProxy*) { return true; }
       virtual void* At(TBranchProxy*, size_t /*idx*/) = 0;
    };
 
