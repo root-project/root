@@ -571,8 +571,8 @@ TROOT::~TROOT()
       // the last access ...
       // So for now, let's avoid delete TCling except in the special build
       // checking the completeness of the termination deletion.
-      SafeDelete(fInterpreter);
 #endif
+      SafeDelete(fInterpreter);
 
 #ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fCleanups);
