@@ -343,6 +343,10 @@ Bool_t TSchemaRule::TestVersion( Int_t version ) const
    if( !fVersionVect )
       ProcessVersion( fVersion ); // At this point the version string should always be correct
 
+   if (version == -1) {
+      version = 1;
+   }
+
    std::vector<std::pair<Int_t, Int_t> >::iterator it;
    for( it = fVersionVect->begin(); it != fVersionVect->end(); ++it ) {
       if( version >= it->first && version <= it->second )
