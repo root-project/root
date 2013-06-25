@@ -241,7 +241,7 @@ void readVectorStarBValue(){
 	TTreeReaderValue<std::vector<B> > myVectorStarB (myTreeReader, "A99.vectorStarB");
 
 	while (myTreeReader.SetNextEntry()){
-		printf("vectorB dummies:");
+		printf("vectorB dummies(%i):", myVectorStarB->size());
 
 		for (int i = 0; i < LIST_ENTRIES; ++i){
 			printf(" %i", myVectorStarB->at(i).dummy);
@@ -413,4 +413,23 @@ void readTree(){
 	}
 
 	myFile->Close();
+}
+
+
+void testAll(){
+	readNum();
+	readBObject();
+	readBObjectDummy();
+	readBStar();
+	readVectorBValue();
+	readVectorStarBValue();
+	readVectorStarBArray();
+	readVectorBArray();
+	readBArray();
+	readBStarArray();
+	readVectorBStarValue();
+	readVectorBStarArray();
+	readBClonesArrayValue();
+	readBClonesArrayArray();
+	readAObject();
 }

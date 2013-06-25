@@ -22,6 +22,7 @@
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TTreeReader.h"
+#include "TGenCollectionProxy.h"
 
 // pin vtable
 ROOT::TCollectionReaderABC::~TCollectionReaderABC() {}
@@ -45,23 +46,34 @@ namespace {
 
    // Reader interface for STL
    class TSTLReader: public ROOT::TCollectionReaderABC {
+   private:
+      Bool_t proxySet = false;
    public:
       ~TSTLReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
          if (!proxy->Read()) return 0;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
-      // virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
-      //    return GetCP(proxy)->Size();
-      // }
+
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
+         CheckProxy(proxy);
          if (!proxy->ReadEntries()) return -1;
          return GetCP(proxy)->Size();
       }
-      // virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
-      //    return GetCP(proxy)->At(idx);
-      // }
+
+      virtual Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
+         if (!proxy->Read()) return false;
+         if (proxy->IsaPointer() && !proxySet) {
+            if (proxy->GetWhere() && *(void**)proxy->GetWhere()){
+               ((TGenCollectionProxy*)proxy->GetCollection())->PushProxy(*(void**)proxy->GetWhere());
+               proxySet = true;
+            }
+         }
+         return true;
+      }
+
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
+         CheckProxy(proxy);
          if (!proxy->Read()) return 0;
          if (!proxy->GetWhere()) return 0;
 
@@ -289,6 +301,8 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
    namedProxy = new ROOT::TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
    fTreeReader->GetProxies()->Add(namedProxy);
    fProxy = namedProxy->GetProxy();
+
+   fImpl->CheckProxy(fProxy);
 }
 
 //______________________________________________________________________________
