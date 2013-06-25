@@ -1,6 +1,7 @@
 
 Processing test3.cxx+...
 Warning in <TClass::TClass>: no dictionary for class ACache is available
+Warning in <TClass::TClass>: no dictionary for class Unversioned is available
 Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from ACache to Axis
 Stream out object
 Axis::x 6

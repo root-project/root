@@ -5,6 +5,16 @@
 #include "Riostream.h"
 #include "TObjArray.h"
 
+class Unversioned {
+public:
+   Unversioned(int seed = 4) : fCached(4) {}
+
+   int fCached; //!
+   void Print() {
+      cout << "Unversioned::fCached: " << fCached << endl;
+   }
+};
+
 class ACache {
 protected:
    int  x;
@@ -17,6 +27,7 @@ protected:
    int  fN;      // Size of fArray
    int *fArray;  //[fN] An array of int that will become an array of char.
    float fValues[3];  // An array of float that will become array of double.
+   Unversioned fUnversioned;
 
  public:
    ACache(int xin = 2, int yin = 3) : x(xin),y(yin),zcalc(false),z(-1),c(x+y),persist(new TObjArray),all(new TObjArray),fN(xin),fArray(0)
@@ -72,6 +83,7 @@ protected:
          cout << "ACache::fValues["<<j<<"] "<< fValues[j] << endl;
 
       }
+      fUnversioned.Print();
    }
 };
 
@@ -82,9 +94,12 @@ public:
    ACache a;
 };
 
+
 #ifdef __MAKECINT__
 #pragma link C++ options=version(8) class ACache+;
 #pragma link C++ options=version(2) class Container+;
+#pragma link C++ class Unversioned+;
+
 #pragma read sourceClass="ACache" targetClass="ACache" source="" version="[1-]" target="zcalc" \
    code="{ zcalc = false; }"
 
@@ -92,5 +107,7 @@ public:
     source="TObjArray* persist" target="all" \
     code="{ all->Delete(); all->AddAll(onfile.persist); }"
 
+#pragma read sourceClass="Unversioned" targetClass="Unversioned" source="" version="[1-]" target="fCached" \
+    code="{ fCached = 1; }"
 #endif
 

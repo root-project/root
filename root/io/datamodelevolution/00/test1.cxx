@@ -23,7 +23,7 @@ void test1() {
    a.Print();
    
    TClassRef cl = TClass::GetClass("ACache");
-
+ 
    TBufferFile b(TBuffer::kWrite);
    b.SetWriteMode();
 

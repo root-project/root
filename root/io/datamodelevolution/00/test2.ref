@@ -1,5 +1,6 @@
 
 Processing test2.cxx+...
+Warning in <TClass::TClass>: no dictionary for class Unversioned is available
 Stream out object
 ACache::x 6
 ACache::y 7

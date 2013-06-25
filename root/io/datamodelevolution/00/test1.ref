@@ -21,6 +21,7 @@ ACache::fArray[5] 15
 ACache::fValues[0] 0
 ACache::fValues[1] 0.01
 ACache::fValues[2] 0.02
+Unversioned::fCached: 4
 Stream out object
 Modify object
 ACache::x     6
@@ -43,6 +44,7 @@ ACache::fArray[5] 15
 ACache::fValues[0] 0
 ACache::fValues[1] 0.01
 ACache::fValues[2] 0.02
+Unversioned::fCached: 4
 Stream in object into existing object
 ACache::x     6
 ACache::y:    7
@@ -63,6 +65,7 @@ ACache::fArray[5] 15
 ACache::fValues[0] 0
 ACache::fValues[1] 0.01
 ACache::fValues[2] 0.02
+Unversioned::fCached: 1
 Create embedded object
 ACache::x     9
 ACache::y:    10
@@ -87,4 +90,5 @@ ACache::fArray[8] 18
 ACache::fValues[0] 0
 ACache::fValues[1] 0.01
 ACache::fValues[2] 0.02
+Unversioned::fCached: 4
 Store on file
