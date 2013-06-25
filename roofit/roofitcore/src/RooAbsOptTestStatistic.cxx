@@ -279,10 +279,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   }
   _ownData = kTRUE ;  
  
-  _dataClone->attachBuffers(*_funcObsSet) ;
-  setEventCount(_dataClone->numEntries()) ;
-
-
 
   // ******************************************************************
   // *** PART 3 *** Make adjustments for fit ranges, if specified     *
@@ -292,7 +288,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   RooArgSet* dataObsSet = (RooArgSet*) _dataClone->get() ;
   if (rangeName && strlen(rangeName)) {    
     cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing test statistic for sub-range named " << rangeName << endl ;    
-//     cout << "now adjusting observable ranges to requested fit range" << endl ;
+    //cout << "now adjusting observable ranges to requested fit range" << endl ;
 
     // Adjust FUNC normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
     iter = _funcObsSet->fwdIterator() ;
@@ -310,8 +306,8 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
 	// Adjust range of function observable to those of given named range
 	realObs->setRange(realObs->getMin(rangeName),realObs->getMax(rangeName)) ;	
-// 	cout << "RAOTS::ctor() setting normalization range on observable " 
-// 	     << realObs->GetName() << " to [" << realObs->getMin() << "," << realObs->getMax() << "]" << endl ;
+//  	cout << "RAOTS::ctor() setting normalization range on observable " 
+//  	     << realObs->GetName() << " to [" << realObs->getMin() << "," << realObs->getMax() << "]" << endl ;
 
 	// Adjust range of data observable to those of given named range
 	RooRealVar* dataObs = (RooRealVar*) dataObsSet->find(realObs->GetName()) ;
@@ -359,6 +355,12 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 	_funcClone->fixAddCoefRange(Form("NormalizationRangeFor%s",rangeName),kFALSE) ;
     }
   }
+
+
+  // This is deferred from part 2 - but must happen after part 3 - otherwise invalid bins cannot be properly marked in cacheValidEntries
+  _dataClone->attachBuffers(*_funcObsSet) ;
+  setEventCount(_dataClone->numEntries()) ;
+
 
 
 

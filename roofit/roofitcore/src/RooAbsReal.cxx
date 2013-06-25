@@ -4143,9 +4143,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
   }
   delete iter ;
   
-  // Construct chi2
-  string name = Form("chi2_%s_%s",GetName(),data.GetName()) ;
-  return new RooChi2Var(name.c_str(),name.c_str(),*this,data,*cmds[0],*cmds[1],*cmds[2],*cmds[3],*cmds[4],*cmds[5],*cmds[6],*cmds[7]) ;
+  return createChi2(data,*cmds[0],*cmds[1],*cmds[2],*cmds[3],*cmds[4],*cmds[5],*cmds[6],*cmds[7]) ;
   
 }
 

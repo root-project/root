@@ -1514,9 +1514,69 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  con
   //  SplitRange() -- Fit range is split by index catory of simultaneous PDF
   //  ConditionalObservables() -- Define projected observables 
 
-  string name = Form("chi2_%s_%s",GetName(),data.GetName()) ;
+  RooLinkedList cmdList ;
+  cmdList.Add((TObject*)&arg1) ;  cmdList.Add((TObject*)&arg2) ;  
+  cmdList.Add((TObject*)&arg3) ;  cmdList.Add((TObject*)&arg4) ;
+  cmdList.Add((TObject*)&arg5) ;  cmdList.Add((TObject*)&arg6) ;  
+  cmdList.Add((TObject*)&arg7) ;  cmdList.Add((TObject*)&arg8) ;
+
+  RooCmdConfig pc(Form("RooAbsPdf::createChi2(%s)",GetName())) ;
+  pc.defineString("rangeName","RangeWithName",0,"",kTRUE) ;
+  pc.allowUndefined(kTRUE) ;
+  pc.process(cmdList) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+  const char* rangeName = pc.getString("rangeName",0,kTRUE) ;
  
-  return new RooChi2Var(name.c_str(),name.c_str(),*this,data,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  // Construct Chi2
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+  RooAbsReal* chi2 ;
+  string baseName = Form("chi2_%s_%s",GetName(),data.GetName()) ;
+  
+  if (!rangeName || strchr(rangeName,',')==0) {
+    // Simple case: default range, or single restricted range
+
+    chi2 = new RooChi2Var(baseName.c_str(),baseName.c_str(),*this,data,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+
+  } else {
+
+    // Find which argument is RangeWithName
+    const RooCmdArg* rarg(0) ;
+    string rcmd = "RangeWithName" ;
+    if (arg1.GetName()==rcmd) rarg = &arg1 ;
+    if (arg2.GetName()==rcmd) rarg = &arg2 ;
+    if (arg3.GetName()==rcmd) rarg = &arg3 ;
+    if (arg4.GetName()==rcmd) rarg = &arg4 ;
+    if (arg5.GetName()==rcmd) rarg = &arg5 ;
+    if (arg6.GetName()==rcmd) rarg = &arg6 ;
+    if (arg7.GetName()==rcmd) rarg = &arg7 ;
+    if (arg8.GetName()==rcmd) rarg = &arg8 ;
+
+    // Composite case: multiple ranges
+    RooArgList chi2List ;
+    const size_t bufSize = strlen(rangeName)+1;
+    char* buf = new char[bufSize] ;
+    strlcpy(buf,rangeName,bufSize) ;
+    char* token = strtok(buf,",") ;
+    while(token) {
+      RooCmdArg subRangeCmd = RooFit::Range(token) ;
+      // Construct chi2 while substituting original RangeWithName argument with subrange argument created above
+      RooAbsReal* chi2Comp = new RooChi2Var(Form("%s_%s",baseName.c_str(),token),"chi^2",*this,data,
+					    &arg1==rarg?subRangeCmd:arg1,&arg2==rarg?subRangeCmd:arg2,
+					    &arg3==rarg?subRangeCmd:arg3,&arg4==rarg?subRangeCmd:arg4,
+					    &arg5==rarg?subRangeCmd:arg5,&arg6==rarg?subRangeCmd:arg6,
+					    &arg7==rarg?subRangeCmd:arg7,&arg8==rarg?subRangeCmd:arg8) ;
+      chi2List.add(*chi2Comp) ;
+      token = strtok(0,",") ;
+    }
+    delete[] buf ;
+    chi2 = new RooAddition(baseName.c_str(),"chi^2",chi2List,kTRUE) ;
+  }
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
+
+
+  return chi2 ;
 }
 
 
