@@ -1668,7 +1668,21 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
    if (!strncmp(filename, "/usr/lib/system/", 16)
        || !strncmp(filename, "/usr/lib/libc++", 15)
        || !strncmp(filename, "/System/Library/Frameworks/", 27)
-       || !strncmp(filename, "/System/Library/PrivateFrameworks/", 34))
+       || !strncmp(filename, "/System/Library/PrivateFrameworks/", 34)
+       || !strncmp(filename, "/System/Library/CoreServices/", 29)
+       || strstr(filename, "/usr/lib/libSystem")
+       || strstr(filename, "/usr/lib/libstdc++")
+       || strstr(filename, "/usr/lib/libicucore")
+       || strstr(filename, "/usr/lib/libbsm")
+       || strstr(filename, "/usr/lib/libobjc")
+       || strstr(filename, "/usr/lib/libresolv")
+       || strstr(filename, "/usr/lib/libauto")
+       || strstr(filename, "/usr/lib/libcups")
+       || strstr(filename, "/usr/lib/libDiagnosticMessagesClient")
+       || strstr(filename, "/usr/lib/liblangid")
+       || strstr(filename, "/usr/lib/libCRFSuite")
+       || strstr(filename, "/usr/lib/libpam")
+       || strstr(filename, "/usr/lib/libOpenScriptingUtil"))
       return;
 #elif defined(__CYGWIN__) || defined(R__WIN32)
    // Check that this is not a system library
@@ -1681,6 +1695,15 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
       snprintf(posixwindir, sizeof(posixwindir), "/Windows/");
    if (strstr(filename, posixwindir) ||
        strstr(filename, "/usr/bin/cyg"))
+      return;
+#elif defined (R__LINUX)
+   if (strstr(filename, "/ld-linux")
+       || strstr(filename, "linux-gnu/")
+       || strstr(filename, "/libstdc++.")
+       || strstr(filename, "/libgcc")
+       || strstr(filename, "/libc.")
+       || strstr(filename, "/libdl.")
+       || strstr(filename, "/libm."))
       return;
 #endif
    // Update string of available libraries.
