@@ -12,6 +12,8 @@
 
 namespace ROOT
 {
+   typedef std::list<std::pair<ROOT::TSchemaType,std::string> > SourceTypeList_t;
+
    //--------------------------------------------------------------------------
    // Allocate global variables
    //--------------------------------------------------------------------------
@@ -323,7 +325,24 @@ namespace ROOT
       }
 
       //-----------------------------------------------------------------------
-      // Check if we have an embed aparameter and if so if it has been set to
+      // Check the source contains proper declarations.
+      //-----------------------------------------------------------------------
+      it1 = rule.find("code");
+      if (it1 != rule.end() && it1->second != "") {
+         SourceTypeList_t source;
+         TSchemaRuleProcessor::SplitDeclaration( rule.find("source")->second, source );
+         SourceTypeList_t::const_iterator it;
+         for( it = source.begin(); it != source.end(); ++it ) {
+            if ( ( it->first.fType == "" && it->second != "") ) {
+               error_string = warning + " - type required when listing a rule's source: ";
+               error_string += "source=\""+ rule.find("source")->second +"\"";
+               return false;
+            }
+         }
+      }
+
+      //-----------------------------------------------------------------------
+      // Check if we have an embed parameter and if so if it has been set to
       // the right value
       //-----------------------------------------------------------------------
       it1 = rule.find( "embed" );
@@ -413,7 +432,6 @@ namespace ROOT
       return true;
    }
 
-   typedef std::list<std::pair<ROOT::TSchemaType,std::string> > SourceTypeList_t;
    //--------------------------------------------------------------------------
    static void WriteAutoVariables( const std::list<std::string>& target,
                                    const SourceTypeList_t& source,
@@ -812,7 +830,8 @@ namespace ROOT
       std::string error_string;
       if( !ParseRule( args, rule, error_string ) ) {
          std::cout << error_string << '\n';
-         std::cout << "The rule has been omited!" << std::endl;
+         std::cout << "The following rule has been omited:" << std::endl;
+         std::cout << "   read " << args << std::endl;
          return;
       }
 
@@ -843,7 +862,8 @@ namespace ROOT
       std::string error_string;
       if( !ParseRule( args, rule, error_string ) ) {
          std::cout << error_string << '\n';
-         std::cout << "The rule has been omited!" << std::endl;
+         std::cout << "The following rule has been omited:" << std::endl;
+         std::cout << "   readraw " << args << std::endl;
          return;
       }
 
