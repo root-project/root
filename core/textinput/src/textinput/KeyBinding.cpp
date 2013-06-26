@@ -86,7 +86,7 @@ namespace textinput {
         if (HadEscPending) {
           return C(Editor::kCmdCutPrevWord);
         } else {
-          return C(Editor::kCmdDelLeft); 
+          return C(Editor::kCmdDelLeft);
         }
       default: return C(In, Editor::kCKError);
     }

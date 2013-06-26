@@ -51,7 +51,7 @@ namespace textinput {
       // stealing it.
       fIn = ::CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-        FILE_ATTRIBUTE_NORMAL, NULL); 
+        FILE_ATTRIBUTE_NORMAL, NULL);
       ::GetConsoleMode(fIn, &fOldMode);
       fMyMode = fOldMode | ENABLE_QUICK_EDIT_MODE | ENABLE_EXTENDED_FLAGS;
       fMyMode = fOldMode & ~(ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT
@@ -115,7 +115,7 @@ namespace textinput {
         WORD Key = buf.Event.KeyEvent.wVirtualKeyCode;
         if (buf.Event.KeyEvent.dwControlKeyState
           & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
-          if (buf.Event.KeyEvent.dwControlKeyState 
+          if (buf.Event.KeyEvent.dwControlKeyState
              & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) {
              // special "Alt Gr" case (equivalent to Ctrl+Alt)...
             in.SetModifier(InputData::kModNone);
