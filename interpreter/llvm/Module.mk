@@ -47,7 +47,7 @@ LLVMDEP      := $(LLVMLIB) $(LLVMRES)
 ifeq ($(LLVMDEV),)
 LLVMOPTFLAGS := --enable-optimized --disable-assertions
 else
-ROOT_BUILDCLANG := yes
+ROOT_BUILDCLANG := "ROOT_BUILDCLANG=yes"
 ifeq (,$(findstring debug,$(ROOTBUILD)))
 LLVMOPTFLAGS := --enable-optimized --enable-debug-symbols
 else
@@ -86,9 +86,9 @@ $(LLVMRES): $(LLVMLIB)
 $(LLVMLIB): $(LLVMDEPO) $(FORCELLVMTARGET)
 		@(echo "*** Building $@..."; \
 		cd $(LLVMDIRO) && \
-		$(MAKE) VERBOSE=1 && \
+		$(MAKE) VERBOSE=1 $(ROOT_BUILDCLANG) && \
 		rm -rf ../inst/lib/clang && \
-		$(MAKE) install \
+		$(MAKE) install $(ROOT_BUILDCLANG) \
                 $(ENDLLVMBUILD) )
 
 $(LLVMGOODO): $(LLVMGOODS) $(LLVMLIB)
@@ -180,7 +180,7 @@ all-$(MODNAME): $(LLVMLIB)
 clean-llvm:
 		-@(if [ -d $(LLVMDIRO) ]; then \
 			cd $(LLVMDIRO); \
-			$(MAKE) clean; \
+			$(MAKE) clean $(ROOT_BUILDCLANG); \
 		fi)
 
 clean::         clean-$(MODNAME)
