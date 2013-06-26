@@ -408,7 +408,7 @@ Bool_t ROOT::TBranchProxy::Setup()
 
             }
 
-         } else if (fBranch->IsA() != TBranch::Class()) {
+         } else if (fBranch->IsA() != TBranch::Class() && fElement->IsA() != TStreamerBasicType::Class()) {
             Error("Setup","%s",Form("Missing TClass object for %s\n",fClassName.Data()));
          }
 
