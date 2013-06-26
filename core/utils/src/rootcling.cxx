@@ -2264,6 +2264,76 @@ static int GenerateModule(clang::CompilerInstance* CI,
 }
 
 
+void AddPlatformDefines(std::vector<std::string> clingArgs)
+{
+   char platformDefines[64] = {0};
+   #ifdef __INTEL_COMPILER
+   snprintf(platformDefines, 64, "-DG__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef __xlC__
+   snprintf(platformDefines, 64, "-DG__xlC=%ld", (long)__xlC__);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef __GNUC__
+   snprintf(platformDefines, 64, "-DG__GNUC=%ld", (long)__GNUC__);
+   snprintf(platformDefines, 64, "-DG__GNUC_VER=%ld", (long)__GNUC__*1000 + __GNUC_MINOR__);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef __GNUC_MINOR__
+   snprintf(platformDefines, 64, "-DG__GNUC_MINOR=%ld", (long)__GNUC_MINOR__);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef __HP_aCC
+   snprintf(platformDefines, 64, "-DG__HP_aCC=%ld", (long)__HP_aCC);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef __sun
+   snprintf(platformDefines, 64, "-DG__sun=%ld", (long)__sun);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef __SUNPRO_CC
+   snprintf(platformDefines, 64, "-DG__SUNPRO_CC=%ld", (long)__SUNPRO_CC);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef _STLPORT_VERSION
+   // stlport version, used on e.g. SUN
+   snprintf(platformDefines, 64, "-DG__STLPORT_VERSION=%ld", (long)_STLPORT_VERSION);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef __ia64__
+   snprintf(platformDefines, 64, "-DG__ia64=%ld", (long)__ia64__);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef __x86_64__
+   snprintf(platformDefines, 64, "-DG__x86_64=%ld", (long)__x86_64__);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef __i386__
+   snprintf(platformDefines, 64, "-DG__i386=%ld", (long)__i386__);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef __arm__
+   snprintf(platformDefines, 64, "-DG__arm=%ld", (long)__arm__);
+   clingArgs.push_back(platformDefines);
+   #endif
+   #ifdef _WIN32
+   snprintf(platformDefines, 64, "-DG__WIN32=%ld",(long)_WIN32);
+   clingArgs.push_back(platformDefines);
+   #else
+   # ifdef WIN32
+   snprintf(platformDefines, 64, "-DG__WIN32=%ld",(long)WIN32);
+   clingArgs.push_back(platformDefines);
+   # endif
+   #endif
+   #ifdef _MSC_VER
+   snprintf(platformDefines, 64, "-DG__MSC_VER=%ld",(long)_MSC_VER);
+   clingArgs.push_back(platformDefines);
+   snprintf(platformDefines, 64, "-DG__VISUAL=%ld",(long)_MSC_VER);
+   clingArgs.push_back(platformDefines);
+   #endif
+}
+
 // cross-compiling for iOS and iOS simulator (assumes host is Intel Mac OS X)
 #if defined(R__IOSSIM) || defined(R__IOS)
 #ifdef __x86_64__
@@ -2592,72 +2662,8 @@ int main(int argc, char **argv)
    // flags used only for the pragma parser:
    clingArgs.push_back("-D__CINT__");
    clingArgs.push_back("-D__MAKECINT__");
-   char platformDefines[64] = {0};
-#ifdef __INTEL_COMPILER
-   snprintf(platformDefines, 64, "-DG__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef __xlC__
-   snprintf(platformDefines, 64, "-DG__xlC=%ld", (long)__xlC__);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef __GNUC__
-   snprintf(platformDefines, 64, "-DG__GNUC=%ld", (long)__GNUC__);
-   snprintf(platformDefines, 64, "-DG__GNUC_VER=%ld", (long)__GNUC__*1000 + __GNUC_MINOR__);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef __GNUC_MINOR__
-   snprintf(platformDefines, 64, "-DG__GNUC_MINOR=%ld", (long)__GNUC_MINOR__);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef __HP_aCC
-   snprintf(platformDefines, 64, "-DG__HP_aCC=%ld", (long)__HP_aCC);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef __sun
-   snprintf(platformDefines, 64, "-DG__sun=%ld", (long)__sun);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef __SUNPRO_CC
-   snprintf(platformDefines, 64, "-DG__SUNPRO_CC=%ld", (long)__SUNPRO_CC);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef _STLPORT_VERSION
-   // stlport version, used on e.g. SUN
-   snprintf(platformDefines, 64, "-DG__STLPORT_VERSION=%ld", (long)_STLPORT_VERSION);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef __ia64__
-   snprintf(platformDefines, 64, "-DG__ia64=%ld", (long)__ia64__);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef __x86_64__
-   snprintf(platformDefines, 64, "-DG__x86_64=%ld", (long)__x86_64__);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef __i386__
-   snprintf(platformDefines, 64, "-DG__i386=%ld", (long)__i386__);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef __arm__
-   snprintf(platformDefines, 64, "-DG__arm=%ld", (long)__arm__);
-   clingArgs.push_back(platformDefines);
-#endif
-#ifdef _WIN32
-   snprintf(platformDefines, 64, "-DG__WIN32=%ld",(long)_WIN32);
-   clingArgs.push_back(platformDefines);
-#else
-# ifdef WIN32
-   snprintf(platformDefines, 64, "-DG__WIN32=%ld",(long)WIN32);
-   clingArgs.push_back(platformDefines);
-# endif
-#endif
-#ifdef _MSC_VER
-   snprintf(platformDefines, 64, "-DG__MSC_VER=%ld",(long)_MSC_VER);
-   clingArgs.push_back(platformDefines);
-   snprintf(platformDefines, 64, "-DG__VISUAL=%ld",(long)_MSC_VER);
-   clingArgs.push_back(platformDefines);
-#endif
+
+   AddPlatformDefines(clingArgs);
 
    std::string interpPragmaSource;
    std::string includeForSource;
