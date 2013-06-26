@@ -37,9 +37,11 @@
 
 static const char *R__GetDeclSourceFileName(const clang::Decl* D)
 {
-   clang::SourceLocation SL = D->getLocation();
    clang::ASTContext& ctx = D->getASTContext();
    clang::SourceManager& SM = ctx.getSourceManager();
+   clang::SourceLocation SL = D->getLocation();
+   if (SL.isMacroID())
+      SL = SM.getSpellingLoc(SL);
 
    if (SL.isValid() && SL.isFileID()) {
       clang::PresumedLoc PLoc = SM.getPresumedLoc(SL);
