@@ -2523,7 +2523,10 @@ int main(int argc, char **argv)
    clingArgs.push_back("-main-file-name");
    clingArgs.push_back("-Xclang");
    clingArgs.push_back((dictname + ".h").c_str());
-#ifdef R__GCC_TOOLCHAIN
+
+   // Hack present for the root workshop: root6 preview distributed on an USB
+   // stick with SLC5 + gcc46.
+#ifdef R__GCC_TOOLCHAIN   
    clingArgs.push_back("-gcc-toolchain");
    clingArgs.push_back(R__GCC_TOOLCHAIN);
    clingArgs.push_back("-cxx-isystem");
