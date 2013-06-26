@@ -2351,7 +2351,7 @@ void AddPlatformDefines(std::vector<std::string> clingArgs)
 #endif
 
 //______________________________________________________________________________
-int main(int argc, char **argv)
+int RootCling(int argc, char **argv)
 {
    if (argc < 2) {
       fprintf(stderr,
@@ -3170,4 +3170,47 @@ int main(int argc, char **argv)
 
    CleanupOnExit(0);
    return 0;
+}
+
+//______________________________________________________________________________
+int GenReflex(int argc, char **argv)
+{
+   // Encapsulate the functionalities of Genreflex here
+   return 0;
+}
+
+//______________________________________________________________________________
+int main(int argc, char **argv)
+{
+   
+   const std::string exePath ( GetExePath() );
+   
+   #ifdef WIN32
+   const char pathSeparator = '\\';
+   #else
+   const char pathSeparator = '/';
+   #endif
+   
+   std::string exeName;
+   const size_t pos = exePath.find_last_of(pathSeparator);
+   if(std::string::npos != pos){
+      exeName.assign(exePath.begin() + pos + 1, exePath.end());
+   } else {
+      exeName.assign(exePath);
+   }
+   
+   // Select according to the name of the executable the procedure to follow:
+   // 1) RootCling
+   // 2) GenReflex
+   // The default is rootcling
+   
+   if (std::string::npos != exeName.find("rootcling")) {
+      return RootCling(argc, argv);
+   } else if (std::string::npos != exeName.find("genereflex.py") ||
+      std::string::npos != exeName.find("genereflex")) {
+         return GenReflex(argc, argv);
+   } else {
+         return RootCling(argc, argv);
+   }
+
 }
