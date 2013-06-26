@@ -190,7 +190,7 @@ const char *help =
 # define R__LLVMDIR "./interpreter/llvm/inst" // only works for rootbuild for now!
 #endif
 
-template <typename T> struct R__IsPointer { enum { kVal = 0 }; };
+template <typename T> struct IsPointer { enum { kVal = 0 }; };
 
 // not needed: there for historical reasons?
 // template <typename T> struct R__IsPointer<T*> { enum { kVal = 1 }; };
@@ -2560,8 +2560,9 @@ int RootCling(int argc, char **argv)
    clingArgs.push_back(argv[0]);
    clingArgs.push_back("-I.");
    clingArgs.push_back("-DROOT_Math_VectorUtil_Cint"); // ignore that little problem maker
-   
-   if (! R__IsPointer<std::vector<int>::iterator>::kVal) {
+
+   // Is this needed at all or just historical?
+   if (! IsPointer<std::vector<int>::iterator>::kVal) {
       // Tell cling (for parsing pragma) that std::vector's iterator is a class
       clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
    }
