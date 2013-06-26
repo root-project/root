@@ -21,6 +21,7 @@
 #pragma link C++ class TTreeReaderValue<std::vector<B*>>+;
 #pragma link C++ class TTreeReaderArray<double>+;
 #pragma link C++ class TTreeReaderArray<B>+;
+#pragma link C++ class TTreeReaderArray<Int_t>+;
 #endif
 
 #define TREE_ENTRIES 10
@@ -391,6 +392,25 @@ void readBClonesArrayArray(){
 	}
 }
 
+void readVectorBDummyArray(){
+	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TTreeReaderArray<Int_t> myVectorBDummyArray (myTreeReader, "A99.vectorB.dummy");
+
+	while (myTreeReader.SetNextEntry()){
+		printf("vectorB.dummies(%i):", myVectorBDummyArray.GetSize());
+
+		for (int i = 0; i < LIST_ENTRIES && i < myVectorBDummyArray.GetSize(); ++i){
+			// B &BObject = (B&)((*myVectorBDummyArray)[i]);
+			// printf(" %i", BObject.dummy);
+			printf(" %i", myVectorBDummyArray.At(i));
+		}
+
+		printf("\n");
+	}
+}
+
 void readAObject(){
 	TFile *myFile = TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
@@ -407,6 +427,7 @@ void readAObject(){
 void readTree(){
 	TFile *myFile = TFile::Open("HardTreeFile.root");
 	TTree *myTree = (TTree*)myFile->Get("HardTree");
+	myTree->Print();
 	
 	for (int i = 0; i < 10 && i < myTree->GetEntries(); ++i){
 		myTree->Show(i);

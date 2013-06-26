@@ -90,9 +90,9 @@ namespace {
 
    // Reader interface for leaf list
    // SEE TTreeProxyGenerator.cxx:1319: '//We have a top level raw type'
-   class TLeafListReader: public ROOT::TCollectionReaderABC {
+   class TObjectArrayReader: public ROOT::TCollectionReaderABC {
    public:
-      ~TLeafListReader() {}
+      ~TObjectArrayReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
          if (!proxy->Read()) return 0;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
@@ -114,7 +114,7 @@ namespace {
       }
    };
 
-   class TArrayParameterSizeReader : public TLeafListReader {
+   class TArrayParameterSizeReader : public TObjectArrayReader {
    private:
       TTreeReaderValue<Int_t> *indexReader;
    public:
@@ -123,7 +123,7 @@ namespace {
       virtual size_t GetSize(ROOT::TBranchProxy* proxy){ return **indexReader; }
    };
 
-   class TArrayFixedSizeReader : public TLeafListReader {
+   class TArrayFixedSizeReader : public TObjectArrayReader {
    private:
       Int_t size;
 
@@ -131,6 +131,24 @@ namespace {
       TArrayFixedSizeReader(Int_t sizeArg) : size(sizeArg) {}
 
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) { return size; }
+   };
+
+   class TBasicTypeArrayReader : public ROOT::TCollectionReaderABC {
+   public:
+      ~TBasicTypeArrayReader() {}
+
+      TVirtualCollectionProxy* GetCP (ROOT::TBranchProxy *proxy) {
+         if (!proxy->Read()) return 0;
+         return (TVirtualCollectionProxy*) proxy->GetCollection();
+      }
+
+      virtual size_t GetSize(ROOT::TBranchProxy* proxy){
+         return GetCP(proxy)->Size();
+      }
+
+      virtual void* At(ROOT::TBranchProxy* proxy, size_t idx){
+         return GetCP(proxy)->At(idx) + proxy->GetOffset();
+      }
    };
 }
 
@@ -260,7 +278,7 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
             fImpl = new TSTLReader();
          }
          else if (element->IsA() == TStreamerObject::Class()){
-            //fImpl = new TLeafListReader(); // BArray[12]
+            //fImpl = new TObjectArrayReader(); // BArray[12]
 
             if (element->GetClass() == TClonesArray::Class()){
                fImpl = new TClonesReader();
@@ -270,9 +288,12 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
             }
          }
          else if (element->IsA() == TStreamerLoop::Class()) {
-            //fImpl = new TLeafListReader(); // BStarArray[num]
+            //fImpl = new TObjectArrayReader(); // BStarArray[num]
             TTreeReaderValue<Int_t> *indexReader = new TTreeReaderValue<Int_t>(*fTreeReader, branchElement->GetBranchCount()->GetName());
             fImpl = new TArrayParameterSizeReader(indexReader);
+         }
+         else if (element->IsA() == TStreamerBasicType::Class()){
+            fImpl = new TBasicTypeArrayReader();
          }
       }
       else { // We are at root node?
