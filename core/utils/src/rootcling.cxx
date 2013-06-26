@@ -192,8 +192,8 @@ const char *help =
 
 template <typename T> struct R__IsPointer { enum { kVal = 0 }; };
 
-template <typename T> struct R__IsPointer<T*> { enum { kVal = 1 }; };
-
+// not needed: there for historical reasons?
+// template <typename T> struct R__IsPointer<T*> { enum { kVal = 1 }; };
 // const char *ShortTypeName(const char *typeDesc);
 
 #ifdef _WIN32
@@ -241,7 +241,7 @@ enum {
 cling::Interpreter *gInterp = 0;
 
 //______________________________________________________________________________
-static void R__GetCurrentDirectory(std::string &output)
+static void GetCurrentDirectory(std::string &output)
 {
    char fixedLength[1024];
    char *currWorkDir = fixedLength;
@@ -272,7 +272,7 @@ static void R__GetCurrentDirectory(std::string &output)
 }
 
 //______________________________________________________________________________
-static std::string R__GetRelocatableHeaderName(const char *header, const std::string &currentDirectory) 
+static std::string GetRelocatableHeaderName(const char *header, const std::string &currentDirectory)
 {
    // Convert to path relative to $PWD
    // If that's not what the caller wants, she should pass -I to rootcling and a
@@ -304,6 +304,7 @@ std::ostream* dictHdrOut = &std::cout;
 
 bool gNeedCollectionProxy = false;
 
+//______________________________________________________________________________
 bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name) 
 {
    std::string given_name(name);
@@ -325,7 +326,7 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
 
 // In order to store the meaningful for the IO comments we have to transform 
 // the comment into annotation of the given decl.
-void R__AnnotateDecl(clang::CXXRecordDecl &CXXRD) 
+void AnnotateDecl(clang::CXXRecordDecl &CXXRD)
 {
    using namespace clang;
    SourceLocation commentSLoc;
@@ -365,7 +366,8 @@ void R__AnnotateDecl(clang::CXXRecordDecl &CXXRD)
 
 std::string gResourceDir;
 
-size_t R__GetFullArrayLength(const clang::ConstantArrayType *arrayType)
+//______________________________________________________________________________
+size_t GetFullArrayLength(const clang::ConstantArrayType *arrayType)
 {
    llvm::APInt len = arrayType->getSize();
    while(const clang::ConstantArrayType *subArrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual()) )
@@ -389,7 +391,9 @@ public:
    FDVisitor() : fFD(0) {}
 };
 
-bool InheritsFromTObject(const clang::RecordDecl *cl, const cling::Interpreter &interp)
+//______________________________________________________________________________
+bool InheritsFromTObject(const clang::RecordDecl *cl,
+                         const cling::Interpreter &interp)
 {
    static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::R__ScopeSearch("TObject", interp);
 
@@ -397,31 +401,39 @@ bool InheritsFromTObject(const clang::RecordDecl *cl, const cling::Interpreter &
    return ROOT::TMetaUtils::R__IsBase(clxx, TObject_decl);
 }
 
-bool InheritsFromTSelector(const clang::RecordDecl *cl, const cling::Interpreter &interp)
+//______________________________________________________________________________
+bool InheritsFromTSelector(const clang::RecordDecl *cl,
+                           const cling::Interpreter &interp)
 {
    static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::R__ScopeSearch("TSelector", interp);
 
    return ROOT::TMetaUtils::R__IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
 }
 
-void R__GetName(std::string &qual_name, const clang::NamedDecl *cl)
-{
-   llvm::raw_string_ostream stream(qual_name);
-   cl->getNameForDiagnostic(stream,cl->getASTContext().getPrintingPolicy(),false); // qual_name = N->getQualifiedNameAsString();
-}
+// Not used, there for historical reasons?
+//______________________________________________________________________________
+// void R__GetName(std::string &qual_name, const clang::NamedDecl *cl)
+// {
+//    llvm::raw_string_ostream stream(qual_name);
+//    cl->getNameForDiagnostic(stream,cl->getASTContext().getPrintingPolicy(),false); // qual_name = N->getQualifiedNameAsString();
+// }
 
+//______________________________________________________________________________
 inline bool R__IsTemplate(const clang::Decl &cl)
 {
    return (cl.getKind() == clang::Decl::ClassTemplatePartialSpecialization
            || cl.getKind() == clang::Decl::ClassTemplateSpecialization);
 }
 
-inline bool R__IsTemplate(const clang::CXXRecordDecl *cl)
-{
-  return cl->getTemplateSpecializationKind() != clang::TSK_Undeclared;
-}
+// Not used, there for historical reasons?
+//______________________________________________________________________________
+// inline bool R__IsTemplate(const clang::CXXRecordDecl *cl)
+// {
+//   return cl->getTemplateSpecializationKind() != clang::TSK_Undeclared;
+// }
 
-bool R__IsSelectionXml(const char *filename)
+//______________________________________________________________________________
+bool IsSelectionXml(const char *filename)
 {
    size_t len = strlen(filename);
    size_t xmllen = 4; /* strlen(".xml"); */
@@ -432,7 +444,8 @@ bool R__IsSelectionXml(const char *filename)
    }
 }
 
-bool R__IsLinkdefFile(const char *filename)
+//______________________________________________________________________________
+bool IsLinkdefFile(const char *filename)
 {
    if ((strstr(filename,"LinkDef") || strstr(filename,"Linkdef") ||
         strstr(filename,"linkdef")) && strstr(filename,".h")) {
@@ -453,9 +466,10 @@ bool R__IsLinkdefFile(const char *filename)
    }
 }
 
-bool R__IsSelectionFile(const char *filename)
+//______________________________________________________________________________
+bool IsSelectionFile(const char *filename)
 {
-   return R__IsLinkdefFile(filename) || R__IsSelectionXml(filename);
+   return IsLinkdefFile(filename) || IsSelectionXml(filename);
 }
 
 //______________________________________________________________________________
@@ -543,7 +557,8 @@ void SetRootSys()
 }
 
 //______________________________________________________________________________
-bool ParsePragmaLine(const std::string& line, const char* expectedTokens[],
+bool ParsePragmaLine(const std::string& line,
+                     const char* expectedTokens[],
                      size_t* end = 0) {
    // Check whether the #pragma line contains expectedTokens (0-terminated array).
    if (end) *end = 0;
@@ -562,12 +577,13 @@ bool ParsePragmaLine(const std::string& line, const char* expectedTokens[],
    return true;
 }
 
-//______________________________________________________________________________
+
 typedef map<string,string> Recmap_t;
 Recmap_t gAutoloads;
 string gLiblistPrefix;
 string gLibsNeeded;
 
+//______________________________________________________________________________
 void RecordDeclCallback(const char *c)
 {
    string need( gAutoloads[c] );
@@ -576,6 +592,7 @@ void RecordDeclCallback(const char *c)
    }
 }
 
+//______________________________________________________________________________
 void LoadLibraryMap()
 {
    string filelistname = gLiblistPrefix + ".in";
@@ -672,7 +689,11 @@ void LoadLibraryMap()
 }
 
 //______________________________________________________________________________
-bool CheckInputOperator(const char *what, const char *proto, const string &fullname, const clang::RecordDecl *cl, cling::Interpreter &interp)
+bool CheckInputOperator(const char *what,
+                        const char *proto,
+                        const string &fullname,
+                        const clang::RecordDecl *cl,
+                        cling::Interpreter &interp)
 {
    // Check if the specificed operator (what) has been properly declared if the user has
    // resquested a custom version.
@@ -809,7 +830,10 @@ bool NeedExternalShowMember(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl_inpu
 }
 
 //______________________________________________________________________________
-int STLContainerStreamer(const clang::FieldDecl &m, int rwmode, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+int STLContainerStreamer(const clang::FieldDecl &m,
+                         int rwmode,
+                         const cling::Interpreter &interp,
+                         const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Create Streamer code for an STL container. Returns 1 if data member
    // was an STL container and if Streamer code has been created, 0 otherwise.
@@ -861,7 +885,7 @@ int STLContainerStreamer(const clang::FieldDecl &m, int rwmode, const cling::Int
    const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(m.getType().getTypePtr());
    if (arrayType) {
       isArr = 1;
-      len =  R__GetFullArrayLength(arrayType);
+      len =  GetFullArrayLength(arrayType);
       pa = 1;
       while (arrayType) {
          if (arrayType->getArrayElementTypeNoTypeQual()->isPointerType()) {
@@ -1336,7 +1360,9 @@ const char *GrabIndex(const clang::FieldDecl &member, int printError)
 }
 
 //______________________________________________________________________________
-void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
+                   const cling::Interpreter &interp,
+                   const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
    if (clxx == 0) return;
@@ -1475,7 +1501,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling:
                    type.getTypePtr()->getArrayElementTypeNoTypeQual()->isPointerType() ) 
                {
                   const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr());
-                  int s = R__GetFullArrayLength(arrayType);
+                  int s = GetFullArrayLength(arrayType);
 
                   if (!decli) {
                      (*dictSrcOut) << "      int R__i;" << std::endl;
@@ -1558,7 +1584,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling:
                      }
                   } else {
                      const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr());
-                     int s = R__GetFullArrayLength(arrayType);
+                     int s = GetFullArrayLength(arrayType);
 
                      if (type.getTypePtr()->getArrayElementTypeNoTypeQual()->isArrayType()) {// if (m.ArrayDim() > 1) {
                         if ( underling_type->isEnumeralType() )
@@ -1630,7 +1656,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling:
                    type.getTypePtr()->getArrayElementTypeNoTypeQual()->isPointerType()) 
                {
                   const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr());
-                  int s = R__GetFullArrayLength(arrayType);
+                  int s = GetFullArrayLength(arrayType);
 
                   if (!decli) {
                      (*dictSrcOut) << "      int R__i;" << std::endl;
@@ -1684,7 +1710,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling:
                   }
                } else if (type.getTypePtr()->isArrayType()) {
                   const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr());
-                  int s = R__GetFullArrayLength(arrayType);
+                  int s = GetFullArrayLength(arrayType);
 
                   if (!decli) {
                      (*dictSrcOut) << "      int R__i;" << std::endl;
@@ -1732,7 +1758,9 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling:
 }
 
 //______________________________________________________________________________
-void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
+                       const cling::Interpreter &interp,
+                       const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
 
    // Write Streamer() method suitable for automatic schema evolution.
@@ -1781,8 +1809,11 @@ void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cl
    }
 }
 
-void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp,
-   const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, bool isAutoStreamer) {
+//______________________________________________________________________________
+void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
+                       const cling::Interpreter &interp,
+                       const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
+                       bool isAutoStreamer) {
    if (isAutoStreamer) {
       WriteAutoStreamer(cl, interp, normCtxt);
    } else {
@@ -1791,7 +1822,8 @@ void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cl
 }
 
 //______________________________________________________________________________
-void WriteBodyShowMembers(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, bool outside)
+void WriteBodyShowMembers(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
+                          bool outside)
 {
    string csymbol;
    ROOT::TMetaUtils::R__GetQualifiedName(csymbol,*cl);
@@ -1821,7 +1853,8 @@ void WriteBodyShowMembers(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, bool 
 }
 
 //______________________________________________________________________________
-void GenerateLinkdef(int *argc, char **argv, int firstInputFile, std::string &code_for_parser)
+void GenerateLinkdef(int *argc, char **argv, int firstInputFile,
+                     std::string &code_for_parser)
 {
    code_for_parser += "#ifdef __CINT__\n\n";
    code_for_parser += "#pragma link off all globals;\n";
@@ -1929,7 +1962,7 @@ const char *CopyArg(const char *original)
    // to make it the name we can use in #includes.
 
 #ifdef ROOTBUILD
-   if (R__IsSelectionFile(original)) {
+   if (IsSelectionFile(original)) {
       return original;
    }
 
@@ -2087,7 +2120,8 @@ static ESourceFileKind GetSourceFileKind(clang::CompilerInstance* CI,
 
 //______________________________________________________________________________
 static int GenerateModule(clang::CompilerInstance* CI,
-                          const char* dictSrcFile, const std::vector<std::string>& args,
+                          const char* dictSrcFile,
+                          const std::vector<std::string>& args,
                           const std::string &currentDirectory)
 {
    // Generate the clang module given the arguments.
@@ -2367,7 +2401,7 @@ int RootCling(int argc, char **argv)
    bool requestAllSymbols = false; // Would be set to true is we decide to support an option like --deep.
 
    std::string currentDirectory;
-   R__GetCurrentDirectory(currentDirectory);
+   GetCurrentDirectory(currentDirectory);
 
    ic = 1;
    if (!strcmp(argv[ic], "-v")) {
@@ -2680,7 +2714,7 @@ int RootCling(int argc, char **argv)
       if (!firstInputFile && *argv[i] != '-' && *argv[i] != '+') {
          firstInputFile = i;
       }
-      if (R__IsSelectionFile(argv[i])) {
+      if (IsSelectionFile(argv[i])) {
          linkdefLoc = i;
          if (i != argc-1) {
             ROOT::TMetaUtils::Error(0, "%s: %s must be last file on command line\n", argv[0], argv[i]);
@@ -2699,12 +2733,12 @@ int RootCling(int argc, char **argv)
          if (*argv[i] != '-' && *argv[i] != '+') {
             // Looks like a file
 
-            bool isSelectionFile = R__IsSelectionFile(argv[i]);
+            bool isSelectionFile = IsSelectionFile(argv[i]);
 
             string argkeep;
             // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             if (!isSelectionFile) StrcpyArg(argkeep, argv[i]);
-            std::string header( isSelectionFile ? argv[i] : R__GetRelocatableHeaderName( argv[i], currentDirectory ) );
+            std::string header( isSelectionFile ? argv[i] : GetRelocatableHeaderName( argv[i], currentDirectory ) );
             // Strip any trailing + which is only used by GeneratedLinkdef.h which currently 
             // use directly argv.
             if (header[header.length()-1]=='+') {
@@ -2713,8 +2747,8 @@ int RootCling(int argc, char **argv)
             
             // We are 'normalizing' the file in two different way.  StrcpyArg (from rootcling)
             // strip just the ROOTBUILD part (i.e. $PWD/package/module/inc) while
-            // R__GetRelocatableHeaderName also $PWD.
-            // R__GetRelocatableHeaderName is likely to be too aggressive and the 
+            // GetRelocatableHeaderName also $PWD.
+            // GetRelocatableHeaderName is likely to be too aggressive and the
             // ROOTBUILD part should really be removed by changing the ROOT makefile
             // to pass -I and path relative to the include path.
             if (cling::Interpreter::kSuccess 
@@ -2849,7 +2883,7 @@ int RootCling(int argc, char **argv)
          CleanupOnExit(1);
          return 1;
       }
-   } else if (R__IsSelectionXml(linkdefFilename.c_str())) {
+   } else if (IsSelectionXml(linkdefFilename.c_str())) {
 
       selectionRules.SetSelectionFileType(SelectionRules::kSelectionXMLFile);
 
@@ -2870,7 +2904,7 @@ int RootCling(int argc, char **argv)
          ROOT::TMetaUtils::Error(0,"XML file %s couldn't be opened!\n",linkdefFilename.c_str());
       }
 
-   } else if (R__IsLinkdefFile(linkdefFilename.c_str())) {
+   } else if (IsLinkdefFile(linkdefFilename.c_str())) {
 
       std::ifstream file(linkdefFilename.c_str());
       if(file.is_open()) {
@@ -3017,7 +3051,7 @@ int RootCling(int argc, char **argv)
          }
 
          if (clang::CXXRecordDecl* CXXRD = llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl())))
-            R__AnnotateDecl(*CXXRD);
+            AnnotateDecl(*CXXRD);
          const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
          if (CRD) {
             ROOT::TMetaUtils::Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
