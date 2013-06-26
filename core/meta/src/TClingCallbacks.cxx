@@ -102,7 +102,7 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
 
      // We should try autoload only for special lookup failures. 
      Sema::LookupNameKind kind = R.getLookupKind();
-     if (kind != Sema::LookupTagName) 
+     if (!(kind == Sema::LookupTagName || kind == Sema::LookupOrdinaryName)) 
         return false;
 
      fIsAutoloadingRecursively = true;
