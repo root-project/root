@@ -150,6 +150,17 @@ namespace {
          return GetCP(proxy)->At(idx) + proxy->GetOffset();
       }
    };
+
+   class TBasicTypeClonesReader : public TClonesReader {
+   private:
+      Int_t offset = 0;
+   public:
+      TBasicTypeClonesReader(Int_t offsetArg) : offset(offsetArg) {}
+
+      virtual void* At(ROOT::TBranchProxy* proxy, size_t idx){
+         return (void*)GetCA(proxy)->At(idx) + offset;
+      }
+   };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -293,7 +304,12 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
             fImpl = new TArrayParameterSizeReader(indexReader);
          }
          else if (element->IsA() == TStreamerBasicType::Class()){
-            fImpl = new TBasicTypeArrayReader();
+            if (branchElement->GetType() == TBranchElement::kSTLMemberNode){
+               fImpl = new TBasicTypeArrayReader();
+            }
+            else if (branchElement->GetType() == TBranchElement::kClonesMemberNode){
+               fImpl = new TBasicTypeClonesReader(element->GetOffset());
+            }
          }
       }
       else { // We are at root node?

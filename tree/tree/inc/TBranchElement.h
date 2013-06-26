@@ -113,7 +113,6 @@ protected:
    virtual void             InitializeOffsets();
    virtual void             InitInfo();
    Bool_t                   IsMissingCollection() const;
-   TClass                  *GetCurrentClass(); // Class referenced by transient description
    TClass                  *GetParentClass(); // Class referenced by fParentName
    TStreamerInfo           *GetInfoImp() const;
    void                     ReleaseObject();
@@ -181,6 +180,7 @@ public:
    virtual TClass          *GetClass() const { return fBranchClass; }
    virtual const char      *GetClonesName() const { return fClonesName.Data(); }
    TVirtualCollectionProxy *GetCollectionProxy();
+   TClass                  *GetCurrentClass(); // Class referenced by transient description
    virtual Int_t            GetEntry(Long64_t entry = 0, Int_t getall = 0);
    virtual Int_t            GetExpectedType(TClass *&clptr,EDataType &type);
            const char      *GetIconName() const;
@@ -223,10 +223,17 @@ public:
    virtual void             UpdateFile();
 
    enum TBranchElementType {
-      kLeafNode = 0,
-      kBranchNode = 2,
+      kLeafNode = 0, // kTerminalNode, kSplittableNode ?
+      kBaseClassNode = 1,  // -- We are a base class element.
+                           // Note: This does not include an STL container class which is
+                           //        being used as a base class because the streamer element
+                           //        in that case is not the base streamer element it is the
+                           //        STL streamer element.
+      kBranchNode = 2, // kSplittableNode?
       kClonesNode = 3,
-      kRootNode = 4,
+      kRootNode = 4, // kSplittableRootNode?
+      kClonesMemberNode = 31,
+      kSTLMemberNode = 41,
    };
 
    ClassDef(TBranchElement,9)  // Branch in case of an object

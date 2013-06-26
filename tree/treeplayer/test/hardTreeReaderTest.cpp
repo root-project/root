@@ -411,6 +411,25 @@ void readVectorBDummyArray(){
 	}
 }
 
+void readBClonesArrayDummyArray(){
+	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TTreeReaderArray<Int_t> myBClonesArrayDummy (myTreeReader, "A99.BClonesArray.dummy");
+
+	while (myTreeReader.SetNextEntry()){
+		printf("BClonesArray.dummies(%i):", myBClonesArrayDummy.GetSize());
+
+		for (int i = 0; i < LIST_ENTRIES && i < myBClonesArrayDummy.GetSize(); ++i){
+			// B &BObject = (B&)((*myBClonesArrayDummy)[i]);
+			// printf(" %i", BObject.dummy);
+			printf(" %i", myBClonesArrayDummy.At(i));
+		}
+
+		printf("\n");
+	}
+}
+
 void readAObject(){
 	TFile *myFile = TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
