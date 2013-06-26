@@ -61,7 +61,7 @@ namespace {
          return GetCP(proxy)->Size();
       }
 
-      virtual Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
+      Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
          if (!proxy->Read()) return false;
          if (proxy->IsaPointer() && !proxySet) {
             if (proxy->GetWhere() && *(void**)proxy->GetWhere()){
