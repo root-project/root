@@ -393,7 +393,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                if (!IsStandaloneTag(tagStr)){ // if the class tag is not standalone, then it has (probably) some child nodes
                   parent = tagStr;
                }
-               csr = new ClassSelectionRule(fCount++); // create new class selection rule
+               csr = new ClassSelectionRule(fCount++, fInterp); // create new class selection rule
                bsr = csr; // we could access it through the base class pointer 
                break;
             case kEndClass: 
@@ -459,7 +459,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   out.ClearSelectionRules();
                   return false;
                }
-               vsr = new VariableSelectionRule(fCount++); // the field is variable selection rule object
+               vsr = new VariableSelectionRule(fCount++, fInterp); // the field is variable selection rule object
                bsrChild = vsr;
                break;
             case kMethod:
@@ -474,7 +474,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   out.ClearSelectionRules();
                   return false;
                }
-               fsr = new FunctionSelectionRule(fCount++); // the method is function selection rule object
+               fsr = new FunctionSelectionRule(fCount++, fInterp); // the method is function selection rule object
                bsrChild = fsr;
                break;
             case kProperties:
@@ -492,15 +492,15 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                // we don't create separate selection object for properties - we include them as attribute-value pairs for the class
                break;
             case kFunction: 
-               fsr = new FunctionSelectionRule(fCount++);
+               fsr = new FunctionSelectionRule(fCount++, fInterp);
                bsr = fsr;
                break;
             case kVariable: 
-               vsr = new VariableSelectionRule(fCount++);
+               vsr = new VariableSelectionRule(fCount++, fInterp);
                bsr = vsr;
                break;
             case kEnum:
-               esr = new EnumSelectionRule(fCount++);
+               esr = new EnumSelectionRule(fCount++, fInterp);
                bsr = esr;
                break;
             case kLcgdict: 

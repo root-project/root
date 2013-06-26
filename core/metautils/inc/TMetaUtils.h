@@ -12,21 +12,29 @@
 #ifndef ROOT_TMetaUtils
 #define ROOT_TMetaUtils
 
-#include "clang/AST/Decl.h"
+#include "RConversionRuleParser.h"
 
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/StringRef.h"
 
 #include <string>
+#include <stdlib.h>
 
 namespace clang {
    class ASTContext;
-   class Decl;
-   class QualType;
    class CompilerInstance;
+   class CXXBaseSpecifier;
+   class CXXRecordDecl;
+   class Decl;
+   class FieldDecl;
+   class FunctionDecl;
    class Module;
+   class NamedDecl;
+   class QualType;
+   class RecordDecl;
    class SourceLocation;
    class Type;
+   class TypedefNameDecl;
 }
 
 namespace cling {
@@ -36,6 +44,10 @@ namespace cling {
 
 // For TClassEdit::ESTLType
 #include "TClassEdit.h"
+
+#ifndef ROOT_Varargs
+#include "Varargs.h"
+#endif
 
 namespace ROOT {
    namespace TMetaUtils {
@@ -61,6 +73,200 @@ namespace ROOT {
 
       // Return the ROOT include directory
       std::string GetROOTIncludeDir(bool rootbuild);
+
+
+
+
+      // These are the methods which were moved from rootcling to TMetaUtils
+      class AnnotatedRecordDecl {
+      private:
+         long fRuleIndex;
+         const clang::RecordDecl* fDecl;
+         std::string fRequestedName;
+         std::string fNormalizedName;
+         bool fRequestStreamerInfo;
+         bool fRequestNoStreamer;
+         bool fRequestNoInputOperator;
+         bool fRequestOnlyTClass;
+         int  fRequestedVersionNumber;
+         
+      public:
+         enum ERootFlag {
+            kNoStreamer      = 0x01,
+            kNoInputOperator = 0x02,
+            kUseByteCount    = 0x04,
+            kStreamerInfo    = 0x04,
+            kHasVersion      = 0x08
+         };
+
+         AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+         AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+         AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl, const char *requestedName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+        ~AnnotatedRecordDecl() {
+            // Nothing to do we do not own the pointer;
+         }
+
+
+         long GetRuleIndex() const { return fRuleIndex; }
+
+         const char *GetRequestedName() const { return fRequestedName.c_str(); }
+         const char *GetNormalizedName() const { return fNormalizedName.c_str(); }
+         bool HasClassVersion() const { return fRequestedVersionNumber >=0 ; }
+         bool RequestStreamerInfo() const { 
+            // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT 
+            return fRequestStreamerInfo; 
+         }
+         bool RequestNoInputOperator() const { return fRequestNoInputOperator; }
+         bool RequestNoStreamer() const { return fRequestNoStreamer; }
+         bool RequestOnlyTClass() const { return fRequestOnlyTClass; }
+         int  RequestedVersionNumber() const { return fRequestedVersionNumber; }
+         int  RootFlag() const {
+            // Return the request (streamerInfo, has_version, etc.) combined in a single
+            // int.  See RScanner::AnnotatedRecordDecl::ERootFlag.
+            int result = 0;
+            if (fRequestNoStreamer) result = kNoStreamer;
+            if (fRequestNoInputOperator) result |= kNoInputOperator;
+            if (fRequestStreamerInfo) result |= kStreamerInfo;
+            if (fRequestedVersionNumber > -1) result |= kHasVersion;
+            return result;
+         }
+         const clang::RecordDecl* GetRecordDecl() const { return fDecl; }
+
+         operator clang::RecordDecl const *() const {
+            return fDecl;
+         }
+         
+         bool operator<(const AnnotatedRecordDecl& right) const
+         {
+            return fRuleIndex < right.fRuleIndex;
+         }
+
+         struct CompareByName {
+            bool operator() (const AnnotatedRecordDecl& right, const AnnotatedRecordDecl& left) 
+            {
+               return left.fNormalizedName < right.fNormalizedName;
+            }
+         };
+      };
+
+      class RConstructorType
+      {
+         private:
+            std::string           fArgTypeName;
+            const clang::CXXRecordDecl *fArgType;
+
+         public:
+            RConstructorType(const char *type_of_arg, const cling::Interpreter&);
+
+            const char *GetName();
+            const clang::CXXRecordDecl *GetType();
+      };
+
+      bool CheckConstructor(const clang::CXXRecordDecl*, ROOT::TMetaUtils::RConstructorType&);
+      bool ClassInfo__HasMethod(const clang::RecordDecl *cl, char const*);
+      void CreateNameTypeMap(clang::CXXRecordDecl const&, std::map<std::string, ROOT::TSchemaType, std::less<std::string>, std::allocator<std::pair<std::string const, ROOT::TSchemaType> > >&);
+      
+      int ElementStreamer(std::ostream& finalString, const clang::NamedDecl &forcontext, const clang::QualType &qti, const char *R__t,int rwmode, const cling::Interpreter &gInterp, const char *tcl=0);
+      bool R__IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base);
+      bool R__IsBase(const clang::FieldDecl &m, const char* basename, const cling::Interpreter &gInterp);
+
+      bool HasCustomOperatorNewArrayPlacement(clang::RecordDecl const&, const cling::Interpreter &interp);
+      bool HasCustomOperatorNewPlacement(char const*, clang::RecordDecl const&, const cling::Interpreter&);
+      bool HasCustomOperatorNewPlacement(clang::RecordDecl const&, const cling::Interpreter&);
+      bool HasDirectoryAutoAdd(clang::CXXRecordDecl const*, const cling::Interpreter&);
+      bool HasIOConstructor(clang::CXXRecordDecl const*, std::string*, const cling::Interpreter&);
+      bool HasNewMerge(clang::CXXRecordDecl const*, const cling::Interpreter&);
+      bool HasOldMerge(clang::CXXRecordDecl const*, const cling::Interpreter&);
+      bool hasOpaqueTypedef(clang::QualType instanceType, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+      bool hasOpaqueTypedef(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+
+      bool HasResetAfterMerge(clang::CXXRecordDecl const*, const cling::Interpreter&);
+      bool NeedDestructor(clang::CXXRecordDecl const*);
+      bool NeedTemplateKeyword(clang::CXXRecordDecl const*);
+      bool R__CheckPublicFuncWithProto(clang::CXXRecordDecl const*, char const*, char const*, const cling::Interpreter&);
+      
+      long R__GetLineNumber(clang::Decl const*);
+      
+      bool R__GetNameWithinNamespace(std::string&, std::string&, std::string&, clang::CXXRecordDecl const*);
+
+      void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext);
+      void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl);
+      void R__GetQualifiedName(std::string &qual_name, const ROOT::TMetaUtils::AnnotatedRecordDecl &annotated);
+      std::string R__GetQualifiedName(const clang::QualType &type, const clang::NamedDecl &forcontext);
+      std::string R__GetQualifiedName(const clang::Type &type, const clang::NamedDecl &forcontext);
+      std::string R__GetQualifiedName(const clang::NamedDecl &cl);
+      std::string R__GetQualifiedName(const clang::CXXBaseSpecifier &base);
+      std::string R__GetQualifiedName(const ROOT::TMetaUtils::AnnotatedRecordDecl &annotated);
+
+
+      int WriteNamespaceHeader(std::ostream&, const clang::RecordDecl *);
+      void WritePointersSTL(const AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+            
+      // void WriteAutoStreamer(const AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+      // void WriteStreamer(const AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+      
+      
+      
+      void WritePointersSTL(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+      int GetClassVersion(const clang::RecordDecl *cl);
+      int IsSTLContainer(const ROOT::TMetaUtils::AnnotatedRecordDecl &annotated);
+      TClassEdit::ESTLType IsSTLContainer(const clang::FieldDecl &m);
+      int IsSTLContainer(const clang::CXXBaseSpecifier &base);
+      const char *ShortTypeName(const char *typeDesc);
+      std::string ShortTypeName(const clang::FieldDecl &m);
+      bool IsStreamableObject(const clang::FieldDecl &m);
+      clang::RecordDecl *R__GetUnderlyingRecordDecl(clang::QualType type);
+
+      std::string R__TrueName(const clang::FieldDecl &m);
+
+      const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const cling::Interpreter &gInterp, const clang::Type** resultType = 0);
+      void AddConstructorType(const char *arg, const cling::Interpreter &interp);
+      void WriteAuxFunctions(std::ostream& finalString, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const clang::CXXRecordDecl *decl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+      //void WriteShowMembers(const AnnotatedRecordDecl &cl, bool outside = false);
+      void WriteShowMembers(std::ostream& finalString, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const clang::CXXRecordDecl *decl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, bool outside = false);
+      bool NeedExternalShowMember(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const clang::CXXRecordDecl *decl,  const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+
+      const clang::FunctionDecl *R__GetFuncWithProto(const clang::Decl* cinfo, const char *method, const char *proto, const cling::Interpreter &gInterp);
+
+      typedef void (*CallWriteStreamer_t)(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, bool isAutoStreamer);
+      
+      void WriteClassCode(CallWriteStreamer_t WriteStreamerFunc, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, std::ostream& finalString);
+      void WriteEverything(CallWriteStreamer_t WriteStreamerFunc, std::ostream& finalString, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const clang::CXXRecordDecl *decl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+      void WriteClassInit(std::ostream& finalString, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const clang::CXXRecordDecl *decl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, bool& needCollectionProxy);
+
+      bool HasCustomStreamerMemberFunction(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const clang::CXXRecordDecl* clxx, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+      void WriteBodyShowMembers(std::ostream& finalString, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const clang::CXXRecordDecl *decl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, bool outside);
+      const int kInfo     =      0;
+      const int kNote     =    500;
+      const int kWarning  =   1000;
+      const int kError    =   2000;
+      const int kSysError =   3000;
+      const int kFatal    =   4000;
+      const int kMaxLen   =   1024;
+
+      extern int gErrorIgnoreLevel;
+
+      void LevelPrint(bool prefix, int level, const char *location, const char *fmt, va_list ap);
+      void Error(const char *location, const char *va_(fmt), ...);
+      void SysError(const char *location, const char *va_(fmt), ...);
+      void Info(const char *location, const char *va_(fmt), ...);
+      void Warning(const char *location, const char *va_(fmt), ...);
+      void Fatal(const char *location, const char *va_(fmt), ...);
+
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       // Return the header file to be included to declare the Decl
       llvm::StringRef GetFileName(const clang::Decl *decl);
@@ -146,19 +352,9 @@ namespace ROOT {
          return Redecl;
       }
 
-      // Specialize the template for typedefs, because they don't contain 
+      // Overload the template for typedefs, because they don't contain 
       // isThisDeclarationADefinition method. (Use inline to avoid violating ODR)
-      template<> inline 
-      const clang::TypedefNameDecl* GetAnnotatedRedeclarable(const clang::TypedefNameDecl* TND) {
-         if (!TND)
-            return 0;
-
-         TND = TND->getMostRecentDecl();
-         while (TND && !(TND->hasAttrs()))
-            TND = TND->getPreviousDecl();
-
-         return TND;
-      }
+      const clang::TypedefNameDecl* GetAnnotatedRedeclarable(const clang::TypedefNameDecl* TND);
 
       // Return true if the decl is part of the std namespace.
       bool IsStdClass(const clang::RecordDecl &cl);

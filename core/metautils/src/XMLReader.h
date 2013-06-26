@@ -27,6 +27,10 @@
 
 class SelectionRules;
 
+namespace cling {
+   class Interpreter;
+}
+
 class XMLReader {
 public:
    // class to temporarily store the arguments of a tag (if such are present)
@@ -40,6 +44,7 @@ public:
    
 private:
    long fCount;
+   cling::Interpreter &fInterp;
 
    //SelectionRules& fSelectionRules;
    //std::string fXMLFileName;
@@ -85,7 +90,7 @@ private:
    
 public:
    // Constructors
-   XMLReader() : fCount(0) {}
+   XMLReader(cling::Interpreter &interp) : fCount(0), fInterp(interp) {}
    /* XMLReader(const std::string& fileName):
     fXMLFileName(fileName) {}*/
    

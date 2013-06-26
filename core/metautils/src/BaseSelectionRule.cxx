@@ -101,10 +101,10 @@ static bool R__match_filename(const char *srcname,const char *filename)
    return false;
 }
 
-const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = 0);
+const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const cling::Interpreter &gInterp, const clang::Type** resultType = 0);
 
-BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue)
-   : fIndex(index), fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0)
+BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp)
+   : fIndex(index), fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp)
 {
    fAttributes.insert(AttributesMap_t::value_type(attributeName, attributeValue));
 }
@@ -235,7 +235,8 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          // Try a real match!
          
          const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
-         const clang::CXXRecordDecl *target = R__ScopeSearch(name_value.c_str());
+         const clang::CXXRecordDecl *target = ROOT::TMetaUtils::R__ScopeSearch(name_value.c_str(), *fInterp);
+         
          if ( target ) {
             const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;
          } else {

@@ -25,6 +25,10 @@
 #include <list>
 #include <iosfwd>
 
+namespace cling {
+   class Interpreter;
+}
+
 class ClassSelectionRule: public BaseSelectionRule
 {
 private:
@@ -39,12 +43,13 @@ private:
    bool fRequestProtected;       // Explicit request to be able to access protected member from the interpreter.
    bool fRequestPrivate;         // Explicit request to be able to access private member from the interpreter.
    int  fRequestedVersionNumber; // Explicit request for a specific version number (default to no request with -1).
-   
+   cling::Interpreter &fInterp;
+
 public:
-   ClassSelectionRule(long index):
-   BaseSelectionRule(index), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false),fRequestedVersionNumber(-1) {}
-   ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue):
-   BaseSelectionRule(index, sel, attributeName, attributeValue), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false),fRequestedVersionNumber(-1) {}
+   ClassSelectionRule(long index, cling::Interpreter &interp):
+   BaseSelectionRule(index, interp), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1), fInterp(interp) {}
+   ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue, cling::Interpreter &interp):
+   BaseSelectionRule(index, sel, attributeName, attributeValue, interp), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false),fRequestedVersionNumber(-1), fInterp(interp) {}
 
    void Print(std::ostream &out) const;
 

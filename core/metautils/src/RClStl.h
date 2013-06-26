@@ -25,7 +25,7 @@
 #include <string>
 #include <set>
 
-#include "Scanner.h"
+#include "TMetaUtils.h"
 
 namespace clang {
    class CXXRecordDecl;
@@ -45,7 +45,7 @@ namespace ROOT {
 
    class RStl {
    private:
-      typedef std::set<RScanner::AnnotatedRecordDecl,RScanner::AnnotatedRecordDecl::CompareByName> list_t;
+      typedef std::set<ROOT::TMetaUtils::AnnotatedRecordDecl,ROOT::TMetaUtils::AnnotatedRecordDecl::CompareByName> list_t;
       list_t fList;
 
    public:
@@ -55,7 +55,7 @@ namespace ROOT {
       void GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlClass, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
       void GenerateTClassFor(const clang::QualType &type, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
       void Print();
-      void WriteClassInit(FILE *file, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+      void WriteClassInit(std::ostream &strm, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, bool &needCollectionProxy);
       void WriteStreamer(FILE *file,const clang::CXXRecordDecl *stlcl);
       void WriteStreamer(FILE *file);
       

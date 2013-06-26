@@ -39,13 +39,14 @@ class PragmaExtraInclude;
 class LinkdefReader 
 {
 public:
-   typedef void (*IOCtorTypeCallback)(const char *type);
+   typedef void (*IOCtorTypeCallback)(const char *type, const cling::Interpreter &interp);
 private:
    long fLine;  // lines count - for error messages
    long fCount; // Number of rules created so far.
    SelectionRules    *fSelectionRules;     // set of rules being filleed.
    std::string        fIncludes;           // Extra set of file to be included by the intepreter.
    IOCtorTypeCallback fIOCtorTypeCallback; // List of values of #pragma ioctortype
+   cling::Interpreter &fInterp;            // Our interpreter
 private:
 
    enum EPragmaNames { // the processed pragma attributes
@@ -84,9 +85,9 @@ private:
    friend class PragmaExtraInclude;
 
 public:
-   LinkdefReader();
+   LinkdefReader(cling::Interpreter &interp);
 
-   bool LoadIncludes(cling::Interpreter &interp, std::string &extraInclude); 
+   bool LoadIncludes(std::string &extraInclude); 
    void SetIOCtorTypeCallback(IOCtorTypeCallback callback);
 
    bool Parse(SelectionRules& sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir);

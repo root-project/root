@@ -22,9 +22,9 @@
 
 #include "llvm/IR/Module.h"
 
-#include "XMLReader.h"
-#include "LinkdefReader.h"
 #include <stack>
+
+#include "TMetaUtils.h"
 
 namespace clang {
    class ClassTemplatePartialSpecializationDecl;
@@ -87,67 +87,7 @@ public:
    static const char* fgClangDeclKey; // property key used for CLang declaration objects
    static const char* fgClangFuncKey; // property key for function (demangled) names
 
-   class AnnotatedRecordDecl {
-   private:
-      long fRuleIndex;
-      const clang::RecordDecl* fDecl;
-      std::string fRequestedName;
-      std::string fNormalizedName;
-      bool fRequestStreamerInfo;
-      bool fRequestNoStreamer;
-      bool fRequestNoInputOperator;
-      bool fRequestOnlyTClass;
-      int  fRequestedVersionNumber;
-      
-   public:
-      enum ERootFlag {
-         kNoStreamer      = 0x01,
-         kNoInputOperator = 0x02,
-         kUseByteCount    = 0x04,
-         kStreamerInfo    = 0x04,
-         kHasVersion      = 0x08
-      };
-
-      AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
-      AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
-      AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl, const char *requestedName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
-     ~AnnotatedRecordDecl() {
-         // Nothing to do we do not own the pointer;
-      }
-
-      long GetRuleIndex() const { return fRuleIndex; }
-
-      const char *GetRequestedName() const { return fRequestedName.c_str(); }
-      const char *GetNormalizedName() const { return fNormalizedName.c_str(); }
-      bool HasClassVersion() const { return fRequestedVersionNumber >=0 ; }
-      bool RequestStreamerInfo() const { 
-         // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT 
-         return fRequestStreamerInfo; 
-      }
-      bool RequestNoInputOperator() const { return fRequestNoInputOperator; }
-      bool RequestNoStreamer() const { return fRequestNoStreamer; }
-      bool RequestOnlyTClass() const { return fRequestOnlyTClass; }
-      int  RequestedVersionNumber() const { return fRequestedVersionNumber; }
-      int  RootFlag() const;
-      const clang::RecordDecl* GetRecordDecl() const { return fDecl; }
-
-      operator clang::RecordDecl const *() const {
-         return fDecl;
-      }
-      
-      bool operator<(const AnnotatedRecordDecl& right) const
-      {
-         return fRuleIndex < right.fRuleIndex;
-      }
-
-      struct CompareByName {
-         bool operator() (const AnnotatedRecordDecl& right, const AnnotatedRecordDecl& left) 
-         {
-            return left.fNormalizedName < right.fNormalizedName;
-         }
-      };
-   };
-   typedef std::vector<AnnotatedRecordDecl>   ClassColl_t;
+   typedef std::vector<ROOT::TMetaUtils::AnnotatedRecordDecl>   ClassColl_t;
    
    class AnnotatedNamespaceDecl {
    private:

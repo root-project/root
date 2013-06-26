@@ -26,10 +26,15 @@
 #include <list>
 #include <iosfwd>
 
+#include "TMetaUtils.h"
+
 namespace clang {
    class NamedDecl;
    class CXXRecordDecl;
    class Type;
+}
+namespace cling {
+   class Interpreter;
 }
 
 class BaseSelectionRule
@@ -50,18 +55,19 @@ public:
    };
 
 private:
-   long                   fIndex;           // Index indicating the ordering of the rules.
-   AttributesMap_t        fAttributes;      // list of the attributes of the selection/exclusion rule
-   ESelect                fIsSelected;      // selected/vetoed/don't care
-   std::list<std::string> fSubPatterns;     // a list of subpatterns, generated form a pattern/proto_pattern attribute 
-   std::list<std::string> fFileSubPatterns; // a list of subpatterns, generated form a file_pattern attribute
-   bool                   fMatchFound;      // this is true if this selection rule has been used at least once
-   const clang::CXXRecordDecl  *fCXXRecordDecl;   // Record decl of the entity searched for.
-   const clang::Type           *fRequestedType;   // Same as the record decl but with some of the typedef preserved (Double32_t, Float16_t, etc..)
+   long                   fIndex;                  // Index indicating the ordering of the rules.
+   AttributesMap_t        fAttributes;             // list of the attributes of the selection/exclusion rule
+   ESelect                fIsSelected;             // selected/vetoed/don't care
+   std::list<std::string> fSubPatterns;            // a list of subpatterns, generated form a pattern/proto_pattern attribute 
+   std::list<std::string> fFileSubPatterns;        // a list of subpatterns, generated form a file_pattern attribute
+   bool                   fMatchFound;             // this is true if this selection rule has been used at least once
+   const clang::CXXRecordDecl  *fCXXRecordDecl;    // Record decl of the entity searched for.
+   const clang::Type           *fRequestedType;    // Same as the record decl but with some of the typedef preserved (Double32_t, Float16_t, etc..)
+   cling::Interpreter *fInterp; 
       
 public:
-   BaseSelectionRule(long index) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0) {} 
-   BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue);
+   BaseSelectionRule(long index, cling::Interpreter &interp) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp) {} 
+   BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp);
    
    virtual void DebugPrint() const;
    virtual void Print(std::ostream &out) const = 0;

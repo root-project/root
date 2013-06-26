@@ -26,6 +26,8 @@
 #include "VariableSelectionRule.h"
 #include "clang/AST/Decl.h"
 
+#include "TMetaUtils.h"
+
 namespace cling {
    class Interpreter;
 }
@@ -51,12 +53,15 @@ private:
    bool fIsDeep; // if --deep option passed from command line, this should be set to true
    bool fHasFileNameRule; // if we have a file name rule, this should be set to true
 
+   cling::Interpreter &fInterp;
+
 public:
    
-   SelectionRules():
+   SelectionRules(cling::Interpreter &interp):
       fSelectionFileType(kNumSelectionFileTypes),
       fIsDeep(false),
-      fHasFileNameRule(false)
+      fHasFileNameRule(false),
+      fInterp(interp)
    {}
    
    void AddClassSelectionRule(const ClassSelectionRule& classSel);

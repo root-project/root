@@ -212,19 +212,19 @@ void SelectionRules::SetDeep(bool deep)
       if (!fClassSelectionRules.empty()) {
          count = fClassSelectionRules.rbegin()->GetIndex() + 1;
       }
-      ClassSelectionRule csr(count++);
+      ClassSelectionRule csr(count++, fInterp);
       csr.SetAttributeValue("pattern", "*");
       csr.SetSelected(BaseSelectionRule::kYes);
       AddClassSelectionRule(csr);
       
-      ClassSelectionRule csr2(count++);
+      ClassSelectionRule csr2(count++, fInterp);
       csr2.SetAttributeValue("pattern", "*::*");
       csr2.SetSelected(BaseSelectionRule::kYes);
       AddClassSelectionRule(csr2);
       
       
       // Should I disable the built-in (automatically generated) structs/classes?
-      ClassSelectionRule csr3(count++);
+      ClassSelectionRule csr3(count++, fInterp);
       csr3.SetAttributeValue("pattern", "__va_*"); // <built-in> 
       csr3.SetSelected(BaseSelectionRule::kNo);
       AddClassSelectionRule(csr3);
@@ -1581,7 +1581,7 @@ bool SelectionRules::SearchNames(cling::Interpreter &interp)
             it->GetAttributeValue("name", name_value);
             // In Class selection rules, we should be interested in scopes.
             const clang::Type *typeptr = 0;
-            const clang::CXXRecordDecl *target = R__ScopeSearch(name_value.c_str(), &typeptr);            
+            const clang::CXXRecordDecl *target = ROOT::TMetaUtils::R__ScopeSearch(name_value.c_str(), interp, &typeptr);            
             if (target) {
                it->SetCXXRecordDecl(target,typeptr);
             }

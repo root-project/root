@@ -69,7 +69,7 @@ std::map <clang::Decl*, std::string> RScanner::fgAnonymousClassMap;
 std::map <clang::Decl*, std::string> RScanner::fgAnonymousEnumMap;
 
 //______________________________________________________________________________
-RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, 
+ROOT::TMetaUtils::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, 
                                                    bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber,
                                                    const cling::Interpreter &interpreter, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) :
    fRuleIndex(index), fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
@@ -84,7 +84,7 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Reco
 
 
 //______________________________________________________________________________
-RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl, const char *requestName, 
+ROOT::TMetaUtils::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl, const char *requestName, 
                                                    bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber, 
                                                    const cling::Interpreter &interpreter, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) : 
    fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
@@ -105,11 +105,7 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type
 }
 
 //______________________________________________________________________________
-RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, 
-                                                   bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber, 
-                                                   const cling::Interpreter &interpreter, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) : 
-   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber) 
+ROOT::TMetaUtils::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber, const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt) : fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer), fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber) 
 {
    // Normalize the requested name.
 
@@ -131,18 +127,18 @@ RScanner::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Reco
 }
 
 //______________________________________________________________________________
-int RScanner::AnnotatedRecordDecl::RootFlag() const 
-{
-   // Return the request (streamerInfo, has_version, etc.) combined in a single
-   // int.  See RScanner::AnnotatedRecordDecl::ERootFlag.
+// int ROOT::TMetaUtils::AnnotatedRecordDecl::RootFlag() const 
+// {
+//    // Return the request (streamerInfo, has_version, etc.) combined in a single
+//    // int.  See RScanner::AnnotatedRecordDecl::ERootFlag.
 
-   int result = 0;
-   if (fRequestNoStreamer) result = kNoStreamer;
-   if (fRequestNoInputOperator) result |= kNoInputOperator;
-   if (fRequestStreamerInfo) result |= kStreamerInfo;
-   if (fRequestedVersionNumber > -1) result |= kHasVersion;
-   return result;
-}
+//    int result = 0;
+//    if (fRequestNoStreamer) result = kNoStreamer;
+//    if (fRequestNoInputOperator) result |= kNoInputOperator;
+//    if (fRequestStreamerInfo) result |= kStreamerInfo;
+//    if (fRequestedVersionNumber > -1) result |= kHasVersion;
+//    return result;
+// }
 
 //______________________________________________________________________________
 RScanner::RScanner (const SelectionRules &rules, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, unsigned int verbose /* = 0 */) : 
@@ -813,12 +809,12 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
       
       std::string name_value;
       if (selected->GetAttributeValue("name", name_value)) {
-         fSelectedClasses.push_back(AnnotatedRecordDecl(selected->GetIndex(),selected->GetRequestedType(), D,name_value.c_str(),
+         fSelectedClasses.push_back(ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),selected->GetRequestedType(), D,name_value.c_str(),
                                                         selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
                                                         selected->RequestNoInputOperator(),selected->RequestOnlyTClass(),selected->RequestedVersionNumber(),
                                                         fInterpreter,fNormCtxt));
       } else {
-         fSelectedClasses.push_back(AnnotatedRecordDecl(selected->GetIndex(),D,
+         fSelectedClasses.push_back(ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),D,
                                                         selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
                                                         selected->RequestNoInputOperator(),selected->RequestOnlyTClass(),selected->RequestedVersionNumber(),
                                                         fInterpreter,fNormCtxt));
