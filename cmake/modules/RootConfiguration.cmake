@@ -89,6 +89,11 @@ set(pgsqllibdir ${PGSQL_LIBRARY_DIR})
 set(pgsqllib ${PGSQL_LIBRARY})
 set(pgsqlincdir ${PGSQL_INCLUDE_DIR})
 
+set(buildsqlite ${value${sqlite}})
+set(sqlitelibdir ${SQLITE_LIBRARY_DIR})
+set(sqlitelib ${SQLITE_LIBRARY})
+set(sqliteincdir ${SQLITE_INCLUDE_DIR})
+
 set(buildsapdb ${value${sapdb}})
 set(sapdblibdir ${SAPDB_LIBRARY_DIR})
 set(sapdblib ${SAPDB_LIBRARY})

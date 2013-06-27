@@ -94,6 +94,7 @@ options="                    \
    enable_shadowpw           \
    enable_shared             \
    enable_soversion          \
+   enable_sqlite             \
    enable_srp                \
    enable_ssl                \
    enable_table              \
@@ -191,6 +192,7 @@ OPENGL           \
 MYSQL            \
 ORACLE           \
 PGSQL            \
+SQLITE           \
 QTDIR            \
 SAPDB            \
 RFIO             \
@@ -1541,6 +1543,7 @@ enable/disable options, prefix with either --enable- or --disable-
   shadowpw           Shadow password support
   shared             Use shared 3rd party libraries if possible
   soversion          Set version number in sonames (recommended)
+  sqlite             SQLite support, requires libsqlite3
   srp                SRP support, requires SRP source tree
   ssl                SSL encryption support, requires openssl
   table              Build libTable contrib library
@@ -1639,6 +1642,8 @@ with options, prefix with --with-, enables corresponding support
   sapdb-libdir       SapDB support, location of libsqlod
   rfio-incdir        RFIO support, location of rfio_api.h
   rfio-libdir        RFIO support, location of librfio, libdpm or libshift
+  sqlite-incdir      SQLite support, location of sqlite3.h
+  sqlite-libdir      SQLite support, location of libsqlite3
   srp                Secure Remote Passwd support, location of SRP distribution
   srp-incdir         SRP support, location header of t_server.h
   srp-libdir         SRP support, location header of libsrp.a
@@ -1982,6 +1987,8 @@ if test $# -gt 0 ; then
       --with-sapdb-libdir=*)   sapdblibdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-rfio-incdir=*)    shiftincdir=$optarg   ; enable_rfio="yes"    ;;
       --with-rfio-libdir=*)    shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
+      --with-sqlite-incdir=*)  sqliteincdir=$optarg  ; enable_sqlite="yes"  ;;
+      --with-sqlite-libdir=*)  sqlitelibdir=$optarg  ; enable_sqlite="yes"  ;;
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
@@ -3084,6 +3091,44 @@ if test ! "x$enable_pgsql" = "xno"; then
 fi
 check_explicit "$enable_pgsql" "$enable_pgsql_explicit" \
      "Explicitly required PostGreSQL dependencies not fulfilled"
+
+######################################################################
+#
+### echo %%% SQLite Support - Third party libraries
+#
+# (See sqlite.org)
+#
+# If the user has set the flags "--disable-sqlite", we don't check for
+# SQLite at all.
+#
+if test ! "x$enable_sqlite" = "xno"; then
+    # Check for SQLite include and library
+    check_header "sqlite3.h" "$sqliteincdir" \
+        $SQLITE ${SQLITE:+$SQLITE/include} \
+        ${finkdir:+$finkdir/include} \
+        /usr/include /usr/local/include \
+        /usr/include/sqlite /usr/local/include/sqlite /usr/local/sqlite/include \
+        /usr/include/sqlite3 /usr/local/include/sqlite3 /usr/local/sqlite3/include \
+	/usr/sqlite /opt/sqlite /opt/sqlite3/include \
+	/usr/sqlite3 /opt/sqlite3 /opt/sqlite/include
+    sqliteinc=$found_hdr
+    sqliteincdir=$found_dir
+
+    check_library "libsqlite3" "$enable_shared" "$sqlitelibdir" \
+        $SQLITE ${SQLITE:+$SQLITE/lib} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/sqlite/lib /usr/local/lib \
+        /usr/lib/sqlite /usr/local/lib/sqlite /usr/sqlite/lib /usr/lib \
+        /usr/sqlite /usr/local/sqlite /opt/sqlite /opt/sqlite/lib
+    sqlitelib=$found_lib
+    sqlitelibdir=$found_dir
+
+    if test "x$sqliteincdir" = "x" || test "x$sqlitelib" = "x"; then
+        enable_sqlite="no"
+    fi
+fi
+check_explicit "$enable_sqlite" "$enable_sqlite_explicit" \
+     "Explicitly required SQLite dependencies not fulfilled"
 
 ######################################################################
 #
@@ -6203,6 +6248,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_oracle"   = "xyes" && pl="$pl root-plugin-sql-oracle"
     test "x$enable_pgsql"    = "xyes" && pl="$pl root-plugin-sql-pgsql"
     test "x$enable_sapdb"    = "xyes" && pl="$pl root-plugin-sql-maxdb"
+    test "x$enable_sqlite"   = "xyes" && pl="$pl root-plugin-sql-sqlite"
     test "x$enable_xrootd"   = "xyes" && pl="$pl root-system-xrootd root-plugin-net-netx root-plugin-net-xrootd"
 
     pl="$pl \
@@ -6711,6 +6757,9 @@ sed -e "s|@globusincdir@|$globusincdir|"        \
     -e "s|@pgsqlincdir@|$pgsqlincdir|"          \
     -e "s|@pgsqllib@|$pgsqllib|"                \
     -e "s|@pgsqllibdir@|$pgsqllibdir|"          \
+    -e "s|@sqliteincdir@|$sqliteincdir|"        \
+    -e "s|@sqlitelib@|$sqlitelib|"              \
+    -e "s|@sqlitelibdir@|$sqlitelibdir|"        \
     -e "s|@pythia6lib@|$pythia6lib|"            \
     -e "s|@pythia6libdir@|$pythia6libdir|"      \
     -e "s|@pythia6cppflags@|$pythia6cppflags|"  \
@@ -6785,6 +6834,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildldap@|$enable_ldap|"            \
     -e "s|@buildmysql@|$enable_mysql|"          \
     -e "s|@buildpgsql@|$enable_pgsql|"          \
+    -e "s|@buildsqlite@|$enable_sqlite|"        \
     -e "s|@buildodbc@|$enable_odbc|"            \
     -e "s|@buildoracle@|$enable_oracle|"        \
     -e "s|@buildsapdb@|$enable_sapdb|"          \
