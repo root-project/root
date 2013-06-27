@@ -1,0 +1,15 @@
+Package: root-plugin-sql-sqlite
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: root-db-client
+Description: SQLite client plugin for ROOT
+ The ROOT system provides a set of OO frameworks with all the
+ functionality needed to handle and analyze large amounts of data
+ efficiently.
+ .
+ This package contains the SQLite plug-in for ROOT.  This plugin
+ provides a thin client (interface) to SQLite database files. Using this
+ client, one can obtain information from a SQLite database into the
+ ROOT environment.
+
+

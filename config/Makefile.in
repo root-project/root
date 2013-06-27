@@ -115,6 +115,11 @@ PGSQLLIBDIR    := @pgsqllibdir@
 PGSQLCLILIB    := @pgsqllib@
 PGSQLINCDIR    := $(filter-out /usr/include, @pgsqlincdir@)
 
+BUILDSQLITE     := @buildsqlite@
+SQLITELIBDIR    := @sqlitelibdir@
+SQLITECLILIB    := @sqlitelib@
+SQLITEINCDIR    := $(filter-out /usr/include, @sqliteincdir@)
+
 BUILDSAPDB     := @buildsapdb@
 SAPDBLIBDIR    := @sapdblibdir@
 SAPDBCLILIB    := @sapdblib@

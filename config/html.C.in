@@ -22,6 +22,7 @@ Bool_t enable_rfio              = @enable_rfio@;
 Bool_t enable_sapdb             = @enable_sapdb@;
 Bool_t enable_srp               = @enable_srp@;
 Bool_t enable_ssl               = @enable_ssl@;
+Bool_t enable_sqlite            = @enable_sqlite@;
 Bool_t enable_table             = @enable_table@;
 Bool_t enable_thread            = kTRUE;
 Bool_t enable_xml               = @enable_xml@;
@@ -94,6 +95,7 @@ void html()
    if (enable_ruby)              gSystem->Load("libRuby");
    if (enable_rfio)              gSystem->Load("libRFIO");
    if (enable_sapdb)             gSystem->Load("libSapDB");
+   if (enable_sqlite)            gSystem->Load("libSQLite");
    if (enable_srp)               gSystem->Load("libSRPAuth");
    if (enable_table)             gSystem->Load("libTable");
    if (enable_thread)            gSystem->Load("libThread");

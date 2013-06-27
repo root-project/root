@@ -121,6 +121,7 @@ ROOT_BUILD_OPTION(sapdb ON "MaxDB/SapDB support, requires libsqlod and libsqlrte
 ROOT_BUILD_OPTION(shadowpw ON "Shadow password support")
 ROOT_BUILD_OPTION(shared ON "Use shared 3rd party libraries if possible")
 ROOT_BUILD_OPTION(soversion OFF "Set version number in sonames (recommended)")
+ROOT_BUILD_OPTION(sqlite ON "SQLite support, requires libsqlite3")
 ROOT_BUILD_OPTION(srp ON "SRP support, requires SRP source tree")
 ROOT_BUILD_OPTION(ssl ON "SSL encryption support, requires openssl")
 ROOT_BUILD_OPTION(table OFF "Build libTable contrib library")

@@ -146,6 +146,9 @@ endif
 ifeq ($(BUILDPGSQL),yes)
 MODULES      += sql/pgsql
 endif
+ifeq ($(BUILDSQLITE),yes)
+MODULES      += sql/sqlite
+endif
 ifeq ($(BUILDSAPDB),yes)
 MODULES      += sql/sapdb
 endif
@@ -285,7 +288,7 @@ ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 graf3d/gl graf3d/ftgl graf3d/glew io/rfio io/castor \
                 montecarlo/pythia6 montecarlo/pythia8 misc/table \
-                sql/mysql sql/pgsql sql/sapdb net/srputils graf3d/x3d \
+                sql/mysql sql/pgsql sql/sqlite sql/sapdb net/srputils graf3d/x3d \
                 rootx net/rootd io/dcache io/chirp hist/hbook graf2d/asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
                 bindings/pyroot bindings/ruby io/gfal misc/minicern \
@@ -1340,6 +1343,7 @@ showbuild:
 	@echo "GVIZLIB            = $(GVIZLIB)"
 	@echo "GVIZINCDIR         = $(GVIZINCDIR)"
 	@echo "SAPDBINCDIR        = $(SAPDBINCDIR)"
+	@echo "SQLITEINCDIR       = $(SQLITEINCDIR)"
 	@echo "SRPLIBDIR          = $(SRPLIBDIR)"
 	@echo "SRPINCDIR          = $(SRPINCDIR)"
 	@echo "SRPUTILLIB         = $(SRPUTILLIB)"

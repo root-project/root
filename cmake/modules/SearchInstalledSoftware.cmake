@@ -446,6 +446,20 @@ if(pgsql)
   endif()
 endif()
 
+#---Check for SQLite-------------------------------------------------------------------
+if(sqlite)
+  message(STATUS "Looking for SQLite")
+  find_package(Sqlite)
+  if(NOT SQLITE_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "SQLite libraries not found and they are required (sqlite option enabled)")
+    else()
+      message(STATUS "SQLite not found. Switching off sqlite option")
+      set(sqlite OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for Pythia6-------------------------------------------------------------------
 if(pythia6)
   message(STATUS "Looking for Pythia6")

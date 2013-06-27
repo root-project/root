@@ -18,7 +18,7 @@ macro(check_value_ok _value)
   endforeach(_false ${false_allowed})
   if (true_value OR false_value)
     if (true_value AND false_value)
-       MESSAGE(FATAL_ERROR "check_value_ok: Value for option is true and false. This can never happen. If this error message is plotted something is wrong with the logic of the macro.") 
+       MESSAGE(FATAL_ERROR "check_value_ok: Value for option is true and false. This can never happen. If this error message is plotted something is wrong with the logic of the macro.")
     endif(true_value AND false_value)
   else (true_value OR false_value)
     MESSAGE("check_value_ok: This value for options is not known.")
@@ -62,7 +62,7 @@ macro(get_enabled_root_install_options)
 endmacro(get_enabled_root_install_options)
 
 
-macro(CHANGE_ROOT_INSTALL_OPTIONS _option _value) 
+macro(CHANGE_ROOT_INSTALL_OPTIONS _option _value)
   # get position of option from array ROOT_INSTAL_OPTIONS
   list(FIND ROOT_INSTALL_OPTIONS ${_option} position)
   if (position EQUAL -1)
@@ -72,7 +72,7 @@ macro(CHANGE_ROOT_INSTALL_OPTIONS _option _value)
   #check if the value to be set is okay
   check_value_ok(${_value})
 
-  #Now set the value _value for option _option 
+  #Now set the value _value for option _option
   if (true_value)
     list(INSERT ROOT_INSTALL_OPTIONS_VALUE ${position} TRUE)
     math(EXPR rel_pos ${position}+1)
@@ -83,145 +83,147 @@ macro(CHANGE_ROOT_INSTALL_OPTIONS _option _value)
     math(EXPR rel_pos ${position}+1)
     list(REMOVE_AT ROOT_INSTALL_OPTIONS_VALUE ${rel_pos})
   endif (false_value)
-    
+
   #check if after the operation the length of ROOT_INSTALL_OPTIONS and ROOT_INSTALL_OPTIONS_VALUE
   #is still the same
-  list(LENGTH ROOT_INSTALL_OPTIONS_VALUE length_value)  
-  list(LENGTH ROOT_INSTALL_OPTIONS length_options)  
+  list(LENGTH ROOT_INSTALL_OPTIONS_VALUE length_value)
+  list(LENGTH ROOT_INSTALL_OPTIONS length_options)
   if(NOT ${length_value} EQUAL ${length_options})
     MESSAGE(FATAL_ERROR "CHANGE_ROOT_INSTALL_OPTIONS: After changing the option the length of both arrays is different (${length_value} NEQ ${length_options}). Something is wrong with this operation")
   endif(NOT ${length_value} EQUAL ${length_options})
 
-endmacro(CHANGE_ROOT_INSTALL_OPTIONS _option _value) 
+endmacro(CHANGE_ROOT_INSTALL_OPTIONS _option _value)
 
 
 # define all packages to be build. By default all of them are enabled at start.
 # We switch them off later on during the process of configuration.
 
 set (ROOT_INSTALL_OPTIONS
-   afs                 
-   alien               
-   asimage             
-   astiff              
-   builtin_afterimage  
-   builtin_ftgl        
-   builtin_freetype    
-   builtin_pcre        
-   builtin_zlib        
-   castor              
-   chirp               
-   cint7               
-   cintex              
-   clarens             
-   dcache              
-   exceptions          
-   explicitlink        
-   fftw3               
-   gdml                
-   gfal                
-   g4root              
-   glite               
-   globus              
-   gsl_shared          
-   krb5                
-   ldap                
-   genvector           
-   mathmore            
-   memstat             
-   monalisa            
-   mysql               
-   odbc                
-   opengl              
-   oracle              
-   pch                 
-   peac                
-   pgsql               
-   pythia6             
-   pythia8             
-   python              
-   qt                  
-   qtgsi               
-   reflex              
-   roofit              
-   minuit2             
-   ruby                
-   rfio                
-   rpath               
-   sapdb               
-   shadowpw            
-   shared              
-   soversion           
-   srp                 
-   ssl                 
-   table              
-   unuran              
-   winrtdebug          
-   xft                 
-   xml                 
-   xrootd              
+   afs
+   alien
+   asimage
+   astiff
+   builtin_afterimage
+   builtin_ftgl
+   builtin_freetype
+   builtin_pcre
+   builtin_zlib
+   castor
+   chirp
+   cint7
+   cintex
+   clarens
+   dcache
+   exceptions
+   explicitlink
+   fftw3
+   gdml
+   gfal
+   g4root
+   glite
+   globus
+   gsl_shared
+   krb5
+   ldap
+   genvector
+   mathmore
+   memstat
+   monalisa
+   mysql
+   odbc
+   opengl
+   oracle
+   pch
+   peac
+   pgsql
+   pythia6
+   pythia8
+   python
+   qt
+   qtgsi
+   reflex
+   roofit
+   minuit2
+   ruby
+   rfio
+   rpath
+   sapdb
+   shadowpw
+   shared
+   soversion
+   sqlite
+   srp
+   ssl
+   table
+   unuran
+   winrtdebug
+   xft
+   xml
+   xrootd
 )
 
 set (ROOT_INSTALL_OPTIONS_VALUE
-  TRUE                    
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
-  TRUE   
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
+  TRUE
 )
 
 CHANGE_ROOT_INSTALL_OPTIONS("afs" "enable")
@@ -284,7 +286,7 @@ SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
 
 # when building, don't use the install RPATH already
 # (but later on when installing)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 
 # the RPATH to be used when installing
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
