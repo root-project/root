@@ -12,13 +12,14 @@ the easy setup of an analysis system that can query and process the data
 interactively or in batch mode, as well as a general parallel processing
 framework, PROOF, that can considerably speed up an analysis.
 
-Thanks to the built-in CINT C++ interpreter the command language,
-the scripting, or macro, language and the programming language are all
-C++. The interpreter allows for fast prototyping of the macros since it
-removes the, time consuming, compile/link cycle. It also provides a good
-environment to learn C++. If more performance is needed the interactively
-developed macros can be compiled using a C++ compiler via a machine
-independent transparent compiler interface called ACliC.
+Thanks to the built-in C++ interpreter cling, the command, the
+scripting and the programming language are all C++. The interpreter
+allows for fast prototyping of the macros since it removes the, time
+consuming, compile/link cycle. It also provides a good environment to
+learn C++. If more performance is needed the interactively developed
+macros can be compiled using a C++ compiler via a machine independent
+transparent compiler interface called ACliC.
+
 
 The system has been designed in such a way that it can query its databases
 in parallel on clusters of workstations or many-core machines. ROOT is
