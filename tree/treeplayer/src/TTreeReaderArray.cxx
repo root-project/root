@@ -323,6 +323,7 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
       printf("TBranchObject\n"); // TODO: Remove (necessary because of gdb bug)
    }  if (branch->IsA() == TBranchSTL::Class()) {
       printf("TBranchSTL\n"); // TODO: Remove (necessary because of gdb bug)
+      fImpl = new TSTLReader();
    }  if (branch->IsA() == TBranchRef::Class()) {
       printf("TBranchRef\n"); // TODO: Remove (necessary because of gdb bug)
    }
@@ -446,6 +447,10 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
             Warning("GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
             dict = fDict;
          }
+         else if (brElement->GetCurrentClass() == TClonesArray::Class()){
+            Warning("GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
+            dict = fDict;
+         }
 
          return 0;
       }
@@ -466,6 +471,11 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
          return 0;
       }
       dict = TDictionary::GetDictionary(dataTypeName);
+      if (branch->IsA() == TBranchSTL::Class()){
+         Warning("GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
+         dict = fDict;
+         return 0;
+      }
       return dataTypeName;
    } else if (branch->IsA() == TBranchClones::Class()) {
       dict = TClonesArray::Class();
