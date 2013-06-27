@@ -296,6 +296,9 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          if (!name.compare(0, 24, "ROOT::R__dummyintdefault")) {
             return kNoMatch;
          }
+         if (!name.compare(0, 27, "ROOT::R__dummyVersionNumber")) {
+            return kNoMatch;
+         }
          if (has_pattern_attribute) {
          if (CheckPattern(name, pattern_value, fSubPatterns, isLinkdef)) {
             const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
