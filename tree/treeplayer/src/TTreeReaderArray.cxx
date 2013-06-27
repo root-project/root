@@ -363,7 +363,7 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
           || brElement->GetType() == 3) {
          TVirtualCollectionProxy* collProxy = brElement->GetCollectionProxy();
          if (collProxy) {
-            dict = collProxy->GetValueClass();
+            dict = TDictionary::GetDictionary(collProxy->GetValueClass()->GetName());
             if (!dict) dict = TDataType::GetDataType(collProxy->GetType());
          }
          if (!dict) {
@@ -371,7 +371,7 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
             // Determine it.
             if (brElement->GetType() == 3) {
                contentTypeName = brElement->GetClonesName();
-               dict = TDictionary::GetDictionary("TClonesArray");
+               dict = TDictionary::GetDictionary(brElement->GetClonesName());
                return 0;
             }
             // STL:

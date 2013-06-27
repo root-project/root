@@ -599,21 +599,21 @@ void readTree(){
 
 
 void testAll(){
-	printf("\n----- readNum(): --------------------\n"); readNum("A99.", false, true);
-	printf("\n----- readBObject(): ----------------\n"); readBObject("A99.", false, true);
-	printf("\n----- readBObjectDummy(): -----------\n"); readBObjectDummy("A99.", false, true);
-	printf("\n----- readBStar(): ------------------\n"); readBStar("A99.", false, true);
-	printf("\n----- readVectorBValue(): -----------\n"); readVectorBValue("A99.", false, true);
-	printf("\n----- readVectorStarBValue(): -------\n"); readVectorStarBValue("A99.", false, true);
-	printf("\n----- readVectorStarBArray(): -------\n"); readVectorStarBArray("A99.", false, true);
-	printf("\n----- readVectorBArray(): -----------\n"); readVectorBArray("A99.", false, true);
-	printf("\n----- readBArray(): -----------------\n"); readBArray("A99.", false, true);
-	printf("\n----- readBStarArray(): -------------\n"); readBStarArray("A99.", false, true);
-	printf("\n----- readVectorBStarValue(): -------\n"); readVectorBStarValue("A99.", false, true);
-	printf("\n----- readVectorBStarArray(): -------\n"); readVectorBStarArray("A99.", false, true);
-	printf("\n----- readBClonesArrayValue(): ------\n"); readBClonesArrayValue("A99.", false, true);
-	printf("\n----- readBClonesArrayArray(): ------\n"); readBClonesArrayArray("A99.", false, true);
-	printf("\n----- readVectorBDummyArray(): ------\n"); readVectorBDummyArray("A99.", false, true);
-	printf("\n----- readBClonesArrayDummyArray(): -\n"); readBClonesArrayDummyArray("A99.", false, true);
-	printf("\n----- readAObject(): ----------------\n"); readAObject();
+	printf("readNum(): -------------------- "); readNum("A99.", false, true);
+	printf("readBObject(): ---------------- "); readBObject("A99.", false, true);
+	printf("readBObjectDummy(): ----------- "); readBObjectDummy("A99.", false, true);
+	printf("readBStar(): ------------------ "); readBStar("A99.", false, true);
+	printf("readVectorBValue(): ----------- "); readVectorBValue("A99.", false, true);
+	printf("readVectorStarBValue(): ------- "); readVectorStarBValue("A99.", false, true);
+	printf("readVectorStarBArray(): ------- "); readVectorStarBArray("A99.", false, true);
+	printf("readVectorBArray(): ----------- "); readVectorBArray("A99.", false, true);
+	printf("readBArray(): ----------------- "); readBArray("A99.", false, true);
+	printf("readBStarArray(): ------------- "); readBStarArray("A99.", false, true);
+	printf("readVectorBStarValue(): ------- "); readVectorBStarValue("A99.", false, true);
+	printf("readVectorBStarArray(): ------- "); readVectorBStarArray("A99.", false, true);
+	printf("readBClonesArrayValue(): ------ "); readBClonesArrayValue("A99.", false, true);
+	printf("readBClonesArrayArray(): ------ "); readBClonesArrayArray("A99.", false, true);
+	printf("readVectorBDummyArray(): ------ "); readVectorBDummyArray("A99.", false, true);
+	printf("readBClonesArrayDummyArray(): - "); readBClonesArrayDummyArray("A99.", false, true);
+	//printf("readAObject(): ---------------- "); readAObject();
 }
