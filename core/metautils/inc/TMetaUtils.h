@@ -167,7 +167,7 @@ namespace ROOT {
       void CreateNameTypeMap(clang::CXXRecordDecl const&, std::map<std::string, ROOT::TSchemaType, std::less<std::string>, std::allocator<std::pair<std::string const, ROOT::TSchemaType> > >&);
       
       int ElementStreamer(std::ostream& finalString, const clang::NamedDecl &forcontext, const clang::QualType &qti, const char *R__t,int rwmode, const cling::Interpreter &gInterp, const char *tcl=0);
-      bool R__IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base);
+      bool R__IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base, const clang::CXXRecordDecl *context = 0);
       bool R__IsBase(const clang::FieldDecl &m, const char* basename, const cling::Interpreter &gInterp);
 
       bool HasCustomOperatorNewArrayPlacement(clang::RecordDecl const&, const cling::Interpreter &interp);

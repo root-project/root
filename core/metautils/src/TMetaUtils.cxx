@@ -167,9 +167,34 @@ const clang::CXXRecordDecl *ROOT::TMetaUtils::R__ScopeSearch(const char *name, c
    return result;
 }
 
-bool ROOT::TMetaUtils::R__IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base)
+static bool CheckDefinition(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *context) {
+   if (!cl->hasDefinition()) {
+      if (context) {
+         ROOT::TMetaUtils::Error("R__IsBase",
+                                 "Missing definition for class %s, please #include its header in the header of %s\n",
+                                 cl->getName().str().c_str(), context->getName().str().c_str());
+      } else {
+         ROOT::TMetaUtils::Error("R__IsBase",
+                                 "Missing definition for class %s\n",
+                                 cl->getName().str().c_str());
+      }
+      return false;
+   }
+   return true;
+}
+
+bool ROOT::TMetaUtils::R__IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base,
+                                 const clang::CXXRecordDecl *context /*=0*/)
 {
    if (!cl || !base) {
+      return false;
+   }
+   if (!CheckDefinition(cl, context) || !CheckDefinition(base, context)) {
+      return false;
+   }
+
+   if (!base->hasDefinition()) {
+      ROOT::TMetaUtils::Error("R__IsBase", "Missing definition for class %s\n", base->getName().str().c_str());
       return false;
    }
    return cl->isDerivedFrom(base);
@@ -185,8 +210,8 @@ bool ROOT::TMetaUtils::R__IsBase(const clang::FieldDecl &m, const char* basename
    const clang::NamedDecl *base = R__ScopeSearch(basename, gInterp);
    
    if (base) {
-      const clang::CXXRecordDecl* baseCRD = llvm::dyn_cast<clang::CXXRecordDecl>( base ); 
-      if (baseCRD) return CRD->isDerivedFrom(baseCRD);
+      return R__IsBase(CRD, llvm::dyn_cast<clang::CXXRecordDecl>( base ),
+                       llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext()));
    }
    return false;
 }
@@ -218,7 +243,7 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString, const clang::Na
    clang::CXXRecordDecl *cxxtype = rawtype->getAsCXXRecordDecl() ;
    int isStre = cxxtype && ROOT::TMetaUtils::ClassInfo__HasMethod(cxxtype,"Streamer");
    int isTObj = cxxtype && (R__IsBase(cxxtype,TObject_decl) || rawname == "TObject");
- 
+
    long kase = 0;   
 
    if (ti.isPointerType())           kase |= kBIT_ISPOINTER;
