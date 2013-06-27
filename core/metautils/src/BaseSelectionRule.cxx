@@ -287,10 +287,13 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
       }
 #endif
       if (hasFileMatch) {
-         // Reject utility class defined in ClassImp
+         // Reject utility classes defined in ClassImp
          // when using a file based rule
          if (!strncmp(name.c_str(), "R__Init", 7) ||
              strstr(name.c_str(), "::R__Init")) {
+            return kNoMatch;
+         }
+         if (!name.compare(0, 24, "ROOT::R__dummyintdefault")) {
             return kNoMatch;
          }
          if (has_pattern_attribute) {
