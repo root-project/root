@@ -275,6 +275,10 @@ N: John Frankland
 E: frankland@ganil.fr
 D: TString contributions
 
+N: Oliver Freyermuth
+E: o.f@cern.ch
+D: SQLite plugin
+
 N: Keisuke Fujii
 E: fujiik@jlcuxf.kek.jp
 D: port to MacOS X
