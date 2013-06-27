@@ -256,7 +256,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          T.append(VD);
          T.setState(cling::Transaction::kCompleted);
 
-         m_Interpreter->codegen(&T);
+         m_Interpreter->emitAllDecls(&T);
          assert(T.getState() == Transaction::kCommitted
                 && "Compilation should never fail!");
       }

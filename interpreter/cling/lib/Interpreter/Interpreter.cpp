@@ -592,12 +592,18 @@ namespace cling {
     return Interpreter::kFailure;
   }
 
-  Interpreter::CompilationResult Interpreter::codegen(Transaction* T) {
+  Interpreter::CompilationResult Interpreter::emitAllDecls(Transaction* T) {
     assert(getCodeGenerator() && "No CodeGenerator?");
-    // FIXME: move this into the transaction's CompOpts.
-    m_IncrParser->commitTransaction(T, /*forceCodeGen*/ true);
-    if (T->getState() == Transaction::kCommitted)
+    m_IncrParser->markWholeTransactionAsUsed(T);
+    m_IncrParser->codeGenTransaction(T);
+
+    // The static initializers might run anything and can thus cause more
+    // decls that need to end up in a transaction. But this one is done
+    // with CodeGen...
+    T->setState(Transaction::kCommitted);
+    if (m_IncrParser->runStaticInitOnTransaction(T))
       return Interpreter::kSuccess;
+
     return Interpreter::kFailure;
   }
 
