@@ -174,8 +174,17 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
          dict = TDictionary::GetDictionary(brElement->GetTypeName());
          if (dict && dict->IsA() == TDataType::Class()){
             dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
+            if (dict != fDict){
+               dict = TClass::GetClass(brElement->GetTypeName());
+            }
+            if (dict != fDict){
+               dict = brElement->GetCurrentClass();
+            }
          }
-         return brElement->GetClassName();
+         else if (!dict) {
+            dict = brElement->GetCurrentClass();
+         }
+         return brElement->GetTypeName();
       } else if (brElement->GetType() == TBranchElement::kClonesNode) {
          dict = TClonesArray::Class();
          return "TClonesArray";

@@ -441,6 +441,12 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
 
          dict = brElement->GetCurrentClass();
          contentTypeName = brElement->GetTypeName();
+
+         if (element->IsA() == TStreamerSTL::Class()){
+            Warning("GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
+            dict = fDict;
+         }
+
          return 0;
       }
       return 0;

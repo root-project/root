@@ -22,6 +22,7 @@
 #pragma link C++ class TTreeReaderArray<double>+;
 #pragma link C++ class TTreeReaderArray<B>+;
 #pragma link C++ class TTreeReaderArray<Int_t>+;
+#pragma link C++ class std::vector<B*>+;
 #endif
 
 #define TREE_ENTRIES 10
