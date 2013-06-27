@@ -149,8 +149,9 @@ public:
 
    void InitPlugins(Option_t *opt="FI");
 
-   TGFileBrowser* MakeFileBrowser();
-   TGFileBrowser* GetFileBrowser() const { return fFileBrowser; }
+   TGFileBrowser* MakeFileBrowser(Bool_t make_default=kFALSE);
+   TGFileBrowser* GetFileBrowser() const;
+   void           SetFileBrowser(TGFileBrowser* b);
 
    void EveMenu(Int_t id);
 

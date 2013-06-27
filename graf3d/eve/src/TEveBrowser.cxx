@@ -762,10 +762,12 @@ void TEveBrowser::InitPlugins(Option_t *opt)
 }
 
 //______________________________________________________________________________
-TGFileBrowser* TEveBrowser::MakeFileBrowser()
+TGFileBrowser* TEveBrowser::MakeFileBrowser(Bool_t make_default)
 {
-   // Create a file-browser. Caller should provide
-   // Start/StopEmbedding() calls and populate the new browser.
+   // Create a file-browser. Caller should provide Start/StopEmbedding() calls
+   // and populate the new browser.
+   // If flag make_default is kTRUE, the default file-browser is set to the
+   // newly created browser.
 
    TBrowserImp    imp;
    TBrowser      *tb = new TBrowser("Pipi", "Strel", &imp);
@@ -777,7 +779,27 @@ TGFileBrowser* TEveBrowser::MakeFileBrowser()
    // This guy is never used and stays in list-of-cleanups after destruction.
    // So let's just delete it now.
    delete tb->GetContextMenu();
+
+   if (make_default)
+      fFileBrowser = fb;
+
    return fb;
+}
+
+//______________________________________________________________________________
+TGFileBrowser* TEveBrowser::GetFileBrowser() const
+{
+  // Returns the default file-browser.
+
+  return fFileBrowser;
+}
+
+//______________________________________________________________________________
+void TEveBrowser::SetFileBrowser(TGFileBrowser* b)
+{
+  // Set the default file browser.
+
+  fFileBrowser = b;
 }
 
 //______________________________________________________________________________
