@@ -40,8 +40,11 @@ static const char *R__GetDeclSourceFileName(const clang::Decl* D)
    clang::ASTContext& ctx = D->getASTContext();
    clang::SourceManager& SM = ctx.getSourceManager();
    clang::SourceLocation SL = D->getLocation();
+   // If the class decl is the result of a macpo expansion, take the location
+   // where the macro is "invoked" i.e. expanded at (ExpansionLoc), not the
+   // spelling location (where the delc's tokens come from).
    if (SL.isMacroID())
-      SL = SM.getSpellingLoc(SL);
+      SL = SM.getExpansionLoc(SL);
 
    if (SL.isValid() && SL.isFileID()) {
       clang::PresumedLoc PLoc = SM.getPresumedLoc(SL);
