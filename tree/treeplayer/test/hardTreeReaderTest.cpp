@@ -633,6 +633,7 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 	printf("A1: readBClonesArrayValue(): ---------------- %s", printAll ? "\n": ""); readBClonesArrayValue(		"A1.", printAll, testAll);
 	printf("A1: readBClonesArrayArray(): ---------------- %s", printAll ? "\n": ""); readBClonesArrayArray(		"A1.", printAll, testAll);
 
+
 	printf("A99: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(					"A99.", printAll, testAll);
 	printf("A99: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(				"A99.", printAll, testAll);
 	printf("A99: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(			"A99.", printAll, testAll);
@@ -651,6 +652,7 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 	printf("A99: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray("A99.", printAll, testAll);
 	//printf("readAObject(): ------------------------ %s", printAll ? "\n": ""); readAObject();
 
+
 	printf("A101: readNum(): ---------------------------- %s", printAll ? "\n": ""); readNum(					"A101.", printAll, testAll);
 	printf("A101: readBObject(): ------------------------ %s", printAll ? "\n": ""); readBObject(				"A101.", printAll, testAll);
 	printf("A101: readBStar(): -------------------------- %s", printAll ? "\n": ""); readBStar(					"A101.", printAll, testAll);
@@ -665,8 +667,24 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 	printf("A101: readBClonesArrayValue(): -------------- %s", printAll ? "\n": ""); readBClonesArrayValue(		"A101.", printAll, testAll);
 	printf("A101: readBClonesArrayArray(): -------------- %s", printAll ? "\n": ""); readBClonesArrayArray(		"A101.", printAll, testAll);
 
-	printf("S0_vectorB: readVectorBValue(): ------------- %s", printAll ? "\n": ""); readVectorBValue(			"S0_", 	printAll, testAll);
-	// printf("vectorB_0: readBranchVectorBArray(): -------- %s", printAll ? "\n": ""); readBranchVectorBArray(		"S0_", 	printAll, testAll);
+
+	// printf("S0_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(						"S0_", printAll, testAll);
+	printf("S0_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(					"S0_", printAll, testAll);
+	printf("S0_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S0_", printAll, testAll);
+	printf("S0_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(					"S0_", printAll, testAll);
+	printf("S0_: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(				"S0_", printAll, testAll);
+	printf("S0_: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(			"S0_", printAll, testAll);
+	printf("S0_: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(			"S0_", printAll, testAll);
+	printf("S0_: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(				"S0_", printAll, testAll);
+	// printf("S0_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(					"S0_", printAll, testAll);
+	// printf("S0_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(				"S0_", printAll, testAll);
+	printf("S0_: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(			"S0_", printAll, testAll);
+	printf("S0_: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(			"S0_", printAll, testAll);
+	printf("S0_: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(		"S0_", printAll, testAll);
+	printf("S0_: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(		"S0_", printAll, testAll);
+	printf("S0_: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(		"S0_", printAll, testAll);
+	printf("S0_: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(	"S0_", printAll, testAll);
+
 
 	// printf("S99_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(						"S99_", printAll, testAll);
 	printf("S99_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(					"S99_", printAll, testAll);
