@@ -87,6 +87,50 @@ namespace {
       }
    };
 
+   class TCollectionLessSTLReader : public ROOT::TCollectionReaderABC {
+   private:
+      TVirtualCollectionProxy *localCollection;
+      Bool_t proxySet = false;
+   public:
+      TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy) {}
+
+      TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
+         if (!proxy->Read()) return 0;
+         return localCollection;
+      }
+
+      virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
+         if (!CheckProxy(proxy)) return -1;
+         if (!proxy->ReadEntries()) return -1;
+         return GetCP(proxy)->Size();
+      }
+
+      virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
+         if (!CheckProxy(proxy)) return 0;
+         if (!proxy->Read()) return 0;
+         if (!proxy->GetWhere()) return 0;
+
+         if (GetCP(proxy)->HasPointers()){
+            return *(void**)GetCP(proxy)->At(idx);
+         }
+         else {
+            return GetCP(proxy)->At(idx);
+         }
+      }
+
+      Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
+         if (!proxy->Read()) return false;
+         if (!proxySet) {
+            if (proxy->GetWhere()){
+               GetCP(proxy)->PushProxy(proxy->GetWhere());
+               proxySet = true;
+            }
+            else return false;
+         }
+         return true;
+      }
+   };
+
 
    // Reader interface for leaf list
    // SEE TTreeProxyGenerator.cxx:1319: '//We have a top level raw type'
@@ -313,7 +357,9 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
          }
       }
       else { // We are at root node?
-
+         if (branchElement->GetClass()->GetCollectionProxy()){
+            fImpl = new TCollectionLessSTLReader(branchElement->GetClass()->GetCollectionProxy());
+         }
       }
    }  if (branch->IsA() == TBranch::Class()) {
       printf("TBranch\n"); // TODO: Remove (necessary because of gdb bug)
@@ -456,6 +502,10 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
          }
          else if (!dict && branch->GetSplitLevel() == 0){
             dict = brElement->GetClass()->GetCollectionProxy()->GetValueClass();
+            contentTypeName = dict->GetName();
+         }
+         else if (!dict){
+            dict = brElement->GetClass();
             contentTypeName = dict->GetName();
          }
 
