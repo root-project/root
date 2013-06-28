@@ -78,13 +78,15 @@ class Cpp2ConverterOperatorsTestCase( MyTestCase ):
    def test1ExactTypes( self ):
       """Test converter operators of exact types"""
 
+      o = OperatorCharStar()
+      self.assertEqual( o.m_str, 'OperatorCharStar' )
+
       if not FIXCLING:
-         o = OperatorCharStar()
-         self.assertEqual( o.m_str, 'OperatorCharStar' )
          self.assertEqual( str(o),  'OperatorCharStar' )
 
-         o = OperatorConstCharStar()
-         self.assertEqual( o.m_str, 'OperatorConstCharStar' )
+      o = OperatorConstCharStar()
+      self.assertEqual( o.m_str, 'OperatorConstCharStar' )
+      if not FIXCLING:
          self.assertEqual( str(o),  'OperatorConstCharStar' )
 
       o = OperatorInt(); o.m_int = -13

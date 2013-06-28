@@ -103,9 +103,6 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
    def test07Namespaces( self ):
       """Test access to namespaces and inner classes"""
 
-      if FIXCLING:
-         return
-
       gROOT.LoadMacro( "Namespace.C+" )
 
       self.assertEqual( PR_NS_A.sa,                            1 )

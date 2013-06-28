@@ -188,9 +188,6 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
    def test5TemplateGlobalFunctions( self ):
       """Test template global function lookup and calls"""
 
-      if FIXCLING:
-         return
-
     # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
 
       f = MyTemplatedFunction

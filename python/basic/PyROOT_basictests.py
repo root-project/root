@@ -235,9 +235,6 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
    def test9ByRefPassing( self ):
       """Test passing by-reference of builtin types"""
 
-      if FIXCLING:
-         return
-
       import array, sys
 
       if 'linux' in sys.platform:
@@ -319,8 +316,7 @@ class Basic5PythonizationTestCase( MyTestCase ):
       self.assertEqual( l.count( 'x' ), 0 )
 
       self.assertEqual( l.index( TObjString( 'i' ) ), 4 )
-      if not FIXCLING:
-         self.assertRaises( ValueError, l.index, TObjString( 'x' ) )
+      self.assertRaises( ValueError, l.index, TObjString( 'x' ) )
 
       l.insert(  3, TObjString('6') )
       l.insert( 20, TObjString('7') )
