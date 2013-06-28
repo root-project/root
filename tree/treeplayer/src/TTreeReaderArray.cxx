@@ -355,6 +355,9 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
                fImpl = new TBasicTypeClonesReader(element->GetOffset());
             }
          }
+         else if (element->IsA() == TStreamerBase::Class()){
+            fImpl = new TClonesReader();
+         }
       }
       else { // We are at root node?
          if (branchElement->GetClass()->GetCollectionProxy()){
@@ -500,7 +503,7 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
             Warning("GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
             dict = fDict;
          }
-         else if (!dict && branch->GetSplitLevel() == 0){
+         else if (!dict && (branch->GetSplitLevel() == 0 || brElement->GetClass()->GetCollectionProxy())){
             dict = brElement->GetClass()->GetCollectionProxy()->GetValueClass();
             contentTypeName = dict->GetName();
          }
