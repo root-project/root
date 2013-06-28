@@ -23,7 +23,7 @@ TSQLiteServer::TSQLiteServer(const char *db, const char* /*uid*/, const char* /*
    // of the form "sqlite://<database>", e.g.:
    // "sqlite://test.sqlite" or "sqlite://:memory:" for a temporary database
    // in memory.
-   // Note that for SQLite versions >= 3.5.0 the full string behind
+   // Note that for SQLite versions >= 3.7.7 the full string behind
    // "sqlite://" is handed to sqlite3_open_v2() with SQLITE_OPEN_URI activated,
    // so all URI accepted by it can be used.
 
@@ -41,6 +41,9 @@ TSQLiteServer::TSQLiteServer(const char *db, const char* /*uid*/, const char* /*
 
    const char *dbase = db + 9;
 
+#ifndef SQLITE_OPEN_URI
+#define SQLITE_OPEN_URI 0x00000000
+#endif
 #if SQLITE_VERSION_NUMBER >= 3005000
    Int_t error = sqlite3_open_v2(dbase, &fSQLite, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, NULL);
 #else
