@@ -668,34 +668,34 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 	printf("A101: readBClonesArrayArray(): -------------- %s", printAll ? "\n": ""); readBClonesArrayArray(		"A101.", printAll, testAll);
 
 
-	// printf("S0_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(						"S0_", printAll, testAll);
+	// printf("S0_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(						"S0_", printAll, testAll); // Leaflist
 	printf("S0_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(					"S0_", printAll, testAll);
-	printf("S0_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S0_", printAll, testAll);
+	// printf("S0_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S0_", printAll, testAll); // Branch not found
 	printf("S0_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(					"S0_", printAll, testAll);
 	printf("S0_: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(				"S0_", printAll, testAll);
 	printf("S0_: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(			"S0_", printAll, testAll);
 	printf("S0_: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(			"S0_", printAll, testAll);
 	printf("S0_: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(				"S0_", printAll, testAll);
-	// printf("S0_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(					"S0_", printAll, testAll);
-	// printf("S0_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(				"S0_", printAll, testAll);
+	// printf("S0_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(					"S0_", printAll, testAll); // Branch not created
+	// printf("S0_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(				"S0_", printAll, testAll); // Branch not created
 	printf("S0_: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(			"S0_", printAll, testAll);
 	printf("S0_: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(			"S0_", printAll, testAll);
-	printf("S0_: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(		"S0_", printAll, testAll);
-	printf("S0_: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(		"S0_", printAll, testAll);
-	printf("S0_: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(		"S0_", printAll, testAll);
-	printf("S0_: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(	"S0_", printAll, testAll);
+	// printf("S0_: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(		"S0_", printAll, testAll); // TBranchProxy->Read() fails
+	// printf("S0_: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(		"S0_", printAll, testAll); // TBranchProxy->Read() fails
+	// printf("S0_: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(		"S0_", printAll, testAll); // Branch not found
+	// printf("S0_: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(	"S0_", printAll, testAll); // Branch not found
 
 
-	// printf("S99_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(						"S99_", printAll, testAll);
+	// printf("S99_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(						"S99_", printAll, testAll); // Leaflist
 	printf("S99_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(					"S99_", printAll, testAll);
-	printf("S99_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S99_", printAll, testAll);
+	// printf("S99_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S99_", printAll, testAll); // Branch not found
 	printf("S99_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(					"S99_", printAll, testAll);
 	printf("S99_: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(				"S99_", printAll, testAll);
 	printf("S99_: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(			"S99_", printAll, testAll);
 	printf("S99_: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(			"S99_", printAll, testAll);
 	printf("S99_: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(				"S99_", printAll, testAll);
-	//printf("S99_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(					"S99_", printAll, testAll);
-	// printf("S99_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(				"S99_", printAll, testAll);
+	// printf("S99_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(					"S99_", printAll, testAll); // Branch not created
+	// printf("S99_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(				"S99_", printAll, testAll); // Branch not created
 	printf("S99_: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(			"S99_", printAll, testAll);
 	printf("S99_: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(			"S99_", printAll, testAll);
 	printf("S99_: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(		"S99_", printAll, testAll);
