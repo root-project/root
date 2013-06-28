@@ -6,7 +6,9 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
+ifeq ($(ROOTSYS),)
 ROOTSYS = ../../..
+endif
 include $(ROOTSYS)/etc/Makefile.arch
 include $(ROOTSYS)/config/Makefile.config
 
