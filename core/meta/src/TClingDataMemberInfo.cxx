@@ -324,6 +324,10 @@ long TClingDataMemberInfo::Property() const
    if (const clang::VarDecl *vard = llvm::dyn_cast<clang::VarDecl>(GetDecl())) {
       if (vard->getStorageClass() == clang::SC_Static) {
          property |= kIsStatic;
+      } else if (declaccess->getDeclContext()->isNamespace()) {
+         // Data membrers of a namespace are global variable which were
+         // considered to be 'static' in the CINT (and thus ROOT) scheme.
+         property |= kIsStatic;
       }
    }
    if (llvm::isa<clang::EnumConstantDecl>(GetDecl())) {
