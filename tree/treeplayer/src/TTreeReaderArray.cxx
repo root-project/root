@@ -436,20 +436,27 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
          TStreamerInfo *streamerInfo = brElement->GetInfo();
          Int_t id = brElement->GetID();
 
-         Int_t offset = streamerInfo->GetOffsets()[id];
-         TStreamerElement *element = (TStreamerElement*)streamerInfo->GetElements()->At(id);
-         Bool_t isPointer = element->IsaPointer();
+         if (id >= 0){
+            Int_t offset = streamerInfo->GetOffsets()[id];
+            TStreamerElement *element = (TStreamerElement*)streamerInfo->GetElements()->At(id);
+            Bool_t isPointer = element->IsaPointer();
 
-         dict = brElement->GetCurrentClass();
-         contentTypeName = brElement->GetTypeName();
+            dict = brElement->GetCurrentClass();
+            contentTypeName = brElement->GetTypeName();
 
-         if (element->IsA() == TStreamerSTL::Class()){
+            if (element->IsA() == TStreamerSTL::Class()){
+               dict = brElement->GetCurrentClass()->GetCollectionProxy()->GetValueClass();
+               contentTypeName = dict->GetName();
+            }
+         }
+         if (brElement->GetCurrentClass() == TClonesArray::Class()){
+            contentTypeName = "TClonesArray";
             Warning("GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
             dict = fDict;
          }
-         else if (brElement->GetCurrentClass() == TClonesArray::Class()){
-            Warning("GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
-            dict = fDict;
+         else if (!dict && branch->GetSplitLevel() == 0){
+            dict = brElement->GetClass()->GetCollectionProxy()->GetValueClass();
+            contentTypeName = dict->GetName();
          }
 
          return 0;
