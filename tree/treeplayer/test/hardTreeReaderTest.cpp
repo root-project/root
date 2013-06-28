@@ -49,28 +49,25 @@ void makeTree(){
 	myTree->Branch("A99.",	"A", 	&myObject0,	32000, 99);
 	myTree->Branch("A101.",	"A", 	&myObject0,	32000, 101);
 
-	// myTree->Branch("vectorB_0.",	&branchForMembers.vectorB,	32000, 0);
-	// myTree->Branch("vectorB_99.",	&branchForMembers.vectorB,	32000, 99);
-
-	// myTree->Branch("vectorBStar_0.",	&branchForMembers.vectorBStar,	32000, 0);
-	// myTree->Branch("vectorBStar_99.",	&branchForMembers.vectorBStar,	32000, 99);
-	// myTree->Branch("vectorBStar_101.",	&branchForMembers.vectorBStar,	32000, 101);
-
 	myTree->Branch("S0_num",			&myObject0.num,	32000, 0);
 	myTree->Branch("S99_num",			&myObject0.num,	32000, 99);
+	myTree->Branch("S101_num",			&myObject0.num,	32000, 101);
 
 	myTree->Branch("S0_vectorB",		&myObject0.vectorB,	32000, 0);
 	myTree->Branch("S99_vectorB",		&myObject0.vectorB,	32000, 99);
+	// myTree->Branch("S101_vectorB",		&myObject0.vectorB,	32000, 101); // Breaks Fill()
 
 	myTree->Branch("S0_vectorBStar",	&myObject0.vectorBStar,	32000, 0);
 	myTree->Branch("S99_vectorBStar",	&myObject0.vectorBStar,	32000, 99);
-	//myTree->Branch("vectorBStar_101",	&branchForMembers.vectorBStar,	32000, 101); // Breaks Fill()
+	// myTree->Branch("S101_vectorBStar",	&myObject0.vectorBStar,	32000, 101); // Breaks Fill()
 
 	myTree->Branch("S0_vectorStarB",	&myObject0.vectorStarB,	32000, 0);
 	myTree->Branch("S99_vectorStarB",	&myObject0.vectorStarB,	32000, 99);
+	// myTree->Branch("S101_vectorStarB",	&myObject0.vectorStarB,	32000, 101); // Breaks Fill()
 
 	myTree->Branch("S0_BStar",			&myObject0.BStar,	32000, 0);
 	myTree->Branch("S99_BStar",			&myObject0.BStar,	32000, 99);
+	myTree->Branch("S101_BStar",			&myObject0.BStar,	32000, 101);
 
 	// myTree->Branch("S0_BArray[12]",		"B[12]",		&myObject0.BArray,	32000, 0); // Will not get made
 	// myTree->Branch("S99_BArray[12]",	"B[12]",		&myObject0.BArray,	32000, 99); // Will not get made
@@ -80,9 +77,11 @@ void makeTree(){
 
 	myTree->Branch("S0_BObject",		&myObject0.BObject,	32000, 0);
 	myTree->Branch("S99_BObject",		&myObject0.BObject,	32000, 99);
+	myTree->Branch("S101_BObject",		&myObject0.BObject,	32000, 101);
 
 	myTree->Branch("S0_BClonesArray",	&myObject0.BClonesArray,	32000, 0);
 	myTree->Branch("S99_BClonesArray",	&myObject0.BClonesArray,	32000, 99);
+	myTree->Branch("S101_BClonesArray",	&myObject0.BClonesArray,	32000, 101);
 
 
 	for (int i = 1; i < TREE_ENTRIES + 1; ++i){
