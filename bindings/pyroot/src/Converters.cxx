@@ -766,22 +766,14 @@ PyROOT::T##name##Converter::T##name##Converter( Bool_t keepControl ) :        \
       TRootObjectConverter( TClass::GetClass( #type ), keepControl ) {}       \
                                                                               \
 Bool_t PyROOT::T##name##Converter::SetArg(                                    \
-      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t user )\
+      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t user ) \
 {                                                                             \
    if ( PyROOT_PyUnicode_Check( pyobject ) ) {                                \
       fBuffer = type( PyROOT_PyUnicode_AsString( pyobject ),                  \
                       PyROOT_PyUnicode_GET_SIZE( pyobject ) );                \
       para.fVoidp = &fBuffer;                                                 \
-      if ( func ) {                                                           \
-   /*         G__value v;                                               \
-         G__setnull( &v );                                                    \
-         v.ref = para.fLong;                                                  \
-         G__letint( &v, 'u', para.fLong );                                    \
-         G__set_tagnum( &v, ((G__ClassInfo*)fClass->GetClassInfo())->Tagnum() ); \
-         gInterpreter->CallFunc_SetArg( func,  v );        */           \
-         PyErr_SetString( PyExc_TypeError, "CLING DOES NOT SUPPORT GENERIC VALUE INTERFACE" ); \
-         return kFALSE;                                                       \
-      }                                                                       \
+      if ( func )                                                             \
+         gInterpreter->CallFunc_SetArg( func, (Long_t)para.fVoidp );          \
       return kTRUE;                                                           \
    }                                                                          \
                                                                               \
