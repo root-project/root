@@ -85,14 +85,24 @@ etc/allDict.h
 /core/utils/src/RConversionRuleParser_tmp.cxx
 
 # /docbook/primer/
-/docbook/primer/primer.tex
-/docbook/primer/primer.html
-/docbook/primer/primer.pdf
-/docbook/primer/primer.epub
+/docbook/primer/ROOTPrimer.tex
+/docbook/primer/ROOTPrimer.html
+/docbook/primer/ROOTPrimer.pdf
+/docbook/primer/ROOTPrimerLetter.pdf
+/docbook/primer/ROOTPrimer.epub
 
 # /docbook/users-guide/
 /docbook/users-guide/ROOTUsersGuide.html
-/docbook/users-guide/ROOTUsersGuide.pdf
+/docbook/users-guide/ROOTUsersGuide.epub
+/docbook/users-guide/ROOTUsersGuide*.pdf
+/docbook/users-guide/ROOTUsersGuide*.aux
+/docbook/users-guide/ROOTUsersGuide*.idx
+/docbook/users-guide/ROOTUsersGuide*.ilg
+/docbook/users-guide/ROOTUsersGuide*.ind
+/docbook/users-guide/ROOTUsersGuide*.log
+/docbook/users-guide/ROOTUsersGuide*.out
+/docbook/users-guide/ROOTUsersGuide*.tex
+/docbook/users-guide/ROOTUsersGuide*.toc
 
 # /etc/
 /etc/system.rootrc
