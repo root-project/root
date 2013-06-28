@@ -17,7 +17,11 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 # from runsometest.C
 
 ifeq ($(shell root-config --has-table),yes)
+ifeq (DISABLED!,)
 testTable: testTable.log
+endif
+testTable:
+	@echo '$@ DISABLED until transactions are fixed!'
 else
 testTable:
 endif
@@ -27,7 +31,6 @@ ifeq ($(FAIL),)
 else
 	$(TestDiff)
 endif
-
 
 operatorLessThanTemplate.log: runoperatorLessThanTemplate.C operatorLessThanTemplate_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b  runoperatorLessThanTemplate.C | $(RemoveLeadingDirs) | grep -v -e tagnum -e size= > $@ 2>&1
