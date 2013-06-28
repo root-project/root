@@ -96,7 +96,7 @@ namespace {
 
       // 2nd attempt: construct name as a class
          PyErr_Clear();
-         attr = MakeRootClassFromString( name );
+         attr = MakeRootClassFromString( name, 0 /* scope */, kFALSE );
          if ( attr != 0 )
             return attr;
 

@@ -826,6 +826,44 @@ namespace {
       return CallSelfIndex( self, (PyObject*)index, "_vector__at" );
    }
 
+   PyObject* VectorBoolSetItem( ObjectProxy* self, PyObject* args )
+   {
+   // std::vector<bool> is a special-case in C++, and its return type depends on
+   // the compiler: treat it special here as well
+      int bval = 0; PyObject* idx = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "Oi:__setitem__" ), &idx, &bval ) )
+         return 0;
+
+      if ( ! self->GetObject() ) {
+         PyErr_SetString( PyExc_TypeError, "unsubscriptable object" );
+         return 0;
+      }
+
+      PyObject* pyindex = PyStyleIndex( (PyObject*)self, idx );
+      if ( ! pyindex )
+         return 0;
+      int index = (int)PyLong_AsLong( pyindex );
+      Py_DECREF( pyindex );
+
+      std::string clName = self->ObjectIsA()->GetName();
+      std::string::size_type pos = clName.find( "vector<bool" );
+      if ( pos != 0 && pos != 5 /* following std:: */ ) {
+         PyErr_Format( PyExc_TypeError,
+                       "require object of type std::vector<bool>, but %s given",
+                       self->ObjectIsA()->GetName() );
+         return 0;
+      }
+
+   // get hold of the actual std::vector<bool> (no cast, as vector is never a base)
+      std::vector<bool>* vb = (std::vector<bool>*)self->GetObject();
+
+   // finally, set the value
+      (*vb)[ index ] = (bool)bval;
+
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
+
 //- map behavior as primitives ------------------------------------------------
    PyObject* MapContains( PyObject* self, PyObject* obj )
    {
@@ -2122,6 +2160,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    // provide a slice-able __getitem__, if possible
       if ( HasAttrDirect( pyclass, PyStrings::gVectorAt ) )
          Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) VectorGetItem, METH_O );
+
+   // std::vector<bool> is a special case in C++
+      std::string::size_type pos = name.find( "vector<bool" ); // to cover all variations
+      if ( pos == 0 /* at beginning */ || pos == 5 /* after std:: */ ) {
+         Utility::AddToClass( pyclass, "__setitem__", (PyCFunction) VectorBoolSetItem );
+      }
 
       return kTRUE;
    }

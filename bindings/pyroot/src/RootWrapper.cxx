@@ -456,7 +456,8 @@ PyObject* PyROOT::MakeRootClassFromType( TClass* klass )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject* scope )
+PyObject* PyROOT::MakeRootClassFromString(
+    const std::string& fullname, PyObject* scope, Bool_t searchGlobal )
 {
 // force building of the class if a scope is specified (prevents loops)
    Bool_t force = scope != 0;
@@ -509,22 +510,8 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       return pytemplate;
    }
 
-// TODO: presumably the next portion is no longer needed with Cling (need check)
-//   if ( ! (Bool_t)klass && G__defined_tagname( lookup.c_str(), 2 ) != -1 ) {
-//   // an unloaded namespace is requested
-//      PyObject* pyns = CreateNewROOTPythonClass( lookup, NULL );
-//
-//   // cache the result
-//      PyObject_SetAttrString( scope ? scope : gRootModule, (char*)name.c_str(), pyns );
-//
-//   // done, next step should be a lookup into this namespace
-//    Py_XDECREF( scope );
-//      return pyns;
-//   }
-//
-
    if ( ! (Bool_t)klass ) {   // if so, all options have been exhausted: it doesn't exist as such
-      if ( ! scope && fullname.find( "ROOT::" ) == std::string::npos ) { // not already in ROOT::
+      if ( ! scope && searchGlobal && fullname.find( "ROOT::" ) == std::string::npos ) { // not already in ROOT::
       // final attempt, for convenience, the "ROOT" namespace isn't required, try again ...
          PyObject* rtns = PyObject_GetAttr( gRootModule, PyStrings::gROOTns );
          PyObject* pyclass = PyObject_GetAttrString( rtns, (char*)fullname.c_str() );
@@ -694,8 +681,15 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 
    TFunction* func = 0;
    while ( (func = (TFunction*)ifunc.Next()) ) {
-      if ( func->GetName() == name )
-         overloads.push_back( new TFunctionHolder( func ) );
+   // cover not only direct matches, but also template matches
+      std::string fn = func->GetName();
+      if ( fn.rfind( name, 0 ) == 0 ) {
+      // either match exactly, or match the name as template
+         if ( (name.size() == fn.size()) ||
+              (name.size() < fn.size() && fn[name.size()] == '<') ) {
+            overloads.push_back( new TFunctionHolder( func ) );
+         }
+      }
    }
 
    if ( ! overloads.empty() )
