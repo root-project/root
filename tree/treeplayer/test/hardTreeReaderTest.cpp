@@ -70,13 +70,13 @@ void makeTree(){
 	myTree->Branch("S99_vectorStarB",	&myObject0.vectorStarB,	32000, 99);
 
 	myTree->Branch("S0_BStar",			&myObject0.BStar,	32000, 0);
-	myTree->Branch("S99_BStar",		&myObject0.BStar,	32000, 99);
+	myTree->Branch("S99_BStar",			&myObject0.BStar,	32000, 99);
 
 	// myTree->Branch("S0_BArray[12]",		"B[12]",		&myObject0.BArray,	32000, 0); // Will not get made
 	// myTree->Branch("S99_BArray[12]",	"B[12]",		&myObject0.BArray,	32000, 99); // Will not get made
 
-	myTree->Branch("S0_BStarArray",	&myObject0.BStarArray,	32000, 0);
-	myTree->Branch("S99_BStarArray",	&myObject0.BStarArray,	32000, 99);
+	// myTree->Branch("S0_BStarArray",		&myObject0.BStarArray,	32000, 0); // No way of specifying an array
+	// myTree->Branch("S99_BStarArray",	&myObject0.BStarArray,	32000, 99); // No way of specifying an array
 
 	myTree->Branch("S0_BObject",		&myObject0.BObject,	32000, 0);
 	myTree->Branch("S99_BObject",		&myObject0.BObject,	32000, 99);
@@ -668,7 +668,7 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 	printf("S0_vectorB: readVectorBValue(): ------------- %s", printAll ? "\n": ""); readVectorBValue(			"S0_", 	printAll, testAll);
 	// printf("vectorB_0: readBranchVectorBArray(): -------- %s", printAll ? "\n": ""); readBranchVectorBArray(		"S0_", 	printAll, testAll);
 
-	printf("S99_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(						"S99_", printAll, testAll);
+	// printf("S99_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(						"S99_", printAll, testAll);
 	printf("S99_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(					"S99_", printAll, testAll);
 	printf("S99_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S99_", printAll, testAll);
 	printf("S99_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(					"S99_", printAll, testAll);
@@ -677,7 +677,7 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 	printf("S99_: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(			"S99_", printAll, testAll);
 	printf("S99_: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(				"S99_", printAll, testAll);
 	//printf("S99_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(					"S99_", printAll, testAll);
-	printf("S99_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(				"S99_", printAll, testAll);
+	// printf("S99_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(				"S99_", printAll, testAll);
 	printf("S99_: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(			"S99_", printAll, testAll);
 	printf("S99_: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(			"S99_", printAll, testAll);
 	printf("S99_: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(		"S99_", printAll, testAll);
