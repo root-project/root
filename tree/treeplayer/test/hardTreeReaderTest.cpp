@@ -56,12 +56,33 @@ void makeTree(){
 	// myTree->Branch("vectorBStar_99.",	&branchForMembers.vectorBStar,	32000, 99);
 	// myTree->Branch("vectorBStar_101.",	&branchForMembers.vectorBStar,	32000, 101);
 
-	myTree->Branch("S0_vectorB.",	&myObject0.vectorB,	32000, 0);
-	myTree->Branch("S99_vectorB.",	&myObject0.vectorB,	32000, 99);
+	myTree->Branch("S0_num",			&myObject0.num,	32000, 0);
+	myTree->Branch("S99_num",			&myObject0.num,	32000, 99);
 
-	myTree->Branch("S0_vectorBStar.",	&myObject0.vectorBStar,	32000, 0);
-	myTree->Branch("S99_vectorBStar.",	&myObject0.vectorBStar,	32000, 99);
-	//myTree->Branch("vectorBStar_101.",	&branchForMembers.vectorBStar,	32000, 101); // Breaks Fill()
+	myTree->Branch("S0_vectorB",		&myObject0.vectorB,	32000, 0);
+	myTree->Branch("S99_vectorB",		&myObject0.vectorB,	32000, 99);
+
+	myTree->Branch("S0_vectorBStar",	&myObject0.vectorBStar,	32000, 0);
+	myTree->Branch("S99_vectorBStar",	&myObject0.vectorBStar,	32000, 99);
+	//myTree->Branch("vectorBStar_101",	&branchForMembers.vectorBStar,	32000, 101); // Breaks Fill()
+
+	myTree->Branch("S0_vectorStarB",	&myObject0.vectorStarB,	32000, 0);
+	myTree->Branch("S99_vectorStarB",	&myObject0.vectorStarB,	32000, 99);
+
+	myTree->Branch("S0_BStar",			&myObject0.BStar,	32000, 0);
+	myTree->Branch("S99_BStar",		&myObject0.BStar,	32000, 99);
+
+	// myTree->Branch("S0_BArray[12]",		"B[12]",		&myObject0.BArray,	32000, 0); // Will not get made
+	// myTree->Branch("S99_BArray[12]",	"B[12]",		&myObject0.BArray,	32000, 99); // Will not get made
+
+	myTree->Branch("S0_BStarArray",	&myObject0.BStarArray,	32000, 0);
+	myTree->Branch("S99_BStarArray",	&myObject0.BStarArray,	32000, 99);
+
+	myTree->Branch("S0_BObject",		&myObject0.BObject,	32000, 0);
+	myTree->Branch("S99_BObject",		&myObject0.BObject,	32000, 99);
+
+	myTree->Branch("S0_BClonesArray",	&myObject0.BClonesArray,	32000, 0);
+	myTree->Branch("S99_BClonesArray",	&myObject0.BClonesArray,	32000, 99);
 
 
 	for (int i = 1; i < TREE_ENTRIES + 1; ++i){
@@ -135,12 +156,15 @@ void readNum(const char* branchName = "A99.", Bool_t printOut = true, Bool_t tes
 
 	TTreeReaderValue<Int_t> myNum (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myNum.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (testValues && *myNum != NUM_CONSTANT) success = false;
 		if (printOut) printf("Num: %i\n", *myNum);
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readBObject(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -152,12 +176,15 @@ void readBObject(const char* branchName = "A99.", Bool_t printOut = true, Bool_t
 
 	TTreeReaderValue<B> myBObject (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myBObject.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (testValues && myBObject->dummy != i * MULTIPLIER_B_OBJECT) success = false;
 		if (printOut) printf("Dummy: %i\n", myBObject->dummy);
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readBObjectDummy(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -169,12 +196,15 @@ void readBObjectDummy(const char* branchName = "A99.", Bool_t printOut = true, B
 
 	TTreeReaderValue<Int_t> myDummy (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myDummy.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (testValues && *myDummy != i * MULTIPLIER_B_OBJECT) success = false;
 		if (printOut) printf("Dummy: %i\n", *myDummy);
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readBStar(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -186,12 +216,15 @@ void readBStar(const char* branchName = "A99.", Bool_t printOut = true, Bool_t t
 
 	TTreeReaderValue<B> myBStar (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myBStar.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (testValues && myBStar->dummy != i * MULTIPLIER_B_STAR) success = false;
 		if (printOut) printf("Dummy: %i\n", myBStar->dummy);
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readVectorBValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -203,8 +236,11 @@ void readVectorBValue(const char* branchName = "A99.", Bool_t printOut = true, B
 
 	TTreeReaderValue<std::vector<B> > myVectorB (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myVectorB.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("vectorB dummies:");
 
 		for (int j = 0; j < LIST_ENTRIES; ++j){
@@ -214,7 +250,7 @@ void readVectorBValue(const char* branchName = "A99.", Bool_t printOut = true, B
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readVectorStarBValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -226,8 +262,11 @@ void readVectorStarBValue(const char* branchName = "A99.", Bool_t printOut = tru
 
 	TTreeReaderValue<std::vector<B> > myVectorStarB (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myVectorStarB.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("vectorB dummies(%i):", myVectorStarB->size());
 
 		for (int j = 0; j < LIST_ENTRIES; ++j){
@@ -237,7 +276,7 @@ void readVectorStarBValue(const char* branchName = "A99.", Bool_t printOut = tru
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readVectorStarBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -249,8 +288,11 @@ void readVectorStarBArray(const char* branchName = "A99.", Bool_t printOut = tru
 
 	TTreeReaderArray<B> myVectorStarB (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myVectorStarB.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("vectorB dummies(%i):", myVectorStarB.GetSize());
 
 		for (int j = 0; j < LIST_ENTRIES; ++j){
@@ -260,7 +302,7 @@ void readVectorStarBArray(const char* branchName = "A99.", Bool_t printOut = tru
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readVectorBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -272,8 +314,11 @@ void readVectorBArray(const char* branchName = "A99.", Bool_t printOut = true, B
 
 	TTreeReaderArray<B> myVectorB (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myVectorB.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("vectorB dummies(%i):", myVectorB.GetSize());
 
 		for (int j = 0; j < LIST_ENTRIES && j < myVectorB.GetSize(); ++j){
@@ -283,7 +328,7 @@ void readVectorBArray(const char* branchName = "A99.", Bool_t printOut = true, B
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -295,8 +340,11 @@ void readBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t 
 
 	TTreeReaderArray<B> myBArray (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myBArray.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("BArray dummies(%i):", myBArray.GetSize());
 
 		for (int j = 0; j < LIST_ENTRIES; ++j){
@@ -306,7 +354,7 @@ void readBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t 
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -318,8 +366,11 @@ void readBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Boo
 
 	TTreeReaderArray<B> myBStarArray (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myBStarArray.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("BStarArray dummies(%i):", myBStarArray.GetSize());
 
 		for (int j = 0; j < myBStarArray.GetSize(); ++j){
@@ -329,7 +380,7 @@ void readBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Boo
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readVectorBStarValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -341,8 +392,11 @@ void readVectorBStarValue(const char* branchName = "A99.", Bool_t printOut = tru
 
 	TTreeReaderValue<std::vector<B*> > myVectorBStar (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myVectorBStar.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("vectorBStar dummies(%i):", myVectorBStar->size());
 
 		for (int j = 0; j < LIST_ENTRIES && j < myVectorBStar->size(); ++j){
@@ -352,7 +406,7 @@ void readVectorBStarValue(const char* branchName = "A99.", Bool_t printOut = tru
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readVectorBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -364,8 +418,11 @@ void readVectorBStarArray(const char* branchName = "A99.", Bool_t printOut = tru
 
 	TTreeReaderArray<B> myVectorBStar (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myVectorBStar.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("vectorBStar dummies(%i):", myVectorBStar.GetSize());
 
 		for (int j = 0; j < LIST_ENTRIES && myVectorBStar.GetSize(); ++j){
@@ -375,7 +432,7 @@ void readVectorBStarArray(const char* branchName = "A99.", Bool_t printOut = tru
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readBClonesArrayValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -387,8 +444,11 @@ void readBClonesArrayValue(const char* branchName = "A99.", Bool_t printOut = tr
 
 	TTreeReaderValue<TClonesArray> myBClonesArray (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myBClonesArray.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("BClonesArray dummies(%i):", myBClonesArray->GetSize());
 
 		for (int j = 0; j < LIST_ENTRIES && j < myBClonesArray->GetSize(); ++j){
@@ -398,7 +458,7 @@ void readBClonesArrayValue(const char* branchName = "A99.", Bool_t printOut = tr
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readBClonesArrayArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -410,8 +470,11 @@ void readBClonesArrayArray(const char* branchName = "A99.", Bool_t printOut = tr
 
 	TTreeReaderArray<B> myBClonesArray (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myBClonesArray.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("BClonesArray dummies(%i):", myBClonesArray.GetSize());
 
 		for (int j = 0; j < LIST_ENTRIES && j < myBClonesArray.GetSize(); ++j){
@@ -421,7 +484,7 @@ void readBClonesArrayArray(const char* branchName = "A99.", Bool_t printOut = tr
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readVectorBDummyArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -433,8 +496,11 @@ void readVectorBDummyArray(const char* branchName = "A99.", Bool_t printOut = tr
 
 	TTreeReaderArray<Int_t> myVectorBDummyArray (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myVectorBDummyArray.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("vectorB.dummies(%i):", myVectorBDummyArray.GetSize());
 
 		for (int j = 0; j < LIST_ENTRIES && j < myVectorBDummyArray.GetSize(); ++j){
@@ -444,7 +510,7 @@ void readVectorBDummyArray(const char* branchName = "A99.", Bool_t printOut = tr
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
@@ -456,8 +522,11 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
 
 	TTreeReaderArray<Int_t> myBClonesArrayDummy (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myBClonesArrayDummy.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("BClonesArray.dummies(%i):", myBClonesArrayDummy.GetSize());
 
 		for (int j = 0; j < LIST_ENTRIES && j < myBClonesArrayDummy.GetSize(); ++j){
@@ -467,7 +536,7 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
 
 		if (printOut) printf("\n");
 	}
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 // void readArrayOfBs(const char *branchName, const char *subBranchPostFix, Bool_t printOut = true, Bool_t testValues = false){
@@ -482,7 +551,7 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
 
 // 	TTreeReaderArray<Int_t> myArrayOfBs (myTreeReader, finalBranchName);
 
-// 	Bool_t success = true;
+// 	Bool_t successmyArrayOfBsRisValid();
 // 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 // 		if (printOut) printf("%s(%i):", subBranchPostFix, myArrayOfBs.GetSize());
 
@@ -493,21 +562,20 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
 
 // 		if (printOut) printf("\n");
 // 	}
-// 	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+// 	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 // }
 
-void readAObject(const char* branchName = "A99."){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
-	TTreeReader myTreeReader ("HardTree");
+// void readAObject(const char* branchName = "A99."){
+// 	TFile *myFile = TFile::Open("HardTreeFile.root");
+// 	TTreeReader myTreeReader ("HardTree");
 
-	TTreeReaderValue<A> myAObject (myTreeReader, branchName);
+// 	TTreeReaderValue<A> myAObject (myTreeReader, branchName);
 
-	while (myTreeReader.SetNextEntry()){
-		printf("Num: %i ", myAObject->num);
-		printf("BDummy: %i ", myAObject->BObject.dummy);
-		printf("BStarDummy: %i\n", myAObject->BStar->dummy);
-	}
-}
+// 	while (myTreeReademyAObjecNisValid();
+// 		printf("BDummy: %i ", myAObject->BObject.dummy);
+// 		printf("BStarDummy: %i\n", myAObject->BStar->dummy);
+// 	}
+// }
 
 void readBranchVectorBValue(const char* splitLevel, Bool_t printOut = true, Bool_t testValues = false){
 	TFile *myFile = TFile::Open("HardTreeFile.root");
@@ -518,8 +586,11 @@ void readBranchVectorBValue(const char* splitLevel, Bool_t printOut = true, Bool
 
 	TTreeReaderValue<std::vector<B> > myObject (myTreeReader, finalBranchName);
 
+	// Bool_t success = !myObject.GetSetupStatus();
 	Bool_t success = true;
+	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
 		if (printOut) printf("vectorB dummies:");
 
 		for (int j = 0; j < myObject->size(); ++j){
@@ -530,7 +601,7 @@ void readBranchVectorBValue(const char* splitLevel, Bool_t printOut = true, Bool
 		if (printOut) printf("\n");
 	}
 
-	if (testValues) printf("%s\n", success ? "Success!" : "Failure");
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
 
@@ -597,7 +668,22 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 	printf("S0_vectorB: readVectorBValue(): ------------- %s", printAll ? "\n": ""); readVectorBValue(			"S0_", 	printAll, testAll);
 	// printf("vectorB_0: readBranchVectorBArray(): -------- %s", printAll ? "\n": ""); readBranchVectorBArray(		"S0_", 	printAll, testAll);
 
-	printf("S99_vectorB: readVectorBValue(): ------------ %s", printAll ? "\n": ""); readVectorBValue(			"S99_", printAll, testAll);
+	printf("S99_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(						"S99_", printAll, testAll);
+	printf("S99_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(					"S99_", printAll, testAll);
+	printf("S99_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S99_", printAll, testAll);
+	printf("S99_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(					"S99_", printAll, testAll);
+	printf("S99_: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(				"S99_", printAll, testAll);
+	printf("S99_: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(			"S99_", printAll, testAll);
+	printf("S99_: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(			"S99_", printAll, testAll);
+	printf("S99_: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(				"S99_", printAll, testAll);
+	//printf("S99_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(					"S99_", printAll, testAll);
+	printf("S99_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(				"S99_", printAll, testAll);
+	printf("S99_: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(			"S99_", printAll, testAll);
+	printf("S99_: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(			"S99_", printAll, testAll);
+	printf("S99_: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(		"S99_", printAll, testAll);
+	printf("S99_: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(		"S99_", printAll, testAll);
+	printf("S99_: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(		"S99_", printAll, testAll);
+	printf("S99_: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(	"S99_", printAll, testAll);
 }
 
 void testAll(){
