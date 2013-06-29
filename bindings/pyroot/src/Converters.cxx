@@ -208,16 +208,8 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
    if ( TCustomInt_CheckExact( pyobject ) ) {
 #if PY_VERSION_HEX < 0x03000000
       para.fLong = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
-      if ( func ) {
-      //         G__value v;
-      //         G__setnull( &v );
-      //         v.ref = (Long_t)&((PyIntObject*)pyobject)->ob_ival;
-      //         G__letint( &v, 'i', para.fLong );
-      //         gInterpreter->CallFunc_SetArg( func,  v );
-         PyErr_SetString( PyExc_TypeError, "CLING DOES NOT SUPPORT GENERIC VALUE INTERFACE" );
-         return kFALSE;
-      }
-
+      if ( func )
+         gInterpreter->CallFunc_SetArg( func, (Long_t)para.fVoidp );
       return kTRUE;
 #else
       para.fLong = 0; func = 0;
@@ -229,14 +221,8 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
 // alternate, pass pointer from buffer
    int buflen = Utility::GetBuffer( pyobject, 'i', sizeof(int), para.fVoidp );
    if ( para.fVoidp && buflen && func ) {
-   //      G__value v;
-   //      G__setnull( &v );
-   //      v.ref = (Long_t)para.fVoidp;
-   //      G__letint( &v, 'i', para.fLong );
-   //      gInterpreter->CallFunc_SetArg( func,  v );
-   //      return kTRUE;
-      PyErr_SetString( PyExc_TypeError, "CLING DOES NOT SUPPORT GENERIC VALUE INTERFACE" );
-      return kFALSE;
+      gInterpreter->CallFunc_SetArg( func, (Long_t)para.fVoidp );
+      return kTRUE;
    }
  
    PyErr_SetString( PyExc_TypeError, "use ROOT.Long for pass-by-ref of ints" );
