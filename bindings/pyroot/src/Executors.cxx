@@ -257,12 +257,10 @@ PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Double, Double_t )
 //- special cases ------------------------------------------------------------
 PyObject* PyROOT::TSTLStringExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
-// TODO: Cling can not handle return by value for now
-   PyErr_SetString(PyExc_NotImplementedError, "CLING DOES NOT SUPPORT RETURN BY VALUE!" );
-   return 0;
-
 // execute <func> with argument <self>, construct python string return value
-   std::string* result = (std::string*)PRCallFuncExecInt( func, self, release_gil );
+   TInterpreterValue value;
+   PRCallFuncExecValue( func, self, value, release_gil );
+   std::string* result = (std::string*)value.GetAsPointer();
    if ( ! result ) {
       Py_INCREF( PyStrings::gEmptyString );
       return PyStrings::gEmptyString;
@@ -271,7 +269,8 @@ PyObject* PyROOT::TSTLStringExecutor::Execute( CallFunc_t* func, void* self, Boo
    PyObject* pyresult =
       PyROOT_PyUnicode_FromStringAndSize( result->c_str(), result->size() );
 
-// TODO: take over ownership from Cling somehow (old:  G__pop_tempobject_nodel(); delete result;)
+// TODO: does the suffice?? See also TRootObjectByValueExecutor
+   gInterpreter->ClearStack();
 
    return pyresult;
 }
