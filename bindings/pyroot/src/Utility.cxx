@@ -91,11 +91,13 @@ namespace {
          gC2POperatorMapping[ "<=" ]  = "__le__";
 
       // the following type mappings are "exact"
-         gC2POperatorMapping[ "const char*" ] = "__str__";
-         gC2POperatorMapping[ "char*" ]       = "__str__";
-         gC2POperatorMapping[ "int" ]         = "__int__";
-         gC2POperatorMapping[ "long" ]        = PYROOT__long__;
-         gC2POperatorMapping[ "double" ]      = "__float__";
+         gC2POperatorMapping[ "const char*" ]  = "__str__";
+         gC2POperatorMapping[ "char*" ]        = "__str__";
+         gC2POperatorMapping[ "const char *" ] = gC2POperatorMapping[ "const char*" ];
+         gC2POperatorMapping[ "char *" ]       = gC2POperatorMapping[ "char*" ];
+         gC2POperatorMapping[ "int" ]          = "__int__";
+         gC2POperatorMapping[ "long" ]         = PYROOT__long__;
+         gC2POperatorMapping[ "double" ]       = "__float__";
 
       // the following type mappings are "okay"; the assumption is that they
       // are not mixed up with the ones above or between themselves (and if
