@@ -20,6 +20,7 @@
 #include "TPgSQLStatement.h"
 #include "TDataType.h"
 #include "TDatime.h"
+#include "TTimeStamp.h"
 
 #include <stdlib.h>
 
@@ -529,33 +530,41 @@ Bool_t TPgSQLStatement::GetLargeObject(Int_t npar, void* &mem, Long_t& size)
 //______________________________________________________________________________
 Bool_t TPgSQLStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
 {
-   // Return field value as date.
+   // Return field value as date, in UTC.
 
    TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
    TDatime d = TDatime(val.Data());
    year = d.GetYear();
    month = d.GetMonth();
    day= d.GetDay();
+   Int_t hour = d.GetHour();
+   Int_t min = d.GetMinute();
+   Int_t sec = d.GetSecond();
+   ConvertTimeToUTC(val, year, month, day, hour, min, sec);
    return kTRUE;
 }
 
 //______________________________________________________________________________
 Bool_t TPgSQLStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // Return field as time.
+   // Return field as time, in UTC.
 
    TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
    TDatime d = TDatime(val.Data());
    hour = d.GetHour();
    min = d.GetMinute();
    sec= d.GetSecond();
+   Int_t year = d.GetYear();
+   Int_t month = d.GetMonth();
+   Int_t day = d.GetDay();
+   ConvertTimeToUTC(val, day, month, year, hour, min, sec);
    return kTRUE;
 }
 
 //______________________________________________________________________________
 Bool_t TPgSQLStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   // Return field value as date & time.
+   // Return field value as date & time, in UTC.
 
    TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
    TDatime d = TDatime(val.Data());
@@ -565,25 +574,83 @@ Bool_t TPgSQLStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& 
    hour = d.GetHour();
    min = d.GetMinute();
    sec= d.GetSecond();
+   ConvertTimeToUTC(val, year, month, day, hour, min, sec);
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TPgSQLStatement::ConvertTimeToUTC(const TString &PQvalue, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
+{
+   // Convert timestamp value to UTC if a zone is included.
+
+   Ssiz_t p = PQvalue.Last('.');
+   // Check if timestamp has timezone
+   TSubString *s_zone;
+   Bool_t hasZone = kFALSE;
+   Ssiz_t tzP = PQvalue.Last('+');
+   if ((tzP != kNPOS) && (tzP > p) ) {
+      s_zone = new TSubString(PQvalue(tzP,PQvalue.Length()-tzP+1));
+      hasZone=kTRUE;
+   } else {
+      Ssiz_t tzM = PQvalue.Last('-');
+      if ((tzM != kNPOS) && (tzM > p) ) {
+         s_zone = new TSubString(PQvalue(tzM,PQvalue.Length()-tzM+1));
+         hasZone = kTRUE;
+      }
+   }
+   if (hasZone == kTRUE) {
+      // Parse timezone, might look like e.g. +00 or -00:00
+      Int_t hourOffset, minuteOffset;
+      Int_t conversions=sscanf(s_zone->Data(), "%d:%d", &hourOffset, &minuteOffset);
+      Int_t secondOffset = hourOffset*3600;
+      if (conversions>1) {
+         // Use sign from hour also for minute
+         secondOffset += (TMath::Sign(minuteOffset, hourOffset))*60;
+      }
+      // Use TTimeStamp so we do not have to take care of over-/underflows
+      TTimeStamp ts(year, month, day, hour, min, sec, 0, kTRUE, -secondOffset);
+      UInt_t uyear, umonth, uday, uhour, umin, usec;
+      ts.GetDate(kTRUE, 0, &uyear, &umonth, &uday);
+      ts.GetTime(kTRUE, 0, &uhour, &umin, &usec);
+      year=uyear;
+      month=umonth;
+      day=uday;
+      hour=uhour;
+      min=umin;
+      sec=usec;
+      delete s_zone;
+   }
 }
 
 //______________________________________________________________________________
 Bool_t TPgSQLStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac)
 {
-   // Return field as timestamp.
+   // Return field as timestamp, in UTC.
+   // Second fraction is to be interpreted as in the following example:
+   // 2013-01-12 12:10:23.093854+02
+   // Fraction is '93854', precision is fixed in this method to 6 decimal places.
+   // This means the returned frac-value is always in microseconds.
 
    TString val=PQgetvalue(fStmt->fRes,fIterationCount,npar);
-   Ssiz_t p = val.Last('.');
-   TSubString s_frac = val(p,val.Length()-p+1);
-   TDatime d = TDatime(val.Data());
+   TDatime d(val.Data());
    year = d.GetYear();
    month = d.GetMonth();
    day= d.GetDay();
    hour = d.GetHour();
    min = d.GetMinute();
    sec= d.GetSecond();
-   frac=atoi(s_frac.Data());
+
+   ConvertTimeToUTC(val, year, month, day, hour, min, sec);
+
+   Ssiz_t p = val.Last('.');
+   TSubString s_frac = val(p,val.Length()-p+1);
+
+   // atoi ignores timezone part.
+   // We MUST use atof here to correctly convert the fraction of
+   // "12:23:01.093854" and put a limitation on precision,
+   // as we can only return an Int_t.
+   frac=(Int_t) (atof(s_frac.Data())*1.E6);
+
    return kTRUE;
 }
 
@@ -778,12 +845,15 @@ Bool_t TPgSQLStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day
 }
 
 //______________________________________________________________________________
-Bool_t TPgSQLStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t)
+Bool_t TPgSQLStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac)
 {
    // Set parameter value as timestamp.
+   // Second fraction is assumed as value in microseconds,
+   // i.e. as a fraction with six decimal places.
+   // See GetTimestamp() for an example.
 
    TDatime d(year,month,day,hour,min,sec);
-   snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
+   snprintf(fBind[npar],kBindStringSize,"%s.%06d",(char*)d.AsSQLString(),frac);
    return kTRUE;
 }
 

@@ -70,6 +70,8 @@ private:
    void        FreeBuffers();
    void        SetBuffersNumber(Int_t n);
 
+   void        ConvertTimeToUTC(const TString &PQvalue, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec);
+
 public:
    TPgSQLStatement(PgSQL_Stmt_t* stmt, Bool_t errout = kTRUE);
    virtual ~TPgSQLStatement();
