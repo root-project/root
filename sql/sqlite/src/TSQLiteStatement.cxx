@@ -418,15 +418,14 @@ Bool_t TSQLiteStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t&
 Bool_t TSQLiteStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac)
 {
    // Return field as timestamp.
+   // Second fraction is in milliseconds, which is also the precision all date and time functions of sqlite use.
 
    TString val = reinterpret_cast<const char*>(sqlite3_column_text(fStmt->fRes, npar));
 
    Ssiz_t p = val.Last('.');
    TSubString ts_part = val(0, p);
 
-   TDatime d;
-   d.Set(atoi(ts_part.Data()));
-
+   TDatime d(ts_part.Data());
    year = d.GetYear();
    month = d.GetMonth();
    day = d.GetDay();
@@ -434,8 +433,8 @@ Bool_t TSQLiteStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int
    min = d.GetMinute();
    sec = d.GetSecond();
 
-   TSubString s_frac = val(p + 1, val.Length() - p);
-   frac = atoi(s_frac.Data());
+   TSubString s_frac = val(p, val.Length() - p+1);
+   frac=(Int_t) (atof(s_frac.Data())*1.E3);
 
    return kTRUE;
 }
@@ -578,13 +577,14 @@ Bool_t TSQLiteStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t da
 Bool_t TSQLiteStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac)
 {
    // Set parameter value as timestamp.
+   // The second fraction has to be in milliseconds,
+   // as all SQLite functions for date and time assume 3 significant digits.
 
-   TTimeStamp ts(year, month, day, hour, min, sec);
+   TDatime d(year,month,day,hour,min,sec);
    TString value;
-   value.Form("%lu.%d", ts.GetSec(), frac);
+   value.Form("%s.%03d", (char*)d.AsSQLString(), frac);
 
    int res = sqlite3_bind_text(fStmt->fRes, npar + 1, value.Data(), -1, SQLITE_TRANSIENT);
 
    return CheckBindError("SetTimestamp", res);
 }
-
