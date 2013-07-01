@@ -76,7 +76,7 @@ nospace: nospace.log
 	$(TestDiff)
 
 drawing.raw.log: DrawTest.sh  dt_DrawTest.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV) MainEvent.cxx Event.cxx Event.h \
-                 $(wildcard dt_wrap*.C) dt_MakeFiles.sh dt_RunDrawTest.sh
+                 Event_cxx.$(DllSuf) $(wildcard dt_wrap*.C) dt_MakeFiles.sh dt_RunDrawTest.sh
 	$(CMDECHO) ./DrawTest.sh > drawing.raw.log 2>&1
 
 drawing.log: drawing.raw.log
