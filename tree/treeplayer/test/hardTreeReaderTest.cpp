@@ -37,12 +37,22 @@
 #define MULTIPLIER_B_ARRAY 4
 #define MULTIPLIER_B_STAR_ARRAY 5
 #define MULTIPLIER_B_CLONES_ARRAY 6
+#define MYDOUBLEARRAY_SIZE 8
+#define MYBOOLARRAYB_SIZE 12
 
 void makeTree(){
 	TFile *myFile = new TFile("HardTreeFile.root", "RECREATE");
 	TTree *myTree = new TTree("HardTree", "This is hard to read");
 
 	A myObject0 (NUM_CONSTANT);
+
+	struct {
+		Int_t myIntX = 0;
+		Float_t myFloatY = 0.0;
+		Int_t myIntN = MYDOUBLEARRAY_SIZE;
+		Double_t myDoubleArrayA [MYDOUBLEARRAY_SIZE];
+		Bool_t myBoolArrayB [MYBOOLARRAYB_SIZE];
+	} myLeaves;
 
 	myTree->Branch("A0.",	"A", 	&myObject0,		32000, 0);
 	myTree->Branch("A1.",	"A", 	&myObject0,		32000, 1);
@@ -92,6 +102,8 @@ void makeTree(){
 	myTree->Branch("S99_BClonesArray",	&myObject0.BClonesArray,	32000, 99);
 	myTree->Branch("S101_BClonesArray",	&myObject0.BClonesArray,	32000, 101);
 
+	myTree->Branch("MyLeafList",		&myLeaves,	"x:y/F:n/I:a[n]/D:b[12]/O");
+
 
 	for (int i = 1; i < TREE_ENTRIES + 1; ++i){
 		printf("\nEntry %i\n\n", i);
@@ -140,6 +152,8 @@ void makeTree(){
 		for (int j = 0; j < LIST_ENTRIES; ++j ){
 			((B*)myObject0.BClonesArray.New(j))->dummy = i*j*6;
 		}
+
+		printf("Filling leaflist\n");
 
 		printf("Filling tree\n");
 		myTree->Fill();

@@ -65,13 +65,13 @@ public:
 
    TTreeReader(TTree* tree);
    TTreeReader(const char* keyname, TDirectory* dir = NULL );
-   TTreeReader(const char* /*keyname*/, TFileCollection* /*files*/) { Error("TTreeReader()", "Not Implemented!\n");};
+   TTreeReader(const char* /*keyname*/, TFileCollection* /*files*/) { Error("TTreeReader()", "Not Implemented!");};
 
    ~TTreeReader();
 
    void SetTree(TTree* tree);
-   void SetTree(const char* /*keyname*/, TDirectory* /*dir = NULL*/ ) { Error("SetTree()", "Not Implemented!\n");};
-   void SetChain(const char* /*keyname*/, TFileCollection* /*files*/ ) { Error("SetChain()", "Not Implemented!\n");};
+   void SetTree(const char* /*keyname*/, TDirectory* /*dir = NULL*/ ) { Error("SetTree()", "Not Implemented!");};
+   void SetChain(const char* /*keyname*/, TFileCollection* /*files*/ ) { Error("SetChain()", "Not Implemented!");};
 
    Bool_t IsChain() const { return TestBit(kBitIsChain); }
 
