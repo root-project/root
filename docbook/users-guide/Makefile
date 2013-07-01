@@ -13,9 +13,9 @@ OPTIONSLATEXA4=--template=./template.tex --variable=geometry:a4paper -V geometry
 OPTIONSLATEXLETTER=--template=./template.tex --variable=geometry:letterpaper -V geometry:margin=1.5cm
 OPTIONSPDF=--variable=geometry:a4paper -V geometry:margin=1.5cm
 
-.PHONY: pdfa4 pdfletter html epub pdf_chapters
+.PHONY: pdfa4 pdfletter html epub pdf_chapters html_chapters
 
-all: pdfa4 pdfletter html epub pdf_chapters
+all: pdfa4 pdfletter html epub pdf_chapters html_chapters
 
 ROOTUsersGuideA4.tex: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSLATEXA4) -t latex $(MDFILES) \
@@ -57,6 +57,11 @@ epub: $(MDFILES) metadata.xml title.txt
 
 pdf_chapters: $(MDFILES:.md=.pdf)
 
+%.html: %.md
+	pandoc $(OPTIONS) $(OPTIONSHTML) $^ -o $@
+
+html_chapters: $(MDFILES:.md=.html)
+
 clean:
 	rm -f ROOTUsersGuideA4.pdf ROOTUsersGuideLetter.pdf \
 	ROOTUsersGuide.html ROOTUsersGuide.epub \
@@ -75,4 +80,11 @@ clean:
 	Trees.pdf MathLibraries.pdf LinearAlgebra.pdf AddingaClass.pdf \
 	CollectionClasses.pdf PhysicsVectors.pdf Geometry.pdf PythonRuby.pdf \
 	TutorialsandTests.pdf ExampleAnalysis.pdf Networking.pdf Threads.pdf \
-	PROOF.pdf WritingGUI.pdf ROOTandQt.pdf HTMLDoc.pdf InstallandBuild.pdf
+	PROOF.pdf WritingGUI.pdf ROOTandQt.pdf HTMLDoc.pdf InstallandBuild.pdf \
+	ROOTUsersGuide.html Preface.html Introduction.html GettingStarted.html \
+	Histograms.html Graphs.html FittingHistograms.html ALittleC++.html CINT.html \
+	ObjectOwnership.html Graphics.html FoldersTasks.html InputOutput.html \
+	Trees.html MathLibraries.html LinearAlgebra.html AddingaClass.html \
+	CollectionClasses.html PhysicsVectors.html Geometry.html PythonRuby.html \
+	TutorialsandTests.html ExampleAnalysis.html Networking.html Threads.html \
+	PROOF.html WritingGUI.html ROOTandQt.html HTMLDoc.html InstallandBuild.html
