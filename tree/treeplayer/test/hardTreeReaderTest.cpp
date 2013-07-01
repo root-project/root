@@ -158,6 +158,14 @@ void makeTree(){
 		}
 
 		printf("Filling leaflist\n");
+		myLeaves.myIntX = i;
+		myLeaves.myFloatY = i / 10.0f;
+		for (int j = 0; j < MYDOUBLEARRAY_SIZE; ++j){
+			myLeaves.myDoubleArrayA[j] = myLeaves.myFloatY * j;
+		}
+		for (int j = 0; j < MYBOOLARRAYB_SIZE; ++j){
+			myLeaves.myBoolArrayB[j] = (i + (i * j)) % 2;
+		}
 
 		printf("Filling tree\n");
 		myTree->Fill();
