@@ -75,9 +75,9 @@ void makeTree(){
 	// myTree->Branch("S0_BStarArray",		&myObject0.BStarArray,	32000, 0); // No way of specifying an array
 	// myTree->Branch("S99_BStarArray",	&myObject0.BStarArray,	32000, 99); // No way of specifying an array
 
-	myTree->Branch("S0_BObject",		&myObject0.BObject,	32000, 0);
-	myTree->Branch("S99_BObject",		&myObject0.BObject,	32000, 99);
-	myTree->Branch("S101_BObject",		&myObject0.BObject,	32000, 101);
+	myTree->Branch("S0_BObject.",		&myObject0.BObject,	32000, 0);
+	myTree->Branch("S99_BObject.",		&myObject0.BObject,	32000, 99);
+	myTree->Branch("S101_BObject.",		&myObject0.BObject,	32000, 101);
 
 	myTree->Branch("S0_BClonesArray",	&myObject0.BClonesArray,	32000, 0);
 	myTree->Branch("S99_BClonesArray",	&myObject0.BClonesArray,	32000, 99);
@@ -172,6 +172,26 @@ void readBObject(const char* branchName = "A99.", Bool_t printOut = true, Bool_t
 
 	TString finalBranchName = branchName;
 	finalBranchName += "BObject";
+
+	TTreeReaderValue<B> myBObject (myTreeReader, finalBranchName);
+
+	// Bool_t success = !myBObject.GetSetupStatus();
+	Bool_t success = true;
+	Bool_t read = false;
+	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
+		if (testValues && myBObject->dummy != i * MULTIPLIER_B_OBJECT) success = false;
+		if (printOut) printf("Dummy: %i\n", myBObject->dummy);
+	}
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
+}
+
+void readBObjectBranch(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
+	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TString finalBranchName = branchName;
+	finalBranchName += "BObject.";
 
 	TTreeReaderValue<B> myBObject (myTreeReader, finalBranchName);
 
@@ -668,8 +688,8 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 
 
 	// printf("S0_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(						"S0_", printAll, testAll); // Leaflist
-	printf("S0_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(					"S0_", printAll, testAll);
-	// printf("S0_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S0_", printAll, testAll); // Branch not found
+	printf("S0_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObjectBranch(					"S0_", printAll, testAll);
+	// printf("S0_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S0_", printAll, testAll); // Branch not created
 	printf("S0_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(					"S0_", printAll, testAll);
 	printf("S0_: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(				"S0_", printAll, testAll);
 	printf("S0_: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(			"S0_", printAll, testAll);
@@ -686,8 +706,8 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 
 
 	// printf("S99_: readNum(): ---------------------------- %s", printAll ? "\n": ""); readNum(						"S99_", printAll, testAll); // Leaflist
-	printf("S99_: readBObject(): ------------------------ %s", printAll ? "\n": ""); readBObject(					"S99_", printAll, testAll);
-	// printf("S99_: readBObjectDummy(): ------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S99_", printAll, testAll); // Branch not found
+	printf("S99_: readBObject(): ------------------------ %s", printAll ? "\n": ""); readBObjectBranch(					"S99_", printAll, testAll);
+	printf("S99_: readBObjectDummy(): ------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S99_", printAll, testAll);
 	printf("S99_: readBStar(): -------------------------- %s", printAll ? "\n": ""); readBStar(					"S99_", printAll, testAll);
 	printf("S99_: readVectorBValue(): ------------------- %s", printAll ? "\n": ""); readVectorBValue(				"S99_", printAll, testAll);
 	printf("S99_: readVectorStarBValue(): --------------- %s", printAll ? "\n": ""); readVectorStarBValue(			"S99_", printAll, testAll);
@@ -703,8 +723,8 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 	printf("S99_: readBClonesArrayDummyArray(): --------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(	"S99_", printAll, testAll);
 
 	// printf("S101_: readNum(): --------------------------- %s", printAll ? "\n": ""); readNum(						"S101_", printAll, testAll); // Leaflist
-	printf("S101_: readBObject(): ----------------------- %s", printAll ? "\n": ""); readBObject(					"S101_", printAll, testAll);
-	// printf("S101_: readBObjectDummy(): ------------------ %s", printAll ? "\n": ""); readBObjectDummy(				"S101_", printAll, testAll); // Branch not found
+	printf("S101_: readBObject(): ----------------------- %s", printAll ? "\n": ""); readBObjectBranch(					"S101_", printAll, testAll);
+	printf("S101_: readBObjectDummy(): ------------------ %s", printAll ? "\n": ""); readBObjectDummy(				"S101_", printAll, testAll);
 	printf("S101_: readBStar(): ------------------------- %s", printAll ? "\n": ""); readBStar(					"S101_", printAll, testAll);
 	// printf("S101_: readVectorBValue(): ------------------ %s", printAll ? "\n": ""); readVectorBValue(				"S101_", printAll, testAll); // Branch not created
 	// printf("S101_: readVectorStarBValue(): -------------- %s", printAll ? "\n": ""); readVectorStarBValue(			"S101_", printAll, testAll); // Branch not created
