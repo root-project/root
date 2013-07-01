@@ -50,36 +50,45 @@ void makeTree(){
 	myTree->Branch("A101.",	"A", 	&myObject0,	32000, 101);
 
 	myTree->Branch("S0_num",			&myObject0.num,	32000, 0);
+	myTree->Branch("S1_num",			&myObject0.num,	32000, 1);
 	myTree->Branch("S99_num",			&myObject0.num,	32000, 99);
 	myTree->Branch("S101_num",			&myObject0.num,	32000, 101);
 
 	myTree->Branch("S0_vectorB",		&myObject0.vectorB,	32000, 0);
+	myTree->Branch("S1_vectorB",		&myObject0.vectorB,	32000, 1);
 	myTree->Branch("S99_vectorB",		&myObject0.vectorB,	32000, 99);
 	// myTree->Branch("S101_vectorB",		&myObject0.vectorB,	32000, 101); // Breaks Fill()
 
 	myTree->Branch("S0_vectorBStar",	&myObject0.vectorBStar,	32000, 0);
+	myTree->Branch("S1_vectorBStar",	&myObject0.vectorBStar,	32000, 1);
 	myTree->Branch("S99_vectorBStar",	&myObject0.vectorBStar,	32000, 99);
 	// myTree->Branch("S101_vectorBStar",	&myObject0.vectorBStar,	32000, 101); // Breaks Fill()
 
 	myTree->Branch("S0_vectorStarB",	&myObject0.vectorStarB,	32000, 0);
+	myTree->Branch("S1_vectorStarB",	&myObject0.vectorStarB,	32000, 1);
 	myTree->Branch("S99_vectorStarB",	&myObject0.vectorStarB,	32000, 99);
 	// myTree->Branch("S101_vectorStarB",	&myObject0.vectorStarB,	32000, 101); // Breaks Fill()
 
 	myTree->Branch("S0_BStar",			&myObject0.BStar,	32000, 0);
+	myTree->Branch("S1_BStar",			&myObject0.BStar,	32000, 1);
 	myTree->Branch("S99_BStar",			&myObject0.BStar,	32000, 99);
 	myTree->Branch("S101_BStar",			&myObject0.BStar,	32000, 101);
 
 	// myTree->Branch("S0_BArray[12]",		"B[12]",		&myObject0.BArray,	32000, 0); // Will not get made
+	// myTree->Branch(199_BArray[12]",	"B[12]",		&myObject0.BArray,	32000, 99); // Will not get made
 	// myTree->Branch("S99_BArray[12]",	"B[12]",		&myObject0.BArray,	32000, 99); // Will not get made
 
 	// myTree->Branch("S0_BStarArray",		&myObject0.BStarArray,	32000, 0); // No way of specifying an array
+	// myTree->Branch(199_BStarArray",	&myObject0.BStarArray,	32000, 99); // No way of specifying an array
 	// myTree->Branch("S99_BStarArray",	&myObject0.BStarArray,	32000, 99); // No way of specifying an array
 
 	myTree->Branch("S0_BObject.",		&myObject0.BObject,	32000, 0);
+	myTree->Branch("S1_BObject.",		&myObject0.BObject,	32000, 1);
 	myTree->Branch("S99_BObject.",		&myObject0.BObject,	32000, 99);
 	myTree->Branch("S101_BObject.",		&myObject0.BObject,	32000, 101);
 
 	myTree->Branch("S0_BClonesArray",	&myObject0.BClonesArray,	32000, 0);
+	myTree->Branch("S1_BClonesArray",	&myObject0.BClonesArray,	32000, 1);
 	myTree->Branch("S99_BClonesArray",	&myObject0.BClonesArray,	32000, 99);
 	myTree->Branch("S101_BClonesArray",	&myObject0.BClonesArray,	32000, 101);
 
@@ -703,6 +712,24 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 	// printf("S0_: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(		"S0_", printAll, testAll); // TBranchProxy->Read() fails
 	// printf("S0_: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(		"S0_", printAll, testAll); // Branch not found
 	// printf("S0_: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(	"S0_", printAll, testAll); // Branch not found
+
+
+	// printf("S1_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(						"S1_", printAll, testAll); // Leaflist
+	printf("S1_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObjectBranch(					"S1_", printAll, testAll);
+	printf("S1_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(				"S1_", printAll, testAll);
+	printf("S1_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(					"S1_", printAll, testAll);
+	printf("S1_: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(				"S1_", printAll, testAll);
+	printf("S1_: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(			"S1_", printAll, testAll);
+	printf("S1_: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(			"S1_", printAll, testAll);
+	printf("S1_: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(				"S1_", printAll, testAll);
+	// printf("S1_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(					"S1_", printAll, testAll); // Branch not created
+	// printf("S1_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(				"S1_", printAll, testAll); // Branch not created
+	printf("S1_: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(			"S1_", printAll, testAll);
+	printf("S1_: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(			"S1_", printAll, testAll);
+	printf("S1_: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(		"S1_", printAll, testAll);
+	printf("S1_: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(		"S1_", printAll, testAll);
+	printf("S1_: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(		"S1_", printAll, testAll);
+	printf("S1_: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(	"S1_", printAll, testAll);
 
 
 	// printf("S99_: readNum(): ---------------------------- %s", printAll ? "\n": ""); readNum(						"S99_", printAll, testAll); // Leaflist
