@@ -47,8 +47,9 @@ namespace {
    // Reader interface for STL
    class TSTLReader: public ROOT::TCollectionReaderABC {
    private:
-      Bool_t proxySet = false;
+      Bool_t proxySet;
    public:
+      TSTLReader() : proxySet(false) {}
       ~TSTLReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
          if (!proxy->Read()) return 0;
@@ -90,9 +91,9 @@ namespace {
    class TCollectionLessSTLReader : public ROOT::TCollectionReaderABC {
    private:
       TVirtualCollectionProxy *localCollection;
-      Bool_t proxySet = false;
+      Bool_t proxySet;
    public:
-      TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy) {}
+      TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy), proxySet(false) {}
 
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
          if (!proxy->Read()) return 0;
@@ -154,7 +155,7 @@ namespace {
 
          void *array = (void*)proxy->GetStart();
          Int_t objectSize = proxy->GetClass()->GetClassSize();
-         return (void*)(array + (objectSize * idx));
+         return (void*)((Byte_t*)array + (objectSize * idx));
       }
    };
 
@@ -164,7 +165,7 @@ namespace {
    public:
       TArrayParameterSizeReader(TTreeReaderValue<Int_t> *indexReaderArg) : indexReader(indexReaderArg) {}
 
-      virtual size_t GetSize(ROOT::TBranchProxy* proxy){ return **indexReader; }
+      virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){ return **indexReader; }
    };
 
    class TArrayFixedSizeReader : public TObjectArrayReader {
@@ -174,7 +175,7 @@ namespace {
    public:
       TArrayFixedSizeReader(Int_t sizeArg) : size(sizeArg) {}
 
-      virtual size_t GetSize(ROOT::TBranchProxy* proxy) { return size; }
+      virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/) { return size; }
    };
 
    class TBasicTypeArrayReader : public ROOT::TCollectionReaderABC {
@@ -191,18 +192,18 @@ namespace {
       }
 
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx){
-         return GetCP(proxy)->At(idx) + proxy->GetOffset();
+         return (Byte_t*)GetCP(proxy)->At(idx) + proxy->GetOffset();
       }
    };
 
    class TBasicTypeClonesReader : public TClonesReader {
    private:
-      Int_t offset = 0;
+      Int_t offset;
    public:
       TBasicTypeClonesReader(Int_t offsetArg) : offset(offsetArg) {}
 
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx){
-         return (void*)GetCA(proxy)->At(idx) + offset;
+         return (Byte_t*)GetCA(proxy)->At(idx) + offset;
       }
    };
 }
@@ -324,10 +325,10 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
       Int_t id = branchElement->GetID();
 
       if (id >= 0){ // Not root node?
-         Int_t offset = streamerInfo->GetOffsets()[id];
+         // Int_t offset = streamerInfo->GetOffsets()[id];
          TStreamerElement *element = (TStreamerElement*)streamerInfo->GetElements()->At(id);
-         Bool_t isPointer = element->IsaPointer();
-         TClass *classPointer = element->GetClassPointer();
+         // Bool_t isPointer = element->IsaPointer();
+         // TClass *classPointer = element->GetClassPointer();
 
          if (element->IsA() == TStreamerSTL::Class()){
             fImpl = new TSTLReader();
@@ -486,9 +487,9 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
          Int_t id = brElement->GetID();
 
          if (id >= 0){
-            Int_t offset = streamerInfo->GetOffsets()[id];
+            // Int_t offset = streamerInfo->GetOffsets()[id];
             TStreamerElement *element = (TStreamerElement*)streamerInfo->GetElements()->At(id);
-            Bool_t isPointer = element->IsaPointer();
+            // Bool_t isPointer = element->IsaPointer();
 
             dict = brElement->GetCurrentClass();
             contentTypeName = brElement->GetTypeName();
