@@ -600,8 +600,8 @@ void TPgSQLStatement::ConvertTimeToUTC(const TString &PQvalue, Int_t& year, Int_
    }
    if (hasZone == kTRUE) {
       // Parse timezone, might look like e.g. +00 or -00:00
-      Int_t hourOffset, minuteOffset;
-      Int_t conversions=sscanf(s_zone->Data(), "%d:%d", &hourOffset, &minuteOffset);
+      Int_t hourOffset, minuteOffset = 0;
+      Int_t conversions=sscanf(s_zone->Data(), "%2d:%2d", &hourOffset, &minuteOffset);
       Int_t secondOffset = hourOffset*3600;
       if (conversions>1) {
          // Use sign from hour also for minute
