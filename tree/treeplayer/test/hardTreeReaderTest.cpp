@@ -47,12 +47,16 @@ void makeTree(){
 	A myObject0 (NUM_CONSTANT);
 
 	struct {
-		Int_t myIntX = 0;
-		Float_t myFloatY = 0.0;
-		Int_t myIntN = MYDOUBLEARRAY_SIZE;
+		Int_t myIntX;
+		Float_t myFloatY;
+		Int_t myIntN;
 		Double_t myDoubleArrayA [MYDOUBLEARRAY_SIZE];
 		Bool_t myBoolArrayB [MYBOOLARRAYB_SIZE];
 	} myLeaves;
+
+	myLeaves.myIntX = 0;
+	myLeaves.myFloatY = 0.0;
+	myLeaves.myIntN = MYDOUBLEARRAY_SIZE;
 
 	myTree->Branch("A0.",	"A", 	&myObject0,		32000, 0);
 	myTree->Branch("A1.",	"A", 	&myObject0,		32000, 1);
@@ -170,7 +174,7 @@ void makeTree(){
 }
 
 void readNum(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -190,7 +194,7 @@ void readNum(const char* branchName = "A99.", Bool_t printOut = true, Bool_t tes
 }
 
 void readBObject(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -210,7 +214,7 @@ void readBObject(const char* branchName = "A99.", Bool_t printOut = true, Bool_t
 }
 
 void readBObjectBranch(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -230,7 +234,7 @@ void readBObjectBranch(const char* branchName = "A99.", Bool_t printOut = true, 
 }
 
 void readBObjectDummy(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -250,7 +254,7 @@ void readBObjectDummy(const char* branchName = "A99.", Bool_t printOut = true, B
 }
 
 void readBStar(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -270,7 +274,7 @@ void readBStar(const char* branchName = "A99.", Bool_t printOut = true, Bool_t t
 }
 
 void readVectorBValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -296,7 +300,7 @@ void readVectorBValue(const char* branchName = "A99.", Bool_t printOut = true, B
 }
 
 void readVectorStarBValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -309,7 +313,7 @@ void readVectorStarBValue(const char* branchName = "A99.", Bool_t printOut = tru
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("vectorB dummies(%i):", myVectorStarB->size());
+		if (printOut) printf("vectorB dummies(%lu):", myVectorStarB->size());
 
 		for (int j = 0; j < LIST_ENTRIES; ++j){
 			if (testValues && myVectorStarB->at(j).dummy != i * j * MULTIPLIER_VECTOR_STAR_B) success = false;
@@ -322,7 +326,7 @@ void readVectorStarBValue(const char* branchName = "A99.", Bool_t printOut = tru
 }
 
 void readVectorStarBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -335,7 +339,7 @@ void readVectorStarBArray(const char* branchName = "A99.", Bool_t printOut = tru
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("vectorB dummies(%i):", myVectorStarB.GetSize());
+		if (printOut) printf("vectorB dummies(%lu):", myVectorStarB.GetSize());
 
 		for (int j = 0; j < LIST_ENTRIES; ++j){
 			if (testValues && myVectorStarB.At(j).dummy != i * j * MULTIPLIER_VECTOR_STAR_B) success = false;
@@ -348,7 +352,7 @@ void readVectorStarBArray(const char* branchName = "A99.", Bool_t printOut = tru
 }
 
 void readVectorBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -361,9 +365,9 @@ void readVectorBArray(const char* branchName = "A99.", Bool_t printOut = true, B
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("vectorB dummies(%i):", myVectorB.GetSize());
+		if (printOut) printf("vectorB dummies(%lu):", myVectorB.GetSize());
 
-		for (int j = 0; j < LIST_ENTRIES && j < myVectorB.GetSize(); ++j){
+		for (int j = 0; j < LIST_ENTRIES && j < (int)myVectorB.GetSize(); ++j){
 			if (testValues && myVectorB.At(j).dummy != i * j * MULTIPLIER_VECTOR_B) success = false;
 			if (printOut) printf(" %i", myVectorB.At(j).dummy);
 		}
@@ -374,7 +378,7 @@ void readVectorBArray(const char* branchName = "A99.", Bool_t printOut = true, B
 }
 
 void readBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -387,7 +391,7 @@ void readBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t 
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("BArray dummies(%i):", myBArray.GetSize());
+		if (printOut) printf("BArray dummies(%lu):", myBArray.GetSize());
 
 		for (int j = 0; j < LIST_ENTRIES; ++j){
 			if (testValues && myBArray.At(j).dummy != i * j * MULTIPLIER_B_ARRAY) success = false;
@@ -400,7 +404,7 @@ void readBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t 
 }
 
 void readBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -413,9 +417,9 @@ void readBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Boo
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("BStarArray dummies(%i):", myBStarArray.GetSize());
+		if (printOut) printf("BStarArray dummies(%lu):", myBStarArray.GetSize());
 
-		for (int j = 0; j < myBStarArray.GetSize(); ++j){
+		for (int j = 0; j < (int)myBStarArray.GetSize(); ++j){
 			if (testValues && myBStarArray.At(j).dummy != i * j * MULTIPLIER_B_STAR_ARRAY) success = false;
 			if (printOut) printf(" %i", myBStarArray.At(j).dummy);
 		}
@@ -426,7 +430,7 @@ void readBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Boo
 }
 
 void readVectorBStarValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -439,9 +443,9 @@ void readVectorBStarValue(const char* branchName = "A99.", Bool_t printOut = tru
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("vectorBStar dummies(%i):", myVectorBStar->size());
+		if (printOut) printf("vectorBStar dummies(%lu):", myVectorBStar->size());
 
-		for (int j = 0; j < LIST_ENTRIES && j < myVectorBStar->size(); ++j){
+		for (int j = 0; j < LIST_ENTRIES && j < (int)myVectorBStar->size(); ++j){
 			if (testValues && myVectorBStar->at(j)->dummy != i * j * MULTIPLIER_VECTOR_B_STAR) success = false;
 			if (printOut) printf(" %i", myVectorBStar->at(j)->dummy);
 		}
@@ -452,7 +456,7 @@ void readVectorBStarValue(const char* branchName = "A99.", Bool_t printOut = tru
 }
 
 void readVectorBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -465,9 +469,9 @@ void readVectorBStarArray(const char* branchName = "A99.", Bool_t printOut = tru
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("vectorBStar dummies(%i):", myVectorBStar.GetSize());
+		if (printOut) printf("vectorBStar dummies(%lu):", myVectorBStar.GetSize());
 
-		for (int j = 0; j < LIST_ENTRIES && myVectorBStar.GetSize(); ++j){
+		for (int j = 0; j < LIST_ENTRIES && (int)myVectorBStar.GetSize(); ++j){
 			if (testValues && myVectorBStar.At(j).dummy != i * j * MULTIPLIER_VECTOR_B_STAR) success = false;
 			if (printOut) printf(" %i", myVectorBStar.At(j).dummy);
 		}
@@ -478,7 +482,7 @@ void readVectorBStarArray(const char* branchName = "A99.", Bool_t printOut = tru
 }
 
 void readBClonesArrayValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -504,7 +508,7 @@ void readBClonesArrayValue(const char* branchName = "A99.", Bool_t printOut = tr
 }
 
 void readBClonesArrayArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -517,9 +521,9 @@ void readBClonesArrayArray(const char* branchName = "A99.", Bool_t printOut = tr
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("BClonesArray dummies(%i):", myBClonesArray.GetSize());
+		if (printOut) printf("BClonesArray dummies(%lu):", myBClonesArray.GetSize());
 
-		for (int j = 0; j < LIST_ENTRIES && j < myBClonesArray.GetSize(); ++j){
+		for (int j = 0; j < LIST_ENTRIES && j < (int)myBClonesArray.GetSize(); ++j){
 			if (testValues && myBClonesArray.At(j).dummy != i * j * MULTIPLIER_B_CLONES_ARRAY) success = false;
 			if (printOut) printf(" %i", myBClonesArray.At(j).dummy);
 		}
@@ -530,7 +534,7 @@ void readBClonesArrayArray(const char* branchName = "A99.", Bool_t printOut = tr
 }
 
 void readVectorBDummyArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -543,9 +547,9 @@ void readVectorBDummyArray(const char* branchName = "A99.", Bool_t printOut = tr
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("vectorB.dummies(%i):", myVectorBDummyArray.GetSize());
+		if (printOut) printf("vectorB.dummies(%lu):", myVectorBDummyArray.GetSize());
 
-		for (int j = 0; j < LIST_ENTRIES && j < myVectorBDummyArray.GetSize(); ++j){
+		for (int j = 0; j < LIST_ENTRIES && j < (int)myVectorBDummyArray.GetSize(); ++j){
 			if (testValues && myVectorBDummyArray.At(j) != i * j * MULTIPLIER_VECTOR_B) success = false;
 			if (printOut) printf(" %i", myVectorBDummyArray.At(j));
 		}
@@ -556,7 +560,7 @@ void readVectorBDummyArray(const char* branchName = "A99.", Bool_t printOut = tr
 }
 
 void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = branchName;
@@ -569,9 +573,9 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("BClonesArray.dummies(%i):", myBClonesArrayDummy.GetSize());
+		if (printOut) printf("BClonesArray.dummies(%lu):", myBClonesArrayDummy.GetSize());
 
-		for (int j = 0; j < LIST_ENTRIES && j < myBClonesArrayDummy.GetSize(); ++j){
+		for (int j = 0; j < LIST_ENTRIES && j < (int)myBClonesArrayDummy.GetSize(); ++j){
 			if (testValues && myBClonesArrayDummy.At(j) != i * j * MULTIPLIER_B_CLONES_ARRAY) success = false;
 			if (printOut) printf(" %i", myBClonesArrayDummy.At(j));
 		}
@@ -582,7 +586,7 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
 }
 
 // void readArrayOfBs(const char *branchName, const char *subBranchPostFix, Bool_t printOut = true, Bool_t testValues = false){
-// 	TFile *myFile = TFile::Open("HardTreeFile.root");
+//  TFile::Open("HardTreeFile.root");
 // 	TTreeReader myTreeReader ("HardTree");
 
 // 	Int_t multiplier;
@@ -595,7 +599,7 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
 
 // 	Bool_t successmyArrayOfBsRisValid();
 // 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
-// 		if (printOut) printf("%s(%i):", subBranchPostFix, myArrayOfBs.GetSize());
+// 		if (printOut) printf("%s(%lu):", subBranchPostFix, myArrayOfBs.GetSize());
 
 // 		for (int j = 0; j < LIST_ENTRIES && i < myArrayOfBs.GetSize(); ++j){
 // 			if (testValues && myArrayOfBs.At(j) != i * j * MULTIPLIER_B_CLONES_ARRAY) success = false;
@@ -608,7 +612,7 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
 // }
 
 // void readAObject(const char* branchName = "A99."){
-// 	TFile *myFile = TFile::Open("HardTreeFile.root");
+//  TFile::Open("HardTreeFile.root");
 // 	TTreeReader myTreeReader ("HardTree");
 
 // 	TTreeReaderValue<A> myAObject (myTreeReader, branchName);
@@ -620,7 +624,7 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
 // }
 
 void readBranchVectorBValue(const char* splitLevel, Bool_t printOut = true, Bool_t testValues = false){
-	TFile *myFile = TFile::Open("HardTreeFile.root");
+	TFile::Open("HardTreeFile.root");
 	TTreeReader myTreeReader ("HardTree");
 
 	TString finalBranchName = "vectorB_";
@@ -635,7 +639,7 @@ void readBranchVectorBValue(const char* splitLevel, Bool_t printOut = true, Bool
 		read = true;
 		if (printOut) printf("vectorB dummies:");
 
-		for (int j = 0; j < myObject->size(); ++j){
+		for (int j = 0; j < (int)myObject->size(); ++j){
 			if (testValues && myObject->at(j).dummy != i * j * MULTIPLIER_VECTOR_B) success = false;
 			if (printOut) printf(" %i", myObject->at(j).dummy);
 		}
