@@ -110,7 +110,7 @@ following article:
     generator", ACM Trans. on Modeling and Computer Simulations, 8, 1,
     (1998), 3-20.
 
-**`TRandom3** is the recommended random number generator, and it is
+**`TRandom3`** is the recommended random number generator, and it is
 used by default in ROOT using the global ***`gRandom`*** object (see
 chapter gRandom).
 
@@ -389,9 +389,9 @@ are:
 -   `GenVector`: physics and geometry vectors for 3 and 4 dimensions
     with their transformations (rotations and boost).
 
--   Generic (`ROOT::Math::IFunction)` and parametric
-    (**`ROOT::Math::IParamFunction`) function interfaces for one and
-    multi dimensions.**
+-   Generic (`ROOT::Math::IFunction`) and parametric
+    (**`ROOT::Math::IParamFunction`**) function interfaces for one and
+    multi dimensions.
 
 A detailed description for all `MathCore` classes is available in the
 [online reference documentation](online reference documentation). The
@@ -899,9 +899,8 @@ objects).
    p3 = v1 + p1;    // p3 is based on the same coordinate system as v1
    p3 = p1 - v1;
    p3 = v1 - p1;
-   v2 = p1 - p2;    // difference between points returns a 
-                    // vector v2 based on the
-   //same coordinate system as p1
+   v2 = p1 - p2;    // difference between points returns a vector v2
+                    // based on the same coordinate system as p1
 ```
 
 Note that the addition between two points is **NOT** possible and the
@@ -1028,7 +1027,7 @@ vector will not compile.
    v1.SetX(1);  //OK setting x for a cartesian vector
    PtEtaPhiEVector v2;
    v2.SetX(1);  //ERROR: cannot set X for a non-cartesian 
-   //vector. Method will not compile.
+                //vector. Method will not compile.
    v2.SetR(1)   // OK setting Pt for a  PtEtaPhiEVector vector
 ```
 
@@ -1085,8 +1084,7 @@ float, int, etc.) .
    v.Beta(); //return beta and gamma value (vector must
    v.Gamma() // be time-like otherwise result is meaningless)
    XYZVector b = v.BoostToCM(); //return boost vector which will bring
-                                //the Vector
-   //in its mas frame (P=0)
+                                //the Vector in its mas frame (P=0)
 ```
 
 ### Example: Vector Transformations
