@@ -695,6 +695,24 @@ void readLeafFloatY(Bool_t printOut = true, Bool_t testValues = false){
 	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
+void readLeafIntN(Bool_t printOut = true, Bool_t testValues = false){
+	TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TString branchName = "MyLeafList.n";
+
+	TTreeReaderValue<Int_t> myInt (myTreeReader, branchName);
+
+	Bool_t success = true;
+	Bool_t read = false;
+	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
+		if (printOut) printf("MyLeafList.y: %i\n", *myInt);
+	}
+
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
+}
+
 void readTree(){
 	TFile *myFile = TFile::Open("HardTreeFile.root");
 	TTree *myTree = (TTree*)myFile->Get("HardTree");
