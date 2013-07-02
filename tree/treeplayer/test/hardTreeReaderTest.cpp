@@ -23,6 +23,7 @@
 #pragma link C++ class TTreeReaderArray<double>+;
 #pragma link C++ class TTreeReaderArray<B>+;
 #pragma link C++ class TTreeReaderArray<Int_t>+;
+#pragma link C++ class TTreeReaderArray<Bool_t>+;
 #pragma link C++ class std::vector<B*>+;
 #endif
 
@@ -51,8 +52,8 @@ void makeTree(){
 		Float_t myFloatX;
 		Float_t myFloatY;
 		Int_t myIntN;
-		Double_t myDoubleArrayA [MYDOUBLEARRAY_SIZE];
 		Bool_t myBoolArrayB [MYBOOLARRAYB_SIZE];
+		Double_t myDoubleArrayA [MYDOUBLEARRAY_SIZE];
 	} myLeaves;
 
 	myLeaves.myFloatX = 0.0;
@@ -107,7 +108,7 @@ void makeTree(){
 	myTree->Branch("S99_BClonesArray",	&myObject0.BClonesArray,	32000, 99);
 	myTree->Branch("S101_BClonesArray",	&myObject0.BClonesArray,	32000, 101);
 
-	myTree->Branch("MyLeafList",		&myLeaves,	"x:y/F:n/I:a[n]/D:b[12]/O");
+	myTree->Branch("MyLeafList",		&myLeaves,	"x:y/F:n/I:b[12]/O:a[n]/D");
 
 
 	for (int i = 1; i < TREE_ENTRIES + 1; ++i){
@@ -165,7 +166,9 @@ void makeTree(){
 			myLeaves.myDoubleArrayA[j] = myLeaves.myFloatY * j;
 		}
 		for (int j = 0; j < MYBOOLARRAYB_SIZE; ++j){
-			myLeaves.myBoolArrayB[j] = (i + (i * j)) % 2;
+			//myLeaves.myBoolArrayB[j] = (i + (i * j)) % 2;
+			myLeaves.myBoolArrayB[j] = j % 2;
+			//myLeaves.myBoolArrayB[j] = true;
 		}
 
 		printf("Filling tree\n");
@@ -707,7 +710,57 @@ void readLeafIntN(Bool_t printOut = true, Bool_t testValues = false){
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("MyLeafList.y: %i\n", *myInt);
+		if (printOut) printf("MyLeafList.n: %i\n", *myInt);
+	}
+
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
+}
+
+void readLeafDoubleAArray(Bool_t printOut = true, Bool_t testValues = false){
+	TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TString branchName = "MyLeafList.a";
+
+	TTreeReaderArray<Double_t> myDoubles (myTreeReader, branchName);
+
+	Bool_t success = true;
+	Bool_t read = false;
+	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
+		if (printOut) printf("MyLeafList.a(%lu):", myDoubles.GetSize());
+
+		for (int j = 0; j < myDoubles.GetSize(); ++j){
+			if (testValues && fabs(myDoubles.At(j) - (i * j) / 10.0f) > 0.0001f) success = false;
+			if (printOut) printf(" %f", myDoubles.At(j));
+		}
+
+		if (printOut) printf("\n");
+	}
+
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
+}
+
+void readLeafBoolBArray(Bool_t printOut = true, Bool_t testValues = false){
+	TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TString branchName = "MyLeafList.b";
+
+	TTreeReaderArray<Bool_t> myDoubles (myTreeReader, branchName);
+
+	Bool_t success = true;
+	Bool_t read = false;
+	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
+		if (printOut) printf("MyLeafList.b(%lu):", myDoubles.GetSize());
+
+		for (int j = 0; j < myDoubles.GetSize(); ++j){
+			if (testValues && myDoubles.At(j) != j % 2) success = false;
+			if (printOut) printf(" %s", myDoubles.At(j) ? "true" : "false" );
+		}
+
+		if (printOut) printf("\n");
 	}
 
 	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
@@ -845,6 +898,12 @@ void output(Bool_t printAll = false, Bool_t testAll = true){
 	printf("S101_: readBClonesArrayArray(): ------------- %s", printAll ? "\n": ""); readBClonesArrayArray(		"S101_", printAll, testAll);
 	// printf("S101_: readVectorBDummyArray(): ------------- %s", printAll ? "\n": ""); readVectorBDummyArray(		"S101_", printAll, testAll);  // Branch not created
 	printf("S101_: readBClonesArrayDummyArray(): -------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(	"S101_", printAll, testAll);
+
+	printf("readLeafFloatX(): --------------------------- %s", printAll ? "\n": ""); readLeafFloatX(		printAll, testAll);
+	printf("readLeafFloatY(): --------------------------- %s", printAll ? "\n": ""); readLeafFloatY(		printAll, testAll);
+	printf("readLeafIntN(): ----------------------------- %s", printAll ? "\n": ""); readLeafIntN(			printAll, testAll);
+	printf("readLeafDoubleAArray(): --------------------- %s", printAll ? "\n": ""); readLeafDoubleAArray(	printAll, testAll);
+	printf("readLeafBoolBArray(): ----------------------- %s", printAll ? "\n": ""); readLeafBoolBArray(	printAll, testAll);
 }
 
 void testAll(){

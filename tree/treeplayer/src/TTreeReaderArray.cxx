@@ -23,6 +23,7 @@
 #include "TStreamerElement.h"
 #include "TTreeReader.h"
 #include "TGenCollectionProxy.h"
+#include "TRegexp.h"
 
 // pin vtable
 ROOT::TCollectionReaderABC::~TCollectionReaderABC() {}
@@ -206,6 +207,40 @@ namespace {
          return (Byte_t*)GetCA(proxy)->At(idx) + offset;
       }
    };
+
+   class TLeafReader : public ROOT::TCollectionReaderABC {
+   private:
+      ROOT::TTreeReaderValueBase *valueReader;
+   public:
+      TLeafReader(ROOT::TTreeReaderValueBase *valueReaderArg) : valueReader(valueReaderArg) {}
+
+      virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){
+         return valueReader->GetLeaf()->GetLen();
+      }
+
+      virtual void* At(ROOT::TBranchProxy* /*proxy*/, size_t idx){
+         void *address = valueReader->GetAddress();
+         Int_t offset = valueReader->GetLeaf()->GetLenType();
+         return (Byte_t*)address + (offset * idx);
+      }
+
+   protected:
+      void ProxyRead(){
+         valueReader->ProxyRead();
+      }
+   };
+
+   class TLeafParameterSizeReader : public TLeafReader {
+   private:
+      TLeaf *sizeReader;
+   public:
+      TLeafParameterSizeReader(TLeaf *sizeReaderArg, ROOT::TTreeReaderValueBase *valueReaderArg) : sizeReader(sizeReaderArg), TLeafReader(valueReaderArg) {}
+
+      virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){
+         ProxyRead();
+         return *(Int_t*)sizeReader->GetValuePointer();
+      }
+   };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -263,45 +298,79 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
       return;
    }
 
-   TBranch* branch = fTreeReader->GetTree()->GetBranch(fBranchName);
-   if (!branch) {
-      Error("CreateContentProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
-      fProxy = 0;
-      return;
-   }
 
    TDictionary* branchActualType = 0;
-   TString branchActualTypeName;
-   const char* nonCollTypeName = GetBranchContentDataType(branch, branchActualTypeName, branchActualType);
-   if (nonCollTypeName) {
-      Error("CreateContentProxy()", "The branch %s contains data of type %s, which should be accessed through a TTreeReaderValue< %s >.",
-            fBranchName.Data(), nonCollTypeName, nonCollTypeName);
-      fProxy = 0;
-      return;
-   }
-   if (!branchActualType) {
-      if (branchActualTypeName.IsNull()) {
-         Error("CreateContentProxy()", "Cannot determine the type contained in the collection of branch %s. That's weird - please report!",
-               fBranchName.Data());
-      } else {
-         Error("CreateContentProxy()", "The branch %s contains data of type %s, which does not have a dictionary.",
-               fBranchName.Data(), branchActualTypeName.Data());
+   TBranch* branch = fTreeReader->GetTree()->GetBranch(fBranchName);
+   TLeaf *myLeaf = NULL;
+   if (!branch) {
+      if (fBranchName.Contains(".")){
+         TRegexp leafNameExpression ("\\.[a-zA-Z0-9]+$");
+         TString leafName (fBranchName(leafNameExpression));
+         TString branchName = fBranchName(0, fBranchName.Length() - leafName.Length());
+         branch = fTreeReader->GetTree()->GetBranch(branchName);
+         if (!branch){
+            Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+            fProxy = 0;
+            return;
+         }
+         else {
+            myLeaf = branch->GetLeaf(TString(leafName(1, leafName.Length())));
+            if (!myLeaf){
+               Error("CreateProxy()", "The tree does not have a branch, nor a sub-branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+            }
+            else {
+               TDictionary *tempDict = TDictionary::GetDictionary(myLeaf->GetTypeName());
+               if (tempDict->IsA() == TDataType::Class() && TDictionary::GetDictionary(((TDataType*)tempDict)->GetTypeName()) == fDict){
+                  //fLeafOffset = myLeaf->GetOffset() / 4;
+                  branchActualType = fDict;
+                  fLeaf = myLeaf;
+               }
+               else {
+                  Error("CreateProxy()", "Leaf of type %s cannot be read by TTreeReaderValue<%s>.", myLeaf->GetTypeName(), fDict->GetName());
+               }
+            }
+         }
       }
-      fProxy = 0;
-      return;
+      else {
+         Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+         fProxy = 0;
+         return;
+      }
    }
 
-   if (fDict != branchActualType) {
-      Error("CreateContentProxy()", "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderArray<%s>",
-            fBranchName.Data(), branchActualType->GetName(), fDict->GetName());
-
-      // Update named proxy's dictionary
-      if (namedProxy && !namedProxy->GetContentDict()) {
-         namedProxy->SetContentDict(fDict);
+   if (!myLeaf){
+      TString branchActualTypeName;
+      const char* nonCollTypeName = GetBranchContentDataType(branch, branchActualTypeName, branchActualType);
+      if (nonCollTypeName) {
+         Error("CreateContentProxy()", "The branch %s contains data of type %s, which should be accessed through a TTreeReaderValue< %s >.",
+               fBranchName.Data(), nonCollTypeName, nonCollTypeName);
+         fProxy = 0;
+         return;
+      }
+      if (!branchActualType) {
+         if (branchActualTypeName.IsNull()) {
+            Error("CreateContentProxy()", "Cannot determine the type contained in the collection of branch %s. That's weird - please report!",
+                  fBranchName.Data());
+         } else {
+            Error("CreateContentProxy()", "The branch %s contains data of type %s, which does not have a dictionary.",
+                  fBranchName.Data(), branchActualTypeName.Data());
+         }
+         fProxy = 0;
+         return;
       }
 
-      // fProxy = 0;
-      // return;
+      if (fDict != branchActualType) {
+         Error("CreateContentProxy()", "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderArray<%s>",
+               fBranchName.Data(), branchActualType->GetName(), fDict->GetName());
+
+         // Update named proxy's dictionary
+         if (namedProxy && !namedProxy->GetContentDict()) {
+            namedProxy->SetContentDict(fDict);
+         }
+
+         // fProxy = 0;
+         // return;
+      }
    }
 
    // Update named proxy's dictionary
@@ -318,7 +387,15 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
    // A proxy for branch must not have been created before (i.e. check
    // fProxies before calling this function!)
 
-   if (branch->IsA() == TBranchElement::Class()) {
+   if (myLeaf){
+      if (!myLeaf->GetLeafCount()){
+         fImpl = new TLeafReader(this);
+      }
+      else {
+         fImpl = new TLeafParameterSizeReader(myLeaf->GetLeafCount(), this);
+      }
+   }
+   else if (branch->IsA() == TBranchElement::Class()) {
       TBranchElement* branchElement = ((TBranchElement*)branch);
 
       TStreamerInfo *streamerInfo = branchElement->GetInfo();
@@ -365,16 +442,16 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
             fImpl = new TCollectionLessSTLReader(branchElement->GetClass()->GetCollectionProxy());
          }
       }
-   }  if (branch->IsA() == TBranch::Class()) {
+   } else if (branch->IsA() == TBranch::Class()) {
       printf("TBranch\n"); // TODO: Remove (necessary because of gdb bug)
-   }  if (branch->IsA() == TBranchClones::Class()) {
+   } else if (branch->IsA() == TBranchClones::Class()) {
       printf("TBranchClones\n"); // TODO: Remove (necessary because of gdb bug)
-   }  if (branch->IsA() == TBranchObject::Class()) {
+   } else if (branch->IsA() == TBranchObject::Class()) {
       printf("TBranchObject\n"); // TODO: Remove (necessary because of gdb bug)
-   }  if (branch->IsA() == TBranchSTL::Class()) {
+   } else if (branch->IsA() == TBranchSTL::Class()) {
       printf("TBranchSTL\n"); // TODO: Remove (necessary because of gdb bug)
       fImpl = new TSTLReader();
-   }  if (branch->IsA() == TBranchRef::Class()) {
+   } else if (branch->IsA() == TBranchRef::Class()) {
       printf("TBranchRef\n"); // TODO: Remove (necessary because of gdb bug)
    }
 

@@ -75,14 +75,7 @@ namespace ROOT {
       ESetupStatus GetSetupStatus() const { return fSetupStatus; }
       EReadStatus GetReadStatus() const { return fReadStatus; }
 
-   protected:
-      TTreeReaderValueBase(TTreeReader* reader = 0, const char* branchname = 0, TDictionary* dict = 0);
-
-      virtual ~TTreeReaderValueBase();
-
-      virtual void CreateProxy();
-      const char* GetBranchDataType(TBranch* branch,
-                                    TDictionary* &dict) const;
+      TLeaf* GetLeaf() const { return fLeaf; }
 
       void* GetAddress() {
          if (ProxyRead() != kReadSuccess) return 0;
@@ -94,6 +87,16 @@ namespace ROOT {
          }
          return fProxy ? (Byte_t*)fProxy->GetWhere() - fLeafOffset : 0;
       }
+      
+   protected:
+      TTreeReaderValueBase(TTreeReader* reader = 0, const char* branchname = 0, TDictionary* dict = 0);
+
+      virtual ~TTreeReaderValueBase();
+
+      virtual void CreateProxy();
+      const char* GetBranchDataType(TBranch* branch,
+                                    TDictionary* &dict) const;
+
       ROOT::TBranchProxy* GetProxy() const { return fProxy; }
 
       void MarkTreeReaderUnavailable() { fTreeReader = 0; }
