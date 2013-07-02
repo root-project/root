@@ -206,9 +206,9 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
    dict = 0;
    if (branch->IsA() == TBranchElement::Class()) {
       TBranchElement* brElement = (TBranchElement*)branch;
-      if (brElement->GetType() == TBranchElement::kRootNode || 
+      if (brElement->GetType() == TBranchElement::kSTLNode || 
             brElement->GetType() == TBranchElement::kLeafNode || 
-            brElement->GetType() == TBranchElement::kBranchNode) {
+            brElement->GetType() == TBranchElement::kObjectNode) {
          dict = TDictionary::GetDictionary(brElement->GetTypeName());
          if (dict && dict->IsA() == TDataType::Class()){
             dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
