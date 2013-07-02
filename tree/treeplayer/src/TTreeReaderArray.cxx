@@ -234,7 +234,7 @@ namespace {
    private:
       TLeaf *sizeReader;
    public:
-      TLeafParameterSizeReader(TLeaf *sizeReaderArg, ROOT::TTreeReaderValueBase *valueReaderArg) : sizeReader(sizeReaderArg), TLeafReader(valueReaderArg) {}
+      TLeafParameterSizeReader(TLeaf *sizeReaderArg, ROOT::TTreeReaderValueBase *valueReaderArg) : TLeafReader(valueReaderArg), sizeReader(sizeReaderArg) {}
 
       virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){
          ProxyRead();
