@@ -480,9 +480,9 @@ XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 
    retunit = GetScale(lunit);
 
-   xline = TString::Format("%s*%s", xpos.Data(), retunit.Data());
-   yline = TString::Format("%s*%s", ypos.Data(), retunit.Data());
-   zline = TString::Format("%s*%s", zpos.Data(), retunit.Data());
+   xline = TString::Format("(%s)*%s", xpos.Data(), retunit.Data());
+   yline = TString::Format("(%s)*%s", ypos.Data(), retunit.Data());
+   zline = TString::Format("(%s)*%s", zpos.Data(), retunit.Data());
 
    TGeoTranslation* pos = new TGeoTranslation(Evaluate(xline),
                                               Evaluate(yline),
@@ -541,9 +541,9 @@ XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 
    retunit = GetScale(aunit);
 
-   xline = TString::Format("%s*%s", xpos.Data(), retunit.Data());
-   yline = TString::Format("%s*%s", ypos.Data(), retunit.Data());
-   zline = TString::Format("%s*%s", zpos.Data(), retunit.Data());
+   xline = TString::Format("(%s)*%s", xpos.Data(), retunit.Data());
+   yline = TString::Format("(%s)*%s", ypos.Data(), retunit.Data());
+   zline = TString::Format("(%s)*%s", zpos.Data(), retunit.Data());
 
    TGeoRotation* rot = new TGeoRotation();
 
@@ -1284,8 +1284,8 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          retunit = GetScale(lunit);
 
          numberline = TString::Format("%s", number.Data());
-         widthline = TString::Format("%s*%s", width.Data(), retunit.Data());
-         offsetline = TString::Format("%s*%s", offset.Data(), retunit.Data());
+         widthline = TString::Format("(%s)*%s", width.Data(), retunit.Data());
+         offsetline = TString::Format("(%s)*%s", offset.Data(), retunit.Data());
 
          fVolID = fVolID + 1;
          Double_t xlo, xhi;
@@ -1645,9 +1645,9 @@ XMLNodePointer_t TGDMLParse::Box(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
 
    retunit = GetScale(lunit);
 
-   xline = TString::Format("%s*%s", xpos.Data(), retunit.Data());
-   yline = TString::Format("%s*%s", ypos.Data(), retunit.Data());
-   zline = TString::Format("%s*%s", zpos.Data(), retunit.Data());
+   xline = TString::Format("(%s)*%s", xpos.Data(), retunit.Data());
+   yline = TString::Format("(%s)*%s", ypos.Data(), retunit.Data());
+   zline = TString::Format("(%s)*%s", zpos.Data(), retunit.Data());
 
 
    TGeoBBox* box = new TGeoBBox(NameShort(name), Evaluate(xline) / 2,
@@ -1718,9 +1718,9 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, 
 
    retunit = GetScale(lunit);
 
-   axline = TString::Format("%s*%s", ax.Data(), retunit.Data());
-   byline = TString::Format("%s*%s", by.Data(), retunit.Data());
-   czline = TString::Format("%s*%s", cz.Data(), retunit.Data());
+   axline = TString::Format("(%s)*%s", ax.Data(), retunit.Data());
+   byline = TString::Format("(%s)*%s", by.Data(), retunit.Data());
+   czline = TString::Format("(%s)*%s", cz.Data(), retunit.Data());
    Double_t radius = Evaluate(czline);
    Double_t dx = Evaluate(axline);
    Double_t dy = Evaluate(byline);
@@ -1732,13 +1732,13 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, 
    if (zcut1 == "") {
       z1 = -radius;
    } else {
-      zcut1line = TString::Format("%s*%s", zcut1.Data(), retunit.Data());
+      zcut1line = TString::Format("(%s)*%s", zcut1.Data(), retunit.Data());
       z1 = Evaluate(zcut1line);
    }
    if (zcut2 == "") {
 	   z2 = radius;
    } else {
-	   zcut2line = TString::Format("%s*%s", zcut2.Data(), retunit.Data());
+	   zcut2line = TString::Format("(%s)*%s", zcut2.Data(), retunit.Data());
 	   z2 = Evaluate(zcut2line);
    }
 
@@ -1815,8 +1815,8 @@ XMLNodePointer_t TGDMLParse::ElCone(TXMLEngine* gdml, XMLNodePointer_t node, XML
    //dxline and dyline are without units because they are as a ration
    dxline = TString::Format("%s", dx.Data());
    dyline = TString::Format("%s", dy.Data());
-   zmaxline = TString::Format("%s*%s", zmax.Data(), retunit.Data());
-   zcutline = TString::Format("%s*%s", zcut.Data(), retunit.Data());
+   zmaxline = TString::Format("(%s)*%s", zmax.Data(), retunit.Data());
+   zcutline = TString::Format("(%s)*%s", zcut.Data(), retunit.Data());
 
    Double_t dxratio = Evaluate(dxline);
    Double_t dyratio = Evaluate(dyline);
@@ -1893,9 +1893,9 @@ XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine* gdml, XMLNodePointer_t node,
 
    retunit = GetScale(lunit);
 
-   rloline = TString::Format("%s*%s", rlopos.Data(), retunit.Data());
-   rhiline = TString::Format("%s*%s", rhipos.Data(), retunit.Data());
-   dzline = TString::Format("%s*%s", dzpos.Data(), retunit.Data());
+   rloline = TString::Format("(%s)*%s", rlopos.Data(), retunit.Data());
+   rhiline = TString::Format("(%s)*%s", rhipos.Data(), retunit.Data());
+   dzline = TString::Format("(%s)*%s", dzpos.Data(), retunit.Data());
 
    TGeoParaboloid* paraboloid = new TGeoParaboloid(NameShort(name), Evaluate(rloline),
                                                    Evaluate(rhiline),
@@ -2011,23 +2011,23 @@ XMLNodePointer_t TGDMLParse::Arb8(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 
    retunit = GetScale(lunit);
 
-   v1xline = TString::Format("%s*%s", v1xpos.Data(), retunit.Data());
-   v1yline = TString::Format("%s*%s", v1ypos.Data(), retunit.Data());
-   v2xline = TString::Format("%s*%s", v2xpos.Data(), retunit.Data());
-   v2yline = TString::Format("%s*%s", v2ypos.Data(), retunit.Data());
-   v3xline = TString::Format("%s*%s", v3xpos.Data(), retunit.Data());
-   v3yline = TString::Format("%s*%s", v3ypos.Data(), retunit.Data());
-   v4xline = TString::Format("%s*%s", v4xpos.Data(), retunit.Data());
-   v4yline = TString::Format("%s*%s", v4ypos.Data(), retunit.Data());
-   v5xline = TString::Format("%s*%s", v5xpos.Data(), retunit.Data());
-   v5yline = TString::Format("%s*%s", v5ypos.Data(), retunit.Data());
-   v6xline = TString::Format("%s*%s", v6xpos.Data(), retunit.Data());
-   v6yline = TString::Format("%s*%s", v6ypos.Data(), retunit.Data());
-   v7xline = TString::Format("%s*%s", v7xpos.Data(), retunit.Data());
-   v7yline = TString::Format("%s*%s", v7ypos.Data(), retunit.Data());
-   v8xline = TString::Format("%s*%s", v8xpos.Data(), retunit.Data());
-   v8yline = TString::Format("%s*%s", v8ypos.Data(), retunit.Data());
-   dzline  = TString::Format("%s*%s", dzpos.Data(),  retunit.Data());
+   v1xline = TString::Format("(%s)*%s", v1xpos.Data(), retunit.Data());
+   v1yline = TString::Format("(%s)*%s", v1ypos.Data(), retunit.Data());
+   v2xline = TString::Format("(%s)*%s", v2xpos.Data(), retunit.Data());
+   v2yline = TString::Format("(%s)*%s", v2ypos.Data(), retunit.Data());
+   v3xline = TString::Format("(%s)*%s", v3xpos.Data(), retunit.Data());
+   v3yline = TString::Format("(%s)*%s", v3ypos.Data(), retunit.Data());
+   v4xline = TString::Format("(%s)*%s", v4xpos.Data(), retunit.Data());
+   v4yline = TString::Format("(%s)*%s", v4ypos.Data(), retunit.Data());
+   v5xline = TString::Format("(%s)*%s", v5xpos.Data(), retunit.Data());
+   v5yline = TString::Format("(%s)*%s", v5ypos.Data(), retunit.Data());
+   v6xline = TString::Format("(%s)*%s", v6xpos.Data(), retunit.Data());
+   v6yline = TString::Format("(%s)*%s", v6ypos.Data(), retunit.Data());
+   v7xline = TString::Format("(%s)*%s", v7xpos.Data(), retunit.Data());
+   v7yline = TString::Format("(%s)*%s", v7ypos.Data(), retunit.Data());
+   v8xline = TString::Format("(%s)*%s", v8xpos.Data(), retunit.Data());
+   v8yline = TString::Format("(%s)*%s", v8ypos.Data(), retunit.Data());
+   dzline  = TString::Format("(%s)*%s", dzpos.Data(),  retunit.Data());
 
 
    TGeoArb8* arb8 = new TGeoArb8(NameShort(name), Evaluate(dzline));
@@ -2108,11 +2108,11 @@ XMLNodePointer_t TGDMLParse::Tube(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    retlunit = GetScale(lunit);
    retaunit = GetScale(aunit);
 
-   rminline = TString::Format("%s*%s", rmin.Data(), retlunit.Data());
-   rmaxline = TString::Format("%s*%s", rmax.Data(), retlunit.Data());
-   zline = TString::Format("%s*%s", z.Data(), retlunit.Data());
-   startphiline = TString::Format("%s*%s", startphi.Data(), retaunit.Data());
-   deltaphiline = TString::Format("(%s*%s) + %s", deltaphi.Data(), retaunit.Data(), startphiline.Data());
+   rminline = TString::Format("(%s)*%s", rmin.Data(), retlunit.Data());
+   rmaxline = TString::Format("(%s)*%s", rmax.Data(), retlunit.Data());
+   zline = TString::Format("(%s)*%s", z.Data(), retlunit.Data());
+   startphiline = TString::Format("(%s)*%s", startphi.Data(), retaunit.Data());
+   deltaphiline = TString::Format("((%s)*%s) + %s", deltaphi.Data(), retaunit.Data(), startphiline.Data());
 
    TGeoTubeSeg* tube = new TGeoTubeSeg(NameShort(name), Evaluate(rminline),
                                        Evaluate(rmaxline),
@@ -2211,17 +2211,17 @@ XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine* gdml, XMLNodePointer_t node, XM
    retlunit = GetScale(lunit);
    retaunit = GetScale(aunit);
 
-   rminline = TString::Format("%s*%s", rmin.Data(), retlunit.Data());
-   rmaxline = TString::Format("%s*%s", rmax.Data(), retlunit.Data());
-   zline = TString::Format("%s*%s", z.Data(), retlunit.Data());
-   startphiline = TString::Format("%s*%s", startphi.Data(), retaunit.Data());
-   deltaphiline = TString::Format("(%s*%s) + %s", deltaphi.Data(), retaunit.Data(), startphiline.Data());
-   lowXline = TString::Format("%s*%s", lowX.Data(), retlunit.Data());
-   lowYline = TString::Format("%s*%s", lowY.Data(), retlunit.Data());
-   lowZline = TString::Format("%s*%s", lowZ.Data(), retlunit.Data());
-   highXline = TString::Format("%s*%s", highX.Data(), retlunit.Data());
-   highYline = TString::Format("%s*%s", highY.Data(), retlunit.Data());
-   highZline = TString::Format("%s*%s", highZ.Data(), retlunit.Data());
+   rminline = TString::Format("(%s)*%s", rmin.Data(), retlunit.Data());
+   rmaxline = TString::Format("(%s)*%s", rmax.Data(), retlunit.Data());
+   zline = TString::Format("(%s)*%s", z.Data(), retlunit.Data());
+   startphiline = TString::Format("(%s)*%s", startphi.Data(), retaunit.Data());
+   deltaphiline = TString::Format("((%s)*%s) + %s", deltaphi.Data(), retaunit.Data(), startphiline.Data());
+   lowXline = TString::Format("(%s)*%s", lowX.Data(), retlunit.Data());
+   lowYline = TString::Format("(%s)*%s", lowY.Data(), retlunit.Data());
+   lowZline = TString::Format("(%s)*%s", lowZ.Data(), retlunit.Data());
+   highXline = TString::Format("(%s)*%s", highX.Data(), retlunit.Data());
+   highYline = TString::Format("(%s)*%s", highY.Data(), retlunit.Data());
+   highZline = TString::Format("(%s)*%s", highZ.Data(), retlunit.Data());
 
 
    TGeoCtub* cuttube = new TGeoCtub(NameShort(name), Evaluate(rminline),
@@ -2311,13 +2311,13 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    retlunit = GetScale(lunit);
    retaunit = GetScale(aunit);
 
-   rmin1line = TString::Format("%s*%s", rmin1.Data(), retlunit.Data());
-   rmax1line = TString::Format("%s*%s", rmax1.Data(), retlunit.Data());
-   rmin2line = TString::Format("%s*%s", rmin2.Data(), retlunit.Data());
-   rmax2line = TString::Format("%s*%s", rmax2.Data(), retlunit.Data());
-   zline = TString::Format("%s*%s", z.Data(), retlunit.Data());
-   startphiline = TString::Format("%s*%s", startphi.Data(), retaunit.Data());
-   deltaphiline = TString::Format("%s*%s", deltaphi.Data(), retaunit.Data());
+   rmin1line = TString::Format("(%s)*%s", rmin1.Data(), retlunit.Data());
+   rmax1line = TString::Format("(%s)*%s", rmax1.Data(), retlunit.Data());
+   rmin2line = TString::Format("(%s)*%s", rmin2.Data(), retlunit.Data());
+   rmax2line = TString::Format("(%s)*%s", rmax2.Data(), retlunit.Data());
+   zline = TString::Format("(%s)*%s", z.Data(), retlunit.Data());
+   startphiline = TString::Format("(%s)*%s", startphi.Data(), retaunit.Data());
+   deltaphiline = TString::Format("(%s)*%s", deltaphi.Data(), retaunit.Data());
    Double_t sphi = Evaluate(startphiline);
    Double_t ephi = sphi + Evaluate(deltaphiline);
 
@@ -2419,17 +2419,17 @@ XMLNodePointer_t TGDMLParse::Trap(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    retlunit = GetScale(lunit);
    retaunit = GetScale(aunit);
 
-   x1line = TString::Format("%s*%s", x1.Data(), retlunit.Data());
-   x2line = TString::Format("%s*%s", x2.Data(), retlunit.Data());
-   x3line = TString::Format("%s*%s", x3.Data(), retlunit.Data());
-   x4line = TString::Format("%s*%s", x4.Data(), retlunit.Data());
-   y1line = TString::Format("%s*%s", y1.Data(), retlunit.Data());
-   y2line = TString::Format("%s*%s", y2.Data(), retlunit.Data());
-   zline = TString::Format("%s*%s", z.Data(), retlunit.Data());
-   philine = TString::Format("%s*%s", phi.Data(), retaunit.Data());
-   thetaline = TString::Format("%s*%s", theta.Data(), retaunit.Data());
-   alpha1line = TString::Format("%s*%s", alpha1.Data(), retaunit.Data());
-   alpha2line = TString::Format("%s*%s", alpha2.Data(), retaunit.Data());
+   x1line = TString::Format("(%s)*%s", x1.Data(), retlunit.Data());
+   x2line = TString::Format("(%s)*%s", x2.Data(), retlunit.Data());
+   x3line = TString::Format("(%s)*%s", x3.Data(), retlunit.Data());
+   x4line = TString::Format("(%s)*%s", x4.Data(), retlunit.Data());
+   y1line = TString::Format("(%s)*%s", y1.Data(), retlunit.Data());
+   y2line = TString::Format("(%s)*%s", y2.Data(), retlunit.Data());
+   zline = TString::Format("(%s)*%s", z.Data(), retlunit.Data());
+   philine = TString::Format("(%s)*%s", phi.Data(), retaunit.Data());
+   thetaline = TString::Format("(%s)*%s", theta.Data(), retaunit.Data());
+   alpha1line = TString::Format("(%s)*%s", alpha1.Data(), retaunit.Data());
+   alpha2line = TString::Format("(%s)*%s", alpha2.Data(), retaunit.Data());
 
    TGeoTrap* trap = new TGeoTrap(NameShort(name), Evaluate(zline) / 2,
                                  Evaluate(thetaline),
@@ -2504,11 +2504,11 @@ XMLNodePointer_t TGDMLParse::Trd(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
 
    retlunit = GetScale(lunit);
 
-   x1line = TString::Format("%s*%s", x1.Data(), retlunit.Data());
-   x2line = TString::Format("%s*%s", x2.Data(), retlunit.Data());
-   y1line = TString::Format("%s*%s", y1.Data(), retlunit.Data());
-   y2line = TString::Format("%s*%s", y2.Data(), retlunit.Data());
-   zline = TString::Format("%s*%s", z.Data(), retlunit.Data());
+   x1line = TString::Format("(%s)*%s", x1.Data(), retlunit.Data());
+   x2line = TString::Format("(%s)*%s", x2.Data(), retlunit.Data());
+   y1line = TString::Format("(%s)*%s", y1.Data(), retlunit.Data());
+   y2line = TString::Format("(%s)*%s", y2.Data(), retlunit.Data());
+   zline = TString::Format("(%s)*%s", z.Data(), retlunit.Data());
 
    TGeoTrd2* trd = new TGeoTrd2(NameShort(name),
                                 Evaluate(x1line) / 2,
@@ -2608,15 +2608,15 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
 
             if (tempattr == "rmin") {
                rmin = gdml->GetAttrValue(attr);
-               rminline = TString::Format("%s*%s", rmin.Data(), retlunit.Data());
+               rminline = TString::Format("(%s)*%s", rmin.Data(), retlunit.Data());
                table[planeno][0] = Evaluate(rminline);
             } else if (tempattr == "rmax") {
                rmax = gdml->GetAttrValue(attr);
-               rmaxline = TString::Format("%s*%s", rmax.Data(), retlunit.Data());
+               rmaxline = TString::Format("(%s)*%s", rmax.Data(), retlunit.Data());
                table[planeno][1] = Evaluate(rmaxline);
             } else if (tempattr == "z") {
                z = gdml->GetAttrValue(attr);
-               zline = TString::Format("%s*%s", z.Data(), retlunit.Data());
+               zline = TString::Format("(%s)*%s", z.Data(), retlunit.Data());
                table[planeno][2] = Evaluate(zline);
             }
             attr = gdml->GetNextAttr(attr);
@@ -2629,8 +2629,8 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine* gdml, XMLNodePointer_t node, X
    TString startphiline = "";
    TString deltaphiline = "";
 
-   startphiline = TString::Format("%s*%s", startphi.Data(), retaunit.Data());
-   deltaphiline = TString::Format("%s*%s", deltaphi.Data(), retaunit.Data());
+   startphiline = TString::Format("(%s)*%s", startphi.Data(), retaunit.Data());
+   deltaphiline = TString::Format("(%s)*%s", deltaphi.Data(), retaunit.Data());
 
    TGeoPcon* poly = new TGeoPcon(NameShort(name),
                                  Evaluate(startphiline),
@@ -2740,15 +2740,15 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, 
 
             if (tempattr == "rmin") {
                rmin = gdml->GetAttrValue(attr);
-               rminline = TString::Format("%s*%s", rmin.Data(), retlunit.Data());
+               rminline = TString::Format("(%s)*%s", rmin.Data(), retlunit.Data());
                table[planeno][0] = Evaluate(rminline);
             } else if (tempattr == "rmax") {
                rmax = gdml->GetAttrValue(attr);
-               rmaxline = TString::Format("%s*%s", rmax.Data(), retlunit.Data());
+               rmaxline = TString::Format("(%s)*%s", rmax.Data(), retlunit.Data());
                table[planeno][1] = Evaluate(rmaxline);
             } else if (tempattr == "z") {
                z = gdml->GetAttrValue(attr);
-               zline = TString::Format("%s*%s", z.Data(), retlunit.Data());
+               zline = TString::Format("(%s)*%s", z.Data(), retlunit.Data());
                table[planeno][2] = Evaluate(zline);
             }
 
@@ -2763,8 +2763,8 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine* gdml, XMLNodePointer_t node, 
    TString deltaphiline = "";
    TString numsidesline = "";
 
-   startphiline = TString::Format("%s*%s", startphi.Data(), retaunit.Data());
-   deltaphiline = TString::Format("%s*%s", deltaphi.Data(), retaunit.Data());
+   startphiline = TString::Format("(%s)*%s", startphi.Data(), retaunit.Data());
+   deltaphiline = TString::Format("(%s)*%s", deltaphi.Data(), retaunit.Data());
    numsidesline = TString::Format("%s", numsides.Data());
 
    TGeoPgon* polyg = new TGeoPgon(NameShort(name),
@@ -2852,12 +2852,12 @@ XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine* gdml, XMLNodePointer_t node, XML
    retlunit = GetScale(lunit);
    retaunit = GetScale(aunit);
 
-   rminline = TString::Format("%s*%s", rmin.Data(), retlunit.Data());
-   rmaxline = TString::Format("%s*%s", rmax.Data(), retlunit.Data());
-   startphiline = TString::Format("%s*%s", startphi.Data(), retaunit.Data());
-   deltaphiline = TString::Format("(%s*%s) + %s", deltaphi.Data(), retaunit.Data(), startphiline.Data());
-   startthetaline = TString::Format("%s*%s", starttheta.Data(), retaunit.Data());
-   deltathetaline = TString::Format("(%s*%s) + %s", deltatheta.Data(), retaunit.Data(), startthetaline.Data());
+   rminline = TString::Format("(%s)*%s", rmin.Data(), retlunit.Data());
+   rmaxline = TString::Format("(%s)*%s", rmax.Data(), retlunit.Data());
+   startphiline = TString::Format("(%s)*%s", startphi.Data(), retaunit.Data());
+   deltaphiline = TString::Format("((%s)*%s) + %s", deltaphi.Data(), retaunit.Data(), startphiline.Data());
+   startthetaline = TString::Format("(%s)*%s", starttheta.Data(), retaunit.Data());
+   deltathetaline = TString::Format("((%s)*%s) + %s", deltatheta.Data(), retaunit.Data(), startthetaline.Data());
 
    TGeoSphere* sphere = new TGeoSphere(NameShort(name),
                                        Evaluate(rminline),
@@ -2933,11 +2933,11 @@ XMLNodePointer_t TGDMLParse::Torus(TXMLEngine* gdml, XMLNodePointer_t node, XMLA
    retlunit = GetScale(lunit);
    retaunit = GetScale(aunit);
 
-   rminline = TString::Format("%s*%s", rmin.Data(), retlunit.Data());
-   rmaxline = TString::Format("%s*%s", rmax.Data(), retlunit.Data());
-   rtorline = TString::Format("%s*%s", rtor.Data(), retlunit.Data());
-   startphiline = TString::Format("%s*%s", startphi.Data(), retaunit.Data());
-   deltaphiline = TString::Format("%s*%s", deltaphi.Data(), retaunit.Data());
+   rminline = TString::Format("(%s)*%s", rmin.Data(), retlunit.Data());
+   rmaxline = TString::Format("(%s)*%s", rmax.Data(), retlunit.Data());
+   rtorline = TString::Format("(%s)*%s", rtor.Data(), retlunit.Data());
+   startphiline = TString::Format("(%s)*%s", startphi.Data(), retaunit.Data());
+   deltaphiline = TString::Format("(%s)*%s", deltaphi.Data(), retaunit.Data());
 
 
    TGeoTorus* torus = new TGeoTorus(NameShort(name), Evaluate(rtorline),
@@ -3011,11 +3011,11 @@ XMLNodePointer_t TGDMLParse::Hype(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    retlunit = GetScale(lunit);
    retaunit = GetScale(aunit);
 
-   rminline = TString::Format("%s*%s", rmin.Data(), retlunit.Data());
-   rmaxline = TString::Format("%s*%s", rmax.Data(), retlunit.Data());
-   zline = TString::Format("%s*%s", z.Data(), retlunit.Data());
-   instline = TString::Format("%s*%s", inst.Data(), retaunit.Data());
-   outstline = TString::Format("%s*%s", outst.Data(), retaunit.Data());
+   rminline = TString::Format("(%s)*%s", rmin.Data(), retlunit.Data());
+   rmaxline = TString::Format("(%s)*%s", rmax.Data(), retlunit.Data());
+   zline = TString::Format("(%s)*%s", z.Data(), retlunit.Data());
+   instline = TString::Format("(%s)*%s", inst.Data(), retaunit.Data());
+   outstline = TString::Format("(%s)*%s", outst.Data(), retaunit.Data());
 
 
    TGeoHype* hype = new TGeoHype(NameShort(name),
@@ -3095,12 +3095,12 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
    retlunit = GetScale(lunit);
    retaunit = GetScale(aunit);
 
-   xline = TString::Format("%s*%s", x.Data(), retlunit.Data());
-   yline = TString::Format("%s*%s", y.Data(), retlunit.Data());
-   zline = TString::Format("%s*%s", z.Data(), retlunit.Data());
-   philine = TString::Format("%s*%s", phi.Data(), retaunit.Data());
-   alphaline = TString::Format("%s*%s", alpha.Data(), retaunit.Data());
-   thetaline = TString::Format("%s*%s", theta.Data(), retaunit.Data());
+   xline = TString::Format("(%s)*%s", x.Data(), retlunit.Data());
+   yline = TString::Format("(%s)*%s", y.Data(), retlunit.Data());
+   zline = TString::Format("(%s)*%s", z.Data(), retlunit.Data());
+   philine = TString::Format("(%s)*%s", phi.Data(), retaunit.Data());
+   alphaline = TString::Format("(%s)*%s", alpha.Data(), retaunit.Data());
+   thetaline = TString::Format("(%s)*%s", theta.Data(), retaunit.Data());
 
 
    TGeoPara* para = new TGeoPara(NameShort(name),
@@ -3206,18 +3206,18 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine* gdml, XMLNodePointer_t node, 
    retlunit = GetScale(lunit);
    retaunit = GetScale(aunit);
 
-   x1line = TString::Format("%s*%s", x1.Data(), retlunit.Data());
-   x2line = TString::Format("%s*%s", x2.Data(), retlunit.Data());
-   x3line = TString::Format("%s*%s", x3.Data(), retlunit.Data());
-   x4line = TString::Format("%s*%s", x4.Data(), retlunit.Data());
-   y1line = TString::Format("%s*%s", y1.Data(), retlunit.Data());
-   y2line = TString::Format("%s*%s", y2.Data(), retlunit.Data());
-   zline  = TString::Format("%s*%s", z.Data(), retlunit.Data());
-   philine = TString::Format("%s*%s", phi.Data(), retaunit.Data());
-   thetaline = TString::Format("%s*%s", theta.Data(), retaunit.Data());
-   alpha1line = TString::Format("%s*%s", alpha1.Data(), retaunit.Data());
-   alpha2line = TString::Format("%s*%s", alpha2.Data(), retaunit.Data());
-   twistline = TString::Format("%s*%s", twist.Data(), retaunit.Data());
+   x1line = TString::Format("(%s)*%s", x1.Data(), retlunit.Data());
+   x2line = TString::Format("(%s)*%s", x2.Data(), retlunit.Data());
+   x3line = TString::Format("(%s)*%s", x3.Data(), retlunit.Data());
+   x4line = TString::Format("(%s)*%s", x4.Data(), retlunit.Data());
+   y1line = TString::Format("(%s)*%s", y1.Data(), retlunit.Data());
+   y2line = TString::Format("(%s)*%s", y2.Data(), retlunit.Data());
+   zline  = TString::Format("(%s)*%s", z.Data(), retlunit.Data());
+   philine = TString::Format("(%s)*%s", phi.Data(), retaunit.Data());
+   thetaline = TString::Format("(%s)*%s", theta.Data(), retaunit.Data());
+   alpha1line = TString::Format("(%s)*%s", alpha1.Data(), retaunit.Data());
+   alpha2line = TString::Format("(%s)*%s", alpha2.Data(), retaunit.Data());
+   twistline = TString::Format("(%s)*%s", twist.Data(), retaunit.Data());
 
 
    TGeoGtra* twtrap = new TGeoGtra(NameShort(name), Evaluate(zline) / 2,
@@ -3287,9 +3287,9 @@ XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine* gdml, XMLNodePointer_t node, XML
 
    retunit = GetScale(lunit);
 
-   xline = TString::Format("%s*%s", xpos.Data(), retunit.Data());
-   yline = TString::Format("%s*%s", ypos.Data(), retunit.Data());
-   zline = TString::Format("%s*%s", zpos.Data(), retunit.Data());
+   xline = TString::Format("(%s)*%s", xpos.Data(), retunit.Data());
+   yline = TString::Format("(%s)*%s", ypos.Data(), retunit.Data());
+   zline = TString::Format("(%s)*%s", zpos.Data(), retunit.Data());
 
    TGeoEltu* eltu = new TGeoEltu(NameShort(name), Evaluate(xline),
                                  Evaluate(yline),
@@ -3339,7 +3339,7 @@ XMLNodePointer_t TGDMLParse::Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAtt
 
    retunit = GetScale(lunit);
 
-   rline = TString::Format("%s*%s", r.Data(), retunit.Data());
+   rline = TString::Format("(%s)*%s", r.Data(), retunit.Data());
 
    TGeoSphere* orb = new TGeoSphere(NameShort(name), 0, Evaluate(rline), 0, 180, 0, 360);
 
@@ -3441,11 +3441,11 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
 
             if (tempattr == "x") {
                x = gdml->GetAttrValue(attr);
-               xline = TString::Format("%s*%s", x.Data(), retlunit.Data());
+               xline = TString::Format("(%s)*%s", x.Data(), retlunit.Data());
                vertx[vert] = Evaluate(xline);
             } else if (tempattr == "y") {
                y = gdml->GetAttrValue(attr);
-               yline = TString::Format("%s*%s", y.Data(), retlunit.Data());
+               yline = TString::Format("(%s)*%s", y.Data(), retlunit.Data());
                verty[vert] = Evaluate(yline);
             }
 
@@ -3471,15 +3471,15 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
                section[sect][0] = Evaluate(zorder);
             } else if (tempattr == "zPosition") {
                zpos = gdml->GetAttrValue(attr);
-               zposline = TString::Format("%s*%s", zpos.Data(), retlunit.Data());
+               zposline = TString::Format("(%s)*%s", zpos.Data(), retlunit.Data());
                section[sect][1] = Evaluate(zposline);
             } else if (tempattr == "xOffset") {
                xoff = gdml->GetAttrValue(attr);
-               xoffline = TString::Format("%s*%s", xoff.Data(), retlunit.Data());
+               xoffline = TString::Format("(%s)*%s", xoff.Data(), retlunit.Data());
                section[sect][2] = Evaluate(xoffline);
             } else if (tempattr == "yOffset") {
                yoff = gdml->GetAttrValue(attr);
-               yoffline = TString::Format("%s*%s", yoff.Data(), retlunit.Data());
+               yoffline = TString::Format("(%s)*%s", yoff.Data(), retlunit.Data());
                section[sect][3] = Evaluate(yoffline);
             } else if (tempattr == "scalingFactor") {
                scale = gdml->GetAttrValue(attr);
