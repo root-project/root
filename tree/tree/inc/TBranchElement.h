@@ -222,16 +222,16 @@ public:
    virtual void             SetType(Int_t btype) { fType = btype; }
    virtual void             UpdateFile();
 
-   enum TBranchElementType {
-      kLeafNode = 0, // kTerminalNode, kSplittableNode ?
+   enum EBranchElementType {
+      kLeafNode = 0,
       kBaseClassNode = 1,  // -- We are a base class element.
                            // Note: This does not include an STL container class which is
                            //        being used as a base class because the streamer element
                            //        in that case is not the base streamer element it is the
                            //        STL streamer element.
-      kBranchNode = 2, // kSplittableNode?
+      kObjectNode = 2,
       kClonesNode = 3,
-      kRootNode = 4, // kSplittableRootNode?
+      kSTLNode = 4,
       kClonesMemberNode = 31,
       kSTLMemberNode = 41
    };
