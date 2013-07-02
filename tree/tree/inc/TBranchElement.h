@@ -233,7 +233,7 @@ public:
       kClonesNode = 3,
       kRootNode = 4, // kSplittableRootNode?
       kClonesMemberNode = 31,
-      kSTLMemberNode = 41,
+      kSTLMemberNode = 41
    };
 
    ClassDef(TBranchElement,9)  // Branch in case of an object
