@@ -36,6 +36,9 @@
 #ifndef ROOT_TVirtualTreePlayer
 #include "TVirtualTreePlayer.h"
 #endif
+#ifndef ROOT_TFileCollection
+#include "TFileCollection.h"
+#endif
 
 
 class TVirtualIndex;
@@ -68,6 +71,7 @@ protected:
    
 public:
    TTreePlayer();
+   TTreePlayer(const char*, TFileCollection*) { printf("Not Implemented!\n");};
    virtual ~TTreePlayer();   
    virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname);
    virtual TTree    *CopyTree(const char *selection, Option_t *option
@@ -125,10 +129,12 @@ public:
    Bool_t            ScanRedirected() {return fScanRedirect;}
    virtual TSQLResult *Query(const char *varexp, const char *selection, Option_t *option
                              ,Long64_t nentries, Long64_t firstentry);
+   void              SetChain(const char*, TFileCollection*) { printf("Not Implemented!\n");};
    virtual void      SetEstimate(Long64_t n);
    void              SetScanRedirect(Bool_t on=kFALSE) {fScanRedirect = on;}
    void              SetScanFileName(const char *name) {fScanFileName=name;}
    virtual void      SetTree(TTree *t) {fTree = t;}
+   void              SetTree(const char*, TDirectory*) { printf("Not Implemented!\n");};
    virtual void      StartViewer(Int_t ww, Int_t wh);
    virtual Int_t     UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
                                  ,Long64_t nentries, Long64_t firstentry);

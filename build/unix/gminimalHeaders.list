@@ -1006,6 +1006,10 @@ include/TTreeInput.h
 include/TTreePerfStats.h
 include/TTreePlayer.h
 include/TTreeProxyGenerator.h
+include/TTreeReader.h
+include/TTreeReaderArray.h
+include/TTreeReaderUtils.h
+include/TTreeReaderValue.h
 include/TTreeResult.h
 include/TTreeRow.h
 include/TTreeSQL.h

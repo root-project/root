@@ -66,7 +66,7 @@ namespace ROOT {
          fName() {
          if (left) {
             fName = left;
-            if (strlen(left)&&right && fName[fName.Length()-1]!='.') fName += ".";
+            if (left[0]&&right && fName[fName.Length()-1]!='.') fName += ".";
          }
          if (right) {
             fName += right;
@@ -114,9 +114,11 @@ namespace ROOT {
       TBranchProxy(TBranchProxyDirector* boss, const char* top, const char* name = 0);
       TBranchProxy(TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
       TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = 0, const char* name = 0);
+      TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername);
       virtual ~TBranchProxy();
 
       TBranchProxy* GetProxy() { return this; }
+      const char* GetBranchName() const { return fBranchName; }
 
       void Reset();
 
