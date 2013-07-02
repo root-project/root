@@ -257,6 +257,16 @@ Draw a lego plot with hidden surface removal.
 Draw a lego plot using colors to show the cell contents When the option "0" is
 used with any LEGO option, the empty bins are not drawn.
 </td></tr>
+ 
+<tr><th valign=top>"LEGO3"</th><td>
+Draw a lego plot with hidden surface removal, like LEGO1 but the border lines
+of each lego-bar are not drawn.
+</td></tr>
+
+<tr><th valign=top>"LEGO4"</th><td>
+Draw a lego plot with hidden surface removal, like LEGO1 but without the
+shadow effect on each lego-bar.
+</td></tr>
 
 <tr><th valign=top>"TEXT"</th><td>
 Draw bin contents as text (format set via <tt>gStyle->SetPaintTextFormat</tt>).
@@ -698,6 +708,7 @@ The "<tt>mode</tt>" has up to nine digits that can be set to on(1 or 2), off(0).
       s = 1;  skewness printed
       s = 2;  skewness and skewness error printed
       i = 1;  integral of bins printed
+      i = 2;  integral of bins with option "width" printed
       o = 1;  number of overflows printed
       u = 1;  number of underflows printed
       r = 1;  rms printed
@@ -744,13 +755,14 @@ To print only the name of the histogram do:
 of underflow/overflows and not just one single number.
 
 <p>The parameter mode can be any combination of the letters
-<tt>kKsSiourRmMen</tt>
+<tt>kKsSiIourRmMen</tt>
 <pre>
       k :  kurtosis printed
       K :  kurtosis and kurtosis error printed
       s :  skewness printed
       S :  skewness and skewness error printed
       i :  integral of bins printed
+      I :  integral of bins with option "width" printed
       o :  number of overflows printed
       u :  number of underflows printed
       r :  rms printed
@@ -822,6 +834,12 @@ and activate it again with:
 <pre>
       h->SetStats(1).
 </pre>
+
+<p>Labels used in the statistics box ("Mean", "RMS", ...) can be changed from 
+<a href="http://root.cern.ch/download/doc/primer/ROOTPrimer.html#configure-root-at-start-up">$ROOTSYS/etc/system.rootrc</a> or 
+<a href="http://root.cern.ch/download/doc/primer/ROOTPrimer.html#configure-root-at-start-up">.rootrc</a> 
+(look for the string <tt>"Hist.Stats."</tt>).
+</p>
 
 
 <a name="HP08"></a><h3>Fit Statistics</h3>
@@ -1572,6 +1590,16 @@ Draw a lego plot using the hidden surface removal technique.
 <tr><th valign=top>"LEGO2"</th><td>
 Draw a lego plot using colors to show the cell contents.
 </td></tr>
+ 
+<tr><th valign=top>"LEGO3"</th><td>
+Draw a lego plot with hidden surface removal, like LEGO1 but the border lines
+of each lego-bar are not drawn.
+</td></tr>
+
+<tr><th valign=top>"LEGO4"</th><td>
+Draw a lego plot with hidden surface removal, like LEGO1 but without the
+shadow effect on each lego-bar.
+</td></tr>
 
 <tr><th valign=top>"0"</th><td>
 When used with any LEGO option, the empty bins are not drawn.
@@ -1579,6 +1607,8 @@ When used with any LEGO option, the empty bins are not drawn.
 
 </table>
 See the limitations with <a href="#HP060a">the option "SAME"</a>.
+
+<p>Line attributes can be used in lego plots to change the edges' style.
 
 <p>The following example shows a 2D histogram plotted with the option
 <tt>"LEGO"</tt>. The option <tt>"LEGO"</tt> draws a lego plot using the hidden
@@ -1622,6 +1652,30 @@ Begin_Macro(source)
    hlego1->Draw("LEGO1 0");
    return c2;
 }
+End_Macro
+Begin_Html
+ 
+<p>The following example shows a 2D histogram plotted with the option
+<tt>"LEGO3"</tt>. Like the option <tt>"LEGO1"</tt>, the option <tt>"LEGO3"</tt> 
+draws a lego plot using the hidden surface removal technique but doesn't draw
+the border lines of each individual lego-bar. This is very useful for histograms
+having many bins. With such histograms the option <tt>"LEGO1"</tt> gives a black
+image because of the border lines. This option also works with stacked legos.
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c2 = new TCanvas("c2","c2",600,400);
+   TH2F *hlego3 = new TH2F("hlego3","Option LEGO3 example",40,-4,4,40,-20,20);
+   Float_t px, py;
+   for (Int_t i = 0; i < 25000; i++) {
+      gRandom->Rannor(px,py);
+      hlego3->Fill(px-1,5*py);
+      hlego3->Fill(2+0.5*px,2*py-10.,0.1);
+   }
+   hlego3->SetFillColor(kRed);
+   hlego3->Draw("LEGO3");
+   return c2;
+ }
 End_Macro
 Begin_Html
 
@@ -2746,6 +2800,7 @@ static TString gStringRMSZ;
 static TString gStringUnderflow;
 static TString gStringOverflow;
 static TString gStringIntegral;
+static TString gStringIntegralBinWidth;
 static TString gStringSkewness;
 static TString gStringSkewnessX;
 static TString gStringSkewnessY;
@@ -2784,26 +2839,27 @@ THistPainter::THistPainter()
       fCutsOpt[i] = 0;
    }
 
-   gStringEntries   = gEnv->GetValue("Hist.Stats.Entries",   "Entries");
-   gStringMean      = gEnv->GetValue("Hist.Stats.Mean",      "Mean");
-   gStringMeanX     = gEnv->GetValue("Hist.Stats.MeanX",     "Mean x");
-   gStringMeanY     = gEnv->GetValue("Hist.Stats.MeanY",     "Mean y");
-   gStringMeanZ     = gEnv->GetValue("Hist.Stats.MeanZ",     "Mean z");
-   gStringRMS       = gEnv->GetValue("Hist.Stats.RMS",       "RMS");
-   gStringRMSX      = gEnv->GetValue("Hist.Stats.RMSX",      "RMS x");
-   gStringRMSY      = gEnv->GetValue("Hist.Stats.RMSY",      "RMS y");
-   gStringRMSZ      = gEnv->GetValue("Hist.Stats.RMSZ",      "RMS z");
-   gStringUnderflow = gEnv->GetValue("Hist.Stats.Underflow", "Underflow");
-   gStringOverflow  = gEnv->GetValue("Hist.Stats.Overflow",  "Overflow");
-   gStringIntegral  = gEnv->GetValue("Hist.Stats.Integral",  "Integral");
-   gStringSkewness  = gEnv->GetValue("Hist.Stats.Skewness",  "Skewness");
-   gStringSkewnessX = gEnv->GetValue("Hist.Stats.SkewnessX", "Skewness x");
-   gStringSkewnessY = gEnv->GetValue("Hist.Stats.SkewnessY", "Skewness y");
-   gStringSkewnessZ = gEnv->GetValue("Hist.Stats.SkewnessZ", "Skewness z");
-   gStringKurtosis  = gEnv->GetValue("Hist.Stats.Kurtosis",  "Kurtosis");
-   gStringKurtosisX = gEnv->GetValue("Hist.Stats.KurtosisX", "Kurtosis x");
-   gStringKurtosisY = gEnv->GetValue("Hist.Stats.KurtosisY", "Kurtosis y");
-   gStringKurtosisZ = gEnv->GetValue("Hist.Stats.KurtosisZ", "Kurtosis z");
+   gStringEntries          = gEnv->GetValue("Hist.Stats.Entries",          "Entries");
+   gStringMean             = gEnv->GetValue("Hist.Stats.Mean",             "Mean");
+   gStringMeanX            = gEnv->GetValue("Hist.Stats.MeanX",            "Mean x");
+   gStringMeanY            = gEnv->GetValue("Hist.Stats.MeanY",            "Mean y");
+   gStringMeanZ            = gEnv->GetValue("Hist.Stats.MeanZ",            "Mean z");
+   gStringRMS              = gEnv->GetValue("Hist.Stats.RMS",              "RMS");
+   gStringRMSX             = gEnv->GetValue("Hist.Stats.RMSX",             "RMS x");
+   gStringRMSY             = gEnv->GetValue("Hist.Stats.RMSY",             "RMS y");
+   gStringRMSZ             = gEnv->GetValue("Hist.Stats.RMSZ",             "RMS z");
+   gStringUnderflow        = gEnv->GetValue("Hist.Stats.Underflow",        "Underflow");
+   gStringOverflow         = gEnv->GetValue("Hist.Stats.Overflow",         "Overflow");
+   gStringIntegral         = gEnv->GetValue("Hist.Stats.Integral",         "Integral");
+   gStringIntegralBinWidth = gEnv->GetValue("Hist.Stats.IntegralBinWidth", "Integral(w)");
+   gStringSkewness         = gEnv->GetValue("Hist.Stats.Skewness",         "Skewness");
+   gStringSkewnessX        = gEnv->GetValue("Hist.Stats.SkewnessX",        "Skewness x");
+   gStringSkewnessY        = gEnv->GetValue("Hist.Stats.SkewnessY",        "Skewness y");
+   gStringSkewnessZ        = gEnv->GetValue("Hist.Stats.SkewnessZ",        "Skewness z");
+   gStringKurtosis         = gEnv->GetValue("Hist.Stats.Kurtosis",         "Kurtosis");
+   gStringKurtosisX        = gEnv->GetValue("Hist.Stats.KurtosisX",        "Kurtosis x");
+   gStringKurtosisY        = gEnv->GetValue("Hist.Stats.KurtosisY",        "Kurtosis y");
+   gStringKurtosisZ        = gEnv->GetValue("Hist.Stats.KurtosisZ",        "Kurtosis z");
 }
 
 
@@ -3382,6 +3438,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       Hoption.Lego = 1; strncpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Lego = 11; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Lego = 12; l[4] = ' '; }
+      if (l[4] == '3') { Hoption.Lego = 13; l[4] = ' '; }
+      if (l[4] == '4') { Hoption.Lego = 14; l[4] = ' '; }
       l = strstr(chopt,"FB"); if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB"); if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
       l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
@@ -6342,6 +6400,22 @@ void THistPainter::PaintLego(Option_t *)
 
    fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
 
+   Int_t nids = -1;
+   TH1 * hid = NULL;
+   Color_t colormain = -1, colordark = -1;
+   Bool_t drawShadowsInLego1 = kTRUE;
+
+   // LEGO3 is like LEGO1 except that the black lines around each lego are not drawn.
+   if (Hoption.Lego == 13) {
+      Hoption.Lego = 11;
+      fLego->SetMesh(0);
+   }
+   // LEGO4 is like LEGO1 except no shadows are drawn.
+   if (Hoption.Lego == 14) {
+      Hoption.Lego = 11;
+      drawShadowsInLego1 = kFALSE;
+   }
+
    //          Create axis object
 
    TGaxis *axis = new TGaxis();
@@ -6355,23 +6429,29 @@ void THistPainter::PaintLego(Option_t *)
    Int_t ndivz  = TMath::Abs(ndiv);
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
 
-   //     Initialize colors for the lighting model (option Lego1 only)
-   if (Hoption.Lego == 1) {
-         Color_t colormain = fH->GetLineColor();
-         fLego->SetColorMain(colormain,0);
+   //     Initialize colors
+   if (!fStack) { 
+      fLego->SetEdgeAtt(fH->GetLineColor(),fH->GetLineStyle(),fH->GetLineWidth(),0);
+   } else {
+      for (Int_t id=0;id<=fStack->GetSize();id++) {
+         hid = (TH1*)fStack->At((id==0)?id:id-1);
+         fLego->SetEdgeAtt(hid->GetLineColor(),hid->GetLineStyle(),hid->GetLineWidth(),id);
+      }
    }
+
    if (Hoption.Lego == 11) {
-      Int_t nids = 1;
+      nids = 1;
       if (fStack) nids = fStack->GetSize();
-      TH1 *hid = fH;
+      hid = fH;
       for (Int_t id=0;id<=nids;id++) {
          if (id > 0 && fStack) hid = (TH1*)fStack->At(id-1);
-         Color_t colormain = hid->GetFillColor();
+         colormain = hid->GetFillColor();
          if (colormain == 1) colormain = 17; //avoid drawing with black
-         Color_t colordark = TColor::GetColorDark(colormain);
+         if (drawShadowsInLego1) colordark = TColor::GetColorDark(colormain);
+         else                    colordark = colormain ; 
          fLego->SetColorMain(colormain,id);
          fLego->SetColorDark(colordark,id);
-         if (id == 0)    fLego->SetColorMain(colormain,-1);  // Set Bottom color
+         if (id <= 1)    fLego->SetColorMain(colormain,-1);  // Set Bottom color
          if (id == nids) fLego->SetColorMain(colormain,99);  // Set Top color
       }
    }
@@ -6390,7 +6470,7 @@ void THistPainter::PaintLego(Option_t *)
    Double_t psideg = view->GetPsi();
    view->SetView(phideg, thedeg, psideg, irep);
 
-   fLego->SetLineColor(fH->GetLineColor());
+   fLego->SetLineColor(kBlack);  /// zgrid color for lego1 & lego2
    fLego->SetFillStyle(fH->GetFillStyle());
 
    //     Set color/style for back box
@@ -6449,7 +6529,6 @@ void THistPainter::PaintLego(Option_t *)
    }
 
    if (Hoption.Lego == 1 || Hoption.Lego == 11) {
-      fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
          fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
@@ -6656,7 +6735,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
       axis->PaintAxis(z1[0], z1[1], z2[0], z2[1], bmin, bmax, ndivz, chopaz);
    }
 
-   fH->SetLineStyle(1);
+   //fH->SetLineStyle(1);  /// otherwise fEdgeStyle[i] gets overwritten!
 }
 
 
@@ -7010,8 +7089,13 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
       stats->AddText(t);
    }
    if (print_integral) {
-      snprintf(textstats,50,"%s = %s%s",gStringIntegral.Data(),"%",stats->GetStatFormat());
-      snprintf(t,100,textstats,fH->Integral());
+      if (print_integral == 1) {
+         snprintf(textstats,50,"%s = %s%s",gStringIntegral.Data(),"%",stats->GetStatFormat());
+         snprintf(t,100,textstats,fH->Integral());
+      } else {
+         snprintf(textstats,50,"%s = %s%s",gStringIntegralBinWidth.Data(),"%",stats->GetStatFormat());
+         snprintf(t,100,textstats,fH->Integral("width"));
+      }
       stats->AddText(t);
    }
    if (print_skew) {
@@ -7602,7 +7686,7 @@ void THistPainter::PaintSurface(Option_t *)
    }
 
    fLego = new TPainter3dAlgorithms(fXbuf, fYbuf, Hoption.System);
-   fLego->SetLineColor(fH->GetLineColor());
+   fLego->SetEdgeAtt(fH->GetLineColor(),fH->GetLineStyle(),fH->GetLineWidth(),0);
    fLego->SetFillColor(fH->GetFillColor());
 
    //          Create axis object
@@ -7679,7 +7763,6 @@ void THistPainter::PaintSurface(Option_t *)
 
    if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 14 || Hoption.Surf == 17) {
       fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
-      fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
          fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);
@@ -7764,7 +7847,6 @@ void THistPainter::PaintSurface(Option_t *)
 
    if ((!Hoption.Same) &&
        (Hoption.Surf == 1 || Hoption.Surf == 13 || Hoption.Surf == 16)) {
-      fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
          fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
          fLego->BackBox(90);

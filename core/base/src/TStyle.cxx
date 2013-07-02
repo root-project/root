@@ -1263,6 +1263,7 @@ void TStyle::SetOptStat(Int_t mode)
    //    s = 1;  skewness printed
    //    s = 2;  skewness and skewness error printed
    //    i = 1;  integral of bins printed
+   //    i = 2;  integral of bins with option "width" printed
    //    o = 1;  number of overflows printed
    //    u = 1;  number of underflows printed
    //    r = 1;  rms printed
@@ -1305,6 +1306,7 @@ void TStyle::SetOptStat(Option_t *stat)
    //    s :  skewness printed
    //    S :  skewness and skewness error printed
    //    i :  integral of bins printed
+   //    I :  integral of bins with option "width" printed
    //    o :  number of overflows printed
    //    u :  number of underflows printed
    //    r :  rms printed
@@ -1331,6 +1333,7 @@ void TStyle::SetOptStat(Option_t *stat)
    if (opt.Contains("u")) mode+=10000;
    if (opt.Contains("o")) mode+=100000;
    if (opt.Contains("i")) mode+=1000000;
+   if (opt.Contains("I")) mode+=2000000;
    if (opt.Contains("s")) mode+=10000000;
    if (opt.Contains("S")) mode+=20000000;
    if (opt.Contains("k")) mode+=100000000;
