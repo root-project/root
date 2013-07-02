@@ -226,7 +226,7 @@ public:
       kLeafNode = 0,
       kBranchNode = 2,
       kClonesNode = 3,
-      kRootNode = 4,
+      kRootNode = 4
    };
 
    ClassDef(TBranchElement,9)  // Branch in case of an object
