@@ -31,10 +31,11 @@
 #ifndef ROOT_TBranchProxy
 #include "TBranchProxy.h"
 #endif
+#include "TLeaf.h"
 
 class TBranch;
 class TBranchElement;
-class TLeaf;
+//class TLeaf;
 class TTreeReader;
 
 namespace ROOT {
@@ -85,7 +86,13 @@ namespace ROOT {
 
       void* GetAddress() {
          if (ProxyRead() != kReadSuccess) return 0;
-         return fProxy ? fProxy->GetWhere() : 0;
+         if (fLeafOffset == -1){
+            if (fLeaf)
+               fLeafOffset = (Byte_t*)fProxy->GetWhere() - (Byte_t*)fLeaf->GetValuePointer();
+            else
+               fLeafOffset = 0;
+         }
+         return fProxy ? (Byte_t*)fProxy->GetWhere() - fLeafOffset : 0;
       }
       ROOT::TBranchProxy* GetProxy() const { return fProxy; }
 
@@ -99,6 +106,8 @@ namespace ROOT {
       ROOT::TBranchProxy* fProxy; // proxy for this branch, owned by TTreeReader
       ESetupStatus fSetupStatus; // setup status of this data access
       EReadStatus  fReadStatus; // read status of this data access
+      Int_t        fLeafOffset;
+      TLeaf*       fLeaf;
 
       ClassDef(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
 

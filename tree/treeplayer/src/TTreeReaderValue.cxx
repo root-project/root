@@ -20,6 +20,7 @@
 #include "TLeaf.h"
 #include "TTreeProxyGenerator.h"
 #include "TTreeReaderValue.h"
+#include "TRegexp.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -48,7 +49,9 @@ ROOT::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
    fDict(dict),
    fProxy(0),
    fSetupStatus(kSetupNotSetup),
-   fReadStatus(kReadNothingYet)
+   fReadStatus(kReadNothingYet),
+   fLeafOffset(-1),
+   fLeaf(NULL)
 {
    // Construct a tree value reader and register it with the reader object.
    if (fTreeReader) fTreeReader->RegisterValueReader(this);
@@ -109,27 +112,62 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
    }
 
    TBranch* branch = fTreeReader->GetTree()->GetBranch(fBranchName);
-   if (!branch) {
-      Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
-      fProxy = 0;
-      return;
-   }
-
+   TLeaf *myLeaf = NULL;
    TDictionary* branchActualType = 0;
-   const char* branchActualTypeName = GetBranchDataType(branch, branchActualType);
 
-   if (!branchActualType) {
-      Error("CreateProxy()", "The branch %s contains data of type %s, which does not have a dictionary.",
-            fBranchName.Data(), branchActualTypeName ? branchActualTypeName : "{UNDETERMINED TYPE}");
-      fProxy = 0;
-      return;
+   if (!branch) {
+      if (fBranchName.Contains(".")){
+         TRegexp leafNameExpression ("\\.[a-zA-Z0-9]+$");
+         TString leafName (fBranchName(leafNameExpression));
+         TString branchName = fBranchName(0, fBranchName.Length() - leafName.Length());
+         branch = fTreeReader->GetTree()->GetBranch(branchName);
+         if (!branch){
+            Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+            fProxy = 0;
+            return;
+         }
+         else {
+            myLeaf = branch->GetLeaf(TString(leafName(1, leafName.Length())));
+            if (!myLeaf){
+               Error("CreateProxy()", "The tree does not have a branch, nor a sub-branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+            }
+            else {
+               TDictionary *tempDict = TDictionary::GetDictionary(myLeaf->GetTypeName());
+               if (tempDict->IsA() == TDataType::Class() && TDictionary::GetDictionary(((TDataType*)tempDict)->GetTypeName()) == fDict){
+                  //fLeafOffset = myLeaf->GetOffset() / 4;
+                  branchActualType = fDict;
+                  fLeaf = myLeaf;
+               }
+               else {
+                  Error("CreateProxy()", "Leaf of type %s cannot be read by TTreeReaderValue<%s>.", myLeaf->GetTypeName(), fDict->GetName());
+               }
+            }
+         }
+      }
+      else {
+         Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+         fProxy = 0;
+         return;
+      }
    }
 
-   if (fDict != branchActualType) {
-      Error("CreateProxy()", "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderValue<%s>",
-            fBranchName.Data(), branchActualType->GetName(), fDict->GetName());
-      //return;
+   if (!myLeaf){
+      const char* branchActualTypeName = GetBranchDataType(branch, branchActualType);
+
+      if (!branchActualType) {
+         Error("CreateProxy()", "The branch %s contains data of type %s, which does not have a dictionary.",
+               fBranchName.Data(), branchActualTypeName ? branchActualTypeName : "{UNDETERMINED TYPE}");
+         fProxy = 0;
+         return;
+      }
+
+      if (fDict != branchActualType) {
+         Error("CreateProxy()", "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderValue<%s>",
+               fBranchName.Data(), branchActualType->GetName(), fDict->GetName());
+         return;
+      }
    }
+   
 
    // Update named proxy's dictionary
    if (namedProxy && !namedProxy->GetDict()) {

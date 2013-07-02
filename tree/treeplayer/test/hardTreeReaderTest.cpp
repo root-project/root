@@ -19,6 +19,7 @@
 #pragma link C++ class TTreeReaderValue<B*>+;
 #pragma link C++ class TTreeReaderValue<TClonesArray>+;
 #pragma link C++ class TTreeReaderValue<std::vector<B*>>+;
+#pragma link C++ class TTreeReaderValue<Float_t>+;
 #pragma link C++ class TTreeReaderArray<double>+;
 #pragma link C++ class TTreeReaderArray<B>+;
 #pragma link C++ class TTreeReaderArray<Int_t>+;
@@ -47,14 +48,14 @@ void makeTree(){
 	A myObject0 (NUM_CONSTANT);
 
 	struct {
-		Int_t myIntX;
+		Float_t myFloatX;
 		Float_t myFloatY;
 		Int_t myIntN;
 		Double_t myDoubleArrayA [MYDOUBLEARRAY_SIZE];
 		Bool_t myBoolArrayB [MYBOOLARRAYB_SIZE];
 	} myLeaves;
 
-	myLeaves.myIntX = 0;
+	myLeaves.myFloatX = 0.0;
 	myLeaves.myFloatY = 0.0;
 	myLeaves.myIntN = MYDOUBLEARRAY_SIZE;
 
@@ -158,8 +159,8 @@ void makeTree(){
 		}
 
 		printf("Filling leaflist\n");
-		myLeaves.myIntX = i;
-		myLeaves.myFloatY = i / 10.0f;
+		myLeaves.myFloatX = (Float_t)i;
+		myLeaves.myFloatY = (Float_t)i / 10.0f;
 		for (int j = 0; j < MYDOUBLEARRAY_SIZE; ++j){
 			myLeaves.myDoubleArrayA[j] = myLeaves.myFloatY * j;
 		}
@@ -658,6 +659,41 @@ void readBranchVectorBValue(const char* splitLevel, Bool_t printOut = true, Bool
 	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
 
+void readLeafFloatX(Bool_t printOut = true, Bool_t testValues = false){
+	TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TString branchName = "MyLeafList.x";
+
+	TTreeReaderValue<Float_t> myFloat (myTreeReader, branchName);
+
+	Bool_t success = true;
+	Bool_t read = false;
+	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
+		if (printOut) printf("MyLeafList.x: %f\n", *myFloat);
+	}
+
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
+}
+
+void readLeafFloatY(Bool_t printOut = true, Bool_t testValues = false){
+	TFile::Open("HardTreeFile.root");
+	TTreeReader myTreeReader ("HardTree");
+
+	TString branchName = "MyLeafList.y";
+
+	TTreeReaderValue<Float_t> myFloat (myTreeReader, branchName);
+
+	Bool_t success = true;
+	Bool_t read = false;
+	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
+		read = true;
+		if (printOut) printf("MyLeafList.y: %f\n", *myFloat);
+	}
+
+	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
+}
 
 void readTree(){
 	TFile *myFile = TFile::Open("HardTreeFile.root");
