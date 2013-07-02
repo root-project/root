@@ -27,7 +27,7 @@ TQtTimer *TQtTimer::fgQTimer=0;
 void TQtTimer::AwakeRootEvent(){
      // proceess the ROOT events inside of Qt event loop
      gSystem->DispatchOneEvent(kFALSE);
-     start(300);
+     start(5);
 }
 //______________________________________________________________________________
 TQtTimer * TQtTimer::Create(QObject *parent)
