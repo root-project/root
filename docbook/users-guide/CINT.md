@@ -799,7 +799,7 @@ respectively compile `MyScript.C` with debug and optimization if the
 library does not exist yet; they will not change the debug and the
 optimization level if the library already exist and it is up to date.
 To use ACLiC from compiled code or from inside another macro, we
-recommend using the `ProcessLine``()` method of **`TROOT`**. For
+recommend using the `ProcessLine()` method of **`TROOT`**. For
 example, in one script you can use ACLiC to compile and load another
 script.
 
@@ -875,8 +875,8 @@ To select the temporary directory ACLiC looks at `$TEMP`, `$TEMP_DIR`,
 `$TEMPDIR`, `$TMP`, `$TMPDIR`, `$TMP_DIR `or uses `/tmp (`or `C:/)`.
 Also, a new interface **`TSystem`**`::Get/SetBuildDir` is introduced
 to let users select an alternative 'root' for building of the ACLiC
-libraries. For `filename``/full/path/name/macro.C`, the library is
-created as `fBuildDir``/full/path/name/macro_C.so.`
+libraries. For `filename/full/path/name/macro.C`, the library is
+created as `fBuildDir/full/path/name/macro_C.so.`
 
 ### Dictionary Generation
 
@@ -935,7 +935,7 @@ See the documentation of `rootcint` for details how `pragma` can be
 used.
 
 NOTE: You should not call ACLiC with a script that has a function
-called `main()``.` When ACLiC calls `rootcint` with a function called
+called `main()`. When ACLiC calls `rootcint` with a function called
 `main` it tries to add every symbol it finds while parsing the script
 and the header files to the dictionary. This includes the system
 header files and the ROOT header files. It will result in duplicate

@@ -565,7 +565,7 @@ connected slot is not called unless the signal is explicitly enabled
 with `TQtWidget::EnableSignalEvents` method.
 
 For example, to create a custom response to the mouse crossing of a
-**`TCanvas``, `**you need to connect the `RootEventProsecced` signal
+**`TCanvas`**, you need to connect the `RootEventProsecced` signal
 with your `qt` slot. The next piece of the code demonstrates that:
 
 ``` {.cpp}

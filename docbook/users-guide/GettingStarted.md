@@ -1107,7 +1107,7 @@ To get the list of colors, if you have an open canvas, click in the
 
 
 ***`gRandom`*** is a pointer to the current random number generator.
-By default, it points to a **`TRandom``3`** object, based on the
+By default, it points to a **`TRandom3`** object, based on the
 "Mersenne-Twister" generator. This generator is very fast and has very
 good random proprieties (a very long period of 10^600^). Setting the
 seed to 0 implies that the seed will be uniquely generated using the

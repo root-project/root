@@ -227,7 +227,7 @@ gStyle->SetEndErrorSize(np);
 ```
 
 The four parameters of **`TGraphErrors`** are: `X, Y` (as in
-**`TGraph``),`** `X`-errors, and `Y`-errors - the size of the errors
+**`TGraph`**), `X`-errors, and `Y`-errors - the size of the errors
 in the `x` and `y` direction. Next example is
 `$ROOTSYS/tutorials/graphs/gerrors.C.`
 

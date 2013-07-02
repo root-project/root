@@ -75,7 +75,7 @@ TVector3 v4(v2);    // v4 = v2
 ```
 
 It is also possible (but not recommended) to initialize a **`TVector3`**
-with a `Double``_t` or `Float_t C` array. You can get the components by
+with a `Double_t` or `Float_t C` array. You can get the components by
 name or by index:
 
 ``` {.cpp}
@@ -118,7 +118,7 @@ Double_t ppv1  = v.Perp(v1);
 Double_t pp2v1 = v.Perp2(v1);
 ```
 
-The pseudo-rapidity `(eta = -ln (tan (``theta``/2)))` can be obtained by
+The pseudo-rapidity `(eta = -ln (tan (theta/2)))` can be obtained by
 `Eta()` or `PseudoRapidity()`:
 
 ``` {.cpp}
@@ -196,7 +196,7 @@ v1.Rotate(TMath::Pi()/4, v2); // rotation around v2
 
 
 **`TVector3`** objects can be rotated by **`TRotation`** objects using
-the `Transform()` method, the `operator ``*=, `or the `operator ``*` of
+the `Transform()` method, the operator `*=`, or the operator `*` of
 the **`TRotation`** class. See the later section on `TRotation.`
 
 ``` {.cpp}
@@ -300,7 +300,7 @@ $$
 ### Rotation around Arbitrary Axis
 
 
-The `Rotate(``)` method allows you to rotate around an arbitrary vector
+The `Rotate()` method allows you to rotate around an arbitrary vector
 (not necessary a unit one) and returns the result.
 
 ``` {.cpp}
@@ -438,7 +438,7 @@ and `Float_t` array.
 
 
 There are two sets of access functions to the components of a
-**`T``LorentzVector`**: `X()`, `Y()`, `Z()`, `T()` and `Px()`, `Py()`,
+**`TLorentzVector`**: `X()`, `Y()`, `Z()`, `T()` and `Px()`, `Py()`,
 `Pz()` and `E()`. Both sets return the same values but the first set is
 more relevant for use where **`TLorentzVector`** describes a combination
 of position and time and the second set is more relevant where
@@ -517,7 +517,7 @@ or get information about the r-coordinate in cylindrical systems:
 ```
 
 there are two more set functions `SetPtEtaPhiE(pt,eta,phi,e)` and
-`S``etPtEtaPhiM``(pt,eta,phi,m)` for convenience.
+`SetPtEtaPhiM(pt,eta,phi,m)` for convenience.
 
 ### Arithmetic and Comparison Operators
 

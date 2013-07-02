@@ -121,7 +121,7 @@ classes (e.g. **`TPosixThread`** ).
 
 **`TMutex`** class implements `mutex` locks. A mutex is a mutually
 exclusive lock. The platform dependent implementation is in the
-**`TMutex``Imp`** class and its descendant classes (e.g.
+**`TMutexImp`** class and its descendant classes (e.g.
 **`TPosixMutex`**)
 
 **`TCondition`** class implements a condition variable. Use a condition
@@ -344,7 +344,7 @@ any call of the `TCondition::Wait()`, **`TCondition`**`::TimedWait()`,
 
 #### Asynchronous
 
-Set by `TThread::SetCancelAsynchronous``()`: If the user is sure that
+Set by `TThread::SetCancelAsynchronous()`: If the user is sure that
 his application is cancel safe, he could call:
 
 ``` {.cpp}

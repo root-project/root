@@ -769,7 +769,7 @@ decompositions. Each of the decomposition methods performs a set of
 matrix transformations to facilitate solving a system of linear
 equations, the formation of inverses as well as the estimation of
 determinants and condition numbers. More specifically the classes
-**`TDecompLU`**, **`TDecompBK``, TDecompChol`**, **`TDecompQRH`** and
+**`TDecompLU`**, **`TDecompBK`**, **`TDecompChol`**, **`TDecompQRH`** and
 **`TDecompSVD`** give a simple and consistent interface to the LU,
 Bunch-Kaufman, Cholesky, QR and SVD decompositions. All of these classes
 are derived from the base class **`TDecompBase`** of which the important

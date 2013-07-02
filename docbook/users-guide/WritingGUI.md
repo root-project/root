@@ -83,7 +83,7 @@ the implementation of **`TVirtualX`**.
 
 ![](pictures/02000201.jpg)
 
-The **`TGQt`` `**interface is currently still under development.
+The **`TGQt`** interface is currently still under development.
 
 ## A Simple Example
 
@@ -1723,7 +1723,7 @@ alt key at the same time.
 
 Menus provide a list of commands or options helping the user to select
 and to perform a task. The menu system classes are **`TGMenuBar`**,
-**`TGMe``nuTitle`**, **`TGPopupMenu`**, and **`TGMenuEntry`**.
+**`TGMenuTitle`**, **`TGPopupMenu`**, and **`TGMenuEntry`**.
 
 The **`TGMenuBar`** class implements a menu bar widget. It is used to
 specify and provide access to common and frequently used application
@@ -2829,7 +2829,7 @@ if (pad) {
 return action;
 ```
 
-`Bool_t HandleDNDdrop(``TDNDdata *data)` - this is the place where the
+`Bool_t HandleDNDdrop(`TDNDdata *data`) - this is the place where the
 widget actually receives the data. First, check the data format (see
 description of **`TDNDData`** - Drag and Drop data class) and then use
 it accordingly. In the case of ROOT object, here is an example of how to

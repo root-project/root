@@ -128,7 +128,7 @@ It explains the build options and targets.
 
 
 To build the library providing thread support you need to define either
-the environment variable ‘`THREAD``=-``lpthread' `or the configure flag
+the environment variable ‘`THREAD=-lpthread' `or the configure flag
 `‘--with-thread=-lpthread`' (it is the default for the `linuxegcs`
 architecture). [Note: this is only tested on Linux for the time being.]
 To build the library providing CERN RFIO (remote I/O) support you need
@@ -148,14 +148,14 @@ have to install the SRP (Secure Remote Password) system. Visit
 <http://srp.stanford.edu>
 
 To use the library you have to define either the environment variable
-‘`SRP=<``srpdir``>`' or the configure flag `‘--with-srp=<srpdir>'.`
+‘`SRP=<srpdir>`' or the configure flag `‘--with-srp=<srpdir>'.`
 
 To build the event generator interfaces for Pythia and Pythia6, you
 first have to get the Pythia libraries available from ftp:
 <ftp://root.cern.ch/root/pythia6.tar.gz>.
 
 To use the libraries you have to define either
-‘`PYTHIA=<``pythiadir``>`' or the configure flag
+‘`PYTHIA=<pythiadir>`' or the configure flag
 `‘--with-pythia=<pythiadir>`'. The same applies for Pythia6.
 
 #### Installing the Source from Subversion
@@ -941,7 +941,7 @@ SrvAuth.SshdPort:         22
 
 Force file opening via **`TNetFile`** (**`TXNetFile`**) if a hostname is
 specified in the Url. By default, for local files `TFile::Open()`
-invokes directly **`TFile``.`**
+invokes directly **`TFile.`**
 
 ``` {.cpp}
 TFile.ForceRemote:        yes

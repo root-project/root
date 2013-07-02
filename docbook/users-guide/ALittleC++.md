@@ -210,7 +210,7 @@ root[] myarrow->Draw();
 
 To explain how objects are created on the stack and on the heap we
 will use the `Quad` class. You can find the definition in
-`$ROOTSYS/tutorials/``quadp/``Quad.h` and `Quad.cxx`. The `Quad` class
+`$ROOTSYS/tutorials/quadp/Quad.h` and `Quad.cxx`. The `Quad` class
 has four methods. The constructor and destructor, `Evaluate` that
 evaluates `ax**2 + bx +c`, and `Solve` which solves the quadratic
 equation `ax**2 + bx +c = 0`.

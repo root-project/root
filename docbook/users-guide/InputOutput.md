@@ -1648,8 +1648,8 @@ identify the referenced **`TObject`**.
 
 When a referenced object is read from a file (its bit `kIsReferenced` is
 set), this object is entered into the objects table of the corresponding
-**`TProcessID`**. Each **`TFile`** has a list of **`TProcessIDs` (see
-`TFile`**`::fProcessIDs`) also accessible` from ``TProcessID::fgPIDs`
+**`TProcessID`**. Each **`TFile`** has a list of **`TProcessIDs`** (see
+**`TFile`**`::fProcessIDs`) also accessible` from `TProcessID::fgPIDs`
 (for all files). When this object is deleted, it is removed from the
 table via the cleanup mechanism invoked by the **`TObject`** destructor.
 Each **`TProcessID`** has a table (`TObjArray *fObjects`) that keeps
@@ -2263,7 +2263,7 @@ We will distinguish the following cases:
 implementation file. This also means that you have specified `MyClass`
 in the `LinkDef.h` file.
 
--   Keep `MyClass ``-` unchanged.
+-   Keep `MyClass` - unchanged.
 
 -   Increment your class version id in `ClassDef` by 1, e.g.
     `ClassDef(MyClass, 2)`
@@ -2598,7 +2598,7 @@ specifies a local file, a **`TFile`** object will be returned (and of
 course no login information is needed). The arguments of the `Open()`
 function are the same as the ones for the **`TFile`** constructor.
 
-Using `ReOpen``()` method it is possible to reopen a file with a
+Using `ReOpen()` method it is possible to reopen a file with a
 different access mode, like from READ to UPDATE or from NEW, CREATE,
 RECREATE, UPDATE to READ. Thus the mode argument can be either "READ" or
 "UPDATE". The method returns:
@@ -2636,7 +2636,7 @@ The shared library `libRXML.so` may be loaded dynamically via
 `gSystem->Load("libRXML")`. This library is also automatically loaded by
 the plug-in manager as soon a XML file is created. To create an XTM
 file, simply specify a filename with an .xml extension when calling
-**`TFile::Open. ``TFile`**`::Open` will recognize that you are trying to
+**`TFile`**`::Open`. **`TFile`**`::Open` will recognize that you are trying to
 open an XML file and return a **`TXMLFile`** object. When a XML file is
 open in write mode, one can use the normal `TObject::Write` to write an
 object in the file.

@@ -219,7 +219,7 @@ be able to generate properly documentation for your classes using
 ClassImp(ClassName)
 ```
 
-For example in `TLine``.cxx`:
+For example in `TLine.cxx`:
 
 ``` {.cpp}
 ClassImp(TLine)

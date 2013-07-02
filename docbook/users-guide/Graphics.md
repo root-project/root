@@ -3349,7 +3349,7 @@ control over its position, scale and rotation. See "Manipulators"
 section below for details on using viewer manipulators.
 
 The clip plane is described by the standard plane equation:
-**`ax+by+cz+d=``0`**, where the factors **`a`**, **`b`**, **`c`**,
+**`ax+by+cz+d=0`**, where the factors **`a`**, **`b`**, **`c`**,
 **`d`** are entered into the edit boxes, and applied using the ‘Apply'
 button.
 
@@ -3914,7 +3914,7 @@ recycled or temporary. To suppress internal caching in the GL Viewer in
 these cases, set `TBuffer3D::fID` to 0 (null).**
 
 The viewer indicates it can support local frame objects through the
-**`TVirtualViewer``3D`** interface method: `PreferLocalFrame()`. If this
+**`TVirtualViewer3D`** interface method: `PreferLocalFrame()`. If this
 returns `kTRUE` you can make repeated calls to `AddObject()`, with
 **`TBuffer3D`** containing the same `fID`, and different `fLocalMaster`
 placements.

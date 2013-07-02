@@ -36,7 +36,7 @@ off, you will not see these large savings.
 The **`TTree`** is also used to optimize the data access. A tree uses a
 hierarchy of branches, and each branch can be read independently from
 any other branch. Now, assume that `Px` and `Py` are data members of the
-event, and we would like to compute `Px``2`` + Py``2` for every event
+event, and we would like to compute `Px2 + Py2` for every event
 and histogram the result.
 
 If we had saved the million events without a **`TTree`** we would have
@@ -1528,7 +1528,7 @@ If the `variablename` is enough to identify uniquely the variable, you
 can leave out the tree and/or branch name.
 
 For example, these commands generate a 3-d scatter plot of variable
-"`var`" in the **`TTree`** `tree` versus variable `v1 in ``TTree ft1`
+"`var`" in the **`TTree`** `tree` versus variable `v1 in `TTree ft1`
 versus variable `v2` in **`TTree`** `ft2`.
 
 ``` {.cpp}
@@ -2105,7 +2105,7 @@ in the `TTree::Draw` method.
 ### Using TCut Objects in TTree::Draw
 
 
-The `TTree::Draw` method also accepts **`TCut``G`** objects. A
+The `TTree::Draw` method also accepts **`TCutG`** objects. A
 **`TCut`** is a specialized string object used for **`TTree`**
 selections. A **`TCut`** object has a name and a title. It does not have
 any data members in addition to what it inherits from **`TNamed`**. It
@@ -2220,7 +2220,7 @@ list of primitives. It does not paint the object on the screen. However,
 `TTree::Draw` when called with option "`same`" gets the current pad
 coordinates to build an intermediate histogram with the right limits.
 Since nothing has been painted in the pad yet, the pad limits have not
-been computed. Calling `pad->Update``()` forces the painting of the pad
+been computed. Calling `pad->Update()` forces the painting of the pad
 and allows `TTree::Draw` to compute the right limits for the
 intermediate histogram.
 
@@ -3192,7 +3192,7 @@ TEntryList::GetEntryList(const char *treename, const char *filename)
 
 and then be used to construct a new **`TEntryList`** for a new
 **`TChain`**, or processed independently as normal **`TEntryList`**(s)
-for **`TTre``e`**(s). This modularity makes **`TEntryList`** much better
+for **`TTree`**(s). This modularity makes **`TEntryList`** much better
 suited for PROOF processing than the **`TEventList`**.
 
 #### Using an Event List
@@ -3221,7 +3221,7 @@ root[] TTree *T = (TTree*)f->Get("T");
 root[] T->Draw("fNtrack");
 ```
 
-2. Now, put the entries with over 600 tracks into a **`TEntry``List`**
+2. Now, put the entries with over 600 tracks into a **`TEntryList`**
 called `myList`. We get the list from the current directory and assign
 it to a variable list.
 
@@ -3657,11 +3657,11 @@ trees chained together in a **`TChain`**. The class definition shows us
 that this tree has one branch and one leaf per data member. The methods
 of `MyClass` are:
 
--   `MyClass(``TTree *tree=0) - t`his constructor has an optional tree
+-   `MyClass(TTree *tree=0) - t`his constructor has an optional tree
     for a parameter. If you pass a tree, `MyClass` will use it rather
     than the tree from which it was created.
 
--   `void  Init(``TTree *tree) -` it is called by the constructor to
+-   `void  Init(TTree *tree) -` it is called by the constructor to
     initialize the tree for reading. It associates each branch with the
     corresponding leaf data member.
 
@@ -3926,7 +3926,7 @@ The program `$ROOTSYS/test/bench.cxx` compares the I/O performance of
 STL vectors to the ROOT native **`TClonesArray`**`s` collection class.
 It creates trees with and without compression for the following cases:
 `vector<THit>`, `vector<THit*>`, `TClonesArray(`**`TObjHit`**`)`
-`not split ``TClonesArray(`**`TObjHit`**`)` `split.`
+not split `TClonesArray(`**`TObjHit`**`)` split.
 
 The next graphs show the two columns on the right which represent the split and 
 non-split **`TClonesArray`**, are significantly lower than the vectors. The most

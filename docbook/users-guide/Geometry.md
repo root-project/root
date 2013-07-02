@@ -2323,7 +2323,7 @@ pVolume->AddNode(pVolDaughter,id,ph) // now ph is owned by
 
 #### Rule for Creation of Transformations
 
-Unless explicitly used for positioning nodes `(``TGeoVolume::AddNode())`
+Unless explicitly used for positioning nodes `(TGeoVolume::AddNode())`
 all matrices deletion have to be managed by users. Matrices passed to
 geometry have to be created by using `new()` operator and
 **`TGeoManager`** class is responsible for their deletion. Matrices that
@@ -3237,7 +3237,7 @@ can be rotated/zoomed or drawn in X3d as any other view. Calling
 
 ![Safety computation checking](pictures/030001E0.png)
 
-In order to check a given point, `Ch``eckPoint``(x,y,z)` method of
+In order to check a given point, `CheckPoint(x,y,z)` method of
 **`TGeoManager`** draws the daughters of the volume containing the point
 one level down, printing the path to the deepest physical node holding
 this point. It also computes the closest distance to any boundary.

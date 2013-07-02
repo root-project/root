@@ -110,7 +110,7 @@ following article:
     generator", ACM Trans. on Modeling and Computer Simulations, 8, 1,
     (1998), 3-20.
 
-**`TRandom3`` `**is the recommended random number generator, and it is
+**`TRandom3** is the recommended random number generator, and it is
 used by default in ROOT using the global ***`gRandom`*** object (see
 chapter gRandom).
 
@@ -354,24 +354,21 @@ Here are the CPU times obtained using the four random classes on an
 `lxplus` machine with an Intel 64 bit architecture and compiled using gcc
 3.4:
 
-+--------------------+---------------+---------------+---------------+---------------+
-|                    | **`TRandom`** | **`T``R``ando | **`TRandom2`* | **`TRandom3`* |
-|                    | (ns/call)     | m1`**         | *             | *             |
-|                    |               | (ns/call)     | (ns/call)     | (ns/call)     |
-+--------------------+---------------+---------------+---------------+---------------+
-| `Rndm()`           | -             | -             | 6             | 9             |
-+--------------------+---------------+---------------+---------------+---------------+
-| `Gaus` `()`        | 31            | 161           | 35            | 42            |
-+--------------------+---------------+---------------+---------------+---------------+
-| `R` `annor` `()`   | 116           | 216           | 126           | 130           |
-+--------------------+---------------+---------------+---------------+---------------+
-| `Poisson` `(`      | 147           | 1161          | 162           | 239           |
-| `m=10` `)`         |               |               |               |               |
-+--------------------+---------------+---------------+---------------+---------------+
-| `Poisson` `(`      | 80            | 294           | 89            | 99            |
-| `m=10` `)`         |               |               |               |               |
-| `UNURAN`           |               |               |               |               |
-+--------------------+---------------+---------------+---------------+---------------+
++--------------------+---------------+----------------+----------------+----------------+
+|                    | **`TRandom`** | **`TRandom1`** | **`TRandom2`** | **`TRandom3`** |
+|                    | (ns/call)     | (ns/call)      | (ns/call)      |  (ns/call)     |
++--------------------+---------------+----------------+----------------+----------------+
+| `Rndm()`           | -             | -              | 6              |  9             |
++--------------------+---------------+----------------+----------------+----------------+
+| `Gaus()`           | 31            | 161            | 35             |  42            |
++--------------------+---------------+----------------+----------------+----------------+
+| `Rannor()`         | 116           | 216            | 126            |  130           |
++--------------------+---------------+----------------+----------------+----------------+
+| `Poisson(m-10)`    | 147           | 1161           | 162            |  239           |
++--------------------+---------------+----------------+----------------+----------------+
+| `Poisson(m=10)`    | 80            | 294            | 89             |  99            |
+| `UNURAN`           |               |                |                |                |
++--------------------+---------------+----------------+----------------+----------------+
 
 ## MathCore Library
 
@@ -463,12 +460,12 @@ difference between two points is a vector. We then distinguish for the 3
 dimensional case, between points and vectors, modeling them with
 different classes:
 
--   `ROOT::Math::`**`DisplacementVector2``D`** and
+-   `ROOT::Math::`**`DisplacementVector2D`** and
     `ROOT::Math::`**`DisplacementVector3D`** template classes describing
     2 and 3 component direction and magnitude vectors, not rooted at any
     particular point;
 
--   `ROOT::Math::`**`PositionVector2``D`** and
+-   `ROOT::Math::`**`PositionVector2D`** and
     `ROOT::Math::`**`PositionVector3D`** template classes modeling the
     points in 2 and 3 dimensions.
 
@@ -560,7 +557,7 @@ transformations are:
 
 - 3D transformation: we describe the transformations defined as a
 composition between a rotation and a translation using the class
-**`ROOT::Math::``Transform3D`**. It is important to note that
+**`ROOT::Math::Transform3D`**. It is important to note that
 transformations act differently on vectors and points. The vectors only
 rotate, therefore when applying a transformation (rotation +
 translation) on a vector, only the rotation operates while the
@@ -778,7 +775,7 @@ or, for example, from an `std::vector` using the iterator
 
 The following operations are possible between vector classes, even of
 different coordinate system types: (`v1,v2` are any type of
-**`ROOT::Math::``DisplacementVector3D`** classes, `v3` is the same type
+**`ROOT::Math::DisplacementVector3D`** classes, `v3` is the same type
 of `v1`; `a` is a scalar value)
 
 ``` {.cpp}
@@ -927,7 +924,7 @@ As in the 3D case, typedef's are defined for user convenience. and can
 be used by including the header file `Math/Vector4D.h`. The following
 typedef's, defined in the header file `Math/Vector4Dfwd.h`, are
 available for the different instantiations of the template class
-**`ROOT::Math::``LorentzVector`**:
+**`ROOT::Math::LorentzVector`**:
 
 -   `ROOT::Math::`**`XYZTVector`** vector based on `x`, `y`, `z`, `t`
     coordinates (Cartesian) in double precision
@@ -1709,7 +1706,7 @@ The `SMatrix` package contains only header files. Normally one does not
 need to build any library. In the ROOT distribution a library,
 `libSmatrix` is produced with the C++ dictionary information for squared
 and symmetric matrices and vectors up to dimension 7 and based on
-**`Double``_t`**, **`F``l``oat_t`** and **`Double32_t`**. The following
+**`Double_t`**, **`Float_t`** and **`Double32_t`**. The following
 paragraphs describe the main characteristics of the matrix and vector
 classes. More detailed information about the `SMatrix` classes API is
 available in the
@@ -2251,7 +2248,7 @@ parameterization for multi-dimensional data by fitting them to
 multi-dimensional data using polynomial or Chebyshev or Legendre
 polynomial
 
-**`TSpe``c``trum`** contains advanced spectra processing functions for
+**`TSpectrum`** contains advanced spectra processing functions for
 1- and 2-dimensional background estimation, smoothing, deconvolution,
 peak search and fitting, and orthogonal transformations.
 
@@ -2259,7 +2256,7 @@ peak search and fitting, and orthogonal transformations.
 modeling (see the RooFit User Guide at
 ftp://root.cern.ch/root/doc/RooFit\_Users\_Manual\_2.07-29.pdf)
 
-**`TSplot`` - `**to disentangle signal from background via an extended
+**`TSplot`** to disentangle signal from background via an extended
 maximum likelihood fit and with a tool to access the quality and
 validity of the fit producing distributions for the control variables.
 (see M. Pivk and F.R. Le Diberder, Nucl. Inst. Meth.A 555, 356-369,

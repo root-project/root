@@ -509,7 +509,7 @@ backslashes.
 
 In interactive mode, the Python exception hook is used to mimic some of
 the CINT commands available. These are: `.q`, **`.!`**, **`.x`**,
-**`.L`**, **`.cd`**, **`.ls`**, **`.pwd`**, **`.?`** and **`.``help`**.
+**`.L`**, **`.cd`**, **`.ls`**, **`.pwd`**, **`.?`** and **`.help`**.
 Note that **`.x`** translates to Python '`execfile()`' and thus accepts
 only Python files, not CINT macros.
 
