@@ -145,6 +145,7 @@ const char *rootClingHelp =
 #include "RConfigure.h"
 #include "RConfig.h"
 #include "Rtypes.h"
+#include "TModuleGenerator.h"
 
 #include <iostream>
 #include <memory>
@@ -157,7 +158,6 @@ const char *rootClingHelp =
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
-#include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/Pragma.h"
 #include "clang/Sema/Sema.h"
@@ -165,7 +165,6 @@ const char *rootClingHelp =
 #include "cling/Utils/AST.h"
 
 #include "llvm/Bitcode/BitstreamWriter.h"
-#include "llvm/Support/PathV2.h"
 
 #ifdef WIN32
 const std::string gPathSeparator ("\\");
@@ -2132,86 +2131,33 @@ static ESourceFileKind GetSourceFileKind(clang::CompilerInstance* CI,
 
 //______________________________________________________________________________
 static int GenerateModule(clang::CompilerInstance* CI,
-                          const char* dictSrcFile,
-                          const std::vector<std::string>& args,
+                          const char* libName, const std::vector<std::string>& args,
                           const std::string &currentDirectory)
 {
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
 
-   bool isPCH = !strcmp(dictSrcFile, "etc/allDict.cxx");
-   std::string dictname = llvm::sys::path::stem(dictSrcFile);
-
-   // Parse Arguments
-   vector<std::string> headers;
-   std::vector<const char*> compI;
-   std::vector<const char*> compD;
-   std::vector<const char*> compU;
-   for (size_t iPcmArg = 1 /*skip argv0*/, nPcmArg = args.size();
-        iPcmArg < nPcmArg; ++iPcmArg) {
-      ESourceFileKind sfk = GetSourceFileKind(CI, args[iPcmArg].c_str());
-      if (sfk == kSFKHeader || sfk == kSFKSource) {
-         headers.push_back(args[iPcmArg]);
-      } else if (sfk == kSFKNotC && args[iPcmArg][0] == '-') {
-         switch (args[iPcmArg][1]) {
-         case 'I':
-            if (args[iPcmArg] != "-I." &&  args[iPcmArg] != "-Iinclude") {
-               compI.push_back(args[iPcmArg].c_str() + 2);
-            }
-            break;
-         case 'D':
-            if (args[iPcmArg] != "-DTRUE=1" && args[iPcmArg] != "-DFALSE=0"
-                && args[iPcmArg] != "-DG__NOCINTDLL") {
-               // keep -DROOT_Math_VectorUtil_Cint -DG__VECTOR_HAS_CLASS_ITERATOR?
-               compD.push_back(args[iPcmArg].c_str() + 2);
-            }
-            break;
-         case 'U': compU.push_back(args[iPcmArg].c_str() + 2); break;
-         }
-      }
-   }
+   TModuleGenerator modGen(CI, dictSrcFile, currentDirectory);
+   modGen.ParseArgs(args);
 
    // Dictionary initialization code for loading the module
-   (*dictSrcOut) << "void TriggerDictionaryInitalization_" << dictname << "() {\n"
+   (*dictSrcOut) << "void TriggerDictionaryInitalization_"
+                 << modGen.GetDictionaryName() << "() {\n"
       "      static const char* headers[] = {\n";
-   {
-      for (size_t iH = 0, eH = headers.size(); iH < eH; ++iH) {
-         (*dictSrcOut) << "             \"" << headers[iH] << "\"," << std::endl;
-      }
-   }
-
-   (*dictSrcOut) <<
-      "      0 };\n"
+   modGen.WriteHeaders(*dictSrcOut);
+   (*dictSrcOut) << 
+      "      };\n"
       "      static const char* includePaths[] = {\n";
-   for (std::vector<const char*>::const_iterator
-           iI = compI.begin(), iE = compI.end(); iI != iE; ++iI) {
-      (*dictSrcOut) << "             \"" << *iI << "\"," << std::endl;
-   }
+   modGen.WriteIncludeArray(*dictSrcOut);
 
-   (*dictSrcOut) <<
-      "      0 };\n"
+   (*dictSrcOut) << 
+      "      };\n"
       "      static const char* macroDefines[] = {\n";
-   for (std::vector<const char*>::const_iterator
-           iD = compD.begin(), iDE = compD.end(); iD != iDE; ++iD) {
-      (*dictSrcOut) << "             \"";
-      // Need to escape the embedded quotes.
-      for(const char *c = *iD; *c != '\0'; ++c) {
-         if ( *c == '"' ) {
-            (*dictSrcOut) << "\\\"";
-         } else {
-            (*dictSrcOut) << *c;
-         }
-      }
-      (*dictSrcOut) << "\"," << std::endl;
-   }
-
-   (*dictSrcOut) <<
-      "      0 };\n"
+   modGen.WriteDefinesArray(*dictSrcOut);
+   (*dictSrcOut) << 
+      "      };\n"
       "      static const char* macroUndefines[] = {\n";
-   for (std::vector<const char*>::const_iterator
-           iU = compU.begin(), iUE = compU.end(); iU != iUE; ++iU) {
-      (*dictSrcOut) << "             \"" << *iU << "\"," << std::endl;
-   }
+   modGen.WriteUndefinesArray(*dictSrcOut);
 
    (*dictSrcOut) <<
       "      0 };\n"
@@ -2231,37 +2177,10 @@ static int GenerateModule(clang::CompilerInstance* CI,
       "  } __TheDictionaryInitializer;\n"
       "}" << std::endl;
 
-   // Note: need to resolve _where_ to create the pcm
-   // We default in a lib subdirectory (for the ROOT build)
-   // otherwise we put it in the same directory as the dictionary file (for ACLiC)
-   std::string dictDir = "lib/";
-#ifdef WIN32
-   struct _stati64 finfo;
-
-   if (_stati64(dictDir.c_str(), &finfo) < 0 ||
-       !(finfo.st_mode & S_IFDIR)) {
-      dictDir = "./";
-   }
-#else
-   struct stat finfo;
-   if (stat(dictDir.c_str(), &finfo) < 0 ||
-       !S_ISDIR(finfo.st_mode)) {
-      dictDir = llvm::sys::path::parent_path(dictSrcFile);
-      if (dictDir.empty()) {
-         dictDir = "./";
-      } else {
-         dictDir += "/";
-      }
-   }
-#endif
-
    if (!isPCH) {
       CI->getPreprocessor().getHeaderSearchInfo().
          setModuleCachePath(dictDir.c_str());
    }
-   std::string moduleFile = dictDir + ROOT::TMetaUtils::GetModuleFileName(dictname.c_str());
-   // .pcm -> .pch
-   if (isPCH) moduleFile[moduleFile.length() - 1] = 'h';
 
    clang::Module* module = 0;
    if (!isPCH) {
@@ -3156,7 +3075,8 @@ int RootCling(int argc,
    if (sharedLibraryPathName.empty()) {
       sharedLibraryPathName = dictpathname;
    }
-   GenerateModule(CI, sharedLibraryPathName.c_str(), pcmArgs, currentDirectory);
+   GenerateModule(CI, sharedLibraryPathName.c_str(), pcmArgs, currentDirectory,
+);
 
    // Now that CINT is not longer there to write the header file,
    // write one and include in there a few things for backward
