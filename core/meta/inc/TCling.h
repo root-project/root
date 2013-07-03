@@ -399,7 +399,7 @@ private: // Private Utility Functions
    bool LoadPCM(TString pcmFileName, const char** headers,
                 void (*triggerFunc)()) const;
 
-   ClassDef(TCling, 0) //Interface to CINT C/C++ interpreter
+   ClassDef(TCling, 0) //Interface to cling C++ interpreter
 };
 
 #endif
