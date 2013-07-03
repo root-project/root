@@ -365,16 +365,25 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
             myLeaf = branch->GetLeaf(TString(leafName(1, leafName.Length())));
             if (!myLeaf){
                Error("CreateProxy()", "The tree does not have a branch, nor a sub-branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+               fProxy = 0;
+               return;
             }
             else {
                TDictionary *tempDict = TDictionary::GetDictionary(myLeaf->GetTypeName());
-               if (tempDict->IsA() == TDataType::Class() && TDictionary::GetDictionary(((TDataType*)tempDict)->GetTypeName()) == fDict){
+               if (!tempDict){
+                  Error("CreateProxy()", "Failed to get the dictionary for %s.", myLeaf->GetTypeName());
+                  fProxy = 0;
+                  return;
+               }
+               else if (tempDict->IsA() == TDataType::Class() && TDictionary::GetDictionary(((TDataType*)tempDict)->GetTypeName()) == fDict){
                   //fLeafOffset = myLeaf->GetOffset() / 4;
                   branchActualType = fDict;
                   fLeaf = myLeaf;
                }
                else {
                   Error("CreateProxy()", "Leaf of type %s cannot be read by TTreeReaderValue<%s>.", myLeaf->GetTypeName(), fDict->GetName());
+                  fProxy = 0;
+                  return;
                }
             }
          }
