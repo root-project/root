@@ -73,7 +73,7 @@ namespace ROOT {
 
       Bool_t IsValid() const { return fProxy && 0 == (int)fSetupStatus && 0 == (int)fReadStatus; }
       ESetupStatus GetSetupStatus() const { return fSetupStatus; }
-      EReadStatus GetReadStatus() const { return fReadStatus; }
+      virtual EReadStatus GetReadStatus() const { return fReadStatus; }
 
       TLeaf* GetLeaf() const { return fLeaf; }
 

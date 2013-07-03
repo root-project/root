@@ -43,6 +43,8 @@ namespace ROOT {
       size_t GetSize() const { return fImpl->GetSize(GetProxy()); }
       Bool_t IsEmpty() const { return !GetSize(); }
 
+      virtual EReadStatus GetReadStatus() const { return fImpl ? fImpl->fReadStatus : kReadError; }
+
    protected:
       void* UntypedAt(size_t idx) const { return fImpl->At(GetProxy(), idx); }
       virtual void CreateProxy();

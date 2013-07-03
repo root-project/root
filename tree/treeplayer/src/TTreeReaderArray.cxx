@@ -34,14 +34,27 @@ namespace {
    public:
       ~TClonesReader() {}
       TClonesArray* GetCA(ROOT::TBranchProxy* proxy) {
-         if (!proxy->Read()) return 0;
+         if (!proxy->Read()){
+            fReadStatus = ROOT::TTreeReaderValueBase::kReadError;
+            Error("GetCA()", "Read error in TBranchProxy.");
+            return 0;
+         }
+         fReadStatus = ROOT::TTreeReaderValueBase::kReadSuccess;
          return (TClonesArray*) proxy->GetWhere();
       }
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
-         return GetCA(proxy)->GetEntries();
+         TClonesArray *myClonesArray = GetCA(proxy);
+         if (myClonesArray){
+            return myClonesArray->GetEntries();
+         }
+         else return 0;
       }
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
-         return GetCA(proxy)->UncheckedAt(idx);
+         TClonesArray *myClonesArray = GetCA(proxy);
+         if (myClonesArray){
+            return myClonesArray->UncheckedAt(idx);
+         }
+         else return 0;
       }
    };
 
@@ -53,14 +66,21 @@ namespace {
       TSTLReader() : proxySet(false) {}
       ~TSTLReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
-         if (!proxy->Read()) return 0;
+         if (!proxy->Read()){
+            fReadStatus = ROOT::TTreeReaderValueBase::kReadError;
+            Error("GetCP()", "Read error in TBranchProxy.");
+            return 0;
+         }
+         fReadStatus = ROOT::TTreeReaderValueBase::kReadSuccess;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
 
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
          if (!CheckProxy(proxy)) return -1;
          if (!proxy->ReadEntries()) return -1;
-         return GetCP(proxy)->Size();
+         TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
+         if (!myCollectionProxy) return 0;
+         return myCollectionProxy->Size();
       }
 
       Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
@@ -97,14 +117,21 @@ namespace {
       TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy), proxySet(false) {}
 
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
-         if (!proxy->Read()) return 0;
+         if (!proxy->Read()){
+            fReadStatus = ROOT::TTreeReaderValueBase::kReadError;
+            Error("GetCP()", "Read error in TBranchProxy.");
+            return 0;
+         }
+         fReadStatus = ROOT::TTreeReaderValueBase::kReadSuccess;
          return localCollection;
       }
 
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
          if (!CheckProxy(proxy)) return -1;
          if (!proxy->ReadEntries()) return -1;
-         return GetCP(proxy)->Size();
+         TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
+         if (!myCollectionProxy) return 0;
+         return myCollectionProxy->Size();
       }
 
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
@@ -112,19 +139,22 @@ namespace {
          if (!proxy->Read()) return 0;
          if (!proxy->GetWhere()) return 0;
 
-         if (GetCP(proxy)->HasPointers()){
-            return *(void**)GetCP(proxy)->At(idx);
+         TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
+         if (!myCollectionProxy) return 0;
+         if (myCollectionProxy->HasPointers()){
+            return *(void**)myCollectionProxy->At(idx);
          }
          else {
-            return GetCP(proxy)->At(idx);
+            return myCollectionProxy->At(idx);
          }
       }
 
       Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
          if (!proxy->Read()) return false;
          if (!proxySet) {
-            if (proxy->GetWhere()){
-               GetCP(proxy)->PushProxy(proxy->GetWhere());
+            TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
+            if (proxy->GetWhere() && myCollectionProxy){
+               myCollectionProxy->PushProxy(proxy->GetWhere());
                proxySet = true;
             }
             else return false;
@@ -140,22 +170,29 @@ namespace {
    public:
       ~TObjectArrayReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
-         if (!proxy->Read()) return 0;
+         if (!proxy->Read()){
+            fReadStatus = ROOT::TTreeReaderValueBase::kReadError;
+            Error("GetCP()", "Read error in TBranchProxy.");
+            return 0;
+         }
+         fReadStatus = ROOT::TTreeReaderValueBase::kReadSuccess;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
       virtual size_t GetSize(ROOT::TBranchProxy* proxy) {
-         TVirtualCollectionProxy *collectionProxy = (TVirtualCollectionProxy*)proxy->GetCollection();
-         if (!collectionProxy){
-            Error("GetSize()", "Statically sized array does not provide size.");
-            return -1;
-         }
-         return GetCP(proxy)->Size();
+         TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
+         if (!myCollectionProxy) return 0;
+         return myCollectionProxy->Size();
       }
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
          if (!proxy->Read()) return 0;
 
          void *array = (void*)proxy->GetStart();
-         Int_t objectSize = proxy->GetClass()->GetClassSize();
+         TClass *myClass = proxy->GetClass();
+         if (!myClass){
+            Error("At()", "Cannot get class info from branch proxy.");
+            return 0;
+         }
+         Int_t objectSize = myClass->GetClassSize();
          return (void*)((Byte_t*)array + (objectSize * idx));
       }
    };
@@ -184,16 +221,25 @@ namespace {
       ~TBasicTypeArrayReader() {}
 
       TVirtualCollectionProxy* GetCP (ROOT::TBranchProxy *proxy) {
-         if (!proxy->Read()) return 0;
+         if (!proxy->Read()){
+            fReadStatus = ROOT::TTreeReaderValueBase::kReadError;
+            Error("GetCP()", "Read error in TBranchProxy.");
+            return 0;
+         }
+         fReadStatus = ROOT::TTreeReaderValueBase::kReadSuccess;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
 
       virtual size_t GetSize(ROOT::TBranchProxy* proxy){
-         return GetCP(proxy)->Size();
+         TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
+         if (!myCollectionProxy) return 0;
+         return myCollectionProxy->Size();
       }
 
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx){
-         return (Byte_t*)GetCP(proxy)->At(idx) + proxy->GetOffset();
+         TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
+         if (!myCollectionProxy) return 0;
+         return (Byte_t*)myCollectionProxy->At(idx) + proxy->GetOffset();
       }
    };
 
@@ -204,7 +250,9 @@ namespace {
       TBasicTypeClonesReader(Int_t offsetArg) : offset(offsetArg) {}
 
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx){
-         return (Byte_t*)GetCA(proxy)->At(idx) + offset;
+         TClonesArray *myClonesArray = GetCA(proxy);
+         if (!myClonesArray) return 0;
+         return (Byte_t*)myClonesArray->At(idx) + offset;
       }
    };
 

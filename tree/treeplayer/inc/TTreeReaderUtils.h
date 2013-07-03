@@ -28,6 +28,7 @@
 #ifndef ROOT_TBranchProxy
 #include "TBranchProxy.h"
 #endif
+#include "TTreeReaderValue.h"
 
 class TDictionary;
 class TTree;
@@ -35,7 +36,6 @@ class TTree;
 namespace ROOT {
    class TBranchProxy;
    class TBranchProxyDirector;
-   class TTreeReaderValueBase;
    class TTreeReaderArrayBase;
 
    class TNamedBranchProxy: public TObject {
@@ -62,6 +62,10 @@ namespace ROOT {
    // Used by TTreeReaderArray
    class TCollectionReaderABC {
    public:
+      ROOT::TTreeReaderValueBase::EReadStatus fReadStatus;
+
+      TCollectionReaderABC() : fReadStatus(ROOT::TTreeReaderValueBase::kReadNothingYet) {}
+
       virtual ~TCollectionReaderABC();
       virtual size_t GetSize(TBranchProxy*) = 0;
       virtual void* At(TBranchProxy*, size_t /*idx*/) = 0;
