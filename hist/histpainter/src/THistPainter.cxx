@@ -23,6 +23,7 @@
 #include "TH2Poly.h"
 #include "TH3.h"
 #include "TProfile.h"
+#include "TProfile2D.h"
 #include "THStack.h"
 #include "TF2.h"
 #include "TF3.h"
@@ -414,6 +415,10 @@ value. A sunken button is drawn for negative values a raised one for positive.
 A box is drawn for each cell with a color scale varying with contents. All the
 none empty bins are painted. Empty bins are not painted unless some bins have
 a negative content because in that case the null bins might be not empty.
+<tt>TProfile2D</tt> histograms are handled differently because, for this type of 2D
+histograms, it is possible to know if an empty bin has been filled or not. So even
+if all the bins' contents are positive some empty bins might be painted. And vice versa,
+if some bins have a negative content some empty bins might be not painted.
 </td></tr>
 
 <tr><th valign=top>"COLZ"</th><td>
@@ -1223,6 +1228,11 @@ is the color change between cells.
 some bins have a negative content because in that case the null bins
 might be not empty.
 
+<p><tt>TProfile2D</tt> histograms are handled differently because, for this type of 2D
+histograms, it is possible to know if an empty bin has been filled or not. So even
+if all the bins' contents are positive some empty bins might be painted. And vice versa,
+if some bins have a negative content some empty bins might be not painted.
+
 <p>Combined with the option <tt>"COL"</tt>, the option <tt>"Z"</tt> allows to
 display the color palette defined by <tt>gStyle->SetPalette()</tt>.
 
@@ -1590,7 +1600,7 @@ Draw a lego plot using the hidden surface removal technique.
 <tr><th valign=top>"LEGO2"</th><td>
 Draw a lego plot using colors to show the cell contents.
 </td></tr>
- 
+
 <tr><th valign=top>"LEGO3"</th><td>
 Draw a lego plot with hidden surface removal, like LEGO1 but the border lines
 of each lego-bar are not drawn.
@@ -1647,7 +1657,6 @@ Begin_Macro(source)
       hlego1->Fill(px-1,5*py);
       hlego1->Fill(2+0.5*px,2*py-10.,0.1);
    }
-   gStyle->SetPalette(1);
    hlego1->SetFillColor(kYellow);
    hlego1->Draw("LEGO1 0");
    return c2;
@@ -3220,7 +3229,7 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
    End_html */
 
    if (!gPad) return (char*)"";
-   static char info[100];
+   static char info[200];
    Double_t x  = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Double_t y  = gPad->PadtoY(gPad->AbsPixeltoY(py));
    Double_t x1 = gPad->PadtoX(gPad->AbsPixeltoX(px+1));
@@ -3280,18 +3289,34 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
       }
    }
    if (fH->GetDimension() == 1) {
-      Double_t integ = 0;
-      for (Int_t bin=binmin;bin<=binx;bin++) {integ += fH->GetBinContent(bin);}
-      snprintf(info,100,"(x=%g, y=%g, binx=%d, binc=%g, Sum=%g)",x,y,binx,fH->GetBinContent(binx),integ);
-   } else {
+      if (fH->InheritsFrom(TProfile::Class())) {
+         TProfile *tp = (TProfile*)fH;
+         snprintf(info,200,"(x=%g, y=%g, binx=%d, binc=%g, bine=%g, binn=%d)", x, y, binx, fH->GetBinContent(binx), fH->GetBinError(binx), (Int_t) tp->GetBinEntries(binx));
+      }
+      else {
+         Double_t integ = 0;
+         for (Int_t bin=binmin;bin<=binx;bin++) {integ += fH->GetBinContent(bin);}
+         snprintf(info,200,"(x=%g, y=%g, binx=%d, binc=%g, Sum=%g)",x,y,binx,fH->GetBinContent(binx),integ);
+      }
+   } else if (fH->GetDimension() == 2){
       if (fH->InheritsFrom(TH2Poly::Class())) {
          TH2Poly *th2 = (TH2Poly*)fH;
          biny = th2->FindBin(x,y);
-         snprintf(info,100,"%s (x=%g, y=%g, bin=%d, binc=%g)",th2->GetBinTitle(biny),x,y,biny,th2->GetBinContent(biny));
+         snprintf(info,200,"%s (x=%g, y=%g, bin=%d, binc=%g)",th2->GetBinTitle(biny),x,y,biny,th2->GetBinContent(biny));
+      } 
+      else if (fH->InheritsFrom(TProfile2D::Class())) {
+         TProfile2D *tp = (TProfile2D*)fH;
+         biny = fYaxis->FindFixBin(y);
+         Int_t bin = fH->GetBin(binx,biny);
+         snprintf(info,200,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g, bine=%g, binn=%d)", x, y, binx, biny, fH->GetBinContent(bin), fH->GetBinError(bin), (Int_t) tp->GetBinEntries(bin));
       } else {
          biny = fYaxis->FindFixBin(y);
-         snprintf(info,100,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g)",x,y,binx,biny,fH->GetCellContent(binx,biny));
+         snprintf(info,200,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g)",x,y,binx,biny,fH->GetBinContent(binx,biny));
       }
+   } else { 
+      // 3d case: retrieving the x,y,z bin is not yet implemented 
+      // print just the x,y info
+      snprintf(info,200,"(x=%g, y=%g)",x,y);
    }
    return info;
 }
@@ -3346,6 +3371,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    char chopt[128];
    Int_t nch = strlen(choptin);
    strlcpy(chopt,choptin,128);
+   Int_t hdim = fH->GetDimension();
 
    Hoption.Axis = Hoption.Bar    = Hoption.Curve   = Hoption.Error = 0;
    Hoption.Hist = Hoption.Line   = Hoption.Mark    = Hoption.Fill  = 0;
@@ -3371,10 +3397,10 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    MakeCuts(chopt);
 
    for (Int_t i=0;i<nch;i++) chopt[i] = toupper(chopt[i]);
-   if (fH->GetDimension() > 1) Hoption.Scat = 1;
+   if (hdim > 1) Hoption.Scat = 1;
    if (!nch) Hoption.Hist = 1;
    if (fFunctions->First()) Hoption.Func = 2;
-   if (fH->GetSumw2N() && fH->GetDimension() == 1) Hoption.Error = 2;
+   if (fH->GetSumw2N() && hdim == 1) Hoption.Error = 2;
 
    l = strstr(chopt,"SPEC");
    if (l) {
@@ -3476,13 +3502,18 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"CONT");
    if (l) {
-      Hoption.Scat = 0;
-      Hoption.Contour = 1; strncpy(l,"    ",4);
-      if (l[4] == '1') { Hoption.Contour = 11; l[4] = ' '; }
-      if (l[4] == '2') { Hoption.Contour = 12; l[4] = ' '; }
-      if (l[4] == '3') { Hoption.Contour = 13; l[4] = ' '; }
-      if (l[4] == '4') { Hoption.Contour = 14; l[4] = ' '; }
-      if (l[4] == '5') { Hoption.Contour = 15; l[4] = ' '; }
+      strncpy(l,"    ",4);
+      if (hdim>1) {
+         Hoption.Scat = 0;
+         Hoption.Contour = 1;
+         if (l[4] == '1') { Hoption.Contour = 11; l[4] = ' '; }
+         if (l[4] == '2') { Hoption.Contour = 12; l[4] = ' '; }
+         if (l[4] == '3') { Hoption.Contour = 13; l[4] = ' '; }
+         if (l[4] == '4') { Hoption.Contour = 14; l[4] = ' '; }
+         if (l[4] == '5') { Hoption.Contour = 15; l[4] = ' '; }
+      } else {
+         Hoption.Hist = 1;
+      }
    }
    l = strstr(chopt,"HBAR");
    if (l) {
@@ -3503,15 +3534,48 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[3] == '4') { Hoption.Bar = 14; l[3] = ' '; }
    }
 
-   l = strstr(chopt,"ARR" ); if (l) { Hoption.Arrow  = 1; strncpy(l,"   ", 3); Hoption.Scat = 0; }
+   l = strstr(chopt,"ARR" );
+   if (l) {
+      strncpy(l,"   ", 3);
+      if (hdim>1) {
+         Hoption.Arrow  = 1;
+         Hoption.Scat = 0;
+      } else {
+         Hoption.Hist = 1;
+      }
+   }
    l = strstr(chopt,"BOX" );
    if (l) {
-      Hoption.Scat = 0;
-      Hoption.Box  = 1; strncpy(l,"   ", 3);
-      if (l[3] == '1') { Hoption.Box = 11; l[3] = ' '; }
+      strncpy(l,"   ", 3);
+      if (hdim>1) {
+         Hoption.Scat = 0;
+         Hoption.Box  = 1;
+         if (l[3] == '1') { Hoption.Box = 11; l[3] = ' '; }
+      } else {
+         Hoption.Hist = 1;
+      }
    }
-   l = strstr(chopt,"COLZ"); if (l) { Hoption.Color  = 2; strncpy(l,"    ",4); Hoption.Scat = 0; Hoption.Zscale = 1;}
-   l = strstr(chopt,"COL" ); if (l) { Hoption.Color  = 1; strncpy(l,"   ", 3); Hoption.Scat = 0; }
+   l = strstr(chopt,"COLZ");
+   if (l) {
+      strncpy(l,"    ",4);
+      if (hdim>1) {
+         Hoption.Color  = 2;
+         Hoption.Scat   = 0;
+         Hoption.Zscale = 1;
+      } else {
+         Hoption.Hist = 1;
+      }
+   }
+   l = strstr(chopt,"COL" );
+   if (l) {
+      strncpy(l,"   ", 3);
+      if (hdim>1) {
+         Hoption.Color = 1;
+         Hoption.Scat  = 0;
+      } else {
+         Hoption.Hist = 1;
+      }
+   }
    l = strstr(chopt,"CHAR"); if (l) { Hoption.Char   = 1; strncpy(l,"    ",4); Hoption.Scat = 0; }
    l = strstr(chopt,"FUNC"); if (l) { Hoption.Func   = 2; strncpy(l,"    ",4); Hoption.Hist = 0; }
    l = strstr(chopt,"HIST"); if (l) { Hoption.Hist   = 2; strncpy(l,"    ",4); Hoption.Func = 0; Hoption.Error = 0;}
@@ -3587,7 +3651,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    }
 
    if (strstr(chopt,"E")) {
-      if (fH->GetDimension() == 1) {
+      if (hdim == 1) {
          Hoption.Error = 1;
          if (strstr(chopt,"E0"))  Hoption.Error = 10;
          if (strstr(chopt,"E1"))  Hoption.Error = 11;
@@ -3905,18 +3969,18 @@ void THistPainter::PaintArrows(Option_t *)
             xstep = fXaxis->GetBinWidth(i);
             if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
             if (i == Hparam.xfirst) {
-               dx = fH->GetCellContent(i+1, j) - fH->GetCellContent(i, j);
+               dx = fH->GetBinContent(i+1, j) - fH->GetBinContent(i, j);
             } else if (i == Hparam.xlast) {
-               dx = fH->GetCellContent(i, j) - fH->GetCellContent(i-1, j);
+               dx = fH->GetBinContent(i, j) - fH->GetBinContent(i-1, j);
             } else {
-               dx = 0.5*(fH->GetCellContent(i+1, j) - fH->GetCellContent(i-1, j));
+               dx = 0.5*(fH->GetBinContent(i+1, j) - fH->GetBinContent(i-1, j));
             }
             if (j == Hparam.yfirst) {
-               dy = fH->GetCellContent(i, j+1) - fH->GetCellContent(i, j);
+               dy = fH->GetBinContent(i, j+1) - fH->GetBinContent(i, j);
             } else if (j == Hparam.ylast) {
-               dy = fH->GetCellContent(i, j) - fH->GetCellContent(i, j-1);
+               dy = fH->GetBinContent(i, j) - fH->GetBinContent(i, j-1);
             } else {
-               dy = 0.5*(fH->GetCellContent(i, j+1) - fH->GetCellContent(i, j-1));
+               dy = 0.5*(fH->GetBinContent(i, j+1) - fH->GetBinContent(i, j-1));
             }
             if (id == 1) {
                dn = TMath::Max(dn, TMath::Abs(dx));
@@ -4610,6 +4674,7 @@ void THistPainter::PaintColorLevels(Option_t *)
    Double_t scale = ndivz/dz;
 
    Int_t color;
+   TProfile2D* prof2d = dynamic_cast<TProfile2D*>(fH);
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       yk    = fYaxis->GetBinLowEdge(j);
       ystep = fYaxis->GetBinWidth(j);
@@ -4620,7 +4685,17 @@ void THistPainter::PaintColorLevels(Option_t *)
          if (Hoption.System == kPOLAR && xk<0) xk= 2*TMath::Pi()+xk;
          if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          z     = fH->GetBinContent(bin);
-         if (z == 0 && (zmin >= 0 || Hoption.Logz)) continue; // don't draw the empty bins for histograms with positive content
+         // if fH is a profile histogram do not draw empty bins
+         if (prof2d) {
+            const Double_t binEntries = prof2d->GetBinEntries(bin);
+            if (binEntries == 0)
+               continue;
+         } else {
+            // don't draw the empty bins for non-profile histograms
+            // with positive content
+            if (z == 0 && (zmin >= 0 || Hoption.Logz)) continue;
+         }
+
          if (Hoption.Logz) {
             if (z > 0) z = TMath::Log10(z);
             else       z = zmin;
@@ -5425,7 +5500,7 @@ void THistPainter::Paint2DErrors(Option_t *)
    Double_t temp1[3],temp2[3];
    Double_t xyerror;
    if (Hoption.Error == 110) {
-      xyerror = 0 ;
+      xyerror = 0;
    } else {
       xyerror = gStyle->GetErrorX();
    }
@@ -6582,10 +6657,10 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
       r[2] = 0;
       view->WCtoNDC(r, x2);
       gPad->PaintLine(x1[0],x1[1],x2[0],x2[1]);
-      return ;
+      return;
    }
 
-   if (Hoption.System != kCARTESIAN) return ;
+   if (Hoption.System != kCARTESIAN) return;
 
    rad = TMath::ATan(1.) * 4. /180.;
    cosa = TMath::Cos(ang*rad);
@@ -7143,9 +7218,9 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
             if (a>50) a = 50;
             if (print_ferrors) {
                snprintf(textstats,50,"= %s%s #pm %s ", "%",stats->GetFitFormat(),
-                        GetBestFormat(fit->GetParameter(ipar), fit->GetParError(ipar), stats->GetFitFormat()));
+                       GetBestFormat(fit->GetParameter(ipar), fit->GetParError(ipar), stats->GetFitFormat()));
                snprintf(&t[a],100,textstats,(Float_t)fit->GetParameter(ipar)
-                        ,(Float_t)fit->GetParError(ipar));
+                               ,(Float_t)fit->GetParError(ipar));
             } else {
                snprintf(textstats,50,"= %s%s ","%",stats->GetFitFormat());
                snprintf(&t[a],100,textstats,(Float_t)fit->GetParameter(ipar));
@@ -7334,15 +7409,22 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
       //get 3*3 under/overflows for 2d hist
       Double_t unov[9];
 
-      unov[0] = h2->Integral(0,h2->GetXaxis()->GetFirst()-1,h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetNbins()+1);
-      unov[1] = h2->Integral(h2->GetXaxis()->GetFirst(),h2->GetXaxis()->GetLast(),h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetNbins()+1);
-      unov[2] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetNbins()+1,h2->GetYaxis()->GetLast()+1,h2->GetYaxis()->GetNbins()+1);
-      unov[3] = h2->Integral(0,h2->GetXaxis()->GetFirst()-1,h2->GetYaxis()->GetFirst(),h2->GetYaxis()->GetLast());
-      unov[4] = h2->Integral(h2->GetXaxis()->GetFirst(),h2->GetXaxis()->GetLast(),h2->GetYaxis()->GetFirst(),h2->GetYaxis()->GetLast());
-      unov[5] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetNbins()+1,h2->GetYaxis()->GetFirst(),h2->GetYaxis()->GetLast());
-      unov[6] = h2->Integral(0,h2->GetXaxis()->GetFirst()-1,0,h2->GetYaxis()->GetFirst()-1);
-      unov[7] = h2->Integral(h2->GetXaxis()->GetFirst(),h2->GetXaxis()->GetLast(),0,h2->GetYaxis()->GetFirst()-1);
-      unov[8] = h2->Integral(h2->GetXaxis()->GetLast()+1,h2->GetXaxis()->GetNbins()+1,0,h2->GetYaxis()->GetFirst()-1);
+      Int_t cellsX = h2->GetXaxis()->GetNbins() + 1;
+      Int_t cellsY = h2->GetYaxis()->GetNbins() + 1;
+      Int_t firstX = std::max(1, h2->GetXaxis()->GetFirst());
+      Int_t firstY = std::max(1, h2->GetYaxis()->GetFirst());
+      Int_t lastX  = std::min(h2->GetXaxis()->GetLast(), h2->GetXaxis()->GetNbins());
+      Int_t lastY  = std::min(h2->GetYaxis()->GetLast(), h2->GetYaxis()->GetNbins());
+
+      unov[0] = h2->Integral(      0, firstX-1, lastY+1, cellsY  );
+      unov[1] = h2->Integral(firstX , lastX   , lastY+1, cellsY  );
+      unov[2] = h2->Integral(lastX+1, cellsX  , lastY+1, cellsY  );
+      unov[3] = h2->Integral(      0, firstX-1, firstY , lastY   );
+      unov[4] = h2->Integral(firstX , lastX   , firstY , lastY   );
+      unov[5] = h2->Integral(lastX+1, cellsX  , firstY , lastY   );
+      unov[6] = h2->Integral(      0, firstX-1,       0, firstY-1);
+      unov[7] = h2->Integral(firstX, lastX,           0, firstY-1);
+      unov[8] = h2->Integral(lastX+1, cellsX  ,       0, firstY-1);
 
       snprintf(t, 100," %7d|%7d|%7d\n", (Int_t)unov[0], (Int_t)unov[1], (Int_t)unov[2]);
       stats->AddText(t);
@@ -8957,10 +9039,10 @@ Int_t THistPainter::TableInit()
    Double_t allchan = 0;
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
-         c1 = fH->GetCellContent(i,j);
+         c1 = fH->GetBinContent(i,j);
          zmax = TMath::Max(zmax,c1);
          if (Hoption.Error) {
-            e1 = fH->GetCellError(i,j);
+            e1 = fH->GetBinError(i,j);
             zmax = TMath::Max(zmax,c1+e1);
          }
          zmin = TMath::Min(zmin,c1);

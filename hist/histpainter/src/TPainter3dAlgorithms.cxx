@@ -40,17 +40,13 @@ End_Html */
 #include "THLimitsFinder.h"
 #include "TColor.h"
 
-#ifdef R__SUNCCBUG
-const Double_t kRad = 1.74532925199432955e-02;
-#else
-const Double_t kRad = TMath::ATan(1)*Double_t(4)/Double_t(180);
-#endif
+const Double_t kRad  = TMath::ATan(1)*Double_t(4)/Double_t(180);
 const Double_t kFdel = 0.;
-const Double_t kDel = 0.0001;
-const Int_t kNiso = 4;
+const Double_t kDel  = 0.0001;
+const Int_t kNiso  = 4;
 const Int_t kNmaxp = kNiso*13;
 const Int_t kNmaxt = kNiso*12;
-const Int_t kLmax = 12;
+const Int_t kLmax  = 12;
 const Int_t kF3FillColor1 = 201;
 const Int_t kF3FillColor2 = 202;
 const Int_t kF3LineColor  = 203;
@@ -95,7 +91,6 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFi
    fDrawFace        = 0;
    fLegoFunction    = 0;
    fSurfaceFunction = 0;
-
 
    TList *stack = 0;
    if (gCurrentHist) stack = gCurrentHist->GetPainter()->GetStack();
@@ -2305,7 +2300,7 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
    //              Get the content of the table, and loop on the
    //              stack if necessary.
    vv[1] = Hparam.zmin;
-   vv[2] = Hparam.factor*gCurrentHist->GetCellContent(ixt, iyt);
+   vv[2] = Hparam.factor*gCurrentHist->GetBinContent(ixt, iyt);
 
    // In linear scale, 3D boxes all start from 0.
    if (Hparam.zmin<0 && !Hoption.Logz && gStyle->GetHistMinimumZero()) {
@@ -2323,7 +2318,7 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
    if (nids) {
       for (i = 2; i <= nids + 1; ++i) {
          TH1 *hid = (TH1*)stack->At(i-2);
-         vv[i + 1] = Hparam.factor*hid->GetCellContent(ixt, iyt) + vv[i];
+         vv[i + 1] = Hparam.factor*hid->GetBinContent(ixt, iyt) + vv[i];
          vv[i + 1] = TMath::Max(Hparam.zmin, vv[i + 1]);
          //vv[i + 1] = TMath::Min(Hparam.zmax, vv[i + 1]);
       }
@@ -3973,7 +3968,7 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
    //          first channel should be used. */
       icx = ixt + ixa;
       if (icx > Hparam.xlast) icx = 1;
-      f[i*3+3] = Hparam.factor*gCurrentHist->GetCellContent(icx, iyt + iya);
+      f[i*3+3] = Hparam.factor*gCurrentHist->GetBinContent(icx, iyt + iya);
       if (Hoption.Logz) {
          if (f[i*3+3] > 0) f[i*3+3] = TMath::Log10(f[i*3+3]);
          else              f[i*3+3] = Hparam.zmin;
@@ -3985,7 +3980,7 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
       }
 
    // The colors on the surface can represent the content or the errors.
-   // if (fSumw2.fN) t[i] = gCurrentHist->GetCellError(icx, iyt + iya);
+   // if (fSumw2.fN) t[i] = gCurrentHist->GetBinError(icx, iyt + iya);
    // else           t[i] = f[i * 3 + 3];
       t[i] = f[i * 3 + 3];
    }
@@ -5230,7 +5225,6 @@ L300:
    MarchingCubeSurfacePenetration(fF8[3], fF8[2], fF8[6], fF8[7],
                                   fF8[0], fF8[1], fF8[5], fF8[4], irep);
    if (irep != 2) goto L400;
-///   IHMCTT(NTRIA,IT8,ITRIA)
    ntria = 9;
    icase = 9;
 
