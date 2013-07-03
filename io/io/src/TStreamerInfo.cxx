@@ -1233,7 +1233,7 @@ void TStreamerInfo::BuildOld()
          element->SetNewType( element->GetType() );
          element->SetNewClass( fClass );
       } else if (((TStreamerElement*)fElements->At(0))->GetType() == TStreamerInfo::kSTL && 
-                 !strcmp( ((TStreamerElement*)fElements->At(0))->GetTypeName(),GetName()) == 0) {
+                 strcmp( ((TStreamerElement*)fElements->At(0))->GetTypeName(),GetName()) != 0) {
          // We have a collection that was proxied but does not have a collection proxy,
          // let's put one in place just for fun ... humm however we have no clue what is the value
          // type ....
