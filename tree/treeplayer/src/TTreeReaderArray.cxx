@@ -548,7 +548,12 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
           || brElement->GetType() == 3) {
          TVirtualCollectionProxy* collProxy = brElement->GetCollectionProxy();
          if (collProxy) {
-            dict = TDictionary::GetDictionary(collProxy->GetValueClass()->GetName());
+            TClass *myClass = collProxy->GetValueClass();
+            if (!myClass){
+               Error("GetBranchContentDataType()", "Could not get value class.");
+               return 0;
+            }
+            dict = TDictionary::GetDictionary(myClass->GetName());
             if (!dict) dict = TDataType::GetDataType(collProxy->GetType());
          }
          if (!dict) {
