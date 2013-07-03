@@ -22,8 +22,7 @@ METACLINGCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGC
 ifneq ($(CXX:g++=),$(CXX))
 METACLINGCXXFLAGS += -Wno-shadow -Wno-unused-parameter
 endif
-METADICTCXXFLAGS := -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Ietc -Ietc/cling $(METADCLINGCXXFLAGS)
-METADICTH    := $(METAH) cling/Interpreter/Interpreter.h cling/Interpreter/DynamicExprInfo.h cling/Interpreter/DynamicLookupLifetimeHandler.h cling/Interpreter/StoredValueRef.h
+METADICTH    := $(METAH)
 METAO        := $(call stripsrc,$(METAS:.cxx=.o))
 
 METADEP      := $(METAO:.o=.d) $(METADO:.o=.d)
