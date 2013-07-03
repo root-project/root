@@ -284,6 +284,9 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    fCurrentMonitor   = 0;
    fServSock         = 0;
 
+   fTerminatedSlaveInfos = new TList;
+   fTerminatedSlaveInfos->SetOwner(kTRUE);
+
    // Control how to start the workers; copy-on-write (fork) is *very*
    // experimental and available on Unix only.
    fForkStartup      = kFALSE;
