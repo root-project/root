@@ -189,7 +189,35 @@ static void CleanUpROOTAtExit()
    }
 }
 
+//______________________________________________________________________________
+namespace {
+   // A module and its headers. Intentionally not a copy:
+   // If these strings end up in this struct they are
+   // long lived by definition because they get passed in
+   // before initialization of TCling.
+   struct ModuleHeaderInfo_t {
+      ModuleHeaderInfo_t(const char* moduleName,
+                         const char** headers,
+                         const char** includePaths,
+                         const char** macroDefines,
+                         const char** macroUndefines,
+                         void (*triggerFunc)() ):
+         fModuleName(moduleName), fHeaders(headers),
+         fIncludePaths(includePaths), fMacroDefines(macroDefines),
+         fMacroUndefines(macroUndefines), fTriggerFunc(triggerFunc) {}
+      const char* fModuleName; // module name
+      const char** fHeaders; // 0-terminated array of header files
+      const char** fIncludePaths; // 0-terminated array of header files
+      const char** fMacroDefines; // 0-terminated array of header files
+      const char** fMacroUndefines; // 0-terminated array of header files
+      void (*fTriggerFunc)(); // Pointer to the dict initialization used to find the library name
+   };
 
+   std::vector<ModuleHeaderInfo_t>& GetModuleHeaderInfoBuffer() {
+      static std::vector<ModuleHeaderInfo_t> moduleHeaderInfoBuffer;
+      return moduleHeaderInfoBuffer;
+   }
+}
 
 Int_t  TROOT::fgDirLevel = 0;
 Bool_t TROOT::fgRootInit = kFALSE;
@@ -1462,6 +1490,20 @@ void TROOT::InitInterpreter()
 
    fgRootInit = kTRUE;
 
+   // Initialize all registered dictionaries.
+   for (std::vector<ModuleHeaderInfo_t>::const_iterator
+           li = GetModuleHeaderInfoBuffer().begin(),
+           le = GetModuleHeaderInfoBuffer().end(); li != le; ++li) {
+         // process buffered module registrations
+      ((TCling*)gCling)->RegisterModule(li->fModuleName,
+                                        li->fHeaders,
+                                        li->fIncludePaths,
+                                        li->fMacroDefines,
+                                        li->fMacroUndefines,
+                                        li->fTriggerFunc);
+      }
+   GetModuleHeaderInfoBuffer().clear();
+
    fInterpreter->Initialize();
 
    TClass::ReadRules(); // Read the default customization rules ...
@@ -1859,6 +1901,31 @@ void TROOT::RefreshBrowsers()
    TBrowser *b;
    while ((b = (TBrowser*) next()))
       b->SetRefreshFlag(kTRUE);
+}
+
+//______________________________________________________________________________
+void TROOT::RegisterModule(const char* modulename,
+                           const char** headers,
+                           const char** includePaths,
+                           const char** macroDefines,
+                           const char** macroUndefines,
+                           void (*triggerFunc)() )
+{
+   // Called by static dictionary initialization to register clang modules
+   // for headers. Calls TCling::RegisterModule() unless gCling
+   // is NULL, i.e. during startup, where the information is buffered in
+   // the static GetModuleHeaderInfoBuffer().
+
+   if (gCling) {
+      ((TCling*)gCling)->RegisterModule(modulename, headers, includePaths,
+                                        macroDefines, macroUndefines,
+                                        triggerFunc);
+   } else {
+      GetModuleHeaderInfoBuffer()
+         .push_back(ModuleHeaderInfo_t(modulename, headers, includePaths,
+                                       macroDefines, macroUndefines,
+                                       triggerFunc));
+   }
 }
 
 //______________________________________________________________________________

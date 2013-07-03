@@ -828,7 +828,6 @@ TClass::TClass(const char *name, Bool_t silent) :
 
    gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
    if (!fClassInfo) {
-      gInterpreter->InitializeDictionaries();
       gInterpreter->SetClassInfo(this);
    }
    if (!silent && !fClassInfo && fName.First('@')==kNPOS) 
@@ -1015,7 +1014,6 @@ void TClass::Init(const char *name, Version_t cversion,
 
          gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
          if (!fClassInfo) {
-            gInterpreter->InitializeDictionaries();
             gInterpreter->SetClassInfo(this);
             if (IsZombie()) {
                TClass::RemoveClass(this);

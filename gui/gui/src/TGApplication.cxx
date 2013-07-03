@@ -119,9 +119,6 @@ TGApplication::TGApplication(const char *appClassName,
       }
    }
 
-   // Make sure all registered dictionaries have been initialized
-   // and that all types have been loaded
-   gInterpreter->InitializeDictionaries();
    gInterpreter->UpdateListOfTypes();
 
    // Save current interpreter context

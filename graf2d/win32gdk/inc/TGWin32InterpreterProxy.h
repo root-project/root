@@ -49,7 +49,6 @@ public:
    void     EnableAutoLoading();
    void     EndOfLineAction();
    void     Initialize();
-   Int_t    InitializeDictionaries();
    void     InspectMembers(TMemberInspector&, void* obj, const TClass* cl);
    Int_t    Load(const char *filenam, Bool_t system = kFALSE);
    void     LoadMacro(const char *filename, EErrorCode *error = 0);

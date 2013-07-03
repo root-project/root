@@ -145,69 +145,6 @@ using namespace clang;
 
 R__EXTERN int optind;
 
-//______________________________________________________________________________
-namespace {
-   // A module and its headers. Intentionally not a copy:
-   // If these strings end up in this struct they are
-   // long lived by definition because they get passed in
-   // before initialization of TCling.
-   struct ModuleHeaderInfo_t {
-      ModuleHeaderInfo_t(const char* moduleName,
-                         const char** headers,
-                         const char** includePaths,
-                         const char** macroDefines,
-                         const char** macroUndefines,
-                         void (*triggerFunc)() ):
-         fModuleName(moduleName), fHeaders(headers),
-         fIncludePaths(includePaths), fMacroDefines(macroDefines),
-         fMacroUndefines(macroUndefines), fTriggerFunc(triggerFunc) {}
-      const char* fModuleName; // module name
-      const char** fHeaders; // 0-terminated array of header files
-      const char** fIncludePaths; // 0-terminated array of header files
-      const char** fMacroDefines; // 0-terminated array of header files
-      const char** fMacroUndefines; // 0-terminated array of header files
-      void (*fTriggerFunc)(); // Pointer to the dict initialization used to find the library name
-   };
-
-   llvm::SmallVector<ModuleHeaderInfo_t, 10> *gModuleHeaderInfoBuffer;
-}
-
-//______________________________________________________________________________
-extern "C"
-void TCling__RegisterModule(const char* modulename,
-                                    const char** headers,
-                                    const char** includePaths,
-                                    const char** macroDefines,
-                                    const char** macroUndefines,
-                                    void (*triggerFunc)() )
-{
-   // Called by static dictionary initialization to register clang modules
-   // for headers. Calls TCling::RegisterModule() unless gCling
-   // is NULL, i.e. during startup, where the information is buffered in
-   // the static moduleHeaderInfoBuffer which then later can be accessed
-   // via the global *gModuleHeaderInfoBuffer after a call to this function
-   // with modulename=0.
-
-   static llvm::SmallVector<ModuleHeaderInfo_t, 10> moduleHeaderInfoBuffer;
-   if (!modulename) {
-      gModuleHeaderInfoBuffer = &moduleHeaderInfoBuffer;
-      return;
-   }
-
-   if (gCling) {
-      ((TCling*)gCling)->RegisterModule(modulename, headers, includePaths,
-                                        macroDefines, macroUndefines,
-                                        triggerFunc);
-   } else {
-      moduleHeaderInfoBuffer.push_back(ModuleHeaderInfo_t(modulename,
-                                                          headers,
-                                                          includePaths,
-                                                          macroDefines,
-                                                          macroUndefines,
-                                                          triggerFunc));
-   }
-}
-
 // The functions are used to bridge cling/clang/llvm compiled with no-rtti and
 // ROOT (which uses rtti)
 
@@ -831,11 +768,6 @@ TCling::TCling(const char *name, const char *title)
    if (fHaveSinglePCM)
       ::Info("TCling::TCling", "Using one PCM.");
 
-   // set the gModuleHeaderInfoBuffer pointer
-   TCling__RegisterModule(0, 0, 0, 0, 0, 0);
-
-   TCling::InitializeDictionaries();
-   
    // For the list to also include string, we have to include it now.
    fInterpreter->declare("#include \"Rtypes.h\"\n"
                          "#include <string>\n"
@@ -1484,30 +1416,6 @@ void TCling::ClearStack()
    // Delete existing temporary values.
 
    // No-op for cling due to StoredValueRef.
-}
-
-//______________________________________________________________________________
-Int_t TCling::InitializeDictionaries()
-{
-   // Initialize all registered dictionaries.
-
-   R__LOCKGUARD(gClingMutex);
-
-   SmallVectorImpl<ModuleHeaderInfo_t>::iterator
-      li = gModuleHeaderInfoBuffer->begin(),
-      le = gModuleHeaderInfoBuffer->end();
-   for (; li != le; ++li) {
-      // process buffered module registrations
-      ((TCling*)gCling)->RegisterModule(li->fModuleName,
-                                        li->fHeaders,
-                                        li->fIncludePaths,
-                                        li->fMacroDefines,
-                                        li->fMacroUndefines,
-                                        li->fTriggerFunc);
-   }
-   gModuleHeaderInfoBuffer->clear();
-
-   return 0;
 }
 
 //______________________________________________________________________________

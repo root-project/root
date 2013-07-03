@@ -44,7 +44,6 @@ VOID_METHOD_ARG0(Interpreter,ClearStack,1)
 VOID_METHOD_ARG0(Interpreter,EndOfLineAction,1)
 VOID_METHOD_ARG0(Interpreter,EnableAutoLoading,1)
 VOID_METHOD_ARG0(Interpreter,Initialize,0)
-RETURN_METHOD_ARG0(Interpreter,Int_t,InitializeDictionaries)
 // Does not support references:
 //VOID_METHOD_ARG3(Interpreter,InspectMembers,TMemberInspector&, insp, void*, obj, const TClass*,cl,1)
 void _NAME4_(p2,Interpreter,InspectMembers,insp)(void *in)

@@ -169,9 +169,6 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
    ResetBit(kProcessRemotely);
 
-   // Make sure all registered dictionaries have been initialized
-   // and that all types have been loaded
-   gInterpreter->InitializeDictionaries();
    gInterpreter->UpdateListOfTypes();
 
    // Enable autoloading

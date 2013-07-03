@@ -42,12 +42,6 @@ extern "C" {
    namespace cling {
       class Transaction;
    }
-   void TCling__RegisterModule(const char* modulename,
-                                       const char** headers,
-                                       const char** includePaths,
-                                       const char** macroDefines,
-                                       const char** macroUndefines,
-                                       void (*triggerFunc)() );
    void TCling__UpdateListsOnCommitted(const cling::Transaction&);
    void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
@@ -130,7 +124,6 @@ public: // Public Interface
    const char* GetIncludePath();
    virtual const char* GetSTLIncludePath() const;
    TObjArray*  GetRootMapFiles() const { return fRootmapFiles; }
-   Int_t   InitializeDictionaries();
    virtual void Initialize();
    void    InspectMembers(TMemberInspector&, void* obj, const TClass* cl);
    Bool_t  IsLoaded(const char* filename) const;

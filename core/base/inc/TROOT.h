@@ -247,6 +247,12 @@ public:
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
    Bool_t            ReadingObject() const { /* Deprecated (will be removed in next release) */ return fReadingObject; }
    void              RefreshBrowsers();
+   static void       RegisterModule(const char* modulename,
+                                    const char** headers,
+                                    const char** includePaths,
+                                    const char** macroDefines,
+                                    const char** macroUndefines,
+                                    void (*triggerFunc)() );
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
    void              SaveContext();
