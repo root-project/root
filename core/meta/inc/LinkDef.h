@@ -21,6 +21,7 @@
 #pragma link C++ class TClass;
 #pragma link C++ class TClassStreamer+;
 #pragma link C++ class TMemberStreamer+;
+#pragma link C++ class TClassAttributeMap+;
 #pragma link C++ class TClassRef+;
 #pragma link C++ class TClassGenerator+;
 #pragma link C++ class TDataMember;
