@@ -52,7 +52,7 @@ namespace ROOT {
                                            TString& contentTypeName,
                                            TDictionary* &dict) const;
 
-      TCollectionReaderABC* fImpl; // Common interface to collections
+      TVirtualCollectionReader* fImpl; // Common interface to collections
 
       ClassDefT(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
    };

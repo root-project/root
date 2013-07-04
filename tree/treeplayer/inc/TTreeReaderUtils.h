@@ -60,13 +60,13 @@ namespace ROOT {
    };
 
    // Used by TTreeReaderArray
-   class TCollectionReaderABC {
+   class TVirtualCollectionReader {
    public:
       ROOT::TTreeReaderValueBase::EReadStatus fReadStatus;
 
-      TCollectionReaderABC() : fReadStatus(ROOT::TTreeReaderValueBase::kReadNothingYet) {}
+      TVirtualCollectionReader() : fReadStatus(ROOT::TTreeReaderValueBase::kReadNothingYet) {}
 
-      virtual ~TCollectionReaderABC();
+      virtual ~TVirtualCollectionReader();
       virtual size_t GetSize(TBranchProxy*) = 0;
       virtual void* At(TBranchProxy*, size_t /*idx*/) = 0;
    };

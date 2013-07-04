@@ -26,11 +26,11 @@
 #include "TRegexp.h"
 
 // pin vtable
-ROOT::TCollectionReaderABC::~TCollectionReaderABC() {}
+ROOT::TVirtualCollectionReader::~TVirtualCollectionReader() {}
 
 namespace {
    // Reader interface for clones arrays
-   class TClonesReader: public ROOT::TCollectionReaderABC {
+   class TClonesReader: public ROOT::TVirtualCollectionReader {
    public:
       ~TClonesReader() {}
       TClonesArray* GetCA(ROOT::TBranchProxy* proxy) {
@@ -59,7 +59,7 @@ namespace {
    };
 
    // Reader interface for STL
-   class TSTLReader: public ROOT::TCollectionReaderABC {
+   class TSTLReader: public ROOT::TVirtualCollectionReader {
    private:
       Bool_t proxySet;
    public:
@@ -109,7 +109,7 @@ namespace {
       }
    };
 
-   class TCollectionLessSTLReader : public ROOT::TCollectionReaderABC {
+   class TCollectionLessSTLReader : public ROOT::TVirtualCollectionReader {
    private:
       TVirtualCollectionProxy *localCollection;
       Bool_t proxySet;
@@ -166,7 +166,7 @@ namespace {
 
    // Reader interface for leaf list
    // SEE TTreeProxyGenerator.cxx:1319: '//We have a top level raw type'
-   class TObjectArrayReader: public ROOT::TCollectionReaderABC {
+   class TObjectArrayReader: public ROOT::TVirtualCollectionReader {
    public:
       ~TObjectArrayReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
@@ -216,7 +216,7 @@ namespace {
       virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/) { return size; }
    };
 
-   class TBasicTypeArrayReader : public ROOT::TCollectionReaderABC {
+   class TBasicTypeArrayReader : public ROOT::TVirtualCollectionReader {
    public:
       ~TBasicTypeArrayReader() {}
 
@@ -256,7 +256,7 @@ namespace {
       }
    };
 
-   class TLeafReader : public ROOT::TCollectionReaderABC {
+   class TLeafReader : public ROOT::TVirtualCollectionReader {
    private:
       ROOT::TTreeReaderValueBase *valueReader;
    public:
