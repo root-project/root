@@ -1,4 +1,3 @@
-
 // @(#)root/meta:$Id$
 // Author: Bianca-Cristina Cristescu   03/07/13
 
@@ -47,7 +46,7 @@ public:
    Int_t       RemovePropertyInt(const char* key);
    TString     RemovePropertyString(const char* key);
    void        RemoveProperty(const char* key);
-   void        Clear(); 
+   void        Clear(Option_t* option = ""); 
 
 private:
 
