@@ -82,7 +82,7 @@ Int_t TClassAttributeMap::GetPropertyAsInt(const char* key) const
    TObject* found = fIntProperty.FindObject(key);
    if (found)
       return ((TParameter<int>*)found)->GetVal(); 
-   else {
+   else 
       //Show an error message if the key is not found.   
       Error("GetPropertyAsInt"
       , "Could not find property with Int value for this key: %s", key);   
