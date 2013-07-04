@@ -101,7 +101,7 @@ public :
    TGeoVoxelFinder();
    TGeoVoxelFinder(TGeoVolume *vol);
    virtual ~TGeoVoxelFinder();
-   void                DaughterToMother(Int_t id, Double_t *local, Double_t *master) const;
+   void                DaughterToMother(Int_t id, const Double_t *local, Double_t *master) const;
    virtual Double_t    Efficiency();
    virtual Int_t      *GetCheckList(const Double_t *point, Int_t &nelem, TGeoStateInfo &td);
    Int_t              *GetCheckList(Int_t &nelem, TGeoStateInfo &td) const;
@@ -110,9 +110,9 @@ public :
    Bool_t              IsInvalid() const {return TObject::TestBit(kGeoInvalidVoxels);}
    Bool_t              NeedRebuild() const {return TObject::TestBit(kGeoRebuildVoxels);}
    Double_t           *GetBoxes() const {return fBoxes;}
-   Bool_t              IsSafeVoxel(Double_t *point, Int_t inode, Double_t minsafe) const;
+   Bool_t              IsSafeVoxel(const Double_t *point, Int_t inode, Double_t minsafe) const;
    virtual void        Print(Option_t *option="") const;
-   void                PrintVoxelLimits(Double_t *point) const;
+   void                PrintVoxelLimits(const Double_t *point) const;
    void                SetInvalid(Bool_t flag=kTRUE) {TObject::SetBit(kGeoInvalidVoxels, flag);}
    void                SetNeedRebuild(Bool_t flag=kTRUE) {TObject::SetBit(kGeoRebuildVoxels, flag);}
    virtual Int_t      *GetNextVoxel(const Double_t *point, const Double_t *dir, Int_t &ncheck, TGeoStateInfo &td);

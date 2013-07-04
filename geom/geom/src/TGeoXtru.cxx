@@ -447,16 +447,17 @@ Double_t TGeoXtru::DistToPlane(const Double_t *point, const Double_t *dir, Int_t
       safe = (vert[0]-point[0])*norm[0]+
              (vert[1]-point[1])*norm[1]+
              (vert[2]-point[2])*norm[2];
-      if (safe<0) return TGeoShape::Big(); // direction outwards plane
+      if (safe<-1.E-8) return TGeoShape::Big(); // direction outwards plane
    } else {
       ndotd = -ndotd;
       if (ndotd<=0) return TGeoShape::Big(); 
       safe = (point[0]-vert[0])*norm[0]+
              (point[1]-vert[1])*norm[1]+
              (point[2]-vert[2])*norm[2];
-      if (safe<0) return TGeoShape::Big(); // direction outwards plane
+      if (safe<-1.E-8) return TGeoShape::Big(); // direction outwards plane
    }      
    snext = safe/ndotd;
+   if (snext<0) return 0.;
    if (snext>stepmax) return TGeoShape::Big();
    if (fZ[iz]<fZ[iz+1]) {
       znew = point[2] + snext*dir[2];
@@ -839,7 +840,7 @@ void TGeoXtru::GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const
    }
 }
 //_____________________________________________________________________________
-Bool_t TGeoXtru::IsPointInsidePlane(const Double_t *point, const Double_t *vert, Double_t *norm) const
+Bool_t TGeoXtru::IsPointInsidePlane(const Double_t *point, Double_t *vert, Double_t *norm) const
 {
 // Check if the quadrilateral defined by VERT contains a coplanar POINT.
    Double_t v1[3], v2[3];
@@ -1018,7 +1019,7 @@ Double_t TGeoXtru::SafetyToSector(const Double_t *point, Int_t iz, Double_t safm
       saf1 = (point[0]-vert[0])*norm[0]+(point[1]-vert[1])*norm[1]+(point[2]-vert[2])*norm[2];
       if (in) saf1 = -saf1;
 //      printf("segment %d: (%f,%f)-(%f,%f) norm=(%f,%f,%f): saf1=%f\n", iseg, vert[0],vert[1],vert[3],vert[4],norm[0],norm[1],norm[2],saf1);
-      if (saf1<0) continue;
+      if (saf1<-1.E-8) continue;
       safe = TMath::Max(safz, saf1);
       safe = TMath::Abs(safe);
       if (safe>safmin) continue;

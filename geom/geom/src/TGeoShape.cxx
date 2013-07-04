@@ -78,7 +78,7 @@
 // Note that global queries related to a geometry are handled by the manager class.
 // However, shape-related queries might be sometimes usefull.
 //
-// A) Bool_t TGeoShape::Contains(Double_t *point[3])
+// A) Bool_t TGeoShape::Contains(const Double_t *point[3])
 //   - this method returns true if POINT is actually inside the shape. The point
 // has to be defined in the local shape reference. For instance, for a box having
 // DX, DY and DZ half-lengths a point will be considered inside if :
@@ -108,7 +108,7 @@
 //   - computes the distance to entering a shape from a given point OUTSIDE. Acts
 // in the same way as B).
 //
-// D) Double_t Safety(Double_t *point[3], Bool_t inside)
+// D) Double_t Safety(const Double_t *point[3], Bool_t inside)
 //
 //   - compute maximum shift of a point in any direction that does not change its
 // INSIDE/OUTSIDE state (does not cross shape boundaries). The state of the point
@@ -711,4 +711,46 @@ void TGeoShape::Paint(Option_t *option)
    } else {
       painter->PaintShape(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
    }  
+}
+
+// Vectorized methods to be overloaded by each solid
+//_____________________________________________________________________________
+void TGeoShape::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
+{
+// Check the inside status for each of the points in the array.
+// Input: Array of point coordinates + vector size
+// Output: Array of Booleans for the inside of each point
+   for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
+}
+
+//_____________________________________________________________________________
+void TGeoShape::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
+{
+// Compute the normal for an array o points so that norm.dot.dir is positive
+// Input: Arrays of point coordinates and directions + vector size
+// Output: Array of normal directions
+   for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
+}
+
+//_____________________________________________________________________________
+void TGeoShape::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
+{
+// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+   for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
+}
+
+//_____________________________________________________________________________
+void TGeoShape::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
+{
+// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+   for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
+}
+
+//_____________________________________________________________________________
+void TGeoShape::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
+{
+// Compute safe distance from each of the points in the input array.
+// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+// Output: Safety values
+   for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

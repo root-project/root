@@ -119,7 +119,7 @@ public:
    void            CheckOverlaps(Double_t ovlp=0.1, Option_t *option="") const; // *MENU*
    void            CheckShape(Int_t testNo, Int_t nsamples=10000, Option_t *option=""); // *MENU*
    Int_t           CountNodes(Int_t nlevels=1000, Int_t option=0);
-   Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
+   Bool_t          Contains(const Double_t *point) const {return fShape->Contains(point);}
    virtual Bool_t  IsAssembly() const;
    virtual Bool_t  IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}

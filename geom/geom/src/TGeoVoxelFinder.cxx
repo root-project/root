@@ -302,7 +302,7 @@ void TGeoVoxelFinder::BuildVoxelLimits()
 }
 
 //_____________________________________________________________________________
-void TGeoVoxelFinder::DaughterToMother(Int_t id, Double_t *local, Double_t *master) const
+void TGeoVoxelFinder::DaughterToMother(Int_t id, const Double_t *local, Double_t *master) const
 {
 // convert a point from the local reference system of node id to reference
 // system of mother volume
@@ -311,7 +311,7 @@ void TGeoVoxelFinder::DaughterToMother(Int_t id, Double_t *local, Double_t *mast
    else      mat->LocalToMaster(local, master);
 }
 //_____________________________________________________________________________
-Bool_t TGeoVoxelFinder::IsSafeVoxel(Double_t *point, Int_t inode, Double_t minsafe) const
+Bool_t TGeoVoxelFinder::IsSafeVoxel(const Double_t *point, Int_t inode, Double_t minsafe) const
 {
 // Computes squared distance from POINT to the voxel(s) containing node INODE. Returns 0
 // if POINT inside voxel(s).
@@ -2246,7 +2246,7 @@ void TGeoVoxelFinder::Print(Option_t *) const
 }
 
 //_____________________________________________________________________________
-void TGeoVoxelFinder::PrintVoxelLimits(Double_t *point) const
+void TGeoVoxelFinder::PrintVoxelLimits(const Double_t *point) const
 {
 // print the voxel containing point
    if (NeedRebuild()) {
