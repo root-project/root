@@ -637,13 +637,16 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
                TVirtualCollectionProxy *myCollectionProxy = myClass->GetCollectionProxy();
                if (!myCollectionProxy){
                   Error("GetBranchDataType()", "Could not get collection proxy from STL class");
+                  return 0;
                }
                dict = myCollectionProxy->GetValueClass();
                contentTypeName = dict->GetName();
+               return 0;
             }
             else {
                dict = brElement->GetCurrentClass();
                contentTypeName = brElement->GetTypeName();
+               return 0;
             }
          }
          if (brElement->GetCurrentClass() == TClonesArray::Class()){
@@ -653,11 +656,13 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
          }
          else if (!dict && (branch->GetSplitLevel() == 0 || brElement->GetClass()->GetCollectionProxy())){
             dict = brElement->GetClass()->GetCollectionProxy()->GetValueClass();
-            contentTypeName = dict->GetName();
+            if (dict) contentTypeName = dict->GetName();
+            return 0;
          }
          else if (!dict){
             dict = brElement->GetClass();
             contentTypeName = dict->GetName();
+            return 0;
          }
 
          return 0;
@@ -678,7 +683,7 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
          }
          return 0;
       }
-      dict = TDictionary::GetDictionary(dataTypeName);
+      if (dataTypeName) dict = TDictionary::GetDictionary(dataTypeName);
       if (branch->IsA() == TBranchSTL::Class()){
          Warning("GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
          dict = fDict;
