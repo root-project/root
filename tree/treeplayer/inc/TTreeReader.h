@@ -40,6 +40,7 @@
 #ifndef ROOT_TTreeReaderUtils
 #include "TTreeReaderUtils.h"
 #endif
+#include "TChain.h"
 
 class TDictionary;
 class TDirectory;
@@ -82,7 +83,14 @@ public:
 
    TTree* GetTree() const { return fTree; }
    Long64_t GetEntries(Bool_t force) const { return fTree ? (force ? fTree->GetEntries() : fTree->GetEntriesFast() ) : -1; }
-   Long64_t GetCurrentEntry() const { return fDirector ? fDirector->GetReadEntry() : 0; }
+   Long64_t GetCurrentEntry() const {
+      if (!fDirector) return 0;
+      Long64_t currentTreeEntry = fDirector->GetReadEntry();
+      if (fTree->IsA() == TChain::Class()) {
+         return ((TChain*)fTree)->GetChainEntryNumber(currentTreeEntry);
+      }
+      return currentTreeEntry;
+   }
 
 protected:
    void Initialize();

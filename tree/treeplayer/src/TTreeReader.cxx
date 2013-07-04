@@ -81,6 +81,7 @@ void TTreeReader::Initialize()
       fEntryStatus = kEntryNoTree;
    } else {
       fDirector = new ROOT::TBranchProxyDirector(fTree, -1);
+      fTree->LoadTree(0);
    }
 }
 
@@ -119,7 +120,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntry(Long64_t entry)
          }
       }
    }
-   fDirector->SetReadEntry(entry);
+   fDirector->SetReadEntry(loadResult);
    fEntryStatus = kEntryValid;
    return fEntryStatus;
 }
