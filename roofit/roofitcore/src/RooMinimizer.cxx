@@ -259,6 +259,14 @@ ROOT::Fit::Fitter* RooMinimizer::fitter()
 }
 
 
+//_____________________________________________________________________________
+const ROOT::Fit::Fitter* RooMinimizer::fitter() const 
+{
+  // Return underlying ROOT fitter object 
+  return _theFitter ;
+}
+
+
 
 //_____________________________________________________________________________
 RooFitResult* RooMinimizer::fit(const char* options)
