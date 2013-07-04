@@ -2065,71 +2065,6 @@ enum ESourceFileKind {
 };
 
 //______________________________________________________________________________
-static ESourceFileKind GetSourceFileKind(clang::CompilerInstance* CI,
-                                         const char* filename)
-{
-   // Check whether the file's extension is compatible with C or C++.
-   // Return whether source, header, Linkdef or nothing.
-   if (filename[0] == '-') return kSFKNotC;
-
-   const size_t len = strlen(filename);
-   const char* ext = filename + len - 1;
-   while (ext >= filename && *ext != '.') --ext;
-   if (ext < filename || *ext != '.') {
-      // This might still be a system header, let's double check
-      // via the FileManager.
-      clang::Preprocessor& PP = CI->getPreprocessor();
-      clang::HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
-      const clang::DirectoryLookup* CurDir = 0;
-      const clang::FileEntry* hdrFileEntry
-         =  HdrSearch.LookupFile(filename, true /*isAngled*/, 0 /*FromDir*/,
-                                 CurDir, 0 /*CurFileEnt*/, 0 /*SearchPath*/,
-                                 0 /*RelativePath*/, 0 /*SuggestedModule*/);
-      if (hdrFileEntry) {
-         return kSFKHeader;
-      }
-      return kSFKNotC;
-   }
-   ++ext;
-   const size_t lenExt = filename + len - ext;
-
-   ESourceFileKind ret = kSFKNotC;
-   switch (lenExt) {
-   case 1: {
-      const char last = toupper(filename[len - 1]);
-      if (last == 'H') ret = kSFKHeader;
-      else if (last == 'C') ret = kSFKSource;
-      break;
-   }
-   case 2: {
-      if (filename[len - 2] == 'h' && filename[len - 1] == 'h')
-         ret = kSFKHeader;
-      else if (filename[len - 2] == 'c' && filename[len - 1] == 'c')
-         ret = kSFKSource;
-      break;
-   }
-   case 3: {
-      const char last = filename[len - 1];
-      if ((last == 'x' || last == 'p')
-          && filename[len - 2] == last) {
-         if (filename[len - 3] == 'h') ret = kSFKHeader;
-         else if (filename[len - 3] == 'c') ret = kSFKSource;
-      }
-   }
-   } // switch extension length
-
-   static const size_t lenLinkdefdot = 8;
-   if (ret == kSFKHeader && len - lenExt >= lenLinkdefdot) {
-      if ((strstr(filename,"LinkDef") || strstr(filename,"Linkdef") ||
-           strstr(filename,"linkdef")) && strstr(filename,".h")) {
-         ret = kSFKLinkdef;
-      }
-   }
-   return ret;
-}
-
-
-//______________________________________________________________________________
 static int GenerateModule(clang::CompilerInstance* CI,
                           const char* libName, const std::vector<std::string>& args,
                           const std::string &currentDirectory)
@@ -2139,43 +2074,7 @@ static int GenerateModule(clang::CompilerInstance* CI,
 
    TModuleGenerator modGen(CI, dictSrcFile, currentDirectory);
    modGen.ParseArgs(args);
-
-   // Dictionary initialization code for loading the module
-   (*dictSrcOut) << "void TriggerDictionaryInitalization_"
-                 << modGen.GetDictionaryName() << "() {\n"
-      "      static const char* headers[] = {\n";
-   modGen.WriteHeaders(*dictSrcOut);
-   (*dictSrcOut) << 
-      "      };\n"
-      "      static const char* includePaths[] = {\n";
-   modGen.WriteIncludeArray(*dictSrcOut);
-
-   (*dictSrcOut) << 
-      "      };\n"
-      "      static const char* macroDefines[] = {\n";
-   modGen.WriteDefinesArray(*dictSrcOut);
-   (*dictSrcOut) << 
-      "      };\n"
-      "      static const char* macroUndefines[] = {\n";
-   modGen.WriteUndefinesArray(*dictSrcOut);
-
-   (*dictSrcOut) <<
-      "      0 };\n"
-      "      static bool sInitialized = false;\n"
-      "      if (!sInitialized) {\n"
-      "        TROOT::RegisterModule(\"" << dictname << "\",\n"
-      "          headers, includePaths, macroDefines, macroUndefines,\n"
-      "          TriggerDictionaryInitalization_" << dictname << ");\n"
-      "        sInitialized = true;\n"
-      "      }\n"
-      "    }\n"
-      "namespace {\n"
-      "  static struct DictInit {\n"
-      "    DictInit() {\n"
-      "      TriggerDictionaryInitalization_" << dictname << "();\n"
-      "    }\n"
-      "  } __TheDictionaryInitializer;\n"
-      "}" << std::endl;
+   modGen.WriteRegistrationSource(*dictSrcOut);
 
    if (!isPCH) {
       CI->getPreprocessor().getHeaderSearchInfo().

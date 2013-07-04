@@ -16,6 +16,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "clang/Lex/HeaderSearch.h"
+#include "clang/Support/SourceManager.h"
 #include "llvm/Support/PathV2.h"
 
 using namespace ROOT;
@@ -154,30 +155,72 @@ void TModuleGenerator::ParseArgs(const std::vector<std::string>& args)
    }
 }
 
-void TModuleGenerator::writePPCode(std::ostream& out)
+void TModuleGenerator::WritePPDefines(std::ostream& out)
+{
+   // Write
+   // #ifndef FOO
+   // # define FOO=bar
+   // #endif
+   for (StringPairVec_t::const_iterator i = fCompD.begin(),
+           e = fCompD.end(); i != e; ++i) {
+      out << "#ifndef " << i->first << "\n"
+         "  #define " << i->first;
+      if (i->second.empty()) {
+         out << i->second;
+      }
+      out << "\n"
+         "#endif\n";
+   }
+   out << std::endl()
+}
+
+void TModuleGenerator::WritePPUndefines(std::ostream& out)
+{
+   // Write
+   // #ifdef FOO
+   // # undef FOO
+   // #endif
+   for (std::vector<std::string>::const_iterator i = fCompU.begin(),
+           e = fCompU.end(); i != e; ++i) {
+      out << "#ifdef " << *i << "\n"
+         "  #undef " << *i << "\n"
+         "#endif\n";
+   }
+   out << std::endl()
+}
+
+void TModuleGenerator::WritePPIncludes(std::ostream& out)
 {
    // Write
    // #include "header1.h"
    // #include "header2.h"
-   // #ifndef FOO
-   // # define FOO=bar
-   // #endif
-      
+   for (std::vector<std::string>::const_iterator i = fHeaders.begin(),
+           e = fHeaders.end(); i != e; ++i) {
+      out << "#include " << *i << "\n";
+   }
+   out << std::endl()
+}
+
+void TModuleGenerator::WriteAllSeenHeadersArray(std::ostream& out) const
+{
+   for (clang::fileinfo_iterator i = fSrcMgr->fileinfo_begin(),
+           e = fSrcMgr->fileinfo_end(); i != e; ++i) {
+   }
 }
 
 void TModuleGenerator::WriteStringVec(const std::vector<std::string>& vec,
-                                      std::ostream& out)
+                                      std::ostream& out) const
 {
    for (std::vector<std::string>::const_iterator i = vec.begin(),
            e = vec.end(); i != e; ++i) {
       out << "\"" << *i << "\",\n";
    }
-   out << "0\n";
+   out << "0" << std::endl();
 
 }
 
 void TModuleGenerator::WriteStringPairVec(const StringPairVec_t& vec,
-                                          std::ostream& out)
+                                          std::ostream& out) const
 {
    for (StringPairVec_t::const_iterator i = vec.begin(),
            e = vec.end(); i != e; ++i) {
@@ -195,70 +238,36 @@ void TModuleGenerator::WriteStringPairVec(const StringPairVec_t& vec,
       }
       out << "\",\n";
    }
-   out << "0\n";
+   out << "0" << std::endl();
 }
 
 //______________________________________________________________________________
-static int GenerateModule(clang::CompilerInstance* CI,
-                          const char* libName, const std::vector<std::string>& args,
-                          const std::string &currentDirectory)
+void TModuleGenerator::WriteRegistrationSource(std::ostream& out) const
 {
-   // Generate the clang module given the arguments.
-   // Returns != 0 on error.
-
-   ModuleGenerator modGen(CI, dictSrcFile, currentDirectory, *dictSrcOut);
-   modGen.ParseArgs(args);
-
-   std::string dictname = llvm::sys::path::stem(dictSrcFile);
-
    // Dictionary initialization code for loading the module
-   (*dictSrcOut) << "void TriggerDictionaryInitalization_"
-                 << modGen.fDictionaryName << "() {\n"
+   out << "void TriggerDictionaryInitalization_"
+       << modGen.GetDictionaryName() << "() {\n"
       "      static const char* headers[] = {\n";
-   {
-      for (size_t iH = 0, eH = headers.size(); iH < eH; ++iH) {
-         (*dictSrcOut) << "             \"" << headers[iH] << "\"," << std::endl;
-      }
-   }
-
-   (*dictSrcOut) << 
-      "      0 };\n"
+   WriteHeaders(*dictSrcOut);
+   out << 
+      "      };\n"
       "      static const char* includePaths[] = {\n";
-   for (std::vector<const char*>::const_iterator
-           iI = compI.begin(), iE = compI.end(); iI != iE; ++iI) {
-      (*dictSrcOut) << "             \"" << *iI << "\"," << std::endl;
-   }
+   WriteIncludePathArray(*dictSrcOut);
 
-   (*dictSrcOut) << 
-      "      0 };\n"
+   out << 
+      "      };\n"
       "      static const char* macroDefines[] = {\n";
-   for (std::vector<const char*>::const_iterator
-           iD = compD.begin(), iDE = compD.end(); iD != iDE; ++iD) {
-      (*dictSrcOut) << "             \"";
-      // Need to escape the embedded quotes.
-      for(const char *c = *iD; *c != '\0'; ++c) {
-         if ( *c == '"' ) {
-            (*dictSrcOut) << "\\\"";            
-         } else {
-            (*dictSrcOut) << *c;
-         }
-      }
-      (*dictSrcOut) << "\"," << std::endl;
-   }
-
-   (*dictSrcOut) << 
-      "      0 };\n"
+   WriteDefinesArray(*dictSrcOut);
+   out << 
+      "      };\n"
       "      static const char* macroUndefines[] = {\n";
-   for (std::vector<const char*>::const_iterator
-           iU = compU.begin(), iUE = compU.end(); iU != iUE; ++iU) {
-      (*dictSrcOut) << "             \"" << *iU << "\"," << std::endl;
-   }
+   WriteUndefinesArray(*dictSrcOut);
 
-   (*dictSrcOut) << 
+   out << 
       "      0 };\n"
       "      static bool sInitialized = false;\n"
       "      if (!sInitialized) {\n"
-      "        TCling__RegisterModule(\"" << dictname << "\",\n"
+      "        TROOT::RegisterModule(\"" << dictname << "\",\n"
       "          headers, includePaths, macroDefines, macroUndefines,\n"
       "          TriggerDictionaryInitalization_" << dictname << ");\n"
       "        sInitialized = true;\n"
@@ -271,58 +280,4 @@ static int GenerateModule(clang::CompilerInstance* CI,
       "    }\n"
       "  } __TheDictionaryInitializer;\n"
       "}" << std::endl;
-
-   if (!isPCH) {
-      CI->getPreprocessor().getHeaderSearchInfo().
-         setModuleCachePath(dictDir.c_str());
-   }
-   std::string moduleFile = dictDir + ROOT::TMetaUtils::GetModuleFileName(dictname.c_str());
-   // .pcm -> .pch
-   if (isPCH) moduleFile[moduleFile.length() - 1] = 'h';
-
-   clang::Module* module = 0;
-   if (!isPCH) {
-      std::vector<const char*> headersCStr;
-      for (std::vector<std::string>::const_iterator
-              iH = headers.begin(), eH = headers.end();
-           iH != eH; ++iH) {
-         headersCStr.push_back(iH->c_str());
-      }
-      headersCStr.push_back(0);
-      module = ROOT::TMetaUtils::declareModuleMap(CI, moduleFile.c_str(), &headersCStr[0]);
-   }
-
-   // From PCHGenerator and friends:
-   llvm::SmallVector<char, 128> Buffer;
-   llvm::BitstreamWriter Stream(Buffer);
-   clang::ASTWriter Writer(Stream);
-   llvm::raw_ostream *OS
-      = CI->createOutputFile(moduleFile, /*Binary=*/true,
-                             /*RemoveFileOnSignal=*/false, /*InFile*/"",
-                             /*Extension=*/"", /*useTemporary=*/false,
-                             /*CreateMissingDirectories*/false);
-   if (OS) {
-      // Emit the PCH file
-      CI->getFrontendOpts().RelocatablePCH = true;
-      std::string ISysRoot("/DUMMY_SYSROOT/include/");
-#ifdef ROOTBUILD
-      ISysRoot = (currentDirectory + "/").c_str();
-#endif
-      Writer.WriteAST(CI->getSema(), moduleFile, module, ISysRoot.c_str());
-
-      // Write the generated bitstream to "Out".
-      OS->write((char *)&Buffer.front(), Buffer.size());
-
-      // Make sure it hits disk now.
-      OS->flush();
-      bool deleteOutputFile =  CI->getDiagnostics().hasErrorOccurred();
-      CI->clearOutputFiles(deleteOutputFile);
-    
-   }
-
-   // Free up some memory, in case the process is kept alive.
-   Buffer.clear();
-
-   return 0;
 }
-
