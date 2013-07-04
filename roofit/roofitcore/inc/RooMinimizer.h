@@ -49,6 +49,8 @@ public:
   void optimizeConst(Int_t flag) ;
   void setEvalErrorWall(Bool_t flag) { _fcn->SetEvalErrorWall(flag); }
   void setOffsetting(Bool_t flag) ;
+  void setMaxIterations(Int_t n) ;
+  void setMaxFunctionCalls(Int_t n) ; 
 
   RooFitResult* fit(const char* options) ;
 
@@ -82,6 +84,8 @@ public:
 
   Int_t evalCounter() const { return _fcn->evalCounter() ; }
   void zeroEvalCount() { _fcn->zeroEvalCount() ; }
+
+  ROOT::Fit::Fitter* fitter() ;
   
 protected:
 
