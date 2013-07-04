@@ -104,7 +104,7 @@
 #include "TMap.h"
 #include "TObjString.h"
 #include "TVirtualMutex.h"
-# include "TCling.h"
+#include "TCling.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -1495,12 +1495,12 @@ void TROOT::InitInterpreter()
            li = GetModuleHeaderInfoBuffer().begin(),
            le = GetModuleHeaderInfoBuffer().end(); li != le; ++li) {
          // process buffered module registrations
-      ((TCling*)gCling)->RegisterModule(li->fModuleName,
-                                        li->fHeaders,
-                                        li->fIncludePaths,
-                                        li->fMacroDefines,
-                                        li->fMacroUndefines,
-                                        li->fTriggerFunc);
+      gCling->RegisterModule(li->fModuleName,
+                             li->fHeaders,
+                             li->fIncludePaths,
+                             li->fMacroDefines,
+                             li->fMacroUndefines,
+                             li->fTriggerFunc);
       }
    GetModuleHeaderInfoBuffer().clear();
 
@@ -1917,9 +1917,9 @@ void TROOT::RegisterModule(const char* modulename,
    // the static GetModuleHeaderInfoBuffer().
 
    if (gCling) {
-      ((TCling*)gCling)->RegisterModule(modulename, headers, includePaths,
-                                        macroDefines, macroUndefines,
-                                        triggerFunc);
+      gCling->RegisterModule(modulename, headers, includePaths,
+                             macroDefines, macroUndefines,
+                             triggerFunc);
    } else {
       GetModuleHeaderInfoBuffer()
          .push_back(ModuleHeaderInfo_t(modulename, headers, includePaths,
