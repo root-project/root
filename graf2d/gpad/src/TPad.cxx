@@ -4529,7 +4529,6 @@ void TPad::Print(const char *filenam, Option_t *option)
          Paint();
       }
       if (noScreen) GetCanvas()->SetBatch(kFALSE);
-      if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt, psname.Data());
 
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
@@ -4539,6 +4538,8 @@ void TPad::Print(const char *filenam, Option_t *option)
          gROOT->GetListOfSpecials()->Add(gVirtualPS);
          gVirtualPS = 0;
       }
+
+      if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt, psname.Data());
    } else {
       // Append to existing Postscript, PDF or GIF file
       if (!ccloseb) {
