@@ -626,16 +626,24 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
          Int_t id = brElement->GetID();
 
          if (id >= 0){
-            // Int_t offset = streamerInfo->GetOffsets()[id];
             TStreamerElement *element = (TStreamerElement*)streamerInfo->GetElements()->At(id);
-            // Bool_t isPointer = element->IsaPointer();
-
-            dict = brElement->GetCurrentClass();
-            contentTypeName = brElement->GetTypeName();
 
             if (element->IsA() == TStreamerSTL::Class()){
-               dict = brElement->GetCurrentClass()->GetCollectionProxy()->GetValueClass();
+               TClass *myClass = brElement->GetCurrentClass();
+               if (!myClass){
+                  Error("GetBranchDataType()", "Could not get class from branch element.");
+                  return 0;
+               }
+               TVirtualCollectionProxy *myCollectionProxy = myClass->GetCollectionProxy();
+               if (!myCollectionProxy){
+                  Error("GetBranchDataType()", "Could not get collection proxy from STL class");
+               }
+               dict = myCollectionProxy->GetValueClass();
                contentTypeName = dict->GetName();
+            }
+            else {
+               dict = brElement->GetCurrentClass();
+               contentTypeName = brElement->GetTypeName();
             }
          }
          if (brElement->GetCurrentClass() == TClonesArray::Class()){
