@@ -2886,7 +2886,7 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // Either f1Number is computed locally or set from outside
    static Int_t f1Number = 0;
    TString f1Name(GetName());
-   char *l = strstr(option,"#");
+   const char *l = strstr(option,"#");
    if (l>0) {
       sscanf(&l[1],"%d",&f1Number);
    } else {
