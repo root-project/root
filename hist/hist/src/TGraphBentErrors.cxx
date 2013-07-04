@@ -495,7 +495,7 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
                                        <<");"<<std::endl;
    }
 
-   static Int_t frameNumber = 0;
+   static Int_t frameNumber = 2000;
    if (fHistogram) {
       frameNumber++;
       TString hname = fHistogram->GetName();
@@ -509,11 +509,14 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
    // save list of functions
    TIter next(fFunctions);
    TObject *obj;
-   while ((obj=next())) {
-      obj->SavePrimitive(out,"nodraw");
-      out<<"   grbe->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<std::endl;
+   while ((obj = next())) {
+      obj->SavePrimitive(out, Form("nodraw #%d\n",++frameNumber));
       if (obj->InheritsFrom("TPaveStats")) {
-         out<<"   ptstats->SetParent(grbe->GetListOfFunctions());"<<std::endl;
+         out << "   grbe->GetListOfFunctions()->Add(ptstats);" << std::endl;
+         out << "   ptstats->SetParent(grbe->GetListOfFunctions());" << std::endl;
+      } else {
+         out << "   grbe->GetListOfFunctions()->Add(" 
+             << Form("%s%d",obj->GetName(),frameNumber) << ");" << std::endl;
       }
    }
 

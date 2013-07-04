@@ -6689,16 +6689,17 @@ void TASImage::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    static int ii = 0;
    ii++;
 
-   str.ReplaceAll("static", "");
+   str.ReplaceAll("static", "const");
    TString xpm = "xpm_";
    xpm += name;
    xpm += ii;
    str.ReplaceAll("asxpm", xpm.Data());
    out << std::endl << str << std::endl << std::endl;
+   
    out << "   TImage *";
-   out << name << " = TImage::Create();" << std::endl;
-   out << "   " << name << "->SetImageBuffer(" << xpm << ", TImage::kXpm);" << std::endl;
-   out << "   " << name << "->Draw();" << std::endl;
+   out << xpm << "_img = TImage::Create();" << std::endl;
+   out << "   " << xpm << "_img->SetImageBuffer( (char **)" << xpm << ", TImage::kXpm);" << std::endl;
+   out << "   " << xpm << "_img->Draw();" << std::endl;
 }
 
 

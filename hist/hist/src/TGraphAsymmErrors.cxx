@@ -993,7 +993,7 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
       out<<"   grae->SetPointError("<<i<<","<<fEXlow[i]<<","<<fEXhigh[i]<<","<<fEYlow[i]<<","<<fEYhigh[i]<<");"<<std::endl;
    }
 
-   static Int_t frameNumber = 0;
+   static Int_t frameNumber = 3000;
    if (fHistogram) {
       frameNumber++;
       TString hname = fHistogram->GetName();
@@ -1007,13 +1007,14 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
    // save list of functions
    TIter next(fFunctions);
    TObject *obj;
-   while ((obj=next())) {
-      obj->SavePrimitive(out,"nodraw");
+   while ((obj = next())) {
+      obj->SavePrimitive(out, Form("nodraw #%d\n",++frameNumber));
       if (obj->InheritsFrom("TPaveStats")) {
-         out<<"   grae->GetListOfFunctions()->Add(ptstats);"<<std::endl;
-         out<<"   ptstats->SetParent(grae->GetListOfFunctions());"<<std::endl;
+         out << "   grae->GetListOfFunctions()->Add(ptstats);" << std::endl;
+         out << "   ptstats->SetParent(grae->GetListOfFunctions());" << std::endl;
       } else {
-         out<<"   grae->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<std::endl;
+         out << "   grae->GetListOfFunctions()->Add(" 
+             << Form("%s%d",obj->GetName(),frameNumber) << ");" << std::endl;
       }
    }
 

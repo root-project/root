@@ -2883,20 +2883,31 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    out<<"   "<<std::endl;
 
+   // Either f1Number is computed locally or set from outside
+   static Int_t f1Number = 0;
+   TString f1Name(GetName());
+   char *l = strstr(option,"#");
+   if (l>0) {
+      sscanf(&l[1],"%d",&f1Number);
+   } else {
+      ++f1Number;
+   }
+   f1Name += f1Number;
+   
    if (!fType) {
-      out<<"   TF1 *"<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<");"<<std::endl;
+      out<<"   TF1 *"<<f1Name.Data()<<" = new TF1("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<");"<<std::endl;
       if (fNpx != 100) {
-         out<<"   "<<GetName()<<"->SetNpx("<<fNpx<<");"<<std::endl;
+         out<<"   "<<f1Name.Data()<<"->SetNpx("<<fNpx<<");"<<std::endl;
       }
    } else {
-      out<<"   TF1 *"<<GetName()<<" = new TF1("<<quote<<"*"<<GetName()<<quote<<","<<fXmin<<","<<fXmax<<","<<GetNpar()<<");"<<std::endl;
+      out<<"   TF1 *"<<f1Name.Data()<<" = new TF1("<<quote<<"*"<<GetName()<<quote<<","<<fXmin<<","<<fXmax<<","<<GetNpar()<<");"<<std::endl;
       out<<"    //The original function : "<<GetTitle()<<" had originally been created by:" <<std::endl;
       out<<"    //TF1 *"<<GetName()<<" = new TF1("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<GetNpar()<<");"<<std::endl;
-      out<<"   "<<GetName()<<"->SetRange("<<fXmin<<","<<fXmax<<");"<<std::endl;
-      out<<"   "<<GetName()<<"->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-      out<<"   "<<GetName()<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetRange("<<fXmin<<","<<fXmax<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
       if (fNpx != 100) {
-         out<<"   "<<GetName()<<"->SetNpx("<<fNpx<<");"<<std::endl;
+         out<<"   "<<f1Name.Data()<<"->SetNpx("<<fNpx<<");"<<std::endl;
       }
       Double_t dx = (fXmax-fXmin)/fNpx;
       Double_t xv[1];
@@ -2904,68 +2915,68 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       for (i=0;i<=fNpx;i++) {
          xv[0]    = fXmin + dx*i;
          Double_t save = EvalPar(xv,fParams);
-         out<<"   "<<GetName()<<"->SetSavedPoint("<<i<<","<<save<<");"<<std::endl;
+         out<<"   "<<f1Name.Data()<<"->SetSavedPoint("<<i<<","<<save<<");"<<std::endl;
       }
-      out<<"   "<<GetName()<<"->SetSavedPoint("<<fNpx+1<<","<<fXmin<<");"<<std::endl;
-      out<<"   "<<GetName()<<"->SetSavedPoint("<<fNpx+2<<","<<fXmax<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetSavedPoint("<<fNpx+1<<","<<fXmin<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetSavedPoint("<<fNpx+2<<","<<fXmax<<");"<<std::endl;
    }
 
    if (TestBit(kNotDraw)) {
-      out<<"   "<<GetName()<<"->SetBit(TF1::kNotDraw);"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetBit(TF1::kNotDraw);"<<std::endl;
    }
    if (GetFillColor() != 0) {
       if (GetFillColor() > 228) {
          TColor::SaveColor(out, GetFillColor());
-         out<<"   "<<GetName()<<"->SetFillColor(ci);" << std::endl;
+         out<<"   "<<f1Name.Data()<<"->SetFillColor(ci);" << std::endl;
       } else
-         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
+         out<<"   "<<f1Name.Data()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
    }
    if (GetFillStyle() != 1001) {
-      out<<"   "<<GetName()<<"->SetFillStyle("<<GetFillStyle()<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetFillStyle("<<GetFillStyle()<<");"<<std::endl;
    }
    if (GetMarkerColor() != 1) {
       if (GetMarkerColor() > 228) {
          TColor::SaveColor(out, GetMarkerColor());
-         out<<"   "<<GetName()<<"->SetMarkerColor(ci);" << std::endl;
+         out<<"   "<<f1Name.Data()<<"->SetMarkerColor(ci);" << std::endl;
       } else
-         out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<std::endl;
+         out<<"   "<<f1Name.Data()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<std::endl;
    }
    if (GetMarkerStyle() != 1) {
-      out<<"   "<<GetName()<<"->SetMarkerStyle("<<GetMarkerStyle()<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetMarkerStyle("<<GetMarkerStyle()<<");"<<std::endl;
    }
    if (GetMarkerSize() != 1) {
-      out<<"   "<<GetName()<<"->SetMarkerSize("<<GetMarkerSize()<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetMarkerSize("<<GetMarkerSize()<<");"<<std::endl;
    }
    if (GetLineColor() != 1) {
       if (GetLineColor() > 228) {
          TColor::SaveColor(out, GetLineColor());
-         out<<"   "<<GetName()<<"->SetLineColor(ci);" << std::endl;
+         out<<"   "<<f1Name.Data()<<"->SetLineColor(ci);" << std::endl;
       } else
-         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
+         out<<"   "<<f1Name.Data()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
    if (GetLineWidth() != 4) {
-      out<<"   "<<GetName()<<"->SetLineWidth("<<GetLineWidth()<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetLineWidth("<<GetLineWidth()<<");"<<std::endl;
    }
    if (GetLineStyle() != 1) {
-      out<<"   "<<GetName()<<"->SetLineStyle("<<GetLineStyle()<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetLineStyle("<<GetLineStyle()<<");"<<std::endl;
    }
    if (GetChisquare() != 0) {
-      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
-      out<<"   "<<GetName()<<"->SetNDF("<<GetNDF()<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetNDF("<<GetNDF()<<");"<<std::endl;
    }
 
-   if (GetXaxis()) GetXaxis()->SaveAttributes(out,GetName(),"->GetXaxis()");
-   if (GetYaxis()) GetYaxis()->SaveAttributes(out,GetName(),"->GetYaxis()");
+   if (GetXaxis()) GetXaxis()->SaveAttributes(out,f1Name.Data(),"->GetXaxis()");
+   if (GetYaxis()) GetYaxis()->SaveAttributes(out,f1Name.Data(),"->GetYaxis()");
 
    Double_t parmin, parmax;
    for (i=0;i<fNpar;i++) {
-      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
-      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
       GetParLimits(i,parmin,parmax);
-      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
+      out<<"   "<<f1Name.Data()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
    }
    if (!strstr(option,"nodraw")) {
-      out<<"   "<<GetName()<<"->Draw("
+      out<<"   "<<f1Name.Data()<<"->Draw("
          <<quote<<option<<quote<<");"<<std::endl;
    }
 }

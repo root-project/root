@@ -6512,8 +6512,7 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out <<"   "<<std::endl;
    out <<"   "<< ClassName() <<" *";
 
-   // Histogram pointer has by default the histogram name.
-   // However, in case the histogram has no directory, it is safer to add a incremental suffix.
+   // Histogram pointer has by default the histogram name with an incremental suffix.
    // If the histogram belongs to a graph or a stack the suffix is not added because
    // the graph and stack objects are not aware of this new name. Same thing if
    // the histogram is drawn with the option COLZ because the TPaletteAxis drawn
@@ -6522,15 +6521,12 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    opt.ToLower();
    static Int_t hcounter = 0;
    TString histName = GetName();
-   if (!fDirectory && !histName.Contains("Graph") 
-                   && !histName.Contains("_stack_")
-                   && !opt.Contains("colz")) {
-      hcounter++;
-      histName += "__";
-      histName += hcounter;
+   if (     !histName.Contains("Graph") 
+         && !histName.Contains("_stack_")
+         && !opt.Contains("colz")) {
+      histName += ++hcounter;
    }
    const char *hname = histName.Data();
-
 
    out << hname << " = new " << ClassName() << "(" << quote
       << hname << quote << "," << quote<< GetTitle() << quote
@@ -6633,16 +6629,20 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    // save list of functions
    TObjOptLink *lnk = (TObjOptLink*)fFunctions->FirstLink();
    TObject *obj;
+   static Int_t funcNumber = 0;
    while (lnk) {
       obj = lnk->GetObject();
-      obj->SavePrimitive(out,"nodraw");
+      obj->SavePrimitive(out,Form("nodraw #%d\n",++funcNumber));
       if (obj->InheritsFrom(TF1::Class())) {
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<std::endl;
+         out<<"   "<<hname<<"->GetListOfFunctions()->Add("
+            <<Form("%s%d",obj->GetName(),funcNumber)<<");"<<std::endl;
       } else if (obj->InheritsFrom("TPaveStats")) {
          out<<"   "<<hname<<"->GetListOfFunctions()->Add(ptstats);"<<std::endl;
          out<<"   ptstats->SetParent("<<hname<<");"<<std::endl;
       } else {
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add("<<obj->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
+         out<<"   "<<hname<<"->GetListOfFunctions()->Add("
+            <<obj->GetName()
+            <<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
       }
       lnk = (TObjOptLink*)lnk->Next();
    }
