@@ -85,7 +85,8 @@ Int_t TClassAttributeMap::GetPropertyAsInt(const char* key) const
    else 
       //Show an error message if the key is not found.   
       Error("GetPropertyAsInt"
-      , "Could not find property with Int value for this key: %s", key);   
+      , "Could not find property with Int value for this key: %s", key);
+   return -1;
 }  
 
 //_____________________________________________________________________________
@@ -101,6 +102,7 @@ const char* TClassAttributeMap::GetPropertyAsString(const char* key) const
       //Show an error message if the key is not found.      
       Error("GetPropertyAsString"
       , "Could not find property with String value for this key: %s", key);
+   return 0;
 }
 
 //_____________________________________________________________________________
@@ -123,7 +125,7 @@ Int_t TClassAttributeMap::RemovePropertyInt(const char* key)
 //_____________________________________________________________________________
 TString TClassAttributeMap::RemovePropertyString(const char* key)
 {
-	//Remove a String property from the attribute map specified by the key.
+   //Remove a String property from the attribute map specified by the key.
 
    return fStringProperty.Remove(fStringProperty.FindObject(key))->GetTitle();
 }
@@ -136,7 +138,7 @@ void TClassAttributeMap::RemoveProperty(const char* key)
 }
 
 //_____________________________________________________________________________
-void TClassAttributeMap::Clear()
+void TClassAttributeMap::Clear(Option_t* /*option = ""*/)
 {
    //Deletes all the properties of the class.
 
