@@ -222,6 +222,10 @@ N: Jean-Damien Durand
 E: Jean-Damien.Durand@cern.ch
 D: CASTOR interface code in the TCastorFile class
 
+N: Anders Eie
+E: anders.eie@gmail.com
+D: TTreeReader
+
 N: Rutger v.d. Eijk
 E: r36@nikhef.nl
 D: various contributions to GUI classes
