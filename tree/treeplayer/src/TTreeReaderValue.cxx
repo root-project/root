@@ -97,7 +97,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
          brDataType = GetBranchDataType(br, brDictUnused);
       }
       Error("CreateProxy()", "The template argument type T of %s accessing branch %s (which contains data of type %s) is not known to ROOT. You will need to create a dictionary for it.",
-            IsA()->GetName(), fBranchName.Data(), brDataType);
+            IsA()->GetName() ? IsA()->GetName() : "?", fBranchName.Data(), brDataType);
       return;
    }
 
@@ -133,7 +133,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
             }
             else {
                TDictionary *tempDict = TDictionary::GetDictionary(myLeaf->GetTypeName());
-               if (tempDict->IsA() == TDataType::Class() && TDictionary::GetDictionary(((TDataType*)tempDict)->GetTypeName()) == fDict){
+               if (tempDict && tempDict->IsA() == TDataType::Class() && TDictionary::GetDictionary(((TDataType*)tempDict)->GetTypeName()) == fDict){
                   //fLeafOffset = myLeaf->GetOffset() / 4;
                   branchActualType = fDict;
                   fLeaf = myLeaf;
@@ -209,7 +209,7 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
       if (brElement->GetType() == TBranchElement::kSTLNode || 
             brElement->GetType() == TBranchElement::kLeafNode || 
             brElement->GetType() == TBranchElement::kObjectNode) {
-         dict = TDictionary::GetDictionary(brElement->GetTypeName());
+         if (brElement->GetTypeName()) dict = TDictionary::GetDictionary(brElement->GetTypeName());
          if (dict && dict->IsA() == TDataType::Class()){
             dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
             if (dict != fDict){
@@ -250,7 +250,7 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
          }
          return 0;
       }
-      dict = TDictionary::GetDictionary(dataTypeName);
+      if (dataTypeName) dict = TDictionary::GetDictionary(dataTypeName);
       return dataTypeName;
    } else if (branch->IsA() == TBranchClones::Class()) {
       dict = TClonesArray::Class();
