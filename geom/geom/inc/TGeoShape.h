@@ -104,15 +104,19 @@ public:
    virtual Double_t      Capacity() const                        = 0;
    void                  CheckShape(Int_t testNo, Int_t nsamples=10000, Option_t *option="");
    virtual void          ComputeBBox()                           = 0;
-   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm) = 0;
-   virtual Bool_t        Contains(Double_t *point) const         = 0;
-   virtual Bool_t        CouldBeCrossed(Double_t *point, Double_t *dir) const = 0;
+   virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) = 0;
+   virtual void          ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize);
+   virtual Bool_t        Contains(const Double_t *point) const         = 0;
+   virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
+   virtual Bool_t        CouldBeCrossed(const Double_t *point, const Double_t *dir) const = 0;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py) = 0;
-   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const = 0;
-   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const = 0;
-   static Double_t       DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1, Double_t s2, Double_t c2, 
+   virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
+   static Double_t       DistToPhiMin(const Double_t *point, const Double_t *dir, Double_t s1, Double_t c1, Double_t s2, Double_t c2, 
                                       Double_t sm, Double_t cm, Bool_t in=kTRUE);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step)   = 0; 
@@ -134,21 +138,22 @@ public:
    virtual Bool_t        IsAssembly() const {return kFALSE;}
    virtual Bool_t        IsComposite() const {return kFALSE;}
    virtual Bool_t        IsCylType() const = 0;
-   static  Bool_t        IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
-   static  Bool_t        IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy);
+   static  Bool_t        IsCloseToPhi(Double_t epsil, const Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
+   static  Bool_t        IsCrossingSemiplane(const Double_t *point, const Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy);
    static  Bool_t        IsSameWithinTolerance(Double_t a, Double_t b);
    static  Bool_t        IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t y2,Double_t x3, Double_t y3,Double_t x4, Double_t y4);
-   static  Bool_t        IsInPhiRange(Double_t *point, Double_t phi1, Double_t phi2);
+   static  Bool_t        IsInPhiRange(const Double_t *point, Double_t phi1, Double_t phi2);
    virtual Bool_t        IsReflected() const {return kFALSE;}
    Bool_t                IsRunTimeShape() const {return TestShapeBit(kGeoRunTimeShape);}
    Bool_t                IsValid() const {return !TestShapeBit(kGeoInvalidShape);}
    virtual Bool_t        IsValidBox() const                      = 0; 
    virtual void          InspectShape() const                    = 0;
    virtual TBuffer3D    *MakeBuffer3D() const {return 0;}
-   static void           NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
+   static void           NormalPhi(const Double_t *point, const Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    virtual void          Paint(Option_t *option="");
-   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
-   static  Double_t      SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_t phi2);
+   virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const = 0;
+   virtual void          Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const;
+   static  Double_t      SafetyPhi(const Double_t *point, Bool_t in, Double_t phi1, Double_t phi2);
    static  Double_t      SafetySeg(Double_t r, Double_t z, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Bool_t outer);
    virtual void          SetDimensions(Double_t *param)          = 0;
    void                  SetId(Int_t id) {fShapeId = id;}

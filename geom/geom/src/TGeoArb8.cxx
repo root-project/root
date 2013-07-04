@@ -339,7 +339,7 @@ Double_t TGeoArb8::GetTwist(Int_t iseg) const
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoArb8::GetClosestEdge(Double_t *point, Double_t *vert, Int_t &isegment) const
+Double_t TGeoArb8::GetClosestEdge(const Double_t *point, Double_t *vert, Int_t &isegment) const
 {
 // Get index of the edge of the quadrilater represented by vert closest to point.
 // If [P1,P2] is the closest segment and P is the point, the function returns the fraction of the
@@ -407,7 +407,7 @@ Double_t TGeoArb8::GetClosestEdge(Double_t *point, Double_t *vert, Int_t &isegme
 }   
 
 //_____________________________________________________________________________
-void TGeoArb8::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoArb8::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
    Double_t safc;
@@ -471,7 +471,7 @@ void TGeoArb8::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoArb8::Contains(Double_t *point) const
+Bool_t TGeoArb8::Contains(const Double_t *point) const
 {
 // Test if point is inside this shape.
    // first check Z range
@@ -490,7 +490,7 @@ Bool_t TGeoArb8::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t in) const 
+Double_t TGeoArb8::DistToPlane(const Double_t *point, const Double_t *dir, Int_t ipl, Bool_t in) const 
 {
 // Computes distance to plane ipl :
 // ipl=0 : points 0,4,1,5
@@ -614,7 +614,7 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
 }      
       
 //_____________________________________________________________________________
-Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t step, Double_t * /*safe*/) const
+Double_t TGeoArb8::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t /*iact*/, Double_t step, Double_t * /*safe*/) const
 {
 // Computes distance from outside point to surface of the shape.
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
@@ -641,7 +641,7 @@ Double_t TGeoArb8::DistFromOutside(Double_t *point, Double_t *dir, Int_t /*iact*
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoArb8::DistFromInside(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
+Double_t TGeoArb8::DistFromInside(const Double_t *point, const Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // Compute distance from inside point to surface of the shape.
    Int_t i;
@@ -977,7 +977,7 @@ void TGeoArb8::InspectShape() const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoArb8::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoArb8::Safety(const Double_t *point, Bool_t in) const
 {
 // Computes the closest distance from given point to this shape.
    Double_t safz = fDz-TMath::Abs(point[2]);
@@ -1053,7 +1053,7 @@ Double_t TGeoArb8::Safety(Double_t *point, Bool_t in) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoArb8::SafetyToFace(Double_t *point, Int_t iseg, Bool_t in) const
+Double_t TGeoArb8::SafetyToFace(const Double_t *point, Int_t iseg, Bool_t in) const
 {
 // Estimate safety to lateral plane defined by segment iseg in range [0,3]
 // Might be negative: plane seen only from inside.
@@ -1314,7 +1314,7 @@ TGeoTrap::~TGeoTrap()
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrap::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrap::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to surface of the trapezoid
    if (iact<3 && safe) {
@@ -1366,7 +1366,7 @@ Double_t TGeoTrap::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoTrap::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from outside point to surface of the trapezoid
    if (iact<3 && safe) {
@@ -1565,7 +1565,7 @@ TGeoShape *TGeoTrap::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoTrap::Safety(const Double_t *point, Bool_t in) const
 {
 // Computes the closest distance from given point to this shape.
    Double_t safe = TGeoShape::Big();
@@ -1782,7 +1782,7 @@ TGeoGtra::~TGeoGtra()
 }
 
 //_____________________________________________________________________________
-Double_t TGeoGtra::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoGtra::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to surface of the shape.
    if (iact<3 && safe) {
@@ -1796,7 +1796,7 @@ Double_t TGeoGtra::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoGtra::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoGtra::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to surface of the shape.
    if (iact<3 && safe) {
@@ -1850,7 +1850,7 @@ TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 }
 
 //_____________________________________________________________________________
-Double_t TGeoGtra::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoGtra::Safety(const Double_t *point, Bool_t in) const
 {
 // Computes the closest distance from given point to this shape.
    return TGeoArb8::Safety(point,in);

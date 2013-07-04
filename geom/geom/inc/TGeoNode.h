@@ -116,7 +116,7 @@ public:
    Bool_t            MayOverlap(Int_t iother) const;
 
    virtual TGeoNode *MakeCopyNode() const {return 0;}
-   Double_t          Safety(Double_t *point, Bool_t in=kTRUE) const;
+   Double_t          Safety(const Double_t *point, Bool_t in=kTRUE) const;
    void              SaveAttributes(std::ostream &out);
    void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
    void              SetVolume(TGeoVolume *volume)       {fVolume = volume;}

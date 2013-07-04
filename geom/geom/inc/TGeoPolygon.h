@@ -48,7 +48,7 @@ protected :
 private:
    void                ConvexCheck(); // force convexity checking
    Bool_t              IsSegConvex(Int_t i1, Int_t i2=-1) const;
-   Bool_t              IsRightSided(Double_t *point, Int_t ind1, Int_t ind2) const;
+   Bool_t              IsRightSided(const Double_t *point, Int_t ind1, Int_t ind2) const;
    void                OutscribedConvex();
 public:
    // constructors
@@ -58,7 +58,7 @@ public:
    virtual ~TGeoPolygon();
    // methods
    Double_t            Area() const;
-   Bool_t              Contains(Double_t *point) const;
+   Bool_t              Contains(const Double_t *point) const;
    virtual void        Draw(Option_t *option="");
    void                FinishPolygon();
    Int_t               GetNvert() const {return fNvert;}
@@ -71,7 +71,7 @@ public:
    Bool_t              IsConvex() const {return TObject::TestBit(kGeoConvex);}
    Bool_t              IsFinished() const {return TObject::TestBit(kGeoFinishPolygon);}
    Bool_t              IsIllegalCheck() const;
-   Double_t            Safety(Double_t *point, Int_t &isegment) const;
+   Double_t            Safety(const Double_t *point, Int_t &isegment) const;
    void                SetConvex(Bool_t flag=kTRUE) {TObject::SetBit(kGeoConvex,flag);}
    void                SetXY(Double_t *x, Double_t *y);   
    void                SetNextIndex(Int_t index=-1);

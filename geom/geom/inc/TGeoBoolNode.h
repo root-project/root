@@ -74,12 +74,12 @@ public:
    virtual ~TGeoBoolNode();
    // methods
    virtual void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin) = 0;
-   virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm) = 0;
-   virtual Bool_t    Contains(Double_t *point) const         = 0;
+   virtual void      ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) = 0;
+   virtual Bool_t    Contains(const Double_t *point) const         = 0;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py) = 0;
-   virtual Double_t  DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const = 0;
-   virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const = 0;
    virtual EGeoBoolType GetBooleanOperator() const = 0;
    virtual Int_t     GetNpoints() = 0;
@@ -91,7 +91,7 @@ public:
    virtual void      Paint(Option_t *option);
    void              RegisterMatrices();
    Bool_t            ReplaceMatrix(TGeoMatrix *mat, TGeoMatrix *newmat);
-   virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
+   virtual Double_t  Safety(const Double_t *point, Bool_t in=kTRUE) const = 0;
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      SetPoints(Double_t *points) const;
    virtual void      SetPoints(Float_t *points)  const;
@@ -119,16 +119,16 @@ public:
    virtual ~TGeoUnion();
    // methods
    virtual void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin);
-   virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
-   virtual Bool_t    Contains(Double_t *point) const;
+   virtual void      ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   virtual Bool_t    Contains(const Double_t *point) const;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py);
-   virtual Double_t  DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
-   virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoUnion;}
    virtual Int_t     GetNpoints();
-   virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual Double_t  Safety(const Double_t *point, Bool_t in=kTRUE) const;
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      Sizeof3D() const;
 
@@ -158,16 +158,16 @@ public:
    virtual ~TGeoIntersection();
    // methods
    virtual void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin);
-   virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
-   virtual Bool_t    Contains(Double_t *point) const;
+   virtual void      ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   virtual Bool_t    Contains(const Double_t *point) const;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py);
-   virtual Double_t  DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
-   virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoIntersection;}
    virtual Int_t     GetNpoints();
-   virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual Double_t  Safety(const Double_t *point, Bool_t in=kTRUE) const;
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      Sizeof3D() const;
 
@@ -196,16 +196,16 @@ public:
    virtual ~TGeoSubtraction();
    // methods
    virtual void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin);
-   virtual void      ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
-   virtual Bool_t    Contains(Double_t *point) const;
+   virtual void      ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   virtual Bool_t    Contains(const Double_t *point) const;
    virtual Int_t     DistanceToPrimitive(Int_t px, Int_t py);
-   virtual Double_t  DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
-   virtual Double_t  DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1,
+   virtual Double_t  DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                Double_t step=0, Double_t *safe=0) const;
    virtual EGeoBoolType GetBooleanOperator() const {return kGeoSubtraction;}
    virtual Int_t     GetNpoints();
-   virtual Double_t  Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual Double_t  Safety(const Double_t *point, Bool_t in=kTRUE) const;
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      Sizeof3D() const;
 

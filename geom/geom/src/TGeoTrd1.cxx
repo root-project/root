@@ -134,7 +134,7 @@ void TGeoTrd1::ComputeBBox()
 }
 
 //_____________________________________________________________________________   
-void TGeoTrd1::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoTrd1::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
    Double_t safe, safemin;
@@ -172,7 +172,7 @@ void TGeoTrd1::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoTrd1::Contains(Double_t *point) const
+Bool_t TGeoTrd1::Contains(const Double_t *point) const
 {
 // test if point is inside this shape
    // check Z range
@@ -186,7 +186,7 @@ Bool_t TGeoTrd1::Contains(Double_t *point) const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrd1::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrd1::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from inside point to surface of the trd1
 // Boundary safe algorithm.
@@ -301,7 +301,7 @@ void TGeoTrd1::GetOppositeCorner(Double_t * /*point*/, Int_t inorm, Double_t *ve
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrd1::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoTrd1::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // Compute distance from outside point to surface of the trd1
 // Boundary safe algorithm
@@ -597,7 +597,7 @@ void TGeoTrd1::InspectShape() const
 }
 
 //_____________________________________________________________________________
-Double_t TGeoTrd1::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoTrd1::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

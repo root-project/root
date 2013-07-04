@@ -78,7 +78,7 @@
 // Note that global queries related to a geometry are handled by the manager class.
 // However, shape-related queries might be sometimes usefull.
 //
-// A) Bool_t TGeoShape::Contains(Double_t *point[3])
+// A) Bool_t TGeoShape::Contains(const Double_t *point[3])
 //   - this method returns true if POINT is actually inside the shape. The point
 // has to be defined in the local shape reference. For instance, for a box having
 // DX, DY and DZ half-lengths a point will be considered inside if :
@@ -108,7 +108,7 @@
 //   - computes the distance to entering a shape from a given point OUTSIDE. Acts
 // in the same way as B).
 //
-// D) Double_t Safety(Double_t *point[3], Bool_t inside)
+// D) Double_t Safety(const Double_t *point[3], Bool_t inside)
 //
 //   - compute maximum shift of a point in any direction that does not change its
 // INSIDE/OUTSIDE state (does not cross shape boundaries). The state of the point
@@ -256,7 +256,7 @@ Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) c
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
+Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, const Double_t *point, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
 // True if point is closer than epsil to one of the phi planes defined by c1,s1 or c2,s2
    Double_t saf1 = TGeoShape::Big();
@@ -269,7 +269,7 @@ Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, Double_t *point, Double_t c1, Dou
 }   
 
 //_____________________________________________________________________________
-Bool_t TGeoShape::IsInPhiRange(Double_t *point, Double_t phi1, Double_t phi2)
+Bool_t TGeoShape::IsInPhiRange(const Double_t *point, Double_t phi1, Double_t phi2)
 {
 // Static method to check if a point is in the phi range (phi1, phi2) [degrees]
    Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
@@ -280,7 +280,7 @@ Bool_t TGeoShape::IsInPhiRange(Double_t *point, Double_t phi1, Double_t phi2)
 }   
 
 //_____________________________________________________________________________  
-Bool_t TGeoShape::IsCrossingSemiplane(Double_t *point, Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy)
+Bool_t TGeoShape::IsCrossingSemiplane(const Double_t *point, const Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy)
 {
 // Compute distance from POINT to semiplane defined by PHI angle along DIR. Computes
 // also radius at crossing point. This might be negative in case the crossing is
@@ -387,7 +387,7 @@ Bool_t TGeoShape::IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t 
 }         
 
 //_____________________________________________________________________________
-Double_t TGeoShape::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
+Double_t TGeoShape::DistToPhiMin(const Double_t *point, const Double_t *dir, Double_t s1, Double_t c1,
                                  Double_t s2, Double_t c2, Double_t sm, Double_t cm, Bool_t in)
 {
 // compute distance from point (inside phi) to both phi planes. Return minimum.
@@ -418,7 +418,7 @@ Double_t TGeoShape::DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Do
 }
 
 //_____________________________________________________________________________
-void TGeoShape::NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
+void TGeoShape::NormalPhi(const Double_t *point, const Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
 {
 // Static method to compute normal to phi planes.
    Double_t saf1 = TGeoShape::Big();
@@ -443,7 +443,7 @@ void TGeoShape::NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double
 }           
  
 //_____________________________________________________________________________
-Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t phi1, Double_t phi2)
+Double_t TGeoShape::SafetyPhi(const Double_t *point, Bool_t in, Double_t phi1, Double_t phi2)
 {
 // Static method to compute safety w.r.t a phi corner defined by cosines/sines
 // of the angles phi1, phi2.
@@ -711,4 +711,46 @@ void TGeoShape::Paint(Option_t *option)
    } else {
       painter->PaintShape(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
    }  
+}
+
+// Vectorized methods to be overloaded by each solid
+//_____________________________________________________________________________
+void TGeoShape::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
+{
+// Check the inside status for each of the points in the array.
+// Input: Array of point coordinates + vector size
+// Output: Array of Booleans for the inside of each point
+   for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
+}
+
+//_____________________________________________________________________________
+void TGeoShape::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
+{
+// Compute the normal for an array o points so that norm.dot.dir is positive
+// Input: Arrays of point coordinates and directions + vector size
+// Output: Array of normal directions
+   for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
+}
+
+//_____________________________________________________________________________
+void TGeoShape::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
+{
+// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+   for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
+}
+
+//_____________________________________________________________________________
+void TGeoShape::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
+{
+// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+   for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
+}
+
+//_____________________________________________________________________________
+void TGeoShape::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
+{
+// Compute safe distance from each of the points in the input array.
+// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+// Output: Safety values
+   for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

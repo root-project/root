@@ -47,15 +47,15 @@ public:
    virtual Double_t      Capacity() const;
    static  Double_t      Capacity(Double_t rmin, Double_t rmax, Double_t dz);
    virtual void          ComputeBBox();
-   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
-   static  void          ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
+   virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   static  void          ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm,
                                         Double_t rmin, Double_t rmax, Double_t dz);
-   virtual Bool_t        Contains(Double_t *point) const;
-   static  Double_t      DistFromInsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
-   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Bool_t        Contains(const Double_t *point) const;
+   static  Double_t      DistFromInsideS(const Double_t *point, const Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   static  Double_t      DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
-   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   static  Double_t      DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    static  void          DistToTube(Double_t rsq, Double_t nsq, Double_t rdotn, Double_t radius, Double_t &b, Double_t &delta);
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
@@ -77,8 +77,8 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual TBuffer3D    *MakeBuffer3D() const;
-   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, Int_t skipz=0);
+   virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;
+   static  Double_t      SafetyS(const Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, Int_t skipz=0);
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
@@ -121,19 +121,19 @@ public:
    virtual Double_t      Capacity() const;
    static  Double_t      Capacity(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2);
    virtual void          ComputeBBox();
-   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
-   static  void          ComputeNormalS(Double_t *point, Double_t *dir, Double_t *norm,
+   virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   static  void          ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm,
                                         Double_t rmin, Double_t rmax, Double_t dz,
                                         Double_t c1, Double_t s1, Double_t c2, Double_t s2);
-   virtual Bool_t        Contains(Double_t *point) const;
+   virtual Bool_t        Contains(const Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   static  Double_t      DistFromInsideS(Double_t *point, Double_t *dir,Double_t rmin, Double_t rmax, Double_t dz, 
+   static  Double_t      DistFromInsideS(const Double_t *point, const Double_t *dir,Double_t rmin, Double_t rmax, Double_t dz, 
                                     Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi);
-   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   static  Double_t      DistFromOutsideS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz,
+   static  Double_t      DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz,
                                    Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi);
-   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
@@ -149,8 +149,8 @@ public:
    Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
    virtual TBuffer3D    *MakeBuffer3D() const;
-   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
-   static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, 
+   virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;
+   static  Double_t      SafetyS(const Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, 
                                  Double_t phi1, Double_t phi2, Int_t skipz=0);
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
@@ -195,11 +195,11 @@ public:
    // methods
    virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
-   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
-   virtual Bool_t        Contains(Double_t *point) const;
-   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   virtual Bool_t        Contains(const Double_t *point) const;
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
@@ -214,7 +214,7 @@ public:
    const Double_t       *GetNhigh() const {return &fNhigh[0];}
    Double_t              GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;
    virtual void          InspectShape() const;
-   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2, Double_t lx, Double_t ly, Double_t lz,

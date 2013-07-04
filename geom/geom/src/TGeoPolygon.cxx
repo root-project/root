@@ -112,7 +112,7 @@ Double_t TGeoPolygon::Area() const
 }      
 
 //_____________________________________________________________________________
-Bool_t TGeoPolygon::Contains(Double_t *point) const
+Bool_t TGeoPolygon::Contains(const Double_t *point) const
 {
 // Check if a point given by X = point[0], Y = point[1] is inside the polygon.
    Int_t i;
@@ -226,7 +226,7 @@ void TGeoPolygon::GetConvexVertices(Double_t *x, Double_t *y) const
 }
       
 //_____________________________________________________________________________
-Bool_t TGeoPolygon::IsRightSided(Double_t *point, Int_t ind1, Int_t ind2) const
+Bool_t TGeoPolygon::IsRightSided(const Double_t *point, Int_t ind1, Int_t ind2) const
 {
 // Check if POINT is right-sided with respect to the segment defined by IND1 and IND2.
    Double_t dot = (point[0]-fX[ind1])*(fY[ind2]-fY[ind1]) -
@@ -329,7 +329,7 @@ void TGeoPolygon::OutscribedConvex()
 }
 
 //_____________________________________________________________________________
-Double_t TGeoPolygon::Safety(Double_t *point, Int_t &isegment) const
+Double_t TGeoPolygon::Safety(const Double_t *point, Int_t &isegment) const
 {
 // Compute minimum distance from POINT to any segment. Returns segment index.
    Int_t i1, i2;

@@ -331,7 +331,7 @@ void TGeoPcon::ComputeBBox()
 }   
 
 //_____________________________________________________________________________   
-void TGeoPcon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
+void TGeoPcon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. 
    memset(norm,0,3*sizeof(Double_t));
@@ -391,7 +391,7 @@ void TGeoPcon::ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm)
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoPcon::Contains(Double_t *point) const
+Bool_t TGeoPcon::Contains(const Double_t *point) const
 {
 // test if point is inside this shape
    // check total z range
@@ -442,7 +442,7 @@ Int_t TGeoPcon::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 //_____________________________________________________________________________
-Double_t TGeoPcon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoPcon::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polycone
    if (iact<3 && safe) {
@@ -505,7 +505,7 @@ Double_t TGeoPcon::DistFromInside(Double_t *point, Double_t *dir, Int_t iact, Do
 }
 
 //_____________________________________________________________________________
-Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz) const
+Double_t TGeoPcon::DistToSegZ(const Double_t *point, const Double_t *dir, Int_t &iz) const
 {
 // compute distance to a pcon Z slice. Segment iz must be valid
    Double_t zmin=fZ[iz];
@@ -544,7 +544,7 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz) const
 }      
 
 //_____________________________________________________________________________
-Double_t TGeoPcon::DistFromOutside(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
+Double_t TGeoPcon::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
    if ((iact<3) && safe) {
@@ -1024,7 +1024,7 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
 }   
 
 //_____________________________________________________________________________
-Double_t TGeoPcon::SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in, Double_t safmin) const
+Double_t TGeoPcon::SafetyToSegment(const Double_t *point, Int_t ipl, Bool_t in, Double_t safmin) const
 {
 // Compute safety from POINT to segment between planes ipl, ipl+1 within safmin.
 
@@ -1055,7 +1055,7 @@ Double_t TGeoPcon::SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in, Double
 }
 
 //_____________________________________________________________________________
-Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
+Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.

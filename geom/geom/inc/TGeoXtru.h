@@ -64,11 +64,11 @@ protected:
    TGeoXtru& operator=(const TGeoXtru&);
 
    // methods
-   Double_t              DistToPlane(Double_t *point, Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax, Bool_t in) const;
+   Double_t              DistToPlane(const Double_t *point, const Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax, Bool_t in) const;
    void                  GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const;
    void                  GetPlaneNormal(const Double_t *vert, Double_t *norm) const;
-   Bool_t                IsPointInsidePlane(Double_t *point, Double_t *vert, Double_t *norm) const;
-   Double_t              SafetyToSector(Double_t *point, Int_t iz, Double_t safmin, Bool_t in);
+   Bool_t                IsPointInsidePlane(const Double_t *point, Double_t *vert, Double_t *norm) const;
+   Double_t              SafetyToSector(const Double_t *point, Int_t iz, Double_t safmin, Bool_t in);
    void                  SetIz(Int_t iz);
    void                  SetSeg(Int_t iseg);
 
@@ -82,13 +82,13 @@ public:
    // methods
    virtual Double_t      Capacity() const;
    virtual void          ComputeBBox();
-   virtual void          ComputeNormal(Double_t *point, Double_t *dir, Double_t *norm);
-   virtual Bool_t        Contains(Double_t *point) const;
+   virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   virtual Bool_t        Contains(const Double_t *point) const;
    Bool_t                DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *yv);
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t x0=0., Double_t y0=0., Double_t scale=1.);
-   virtual Double_t      DistFromInside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
-   virtual Double_t      DistFromOutside(Double_t *point, Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    void                  DrawPolygon(Option_t *option="");
@@ -109,7 +109,7 @@ public:
    virtual void          InspectShape() const;
    virtual TBuffer3D    *MakeBuffer3D() const;
    Double_t             &Z(Int_t ipl) {return fZ[ipl];}
-   virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
    void                  SetCurrentZ(Double_t z, Int_t iz);
    void                  SetCurrentVertices(Double_t x0, Double_t y0, Double_t scale);
