@@ -259,6 +259,7 @@ include/TChain.h
 include/TChainElement.h
 include/TChainIndex.h
 include/TClass.h
+include/TClassAttributeMap.h
 include/TClassDocOutput.h
 include/TClassEdit.h
 include/TClassGenerator.h
