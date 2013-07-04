@@ -4529,7 +4529,6 @@ void TPad::Print(const char *filenam, Option_t *option)
          Paint();
       }
       if (noScreen) GetCanvas()->SetBatch(kFALSE);
-      if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt, psname.Data());
 
       if (mustClose) {
          gROOT->GetListOfSpecials()->Remove(gVirtualPS);
@@ -4539,6 +4538,8 @@ void TPad::Print(const char *filenam, Option_t *option)
          gROOT->GetListOfSpecials()->Add(gVirtualPS);
          gVirtualPS = 0;
       }
+      
+      if (!gSystem->AccessPathName(psname)) Info("Print", "%s file %s has been created", opt, psname.Data());
    } else {
       // Append to existing Postscript, PDF or GIF file
       if (!ccloseb) {
@@ -5014,12 +5015,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
       out <<"  "<<std::endl;
       out <<"// ------------>Primitives in pad: "<<GetName()<<std::endl;
 
-      if (gROOT->ClassSaved(TPad::Class())) {
-         out<<"   ";
-      } else {
-         out<<"   TPad *";
-      }
-      out<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
       <<quote
       <<","<<fXlowNDC
       <<","<<fYlowNDC
@@ -5034,8 +5030,9 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    Double_t rmin[3], rmax[3];
    if (view) {
       view->GetRange(rmin, rmax);
-      out<<"   TView *view = TView::CreateView(1);"<<std::endl;
-      out<<"   view->SetRange("<<rmin[0]<<","<<rmin[1]<<","<<rmin[2]<<","
+      static Int_t viewNumber = 0;
+      out<<"   TView *view"<<++viewNumber<<" = TView::CreateView(1);"<<std::endl;
+      out<<"   view"<<viewNumber<<"->SetRange("<<rmin[0]<<","<<rmin[1]<<","<<rmin[2]<<","
                                <<rmax[0]<<","<<rmax[1]<<","<<rmax[2]<<");"<<std::endl;
    }
    if (GetFillColor() != 19) {

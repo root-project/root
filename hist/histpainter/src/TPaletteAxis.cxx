@@ -105,8 +105,6 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, 
 TPaletteAxis::~TPaletteAxis()
 {
    // Palette destructor.
-
-   if (fH) fH->GetListOfFunctions()->Remove(this);
 }
 
 

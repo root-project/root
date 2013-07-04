@@ -687,7 +687,7 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   gre->SetPointError(" << i << "," << fEX[i] << "," << fEY[i] << ");" << std::endl;
    }
 
-   static Int_t frameNumber = 0;
+   static Int_t frameNumber = 1000;
    if (fHistogram) {
       frameNumber++;
       TString hname = fHistogram->GetName();
@@ -702,12 +702,13 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TIter next(fFunctions);
    TObject *obj;
    while ((obj = next())) {
-      obj->SavePrimitive(out, "nodraw");
+      obj->SavePrimitive(out, Form("nodraw #%d\n",++frameNumber));
       if (obj->InheritsFrom("TPaveStats")) {
          out << "   gre->GetListOfFunctions()->Add(ptstats);" << std::endl;
          out << "   ptstats->SetParent(gre->GetListOfFunctions());" << std::endl;
       } else {
-         out << "   gre->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
+         out << "   gre->GetListOfFunctions()->Add(" 
+             << Form("%s%d",obj->GetName(),frameNumber) << ");" << std::endl;
       }
    }
 

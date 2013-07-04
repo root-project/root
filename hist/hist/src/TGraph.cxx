@@ -2128,12 +2128,13 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TIter next(fFunctions);
    TObject *obj;
    while ((obj = next())) {
-      obj->SavePrimitive(out, "nodraw");
+      obj->SavePrimitive(out, Form("nodraw #%d\n",++frameNumber));
       if (obj->InheritsFrom("TPaveStats")) {
          out << "   graph->GetListOfFunctions()->Add(ptstats);" << std::endl;
          out << "   ptstats->SetParent(graph->GetListOfFunctions());" << std::endl;
       } else {
-         out << "   graph->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
+         out << "   graph->GetListOfFunctions()->Add(" 
+             << Form("%s%d",obj->GetName(),frameNumber) << ");" << std::endl;
       }
    }
 
