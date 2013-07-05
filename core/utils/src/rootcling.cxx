@@ -3570,8 +3570,9 @@ int GenReflex(int argc, char **argv)
 
    // Parse the options
    option::Stats  stats(genreflexUsageDescriptor,  newArgc, newArgv);
-   option::Option options[stats.options_max], buffer[stats.buffer_max];
-   option::Parser parse(genreflexUsageDescriptor, newArgc, newArgv, options, buffer);
+   std::vector<option::Option> options(stats.options_max);// non POD var size arrays are not C++!
+   std::vector<option::Option> buffer(stats.buffer_max);
+   option::Parser parse(genreflexUsageDescriptor, newArgc, newArgv, &options[0], &buffer[0]);
 
    if (parse.error()){
       ROOT::TMetaUtils::Error(0, "*** genreflex: Argument parsing error!\n");
