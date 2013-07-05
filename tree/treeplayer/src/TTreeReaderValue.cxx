@@ -82,6 +82,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
    if (fProxy) {
       Error("CreateProxy()", "Proxy object for branch %s already exists!",
             fBranchName.Data());
+      //fProxy->Setup();
       return;
    }
    if (!fTreeReader) {
