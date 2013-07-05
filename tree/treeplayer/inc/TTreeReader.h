@@ -86,7 +86,7 @@ public:
    Long64_t GetCurrentEntry() const {
       if (!fDirector) return 0;
       Long64_t currentTreeEntry = fDirector->GetReadEntry();
-      if (fTree->IsA() == TChain::Class()) {
+      if (fTree->IsA() == TChain::Class() && currentTreeEntry >= 0) {
          return ((TChain*)fTree)->GetChainEntryNumber(currentTreeEntry);
       }
       return currentTreeEntry;

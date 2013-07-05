@@ -81,7 +81,6 @@ void TTreeReader::Initialize()
       fEntryStatus = kEntryNoTree;
    } else {
       fDirector = new ROOT::TBranchProxyDirector(fTree, -1);
-      fTree->LoadTree(0);
    }
 }
 
