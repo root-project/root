@@ -2115,18 +2115,20 @@ void TGX11::SetDrawMode(EDrawMode mode)
    //          the vendor
 
    int i;
-   switch (mode) {
-      case kCopy:
-         for (i = 0; i < kMAXGC; i++) XSetFunction((Display*)fDisplay, gGClist[i], GXcopy);
-         break;
+   if (fDisplay) {
+      switch (mode) {
+         case kCopy:
+            for (i = 0; i < kMAXGC; i++) XSetFunction((Display*)fDisplay, gGClist[i], GXcopy);
+            break;
 
-      case kXor:
-         for (i = 0; i < kMAXGC; i++) XSetFunction((Display*)fDisplay, gGClist[i], GXxor);
-         break;
+         case kXor:
+            for (i = 0; i < kMAXGC; i++) XSetFunction((Display*)fDisplay, gGClist[i], GXxor);
+            break;
 
-      case kInvert:
-         for (i = 0; i < kMAXGC; i++) XSetFunction((Display*)fDisplay, gGClist[i], GXinvert);
-         break;
+         case kInvert:
+            for (i = 0; i < kMAXGC; i++) XSetFunction((Display*)fDisplay, gGClist[i], GXinvert);
+            break;
+      }
    }
    fDrawMode = mode;
 }
