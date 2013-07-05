@@ -2,7 +2,6 @@
 #include "TTreeReader.h"
 #include "TInterpreter.h"
 #include "TSystem.h"
-#include "MyParticle.h"
 #include "TTreeReaderValue.h"
 #include "TTreeReaderArray.h"
 #include <vector>
@@ -10,9 +9,6 @@
 #include "B.h"
 
 #ifdef __CINT__
-#pragma link C++ class TTreeReaderValue<std::vector<MyParticle*>>+;
-#pragma link C++ class TTreeReaderValue<MyParticle>+;
-#pragma link C++ class TTreeReaderValue<Int_t>+;
 #pragma link C++ class TTreeReaderValue<B>+;
 #pragma link C++ class TTreeReaderValue<A>+;
 #pragma link C++ class TTreeReaderValue<std::vector<B>>+;
@@ -596,44 +592,6 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
 	}
 	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
 }
-
-// void readArrayOfBs(const char *branchName, const char *subBranchPostFix, Bool_t printOut = true, Bool_t testValues = false){
-//  TFile::Open(fileName);
-// 	TTreeReader myTreeReader ("HardTree");
-
-// 	Int_t multiplier;
-// 	if (!strcmp(subBranchPostFix))
-
-// 	TString finalBranchName = branchName;
-// 	finalBranchName += subBranchPostFix;
-
-// 	TTreeReaderArray<Int_t> myArrayOfBs (myTreeReader, finalBranchName);
-
-// 	Bool_t successmyArrayOfBsRisValid();
-// 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
-// 		if (printOut) printf("%s(%lu):", subBranchPostFix, myArrayOfBs.GetSize());
-
-// 		for (int j = 0; j < LIST_ENTRIES && i < myArrayOfBs.GetSize(); ++j){
-// 			if (testValues && myArrayOfBs.At(j) != i * j * MULTIPLIER_B_CLONES_ARRAY) success = false;
-// 			if (printOut) printf(" %i", myArrayOfBs.At(j));
-// 		}
-
-// 		if (printOut) printf("\n");
-// 	}
-// 	if (testValues) printf("%s\n", success && read ? "Success!" : "Failure");
-// }
-
-// void readAObject(const char* branchName = "A99."){
-//  TFile::Open(fileName);
-// 	TTreeReader myTreeReader ("HardTree");
-
-// 	TTreeReaderValue<A> myAObject (myTreeReader, branchName);
-
-// 	while (myTreeReademyAObjecNisValid();
-// 		printf("BDummy: %i ", myAObject->BObject.dummy);
-// 		printf("BStarDummy: %i\n", myAObject->BStar->dummy);
-// 	}
-// }
 
 void readLeafFloatX(Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
 	TFile::Open(fileName);
