@@ -10,7 +10,7 @@
  *************************************************************************/
 
 // Write the help as a big string to have only one version of the documentation
-const char *help =
+const char *rootClingHelp =
 "                                                                            \n"
 "This program generates the Cling dictionaries needed in order to            \n"
 "get access to your classes via the interpreter.                             \n"
@@ -166,6 +166,18 @@ const char *help =
 
 #include "llvm/Bitcode/BitstreamWriter.h"
 #include "llvm/Support/PathV2.h"
+
+#ifdef WIN32
+const std::string gPathSeparator ("\\");
+#else
+const std::string gPathSeparator ("/");
+#endif
+
+
+// FIXME To ease the option parsing.
+// Presently used for the genreflex mode and not for the rootcling mode for
+// historical reasons.
+#include "OptionParser.h"
 
 #ifdef __APPLE__
 #include <libgen.h> // Needed for basename
@@ -746,7 +758,7 @@ bool CheckInputOperator(const clang::RecordDecl *cl, cling::Interpreter &interp)
    int ncha = fullname.length()+13;
    char *proto = new char[ncha];
    snprintf(proto,ncha,"TBuffer&,%s*&",fullname.c_str());
-   
+
    ROOT::TMetaUtils::Info(0, "Class %s: Do not generate operator>>()\n",
         fullname.c_str());
 
@@ -2298,7 +2310,7 @@ static int GenerateModule(clang::CompilerInstance* CI,
 }
 
 
-void AddPlatformDefines(std::vector<std::string> clingArgs)
+void AddPlatformDefines(std::vector<std::string>& clingArgs)
 {
    char platformDefines[64] = {0};
    #ifdef __INTEL_COMPILER
@@ -2467,7 +2479,7 @@ int RootCling(int argc, char **argv)
       force = 1;
       ic++;
    } else if (argc > 1 && (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h"))) {
-      fprintf(stderr, "%s\n", help);
+      fprintf(stderr, "%s\n", rootClingHelp);
       return 1;
    } else if (ic < argc && !strncmp(argv[ic], "-",1)) {
       fprintf(stderr,"Usage: %s [-v][-v0-4] [-f] [out.cxx] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
@@ -2549,7 +2561,7 @@ int RootCling(int argc, char **argv)
       ic++;
 
    } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
-      fprintf(stderr, "%s\n", help);
+      fprintf(stderr, "%s\n", rootClingHelp);
       return 1;
    } else {
       ic = 1;
@@ -2898,7 +2910,7 @@ int RootCling(int argc, char **argv)
          }
          else {
             ROOT::TMetaUtils::Info(0,"XML file successfully parsed\n");
-         }            
+         }
          file.close();
       }
       else {
@@ -3207,44 +3219,450 @@ int RootCling(int argc, char **argv)
    return 0;
 }
 
+namespace genreflex{
+
+bool verbose = false;
+
+//______________________________________________________________________________
+bool endsWith(const std::string& theString, const std::string& theSubstring)
+{
+   if (theString.size() < theSubstring.size()) return false;
+   const unsigned int theSubstringSize = theSubstring.size();
+   return 0 == theString.compare(theString.size()-theSubstringSize,
+                                 theSubstringSize,
+                                 theSubstring);
+}
+
+//______________________________________________________________________________
+bool beginsWith(const std::string& theString, const std::string& theSubstring)
+{
+   if (theString.size() < theSubstring.size()) return false;
+   const unsigned int theSubstringSize = theSubstring.size();
+   return 0 == theString.compare(0,
+                                 theSubstringSize,
+                                 theSubstring);
+}
+
+//______________________________________________________________________________
+bool isHeaderName(const std::string& filename)
+{
+   return endsWith(filename,".h") || endsWith(filename,".hpp");
+}
+
+//______________________________________________________________________________
+unsigned int checkHeadersNames(std::vector<std::string>& headersNames)
+{
+   // Loop on arguments: stop at the first which starts with -
+   unsigned int numberOfHeaders = 0;
+   for (std::vector<std::string>::iterator it=headersNames.begin();
+        it!=headersNames.end();it++){
+      const std::string headername(*it);
+      if ( isHeaderName( headername ) ) {
+         numberOfHeaders++;
+      } else {
+         ROOT::TMetaUtils::Warning(0,
+            "*** genreflex: %s is not a vaild header name (.h and .hpp extensions expected)!\n",
+            headername.c_str());
+      }
+   }
+   return numberOfHeaders;   
+}
+
+//______________________________________________________________________________
+unsigned int extractArgs(int& argc, char**& argv, std::vector<std::string>& args)
+{
+   // Extract the arguments from the command line
+
+   // loop on argv, spot strings which are not preceeded by something
+   // starting with "-" and do not start with "-"
+   std::vector<unsigned int> argsIndeces;
+   for (int i=1;i<argc;++i){
+      if (!beginsWith(argv[i-1],"-") && // so, if preceeding element starts with -, this is a value for an option
+          !beginsWith(argv[i],"-")){ // and the element itself is not an option
+         argsIndeces.push_back(i);
+         args.push_back(argv[i]);
+         }
+   }
+
+   // now create a new argv w/o the arguments, adapt argc
+   int newArgc = argc - argsIndeces.size();
+   char** newArgv = new char*[newArgc];
+   unsigned int argvCounter=0;
+
+   for (int i=0;i<argc;++i){
+      // if index was NOT the one of an arg,copy in argv
+      if (count (argsIndeces.begin(), argsIndeces.end(), i) == 0){
+         newArgv[argvCounter]=argv[i];
+         argvCounter++;
+      }
+   }
+   argv=newArgv;
+   argc=newArgc;
+   return args.size();
+}
+//______________________________________________________________________________
+bool replace(std::string& str, const std::string& from, const std::string& to)
+{
+   size_t start_pos = str.find(from);
+   if(start_pos == std::string::npos)
+      return false;
+   str.replace(start_pos, from.length(), to);
+   return true;
+}
+
+//______________________________________________________________________________
+void replaceAll(std::string& str, const std::string& from, const std::string& to)
+{
+   if(from.empty())
+      return;
+   size_t start_pos = 0;
+   while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+      str.replace(start_pos, from.length(), to);
+      start_pos += to.length(); 
+   }
+}
+
+//______________________________________________________________________________
+bool isExistingDir(const std::string& path)
+{
+
+   int returnCode = 0;
+   bool isDir = false;
+   #ifdef WIN32
+   struct _stati64 finfo;
+   returnCode = _stati64(path.c_str(), &finfo);
+   isDir = (finfo.st_mode & S_IFDIR);
+   #else
+   struct stat finfo;
+   returnCode = lstat(path.c_str(), &finfo);
+   isDir = S_ISDIR(finfo.st_mode);
+   #endif
+   return returnCode==0 && isDir;  
+}
+
+//______________________________________________________________________________
+char* string2charptr(const std::string& str)
+{
+   // The caller is responsible for deleting the string!
+   const unsigned int size(str.size());
+   char *a=new char[size+1];
+   a[size]=0;
+   memcpy(a,str.c_str(),size);
+   return a;
+}
+
+//______________________________________________________________________________
+void header2outputName(std::string& fileName)
+{
+   // Replace the extension with "_rflx.cpp"
+   replaceAll(fileName,
+              std::string::npos != fileName.find(".h") ? ".h" : ".hpp",
+              "_rflx.cpp");
+}
+
+//______________________________________________________________________________
+void headers2outputsNames(const std::vector<std::string>& headersNames,
+                          std::vector<std::string>& ofilesnames)
+{
+   // Get a proper name for the output file
+
+   ofilesnames.reserve(headersNames.size());
+
+   for (std::vector<std::string>::const_iterator it = headersNames.begin();
+        it!=headersNames.end();it++){
+      std::string ofilename(*it);
+      header2outputName(ofilename);
+      ofilesnames.push_back(ofilename);
+      }
+}
+
+//______________________________________________________________________________
+int invokeRootCling(const std::string& verbosity,
+                    const std::string& selectionFileName,
+                    const std::vector<std::string>& headersNames,
+                    const std::string& ofilename){
+
+   //Prepare and invoke the commandline to invoke rootcling
+
+   // compute the number of arguments
+   // 1) rootcling * required
+   // 2) verbosity * required
+   // 3) force rewrite * required
+   // 4) output file name * required
+   // 5) N headers
+   // 6) optional: A selection file
+
+   int argc = 4; // 4 required
+   if (selectionFileName != "") argc+=1;
+   argc += headersNames.size();
+
+   char* argv[argc];
+
+   argv[0]=string2charptr("rootcling");
+   argv[1]=string2charptr(verbosity);
+   argv[2]=string2charptr("-f");
+   argv[3]=string2charptr(ofilename);
+
+   int counter=4;
+   for (std::vector<std::string>::const_iterator it = headersNames.begin();
+        it!=headersNames.end();it++){
+      argv[counter]=string2charptr(*it);
+      counter++;
+   }
+
+   // Output commandline for rootcling
+   std::cout << "Rootcling commandline:\n";
+   for (int i=0;i<argc;i++)
+      if (genreflex::verbose) std::cout << i << ") " << argv[i] <<std::endl;
+
+   int rootclingReturnCode = RootCling(argc,argv);
+
+   // now clean (string2charptr gives away ownership!)
+   for (int i=0;i<argc;i++)
+      delete argv[i];
+
+   return rootclingReturnCode;
+}
+
+//______________________________________________________________________________
+int invokeManyRootCling(const std::string& verbosity,
+                        const std::string& selectionFileName,
+                        const std::vector<std::string>& headersNames,
+                        const std::string& outputDirName_const="")
+{
+   // Get the right ofilenames and invoke several times rootcling
+   // One invokation per header
+
+   std::string outputDirName(outputDirName_const);
+
+   std::vector<std::string> ofilesNames;
+   headers2outputsNames(headersNames,ofilesNames);
+
+   if (!outputDirName.empty() && !endsWith(outputDirName,gPathSeparator)){
+     outputDirName+=gPathSeparator;
+   }
+
+   std::vector<std::string> namesSingleton(1);
+   for (unsigned int i=0;i<headersNames.size();++i){
+      namesSingleton[0]=headersNames[i];
+      int returnCode = invokeRootCling(verbosity,
+                                       selectionFileName,
+                                       namesSingleton,
+                                       outputDirName+ofilesNames[i]);
+      if (returnCode!=0)
+         return returnCode;
+   }
+
+   return 0;
+}
+
+
+} // end genreflex namespace
 //______________________________________________________________________________
 int GenReflex(int argc, char **argv)
 {
-   // Encapsulate the functionalities of Genreflex here
-   return 0;
+   // Translate the aruments of genreflex into rootcling ones and forward them
+   // to the RootCling function.
+   // These are two typical genreflex and rootcling commandlines
+   // 1) genreflex.py header1.h [header2.h ...] [options] [preprocessor options]
+   // 2) rootcling [-v] [-v0-4] [-f] [out.cxx] [-s sharedlib.so] [-m pcmfilename]
+   //     header1.h[{+,-}][!] ..headerN.h[{+,-}][!] [{LinkDef.h,selectionRules.xml}]
+   // The rules with which the arguments are translated are (1st column genreflex):
+   // --debug                             -v4
+   // --quiet                             -v0
+   // -o ofile                            positional arg after -f
+   // -s selection file                   Last argument of the call
+   // --fail_on_warning                   Wrap ROOT::TMetaUtils::Warning and throw if selected
+
+   using namespace genreflex;
+
+   // Setup the options parser
+   enum  optionIndex { UNKNOWN, OFILENAME, SELECTIONFILENAME, DEBUG, QUIET, HELP };
+   enum  optionTypes { NOTYPE, STRING } ;
+
+   // Some long help strings
+   const char* genreflexUsage =
+   "Generates pcm file from starting from the old genreflex syntax\n"
+   "Usage: genreflex[.py] headerfile1.h [ ... headerfileN.h] [opts] [preproc. opts]\n\n"
+   "Options:\n";
+
+   const char* selectionFilenameUsage=
+   "-s, --selection_file \tSelection filename\n"
+   "      Class selection file to specify for which classes the dictionary\n"
+   "      will be generated\n"
+   "      Format (XML):\n"
+   "        <lcgdict>\n"
+   "        [<selection>]\n"
+   "          <class [name=\"classname\"] [pattern=\"wildname\"]\n"
+   "                 [file_name=\"filename\"] [file_pattern=\"wildname\"]\n"
+   "                 [id=\"xxxx\"] [type=\"vector\"]/>\n"
+   "          <class name=\"classname\" >\n"
+   "            <field name=\"m_transient\" transient=\"true\"/>\n"
+   "            <field name=\"m_anothertransient\" transient=\"true\"/>\n"
+   "            <properties prop1=\"value1\" [prop2=\"value2\"]/>\n"
+   "          </class>\n"
+   "          <function [name=\"funcname\"] [pattern=\"wildname\"] />\n"
+   "          <enum [name=\"enumname\"] [pattern=\"wildname\"] />\n"
+   "          <variable [name=\"varname\"] [pattern=\"wildname\"] />\n"
+   "        [</selection>]\n"
+   "        <exclusion>\n"
+   "          <class [name=\"classname\"] [pattern=\"wildname\"] />\n"
+   "            <method name=\"unwanted\" />\n"
+   "          </class>\n"
+   "        ...\n"
+   "        </lcgdict>\n";
+
+   const char* outputFilenameUsage=
+   "-o, --output \tOutput filename\n"
+   "      Output file name. If an existing directory is specified instead of a file,\n"
+   "      then a filename will be build using the name of the input file and will\n"
+   "      be placed in the given directory. <headerfile>_rflx.cpp \n";
+
+   // The Descriptor
+   const option::Descriptor genreflexUsageDescriptor[] =
+   {
+      {UNKNOWN,
+         NOTYPE,
+         "","",
+         option::Arg::None,
+         genreflexUsage},
+
+      {OFILENAME,
+        STRING ,
+        "o" , "output" ,
+        option::FullArg::Required,
+        outputFilenameUsage},
+
+      {SELECTIONFILENAME,
+        STRING ,
+        "s" , "selection_file" ,
+        option::FullArg::Required,
+        selectionFilenameUsage},
+
+      {DEBUG,
+        NOTYPE ,
+        "" , "--debug",
+        option::Arg::None,
+        "--debug  \tPrint debug information\n"},
+
+      {QUIET,
+        NOTYPE ,
+        "" , "--quiet",
+        option::Arg::None,
+        "--quiet  \tPrint no information at all\n"},
+
+      {HELP,
+         NOTYPE,
+         "h" , "help",
+         option::Arg::None,
+         "--help   \tPrint usage and exit.\n"},
+
+      {0,0,0,0,0,0}
+      };
+
+   std::vector<std::string> headersNames;
+   int originalArgc=argc;
+   extractArgs(argc,argv,headersNames); // The only args are the headers here
+
+   // skip program name argv[0] if present
+   int newArgc = argc-(argc>0);
+   char** newArgv = argv+(argc>0);
+
+   // Parse the options
+   option::Stats  stats(genreflexUsageDescriptor,  newArgc, newArgv);
+   option::Option options[stats.options_max], buffer[stats.buffer_max];
+   option::Parser parse(genreflexUsageDescriptor, newArgc, newArgv, options, buffer);
+
+   if (parse.error()){
+      ROOT::TMetaUtils::Error(0, "*** genreflex: Argument parsing error!\n");
+      return 1;
+   }
+
+   // Print help if needed
+   if (options[HELP] || originalArgc == 1) {
+      option::printUsage(std::cout, genreflexUsageDescriptor);
+      return 0;
+   }
+   // See if no header was provided
+   int numberOfHeaders = checkHeadersNames(headersNames);
+   if (0 == numberOfHeaders){
+      ROOT::TMetaUtils::Error(0, "*** genreflex: No valid header was provided!\n");
+      return 1;
+      }
+
+   // The verbosity: debug wins over quiet
+   std::string verbosityOption("-v");
+   if (options[QUIET]) verbosityOption="-v4";
+   if (options[DEBUG]) verbosityOption="-v0";
+
+   // The selection file
+   std::string selectionFileName;
+   if (options[SELECTIONFILENAME]){
+      selectionFileName = options[SELECTIONFILENAME].arg;
+      if (!endsWith(selectionFileName, ".xml")){
+         ROOT::TMetaUtils::Error(0,
+            "*** genreflex: Invalid selection file extension: filename is %s and extension .xml is expected!\n",
+            selectionFileName.c_str());
+         return 1;
+      }
+   }
+
+   // The outputfilename(s)
+   // There are two cases:
+   // 1) The outputfilename is specified
+   //   -->  The information of all headers will be in one single dictionary
+   //     (1 call to rootcling)
+   // 2) The outputfilename is not specified
+   //   --> There will be a dictionary per header
+   //     (N calls to rootcling)
+   int returnValue = 0;
+   std::string ofileName(options[OFILENAME] ? options[OFILENAME].arg : "");
+
+   // If not empty and not a directory (therefore it's a file)
+   // call rootcling directly. The number of headers files is irrelevant.
+   if (!ofileName.empty() && !isExistingDir(ofileName)){
+      returnValue = invokeRootCling(verbosityOption,
+                                    selectionFileName,
+                                    headersNames,
+                                    ofileName);
+   } else{
+   // Here ofilename is either "" or a directory: this is irrelevant.
+      returnValue = invokeManyRootCling(verbosityOption,
+                                        selectionFileName,
+                                        headersNames,
+                                        ofileName);
+   }
+
+   //extracArgs gives away ownership of a char*[]
+   delete[]  argv;
+
+   return returnValue;
 }
 
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
-   
+
    const std::string exePath ( GetExePath() );
-   
-   #ifdef WIN32
-   const char pathSeparator = '\\';
-   #else
-   const char pathSeparator = '/';
-   #endif
-   
+
    std::string exeName;
-   const size_t pos = exePath.find_last_of(pathSeparator);
+   const size_t pos = exePath.find_last_of(gPathSeparator);
    if(std::string::npos != pos){
       exeName.assign(exePath.begin() + pos + 1, exePath.end());
    } else {
       exeName.assign(exePath);
    }
-   
+
    // Select according to the name of the executable the procedure to follow:
    // 1) RootCling
    // 2) GenReflex
    // The default is rootcling
-   
+
    if (std::string::npos != exeName.find("rootcling")) {
       return RootCling(argc, argv);
-   } else if (std::string::npos != exeName.find("genereflex.py") ||
-      std::string::npos != exeName.find("genereflex")) {
+   } else if (std::string::npos != exeName.find("genreflex")){
          return GenReflex(argc, argv);
-   } else {
+   } else { //default
          return RootCling(argc, argv);
    }
 
