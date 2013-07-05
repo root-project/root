@@ -75,7 +75,7 @@ friend class ROOT::TGenericClassInfo;
 
 public:
    // TClass status bits
-   enum { kClassSaved  = BIT(12), kIgnoreTObjectStreamer = BIT(15), 
+   enum { kClassSaved  = BIT(12), kIgnoreTObjectStreamer = BIT(15),
           kUnloaded    = BIT(16), kIsTObject = BIT(17),
           kIsForeign   = BIT(18), kIsEmulation = BIT(19),
           kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
@@ -140,7 +140,7 @@ private:
    TClassRef         *fRefStart;        //!List of references to this object
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    ROOT::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
-   TClassAttributeMap *fAttributeMap;    //pointer to a class attribute map  
+   TClassAttributeMap *fAttributeMap;    //pointer to a class attribute map
 
    typedef void (TClass::*StreamerImpl_t)(void *obj, TBuffer &b, const TClass *onfile_class) const;
    mutable StreamerImpl_t fStreamerImpl;//! Pointer to the function implementing the right streaming behavior for the class represented by this object.
@@ -157,7 +157,7 @@ private:
 
    void               SetClassVersion(Version_t version);
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
-   
+
    // Various implementation for TClass::Stramer
    void StreamerExternal(void *object, TBuffer &b, const TClass *onfile_class) const;
    void StreamerTObject(void *object, TBuffer &b, const TClass *onfile_class) const;
@@ -166,7 +166,7 @@ private:
    void StreamerInstrumented(void *object, TBuffer &b, const TClass *onfile_class) const;
    void StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile_class) const;
    void StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const;
-   
+
    static IdMap_t    *GetIdMap();       //Map from typeid to TClass pointer
    static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
@@ -197,12 +197,12 @@ private:
    };
 
    // These are the above-referenced hash tables.  (The pointers are null
-   // if no entries have been made.)  
+   // if no entries have been made.)
    static THashTable* fgClassTypedefHash;
 
 private:
    TClass(const TClass& tc);
-   TClass& operator=(const TClass&);   
+   TClass& operator=(const TClass&);
 
 protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
@@ -300,7 +300,7 @@ public:
    ROOT::TSchemaRuleSet *GetSchemaRules(Bool_t create = kFALSE);
    const char        *GetSharedLibs();
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
-   TClassStreamer    *GetStreamer() const; 
+   TClassStreamer    *GetStreamer() const;
    ClassStreamerFunc_t GetStreamerFunc() const;
    TObjArray         *GetStreamerInfos() const { return fStreamerInfo; }
    TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
@@ -326,7 +326,7 @@ public:
    Long_t             Property() const;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
-   void               RemoveRef(TClassRef *ref); 
+   void               RemoveRef(TClassRef *ref);
    void               ReplaceWith(TClass *newcl, Bool_t recurse = kTRUE) const;
    void               ResetCaches();
    void               ResetClassInfo(Long_t tagnum);
@@ -381,13 +381,14 @@ public:
    void              *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    Bool_t             IsFolder(void *obj) const;
    void               CreateAttributeMap();
-   inline TClassAttributeMap *GetAttributeMap() const
+   TClassAttributeMap *GetAttributeMap() const
    {
-      //Get the TClassAttributeMap pointer to be able to add attribute 
+      //Get the TClassAttributeMap pointer to be able to add attribute
       //pairs key-value to the TClass.
- 
+
       return fAttributeMap;
    }
+
    inline void        Streamer(void *obj, TBuffer &b, const TClass *onfile_class = 0) const
    {
       // Inline for performance, skipping one function call.

@@ -13,7 +13,7 @@
 //                                                                      //
 //  The ROOT oject has a list of properties which are stored and       //
 //  retrieved using TClassAttributeMap.                                 //
-//  TClassAttributeMap maps the property keys of the object to their		//	
+//  TClassAttributeMap maps the property keys of the object to their		//
 //  values.															    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -47,8 +47,8 @@ void TClassAttributeMap::AddProperty(const char* key, Int_t value)
    //Parameters: key and Int value of the property.
 
    //Add the property pair name - Int value to the hash table.
-   fIntProperty.Add(new TParameter<int>(key, value));   
-}  
+   fIntProperty.Add(new TParameter<int>(key, value));
+}
 
 //_____________________________________________________________________________
 void TClassAttributeMap::AddProperty(const char* key, const char* value)
@@ -57,7 +57,7 @@ void TClassAttributeMap::AddProperty(const char* key, const char* value)
    //Parameters: key and char* value of the property.
 
    //Add the property pair name - Int value to the hash table.
-   fStringProperty.Add(new TNamed(key, value));   
+   fStringProperty.Add(new TNamed(key, value));
 }
 
 //_____________________________________________________________________________
@@ -81,13 +81,13 @@ Int_t TClassAttributeMap::GetPropertyAsInt(const char* key) const
    //Copy object into found to avoid calling the function two times.
    TObject* found = fIntProperty.FindObject(key);
    if (found)
-      return ((TParameter<int>*)found)->GetVal(); 
-   else 
-      //Show an error message if the key is not found.   
+      return ((TParameter<int>*)found)->GetVal();
+   else
+      //Show an error message if the key is not found.
       Error("GetPropertyAsInt"
       , "Could not find property with Int value for this key: %s", key);
    return -1;
-}  
+}
 
 //_____________________________________________________________________________
 const char* TClassAttributeMap::GetPropertyAsString(const char* key) const
@@ -99,7 +99,7 @@ const char* TClassAttributeMap::GetPropertyAsString(const char* key) const
    if(found)
       return found->GetTitle();
    else
-      //Show an error message if the key is not found.      
+      //Show an error message if the key is not found.
       Error("GetPropertyAsString"
       , "Could not find property with String value for this key: %s", key);
    return 0;
@@ -117,33 +117,41 @@ Int_t TClassAttributeMap::GetPropertySize() const
 Int_t TClassAttributeMap::RemovePropertyInt(const char* key)
 {
    //Remove a Int property from the attribute map.
-   //Returns the Int property removed or NULL if the property does not exist.
-   
-   return ((TParameter<int>*)fIntProperty.Remove
-          (fIntProperty.FindObject(key)))->GetVal();
+   //Returns the Int property removed or -1 if the property does not exist.
+
+   TParameter<int> *property = (TParameter<int>*)fIntProperty.FindObject(key);
+   if (property) {
+     fIntProperty.Remove(property);
+     return property->GetVal();
+   }
+   return -1;
 }
 
 //_____________________________________________________________________________
 TString TClassAttributeMap::RemovePropertyString(const char* key)
 {
    //Remove a String property from the attribute map specified by the key.
-   //Returns the TString property removed or NULL if the property does not exist.
+   //Returns the TString property removed or 0 if the property does not exist.
 
-   return fStringProperty.Remove(fStringProperty.FindObject(key))->GetTitle();
+   TObject *property = fStringProperty.FindObject(key);
+   if (property) {
+      fStringProperty.Remove(property);
+      return property->GetTitle();
+   }
+   return TString(0);
 }
 
 Bool_t TClassAttributeMap::RemoveProperty(const char* key)
 {
    //Remove a property from the attribute map specified by the key.
-   //Returns true if property exists and was removed, false if property 
+   //Returns true if property exists and was removed, false if property
    //does not exist.
 
-   if(TObject *property = fStringProperty.FindObject(key)){
+   if (TObject *property = fStringProperty.FindObject(key)) {
       fStringProperty.Remove(property);
       return true;
    }
-   else
-      return false;   
+   return false;
 }
 
 //_____________________________________________________________________________
