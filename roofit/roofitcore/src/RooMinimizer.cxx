@@ -186,6 +186,28 @@ void RooMinimizer::setStrategy(Int_t istrat)
 
 
 //_____________________________________________________________________________
+void RooMinimizer::setMaxIterations(Int_t n) 
+{
+  // Change maximum number of MINUIT iterations 
+  // (RooMinimizer default 500 * #parameters)
+  _theFitter->Config().MinimizerOptions().SetMaxIterations(n);
+}
+
+
+
+
+//_____________________________________________________________________________
+void RooMinimizer::setMaxFunctionCalls(Int_t n) 
+{
+  // Change maximum number of likelihood function calss from MINUIT
+  // (RooMinimizer default 500 * #parameters)
+  _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(n);
+}
+
+
+
+
+//_____________________________________________________________________________
 void RooMinimizer::setErrorLevel(Double_t level)
 {
   // Set the level for MINUIT error analysis to the given
@@ -226,6 +248,23 @@ void RooMinimizer::setMinimizerType(const char* type)
   _minimizerType = type;
 }
 
+
+
+
+//_____________________________________________________________________________
+ROOT::Fit::Fitter* RooMinimizer::fitter()
+{
+  // Return underlying ROOT fitter object 
+  return _theFitter ;
+}
+
+
+//_____________________________________________________________________________
+const ROOT::Fit::Fitter* RooMinimizer::fitter() const 
+{
+  // Return underlying ROOT fitter object 
+  return _theFitter ;
+}
 
 
 

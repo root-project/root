@@ -47,8 +47,10 @@ public:
   void setErrorLevel(Double_t level) ;
   void setEps(Double_t eps) ;
   void optimizeConst(Int_t flag) ;
-  void setEvalErrorWall(Bool_t flag) { _fcn->SetEvalErrorWall(flag); }
+  void setEvalErrorWall(Bool_t flag) { fitterFcn()->SetEvalErrorWall(flag); }
   void setOffsetting(Bool_t flag) ;
+  void setMaxIterations(Int_t n) ;
+  void setMaxFunctionCalls(Int_t n) ; 
 
   RooFitResult* fit(const char* options) ;
 
@@ -68,10 +70,10 @@ public:
 		   Double_t n4=0, Double_t n5=0, Double_t n6=0) ;
 
   Int_t setPrintLevel(Int_t newLevel) ; 
-  void setPrintEvalErrors(Int_t numEvalErrors) { _fcn->SetPrintEvalErrors(numEvalErrors); }
-  void setVerbose(Bool_t flag=kTRUE) { _verbose = flag ; _fcn->SetVerbose(flag); }
+  void setPrintEvalErrors(Int_t numEvalErrors) { fitterFcn()->SetPrintEvalErrors(numEvalErrors); }
+  void setVerbose(Bool_t flag=kTRUE) { _verbose = flag ; fitterFcn()->SetVerbose(flag); }
   void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }
-  Bool_t setLogFile(const char* logf=0) { return _fcn->SetLogFile(logf); }
+  Bool_t setLogFile(const char* logf=0) { return fitterFcn()->SetLogFile(logf); }
 
   void setMinimizerType(const char* type) ;
 
@@ -80,8 +82,11 @@ public:
 
   void saveStatus(const char* label, Int_t status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
 
-  Int_t evalCounter() const { return _fcn->evalCounter() ; }
-  void zeroEvalCount() { _fcn->zeroEvalCount() ; }
+  Int_t evalCounter() const { return fitterFcn()->evalCounter() ; }
+  void zeroEvalCount() { fitterFcn()->zeroEvalCount() ; }
+
+  ROOT::Fit::Fitter* fitter() ;
+  const ROOT::Fit::Fitter* fitter() const ;
   
 protected:
 
@@ -91,9 +96,12 @@ protected:
   void profileStart() ;
   void profileStop() ;
 
-  inline Int_t getNPar() const { return _fcn->NDim() ; }
-  inline std::ofstream* logfile() const { return _fcn->GetLogFile(); }
-  inline Double_t& maxFCN() { return _fcn->GetMaxFCN() ; }
+  inline Int_t getNPar() const { return fitterFcn()->NDim() ; }
+  inline std::ofstream* logfile() { return fitterFcn()->GetLogFile(); }
+  inline Double_t& maxFCN() { return fitterFcn()->GetMaxFCN() ; }
+  
+  const RooMinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? ((RooMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
+  RooMinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? ((RooMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
 
 private:
 
