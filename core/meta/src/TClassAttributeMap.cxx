@@ -117,6 +117,7 @@ Int_t TClassAttributeMap::GetPropertySize() const
 Int_t TClassAttributeMap::RemovePropertyInt(const char* key)
 {
    //Remove a Int property from the attribute map.
+   //Returns the Int property removed or NULL if the property does not exist.
    
    return ((TParameter<int>*)fIntProperty.Remove
           (fIntProperty.FindObject(key)))->GetVal();
@@ -126,15 +127,23 @@ Int_t TClassAttributeMap::RemovePropertyInt(const char* key)
 TString TClassAttributeMap::RemovePropertyString(const char* key)
 {
    //Remove a String property from the attribute map specified by the key.
+   //Returns the TString property removed or NULL if the property does not exist.
 
    return fStringProperty.Remove(fStringProperty.FindObject(key))->GetTitle();
 }
 
-void TClassAttributeMap::RemoveProperty(const char* key)
+Bool_t TClassAttributeMap::RemoveProperty(const char* key)
 {
    //Remove a property from the attribute map specified by the key.
+   //Returns true if property exists and was removed, false if property 
+   //does not exist.
 
-   fStringProperty.Remove(fStringProperty.FindObject(key));
+   if(TObject *property = fStringProperty.FindObject(key)){
+      fStringProperty.Remove(property);
+      return true;
+   }
+   else
+      return false;   
 }
 
 //_____________________________________________________________________________

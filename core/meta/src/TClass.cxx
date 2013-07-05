@@ -30,6 +30,7 @@
 #include "TBaseClass.h"
 #include "TBrowser.h"
 #include "TBuffer.h"
+#include "TClassAttributeMap.h"
 #include "TClassGenerator.h"
 #include "TClassEdit.h"
 #include "TClassMenuItem.h"
@@ -772,7 +773,7 @@ TClass::TClass() :
    TDictionary(),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
    fBase(0), fData(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
-   fClassMenuList(0),
+   fClassMenuList(0), 
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
@@ -784,11 +785,13 @@ TClass::TClass() :
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+
 {
    // Default ctor.
 
    R__LOCKGUARD2(gCINTMutex);
    fDeclFileLine   = -2;    // -2 for standalone TClass (checked in dtor)
+   fAttributeMap = 0;
 }
 
 //______________________________________________________________________________
@@ -1279,6 +1282,8 @@ TClass::~TClass()
       }
       delete fConversionStreamerInfo;
    }
+
+   delete fAttributeMap;
 }
 
 //------------------------------------------------------------------------------
@@ -5665,5 +5670,14 @@ ROOT::DirAutoAdd_t TClass::GetDirectoryAutoAdd() const
    // Return the wrapper around the directory auto add function.
 
    return fDirAutoAdd;
+}
+
+void TClass::CreateAttributeMap()
+{
+   //Create a TClassAttributeMap for a TClass to be able to add attribute pairs
+   //key-value to the TClass.
+
+   if (fAttributeMap != 0)
+      fAttributeMap = new TClassAttributeMap; 
 }
 
