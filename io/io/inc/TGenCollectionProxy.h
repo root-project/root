@@ -381,6 +381,7 @@ public:
    // Return the type of collection see TClassEdit::ESTLType
    virtual Int_t   GetCollectionType() const;
 
+   // Return the address of the currently proxied object.
    virtual EnvironBase_t* GetEnv() const { return fEnv; }
 
    // Return the offset between two consecutive value_types (memory layout).
