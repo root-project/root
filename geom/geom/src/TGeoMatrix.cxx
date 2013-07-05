@@ -208,7 +208,7 @@ TGeoMatrix::~TGeoMatrix()
 {
 // Destructor
    if (IsRegistered() && gGeoManager) {
-      if (gGeoManager->GetListOfVolumes()) {
+      if (!gGeoManager->IsCleaning()) {
          gGeoManager->GetListOfMatrices()->Remove(this);
          Warning("dtor", "Registered matrix %s was removed", GetName());
       }
@@ -377,7 +377,7 @@ void TGeoMatrix::LocalToMasterBomb(const Double_t *local, Double_t *master) cons
    }   
    Int_t i;
    const Double_t *tr = GetTranslation();
-   Double_t bombtr[3];
+   Double_t bombtr[3] = {0.,0.,0.};
    gGeoManager->BombTranslation(tr, &bombtr[0]);
    if (!IsRotation()) {
       for (i=0; i<3; i++) master[i] = bombtr[i] + local[i];
@@ -441,7 +441,7 @@ void TGeoMatrix::MasterToLocalBomb(const Double_t *master, Double_t *local) cons
       return;
    }   
    const Double_t *tr = GetTranslation();
-   Double_t bombtr[3];
+   Double_t bombtr[3] = {0.,0.,0.};
    Int_t i;
    gGeoManager->UnbombTranslation(tr, &bombtr[0]);
    if (!IsRotation()) {
@@ -700,7 +700,7 @@ void TGeoTranslation::LocalToMasterBomb(const Double_t *local, Double_t *master)
 {
 // convert a point by multiplying its column vector (x, y, z, 1) to matrix inverse
    const Double_t *tr = GetTranslation();
-   Double_t bombtr[3];
+   Double_t bombtr[3] = {0.,0.,0.};
    gGeoManager->BombTranslation(tr, &bombtr[0]);
    for (Int_t i=0; i<3; i++) 
       master[i] = bombtr[i] + local[i]; 
@@ -727,7 +727,7 @@ void TGeoTranslation::MasterToLocalBomb(const Double_t *master, Double_t *local)
 {
 // convert a point by multiplying its column vector (x, y, z, 1) to matrix
    const Double_t *tr = GetTranslation();
-   Double_t bombtr[3];
+   Double_t bombtr[3] = {0.,0.,0.};
    gGeoManager->UnbombTranslation(tr, &bombtr[0]);
    for (Int_t i=0; i<3; i++) 
       local[i] =  master[i]-bombtr[i];
@@ -1271,6 +1271,19 @@ TGeoScale::~TGeoScale()
 {
 // destructor
 }
+
+//_____________________________________________________________________________
+TGeoScale &TGeoScale::operator=(const TGeoScale &other)
+{
+// Assignment operator
+   if (&other == this) return *this;
+   SetBit(kGeoScale);
+   const Double_t *scl =  other.GetScale();
+   memcpy(fScale, scl, kN3);
+   if (fScale[0]*fScale[1]*fScale[2]<0) SetBit(kGeoReflection);
+   else SetBit(kGeoReflection, kFALSE);
+   return *this;
+}   
 
 //_____________________________________________________________________________
 TGeoMatrix& TGeoScale::Inverse() const

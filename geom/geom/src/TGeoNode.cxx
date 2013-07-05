@@ -409,56 +409,6 @@ Int_t TGeoNode::FindNode(const TGeoNode *node, Int_t level)
 }
 
 //_____________________________________________________________________________
-void TGeoNode::SetUserExtension(TGeoExtension *ext)
-{
-// Connect user-defined extension to the node. The node "grabs" a copy, so
-// the original object can be released by the producer. Release the previously 
-// connected extension if any.
-//==========================================================================
-// NOTE: This interface is intended for user extensions and is guaranteed not
-// to be used by TGeo
-//==========================================================================
-   if (fUserExtension) fUserExtension->Release();
-   fUserExtension = 0;
-   if (ext) fUserExtension = ext->Grab();
-}   
-
-//_____________________________________________________________________________
-void TGeoNode::SetFWExtension(TGeoExtension *ext)
-{
-// Connect framework defined extension to the node. The node "grabs" a copy,
-// so the original object can be released by the producer. Release the previously 
-// connected extension if any.
-//==========================================================================
-// NOTE: This interface is intended for the use by TGeo and the users should
-//       NOT connect extensions using this method
-//==========================================================================
-   if (fFWExtension) fFWExtension->Release();
-   fFWExtension = 0;
-   if (ext) fFWExtension = ext->Grab();
-}   
-
-//_____________________________________________________________________________
-TGeoExtension *TGeoNode::GrabUserExtension() const
-{
-// Get a copy of the user extension pointer. The user must call Release() on
-// the copy pointer once this pointer is not needed anymore (equivalent to
-// delete() after calling new())
-   if (fUserExtension) return fUserExtension->Grab();
-   return 0;
-}   
-   
-//_____________________________________________________________________________
-TGeoExtension *TGeoNode::GrabFWExtension() const
-{
-// Get a copy of the framework extension pointer. The user must call Release() on
-// the copy pointer once this pointer is not needed anymore (equivalent to
-// delete() after calling new())
-   if (fFWExtension) return fFWExtension->Grab();
-   return 0;
-}   
-
-//_____________________________________________________________________________
 void TGeoNode::SaveAttributes(std::ostream &out)
 {
 // save attributes for this node
@@ -509,6 +459,55 @@ void TGeoNode::SaveAttributes(std::ostream &out)
    }
 }
 
+//_____________________________________________________________________________
+void TGeoNode::SetUserExtension(TGeoExtension *ext)
+{
+// Connect user-defined extension to the node. The node "grabs" a copy, so
+// the original object can be released by the producer. Release the previously 
+// connected extension if any.
+//==========================================================================
+// NOTE: This interface is intended for user extensions and is guaranteed not
+// to be used by TGeo
+//==========================================================================
+   if (fUserExtension) fUserExtension->Release();
+   fUserExtension = 0;
+   if (ext) fUserExtension = ext->Grab();
+}   
+
+//_____________________________________________________________________________
+void TGeoNode::SetFWExtension(TGeoExtension *ext)
+{
+// Connect framework defined extension to the node. The node "grabs" a copy,
+// so the original object can be released by the producer. Release the previously 
+// connected extension if any.
+//==========================================================================
+// NOTE: This interface is intended for the use by TGeo and the users should
+//       NOT connect extensions using this method
+//==========================================================================
+   if (fFWExtension) fFWExtension->Release();
+   fFWExtension = 0;
+   if (ext) fFWExtension = ext->Grab();
+}   
+
+//_____________________________________________________________________________
+TGeoExtension *TGeoNode::GrabUserExtension() const
+{
+// Get a copy of the user extension pointer. The user must call Release() on
+// the copy pointer once this pointer is not needed anymore (equivalent to
+// delete() after calling new())
+   if (fUserExtension) return fUserExtension->Grab();
+   return 0;
+}   
+   
+//_____________________________________________________________________________
+TGeoExtension *TGeoNode::GrabFWExtension() const
+{
+// Get a copy of the framework extension pointer. The user must call Release() on
+// the copy pointer once this pointer is not needed anymore (equivalent to
+// delete() after calling new())
+   if (fFWExtension) return fFWExtension->Grab();
+   return 0;
+}   
 //_____________________________________________________________________________
 Bool_t TGeoNode::MayOverlap(Int_t iother) const 
 {

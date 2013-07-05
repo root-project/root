@@ -256,6 +256,7 @@ public :
    TGeoScale(const char *name, Double_t sx, Double_t sy, Double_t sz);
    virtual ~TGeoScale();
    
+   TGeoScale& operator=(const TGeoScale &other);   
    virtual TGeoMatrix&  Inverse() const;
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;

@@ -257,6 +257,7 @@ TGeoIsotope *TGeoIsotope::FindIsotope(const char *name)
 {
 // Find existing isotope by name.
    TGeoElementTable *elTable = TGeoElement::GetElementTable();
+   if (!elTable) return 0;
    return elTable->FindIsotope(name);
 }   
 

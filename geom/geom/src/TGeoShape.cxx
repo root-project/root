@@ -191,7 +191,7 @@ TGeoShape::TGeoShape(const char *name)
 TGeoShape::~TGeoShape()
 {
 // Destructor
-   if (gGeoManager) gGeoManager->GetListOfShapes()->Remove(this);
+   if (gGeoManager && !gGeoManager->IsCleaning()) gGeoManager->GetListOfShapes()->Remove(this);
 }
 
 //_____________________________________________________________________________

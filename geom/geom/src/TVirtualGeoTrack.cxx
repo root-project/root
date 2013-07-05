@@ -89,6 +89,18 @@ TVirtualGeoTrack::~TVirtualGeoTrack()
 }
 
 //______________________________________________________________________________
+Int_t TVirtualGeoTrack::GetDaughterId(Int_t index) const
+{
+// Returns daughter id.
+   TVirtualGeoTrack *daughter = GetDaughter(index);
+   if (!daughter) {
+      Error("GetDaughterId", "No daughter track with index %d", index);
+      return -1;
+   }   
+   return daughter->GetId();
+}
+
+//______________________________________________________________________________
 TVirtualGeoTrack *TVirtualGeoTrack::FindTrackWithId(Int_t id) const
 {
 // Recursively search through this track for a daughter

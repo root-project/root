@@ -350,6 +350,7 @@ TGeoManager::TGeoManager()
       fDrawExtra = kFALSE;
       fStreamVoxels = kFALSE;
       fIsGeomReading = kFALSE;
+      fIsGeomCleaning = kFALSE;
       fClosed = kFALSE;
       fLoopVolumes = kFALSE;
       fBits = 0;
@@ -446,6 +447,7 @@ void TGeoManager::Init()
    fDrawExtra = kFALSE;
    fStreamVoxels = kFALSE;
    fIsGeomReading = kFALSE;
+   fIsGeomCleaning = kFALSE;
    fClosed = kFALSE;
    fLoopVolumes = kFALSE;
    fBits = new UChar_t[50000]; // max 25000 nodes per volume
@@ -524,6 +526,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fLoopVolumes(gm.fLoopVolumes),
   fStreamVoxels(gm.fStreamVoxels),
   fIsGeomReading(gm.fIsGeomReading),
+  fIsGeomCleaning(kFALSE),
   fPhiCut(gm.fPhiCut),
   fTimeCut(gm.fTimeCut),
   fDrawExtra(gm.fDrawExtra),
@@ -603,6 +606,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fLoopVolumes=gm.fLoopVolumes;
       fStreamVoxels=gm.fStreamVoxels;
       fIsGeomReading=gm.fIsGeomReading;
+      fIsGeomCleaning = kFALSE;
       fPhiCut=gm.fPhiCut;
       fTimeCut=gm.fTimeCut;
       fDrawExtra=gm.fDrawExtra;
@@ -657,6 +661,7 @@ TGeoManager::~TGeoManager()
 {
 //   Destructor
    if (gGeoManager != this) gGeoManager = this;
+   fIsGeomCleaning = kTRUE;
 
    if (gROOT->GetListOfFiles()) { //in case this function is called from TROOT destructor
       gROOT->GetListOfGeometries()->Remove(this);
@@ -695,6 +700,7 @@ TGeoManager::~TGeoManager()
       delete [] fKeyPNEId;
       delete [] fValuePNEId;
    }
+   fIsGeomCleaning = kFALSE;
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
@@ -825,16 +831,23 @@ TGeoNavigator *TGeoManager::AddNavigator()
    return nav;
 }   
 
+TTHREAD_TLS_DECLARE(TGeoNavigator*, tnav);
+
 //_____________________________________________________________________________
 TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 {
 // Returns current navigator for the calling thread.
+   TTHREAD_TLS_INIT(TGeoNavigator*,tnav,0);
    if (!fMultiThread) return fCurrentNavigator;
+   TGeoNavigator *nav = TTHREAD_TLS_GET(TGeoNavigator*,tnav);
+   if (nav) return nav;
    Long_t threadId = TThread::SelfId();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) return 0;
    TGeoNavigatorArray *array = it->second;
-   return array->GetCurrentNavigator();
+   nav = array->GetCurrentNavigator();
+   TTHREAD_TLS_SET(TGeoNavigator*,tnav,nav);
+   return nav;
 }
 
 //_____________________________________________________________________________
@@ -1746,7 +1759,7 @@ void TGeoManager::DrawTracks(Option_t *option)
    SetAnimateTracks();
    for (Int_t i=0; i<fNtracks; i++) {
       track = GetTrack(i);
-      track->Draw(option);
+      if (track) track->Draw(option);
    }
    SetAnimateTracks(kFALSE);
    ModifiedPad();
@@ -3214,9 +3227,12 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
       fCurrentNavigator = AddNavigator();
       return;
    }      
-   Int_t nnavigators = GetListOfNavigators()->GetEntriesFast();
+   Int_t nnavigators = 0;
+   TGeoNavigatorArray *arr = GetListOfNavigators();
+   if (!arr) return;
+   nnavigators = arr->GetEntriesFast();
    for (Int_t i=0; i<nnavigators; i++) {
-      TGeoNavigator *nav = (TGeoNavigator*)GetListOfNavigators()->At(i);
+      TGeoNavigator *nav = (TGeoNavigator*)arr->At(i);
       nav->ResetAll();
       if (fClosed) nav->GetCache()->BuildInfoBranch();
    }
@@ -3632,7 +3648,9 @@ void TGeoManager::UpdateElements()
          nelem = mix->GetNelements();
          for (i=0; i<nelem; i++) {
             elem = mix->GetElement(i);
+            if (!elem) continue;
             elem_table = fElementTable->GetElement(elem->Z());
+            if (!elem_table) continue;
             if (elem != elem_table) {
                elem_table->SetDefined(elem->IsDefined());
                elem_table->SetUsed(elem->IsUsed());
@@ -3642,7 +3660,9 @@ void TGeoManager::UpdateElements()
          }
       } else {
          elem = mat->GetElement();
+         if (!elem) continue;
          elem_table = fElementTable->GetElement(elem->Z());
+         if (!elem_table) continue;
          if (elem != elem_table) {
             elem_table->SetDefined(elem->IsDefined());
             elem_table->SetUsed(elem->IsUsed());

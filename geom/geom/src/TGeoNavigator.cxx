@@ -868,6 +868,10 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
          TGeoHMatrix *matrix;
          while (nmany) {
             mothernode = GetMother(up);
+            if (!mothernode) {
+               Fatal("FindNextBoundary", "Cannot find mother node");
+               return 0;
+            }   
             mup = mothernode;
             imother = up+1;
             offset = kFALSE;
@@ -885,6 +889,10 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
             }   
             if (ovlp || nextovlp) {
                matrix = GetMotherMatrix(up);
+               if (!matrix) {
+                  Fatal("FindNextBoundary", "Cannot find mother matrix");
+                  return 0;
+               }   
                matrix->MasterToLocal(fPoint,dpt);
                matrix->MasterToLocalVect(fDirection,dvec);
                snext = TGeoShape::Big();

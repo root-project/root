@@ -291,7 +291,8 @@ Bool_t TGeoBBox::Contains(const Double_t *point) const
 //_____________________________________________________________________________
 Bool_t TGeoBBox::Contains(const Double_t *point, Double_t dx, Double_t dy, Double_t dz, const Double_t *origin)
 {
-// Test if point is inside this shape.
+// Static method to check if point[3] is located inside a box of having dx, dy, dz
+// as half-lengths.
    if (TMath::Abs(point[2]-origin[2]) > dz) return kFALSE;
    if (TMath::Abs(point[0]-origin[0]) > dx) return kFALSE;
    if (TMath::Abs(point[1]-origin[1]) > dy) return kFALSE;

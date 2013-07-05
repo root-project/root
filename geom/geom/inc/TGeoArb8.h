@@ -90,7 +90,7 @@ public:
    Double_t             *GetVertices() {return &fXY[0][0];}
    Double_t              GetTwist(Int_t iseg) const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
-   static Bool_t         IsSamePoint(Double_t *p1, Double_t *p2) {return (TMath::Abs(p1[0]-p2[0])<1.E-16 && TMath::Abs(p1[1]-p2[1])<1.E-16)?kTRUE:kFALSE;}
+   static Bool_t         IsSamePoint(const Double_t *p1, const Double_t *p2) {return (TMath::Abs(p1[0]-p2[0])<1.E-16 && TMath::Abs(p1[1]-p2[1])<1.E-16)?kTRUE:kFALSE;}
    static Bool_t         InsidePolygon(Double_t x, Double_t y, Double_t *pts);
    virtual void          InspectShape() const;
    Bool_t                IsTwisted() const {return (fTwist==0)?kFALSE:kTRUE;}

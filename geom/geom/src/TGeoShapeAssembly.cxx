@@ -182,7 +182,7 @@ Bool_t TGeoShapeAssembly::Contains(const Double_t *point) const
       // get the list of nodes passing thorough the current voxel
       TGeoNavigator *nav = gGeoManager->GetCurrentNavigator();
       TGeoStateInfo &td = *nav->GetCache()->GetInfo();
-      check_list = voxels->GetCheckList(&point[0], ncheck, td);
+      check_list = voxels->GetCheckList(point, ncheck, td);
       if (!check_list) {
          nav->GetCache()->ReleaseInfo();
          return kFALSE;

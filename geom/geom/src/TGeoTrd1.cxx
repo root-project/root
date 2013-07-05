@@ -238,7 +238,7 @@ Double_t TGeoTrd1::DistFromInside(const Double_t *point, const Double_t *dir, In
 }
 
 //_____________________________________________________________________________
-void TGeoTrd1::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *normals) const
+void TGeoTrd1::GetVisibleCorner(const Double_t *point, Double_t *vertex, Double_t *normals) const
 {
 // get the most visible corner from outside point and the normals
    Double_t fx = 0.5*(fDx1-fDx2)/fDz;
@@ -278,7 +278,7 @@ void TGeoTrd1::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *nor
 }
 
 //_____________________________________________________________________________
-void TGeoTrd1::GetOppositeCorner(Double_t * /*point*/, Int_t inorm, Double_t *vertex, Double_t *normals) const
+void TGeoTrd1::GetOppositeCorner(const Double_t * /*point*/, Int_t inorm, Double_t *vertex, Double_t *normals) const
 {
 // get the opposite corner of the intersected face
    TGeoTrd1 *trd1 = (TGeoTrd1*)this;

@@ -67,8 +67,8 @@ public:
    Double_t              GetDz() const  {return fDz;}
    virtual Int_t         GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
-   void                  GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *normals) const;
-   void                  GetOppositeCorner(Double_t *point, Int_t inorm, Double_t *vertex, Double_t *normals) const;
+   void                  GetVisibleCorner(const Double_t *point, Double_t *vertex, Double_t *normals) const;
+   void                  GetOppositeCorner(const Double_t *point, Int_t inorm, Double_t *vertex, Double_t *normals) const;
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;

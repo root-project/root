@@ -281,7 +281,7 @@ public:
    virtual void    AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");       // most general case
    virtual void    AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option="");
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
-   TGeoShape      *GetLastShape() const {return GetVolume(fVolumes->GetEntriesFast()-1)->GetShape();}
+   TGeoShape      *GetLastShape() const;
    Int_t           GetNvolumes() const {return fVolumes->GetEntriesFast();}
    Int_t           GetAxis() const {return fNdiv;}
    Int_t           GetNdiv() const {return fNdiv;}
