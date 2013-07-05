@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: 601078dc44e227355f227975deb639cd63f1476b $
+// @(#)root/geom:$Id$
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1308,6 +1308,56 @@ void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
 }   
 
 //______________________________________________________________________________
+void TGeoVolume::SetUserExtension(TGeoExtension *ext)
+{
+// Connect user-defined extension to the volume. The volume "grabs" a copy, so
+// the original object can be released by the producer. Release the previously 
+// connected extension if any.
+//==========================================================================
+// NOTE: This interface is intended for user extensions and is guaranteed not
+// to be used by TGeo
+//==========================================================================
+   if (fUserExtension) fUserExtension->Release();
+   fUserExtension = 0;
+   if (ext) fUserExtension = ext->Grab();
+}   
+
+//_____________________________________________________________________________
+void TGeoVolume::SetFWExtension(TGeoExtension *ext)
+{
+// Connect framework defined extension to the volume. The volume "grabs" a copy,
+// so the original object can be released by the producer. Release the previously 
+// connected extension if any.
+//==========================================================================
+// NOTE: This interface is intended for the use by TGeo and the users should
+//       NOT connect extensions using this method
+//==========================================================================
+   if (fFWExtension) fFWExtension->Release();
+   fFWExtension = 0;
+   if (ext) fFWExtension = ext->Grab();
+}   
+
+//_____________________________________________________________________________
+TGeoExtension *TGeoVolume::GrabUserExtension() const
+{
+// Get a copy of the user extension pointer. The user must call Release() on
+// the copy pointer once this pointer is not needed anymore (equivalent to
+// delete() after calling new())
+   if (fUserExtension) return fUserExtension->Grab();
+   return 0;
+}   
+   
+//_____________________________________________________________________________
+TGeoExtension *TGeoVolume::GrabFWExtension() const
+{
+// Get a copy of the framework extension pointer. The user must call Release() on
+// the copy pointer once this pointer is not needed anymore (equivalent to
+// delete() after calling new())
+   if (fFWExtension) return fFWExtension->Grab();
+   return 0;
+}   
+
+//_____________________________________________________________________________
 void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
@@ -1322,7 +1372,7 @@ void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // check if we need to save shape/volume
    Bool_t mustDraw = kFALSE;
    if (fGeoManager->GetGeomPainter()->GetTopVolume()==this) mustDraw = kTRUE;
-   if (!option[0]) {
+   if (!strlen(option)) {
       fGeoManager->SetAllIndex();
       out << "   new TGeoManager(\"" << fGeoManager->GetName() << "\", \"" << fGeoManager->GetTitle() << "\");" << std::endl << std::endl;
 //      if (mustDraw) out << "   Bool_t mustDraw = kTRUE;" << std::endl;
@@ -1454,56 +1504,6 @@ void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       } 
    }   
 }
-
-//_____________________________________________________________________________
-void TGeoVolume::SetUserExtension(TGeoExtension *ext)
-{
-// Connect user-defined extension to the volume. The volume "grabs" a copy, so
-// the original object can be released by the producer. Release the previously 
-// connected extension if any.
-//==========================================================================
-// NOTE: This interface is intended for user extensions and is guaranteed not
-// to be used by TGeo
-//==========================================================================
-   if (fUserExtension) fUserExtension->Release();
-   fUserExtension = 0;
-   if (ext) fUserExtension = ext->Grab();
-}   
-
-//_____________________________________________________________________________
-void TGeoVolume::SetFWExtension(TGeoExtension *ext)
-{
-// Connect framework defined extension to the volume. The volume "grabs" a copy,
-// so the original object can be released by the producer. Release the previously 
-// connected extension if any.
-//==========================================================================
-// NOTE: This interface is intended for the use by TGeo and the users should
-//       NOT connect extensions using this method
-//==========================================================================
-   if (fFWExtension) fFWExtension->Release();
-   fFWExtension = 0;
-   if (ext) fFWExtension = ext->Grab();
-}   
-
-//_____________________________________________________________________________
-TGeoExtension *TGeoVolume::GrabUserExtension() const
-{
-// Get a copy of the user extension pointer. The user must call Release() on
-// the copy pointer once this pointer is not needed anymore (equivalent to
-// delete() after calling new())
-   if (fUserExtension) return fUserExtension->Grab();
-   return 0;
-}   
-   
-//_____________________________________________________________________________
-TGeoExtension *TGeoVolume::GrabFWExtension() const
-{
-// Get a copy of the framework extension pointer. The user must call Release() on
-// the copy pointer once this pointer is not needed anymore (equivalent to
-// delete() after calling new())
-   if (fFWExtension) return fFWExtension->Grab();
-   return 0;
-}   
    
 //_____________________________________________________________________________
 void TGeoVolume::UnmarkSaved()
@@ -2636,7 +2636,7 @@ void TGeoVolumeAssembly::CreateThreadData(Int_t nthreads)
          fThreadData[tid] = new ThreadData_t;
       }
    } 
-   TGeoVolume:: CreateThreadData(nthreads);
+   TGeoVolume::CreateThreadData(nthreads);
    TThread::UnLock();
 }
 

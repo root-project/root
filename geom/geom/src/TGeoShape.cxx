@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: 71b9b344a8268b90e569c1d9127a5bc6a11a8d6f $
+// @(#)root/geom:$Id$
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -240,7 +240,7 @@ Double_t TGeoShape::EpsMch()
 const char *TGeoShape::GetName() const
 {
 // Get the shape name.
-   if (!fName[0]) {
+   if (!strlen(fName)) {
       return ((TObject *)this)->ClassName();
    }
    return TNamed::GetName();

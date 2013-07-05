@@ -1,4 +1,4 @@
-// @(#)root/geom:$Id: 4b9524bc70142246f5ab075a059374ae08fda4ae $
+// @(#)root/geom:$Id$
 // Author: Mihaela Gheata   30/05/07
 
 /*************************************************************************
@@ -288,7 +288,7 @@ Bool_t TGeoNavigator::cd(const char *path)
 {
 // Browse the tree of nodes starting from top node according to pathname.
 // Changes the path accordingly.
-   if (!path[0]) return kFALSE;
+   if (!strlen(path)) return kFALSE;
    CdTop();
    TString spath = path;
    TGeoVolume *vol;
