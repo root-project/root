@@ -784,7 +784,7 @@ TClass::TClass() :
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
-   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+   fSchemaRules(0), fAttributeMap(0), fStreamerImpl(&TClass::StreamerDefault)
 
 {
    // Default ctor.
@@ -810,7 +810,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
-   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+   fSchemaRules(0), fAttributeMap(0), fStreamerImpl(&TClass::StreamerDefault)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -860,7 +860,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
-   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+   fSchemaRules(0), fAttributeMap(0), fStreamerImpl(&TClass::StreamerDefault)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -889,7 +889,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
-   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+   fSchemaRules(0), fAttributeMap(0), fStreamerImpl(&TClass::StreamerDefault)
 {
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
@@ -1165,6 +1165,7 @@ TClass::TClass(const TClass& cl) :
   fRefStart(cl.fRefStart),
   fRefProxy(cl.fRefProxy),
   fSchemaRules(cl.fSchemaRules),
+  fAttributeMap(cl.fAttributeMap ? (TClassAttributeMap*)cl.fAttributeMap->Clone() : 0 ),
   fStreamerImpl(cl.fStreamerImpl)
 {
    //copy constructor
