@@ -115,6 +115,15 @@
        h->Draw("same"); 
     ```
 
+### TGraph
+
+-   `TGraph::Draw()` needed at least the option `AL` to draw the graph
+     axis even when there was no active canvas or when the active canvas
+     did not have any axis defined. This was counter-intuitive. Now if
+     `TGraph::Draw()` is invoked without parameter and if there is no
+     axis defined in the current canvas, the option `ALP` is automatically
+     set.
+
 ### TGraph2D
 
 -   When `GetX(YZ)axis` were called on a `TGraph2D`, the frame limit and

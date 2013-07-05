@@ -804,6 +804,15 @@ void TGraph::Draw(Option_t *option)
       if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       if (opt.Contains("a")) gPad->Clear();
    }
+   // If no option is specified, it is defined as "alp" in case there
+   // no current pad or if the current pad as no axis defined.
+   if (!strlen(option)) {
+      if (gPad) {
+         if (!gPad->GetListOfPrimitives()->FindObject("TFrame")) opt = "alp";
+      } else {
+         opt = "alp";
+      }
+   }
    AppendPad(opt);
 }
 
