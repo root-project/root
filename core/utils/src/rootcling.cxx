@@ -158,6 +158,7 @@ const char *rootClingHelp =
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
+#include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/Pragma.h"
 #include "clang/Sema/Sema.h"
@@ -165,6 +166,7 @@ const char *rootClingHelp =
 #include "cling/Utils/AST.h"
 
 #include "llvm/Bitcode/BitstreamWriter.h"
+#include "llvm/Support/PathV2.h"
 
 #ifdef WIN32
 const std::string gPathSeparator ("\\");
@@ -2065,32 +2067,32 @@ enum ESourceFileKind {
 };
 
 //______________________________________________________________________________
-static int GenerateModule(clang::CompilerInstance* CI,
-                          const char* libName, const std::vector<std::string>& args,
+static int GenerateModule(clang::CompilerInstance* CI, const char* libName,
+                          const std::vector<std::string>& args,
                           const std::string &currentDirectory)
 {
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
 
-   TModuleGenerator modGen(CI, dictSrcFile, currentDirectory);
+   TModuleGenerator modGen(CI, libName);
    modGen.ParseArgs(args);
    modGen.WriteRegistrationSource(*dictSrcOut);
 
-   if (!isPCH) {
+   if (!modGen.IsPCH()) {
       CI->getPreprocessor().getHeaderSearchInfo().
-         setModuleCachePath(dictDir.c_str());
+         setModuleCachePath(modGen.GetModuleDirName().c_str());
    }
 
    clang::Module* module = 0;
-   if (!isPCH) {
+   if (!modGen.IsPCH()) {
       std::vector<const char*> headersCStr;
       for (std::vector<std::string>::const_iterator
-              iH = headers.begin(), eH = headers.end();
+              iH = modGen.GetHeaders().begin(), eH = modGen.GetHeaders().end();
            iH != eH; ++iH) {
          headersCStr.push_back(iH->c_str());
       }
       headersCStr.push_back(0);
-      module = ROOT::TMetaUtils::declareModuleMap(CI, moduleFile.c_str(), &headersCStr[0]);
+      module = ROOT::TMetaUtils::declareModuleMap(CI, modGen.GetModuleFileName().c_str(), &headersCStr[0]);
    }
 
    // From PCHGenerator and friends:
@@ -2098,7 +2100,8 @@ static int GenerateModule(clang::CompilerInstance* CI,
    llvm::BitstreamWriter Stream(Buffer);
    clang::ASTWriter Writer(Stream);
    llvm::raw_ostream *OS
-      = CI->createOutputFile(moduleFile, /*Binary=*/true,
+      = CI->createOutputFile(modGen.GetModuleFileName().c_str(),
+                             /*Binary=*/true,
                              /*RemoveFileOnSignal=*/false, /*InFile*/"",
                              /*Extension=*/"", /*useTemporary=*/false,
                              /*CreateMissingDirectories*/false);
@@ -2109,7 +2112,8 @@ static int GenerateModule(clang::CompilerInstance* CI,
 #ifdef ROOTBUILD
       ISysRoot = (currentDirectory + "/").c_str();
 #endif
-      Writer.WriteAST(CI->getSema(), moduleFile, module, ISysRoot.c_str());
+      Writer.WriteAST(CI->getSema(), modGen.GetModuleFileName().c_str(),
+                      module, ISysRoot.c_str());
 
       // Write the generated bitstream to "Out".
       OS->write((char *)&Buffer.front(), Buffer.size());
@@ -2974,8 +2978,8 @@ int RootCling(int argc,
    if (sharedLibraryPathName.empty()) {
       sharedLibraryPathName = dictpathname;
    }
-   GenerateModule(CI, sharedLibraryPathName.c_str(), pcmArgs, currentDirectory,
-);
+   GenerateModule(CI, sharedLibraryPathName.c_str(), pcmArgs,
+                  currentDirectory);
 
    // Now that CINT is not longer there to write the header file,
    // write one and include in there a few things for backward

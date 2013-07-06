@@ -40,8 +40,7 @@ public:
    };
 
    TModuleGenerator(clang::CompilerInstance* CI,
-                    const char* shLibFileName,
-                    const std::string &currentDirectory);
+                    const char* shLibFileName);
 
    // FIXME: remove once PCH is gone.
    bool IsPCH() const { return fIsPCH; }
@@ -53,50 +52,52 @@ public:
    const std::string& GetUmbrellaName() const { return fUmbrellaName; }
    const std::string& GetContentName() const { return fContentName; }
 
+   const std::vector<std::string>& GetHeaders() const { return fHeaders; }
+
    void WriteRegistrationSource(std::ostream& out) const;
+   void WriteContentHeader(std::ostream& out) const;
+   void WriteUmbrellaHeader(std::ostream& out) const;
 
 private:
-   void WritePPCode(std::ostream& out) const {
+   std::ostream& WritePPCode(std::ostream& out) const {
       // Write defines, undefiles, includes, corrsponding to a rootcling
       // invocation with -c -DFOO -UBAR header.h.
       WritePPDefines(out);
       WritePPUndefines(out);
-      WritePPIncludes(out);
+      return WritePPIncludes(out);
    }
-   void WritePPDefines(std::ostream& out) const;
-   void WritePPUndefines(std::ostream& out) const;
-   void WritePPIncludes(std::ostream& out) const;
+   std::ostream& WritePPDefines(std::ostream& out) const;
+   std::ostream& WritePPUndefines(std::ostream& out) const;
+   std::ostream& WritePPIncludes(std::ostream& out) const;
 
-   void WriteAllSeenHeadersArray(std::ostream& out) const;
-   void WriteHeaderArray(std::ostream& out) const {
+   std::ostream& WriteAllSeenHeadersArray(std::ostream& out) const;
+   std::ostream& WriteHeaderArray(std::ostream& out) const {
       // Write "header1.h",\n"header2.h",\n0\n
-      WriteStringVec(fHeaders);
+      return WriteStringVec(fHeaders, out);
    }
-   void WriteIncludePathArray(std::ostream& out) const {
+   std::ostream& WriteIncludePathArray(std::ostream& out) const {
       // Write "./include",\n"/usr/include",\n0\n
-      WriteStringVec(fCompI);
+      return WriteStringVec(fCompI, out);
    }
-   void WriteDefinesArray(std::ostream& out) const {
+   std::ostream& WriteDefinesArray(std::ostream& out) const {
       // Write "DEFINED",\n"NAME=\"VALUE\"",\n0\n
-      WriteStringPairVec(fCompD);
+      return WriteStringPairVec(fCompD, out);
    }
-   void WriteUndefinesArray(std::ostream& out) const {
+   std::ostream& WriteUndefinesArray(std::ostream& out) const {
       // Write "UNDEFINED",\n"NAME",\n0\n
-      WriteStringVec(fCompD);
+      return WriteStringVec(fCompU, out);
    }
-   void WriteUndefinesArray(std::ostream& out);
 
    typedef std::vector<std::pair<std::string, std::string> > StringPairVec_t;
 
    ESourceFileKind GetSourceFileKind(const char* filename) const;
-   void WriteStringVec(const std::vector<std::string>& vec,
+   std::ostream& WriteStringVec(const std::vector<std::string>& vec,
                        std::ostream& out) const;
-   void WriteStringPairVec(const StringPairVec_t& vecP,
+   std::ostream& WriteStringPairVec(const StringPairVec_t& vecP,
                            std::ostream& out) const;
 
    clang::CompilerInstance* fCI;
-   const char* fShLibFileName;
-   const std::string &fCurrentDirectory;
+   std::string fShLibFileName;
    bool fIsPCH;
 
    std::string fDictionaryName; // Name of the dictionary, e.g. "Base"
@@ -106,7 +107,6 @@ private:
    std::string fContentName; // name of content description header in PCM
 
    std::vector<std::string> fHeaders; // exported headers in PCM
-   clang::SourceManager fSrcMgr; // File manager - knows all seen headers
    std::vector<std::string> fCompI; // -I; needed only for ACLiC without PCMs
 
    StringPairVec_t fCompD; // -Dfirst=second

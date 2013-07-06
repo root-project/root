@@ -15,12 +15,43 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "TModuleGenerator.h"
+#include "TMetaUtils.h"
+
+#include "clang/Basic/SourceManager.h"
+#include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/HeaderSearch.h"
-#include "clang/Support/SourceManager.h"
+#include "clang/Lex/Preprocessor.h"
 #include "llvm/Support/PathV2.h"
 
 using namespace ROOT;
 using namespace clang;
+
+TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
+                                   const char* shLibFileName):
+   fCI(CI),
+   fShLibFileName(shLibFileName),
+   fIsPCH(!strcmp(shLibFileName, "etc/allDict.cxx")),
+   fDictionaryName(llvm::sys::path::stem(shLibFileName)),
+   fModuleDirName(llvm::sys::path::parent_path(shLibFileName))
+{
+      
+   // Need to resolve _where_ to create the pcm
+   // We default in the lib subdirectory
+   // otherwise we put it in the same directory as the dictionary file (for ACLiC)
+   if (fModuleDirName.empty()) {
+      fModuleDirName = "./";
+   } else {
+      fModuleDirName += "/";
+   }
+
+   fModuleFileName = fModuleDirName + ROOT::TMetaUtils::GetModuleFileName(fShLibFileName.c_str());
+   // .pcm -> .pch
+   if (IsPCH()) fModuleFileName[fModuleFileName.length() - 1] = 'h';
+
+   fUmbrellaName = fDictionaryName + "_dictUmbrella.h";
+   fContentName = fDictionaryName + "_dictContent.h";
+}
 
 //______________________________________________________________________________
 TModuleGenerator::ESourceFileKind
@@ -36,7 +67,7 @@ TModuleGenerator::GetSourceFileKind(const char* filename) const
    if (ext < filename || *ext != '.') {
       // This might still be a system header, let's double check
       // via the FileManager.
-      clang::Preprocessor& PP = CI->getPreprocessor();
+      clang::Preprocessor& PP = fCI->getPreprocessor();
       clang::HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
       const clang::DirectoryLookup* CurDir = 0;
       const clang::FileEntry* hdrFileEntry
@@ -87,34 +118,6 @@ TModuleGenerator::GetSourceFileKind(const char* filename) const
 }
 
 
-TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
-                                   const char* shLibFileName,
-                                   const std::string &currentDirectory):
-   fCI(CI),
-   fShLibFileName(shLibFileName),
-   fCurrentDirectory(currentDirectory),
-   fIsPCH(!strcmp(shLibFileName, "etc/allDict.cxx")),
-   fDictionaryName(llvm::sys::path::stem(shLibFileName)),
-   fModuleDirName(llvm::sys::path::parent_path(shLibFileName))
-{
-      
-   // Need to resolve _where_ to create the pcm
-   // We default in the lib subdirectory
-   // otherwise we put it in the same directory as the dictionary file (for ACLiC)
-   if (fModuleDirName.empty()) {
-      fModuleDirName = "./";
-   } else {
-      fModuleDirName += "/";
-   }
-
-   fModuleFileName = dictDir + ROOT::TMetaUtils::GetModuleFileName(dictname.c_str());
-   // .pcm -> .pch
-   if (isPCH) moduleFile[moduleFile.length() - 1] = 'h';
-
-   fUmbrellaName = fDictionaryName + "_dictUmbrella.h";
-   fContentName = fDictionaryName + "_dictContent.h";
-}
-
 static
 std::pair<std::string, std::string> SplitPPDefine(const std::string& in) {
    std::string::size_type posEq = in.find('=');
@@ -130,7 +133,7 @@ void TModuleGenerator::ParseArgs(const std::vector<std::string>& args)
    // Parse -I -D -U headers.h SomethingLinkdef.h.
    for (size_t iPcmArg = 1 /*skip argv0*/, nPcmArg = args.size();
         iPcmArg < nPcmArg; ++iPcmArg) {
-      ESourceFileKind sfk = GetSourceFileKind(CI, args[iPcmArg].c_str());
+      ESourceFileKind sfk = GetSourceFileKind(args[iPcmArg].c_str());
       if (sfk == kSFKHeader || sfk == kSFKSource) {
          fHeaders.push_back(args[iPcmArg]);
       } else if (sfk == kSFKNotC && args[iPcmArg][0] == '-') {
@@ -148,14 +151,14 @@ void TModuleGenerator::ParseArgs(const std::vector<std::string>& args)
             }
             break;
          case 'U':
-            fCompU.push_back(SplitPPDefine(args[iPcmArg].c_str() + 2));
+            fCompU.push_back(args[iPcmArg].c_str() + 2);
             break;
          }
       }
    }
 }
 
-void TModuleGenerator::WritePPDefines(std::ostream& out)
+std::ostream& TModuleGenerator::WritePPDefines(std::ostream& out) const
 {
    // Write
    // #ifndef FOO
@@ -171,10 +174,11 @@ void TModuleGenerator::WritePPDefines(std::ostream& out)
       out << "\n"
          "#endif\n";
    }
-   out << std::endl()
+   out << std::endl;
+   return out;
 }
 
-void TModuleGenerator::WritePPUndefines(std::ostream& out)
+std::ostream& TModuleGenerator::WritePPUndefines(std::ostream& out) const
 {
    // Write
    // #ifdef FOO
@@ -186,10 +190,11 @@ void TModuleGenerator::WritePPUndefines(std::ostream& out)
          "  #undef " << *i << "\n"
          "#endif\n";
    }
-   out << std::endl()
+   out << std::endl;
+   return out;
 }
 
-void TModuleGenerator::WritePPIncludes(std::ostream& out)
+std::ostream& TModuleGenerator::WritePPIncludes(std::ostream& out) const
 {
    // Write
    // #include "header1.h"
@@ -198,47 +203,55 @@ void TModuleGenerator::WritePPIncludes(std::ostream& out)
            e = fHeaders.end(); i != e; ++i) {
       out << "#include " << *i << "\n";
    }
-   out << std::endl()
+   out << std::endl;
+   return out;
 }
 
-void TModuleGenerator::WriteAllSeenHeadersArray(std::ostream& out) const
+std::ostream& TModuleGenerator::WriteAllSeenHeadersArray(std::ostream& out) const
 {
-   for (clang::fileinfo_iterator i = fSrcMgr->fileinfo_begin(),
-           e = fSrcMgr->fileinfo_end(); i != e; ++i) {
+   SourceManager& srcMgr = fCI->getSourceManager();
+   for (SourceManager::fileinfo_iterator i = srcMgr.fileinfo_begin(),
+           e = srcMgr.fileinfo_end(); i != e; ++i) {
+      const FileEntry* fileEntry = i->first;
+      out << "\"" << fileEntry->getName() << "\",\n";
    }
+   out << "0" << std::endl;
+   return out;
 }
 
-void TModuleGenerator::WriteStringVec(const std::vector<std::string>& vec,
+std::ostream& TModuleGenerator::WriteStringVec(const std::vector<std::string>& vec,
                                       std::ostream& out) const
 {
    for (std::vector<std::string>::const_iterator i = vec.begin(),
            e = vec.end(); i != e; ++i) {
       out << "\"" << *i << "\",\n";
    }
-   out << "0" << std::endl();
-
+   out << "0" << std::endl;
+   return out;
 }
 
-void TModuleGenerator::WriteStringPairVec(const StringPairVec_t& vec,
+std::ostream& TModuleGenerator::WriteStringPairVec(const StringPairVec_t& vec,
                                           std::ostream& out) const
 {
    for (StringPairVec_t::const_iterator i = vec.begin(),
            e = vec.end(); i != e; ++i) {
       out << "\"" << i->first;
       if (!i->second.empty()) {
+         out << "=\\\"";
          // Need to escape the embedded quotes.
          for (const char *c = i->second.c_str(); *c != '\0'; ++c) {
             if ( *c == '"' ) {
-               out << "\\\"";            
+               out << "\\\\\"";
             } else {
                out << *c;
             }
-         }         
-         out << "=\\\"" << value << "\\\"";
+            out << "\\\"";
+         }
       }
       out << "\",\n";
    }
-   out << "0" << std::endl();
+   out << "0" << std::endl;
+   return out;
 }
 
 //______________________________________________________________________________
@@ -246,38 +259,79 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out) const
 {
    // Dictionary initialization code for loading the module
    out << "void TriggerDictionaryInitalization_"
-       << modGen.GetDictionaryName() << "() {\n"
+       << GetDictionaryName() << "() {\n"
       "      static const char* headers[] = {\n";
-   WriteHeaders(*dictSrcOut);
-   out << 
+   WriteHeaderArray(out) << 
+      "      };\n"
+      "      static const char* allHeaders[] = {\n";
+   WriteAllSeenHeadersArray(out) << 
       "      };\n"
       "      static const char* includePaths[] = {\n";
-   WriteIncludePathArray(*dictSrcOut);
-
-   out << 
+   WriteIncludePathArray(out) << 
       "      };\n"
       "      static const char* macroDefines[] = {\n";
-   WriteDefinesArray(*dictSrcOut);
-   out << 
+   WriteDefinesArray(out) << 
       "      };\n"
       "      static const char* macroUndefines[] = {\n";
-   WriteUndefinesArray(*dictSrcOut);
-
-   out << 
+   WriteUndefinesArray(out) << 
       "      0 };\n"
       "      static bool sInitialized = false;\n"
       "      if (!sInitialized) {\n"
-      "        TROOT::RegisterModule(\"" << dictname << "\",\n"
+      "        TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
       "          headers, includePaths, macroDefines, macroUndefines,\n"
-      "          TriggerDictionaryInitalization_" << dictname << ");\n"
+      "          TriggerDictionaryInitalization_" << GetDictionaryName() << ");\n"
       "        sInitialized = true;\n"
       "      }\n"
       "    }\n"
       "namespace {\n"
       "  static struct DictInit {\n"
       "    DictInit() {\n"
-      "      TriggerDictionaryInitalization_" << dictname << "();\n"
+      "      TriggerDictionaryInitalization_" << GetDictionaryName() << "();\n"
       "    }\n"
       "  } __TheDictionaryInitializer;\n"
       "}" << std::endl;
+}
+
+//______________________________________________________________________________
+void TModuleGenerator::WriteContentHeader(std::ostream& out) const
+{
+   // Write a header file describing the content of this module
+   // through a series of variables inside the namespace
+   // ROOT::Dict::[DictionaryName]. Each variable is an array of string
+   // literals, with a const char* of 0 being the last element, e.g.
+   // ROOT::Dict::_DictName::arrIncludes[] = { "A.h", "B.h", 0 };
+
+   out << "namespace ROOT { namespace Dict { namespace _"
+       << GetDictionaryName() << "{\n";
+
+   out << "const char* arrIncludes[] = {\n";
+   WriteHeaderArray(out) << "};\n";
+
+   out << "const char* arrAllHeaders[] = {\n";
+   WriteAllSeenHeadersArray(out) << "};\n";
+
+   out << "const char* arrIncludePaths[] = {\n";
+   WriteIncludePathArray(out) << "};\n";
+
+   out << "const char* arrDefines[] = {\n";
+   WriteDefinesArray(out) << "};\n";
+
+   out << "const char* arrUndefines[] = {\n";
+   WriteUndefinesArray(out) << "};\n";
+
+   out << "} } }" << std::endl;
+}
+
+//______________________________________________________________________________
+void TModuleGenerator::WriteUmbrellaHeader(std::ostream& out) const
+{
+   // Write a header file pulling in the content of this module
+   // through a series of #defined, #undefs and #includes.
+   // The sequence corrsponds to a rootcling invocation with
+   //   -c -DFOO -UBAR header.h
+   // I.e. defines, undefines and finally includes.
+
+   WritePPDefines(out);
+   WritePPUndefines(out);
+   WritePPIncludes(out);
 }
