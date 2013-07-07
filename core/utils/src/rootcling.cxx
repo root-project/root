@@ -2067,15 +2067,13 @@ enum ESourceFileKind {
 };
 
 //______________________________________________________________________________
-static int GenerateModule(clang::CompilerInstance* CI, const char* libName,
-                          const std::vector<std::string>& args,
+static int GenerateModule(TModuleGenerator& modGen,
+                          clang::CompilerInstance* CI,
                           const std::string &currentDirectory)
 {
    // Generate the clang module given the arguments.
    // Returns != 0 on error.
 
-   TModuleGenerator modGen(CI, libName);
-   modGen.ParseArgs(args);
    modGen.WriteRegistrationSource(*dictSrcOut);
 
    if (!modGen.IsPCH()) {
@@ -2538,6 +2536,7 @@ int RootCling(int argc,
 
    AddPlatformDefines(clingArgs);
 
+   
    std::string interpPragmaSource;
    std::string includeForSource;
    string esc_arg;
@@ -2590,18 +2589,9 @@ int RootCling(int argc,
             // GetRelocatableHeaderName is likely to be too aggressive and the
             // ROOTBUILD part should really be removed by changing the ROOT makefile
             // to pass -I and path relative to the include path.
-            if (cling::Interpreter::kSuccess
-                == interp.declare(std::string("#include \"") + header + "\"")) {
-               interpPragmaSource += std::string("#include \"") + header + "\"\n";
-               if (!isSelectionFile)
-                  includeForSource += std::string("#include \"") + header + "\"\n";
-               pcmArgs.push_back(header);
-            } else {
-               ROOT::TMetaUtils::Error(0, "%s: compilation failure\n", argv[0]);
-               CleanupOnExit(1);
-               return 1;
-            }
-
+            if (!isSelectionFile)
+               includeForSource += std::string("#include \"") + header + "\"\n";
+            pcmArgs.push_back(header);
          }
       }
    }
@@ -2610,6 +2600,34 @@ int RootCling(int argc,
       ROOT::TMetaUtils::Error(0, "%s: no input files specified\n", argv[0]);
       CleanupOnExit(1);
       return 1;
+   }
+
+   if (sharedLibraryPathName.empty()) {
+      sharedLibraryPathName = dictpathname;
+   }
+
+   TModuleGenerator modGen(interp.getCI(), sharedLibraryPathName.c_str());
+   modGen.ParseArgs(pcmArgs);
+   {
+      std::ofstream umbrella(modGen.GetUmbrellaName().c_str());
+      if (!umbrella) {
+         ROOT::TMetaUtils::Error(0, "%s: failed to open umbrella header output %s\n",
+                                 argv[0], modGen.GetUmbrellaName().c_str());
+         CleanupOnExit(1);
+         return 1;
+      }
+      // This will duplicate the -D,-U from clingArgs - but as they are surrounded
+      // by #ifndef there is no problem here.
+      modGen.WriteUmbrellaHeader(umbrella);
+   }
+   {
+      std::string umbrellaIncludeDirective("#include \"");
+      umbrellaIncludeDirective += modGen.GetUmbrellaName() + "\"";
+      if (interp.declare(umbrellaIncludeDirective) != cling::Interpreter::kSuccess) {
+         ROOT::TMetaUtils::Error(0, "%s: compilation failure\n", argv[0]);
+         CleanupOnExit(1);
+         return 1;
+      }
    }
 
    if (!linkdefLoc) {
@@ -2963,23 +2981,7 @@ int RootCling(int argc,
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
 
-   // pcmArgs does not need any of the 'extra' include (entered via
-   // #pragma) as those are needed only for compilation.
-   // However CINT was essentially treating them the same as any other
-   // so we may have to put them here too ... maybe.
-
-   // Until the module are actually enabled in ROOT, we need to register
-   // the 'current' directory to make it relocatable (i.e. have a way
-   // to find the headers).
-   string incCurDir = "-I";
-   incCurDir += currentDirectory;
-   pcmArgs.push_back(incCurDir);
-
-   if (sharedLibraryPathName.empty()) {
-      sharedLibraryPathName = dictpathname;
-   }
-   GenerateModule(CI, sharedLibraryPathName.c_str(), pcmArgs,
-                  currentDirectory);
+   GenerateModule(modGen, CI, currentDirectory);
 
    // Now that CINT is not longer there to write the header file,
    // write one and include in there a few things for backward
