@@ -265,9 +265,9 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out) const
       "      static const char* headers[] = {\n";
    WriteHeaderArray(out) <<
       "      };\n"
-   "      static const char* allHeaders[] = {\n";
+      /*"      static const char* allHeaders[] = {\n";
    WriteAllSeenHeadersArray(out) << 
-      "      };\n"
+      "      };\n"*/
       "      static const char* includePaths[] = {\n";
    WriteIncludePathArray(out) << 
       "      };\n"
