@@ -45,7 +45,8 @@ TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
       fModuleDirName += "/";
    }
 
-   fModuleFileName = fModuleDirName + ROOT::TMetaUtils::GetModuleFileName(fShLibFileName.c_str());
+   fModuleFileName = fModuleDirName
+      + ROOT::TMetaUtils::GetModuleFileName(fDictionaryName.c_str());
    // .pcm -> .pch
    if (IsPCH()) fModuleFileName[fModuleFileName.length() - 1] = 'h';
 
@@ -107,13 +108,14 @@ TModuleGenerator::GetSourceFileKind(const char* filename) const
    }
    } // switch extension length
 
+   /*
    static const size_t lenLinkdefdot = 8;
    if (ret == kSFKHeader && len - lenExt >= lenLinkdefdot) {
       if ((strstr(filename,"LinkDef") || strstr(filename,"Linkdef") ||
            strstr(filename,"linkdef")) && strstr(filename,".h")) {
          ret = kSFKLinkdef;
       }
-   }
+   }*/
    return ret;
 }
 
@@ -201,7 +203,7 @@ std::ostream& TModuleGenerator::WritePPIncludes(std::ostream& out) const
    // #include "header2.h"
    for (std::vector<std::string>::const_iterator i = fHeaders.begin(),
            e = fHeaders.end(); i != e; ++i) {
-      out << "#include " << *i << "\n";
+      out << "#include \"" << *i << "\"\n";
    }
    out << std::endl;
    return out;
@@ -261,9 +263,9 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out) const
    out << "void TriggerDictionaryInitalization_"
        << GetDictionaryName() << "() {\n"
       "      static const char* headers[] = {\n";
-   WriteHeaderArray(out) << 
+   WriteHeaderArray(out) <<
       "      };\n"
-      "      static const char* allHeaders[] = {\n";
+   "      static const char* allHeaders[] = {\n";
    WriteAllSeenHeadersArray(out) << 
       "      };\n"
       "      static const char* includePaths[] = {\n";
@@ -274,7 +276,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out) const
       "      };\n"
       "      static const char* macroUndefines[] = {\n";
    WriteUndefinesArray(out) << 
-      "      0 };\n"
+      "      };\n"
       "      static bool sInitialized = false;\n"
       "      if (!sInitialized) {\n"
       "        TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"

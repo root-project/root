@@ -35,8 +35,8 @@ public:
    enum ESourceFileKind {
       kSFKNotC,
       kSFKHeader,
-      kSFKSource,
-      kSFKLinkdef
+      kSFKSource /*,
+      kSFKLinkdef*/
    };
 
    TModuleGenerator(clang::CompilerInstance* CI,
