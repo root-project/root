@@ -2589,9 +2589,16 @@ int RootCling(int argc,
             // GetRelocatableHeaderName is likely to be too aggressive and the
             // ROOTBUILD part should really be removed by changing the ROOT makefile
             // to pass -I and path relative to the include path.
-            if (!isSelectionFile)
+            interpPragmaSource += std::string("#include \"") + header + "\"\n";
+            if (!isSelectionFile) {
                includeForSource += std::string("#include \"") + header + "\"\n";
-            pcmArgs.push_back(header);
+               pcmArgs.push_back(header);
+            } else if (interp.declare(std::string("#include \"") + header + "\"\n")
+                     != cling::Interpreter::kSuccess) {
+               ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);
+               CleanupOnExit(1);
+               return 1;
+            }
          }
       }
    }
