@@ -111,9 +111,10 @@ of the canvas. It gives a short explanation about the canvas' menus.
 <p>
 A canvas may be automatically divided into pads via <tt>TPad::Divide</tt>.
 <p>
-At creation time, the canvas size defines the size of the canvas window
-(including the window manager's decoration). To define precisely the graphics
-area size of a canvas, the following four lines of code should be used:
+At creation time, in interactive mode, the canvas size defines the size of the
+canvas window (including the window manager's decoration). To define precisely
+the graphics area size of a canvas, the following four lines of code should be
+used:
 <pre>
    {
       Double_t w = 600;
@@ -121,6 +122,10 @@ area size of a canvas, the following four lines of code should be used:
       TCanvas * c1 = new TCanvas("c", "c", w, h);
       c->SetWindowSize(w + (w - c->GetWw()), h + (h - c->GetWh()));
    }
+</pre>
+in batch mode simply do:
+<pre>
+      c->SetCanvasSize(w,h);
 </pre>
 End_Html */
 
