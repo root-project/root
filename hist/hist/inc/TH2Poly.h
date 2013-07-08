@@ -116,6 +116,7 @@ public:
    Double_t     Integral(Int_t, Int_t, const Option_t*) const{return 0;}                             //MayNotUse
    Double_t     Integral(Int_t, Int_t, Int_t, Int_t, const Option_t*) const{return 0;}               //MayNotUse
    Double_t     Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, const Option_t*) const{return 0;} //MayNotUse
+   Long64_t     Merge(TCollection *);
    void         Reset(Option_t *option);
    void         SavePrimitive(ostream& out, Option_t* option = "");
    void         SetBinContent(Int_t bin, Double_t content);

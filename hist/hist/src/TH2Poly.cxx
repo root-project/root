@@ -1133,6 +1133,14 @@ Bool_t TH2Poly::IsIntersectingPolygon(Int_t bn, Double_t *x, Double_t *y,
 
 
 //______________________________________________________________________________
+Long64_t TH2Poly::Merge(TCollection *)
+{
+   Error("Merge","Cannot merge TH2Poly");
+   return 0;
+}
+
+
+//______________________________________________________________________________
 void TH2Poly::SavePrimitive(ostream &out, Option_t *option)
 {
    // Save primitive as a C++ statement(s) on output stream out
