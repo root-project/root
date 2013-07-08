@@ -608,11 +608,13 @@ void TLegend::PaintPrimitives()
    Double_t boxw = boxwidth*0.35;
    Double_t yspace = (y2-y1)/nRows;
    Double_t textsize = GetTextSize();
+   Bool_t autosize = kFALSE;
    Double_t save_textsize = textsize;
    Double_t* columnWidths = new Double_t[fNColumns];
    memset(columnWidths, 0, fNColumns*sizeof(Double_t));
 
    if ( textsize == 0 ) {
+      autosize = kTRUE;
       textsize = ( 1. - fEntrySeparation ) * yspace;
 
       // find the max width and height (in pad coords) of one latex entry label
@@ -625,6 +627,7 @@ void TLegend::PaintPrimitives()
          entrytex.SetNDC();
          Style_t tfont = entrysize->GetTextFont();
          if (tfont == 0) tfont = GetTextFont();
+	 if (tfont%10 == 3) --tfont;
          entrytex.SetTextFont(tfont);
          entrytex.SetTextSize(textsize);
          if ( entrytex.GetYsize() > maxentryheight ) {
@@ -669,6 +672,7 @@ void TLegend::PaintPrimitives()
          entrytex.SetNDC();
          Style_t tfont = entry->GetTextFont();
          if (tfont == 0) tfont = GetTextFont();
+	 if (autosize && tfont%10 == 3) --tfont;
          entrytex.SetTextFont(tfont);
          if(entry->GetTextSize() == 0) entrytex.SetTextSize(textsize);
          TString opt = entry->GetOption();
@@ -710,7 +714,11 @@ void TLegend::PaintPrimitives()
       if (talign == 0) entry->SetTextAlign(GetTextAlign());
       if (tangle == 0) entry->SetTextAngle(GetTextAngle());
       if (tcolor == 0) entry->SetTextColor(GetTextColor());
-      if (tfont  == 0) entry->SetTextFont(GetTextFont());
+      if (tfont  == 0) {
+         tfont = GetTextFont();
+         if (autosize && tfont%10 == 3) --tfont;
+         entry->SetTextFont(tfont);
+      }
       if (tsize  == 0) entry->SetTextSize(GetTextSize());
       // set x,y according to the requested alignment
       Double_t x=0,y=0;
