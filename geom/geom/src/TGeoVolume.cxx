@@ -500,7 +500,7 @@ void TGeoVolume::Browse(TBrowser *b)
    TString title;
    for (Int_t i=0; i<GetNdaughters(); i++) { 
       daughter = GetNode(i)->GetVolume();
-      if(!strlen(daughter->GetTitle())) {
+      if(daughter->GetTitle()[0]) {
          if (daughter->IsAssembly()) title.TString::Format("Assembly with %d daughter(s)", 
                                                 daughter->GetNdaughters());
          else if (daughter->GetFinder()) {
@@ -628,7 +628,7 @@ void TGeoVolume::CheckShapes()
    for (Int_t i=0; i<nd; i++) {
       node=(TGeoNode*)fNodes->At(i);
       // check if node has name
-      if (!strlen(node->GetName())) printf("Daughter %i of volume %s - NO NAME!!!\n",
+      if (!node->GetName()[0]) printf("Daughter %i of volume %s - NO NAME!!!\n",
                                            i, GetName());
       old_vol = node->GetVolume();
       shape = old_vol->GetShape();
@@ -808,7 +808,7 @@ TGeoVolume *TGeoVolume::Import(const char *filename, const char *name, Option_t 
          printf("Error: TGeoVolume::Import : Cannot open file %s\n", filename);
          return 0;
       }
-      if (name && strlen(name) > 0) {
+      if (name && name[0]) {
          volume = (TGeoVolume*)f->Get(name);
       } else {
          TIter next(f->GetListOfKeys());
@@ -1096,7 +1096,7 @@ void TGeoVolume::Draw(Option_t *option)
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    TGeoAtt::SetVisRaytrace(kFALSE);
    if (!IsVisContainers()) SetVisLeaves();
-   if (option && strlen(option) > 0) {
+   if (option && option[0] > 0) {
       painter->DrawVolume(this, option); 
    } else {
       painter->DrawVolume(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
@@ -1115,7 +1115,7 @@ void TGeoVolume::DrawOnly(Option_t *option)
    SetVisOnly();
    TGeoAtt::SetVisRaytrace(kFALSE);
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
-   if (option && strlen(option) > 0) {
+   if (option && option[0] > 0) {
       painter->DrawVolume(this, option); 
    } else {
       painter->DrawVolume(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
@@ -1139,7 +1139,7 @@ void TGeoVolume::Paint(Option_t *option)
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    painter->SetTopVolume(this);
 //   painter->Paint(option);   
-   if (option && strlen(option) > 0) {
+   if (option && option[0] > 0) {
       painter->Paint(option); 
    } else {
       painter->Paint(gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
@@ -1372,7 +1372,7 @@ void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // check if we need to save shape/volume
    Bool_t mustDraw = kFALSE;
    if (fGeoManager->GetGeomPainter()->GetTopVolume()==this) mustDraw = kTRUE;
-   if (!strlen(option)) {
+   if (!option[0]) {
       fGeoManager->SetAllIndex();
       out << "   new TGeoManager(\"" << fGeoManager->GetName() << "\", \"" << fGeoManager->GetTitle() << "\");" << std::endl << std::endl;
 //      if (mustDraw) out << "   Bool_t mustDraw = kTRUE;" << std::endl;
@@ -1742,7 +1742,7 @@ TGeoVolume *TGeoVolume::MakeReflectedVolume(const char *newname) const
    }   
    TGeoVolume *vol = (TGeoVolume*)map.GetValue(this);
    if (vol) {
-      if (strlen(newname)) vol->SetName(newname);
+      if (newname && newname[0]) vol->SetName(newname);
       return vol;
    }
 //   printf("Making reflection for volume: %s\n", GetName());   
@@ -1752,7 +1752,7 @@ TGeoVolume *TGeoVolume::MakeReflectedVolume(const char *newname) const
       return 0;
    }   
    map.Add((TObject*)this, vol);
-   if (strlen(newname)) vol->SetName(newname);
+   if (newname && newname[0]) vol->SetName(newname);
    delete vol->GetNodes();
    vol->SetNodes(NULL);
    vol->SetBit(kVolumeImportNodes, kFALSE);
@@ -1959,9 +1959,9 @@ Int_t TGeoVolume::GetByteCount() const
 {
 // get the total size in bytes for this volume
    Int_t count = 28+2+6+4+0;    // TNamed+TGeoAtt+TAttLine+TAttFill+TAtt3D
-   count += strlen(GetName()) + strlen(GetTitle()); // name+title
-   count += 4+4+4+4+4; // fShape + fMedium + fFinder + fField + fNodes
-   count += 8 + strlen(fOption.Data()); // fOption
+   count += fName.Capacity() + fTitle.Capacity(); // name+title
+   count += 7*sizeof(char*); // fShape + fMedium + fFinder + fField + fNodes + 2 extensions
+   count += fOption.Capacity(); // fOption
    if (fShape)  count += fShape->GetByteCount();
    if (fFinder) count += fFinder->GetByteCount();
    if (fNodes) {

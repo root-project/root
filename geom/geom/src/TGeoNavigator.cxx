@@ -288,7 +288,7 @@ Bool_t TGeoNavigator::cd(const char *path)
 {
 // Browse the tree of nodes starting from top node according to pathname.
 // Changes the path accordingly.
-   if (!strlen(path)) return kFALSE;
+   if (!path[0]) return kFALSE;
    CdTop();
    TString spath = path;
    TGeoVolume *vol;
@@ -678,7 +678,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
              fDirection[0], fDirection[1], fDirection[2]);
       printf("  pstep=%9.6g  path=%s\n", stepmax, GetPath());
    }   
-   if (strlen(path)) {
+   if (path[0]) {
       PushPath();
       if (!cd(path)) {
          PopPath();
