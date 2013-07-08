@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #ifndef ROOT_CocoaPrivate
 #define ROOT_CocoaPrivate
 
@@ -59,8 +58,8 @@ namespace MacOSX {
 namespace Details {
 
 class CocoaPrivate {
-   friend class TGCocoa;
-   friend class TGQuartz;
+   friend class ::TGCocoa;
+   friend class ::TGQuartz;
    friend class X11::CommandBuffer;
 public:
    ~CocoaPrivate();
