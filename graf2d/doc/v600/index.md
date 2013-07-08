@@ -28,6 +28,8 @@
 
 -   The line attribute of objects in the legend were not taken into
     account with the option "e".
+-   In case of automatic computation of the legend items' size, the 
+    text size was wrong if the font precision was set to 3.
 
 ### TPie
 
