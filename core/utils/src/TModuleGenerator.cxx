@@ -126,7 +126,7 @@ std::pair<std::string, std::string> SplitPPDefine(const std::string& in) {
    if (posEq == std::string::npos)
       return std::make_pair(in, "");
    return std::pair<std::string, std::string>
-      (in.substr(0, posEq - 1), in.substr(posEq + 1, std::string::npos));
+      (in.substr(0, posEq), in.substr(posEq + 1, std::string::npos));
 }
 
 
@@ -170,8 +170,8 @@ std::ostream& TModuleGenerator::WritePPDefines(std::ostream& out) const
            e = fCompD.end(); i != e; ++i) {
       out << "#ifndef " << i->first << "\n"
          "  #define " << i->first;
-      if (i->second.empty()) {
-         out << i->second;
+      if (!i->second.empty()) {
+         out << " " << i->second;
       }
       out << "\n"
          "#endif\n";
@@ -239,15 +239,14 @@ std::ostream& TModuleGenerator::WriteStringPairVec(const StringPairVec_t& vec,
            e = vec.end(); i != e; ++i) {
       out << "\"" << i->first;
       if (!i->second.empty()) {
-         out << "=\\\"";
+         out << "=";
          // Need to escape the embedded quotes.
          for (const char *c = i->second.c_str(); *c != '\0'; ++c) {
             if ( *c == '"' ) {
-               out << "\\\\\"";
+               out << "\\\"";
             } else {
                out << *c;
             }
-            out << "\\\"";
          }
       }
       out << "\",\n";
