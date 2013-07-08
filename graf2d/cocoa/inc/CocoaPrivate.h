@@ -59,8 +59,8 @@ namespace MacOSX {
 namespace Details {
 
 class CocoaPrivate {
-   friend class TGCocoa;
-   friend class TGQuartz;
+   friend class ::TGCocoa;
+   friend class ::TGQuartz;
    friend class X11::CommandBuffer;
 public:
    ~CocoaPrivate();
