@@ -1130,6 +1130,47 @@ const TBuffer3D & TGeoTube::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    return buffer;
 }
 
+//_____________________________________________________________________________
+void TGeoTube::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
+{
+// Check the inside status for each of the points in the array.
+// Input: Array of point coordinates + vector size
+// Output: Array of Booleans for the inside of each point
+   for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
+}
+
+//_____________________________________________________________________________
+void TGeoTube::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
+{
+// Compute the normal for an array o points so that norm.dot.dir is positive
+// Input: Arrays of point coordinates and directions + vector size
+// Output: Array of normal directions
+   for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
+}
+
+//_____________________________________________________________________________
+void TGeoTube::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
+{
+// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+   for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
+}
+
+//_____________________________________________________________________________
+void TGeoTube::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
+{
+// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+   for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
+}
+
+//_____________________________________________________________________________
+void TGeoTube::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
+{
+// Compute safe distance from each of the points in the input array.
+// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+// Output: Safety values
+   for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
+}
+
 ClassImp(TGeoTubeSeg)
 
 //_____________________________________________________________________________
@@ -2239,6 +2280,47 @@ const TBuffer3D & TGeoTubeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame)
    return buffer;
 }
 
+//_____________________________________________________________________________
+void TGeoTubeSeg::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
+{
+// Check the inside status for each of the points in the array.
+// Input: Array of point coordinates + vector size
+// Output: Array of Booleans for the inside of each point
+   for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
+}
+
+//_____________________________________________________________________________
+void TGeoTubeSeg::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
+{
+// Compute the normal for an array o points so that norm.dot.dir is positive
+// Input: Arrays of point coordinates and directions + vector size
+// Output: Array of normal directions
+   for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
+}
+
+//_____________________________________________________________________________
+void TGeoTubeSeg::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
+{
+// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+   for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
+}
+
+//_____________________________________________________________________________
+void TGeoTubeSeg::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
+{
+// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+   for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
+}
+
+//_____________________________________________________________________________
+void TGeoTubeSeg::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
+{
+// Compute safe distance from each of the points in the input array.
+// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+// Output: Safety values
+   for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
+}
+
 ClassImp(TGeoCtub)
 
 TGeoCtub::TGeoCtub()
@@ -3014,4 +3096,45 @@ const TBuffer3D & TGeoCtub::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    }
 
    return buffer;
+}
+
+//_____________________________________________________________________________
+void TGeoCtub::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
+{
+// Check the inside status for each of the points in the array.
+// Input: Array of point coordinates + vector size
+// Output: Array of Booleans for the inside of each point
+   for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
+}
+
+//_____________________________________________________________________________
+void TGeoCtub::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
+{
+// Compute the normal for an array o points so that norm.dot.dir is positive
+// Input: Arrays of point coordinates and directions + vector size
+// Output: Array of normal directions
+   for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
+}
+
+//_____________________________________________________________________________
+void TGeoCtub::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
+{
+// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+   for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
+}
+
+//_____________________________________________________________________________
+void TGeoCtub::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
+{
+// Compute distance from array of input points having directions specisied by dirs. Store output in dists
+   for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
+}
+
+//_____________________________________________________________________________
+void TGeoCtub::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
+{
+// Compute safe distance from each of the points in the input array.
+// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+// Output: Safety values
+   for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

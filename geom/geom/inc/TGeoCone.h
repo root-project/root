@@ -54,19 +54,23 @@ public:
    static  Double_t      Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2);
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   virtual void          ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize);
    static  void          ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm,
                                         Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2);
    virtual Bool_t        Contains(const Double_t *point) const;
+   virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    static  void          DistToCone(const Double_t *point, const Double_t *dir, Double_t dz, Double_t r1, Double_t r2, Double_t &b, Double_t &delta);   
    static  Double_t      DistFromInsideS(const Double_t *point, const Double_t *dir, Double_t dz,
                                     Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2);
    virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+   virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    static  Double_t      DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t dz,
                                    Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2);
    virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+   virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
 
@@ -89,6 +93,7 @@ public:
    virtual Bool_t        IsCylType() const {return kTRUE;}
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;
+   virtual void          Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const;
    static  Double_t      SafetyS(const Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                                  Double_t rmin2, Double_t rmax2, Int_t skipz=0);
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
@@ -135,11 +140,12 @@ public:
    static  Double_t      Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
+   virtual void          ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize);
    static  void          ComputeNormalS(const Double_t *point, const Double_t *dir, Double_t *norm,
                                         Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2,
                                         Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    virtual Bool_t        Contains(const Double_t *point) const;
-
+   virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
    
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    static  Double_t      DistToCons(const Double_t *point, const Double_t *dir, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Double_t phi1, Double_t phi2);
@@ -147,10 +153,12 @@ public:
                                    Double_t rmin2, Double_t rmax2, Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi);
    virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+   virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    static  Double_t      DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
                                    Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi);   
    virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+   virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
                                 Double_t start, Double_t step);
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
@@ -166,6 +174,7 @@ public:
    virtual void          InspectShape() const;
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;
+   virtual void          Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const;
    static  Double_t      SafetyS(const Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                                  Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2, Int_t skipz=0);
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
