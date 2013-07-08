@@ -105,17 +105,17 @@ public:
    void                  CheckShape(Int_t testNo, Int_t nsamples=10000, Option_t *option="");
    virtual void          ComputeBBox()                           = 0;
    virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) = 0;
-   virtual void          ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize);
+   virtual void          ComputeNormal_v(const Double_t *, const Double_t *, Double_t *, Int_t) {}
    virtual Bool_t        Contains(const Double_t *point) const         = 0;
-   virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
+   virtual void          Contains_v(const Double_t *, Bool_t *, Int_t) const {}
    virtual Bool_t        CouldBeCrossed(const Double_t *point, const Double_t *dir) const = 0;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py) = 0;
    virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const = 0;
-   virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
+   virtual void          DistFromInside_v(const Double_t *, const Double_t *, Double_t *, Int_t, Double_t *) const {}
    virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const = 0;
-   virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
+   virtual void          DistFromOutside_v(const Double_t *, const Double_t *, Double_t *, Int_t, Double_t *) const {}
    static Double_t       DistToPhiMin(const Double_t *point, const Double_t *dir, Double_t s1, Double_t c1, Double_t s2, Double_t c2, 
                                       Double_t sm, Double_t cm, Bool_t in=kTRUE);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
@@ -152,7 +152,7 @@ public:
    static void           NormalPhi(const Double_t *point, const Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    virtual void          Paint(Option_t *option="");
    virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const = 0;
-   virtual void          Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const;
+   virtual void          Safety_v(const Double_t *, const Bool_t *, Double_t *, Int_t) const {}
    static  Double_t      SafetyPhi(const Double_t *point, Bool_t in, Double_t phi1, Double_t phi2);
    static  Double_t      SafetySeg(Double_t r, Double_t z, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Bool_t outer);
    virtual void          SetDimensions(Double_t *param)          = 0;
