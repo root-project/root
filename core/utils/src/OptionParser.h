@@ -37,6 +37,20 @@
  *
  */
 
+/*
+Danio Piparo - Since we import this parser from tan external source, we keep
+track of the changes:
+
+New Features 6-7-12:
+ o Added FullArg class from the examples in the header
+
+Bugs Fixed 8-7-12:
+ o Cov: Add initialisation of screenlen variable in LinePartIterator
+ o Cov: LineWrapper databuf, lenbuf and wrote_something are now initialised
+ o Cov: Option::operator= now returns Option& (return *this;) and not void
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -773,9 +787,11 @@ public:
    *
    * After this operation @c *this will be a one-element linked list.
    */
-  void operator=(const Option& orig)
+  //void operator=(const Option& orig)
+  Option& operator=(const Option& orig)
   {
     init(orig.desc, orig.name, orig.arg);
+    return *this;
   }
 
   /**
@@ -1957,7 +1973,7 @@ struct PrintUsageImplementation
   public:
     //! @brief Creates an iterator for @c usage.
     LinePartIterator(const Descriptor usage[]) :
-        tablestart(usage), rowdesc(0), rowstart(0), ptr(0), col(-1), len(0), max_line_in_block(0), line_in_block(0),
+    tablestart(usage), rowdesc(0), rowstart(0), ptr(0), col(-1), len(0), screenlen(0), max_line_in_block(0), line_in_block(0),
         target_line_in_block(0), hit_target_line(true)
     {
     }
@@ -2396,7 +2412,7 @@ struct PrintUsageImplementation
      * @c x1 gives the indentation LineWrapper uses if it needs to indent.
      */
     LineWrapper(int x1, int x2) :
-        x(x1), width(x2 - x1), head(0), tail(bufmask)
+    lenbuf(), datbuf(), x(x1), width(x2 - x1), head(0), tail(bufmask), wrote_something(false)
     {
       if (width < 2) // because of wide characters we need at least width 2 or the code breaks
         width = 2;

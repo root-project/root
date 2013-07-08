@@ -3269,7 +3269,7 @@ unsigned int checkHeadersNames(std::vector<std::string>& headersNames)
 }
 
 //______________________________________________________________________________
-unsigned int extractArgs(int& argc, char**& argv, std::vector<std::string>& args)
+unsigned int extractArgs(int& argc, char** argv, std::vector<std::string>& args)
 {
    // Extract the arguments from the command line
 
@@ -3286,9 +3286,8 @@ unsigned int extractArgs(int& argc, char**& argv, std::vector<std::string>& args
 
    // now create a new argv w/o the arguments, adapt argc
    int newArgc = argc - argsIndeces.size();
-   char** newArgv = new char*[newArgc];
+   std::vector<char*> newArgv (newArgc);
    unsigned int argvCounter=0;
-
    for (int i=0;i<argc;++i){
       // if index was NOT the one of an arg,copy in argv
       if (count (argsIndeces.begin(), argsIndeces.end(), i) == 0){
@@ -3296,7 +3295,37 @@ unsigned int extractArgs(int& argc, char**& argv, std::vector<std::string>& args
          argvCounter++;
       }
    }
-   argv=newArgv;
+
+   // Some debug
+   if (genreflex::verbose){
+     std::cout << "Old commandline: \n";
+     for (int i=0;i<argc;++i){
+        std::cout << i << ") " << argv[i] << std::endl;
+     }     
+   }
+   
+   // Assign to argv now
+   for (int i=0;i<newArgc;++i){
+      argv[i]=newArgv[i];
+      }
+
+   // Some debug
+   if (genreflex::verbose){
+      int i=0;
+      std::cout << "New commandline: \n";
+      for (i=0;i<newArgc;++i){
+         std::cout << i << ") " << argv[i] << std::endl;
+      }
+      i=0;
+      std::cout << "Args: \n";
+      for (std::vector<std::string>::iterator it = args.begin();
+           it < args.end();++it){
+         std::cout << i << ") " << *it << std::endl;
+         ++i;
+      }
+         
+   }
+      
    argc=newArgc;
    return args.size();
 }
@@ -3633,9 +3662,6 @@ int GenReflex(int argc, char **argv)
                                         headersNames,
                                         ofileName);
    }
-
-   //extracArgs gives away ownership of a char*[]
-   delete[]  argv;
 
    return returnValue;
 }
