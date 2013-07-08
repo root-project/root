@@ -2397,7 +2397,7 @@ void AddPlatformDefines(std::vector<std::string>& clingArgs)
 #endif
 
 //______________________________________________________________________________
-int RootCling(int argc, char **argv)
+int RootCling(int argc, char **argv, bool isDeep=false)
 {
    if (argc < 2) {
       fprintf(stderr,
@@ -2410,7 +2410,7 @@ int RootCling(int argc, char **argv)
    std::string dictname;
    std::string dictpathname;
    int ic, force = 0, onepcm = 0;
-   bool requestAllSymbols = false; // Would be set to true is we decide to support an option like --deep.
+   bool requestAllSymbols = isDeep; 
 
    std::string currentDirectory;
    GetCurrentDirectory(currentDirectory);
@@ -3408,6 +3408,7 @@ void headers2outputsNames(const std::vector<std::string>& headersNames,
 //______________________________________________________________________________
 int invokeRootCling(const std::string& verbosity,
                     const std::string& selectionFileName,
+                    bool isDeep,
                     const std::vector<std::string>& headersNames,
                     const std::string& ofilename){
 
@@ -3444,7 +3445,7 @@ int invokeRootCling(const std::string& verbosity,
    for (int i=0;i<argc;i++)
       if (genreflex::verbose) std::cout << i << ") " << argv[i] <<std::endl;
 
-   int rootclingReturnCode = RootCling(argc,argv);
+   int rootclingReturnCode = RootCling(argc, argv, isDeep);
 
    // now clean (string2charptr gives away ownership!)
    for (int i=0;i<argc;i++)
@@ -3456,6 +3457,7 @@ int invokeRootCling(const std::string& verbosity,
 //______________________________________________________________________________
 int invokeManyRootCling(const std::string& verbosity,
                         const std::string& selectionFileName,
+                        bool isDeep,
                         const std::vector<std::string>& headersNames,
                         const std::string& outputDirName_const="")
 {
@@ -3476,6 +3478,7 @@ int invokeManyRootCling(const std::string& verbosity,
       namesSingleton[0]=headersNames[i];
       int returnCode = invokeRootCling(verbosity,
                                        selectionFileName,
+                                       isDeep,
                                        namesSingleton,
                                        outputDirName+ofilesNames[i]);
       if (returnCode!=0)
@@ -3502,11 +3505,15 @@ int GenReflex(int argc, char **argv)
    // -o ofile                            positional arg after -f
    // -s selection file                   Last argument of the call
    // --fail_on_warning                   Wrap ROOT::TMetaUtils::Warning and throw if selected
+   // Exceptions
+   // The --deep option of genreflex is passed as function parameter to rootcling
+   // since it's not needed at the moment there.
 
+   
    using namespace genreflex;
 
    // Setup the options parser
-   enum  optionIndex { UNKNOWN, OFILENAME, SELECTIONFILENAME, DEBUG, QUIET, HELP };
+   enum  optionIndex { UNKNOWN, OFILENAME, SELECTIONFILENAME, DEEP, DEBUG, QUIET, HELP };
    enum  optionTypes { NOTYPE, STRING } ;
 
    // Some long help strings
@@ -3568,6 +3575,12 @@ int GenReflex(int argc, char **argv)
         option::FullArg::Required,
         selectionFilenameUsage},
 
+      {DEEP,
+        NOTYPE ,
+        "" , "--deep",
+        option::Arg::None,
+        "--deep  \tGenerate dictionaries for all dependent classes\n"},
+        
       {DEBUG,
         NOTYPE ,
         "" , "--debug",
@@ -3648,17 +3661,22 @@ int GenReflex(int argc, char **argv)
    int returnValue = 0;
    std::string ofileName(options[OFILENAME] ? options[OFILENAME].arg : "");
 
+   // Now check if the --deep option was selected
+   bool isDeep = options[DEEP];
+   
    // If not empty and not a directory (therefore it's a file)
    // call rootcling directly. The number of headers files is irrelevant.
    if (!ofileName.empty() && !isExistingDir(ofileName)){
       returnValue = invokeRootCling(verbosityOption,
                                     selectionFileName,
+                                    isDeep,
                                     headersNames,
                                     ofileName);
    } else{
    // Here ofilename is either "" or a directory: this is irrelevant.
       returnValue = invokeManyRootCling(verbosityOption,
                                         selectionFileName,
+                                        isDeep,
                                         headersNames,
                                         ofileName);
    }
