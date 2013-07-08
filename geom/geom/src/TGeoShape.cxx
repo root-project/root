@@ -240,7 +240,7 @@ Double_t TGeoShape::EpsMch()
 const char *TGeoShape::GetName() const
 {
 // Get the shape name.
-   if (!strlen(fName)) {
+   if (!fName[0]) {
       return ((TObject *)this)->ClassName();
    }
    return TNamed::GetName();
@@ -694,7 +694,7 @@ void TGeoShape::Draw(Option_t *option)
 {
 // Draw this shape.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (option && strlen(option) > 0) {
+   if (option && option[0]) {
       painter->DrawShape(this, option); 
    } else {
       painter->DrawShape(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
@@ -706,7 +706,7 @@ void TGeoShape::Paint(Option_t *option)
 {
 // Paint this shape.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (option && strlen(option) > 0) {
+   if (option && option[0]) {
       painter->PaintShape(this, option); 
    } else {
       painter->PaintShape(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));

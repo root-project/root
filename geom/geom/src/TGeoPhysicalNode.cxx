@@ -80,7 +80,7 @@ TGeoPhysicalNode::TGeoPhysicalNode() : TNamed()
 TGeoPhysicalNode::TGeoPhysicalNode(const char *path) : TNamed(path,"")
 {
 // Constructor
-   if (!strlen(path)) {
+   if (!path[0]) {
       Error("ctor", "path not valid");
       return;
    }
