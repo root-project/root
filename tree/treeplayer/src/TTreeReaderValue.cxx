@@ -21,6 +21,8 @@
 #include "TTreeProxyGenerator.h"
 #include "TTreeReaderValue.h"
 #include "TRegexp.h"
+#include "TStreamerInfo.h"
+#include "TStreamerElement.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -207,6 +209,19 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
       if (brElement->GetType() == TBranchElement::kSTLNode || 
             brElement->GetType() == TBranchElement::kLeafNode || 
             brElement->GetType() == TBranchElement::kObjectNode) {
+
+         TStreamerInfo *streamerInfo = brElement->GetInfo();
+         Int_t id = brElement->GetID();
+
+         if (id >= 0){
+            TStreamerElement *element = (TStreamerElement*)streamerInfo->GetElements()->At(id);
+            if (element->IsA() == TStreamerSTL::Class()){
+               TStreamerSTL *myStl = (TStreamerSTL*)element;
+               dict = myStl->GetClass();
+               return 0;
+            }
+         }
+
          if (brElement->GetTypeName()) dict = TDictionary::GetDictionary(brElement->GetTypeName());
          if (dict && dict->IsA() == TDataType::Class()){
             dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
@@ -220,6 +235,7 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
          else if (!dict) {
             dict = brElement->GetCurrentClass();
          }
+
          return brElement->GetTypeName();
       } else if (brElement->GetType() == TBranchElement::kClonesNode) {
          dict = TClonesArray::Class();
