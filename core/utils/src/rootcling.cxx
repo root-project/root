@@ -3408,6 +3408,7 @@ void headers2outputsNames(const std::vector<std::string>& headersNames,
 //______________________________________________________________________________
 int invokeRootCling(const std::string& verbosity,
                     const std::string& selectionFileName,
+                    const std::string& targetLibName,                    
                     bool isDeep,
                     const std::vector<std::string>& headersNames,
                     const std::string& ofilename){
@@ -3420,43 +3421,54 @@ int invokeRootCling(const std::string& verbosity,
    // 3) force rewrite * required
    // 4) output file name * required
    // 5) N headers
-   // 6) optional: A selection file
+   // 6) optional: A selection file, a target library file
 
-   int argc = 4; // 4 required
-   if (selectionFileName != "") argc+=1;
-   argc += headersNames.size();
 
-   char* argv[argc];
+   std::vector<char*> argvVector;
+   argvVector.reserve(7+headersNames.size());
+   argvVector.push_back(string2charptr("rootcling"));
+   argvVector.push_back(string2charptr(verbosity));
+   argvVector.push_back(string2charptr("-f"));
+   argvVector.push_back(string2charptr(ofilename));
 
-   argv[0]=string2charptr("rootcling");
-   argv[1]=string2charptr(verbosity);
-   argv[2]=string2charptr("-f");
-   argv[3]=string2charptr(ofilename);
-
-   int counter=4;
+   if (!targetLibName.empty()){
+      argvVector.push_back(string2charptr("-s"));
+      argvVector.push_back(string2charptr(targetLibName));
+   }
+   
    for (std::vector<std::string>::const_iterator it = headersNames.begin();
         it!=headersNames.end();it++){
-      argv[counter]=string2charptr(*it);
-      counter++;
+      argvVector.push_back(string2charptr(*it));           
+      }   
+
+   if (!selectionFileName.empty()){
+      argvVector.push_back(string2charptr(selectionFileName));
+   }
+         
+      
+   const int argc = argvVector.size();
+      
+   // Output commandline for rootcling
+   if (genreflex::verbose){
+      std::cout << "Rootcling commandline:\n";
+      for (int i=0;i<argc;i++)
+         std::cout << i << ") " << argvVector[i] <<std::endl;
    }
 
-   // Output commandline for rootcling
-   std::cout << "Rootcling commandline:\n";
-   for (int i=0;i<argc;i++)
-      if (genreflex::verbose) std::cout << i << ") " << argv[i] <<std::endl;
-
+   char** argv =  & (argvVector[0]);
    int rootclingReturnCode = RootCling(argc, argv, isDeep);
 
-   // now clean (string2charptr gives away ownership!)
    for (int i=0;i<argc;i++)
-      delete argv[i];
+      delete argvVector[i];
 
    return rootclingReturnCode;
+
 }
 
 //______________________________________________________________________________
 int invokeManyRootCling(const std::string& verbosity,
                         const std::string& selectionFileName,
+                        const std::string& targetLibName,
                         bool isDeep,
                         const std::vector<std::string>& headersNames,
                         const std::string& outputDirName_const="")
@@ -3478,6 +3490,7 @@ int invokeManyRootCling(const std::string& verbosity,
       namesSingleton[0]=headersNames[i];
       int returnCode = invokeRootCling(verbosity,
                                        selectionFileName,
+                                       targetLibName,
                                        isDeep,
                                        namesSingleton,
                                        outputDirName+ofilesNames[i]);
@@ -3505,15 +3518,28 @@ int GenReflex(int argc, char **argv)
    // -o ofile                            positional arg after -f
    // -s selection file                   Last argument of the call
    // --fail_on_warning                   Wrap ROOT::TMetaUtils::Warning and throw if selected
+   //
+   // New arguments:
+   // -l --library targetLib name         -s  targetLib name
+   //
+   //
    // Exceptions
    // The --deep option of genreflex is passed as function parameter to rootcling
    // since it's not needed at the moment there.
 
-   
+
    using namespace genreflex;
 
    // Setup the options parser
-   enum  optionIndex { UNKNOWN, OFILENAME, SELECTIONFILENAME, DEEP, DEBUG, QUIET, HELP };
+   enum  optionIndex { UNKNOWN,
+                       OFILENAME,
+                       TARGETLIB,
+                       SELECTIONFILENAME,
+                       DEEP,
+                       DEBUG,
+                       QUIET,
+                       HELP };
+
    enum  optionTypes { NOTYPE, STRING } ;
 
    // Some long help strings
@@ -3554,6 +3580,14 @@ int GenReflex(int argc, char **argv)
    "      then a filename will be build using the name of the input file and will\n"
    "      be placed in the given directory. <headerfile>_rflx.cpp \n";
 
+   const char* targetLib=
+   "-l, --library \t Target library\n"
+   "      The flag -s must be followed by the name of the library that will\n"
+   "      contain the object file corresponding to the dictionary produced by\n"
+   "      this invocation of rootcling.  The name will be used as the stem\n"
+   "      for the name of the precompiled module generated by this\n"
+   "      invocation of rootcling.\n";
+   
    // The Descriptor
    const option::Descriptor genreflexUsageDescriptor[] =
    {
@@ -3569,6 +3603,12 @@ int GenReflex(int argc, char **argv)
         option::FullArg::Required,
         outputFilenameUsage},
 
+      {TARGETLIB,
+        STRING ,
+        "l" , "library" ,
+        option::FullArg::Required,
+        targetLib},
+
       {SELECTIONFILENAME,
         STRING ,
         "s" , "selection_file" ,
@@ -3577,19 +3617,19 @@ int GenReflex(int argc, char **argv)
 
       {DEEP,
         NOTYPE ,
-        "" , "--deep",
+        "" , "deep",
         option::Arg::None,
         "--deep  \tGenerate dictionaries for all dependent classes\n"},
-        
+
       {DEBUG,
         NOTYPE ,
-        "" , "--debug",
+        "" , "debug",
         option::Arg::None,
         "--debug  \tPrint debug information\n"},
 
       {QUIET,
         NOTYPE ,
-        "" , "--quiet",
+        "" , "quiet",
         option::Arg::None,
         "--quiet  \tPrint no information at all\n"},
 
@@ -3635,8 +3675,8 @@ int GenReflex(int argc, char **argv)
 
    // The verbosity: debug wins over quiet
    std::string verbosityOption("-v");
-   if (options[QUIET]) verbosityOption="-v4";
-   if (options[DEBUG]) verbosityOption="-v0";
+   if (options[QUIET]) verbosityOption="-v0";
+   if (options[DEBUG]) verbosityOption="-v4";
 
    // The selection file
    std::string selectionFileName;
@@ -3650,6 +3690,17 @@ int GenReflex(int argc, char **argv)
       }
    }
 
+   // The target lib name
+   std::string targetLibName;
+   if (options[TARGETLIB]){
+      targetLibName = options[TARGETLIB].arg;
+      if (!endsWith(targetLibName, ".so")){
+         ROOT::TMetaUtils::Error(0,
+            "*** genreflex: Invalid target library extension: filename is %s and extension .so is expected!\n",
+            targetLibName.c_str());
+      }
+   }
+   
    // The outputfilename(s)
    // There are two cases:
    // 1) The outputfilename is specified
@@ -3669,6 +3720,7 @@ int GenReflex(int argc, char **argv)
    if (!ofileName.empty() && !isExistingDir(ofileName)){
       returnValue = invokeRootCling(verbosityOption,
                                     selectionFileName,
+                                    targetLibName,
                                     isDeep,
                                     headersNames,
                                     ofileName);
@@ -3676,6 +3728,7 @@ int GenReflex(int argc, char **argv)
    // Here ofilename is either "" or a directory: this is irrelevant.
       returnValue = invokeManyRootCling(verbosityOption,
                                         selectionFileName,
+                                        targetLibName,
                                         isDeep,
                                         headersNames,
                                         ofileName);
