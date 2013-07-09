@@ -62,6 +62,29 @@
        canvas->cd(2) ; gStyle->SetOptStat("nemruoI") ; histo1D->DrawClone() ;
     }
     ```
+-   `TH1` was drawn improperly in "Logx" mode if "X" axis starts at 
+    negative values. The following macro illustrades this problem.
+    ``` {.cpp}
+    {
+       TCanvas *c1 = new TCanvas("c1", "c1",0,0,1200,700);
+       int n = 100;
+       Float_t d = 0.5;
+       TH1F *h1 = new TH1F("h1", "x_min = - d", n, -d, 100-d);
+       h1->Fill(1, 1); h1->Fill(3, 3); h1->Fill(5, 5); h1->Fill(7, 7);
+ 
+       TH1F *h2 = new TH1F("h2", "x_min = +d", n, d, 100+d);
+       h2->Fill(1, 1); h2->Fill(3, 3); h2->Fill(5, 5); h2->Fill(7, 7);
+ 
+       c1->Divide(1, 2);
+       c1->cd(1); gPad->SetLogx(); h1->Draw(); // upper picture
+       c1->cd(2); gPad->SetLogx(); h2->Draw(); // lower picture
+       h1->GetXaxis()->SetMoreLogLabels();
+       h2->GetXaxis()->SetMoreLogLabels();
+       c1_1->SetGridx();
+       c1_2->SetGridx();
+    }
+    ```
+
 
 ### TGraphPainter
 

@@ -5909,6 +5909,7 @@ Int_t THistPainter::PaintInit()
 
    if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf) return 1;
 
+   Int_t i;
    static const char *where = "PaintInit";
    Double_t yMARGIN = gStyle->GetHistTopMargin();
    Int_t maximum = 0;
@@ -5929,17 +5930,27 @@ Int_t THistPainter::PaintInit()
 
    //       if log scale in X, replace xmin,max by the log
    if (Hoption.Logx) {
+      if (Hparam.xmax<=0) {
+         Error(where, "cannot set X axis to log scale");
+         return 0;
+      }
       if (Hparam.xlowedge <=0 ) {
          if (Hoption.Same) {
             Hparam.xlowedge = TMath::Power(10, gPad->GetUxmin());
          } else {
-            Hparam.xlowedge = 0.1*Hparam.xbinsize;
+            for (i=first; i<=last ;i++) {
+               Double_t binLow = fXaxis->GetBinLowEdge(i);
+               if (binLow>0) {
+                  Hparam.xlowedge = binLow;
+                  break;
+               }
+            }
+            if (Hparam.xlowedge<=0) {
+               Error(where, "cannot set X axis to log scale");
+               return 0;
+            }
          }
          Hparam.xmin  = Hparam.xlowedge;
-      }
-      if (Hparam.xmin <=0 || Hparam.xmax <=0) {
-         Error(where, "cannot set X axis to log scale");
-         return 0;
       }
       Hparam.xfirst= fXaxis->FindFixBin(Hparam.xmin);
       Hparam.xlast = fXaxis->FindFixBin(Hparam.xmax);
@@ -5956,7 +5967,6 @@ Int_t THistPainter::PaintInit()
    Double_t c1, e1;
    Double_t xv[1];
    Double_t fval;
-   Int_t i;
    TObject *f;
    TF1 *f1;
    Double_t allchan = 0;
