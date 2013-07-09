@@ -113,8 +113,9 @@ namespace {
    private:
       TVirtualCollectionProxy *localCollection;
       Bool_t proxySet;
+      void *lastWhere;
    public:
-      TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy), proxySet(false) {}
+      TCollectionLessSTLReader(TVirtualCollectionProxy *proxy) : localCollection(proxy), proxySet(false), lastWhere(0) {}
 
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
          if (!proxy->Read()){
@@ -151,11 +152,12 @@ namespace {
 
       Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
          if (!proxy->Read()) return false;
-         if (!proxySet) {
+         if (!proxySet || lastWhere != proxy->GetWhere()) {
             TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
             if (proxy->GetWhere() && myCollectionProxy){
                myCollectionProxy->PushProxy(proxy->GetWhere());
                proxySet = true;
+               lastWhere = proxy->GetWhere();
             }
             else return false;
          }
