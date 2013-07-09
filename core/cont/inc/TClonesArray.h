@@ -32,7 +32,7 @@ class TClass;
 class TClonesArray : public TObjArray {
 
 protected:
-   TClass       *fClass;       //!Pointer to the class
+   TClass       *fClass;       //!Pointer to the class of the elements
    TObjArray    *fKeep;        //!Saved copies of pointers to objects
 
 public:
