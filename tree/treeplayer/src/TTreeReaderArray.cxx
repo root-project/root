@@ -641,6 +641,12 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
                contentTypeName = dict->GetName();
                return 0;
             }
+            else if (element->IsA() == TStreamerObject::Class() && !strcmp(element->GetTypeName(), "TClonesArray")){
+               contentTypeName = "TClonesArray";
+               Warning("GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
+               dict = fDict;
+               return 0;
+            }
             else {
                dict = brElement->GetCurrentClass();
                contentTypeName = brElement->GetTypeName();
