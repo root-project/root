@@ -24,7 +24,6 @@
 #include "TTreeReader.h"
 #include "TGenCollectionProxy.h"
 #include "TRegexp.h"
-#include "TObjArray.h"
 
 // pin vtable
 ROOT::TVirtualCollectionReader::~TVirtualCollectionReader() {}
