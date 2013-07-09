@@ -24,6 +24,7 @@
 #include "TTreeReader.h"
 #include "TGenCollectionProxy.h"
 #include "TRegexp.h"
+#include "TObjArray.h"
 
 // pin vtable
 ROOT::TVirtualCollectionReader::~TVirtualCollectionReader() {}
@@ -393,6 +394,19 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
       }
    }
 
+   TString membername;
+
+   bool isTopLevel = branch->GetMother() == branch;
+   if (!isTopLevel) {
+      membername = strrchr(branch->GetName(), '.');
+      if (membername.IsNull()) {
+         membername = branch->GetName();
+      }
+   }
+   namedProxy = new ROOT::TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
+   fTreeReader->GetProxies()->Add(namedProxy);
+   fProxy = namedProxy->GetProxy();
+
    if (!myLeaf){
       TString branchActualTypeName;
       const char* nonCollTypeName = GetBranchContentDataType(branch, branchActualTypeName, branchActualType);
@@ -509,19 +523,6 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
    } else if (branch->IsA() == TBranchRef::Class()) {
       printf("TBranchRef\n"); // TODO: Remove (necessary because of gdb bug)
    }
-
-   TString membername;
-
-   bool isTopLevel = branch->GetMother() == branch;
-   if (!isTopLevel) {
-      membername = strrchr(branch->GetName(), '.');
-      if (membername.IsNull()) {
-         membername = branch->GetName();
-      }
-   }
-   namedProxy = new ROOT::TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
-   fTreeReader->GetProxies()->Add(namedProxy);
-   fProxy = namedProxy->GetProxy();
 }
 
 //______________________________________________________________________________
@@ -642,9 +643,11 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
                return 0;
             }
             else if (element->IsA() == TStreamerObject::Class() && !strcmp(element->GetTypeName(), "TClonesArray")){
-               contentTypeName = "TClonesArray";
-               Warning("GetBranchContentDataType()", "Not able to check type correctness, ignoring check");
-               dict = fDict;
+               fProxy->Setup();
+               fProxy->Read();
+               TClonesArray *myArray = (TClonesArray*)fProxy->GetWhere();
+               dict = myArray->GetClass();
+               contentTypeName = dict->GetName();
                return 0;
             }
             else {
