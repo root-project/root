@@ -2309,7 +2309,7 @@ static int GenerateModule(clang::CompilerInstance* CI,
    return 0;
 }
 
-
+//______________________________________________________________________________
 void AddPlatformDefines(std::vector<std::string>& clingArgs)
 {
    char platformDefines[64] = {0};
@@ -2397,7 +2397,9 @@ void AddPlatformDefines(std::vector<std::string>& clingArgs)
 #endif
 
 //______________________________________________________________________________
-int RootCling(int argc, char **argv, bool isDeep=false)
+int RootCling(int argc,
+              char **argv,
+              bool isDeep=false)
 {
    if (argc < 2) {
       fprintf(stderr,
@@ -2569,7 +2571,7 @@ int RootCling(int argc, char **argv, bool isDeep=false)
    }
    
    std::vector<std::string> clingArgs;
-   clingArgs.push_back(argv[0]);
+   clingArgs.push_back(argv[0]);   
    clingArgs.push_back("-I.");
    clingArgs.push_back("-DROOT_Math_VectorUtil_Cint"); // ignore that little problem maker
 
@@ -2613,7 +2615,8 @@ int RootCling(int argc, char **argv, bool isDeep=false)
             // filter out undesirable options
             if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
                 && strcmp("-p", argv[ic])) 
-               {    
+               {
+                  //std::cout << "Pushing to clingArgs " << argv[ic] << std::endl;
                   clingArgs.push_back(argv[ic]);
                }
          }
@@ -3406,26 +3409,50 @@ void headers2outputsNames(const std::vector<std::string>& headersNames,
 }
 
 //______________________________________________________________________________
+void AddToArgVector(std::vector<char*>& argvVector,
+                    const std::vector<std::string>& argsToBeAdded,
+                    const std::string& optName="")
+{
+   for (std::vector<std::string>::const_iterator it = argsToBeAdded.begin();
+        it!=argsToBeAdded.end();it++){
+      argvVector.push_back(string2charptr(optName+*it));
+   }   
+}
+
+//______________________________________________________________________________
 int invokeRootCling(const std::string& verbosity,
                     const std::string& selectionFileName,
-                    const std::string& targetLibName,                    
+                    const std::string& targetLibName,
+                    const std::vector<std::string>& pcmsNames,
+                    const std::vector<std::string>& includes,
+                    const std::vector<std::string>& preprocDefines,
+                    const std::vector<std::string>& preprocUndefines,                        
                     bool isDeep,
                     const std::vector<std::string>& headersNames,
                     const std::string& ofilename){
 
-   //Prepare and invoke the commandline to invoke rootcling
+   // Prepare and invoke the commandline to invoke rootcling
 
    // compute the number of arguments
-   // 1) rootcling * required
-   // 2) verbosity * required
-   // 3) force rewrite * required
-   // 4) output file name * required
-   // 5) N headers
-   // 6) optional: A selection file, a target library file
+   // 1) required: rootcling
+   // 2) required: verbosity
+   // 3) required: force rewrite
+   // 4) required: output file name
+   // 5) N pcms to be loaded before any header
+   // 6) M headers (at least 1 required)
+   // 7) optional: A selection file
+   // 8) optional: A target library file
+   // 9) optional: 2*K other options of type -I, -U, -D
 
 
    std::vector<char*> argvVector;
-   argvVector.reserve(7+headersNames.size());
+   argvVector.reserve(7 + // 5 required, 2 optional
+                      (headersNames.size()-1) + // 1 header already counted
+                      pcmsNames.size()*2+ // -m pcmName N times => 2N
+                      includes.size()*2+  // -I include.h
+                      preprocDefines.size()*2+ // -D
+                      preprocUndefines.size()*2); // -U
+
    argvVector.push_back(string2charptr("rootcling"));
    argvVector.push_back(string2charptr(verbosity));
    argvVector.push_back(string2charptr("-f"));
@@ -3435,16 +3462,19 @@ int invokeRootCling(const std::string& verbosity,
       argvVector.push_back(string2charptr("-s"));
       argvVector.push_back(string2charptr(targetLibName));
    }
-   
-   for (std::vector<std::string>::const_iterator it = headersNames.begin();
-        it!=headersNames.end();it++){
-      argvVector.push_back(string2charptr(*it));           
-      }   
 
+   AddToArgVector(argvVector, pcmsNames, "-m");
+
+   // Clingargs
+   AddToArgVector(argvVector, includes, "-I");
+   AddToArgVector(argvVector, preprocDefines, "-D");
+   AddToArgVector(argvVector, preprocUndefines, "-U");
+   
+   AddToArgVector(argvVector, headersNames);
+   
    if (!selectionFileName.empty()){
       argvVector.push_back(string2charptr(selectionFileName));
-   }
-         
+   }         
       
    const int argc = argvVector.size();
       
@@ -3456,7 +3486,9 @@ int invokeRootCling(const std::string& verbosity,
    }
 
    char** argv =  & (argvVector[0]);
-   int rootclingReturnCode = RootCling(argc, argv, isDeep);
+   int rootclingReturnCode = RootCling(argc,
+                                       argv,
+                                       isDeep);
 
    for (int i=0;i<argc;i++)
       delete argvVector[i];
@@ -3469,6 +3501,10 @@ int invokeRootCling(const std::string& verbosity,
 int invokeManyRootCling(const std::string& verbosity,
                         const std::string& selectionFileName,
                         const std::string& targetLibName,
+                        const std::vector<std::string>& pcmsNames,
+                        const std::vector<std::string>& includes,
+                        const std::vector<std::string>& preprocDefines,
+                        const std::vector<std::string>& preprocUndefines,                        
                         bool isDeep,
                         const std::vector<std::string>& headersNames,
                         const std::string& outputDirName_const="")
@@ -3491,6 +3527,10 @@ int invokeManyRootCling(const std::string& verbosity,
       int returnCode = invokeRootCling(verbosity,
                                        selectionFileName,
                                        targetLibName,
+                                       pcmsNames,
+                                       includes,
+                                       preprocDefines,
+                                       preprocUndefines,                                       
                                        isDeep,
                                        namesSingleton,
                                        outputDirName+ofilesNames[i]);
@@ -3503,6 +3543,39 @@ int invokeManyRootCling(const std::string& verbosity,
 
 
 } // end genreflex namespace
+
+//______________________________________________________________________________
+int extractMultipleOptions(std::vector<option::Option>& options,
+                           int oIndex,
+                           std::vector<std::string>& values)
+{
+   // Extract from options multiple values with the same option
+   int nValues=0;
+   if (options[oIndex]){
+      values.reserve(options[oIndex].count());
+      for (option::Option* opt = options[oIndex]; opt; opt = opt->next()){
+         if (genreflex::verbose) std::cout << "Extracting multiple args: "
+                                           << opt->arg << std::endl;
+         values.push_back(opt->arg);
+         nValues++;
+      }
+   }
+   return nValues;
+}
+
+//______________________________________________________________________________
+void RiseWarningIfPresent(std::vector<option::Option>& options,
+                          int optionIndex,
+                          const char* descriptor)
+{
+   
+   if (options[optionIndex]){
+   ROOT::TMetaUtils::Warning(0,
+                             "*** genereflex: %s are not supported anymore.\n",
+                             descriptor);
+   }
+}
+
 //______________________________________________________________________________
 int GenReflex(int argc, char **argv)
 {
@@ -3521,11 +3594,24 @@ int GenReflex(int argc, char **argv)
    //
    // New arguments:
    // -l --library targetLib name         -s  targetLib name
+   // -m pcmname (can be many -m)         -m pcmname (can be many -m)
    //
+   // genreflex options which rise warnings (feedback is desirable)
+   // -c, --capabilities (should not be needed with the new plufing system)
+   // --no_membertypedefs (it should be irrelevant)
+   // --no_templatetypedefs (it should be irrelevant)
+   //
+   // genreflex options which are ignored (know for sure they are not needed)
+   // --pool, --dataonly
+   // --interpreteronly
+   // --gccxml{path,opt,post}
+   // --reflex
+   //  
    //
    // Exceptions
    // The --deep option of genreflex is passed as function parameter to rootcling
    // since it's not needed at the moment there.
+   // Same is for the -I, -D and -U options.
 
 
    using namespace genreflex;
@@ -3535,10 +3621,19 @@ int GenReflex(int argc, char **argv)
                        OFILENAME,
                        TARGETLIB,
                        SELECTIONFILENAME,
+                       PCMFILENAME,
                        DEEP,
                        DEBUG,
                        QUIET,
-                       HELP };
+                       HELP,
+                       // Warnings
+                       CAPABILITIESFILENAME,
+                       NOMEMBERTYPEDEFS,
+                       NOTEMPLATETYPEDEFS,
+                       // Don't show up in the help
+                       PREPROCDEFINE,
+                       PREPROCUNDEFINE,
+                       INCLUDE};
 
    enum  optionTypes { NOTYPE, STRING } ;
 
@@ -3615,6 +3710,12 @@ int GenReflex(int argc, char **argv)
         option::FullArg::Required,
         selectionFilenameUsage},
 
+      {PCMFILENAME,
+        STRING ,
+        "m" , "" ,
+        option::FullArg::Required,
+        "-m \tPcm file loaded before any header (option can be repeated)"},
+        
       {DEEP,
         NOTYPE ,
         "" , "deep",
@@ -3634,12 +3735,50 @@ int GenReflex(int argc, char **argv)
         "--quiet  \tPrint no information at all\n"},
 
       {HELP,
-         NOTYPE,
-         "h" , "help",
-         option::Arg::None,
-         "--help   \tPrint usage and exit.\n"},
+        NOTYPE,
+        "h" , "help",
+        option::Arg::None,
+        "--help   \tPrint usage and exit.\n"},             
 
-      {0,0,0,0,0,0}
+      // Left intentionally empty not to be shown in the help, like in the first genreflex
+      {PREPROCDEFINE,
+        STRING ,
+        "D" , "" ,
+        option::FullArg::Required,
+        ""}, 
+
+      {PREPROCUNDEFINE,
+        STRING ,
+        "U" , "" ,
+        option::FullArg::Required,
+        ""}, 
+        
+      {INCLUDE,
+        STRING ,
+        "I" , "" ,
+        option::FullArg::Required,
+        ""}, 
+
+      // Options that rise warnings
+      {CAPABILITIESFILENAME,
+        STRING ,
+        "c" , "capabilities" ,
+        option::FullArg::Required,
+        ""},
+
+      {NOMEMBERTYPEDEFS,
+        STRING ,
+        "" , "no_membertypedefs" ,
+        option::FullArg::Required,
+        ""},
+
+      {NOTEMPLATETYPEDEFS,
+        STRING ,
+        "" , "no_templatetypedefs" ,
+        option::FullArg::Required,
+        ""},
+        
+        {0,0,0,0,0,0}
       };
 
    std::vector<std::string> headersNames;
@@ -3673,6 +3812,11 @@ int GenReflex(int argc, char **argv)
       return 1;
       }
 
+   // Warnings:
+   RiseWarningIfPresent(options,CAPABILITIESFILENAME,"Capabilities files");
+   RiseWarningIfPresent(options,NOMEMBERTYPEDEFS,"Exclusion of member typedefs");
+   RiseWarningIfPresent(options,NOTEMPLATETYPEDEFS,"Exclusion of template typedefs");
+         
    // The verbosity: debug wins over quiet
    std::string verbosityOption("-v");
    if (options[QUIET]) verbosityOption="-v0";
@@ -3700,6 +3844,22 @@ int GenReflex(int argc, char **argv)
             targetLibName.c_str());
       }
    }
+
+   // The list of pcms to be preloaded
+   std::vector<std::string> pcmsNames;
+   extractMultipleOptions(options,PCMFILENAME, pcmsNames);
+   
+   // Preprocessor defines
+   std::vector<std::string> preprocDefines;
+   extractMultipleOptions(options,PREPROCDEFINE, preprocDefines);
+
+   // Preprocessor undefines
+   std::vector<std::string> preprocUndefines;
+   extractMultipleOptions(options,PREPROCUNDEFINE, preprocUndefines);
+   
+   // Includes
+   std::vector<std::string> includes;
+   extractMultipleOptions(options,INCLUDE, includes);
    
    // The outputfilename(s)
    // There are two cases:
@@ -3721,6 +3881,10 @@ int GenReflex(int argc, char **argv)
       returnValue = invokeRootCling(verbosityOption,
                                     selectionFileName,
                                     targetLibName,
+                                    pcmsNames,
+                                    includes,
+                                    preprocDefines,
+                                    preprocUndefines,
                                     isDeep,
                                     headersNames,
                                     ofileName);
@@ -3729,6 +3893,10 @@ int GenReflex(int argc, char **argv)
       returnValue = invokeManyRootCling(verbosityOption,
                                         selectionFileName,
                                         targetLibName,
+                                        pcmsNames,
+                                        includes,
+                                        preprocDefines,
+                                        preprocUndefines,                                        
                                         isDeep,
                                         headersNames,
                                         ofileName);
