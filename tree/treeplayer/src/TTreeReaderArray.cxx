@@ -345,6 +345,9 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
    ROOT::TNamedBranchProxy* namedProxy = fTreeReader->FindProxy(fBranchName);
    if (namedProxy && namedProxy->GetContentDict() == fDict) {
       fProxy = namedProxy->GetProxy();
+      if (!fImpl){
+         Fatal("CreateProxy()", "No fImpl set!");
+      }
       return;
    }
 
@@ -399,18 +402,25 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
       }
    }
 
-   TString membername;
-
-   bool isTopLevel = branch->GetMother() == branch;
-   if (!isTopLevel) {
-      membername = strrchr(branch->GetName(), '.');
-      if (membername.IsNull()) {
-         membername = branch->GetName();
-      }
+   // Update named proxy's dictionary
+   if (namedProxy && !namedProxy->GetContentDict()) {
+      namedProxy->SetContentDict(fDict);
+      fProxy = namedProxy->GetProxy();
    }
-   namedProxy = new ROOT::TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
-   fTreeReader->GetProxies()->Add(namedProxy);
-   fProxy = namedProxy->GetProxy();
+   else {
+      TString membername;
+
+      bool isTopLevel = branch->GetMother() == branch;
+      if (!isTopLevel) {
+         membername = strrchr(branch->GetName(), '.');
+         if (membername.IsNull()) {
+            membername = branch->GetName();
+         }
+      }
+      namedProxy = new ROOT::TNamedBranchProxy(fTreeReader->fDirector, branch, membername);
+      fTreeReader->GetProxies()->Add(namedProxy);
+      fProxy = namedProxy->GetProxy();
+   }
 
    if (!myLeaf){
       TString branchActualTypeName;
@@ -447,12 +457,7 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
       }
    }
 
-   // Update named proxy's dictionary
-   if (namedProxy && !namedProxy->GetContentDict()) {
-      namedProxy->SetContentDict(fDict);
-      fProxy = namedProxy->GetProxy();
-      return;
-   }
+   
 
    // Access a branch's collection content (not the collection itself)
    // through a proxy.

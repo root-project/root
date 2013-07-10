@@ -42,7 +42,7 @@ namespace ROOT {
    public:
       TNamedBranchProxy(): fDict(0) {}
       TNamedBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername):
-         fProxy(boss, branch, membername), fDict(0) {}
+         fProxy(boss, branch, membername), fDict(0), fContentDict(0) {}
 
       const char* GetName() const { return fProxy.GetBranchName(); }
       const ROOT::TBranchProxy* GetProxy() const { return &fProxy; }
