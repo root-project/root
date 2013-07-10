@@ -2103,6 +2103,16 @@ void TClass::CopyCollectionProxy(const TVirtualCollectionProxy &orig)
 
 
 //______________________________________________________________________________
+void TClass::CreateAttributeMap()
+{
+   //Create a TClassAttributeMap for a TClass to be able to add attribute pairs
+   //key-value to the TClass.
+
+   if (!fAttributeMap)
+      fAttributeMap = new TClassAttributeMap;
+}
+
+//______________________________________________________________________________
 void TClass::Draw(Option_t *option)
 {
    // Draw detailed class inheritance structure.
@@ -5671,13 +5681,3 @@ ROOT::DirAutoAdd_t TClass::GetDirectoryAutoAdd() const
 
    return fDirAutoAdd;
 }
-
-void TClass::CreateAttributeMap()
-{
-   //Create a TClassAttributeMap for a TClass to be able to add attribute pairs
-   //key-value to the TClass.
-
-   if (fAttributeMap != 0)
-      fAttributeMap = new TClassAttributeMap; 
-}
-

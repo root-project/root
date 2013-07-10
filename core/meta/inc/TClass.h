@@ -384,7 +384,7 @@ public:
    void              *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    Bool_t             IsFolder(void *obj) const;
    void               CreateAttributeMap();
-   inline TClassAttributeMap *GetAttributeMap() const
+   TClassAttributeMap *GetAttributeMap() const
    {
       //Get the TClassAttributeMap pointer to be able to add attribute 
       //pairs key-value to the TClass.
