@@ -52,10 +52,11 @@ ROOT::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
    fProxy(0),
    fSetupStatus(kSetupNotSetup),
    fReadStatus(kReadNothingYet),
-   fLeafOffset(-1),
+   fLeafOffset(0),
    fLeaf(NULL),
    fTreeLastOffset(-1),
-   fLeafName("")
+   fLeafName(""),
+   fLeafInitialized(false)
 {
    // Construct a tree value reader and register it with the reader object.
    if (fTreeReader) fTreeReader->RegisterValueReader(this);
@@ -88,6 +89,7 @@ TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
       if (newChainOffset != fTreeLastOffset){
          fTreeLastOffset = newChainOffset;
          fLeaf = fTreeReader->GetTree()->GetBranch(fBranchName)->GetLeaf(fLeafName);
+         fLeafOffset = (Byte_t*)fProxy->GetWhere() - (Byte_t*)fLeaf->GetValuePointer();
       }
       return fLeaf;
    }
@@ -99,14 +101,22 @@ TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
 
 void* ROOT::TTreeReaderValueBase::GetAddress() {
    if (ProxyRead() != kReadSuccess) return 0;
-   if (fLeafName.Length() > 0){
-      Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
 
-      if (newChainOffset != fTreeLastOffset){
-         fTreeLastOffset = newChainOffset;
-         fLeaf = fTreeReader->GetTree()->GetBranch(fBranchName)->GetLeaf(fLeafName);
+   else if (fLeafName.Length() > 0){
+      if (!fLeafInitialized){
+         fLeafInitialized = true;
          fLeafOffset = (Byte_t*)fProxy->GetWhere() - (Byte_t*)fLeaf->GetValuePointer();
       }
+      else {
+         Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
+
+         if (newChainOffset != fTreeLastOffset){
+            fTreeLastOffset = newChainOffset;
+            fLeaf = fTreeReader->GetTree()->GetBranch(fBranchName)->GetLeaf(fLeafName);
+            fLeafOffset = (Byte_t*)fProxy->GetWhere() - (Byte_t*)fLeaf->GetValuePointer();
+         }
+      }
+      return fLeaf->GetValuePointer();
    }
    else {
       fLeafOffset = 0;

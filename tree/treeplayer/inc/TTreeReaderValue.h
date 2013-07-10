@@ -104,6 +104,7 @@ namespace ROOT {
       TLeaf*       fLeaf;
       Long64_t     fTreeLastOffset;
       TString      fLeafName;
+      Bool_t       fLeafInitialized;
 
       ClassDef(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
 
