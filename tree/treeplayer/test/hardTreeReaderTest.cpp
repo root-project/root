@@ -605,6 +605,7 @@ void readLeafFloatX(Bool_t printOut = true, Bool_t testValues = false, const cha
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
+		if (testValues && *myFloat - (Float_t)i > 0.0001f) success = false;
 		if (printOut) printf("MyLeafList.x: %f\n", *myFloat);
 	}
 
@@ -623,6 +624,7 @@ void readLeafFloatY(Bool_t printOut = true, Bool_t testValues = false, const cha
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
+		if (testValues && *myFloat - ((Float_t)i / 10.0f) > 0.0001f) success = false;
 		if (printOut) printf("MyLeafList.y: %f\n", *myFloat);
 	}
 
@@ -641,6 +643,7 @@ void readLeafIntN(Bool_t printOut = true, Bool_t testValues = false, const char*
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
+		if (testValues && *myInt != MYDOUBLEARRAY_SIZE) success = false;
 		if (printOut) printf("MyLeafList.n: %i\n", *myInt);
 	}
 
@@ -661,7 +664,7 @@ void readLeafDoubleAArray(Bool_t printOut = true, Bool_t testValues = false, con
 		read = true;
 		if (printOut) printf("MyLeafList.a(%lu):", myDoubles.GetSize());
 
-		for (int j = 0; j < myDoubles.GetSize(); ++j){
+		for (int j = 0; j < myDoubles.GetSize() && j < 10; ++j){
 			if (testValues && fabs(myDoubles.At(j) - (i * j) / 10.0f) > 0.0001f) success = false;
 			if (printOut) printf(" %f", myDoubles.At(j));
 		}
@@ -686,7 +689,7 @@ void readLeafBoolBArray(Bool_t printOut = true, Bool_t testValues = false, const
 		read = true;
 		if (printOut) printf("MyLeafList.b(%lu):", myDoubles.GetSize());
 
-		for (int j = 0; j < myDoubles.GetSize(); ++j){
+		for (int j = 0; j < myDoubles.GetSize() && j < 10; ++j){
 			if (testValues && myDoubles.At(j) != j % 2) success = false;
 			if (printOut) printf(" %s", myDoubles.At(j) ? "true" : "false" );
 		}
