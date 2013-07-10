@@ -100,11 +100,9 @@ namespace ROOT {
       ROOT::TBranchProxy* fProxy; // proxy for this branch, owned by TTreeReader
       ESetupStatus fSetupStatus; // setup status of this data access
       EReadStatus  fReadStatus; // read status of this data access
-      Int_t        fLeafOffset;
       TLeaf*       fLeaf;
       Long64_t     fTreeLastOffset;
       TString      fLeafName;
-      Bool_t       fLeafInitialized;
 
       ClassDef(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
 
