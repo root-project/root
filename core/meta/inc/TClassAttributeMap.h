@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TClassAttributeMap                                                    //
+// TClassAttributeMap                                                   //
 //                                                                      //
 // Dictionary of attributes of a TClass.                                //
 //                                                                      //
