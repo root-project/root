@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "TClassEdit.h"
 #include <ctype.h>
 #include "Rstrstream.h"
