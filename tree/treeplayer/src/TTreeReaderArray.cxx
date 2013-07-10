@@ -638,6 +638,10 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
                   return 0;
                }
                dict = myCollectionProxy->GetValueClass();
+               if (!dict){
+                  Error("GetBranchDataType()", "Could not get valueClass from collectionProxy.");
+                  return 0;
+               }
                contentTypeName = dict->GetName();
                return 0;
             }
