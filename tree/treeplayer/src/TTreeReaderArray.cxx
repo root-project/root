@@ -642,8 +642,12 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
                return 0;
             }
             else if (element->IsA() == TStreamerObject::Class() && !strcmp(element->GetTypeName(), "TClonesArray")){
-               fProxy->Setup();
-               fProxy->Read();
+               if (!fProxy->Setup() || !fProxy->Read()){
+                  Error("GetBranchContentDataType()", "Failed to get type from proxy, unable to check type");
+                  contentTypeName = "UNKNOWN";
+                  dict = 0;
+                  return contentTypeName;
+               }
                TClonesArray *myArray = (TClonesArray*)fProxy->GetWhere();
                dict = myArray->GetClass();
                contentTypeName = dict->GetName();
