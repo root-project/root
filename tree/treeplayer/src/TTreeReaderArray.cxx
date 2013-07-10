@@ -261,17 +261,19 @@ namespace {
    class TLeafReader : public ROOT::TVirtualCollectionReader {
    private:
       ROOT::TTreeReaderValueBase *valueReader;
+      Int_t elementSize;
    public:
-      TLeafReader(ROOT::TTreeReaderValueBase *valueReaderArg) : valueReader(valueReaderArg) {}
+      TLeafReader(ROOT::TTreeReaderValueBase *valueReaderArg) : valueReader(valueReaderArg), elementSize(-1) {}
 
       virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){
          return valueReader->GetLeaf()->GetLen();
       }
 
       virtual void* At(ROOT::TBranchProxy* /*proxy*/, size_t idx){
+         ProxyRead();
          void *address = valueReader->GetAddress();
-         Int_t offset = valueReader->GetLeaf()->GetLenType();
-         return (Byte_t*)address + (offset * idx);
+         if (elementSize == -1) elementSize = valueReader->GetLeaf()->GetLenType();
+         return (Byte_t*)address + (elementSize * idx);
       }
 
    protected:
@@ -282,13 +284,13 @@ namespace {
 
    class TLeafParameterSizeReader : public TLeafReader {
    private:
-      TLeaf *sizeReader;
+      TTreeReaderValue<Int_t> *sizeReader;
    public:
-      TLeafParameterSizeReader(TLeaf *sizeReaderArg, ROOT::TTreeReaderValueBase *valueReaderArg) : TLeafReader(valueReaderArg), sizeReader(sizeReaderArg) {}
+      TLeafParameterSizeReader(TTreeReaderValue<Int_t> *sizeReaderArg, ROOT::TTreeReaderValueBase *valueReaderArg) : TLeafReader(valueReaderArg), sizeReader(sizeReaderArg) {}
 
       virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){
          ProxyRead();
-         return *(Int_t*)sizeReader->GetValuePointer();
+         return **sizeReader;
       }
    };
 }
@@ -379,6 +381,8 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
                   //fLeafOffset = myLeaf->GetOffset() / 4;
                   branchActualType = fDict;
                   fLeaf = myLeaf;
+                  fBranchName = branchName;
+                  fLeafName = leafName(1, leafName.Length());
                }
                else {
                   Error("CreateProxy()", "Leaf of type %s cannot be read by TTreeReaderValue<%s>.", myLeaf->GetTypeName(), fDict->GetName());
@@ -462,7 +466,11 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
          fImpl = new TLeafReader(this);
       }
       else {
-         fImpl = new TLeafParameterSizeReader(myLeaf->GetLeafCount(), this);
+         TString leafFullName = myLeaf->GetBranch()->GetName();
+         leafFullName += ".";
+         leafFullName += myLeaf->GetLeafCount()->GetName();
+         TTreeReaderValue<Int_t> *sizeReader = new TTreeReaderValue<Int_t>(*fTreeReader, leafFullName.Data());
+         fImpl = new TLeafParameterSizeReader(sizeReader, this);
       }
    }
    else if (branch->IsA() == TBranchElement::Class()) {

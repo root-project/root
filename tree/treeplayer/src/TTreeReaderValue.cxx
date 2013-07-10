@@ -53,7 +53,9 @@ ROOT::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
    fSetupStatus(kSetupNotSetup),
    fReadStatus(kReadNothingYet),
    fLeafOffset(-1),
-   fLeaf(NULL)
+   fLeaf(NULL),
+   fTreeLastOffset(-1),
+   fLeafName("")
 {
    // Construct a tree value reader and register it with the reader object.
    if (fTreeReader) fTreeReader->RegisterValueReader(this);
@@ -76,6 +78,40 @@ ROOT::TTreeReaderValueBase::ProxyRead() {
       fReadStatus = kReadError;
    }
    return fReadStatus;
+}
+
+TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() { 
+   if (fLeafName.Length() > 0){
+
+      Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
+
+      if (newChainOffset != fTreeLastOffset){
+         fTreeLastOffset = newChainOffset;
+         fLeaf = fTreeReader->GetTree()->GetBranch(fBranchName)->GetLeaf(fLeafName);
+      }
+      return fLeaf;
+   }
+   else {
+      Error("GetLeaf()", "We are not reading a leaf");
+      return 0;
+   }
+}
+
+void* ROOT::TTreeReaderValueBase::GetAddress() {
+   if (ProxyRead() != kReadSuccess) return 0;
+   if (fLeafName.Length() > 0){
+      Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
+
+      if (newChainOffset != fTreeLastOffset){
+         fTreeLastOffset = newChainOffset;
+         fLeaf = fTreeReader->GetTree()->GetBranch(fBranchName)->GetLeaf(fLeafName);
+         fLeafOffset = (Byte_t*)fProxy->GetWhere() - (Byte_t*)fLeaf->GetValuePointer();
+      }
+   }
+   else {
+      fLeafOffset = 0;
+   }
+   return fProxy ? (Byte_t*)fProxy->GetWhere() - fLeafOffset : 0;
 }
 
 //______________________________________________________________________________
@@ -137,6 +173,8 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                   //fLeafOffset = myLeaf->GetOffset() / 4;
                   branchActualType = fDict;
                   fLeaf = myLeaf;
+                  fBranchName = branchName;
+                  fLeafName = leafName(1, leafName.Length());
                }
                else {
                   Error("CreateProxy()", "Leaf of type %s cannot be read by TTreeReaderValue<%s>.", myLeaf->GetTypeName(), fDict->GetName());

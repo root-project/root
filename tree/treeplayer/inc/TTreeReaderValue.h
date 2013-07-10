@@ -75,18 +75,9 @@ namespace ROOT {
       ESetupStatus GetSetupStatus() const { return fSetupStatus; }
       virtual EReadStatus GetReadStatus() const { return fReadStatus; }
 
-      TLeaf* GetLeaf() const { return fLeaf; }
+      TLeaf* GetLeaf();
 
-      void* GetAddress() {
-         if (ProxyRead() != kReadSuccess) return 0;
-         if (fLeafOffset == -1){
-            if (fLeaf)
-               fLeafOffset = (Byte_t*)fProxy->GetWhere() - (Byte_t*)fLeaf->GetValuePointer();
-            else
-               fLeafOffset = 0;
-         }
-         return fProxy ? (Byte_t*)fProxy->GetWhere() - fLeafOffset : 0;
-      }
+      void* GetAddress();
       
    protected:
       TTreeReaderValueBase(TTreeReader* reader = 0, const char* branchname = 0, TDictionary* dict = 0);
@@ -111,6 +102,8 @@ namespace ROOT {
       EReadStatus  fReadStatus; // read status of this data access
       Int_t        fLeafOffset;
       TLeaf*       fLeaf;
+      Long64_t     fTreeLastOffset;
+      TString      fLeafName;
 
       ClassDef(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
 
