@@ -218,6 +218,7 @@ find $srcdir -path '*/test' -prune -o \
              -path '*/io/rfio/*' -prune -o \
              -path '*/net/alien/*' -prune -o \
              -path '*/proof/proofx/*' -prune -o \
+             -path '*/core/meta/inc/LinkDefCling.h' -prune -o \
              -path '*/core/winnt/*' -prune -o \
              -path '*/sql/*' -prune -o \
              -path '*/bindings/pyroot/*' -prune -o \

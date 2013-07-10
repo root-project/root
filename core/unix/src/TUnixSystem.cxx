@@ -4498,7 +4498,10 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
          dynpath += ":"; dynpath += gRootDir; dynpath += "/lib";
       }
 #endif
-      dynpath += ":"; dynpath += gInterpreter->GetSTLIncludePath();
+      if (gCling) {
+         dynpath += ":"; dynpath += gCling->GetSTLIncludePath();
+      } else
+         initialized = kFALSE;
    }
    return dynpath;
 }

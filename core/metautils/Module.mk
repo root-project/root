@@ -20,12 +20,23 @@ METAUTILSS     := $(filter-out $(MODDIRS)/TMetaUtils.%,\
 
 METAUTILSTH     += $(MODDIRI)/TMetaUtils.h
 METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx
+
+METAUTILSSLLVM := $(MODDIRS)/BaseSelectionRule.cxx \
+                  $(MODDIRS)/ClassSelectionRule.cxx \
+                  $(MODDIRS)/VariableSelectionRule.cxx \
+                  $(MODDIRS)/RClStl.cxx \
+                  $(MODDIRS)/Scanner.cxx \
+                  $(MODDIRS)/SelectionRules.cxx \
+                  $(MODDIRS)/XMLReader.cxx
+
 METAUTILSCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS)))
 ifneq ($(CXX:g++=),$(CXX))
 METAUTILSCXXFLAGS += -Wno-shadow -Wno-unused-parameter
 endif
 
 METAUTILSO     := $(call stripsrc,$(METAUTILSS:.cxx=.o))
+METAUTILSOLLVM := $(call stripsrc,$(METAUTILSSLLVM:.cxx=.o))
+METAUTILSO     := $(filter-out $(METAUTILSOLLVM),$(METAUTILSO))
 METAUTILSTO    := $(call stripsrc,$(METAUTILSTS:.cxx=.o))
 
 METAUTILSL     := $(MODDIRI)/LinkDef.h
@@ -101,7 +112,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(METAUTILSO): CXXFLAGS += $(METAUTILSCXXFLAGS)
-$(METAUTILSO): $(LLVMDEP)
+$(METAUTILSOLLVM): CXXFLAGS += $(METAUTILSCXXFLAGS)
+$(METAUTILSOLLVM): $(LLVMDEP)
 $(METAUTILSTO): CXXFLAGS += $(METAUTILSCXXFLAGS)
 $(METAUTILSTO): $(LLVMDEP)

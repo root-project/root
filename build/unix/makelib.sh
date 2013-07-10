@@ -48,8 +48,7 @@ LIBVERS=
 VERSION=
 EXPLLNKCORE=
 if [ "x$EXPLICIT" = "xyes" ]; then
-   if [ $LIB != "lib/libCling.$soext" ] && \
-      [ $LIB != "lib/libminicern.$soext" ]; then
+   if [ $LIB != "lib/libminicern.$soext" ]; then
       if [ $LIB != "lib/libCore.$soext" ]; then
          EXPLLNKCORE="-Llib -lCore"
       else
@@ -165,8 +164,7 @@ elif [ $PLATFORM = "ios" ]; then
    fi
 elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
    EXPLLNKCORE=
-   if [ $SONAME != "libCling.dll" ] && \
-      [ $SONAME != "libminicern.dll" ]; then
+   if [ $SONAME != "libminicern.dll" ]; then
       if [ $SONAME = "libCore.dll" ]; then
          EXPLLNKCORE=""
       else

@@ -17,6 +17,19 @@ METAL        := $(MODDIRI)/LinkDef.h
 
 METAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 METAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+
+METASLLVM    := $(MODDIRS)/TCling.cxx \
+                $(MODDIRS)/TClingBaseClassInfo.cxx \
+                $(MODDIRS)/TClingCallFunc.cxx \
+                $(MODDIRS)/TClingCallbacks.cxx \
+                $(MODDIRS)/TClingClassInfo.cxx \
+                $(MODDIRS)/TClingDataMemberInfo.cxx \
+                $(MODDIRS)/TClingMethodArgInfo.cxx \
+                $(MODDIRS)/TClingMethodInfo.cxx \
+                $(MODDIRS)/TClingTypeInfo.cxx \
+                $(MODDIRS)/TClingTypedefInfo.cxx \
+                $(MODDIRS)/TClingValue.cxx
+
 METADCLINGCXXFLAGS:= -DR__WITH_CLING
 METACLINGCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGCXXFLAGS)))
 ifneq ($(CXX:g++=),$(CXX))
@@ -26,6 +39,23 @@ METADICTH    := $(METAH)
 METAO        := $(call stripsrc,$(METAS:.cxx=.o))
 
 METADEP      := $(METAO:.o=.d) $(METADO:.o=.d)
+
+METAOLLVM    := $(call stripsrc,$(METASLLVM:.cxx=.o))
+METAO        := $(filter-out $(METAOLLVM),$(METAO))
+
+##### libCling #####
+
+CLINGL       := $(MODDIRI)/LinkDefCling.h
+CLINGDS      := $(call stripsrc,$(MODDIRS)/G__Cling.cxx)
+CLINGDO      := $(CLINGDS:.cxx=.o)
+CLINGDH      := $(CLINGDS:.cxx=.h)
+CLINGH       := $(MODDIRS)/TCling.h
+
+CLINGLIB     := $(LPATH)/libCling.$(SOEXT)
+CLINGMAP     := $(CLINGLIB:.$(SOEXT)=.rootmap)
+
+ALLLIBS      += $(CLINGLIB)
+ALLMAPS      += $(CLINGMAP)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAH))
@@ -39,15 +69,33 @@ INCLUDEFILES += $(METADEP)
 include/%.h:    $(METADIRI)/%.h
 		cp $< $@
 
-all-$(MODNAME): $(METAO)
+$(CLINGLIB):    $(CLINGO) $(CLINGDO) $(METAOLLVM) $(METAUTILSOLLVM) \
+                $(METAUTILSTO) $(ORDER_) $(MAINLIBS)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libCling.$(SOEXT) $@ \
+		   "$(METAOLLVM) $(METAUTILSOLLVM) $(METAUTILSTO) \
+		    $(CLINGO) $(CLINGDO) $(CLINGLIBEXTRA)" \
+		   ""
+
+$(CLINGMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(CLINGL)
+		$(RLIBMAP) -o $@ -l $(CLINGLIB) \
+		   -d $(CLINGLIBDEPM) -c $(CLINGL)
+
+$(CLINGDS): $(CLINGL) $(ROOTCINTTMPDEP) $(LLVMDEP)
+		$(MAKEDIR)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ $(call dictModule,CLINGLIB) -c $(CLINGH) \
+		   $(CLINGL)
+
+all-$(MODNAME): $(METAO) $(METAOLLVM) $(CLINGLIB) $(CLINGMAP)
 
 clean-$(MODNAME):
-		@rm -f $(METAO)
+		@rm -f $(METAO) $(METAOLLVM) $(GLINGDO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-		@rm -f $(METADEP)
+		@rm -f $(METADEP) $(CLINGDS) $(CLINGDH) $(CLINGLIB) $(CLINGMAP)
 
 distclean::     distclean-$(MODNAME)
 

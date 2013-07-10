@@ -69,6 +69,8 @@
 #include <stdlib.h>
 #ifdef WIN32
 #include <io.h>
+#else
+#include <dlfcn.h>
 #endif
 
 #include "Riostream.h"
@@ -104,7 +106,7 @@
 #include "TMap.h"
 #include "TObjString.h"
 #include "TVirtualMutex.h"
-#include "TCling.h"
+#include "TInterpreter.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -121,6 +123,8 @@ namespace std {} using namespace std;
 #endif
 
 extern "C" void R__SetZipMode(int);
+
+static DestroyInterpreter_t *gDestroyCling = 0;
 
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
@@ -585,21 +589,21 @@ TROOT::~TROOT()
       delete gSystem;
 
 #ifdef R__COMPLETE_MEM_TERMINATION
-      // On some 'newer' platform (Fedora Core 17+, Ubuntu 12), the 
+      // On some 'newer' platform (Fedora Core 17+, Ubuntu 12), the
       // initialization order is (by default?) is 'wrong' and so we can't
-      // delete the interpreter now .. because any of the static in the 
+      // delete the interpreter now .. because any of the static in the
       // interpreter's libray have already been deleted.
-      // On the link line, we must list the most dependent .o file 
+      // On the link line, we must list the most dependent .o file
       // and end with the least dependent (LLVM libraries), unfortunately,
       // Fedora Core 17+ or Ubuntu 12 will also execute the initialization
-      // in the same order (hence doing libCore's before LLVM's and 
-      // vice et versa for both the destructor.  We worked around the 
+      // in the same order (hence doing libCore's before LLVM's and
+      // vice et versa for both the destructor.  We worked around the
       // initialization order by delay the TROOT creation until first use.
       // We can not do the same for destruction as we have no way of knowing
       // the last access ...
       // So for now, let's avoid delete TCling except in the special build
       // checking the completeness of the termination deletion.
-      SafeDelete(fInterpreter);
+      gDestroyCling(fInterpreter);
 #endif
 
 #ifdef R__COMPLETE_MEM_TERMINATION
@@ -1484,7 +1488,30 @@ void TROOT::InitInterpreter()
    // Initialize the interpreter. Should be called only after main(),
    // to make sure LLVM/Clang is fully initialized.
 
-   fInterpreter = new TCling("C/C++", "CINT+cling C/C++ Interpreter");
+   char *libcling = gSystem->DynamicPathName("libCling");
+   void *clingHandle = dlopen(libcling, RTLD_LAZY|RTLD_GLOBAL);
+   delete [] libcling;
+   if (!clingHandle) {
+      TString err = dlerror();
+      fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load library %s\n", err.Data());
+      exit(1);
+   }
+   dlerror();   // reset error message
+   CreateInterpreter_t *CreateCling = (CreateInterpreter_t*) dlsym(clingHandle, "CreateCling");
+   if (!CreateCling) {
+      TString err = dlerror();
+      fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load symbol %s\n", err.Data());
+      exit(1);
+   }
+   gDestroyCling = (DestroyInterpreter_t*) dlsym(clingHandle, "DestroyCling");
+   if (!gDestroyCling) {
+      TString err = dlerror();
+      fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load symbol %s\n", err.Data());
+      exit(1);
+   }
+
+   fInterpreter = CreateCling();
+
    fCleanups->Add(fInterpreter);
    fInterpreter->SetBit(kMustCleanup);
 

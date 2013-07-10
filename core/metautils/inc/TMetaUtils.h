@@ -42,7 +42,7 @@ namespace cling {
    class LookupHelper;
 }
 
-// For TClassEdit::ESTLType
+// For TClassEdit::ESTLType and for TClassEdit::TInterpreterLookupHelper
 #include "TClassEdit.h"
 
 #ifndef ROOT_Varargs
@@ -51,9 +51,9 @@ namespace cling {
 
 namespace ROOT {
    namespace TMetaUtils {
-      
+
       class TNormalizedCtxt {
-         typedef llvm::SmallSet<const clang::Type*, 4> TypesCont_t; 
+         typedef llvm::SmallSet<const clang::Type*, 4> TypesCont_t;
       private:
          TypesCont_t fTypeToSkip;
          TypesCont_t fTypeWithAlternative;
@@ -62,6 +62,19 @@ namespace ROOT {
 
          const TypesCont_t &GetTypeToSkip() const { return fTypeToSkip; }
          const TypesCont_t &GetTypeWithAlternative() const { return fTypeWithAlternative; }
+      };
+
+      class TClingLookupHelper : public TClassEdit::TInterpreterLookupHelper {
+      private:
+         cling::Interpreter *fInterpreter;
+         TNormalizedCtxt    *fNormalizedCtxt;
+      public:
+         TClingLookupHelper(cling::Interpreter &interpreter, ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+         virtual ~TClingLookupHelper() { /* we're not owner */ }
+         virtual void GetPartiallyDesugaredName(std::string &nameLong);
+         virtual bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong);
+         virtual bool IsDeclaredScope(const std::string &base);
+         virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result);
       };
 
       // Add default template parameters.
@@ -73,8 +86,6 @@ namespace ROOT {
 
       // Return the ROOT include directory
       std::string GetROOTIncludeDir(bool rootbuild);
-
-
 
 
       // These are the methods which were moved from rootcling to TMetaUtils
@@ -89,7 +100,7 @@ namespace ROOT {
          bool fRequestNoInputOperator;
          bool fRequestOnlyTClass;
          int  fRequestedVersionNumber;
-         
+
       public:
          enum ERootFlag {
             kNoStreamer      = 0x01,
@@ -112,9 +123,9 @@ namespace ROOT {
          const char *GetRequestedName() const { return fRequestedName.c_str(); }
          const char *GetNormalizedName() const { return fNormalizedName.c_str(); }
          bool HasClassVersion() const { return fRequestedVersionNumber >=0 ; }
-         bool RequestStreamerInfo() const { 
-            // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT 
-            return fRequestStreamerInfo; 
+         bool RequestStreamerInfo() const {
+            // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT
+            return fRequestStreamerInfo;
          }
          bool RequestNoInputOperator() const { return fRequestNoInputOperator; }
          bool RequestNoStreamer() const { return fRequestNoStreamer; }
@@ -135,14 +146,14 @@ namespace ROOT {
          operator clang::RecordDecl const *() const {
             return fDecl;
          }
-         
+
          bool operator<(const AnnotatedRecordDecl& right) const
          {
             return fRuleIndex < right.fRuleIndex;
          }
 
          struct CompareByName {
-            bool operator() (const AnnotatedRecordDecl& right, const AnnotatedRecordDecl& left) 
+            bool operator() (const AnnotatedRecordDecl& right, const AnnotatedRecordDecl& left)
             {
                return left.fNormalizedName < right.fNormalizedName;
             }
@@ -165,7 +176,7 @@ namespace ROOT {
       bool CheckConstructor(const clang::CXXRecordDecl*, ROOT::TMetaUtils::RConstructorType&);
       bool ClassInfo__HasMethod(const clang::RecordDecl *cl, char const*);
       void CreateNameTypeMap(clang::CXXRecordDecl const&, std::map<std::string, ROOT::TSchemaType, std::less<std::string>, std::allocator<std::pair<std::string const, ROOT::TSchemaType> > >&);
-      
+
       int ElementStreamer(std::ostream& finalString, const clang::NamedDecl &forcontext, const clang::QualType &qti, const char *R__t,int rwmode, const cling::Interpreter &gInterp, const char *tcl=0);
       bool R__IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base, const clang::CXXRecordDecl *context = 0);
       bool R__IsBase(const clang::FieldDecl &m, const char* basename, const cling::Interpreter &gInterp);
@@ -184,9 +195,9 @@ namespace ROOT {
       bool NeedDestructor(clang::CXXRecordDecl const*);
       bool NeedTemplateKeyword(clang::CXXRecordDecl const*);
       bool R__CheckPublicFuncWithProto(clang::CXXRecordDecl const*, char const*, char const*, const cling::Interpreter&);
-      
+
       long R__GetLineNumber(clang::Decl const*);
-      
+
       bool R__GetNameWithinNamespace(std::string&, std::string&, std::string&, clang::CXXRecordDecl const*);
 
       void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext);
@@ -198,15 +209,12 @@ namespace ROOT {
       std::string R__GetQualifiedName(const clang::CXXBaseSpecifier &base);
       std::string R__GetQualifiedName(const ROOT::TMetaUtils::AnnotatedRecordDecl &annotated);
 
-
       int WriteNamespaceHeader(std::ostream&, const clang::RecordDecl *);
       void WritePointersSTL(const AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
-            
+
       // void WriteAutoStreamer(const AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
       // void WriteStreamer(const AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
-      
-      
-      
+
       void WritePointersSTL(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
       int GetClassVersion(const clang::RecordDecl *cl);
       int IsSTLContainer(const ROOT::TMetaUtils::AnnotatedRecordDecl &annotated);
@@ -229,7 +237,7 @@ namespace ROOT {
       const clang::FunctionDecl *R__GetFuncWithProto(const clang::Decl* cinfo, const char *method, const char *proto, const cling::Interpreter &gInterp);
 
       typedef void (*CallWriteStreamer_t)(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, bool isAutoStreamer);
-      
+
       void WriteClassCode(CallWriteStreamer_t WriteStreamerFunc, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, std::ostream& finalString);
       void WriteEverything(CallWriteStreamer_t WriteStreamerFunc, std::ostream& finalString, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const clang::CXXRecordDecl *decl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
       void WriteClassInit(std::ostream& finalString, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const clang::CXXRecordDecl *decl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, bool& needCollectionProxy);
@@ -253,20 +261,6 @@ namespace ROOT {
       void Warning(const char *location, const char *va_(fmt), ...);
       void Fatal(const char *location, const char *va_(fmt), ...);
 
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
 
       // Return the header file to be included to declare the Decl
       llvm::StringRef GetFileName(const clang::Decl *decl);
@@ -278,13 +272,13 @@ namespace ROOT {
       clang::Module* declareModuleMap(clang::CompilerInstance* CI,
                                       const char* moduleFileName,
                                       const char* headers[]);
-                                
+
       // Return the -I needed to find RuntimeUniverse.h
       std::string GetInterpreterExtraIncludePath(bool rootbuild);
 
       // Return the LLVM / clang resource directory
       std::string GetLLVMResourceDir(bool rootbuild);
-      
+
       // Return the ROOT include directory
       std::string GetROOTIncludeDir(bool rootbuild);
 
@@ -308,7 +302,7 @@ namespace ROOT {
 
       // Returns the comment (// striped away), annotating declaration in a meaningful
       // for ROOT IO way.
-      // Takes optional out parameter clang::SourceLocation returning the source 
+      // Takes optional out parameter clang::SourceLocation returning the source
       // location of the comment.
       //
       // CXXMethodDecls, FieldDecls and TagDecls are annotated.
@@ -340,7 +334,7 @@ namespace ROOT {
       //
       // returns 0 if no annotation was found.
       //
-      template<typename T> 
+      template<typename T>
       const T* GetAnnotatedRedeclarable(const T* Redecl) {
          if (!Redecl)
             return 0;
@@ -352,21 +346,21 @@ namespace ROOT {
          return Redecl;
       }
 
-      // Overload the template for typedefs, because they don't contain 
+      // Overload the template for typedefs, because they don't contain
       // isThisDeclarationADefinition method. (Use inline to avoid violating ODR)
       const clang::TypedefNameDecl* GetAnnotatedRedeclarable(const clang::TypedefNameDecl* TND);
 
       // Return true if the decl is part of the std namespace.
       bool IsStdClass(const clang::RecordDecl &cl);
-      
+
       // Return which kind of STL container the decl is, if any.
       TClassEdit::ESTLType IsSTLCont(const clang::RecordDecl &cl);
 
       // Check if 'input' or any of its template parameter was substituted when
-      // instantiating the class template instance and replace it with the 
+      // instantiating the class template instance and replace it with the
       // partially sugared type we have from 'instance'.
       clang::QualType ReSubstTemplateArg(clang::QualType input, const clang::Type *instance);
- 
+
       // Kind of stl container
       TClassEdit::ESTLType STLKind(const llvm::StringRef type);
 

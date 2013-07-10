@@ -302,9 +302,10 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* s
       result = (void*)PRCallFuncExecInt( func, self, release_gil );
    } else {
 // -- CLING WORKAROUND
-      TInterpreterValue value;
-      PRCallFuncExecValue( func, self, value, release_gil );
-      result = value.GetAsPointer();
+      TInterpreterValue *value = gInterpreter->CreateTemporary();
+      PRCallFuncExecValue( func, self, *value, release_gil );
+      result = value->GetAsPointer();
+      delete value;
    }
 
    if ( ! result ) {
@@ -320,7 +321,7 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* s
 // TODO: there's no guarantee that we're the only user of temp objects; this as well as
 // the bitwise-copy issue means that it'd be better if the ownership could be transferred
    gInterpreter->ClearStack();     // currently a no-op for Cling (?)
-                            
+
 // the result can then be bound
    ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( fresh, fClass );
    if ( ! pyobj )

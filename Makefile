@@ -518,10 +518,10 @@ COREDO       := $(COREDS:.cxx=.o)
 COREDH       := $(COREDS:.cxx=.h)
 COREDICTHDEP  = $(BASEH1) $(BASEH3) $(CONTH) $(METAH) $(SYSTEMH) $(ZIPDICTH) \
 		$(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
-COREDICTH     = $(BASEH1) $(BASEH3) $(CONTH) $(METADICTH) $(SYSTEMDICTH) $(ZIPDICTH) \
-		$(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
+COREDICTH     = $(BASEH1) $(BASEH3) $(CONTH) $(METADICTH) $(SYSTEMDICTH) \
+                $(ZIPDICTH) $(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
 COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
-                $(CLIBO) $(METAUTILSO) $(METAUTILSTO) $(TEXTINPUTO)
+                $(CLIBO) $(METAUTILSO) $(TEXTINPUTO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
@@ -770,15 +770,16 @@ endif
 	   touch $@; \
 	fi)
 
-$(COREDS):      $(COREDICTHDEP) $(COREL) $(ROOTCINTTMPDEP) $(LLVMDEP)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -s lib/libCore.so -c $(COREDICTCXXFLAGS) $(COREDICTH) $(COREL0)
+$(COREDS): $(COREDICTHDEP) $(COREL) $(ROOTCINTTMPDEP) $(LLVMDEP)
+	$(MAKEDIR)
+	@echo "Generating dictionary $@..."
+	$(ROOTCINTTMP) -f $@ -s lib/libCore.so -c $(COREDICTCXXFLAGS) \
+	   $(COREDICTH) $(COREL0)
 
-$(CORELIB): $(CLINGO) $(COREO) $(COREDO) $(PCREDEP) $(CORELIBDEP)
+$(CORELIB): $(COREO) $(COREDO) $(PCREDEP) $(CORELIBDEP)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ \
-	   "$(COREDO) $(COREO) $(CLINGO) $(CLINGLIBEXTRA)" \
+	   "$(COREDO) $(COREO)" \
 	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 
 $(COREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(COREL)

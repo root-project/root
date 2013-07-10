@@ -64,6 +64,7 @@ namespace cling {
 namespace ROOT {
    namespace TMetaUtils {
       class TNormalizedCtxt;
+      class TClingLookupHelper;
    }
 }
 
@@ -92,6 +93,7 @@ private: // Data Members
 
    std::vector<cling::StoredValueRef> *fTemporaries;    // Stack of temporaries
    ROOT::TMetaUtils::TNormalizedCtxt  *fNormalizedCtxt; // Which typedef to avoid striping.
+   ROOT::TMetaUtils::TClingLookupHelper *fLookupHelper; // lookup helper used by TClassEdit
 
    void*           fPrevLoadedDynLibInfo; // Internal info to mark the last loaded libray.
    TClingCallbacks* fClingCallbacks; // cling::Interpreter owns it.
@@ -99,7 +101,6 @@ private: // Data Members
    std::vector<const void*> fDeserializedDecls; // Decls read from the AST
 
 public: // Public Interface
-
    virtual ~TCling();
    TCling(const char* name, const char* title);
 
@@ -115,7 +116,7 @@ public: // Public Interface
    TEnv*   GetMapfile() const { return fMapfile; }
    Int_t   GetMore() const { return fMore; }
    TClass *GenerateTClass(const char *classname, Bool_t emulation, Bool_t silent = kFALSE);
-   TClass *GenerateTClass(ClassInfo_t *classinfo, Bool_t silent = kFALSE); 
+   TClass *GenerateTClass(ClassInfo_t *classinfo, Bool_t silent = kFALSE);
    Int_t   GenerateDictionary(const char* classes, const char* includes = 0, const char* options = 0);
    char*   GetPrompt() { return fPrompt; }
    const char* GetSharedLibs();
@@ -219,9 +220,10 @@ public: // Public Interface
    virtual void   SetRTLD_LAZY() const;
    virtual void   SetTempLevel(int val) const;
    virtual int    UnloadFile(const char* path) const;
-   void           RegisterTemporary(const TInterpreterValue& value);
-   void           RegisterTemporary(const cling::StoredValueRef& value);
 
+   TInterpreterValue *CreateTemporary();
+   void               RegisterTemporary(const TInterpreterValue& value);
+   void               RegisterTemporary(const cling::StoredValueRef& value);
 
    // CallFunc interface
    virtual void   CallFunc_Delete(void* func) const;
@@ -246,7 +248,6 @@ public: // Public Interface
    virtual void   CallFunc_SetFunc(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* params, Long_t* Offset) const;
    virtual void   CallFunc_SetFunc(CallFunc_t* func, MethodInfo_t* info) const;
    virtual void   CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, Long_t* Offset) const;
-
 
    // ClassInfo interface
    virtual Long_t ClassInfo_ClassProperty(ClassInfo_t* info) const;
@@ -280,7 +281,6 @@ public: // Public Interface
    virtual const char* ClassInfo_Name(ClassInfo_t* info) const;
    virtual const char* ClassInfo_Title(ClassInfo_t* info) const;
    virtual const char* ClassInfo_TmpltName(ClassInfo_t* info) const;
-
 
    // BaseClassInfo interface
    virtual void   BaseClassInfo_Delete(BaseClassInfo_t* bcinfo) const;
@@ -345,7 +345,6 @@ public: // Public Interface
    virtual const char* MethodArgInfo_TypeName(MethodArgInfo_t* marginfo) const;
    virtual std::string MethodArgInfo_TypeNormalizedName(MethodArgInfo_t *marginfo) const;
 
-
    // TypeInfo interface
    virtual void   TypeInfo_Delete(TypeInfo_t* tinfo) const;
    virtual TypeInfo_t* TypeInfo_Factory() const;
@@ -357,7 +356,6 @@ public: // Public Interface
    virtual int    TypeInfo_RefType(TypeInfo_t* /* tinfo */) const;
    virtual int    TypeInfo_Size(TypeInfo_t* tinfo) const;
    virtual const char* TypeInfo_TrueName(TypeInfo_t* tinfo) const;
-
 
    // TypedefInfo interface
    virtual void   TypedefInfo_Delete(TypedefInfo_t* tinfo) const;
@@ -377,7 +375,6 @@ public: // Public Interface
    void HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*>& modifiedClasses);
 
 private: // Private Utility Functions
-
    TCling();
    TCling(const TCling&); // NOT IMPLEMENTED
    TCling& operator=(const TCling&); // NOT IMPLEMENTED

@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/metautils:$Id$
 // Author: Victor Perev   10/04/2003
 //         Philippe Canal 05/2004
 
@@ -69,8 +69,20 @@ namespace TClassEdit {
       kEnd      = 9
    };
 
+   class TInterpreterLookupHelper {
+   public:
+      TInterpreterLookupHelper() { }
+      virtual ~TInterpreterLookupHelper() { }
+      virtual void GetPartiallyDesugaredName(std::string & /*nameLong*/) = 0;
+      virtual bool IsAlreadyPartiallyDesugaredName(const std::string & /*nondef*/,
+                                                   const std::string & /*nameLong*/) = 0;
+      virtual bool IsDeclaredScope(const std::string & /*base*/) = 0;
+      virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string & /*tname*/,
+                                                              std::string & /*result*/) = 0;
+   };
+
    struct TSplitType {
-      
+
       const char *fName; // Original spelling of the name.
       std::vector<std::string> fElements;
       int fNestedLocation; // Stores the location of the tail (nested names) in nestedLoc (0 indicates no tail).
@@ -85,7 +97,7 @@ namespace TClassEdit {
       TSplitType &operator=(const TSplitType &); // intentionally not implemented
    };
 
-   void        Init(cling::Interpreter &interp,ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
+   void        Init(TClassEdit::TInterpreterLookupHelper *helper);
 
    std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
    bool        IsDefAlloc(const char *alloc, const char *classname);
