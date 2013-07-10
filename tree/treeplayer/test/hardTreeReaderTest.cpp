@@ -681,17 +681,17 @@ void readLeafBoolBArray(Bool_t printOut = true, Bool_t testValues = false, const
 
 	TString branchName = "MyLeafList.b";
 
-	TTreeReaderArray<Bool_t> myDoubles (myTreeReader, branchName);
+	TTreeReaderArray<Bool_t> myBools (myTreeReader, branchName);
 
 	Bool_t success = true;
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("MyLeafList.b(%lu):", myDoubles.GetSize());
+		if (printOut) printf("MyLeafList.b(%lu):", myBools.GetSize());
 
-		for (int j = 0; j < myDoubles.GetSize() && j < 10; ++j){
-			if (testValues && myDoubles.At(j) != j % 2) success = false;
-			if (printOut) printf(" %s", myDoubles.At(j) ? "true" : "false" );
+		for (int j = 0; j < myBools.GetSize() && j < 10; ++j){
+			if (testValues && myBools.At(j) != j % 2) success = false;
+			if (printOut) printf(" %s", myBools.At(j) ? "true" : "false" );
 		}
 
 		if (printOut) printf("\n");
