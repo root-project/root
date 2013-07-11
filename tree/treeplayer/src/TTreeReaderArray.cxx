@@ -284,13 +284,13 @@ namespace {
 
    class TLeafParameterSizeReader : public TLeafReader {
    private:
-      TTreeReaderValue<Int_t> *sizeReader;
+      TTreeReaderValue<Int_t> sizeReader;
    public:
-      TLeafParameterSizeReader(TTreeReaderValue<Int_t> *sizeReaderArg, ROOT::TTreeReaderValueBase *valueReaderArg) : TLeafReader(valueReaderArg), sizeReader(sizeReaderArg) {}
+      TLeafParameterSizeReader(TTreeReader *treeReader, const char *leafName, ROOT::TTreeReaderValueBase *valueReaderArg) : TLeafReader(valueReaderArg), sizeReader(*treeReader, leafName) {}
 
       virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){
          ProxyRead();
-         return **sizeReader;
+         return *sizeReader;
       }
    };
 }
@@ -474,8 +474,7 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
          TString leafFullName = myLeaf->GetBranch()->GetName();
          leafFullName += ".";
          leafFullName += myLeaf->GetLeafCount()->GetName();
-         TTreeReaderValue<Int_t> *sizeReader = new TTreeReaderValue<Int_t>(*fTreeReader, leafFullName.Data());
-         fImpl = new TLeafParameterSizeReader(sizeReader, this);
+         fImpl = new TLeafParameterSizeReader(fTreeReader, leafFullName.Data(), this);
       }
    }
    else if (branch->IsA() == TBranchElement::Class()) {
