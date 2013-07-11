@@ -6599,6 +6599,33 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
 }
 
 //______________________________________________________________________________
+Int_t TProof::Echo(const TObject *obj)
+{
+   // Sends an object to master and workers and expect them to send back a
+   // message with the output of its TObject::Print(). Returns -1 on error, the
+   // number of workers that received the objects on success.
+
+   if (!IsValid() || !obj) return -1;
+   TMessage mess(kPROOF_ECHO);
+   mess.WriteObject(obj);
+   return Broadcast(mess);
+}
+
+//______________________________________________________________________________
+Int_t TProof::Echo(const char *str)
+{
+   // Sends a string to master and workers and expect them to echo it back to
+   // the client via a message. It is a special case of the generic Echo()
+   // that works with TObjects. Returns -1 on error, the number of workers that
+   // received the message on success.
+
+   TObjString *os = new TObjString(str);
+   Int_t rv = Echo(os);
+   delete os;
+   return rv;
+}
+
+//______________________________________________________________________________
 Int_t TProof::SendObject(const TObject *obj, ESlaves list)
 {
    // Send object to master or slave servers. Returns number of slaves object
