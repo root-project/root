@@ -201,11 +201,11 @@ namespace {
 
    class TArrayParameterSizeReader : public TObjectArrayReader {
    private:
-      TTreeReaderValue<Int_t> *indexReader;
+      TTreeReaderValue<Int_t> indexReader;
    public:
-      TArrayParameterSizeReader(TTreeReaderValue<Int_t> *indexReaderArg) : indexReader(indexReaderArg) {}
+      TArrayParameterSizeReader(TTreeReader *treeReader, const char *branchName) : indexReader(*treeReader, branchName) {}
 
-      virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){ return **indexReader; }
+      virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){ return *indexReader; }
    };
 
    class TArrayFixedSizeReader : public TObjectArrayReader {
@@ -503,9 +503,7 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
             }
          }
          else if (element->IsA() == TStreamerLoop::Class()) {
-            //fImpl = new TObjectArrayReader(); // BStarArray[num]
-            TTreeReaderValue<Int_t> *indexReader = new TTreeReaderValue<Int_t>(*fTreeReader, branchElement->GetBranchCount()->GetName());
-            fImpl = new TArrayParameterSizeReader(indexReader);
+            fImpl = new TArrayParameterSizeReader(fTreeReader, branchElement->GetBranchCount()->GetName());
          }
          else if (element->IsA() == TStreamerBasicType::Class()){
             if (branchElement->GetType() == TBranchElement::kSTLMemberNode){
