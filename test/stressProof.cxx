@@ -1273,7 +1273,7 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
          }
       if (navg > 0) avgmarks /= navg;
       
-      gProof->GetStatistics((verbose > 0));
+      gProof->GetStatistics((gverbose > 0));
       // Reference time measured on a HP DL580 24 core (4 x Intel(R) Xeon(R) CPU X7460
       // @ 2.132 GHz, 48GB RAM, 1 Gb/s NIC) with 4 workers.
       const double reftime = 70.169;
@@ -2731,6 +2731,7 @@ Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
 
    // Unlink the entry list file
    gSystem->Unlink("elist.root");
+
    // Cleanup entry-list from the input list
    nxi.Reset();
    while ((o = nxi())) {
