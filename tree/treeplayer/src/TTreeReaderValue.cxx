@@ -78,6 +78,7 @@ ROOT::TTreeReaderValueBase::ProxyRead() {
    return fReadStatus;
 }
 
+//______________________________________________________________________________
 TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() { 
    if (fLeafName.Length() > 0){
 
@@ -95,6 +96,7 @@ TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
    }
 }
 
+//______________________________________________________________________________
 void* ROOT::TTreeReaderValueBase::GetAddress() {
    if (ProxyRead() != kReadSuccess) return 0;
 
