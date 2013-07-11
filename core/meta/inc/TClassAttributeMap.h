@@ -28,9 +28,6 @@
 #ifndef ROOT_THashTable
 #include "THashTable.h"
 #endif
-#ifndef ROOT_TEnumConstant
-#include "TEnumConstant.h"
-#endif
 
 
 class TClassAttributeMap : public TObject {
