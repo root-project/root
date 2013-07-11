@@ -1788,7 +1788,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    // Remove trailing blanks in object name
    Int_t nch = strlen(oname);
    char *newName = 0;
-   if (oname[nch-1] == ' ') {
+   if (nch && oname[nch-1] == ' ') {
       newName = new char[nch+1];
       strlcpy(newName,oname,nch+1);
       for (Int_t i=0;i<nch;i++) {
@@ -1912,7 +1912,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    // Remove trailing blanks in object name
    Int_t nch = strlen(oname);
    char *newName = 0;
-   if (oname[nch-1] == ' ') {
+   if (nch && oname[nch-1] == ' ') {
       newName = new char[nch+1];
       strlcpy(newName,oname,nch+1);
       for (Int_t i=0;i<nch;i++) {
