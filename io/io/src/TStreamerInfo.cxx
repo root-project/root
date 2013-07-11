@@ -1466,7 +1466,7 @@ void TStreamerInfo::BuildOld()
       TDataMember* dm = 0;
 
       // First set the offset and sizes.
-      if (fClass->GetDeclFileLine() < 0) {
+      if (fClass->GetClassInfo() == 0) {
          // Note the initilization in this case are
          // delayed until __after__ the schema evolution
          // section, just in case the info has changed.
@@ -1475,7 +1475,10 @@ void TStreamerInfo::BuildOld()
          streamer = 0;
          element->Init(this);
       } else {
-         // The class is loaded.
+         // The class is known to Cling (and thus is not emulated)
+         // and we need to use the real offsets.
+         // However we may not have a 'proper' TClass for it 
+         // (in which case IsLoaded will be false and GetImplFileLine will be -1)
 
          // First look for the data member in the current class
          dm = (TDataMember*) fClass->GetListOfDataMembers()->FindObject(element->GetName());
@@ -1816,11 +1819,14 @@ void TStreamerInfo::BuildOld()
          element->SetOffset(kMissing);
       }
 
-      if (offset != kMissing && fClass->GetDeclFileLine() < 0) {
+      if (offset != kMissing && fClass->GetClassInfo() == 0) {
          // Note the initialization in this case are
          // delayed until __after__ the schema evolution
          // section, just in case the info has changed.
-
+         
+         // The class is NOT known to Cling (and thus IS emulated)
+         // and we need to use the calculated offset.
+     
          Int_t asize;
          if (element->GetType() == TStreamerInfo::kSTL &&
              strcmp(element->GetName(),"This") == 0 &&
