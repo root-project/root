@@ -53,8 +53,7 @@ ROOT::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
    fSetupStatus(kSetupNotSetup),
    fReadStatus(kReadNothingYet),
    fLeaf(NULL),
-   fTreeLastOffset(-1),
-   fLeafName("")
+   fTreeLastOffset(-1)
 {
    // Construct a tree value reader and register it with the reader object.
    if (fTreeReader) fTreeReader->RegisterValueReader(this);
