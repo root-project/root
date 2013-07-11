@@ -841,7 +841,7 @@ Int_t TProofServ::CreateServer()
 
    if (!fLogFile) {
       RedirectOutput();
-      // If for some reason we failed setting a redirection fole for the logs
+      // If for some reason we failed setting a redirection file for the logs
       // we cannot continue
       if (!fLogFile || (fLogFileDes = fileno(fLogFile)) < 0) {
          LogToMaster();
@@ -1466,7 +1466,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 {
    // Process input coming from the client or from the master server.
    // If 'all' is kFALSE, process only those messages that can be handled
-   // during qurey processing.
+   // during query processing.
    // Returns -1 if the message could not be processed, <-1 if something went
    // wrong. Returns 1 if the action may have changed the parallel state.
    // Returns 2 if the message has to be enqueued.
@@ -2116,6 +2116,73 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                SendAsynMessage("Processing request to go asynchronous:"
                                " idle or undefined player - ignoring");
             }
+         }
+         break;
+
+      case kPROOF_ECHO:
+         {  // Echo request: an object has been sent along. If the object is a
+            // string, it is simply echoed back to the client from the master
+            // and each worker. Elsewhere, the output of TObject::Print() is
+            // sent. Received object is disposed after usage.
+
+            TObject *obj = mess->ReadObject(0x0);  // class type ignored
+
+            if (IsMaster()) {
+               // We are on master
+               // dbTODO: forward on dynamic startup when wrks are up
+               if (IsParallel() && fProof && !fProof->UseDynamicStartup()) {
+                  fProof->Echo(obj);  // forward to lower layer
+               }
+            }
+
+            TMessage rmsg(kPROOF_MESSAGE);
+            TString smsg;
+
+            if (obj->InheritsFrom(TObjString::Class())) {
+               // It's a string: echo it
+               smsg.Form("Echo response from %s:%s: %s",
+                  gSystem->HostName(), GetOrdinal(),
+                  ((TObjString *)obj)->String().Data());
+            }
+            else {
+               // Not a string: collect Print() output and send it
+
+               // Output to tempfile
+               TString tmpfn = "echo-out-";
+               FILE *tf = gSystem->TempFileName(tmpfn, fDataDir);
+               if (gSystem->RedirectOutput(tmpfn.Data()) == -1) {
+                  Error("HandleSocketInput", "Can't redirect output");
+                  rc = -1;
+                  fclose(tf);
+                  gSystem->Unlink(tmpfn);
+                  delete obj;
+                  break;
+               }
+               //cout << obj->ClassName() << endl;
+               obj->Print();
+               gSystem->RedirectOutput(0x0);  // restore
+               fclose(tf);
+
+               // Read file back and send it via message
+               smsg.Append(Form("*** Echo response from %s:%s ***\n",
+                  gSystem->HostName(), GetOrdinal()));
+               TMacro *fr = new TMacro();
+               fr->ReadFile(tmpfn);
+               TIter nextLine(fr->GetListOfLines());
+               TObjString *line;
+               while (( line = (TObjString *)nextLine() )) {
+                  smsg.Append( line->String() );
+               }
+
+               // Close the reader (TMacro) and remove file
+               delete fr;
+               gSystem->Unlink(tmpfn);
+            }
+
+            // Send message and dispose object
+            rmsg << smsg;
+            GetSocket()->Send(rmsg);
+            delete obj;
          }
          break;
 

@@ -95,6 +95,7 @@ enum EMessageTypes {
    kPROOF_FORK           = 1054,         //ask the worker to clone itself
    kPROOF_GOASYNC        = 1055,         //switch to asynchronous mode
    kPROOF_SUBMERGER      = 1056,         //sub-merger based approach in finalization
+   kPROOF_ECHO           = 1057,         //object echo request from client
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER           = 2000,         //user id follows
