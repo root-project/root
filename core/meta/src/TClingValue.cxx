@@ -29,12 +29,12 @@ static cling::StoredValueRef& GetAsStoredValueRef(void*& value) {
    return reinterpret_cast<cling::StoredValueRef&>(value);
 }
 
-TClingValue::TClingValue() {
+TClingValue::TClingValue() : fValue(0) {
    // We default initialize to invalid value so that we could keep a "sane" state.
    new (&fValue) cling::StoredValueRef();
 }
 
-TClingValue::TClingValue(const TClingValue& Other) : TInterpreterValue() {
+TClingValue::TClingValue(const TClingValue& Other) : TInterpreterValue(), fValue(0) {
    using namespace cling;
    new (&fValue) StoredValueRef(GetAsStoredValueRef(Other.fValue));
 }
