@@ -29,6 +29,7 @@ ProofNtuple::~ProofNtuple()
    // Destructor
 
    SafeDelete(fNtp);
+   SafeDelete(fNtp2);
    SafeDelete(fFile);
    SafeDelete(fRandom);
 }
@@ -138,6 +139,12 @@ void ProofNtuple::SlaveBegin(TTree * /*tree*/)
    fNtp->SetDirectory(fFile);
    fNtp->AutoSave();
 
+   // Now we create the second ntuple
+   fNtp2 = new TNtuple("ntuple2","Demo ntuple2","vx:vy:vz");
+   // File resident
+   fNtp2->SetDirectory(fFile);
+   fNtp2->AutoSave();
+
    // Should we generate the random numbers or take them from the ntuple ?
    TNamed *unr = (TNamed *) fInput->FindObject("PROOF_USE_NTP_RNDM");
    if (unr) {
@@ -200,6 +207,12 @@ Bool_t ProofNtuple::Process(Long64_t entry)
    Int_t i = (Int_t) entry;
    fNtp->Fill(px,py,pz,random,i);
 
+   if (!fNtp2) return kTRUE;
+   
+   // The second ntuple
+   Float_t vz = random * 2. - 1.;
+   fNtp2->Fill(px,py,vz);
+
    return kTRUE;
 }
 
@@ -220,13 +233,15 @@ void ProofNtuple::SlaveTerminate()
       TDirectory *savedir = gDirectory;
       if (fNtp->GetEntries() > 0) {
          fFile->cd();
-         fNtp->Write();
+         fNtp->Write(0, TObject::kOverwrite);
+         if (fNtp2 && fNtp2->GetEntries() > 0) fNtp2->Write(0, TObject::kOverwrite);
          fProofFile->Print();
          fOutput->Add(fProofFile);
       } else {
          cleanup = kTRUE;
       }
       fNtp->SetDirectory(0);
+      if (fNtp2) fNtp2->SetDirectory(0);
       gDirectory = savedir;
       fFile->Close();
       // Cleanup, if needed
