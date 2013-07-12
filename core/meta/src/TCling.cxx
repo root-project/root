@@ -434,12 +434,12 @@ extern "C" const Decl* TCling__GetObjectDecl(TObject *obj) {
    return ((TClingClassInfo*)obj->IsA()->GetClassInfo())->GetDecl();
 }
 
-extern "C" TInterpreter *CreateCling()
+extern "C" TInterpreter *CreateInterpreter()
 {
    return new TCling("C++", "cling C++ Interpreter");
 }
 
-extern "C" void DestroyCling(TInterpreter *interp)
+extern "C" void DestroyInterpreter(TInterpreter *interp)
 {
    delete interp;
 }

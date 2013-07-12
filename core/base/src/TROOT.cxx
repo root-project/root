@@ -124,8 +124,8 @@ namespace std {} using namespace std;
 
 extern "C" void R__SetZipMode(int);
 
-static DestroyInterpreter_t *gDestroyCling = 0;
-static void *gClingHandle = 0;
+static DestroyInterpreter_t *gDestroyInterpreter = 0;
+static void *gInterpreterLib = 0;
 
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
@@ -637,7 +637,7 @@ TROOT::~TROOT()
       // Cleanup system class
       delete gSystem;
 
-      if (gClingHandle) dlclose(gClingHandle);
+      if (gInterpreterLib) dlclose(gInterpreterLib);
 #ifdef R__COMPLETE_MEM_TERMINATION
       // On some 'newer' platform (Fedora Core 17+, Ubuntu 12), the
       // initialization order is (by default?) is 'wrong' and so we can't
@@ -1539,9 +1539,9 @@ void TROOT::InitInterpreter()
    // to make sure LLVM/Clang is fully initialized.
 
    char *libcling = gSystem->DynamicPathName("libCling");
-   gClingHandle = dlopen(libcling, RTLD_NOW|RTLD_LOCAL);
+   gInterpreterLib = dlopen(libcling, RTLD_NOW|RTLD_LOCAL);
    delete [] libcling;
-   if (!gClingHandle) {
+   if (!gInterpreterLib) {
       TString err = dlerror();
       fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load library %s\n", err.Data());
       exit(1);
@@ -1551,20 +1551,20 @@ void TROOT::InitInterpreter()
    // Schedule the destruction of TROOT.
    atexit(at_exit_of_TROOT);
 
-   CreateInterpreter_t *CreateCling = (CreateInterpreter_t*) dlsym(gClingHandle, "CreateCling");
-   if (!CreateCling) {
+   CreateInterpreter_t *CreateInterpreter = (CreateInterpreter_t*) dlsym(gInterpreterLib, "CreateInterpreter");
+   if (!CreateInterpreter) {
       TString err = dlerror();
       fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load symbol %s\n", err.Data());
       exit(1);
    }
-   gDestroyCling = (DestroyInterpreter_t*) dlsym(gClingHandle, "DestroyCling");
-   if (!gDestroyCling) {
+   gDestroyInterpreter = (DestroyInterpreter_t*) dlsym(gInterpreterLib, "DestroyInterpreter");
+   if (!gDestroyInterpreter) {
       TString err = dlerror();
       fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load symbol %s\n", err.Data());
       exit(1);
    }
 
-   fInterpreter = CreateCling();
+   fInterpreter = CreateInterpreter();
 
    fCleanups->Add(fInterpreter);
    fInterpreter->SetBit(kMustCleanup);
@@ -1576,12 +1576,12 @@ void TROOT::InitInterpreter()
            li = GetModuleHeaderInfoBuffer().begin(),
            le = GetModuleHeaderInfoBuffer().end(); li != le; ++li) {
          // process buffered module registrations
-      gCling->RegisterModule(li->fModuleName,
-                             li->fHeaders,
-                             li->fIncludePaths,
-                             li->fMacroDefines,
-                             li->fMacroUndefines,
-                             li->fTriggerFunc);
+      fInterpreter->RegisterModule(li->fModuleName,
+                                   li->fHeaders,
+                                   li->fIncludePaths,
+                                   li->fMacroDefines,
+                                   li->fMacroUndefines,
+                                   li->fTriggerFunc);
       }
    GetModuleHeaderInfoBuffer().clear();
 
