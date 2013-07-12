@@ -258,9 +258,9 @@ PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Double, Double_t )
 PyObject* PyROOT::TSTLStringExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python string return value
-   TInterpreterValue value;
-   PRCallFuncExecValue( func, self, value, release_gil );
-   std::string* result = (std::string*)value.GetAsPointer();
+   TInterpreterValue* value = gInterpreter->CreateTemporary();
+   PRCallFuncExecValue( func, self, *value, release_gil );
+   std::string* result = (std::string*)value->GetAsPointer();
    if ( ! result ) {
       Py_INCREF( PyStrings::gEmptyString );
       return PyStrings::gEmptyString;
