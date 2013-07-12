@@ -290,7 +290,7 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
               || branch->IsA() == TBranchObject::Class()
               || branch->IsA() == TBranchSTL::Class()) {
       if (branch->GetTree()->IsA() == TNtuple::Class()){
-         dict = TDictionary::GetDictionary(((TDataType*)TDictionary::GetDictionary("Float_t"))->GetTypeName());
+         dict = TDataType::GetDataType(kFloat_t);
          return dict->GetName();
       }
       const char* dataTypeName = branch->GetClassName();
