@@ -34,7 +34,7 @@ TClingValue::TClingValue() {
    new (&fValue) cling::StoredValueRef();
 }
 
-TClingValue::TClingValue(const TClingValue& Other) {
+TClingValue::TClingValue(const TClingValue& Other) : TInterpreterValue() {
    using namespace cling;
    new (&fValue) StoredValueRef(GetAsStoredValueRef(Other.fValue));
 }
