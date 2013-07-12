@@ -2059,12 +2059,6 @@ void CleanupOnExit(int code)
    }
 }
 
-enum ESourceFileKind {
-   kSFKNotC,
-   kSFKHeader,
-   kSFKSource,
-   kSFKLinkdef
-};
 
 //______________________________________________________________________________
 static int GenerateModule(TModuleGenerator& modGen,
