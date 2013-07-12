@@ -59,6 +59,7 @@ class TROOT;
 R__EXTERN TVirtualMutex *gROOTMutex;
 
 namespace ROOT {
+   class TROOTAllocator;
    TROOT *GetROOT2();
 }
 
@@ -142,6 +143,9 @@ protected:
    void           InitInterpreter();      //Initialize interpreter (cling)
    void           ReadGitInfo();          //Read Git commit SHA1 and branch name
    void          *operator new(size_t l) { return TObject::operator new(l); }
+   void          *operator new(size_t l, void *ptr) { return TObject::operator new(l,ptr); }
+
+   friend class ::ROOT::TROOTAllocator;
 
 public:
                      TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);

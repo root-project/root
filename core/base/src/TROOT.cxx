@@ -125,6 +125,7 @@ namespace std {} using namespace std;
 extern "C" void R__SetZipMode(int);
 
 static DestroyInterpreter_t *gDestroyCling = 0;
+static void *gClingHandle = 0;
 
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
@@ -227,13 +228,61 @@ Int_t  TROOT::fgDirLevel = 0;
 Bool_t TROOT::fgRootInit = kFALSE;
 Bool_t TROOT::fgMemCheck = kFALSE;
 
+static void at_exit_of_TROOT() {
+   gROOT->~TROOT();
+}
+
 // This local static object initializes the ROOT system
 namespace ROOT {
+   class TROOTAllocator {
+      // Simple wrapper to separate, time-wise, the call to the
+      // TROOT destructor and the actual free-ing of the memory.
+      // 
+      // Since the interpreter implementation (currently TCling) is
+      // loaded via dlopen by libCore, the destruction of its global
+      // variable (i.e. in particular clang's) is scheduled before
+      // those in libCore so we need to schedule the call to the TROOT
+      // destructor before that *but* we want to make sure the memory
+      // stay around until libCore itself is unloaded so that code
+      // using gROOT can 'properly' check for validity.
+      //
+      // The order of loading for is:
+      //    libCore.so
+      //    libRint.so
+      //    ... anything other library hard linked to the executable ...
+      //    ... for example libEvent
+      //    libCling.so
+      //    ... other libraries like libTree for example ....
+      // and the destruction order is (of course) the reverse.
+      // By default the unloading of the dictionary, does use
+      // the service of the interpreter ... which of course
+      // fails if libCling is already unloaded by that information
+      // has not been registered per se.
+      // 
+      // To solve this problem, we now schedule the destruction
+      // of the TROOT object to happen _just_ before the 
+      // unloading/destruction of libCling so that we can 
+      // maximize the amount of clean-up we can do correctly
+      // and we can still allocate the TROOT object's memory
+      // statically.
+      //
+      char fHolder[sizeof(TROOT)];
+   public:
+      TROOTAllocator() {
+         new ( &(fHolder[0]) ) TROOT("root", "The ROOT of EVERYTHING");
+      }
+      ~TROOTAllocator() {
+         if (gROOTLocal) {
+            gROOTLocal->~TROOT();
+         }
+      }
+   };
+
    extern TROOT *gROOTLocal;
    TROOT *GetROOT1() {
       if (gROOTLocal)
          return gROOTLocal;
-      static TROOT root("root", "The ROOT of EVERYTHING");
+      static TROOTAllocator alloc;
       return gROOTLocal;
    }
    TROOT *GetROOT2() {
@@ -588,6 +637,7 @@ TROOT::~TROOT()
       // Cleanup system class
       delete gSystem;
 
+      if (gClingHandle) dlclose(gClingHandle);
 #ifdef R__COMPLETE_MEM_TERMINATION
       // On some 'newer' platform (Fedora Core 17+, Ubuntu 12), the
       // initialization order is (by default?) is 'wrong' and so we can't
@@ -1489,21 +1539,25 @@ void TROOT::InitInterpreter()
    // to make sure LLVM/Clang is fully initialized.
 
    char *libcling = gSystem->DynamicPathName("libCling");
-   void *clingHandle = dlopen(libcling, RTLD_LAZY|RTLD_GLOBAL);
+   gClingHandle = dlopen(libcling, RTLD_LAZY|RTLD_LOCAL|RTLD_NODELETE);
    delete [] libcling;
-   if (!clingHandle) {
+   if (!gClingHandle) {
       TString err = dlerror();
       fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load library %s\n", err.Data());
       exit(1);
    }
    dlerror();   // reset error message
-   CreateInterpreter_t *CreateCling = (CreateInterpreter_t*) dlsym(clingHandle, "CreateCling");
+
+   // Schedule the destruction of TROOT.
+   atexit(at_exit_of_TROOT);
+
+   CreateInterpreter_t *CreateCling = (CreateInterpreter_t*) dlsym(gClingHandle, "CreateCling");
    if (!CreateCling) {
       TString err = dlerror();
       fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load symbol %s\n", err.Data());
       exit(1);
    }
-   gDestroyCling = (DestroyInterpreter_t*) dlsym(clingHandle, "DestroyCling");
+   gDestroyCling = (DestroyInterpreter_t*) dlsym(gClingHandle, "DestroyCling");
    if (!gDestroyCling) {
       TString err = dlerror();
       fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load symbol %s\n", err.Data());
