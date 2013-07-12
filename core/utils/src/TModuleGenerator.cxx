@@ -50,8 +50,13 @@ TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
    // .pcm -> .pch
    if (IsPCH()) fModuleFileName[fModuleFileName.length() - 1] = 'h';
 
-   fUmbrellaName = fDictionaryName + "_dictUmbrella.h";
-   fContentName = fDictionaryName + "_dictContent.h";
+   fUmbrellaName = fModuleDirName + fDictionaryName + "_dictUmbrella.h";
+   fContentName = fModuleDirName + fDictionaryName + "_dictContent.h";
+}
+
+TModuleGenerator::~TModuleGenerator() {
+   unlink(fUmbrellaName.c_str());
+   unlink(fContentName.c_str());
 }
 
 //______________________________________________________________________________

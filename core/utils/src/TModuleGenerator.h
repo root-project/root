@@ -41,6 +41,7 @@ public:
 
    TModuleGenerator(clang::CompilerInstance* CI,
                     const char* shLibFileName);
+   ~TModuleGenerator();
 
    // FIXME: remove once PCH is gone.
    bool IsPCH() const { return fIsPCH; }
