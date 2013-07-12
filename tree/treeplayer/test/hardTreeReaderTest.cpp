@@ -664,7 +664,7 @@ void readLeafDoubleAArray(Bool_t printOut = true, Bool_t testValues = false, con
 		read = true;
 		if (printOut) printf("MyLeafList.a(%lu):", myDoubles.GetSize());
 
-		for (int j = 0; j < myDoubles.GetSize() && j < 10; ++j){
+		for (size_t j = 0; j < myDoubles.GetSize() && j < 10; ++j){
 			if (testValues && fabs(myDoubles.At(j) - (i * j) / 10.0f) > 0.0001f) success = false;
 			if (printOut) printf(" %f", myDoubles.At(j));
 		}
@@ -689,7 +689,7 @@ void readLeafBoolBArray(Bool_t printOut = true, Bool_t testValues = false, const
 		read = true;
 		if (printOut) printf("MyLeafList.b(%lu):", myBools.GetSize());
 
-		for (int j = 0; j < myBools.GetSize() && j < 10; ++j){
+		for (size_t j = 0; j < myBools.GetSize() && j < 10; ++j){
 			if (testValues && myBools.At(j) != j % 2) success = false;
 			if (printOut) printf(" %s", myBools.At(j) ? "true" : "false" );
 		}
