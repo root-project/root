@@ -63,10 +63,9 @@ TTreeReader::TTreeReader(const char* keyname, TDirectory* dir /*= NULL*/):
 TTreeReader::~TTreeReader()
 {
    // Tell all value readers that the tree reader does not exist anymore.
-   TIter iValue(&fValues);
-   ROOT::TTreeReaderValueBase* valueReader = 0;
-   while ((valueReader = (ROOT::TTreeReaderValueBase*)iValue())) {
-      valueReader->MarkTreeReaderUnavailable();
+   for (std::deque<ROOT::TTreeReaderValueBase*>::const_iterator
+           i = fValues.begin(), e = fValues.end(); i != e; ++i) {
+      (*i)->MarkTreeReaderUnavailable();
    }
    delete fDirector;
    fProxies.SetOwner();
@@ -110,12 +109,11 @@ TTreeReader::EEntryStatus TTreeReader::SetEntry(Long64_t entry)
    }
    if (!prevTree || fDirector->GetReadEntry() == -1) {
       // Tell readers we now have a tree
-      TIter iValue(&fValues);
-      ROOT::TTreeReaderValueBase* valueReader = 0;
-      while ((valueReader = (ROOT::TTreeReaderValueBase*)iValue())) {
-         valueReader->CreateProxy();
+      for (std::deque<ROOT::TTreeReaderValueBase*>::const_iterator
+              i = fValues.begin(), e = fValues.end(); i != e; ++i) {
+         (*i)->CreateProxy();
 
-         if (!valueReader->GetProxy()){
+         if (!(*i)->GetProxy()){
             fEntryStatus = kEntryDictionaryError;
             return fEntryStatus;
          }
@@ -148,12 +146,18 @@ void TTreeReader::SetTree(TTree* tree)
 void TTreeReader::RegisterValueReader(ROOT::TTreeReaderValueBase* reader)
 {
    // Add a value reader for this tree.
-   fValues.AddLast(reader);
+   fValues.push_back(reader);
 }
 
 //______________________________________________________________________________
 void TTreeReader::DeregisterValueReader(ROOT::TTreeReaderValueBase* reader)
 {
    // Remove a value reader for this tree.
-   fValues.Remove(reader);
+   std::deque<ROOT::TTreeReaderValueBase*>::iterator iReader
+      = std::find(fValues.begin(), fValues.end(), reader);
+   if (iReader == fValues.end()) {
+      Error("DeregisterValueReader", "Cannot find reader of type %s for branch name %s", reader->GetDerivedTypeName(), reader->fBranchName.Data());
+      return;
+   }
+   fValues.erase(iReader);
 }

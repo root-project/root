@@ -41,6 +41,7 @@
 #include "TTreeReaderUtils.h"
 #endif
 #include "TChain.h"
+#include <deque>
 
 class TDictionary;
 class TDirectory;
@@ -111,7 +112,7 @@ private:
    TDirectory* fDirectory; // directory (or current file for chains)
    EEntryStatus fEntryStatus; // status of most recent read request
    ROOT::TBranchProxyDirector* fDirector; // proxying director, owned
-   TObjArray    fValues; // TTreeReaderValueBase objects that use our director
+   std::deque<ROOT::TTreeReaderValueBase*> fValues; // readers that use our director
    THashTable   fProxies; //attached ROOT::TNamedBranchProxies; owned
 
    friend class ROOT::TTreeReaderValueBase;
