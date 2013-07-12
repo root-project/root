@@ -156,7 +156,7 @@ void TTreeReader::DeregisterValueReader(ROOT::TTreeReaderValueBase* reader)
    std::deque<ROOT::TTreeReaderValueBase*>::iterator iReader
       = std::find(fValues.begin(), fValues.end(), reader);
    if (iReader == fValues.end()) {
-      Error("DeregisterValueReader", "Cannot find reader of type %s for branch name %s", reader->GetDerivedTypeName(), reader->fBranchName.Data());
+      Error("DeregisterValueReader", "Cannot find reader of type %s for branch %s", reader->GetDerivedTypeName(), reader->fBranchName.Data());
       return;
    }
    fValues.erase(iReader);

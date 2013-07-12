@@ -153,7 +153,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
          brDataType = GetBranchDataType(br, brDictUnused);
       }
       Error("CreateProxy()", "The template argument type T of %s accessing branch %s (which contains data of type %s) is not known to ROOT. You will need to create a dictionary for it.",
-            IsA()->GetName() ? IsA()->GetName() : "?", fBranchName.Data(), brDataType);
+            GetDerivedTypeName(), fBranchName.Data(), brDataType);
       return;
    }
 

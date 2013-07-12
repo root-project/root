@@ -29,10 +29,6 @@
 #include "TTreeReaderUtils.h"
 #endif
 
-#ifdef __CINT__
-#pragma link C++ class TTreeReaderValue<Int_t>+; // For the automatic array size reader
-#endif
-
 namespace ROOT {
    class TTreeReaderArrayBase: public TTreeReaderValueBase {
    public:
@@ -54,7 +50,8 @@ namespace ROOT {
 
       TVirtualCollectionReader* fImpl; // Common interface to collections
 
-      ClassDefT(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
+      // FIXME: re-introduce once we have ClassDefInline!
+      //ClassDef(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
    };
 
 } // namespace ROOT
@@ -71,7 +68,12 @@ public:
    T& At(size_t idx) { return *(T*)UntypedAt(idx); }
    T& operator[](size_t idx) { return At(idx); }
 
-   ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
+protected:
+#define R__TTreeReaderArray_TypeString(T) #T
+   virtual const char* GetDerivedTypeName() const { return R__TTreeReaderArray_TypeString(T); }
+#undef R__TTreeReaderArray_TypeString
+   // FIXME: re-introduce once we have ClassDefTInline!
+   //ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
 };
 
 #endif // ROOT_TTreeReaderArray

@@ -40,7 +40,7 @@ class TTreeReader;
 
 namespace ROOT {
 
-   class TTreeReaderValueBase: public TObject {
+   class TTreeReaderValueBase {
    public:
 
       // Status flags, 0 is good
@@ -78,6 +78,8 @@ namespace ROOT {
       TLeaf* GetLeaf();
 
       void* GetAddress();
+
+      const char* GetBranchName() const { return fBranchName; }
       
    protected:
       TTreeReaderValueBase(TTreeReader* reader = 0, const char* branchname = 0, TDictionary* dict = 0);
@@ -88,12 +90,12 @@ namespace ROOT {
       const char* GetBranchDataType(TBranch* branch,
                                     TDictionary* &dict) const;
 
+      virtual const char* GetDerivedTypeName() const = 0;
+
       ROOT::TBranchProxy* GetProxy() const { return fProxy; }
 
       void MarkTreeReaderUnavailable() { fTreeReader = 0; }
 
-
-   protected:
       TTreeReader* fTreeReader; // tree reader we belong to
       TString      fBranchName; // name of the branch to read data from.
       TDictionary* fDict; // type that the branch should contain
@@ -104,7 +106,8 @@ namespace ROOT {
       Long64_t     fTreeLastOffset;
       TString      fLeafName;
 
-      ClassDef(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
+      // FIXME: re-introduce once we have ClassDefInline!
+      //ClassDef(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
 
       friend class ::TTreeReader;
    };
@@ -125,7 +128,14 @@ public:
    T* operator->() { return Get(); }
    T& operator*() { return *Get(); }
 
-   ClassDefT(TTreeReaderValue, 0);//Accessor to data via TTreeReader
+protected:
+   // FIXME: use IsA() instead once we have ClassDefTInline
+#define R__TTreeReaderValue_TypeString(T) #T
+   virtual const char* GetDerivedTypeName() const { return R__TTreeReaderValue_TypeString(T); }
+#undef R__TTreeReaderValue_TypeString
+
+   // FIXME: re-introduce once we have ClassDefTInline!
+   //ClassDefT(TTreeReaderValue, 0);//Accessor to data via TTreeReader
 };
 
 #endif // ROOT_TTreeReaderValue
