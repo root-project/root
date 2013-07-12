@@ -2059,6 +2059,42 @@ void CleanupOnExit(int code)
    }
 }
 
+//______________________________________________________________________________
+static bool InjectModuleUtilHeader(const char* argv0,
+                                  TModuleGenerator& modGen,
+                                  cling::Interpreter& interp,
+                                  bool umbrella)
+{
+   // Write the extra header injected into the module:
+   // umbrella header if (umbrella) else content header.
+   const std::string& hdrName
+      = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
+   {
+      std::ofstream out(hdrName.c_str());
+      if (!out) {
+         ROOT::TMetaUtils::Error(0, "%s: failed to open header output %s\n",
+                                 argv0, hdrName.c_str());
+         return false;
+      }
+      if (umbrella) {
+         // This will duplicate the -D,-U from clingArgs - but as they are surrounded
+         // by #ifndef there is no problem here.
+         modGen.WriteUmbrellaHeader(out);
+      } else {
+         modGen.WriteContentHeader(out);
+      }
+   }
+   {
+      std::string includeDirective("#include \"");
+      includeDirective += hdrName + "\"";
+      if (interp.declare(includeDirective) != cling::Interpreter::kSuccess) {
+         ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
+                                 hdrName.c_str());
+         return false;
+      }
+   }
+   return true;
+}
 
 //______________________________________________________________________________
 static int GenerateModule(TModuleGenerator& modGen,
@@ -2607,28 +2643,19 @@ int RootCling(int argc,
       sharedLibraryPathName = dictpathname;
    }
 
+   // Until the module are actually enabled in ROOT, we need to register
+   // the 'current' directory to make it relocatable (i.e. have a way
+   // to find the headers).
+   string incCurDir = "-I";
+   incCurDir += currentDirectory;
+   pcmArgs.push_back(incCurDir);
+
    TModuleGenerator modGen(interp.getCI(), sharedLibraryPathName.c_str());
    modGen.ParseArgs(pcmArgs);
-   {
-      std::ofstream umbrella(modGen.GetUmbrellaName().c_str());
-      if (!umbrella) {
-         ROOT::TMetaUtils::Error(0, "%s: failed to open umbrella header output %s\n",
-                                 argv[0], modGen.GetUmbrellaName().c_str());
-         CleanupOnExit(1);
-         return 1;
-      }
-      // This will duplicate the -D,-U from clingArgs - but as they are surrounded
-      // by #ifndef there is no problem here.
-      modGen.WriteUmbrellaHeader(umbrella);
-   }
-   {
-      std::string umbrellaIncludeDirective("#include \"");
-      umbrellaIncludeDirective += modGen.GetUmbrellaName() + "\"";
-      if (interp.declare(umbrellaIncludeDirective) != cling::Interpreter::kSuccess) {
-         ROOT::TMetaUtils::Error(0, "%s: compilation failure\n", argv[0]);
-         CleanupOnExit(1);
-         return 1;
-      }
+   if (!InjectModuleUtilHeader(argv[0], modGen, interp, true)
+       || !InjectModuleUtilHeader(argv[0], modGen, interp, false)) {
+      CleanupOnExit(1);
+      return 1;
    }
 
    if (!linkdefLoc) {
