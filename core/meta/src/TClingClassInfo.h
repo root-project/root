@@ -29,6 +29,7 @@
 
 #include <vector>
 #include <string>
+#include "llvm/ADT/DenseMap.h"
 
 namespace cling {
    class Interpreter;
@@ -57,7 +58,7 @@ private:
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
    std::string           fTitle; // The meta info for the class.
    mutable int           fNMethods; // Number of methods, assuming fNDecls is correct
-   mutable llvm::SmallVector<const clang::Decl*, 2> fLastDeclForNMethods; // Last decls in the decl contexts during last update of fNMethods
+   mutable llvm::DenseMap<const clang::DeclContext*, const clang::Decl*> fLastDeclForNMethods; // Last decls in the decl contexts during last update of fNMethods
    
    std::string           fDeclFileName; // Name of the file where the underlying entity is declared.
 

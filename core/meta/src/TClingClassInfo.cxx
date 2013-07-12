@@ -760,14 +760,23 @@ int TClingClassInfo::NMethods() const
    DC->collectAllContexts(contexts);
    bool noUpdate = fLastDeclForNMethods.size() == contexts.size();
    for (unsigned I = 0; noUpdate && I < contexts.size(); ++I) {
-      // If there are no decls in the context - even now - then continue.
-      if (contexts[I]->decls_begin()
-          == contexts[I]->decls_end())
-         continue;
-      // If there are decls now, but weren't before: update.
-      // If there is a new next decl: update.
-      noUpdate &= !fLastDeclForNMethods[I] ||
-         !fLastDeclForNMethods[I]->getNextDeclInContext();
+      if (contexts[I]->decls_begin() == contexts[I]->decls_end()) {
+         if (!fLastDeclForNMethods[contexts[I]]) {
+            // If there are still no decls in the context then continue.
+            continue;
+         }
+         // We had some, but now have none: update.
+         noUpdate = false;
+         break;
+      } else {
+         // If there are decls now, but weren't before: update.
+         llvm::DenseMap<const clang::DeclContext*, const clang::Decl*>::const_iterator posCtx = fLastDeclForNMethods.find(contexts[I]);
+         noUpdate &= posCtx != fLastDeclForNMethods.end();
+         // If there is a new next decl: update.
+         if (noUpdate) {
+            noUpdate &= !posCtx->second->getNextDeclInContext();
+         }
+      }
    }
    if (noUpdate) {
       return fNMethods;
@@ -792,7 +801,7 @@ int TClingClassInfo::NMethods() const
               iEnd = DC->decls_end(); iter != iEnd; ++iter) {
          if (*iter) lastDecl = *iter;
       }
-      fLastDeclForNMethods[I] = lastDecl;
+      fLastDeclForNMethods[DC] = lastDecl;
    }
    return fNMethods;
 }
