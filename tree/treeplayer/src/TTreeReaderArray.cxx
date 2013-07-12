@@ -267,7 +267,7 @@ namespace {
 
       virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){
          TLeaf *myLeaf = valueReader->GetLeaf();
-         return myLeaf ? myLeaf->GetLen() : 0;
+         return myLeaf ? myLeaf->GetLen() : 0; // Error will be printed by GetLeaf
       }
 
       virtual void* At(ROOT::TBranchProxy* /*proxy*/, size_t idx){
@@ -275,7 +275,7 @@ namespace {
          void *address = valueReader->GetAddress();
          if (elementSize == -1){
             TLeaf *myLeaf = valueReader->GetLeaf();
-            if (!myLeaf) return 0;
+            if (!myLeaf) return 0; // Error will be printed by GetLeaf
             elementSize = myLeaf->GetLenType();
          }
          return (Byte_t*)address + (elementSize * idx);
