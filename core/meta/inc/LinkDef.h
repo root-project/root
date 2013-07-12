@@ -27,6 +27,8 @@
 #pragma link C++ class TDataMember;
 #pragma link C++ class TDataType;
 #pragma link C++ class TDictionary;
+#pragma link C++ class TEnumConstant+;
+#pragma link C++ class TEnum+;
 #pragma link C++ class TFunction;
 #pragma link C++ class ROOT::TSchemaMatch+;
 #pragma link C++ class ROOT::TSchemaRule+;
