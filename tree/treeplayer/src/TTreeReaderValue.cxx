@@ -105,6 +105,9 @@ TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
          }
 
          fLeaf = myBranch->GetLeaf(fLeafName);
+         if (!fLeaf) {
+            Error("GetLeaf()", "Failed to get the leaf from the branch");
+         }
       }
       return fLeaf;
    }

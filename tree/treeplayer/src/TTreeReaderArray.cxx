@@ -266,13 +266,18 @@ namespace {
       TLeafReader(ROOT::TTreeReaderValueBase *valueReaderArg) : valueReader(valueReaderArg), elementSize(-1) {}
 
       virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){
-         return valueReader->GetLeaf()->GetLen();
+         TLeaf *myLeaf = valueReader->GetLeaf();
+         return myLeaf ? myLeaf->GetLen() : 0;
       }
 
       virtual void* At(ROOT::TBranchProxy* /*proxy*/, size_t idx){
          ProxyRead();
          void *address = valueReader->GetAddress();
-         if (elementSize == -1) elementSize = valueReader->GetLeaf()->GetLenType();
+         if (elementSize == -1){
+            TLeaf *myLeaf = valueReader->GetLeaf();
+            if (!myLeaf) return 0;
+            elementSize = myLeaf->GetLenType();
+         }
          return (Byte_t*)address + (elementSize * idx);
       }
 
