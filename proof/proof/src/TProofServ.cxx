@@ -2164,8 +2164,8 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                fclose(tf);
 
                // Read file back and send it via message
-               smsg.Append(Form("*** Echo response from %s:%s ***\n",
-                  gSystem->HostName(), GetOrdinal()));
+               smsg.Form("*** Echo response from %s:%s ***\n",
+                  gSystem->HostName(), GetOrdinal());
                TMacro *fr = new TMacro();
                fr->ReadFile(tmpfn);
                TIter nextLine(fr->GetListOfLines());
@@ -3289,8 +3289,10 @@ Int_t TProofServ::SetupCommon()
          TPMERegexp reReqDir("(^| )(dir:)?([^ ]+)( |$)");
 
          if (reReqDir.Match(dsReqCfg) == 5) {
+            TString dsDirFmt;
+            dsDirFmt.Form("dir:%s perms:open", reReqDir[3].Data());
             fDataSetStgRepo = new TDataSetManagerFile("_stage_", "_stage_",
-              Form("dir:%s perms:open", reReqDir[3].Data()));
+               dsDirFmt);
             if (fDataSetStgRepo &&
                fDataSetStgRepo->TestBit(TObject::kInvalidObject)) {
                Warning("SetupCommon",

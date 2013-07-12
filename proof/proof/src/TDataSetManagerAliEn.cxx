@@ -121,9 +121,10 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
       TPMERegexp *reArchSubst = NULL;
       TString substWith;
       if (fArchSubst) {
-         TString temp = Form("/%s$", fFileName.Data());
+         TString temp;
+         temp.Form("/%s$", fFileName.Data());
          reArchSubst = new TPMERegexp(temp.Data());
-         substWith = Form("/root_archive.zip#%s", fFileName.Data());
+         substWith.Form("/root_archive.zip#%s", fFileName.Data());
       }
 
       TIter it(fGridResult);
@@ -312,8 +313,9 @@ void TDataSetManagerAliEn::Init(TString cacheDir, TString urlTpl,
   fUrlTpl = urlTpl;
   fUrlTpl.ReplaceAll("<path>", "$1");
 
-  fCache = new TDataSetManagerFile("_cache_", "_cache_",
-    Form("dir:%s perms:open", cacheDir.Data()));
+  TString dsDirFmt;
+  dsDirFmt.Form("dir:%s perms:open", cacheDir.Data());
+  fCache = new TDataSetManagerFile("_cache_", "_cache_", dsDirFmt);
 
   if (fCache->TestBit(TObject::kInvalidObject)) {
     Error("Init", "Cannot initialize cache on directory %s", cacheDir.Data());
@@ -470,15 +472,15 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
           }
         }
 
-        basePath = Form("/alice/sim/%s", lhcPeriod.Data());  // no year
+        basePath.Form("/alice/sim/%s", lhcPeriod.Data());  // no year
         if (!gGrid->Cd(basePath.Data())) {
-          basePath = Form("/alice/sim/%d/%s", year, lhcPeriod.Data());
+          basePath.Form("/alice/sim/%d/%s", year, lhcPeriod.Data());
         }
         temp.Form("/%06d", runList->at(i));
         basePath.Append(temp);
 
         if (!esd) {
-          temp = Form("/AOD%03d", aodNum);
+          temp.Form("/AOD%03d", aodNum);
           basePath.Append(temp);
         }
       }
@@ -492,13 +494,13 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
         if ((pass[0] >= '0') && (pass[0] <= '9')) pass.Prepend("pass");
 
         // Data
-        basePath = Form("/alice/data/%d/%s/%09d/ESDs/%s", year,
+        basePath.Form("/alice/data/%d/%s/%09d/ESDs/%s", year,
           lhcPeriod.Data(), runList->at(i), pass.Data());
         if (esd) {
           basePath.Append("/*.*");
         }
         else {
-          temp = Form("/AOD%03d", aodNum);
+          temp.Form("/AOD%03d", aodNum);
           basePath.Append(temp);
         }
       }
