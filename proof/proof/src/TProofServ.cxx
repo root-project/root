@@ -3286,11 +3286,11 @@ Int_t TProofServ::SetupCommon()
       // Dataset manager for staging requests
       TString dsReqCfg = gEnv->GetValue("Proof.DataSetStagingRequests", "");
       if (!dsReqCfg.IsNull()) {
-         TPMERegexp reReqDir("(^| )dir:([^ ]+)( |$)");
+         TPMERegexp reReqDir("(^| )(dir:)?([^ ]+)( |$)");
 
-         if (reReqDir.Match(dsReqCfg) == 4) {
+         if (reReqDir.Match(dsReqCfg) == 5) {
             fDataSetStgRepo = new TDataSetManagerFile("_stage_", "_stage_",
-              Form("dir:%s perms:open", reReqDir[2].Data()));
+              Form("dir:%s perms:open", reReqDir[3].Data()));
             if (fDataSetStgRepo &&
                fDataSetStgRepo->TestBit(TObject::kInvalidObject)) {
                Warning("SetupCommon",
@@ -3299,7 +3299,7 @@ Int_t TProofServ::SetupCommon()
             }
          } else {
             Warning("SetupCommon",
-              "specify, with dir:<path>, a valid path for staging requests");
+              "specify, with [dir:]<path>, a valid path for staging requests");
          }
       } else if (gProofDebugLevel > 0) {
          Warning("SetupCommon", "no repository for staging requests available");
