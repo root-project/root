@@ -87,7 +87,24 @@ TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
 
       if (newChainOffset != fTreeLastOffset){
          fTreeLastOffset = newChainOffset;
-         fLeaf = fTreeReader->GetTree()->GetBranch(fBranchName)->GetLeaf(fLeafName);
+
+         TTree *myTree = fTreeReader->GetTree();
+
+         if (!myTree) {
+            fReadStatus = kReadError;
+            Error("GetLeaf()", "Unable to get the tree from the TTreeReader");
+            return 0;
+         }
+
+         TBranch *myBranch = myTree->GetBranch(fBranchName);
+
+         if (!myBranch) {
+            fReadStatus = kReadError;
+            Error("GetLeaf()", "Unable to get the branch from the tree");
+            return 0;
+         }
+
+         fLeaf = myBranch->GetLeaf(fLeafName);
       }
       return fLeaf;
    }
@@ -102,13 +119,14 @@ void* ROOT::TTreeReaderValueBase::GetAddress() {
    if (ProxyRead() != kReadSuccess) return 0;
 
    if (fLeafName.Length() > 0){
-      Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
-
-      if (newChainOffset != fTreeLastOffset){
-         fTreeLastOffset = newChainOffset;
-         fLeaf = fTreeReader->GetTree()->GetBranch(fBranchName)->GetLeaf(fLeafName);
+      if (GetLeaf()){
+         return fLeaf->GetValuePointer();
       }
-      return fLeaf->GetValuePointer();
+      else {
+         fReadStatus = kReadError;
+         Error("GetAddress()", "Unable to get the leaf");
+         return 0;
+      }
    }
    return fProxy ? (Byte_t*)fProxy->GetWhere() : 0;
 }
