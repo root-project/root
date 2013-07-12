@@ -23,6 +23,7 @@
 #include "TRegexp.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
+#include "TNtuple.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -288,6 +289,10 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
    } else if (branch->IsA() == TBranch::Class()
               || branch->IsA() == TBranchObject::Class()
               || branch->IsA() == TBranchSTL::Class()) {
+      if (branch->GetTree()->IsA() == TNtuple::Class()){
+         dict = TDictionary::GetDictionary(((TDataType*)TDictionary::GetDictionary("Float_t"))->GetTypeName());
+         return dict->GetName();
+      }
       const char* dataTypeName = branch->GetClassName();
       if ((!dataTypeName || !dataTypeName[0])
           && branch->IsA() == TBranch::Class()) {
