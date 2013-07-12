@@ -10,8 +10,8 @@
 void TreeReaderSimple() {
 	TH1F *myHistogram = new TH1F ("h1","ntuple",100,-4,4);
 
-	TFile::Open("hsimple.root");
-	TTreeReader myHSimpleReader ("ntuple");
+	TFile *myFile = TFile::Open("hsimple.root");
+	TTreeReader myHSimpleReader ("ntuple", myFile);
 
 	TTreeReaderValue<Float_t> myPx (myHSimpleReader, "px");
 	TTreeReaderValue<Float_t> myPy (myHSimpleReader, "py");
