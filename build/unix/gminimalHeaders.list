@@ -334,6 +334,8 @@ include/TEntryList.h
 include/TEntryListArray.h
 include/TEntryListBlock.h
 include/TEntryListFromFile.h
+include/TEnum.h
+include/TEnumConstant.h
 include/TEnv.h
 include/TError.h
 include/TEventIter.h
