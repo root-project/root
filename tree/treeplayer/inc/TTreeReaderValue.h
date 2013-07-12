@@ -2,7 +2,7 @@
 // Author: Axel Naumann, 2010-08-02
 
 /*************************************************************************
- * Copyright (C) 1995-2010, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -31,11 +31,10 @@
 #ifndef ROOT_TBranchProxy
 #include "TBranchProxy.h"
 #endif
-#include "TLeaf.h"
 
 class TBranch;
 class TBranchElement;
-//class TLeaf;
+class TLeaf;
 class TTreeReader;
 
 namespace ROOT {

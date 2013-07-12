@@ -2,7 +2,7 @@
 // Author: Axel Naumann, 2010-08-02
 
 /*************************************************************************
- * Copyright (C) 1995-2010, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -22,15 +22,6 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBranchProxyDirector
-#include "TBranchProxyDirector.h"
-#endif
-#ifndef ROOT_TBranchProxy
-#include "TBranchProxy.h"
-#endif
-#ifndef ROOT_TObjArray
-#include "TObjArray.h"
-#endif
 #ifndef ROOT_THashTable
 #include "THashTable.h"
 #endif
@@ -40,12 +31,16 @@
 #ifndef ROOT_TTreeReaderUtils
 #include "TTreeReaderUtils.h"
 #endif
-#include "TChain.h"
+
 #include <deque>
 
 class TDictionary;
 class TDirectory;
 class TFileCollection;
+
+namespace ROOT {
+   class TBranchProxyDirector;
+}
 
 class TTreeReader: public TObject {
 public:
@@ -84,14 +79,7 @@ public:
 
    TTree* GetTree() const { return fTree; }
    Long64_t GetEntries(Bool_t force) const { return fTree ? (force ? fTree->GetEntries() : fTree->GetEntriesFast() ) : -1; }
-   Long64_t GetCurrentEntry() const {
-      if (!fDirector) return 0;
-      Long64_t currentTreeEntry = fDirector->GetReadEntry();
-      if (fTree->IsA() == TChain::Class() && currentTreeEntry >= 0) {
-         return ((TChain*)fTree)->GetChainEntryNumber(currentTreeEntry);
-      }
-      return currentTreeEntry;
-   }
+   Long64_t GetCurrentEntry() const;
 
 protected:
    void Initialize();
