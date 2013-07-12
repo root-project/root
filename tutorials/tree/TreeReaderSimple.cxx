@@ -2,7 +2,6 @@
 #include "TH1F.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
-#include "TTreeReaderArray.h"
 
 #ifdef __CINT__
 #pragma link C++ class TTreeReaderValue<Float_t>+;
