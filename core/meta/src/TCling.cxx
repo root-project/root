@@ -55,6 +55,7 @@
 #include "TVirtualMutex.h"
 #include "TError.h"
 #include "TEnv.h"
+#include "TEnum.h"
 #include "THashTable.h"
 #include "RConfigure.h"
 #include "compiledata.h"
@@ -222,8 +223,39 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
 
    const clang::Decl* D = static_cast<const clang::Decl*>(DV);
    if (!D->isCanonicalDecl()) return;
-   if (isa<clang::FunctionDecl>(D->getDeclContext())
-       || isa<clang::TagDecl>(D->getDeclContext()))
+   if (isa<clang::FunctionDecl>(D->getDeclContext())) return;
+
+   // We handle nested enums here, globals are handled later.
+   if (!isa<clang::TranslationUnitDecl>(D->getDeclContext())) {
+      if (const clang::EnumDecl* ED = dyn_cast<clang::EnumDecl>(D)) {
+
+         // Get name of the enum type.
+         // Note: This *must* be static because we are returning a pointer inside it!
+         static std::string buf;
+         buf.clear();
+         PrintingPolicy Policy(D->getASTContext().getPrintingPolicy());
+         llvm::raw_string_ostream stream(buf);
+         ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+         const char* name = buf.c_str();
+
+         // Create the enum type.
+         TEnum* enumType = new TEnum(name, false /*!global*/, &D);
+         gROOT->GetListOfEnums()->Add(enumType);
+
+         // Add the constants to the enum type.
+         for (EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
+                EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
+
+            // Get title of the constant.
+            DataMemberInfo_t *info = new TClingDataMemberInfo(fInterpreter, *EDI);
+            Long64_t value = (Long64_t)DataMemberInfo_Title(info);
+            // Create the constant.
+            new TEnumConstant(info, value, enumType);
+         }
+      }
+   }
+
+   if (isa<clang::TagDecl>(D->getDeclContext()))
       return;
 
    // Don't list templates.
@@ -320,18 +352,39 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       if (gROOT->GetListOfGlobals()->FindObject(ND->getNameAsString().c_str()))
          return;
 
+      //Put the global constants in the list.
       if (const EnumDecl *ED = dyn_cast<EnumDecl>(D)) {
 
-         for(EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
-                EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
-            if (!gROOT->GetListOfGlobals()->FindObject((*EDI)->getNameAsString().c_str())) {
-               gROOT->GetListOfGlobals()->Add(new TGlobal(new TClingDataMemberInfo(fInterpreter, *EDI)));
+         if (!gROOT->GetListOfEnums()->FindObject(ND->getNameAsString().c_str())) {
+
+            // Get name of the enum type.
+            // Note: This *must* be static because we are returning a pointer inside it!
+            static std::string buf;
+            buf.clear();
+            PrintingPolicy Policy(D->getASTContext().getPrintingPolicy());
+            llvm::raw_string_ostream stream(buf);
+            ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+            const char* name = buf.c_str();
+
+            // Create the enum type.
+            TEnum* enumType = new TEnum(name, true /*global!*/, &D);
+            gROOT->GetListOfEnums()->Add(enumType);
+
+            // Add the constants to the enum type.
+            for(EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
+                   EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
+
+               // Get title of the constant.
+               DataMemberInfo_t *info = new TClingDataMemberInfo(fInterpreter, *EDI);
+               Long64_t value = (Long64_t)DataMemberInfo_Title(info);
+               // Create the constant and add it to the list of globals.
+               gROOT->GetListOfGlobals()->Add(new TEnumConstant(info, value, enumType));
             }
          }
-      }
-      else
+      } else
          gROOT->GetListOfGlobals()->Add(new TGlobal(new TClingDataMemberInfo(fInterpreter,
                                                               cast<ValueDecl>(ND))));
+
    }
 }
 
