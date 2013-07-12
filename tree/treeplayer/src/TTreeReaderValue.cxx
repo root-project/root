@@ -45,16 +45,16 @@ ClassImp(TTreeReaderValueBase)
 
 //______________________________________________________________________________
 ROOT::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
-                                                       const char* branchname /*= 0*/,
-                                                       TDictionary* dict /*= 0*/):
-   fTreeReader(reader),
+                                                 const char* branchname /*= 0*/,
+                                                 TDictionary* dict /*= 0*/):
    fBranchName(branchname),
+   fTreeReader(reader),
    fDict(dict),
-   fProxy(0),
-   fSetupStatus(kSetupNotSetup),
-   fReadStatus(kReadNothingYet),
+   fProxy(NULL),
    fLeaf(NULL),
-   fTreeLastOffset(-1)
+   fTreeLastOffset(-1),
+   fSetupStatus(kSetupNotSetup),
+   fReadStatus(kReadNothingYet)
 {
    // Construct a tree value reader and register it with the reader object.
    if (fTreeReader) fTreeReader->RegisterValueReader(this);

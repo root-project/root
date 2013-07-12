@@ -96,15 +96,15 @@ namespace ROOT {
 
       void MarkTreeReaderUnavailable() { fTreeReader = 0; }
 
-      TTreeReader* fTreeReader; // tree reader we belong to
       TString      fBranchName; // name of the branch to read data from.
+      TString      fLeafName;
+      TTreeReader* fTreeReader; // tree reader we belong to
       TDictionary* fDict; // type that the branch should contain
       ROOT::TBranchProxy* fProxy; // proxy for this branch, owned by TTreeReader
-      ESetupStatus fSetupStatus; // setup status of this data access
-      EReadStatus  fReadStatus; // read status of this data access
       TLeaf*       fLeaf;
       Long64_t     fTreeLastOffset;
-      TString      fLeafName;
+      ESetupStatus fSetupStatus; // setup status of this data access
+      EReadStatus  fReadStatus; // read status of this data access
 
       // FIXME: re-introduce once we have ClassDefInline!
       //ClassDef(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
