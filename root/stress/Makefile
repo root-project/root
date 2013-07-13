@@ -209,6 +209,9 @@ stress-itest.log: CALLROOTEXE += -e 'gSystem->Load("test/libEvent")'
 stressGraphics-itest.log: CALLROOTEXE += -e 'gSystem->Load("libGpad"); gSystem->Load("libTreeViewer");'
 stressGUI-itest.log: CALLROOTEXE += -e 'gSystem->Load("libGpad"); gSystem->Load("libGui");'
 endif
+ifneq ($(ClingWorkAroundAutoLoadingNotConnectingSymbols),)
+stressSpectrum-itest.log: CALLROOTEXE += -e 'gSystem->Load("libSpectrum");'
+endif
 stress-ctest.log: STRESSFLAGS:=-b 30
 stress-itest.log: STRESSFLAGS:="(30)"
 stressTMVA-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Automatic variable Endl is allocated'

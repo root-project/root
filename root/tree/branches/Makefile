@@ -132,3 +132,6 @@ ifneq ($(ClingWorkAroundMissingAutoLoading),)
 updates.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
 endif
 
+ifneq ($(ClingWorkAroundAutoLoadingNotConnectingSymbols),)
+execWriteRead.log: CALLROOTEXE += -e 'gSystem->Load("libEG");'
+endif

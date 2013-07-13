@@ -67,6 +67,9 @@ MakeIndex: MakeIndex_filtered.log
 ifeq ($(ClingWorkAroundLackOfModule)$(PLATFORM),yesmacosx)
 MakeIndex.log:  CALLROOTEXE += -e '\#define _MALLOC_MALLOC_H_ 0'
 endif
+ifneq ($(ClingWorkAroundAutoLoadingNotConnectingSymbols)$(PLATFORM),macosx)
+MakeIndex.log:  CALLROOTEXE += -e 'gSystem->Load("libHtml");'
+endif
 ifneq ($(ClingWorkAroundMissingAutoLoading),)
 MakeIndex.log:  CALLROOTEXE += -e 'gSystem->Load("libHtml");'
 endif

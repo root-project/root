@@ -65,7 +65,7 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-ifneq ($(ClingWorkAroundMissingAutoLoading),)
+ifneq ($(ClingWorkAroundMissingAutoLoading)$(ClingWorkAroundAutoLoadingNotConnectingSymbols),)
 CALLROOTEXE += -e 'gSystem->Load("libGeom");'
 endif
 
