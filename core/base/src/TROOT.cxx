@@ -1539,7 +1539,7 @@ void TROOT::InitInterpreter()
    // to make sure LLVM/Clang is fully initialized.
 
    char *libcling = gSystem->DynamicPathName("libCling");
-   gInterpreterLib = dlopen(libcling, RTLD_NOW|RTLD_LOCAL);
+   gInterpreterLib = dlopen(libcling, RTLD_NOW|RTLD_GLOBAL);
    delete [] libcling;
    if (!gInterpreterLib) {
       TString err = dlerror();
