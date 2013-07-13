@@ -2156,7 +2156,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                // Output to tempfile
                TString tmpfn = "echo-out-";
                FILE *tf = gSystem->TempFileName(tmpfn, fDataDir);
-               if (gSystem->RedirectOutput(tmpfn.Data()) == -1) {
+               if (!tf || gSystem->RedirectOutput(tmpfn.Data()) == -1) {
                   Error("HandleSocketInput", "Can't redirect output");
                   rc = -1;
                   fclose(tf);
