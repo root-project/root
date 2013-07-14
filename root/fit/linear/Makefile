@@ -59,7 +59,7 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-ifneq ($(ClingWorkAroundMissingAutoLoading)$(ClingWorkAroundAutoLoadingNotConnectingSymbols),)
+ifneq ($(ClingWorkAroundMissingAutoLoading),)
 storing.log: CALLROOTEXE += -e 'gSystem->Load("libMinuit");'
 endif
 

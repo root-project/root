@@ -18,7 +18,6 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForNamespaces"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForTemplates"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
-CALLROOTEXE += -e "\#define ClingWorkAroundAutoLoadingNotConnectingSymbols"
 CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndVirtual"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
@@ -72,7 +71,6 @@ ClingWorkAroundMissingAutoLoadingForTemplates = yes  # See: https://sft.its.cern
 #ClingWorkAroundMissingAutoLoading = yes        # See *also* the problem namespace and templates:
                                                #     https://sft.its.cern.ch/jira/browse/ROOT-4786
                                                #     https://sft.its.cern.ch/jira/browse/ROOT-4779
-ClingWorkAroundAutoLoadingNotConnectingSymbols = yes # See https://sft.its.cern.ch/jira/browse/ROOT-5359
 ClingWorkAroundJITfullSymbolResolution = yes   # See https://savannah.cern.ch/bugs/index.php?98898
 ClingWorkAroundMissingSmartInclude = yes
 ClingWorkAroundBrokenUnnamedReturn = yes       # See https://savannah.cern.ch/bugs/index.php?99032

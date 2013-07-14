@@ -200,6 +200,3 @@ assert_tread.eclog: tcls.root
 ifneq ($(ClingWorkAroundMissingAutoLoading),)
 execReuseTree.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
 endif
-ifneq ($(ClingWorkAroundAutoLoadingNotConnectingSymbols),)
-execReuseTree.log: CALLROOTEXE += -e 'gSystem->Load("libEG");'
-endif

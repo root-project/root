@@ -63,10 +63,6 @@ ifneq ($(ClingWorkAroundJITandInline),)
 CALLROOTEXE := $(subst root.exe,root.exe -e '\#include <deque>',$(CALLROOTEXE))
 endif
 
-ifneq ($(ClingWorkAroundAutoLoadingNotConnectingSymbols),)
-CALLROOTEXE += -e 'gSystem->Load("libXMLIO");'
-endif
-
 basicxml.log: test_classes_h.$(DllSuf)
 
 filexml.log:  test_classes_h.$(DllSuf)
