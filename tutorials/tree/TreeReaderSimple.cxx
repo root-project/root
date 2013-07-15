@@ -4,13 +4,13 @@
 #include "TTreeReaderValue.h"
 
 void TreeReaderSimple() {
-	TH1F *myHistogram = new TH1F ("h1","ntuple",100,-4,4);
+	TH1F *myHistogram = new TH1F("h1","ntuple",100,-4,4);
 
 	TFile *myFile = TFile::Open("hsimple.root");
-	TTreeReader myHSimpleReader ("ntuple", myFile);
+	TTreeReader myHSimpleReader("ntuple", myFile);
 
-	TTreeReaderValue<Float_t> myPx (myHSimpleReader, "px");
-	TTreeReaderValue<Float_t> myPy (myHSimpleReader, "py");
+	TTreeReaderValue<Float_t> myPx(myHSimpleReader, "px");
+	TTreeReaderValue<Float_t> myPy(myHSimpleReader, "py");
 
 	while (myHSimpleReader.SetNextEntry()){
 		myHistogram->Fill(*myPx + *myPy);
