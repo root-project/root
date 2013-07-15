@@ -43,9 +43,9 @@ TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
    : InterpreterCallbacks(interp),
      fLastLookupCtx(0), fROOTSpecialNamespace(0), fFirstRun(true), 
      fIsAutoloading(false), fIsAutoloadingRecursively(false) {
-   const Decl* D = 0;
-   m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &D);
-   fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(const_cast<Decl*>(D));
+   Transaction* T = 0;
+   m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &T);
+   fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl());
 }
 
 //pin the vtable here
