@@ -120,7 +120,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntry(Long64_t entry)
    if (!prevTree || fDirector->GetReadEntry() == -1) {
       // Tell readers we now have a tree
       for (std::deque<ROOT::TTreeReaderValueBase*>::const_iterator
-              i = fValues.begin(), e = fValues.end(); i != e; ++i) {
+              i = fValues.begin(); i != fValues.end(); ++i) { // Iterator end changes when parameterized arrays are read
          (*i)->CreateProxy();
 
          if (!(*i)->GetProxy()){
