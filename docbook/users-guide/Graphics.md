@@ -2708,8 +2708,7 @@ can be:
 
 -   "`Portrait`" a Postscript file is produced with Portrait orientation
 
--   "`Landscape`" a Postscript file is produced with Landscape
-    orientation
+-   "`Landscape`" a Postscript file is produced with Landscape orientation
 
 -   "`eps`"an Encapsulated Postscript file
 
@@ -2791,7 +2790,7 @@ The following characters have a special action on the PostScript file:
 
 -   `&` - backspace one character
 
--   `#` - end of Greek or of `ZapfDingbats`
+-   `#` - end of Greek or end of ZapfDingbats
 
 These special characters are printed as such on the screen. To generate
 one of these characters on the PostScript file, you must escape it with
@@ -2853,13 +2852,16 @@ when **`TCanvas::Clear` is called by `object->Draw()`.**
 {  
    TFile f("hsimple.root");
    TCanvas c1("c1","canvas",800,600);
+   
    //select PostScript  output type
    Int_t type = 111;         //portrait  ps
    // Int_t type = 112;      //landscape ps
    // Int_t type = 113;      //eps
-//create a PostScript  file and set the paper size
+
+   //create a PostScript  file and set the paper size
    TPostScript ps("test.ps",type);
    ps.Range(16,24);          //set x,y of printed page
+
    //draw 3 histograms from file hsimple.root on separate pages
    hpx->Draw();
    c1.Update();              //force drawing in a script
@@ -2875,8 +2877,9 @@ The next example does the same:
 
 ``` {.cpp}
 {
-TFile f("hsimple.root");
-TCanvas c1("c1","canvas",800,600);
+   TFile f("hsimple.root");
+   TCanvas c1("c1","canvas",800,600);
+
    //set x,y of printed page
    gStyle->SetPaperSize(16,24);
 
@@ -2898,27 +2901,30 @@ called at the end of the first picture.
 
 ``` {.cpp}
 {
-TFile *f1 = new TFile("hsimple.root");
-TCanvas *c1 = new TCanvas("c1");
-TPostScript *ps = new TPostScript("file.ps",112);
+   TFile *f1 = new TFile("hsimple.root");
+   TCanvas *c1 = new TCanvas("c1");
+   TPostScript *ps = new TPostScript("file.ps",112);
+
    // picture 1
-c1->Divide(2,1);
-ps->NewPage();
-c1->cd(1);
-hpx->Draw();
-c1->cd(2);
-hprof->Draw();
+   c1->Divide(2,1);
+   ps->NewPage();
+   c1->cd(1);
+   hpx->Draw();
+   c1->cd(2);
+   hprof->Draw();
+
    // picture 2
-c1->Update();
-ps->NewPage();
-c1->cd(1);
-hpxpy->Draw();
-c1->cd(2);
-ntuple->Draw("px");
-c1->Update();
-ps->Close();
+   c1->Update();
+   ps->NewPage();
+   c1->cd(1);
+   hpxpy->Draw();
+   c1->cd(2);
+   ntuple->Draw("px");
+   c1->Update();
+   ps->Close();
+
    // invoke PostScript  viewer 
-gSystem->Exec("gs file.ps");
+   gSystem->Exec("gs file.ps");
 }
 ```
 
@@ -2926,24 +2932,90 @@ The next one does the same:
 
 ``` {.cpp}
 {
-TFile *f1 = new TFile("hsimple.root");
-TCanvas *c1 = new TCanvas("c1");
-c1->Divide(2,1);
+   TFile *f1 = new TFile("hsimple.root");
+   TCanvas *c1 = new TCanvas("c1");
+   c1->Divide(2,1);
+
    // picture 1
-c1->cd(1);
-hpx->Draw();
-c1->cd(2);
-hprof->Draw();
-c1->Print("test2.ps(", "Landscape");
+   c1->cd(1);
+   hpx->Draw();
+   c1->cd(2);
+   hprof->Draw();
+   c1->Print("test2.ps(", "Landscape");
+
    // picture 2
-c1->cd(1);
-hpxpy->Draw();
-c1->cd(2);
-ntuple->Draw("px");
-c1->Print("test2.ps)");
-gSystem->Exec("gs file.ps");  // invoke PostScript  viewer
+   c1->cd(1);
+   hpxpy->Draw();
+   c1->cd(2);
+   ntuple->Draw("px");
+   c1->Print("test2.ps)");
+   gSystem->Exec("gs file.ps");  // invoke PostScript  viewer
 }
 ```
+### The Color Models
+
+`TPostScript` (and `TPDF`) support two color models: RGB and CMYK. 
+CMY and CMYK models are subtractive color models unlike RGB which is an 
+additive. They are mainly used for printing purposes. CMY means Cyan 
+Magenta Yellow to convert RGB to CMY it is enough to do: 
+`C=1-R`, `M=1-G` and `Y=1-B`. CMYK has one more component K
+(black). The conversion from RGB to CMYK is:
+
+``` {.cpp}
+ Double_t Black   = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
+ Double_t Cyan    = (1-Red-Black)/(1-Black);
+ Double_t Magenta = (1-Green-Black)/(1-Black);
+ Double_t Yellow  = (1-Blue-Black)/(1-Black);
+```
+ 
+``CMYK`` add the black component which allows to have a better quality
+for black printing. `TPostScript` (and `TPDF`) support the ``CMYK`` model. 
+To change the color model use:
+
+``` {.cpp}
+ gStyle->SetColorModelPS(c);
+```
+
+-   `c = 0` means TPostScript will use RGB color model (default)
+-   `c = 1` means TPostScript will use CMYK color model
+
+## The PDF Interface
+
+Like PostScript, PDF is a vector graphics output format allowing a very 
+high graphics output quality. The functionnalities provided by this class
+are very similar to those provided by TPostScript`.
+
+Compare to PostScript output, the PDF files are usually smaller because
+some parts of them can be compressed.
+
+PDF also allows to define table of contents. This facility can be used
+in ROOT. The following example shows how to proceed:
+
+``` {.cpp}
+{
+   TCanvas* canvas = new TCanvas("canvas");
+   TH1F* histo = new TH1F("histo","test 1",10,0.,10.);
+   histo->SetFillColor(2);
+   histo->Fill(2.);
+   histo->Draw();
+   canvas->Print("plots.pdf(","Title:One bin filled");
+   histo->Fill(4.);
+   histo->Draw();
+   canvas->Print("plots.pdf","Title:Two bins filled");
+   histo->Fill(6.);
+   histo->Draw();
+   canvas->Print("plots.pdf","Title:Three bins filled");
+   histo->Fill(8.);
+   histo->Draw();
+   canvas->Print("plots.pdf","Title:Four bins filled");
+   histo->Fill(8.);
+   histo->Draw();
+   canvas->Print("plots.pdf)","Title:The fourth bin content is 2");
+}
+```
+
+Each character string following the keyword "Title:" makes a new entry
+in the table of contents.
 
 ## Create or Modify a Style
 
