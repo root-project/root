@@ -60,10 +60,7 @@ namespace {
 
    // Reader interface for STL
    class TSTLReader: public ROOT::TVirtualCollectionReader {
-   private:
-      Bool_t proxySet;
    public:
-      TSTLReader() : proxySet(false) {}
       ~TSTLReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
          if (!proxy->Read()){
@@ -85,10 +82,10 @@ namespace {
 
       Bool_t CheckProxy(ROOT::TBranchProxy *proxy) {
          if (!proxy->Read()) return false;
-         if (proxy->IsaPointer() && (!proxySet || !((TGenCollectionProxy*)proxy->GetCollection())->GetEnv()->fObject)) {
+         if (proxy->IsaPointer()) {
             if (proxy->GetWhere() && *(void**)proxy->GetWhere()){
+               ((TGenCollectionProxy*)proxy->GetCollection())->PopProxy();
                ((TGenCollectionProxy*)proxy->GetCollection())->PushProxy(*(void**)proxy->GetWhere());
-               proxySet = true;
             }
             else return false;
          }
