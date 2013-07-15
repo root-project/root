@@ -3,10 +3,6 @@
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 
-#ifdef __CINT__
-#pragma link C++ class TTreeReaderValue<Float_t>+;
-#endif
-
 void TreeReaderSimple() {
 	TH1F *myHistogram = new TH1F ("h1","ntuple",100,-4,4);
 
