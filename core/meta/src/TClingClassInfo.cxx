@@ -66,8 +66,7 @@ static std::string FullyQualifiedName(const Decl *decl) {
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
-     fNMethods(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
@@ -92,7 +91,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
-     fTitle(""), fNMethods(0)
+     fTitle("")
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const Type *type = 0;
@@ -114,7 +113,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const Type &tag)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), 
-     fTitle(""), fNMethods(0)
+     fTitle("")
 {
    Init(tag);
 }
@@ -749,38 +748,6 @@ void *TClingClassInfo::New(void *arena) const
    // The ref-counted pointer will get destructed by StoredValueRef,
    // but not the allocation! I.e. the following is fine:
    return llvm::GVTOP(val.get().getGV());
-}
-
-int TClingClassInfo::NMethods() const
-{
-   // Return the number of methods
-   DeclContext *DC = const_cast<DeclContext*>(
-      llvm::cast<DeclContext>(fDecl));
-   llvm::SmallVector<DeclContext *, 2> contexts;
-   DC->collectAllContexts(contexts);
-   // We have a new decl, so update the method count.
-   fNMethods = 0;
-   TClingMethodInfo t(fInterp, const_cast<TClingClassInfo*>(this));
-   // This while loop must be identical to TCling::CreateListOfMethods()
-   // (except for the ++fNMethods part, obviously)
-   while (t.Next()) {
-      // if name cannot be obtained no use to put in list
-      if (t.IsValid() && t.Name()) {
-         ++fNMethods;
-      }
-   }
-   // Determine last decl per context as update tag:
-   fLastDeclForNMethods.resize(contexts.size());
-   for (unsigned I = 0; I < contexts.size(); ++I) {
-      DC = contexts[I];
-      Decl* lastDecl = 0;
-      for (DeclContext::decl_iterator iter = DC->decls_begin(),
-              iEnd = DC->decls_end(); iter != iEnd; ++iter) {
-         if (*iter) lastDecl = *iter;
-      }
-      fLastDeclForNMethods[DC] = lastDecl;
-   }
-   return fNMethods;
 }
 
 long TClingClassInfo::Property() const

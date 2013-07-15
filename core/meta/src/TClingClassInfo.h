@@ -57,9 +57,6 @@ private:
    const clang::Type    *fType; // Type representing the decl (conserves typedefs like Double32_t). (we do *not* own)
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
    std::string           fTitle; // The meta info for the class.
-   mutable int           fNMethods; // Number of methods, assuming fNDecls is correct
-   mutable llvm::DenseMap<const clang::DeclContext*, const clang::Decl*> fLastDeclForNMethods; // Last decls in the decl contexts during last update of fNMethods
-   
    std::string           fDeclFileName; // Name of the file where the underlying entity is declared.
 
    explicit TClingClassInfo() /* = delete */; // NOT IMPLEMENTED
@@ -113,7 +110,6 @@ public:
    void                *New(int n) const;
    void                *New(int n, void *arena) const;
    void                *New(void *arena) const;
-   int                  NMethods() const;
    long                 Property() const;
    int                  RootFlag() const;
    int                  Size() const;
