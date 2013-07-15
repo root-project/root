@@ -16,13 +16,20 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "TModuleGenerator.h"
+
 #include "TMetaUtils.h"
+#include "RConfigure.h"
+#include "RConfig.h"
 
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
 #include "llvm/Support/PathV2.h"
+
+#ifndef R__WIN32
+#include <unistd.h>
+#endif
 
 using namespace ROOT;
 using namespace clang;
