@@ -2244,23 +2244,14 @@ void TCling::CreateListOfMethods(TClass* cl) const
          cl->fMethod->Add(new TMethod(a, cl));
       }
    }
-   if (cl->fMethod->GetEntries() != ((TClingClassInfo*)cl->GetClassInfo())->NMethods())
-      Error("CreateListOfMethods", "More methods in ROOT/meta than in cling!");
 }
 
 //______________________________________________________________________________
 void TCling::UpdateListOfMethods(TClass* cl) const
 {
    // Update the list of pointers to method for TClass cl, if necessary
-   if (cl->fMethod) {
-      TClingClassInfo *info = (TClingClassInfo*)cl->GetClassInfo();
-      assert(cl->fMethod->GetEntries() <= info->NMethods() && "More methods in ROOT/meta than in cling!");
-      if (!info || cl->fMethod->GetEntries() == info->NMethods()) {
-         return;
-      }
-      delete cl->fMethod;
-      cl->fMethod = 0;
-   }
+   delete cl->fMethod;
+   cl->fMethod = 0;
    CreateListOfMethods(cl);
 }
 
