@@ -758,29 +758,6 @@ int TClingClassInfo::NMethods() const
       llvm::cast<DeclContext>(fDecl));
    llvm::SmallVector<DeclContext *, 2> contexts;
    DC->collectAllContexts(contexts);
-   bool noUpdate = fLastDeclForNMethods.size() == contexts.size();
-   for (unsigned I = 0; noUpdate && I < contexts.size(); ++I) {
-      if (contexts[I]->decls_begin() == contexts[I]->decls_end()) {
-         if (!fLastDeclForNMethods[contexts[I]]) {
-            // If there are still no decls in the context then continue.
-            continue;
-         }
-         // We had some, but now have none: update.
-         noUpdate = false;
-         break;
-      } else {
-         // If there are decls now, but weren't before: update.
-         llvm::DenseMap<const clang::DeclContext*, const clang::Decl*>::const_iterator posCtx = fLastDeclForNMethods.find(contexts[I]);
-         noUpdate &= posCtx != fLastDeclForNMethods.end();
-         // If there is a new next decl: update.
-         if (noUpdate) {
-            noUpdate &= !posCtx->second->getNextDeclInContext();
-         }
-      }
-   }
-   if (noUpdate) {
-      return fNMethods;
-   }
    // We have a new decl, so update the method count.
    fNMethods = 0;
    TClingMethodInfo t(fInterp, const_cast<TClingClassInfo*>(this));
