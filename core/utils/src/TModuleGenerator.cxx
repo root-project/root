@@ -62,8 +62,8 @@ TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
 }
 
 TModuleGenerator::~TModuleGenerator() {
-   unlink(fUmbrellaName.c_str());
-   unlink(fContentName.c_str());
+   //unlink(fUmbrellaName.c_str());
+   //unlink(fContentName.c_str());
 }
 
 //______________________________________________________________________________
@@ -276,9 +276,9 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out) const
       "      static const char* headers[] = {\n";
    WriteHeaderArray(out) <<
       "      };\n"
-      /*"      static const char* allHeaders[] = {\n";
+      "      static const char* allHeaders[] = {\n";
    WriteAllSeenHeadersArray(out) << 
-      "      };\n"*/
+      "      };\n"
       "      static const char* includePaths[] = {\n";
    WriteIncludePathArray(out) << 
       "      };\n"
@@ -291,7 +291,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out) const
       "      static bool sInitialized = false;\n"
       "      if (!sInitialized) {\n"
       "        TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
-      "          headers, includePaths, macroDefines, macroUndefines,\n"
+      "          headers, allHeaders, includePaths, macroDefines, macroUndefines,\n"
       "          TriggerDictionaryInitalization_" << GetDictionaryName() << ");\n"
       "        sInitialized = true;\n"
       "      }\n"

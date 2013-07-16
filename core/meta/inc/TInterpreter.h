@@ -88,6 +88,7 @@ public:
    virtual void     PrintIntro() = 0;
    virtual void     RegisterModule(const char* /*modulename*/,
                                    const char** /*headers*/,
+                                   const char** /*allHeaders*/,
                                    const char** /*includePaths*/,
                                    const char** /*macroDefines*/,
                                    const char** /*macroUndefines*/,

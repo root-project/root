@@ -141,6 +141,7 @@ public: // Public Interface
    void    PrintIntro();
    void    RegisterModule(const char* modulename,
                           const char** headers,
+                          const char** allHeaders,
                           const char** includePaths,
                           const char** macroDefines,
                           const char** macroUndefines,

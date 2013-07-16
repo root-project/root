@@ -203,15 +203,17 @@ namespace {
    struct ModuleHeaderInfo_t {
       ModuleHeaderInfo_t(const char* moduleName,
                          const char** headers,
+                         const char** allHeaders,
                          const char** includePaths,
                          const char** macroDefines,
                          const char** macroUndefines,
                          void (*triggerFunc)() ):
-         fModuleName(moduleName), fHeaders(headers),
+         fModuleName(moduleName), fHeaders(headers), fAllHeaders(allHeaders),
          fIncludePaths(includePaths), fMacroDefines(macroDefines),
          fMacroUndefines(macroUndefines), fTriggerFunc(triggerFunc) {}
       const char* fModuleName; // module name
       const char** fHeaders; // 0-terminated array of header files
+      const char** fAllHeaders; // 0-terminated array of all seen header files
       const char** fIncludePaths; // 0-terminated array of header files
       const char** fMacroDefines; // 0-terminated array of header files
       const char** fMacroUndefines; // 0-terminated array of header files
@@ -1578,6 +1580,7 @@ void TROOT::InitInterpreter()
          // process buffered module registrations
       fInterpreter->RegisterModule(li->fModuleName,
                                    li->fHeaders,
+                                   li->fAllHeaders,
                                    li->fIncludePaths,
                                    li->fMacroDefines,
                                    li->fMacroUndefines,
@@ -1987,6 +1990,7 @@ void TROOT::RefreshBrowsers()
 //______________________________________________________________________________
 void TROOT::RegisterModule(const char* modulename,
                            const char** headers,
+                           const char** allHeaders,
                            const char** includePaths,
                            const char** macroDefines,
                            const char** macroUndefines,
@@ -1998,14 +2002,14 @@ void TROOT::RegisterModule(const char* modulename,
    // the static GetModuleHeaderInfoBuffer().
 
    if (gCling) {
-      gCling->RegisterModule(modulename, headers, includePaths,
+      gCling->RegisterModule(modulename, headers, allHeaders, includePaths,
                              macroDefines, macroUndefines,
                              triggerFunc);
    } else {
       GetModuleHeaderInfoBuffer()
-         .push_back(ModuleHeaderInfo_t(modulename, headers, includePaths,
-                                       macroDefines, macroUndefines,
-                                       triggerFunc));
+         .push_back(ModuleHeaderInfo_t(modulename, headers, allHeaders,
+                                       includePaths, macroDefines,
+                                       macroUndefines, triggerFunc));
    }
 }
 

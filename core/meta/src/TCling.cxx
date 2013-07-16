@@ -949,8 +949,9 @@ bool TCling::LoadPCM(TString pcmFileName,
 
 //______________________________________________________________________________
 void TCling::RegisterModule(const char* modulename, const char** headers,
-                            const char** includePaths, const char** macroDefines,
-                            const char** macroUndefines, void (*triggerFunc)())
+                            const char** allHeaders, const char** includePaths,
+                            const char** macroDefines, const char** macroUndefines,
+                            void (*triggerFunc)())
 {
    // Inject the module named "modulename" into cling; load all headers.
    // headers is a 0-terminated array of header files to #include after
