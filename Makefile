@@ -1,4 +1,4 @@
-.DEFAULT_GOAL := clingtest
+.DEFAULT_GOAL := summary
 
 CLEAN_TARGETS += $(ALL_LIBRARIES)
 
@@ -13,6 +13,11 @@ else
 ifeq ($(.DEFAULT_GOAL),clingtest)
 HAS_PYTHON=no
 MAKE += HAS_PYTHON=no
+else
+ifeq ($(.DEFAULT_GOAL),summary)
+HAS_PYTHON=no
+MAKE += HAS_PYTHON=no
+endif
 endif
 endif
 

@@ -3,7 +3,7 @@
 # Contains most of the infrastructure for the roottest makefiles.
 #
 
-all: tests
+all: summary
 
 test: tests ;
 
