@@ -4025,7 +4025,6 @@ Int_t PT_MultiTrees(void *, RunTimes &tt)
          }
       } else if (j == 1) {
          // Fill the first histo from the first ntuple
-         dset->SetObjName("ntuple");
          {  SwitchProgressGuard spg;
             gProof->DrawSelect(dset, "3*px+2>>h1_1", "px*px+py*py>1");
          }
