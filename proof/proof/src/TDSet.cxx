@@ -987,8 +987,14 @@ void TDSet::SetObjName(const char *objname)
 {
    // Set/change object name.
 
-   if (objname)
+   if (objname) {
       fObjName = objname;
+      TIter next(GetListOfElements());
+      TDSetElement *e;
+      while ((e = (TDSetElement *) next())) {
+         e->SetTitle(objname);
+      }
+   }
 }
 
 //______________________________________________________________________________
