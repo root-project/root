@@ -1159,7 +1159,10 @@ void TClingCallFunc::Invoke(cling::StoredValueRef* result /*= 0*/) const
       for (size_t i = 0; i < num_default_args_to_resolve; ++i) {
          // If this was a member function, skip the this ptr - it has already 
          // been handled.
-         arg_index = min_args + i - IsMemberFunc() + IsTrampolineFunc();
+         arg_index = num_given_args + i                           // count in func decl
+                     - int(IsMemberFunc() && !IsTrampolineFunc()) // tramp 'this' adj.
+                     - int(DoesThatFuncReturnATemporary())        // return-by-value adj.
+                     - int(IsTrampolineFunc() && DoesThatTrampolineFuncReturn());    // tramp return adj.
          //arg_index = num_given_args - min_args + i;
          //arg_index = num_given_args + i - IsMemberFunc() + IsTrampolineFunc();
          // Use the default value from the decl.
@@ -1261,8 +1264,8 @@ void TClingCallFunc::Invoke(cling::StoredValueRef* result /*= 0*/) const
       // }
       // We have a user-provided argument value.
       // If this was a member function, skip the this ptr - it has already been
-      // handled.
-      unsigned eearg_index = i - 2 + IsMemberFunc();
+      // handled. Likewise, if return-by-val, skip return address.
+      unsigned eearg_index = i - 2 + (int)IsMemberFunc() + (int)DoesThatFuncReturnATemporary();
       const llvm::Type *ty = ft->getParamType(eearg_index);
       if (ty != fArgVals[i].get().getLLVMType())
          Args.push_back(convertIntegralToArg(fArgVals[i].get(), ty));
