@@ -3021,7 +3021,9 @@ TList *TClass::GetListOfMethods()
       TMmallocDescTemp setreset;
       gInterpreter->CreateListOfMethods(this);
    } else {
-      gInterpreter->UpdateListOfMethods(this);
+      // This routine is now called on demand whenever TCling notices
+      // a change in the class or namespace.
+      // gInterpreter->UpdateListOfMethods(this);
    }
    return fMethod;
 }
