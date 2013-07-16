@@ -174,25 +174,51 @@ public:
 	TEntryList     *elist;//!
 	Long64_t        fProcessed;//!
 
-	h1analysisTreeReader(TTree*) { }
+   	TTree          *fChain;//!    //pointer to the analyzed TTree or TChain
+   	Long64_t		fChainOffset;//!
+
+	h1analysisTreeReader(TTree* tree=0);
 
 	virtual ~h1analysisTreeReader() { }
 	void    Reset();
 
 	int     Version() const {return 1;}
-	void    Begin(TTree *) {};
+	void    Begin(TTree *);
 	void    SlaveBegin(TTree *);
-	void    Init(TTree *){};
-	Bool_t  Notify(){return true;};
+	void    Init(TTree *);
+	Bool_t  Notify();
 	Bool_t  Process(Long64_t entry);
 	void    SetOption(const char *option) { fOption = option; }
 	void    SetObject(TObject *obj) { fObject = obj; }
 	void    SetInputList(TList *input) {fInput = input;}
 	TList  *GetOutputList() const { return fOutput; }
 	void    SlaveTerminate();
-	void    Terminate(){};
+	void    Terminate();
 
 	ClassDef(h1analysisTreeReader,0);
 };
+
+
+
+//_____________________________________________________________________
+h1analysisTreeReader::h1analysisTreeReader(TTree * /*tree*/)
+{
+  // Constructor
+
+   Reset();
+}
+//_____________________________________________________________________
+void h1analysisTreeReader::Reset()
+{
+   // Reset the data members to theit initial value
+
+   hdmd = 0;
+   h2 = 0;
+   fChain = 0;
+   elist = 0;
+   fillList = kFALSE;
+   useList  = kFALSE;
+   fProcessed = 0;
+}
 
 #endif
