@@ -159,7 +159,10 @@ Bool_t TProofDraw::Notify()
          return kFALSE;
    }
    if (!fStatus->IsOk()) return kFALSE;
-   if (!fManager) return kFALSE;
+   if (!fManager) {
+      fAbort = TSelector::kAbortProcess;
+      return kFALSE;
+   }
    fManager->UpdateFormulaLeaves();
    return kTRUE;
 }
