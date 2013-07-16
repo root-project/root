@@ -15,7 +15,7 @@ ROOTCLINGTMPEXE := $(UTILSDIRS)/rootcling_tmp$(EXEEXT)
 ROOTCINTTMP     := $(ROOTCLINGTMPEXE)
 
 ##### Dependencies for all dictionaries
-ROOTCINTTMPDEP   = $(ROOTCLINGTMPO) $(ORDER_) $(ROOTCLINGTMPEXE)
+ROOTCINTTMPDEP   = $(ROOTCLINGTMPO) $(ROOTCLINGTMPEXE)
 
 ##### rlibmap #####
 RLIBMAP      := $(BUILDTOOLSDIR)/bin/rlibmap$(EXEEXT)
@@ -48,7 +48,7 @@ ROOTCLINGEXE    := bin/rootcling$(EXEEXT)
 ROOTCINTTMP     := $(ROOTCLINGTMPEXE)
 
 ##### Dependencies for all dictionaries
-ROOTCINTTMPDEP  = $(ROOTCLINGTMPO) $(ORDER_) $(ROOTCLINGTMPEXE)
+ROOTCINTTMPDEP  = $(ROOTCLINGTMPO) $(ROOTCLINGTMPEXE)
 
 ##### rlibmap #####
 RLIBMAPS     := $(UTILSDIRS)/rlibmap.cxx
