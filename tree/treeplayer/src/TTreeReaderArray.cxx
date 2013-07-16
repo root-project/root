@@ -702,6 +702,13 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
       const char* dataTypeName = branch->GetClassName();
       if ((!dataTypeName || !dataTypeName[0])
           && branch->IsA() == TBranch::Class()) {
+         TLeaf *myLeaf = branch->GetLeaf(branch->GetName());
+         if (myLeaf){
+            dict = TDictionary::GetDictionary(((TDataType*)TDictionary::GetDictionary(myLeaf->GetTypeName()))->GetTypeName());
+            contentTypeName = myLeaf->GetTypeName();
+            return 0;
+         }
+
          // leaflist. Can't represent.
          Error("GetBranchContentDataType()", "The branch %s was created using a leaf list and cannot be represented as a C++ type. Please access one of its siblings using a TTreeReaderValueArray:", branch->GetName());
          TIter iLeaves(branch->GetListOfLeaves());
