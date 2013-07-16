@@ -654,7 +654,7 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
       // '@' is special character used only the artifical class name used by ROOT to implement the
       // I/O customization rules that requires caching of the input data.
 
-      if (*c == '<')   lev++;
+      if (*c == '<' || *c == '(')   lev++;
       if (lev==0 && !isalnum(*c)) {
          if (!strchr("*&:_$ []-@",*c)) break;
       }
@@ -662,7 +662,7 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 
       result += c[0];
 
-      if (*c == '>')    lev--;
+      if (*c == '>' || *c == ')')    lev--;
    }
    if(tail) *tail=c;
    return result;
