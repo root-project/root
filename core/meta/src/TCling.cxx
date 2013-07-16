@@ -56,6 +56,7 @@
 #include "TError.h"
 #include "TEnv.h"
 #include "TEnum.h"
+#include "TEnumConstant.h"
 #include "THashTable.h"
 #include "RConfigure.h"
 #include "compiledata.h"
@@ -216,6 +217,55 @@ static void TCling__UpdateClassInfo(const NamedDecl* TD)
    }
 }
 
+void TCling::HandleEnumDecl(const clang::EnumDecl* ED, bool isGlobal)
+{
+
+   // Get name of the enum type.
+   std::string buf;
+   PrintingPolicy Policy(ED->getASTContext().getPrintingPolicy());
+   llvm::raw_string_ostream stream(buf);
+   ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+   const char* name = buf.c_str();
+
+   // Create the enum type.
+   TEnum* enumType = new TEnum(name, false /*!global*/, &ED);
+   if (!enumType) {
+      Error ("HandleEnumDecl", "The enum type %s was not created.", name);
+   } else {
+      gROOT->GetListOfEnums()->Add(enumType);
+   }
+
+   // Add the constants to the enum type.
+   for (EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
+                EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
+
+      // Get name of the enum type.
+      buf.clear();
+      PrintingPolicy Policy(EDI->getASTContext().getPrintingPolicy());
+      llvm::raw_string_ostream stream(buf);
+      EDI->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+      const char* constantName = buf.c_str();
+
+      // Get value of the constant.
+      Long64_t value;
+      const llvm::APSInt valAPSInt = EDI->getInitVal();
+      if (valAPSInt.isSigned()) {
+         value = valAPSInt.getSExtValue();
+      } else {
+         value = valAPSInt.getZExtValue();
+      }
+
+      TEnumConstant* enumConstant = new TEnumConstant(new TClingDataMemberInfo(fInterpreter, *EDI)
+                                    , constantName, value, enumType);
+      if (!enumConstant) {
+         Error ("HandleEnumDecl", "The enum constant %s was not created.", constantName);
+      } else {
+         if (isGlobal) {
+            gROOT->GetListOfGlobals()->Add(enumConstant);
+         }
+      }
+   }
+}
 
 void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*> &modifiedTClasses) {
    // Handle new declaration.
@@ -228,30 +278,7 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
    // We handle nested enums here, globals are handled later.
    if (!isa<clang::TranslationUnitDecl>(D->getDeclContext())) {
       if (const clang::EnumDecl* ED = dyn_cast<clang::EnumDecl>(D)) {
-
-         // Get name of the enum type.
-         // Note: This *must* be static because we are returning a pointer inside it!
-         static std::string buf;
-         buf.clear();
-         PrintingPolicy Policy(D->getASTContext().getPrintingPolicy());
-         llvm::raw_string_ostream stream(buf);
-         ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-         const char* name = buf.c_str();
-
-         // Create the enum type.
-         TEnum* enumType = new TEnum(name, false /*!global*/, &D);
-         gROOT->GetListOfEnums()->Add(enumType);
-
-         // Add the constants to the enum type.
-         for (EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
-                EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
-
-            // Get title of the constant.
-            DataMemberInfo_t *info = new TClingDataMemberInfo(fInterpreter, *EDI);
-            Long64_t value = (Long64_t)DataMemberInfo_Title(info);
-            // Create the constant.
-            new TEnumConstant(info, value, enumType);
-         }
+         HandleEnumDecl(ED, false /* not global*/);
       }
    }
 
@@ -356,34 +383,12 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       if (const EnumDecl *ED = dyn_cast<EnumDecl>(D)) {
 
          if (!gROOT->GetListOfEnums()->FindObject(ND->getNameAsString().c_str())) {
-
-            // Get name of the enum type.
-            // Note: This *must* be static because we are returning a pointer inside it!
-            static std::string buf;
-            buf.clear();
-            PrintingPolicy Policy(D->getASTContext().getPrintingPolicy());
-            llvm::raw_string_ostream stream(buf);
-            ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-            const char* name = buf.c_str();
-
-            // Create the enum type.
-            TEnum* enumType = new TEnum(name, true /*global!*/, &D);
-            gROOT->GetListOfEnums()->Add(enumType);
-
-            // Add the constants to the enum type.
-            for(EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
-                   EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
-
-               // Get title of the constant.
-               DataMemberInfo_t *info = new TClingDataMemberInfo(fInterpreter, *EDI);
-               Long64_t value = (Long64_t)DataMemberInfo_Title(info);
-               // Create the constant and add it to the list of globals.
-               gROOT->GetListOfGlobals()->Add(new TEnumConstant(info, value, enumType));
-            }
+            HandleEnumDecl(ED, true /* is global*/);
          }
-      } else
+      } else {
          gROOT->GetListOfGlobals()->Add(new TGlobal(new TClingDataMemberInfo(fInterpreter,
                                                               cast<ValueDecl>(ND))));
+      }
 
    }
 }

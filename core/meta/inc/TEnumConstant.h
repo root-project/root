@@ -24,21 +24,17 @@
 #ifndef ROOT_TGlobal
 #include "TGlobal.h"
 #endif
-#ifndef ROOT_TEnum
-#include "TEnum.h"
-#endif
 
 class TEnum;
 
 class TEnumConstant : public TGlobal {
 private:
-   const TEnum       *fEnum;                    //the enum type
-   Long64_t     fValue;                   //the value for the constant
-   DataMemberInfo_t  *fDataMemberInfo_t;        //the data member information
+   const TEnum       *fEnum;  //the enum type
+   Long64_t           fValue; //the value for the constant
 
 public:
    TEnumConstant(): fEnum(0), fValue(-1) {}
-   TEnumConstant(DataMemberInfo_t *info, Long64_t value, TEnum* type);
+   TEnumConstant(DataMemberInfo_t *info, const char* name, Long64_t value, TEnum* type);
    virtual ~TEnumConstant();
 
    Long64_t     GetValue() const { return fValue; }

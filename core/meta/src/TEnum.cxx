@@ -11,25 +11,24 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// THe TEnum class implements the enum type.                            //
+// The TEnum class implements the enum type.                            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TEnum.h"
 #include "TEnumConstant.h"
 
+
 ClassImp(TEnum)
 //______________________________________________________________________________
 TEnum::TEnum(const char* name, bool isGlobal, void* info)
-{
+: TNamed(name, "An enum type"), fInfo(info) {
 	//Constructor for TEnum class.
 	//It take the name of the TEnum type, specification if it is global
 	//and interpreter info.
 	//Constant List is owner if enum not on global scope (thus constants not
 	//in TROOT::GetListOfGlobals).
 
-	fName = name;
-	fInfo = info;
 	if (!isGlobal)
 	   fConstantList.SetOwner(kTRUE);
 }
