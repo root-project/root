@@ -2249,9 +2249,11 @@ void TCling::CreateListOfMethods(TClass* cl) const
 //______________________________________________________________________________
 void TCling::UpdateListOfMethods(TClass* cl) const
 {
-   // Update the list of pointers to method for TClass cl, if necessary
+   // Update the list of pointers to method for TClass cl
    delete cl->fMethod;
    cl->fMethod = 0;
+   delete cl->fAllPubMethod;
+   cl->fAllPubMethod = 0;   
    CreateListOfMethods(cl);
 }
 
