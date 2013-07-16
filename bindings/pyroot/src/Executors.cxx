@@ -262,12 +262,14 @@ PyObject* PyROOT::TSTLStringExecutor::Execute( CallFunc_t* func, void* self, Boo
    PRCallFuncExecValue( func, self, *value, release_gil );
    std::string* result = (std::string*)value->GetAsPointer();
    if ( ! result ) {
+      delete value;
       Py_INCREF( PyStrings::gEmptyString );
       return PyStrings::gEmptyString;
    }
 
    PyObject* pyresult =
       PyROOT_PyUnicode_FromStringAndSize( result->c_str(), result->size() );
+   delete value;
 
 // TODO: does the suffice?? See also TRootObjectByValueExecutor
    gInterpreter->ClearStack();
@@ -293,17 +295,18 @@ PyObject* PyROOT::TRootObjectExecutor::Execute( CallFunc_t* func, void* self, Bo
 PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execution will bring a temporary in existence
-   void* result = 0;
+   void* result = malloc( fClass->Size() );
 
 // CLING WORKAROUND (ROOT-5202): it's not clear when an object is returned as
 // struct, and when as a builtin value; for 64b, the cut-off appears to be 16 bytes
    if ( fClass->Size() <= 16 ) {   // return by value
-      result = (void*)PRCallFuncExecInt( func, self, release_gil );
+      std::memcpy( result, (void*)PRCallFuncExecInt( func, self, release_gil ), 16 );
    } else {
 // -- CLING WORKAROUND
       TInterpreterValue *value = gInterpreter->CreateTemporary();
       PRCallFuncExecValue( func, self, *value, release_gil );
-      result = value->GetAsPointer();
+   // TODO: there's no guarantee that bit-wise copy is correct ...
+      std::memcpy( result, value->GetAsPointer(), fClass->Size() );
       delete value;
    }
 
@@ -313,16 +316,12 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* s
       return 0;
    }
 
-// TODO: there's no guarantee that bit-wise copy is correct ...
-   void* fresh = malloc( fClass->Size() );
-   std::memcpy( fresh, result, fClass->Size() );
-
 // TODO: there's no guarantee that we're the only user of temp objects; this as well as
 // the bitwise-copy issue means that it'd be better if the ownership could be transferred
    gInterpreter->ClearStack();     // currently a no-op for Cling (?)
 
 // the result can then be bound
-   ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( fresh, fClass );
+   ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( result, fClass );
    if ( ! pyobj )
       return 0;
 
