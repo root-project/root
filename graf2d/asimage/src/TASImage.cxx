@@ -5740,13 +5740,12 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
    Int_t wh = gPad->XtoPixel(gPad->GetX2());
    Int_t hh = gPad->YtoPixel(gPad->GetY1());
 
-   // set text size in pixels
-   Int_t ttfsize;
-
+   // set text size
+   Float_t ttfsize;
    if (wh < hh) {
-      ttfsize = (Int_t)(text->GetTextSize()*wh);
+      ttfsize = text->GetTextSize()*wh;
    } else {
-      ttfsize = (Int_t)(text->GetTextSize()*hh);
+      ttfsize = text->GetTextSize()*hh;
    }
    TTF::SetTextSize(ttfsize);
 
