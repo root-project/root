@@ -1073,6 +1073,10 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
          h = isConst ? gConvFactories.find( "const long&" ) : gConvFactories.find( "long&" );
       else
          h = gConvFactories.find( "UInt_t" );
+   } else if ( realType.find( "(*)" ) != std::string::npos ) {
+   // this is a function function pointer
+   // TODO: a converter that generates wrappers as appropriate
+      h = gConvFactories.find( "void*" );
    }
 
    if ( ! result && h != gConvFactories.end() )

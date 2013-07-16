@@ -11,6 +11,7 @@
 // Standard
 #include <map>
 #include <string>
+#include <vector>
 
 
 namespace PyROOT {
@@ -114,13 +115,9 @@ namespace PyROOT {
       void ErrMsgCallback( char* msg );
       void ErrMsgHandler( int level, Bool_t abort, const char* location, const char* msg );
 
-   // install a python function with CINT; returns identifier
-   // TODO: write Cling equivalent
-   //      Long_t InstallMethod( Cint::G__ClassInfo* scope, PyObject* callback,
-   //         const std::string& mtName, const char* rtype, const char* signature,
-   //         void* func, Int_t npar = 0, Long_t extra = 0 );
-
-      PyObject* GetInstalledMethod( int tagnum, Long_t* extra = 0 );
+   // create a wrapper for the python function with Cling; returns function pointer
+      void* CreateWrapperMethod( PyObject* pyfunc, Long_t user,
+         const char* retType, const std::vector<std::string>& signature, const char* callback );
 
    // for threading: save call to PyErr_Occurred()
       PyObject* PyErr_Occurred_WithGIL();

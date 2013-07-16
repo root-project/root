@@ -34,6 +34,8 @@
 #include <sstream>
 #include <utility>
 
+#include <iostream>
+
 
 //- data _____________________________________________________________________
 dict_lookup_func PyROOT::gDictLookupOrg = 0;
@@ -120,10 +122,6 @@ namespace {
 #endif
       }
    } initOperatorMapping_;
-
-// for keeping track of callbacks for CINT-installed methods into python:
-   typedef std::pair< PyObject*, Long_t > CallInfo_t;
-   std::map< int, CallInfo_t > s_PyObjectCallbacks;
 
 } // unnamed namespace
 
@@ -753,7 +751,7 @@ Long_t PyROOT::Utility::GetObjectOffset(
    interpcast << "(long)(" << gInterpreter->ClassInfo_FullName( clDesired ) << "*)("
               << clCurrent << "*)" << (void*)obj
               << "-(long)(" << clCurrent << "*)" << (void*)obj
-              << ";" << std::ends;
+              << ";";
    return (Long_t)gInterpreter->ProcessLine( interpcast.str().c_str() );
 }
 
@@ -859,83 +857,58 @@ void PyROOT::Utility::ErrMsgHandler( int level, Bool_t abort, const char* locati
 
 
 //____________________________________________________________________________
-/* TODO: write Cling equivalent
-Long_t PyROOT::Utility::InstallMethod( G__ClassInfo* scope, PyObject* callback, 
-   const std::string& mtName, const char* rtype, const char* signature,
-   void* func, Int_t npar, Long_t extra )
+void* PyROOT::Utility::CreateWrapperMethod( PyObject* pyfunc, Long_t user,
+   const char* retType, const std::vector<std::string>& signature, const char* callback )
 {
-// Install the given CINT-based method (typically callbacks).
-   static Long_t s_fid = (Long_t)PyROOT::Utility::InstallMethod;
-   ++s_fid;
+// Compile a function on the fly and return a function pointer for use on C-APIs.
+// The callback should take a (void*)pyfunc and the (Long_t)user as well as the
+// rest of the declare signature. It should also live in namespace PyROOT
 
-// Install a python callable method so that CINT can call it
+   static Long_t s_fid = 0;
 
-   if ( ! PyCallable_Check( callback ) )
+   if ( ! PyCallable_Check( pyfunc ) )
       return 0;
 
-// create a return type (typically masked/wrapped by a TPyReturn) for the method
-   G__linked_taginfo pti;
-   pti.tagnum = -1;
-   pti.tagtype = 'c';
-   std::string tagname;                     // used as a buffer
-   if ( rtype ) {
-      tagname = rtype;
-      if ( tagname == "TPyReturn" ) {
-      // special case: setup a pseudo-inherited class to allow callbacks to work
-         if ( scope )
-            tagname += scope->Fullname();
-         tagname += mtName;
-         G__linked_taginfo tpy_pti = { "TPyReturn", 'c', -1 };
-         pti.tagname = tagname.c_str();
-         G__inheritance_setup( G__get_linked_tagnum( &pti ), G__get_linked_tagnum( &tpy_pti ), 0, 1, 1 );
-      }
-   } else {
-      const char* cname = scope ? scope->Fullname() : 0;
-      tagname = cname ? std::string( cname ) + "::" + mtName : mtName;
-   }
-   pti.tagname = tagname.c_str();
-   int tagnum = G__get_linked_tagnum( &pti );     // creates entry for new names
+// keep  alive (TODO: manage this intelligently)
+   Py_INCREF( pyfunc );
 
-   if ( scope ) {   // add method to existing scope
-      G__MethodInfo meth = scope->AddMethod( pti.tagname, mtName.c_str(), signature, 0, 0, func );
-   } else {         // for free functions, add to global scope and add lookup through tp2f
-   // setup a connection between the pointer and the name (only the interface method will be
-   // called in the end, the tp2f must only be consistent: s_fid is chosen to allow the same
-   // C++ callback to serve multiple python objects)
-      Long_t hash = 0, len = 0;
-      G__hash( mtName.c_str(), hash, len );
-      G__lastifuncposition();
-      G__memfunc_setup( mtName.c_str(), hash,
-        (G__InterfaceMethod)func, tagnum, tagnum, tagnum, 0, npar, 0, 1, 0, signature, (char*)0, (void*)s_fid, 0 );
-      G__resetifuncposition();
+   Long_t fid = s_fid++;
 
-   // setup a name in the global namespace (does not result in calls, so the signature does
-   // not matter; but it makes subsequent GetMethod() calls work)
-      G__MethodInfo meth = G__ClassInfo().AddMethod( mtName.c_str(), mtName.c_str(), signature, 1, 0, func );
+// basic function name part
+   std::ostringstream funcName;
+   funcName << "pyrootGenFun" << fid;
+
+// build-up a signature
+   std::ostringstream sigDecl, argsig;
+   std::vector<std::string>::size_type nargs = signature.size();
+   for ( std::vector<std::string>::size_type i = 0; i < nargs; ++i ) {
+      sigDecl << signature[i] << " a" << i;
+      argsig << ", a" << i;
+      if ( i != nargs-1 ) sigDecl << ", ";
    }
 
-// and store callback
-   Py_INCREF( callback );
-   std::map< int, CallInfo_t >::iterator old = s_PyObjectCallbacks.find( tagnum );
-   if ( old != s_PyObjectCallbacks.end() ) {
-      PyObject* oldp = old->second.first;
-      Py_XDECREF( oldp );
-   }
-   s_PyObjectCallbacks[ tagnum ] = std::make_pair( callback, extra );
+// create full definition
+   std::ostringstream declCode;
+   declCode << "namespace PyROOT { "
+               << retType << " " << callback << "(void*, Long_t, " << sigDecl.str() << "); }\n"
+            << retType << " " << funcName.str() << "(" << sigDecl.str()
+            << ") { void* v0 = (void*)" << (void*)pyfunc << "; "
+            << "return PyROOT::" << callback << "(v0, " << user << argsig.str() << "); }";
 
-// hard to check result ... assume ok
-   return s_fid;
-}
-*/
+// body compilation
+   gInterpreter->LoadText( declCode.str().c_str() );
 
-//____________________________________________________________________________
-PyObject* PyROOT::Utility::GetInstalledMethod( int tagnum, Long_t* extra )
-{
-// Return the CINT-installed python callable, if any.
-   CallInfo_t cinfo = s_PyObjectCallbacks[ tagnum ];
-   if ( extra )
-      *extra = cinfo.second;
-   return cinfo.first;
+// func-ptr retrieval code
+   std::ostringstream fptrCode;
+   fptrCode << "void* pyrootPtrVar" << fid << " = (void*)" << funcName.str()
+            << "; pyrootPtrVar" << fid << ";";
+
+// retrieve function pointer
+   void* fptr = (void*)gInterpreter->ProcessLineSynch( fptrCode.str().c_str() );
+   if ( fptr == 0 )
+      PyErr_SetString( PyExc_SyntaxError, "could not generate C++ callback wrapper" );
+
+   return fptr;
 }
 
 //____________________________________________________________________________

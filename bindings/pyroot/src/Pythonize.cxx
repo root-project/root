@@ -1525,6 +1525,39 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       }
    };
 
+//- TFN behavior --------------------------------------------------------------
+   double TFNPyCallback( void* vpyfunc, Long_t npar, double* a0, double* a1 ) {
+   // a void* was passed to keep the interface on builtin types only
+      PyObject* pyfunc = (PyObject*)vpyfunc;
+
+   // prepare arguments and call
+      PyObject* pya0 = BufFac_t::Instance()->PyBuffer_FromMemory( a0, 4 );
+      if ( ! pya0 )
+         return 0.;
+
+      PyObject* result = 0;
+      if ( npar != 0 ) {
+         PyObject* pya1 = BufFac_t::Instance()->PyBuffer_FromMemory( a1, npar );
+         result = PyObject_CallFunction( pyfunc, (char*)"OO", pya0, pya1 );
+         Py_DECREF( pya1 );
+      } else
+         result = PyObject_CallFunction( pyfunc, (char*)"O", pya0 );
+
+      Py_DECREF( pya0 );
+
+   // translate result, throw if an error has occurred
+      double d = 0.;
+      if ( ! result ) {
+         PyErr_Print();
+         throw std::runtime_error( "TFN python function call failed" );
+      } else {
+         d = PyFloat_AsDouble( result );
+         Py_DECREF( result );
+      }
+
+      return d;
+   }
+
 } // namespace PyROOT
 
 
@@ -1546,51 +1579,8 @@ namespace {
       return self;
    }
 
-//- TFN behavior --------------------------------------------------------------
-/* TODO: implement for Cling
-   int TFNPyCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
-   {
-   // This is a generic CINT-installable TFN (with N=1,2,3) callback (used to factor
-   // out some common code), to allow TFN to call back into python.
-      PyObject* result = 0;
-
-   // retrieve function information
-      Long_t npar = 0;
-      PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( G__value_get_tagnum(res), &npar );
-      if ( ! pyfunc )
-         return 0;
-
-   // prepare arguments and call
-      PyObject* arg1 = BufFac_t::Instance()->PyBuffer_FromMemory(
-         (double*)G__int(libp->para[0]), 4 );
-      if ( ! arg1 )
-         return 0;
-
-      if ( npar != 0 ) {
-         PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory(
-            (double*)G__int(libp->para[1]), npar );
-         result = PyObject_CallFunction( pyfunc, (char*)"OO", arg1, arg2 );
-         Py_DECREF( arg2 );
-      } else
-         result = PyObject_CallFunction( pyfunc, (char*)"O", arg1 );
-
-      Py_DECREF( arg1 );
-
-   // translate result, throw if an error has occurred
-      double d = 0.;
-      if ( ! result ) {
-         PyErr_Print();
-         throw std::runtime_error( "TFN python function call failed" );
-      } else {
-         d = PyFloat_AsDouble( result );
-         Py_DECREF( result );
-      }
-
-      G__letdouble( res, 100, d );
-      return ( 1 || hash || res || libp );
-   }
-
 //- TMinuit behavior ----------------------------------------------------------
+/* TODO: implement for Cling
    int TMinuitPyCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
    {
    // CINT-installable callback function to allow Minuit to call into python.
@@ -1660,7 +1650,6 @@ namespace {
    };
 
 //____________________________________________________________________________
-/* TODO: implement for Cling
    class TF1InitWithPyFunc : public TPretendInterpreted {
    public:
       TF1InitWithPyFunc( int ntf = 1 ) : TPretendInterpreted( 2 + 2*ntf ) {}
@@ -1690,22 +1679,22 @@ namespace {
          }
 
          PyObject* pyfunc = PyTuple_GET_ITEM( args, 1 );
-         if ( ! IsCallable( pyfunc ) )
-            return 0;
-
-      // use requested function name as identifier
-         const char* name = PyROOT_PyUnicode_AsString( PyTuple_GET_ITEM( args, 0 ) );
-         if ( PyErr_Occurred() )
-            return 0;
 
       // verify/setup the callback parameters
          Long_t npar = 0;             // default value if not given
          if ( argc == reqNArgs+1 )
             npar = PyInt_AsLong( PyTuple_GET_ITEM( args, reqNArgs ) );
 
-      // registration with CINT
-         Long_t fid = Utility::InstallMethod(
-            0, pyfunc, name, 0, "D - - 0 - - D - - 0 - -", (void*)TFNPyCallback, 2, npar );
+      // create signature
+         std::vector<std::string> signature; signature.reserve( 2 );
+         signature.push_back( "double*" );
+         signature.push_back( "double*" );
+
+      // registration with Cling
+         void* fptr = Utility::CreateWrapperMethod(
+            pyfunc, npar, "double", signature, "TFNPyCallback" );
+         if ( ! fptr /* PyErr was set */ )
+            return 0;
 
       // get constructor
          MethodProxy* method =
@@ -1720,14 +1709,14 @@ namespace {
                Py_INCREF( item );
                PyTuple_SET_ITEM( newArgs, iarg, item );
             } else {
-               PyTuple_SET_ITEM( newArgs, iarg, PyROOT_PyCapsule_New( (void*)fid, NULL, NULL ) );
+               PyTuple_SET_ITEM( newArgs, iarg, PyROOT_PyCapsule_New( fptr, NULL, NULL ) );
             }
          }
 
          if ( argc == reqNArgs )             // meaning: use default for last value
             PyTuple_SET_ITEM( newArgs, reqNArgs, PyInt_FromLong( 0l ) );
 
-      // re-run
+      // re-run constructor, will select the proper one with void* for callback
          PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
 
       // done, may have worked, if not: 0 is returned
@@ -1771,7 +1760,6 @@ namespace {
 
       virtual PyCallable* Clone() { return new TF3InitWithPyFunc( *this ); }
    };
-*/
 
 //- TFunction behavior ---------------------------------------------------------
    PyObject* TFunctionCall( ObjectProxy* self, PyObject* args ) {
@@ -2300,7 +2288,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( name == "TH1" )       // allow hist *= scalar
       return Utility::AddToClass( pyclass, "__imul__", (PyCFunction) THNIMul, METH_O );
 
-/* TODO: implement for Cling
    if ( name == "TF1" )       // allow instantiation with python callable
       return Utility::AddToClass( pyclass, "__init__", new TF1InitWithPyFunc );
 
@@ -2309,7 +2296,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    if ( name == "TF3" )       // allow instantiation with python callable
       return Utility::AddToClass( pyclass, "__init__", new TF3InitWithPyFunc );
-*/
 
    if ( name == "TFunction" ) // allow direct call
       return Utility::AddToClass( pyclass, "__call__", (PyCFunction) TFunctionCall );
