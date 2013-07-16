@@ -5,6 +5,9 @@
 -   In some cases dashed lines with a line width greater than "1" were
     not drawn.
 -   The `TLatex` symbol `#tilde`, was misplaced.
+-   In `TASImage::DrawtText`, `TTF::SetTextSize` was called with a rounded 
+    value (to pixel). This cause some misplacements of character in TLatex 
+    formulae.
 
 ### X11 fonts
 
