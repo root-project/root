@@ -20,8 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 #ifndef ROOT_THashList
 #include "THashList.h"
@@ -29,19 +29,12 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
-#ifndef ROOT_TSeqCollection
-#include "TSeqCollection.h"
-#endif
-#ifndef ROOT_TEnumConstant
-#include "TEnumConstant.h"
-#endif
 
 class TEnumConstant;
 
-class TEnum : public TObject {
+class TEnum : public TNamed {
 
 private:
-   TString   fName;             //name of the enum type
    THashList fConstantList;     //list of constants the enum type
    void*     fInfo;             //interpreter implementation provided declaration
 

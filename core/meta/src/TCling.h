@@ -39,9 +39,12 @@
 extern "C" {
    namespace clang {
       class Decl;
+      class EnumDecl;
    }
    namespace cling {
       class Transaction;
+      class MetaProcessor;
+      class StoredValueRef;
       class Interpreter;
    }
    void TCling__UpdateListsOnCommitted(const cling::Transaction&, 
@@ -57,12 +60,6 @@ class TClingCallbacks;
 class TMethod;
 class TObjArray;
 class TInterpreterValue;
-
-namespace cling {
-   class Interpreter;
-   class MetaProcessor;
-   class StoredValueRef;
-}
 
 namespace ROOT {
    namespace TMetaUtils {
@@ -388,6 +385,7 @@ public: // Public Interface
    std::set<TClass*>& GetModTClasses() { return fModTClasses; }
 
    void HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*>& modifiedClasses);
+   void HandleEnumDecl(const clang::EnumDecl* ED, bool isGlobal);
 
 private: // Private Utility Functions
    TCling();
