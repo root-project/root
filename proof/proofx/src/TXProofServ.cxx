@@ -765,11 +765,10 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
 
    TProofServ::EQueryAction rc = kQueryStop;
 
-   // If user config files are enabled, check them first
+   // User config files, when enabled, override cluster-wide configuration
    if (gEnv->GetValue("ProofServ.UseUserCfg", 0) != 0) {
       Int_t pc = 1;
-      if ((rc = TProofServ::GetWorkers(workers, pc)) == kQueryOK)
-         return rc;
+      return TProofServ::GetWorkers(workers, pc);
    }
 
    // seqnum of the query for which we call getworkers
