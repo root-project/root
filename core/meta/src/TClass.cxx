@@ -3042,10 +3042,14 @@ TList *TClass::GetListOfAllPublicMethods()
 
    R__LOCKGUARD(gClingMutex);
    if (!fAllPubMethod) {
+      // This would delete fAllPubMethod if the list of methods
+      // has not been created yet.
+      TList *allMethod = GetListOfMethods(); 
+
       fAllPubMethod = new TList;
 
       // put all methods in the list
-      fAllPubMethod->AddAll(GetListOfMethods());
+      fAllPubMethod->AddAll(allMethod);
 
       // loop over all base classes and add new methods
       TIter nextBaseClass(GetListOfBases());
