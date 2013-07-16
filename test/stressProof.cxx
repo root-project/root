@@ -203,7 +203,7 @@ int stressProof(const char *url = 0,
                 const char *h1src = 0, const char *eventsrc = 0,
                 Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE,
                 Bool_t clearcache = kFALSE, Bool_t useprogress = kTRUE,
-                const char *tutdir = 0, Bool_t cleanlog = kFALSE);
+                const char *tutdir = 0, Bool_t cleanlog = kFALSE, Bool_t keeplog = kTRUE);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -241,10 +241,12 @@ int main(int argc,const char *argv[])
       printf("                 The log file path can be also passed via the env STRESSPROOF_LOGFILE.\n");
       printf("                 In case of failure, the log files of the nodes (master and workers) are saved into\n");
       printf("                 a file called <logfile>.nodes .\n");
-      printf("   -cleanlog     Delete the logfile specified via '-l' in case of a successful run; by default\n");
+      printf("   -c,-cleanlog  Delete the logfile specified via '-l' in case of a successful run; by default\n");
       printf("                 the file specified by '-l' is kept in all cases (default log files are deleted\n");
       printf("                 on success); adding this switch allows to keep a user-defined log file only\n");
       printf("                 in case of error.\n");
+      printf("   -k,-keeplog   Keep all logfiles, including the ones fro the PROOF nodes (in one single file).\n");
+      printf("                 The paths are printed on the screen.\n");
       printf("   -dyn          run the test in dynamicStartup mode\n");
       printf("   -ds           force the dataset test if skipped by default\n");
       printf("   -t tests      run only tests in the comma-separated list and those from which they\n");
@@ -286,6 +288,7 @@ int main(int argc,const char *argv[])
    Bool_t clearcache = kFALSE;
    Bool_t useprogress = kTRUE;
    Bool_t cleanlog = kFALSE;
+   Bool_t keeplog = kFALSE;
    const char *logfile = 0;
    const char *h1src = 0;
    const char *eventsrc = 0;
@@ -320,8 +323,11 @@ int main(int argc,const char *argv[])
             logfile = argv[i+1];
             i += 2;
          }
-      } else if (!strncmp(argv[i],"-cleanlog",11)) {
+      } else if (!strncmp(argv[i],"-c",2) || !strncmp(argv[i],"-cleanlog",11)) {
          cleanlog = kTRUE;
+         i++;
+      } else if (!strncmp(argv[i],"-k",2) || !strncmp(argv[i],"-keeplog",10)) {
+         keeplog = kTRUE;
          i++;
       } else if (!strncmp(argv[i],"-v",2)) {
          // For backward compatibility
@@ -398,7 +404,7 @@ int main(int argc,const char *argv[])
    }
 
    int rc = stressProof(url, tests, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
-                        h1src, eventsrc, dryrun, showcpu, clearcache, useprogress, tutdir, cleanlog);
+                        h1src, eventsrc, dryrun, showcpu, clearcache, useprogress, tutdir, cleanlog, keeplog);
 
    gSystem->Exit(rc);
 }
@@ -789,7 +795,7 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
                 const char *verbose, const char *logfile, Bool_t dyn, Bool_t skipds,
                 const char *h1src, const char *eventsrc,
                 Bool_t dryrun, Bool_t showcpu, Bool_t clearcache, Bool_t useprogress,
-                const char *tutdir, Bool_t cleanlog)
+                const char *tutdir, Bool_t cleanlog, Bool_t keeplog)
 {
    printf("******************************************************************\n");
    printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
@@ -969,6 +975,10 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
    }
    if (clearcache && gverbose > 0) {
       printf("*  Clearing cache associated to files, if possible ...          **\n");
+      printf("******************************************************************\n");
+   }
+   if (keeplog && gverbose > 0) {
+      printf("*  Keeping logfiles (paths specified at the end)                **\n");
       printf("******************************************************************\n");
    }
    //
@@ -1221,9 +1231,10 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
       }
 
    // Done
+   Bool_t kept = ((usedeflog || cleanlog) && !keeplog) ? kFALSE : kTRUE;
    if (failed) {
-      Bool_t kept = kTRUE;
-      if (usedeflog && !gROOT->IsBatch()) {
+      kept = kTRUE;
+      if (usedeflog && !gROOT->IsBatch() && !keeplog) {
          const char *answer = Getline(" Some tests failed: would you like to keep the log file (N,Y)? [Y] ");
          if (answer && (answer[0] == 'N' || answer[0] == 'n')) {
             // Remove log file
@@ -1231,29 +1242,34 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
             kept = kFALSE;
          }
       }
-      if (kept) {
-         TString logfiles(glogfile);
-         // Save also the logs from the workers
-         TProofMgr *mgr = gProof ? gProof->GetManager() : 0;
-         if (mgr) {
-            TProofLog *pl = mgr->GetSessionLogs();
-            if (pl) {
-               logfiles += ".nodes";
-               pl->Retrieve("*",  TProofLog::kAll, logfiles);
-               SafeDelete(pl);
-            } else {
-               printf("+++ Warning: could not get the session logs\n");
-            }
-         } else {
-            printf("+++ Warning: could not attach to manager to get the session logs\n");
-         }         
-         printf("* Main log file kept at %s (Proof logs in %s)\n", glogfile.Data(), logfiles.Data());
-      }
    } else {
       printf("* All registered tests have been passed  :-)                     *\n");
+   }
+
+   if (kept) {
+      TString logfiles(glogfile);
+      // Save also the logs from the workers
+      TProofMgr *mgr = gProof ? gProof->GetManager() : 0;
+      if (mgr) {
+         gSystem->RedirectOutput(glogfile, "a", &gRH);
+         TProofLog *pl = mgr->GetSessionLogs();
+         if (pl) {
+            logfiles += ".nodes";
+            pl->Retrieve("*",  TProofLog::kAll, logfiles);
+            gSystem->RedirectOutput(0, 0, &gRH);
+            SafeDelete(pl);
+         } else {
+            gSystem->RedirectOutput(0, 0, &gRH);
+            printf("+++ Warning: could not get the session logs\n");
+         }
+      } else {
+         printf("+++ Warning: could not attach to manager to get the session logs\n");
+      }         
+      printf("******************************************************************\n");
+      printf(" Main log file kept at %s (Proof logs in %s)\n", glogfile.Data(), logfiles.Data());
+   } else {
       // Remove log file if not passed by the user
-      if (usedeflog || cleanlog)
-         gSystem->Unlink(glogfile);
+      gSystem->Unlink(glogfile);
    }
 
    printf("******************************************************************\n");
