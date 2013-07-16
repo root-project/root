@@ -2201,7 +2201,7 @@ Int_t PT_Open(void *args, RunTimes &tt)
    }
    
    // Check if it is in dynamic startup mode
-   Int_t dyn;
+   Int_t dyn = 0;
    p->GetRC("Proof.DynamicStartup", dyn);
    if (dyn != 0) gDynamicStartup = kTRUE;
 
