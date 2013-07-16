@@ -80,14 +80,11 @@ class Cpp2ConverterOperatorsTestCase( MyTestCase ):
 
       o = OperatorCharStar()
       self.assertEqual( o.m_str, 'OperatorCharStar' )
-
-      if not FIXCLING:
-         self.assertEqual( str(o),  'OperatorCharStar' )
+      self.assertEqual( str(o),  'OperatorCharStar' )
 
       o = OperatorConstCharStar()
       self.assertEqual( o.m_str, 'OperatorConstCharStar' )
-      if not FIXCLING:
-         self.assertEqual( str(o),  'OperatorConstCharStar' )
+      self.assertEqual( str(o),  'OperatorConstCharStar' )
 
       o = OperatorInt(); o.m_int = -13
       self.assertEqual( o.m_int,   -13 )

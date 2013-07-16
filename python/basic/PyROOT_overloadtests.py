@@ -54,16 +54,15 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
    def test2ClassOverloads( self ):
       """Test functions overloaded on void* and non-existing classes"""
 
-      if FIXCLING:
-         return
-
       import ROOT
       oldval = ROOT.gErrorIgnoreLevel
       ROOT.gErrorIgnoreLevel = ROOT.kError
       self.assertEqual( MyOverloads().call( AA() ), "AA" )
-      self.assertEqual( MyOverloads().call( BB() ), "DD" ) # <- BB has an unknown + void*
+      if not FIXCLING:
+         self.assertEqual( MyOverloads().call( BB() ), "DD" ) # <- BB has an unknown + void*
       self.assertEqual( MyOverloads().call( CC() ), "CC" )
-      self.assertEqual( MyOverloads().call( DD() ), "DD" ) # <- DD has an unknown
+      if not FIXCLING:
+         self.assertEqual( MyOverloads().call( DD() ), "DD" ) # <- DD has an unknown
       ROOT.gErrorIgnoreLevel = oldval
 
    def test3ClassOverloadsAmongUnknowns( self ):

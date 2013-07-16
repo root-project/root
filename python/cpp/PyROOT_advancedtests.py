@@ -225,9 +225,8 @@ class Cpp03PassByNonConstRefTestCase( MyTestCase ):
       self.assertEqual( d, 3.1415 )
 
       i = Long( pylong(42) )
-      if not FIXCLING:
-         SetIntThroughRef( i, 13 )
-         self.assertEqual( i, 13 )
+      SetIntThroughRef( i, 13 )
+      self.assertEqual( i, 13 )
 
    def test3PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through const reference"""
@@ -342,9 +341,6 @@ class Cpp09LongExpressionsTestCase( MyTestCase ):
 class Cpp10StandardExceptionsTestCase( MyTestCase ):
    def test1StandardExceptionsAccessFromPython( self ):
       """Access C++ standard exception objects from python"""
-
-      if FIXCLING:
-         return
 
       e = std.runtime_error( "runtime pb!!" )
       self.assert_( e )

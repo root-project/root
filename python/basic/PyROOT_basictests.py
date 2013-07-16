@@ -123,45 +123,40 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       gROOT.LoadMacro( 'ArgumentPassingInterpreted.C' )
 
-      if FIXCLING:
-         return
-
       f = InterpretedTest.StringValueArguments
 
       self.assertEqual( f( 'aap' ), 'aap' )
-#      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
-      self.assertEqual( f( 'zus', 1 ), 'default' )
-#      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
+      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
+      self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
+      if not FIXCLING:
+         self.assertEqual( f( 'zus', 1 ), 'default' )
+      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
 
    def test2TStringByRefInterpreted( self ):
       """Test passing a TString by reference through an interpreted function"""
 
       # script ArgumentPassingInterpreted.C already loaded in by value test
 
-      if FIXCLING:
-         return
-
       f = InterpretedTest.StringRefArguments
 
       self.assertEqual( f( 'aap' ), 'aap' )
-#      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
-      self.assertEqual( f( 'zus', 1 ), 'default' )
-#      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
+      self.assertEqual( f( TString( 'noot' ) ), 'noot' )
+      self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
+      if not FIXCLING:
+         self.assertEqual( f( 'zus', 1 ), 'default' )
+      self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
 
    def test3TLorentzVectorByValueInterpreted( self ):
       """Test passing a TLorentzVector by value through an interpreted function"""
 
       # script ArgumentPassingInterpreted.C already loaded in by value test
 
-      if FIXCLING:
-         return
-
       f = InterpretedTest.LorentzVectorValueArguments
 
-      TLorentzVector( 5, 6, 7, 8 ).Print()
-#      f( TLorentzVector( 5, 6, 7, 8 ) ).Print()
+      # NOTE: these never worked with CINT!
       self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
-#      self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
+      if not FIXCLING:
+         self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
 
    def test4TLorentzVectorByRefInterpreted( self ):
       """Test passing a TLorentzVector by reference through an interpreted function"""
@@ -181,14 +176,13 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       gROOT.LoadMacro( 'ArgumentPassingCompiled.C+' )
 
-      if FIXCLING:
-         return
-
       f = CompiledTest.StringValueArguments
 
       self.assertEqual( f( 'aap' ), 'aap' )
       self.assertEqual( f( TString( 'noot' ) ), 'noot' )
-      self.assertEqual( f( 'zus', 1 ), 'default' )
+      self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
+      if not FIXCLING:
+         self.assertEqual( f( 'zus', 1 ), 'default' )
       self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
 
    def test6TStringByRefCompiled( self ):
@@ -196,14 +190,13 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       # script ArgumentPassingCompiled.C already loaded in by value test
 
-      if FIXCLING:
-         return
-
       f = CompiledTest.StringRefArguments
 
       self.assertEqual( f( 'aap' ), 'aap' )
       self.assertEqual( f( TString( 'noot' ) ), 'noot' )
-      self.assertEqual( f( 'zus', 1 ), 'default' )
+      self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
+      if not FIXCLING:
+         self.assertEqual( f( 'zus', 1 ), 'default' )
       self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
 
    def test7TLorentzVectorByValueCompiled( self ):
@@ -211,13 +204,11 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       # script ArgumentPassingCompiled.C already loaded in by value test
 
-      if FIXCLING:
-         return
-
       f = CompiledTest.LorentzVectorValueArguments
 
       self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
-      self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
+      if not FIXCLING:
+         self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
 
    def test8TLorentzVectorByRefCompiled( self ):
       """Test passing a TLorentzVector by reference through a compiled function"""
