@@ -166,7 +166,10 @@ namespace {
    // Reader interface for leaf list
    // SEE TTreeProxyGenerator.cxx:1319: '//We have a top level raw type'
    class TObjectArrayReader: public ROOT::TVirtualCollectionReader {
+   private:
+      Int_t basicTypeSize;
    public:
+      TObjectArrayReader() : basicTypeSize(-1) { }
       ~TObjectArrayReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
          if (!proxy->Read()){
@@ -185,14 +188,25 @@ namespace {
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
          if (!proxy->Read()) return 0;
 
+         Int_t objectSize;
          void *array = (void*)proxy->GetStart();
-         TClass *myClass = proxy->GetClass();
-         if (!myClass){
-            Error("At()", "Cannot get class info from branch proxy.");
-            return 0;
+
+         if (basicTypeSize == -1){
+            TClass *myClass = proxy->GetClass();
+            if (!myClass){
+               Error("At()", "Cannot get class info from branch proxy.");
+               return 0;
+            }
+            objectSize = myClass->GetClassSize();
          }
-         Int_t objectSize = myClass->GetClassSize();
+         else {
+            objectSize = basicTypeSize;
+         }
          return (void*)((Byte_t*)array + (objectSize * idx));
+      }
+
+      void SetBasicTypeSize(Int_t size){
+         basicTypeSize = size;
       }
    };
 
@@ -525,7 +539,17 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
          }
       }
    } else if (branch->IsA() == TBranch::Class()) {
-      printf("TBranch\n"); // TODO: Remove (necessary because of gdb bug)
+      //printf("TBranch\n"); // TODO: Remove (necessary because of gdb bug)
+      TLeaf *topLeaf = branch->GetLeaf(branch->GetName());
+      Int_t size = 0;
+      TLeaf *sizeLeaf = topLeaf->GetLeafCounter(size);
+      if (!sizeLeaf) {
+         fImpl = new TArrayFixedSizeReader(size);
+      }
+      else {
+         fImpl = new TArrayParameterSizeReader(fTreeReader, sizeLeaf->GetName());
+      }
+      ((TObjectArrayReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
    } else if (branch->IsA() == TBranchClones::Class()) {
       printf("TBranchClones\n"); // TODO: Remove (necessary because of gdb bug)
    } else if (branch->IsA() == TBranchObject::Class()) {
