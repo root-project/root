@@ -2156,11 +2156,13 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                // Output to tempfile
                TString tmpfn = "echo-out-";
                FILE *tf = gSystem->TempFileName(tmpfn, fDataDir);
-               if (!tf || gSystem->RedirectOutput(tmpfn.Data()) == -1) {
+               if (!tf || (gSystem->RedirectOutput(tmpfn.Data()) == -1)) {
                   Error("HandleSocketInput", "Can't redirect output");
+                  if (tf) {
+                     fclose(tf);
+                     gSystem->Unlink(tmpfn);
+                  }
                   rc = -1;
-                  fclose(tf);
-                  gSystem->Unlink(tmpfn);
                   delete obj;
                   break;
                }
