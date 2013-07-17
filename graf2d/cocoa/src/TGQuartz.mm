@@ -84,11 +84,11 @@ TGQuartz::TGQuartz()
    //Default ctor.
    
 
-   if (!TTF::fgInit)
+   if (!TTF::IsInitialized())
       TTF::Init();
 
    //I do not know why TTF::Init returns void and I have to check fgInit again.
-   if (!TTF::fgInit)
+   if (!TTF::IsInitialized())
       Error("TGQuartz", "TTF::Init() failed");
 
    fAlign.x = 0;
@@ -101,11 +101,11 @@ TGQuartz::TGQuartz(const char *name, const char *title)
             : TGCocoa(name, title)
 {
    //Constructor.
-   if (!TTF::fgInit)
+   if (!TTF::IsInitialized())
       TTF::Init();
 
    //I do not know why TTF::Init returns void and I have to check fgInit again.
-   if (!TTF::fgInit)
+   if (!TTF::IsInitialized())
       Error("TGQuartz", "TTF::Init() failed");
 
    fAlign.x = 0;
@@ -376,7 +376,7 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t /*mgn*/, const 
    if (!text || !text[0])
       return;
 
-   if (!TTF::fgInit) {
+   if (!TTF::IsInitialized()) {
       Error("DrawText", "wchar_t string to draw, but TTF initialization failed");
       return;
    }
@@ -545,15 +545,19 @@ void TGQuartz::SetTextFont(Font_t fontNumber)
 
    TAttText::SetTextFont(fontNumber);
    
-   if (TTF::fgInit)
-      TTF::SetTextFont(fontNumber);
+   if (!TTF::IsInitialized()) {
+      Error("SetTextFont", "TTF is not initialized");
+      return;
+   }
+
+   TTF::SetTextFont(fontNumber);
 }
 
 //______________________________________________________________________________
 Int_t TGQuartz::SetTextFont(char *fontName, ETextSetMode /*mode*/)
 {
    //This function is never used in gPad (in normal text rendering, so I'm not setting anything for CoreText).
-   if (!TTF::fgInit) {
+   if (!TTF::IsInitialized()) {
       Error("SetTextFont", "TTF is not initialized");
       return 0;
    }
@@ -568,8 +572,12 @@ void TGQuartz::SetTextSize(Float_t textsize)
    
    TAttText::SetTextSize(textsize);
    
-   if (TTF::fgInit)
-      TTF::SetTextSize(textsize);
+   if (!TTF::IsInitialized()) {
+      Error("SetTextSize", "TTF is not initialized");
+      return;
+   }
+
+   TTF::SetTextSize(textsize);
 }
 
 
@@ -601,23 +609,23 @@ void TGQuartz::AlignTTFString()
 
    // vertical alignment
    if (align == kTLeft || align == kTCenter || align == kTRight) {
-      fAlign.y = TTF::fgAscent;
+      fAlign.y = TTF::GetAscent();
    } else if (align == kMLeft || align == kMCenter || align == kMRight) {
-      fAlign.y = TTF::fgAscent / 2;
+      fAlign.y = TTF::GetAscent() / 2;
    } else {
       fAlign.y = 0;
    }
 
    // horizontal alignment
    if (align == kTRight || align == kMRight || align == kBRight) {
-      fAlign.x = TTF::fgWidth;
+      fAlign.x = TTF::GetWidth();
    } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
-      fAlign.x = TTF::fgWidth / 2;
+      fAlign.x = TTF::GetWidth() / 2;
    } else {
       fAlign.x = 0;
    }
 
-   FT_Vector_Transform(&fAlign, TTF::fgRotMatrix);
+   FT_Vector_Transform(&fAlign, TTF::GetRotMatrix());
    //This shift is from the original code.
    fAlign.x = fAlign.x >> 6;
    fAlign.y = fAlign.y >> 6;
@@ -738,9 +746,9 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
    
    CGContextSetRGBStrokeColor(ctx, 0., 0., 1., 1.);
    // paint the glyphs in the pixmap.
-   TTGlyph *glyph = TTF::fgGlyphs;
-   for (int n = 0; n < TTF::fgNumGlyphs; ++n, ++glyph) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage, TTF::fgSmoothing ? ft_render_mode_normal : ft_render_mode_mono, 0, 1 ))
+   TTGlyph *glyph = TTF::GetGlyphs();
+   for (int n = 0; n < TTF::GetNumGlyphs(); ++n, ++glyph) {
+      if (FT_Glyph_To_Bitmap(&glyph->fImage, TTF::GetSmoothing() ? ft_render_mode_normal : ft_render_mode_mono, 0, 1 ))
          continue;
 
       FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
@@ -770,7 +778,7 @@ void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, FT_Bitmap *source, ULong_t for
    assert(pixmap != nil && "DrawFTGlyphIntoPixmap, pixmap parameter is nil");
    assert(source != 0 && "DrawFTGlyphIntoPixmap, source parameter is null");
 
-   if (TTF::fgSmoothing) {
+   if (TTF::GetSmoothing()) {
       static ColorStruct_t col[5];
       // background kClear, i.e. transparent, we take as background color
       // the average of the rgb values of all pixels covered by this character
