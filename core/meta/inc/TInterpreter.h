@@ -153,7 +153,7 @@ public:
    virtual void   CallFunc_Delete(void * /* func */) const {;}
    virtual void   CallFunc_Exec(CallFunc_t * /* func */, void * /* address */) const {;}
    virtual Long_t    CallFunc_ExecInt(CallFunc_t * /* func */, void * /* address */) const {return 0;}
-   virtual Long_t    CallFunc_ExecInt64(CallFunc_t * /* func */, void * /* address */) const {return 0;}
+   virtual Long64_t  CallFunc_ExecInt64(CallFunc_t * /* func */, void * /* address */) const {return 0;}
    virtual Double_t  CallFunc_ExecDouble(CallFunc_t * /* func */, void * /* address */) const {return 0;}
    virtual CallFunc_t   *CallFunc_Factory() const {return 0;}
    virtual CallFunc_t   *CallFunc_FactoryCopy(CallFunc_t * /* func */) const {return 0;}

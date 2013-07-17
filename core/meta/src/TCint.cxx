@@ -2562,7 +2562,7 @@ Long_t  TCint::CallFunc_ExecInt(CallFunc_t *func, void *address) const
    return f->ExecInt(address);
 }
 //______________________________________________________________________________
-Long_t  TCint::CallFunc_ExecInt64(CallFunc_t *func, void *address) const
+Long64_t TCint::CallFunc_ExecInt64(CallFunc_t *func, void *address) const
 {
    // Interface to CINT function
 
