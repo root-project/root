@@ -545,8 +545,12 @@ void TGQuartz::SetTextFont(Font_t fontNumber)
 
    TAttText::SetTextFont(fontNumber);
    
-   if (TTF::IsInitialized())
-      TTF::SetTextFont(fontNumber);
+   if (!TTF::IsInitialized()) {
+      Error("SetTextFont", "TTF is not initialized");
+      return;
+   }
+
+   TTF::SetTextFont(fontNumber);
 }
 
 //______________________________________________________________________________
@@ -568,8 +572,12 @@ void TGQuartz::SetTextSize(Float_t textsize)
    
    TAttText::SetTextSize(textsize);
    
-   if (TTF::IsInitialized())
-      TTF::SetTextSize(textsize);
+   if (!TTF::IsInitialized()) {
+      Error("SetTextSize", "TTF is not initialized");
+      return;
+   }
+   
+   TTF::SetTextSize(textsize);
 }
 
 
