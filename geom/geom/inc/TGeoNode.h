@@ -211,7 +211,7 @@ public:
    virtual TGeoPatternFinder *GetFinder() const {return fFinder;}
    virtual TGeoMatrix *GetMatrix() const {cd(); return fFinder->GetMatrix();}
    virtual TGeoNode *MakeCopyNode() const;
-   void              SetFinder(const TGeoPatternFinder *finder) {fFinder = (TGeoPatternFinder*)finder;}
+   void              SetFinder(TGeoPatternFinder *finder) {fFinder = finder;}
 
    ClassDef(TGeoNodeOffset, 1)      // a geometry node with just an offset
 };

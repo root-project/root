@@ -41,6 +41,9 @@ public:
 
       ThreadData_t();
       ~ThreadData_t();
+   private:
+      ThreadData_t(const ThreadData_t&); // Not implemented
+      ThreadData_t& operator=(const ThreadData_t&); // Not implemented
    };
    ThreadData_t& GetThreadData()   const;
    void          ClearThreadData() const;
