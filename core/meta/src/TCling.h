@@ -137,6 +137,8 @@ public: // Public Interface
    const char* GetIncludePath();
    virtual const char* GetSTLIncludePath() const;
    TObjArray*  GetRootMapFiles() const { return fRootmapFiles; }
+   void GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const clang::Decl*> netD);
+   std::set<TClass*> GetMissingDictionaries(TClass* cl);
    virtual void Initialize();
    void    InspectMembers(TMemberInspector&, void* obj, const TClass* cl);
    Bool_t  IsLoaded(const char* filename) const;

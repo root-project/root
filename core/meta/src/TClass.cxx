@@ -3159,6 +3159,14 @@ void TClass::GetMenuItems(TList *list)
    }
 }
 
+std::set<TClass*> TClass::GetMissingClassDictionaries()
+{
+   //Get the classes that have a missing dictionary.
+
+   std::set<TClass*> clMissingDict = gInterpreter->GetMissingDictionaries(this);
+   return clMissingDict;
+}
+
 //______________________________________________________________________________
 Bool_t TClass::IsFolder(void *obj) const
 {

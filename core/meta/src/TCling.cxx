@@ -2754,6 +2754,55 @@ const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
 }
 
 //______________________________________________________________________________
+namespace {
+   void GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const clang::Decl*> &netD)
+   {
+      // Get the data members that do not have a dictionary for a Decl.
+
+      // Convert to RecordDecl.
+      const clang::RecordDecl* RD = dyn_cast<clang::RecordDecl>(D);
+      // If there is no RecordDecl there is no Dictionary
+      if (!RD) return;
+
+      // Get the name of the class.
+      std::string name = dyn_cast<clang::NamedDecl>(RD)->getQualifiedNameAsString();
+      // Check for the dictionary of the curent class.
+      if (!gClassTable->GetDict(name.c_str())){
+         netD.insert(D);
+         return ;
+      }
+      // Recurse for the data members.
+      for (clang::RecordDecl::decl_iterator RDI = RD->decls_begin()
+           , RDE = RD->decls_end(); RDI != RDE; ++RDI) {
+         GetMissingDictionariesForDecl(*RDI, netD);
+      }
+
+      return ;
+   }
+}
+//______________________________________________________________________________
+std::set<TClass*> TCling::GetMissingDictionaries(TClass* cl)
+{
+   // Get the Tclass-s that do not have a dictionary.
+
+   // Get the Decl for the class.
+   TClingClassInfo* cli = (TClingClassInfo*)cl->GetClassInfo();
+   const clang::Decl* D = cli->GetDecl();
+
+   // Get the Decls recursively for all data members of TClass cl
+
+   std::set<const clang::Decl*> netD;
+   GetMissingDictionariesForDecl(D, netD);
+
+   //convert set<Decl> to set<TClass>
+
+   //return the classes the have missing dictionaries
+   std::set<TClass*> clMissingDict;
+   if (netD.empty()) clMissingDict.insert(0);
+   return clMissingDict;
+}
+
+//______________________________________________________________________________
 void TCling::Execute(const char* function, const char* params, int* error)
 {
    // Execute a global function with arguments params.
