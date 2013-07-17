@@ -3679,7 +3679,7 @@ Long_t TCling::CallFunc_ExecInt(CallFunc_t* func, void* address) const
 }
 
 //______________________________________________________________________________
-Long_t TCling::CallFunc_ExecInt64(CallFunc_t* func, void* address) const
+Long64_t TCling::CallFunc_ExecInt64(CallFunc_t* func, void* address) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    return f->ExecInt64(address);
