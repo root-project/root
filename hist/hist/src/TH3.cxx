@@ -1842,7 +1842,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
    //*-*      ====================================================
    //
    //   The projection is always of the type TH1D.
-   //   The projection is made from the cells along the X axis
+   //   The projection is made from the cells along the Z axis
    //   ranging from ixmin to ixmax and iymin to iymax included.
    //   By default, bins 1 to nx and 1 to ny  are included
    //   By setting ixmin=1 and/or ixmax=NbinsX the underflow and/or overflow in X will be excluded
