@@ -269,6 +269,7 @@ int TClingMethodInfo::InternalNext()
       if ( templateDecl ) {
          SpecIterator subiter(templateDecl);
          if (subiter) {
+            delete fTemplateSpecIter;
             fTemplateSpecIter = new SpecIterator(templateDecl);
             return 1;
          }
