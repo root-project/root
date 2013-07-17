@@ -7,7 +7,7 @@
 
 class Unversioned {
 public:
-   Unversioned(int seed = 4) : fCached(4) {}
+   Unversioned(int seed = 4) : fCached(seed) {}
 
    int fCached; //!
    void Print() {
