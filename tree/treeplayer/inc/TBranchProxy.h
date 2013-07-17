@@ -107,7 +107,7 @@ namespace ROOT {
       void    *fWhere;    // memory location of the data
       TVirtualCollectionProxy *fCollection; // Handle to the collection containing the data chunk.
 
-      Int_t currentTreeNumber;
+      Int_t    fCurrentTreeNumber;
 
    public:
       virtual void Print();
@@ -127,7 +127,7 @@ namespace ROOT {
       Bool_t Setup();
 
       Bool_t IsInitialized() {
-         return fLastTree && (currentTreeNumber == fDirector->GetTree()->GetTreeNumber());
+         return fLastTree && (fCurrentTreeNumber == fDirector->GetTree()->GetTreeNumber());
       }
 
       Bool_t IsaPointer() const {
