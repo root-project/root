@@ -29,6 +29,7 @@
 #endif
 
 #include <set>
+#include <map>
 #include <vector>
 
 #ifndef WIN32
@@ -99,6 +100,14 @@ private: // Data Members
    TClingCallbacks* fClingCallbacks; // cling::Interpreter owns it.
    Bool_t          fHaveSinglePCM; // Whether a single ROOT PCM was provided
    std::vector<const void*> fDeserializedDecls; // Decls read from the AST
+   struct CharPtrCmp_t {
+      bool operator()(const char* a, const char *b) {
+         return strcmp(a, b) < 0;
+      }
+   };
+   typedef std::map<const char* /*hdr*/, const char* /*mod*/, CharPtrCmp_t>
+      ModuleForHeader_t;
+   ModuleForHeader_t fModuleForHeader; // Which module a header is in. Assumes string storage in dictionary.
 
 public: // Public Interface
    virtual ~TCling();

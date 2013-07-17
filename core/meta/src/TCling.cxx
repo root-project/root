@@ -969,6 +969,19 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
       TCling::AddIncludePath(*inclPath);
    }
 
+   if (gDebug > 0) {
+      for (const char** allHdr = allHeaders; *allHdr; ++allHdr) {
+         ModuleForHeader_t::iterator iMap = fModuleForHeader.find(*allHdr);
+         if (iMap != fModuleForHeader.end()) {
+            Warning("RegisterModule()",
+                    "Header %s provided by module %s was already available through module %s",
+                    *allHdr, modulename, iMap->second);
+         } else {
+            fModuleForHeader[*allHdr] = modulename;
+         }
+      }
+   }
+
    TString code;
    if (!getenv("ROOT_MODULES")) {
       for (int what = 0; what < 2; ++what) {
