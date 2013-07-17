@@ -17,6 +17,14 @@
 #include "TError.h"
 
 
+//- helper -------------------------------------------------------------------
+namespace PyROOT {
+   inline std::string UnqualifiedTypeName( const std::string name ) {
+      return TClassEdit::ShortType(
+         TClassEdit::CleanType( name.c_str(), 1 ).c_str(), 5 );
+   }
+} // namespace PyROOT
+
 //= TReturnTypeAdapter =======================================================
 std::string PyROOT::TReturnTypeAdapter::Name( unsigned int mod ) const
 {
@@ -24,7 +32,7 @@ std::string PyROOT::TReturnTypeAdapter::Name( unsigned int mod ) const
    std::string name = fName;
 
    if ( ! ( mod & Rflx::QUALIFIED ) )
-      name = TClassEdit::CleanType( fName.c_str(), 1 );
+      name = UnqualifiedTypeName( fName );
 
    if ( mod & Rflx::FINAL )
       name = Utility::ResolveTypedef( name );
@@ -94,11 +102,11 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
    if ( arg ) {
 
       std::string name = arg->GetTypeNormalizedName();
-      if ( mod & Rflx::QUALIFIED )
-         return name;
-
       if ( mod & Rflx::FINAL )
          name = Utility::ResolveTypedef( name );
+
+      if ( ! ( mod & Rflx::QUALIFIED ) )
+         name = UnqualifiedTypeName( name );
 
       return name;
 
@@ -280,11 +288,11 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
    // fundamental types have no class, and unknown classes have no property
       std::string name = fName;
 
-      if ( ! ( mod & Rflx::QUALIFIED ) )
-         name = TClassEdit::CleanType( fName.c_str(), 1 );
-
       if ( mod & Rflx::FINAL )
          name = Utility::ResolveTypedef( name );
+
+      if ( ! ( mod & Rflx::QUALIFIED ) )
+         name = UnqualifiedTypeName( fName );
 
       return name;
    }
@@ -384,9 +392,17 @@ PyROOT::TScopeAdapter::operator Bool_t() const
 
    Int_t oldEIL = gErrorIgnoreLevel;
    gErrorIgnoreLevel = 3000;
-   TClass* klass = TClass::GetClass( Name( Rflx::QUALIFIED | Rflx::SCOPED ).c_str() );
-   if ( klass && klass->GetClassInfo() )
+   std::string scname = Name( Rflx::SCOPED );
+   TClass* klass = TClass::GetClass( scname.c_str() );
+   if ( klass && klass->GetClassInfo() )     // works for normal case w/ dict
       b = gInterpreter->ClassInfo_IsValid( klass->GetClassInfo() );
+   else {      // special case for forward declared classes
+      ClassInfo_t* ci = gInterpreter->ClassInfo_Factory( scname.c_str() );
+      if ( ci ) {
+         b = gInterpreter->ClassInfo_IsValid( ci );
+         gInterpreter->ClassInfo_Delete( ci );    // we own the fresh class info
+      }
+   }
    gErrorIgnoreLevel = oldEIL;
    return b;
 }
@@ -397,8 +413,17 @@ Bool_t PyROOT::TScopeAdapter::IsComplete() const
 // verify whether the dictionary of this class is fully available
    Bool_t b = kFALSE;
 
-   TClass* klass = TClass::GetClass( Name( Rflx::SCOPED ).c_str() );
-   if ( klass ) b = gInterpreter->ClassInfo_IsLoaded( klass->GetClassInfo() );
+   std::string scname = Name( Rflx::SCOPED );
+   TClass* klass = TClass::GetClass( scname.c_str() );
+   if ( klass && klass->GetClassInfo() )     // works for normal case w/ dict
+      b = gInterpreter->ClassInfo_IsLoaded( klass->GetClassInfo() );
+   else {      // special case for forward declared classes
+      ClassInfo_t* ci = gInterpreter->ClassInfo_Factory( scname.c_str() );
+      if ( ci ) {
+         b = gInterpreter->ClassInfo_IsLoaded( ci );
+         gInterpreter->ClassInfo_Delete( ci );    // we own the fresh class info
+      }
+   }
    return b;
 }
 

@@ -374,15 +374,17 @@ Int_t PyROOT::TMethodHolder::GetPriority()
 
    // the following numbers are made up and may cause problems in specific
    // situations: use <obj>.<meth>.disp() for choice of exact dispatch
-      if ( ! (Bool_t)arg ) {
-         priority -= 10000;   // class is gibberish
-      } else if ( (arg.IsClass() || arg.IsStruct()) && ! arg.IsComplete() ) {
-      // class is known, but no dictionary available, 2 more cases: * and &
-         const std::string aname = arg.Name( Rflx::QUALIFIED );
-         if ( aname[ aname.size() - 1 ] == '&' )
-            priority -= 3000;
-         else
-            priority -= 1000; // prefer pointer passing over reference
+      if ( arg.IsClass() || arg.IsStruct() ) {
+         if ( ! (Bool_t)arg ) {
+            priority -= 10000;   // class is gibberish
+         } else if ( ! arg.IsComplete() ) {
+         // class is known, but no dictionary available, 2 more cases: * and &
+            const std::string aname = arg.Name( Rflx::QUALIFIED );
+            if ( aname[ aname.size() - 1 ] == '&' )
+               priority -= 3000;
+            else
+               priority -= 1000; // prefer pointer passing over reference
+         }
       } else {
          const std::string aname = arg.Name( Rflx::FINAL | Rflx::QUALIFIED );
          if ( aname == "void*" )
