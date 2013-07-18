@@ -71,7 +71,7 @@ public:
 private:
    // Copy constructor and assignment not allowed
    TGeoRCExtension(const TGeoRCExtension &); // Not implemented
-   TGeoRCExtension &operator =(const TGeoRCExtension &) {return *this;}
+   TGeoRCExtension &operator =(const TGeoRCExtension &); // Not implemented
    mutable Int_t        fRC;           // Reference counter
    TObject             *fUserObject;   // Attached user object
 
