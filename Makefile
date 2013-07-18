@@ -776,6 +776,9 @@ $(COREDS): $(COREDICTHDEP) $(COREL) $(ROOTCINTTMPDEP) $(LLVMDEP)
 	$(ROOTCINTTMP) -f $@ -s lib/libCore.so -c $(COREDICTCXXFLAGS) \
 	   $(COREDICTH) $(COREL0)
 
+$(call pcmname,CORELIB): $(COREDS)
+	$(noop)
+
 $(CORELIB): $(COREO) $(COREDO) $(PCREDEP) $(CORELIBDEP)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ \

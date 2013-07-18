@@ -21,9 +21,13 @@ stripsrc = $(subst $(ROOT_SRCDIR)/,,$(1))
 
 # The macro create the list of pcm files to be passed to a libraries
 # dictionary generation step, somethings like
-#    $(call pcmfiles,$(TREELIBDEPM))
-pcmfiles = -m lib/libCore.pcm $(addprefix -m ,$(subst $(SOEXT),pcm,$1))
-dictModule = -s $($1) $(call pcmfiles,$($1DEPM))
+#    $(call pcm_rootcling_opt,$(TREELIBDEPM))
+pcmname = $(subst .$(SOEXT),_rdict.pcm,$($1))
+pcmrule = $(call pcmname,$1LIB): $(call pcm_dep,$1LIB) $($1DS)
+pcm_dep = lib/libCore_rdict.pcm $(subst .$(SOEXT),_rdict.pcm,$($1DEPM))
+pcm_rootcling_opt = -m lib/libCore.pcm $(addprefix -m ,$(subst $(SOEXT),pcm,$1))
+dictModule = -s $($1) $(call pcm_rootcling_opt,$($1DEPM))
+noop = @true # "Do nothing really, this is just to make the rule stick"
 
 ARCH           := @architecture@
 HOST           := @host@

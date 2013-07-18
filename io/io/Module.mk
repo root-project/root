@@ -46,7 +46,10 @@ $(IOLIB):       $(IOO) $(IODO) $(ORDER_) $(MAINLIBS) $(IOLIBDEP)
 		   "$(SOFLAGS)" libRIO.$(SOEXT) $@ "$(IOO) $(IODO)" \
 		   "$(IOLIBEXTRA)"
 
-$(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP)
+$(call pcmrule,IO)
+	$(noop)
+
+$(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP) $(call pcm_dep,IOLIB)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,IOLIB) -c $(IOH) $(IOL)
