@@ -267,7 +267,7 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
       Bool_t isStatic = isNamespace || method.IsStatic();
 
    // template members; handled by adding a dispatcher to the class
-      if ( ! isStatic && mtName[mtName.size()-1] == '>' ) {
+      if ( ! (isStatic || isConstructor) && mtName[mtName.size()-1] == '>' ) {
          std::string tmplname = mtName.substr( 0, mtName.find('<') );
          PyObject* attr = PyObject_GetAttrString( pyclass, const_cast< char* >( tmplname.c_str() ) );
          if ( ! TemplateProxy_Check( attr ) ) {
