@@ -49,7 +49,7 @@ $(FUMILILIB):   $(FUMILIO) $(FUMILIDO) $(ORDER_) $(MAINLIBS) $(FUMILILIBDEP)
 $(FUMILIDS):    $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,FUMILILIB) -c $(FUMILIH) $(FUMILIL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,FUMILI) -c $(FUMILIH) $(FUMILIL)
 
 $(FUMILIMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(FUMILIL)
 		$(RLIBMAP) -o $@ -l $(FUMILILIB) \

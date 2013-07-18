@@ -50,7 +50,7 @@ $(SQLITELIB):   $(SQLITEO) $(SQLITEDO) $(ORDER_) $(MAINLIBS) $(SQLITELIBDEP)
 $(SQLITEDS):    $(SQLITEH) $(SQLITEL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,SQLITELIB) \
+		$(ROOTCINTTMP) -f $@ $(call dictModule,SQLITE) \
 		   -c $(SQLITEINCDIR:%=-I%) $(SQLITEH) $(SQLITEL)
 
 $(SQLITEMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(SQLITEL)

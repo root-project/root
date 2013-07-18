@@ -49,7 +49,7 @@ $(RFIOLIB):     $(RFIOO) $(RFIODO) $(ORDER_) $(MAINLIBS) $(RFIOLIBDEP)
 $(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,RFIOLIB) -c $(RFIOH) $(RFIOL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,RFIO) -c $(RFIOH) $(RFIOL)
 
 $(RFIOMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(RFIOL)
 		$(RLIBMAP) -o $@ -l $(RFIOLIB) \

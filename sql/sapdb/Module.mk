@@ -49,7 +49,7 @@ $(SAPDBLIB):    $(SAPDBO) $(SAPDBDO) $(ORDER_) $(MAINLIBS)
 $(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,SAPDBLIB) -c $(SAPDBH) $(SAPDBL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,SAPDB) -c $(SAPDBH) $(SAPDBL)
 
 $(SAPDBMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(SAPDBL)
 		$(RLIBMAP) -o $@ -l $(SAPDBLIB) \

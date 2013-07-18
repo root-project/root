@@ -108,7 +108,7 @@ $(RAUTHLIB):    $(RAUTHO) $(RAUTHDO) $(ORDER_) $(MAINLIBS) $(RAUTHLIBDEP)
 $(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,RAUTHLIB) -c $(RAUTHH) $(RAUTHL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,RAUTH) -c $(RAUTHH) $(RAUTHL)
 
 $(RAUTHMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(RAUTHL)
 		$(RLIBMAP) -o $@ -l $(RAUTHLIB) \

@@ -49,7 +49,7 @@ $(TABLELIB):    $(TABLEO) $(TABLEDO) $(ORDER_) $(MAINLIBS) $(TABLELIBDEP)
 $(TABLEDS):     $(TABLEH) $(TABLEL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,TABLELIB) -c $(TABLEH) $(TABLEL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,TABLE) -c $(TABLEH) $(TABLEL)
 
 $(TABLEMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(TABLEL)
 		$(RLIBMAP) -o $@ -l $(TABLELIB) \

@@ -51,7 +51,7 @@ $(GRAFLIB):     $(GRAFO) $(GRAFDO) $(MATHTEXTLIBDEP) $(FREETYPEDEP) $(ORDER_) \
 $(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GRAFLIB) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
 
 $(GRAFMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GRAFL)
 		$(RLIBMAP) -o $@ -l $(GRAFLIB) \

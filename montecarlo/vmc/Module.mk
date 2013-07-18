@@ -50,7 +50,7 @@ $(VMCLIB):      $(VMCO) $(VMCDO) $(ORDER_) $(MAINLIBS) $(VMCLIBDEP)
 $(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,VMCLIB) -c $(VMCH1) $(VMCL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,VMC) -c $(VMCH1) $(VMCL)
 
 $(VMCMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(VMCL)
 		$(RLIBMAP) -o $@ -l $(VMCLIB) \

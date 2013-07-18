@@ -49,7 +49,7 @@ $(GLITELIB):    $(GLITEO) $(GLITEDO) $(ORDER_) $(MAINLIBS) $(GLITELIBDEP)
 $(GLITEDS):     $(GLITEH) $(GLITEL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GLITELIB) -c $(GLITEH) $(GLITEL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GLITE) -c $(GLITEH) $(GLITEL)
 
 $(GLITEMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(GLITEL)
 		$(RLIBMAP) -o $@ -l $(GLITELIB) \

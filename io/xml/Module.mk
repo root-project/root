@@ -49,7 +49,7 @@ $(XMLLIB):      $(XMLO) $(XMLDO) $(ORDER_) $(MAINLIBS) $(XMLLIBDEP)
 $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,XMLLIB) -c $(XMLH) $(XMLL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,XML) -c $(XMLH) $(XMLL)
 
 $(XMLMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(XMLL)
 		$(RLIBMAP) -o $@ -l $(XMLLIB) \

@@ -50,7 +50,7 @@ $(CASTORLIB):   $(CASTORO) $(CASTORDO) $(ORDER_) $(MAINLIBS) $(CASTORLIBDEP)
 $(CASTORDS):    $(CASTORH) $(CASTORL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,CASTORLIB) -c $(CASTORH) $(CASTORL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,CASTOR) -c $(CASTORH) $(CASTORL)
 
 $(CASTORMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(CASTORL)
 		$(RLIBMAP) -o $@ -l $(CASTORLIB) \

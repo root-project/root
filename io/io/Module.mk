@@ -52,7 +52,7 @@ $(call pcmrule,IO)
 $(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP) $(call pcm_dep,IOLIB)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,IOLIB) -c $(IOH) $(IOL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,IO) -c $(IOH) $(IOL)
 
 $(IOMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(IOL)
 		$(RLIBMAP) -o $@ -l $(IOLIB) -d $(IOLIBDEPM) -c $(IOL)

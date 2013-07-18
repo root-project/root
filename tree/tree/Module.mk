@@ -49,7 +49,7 @@ $(TREELIB):     $(TREEO) $(TREEDO) $(ORDER_) $(MAINLIBS) $(TREELIBDEP)
 $(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,TREELIB) -c $(TREEH) $(TREEL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,TREE) -c $(TREEH) $(TREEL)
 
 $(TREEMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TREEL)
 		$(RLIBMAP) -o $@ -l $(TREELIB) \

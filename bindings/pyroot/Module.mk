@@ -94,7 +94,7 @@ endif
 $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,PYROOTLIB) -c $(PYROOTH) $(PYROOTL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)
 
 $(PYROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(PYROOTL)
 		$(RLIBMAP) -o $@ -l $(PYROOTLIB) \

@@ -49,7 +49,7 @@ $(BONJLIB):     $(BONJO) $(BONJDO) $(ORDER_) $(MAINLIBS)
 $(BONJDS):      $(BONJH) $(BONJL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,BONJLIB) -c $(BONJH) $(BONJL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,BONJ) -c $(BONJH) $(BONJL)
 
 $(BONJMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(BONJL)
 		$(RLIBMAP) -o $@ -l $(BONJLIB) \

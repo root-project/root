@@ -49,7 +49,7 @@ $(FITSIOLIB):   $(FITSIOO) $(FITSIODO) $(ORDER_) $(MAINLIBS) $(FITSIOLIBDEP)
 $(FITSIODS):    $(FITSIOH) $(FITSIOL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,FITSIOLIB) -c $(FITSIOH) $(FITSIOL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,FITSIO) -c $(FITSIOH) $(FITSIOL)
 
 $(FITSIOMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(FITSIOL)
 		$(RLIBMAP) -o $@ -l $(FITSIOLIB) \

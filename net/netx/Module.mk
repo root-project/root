@@ -85,7 +85,7 @@ $(NETXLIB):     $(NETXO) $(NETXDO) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP) \
 $(NETXDS):      $(NETXH1) $(NETXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP) $(XRDPLUGINS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,NETXLIB) -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,NETX) -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
 
 $(NETXMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(NETXL)
 		$(RLIBMAP) -o $@ -l $(NETXLIB) -d $(NETXLIBDEPM) -c $(NETXL)

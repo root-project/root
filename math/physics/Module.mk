@@ -49,7 +49,7 @@ $(PHYSICSLIB):  $(PHYSICSO) $(PHYSICSDO) $(ORDER_) $(MAINLIBS) $(PHYSICSLIBDEP)
 $(PHYSICSDS):   $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,PHYSICSLIB) -c $(PHYSICSH) $(PHYSICSL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,PHYSICS) -c $(PHYSICSH) $(PHYSICSL)
 
 $(PHYSICSMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PHYSICSL)
 		$(RLIBMAP) -o $@ -l $(PHYSICSLIB) \

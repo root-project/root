@@ -49,7 +49,7 @@ $(MINUITLIB):   $(MINUITO) $(MINUITDO) $(ORDER_) $(MAINLIBS) $(MINUITLIBDEP)
 $(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,MINUITLIB) -c $(MINUITH) $(MINUITL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,MINUIT) -c $(MINUITH) $(MINUITL)
 
 $(MINUITMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(MINUITL)
 		$(RLIBMAP) -o $@ -l $(MINUITLIB) \

@@ -49,7 +49,7 @@ $(HDFSLIB):     $(HDFSO) $(HDFSDO) $(ORDER_) $(MAINLIBS) $(HDFSLIBDEP)
 $(HDFSDS):      $(HDFSH) $(HDFSL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,HDFSLIB) -c $(HDFSH) $(HDFSL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,HDFS) -c $(HDFSH) $(HDFSL)
 
 $(HDFSMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HDFSL)
 		$(RLIBMAP) -o $@ -l $(HDFSLIB) \

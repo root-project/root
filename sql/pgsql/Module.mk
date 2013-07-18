@@ -49,7 +49,7 @@ $(PGSQLLIB):    $(PGSQLO) $(PGSQLDO) $(ORDER_) $(MAINLIBS) $(PGSQLLIBDEP)
 $(PGSQLDS):     $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,PGSQLLIB) -c $(PGSQLINCDIR:%=-I%) $(PGSQLH) $(PGSQLL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,PGSQL) -c $(PGSQLINCDIR:%=-I%) $(PGSQLH) $(PGSQLL)
 
 $(PGSQLMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(PGSQLL)
 		$(RLIBMAP) -o $@ -l $(PGSQLLIB) \

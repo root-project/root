@@ -84,7 +84,7 @@ $(CLINGMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(CLINGL)
 $(CLINGDS): $(CLINGL) $(ROOTCINTTMPDEP) $(LLVMDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,CLINGLIB) -c $(CLINGH) \
+		$(ROOTCINTTMP) -f $@ $(call dictModule,CLING) -c $(CLINGH) \
 		   $(CLINGL)
 
 all-$(MODNAME): $(METAO) $(METAOLLVM) $(CLINGLIB) $(CLINGMAP)

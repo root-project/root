@@ -49,7 +49,7 @@ $(RECLIB):      $(RECO) $(RECDO) $(ORDER_) $(MAINLIBS) $(RECLIBDEP)
 $(RECDS):       $(RECH) $(RECL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,RECLIB) -c $(RECH) $(RECL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,REC) -c $(RECH) $(RECL)
 
 $(RECMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(RECL)
 		$(RLIBMAP) -o $@ -l $(RECLIB) \

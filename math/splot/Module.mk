@@ -49,7 +49,7 @@ $(SPLOTLIB):    $(SPLOTO) $(SPLOTDO) $(ORDER_) $(MAINLIBS) $(SPLOTLIBDEP)
 $(SPLOTDS):     $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,SPLOTLIB) -c $(SPLOTH) $(SPLOTL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,SPLOT) -c $(SPLOTH) $(SPLOTL)
 
 $(SPLOTMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(SPLOTL)
 		$(RLIBMAP) -o $@ -l $(SPLOTLIB) \

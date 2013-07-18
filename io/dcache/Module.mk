@@ -48,7 +48,7 @@ $(DCACHELIB):   $(DCACHEO) $(DCACHEDO) $(ORDER_) $(MAINLIBS) $(DCACHELIBDEP)
 $(DCACHEDS):    $(DCACHEH) $(DCACHEL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,DCACHELIB) -c $(DCACHEH) $(DCACHEL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,DCACHE) -c $(DCACHEH) $(DCACHEL)
 
 $(DCACHEMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(DCACHEL)
 		$(RLIBMAP) -o $@ -l $(DCACHELIB) \

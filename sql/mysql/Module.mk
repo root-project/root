@@ -49,7 +49,7 @@ $(MYSQLLIB):    $(MYSQLO) $(MYSQLDO) $(ORDER_) $(MAINLIBS) $(MYSQLLIBDEP)
 $(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,MYSQLLIB) -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,MYSQL) -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
 
 $(MYSQLMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(MYSQLL)
 		$(RLIBMAP) -o $@ -l $(MYSQLLIB) \

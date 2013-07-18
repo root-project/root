@@ -82,14 +82,12 @@ $(THREADLIB):   $(THREADO) $(THREADDO) $(ORDER_) $(MAINLIBS) $(THREADLIBDEP)
 		   "$(THREADLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB)"
 
 $(call pcmrule,THREAD)
-	@echo "Do nothing really, this is just to make the rule stick"
-
-#	$(noop)
+	$(noop)
 
 $(THREADDS):    $(THREADH) $(THREADL) $(ROOTCINTTMPDEP) $(call pcm_dep,THREADLIB)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,THREADLIB) -c $(THREADH) $(THREADL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,THREAD) -c $(THREADH) $(THREADL)
 
 $(THREADMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(THREADL)
 		$(RLIBMAP) -o $@ -l $(THREADLIB) \

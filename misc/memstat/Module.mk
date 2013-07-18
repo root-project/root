@@ -56,7 +56,7 @@ $(MEMSTATLIB):  $(MEMSTATO) $(MEMSTATDO) $(ORDER_) $(MAINLIBS) $(MEMSTATLIBDEP)
 $(MEMSTATDS):   $(MEMSTATH) $(MEMSTATL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,MEMSTATLIB) -c $(MEMSTATH) $(MEMSTATL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,MEMSTAT) -c $(MEMSTATH) $(MEMSTATL)
 
 $(MEMSTATMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(MEMSTATL)
 		$(RLIBMAP) -o $@ -l $(MEMSTATLIB) \

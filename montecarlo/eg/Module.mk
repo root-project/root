@@ -50,7 +50,7 @@ $(EGLIB):       $(EGO) $(EGDO) $(ORDER_) $(MAINLIBS) $(EGLIBDEP)
 $(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,EGLIB) -c $(EGH1) $(EGL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,EG) -c $(EGH1) $(EGL)
 
 $(EGMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(EGL)
 		$(RLIBMAP) -o $@ -l $(EGLIB) \

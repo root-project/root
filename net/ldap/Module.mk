@@ -49,7 +49,7 @@ $(LDAPLIB):     $(LDAPO) $(LDAPDO) $(ORDER_) $(MAINLIBS)
 $(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,LDAPLIB) -c $(LDAPH) $(LDAPL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,LDAP) -c $(LDAPH) $(LDAPL)
 
 $(LDAPMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(LDAPL)
 		$(RLIBMAP) -o $@ -l $(LDAPLIB) \

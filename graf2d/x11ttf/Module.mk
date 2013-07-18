@@ -52,7 +52,7 @@ $(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) \
 $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,X11TTFLIB) -c $(FREETYPEINC) $(X11TTFH) $(X11TTFL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,X11TTF) -c $(FREETYPEINC) $(X11TTFH) $(X11TTFL)
 
 $(X11TTFMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(X11TTFL)
 		$(RLIBMAP) -o $@ -l $(X11TTFLIB) \

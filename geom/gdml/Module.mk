@@ -49,7 +49,7 @@ $(GDMLLIB):     $(GDMLO) $(GDMLDO) $(ORDER_) $(MAINLIBS) $(GDMLLIBDEP)
 $(GDMLDS):      $(GDMLH) $(GDMLL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GDMLLIB) -c $(GDMLH) $(GDMLL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GDML) -c $(GDMLH) $(GDMLL)
 
 $(GDMLMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GDMLL)
 		$(RLIBMAP) -o $@ -l $(GDMLLIB) \

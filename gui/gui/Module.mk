@@ -81,7 +81,7 @@ $(GUILIB):      $(GUIO) $(GUIDO) $(ORDER_) $(MAINLIBS) $(GUILIBDEP)
 $(GUIDS):       $(GUIH) $(GUIL0) $(GUILS) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GUILIB) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GUI) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)
 
 $(GUIMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(GUIL0) $(GUILS)
 		$(RLIBMAP) -o $@ -l $(GUILIB) \

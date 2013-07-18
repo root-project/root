@@ -49,7 +49,7 @@ $(GVIZ3DLIB):   $(GVIZ3DO) $(GVIZ3DDO) $(ORDER_) $(MAINLIBS) $(GVIZ3DLIBDEP)
 $(GVIZ3DDS):    $(GVIZ3DH) $(GVIZ3DL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GVIZ3DLIB) -c $(GVIZ3DH) $(GVIZ3DL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GVIZ3D) -c $(GVIZ3DH) $(GVIZ3DL)
 
 $(GVIZ3DMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(GVIZ3DL)
 		$(RLIBMAP) -o $@ -l $(GVIZ3DLIB) \

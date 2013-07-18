@@ -49,7 +49,7 @@ $(GUIBLDLIB):   $(GUIBLDO) $(GUIBLDDO) $(ORDER_) $(MAINLIBS) $(GUIBLDLIBDEP)
 $(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GUIBLDLIB) -c $(GUIBLDH) $(GUIBLDL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,GUIBLD) -c $(GUIBLDH) $(GUIBLDL)
 
 $(GUIBLDMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(GUIBLDL)
 		$(RLIBMAP) -o $@ -l $(GUIBLDLIB) \

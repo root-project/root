@@ -52,7 +52,7 @@ $(X3DLIB):      $(X3DO) $(X3DDO) $(ORDER_) $(MAINLIBS) $(X3DLIBDEP)
 $(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,X3DLIB) -c $(X3DH1) $(X3DL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,X3D) -c $(X3DH1) $(X3DL)
 
 $(X3DMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(X3DL)
 		$(RLIBMAP) -o $@ -l $(X3DLIB) \
