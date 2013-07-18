@@ -905,15 +905,14 @@ Bool_t TEveTrackPropagator::LineIntersectPlane(const TEveVectorD& p,
    // the line.
 
    TEveVectorD pos(fV.fX, fV.fY, fV.fZ);
-   TEveVectorD delta = pos - point;
+   TEveVectorD delta = point - pos;
 
-   Double_t d = delta.Dot(normal);
-   if (d == 0) {
-      itsect = pos;
-      return kTRUE;
+   Double_t pn = p.Dot(normal);
+   if (pn == 0)
+   {
+     return kFALSE;
    }
-
-   Double_t t = (p.Dot(normal)) / d;
+   Double_t t = delta.Dot(normal) / pn;
    if (t < 0) {
       return kFALSE;
    } else {
