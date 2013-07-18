@@ -45,9 +45,7 @@ Bool_t h1analysisTreeReader::Process(Long64_t entry){
    fProcessed++;
    //in case one entry list is given in input, the selection has already been done.
    if (!useList) {
-      // Read only the necessary branches to select entries.
-      // return as soon as a bad entry is detected
-      // to read complete event, call fChain->GetTree()->GetEntry(entry)
+      // Return as soon as a bad entry is detected
       if (TMath::Abs(*md0_d-1.8646) >= 0.04) return kFALSE;
       if (*ptds_d <= 2.5) return kFALSE;
       if (TMath::Abs(*etads_d) >= 1.5) return kFALSE;
@@ -67,12 +65,6 @@ Bool_t h1analysisTreeReader::Process(Long64_t entry){
    }
    // if option fillList, fill the entry list
    if (fillList) elist->Enter(entry);
-
-   // to read complete event, call fChain->GetTree()->GetEntry(entry)
-   // read branches not processed in ProcessCut
-   //read branch holding dm_d
-   //read branch holding rpd0_t
-   //read branch holding ptd0_d
 
    //fill some histograms
    hdmd->Fill(*dm_d);
