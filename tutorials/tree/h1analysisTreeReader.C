@@ -41,29 +41,29 @@ Double_t fdm2(Double_t *xx, Double_t *par)
 Bool_t h1analysisTreeReader::Process(Long64_t entry){
 // entry is the entry number in the current Tree
 // Selection function to select D* and D0.
-   myTreeReader->SetEntry(fChainOffset + entry);
+   myTreeReader.SetEntry(fChainOffset + entry);
    fProcessed++;
    //in case one entry list is given in input, the selection has already been done.
    if (!useList) {
       // Read only the necessary branches to select entries.
       // return as soon as a bad entry is detected
       // to read complete event, call fChain->GetTree()->GetEntry(entry)
-      if (TMath::Abs(**md0_d-1.8646) >= 0.04) return kFALSE;
-      if (**ptds_d <= 2.5) return kFALSE;
-      if (TMath::Abs(**etads_d) >= 1.5) return kFALSE;
-      (**ik)--; //original ik used f77 convention starting at 1
-      (**ipi)--;
+      if (TMath::Abs(*md0_d-1.8646) >= 0.04) return kFALSE;
+      if (*ptds_d <= 2.5) return kFALSE;
+      if (TMath::Abs(*etads_d) >= 1.5) return kFALSE;
+      (*ik)--; //original ik used f77 convention starting at 1
+      (*ipi)--;
       
       
-      if (nhitrp->At(**ik)* nhitrp->At(**ipi) <= 1) return kFALSE;
+      if (nhitrp.At(*ik)* nhitrp.At(*ipi) <= 1) return kFALSE;
       
       
-      if (rend->At(**ik) -rstart->At(**ik)  <= 22) return kFALSE;
-      if (rend->At(**ipi)-rstart->At(**ipi) <= 22) return kFALSE;
-      if (nlhk->At(**ik) <= 0.1)    return kFALSE;
-      if (nlhpi->At(**ipi) <= 0.1)  return kFALSE;
-      (**ipis)--; if (nlhpi->At(**ipis) <= 0.1) return kFALSE;
-      if (**njets < 1)          return kFALSE;
+      if (rend.At(*ik) -rstart.At(*ik)  <= 22) return kFALSE;
+      if (rend.At(*ipi)-rstart.At(*ipi) <= 22) return kFALSE;
+      if (nlhk.At(*ik) <= 0.1)    return kFALSE;
+      if (nlhpi.At(*ipi) <= 0.1)  return kFALSE;
+      (*ipis)--; if (nlhpi.At(*ipis) <= 0.1) return kFALSE;
+      if (*njets < 1)          return kFALSE;
    }
    // if option fillList, fill the entry list
    if (fillList) elist->Enter(entry);
@@ -75,8 +75,8 @@ Bool_t h1analysisTreeReader::Process(Long64_t entry){
    //read branch holding ptd0_d
 
    //fill some histograms
-   hdmd->Fill(**dm_d);
-   h2->Fill(**dm_d,**rpd0_t/0.029979*1.8646/ **ptd0_d);
+   hdmd->Fill(*dm_d);
+   h2->Fill(*dm_d,*rpd0_t/0.029979*1.8646/ *ptd0_d);
 
    return kTRUE;
 }
@@ -133,24 +133,8 @@ void h1analysisTreeReader::SlaveBegin(TTree *myTree){
 //  -it creates histograms
 //  -it sets some initialisation for the entry list
 
-   myTreeReader = new TTreeReader(myTree);
+   myTreeReader.SetTree(myTree);
 
-   
-   ptds_d     = new TTreeReaderValue<Float_t>  (*myTreeReader, "ptds_d"  ); //Need
-   etads_d    = new TTreeReaderValue<Float_t>  (*myTreeReader, "etads_d" ); //Need
-   dm_d       = new TTreeReaderValue<Float_t>  (*myTreeReader, "dm_d"    ); //Need
-   ik         = new TTreeReaderValue<Int_t>    (*myTreeReader, "ik"      ); //Need
-   ipi        = new TTreeReaderValue<Int_t>    (*myTreeReader, "ipi"     ); //Need
-   ipis       = new TTreeReaderValue<Int_t>    (*myTreeReader, "ipis"    ); //Need
-   ptd0_d     = new TTreeReaderValue<Float_t>  (*myTreeReader, "ptd0_d"  ); //Need
-   md0_d      = new TTreeReaderValue<Float_t>  (*myTreeReader, "md0_d"   ); //Need
-   rpd0_t     = new TTreeReaderValue<Float_t>  (*myTreeReader, "rpd0_t"  ); //Need
-   nhitrp     = new TTreeReaderArray<Int_t>    (*myTreeReader, "nhitrp"  ); //Need
-   rstart     = new TTreeReaderArray<Float_t>  (*myTreeReader, "rstart"  ); //Need
-   rend       = new TTreeReaderArray<Float_t>  (*myTreeReader, "rend"    ); //Need
-   nlhk       = new TTreeReaderArray<Float_t>  (*myTreeReader, "nlhk"    ); //Need
-   nlhpi      = new TTreeReaderArray<Float_t>  (*myTreeReader, "nlhpi"   ); //Need
-   njets      = new TTreeReaderValue<Int_t>    (*myTreeReader, "njets"   ); //Need
    fChainOffset = 0;
 
    //print the option specified in the Process function.
@@ -255,31 +239,15 @@ void h1analysisTreeReader::Terminate() {
 }
 
 void h1analysisTreeReader::SlaveTerminate(){
-   delete myTreeReader;
-
-   delete  ptds_d;
-   delete  etads_d;
-   delete  dm_d;
-   delete  ik;
-   delete  ipi;
-   delete  ipis;
-   delete  ptd0_d;
-   delete  md0_d;
-   delete  rpd0_t;
-   delete  nhitrp;
-   delete  rstart;
-   delete  rend;
-   delete  nlhk;
-   delete  nlhpi;
-   delete  njets;
+   
 }
 
 Bool_t h1analysisTreeReader::Notify() {
 //   called when loading a new file
 //   get branch pointers
 
-   Info("Notify","processing file: %s",myTreeReader->GetTree()->GetCurrentFile()->GetName());
-   fChainOffset = myTreeReader->GetTree()->GetChainOffset();
+   Info("Notify","processing file: %s",myTreeReader.GetTree()->GetCurrentFile()->GetName());
+   fChainOffset = myTreeReader.GetTree()->GetChainOffset();
 
    if (elist && fChain) {
       if (fillList) {
