@@ -127,7 +127,7 @@ namespace ROOT {
       Bool_t Setup();
 
       Bool_t IsInitialized() {
-         return fLastTree && (fCurrentTreeNumber == fDirector->GetTree()->GetTreeNumber());
+         return fLastTree && fCurrentTreeNumber == fDirector->GetTree()->GetTreeNumber() && fLastTree == fDirector->GetTree();
       }
 
       Bool_t IsaPointer() const {
