@@ -22,11 +22,29 @@ stripsrc = $(subst $(ROOT_SRCDIR)/,,$(1))
 # The macro create the list of pcm files to be passed to a libraries
 # dictionary generation step, somethings like
 #    $(call pcm_rootcling_opt,$(TREELIBDEPM))
-pcmname = $(subst .$(SOEXT),_rdict.pcm,$($1))
-pcmrule = $(call pcmname,$1LIB): $(call pcm_dep,$1LIB) $($1DS)
-pcm_dep = lib/libCore_rdict.pcm $(subst .$(SOEXT),_rdict.pcm,$($1DEPM))
 pcm_rootcling_opt = -m lib/libCore.pcm $(addprefix -m ,$(subst $(SOEXT),pcm,$1))
-dictModule = -s $($1) $(call pcm_rootcling_opt,$($1DEPM))
+
+# This macro returns the name of the pcm corresponding to a library
+#    $(call pcmname,$(TREELIB))
+pcmname = $(subst .$(SOEXT),_rdict.pcm,$1)
+
+# This macro return the list of pcm that are needed for a package
+#    $(call pcm_dep,TREE)  
+# the argument is the upper case name fo the library (see the Module.mk)
+pcm_dep = lib/libCore_rdict.pcm $(subst .$(SOEXT),_rdict.pcm,$($1LIBDEPM))
+
+# This macro return the argument to be passed to rootcling to
+# properly setup the pcm
+#    $(call dictModule,TREE)  
+# the argument is the upper case name fo the library (see the Module.mk)
+dictModule = -s $($1LIB) $(call pcm_rootcling_opt,$($1LIBDEPM))
+
+# This macro is used to setup the rule where the pcm depends on the 
+# dictionary and the library's dependent pcm
+#    $(call pcmrule,TREE)  
+# the argument is the upper case name fo the library (see the Module.mk)
+pcmrule = $(call pcmname,$($1LIB)): $(call pcm_dep,$1LIB) $($1DS)
+
 noop = @true # "Do nothing really, this is just to make the rule stick"
 
 ARCH           := @architecture@
