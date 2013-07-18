@@ -57,7 +57,8 @@ public:
 
    TTreeReader():
       fDirectory(0),
-      fEntryStatus(kEntryNoTree)
+      fEntryStatus(kEntryNoTree),
+      fDirector(0)
    {}
 
    TTreeReader(TTree* tree);
