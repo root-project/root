@@ -319,8 +319,11 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
           && branch->IsA() == TBranch::Class()) {
          TLeaf *myLeaf = branch->GetLeaf(branch->GetName());
          if (myLeaf){
-            dict = TDictionary::GetDictionary(((TDataType*)TDictionary::GetDictionary(myLeaf->GetTypeName()))->GetTypeName());
-            return myLeaf->GetTypeName();
+            TDictionary *myDataType = TDictionary::GetDictionary(myLeaf->GetTypeName());
+            if (myDataType->IsA() == TDataType::Class()){
+               dict = TDataType::GetDataType((EDataType)((TDataType*)myDataType)->GetType());
+               return myLeaf->GetTypeName();
+            }
          }
 
 
