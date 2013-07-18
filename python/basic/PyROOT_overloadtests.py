@@ -58,18 +58,13 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
       oldval = ROOT.gErrorIgnoreLevel
       ROOT.gErrorIgnoreLevel = ROOT.kError
       self.assertEqual( MyOverloads().call( AA() ), "AA" )
-      if not FIXCLING:
-         self.assertEqual( MyOverloads().call( BB() ), "DD" ) # <- BB has an unknown + void*
+      self.assertEqual( MyOverloads().call( BB() ), "DD" ) # <- BB has an unknown + void*
       self.assertEqual( MyOverloads().call( CC() ), "CC" )
-      if not FIXCLING:
-         self.assertEqual( MyOverloads().call( DD() ), "DD" ) # <- DD has an unknown
+      self.assertEqual( MyOverloads().call( DD() ), "DD" ) # <- DD has an unknown
       ROOT.gErrorIgnoreLevel = oldval
 
    def test3ClassOverloadsAmongUnknowns( self ):
       """Test that unknown* is preferred over unknown&"""
-
-      if FIXCLING:
-         return
 
       import ROOT
       oldval = ROOT.gErrorIgnoreLevel
@@ -95,7 +90,7 @@ class Overloads2TMathTestCase( MyTestCase ):
    def test1MeanOverloads( self ):
       """Test overloads using TMath::Mean(), TMath::Median"""
 
-      if FIXCLING: # Mean and Median fail b/c they're templates
+      if FIXCLING:       # Mean and Median fail b/c they're templates
          return
 
       numbers = [ 8, 2, 4, 2, 4, 2, 4, 4, 1, 5, 6, 3, 7 ]
@@ -127,9 +122,6 @@ class Overloads2TMathTestCase( MyTestCase ):
 
    def test2DoubleIntOverloads( self ):
       """Test overloads on int/doubles"""
-
-      if FIXCLING:
-         return
 
       self.assertEqual( MyOverloads().call( 1 ), "int" )
       self.assertEqual( MyOverloads().call( 1. ), "double" )

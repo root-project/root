@@ -72,10 +72,10 @@ class Regression03UserDefinedNewOperatorTestCase( MyTestCase ):
    def test1CreateTemporary( self ):
       """Test handling of a temporary for user defined operator new"""
 
-      if FIXCLING:
-         return
-
       gROOT.LoadMacro( "MuonTileID.C+" )
+
+      if FIXCLING:       # failure b/c of temporaries
+         return
 
       getID()
       getID()                 # used to crash
@@ -202,7 +202,7 @@ class Regression07MatchConstWithProperReturn( MyTestCase ):
    def test1OverloadOrderWithProperReturn( self ):
       """Test return type against proper overload w/ const and covariance"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of no exact match
          return
 
       gROOT.LoadMacro( "Scott2.C+" )
@@ -238,9 +238,6 @@ class Regression10BreakSmartPtrCircularLoop( MyTestCase ):
    def test1VerifyNoLoopt( self ):
       """Smart class that returns itself on dereference should not loop"""
 
-      if FIXCLING:
-         return
-
       gROOT.LoadMacro( "Scott3.C+" )
       a = MyTooSmartClass()
       self.assertRaises( AttributeError, getattr, a, 'DoesNotExist' )
@@ -260,7 +257,7 @@ class Regression11CoralAttributeListIterators( MyTestCase ):
    def test1IterateWithBaseIterator( self ):
       """Verify that the correct base class iterators is picked up"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of temporaries
          return
 
       gROOT.LoadMacro( "CoralAttributeList.C+" )

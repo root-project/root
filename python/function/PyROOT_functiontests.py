@@ -111,14 +111,13 @@ class Func2FitFunctionTestCase( MyTestCase ):
    def test1FitGaussian( self ):
       """Test fitting with a python global function"""
 
-      if FIXCLING:
-         return
-
       f = TF1( 'pygaus', pygaus, -4, 4, 4 )
       f.SetParameters( 600, 0.43, 0.35, 600 )
 
       h = TH1F( "h", "test", 100, -4, 4 )
       h.FillRandom( "gaus", 200000 )
+      if FIXCLING:       # failure b/c of temporaries
+         return
       h.Fit( f, "0Q" )
 
       self.assertEqual( f.GetNDF(), 96 )

@@ -182,7 +182,7 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
       self.assertEqual( m.GetSize( float )(),    m.GetFloatSize() )
       self.assertEqual( m.GetSize( 'double' )(), m.GetDoubleSize() )
 
-      if not FIXCLING:
+      if not FIXCLING:   # fails b/c Cling does not construct a generic template
          self.assertEqual( m.GetSize( 'MyDoubleVector_t' )(), m.GetVectorOfDoubleSize() )
 
    def test5TemplateGlobalFunctions( self ):
@@ -291,7 +291,7 @@ class Cpp07GloballyOverloadedComparatorTestCase( MyTestCase ):
    def test1Comparator( self ):
       """Check that the global operator!=/== is picked up"""
 
-      if FIXCLING:
+      if FIXCLING:       # fails b/c global operator overloads not reflected
          return
 
       a, b = Comparable(), Comparable()
@@ -326,7 +326,7 @@ class Cpp09LongExpressionsTestCase( MyTestCase ):
       r = SomeClassWithData()
       self.assertEqual( SomeClassWithData.SomeData.s_numData, 1 )
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of temporaries
          return
 
     # in this, GimeData() returns a datamember of the temporary result

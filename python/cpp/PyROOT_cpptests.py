@@ -76,7 +76,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       for i in range(n):
          self.assertEqual( v[i], 0.0 )
 
-         if not FIXCLING:
+         if not FIXCLING:     # failure b/c of temporaries
             for j in range(n):
                self.assertEqual( m[i][j], 0.0 )
 

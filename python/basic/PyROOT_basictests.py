@@ -128,7 +128,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
       self.assertEqual( f( 'aap' ), 'aap' )
       self.assertEqual( f( TString( 'noot' ) ), 'noot' )
       self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
-      if not FIXCLING:
+      if not FIXCLING:   # failure b/c of default expression
          self.assertEqual( f( 'zus', 1 ), 'default' )
       self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
 
@@ -142,7 +142,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
       self.assertEqual( f( 'aap' ), 'aap' )
       self.assertEqual( f( TString( 'noot' ) ), 'noot' )
       self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
-      if not FIXCLING:
+      if not FIXCLING:   # failure b/c of default expression
          self.assertEqual( f( 'zus', 1 ), 'default' )
       self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
 
@@ -155,7 +155,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       # NOTE: these never worked with CINT!
       self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
-      if not FIXCLING:
+      if not FIXCLING:   # failure b/c of temporaries
          self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
 
    def test4TLorentzVectorByRefInterpreted( self ):
@@ -163,7 +163,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       # script ArgumentPassingInterpreted.C already loaded in by value test
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of temporaries
          return
 
       f = InterpretedTest.LorentzVectorRefArguments
@@ -181,7 +181,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
       self.assertEqual( f( 'aap' ), 'aap' )
       self.assertEqual( f( TString( 'noot' ) ), 'noot' )
       self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
-      if not FIXCLING:
+      if not FIXCLING:   # failure b/c of default expression
          self.assertEqual( f( 'zus', 1 ), 'default' )
       self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
 
@@ -195,7 +195,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
       self.assertEqual( f( 'aap' ), 'aap' )
       self.assertEqual( f( TString( 'noot' ) ), 'noot' )
       self.assertEqual( f( 'zus', 1, 'default' ), 'default' )
-      if not FIXCLING:
+      if not FIXCLING:   # failure b/c of default expression
          self.assertEqual( f( 'zus', 1 ), 'default' )
       self.assertEqual( f( 'jet', 1, TString( 'teun' ) ), 'teun' )
 
@@ -207,7 +207,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
       f = CompiledTest.LorentzVectorValueArguments
 
       self.assertEqual( f( TLorentzVector( 5, 6, 7, 8 ) ), TLorentzVector( 5, 6, 7, 8 ) )
-      if not FIXCLING:
+      if not FIXCLING:   # failure b/c of temporaries
          self.assertEqual( f( TLorentzVector(), 1 ), TLorentzVector( 1, 2, 3, 4 ) )
 
    def test8TLorentzVectorByRefCompiled( self ):
@@ -215,7 +215,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 
       # script ArgumentPassingCompiled.C already loaded in by value test
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of temporaries
          return
 
       f = CompiledTest.LorentzVectorRefArguments

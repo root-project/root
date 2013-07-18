@@ -31,7 +31,7 @@ class STL1VectorTestCase( MyTestCase ):
       """Test access to a vector<int> (part of cintdlls)"""
 
       a = std.vector( int )( self.N )
-      if FIXCLING:
+      if FIXCLING:       # failure due to ctor not available and default expression
          return
 
       self.assertEqual( len(a), self.N )
@@ -116,7 +116,7 @@ class STL2ListTestCase( MyTestCase ):
          a.push_back( i )
 
       self.assertEqual( len(a), self.N )
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of temporaries
          return
       self.failUnless( 11 in a )
 
@@ -130,7 +130,7 @@ class STL2ListTestCase( MyTestCase ):
    def test2EmptyListType( self ):
       """Test behavior of empty list<int> (part of cintdlls)"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of temporaries
          return
 
       a = std.list( int )()
@@ -145,7 +145,7 @@ class STL3MapTestCase( MyTestCase ):
    def test1BuiltinMapType( self ):
       """Test access to a map<int,int> (part of cintdlls)"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of no exact match
          return
 
       a = std.map( int, int )()
@@ -174,7 +174,7 @@ class STL3MapTestCase( MyTestCase ):
    def test2KeyedMapType( self ):
       """Test access to a map<std::string,int> (part of cintdlls)"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of no exact match
          return
 
       a = std.map( std.string, int )()
@@ -187,7 +187,7 @@ class STL3MapTestCase( MyTestCase ):
    def test3EmptyMapType( self ):
       """Test behavior of empty map<int,int> (part of cintdlls)"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of temporaries
          return
 
       m = std.map( int, int )()
@@ -197,7 +197,7 @@ class STL3MapTestCase( MyTestCase ):
    def test4UnsignedvalueTypeMapTypes( self ):
       """Test assignability of maps with unsigned value types (not part of cintdlls)"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of no exact match
          return
 
       import math
@@ -226,18 +226,12 @@ class STL4STLLikeClassTestCase( MyTestCase ):
    def test1STLLikeClassIndexingOverloads( self ):
       """Test overloading of operator[] in STL like class"""
 
-      if FIXCLING:
-         return
-
       a = STLLikeClass( int )()
       self.assertEqual( a[ "some string" ], 'string' )
       self.assertEqual( a[ 3.1415 ], 'double' )
 
    def test2STLLikeClassIterators( self ):
       """Test the iterator protocol mapping for an STL like class"""
-
-      if FIXCLING:
-         return
 
       a = STLLikeClass( int )()
       for i in a:
@@ -251,7 +245,7 @@ class STL5StringHandlingTestCase( MyTestCase ):
    def test1StringArgumentPassing( self ):
       """Test mapping of python strings and std::string"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of default expression
          return
 
       c, s = StringyClass(), std.string( "test1" )
@@ -281,7 +275,7 @@ class STL5StringHandlingTestCase( MyTestCase ):
    def test2StringDataAccess( self ):
       """Test access to std::string object data members"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of default expression
          return
 
       c, s = StringyClass(), std.string( "test string" )
@@ -297,7 +291,7 @@ class STL5StringHandlingTestCase( MyTestCase ):
    def test3StringWithNullCharacter( self ):
       """Test that strings with NULL do not get truncated"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of default expression
          return
 
       t0 = "aap\0noot"
@@ -315,7 +309,7 @@ class STL6IteratorComparisonTestCase( MyTestCase ):
    def test1BuiltinVectorIterators( self ):
       """Test iterator comparison with operator== reflected"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of temporaries and default expression
          return
 
       v = std.vector( int )()
@@ -353,7 +347,7 @@ class STL6IteratorComparisonTestCase( MyTestCase ):
    def test2CustomVectorIterators( self ):
       """Test iterator comparison with operator== NOT reflected"""
 
-      if FIXCLING:
+      if FIXCLING:       # failure b/c of temporaries and default expression
          return
 
       v = std.vector( JustAClass )()

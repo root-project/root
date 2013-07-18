@@ -2,7 +2,7 @@
   File: roottest/python/stl/StlTypes.C
   Author: Wim Lavrijsen@lbl.gov
   Created: 10/25/05
-  Last: 03/01/13
+  Last: 07/17/13
 */
 
 #include <list>
@@ -42,6 +42,7 @@ public:
 
 // explicit instantiations to make all methods available
 template class std::vector< JustAClass >;
+template class STLLikeClass< int >;
 
 // can not instantiate std::list w/o also making available all
 // comparator operators; leave it for now
@@ -65,6 +66,7 @@ using namespace std;  // instead of std:: to make cint7 happy
 #pragma link C++ class map< std::string, unsigned long >::iterator-;
 #pragma link C++ class map< std::string, unsigned long >::const_iterator-;
 #pragma link C++ class pair< std::string, unsigned long >-;
+#pragma link C++ class STLLikeClass< int >;
 #ifdef G__WIN32
 #pragma link C++ class iterator<random_access_iterator_tag,JustAClass,long,JustAClass*,JustAClass&>-;
 #endif
