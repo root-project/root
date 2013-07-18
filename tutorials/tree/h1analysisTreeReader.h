@@ -37,7 +37,6 @@ public:
    TEntryList                   *elist;//!
    Long64_t                      fProcessed;//!
 
-   TTree                        *fChain;//!    //pointer to the analyzed TTree or TChain
    Long64_t                      fChainOffset;//!
 
    h1analysisTreeReader(TTree* /*tree*/=0) :
@@ -87,7 +86,6 @@ void h1analysisTreeReader::Reset()
 
    hdmd = 0;
    h2 = 0;
-   fChain = 0;
    elist = 0;
    fillList = kFALSE;
    useList  = kFALSE;

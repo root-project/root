@@ -85,8 +85,6 @@ void h1analysisTreeReader::Begin(TTree* /*myTree*/) {
    TString option = GetOption();
    Info("Begin", "starting h1analysis with process option: %s", option.Data());
 
-   //process cases with entry list
-   if (fChain) fChain->SetEntryList(0);
    delete gDirectory->GetList()->FindObject("elist");
 
    // case when one creates/fills the entry list
@@ -241,11 +239,11 @@ Bool_t h1analysisTreeReader::Notify() {
    Info("Notify","processing file: %s",myTreeReader.GetTree()->GetCurrentFile()->GetName());
    fChainOffset = myTreeReader.GetTree()->GetChainOffset();
 
-   if (elist && fChain) {
+   if (elist && myTreeReader.GetTree()) {
       if (fillList) {
-         elist->SetTree(fChain);
+         elist->SetTree(myTreeReader.GetTree());
       } else if (useList) {
-         fChain->SetEntryList(elist);
+         myTreeReader.GetTree()->SetEntryList(elist);
       }
    }
    return kTRUE;
