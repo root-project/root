@@ -101,7 +101,7 @@ private: // Data Members
    Bool_t          fHaveSinglePCM; // Whether a single ROOT PCM was provided
    std::vector<const void*> fDeserializedDecls; // Decls read from the AST
    struct CharPtrCmp_t {
-      bool operator()(const char* a, const char *b) {
+      bool operator()(const char* a, const char *b) const {
          return strcmp(a, b) < 0;
       }
    };
