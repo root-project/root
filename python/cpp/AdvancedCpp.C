@@ -7,7 +7,6 @@
 
 #include <vector>
 
-#include <iostream>
 
 class PR_A {
 public:
@@ -139,14 +138,12 @@ class Comparable {
 bool operator==( const Comparable& c1, const Comparable& c2 )
 {
 // does the opposite of a (default PyROOT) pointer comparison
-   std::cout << "CALLING COMPARABLE ==" << std::endl;
    return &c1 != &c2;
 }
 
 bool operator!=( const Comparable& c1, const Comparable& c2 )
 {
 // does the opposite of a (default PyROOT) pointer comparison
-   std::cout << "CALLING COMPARABLE !=" << std::endl;
    return &c1 == &c2;
 }
 
