@@ -8,21 +8,6 @@
 #include "A.h"
 #include "B.h"
 
-#ifdef __CINT__
-#pragma link C++ class TTreeReaderValue<B>+;
-#pragma link C++ class TTreeReaderValue<A>+;
-#pragma link C++ class TTreeReaderValue<std::vector<B>>+;
-#pragma link C++ class TTreeReaderValue<B*>+;
-#pragma link C++ class TTreeReaderValue<TClonesArray>+;
-#pragma link C++ class TTreeReaderValue<std::vector<B*>>+;
-#pragma link C++ class TTreeReaderValue<Float_t>+;
-#pragma link C++ class TTreeReaderArray<double>+;
-#pragma link C++ class TTreeReaderArray<B>+;
-#pragma link C++ class TTreeReaderArray<Int_t>+;
-#pragma link C++ class TTreeReaderArray<Bool_t>+;
-#pragma link C++ class std::vector<B*>+;
-#endif
-
 #define TREE_ENTRIES 10
 #define LIST_ENTRIES 10
 
