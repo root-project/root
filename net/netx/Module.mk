@@ -82,7 +82,10 @@ $(NETXLIB):     $(NETXO) $(NETXDO) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP) \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
 		   "$(NETXLIBEXTRA)"
 
-$(NETXDS):      $(NETXH1) $(NETXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP) $(XRDPLUGINS)
+$(call pcmrule,NETX)
+	$(noop)
+
+$(NETXDS):      $(NETXH1) $(NETXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP) $(XRDPLUGINS) $(call pcm_dep,NETX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,NETX) -c $(NETXINCEXTRA) $(NETXH) $(NETXL)

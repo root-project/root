@@ -47,7 +47,10 @@ $(SQLITELIB):   $(SQLITEO) $(SQLITEDO) $(ORDER_) $(MAINLIBS) $(SQLITELIBDEP)
 		   "$(SQLITEO) $(SQLITEDO)" \
 		   "$(SQLITELIBEXTRA) $(SQLITELIBDIR) $(SQLITECLILIB)"
 
-$(SQLITEDS):    $(SQLITEH) $(SQLITEL) $(ROOTCINTTMPDEP)
+$(call pcmrule,SQLITE)
+	$(noop)
+
+$(SQLITEDS):    $(SQLITEH) $(SQLITEL) $(ROOTCINTTMPDEP) $(call pcm_dep,SQLITE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SQLITE) \

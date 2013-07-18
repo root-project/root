@@ -65,7 +65,10 @@ $(NETLIB):      $(NETO) $(NETDO) $(ORDER_) $(MAINLIBS) $(NETLIBDEP)
 		   "$(SOFLAGS)" libNet.$(SOEXT) $@ "$(NETO) $(NETDO)" \
 		   "$(NETLIBEXTRA) $(CRYPTOLIBDIR) $(CRYPTOLIB) $(SSLLIB)"
 
-$(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPDEP)
+$(call pcmrule,NET)
+	$(noop)
+
+$(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPDEP) $(call pcm_dep,NET)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,NET) -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)

@@ -66,7 +66,10 @@ $(GEOMLIB):     $(GEOMO) $(GEOMDO) $(ORDER_) $(MAINLIBS) $(GEOMLIBDEP)
 		   "$(SOFLAGS)" libGeom.$(SOEXT) $@ "$(GEOMO) $(GEOMDO)" \
 		   "$(GEOMLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB)"
 
-$(GEOMDS):      $(GEOMH) $(GEOML0) $(GEOMLS) $(ROOTCINTTMPDEP)
+$(call pcmrule,GEOM)
+	$(noop)
+
+$(GEOMDS):      $(GEOMH) $(GEOML0) $(GEOMLS) $(ROOTCINTTMPDEP) $(call pcm_dep,GEOM)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOM) -c -I$(ROOT_SRCDIR) $(GEOMH1) $(GEOMH2) $(GEOML0)

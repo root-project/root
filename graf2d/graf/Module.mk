@@ -48,7 +48,10 @@ $(GRAFLIB):     $(GRAFO) $(GRAFDO) $(MATHTEXTLIBDEP) $(FREETYPEDEP) $(ORDER_) \
 		   "$(GRAFO) $(GRAFDO)" \
 		   "$(GRAFLIBEXTRA) $(MATHTEXTLIB) $(FREETYPELDFLAGS) $(FREETYPELIB)"
 
-$(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GRAF)
+	$(noop)
+
+$(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP) $(call pcm_dep,GRAF)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)

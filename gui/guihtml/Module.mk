@@ -46,7 +46,10 @@ $(GUIHTMLLIB):  $(GUIHTMLO) $(GUIHTMLDO) $(ORDER_) $(MAINLIBS) $(GUIHTMLLIBDEP)
 		   "$(SOFLAGS)" libGuiHtml.$(SOEXT) $@ "$(GUIHTMLO) $(GUIHTMLDO)" \
 		   "$(GUIHTMLLIBEXTRA)"
 
-$(GUIHTMLDS):   $(GUIHTMLH) $(GUIHTMLL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GUIHTML)
+	$(noop)
+
+$(GUIHTMLDS):   $(GUIHTMLH) $(GUIHTMLL) $(ROOTCINTTMPDEP) $(call pcm_dep,GUIHTML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GUIHTML) -c $(GUIHTMLH) $(GUIHTMLL)

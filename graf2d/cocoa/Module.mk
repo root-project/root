@@ -52,7 +52,10 @@ $(COCOALIB):    $(COCOAO) $(COCOAOBJCPPO) $(COCOADO) $(FREETYPEDEP) $(ORDER_) $(
          "$(FREETYPELDFLAGS) $(FREETYPELIB) \
 		    $(COCOALIBEXTRA) -framework Cocoa -framework OpenGL"
 
-$(COCOADS):     $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP)
+$(call pcmrule,COCOA)
+	$(noop)
+
+$(COCOADS):     $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP) $(call pcm_dep,COCOA)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,COCOA) -c $(FREETYPEINC) $(COCOAH1) $(COCOAL)

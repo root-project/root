@@ -46,7 +46,10 @@ $(MLPLIB):      $(MLPO) $(MLPDO) $(ORDER_) $(MAINLIBS) $(MLPLIBDEP)
 		   "$(SOFLAGS)" libMLP.$(SOEXT) $@ "$(MLPO) $(MLPDO)" \
 		   "$(MLPLIBEXTRA)"
 
-$(MLPDS):       $(MLPH) $(MLPL) $(ROOTCINTTMPDEP)
+$(call pcmrule,MLP)
+	$(noop)
+
+$(MLPDS):       $(MLPH) $(MLPL) $(ROOTCINTTMPDEP) $(call pcm_dep,MLP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MLP) -c $(MLPH) $(MLPL)

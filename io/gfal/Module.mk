@@ -46,7 +46,10 @@ $(GFALLIB):     $(GFALO) $(GFALDO) $(ORDER_) $(MAINLIBS) $(GFALLIBDEP)
 		   "$(SOFLAGS)" libGFAL.$(SOEXT) $@ "$(GFALO) $(GFALDO)" \
 		   "$(GFALLIBEXTRA) $(GFALLIBDIR) $(GFALCLILIB)"
 
-$(GFALDS):      $(GFALH) $(GFALL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GFAL)
+	$(noop)
+
+$(GFALDS):      $(GFALH) $(GFALL) $(ROOTCINTTMPDEP) $(call pcm_dep,GFAL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GFAL) -c $(GFALH) $(GFALL)

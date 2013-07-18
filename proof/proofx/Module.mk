@@ -104,7 +104,10 @@ $(PROOFXLIB):   $(PROOFXO) $(PROOFXDO) $(XPCONNO) $(ORDER_) $(MAINLIBS) \
 		   "$(PROOFXO) $(XPCONNO) $(PROOFXDO)" \
 		   "$(PROOFXLIBEXTRA)"
 
-$(PROOFXDS):    $(PROOFXH) $(PROOFXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP)
+$(call pcmrule,PROOFX)
+	$(noop)
+
+$(PROOFXDS):    $(PROOFXH) $(PROOFXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP) $(call pcm_dep,PROOFX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PROOFX) -c $(PROOFXINCEXTRA) $(PROOFXH) $(PROOFXL)

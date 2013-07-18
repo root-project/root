@@ -46,7 +46,10 @@ $(MYSQLLIB):    $(MYSQLO) $(MYSQLDO) $(ORDER_) $(MAINLIBS) $(MYSQLLIBDEP)
 		   "$(SOFLAGS)" libRMySQL.$(SOEXT) $@ "$(MYSQLO) $(MYSQLDO)" \
 		   "$(MYSQLLIBEXTRA) $(MYSQLLIBDIR) $(MYSQLCLILIB)"
 
-$(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPDEP)
+$(call pcmrule,MYSQL)
+	$(noop)
+
+$(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPDEP) $(call pcm_dep,MYSQL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MYSQL) -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)

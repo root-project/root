@@ -51,7 +51,10 @@ $(QUARTZLIB):   $(QUARTZO) $(QUARTZOBJCPPO) $(QUARTZDO) $(ORDER_) $(MAINLIBS) \
 		   "$(QUARTZO) $(QUARTZOBJCPPO) $(QUARTZDO)" \
 		   "$(QUARTZLIBEXTRA) -framework Cocoa"
 
-$(QUARTZDS):    $(QUARTZH1) $(QUARTZL) $(ROOTCINTTMPDEP)
+$(call pcmrule,QUARTZ)
+	$(noop)
+
+$(QUARTZDS):    $(QUARTZH1) $(QUARTZL) $(ROOTCINTTMPDEP) $(call pcm_dep,QUARTZ)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,QUARTZ) -c $(QUARTZH1) $(QUARTZL)

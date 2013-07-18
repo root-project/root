@@ -81,7 +81,10 @@ $(CLINGMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(CLINGL)
 		$(RLIBMAP) -o $@ -l $(CLINGLIB) \
 		   -d $(CLINGLIBDEPM) -c $(CLINGL)
 
-$(CLINGDS): $(CLINGL) $(ROOTCINTTMPDEP) $(LLVMDEP)
+$(call pcmrule,CLING)
+	$(noop)
+
+$(CLINGDS): $(CLINGL) $(ROOTCINTTMPDEP) $(LLVMDEP) $(call pcm_dep,CLING)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,CLING) -c $(CLINGH) \

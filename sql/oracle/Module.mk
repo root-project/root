@@ -46,7 +46,10 @@ $(ORACLELIB):   $(ORACLEO) $(ORACLEDO) $(ORDER_) $(MAINLIBS) $(ORACLELIBDEP)
 		   "$(SOFLAGS)" libOracle.$(SOEXT) $@ "$(ORACLEO) $(ORACLEDO)" \
 		   "$(ORACLELIBEXTRA) $(ORACLELIBDIR) $(ORACLECLILIB)"
 
-$(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPDEP)
+$(call pcmrule,ORACLE)
+	$(noop)
+
+$(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPDEP) $(call pcm_dep,ORACLE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ORACLE) -c $(ORACLEINCDIR:%=-I%) $(ORACLEH) $(ORACLEL)

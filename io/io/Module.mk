@@ -49,7 +49,7 @@ $(IOLIB):       $(IOO) $(IODO) $(ORDER_) $(MAINLIBS) $(IOLIBDEP)
 $(call pcmrule,IO)
 	$(noop)
 
-$(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP) $(call pcm_dep,IOLIB)
+$(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP) $(call pcm_dep,IO)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,IO) -c $(IOH) $(IOL)

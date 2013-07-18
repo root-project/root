@@ -80,7 +80,10 @@ $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
 		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) \
 		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
 
-$(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GL)
+	$(noop)
+
+$(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP) $(call pcm_dep,GL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GL) -c $(CINTFLAGS) $(GLH2) $(GLL)

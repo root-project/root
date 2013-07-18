@@ -47,7 +47,10 @@ $(EGLIB):       $(EGO) $(EGDO) $(ORDER_) $(MAINLIBS) $(EGLIBDEP)
 		   "$(SOFLAGS)" libEG.$(SOEXT) $@ "$(EGO) $(EGDO)" \
 		   "$(EGLIBEXTRA)"
 
-$(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMPDEP)
+$(call pcmrule,EG)
+	$(noop)
+
+$(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMPDEP) $(call pcm_dep,EG)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,EG) -c $(EGH1) $(EGL)

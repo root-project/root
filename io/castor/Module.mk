@@ -47,7 +47,10 @@ $(CASTORLIB):   $(CASTORO) $(CASTORDO) $(ORDER_) $(MAINLIBS) $(CASTORLIBDEP)
 		   "$(CASTORO) $(CASTORDO)" \
 		   "$(CASTORLIBEXTRA) $(CASTORLIBDIR) $(CASTORCLILIB)"
 
-$(CASTORDS):    $(CASTORH) $(CASTORL) $(ROOTCINTTMPDEP)
+$(call pcmrule,CASTOR)
+	$(noop)
+
+$(CASTORDS):    $(CASTORH) $(CASTORL) $(ROOTCINTTMPDEP) $(call pcm_dep,CASTOR)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,CASTOR) -c $(CASTORH) $(CASTORL)

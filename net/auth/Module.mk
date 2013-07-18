@@ -105,7 +105,10 @@ $(RAUTHLIB):    $(RAUTHO) $(RAUTHDO) $(ORDER_) $(MAINLIBS) $(RAUTHLIBDEP)
 		   "$(SOFLAGS)" libRootAuth.$(SOEXT) $@ "$(RAUTHO) $(RAUTHDO)" \
 		   "$(RAUTHLIBEXTRA) $(EXTRA_RAUTHLIBS)"
 
-$(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP)
+$(call pcmrule,RAUTH)
+	$(noop)
+
+$(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP) $(call pcm_dep,RAUTH)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,RAUTH) -c $(RAUTHH) $(RAUTHL)
@@ -120,10 +123,13 @@ $(AFSAUTHLIB):  $(AFSAUTHO) $(AFSAUTHDO) $(ORDER_) $(MAINLIBS) $(AFSAUTHLIBDEP)
 		   "$(AFSAUTHO) $(AFSAUTHDO)" \
 		   "$(AFSLIBDIR) $(AFSLIB) $(RESOLVLIB)"
 
-$(AFSAUTHDS):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPDEP)
+$(call pcmrule,AFSAUTH)
+	$(noop)
+
+$(AFSAUTHDS):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPDEP) $(call pcm_dep,AFSAUTH)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,AFSAUTHLIB) -c $(AFSAUTHH) $(AFSAUTHL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,AFSAUTH) -c $(AFSAUTHH) $(AFSAUTHL)
 
 $(AFSAUTHMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(AFSAUTHL)
 		$(RLIBMAP) -o $(AFSAUTHMAP) -l $(AFSAUTHLIB) \

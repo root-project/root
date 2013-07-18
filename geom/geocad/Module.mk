@@ -50,7 +50,10 @@ $(GEOCADLIB):   $(GEOCADO) $(GEOCADDO) $(ORDER_) $(MAINLIBS) $(GEOCADLIBDEP)
 		   "$(SOFLAGS)" libGeoCad.$(SOEXT) $@ "$(GEOCADO) $(GEOCADDO)" \
 		   "$(GEOCADLIBEXTRA) $(OCCLIBDIR) $(OCCLIB)"
 
-$(GEOCADDS):    $(GEOCADH1) $(GEOCADH2) $(GEOCADL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GEOCAD)
+	$(noop)
+
+$(GEOCADDS):    $(GEOCADH1) $(GEOCADH2) $(GEOCADL) $(ROOTCINTTMPDEP) $(call pcm_dep,GEOCAD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOCAD) -c $(GEOCADH2) $(GEOCADL)

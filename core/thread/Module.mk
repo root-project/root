@@ -84,7 +84,7 @@ $(THREADLIB):   $(THREADO) $(THREADDO) $(ORDER_) $(MAINLIBS) $(THREADLIBDEP)
 $(call pcmrule,THREAD)
 	$(noop)
 
-$(THREADDS):    $(THREADH) $(THREADL) $(ROOTCINTTMPDEP) $(call pcm_dep,THREADLIB)
+$(THREADDS):    $(THREADH) $(THREADL) $(ROOTCINTTMPDEP) $(call pcm_dep,THREAD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,THREAD) -c $(THREADH) $(THREADL)

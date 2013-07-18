@@ -46,7 +46,10 @@ $(TABLELIB):    $(TABLEO) $(TABLEDO) $(ORDER_) $(MAINLIBS) $(TABLELIBDEP)
 		   "$(SOFLAGS)" libTable.$(SOEXT) $@ "$(TABLEO) $(TABLEDO)" \
 		   "$(TABLELIBEXTRA)"
 
-$(TABLEDS):     $(TABLEH) $(TABLEL) $(ROOTCINTTMPDEP)
+$(call pcmrule,TABLE)
+	$(noop)
+
+$(TABLEDS):     $(TABLEH) $(TABLEL) $(ROOTCINTTMPDEP) $(call pcm_dep,TABLE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,TABLE) -c $(TABLEH) $(TABLEL)

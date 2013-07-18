@@ -46,7 +46,10 @@ $(HTMLLIB):     $(HTMLO) $(HTMLDO) $(ORDER_) $(MAINLIBS) $(HTMLLIBDEP)
 		   "$(SOFLAGS)" libHtml.$(SOEXT) $@ "$(HTMLO) $(HTMLDO)" \
 		   "$(HTMLLIBEXTRA)"
 
-$(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPDEP)
+$(call pcmrule,HTML)
+	$(noop)
+
+$(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPDEP) $(call pcm_dep,HTML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)

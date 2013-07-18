@@ -46,7 +46,10 @@ $(GPADLIB):     $(GPADO) $(GPADDO) $(ORDER_) $(MAINLIBS) $(GPADLIBDEP)
 		   "$(SOFLAGS)" libGpad.$(SOEXT) $@ "$(GPADO) $(GPADDO)" \
 		   "$(GPADLIBEXTRA)"
 
-$(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GPAD)
+	$(noop)
+
+$(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMPDEP) $(call pcm_dep,GPAD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GPAD) -c $(GPADH) $(GPADL)

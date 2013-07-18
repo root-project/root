@@ -46,7 +46,10 @@ $(QUADPLIB):    $(QUADPO) $(QUADPDO) $(ORDER_) $(MAINLIBS) $(QUADPLIBDEP)
 		   "$(SOFLAGS)" libQuadp.$(SOEXT) $@ "$(QUADPO) $(QUADPDO)" \
 		   "$(QUADPLIBEXTRA)"
 
-$(QUADPDS):     $(QUADPH) $(QUADPL) $(ROOTCINTTMPDEP)
+$(call pcmrule,QUADP)
+	$(noop)
+
+$(QUADPDS):     $(QUADPH) $(QUADPL) $(ROOTCINTTMPDEP) $(call pcm_dep,QUADP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,QUADP) -c $(QUADPH) $(QUADPL)

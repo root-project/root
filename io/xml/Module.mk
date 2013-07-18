@@ -46,7 +46,10 @@ $(XMLLIB):      $(XMLO) $(XMLDO) $(ORDER_) $(MAINLIBS) $(XMLLIBDEP)
 		   "$(SOFLAGS)" libXMLIO.$(SOEXT) $@ "$(XMLO) $(XMLDO)" \
 		   "$(XMLLIBEXTRA)"
 
-$(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPDEP)
+$(call pcmrule,XML)
+	$(noop)
+
+$(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPDEP) $(call pcm_dep,XML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,XML) -c $(XMLH) $(XMLL)

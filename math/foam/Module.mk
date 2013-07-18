@@ -46,7 +46,10 @@ $(FOAMLIB):     $(FOAMO) $(FOAMDO) $(ORDER_) $(MAINLIBS) $(FOAMLIBDEP)
 		   "$(SOFLAGS)" libFoam.$(SOEXT) $@ "$(FOAMO) $(FOAMDO)" \
 		   "$(FOAMLIBEXTRA)"
 
-$(FOAMDS):      $(FOAMH) $(FOAML) $(ROOTCINTTMPDEP)
+$(call pcmrule,FOAM)
+	$(noop)
+
+$(FOAMDS):      $(FOAMH) $(FOAML) $(ROOTCINTTMPDEP) $(call pcm_dep,FOAM)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FOAM) -c $(FOAMH) $(FOAML)

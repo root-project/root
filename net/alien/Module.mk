@@ -56,7 +56,10 @@ $(ALIENLIB):    $(ALIENO) $(ALIENDO) $(ORDER_) $(MAINLIBS) $(ALIENLIBDEP)
 		   "$(SOFLAGS)" libRAliEn.$(SOEXT) $@ "$(ALIENO) $(ALIENDO)" \
 		   "$(ALIENLIBEXTRA) $(ALIENLIBDIR) $(ALIENCLILIB)"
 
-$(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP)
+$(call pcmrule,ALIEN)
+	$(noop)
+
+$(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP) $(call pcm_dep,ALIEN)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ALIEN) -c $(ALIENINCEXTRA) $(ALIENH) $(ALIENL)

@@ -46,7 +46,10 @@ $(FITSIOLIB):   $(FITSIOO) $(FITSIODO) $(ORDER_) $(MAINLIBS) $(FITSIOLIBDEP)
 		   "$(SOFLAGS)" libFITSIO.$(SOEXT) $@ "$(FITSIOO) $(FITSIODO)" \
 		   "$(FITSIOLIBEXTRA) $(CFITSIOLIBDIR) $(CFITSIOLIB)"
 
-$(FITSIODS):    $(FITSIOH) $(FITSIOL) $(ROOTCINTTMPDEP)
+$(call pcmrule,FITSIO)
+	$(noop)
+
+$(FITSIODS):    $(FITSIOH) $(FITSIOL) $(ROOTCINTTMPDEP) $(call pcm_dep,FITSIO)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FITSIO) -c $(FITSIOH) $(FITSIOL)

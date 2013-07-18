@@ -57,7 +57,10 @@ $(HISTLIB):     $(HISTO) $(HISTDO) $(ORDER_) $(MAINLIBS) $(HISTLIBDEP)
 		   "$(SOFLAGS)" libHist.$(SOEXT) $@ "$(HISTO) $(HISTDO)" \
 		   "$(HISTLIBEXTRA)"
 
-$(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP)
+$(call pcmrule,HIST)
+	$(noop)
+
+$(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP) $(call pcm_dep,HIST)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HIST) -c $(HISTHH) $(HISTL)

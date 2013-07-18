@@ -46,7 +46,10 @@ $(FITPANELLIB): $(FITPANELO) $(FITPANELDO) $(ORDER_) $(MAINLIBS) $(FITPANELLIBDE
 		   "$(SOFLAGS)" libFitPanel.$(SOEXT) $@ "$(FITPANELO) $(FITPANELDO)" \
 		   "$(FITPANELLIBEXTRA)"
 
-$(FITPANELDS):  $(FITPANELH) $(FITPANELL) $(ROOTCINTTMPDEP)
+$(call pcmrule,FITPANEL)
+	$(noop)
+
+$(FITPANELDS):  $(FITPANELH) $(FITPANELL) $(ROOTCINTTMPDEP) $(call pcm_dep,FITPANEL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FITPANEL) -c $(FITPANELH) $(FITPANELL)

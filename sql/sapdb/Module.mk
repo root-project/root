@@ -46,7 +46,10 @@ $(SAPDBLIB):    $(SAPDBO) $(SAPDBDO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libSapDB.$(SOEXT) $@ "$(SAPDBO) $(SAPDBDO)" \
 		   "$(SAPDBLIBEXTRA) $(SAPDBLIBDIR) $(SAPDBCLILIB)"
 
-$(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPDEP)
+$(call pcmrule,SAPDB)
+	$(noop)
+
+$(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPDEP) $(call pcm_dep,SAPDB)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SAPDB) -c $(SAPDBH) $(SAPDBL)

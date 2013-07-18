@@ -49,7 +49,10 @@ $(X3DLIB):      $(X3DO) $(X3DDO) $(ORDER_) $(MAINLIBS) $(X3DLIBDEP)
 		   "$(SOFLAGS)" libX3d.$(SOEXT) $@ "$(X3DO) $(X3DDO)" \
 		   "$(X3DLIBEXTRA) $(XLIBS)"
 
-$(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPDEP)
+$(call pcmrule,X3D)
+	$(noop)
+
+$(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPDEP) $(call pcm_dep,X3D)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,X3D) -c $(X3DH1) $(X3DL)

@@ -46,7 +46,10 @@ $(RECLIB):      $(RECO) $(RECDO) $(ORDER_) $(MAINLIBS) $(RECLIBDEP)
 		   "$(SOFLAGS)" libRecorder.$(SOEXT) $@ "$(RECO) $(RECDO)" \
 		   "$(RECLIBEXTRA)"
 
-$(RECDS):       $(RECH) $(RECL) $(ROOTCINTTMPDEP)
+$(call pcmrule,REC)
+	$(noop)
+
+$(RECDS):       $(RECH) $(RECL) $(ROOTCINTTMPDEP) $(call pcm_dep,REC)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,REC) -c $(RECH) $(RECL)

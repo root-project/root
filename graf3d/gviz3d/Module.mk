@@ -46,7 +46,10 @@ $(GVIZ3DLIB):   $(GVIZ3DO) $(GVIZ3DDO) $(ORDER_) $(MAINLIBS) $(GVIZ3DLIBDEP)
 		   "$(SOFLAGS)" libGviz3d.$(SOEXT) $@ "$(GVIZ3DO) $(GVIZ3DDO)" \
 		   "$(GVIZ3DLIBEXTRA)"
 
-$(GVIZ3DDS):    $(GVIZ3DH) $(GVIZ3DL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GVIZ3D)
+	$(noop)
+
+$(GVIZ3DDS):    $(GVIZ3DH) $(GVIZ3DL) $(ROOTCINTTMPDEP) $(call pcm_dep,GVIZ3D)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GVIZ3D) -c $(GVIZ3DH) $(GVIZ3DL)

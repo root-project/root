@@ -46,7 +46,10 @@ $(PHYSICSLIB):  $(PHYSICSO) $(PHYSICSDO) $(ORDER_) $(MAINLIBS) $(PHYSICSLIBDEP)
 		   "$(SOFLAGS)" libPhysics.$(SOEXT) $@ \
 		   "$(PHYSICSO) $(PHYSICSDO)" "$(PHYSICSLIBEXTRA)"
 
-$(PHYSICSDS):   $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMPDEP)
+$(call pcmrule,PHYSICS)
+	$(noop)
+
+$(PHYSICSDS):   $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMPDEP) $(call pcm_dep,PHYSICS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PHYSICS) -c $(PHYSICSH) $(PHYSICSL)

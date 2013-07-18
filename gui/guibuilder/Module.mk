@@ -46,7 +46,10 @@ $(GUIBLDLIB):   $(GUIBLDO) $(GUIBLDDO) $(ORDER_) $(MAINLIBS) $(GUIBLDLIBDEP)
 		   "$(SOFLAGS)" libGuiBld.$(SOEXT) $@ "$(GUIBLDO) $(GUIBLDDO)" \
 		   "$(GUIBLDLIBEXTRA)"
 
-$(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GUIBLD)
+	$(noop)
+
+$(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPDEP) $(call pcm_dep,GUIBLD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GUIBLD) -c $(GUIBLDH) $(GUIBLDL)

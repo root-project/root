@@ -46,7 +46,10 @@ $(HBOOKLIB):    $(HBOOKO) $(HBOOKDO) $(ORDER_) $(MAINLIBS) $(HBOOKLIBDEP)
 		   "$(SOFLAGS)" libHbook.$(SOEXT) $@ "$(HBOOKO) $(HBOOKDO)" \
 		   "$(HBOOKLIBEXTRA)"
 
-$(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPDEP)
+$(call pcmrule,HBOOK)
+	$(noop)
+
+$(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPDEP) $(filter-out lib/libminicern_rdict.pcm,$(call pcm_dep,HBOOK))
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HBOOK) -c $(HBOOKH) $(HBOOKL)

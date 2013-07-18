@@ -46,7 +46,10 @@ $(GDMLLIB):     $(GDMLO) $(GDMLDO) $(ORDER_) $(MAINLIBS) $(GDMLLIBDEP)
 		   "$(SOFLAGS)" libGdml.$(SOEXT) $@ "$(GDMLO) $(GDMLDO)" \
 		   "$(GDMLLIBEXTRA)"
 
-$(GDMLDS):      $(GDMLH) $(GDMLL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GDML)
+	$(noop)
+
+$(GDMLDS):      $(GDMLH) $(GDMLL) $(ROOTCINTTMPDEP) $(call pcm_dep,GDML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GDML) -c $(GDMLH) $(GDMLL)

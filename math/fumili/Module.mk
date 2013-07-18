@@ -46,7 +46,10 @@ $(FUMILILIB):   $(FUMILIO) $(FUMILIDO) $(ORDER_) $(MAINLIBS) $(FUMILILIBDEP)
 		   "$(SOFLAGS)" libFumili.$(SOEXT) $@ "$(FUMILIO) $(FUMILIDO)" \
 		   "$(FUMILILIBEXTRA)"
 
-$(FUMILIDS):    $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPDEP)
+$(call pcmrule,FUMILI)
+	$(noop)
+
+$(FUMILIDS):    $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPDEP) $(call pcm_dep,FUMILI)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FUMILI) -c $(FUMILIH) $(FUMILIL)

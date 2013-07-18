@@ -46,7 +46,10 @@ $(GEDLIB):      $(GEDO) $(GEDDO) $(ORDER_) $(MAINLIBS) $(GEDLIBDEP)
 		   "$(SOFLAGS)" libGed.$(SOEXT) $@ "$(GEDO) $(GEDDO)" \
 		   "$(GEDLIBEXTRA)"
 
-$(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GED)
+	$(noop)
+
+$(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMPDEP) $(call pcm_dep,GED)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GED) -c $(GEDH) $(GEDL)

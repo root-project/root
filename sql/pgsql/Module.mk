@@ -46,7 +46,10 @@ $(PGSQLLIB):    $(PGSQLO) $(PGSQLDO) $(ORDER_) $(MAINLIBS) $(PGSQLLIBDEP)
 		   "$(SOFLAGS)" libPgSQL.$(SOEXT) $@ "$(PGSQLO) $(PGSQLDO)" \
 		   "$(PGSQLLIBEXTRA) $(PGSQLLIBDIR) $(PGSQLCLILIB)"
 
-$(PGSQLDS):     $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPDEP)
+$(call pcmrule,PGSQL)
+	$(noop)
+
+$(PGSQLDS):     $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPDEP) $(call pcm_dep,PGSQL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PGSQL) -c $(PGSQLINCDIR:%=-I%) $(PGSQLH) $(PGSQLL)

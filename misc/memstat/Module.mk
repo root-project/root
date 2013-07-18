@@ -53,7 +53,10 @@ $(MEMSTATLIB):  $(MEMSTATO) $(MEMSTATDO) $(ORDER_) $(MAINLIBS) $(MEMSTATLIBDEP)
 		   "$(SOFLAGS)" libMemStat.$(SOEXT) $@ \
 		   "$(MEMSTATO) $(MEMSTATDO)" "$(MEMSTATLIBEXTRA)"
 
-$(MEMSTATDS):   $(MEMSTATH) $(MEMSTATL) $(ROOTCINTTMPDEP)
+$(call pcmrule,MEMSTAT)
+	$(noop)
+
+$(MEMSTATDS):   $(MEMSTATH) $(MEMSTATL) $(ROOTCINTTMPDEP) $(call pcm_dep,MEMSTAT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MEMSTAT) -c $(MEMSTATH) $(MEMSTATL)

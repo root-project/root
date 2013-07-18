@@ -46,7 +46,10 @@ $(MINUITLIB):   $(MINUITO) $(MINUITDO) $(ORDER_) $(MAINLIBS) $(MINUITLIBDEP)
 		   "$(SOFLAGS)" libMinuit.$(SOEXT) $@ "$(MINUITO) $(MINUITDO)" \
 		   "$(MINUITLIBEXTRA)"
 
-$(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPDEP)
+$(call pcmrule,MINUIT)
+	$(noop)
+
+$(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPDEP) $(call pcm_dep,MINUIT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MINUIT) -c $(MINUITH) $(MINUITL)

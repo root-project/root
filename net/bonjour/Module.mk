@@ -46,7 +46,10 @@ $(BONJLIB):     $(BONJO) $(BONJDO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libBonjour.$(SOEXT) $@ "$(BONJO) $(BONJDO)" \
 		   "$(BONJLIBEXTRA) $(DNSSDLIBDIR) $(DNSSDLIB)"
 
-$(BONJDS):      $(BONJH) $(BONJL) $(ROOTCINTTMPDEP)
+$(call pcmrule,BONJ)
+	$(noop)
+
+$(BONJDS):      $(BONJH) $(BONJL) $(ROOTCINTTMPDEP) $(call pcm_dep,BONJ)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,BONJ) -c $(BONJH) $(BONJL)

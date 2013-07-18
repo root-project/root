@@ -94,7 +94,10 @@ $(GQTLIB):      $(GQTO) $(GQTDO) $(GQTMOCO) $(ORDER_) $(MAINLIBS) $(GQTLIBDEP)
 		   "$(GQTO) $(GQTMOCO) $(GQTDO)" \
 		   "$(GQTLIBEXTRA) $(QTLIBDIR) $(QTLIB)"
 
-$(GQTDS):       $(GQTH1) $(GQTL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GQT)
+	$(noop)
+
+$(GQTDS):       $(GQTH1) $(GQTL) $(ROOTCINTTMPDEP) $(call pcm_dep,GQT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GQT) -c $(GQTCXXFLAGS) $(GQTH1) $(GQTL)

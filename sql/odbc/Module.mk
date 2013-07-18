@@ -46,7 +46,10 @@ $(ODBCLIB):     $(ODBCO) $(ODBCDO) $(ORDER_) $(MAINLIBS) $(ODBCLIBDEP)
 		   "$(SOFLAGS)" libRODBC.$(SOEXT) $@ "$(ODBCO) $(ODBCDO)" \
 		   "$(ODBCLIBEXTRA) $(ODBCLIBDIR) $(ODBCCLILIB)"
 
-$(ODBCDS):     $(ODBCH) $(ODBCL) $(ROOTCINTTMPDEP)
+$(call pcmrule,ODBC)
+	$(noop)
+
+$(ODBCDS):     $(ODBCH) $(ODBCL) $(ROOTCINTTMPDEP) $(call pcm_dep,ODBC)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ODBC) -c $(ODBCINCDIR:%=-I%) $(ODBCH) $(ODBCL)

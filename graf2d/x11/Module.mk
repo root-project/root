@@ -48,7 +48,10 @@ $(X11LIB):      $(X11O) $(X11DO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libGX11.$(SOEXT) $@ "$(X11O) $(X11DO)" \
 		   "$(X11LIBEXTRA) $(XLIBS)"
 
-$(X11DS):       $(X11H1) $(X11L) $(ROOTCINTTMPDEP)
+$(call pcmrule,X11)
+	$(noop)
+
+$(X11DS):       $(X11H1) $(X11L) $(ROOTCINTTMPDEP) $(call pcm_dep,X11)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,X11) -c $(X11INCDIR:%=-I%) $(X11H1) $(X11L)

@@ -46,7 +46,10 @@ $(HDFSLIB):     $(HDFSO) $(HDFSDO) $(ORDER_) $(MAINLIBS) $(HDFSLIBDEP)
 		   "$(SOFLAGS)" libHDFS.$(SOEXT) $@ "$(HDFSO) $(HDFSDO)" \
 		   "$(HDFSLIBEXTRA) $(HDFSLIBDIR) $(HDFSCLILIB) $(JVMLIBDIR) $(JVMCLILIB)"
 
-$(HDFSDS):      $(HDFSH) $(HDFSL) $(ROOTCINTTMPDEP)
+$(call pcmrule,HDFS)
+	$(noop)
+
+$(HDFSDS):      $(HDFSH) $(HDFSL) $(ROOTCINTTMPDEP) $(call pcm_dep,HDFS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HDFS) -c $(HDFSH) $(HDFSL)

@@ -46,7 +46,10 @@ $(SQLLIB):      $(SQLO) $(SQLDO) $(ORDER_) $(MAINLIBS) $(SQLLIBDEP)
 		   "$(SOFLAGS)" libSQLIO.$(SOEXT) $@ "$(SQLO) $(SQLDO)" \
 		   "$(SQLLIBEXTRA)"
 
-$(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPDEP)
+$(call pcmrule,SQL)
+	$(noop)
+
+$(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPDEP) $(call pcm_dep,SQL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SQL) -c $(SQLH) $(SQLL)

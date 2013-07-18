@@ -46,7 +46,10 @@ $(LDAPLIB):     $(LDAPO) $(LDAPDO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libRLDAP.$(SOEXT) $@ "$(LDAPO) $(LDAPDO)" \
 		   "$(LDAPLIBEXTRA) $(LDAPLIBDIR) $(LDAPCLILIB)"
 
-$(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP)
+$(call pcmrule,LDAP)
+	$(noop)
+
+$(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP) $(call pcm_dep,LDAP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,LDAP) -c $(LDAPH) $(LDAPL)

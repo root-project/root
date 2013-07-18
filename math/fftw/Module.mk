@@ -46,7 +46,10 @@ $(FFTWLIB):     $(FFTWO) $(FFTWDO) $(ORDER_) $(MAINLIBS) $(FFTWLIBDEP)
 		   "$(SOFLAGS)" libFFTW.$(SOEXT) $@ "$(FFTWO) $(FFTWDO)" \
 		   "$(FFTWLIBEXTRA) $(FFTW3LIBDIR) $(FFTW3LIB)"
 
-$(FFTWDS):      $(FFTWH) $(FFTWL) $(ROOTCINTTMPDEP)
+$(call pcmrule,FFTW)
+	$(noop)
+
+$(FFTWDS):      $(FFTWH) $(FFTWL) $(ROOTCINTTMPDEP) $(call pcm_dep,FFTW)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FFTW) -c $(FFTWH) $(FFTWL)

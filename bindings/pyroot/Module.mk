@@ -91,7 +91,10 @@ ifeq ($(ARCH),win32)
 	@rm -f bin/libPyROOT.exp
 endif
 
-$(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPDEP)
+$(call pcmrule,PYROOT)
+	$(noop)
+
+$(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPDEP) $(call pcm_dep,PYROOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)

@@ -46,7 +46,10 @@ $(QTROOTLIB):   $(QTROOTO) $(QTROOTDO) $(ORDER_) $(MAINLIBS) $(QTROOTLIBDEP)
 		   "$(SOFLAGS)" libQtRoot.$(SOEXT) $@ "$(QTROOTO) $(QTROOTDO)" \
 		   "$(QTROOTLIBEXTRA) $(QTLIBDIR) $(QTLIB)"
 
-$(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP)
+$(call pcmrule,QTROOT)
+	$(noop)
+
+$(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP) $(call pcm_dep,QTROOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,QTROOT) -c $(QTROOTH) $(QTROOTL)

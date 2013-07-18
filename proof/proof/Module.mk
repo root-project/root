@@ -56,7 +56,10 @@ $(PROOFLIB):    $(PROOFO) $(PROOFDO) $(ORDER_) $(MAINLIBS) $(PROOFLIBDEP)
 		   "$(SOFLAGS)" libProof.$(SOEXT) $@ "$(PROOFO) $(PROOFDO)" \
 		   "$(PROOFLIBEXTRA)"
 
-$(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP)
+$(call pcmrule,PROOF)
+	$(noop)
+
+$(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP) $(call pcm_dep,PROOF)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PROOF) -c $(ALIENDSMGR) $(PROOFH) $(PROOFL)

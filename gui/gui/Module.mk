@@ -78,7 +78,10 @@ $(GUILIB):      $(GUIO) $(GUIDO) $(ORDER_) $(MAINLIBS) $(GUILIBDEP)
 		   "$(SOFLAGS)" libGui.$(SOEXT) $@ "$(GUIO) $(GUIDO)" \
 		   "$(GUILIBEXTRA)"
 
-$(GUIDS):       $(GUIH) $(GUIL0) $(GUILS) $(ROOTCINTTMPDEP)
+$(call pcmrule,GUI)
+	$(noop)
+
+$(GUIDS):       $(GUIH) $(GUIL0) $(GUILS) $(ROOTCINTTMPDEP) $(call pcm_dep,GUI)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GUI) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)

@@ -46,7 +46,10 @@ $(RINTLIB):     $(RINTO) $(RINTDO) $(ORDER_) $(MAINLIBS)
 		   "$(SOFLAGS)" libRint.$(SOEXT) $@ "$(RINTO) $(RINTDO)" \
 		   "$(RINTLIBEXTRA)"
 
-$(RINTDS):      $(RINTH) $(RINTL) $(ROOTCINTTMPDEP)
+$(call pcmrule,RINT)
+	$(noop)
+
+$(RINTDS):      $(RINTH) $(RINTL) $(ROOTCINTTMPDEP) $(call pcm_dep,RINT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,RINT) -c $(RINTH) $(RINTL)

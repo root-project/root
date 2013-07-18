@@ -46,7 +46,10 @@ $(RFIOLIB):     $(RFIOO) $(RFIODO) $(ORDER_) $(MAINLIBS) $(RFIOLIBDEP)
 		   "$(SOFLAGS)" libRFIO.$(SOEXT) $@ "$(RFIOO) $(RFIODO)" \
 		   "$(SHIFTLIBDIR) $(SHIFTLIB) $(RFIOLIBEXTRA)"
 
-$(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPDEP)
+$(call pcmrule,RFIO)
+	$(noop)
+
+$(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPDEP) $(call pcm_dep,RFIO)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,RFIO) -c $(RFIOH) $(RFIOL)

@@ -47,7 +47,10 @@ $(VMCLIB):      $(VMCO) $(VMCDO) $(ORDER_) $(MAINLIBS) $(VMCLIBDEP)
 		   "$(SOFLAGS)" libVMC.$(SOEXT) $@ "$(VMCO) $(VMCDO)" \
 		   "$(VMCLIBEXTRA)"
 
-$(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPDEP)
+$(call pcmrule,VMC)
+	$(noop)
+
+$(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPDEP) $(call pcm_dep,VMC)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,VMC) -c $(VMCH1) $(VMCL)

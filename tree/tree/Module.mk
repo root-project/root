@@ -46,7 +46,10 @@ $(TREELIB):     $(TREEO) $(TREEDO) $(ORDER_) $(MAINLIBS) $(TREELIBDEP)
 		   "$(SOFLAGS)" libTree.$(SOEXT) $@ "$(TREEO) $(TREEDO)" \
 		   "$(TREELIBEXTRA)"
 
-$(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP)
+$(call pcmrule,TREE)
+	$(noop)
+
+$(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP) $(call pcm_dep,TREE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,TREE) -c $(TREEH) $(TREEL)

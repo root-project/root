@@ -46,7 +46,10 @@ $(GVIZLIB):     $(GVIZO) $(GVIZDO) $(ORDER_) $(MAINLIBS) $(GVIZLIBDEP)
 		   "$(SOFLAGS)" libGviz.$(SOEXT) $@ "$(GVIZO) $(GVIZDO)" \
 		   "$(GVIZLIBEXTRA) $(GRAPHVIZLIB)"
 
-$(GVIZDS):      $(GVIZH) $(GVIZL) $(ROOTCINTTMPDEP)
+$(call pcmrule,GVIZ)
+	$(noop)
+
+$(GVIZDS):      $(GVIZH) $(GVIZL) $(ROOTCINTTMPDEP) $(call pcm_dep,GVIZ)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GVIZ) -c $(GRAPHVIZINCDIR:%=-I%) $(GVIZH) $(GVIZL)
