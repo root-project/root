@@ -103,7 +103,7 @@ $(WIN32GDKLIB): $(WIN32GDKO) $(WIN32GDKDO) $(FREETYPEDEP) $(GDKLIB) $(GDKDLL) \
 $(call pcmrule,WIN32GDK)
 	$(noop)
 
-$(WIN32GDKDS):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMPDEP) $(call pcm_dep,WIN32GDK)
+$(WIN32GDKDS):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMPDEP) $(call pcmdep,WIN32GDK)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,WIN32GDK) -c $(WIN32GDKH1) $(WIN32GDKL)

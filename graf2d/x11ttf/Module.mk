@@ -52,7 +52,7 @@ $(X11TTFLIB):   $(X11TTFO) $(X11TTFDO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) \
 $(call pcmrule,X11TTF)
 	$(noop)
 
-$(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMPDEP) $(call pcm_dep,X11TTF)
+$(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMPDEP) $(call pcmdep,X11TTF)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,X11TTF) -c $(FREETYPEINC) $(X11TTFH) $(X11TTFL)

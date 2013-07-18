@@ -49,7 +49,7 @@ $(FFTWLIB):     $(FFTWO) $(FFTWDO) $(ORDER_) $(MAINLIBS) $(FFTWLIBDEP)
 $(call pcmrule,FFTW)
 	$(noop)
 
-$(FFTWDS):      $(FFTWH) $(FFTWL) $(ROOTCINTTMPDEP) $(call pcm_dep,FFTW)
+$(FFTWDS):      $(FFTWH) $(FFTWL) $(ROOTCINTTMPDEP) $(call pcmdep,FFTW)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FFTW) -c $(FFTWH) $(FFTWL)

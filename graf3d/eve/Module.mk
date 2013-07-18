@@ -71,7 +71,7 @@ $(EVELIB):      $(EVEO) $(EVEDO) $(ORDER_) $(MAINLIBS) $(EVELIBDEP) \
 $(call pcmrule,EVE)
 	$(noop)
 
-$(EVEDS):       $(EVEH) $(EVEL0) $(EVELS) $(ROOTCINTTMPDEP) $(call pcm_dep,EVE)
+$(EVEDS):       $(EVEH) $(EVEL0) $(EVELS) $(ROOTCINTTMPDEP) $(call pcmdep,EVE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,EVE) -c -I$(ROOT_SRCDIR) $(EVEH) $(EVEDIRS)/SolarisCCDictHack.h $(EVEL0)

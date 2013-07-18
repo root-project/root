@@ -49,7 +49,7 @@ $(GEDLIB):      $(GEDO) $(GEDDO) $(ORDER_) $(MAINLIBS) $(GEDLIBDEP)
 $(call pcmrule,GED)
 	$(noop)
 
-$(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMPDEP) $(call pcm_dep,GED)
+$(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMPDEP) $(call pcmdep,GED)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GED) -c $(GEDH) $(GEDL)

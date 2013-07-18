@@ -31,7 +31,7 @@ pcmname = $(subst .$(SOEXT),_rdict.pcm,$1)
 # This macro return the list of pcm that are needed for a package
 #    $(call pcm_dep,TREE)  
 # the argument is the upper case name fo the library (see the Module.mk)
-pcm_dep = lib/libCore_rdict.pcm $(subst .$(SOEXT),_rdict.pcm,$($1LIBDEPM))
+pcmdep = lib/libCore_rdict.pcm $(subst .$(SOEXT),_rdict.pcm,$($1LIBDEPM))
 
 # This macro return the argument to be passed to rootcling to
 # properly setup the pcm

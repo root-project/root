@@ -49,7 +49,7 @@ $(GPADLIB):     $(GPADO) $(GPADDO) $(ORDER_) $(MAINLIBS) $(GPADLIBDEP)
 $(call pcmrule,GPAD)
 	$(noop)
 
-$(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMPDEP) $(call pcm_dep,GPAD)
+$(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMPDEP) $(call pcmdep,GPAD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GPAD) -c $(GPADH) $(GPADL)

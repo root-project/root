@@ -49,7 +49,7 @@ $(SAPDBLIB):    $(SAPDBO) $(SAPDBDO) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,SAPDB)
 	$(noop)
 
-$(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPDEP) $(call pcm_dep,SAPDB)
+$(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPDEP) $(call pcmdep,SAPDB)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SAPDB) -c $(SAPDBH) $(SAPDBL)

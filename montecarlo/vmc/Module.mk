@@ -50,7 +50,7 @@ $(VMCLIB):      $(VMCO) $(VMCDO) $(ORDER_) $(MAINLIBS) $(VMCLIBDEP)
 $(call pcmrule,VMC)
 	$(noop)
 
-$(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPDEP) $(call pcm_dep,VMC)
+$(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPDEP) $(call pcmdep,VMC)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,VMC) -c $(VMCH1) $(VMCL)

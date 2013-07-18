@@ -49,7 +49,7 @@ $(XMLLIB):      $(XMLO) $(XMLDO) $(ORDER_) $(MAINLIBS) $(XMLLIBDEP)
 $(call pcmrule,XML)
 	$(noop)
 
-$(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPDEP) $(call pcm_dep,XML)
+$(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPDEP) $(call pcmdep,XML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,XML) -c $(XMLH) $(XMLL)

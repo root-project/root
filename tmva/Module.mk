@@ -85,7 +85,7 @@ $(TMVALIB):     $(TMVAO) $(TMVADO) $(ORDER_) $(MAINLIBS) $(TMVALIBDEP)
 $(call pcmrule,TMVA)
 	$(noop)
 
-$(TMVADS):      $(TMVAH) $(TMVAL0) $(TMVALS) $(ROOTCINTTMPDEP) $(call pcm_dep,TMVA)
+$(TMVADS):      $(TMVAH) $(TMVAL0) $(TMVALS) $(ROOTCINTTMPDEP) $(call pcmdep,TMVA)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,TMVA) -c -I$(ROOT_SRCDIR) $(TMVAH) $(TMVAL0)

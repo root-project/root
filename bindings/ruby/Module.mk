@@ -63,7 +63,7 @@ $(RUBYROOTLIB): $(RUBYROOTO) $(RUBYROOTDO) $(ORDER_) $(MAINLIBS) $(RUBYLIBDEP)
 $(call pcmrule,RUBYROOT)
 	$(noop)
 
-$(RUBYROOTDS):  $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMPDEP) $(call pcm_dep,RUBYROOT)
+$(RUBYROOTDS):  $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,RUBYROOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,RUBYROOT) -c $(RUBYROOTH) $(RUBYROOTL)

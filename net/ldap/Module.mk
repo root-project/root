@@ -49,7 +49,7 @@ $(LDAPLIB):     $(LDAPO) $(LDAPDO) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,LDAP)
 	$(noop)
 
-$(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP) $(call pcm_dep,LDAP)
+$(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP) $(call pcmdep,LDAP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,LDAP) -c $(LDAPH) $(LDAPL)

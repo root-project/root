@@ -49,7 +49,7 @@ $(HDFSLIB):     $(HDFSO) $(HDFSDO) $(ORDER_) $(MAINLIBS) $(HDFSLIBDEP)
 $(call pcmrule,HDFS)
 	$(noop)
 
-$(HDFSDS):      $(HDFSH) $(HDFSL) $(ROOTCINTTMPDEP) $(call pcm_dep,HDFS)
+$(HDFSDS):      $(HDFSH) $(HDFSL) $(ROOTCINTTMPDEP) $(call pcmdep,HDFS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HDFS) -c $(HDFSH) $(HDFSL)

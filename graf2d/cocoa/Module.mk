@@ -55,7 +55,7 @@ $(COCOALIB):    $(COCOAO) $(COCOAOBJCPPO) $(COCOADO) $(FREETYPEDEP) $(ORDER_) $(
 $(call pcmrule,COCOA)
 	$(noop)
 
-$(COCOADS):     $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP) $(call pcm_dep,COCOA)
+$(COCOADS):     $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP) $(call pcmdep,COCOA)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,COCOA) -c $(FREETYPEINC) $(COCOAH1) $(COCOAL)

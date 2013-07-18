@@ -49,7 +49,7 @@ $(GVIZLIB):     $(GVIZO) $(GVIZDO) $(ORDER_) $(MAINLIBS) $(GVIZLIBDEP)
 $(call pcmrule,GVIZ)
 	$(noop)
 
-$(GVIZDS):      $(GVIZH) $(GVIZL) $(ROOTCINTTMPDEP) $(call pcm_dep,GVIZ)
+$(GVIZDS):      $(GVIZH) $(GVIZL) $(ROOTCINTTMPDEP) $(call pcmdep,GVIZ)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GVIZ) -c $(GRAPHVIZINCDIR:%=-I%) $(GVIZH) $(GVIZL)

@@ -49,7 +49,7 @@ $(ROOFITLIB):   $(ROOFITO) $(ROOFITDO) $(ORDER_) $(MAINLIBS) $(ROOFITLIBDEP)
 $(call pcmrule,ROOFIT)
 	$(noop)
 
-$(ROOFITDS):    $(ROOFITH) $(ROOFITL) $(ROOTCINTTMPDEP) $(call pcm_dep,ROOFIT)
+$(ROOFITDS):    $(ROOFITH) $(ROOFITL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOFIT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ROOFIT) -c $(ROOFITH) $(ROOFITL)

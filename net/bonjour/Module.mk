@@ -49,7 +49,7 @@ $(BONJLIB):     $(BONJO) $(BONJDO) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,BONJ)
 	$(noop)
 
-$(BONJDS):      $(BONJH) $(BONJL) $(ROOTCINTTMPDEP) $(call pcm_dep,BONJ)
+$(BONJDS):      $(BONJH) $(BONJL) $(ROOTCINTTMPDEP) $(call pcmdep,BONJ)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,BONJ) -c $(BONJH) $(BONJL)

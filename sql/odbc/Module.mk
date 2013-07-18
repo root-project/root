@@ -49,7 +49,7 @@ $(ODBCLIB):     $(ODBCO) $(ODBCDO) $(ORDER_) $(MAINLIBS) $(ODBCLIBDEP)
 $(call pcmrule,ODBC)
 	$(noop)
 
-$(ODBCDS):     $(ODBCH) $(ODBCL) $(ROOTCINTTMPDEP) $(call pcm_dep,ODBC)
+$(ODBCDS):     $(ODBCH) $(ODBCL) $(ROOTCINTTMPDEP) $(call pcmdep,ODBC)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ODBC) -c $(ODBCINCDIR:%=-I%) $(ODBCH) $(ODBCL)

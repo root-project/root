@@ -59,7 +59,7 @@ $(PROOFLIB):    $(PROOFO) $(PROOFDO) $(ORDER_) $(MAINLIBS) $(PROOFLIBDEP)
 $(call pcmrule,PROOF)
 	$(noop)
 
-$(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP) $(call pcm_dep,PROOF)
+$(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP) $(call pcmdep,PROOF)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PROOF) -c $(ALIENDSMGR) $(PROOFH) $(PROOFL)

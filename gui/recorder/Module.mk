@@ -49,7 +49,7 @@ $(RECLIB):      $(RECO) $(RECDO) $(ORDER_) $(MAINLIBS) $(RECLIBDEP)
 $(call pcmrule,REC)
 	$(noop)
 
-$(RECDS):       $(RECH) $(RECL) $(ROOTCINTTMPDEP) $(call pcm_dep,REC)
+$(RECDS):       $(RECH) $(RECL) $(ROOTCINTTMPDEP) $(call pcmdep,REC)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,REC) -c $(RECH) $(RECL)

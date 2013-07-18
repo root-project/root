@@ -49,7 +49,7 @@ $(MATRIXLIB):   $(MATRIXO) $(MATRIXDO) $(ORDER_) $(MAINLIBS) $(MATRIXLIBDEP)
 $(call pcmrule,MATRIX)
 	$(noop)
 
-$(MATRIXDS):    $(MATRIXH) $(MATRIXL) $(ROOTCINTTMPDEP) $(call pcm_dep,MATRIX)
+$(MATRIXDS):    $(MATRIXH) $(MATRIXL) $(ROOTCINTTMPDEP) $(call pcmdep,MATRIX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MATRIX) -c $(MATRIXH) $(MATRIXL)

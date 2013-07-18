@@ -60,7 +60,7 @@ $(HISTLIB):     $(HISTO) $(HISTDO) $(ORDER_) $(MAINLIBS) $(HISTLIBDEP)
 $(call pcmrule,HIST)
 	$(noop)
 
-$(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP) $(call pcm_dep,HIST)
+$(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP) $(call pcmdep,HIST)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HIST) -c $(HISTHH) $(HISTL)

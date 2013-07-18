@@ -227,7 +227,7 @@ $(ASIMAGELIB):  $(ASIMAGEO) $(ASIMAGEDO) $(ASTEPDEP) $(FREETYPEDEP) \
 $(call pcmrule,ASIMAGE)
 	$(noop)
 
-$(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMPDEP) $(call pcm_dep,ASIMAGE)
+$(ASIMAGEDS):   $(ASIMAGEH) $(ASIMAGEL) $(ROOTCINTTMPDEP) $(call pcmdep,ASIMAGE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ASIMAGE) -c $(ASIMAGEH) $(ASIMAGEL)
@@ -249,7 +249,7 @@ $(ASIMAGEGUILIB):  $(ASIMAGEGUIO) $(ASIMAGEGUIDO) $(ASTEPDEP) $(FREETYPEDEP) \
 $(call pcmrule,ASIMAGEGUI)
 	$(noop)
 
-$(ASIMAGEGUIDS): $(ASIMAGEGUIH) $(ASIMAGEGUIL) $(ROOTCINTTMPDEP) $(call pcm_dep,ASIMAGEGUI)
+$(ASIMAGEGUIDS): $(ASIMAGEGUIH) $(ASIMAGEGUIL) $(ROOTCINTTMPDEP) $(call pcmdep,ASIMAGEGUI)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ASIMAGEGUI) -c $(ASIMAGEGUIH) $(ASIMAGEGUIL)

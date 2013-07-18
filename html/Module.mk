@@ -49,7 +49,7 @@ $(HTMLLIB):     $(HTMLO) $(HTMLDO) $(ORDER_) $(MAINLIBS) $(HTMLLIBDEP)
 $(call pcmrule,HTML)
 	$(noop)
 
-$(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPDEP) $(call pcm_dep,HTML)
+$(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPDEP) $(call pcmdep,HTML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)

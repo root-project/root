@@ -132,7 +132,7 @@ $(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) \
 $(call pcmrule,UNURAN)
 	$(noop)
 
-$(UNURANDS):    $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCINTTMPDEP) $(call pcm_dep,UNURAN)
+$(UNURANDS):    $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCINTTMPDEP) $(call pcmdep,UNURAN)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,UNURAN) -c $(UNRFLAGS) $(UNURANDH1) $(UNURANL)

@@ -49,7 +49,7 @@ $(GLITELIB):    $(GLITEO) $(GLITEDO) $(ORDER_) $(MAINLIBS) $(GLITELIBDEP)
 $(call pcmrule,GLITE)
 	$(noop)
 
-$(GLITEDS):     $(GLITEH) $(GLITEL) $(ROOTCINTTMPDEP) $(call pcm_dep,GLITE)
+$(GLITEDS):     $(GLITEH) $(GLITEL) $(ROOTCINTTMPDEP) $(call pcmdep,GLITE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GLITE) -c $(GLITEH) $(GLITEL)

@@ -56,7 +56,7 @@ $(MEMSTATLIB):  $(MEMSTATO) $(MEMSTATDO) $(ORDER_) $(MAINLIBS) $(MEMSTATLIBDEP)
 $(call pcmrule,MEMSTAT)
 	$(noop)
 
-$(MEMSTATDS):   $(MEMSTATH) $(MEMSTATL) $(ROOTCINTTMPDEP) $(call pcm_dep,MEMSTAT)
+$(MEMSTATDS):   $(MEMSTATH) $(MEMSTATL) $(ROOTCINTTMPDEP) $(call pcmdep,MEMSTAT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MEMSTAT) -c $(MEMSTATH) $(MEMSTATL)

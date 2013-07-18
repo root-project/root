@@ -94,7 +94,7 @@ endif
 $(call pcmrule,PYROOT)
 	$(noop)
 
-$(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPDEP) $(call pcm_dep,PYROOT)
+$(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,PYROOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)

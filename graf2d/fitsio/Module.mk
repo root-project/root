@@ -49,7 +49,7 @@ $(FITSIOLIB):   $(FITSIOO) $(FITSIODO) $(ORDER_) $(MAINLIBS) $(FITSIOLIBDEP)
 $(call pcmrule,FITSIO)
 	$(noop)
 
-$(FITSIODS):    $(FITSIOH) $(FITSIOL) $(ROOTCINTTMPDEP) $(call pcm_dep,FITSIO)
+$(FITSIODS):    $(FITSIOH) $(FITSIOL) $(ROOTCINTTMPDEP) $(call pcmdep,FITSIO)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FITSIO) -c $(FITSIOH) $(FITSIOL)

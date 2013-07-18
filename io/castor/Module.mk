@@ -50,7 +50,7 @@ $(CASTORLIB):   $(CASTORO) $(CASTORDO) $(ORDER_) $(MAINLIBS) $(CASTORLIBDEP)
 $(call pcmrule,CASTOR)
 	$(noop)
 
-$(CASTORDS):    $(CASTORH) $(CASTORL) $(ROOTCINTTMPDEP) $(call pcm_dep,CASTOR)
+$(CASTORDS):    $(CASTORH) $(CASTORL) $(ROOTCINTTMPDEP) $(call pcmdep,CASTOR)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,CASTOR) -c $(CASTORH) $(CASTORL)

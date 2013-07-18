@@ -68,7 +68,7 @@ $(NETLIB):      $(NETO) $(NETDO) $(ORDER_) $(MAINLIBS) $(NETLIBDEP)
 $(call pcmrule,NET)
 	$(noop)
 
-$(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPDEP) $(call pcm_dep,NET)
+$(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPDEP) $(call pcmdep,NET)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,NET) -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)

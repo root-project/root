@@ -49,7 +49,7 @@ $(GUIBLDLIB):   $(GUIBLDO) $(GUIBLDDO) $(ORDER_) $(MAINLIBS) $(GUIBLDLIBDEP)
 $(call pcmrule,GUIBLD)
 	$(noop)
 
-$(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPDEP) $(call pcm_dep,GUIBLD)
+$(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPDEP) $(call pcmdep,GUIBLD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GUIBLD) -c $(GUIBLDH) $(GUIBLDL)

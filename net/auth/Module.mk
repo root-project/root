@@ -108,7 +108,7 @@ $(RAUTHLIB):    $(RAUTHO) $(RAUTHDO) $(ORDER_) $(MAINLIBS) $(RAUTHLIBDEP)
 $(call pcmrule,RAUTH)
 	$(noop)
 
-$(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP) $(call pcm_dep,RAUTH)
+$(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,RAUTH)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,RAUTH) -c $(RAUTHH) $(RAUTHL)
@@ -126,7 +126,7 @@ $(AFSAUTHLIB):  $(AFSAUTHO) $(AFSAUTHDO) $(ORDER_) $(MAINLIBS) $(AFSAUTHLIBDEP)
 $(call pcmrule,AFSAUTH)
 	$(noop)
 
-$(AFSAUTHDS):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPDEP) $(call pcm_dep,AFSAUTH)
+$(AFSAUTHDS):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,AFSAUTH)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,AFSAUTH) -c $(AFSAUTHH) $(AFSAUTHL)

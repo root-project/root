@@ -48,7 +48,7 @@ $(DCACHELIB):   $(DCACHEO) $(DCACHEDO) $(ORDER_) $(MAINLIBS) $(DCACHELIBDEP)
 $(call pcmrule,DCACHE)
 	$(noop)
 
-$(DCACHEDS):    $(DCACHEH) $(DCACHEL) $(ROOTCINTTMPDEP) $(call pcm_dep,DCACHE)
+$(DCACHEDS):    $(DCACHEH) $(DCACHEL) $(ROOTCINTTMPDEP) $(call pcmdep,DCACHE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,DCACHE) -c $(DCACHEH) $(DCACHEL)

@@ -53,7 +53,7 @@ $(GEOCADLIB):   $(GEOCADO) $(GEOCADDO) $(ORDER_) $(MAINLIBS) $(GEOCADLIBDEP)
 $(call pcmrule,GEOCAD)
 	$(noop)
 
-$(GEOCADDS):    $(GEOCADH1) $(GEOCADH2) $(GEOCADL) $(ROOTCINTTMPDEP) $(call pcm_dep,GEOCAD)
+$(GEOCADDS):    $(GEOCADH1) $(GEOCADH2) $(GEOCADL) $(ROOTCINTTMPDEP) $(call pcmdep,GEOCAD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOCAD) -c $(GEOCADH2) $(GEOCADL)

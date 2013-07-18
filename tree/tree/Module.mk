@@ -49,7 +49,7 @@ $(TREELIB):     $(TREEO) $(TREEDO) $(ORDER_) $(MAINLIBS) $(TREELIBDEP)
 $(call pcmrule,TREE)
 	$(noop)
 
-$(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP) $(call pcm_dep,TREE)
+$(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP) $(call pcmdep,TREE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,TREE) -c $(TREEH) $(TREEL)

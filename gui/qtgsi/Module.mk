@@ -68,7 +68,7 @@ $(QTGSILIB):    $(QTGSIO) $(QTGSIDO) $(QTGSIMOCO) $(ORDER_) $(MAINLIBS) $(QTGSIL
 $(call pcmrule,QTGSI)
 	$(noop)
 
-$(QTGSIDS):     $(QTGSIH) $(QTGSIL) $(ROOTCINTTMPDEP) $(call pcm_dep,QTGSI)
+$(QTGSIDS):     $(QTGSIH) $(QTGSIL) $(ROOTCINTTMPDEP) $(call pcmdep,QTGSI)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,QTGSI) -c -DQTVERS=$(QTVERS) $(QTGSICXXFLAGS) $(QTGSIH) $(QTGSIL)

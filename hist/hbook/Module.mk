@@ -49,7 +49,7 @@ $(HBOOKLIB):    $(HBOOKO) $(HBOOKDO) $(ORDER_) $(MAINLIBS) $(HBOOKLIBDEP)
 $(call pcmrule,HBOOK)
 	$(noop)
 
-$(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPDEP) $(filter-out lib/libminicern_rdict.pcm,$(call pcm_dep,HBOOK))
+$(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPDEP) $(filter-out lib/libminicern_rdict.pcm,$(call pcmdep,HBOOK))
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HBOOK) -c $(HBOOKH) $(HBOOKL)

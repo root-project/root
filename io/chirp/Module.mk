@@ -48,7 +48,7 @@ $(CHIRPLIB):    $(CHIRPO) $(CHIRPDO) $(ORDER_) $(MAINLIBS) $(CHIRPLIBDEP)
 $(call pcmrule,CHIRP)
 	$(noop)
 
-$(CHIRPDS):     $(CHIRPH) $(CHIRPL) $(ROOTCINTTMPDEP) $(call pcm_dep,CHIRP)
+$(CHIRPDS):     $(CHIRPH) $(CHIRPL) $(ROOTCINTTMPDEP) $(call pcmdep,CHIRP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,CHIRP) -c $(CHIRPH) $(CHIRPL)

@@ -77,7 +77,7 @@ $(SMATRIXLIB): $(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,SMATRIX)
 	$(noop)
 
-$(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPDEP) $(call pcm_dep,SMATRIX)
+$(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPDEP) $(call pcmdep,SMATRIX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(MAKEDIR)

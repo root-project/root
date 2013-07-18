@@ -54,7 +54,7 @@ $(G3DLIB):      $(G3DO) $(G3DDO) $(ORDER_) $(MAINLIBS) $(G3DLIBDEP)
 $(call pcmrule,G3D)
 	$(noop)
 
-$(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCINTTMPDEP) $(call pcm_dep,G3D)
+$(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCINTTMPDEP) $(call pcmdep,G3D)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,G3D) -c $(G3DH1) $(G3DL)

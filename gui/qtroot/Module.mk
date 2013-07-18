@@ -49,7 +49,7 @@ $(QTROOTLIB):   $(QTROOTO) $(QTROOTDO) $(ORDER_) $(MAINLIBS) $(QTROOTLIBDEP)
 $(call pcmrule,QTROOT)
 	$(noop)
 
-$(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP) $(call pcm_dep,QTROOT)
+$(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,QTROOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,QTROOT) -c $(QTROOTH) $(QTROOTL)

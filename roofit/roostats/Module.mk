@@ -59,7 +59,7 @@ $(ROOSTATSLIB): $(ROOSTATSO) $(ROOSTATSDO) $(ORDER_) $(MAINLIBS) \
 $(call pcmrule,ROOSTATS)
 	$(noop)
 
-$(ROOSTATSDS):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCINTTMPDEP) $(call pcm_dep,ROOSTATS)
+$(ROOSTATSDS):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOSTATS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@  $(call dictModule,ROOSTATS) -c $(ROOSTATSH) $(ROOSTATSL)

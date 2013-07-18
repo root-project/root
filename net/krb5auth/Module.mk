@@ -54,7 +54,7 @@ $(KRB5AUTHLIB): $(KRB5AUTHO) $(KRB5AUTHDO) $(ORDER_) $(MAINLIBS) $(KRB5AUTHLIBDE
 $(call pcmrule,KRB5AUTH)
 	$(noop)
 
-$(KRB5AUTHDS):  $(KRB5AUTHH1) $(KRB5AUTHL) $(ROOTCINTTMPDEP) $(call pcm_dep,KRB5AUTH)
+$(KRB5AUTHDS):  $(KRB5AUTHH1) $(KRB5AUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,KRB5AUTH)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,KRB5AUTH) -c $(KRB5INCDIR:%=-I%) $(KRB5AUTHH1) $(KRB5AUTHL)

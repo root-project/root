@@ -49,7 +49,7 @@ $(SQLLIB):      $(SQLO) $(SQLDO) $(ORDER_) $(MAINLIBS) $(SQLLIBDEP)
 $(call pcmrule,SQL)
 	$(noop)
 
-$(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPDEP) $(call pcm_dep,SQL)
+$(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPDEP) $(call pcmdep,SQL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SQL) -c $(SQLH) $(SQLL)

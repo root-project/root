@@ -49,7 +49,7 @@ $(TABLELIB):    $(TABLEO) $(TABLEDO) $(ORDER_) $(MAINLIBS) $(TABLELIBDEP)
 $(call pcmrule,TABLE)
 	$(noop)
 
-$(TABLEDS):     $(TABLEH) $(TABLEL) $(ROOTCINTTMPDEP) $(call pcm_dep,TABLE)
+$(TABLEDS):     $(TABLEH) $(TABLEL) $(ROOTCINTTMPDEP) $(call pcmdep,TABLE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,TABLE) -c $(TABLEH) $(TABLEL)

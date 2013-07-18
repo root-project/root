@@ -49,7 +49,7 @@ $(SPLOTLIB):    $(SPLOTO) $(SPLOTDO) $(ORDER_) $(MAINLIBS) $(SPLOTLIBDEP)
 $(call pcmrule,SPLOT)
 	$(noop)
 
-$(SPLOTDS):     $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPDEP) $(call pcm_dep,SPLOT)
+$(SPLOTDS):     $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPDEP) $(call pcmdep,SPLOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SPLOT) -c $(SPLOTH) $(SPLOTL)

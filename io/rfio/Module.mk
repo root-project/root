@@ -49,7 +49,7 @@ $(RFIOLIB):     $(RFIOO) $(RFIODO) $(ORDER_) $(MAINLIBS) $(RFIOLIBDEP)
 $(call pcmrule,RFIO)
 	$(noop)
 
-$(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPDEP) $(call pcm_dep,RFIO)
+$(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPDEP) $(call pcmdep,RFIO)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,RFIO) -c $(RFIOH) $(RFIOL)

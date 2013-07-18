@@ -54,7 +54,7 @@ $(QUARTZLIB):   $(QUARTZO) $(QUARTZOBJCPPO) $(QUARTZDO) $(ORDER_) $(MAINLIBS) \
 $(call pcmrule,QUARTZ)
 	$(noop)
 
-$(QUARTZDS):    $(QUARTZH1) $(QUARTZL) $(ROOTCINTTMPDEP) $(call pcm_dep,QUARTZ)
+$(QUARTZDS):    $(QUARTZH1) $(QUARTZL) $(ROOTCINTTMPDEP) $(call pcmdep,QUARTZ)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,QUARTZ) -c $(QUARTZH1) $(QUARTZL)

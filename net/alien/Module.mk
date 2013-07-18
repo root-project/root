@@ -59,7 +59,7 @@ $(ALIENLIB):    $(ALIENO) $(ALIENDO) $(ORDER_) $(MAINLIBS) $(ALIENLIBDEP)
 $(call pcmrule,ALIEN)
 	$(noop)
 
-$(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP) $(call pcm_dep,ALIEN)
+$(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP) $(call pcmdep,ALIEN)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ALIEN) -c $(ALIENINCEXTRA) $(ALIENH) $(ALIENL)

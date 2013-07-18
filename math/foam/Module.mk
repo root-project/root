@@ -49,7 +49,7 @@ $(FOAMLIB):     $(FOAMO) $(FOAMDO) $(ORDER_) $(MAINLIBS) $(FOAMLIBDEP)
 $(call pcmrule,FOAM)
 	$(noop)
 
-$(FOAMDS):      $(FOAMH) $(FOAML) $(ROOTCINTTMPDEP) $(call pcm_dep,FOAM)
+$(FOAMDS):      $(FOAMH) $(FOAML) $(ROOTCINTTMPDEP) $(call pcmdep,FOAM)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FOAM) -c $(FOAMH) $(FOAML)

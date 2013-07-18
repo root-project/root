@@ -49,7 +49,7 @@ $(MONALISALIB): $(MONALISAO) $(MONALISADO) $(ORDER_) $(MAINLIBS) $(MONALISALIBDE
 $(call pcmrule,MONALISA)
 	$(noop)
 
-$(MONALISADS):  $(MONALISAH) $(MONALISAL) $(ROOTCINTTMPDEP) $(call pcm_dep,MONALISA)
+$(MONALISADS):  $(MONALISAH) $(MONALISAL) $(ROOTCINTTMPDEP) $(call pcmdep,MONALISA)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MONALISA) -c $(MONALISAINCDIR:%=-I%) $(MONALISAH) $(MONALISAL)

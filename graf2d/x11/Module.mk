@@ -51,7 +51,7 @@ $(X11LIB):      $(X11O) $(X11DO) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,X11)
 	$(noop)
 
-$(X11DS):       $(X11H1) $(X11L) $(ROOTCINTTMPDEP) $(call pcm_dep,X11)
+$(X11DS):       $(X11H1) $(X11L) $(ROOTCINTTMPDEP) $(call pcmdep,X11)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,X11) -c $(X11INCDIR:%=-I%) $(X11H1) $(X11L)

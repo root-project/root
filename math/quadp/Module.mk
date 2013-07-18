@@ -49,7 +49,7 @@ $(QUADPLIB):    $(QUADPO) $(QUADPDO) $(ORDER_) $(MAINLIBS) $(QUADPLIBDEP)
 $(call pcmrule,QUADP)
 	$(noop)
 
-$(QUADPDS):     $(QUADPH) $(QUADPL) $(ROOTCINTTMPDEP) $(call pcm_dep,QUADP)
+$(QUADPDS):     $(QUADPH) $(QUADPL) $(ROOTCINTTMPDEP) $(call pcmdep,QUADP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,QUADP) -c $(QUADPH) $(QUADPL)

@@ -49,7 +49,7 @@ $(ORACLELIB):   $(ORACLEO) $(ORACLEDO) $(ORDER_) $(MAINLIBS) $(ORACLELIBDEP)
 $(call pcmrule,ORACLE)
 	$(noop)
 
-$(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPDEP) $(call pcm_dep,ORACLE)
+$(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPDEP) $(call pcmdep,ORACLE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ORACLE) -c $(ORACLEINCDIR:%=-I%) $(ORACLEH) $(ORACLEL)

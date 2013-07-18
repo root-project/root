@@ -51,7 +51,7 @@ $(SPECTRUMLIB): $(SPECTRUMO) $(SPECTRUMDO) $(ORDER_) $(MAINLIBS) \
 $(call pcmrule,SPECTRUM)
 	$(noop)
 
-$(SPECTRUMDS):  $(SPECTRUMH) $(SPECTRUML) $(ROOTCINTTMPDEP) $(call pcm_dep,SPECTRUM)
+$(SPECTRUMDS):  $(SPECTRUMH) $(SPECTRUML) $(ROOTCINTTMPDEP) $(call pcmdep,SPECTRUM)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SPECTRUM) -c $(SPECTRUMH) $(SPECTRUML)

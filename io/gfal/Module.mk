@@ -49,7 +49,7 @@ $(GFALLIB):     $(GFALO) $(GFALDO) $(ORDER_) $(MAINLIBS) $(GFALLIBDEP)
 $(call pcmrule,GFAL)
 	$(noop)
 
-$(GFALDS):      $(GFALH) $(GFALL) $(ROOTCINTTMPDEP) $(call pcm_dep,GFAL)
+$(GFALDS):      $(GFALH) $(GFALL) $(ROOTCINTTMPDEP) $(call pcmdep,GFAL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GFAL) -c $(GFALH) $(GFALL)

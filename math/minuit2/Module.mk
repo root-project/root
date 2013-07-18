@@ -86,7 +86,7 @@ $(MINUIT2LIB):  $(MINUIT2O) $(MINUIT2DO) $(ORDER_) $(MAINLIBS) $(MINUIT2LIBDEP)
 $(call pcmrule,MINUIT2)
 	$(noop)
 
-$(MINUIT2DS):   $(MINUIT2H) $(MINUIT2L) $(ROOTCINTTMPDEP) $(call pcm_dep,MINUIT2)
+$(MINUIT2DS):   $(MINUIT2H) $(MINUIT2L) $(ROOTCINTTMPDEP) $(call pcmdep,MINUIT2)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MINUIT2) -c $(MINUIT2H) $(MINUIT2L)

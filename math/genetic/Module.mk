@@ -57,7 +57,7 @@ $(GENETICLIB): $(GENETICO) $(GENETICDO) $(ORDER_) $(MAINLIBS) $(GENETICLIBDEP)
 $(call pcmrule,GENETIC)
 	$(noop)
 
-$(GENETICDS):  $(GENETICDH1) $(GENETICL) $(GENETICLINC) $(ROOTCINTTMPDEP) $(call pcm_dep,GENETIC)
+$(GENETICDS):  $(GENETICDH1) $(GENETICL) $(GENETICLINC) $(ROOTCINTTMPDEP) $(call pcmdep,GENETIC)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GENETIC) -c $(GENETICDH1) $(GENETICL)

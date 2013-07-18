@@ -52,7 +52,7 @@ $(X3DLIB):      $(X3DO) $(X3DDO) $(ORDER_) $(MAINLIBS) $(X3DLIBDEP)
 $(call pcmrule,X3D)
 	$(noop)
 
-$(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPDEP) $(call pcm_dep,X3D)
+$(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPDEP) $(call pcmdep,X3D)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,X3D) -c $(X3DH1) $(X3DL)

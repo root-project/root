@@ -50,7 +50,7 @@ $(XMLPARSERLIB): $(XMLPARSERO) $(XMLPARSERDO) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,XMLPARSER)
 	$(noop)
 
-$(XMLPARSERDS): $(XMLPARSERH) $(XMLPARSERL) $(ROOTCINTTMPDEP) $(call pcm_dep,XMLPARSER)
+$(XMLPARSERDS): $(XMLPARSERH) $(XMLPARSERL) $(ROOTCINTTMPDEP) $(call pcmdep,XMLPARSER)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,XMLPARSER) -c $(XMLPARSERH) $(XMLPARSERL)

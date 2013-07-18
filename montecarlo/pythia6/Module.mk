@@ -64,7 +64,7 @@ $(PYTHIA6LIB):  $(PYTHIA6O) $(PYTHIA6DO) $(ORDER_) $(MAINLIBS) $(PYTHIA6LIBDEP)
 $(call pcmrule,PYTHIA6)
 	$(noop)
 
-$(PYTHIA6DS):   $(PYTHIA6H) $(PYTHIA6L) $(ROOTCINTTMPDEP) $(call pcm_dep,PYTHIA6)
+$(PYTHIA6DS):   $(PYTHIA6H) $(PYTHIA6L) $(ROOTCINTTMPDEP) $(call pcmdep,PYTHIA6)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PYTHIA6) -c $(PYTHIA6H) $(PYTHIA6L)

@@ -49,7 +49,7 @@ $(FITPANELLIB): $(FITPANELO) $(FITPANELDO) $(ORDER_) $(MAINLIBS) $(FITPANELLIBDE
 $(call pcmrule,FITPANEL)
 	$(noop)
 
-$(FITPANELDS):  $(FITPANELH) $(FITPANELL) $(ROOTCINTTMPDEP) $(call pcm_dep,FITPANEL)
+$(FITPANELDS):  $(FITPANELH) $(FITPANELL) $(ROOTCINTTMPDEP) $(call pcmdep,FITPANEL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FITPANEL) -c $(FITPANELH) $(FITPANELL)

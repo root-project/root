@@ -49,7 +49,7 @@ $(MINUITLIB):   $(MINUITO) $(MINUITDO) $(ORDER_) $(MAINLIBS) $(MINUITLIBDEP)
 $(call pcmrule,MINUIT)
 	$(noop)
 
-$(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPDEP) $(call pcm_dep,MINUIT)
+$(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPDEP) $(call pcmdep,MINUIT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MINUIT) -c $(MINUITH) $(MINUITL)

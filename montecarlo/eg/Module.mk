@@ -50,7 +50,7 @@ $(EGLIB):       $(EGO) $(EGDO) $(ORDER_) $(MAINLIBS) $(EGLIBDEP)
 $(call pcmrule,EG)
 	$(noop)
 
-$(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMPDEP) $(call pcm_dep,EG)
+$(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMPDEP) $(call pcmdep,EG)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,EG) -c $(EGH1) $(EGL)

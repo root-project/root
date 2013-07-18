@@ -49,7 +49,7 @@ $(FUMILILIB):   $(FUMILIO) $(FUMILIDO) $(ORDER_) $(MAINLIBS) $(FUMILILIBDEP)
 $(call pcmrule,FUMILI)
 	$(noop)
 
-$(FUMILIDS):    $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPDEP) $(call pcm_dep,FUMILI)
+$(FUMILIDS):    $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPDEP) $(call pcmdep,FUMILI)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FUMILI) -c $(FUMILIH) $(FUMILIL)

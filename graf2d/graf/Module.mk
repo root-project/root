@@ -51,7 +51,7 @@ $(GRAFLIB):     $(GRAFO) $(GRAFDO) $(MATHTEXTLIBDEP) $(FREETYPEDEP) $(ORDER_) \
 $(call pcmrule,GRAF)
 	$(noop)
 
-$(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP) $(call pcm_dep,GRAF)
+$(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP) $(call pcmdep,GRAF)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)

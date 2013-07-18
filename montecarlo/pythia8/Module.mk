@@ -50,7 +50,7 @@ $(PYTHIA8LIB):  $(PYTHIA8O) $(PYTHIA8DO) $(ORDER_) $(MAINLIBS) $(PYTHIA8LIBDEP)
 $(call pcmrule,PYTHIA8)
 	$(noop)
 
-$(PYTHIA8DS):   $(PYTHIA8H) $(PYTHIA8L) $(ROOTCINTTMPDEP) $(call pcm_dep,PYTHIA8)
+$(PYTHIA8DS):   $(PYTHIA8H) $(PYTHIA8L) $(ROOTCINTTMPDEP) $(call pcmdep,PYTHIA8)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PYTHIA8) -c -I$(FPYTHIA8INCDIR) $(PYTHIA8H) $(PYTHIA8L)
