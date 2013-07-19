@@ -207,7 +207,7 @@ Bool_t ROOT::TBranchProxy::Setup()
 
       // This is not sufficient for following pointers
 
-   } else if (!fBranch || fCurrentTreeNumber != fDirector->GetTree()->GetTreeNumber()) {
+   } else if (!fBranch || fCurrentTreeNumber != fDirector->GetTree()->GetTreeNumber() || fLastTree != fDirector->GetTree()) {
 
       // This does not allow (yet) to precede the branch name with
       // its mother's name
