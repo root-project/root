@@ -94,7 +94,7 @@ Long64_t TTreeReader::GetCurrentEntry() const {
 }
 
 //______________________________________________________________________________
-TTreeReader::EEntryStatus TTreeReader::SetEntry(Long64_t entry)
+TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local)
 {
    // Load an entry into the tree, return the status of the read.
    // For chains, entry is the global (i.e. not tree-local) entry number.
@@ -104,18 +104,21 @@ TTreeReader::EEntryStatus TTreeReader::SetEntry(Long64_t entry)
       return fEntryStatus;
    }
    Int_t treeNumInChain = fTree->GetTreeNumber();
+   Long64_t absoluteEntry = local ? fTree->GetChainOffset() + entry : entry;
 
    TTree* prevTree = fDirector->GetTree();
 
-   int loadResult = fTree->LoadTree(entry);
+   int loadResult = fTree->LoadTree(absoluteEntry);
    if (loadResult == -2) {
       fEntryStatus = kEntryNotFound;
       return fEntryStatus;
    }
 
-   Int_t currentTreeNumInChain = fTree->GetTreeNumber();
-   if (treeNumInChain != currentTreeNumInChain) {
-         fDirector->SetTree(fTree->GetTree());
+   if (!local){
+      Int_t currentTreeNumInChain = fTree->GetTreeNumber();
+      if (treeNumInChain != currentTreeNumInChain) {
+            fDirector->SetTree(fTree->GetTree());
+      }
    }
    if (!prevTree || fDirector->GetReadEntry() == -1) {
       // Tell readers we now have a tree
