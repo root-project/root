@@ -32,7 +32,7 @@ Double_t fdm2(Double_t *xx, Double_t *par)
        + par[1] / 2.5066/sigma*TMath::Exp(-xp3/2/sigma/sigma));
    return res;
 }
-
+//_____________________________________________________________________
 Bool_t h1analysisTreeReader::Process(Long64_t entry){
 // entry is the entry number in the current Tree
 // Selection function to select D* and D0.
@@ -113,7 +113,7 @@ void h1analysisTreeReader::Begin(TTree* /*myTree*/) {
 
 void h1analysisTreeReader::SlaveBegin(TTree *myTree){
 
-   // function called before starting the event loop
+// function called before starting the event loop
 //  -it performs some cleanup
 //  -it creates histograms
 //  -it sets some initialisation for the entry list
