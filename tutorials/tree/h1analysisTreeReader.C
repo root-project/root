@@ -46,29 +46,29 @@ Bool_t h1analysisTreeReader::Process(Long64_t entry){
    //in case one entry list is given in input, the selection has already been done.
    if (!useList) {
       // Return as soon as a bad entry is detected
-      if (TMath::Abs(*md0_d-1.8646) >= 0.04) return kFALSE;
-      if (*ptds_d <= 2.5) return kFALSE;
-      if (TMath::Abs(*etads_d) >= 1.5) return kFALSE;
-      (*ik)--; //original ik used f77 convention starting at 1
-      (*ipi)--;
+      if (TMath::Abs(*fMd0_d-1.8646) >= 0.04) return kFALSE;
+      if (*fPtds_d <= 2.5) return kFALSE;
+      if (TMath::Abs(*fEtads_d) >= 1.5) return kFALSE;
+      (*fIk)--; //original fIk used f77 convention starting at 1
+      (*fIpi)--;
       
       
-      if (nhitrp.At(*ik)* nhitrp.At(*ipi) <= 1) return kFALSE;
+      if (fNhitrp.At(*fIk)* fNhitrp.At(*fIpi) <= 1) return kFALSE;
       
       
-      if (rend.At(*ik) -rstart.At(*ik)  <= 22) return kFALSE;
-      if (rend.At(*ipi)-rstart.At(*ipi) <= 22) return kFALSE;
-      if (nlhk.At(*ik) <= 0.1)    return kFALSE;
-      if (nlhpi.At(*ipi) <= 0.1)  return kFALSE;
-      (*ipis)--; if (nlhpi.At(*ipis) <= 0.1) return kFALSE;
-      if (*njets < 1)          return kFALSE;
+      if (fRend.At(*fIk) -fRstart.At(*fIk)  <= 22) return kFALSE;
+      if (fRend.At(*fIpi)-fRstart.At(*fIpi) <= 22) return kFALSE;
+      if (fNlhk.At(*fIk) <= 0.1)    return kFALSE;
+      if (fNlhpi.At(*fIpi) <= 0.1)  return kFALSE;
+      (*fIpis)--; if (fNlhpi.At(*fIpis) <= 0.1) return kFALSE;
+      if (*fNjets < 1)          return kFALSE;
    }
    // if option fillList, fill the entry list
    if (fillList) elist->Enter(entry);
 
    //fill some histograms
-   hdmd->Fill(*dm_d);
-   h2->Fill(*dm_d,*rpd0_t/0.029979*1.8646/ *ptd0_d);
+   hdmd->Fill(*fDm_d);
+   h2->Fill(*fDm_d,*fRpd0_t/0.029979*1.8646/ *fPtd0_d);
 
    return kTRUE;
 }
@@ -131,8 +131,8 @@ void h1analysisTreeReader::SlaveBegin(TTree *myTree){
         "starting h1analysis with process option: %s (tree: %p)", option.Data(), myTree);
 
    //create histograms
-   hdmd = new TH1F("hdmd","dm_d",40,0.13,0.17);
-   h2   = new TH2F("h2","ptD0 vs dm_d",30,0.135,0.165,30,-3,6);
+   hdmd = new TH1F("hdmd","Dm_d",40,0.13,0.17);
+   h2   = new TH2F("h2","ptD0 vs Dm_d",30,0.135,0.165,30,-3,6);
 
    fOutput->Add(hdmd);
    fOutput->Add(h2);
@@ -172,7 +172,7 @@ void h1analysisTreeReader::Terminate() {
    hdmd->GetXaxis()->SetTitle("m_{K#pi#pi} - m_{K#pi}[GeV/c^{2}]");
    hdmd->GetXaxis()->SetTitleOffset(1.4);
 
-   //fit histogram hdmd with function f5 using the loglikelihood option
+   //fit histogram hdmd with function f5 using the loglfIkelihood option
    if (gROOT->GetListOfFunctions()->FindObject("f5"))
       delete gROOT->GetFunction("f5");
    TF1 *f5 = new TF1("f5",fdm5,0.139,0.17,5);
