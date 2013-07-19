@@ -727,9 +727,12 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
           && branch->IsA() == TBranch::Class()) {
          TLeaf *myLeaf = branch->GetLeaf(branch->GetName());
          if (myLeaf){
-            dict = TDictionary::GetDictionary(((TDataType*)TDictionary::GetDictionary(myLeaf->GetTypeName()))->GetTypeName());
-            contentTypeName = myLeaf->GetTypeName();
-            return 0;
+            TDictionary *myDataType = TDictionary::GetDictionary(myLeaf->GetTypeName());
+            if (myDataType->IsA() == TDataType::Class()){
+               dict = TDataType::GetDataType((EDataType)((TDataType*)myDataType)->GetType());
+               contentTypeName = myLeaf->GetTypeName();
+               return 0;
+            }
          }
 
          // leaflist. Can't represent.
