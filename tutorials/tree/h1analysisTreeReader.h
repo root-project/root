@@ -37,8 +37,6 @@ public:
    TEntryList                   *elist;//!
    Long64_t                      fProcessed;//!
 
-   Long64_t                      fChainOffset;//!
-
    h1analysisTreeReader(TTree* /*tree*/=0) :
    	myTreeReader(),
 	   ptds_d     (myTreeReader, "ptds_d"  ),

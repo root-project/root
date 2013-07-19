@@ -41,7 +41,7 @@ Double_t fdm2(Double_t *xx, Double_t *par)
 Bool_t h1analysisTreeReader::Process(Long64_t entry){
 // entry is the entry number in the current Tree
 // Selection function to select D* and D0.
-   myTreeReader.SetEntry(fChainOffset + entry);
+   myTreeReader.SetLocalEntry(entry);
    fProcessed++;
    //in case one entry list is given in input, the selection has already been done.
    if (!useList) {
@@ -124,8 +124,6 @@ void h1analysisTreeReader::SlaveBegin(TTree *myTree){
 //  -it sets some initialisation for the entry list
 
    myTreeReader.SetTree(myTree);
-
-   fChainOffset = 0;
 
    //print the option specified in the Process function.
    TString option = GetOption();
@@ -237,7 +235,6 @@ Bool_t h1analysisTreeReader::Notify() {
 //   get branch pointers
 
    Info("Notify","processing file: %s",myTreeReader.GetTree()->GetCurrentFile()->GetName());
-   fChainOffset = myTreeReader.GetTree()->GetChainOffset();
 
    if (elist && myTreeReader.GetTree()) {
       if (fillList) {
