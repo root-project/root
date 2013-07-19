@@ -123,7 +123,7 @@ public:
 
    T* Get() {
       if (!fProxy){
-         Error("Get()", "Value reader not properly initialized, did you remember to call TTreeReader.Set(Next)Entry ?");
+         Error("Get()", "Value reader not properly initialized, did you remember to call TTreeReader.Set(Next)Entry()?");
          return 0;
       }
       void *address = GetAddress(); // Needed to figure out if it's a pointer
