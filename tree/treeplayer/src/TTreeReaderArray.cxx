@@ -539,7 +539,6 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
          }
       }
    } else if (branch->IsA() == TBranch::Class()) {
-      //printf("TBranch\n"); // TODO: Remove (necessary because of gdb bug)
       TLeaf *topLeaf = branch->GetLeaf(branch->GetName());
       Int_t size = 0;
       TLeaf *sizeLeaf = topLeaf->GetLeafCounter(size);
@@ -551,14 +550,14 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
       }
       ((TObjectArrayReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
    } else if (branch->IsA() == TBranchClones::Class()) {
-      printf("TBranchClones\n"); // TODO: Remove (necessary because of gdb bug)
+      Error("CreateProxy", "Support for branches of type TBranchClones not implemented");
    } else if (branch->IsA() == TBranchObject::Class()) {
-      printf("TBranchObject\n"); // TODO: Remove (necessary because of gdb bug)
+      Error("CreateProxy", "Support for branches of type TBranchObject not implemented");
    } else if (branch->IsA() == TBranchSTL::Class()) {
-      printf("TBranchSTL\n"); // TODO: Remove (necessary because of gdb bug)
+      Error("CreateProxy", "Support for branches of type TBranchSTL not implemented");
       fImpl = new TSTLReader();
    } else if (branch->IsA() == TBranchRef::Class()) {
-      printf("TBranchRef\n"); // TODO: Remove (necessary because of gdb bug)
+      Error("CreateProxy", "Support for branches of type TBranchRef not implemented");
    }
 }
 
