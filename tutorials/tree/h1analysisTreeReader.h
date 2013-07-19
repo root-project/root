@@ -5,9 +5,9 @@
 #include "TTreeReaderValue.h"
 #include "TTreeReaderArray.h"
 #include "TSelector.h"
-#include "TH2F.h"
-#include "TH1F.h"
 #include "TEntryList.h"
+#include "TH2.h"
+#include "TF1.h"
 
 class h1analysisTreeReader : public TSelector {
 public:
