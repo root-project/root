@@ -138,7 +138,7 @@ class TSelector;
 // 32 -> 33: Development cycle 5.29/04 (fixed worker activation, new startup technology, ...)
 // 33 -> 34: Development cycle 5.33/02 (fix load issue, ...)
 // 34 -> 35: Development cycle 5.99/01 (PLite on workers, staging requests in separate dsmgr...)
-// 35 -> 36: Support for SetParallel in dynamic mode (changes default in GoParallel)
+// 35 -> 36: SetParallel in dynamic mode (changes default in GoParallel), cancel staging requests
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol        = 36;            // protocol version number
@@ -465,7 +465,8 @@ private:
       kSetDefaultTreeName  = 12, //Set the default tree name
       kCache               = 13, //Show/clear cache
       kRequestStaging      = 14, //Request staging of a dataset
-      kStagingStatus       = 15  //Obtain staging status for the given dataset
+      kStagingStatus       = 15, //Obtain staging status for the given dataset
+      kCancelStaging       = 16  //Cancels dataset staging request
    };
    enum ESendFileOpt {
       kAscii               = 0x0,
@@ -917,6 +918,7 @@ public:
    virtual Bool_t RequestStagingDataSet(const char *dataset);
    virtual TFileCollection *GetStagingStatusDataSet(const char *dataset);
    virtual void   ShowStagingStatusDataSet(const char *dataset, const char *optStr = "filter:SsCc");
+   virtual Bool_t CancelStagingDataSet(const char *dataset);
 
    virtual Int_t SetDataSetTreeName( const char *dataset, const char *treename);
 

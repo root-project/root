@@ -478,13 +478,14 @@ void TFileCollection::PrintDetailed(TString &showOnly) const
 
          // First line: current URL with all information
          info->ResetUrl();
+         TUrl *curUrl = info->GetCurrentUrl();
+         const char *curUrlStr = curUrl ? curUrl->GetUrl() : "n.a.";
          Printf("\033[1m%4u.\033[m %c%c | %-7s | %6.1lf %s | %s",
            ++countMatch,
            (s ? 'S' : 's'), (c ? 'C' : 'c'),
            ((entries > 0) ? Form("% 7d", entries) : "n.a."),
-           sz, um.Data(),
-           info->GetCurrentUrl()->GetUrl());
-           info->NextUrl();
+           sz, um.Data(), curUrlStr);
+         info->NextUrl();
 
          // Every other URL shown below current one
          while ((url = info->NextUrl())) {

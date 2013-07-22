@@ -11030,6 +11030,32 @@ Bool_t TProof::RequestStagingDataSet(const char *dataset)
 }
 
 //______________________________________________________________________________
+Bool_t TProof::CancelStagingDataSet(const char *dataset)
+{
+   // Cancels a dataset staging request. Returns kTRUE on success, kFALSE on
+   // failure. Dataset not found equals to a failure.
+
+   if (fProtocol < 36) {
+      Error("CancelStagingDataSet",
+         "functionality not supported by the server");
+      return kFALSE;
+   }
+
+   TMessage mess(kPROOF_DATASETS);
+   mess << Int_t(kCancelStaging);
+   mess << TString(dataset);
+   Broadcast(mess);
+
+   Collect();
+   if (fStatus != 0) {
+      Error("CancelStagingDataSet", "cancel staging request was unsuccessful");
+      return kFALSE;
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 TFileCollection *TProof::GetStagingStatusDataSet(const char *dataset)
 {
    // Obtains a TFileCollection showing the staging status of the specified

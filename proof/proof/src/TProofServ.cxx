@@ -6853,23 +6853,19 @@ Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
 
       case TProof::kStagingStatus:
          {
-            (*mess) >> uri;  // TString
-
             if (!fDataSetStgRepo) {
                Error("HandleDataSets",
                   "no dataset staging request repository available");
                return -1;
             }
 
-            // TODO what is slb?
-            //if (slb) slb->Form("%d %s %s", type, uri.Data(), opt.Data());
+            (*mess) >> uri;  // TString
 
             // Transform URI in a valid dataset name
-            TString validUri = uri;
-            while (reInvalid.Substitute(validUri, "_")) {}
+            while (reInvalid.Substitute(uri, "_")) {}
 
             // Get the list
-            TFileCollection *fc = fDataSetStgRepo->GetDataSet(validUri.Data());
+            TFileCollection *fc = fDataSetStgRepo->GetDataSet(uri.Data());
             if (fc) {
                fSocket->SendObject(fc, kMESS_OK);
                delete fc;
@@ -6878,9 +6874,29 @@ Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
             else {
                // No such dataset: not an error, but don't send message
                Info("HandleDataSets", "no pending staging request for %s",
-                  validUri.Data());
+                  uri.Data());
                return 0;
             }
+         }
+         break;
+
+      case TProof::kCancelStaging:
+         {
+            if (!fDataSetStgRepo) {
+               Error("HandleDataSets",
+                  "no dataset staging request repository available");
+               return -1;
+            }
+
+            (*mess) >> uri;
+
+            // Transform URI in a valid dataset name
+            while (reInvalid.Substitute(uri, "_")) {}
+
+            if (!fDataSetStgRepo->RemoveDataSet(uri.Data()))
+               return -1;  // failure
+
+            return 0;  // success
          }
          break;
 
