@@ -381,7 +381,7 @@ TDataSetManagerAliEn::~TDataSetManagerAliEn()
 
 //______________________________________________________________________________
 TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
-  EDataMode &dataMode)
+  EDataMode &dataMode, Bool_t &forceUpdate)
 {
   // Parse kind
   TPMERegexp reKind("^(Data;|Sim;|Find;)");
@@ -526,7 +526,11 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
 
   }
 
-  // If no valid data found, then findCommands is NULL
+  // Force update or use cache (when possible)
+  TPMERegexp reForceUpdate("(^|;)ForceUpdate(;|$)");
+  forceUpdate = (reForceUpdate.Match(uri) == 3);
+
+  // If no valid data was found, then findCommands is NULL
   return findCommands;
 }
 
@@ -714,9 +718,10 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
 {
   TFileCollection *fc = NULL;  // global collection
 
-  EDataMode dataMode;
   TString sUri(uri);
-  TList *findCmds = GetFindCommandsFromUri(sUri, dataMode);
+  EDataMode dataMode;
+  Bool_t forceUpdate;
+  TList *findCmds = GetFindCommandsFromUri(sUri, dataMode, forceUpdate);
   if (!findCmds) return NULL;
 
   fc = new TFileCollection();  // this fc will contain all data
@@ -738,9 +743,13 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
     Long_t now = gSystem->Now();
     now = now/1000 + 788914800;  // magic is secs between Jan 1st 1970 and 1995
 
-    if ((mtime > 0) && (now-mtime > fCacheExpire_s)) {
+    if (forceUpdate) {
       if (gDebug >= 1)
-        Info("GetDataSet", "Dataset cache expired");
+        Info("GetDataSet", "Ignoring cached query result: forcing update");
+    }
+    else if ((mtime > 0) && (now-mtime > fCacheExpire_s)) {
+      if (gDebug >= 1)
+        Info("GetDataSet", "Dataset cache has expired");
     }
     else {
       if (gDebug >= 1)
