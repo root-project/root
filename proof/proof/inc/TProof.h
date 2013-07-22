@@ -138,9 +138,10 @@ class TSelector;
 // 32 -> 33: Development cycle 5.29/04 (fixed worker activation, new startup technology, ...)
 // 33 -> 34: Development cycle 5.33/02 (fix load issue, ...)
 // 34 -> 35: Development cycle 5.99/01 (PLite on workers, staging requests in separate dsmgr...)
+// 35 -> 36: Support for SetParallel in dynamic mode (changes default in GoParallel)
 
 // PROOF magic constants
-const Int_t       kPROOF_Protocol        = 35;            // protocol version number
+const Int_t       kPROOF_Protocol        = 36;            // protocol version number
 const Int_t       kPROOF_Port            = 1093;          // IANA registered PROOF port
 const char* const kPROOF_ConfFile        = "proof.conf";  // default config file
 const char* const kPROOF_ConfDir         = "/usr/local/root";  // default config dir
