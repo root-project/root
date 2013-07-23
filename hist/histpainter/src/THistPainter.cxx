@@ -7456,7 +7456,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
          snprintf(t,100,"%-8s = %5.4g #pm %5.4g ",fit->GetParName(ipar)
                                    ,(Float_t)fit->GetParameter(ipar)
                                    ,(Float_t)fit->GetParError(ipar));
-         t[32] = 0;
+         t[63] = 0;
          stats->AddText(t);
       }
    }
