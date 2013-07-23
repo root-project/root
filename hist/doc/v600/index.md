@@ -84,6 +84,9 @@
        c1_2->SetGridx();
     }
     ```
+-   In `PaintStat2` the temporary string used to paint the fit parameters 
+    was too small and in some cases the errors where truncated. The size 
+    of the string is now the same as in `PaintStat`.
 
 
 ### TGraphPainter
