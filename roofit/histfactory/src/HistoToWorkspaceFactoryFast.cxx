@@ -1086,9 +1086,8 @@ namespace HistFactory{
 
 
   ///////////////////////////////////////////////
-  RooWorkspace* HistoToWorkspaceFactoryFast::MakeSingleChannelWorkspace(Measurement& measurement, Channel& channel)
-  {
-
+  RooWorkspace* HistoToWorkspaceFactoryFast::MakeSingleChannelWorkspace(Measurement& measurement, Channel& channel) {
+    
     // Set these by hand inside the function
     vector<string> systToFix = measurement.GetConstantParams();
     bool doRatio=false;
@@ -1143,8 +1142,8 @@ namespace HistFactory{
     vector< pair<TH1*,TH1*> >       statHistPairs; // <nominal, error>
     std::string                     statFuncName; // the name of the ParamHistFunc
     std::string                     statNodeName; // the name of the McStat Node
-    Constraint::Type statConstraintType=Constraint::Gaussian;
-    Double_t                        statRelErrorThreshold=0.0;
+    // Constraint::Type statConstraintType=Constraint::Gaussian;
+    // Double_t                        statRelErrorThreshold=0.0;
 
     string prefix, range;
 
@@ -1208,7 +1207,7 @@ namespace HistFactory{
       //        - else, if the histo syst's don't match, return (we ignore this case)
       //        - finally, we take the syst's and apply the linear interpolation w/ constraint
 
-      if(sample.GetHistoSysList().size() == 0){
+      if(sample.GetHistoSysList().size() == 0) {
 
 	// If no HistoSys
         cout << sample.GetName() + "_" + channel_name + " has no variation histograms " << endl;
@@ -1220,7 +1219,8 @@ namespace HistFactory{
       } 
       else {
 	// If there ARE HistoSys(s)
-        string constraintPrefix = sample.GetName() + "_" + channel_name + "_Hist_alpha"; // name of source for variation
+	// name of source for variation
+        string constraintPrefix = sample.GetName() + "_" + channel_name + "_Hist_alpha"; 
 	syst_x_expectedPrefix = sample.GetName() + "_" + channel_name + "_overallSyst_x_HistSyst";
 	// constraintTermNames are passed by reference and appended to,
 	// overallSystName is a std::string for this sample
@@ -1237,7 +1237,8 @@ namespace HistFactory{
       if( sample.GetStatError().GetActivate() ) {
 
 	if( fObsNameVec.size() > 3 ) {
-	  std::cout << "Cannot include Stat Error for histograms of more than 3 dimensions." << std::endl; 
+	  std::cout << "Cannot include Stat Error for histograms of more than 3 dimensions." 
+		    << std::endl; 
 	  throw hf_exc();
 	} else {
 
@@ -1249,12 +1250,8 @@ namespace HistFactory{
 		    << "for channel " << channel_name
 		    << std::endl;
 
-	  // Get the type of StatError constraint from the channel
+	  /*
 	  Constraint::Type type = channel.GetStatErrorConfig().GetConstraintType();
-
-	  // For now, convert it to an EstimateSummary constraint
-	  // Will remove this intermediate step later
-	  // EstimateSummary::ConstraintType:
 	  statConstraintType = Constraint::Gaussian;
 	  if( type == Constraint::Gaussian) {
 	    std::cout << "Using Gaussian StatErrors" << std::endl;
@@ -1264,22 +1261,26 @@ namespace HistFactory{
 	    std::cout << "Using Poisson StatErrors" << std::endl;
 	    statConstraintType = Constraint::Poisson;
 	  }
+	  */
 
-	  statRelErrorThreshold = channel.GetStatErrorConfig().GetRelErrorThreshold();
-
+	  //statRelErrorThreshold = channel.GetStatErrorConfig().GetRelErrorThreshold();
 
 	  // First, get the uncertainty histogram
 	  // and push it back to our vectors
 	
-	  // And get the Relative Error histogram for this sample, if there is one
-	  TH1* statErrorHist = NULL;
-	  if( sample.GetStatError().GetErrorHist() ) {
-	    statErrorHist = (TH1*) sample.GetStatError().GetErrorHist()->Clone();
-	  }
+	  //if( sample.GetStatError().GetErrorHist() ) {
+	  //statErrorHist = (TH1*) sample.GetStatError().GetErrorHist()->Clone();
+	  //}
+	  //if( statErrorHist == NULL ) {
 
+	  // We need to get the *ABSOLUTE* uncertainty for use in Stat Uncertainties
+	  // This can be done in one of two ways:
+	  //   - Use the built-in Errors in the TH1 itself (they are aboslute)
+	  //   - Take the supplied *RELATIVE* error and multiply by the nominal  
 	  string UncertName  = syst_x_expectedPrefix + "_StatAbsolUncert";
-	
-	  if( statErrorHist == NULL ) {
+	  TH1* statErrorHist = NULL;
+
+	  if( sample.GetStatError().GetErrorHist() == NULL ) {
 	    // Make the absolute stat error
 	    std::cout << "Making Statistical Uncertainty Hist for "
 		      << " Channel: " << channel_name
@@ -1287,6 +1288,7 @@ namespace HistFactory{
 		      << std::endl;
 	    statErrorHist = MakeAbsolUncertaintyHist( UncertName, nominal );
 	  } else {
+	    statErrorHist = (TH1*) sample.GetStatError().GetErrorHist()->Clone();
 	    // We assume the (relative) error is provided.
 	    // We must turn it into an absolute error
 	    // using the nominal histogram
@@ -1303,33 +1305,47 @@ namespace HistFactory{
 	
 	  // Save the nominal and error hists
 	  // for the building of constraint terms
-	  statHistPairs.push_back( pair<TH1*,TH1*>(nominal,statErrorHist) );
+	  statHistPairs.push_back( pair<TH1*,TH1*>(nominal, statErrorHist) );
 
-	  // Next, try to get the flexible ParamHistFunc/
+	  // To do the 'conservative' version, we would need to do some
+	  // intervention here.  We would probably need to create a different
+	  // ParamHistFunc for each sample in the channel.  The would nominally
+	  // use the same gamma's, so we haven't increased the number of parameters
+	  // However, if a bin in the 'nominal' histogram is 0, we simply need to
+	  // change the parameter in that bin in the ParamHistFunc for this sample.
+	  // We also need to add a constraint term.
+	  //  Actually, we'd probably not use the ParamHistFunc...?
+	  //  we could remove the dependence in this ParamHistFunc on the ith gamma
+	  //  and then create the poisson term: Pois(tau | n_exp)Pois(data | n_exp)
+
+
+	  // Next, try to get the ParamHistFunc (it may have been 
+	  // created by another sample in this channel)
 	  // or create it if it doesn't yet exist:
 	  statFuncName = "mc_stat_" + channel_name;
 	  ParamHistFunc* paramHist = (ParamHistFunc*) proto->function( statFuncName.c_str() );
 	  if( paramHist == NULL ) {
 
 	    // Get a RooArgSet of the observables:
-	    // Names in the lsit fObsNameVec:
+	    // Names in the list fObsNameVec:
 	    RooArgList observables;
 	    std::vector<std::string>::iterator itr = fObsNameVec.begin();
 	    for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
 	      observables.add( *proto->var(itr->c_str()) );
 	    }
 	  
-	    //	    RooRealVar* var = (RooRealVar*) observables.first();
-	  
 	    // Create the list of terms to
 	    // control the bin heights:
 	    std::string ParamSetPrefix  = "gamma_stat_" + channel_name;
 	    Double_t gammaMin = 0.0;
 	    Double_t gammaMax = 10.0;
-	    RooArgList statFactorParams = ParamHistFunc::createParamSet(*proto, ParamSetPrefix.c_str(), observables, gammaMin, gammaMax);
+	    RooArgList statFactorParams = ParamHistFunc::createParamSet(*proto, 
+									ParamSetPrefix.c_str(), 
+									observables, 
+									gammaMin, gammaMax);
 
 	    ParamHistFunc statUncertFunc(statFuncName.c_str(), statFuncName.c_str(), 
-				       observables, statFactorParams );
+					 observables, statFactorParams );
 	  
 	    proto->import( statUncertFunc, RecycleConflictNodes() );
 
@@ -1337,7 +1353,6 @@ namespace HistFactory{
 
 	  } // END: If Statement: Create ParamHistFunc
 	
-
 	  // Create the node as a product
 	  // of this function and the 
 	  // expected value from MC
@@ -1362,18 +1377,11 @@ namespace HistFactory{
       // Create a ShapeFactor for this channel //
       ///////////////////////////////////////////
 
-      // GHL: I belive this is logically what we want
       if( sample.GetShapeFactorList().size() > 0 ) {
 
-	// // For now, only one shape factor per channel
-	// if( sample.GetShapeFactorList().size() > 1 ) {
-	//   std::cout << "Error: Only One Shape Factor currently supported" << std::endl;
-	//   throw hf_exc();
-	// }
-
 	if( fObsNameVec.size() > 3 ) {
-	  std::cout << "Cannot include Stat Error for histograms of more than 3 dimensions." << std::endl; 
-	  // We should probably stop execution here, instead of being silent
+	  std::cout << "Cannot include Stat Error for histograms of more than 3 dimensions." 
+		    << std::endl; 
 	  throw hf_exc();
 	} else {
 
@@ -1398,19 +1406,36 @@ namespace HistFactory{
 		observables.add( *proto->var(itr->c_str()) );
 	      }
 	      
-	      //	    RooRealVar* var = (RooRealVar*) observables.first();
-	      
 	      // Create the Parameters
 	      std::string funcParams = "gamma_" + shapeFactor.GetName();
 
 	      // GHL: Again, we are putting hard ranges on the gamma's
 	      //      We should change this to range from 0 to /inf
-	      RooArgList shapeFactorParams = ParamHistFunc::createParamSet(*proto, funcParams.c_str(), observables, 0, 1000);
+	      RooArgList shapeFactorParams = ParamHistFunc::createParamSet(*proto, 
+									   funcParams.c_str(), 
+									   observables, 0, 1000);
 	      
 	      // Create the Function
 	      ParamHistFunc shapeFactorFunc( funcName.c_str(), funcName.c_str(),
 					   observables, shapeFactorParams );
 	      
+	      // Set an initial shape, if requested
+	      if( shapeFactor.GetInitialShape() != NULL ) {
+		TH1* initialShape = shapeFactor.GetInitialShape();
+		std::cout << "Setting Shape Factor: " << shapeFactor.GetName()
+			  << " to have initial shape from hist: "
+			  << initialShape->GetName()
+			  << std::endl;
+		shapeFactorFunc.setShape( initialShape );
+	      }
+	      
+	      // Set the variables constant, if requested
+	      if( shapeFactor.IsConstant() ) {
+		std::cout << "Setting Shape Factor: " << shapeFactor.GetName()
+			  << " to be constant" << std::endl;
+		shapeFactorFunc.setConstant(true);
+	      }
+
 	      proto->import( shapeFactorFunc, RecycleConflictNodes() );
 	      paramHist = (ParamHistFunc*) proto->function( funcName.c_str() );
 	  
@@ -1461,7 +1486,8 @@ namespace HistFactory{
       if( sample.GetShapeSysList().size() != 0 ) {
 
 	if( fObsNameVec.size() > 3 ) {
-	  std::cout << "Cannot include Stat Error for histograms of more than 3 dimensions." << std::endl; 
+	  std::cout << "Cannot include Stat Error for histograms of more than 3 dimensions." 
+		    << std::endl; 
 	  throw hf_exc();
 	} else {
 
@@ -1498,11 +1524,10 @@ namespace HistFactory{
 		observables.add( *proto->var(itr->c_str()) );
 	      }
 
-	      //	      RooRealVar* var = (RooRealVar*) observables.first();
-
 	      // Create the Parameters
 	      std::string funcParams = "gamma_" + shapeSys.GetName();
-	      RooArgList shapeFactorParams = ParamHistFunc::createParamSet(*proto, funcParams.c_str(), 
+	      RooArgList shapeFactorParams = ParamHistFunc::createParamSet(*proto, 
+									   funcParams.c_str(), 
 									   observables, 0, 10);
 
 	      // Create the Function
@@ -1521,18 +1546,20 @@ namespace HistFactory{
 	    // The syst should be a fractional error
 	    TH1* shapeErrorHist = shapeSys.GetErrorHist();
 
-	    Constraint::Type shapeConstraintType = Constraint::Gaussian;
+	    // Constraint::Type shapeConstraintType = Constraint::Gaussian;
 	    Constraint::Type systype = shapeSys.GetConstraintType();
 	    if( systype == Constraint::Gaussian) {
-	      shapeConstraintType = Constraint::Gaussian;
+	      systype = Constraint::Gaussian;
 	    }
 	    if( systype == Constraint::Poisson ) {
-	      shapeConstraintType = Constraint::Poisson;
+	      systype = Constraint::Poisson;
 	    }
 
 	    Double_t minShapeUncertainty = 0.0;
-	    RooArgList shapeConstraints = createStatConstraintTerms(proto, constraintTermNames, *paramHist, shapeErrorHist, 
-								    shapeConstraintType, minShapeUncertainty);
+	    RooArgList shapeConstraints = createStatConstraintTerms(proto, constraintTermNames, 
+								    *paramHist, shapeErrorHist, 
+								    systype, 
+								    minShapeUncertainty);
 
 	  } // End: Loop over ShapeSys vector in this EstimateSummary
 	  
@@ -1561,7 +1588,7 @@ namespace HistFactory{
 
 	} // End: NumObsVar == 1
 
-      } // End: ShapeSysts Size != 0
+      } // End: GetShapeSysList.size() != 0
 
       // Append the name of the "node"
       // that is to be summed with the
@@ -1586,14 +1613,14 @@ namespace HistFactory{
 
     // If a non-zero number of samples call for
     // Stat Uncertainties, create the statFactor functions
-
     if( statHistPairs.size() > 0 ) {
       
       // Create the histogram of (binwise)
       // stat uncertainties:
       TH1* fracStatError = MakeScaledUncertaintyHist( statNodeName + "_RelErr", statHistPairs ); 
       if( fracStatError == NULL ) {
-	std::cout << "Error: Failed to make ScaledUncertaintyHist for: " << statNodeName << std::endl;
+	std::cout << "Error: Failed to make ScaledUncertaintyHist for: " 
+		  << statNodeName << std::endl;
 	throw hf_exc();
       }
       
@@ -1610,8 +1637,20 @@ namespace HistFactory{
       // EstimateSummary looped over (but all
       // should be the same)
 
-      RooArgList statConstraints = createStatConstraintTerms(proto, constraintTermNames, *chanStatUncertFunc, fracStatError, 
-							     statConstraintType, statRelErrorThreshold);
+      // Get the type of StatError constraint from the channel
+      Constraint::Type statConstraintType = channel.GetStatErrorConfig().GetConstraintType();
+      if( statConstraintType == Constraint::Gaussian) {
+	std::cout << "Using Gaussian StatErrors in channel: " << channel.GetName() << std::endl;
+      }
+      if( statConstraintType == Constraint::Poisson ) {
+	std::cout << "Using Poisson StatErrors in channel: " << channel.GetName()  << std::endl;
+      }
+
+      double statRelErrorThreshold = channel.GetStatErrorConfig().GetRelErrorThreshold();
+      RooArgList statConstraints = createStatConstraintTerms(proto, constraintTermNames, 
+							     *chanStatUncertFunc, fracStatError, 
+							     statConstraintType, 
+							     statRelErrorThreshold);
 
     } // END: Loop over stat Hist Pairs
     
@@ -1643,10 +1682,12 @@ namespace HistFactory{
 	if(auxMeas){
 	  const_cast<RooArgSet*>(proto->set("globalObservables"))->remove(*auxMeas);
 	} else{
-	  cout << "could not corresponding auxiliary measurement  " << Form("nom_%s",temp->GetName()) << endl;
+	  cout << "could not corresponding auxiliary measurement  " 
+	       << Form("nom_%s",temp->GetName()) << endl;
 	}
       } else {
-	cout << "could not find variable " << systToFix.at(i) << " could not set it to constant" << endl;
+	cout << "could not find variable " << systToFix.at(i) 
+	     << " could not set it to constant" << endl;
       }
     }
 
@@ -2362,9 +2403,10 @@ namespace HistFactory{
 
 
 
-  RooArgList HistoToWorkspaceFactoryFast::createStatConstraintTerms( RooWorkspace* proto, vector<string>& constraintTermNames,
-								     ParamHistFunc& paramHist, TH1* uncertHist, 
-								     Constraint::Type type, Double_t minSigma ) {
+  RooArgList HistoToWorkspaceFactoryFast::
+  createStatConstraintTerms( RooWorkspace* proto, vector<string>& constraintTermNames,
+			     ParamHistFunc& paramHist, TH1* uncertHist, 
+			     Constraint::Type type, Double_t minSigma ) {
 
 
   // Take a RooArgList of RooAbsReal's and
@@ -2384,7 +2426,6 @@ namespace HistFactory{
 
   RooArgList paramSet = paramHist.paramList();
 
-
   // Must get the full size of the TH1
   // (No direct method to do this...)
   Int_t numBins   = uncertHist->GetNbinsX()*uncertHist->GetNbinsY()*uncertHist->GetNbinsZ();
@@ -2394,10 +2435,10 @@ namespace HistFactory{
   // Check that there are N elements
   // in the RooArgList
   if( numBins != numParams ) {
-    std::cout << "createStatConstraintTerms: bad number of bins" << std::endl;
+    std::cout << "Error: In createStatConstraintTerms, encountered bad number of bins" << std::endl;
     std::cout << "Given histogram with " << numBins << " bins,"
 	      << " but require exactly " << numParams << std::endl;
-    return ConstraintTerms;
+    throw hf_exc();
   }
 
   Int_t TH1BinNumber = 0;
@@ -2438,7 +2479,6 @@ namespace HistFactory{
 
     // Make Constraint Term
     std::string constrName = string(gamma.GetName()) + "_constraint";
-
     std::string nomName = string("nom_") + gamma.GetName();
     std::string sigmaName = string(gamma.GetName()) + "_sigma";
     std::string poisMeanName = string(gamma.GetName()) + "_poisMean";
@@ -2491,6 +2531,7 @@ namespace HistFactory{
 
       std::cout << "Error: Did not recognize Stat Error constraint term type: "
 		<< type << " for : " << paramHist.GetName() << std::endl;
+      throw hf_exc();
     }
   
     // If the sigma value is less

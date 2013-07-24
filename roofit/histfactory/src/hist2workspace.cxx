@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   if(argc==2){
     std::string input(argv[1]);
     try {
-      fastDriver(input);
+      RooStats::HistFactory::fastDriver(input);
     }
     catch (std::string str) {
       std::cerr << "caught exception: " << str << std::endl ;
@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 
     if(flag=="-standard_form") {
       try {
-	fastDriver(input);
+	RooStats::HistFactory::fastDriver(input);
       }
       catch (std::string str) {
 	std::cerr << "caught exception: " << str << std::endl ;

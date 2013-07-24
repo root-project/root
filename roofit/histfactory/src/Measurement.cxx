@@ -205,7 +205,6 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
 
   // First, check that the directory exists:
 
-
   // LM : fixes for Windows 
   if( gSystem->OpenDirectory( Directory.c_str() ) == 0 ) {
     int success = gSystem->MakeDirectory(Directory.c_str() );    
@@ -252,7 +251,6 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
       << day
       << std::endl;
 
-
   xml << "-->" << std::endl;
 
   // Add the doctype
@@ -283,8 +281,8 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
   xml << "  <Measurement Name=\"" << GetName() << "\" "
       << "Lumi=\""        << fLumi       << "\" " 
       << "LumiRelErr=\""  << fLumiRelErr << "\" "
-      << "BinLow=\""      << fBinLow     << "\" "
-      << "BinHigh=\""     << fBinHigh    << "\" "
+    //<< "BinLow=\""      << fBinLow     << "\" "
+    // << "BinHigh=\""     << fBinHigh    << "\" "
       << "ExportOnly=\""  << (fExportOnly ? std::string("True") : std::string("False")) << "\" "
       << " >" <<  std::endl;
 
@@ -292,7 +290,8 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
   // Set the POI
   xml << "    <POI>" ;
   for(unsigned int i = 0; i < fPOI.size(); ++i) {
-    xml << fPOI.at(i) << " ";
+    if(i==0) xml << fPOI.at(i);
+    else     xml << " " << fPOI.at(i);
   } 
   xml << "</POI>  " << std::endl;
   
@@ -381,7 +380,6 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file ) {
     chanDir->cd();
 
     // Save the data:
-    
     TDirectory* dataDir = chanDir->mkdir( "data" );
     if( dataDir == NULL ) {
       std::cout << "Error: Cannot make directory " << chanDir << std::endl;
@@ -450,6 +448,8 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file ) {
 
       // Write the histograms associated with
       // systematics
+
+      /*  THIS IS WHAT I"M COMMENTING
       sample.GetStatError().writeToFile( OutputFileName, sampleDirPath );
 
       // Must write all systematics that contain internal histograms
@@ -464,7 +464,7 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file ) {
       for( unsigned int i = 0; i < sample.GetShapeSysList().size(); ++i ) {
 	sample.GetShapeSysList().at(i).writeToFile( OutputFileName, sampleDirPath );
       }
-
+      END COMMENT  */
       /*
       sample.statError.writeToFile( OutputFileName, sampleDirPath );
 

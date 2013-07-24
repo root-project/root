@@ -44,3 +44,13 @@ void RooStats::HistFactory::Data::writeToFile( std::string OutputFileName, std::
   }
 
 }
+
+
+void RooStats::HistFactory::Data::PrintXML( std::ostream& xml ) {
+
+  xml << "    <Data HistoName=\"" << GetHistoName() << "\" "
+      << "InputFile=\"" << GetInputFile() << "\" "
+      << "HistoPath=\"" << GetHistoPath() << "\" "
+      << " /> " << std::endl << std::endl;  
+  
+}

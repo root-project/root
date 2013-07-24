@@ -61,7 +61,6 @@ void RooStats::HistFactory::Channel::Print( std::ostream& stream ) {
 void RooStats::HistFactory::Channel::PrintXML( std::string Directory, std::string Prefix ) {
 
   // Create an XML file for this channel
-
   std::cout << "Printing XML Files for channel: " << GetName() << std::endl;
   
   std::string XMLName = Prefix + fName + ".xml";
@@ -69,19 +68,10 @@ void RooStats::HistFactory::Channel::PrintXML( std::string Directory, std::strin
   
   ofstream xml( XMLName.c_str() );
 
-
   // Add the time
   xml << "<!--" << std::endl;
   xml << "This xml file created automatically on: " << std::endl;
-/*
-  time_t t = time(0);   // get time now
-  struct tm * now = localtime( &t );
-  xml << (now->tm_year + 1900) << '-'
-      << (now->tm_mon + 1) << '-'
-      << now->tm_mday
-      << std::endl;
-*/
-// LM: use TTimeStamp since time_t does not work on Windows
+  // LM: use TTimeStamp since time_t does not work on Windows
   TTimeStamp t; 
   UInt_t year = 0; 
   UInt_t month = 0; 
@@ -91,9 +81,7 @@ void RooStats::HistFactory::Channel::PrintXML( std::string Directory, std::strin
       << month << '-'
       << day
       << std::endl;
-
   xml << "-->" << std::endl;
-  
 
   // Add the DOCTYPE
   xml << "<!DOCTYPE Channel  SYSTEM 'HistFactorySchema.dtd'>  " << std::endl << std::endl;
@@ -101,16 +89,20 @@ void RooStats::HistFactory::Channel::PrintXML( std::string Directory, std::strin
   // Add the Channel
   xml << "  <Channel Name=\"" << fName << "\" InputFile=\"" << fInputFile << "\" >" << std::endl << std::endl;
 
+  fData.PrintXML( xml );
+  /*
   xml << "    <Data HistoName=\"" << fData.GetHistoName() << "\" "
       << "InputFile=\"" << fData.GetInputFile() << "\" "
       << "HistoPath=\"" << fData.GetHistoPath() << "\" "
       << " /> " << std::endl << std::endl;  
+  */
 
-
+  fStatErrorConfig.PrintXML( xml );
+  /*
   xml << "    <StatErrorConfig RelErrorThreshold=\"" << fStatErrorConfig.GetRelErrorThreshold() << "\" "
       << "ConstraintType=\"" << Constraint::Name( fStatErrorConfig.GetConstraintType() ) << "\" "
       << "/> " << std::endl << std::endl;            
-
+  */
 
   for( unsigned int i = 0; i < fSamples.size(); ++i ) {
     fSamples.at(i).PrintXML( xml );
@@ -118,14 +110,10 @@ void RooStats::HistFactory::Channel::PrintXML( std::string Directory, std::strin
   }
 
   xml << std::endl;
-
   xml << "  </Channel>  " << std::endl;
-
   xml.close();
 
   std::cout << "Finished printing XML files" << std::endl;
-
-
 
 }
 
@@ -218,9 +206,7 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 
 
     // Get the StatError Histogram (if necessary)
-
     if( sample.GetStatError().GetUseHisto() ) {
-
       sample.GetStatError().SetErrorHist( GetHistogram(sample.GetStatError().GetInputFile(),
 						       sample.GetStatError().GetHistoPath(),
 						       sample.GetStatError().GetHistoName()) );
@@ -267,6 +253,20 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 					  shapeSys.GetHistoName()) );
     } // End Loop over ShapeSys
 
+    
+    // Get any initial shape for a ShapeFactor
+    for( unsigned int shapeFactorItr = 0; shapeFactorItr < sample.GetShapeFactorList().size(); ++shapeFactorItr ) {
+
+      RooStats::HistFactory::ShapeFactor& shapeFactor = sample.GetShapeFactorList().at( shapeFactorItr );
+
+      // Check if we need an InitialShape
+      if( shapeFactor.HasInitialShape() ) {
+	TH1* hist = GetHistogram( shapeFactor.GetInputFile(), shapeFactor.GetHistoPath(), 
+				  shapeFactor.GetHistoName() );
+	shapeFactor.SetInitialShape( hist );
+      }
+
+    } // End Loop over ShapeFactor
 
   } // End Loop over Samples
 

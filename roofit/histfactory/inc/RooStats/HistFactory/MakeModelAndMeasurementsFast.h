@@ -13,11 +13,12 @@
 #include "RooPlot.h"
 #include "TFile.h"
 
-void fastDriver(std::string input);
+
 
 namespace RooStats{
   namespace HistFactory{
 
+    void fastDriver(std::string input);
 
     RooWorkspace* MakeModelAndMeasurementFast( RooStats::HistFactory::Measurement& measurement );
     //RooWorkspace* MakeModelFast( RooStats::HistFactory::Measurement& measurement );

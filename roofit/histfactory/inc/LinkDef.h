@@ -5,6 +5,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+
 #pragma link C++ namespace RooStats;
 #pragma link C++ namespace RooStats::HistFactory;
 

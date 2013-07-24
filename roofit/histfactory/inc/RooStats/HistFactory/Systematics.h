@@ -19,8 +19,6 @@
 #include "TH1.h"
 #include "TRef.h"
 
-//#include "RooStats/HistFactory/HistCollector.h"
-
 namespace RooStats{
 namespace HistFactory {
 
@@ -28,15 +26,27 @@ namespace HistFactory {
   namespace Constraint {
     enum Type{ Gaussian, Poisson };            
     std::string Name( Type type ); 
-    Type GetType( std::string Name );
+    Type GetType( const std::string& Name );
   }
 
 
+  // Base class for common functions
+  /*
+  class Systematic {
+    
+  public:
+
+    virtual void Print(std::ostream& = std::cout);
+    virtual void writeToFile(const std::string& FileName, 
+			     const std::string& Directory);
+    
+    
+  };
+  */
 
   class OverallSys {
 
   public:
-    //friend class Channel;
 
     void SetName( const std::string& Name ) { fName = Name; }
     std::string GetName() { return fName; }
@@ -47,6 +57,7 @@ namespace HistFactory {
     double GetHigh() { return fHigh; }
 
     void Print(std::ostream& = std::cout);  
+    void PrintXML(std::ostream&);
 
   protected:
     std::string fName;
@@ -59,7 +70,6 @@ namespace HistFactory {
   class NormFactor {
 
   public:
-    //friend class Channel;
 
     NormFactor();
 
@@ -78,6 +88,7 @@ namespace HistFactory {
     double GetHigh() { return fHigh; }
 
     void Print(std::ostream& = std::cout);      
+    void PrintXML(std::ostream&);
 
   protected:
 
@@ -93,21 +104,19 @@ namespace HistFactory {
   class HistoSys {
 
   public:
-    //friend class Channel;
-
 
     HistoSys() : fhLow(NULL), fhHigh(NULL) {;}
     HistoSys(const std::string& Name) : fName(Name), fhLow(NULL), fhHigh(NULL) {;}
 
     void Print(std::ostream& = std::cout);  
-    void writeToFile( std::string FileName, std::string DirName );
+    void PrintXML(std::ostream&);
+    void writeToFile( const std::string& FileName, const std::string& DirName );
 
     void SetHistoLow( TH1* Low ) { fhLow = Low; }
     void SetHistoHigh( TH1* High ) { fhHigh = High; }
     
     TH1* GetHistoLow();
     TH1* GetHistoHigh();
-
     
     void SetName( const std::string& Name ) { fName = Name; }
     std::string GetName() { return fName; }
@@ -129,7 +138,6 @@ namespace HistFactory {
     
     std::string GetHistoPathLow() { return fHistoPathLow; }
     std::string GetHistoPathHigh() { return fHistoPathHigh; }
-
 
   protected:
 
@@ -153,13 +161,10 @@ namespace HistFactory {
   class HistoFactor {
 
   public:
-    //friend class Channel;  
-
-
 
     void SetName( const std::string& Name ) { fName = Name; }
     std::string GetName() { return fName; }
-
+    
     void SetInputFileLow( const std::string& InputFileLow ) { fInputFileLow = InputFileLow; }
     void SetInputFileHigh( const std::string& InputFileHigh ) { fInputFileHigh = InputFileHigh; }
     
@@ -179,15 +184,13 @@ namespace HistFactory {
     std::string GetHistoPathHigh() { return fHistoPathHigh; }
 
     void Print(std::ostream& = std::cout);  
-    void writeToFile( std::string FileName, std::string DirName );
-
+    void writeToFile( const std::string& FileName, const std::string& DirName );
+    void PrintXML(std::ostream&);
 
     TH1* GetHistoLow();
     TH1* GetHistoHigh();
     void SetHistoLow( TH1* Low ) { fhLow = Low; }
     void SetHistoHigh( TH1* High ) { fhHigh = High; }
-
-
 
   protected:
 
@@ -211,8 +214,6 @@ namespace HistFactory {
   class ShapeSys {
 
   public:
-    //friend class Channel;
-
 
     void SetName( const std::string& Name ) { fName = Name; }
     std::string GetName() { return fName; }
@@ -226,18 +227,15 @@ namespace HistFactory {
     void SetHistoPath( const std::string& HistoPath ) { fHistoPath = HistoPath; }
     std::string GetHistoPath() { return fHistoPath; }
 
-
     void Print(std::ostream& = std::cout);  
-    void writeToFile( std::string FileName, std::string DirName );
+    void PrintXML(std::ostream&);
+    void writeToFile( const std::string& FileName, const std::string& DirName );
 
     TH1* GetErrorHist();
     void SetErrorHist(TH1* hError) { fhError = hError; }
 
-
-
     void SetConstraintType( Constraint::Type ConstrType ) { fConstraintType = ConstrType; }
     Constraint::Type GetConstraintType() { return fConstraintType; }
-
 
   protected:
 
@@ -256,16 +254,54 @@ namespace HistFactory {
   class ShapeFactor {
 
   public:
-    //friend class Channel;  
 
+    ShapeFactor();
+    
     void SetName( const std::string& Name ) { fName = Name; }
     std::string GetName() { return fName; }
 
-
     void Print(std::ostream& = std::cout);  
+    void PrintXML(std::ostream&);
+    void writeToFile( const std::string& FileName, const std::string& DirName);
+
+    void SetInitialShape(TH1* shape) { fhInitialShape = shape; }
+    TH1* GetInitialShape() { return fhInitialShape; }
+
+    void SetConstant(bool constant) { fConstant = constant; }
+    bool IsConstant() { return fConstant; }
+    
+    bool HasInitialShape() { return fHasInitialShape; }
+
+    void SetInputFile( const std::string& InputFile ) { 
+      fInputFile = InputFile; 
+      fHasInitialShape=true;
+    }
+    std::string GetInputFile() { return fInputFile; }
+
+    void SetHistoName( const std::string& HistoName ) { 
+      fHistoName = HistoName; 
+      fHasInitialShape=true; 
+    }
+    std::string GetHistoName() { return fHistoName; }
+
+    void SetHistoPath( const std::string& HistoPath ) { 
+      fHistoPath = HistoPath; 
+      fHasInitialShape=true;
+    }
+    std::string GetHistoPath() { return fHistoPath; }
 
   protected:
     std::string fName;
+
+    bool fConstant;
+
+    // A histogram representing
+    // the initial shape
+    bool fHasInitialShape;
+    std::string fHistoName;
+    std::string fHistoPath;
+    std::string fInputFile;
+    TH1* fhInitialShape;
 
   };
 
@@ -273,12 +309,12 @@ namespace HistFactory {
   class StatError {
 
   public:
-    //friend class Channel;
 
     StatError() : fActivate(false), fUseHisto(false), fhError(NULL) {;}
 
     void Print(std::ostream& = std::cout);  
-    void writeToFile( std::string FileName, std::string DirName );
+    void PrintXML(std::ostream&);
+    void writeToFile( const std::string& FileName, const std::string& DirName );
 
     void Activate( bool IsActive=true ) { fActivate = IsActive; }
     bool GetActivate() { return fActivate; }
@@ -299,7 +335,6 @@ namespace HistFactory {
     TH1* GetErrorHist();
     void SetErrorHist(TH1* Error) { fhError = Error; }
 
-
   protected:
 
     bool fActivate;
@@ -316,18 +351,16 @@ namespace HistFactory {
   class StatErrorConfig {
 
   public:
-    //friend class Channel;
-
 
     StatErrorConfig() : fRelErrorThreshold( .05 ), fConstraintType( Constraint::Gaussian ) {;}
     void Print(std::ostream& = std::cout);  
+    void PrintXML(std::ostream&);
 
     void SetRelErrorThreshold( double Threshold ) { fRelErrorThreshold = Threshold; }
     double GetRelErrorThreshold() { return fRelErrorThreshold; }
 
     void SetConstraintType( Constraint::Type ConstrType ) { fConstraintType = ConstrType; }
     Constraint::Type GetConstraintType() { return fConstraintType; }
-
 
   protected:
 

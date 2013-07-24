@@ -1,24 +1,13 @@
 
 #include <map>
 
-#include "TFile.h"
 #include "TH1.h"
-#include "TROOT.h"
-#include "TMath.h"
-
-#include "TCanvas.h"
 #include "THStack.h"
-#include "TLegend.h"
 
 #include "RooDataSet.h"
 #include "RooRealVar.h"
-#include "RooWorkspace.h"
-#include "RooSimultaneous.h"
-#include "RooCategory.h"
 #include "RooProduct.h"
-#include "RooRealSumPdf.h"
 #include "RooStats/HistFactory/Measurement.h"
-
 #include "RooStats/ModelConfig.h"
 
 
@@ -60,7 +49,7 @@ namespace RooStats {
       void PrintSampleComponents(const std::string& channel, const std::string& sample);
 
       // Print a "HistFactory style" RooDataSet in a readable way
-      static void PrintDataSet(RooDataSet* data, const std::string& channel="", int max=-1);
+      void PrintDataSet(RooDataSet* data, const std::string& channel="");
 
       // Print the model and the data, comparing channel by channel
       void PrintModelAndData(RooDataSet* data);
@@ -77,6 +66,15 @@ namespace RooStats {
 
       // Get the total channel histogram for this channel
       TH1* GetChannelHist(const std::string& channel, const std::string& name="");
+
+      // Get a histogram from the dataset for this channel
+      TH1* GetDataHist(RooDataSet* data, const std::string& channel, const std::string& name="");
+
+      // Get a stack of all samples in a channel
+      THStack* GetChannelStack(const std::string& channel, const std::string& name="");
+
+      // Draw a stack of the channel, and include data if the pointer is supplied
+      void DrawChannel(const std::string& channel, RooDataSet* data=NULL);
 
       // Get the RooAbsReal function for a given sample in a given channel
       RooAbsReal* SampleFunction(const std::string& channel, const std::string& sample);
@@ -95,20 +93,24 @@ namespace RooStats {
       // Will do minimial checking to make sure the replacement makes sense
       void ReplaceNode(const std::string& ToReplace, RooAbsArg* ReplaceWith);
 
-
       // Set any RooRealVar's const (or not const) if they match
       // the supplied regular expression
       void SetConstant(const std::string& regExpr=".*", bool constant=true);
 
-      void SetNumBinsToPrint(int num) { _numBinsToPrint = num; }
-      int GetNumBinsToPrint() const { return _numBinsToPrint; }
+      void SetMaxBinToPrint(int max) { _maxBinToPrint = max; }
+      int GetMaxBinToPrint() const { return _maxBinToPrint; }
+
+      void SetMinBinToPrint(int min) { _minBinToPrint = min; }
+      int GetMinBinToPrint() const { return _minBinToPrint; }
 
       // Get the model for this channel
       RooAbsPdf* GetModel() const { return fModel; }
 
       //
       RooAbsPdf* GetChannelPdf(const std::string& channel);
-      
+
+
+      std::vector< std::string > GetChannelSampleList(const std::string& channel);
 
       // Return the RooRealVar by the same name used in the model
       // If not found, return NULL
@@ -140,6 +142,7 @@ namespace RooStats {
 
       // Print a histogram's contents to the screen
       // void PrettyPrintHistogram(TH1* hist);
+      void PrintMultiDimHist(TH1* hist, int bin_print_width);
 
       // Make a histogram from a funciton
       // Edit so it can take a RooArgSet of parameters
@@ -156,7 +159,8 @@ namespace RooStats {
       // The observables
       RooArgSet* fObservables;
 
-      int _numBinsToPrint;
+      int _minBinToPrint;
+      int _maxBinToPrint;
 
       // The list of channels
       std::vector<std::string> fChannelNameVec;

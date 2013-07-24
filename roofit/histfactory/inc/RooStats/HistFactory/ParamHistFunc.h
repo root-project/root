@@ -31,22 +31,19 @@ public:
   ParamHistFunc() ;
   ParamHistFunc(const char *name, const char *title, const RooArgList& vars, const RooArgList& paramSet );
   ParamHistFunc(const char *name, const char *title, const RooArgList& vars, const RooArgList& paramSet, const TH1* hist );
-  // Not yet fully implemented:
-  //ParamHistFunc(const char *name, const char *title, const RooRealVar& var, const RooArgList& paramSet, const RooAbsReal& nominal );
   virtual ~ParamHistFunc() ;
-
 
   ParamHistFunc(const ParamHistFunc& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new ParamHistFunc(*this, newname); }
 
-  //  void printMetaArgs(std::ostream& os) const ;
-
   const RooArgList& paramList() const { return _paramSet ; }
-
 
   Int_t numBins() const { return _dataSet.numEntries(); } // Number of bins (called numEntries in RooDataHist)
 
   void setParamConst( Int_t, Bool_t=kTRUE );
+  void setConstant(bool constant);
+
+  void setShape(TH1* shape);
 
   RooRealVar& getParameter() const ;
   RooRealVar& getParameter( Int_t masterIdx ) const ;
@@ -60,8 +57,6 @@ public:
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
-
-
 
   static RooArgList createParamSet(RooWorkspace& w, const std::string&, const RooArgList& Vars);
   static RooArgList createParamSet(RooWorkspace& w, const std::string&, const RooArgList& Vars, Double_t, Double_t);

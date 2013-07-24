@@ -41,8 +41,8 @@ public:
   void SetHistoPath(const std::string& HistoPath) { fHistoPath = HistoPath; }
   std::string GetHistoPath() { return fHistoPath; }
 
-
   void Print(std::ostream& = std::cout);
+  void PrintXML( std::ostream& );
   void writeToFile( std::string FileName, std::string DirName );
 
   TH1* GetHisto();
