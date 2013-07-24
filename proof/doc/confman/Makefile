@@ -24,7 +24,6 @@ OUTPUT_HTML = $(INPUT_MDS:.md=.html)
 all: html
 
 html: $(OUTPUT_HTML)
-	@echo HTML generation successful
 
 %.html: %.md
 	@echo Generating HTML: $@
