@@ -22,7 +22,7 @@ stripsrc = $(subst $(ROOT_SRCDIR)/,,$(1))
 # The macro create the list of pcm files to be passed to a libraries
 # dictionary generation step, somethings like
 #    $(call pcm_rootcling_opt,$(TREELIBDEPM))
-pcm_rootcling_opt = -m lib/libCore.pcm $(addprefix -m ,$(subst $(SOEXT),pcm,$1))
+pcm_rootcling_opt = -m lib/libCore_rdict.pcm $(addprefix -m ,$(subst $(SOEXT),_rdict.pcm,$1))
 
 # This macro returns the name of the pcm corresponding to a library
 #    $(call pcmname,$(TREELIB))
