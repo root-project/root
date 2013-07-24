@@ -29,7 +29,9 @@ html: $(OUTPUT_HTML)
 
 %.html: %.md
 	@echo Generating HTML: $@
-	@pandoc $(PANDOC_OPTS) $< -o $@
+	@(OFFSET=$$(for F in $(INPUT_MDS) ; do echo $$F ; done | grep -n $< | cut -d: -f1) ; \
+	  let OFFSET-- ; \
+	  pandoc $(PANDOC_OPTS) --number-offset $$OFFSET $< -o $@)
 
 clean:
 	@echo Cleaning up HTML
