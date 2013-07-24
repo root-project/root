@@ -15,7 +15,8 @@
 PANDOC_OPTS :=-s -S --toc --chapters --number-sections -f markdown -H css/github.css
 
 INPUT_MDS := \
-	ConfigProofPoD.md
+	ConfigProofPoD.md \
+	DeployVirtualAnalysisFacility.md
 
 OUTPUT_HTML = $(INPUT_MDS:.md=.html)
 
