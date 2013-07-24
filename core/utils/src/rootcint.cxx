@@ -4254,6 +4254,10 @@ int main(int argc, char **argv)
    } else if (!strcmp(argv[ic], "-v4")) {
       gErrorIgnoreLevel = kInfo; // Display all information (same as -v)
       ic++;
+   } else if (!strcmp(argv[ic], "-s") || !strcmp(argv[ic], "-m")) {
+      // Ignore ROOT 6 arguments about creating pcm and
+      // their dependencies.
+      ic += 2;
    }
    if (ic < argc) {
       if (!strcmp(argv[ic], "-cint")) {
@@ -4282,6 +4286,10 @@ int main(int argc, char **argv)
 
          longheadername = 1;
          ic++;
+      } else if (!strcmp(argv[ic], "-s") || !strcmp(argv[ic], "-m")) {
+         // Ignore ROOT 6 arguments about creating pcm and
+         // their dependencies.
+         ic += 2;
       } else if (!strncmp(argv[ic],libprefix,strlen(libprefix))) {
 
          gLiblistPrefix = argv[ic]+strlen(libprefix);
@@ -4410,6 +4418,12 @@ int main(int argc, char **argv)
       ic = 1;
       if (force) ic = 2;
       ifl = 0;
+   }
+
+   while (!strcmp(argv[ic], "-s") || !strcmp(argv[ic], "-m")) {
+      // Ignore ROOT 6 arguments about creating pcm and
+      // their dependencies.
+      ic += 2;
    }
 
    // If the user request use of a preprocessor we are going to bundle
