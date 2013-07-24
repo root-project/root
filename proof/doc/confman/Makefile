@@ -18,7 +18,8 @@ INPUT_MDS := \
 	ConfigProofPoD.md \
 	DeployVirtualAnalysisFacility.md \
 	UsingVirtualAnalysisFacility.md \
-	TDataSetManagerAliEn.md
+	TDataSetManagerAliEn.md \
+	DatasetStager.md
 
 OUTPUT_HTML = $(INPUT_MDS:.md=.html)
 
