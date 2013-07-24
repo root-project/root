@@ -103,22 +103,27 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       fEntryStatus = kEntryNoTree;
       return fEntryStatus;
    }
-   Int_t treeNumInChain = fTree->GetTreeNumber();
-   Long64_t absoluteEntry = local ? fTree->GetChainOffset() + entry : entry;
 
    TTree* prevTree = fDirector->GetTree();
 
-   int loadResult = fTree->LoadTree(absoluteEntry);
-   if (loadResult == -2) {
-      fEntryStatus = kEntryNotFound;
-      return fEntryStatus;
-   }
-
+   int loadResult;
    if (!local){
+      Int_t treeNumInChain = fTree->GetTreeNumber();
+
+      loadResult = fTree->LoadTree(entry);
+
+      if (loadResult == -2) {
+         fEntryStatus = kEntryNotFound;
+         return fEntryStatus;
+      }
+
       Int_t currentTreeNumInChain = fTree->GetTreeNumber();
       if (treeNumInChain != currentTreeNumInChain) {
             fDirector->SetTree(fTree->GetTree());
       }
+   }
+   else {
+      loadResult = entry;
    }
    if (!prevTree || fDirector->GetReadEntry() == -1) {
       // Tell readers we now have a tree
