@@ -3274,6 +3274,20 @@ void AddToArgVector(std::vector<char*>& argvVector,
 }
 
 //______________________________________________________________________________
+void AddToArgVectorSplit(std::vector<char*>& argvVector,
+                    const std::vector<std::string>& argsToBeAdded,
+                    const std::string& optName="")
+{
+   for (std::vector<std::string>::const_iterator it = argsToBeAdded.begin();
+        it!=argsToBeAdded.end();it++){
+      if (optName.length()) {
+         argvVector.push_back(string2charptr(optName));
+      }
+      argvVector.push_back(string2charptr(*it));
+   }   
+}
+
+//______________________________________________________________________________
 int invokeRootCling(const std::string& verbosity,
                     const std::string& selectionFileName,
                     const std::string& targetLibName,
@@ -3317,7 +3331,7 @@ int invokeRootCling(const std::string& verbosity,
       argvVector.push_back(string2charptr(targetLibName));
    }
 
-   AddToArgVector(argvVector, pcmsNames, "-m");
+   AddToArgVectorSplit(argvVector, pcmsNames, "-m");
 
    // Clingargs
    AddToArgVector(argvVector, includes, "-I");
