@@ -124,10 +124,11 @@ class genreflex:
         break
     #----Process options--------------------------------
     try:
-      opts, args = getopt.getopt(options, 'ho:s:c:I:U:D:PC', \
+      opts, args = getopt.getopt(options, 'ho:s:c:I:U:D:PCl:m:', \
       ['help','debug=', 'output=','selection_file=','pool','dataonly','interpreteronly','deep','gccxmlpath=',
        'capabilities=','rootmap=','rootmap-lib=','comments','iocomments','no_membertypedefs',
-       'fail_on_warnings', 'quiet', 'gccxmlopt=', 'reflex', 'split=','no_templatetypedefs','gccxmlpost='])
+       'fail_on_warnings', 'quiet', 'gccxmlopt=', 'reflex', 'split=','no_templatetypedefs','gccxmlpost=',
+       'library='])
     except getopt.GetoptError, e:
       print "--->> genreflex: ERROR:",e
       self.usage(2)
