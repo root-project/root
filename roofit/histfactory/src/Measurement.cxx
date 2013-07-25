@@ -12,6 +12,10 @@
 /*
 BEGIN_HTML
 <p>
+The RooStats::HistFactory::Measurement class can be used to construct a model
+by combining multiple RooStats::HistFactory::Channel objects. It also allows
+to set some general properties like the integrated luminosity, its relative
+uncertainty or the functional form of constraints on nuisance parameters.
 </p>
 END_HTML
 */
@@ -35,7 +39,10 @@ ClassImp(RooStats::HistFactory::Measurement) ;
 
 RooStats::HistFactory::Measurement::Measurement() :
   fPOI(), fLumi( 1.0 ), fLumiRelErr( .10 ), 
-  fBinLow( 0 ), fBinHigh( 1 ), fExportOnly( false )  { ; }
+  fBinLow( 0 ), fBinHigh( 1 ), fExportOnly( false )
+{
+  // standard constructor
+}
 
 /*
 RooStats::HistFactory::Measurement::Measurement(const Measurement& other) :
@@ -48,10 +55,17 @@ RooStats::HistFactory::Measurement::Measurement(const Measurement& other) :
 RooStats::HistFactory::Measurement::Measurement(const char* Name, const char* Title) :
   TNamed( Name, Title ),
   fPOI(), fLumi( 1.0 ), fLumiRelErr( .10 ), 
-  fBinLow( 0 ), fBinHigh( 1 ), fExportOnly( false )  { ; }
+  fBinLow( 0 ), fBinHigh( 1 ), fExportOnly( false )
+{
+  // standard constructor specifying name and title of measurement
+}
 
 
-void RooStats::HistFactory::Measurement::AddConstantParam( const std::string& param ) { 
+void RooStats::HistFactory::Measurement::AddConstantParam( const std::string& param )
+{ 
+  // set a parameter in the model to be constant
+  // the parameter does not have to exist yet, the information will be used when
+  // the model is actually created
   
   // Check if the parameter is already set constant
   // We don't need to set it constant twice,
@@ -70,7 +84,9 @@ void RooStats::HistFactory::Measurement::AddConstantParam( const std::string& pa
 
 }
 
-void RooStats::HistFactory::Measurement::SetParamValue( const std::string& param, double value ) {
+void RooStats::HistFactory::Measurement::SetParamValue( const std::string& param, double value )
+{
+  // set parameter of the model to given value
 
   // Check if this parameter is already set to a value
   // If so, issue a warning
@@ -92,7 +108,10 @@ void RooStats::HistFactory::Measurement::SetParamValue( const std::string& param
 
 }
 
-void RooStats::HistFactory::Measurement::AddPreprocessFunction( std::string name, std::string expression, std::string dependencies ) {
+void RooStats::HistFactory::Measurement::AddPreprocessFunction( std::string name, std::string expression, std::string dependencies )
+{
+  // Add a preprocessed function by giving the function a name,
+  // a functional expression, and a string with a bracketed list of dependencies (eg "SigXsecOverSM[0,3]")
 
   PreprocessFunction func(name, expression, dependencies);
   AddFunctionObject(func);
@@ -100,7 +119,10 @@ void RooStats::HistFactory::Measurement::AddPreprocessFunction( std::string name
 }
 
 
-std::vector<std::string> RooStats::HistFactory::Measurement::GetPreprocessFunctions() {
+std::vector<std::string> RooStats::HistFactory::Measurement::GetPreprocessFunctions()
+{
+  // returns a list of defined proprocess function expressions
+  
   std::vector<std::string> PreprocessFunctionExpressions;
   for( unsigned int i = 0; i < fFunctionObjects.size(); ++i ) {
     std::string expression = fFunctionObjects.at(i).GetCommand();
@@ -109,24 +131,38 @@ std::vector<std::string> RooStats::HistFactory::Measurement::GetPreprocessFuncti
   return PreprocessFunctionExpressions;
 }
 
-void RooStats::HistFactory::Measurement::AddGammaSyst(std::string syst, double uncert) {
+void RooStats::HistFactory::Measurement::AddGammaSyst(std::string syst, double uncert)
+{
+  // set constraint term for given systematic to Gamma distribution
+  
   fGammaSyst[syst] = uncert;
 }
 
-void RooStats::HistFactory::Measurement::AddLogNormSyst(std::string syst, double uncert) {
+void RooStats::HistFactory::Measurement::AddLogNormSyst(std::string syst, double uncert)
+{
+  // set constraint term for given systematic to LogNormal distribution
+  
   fLogNormSyst[syst] = uncert;
 }
 
-void RooStats::HistFactory::Measurement::AddUniformSyst(std::string syst) {
+void RooStats::HistFactory::Measurement::AddUniformSyst(std::string syst)
+{
+  // set constraint term for given systematic to uniform distribution
+
   fUniformSyst[syst] = 1.0; // Is this parameter simply a dummy?
 }
 
-void RooStats::HistFactory::Measurement::AddNoSyst(std::string syst) {
+void RooStats::HistFactory::Measurement::AddNoSyst(std::string syst)
+{
+  // define given systematics to have no external constraint
+  
   fNoSyst[syst] = 1.0; // dummy value
 }
 
 
-bool RooStats::HistFactory::Measurement::HasChannel( std::string ChanName ) {
+bool RooStats::HistFactory::Measurement::HasChannel( std::string ChanName )
+{
+  // is the given channel part of this measurement
 
   for( unsigned int i = 0; i < fChannels.size(); ++i ) {
 
@@ -141,7 +177,10 @@ bool RooStats::HistFactory::Measurement::HasChannel( std::string ChanName ) {
 
 }
 
-RooStats::HistFactory::Channel& RooStats::HistFactory::Measurement::GetChannel( std::string ChanName ) {
+RooStats::HistFactory::Channel& RooStats::HistFactory::Measurement::GetChannel( std::string ChanName )
+{
+  // get channel with given name from this measurement
+  // throws an exception in case the channel is not found
 
   for( unsigned int i = 0; i < fChannels.size(); ++i ) {
 
@@ -171,7 +210,9 @@ RooStats::HistFactory::Channel& RooStats::HistFactory::Measurement::GetChannel( 
   }
 */
 
-void RooStats::HistFactory::Measurement::PrintTree( std::ostream& stream ) {
+void RooStats::HistFactory::Measurement::PrintTree( std::ostream& stream )
+{
+  // print information about measurement object in tree-like structure to given stream
   
   stream << "Measurement Name: " << GetName()
 	 << "\t OutputFilePrefix: " << fOutputFilePrefix
@@ -216,7 +257,10 @@ void RooStats::HistFactory::Measurement::PrintTree( std::ostream& stream ) {
 
 
 
-void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::string NewOutputPrefix ) {
+void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::string NewOutputPrefix )
+{
+  // create XML files for this measurement in the given directory
+  // XML files can be configured with a different output prefix
 
   // Create an XML file for this measurement
   // First, create the XML driver
@@ -377,12 +421,16 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
 
 
 
-void RooStats::HistFactory::Measurement::writeToFile( TFile* file ) {
-
+void RooStats::HistFactory::Measurement::writeToFile( TFile* file )
+{
+  // A measurement, once fully configured, can be saved into a ROOT
+  // file. This will persitify the Measurement object, along with any
+  // channels and samples that have been added to it. It can then be
+  // loaded, potentially modified, and used to create new models.
+    
   // Write every histogram to the file.
   // Edit the measurement to point to this file
   // and to point to each histogram in this file
-
   // Then write the measurement itself.
 
   // Create a tempory measurement
@@ -553,8 +601,8 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file ) {
 }
 
 
-std::string RooStats::HistFactory::Measurement::GetDirPath( TDirectory* dir ) {
-
+std::string RooStats::HistFactory::Measurement::GetDirPath( TDirectory* dir )
+{
   // Return the directory's path,
   // stripped of unnecessary prefixes
 
@@ -582,7 +630,16 @@ std::string RooStats::HistFactory::Measurement::GetDirPath( TDirectory* dir ) {
 
 
 
-void RooStats::HistFactory::Measurement::CollectHistograms() {
+void RooStats::HistFactory::Measurement::CollectHistograms()
+{
+  // The most common way to add histograms to channels is to have them
+  // stored in ROOT files and to give HistFactory the location of these
+  // files. This means providing the path to the ROOT file and the path
+  // and name of the histogram within that file. When providing these
+  // in a script, HistFactory doesn't load the histogram from the file
+  // right away. Instead, once all such histograms have been supplied,
+  // one should run this method to open all ROOT files and to copy and
+  // save all necessary histograms.
 
   for( unsigned int chanItr = 0; chanItr < fChannels.size(); ++chanItr) {
 
