@@ -64,7 +64,7 @@ public:
    int     Version() const {return 1;}
    void    Begin(TTree *);
    void    SlaveBegin(TTree *);
-   void    Init(TTree *) {};
+   void    Init(TTree *myTree) { myTreeReader.SetTree(myTree); }
    Bool_t  Notify();
    Bool_t  Process(Long64_t entry);
    void    SetOption(const char *option) { fOption = option; }

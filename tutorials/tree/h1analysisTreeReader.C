@@ -118,7 +118,7 @@ void h1analysisTreeReader::SlaveBegin(TTree *myTree){
 //  -it creates histograms
 //  -it sets some initialisation for the entry list
 
-   myTreeReader.SetTree(myTree);
+   Init(myTree);
 
    //print the option specified in the Process function.
    TString option = GetOption();
