@@ -5,6 +5,12 @@ MDFILES=ROOTUsersGuide.md Preface.md Introduction.md GettingStarted.md \
 	CollectionClasses.md PhysicsVectors.md Geometry.md PythonRuby.md \
 	TutorialsandTests.md ExampleAnalysis.md Networking.md Threads.md \
 	PROOF.md WritingGUI.md ROOTandQt.md HTMLDoc.md InstallandBuild.md
+
+HTMLFILES=$(MDFILES:.md=.html)
+PDFFILES=$(MDFILES:.md=.pdf)
+
+LATEXA4PREFIX=ROOTUsersGuideA4
+LATEXLETTERPREFIX=ROOTUsersGuideLetter
 	
 OPTIONS=-s -S -f markdown --toc --chapters --number-sections
 OPTIONSHTML=-H css/github.css --mathjax
@@ -17,32 +23,32 @@ OPTIONSPDF=--variable=geometry:a4paper -V geometry:margin=1.5cm
 
 all: pdfa4 pdfletter html epub pdf_chapters html_chapters
 
-ROOTUsersGuideA4.tex: $(MDFILES)
+$(LATEXA4PREFIX).tex: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSLATEXA4) -t latex $(MDFILES) \
-	-o ROOTUsersGuideA4.tex
+	-o $(LATEXA4PREFIX).tex
 
 # on OSX pdflatex returns 1 even in case of success !?
-ROOTUsersGuideA4.toc: ROOTUsersGuideA4.tex
-	pdflatex -interaction=batchmode ROOTUsersGuideA4.tex || true
+$(LATEXA4PREFIX).toc: $(LATEXA4PREFIX).tex
+	pdflatex -interaction=batchmode $(LATEXA4PREFIX).tex || true
 
-ROOTUsersGuideA4.ind: ROOTUsersGuideA4.toc ROOTUsersGuide.ist
-	makeindex -s ROOTUsersGuide.ist ROOTUsersGuideA4.idx
+$(LATEXA4PREFIX).ind: $(LATEXA4PREFIX).toc ROOTUsersGuide.ist
+	makeindex -s ROOTUsersGuide.ist $(LATEXA4PREFIX).idx
 
-pdfa4: ROOTUsersGuideA4.tex ROOTUsersGuideA4.ind
-	pdflatex -interaction=batchmode ROOTUsersGuideA4.tex || true
+pdfa4: $(LATEXA4PREFIX).tex $(LATEXA4PREFIX).ind
+	pdflatex -interaction=batchmode $(LATEXA4PREFIX).tex || true
 
-ROOTUsersGuideLetter.tex: $(MDFILES)
+$(LATEXLETTERPREFIX).tex: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSLATEXLETTER) -t latex $(MDFILES) \
-	-o ROOTUsersGuideLetter.tex
+	-o $(LATEXLETTERPREFIX).tex
 
-ROOTUsersGuideLetter.toc: ROOTUsersGuideLetter.tex
-	pdflatex -interaction=batchmode ROOTUsersGuideLetter.tex || true
+$(LATEXLETTERPREFIX).toc: $(LATEXLETTERPREFIX).tex
+	pdflatex -interaction=batchmode $(LATEXLETTERPREFIX).tex || true
 
-ROOTUsersGuideLetter.ind: ROOTUsersGuideLetter.toc ROOTUsersGuide.ist
-	makeindex -s ROOTUsersGuide.ist ROOTUsersGuideLetter.idx
+$(LATEXLETTERPREFIX).ind: $(LATEXLETTERPREFIX).toc ROOTUsersGuide.ist
+	makeindex -s ROOTUsersGuide.ist $(LATEXLETTERPREFIX).idx
 
-pdfletter: $(MDFILES) ROOTUsersGuideLetter.toc ROOTUsersGuideLetter.ind
-	pdflatex -interaction=batchmode ROOTUsersGuideLetter.tex || true
+pdfletter: $(MDFILES) $(LATEXLETTERPREFIX).toc $(LATEXLETTERPREFIX).ind
+	pdflatex -interaction=batchmode $(LATEXLETTERPREFIX).tex || true
 
 html: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) \
@@ -52,39 +58,25 @@ epub: $(MDFILES) metadata.xml title.txt
 	pandoc $(OPTIONS) $(OPTIONSEPUB) --epub-metadata=metadata.xml \
 	title.txt $(MDFILES) -o ROOTUsersGuide.epub
 
+# --number-offset unfortunately not supported in PDF output :(
 %.pdf: %.md
-	pandoc $(OPTIONS) $(OPTIONSPDF) $^ -o $@
+	@echo Generating PDF chapter: $@
+	@pandoc $(OPTIONS) $(OPTIONSPDF) $^ -o $@
 
-pdf_chapters: $(MDFILES:.md=.pdf)
+pdf_chapters: $(PDFFILES)
 
 %.html: %.md
-	pandoc $(OPTIONS) $(OPTIONSHTML) $^ -o $@
+	@echo Generating HTML chapter: $@
+	@( OFFSET=$$( for F in $(MDFILES) ; do echo $$F ; done | \
+	   grep -n "^$^$$" | head -n1 | cut -d: -f1 ) && \
+	   let OFFSET-- && \
+	   pandoc $(OPTIONS) $(OPTIONSHTML) --number-offset $$OFFSET $^ -o $@ )
 
-html_chapters: $(MDFILES:.md=.html)
+html_chapters: $(HTMLFILES)
 
 clean:
-	rm -f ROOTUsersGuideA4.pdf ROOTUsersGuideLetter.pdf \
+	rm -f $(LATEXA4PREFIX).pdf $(LATEXLETTERPREFIX).pdf \
 	ROOTUsersGuide.html ROOTUsersGuide.epub \
-	ROOTUsersGuideA4.tex ROOTUsersGuideA4.dvi ROOTUsersGuideA4.ind \
-	ROOTUsersGuideA4.toc ROOTUsersGuideA4.out ROOTUsersGuideA4.log \
-	ROOTUsersGuideA4.idx ROOTUsersGuideA4.aux ROOTUsersGuideA4.ilg \
-	ROOTUsersGuideLetter.tex ROOTUsersGuideLetter.dvi \
-	ROOTUsersGuideLetter.ind \
-	ROOTUsersGuideLetter.toc ROOTUsersGuideLetter.out \
-	ROOTUsersGuideLetter.log \
-	ROOTUsersGuideLetter.idx ROOTUsersGuideLetter.aux \
-	ROOTUsersGuideLetter.ilg \
-	ROOTUsersGuide.pdf Preface.pdf Introduction.pdf GettingStarted.pdf \
-	Histograms.pdf Graphs.pdf FittingHistograms.pdf ALittleC++.pdf CINT.pdf \
-	ObjectOwnership.pdf Graphics.pdf FoldersTasks.pdf InputOutput.pdf \
-	Trees.pdf MathLibraries.pdf LinearAlgebra.pdf AddingaClass.pdf \
-	CollectionClasses.pdf PhysicsVectors.pdf Geometry.pdf PythonRuby.pdf \
-	TutorialsandTests.pdf ExampleAnalysis.pdf Networking.pdf Threads.pdf \
-	PROOF.pdf WritingGUI.pdf ROOTandQt.pdf HTMLDoc.pdf InstallandBuild.pdf \
-	ROOTUsersGuide.html Preface.html Introduction.html GettingStarted.html \
-	Histograms.html Graphs.html FittingHistograms.html ALittleC++.html CINT.html \
-	ObjectOwnership.html Graphics.html FoldersTasks.html InputOutput.html \
-	Trees.html MathLibraries.html LinearAlgebra.html AddingaClass.html \
-	CollectionClasses.html PhysicsVectors.html Geometry.html PythonRuby.html \
-	TutorialsandTests.html ExampleAnalysis.html Networking.html Threads.html \
-	PROOF.html WritingGUI.html ROOTandQt.html HTMLDoc.html InstallandBuild.html
+	$(LATEXA4PREFIX).{tex,dvi,ind,toc,out,log,idx,aux,ilg} \
+	$(LATEXLETTERPREFIX).{tex,dvi,ind,toc,out,log,idx,aux,ilg} \
+	$(PDFFILES) $(HTMLFILES)
