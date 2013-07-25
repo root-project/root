@@ -158,6 +158,10 @@ void TTreeReader::SetTree(TTree* tree)
    if (!fDirector) {
       Initialize();
    }
+   else {
+      fDirector->SetTree(fTree);
+      fDirector->SetReadEntry(-1);
+   }
 }
 
 //______________________________________________________________________________
