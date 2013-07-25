@@ -70,6 +70,9 @@ ROOT::TTreeReaderValueBase::~TTreeReaderValueBase()
 //______________________________________________________________________________
 ROOT::TTreeReaderValueBase::EReadStatus
 ROOT::TTreeReaderValueBase::ProxyRead() {
+   // Try to read the value from the TBranchProxy, returns
+   // the status of the read.
+
    if (!fProxy) return kReadNothingYet;
    if (fProxy->Read()) {
       fReadStatus = kReadSuccess;
@@ -81,6 +84,8 @@ ROOT::TTreeReaderValueBase::ProxyRead() {
 
 //______________________________________________________________________________
 TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() { 
+   // If we are reading a leaf, return the corresponding TLeaf.
+
    if (fLeafName.Length() > 0){
 
       Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
@@ -119,6 +124,8 @@ TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
 
 //______________________________________________________________________________
 void* ROOT::TTreeReaderValueBase::GetAddress() {
+   // Returns the memory address of the object being read.
+
    if (ProxyRead() != kReadSuccess) return 0;
 
    if (fLeafName.Length() > 0){

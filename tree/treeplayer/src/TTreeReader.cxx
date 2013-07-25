@@ -85,6 +85,8 @@ void TTreeReader::Initialize()
 
 //______________________________________________________________________________
 Long64_t TTreeReader::GetCurrentEntry() const {
+   //Returns the index of the current entry being read
+
    if (!fDirector) return 0;
    Long64_t currentTreeEntry = fDirector->GetReadEntry();
    if (fTree->IsA() == TChain::Class() && currentTreeEntry >= 0) {
