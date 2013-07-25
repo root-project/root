@@ -335,7 +335,7 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
 	throw hf_exc();
       }
       //poi// measurement.SetPOI( child->GetText() );
-      measurement.AddPOI( child->GetText() );
+     AddSubStrings( measurement.GetPOIList(), child->GetText() );
     }
 
     else if( child->GetNodeName() == TString( "ParamSetting" ) ) {
