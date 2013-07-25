@@ -179,7 +179,7 @@ and official Monte Carlo productions:
 Period
 :   The LHC period.
 
-    Example of valid values: *LHC10h, LHC11h\_2, LHC11f\_Technical*
+    Example of valid values: `LHC10h`, `LHC11h_2`, `LHC11f_Technical`
 
 Variant
 :   Data variant, which might be `ESDs` (or `ESD`) for ESDs and `AODXXX`
@@ -350,6 +350,14 @@ cache
     > inefficient. It also conflicts with the preferred method, which is
     > to stage data asynchronously using the [stager
     > daemon](http://afdsmgrd.googlecode.com/).
+
+#### Force cache refresh
+
+If the cached information for a certain AliEn file catalog query is wrong,
+it is possible to force querying the catalog again by using the keyword
+`ForceUpdate`:
+
+    Data;ForceUpdate;Period=LHC10h;Variant=AOD086;Run=130831-130833;Pass=pass1
 
 ### Staging requests
 
