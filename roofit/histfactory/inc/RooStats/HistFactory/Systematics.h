@@ -11,7 +11,6 @@
 #ifndef HISTFACTORY_SYSTEMATICS_H
 #define HISTFACTORY_SYSTEMATICS_H
 
-
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -21,7 +20,6 @@
 
 namespace RooStats{
 namespace HistFactory {
-
 
   namespace Constraint {
     enum Type{ Gaussian, Poisson };            

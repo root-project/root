@@ -1,3 +1,22 @@
+// @(#)root/roostats:$Id$
+// Author: Kyle Cranmer, George Lewis 
+/*************************************************************************
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//_________________________________________________
+/*
+BEGIN_HTML
+<p>
+</p>
+END_HTML
+*/
+//
+
 
 #include <ctime>
 #include <iostream>
@@ -262,10 +281,13 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
   // Add the Preprocessed Functions
   for( unsigned int i = 0; i < fFunctionObjects.size(); ++i ) {
     RooStats::HistFactory::PreprocessFunction func = fFunctionObjects.at(i);
+    func.PrintXML(xml);
+    /*
     xml << "<Function Name=\"" << func.GetName() << "\" "
 	<< "Expression=\""     << func.GetExpression() << "\" "
 	<< "Dependents=\""     << func.GetDependents() << "\" "
 	<< "/>" << std::endl;
+    */
   }
   
   xml << std::endl;
@@ -301,6 +323,35 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
     xml << fConstantParams.at(i) << " ";
   }
   xml << "</ParamSetting>" << std::endl;
+
+  // Set the Parameters with new Constraint Terms
+  std::map<std::string, double>::iterator ConstrItr;
+  
+  // Gamma
+  for( ConstrItr = fGammaSyst.begin(); ConstrItr != fGammaSyst.end(); ++ConstrItr ) {
+    xml << "<ConstraintTerm Type=\"Gamma\" RelativeUncertainty=\""
+	<< ConstrItr->second << "\">" << ConstrItr->first
+	<< "</ConstraintTerm>" << std::endl; 
+  }
+  // Uniform
+  for( ConstrItr = fUniformSyst.begin(); ConstrItr != fUniformSyst.end(); ++ConstrItr ) {
+    xml << "<ConstraintTerm Type=\"Uniform\" RelativeUncertainty=\""
+	<< ConstrItr->second << "\">" << ConstrItr->first
+	<< "</ConstraintTerm>" << std::endl; 
+  }
+  // LogNormal
+  for( ConstrItr = fLogNormSyst.begin(); ConstrItr != fLogNormSyst.end(); ++ConstrItr ) {
+    xml << "<ConstraintTerm Type=\"LogNormal\" RelativeUncertainty=\""
+	<< ConstrItr->second << "\">" << ConstrItr->first
+	<< "</ConstraintTerm>" << std::endl; 
+  }
+  // NoSyst
+  for( ConstrItr = fNoSyst.begin(); ConstrItr != fNoSyst.end(); ++ConstrItr ) {
+    xml << "<ConstraintTerm Type=\"NoSyst\" RelativeUncertainty=\""
+	<< ConstrItr->second << "\">" << ConstrItr->first
+	<< "</ConstraintTerm>" << std::endl; 
+  }
+
 
   // Close the Measurement
   xml << "  </Measurement> " << std::endl << std::endl;

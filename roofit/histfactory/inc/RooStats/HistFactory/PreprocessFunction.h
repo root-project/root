@@ -19,6 +19,7 @@ namespace HistFactory {
 			   
 
     void Print(std::ostream& = std::cout);  
+    void PrintXML(std::ostream& );  
 
     void SetName( const std::string& Name) { fName = Name; }
     std::string GetName() { return fName; }

@@ -28,7 +28,8 @@ namespace RooStats {
 
     // CONSTRUCTOR
     HistFactoryNavigation::HistFactoryNavigation(ModelConfig* mc) 
-      : _minBinToPrint(-1), _maxBinToPrint(-1) {
+      : _minBinToPrint(-1), _maxBinToPrint(-1), 
+	_label_print_width(20), _bin_print_width(12) {
 
       if( !mc ) {
 	std::cout << "Error: The supplied ModelConfig is NULL " << std::endl;
@@ -73,7 +74,8 @@ namespace RooStats {
     HistFactoryNavigation::HistFactoryNavigation(const std::string& FileName,
 						 const std::string& WorkspaceName,
 						 const std::string& ModelConfigName) :
-      _minBinToPrint(-1), _maxBinToPrint(-1) {
+      _minBinToPrint(-1), _maxBinToPrint(-1), 
+      _label_print_width(20), _bin_print_width(12) {
       
       // Open the File
       TFile* file = new TFile(FileName.c_str());
@@ -136,7 +138,8 @@ namespace RooStats {
 
     // CONSTRUCTOR
     HistFactoryNavigation::HistFactoryNavigation(RooAbsPdf* model, RooArgSet* observables) :
-      _minBinToPrint(-1), _maxBinToPrint(-1) {
+      _minBinToPrint(-1), _maxBinToPrint(-1), 
+      _label_print_width(20), _bin_print_width(12) {
 
       // Save the model pointer
       if( !model ) {
@@ -211,19 +214,21 @@ namespace RooStats {
 
     void HistFactoryNavigation::PrintState(const std::string& channel) {
 
-      int label_print_width = 20;
-      int bin_print_width = 12;
+      //int label_print_width = 20;
+      //int bin_print_width = 12;
       std::cout << std::endl << channel << ":" << std::endl;
 
       // Get the map of Samples for this channel
       std::map< std::string, RooAbsReal*> SampleFunctionMap = GetSampleFunctionMap(channel);      
 
       // Set the size of the print width if necessary
+      /*
       for( std::map< std::string, RooAbsReal*>::iterator itr = SampleFunctionMap.begin(); 
 	   itr != SampleFunctionMap.end(); ++itr) {
 	std::string sample_name = itr->first;
 	label_print_width = TMath::Max(label_print_width, (int)sample_name.size()+2);
       }
+      */
 
       // Loop over the SampleFunctionMap and print the individual histograms
       // to get the total histogram for the channel
@@ -235,10 +240,10 @@ namespace RooStats {
 	std::string tmp_name = sample_name + channel + "_pretty_tmp";
 	TH1* sample_hist = GetSampleHist(channel, sample_name, tmp_name);
 	num_bins = sample_hist->GetNbinsX()*sample_hist->GetNbinsY()*sample_hist->GetNbinsZ();
-	std::cout << std::setw(label_print_width) << sample_name;
+	std::cout << std::setw(_label_print_width) << sample_name;
 
 	// Print the content of the histogram
-	PrintMultiDimHist(sample_hist, bin_print_width);
+	PrintMultiDimHist(sample_hist, _bin_print_width);
 	delete sample_hist;
 
       }
@@ -246,9 +251,9 @@ namespace RooStats {
       // Make the line break as a set of "===============" ...
       std::string line_break;
       int high_bin = _maxBinToPrint==-1 ? num_bins : TMath::Min(_maxBinToPrint, (int)num_bins);
-      int low_bin = _minBinToPrint==-1 ? num_bins : _minBinToPrint;
-      int break_length = (high_bin - low_bin + 1) * bin_print_width;
-      break_length += label_print_width;
+      int low_bin = _minBinToPrint==-1 ? 1 : _minBinToPrint;
+      int break_length = (high_bin - low_bin + 1) * _bin_print_width;
+      break_length += _label_print_width;
       for(int i = 0; i < break_length; ++i) {
 	line_break += "=";
       }
@@ -256,10 +261,10 @@ namespace RooStats {
 
       std::string tmp_name = channel + "_pretty_tmp";
       TH1* channel_hist = GetChannelHist(channel, tmp_name);
-      std::cout << std::setw(label_print_width) << "TOTAL:";
+      std::cout << std::setw(_label_print_width) << "TOTAL:";
 
       // Print the Histogram
-      PrintMultiDimHist(channel_hist, bin_print_width);
+      PrintMultiDimHist(channel_hist, _bin_print_width);
       delete channel_hist;
 
       return;
@@ -273,6 +278,23 @@ namespace RooStats {
 	PrintState(fChannelNameVec.at(i));
       }
     }
+
+    
+    void HistFactoryNavigation::SetPrintWidths(const std::string& channel) {
+
+      // Get the map of Samples for this channel
+      std::map< std::string, RooAbsReal*> SampleFunctionMap = GetSampleFunctionMap(channel);      
+
+      // Get the max of the samples
+      for( std::map< std::string, RooAbsReal*>::iterator itr = SampleFunctionMap.begin(); 
+	   itr != SampleFunctionMap.end(); ++itr) {
+	std::string sample_name = itr->first;
+	_label_print_width = TMath::Max(_label_print_width, (int)sample_name.size()+2);
+      }
+
+      _label_print_width = TMath::Max( _label_print_width, (int)channel.size() + 7); 
+    }
+
 
     void HistFactoryNavigation::PrintDataSet(RooDataSet* data, 
 					     const std::string& channel_to_print) {
@@ -291,8 +313,8 @@ namespace RooStats {
       //                        ...etc...
       // =====================================================
 
-      int label_print_width = 20;
-      int bin_print_width = 12;
+      // int label_print_width = 20;
+      // int bin_print_width = 12;
 
       // Get the Data Histogram for this channel
       for( unsigned int i_chan=0; i_chan < fChannelNameVec.size(); ++i_chan) {
@@ -303,10 +325,10 @@ namespace RooStats {
 	if( channel_to_print != "" && channel_name != channel_to_print) continue;
 
 	TH1* data_hist = GetDataHist(data, channel_name, channel_name+"_tmp");
-	std::cout << std::setw(label_print_width) << channel_name + " (data)";
+	std::cout << std::setw(_label_print_width) << channel_name + " (data)";
 
 	// Print the Histogram
-	PrintMultiDimHist(data_hist, bin_print_width);
+	PrintMultiDimHist(data_hist, _bin_print_width);
 	delete data_hist;
       }
     }
@@ -319,6 +341,7 @@ namespace RooStats {
 
       for( unsigned int i = 0; i < fChannelNameVec.size(); ++i) {
 	std::string channel = fChannelNameVec.at(i);
+	SetPrintWidths(channel);
 	PrintState(channel);
 	PrintDataSet(data, channel);
       }
@@ -1099,6 +1122,7 @@ namespace RooStats {
 
       // Now, loop over the components and print them out:
       std::cout << std::endl;
+      std::cout << "Channel: " << channel << " Sample: " << sample << std::endl;
       std::cout << std::setw(label_print_width) << "Factor";
 
       for(unsigned int i=0; i < num_bins; ++i) {
@@ -1140,7 +1164,7 @@ namespace RooStats {
       /////
       std::string line_break;
       int high_bin = _maxBinToPrint==-1 ? num_bins : TMath::Min(_maxBinToPrint, (int)num_bins);
-      int low_bin = _minBinToPrint==-1 ? num_bins : _minBinToPrint;
+      int low_bin = _minBinToPrint==-1 ? 1 : _minBinToPrint;
       int break_length = (high_bin - low_bin + 1) * bin_print_width;
       break_length += label_print_width;
       for(int i = 0; i < break_length; ++i) {

@@ -51,6 +51,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
     if( parseError ) { 
       std::cerr << "Loading of xml document \"" << input
 		<< "\" failed" << std::endl;
+      throw hf_exc();
     } 
 
 
@@ -551,6 +552,7 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
   if( parseError ) { 
     std::cout << "Loading of xml document \"" << filen
 	      << "\" failed" << std::endl;
+    throw hf_exc();
   } 
 
   TXMLDocument* xmldoc = xmlparser.GetXMLDocument();
@@ -1021,6 +1023,24 @@ HistFactory::NormFactor ConfigParser::MakeNormFactor( TXMLNode* node ) {
 
   if( norm.GetName() == "" ) {
     std::cout << "Error: NormFactor Node has no Name" << std::endl;
+    throw hf_exc();
+  }
+
+  if( norm.GetLow() >= norm.GetHigh() ) {
+    std::cout << "Error: NormFactor: " << norm.GetName()
+	      << " has lower limit >= its upper limit: " 
+	      << " Lower: " << norm.GetLow()
+	      << " Upper: " << norm.GetHigh()
+	      << ". Please Fix" << std::endl;
+    throw hf_exc();
+  }
+  if( norm.GetVal() > norm.GetHigh() || norm.GetVal() < norm.GetLow() ) {
+    std::cout << "Error: NormFactor: " << norm.GetName()
+	      << " has initial value not within its range: "
+	      << " Val: " << norm.GetVal()
+	      << " Lower: " << norm.GetLow()
+	      << " Upper: " << norm.GetHigh()
+	      << ". Please Fix" << std::endl;
     throw hf_exc();
   }
 

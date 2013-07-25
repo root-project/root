@@ -135,7 +135,6 @@ private:
   // List of Asimov datasets to generate
   std::vector< RooStats::HistFactory::Asimov > fAsimovDatasets;
 
-
   // List of Alternate constraint terms
   std::map< std::string, double > fGammaSyst;
   std::map< std::string, double > fUniformSyst;

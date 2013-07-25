@@ -135,6 +135,9 @@ namespace RooStats {
 
     protected:
 
+      // Set the title and bin widths
+      void SetPrintWidths(const std::string& channel);
+
       // Fetch the node information for the pdf in question, and
       // save it in the varous collections in this class
       void _GetNodes(ModelConfig* mc);
@@ -161,6 +164,9 @@ namespace RooStats {
 
       int _minBinToPrint;
       int _maxBinToPrint;
+
+      int _label_print_width;
+      int _bin_print_width;
 
       // The list of channels
       std::vector<std::string> fChannelNameVec;
