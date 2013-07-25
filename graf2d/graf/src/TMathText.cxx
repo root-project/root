@@ -49,9 +49,7 @@ Begin_Html
 End_Html
 */
 
-
 const Double_t kPI      = TMath::Pi();
-const Int_t kLatex      = BIT(10);
 
 class TMathTextRenderer : public TText, public TAttFill,
                           public mathtext::math_text_renderer_t {
@@ -626,7 +624,6 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
       size = size / std::min(w, h);
       SetTextFont(10 * (saveFont / 10) + 2);
    }
-   if (gVirtualPS) gVirtualPS->SetBit(kLatex);
 
    const TString newText = text1;
 
@@ -643,8 +640,6 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
    SetTextSize(saveSize);
    SetTextFont(saveFont);
    SetTextAlign(saveAlign);
-
-   if (gVirtualPS) gVirtualPS->ResetBit(kLatex);
 }
 
 

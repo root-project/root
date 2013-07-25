@@ -19,7 +19,6 @@
 #include "TVirtualPS.h"
 
 const Double_t kPI = TMath::Pi();
-const Int_t kLatex = BIT(10);
 
 ClassImp(TLatex)
 
@@ -1911,7 +1910,6 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          size = size/h;
       SetTextFont(10*(saveFont/10) + 2);
    }
-   if (gVirtualPS) gVirtualPS->SetBit(kLatex);
 
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
@@ -1973,8 +1971,6 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
    SetLineWidth(lineW);
    SetLineColor(lineC);
    delete[] fTabSize;
-
-   if (gVirtualPS) gVirtualPS->ResetBit(kLatex);
 }
 
 
