@@ -362,12 +362,15 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
   xml << "</POI>  " << std::endl;
   
   // Set the Constant Parameters
-  xml << "    <ParamSetting Const=\"True\">";
-  for( unsigned int i = 0; i < fConstantParams.size(); ++i ) {
-    xml << fConstantParams.at(i) << " ";
+  if(fConstantParams.size()) {
+    xml << "    <ParamSetting Const=\"True\">";
+    for( unsigned int i = 0; i < fConstantParams.size(); ++i ) {
+      if (i==0) xml << fConstantParams.at(i);
+      else      xml << " " << fConstantParams.at(i);;
+    }
+    xml << "</ParamSetting>" << std::endl;
   }
-  xml << "</ParamSetting>" << std::endl;
-
+  
   // Set the Parameters with new Constraint Terms
   std::map<std::string, double>::iterator ConstrItr;
   
