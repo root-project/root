@@ -404,7 +404,7 @@ long *G__typeid(const char *typenamein)
   * Get type_info tagname
   ***********************************************************************/
   tag_type_info = G__defined_tagname("type_info",1);
-  if(-1==tag_type_info) {
+  if(-1==tag_type_info || G__struct.size[tag_type_info] == 0) {
     G__genericerror("Error: class type_info not defined. <typeinfo.h> must be included");
     return((long*)NULL);
   }

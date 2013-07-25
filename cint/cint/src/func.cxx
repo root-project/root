@@ -3645,7 +3645,7 @@ int G__special_func(G__value* result7, char* funcname, G__param* libp, int hash)
          G__letint(result7, 'u', (long)G__typeid(libp->parameter[0]));
       }
       result7->ref = result7->obj.i;
-      result7->tagnum = *(int*)(result7->ref);
+      if (result7->ref) result7->tagnum = *(int*)(result7->ref);
       return 1;
    }
 #endif // G__TYPEINFO
