@@ -12,6 +12,11 @@
 /*
 BEGIN_HTML
 <p>
+This class encapsulates all information for the statistical interpretation of one experiment.
+It can be combined with other channels (e.g. for the combination of multiple experiments, or
+to constrain nuisance parameters with information obtained in a control region).
+A channel contains one or more samples which describe the contribution from different processes
+to this measurement.
 </p>
 END_HTML
 */
@@ -30,10 +35,16 @@ END_HTML
 using namespace std;
 
 RooStats::HistFactory::Channel::Channel() :
-  fName( "" ) { ; }
+  fName( "" )
+{
+  // standard constructor
+}
 
 RooStats::HistFactory::Channel::Channel(std::string ChanName, std::string ChanInputFile) :
-  fName( ChanName ), fInputFile( ChanInputFile ) { ; }
+  fName( ChanName ), fInputFile( ChanInputFile )
+{
+  // create channel with given name and input file
+}
 
 namespace RooStats{
   namespace HistFactory{
@@ -44,13 +55,16 @@ namespace RooStats{
 }
 
 
-void RooStats::HistFactory::Channel::AddSample( RooStats::HistFactory::Sample sample ) { 
+void RooStats::HistFactory::Channel::AddSample( RooStats::HistFactory::Sample sample )
+{
+  // add fully configured sample to channel
+  
   sample.SetChannelName( GetName() );
   fSamples.push_back( sample ); 
 }
 
 void RooStats::HistFactory::Channel::Print( std::ostream& stream ) {
-
+  // print information of channel to given stream
 
   stream << "\t Channel Name: " << fName
 	 << "\t InputFile: " << fInputFile
@@ -141,6 +155,8 @@ void RooStats::HistFactory::Channel::PrintXML( std::string Directory, std::strin
 
 
 void RooStats::HistFactory::Channel::SetData( std::string DataHistoName, std::string DataInputFile, std::string DataHistoPath ) {
+  // set data for this channel by specifying the name of the histogram,
+  // the external ROOT file and the path to the histogram inside the ROOT file
 
   fData.SetHistoName( DataHistoName );
   fData.SetInputFile( DataInputFile );
@@ -150,7 +166,8 @@ void RooStats::HistFactory::Channel::SetData( std::string DataHistoName, std::st
 
 
 
-void RooStats::HistFactory::Channel::SetData( TH1* hData ) { 
+void RooStats::HistFactory::Channel::SetData( TH1* hData ) {
+  // set data directly to some histogram
   fData.SetHisto( hData ); 
 }
 

@@ -37,6 +37,7 @@ public:
   void writeToFile( std::string FileName, std::string DirName );
 
   TH1* GetHisto();
+  // set histogram for this sample
   void SetHisto( TH1* histo ) { fhNominal = histo; fHistoName=histo->GetName(); }
   void SetValue( Double_t Val );
 
@@ -65,25 +66,35 @@ public:
   void AddShapeSys(    std::string Name, Constraint::Type ConstraintType, std::string HistoName, std::string HistoFile, std::string HistoPath="" );
   void AddShapeSys( const ShapeSys& Sys );
 
+  // defines whether the normalization scale with luminosity
   void SetNormalizeByTheory( bool norm ) { fNormalizeByTheory = norm; }
+  // does the normalization scale with luminosity
   bool GetNormalizeByTheory() { return fNormalizeByTheory; }
 
 
-
+  // get name of sample
   std::string GetName() { return fName; }
+  // set name of sample
   void SetName(const std::string& Name) { fName = Name; }
-  
 
+  // get input ROOT file
   std::string GetInputFile() { return fInputFile; }
+  // set input ROOT file
   void SetInputFile(const std::string& InputFile) { fInputFile = InputFile; }
 
+  // get histogram name
   std::string GetHistoName() { return fHistoName; }
+  // set histogram name
   void SetHistoName(const std::string& HistoName) { fHistoName = HistoName; }
 
+  // get histogram path
   std::string GetHistoPath() { return fHistoPath; }
+  // set histogram path
   void SetHistoPath(const std::string& HistoPath) { fHistoPath = HistoPath; }
 
+  // get name of associated channel
   std::string GetChannelName() { return fChannelName; }
+  // set name of associated channel
   void SetChannelName(const std::string& ChannelName) { fChannelName = ChannelName; }
 
 
