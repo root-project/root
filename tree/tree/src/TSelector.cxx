@@ -168,14 +168,13 @@ TSelector *TSelector::GetSelector(const char *filename)
    if (!fromFile && gCling->AutoLoad(localname) != 1)
       autoloaderr = kTRUE;
 
-   ClassInfo_t *cl = gCling->ClassInfo_Factory();
+   ClassInfo_t *cl = gCling->ClassInfo_Factory(localname);
    Bool_t ok = kFALSE;
    Bool_t nameFound = kFALSE;
-   while (gCling->ClassInfo_Next(cl)) {
+   if (cl && gCling->ClassInfo_IsValid(cl)) {
       if (localname == gCling->ClassInfo_FullName(cl)) {
          nameFound = kTRUE;
          if (gCling->ClassInfo_IsBase(cl,"TSelector")) ok = kTRUE;
-         break;
       }
    }
    if (!ok) {
