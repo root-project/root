@@ -1387,7 +1387,7 @@ void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params
    // Check number of actual parameters against of expected formal ones
 
    Int_t nparms = argList->LastIndex()+1;
-   Int_t argc   = params ? params->LastIndex()+1:0;
+   Int_t argc   = params ? params->LastIndex()+1:1;
 
    if (nparms != argc) {
       Error("Execute","Wrong number of the parameters");
