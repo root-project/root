@@ -576,6 +576,7 @@ int TClingClassInfo::InternalNext()
       }
       return 0;
    }
+   cling::Interpreter::PushTransactionRAII pushedT(fInterp);
    while (true) {
       // Advance to next usable decl, or return if there is no next usable decl.
       if (fFirstTime) {
