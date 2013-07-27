@@ -5736,6 +5736,8 @@ def note_printf_c_str: Note<"did you mean to call the %0 method?">;
 def warn_null_arg : Warning<
   "null passed to a callee which requires a non-null argument">,
   InGroup<NonNull>;
+def warn_null_ptr_deref: Warning<
+  "you are about to dereference null ptr, which probably will lead to seg violation. Do you want to proceed?[y/n]">;
 
 // CHECK: returning address/reference of stack memory
 def warn_ret_stack_addr : Warning<
