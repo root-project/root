@@ -1532,7 +1532,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    strlcpy(s,t,nch+1);
    char *sopen  = strchr(s,'<'); 
    if (sopen == 0) {
-      Fatal("TStreamerSTL","For %s, the type name (%s) is not seemingly not a template (template argument not found)", name, s);
+      Fatal("TStreamerSTL","For %s, the type name (%s) is seemingly not a template (template argument not found)", name, s);
       return;
    }
    *sopen  = 0; sopen++;
