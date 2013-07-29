@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Id$
+// @(#)root/treeplayer:$Id: 725e0cf2ee411db3c264a8c94d1432c21569b191 $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -5316,6 +5316,13 @@ Bool_t TTreeFormula::LoadCurrentDim() {
             // member to be signed integral type.
 
             TBranchElement* branch = (TBranchElement*) leaf->GetBranch();
+            if (branch->GetAddress() == 0) {
+               // Humm there is no space reserve to write the data,
+               // the data member is likely 'removed' from the class
+               // layout, so rather than crashing by accessing 
+               // random memory, make it clear we can't read it.
+               size = 0;
+            }
 
             // NOTE: could be sped up
             if (fHasMultipleVarDim[i]) {// info && info->GetVarDim()>=0) {
