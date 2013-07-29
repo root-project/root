@@ -1811,6 +1811,7 @@ char *TUnixSystem::ExpandPathName(const char *path)
    // environment variables in a pathname. If compatibility is not an issue
    // you can use on Unix directly $XXX. The user must delete returned string.
    // Returns the expanded pathname or 0 in case of error.
+   // The user must delete returned string (delete []).
 
    TString patbuf = path;
    if (ExpandPathName(patbuf))
