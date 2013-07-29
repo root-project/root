@@ -1,4 +1,4 @@
-// @(#)root/xml:$Id$
+// @(#)root/xml:$Id: 1bd040ac1c03c58bcad15b5206d602680a831c0a $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -98,6 +98,7 @@ public:
    {
       if (fCurrent!=fBuf) OutputCurrent();
       delete fOut;
+      free(fBuf);
    }
 
    void OutputCurrent()
@@ -273,14 +274,14 @@ public:
 
    Bool_t SkipSpaces(Bool_t tillendl = kFALSE)
    {
-      do {
+      while (fCurrent<fMaxAddr) {
          char symb = *fCurrent;
          if ((symb>26) && (symb!=' ')) return kTRUE;
 
          if (!ShiftCurrent()) return kFALSE;
 
          if (tillendl && (symb==10)) return kTRUE;
-      } while (fCurrent<fMaxAddr);
+      }
       return kFALSE;
    }
 
