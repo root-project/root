@@ -523,6 +523,7 @@ Double_t TGeoXtru::DistFromInside(const Double_t *point, const Double_t *dir, In
             if (convex) return snext;
          }   
       }
+      if (snext < 1.E10) return snext;
       return TGeoShape::Tolerance();
    }      
    
