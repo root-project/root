@@ -550,7 +550,23 @@ void TStreamerInfo::BuildCheck()
       fClass = new TClass(GetName(), fClassVersion, 0, 0, -1, -1);
       fClass->SetBit(TClass::kIsEmulation);
       array = fClass->GetStreamerInfos();
-   } else {
+     
+      // Case of a custom collection (the user provided a CollectionProxy
+      // for a class that is not an STL collection).
+      if (GetElements()->GetEntries() == 1) {
+         TObject *element = GetElements()->UncheckedAt(0);
+         Bool_t isstl = element && strcmp("This",element->GetName())==0;
+         if (isstl) {   
+            Warning("BuildCheck", "\n\
+   The class %s had a collection proxy when written but it is not an STL\n\
+   collection and we did not record the type of the content of the collection.\n\
+   We will claim the content is a bool (i.e. no data will be read).",
+                    GetName());
+            fClass->CopyCollectionProxy( *TClass::GetClass("vector<bool>")->GetCollectionProxy() );
+         }
+      }
+
+  } else {
       if (TClassEdit::IsSTLCont(fClass->GetName())) {
          SetBit(kCanDelete);
          return;
@@ -565,6 +581,21 @@ void TStreamerInfo::BuildCheck()
          // For consistency, let's print it now!
 
          ::Warning("TClass::TClass", "no dictionary for class %s is available", GetName());
+      }
+
+      // Case of a custom collection (the user provided a CollectionProxy
+      // for a class that is not an STL collection).
+      if (GetElements()->GetEntries() == 1) {
+         TObject *element = GetElements()->UncheckedAt(0);
+         Bool_t isstl = element && strcmp("This",element->GetName())==0;
+         if (isstl) {
+            
+            Warning("BuildCheck", "\n\
+   The class %s had a collection proxy when written but it is not an STL\n\
+   collection and we did not record the type of the content of the collection.\n\
+   We will claim the content is a bool (i.e. no data will be read).",
+                    GetName());
+         }
       }
 
       // If the user has not specified a class version (this _used to_
