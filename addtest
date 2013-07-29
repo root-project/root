@@ -88,14 +88,14 @@ echo "	\$(TestDiff)" >> Makefile
 if [ ! -s $testname.ref ]; then
     echo "" > $testname.ref
     echo "Processing run$testname.C..." >> $testname.ref
-    svn add $testname.ref
+    git add $testname.ref
 fi
 
 if [ ! -s run$testname.C ]; then
     echo "{"  > run$testname.C
     echo "// Fill out the code of the actual test" >> run$testname.C 
     echo "}" >> run$testname.C 
-    svn add run$testname.C
+    git add run$testname.C
 fi
 
 echo "Message: Test successfully added"
