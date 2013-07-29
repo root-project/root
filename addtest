@@ -85,6 +85,8 @@ echo "" >> Makefile
 echo "$testname: $testname.log" >> Makefile
 echo "	\$(TestDiff)" >> Makefile
 
+git add Makefile
+
 if [ ! -s $testname.ref ]; then
     echo "" > $testname.ref
     echo "Processing run$testname.C..." >> $testname.ref
