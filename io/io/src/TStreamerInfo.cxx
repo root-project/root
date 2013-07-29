@@ -1881,6 +1881,23 @@ void TStreamerInfo::BuildOld()
             // The data member exist in the onfile StreamerInfo and there is a rule
             // that has the same member 'only' has a target ... so this means we are
             // asked to ignore the input data ...
+            if (element->GetType() == kCounter) {
+               // If the element is a counter, we will need its value to read
+               // other data member, so let's do so (by not disabling it) even
+               // if the value will be over-written by a rule.
+            } else {
+               element->SetOffset(kMissing);
+            }
+         }
+      } else if (rules && rules->HasRuleWithTarget( element->GetName(), kTRUE ) ) {
+         // The data member exist in the onfile StreamerInfo and there is a rule
+         // that has the same member 'only' has a target ... so this means we are
+         // asked to ignore the input data ...
+         if (element->GetType() == kCounter) {
+            // If the element is a counter, we will need its value to read
+            // other data member, so let's do so (by not disabling it) even
+            // if the value will be over-written by a rule.
+         } else {
             element->SetOffset(kMissing);
          }
       }
