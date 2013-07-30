@@ -218,8 +218,14 @@ void TStreamerInfo::Build()
    fIsBuilt = kTRUE;
 
    if (fClass->GetCollectionProxy()) {
-      //FIXME: What about arrays of STL containers?
-      TStreamerElement* element = new TStreamerSTL("This", "Used to call the proper TStreamerInfo case", 0, fClass->GetName(), fClass->GetName(), 0);
+      TVirtualCollectionProxy *proxy = fClass->GetCollectionProxy();
+      TString title;
+      if (proxy->GetValueClass()) {
+         title.Form("<%s%s> Used to call the proper TStreamerInfo case",proxy->GetValueClass()->GetName(),proxy->HasPointers() ? "*" : "");
+      } else {
+         title .Form("<%s%s> Used to call the proper TStreamerInfo case",TDataType::GetTypeName(proxy->GetType()),proxy->HasPointers() ? "*" : "");
+      }
+      TStreamerElement* element = new TStreamerSTL("This", title.Data(), 0, fClass->GetName(), fClass->GetName(), 0);
       fElements->Add(element);
       Compile();
       return;
