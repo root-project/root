@@ -225,7 +225,7 @@ void TStreamerInfo::Build()
       } else {
          title .Form("<%s%s> Used to call the proper TStreamerInfo case",TDataType::GetTypeName(proxy->GetType()),proxy->HasPointers() ? "*" : "");
       }
-      TStreamerElement* element = new TStreamerSTL("This", title.Data(), 0, fClass->GetName(), fClass->GetName(), 0);
+      TStreamerElement* element = new TStreamerSTL("This", title.Data(), 0, fClass->GetName(), *proxy, 0);
       fElements->Add(element);
       Compile();
       return;
@@ -262,7 +262,9 @@ void TStreamerInfo::Build()
       if (!strcmp(bname, "string")) {
          element = new TStreamerSTLstring(bname, btitle, offset, bname, kFALSE);
       } else if (base->IsSTLContainer()) {
-         element = new TStreamerSTL(bname, btitle, offset, bname, 0, kFALSE);
+         TVirtualCollectionProxy *proxy = base->GetClassPointer()->GetCollectionProxy();
+         if (proxy) element = new TStreamerSTL(bname, btitle, offset, bname, *proxy, kFALSE);
+         else       element = new TStreamerSTL(bname, btitle, offset, bname, 0, kFALSE);
          if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != TClassEdit::kVector) {
             if (!element->GetClassPointer()->IsLoaded()) {
                Error("Build","The class \"%s\" is compiled and its base class \"%s\" is a collection and we do not have a dictionary for it, we will not be able to read or write this base class.",GetName(),bname);
@@ -395,7 +397,9 @@ void TStreamerInfo::Build()
          if (!strcmp(dmType, "string") || !strcmp(dmType, full_string_name)) {
             element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
          } else if (dm->IsSTLContainer()) {
-            element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
+            TVirtualCollectionProxy *proxy = TClass::GetClass(dmFull)->GetCollectionProxy();
+            if (proxy) element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, *proxy, dmIsPtr);
+            else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
             if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != TClassEdit::kVector) {
                if (!element->GetClassPointer()->IsLoaded()) {
                   Error("Build","The class \"%s\" is compiled and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
