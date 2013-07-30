@@ -74,6 +74,15 @@ int execWriteCustomCollection() {
    file->Write();
    delete file;
 
+   printf("Writing file with just a TTree.\n");
+   file = TFile::Open("tcoll.root","RECREATE");
+   tree = new TTree("T","T");
+   tree->Branch("coll.",&v);
+   tree->Branch("vec.",&v.fValues);
+   tree->Fill();
+   file->Write();
+   delete file;
+
    printf("Reading\n");
    DataVector *vp = 0;
    file = TFile::Open("coll.root","READ");
@@ -90,6 +99,18 @@ int execWriteCustomCollection() {
       if (tvp) tvp->Print();
    }
    delete file;
+
+   printf("Reading file with just a TTree\n");
+   file = TFile::Open("tcoll.root","READ");
+   file->GetObject("T",tree);
+   if (tree) {
+      DataVector *tvp = 0;
+      tree->SetBranchAddress("coll",&tvp);
+      tree->GetEntry(0);
+      if (tvp) tvp->Print();
+   }
+   delete file;
+   
    return 0;
 }
 #endif
