@@ -556,13 +556,35 @@ void TStreamerInfo::BuildCheck()
       if (GetElements()->GetEntries() == 1) {
          TObject *element = GetElements()->UncheckedAt(0);
          Bool_t isstl = element && strcmp("This",element->GetName())==0;
-         if (isstl) {   
-            Warning("BuildCheck", "\n\
-   The class %s had a collection proxy when written but it is not an STL\n\
-   collection and we did not record the type of the content of the collection.\n\
+         if (isstl) {
+            if (element->GetTitle()[0] == '<') {
+               // We know the content.
+               TString content = element->GetTitle();
+               Int_t level = 1;
+               for(Int_t c = 1; c < content.Length(); ++c) {
+                  if (content[c] == '<') ++level;
+                  else if (content[c] == '>') --level;
+                  if (level == 0) {
+                     content.Remove(c+1);
+                     break;
+                  }
+               }
+               content.Prepend("vector");
+               TClass *clequiv = TClass::GetClass(content);
+               TVirtualCollectionProxy *proxy = clequiv->GetCollectionProxy();
+               if (gDebug > 1)
+                  Info("BuildCheck",
+                       "Update the collection proxy of the class \"%s\" \n"
+                       "\tto be similar to \"%s\".",
+                    GetName(),content.Data());
+               fClass->CopyCollectionProxy( *proxy );
+            } else {
+               Warning("BuildCheck", "\n\
+   The class %s had a collection proxy when written but it is not an STL\n \
+   collection and we did not record the type of the content of the collection.\n \
    We will claim the content is a bool (i.e. no data will be read).",
-                    GetName());
-            fClass->CopyCollectionProxy( *TClass::GetClass("vector<bool>")->GetCollectionProxy() );
+                       GetName());
+            }
          }
       }
 
@@ -588,13 +610,37 @@ void TStreamerInfo::BuildCheck()
       if (GetElements()->GetEntries() == 1) {
          TObject *element = GetElements()->UncheckedAt(0);
          Bool_t isstl = element && strcmp("This",element->GetName())==0;
-         if (isstl) {
-            
-            Warning("BuildCheck", "\n\
-   The class %s had a collection proxy when written but it is not an STL\n\
-   collection and we did not record the type of the content of the collection.\n\
+         if (isstl && !fClass->GetCollectionProxy()) {
+            if (element->GetTitle()[0] == '<') {
+               // We know the content.
+               TString content = element->GetTitle();
+               Int_t level = 1;
+               for(Int_t c = 1; c < content.Length(); ++c) {
+                  if (content[c] == '<') ++level;
+                  else if (content[c] == '>') --level;
+                  if (level == 0) {
+                     content.Remove(c+1);
+                     break;
+                  }
+               }
+               content.Prepend("vector");
+               TClass *clequiv = TClass::GetClass(content);
+               TVirtualCollectionProxy *proxy = clequiv->GetCollectionProxy();
+               if (gDebug > 1)
+                  Info("BuildCheck",
+                       "Update the collection proxy of the class \"%s\" \n"
+                       "\tto be similar to \"%s\".",
+                    GetName(),content.Data());
+               fClass->CopyCollectionProxy( *proxy );
+            } else {
+               Warning("BuildCheck", "\n\
+   The class %s had a collection proxy when written but it is not an STL\n \
+   collection and we did not record the type of the content of the collection.\n \
    We will claim the content is a bool (i.e. no data will be read).",
-                    GetName());
+                       GetName());
+            }
+            SetBit(kCanDelete);
+            return;         
          }
       }
 
