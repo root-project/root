@@ -666,13 +666,19 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
          if (!clElements) continue;
 
          // now loop over the class's streamer elements
-         streamerInfo= clElements->GetStreamerInfo();
-         TIter iElem(streamerInfo->GetElements());
-         TStreamerElement* elem=0;
-         while ((elem=(TStreamerElement*)iElem())) {
-            TNonSplitBrowsable* nsb=new TNonSplitBrowsable(elem, branch, parent);
-            li.Add(nsb);
-            numAdded++;
+         streamerInfo = clElements->GetStreamerInfo();
+         if (streamerInfo) {
+            TIter iElem(streamerInfo->GetElements());
+            TStreamerElement* elem=0;
+            while ((elem=(TStreamerElement*)iElem())) {
+               TNonSplitBrowsable* nsb=new TNonSplitBrowsable(elem, branch, parent);
+               li.Add(nsb);
+               numAdded++;
+            }
+         } else {
+            ::Error("TNonSplitBrowsable::GetBrowsables",
+                    "Missing the StreamerInfo for the class \"%s\" for the branch \"%s\" in the TTree \"%s\".",
+                    clElements->GetName(), branch->GetName(), branch->GetTree()->GetName());
          }
       } else {
          // we have a basic streamer element
