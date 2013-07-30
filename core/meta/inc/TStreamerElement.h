@@ -1,4 +1,4 @@
-// @(#)root/meta:$Id$
+// @(#)root/meta:$Id: e0eac11e63ad37390c9467c97c5c6849c4ab7d39 $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -362,6 +362,8 @@ public:
    TStreamerSTL();
    TStreamerSTL(const char *name, const char *title, Int_t offset, 
                 const char *typeName, const char *trueType, Bool_t dmPointer);
+   TStreamerSTL(const char *name, const char *title, Int_t offset, 
+                const char *typeName, const TVirtualCollectionProxy &proxy , Bool_t dmPointer);
    virtual       ~TStreamerSTL();
    Bool_t         CannotSplit() const;
    Bool_t         IsaPointer() const;

@@ -32,6 +32,7 @@
 #include "TError.h"
 #include "TDataType.h"
 #include "TVirtualMutex.h"
+#include "TVirtualCollectionProxy.h"
 #include <iostream>
 
 #include <string>
@@ -1507,6 +1508,37 @@ TStreamerSTL::TStreamerSTL() : fSTLtype(0),fCtype(0)
 {
    // Default ctor.
 
+}
+
+//______________________________________________________________________________
+TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
+                           const char *typeName, const TVirtualCollectionProxy &proxy, Bool_t dmPointer)
+        : TStreamerElement(name,title,offset,kSTL,typeName)
+{
+   // Create a TStreamerSTL object.
+
+   fTypeName = TClassEdit::ShortType(fTypeName,TClassEdit::kDropStlDefault).c_str();
+
+  if (name==typeName /* intentional pointer comparison */
+      || strcmp(name,typeName)==0) {
+      // We have a base class.
+      fName = fTypeName;
+   }
+   fSTLtype = proxy.GetCollectionType();
+   fCtype   = 0;
+
+   if (dmPointer) fSTLtype += TVirtualStreamerInfo::kOffsetP;
+
+   if (fSTLtype == kSTLbitset) {
+      // Nothing to check
+   } else if (proxy.GetValueClass()) {
+      if (proxy.HasPointers()) fCtype = TVirtualStreamerInfo::kObjectp;
+      else                     fCtype = TVirtualStreamerInfo::kObject;
+   } else {
+      fCtype = proxy.GetType();
+      if (proxy.HasPointers()) fCtype += TVirtualStreamerInfo::kOffsetP;
+   }
+   if (TStreamerSTL::IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;  
 }
 
 //______________________________________________________________________________
