@@ -11,8 +11,29 @@ public:
    ClassDef(Content,3);
 };
 
-template <class T>
+
+template <typename T>
 class DataVectorTmplt {
+public:
+   std::vector<T> fValues; //!
+
+   void Fill(unsigned long seed) {
+      T obj;
+      for(size_t i = 0; i < seed; ++i) {
+         obj.SetName(TString::Format("name%lu_%lu",i,seed));
+         fValues.push_back(obj);
+      }
+   }
+
+   void Print() {
+      for(size_t i = 0; i < fValues.size(); ++i) {
+         printf("values: %lu / %lu : %s\n",
+                i, fValues.size(), fValues[i].GetName());
+      }
+   }
+};
+
+class DataVectorConcrete {
 public:
    std::vector<Content> fValues; //!
 
@@ -49,6 +70,21 @@ typedef DataVectorTmplt<Content> DataVector;
 #endif
 #include "TVirtualCollectionProxy.h"
 
+void MakeCollection(const char *classname, const char *equiv) 
+{
+   //   TClass *c = TClass::GetClass("DataVector");
+   TClass *c = TClass::GetClass(classname);
+   TClass *e = TClass::GetClass(equiv);
+   if (!e) {
+      printf("Error could not find or create the TClass for \"%s\".\n",equiv);
+      return;
+   }
+   c->CopyCollectionProxy( * TClass::GetClass(equiv)->GetCollectionProxy() );
+
+   // This breaks the test on windows.
+   c->GetCollectionProxy()->fClass = c;
+}
+
 #ifdef __CLING__
 int execWriteCustomCollection();
 #else
@@ -56,11 +92,8 @@ int execWriteCustomCollection() {
    TFile *file = TFile::Open("coll.root","RECREATE");
    if (!file) return 1;
 
-   TClass *c = TClass::GetClass("DataVector");
-   c->CopyCollectionProxy( * TClass::GetClass("vector<Content")->GetCollectionProxy() );
-
-   // This breaks the test on windows.
-   c->GetCollectionProxy()->fClass = c;
+   MakeCollection("DataVector","vector<Content>");
+   MakeCollection("DataVectorConcrete","vector<Content>");
    
    DataVector v;
    v.Fill(3);
@@ -75,10 +108,12 @@ int execWriteCustomCollection() {
    delete file;
 
    printf("Writing file with just a TTree.\n");
+   DataVectorConcrete vc;
+   vc.Fill(4);
    file = TFile::Open("tcoll.root","RECREATE");
    tree = new TTree("T","T");
-   tree->Branch("coll.",&v);
-   tree->Branch("vec.",&v.fValues);
+   tree->Branch("coll.",&vc);
+   tree->Branch("vec.",&vc.fValues);
    tree->Fill();
    file->Write();
    delete file;
@@ -104,7 +139,7 @@ int execWriteCustomCollection() {
    file = TFile::Open("tcoll.root","READ");
    file->GetObject("T",tree);
    if (tree) {
-      DataVector *tvp = 0;
+      DataVectorConcrete *tvp = 0;
       tree->SetBranchAddress("coll",&tvp);
       tree->GetEntry(0);
       if (tvp) tvp->Print();
