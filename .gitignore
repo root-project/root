@@ -33,6 +33,7 @@ dummy[0-9]*.C
 AutoDict_*.cxx
 *_rflx.cpp
 *_rflxdriver.C
+*~
 
 # /
 /root_version
@@ -188,6 +189,9 @@ AutoDict_*.cxx
 
 # /root/io/constmembers/
 /root/io/constmembers/*.root
+
+# /root/io/customCollection/
+/root/io/customCollection/coll.root
 
 # /root/io/customStreamer/
 
@@ -932,7 +936,7 @@ AutoDict_*.cxx
 /root/tutorials/RooGenPdfPdf.h
 /root/tutorials/c1.eps
 /root/tutorials/c1.jpg/
-root/tutorials/cocoa/
+/root/tutorials/cocoa/
 /root/tutorials/config/
 /root/tutorials/data/
 /root/tutorials/fitsio/

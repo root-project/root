@@ -1,0 +1,19 @@
+
+Processing runcustomCollection.C...
+Warning in <TClass::TClass>: no dictionary for class Content is available
+Warning in <TClass::TClass>: no dictionary for class DataVectorTmplt<Content> is available
+Reading TTree
+***********************************
+*    Row   * Instance * coll.fNam *
+***********************************
+*        0 *        0 *         7 *
+*        0 *        1 *         7 *
+*        0 *        2 *         7 *
+***********************************
+***********************************************************************************************
+*    Row   * Instance * coll.fUni * coll.fBit * coll.fNam * vec.fUniq * vec.fBits * vec.fName *
+***********************************************************************************************
+*        0 *        0 *         0 *  33554432 *   name0_3 *         0 *  33554432 *   name0_3 *
+*        0 *        1 *         0 *  33554432 *   name0_3 *         0 *  33554432 *   name0_3 *
+*        0 *        2 *         0 *  33554432 *   name0_3 *         0 *  33554432 *   name0_3 *
+***********************************************************************************************
