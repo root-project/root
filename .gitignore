@@ -18,6 +18,8 @@ G__*.cxx
 G__*.h
 etc/allDict.cxx
 etc/allDict.h
+etc/allDict_dictContent.h
+etc/allDict_dictUmbrella.h
 
 # Other Stuff
 *.d
