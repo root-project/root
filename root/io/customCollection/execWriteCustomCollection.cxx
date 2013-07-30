@@ -49,6 +49,9 @@ typedef DataVectorTmplt<Content> DataVector;
 #endif
 #include "TVirtualCollectionProxy.h"
 
+#ifdef __CLING__
+int execWriteCustomCollection();
+#else
 int execWriteCustomCollection() {
    TFile *file = TFile::Open("coll.root","RECREATE");
    if (!file) return 1;
@@ -89,3 +92,4 @@ int execWriteCustomCollection() {
    delete file;
    return 0;
 }
+#endif
