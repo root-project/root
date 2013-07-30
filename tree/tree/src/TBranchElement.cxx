@@ -2118,10 +2118,10 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
                   "Can not create a Collection Proxy of any kind for the class \"%s\" needed by the branch \"%s\" of the TTree \"%s\"!",
                   className, GetName(), GetTree()->GetName());
          }
-         Info("GetCollectionProxy",
-              "Fixing the collection proxy of the class \"%s\" \n"
-              "\tneeded by the branch \"%s\" of the TTree \"%s\" to be similar to \"%s\".",
-              className, GetName(), GetTree()->GetName(),equiv.Data());
+         if (gDebug > 0) Info("GetCollectionProxy",
+                              "Fixing the collection proxy of the class \"%s\" \n"
+                              "\tneeded by the branch \"%s\" of the TTree \"%s\" to be similar to \"%s\".",
+                              className, GetName(), GetTree()->GetName(),equiv.Data());
          cl->CopyCollectionProxy( *proxy );
       }
       fCollProxy = proxy->Generate();
