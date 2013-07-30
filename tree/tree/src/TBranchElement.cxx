@@ -2091,6 +2091,20 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
          className = se->GetTypeName();
       }
       TClass* cl = TClass::GetClass(className);
+      if (!cl) {
+         // The TClass was not created but we do know (since it
+         // is used as a collection) that it 'className' was a
+         // class, so let's create it by hand!.
+
+         if (fID < 0) {
+            cl = new TClass(fBranchClass.GetClassName(), fClassVersion, 0, 0, -1, -1);
+            cl->SetBit(TClass::kIsEmulation);
+            className = cl->GetName();
+         } else {
+            cl = new TClass(className, fClassVersion, 0, 0, -1, -1);
+            cl->SetBit(TClass::kIsEmulation);
+         }
+      }
       TVirtualCollectionProxy* proxy = cl->GetCollectionProxy();
       if (!proxy) {
          // humm, we must have an older file with a custom collection
@@ -4908,7 +4922,7 @@ void TBranchElement::SetReadActionSequence()
             } else {
                original = GetCollectionProxy()->GetReadMemberWiseActions(fClassVersion);
             }
-         } else {
+         } else if (GetCollectionProxy()) {
             // Base class and embedded objects.
 
             transient = TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(info,*GetCollectionProxy());
@@ -4995,7 +5009,7 @@ void TBranchElement::SetFillActionSequence()
             //} else {
             original = GetCollectionProxy()->GetWriteMemberWiseActions();
             //}
-         } else {
+         } else if (GetCollectionProxy()) {
             // Base class and embedded objects.
 
             transient = TStreamerInfoActions::TActionSequence::CreateWriteMemberWiseActions(info,*GetCollectionProxy());
