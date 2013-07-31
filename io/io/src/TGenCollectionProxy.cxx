@@ -862,7 +862,7 @@ Int_t TGenCollectionProxy::GetCollectionType() const
 {
    // Return the type of collection see TClassEdit::ESTLType
 
-   if (!fClass) {
+   if (!fValue) {
       Initialize(kFALSE);
    }
    return fSTL_type;
