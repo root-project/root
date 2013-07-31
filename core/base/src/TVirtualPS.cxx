@@ -180,12 +180,16 @@ void TVirtualPS::WriteInteger(Int_t n, Bool_t space )
 
 
 //______________________________________________________________________________
-void TVirtualPS::WriteReal(Float_t z)
+void TVirtualPS::WriteReal(Float_t z, Bool_t space)
 {
    // Write a Real number to the file
 
    char str[15];
-   snprintf(str,15," %g", z);
+   if (space) {
+      snprintf(str,15," %g", z);
+   } else {
+      snprintf(str,15,"%g", z);
+   }
    PrintStr(str);
 }
 
