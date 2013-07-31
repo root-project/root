@@ -104,6 +104,7 @@ namespace ROOT {
       Long64_t     fTreeLastOffset;
       ESetupStatus fSetupStatus; // setup status of this data access
       EReadStatus  fReadStatus; // read status of this data access
+      Long64_t     fStaticClassOffset; // Offset from the read class to the object we want (for splitlevel 0 traversal)
 
       // FIXME: re-introduce once we have ClassDefInline!
       //ClassDef(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
