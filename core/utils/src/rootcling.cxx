@@ -1,7 +1,8 @@
 // Authors: Axel Naumann, Philippe Canal, Danilo Piparo
 
 /*************************************************************************
- * Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.    *
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
@@ -2260,9 +2261,7 @@ void manipForRootmap(std::string& name)
 {
    // A set of rules are applied in order to transform the name for the rootmap
    // file
-   // * "std::" becomes ""
    // * "::" becomes "@@"
-   // * "basic_string<char>" becomes "string"
    // * "{const,unsigned,signed} " become "{const,unsigned,signed}-"
    // * "short int" becomes "short"
    // * "long int" becomes "long"
@@ -2270,17 +2269,12 @@ void manipForRootmap(std::string& name)
    // * "long double" becomes "long-double"
    // * " " becomes ""
    // * ">>" becomes ">->" except for "operator>>"
-   
-   
-   // * "std::" becomes ""
-   replaceAll(name,"std::","");
-   
+
+
    // * "::" becomes "@@"
    replaceAll(name,"::","@@");
-   
-   // * "basic_string<char>" becomes "string"
-   replaceAll(name,"basic_string<char>","string");
-   
+
+
    // * "{const,unsigned,signed} " become "{const,unsigned,signed}-"
    // We do it in 2 steps: trim the spaces and replace
    // 1
@@ -2332,7 +2326,7 @@ void createRootMapFile(const std::string& rootmapFileName,
    // Loop on selected classes and insert them in the rootmap   
    for (RScanner::ClassColl_t::const_iterator selClassesIter = scan.fSelectedClasses.begin();
         selClassesIter!= scan.fSelectedClasses.end(); selClassesIter++){
-      std::string className(ROOT::TMetaUtils::R__GetQualifiedName(* selClassesIter->GetRecordDecl()));
+      std::string className(selClassesIter->GetNormalizedName());
       manipForRootmap(className);
       rootmapFile << "Library." << className << ":"
                   << std::setw(35-className.size()) << rootmapLibName
@@ -3854,7 +3848,10 @@ int GenReflex(int argc, char **argv)
    // The verbosity: debug wins over quiet
    std::string verbosityOption("-v");
    if (options[QUIET]) verbosityOption="-v0";
-   if (options[DEBUG]) verbosityOption="-v4";
+   if (options[DEBUG]) {
+      verbosityOption="-v4";
+      genreflex::verbose=true;
+   }
 
    // The selection file
    std::string selectionFileName;
