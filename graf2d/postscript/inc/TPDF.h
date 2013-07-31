@@ -101,7 +101,7 @@ public:
    void     TextNDC(Double_t u, Double_t v, const char *string);
    void     TextNDC(Double_t, Double_t, const wchar_t *){}
    void     WriteCompressedBuffer();
-   virtual  void  WriteReal(Float_t r);
+   virtual  void WriteReal(Float_t r, Bool_t space=kTRUE);
    Double_t UtoPDF(Double_t u);
    Double_t VtoPDF(Double_t v);
    Double_t XtoPDF(Double_t x);

@@ -2471,7 +2471,7 @@ void TPDF::WriteCompressedBuffer()
 }
 
 //______________________________________________________________________________
-void TPDF::WriteReal(Float_t z)
+void TPDF::WriteReal(Float_t z, Bool_t space)
 {
    // Write a Real number to the file.
    // This method overwrites TVirtualPS::WriteReal. Some PDF reader like
@@ -2480,7 +2480,12 @@ void TPDF::WriteReal(Float_t z)
    // format "%g" when writing it with "%g" generates a number with exponent.
 
    char str[15];
-   snprintf(str,15," %g", z);
-   if (strstr(str,"e") || strstr(str,"E")) snprintf(str,15," %10.8f", z);
+   if (space) {
+      snprintf(str,15," %g", z);
+      if (strstr(str,"e") || strstr(str,"E")) snprintf(str,15," %10.8f", z);
+   } else {
+      snprintf(str,15,"%g", z);
+      if (strstr(str,"e") || strstr(str,"E")) snprintf(str,15,"%10.8f", z);
+   }
    PrintStr(str);
 }
