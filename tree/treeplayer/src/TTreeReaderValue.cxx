@@ -204,7 +204,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
             
             branch = fTreeReader->GetTree()->GetBranch(branchName);
             if (!branch) branch = fTreeReader->GetTree()->GetBranch(branchName + ".");
-            if (!branch) nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
+            if (leafName.Length()) nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
             
             while (!branch && branchName.Contains(".")){
                leafName = branchName(leafNameExpression);
@@ -226,6 +226,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
 
                std::vector<Long64_t> offsets;
                Long64_t offset = 0;
+               TClass *elementClass = 0;
 
                TObjArray *myObjArray = myBranchElement->GetInfo()->GetElements();
                Int_t     *myOffsets  = myBranchElement->GetInfo()->GetOffsets();
@@ -243,7 +244,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                         traversingBranch = nameStack.back();
                         nameStack.pop_back();
 
-                        TClass *elementClass = tempStreamerElement->GetClass();
+                        elementClass = tempStreamerElement->GetClass();
                         if (elementClass){
                            TVirtualStreamerInfo *tempStreamerInfo = elementClass->GetStreamerInfo(0);
                            myObjArray = tempStreamerInfo->GetElements();
@@ -270,21 +271,23 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                offsets.push_back(offset);
 
                if (found){
-                  printf("Success! %lld %s\n", offset, finalDataType->GetName());
                   fStaticClassOffset = offset;
                   fStaticClassOffsets = offsets;
 
-                  if (fDict != finalDataType){
-                     Error("CreateProxy", "Wrong data type");
+                  if (fDict != finalDataType && fDict != elementClass){
+                     Error("CreateProxy", "Wrong data type %s", finalDataType ? finalDataType->GetName() : elementClass ? elementClass->GetName() : "UNKNOWN");
+                     return;
                   }
                }
                else printf("Failure! %lld\n", offset);
             }
 
             
-            Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
-            fProxy = 0;
-            if (fStaticClassOffset == -1) return;
+            if (fStaticClassOffset == -1) {
+               Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+               fProxy = 0;
+               return;
+            }
          }
          else {
             myLeaf = branch->GetLeaf(TString(leafName(1, leafName.Length())));
