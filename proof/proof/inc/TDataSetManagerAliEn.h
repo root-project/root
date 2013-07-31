@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id$
+// @(#)root/proof:$Id: 511148a2a899e02c8f5b86a7d87caee2e5979f9d $
 // Author: Dario Berzano, 26.11.12
 
 /*************************************************************************
@@ -123,7 +123,7 @@ class TDataSetManagerAliEn : public TDataSetManager {
          ULong_t cacheExpire_s);
       TDataSetManagerAliEn(const char *, const char *, const char *cfgStr);
 
-      virtual TList *GetFindCommandsFromUri(TString &uri, EDataMode &dataMode);
+      virtual TList *GetFindCommandsFromUri(TString &uri, EDataMode &dataMode, Bool_t &forceUpdate);
 
       virtual ~TDataSetManagerAliEn();
       virtual TFileCollection *GetDataSet(const char *uri, const char * = 0);
