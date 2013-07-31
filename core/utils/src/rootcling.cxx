@@ -2245,6 +2245,17 @@ void replaceAll(std::string& str, const std::string& from, const std::string& to
 }
 
 //______________________________________________________________________________
+void extractFileName(const std::string& path, std::string& filename)
+{
+   const size_t pos = path.find_last_of(gPathSeparator);
+   if(std::string::npos != pos){
+      filename.assign(path.begin() + pos + 1, path.end());
+   } else {
+      filename.assign(path);
+   }
+}
+
+//______________________________________________________________________________
 void manipForRootmap(std::string& name)
 {
    // A set of rules are applied in order to transform the name for the rootmap
@@ -3465,14 +3476,18 @@ int invokeRootCling(const std::string& verbosity,
    }
 
    // Prepare the correct rootmap libname if not already set.
-   if (!rootmapFileName.empty() && rootmapLibName.empty()){
+   std::string newRootmapLibName(rootmapLibName);
+   if (!rootmapFileName.empty() && newRootmapLibName.empty()){
       if (headersNames.size() != 1){
          ROOT::TMetaUtils::Warning(0,
             "*** genreflex: No rootmap lib and several header specified!\n");
       }
-      std::string headerName("lib");
-      headerName+=headersNames[0];
-      changeExtension(headerName,".so");
+      std::string cleanHeaderName;
+      extractFileName(headersNames[0],cleanHeaderName);
+      newRootmapLibName = "lib";
+      newRootmapLibName+=cleanHeaderName;
+      changeExtension(newRootmapLibName,".so");
+      
 
    }
    
@@ -3480,7 +3495,7 @@ int invokeRootCling(const std::string& verbosity,
    int rootclingReturnCode = RootCling(argc,
                                        argv,
                                        rootmapFileName,
-                                       rootmapLibName,
+                                       newRootmapLibName,
                                        isDeep);
 
    for (int i=0;i<argc;i++)
@@ -3942,6 +3957,7 @@ int GenReflex(int argc, char **argv)
    return returnValue;
 }
 
+
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
@@ -3949,12 +3965,7 @@ int main(int argc, char **argv)
    const std::string exePath ( GetExePath() );
 
    std::string exeName;
-   const size_t pos = exePath.find_last_of(gPathSeparator);
-   if(std::string::npos != pos){
-      exeName.assign(exePath.begin() + pos + 1, exePath.end());
-   } else {
-      exeName.assign(exePath);
-   }
+   extractFileName(exePath,exeName);
 
    // Select according to the name of the executable the procedure to follow:
    // 1) RootCling
