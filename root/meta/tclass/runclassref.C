@@ -8,7 +8,7 @@
 
    TClassRef clref("MyClass");
 #ifdef __CINT__
-   TClass *cl = clref.GetClass(); // CINT does not properly handle operrator Cast
+   TClass *cl = clref.GetClass(); // CINT does not properly handle operator Cast
 #else
    TClass *cl = clref;
 #endif
