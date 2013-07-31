@@ -2012,9 +2012,12 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
    TRACEP(p, FORK,"Parent process: child is "<<pid);
    XrdOucString emsg;
 
-   // Finalize unique tag and relevant dirs for this session and create log file path
+   // Finalize unique tag and relevant dirs for this session
    GetTagDirs((int)pid, p, xps, in.fSessionTag, in.fTopSessionTag, in.fSessionDir, in.fWrkDir);
-   XPDFORM(in.fLogFile, "%s.log", in.fWrkDir.c_str());
+
+   // Create log file path
+   GetLogFile(p, xps, in.fSessionDir, in.fLogFile);
+
    TRACEP(p, FORK, "log file: "<<in.fLogFile);
 
    // Log prefix
