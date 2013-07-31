@@ -201,9 +201,11 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
             nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
             leafName = branchName(leafNameExpression);
             branchName = branchName(0, branchName.Length() - leafName.Length());
+            
             branch = fTreeReader->GetTree()->GetBranch(branchName);
             if (!branch) branch = fTreeReader->GetTree()->GetBranch(branchName + ".");
-            nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
+            if (!branch) nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
+            
             while (!branch && branchName.Contains(".")){
                leafName = branchName(leafNameExpression);
                branchName = branchName(0, fBranchName.Length() - leafName.Length());
@@ -249,6 +251,9 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                         }
                         else {
                            finalDataType = TDataType::GetDataType((EDataType)tempStreamerElement->GetType());
+                           if (!finalDataType){
+                              finalDataType = TDataType::GetDataType((EDataType)((TDataType*)TDictionary::GetDictionary(tempStreamerElement->GetTypeName()))->GetType());
+                           }
                         }
 
                         if (tempStreamerElement->IsaPointer()){
