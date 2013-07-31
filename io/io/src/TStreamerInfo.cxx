@@ -400,7 +400,7 @@ void TStreamerInfo::Build()
          if (!strcmp(dmType, "string") || !strcmp(dmType, "std::string") || !strcmp(dmType, full_string_name)) {
             element = new TStreamerSTLstring(dmName, dmTitle, offset, dmFull, dmIsPtr);
          } else if (dm->IsSTLContainer()) {
-            TVirtualCollectionProxy *proxy = TClass::GetClass(dmFull)->GetCollectionProxy();
+            TVirtualCollectionProxy *proxy = TClass::GetClass(dm->GetTypeName() /* the underlying type */)->GetCollectionProxy();
             if (proxy) element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, *proxy, dmIsPtr);
             else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
             if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != TClassEdit::kVector) {
