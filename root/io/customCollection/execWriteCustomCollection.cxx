@@ -70,6 +70,11 @@ typedef DataVectorTmplt<Content> DataVector;
 #endif
 #include "TVirtualCollectionProxy.h"
 
+#ifdef __CLING__
+void MakeCollection(const char *classname, const char *equiv);
+int execWriteCustomCollection();
+#else
+
 void MakeCollection(const char *classname, const char *equiv) 
 {
    //   TClass *c = TClass::GetClass("DataVector");
@@ -85,9 +90,6 @@ void MakeCollection(const char *classname, const char *equiv)
    c->GetCollectionProxy()->fClass = c;
 }
 
-#ifdef __CLING__
-int execWriteCustomCollection();
-#else
 int execWriteCustomCollection() {
    TFile *file = TFile::Open("coll.root","RECREATE");
    if (!file) return 1;

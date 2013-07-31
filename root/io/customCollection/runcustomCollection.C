@@ -11,8 +11,8 @@
    delete file;
 
    printf("Reading TTree\n");
-   TFile *file = TFile::Open("coll.root","READ");
-   TTree *tree = 0;
+   file = TFile::Open("coll.root","READ");
+   tree = 0;
    file->GetObject("T",tree);
    if (tree) {
       tree->Scan("coll.fName.Length()");
