@@ -282,6 +282,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
             if (fStaticClassOffset == -1) return;
          }
          else {
+            myLeaf = branch->GetLeaf(TString(leafName(1, leafName.Length())));
             if (!myLeaf){
                Error("CreateProxy()", "The tree does not have a branch, nor a sub-branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
             }
