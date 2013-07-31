@@ -1,9 +1,7 @@
-// @(#)root/utils:$Id$
-// Author: Fons Rademakers   13/07/96
+// Authors: Axel Naumann, Philippe Canal, Danilo Piparo
 
 /*************************************************************************
- * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
+ * Copyright CERN, CH-1211 Geneva 23, 2004-2006, All rights reserved.    *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
@@ -148,8 +146,12 @@ const char *rootClingHelp =
 #include "TModuleGenerator.h"
 
 #include <iostream>
+#include <iomanip>
 #include <memory>
 #include <vector>
+#include <algorithm>
+#include <time.h>
+
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
@@ -2230,6 +2232,114 @@ void AddPlatformDefines(std::vector<std::string>& clingArgs)
    #endif
 }
 
+//______________________________________________________________________________
+void replaceAll(std::string& str, const std::string& from, const std::string& to)
+{
+   if(from.empty())
+      return;
+   size_t start_pos = 0;
+   while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+      str.replace(start_pos, from.length(), to);
+      start_pos += to.length();
+   }
+}
+
+//______________________________________________________________________________
+void manipForRootmap(std::string& name)
+{
+   // A set of rules are applied in order to transform the name for the rootmap
+   // file
+   // * "std::" becomes ""
+   // * "::" becomes "@@"
+   // * "basic_string<char>" becomes "string"
+   // * "{const,unsigned,signed} " become "{const,unsigned,signed}-"
+   // * "short int" becomes "short"
+   // * "long int" becomes "long"
+   // * "long long" becomes "long-long"
+   // * "long double" becomes "long-double"
+   // * " " becomes ""
+   // * ">>" becomes ">->" except for "operator>>"
+   
+   
+   // * "std::" becomes ""
+   replaceAll(name,"std::","");
+   
+   // * "::" becomes "@@"
+   replaceAll(name,"::","@@");
+   
+   // * "basic_string<char>" becomes "string"
+   replaceAll(name,"basic_string<char>","string");
+   
+   // * "{const,unsigned,signed} " become "{const,unsigned,signed}-"
+   // We do it in 2 steps: trim the spaces and replace
+   // 1
+   name.erase(name.find_last_not_of(" \n\r\t")+1);
+   // 2
+   replaceAll(name,"const ","const-");
+   replaceAll(name,"signed ","signed-");
+   
+   // * "short int" becomes "short"
+   replaceAll(name,"short int","short");
+   
+   // * "long int" becomes "long"
+   replaceAll(name,"long int","long");
+   
+   // * "long long" becomes "long-long"
+   replaceAll(name,"long long","long-long");
+   
+   // * "long double" becomes "long-double"
+   replaceAll(name,"long double","long-double");
+   
+   // * " " becomes ""
+   replaceAll(name," ","");
+   // But this is could be more efficient
+   //name.erase(std::remove_if(name.begin(), name.end(), isspace), name.end());
+   
+   // * ">>" becomes ">->" except for "operator>>"
+   // We replace blindly and recursively and then roll back for operator>->
+   // in other words "Better to Say Sorry than to Ask Permission"
+   while (name.find(">>") != std::string::npos){
+      replaceAll(name,">>",">->");
+   }
+   replaceAll(name,"operator>->","operator>>");
+   
+}
+
+//______________________________________________________________________________
+void createRootMapFile(const std::string& rootmapFileName,
+                       const std::string& rootmapLibName,
+                       RScanner& scan)
+{
+   // Create the rootmap file from the selected classes and namespaces
+   std::ofstream rootmapFile(rootmapFileName.c_str());
+
+   // Preamble
+   time_t rawtime;  
+   time (&rawtime);
+   rootmapFile << "# Automatically generated with genreflex on " << ctime(&rawtime);
+
+   // Loop on selected classes and insert them in the rootmap   
+   for (RScanner::ClassColl_t::const_iterator selClassesIter = scan.fSelectedClasses.begin();
+        selClassesIter!= scan.fSelectedClasses.end(); selClassesIter++){
+      std::string className(ROOT::TMetaUtils::R__GetQualifiedName(* selClassesIter->GetRecordDecl()));
+      manipForRootmap(className);
+      rootmapFile << "Library." << className << ":"
+                  << std::setw(35-className.size()) << rootmapLibName
+                  << std::endl;   
+      }
+   
+   // Same for namespaces
+   for (RScanner::NamespaceColl_t::const_iterator selNsIter = scan.fSelectedNamespaces.begin();
+        selNsIter!= scan.fSelectedNamespaces.end(); selNsIter++){
+      std::string className(ROOT::TMetaUtils::R__GetQualifiedName(* selNsIter->GetNamespaceDecl()));
+      manipForRootmap(className);
+      rootmapFile << "Library." << className << ":"
+                  << std::setw(35-className.size()) << rootmapLibName
+                  << std::endl;
+        }   
+}
+
+
 // cross-compiling for iOS and iOS simulator (assumes host is Intel Mac OS X)
 #if defined(R__IOSSIM) || defined(R__IOS)
 #ifdef __x86_64__
@@ -2249,6 +2359,8 @@ void AddPlatformDefines(std::vector<std::string>& clingArgs)
 //______________________________________________________________________________
 int RootCling(int argc,
               char **argv,
+              const std::string& rootmapFileName="",
+              const std::string& rootmapLibName="",
               bool isDeep=false)
 {
    if (argc < 2) {
@@ -3073,6 +3185,14 @@ int RootCling(int argc,
    }
 
    CleanupOnExit(0);
+
+   // Create the rootmapfile if needed
+   if (!rootmapFileName.empty()){
+      createRootMapFile(rootmapFileName,
+                        rootmapLibName,
+                        scan);
+   }
+   
    return 0;
 }
 
@@ -3186,26 +3306,16 @@ unsigned int extractArgs(int& argc, char** argv, std::vector<std::string>& args)
    argc=newArgc;
    return args.size();
 }
-//______________________________________________________________________________
-bool replace(std::string& str, const std::string& from, const std::string& to)
-{
-   size_t start_pos = str.find(from);
-   if(start_pos == std::string::npos)
-      return false;
-   str.replace(start_pos, from.length(), to);
-   return true;
-}
 
 //______________________________________________________________________________
-void replaceAll(std::string& str, const std::string& from, const std::string& to)
+void changeExtension(std::string& filename, const std::string& newExtension)
 {
-   if(from.empty())
-      return;
-   size_t start_pos = 0;
-   while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-      str.replace(start_pos, from.length(), to);
-      start_pos += to.length(); 
-   }
+   size_t result = filename.find_last_of('.'); 
+   if (std::string::npos != result){
+      filename.erase(result);
+      filename.append(newExtension);
+   }   
+      
 }
 
 //______________________________________________________________________________
@@ -3241,9 +3351,7 @@ char* string2charptr(const std::string& str)
 void header2outputName(std::string& fileName)
 {
    // Replace the extension with "_rflx.cpp"
-   replaceAll(fileName,
-              std::string::npos != fileName.find(".h") ? ".h" : ".hpp",
-              "_rflx.cpp");
+   changeExtension(fileName,"_rflx.cpp");
 }
 
 //______________________________________________________________________________
@@ -3294,12 +3402,15 @@ int invokeRootCling(const std::string& verbosity,
                     const std::vector<std::string>& pcmsNames,
                     const std::vector<std::string>& includes,
                     const std::vector<std::string>& preprocDefines,
-                    const std::vector<std::string>& preprocUndefines,                        
+                    const std::vector<std::string>& preprocUndefines,
+                    const std::string& rootmapFileName,
+                    const std::string& rootmapLibName,
                     bool isDeep,
                     const std::vector<std::string>& headersNames,
                     const std::string& ofilename){
 
    // Prepare and invoke the commandline to invoke rootcling
+   // Adjust the name of the rootmap lib if not previously set
 
    // compute the number of arguments
    // 1) required: rootcling
@@ -3353,9 +3464,23 @@ int invokeRootCling(const std::string& verbosity,
          std::cout << i << ") " << argvVector[i] <<std::endl;
    }
 
+   // Prepare the correct rootmap libname if not already set.
+   if (!rootmapFileName.empty() && rootmapLibName.empty()){
+      if (headersNames.size() != 1){
+         ROOT::TMetaUtils::Warning(0,
+            "*** genreflex: No rootmap lib and several header specified!\n");
+      }
+      std::string headerName("lib");
+      headerName+=headersNames[0];
+      changeExtension(headerName,".so");
+
+   }
+   
    char** argv =  & (argvVector[0]);
    int rootclingReturnCode = RootCling(argc,
                                        argv,
+                                       rootmapFileName,
+                                       rootmapLibName,
                                        isDeep);
 
    for (int i=0;i<argc;i++)
@@ -3372,7 +3497,9 @@ int invokeManyRootCling(const std::string& verbosity,
                         const std::vector<std::string>& pcmsNames,
                         const std::vector<std::string>& includes,
                         const std::vector<std::string>& preprocDefines,
-                        const std::vector<std::string>& preprocUndefines,                        
+                        const std::vector<std::string>& preprocUndefines,
+                        const std::string& rootmapFileName,
+                        const std::string& rootmapLibName,                        
                         bool isDeep,
                         const std::vector<std::string>& headersNames,
                         const std::string& outputDirName_const="")
@@ -3398,7 +3525,9 @@ int invokeManyRootCling(const std::string& verbosity,
                                        pcmsNames,
                                        includes,
                                        preprocDefines,
-                                       preprocUndefines,                                       
+                                       preprocUndefines,
+                                       rootmapFileName,
+                                       rootmapLibName,                                       
                                        isDeep,
                                        namesSingleton,
                                        outputDirName+ofilesNames[i]);
@@ -3461,7 +3590,7 @@ int GenReflex(int argc, char **argv)
    // --fail_on_warning                   Wrap ROOT::TMetaUtils::Warning and throw if selected
    //
    // New arguments:
-   // -l --library targetLib name         -s  targetLib name
+   // -l --library targetLib name         -l  targetLib name
    // -m pcmname (can be many -m)         -m pcmname (can be many -m)
    //
    // genreflex options which rise warnings (feedback is desirable)
@@ -3489,6 +3618,8 @@ int GenReflex(int argc, char **argv)
                        OFILENAME,
                        TARGETLIB,
                        SELECTIONFILENAME,
+                       ROOTMAP,
+                       ROOTMAPLIB,
                        PCMFILENAME,
                        DEEP,
                        DEBUG,
@@ -3547,9 +3678,17 @@ int GenReflex(int argc, char **argv)
    "-l, --library \t Target library\n"
    "      The flag -l must be followed by the name of the library that will\n"
    "      contain the object file corresponding to the dictionary produced by\n"
-   "      this invocation of rootcling.  The name will be used as the stem\n"
+   "      this invocation of genreflex.  The name will be used as the stem\n"
    "      for the name of the precompiled module generated by this\n"
-   "      invocation of rootcling.\n";
+   "      invocation of genreflex. It takes precedence over the rootmap lib.\n";
+
+   const char* rootmapUsage=
+   "--rootmap  \tGenerate the rootmap file to be used by ROOT.\n"
+   "      This file lists the names of all classes for which the reflection\n"
+   "      information is provided.";
+
+   const char* rootmapLibUsage=
+   "--rootmap-lib  \tLibrary name for the rootmap file.\n";
    
    // The Descriptor
    const option::Descriptor genreflexUsageDescriptor[] =
@@ -3578,35 +3717,47 @@ int GenReflex(int argc, char **argv)
         option::FullArg::Required,
         selectionFilenameUsage},
 
+      {ROOTMAP,
+        STRING ,
+        "" , "rootmap" ,
+        option::FullArg::Required,
+        rootmapUsage},
+
+        {ROOTMAPLIB,
+        STRING ,
+        "" , "rootmap-lib" ,
+        option::FullArg::Required,
+        rootmapLibUsage},
+        
       {PCMFILENAME,
         STRING ,
         "m" , "" ,
         option::FullArg::Required,
-        "-m \tPcm file loaded before any header (option can be repeated)"},
+        "-m \tPcm file loaded before any header (option can be repeated)\n"},
         
       {DEEP,
         NOTYPE ,
         "" , "deep",
         option::Arg::None,
-        "--deep  \tGenerate dictionaries for all dependent classes\n"},
+        "--deep  \tGenerate dictionaries for all dependent classes.\n"},
 
       {DEBUG,
         NOTYPE ,
         "" , "debug",
         option::Arg::None,
-        "--debug  \tPrint debug information\n"},
+        "--debug  \tPrint debug information.\n"},
 
       {QUIET,
         NOTYPE ,
         "" , "quiet",
         option::Arg::None,
-        "--quiet  \tPrint no information at all\n"},
+        "--quiet  \tPrint no information at all.\n"},
 
       {HELP,
         NOTYPE,
         "h" , "help",
         option::Arg::None,
-        "--help   \tPrint usage and exit.\n"},             
+        "--help   \tPrint usage and exit.\n"},
 
       // Left intentionally empty not to be shown in the help, like in the first genreflex
       {PREPROCDEFINE,
@@ -3702,7 +3853,14 @@ int GenReflex(int argc, char **argv)
       }
    }
 
+   // Set the parameters for the rootmap file. If the libname is not set,
+   // it will be set according to the header in invokeRootCling.
+   // FIXME: treatment of directories
+   std::string rootmapFileName(options[ROOTMAP].arg ? options[ROOTMAP].arg : "");
+   std::string rootmapLibName(options[ROOTMAPLIB].arg ? options[ROOTMAPLIB].arg : "");
+   
    // The target lib name
+
    std::string targetLibName;
    if (options[TARGETLIB]){
       targetLibName = options[TARGETLIB].arg;
@@ -3711,8 +3869,15 @@ int GenReflex(int argc, char **argv)
             "*** genreflex: Invalid target library extension: filename is %s and extension .so is expected!\n",
             targetLibName.c_str());
       }
+      // Target lib has precedence over rootmap lib
+      rootmapLibName = options[TARGETLIB].arg;
    }
 
+   // Add the .so extension to the rootmap lib if not there
+   if (!rootmapLibName.empty() && !endsWith(rootmapLibName,".so")){
+      rootmapLibName+=".so";
+   }
+   
    // The list of pcms to be preloaded
    std::vector<std::string> pcmsNames;
    extractMultipleOptions(options,PCMFILENAME, pcmsNames);
@@ -3753,6 +3918,8 @@ int GenReflex(int argc, char **argv)
                                     includes,
                                     preprocDefines,
                                     preprocUndefines,
+                                    rootmapFileName,
+                                    rootmapLibName,
                                     isDeep,
                                     headersNames,
                                     ofileName);
@@ -3765,7 +3932,9 @@ int GenReflex(int argc, char **argv)
                                         includes,
                                         preprocDefines,
                                         preprocUndefines,                                        
-                                        isDeep,
+                                        rootmapFileName,
+                                        rootmapLibName,
+                                        isDeep,                                        
                                         headersNames,
                                         ofileName);
    }
