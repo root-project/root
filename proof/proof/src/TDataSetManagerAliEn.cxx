@@ -468,6 +468,7 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
           TGrid::Connect("alien:");
           if (!gGrid) {
             delete findCommands;
+            delete runList;
             return NULL;
           }
         }
