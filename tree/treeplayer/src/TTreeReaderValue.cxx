@@ -140,8 +140,14 @@ void* ROOT::TTreeReaderValueBase::GetAddress() {
          return 0;
       }
    }
-   if (fStaticClassOffset != -1){
-      return (Byte_t*)fProxy->GetWhere() + fStaticClassOffset;
+   if (fStaticClassOffset != -1){ // Follow all the pointers
+      Byte_t *address = (Byte_t*)fProxy->GetWhere();
+
+      for (int i = 0; i < fStaticClassOffsets.size() - 1; ++i){
+         address = *(Byte_t**)(address + fStaticClassOffsets[i]);
+      }
+
+      return address + fStaticClassOffsets.back();
    }
    return fProxy ? (Byte_t*)fProxy->GetWhere() : 0;
 }
@@ -216,6 +222,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
 
                TDataType *finalDataType = 0;
 
+               std::vector<Long64_t> offsets;
                Long64_t offset = 0;
 
                TObjArray *myObjArray = myBranchElement->GetInfo()->GetElements();
@@ -244,15 +251,23 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                            finalDataType = TDataType::GetDataType((EDataType)tempStreamerElement->GetType());
                         }
 
+                        if (tempStreamerElement->IsaPointer()){
+                           offsets.push_back(offset);
+                           offset = 0;
+                        }
+
                         found = true;
                         break;
                      }
                   }
                }
 
+               offsets.push_back(offset);
+
                if (found){
                   printf("Success! %lld %s\n", offset, finalDataType->GetName());
                   fStaticClassOffset = offset;
+                  fStaticClassOffsets = offsets;
 
                   if (fDict != finalDataType){
                      Error("CreateProxy", "Wrong data type");
