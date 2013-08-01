@@ -49,6 +49,11 @@ TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t* stmt, Bool_t errout):
    // Normal constructor.
    // Checks if statement contains parameters tags.
 
+   // Given fRes not used, we retrieve the statement using the connection. 
+   if (fStmt->fRes != NULL) {
+      PQclear(fStmt->fRes);
+   }
+
    fStmt->fRes = PQdescribePrepared(fStmt->fConn,"preparedstmt");
    unsigned long paramcount = PQnparams(fStmt->fRes);
    fNumResultCols = PQnfields(fStmt->fRes);
@@ -150,6 +155,12 @@ Bool_t TPgSQLStatement::Process()
    // Process statement.
 
    CheckStmt("Process",kFALSE);
+
+   // We create the prepared statement below, MUST delete the old one
+   // from our constructor first! 
+   if (fStmt->fRes != NULL) {
+      PQclear(fStmt->fRes);
+   }
 
    if (IsSetParsMode()) {
       fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",fNumBuffers,
@@ -284,7 +295,7 @@ void TPgSQLStatement::FreeBuffers()
 {
    // Release all buffers, used by statement.
 
-  //individual field names free()'ed by PQClear of fStmt->fRes
+  //individual field names free()'ed by PQclear of fStmt->fRes
    if (fFieldName)
       delete[] fFieldName;
 
