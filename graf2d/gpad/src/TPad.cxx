@@ -4182,6 +4182,7 @@ void TPad::Print(const char *filenam, Option_t *option)
    //           "Preview" - an Encapsulated Postscript file with preview is produced.
    //               "pdf" - a PDF file is produced
    //               "svg" - a SVG file is produced
+   //               "tex" - a TeX file is produced
    //               "gif" - a GIF file is produced
    //            "gif+NN" - an animated GIF file is produced, where NN is delay in 10ms units
    //               "xpm" - a XPM file is produced
@@ -4446,6 +4447,49 @@ void TPad::Print(const char *filenam, Option_t *option)
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
 
       if (!gSystem->AccessPathName(psname)) Info("Print", "SVG file %s has been created", psname.Data());
+
+      delete gVirtualPS;
+      gVirtualPS = psave;
+      gVirtualPS = 0;
+      padsav->cd();
+
+      return;
+   }
+   
+   //==============Save pad/canvas as a TeX file================================
+   if (strstr(opt,"tex")) {
+      gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
+
+      Bool_t noScreen = kFALSE;
+      if (!GetCanvas()->IsBatch() && GetCanvas()->GetCanvasID() == -1) {
+         noScreen = kTRUE;
+         GetCanvas()->SetBatch(kTRUE);
+      }
+
+      TPad *padsav = (TPad*)gPad;
+      cd();
+      TVirtualPS *psave = gVirtualPS;
+
+      if (!gVirtualPS) {
+         // Plugin Postscript/SVG driver
+         TPluginHandler *h;
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "tex"))) {
+            if (h->LoadPlugin() == -1)
+               return;
+            h->ExecPlugin(0);
+         }
+      }
+
+      // Create a new SVG file
+      gVirtualPS->SetName(psname);
+      gVirtualPS->Open(psname);
+      gVirtualPS->SetBit(kPrintingPS);
+      gVirtualPS->NewPage();
+      Paint();
+
+      if (noScreen)  GetCanvas()->SetBatch(kFALSE);
+
+      if (!gSystem->AccessPathName(psname)) Info("Print", "TeX file %s has been created", psname.Data());
 
       delete gVirtualPS;
       gVirtualPS = psave;
@@ -4921,6 +4965,7 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
    //   if filename contains .eps, an Encapsulated Postscript file is produced
    //   if filename contains .pdf, a PDF file is produced
    //   if filename contains .svg, a SVG file is produced
+   //   if filename contains .tex, a TeX file is produced
    //   if filename contains .gif, a GIF file is produced
    //   if filename contains .gif+NN, an  animated GIF file is produced
    //   if filename contains .xpm, a XPM file is produced
@@ -4972,6 +5017,8 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
       ((TPad*)this)->Print(psname,"pdf");
    else if (psname.EndsWith(".svg"))
       ((TPad*)this)->Print(psname,"svg");
+   else if (psname.EndsWith(".tex"))
+      ((TPad*)this)->Print(psname,"tex");
    else if (psname.EndsWith(".xpm"))
       ((TPad*)this)->Print(psname,"xpm");
    else if (psname.EndsWith(".png"))

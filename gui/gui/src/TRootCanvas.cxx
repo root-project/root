@@ -163,6 +163,7 @@ static const char *gSaveAsTypes[] = { "PostScript",   "*.ps",
                                       "Encapsulated PostScript", "*.eps",
                                       "PDF",          "*.pdf",
                                       "SVG",          "*.svg",
+                                      "TeX",          "*.tex",
                                       "GIF",          "*.gif",
                                       "ROOT macros",  "*.C",
                                       "ROOT files",   "*.root",
@@ -841,6 +842,7 @@ again:
                             fn.EndsWith(".eps")  ||
                             fn.EndsWith(".pdf")  ||
                             fn.EndsWith(".svg")  ||
+                            fn.EndsWith(".tex")  ||
                             fn.EndsWith(".gif")  ||
                             fn.EndsWith(".xml")  ||
                             fn.EndsWith(".xpm")  ||
