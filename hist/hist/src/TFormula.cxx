@@ -2909,24 +2909,16 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
             TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
 
             // Set the arguments
-            TString args;
+            method->ResetParam();
             if (nargs) {
                UInt_t argloc = pos-nargs;
                for(j=0;j<nargs;j++,argloc++,pos--) {
-                  if (TMath::IsNaN(tab[argloc])) {
-                     // TString would add 'nan' this is not what we want
-                     // so let's do somethign else
-                     args += "(double)(0x8000000000000)";
-                  } else {
-                     args += tab[argloc];
-                  }
-                  args += ',';
+                  method->SetParam(tab[argloc]);
                }
-               args.Remove(args.Length()-1);
             }
             pos++;
             Double_t ret;
-            method->Execute(args,ret);
+            method->Execute(ret);
             tab[pos-1] = ret; // check for the correct conversion!
 
             continue;
@@ -4373,24 +4365,16 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
             TMethodCall *method = (TMethodCall*)fFunctions.At(fno);
 
             // Set the arguments
-            TString args;
+            method->ResetParam();
             if (nargs) {
                UInt_t argloc = pos-nargs;
                for(j=0;j<nargs;j++,argloc++,pos--) {
-                  if (TMath::IsNaN(tab[argloc])) {
-                     // TString would add 'nan' this is not what we want
-                     // so let's do somethign else
-                     args += "(double)(0x8000000000000)";
-                  } else {
-                     args += tab[argloc];
-                  }
-                  args += ',';
+                  method->SetParam(tab[argloc]);
                }
-               args.Remove(args.Length()-1);
             }
             pos++;
             Double_t ret;
-            method->Execute(args,ret);
+            method->Execute(ret);
             tab[pos-1] = ret; // check for the correct conversion!
 
             continue;
