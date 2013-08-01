@@ -2740,7 +2740,7 @@ int RootCling(int argc,
             if (!isSelectionFile) {
                includeForSource += std::string("#include \"") + header + "\"\n";
                pcmArgs.push_back(header);
-            } else if (interp.declare(std::string("#include \"") + header + "\"\n")
+            } else if (!IsSelectionXml(argv[i]) && interp.declare(std::string("#include \"") + header + "\"\n")
                      != cling::Interpreter::kSuccess) {
                ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);
                CleanupOnExit(1);
