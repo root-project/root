@@ -302,8 +302,8 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 
 //______________________________________________________________________________
-void TTeXDump::DrawFrame(Double_t /*xl*/, Double_t /*yl*/, Double_t /*xt*/, Double_t  /*yt*/,
-                         Int_t /*mode*/, Int_t /*border*/, Int_t /*dark*/, Int_t /*light*/)
+void TTeXDump::DrawFrame(Double_t, Double_t, Double_t, Double_t,
+                         Int_t, Int_t, Int_t, Int_t)
 {
    // Draw a Frame around a box
    //
@@ -318,7 +318,7 @@ void TTeXDump::DrawFrame(Double_t /*xl*/, Double_t /*yl*/, Double_t /*xt*/, Doub
 
 
 //______________________________________________________________________________
-void TTeXDump::DrawPolyLine(Int_t /*nn*/, TPoints */*xy*/)
+void TTeXDump::DrawPolyLine(Int_t, TPoints *)
 {
    // Draw a PolyLine
    //
@@ -334,7 +334,7 @@ void TTeXDump::DrawPolyLine(Int_t /*nn*/, TPoints */*xy*/)
 
 
 //______________________________________________________________________________
-void TTeXDump::DrawPolyLineNDC(Int_t /*nn*/, TPoints */*xy*/)
+void TTeXDump::DrawPolyLineNDC(Int_t, TPoints *)
 {
    // Draw a PolyLine in NDC space
    //
@@ -350,7 +350,7 @@ void TTeXDump::DrawPolyLineNDC(Int_t /*nn*/, TPoints */*xy*/)
 
 
 //______________________________________________________________________________
-void TTeXDump::DrawPolyMarker(Int_t /*n*/, Float_t */*xw*/, Float_t */*yw*/)
+void TTeXDump::DrawPolyMarker(Int_t, Float_t *, Float_t *)
 {
    // Paint PolyMarker
 
