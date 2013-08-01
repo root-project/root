@@ -396,7 +396,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
       fXsize = xrange; fYsize = yrange;
    }
 
-   // open OS file
+   // Open OS file
    fFileName = fname;
    fStream = new std::ofstream(fFileName.Data(),std::ios::out);
    if (fStream == 0 || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
