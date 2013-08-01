@@ -8,6 +8,55 @@
 -   In `TASImage::DrawtText`, `TTF::SetTextSize` was called with a rounded 
     value (to pixel). This cause some misplacements of character in TLatex 
     formulae.
+    
+### New class TTeXDump: Graphics interface to TeX
+
+This class allow to generate `PGF/TikZ` vector graphics output
+which can be included in TeX and LaTeX documents.
+
+`PGF` is a TeX macro package for generating graphics. It is platform
+and format-independent and works together with the most important TeX
+backend drivers, including pdftex and dvips. It comes with a
+user-friedly syntax layer called `TikZ`.
+
+To generate a such file it is enough to do:
+
+```
+   gStyle->SetPaperSize(10.,10.);
+   hpx->Draw();
+   gPad->Print("hpx.tex");
+```
+
+Then, the generated file (<tt>hpx.tex</tt>) can be included in a
+LaTeX document (`simple.tex`) in the following way:
+
+``
+\documentclass{article}
+\usepackage{tikz}
+\usetikzlibrary{patterns}
+\title{A simple LaTeX example}
+\date{July 2013}
+\begin{document}
+\maketitle
+The following image as been generated using the TTeXDump class:
+\par
+\input{hpx.tex}
+\end{document}
+```
+
+Note the two directive needed at the top of the LaTeX file:
+
+```
+\usepackage{tikz}
+\usetikzlibrary{patterns}
+```
+
+Then including the picture in the document is done with the
+`\input` directive.
+
+The command `pdflatex simple.tex` will generate the corresponding pdf
+file `simple.pdf`.
+
 
 ### X11 fonts
 
