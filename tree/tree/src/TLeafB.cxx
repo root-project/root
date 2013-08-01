@@ -166,7 +166,7 @@ void TLeafB::ReadBasketExport(TBuffer& b, TClonesArray* list, Int_t n)
 //______________________________________________________________________________
 void TLeafB::ReadValue(istream &s, Char_t /*delim = ' '*/)
 {
-   // -- Read a string from istream s and store it into the branch buffer.
+   // -- Read a 8 bit integer from istream s and store it into the branch buffer.
    if (fIsUnsigned) {
       UChar_t *uvalue = (UChar_t*)GetValuePointer();
       for (Int_t i=0;i<fLen;i++) {
