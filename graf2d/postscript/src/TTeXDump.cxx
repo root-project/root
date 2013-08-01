@@ -154,7 +154,7 @@ void TTeXDump::Open(const char *fname, Int_t wtype)
    }
 
    // Open OS file
-   fStream   = new ofstream(fname,ios::out);
+   fStream   = new std::ofstream(fname,std::ios::out);
    if (fStream == 0 || !fStream->good()) {
       printf("ERROR in TTeXDump::Open: Cannot open file:%s\n",fname);
       if (fStream == 0) return;
