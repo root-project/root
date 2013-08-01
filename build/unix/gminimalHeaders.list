@@ -980,6 +980,7 @@ include/TSystemFile.h
 include/TTabCom.h
 include/TTask.h
 include/TText.h
+include/TTeXDump.h
 include/TTF.h
 include/TThread.h
 include/TThreadFactory.h
