@@ -18,5 +18,6 @@
 #pragma link C++ class TSVG+;
 #pragma link C++ class TPDF+;
 #pragma link C++ class TImageDump+;
+#pragma link C++ class TTeXDump+;
 
 #endif

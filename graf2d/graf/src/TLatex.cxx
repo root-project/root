@@ -1878,6 +1878,22 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 
    TAttText::Modify();  // Change text attributes only if necessary.
 
+   TVirtualPS *saveps = gVirtualPS;
+               
+   if (gVirtualPS) {
+      if (gVirtualPS->InheritsFrom("TTeXDump")) {
+         gVirtualPS->SetTextAngle(angle);
+         TString t(text1);
+         if (t.Index("#")>=0) {
+            t.ReplaceAll("#","\\");
+            t.Prepend("$");
+            t.Append("$");
+         }
+         gVirtualPS->Text(x,y,t.Data());
+         gVirtualPS = 0;
+      }
+   }
+   
    // Do not use Latex if font is low precision.
    if (fTextFont%10 < 2) {
       if (gVirtualX) gVirtualX->SetTextAngle(angle);
@@ -1915,6 +1931,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<text1<<std::endl;
+      if (saveps) gVirtualPS = saveps;
       return ;
    }
    fError = 0 ;
@@ -1971,6 +1988,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
    SetLineWidth(lineW);
    SetLineColor(lineC);
    delete[] fTabSize;
+   if (saveps) gVirtualPS = saveps;
 }
 
 

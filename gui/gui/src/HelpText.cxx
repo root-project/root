@@ -254,6 +254,7 @@ Each canvas has a menu bar with the following items:\n\
         <name.eps >   makes a Postscript encapsulated file\n\
         <name.pdf >   makes a PDF file\n\
         <name.svg >   makes a SVG file\n\
+        <name.tex >   makes a TeX file\n\
         <name.gif >   makes a GIF file\n\
         <name.C   >   generates a C++ macro to reproduce the canvas\n\
         <name.root>   saves canvas objects in a Root file\n\
