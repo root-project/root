@@ -1821,7 +1821,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
                  p, xps, in.fSessionTag, in.fTopSessionTag, in.fSessionDir, in.fWrkDir);
 
       // Create log file path
-      GetLogFile(p, xps, in.fSessionDir, in.fLogFile);
+      FormFileNameInSessionDir(p, xps, in.fSessionDir.c_str(), "log", in.fLogFile);
 
       // Log to the session log file from now on
       if (fLogger) fLogger->Bind(in.fLogFile.c_str());
@@ -1996,7 +1996,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
    GetTagDirs((int)pid, p, xps, in.fSessionTag, in.fTopSessionTag, in.fSessionDir, in.fWrkDir);
 
    // Create log file path
-   GetLogFile(p, xps, in.fSessionDir, in.fLogFile);
+   FormFileNameInSessionDir(p, xps, in.fSessionDir.c_str(), "log", in.fLogFile);
 
    TRACEP(p, FORK, "log file: "<<in.fLogFile);
 
@@ -2398,7 +2398,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       return 0;
    }
 
-   // Create the RC-file and env-file paths for this session: for masters this will be temporary
+   // Create the RC-file and env-file paths for this session: for masters this will be temporarily
    // located in the sandbox
    XrdOucString rcfile, envfile;
    if (p->ConnType() == kXPD_ClientMaster) {
@@ -3314,8 +3314,11 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdManager *mgr, XrdROOT *r)
 }
 
 //______________________________________________________________________________
-void XrdProofdProofServMgr::GetLogFile(XrdProofdProtocol *p, XrdProofdProofServ *xps,
-                                       XrdOucString &sessiondir, XrdOucString &logfile)
+void XrdProofdProofServMgr::FormFileNameInSessionDir(XrdProofdProtocol *p,
+                                                     XrdProofdProofServ *xps,
+                                                     const char *sessiondir,
+                                                     const char *extension,
+                                                     XrdOucString &outfn)
 {
    XrdOucString host   = fMgr->Host();
    XrdOucString ord    = xps->Ordinal();
@@ -3328,14 +3331,15 @@ void XrdProofdProofServMgr::GetLogFile(XrdProofdProtocol *p, XrdProofdProofServ 
    if (p->ConnType() == kXPD_MasterWorker) role = "worker";
    else role = "master";
 
-   // Log file name format:
-   // <sessiondir>/[master|worker]-<ordinal>-<host>.log
+   // File name format:
+   // <sessiondir>/[master|worker]-<ordinal>-<host>.<ext>
    // No PID is contained
-   XPDFORM(logfile, "%s/%s-%s-%s.log",
-      sessiondir.c_str(),
+   XPDFORM(outfn, "%s/%s-%s-%s.%s",
+      sessiondir,
       role.c_str(),
       ord.c_str(),
-      host.c_str()
+      host.c_str(),
+      extension
    );
 }
 
@@ -3490,18 +3494,16 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
       return -1;
    }
 
-   // Create the rootrc and env files
-   TRACE(DBG, "creating env file");
-   XrdOucString rcfile = in->fWrkDir;
-   rcfile += ".rootrc";
+   // Create .rootrc and .env files
+   TRACE(DBG, "creating rc and env files");
+   XrdOucString rcfile, envfile;
+   FormFileNameInSessionDir(p, xps, in->fSessionDir.c_str(), "rootrc", rcfile);
    if (CreateProofServRootRc(p, in, rcfile.c_str()) != 0) {
       TRACE(XERR, "problems creating RC file "<<rcfile.c_str());
       return -1;
    }
 
-   // Now save the exported env variables, for the record
-   XrdOucString envfile = in->fWrkDir;
-   envfile += ".env";
+   FormFileNameInSessionDir(p, xps, in->fSessionDir.c_str(), "env", envfile);
    if (CreateProofServEnvFile(p, in, envfile.c_str(), rcfile.c_str()) != 0) {
       TRACE(XERR, "problems creating environment file "<<envfile.c_str());
       return -1;

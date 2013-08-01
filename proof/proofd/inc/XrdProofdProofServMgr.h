@@ -267,8 +267,12 @@ public:
 
    int               CleanupProofServ(bool all = 0, const char *usr = 0);
 
-   void              GetLogFile(XrdProofdProtocol *p, XrdProofdProofServ *xps,
-                                XrdOucString &sessiondir, XrdOucString &logfile);
+   void              FormFileNameInSessionDir(XrdProofdProtocol *p,
+                                              XrdProofdProofServ *xps,
+                                              const char *sessiondir,
+                                              const char *extension,
+                                              XrdOucString &outfn);
+
    void              GetTagDirs(int opt, XrdProofdProtocol *p, XrdProofdProofServ *xps,
                                 XrdOucString &sesstag, XrdOucString &topsesstag,
                                 XrdOucString &sessiondir, XrdOucString &sesswrkdir);
