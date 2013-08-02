@@ -153,10 +153,43 @@ llvm::GenericValue TClingCallFunc::convertIntegralToArg(const cling::Value& val,
 
    case llvm::Type::DoubleTyID: {
       switch (targetType->getTypeID()) {
+      case llvm::Type::HalfTyID : /*16 bit floating point*/ 
       case llvm::Type::FloatTyID :
          result.FloatVal = (float)val.getGV().DoubleVal;
          return result;
 
+      case llvm::Type::IntegerTyID : {
+         // We need to match the bitwidths, because this makes LLVM build 
+         // different types. Eg. BitWidth = 64 -> i64, BitWidth = 32 -> i32. 
+         // If we don't do a bitwidth conversion, later on when making the call 
+         // the types mismatch and we are screwed.
+         result.IntVal = llvm::APInt(targetType->getPrimitiveSizeInBits(),
+                                     val.getGV().DoubleVal,
+                                     true);
+         return result;
+      }
+      default:
+         return val.getGV();
+      }
+   }
+
+   case llvm::Type::HalfTyID : /*16 bit floating point*/ 
+   case llvm::Type::FloatTyID: {
+      switch (targetType->getTypeID()) {
+      case llvm::Type::DoubleTyID :
+         result.DoubleVal = val.getGV().FloatVal;
+         return result;
+
+      case llvm::Type::IntegerTyID : {
+         // We need to match the bitwidths, because this makes LLVM build 
+         // different types. Eg. BitWidth = 64 -> i64, BitWidth = 32 -> i32. 
+         // If we don't do a bitwidth conversion, later on when making the call 
+         // the types mismatch and we are screwed.
+         result.IntVal = llvm::APInt(targetType->getPrimitiveSizeInBits(),
+                                     val.getGV().FloatVal,
+                                     true);
+         return result;
+      }
       default:
          return val.getGV();
       }
