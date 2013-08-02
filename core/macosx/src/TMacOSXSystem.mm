@@ -107,20 +107,12 @@ namespace ROOT {
 namespace MacOSX {
 namespace Detail {
 
-class NSAppInitializer
-{
-public:
-   NSAppInitializer()
-   {
-      [NSApplication sharedApplication];
-   }
-};
-
 class MacOSXSystem {
 public:
    MacOSXSystem();
    ~MacOSXSystem();
 
+   void InitializeCocoa();
 
    void AddFileHandler(TFileHandler *fh);
    void RemoveFileHandler(TFileHandler *fh);
@@ -146,9 +138,9 @@ public:
    void SetFileDescriptors(const fd_map_type &fdTable, DescriptorType fdType);
 
    std::set<CFFileDescriptorRef> fCFFileDescriptors;
-   
-   NSAppInitializer fAppStarter;
-   const ROOT::MacOSX::Util::AutoreleasePool fPool;
+
+   ROOT::MacOSX::Util::AutoreleasePool fPool;
+   bool fCocoaInitialized;
 
    static MacOSXSystem *fgInstance;
 };
@@ -197,16 +189,28 @@ void TMacOSXSystem_WriteCallback(CFFileDescriptorRef fdref, CFOptionFlags /*call
 
 //______________________________________________________________________________
 MacOSXSystem::MacOSXSystem()
+                : fPool(true), //Delay the pool creation!
+                  fCocoaInitialized(false)
 {
    assert(fgInstance == 0 && "MacOSXSystem, fgInstance was initialized already");
-
    fgInstance = this;
 }
 
 //______________________________________________________________________________
 MacOSXSystem::~MacOSXSystem()
 {
-   CloseFileDescriptors();
+   if (fCocoaInitialized)
+      CloseFileDescriptors();
+}
+
+//______________________________________________________________________________
+void MacOSXSystem::InitializeCocoa()
+{
+   assert(fCocoaInitialized == false && "InitializeCocoa, Cocoa was initialized already");
+   
+   [NSApplication sharedApplication];
+   fPool.Reset();//TODO: test, should it be BEFORE shared application???
+   fCocoaInitialized = true;
 }
 
 //______________________________________________________________________________
@@ -276,6 +280,9 @@ void MacOSXSystem::UnregisterFileDescriptor(CFFileDescriptorRef fd)
 //______________________________________________________________________________
 void MacOSXSystem::CloseFileDescriptors()
 {
+   //While Core Foundation is not Cocoa, it still should not be used if we are not initializing Cocoa.
+   assert(fCocoaInitialized == true && "CloseFileDescriptors, Cocoa was not initialized");
+
    for (std::set<CFFileDescriptorRef>::iterator fdIter = fCFFileDescriptors.begin(), end = fCFFileDescriptors.end(); fdIter != end; ++fdIter) {
       CFFileDescriptorInvalidate(*fdIter);
       CFRelease(*fdIter);
@@ -304,6 +311,9 @@ void MacOSXSystem::RemoveFileDescriptor(fd_map_type &fdTable, int fd)
 //______________________________________________________________________________
 void MacOSXSystem::SetFileDescriptors(const fd_map_type &fdTable, DescriptorType fdType)
 {
+   //While CoreFoundation is not Cocoa, it still should not be used if we are not initializing Cocoa.
+   assert(fCocoaInitialized == true && "SetFileDescriptors, Cocoa was not initialized");
+
    for (const_fd_map_iterator fdIter = fdTable.begin(), end = fdTable.end(); fdIter != end; ++fdIter) {
       const bool read = fdType == kDTRead;
       CFFileDescriptorRef fdref = CFFileDescriptorCreate(kCFAllocatorDefault, fdIter->first, false, read ? TMacOSXSystem_ReadCallback : TMacOSXSystem_WriteCallback, 0);
@@ -337,23 +347,9 @@ ClassImp(TMacOSXSystem)
 
 //______________________________________________________________________________
 TMacOSXSystem::TMacOSXSystem()
-                  : fPimpl(new Private::MacOSXSystem)
+                  : fPimpl(new Private::MacOSXSystem),
+                    fCocoaInitialized(false)
 {
-   //
-
-   const ROOT::MacOSX::Util::AutoreleasePool pool;
-
-   [NSApplication sharedApplication];
-   //Documentation says, that +sharedApplication, initializes the app. But this is not true,
-   //it's still not really initialized, part of initialization is done by -run method.
-
-   //If you call run, it never returns unless app is finished. I have to stop Cocoa's event loop
-   //processing, since we have our own event loop.
-  
-   const ROOT::MacOSX::Util::NSScopeGuard<RunStopper> stopper([[RunStopper alloc] init]);
-
-   [stopper.Get() performSelector : @selector(stopRun) withObject : nil afterDelay : 0.05];//Delay? What it should be?
-   [NSApp run];
 }
 
 //______________________________________________________________________________
@@ -362,93 +358,14 @@ TMacOSXSystem::~TMacOSXSystem()
 }
 
 //______________________________________________________________________________
-void TMacOSXSystem::ProcessApplicationDefinedEvent(void *e)
-{
-   //Right now I have app. defined events only
-   //for file descriptors. This can change in a future.
-   NSEvent *event = (NSEvent *)e;
-
-   assert(event != nil && "ProcessApplicationDefinedEvent, event parameter is nil");
-   assert(event.type == NSApplicationDefined && "ProcessApplicationDefinedEvent, event parameter has wrong type");
-   
-   Private::MacOSXSystem::fd_map_iterator fdIter = fPimpl->fReadFds.find(event.data1);
-   bool descriptorFound = false;
-
-   if (fdIter != fPimpl->fReadFds.end()) {
-      fReadready->Set(event.data1);
-      descriptorFound = true;
-   }
-   
-   fdIter = fPimpl->fWriteFds.find(event.data1);
-   if (fdIter != fPimpl->fWriteFds.end()) {
-      fWriteready->Set(event.data1);
-      descriptorFound = true;
-   }
-   
-   if (!descriptorFound) {
-      Error("ProcessApplicationDefinedEvent", "file descriptor %d was not found", int(event.data1));
-      return;
-   }
-   
-   ++fNfd;
-}
-
-//______________________________________________________________________________
-void TMacOSXSystem::WaitEvents(Long_t nextto)
-{
-   //Wait for GUI/Non-GUI events.
-
-   if (!fPimpl->SetFileDescriptors()) {
-      //I consider this error as fatal.
-      Fatal("WaitForAllEvents", "SetFileDesciptors failed");
-   }
-
-   NSDate *untilDate = nil;
-   if (nextto >= 0)//0 also means non-blocking call.
-      untilDate = [NSDate dateWithTimeIntervalSinceNow : nextto / 1000.];
-   else
-      untilDate = [NSDate distantFuture];
-
-   fReadready->Zero();
-   fWriteready->Zero();
-   fNfd = 0;
-
-   NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : untilDate inMode : NSDefaultRunLoopMode dequeue : YES];
-
-   if (event.type == NSApplicationDefined)
-      ProcessApplicationDefinedEvent(event);
-   else
-      [NSApp sendEvent : event];
-
-   while ((event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES])) {
-      if (event.type == NSApplicationDefined)
-         ProcessApplicationDefinedEvent(event);
-      else
-         [NSApp sendEvent : event];
-   }
-
-   fPimpl->CloseFileDescriptors();
-
-   gVirtualX->Update(2);
-   gVirtualX->Update(3);
-}
-
-//______________________________________________________________________________
-bool TMacOSXSystem::ProcessPendingEvents()
-{
-   bool processed = false;
-   while (NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]) {
-      [NSApp sendEvent : event];
-      processed = true;
-   }
-   return processed;
-}
-
-//______________________________________________________________________________
 void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    //Here I try to emulate TUnixSystem's behavior, which is quite twisted.
-   //I'm not even sure, I need all this code :)   
+   //I'm not even sure, I need all this code :)
+   
+   if (!fCocoaInitialized)//We are in a batch mode (or 'batch').
+      return TUnixSystem::DispatchOneEvent(pendingOnly);
+   
    Bool_t pollOnce = pendingOnly;
 
    while (true) {
@@ -523,6 +440,94 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
 }
 
 //______________________________________________________________________________
+bool TMacOSXSystem::CocoaInitialized() const
+{
+   return fCocoaInitialized;
+}
+
+//______________________________________________________________________________
+void TMacOSXSystem::InitializeCocoa()
+{
+   if (fCocoaInitialized)
+      return;
+   
+   //TODO: add error handling and results check.
+   
+   fPimpl->InitializeCocoa();
+   
+   const ROOT::MacOSX::Util::AutoreleasePool pool;
+
+   //[NSApplication sharedApplication];//TODO: clean-up this mess with pools and sharedApplication
+   //Documentation says, that +sharedApplication, initializes the app. But this is not true,
+   //it's still not really initialized, part of initialization is done by -run method.
+
+   //If you call run, it never returns unless app is finished. I have to stop Cocoa's event loop
+   //processing, since we have our own event loop.
+  
+   const ROOT::MacOSX::Util::NSScopeGuard<RunStopper> stopper([[RunStopper alloc] init]);
+
+   [stopper.Get() performSelector : @selector(stopRun) withObject : nil afterDelay : 0.05];//Delay? What it should be?
+   [NSApp run];
+   
+   fCocoaInitialized = true;
+}
+
+//______________________________________________________________________________
+bool TMacOSXSystem::ProcessPendingEvents()
+{
+   assert(fCocoaInitialized == true && "ProcessPendingEvents, called while Cocoa was not initialized");
+
+   bool processed = false;
+   while (NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]) {
+      [NSApp sendEvent : event];
+      processed = true;
+   }
+   return processed;
+}
+
+//______________________________________________________________________________
+void TMacOSXSystem::WaitEvents(Long_t nextto)
+{
+   //Wait for GUI/Non-GUI events.
+   
+   assert(fCocoaInitialized == true && "WaitEvents, called while Cocoa was not initialized");
+
+   if (!fPimpl->SetFileDescriptors()) {
+      //I consider this error as fatal.
+      Fatal("WaitForAllEvents", "SetFileDesciptors failed");
+   }
+
+   NSDate *untilDate = nil;
+   if (nextto >= 0)//0 also means non-blocking call.
+      untilDate = [NSDate dateWithTimeIntervalSinceNow : nextto / 1000.];
+   else
+      untilDate = [NSDate distantFuture];
+
+   fReadready->Zero();
+   fWriteready->Zero();
+   fNfd = 0;
+
+   NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : untilDate inMode : NSDefaultRunLoopMode dequeue : YES];
+
+   if (event.type == NSApplicationDefined)
+      ProcessApplicationDefinedEvent(event);
+   else
+      [NSApp sendEvent : event];
+
+   while ((event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES])) {
+      if (event.type == NSApplicationDefined)
+         ProcessApplicationDefinedEvent(event);
+      else
+         [NSApp sendEvent : event];
+   }
+
+   fPimpl->CloseFileDescriptors();
+
+   gVirtualX->Update(2);
+   gVirtualX->Update(3);
+}
+
+//______________________________________________________________________________
 void TMacOSXSystem::AddFileHandler(TFileHandler *fh)
 {
    fPimpl->AddFileHandler(fh);
@@ -535,3 +540,38 @@ TFileHandler *TMacOSXSystem::RemoveFileHandler(TFileHandler *fh)
    fPimpl->RemoveFileHandler(fh);
    return TUnixSystem::RemoveFileHandler(fh);
 }
+
+//______________________________________________________________________________
+void TMacOSXSystem::ProcessApplicationDefinedEvent(void *e)
+{
+   //Right now I have app. defined events only
+   //for file descriptors. This can change in a future.
+   
+   assert(fCocoaInitialized == true && "ProcessApplicationDefinedEvent, called while Cocoa was not initialized");
+   
+   NSEvent *event = (NSEvent *)e;
+   assert(event != nil && "ProcessApplicationDefinedEvent, event parameter is nil");
+   assert(event.type == NSApplicationDefined && "ProcessApplicationDefinedEvent, event parameter has wrong type");
+   
+   Private::MacOSXSystem::fd_map_iterator fdIter = fPimpl->fReadFds.find(event.data1);
+   bool descriptorFound = false;
+
+   if (fdIter != fPimpl->fReadFds.end()) {
+      fReadready->Set(event.data1);
+      descriptorFound = true;
+   }
+   
+   fdIter = fPimpl->fWriteFds.find(event.data1);
+   if (fdIter != fPimpl->fWriteFds.end()) {
+      fWriteready->Set(event.data1);
+      descriptorFound = true;
+   }
+   
+   if (!descriptorFound) {
+      Error("ProcessApplicationDefinedEvent", "file descriptor %d was not found", int(event.data1));
+      return;
+   }
+   
+   ++fNfd;
+}
+

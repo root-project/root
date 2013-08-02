@@ -39,15 +39,17 @@ class MacOSXSystem;
 }
 
 class TMacOSXSystem : public TUnixSystem {
+   friend class TGCocoa;
 public:
    TMacOSXSystem();
    ~TMacOSXSystem();
    
    void DispatchOneEvent(Bool_t pendingOnly);
+   bool CocoaInitialized() const;
 
 private:
+   void InitializeCocoa();
 
-//   void WaitForGuiEvents(Long_t nextto);
    bool ProcessPendingEvents();
    void WaitEvents(Long_t nextto);
 
@@ -57,6 +59,7 @@ private:
    void ProcessApplicationDefinedEvent(void *event);
 
    std::auto_ptr<ROOT::MacOSX::Detail::MacOSXSystem> fPimpl; //!
+   bool fCocoaInitialized;//!
 
    TMacOSXSystem(const TMacOSXSystem &rhs);
    TMacOSXSystem &operator = (const TMacOSXSystem &rhs);

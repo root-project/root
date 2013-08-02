@@ -23,6 +23,7 @@
 #include <OpenGL/gl.h>
 
 #include "ROOTOpenGLView.h"
+#include "TMacOSXSystem.h"
 #include "CocoaPrivate.h"
 #include "QuartzWindow.h"
 #include "QuartzPixmap.h"
@@ -355,6 +356,12 @@ TGCocoa::TGCocoa()
               fForegroundProcess(false),
               fSetApp(true)
 {
+   assert(dynamic_cast<TMacOSXSystem *>(gSystem) != nullptr && "TGCocoa, gSystem is eihter null or has a wrong type");
+   TMacOSXSystem * const system = (TMacOSXSystem *)gSystem;
+   
+   if (!system->CocoaInitialized())
+      system->InitializeCocoa();
+
    fPimpl.reset(new Details::CocoaPrivate);
 
    X11::InitWithPredefinedAtoms(fNameToAtom, fAtomToName);
@@ -371,6 +378,12 @@ TGCocoa::TGCocoa(const char *name, const char *title)
               fForegroundProcess(false),
               fSetApp(true)
 {
+   assert(dynamic_cast<TMacOSXSystem *>(gSystem) != nullptr && "TGCocoa, gSystem is eihter null or has a wrong type");
+   TMacOSXSystem * const system = (TMacOSXSystem *)gSystem;
+   
+   if (!system->CocoaInitialized())
+      system->InitializeCocoa();
+
    fPimpl.reset(new Details::CocoaPrivate);
    
    X11::InitWithPredefinedAtoms(fNameToAtom, fAtomToName);
@@ -4198,7 +4211,7 @@ bool TGCocoa::MakeProcessForeground()
          Error("MakeProcessForeground", "TransformProcessType failed with code %d", res1);
          return false;
       }
-
+   
       const OSErr res2 = SetFrontProcess(&psn);
       if (res2 != noErr) {
          Error("MakeProcessForeground", "SetFrontProcess failed with code %d", res2);
@@ -4211,7 +4224,7 @@ bool TGCocoa::MakeProcessForeground()
 
       OSErr res = GetCurrentProcess(&psn);
       if (res != noErr) {
-         Error("MapProcessForeground", "GetCurrentProcess failed with code %d", res);
+         Error("MakeProcessForeground", "GetCurrentProcess failed with code %d", res);
          return false;
       }
       
