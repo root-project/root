@@ -9,6 +9,10 @@
     value (to pixel). This cause some misplacements of character in TLatex 
     formulae.
     
+### TPDF and TPostScript
+
+- Parenthesis can be used in PDF and PS file names.
+    
 ### New class TTeXDump: Graphics interface to TeX
 
 This class allow to generate `PGF/TikZ` vector graphics output
