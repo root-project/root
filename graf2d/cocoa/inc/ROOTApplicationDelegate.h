@@ -1,7 +1,7 @@
 #ifndef ROOT_ROOTApplicationDelegate
 #define ROOT_ROOTApplicationDelegate
 
-#import <Cocoa/Cocoa.h>
+#include <Cocoa/Cocoa.h>
 
 @interface ROOTApplicationDelegate : NSObject<NSApplicationDelegate>
 @end

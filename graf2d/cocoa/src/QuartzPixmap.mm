@@ -11,19 +11,19 @@
 
 //#define NDEBUG
 
-#import <algorithm>
-#import <utility>
-#import <cassert>
-#import <cstddef>
-#import <limits>
-#import <new>
+#include <algorithm>
+#include <utility>
+#include <cassert>
+#include <cstddef>
+#include <limits>
+#include <new>
 
-#import "CocoaGuiTypes.h"
-#import "QuartzWindow.h"
-#import "QuartzPixmap.h"
-#import "QuartzUtils.h"
-#import "CocoaUtils.h"
-#import "X11Colors.h"
+#include "CocoaGuiTypes.h"
+#include "QuartzWindow.h"
+#include "QuartzPixmap.h"
+#include "QuartzUtils.h"
+#include "CocoaUtils.h"
+#include "X11Colors.h"
 
 //Call backs for data provider.
 extern "C" {

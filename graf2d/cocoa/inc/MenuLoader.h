@@ -1,7 +1,7 @@
 #ifndef ROOT_MenuLoader
 #define ROOT_MenuLoader
 
-#import <Cocoa/Cocoa.h>
+#include <Cocoa/Cocoa.h>
 
 namespace ROOT {
 namespace MacOSX {

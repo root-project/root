@@ -1,5 +1,5 @@
-#import "ROOTApplicationDelegate.h"
-#import "TApplication.h"
+#include "ROOTApplicationDelegate.h"
+#include "TApplication.h"
 
 @implementation ROOTApplicationDelegate
 

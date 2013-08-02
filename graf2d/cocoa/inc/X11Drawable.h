@@ -12,11 +12,17 @@
 #ifndef ROOT_X11Drawable
 #define ROOT_X11Drawable
 
-#import <Cocoa/Cocoa.h>
+#include <Cocoa/Cocoa.h>
 
-#import "CocoaGuiTypes.h"
-#import "TVirtualX.h"
-#import "GuiTypes.h"
+#ifndef ROOT_CocoaGuiTypes
+#include "CocoaGuiTypes.h"
+#endif
+#ifndef ROOT_TVirtualX
+#include "TVirtualX.h"
+#endif
+#ifndef ROOT_GuiTypes
+#include "GuiTypes.h"
+#endif
 
 @class PassiveKeyGrab;
 @class QuartzWindow;

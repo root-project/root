@@ -16,8 +16,8 @@ namespace MacOSX {
 namespace Util {
 
 //______________________________________________________________________________
-AutoreleasePool::AutoreleasePool()
-                  : fPool([[NSAutoreleasePool alloc] init])
+AutoreleasePool::AutoreleasePool(bool delayCreation /* = false*/)
+                  : fPool(delayCreation ? nil : [[NSAutoreleasePool alloc] init])
 {
 }
 
@@ -25,6 +25,15 @@ AutoreleasePool::AutoreleasePool()
 AutoreleasePool::~AutoreleasePool()
 {
    [fPool release];
+}
+
+//______________________________________________________________________________
+void AutoreleasePool::Reset()
+{
+   if (fPool)
+      [fPool release];
+
+   fPool = [[NSAutoreleasePool alloc] init];
 }
 
 }//Util

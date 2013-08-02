@@ -16,7 +16,7 @@
 #include <map>
 #include <set>
 
-#import <Cocoa/Cocoa.h>
+#include <Cocoa/Cocoa.h>
 
 #include "TSeqCollection.h"
 #include "TMacOSXSystem.h"
