@@ -157,8 +157,12 @@ private:
 
 class AutoreleasePool {
 public:
-   AutoreleasePool();
+   AutoreleasePool(bool delayCreation = false);
    ~AutoreleasePool();
+   
+   //Drains the previous pool (if any)
+   //and activates a new one.
+   void Reset();
    
 private:
    NSAutoreleasePool *fPool;

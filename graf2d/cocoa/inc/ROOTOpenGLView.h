@@ -12,7 +12,9 @@
 #ifndef ROOT_ROOTOpenGLView
 #define ROOT_ROOTOpenGLView
 
-#import "QuartzWindow.h"
+#ifndef ROOT_QuartzWindow
+#include "QuartzWindow.h"
+#endif
 
 ///////////////////////////////////////////
 //                                       //

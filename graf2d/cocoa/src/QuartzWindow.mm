@@ -14,28 +14,28 @@
 //#define NDEBUG
 
 #ifdef DEBUG_ROOT_COCOA
-#import <iostream>
-#import <fstream>
+#include <iostream>
+#include <fstream>
 
-#import "TClass.h"
+#include "TClass.h"
 #endif
 
-#import <algorithm>
-#import <stdexcept>
-#import <cassert>
+#include <algorithm>
+#include <stdexcept>
+#include <cassert>
 
-#import "ROOTOpenGLView.h"
-#import "QuartzWindow.h"
-#import "QuartzPixmap.h"
-#import "QuartzUtils.h"
-#import "CocoaUtils.h"
-#import "X11Colors.h"
-#import "X11Buffer.h"
-#import "X11Events.h"
-#import "TGWindow.h"
-#import "TGClient.h"
-#import "TSystem.h"
-#import "TGCocoa.h"
+#include "ROOTOpenGLView.h"
+#include "QuartzWindow.h"
+#include "QuartzPixmap.h"
+#include "QuartzUtils.h"
+#include "CocoaUtils.h"
+#include "X11Colors.h"
+#include "X11Buffer.h"
+#include "X11Events.h"
+#include "TGWindow.h"
+#include "TGClient.h"
+#include "TSystem.h"
+#include "TGCocoa.h"
 
 namespace ROOT {
 namespace MacOSX {

@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#import <cassert>
+#include <cassert>
 
-#import "ROOTOpenGLView.h"
-#import "X11Events.h"
-#import "TGCocoa.h"
+#include "ROOTOpenGLView.h"
+#include "X11Events.h"
+#include "TGCocoa.h"
 
 namespace ROOT {
 namespace MacOSX {

@@ -12,11 +12,17 @@
 #ifndef ROOT_QuartzWindow
 #define ROOT_QuartzWindow
 
-#import <Cocoa/Cocoa.h>
+#include <Cocoa/Cocoa.h>
 
-#import "CocoaGuiTypes.h"
-#import "X11Drawable.h"
-#import "GuiTypes.h"
+#ifndef ROOT_CocoaGuiTypes
+#include "CocoaGuiTypes.h"
+#endif
+#ifndef ROOT_X11Drawable
+#include "X11Drawable.h"
+#endif
+#ifndef ROOT_GuiTypes
+#include "GuiTypes.h"
+#endif
 
 ////////////////////////////////////////////////
 //                                            //
