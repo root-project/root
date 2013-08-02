@@ -420,7 +420,7 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
    // will flush the deserialized decls into Meta.
    //if (!T.size())
    //   return;
-   if (fFirstRun && !T.empty())
+   if (fFirstRun && T.size())
       Initialize((*(T.getFirstDecl().begin()))->getASTContext());
 
    TCling__UpdateListsOnCommitted(T);
