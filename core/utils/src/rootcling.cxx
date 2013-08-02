@@ -2384,6 +2384,7 @@ int RootCling(int argc,
    std::string currentDirectory;
    GetCurrentDirectory(currentDirectory);
 
+   int verbosityLevel=0;
    ic = 1;
    if (!strcmp(argv[ic], "-v")) {
       ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kInfo; // The default is kError
@@ -2402,6 +2403,7 @@ int RootCling(int argc,
       ic++;
    } else if (!strcmp(argv[ic], "-v4")) {
       ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kInfo; // Display all information (same as -v)
+      verbosityLevel=4;
       ic++;
    }
    if (ic < argc) {
@@ -2862,6 +2864,8 @@ int RootCling(int argc,
    SelectionRules selectionRules(interp);
    std::string extraIncludes;
 
+   bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
+   
    if (requestAllSymbols) {
       selectionRules.SetDeep(true);
    } else if (!linkdefLoc) {
@@ -2885,7 +2889,7 @@ int RootCling(int argc,
          CleanupOnExit(1);
          return 1;
       }
-   } else if (IsSelectionXml(linkdefFilename.c_str())) {
+   } else if (isSelXML) {
 
       selectionRules.SetSelectionFileType(SelectionRules::kSelectionXMLFile);
 
@@ -2942,6 +2946,7 @@ int RootCling(int argc,
 
    }
 
+   
    //---------------------------------------------------------------------------
    // Write schema evolution related headers and declarations
    //---------------------------------------------------------------------------
@@ -2973,7 +2978,7 @@ int RootCling(int argc,
 
    clang::CompilerInstance* CI = interp.getCI();
 
-   RScanner scan(selectionRules,interp,normCtxt);
+   RScanner scan(selectionRules,interp,normCtxt,verbosityLevel);
    // If needed initialize the autoloading hook
    if (gLiblistPrefix.length()) {
       LoadLibraryMap();
@@ -2982,7 +2987,7 @@ int RootCling(int argc,
    scan.Scan(CI->getASTContext());
 
    bool has_input_error = false;
-
+   
 // SELECTION LOOP
    // Check for error in the class layout before doing anything else.
    RScanner::ClassColl_t::const_iterator iter = scan.fSelectedClasses.begin();

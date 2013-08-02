@@ -86,7 +86,8 @@ private:
    static bool GetAttributes(const std::string& tag, std::vector<Attributes>& out); //writes the attr. names in values in the
    // vector of Attribute objects passed as a second parameter
    static bool CheckIsTagOK(const std::string& tag); // for a given tag checks if the tag is the correct format, i.e
-   // < class name="x"> will return false but <class name="x"> will return true 
+   // < class name="x"> will return false but <class name="x"> will return true
+   static bool IsTagComment(const std::string& tag); // Check that this is not an XML comment: <!-- comment -->
    
 public:
    // Constructors

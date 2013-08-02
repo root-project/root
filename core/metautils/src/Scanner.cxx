@@ -1134,13 +1134,7 @@ void RScanner::Scan(const clang::ASTContext &C)
 {
    fSourceManager = &C.getSourceManager();
    
-#ifdef SELECTION_DEBUG
-   if (fVerboseLevel > 3) printf("\nDEBUG from Velislava - into the Scan() function!!!\n");
-#endif
-
-#ifdef SELECTION_DEBUG
-   if (fVerboseLevel > 3) fSelectionRules.PrintSelectionRules();
-#endif
+   if (fVerboseLevel >= 3) fSelectionRules.PrintSelectionRules();
    
    if (fVerboseLevel > 0)  {
       if (fSelectionRules.GetHasFileNameRule())
@@ -1148,12 +1142,12 @@ void RScanner::Scan(const clang::ASTContext &C)
    }
 
    TraverseDecl(C.getTranslationUnitDecl());
-      
-   if (!fSelectionRules.AreAllSelectionRulesUsed()) {
+
 #ifdef SELECTION_DEBUG
+   if (!fSelectionRules.AreAllSelectionRulesUsed()) {
       if (fVerboseLevel > 3) std::cout<<"\nDEBUG - unused sel rules"<<std::endl;
-#endif
    }
+#endif
    
    // And finally resort the results according to the rule ordering.
    std::sort(fSelectedClasses.begin(),fSelectedClasses.end());

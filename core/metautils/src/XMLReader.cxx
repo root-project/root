@@ -58,7 +58,10 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
    std::string str;
    bool angleBraceLevel = false;
    bool quotes = false;
-   
+   bool comment = false;
+   char charMinus1= '@';
+   char charMinus2= '@';
+   char charMinus3= '@';
    while(file.good())
    {
       c = file.get();
@@ -73,13 +76,20 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
                break;
             case '<': 
                if (!quotes) angleBraceLevel = !angleBraceLevel; // we count < only outside quotes (i.e. quotes = false)
-               if (!angleBraceLevel) return false; // if angleBraceLevel = true, we have < outside quotes - this is error
+               if (!angleBraceLevel && !comment) return false; // if angleBraceLevel = true, we have < outside quotes - this is error
                break;
             case '>': 
                if (!quotes) angleBraceLevel = !angleBraceLevel; // we count > only outside quotes (i.e. quotes = false)
-               if (!angleBraceLevel) br = true; // if angleBraceLevel = true, we have > outside quotes - this is end of tag => break
+               if (!angleBraceLevel && !comment) br = true; // if angleBraceLevel = true, we have > outside quotes - this is end of tag => break
+               if (!angleBraceLevel && comment && charMinus2=='-' && charMinus1=='-') br = true;
+               break;
+            case '-':
+               if (charMinus3=='<' && charMinus2=='!' && charMinus1=='-') comment = !comment; // We are in a comment
                break;
          }
+         charMinus3=charMinus2;
+         charMinus2=charMinus1;
+         charMinus1=c;
          out += c; // if c != {<,>,"}, add it to the tag 
          if (br) break; // if br = true, we have reached the end of the tag and we stop reading from the input stream
          
@@ -100,12 +110,44 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
       out = out.substr( startpos, endpos-startpos+1 );
    
    // if tag isn't empty, check if everything is OK with the tag format 
-   if (!out.empty()) 
-      return CheckIsTagOK(out);
+   if (!out.empty()){
+      bool isTagOk = CheckIsTagOK(out);
+      if (IsTagComment(out)){
+         out="";
+         return GetNextTag(file,out,lineCount);
+      }
+      else{
+         return isTagOk;
+      }
+   }
    else 
       return true;
 }
 
+//______________________________________________________________________________
+bool XMLReader::IsTagComment(const std::string& tag)
+{
+   // An XML comment is represented as <!-- My Comment -->.
+   const int tagSize = tag.size();
+   // Too short to be a comment
+   if (tagSize < 7 ){
+      return false;
+   }
+
+   // Does it start with <!-- ?
+   const std::string commentBegin("<!--");
+   if (0 != tag.compare(0, commentBegin.size(), commentBegin))
+      return false;
+   
+   // Does it end with --> ?
+   const std::string commentEnd("-->");
+   const int commentEndSize=commentEnd.size();
+   if (0 != tag.compare(tagSize-commentEndSize, tagSize, commentEnd))
+      return false;
+
+   // It is long enough, it starts with <!-- and finishes with -->: it's a comment!
+   return true;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
