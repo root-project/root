@@ -4507,13 +4507,13 @@ void TPad::Print(const char *filenam, Option_t *option)
    char *l;
    Bool_t mustOpen  = kTRUE;
    Bool_t mustClose = kTRUE;
-   char *copen=0, *cclose=0, *copenb=0, *ccloseb=0;
+   Bool_t copen=kFALSE, cclose=kFALSE, copenb=kFALSE, ccloseb=kFALSE;
    if (!image) {
       // The parenthesis mechanism is only valid for PS and PDF files.
-      copen   = (char*)strstr(psname.Data(),"("); if (copen)   *copen   = 0;
-      cclose  = (char*)strstr(psname.Data(),")"); if (cclose)  *cclose  = 0;
-      copenb  = (char*)strstr(psname.Data(),"["); if (copenb)  *copenb  = 0;
-      ccloseb = (char*)strstr(psname.Data(),"]"); if (ccloseb) *ccloseb = 0;
+      copen   = psname.EndsWith("("); if (copen)   psname[psname.Length()-1] = 0;
+      cclose  = psname.EndsWith(")"); if (cclose)  psname[psname.Length()-1] = 0;
+      copenb  = psname.EndsWith("["); if (copenb)  psname[psname.Length()-1] = 0;
+      ccloseb = psname.EndsWith("]"); if (ccloseb) psname[psname.Length()-1] = 0;
    }
    gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
    if (gVirtualPS) {mustOpen = kFALSE; mustClose = kFALSE;}
