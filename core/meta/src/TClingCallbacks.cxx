@@ -421,7 +421,7 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
    //if (!T.size())
    //   return;
    if (fFirstRun && T.size())
-      Initialize((*(T.getFirstDecl().begin()))->getASTContext());
+      Initialize(T.getASTContext());
 
    TCling__UpdateListsOnCommitted(T);
 }
