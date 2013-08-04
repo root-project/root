@@ -233,17 +233,15 @@ template <typename T> struct IsPointer { enum { kVal = 0 }; };
 
 namespace std {}
 using namespace std;
-
-//#include <fstream>
-//#include <strstream>
+namespace genreflex {
+  bool verbose = false;
+  }
 
 #include "TClassEdit.h"
 using namespace TClassEdit;
 #include "TMetaUtils.h"
-using namespace ROOT;
 
 #include "RClStl.h"
-//#include "RConversionRuleParser.h"
 #include "XMLReader.h"
 #include "LinkdefReader.h"
 #include "SelectionRules.h"
@@ -2248,6 +2246,8 @@ void replaceAll(std::string& str, const std::string& from, const std::string& to
 //______________________________________________________________________________
 void extractFileName(const std::string& path, std::string& filename)
 {
+   // Extract the filename from a fullpath finding the last \ or /
+   // according to the content in gPathSeparator
    const size_t pos = path.find_last_of(gPathSeparator);
    if(std::string::npos != pos){
       filename.assign(path.begin() + pos + 1, path.end());
@@ -2307,7 +2307,7 @@ void manipForRootmap(std::string& name)
       replaceAll(name,">>",">->");
    }
    replaceAll(name,"operator>->","operator>>");
-   
+
 }
 
 //______________________________________________________________________________
@@ -2315,6 +2315,14 @@ void createRootMapFile(const std::string& rootmapFileName,
                        const std::string& rootmapLibName,
                        RScanner& scan)
 {
+
+   if (genreflex::verbose){
+      std::cout << "*** genreflex: rootmapfile = "
+                << rootmapFileName
+                << " -- rootmaplib = "
+                << rootmapLibName << std::endl;
+      }
+
    // Create the rootmap file from the selected classes and namespaces
    std::ofstream rootmapFile(rootmapFileName.c_str());
 
@@ -3208,8 +3216,6 @@ int RootCling(int argc,
 
 namespace genreflex{
 
-bool verbose = false;
-
 //______________________________________________________________________________
 bool endsWith(const std::string& theString, const std::string& theSubstring)
 {
@@ -3486,10 +3492,10 @@ int invokeRootCling(const std::string& verbosity,
       newRootmapLibName = "lib";
       newRootmapLibName+=cleanHeaderName;
       changeExtension(newRootmapLibName,".so");
-      
+
 
    }
-   
+
    char** argv =  & (argvVector[0]);
    int rootclingReturnCode = RootCling(argc,
                                        argv,
@@ -3742,13 +3748,13 @@ int GenReflex(int argc, char **argv)
         "" , "rootmap-lib" ,
         option::FullArg::Required,
         rootmapLibUsage},
-        
+
       {PCMFILENAME,
         STRING ,
         "m" , "" ,
         option::FullArg::Required,
         "-m \tPcm file loaded before any header (option can be repeated)\n"},
-        
+
       {DEEP,
         NOTYPE ,
         "" , "deep",
@@ -3778,19 +3784,19 @@ int GenReflex(int argc, char **argv)
         STRING ,
         "D" , "" ,
         option::FullArg::Required,
-        ""}, 
+        ""},
 
       {PREPROCUNDEFINE,
         STRING ,
         "U" , "" ,
         option::FullArg::Required,
-        ""}, 
-        
+        ""},
+
       {INCLUDE,
         STRING ,
         "I" , "" ,
         option::FullArg::Required,
-        ""}, 
+        ""},
 
       // Options that rise warnings
       {CAPABILITIESFILENAME,
@@ -3810,7 +3816,7 @@ int GenReflex(int argc, char **argv)
         "" , "no_templatetypedefs" ,
         option::FullArg::Required,
         ""},
-        
+
         {0,0,0,0,0,0}
       };
 
@@ -3826,7 +3832,9 @@ int GenReflex(int argc, char **argv)
    option::Stats  stats(genreflexUsageDescriptor,  newArgc, newArgv);
    std::vector<option::Option> options(stats.options_max);// non POD var size arrays are not C++!
    std::vector<option::Option> buffer(stats.buffer_max);
-   option::Parser parse(genreflexUsageDescriptor, newArgc, newArgv, &options[0], &buffer[0]);
+   // The 4 is the minimum size of the abbreviation lenght.
+   // For example, --selction_file can be abbreviated with --sele at least.
+   option::Parser parse(genreflexUsageDescriptor, newArgc, newArgv, &options[0], &buffer[0], 4);
 
    if (parse.error()){
       ROOT::TMetaUtils::Error(0, "*** genreflex: Argument parsing error!\n");
@@ -3849,14 +3857,13 @@ int GenReflex(int argc, char **argv)
    RiseWarningIfPresent(options,CAPABILITIESFILENAME,"Capabilities files");
    RiseWarningIfPresent(options,NOMEMBERTYPEDEFS,"Exclusion of member typedefs");
    RiseWarningIfPresent(options,NOTEMPLATETYPEDEFS,"Exclusion of template typedefs");
-         
+
    // The verbosity: debug wins over quiet
-   std::string verbosityOption("-v");
+   std::string verbosityOption("-v4"); // Changed for the testing phase. It should be -v
    if (options[QUIET]) verbosityOption="-v0";
-   if (options[DEBUG]) {
-      verbosityOption="-v4";
-      genreflex::verbose=true;
-   }
+   if (options[DEBUG]) verbosityOption="-v4";
+
+   genreflex::verbose=verbosityOption=="-v4";
 
    // The selection file
    std::string selectionFileName;
@@ -3875,7 +3882,7 @@ int GenReflex(int argc, char **argv)
    // FIXME: treatment of directories
    std::string rootmapFileName(options[ROOTMAP].arg ? options[ROOTMAP].arg : "");
    std::string rootmapLibName(options[ROOTMAPLIB].arg ? options[ROOTMAPLIB].arg : "");
-   
+
    // The target lib name
 
    std::string targetLibName;
@@ -3890,15 +3897,17 @@ int GenReflex(int argc, char **argv)
       rootmapLibName = options[TARGETLIB].arg;
    }
 
+   // If the rootmaplib is not set, set one 
+
    // Add the .so extension to the rootmap lib if not there
    if (!rootmapLibName.empty() && !endsWith(rootmapLibName,".so")){
       rootmapLibName+=".so";
    }
-   
+
    // The list of pcms to be preloaded
    std::vector<std::string> pcmsNames;
    extractMultipleOptions(options,PCMFILENAME, pcmsNames);
-   
+
    // Preprocessor defines
    std::vector<std::string> preprocDefines;
    extractMultipleOptions(options,PREPROCDEFINE, preprocDefines);
@@ -3906,11 +3915,11 @@ int GenReflex(int argc, char **argv)
    // Preprocessor undefines
    std::vector<std::string> preprocUndefines;
    extractMultipleOptions(options,PREPROCUNDEFINE, preprocUndefines);
-   
+
    // Includes
    std::vector<std::string> includes;
    extractMultipleOptions(options,INCLUDE, includes);
-   
+
    // The outputfilename(s)
    // There are two cases:
    // 1) The outputfilename is specified
@@ -3924,7 +3933,7 @@ int GenReflex(int argc, char **argv)
 
    // Now check if the --deep option was selected
    bool isDeep = options[DEEP];
-   
+
    // If not empty and not a directory (therefore it's a file)
    // call rootcling directly. The number of headers files is irrelevant.
    if (!ofileName.empty() && !isExistingDir(ofileName)){
@@ -3948,10 +3957,10 @@ int GenReflex(int argc, char **argv)
                                         pcmsNames,
                                         includes,
                                         preprocDefines,
-                                        preprocUndefines,                                        
+                                        preprocUndefines,
                                         rootmapFileName,
                                         rootmapLibName,
-                                        isDeep,                                        
+                                        isDeep,
                                         headersNames,
                                         ofileName);
    }
