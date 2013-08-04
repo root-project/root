@@ -107,6 +107,8 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
    clang::DeclContext *dc =
       llvm::cast<clang::DeclContext>(const_cast<clang::Decl*>(ci->GetDecl()));
    dc->collectAllContexts(fContexts);
+   // Could trigger deserialization of decls.
+   cling::Interpreter::PushTransactionRAII RAII(interp);
    fIter = dc->decls_begin();
    InternalNext();
    fFirstTime = true;
@@ -257,6 +259,8 @@ int TClingMethodInfo::InternalNext()
             return 0;
          }
          clang::DeclContext *dc = fContexts[fContextIdx];
+         // Could trigger deserialization of decls.
+         cling::Interpreter::PushTransactionRAII RAII(fInterp);
          fIter = dc->decls_begin();
          if (*fIter) {
             // Good, a non-empty context.

@@ -70,6 +70,8 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
+   // Could trigger deserialization of decls.
+   cling::Interpreter::PushTransactionRAII RAII(interp);
    fIter = TU->decls_begin();
    InternalNext();
    fFirstTime = true;

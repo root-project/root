@@ -42,8 +42,10 @@ extern "C" {
    }
    namespace cling {
       class Transaction;
+      class Interpreter;
    }
-   void TCling__UpdateListsOnCommitted(const cling::Transaction&);
+   void TCling__UpdateListsOnCommitted(const cling::Transaction&, 
+                                       cling::Interpreter*);
    void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    const clang::Decl* TCling__GetObjectDecl(TObject *obj);

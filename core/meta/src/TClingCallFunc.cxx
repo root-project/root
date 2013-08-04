@@ -333,6 +333,9 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
    IdentifierInfo& II = C.Idents.get(FunctionName);
    SourceLocation Loc;
 
+   // Could trigger deserialization of decls.
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
    // Copy-pasted and adapted from cling's DeclExtractor.cpp
    FunctionDecl* TrampolineFD 
       = dyn_cast_or_null<FunctionDecl>(S.ImplicitlyDefineFunction(Loc, II, S.TUScope));
@@ -525,7 +528,7 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    CO.Debug = 0;
    CO.CodeGeneration = 1;
 
-   cling::Transaction T(CO);
+   cling::Transaction T(CO, FD->getASTContext());
 
    T.append(const_cast<clang::FunctionDecl*>(FD));
    T.setState(cling::Transaction::kCompleted);

@@ -56,6 +56,8 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
    }
    if (fClassInfo->IsValid()) {
       const Decl *D = fClassInfo->GetDecl();
+      // Could trigger deserialization of decls.
+      cling::Interpreter::PushTransactionRAII RAII(interp);
       fIter = llvm::cast<clang::DeclContext>(D)->decls_begin();
       const TagDecl *TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(llvm::dyn_cast<TagDecl>(D));
       if (TD)

@@ -341,7 +341,8 @@ void TCling__UpdateListsOnDeclDeserialized(const clang::Decl* D) {
 }
 
 extern "C"
-void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
+void TCling__UpdateListsOnCommitted(const cling::Transaction &T, 
+                                    cling::Interpreter* interp) {
 
    std::set<TClass*> modifiedTClasses; // TClasses that require update after this transaction
 
@@ -360,6 +361,7 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
          // TInterpreterLookupCollection, one that reimplements
          // TCollection::FindObject(name) and performs a lookup
          // if not found in its T(Hash)List.
+         cling::Interpreter::PushTransactionRAII RAII(interp);
          for (clang::DeclContext::decl_iterator TUI = TU->decls_begin(),
                  TUE = TU->decls_end(); TUI != TUE; ++TUI)
             ((TCling*)gCling)->HandleNewDecl(*TUI, (*TUI)->isFromASTFile(),modifiedTClasses);
@@ -401,6 +403,8 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T) {
       if (!gROOT->GetListOfClasses()->FindObject(*I)) {
          continue;
       }
+      // Could trigger deserialization of decls.
+      cling::Interpreter::PushTransactionRAII RAII(interp);
       ((TCling*)gCling)->UpdateListOfMethods(*I);
       ((TCling*)gCling)->UpdateListOfDataMembers(*I);
    }

@@ -31,7 +31,7 @@ class TObject;
 // Functions used to forward calls from code compiled with no-rtti to code 
 // compiled with rtti.
 extern "C" {
-   void TCling__UpdateListsOnCommitted(const cling::Transaction&);
+   void TCling__UpdateListsOnCommitted(const cling::Transaction&, Interpreter*);
    void TCling__UpdateListsOnUnloaded(const cling::Transaction&); 
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    Decl* TCling__GetObjectDecl(TObject *obj);
@@ -252,7 +252,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          CO.Debug = 0;
          CO.CodeGeneration = 1;
 
-         cling::Transaction T(CO);
+         cling::Transaction T(CO, VD->getASTContext());
          T.append(VD);
          T.setState(cling::Transaction::kCompleted);
 
@@ -401,13 +401,13 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    return false;
 }
 
-void TClingCallbacks::Initialize(ASTContext& Ctx) {
+void TClingCallbacks::Initialize(const ASTContext& Ctx) {
    // Replay existing decls from the AST.
    if (fFirstRun) {
       // Before setting up the callbacks register what cling have seen during init.
-      cling::Transaction TPrev((cling::CompilationOptions()));
+      cling::Transaction TPrev((cling::CompilationOptions(), Ctx));
       TPrev.append(Ctx.getTranslationUnitDecl());
-      TCling__UpdateListsOnCommitted(TPrev);
+      TCling__UpdateListsOnCommitted(TPrev, m_Interpreter);
 
       fFirstRun = false;
    }
@@ -423,7 +423,7 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
    if (fFirstRun && T.size())
       Initialize(T.getASTContext());
 
-   TCling__UpdateListsOnCommitted(T);
+   TCling__UpdateListsOnCommitted(T, m_Interpreter);
 }
 
 // The callback is used to update the list of globals in ROOT.
