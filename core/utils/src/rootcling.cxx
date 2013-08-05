@@ -2257,6 +2257,19 @@ void extractFileName(const std::string& path, std::string& filename)
 }
 
 //______________________________________________________________________________
+void extractFilePath(const std::string& path, std::string& dirname)
+{
+   // Extract the path from a fullpath finding the last \ or /
+   // according to the content in gPathSeparator
+   const size_t pos = path.find_last_of(gPathSeparator);
+   if(std::string::npos != pos){
+      dirname.assign(path.begin(), path.begin() + pos + 1);
+   } else {
+      dirname.assign("");
+   }
+}
+
+//______________________________________________________________________________
 void manipForRootmap(std::string& name)
 {
    // A set of rules are applied in order to transform the name for the rootmap
@@ -3492,14 +3505,16 @@ int invokeRootCling(const std::string& verbosity,
       newRootmapLibName = "lib";
       newRootmapLibName+=cleanHeaderName;
       changeExtension(newRootmapLibName,".so");
-
-
    }
 
+   // Prepend to the rootmap the directory of the directory of the header
+   std::string headerLocation("");
+   extractFilePath(ofilename,headerLocation); 
+   
    char** argv =  & (argvVector[0]);
    int rootclingReturnCode = RootCling(argc,
                                        argv,
-                                       rootmapFileName,
+                                       headerLocation+rootmapFileName,
                                        newRootmapLibName,
                                        isDeep);
 
@@ -3780,24 +3795,24 @@ int GenReflex(int argc, char **argv)
         "--help   \tPrint usage and exit.\n"},
 
       // Left intentionally empty not to be shown in the help, like in the first genreflex
-      {PREPROCDEFINE,
-        STRING ,
-        "D" , "" ,
-        option::FullArg::Required,
-        ""},
-
-      {PREPROCUNDEFINE,
-        STRING ,
-        "U" , "" ,
-        option::FullArg::Required,
-        ""},
-
       {INCLUDE,
         STRING ,
         "I" , "" ,
         option::FullArg::Required,
         ""},
 
+      {PREPROCDEFINE,
+        STRING ,
+        "D" , "" ,
+        option::FullArg::Required,
+        ""},        
+        
+      {PREPROCUNDEFINE,
+        STRING ,
+        "U" , "" ,
+        option::FullArg::Required,
+        ""},
+        
       // Options that rise warnings
       {CAPABILITIESFILENAME,
         STRING ,
@@ -3882,9 +3897,8 @@ int GenReflex(int argc, char **argv)
    // FIXME: treatment of directories
    std::string rootmapFileName(options[ROOTMAP].arg ? options[ROOTMAP].arg : "");
    std::string rootmapLibName(options[ROOTMAPLIB].arg ? options[ROOTMAPLIB].arg : "");
-
+   
    // The target lib name
-
    std::string targetLibName;
    if (options[TARGETLIB]){
       targetLibName = options[TARGETLIB].arg;
