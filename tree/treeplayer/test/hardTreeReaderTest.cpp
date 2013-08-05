@@ -488,9 +488,9 @@ void readBClonesArrayValue(const char* branchName = "A99.", Bool_t printOut = tr
 	Bool_t read = false;
 	for (int i = 1; myTreeReader.SetNextEntry(); ++i){
 		read = true;
-		if (printOut) printf("BClonesArray dummies(%i):", myBClonesArray->GetSize());
+		if (printOut) printf("BClonesArray dummies(%i):", myBClonesArray->GetEntries());
 
-		for (int j = 0; j < LIST_ENTRIES && j < myBClonesArray->GetSize(); ++j){
+		for (int j = 0; j < LIST_ENTRIES && j < myBClonesArray->GetEntries(); ++j){
 			if (testValues && ((B*)myBClonesArray->At(j))->dummy != i * j * MULTIPLIER_B_CLONES_ARRAY) success = false;
 			if (printOut) printf(" %i", ((B*)myBClonesArray->At(j))->dummy);
 		}
