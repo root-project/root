@@ -110,6 +110,7 @@ private: // Data Members
    typedef std::map<const char* /*hdr*/, const char* /*mod*/, CharPtrCmp_t>
       ModuleForHeader_t;
    ModuleForHeader_t fModuleForHeader; // Which module a header is in. Assumes string storage in dictionary.
+   std::set<TClass*> fModTClasses;
 
 public: // Public Interface
    virtual ~TCling();
@@ -384,6 +385,8 @@ public: // Public Interface
 
    void AddDeserializedDecl(const void* D) { fDeserializedDecls.push_back(D); }
    std::vector<const void*>& GetDeserializedDecls() { return fDeserializedDecls; }
+   std::set<TClass*>& GetModTClasses() { return fModTClasses; }
+
    void HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*>& modifiedClasses);
 
 private: // Private Utility Functions

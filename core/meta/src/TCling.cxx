@@ -87,6 +87,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/PathV2.h"
 
+#include <algorithm>
 #include <iostream>
 #include <cassert>
 #include <map>
@@ -397,8 +398,27 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
       }
    }
 
-   for (std::set<TClass*>::const_iterator I = modifiedTClasses.begin(),
-           E = modifiedTClasses.end(); I != E; ++I) {
+   // When fully building the reflection info in TClass, a deserialization
+   // could be triggered, which may result in request for building the 
+   // reflection info for the same TClass. This in turn will clear the caches
+   // for the TClass in-flight and cause null ptr derefs.
+   // FIXME: This is a quick fix, solving most of the issues. The actual 
+   // question is: Shouldn't TClass provide a lock mechanism on update or lock
+   // itself until the update is done.
+   //
+   std::vector<TClass*> modifiedTClassesDiff(modifiedTClasses.size());
+   std::vector<TClass*>::iterator it;
+   it = set_difference(modifiedTClasses.begin(), modifiedTClasses.end(),
+                       ((TCling*)gCling)->GetModTClasses().begin(),
+                       ((TCling*)gCling)->GetModTClasses().end(),
+                       modifiedTClassesDiff.begin());
+   modifiedTClassesDiff.resize(it - modifiedTClassesDiff.begin());
+
+   // Lock the TClass for updates
+   ((TCling*)gCling)->GetModTClasses().insert(modifiedTClassesDiff.begin(),
+                                              modifiedTClassesDiff.end());
+   for (std::vector<TClass*>::const_iterator I = modifiedTClassesDiff.begin(),
+           E = modifiedTClassesDiff.end(); I != E; ++I) {
       // Make sure the TClass has not been deleted.
       if (!gROOT->GetListOfClasses()->FindObject(*I)) {
          continue;
@@ -407,6 +427,9 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
       cling::Interpreter::PushTransactionRAII RAII(interp);
       ((TCling*)gCling)->UpdateListOfMethods(*I);
       ((TCling*)gCling)->UpdateListOfDataMembers(*I);
+
+      // Unlock the TClass for updates
+      ((TCling*)gCling)->GetModTClasses().erase(*I);
    }
 }
 
@@ -885,7 +908,7 @@ static const char *FindLibraryName(void (*func)())
    {
       return 0;
    }
-   return moduleName;
+   return moduleName; 
 #else
    Dl_info info;
    if (dladdr((void*)func,&info)==0) {
