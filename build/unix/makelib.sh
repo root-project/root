@@ -162,7 +162,7 @@ elif [ $PLATFORM = "ios" ]; then
    if [ $linkstat -ne 0 ]; then
       exit $linkstat
    fi
-elif test "${LD#*wingcc_ld.sh}" != "$LD" then
+elif test "${LD#*wingcc_ld.sh}" != "$LD"; then
    EXPLLNKCORE=
    if [ $SONAME != "libminicern.dll" ]; then
       if [ $SONAME = "libCore.dll" ]; then
