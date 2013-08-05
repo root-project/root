@@ -350,6 +350,7 @@ TMacOSXSystem::TMacOSXSystem()
                   : fPimpl(new Private::MacOSXSystem),
                     fCocoaInitialized(false)
 {
+   InitializeCocoa();
 }
 
 //______________________________________________________________________________
