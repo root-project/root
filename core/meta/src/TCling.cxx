@@ -181,6 +181,39 @@ public:
       return true; // returning false will abort the in-depth traversal.
    }
 };
+//______________________________________________________________________________
+
+// Class extracting recursively every Enum type defined for a class.
+class EnumVisitor : public RecursiveASTVisitor<EnumVisitor> {
+private:
+   llvm::SmallVector<EnumDecl*,128> &fClassEnums;
+public:
+   EnumVisitor(llvm::SmallVector<EnumDecl*,128> &enums) : fClassEnums(enums)
+   {}
+
+   bool TraverseStmt(Stmt*) {
+      // Don't descend into function bodies.
+      return true;
+   }
+
+   bool shouldVisitTemplateInstantiations() const { return true; }
+
+   bool TraverseClassTemplateDecl(ClassTemplateDecl*) {
+      // Don't descend into templates (but only instances thereof).
+      return true; // returning false will abort the in-depth traversal.
+   }
+
+   bool TraverseClassTemplatePartialSpecializationDecl(ClassTemplatePartialSpecializationDecl*) {
+      // Don't descend into templates partial specialization (but only instances thereof).
+      return true; // returning false will abort the in-depth traversal.
+   }
+
+   bool VisitEnumDecl(EnumDecl *TEnumD) {
+      if (!TEnumD->getDeclContext()->isDependentContext())
+         fClassEnums.push_back(TEnumD);
+      return true; // returning false will abort the in-depth traversal.
+   }
+};
 
 //______________________________________________________________________________
 static void TCling__UpdateClassInfo(const NamedDecl* TD)
@@ -217,52 +250,67 @@ static void TCling__UpdateClassInfo(const NamedDecl* TD)
    }
 }
 
-void TCling::HandleEnumDecl(const clang::EnumDecl* ED, bool isGlobal)
+void TCling::HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl) const
 {
+   // Handle new enum declaration for either global and nested enums.
 
    // Get name of the enum type.
    std::string buf;
-   PrintingPolicy Policy(ED->getASTContext().getPrintingPolicy());
-   llvm::raw_string_ostream stream(buf);
-   ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+   if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(D)) {
+      PrintingPolicy Policy(D->getASTContext().getPrintingPolicy());
+      llvm::raw_string_ostream stream(buf);
+      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
+   }
    const char* name = buf.c_str();
 
    // Create the enum type.
-   TEnum* enumType = new TEnum(name, false /*!global*/, &ED);
+   TEnum* enumType = new TEnum(name, false /*!global*/, &D);
+   // Check TEnum is created.
    if (!enumType) {
       Error ("HandleEnumDecl", "The enum type %s was not created.", name);
    } else {
-      gROOT->GetListOfEnums()->Add(enumType);
+      // Add global enums to the list of globals TEnums.
+      if (isGlobal) {
+         gROOT->GetListOfEnums()->Add(enumType);
+      } else {
+         cl->fEnums->Add(enumType);
+      }
    }
 
    // Add the constants to the enum type.
+   const EnumDecl* ED = llvm::dyn_cast<EnumDecl>(D);
    for (EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
                 EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
-
       // Get name of the enum type.
-      buf.clear();
-      PrintingPolicy Policy(EDI->getASTContext().getPrintingPolicy());
-      llvm::raw_string_ostream stream(buf);
-      EDI->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-      const char* constantName = buf.c_str();
+      std::string constbuf;
+      if (const NamedDecl* END = llvm::dyn_cast<NamedDecl>(*EDI)) {
+         PrintingPolicy Policy((*EDI)->getASTContext().getPrintingPolicy());
+         llvm::raw_string_ostream stream(constbuf);
+         (END)->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
+      }
+      const char* constantName = constbuf.c_str();
 
       // Get value of the constant.
       Long64_t value;
-      const llvm::APSInt valAPSInt = EDI->getInitVal();
+      const llvm::APSInt valAPSInt = (*EDI)->getInitVal();
       if (valAPSInt.isSigned()) {
          value = valAPSInt.getSExtValue();
       } else {
          value = valAPSInt.getZExtValue();
       }
 
+      // Create the TEnumConstant.
       TEnumConstant* enumConstant = new TEnumConstant(new TClingDataMemberInfo(fInterpreter, *EDI)
                                     , constantName, value, enumType);
+      // Check that the constant was created.
       if (!enumConstant) {
          Error ("HandleEnumDecl", "The enum constant %s was not created.", constantName);
       } else {
+         // Add the global constants to the list of Globals.
          if (isGlobal) {
             gROOT->GetListOfGlobals()->Add(enumConstant);
          }
+
       }
    }
 }
@@ -272,17 +320,10 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
    // Record the modified class, struct and namespaces in 'modifiedTClasses'.
 
    const clang::Decl* D = static_cast<const clang::Decl*>(DV);
+
    if (!D->isCanonicalDecl()) return;
-   if (isa<clang::FunctionDecl>(D->getDeclContext())) return;
-
-   // We handle nested enums here, globals are handled later.
-   if (!isa<clang::TranslationUnitDecl>(D->getDeclContext())) {
-      if (const clang::EnumDecl* ED = dyn_cast<clang::EnumDecl>(D)) {
-         HandleEnumDecl(ED, false /* not global*/);
-      }
-   }
-
-   if (isa<clang::TagDecl>(D->getDeclContext()))
+   if (isa<clang::FunctionDecl>(D->getDeclContext())
+       || isa<clang::TagDecl>(D->getDeclContext()))
       return;
 
    // Don't list templates.
@@ -379,9 +420,8 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       if (gROOT->GetListOfGlobals()->FindObject(ND->getNameAsString().c_str()))
          return;
 
-      //Put the global constants in the list.
+      // Put the global constants and global enums in the coresponding lists.
       if (const EnumDecl *ED = dyn_cast<EnumDecl>(D)) {
-
          if (!gROOT->GetListOfEnums()->FindObject(ND->getNameAsString().c_str())) {
             HandleEnumDecl(ED, true /* is global*/);
          }
@@ -439,6 +479,9 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
       const clang::Decl* WrapperFD = T.getWrapperFD();
       for (cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
           I != E; ++I) {
+         if (I->m_Call != cling::Transaction::kCCIHandleTopLevelDecl)
+            continue;
+
          for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
                  DE = I->m_DGR.end(); DI != DE; ++DI) {
             if (*DI == WrapperFD)
@@ -492,7 +535,7 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
       cling::Interpreter::PushTransactionRAII RAII(interp);
       ((TCling*)gCling)->UpdateListOfMethods(*I);
       ((TCling*)gCling)->UpdateListOfDataMembers(*I);
-
+      ((TCling*)gCling)->UpdateListOfEnums(*I);
       // Unlock the TClass for updates
       ((TCling*)gCling)->GetModTClasses().erase(*I);
    }
@@ -2310,6 +2353,33 @@ void TCling::CreateListOfBaseClasses(TClass* cl) const
 }
 
 //______________________________________________________________________________
+void TCling::CreateListOfEnums(TClass* cl) const
+{
+   // Create list of pointers to enums for TClass cl.
+   R__LOCKGUARD2(gClingMutex);
+   if (cl->fEnums) {
+      return;
+   }
+   cl->fEnums = new TList;
+   cl->fEnums->SetOwner();
+   const Decl * D = ((TClingClassInfo*)cl->GetClassInfo())->GetDecl();
+
+   // Recurse on the data member of the class and get the enums.
+   if (const clang::RecordDecl* RD = dyn_cast<clang::RecordDecl>(D)) {
+      llvm::SmallVector<EnumDecl*, 128> enums; cout<<RD;
+      EnumVisitor E(enums);
+      // Traverse the list of enums for this RecordDecl.
+      E.TraverseDecl(const_cast<clang::Decl*>(D));
+      for (size_t i = 0; i < enums.size(); ++i) {
+         // Add the enum to the list of enums of the corresponding class.
+         if (!gROOT->GetListOfEnums()->FindObject(enums[i]->getNameAsString().c_str())) {
+           HandleEnumDecl(enums[i], false /* not global*/, cl);
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
 void TCling::CreateListOfDataMembers(TClass* cl) const
 {
    // Create list of pointers to data members for TClass cl.
@@ -2361,6 +2431,15 @@ void TCling::UpdateListOfMethods(TClass* cl) const
    delete cl->fMethod;
    cl->fMethod = 0;
    CreateListOfMethods(cl);
+}
+
+//______________________________________________________________________________
+void TCling::UpdateListOfEnums(TClass* cl) const
+{
+   // Update the list of pointers to enums for TClass cl.
+   delete cl->fEnums;
+   cl->fEnums = 0;
+   CreateListOfEnums(cl);
 }
 
 //______________________________________________________________________________

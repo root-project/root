@@ -110,7 +110,7 @@ protected:
    TCollection     *fTypes;               //List of data types definition
    TCollection     *fGlobals;             //List of global variables
    TCollection     *fGlobalFunctions;     //List of global functions
-   TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl.
+   TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl. 
    TSeqCollection  *fFiles;               //List of files
    TSeqCollection  *fMappedFiles;         //List of memory mapped files
    TSeqCollection  *fSockets;             //List of network sockets
