@@ -417,7 +417,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    //fIdMap           = new IdMap_t;
    fStreamerInfo    = new TObjArray(100);
    fClassGenerators = new TList;
-   fEnums           = new THashTable(200, 3); // FIXME: should be 1.2 * number of ROOT enums at startup
+   fEnums           = new THashTable(200, 3); // FIXME: should be 1.2 * number of ROOT global enums at startup
 
    // initialize plugin manager early
    fPluginManager->LoadHandlersFromEnv(gEnv);

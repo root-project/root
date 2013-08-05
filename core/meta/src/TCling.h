@@ -176,10 +176,12 @@ public: // Public Interface
    Long_t  Calc(const char* line, EErrorCode* error = 0);
    void    CreateListOfBaseClasses(TClass* cl) const;
    void    CreateListOfDataMembers(TClass* cl) const;
+   void    CreateListOfEnums(TClass* cl) const;
    void    CreateListOfMethods(TClass* cl) const;
    void    CreateListOfMethodArgs(TFunction* m) const;
    void    UpdateListOfMethods(TClass* cl) const;
    void    UpdateListOfDataMembers(TClass* cl) const;
+   void    UpdateListOfEnums(TClass* cl) const;
 
    TString GetMangledName(TClass* cl, const char* method, const char* params);
    TString GetMangledNameWithPrototype(TClass* cl, const char* method, const char* proto);
@@ -385,7 +387,7 @@ public: // Public Interface
    std::set<TClass*>& GetModTClasses() { return fModTClasses; }
 
    void HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*>& modifiedClasses);
-   void HandleEnumDecl(const clang::EnumDecl* ED, bool isGlobal);
+
 
 private: // Private Utility Functions
    TCling();
@@ -401,6 +403,7 @@ private: // Private Utility Functions
 
    bool LoadPCM(TString pcmFileName, const char** headers,
                 void (*triggerFunc)()) const;
+   void HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl = 0) const;
 
    ClassDef(TCling, 0) //Interface to cling C++ interpreter
 };
