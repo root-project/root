@@ -507,6 +507,7 @@ private:
    TList          *fRecvMessages;    //Messages received during collect not yet processed
    TList          *fSlaveInfo;       //!list returned by kPROOF_GETSLAVEINFO
    Bool_t          fSendGroupView;   //if true send new group view
+   Bool_t          fCanPollWorkers;  //will be set to kFALSE to prevent recursive dyn workers check in dyn mode
    TList          *fActiveSlaves;    //list of active slaves (subset of all slaves)
    TString         fActiveSlavesSaved;// comma-separated list of active slaves (before last call to
                                       // SetParallel or Activate/DeactivateWorkers)
@@ -644,6 +645,7 @@ private:
    void     AskStatistics();
    void     AskParallel();
    Int_t    GoParallel(Int_t nodes, Bool_t accept = kFALSE, Bool_t random = kFALSE);
+   Int_t    GoMoreParallel(Int_t nWorkersToAdd);
    Int_t    SetParallelSilent(Int_t nodes, Bool_t random = kFALSE);
    void     RecvLogFile(TSocket *s, Int_t size);
    void     NotifyLogMsg(const char *msg, const char *sfx = "\n");
@@ -680,6 +682,7 @@ private:
    Int_t    HandleInputMessage(TSlave *wrk, TMessage *m, Bool_t deactonfail = kFALSE);
    void     HandleSubmerger(TMessage *mess, TSlave *sl);
    void     SetMonitor(TMonitor *mon = 0, Bool_t on = kTRUE);
+   Bool_t   PollForNewWorkers();
 
    void     ReleaseMonitor(TMonitor *mon);
 
