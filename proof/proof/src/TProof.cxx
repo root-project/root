@@ -1264,7 +1264,6 @@ Int_t TProof::AddWorkers(TList *workerList)
    Int_t ord = 0;
 
    // Loop over all new workers and start them
-   Info("AddWorkers", "We currently have %d slaves already", fSlaves->GetEntries());
    Bool_t goMoreParallel = (fSlaves->GetEntries() > 0);
 
    // a list of TSlave objects for workers that are being added
