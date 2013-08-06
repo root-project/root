@@ -100,7 +100,8 @@ public:
    //std::ifstream& openXMLInStream(const std::string& fileName);
    
    // main parsing function - should be called over an open input file stream
-   bool Parse(std::ifstream &file, SelectionRules& out); 
+   bool Parse(std::ifstream &file, SelectionRules& out);
+
 };
 
 #endif

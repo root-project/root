@@ -293,7 +293,11 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
             }
             else {
                equalfound = true;
-               lastsymbol = '=';
+               if (!value) // do not do that if we are reading a value. There can be an = in it
+                  lastsymbol = '=';
+               else
+                  attr_value += c; // in case we are in a value, we save also the =
+               
             }
          }
          else if (isspace(c)) continue;
@@ -320,6 +324,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
                      //int pos = attr_value.find_last_of("(");
                      printf("NOT IMPLEMENTED YET!\n");
                   }
+                  std::cout << "*** Attribute: " << attr_name << " " << attr_value << std::endl;
                   Attributes at(attr_name, attr_value);
                   out.push_back(at);
                   attr_name = "";
@@ -339,7 +344,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
          else if (lastsymbol == '=') { // this is the case in which the symbol is not ", space or = and the last symbol read
             // (diferent than space) is =. This is a situation which is represented by for example <class name = x"value">
             // this is an error
-            std::cout<<"Error - wrong quotes placement or lack of quotes"<<std::endl;
+            std::cout << "Error - wrong quotes placement or lack of quotes"<<std::endl;
             return false;
          }
          else if ((newattr || namefound) && !value){ // else - if name or newattr is Set, we should write in the attr_name variable
@@ -347,8 +352,10 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
             namefound = true;
             attr_name += c;
             lastsymbol = c;
+         }         
+         else if (value) {            
+            attr_value += c; // if not, we should write in the attr_value variable
          }
-         else if (value) attr_value += c; // if not, we should write in the attr_value variable
       }
       
       if (namefound && (!equalfound || !value)) { // this catches the situation <class name = "value" something >
@@ -358,7 +365,6 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
    }
    return true;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /*
