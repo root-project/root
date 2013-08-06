@@ -3951,6 +3951,13 @@ void TCling::CallFunc_SetFunc(CallFunc_t* func, ClassInfo_t* info, const char* m
 }
 
 //______________________________________________________________________________
+void TCling::CallFunc_SetFunc(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* params, bool objectIsConst, Long_t* offset) const
+{
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   TClingClassInfo* ci = (TClingClassInfo*) info;
+   f->SetFunc(ci, method, params, objectIsConst, offset);
+}
+//______________________________________________________________________________
 void TCling::CallFunc_SetFunc(CallFunc_t* func, MethodInfo_t* info) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
@@ -3967,6 +3974,14 @@ void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const ch
    f->SetFuncProto(ci, method, proto, offset);
 }
 
+//______________________________________________________________________________
+void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, bool objectIsConst, Long_t* offset) const
+{
+   // Interface to CINT function
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   TClingClassInfo* ci = (TClingClassInfo*) info;
+   f->SetFuncProto(ci, method, proto, objectIsConst, offset);
+}
 
 //______________________________________________________________________________
 //

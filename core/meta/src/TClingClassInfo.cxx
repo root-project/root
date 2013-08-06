@@ -248,6 +248,14 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       const char *proto, long *poffset, MatchMode mode /*= ConversionMatch*/,
       InheritanceMode imode /*= WithInheritance*/) const
 {
+   return GetMethod(fname,proto,false,poffset,mode,imode);
+}
+
+TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
+      const char *proto, bool objectIsConst,
+      long *poffset, MatchMode mode /*= ConversionMatch*/,
+      InheritanceMode imode /*= WithInheritance*/) const
+{
    if (poffset) {
       *poffset = 0L;
    }
@@ -264,7 +272,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       // constructor function itself.
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   const FunctionDecl *fd = lh.findFunctionProto(fDecl, fname, proto);
+   const FunctionDecl *fd = lh.findFunctionProto(fDecl, fname, proto, objectIsConst);
    if (!fd) {
       // Function not found.
       TClingMethodInfo tmi(fInterp);
@@ -284,7 +292,15 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
 }
 
 TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
-      const char *arglist, long *poffset, MatchMode /*mode = ConversionMatch*/,
+      const char *arglist, long *poffset, MatchMode mode /* = ConversionMatch*/,
+      InheritanceMode imode /* = WithInheritance*/) const
+{
+   return GetMethodWithArgs(fname,arglist,false,poffset,mode,imode);
+}
+
+TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
+      const char *arglist, bool objectIsConst,
+      long *poffset, MatchMode /*mode = ConversionMatch*/,
       InheritanceMode /* imode = WithInheritance*/) const
 {
    if (poffset) {
@@ -307,7 +323,7 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       // constructor function itself.
    }
    const cling::LookupHelper &lh = fInterp->getLookupHelper();
-   const FunctionDecl *fd = lh.findFunctionArgs(fDecl, fname, arglist);
+   const FunctionDecl *fd = lh.findFunctionArgs(fDecl, fname, arglist, objectIsConst);
    if (!fd) {
       // Function not found.
       TClingMethodInfo tmi(fInterp);

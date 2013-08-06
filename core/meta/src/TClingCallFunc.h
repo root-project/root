@@ -168,8 +168,10 @@ public:
    void                SetArgArray(long *argArr, int narg);
    void                SetArgs(const char *args);
    void                SetFunc(const TClingClassInfo *info, const char *method, const char *arglist, long *poffset);
+   void                SetFunc(const TClingClassInfo *info, const char *method, const char *arglist, bool objectIsConst, long *poffset);
    void                SetFunc(const TClingMethodInfo *info);
    void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, long *poffset);
+   void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, bool objectIsConst, long *poffset);
    void                Init(const clang::FunctionDecl *);
    void                Invoke(cling::StoredValueRef* result = 0) const;
 };
