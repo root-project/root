@@ -302,6 +302,7 @@ protected:
    ErrorHandlerFunc_t  fErrorHandler;  // Store previous handler when redirecting output
    Bool_t              fMergeTH1OneByOne;  // If kTRUE forces TH1 merge one-by-one [kTRUE]
    TH1                *fProcPackets;    //!Histogram with packets being processed (owned by TPerfStats)
+   TMessage           *fProcessMessage;  // Process message to replay when adding new workers dynamically
 
    virtual Bool_t  HandleTimer(TTimer *timer);
    Int_t           InitPacketizer(TDSet *dset, Long64_t nentries,
@@ -321,7 +322,8 @@ public:
    TProofPlayerRemote(TProof *proof = 0) : fProof(proof), fOutputLists(0), fFeedback(0),
                                            fFeedbackLists(0), fPacketizer(0),
                                            fMergeFiles(kFALSE), fDSet(0), fErrorHandler(0),
-                                           fMergeTH1OneByOne(kTRUE), fProcPackets(0)
+                                           fMergeTH1OneByOne(kTRUE), fProcPackets(0),
+                                           fProcessMessage(0)
                                            { fProgressStatus = new TProofProgressStatus(); }
    virtual ~TProofPlayerRemote();   // Owns the fOutput list
    virtual Long64_t Process(TDSet *set, const char *selector,
