@@ -2329,12 +2329,12 @@ void createRootMapFile(const std::string& rootmapFileName,
                        RScanner& scan)
 {
 
-   if (genreflex::verbose){
-      std::cout << "*** genreflex: rootmapfile = "
-                << rootmapFileName
-                << " -- rootmaplib = "
-                << rootmapLibName << std::endl;
-      }
+//    if (genreflex::verbose){
+//       std::cout << "*** genreflex: rootmapfile = "
+//                 << rootmapFileName
+//                 << " -- rootmaplib = "
+//                 << rootmapLibName << std::endl;
+//       }
 
    // Create the rootmap file from the selected classes and namespaces
    std::ofstream rootmapFile(rootmapFileName.c_str());
