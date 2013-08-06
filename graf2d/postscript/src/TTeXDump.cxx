@@ -726,8 +726,6 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    ftsize *= 2.22097;
 
    TString t(chars);
-   t.ReplaceAll("{","\\{");
-   t.ReplaceAll("}","\\}");
    t.ReplaceAll("&","\\&");
    t.ReplaceAll("<","$<$");
    t.ReplaceAll(">","$>$");
