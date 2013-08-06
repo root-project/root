@@ -50,6 +50,7 @@ public:
    void    CellArrayEnd();
    void    Close(Option_t *opt="");
    Int_t   CMtoTeX(Double_t u) {return Int_t(0.5 + 72*u/2.54);}
+   void    DefineMarkers();
    void    DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    void    DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                      Int_t mode, Int_t border, Int_t dark, Int_t light);
@@ -71,6 +72,7 @@ public:
    void    SetLineStyle(Style_t linestyle = 1);
    void    SetLineWidth(Width_t linewidth = 1);
    void    SetLineScale(Float_t =3) { }
+   void    SetMarkerSize( Size_t msize=1);
    void    SetMarkerColor( Color_t cindex=1);
    void    SetTextColor( Color_t cindex=1);
    void    Text(Double_t x, Double_t y, const char *string);
