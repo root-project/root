@@ -1353,36 +1353,19 @@ Int_t TProof::AddWorkers(TList *workerList)
       if (s.IsDigit()) nwrk = s.Atoi();
    }
 
-   if (fDynamicStartup && goMoreParallel && fPlayer) {
+   if (fDynamicStartup && goMoreParallel) {
 
       PDB(kGlobal, 3)
          Info("AddWorkers", "Will invoke GoMoreParallel()");
       Int_t nw = GoMoreParallel(nwrk);
-      PDB(kGlobal, 2)
+      PDB(kGlobal, 3)
          Info("AddWorkers", "GoMoreParallel()=%d", nw);
 
-      PDB(kGlobal, 3)
-         Info("AddWorkers", "Will invoke SaveWorkerInfo()");
-      SaveWorkerInfo();
-
-      PDB(kGlobal, 3)
-         Info("AddWorkers", "Will invoke SendParallel()");
-      gProofServ->SendParallel(kTRUE);
-
-      PDB(kGlobal, 3)
-         Info("AddWorkers", "Will send the PROCESS message to selected workers only");
-      fPlayer->Process(0x0, (const char *)0x0, (Option_t *)addedWorkers, 0, 0);
-
-      // TODO
-      Warning("AddWorkers", "+++ I am exiting for the moment +++");
-
-      // exit for the moment
-      delete addedWorkers;
-
-      return 0;
    }
    else {
       // Not in Dynamic Workers mode
+      PDB(kGlobal, 3)
+         Info("AddWorkers", "Will invoke GoParallel()");
       GoParallel(nwrk, kFALSE, 0);
    }
 
@@ -1393,8 +1376,19 @@ Int_t TProof::AddWorkers(TList *workerList)
       while ((pck = (TPair *) nxp())) {
          // Upload and Enable methods are intelligent and avoid
          // re-uploading or re-enabling of a package to a node that has it.
-         if (UploadPackage(pck->GetName()) >= 0)
-            EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE);
+         if (fDynamicStartup && goMoreParallel) {
+            // Upload only on added workers
+            PDB(kGlobal, 3)
+               Info("AddWorkers", "Will invoke UploadPackage() and EnablePackage() on added workers");
+            if (UploadPackage(pck->GetName(), kUntar, addedWorkers) >= 0)
+               EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE, addedWorkers);
+         }
+         else {
+            PDB(kGlobal, 3)
+               Info("AddWorkers", "Will invoke UploadPackage() and EnablePackage() on all workers");
+            if (UploadPackage(pck->GetName()) >= 0)
+               EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE);
+         }
       }
    }
 
@@ -1402,6 +1396,8 @@ Int_t TProof::AddWorkers(TList *workerList)
       TIter nxp(fLoadedMacros);
       TObjString *os = 0;
       while ((os = (TObjString *) nxp())) {
+         PDB(kGlobal, 3)
+            Info("AddWorkers", "Will invoke Load() on selected workers");
          Printf("Loading a macro : %s", os->GetName());
          Load(os->GetName(), kTRUE, kTRUE, addedWorkers);
       }
@@ -1410,21 +1406,40 @@ Int_t TProof::AddWorkers(TList *workerList)
    TString dyn = gSystem->GetDynamicPath();
    dyn.ReplaceAll(":", " ");
    dyn.ReplaceAll("\"", " ");
+   PDB(kGlobal, 3)
+      Info("AddWorkers", "Will invoke AddDynamicPath() on selected workers");
    AddDynamicPath(dyn, kFALSE, addedWorkers);
+
    TString inc = gSystem->GetIncludePath();
    inc.ReplaceAll("-I", " ");
    inc.ReplaceAll("\"", " ");
+   PDB(kGlobal, 3)
+      Info("AddWorkers", "Will invoke AddIncludePath() on selected workers");
    AddIncludePath(inc, kFALSE, addedWorkers);
 
-   // Cleanup
-   delete addedWorkers;
-
    // Update list of current workers
+   PDB(kGlobal, 3)
+      Info("AddWorkers", "Will invoke SaveWorkerInfo()");
    SaveWorkerInfo();
 
    // Inform the client that the number of workers has changed
-   if (fDynamicStartup && gProofServ)
+   if (fDynamicStartup && gProofServ) {
+      PDB(kGlobal, 3)
+         Info("AddWorkers", "Will invoke SendParallel()");
       gProofServ->SendParallel(kTRUE);
+
+      if (goMoreParallel && fPlayer) {
+         // In case we are adding workers dynamically to an existing process, we
+         // should invoke a special player's Process() to set only added workers
+         // to the proper state
+         PDB(kGlobal, 3)
+            Info("AddWorkers", "Will send the PROCESS message to selected workers");
+         fPlayer->Process(0x0, (const char *)0x0, (Option_t *)addedWorkers, 0, 0);
+      }
+   }
+
+   // Cleanup
+   delete addedWorkers;
 
    return 0;
 }
@@ -7995,7 +8010,8 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path, I
 }
 
 //______________________________________________________________________________
-Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient, TList *loadopts)
+Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient,
+   TList *loadopts, TList *workers)
 {
    // Load specified package. Executes the PROOF-INF/SETUP.C script
    // on all active nodes. If notOnClient = true, don't load package
@@ -8025,10 +8041,20 @@ Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient, TList *loadop
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kLoadPackage) << pac;
    if (loadopts) mess << loadopts;
-   Broadcast(mess);
+
    // On the master, workers that fail are deactivated
    Bool_t deactivateOnFailure = (IsMaster()) ? kTRUE : kFALSE;
-   Collect(kActive, -1, -1, deactivateOnFailure);
+
+   if (workers) {
+      PDB(kPackage, 3)
+         Info("LoadPackage", "Sending load message to selected workers only");
+      Broadcast(mess, workers);
+      Collect(workers, -1, -1, deactivateOnFailure);
+   }
+   else {
+      Broadcast(mess);
+      Collect(kActive, -1, -1, deactivateOnFailure);  
+   }
 
    return fStatus;
 }
@@ -8301,21 +8327,23 @@ Int_t TProof::UnloadPackages()
 }
 
 //______________________________________________________________________________
-Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient)
+Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient,
+   TList *workers)
 {
    // Enable specified package. Executes the PROOF-INF/BUILD.sh
    // script if it exists followed by the PROOF-INF/SETUP.C script.
    // In case notOnClient = true, don't enable the package on the client.
    // The default is to enable packages also on the client.
+   // If specified, enables packages only on the specified workers.
    // Returns 0 in case of success and -1 in case of error.
    // Provided for backward compatibility.
 
-   return EnablePackage(package, (TList *)0, notOnClient);
+   return EnablePackage(package, (TList *)0, notOnClient, workers);
 }
 
 //______________________________________________________________________________
 Int_t TProof::EnablePackage(const char *package, const char *loadopts,
-                            Bool_t notOnClient)
+                            Bool_t notOnClient, TList *workers)
 {
    // Enable specified package. Executes the PROOF-INF/BUILD.sh
    // script if it exists followed by the PROOF-INF/SETUP.C script.
@@ -8328,7 +8356,8 @@ Int_t TProof::EnablePackage(const char *package, const char *loadopts,
    //     off         no check; failure may occur at loading
    //     on          check ROOT version [default]
    //     svn         check ROOT version and SVN revision number.
-   // (Use ';', ' ' or '|' to separate 'chkv=<o>' from the rest.) 
+   // (Use ';', ' ' or '|' to separate 'chkv=<o>' from the rest.)
+   // If specified, enables packages only on the specified workers.
    // Returns 0 in case of success and -1 in case of error.
 
    TList *optls = 0;
@@ -8375,7 +8404,7 @@ Int_t TProof::EnablePackage(const char *package, const char *loadopts,
       }
    }
    // Run
-   Int_t rc = EnablePackage(package, optls, notOnClient);
+   Int_t rc = EnablePackage(package, optls, notOnClient, workers);
    // Clean up
    SafeDelete(optls);
    // Done
@@ -8384,7 +8413,7 @@ Int_t TProof::EnablePackage(const char *package, const char *loadopts,
 
 //______________________________________________________________________________
 Int_t TProof::EnablePackage(const char *package, TList *loadopts,
-                            Bool_t notOnClient)
+                            Bool_t notOnClient, TList *workers)
 {
    // Enable specified package. Executes the PROOF-INF/BUILD.sh
    // script if it exists followed by the PROOF-INF/SETUP.C script.
@@ -8444,7 +8473,7 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
       optls = 0;
    }
 
-   if (LoadPackage(pac, notOnClient, optls) == -1)
+   if (LoadPackage(pac, notOnClient, optls, workers) == -1)
       return -1;
 
    return 0;
@@ -8545,7 +8574,8 @@ Int_t TProof::DownloadPackage(const char *pack, const char *dstdir)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
+Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt,
+   TList *workers)
 {
    // Upload a PROOF archive (PAR file). A PAR file is a compressed
    // tar file with one special additional directory, PROOF-INF
@@ -8661,8 +8691,11 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
       mess3 << (UInt_t) opt;
    }
 
-   // loop over all selected nodes
-   TIter next(fUniqueSlaves);
+   // Loop over all slaves with unique fs image, or to a selected
+   // list of workers, if specified
+   if (!workers)
+      workers = fUniqueSlaves;
+   TIter next(workers);
    TSlave *sl = 0;
    while ((sl = (TSlave *) next())) {
       if (!sl->IsValid())

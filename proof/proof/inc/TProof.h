@@ -651,7 +651,7 @@ private:
    void     NotifyLogMsg(const char *msg, const char *sfx = "\n");
    Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll, Int_t chkveropt = 2);
    Int_t    BuildPackageOnClient(const char *package, Int_t opt = 0, TString *path = 0, Int_t chkveropt = 2);
-   Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE, TList *loadopts = 0);
+   Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE, TList *loadopts = 0, TList *workers = 0);
    Int_t    LoadPackageOnClient(const char *package, TList *loadopts = 0);
    Int_t    UnloadPackage(const char *package);
    Int_t    UnloadPackageOnClient(const char *package);
@@ -886,12 +886,12 @@ public:
    Int_t         ClearPackages();
    Int_t         ClearPackage(const char *package);
    Int_t         DownloadPackage(const char *par, const char *dstdir = 0);
-   Int_t         EnablePackage(const char *package, Bool_t notOnClient = kFALSE);
+   Int_t         EnablePackage(const char *package, Bool_t notOnClient = kFALSE, TList *workers = 0);
    Int_t         EnablePackage(const char *package, const char *loadopts,
-                               Bool_t notOnClient = kFALSE);
+                               Bool_t notOnClient = kFALSE, TList *workers = 0);
    Int_t         EnablePackage(const char *package, TList *loadopts,
-                               Bool_t notOnClient = kFALSE);
-   Int_t         UploadPackage(const char *par, EUploadPackageOpt opt = kUntar);
+                               Bool_t notOnClient = kFALSE, TList *workers = 0);
+   Int_t         UploadPackage(const char *par, EUploadPackageOpt opt = kUntar, TList *workers = 0);
    virtual Int_t Load(const char *macro, Bool_t notOnClient = kFALSE, Bool_t uniqueOnly = kTRUE,
                       TList *wrks = 0);
 
