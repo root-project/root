@@ -6924,7 +6924,8 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
       // If worker is of an invalid type, break everything: it should not happen!
       if ((sl->GetSlaveType() != TSlave::kSlave) &&
           (sl->GetSlaveType() != TSlave::kMaster)) {
-         Error("GoMoreParallel", "TSlave is neither a Master nor a Slave!");
+         Error("GoMoreParallel", "TSlave is neither a Master nor a Slave: %s:%s",
+            sl->GetName(), sl->GetOrdinal());
          R__ASSERT(0);
       }
 
@@ -6939,7 +6940,7 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
 
       // Worker is good but it is already active: skip it
       if (fActiveSlaves->FindObject(sl)) {
-         Warning("GoMoreParallel", "Worker %s:%s is already active: skipping",
+         Info("GoMoreParallel", "Worker %s:%s is already active: skipping",
             sl->GetName(), sl->GetOrdinal());
          continue;
       }
@@ -6954,6 +6955,9 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
          fInactiveSlaves->Remove(sl);
          fActiveMonitor->Add(sl->GetSocket());
          nAddedWorkers++;
+         PDB(kGlobal, 2)
+            Info("GoMoreParallel", "Worker %s:%s marked as active!",
+               sl->GetName(), sl->GetOrdinal());
       }
       else {
          // Can't add masters dynamically: this should not happen!
@@ -6964,21 +6968,21 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
    } // end loop over all slaves
 
    // Get slave status (will set the slaves fWorkDir correctly)
-   PDB(kGlobal, 2)
-      Info("GoMoreParallel", "Calling AskStatistics() -- implies a Collect()");
+   PDB(kGlobal, 3)
+      Info("GoMoreParallel", "Will invoke AskStatistics() -- implies a Collect()");
    AskStatistics();
 
    // Find active slaves with unique image
-   PDB(kGlobal, 2)
-      Info("GoMoreParallel", "Calling FindUniqueSlaves()");
+   PDB(kGlobal, 3)
+      Info("GoMoreParallel", "Will invoke FindUniqueSlaves()");
    FindUniqueSlaves();
 
    // Send new group-view to slaves
-   PDB(kGlobal, 2)
-      Info("GoMoreParallel", "Calling SendGroupView()");
+   PDB(kGlobal, 3)
+      Info("GoMoreParallel", "Will invoke SendGroupView()");
    SendGroupView();
 
-   PDB(kGlobal, 2)
+   PDB(kGlobal, 3)
       Info("GoMoreParallel", "Will invoke GetParallel()");
    Int_t nTotalWorkers = GetParallel();
 
