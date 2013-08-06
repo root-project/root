@@ -516,6 +516,7 @@ void TProof::InitMembers()
    fSlaveInfo = 0;
    fMasterServ = kFALSE;
    fSendGroupView = kFALSE;
+   fCanPollWorkers = kTRUE;
    fActiveSlaves = 0;
    fInactiveSlaves = 0;
    fUniqueSlaves = 0;
@@ -1262,7 +1263,9 @@ Int_t TProof::AddWorkers(TList *workerList)
    UInt_t nSlavesDone = 0;
    Int_t ord = 0;
 
-   // Loop over all workers and start them
+   // Loop over all new workers and start them
+   Info("AddWorkers", "We currently have %d slaves already", fSlaves->GetEntries());
+   Bool_t goMoreParallel = (fSlaves->GetEntries() > 0);
 
    // a list of TSlave objects for workers that are being added
    TList *addedWorkers = new TList();
@@ -1393,8 +1396,40 @@ Int_t TProof::AddWorkers(TList *workerList)
       TString s(n->GetTitle());
       if (s.IsDigit()) nwrk = s.Atoi();
    }
-   GoParallel(nwrk, kFALSE, 0);
-      
+
+   if (fDynamicStartup && goMoreParallel && fPlayer) {
+
+      PDB(kGlobal, 3)
+         Info("AddWorkers", "Will invoke GoMoreParallel()");
+      Int_t nw = GoMoreParallel(nwrk);
+      PDB(kGlobal, 2)
+         Info("AddWorkers", "GoMoreParallel()=%d", nw);
+
+      PDB(kGlobal, 3)
+         Info("AddWorkers", "Will invoke SaveWorkerInfo()");
+      SaveWorkerInfo();
+
+      PDB(kGlobal, 3)
+         Info("AddWorkers", "Will invoke SendParallel()");
+      gProofServ->SendParallel(kTRUE);
+
+      PDB(kGlobal, 3)
+         Info("AddWorkers", "Will send the PROCESS message to selected workers only");
+      fPlayer->Process(0x0, (const char *)0x0, (Option_t *)addedWorkers, 0, 0);
+
+      // TODO
+      Warning("AddWorkers", "+++ I am exiting for the moment +++");
+
+      // exit for the moment
+      delete addedWorkers;
+
+      return 0;
+   }
+   else {
+      // Not in Dynamic Workers mode
+      GoParallel(nwrk, kFALSE, 0);
+   }
+
    if (gProofServ && gProofServ->GetEnabledPackages() &&
        gProofServ->GetEnabledPackages()->GetSize() > 0) {
       TIter nxp(gProofServ->GetEnabledPackages());      
@@ -1406,7 +1441,6 @@ Int_t TProof::AddWorkers(TList *workerList)
             EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE);
       }
    }
-
 
    if (fLoadedMacros) {
       TIter nxp(fLoadedMacros);
@@ -1432,7 +1466,7 @@ Int_t TProof::AddWorkers(TList *workerList)
    // Update list of current workers
    SaveWorkerInfo();
 
-   // Inform the client that the number of workers is changed
+   // Inform the client that the number of workers has changed
    if (fDynamicStartup && gProofServ)
       gProofServ->SendParallel(kTRUE);
 
@@ -2602,6 +2636,13 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
    // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
    // which means wait forever).
    // If defined (>= 0) endtype is the message that stops this collection.
+   // Collect also stops its execution from time to time to check for new
+   // workers in Dynamic Startup mode.
+
+   Int_t collectId = gRandom->Integer(9999);
+
+   PDB(kCollect, 3)
+      Info("Collect", ">>>>>> Entering collect responses #%04d", collectId);
 
    // Reset the status flag and clear the messages in the list, if any
    fStatus = 0;
@@ -2669,7 +2710,17 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
          }
       }
 
+      // Preemptive poll for new workers on the master only in Dynamic Mode and only
+      // during processing (TODO: should work on Top Master only)
+      if (TestBit(TProof::kIsMaster) && !IsIdle() && fDynamicStartup && fCanPollWorkers) {
+         fCanPollWorkers = kFALSE;
+         PollForNewWorkers();
+         fCanPollWorkers = kTRUE;
+      }
+
       // Wait for a ready socket
+      PDB(kCollect, 3)
+         Info("Collect", "Will invoke Select() #%04d", collectId);
       TSocket *s = mon->Select(1000);
 
       if (s && s != (TSocket *)(-1)) {
@@ -2714,7 +2765,8 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
          sto = (Long_t) actto;
          nsto = 60;
       }
-   }
+
+   } // end loop over active monitors
 
    // If timed-out, deactivate the remaining sockets
    if (nto == 0) {
@@ -2751,7 +2803,77 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
 
    ActivateAsyncInput();
 
+   PDB(kCollect, 3)
+      Info("Collect", "<<<<<< Exiting collect responses #%04d", collectId);
+
    return cnt;
+}
+
+//______________________________________________________________________________
+Bool_t TProof::PollForNewWorkers()
+{
+   // Asks the PROOF Serv for new workers in Dynamic Startup mode and activates
+   // them. Returns the number of new workers found.
+
+   // Requests for worker updates
+   Int_t dummy = 0;
+   TList *reqWorkers = new TList();
+   reqWorkers->SetOwner(kFALSE);
+
+   R__ASSERT(gProofServ);
+   gProofServ->GetWorkers(reqWorkers, dummy, kTRUE);  // last 2 are dummy
+
+   // List of new workers only (TProofNodeInfo)
+   TList *newWorkers = new TList();
+   newWorkers->SetOwner(kTRUE);
+
+   TIter next(reqWorkers);
+   TProofNodeInfo *ni;
+   TString fullOrd;
+   while (( ni = dynamic_cast<TProofNodeInfo *>(next()) )) {
+
+      // Form the full ordinal
+      fullOrd.Form("%s.%s", gProofServ->GetOrdinal(), ni->GetOrdinal().Data());
+
+      TIter nextInner(fSlaves);
+      TSlave *sl;
+      Bool_t found = kFALSE;
+      while (( sl = dynamic_cast<TSlave *>(nextInner()) )) {
+         if ( strcmp(sl->GetOrdinal(), fullOrd.Data()) == 0 ) {
+            found = kTRUE;
+            break;
+         }
+      }
+
+      if (found) delete ni;
+      else {
+         newWorkers->Add(ni);
+         PDB(kGlobal, 1)
+            Info("PollForNewWorkers", "New worker found: %s:%s",
+               ni->GetNodeName().Data(), fullOrd.Data());
+      }
+   }
+
+   delete reqWorkers;  // not owner
+
+   Int_t nNewWorkers = newWorkers->GetEntries();
+
+   // Add the new workers
+   if (newWorkers->GetEntries() > 0) {
+      PDB(kGlobal, 1)
+         Info("PollForNewWorkers", "Requesting to add %d new worker(s)", newWorkers->GetEntries());
+      Int_t rv = AddWorkers(newWorkers);
+      // Don't delete newWorkers: AddWorkers() will do that
+      PDB(kGlobal, 1)
+         Info("PollForNewWorkers", "AddWorkers() returned %d", rv);
+   }
+   else {
+      PDB(kGlobal, 2)
+         Info("PollForNewWorkers", "No new worker found");
+      delete newWorkers;
+   }
+
+   return nNewWorkers;
 }
 
 //______________________________________________________________________________
@@ -6761,8 +6883,9 @@ Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
    // parallel slaves. Returns -1 in case of error.
 
    // If delayed startup reset settings, if required 
-   if (fDynamicStartup && nodes < 0)
+   if (fDynamicStartup && nodes < 0) {
       if (gSystem->Getenv("PROOF_NWORKERS")) gSystem->Unsetenv("PROOF_NWORKERS");
+   }
 
    Int_t n = SetParallelSilent(nodes, random);
    if (TestBit(TProof::kIsClient)) {
@@ -6779,6 +6902,100 @@ Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
       gSystem->Setenv("PROOF_NWORKERS", TString::Format("%d", nodes));
    }
    return n;
+}
+
+//______________________________________________________________________________
+Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
+{
+   // Add nWorkersToAdd workers to current list of workers. This function is
+   // works on the master only, and only when an analysis is ongoing. A message
+   // is sent back to the client when we go "more" parallel.
+   // Returns -1 on error, number of total (not added!) workers on success.
+
+   if (!IsValid() || !IsMaster() || IsIdle())
+      return -1;
+
+   TSlave *sl = 0x0;
+   TIter next( fSlaves );
+   Int_t nAddedWorkers = 0;
+
+   while (((nAddedWorkers < nWorkersToAdd) || (nWorkersToAdd == -1)) &&
+          (( sl = dynamic_cast<TSlave *>( next() ) ))) {
+
+      // If worker is of an invalid type, break everything: it should not happen!
+      if ((sl->GetSlaveType() != TSlave::kSlave) &&
+          (sl->GetSlaveType() != TSlave::kMaster)) {
+         Error("GoMoreParallel", "TSlave is neither a Master nor a Slave!");
+         R__ASSERT(0);
+      }
+
+      // Skip current worker if it is not a good candidate
+      if ((!sl->IsValid()) || (fBadSlaves->FindObject(sl)) ||
+          (strcmp("IGNORE", sl->GetImage()) == 0)) {
+         PDB(kGlobal, 2)
+            Info("GoMoreParallel", "Worker %s:%s won't be considered",
+               sl->GetName(), sl->GetOrdinal());
+         continue;
+      }
+
+      // Worker is good but it is already active: skip it
+      if (fActiveSlaves->FindObject(sl)) {
+         Warning("GoMoreParallel", "Worker %s:%s is already active: skipping",
+            sl->GetName(), sl->GetOrdinal());
+         continue;
+      }
+
+      //
+      // From here on: worker is a good candidate
+      //
+
+      if (sl->GetSlaveType() == TSlave::kSlave) {
+         sl->SetStatus(TSlave::kActive);
+         fActiveSlaves->Add(sl);
+         fInactiveSlaves->Remove(sl);
+         fActiveMonitor->Add(sl->GetSocket());
+         nAddedWorkers++;
+      }
+      else {
+         // Can't add masters dynamically: this should not happen!
+         Error("GoMoreParallel", "Dynamic addition of master is not supported");
+         R__ASSERT(0);
+      }
+
+   } // end loop over all slaves
+
+   // Get slave status (will set the slaves fWorkDir correctly)
+   PDB(kGlobal, 2)
+      Info("GoMoreParallel", "Calling AskStatistics() -- implies a Collect()");
+   AskStatistics();
+
+   // Find active slaves with unique image
+   PDB(kGlobal, 2)
+      Info("GoMoreParallel", "Calling FindUniqueSlaves()");
+   FindUniqueSlaves();
+
+   // Send new group-view to slaves
+   PDB(kGlobal, 2)
+      Info("GoMoreParallel", "Calling SendGroupView()");
+   SendGroupView();
+
+   PDB(kGlobal, 2)
+      Info("GoMoreParallel", "Will invoke GetParallel()");
+   Int_t nTotalWorkers = GetParallel();
+
+   // Notify the client that we've got more workers, and print info on
+   // Master's log as well
+   R__ASSERT(gProofServ);
+   TMessage msg(kPROOF_MESSAGE);
+   TString s;
+   s.Form("PROOF just went more parallel (%d additional worker%s, %d worker%s total)",
+      nAddedWorkers, (nAddedWorkers == 1) ? "" : "s",
+      nTotalWorkers, (nTotalWorkers == 1) ? "" : "s");
+   msg << s;
+   gProofServ->GetSocket()->Send(msg);
+   Info("GoMoreParallel", s.Data());
+
+   return nTotalWorkers;
 }
 
 //______________________________________________________________________________
