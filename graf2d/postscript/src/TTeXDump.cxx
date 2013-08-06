@@ -389,25 +389,74 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       PrintFast(1,")");
    }
 
-   PrintStr("}{\\node [c] at \\P {");
+   PrintStr("}{\\draw[mark options={color=c,fill=c},mark size=");
+   PrintStr(Form("%fpt,mark=",8.));
    switch (fMarkerStyle) {
-      case 1 :
-         PrintStr(".");
-         break;
-      case 2 :
-         PrintStr("+");
-         break;
-      case 3 :
-         PrintStr("*");
-         break;
-      case 4 :
-         PrintStr("$\\circ$");
-         break;
-      case 5 :
-         PrintStr("x");
-         break;
+   case 1 :
+      PrintStr("*");
+      PrintStr(",mark size=1pt");
+      break;
+   case 2 :
+      PrintStr("+");
+      break;
+   case 3 :
+      PrintStr("asterisk");
+      break;
+   case 4 :
+      PrintStr("o");
+      break;
+   case 5 :
+      PrintStr("x");
+      break;
+   case 20 :
+      PrintStr("*");
+      break;
+   case 21 :
+      PrintStr("square*");
+      break;
+   case 22 :
+      PrintStr("triangle*");
+      break;
+   case 23 :
+      PrintStr("triangle*");
+      PrintStr(",mark options={rotate=180}");
+      break;
+   case 24 :
+      PrintStr("o");
+      break;
+   case 25 :
+      PrintStr("square");
+      break;
+   case 26 :
+      PrintStr("triangle");
+      break;
+   case 27 :
+      PrintStr("diamond");
+      break;
+   case 28 :
+      PrintStr("cross");
+      break;
+   case 29 :
+      PrintStr("newstar*");
+      break;
+   case 30 :
+      PrintStr("newstar");
+      break;
+   case 31 :
+      PrintStr("10-pointed star");
+      break;
+   case 32 :
+      PrintStr("triangle");
+      PrintStr(",mark options={rotate=180}");
+      break;
+   case 33 :
+      PrintStr("diamond*");
+      break;
+   case 34 :
+      PrintStr("cross*");
+      break;
    }
-   PrintStr("};}");
+   PrintStr("] plot coordinates {\\P};}");
 }
 
 
@@ -498,6 +547,7 @@ void TTeXDump::NewPage()
    }
 
    if(!fBoundingBox) {
+      DefineMarkers();
       PrintStr("\\begin{tikzpicture}@");
       /*
       PrintStr("\\draw[help lines] (0,0) grid (");
@@ -562,6 +612,14 @@ void TTeXDump::SetLineWidth(Width_t linewidth)
    // Set the lines width.
 
    fLineWidth = linewidth;
+}
+
+//______________________________________________________________________________
+void TTeXDump::SetMarkerSize( Size_t msize)
+{
+   // Set size for markers.
+
+   fMarkerSize = msize;
 }
 
 
@@ -759,4 +817,78 @@ void TTeXDump::DrawPS(Int_t, Float_t *, Float_t *)
    // Not needed in TeX case
 
    Warning("DrawPS", "not yet implemented");
+}
+
+//______________________________________________________________________________
+void TTeXDump::DefineMarkers()
+{
+   // add additional pgfplotmarks
+
+  // open cross
+  PrintStr("\\pgfdeclareplotmark{cross} {@");
+  PrintStr("\\pgfpathmoveto{\\pgfpoint{-0.3\\pgfplotmarksize}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+1\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+1\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{-1.\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{-1.\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{-1.\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{-1.\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathclose@");
+  PrintStr("\\pgfusepathqstroke@");
+  PrintStr("}@");
+
+  // filled cross
+  PrintStr("\\pgfdeclareplotmark{cross*} {@");
+  PrintStr("\\pgfpathmoveto{\\pgfpoint{-0.3\\pgfplotmarksize}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+1\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+1\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{-1.\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{-1.\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{-1.\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{-1.\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathclose@");
+  PrintStr("\\pgfusepathqfillstroke@");
+  PrintStr("}@");
+
+  // open star
+  PrintStr("\\pgfdeclareplotmark{newstar} {@");
+  PrintStr("\\pgfpathmoveto{\\pgfqpoint{0pt}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{44}{0.5\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{18}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-20}{0.5\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-54}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-90}{0.5\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{234}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{198}{0.5\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{162}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{134}{0.5\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathclose@");
+  PrintStr("\\pgfusepathqstroke@");
+  PrintStr("}@");
+
+  // filled star
+  PrintStr("\\pgfdeclareplotmark{newstar*} {@");
+  PrintStr("\\pgfpathmoveto{\\pgfqpoint{0pt}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{44}{0.5\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{18}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-20}{0.5\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-54}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-90}{0.5\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{234}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{198}{0.5\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{162}{\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{134}{0.5\\pgfplotmarksize}}@");
+  PrintStr("\\pgfpathclose@");
+  PrintStr("\\pgfusepathqfillstroke@");
+  PrintStr("}@");
 }
