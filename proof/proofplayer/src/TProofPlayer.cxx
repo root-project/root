@@ -1871,6 +1871,9 @@ TProofPlayerRemote::~TProofPlayerRemote()
    // Objects stored in maps are already deleted when merging the feedback
    SafeDelete(fFeedbackLists);
    SafeDelete(fPacketizer);
+
+   if (fProcessMessage)
+      SafeDelete(fProcessMessage);
 }
 
 //______________________________________________________________________________
@@ -2141,6 +2144,36 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    // in case of success.
 
    PDB(kGlobal,1) Info("Process","Enter");
+
+   if (dset == NULL) {
+      // We are going to add new workers to the ongoing analysis. The "option"
+      // field now carries a TList of new workers to add.
+
+      PDB(kGlobal, 1)
+         Info("Process", "Preparing new workers for process status");
+
+      if (!fProcessMessage || !fProof) {
+         Error("Process", "Should not happen: fProcessMessage=%p fProof=%p",
+            fProcessMessage, fProof);
+         return -1;
+      }
+
+      TList *newWorkers = (TList *)option;
+
+      PDB(kGlobal, 2)
+         Info("Process", "Number of workers to prepare: %d", newWorkers->GetEntries());
+
+      PDB(kGlobal, 2)
+         Info("Process", "Broadcasting process message to new workers");
+      fProof->Broadcast(*fProcessMessage, newWorkers);
+
+      PDB(kGlobal, 2)
+         Info("Process", "Collecting from new workers");
+      fProof->Collect(newWorkers);
+
+      return 0;
+   }
+
    fDSet = dset;
    fExitStatus = kFinished;
 
@@ -2325,7 +2358,10 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    TEventList *evl = (!fProof->IsMaster() && !enl) ? dynamic_cast<TEventList *>(set->GetEntryList())
                                            : (TEventList *)0;
    if (fProof->fProtocol > 14) {
+      if (fProcessMessage) delete fProcessMessage;
+      fProcessMessage = new TMessage(kPROOF_PROCESS);
       mesg << set << fn << fInput << opt << num << fst << evl << sync << enl;
+      (*fProcessMessage) << set << fn << fInput << opt << num << fst << evl << sync << enl;
    } else {
       mesg << set << fn << fInput << opt << num << fst << evl << sync;
       if (enl)
