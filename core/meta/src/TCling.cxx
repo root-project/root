@@ -3208,7 +3208,7 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
    // yet another time.
    int storedAutoloading = SetClassAutoloading(false);
    TClass* cl = TClass::GetClassOrAlias(name.c_str());
-   if (cl) {
+   if (cl && GetModTClasses().find(cl) == GetModTClasses().end()) {
       TClingClassInfo* cci = ((TClingClassInfo*)cl->fClassInfo);
       if (cci) {
          // If we only had a forward declaration then update the
