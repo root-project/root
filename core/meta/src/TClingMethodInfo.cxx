@@ -102,6 +102,10 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
    clang::CXXRecordDecl *cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::Decl*>(ci->GetDecl()));
    if (cxxdecl) {
       // Make sure we have an entry for all the implicit function.
+
+      // Could trigger deserialization of decls.
+      cling::Interpreter::PushTransactionRAII RAII(interp);
+
       fInterp->getSema().ForceDeclarationOfImplicitMembers(cxxdecl);
    }
    clang::DeclContext *dc =
