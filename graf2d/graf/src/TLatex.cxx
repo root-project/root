@@ -1884,8 +1884,12 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       if (gVirtualPS->InheritsFrom("TTeXDump")) {
          gVirtualPS->SetTextAngle(angle);
          TString t(text1);
-         if (t.Index("#")>=0) {
+         if (t.Index("#")>=0 || t.Index("^")>=0) {
             t.ReplaceAll("#","\\");
+            t.Prepend("$");
+            t.Append("$");
+         }
+         if (t.Index("\\")>=0) {
             t.Prepend("$");
             t.Append("$");
          }
@@ -1899,6 +1903,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       if (gVirtualX) gVirtualX->SetTextAngle(angle);
       if (gVirtualPS) gVirtualPS->SetTextAngle(angle);
       gPad->PaintText(x,y,text1);
+      if (saveps) gVirtualPS = saveps;
       return;
    }
 
@@ -1907,6 +1912,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       TMathText tm;
       tm.SetTextAlign(GetTextAlign());
       tm.PaintMathText(x, y, angle, size, text1);
+      if (saveps) gVirtualPS = saveps;
       return;
    }
 
