@@ -9132,11 +9132,14 @@ Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks)
       m << TString("-");
 
    // Forward the request
-   if (wrks)
+   if (wrks) {
       Broadcast(m, wrks);
-   else
+      Collect(wrks, fCollectTimeout);
+   }
+   else {
       Broadcast(m);
-   Collect(kActive, fCollectTimeout);
+      Collect(kActive, fCollectTimeout);
+   }
 
    return 0;
 }
@@ -9169,11 +9172,14 @@ Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks)
       m << TString("-");
 
    // Forward the request
-   if (wrks)
+   if (wrks) {
       Broadcast(m, wrks);
-   else
+      Collect(wrks, fCollectTimeout);
+   }
+   else {
       Broadcast(m);
-   Collect(kActive, fCollectTimeout);
+      Collect(kActive, fCollectTimeout);
+   }
 
    return 0;
 }
