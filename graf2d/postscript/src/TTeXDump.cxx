@@ -487,8 +487,37 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       SetColor(fLineColor);
       PrintStr("@");
       PrintStr("\\draw [c");
-      if (fLineStyle==2) PrintStr(",dashed");
-      if (fLineStyle==3) PrintStr(",dotted");
+      switch(fLineStyle) {
+      case 1:
+         break;
+      case 2:
+         PrintStr(",dashed");
+         break;
+      case 3:
+         PrintStr(",dotted");
+         break;
+      case 4:
+         PrintStr(",dash pattern=on 2.4pt off 3.2pt on 0.8pt off 3.2pt");
+         break;
+      case 5:
+         PrintStr(",dash pattern=on 4pt off 2.4pt on 0.8pt off 2.4pt");
+         break;
+      case 6:
+         PrintStr(",dash pattern=on 4pt off 2.4pt on 0.8pt off 2.4pt on 0.8pt off 2.4pt on 0.8pt off 2.4pt");
+         break;
+      case 7:
+         PrintStr(",dash pattern=on 4pt off 4pt");
+         break;
+      case 8:
+         PrintStr(",dash pattern=on 4pt off 2.4pt on 0.8pt off 2.4pt on 0.8pt off 2.4pt");
+         break;
+      case 9:
+         PrintStr(",dash pattern=on 16pt off 4pt");
+         break;
+      case 10:
+         PrintStr(",dash pattern=on 16pt off 8pt on 0.8pt off 8pt");
+         break;
+      }
       if (fLineWidth>1) {
          PrintStr(",line width=");
          WriteReal(fLineWidth*0.2, kFALSE);
