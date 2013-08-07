@@ -16,6 +16,9 @@
  *	factored code to provide a nice Cholesky decomposition class, along
  *	with separate methods for solving a single linear system and to
  *	obtain the inverse matrix from the decomposition
+ * @data July 15th 2013
+ * 	provide a version of that class which works if the dimension of the
+ * 	problem is only known at run time
  */
 
 #include <cmath>
@@ -28,9 +31,13 @@ namespace ROOT {
 /// helpers for CholeskyDecomp
 namespace CholeskyDecompHelpers {
    // forward decls
+   template<class F, class M> struct _decomposerGenDim;
    template<class F, unsigned N, class M> struct _decomposer;
+   template<class F, class M> struct _inverterGenDim;
    template<class F, unsigned N, class M> struct _inverter;
+   template<class F, class V> struct _solverGenDim;
    template<class F, unsigned N, class V> struct _solver;
+   template<typename G> class PackedArrayAdapter;
 }
 
 /// class to compute the Cholesky decomposition of a matrix
@@ -72,21 +79,6 @@ private:
    F fL[N * (N + 1) / 2];
    /// flag indicating a successful decomposition
    bool fOk;
-   /// adapter for packed arrays (to SMatrix indexing conventions)
-   template<typename G> class PackedArrayAdapter
-   {
-   private:
-      G* fArr; ///< pointer to first array element
-   public:
-      /// constructor
-      PackedArrayAdapter(G* arr) : fArr(arr) {}
-      /// read access to elements (make sure that j <= i)
-      const G operator()(unsigned i, unsigned j) const
-      { return fArr[((i * (i + 1)) / 2) + j]; }
-      /// write access to elements (make sure that j <= i)
-      G& operator()(unsigned i, unsigned j)
-      { return fArr[((i * (i + 1)) / 2) + j]; }
-   };
 public:
    /// perform a Cholesky decomposition
    /** perfrom a Cholesky decomposition of a symmetric positive
@@ -118,6 +110,7 @@ public:
       fL(), fOk(false)
    {
       using CholeskyDecompHelpers::_decomposer;
+      using CholeskyDecompHelpers::PackedArrayAdapter;
       fOk = _decomposer<F, N, PackedArrayAdapter<G> >()(
          fL, PackedArrayAdapter<G>(m));
    }
@@ -171,6 +164,7 @@ public:
    template<typename G> bool Invert(G* m) const
    {
       using CholeskyDecompHelpers::_inverter;
+      using CholeskyDecompHelpers::PackedArrayAdapter;
       if (fOk) {
          PackedArrayAdapter<G> adapted(m);
          _inverter<F,N,PackedArrayAdapter<G> >()(adapted, fL);
@@ -179,14 +173,168 @@ public:
    }
 };
 
+/// class to compute the Cholesky decomposition of a matrix
+/** class to compute the Cholesky decomposition of a symmetric
+ * positive definite matrix when the dimensionality of the problem is not known
+ * at compile time
+ *
+ * provides routines to check if the decomposition succeeded (i.e. if
+ * matrix is positive definite and non-singular), to solve a linear
+ * system for the given matrix and to obtain its inverse
+ *
+ * the actual functionality is implemented in templated helper
+ * classes which have specializations for dimensions N = 1 to 6
+ * to achieve a gain in speed for common matrix sizes
+ *
+ * usage example:
+ * @code
+ * // let m be a symmetric positive definite SMatrix (use type float
+ * // for internal computations, matrix size is 4x4)
+ * CholeskyDecomp<float, 4> decomp(m);
+ * // check if the decomposition succeeded
+ * if (!decomp) {
+ *   std::cerr << "decomposition failed!" << std::endl;
+ * } else {
+ *   // let rhs be a vector; we seek a vector x such that m * x = rhs
+ *   decomp.Solve(rhs);
+ *   // rhs now contains the solution we are looking for
+ *
+ *   // obtain the inverse of m, put it into m itself
+ *   decomp.Invert(m);
+ * }
+ * @endcode
+ */
+template<class F> class CholeskyDecompGenDim
+{
+private:
+   /** @brief dimensionality
+    * dimensionality of the problem */
+   unsigned fN; 
+   /// lower triangular matrix L
+   /** lower triangular matrix L, packed storage, with diagonal
+    * elements pre-inverted */
+   F *fL;
+   /// flag indicating a successful decomposition
+   bool fOk;
+public:
+   /// perform a Cholesky decomposition
+   /** perfrom a Cholesky decomposition of a symmetric positive
+    * definite matrix m
+    *
+    * this is the constructor to uses with an SMatrix (and objects
+    * that behave like an SMatrix in terms of using
+    * operator()(int i, int j) for access to elements)
+    */
+   template<class M> CholeskyDecompGenDim(unsigned N, const M& m) : 
+      fN(N), fL(new F[(fN * (fN + 1)) / 2]), fOk(false)
+   {
+      using CholeskyDecompHelpers::_decomposerGenDim;
+      fOk = _decomposerGenDim<F, M>()(fL, m, fN);
+   }
+
+   /// perform a Cholesky decomposition
+   /** perfrom a Cholesky decomposition of a symmetric positive
+    * definite matrix m
+    * 
+    * this is the constructor to use in special applications where
+    * plain arrays are used
+    *
+    * NOTE: the matrix is given in packed representation, matrix
+    * element m(i,j) (j <= i) is supposed to be in array element
+    * (i * (i + 1)) / 2 + j
+    */
+   template<typename G> CholeskyDecompGenDim(unsigned N, G* m) : 
+      fN(N), fL(new F[(fN * (fN + 1)) / 2]), fOk(false)
+   {
+      using CholeskyDecompHelpers::_decomposerGenDim;
+      using CholeskyDecompHelpers::PackedArrayAdapter;
+      fOk = _decomposerGenDim<F, PackedArrayAdapter<G> >()(
+         fL, PackedArrayAdapter<G>(m), fN);
+   }
+
+   /// destructor
+   ~CholeskyDecompGenDim() { delete[] fL; }
+
+   /// returns true if decomposition was successful
+   /** @returns true if decomposition was successful */
+   bool ok() const { return fOk; }
+   /// returns true if decomposition was successful
+   /** @returns true if decomposition was successful */
+   operator bool() const { return fOk; }
+
+   /// solves a linear system for the given right hand side
+   /** solves a linear system for the given right hand side
+    *
+    * Note that you can use both SVector classes and plain arrays for
+    * rhs. (Make sure that the sizes match!). It will work with any vector 
+    * implementing the operator [i]
+    *
+    * @returns if the decomposition was successful
+    */
+   template<class V> bool Solve(V& rhs) const
+   {
+      using CholeskyDecompHelpers::_solverGenDim;
+      if (fOk) _solverGenDim<F,V>()(rhs, fL, fN); return fOk;
+   }
+
+   /// place the inverse into m
+   /** place the inverse into m
+    *
+    * This is the method to use with an SMatrix.
+    *
+    * @returns if the decomposition was successful
+    */
+   template<class M> bool Invert(M& m) const
+   {
+      using CholeskyDecompHelpers::_inverterGenDim;
+      if (fOk) _inverterGenDim<F,M>()(m, fL, fN); return fOk;
+   }
+
+   /// place the inverse into m
+   /** place the inverse into m
+    *
+    * This is the method to use with a plain array.
+    *
+    * @returns if the decomposition was successful
+    *
+    * NOTE: the matrix is given in packed representation, matrix
+    * element m(i,j) (j <= i) is supposed to be in array element
+    * (i * (i + 1)) / 2 + j
+    */
+   template<typename G> bool Invert(G* m) const
+   {
+      using CholeskyDecompHelpers::_inverterGenDim;
+      using CholeskyDecompHelpers::PackedArrayAdapter;
+      if (fOk) {
+         PackedArrayAdapter<G> adapted(m);
+         _inverterGenDim<F,PackedArrayAdapter<G> >()(adapted, fL, fN);
+      }
+      return fOk;
+   }
+};
 
 namespace CholeskyDecompHelpers {
-   /// struct to do a Cholesky decomposition
-   template<class F, unsigned N, class M> struct _decomposer
+   /// adapter for packed arrays (to SMatrix indexing conventions)
+   template<typename G> class PackedArrayAdapter
+   {
+   private:
+      G* fArr; ///< pointer to first array element
+   public:
+      /// constructor
+      PackedArrayAdapter(G* arr) : fArr(arr) {}
+      /// read access to elements (make sure that j <= i)
+      const G operator()(unsigned i, unsigned j) const
+      { return fArr[((i * (i + 1)) / 2) + j]; }
+      /// write access to elements (make sure that j <= i)
+      G& operator()(unsigned i, unsigned j)
+      { return fArr[((i * (i + 1)) / 2) + j]; }
+   };
+   /// struct to do a Cholesky decomposition (general dimensionality)
+   template<class F, class M> struct _decomposerGenDim
    {
       /// method to do the decomposition
       /** @returns if the decomposition was successful */
-      bool operator()(F* dst, const M& src) const
+      bool operator()(F* dst, const M& src, unsigned N) const
       {
          // perform Cholesky decomposition of matrix: M = L L^T
          // only thing that can go wrong: trying to take square
@@ -223,14 +371,23 @@ namespace CholeskyDecompHelpers {
       }
    };
 
-   /// struct to obtain the inverse from a Cholesky decomposition
-   template<class F, unsigned N, class M> struct _inverter
+   /// struct to do a Cholesky decomposition
+   template<class F, unsigned N, class M> struct _decomposer
+   {
+      /// method to do the decomposition
+      /** @returns if the decomposition was successful */
+      bool operator()(F* dst, const M& src) const
+      { return _decomposerGenDim<F, M>()(dst, src, N); }
+   };
+
+   /// struct to obtain the inverse from a Cholesky decomposition (general dimensionality)
+   template<class F, class M> struct _inverterGenDim
    {
       /// method to do the inversion
-      void operator()(M& dst, const F* src) const
+      void operator()(M& dst, const F* src, unsigned N) const
       {
          // make working copy
-         F l[N * (N + 1) / 2];
+         F * l = new F[N * (N + 1) / 2];
          std::copy(src, src + ((N * (N + 1)) / 2), l);
          // ok, next step: invert off-diagonal part of matrix
          F* base1 = &l[1];
@@ -254,14 +411,23 @@ namespace CholeskyDecompHelpers {
                dst(i, j) = tmp;
             }
          }
+         delete [] l;
       }
    };
 
-   /// struct to solve a linear system using its Cholesky decomposition
-   template<class F, unsigned N, class V> struct _solver
+   /// struct to obtain the inverse from a Cholesky decomposition
+   template<class F, unsigned N, class M> struct _inverter
+   {
+      /// method to do the inversion
+      void operator()(M& dst, const F* src) const
+      { return _inverterGenDim<F, M>()(dst, src, N); }
+   };
+
+   /// struct to solve a linear system using its Cholesky decomposition (generalised dimensionality)
+   template<class F, class V> struct _solverGenDim
    {
       /// method to solve the linear system
-      void operator()(V& rhs, const F* l) const
+      void operator()(V& rhs, const F* l, unsigned N) const
       {
          // solve Ly = rhs
          for (unsigned k = 0; k < N; ++k) {
@@ -281,6 +447,14 @@ namespace CholeskyDecompHelpers {
             rhs[k] = (rhs[k] - sum) * l[(k * (k + 1)) / 2 + k];
          }
       }
+   };
+
+   /// struct to solve a linear system using its Cholesky decomposition
+   template<class F, unsigned N, class V> struct _solver
+   {
+      /// method to solve the linear system
+      void operator()(V& rhs, const F* l) const
+      { _solverGenDim<F, V>()(rhs, l, N); }
    };
 
    /// struct to do a Cholesky decomposition (specialized, N = 6)
