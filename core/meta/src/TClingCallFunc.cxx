@@ -532,6 +532,16 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
          return;
       }
    }
+
+   if (needInstantiation) {
+      // Could trigger deserialization of decls.
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      clang::Sema &S = fInterp->getSema();
+      clang::FunctionDecl *FDmod = const_cast<clang::FunctionDecl*>(FD);
+      S.InstantiateFunctionDefinition(clang::SourceLocation(), FDmod,
+                                      /*Recursive=*/ true,
+                                      /*DefinitionRequired=*/ true);
+   }
    cling::CompilationOptions CO;
    CO.DeclarationExtraction = 0;
    CO.ValuePrinting = cling::CompilationOptions::VPDisabled;
@@ -539,16 +549,9 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    CO.DynamicScoping = 0;
    CO.Debug = 0;
    CO.CodeGeneration = 1;
-
+   
    cling::Transaction T(CO, FD->getASTContext());
 
-   if (needInstantiation) {
-      clang::Sema &S = fInterp->getSema();
-      clang::FunctionDecl *FDmod = const_cast<clang::FunctionDecl*>(FD);
-      S.InstantiateFunctionDefinition(clang::SourceLocation(), FDmod,
-                                      /*Recursive=*/ true,
-                                      /*DefinitionRequired=*/ true);
-   }
    T.append(const_cast<clang::FunctionDecl*>(FD));
    T.setState(cling::Transaction::kCompleted);
 
