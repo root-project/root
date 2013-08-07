@@ -138,7 +138,8 @@ Bool_t TTimer::CheckTimer(const TTime &now)
 Bool_t TTimer::Notify()
 {
    // Notify when timer times out. The timer is always reset. To stop
-   // the timer call TurnOff().
+   // the timer call TurnOff(). Make sure to call Reset() also in derived
+   // Notify() so timers will keep working repeatedly.
 
    Timeout();       // emit Timeout() signal
    if (fObject) fObject->HandleTimer(this);
