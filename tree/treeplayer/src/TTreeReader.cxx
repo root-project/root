@@ -85,6 +85,8 @@ void TTreeReader::Initialize()
 
 //______________________________________________________________________________
 Long64_t TTreeReader::GetCurrentEntry() const {
+   //Returns the index of the current entry being read
+
    if (!fDirector) return 0;
    Long64_t currentTreeEntry = fDirector->GetReadEntry();
    if (fTree->IsA() == TChain::Class() && currentTreeEntry >= 0) {
@@ -94,7 +96,7 @@ Long64_t TTreeReader::GetCurrentEntry() const {
 }
 
 //______________________________________________________________________________
-TTreeReader::EEntryStatus TTreeReader::SetEntry(Long64_t entry)
+TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local)
 {
    // Load an entry into the tree, return the status of the read.
    // For chains, entry is the global (i.e. not tree-local) entry number.
@@ -103,19 +105,27 @@ TTreeReader::EEntryStatus TTreeReader::SetEntry(Long64_t entry)
       fEntryStatus = kEntryNoTree;
       return fEntryStatus;
    }
-   Int_t treeNumInChain = fTree->GetTreeNumber();
 
    TTree* prevTree = fDirector->GetTree();
 
-   int loadResult = fTree->LoadTree(entry);
-   if (loadResult == -2) {
-      fEntryStatus = kEntryNotFound;
-      return fEntryStatus;
-   }
+   int loadResult;
+   if (!local){
+      Int_t treeNumInChain = fTree->GetTreeNumber();
 
-   Int_t currentTreeNumInChain = fTree->GetTreeNumber();
-   if (treeNumInChain != currentTreeNumInChain) {
-         fDirector->SetTree(fTree->GetTree());
+      loadResult = fTree->LoadTree(entry);
+
+      if (loadResult == -2) {
+         fEntryStatus = kEntryNotFound;
+         return fEntryStatus;
+      }
+
+      Int_t currentTreeNumInChain = fTree->GetTreeNumber();
+      if (treeNumInChain != currentTreeNumInChain) {
+            fDirector->SetTree(fTree->GetTree());
+      }
+   }
+   else {
+      loadResult = entry;
    }
    if (!prevTree || fDirector->GetReadEntry() == -1) {
       // Tell readers we now have a tree
@@ -149,6 +159,10 @@ void TTreeReader::SetTree(TTree* tree)
 
    if (!fDirector) {
       Initialize();
+   }
+   else {
+      fDirector->SetTree(fTree);
+      fDirector->SetReadEntry(-1);
    }
 }
 

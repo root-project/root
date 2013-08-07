@@ -57,7 +57,8 @@ public:
 
    TTreeReader():
       fDirectory(0),
-      fEntryStatus(kEntryNoTree)
+      fEntryStatus(kEntryNoTree),
+      fDirector(0)
    {}
 
    TTreeReader(TTree* tree);
@@ -73,7 +74,8 @@ public:
    Bool_t IsChain() const { return TestBit(kBitIsChain); }
 
    Bool_t SetNextEntry() { return SetEntry(GetCurrentEntry() + 1) == kEntryValid; }
-   EEntryStatus SetEntry(Long64_t entry);
+   EEntryStatus SetEntry(Long64_t entry) { return SetEntryBase(entry, kFALSE); }
+   EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
 
    EEntryStatus GetEntryStatus() const { return fEntryStatus; }
 
@@ -89,6 +91,8 @@ protected:
 
    void RegisterValueReader(ROOT::TTreeReaderValueBase* reader);
    void DeregisterValueReader(ROOT::TTreeReaderValueBase* reader);
+
+   EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);
 
 private:
 

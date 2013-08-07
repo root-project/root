@@ -166,7 +166,10 @@ namespace {
    // Reader interface for leaf list
    // SEE TTreeProxyGenerator.cxx:1319: '//We have a top level raw type'
    class TObjectArrayReader: public ROOT::TVirtualCollectionReader {
+   private:
+      Int_t basicTypeSize;
    public:
+      TObjectArrayReader() : basicTypeSize(-1) { }
       ~TObjectArrayReader() {}
       TVirtualCollectionProxy* GetCP(ROOT::TBranchProxy* proxy) {
          if (!proxy->Read()){
@@ -185,14 +188,25 @@ namespace {
       virtual void* At(ROOT::TBranchProxy* proxy, size_t idx) {
          if (!proxy->Read()) return 0;
 
+         Int_t objectSize;
          void *array = (void*)proxy->GetStart();
-         TClass *myClass = proxy->GetClass();
-         if (!myClass){
-            Error("At()", "Cannot get class info from branch proxy.");
-            return 0;
+
+         if (basicTypeSize == -1){
+            TClass *myClass = proxy->GetClass();
+            if (!myClass){
+               Error("At()", "Cannot get class info from branch proxy.");
+               return 0;
+            }
+            objectSize = myClass->GetClassSize();
          }
-         Int_t objectSize = myClass->GetClassSize();
+         else {
+            objectSize = basicTypeSize;
+         }
          return (void*)((Byte_t*)array + (objectSize * idx));
+      }
+
+      void SetBasicTypeSize(Int_t size){
+         basicTypeSize = size;
       }
    };
 
@@ -525,16 +539,25 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
          }
       }
    } else if (branch->IsA() == TBranch::Class()) {
-      printf("TBranch\n"); // TODO: Remove (necessary because of gdb bug)
+      TLeaf *topLeaf = branch->GetLeaf(branch->GetName());
+      Int_t size = 0;
+      TLeaf *sizeLeaf = topLeaf->GetLeafCounter(size);
+      if (!sizeLeaf) {
+         fImpl = new TArrayFixedSizeReader(size);
+      }
+      else {
+         fImpl = new TArrayParameterSizeReader(fTreeReader, sizeLeaf->GetName());
+      }
+      ((TObjectArrayReader*)fImpl)->SetBasicTypeSize(((TDataType*)fDict)->Size());
    } else if (branch->IsA() == TBranchClones::Class()) {
-      printf("TBranchClones\n"); // TODO: Remove (necessary because of gdb bug)
+      Error("CreateProxy", "Support for branches of type TBranchClones not implemented");
    } else if (branch->IsA() == TBranchObject::Class()) {
-      printf("TBranchObject\n"); // TODO: Remove (necessary because of gdb bug)
+      Error("CreateProxy", "Support for branches of type TBranchObject not implemented");
    } else if (branch->IsA() == TBranchSTL::Class()) {
-      printf("TBranchSTL\n"); // TODO: Remove (necessary because of gdb bug)
+      Error("CreateProxy", "Support for branches of type TBranchSTL not implemented");
       fImpl = new TSTLReader();
    } else if (branch->IsA() == TBranchRef::Class()) {
-      printf("TBranchRef\n"); // TODO: Remove (necessary because of gdb bug)
+      Error("CreateProxy", "Support for branches of type TBranchRef not implemented");
    }
 }
 
@@ -702,6 +725,16 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
       const char* dataTypeName = branch->GetClassName();
       if ((!dataTypeName || !dataTypeName[0])
           && branch->IsA() == TBranch::Class()) {
+         TLeaf *myLeaf = branch->GetLeaf(branch->GetName());
+         if (myLeaf){
+            TDictionary *myDataType = TDictionary::GetDictionary(myLeaf->GetTypeName());
+            if (myDataType->IsA() == TDataType::Class()){
+               dict = TDataType::GetDataType((EDataType)((TDataType*)myDataType)->GetType());
+               contentTypeName = myLeaf->GetTypeName();
+               return 0;
+            }
+         }
+
          // leaflist. Can't represent.
          Error("GetBranchContentDataType()", "The branch %s was created using a leaf list and cannot be represented as a C++ type. Please access one of its siblings using a TTreeReaderValueArray:", branch->GetName());
          TIter iLeaves(branch->GetListOfLeaves());
