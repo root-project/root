@@ -773,7 +773,8 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
    }
    DumpDecl(D, "");
 
-   if (fVerboseLevel > 2) {
+   #ifdef SELECTION_DEBUG   
+   if (fVerboseLevel > 3) {
       std::string qual_name2;   
       if (GetDeclQualName(D, qual_name2))
          std::cout<<"\tLooking at " << qual_name2 << "\n";
@@ -781,6 +782,7 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
          std::cout<<"  "<<D->clang::Decl::getDeclKindName()<<"\n";
       }
    }
+   #endif
    
    const ClassSelectionRule *selected = fSelectionRules.IsDeclSelected(D);
    if (selected && selected->GetSelected() == BaseSelectionRule::kYes) {
