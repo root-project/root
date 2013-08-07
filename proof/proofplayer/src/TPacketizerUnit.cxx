@@ -304,7 +304,11 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
 
    // Find slave
    TSlaveStat *slstat = (TSlaveStat*) fWrkStats->GetValue(sl);
-   R__ASSERT(slstat != 0);
+   if (!slstat) {
+      Warning("GetNextPacket", "Received a packet request from an unknown slave: %s:%s",
+         sl->GetName(), sl->GetOrdinal());
+      return 0;
+   }
 
    PDB(kPacketizer,2)
       Info("GetNextPacket","worker-%s: fAssigned %lld\t", sl->GetOrdinal(), fAssigned);
