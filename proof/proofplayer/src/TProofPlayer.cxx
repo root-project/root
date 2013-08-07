@@ -2492,9 +2492,9 @@ Bool_t TProofPlayerRemote::JoinProcess(TList *workers)
    // Prepares the given list of new workers to join a progressing process.
    // Returns kTRUE on success, kFALSE otherwise.
 
-   if (!fProcessMessage || !fProof) {
-      Error("Process", "Should not happen: fProcessMessage=%p fProof=%p",
-         fProcessMessage, fProof);
+   if (!fProcessMessage || !fProof || !fPacketizer) {
+      Error("Process", "Should not happen: fProcessMessage=%p fProof=%p fPacketizer=%p",
+         fProcessMessage, fProof, fPacketizer);
       return kFALSE;
    }
 
@@ -2514,6 +2514,13 @@ Bool_t TProofPlayerRemote::JoinProcess(TList *workers)
          Error("Process", "Problems in sending selector file %s", fSelectorFileName.Data());
          return kFALSE;
       }
+   }
+
+   PDB(kGlobal, 2)
+      Info("Process", "Adding new workers to the packetizer");
+   if (fPacketizer->AddWorkers(workers) == -1) {
+      Error("Process", "Cannot add new workers to the packetizer!");
+      return kFALSE;  // TODO: make new wrks inactive
    }
 
    PDB(kGlobal, 2)

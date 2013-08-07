@@ -60,10 +60,11 @@ private:
    Bool_t      fFixedNum;        // Whether we must assign a fixed number of cycles per worker
 
    Long64_t    fPacketSeq;       // Sequential number of the last packet assigned
+   TList      *fInput;           // Input list
 
    TPacketizerUnit();
    TPacketizerUnit(const TPacketizerUnit&);     // no implementation, will generate
-   void operator=(const TPacketizerUnit&);  // error on accidental usage
+   void operator=(const TPacketizerUnit&);      // error on accidental usage
 
 public:
    TPacketizerUnit(TList *slaves, Long64_t num, TList *input, TProofProgressStatus *st = 0);
@@ -76,6 +77,8 @@ public:
 
    Float_t       GetCurrentRate(Bool_t &all);
    Int_t         GetActiveWorkers() { return fWrkStats->GetSize(); }
+
+   Int_t         AddWorkers(TList *workers);
 
    ClassDef(TPacketizerUnit,0)  //Generate work packets for parallel processing
 };
