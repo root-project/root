@@ -145,7 +145,7 @@ public:
    TFileInfo(const char *name, const char *srv) :
       TNamed(name, srv), fPackets(0), fRPackets(0), fStart(0), fStop(-1),
       fSizeAvg(0), fSizeMax(-1.), fSizeMin(-1.),
-      fMBRateAvg(0), fMBRateMax(-1.), fMBRateMin(-1.),
+      fMBRateAvg(0), fMBRateMax(-1.), fMBRateMin(-1.), fSizeP(0),
       fRateP(0), fRatePRemote(0), fMBRateP(0), fMBRatePRemote(0) { }
    virtual ~TFileInfo() {SafeDelete(fSizeP);
                          SafeDelete(fRateP); SafeDelete(fRatePRemote);
@@ -927,6 +927,7 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
    }
    Int_t nbins = jj;
    Int_t *jidx = new Int_t[nbins];
+   memset(jidx, 0, nbins * sizeof(Int_t));
    TMath::Sort(nbins, xraw, jidx, kFALSE);
    Double_t *xbins = new Double_t[nbins];
    jj = 0;
@@ -938,7 +939,8 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
       }
    }
    nbins = jj;
-   delete[] xraw;
+   delete [] xraw;
+   delete [] jidx;
 
    // Create the global histograms
    Int_t nbin = nbins - 1;
@@ -967,6 +969,8 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
    fMBRateRun->SetStats(kFALSE);
    fMBRateRun->SetLineColor(kBlue);
    fMBRateRun->GetXaxis()->SetTitle("Query Processing Time (s)");
+   // Not needed any longer
+   delete [] xbins;
 
    THashList gBins;
    TList *gwl = 0, *gbl = 0;
@@ -1569,12 +1573,15 @@ void TProofPerfAnalysis::FileProcPlot(const char *fn, const char *out)
       xraw[jj++] = pi->fStop;
    }
    Int_t *jidx = new Int_t[nbins];
+   memset(jidx, 0, nbins * sizeof(Int_t));
    TMath::Sort(nbins, xraw, jidx, kFALSE);
    Double_t *xbins = new Double_t[nbins];
    Int_t kk =0;
    for (kk = 0; kk < nbins; kk++) {
       xbins[kk] = xraw[jidx[kk]];
    }
+   delete [] xraw;
+   delete [] jidx;
 
    // Create the histograms
    Int_t nbin = nbins - 1;
@@ -1600,6 +1607,8 @@ void TProofPerfAnalysis::FileProcPlot(const char *fn, const char *out)
    hrt4->SetMinimum(0.);
    hrt4->SetStats(kFALSE);
    hrt4->GetXaxis()->SetTitle("Query Processing Time (s)");
+   // Not needed any longer
+   delete [] xbins;
 
    // Fill histos now
    Int_t ii = 0;
