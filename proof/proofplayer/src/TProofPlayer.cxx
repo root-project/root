@@ -75,6 +75,7 @@
 #include "TVirtualMonitoring.h"
 #include "TParameter.h"
 #include "TOutputListSelectorDataMap.h"
+#include "TStopwatch.h"
 
 // Timeout exception
 #define kPEX_STOPPED  1001
@@ -131,6 +132,33 @@ Bool_t TDispatchTimer::Notify()
 
    // Needed for the next shot
    Reset();
+   return kTRUE;
+}
+
+//
+// Special timer to notify reach of max packet proc time
+//______________________________________________________________________________
+class TProctimeTimer : public TTimer {
+private:
+   TProofPlayer    *fPlayer;
+
+public:
+   TProctimeTimer(TProofPlayer *p, Long_t to) : TTimer(to, kFALSE), fPlayer(p) { }
+
+   Bool_t Notify();
+};
+//______________________________________________________________________________
+Bool_t TProctimeTimer::Notify()
+{
+   // Handle expiration of the timer associated with dispatching pending
+   // events while processing. We must act as fast as possible here, so
+   // we just set a flag submitting a request for dispatching pending events
+
+   if (gDebug > 0) printf("TProctimeTimer::Notify: called!\n");
+
+   fPlayer->SetBit(TProofPlayer::kMaxProcTimeReached);
+
+   // One shot only
    return kTRUE;
 }
 
@@ -199,6 +227,7 @@ TProofPlayer::TProofPlayer(TProof *)
      fTotalEvents(0), fReadBytesRun(0), fReadCallsRun(0), fProcessedRun(0),
      fQueryResults(0), fQuery(0), fPreviousQuery(0), fDrawQueries(0),
      fMaxDrawQueries(1), fStopTimer(0), fStopTimerMtx(0), fDispatchTimer(0),
+     fProcTimeTimer(0), fProcTime(0),
      fOutputFile(0),
      fSaveMemThreshold(-1), fSavePartialResults(kFALSE), fSaveResultsPerPacket(kFALSE)
 {
@@ -207,7 +236,10 @@ TProofPlayer::TProofPlayer(TProof *)
    fInput         = new TList;
    fExitStatus    = kFinished;
    fProgressStatus = new TProofProgressStatus();
+   ResetBit(TProofPlayer::kDispatchOneEvent);
    ResetBit(TProofPlayer::kIsProcessing);
+   ResetBit(TProofPlayer::kMaxProcTimeReached);
+   ResetBit(TProofPlayer::kMaxProcTimeExtended);
 
    static Bool_t initLimitsFinder = kFALSE;
    if (!initLimitsFinder && gProofServ && !gProofServ->IsMaster()) {
@@ -230,6 +262,8 @@ TProofPlayer::~TProofPlayer()
    SafeDelete(fEvIter);
    SafeDelete(fQueryResults);
    SafeDelete(fDispatchTimer);
+   SafeDelete(fProcTimeTimer);
+   SafeDelete(fProcTime);
    SafeDelete(fStopTimer);
 }
 
@@ -1167,6 +1201,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       Long64_t fst = -1, num;
       TEntryList *enl = 0;
       TEventList *evl = 0;
+      Long_t maxproctime = -1;
+      Bool_t newrun = kFALSE;
       while ((fEvIter->GetNextPacket(fst, num, &enl, &evl) != -1) &&
               !fSelStatus->TestBit(TStatus::kNotOk) &&
               fSelector->GetAbort() == TSelector::kContinue) {
@@ -1199,9 +1235,45 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                }
                TProofServ::SetLastMsg(lastMsg);
             }
+            // Set the max proc time, if any
+            if (dset->Current()->GetMaxProcTime() >= 0.)
+               maxproctime = (Long_t) (1000 * dset->Current()->GetMaxProcTime());
+            newrun = (dset->Current()->TestBit(TDSetElement::kNewPacket)) ? kTRUE : kFALSE;
          }
 
+         ResetBit(TProofPlayer::kMaxProcTimeReached);
+         ResetBit(TProofPlayer::kMaxProcTimeExtended);
+         // Setup packet proc time measurement
+         if (maxproctime > 0) {
+            if (!fProcTimeTimer) fProcTimeTimer = new TProctimeTimer(this, maxproctime);
+            fProcTimeTimer->Start(maxproctime, kTRUE); // One shot
+            if (!fProcTime) fProcTime = new TStopwatch();
+            fProcTime->Reset();                        // Reset counters
+         }
+         Long64_t refnum = num;
          while (num--) {
+
+            // Did we use all our time? 
+            if (TestBit(TProofPlayer::kMaxProcTimeReached)) {
+               fProcTime->Stop();
+               if (!newrun && !TestBit(TProofPlayer::kMaxProcTimeExtended)) {
+                  // How much are we left with?
+                  Float_t xleft = (refnum > num) ? (Float_t) num / (Float_t) (refnum) : 1.;
+                  if (xleft < 0.2) {
+                     // Give another try, 1.5 times the remaining measured expected time
+                     Long_t mpt = (Long_t) (1500 * num / ((Double_t)(refnum - num) / fProcTime->RealTime())); 
+                     SetBit(TProofPlayer::kMaxProcTimeExtended);
+                     fProcTimeTimer->Start(mpt, kTRUE); // One shot
+                     ResetBit(TProofPlayer::kMaxProcTimeReached);
+                  }
+               }
+               if (TestBit(TProofPlayer::kMaxProcTimeReached)) {
+                  Info("Process", "max proc time reached (%ld msecs): packet processing stopped:\n%s",
+                                  maxproctime, lastMsg.Data());
+                 
+                  break;
+               }
+            }
             
             if (!(!fSelStatus->TestBit(TStatus::kNotOk) &&
                    fSelector->GetAbort() == TSelector::kContinue)) break;

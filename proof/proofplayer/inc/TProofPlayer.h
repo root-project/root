@@ -70,6 +70,7 @@ class TTimer;
 class THashList;
 class TH1;
 class TFile;
+class TStopwatch;
 
 //------------------------------------------------------------------------
 
@@ -107,6 +108,9 @@ protected:
 
    TTimer       *fDispatchTimer;    //Dispatch pending events while processing
 
+   TTimer       *fProcTimeTimer;    //Notifies reaching of allowed max proc time 
+   TStopwatch   *fProcTime;         //Packet proc time
+
    TString       fOutputFilePath;   //Path to file with (partial) results of the query
    TFile        *fOutputFile;       //TFile object attached to fOutputFilePath
    Long_t        fSaveMemThreshold; //Threshold for saving output to file
@@ -141,7 +145,8 @@ protected:
    void MapOutputListToDataMembers() const;
 
 public:
-   enum EStatusBits { kDispatchOneEvent = BIT(15), kIsProcessing = BIT(16) };
+   enum EStatusBits { kDispatchOneEvent = BIT(15), kIsProcessing = BIT(16),
+                      kMaxProcTimeReached = BIT(17), kMaxProcTimeExtended = BIT(18) };
 
    TProofPlayer(TProof *proof = 0);
    virtual ~TProofPlayer();
