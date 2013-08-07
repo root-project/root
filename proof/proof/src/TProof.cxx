@@ -517,6 +517,7 @@ void TProof::InitMembers()
    fMasterServ = kFALSE;
    fSendGroupView = kFALSE;
    fCanPollWorkers = kTRUE;
+   fLastPollWorkers_s = -1;
    fActiveSlaves = 0;
    fInactiveSlaves = 0;
    fUniqueSlaves = 0;
@@ -2684,9 +2685,11 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
 
       // Preemptive poll for new workers on the master only in Dynamic Mode and only
       // during processing (TODO: should work on Top Master only)
-      if (TestBit(TProof::kIsMaster) && !IsIdle() && fDynamicStartup && fCanPollWorkers) {
+      if (TestBit(TProof::kIsMaster) && !IsIdle() && fDynamicStartup && fCanPollWorkers &&
+         ((fLastPollWorkers_s == -1) || (time(0)-fLastPollWorkers_s >= kPROOF_DynWrkPollInt_s))) {
          fCanPollWorkers = kFALSE;
          PollForNewWorkers();
+         fLastPollWorkers_s = time(0);
          fCanPollWorkers = kTRUE;
       }
 
@@ -2834,10 +2837,8 @@ Bool_t TProof::PollForNewWorkers()
    if (newWorkers->GetEntries() > 0) {
       PDB(kGlobal, 1)
          Info("PollForNewWorkers", "Requesting to add %d new worker(s)", newWorkers->GetEntries());
-      Int_t rv = AddWorkers(newWorkers);
+      AddWorkers(newWorkers);
       // Don't delete newWorkers: AddWorkers() will do that
-      PDB(kGlobal, 1)
-         Info("PollForNewWorkers", "AddWorkers() returned %d", rv);
    }
    else {
       PDB(kGlobal, 2)
