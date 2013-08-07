@@ -93,6 +93,7 @@ private:
    TString          fDataSet;    // Name of the dataset of which this element is part
    TList           *fAssocObjList;  // List of objects associated to this element
                                    // (e.g. TObjString describing associated files)
+   Float_t          fMaxProcTime; // Max processing time in secs; -1 no limit
 
    Bool_t           HasBeenLookedUp() const { return TestBit(kHasBeenLookedUp); }
 
@@ -140,9 +141,12 @@ public:
    void             SetLookedUp() { SetBit(kHasBeenLookedUp); }
    TFileInfo       *GetFileInfo(const char *type = "TTree");
 
+   Float_t          GetMaxProcTime() const { return fMaxProcTime; }
+   void             SetMaxProcTime(Float_t mpt) { fMaxProcTime = mpt; }
+
    Int_t            MergeElement(TDSetElement *elem);
 
-   ClassDef(TDSetElement,8)  // A TDSet element
+   ClassDef(TDSetElement,9)  // A TDSet element
 };
 
 
