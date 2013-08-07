@@ -139,10 +139,10 @@ void* ROOT::TTreeReaderValueBase::GetAddress() {
          return 0;
       }
    }
-   if (fStaticClassOffsets.size()){ // Follow all the pointers
+   if (!fStaticClassOffsets.empty()){ // Follow all the pointers
       Byte_t *address = (Byte_t*)fProxy->GetWhere();
 
-      for (int i = 0; i < fStaticClassOffsets.size() - 1; ++i){
+      for (unsigned int i = 0; i < fStaticClassOffsets.size() - 1; ++i){
          address = *(Byte_t**)(address + fStaticClassOffsets[i]);
       }
 
