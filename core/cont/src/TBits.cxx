@@ -303,6 +303,45 @@ UInt_t TBits::FirstNullBit(UInt_t startBit) const
 }
 
 //______________________________________________________________________________
+UInt_t TBits::LastNullBit(UInt_t startBit) const
+{
+   // Return position of first null bit (starting from position 0 and up)
+
+   static const Int_t fbits[256] = {
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+             6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+             6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+             6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+             5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
+             5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
+             4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
+             3,3,3,3,3,3,3,3,2,2,2,2,1,1,0,8};
+
+   UInt_t i;
+   if (startBit>=fNbits) startBit = fNbits-1;
+   UInt_t startByte = startBit/8;
+   UInt_t ibit = startBit%8;
+   if (ibit<7) {
+      for (i=ibit+1;i>0;i--) {
+         if ((fAllBits[startByte] & (1<<(i-1))) == 0) return 8*startByte+i-1;
+      }
+      startByte--;
+   }
+   for(i=startByte+1; i>0; i--) {
+      if (fAllBits[i-1] != 255) return 8*(i-1) + fbits[fAllBits[i-1]];
+   }
+   return fNbits;
+}
+
+//______________________________________________________________________________
 UInt_t TBits::FirstSetBit(UInt_t startBit) const
 {
    // Return position of first non null bit (starting from position 0 and up)
@@ -343,6 +382,45 @@ UInt_t TBits::FirstSetBit(UInt_t startBit) const
    }
    for(i=startByte; i<fNbytes; i++) {
       if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];
+   }
+   return fNbits;
+}
+
+//______________________________________________________________________________
+UInt_t TBits::LastSetBit(UInt_t startBit) const
+{
+   // Return position of first non null bit (starting from position 0 and up)
+
+   static const Int_t fbits[256] = {
+             8,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,
+             4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
+             5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
+             5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
+             6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+             6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+             6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+             6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+             7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7};
+
+   UInt_t i;
+   if (startBit>=fNbits) startBit = fNbits-1;
+   UInt_t startByte = startBit/8;
+   UInt_t ibit = startBit%8;
+   if (ibit<7) {
+      for (i=ibit+1;i>0;i--) {
+         if ((fAllBits[startByte] & (1<<(i-1))) != 0) return 8*startByte+i-1;
+      }
+      startByte--;
+   }
+   for(i=startByte+1; i>0; i--) {
+      if (fAllBits[i-1] != 0) return 8*(i-1) + fbits[fAllBits[i-1]];
    }
    return fNbits;
 }
