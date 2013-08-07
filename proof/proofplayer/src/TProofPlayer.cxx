@@ -1503,6 +1503,14 @@ Long64_t TProofPlayer::Process(TDSet *dset, TSelector *selector,
 }
 
 //______________________________________________________________________________
+Bool_t TProofPlayer::JoinProcess(TList *)
+{
+   // Not implemented: meaningful only in the remote player. Returns kFALSE.
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 Bool_t TProofPlayer::CheckMemUsage(Long64_t &mfreq, Bool_t &w80r,
                                    Bool_t &w80v, TString &wmsg)
 {
@@ -2145,45 +2153,6 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    PDB(kGlobal,1) Info("Process", "Enter");
 
-   if (dset == NULL) {
-      // We are going to add new workers to the ongoing analysis. The "option"
-      // field now carries a TList of new workers to add.
-
-      PDB(kGlobal, 1)
-         Info("Process", "Preparing new workers for process status");
-
-      if (!fProcessMessage || !fProof) {
-         Error("Process", "Should not happen: fProcessMessage=%p fProof=%p",
-            fProcessMessage, fProof);
-         return -1;
-      }
-
-      TList *newWorkers = (TList *)option;
-
-      PDB(kGlobal, 2)
-         Info("Process", "Number of workers to prepare: %d", newWorkers->GetEntries());
-
-      // Sends the file associated to the TSelector, if necessary
-      if (fCreateSelObj) {
-         PDB(kGlobal, 2)
-            Info("Process", "Sending selector file %s", fSelectorFileName.Data());
-         if(!SendSelector(fSelectorFileName.Data())) {
-            Error("Process", "Problems in sending selector file %s", fSelectorFileName.Data());
-         }
-      }
-
-      PDB(kGlobal, 2)
-         Info("Process", "Broadcasting process message to new workers");
-      fProof->Broadcast(*fProcessMessage, newWorkers);
-
-      // Don't call Collect(): we came here from a global Collect() already which
-      // will take care of new workers as well
-
-      return 0;
-
-      // End of part dedicated to dynamic workers addition
-   }
-
    fDSet = dset;
    fExitStatus = kFinished;
 
@@ -2515,6 +2484,48 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, TSelector *selector,
 
    return Process(dset, selector->ClassName(), option, nentries, first);
 }
+
+//______________________________________________________________________________
+Bool_t TProofPlayerRemote::JoinProcess(TList *workers)
+{
+   // Prepares the given list of new workers to join a progressing process.
+   // Returns kTRUE on success, kFALSE otherwise.
+
+   if (!fProcessMessage || !fProof) {
+      Error("Process", "Should not happen: fProcessMessage=%p fProof=%p",
+         fProcessMessage, fProof);
+      return kFALSE;
+   }
+
+   if (!workers || !fProof->IsMaster()) {
+      Error("Process", "Invalid call");
+      return kFALSE;
+   }
+
+   PDB(kGlobal, 1)
+      Info("Process", "Preparing %d new worker(s) to process", workers->GetEntries());
+
+   // Sends the file associated to the TSelector, if necessary
+   if (fCreateSelObj) {
+      PDB(kGlobal, 2)
+         Info("Process", "Sending selector file %s", fSelectorFileName.Data());
+      if(!SendSelector(fSelectorFileName.Data())) {
+         Error("Process", "Problems in sending selector file %s", fSelectorFileName.Data());
+         return kFALSE;
+      }
+   }
+
+   PDB(kGlobal, 2)
+      Info("Process", "Broadcasting process message to new workers");
+   fProof->Broadcast(*fProcessMessage, workers);
+
+   // Don't call Collect(): we came here from a global Collect() already which
+   // will take care of new workers as well
+
+   return kTRUE;
+
+}
+
 //______________________________________________________________________________
 Bool_t TProofPlayerRemote::MergeOutputFiles()
 {

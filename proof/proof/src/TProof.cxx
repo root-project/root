@@ -1435,7 +1435,7 @@ Int_t TProof::AddWorkers(TList *workerList)
          // to the proper state
          PDB(kGlobal, 3)
             Info("AddWorkers", "Will send the PROCESS message to selected workers");
-         fPlayer->Process(0x0, (const char *)0x0, (Option_t *)addedWorkers, 0, 0);
+         fPlayer->JoinProcess(addedWorkers);
       }
    }
 
