@@ -303,6 +303,7 @@ protected:
    Bool_t              fMergeTH1OneByOne;  // If kTRUE forces TH1 merge one-by-one [kTRUE]
    TH1                *fProcPackets;    //!Histogram with packets being processed (owned by TPerfStats)
    TMessage           *fProcessMessage;  // Process message to replay when adding new workers dynamically
+   TString             fSelectorFileName;  // Current Selector's name, set by Process()
 
    virtual Bool_t  HandleTimer(TTimer *timer);
    Int_t           InitPacketizer(TDSet *dset, Long64_t nentries,

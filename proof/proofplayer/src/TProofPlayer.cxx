@@ -2163,6 +2163,15 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       PDB(kGlobal, 2)
          Info("Process", "Number of workers to prepare: %d", newWorkers->GetEntries());
 
+      // Sends the file associated to the TSelector, if necessary
+      if (fCreateSelObj) {
+         PDB(kGlobal, 2)
+            Info("Process", "Sending selector file %s", fSelectorFileName.Data());
+         if(!SendSelector(fSelectorFileName.Data())) {
+            Error("Process", "Problems in sending selector file %s", fSelectorFileName.Data());
+         }
+      }
+
       PDB(kGlobal, 2)
          Info("Process", "Broadcasting process message to new workers");
       fProof->Broadcast(*fProcessMessage, newWorkers);
@@ -2199,6 +2208,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    // Define filename
    TString fn;
+   fSelectorFileName = selector_file;
 
    if (fCreateSelObj) {
       if(!SendSelector(selector_file)) return -1;
