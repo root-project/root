@@ -19,4 +19,10 @@ ok
 ok
 ok
 ok
+Testing TBits::LastSetBit() ...
+Test 1: Set/Find SUCCESS
+Test 2: checksum1=3154177795  checksum2=3154177795 ... SUCCESS
+Testing TBits::LastNullBit() ...
+Test 3: Reset/Find SUCCESS
+Test 4: checksum3=3163936113  checksum4=3163936113 ... SUCCESS
 (bool)0
