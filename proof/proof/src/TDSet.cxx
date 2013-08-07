@@ -124,6 +124,7 @@ TDSetElement::TDSetElement(const char *file, const char *objname, const char *di
    fAssocObjList = 0;
    if (dir)
       fDirectory = dir;
+   fMaxProcTime = -1.;
 
    ResetBit(kWriteV3);
    ResetBit(kHasBeenLookedUp);
@@ -149,6 +150,7 @@ TDSetElement::TDSetElement(const TDSetElement& elem)
    fFriends = 0;
    fDataSet = elem.fDataSet;
    fAssocObjList = 0;
+   fMaxProcTime = elem.fMaxProcTime;
    ResetBit(kWriteV3);
    ResetBit(kHasBeenLookedUp);
    ResetBit(kEmpty);
