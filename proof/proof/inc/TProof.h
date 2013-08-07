@@ -508,7 +508,7 @@ private:
    TList          *fRecvMessages;    //Messages received during collect not yet processed
    TList          *fSlaveInfo;       //!list returned by kPROOF_GETSLAVEINFO
    Bool_t          fSendGroupView;   //if true send new group view
-   Bool_t          fCanPollWorkers;  //will be set to kFALSE to prevent recursive dyn workers check in dyn mode
+   Bool_t          fIsPollingWorkers;  //will be set to kFALSE to prevent recursive dyn workers check in dyn mode
    Long64_t        fLastPollWorkers_s;  //timestamp (in seconds) of last poll for workers, -1 if never checked
    TList          *fActiveSlaves;    //list of active slaves (subset of all slaves)
    TString         fActiveSlavesSaved;// comma-separated list of active slaves (before last call to

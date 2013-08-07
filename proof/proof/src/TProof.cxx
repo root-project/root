@@ -516,7 +516,7 @@ void TProof::InitMembers()
    fSlaveInfo = 0;
    fMasterServ = kFALSE;
    fSendGroupView = kFALSE;
-   fCanPollWorkers = kTRUE;
+   fIsPollingWorkers = kTRUE;
    fLastPollWorkers_s = -1;
    fActiveSlaves = 0;
    fInactiveSlaves = 0;
@@ -2685,12 +2685,12 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
 
       // Preemptive poll for new workers on the master only in Dynamic Mode and only
       // during processing (TODO: should work on Top Master only)
-      if (TestBit(TProof::kIsMaster) && !IsIdle() && fDynamicStartup && fCanPollWorkers &&
+      if (TestBit(TProof::kIsMaster) && !IsIdle() && fDynamicStartup && fIsPollingWorkers &&
          ((fLastPollWorkers_s == -1) || (time(0)-fLastPollWorkers_s >= kPROOF_DynWrkPollInt_s))) {
-         fCanPollWorkers = kFALSE;
+         fIsPollingWorkers = kFALSE;
          PollForNewWorkers();
          fLastPollWorkers_s = time(0);
-         fCanPollWorkers = kTRUE;
+         fIsPollingWorkers = kTRUE;
       }
 
       // Wait for a ready socket
