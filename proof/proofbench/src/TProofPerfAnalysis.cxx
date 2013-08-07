@@ -110,7 +110,6 @@ public:
          Printf("   %s:\t%s  \t%10lld evts, \t%12.2f MB/s, \t%12.3f -> %12.3f s", GetTitle(), GetName(), fSize, fMBRate, fStart, fStop);
       }
    }
-
 };
 
 class TProofPerfAnalysis::TWrkInfoFile : public TNamed {
@@ -208,7 +207,7 @@ public:
                                           return 1; }
 };
 
-Int_t TProofPerfAnalysis::fgDebug = 0;
+Bool_t TProofPerfAnalysis::fgDebug = kTRUE;
 //________________________________________________________________________
 TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
                                const char *title, const char *treename)
@@ -217,7 +216,9 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
                  fEvents(0), fPackets(0),
                  fEvtRateMax(-1.), fMBRateMax(-1.), fLatencyMax(-1.),
                  fEvtRate(0), fEvtRateRun(0), fMBRate(0), fMBRateRun(0),
-                 fEvtRateAvgMax(-1.), fMBRateAvgMax(-1.), fEvtRateAvg(-1.), fMBRateAvg(0)
+                 fEvtRateAvgMax(-1.), fMBRateAvgMax(-1.),
+                 fEvtRateAvg(-1.), fMBRateAvg(0),
+                 fDebug(0)
 {
    // Constructor: open the file and attach to the tree
 
@@ -262,7 +263,8 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
       SafeDelete(fFile);
       return;
    }
-   Printf(" +++ TTree '%s' has %lld entries", fTreeName.Data(), fTree->GetEntries());
+   if (fgDebug)
+      Printf(" +++ TTree '%s' has %lld entries", fTreeName.Data(), fTree->GetEntries());
 
    // Init worker information
    FillWrkInfo();
@@ -330,7 +332,7 @@ void TProofPerfAnalysis::LoadTree(TDirectory *dir)
          if (tn.Index(re) != kNPOS) {
             if ((fTree = dynamic_cast<TTree *>(dir->Get(tn)))) {
                fTreeName = tn;
-               Printf(" +++ Found and loaded TTree '%s'", tn.Data());
+               if (fgDebug) Printf(" +++ Found and loaded TTree '%s'", tn.Data());
                return;
             }
          }
@@ -1044,7 +1046,7 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
          }
 
          // Notify
-         if (fgDebug > 1) {
+         if (fDebug > 1) {
             if (pe.fProcTime > 0.) {
                Printf(" +++ %s #:%d at:%fs lat:%fs proc:%fs evts:%lld bytes:%lld (rates:%f evt/s, %f MB/s)",
                      wi->GetName(), wi->fPackets, fMaxTime - pe.fProcTime,
@@ -1057,12 +1059,12 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
          }
       } else if (pe.fType == TVirtualPerfStats::kStart) {
          Float_t start = pe.fTimeStamp.GetSec() + 1e-9*pe.fTimeStamp.GetNanoSec();
-         if (fgDebug > 1) Printf(" +++ %s Start: %f s", pe.fEvtNode.Data(), start);
+         if (fDebug > 1) Printf(" +++ %s Start: %f s", pe.fEvtNode.Data(), start);
       } else if (pe.fType == TVirtualPerfStats::kStop) {
          Float_t stop = pe.fTimeStamp.GetSec() + 1e-9*pe.fTimeStamp.GetNanoSec();
-         if (fgDebug > 1) Printf(" +++ %s Stop: %f s", pe.fEvtNode.Data(), stop);
+         if (fDebug > 1) Printf(" +++ %s Stop: %f s", pe.fEvtNode.Data(), stop);
       } else {
-         if (fgDebug > 2) Printf(" +++ Event type: %d", pe.fType);
+         if (fDebug > 2) Printf(" +++ Event type: %d", pe.fType);
       }
    }
 
@@ -1171,7 +1173,7 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
    fPackets->GetXaxis()->SetTitle("Worker");
    
    // Print summary
-   Summary();
+   if (fgDebug) Summary();
 }
 
 //________________________________________________________________________
@@ -1290,7 +1292,7 @@ void TProofPerfAnalysis::FillFileInfo(Bool_t force)
          wif->fPackets.Add(pi);
 
          // Notify
-         if (fgDebug > 1) {
+         if (fDebug > 1) {
             if (pe.fProcTime > 0.) {
                Printf(" +++ %s #:%d at:%fs lat:%fs proc:%fs evts:%lld bytes:%lld (rates:%f evt/s, %f MB/s)",
                      fi->GetName(), fi->fPackets, fMaxTime - pe.fProcTime,
@@ -1303,12 +1305,12 @@ void TProofPerfAnalysis::FillFileInfo(Bool_t force)
          }
       } else if (pe.fType == TVirtualPerfStats::kStart) {
          Float_t start = pe.fTimeStamp.GetSec() + 1e-9*pe.fTimeStamp.GetNanoSec();
-         if (fgDebug > 1) Printf(" +++ %s Start: %f s", pe.fEvtNode.Data(), start);
+         if (fDebug > 1) Printf(" +++ %s Start: %f s", pe.fEvtNode.Data(), start);
       } else if (pe.fType == TVirtualPerfStats::kStop) {
          Float_t stop = pe.fTimeStamp.GetSec() + 1e-9*pe.fTimeStamp.GetNanoSec();
-         if (fgDebug > 1) Printf(" +++ %s Stop: %f s", pe.fEvtNode.Data(), stop);
+         if (fDebug > 1) Printf(" +++ %s Stop: %f s", pe.fEvtNode.Data(), stop);
       } else {
-         if (fgDebug > 2) Printf(" +++ Event type: %d", pe.fType);
+         if (fDebug > 2) Printf(" +++ Event type: %d", pe.fType);
       }
    }
    // Final analysis to find relevant times
@@ -1325,7 +1327,8 @@ void TProofPerfAnalysis::FillFileInfo(Bool_t force)
    delete fl;
    
    // Print summary
-   Printf(" +++ %d files were processed during this query", fFilesInfo.GetSize());
+   if (fgDebug)
+      Printf(" +++ %d files were processed during this query", fFilesInfo.GetSize());
 }
 
 //________________________________________________________________________
@@ -1333,9 +1336,17 @@ void TProofPerfAnalysis::SetDebug(Int_t d)
 {
    // Static setter for the verbosity level
    
-   fgDebug = d;
+   fDebug = d;
 }
 
+
+//________________________________________________________________________
+void TProofPerfAnalysis::SetgDebug(Bool_t on)
+{
+   // Static setter for the verbosity level
+   
+   fgDebug = on;
+}
 //________________________________________________________________________
 void TProofPerfAnalysis::EventDist()
 {
