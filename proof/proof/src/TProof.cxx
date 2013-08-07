@@ -7004,13 +7004,11 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
    // Notify the client that we've got more workers, and print info on
    // Master's log as well
    R__ASSERT(gProofServ);
-   TMessage msg(kPROOF_MESSAGE);
    TString s;
    s.Form("PROOF just went more parallel (%d additional worker%s, %d worker%s total)",
       nAddedWorkers, (nAddedWorkers == 1) ? "" : "s",
       nTotalWorkers, (nTotalWorkers == 1) ? "" : "s");
-   msg << s;
-   gProofServ->GetSocket()->Send(msg);
+   gProofServ->SendAsynMessage(s);
    Info("GoMoreParallel", s.Data());
 
    return nTotalWorkers;
