@@ -159,6 +159,7 @@ const char* const kPROOF_TerminateWorker = "+++ terminating +++"; // signal work
 const char* const kPROOF_WorkerIdleTO    = "+++ idle-timeout +++"; // signal worker idle timeout in MarkBad
 const char* const kPROOF_InputDataFile   = "inputdata.root";      // Default input data file name
 const char* const kPROOF_MissingFiles    = "MissingFiles";  // Missingfile list name
+const Long64_t    kPROOF_DynWrkPollInt_s = 10;  // minimum number of seconds between two polls for dyn wrks
 
 #ifndef R__WIN32
 const char* const kCP     = "/bin/cp -fp";
@@ -503,6 +504,7 @@ private:
    TList          *fSlaveInfo;       //!list returned by kPROOF_GETSLAVEINFO
    Bool_t          fSendGroupView;   //if true send new group view
    Bool_t          fCanPollWorkers;  //will be set to kFALSE to prevent recursive dyn workers check in dyn mode
+   Long64_t        fLastPollWorkers_s;  //timestamp (in seconds) of last poll for workers, -1 if never checked
    TList          *fActiveSlaves;    //list of active slaves (subset of all slaves)
    TString         fActiveSlavesSaved;// comma-separated list of active slaves (before last call to
                                       // SetParallel or Activate/DeactivateWorkers)
