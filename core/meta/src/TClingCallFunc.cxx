@@ -514,11 +514,27 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    if (!FD)
       return;
    if (!FD->isDefined(FD)) {
-      // Not an error; the caller might just check whether this function can
-      // be called at all.
-      //Error("CodeGenDecl", "Cannot codegen %s: no definition available!",
-      //      FD->getNameAsString().c_str());
-      return;
+      if (FD->getTemplatedKind() != clang::FunctionDecl::TK_NonTemplate) {
+         // We have a function template instance, let's check the
+         // template.
+         const clang::FunctionDecl *tmplt = FD->getInstantiatedFromMemberFunction();
+         if (tmplt && !tmplt->isDefined(tmplt)) {
+            return;
+         } else {
+            clang::Sema &S = fInterp->getSema();
+            clang::FunctionDecl *FDmod = const_cast<clang::FunctionDecl*>(FD);
+            S.InstantiateFunctionDefinition(clang::SourceLocation(), FDmod,
+                                            /*Recursive=*/ true,
+                                            /*DefinitionRequired=*/ true);
+
+         }
+      } else {
+         // Not an error; the caller might just check whether this function can
+         // be called at all.
+         //Error("CodeGenDecl", "Cannot codegen %s: no definition available!",
+         //      FD->getNameAsString().c_str());
+         return;
+      }
    }
    cling::CompilationOptions CO;
    CO.DeclarationExtraction = 0;
