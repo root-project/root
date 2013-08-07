@@ -387,7 +387,6 @@ namespace CholeskyDecompHelpers {
       void operator()(M& dst, const F* src, unsigned N) const
       {
          // make working copy
-         //F l[N * (N + 1) / 2];
          F * l = new F[N * (N + 1) / 2];
          std::copy(src, src + ((N * (N + 1)) / 2), l);
          // ok, next step: invert off-diagonal part of matrix
