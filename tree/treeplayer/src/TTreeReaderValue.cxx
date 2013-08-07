@@ -55,8 +55,7 @@ ROOT::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
    fLeaf(NULL),
    fTreeLastOffset(-1),
    fSetupStatus(kSetupNotSetup),
-   fReadStatus(kReadNothingYet),
-   fStaticClassOffset(-1)
+   fReadStatus(kReadNothingYet)
 {
    // Construct a tree value reader and register it with the reader object.
    if (fTreeReader) fTreeReader->RegisterValueReader(this);
@@ -140,7 +139,7 @@ void* ROOT::TTreeReaderValueBase::GetAddress() {
          return 0;
       }
    }
-   if (fStaticClassOffset != -1){ // Follow all the pointers
+   if (fStaticClassOffsets.size()){ // Follow all the pointers
       Byte_t *address = (Byte_t*)fProxy->GetWhere();
 
       for (int i = 0; i < fStaticClassOffsets.size() - 1; ++i){
@@ -271,7 +270,6 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                offsets.push_back(offset);
 
                if (found){
-                  fStaticClassOffset = offset;
                   fStaticClassOffsets = offsets;
 
                   if (fDict != finalDataType && fDict != elementClass){
@@ -282,7 +280,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
             }
 
             
-            if (fStaticClassOffset == -1) {
+            if (!fStaticClassOffsets.size()) {
                Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
                fProxy = 0;
                return;
@@ -315,7 +313,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
       }
    }
 
-   if (!myLeaf && fStaticClassOffset == -1){
+   if (!myLeaf && !fStaticClassOffsets.size()){
       const char* branchActualTypeName = GetBranchDataType(branch, branchActualType);
 
       if (!branchActualType) {
