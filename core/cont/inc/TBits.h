@@ -136,8 +136,6 @@ public:
    UInt_t  CountBits(UInt_t startBit=0)     const ;  // return number of bits set to 1
    UInt_t  FirstNullBit(UInt_t startBit=0)  const;
    UInt_t  FirstSetBit(UInt_t startBit=0)   const;
-   UInt_t  LastNullBit(UInt_t startBit=999999999) const;
-   UInt_t  LastSetBit(UInt_t startBit=999999999)  const;
    UInt_t  GetNbits()      const { return fNbits; }
    UInt_t  GetNbytes()     const { return fNbytes; }
 
