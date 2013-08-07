@@ -68,7 +68,9 @@ private:
    Double_t fEvtRateAvg;         // Average event processing rate
    Double_t fMBRateAvg;          // Average MB processing rate
 
-   static Int_t fgDebug;         // Verbosity level
+   Int_t fDebug;                 // Local verbosity level
+
+   static Bool_t fgDebug;         // Global verbosity on/off
 
    Int_t CompareOrd(const char *ord1, const char *ord2);
    void  FillFileDist(TH1F *hf, TH1F *hb, TH2F *hx, Bool_t wdet = kFALSE);
@@ -104,6 +106,7 @@ public:
    void  Summary(Option_t *opt = "", const char *out = "");
   
    void  SetDebug(Int_t d = 0);   // Setter for the verbosity level
+   static void  SetgDebug(Bool_t on = kTRUE);   // Overall verbosity level
 
    ClassDef(TProofPerfAnalysis, 0)   // Set of tools to analyse the performance tree
 };
