@@ -2143,7 +2143,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    // The return value is -1 in case of an error and TSelector::GetStatus() in
    // in case of success.
 
-   PDB(kGlobal,1) Info("Process","Enter");
+   PDB(kGlobal,1) Info("Process", "Enter");
 
    if (dset == NULL) {
       // We are going to add new workers to the ongoing analysis. The "option"
@@ -2176,11 +2176,12 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          Info("Process", "Broadcasting process message to new workers");
       fProof->Broadcast(*fProcessMessage, newWorkers);
 
-      PDB(kGlobal, 2)
-         Info("Process", "Collecting from new workers");
-      fProof->Collect(newWorkers);
+      // Don't call Collect(): we came here from a global Collect() already which
+      // will take care of new workers as well
 
       return 0;
+
+      // End of part dedicated to dynamic workers addition
    }
 
    fDSet = dset;
