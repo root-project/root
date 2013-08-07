@@ -279,7 +279,6 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                      return;
                   }
                }
-               else printf("Failure! %lld\n", offset);
             }
 
             
