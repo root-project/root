@@ -41,7 +41,7 @@ which can be included in TeX and LaTeX documents.
 PGF is a TeX macro package for generating graphics. It is platform
 and format-independent and works together with the most important TeX
 backend drivers, including pdftex and dvips. It comes with a
-user-friedly syntax layer called TikZ.
+user-friendly syntax layer called TikZ.
 <p>
 To generate a such file it is enough to do:
 <pre>
