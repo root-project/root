@@ -104,6 +104,7 @@ namespace ROOT {
       Long64_t     fTreeLastOffset;
       ESetupStatus fSetupStatus; // setup status of this data access
       EReadStatus  fReadStatus; // read status of this data access
+      std::vector<Long64_t> fStaticClassOffsets;
 
       // FIXME: re-introduce once we have ClassDefInline!
       //ClassDef(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader

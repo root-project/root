@@ -24,6 +24,7 @@
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TNtuple.h"
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
@@ -138,6 +139,15 @@ void* ROOT::TTreeReaderValueBase::GetAddress() {
          return 0;
       }
    }
+   if (fStaticClassOffsets.size()){ // Follow all the pointers
+      Byte_t *address = (Byte_t*)fProxy->GetWhere();
+
+      for (int i = 0; i < fStaticClassOffsets.size() - 1; ++i){
+         address = *(Byte_t**)(address + fStaticClassOffsets[i]);
+      }
+
+      return address + fStaticClassOffsets.back();
+   }
    return fProxy ? (Byte_t*)fProxy->GetWhere() : 0;
 }
 
@@ -180,14 +190,101 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
 
    if (!branch) {
       if (fBranchName.Contains(".")){
-         TRegexp leafNameExpression ("\\.[a-zA-Z0-9]+$");
+         TRegexp leafNameExpression ("\\.[a-zA-Z0-9_]+$");
          TString leafName (fBranchName(leafNameExpression));
          TString branchName = fBranchName(0, fBranchName.Length() - leafName.Length());
          branch = fTreeReader->GetTree()->GetBranch(branchName);
          if (!branch){
-            Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
-            fProxy = 0;
-            return;
+            std::vector<TString> nameStack;
+            nameStack.push_back(TString()); //Trust me
+            nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
+            leafName = branchName(leafNameExpression);
+            branchName = branchName(0, branchName.Length() - leafName.Length());
+            
+            branch = fTreeReader->GetTree()->GetBranch(branchName);
+            if (!branch) branch = fTreeReader->GetTree()->GetBranch(branchName + ".");
+            if (leafName.Length()) nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
+            
+            while (!branch && branchName.Contains(".")){
+               leafName = branchName(leafNameExpression);
+               branchName = branchName(0, fBranchName.Length() - leafName.Length());
+               branch = fTreeReader->GetTree()->GetBranch(branchName);
+               if (!branch) branch = fTreeReader->GetTree()->GetBranch(branchName + ".");
+               nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
+            }
+
+            if (branch->IsA() == TBranchElement::Class()){
+               TBranchElement *myBranchElement = (TBranchElement*)branch;
+
+               TString traversingBranch = nameStack.back();
+               nameStack.pop_back();
+
+               bool found = true;
+
+               TDataType *finalDataType = 0;
+
+               std::vector<Long64_t> offsets;
+               Long64_t offset = 0;
+               TClass *elementClass = 0;
+
+               TObjArray *myObjArray = myBranchElement->GetInfo()->GetElements();
+               Int_t     *myOffsets  = myBranchElement->GetInfo()->GetOffsets();
+
+               while (nameStack.size() && found){
+                  found = false;
+
+                  for (int i = 0; i < myObjArray->GetEntries(); ++i){
+
+                     TStreamerElement *tempStreamerElement = (TStreamerElement*)myObjArray->At(i);
+
+                     if (!strcmp(tempStreamerElement->GetName(), traversingBranch.Data())){
+                        offset += myOffsets[i];
+
+                        traversingBranch = nameStack.back();
+                        nameStack.pop_back();
+
+                        elementClass = tempStreamerElement->GetClass();
+                        if (elementClass){
+                           TVirtualStreamerInfo *tempStreamerInfo = elementClass->GetStreamerInfo(0);
+                           myObjArray = tempStreamerInfo->GetElements();
+                           myOffsets = tempStreamerInfo->GetOffsets();
+                        }
+                        else {
+                           finalDataType = TDataType::GetDataType((EDataType)tempStreamerElement->GetType());
+                           if (!finalDataType){
+                              finalDataType = TDataType::GetDataType((EDataType)((TDataType*)TDictionary::GetDictionary(tempStreamerElement->GetTypeName()))->GetType());
+                           }
+                        }
+
+                        if (tempStreamerElement->IsaPointer()){
+                           offsets.push_back(offset);
+                           offset = 0;
+                        }
+
+                        found = true;
+                        break;
+                     }
+                  }
+               }
+
+               offsets.push_back(offset);
+
+               if (found){
+                  fStaticClassOffsets = offsets;
+
+                  if (fDict != finalDataType && fDict != elementClass){
+                     Error("CreateProxy", "Wrong data type %s", finalDataType ? finalDataType->GetName() : elementClass ? elementClass->GetName() : "UNKNOWN");
+                     return;
+                  }
+               }
+            }
+
+            
+            if (!fStaticClassOffsets.size()) {
+               Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+               fProxy = 0;
+               return;
+            }
          }
          else {
             myLeaf = branch->GetLeaf(TString(leafName(1, leafName.Length())));
@@ -216,7 +313,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
       }
    }
 
-   if (!myLeaf){
+   if (!myLeaf && !fStaticClassOffsets.size()){
       const char* branchActualTypeName = GetBranchDataType(branch, branchActualType);
 
       if (!branchActualType) {

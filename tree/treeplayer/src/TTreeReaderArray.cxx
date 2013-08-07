@@ -373,7 +373,7 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
    TLeaf *myLeaf = NULL;
    if (!branch) {
       if (fBranchName.Contains(".")){
-         TRegexp leafNameExpression ("\\.[a-zA-Z0-9]+$");
+         TRegexp leafNameExpression ("\\.[a-zA-Z0-9_]+$");
          TString leafName (fBranchName(leafNameExpression));
          TString branchName = fBranchName(0, fBranchName.Length() - leafName.Length());
          branch = fTreeReader->GetTree()->GetBranch(branchName);
