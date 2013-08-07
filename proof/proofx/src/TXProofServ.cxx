@@ -806,8 +806,8 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
          }
          if (s.IsDigit()) {
             nwrks = s.Atoi();
-            if (nwrks > 0) {
-               // Notify
+            if (!dynamicStartup && (nwrks > 0)) {
+               // Notify, except in dynamic workers mode to avoid flooding
                TString msg;
                if (pernode) {
                   msg.Form("+++ Starting max %d workers per node following the setting of PROOF_NWORKERS", nwrks);
