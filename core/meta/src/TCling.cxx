@@ -805,7 +805,7 @@ TCling::TCling(const char *name, const char *title)
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
    fClingCallbacks(0), fHaveSinglePCM(kFALSE)
 {
-   // Initialize the CINT+cling interpreter interface.
+   // Initialize the cling interpreter interface.
 
    fTemporaries = new std::vector<cling::StoredValueRef>();
    std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
@@ -880,7 +880,7 @@ TCling::TCling(const char *name, const char *title)
    fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt);
    TClassEdit::Init(fLookupHelper);
 
-   // Initialize the CINT interpreter interface.
+   // Initialize the cling interpreter interface.
    fMore      = 0;
    fPrompt[0] = 0;
    fMapfile   = 0;
@@ -1273,7 +1273,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 //______________________________________________________________________________
 void TCling::PrintIntro()
 {
-   // Print CINT introduction and help message.
+   // Print cling introduction and help message.
 
    Printf("cling C/C++ Interpreter: type .? for help.");
 }
@@ -1730,7 +1730,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
 //______________________________________________________________________________
 Int_t TCling::Load(const char* filename, Bool_t system)
 {
-   // Load a library file in CINT's memory.
+   // Load a library file in cling's memory.
    // if 'system' is true, the library is never unloaded.
    // Return 0 on success, -1 on failure.
 
@@ -1752,7 +1752,7 @@ Int_t TCling::Load(const char* filename, Bool_t system)
 //______________________________________________________________________________
 void TCling::LoadMacro(const char* filename, EErrorCode* error)
 {
-   // Load a macro file in CINT's memory.
+   // Load a macro file in cling's memory.
    ProcessLine(Form(".L %s", filename), error);
    UpdateListOfTypes();
    UpdateListOfGlobals();
@@ -1762,14 +1762,14 @@ void TCling::LoadMacro(const char* filename, EErrorCode* error)
 //______________________________________________________________________________
 Long_t TCling::ProcessLineAsynch(const char* line, EErrorCode* error)
 {
-   // Let CINT process a command line asynch.
+   // Let cling process a command line asynch.
    return ProcessLine(line, error);
 }
 
 //______________________________________________________________________________
 Long_t TCling::ProcessLineSynch(const char* line, EErrorCode* error)
 {
-   // Let CINT process a command line synchronously, i.e we are waiting
+   // Let cling process a command line synchronously, i.e we are waiting
    // it will be finished.
    R__LOCKGUARD(fLockProcessLine ? gClingMutex : 0);
    if (gApplication) {
@@ -1793,7 +1793,7 @@ Long_t TCling::Calc(const char* line, EErrorCode* error)
    // we can not use it.
    if (gApplication && gApplication->GetApplicationImp()) {
       while (gROOT->IsLineProcessing() && !gApplication) {
-         Warning("Calc", "waiting for CINT thread to free");
+         Warning("Calc", "waiting for cling thread to free");
          gSystem->Sleep(500);
       }
       gROOT->SetLineIsProcessing();
@@ -1853,8 +1853,8 @@ void TCling::SetGetline(const char * (*getlineFunc)(const char* prompt),
 //______________________________________________________________________________
 void TCling::RecursiveRemove(TObject* obj)
 {
-   // Delete object from CINT symbol table so it can not be used anymore.
-   // CINT objects are always on the heap.
+   // Delete object from cling symbol table so it can not be used anymore.
+   // cling objects are always on the heap.
    R__LOCKGUARD(gClingMutex);
    // Note that fgSetOfSpecials is supposed to be updated by TClingCallbacks::tryFindROOTSpecialInternal
    // (but isn't at the moment).
@@ -2106,7 +2106,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
          // classes has a dictionary.
          zombieCandidate = kTRUE;
       }
-      // this happens when no CINT dictionary is available
+      // this happens when no dictionary is available
       delete info;
       cl->fClassInfo = 0;
    }
@@ -2577,7 +2577,7 @@ Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 
 TString TCling::GetMangledName(TClass* cl, const char* method,
                               const char* params)
 {
-   // Return the CINT mangled name for a method of a class with parameters
+   // Return the cling mangled name for a method of a class with parameters
    // params (params is a string of actual arguments, not formal ones). If the
    // class is 0 the global function list will be searched.
    R__LOCKGUARD2(gClingMutex);
@@ -2603,7 +2603,7 @@ TString TCling::GetMangledName(TClass* cl, const char* method,
 TString TCling::GetMangledNameWithPrototype(TClass* cl, const char* method,
       const char* proto)
 {
-   // Return the CINT mangled name for a method of a class with a certain
+   // Return the cling mangled name for a method of a class with a certain
    // prototype, i.e. "char*,int,float". If the class is 0 the global function
    // list will be searched.
    R__LOCKGUARD2(gClingMutex);
@@ -2620,7 +2620,7 @@ TString TCling::GetMangledNameWithPrototype(TClass* cl, const char* method,
 void* TCling::GetInterfaceMethod(TClass* cl, const char* method,
                                          const char* params)
 {
-   // Return pointer to CINT interface function for a method of a class with
+   // Return pointer to cling interface function for a method of a class with
    // parameters params (params is a string of actual arguments, not formal
    // ones). If the class is 0 the global function list will be searched.
    R__LOCKGUARD2(gClingMutex);
@@ -2642,7 +2642,7 @@ void* TCling::GetInterfaceMethod(TClass* cl, const char* method,
 void* TCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
       const char* proto)
 {
-   // Return pointer to CINT interface function for a method of a class with
+   // Return pointer to cling interface function for a method of a class with
    // a certain prototype, i.e. "char*,int,float". If the class is 0 the global
    // function list will be searched.
    R__LOCKGUARD2(gClingMutex);
@@ -2834,7 +2834,7 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
 //______________________________________________________________________________
 Long_t TCling::ExecuteMacro(const char* filename, EErrorCode* error)
 {
-   // Execute a CINT macro.
+   // Execute a cling macro.
    R__LOCKGUARD(gClingMutex);
    return TApplication::ExecuteFile(filename, (int*)error);
 }
@@ -3526,14 +3526,14 @@ const char* TCling::GetSTLIncludePath() const
 
 int TCling::DisplayClass(FILE* /*fout*/, const char* /*name*/, int /*base*/, int /*start*/) const
 {
-   // Interface to CINT function
+   // Interface to cling function
    return 0;
 }
 
 //______________________________________________________________________________
 int TCling::DisplayIncludePath(FILE *fout) const
 {
-   // Interface to CINT function
+   // Interface to cling function
    assert(fout != 0 && "DisplayIncludePath, 'fout' parameter is null");
 
    llvm::SmallVector<std::string, 10> includePaths;//Why 10? Hell if I know.
@@ -3561,7 +3561,7 @@ int TCling::DisplayIncludePath(FILE *fout) const
 //______________________________________________________________________________
 void* TCling::FindSym(const char* entry) const
 {
-   // Interface to CINT function
+   // Interface to cling function
    return fInterpreter->getAddressOfGlobal(entry);
 }
 
@@ -3616,7 +3616,7 @@ const char* TCling::Getp2f2funcname(void*) const
 //______________________________________________________________________________
 int TCling::GetSecurityError() const
 {
-   // Interface to CINT function
+   // Interface to cling function
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
    Warning("GetSecurityError", "Interface not available yet.");
@@ -3644,7 +3644,7 @@ void TCling::LoadText(const char* text) const
 //______________________________________________________________________________
 const char* TCling::MapCppName(const char* name) const
 {
-   // Interface to CINT function
+   // Interface to cling function
    static std::string buffer;
    ROOT::TMetaUtils::GetCppName(buffer,name);
    return buffer.c_str();
@@ -3698,7 +3698,7 @@ void TCling::SetErrmsgcallback(void* p) const
 //______________________________________________________________________________
 void TCling::Setgvp(Long_t gvp) const
 {
-   // Interface to the CINT global object pointer which was controlling the
+   // Interface to the cling global object pointer which was controlling the
    // behavior of the wrapper around the calls to operator new and the constructor
    // and operator delete and the destructor.
 
@@ -3968,7 +3968,7 @@ void TCling::CallFunc_SetFunc(CallFunc_t* func, MethodInfo_t* info) const
 //______________________________________________________________________________
 void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, Long_t* offset) const
 {
-   // Interface to CINT function
+   // Interface to cling function
    TClingCallFunc* f = (TClingCallFunc*) func;
    TClingClassInfo* ci = (TClingClassInfo*) info;
    f->SetFuncProto(ci, method, proto, offset);
@@ -3977,7 +3977,7 @@ void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const ch
 //______________________________________________________________________________
 void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, bool objectIsConst, Long_t* offset) const
 {
-   // Interface to CINT function
+   // Interface to cling function
    TClingCallFunc* f = (TClingCallFunc*) func;
    TClingClassInfo* ci = (TClingClassInfo*) info;
    f->SetFuncProto(ci, method, proto, objectIsConst, offset);
@@ -4401,7 +4401,7 @@ const char* TCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) con
 //______________________________________________________________________________
 void TCling::MethodInfo_Delete(MethodInfo_t* minfo) const
 {
-   // Interface to CINT function
+   // Interface to cling function
    delete(TClingMethodInfo*) minfo;
 }
 
