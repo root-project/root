@@ -671,6 +671,13 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
       return false; 
    }
 
+   // check if parameter is fixed
+   if (fMinuit->fNiofex[i] == 0 ) { 
+      if (PrintLevel() > 0) Info("TMinuitMinimizer::GetMinosError","Parameter %s is fixed. There are no Minos error to calculate. Ignored.",VariableName(i).c_str());
+      errLow = 0; errUp = 0;
+      return true;
+   } 
+
    double arglist[2];
    int ierr = 0; 
 
