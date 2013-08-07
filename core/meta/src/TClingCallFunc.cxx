@@ -513,6 +513,7 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
 void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    if (!FD)
       return;
+   bool needInstantiation = false;
    if (!FD->isDefined(FD)) {
       if (FD->getTemplatedKind() != clang::FunctionDecl::TK_NonTemplate) {
          // We have a function template instance, let's check the
@@ -521,12 +522,7 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
          if (tmplt && !tmplt->isDefined(tmplt)) {
             return;
          } else {
-            clang::Sema &S = fInterp->getSema();
-            clang::FunctionDecl *FDmod = const_cast<clang::FunctionDecl*>(FD);
-            S.InstantiateFunctionDefinition(clang::SourceLocation(), FDmod,
-                                            /*Recursive=*/ true,
-                                            /*DefinitionRequired=*/ true);
-
+            needInstantiation = true;
          }
       } else {
          // Not an error; the caller might just check whether this function can
@@ -546,6 +542,13 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
 
    cling::Transaction T(CO, FD->getASTContext());
 
+   if (needInstantiation) {
+      clang::Sema &S = fInterp->getSema();
+      clang::FunctionDecl *FDmod = const_cast<clang::FunctionDecl*>(FD);
+      S.InstantiateFunctionDefinition(clang::SourceLocation(), FDmod,
+                                      /*Recursive=*/ true,
+                                      /*DefinitionRequired=*/ true);
+   }
    T.append(const_cast<clang::FunctionDecl*>(FD));
    T.setState(cling::Transaction::kCompleted);
 
