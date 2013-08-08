@@ -728,7 +728,7 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
          TLeaf *myLeaf = branch->GetLeaf(branch->GetName());
          if (myLeaf){
             TDictionary *myDataType = TDictionary::GetDictionary(myLeaf->GetTypeName());
-            if (myDataType->IsA() == TDataType::Class()){
+            if (myDataType && myDataType->IsA() == TDataType::Class()){
                dict = TDataType::GetDataType((EDataType)((TDataType*)myDataType)->GetType());
                contentTypeName = myLeaf->GetTypeName();
                return 0;
