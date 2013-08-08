@@ -159,7 +159,7 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
 #else
                // It is a workaround of the "Dead lock under Windows
                char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
-                                "(TMethod *)0x%lx,(TObjArray *)0);",
+                                "(TMethod *)0x%lx,\"\");",
                                 (Long_t)this,(Long_t)object,(Long_t)method);
                //Printf("%s", cmd);
                gROOT->ProcessLine(cmd);
@@ -171,8 +171,9 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
 #else
                // It is a workaround of the "Dead lock under Windows
                char *cmd = Form("((TContextMenu *)0x%lx)->Execute((TObject *)0x%lx,"
-                                "(TMethod *)0x%lx,(TObjArray *)0);",
-                                (Long_t)this,(Long_t)object,(Long_t)method);
+                                "(TMethod *)0x%lx,(TObject*)0x%lx);",
+                                (Long_t)this,(Long_t)object,(Long_t)method,
+                                (Long_t)fSelectedObject);
                //Printf("%s", cmd);
                gROOT->ProcessLine(cmd);
                //Execute( object, method, (TObjArray *)NULL );
