@@ -235,9 +235,16 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
          return;
    }
 
-   if (!isDeserialized && isa<DeclContext>(D) && !isa<EnumDecl>(D)) {
+   // FIXME: don't load the world. Really, don't. Maybe
+   // instead smarten TROOT::GetListOfWhateveros() which
+   // currently is a THashList but could be a
+   // TInterpreterLookupCollection, one that reimplements
+   // TCollection::FindObject(name) and performs a lookup
+   // if not found in its T(Hash)List.
+   if (/* !isDeserialized && */ isa<DeclContext>(D) && !isa<EnumDecl>(D)) {
       // We have to find all the typedefs contained in that decl context
       // and add it to the list of types.
+      cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
       llvm::SmallVector<TypedefDecl*, 128> Defs;
       TypedefVisitor V(Defs);
       V.TraverseDecl(const_cast<Decl*>(D));
