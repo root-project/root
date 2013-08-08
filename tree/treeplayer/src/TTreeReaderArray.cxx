@@ -219,6 +219,7 @@ namespace {
       virtual size_t GetSize(ROOT::TBranchProxy* /*proxy*/){ return *indexReader; }
    };
 
+   // Reader interface for fixed size arrays
    class TArrayFixedSizeReader : public TObjectArrayReader {
    private:
       Int_t size;
