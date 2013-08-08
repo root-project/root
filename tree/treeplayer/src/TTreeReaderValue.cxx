@@ -213,7 +213,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
             }
 
-            if (branch->IsA() == TBranchElement::Class()){
+            if (branch && branch->IsA() == TBranchElement::Class()){
                TBranchElement *myBranchElement = (TBranchElement*)branch;
 
                TString traversingBranch = nameStack.back();
