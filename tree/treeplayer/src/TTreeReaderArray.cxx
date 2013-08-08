@@ -540,6 +540,10 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
       }
    } else if (branch->IsA() == TBranch::Class()) {
       TLeaf *topLeaf = branch->GetLeaf(branch->GetName());
+      if (!topLeaf) {
+         Error("CreateProxy", "Failed to get the top leaf from the branch");
+         return;
+      }
       Int_t size = 0;
       TLeaf *sizeLeaf = topLeaf->GetLeafCounter(size);
       if (!sizeLeaf) {
