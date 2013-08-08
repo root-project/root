@@ -350,6 +350,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
             break;
          case TClassMenuItem::kPopupUserFunction:
             {
+               const char* menuItemTitle = menuItem->GetTitle();
                if (menuItem->IsToggle()) {
                   TMethod* method =
                         object->IsA()->GetMethodWithPrototype(menuItem->GetFunctionName(),menuItem->GetArgs());
@@ -359,11 +360,11 @@ void TRootContextMenu::CreateMenu(TObject *object)
                      t->SetOnValue(1);
                      fTrash->Add(t);
 
-                     AddEntry(method->GetName(), toggle++, t);
+                     if (strlen(menuItemTitle)==0) menuItemTitle = method->GetName();
+                     AddEntry(menuItemTitle, toggle++, t);
                      if (t->GetState()) CheckEntry(toggle-1);
                   }
                } else {
-                  const char* menuItemTitle = menuItem->GetTitle();
                   if (strlen(menuItemTitle)==0) menuItemTitle = menuItem->GetFunctionName();
                   AddEntry(menuItemTitle,userfunction++,menuItem);
                }
