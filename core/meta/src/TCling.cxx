@@ -538,6 +538,7 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
       ((TCling*)gCling)->UpdateListOfEnums(*I);
       // Unlock the TClass for updates
       ((TCling*)gCling)->GetModTClasses().erase(*I);
+      
    }
 }
 
@@ -2365,16 +2366,15 @@ void TCling::CreateListOfEnums(TClass* cl) const
    const Decl * D = ((TClingClassInfo*)cl->GetClassInfo())->GetDecl();
 
    // Recurse on the data member of the class and get the enums.
-   if (const clang::RecordDecl* RD = dyn_cast<clang::RecordDecl>(D)) {
-      llvm::SmallVector<EnumDecl*, 128> enums; cout<<RD;
+   if (isa<clang::RecordDecl>(D)) {
+      llvm::SmallVector<EnumDecl*, 128> enums; 
       EnumVisitor E(enums);
       // Traverse the list of enums for this RecordDecl.
+      // Iteration over the decls might cause deserialization.
+      cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
       E.TraverseDecl(const_cast<clang::Decl*>(D));
       for (size_t i = 0; i < enums.size(); ++i) {
-         // Add the enum to the list of enums of the corresponding class.
-         if (!gROOT->GetListOfEnums()->FindObject(enums[i]->getNameAsString().c_str())) {
            HandleEnumDecl(enums[i], false /* not global*/, cl);
-         }
       }
    }
 }
