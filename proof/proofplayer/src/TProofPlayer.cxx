@@ -1251,12 +1251,25 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             fProcTime->Reset();                        // Reset counters
          }
          Long64_t refnum = num;
-         while (num--) {
+         if (refnum < 0 && maxproctime <= 0) {
+            wmsg.Form("neither entries nor max proc time specified:"
+                      " risk of infinite loop: processing aborted");
+            Error("Process", "%s", wmsg.Data());
+            if (gProofServ) {
+               wmsg.Insert(0, TString::Format("ERROR:%s, entry:%lld, ",
+                                             gProofServ->GetOrdinal(), fProcessedRun));
+               gProofServ->SendAsynMessage(wmsg.Data());
+            }
+            fExitStatus = kAborted;
+            ResetBit(TProofPlayer::kIsProcessing);
+            break;
+         }
+         while (refnum < 0 || num--) {
 
             // Did we use all our time? 
             if (TestBit(TProofPlayer::kMaxProcTimeReached)) {
                fProcTime->Stop();
-               if (!newrun && !TestBit(TProofPlayer::kMaxProcTimeExtended)) {
+               if (!newrun && !TestBit(TProofPlayer::kMaxProcTimeExtended) && refnum > 0) {
                   // How much are we left with?
                   Float_t xleft = (refnum > num) ? (Float_t) num / (Float_t) (refnum) : 1.;
                   if (xleft < 0.2) {
