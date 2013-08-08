@@ -9,10 +9,12 @@ public:
    int t;
 };
 class BottomOne : public TopLevel {
+   BottomOne(): b(0) {}
    int b;
 };
 #if !defined(__MAKECINT__) && !defined(__ROOTCLING__)
 class BottomMissing : public TopLevel {
+   BottomMissing(): c() {}
    int c;
 };
 #endif

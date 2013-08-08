@@ -138,7 +138,6 @@ namespace genie {
    private:
       
       string fName;
-      bool   fIsReadOnly;
       
       map<string, genie::RegistryItemI *> fRegistry;
    };
