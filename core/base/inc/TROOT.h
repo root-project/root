@@ -130,6 +130,7 @@ protected:
    TSeqCollection  *fProofs;              //List of proof sessions
    TSeqCollection  *fClipboard;           //List of clipbard objects
    TSeqCollection  *fDataSets;            //List of data sets (TDSet or TChain)
+   TCollection     *fEnums;               //List of enum types
    TProcessUUID    *fUUIDs;               //Pointer to TProcessID managing TUUIDs
    TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables
@@ -212,6 +213,7 @@ public:
    TSeqCollection   *GetListOfProofs() const { return fProofs; }
    TSeqCollection   *GetClipboard() const { return fClipboard; }
    TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
+   TCollection      *GetListOfEnums() const { return fEnums; }
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
    TFile            *GetFile() const { if (gDirectory != this) return gDirectory->GetFile(); else return 0;}

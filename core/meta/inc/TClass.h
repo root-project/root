@@ -92,6 +92,7 @@ private:
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
    TList             *fData;            //linked list for data members
+   TList             *fEnums;           //linked list for the enums
    TList             *fMethod;          //linked list for methods
    TList             *fAllPubData;      //all public data members (including from base classes)
    TList             *fAllPubMethod;    //all public methods (including from base classes)
@@ -267,6 +268,7 @@ public:
       else return (fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
    }
    TList             *GetListOfDataMembers();
+   TList             *GetListOfEnums();
    TList             *GetListOfBases();
    TList             *GetListOfMethods();
    TList             *GetListOfRealData() const { return fRealData; }
