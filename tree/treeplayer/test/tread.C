@@ -18,7 +18,7 @@ void tread_obj() {
    TFile* f = TFile::Open("tr.root");
    TTreeReader tr("T");
    TTreeReaderValue< MyParticle > p(tr, "p");
-   while (tr.SetNextEntry()) {
+   while (tr.Next()) {
       printf("Particle momentum: %g\n", *p->P());
    }
    delete f;
@@ -29,7 +29,7 @@ void tread_makeclass() {
    TFile* f = TFile::Open("tr.root");
    TTreeReader tr("T");
    TTreeReaderArray<double> e(tr, "v.fPos.fY");
-   while (tr.SetNextEntry()) {
+   while (tr.Next()) {
       if (!e.IsEmpty())
          printf("lead muon energy: %g\n", e.At(0));
    }
