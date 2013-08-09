@@ -1,38 +1,19 @@
 #include "TPython.h"
-#include "TError.h"
+
+// This test is no longer one script as it once was: Cling compiles code
+// within a single macro, so there is a problem of initialization of the
+// python interpreter, and of call order: the python classes need to be
+// fully loaded into C++ before they can be used in declarations. This is
+// different from the line-to-line behaviour of CINT (and the ROOT CLI).
 
 void runPyClassTest() {
-// The higher warning ignore level is to suppress warnings about
-// classes already being in the class table (on Mac).
-   int eil = gErrorIgnoreLevel;
-   gErrorIgnoreLevel = kError;
+// load a python class and test its use
    TPython::LoadMacro( "MyPyClass.py" );
+   gROOT->LoadMacro( "PyClassTest1.C" );
 
-   MyPyClass m;
-   printf( "string (aap) : %s\n", (const char*)(*(TPyReturn*)m.gime( "aap" ))  );
-   printf( "string (noot): %s\n", (const char*) ((TPyReturn&)m.gime( "noot" )) );
-   printf( "string (mies): %s\n", (const char*)              m.gime( "mies" )  );
-   printf( "string (zus) : %s\n",       (char*)              m.gime( "zus" )   );
-
-   printf( "double (0.123): %.3f\n",   (double)(*(TPyReturn*)m.gime( 0.123 ))  );
-   printf( "double (0.456): %.3f\n",   (double)  ((TPyReturn)m.gime( 0.456 ))  );
-   printf( "double (0.789): %.3f\n",   (double)              m.gime( 0.789 )   );
-
-// load another class
+// load another python class and test it (note that this test was setup for
+// a CINT-specific problem of not being able to build closures; that is in
+// principle a non-issue with Cling)
    TPython::LoadMacro( "MyOtherPyClass.py" );
-
-// did this intefere with the old class?
-   printf( "string (jet) : %s\n",       (char*)              m.gime( "zus" )   );
-
-   MyOtherPyClass o;
-   o.hop();
-   o.duck();
-
-// finally, ref counting test
-   TPython::Exec( "print \'instance count:\', MyOtherPyClass.count" );
-   TPython::Exec( "op = MyOtherPyClass()" );
-   TPython::Exec( "print \'instance count:\', MyOtherPyClass.count" );
-   (void*)TPython::Eval( "op" );
-   TPython::Exec( "del op" );
-   TPython::Exec( "print \'instance count:\', MyOtherPyClass.count" );
+   gROOT->LoadMacro( "PyClassTest2.C" );
 }
