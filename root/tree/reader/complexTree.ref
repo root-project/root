@@ -411,6 +411,126 @@ Filling leaflist
 Filling tree
 Entry created
 Tree created
+A0: readNum(): ----------------------------- 
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Success!
+A0: readBObject(): ------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+A0: readBObjectDummy(): -------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Success!
+A0: readBStar(): --------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Success!
+A0: readVectorBValue(): -------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+Success!
+A0: readVectorStarBValue(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+Success!
+A0: readVectorStarBArray(): ---------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.vectorStarB. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBArray(): -------------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.vectorB. You could check with TTree::Print() for available branches.
+Failure
+A0: readBArray(): -------------------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.BArray[12]. You could check with TTree::Print() for available branches.
+Failure
+A0: readBStarArray(): ---------------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.BStarArray. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBStarValue(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+Success!
+A0: readVectorBStarArray(): ---------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.vectorBStar. You could check with TTree::Print() for available branches.
+Failure
+A0: readBClonesArrayValue(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A0: readBClonesArrayArray(): --------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.BClonesArray. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBDummyArray(): --------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.vectorB.dummy. You could check with TTree::Print() for available branches.
+Failure
+A0: readBClonesArrayDummyArray(): ---------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.BClonesArray.dummy. You could check with TTree::Print() for available branches.
+Failure
 A1: readNum(): ------------------------------ 
 Num: 14
 Num: 14
@@ -544,16 +664,16 @@ vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
 vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
 Success!
 A1: readBClonesArrayValue(): ---------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 A1: readBClonesArrayArray(): ---------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -712,16 +832,16 @@ vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
 vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
 Success!
 A99: readBClonesArrayValue(): --------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 A99: readBClonesArrayArray(): --------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -868,16 +988,16 @@ BStarArray dummies(14): 0 45 90 135 180 225 270 315 360 405 450 495 540 585
 BStarArray dummies(14): 0 50 100 150 200 250 300 350 400 450 500 550 600 650
 Success!
 A101: readBClonesArrayValue(): -------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 A101: readBClonesArrayArray(): -------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -1096,16 +1216,16 @@ vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
 vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
 Success!
 S1_: readBClonesArrayValue(): --------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 S1_: readBClonesArrayArray(): --------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -1252,16 +1372,16 @@ vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
 vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
 Success!
 S99_: readBClonesArrayValue(): -------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 S99_: readBClonesArrayArray(): -------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -1336,16 +1456,16 @@ Dummy: 18
 Dummy: 20
 Success!
 S101_: readBClonesArrayValue(): ------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 S101_: readBClonesArrayArray(): ------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -1842,6 +1962,206 @@ Filling leaflist
 Filling tree
 Entry created
 Tree created
+A0: readNum(): ----------------------------- 
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Num: 14
+Success!
+A0: readBObject(): ------------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+A0: readBObjectDummy(): -------------------- 
+Dummy: 1
+Dummy: 2
+Dummy: 3
+Dummy: 4
+Dummy: 5
+Dummy: 6
+Dummy: 7
+Dummy: 8
+Dummy: 9
+Dummy: 10
+Dummy: 11
+Dummy: 12
+Dummy: 13
+Dummy: 14
+Dummy: 15
+Dummy: 16
+Dummy: 17
+Dummy: 18
+Dummy: 19
+Dummy: 20
+Success!
+A0: readBStar(): --------------------------- 
+Dummy: 2
+Dummy: 4
+Dummy: 6
+Dummy: 8
+Dummy: 10
+Dummy: 12
+Dummy: 14
+Dummy: 16
+Dummy: 18
+Dummy: 20
+Dummy: 22
+Dummy: 24
+Dummy: 26
+Dummy: 28
+Dummy: 30
+Dummy: 32
+Dummy: 34
+Dummy: 36
+Dummy: 38
+Dummy: 40
+Success!
+A0: readVectorBValue(): -------------------- 
+vectorB dummies: 0 1 2 3 4 5 6 7 8 9
+vectorB dummies: 0 2 4 6 8 10 12 14 16 18
+vectorB dummies: 0 3 6 9 12 15 18 21 24 27
+vectorB dummies: 0 4 8 12 16 20 24 28 32 36
+vectorB dummies: 0 5 10 15 20 25 30 35 40 45
+vectorB dummies: 0 6 12 18 24 30 36 42 48 54
+vectorB dummies: 0 7 14 21 28 35 42 49 56 63
+vectorB dummies: 0 8 16 24 32 40 48 56 64 72
+vectorB dummies: 0 9 18 27 36 45 54 63 72 81
+vectorB dummies: 0 10 20 30 40 50 60 70 80 90
+vectorB dummies: 0 11 22 33 44 55 66 77 88 99
+vectorB dummies: 0 12 24 36 48 60 72 84 96 108
+vectorB dummies: 0 13 26 39 52 65 78 91 104 117
+vectorB dummies: 0 14 28 42 56 70 84 98 112 126
+vectorB dummies: 0 15 30 45 60 75 90 105 120 135
+vectorB dummies: 0 16 32 48 64 80 96 112 128 144
+vectorB dummies: 0 17 34 51 68 85 102 119 136 153
+vectorB dummies: 0 18 36 54 72 90 108 126 144 162
+vectorB dummies: 0 19 38 57 76 95 114 133 152 171
+vectorB dummies: 0 20 40 60 80 100 120 140 160 180
+Success!
+A0: readVectorStarBValue(): ---------------- 
+vectorB dummies(10): 0 2 4 6 8 10 12 14 16 18
+vectorB dummies(10): 0 4 8 12 16 20 24 28 32 36
+vectorB dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorB dummies(10): 0 8 16 24 32 40 48 56 64 72
+vectorB dummies(10): 0 10 20 30 40 50 60 70 80 90
+vectorB dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorB dummies(10): 0 14 28 42 56 70 84 98 112 126
+vectorB dummies(10): 0 16 32 48 64 80 96 112 128 144
+vectorB dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorB dummies(10): 0 20 40 60 80 100 120 140 160 180
+vectorB dummies(10): 0 22 44 66 88 110 132 154 176 198
+vectorB dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorB dummies(10): 0 26 52 78 104 130 156 182 208 234
+vectorB dummies(10): 0 28 56 84 112 140 168 196 224 252
+vectorB dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorB dummies(10): 0 32 64 96 128 160 192 224 256 288
+vectorB dummies(10): 0 34 68 102 136 170 204 238 272 306
+vectorB dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorB dummies(10): 0 38 76 114 152 190 228 266 304 342
+vectorB dummies(10): 0 40 80 120 160 200 240 280 320 360
+Success!
+A0: readVectorStarBArray(): ---------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.vectorStarB. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBArray(): -------------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.vectorB. You could check with TTree::Print() for available branches.
+Failure
+A0: readBArray(): -------------------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.BArray[12]. You could check with TTree::Print() for available branches.
+Failure
+A0: readBStarArray(): ---------------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.BStarArray. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBStarValue(): ---------------- 
+vectorBStar dummies(10): 0 3 6 9 12 15 18 21 24 27
+vectorBStar dummies(10): 0 6 12 18 24 30 36 42 48 54
+vectorBStar dummies(10): 0 9 18 27 36 45 54 63 72 81
+vectorBStar dummies(10): 0 12 24 36 48 60 72 84 96 108
+vectorBStar dummies(10): 0 15 30 45 60 75 90 105 120 135
+vectorBStar dummies(10): 0 18 36 54 72 90 108 126 144 162
+vectorBStar dummies(10): 0 21 42 63 84 105 126 147 168 189
+vectorBStar dummies(10): 0 24 48 72 96 120 144 168 192 216
+vectorBStar dummies(10): 0 27 54 81 108 135 162 189 216 243
+vectorBStar dummies(10): 0 30 60 90 120 150 180 210 240 270
+vectorBStar dummies(10): 0 33 66 99 132 165 198 231 264 297
+vectorBStar dummies(10): 0 36 72 108 144 180 216 252 288 324
+vectorBStar dummies(10): 0 39 78 117 156 195 234 273 312 351
+vectorBStar dummies(10): 0 42 84 126 168 210 252 294 336 378
+vectorBStar dummies(10): 0 45 90 135 180 225 270 315 360 405
+vectorBStar dummies(10): 0 48 96 144 192 240 288 336 384 432
+vectorBStar dummies(10): 0 51 102 153 204 255 306 357 408 459
+vectorBStar dummies(10): 0 54 108 162 216 270 324 378 432 486
+vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
+vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
+Success!
+A0: readVectorBStarArray(): ---------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.vectorBStar. You could check with TTree::Print() for available branches.
+Failure
+A0: readBClonesArrayValue(): --------------- 
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
+Success!
+A0: readBClonesArrayArray(): --------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.BClonesArray. You could check with TTree::Print() for available branches.
+Failure
+A0: readVectorBDummyArray(): --------------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.vectorB.dummy. You could check with TTree::Print() for available branches.
+Failure
+A0: readBClonesArrayDummyArray(): ---------- 
+Error in <CreateProxy()>: The tree does not have a branch called A0.BClonesArray.dummy. You could check with TTree::Print() for available branches.
+Failure
 A1: readNum(): ------------------------------ 
 Num: 14
 Num: 14
@@ -2085,26 +2405,26 @@ vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
 vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 A1: readBClonesArrayValue(): ---------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
-BClonesArray dummies(1000): 0 66 132 198 264 330 396 462 528 594
-BClonesArray dummies(1000): 0 72 144 216 288 360 432 504 576 648
-BClonesArray dummies(1000): 0 78 156 234 312 390 468 546 624 702
-BClonesArray dummies(1000): 0 84 168 252 336 420 504 588 672 756
-BClonesArray dummies(1000): 0 90 180 270 360 450 540 630 720 810
-BClonesArray dummies(1000): 0 96 192 288 384 480 576 672 768 864
-BClonesArray dummies(1000): 0 102 204 306 408 510 612 714 816 918
-BClonesArray dummies(1000): 0 108 216 324 432 540 648 756 864 972
-BClonesArray dummies(1000): 0 114 228 342 456 570 684 798 912 1026
-BClonesArray dummies(1000): 0 120 240 360 480 600 720 840 960 1080
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
 Success!
 A1: readBClonesArrayArray(): ---------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -2393,26 +2713,26 @@ vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
 vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 A99: readBClonesArrayValue(): --------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
-BClonesArray dummies(1000): 0 66 132 198 264 330 396 462 528 594
-BClonesArray dummies(1000): 0 72 144 216 288 360 432 504 576 648
-BClonesArray dummies(1000): 0 78 156 234 312 390 468 546 624 702
-BClonesArray dummies(1000): 0 84 168 252 336 420 504 588 672 756
-BClonesArray dummies(1000): 0 90 180 270 360 450 540 630 720 810
-BClonesArray dummies(1000): 0 96 192 288 384 480 576 672 768 864
-BClonesArray dummies(1000): 0 102 204 306 408 510 612 714 816 918
-BClonesArray dummies(1000): 0 108 216 324 432 540 648 756 864 972
-BClonesArray dummies(1000): 0 114 228 342 456 570 684 798 912 1026
-BClonesArray dummies(1000): 0 120 240 360 480 600 720 840 960 1080
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
 Success!
 A99: readBClonesArrayArray(): --------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -2679,26 +2999,26 @@ BStarArray dummies(14): 0 95 190 285 380 475 570 665 760 855 950 1045 1140 1235
 BStarArray dummies(14): 0 100 200 300 400 500 600 700 800 900 1000 1100 1200 1300
 Success!
 A101: readBClonesArrayValue(): -------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
-BClonesArray dummies(1000): 0 66 132 198 264 330 396 462 528 594
-BClonesArray dummies(1000): 0 72 144 216 288 360 432 504 576 648
-BClonesArray dummies(1000): 0 78 156 234 312 390 468 546 624 702
-BClonesArray dummies(1000): 0 84 168 252 336 420 504 588 672 756
-BClonesArray dummies(1000): 0 90 180 270 360 450 540 630 720 810
-BClonesArray dummies(1000): 0 96 192 288 384 480 576 672 768 864
-BClonesArray dummies(1000): 0 102 204 306 408 510 612 714 816 918
-BClonesArray dummies(1000): 0 108 216 324 432 540 648 756 864 972
-BClonesArray dummies(1000): 0 114 228 342 456 570 684 798 912 1026
-BClonesArray dummies(1000): 0 120 240 360 480 600 720 840 960 1080
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
 Success!
 A101: readBClonesArrayArray(): -------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -3097,26 +3417,26 @@ vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
 vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 S1_: readBClonesArrayValue(): --------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
-BClonesArray dummies(1000): 0 66 132 198 264 330 396 462 528 594
-BClonesArray dummies(1000): 0 72 144 216 288 360 432 504 576 648
-BClonesArray dummies(1000): 0 78 156 234 312 390 468 546 624 702
-BClonesArray dummies(1000): 0 84 168 252 336 420 504 588 672 756
-BClonesArray dummies(1000): 0 90 180 270 360 450 540 630 720 810
-BClonesArray dummies(1000): 0 96 192 288 384 480 576 672 768 864
-BClonesArray dummies(1000): 0 102 204 306 408 510 612 714 816 918
-BClonesArray dummies(1000): 0 108 216 324 432 540 648 756 864 972
-BClonesArray dummies(1000): 0 114 228 342 456 570 684 798 912 1026
-BClonesArray dummies(1000): 0 120 240 360 480 600 720 840 960 1080
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
 Success!
 S1_: readBClonesArrayArray(): --------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -3383,26 +3703,26 @@ vectorBStar dummies(10): 0 57 114 171 228 285 342 399 456 513
 vectorBStar dummies(10): 0 60 120 180 240 300 360 420 480 540
 Success!
 S99_: readBClonesArrayValue(): -------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
-BClonesArray dummies(1000): 0 66 132 198 264 330 396 462 528 594
-BClonesArray dummies(1000): 0 72 144 216 288 360 432 504 576 648
-BClonesArray dummies(1000): 0 78 156 234 312 390 468 546 624 702
-BClonesArray dummies(1000): 0 84 168 252 336 420 504 588 672 756
-BClonesArray dummies(1000): 0 90 180 270 360 450 540 630 720 810
-BClonesArray dummies(1000): 0 96 192 288 384 480 576 672 768 864
-BClonesArray dummies(1000): 0 102 204 306 408 510 612 714 816 918
-BClonesArray dummies(1000): 0 108 216 324 432 540 648 756 864 972
-BClonesArray dummies(1000): 0 114 228 342 456 570 684 798 912 1026
-BClonesArray dummies(1000): 0 120 240 360 480 600 720 840 960 1080
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
 Success!
 S99_: readBClonesArrayArray(): -------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
@@ -3537,26 +3857,26 @@ Dummy: 38
 Dummy: 40
 Success!
 S101_: readBClonesArrayValue(): ------------- 
-BClonesArray dummies(1000): 0 6 12 18 24 30 36 42 48 54
-BClonesArray dummies(1000): 0 12 24 36 48 60 72 84 96 108
-BClonesArray dummies(1000): 0 18 36 54 72 90 108 126 144 162
-BClonesArray dummies(1000): 0 24 48 72 96 120 144 168 192 216
-BClonesArray dummies(1000): 0 30 60 90 120 150 180 210 240 270
-BClonesArray dummies(1000): 0 36 72 108 144 180 216 252 288 324
-BClonesArray dummies(1000): 0 42 84 126 168 210 252 294 336 378
-BClonesArray dummies(1000): 0 48 96 144 192 240 288 336 384 432
-BClonesArray dummies(1000): 0 54 108 162 216 270 324 378 432 486
-BClonesArray dummies(1000): 0 60 120 180 240 300 360 420 480 540
-BClonesArray dummies(1000): 0 66 132 198 264 330 396 462 528 594
-BClonesArray dummies(1000): 0 72 144 216 288 360 432 504 576 648
-BClonesArray dummies(1000): 0 78 156 234 312 390 468 546 624 702
-BClonesArray dummies(1000): 0 84 168 252 336 420 504 588 672 756
-BClonesArray dummies(1000): 0 90 180 270 360 450 540 630 720 810
-BClonesArray dummies(1000): 0 96 192 288 384 480 576 672 768 864
-BClonesArray dummies(1000): 0 102 204 306 408 510 612 714 816 918
-BClonesArray dummies(1000): 0 108 216 324 432 540 648 756 864 972
-BClonesArray dummies(1000): 0 114 228 342 456 570 684 798 912 1026
-BClonesArray dummies(1000): 0 120 240 360 480 600 720 840 960 1080
+BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
+BClonesArray dummies(10): 0 12 24 36 48 60 72 84 96 108
+BClonesArray dummies(10): 0 18 36 54 72 90 108 126 144 162
+BClonesArray dummies(10): 0 24 48 72 96 120 144 168 192 216
+BClonesArray dummies(10): 0 30 60 90 120 150 180 210 240 270
+BClonesArray dummies(10): 0 36 72 108 144 180 216 252 288 324
+BClonesArray dummies(10): 0 42 84 126 168 210 252 294 336 378
+BClonesArray dummies(10): 0 48 96 144 192 240 288 336 384 432
+BClonesArray dummies(10): 0 54 108 162 216 270 324 378 432 486
+BClonesArray dummies(10): 0 60 120 180 240 300 360 420 480 540
+BClonesArray dummies(10): 0 66 132 198 264 330 396 462 528 594
+BClonesArray dummies(10): 0 72 144 216 288 360 432 504 576 648
+BClonesArray dummies(10): 0 78 156 234 312 390 468 546 624 702
+BClonesArray dummies(10): 0 84 168 252 336 420 504 588 672 756
+BClonesArray dummies(10): 0 90 180 270 360 450 540 630 720 810
+BClonesArray dummies(10): 0 96 192 288 384 480 576 672 768 864
+BClonesArray dummies(10): 0 102 204 306 408 510 612 714 816 918
+BClonesArray dummies(10): 0 108 216 324 432 540 648 756 864 972
+BClonesArray dummies(10): 0 114 228 342 456 570 684 798 912 1026
+BClonesArray dummies(10): 0 120 240 360 480 600 720 840 960 1080
 Success!
 S101_: readBClonesArrayArray(): ------------- 
 BClonesArray dummies(10): 0 6 12 18 24 30 36 42 48 54
