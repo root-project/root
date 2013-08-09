@@ -812,7 +812,6 @@ void TGFontDialog::GetFontName()
       }
    }
 
-out:
    Int_t oldAlign = fTextAlign;
 
    Int_t idx = fTextAligns->GetSelected();
