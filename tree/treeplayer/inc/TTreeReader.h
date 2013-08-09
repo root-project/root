@@ -73,7 +73,7 @@ public:
 
    Bool_t IsChain() const { return TestBit(kBitIsChain); }
 
-   Bool_t SetNextEntry() { return SetEntry(GetCurrentEntry() + 1) == kEntryValid; }
+   Bool_t Next() { return SetEntry(GetCurrentEntry() + 1) == kEntryValid; }
    EEntryStatus SetEntry(Long64_t entry) { return SetEntryBase(entry, kFALSE); }
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
 

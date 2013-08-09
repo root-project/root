@@ -12,7 +12,7 @@ void TreeReaderSimple() {
 	TTreeReaderValue<Float_t> myPx(myHSimpleReader, "px");
 	TTreeReaderValue<Float_t> myPy(myHSimpleReader, "py");
 
-	while (myHSimpleReader.SetNextEntry()){
+	while (myHSimpleReader.Next()){
 		myHistogram->Fill(*myPx + *myPy);
 	}
 
