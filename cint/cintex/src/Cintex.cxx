@@ -37,9 +37,11 @@ namespace {
       Cintex_dict_t() {
          //--Reflex class builder
          //NamespaceBuilder( "ROOT::Cintex" );
-         Type t_void = TypeBuilder("void");
-         Type t_int  = TypeBuilder("int");
-         Type t_bool = TypeBuilder("bool");
+         Type t_void = TypeBuilder(Literal("void"));
+         Type t_int  = TypeBuilder(Literal("int"));
+         Type t_bool = TypeBuilder(Literal("bool"));
+         Type t_double = TypeBuilder(Literal("double"));
+         Type t_double32 = TypedefTypeBuilder(Literal("Double32_t"), t_double);
          ClassBuilderT< Cintex >("Cintex", PUBLIC)
             .AddFunctionMember(FunctionTypeBuilder(t_void), "Enable", Enable, 0, 0, PUBLIC | STATIC)
             .AddFunctionMember(FunctionTypeBuilder(t_void, t_int), "SetDebug", SetDebug, 0, 0, PUBLIC | STATIC)

@@ -39,6 +39,8 @@ namespace ROOT {
             static std::set<std::string> exclusionList;
             if (!init) {
                exclusionList.insert("stringstream");
+               exclusionList.insert("Double32_t");
+               exclusionList.insert("Float16_t");
                init = true;
             }
             if ( exclusionList.find(nam) != exclusionList.end() ) {
