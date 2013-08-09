@@ -720,6 +720,9 @@ AutoDict_*.cxx
 
 # /root/tree/query/
 
+# /root/tree/reader/
+/root/tree/reader/*.root
+
 # /root/tree/readfile/
 
 # /root/tree/selector/
