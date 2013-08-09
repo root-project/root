@@ -1387,11 +1387,38 @@ void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params
    // Check number of actual parameters against of expected formal ones
 
    Int_t nparms = argList->LastIndex()+1;
-   Int_t argc   = params ? params->LastIndex()+1:1;
+   Int_t argc   = params ? params->GetEntries() : 0;
 
-   if (nparms != argc) {
-      Error("Execute","Wrong number of the parameters");
+   if (argc > nparms) {
+      Error("Execute","Too many parameters to call %s, got %d but expected at most %d.",method->GetName(),argc,nparms);
       return;
+   }
+   if (nparms != argc) {
+      // Let's see if the 'missing' argument are all defaulted.
+
+      // if nparms==0 then either we stopped earlier either argc is also zero and we can't reach here.
+      assert(nparms > 0);
+
+      TMethodArg *arg = (TMethodArg *) argList->At( 0 );
+      if (arg && arg->GetDefault() && arg->GetDefault()[0]) {
+         // There is a default value for the first missing
+         // argument, so we are fine.
+      } else {
+         Int_t firstDefault = -1;
+         for (Int_t i = 0; i < nparms; i ++) {
+            arg = (TMethodArg *) argList->At( i );
+            if (arg && arg->GetDefault() && arg->GetDefault()[0]) {
+               firstDefault = i;
+               break;
+            }
+         }
+         if (firstDefault >= 0) {
+            Error("Execute","Too few arguments to call %s, got only %d but expected at least %d and at most %d.",method->GetName(),argc,firstDefault,nparms);            
+         } else {
+            Error("Execute","Too few arguments to call %s, got only %d but expected %d.",method->GetName(),argc,nparms);
+         }
+         return;
+      }
    }
 
    const char *listpar = "";
