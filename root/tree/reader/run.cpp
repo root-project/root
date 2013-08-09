@@ -1,4 +1,4 @@
-{
+void run() {
     makeTree();
     printAll();
     makeTree("HardTreeFile2.root", 11);
