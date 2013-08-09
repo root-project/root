@@ -1,3 +1,4 @@
+#include "TPython.h"
 #include "TError.h"
 
 void runPyAPITest() {
@@ -7,7 +8,7 @@ void runPyAPITest() {
    gErrorIgnoreLevel = kError;
 
    TObject* o = new TObject;
-   void* a = TPython::ObjectProxy_FromVoidPtr( o, "TObject" );
+   PyObject* a = TPython::ObjectProxy_FromVoidPtr( o, "TObject" );
    printf( "OBC:  should be true:  %d\n", TPython::ObjectProxy_Check( a ) );
    printf( "OBCE: should be false: %d\n", TPython::ObjectProxy_CheckExact( a ) );
 

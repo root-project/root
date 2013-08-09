@@ -1,3 +1,4 @@
+#include "TPython.h"
 #include "TError.h"
 
 void runPyClassTest() {

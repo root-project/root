@@ -23,14 +23,13 @@ PyClassTest.log: runPyClassTest.C runPyAPITest.C
 ifeq ($(FAIL),)
 PyClassTest: 
 	$(WarnFailTest)
-PyAPITest: 
-	$(WarnFailTest)
 else
 PyClassTest: PyClassTest.log
 	$(TestDiff)
+endif
+
 PyAPITest: PyAPITest.log
 	$(TestDiff)
-endif
 
 PyROOT_cinttests: PyROOT_cinttests.log
 	$(TestDiff)
