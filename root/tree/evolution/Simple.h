@@ -10,6 +10,7 @@ public:
 
 class Simple {
 public:
+   virtual ~Simple() {};
 #if VERSION==1
    int fData;
    std::vector<Content> fWillBeMissing;
