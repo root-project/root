@@ -358,10 +358,10 @@ void *OpenGraphic(char *name)
       // get width and height of picture
       hr = Ipic->get_Width(&sizeInHiMetric.cx);
       if (!SUCCEEDED(hr))
-         goto err;
+         return 0;
       Ipic->get_Height(&sizeInHiMetric.cy);
       if (!SUCCEEDED(hr))
-         goto err;
+         return 0;
 
       // convert himetric to pixels
       sizeInPix.cx = (nPixelsPerInchX * sizeInHiMetric.cx +
@@ -374,7 +374,6 @@ void *OpenGraphic(char *name)
       gImageInfo.Path = name;
       return Ipic;
    }
-err:
    return 0;
 }
 
