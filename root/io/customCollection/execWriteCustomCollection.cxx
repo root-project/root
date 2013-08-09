@@ -5,6 +5,7 @@
 class Content {
 public:
    Content() : fId(0) {};
+   virtual ~Content() {}
    UInt_t fId;
    TString fName;
    const char *GetName() const { return fName; }
