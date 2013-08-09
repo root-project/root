@@ -6,16 +6,16 @@
 
 class B : public TObject {
 public:
-	Int_t dummy;
+    Int_t dummy;
 
-	B() : dummy(0) {}
-	B(Int_t dummyArg) : dummy(dummyArg) {}
+    B() : dummy(0) {}
+    B(Int_t dummyArg) : dummy(dummyArg) {}
 
-	void SetDummy(Int_t dummyArg) { dummy = dummyArg; }
+    void SetDummy(Int_t dummyArg) { dummy = dummyArg; }
 
-	Int_t GetDummy() const { return dummy; }
+    Int_t GetDummy() const { return dummy; }
 
-	ClassDef(B, 1);
+    ClassDef(B, 1);
 };
 
 #endif
