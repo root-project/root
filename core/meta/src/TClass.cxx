@@ -3159,11 +3159,11 @@ void TClass::GetMenuItems(TList *list)
    }
 }
 
-std::set<TClass*> TClass::GetMissingClassDictionaries()
+std::set<TClass*> TClass::GetMissingClassDictionaries(bool recurse)
 {
    //Get the classes that have a missing dictionary.
 
-   std::set<TClass*> clMissingDict = gInterpreter->GetMissingDictionaries(this);
+   std::set<TClass*> clMissingDict = gInterpreter->GetMissingDictionaries(this, recurse);
    return clMissingDict;
 }
 
