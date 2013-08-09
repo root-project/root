@@ -806,15 +806,11 @@ void TGFontDialog::GetFontName()
       if (!fLabelFont) {
          // should not happen
          fLName = oldFont;
-         goto out;
       }
-
-      if (fSample) {
+      else if (fSample) {
          fSample->SetTextFont(fLabelFont);
       }
    }
-
-out:
    Int_t oldAlign = fTextAlign;
 
    Int_t idx = fTextAligns->GetSelected();

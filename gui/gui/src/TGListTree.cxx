@@ -2338,7 +2338,6 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
    TGListTreeItem *diritem = 0;
    TString fulldir;
 
-start:
    while (1) {
       while (*p && *p == '/') p++;
       if (!*p) break;
@@ -2361,7 +2360,7 @@ start:
             if (!s || !strlen(s)) return diritem;
             p = ++s;
             item = diritem;
-            goto start;
+            continue;
          }
       }
 
