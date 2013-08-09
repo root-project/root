@@ -113,6 +113,7 @@ public:
    virtual Bool_t   CheckClassTemplate(const char *name) = 0;
    virtual Long_t   Calc(const char *line, EErrorCode* error = 0) = 0;
    virtual void     CreateListOfBaseClasses(TClass *cl) const = 0;
+   virtual void     CreateListOfEnums(TClass *cl) const = 0;
    virtual void     CreateListOfDataMembers(TClass *cl) const = 0;
    virtual void     CreateListOfMethods(TClass *cl) const = 0;
    virtual void     CreateListOfMethodArgs(TFunction *m) const = 0;

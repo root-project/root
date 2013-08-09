@@ -399,6 +399,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    // Initialize interface to CINT C++ interpreter
    fVersionInt      = 0;  // check in TROOT dtor in case TCling fails
    fClasses         = 0;  // might be checked via TCling ctor
+   fEnums           = 0;
 
    fConfigOptions   = R__CONFIGUREOPTIONS;
    fConfigFeatures  = R__CONFIGUREFEATURES;
@@ -416,6 +417,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    //fIdMap           = new IdMap_t;
    fStreamerInfo    = new TObjArray(100);
    fClassGenerators = new TList;
+   fEnums           = new THashTable(200, 3); // FIXME: should be 1.2 * number of ROOT global enums at startup
 
    // initialize plugin manager early
    fPluginManager->LoadHandlersFromEnv(gEnv);
@@ -630,6 +632,7 @@ TROOT::~TROOT()
       SafeDelete(fGlobals);
       if (fGlobalFunctions) fGlobalFunctions->Delete();
       SafeDelete(fGlobalFunctions);
+      fEnums->Delete();
       fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
 #endif
 

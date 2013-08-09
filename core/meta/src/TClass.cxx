@@ -771,7 +771,7 @@ ClassImp(TClass)
 TClass::TClass() :
    TDictionary(),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
+   fBase(0), fData(0), fEnums(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
    fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
@@ -797,7 +797,7 @@ TClass::TClass() :
 TClass::TClass(const char *name, Bool_t silent) :
    TDictionary(name),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
+   fBase(0), fData(0), fEnums(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
    fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
@@ -846,7 +846,7 @@ TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
    TDictionary(name),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
+   fBase(0), fData(0), fEnums(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
    fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
@@ -875,7 +875,7 @@ TClass::TClass(const char *name, Version_t cversion,
                Bool_t silent) :
    TDictionary(name),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
+   fBase(0), fData(0), fEnums(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
    fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
@@ -1129,6 +1129,7 @@ TClass::TClass(const TClass& cl) :
   fRealData(cl.fRealData),
   fBase(cl.fBase),
   fData(cl.fData),
+  fEnums(cl.fEnums),
   fMethod(cl.fMethod),
   fAllPubData(cl.fAllPubData),
   fAllPubMethod(cl.fAllPubMethod),
@@ -1230,6 +1231,10 @@ TClass::~TClass()
    if (fData)
       fData->Delete();
    delete fData;   fData = 0;
+
+   if (fEnums)
+      fEnums->Delete();
+   delete fEnums; fEnums = 0;
 
    if (fMethod)
       fMethod->Delete();
@@ -2984,6 +2989,26 @@ TList *TClass::GetListOfBases()
 }
 
 //______________________________________________________________________________
+TList *TClass::GetListOfEnums()
+{
+   // Return list containing the TEnums of a class.
+
+   R__LOCKGUARD(gClingMutex);
+   if (!fClassInfo) {
+      if (!fEnums) fEnums = new TList;
+      return fEnums;
+   }
+
+   if (!fEnums) {
+      if (!gInterpreter)
+         Fatal("GetListOfEnums", "gInterpreter not initialized");
+
+      gInterpreter->CreateListOfEnums(this);
+   }
+   return fEnums;
+}
+
+//______________________________________________________________________________
 TList *TClass::GetListOfDataMembers()
 {
    // Return list containing the TDataMembers of a class.
@@ -3240,6 +3265,10 @@ void TClass::ResetCaches()
    if (fData)
       fData->Delete();
    delete fData;   fData = 0;
+
+   if (fEnums)
+      fEnums->Delete();
+   delete fEnums;   fEnums = 0;
 
    if (fMethod)
       fMethod->Delete();
