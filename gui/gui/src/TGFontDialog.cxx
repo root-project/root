@@ -806,10 +806,8 @@ void TGFontDialog::GetFontName()
       if (!fLabelFont) {
          // should not happen
          fLName = oldFont;
-         goto out;
       }
-
-      if (fSample) {
+      else if (fSample) {
          fSample->SetTextFont(fLabelFont);
       }
    }
