@@ -193,7 +193,7 @@ int test4D ( const LorentzVector<C> & v, double ticks ) {
   ret |= compare4D( vxyzt_d, vrep_d, ticks);
 
   LorentzVector< PtEtaPhiM4D<double> > vrepm_d ( rho, eta, phi, v.M() );
-  ret |= compare4D( vxyzt_d, vrep_d, ticks);
+  ret |= compare4D( vxyzt_d, vrepm_d, ticks);
 
   LorentzVector< PxPyPzM4D  <double> > vxyzm_d ( v.x(), v.y(), v.z(), v.M() );
   ret |= compare4D( vrep_d, vxyzm_d, ticks);
