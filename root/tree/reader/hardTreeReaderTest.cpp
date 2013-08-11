@@ -163,10 +163,11 @@ void makeTree(const char* fileName = "HardTreeFile.root", Int_t startI = 1){
     fprintf(stderr, "Tree created\n");
 
     myFile->Write();
+    delete myFile;
 }
 
 void readNum(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -183,10 +184,11 @@ void readNum(const char* branchName = "A99.", Bool_t printOut = true, Bool_t tes
         if (printOut) fprintf(stderr, "Num: %i\n", *myNum);
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readBObject(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -203,10 +205,11 @@ void readBObject(const char* branchName = "A99.", Bool_t printOut = true, Bool_t
         if (printOut) fprintf(stderr, "Dummy: %i\n", myBObject->dummy);
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readBObjectBranch(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -223,10 +226,11 @@ void readBObjectBranch(const char* branchName = "A99.", Bool_t printOut = true, 
         if (printOut) fprintf(stderr, "Dummy: %i\n", myBObject->dummy);
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readBObjectDummy(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -243,10 +247,11 @@ void readBObjectDummy(const char* branchName = "A99.", Bool_t printOut = true, B
         if (printOut) fprintf(stderr, "Dummy: %i\n", *myDummy);
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readBStar(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -263,10 +268,11 @@ void readBStar(const char* branchName = "A99.", Bool_t printOut = true, Bool_t t
         if (printOut) fprintf(stderr, "Dummy: %i\n", myBStar->dummy);
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readVectorBValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -289,10 +295,11 @@ void readVectorBValue(const char* branchName = "A99.", Bool_t printOut = true, B
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readVectorStarBValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -315,10 +322,11 @@ void readVectorStarBValue(const char* branchName = "A99.", Bool_t printOut = tru
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readVectorStarBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -341,10 +349,11 @@ void readVectorStarBArray(const char* branchName = "A99.", Bool_t printOut = tru
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readVectorBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -367,10 +376,11 @@ void readVectorBArray(const char* branchName = "A99.", Bool_t printOut = true, B
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -393,10 +403,11 @@ void readBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t 
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -419,10 +430,11 @@ void readBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Boo
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readVectorBStarValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -445,10 +457,11 @@ void readVectorBStarValue(const char* branchName = "A99.", Bool_t printOut = tru
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readVectorBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -471,10 +484,11 @@ void readVectorBStarArray(const char* branchName = "A99.", Bool_t printOut = tru
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readBClonesArrayValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -497,10 +511,11 @@ void readBClonesArrayValue(const char* branchName = "A99.", Bool_t printOut = tr
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readBClonesArrayArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -523,10 +538,11 @@ void readBClonesArrayArray(const char* branchName = "A99.", Bool_t printOut = tr
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readVectorBDummyArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -549,10 +565,11 @@ void readVectorBDummyArray(const char* branchName = "A99.", Bool_t printOut = tr
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString finalBranchName = branchName;
@@ -575,10 +592,11 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readLeafFloatX(Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString branchName = "MyLeafList.x";
@@ -594,10 +612,11 @@ void readLeafFloatX(Bool_t printOut = true, Bool_t testValues = false, const cha
     }
 
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readLeafFloatY(Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString branchName = "MyLeafList.y";
@@ -613,10 +632,11 @@ void readLeafFloatY(Bool_t printOut = true, Bool_t testValues = false, const cha
     }
 
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readLeafIntN(Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString branchName = "MyLeafList.n";
@@ -632,10 +652,11 @@ void readLeafIntN(Bool_t printOut = true, Bool_t testValues = false, const char*
     }
 
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readLeafDoubleAArray(Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString branchName = "MyLeafList.a";
@@ -657,10 +678,11 @@ void readLeafDoubleAArray(Bool_t printOut = true, Bool_t testValues = false, con
     }
 
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readLeafBoolBArray(Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile::Open(fileName);
+    TFile* myFile = TFile::Open(fileName);
     TTreeReader myTreeReader ("HardTree");
 
     TString branchName = "MyLeafList.b";
@@ -682,6 +704,7 @@ void readLeafBoolBArray(Bool_t printOut = true, Bool_t testValues = false, const
     }
 
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
+    delete myFile;
 }
 
 void readTree(const char* fileName = "HardTreeFile.root"){
@@ -693,7 +716,7 @@ void readTree(const char* fileName = "HardTreeFile.root"){
         myTree->Show(i);
     }
 
-    myFile->Close();
+    delete myFile;
 }
 
 
