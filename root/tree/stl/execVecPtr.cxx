@@ -8,6 +8,7 @@ public:
   virtual void Print() {
      std::cout << " top::fTopValue= " << fTopValue; 
   }
+  virtual ~Top() {}
 };
 
 class One : public Top {
@@ -19,7 +20,7 @@ public:
      Top::Print();
      std::cout << " One::fOneValue= " << fOneValue;
    }
-
+   virtual ~One() {}
 };
 
 class Two : public Top {
@@ -31,7 +32,7 @@ public:
      Top::Print();
      std::cout << " Two::fTwoValue= " << fTwoValue;
    }
-
+   virtual ~Two() {}
 };
 
 #include <vector>

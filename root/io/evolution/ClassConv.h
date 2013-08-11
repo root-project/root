@@ -24,6 +24,7 @@ typedef OtherLib::Typedefed Typedefed;
 #endif
 
 class TopLevel {
+public:
 #if VERSION==2
    MyLib::Inside in;
 #elif VERSION==3

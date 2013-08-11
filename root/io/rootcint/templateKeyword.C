@@ -10,14 +10,20 @@ class Template : public GeometricalType,
                  public EnergeticType,
                  public CompositeType
 {
+public:
+  virtual ~Template() {}
   ClassDef(Template,1);
 };
 
 template <class T> class MyTest {
+public:
+   virtual ~MyTest() {}
    ClassDef(MyTest,1);
 };
 
 template <> class MyTest<int> {
+public:
+   virtual ~MyTest() {}
    ClassDef(MyTest,1);
 };
 
@@ -28,6 +34,8 @@ template <> class MyTest<int> {
 
 class ClassA
 {
+public:
+  virtual ~ClassA() {}
   ClassDef(ClassA,1)
 };
 
@@ -37,6 +45,8 @@ class ClassA
 
 class ClassB
 {
+public:
+  virtual ~ClassB() {}
   ClassDef(ClassB,1);
 };
 
@@ -46,6 +56,8 @@ class ClassB
 
 class ClassC
 {
+public:
+   virtual ~ClassC() {}
   ClassDef(ClassC,1);
 };
 

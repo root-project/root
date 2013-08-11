@@ -59,8 +59,8 @@ template <class T> void TestError(const std::string &test,
 }
 
 template <class T> void TestError(const std::string &test, 
-                                  std::vector<T> *orig, 
-                                  std::vector<T> *copy) {
+                                  std::vector<T> * /* orig */, 
+                                  std::vector<T> * /* copy */) {
    TestError(test,"Containers are not equivalent! See previous errors");
 }
 
@@ -71,8 +71,8 @@ template <class T> void TestError(const std::string &test,
 }
 
 template <class T> void TestError(const std::string &test, 
-                                  std::deque<T> *orig, 
-                                  std::deque<T> *copy) {
+                                  std::deque<T> */*orig*/, 
+                                  std::deque<T> */*copy*/) {
    TestError(test,"Containers are not equivalent! See previous errors");
 }
 
@@ -84,8 +84,8 @@ template <class T> void TestError(const std::string &test,
 }
 
 template <class T> void TestError(const std::string &test, 
-                                  std::list<T> *orig, 
-                                  std::list<T> *copy) {
+                                  std::list<T> */*orig*/, 
+                                  std::list<T> */*copy*/) {
    TestError(test,"Containers are not equivalent! See previous errors");
 }
 
@@ -96,8 +96,8 @@ template <class T> void TestError(const std::string &test,
 }
 
 template <class T> void TestError(const std::string &test, 
-                                  std::set<T> *orig, 
-                                  std::set<T> *copy) {
+                                  std::set<T> */*orig*/, 
+                                  std::set<T> */*copy*/) {
    TestError(test,"Containers are not equivalent! See previous errors");
 }
 
@@ -108,8 +108,8 @@ template <class T> void TestError(const std::string &test,
 }
 
 template <class T> void TestError(const std::string &test, 
-                                  std::multiset<T> *orig, 
-                                  std::multiset<T> *copy) {
+                                  std::multiset<T> */*orig*/, 
+                                  std::multiset<T> */*copy*/) {
    TestError(test,"Containers are not equivalent! See previous errors");
 }
 
@@ -120,8 +120,8 @@ template <class Key, class T> void TestError(const std::string &test,
 }
 
 template <class Key, class T> void TestError(const std::string &test, 
-                                             std::map<Key, T> *orig, 
-                                             std::map<Key, T> *copy) {
+                                             std::map<Key, T> */*orig*/, 
+                                             std::map<Key, T> */*copy*/) {
    TestError(test,"Containers are not equivalent! See previous errors");
 }
 
@@ -132,8 +132,8 @@ template <class Key, class T> void TestError(const std::string &test,
 }
 
 template <class Key, class T> void TestError(const std::string &test, 
-                                             std::multimap<Key, T> *orig, 
-                                             std::multimap<Key, T> *copy) {
+                                             std::multimap<Key, T> */*orig*/, 
+                                             std::multimap<Key, T> */*copy*/) {
    TestError(test,"Containers are not equivalent! See previous errors");
 }
 

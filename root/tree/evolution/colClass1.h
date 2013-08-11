@@ -5,6 +5,7 @@ class MoreNested {
 public:
    MoreNested(int i = 0) : fMoreNestedValue(i) {}
    int fMoreNestedValue;
+   virtual ~MoreNested() {}
    ClassDef(MoreNested,2);
 };
 
@@ -13,6 +14,7 @@ class Nested {
     Nested(int i = 0) : fNestedValue(i),fOther(i) {}
    int fNestedValue;
    MoreNested fOther;
+   virtual ~Nested() {}
    ClassDef(Nested,2);
 };
 
@@ -21,6 +23,7 @@ class Inside {
    Inside(int i = 0) : fValue(i),fSub(i) {}
    int fValue;
    Nested fSub;
+   virtual ~Inside() {}
    ClassDef(Inside,2);
 };
 
@@ -37,6 +40,8 @@ public:
    std::vector<int>    fValues;
    std::vector<Inside> fObjects;
    std::vector<double> fMeans;
+
+   virtual ~colClass() {}
    ClassDef(colClass,2);
 };
 

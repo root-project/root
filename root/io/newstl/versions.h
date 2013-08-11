@@ -39,6 +39,7 @@ class OutputOneErrorMessage {
       if (file) Unsupported(file->GetVersion(), msg);
       else Unsupported(msg);
    }
+   Bool_t result() { return false; }
 };
 
 Bool_t FileVersionGreaterThan(TFile *file, UInt_t comp) {
@@ -64,8 +65,10 @@ Bool_t HasPolymorphClassDefNonTObject(TFile *file) {
    if (!result) {
       if (FileVersionEqualCurrent(file)) {
          static OutputOneErrorMessage error("polymorphic behavior of non-TObject with a classDef");
+         return error.result();
       } else {
          static OutputOneErrorMessage error((TFile*)gDirectory,"polymorphic behavior of non-TObject with a classDef");
+         return error.result();
       }
    }
    return result;
@@ -76,8 +79,10 @@ Bool_t HasNestedContainer(TFile *file) {
    if (!result) {
       if (FileVersionEqualCurrent(file)) {
          static OutputOneErrorMessage error("nested stl containers");
+         return error.result();
       } else {
          static OutputOneErrorMessage error((TFile*)gDirectory,"nested stl containers");
+         return error.result();
       }
    }
    return result;
@@ -88,8 +93,10 @@ Bool_t HasNestedConstString(TFile *file) {
    if (!result) {
       if (FileVersionEqualCurrent(file)) {
          static OutputOneErrorMessage error("stl containers of const string*");
+         return error.result();
       } else {
          static OutputOneErrorMessage error((TFile*)gDirectory,"stl containers of const string*");
+         return error.result();
       }
    }
    return result;
@@ -100,8 +107,10 @@ bool HasSplitStlContainer(TFile *file, int splitlevel) {
    if (!result) {
       if (FileVersionEqualCurrent(file)) {
          static OutputOneErrorMessage error("splitting of stl containers");
+         return error.result();
       } else {
          static OutputOneErrorMessage error((TFile*)gDirectory,"splitting of stl containers");
+         return error.result();
       }
    }
    return result;
@@ -112,8 +121,10 @@ bool HasVarArrayOfContainers(TFile *file) {
    if (!result) {
       if (FileVersionEqualCurrent(file)) {
          static OutputOneErrorMessage error("variable size array of stl containers");
+         return error.result();
       } else {
          static OutputOneErrorMessage error((TFile*)gDirectory,"variable size array of stl containers");
+         return error.result();
       }
    }
    return result;

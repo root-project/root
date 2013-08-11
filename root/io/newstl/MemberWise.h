@@ -13,6 +13,7 @@ public:
    Member(const Member &rhs) : fName(rhs.fName), fIndex(rhs.fIndex) {}
    Member(const char *name, UInt_t index) : fName(name), fIndex(index) {}
    
+   virtual ~Member() {}
    ClassDef(Member,2);
 };
 
@@ -80,7 +81,9 @@ public:
 #ifdef NewMember
    UInt_t fData;
 #endif
-   
+  
+   virtual ~Content() {}
+ 
 #ifdef NewMember
    
    Content() : fOne("Default one",0),fTwo("Default two",0), fData(0) {}

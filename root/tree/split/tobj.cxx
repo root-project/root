@@ -7,11 +7,14 @@ class Collector : public TObject {
    Bool_t         fValid;
 
 public:
+   const TClonesArray& getArr() { return fMyClArr; }
+   const TObjArray* getObjArr() { if (fValid) return &fMyObjArr; else return 0; } 
    Collector() : fMyClArr("TNamed") {}
    ClassDef(Collector,1);
 };
 
 class Real : public Collector {
+public:
    Float_t fValue;
 
    ClassDef(Real,1);
@@ -25,6 +28,7 @@ class Event {
 
 public:
    Event() : fArr("Real") {};
+   int getNum() { return fEventNum; }
 };
 
 #include "TTree.h"

@@ -10,6 +10,7 @@ public:
    void Print() const {
       fprintf(stdout,"fOld = %d, fKeep = %d\n",fOld,fKeep);
    }
+   virtual ~MyClass() {}
    ClassDef(MyClass,3);
 };
 

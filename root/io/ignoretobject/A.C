@@ -15,7 +15,8 @@ private:
 public:
    A();
    virtual ~A();
-ClassDef(A, 2);
+   double get() { return fX*fY*fZ; }
+   ClassDef(A, 2);
 };
 
 #ifdef __MAKECINT__
@@ -25,7 +26,7 @@ ClassDef(A, 2);
 ClassImp(A);
 
 A::A()
-: fX(0.0)
+   : fX(0.0),fY(0.0),fZ(0.0)
 {
    // We are going to test TTree::Bronch()
    // to see if it handles this correctly. 

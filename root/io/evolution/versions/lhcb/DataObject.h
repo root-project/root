@@ -39,5 +39,11 @@ private:
 public:
   DataObject() : m_refCount(0),m_version(0),m_pRegistry(0),m_pLinkMgr(0)
     {}
+  
+  unsigned long       GetCount() { return m_refCount; }
+  unsigned char       GetVersion() { return m_version; }
+  IRegistry*          GetRegistry() { return m_pRegistry; }
+  LinkManager*        GetLink() { return m_pLinkMgr; }
+
 };
 #endif // GAUDIKERNEL_DATAOBJECT_H
