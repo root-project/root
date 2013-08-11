@@ -11,7 +11,7 @@ summary:
 	@CALLDIR= ; $(MAKE) --no-print-directory  tests || \
 	if [ `ls $(SUMMARY).*.summary 2>/dev/null | wc -l` -gt 0 ] ; then \
           res=`grep FAILING $(SUMMARY).*.summary  | wc -l` ; \
-	  echo "There is at least $$res failings test:" ; \
+	  echo "At least $$res tests have failed:" ; \
 	  grep -h FAILING $(SUMMARY).*.summary; \
 	fi
 
