@@ -147,7 +147,7 @@ private:
    mutable StreamerImpl_t fStreamerImpl;//! Pointer to the function implementing the right streaming behavior for the class represented by this object.
 
    TMethod           *GetClassMethod(Long_t faddr);
-   TMethod           *GetClassMethod(const char *name, const char *signature);
+   TMethod           *GetClassMethod(const char *name, const char *signature, Bool_t objectIsConst = kFALSE);
    Int_t              GetBaseClassOffsetRecurse(const TClass *base);
    void Init(const char *name, Version_t cversion, const type_info *info,
              TVirtualIsAProxy *isa, ShowMembersFunc_t showmember,
@@ -286,8 +286,8 @@ public:
    UInt_t             GetHeapInstanceCount() const { return fOnHeap; }
    void               GetMenuItems(TList *listitems);
    TList             *GetMenuList() const;
-   TMethod           *GetMethod(const char *method, const char *params);
-   TMethod           *GetMethodWithPrototype(const char *method, const char *proto);
+   TMethod           *GetMethod(const char *method, const char *params, Bool_t objectIsConst = kFALSE);
+   TMethod           *GetMethodWithPrototype(const char *method, const char *proto, Bool_t objectIsConst = kFALSE);
    TMethod           *GetMethodAny(const char *method);
    TMethod           *GetMethodAllAny(const char *method);
    Int_t              GetNdata();

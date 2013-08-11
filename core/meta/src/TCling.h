@@ -186,13 +186,14 @@ public: // Public Interface
    void    UpdateListOfDataMembers(TClass* cl) const;
    void    UpdateListOfEnums(TClass* cl) const;
 
-   TString GetMangledName(TClass* cl, const char* method, const char* params);
-   TString GetMangledNameWithPrototype(TClass* cl, const char* method, const char* proto);
-   void*   GetInterfaceMethod(TClass* cl, const char* method, const char* params);
-   void*   GetInterfaceMethodWithPrototype(TClass* cl, const char* method, const char* proto);
+   TString GetMangledName(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
+   TString GetMangledNameWithPrototype(TClass* cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE);
+   void*   GetInterfaceMethod(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
+   void*   GetInterfaceMethodWithPrototype(TClass* cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE);
    const char* GetInterpreterTypeName(const char* name, Bool_t full = kFALSE);
    void    Execute(const char* function, const char* params, int* error = 0);
    void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, int* error = 0);
+   void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, Bool_t objectIsConst, int* error = 0);
    void    Execute(TObject* obj, TClass* cl, TMethod* method, TObjArray* params, int* error = 0);
    Long_t  ExecuteMacro(const char* filename, EErrorCode* error = 0);
    void    RecursiveRemove(TObject* obj);

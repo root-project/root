@@ -2575,7 +2575,7 @@ Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 
 
 //______________________________________________________________________________
 TString TCling::GetMangledName(TClass* cl, const char* method,
-                              const char* params)
+                               const char* params, Bool_t objectIsConst /* = kFALSE */)
 {
    // Return the cling mangled name for a method of a class with parameters
    // params (params is a string of actual arguments, not formal ones). If the
@@ -2584,7 +2584,7 @@ TString TCling::GetMangledName(TClass* cl, const char* method,
    TClingCallFunc func(fInterpreter);
    if (cl) {
       Long_t offset;
-      func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params,
+      func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params, objectIsConst,
          &offset);
    }
    else {
@@ -2601,7 +2601,7 @@ TString TCling::GetMangledName(TClass* cl, const char* method,
 
 //______________________________________________________________________________
 TString TCling::GetMangledNameWithPrototype(TClass* cl, const char* method,
-      const char* proto)
+      const char* proto, Bool_t objectIsConst /* = kFALSE */)
 {
    // Return the cling mangled name for a method of a class with a certain
    // prototype, i.e. "char*,int,float". If the class is 0 the global function
@@ -2610,15 +2610,15 @@ TString TCling::GetMangledNameWithPrototype(TClass* cl, const char* method,
    Long_t offset;
    if (cl) {
       return ((TClingClassInfo*)cl->GetClassInfo())->
-             GetMethod(method, proto, &offset).GetMangledName();
+         GetMethod(method, proto, objectIsConst, &offset).GetMangledName();
    }
    TClingClassInfo gcl(fInterpreter);
-   return gcl.GetMethod(method, proto, &offset).GetMangledName();
+   return gcl.GetMethod(method, proto, objectIsConst, &offset).GetMangledName();
 }
 
 //______________________________________________________________________________
 void* TCling::GetInterfaceMethod(TClass* cl, const char* method,
-                                         const char* params)
+                                 const char* params, Bool_t objectIsConst /* = kFALSE */)
 {
    // Return pointer to cling interface function for a method of a class with
    // parameters params (params is a string of actual arguments, not formal
@@ -2627,8 +2627,8 @@ void* TCling::GetInterfaceMethod(TClass* cl, const char* method,
    TClingCallFunc func(fInterpreter);
    if (cl) {
       Long_t offset;
-      func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params,
-         &offset);
+      func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params, objectIsConst,
+                   &offset);
    }
    else {
       TClingClassInfo gcl(fInterpreter);
@@ -2640,7 +2640,8 @@ void* TCling::GetInterfaceMethod(TClass* cl, const char* method,
 
 //______________________________________________________________________________
 void* TCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
-      const char* proto)
+                                              const char* proto,
+                                              Bool_t objectIsConst /* = kFALSE */)
 {
    // Return pointer to cling interface function for a method of a class with
    // a certain prototype, i.e. "char*,int,float". If the class is 0 the global
@@ -2650,12 +2651,12 @@ void* TCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
    if (cl) {
       Long_t offset;
       f = ((TClingClassInfo*)cl->GetClassInfo())->
-          GetMethod(method, proto, &offset).InterfaceMethod();
+         GetMethod(method, proto, objectIsConst, &offset).InterfaceMethod();
    }
    else {
       Long_t offset;
       TClingClassInfo gcl(fInterpreter);
-      f = gcl.GetMethod(method, proto, &offset).InterfaceMethod();
+      f = gcl.GetMethod(method, proto, objectIsConst, &offset).InterfaceMethod();
    }
    return f;
 }
@@ -2724,7 +2725,7 @@ void TCling::Execute(const char* function, const char* params, int* error)
 
 //______________________________________________________________________________
 void TCling::Execute(TObject* obj, TClass* cl, const char* method,
-                    const char* params, int* error)
+                     const char* params, Bool_t objectIsConst, int* error)
 {
    // Execute a method from class cl with arguments params.
    //
@@ -2746,14 +2747,20 @@ void TCling::Execute(TObject* obj, TClass* cl, const char* method,
    void* addr = cl->DynamicCast(TObject::Class(), obj, kFALSE);
    Long_t offset = 0L;
    TClingCallFunc func(fInterpreter);
-   func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params, &offset);
+   func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params, objectIsConst, &offset);
    void* address = (void*)((Long_t)addr + offset);
    func.Exec(address);
 }
 
 //______________________________________________________________________________
+void TCling::Execute(TObject* obj, TClass* cl, const char* method,
+                    const char* params, int* error)
+{
+   Execute(obj,cl,method,params,false,error);
+}
+//______________________________________________________________________________
 void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
-      TObjArray* params, int* error)
+                     TObjArray* params, int* error)
 {
    // Execute a method from class cl with the arguments in array params
    // (params[0] ... params[n] = array of TObjString parameters).

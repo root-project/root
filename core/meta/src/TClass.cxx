@@ -3423,7 +3423,8 @@ TMethod *TClass::GetMethodAllAny(const char *method)
 }
 
 //______________________________________________________________________________
-TMethod *TClass::GetMethod(const char *method, const char *params)
+TMethod *TClass::GetMethod(const char *method, const char *params,
+                           Bool_t objectIsConst /* = kFALSE */)
 {
    // Find the best method (if there is one) matching the parameters.
    // The params string must contain argument values, like "3189, \"aap\", 1.3".
@@ -3437,7 +3438,7 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
       Fatal("GetMethod", "gInterpreter not initialized");
 
    Long_t faddr = (Long_t)gInterpreter->GetInterfaceMethod(this, method,
-                                                           params);
+                                                           params, objectIsConst);
    if (!faddr) return 0;
 
    // loop over all methods in this class (and its baseclasses) till
@@ -3451,14 +3452,14 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
    // So we can not easily determine whether something is interpreted or
    // so the optimization of not looking at the mangled name can not be
    // used
-   m = GetClassMethod(method,params);
+   m = GetClassMethod(method,params,objectIsConst);
 
 #else
    if (faddr == (Long_t)gCling->GetExecByteCode()) {
       // the method is actually interpreted, its address is
       // not a discriminant (it always point to the same
       // function pointed by CINT G__exec_bytecode.
-      m = GetClassMethod(method,params);
+      m = GetClassMethod(method,params,objectIsConst);
    } else {
       m = GetClassMethod(faddr);
    }
@@ -3471,18 +3472,19 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
    while ((base = (TBaseClass *) next())) {
       TClass *c = base->GetClassPointer();
       if (c) {
-         m = c->GetMethod(method,params);
+         m = c->GetMethod(method,params,objectIsConst);
          if (m) return m;
       }
    }
    Error("GetMethod",
-         "\nDid not find matching TMethod <%s> with \"%s\" for %s",
-         method,params,GetName());
+         "\nDid not find matching TMethod <%s> with \"%s\" %sfor %s",
+         method,params,objectIsConst ? "const " : "", GetName());
    return 0;
 }
 
 //______________________________________________________________________________
-TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto)
+TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
+                                        Bool_t objectIsConst /* = kFALSE */)
 {
    // Find the method with a given prototype. The proto string must be of the
    // form: "char*,int,double". Returns 0 in case method is not found.
@@ -3493,7 +3495,8 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto)
       Fatal("GetMethod", "gInterpreter not initialized");
 
    Long_t faddr = (Long_t)gInterpreter->GetInterfaceMethodWithPrototype(this,
-                                                              method, proto);
+                                                               method, proto,
+                                                               objectIsConst);
    if (!faddr) return 0;
 
    // loop over all methods in this class (and its baseclasses) till
@@ -3507,7 +3510,7 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto)
    while ((base = (TBaseClass *) next())) {
       TClass *c = base->GetClassPointer();
       if (c) {
-         m = c->GetMethodWithPrototype(method,proto);
+         m = c->GetMethodWithPrototype(method,proto,objectIsConst);
          if (m) return m;
       }
    }
@@ -3533,7 +3536,8 @@ TMethod *TClass::GetClassMethod(Long_t faddr)
 }
 
 //______________________________________________________________________________
-TMethod *TClass::GetClassMethod(const char *name, const char* params)
+TMethod *TClass::GetClassMethod(const char *name, const char* params,
+                                Bool_t objectIsConst /* = kFALSE */)
 {
    // Look for a method in this class that has the name and
    // signature
@@ -3548,7 +3552,7 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params)
       R__LOCKGUARD2(gClingMutex);
       CallFunc_t  *func = gCling->CallFunc_Factory();
       Long_t       offset;
-      gCling->CallFunc_SetFunc(func,GetClassInfo(), name, params, &offset);
+      gCling->CallFunc_SetFunc(func,GetClassInfo(), name, params, objectIsConst, &offset);
       MethodInfo_t *info = gCling->CallFunc_FactoryMethod(func);
       TMethod request(info,this);
       TMethod *m;
