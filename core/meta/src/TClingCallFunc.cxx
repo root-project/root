@@ -513,12 +513,41 @@ void TClingCallFunc::BuildTrampolineFunc(clang::CXXMethodDecl* MD) {
 void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    if (!FD)
       return;
+   bool needInstantiation = false;
    if (!FD->isDefined(FD)) {
-      // Not an error; the caller might just check whether this function can
-      // be called at all.
-      //Error("CodeGenDecl", "Cannot codegen %s: no definition available!",
-      //      FD->getNameAsString().c_str());
-      return;
+      if (FD->getTemplatedKind() != clang::FunctionDecl::TK_NonTemplate) {
+         // We have a function template instance, let's check the
+         // template.
+         const clang::FunctionDecl *tmplt = FD->getInstantiatedFromMemberFunction();
+         if (tmplt && !tmplt->isDefined(tmplt)) {
+            return;
+         }
+         if (FD->getTemplateSpecializationInfo()) {
+            clang::FunctionTemplateDecl *tmpltDecl = FD->getTemplateSpecializationInfo()->getTemplate();
+            if (tmpltDecl && !tmpltDecl->hasBody()) {
+               return;
+            }
+         }
+         if (FD->isImplicitlyInstantiable()) {
+            needInstantiation = true;
+         }
+      } else {
+         // Not an error; the caller might just check whether this function can
+         // be called at all.
+         //Error("CodeGenDecl", "Cannot codegen %s: no definition available!",
+         //      FD->getNameAsString().c_str());
+         return;
+      }
+   }
+
+   if (needInstantiation) {
+      // Could trigger deserialization of decls.
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      clang::Sema &S = fInterp->getSema();
+      clang::FunctionDecl *FDmod = const_cast<clang::FunctionDecl*>(FD);
+      S.InstantiateFunctionDefinition(clang::SourceLocation(), FDmod,
+                                      /*Recursive=*/ true,
+                                      /*DefinitionRequired=*/ true);
    }
    cling::CompilationOptions CO;
    CO.DeclarationExtraction = 0;
@@ -527,7 +556,7 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    CO.DynamicScoping = 0;
    CO.Debug = 0;
    CO.CodeGeneration = 1;
-
+   
    cling::Transaction T(CO, FD->getASTContext());
 
    T.append(const_cast<clang::FunctionDecl*>(FD));
