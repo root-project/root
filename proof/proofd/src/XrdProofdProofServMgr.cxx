@@ -3112,7 +3112,6 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
                return -1;
             }
          }
-         fclose(fenv);
       }
    }
 
@@ -3609,7 +3608,6 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
                return -1;
             }
          }
-         fclose(fenv);
       }
    }
 
