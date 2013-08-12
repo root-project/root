@@ -1842,7 +1842,7 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
             Long_t offset = 0;
 
             R__LOCKGUARD2(gClingMutex);
-            gCling->CallFunc_SetFuncProto(ism,fClassInfo,"ShowMembers", "TMemberInspector&", &offset);
+            gCling->CallFunc_SetFuncProto(ism,fClassInfo, "ShowMembers", "TMemberInspector&", &offset);
             if (fIsOffsetStreamerSet && offset != fOffsetStreamer) {
                Error("CallShowMembers", "Logic Error: offset for Streamer() and ShowMembers() differ!");
                fInterShowMembers = 0;

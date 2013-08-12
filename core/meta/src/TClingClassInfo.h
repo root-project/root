@@ -96,7 +96,7 @@ public:
    TClingMethodInfo     GetMethodWithArgs(const char *fname, const char *arglist, bool objectIsConst,
                                   long *poffset, MatchMode mode = ConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
-   int                  GetMethodNArg(const char *method, const char *proto) const;
+   int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, MatchMode mode = ConversionMatch) const;
    long                 GetOffset(const clang::CXXMethodDecl* md) const;
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    bool                 HasDefaultConstructor() const;
@@ -109,7 +109,7 @@ public:
    static bool          IsEnum(cling::Interpreter *interp, const char *name);
    bool                 IsLoaded() const;
    bool                 IsValid() const;
-   bool                 IsValidMethod(const char *method, const char *proto, long *offset) const;
+   bool                 IsValidMethod(const char *method, const char *proto, Bool_t objectIsConst, long *offset, MatchMode mode = ConversionMatch) const;
    int                  InternalNext();
    int                  Next();
    void                *New() const;

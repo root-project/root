@@ -2601,19 +2601,21 @@ TString TCling::GetMangledName(TClass* cl, const char* method,
 
 //______________________________________________________________________________
 TString TCling::GetMangledNameWithPrototype(TClass* cl, const char* method,
-      const char* proto, Bool_t objectIsConst /* = kFALSE */)
+                                            const char* proto, Bool_t objectIsConst /* = kFALSE */,
+                                            MatchMode imode /* = ConversionMatch */)
 {
    // Return the cling mangled name for a method of a class with a certain
    // prototype, i.e. "char*,int,float". If the class is 0 the global function
    // list will be searched.
    R__LOCKGUARD2(gClingMutex);
    Long_t offset;
+   TClingClassInfo::MatchMode mode = (TClingClassInfo::MatchMode)imode;
    if (cl) {
       return ((TClingClassInfo*)cl->GetClassInfo())->
-         GetMethod(method, proto, objectIsConst, &offset).GetMangledName();
+         GetMethod(method, proto, objectIsConst, &offset, mode).GetMangledName();
    }
    TClingClassInfo gcl(fInterpreter);
-   return gcl.GetMethod(method, proto, objectIsConst, &offset).GetMangledName();
+   return gcl.GetMethod(method, proto, objectIsConst, &offset, mode).GetMangledName();
 }
 
 //______________________________________________________________________________
@@ -2641,22 +2643,24 @@ void* TCling::GetInterfaceMethod(TClass* cl, const char* method,
 //______________________________________________________________________________
 void* TCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
                                               const char* proto,
-                                              Bool_t objectIsConst /* = kFALSE */)
+                                              Bool_t objectIsConst /* = kFALSE */,
+                                              MatchMode imode /* = ConversionMatch */)
 {
    // Return pointer to cling interface function for a method of a class with
    // a certain prototype, i.e. "char*,int,float". If the class is 0 the global
    // function list will be searched.
    R__LOCKGUARD2(gClingMutex);
    void* f;
+   TClingClassInfo::MatchMode mode = (TClingClassInfo::MatchMode)imode;
    if (cl) {
       Long_t offset;
       f = ((TClingClassInfo*)cl->GetClassInfo())->
-         GetMethod(method, proto, objectIsConst, &offset).InterfaceMethod();
+         GetMethod(method, proto, objectIsConst, &offset, mode).InterfaceMethod();
    }
    else {
       Long_t offset;
       TClingClassInfo gcl(fInterpreter);
-      f = gcl.GetMethod(method, proto, objectIsConst, &offset).InterfaceMethod();
+      f = gcl.GetMethod(method, proto, objectIsConst, &offset, mode).InterfaceMethod();
    }
    return f;
 }
@@ -3989,21 +3993,21 @@ void TCling::CallFunc_SetFunc(CallFunc_t* func, MethodInfo_t* info) const
 }
 
 //______________________________________________________________________________
-void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, Long_t* offset) const
+void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, Long_t* offset, MatchMode mode /* = ConversionMatch */) const
 {
    // Interface to cling function
    TClingCallFunc* f = (TClingCallFunc*) func;
    TClingClassInfo* ci = (TClingClassInfo*) info;
-   f->SetFuncProto(ci, method, proto, offset);
+   f->SetFuncProto(ci, method, proto, offset, (TClingClassInfo::MatchMode)mode);
 }
 
 //______________________________________________________________________________
-void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, bool objectIsConst, Long_t* offset) const
+void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, bool objectIsConst, Long_t* offset, MatchMode mode /* = ConversionMatch */) const
 {
    // Interface to cling function
    TClingCallFunc* f = (TClingCallFunc*) func;
    TClingClassInfo* ci = (TClingClassInfo*) info;
-   f->SetFuncProto(ci, method, proto, objectIsConst, offset);
+   f->SetFuncProto(ci, method, proto, objectIsConst, offset, (TClingClassInfo::MatchMode)mode);
 }
 
 //______________________________________________________________________________
@@ -4063,10 +4067,10 @@ ClassInfo_t* TCling::ClassInfo_Factory(const char* name) const
 }
 
 //______________________________________________________________________________
-int TCling::ClassInfo_GetMethodNArg(ClassInfo_t* cinfo, const char* method, const char* proto) const
+int TCling::ClassInfo_GetMethodNArg(ClassInfo_t* cinfo, const char* method, const char* proto, Bool_t objectIsConst /* = false */, MatchMode mode /* = ConversionMatch */) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   return TClinginfo->GetMethodNArg(method, proto);
+   return TClinginfo->GetMethodNArg(method, proto, objectIsConst, (TClingClassInfo::MatchMode)mode);
 }
 
 //______________________________________________________________________________
@@ -4125,10 +4129,17 @@ bool TCling::ClassInfo_IsValid(ClassInfo_t* cinfo) const
 }
 
 //______________________________________________________________________________
-bool TCling::ClassInfo_IsValidMethod(ClassInfo_t* cinfo, const char* method, const char* proto, Long_t* offset) const
+bool TCling::ClassInfo_IsValidMethod(ClassInfo_t* cinfo, const char* method, const char* proto, Long_t* offset, MatchMode mode /* = ConversionMatch */) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   return TClinginfo->IsValidMethod(method, proto, offset);
+   return TClinginfo->IsValidMethod(method, proto, false, offset, (TClingClassInfo::MatchMode)mode);
+}
+
+//______________________________________________________________________________
+bool TCling::ClassInfo_IsValidMethod(ClassInfo_t* cinfo, const char* method, const char* proto, Bool_t objectIsConst, Long_t* offset, MatchMode mode /* = ConversionMatch */) const
+{
+   TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
+   return TClinginfo->IsValidMethod(method, proto, objectIsConst, offset, (TClingClassInfo::MatchMode)mode);
 }
 
 //______________________________________________________________________________

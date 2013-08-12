@@ -272,7 +272,17 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       // constructor function itself.
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   const FunctionDecl *fd = lh.findFunctionProto(fDecl, fname, proto, objectIsConst);
+   const FunctionDecl *fd;
+   if (mode == ConversionMatch) {
+      fd = lh.findFunctionProto(fDecl, fname, proto, objectIsConst);
+   } else if (mode == ExactMatch) {
+      fd = lh.matchFunctionProto(fDecl, fname, proto, objectIsConst);
+   } else {
+      Error("TClingClassInfo::GetMethod",
+            "The MatchMode %d is not supported.", mode);
+      TClingMethodInfo tmi(fInterp);
+      return tmi;      
+   }
    if (!fd) {
       // Function not found.
       TClingMethodInfo tmi(fInterp);
@@ -342,13 +352,15 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
    return tmi;
 }
 
-int TClingClassInfo::GetMethodNArg(const char *method, const char *proto) const
+int TClingClassInfo::GetMethodNArg(const char *method, const char *proto,
+                                   Bool_t objectIsConst,
+                                   MatchMode mode /*= ConversionMatch*/) const
 {
    // Note: Used only by TQObject.cxx:170 and only for interpreted classes.
    if (!IsLoaded()) {
       return -1;
    }
-   TClingMethodInfo mi = GetMethod(method, proto, 0);
+   TClingMethodInfo mi = GetMethod(method, proto, objectIsConst, 0, mode);
    int clang_val = -1;
    if (mi.IsValid()) {
       unsigned num_params = mi.GetMethodDecl()->getNumParams();
@@ -563,7 +575,9 @@ bool TClingClassInfo::IsValid() const
 }
 
 bool TClingClassInfo::IsValidMethod(const char *method, const char *proto,
-                                    long *offset) const
+                                    Bool_t objectIsConst,
+                                    long *offset,
+                                    MatchMode mode /*= ConversionMatch*/) const
 {
    // Check if the method with the given prototype exist.
    if (!IsLoaded()) {
@@ -572,7 +586,7 @@ bool TClingClassInfo::IsValidMethod(const char *method, const char *proto,
    if (offset) {
       *offset = 0L;
    }
-   TClingMethodInfo mi = GetMethod(method, proto, offset);
+   TClingMethodInfo mi = GetMethod(method, proto, offset, mode);
    return mi.IsValid();
 }
 

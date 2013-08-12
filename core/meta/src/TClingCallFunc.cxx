@@ -1018,15 +1018,19 @@ void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
                                   const char *method, const char *proto,
-                                  long *poffset)
+                                  long *poffset,
+                                  TClingClassInfo::MatchMode mode /* = TClingClassInfo::ConversionMatch */
+                                  )
 {
-   SetFuncProto(info,method,proto,false,poffset);
+   SetFuncProto(info,method,proto,false,poffset, mode);
 }
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
                                   const char *method, const char *proto,
                                   bool objectIsConst,
-                                  long *poffset)
+                                  long *poffset,
+                                  TClingClassInfo::MatchMode mode /* = TClingClassInfo::ConversionMatch */
+                                  )
 {
    delete fMethod;
    fMethod = new TClingMethodInfo(fInterp);
@@ -1040,7 +1044,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
       Error("TClingCallFunc::SetFuncProto", "Class info is invalid!");
       return;
    }
-   *fMethod = info->GetMethod(method, proto, objectIsConst, poffset);
+   *fMethod = info->GetMethod(method, proto, objectIsConst, poffset, mode);
    if (!fMethod->IsValid()) {
       //Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
       //      method, proto);
