@@ -36,23 +36,17 @@
 #define TWin32SendClass char
 #endif
 
-extern "C" {
-   namespace clang {
-      class Decl;
-      class EnumDecl;
-   }
-   namespace cling {
-      class Transaction;
-      class MetaProcessor;
-      class StoredValueRef;
-      class Interpreter;
-   }
-   void TCling__UpdateListsOnCommitted(const cling::Transaction&, 
-                                       cling::Interpreter*);
-   void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
-   TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
-   const clang::Decl* TCling__GetObjectDecl(TObject *obj);
-
+namespace clang {
+   class CXXRecordDecl;
+   class Decl;
+   class EnumDecl;
+   class FunctionDecl;
+}
+namespace cling {
+   class Interpreter;
+   class MetaProcessor;
+   class StoredValueRef;
+   class Transaction;
 }
 
 class TEnv;
@@ -66,6 +60,15 @@ namespace ROOT {
       class TNormalizedCtxt;
       class TClingLookupHelper;
    }
+}
+
+extern "C" {
+   void TCling__UpdateListsOnCommitted(const cling::Transaction&, 
+                                       cling::Interpreter*);
+   void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
+   TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
+   const clang::Decl* TCling__GetObjectDecl(TObject *obj);
+
 }
 
 class TCling : public TInterpreter {
@@ -400,6 +403,7 @@ private: // Private Utility Functions
 
    void UpdateListOfLoadedSharedLibraries();
    void RegisterLoadedSharedLibrary(const char* name);
+   void AddFriendToClass(clang::FunctionDecl*, clang::CXXRecordDecl*) const;
 
    bool LoadPCM(TString pcmFileName, const char** headers,
                 void (*triggerFunc)()) const;

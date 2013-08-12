@@ -3846,6 +3846,21 @@ void TCling::RegisterTemporary(const cling::StoredValueRef& value)
    fTemporaries->push_back(value);
 }
 
+//______________________________________________________________________________
+void TCling::AddFriendToClass(clang::FunctionDecl* function,
+                              clang::CXXRecordDecl* klass) const
+{
+   // Inject function as a friend into klass.
+   // With function being f in void f() {new N::PrivKlass(); } this enables
+   // I/O of non-public classes.
+   using namespace clang;
+   ASTContext& Ctx = klass->getASTContext();
+   FriendDecl::FriendUnion friendUnion(function);
+   // one dummy object for the source location
+   SourceLocation sl;
+   FriendDecl* friendDecl = FriendDecl::Create(Ctx, klass, sl, friendUnion, sl);
+   klass->pushFriendDecl(friendDecl);
+}
 
 //______________________________________________________________________________
 //
