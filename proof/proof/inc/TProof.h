@@ -892,8 +892,8 @@ public:
    virtual Int_t Load(const char *macro, Bool_t notOnClient = kFALSE, Bool_t uniqueOnly = kTRUE,
                       TList *wrks = 0);
 
-   Int_t       AddDynamicPath(const char *libpath, Bool_t onClient = kFALSE, TList *wrks = 0);
-   Int_t       AddIncludePath(const char *incpath, Bool_t onClient = kFALSE, TList *wrks = 0);
+   Int_t       AddDynamicPath(const char *libpath, Bool_t onClient = kFALSE, TList *wrks = 0, Bool_t doCollect = kTRUE);
+   Int_t       AddIncludePath(const char *incpath, Bool_t onClient = kFALSE, TList *wrks = 0, Bool_t doCollect = kTRUE);
    Int_t       RemoveDynamicPath(const char *libpath, Bool_t onClient = kFALSE);
    Int_t       RemoveIncludePath(const char *incpath, Bool_t onClient = kFALSE);
 

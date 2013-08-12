@@ -1452,14 +1452,14 @@ Int_t TProof::AddWorkers(TList *workerList)
    dyn.ReplaceAll("\"", " ");
    PDB(kGlobal, 3)
       Info("AddWorkers", "Will invoke AddDynamicPath() on selected workers");
-   AddDynamicPath(dyn, kFALSE, addedWorkers);
+   AddDynamicPath(dyn, kFALSE, addedWorkers, fDynamicStartup);
 
    TString inc = gSystem->GetIncludePath();
    inc.ReplaceAll("-I", " ");
    inc.ReplaceAll("\"", " ");
    PDB(kGlobal, 3)
       Info("AddWorkers", "Will invoke AddIncludePath() on selected workers");
-   AddIncludePath(inc, kFALSE, addedWorkers);
+   AddIncludePath(inc, kFALSE, addedWorkers, fDynamicStartup);
 
    // Update list of current workers
    PDB(kGlobal, 3)
@@ -9137,7 +9137,8 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
 }
 
 //______________________________________________________________________________
-Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks)
+Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks,
+   Bool_t doCollect)
 {
    // Add 'libpath' to the lib path search.
    // Multiple paths can be specified at once separating them with a comma or
@@ -9166,7 +9167,8 @@ Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks)
    // Forward the request
    if (wrks) {
       Broadcast(m, wrks);
-      Collect(wrks, fCollectTimeout);
+      if (doCollect)
+         Collect(wrks, fCollectTimeout);
    }
    else {
       Broadcast(m);
@@ -9177,7 +9179,8 @@ Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks)
 }
 
 //______________________________________________________________________________
-Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks)
+Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks,
+   Bool_t doCollect)
 {
    // Add 'incpath' to the inc path search.
    // Multiple paths can be specified at once separating them with a comma or
@@ -9206,7 +9209,8 @@ Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks)
    // Forward the request
    if (wrks) {
       Broadcast(m, wrks);
-      Collect(wrks, fCollectTimeout);
+      if (doCollect)
+         Collect(wrks, fCollectTimeout);
    }
    else {
       Broadcast(m);
