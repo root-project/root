@@ -468,6 +468,12 @@ const char *TClingMethodInfo::GetPrototype() const
       ++idx;
    }
    buf += ')';
+   if (const clang::CXXMethodDecl *md =
+       llvm::dyn_cast<clang::CXXMethodDecl>( GetMethodDecl())) {
+      if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
+         buf += " const";
+      }
+   }
    return buf.c_str();
 }
 
