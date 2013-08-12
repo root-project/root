@@ -2,7 +2,7 @@
 // Author: Axel Naumann, 2011-09-21
 
 /*************************************************************************
- * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers and al.        *
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers and al.        *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
