@@ -2835,7 +2835,23 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
       }
       listpar = complete.Data();
    }
-   Execute(obj, cl, const_cast<char*>(method->GetName()), const_cast<char*>(listpar), error);
+
+   // And now execute it.
+   R__LOCKGUARD2(gClingMutex);
+   if (error) {
+      *error = TInterpreter::kNoError;
+   }
+   // If the actual class of this object inherits 2nd (or more) from TObject,
+   // 'obj' is unlikely to be the start of the object (as described by IsA()),
+   // hence gInterpreter->Execute will improperly correct the offset.
+   void* addr = cl->DynamicCast(TObject::Class(), obj, kFALSE);
+   Long_t offset = 0L;
+   TClingCallFunc func(fInterpreter);
+   TClingMethodInfo *minfo = (TClingMethodInfo*)method->fInfo;
+   func.Init(minfo->GetMethodDecl());
+   func.SetArgs(listpar);
+   void* address = (void*)((Long_t)addr + offset);
+   func.Exec(address);
 }
 
 //______________________________________________________________________________
