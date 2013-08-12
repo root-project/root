@@ -418,42 +418,10 @@ const char *TClingMethodInfo::GetMangledName() const
    if (!IsValid()) {
       return 0;
    }
-   const char *fname = 0;
    static std::string mangled_name;
    mangled_name.clear();
-   llvm::raw_string_ostream os(mangled_name);
-   llvm::OwningPtr<clang::MangleContext> mangle(GetMethodDecl()->getASTContext().
-         createMangleContext());
-   const clang::NamedDecl *nd = GetMethodDecl();
-   if (!nd) {
-      return 0;
-   }
-   if (!mangle->shouldMangleDeclName(nd)) {
-      clang::IdentifierInfo *ii = nd->getIdentifier();
-      fname = ii->getNameStart();
-   }
-   else {
-      if (const clang::CXXConstructorDecl *d =
-               llvm::dyn_cast<clang::CXXConstructorDecl>(nd)) {
-         //Ctor_Complete,          // Complete object ctor
-         //Ctor_Base,              // Base object ctor
-         //Ctor_CompleteAllocating // Complete object allocating ctor (unused)
-         mangle->mangleCXXCtor(d, clang::Ctor_Complete, os);
-      }
-      else if (const clang::CXXDestructorDecl *d =
-                  llvm::dyn_cast<clang::CXXDestructorDecl>(nd)) {
-         //Dtor_Deleting, // Deleting dtor
-         //Dtor_Complete, // Complete object dtor
-         //Dtor_Base      // Base object dtor
-         mangle->mangleCXXDtor(d, clang::Dtor_Complete, os);
-      }
-      else {
-         mangle->mangleName(nd, os);
-      }
-      os.flush();
-      fname = mangled_name.c_str();
-   }
-   return fname;
+   fInterp->maybeMangleDeclName(GetMethodDecl(),mangled_name);
+   return mangled_name.c_str();
 }
 
 const char *TClingMethodInfo::GetPrototype() const
