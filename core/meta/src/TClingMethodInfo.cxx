@@ -445,7 +445,7 @@ const char *TClingMethodInfo::GetMangledName() const
          //Dtor_Deleting, // Deleting dtor
          //Dtor_Complete, // Complete object dtor
          //Dtor_Base      // Base object dtor
-         mangle->mangleCXXDtor(d, clang::Dtor_Deleting, os);
+         mangle->mangleCXXDtor(d, clang::Dtor_Complete, os);
       }
       else {
          mangle->mangleName(nd, os);
