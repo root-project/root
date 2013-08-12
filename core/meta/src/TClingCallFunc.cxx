@@ -521,7 +521,14 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
          const clang::FunctionDecl *tmplt = FD->getInstantiatedFromMemberFunction();
          if (tmplt && !tmplt->isDefined(tmplt)) {
             return;
-         } else {
+         }
+         if (FD->getTemplateSpecializationInfo()) {
+            clang::FunctionTemplateDecl *tmpltDecl = FD->getTemplateSpecializationInfo()->getTemplate();
+            if (tmpltDecl && !tmpltDecl->hasBody()) {
+               return;
+            }
+         }
+         if (FD->isImplicitlyInstantiable()) {
             needInstantiation = true;
          }
       } else {
