@@ -5,7 +5,7 @@ platforms. Most notably Windows is not supported until at least 6.02.
 6.00/00 supports only
 
 -   Linux 32bit and 64 bit, i32 and x86-64 and x32 (see below). Likely
-    also PPC but that is untested, please report.
+    also PPC 32 and 64 bit but that is untested, please report.
 -   MacOS on Intel CPUs.
 
 More platforms are expected to be available later; the lack of support
@@ -35,7 +35,7 @@ side-by-side will be possible.
 
 Cling follows the C++ standard much more strictly than CINT. In
 particular some code that used to run with CINT will either issue new
-warnings or new compilations error. For example when CINT was parsing
+warnings or new compilation errors. For example when CINT was parsing
 Namespace::Symbol it would not only apply the C++ search rules but also
 search in the outer scopes and for this example could actually return
 ::Symbol instead of (as Cling now does) issuing a compilation error.
@@ -50,21 +50,9 @@ With:
 With Cling (and any standard compliant compiler), using `*vec<>*` is
 allowed (but `*vec*` is not).
 
-### Cling not yet implemented features
-
-In this release Cling does not support the following (but we intend to
-re-introduce them soon) features:
-
--   Unloading of script and shared libraries
--   Discovery of symbols that are declared but not implemented being
-    delayed until run-time. I.e.
-    
-``` {.cpp}
-       void foo();
-       void run() { dlopen("foo.so"); foo(); }
-```
-
-does not work in this release.
+Given `namespace N { class A; template <typename T> class B;}`, the name
+`N::B<N::A>` is no longer "shortened" to `N::B<A:`. This affects the forward
+and backward compatibility of files.
 
 ### TInterpreter
 
