@@ -278,39 +278,40 @@ void TCling::HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl) con
    }
 
    // Add the constants to the enum type.
-   const EnumDecl* ED = llvm::dyn_cast<EnumDecl>(D);
-   for (EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
+   if (const EnumDecl* ED = llvm::dyn_cast<EnumDecl>(D)) {
+      for (EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
                 EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
-      // Get name of the enum type.
-      std::string constbuf;
-      if (const NamedDecl* END = llvm::dyn_cast<NamedDecl>(*EDI)) {
-         PrintingPolicy Policy((*EDI)->getASTContext().getPrintingPolicy());
-         llvm::raw_string_ostream stream(constbuf);
-         (END)->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
-      }
-      const char* constantName = constbuf.c_str();
+         // Get name of the enum type.
+         std::string constbuf;
+         if (const NamedDecl* END = llvm::dyn_cast<NamedDecl>(*EDI)) {
+            PrintingPolicy Policy((*EDI)->getASTContext().getPrintingPolicy());
+            llvm::raw_string_ostream stream(constbuf);
+            (END)->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
+         }
+         const char* constantName = constbuf.c_str();
 
-      // Get value of the constant.
-      Long64_t value;
-      const llvm::APSInt valAPSInt = (*EDI)->getInitVal();
-      if (valAPSInt.isSigned()) {
-         value = valAPSInt.getSExtValue();
-      } else {
-         value = valAPSInt.getZExtValue();
-      }
-
-      // Create the TEnumConstant.
-      TEnumConstant* enumConstant = new TEnumConstant(new TClingDataMemberInfo(fInterpreter, *EDI)
-                                    , constantName, value, enumType);
-      // Check that the constant was created.
-      if (!enumConstant) {
-         Error ("HandleEnumDecl", "The enum constant %s was not created.", constantName);
-      } else {
-         // Add the global constants to the list of Globals.
-         if (isGlobal) {
-            gROOT->GetListOfGlobals()->Add(enumConstant);
+         // Get value of the constant.
+         Long64_t value;
+         const llvm::APSInt valAPSInt = (*EDI)->getInitVal();
+         if (valAPSInt.isSigned()) {
+            value = valAPSInt.getSExtValue();
+         } else {
+            value = valAPSInt.getZExtValue();
          }
 
+         // Create the TEnumConstant.
+         TEnumConstant* enumConstant = new TEnumConstant(new TClingDataMemberInfo(fInterpreter, *EDI)
+                                       , constantName, value, enumType);
+         // Check that the constant was created.
+         if (!enumConstant) {
+            Error ("HandleEnumDecl", "The enum constant %s was not created.", constantName);
+         } else {
+            // Add the global constants to the list of Globals.
+            if (isGlobal) {
+               gROOT->GetListOfGlobals()->Add(enumConstant);
+            }
+
+         }
       }
    }
 }
