@@ -56,6 +56,7 @@ LaTeX document (<tt>simple.tex</tt>) in the following way:
 \documentclass{article}
 \usepackage{tikz}
 \usetikzlibrary{patterns}
+\usetikzlibrary{plotmarks}
 \title{A simple LaTeX example}
 \date{July 2013}
 \begin{document}
@@ -66,10 +67,11 @@ The following image as been generated using the TTeXDump class:
 \end{document}
 </pre>
 
-Note the two directive needed at the top of the LaTeX file:
+Note the three directives needed at the top of the LaTeX file:
 <pre>
 \usepackage{tikz}
 \usetikzlibrary{patterns}
+\usetikzlibrary{plotmarks}
 </pre>
 
 Then including the picture in the document is done with the
