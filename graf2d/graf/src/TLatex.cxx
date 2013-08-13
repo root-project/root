@@ -1886,6 +1886,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          TString t(text1);
          if (t.Index("#")>=0 || t.Index("^")>=0 || t.Index("\\")>=0) {
             t.ReplaceAll("#","\\");
+            t.ReplaceAll("%","\\%");
             t.Prepend("$");
             t.Append("$");
          }
