@@ -6962,7 +6962,7 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
       nAddedWorkers, (nAddedWorkers == 1) ? "" : "s",
       nTotalWorkers, (nTotalWorkers == 1) ? "" : "s");
    gProofServ->SendAsynMessage(s);
-   Info("GoMoreParallel", s.Data());
+   Info("GoMoreParallel", "%s", s.Data());
 
    return nTotalWorkers;
 }
