@@ -34,8 +34,6 @@
 #include <sstream>
 #include <utility>
 
-#include <iostream>
-
 
 //- data _____________________________________________________________________
 dict_lookup_func PyROOT::gDictLookupOrg = 0;

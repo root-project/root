@@ -32,6 +32,7 @@ public:
    virtual ~TPyReturn();
 
 // conversions to standard types, may fail if unconvertible
+   operator char*() const;
    operator const char*() const;
    operator Char_t() const;
 

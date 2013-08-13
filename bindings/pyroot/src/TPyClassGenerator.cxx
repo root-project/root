@@ -9,126 +9,12 @@
 
 // ROOT
 #include "TClass.h"
+#include "TInterpreter.h"
 
 // Standard
+#include <sstream>
 #include <string>
 #include <typeinfo>
-
-
-//- private helpers ----------------------------------------------------------
-namespace {
-
-   //_________________________________________________________________________
-/* TODO: implement for Cling
-   int PyCtorCallback( G__value* res, G__CONST char*, struct G__param*, int )
-   {
-   // CINT-installable constructor callback.
-      int tagnum = G__value_get_tagnum( res );
-      PyObject* pyclass = PyROOT::Utility::GetInstalledMethod( tagnum );
-      if ( ! pyclass )
-         return 0;
-
-      PyObject* args = PyTuple_New( 0 );
-      PyObject* result = PyObject_Call( pyclass, args, NULL );
-      if ( ! result )
-         PyErr_Print();
-      Py_DECREF( args );
-
-      G__letint( res, 'u', (Long_t)result );
-      res->ref = (Long_t)result;
-      G__set_tagnum( res, tagnum );
-
-      return 1;
-   }
-*/
-
-   //_________________________________________________________________________
-/* TODO: implement for Cling
-   int PyMemFuncCallback( G__value* res, G__CONST char*, struct G__param* libp, int )
-   {
-   // CINT-installable member function callback.
-      PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( G__value_get_tagnum(res) );
-      if ( ! pyfunc )
-         return 0;
-
-      PyObject* self = (PyObject*)G__getstructoffset();
-      Py_INCREF( self );
-
-      PyObject* args = PyTuple_New( 1 + libp->paran );
-      PyTuple_SetItem( args, 0, self );
-      for ( int i = 0; i < libp->paran; ++i ) {
-         PyObject* arg = 0;
-         switch ( G__value_get_type(&libp->para[i]) ) {
-         case 'd':
-            arg = PyFloat_FromDouble( G__Mdouble(libp->para[i]) );
-            break;
-         case 'f':
-            arg = PyFloat_FromDouble( (double)G__Mfloat(libp->para[i]) );
-            break;
-         case 'l':
-            arg = PyLong_FromLong( G__Mlong(libp->para[i]) );
-            break;
-         case 'k':
-            arg = PyLong_FromUnsignedLong( G__Mulong(libp->para[i] ) );
-            break;
-         case 'i':
-            arg = PyInt_FromLong( (Long_t)G__Mint(libp->para[i]) );
-            break;
-         case 'h':
-            //arg = PyLong_FromUnsignedLong( (UInt_t)G__Muint(libp->para[i]) );
-            arg = PyLong_FromUnsignedLong( *(ULong_t*)((void*)G__Mlong(libp->para[i])) );
-            break;
-         case 's':
-            arg = PyInt_FromLong( (Long_t)G__Mshort(libp->para[i]) );
-            break;
-         case 'r':
-            arg = PyInt_FromLong( (Long_t)G__Mushort(libp->para[i]) );
-            break;
-         case 'u':
-         // longlong, ulonglong, longdouble
-            break;
-         case 'c':
-            char cc[2]; cc[0] = G__Mchar(libp->para[i]); cc[1] = '\0';
-            arg = PyBytes_FromString( cc );
-            break;
-         case 'b':
-         // unsigned char
-            break;
-         case 'C':
-            arg = PyBytes_FromString( (char*)G__Mlong(libp->para[i]) );
-            break;
-         }
-
-         if ( arg != 0 )
-            PyTuple_SetItem( args, i+1, arg );         // steals ref to arg
-         else {
-            PyErr_Format( PyExc_TypeError,
-               "error converting parameter: %d (type: %c)", i, G__value_get_type(&libp->para[i]) );
-            break;
-         }
-
-      }
-
-      PyObject* result = 0;
-      if ( ! PyErr_Occurred() )
-         result =  PyObject_Call( pyfunc, args, NULL );
-      Py_DECREF( args );
-
-      if ( ! result )
-         PyErr_Print();
-
-      TPyReturn* retval = new TPyReturn( result );
-      G__letint( res, 'u', (Long_t)retval );
-      res->ref = (Long_t)retval;
-      G__set_tagnum( res, ((G__ClassInfo*)TPyReturn::Class()->GetClassInfo())->Tagnum() );
-      G__store_tempobject( *res );
-
-      return 1;
-   }
-
-*/
-
-} // unnamed namespace
 
 
 //- public members -----------------------------------------------------------
@@ -139,10 +25,9 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load )
 }
 
 //- public members -----------------------------------------------------------
-TClass* TPyClassGenerator::GetClass( const char* /* name */, Bool_t /* load */, Bool_t /* silent */ )
+TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silent )
 {
-/* TODO: implment for Cling
-// Class generator to make python classes available to CINT.
+// Class generator to make python classes available to Cling
 
 // called if all other class generators failed, attempt to build from python class
    if ( PyROOT::gDictLookupActive == kTRUE )
@@ -191,26 +76,16 @@ TClass* TPyClassGenerator::GetClass( const char* /* name */, Bool_t /* load */, 
       return 0;
    }
 
-// build CINT class placeholder
-   G__linked_taginfo pti;
-   pti.tagnum = -1;
-   pti.tagtype = 'c';
-   pti.tagname = clName.c_str();
-   G__add_compiledheader( (clName+".h").c_str() );
+// pre-amble Cling proxy class
+   std::ostringstream proxyCode;
+   proxyCode << "class " << clName << " {\nprivate:\n PyObject* fPyObject;\npublic:\n";
 
-   int tagnum = G__get_linked_tagnum( &pti );
-
-   G__tagtable_setup(
-      tagnum, sizeof(PyObject), G__CPPLINK, 0x00020000, "", 0, 0 );
-
-   G__ClassInfo gcl( tagnum );
-
-   G__tag_memfunc_setup( tagnum );
-
+/*
 // special case: constructor; add method and store callback
    PyROOT::Utility::InstallMethod( &gcl, pyclass, clName, 0, "ellipsis", (void*)PyCtorCallback );
-
+*/
 // loop over and add member functions
+   Bool_t hasConstructor = kFALSE;
    for ( int i = 0; i < PyList_GET_SIZE( attrs ); ++i ) {
       PyObject* label = PyList_GET_ITEM( attrs, i );
       Py_INCREF( label );
@@ -220,28 +95,77 @@ TClass* TPyClassGenerator::GetClass( const char* /* name */, Bool_t /* load */, 
       if ( PyCallable_Check( attr ) ) {
          std::string mtName = PyROOT_PyUnicode_AsString( label );
 
-      // add method and store callback
-         if ( mtName != "__init__" ) {
+      // figure out number of variables required
+         PyObject* im_func = PyObject_GetAttrString( attr, (char*)"im_func" );
+         PyObject* func_code =
+            im_func ? PyObject_GetAttrString( im_func, (char*)"func_code" ) : NULL;
+         PyObject* var_names =
+            func_code ? PyObject_GetAttrString( func_code, (char*)"co_varnames" ) : NULL;
+         int nVars = var_names ? PyTuple_GET_SIZE( var_names ) - 1 /* self */ : 0 /* TODO: probably large number, all default? */;
+         if ( nVars < 0 ) nVars = 0;
+         Py_XDECREF( var_names );
+         Py_XDECREF( func_code );
+         Py_XDECREF( im_func );
+
+         Bool_t isConstructor = mtName == "__init__";
+         Bool_t isDestructor  = mtName == "__del__";
+
+      // method declaration as appropriate
+         if ( isConstructor ) {
+            hasConstructor = kTRUE;
+            proxyCode << " " << clName << "(";
+         } else if ( isDestructor )
+            proxyCode << " ~" << clName << "(";
+         else // normal method
+            proxyCode << " TPyReturn " << mtName << "(";
+         for ( int ivar = 0; ivar < nVars; ++ivar ) {
+             proxyCode << "const TPyArg& a" << ivar;
+             if ( ivar != nVars-1 ) proxyCode << ", ";
+         }
+         proxyCode << ") {\n";
+         proxyCode << "  std::vector<TPyArg> v; v.reserve(" << nVars+(isConstructor ? 0 : 1) << ");\n";
+
+      // add the 'self' argument as appropriate
+         if ( ! isConstructor )
+            proxyCode << "  v.push_back(fPyObject);\n";
+
+      // then add the remaining variables
+         for ( int ivar = 0; ivar < nVars; ++ ivar )
+            proxyCode << "  v.push_back(a" << ivar << ");\n";
+
+      // call dispatch (method or class pointer hard-wired)
+         if ( ! isConstructor )
+            proxyCode << "  return TPyReturn(TPyArg::CallMethod((PyObject*)" << (void*)attr << ", v))";
+         else
+            proxyCode << "  TPyArg::CallConstructor(fPyObject, (PyObject*)" << (void*)pyclass << ", v)";
+         proxyCode << ";\n }\n";
+/*         if ( mtName != "__init__" ) {
             PyROOT::Utility::InstallMethod(
                &gcl, attr, mtName, "TPyReturn", "ellipsis", (void*)PyMemFuncCallback );
-         }
+         } */
       }
 
-      Py_DECREF( attr );
+      // no decref of attr for now (b/c of hard-wired ptr); need cleanup somehow
       Py_DECREF( label );
    }
 
-   G__tag_memfunc_reset();
+// special case if no constructor
+   if ( ! hasConstructor )
+      proxyCode << " " << clName << "() {\n TPyArg::CallConstructor(fPyObject, (PyObject*)" << (void*)pyclass << "); }\n";
+
+// closing and building of Cling proxy class
+   proxyCode << "};";
+
+// body compilation
+   gInterpreter->LoadText( proxyCode.str().c_str() );
 
 // done, let ROOT manage the new class
-   Py_DECREF( pyclass );
+   Py_DECREF( pyclass ); // or not, given hard-wired pointers above?
 
    TClass* klass = new TClass( clName.c_str(), silent );
    TClass::AddClass( klass );
 
    return klass;
-*/
-   return NULL;
 }
 
 //____________________________________________________________________________

@@ -23,7 +23,7 @@
 //                          Python interpreter access
 //                          =========================
 //
-// The TPython class allows for access to python objects from CINT. The current
+// The TPython class allows for access to python objects from Cling. The current
 // functionality is only basic: ROOT objects and builtin types can freely cross
 // the boundary between the two interpreters, python objects can be instantiated
 // and their methods can be called. All other cross-coding is based on strings
@@ -69,7 +69,7 @@
 //  (class TString)"aap"
 //
 // It is possible to switch between interpreters by calling "TPython::Prompt()"
-// on the CINT side, while returning with ^D (EOF). State is preserved between
+// on the Cling side, while returning with ^D (EOF). State is preserved between
 // successive switches.
 //
 // The API part provides (direct) C++ access to the bindings functionality of
@@ -95,7 +95,7 @@ Bool_t TPython::Initialize()
       return kTRUE;
 
    if ( ! Py_IsInitialized() ) {
-   // this happens if CINT comes in first
+   // this happens if Cling comes in first
       PyEval_InitThreads();
       Py_Initialize();
 
@@ -126,7 +126,6 @@ Bool_t TPython::Initialize()
    }
 
 // python side class construction, managed by ROOT
-// TODO: implement TPyClassGenerator for Cling
    gROOT->AddClassGenerator( new TPyClassGenerator );
 
 // declare success ...
@@ -138,7 +137,7 @@ Bool_t TPython::Initialize()
 void TPython::LoadMacro( const char* name )
 {
 // Execute the give python script as if it were a macro (effectively an
-// execfile in __main__), and create CINT equivalents for any newly available
+// execfile in __main__), and create Cling equivalents for any newly available
 // python classes.
 
 // setup
@@ -154,7 +153,7 @@ void TPython::LoadMacro( const char* name )
 // obtain new __main__ contents
    PyObject* current = PyDict_Values( gMainDict );
 
-// create CINT classes for all new python classes
+// create Cling classes for all new python classes
    for ( int i = 0; i < PyList_GET_SIZE( current ); ++i ) {
       PyObject* value = PyList_GET_ITEM( current, i );
       Py_INCREF( value );

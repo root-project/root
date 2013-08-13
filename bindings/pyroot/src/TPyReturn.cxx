@@ -18,7 +18,7 @@
 //                        Python expression eval result
 //                        =============================
 //
-// Transport class for bringing objects from python (dynamically typed) to CINT
+// Transport class for bringing objects from python (dynamically typed) to Cling
 // (statically typed). It is best to immediately cast a TPyReturn to the real
 // type, either implicitly (for builtin types) or explicitly (through a void*
 // cast for pointers to ROOT objects).
@@ -88,6 +88,13 @@ TPyReturn::~TPyReturn()
 
 
 //- public members -----------------------------------------------------------
+TPyReturn::operator char*() const
+{
+// Cast python return value to C-style string (may fail).
+   return (char*)((const char*)*this);
+}
+
+//____________________________________________________________________________
 TPyReturn::operator const char*() const
 {
 // Cast python return value to C-style string (may fail).
