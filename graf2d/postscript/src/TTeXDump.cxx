@@ -243,7 +243,7 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    if (fillis==1) {
       SetColor(fFillColor);
       PrintStr("@");
-      PrintStr("\\draw [fill=c] (");
+      PrintStr("\\draw [color=c, fill=c] (");
       WriteReal(x1c, kFALSE);
       PrintFast(1,",");
       WriteReal(y1c, kFALSE);
