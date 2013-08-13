@@ -9,11 +9,11 @@
 void runPyClassTest() {
 // load a python class and test its use
    TPython::LoadMacro( "MyPyClass.py" );
-   gROOT->LoadMacro( "PyClassTest1.C" );
+   gROOT->ProcessLine( ".x PyClassTest1.C" );
 
 // load another python class and test it (note that this test was setup for
 // a CINT-specific problem of not being able to build closures; that is in
 // principle a non-issue with Cling)
    TPython::LoadMacro( "MyOtherPyClass.py" );
-   gROOT->LoadMacro( "PyClassTest2.C" );
+   gROOT->ProcessLine( ".x PyClassTest2.C" );
 }
