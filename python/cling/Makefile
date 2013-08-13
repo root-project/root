@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog
 
 #Set the list of target to make while testing
-TEST_TARGETS += PyClassTest PyAPITest PyROOT_cinttests
+TEST_TARGETS += PyClassTest PyAPITest PyROOT_clingtests
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
@@ -20,16 +20,11 @@ endif
 
 PyClassTest.log: runPyClassTest.C runPyAPITest.C
 
-ifeq ($(FAIL),)
-PyClassTest: 
-	$(WarnFailTest)
-else
 PyClassTest: PyClassTest.log
 	$(TestDiff)
-endif
 
 PyAPITest: PyAPITest.log
 	$(TestDiff)
 
-PyROOT_cinttests: PyROOT_cinttests.log
+PyROOT_clingtests: PyROOT_clingtests.log
 	$(TestDiff)

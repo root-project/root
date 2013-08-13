@@ -1,9 +1,9 @@
-# File: roottest/python/cint/PyROOT_cinttests.py
+# File: roottest/python/cling/PyROOT_clingtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 05/11/05
+# Last: 05813/13
 
-"""CINT compatability tests for PyROOT package."""
+"""Cling compatability tests for PyROOT package."""
 
 import os, sys, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
@@ -12,14 +12,14 @@ from ROOT import *
 from common import FIXCLING
 
 __all__ = [
-   'CINT1ErrorTranslationTestCase'
+   'Cling1ErrorTranslationTestCase'
 ]
 
 
-### CINT error translation test cases ========================================
-class CINT1ErrorTranslationTestCase( unittest.TestCase ):
+### Cling error translation test cases =======================================
+class Cling1ErrorTranslationTestCase( unittest.TestCase ):
    def test1IndexError( self ):
-      """Test CINT index error translation"""
+      """Test Cling index error translation"""
 
       if FIXCLING:
          return
