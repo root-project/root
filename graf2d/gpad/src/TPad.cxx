@@ -396,14 +396,15 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 {
    // Build a legend from the graphical objects in the pad
    //
-   // A simple method to to build automatically a TLegend from the primitives in
-   // a TPad. Only those deriving from TAttLine, TAttMarker and TAttFill are
-   // added, excluding TPave and TFrame derived classes.
-   // x1, y1, x2, y2 are the Tlegend coordinates.
-   // title is the legend title. By default it is " ".
+   // A simple method to to build automatically a TLegend from the
+   // primitives in a TPad. Only those deriving from TAttLine,
+   // TAttMarker and TAttFill are added, excluding TPave and TFrame
+   // derived classes. x1, y1, x2, y2 are the TLegend coordinates.
+   // title is the legend title. By default it is " ". The caller 
+   // program owns the returned TLegend.
    //
-   // If the pad contains some TMultiGraph or THStack the individual graphs or
-   // histograms in them are added to the TLegend.
+   // If the pad contains some TMultiGraph or THStack the individual
+   // graphs or histograms in them are added to the TLegend.
 
    TList *lop=GetListOfPrimitives();
    if (!lop) return 0;
