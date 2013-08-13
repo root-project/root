@@ -390,7 +390,7 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    }
 
    PrintStr("}{\\draw[mark options={color=c,fill=c},mark size=");
-   PrintStr(Form("%fpt,mark=",8.));
+   PrintStr(Form("%fpt,mark=",14./3*fMarkerSize));
    switch (fMarkerStyle) {
    case 1 :
       PrintStr("*");
