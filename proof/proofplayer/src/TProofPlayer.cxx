@@ -1503,6 +1503,14 @@ Long64_t TProofPlayer::Process(TDSet *dset, TSelector *selector,
 }
 
 //______________________________________________________________________________
+Bool_t TProofPlayer::JoinProcess(TList *)
+{
+   // Not implemented: meaningful only in the remote player. Returns kFALSE.
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
 Bool_t TProofPlayer::CheckMemUsage(Long64_t &mfreq, Bool_t &w80r,
                                    Bool_t &w80v, TString &wmsg)
 {
@@ -1871,6 +1879,9 @@ TProofPlayerRemote::~TProofPlayerRemote()
    // Objects stored in maps are already deleted when merging the feedback
    SafeDelete(fFeedbackLists);
    SafeDelete(fPacketizer);
+
+   if (fProcessMessage)
+      SafeDelete(fProcessMessage);
 }
 
 //______________________________________________________________________________
@@ -2140,7 +2151,8 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    // The return value is -1 in case of an error and TSelector::GetStatus() in
    // in case of success.
 
-   PDB(kGlobal,1) Info("Process","Enter");
+   PDB(kGlobal,1) Info("Process", "Enter");
+
    fDSet = dset;
    fExitStatus = kFinished;
 
@@ -2166,6 +2178,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    // Define filename
    TString fn;
+   fSelectorFileName = selector_file;
 
    if (fCreateSelObj) {
       if(!SendSelector(selector_file)) return -1;
@@ -2325,7 +2338,10 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    TEventList *evl = (!fProof->IsMaster() && !enl) ? dynamic_cast<TEventList *>(set->GetEntryList())
                                            : (TEventList *)0;
    if (fProof->fProtocol > 14) {
+      if (fProcessMessage) delete fProcessMessage;
+      fProcessMessage = new TMessage(kPROOF_PROCESS);
       mesg << set << fn << fInput << opt << num << fst << evl << sync << enl;
+      (*fProcessMessage) << set << fn << fInput << opt << num << fst << evl << sync << enl;
    } else {
       mesg << set << fn << fInput << opt << num << fst << evl << sync;
       if (enl)
@@ -2468,6 +2484,55 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, TSelector *selector,
 
    return Process(dset, selector->ClassName(), option, nentries, first);
 }
+
+//______________________________________________________________________________
+Bool_t TProofPlayerRemote::JoinProcess(TList *workers)
+{
+   // Prepares the given list of new workers to join a progressing process.
+   // Returns kTRUE on success, kFALSE otherwise.
+
+   if (!fProcessMessage || !fProof || !fPacketizer) {
+      Error("Process", "Should not happen: fProcessMessage=%p fProof=%p fPacketizer=%p",
+         fProcessMessage, fProof, fPacketizer);
+      return kFALSE;
+   }
+
+   if (!workers || !fProof->IsMaster()) {
+      Error("Process", "Invalid call");
+      return kFALSE;
+   }
+
+   PDB(kGlobal, 1)
+      Info("Process", "Preparing %d new worker(s) to process", workers->GetEntries());
+
+   // Sends the file associated to the TSelector, if necessary
+   if (fCreateSelObj) {
+      PDB(kGlobal, 2)
+         Info("Process", "Sending selector file %s", fSelectorFileName.Data());
+      if(!SendSelector(fSelectorFileName.Data())) {
+         Error("Process", "Problems in sending selector file %s", fSelectorFileName.Data());
+         return kFALSE;
+      }
+   }
+
+   PDB(kGlobal, 2)
+      Info("Process", "Adding new workers to the packetizer");
+   if (fPacketizer->AddWorkers(workers) == -1) {
+      Error("Process", "Cannot add new workers to the packetizer!");
+      return kFALSE;  // TODO: make new wrks inactive
+   }
+
+   PDB(kGlobal, 2)
+      Info("Process", "Broadcasting process message to new workers");
+   fProof->Broadcast(*fProcessMessage, workers);
+
+   // Don't call Collect(): we came here from a global Collect() already which
+   // will take care of new workers as well
+
+   return kTRUE;
+
+}
+
 //______________________________________________________________________________
 Bool_t TProofPlayerRemote::MergeOutputFiles()
 {

@@ -434,3 +434,14 @@ void TVirtualPacketizer::SetInitTime()
          Info("SetInitTime","fInitTime set to %f s", fInitTime);
    }
 }
+
+//______________________________________________________________________________
+Int_t TVirtualPacketizer::AddWorkers(TList *)
+{
+   // Adds new workers. Must be implemented by each real packetizer properly.
+   // Returns the number of workers added, or -1 on failure.
+
+   Warning("AddWorkers", "Not implemented for this packetizer");
+
+   return -1;
+}

@@ -2762,7 +2762,11 @@ void TProofServ::SendParallel(Bool_t async)
 
    Int_t nparallel = 0;
    if (IsMaster()) {
+      PDB(kGlobal, 2)
+         Info("SendParallel", "Will invoke AskParallel()");
       fProof->AskParallel();
+      PDB(kGlobal, 2)
+         Info("SendParallel", "Will invoke GetParallel()");
       nparallel = fProof->GetParallel();
    } else {
       nparallel = 1;

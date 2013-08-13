@@ -132,6 +132,7 @@ public:
    virtual void            StopProcess(Bool_t abort, Bool_t stoptimer = kFALSE);
    TList                  *GetFailedPackets() { return fFailedPackets; }
    void                    SetFailedPackets(TList *list) { fFailedPackets = list; }
+   virtual Int_t           AddWorkers(TList *workers);
 
    Long64_t      GetBytesRead() const { return (fProgressStatus? fProgressStatus->GetBytesRead() : 0); }
    Long64_t      GetReadCalls() const { return (fProgressStatus? fProgressStatus->GetReadCalls() : 0); }
