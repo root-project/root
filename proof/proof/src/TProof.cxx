@@ -516,6 +516,8 @@ void TProof::InitMembers()
    fSlaveInfo = 0;
    fMasterServ = kFALSE;
    fSendGroupView = kFALSE;
+   fIsPollingWorkers = kFALSE;
+   fLastPollWorkers_s = -1;
    fActiveSlaves = 0;
    fInactiveSlaves = 0;
    fUniqueSlaves = 0;
@@ -1262,7 +1264,8 @@ Int_t TProof::AddWorkers(TList *workerList)
    UInt_t nSlavesDone = 0;
    Int_t ord = 0;
 
-   // Loop over all workers and start them
+   // Loop over all new workers and start them
+   Bool_t goMoreParallel = (fSlaves->GetEntries() > 0);
 
    // a list of TSlave objects for workers that are being added
    TList *addedWorkers = new TList();
@@ -1393,8 +1396,23 @@ Int_t TProof::AddWorkers(TList *workerList)
       TString s(n->GetTitle());
       if (s.IsDigit()) nwrk = s.Atoi();
    }
-   GoParallel(nwrk, kFALSE, 0);
-      
+
+   if (fDynamicStartup && goMoreParallel) {
+
+      PDB(kGlobal, 3)
+         Info("AddWorkers", "Will invoke GoMoreParallel()");
+      Int_t nw = GoMoreParallel(nwrk);
+      PDB(kGlobal, 3)
+         Info("AddWorkers", "GoMoreParallel()=%d", nw);
+
+   }
+   else {
+      // Not in Dynamic Workers mode
+      PDB(kGlobal, 3)
+         Info("AddWorkers", "Will invoke GoParallel()");
+      GoParallel(nwrk, kFALSE, 0);
+   }
+
    if (gProofServ && gProofServ->GetEnabledPackages() &&
        gProofServ->GetEnabledPackages()->GetSize() > 0) {
       TIter nxp(gProofServ->GetEnabledPackages());      
@@ -1402,16 +1420,28 @@ Int_t TProof::AddWorkers(TList *workerList)
       while ((pck = (TPair *) nxp())) {
          // Upload and Enable methods are intelligent and avoid
          // re-uploading or re-enabling of a package to a node that has it.
-         if (UploadPackage(pck->GetName()) >= 0)
-            EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE);
+         if (fDynamicStartup && goMoreParallel) {
+            // Upload only on added workers
+            PDB(kGlobal, 3)
+               Info("AddWorkers", "Will invoke UploadPackage() and EnablePackage() on added workers");
+            if (UploadPackage(pck->GetName(), kUntar, addedWorkers) >= 0)
+               EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE, addedWorkers);
+         }
+         else {
+            PDB(kGlobal, 3)
+               Info("AddWorkers", "Will invoke UploadPackage() and EnablePackage() on all workers");
+            if (UploadPackage(pck->GetName()) >= 0)
+               EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE);
+         }
       }
    }
-
 
    if (fLoadedMacros) {
       TIter nxp(fLoadedMacros);
       TObjString *os = 0;
       while ((os = (TObjString *) nxp())) {
+         PDB(kGlobal, 3)
+            Info("AddWorkers", "Will invoke Load() on selected workers");
          Printf("Loading a macro : %s", os->GetName());
          Load(os->GetName(), kTRUE, kTRUE, addedWorkers);
       }
@@ -1420,21 +1450,40 @@ Int_t TProof::AddWorkers(TList *workerList)
    TString dyn = gSystem->GetDynamicPath();
    dyn.ReplaceAll(":", " ");
    dyn.ReplaceAll("\"", " ");
-   AddDynamicPath(dyn, kFALSE, addedWorkers);
+   PDB(kGlobal, 3)
+      Info("AddWorkers", "Will invoke AddDynamicPath() on selected workers");
+   AddDynamicPath(dyn, kFALSE, addedWorkers, fDynamicStartup);
+
    TString inc = gSystem->GetIncludePath();
    inc.ReplaceAll("-I", " ");
    inc.ReplaceAll("\"", " ");
-   AddIncludePath(inc, kFALSE, addedWorkers);
+   PDB(kGlobal, 3)
+      Info("AddWorkers", "Will invoke AddIncludePath() on selected workers");
+   AddIncludePath(inc, kFALSE, addedWorkers, fDynamicStartup);
+
+   // Update list of current workers
+   PDB(kGlobal, 3)
+      Info("AddWorkers", "Will invoke SaveWorkerInfo()");
+   SaveWorkerInfo();
+
+   // Inform the client that the number of workers has changed
+   if (fDynamicStartup && gProofServ) {
+      PDB(kGlobal, 3)
+         Info("AddWorkers", "Will invoke SendParallel()");
+      gProofServ->SendParallel(kTRUE);
+
+      if (goMoreParallel && fPlayer) {
+         // In case we are adding workers dynamically to an existing process, we
+         // should invoke a special player's Process() to set only added workers
+         // to the proper state
+         PDB(kGlobal, 3)
+            Info("AddWorkers", "Will send the PROCESS message to selected workers");
+         fPlayer->JoinProcess(addedWorkers);
+      }
+   }
 
    // Cleanup
    delete addedWorkers;
-
-   // Update list of current workers
-   SaveWorkerInfo();
-
-   // Inform the client that the number of workers is changed
-   if (fDynamicStartup && gProofServ)
-      gProofServ->SendParallel(kTRUE);
 
    return 0;
 }
@@ -2602,6 +2651,13 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
    // If timeout >= 0, wait at most timeout seconds (timeout = -1 by default,
    // which means wait forever).
    // If defined (>= 0) endtype is the message that stops this collection.
+   // Collect also stops its execution from time to time to check for new
+   // workers in Dynamic Startup mode.
+
+   Int_t collectId = gRandom->Integer(9999);
+
+   PDB(kCollect, 3)
+      Info("Collect", ">>>>>> Entering collect responses #%04d", collectId);
 
    // Reset the status flag and clear the messages in the list, if any
    fStatus = 0;
@@ -2669,7 +2725,19 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
          }
       }
 
+      // Preemptive poll for new workers on the master only in Dynamic Mode and only
+      // during processing (TODO: should work on Top Master only)
+      if (TestBit(TProof::kIsMaster) && !IsIdle() && fDynamicStartup && !fIsPollingWorkers &&
+         ((fLastPollWorkers_s == -1) || (time(0)-fLastPollWorkers_s >= kPROOF_DynWrkPollInt_s))) {
+         fIsPollingWorkers = kTRUE;
+         PollForNewWorkers();
+         fLastPollWorkers_s = time(0);
+         fIsPollingWorkers = kFALSE;
+      }
+
       // Wait for a ready socket
+      PDB(kCollect, 3)
+         Info("Collect", "Will invoke Select() #%04d", collectId);
       TSocket *s = mon->Select(1000);
 
       if (s && s != (TSocket *)(-1)) {
@@ -2714,7 +2782,8 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
          sto = (Long_t) actto;
          nsto = 60;
       }
-   }
+
+   } // end loop over active monitors
 
    // If timed-out, deactivate the remaining sockets
    if (nto == 0) {
@@ -2751,7 +2820,75 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
 
    ActivateAsyncInput();
 
+   PDB(kCollect, 3)
+      Info("Collect", "<<<<<< Exiting collect responses #%04d", collectId);
+
    return cnt;
+}
+
+//______________________________________________________________________________
+Bool_t TProof::PollForNewWorkers()
+{
+   // Asks the PROOF Serv for new workers in Dynamic Startup mode and activates
+   // them. Returns the number of new workers found.
+
+   // Requests for worker updates
+   Int_t dummy = 0;
+   TList *reqWorkers = new TList();
+   reqWorkers->SetOwner(kFALSE);
+
+   R__ASSERT(gProofServ);
+   gProofServ->GetWorkers(reqWorkers, dummy, kTRUE);  // last 2 are dummy
+
+   // List of new workers only (TProofNodeInfo)
+   TList *newWorkers = new TList();
+   newWorkers->SetOwner(kTRUE);
+
+   TIter next(reqWorkers);
+   TProofNodeInfo *ni;
+   TString fullOrd;
+   while (( ni = dynamic_cast<TProofNodeInfo *>(next()) )) {
+
+      // Form the full ordinal
+      fullOrd.Form("%s.%s", gProofServ->GetOrdinal(), ni->GetOrdinal().Data());
+
+      TIter nextInner(fSlaves);
+      TSlave *sl;
+      Bool_t found = kFALSE;
+      while (( sl = dynamic_cast<TSlave *>(nextInner()) )) {
+         if ( strcmp(sl->GetOrdinal(), fullOrd.Data()) == 0 ) {
+            found = kTRUE;
+            break;
+         }
+      }
+
+      if (found) delete ni;
+      else {
+         newWorkers->Add(ni);
+         PDB(kGlobal, 1)
+            Info("PollForNewWorkers", "New worker found: %s:%s",
+               ni->GetNodeName().Data(), fullOrd.Data());
+      }
+   }
+
+   delete reqWorkers;  // not owner
+
+   Int_t nNewWorkers = newWorkers->GetEntries();
+
+   // Add the new workers
+   if (newWorkers->GetEntries() > 0) {
+      PDB(kGlobal, 1)
+         Info("PollForNewWorkers", "Requesting to add %d new worker(s)", newWorkers->GetEntries());
+      AddWorkers(newWorkers);
+      // Don't delete newWorkers: AddWorkers() will do that
+   }
+   else {
+      PDB(kGlobal, 2)
+         Info("PollForNewWorkers", "No new worker found");
+      delete newWorkers;
+   }
+
+   return nNewWorkers;
 }
 
 //______________________________________________________________________________
@@ -6761,8 +6898,9 @@ Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
    // parallel slaves. Returns -1 in case of error.
 
    // If delayed startup reset settings, if required 
-   if (fDynamicStartup && nodes < 0)
+   if (fDynamicStartup && nodes < 0) {
       if (gSystem->Getenv("PROOF_NWORKERS")) gSystem->Unsetenv("PROOF_NWORKERS");
+   }
 
    Int_t n = SetParallelSilent(nodes, random);
    if (TestBit(TProof::kIsClient)) {
@@ -6779,6 +6917,102 @@ Int_t TProof::SetParallel(Int_t nodes, Bool_t random)
       gSystem->Setenv("PROOF_NWORKERS", TString::Format("%d", nodes));
    }
    return n;
+}
+
+//______________________________________________________________________________
+Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
+{
+   // Add nWorkersToAdd workers to current list of workers. This function is
+   // works on the master only, and only when an analysis is ongoing. A message
+   // is sent back to the client when we go "more" parallel.
+   // Returns -1 on error, number of total (not added!) workers on success.
+
+   if (!IsValid() || !IsMaster() || IsIdle())
+      return -1;
+
+   TSlave *sl = 0x0;
+   TIter next( fSlaves );
+   Int_t nAddedWorkers = 0;
+
+   while (((nAddedWorkers < nWorkersToAdd) || (nWorkersToAdd == -1)) &&
+          (( sl = dynamic_cast<TSlave *>( next() ) ))) {
+
+      // If worker is of an invalid type, break everything: it should not happen!
+      if ((sl->GetSlaveType() != TSlave::kSlave) &&
+          (sl->GetSlaveType() != TSlave::kMaster)) {
+         Error("GoMoreParallel", "TSlave is neither a Master nor a Slave: %s:%s",
+            sl->GetName(), sl->GetOrdinal());
+         R__ASSERT(0);
+      }
+
+      // Skip current worker if it is not a good candidate
+      if ((!sl->IsValid()) || (fBadSlaves->FindObject(sl)) ||
+          (strcmp("IGNORE", sl->GetImage()) == 0)) {
+         PDB(kGlobal, 2)
+            Info("GoMoreParallel", "Worker %s:%s won't be considered",
+               sl->GetName(), sl->GetOrdinal());
+         continue;
+      }
+
+      // Worker is good but it is already active: skip it
+      if (fActiveSlaves->FindObject(sl)) {
+         Info("GoMoreParallel", "Worker %s:%s is already active: skipping",
+            sl->GetName(), sl->GetOrdinal());
+         continue;
+      }
+
+      //
+      // From here on: worker is a good candidate
+      //
+
+      if (sl->GetSlaveType() == TSlave::kSlave) {
+         sl->SetStatus(TSlave::kActive);
+         fActiveSlaves->Add(sl);
+         fInactiveSlaves->Remove(sl);
+         fActiveMonitor->Add(sl->GetSocket());
+         nAddedWorkers++;
+         PDB(kGlobal, 2)
+            Info("GoMoreParallel", "Worker %s:%s marked as active!",
+               sl->GetName(), sl->GetOrdinal());
+      }
+      else {
+         // Can't add masters dynamically: this should not happen!
+         Error("GoMoreParallel", "Dynamic addition of master is not supported");
+         R__ASSERT(0);
+      }
+
+   } // end loop over all slaves
+
+   // Get slave status (will set the slaves fWorkDir correctly)
+   PDB(kGlobal, 3)
+      Info("GoMoreParallel", "Will invoke AskStatistics() -- implies a Collect()");
+   AskStatistics();
+
+   // Find active slaves with unique image
+   PDB(kGlobal, 3)
+      Info("GoMoreParallel", "Will invoke FindUniqueSlaves()");
+   FindUniqueSlaves();
+
+   // Send new group-view to slaves
+   PDB(kGlobal, 3)
+      Info("GoMoreParallel", "Will invoke SendGroupView()");
+   SendGroupView();
+
+   PDB(kGlobal, 3)
+      Info("GoMoreParallel", "Will invoke GetParallel()");
+   Int_t nTotalWorkers = GetParallel();
+
+   // Notify the client that we've got more workers, and print info on
+   // Master's log as well
+   R__ASSERT(gProofServ);
+   TString s;
+   s.Form("PROOF just went more parallel (%d additional worker%s, %d worker%s total)",
+      nAddedWorkers, (nAddedWorkers == 1) ? "" : "s",
+      nTotalWorkers, (nTotalWorkers == 1) ? "" : "s");
+   gProofServ->SendAsynMessage(s);
+   Info("GoMoreParallel", "%s", s.Data());
+
+   return nTotalWorkers;
 }
 
 //______________________________________________________________________________
@@ -7820,7 +8054,8 @@ Int_t TProof::BuildPackageOnClient(const char *pack, Int_t opt, TString *path, I
 }
 
 //______________________________________________________________________________
-Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient, TList *loadopts)
+Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient,
+   TList *loadopts, TList *workers)
 {
    // Load specified package. Executes the PROOF-INF/SETUP.C script
    // on all active nodes. If notOnClient = true, don't load package
@@ -7850,10 +8085,20 @@ Int_t TProof::LoadPackage(const char *package, Bool_t notOnClient, TList *loadop
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kLoadPackage) << pac;
    if (loadopts) mess << loadopts;
-   Broadcast(mess);
+
    // On the master, workers that fail are deactivated
    Bool_t deactivateOnFailure = (IsMaster()) ? kTRUE : kFALSE;
-   Collect(kActive, -1, -1, deactivateOnFailure);
+
+   if (workers) {
+      PDB(kPackage, 3)
+         Info("LoadPackage", "Sending load message to selected workers only");
+      Broadcast(mess, workers);
+      Collect(workers, -1, -1, deactivateOnFailure);
+   }
+   else {
+      Broadcast(mess);
+      Collect(kActive, -1, -1, deactivateOnFailure);  
+   }
 
    return fStatus;
 }
@@ -8126,21 +8371,23 @@ Int_t TProof::UnloadPackages()
 }
 
 //______________________________________________________________________________
-Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient)
+Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient,
+   TList *workers)
 {
    // Enable specified package. Executes the PROOF-INF/BUILD.sh
    // script if it exists followed by the PROOF-INF/SETUP.C script.
    // In case notOnClient = true, don't enable the package on the client.
    // The default is to enable packages also on the client.
+   // If specified, enables packages only on the specified workers.
    // Returns 0 in case of success and -1 in case of error.
    // Provided for backward compatibility.
 
-   return EnablePackage(package, (TList *)0, notOnClient);
+   return EnablePackage(package, (TList *)0, notOnClient, workers);
 }
 
 //______________________________________________________________________________
 Int_t TProof::EnablePackage(const char *package, const char *loadopts,
-                            Bool_t notOnClient)
+                            Bool_t notOnClient, TList *workers)
 {
    // Enable specified package. Executes the PROOF-INF/BUILD.sh
    // script if it exists followed by the PROOF-INF/SETUP.C script.
@@ -8153,7 +8400,8 @@ Int_t TProof::EnablePackage(const char *package, const char *loadopts,
    //     off         no check; failure may occur at loading
    //     on          check ROOT version [default]
    //     svn         check ROOT version and Git commit SHA1.
-   // (Use ';', ' ' or '|' to separate 'chkv=<o>' from the rest.) 
+   // (Use ';', ' ' or '|' to separate 'chkv=<o>' from the rest.)
+   // If specified, enables packages only on the specified workers.
    // Returns 0 in case of success and -1 in case of error.
 
    TList *optls = 0;
@@ -8200,7 +8448,7 @@ Int_t TProof::EnablePackage(const char *package, const char *loadopts,
       }
    }
    // Run
-   Int_t rc = EnablePackage(package, optls, notOnClient);
+   Int_t rc = EnablePackage(package, optls, notOnClient, workers);
    // Clean up
    SafeDelete(optls);
    // Done
@@ -8209,7 +8457,7 @@ Int_t TProof::EnablePackage(const char *package, const char *loadopts,
 
 //______________________________________________________________________________
 Int_t TProof::EnablePackage(const char *package, TList *loadopts,
-                            Bool_t notOnClient)
+                            Bool_t notOnClient, TList *workers)
 {
    // Enable specified package. Executes the PROOF-INF/BUILD.sh
    // script if it exists followed by the PROOF-INF/SETUP.C script.
@@ -8269,7 +8517,7 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
       optls = 0;
    }
 
-   if (LoadPackage(pac, notOnClient, optls) == -1)
+   if (LoadPackage(pac, notOnClient, optls, workers) == -1)
       return -1;
 
    return 0;
@@ -8370,7 +8618,8 @@ Int_t TProof::DownloadPackage(const char *pack, const char *dstdir)
 }
 
 //______________________________________________________________________________
-Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
+Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt,
+   TList *workers)
 {
    // Upload a PROOF archive (PAR file). A PAR file is a compressed
    // tar file with one special additional directory, PROOF-INF
@@ -8486,8 +8735,11 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt)
       mess3 << (UInt_t) opt;
    }
 
-   // loop over all selected nodes
-   TIter next(fUniqueSlaves);
+   // Loop over all slaves with unique fs image, or to a selected
+   // list of workers, if specified
+   if (!workers)
+      workers = fUniqueSlaves;
+   TIter next(workers);
    TSlave *sl = 0;
    while ((sl = (TSlave *) next())) {
       if (!sl->IsValid())
@@ -8885,7 +9137,8 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
 }
 
 //______________________________________________________________________________
-Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks)
+Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks,
+   Bool_t doCollect)
 {
    // Add 'libpath' to the lib path search.
    // Multiple paths can be specified at once separating them with a comma or
@@ -8912,17 +9165,22 @@ Int_t TProof::AddDynamicPath(const char *libpath, Bool_t onClient, TList *wrks)
       m << TString("-");
 
    // Forward the request
-   if (wrks)
+   if (wrks) {
       Broadcast(m, wrks);
-   else
+      if (doCollect)
+         Collect(wrks, fCollectTimeout);
+   }
+   else {
       Broadcast(m);
-   Collect(kActive, fCollectTimeout);
+      Collect(kActive, fCollectTimeout);
+   }
 
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks)
+Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks,
+   Bool_t doCollect)
 {
    // Add 'incpath' to the inc path search.
    // Multiple paths can be specified at once separating them with a comma or
@@ -8949,11 +9207,15 @@ Int_t TProof::AddIncludePath(const char *incpath, Bool_t onClient, TList *wrks)
       m << TString("-");
 
    // Forward the request
-   if (wrks)
+   if (wrks) {
       Broadcast(m, wrks);
-   else
+      if (doCollect)
+         Collect(wrks, fCollectTimeout);
+   }
+   else {
       Broadcast(m);
-   Collect(kActive, fCollectTimeout);
+      Collect(kActive, fCollectTimeout);
+   }
 
    return 0;
 }

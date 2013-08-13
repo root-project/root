@@ -60,6 +60,7 @@ public:
    virtual Long64_t  Process(TDSet *set,
                              TSelector *selector, Option_t *option = "",
                              Long64_t nentries = -1, Long64_t firstentry = 0) = 0;
+   virtual Bool_t    JoinProcess(TList *workers) = 0;
    virtual Long64_t  Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE) = 0;
    virtual Long64_t  Finalize(TQueryResult *qr) = 0;
    virtual Long64_t  DrawSelect(TDSet *set, const char *varexp,

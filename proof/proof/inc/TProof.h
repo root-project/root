@@ -159,6 +159,7 @@ const char* const kPROOF_TerminateWorker = "+++ terminating +++"; // signal work
 const char* const kPROOF_WorkerIdleTO    = "+++ idle-timeout +++"; // signal worker idle timeout in MarkBad
 const char* const kPROOF_InputDataFile   = "inputdata.root";      // Default input data file name
 const char* const kPROOF_MissingFiles    = "MissingFiles";  // Missingfile list name
+const Long64_t    kPROOF_DynWrkPollInt_s = 10;  // minimum number of seconds between two polls for dyn wrks
 
 #ifndef R__WIN32
 const char* const kCP     = "/bin/cp -fp";
@@ -502,6 +503,8 @@ private:
    TList          *fRecvMessages;    //Messages received during collect not yet processed
    TList          *fSlaveInfo;       //!list returned by kPROOF_GETSLAVEINFO
    Bool_t          fSendGroupView;   //if true send new group view
+   Bool_t          fIsPollingWorkers;  //will be set to kFALSE to prevent recursive dyn workers check in dyn mode
+   Long64_t        fLastPollWorkers_s;  //timestamp (in seconds) of last poll for workers, -1 if never checked
    TList          *fActiveSlaves;    //list of active slaves (subset of all slaves)
    TString         fActiveSlavesSaved;// comma-separated list of active slaves (before last call to
                                       // SetParallel or Activate/DeactivateWorkers)
@@ -639,12 +642,13 @@ private:
    void     AskStatistics();
    void     AskParallel();
    Int_t    GoParallel(Int_t nodes, Bool_t accept = kFALSE, Bool_t random = kFALSE);
+   Int_t    GoMoreParallel(Int_t nWorkersToAdd);
    Int_t    SetParallelSilent(Int_t nodes, Bool_t random = kFALSE);
    void     RecvLogFile(TSocket *s, Int_t size);
    void     NotifyLogMsg(const char *msg, const char *sfx = "\n");
    Int_t    BuildPackage(const char *package, EBuildPackageOpt opt = kBuildAll, Int_t chkveropt = kCheckROOT);
    Int_t    BuildPackageOnClient(const char *package, Int_t opt = 0, TString *path = 0, Int_t chkveropt = kCheckROOT);
-   Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE, TList *loadopts = 0);
+   Int_t    LoadPackage(const char *package, Bool_t notOnClient = kFALSE, TList *loadopts = 0, TList *workers = 0);
    Int_t    LoadPackageOnClient(const char *package, TList *loadopts = 0);
    Int_t    UnloadPackage(const char *package);
    Int_t    UnloadPackageOnClient(const char *package);
@@ -675,6 +679,7 @@ private:
    Int_t    HandleInputMessage(TSlave *wrk, TMessage *m, Bool_t deactonfail = kFALSE);
    void     HandleSubmerger(TMessage *mess, TSlave *sl);
    void     SetMonitor(TMonitor *mon = 0, Bool_t on = kTRUE);
+   Bool_t   PollForNewWorkers();
 
    void     ReleaseMonitor(TMonitor *mon);
 
@@ -878,17 +883,17 @@ public:
    Int_t         ClearPackages();
    Int_t         ClearPackage(const char *package);
    Int_t         DownloadPackage(const char *par, const char *dstdir = 0);
-   Int_t         EnablePackage(const char *package, Bool_t notOnClient = kFALSE);
+   Int_t         EnablePackage(const char *package, Bool_t notOnClient = kFALSE, TList *workers = 0);
    Int_t         EnablePackage(const char *package, const char *loadopts,
-                               Bool_t notOnClient = kFALSE);
+                               Bool_t notOnClient = kFALSE, TList *workers = 0);
    Int_t         EnablePackage(const char *package, TList *loadopts,
-                               Bool_t notOnClient = kFALSE);
-   Int_t         UploadPackage(const char *par, EUploadPackageOpt opt = kUntar);
+                               Bool_t notOnClient = kFALSE, TList *workers = 0);
+   Int_t         UploadPackage(const char *par, EUploadPackageOpt opt = kUntar, TList *workers = 0);
    virtual Int_t Load(const char *macro, Bool_t notOnClient = kFALSE, Bool_t uniqueOnly = kTRUE,
                       TList *wrks = 0);
 
-   Int_t       AddDynamicPath(const char *libpath, Bool_t onClient = kFALSE, TList *wrks = 0);
-   Int_t       AddIncludePath(const char *incpath, Bool_t onClient = kFALSE, TList *wrks = 0);
+   Int_t       AddDynamicPath(const char *libpath, Bool_t onClient = kFALSE, TList *wrks = 0, Bool_t doCollect = kTRUE);
+   Int_t       AddIncludePath(const char *incpath, Bool_t onClient = kFALSE, TList *wrks = 0, Bool_t doCollect = kTRUE);
    Int_t       RemoveDynamicPath(const char *libpath, Bool_t onClient = kFALSE);
    Int_t       RemoveIncludePath(const char *incpath, Bool_t onClient = kFALSE);
 

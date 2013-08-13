@@ -179,13 +179,17 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    // Init pointer members
    fWrkStats = 0;
    fPackets = 0;
+   fInput = input;
 
    fFixedNum = kFALSE;
    Int_t fixednum = -1;
-   if (TProof::GetParameter(input, "PROOF_PacketizerFixedNum", fixednum) == 0 && fixednum != 0)
-      fFixedNum = kTRUE;
-   if (fFixedNum)
+   if (TProof::GetParameter(input, "PROOF_PacketizerFixedNum", fixednum) != 0 || fixednum <= 0) {
+      fFixedNum = kFALSE;
+   }
+   else {
       Info("TPacketizerUnit", "forcing the same cycles on each worker");
+      fFixedNum = kTRUE;
+   }
 
    fCalibFrac = 0.01; 
    if (TProof::GetParameter(input, "PROOF_PacketizerCalibFrac", fCalibFrac) != 0 || fCalibFrac <= 0)
@@ -350,9 +354,8 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    // Find slave
    TSlaveStat *slstat = (TSlaveStat*) fWrkStats->GetValue(sl);
    if (!slstat) {
-      // If the worker is none of the known lists, we abort
-      if (!fWrkExcluded->FindObject(sl)) R__ASSERT(slstat != 0);
-      // Just return, this worker node is not active
+      Warning("GetNextPacket", "Received a packet request from an unknown slave: %s:%s",
+         sl->GetName(), sl->GetOrdinal());
       return 0;
    }
 
@@ -576,4 +579,33 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    fAssigned += slstat->fLastProcessed;
 
    return elem;
+}
+
+//______________________________________________________________________________
+Int_t TPacketizerUnit::AddWorkers(TList *workers)
+{
+   // Adds new workers. Returns the number of workers added, or -1 on failure.
+
+   if (!workers) {
+      Error("AddWorkers", "Null list of new workers!");
+      return -1;
+   }
+
+   Int_t curNumOfWrks = fWrkStats->GetEntries();
+
+   TSlave *sl;
+   TIter next(workers);
+   while (( sl = dynamic_cast<TSlave*>(next()) ))
+      fWrkStats->Add(sl, new TSlaveStat(sl, fInput));
+
+   fNumPerWorker = -1;
+   if (fFixedNum && fWrkStats->GetSize() > 0) {
+      // Approximate number: the exact number is determined in GetNextPacket
+      fNumPerWorker = (fNumPerWorker * curNumOfWrks) / fWrkStats->GetSize();
+      if (fNumPerWorker == 0) fNumPerWorker = 1;
+   }
+
+   fConfigParams->Add(new TParameter<Long64_t>("PROOF_PacketizerFixedNum", fNumPerWorker));
+
+   return fWrkStats->GetEntries();
 }

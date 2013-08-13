@@ -516,7 +516,7 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
       }
    } else {
       if (maxnum > 0) {
-         // This is over-conservative for sub-selectiob (random, or round-robin options)
+         // This is over-conservative for sub-selection (random, or round-robin options)
          // A better solution should be implemented for that.
          int nactsess = mst->GetNActiveSessions();
          TRACE(REQ, "act sess ... " << nactsess);
@@ -549,8 +549,8 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
       }
    }
 
-   // If the session has already assigned workers just return
-   if (xps->Workers()->Num() > 0) {
+   // If a non-dynamic session already has assigned workers just return
+   if (!isDynamic && (xps->Workers()->Num() > 0)) {
       // Current assignement is valid
       SafeDel(acwseff);
       return 1;
