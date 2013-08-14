@@ -80,21 +80,39 @@ void TClingTypedefInfo::Init(const char *name)
    fIter = clang::DeclContext::decl_iterator();
    fIterStack.clear();
    // Ask the cling interpreter to lookup the name for us.
-   fDecl = fInterp->getLookupHelper().findScope(name);
-   if (!fDecl) {
-      if (gDebug > 0) {
-         Info("TClingTypedefInfo::Init(name)",
-              "typedef not found name: %s", name);
+   const cling::LookupHelper& lh = fInterp->getLookupHelper();
+   clang::QualType QT = lh.findType(name);
+   if (QT.isNull()) {
+      std::string buf = TClassEdit::InsertStd(name);
+      QT = lh.findType(buf);
+
+      if (QT.isNull()) {
+         if (gDebug > 0) {
+            Info("TClingTypedefInfo::Init(name)",
+                 "type not found: %s", name);
+         }
+         fDecl = 0;
+         return;
       }
-      return;
    }
-   if (fDecl && !llvm::isa<clang::TypedefDecl>(fDecl)) {
+   const clang::TypedefType *td = QT->getAs<clang::TypedefType>();
+   // if (fDecl && !llvm::isa<clang::TypedefDecl>(fDecl)) {
+   if (!td) {
       // If what the lookup found is not a typedef, ignore it.
       if (gDebug > 0) {
          Info("TClingTypedefInfo::Init(name)",
               "type not a typedef: %s", name);
       }
       fDecl = 0;
+      return;
+   }
+   fDecl = td->getDecl();
+   if (!fDecl) {
+      if (gDebug > 0) {
+         Info("TClingTypedefInfo::Init(name)",
+              "typedef decl not found name: %s", name);
+      }
+      return;
    }
    if (gDebug > 0) {
       Info("TClingTypedefInfo::Init(name)", "found typedef name: "
