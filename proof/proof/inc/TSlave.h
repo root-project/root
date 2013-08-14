@@ -58,6 +58,9 @@ public:
 
    enum ESlaveType { kMaster, kSlave };
    enum ESlaveStatus { kInvalid, kActive, kInactive };
+   enum EStatusBits {
+      kOutputRequested = BIT(15)       // If output has been requested
+   };
 
 private:
 
