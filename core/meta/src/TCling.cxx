@@ -2759,31 +2759,66 @@ namespace UNNAMED {
    {
       // Get the data members that do not have a dictionary for a Decl.
 
-      // Convert to RecordDecl.
-      const clang::RecordDecl* RD = dyn_cast<clang::RecordDecl>(D);
-      // If there is no RecordDecl there is no Dictionary
-      if (!RD) return;
-
       // Get the name of the class
       std::string buf;
-      if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(RD)) {
+      if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(D)) {
          PrintingPolicy Policy(ND->getASTContext().getPrintingPolicy());
          llvm::raw_string_ostream stream(buf);
-         ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+         ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
       }
       const char* name = buf.c_str();
 
       // Check for the dictionary of the curent class.
       if (!gClassTable->GetDict(name)){
-         netD.insert(D);
+         std::set<const clang::Decl*>::iterator it = netD.find(D);
+         if (it != netD.end()) return ;
+         netD.insert(D);   
          if(!recurse) return ;
       }
-      // Recurse for the data members.
-      for (clang::RecordDecl::decl_iterator RDI = RD->decls_begin()
-           , RDE = RD->decls_end(); RDI != RDE; ++RDI) {
-         GetMissingDictionariesForDecl(*RDI, netD, recurse);
-      }
+      else return ;
 
+      if (const clang::CXXRecordDecl* RD = llvm::dyn_cast<clang::CXXRecordDecl>(D)) {
+      // Recurse for the data members.
+      for (clang::RecordDecl::field_iterator iField = RD->field_begin(),
+        eField = RD->field_end(); iField != eField; ++iField) {
+            
+               clang::QualType qualType = (*iField)->getType();
+               if (!qualType.isNull()) {
+            
+               //class 
+               if (qualType->isRecordType()) {
+                  if(clang::CXXRecordDecl* FD = qualType->getAsCXXRecordDecl()) {
+                     GetMissingDictionariesForDecl(FD, netD, recurse);
+                  }   
+               }
+               //pointer to class or to array or reference
+               if (qualType->isPointerType() || qualType->isReferenceType()) {
+                  QualType pointeeType = qualType->getPointeeType();
+                  if (pointeeType->isRecordType()) {
+                     if(clang::CXXRecordDecl* FD = pointeeType->getAsCXXRecordDecl()) {
+                     GetMissingDictionariesForDecl(FD, netD, recurse);
+                  }   
+                  }   
+                  else if(pointeeType->isArrayType()) {
+                     const Type* elementType = qualType->getArrayElementTypeNoTypeQual();
+                     if (elementType->isRecordType()) {
+                        if(clang::CXXRecordDecl* FD = elementType->getAsCXXRecordDecl()) {
+                     GetMissingDictionariesForDecl(FD, netD, recurse);
+                  }   
+                     }            
+                  }
+               }
+               //array of class elements
+               if (qualType->isArrayType()) {
+                  const Type* elementType = qualType->getArrayElementTypeNoTypeQual();
+                  if (elementType->isRecordType()) {
+                     clang::CXXRecordDecl* FD = elementType->getAsCXXRecordDecl();
+                     GetMissingDictionariesForDecl(FD, netD, recurse);
+                  }
+               }
+            }   
+      }   
+   }
       return ;
    }
 }
@@ -2799,7 +2834,10 @@ std::set<TClass*> TCling::GetMissingDictionaries(TClass* cl, bool recurse /*recu
    // Get the Decls recursively for all data members of TClass cl
 
    std::set<const clang::Decl*> netD;
-   UNNAMED::GetMissingDictionariesForDecl(D, netD, recurse);
+   // Convert to RecordDecl.
+   if (const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(D)) {
+      UNNAMED::GetMissingDictionariesForDecl(RD, netD, recurse);
+   }   
 
    std::set<TClass*> classesMissingDict;
 
