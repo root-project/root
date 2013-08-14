@@ -599,6 +599,8 @@ void TProof::InitMembers()
    
    fPerfTree = "";
 
+   fWrksOutputReady = 0;
+
    fSelector = 0;
 
    // Check if the user defined a list of environment variables to send over:
@@ -687,6 +689,10 @@ TProof::~TProof()
    SafeDelete(fInputData);
    SafeDelete(fRunningDSets);
    SafeDelete(fCloseMutex);
+   if (fWrksOutputReady) {
+      fWrksOutputReady->SetOwner(kFALSE);
+      delete fWrksOutputReady;
+   }
 
    // remove file with redirected logs
    if (TestBit(TProof::kIsClient)) {
@@ -2734,6 +2740,33 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
          if (s == (TSocket *)(-1) && nto > 0)
             nto--;
       }
+
+      // Check if there are workers with ready output to be sent and ask the first to send it
+      if (IsMaster() && fWrksOutputReady && fWrksOutputReady->GetSize() > 0) {
+         // Maximum number of concurrent sendings
+         Int_t mxws = gEnv->GetValue("Proof.ControlSendOutput", 1);
+         if (TProof::GetParameter(fPlayer->GetInputList(), "PROOF_ControlSendOutput", mxws) != 0)
+            mxws = gEnv->GetValue("Proof.ControlSendOutput", 1);
+         TIter nxwr(fWrksOutputReady);
+         TSlave *wrk = 0;
+         while (mxws && (wrk = (TSlave *) nxwr())) {
+            if (!wrk->TestBit(TSlave::kOutputRequested)) {
+               // Ask worker for output
+               TMessage sendoutput(kPROOF_SENDOUTPUT);
+               PDB(kCollect, 2)
+                  Info("Collect", "worker %s was asked to send its output to master",
+                                                wrk->GetOrdinal());
+               if (wrk->GetSocket()->Send(sendoutput) != 1) {
+                  wrk->SetBit(TSlave::kOutputRequested);
+                  mxws--;
+               }
+            } else {
+               // Count
+               mxws--;
+            }
+         }
+      }
+
       // Check if we need to check the socket activity (we do it every 10 cycles ~ 10 sec)
       sto = -1;
       if (--nsto <= 0) {
@@ -3064,6 +3097,11 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
             // Deactivate the worker, if required
             if (deactonfail) DeactivateWorker(sl->fOrdinal);
          }
+         // Remove from the workers-ready list
+         if (fWrksOutputReady && fWrksOutputReady->FindObject(sl)) {
+            sl->ResetBit(TSlave::kOutputRequested);
+            fWrksOutputReady->Remove(sl);
+         }
          rc = 1;
          break;
 
@@ -3151,6 +3189,20 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
             default:
                Error("HandleInputMessage", "kPROOF_PACKAGE_LIST: unknown type: %d", type);
             }
+         }
+         break;
+
+      case kPROOF_SENDOUTPUT:
+         {  // Worker is ready to send output: make sure the relevant bit is reset
+            sl->ResetBit(TSlave::kOutputRequested);
+            PDB(kGlobal,2)
+               Info("HandleInputMessage","kPROOF_SENDOUTPUT: enter (%s)", sl->GetOrdinal());
+            // Create the list if not yet done
+            if (!fWrksOutputReady) {
+               fWrksOutputReady = new TList;
+               fWrksOutputReady->SetOwner(kFALSE);
+            }
+            fWrksOutputReady->Add(sl);
          }
          break;
 
@@ -5115,6 +5167,12 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 
    // Make sure we get a fresh result
    fOutputList.Clear();
+
+   // Make sure that the workers ready list is empty
+   if (fWrksOutputReady) {
+      fWrksOutputReady->SetOwner(kFALSE);
+      fWrksOutputReady->Clear();
+   }
    
    Long64_t rv = -1;
    if (selector && strlen(selector)) {
