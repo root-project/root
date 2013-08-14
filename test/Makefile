@@ -274,28 +274,34 @@ STRESSHISTO   = stressHistogram.$(ObjSuf)
 STRESSHISTS   = stressHistogram.$(SrcSuf)
 STRESSHIST    = stressHistogram$(ExeSuf)
 
+SQLITETESTO   = sqlitetest.$(ObjSuf)
+SQLITETESTS   = sqlitetest.$(SrcSuf)
+SQLITETEST    = sqlitetest.$(ExeSuf)
 
-OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
+
+OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) \
+                $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
                 $(STRESSSHAPESO) $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) \
-                $(STRESSGO) $(STRESSSPO) $(TESTBITSO)  \
+                $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADSO) $(STRESSVECO) \
-                $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) $(STRESSHEPIXO) \
-                $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSROOSTATSO) $(STRESSPROOFO) \
-                $(STRESSMATHMOREO) $(STRESSTMVAO) $(STRESSINTERPO) $(STRESSITERO) \
-                $(STRESSHISTO) $(STRESSGUIO)
+                $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) \
+                $(STRESSHEPIXO) $(STRESSENTRYLISTO) $(STRESSROOFITO) \
+                $(STRESSROOSTATSO) $(STRESSPROOFO) $(STRESSMATHMOREO) \
+                $(STRESSTMVAO) $(STRESSINTERPO) $(STRESSITERO) \
+                $(STRESSHISTO) $(STRESSGUIO) $(SQLITETESTO)
 
-PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
-                $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
+PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) \
+                $(TSTRING) $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) \
+                $(VLAZY) $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHISTOFIT) $(STRESSHEPIX) \
-                $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSROOSTATS) $(STRESSPROOF) $(STRESSMATH) \
+                $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSROOSTATS) \
+                $(STRESSPROOF) $(STRESSMATH) \
                 $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSINTERP)  $(STRESSITER) \
-                $(STRESSHIST) $(STRESSGUI)
-
+                $(STRESSHIST) $(STRESSGUI) $(SQLITETEST)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
@@ -713,6 +719,11 @@ $(STRESSITER):	$(STRESSITERO)
 		@echo "$@ done"
 
 $(STRESSHIST):  $(STRESSHISTO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
+		@echo "$@ done"
+
+$(SQLITETEST):  $(SQLITETESTO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
