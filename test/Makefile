@@ -276,27 +276,36 @@ STRESSHISTO   = stressHistogram.$(ObjSuf)
 STRESSHISTS   = stressHistogram.$(SrcSuf)
 STRESSHIST    = stressHistogram$(ExeSuf)
 
+ifeq ($(shell $(RC) --has-sqlite),yes)
+SQLITETESTO   = sqlitetest.$(ObjSuf)
+SQLITETESTS   = sqlitetest.$(SrcSuf)
+SQLITETEST    = sqlitetest$(ExeSuf)
+endif
 
-OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
+
+OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) \
+                $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
                 $(STRESSSHAPESO) $(TCOLLBMO) $(STRESSGEOMETRYO) $(STRESSLO) \
-                $(STRESSGO) $(STRESSSPO) $(TESTBITSO)  \
+                $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADSO) $(STRESSVECO) \
-                $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) $(STRESSHEPIXO) \
-                $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSROOSTATSO) $(STRESSPROOFO) \
-                $(STRESSMATHMOREO) $(STRESSTMVAO) $(STRESSINTERPO) $(STRESSITERO) \
-                $(STRESSHISTO) $(STRESSGUIO)
+                $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) \
+                $(STRESSHEPIXO) $(STRESSENTRYLISTO) $(STRESSROOFITO) \
+                $(STRESSROOSTATSO) $(STRESSPROOFO) $(STRESSMATHMOREO) \
+                $(STRESSTMVAO) $(STRESSINTERPO) $(STRESSITERO) \
+                $(STRESSHISTO) $(STRESSGUIO) $(SQLITETESTO)
 
-PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
-                $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
+PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) \
+                $(TSTRING) $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) \
+                $(VLAZY) $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHISTOFIT) $(STRESSHEPIX) \
-                $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSROOSTATS) $(STRESSPROOF) $(STRESSMATH) \
-                $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSINTERP)  $(STRESSITER) \
-                $(STRESSHIST) $(STRESSGUI)
+                $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSROOSTATS) \
+                $(STRESSPROOF) $(STRESSMATH) \
+                $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSINTERP) $(STRESSITER) \
+                $(STRESSHIST) $(STRESSGUI) $(SQLITETEST)
 
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
@@ -719,6 +728,11 @@ $(STRESSHIST):  $(STRESSHISTO)
 		$(MT_EXE)
 		@echo "$@ done"
 
+$(SQLITETEST):  $(SQLITETESTO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		$(MT_EXE)
+		@echo "$@ done"
+
 clean:
 		@rm -f $(OBJS) $(TRACKMATHSRC) core *Dict.*
 
@@ -726,7 +740,7 @@ distclean:      clean
 		-@(mv -f stressRooStats_ref.root stressRooStats_ref.root- >/dev/null 2>&1;true)
 		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
 		   *.root *.ps *.so *.lib *.dll *.d *.log .def so_locations \
-		   files/* *.pcm
+		   files/* *.pcm testdb.sqlite
 		@rm -rf cxx_repository
 		-@(mv -f stressRooStats_ref.root- stressRooStats_ref.root >/dev/null 2>&1;true)
 		-@cd RootShower && $(MAKE) distclean
