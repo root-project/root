@@ -108,7 +108,9 @@ public:
       if (npts == 0) return -1; 
 
       unsigned int npar = funcVec[0].NDim(); 
-      typedef typename std::vector<Func>  FuncVec; 
+      // Remove unused typedef to remove warning in GCC48
+      // http://gcc.gnu.org/gcc-4.8/porting_to.html
+      // typedef typename std::vector<Func>  FuncVec; 
       //FuncIt funcIter = funcVec.begin(); 
       fFunc.SetFunction(funcVec, npts, npar); 
       // create solver object 
