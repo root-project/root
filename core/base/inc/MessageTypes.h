@@ -64,7 +64,7 @@ enum EMessageTypes {
    kPROOF_HOSTAUTH       = 1023,         //HostAuth info follows
    kPROOF_GETSLAVEINFO   = 1024,         //get worker info from master
    kPROOF_GETTREEHEADER  = 1025,         //get tree object
-   kPROOF_GETOUTPUTLIST  = 1026,         //get the output list
+   kPROOF_GETOUTPUTLIST  = 1026,         //get the output list names
    kPROOF_GETSTATS       = 1027,         //get statistics of workers
    kPROOF_GETPARALLEL    = 1028,         //get number of parallel workers
    kPROOF_VALIDATE_DSET  = 1029,         //validate a TDSet
@@ -96,6 +96,7 @@ enum EMessageTypes {
    kPROOF_GOASYNC        = 1055,         //switch to asynchronous mode
    kPROOF_SUBMERGER      = 1056,         //sub-merger based approach in finalization
    kPROOF_ECHO           = 1057,         //object echo request from client
+   kPROOF_SENDOUTPUT     = 1058,         //control output sending
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER           = 2000,         //user id follows
