@@ -593,6 +593,8 @@ private:
    Int_t           fRedirectNext;
 
    TString         fPerfTree;        // If non-null triggers saving of the performance info into fPerfTree
+
+   TList          *fWrksOutputReady; // List of workers ready to send output (in control output sending mode)
    
    static TPluginHandler *fgLogViewer;  // Log dialog box plugin
 
