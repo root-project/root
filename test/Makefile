@@ -276,7 +276,7 @@ STRESSHIST    = stressHistogram$(ExeSuf)
 
 SQLITETESTO   = sqlitetest.$(ObjSuf)
 SQLITETESTS   = sqlitetest.$(SrcSuf)
-SQLITETEST    = sqlitetest.$(ExeSuf)
+SQLITETEST    = sqlitetest$(ExeSuf)
 
 
 OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) \
@@ -708,12 +708,12 @@ else
 endif
 endif
 
-$(STRESSINTERP): $(STRESSINTERPO) 
+$(STRESSINTERP): $(STRESSINTERPO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
 
-$(STRESSITER):	$(STRESSITERO) 
+$(STRESSITER):	$(STRESSITERO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
@@ -735,7 +735,7 @@ distclean:      clean
 		-@(mv -f stressRooStats_ref.root stressRooStats_ref.root- >/dev/null 2>&1;true)
 		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
 		   *.root *.ps *.so *.lib *.dll *.d *.log .def so_locations \
-		   files/*
+		   files/* testdb.sqlite
 		@rm -rf cxx_repository
 		-@(mv -f stressRooStats_ref.root- stressRooStats_ref.root >/dev/null 2>&1;true)
 		-@cd RootShower && $(MAKE) distclean
