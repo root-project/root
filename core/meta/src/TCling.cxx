@@ -144,6 +144,7 @@ extern "C" {
 
 using namespace std;
 using namespace clang;
+using namespace ROOT;
 
 R__EXTERN int optind;
 

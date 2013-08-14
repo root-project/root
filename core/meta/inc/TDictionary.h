@@ -111,10 +111,13 @@ enum ERefTypeValues {
    kParaRefP2P2P   = 103    // not used
 };
 
-enum EFunctionMatchMode {
-   kExactMatch = 0,
-   kConversionMatch = 1
-};
+namespace ROOT {
+   enum EFunctionMatchMode {
+      kExactMatch = 0,
+      kConversionMatch = 1
+   };
+}
+
 
 class TDictionary : public TNamed {
 

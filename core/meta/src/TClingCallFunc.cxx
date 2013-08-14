@@ -66,6 +66,8 @@
 #include <string>
 #include <vector>
 
+using namespace ROOT;
+
 // This ought to be declared by the implementer .. oh well...
 extern void unresolvedSymbol();
 

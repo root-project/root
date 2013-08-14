@@ -53,6 +53,7 @@
 #include <string>
 
 using namespace clang;
+using namespace ROOT;
 
 static std::string FullyQualifiedName(const Decl *decl) {
    // Return the fully qualified name without worrying about normalizing it.
