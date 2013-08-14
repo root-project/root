@@ -245,7 +245,7 @@ void TClingClassInfo::Destruct(void *arena) const
 }
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
-      const char *proto, long *poffset, MatchMode mode /*= ConversionMatch*/,
+      const char *proto, long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
       InheritanceMode imode /*= WithInheritance*/) const
 {
    return GetMethod(fname,proto,false,poffset,mode,imode);
@@ -253,7 +253,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       const char *proto, bool objectIsConst,
-      long *poffset, MatchMode mode /*= ConversionMatch*/,
+      long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
       InheritanceMode imode /*= WithInheritance*/) const
 {
    if (poffset) {
@@ -273,9 +273,9 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const FunctionDecl *fd;
-   if (mode == ConversionMatch) {
+   if (mode == kConversionMatch) {
       fd = lh.findFunctionProto(fDecl, fname, proto, objectIsConst);
-   } else if (mode == ExactMatch) {
+   } else if (mode == kExactMatch) {
       fd = lh.matchFunctionProto(fDecl, fname, proto, objectIsConst);
    } else {
       Error("TClingClassInfo::GetMethod",
@@ -302,7 +302,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
 }
 
 TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
-      const char *arglist, long *poffset, MatchMode mode /* = ConversionMatch*/,
+      const char *arglist, long *poffset, EFunctionMatchMode mode /* = kConversionMatch*/,
       InheritanceMode imode /* = WithInheritance*/) const
 {
    return GetMethodWithArgs(fname,arglist,false,poffset,mode,imode);
@@ -310,7 +310,7 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
 
 TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       const char *arglist, bool objectIsConst,
-      long *poffset, MatchMode /*mode = ConversionMatch*/,
+      long *poffset, EFunctionMatchMode /*mode = kConversionMatch*/,
       InheritanceMode /* imode = WithInheritance*/) const
 {
    if (poffset) {
@@ -354,7 +354,7 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
 
 int TClingClassInfo::GetMethodNArg(const char *method, const char *proto,
                                    Bool_t objectIsConst,
-                                   MatchMode mode /*= ConversionMatch*/) const
+                                   EFunctionMatchMode mode /*= kConversionMatch*/) const
 {
    // Note: Used only by TQObject.cxx:170 and only for interpreted classes.
    if (!IsLoaded()) {
@@ -577,7 +577,7 @@ bool TClingClassInfo::IsValid() const
 bool TClingClassInfo::IsValidMethod(const char *method, const char *proto,
                                     Bool_t objectIsConst,
                                     long *offset,
-                                    MatchMode mode /*= ConversionMatch*/) const
+                                    EFunctionMatchMode mode /*= kConversionMatch*/) const
 {
    // Check if the method with the given prototype exist.
    if (!IsLoaded()) {

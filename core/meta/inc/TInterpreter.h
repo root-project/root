@@ -50,11 +50,6 @@ public:
       kProcessing  = 99
    };
 
-   enum MatchMode {
-      ExactMatch = 0,
-      ConversionMatch = 1
-   };
-
    TInterpreter() { }   // for Dictionary
    TInterpreter(const char *name, const char *title = "Generic Interpreter");
    virtual ~TInterpreter() { }
@@ -124,10 +119,10 @@ public:
    virtual void     CreateListOfMethodArgs(TFunction *m) const = 0;
    virtual void     UpdateListOfMethods(TClass *cl) const = 0;
    virtual TString  GetMangledName(TClass *cl, const char *method, const char *params, Bool_t objectIsConst = kFALSE) = 0;
-   virtual TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, MatchMode /* mode */ = ConversionMatch) = 0;
+   virtual TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, EFunctionMatchMode /* mode */ = kConversionMatch) = 0;
    virtual const char *GetInterpreterTypeName(const char *name,Bool_t full = kFALSE) = 0;
    virtual void    *GetInterfaceMethod(TClass *cl, const char *method, const char *params, Bool_t objectIsConst = kFALSE) = 0;
-   virtual void    *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, MatchMode /* mode */ = ConversionMatch) = 0;
+   virtual void    *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, EFunctionMatchMode /* mode */ = kConversionMatch) = 0;
    virtual void     Execute(const char *function, const char *params, int *error = 0) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0) = 0;
@@ -190,8 +185,8 @@ public:
    virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, bool /* objectIsConst */, Long_t * /* Offset */) const {;}
    virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* params */, Long_t * /* Offset */) const {;}
    virtual void   CallFunc_SetFunc(CallFunc_t * /* func */, MethodInfo_t * /* info */) const {;}
-   virtual void   CallFunc_SetFuncProto(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* proto */, Long_t * /* Offset */, MatchMode /* mode */ = ConversionMatch) const {;}
-   virtual void   CallFunc_SetFuncProto(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* proto */, bool /* objectIsConst */, Long_t * /* Offset */, MatchMode /* mode */ = ConversionMatch) const {;}
+   virtual void   CallFunc_SetFuncProto(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* proto */, Long_t * /* Offset */, EFunctionMatchMode /* mode */ = kConversionMatch) const {;}
+   virtual void   CallFunc_SetFuncProto(CallFunc_t * /* func */, ClassInfo_t * /* info */, const char * /* method */, const char * /* proto */, bool /* objectIsConst */, Long_t * /* Offset */, EFunctionMatchMode /* mode */ = kConversionMatch) const {;}
 
 
    // ClassInfo interface
@@ -203,7 +198,7 @@ public:
    virtual ClassInfo_t  *ClassInfo_Factory() const {return 0;}
    virtual ClassInfo_t  *ClassInfo_Factory(ClassInfo_t * /* cl */) const {return 0;}
    virtual ClassInfo_t  *ClassInfo_Factory(const char * /* name */) const {return 0;}
-   virtual int    ClassInfo_GetMethodNArg(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Bool_t /* objectIsConst */ = false, MatchMode /* mode */ = ConversionMatch) const {return 0;}
+   virtual int    ClassInfo_GetMethodNArg(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Bool_t /* objectIsConst */ = false, EFunctionMatchMode /* mode */ = kConversionMatch) const {return 0;}
    virtual Bool_t ClassInfo_HasDefaultConstructor(ClassInfo_t * /* info */) const {return 0;}
    virtual Bool_t ClassInfo_HasMethod(ClassInfo_t * /* info */, const char * /* name */) const {return 0;}
    virtual void   ClassInfo_Init(ClassInfo_t * /* info */, const char * /* funcname */) const {;}
@@ -212,8 +207,8 @@ public:
    virtual Bool_t ClassInfo_IsEnum(const char * /* name */) const {return 0;}
    virtual Bool_t ClassInfo_IsLoaded(ClassInfo_t * /* info */) const {return 0;}
    virtual Bool_t ClassInfo_IsValid(ClassInfo_t * /* info */) const {return 0;}
-   virtual Bool_t ClassInfo_IsValidMethod(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Long_t * /* offset */, MatchMode /* mode */ = ConversionMatch) const {return 0;}
-   virtual Bool_t ClassInfo_IsValidMethod(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Bool_t /* objectIsConst */, Long_t * /* offset */, MatchMode /* mode */ = ConversionMatch) const {return 0;}
+   virtual Bool_t ClassInfo_IsValidMethod(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Long_t * /* offset */, EFunctionMatchMode /* mode */ = kConversionMatch) const {return 0;}
+   virtual Bool_t ClassInfo_IsValidMethod(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Bool_t /* objectIsConst */, Long_t * /* offset */, EFunctionMatchMode /* mode */ = kConversionMatch) const {return 0;}
    virtual int    ClassInfo_Next(ClassInfo_t * /* info */) const {return 0;}
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */) const {return 0;}
    virtual void  *ClassInfo_New(ClassInfo_t * /* info */, int /* n */) const {return 0;}

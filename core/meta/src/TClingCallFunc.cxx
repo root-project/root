@@ -556,7 +556,7 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    CO.DynamicScoping = 0;
    CO.Debug = 0;
    CO.CodeGeneration = 1;
-   
+
    cling::Transaction T(CO, FD->getASTContext());
 
    T.append(const_cast<clang::FunctionDecl*>(FD));
@@ -1019,7 +1019,7 @@ void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
                                   const char *method, const char *proto,
                                   long *poffset,
-                                  TClingClassInfo::MatchMode mode /* = TClingClassInfo::ConversionMatch */
+                                  EFunctionMatchMode mode /* = kConversionMatch */
                                   )
 {
    SetFuncProto(info,method,proto,false,poffset, mode);
@@ -1029,7 +1029,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
                                   const char *method, const char *proto,
                                   bool objectIsConst,
                                   long *poffset,
-                                  TClingClassInfo::MatchMode mode /* = TClingClassInfo::ConversionMatch */
+                                  EFunctionMatchMode mode /* =kConversionMatch */
                                   )
 {
    delete fMethod;

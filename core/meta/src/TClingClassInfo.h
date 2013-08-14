@@ -26,6 +26,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TClingMethodInfo.h"
+#include "TDictionary.h"
 
 #include <vector>
 #include <string>
@@ -63,11 +64,6 @@ private:
    TClingClassInfo &operator=(const TClingClassInfo &) /* = delete */; // NOT IMPLEMENTED
 public: // Types
 
-   enum MatchMode {
-      ExactMatch = 0,
-      ConversionMatch = 1,
-      ConversionMatchBytecode = 2
-   };
    enum InheritanceMode {
       InThisScope = 0,
       WithInheritance = 1
@@ -85,18 +81,18 @@ public:
    void                 Destruct(void *arena) const;
    const clang::Decl   *GetDecl() const { return fDecl; } // Underlying representation without Double32_t
    TClingMethodInfo     GetMethod(const char *fname, const char *proto,
-                                  long *poffset, MatchMode mode = ConversionMatch,
+                                  long *poffset, EFunctionMatchMode mode = kConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
    TClingMethodInfo     GetMethodWithArgs(const char *fname, const char *arglist,
-                                  long *poffset, MatchMode mode = ConversionMatch,
+                                  long *poffset, EFunctionMatchMode mode = kConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
    TClingMethodInfo     GetMethod(const char *fname, const char *proto, bool objectIsConst,
-                                  long *poffset, MatchMode mode = ConversionMatch,
+                                  long *poffset, EFunctionMatchMode mode = kConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
    TClingMethodInfo     GetMethodWithArgs(const char *fname, const char *arglist, bool objectIsConst,
-                                  long *poffset, MatchMode mode = ConversionMatch,
+                                  long *poffset, EFunctionMatchMode mode = kConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
-   int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, MatchMode mode = ConversionMatch) const;
+   int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, EFunctionMatchMode mode = kConversionMatch) const;
    long                 GetOffset(const clang::CXXMethodDecl* md) const;
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    bool                 HasDefaultConstructor() const;
@@ -109,7 +105,7 @@ public:
    static bool          IsEnum(cling::Interpreter *interp, const char *name);
    bool                 IsLoaded() const;
    bool                 IsValid() const;
-   bool                 IsValidMethod(const char *method, const char *proto, Bool_t objectIsConst, long *offset, MatchMode mode = ConversionMatch) const;
+   bool                 IsValidMethod(const char *method, const char *proto, Bool_t objectIsConst, long *offset, EFunctionMatchMode mode = kConversionMatch) const;
    int                  InternalNext();
    int                  Next();
    void                *New() const;
