@@ -3484,7 +3484,8 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
 
 //______________________________________________________________________________
 TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
-                                        Bool_t objectIsConst /* = kFALSE */)
+                                        Bool_t objectIsConst /* = kFALSE */,
+                                        ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */)
 {
    // Find the method with a given prototype. The proto string must be of the
    // form: "char*,int,double". Returns 0 in case method is not found.
@@ -3496,7 +3497,8 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
 
    Long_t faddr = (Long_t)gInterpreter->GetInterfaceMethodWithPrototype(this,
                                                                method, proto,
-                                                               objectIsConst);
+                                                                        objectIsConst, 
+                                                                        mode);
    if (!faddr) return 0;
 
    // loop over all methods in this class (and its baseclasses) till
@@ -3510,7 +3512,7 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
    while ((base = (TBaseClass *) next())) {
       TClass *c = base->GetClassPointer();
       if (c) {
-         m = c->GetMethodWithPrototype(method,proto,objectIsConst);
+         m = c->GetMethodWithPrototype(method,proto,objectIsConst, mode);
          if (m) return m;
       }
    }
@@ -3539,8 +3541,10 @@ TMethod *TClass::GetClassMethod(Long_t faddr)
 TMethod *TClass::GetClassMethod(const char *name, const char* params,
                                 Bool_t objectIsConst /* = kFALSE */)
 {
-   // Look for a method in this class that has the name and
-   // signature
+   // Look for a method in this class that has the name and matches the parameters.
+   // The params string must contain argument values, like "3189, \"aap\", 1.3".
+   // Returns 0 in case method is not found.
+   // See TClass::GetMethod to also search the base classes.
 
    if (!fClassInfo) return 0;
 
@@ -3553,6 +3557,43 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params,
       CallFunc_t  *func = gCling->CallFunc_Factory();
       Long_t       offset;
       gCling->CallFunc_SetFunc(func,GetClassInfo(), name, params, objectIsConst, &offset);
+      MethodInfo_t *info = gCling->CallFunc_FactoryMethod(func);
+      TMethod request(info,this);
+      TMethod *m;
+      TIter    next(bucketForMethod);
+      while ((m = (TMethod *) next())) {
+         if (!strcmp(name,m->GetName())
+             &&!strcmp(request.GetSignature(),m->GetSignature())) {
+            gCling->CallFunc_Delete(func);
+            return m;
+         }
+      }
+      gCling->CallFunc_Delete(func);
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TMethod *TClass::GetClassMethodWithPrototype(const char *name, const char* proto,
+                                             Bool_t objectIsConst /* = kFALSE */,
+                      ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */)
+{
+   // Look for a method in this class that has the name and matches the parameters.
+   // The params string must contain argument values, like "3189, \"aap\", 1.3".
+   // Returns 0 in case method is not found.
+   // See TClass::GetMethodWithPrototype to also search the base classes.
+
+   if (!fClassInfo) return 0;
+
+   // Need to go through those loops to get the signature from
+   // the valued params (i.e. from "1.0,3" to "double,int")
+
+   TList* bucketForMethod = ((THashList*)GetListOfMethods())->GetListForObject(name);
+   if (bucketForMethod) {
+      R__LOCKGUARD2(gClingMutex);
+      CallFunc_t  *func = gCling->CallFunc_Factory();
+      Long_t       offset;
+      gCling->CallFunc_SetFuncProto(func,GetClassInfo(), name, proto, objectIsConst, &offset, mode);
       MethodInfo_t *info = gCling->CallFunc_FactoryMethod(func);
       TMethod request(info,this);
       TMethod *m;
