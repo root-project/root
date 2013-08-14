@@ -1654,7 +1654,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
       case kPROOF_SENDOUTPUT:
          {
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_SENDOUTPUT",
-                                    "worker was asked for sending output to master");
+                                 "worker was asked to send output to master");
             Int_t rc = 0;
             if (SendResults(fSocket, fPlayer->GetOutputList()) != 0) {
                Error("HandleSocketInput:kPROOF_SENDOUTPUT", "problems sending output list");
@@ -1663,6 +1663,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             // Signal the master that we are idle
             fSocket->Send(kPROOF_SETIDLE);
             SetIdle(kTRUE);
+            DeletePlayer();
             SendLogFile(rc);
          }
          break;
@@ -4163,25 +4164,25 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
                         fPlayer->GetOutputList()) ? kTRUE : kFALSE;
       if (outok) {
          // Check if in controlled output sending mode
-         Int_t cso = gEnv->GetValue("Proof.ControlSendOutput", 0);
-         if (TProof::GetParameter(input, "PROOF_ControlSendOutput", cso) == 0)
-            cso = gEnv->GetValue("Proof.ControlSendOutput", 0);
+         Int_t cso = gEnv->GetValue("Proof.ControlSendOutput", 1);
+         if (TProof::GetParameter(input, "PROOF_ControlSendOutput", cso) != 0)
+            cso = gEnv->GetValue("Proof.ControlSendOutput", 1);
          if (cso > 0) {
-            // Control output sending mode:
-            // First, it reports only the size of its output to the master
-            // Wait for the master to ask for the objects.
-            // Allows controls of memory usage on the master.
 
+            // Control output sending mode: wait for the master to ask for the objects.
+            // Allows controls of memory usage on the master.
             TMessage msg(kPROOF_SENDOUTPUT);
-            msg << Int_t(TProof::kOutputSize);
-            msg << fPlayer->GetOutputList()->GetEntries();
             fSocket->Send(msg);
 
             // Set idle
             SetIdle(kTRUE);
 
-            PDB(kGlobal, 1) Info("HandleProcess", "controlled mode: worker %s has finished,"
-                                                  " sizes sent to master", fOrdinal.Data());
+            // Do not cleanup the player yet: it will be used in sending output activities
+            deleteplayer = kFALSE;
+
+            PDB(kGlobal, 1)
+               Info("HandleProcess", "controlled mode: worker %s has finished,"
+                                     " sizes sent to master", fOrdinal.Data());
          } else {
 
 
