@@ -274,9 +274,11 @@ STRESSHISTO   = stressHistogram.$(ObjSuf)
 STRESSHISTS   = stressHistogram.$(SrcSuf)
 STRESSHIST    = stressHistogram$(ExeSuf)
 
+ifeq ($(shell $(RC) --has-sqlite),yes)
 SQLITETESTO   = sqlitetest.$(ObjSuf)
 SQLITETESTS   = sqlitetest.$(SrcSuf)
 SQLITETEST    = sqlitetest$(ExeSuf)
+endif
 
 
 OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) \
@@ -300,7 +302,7 @@ PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHISTOFIT) $(STRESSHEPIX) \
                 $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSROOSTATS) \
                 $(STRESSPROOF) $(STRESSMATH) \
-                $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSINTERP)  $(STRESSITER) \
+                $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSINTERP) $(STRESSITER) \
                 $(STRESSHIST) $(STRESSGUI) $(SQLITETEST)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
