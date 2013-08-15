@@ -6047,7 +6047,13 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          TBranch *branch = leaf->GetBranch();
          Double_t totBytes = (Double_t)branch->GetTotBytes();
          Double_t idealFactor = totBytes/aveSize;
-         UInt_t sizeOfOneEntry = 1+(UInt_t)(totBytes / (Double_t)branch->GetEntries()); 
+         UInt_t sizeOfOneEntry;
+         if (branch->GetEntries() == 0) {
+            // There is no data, so let's make a guess ...
+            sizeOfOneEntry = aveSize;
+         } else {
+            sizeOfOneEntry = 1+(UInt_t)(totBytes / (Double_t)branch->GetEntries()); 
+         }
          Int_t oldBsize = branch->GetBasketSize();
          oldMemsize += oldBsize;
          oldBaskets += 1+Int_t(totBytes/oldBsize);
