@@ -485,18 +485,15 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
     gof->SetName(Form("%s_GOF%d",GetName(),i)) ;
     gof->SetTitle(Form("%s_GOF%d",GetTitle(),i)) ;
 
-    Bool_t doInline = (i==_nCPU-1) ;
-    if (!doInline) coutI(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl ;
-    _mpfeArray[i] = new RooRealMPFE(Form("%s_%lx_MPFE%d",GetName(),(ULong_t)this,i),Form("%s_%lx_MPFE%d",GetTitle(),(ULong_t)this,i),*gof,doInline) ;
+    coutI(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl ;
+    _mpfeArray[i] = new RooRealMPFE(Form("%s_%lx_MPFE%d",GetName(),(ULong_t)this,i),Form("%s_%lx_MPFE%d",GetTitle(),(ULong_t)this,i),*gof,false) ;
     //_mpfeArray[i]->setVerbose(kTRUE,kTRUE) ;
     _mpfeArray[i]->initialize() ;
-    if (doInline) {
-      _mpfeArray[i]->addOwnedComponents(*gof) ;
-    }
-    if (i>0) {
+    if (i > 0) {
       _mpfeArray[i]->followAsSlave(*_mpfeArray[0]) ;
     }
   }
+  _mpfeArray[_nCPU - 1]->addOwnedComponents(*gof);
   //cout << "initMPMode --- done" << endl ;
   return ;
 }
