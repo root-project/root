@@ -150,37 +150,6 @@ R__EXTERN int optind;
 // The functions are used to bridge cling/clang/llvm compiled with no-rtti and
 // ROOT (which uses rtti)
 
-// Class extracting recursively every typedef defined somewhere.
-class TypedefVisitor : public RecursiveASTVisitor<TypedefVisitor> {
-private:
-   llvm::SmallVector<TypedefDecl*,128> &fTypedefs;
-public:
-   TypedefVisitor(llvm::SmallVector<TypedefDecl*,128> &defs) : fTypedefs(defs)
-   {}
-
-   bool TraverseStmt(Stmt*) {
-      // Don't descend into function bodies.
-      return true;
-   }
-
-   bool shouldVisitTemplateInstantiations() const { return true; }
-
-   bool TraverseClassTemplateDecl(ClassTemplateDecl*) {
-      // Don't descend into templates (but only instances thereof).
-      return true; // returning false will abort the in-depth traversal.
-   }
-
-   bool TraverseClassTemplatePartialSpecializationDecl(ClassTemplatePartialSpecializationDecl*) {
-      // Don't descend into templates partial specialization (but only instances thereof).
-      return true; // returning false will abort the in-depth traversal.
-   }
-
-   bool VisitTypedefDecl(TypedefDecl *TdefD) {
-      if (!TdefD->getDeclContext()->isDependentContext())
-         fTypedefs.push_back(TdefD);
-      return true; // returning false will abort the in-depth traversal.
-   }
-};
 //______________________________________________________________________________
 
 // Class extracting recursively every Enum type defined for a class.
@@ -336,25 +305,6 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
          return;
    }
 
-   // FIXME: don't load the world. Really, don't. Maybe
-   // instead smarten TROOT::GetListOfWhateveros() which
-   // currently is a THashList but could be a
-   // TInterpreterLookupCollection, one that reimplements
-   // TCollection::FindObject(name) and performs a lookup
-   // if not found in its T(Hash)List.
-   if (/* !isDeserialized && */ isa<DeclContext>(D) && !isa<EnumDecl>(D)) {
-      // We have to find all the typedefs contained in that decl context
-      // and add it to the list of types.
-      cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
-      llvm::SmallVector<TypedefDecl*, 128> Defs;
-      TypedefVisitor V(Defs);
-      V.TraverseDecl(const_cast<Decl*>(D));
-      for (size_t i = 0; i < Defs.size(); ++i) {
-         if (!gROOT->GetListOfTypes()->FindObject(Defs[i]->getNameAsString().c_str())) {
-            gROOT->GetListOfTypes()->Add(new TDataType(new TClingTypedefInfo(fInterpreter, Defs[i])));
-         }
-      }
-   }
    if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
       if (isDeserialized && isa<CXXMethodDecl>(FD))
          return;
@@ -378,11 +328,6 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
    }
    else if (const RecordDecl *TD = dyn_cast<RecordDecl>(D)) {
       TCling__UpdateClassInfo(TD);
-   }
-   else if (const TypedefDecl* TdefD = dyn_cast<TypedefDecl>(D)) {
-      if (!gROOT->GetListOfTypes()->FindObject(TdefD->getNameAsString().c_str())) {
-         gROOT->GetListOfTypes()->Add(new TDataType(new TClingTypedefInfo(fInterpreter, TdefD)));
-      }
    }
    else if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
 
@@ -4730,6 +4675,12 @@ void TCling::TypedefInfo_Delete(TypedefInfo_t* tinfo) const
 TypedefInfo_t* TCling::TypedefInfo_Factory() const
 {
    return (TypedefInfo_t*) new TClingTypedefInfo(fInterpreter);
+}
+
+//______________________________________________________________________________
+TypedefInfo_t* TCling::TypedefInfo_Factory(const char *name) const
+{
+   return (TypedefInfo_t*) new TClingTypedefInfo(fInterpreter, name);
 }
 
 //______________________________________________________________________________

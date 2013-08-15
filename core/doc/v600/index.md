@@ -120,6 +120,18 @@ and for genreflex
    </class>
 ```
 
+### TROOT
+
+The list returned by `GetListOfTypes` is no longer filled when the dictionary
+are loaded but instead are filled on demand, when the user explicitly (directly
+or indirectly) request each typedef.  In particular this means that
+``` {.cpp}
+   gROOT->GetListOfTypes()->ls(); // or Print()
+```
+no longer prints the list of all available typedef but instead list only the
+typedefs that have been previously accessed throught the list (plus the builtins
+types).
+
 ### ACliC
 
 ACLiC has the following backward incompatibilities:
@@ -128,6 +140,11 @@ ACLiC has the following backward incompatibilities:
     keyword to public, the code compiled by ACLIC no longer has access
     to protected and private members of a class (except where allowed by
     the C++ standard).
+
+### Collection
+
+New collection `TListOfTypes` that implements on demand creation
+of the `TDataType` describing a typedef.
 
 ### TUnixSystem
 

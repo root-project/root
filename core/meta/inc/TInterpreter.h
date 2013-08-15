@@ -301,6 +301,7 @@ public:
    // TypedefInfo interface
    virtual void   TypedefInfo_Delete(TypedefInfo_t * /* tinfo */) const {;}
    virtual TypedefInfo_t  *TypedefInfo_Factory() const {return 0;}
+   virtual TypedefInfo_t  *TypedefInfo_Factory(const char *) const {return 0;}
    virtual TypedefInfo_t  *TypedefInfo_FactoryCopy(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual void   TypedefInfo_Init(TypedefInfo_t * /* tinfo */, const char * /* funcname */) const {;}
    virtual Bool_t TypedefInfo_IsValid(TypedefInfo_t * /* tinfo */) const {return 0;}

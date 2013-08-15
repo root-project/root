@@ -107,6 +107,7 @@
 #include "TObjString.h"
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
+#include "TListOfTypes.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -1354,9 +1355,8 @@ TCollection *TROOT::GetListOfTypes(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fTypes) {
-      fTypes = new THashTable(100, 3);
+      fTypes = new TListOfTypes;
       load = kTRUE;
-      TDataType::AddBuiltins(fTypes);
    }
 
    if (!fInterpreter)
