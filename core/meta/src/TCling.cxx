@@ -212,8 +212,7 @@ static void TCling__UpdateClassInfo(const NamedDecl* TD)
    }
    if (topLevel) {
       while (!updateList.empty()) {
-         ((TCling*)gInterpreter)
-            ->UpdateClassInfoWithDecl(updateList.back());
+         ((TCling*)gInterpreter)->UpdateClassInfoWithDecl(updateList.back());
          updateList.pop_back();
       }
       entered = kFALSE;
