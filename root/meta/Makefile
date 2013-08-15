@@ -113,3 +113,5 @@ loadernotapp.success: loadernotapp.log
 	$(SuccessTestDiff) && touch $@
 
 execResolveTypedef.success: EXTRA_DIFFOPTS += -w
+
+execTypedefList.log: typelist.v5.txt typelist.v6.txt
