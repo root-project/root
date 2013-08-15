@@ -427,7 +427,7 @@ void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets)
 {
   // Set MultiProcessor set number identification of this instance
   _setNum = inSetNum; _numSets = inNumSets;
-  _extSet = _mpinterl==RooFit::SimComponents ? _setNum : crc32(Form("%sXXXX",GetName()))%_numSets;
+  _extSet = _mpinterl==RooFit::SimComponents ? _setNum : (_numSets - 1);
   
   if (SimMaster == _gofOpMode) {
     // Forward to slaves
