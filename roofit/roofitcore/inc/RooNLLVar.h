@@ -63,8 +63,10 @@ protected:
   virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
   Bool_t _weightSq ; // Apply weights squared?
   mutable Bool_t _first ; //!
+  Double_t _offsetSaveW2; //!
+  Double_t _offsetCarrySaveW2; //!
   
-  ClassDef(RooNLLVar,1) // Function representing (extended) -log(L) of p.d.f and dataset
+  ClassDef(RooNLLVar,2) // Function representing (extended) -log(L) of p.d.f and dataset
 };
 
 #endif

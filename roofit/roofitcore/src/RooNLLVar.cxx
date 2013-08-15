@@ -26,6 +26,8 @@
 // END_HTML
 //
 
+#include <algorithm>
+
 #include "RooFit.h"
 #include "Riostream.h"
 
@@ -84,7 +86,10 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
   _extended = pc.getInt("extended") ;
   _weightSq = kFALSE ;
   _first = kTRUE ;
-  _offset = 0 ;
+  _offset = 0.;
+  _offsetCarry = 0.;
+  _offsetSaveW2 = 0.;
+  _offsetCarrySaveW2 = 0.;
 
 }
 
@@ -97,7 +102,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
   RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
   _extended(extended),
   _weightSq(kFALSE),
-  _first(kTRUE)
+  _first(kTRUE), _offsetSaveW2(0.), _offsetCarrySaveW2(0.)
 {
   // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   // For internal use.
@@ -113,7 +118,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
   RooAbsOptTestStatistic(name,title,pdf,indata,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
   _extended(extended),
   _weightSq(kFALSE),
-  _first(kTRUE)
+  _first(kTRUE), _offsetSaveW2(0.), _offsetCarrySaveW2(0.)
 {
   // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   // For internal use.  
@@ -128,8 +133,8 @@ RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
   RooAbsOptTestStatistic(other,name),
   _extended(other._extended),
   _weightSq(other._weightSq),
-  _first(kTRUE)
-{
+  _first(kTRUE), _offsetSaveW2(other._offsetSaveW2),
+  _offsetCarrySaveW2(other._offsetCarrySaveW2) {
   // Copy constructor
 }
 
@@ -149,21 +154,18 @@ RooNLLVar::~RooNLLVar()
 void RooNLLVar::applyWeightSquared(Bool_t flag) 
 { 
   if (_gofOpMode==Slave) {
-    _weightSq = flag ; 
-    setValueDirty() ; 
-
-  } else if ( _gofOpMode==MPMaster) {
-
-    for (Int_t i=0 ; i<_nCPU ; i++) {
-      _mpfeArray[i]->applyNLLWeightSquared(flag) ;
-    }    
-
-  } else if ( _gofOpMode==SimMaster) {
-
-    for (Int_t i=0 ; i<_nGof ; i++) {
-      ((RooNLLVar*)_gofArray[i])->applyWeightSquared(flag) ;
+    if (flag != _weightSq) {
+      _weightSq = flag;
+      std::swap(_offset, _offsetSaveW2);
+      std::swap(_offsetCarry, _offsetCarrySaveW2);
     }
-
+    setValueDirty();
+  } else if ( _gofOpMode==MPMaster) {
+    for (Int_t i=0 ; i<_nCPU ; i++)
+      _mpfeArray[i]->applyNLLWeightSquared(flag);
+  } else if ( _gofOpMode==SimMaster) {
+    for (Int_t i=0 ; i<_nGof ; i++)
+      ((RooNLLVar*)_gofArray[i])->applyWeightSquared(flag);
   }
 } 
 
