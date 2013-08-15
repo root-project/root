@@ -35,8 +35,10 @@
 // Standard
 #include <stdexcept>
 #include <string>
-#include <stdio.h>
 #include <utility>
+
+#include <stdio.h>
+#include <string.h>     // only needed for Cling TMinuit workaround
 
 
 namespace {
