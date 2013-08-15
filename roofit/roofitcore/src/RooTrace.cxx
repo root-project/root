@@ -166,7 +166,7 @@ void RooTrace::callgrind_zero()
   // To trigger callgrind zero counter action, run callgrind with 
   // argument '--zero-before=RooTrace::callgrind_zero()' (include single quotes in cmdline)
   
-  oocoutP((TObject*)0,Tracing) << "RooTrace::callgrind_zero()" << endl ;
+  ooccoutD((TObject*)0,Tracing) << "RooTrace::callgrind_zero()" << endl ;
 }
 
 //_____________________________________________________________________________
@@ -178,5 +178,5 @@ void RooTrace::callgrind_dump()
   // To trigger callgrind dumping action, run callgrind with 
   // argument '--dump-before=RooTrace::callgrind_dump()' (include single quotes in cmdline)
 
-  oocoutP((TObject*)0,Tracing) << "RooTrace::callgrind_dump()" << endl ;
+  ooccoutD((TObject*)0,Tracing) << "RooTrace::callgrind_dump()" << endl ;
 }

@@ -460,7 +460,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
     gof->SetName(Form("%s_GOF%d",GetName(),i));
     gof->SetTitle(Form("%s_GOF%d",GetTitle(),i));
 
-    coutI(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl;
+    ccoutD(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl;
     _mpfeArray[i] = new RooRealMPFE(Form("%s_%lx_MPFE%d",GetName(),(ULong_t)this,i),Form("%s_%lx_MPFE%d",GetTitle(),(ULong_t)this,i),*gof,false);
     //_mpfeArray[i]->setVerbose(kTRUE,kTRUE);
     _mpfeArray[i]->initialize();
@@ -469,6 +469,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
     }
   }
   _mpfeArray[_nCPU - 1]->addOwnedComponents(*gof);
+  coutI(Eval) << "RooAbsTestStatistic::initMPMode: started " << _nCPU << " remote server process." << endl;
   //cout << "initMPMode --- done" << endl ;
   return ;
 }
@@ -522,7 +523,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName());
 
     if (pdf && dset && (0. != dset->sumEntries() || processEmptyDataSets())) {
-      coutI(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << n << " for state " << type->GetName()
+      ccoutD(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << n << " for state " << type->GetName()
 		     << " (" << dset->numEntries() << " dataset entries)" << endl;
 
       if (_splitRange && rangeName) {
@@ -560,12 +561,13 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     } else {
       if ((!dset || (0. != dset->sumEntries() && !processEmptyDataSets())) && pdf) {
 	if (_verbose) {
-	  coutI(Fitting) << "RooAbsTestStatistic::initSimMode: state " << type->GetName()
+	  ccoutD(Fitting) << "RooAbsTestStatistic::initSimMode: state " << type->GetName()
 			 << " has no data entries, no slave calculator created" << endl;
 	}
       }
     }
   }
+  coutI(Fitting) << "RooAbsTestStatistic::initSimMode: created " << n << " slave calculators." << endl;
   
   // Delete datasets by hand as TList::Delete() doesn't see our datasets as 'on the heap'...
   TIterator* iter = dsetList->MakeIterator();

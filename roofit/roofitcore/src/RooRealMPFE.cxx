@@ -190,17 +190,17 @@ void RooRealMPFE::initialize()
     serverLoop();
 
     // Kill server at end of service
-    coutI(Minimization) << "RooRealMPFE::initialize(" << GetName() 
-			<< ") server process terminating" << endl ;
+    if (_verboseServer) ccoutD(Minimization) << "RooRealMPFE::initialize(" <<
+	GetName() << ") server process terminating" << endl ;
 
     delete _arg.absArg();
     delete _pipe;
     _exit(0) ;
   } else {
     // Client process - fork successul
-    coutI(Minimization) << "RooRealMPFE::initialize(" << GetName() 
-			<< ") successfully forked server process " <<
-			_pipe->pidOtherEnd() << endl ;
+    if (_verboseClient) ccoutD(Minimization) << "RooRealMPFE::initialize(" <<
+	GetName() << ") successfully forked server process " <<
+	    _pipe->pidOtherEnd() << endl ;
     _state = Client ;
     _calcInProgress = kFALSE ;
   }
