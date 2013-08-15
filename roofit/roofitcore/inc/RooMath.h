@@ -85,6 +85,18 @@ public:
    * to better than 4e-13 relative, the average relative error is better than
    * 7e-16. On a modern x86_64 machine, the routine is roughly three times as
    * fast than the old CERNLIB implementation and offers better accuracy.
+   *
+   * For large @f$|z|@f$, the familiar continued fraction approximation
+   * 
+   * @f[ w(z)=\frac{-iz/\sqrt{\pi}}{-z^2+\frac{1/2}{1+\frac{2/2}{-z^2 +
+   * \frac{3/2}{1+\frac{4/2}{-z^2+\frac{5/2}{1+\frac{6/2}{-z^2+\frac{7/2
+   * }{1+\frac{8/2}{-z^2+\frac{9/2}{1+\ldots}}}}}}}}}} @f]
+   *
+   * is used, truncated at the ellipsis ("...") in the formula; for @f$|z| >
+   * 12@f$, @f$Im(z)>0@f$ it will give full double precision at a smaller
+   * computational cost than the method described above. (For @f$|z|>12@f$,
+   * @f$Im(z)<0@f$, the symmetry property @f$w(x-iy)=2e^{-(x+iy)^2-w(x+iy)}@f$
+   * is used.
    */
   static std::complex<double> faddeeva(std::complex<double> z);
   /** @brief evaluate Faddeeva function for complex argument (fast version)
@@ -109,6 +121,17 @@ public:
    * interpolation/lookup table based fast method used previously in RooFit,
    * and offers better accuracy than the latter (the relative error is roughly
    * a factor 280 smaller than the old interpolation/table lookup routine).
+   *
+   * For large @f$|z|@f$, the familiar continued fraction approximation
+   * 
+   * @f[ w(z)=\frac{-iz/\sqrt{\pi}}{-z^2+\frac{1/2}{1+\frac{2/2}{-z^2 +
+   * \frac{3/2}{1+\ldots}}}} @f]
+   *
+   * is used, truncated at the ellipsis ("...") in the formula; for @f$|z| >
+   * 8@f$, @f$Im(z)>0@f$ it will give full float precision at a smaller
+   * computational cost than the method described above. (For @f$|z|>8@f$,
+   * @f$Im(z)<0@f$, the symmetry property @f$w(x-iy)=2e^{-(x+iy)^2-w(x+iy)}@f$
+   * is used.
    */
   static std::complex<double> faddeeva_fast(std::complex<double> z);
 

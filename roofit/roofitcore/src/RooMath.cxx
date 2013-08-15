@@ -104,7 +104,7 @@ namespace faddeeva_impl {
 #endif
     }
 
-    template <class T, unsigned N, unsigned NTAYLOR>
+    template <class T, unsigned N, unsigned NTAYLOR, unsigned NCF>
     static inline std::complex<T> faddeeva_smabmq_impl(
 	    T zre, T zim, const T tm,
 	    const T (&a)[N], const T (&npi)[N],
@@ -125,7 +125,7 @@ namespace faddeeva_impl {
 		// we're in the interesting range of the real axis as well...
 		// deal with Re(z) < 0 so we only need N different Taylor
 		// expansions; use w(-x+iy) = conj(w(x+iy))
-		const bool negrez = zre < 0.;
+		const bool negrez = zre < T(0);
 		// figure out closest singularity
 		const int nsing = int(std::abs(dnsing) + T(1) / T(2));
 		// and calculate just how far we are from it
@@ -153,10 +153,37 @@ namespace faddeeva_impl {
 	}
 	// negative Im(z) is treated by calculating for -z, and using the
 	// symmetry properties of erfc(z)
-	const bool negimz = zim < 0.;
+	const bool negimz = zim < T(0);
 	if (negimz) {
 	    zre = -zre;
 	    zim = -zim;
+	}
+        const T znorm = zre * zre + zim2;
+	if (znorm > tm * tm) {
+	    // use continued fraction approximation for |z| large
+	    const T isqrtpi = 5.64189583547756287e-01;
+	    const T z2re = (zre + zim) * (zre - zim);
+	    const T z2im = T(2) * zre * zim;
+	    T cfre = T(1), cfim = T(0), cfnorm = T(1);
+	    for (unsigned k = NCF; k; --k) {
+		cfre = +(T(k) / T(2)) * cfre / cfnorm;
+		cfim = -(T(k) / T(2)) * cfim / cfnorm;
+		if (k & 1) cfre -= z2re, cfim -= z2im;
+		else cfre += T(1);
+		cfnorm = cfre * cfre + cfim * cfim;
+	    }
+	    T sumre =  (zim * cfre - zre * cfim) * isqrtpi / cfnorm;
+	    T sumim = -(zre * cfre + zim * cfim) * isqrtpi / cfnorm;
+	    if (negimz) {
+		// use erfc(-z) = 2 - erfc(z) to get good accuracy for
+		// Im(z) < 0: 2 / exp(z^2) - w(z)
+		T ez2re = -z2re, ez2im = -z2im;
+		faddeeva_impl::cexp(ez2re, ez2im);
+		return std::complex<T>(T(2) * ez2re - sumre,
+			T(2) * ez2im - sumim);
+	    } else {
+		return std::complex<T>(sumre, sumim);
+	    }
 	}
 	const T twosqrtpi = 3.54490770181103205e+00;
 	const T tmzre = tm * zre, tmzim = tm * zim;
@@ -189,7 +216,6 @@ namespace faddeeva_impl {
 	defined(__OPTIMIZE_SIZE__) || defined(__INTEL_COMPILER) || \
 	defined(__clang__) || defined(__OPEN64__) || \
 	defined(__PATHSCALE__) || !defined(__GNUC__)
-        const T znorm = zre * zre + zim2;
         T sumre = (-a[0] / znorm) * (numerarr[0] * zre + numerarr[1] * zim);
         T sumim = (-a[0] / znorm) * (numerarr[1] * zre - numerarr[0] * zim);
         for (unsigned i = 0; i < N; ++i) {
@@ -226,7 +252,6 @@ namespace faddeeva_impl {
 	    tmp[2 * (N - 1) + 0] = -f * (numertmz[0] * wk + numertmz[1] * reimtmzm2);
 	    tmp[2 * (N - 1) + 1] = -f * (numertmz[1] * wk - numertmz[0] * reimtmzm2);
 	}
-	const T znorm = zre * zre + zim2;
 	T sumre = (-a[0] / znorm) * (numerarr[0] * zre + numerarr[1] * zim);
 	T sumim = (-a[0] / znorm) * (numerarr[1] * zre - numerarr[0] * zim);
 	for (unsigned i = 0; i < N; ++i) {
@@ -239,13 +264,12 @@ namespace faddeeva_impl {
 	if (negimz) {
 	    // use erfc(-z) = 2 - erfc(z) to get good accuracy for
 	    // Im(z) < 0: 2 / exp(z^2) - w(z)
-	    const T z2im = T(2) * zre * zim;
-	    const T z2re = (zre + zim) * (zre - zim);
+	    const T z2im = -T(2) * zre * zim;
+	    const T z2re = -(zre + zim) * (zre - zim);
 	    T ez2re = z2re, ez2im = z2im;
 	    faddeeva_impl::cexp(ez2re, ez2im);
-	    const T twoez2norm = T(2) / (ez2re * ez2re + ez2im * ez2im);
-	    return std::complex<T>(twoez2norm * ez2re + sumim / twosqrtpi,
-		    -twoez2norm * ez2im - sumre / twosqrtpi);
+	    return std::complex<T>(T(2) * ez2re + sumim / twosqrtpi,
+		    T(2) * ez2im - sumre / twosqrtpi);
 	} else {
 	    return std::complex<T>(-sumim / twosqrtpi, sumre / twosqrtpi);
 	}
@@ -506,14 +530,14 @@ namespace faddeeva_impl {
 
 std::complex<double> RooMath::faddeeva(std::complex<double> z)
 {
-    return faddeeva_impl::faddeeva_smabmq_impl<double, 24, 6>(
+    return faddeeva_impl::faddeeva_smabmq_impl<double, 24, 6, 9>(
 	    z.real(), z.imag(), 12., faddeeva_impl::a24,
 	    faddeeva_impl::npi24, faddeeva_impl::taylorarr24);
 }
 
 std::complex<double> RooMath::faddeeva_fast(std::complex<double> z)
 {
-    return faddeeva_impl::faddeeva_smabmq_impl<double, 11, 3>(
+    return faddeeva_impl::faddeeva_smabmq_impl<double, 11, 3, 3>(
 	    z.real(), z.imag(), 8., faddeeva_impl::a11,
 	    faddeeva_impl::npi11, faddeeva_impl::taylorarr11);
 }
