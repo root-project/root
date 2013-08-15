@@ -3356,34 +3356,6 @@ Double_t RooAbsReal::maxVal(Int_t /*code*/) const
 
 
 //_____________________________________________________________________________
-void RooAbsReal::EvalError::setMessage(const char* tmp) 
-{ 
-  if (strlen(tmp)<1023) {
-    strlcpy(_msg,tmp,1023) ; 
-  } else {
-    strncpy(_msg,tmp,1020); 
-    _msg[1020]='.' ; _msg[1021]='.' ; 
-    _msg[1022]='.' ; _msg[1023]=0 ;    
-  }
-}
-
-
-
-//_____________________________________________________________________________
-void RooAbsReal::EvalError::setServerValues(const char* tmp) 
-{ 
-  if (strlen(tmp)<1023) {
-    strlcpy(_srvval,tmp,1023) ; 
-  } else {
-    strncpy(_srvval,tmp,1020); 
-    _srvval[1020]='.' ; _srvval[1021]='.' ;
-    _srvval[1022]='.' ; _srvval[1023]=0 ;    
-  }
-}
-
-
-
-//_____________________________________________________________________________
 void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString) 
 {
   // Interface to insert remote error logging messages received by RooRealMPFE into current error loggin stream
