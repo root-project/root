@@ -92,7 +92,7 @@ int execTypedefList() {
    res = check_missing("TBuffer::CacheList_notAtype"); if (res) return res;
    
    res = check_file("typelist.v5.txt",368); if (res) return res;
-   res = check_file("typelist.v6.txt",1732); if (res) return res;
+   res = check_file("typelist.v6.txt",1730); if (res) return res;
 
    return 0;
 }
