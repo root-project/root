@@ -2827,10 +2827,10 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
 }
 
 //______________________________________________________________________________
-Bool_t TProof::PollForNewWorkers()
+Int_t TProof::PollForNewWorkers()
 {
    // Asks the PROOF Serv for new workers in Dynamic Startup mode and activates
-   // them. Returns the number of new workers found.
+   // them. Returns the number of new workers found, or <0 on errors.
 
    // Requests for worker updates
    Int_t dummy = 0;
@@ -2884,10 +2884,14 @@ Bool_t TProof::PollForNewWorkers()
    Int_t nNewWorkers = newWorkers->GetEntries();
 
    // Add the new workers
-   if (newWorkers->GetEntries() > 0) {
+   if (nNewWorkers > 0) {
       PDB(kGlobal, 1)
          Info("PollForNewWorkers", "Requesting to add %d new worker(s)", newWorkers->GetEntries());
-      AddWorkers(newWorkers);
+      Int_t rv = AddWorkers(newWorkers);
+      if (rv < 0) {
+         Error("PollForNewWorkers", "Call to AddWorkers() failed (got %d < 0)", rv);
+         return -1;
+      }
       // Don't delete newWorkers: AddWorkers() will do that
    }
    else {
