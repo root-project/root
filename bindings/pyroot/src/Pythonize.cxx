@@ -1781,12 +1781,6 @@ namespace {
          if ( ! IsCallable( pyfunc ) )
             return 0;
 
-      // use callable name (if available) as identifier
-         PyObject* pyname = PyObject_GetAttr( pyfunc, PyStrings::gName );
-         const char* name = "dummy";
-         if ( pyname != 0 )
-            name = PyROOT_PyUnicode_AsString( pyname );
-
       // create signature
          std::vector<std::string> signature; signature.reserve( 5 );
          signature.push_back( "Int_t&" );
@@ -1812,8 +1806,7 @@ namespace {
          const MethodProxy::Methods_t& methods = method->fMethodInfo->fMethods;
          for ( MethodProxy::Methods_t::const_iterator im = methods.begin(); im != methods.end(); ++im ) {
              PyObject* sig = (*im)->GetSignature();
-             if ( strnstr( PyROOT_PyUnicode_AsString( sig ), "Double_t&",
-                    PyROOT_PyUnicode_GET_SIZE( sig ) ) ) {
+             if ( strstr( PyROOT_PyUnicode_AsString( sig ), "Double_t&" ) ) {
              // the comparison was not exact, but this is just a workaround
                 setFCN = *im;
                 Py_DECREF( sig );
