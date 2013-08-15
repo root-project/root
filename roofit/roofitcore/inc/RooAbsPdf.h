@@ -111,6 +111,7 @@ public:
               ) const {
     return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10) ;
   }
+  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
 
   virtual RooPlot* paramOn(RooPlot* frame, 
@@ -262,7 +263,6 @@ protected:
 			   Double_t xmax= 0.99,Double_t ymax=0.95, const RooCmdArg* formatCmd=0) ;
 
 
-  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
   void plotOnCompSelect(RooArgSet* selNodes) const ;
 
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;  

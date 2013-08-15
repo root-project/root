@@ -312,10 +312,6 @@ public:
   static Bool_t hideOffset() ;
 
 protected:
-
-  // PlotOn with command list
-  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
-
   // Hook for objects with normalization-dependent parameters interperetation
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
   virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
@@ -450,6 +446,9 @@ protected:
 
   // Plot implementation functions
   virtual RooPlot *plotOn(RooPlot* frame, PlotOpt o) const;
+  // PlotOn with command list
+  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
+
   virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const;
 
 
