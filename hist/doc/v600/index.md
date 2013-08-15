@@ -158,6 +158,8 @@
     `TGraph2D` after a `Clear` is performed.
 -   In `GetHistogram()` the lower and higher axis limits are always
     different.
+-   Protection added to avoid a Seg Fault on `.q` when `SetHistogram()` 
+    is called on a `TGraph2D`.
 
 ### TF1
 
