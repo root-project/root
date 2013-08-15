@@ -24,6 +24,7 @@
 
 // Standard
 #include <string>
+#include <sstream>
 
 
 //- from Python's dictobject.c -------------------------------------------------
@@ -73,10 +74,10 @@ namespace {
    PyObject* LookupRootEntity( PyObject* pyname, PyObject* args )
    {
    // Find a match within the ROOT module for something with name 'pyname'.
-      const char* cname = 0;
+      const char* cname = 0; long macro_ok = 0;
       if ( pyname && PyROOT_PyUnicode_CheckExact( pyname ) )
          cname = PyROOT_PyUnicode_AsString( pyname );
-      else if ( ! ( args && PyArg_ParseTuple( args, const_cast< char* >( "s" ), &cname ) ) )
+      else if ( ! ( args && PyArg_ParseTuple( args, const_cast< char* >( "s|l" ), &cname, &macro_ok ) ) )
          return 0;
 
    // we may have been destroyed if this code is called during shutdown
@@ -111,6 +112,20 @@ namespace {
          TObject* object = gROOT->FindObject( name.c_str() );
          if ( object != 0 )
             return BindRootObject( object, object->IsA() );
+
+      // 5th attempt: check macro's (debatable, but this worked in CINT)
+         if ( macro_ok ) {
+            PyErr_Clear();
+            std::ostringstream ismacro;
+            ismacro << "#ifdef " << name << "\n_pyroot_" << name << "=" << name
+                    << ";true;\n#else\nfalse;\n#endif";
+            if ( gROOT->ProcessLine( ismacro.str().c_str() ) ) {
+            // can now retrieve this as a global
+               attr = GetRootGlobalFromString( "_pyroot_"+name );
+               if ( attr != 0 )
+                  return attr;
+            }
+         }
       }
 
    // still here? raise attribute error

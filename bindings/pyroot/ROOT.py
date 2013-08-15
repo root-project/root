@@ -132,11 +132,12 @@ del isfunction, ismethod
 
 ### configuration ---------------------------------------------------------------
 class _Configuration( object ):
-   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', '_gts' ]
+   __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros', '_gts' ]
 
    def __init__( self ):
       self.IgnoreCommandLineOptions = 0
       self.StartGuiThread = True
+      self.ExposeCppMacros = False
       self._gts = []
 
    def __setGTS( self, value ):
@@ -455,7 +456,7 @@ class ModuleFacade( types.ModuleType ):
          return self.module.__all__
 
     # lookup into ROOT (which may cause python-side enum/class/global creation)
-      attr = _root.LookupRootEntity( name )
+      attr = _root.LookupRootEntity( name, PyConfig.ExposeCppMacros )
 
     # the call above will raise AttributeError as necessary; so if we get here,
     # attr is valid: cache as appropriate, so we don't come back
@@ -563,6 +564,9 @@ class ModuleFacade( types.ModuleType ):
     # store already available ROOT objects to prevent spurious lookups
       for name in self.module.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
          self.__dict__[ name ] = getattr( _root, name )
+
+    # the macro NULL is not available from Cling globals, but might be useful
+      setattr( _root, 'NULL', 0 )
 
       for name in std.stlclasses:
          setattr( _root, name, getattr( std, name ) )
