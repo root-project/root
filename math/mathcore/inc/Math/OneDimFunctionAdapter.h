@@ -102,8 +102,11 @@ public:
       clone
    */
    virtual OneDimMultiFunctionAdapter * Clone( ) const { 
-      if (fOwn) 
-         return new OneDimMultiFunctionAdapter( fFunc, fDim, fCoord, fParams); 
+      if (fOwn) { 
+         OneDimMultiFunctionAdapter * f =  new OneDimMultiFunctionAdapter( fFunc, fDim, fCoord, fParams); 
+         std::copy(fX, fX+fDim, f->fX); 
+         return f; 
+      }
       else 
          return new OneDimMultiFunctionAdapter( fFunc, fX, fCoord, fParams); 
    }
