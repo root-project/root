@@ -2785,6 +2785,41 @@ const clang::Type *GetFullyQualifiedLocalType(const clang::ASTContext& Ctx,
                                                                 TST->getCanonicalTypeInternal());
          return QT.getTypePtr();
       }
+   } else if (const clang::RecordType *TSTRecord
+              = llvm::dyn_cast<const clang::RecordType>(typeptr)) {
+      // We are asked to fully qualify and we have a Record Type,
+      // which can point to a template instantiation with no sugar in any of
+      // its template argument, however we still need to fully qualify them.
+      
+      if (const clang::ClassTemplateSpecializationDecl* TSTdecl =
+          llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(TSTRecord->getDecl()))
+      {
+         const clang::TemplateArgumentList& templateArgs
+            = TSTdecl->getTemplateArgs();
+         
+         bool mightHaveChanged = false;
+         llvm::SmallVector<clang::TemplateArgument, 4> desArgs;
+         for(unsigned int I = 0, E = templateArgs.size();
+             I != E; ++I) {
+            if (templateArgs[I].getKind() != clang::TemplateArgument::Type) {
+               desArgs.push_back(templateArgs[I]);
+               continue;
+            }
+            
+            clang::QualType SubTy = templateArgs[I].getAsType();
+            // Check if the type needs more desugaring and recurse.
+            mightHaveChanged = true;
+            desArgs.push_back(clang::TemplateArgument(GetFullyQualifiedType(Ctx,SubTy)));
+         }
+         // If desugaring happened allocate new type in the AST.
+         if (mightHaveChanged) {
+            clang::QualType QT = Ctx.getTemplateSpecializationType(clang::TemplateName(TSTdecl->getSpecializedTemplate()),
+                                                                   desArgs.data(),
+                                                                   desArgs.size(),
+                                                                   TSTRecord->getCanonicalTypeInternal());
+            return QT.getTypePtr();
+         }
+      }
    }
    return typeptr;
 }
