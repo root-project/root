@@ -414,7 +414,6 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
       }
    }
 
-   std::string declName;
    const std::string thisClassName(CXXRD.getName());
 
    if (genreflex::verbose)
@@ -429,10 +428,6 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
       // See: http://clang.llvm.org/doxygen/classclang_1_1DeclaratorDecl.html
       if (!(*I)->isImplicit()
           && (isa<CXXMethodDecl>(*I) || isa<FieldDecl>(*I) || isa<VarDecl>(*I))) {
-
-         NamedDecl* namedDecl (cast<NamedDecl>(*I));
-
-         declName = namedDecl->getName().str();
 
          
          // For now we allow only a special macro (ClassDef) to have meaningful comments
@@ -465,6 +460,8 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          // and the cast was successful
          if (selectionRules.IsSelectionXMLFile() && thisClassSelectionRule!=0){            
             const std::list<VariableSelectionRule>& fieldSelRules = thisClassSelectionRule->GetFieldSelectionRules();
+
+            NamedDecl* namedDecl (cast<NamedDecl>(*I));
             AnnotateFieldDecl(*namedDecl,fieldSelRules);
          } // End presence of XML selection file
       }
