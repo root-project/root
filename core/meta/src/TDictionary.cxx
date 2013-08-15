@@ -52,15 +52,10 @@ TDictionary* TDictionary::GetDictionary(const char* name)
    // named "name". Returned object is either a TClass or TDataType.
    // Returns 0 if the type is unknown.
 
-   TClassEdit::TSplitType stname(name, TClassEdit::kDropStd);
-   std::string shorttype;
-   stname.ShortType(shorttype, TClassEdit::kDropAllDefault);
-
-   TDictionary* ret = (TDictionary*)gROOT->GetListOfTypes()
-      ->FindObject(shorttype.c_str());
+   TDictionary* ret = (TDictionary*)gROOT->GetListOfTypes()->FindObject(name);
    if (ret) return ret;
 
-   return TClass::GetClass(shorttype.c_str(), true);
+   return TClass::GetClass(name, true);
 }
 
 TDictionary* TDictionary::GetDictionary(const type_info &typeinfo)
