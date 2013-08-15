@@ -1136,7 +1136,7 @@ void RScanner::Scan(const clang::ASTContext &C)
 {
    fSourceManager = &C.getSourceManager();
    
-   if (fVerboseLevel >= 3) fSelectionRules.PrintSelectionRules();
+//    if (fVerboseLevel >= 3) fSelectionRules.PrintSelectionRules();
    
    if (fVerboseLevel > 0)  {
       if (fSelectionRules.GetHasFileNameRule())

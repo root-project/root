@@ -17,6 +17,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <algorithm>
+
 #include "RConfigure.h"
 #include "RConfig.h"
 #include "Rtypes.h"
@@ -996,6 +998,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
    std::string csymbol = classname;
    std::string args;
 
+   
+
    if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
 
       // Prefix the full class name with '::' except for the STL
@@ -1011,7 +1015,10 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
 
    if (!ClassInfo__HasMethod(decl,"Dictionary") || R__IsTemplate(*decl))
    {
-      finalString << "   static void " << mappedname.c_str() << "_Dictionary();" << "\n" << "   static void " << mappedname.c_str() << "_Dictionary();" << "\n";
+      finalString << "   static void " << mappedname.c_str() << "_Dictionary();\n"
+                  << "   static void " << mappedname.c_str() << "_TClassManip(TClass*);\n";
+
+      
    }
 
    if (HasIOConstructor(decl,&args, interp)) {
@@ -1263,9 +1270,65 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
 
 
    finalString << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstanceLocal((const " << csymbol.c_str() << "*)0x0); R__UseDummy(_R__UNIQUE_(Init));" << "\n";
-
+  
    if (!ClassInfo__HasMethod(decl,"Dictionary") || R__IsTemplate(*decl)) {
-      finalString <<  "\n" << "   // Dictionary for non-ClassDef classes" << "\n" << "   static void " << mappedname.c_str() << "_Dictionary() {" << "\n" << "      ::ROOT::GenerateInitInstanceLocal((const " << csymbol.c_str() << "*)0x0)->GetClass();" << "\n" << "   }" << "\n" << "\n";
+      const char* cSymbolStr = csymbol.c_str();
+      finalString <<  "\n" << "   // Dictionary for non-ClassDef classes" << "\n"
+                  << "   static void " << mappedname.c_str() << "_Dictionary() {\n"
+                  << "      TClass* theClass ="
+                  << "::ROOT::GenerateInitInstanceLocal((const " << cSymbolStr << "*)0x0)->GetClass();\n"
+                  << "      " << mappedname << "_TClassManip(theClass);\n";
+
+      finalString << "   }\n\n";
+
+      // Now manipulate tclass in order to percolate the properties expressed as
+      // annotations of the decls.
+      std::string manipString;
+      
+      // Class properties
+      // To be filled when the TClass interface allows this
+
+      // Member properties
+      // NOTE: Only transiency propagated
+  
+      // Loop on declarations inside the class, including data members
+      for(clang::CXXRecordDecl::decl_iterator internalDeclIt = decl->decls_begin();
+          internalDeclIt != decl->decls_end(); ++internalDeclIt){
+         if (!(!(*internalDeclIt)->isImplicit()
+            && (clang::isa<clang::FieldDecl>(*internalDeclIt) ||
+                clang::isa<clang::VarDecl>(*internalDeclIt)))) continue; // Check if it's a var or a field
+         // Now let's check the attributes of the var/field
+         for (clang::Decl::attr_iterator attrIt = internalDeclIt->attr_begin();
+              attrIt!=internalDeclIt->attr_end();++attrIt){
+            // Convert the attribute to AnnotateAttr if possible
+            clang::AnnotateAttr* annAttr = clang::dyn_cast<clang::AnnotateAttr>(*attrIt);
+            if (!annAttr) continue;
+            // Let's see if it's a transient attribute
+            std::string attribute_s (annAttr->getAnnotation());
+            std::string attributeNoSpaces_s (attribute_s);         
+            std::remove(attributeNoSpaces_s.begin(), attributeNoSpaces_s.end(), ' ');
+            // 1) Let's see if it's a //!
+            std::size_t found = attributeNoSpaces_s.find("//!");
+            if (found != 0) continue;
+            // 2) Add the modification lines to the manipString.
+            //    Get the TDataMamber and then set it Transient
+            clang::NamedDecl* namedInternalDecl = clang::dyn_cast<clang::NamedDecl> (*internalDeclIt);
+            if (!namedInternalDecl) {
+               TMetaUtils::Error(0,"Cannot convert field declaration to clang::NamedDecl");
+               continue;
+            };
+            std::string memberName(namedInternalDecl->getName());
+            manipString+="      TDataMember* theMember = theClass->GetDataMember(\""+memberName+"\");\n"
+                         "      theMember->ResetBit(BIT(2));\n"; //FIXME: Make it less cryptic
+            
+
+         } // End loop on attributes
+      } // End loop on internal declarations
+      
+         
+         finalString << "   static void " << mappedname << "_TClassManip(TClass* " << (manipString.empty() ? "":"theClass") << "){\n"
+                  << manipString
+                  << "   }\n\n";
    }
 
    finalString << "} // end of namespace ROOT" << "\n" << "\n";

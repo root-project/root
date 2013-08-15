@@ -234,7 +234,7 @@ template <typename T> struct IsPointer { enum { kVal = 0 }; };
 namespace std {}
 using namespace std;
 namespace genreflex {
-  bool verbose = true;
+  bool verbose = false;
   }
 
 #include "TClassEdit.h"
@@ -338,9 +338,52 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
    return false;
 }
 
+//______________________________________________________________________________
+void AnnotateFieldDecl(clang::NamedDecl& decl,
+                       const std::list<VariableSelectionRule>& fieldSelRules)
+{
+
+   // See if in the VariableSelectionRules there are attributes and names with
+   // which we can annotate.
+   // We may look for a smarter algorithm.
+
+   // Nothing to do then ...
+   if (fieldSelRules.size()==0) return;
+   
+   clang::ASTContext &C = decl.getASTContext();
+   clang::SourceRange commentRange; // Empty: this is a fake comment
+   
+   const std::string declName (decl.getName());
+   std::string varName;
+   for(std::list<VariableSelectionRule>::const_iterator it = fieldSelRules.begin();
+       it != fieldSelRules.end(); ++it){
+      it->GetAttributeValue("name",varName);
+      if (declName == varName){ // we have the rule!
+         // Let's extract the attributes
+         BaseSelectionRule::AttributesMap_t attrMap( it->GetAttributes() );
+         BaseSelectionRule::AttributesMap_t::iterator iter;
+         std::string userDefinedProperty;
+         for(iter = attrMap.begin();iter!=attrMap.end();iter++){
+            const std::string& name = iter->first;
+            if (name == "name") continue;
+            const std::string& value = iter->second;
+            if (name == "transient" && value == "true") // special case
+               userDefinedProperty="//!";
+            else
+               userDefinedProperty=name+"@@@"+value;
+            std::cout << varName << " " << userDefinedProperty << std::endl;
+            decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, userDefinedProperty));
+         }
+      }
+   }
+}
+
 // In order to store the meaningful for the IO comments we have to transform
 // the comment into annotation of the given decl.
-void AnnotateDecl(clang::CXXRecordDecl &CXXRD)
+// This works only with comments in the headers, so no selectionrules in an xml
+// file.
+void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
+                  SelectionRules& selectionRules)
 {
    using namespace clang;
    SourceLocation commentSLoc;
@@ -351,15 +394,52 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD)
 
    SourceRange commentRange;
 
+   // Fetch the selection rule associated to this class
+   clang::Decl* declBaseClassPtr = static_cast<clang::Decl*>(&CXXRD);   
+   const BaseSelectionRule* thisClassBaseSelectionRule (selectionRules.IsDeclSelected(declBaseClassPtr));
+   BaseSelectionRule::AttributesMap_t attrMap;
+   // If the rule is there
+   if (thisClassBaseSelectionRule){
+      // Fetch and loop over Class attributes
+      // if the name of the attribute is not "name", add attr to the ast.
+      attrMap = thisClassBaseSelectionRule->GetAttributes();
+      BaseSelectionRule::AttributesMap_t::iterator iter;
+      std::string userDefinedProperty;
+      for(iter = attrMap.begin();iter!=attrMap.end();iter++){
+         const std::string& name = iter->first;
+         if (name == "name") continue; 
+         const std::string& value = iter->second;
+         userDefinedProperty=name+"@@@"+value;
+         CXXRD.addAttr(new (C) AnnotateAttr(commentRange, C, userDefinedProperty));
+      }
+   }
+
+   std::string declName;
+   const std::string thisClassName(CXXRD.getName());
+
+   if (genreflex::verbose)
+      std::cout << "Inspecting class declaration" << thisClassName << " for annotations\n";
+
+   // See if the rule is a class selection rule (FIX dynamic_cast)  
+   const ClassSelectionRule* thisClassSelectionRule = reinterpret_cast<const ClassSelectionRule*>(thisClassBaseSelectionRule);
+   
    for(CXXRecordDecl::decl_iterator I = CXXRD.decls_begin(),
           E = CXXRD.decls_end(); I != E; ++I) {
+      // CXXMethodDecl,FieldDecl and VarDecl inherit from NamedDecl
+      // See: http://clang.llvm.org/doxygen/classclang_1_1DeclaratorDecl.html
       if (!(*I)->isImplicit()
           && (isa<CXXMethodDecl>(*I) || isa<FieldDecl>(*I) || isa<VarDecl>(*I))) {
+
+         NamedDecl* namedDecl (cast<NamedDecl>(*I));
+
+         declName = namedDecl->getName().str();
+
+         
          // For now we allow only a special macro (ClassDef) to have meaningful comments
          SourceLocation maybeMacroLoc = (*I)->getLocation();
          bool isClassDefMacro = maybeMacroLoc.isMacroID() && S.findMacroSpelling(maybeMacroLoc, "ClassDef");
          if (isClassDefMacro) {
-            while (isa<NamedDecl>(*I) && cast<NamedDecl>(*I)->getName() != "DeclFileLine")
+            while (isa<NamedDecl>(*I) && cast<NamedDecl>(*I)->getName() != "DeclFileLine") // FIXME Why While?
                ++I;
          }
 
@@ -369,11 +449,24 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD)
             // nice warnings, eg. empty comment and so on.
             commentRange = SourceRange(commentSLoc, commentSLoc.getLocWithOffset(comment.size()));
             // The ClassDef annotation is for the class itself
-            if (isClassDefMacro)
+            if (isClassDefMacro){
                CXXRD.addAttr(new (C) AnnotateAttr(commentRange, C, comment.str()));
-            else
+            }
+            else if (!selectionRules.IsSelectionXMLFile()){
+               // Here we check if we are in presence of a selction file so that
+               // the comment does not ends up as a decoration in the AST,
+               // Nevertheless, w/o PCMS this has no effect, since the headers
+               // are parsed at runtime and the information in the AST dumped by
+               // rootcling is not relevant.
                (*I)->addAttr(new (C) AnnotateAttr(commentRange, C, comment.str()));
+            }
          }
+         // Match decls with sel rules if we are in presence of a selection file
+         // and the cast was successful
+         if (selectionRules.IsSelectionXMLFile() && thisClassSelectionRule!=0){            
+            const std::list<VariableSelectionRule>& fieldSelRules = thisClassSelectionRule->GetFieldSelectionRules();
+            AnnotateFieldDecl(*namedDecl,fieldSelRules);
+         } // End presence of XML selection file
       }
    }
 }
@@ -2860,6 +2953,7 @@ int RootCling(int argc,
 
                  << "#define R__DICTIONARY_FILENAME " << main_dictname << std::endl
                  << "#include \"" << inclf << "\"\n"
+                 << "#include \"TDataMember.h\"\n" // To set their transiency
                  << std::endl;
 #ifndef R__SOLARIS
    (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
@@ -3008,6 +3102,10 @@ int RootCling(int argc,
    scan.Scan(CI->getASTContext());
 
    bool has_input_error = false;
+
+   if (genreflex::verbose)
+      selectionRules.PrintSelectionRules();
+
    
 // SELECTION LOOP
    // Check for error in the class layout before doing anything else.
@@ -3077,10 +3175,15 @@ int RootCling(int argc,
             // For now delay those for later.
             continue;
          }
+         
+         // Very important: here we decide if we want to attach attributes to the decl.
+         if (clang::CXXRecordDecl* CXXRD =
+              llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
+            AnnotateDecl(*CXXRD,selectionRules);
+         }
 
-         if (clang::CXXRecordDecl* CXXRD = llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl())))
-            AnnotateDecl(*CXXRD);
          const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
+
          if (CRD) {
             ROOT::TMetaUtils::Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
             std::string qualname( CRD->getQualifiedNameAsString() );
