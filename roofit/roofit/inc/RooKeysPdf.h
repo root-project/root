@@ -35,6 +35,12 @@ public:
   RooKeysPdf(const RooKeysPdf& other, const char* name=0);
   virtual TObject* clone(const char* newname) const {return new RooKeysPdf(*this,newname); }
   virtual ~RooKeysPdf();
+
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
+	  const char* rangeName = 0) const;
+  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName = 0) const;
+  virtual Int_t getMaxVal(const RooArgSet& vars) const;
+  virtual Double_t maxVal(Int_t code) const;
   
   void LoadDataSet( RooDataSet& data);
 
