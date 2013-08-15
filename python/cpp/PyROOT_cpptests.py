@@ -145,18 +145,25 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
    def test09Macro( self ):
       """Test access to cpp macro's"""
 
-      if FIXCLING:
-         return
-
       self.assertEqual( NULL, 0 );
 
       gROOT.ProcessLine( '#define aap "aap"' )
       gROOT.ProcessLine( '#define noot 1' )
       gROOT.ProcessLine( '#define mies 2.0' )
 
-      self.assertEqual( aap, "aap" )
-      self.assertEqual( noot, 1 )
-      self.assertEqual( mies, 2.0 )
+      # looking up macro's is slow, so needs to be explicit (note that NULL,
+      # see above, is a special case)
+      import ROOT
+      ROOT.PyConfig.ExposeCppMacros = True
+
+      self.assertEqual( ROOT.aap, "aap" )
+      self.assertEqual( ROOT.noot, 1 )
+      self.assertEqual( ROOT.mies, 2.0 )
+
+      # test also that garbage macros are not found
+      self.assertRaises( AttributeError, getattr, ROOT, "_this_does_not_exist_at_all" )
+
+      ROOT.PyConfig.ExposeCppMacros = False
 
    def test10OpaquePointerPassing( self ):
       """Test passing around of opaque pointers"""

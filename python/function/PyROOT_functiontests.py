@@ -183,9 +183,6 @@ class Func5MinuitTestCase( MyTestCase ):
    def test1MinuitFit( self ):
       """Test minuit callback and fit"""
 
-      if FIXCLING:
-         return
-
     # setup minuit and callback
       gMinuit = TMinuit(5)
       gMinuit.SetPrintLevel( -1 )            # quiet

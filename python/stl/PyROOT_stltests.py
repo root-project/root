@@ -30,10 +30,10 @@ class STL1VectorTestCase( MyTestCase ):
    def test1BuiltinVectorType( self ):
       """Test access to a vector<int> (part of cintdlls)"""
 
-      a = std.vector( int )( self.N )
       if FIXCLING:       # failure due to ctor not available and default expression
          return
 
+      a = std.vector( int )( self.N )
       self.assertEqual( len(a), self.N )
 
       for i in range(self.N):
