@@ -2263,8 +2263,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   depPos.add(projDataVars) ;
   depNeg.add(projDataVars) ;
 
-  const RooAbsReal *posProj = funcPos->createPlotProjection(depPos, &projectedVars, posProjCompList) ;
-  const RooAbsReal *negProj = funcNeg->createPlotProjection(depNeg, &projectedVars, negProjCompList) ;
+  const RooAbsReal *posProj = funcPos->createPlotProjection(depPos, &projectedVars, posProjCompList, o.projectionRangeName) ;
+  const RooAbsReal *negProj = funcNeg->createPlotProjection(depNeg, &projectedVars, negProjCompList, o.projectionRangeName) ;
   if (!posProj || !negProj) {
     coutE(Plotting) << "RooAbsReal::plotAsymOn(" << GetName() << ") Unable to create projections, abort" << endl ;
     return frame ; 
