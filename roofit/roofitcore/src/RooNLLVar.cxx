@@ -282,6 +282,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     result = t;
   }
     
+  _evalCarry = carry;
   return result ;
 }
 

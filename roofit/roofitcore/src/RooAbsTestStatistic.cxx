@@ -58,30 +58,14 @@ ClassImp(RooAbsTestStatistic)
 
 
 //_____________________________________________________________________________
-RooAbsTestStatistic::RooAbsTestStatistic()
+RooAbsTestStatistic::RooAbsTestStatistic() :
+  _func(0), _data(0), _projDeps(0), _splitRange(0), _simCount(0),
+  _verbose(kFALSE), _init(kFALSE), _gofOpMode(Slave), _nEvents(0), _setNum(0),
+  _numSets(0), _extSet(0), _nGof(0), _gofArray(0), _nCPU(1), _mpfeArray(0),
+  _mpinterl(RooFit::BulkPartition), _doOffset(kFALSE), _offset(0),
+  _offsetCarry(0), _evalCarry(0)
 {
-  // Default constructor
-  _func = 0 ;
-  _data = 0 ;
-  _projDeps = 0 ;
-  _init = kFALSE ;
-  _gofArray = 0 ;
-  _mpfeArray = 0 ;
-  _projDeps = 0 ;
-  _gofOpMode = Slave ;
-  _mpinterl = RooFit::BulkPartition ;
-  _nCPU = 1 ;
-  _nEvents = 0 ; 
-  _nGof = 0 ;
-  _numSets = 0 ;
-  _setNum = 0 ;
-  _extSet = 0 ;
-  _simCount = 0 ;
-  _splitRange = 0 ;
-  _verbose = kFALSE ;
-  _doOffset = kFALSE ;
-  _offset = 0 ;
-  _offsetCarry = 0;
+      // Default constructor
 }
 
 
@@ -107,7 +91,8 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _mpinterl(interleave),
   _doOffset(kFALSE),
   _offset(0),
-  _offsetCarry(0)
+  _offsetCarry(0),
+  _evalCarry(0)
 {
   // Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If
   // rangeName is not null, only events in the dataset inside the range will be used in the test
@@ -176,7 +161,8 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _mpinterl(other._mpinterl),
   _doOffset(other._doOffset),
   _offset(other._offset),
-  _offsetCarry(other._offsetCarry)
+  _offsetCarry(other._offsetCarry),
+  _evalCarry(other._evalCarry)
 {
   // Copy constructor
 
@@ -256,19 +242,26 @@ Double_t RooAbsTestStatistic::evaluate() const
     if (_mpinterl == RooFit::BulkPartition || _mpinterl == RooFit::Interleave ) {
       ret = combinedValue((RooAbsReal**)_gofArray,_nGof);
     } else {
-      Double_t sum = 0.;
+      Double_t sum = 0., carry = 0.;
       for (Int_t i = 0 ; i < _nGof; ++i) {
 	if (i % _numSets == _setNum || (_mpinterl==RooFit::Hybrid && _gofSplitMode[i] != RooFit::SimComponents )) {
-	  Double_t tmp = _gofArray[i]->getValV() ;
-	  sum += tmp ;
+	  Double_t y = _gofArray[i]->getValV();
+	  carry += _gofArray[i]->getCarry();
+	  y -= carry;
+	  const Double_t t = sum + y;
+	  carry = (t - sum) - y;
+	  sum = t;
 	}
       }
       ret = sum ;
+      _evalCarry = carry;
     }
 
     // Only apply global normalization if SimMaster doesn't have MP master
     if (numSets()==1) {
-      ret /= globalNormalization() ;
+      const Double_t norm = globalNormalization();
+      ret /= norm;
+      _evalCarry /= norm;
     }
 
     return ret ;
@@ -276,19 +269,21 @@ Double_t RooAbsTestStatistic::evaluate() const
   } else if (MPMaster == _gofOpMode) {
     
     // Start calculations in parallel
-    Int_t i ;
-    for (i=0 ; i<_nCPU ; i++) {
-      _mpfeArray[i]->calculate() ;
-    }
+    for (Int_t i = 0; i < _nCPU; ++i) _mpfeArray[i]->calculate();
 
 
-    Double_t sum(0) ;
-    for (i=0 ; i<_nCPU ; i++) {
-      Double_t tmp = _mpfeArray[i]->getValV() ;
-      sum += tmp ;
+    Double_t sum(0), carry = 0.;
+    for (Int_t i = 0; i < _nCPU; ++i) {
+      Double_t y = _mpfeArray[i]->getValV();
+      carry += _mpfeArray[i]->getCarry();
+      y -= carry;
+      const Double_t t = sum + y;
+      carry = (t - sum) - y;
+      sum = t;
     }
 
     Double_t ret = sum ;
+    _evalCarry = carry;
     return ret ;
 
   } else {
@@ -320,10 +315,12 @@ Double_t RooAbsTestStatistic::evaluate() const
       break ;
     }
 
-    Double_t ret =  evaluatePartition(nFirst,nLast,nStep) ;
+    Double_t ret = evaluatePartition(nFirst,nLast,nStep);
 
     if (numSets()==1) {
-      ret /= globalNormalization() ;
+      const Double_t norm = globalNormalization();
+      ret /= norm;
+      _evalCarry /= norm;
     }
     
     return ret ;
@@ -673,3 +670,5 @@ void RooAbsTestStatistic::enableOffsetting(Bool_t flag)
 }
 
 
+Double_t RooAbsTestStatistic::getCarry() const
+{ return _evalCarry; }

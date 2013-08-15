@@ -273,6 +273,7 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
     result = t;
   }
     
+  _evalCarry = carry;
   return result ;
 }
 

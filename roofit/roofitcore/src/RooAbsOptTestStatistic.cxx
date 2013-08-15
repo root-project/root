@@ -449,13 +449,16 @@ Double_t RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) cons
   // values
   
   // Default implementation returns sum of components
-  Double_t sum(0) ;
-  Int_t i ;
-  for (i=0 ; i<n ; i++) {
-    Double_t tmp = array[i]->getValV() ;
-    // if (tmp==0) return 0 ; WVE no longer needed
-    sum += tmp ;
+  Double_t sum(0), carry(0);
+  for (Int_t i = 0; i < n; ++i) {
+    Double_t y = array[i]->getValV();
+    carry += reinterpret_cast<RooAbsOptTestStatistic*>(array[i])->getCarry();
+    y -= carry;
+    const Double_t t = sum + y;
+    carry = (t - sum) - y;
+    sum = t;
   }
+  _evalCarry = carry;
   return sum ;
 }
 

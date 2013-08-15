@@ -84,7 +84,7 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, B
   _remoteEvalErrorLoggingState(RooAbsReal::PrintErrors),
   _pipe(0),
   _updateMaster(0),
-  _retrieveDispatched(kFALSE)
+  _retrieveDispatched(kFALSE), _evalCarry(0.)
 {  
   // Construct front-end object for object 'arg' whose evaluation will be calculated
   // asynchronously in a separate process. If calcInline is true the value of 'arg'
@@ -113,7 +113,7 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
   _remoteEvalErrorLoggingState(other._remoteEvalErrorLoggingState),
   _pipe(0),
   _updateMaster(0),
-  _retrieveDispatched(kFALSE)
+  _retrieveDispatched(kFALSE), _evalCarry(other._evalCarry)
 {
   // Copy constructor. Initializes in clean state so that upon eval
   // this instance will create its own server processes
@@ -162,7 +162,16 @@ void RooRealMPFE::initVars()
   //delete ncVars ;
 }
 
-
+Double_t RooRealMPFE::getCarry() const
+{
+  if (_inlineMode) {
+    RooAbsTestStatistic* tmp = dynamic_cast<RooAbsTestStatistic*>(_arg.absArg());
+    if (tmp) return tmp->getCarry();
+    else return 0.;
+  } else {
+    return _evalCarry;
+  }
+}
 
 //_____________________________________________________________________________
 void RooRealMPFE::initialize() 
@@ -278,7 +287,7 @@ void RooRealMPFE::serverLoop()
 				 << ") IPC fromClient> Retrieve" << endl ; 
 	msg = ReturnValue;
 	numErrors = numEvalErrors();
-	*_pipe << msg << _value << numErrors;
+	*_pipe << msg << _value << getCarry() << numErrors;
 
 	if (_verboseServer) cout << "RooRealMPFE::serverLoop(" << GetName() 
 				 << ") IPC toClient> ReturnValue " << _value << " NumError " << numErrors << endl ; 
@@ -557,7 +566,7 @@ Double_t RooRealMPFE::evaluate() const
 
     Int_t numError;
 
-    *_pipe >> msg >> value >> numError;
+    *_pipe >> msg >> value >> _evalCarry >> numError;
     
     if (msg!=ReturnValue) {
       cout << "RooRealMPFE::evaluate(" << GetName() 

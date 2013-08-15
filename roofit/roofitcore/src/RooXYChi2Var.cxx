@@ -442,6 +442,7 @@ Double_t RooXYChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_
     result = t;
   }
 
+  _evalCarry = carry;
   return result ;
 }
 

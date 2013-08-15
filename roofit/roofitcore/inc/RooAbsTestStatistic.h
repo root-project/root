@@ -35,6 +35,7 @@ typedef RooAbsData* pRooAbsData ;
 typedef RooRealMPFE* pRooRealMPFE ;
 
 class RooAbsTestStatistic : public RooAbsReal {
+    friend class RooRealMPFE;
 public:
 
   // Constructors, assignment etc
@@ -61,6 +62,7 @@ public:
   void enableOffsetting(Bool_t flag) ;
   Bool_t isOffsetting() const { return _doOffset ; }
   virtual Double_t offset() const { return _offset ; }
+  virtual Double_t offsetCarry() const { return _offsetCarry; }
 
 protected:
 
@@ -70,6 +72,7 @@ protected:
   virtual Double_t evaluate() const ;
 
   virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const = 0 ;
+  virtual Double_t getCarry() const;
 
   void setMPSet(Int_t setNum, Int_t numSets) ; 
   void setSimCount(Int_t simCount) { 
@@ -141,6 +144,7 @@ protected:
   Bool_t         _doOffset ; // Apply interval value offset to control numeric precision?
   mutable Double_t _offset ; //! Offset
   mutable Double_t _offsetCarry; //! avoids loss of precision
+  mutable Double_t _evalCarry; //! carry of Kahan sum in evaluatePartition
 
   ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
 

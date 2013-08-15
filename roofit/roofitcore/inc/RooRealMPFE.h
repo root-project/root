@@ -53,6 +53,7 @@ public:
   virtual Double_t evaluate() const ;
   friend class RooAbsTestStatistic ;
   virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTracking=kTRUE) ;
+  virtual Double_t getCarry() const;
 
   enum State { Initialize,Client,Server,Inline } ;
   State _state ;
@@ -82,6 +83,7 @@ public:
   mutable std::vector<Bool_t> _constChanged ; //! Flags if variable needs update on server-side
   RooRealMPFE* _updateMaster ; //! Update master
   mutable Bool_t _retrieveDispatched ; //!
+  mutable Double_t _evalCarry; //!
 
   static RooMPSentinel _sentinel ;
 
