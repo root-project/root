@@ -37,9 +37,9 @@ public:
    using THashTable::FindObject;
    virtual TObject   *FindObject(const char *name) const;
    
-   virtual TDataType *FindType(const char *name) const;
+   TDataType *FindType(const char *name) const;
    
-   ClassDef(TListOfTypes,3); // Specical container for the list of types.
+   ClassDef(TListOfTypes,2); // Specical container for the list of types.
 };
 
 
