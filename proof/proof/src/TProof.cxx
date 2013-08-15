@@ -2795,7 +2795,15 @@ Int_t TProof::PollForNewWorkers()
    TList *reqWorkers = new TList();
    reqWorkers->SetOwner(kFALSE);
 
-   R__ASSERT(gProofServ);
+   if (!TestBit(TProof::kIsMaster)) {
+      Error("PollForNewWorkers", "Can't invoke: not on a master -- should not happen!");
+      return -1;
+   }
+   if (!gProofServ) {
+      Error("PollForNewWorkers", "No ProofServ available -- should not happen!");
+      return -1;
+   }
+
    gProofServ->GetWorkers(reqWorkers, dummy, kTRUE);  // last 2 are dummy
 
    // List of new workers only (TProofNodeInfo)
@@ -6883,8 +6891,14 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
    // is sent back to the client when we go "more" parallel.
    // Returns -1 on error, number of total (not added!) workers on success.
 
-   if (!IsValid() || !IsMaster() || IsIdle())
+   if (!IsValid() || !IsMaster() || IsIdle()) {
+      Error("GoMoreParallel", "Can't invoke here -- should not happen!");
       return -1;
+   }
+   if (!gProofServ) {
+      Error("GoMoreParallel", "No ProofServ available -- should not happen!");
+      return -1;
+   }
 
    TSlave *sl = 0x0;
    TIter next( fSlaves );
@@ -6960,7 +6974,6 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
 
    // Notify the client that we've got more workers, and print info on
    // Master's log as well
-   R__ASSERT(gProofServ);
    TString s;
    s.Form("PROOF just went more parallel (%d additional worker%s, %d worker%s total)",
       nAddedWorkers, (nAddedWorkers == 1) ? "" : "s",
