@@ -115,11 +115,9 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
       out = out.substr( startpos, endpos-startpos+1 );
    
    // if tag isn't empty, check if everything is OK with the tag format
-//    std::cout << "Tag is: " << out << std::endl;
    if (!out.empty()){
       bool isTagOk = CheckIsTagOK(out);
       if (tagIsComment){
-//          std::cout << "---> Tag was a comment!\n";
          out="";
          return GetNextTag(file,out,lineCount);
       }
