@@ -113,6 +113,8 @@ public:
    virtual Double_t      GetErrorY(Int_t bin) const;
    virtual Double_t      GetErrorZ(Int_t bin) const;
    Double_t              GetMargin() const {return fMargin;}
+   Double_t              GetMaximum() const {return fMaximum;};
+   Double_t              GetMinimum() const {return fMinimum;};
    TAxis                *GetXaxis() const ;
    TAxis                *GetYaxis() const ;
    TAxis                *GetZaxis() const ;

@@ -589,8 +589,12 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
    Double_t x0 = x[0]  , x2 = x[0];
    Double_t y0 = y[0]  , y2 = y[0];
    Double_t z0 = fZ[p0], z2 = fZ[p0];
-   Double_t zmin = fZmin;
-   Double_t zmax = fZmax;
+   Double_t zmin = fGraph2D->GetMinimum();
+   Double_t zmax = fGraph2D->GetMaximum();
+   if (zmin==-1111 && zmax==-1111) {
+      zmin = fZmin;
+      zmax = fZmax;
+   }
 
    // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
    // After this z0 < z1 < z2
@@ -773,7 +777,7 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
    Bool_t colors   = opt.Contains("pcol");
    Int_t  ncolors  = gStyle->GetNumberOfColors();
    Int_t  it, theColor;
-   
+
    // Initialize the levels on the Z axis
    if (colors) {
       Int_t ndiv   = gCurrentHist->GetContour();
@@ -783,7 +787,7 @@ void TGraph2DPainter::PaintPolyMarker(Option_t *option)
       }
       if (gCurrentHist->TestBit(TH1::kUserContour) == 0) gCurrentHist->SetContour(ndiv);
    }
-   
+
    Double_t *xm = new Double_t[fNpoints];
    Double_t *ym = new Double_t[fNpoints];
    Double_t hzmin = gCurrentHist->GetMinimum();
