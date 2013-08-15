@@ -80,10 +80,6 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
    std::ostringstream proxyCode;
    proxyCode << "class " << clName << " {\nprivate:\n PyObject* fPyObject;\npublic:\n";
 
-/*
-// special case: constructor; add method and store callback
-   PyROOT::Utility::InstallMethod( &gcl, pyclass, clName, 0, "ellipsis", (void*)PyCtorCallback );
-*/
 // loop over and add member functions
    Bool_t hasConstructor = kFALSE;
    for ( int i = 0; i < PyList_GET_SIZE( attrs ); ++i ) {
@@ -139,10 +135,6 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
          else
             proxyCode << "  TPyArg::CallConstructor(fPyObject, (PyObject*)" << (void*)pyclass << ", v)";
          proxyCode << ";\n }\n";
-/*         if ( mtName != "__init__" ) {
-            PyROOT::Utility::InstallMethod(
-               &gcl, attr, mtName, "TPyReturn", "ellipsis", (void*)PyMemFuncCallback );
-         } */
       }
 
       // no decref of attr for now (b/c of hard-wired ptr); need cleanup somehow
