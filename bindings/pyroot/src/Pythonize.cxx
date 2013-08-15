@@ -35,8 +35,10 @@
 // Standard
 #include <stdexcept>
 #include <string>
-#include <stdio.h>
 #include <utility>
+
+#include <stdio.h>
+#include <string.h>     // only needed for Cling TMinuit workaround
 
 
 namespace {
@@ -1525,6 +1527,31 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       }
    };
 
+//- TMinuit behavior ----------------------------------------------------------
+   void TMinuitPyCallback( void* vpyfunc, Long_t /* npar */,
+         Int_t& a0, Double_t* a1, Double_t& a2, Double_t* a3, Int_t a4 ) {
+   // a void* was passed to keep the interface on builtin types only
+      PyObject* pyfunc = (PyObject*)vpyfunc;
+
+   // prepare arguments
+      PyObject* pya0 = BufFac_t::Instance()->PyBuffer_FromMemory( &a0,  1 );
+      PyObject* pya1 = BufFac_t::Instance()->PyBuffer_FromMemory(  a1, a0 );
+      PyObject* pya2 = BufFac_t::Instance()->PyBuffer_FromMemory( &a2,  1 );
+      PyObject* pya3 = BufFac_t::Instance()->PyBuffer_FromMemory(  a3, -1 ); // size unknown
+
+   // perform actual call
+      PyObject* result = PyObject_CallFunction(
+         pyfunc, (char*)"OOOOi", pya0, pya1, pya2, pya3, a4 );
+      Py_DECREF( pya3 ); Py_DECREF( pya2 ); Py_DECREF( pya1 ); Py_DECREF( pya0 );
+
+      if ( ! result ) {
+         PyErr_Print();
+         throw std::runtime_error( "TMinuit python fit function call failed" );
+      }
+
+      Py_XDECREF( result );
+   }
+
 //- TFN behavior --------------------------------------------------------------
    double TFNPyCallback( void* vpyfunc, Long_t npar, double* a0, double* a1 ) {
    // a void* was passed to keep the interface on builtin types only
@@ -1579,49 +1606,6 @@ namespace {
       return self;
    }
 
-//- TMinuit behavior ----------------------------------------------------------
-/* TODO: implement for Cling
-   int TMinuitPyCallback( G__value* res, G__CONST char*, struct G__param* libp, int hash )
-   {
-   // CINT-installable callback function to allow Minuit to call into python.
-      PyObject* result = 0;
-
-   // retrieve function information
-      PyObject* pyfunc = PyROOT::Utility::GetInstalledMethod( G__value_get_tagnum(res) );
-      if ( ! pyfunc )
-         return 0;
-
-   // prepare arguments
-      PyObject* arg1 = BufFac_t::Instance()->PyBuffer_FromMemory(
-         G__Intref(&libp->para[0]), 1 );
-      int npar = *G__Intref(&libp->para[0]);
- 
-      PyObject* arg2 = BufFac_t::Instance()->PyBuffer_FromMemory(
-         (Double_t*)G__int(libp->para[1]), npar );
-
-      PyObject* arg3 = BufFac_t::Instance()->PyBuffer_FromMemory(
-         G__Doubleref(&libp->para[2]), 1 );
-
-      PyObject* arg4 = BufFac_t::Instance()->PyBuffer_FromMemory(
-         (Double_t*)G__int(libp->para[3]), -1 ); // size unknown
-
-   // perform actual call
-      result = PyObject_CallFunction( pyfunc, (char*)"OOOOi",
-         arg1, arg2, arg3, arg4, (int)G__int(libp->para[4]) );
-      Py_DECREF( arg4 ); Py_DECREF( arg3 ); Py_DECREF( arg2 ); Py_DECREF( arg1 );
-
-      if ( ! result ) {
-         PyErr_Print();
-         throw std::runtime_error( "TMinuit python fit function call failed" );
-      }
-
-      Py_XDECREF( result );
-
-      G__setnull( res );
-      return ( 1 || hash || res || libp );
-   }
-
-*/
 
 //____________________________________________________________________________
    class TPretendInterpreted: public PyCallable {
@@ -1768,7 +1752,6 @@ namespace {
 
 
 //- TMinuit behavior -----------------------------------------------------------
-/* TODO: implement for Cling
    class TMinuitSetFCN : public TPretendInterpreted {
    public:
       TMinuitSetFCN( int nArgs = 1 ) : TPretendInterpreted( nArgs ) {}
@@ -1798,28 +1781,50 @@ namespace {
          if ( ! IsCallable( pyfunc ) )
             return 0;
 
-      // use callable name (if available) as identifier
-         PyObject* pyname = PyObject_GetAttr( pyfunc, PyStrings::gName );
-         const char* name = "dummy";
-         if ( pyname != 0 )
-            name = PyROOT_PyUnicode_AsString( pyname );
+      // create signature
+         std::vector<std::string> signature; signature.reserve( 5 );
+         signature.push_back( "Int_t&" );
+         signature.push_back( "Double_t*" );
+         signature.push_back( "Double_t&" );
+         signature.push_back( "Double_t*" );
+         signature.push_back( "Int_t" );
 
-      // registration with CINT
-         Long_t fid = Utility::InstallMethod( 0, pyfunc, name, 0,
-            "i - - 1 - - D - - 0 - - d - - 1 - - D - - 0 - - i - - 0 - -",
-            (void*)TMinuitPyCallback, 5 );
-         Py_XDECREF( pyname );
+      // registration with Cling
+         void* fptr = Utility::CreateWrapperMethod(
+            pyfunc, 5, "void", signature, "TMinuitPyCallback" );
+         if ( ! fptr /* PyErr was set */ )
+            return 0;
 
-      // get function
+      // get setter function
          MethodProxy* method =
             (MethodProxy*)PyObject_GetAttr( (PyObject*)self, PyStrings::gSetFCN );
 
+      // CLING WORKAROUND: SetFCN(void* fun) is deprecated but for whatever reason
+      // still available yet not functional; select the correct one based on its
+      // signature of the full function pointer
+         PyCallable* setFCN = 0;
+         const MethodProxy::Methods_t& methods = method->fMethodInfo->fMethods;
+         for ( MethodProxy::Methods_t::const_iterator im = methods.begin(); im != methods.end(); ++im ) {
+             PyObject* sig = (*im)->GetSignature();
+             if ( strstr( PyROOT_PyUnicode_AsString( sig ), "Double_t&" ) ) {
+             // the comparison was not exact, but this is just a workaround
+                setFCN = *im;
+                Py_DECREF( sig );
+                break;
+             }
+             Py_DECREF( sig );
+         }
+      // END CLING WORKAROUND
+
       // build new argument array
          PyObject* newArgs = PyTuple_New( 1 );
-         PyTuple_SET_ITEM( newArgs, 0, PyROOT_PyCapsule_New( (void*)fid, NULL, NULL ) );
+         PyTuple_SET_ITEM( newArgs, 0, PyROOT_PyCapsule_New( fptr, NULL, NULL ) );
 
       // re-run
-         PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
+      // CLING WORKAROUND: this is to be the call once TMinuit is fixed: 
+         // PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
+         PyObject* result = setFCN->operator()( self, newArgs, NULL );
+      // END CLING WORKAROUND
 
       // done, may have worked, if not: 0 is returned
          Py_DECREF( newArgs );
@@ -1856,14 +1861,13 @@ namespace {
          return TMinuitSetFCN::operator()( self, args, 0, 0, release_gil );
       }
    };
-*/
 
 //- Fit::TFitter behavior ------------------------------------------------------
    PyObject* gFitterPyCallback = 0;
 
    void FitterPyCallback( int& npar, double* gin, double& f, double* u, int flag )
    {
-   // CINT-callable callback for Fit::Fitter derived objects.
+   // Cling-callable callback for Fit::Fitter derived objects.
       PyObject* result = 0;
 
    // prepare arguments
@@ -1890,7 +1894,6 @@ namespace {
 
       Py_XDECREF( result );
    }
-
 
    class TFitterFitFCN : public TPretendInterpreted {
    public:
@@ -2300,13 +2303,11 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    if ( name == "TFunction" ) // allow direct call
       return Utility::AddToClass( pyclass, "__call__", (PyCFunction) TFunctionCall );
 
-/* TODO: implement for Cling
    if ( name == "TMinuit" )   // allow call with python callable
       return Utility::AddToClass( pyclass, "SetFCN", new TMinuitSetFCN );
 
    if ( name == "TFitter" )   // allow call with python callable (this is not correct)
       return Utility::AddToClass( pyclass, "SetFCN", new TMinuitFitterSetFCN );
-*/
 
    if ( name == "Fitter" )    // really Fit::Fitter, allow call with python callable
       return Utility::AddToClass( pyclass, "FitFCN", new TFitterFitFCN );

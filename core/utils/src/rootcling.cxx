@@ -234,7 +234,7 @@ template <typename T> struct IsPointer { enum { kVal = 0 }; };
 namespace std {}
 using namespace std;
 namespace genreflex {
-  bool verbose = false;
+  bool verbose = true;
   }
 
 #include "TClassEdit.h"
@@ -3275,65 +3275,65 @@ unsigned int checkHeadersNames(std::vector<std::string>& headersNames)
 }
 
 //______________________________________________________________________________
-unsigned int extractArgs(int& argc, char** argv, std::vector<std::string>& args)
+unsigned int extractArgs(int argc, char** argv, std::vector<std::string>& args)
 {
    // Extract the arguments from the command line
-
+   
    // loop on argv, spot strings which are not preceeded by something
    // starting with "-" and do not start with "-"
-   std::vector<unsigned int> argsIndeces;
+//    std::vector<unsigned int> argsIndeces;
+   unsigned int argvCounter=0;
    for (int i=1;i<argc;++i){
       if (!beginsWith(argv[i-1],"-") && // so, if preceeding element starts with -, this is a value for an option
           !beginsWith(argv[i],"-")){ // and the element itself is not an option
-         argsIndeces.push_back(i);
-         args.push_back(argv[i]);
+//          argsIndeces.push_back(i);
+         args.push_back(argv[i]);         
+         argvCounter++;
          }
    }
 
-   // now create a new argv w/o the arguments, adapt argc
-   int newArgc = argc - argsIndeces.size();
-   std::vector<char*> newArgv (newArgc);
-   unsigned int argvCounter=0;
-   for (int i=0;i<argc;++i){
-      // if index was NOT the one of an arg,copy in argv
-      if (count (argsIndeces.begin(), argsIndeces.end(), i) == 0){
-         newArgv[argvCounter]=argv[i];
-         argvCounter++;
-      }
-   }
+//    // now create a new argv w/o the arguments, adapt argc
+//    int newArgc = argc - argsIndeces.size();
+//    std::vector<char*> newArgv (newArgc);
+//    unsigned int argvCounter=0;
+//    for (int i=0;i<argc;++i){
+//       // if index was NOT the one of an arg,copy in argv
+//       if (count (argsIndeces.begin(), argsIndeces.end(), i) == 0){
+//          newArgv[argvCounter]=argv[i];
+//          argvCounter++;
+//       }
+//    }
 
    // Some debug
-   if (genreflex::verbose){
-     std::cout << "Old commandline: \n";
-     for (int i=0;i<argc;++i){
-        std::cout << i << ") " << argv[i] << std::endl;
-     }     
-   }
+//    if (genreflex::verbose){
+//      std::cout << "Old commandline: \n";
+//      for (int i=0;i<argc;++i){
+//         std::cout << i << ") " << argv[i] << std::endl;
+//      }     
+//    }
    
-   // Assign to argv now
-   for (int i=0;i<newArgc;++i){
-      argv[i]=newArgv[i];
-      }
+//    // Assign to argv now
+//    for (int i=0;i<newArgc;++i){
+//       argv[i]=newArgv[i];
+//       }
 
    // Some debug
    if (genreflex::verbose){
       int i=0;
-      std::cout << "New commandline: \n";
-      for (i=0;i<newArgc;++i){
-         std::cout << i << ") " << argv[i] << std::endl;
-      }
-      i=0;
       std::cout << "Args: \n";
       for (std::vector<std::string>::iterator it = args.begin();
            it < args.end();++it){
          std::cout << i << ") " << *it << std::endl;
          ++i;
       }
-         
+
    }
-      
-   argc=newArgc;
-   return args.size();
+
+//    for (int i=0;i<argc;++i){
+//       std::cout << argv << ": " << &argv[i] << " = " << argv[i] << std::endl;
+//    }
+//    
+   return argvCounter;
 }
 
 //______________________________________________________________________________
@@ -3584,10 +3584,14 @@ int extractMultipleOptions(std::vector<option::Option>& options,
    // Extract from options multiple values with the same option
    int nValues=0;
    if (options[oIndex]){
-      values.reserve(options[oIndex].count());
+      const int nVals= options[oIndex].count();
+      values.reserve(nVals);
+      int optionIndex=0;
       for (option::Option* opt = options[oIndex]; opt; opt = opt->next()){
          if (genreflex::verbose) std::cout << "Extracting multiple args: "
+                                           << optionIndex << "/" << nVals << " "
                                            << opt->arg << std::endl;
+         optionIndex++;
          values.push_back(opt->arg);
          nValues++;
       }
@@ -3603,7 +3607,7 @@ void RiseWarningIfPresent(std::vector<option::Option>& options,
    
    if (options[optionIndex]){
    ROOT::TMetaUtils::Warning(0,
-                             "*** genereflex: %s are not supported anymore.\n",
+                             "*** genereflex: %s is not supported anymore.\n",
                              descriptor);
    }
 }
@@ -3823,34 +3827,38 @@ int GenReflex(int argc, char **argv)
       {NOMEMBERTYPEDEFS,
         STRING ,
         "" , "no_membertypedefs" ,
-        option::FullArg::Required,
+        option::FullArg::None,
         ""},
 
       {NOTEMPLATETYPEDEFS,
         STRING ,
         "" , "no_templatetypedefs" ,
-        option::FullArg::Required,
+        option::FullArg::None,
         ""},
 
         {0,0,0,0,0,0}
       };
 
    std::vector<std::string> headersNames;
-   int originalArgc=argc;
-   extractArgs(argc,argv,headersNames); // The only args are the headers here
+   const int originalArgc=argc;
+   // The only args are the headers here
+   const int extractedArgs = extractArgs(argc,argv,headersNames); 
 
-   // skip program name argv[0] if present
-   int newArgc = argc-(argc>0);
-   char** newArgv = argv+(argc>0);
+   const int offset = 1 + extractedArgs; // skip argv[0] and the headers
+   argc-=offset;
+   argv+=offset;
 
    // Parse the options
-   option::Stats  stats(genreflexUsageDescriptor,  newArgc, newArgv);
+   option::Stats  stats(genreflexUsageDescriptor,  argc, argv);
    std::vector<option::Option> options(stats.options_max);// non POD var size arrays are not C++!
    std::vector<option::Option> buffer(stats.buffer_max);
    // The 4 is the minimum size of the abbreviation lenght.
    // For example, --selction_file can be abbreviated with --sele at least.
-   option::Parser parse(genreflexUsageDescriptor, newArgc, newArgv, &options[0], &buffer[0], 4);
 
+   std::cout << "Parsing\n";
+   option::Parser parse(genreflexUsageDescriptor, argc, argv, &options[0], &buffer[0], 5);
+   std::cout << "Parsing END\n";
+   
    if (parse.error()){
       ROOT::TMetaUtils::Error(0, "*** genreflex: Argument parsing error!\n");
       return 1;

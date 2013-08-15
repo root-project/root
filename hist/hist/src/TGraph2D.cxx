@@ -614,7 +614,7 @@ void TGraph2D::Clear(Option_t * /*option = "" */)
    delete [] fZ;
    fZ = 0;
    fSize = fNpoints = 0;
-   if (fHistogram) {
+   if (fHistogram && !fUserHisto) {
       delete fHistogram;
       fHistogram = 0;
    }
