@@ -837,6 +837,18 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       chain->LoadTree(0);
    }
 
+   fprintf(fp,"\n");
+   if (opt.Contains("selector")) {
+      fprintf(fp,"class %s : public TSelector {\n",classname);
+      fprintf(fp,"public :\n");
+      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
+   } else {
+      fprintf(fp,"class %s {\n",classname);
+      fprintf(fp,"public :\n");
+      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
+      fprintf(fp,"   Int_t           fCurrent; //!current Tree number in a TChain\n");
+   }
+
    fprintf(fp,"\n// Fixed size dimensions of array or collections stored in the TTree if any.\n");   
    leaves = fTree->GetListOfLeaves();
    for (l=0;l<nleaves;l++) {
@@ -856,7 +868,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          blen[lenb-1] = 0;
          len = leaflen[l];
          if (len <= 0) len = 1;
-         fprintf(fp,"const Int_t kMax%s = %d;\n",blen,len);
+         fprintf(fp,"   const Int_t kMax%s = %d;\n",blen,len);
       }
    }
    delete [] leaflen;
@@ -864,17 +876,6 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    delete leafs;
 
 // second loop on all leaves to generate type declarations
-   fprintf(fp,"\n");
-   if (opt.Contains("selector")) {
-      fprintf(fp,"class %s : public TSelector {\n",classname);
-      fprintf(fp,"public :\n");
-      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
-   } else {
-      fprintf(fp,"class %s {\n",classname);
-      fprintf(fp,"public :\n");
-      fprintf(fp,"   TTree          *fChain;   //!pointer to the analyzed TTree or TChain\n");
-      fprintf(fp,"   Int_t           fCurrent; //!current Tree number in a TChain\n");
-   }
    fprintf(fp,"\n   // Declaration of leaf types\n");
    TLeaf *leafcount;
    TLeafObject *leafobj;
