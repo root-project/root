@@ -2785,6 +2785,7 @@ namespace UNNAMED {
                clang::QualType qualType = (*iField)->getType();
                if (!qualType.isNull()) {
             
+               //Repetion of code will be fixed with next commit.
                //class 
                if (qualType->isRecordType()) {
                   if(clang::CXXRecordDecl* FD = qualType->getAsCXXRecordDecl()) {
