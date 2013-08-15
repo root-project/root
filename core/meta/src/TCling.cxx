@@ -321,6 +321,8 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       }
 
       // We skip functions without prototype
+      // FunctionNoProtoType - Represents a K&R-style 'int foo()' function, 
+      // which has no information available about its arguments.
       if (!isa<FunctionNoProtoType>(FD->getType())
           && !gROOT->GetListOfGlobalFunctions()->FindObject(FD->getNameAsString().c_str())) {
          gROOT->GetListOfGlobalFunctions()->Add(new TFunction(new TClingMethodInfo(fInterpreter, FD)));
