@@ -49,11 +49,12 @@ namespace cling {
    class Transaction;
 }
 
-class TEnv;
 class TClingCallbacks;
+class TEnv;
+class THashTable;
+class TInterpreterValue;
 class TMethod;
 class TObjArray;
-class TInterpreterValue;
 
 namespace ROOT {
    namespace TMetaUtils {
@@ -88,6 +89,7 @@ private: // Data Members
    TString         fIncludePath;      // Interpreter include path.
    TString         fRootmapLoadPath;  // Dynamic load path for rootmap files.
    TEnv*           fMapfile;          // Association of classes to libraries.
+   THashTable*     fMapNamespaces;    // Entries for the namespaces, that we need to signal to clang.
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
    Bool_t          fLockProcessLine;  // True if ProcessLine should lock gClingMutex.
 
@@ -119,7 +121,8 @@ public: // Public Interface
    cling::Interpreter *GetInterpreter() { return fInterpreter; }
 
    void    AddIncludePath(const char* path);
-   Int_t   AutoLoad(const char* classname);
+   Int_t   AutoLoad(const char* cls);
+   Bool_t  IsAutoLoadNamespaceCandidate(const char* name);
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values
    void    EnableAutoLoading();

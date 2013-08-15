@@ -388,7 +388,7 @@ void TCling__UpdateListsOnDeclDeserialized(const clang::Decl* D) {
    // We cache them because the decls and their types might not have
    // been completely deserialized; we push them into root/meta once
    // the transaction is done.
-   if (!isa<TagDecl>(D->getDeclContext()) &&
+   if ((D->getDeclContext() && !isa<TagDecl>(D->getDeclContext())) &&
        (isa<NamespaceDecl>(D) || isa<FunctionDecl>(D)
         || (isa<VarDecl>(D) && !isa<ParmVarDecl>(D))
         || isa<TagDecl>(D) || isa<TypedefDecl>(D))) {
@@ -536,6 +536,12 @@ extern "C" int TCling__AutoLoadCallback(const char* className)
 {
    string cls(className);
    return gCling->AutoLoad(cls.c_str());
+}
+
+// Returns 0 for failure 1 for success
+extern "C" int TCling__IsAutoLoadNamespaceCandidate(const char* name)
+{
+   return ((TCling*)gCling)->IsAutoLoadNamespaceCandidate(name);
 }
 
 //______________________________________________________________________________
@@ -888,6 +894,7 @@ TCling::TCling(const char *name, const char *title)
    fMore      = 0;
    fPrompt[0] = 0;
    fMapfile   = 0;
+   fMapNamespaces   = 0;
    fRootmapFiles = 0;
    fLockProcessLine = kTRUE;
    // Disable the autoloader until it is explicitly enabled.
@@ -921,6 +928,7 @@ TCling::~TCling()
 {
    // Destroy the interpreter interface.
    delete fMapfile;
+   delete fMapNamespaces;
    delete fRootmapFiles;
    delete fMetaProcessor;
    delete fTemporaries;
@@ -2996,6 +3004,8 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
    if (!fMapfile) {
       fMapfile = new TEnv(".rootmap");
       fMapfile->IgnoreDuplicates(kTRUE);
+      fMapNamespaces = new THashTable();
+      fMapNamespaces->SetOwner();
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
    }
@@ -3102,6 +3112,17 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
             }
             delete[] wlib;
          }
+         // Fill in the namespace candidate list
+         Ssiz_t last = cls.Last(':');
+         if (last != kNPOS) {
+            // Please note that the funny op overlaod does substring.
+            TString namespaceCand = cls(0, last - 1);
+            // This is a reference to a substring that lives in fMapfile
+            if (!fMapNamespaces->FindObject(namespaceCand.Data()))
+               fMapNamespaces->Add(new TNamed(namespaceCand.Data(), 0));
+         }
+            
+
          delete tokens;
       }
    }
@@ -3270,6 +3291,8 @@ Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
    if (!fMapfile) {
       fMapfile = new TEnv(".rootmap");
       fMapfile->IgnoreDuplicates(kTRUE);
+      fMapNamespaces = new THashTable();
+      fMapNamespaces->SetOwner();
 
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
@@ -3324,6 +3347,12 @@ Int_t TCling::AutoLoad(const char* cls)
    }
    SetClassAutoloading(oldvalue);
    return status;
+}
+
+Bool_t TCling::IsAutoLoadNamespaceCandidate(const char* name) {
+   if (fMapNamespaces)
+      return fMapNamespaces->FindObject(name);
+   return false;
 }
 
 //______________________________________________________________________________

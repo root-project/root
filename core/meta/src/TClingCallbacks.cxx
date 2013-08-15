@@ -36,6 +36,7 @@ extern "C" {
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    Decl* TCling__GetObjectDecl(TObject *obj);
    int TCling__AutoLoadCallback(const char* className);
+   int TCling__IsAutoLoadNamespaceCandidate(const char* name);
    void TCling__UpdateListsOnDeclDeserialized(const clang::Decl*);
 }
 
@@ -102,7 +103,8 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
 
      // We should try autoload only for special lookup failures. 
      Sema::LookupNameKind kind = R.getLookupKind();
-     if (!(kind == Sema::LookupTagName || kind == Sema::LookupOrdinaryName)) 
+     if (!(kind == Sema::LookupTagName || kind == Sema::LookupOrdinaryName
+           || kind == Sema::LookupNestedNameSpecifierName)) 
         return false;
 
      fIsAutoloadingRecursively = true;
@@ -134,9 +136,14 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
         // wrapper function so the parent context must be the global.
         Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
                                                SemaR.TUScope);
-
-        if (TCling__AutoLoadCallback(Name.getAsString().c_str())) {
-            pushedDCAndS.pop();
+        std::string missingName = Name.getAsString();
+        if (TCling__AutoLoadCallback(missingName.c_str())) {
+           pushedDCAndS.pop();
+           cleanupRAII.pop();
+           lookupSuccess = SemaR.LookupName(R, S);
+        } else if (TCling__IsAutoLoadNamespaceCandidate(missingName.c_str())) {
+           m_Interpreter->declare("namespace " + missingName + "{}");
+           pushedDCAndS.pop();
            cleanupRAII.pop();
            lookupSuccess = SemaR.LookupName(R, S);
         }
