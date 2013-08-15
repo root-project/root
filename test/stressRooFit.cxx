@@ -61,6 +61,7 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 //______________________________________________________________________________
 Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
 {
+  Int_t retVal = 0;
   // Save memory directory location
   RooUnitTest::setMemDir(gDirectory) ;
 
@@ -73,7 +74,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
     if (TString(refFile).Contains("http:")) {
       if (writeRef) {
 	cout << "stressRooFit ERROR: reference file must be local file in writing mode" << endl ;
-	return kFALSE ;
+	return 1;
       }
       fref = new TWebFile(refFile) ;
     } else {
@@ -81,7 +82,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
     }
     if (fref->IsZombie()) {
       cout << "stressRooFit ERROR: cannot open reference file " << refFile << endl ;
-      return kFALSE ;
+      return 1;
     }
   }
 
@@ -177,7 +178,10 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
       if (doDump) {
 	(*iter)->setDebug(kTRUE) ;
       }
-      StatusPrint( i,(*iter)->GetName(),(*iter)->isTestAvailable()?(*iter)->runTest():-1);
+      Int_t status = (*iter)->isTestAvailable()?(*iter)->runTest():-1;
+      StatusPrint( i,(*iter)->GetName(), status);
+      // increment retVal for every failed test
+      if (!status) ++retVal;
     }
     delete (*iter) ;
     i++ ;
@@ -236,7 +240,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   delete gBenchmark ;
   gBenchmark = 0 ;
 
-  return 0;
+  return retVal;
 }
 
 //_____________________________batch only_____________________
@@ -340,8 +344,8 @@ int main(int argc,const char *argv[])
   RooMath::cacheCERF(kFALSE) ;
 
   gBenchmark = new TBenchmark();
-  stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);  
-  return 0;
+  Int_t retVal = stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);  
+  return retVal;
 }
 
 #endif
