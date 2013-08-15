@@ -119,6 +119,10 @@
        histo2->Draw("same");
     }
     ```
+-   In `TGraph2DPainter::PaintLevels` the colour levels used to paint
+    the triangles did not match the minimum and maximum set by the 
+    user on the `TGraph2D`. This problem was reported 
+    [here](http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=16937&p=72314#p72314)
 
 ### TPaletteAxis
 
