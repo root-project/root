@@ -1628,19 +1628,23 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
 
   
   // Loop over dataset and copy event to matching subset
-  Int_t i ;
-  for (i=0 ; i<numEntries() ; i++) {
-    const RooArgSet* row =  get(i) ;
-    RooAbsData* subset = (RooAbsData*) dsetList->FindObject(cloneCat->getLabel()) ;
+  const bool propWeightSquared = isWeighted();
+  for (Int_t i = 0; i < numEntries(); ++i) {
+    const RooArgSet* row =  get(i);
+    RooAbsData* subset = (RooAbsData*) dsetList->FindObject(cloneCat->getLabel());
     if (!subset) {
-      subset = emptyClone(cloneCat->getLabel(),cloneCat->getLabel(),&subsetVars,(addWV?"weight":0)) ;
-      dsetList->Add((RooAbsArg*)subset) ;
+      subset = emptyClone(cloneCat->getLabel(),cloneCat->getLabel(),&subsetVars,(addWV?"weight":0));
+      dsetList->Add((RooAbsArg*)subset);
     }
-    subset->add(*row,weight()) ;
+    if (!propWeightSquared) {
+	subset->add(*row, weight());
+    } else {
+	subset->add(*row, weight(), weightSquared());
+    }
   }
 
-  delete cloneSet ;
-  return dsetList ;
+  delete cloneSet;
+  return dsetList;
 }
 
 
