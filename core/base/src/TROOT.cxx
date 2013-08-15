@@ -1153,17 +1153,11 @@ TCanvas *TROOT::MakeDefCanvas() const
 }
 
 //______________________________________________________________________________
-TDataType *TROOT::GetType(const char *name, Bool_t load) const
+TDataType *TROOT::GetType(const char *name, Bool_t /* load */) const
 {
    // Return pointer to type with name.
 
-   // First try without loading.  We can do that because nothing is
-   // ever removed from the list of types. (See TCling::UpdateListOfTypes).
-   TDataType* type = (TDataType*)gROOT->GetListOfTypes(kFALSE)->FindObject(name);
-   if (type || !load)
-      return type;
-   else
-      return (TDataType*)gROOT->GetListOfTypes(load)->FindObject(name);
+   return (TDataType*)gROOT->GetListOfTypes()->FindObject(name);
 }
 
 //______________________________________________________________________________
@@ -1345,28 +1339,29 @@ TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
 }
 
 //______________________________________________________________________________
-TCollection *TROOT::GetListOfTypes(Bool_t load)
+TCollection *TROOT::GetListOfTypes(Bool_t /* load */)
 {
-   // Return list containing all TDataTypes (typedefs) currently defined.
-   // Since types can be added and removed during execution of the
-   // program, we need to update the list of types every time we
-   // execute this method. However, when calling this function in
-   // a (tight) loop where no new types will be created
-   // you can set load=kFALSE (default).
+   // Return a dynamic list giving access to all TDataTypes (typedefs)
+   // currently defined.
+   //
+   // The list is populated on demand.  Calling
+   //    gROOT->GetListOfTypes()->FindObject(nameoftype);
+   // will return the TDataType corresponding to 'nameoftype'.  If the
+   // TDataType is not already in the list itself and the type does exist,
+   // a new TDataType will be created and added to the list.
+   //
+   // Calling
+   //    gROOT->GetListOfTypes()->ls(); // or Print()
+   // list only the typedefs that have been previously accessed throught the
+   // list (plus the builtins types).
+   //
 
    if (!fTypes) {
       fTypes = new TListOfTypes;
-      load = kTRUE;
    }
 
    if (!fInterpreter)
       Fatal("GetListOfTypes", "fInterpreter not initialized");
-
-   if (load) {
-///      printf("calling Update ListOfTypes\n");
-      gInterpreter->UpdateListOfTypes();
-///      printf("after calling Update ListOfTypes\n");
-   }
 
    return fTypes;
 }
@@ -1706,10 +1701,6 @@ Int_t TROOT::LoadClass(const char * /*classname*/, const char *libname,
       }
    }
 
-   if (err == 0 && !check) {
-      GetListOfTypes(kTRUE);
-   }
-
    if (err == -1) {
       //Error("LoadClass", "library %s could not be loaded", libname);
    }
@@ -1779,8 +1770,6 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
             gInterpreter->LoadMacro(fname.Data(), (TInterpreter::EErrorCode*)terr);
             if (*terr)
                err = -1;
-            //else   // maybe not needed (RDM)
-            //   GetListOfTypes(kTRUE);
          }
       }
       delete [] mac;
