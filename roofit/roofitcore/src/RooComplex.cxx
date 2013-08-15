@@ -23,7 +23,7 @@
 
 #include "RooFit.h"
 
-#include "RooComplex.h"
+#define ROO_COMPLEX_CXX
 #include "RooComplex.h"
 #include "Riostream.h"
 #include <iomanip>
@@ -32,6 +32,14 @@ using namespace std;
 
 ClassImp(RooComplex)
 
+void RooComplex::warn() const
+{
+    static int nwarns = 0;
+    if (nwarns < 1<<12) {
+	cout << "[#0] WARN: RooComplex is deprecated. Please use std::complex<Double_t> in your code instead." << std::endl;
+	++nwarns;
+    }
+}
 
 //_____________________________________________________________________________
 void RooComplex::Print() const {

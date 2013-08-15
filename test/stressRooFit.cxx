@@ -339,10 +339,6 @@ int main(int argc,const char *argv[])
     cout << "stressRooFit: WARNING running in write mode, but reference file is web file, writing local file instead: " << refFileName << endl ;
   }
 
-  // Disable caching of complex error function calculation, as we don't 
-  // want to write out the cache file as part of the validation procedure
-  RooMath::cacheCERF(kFALSE) ;
-
   gBenchmark = new TBenchmark();
   Int_t retVal = stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);  
   return retVal;

@@ -27,13 +27,8 @@
 #include "RooFit.h"
 
 #include "RooMath.h"
-#include "RooMath.h"
-#include "TMath.h"
-#include <math.h>
 #include "Riostream.h"
 #include "RooMsgService.h"
-#include "RooSentinel.h"
-#include "TSystem.h"
 
 using namespace std;
 
@@ -166,9 +161,6 @@ namespace faddeeva_impl {
 	const T twosqrtpi = 3.54490770181103205e+00;
 	const T tmzre = tm * zre, tmzim = tm * zim;
 	// calculate exp(i tm z)
-	/*const T ere = std::exp(-tmzim);
-	const T eitmzreref = ere * std::cos(tmzre);
-	const T eitmzimref = ere * std::sin(tmzre);*/
 	T eitmzre = -tmzim, eitmzim = tmzre;
 	faddeeva_impl::cexp(eitmzre, eitmzim);
 	// form 1 +/- exp (i tm z)
@@ -575,59 +567,6 @@ std::complex<double> RooMath::erf_fast(const std::complex<double> z)
 }
 
 
-RooComplex RooMath::FastComplexErrFunc(const RooComplex& z)
-{
-  const std::complex<double> w = faddeeva_fast(std::complex<double>(z.re(), z.im()));
-  return RooComplex(w.real(), w.imag());
-}
-  
-Double_t RooMath::FastComplexErrFuncRe(const RooComplex& z) 
-{ return faddeeva_fast(std::complex<double>(z.re(), z.im())).real(); }
-
-Double_t RooMath::FastComplexErrFuncIm(const RooComplex& z) 
-{ return faddeeva_fast(std::complex<double>(z.re(), z.im())).imag(); }
-
-void RooMath::cacheCERF(Bool_t /* flag */) 
-{ }
-
-
-RooComplex RooMath::ComplexErrFunc(Double_t re, Double_t im)
-{
-  const std::complex<double> z = faddeeva(std::complex<double>(re, im));
-  return RooComplex(z.real(),z.imag());
-}
-
-RooComplex RooMath::ComplexErrFunc(const RooComplex& Z) {
-  const std::complex<double> w = faddeeva(std::complex<double>(Z.re(), Z.im()));
-  return RooComplex(w.real(), w.imag());
-}
-
-
-
-void RooMath::initFastCERF(
-	Int_t /* reBins */, Double_t /* reMin */, Double_t /* reMax */,
-	Int_t /* imBins */, Double_t /* imMin */, Double_t /* imMax */)
-{
-}
-
-
-
-void RooMath::cleanup()
-{ }
-
-
-RooComplex RooMath::ITPComplexErrFunc(const RooComplex& z, Int_t /* nOrder */)
-{
-  const std::complex<double> w = faddeeva_fast(std::complex<double>(z.re(), z.im()));
-  return RooComplex(w.real(), w.imag());
-}
-
-Double_t RooMath::ITPComplexErrFuncRe(const RooComplex& z, Int_t /* nOrder */)
-{ return faddeeva_fast(std::complex<double>(z.re(), z.im())).real(); }
-
-Double_t RooMath::ITPComplexErrFuncIm(const RooComplex& z, Int_t /* nOrder */)
-{ return faddeeva_fast(std::complex<double>(z.re(), z.im())).imag(); }
-
 Double_t RooMath::interpolate(Double_t ya[], Int_t n, Double_t x) 
 {
   // Interpolate array 'ya' with 'n' elements for 'x' (between 0 and 'n'-1)
@@ -707,13 +646,21 @@ Double_t RooMath::interpolate(Double_t xa[], Double_t ya[], Int_t n, Double_t x)
 }
 
 
-
-Double_t RooMath::erf(Double_t x) 
+#include <map>
+void RooMath::warn(const char* oldfun, const char* newfun)
 {
-  return TMath::Erf(x) ;
-}
-
-Double_t RooMath::erfc(Double_t x)
-{
-  return TMath::Erfc(x) ;
+    static std::map<const char*, int> nwarn;
+    if (nwarn[oldfun] < 1<<12) {
+	++nwarn[oldfun];
+	if (newfun) {
+	    std::cout << "[#0] WARN: RooMath::" << oldfun <<
+		" is deprecated, please use " <<
+		newfun << " instead." << std::endl;
+	} else {
+	    std::cout << "[#0] WARN: RooMath::" << oldfun <<
+		" is deprecated, and no longer needed, "
+		"you can remove the call to " <<
+		oldfun << " entirely." << std::endl;
+	}
+    }
 }

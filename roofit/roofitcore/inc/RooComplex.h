@@ -16,6 +16,11 @@
 #ifndef ROO_COMPLEX
 #define ROO_COMPLEX
 
+#if !defined(ROO_MATH) && !defined(ROO_COMPLEX_CXX) && !defined(__CINT__) && \
+    !defined(R__DICTIONARY_FILENAME)
+#warning "RooComplex is deprecated, use std::complex instead!"
+#endif
+
 #include <math.h>
 #include "Rtypes.h"
 #include "Riosfwd.h"
@@ -28,9 +33,10 @@
 
 class RooComplex {
 public:
-  inline RooComplex(Double_t a=0, Double_t b=0) : _re(a), _im(b) { }
-  virtual ~RooComplex() {} ;
+  inline RooComplex(Double_t a=0, Double_t b=0) : _re(a), _im(b) { warn(); }
+  virtual ~RooComplex() { }
   inline RooComplex& operator=(const RooComplex& other) {
+    warn();
     if (&other==this) return *this ;
     this->_re= other._re;
     this->_im= other._im;
@@ -94,6 +100,9 @@ public:
   void Print() const;
 private:
   Double_t _re,_im;
+
+  void warn() const;
+
   ClassDef(RooComplex,0) // a non-persistent bare-bones complex class
 };
 

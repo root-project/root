@@ -16,9 +16,12 @@
 #ifndef ROO_GEXP_MODEL
 #define ROO_GEXP_MODEL
 
+#include <cmath>
+#include <complex>
+
+#include "Rtypes.h"
 #include "RooResolutionModel.h"
 #include "RooRealProxy.h"
-#include "RooComplex.h"
 #include "RooMath.h"
 
 class RooGExpModel : public RooResolutionModel {
@@ -76,35 +79,24 @@ protected:
   //Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau) const ;
   Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau, Double_t fsign) const ;  
 	// modified FMV,08/13/03
-  RooComplex calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t omega, Double_t rtau, Double_t fsign) const ;
+  std::complex<Double_t> calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t omega, Double_t rtau, Double_t fsign) const ;
   Double_t calcSinConv(Double_t sign, Double_t sig, Double_t tau, Double_t rtau, Double_t fsign) const ;
-  RooComplex calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega, 
+  std::complex<Double_t> calcSinConvNorm(Double_t sign, Double_t tau, Double_t omega, 
 	                     Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const ; // modified FMV,07/24/03
   Double_t calcSinConvNorm(Double_t sign, Double_t tau, 
         Double_t sig, Double_t rtau, Double_t fsign, const char* rangeName) const ; // added FMV,08/18/03
   //Double_t calcSinhConv(Double_t sign, Double_t sign1, Double_t sign2, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
   //Double_t calcCoshConv(Double_t sign, Double_t tau, Double_t dgamma, Double_t sig, Double_t rtau, Double_t fsign) const ;
   virtual Double_t evaluate() const ;
-  RooComplex evalCerfApprox(Double_t swt, Double_t u, Double_t c) const ;
+  static std::complex<Double_t> evalCerfApprox(Double_t swt, Double_t u, Double_t c);
 
   // Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
-  inline RooComplex evalCerf(Double_t swt, Double_t u, Double_t c) const {
-    RooComplex z(swt*c,u+c);
-    return (z.im()>-4.0) ? RooMath::FastComplexErrFunc(z)*exp(-u*u) : evalCerfApprox(swt,u,c) ;
+  static inline std::complex<Double_t> evalCerf(Double_t swt, Double_t u, Double_t c)
+  {
+    std::complex<Double_t> z(swt*c,u+c);
+    return (z.imag()>-4.0) ? RooMath::faddeeva_fast(z)*std::exp(-u*u) : evalCerfApprox(swt,u,c) ;
   }
     
-  // Calculate Re(exp(-u^2) cwerf(swt*c + i(u+c))), taking care of numerical instabilities
-  inline Double_t evalCerfRe(Double_t swt, Double_t u, Double_t c) const {
-    RooComplex z(swt*c,u+c);
-    return (z.im()>-4.0) ? RooMath::FastComplexErrFuncRe(z)*exp(-u*u) : evalCerfApprox(swt,u,c).re() ;
-  }
-  
-  // Calculate Im(exp(-u^2) cwerf(swt*c + i(u+c))), taking care of numerical instabilities
-  inline Double_t evalCerfIm(Double_t swt, Double_t u, Double_t c) const {
-    RooComplex z(swt*c,u+c);
-    return (z.im()>-4.0) ? RooMath::FastComplexErrFuncIm(z)*exp(-u*u) : evalCerfApprox(swt,u,c).im() ;
-  }
-
   // Calculate Re(exp(-u^2) cwerf(i(u+c)))
   // added FMV, 08/17/03
   inline Double_t evalCerfRe(Double_t u, Double_t c) const {
@@ -118,7 +110,7 @@ protected:
 
   // Calculate common normalization factors 
   // added FMV,07/24/03
-  RooComplex evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
+  std::complex<Double_t> evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
   Double_t evalCerfInt(Double_t sign, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
 
   RooRealProxy sigma ;

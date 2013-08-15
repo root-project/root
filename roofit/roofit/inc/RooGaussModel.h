@@ -16,9 +16,11 @@
 #ifndef ROO_GAUSS_MODEL
 #define ROO_GAUSS_MODEL
 
+#include <cmath>
+#include <complex>
+
 #include "RooResolutionModel.h"
 #include "RooRealProxy.h"
-#include "RooComplex.h"
 #include "RooMath.h"
 
 class RooGaussModel : public RooResolutionModel {
@@ -61,28 +63,17 @@ public:
 protected:
 
   virtual Double_t evaluate() const ;
-  RooComplex evalCerfApprox(Double_t swt, Double_t u, Double_t c) const ;
+  static std::complex<Double_t> evalCerfApprox(Double_t swt, Double_t u, Double_t c);
 
   // Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
-  inline RooComplex evalCerf(Double_t swt, Double_t u, Double_t c) const {
-    RooComplex z(swt*c,u+c);
-    return (z.im()>-4.0) ? RooMath::FastComplexErrFunc(z)*exp(-u*u) : evalCerfApprox(swt,u,c) ;
+  static inline std::complex<Double_t> evalCerf(Double_t swt, Double_t u, Double_t c)
+  {
+    std::complex<Double_t> z(swt*c,u+c);
+    return (z.imag()>-4.0) ? (std::exp(-u*u)*RooMath::faddeeva_fast(z)) : evalCerfApprox(swt,u,c);
   }
     
-  // Calculate Re(exp(-u^2) cwerf(swt*c + i(u+c))), taking care of numerical instabilities
-  inline Double_t evalCerfRe(Double_t swt, Double_t u, Double_t c) const {
-    RooComplex z(swt*c,u+c);
-    return (z.im()>-4.0) ? RooMath::FastComplexErrFuncRe(z)*exp(-u*u) : evalCerfApprox(swt,u,c).re() ;
-  }
-  
-  // Calculate Im(exp(-u^2) cwerf(swt*c + i(u+c))), taking care of numerical instabilities
-  inline Double_t evalCerfIm(Double_t swt, Double_t u, Double_t c) const {
-    RooComplex z(swt*c,u+c);
-    return (z.im()>-4.0) ? RooMath::FastComplexErrFuncIm(z)*exp(-u*u) : evalCerfApprox(swt,u,c).im() ;
-  }
-
   // Calculate common normalization factors 
-  RooComplex evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const ;
+  std::complex<Double_t> evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const;
 
   Bool_t _flatSFInt ;
 

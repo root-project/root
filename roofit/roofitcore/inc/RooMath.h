@@ -19,17 +19,16 @@
 #include <cmath>
 #include <complex>
 
+#include "Rtypes.h"
+#include "TMath.h"
 #include "RooComplex.h"
 
-#include <fstream>
-
-typedef RooComplex* pRooComplex ;
-typedef Double_t* pDouble_t ;
+typedef Double_t* pDouble_t;
 
 class RooMath {
 public:
 
-  virtual ~RooMath() {} ;
+  virtual ~RooMath() {};
 
   /** @brief evaluate Faddeeva function for complex argument
    *
@@ -147,42 +146,56 @@ public:
    */
   static std::complex<double> erfc_fast(const std::complex<double> z);
 
-
-  // CERNLIB complex error function
-  static RooComplex ComplexErrFunc(Double_t re, Double_t im= 0);
-  static RooComplex ComplexErrFunc(const RooComplex& z);
-
-  // Interpolated CERF with automatic interpolation order selection
-  static RooComplex FastComplexErrFunc(const RooComplex& z) ;
-  
-  // Interpolated Re(CERF) with automatic interpolation order selection
-  static Double_t FastComplexErrFuncRe(const RooComplex& z) ;
-
-  // Interpolated Im(CERF) with automatic interpolation order selection
-  static Double_t FastComplexErrFuncIm(const RooComplex& z) ;
-
-  // Interpolated complex error function at specified interpolation order
-  static RooComplex ITPComplexErrFunc(const RooComplex& z, Int_t nOrder) ;
-  static Double_t ITPComplexErrFuncRe(const RooComplex& z, Int_t nOrder) ;
-  static Double_t ITPComplexErrFuncIm(const RooComplex& z, Int_t nOrder) ;
-
-  // Switch to use file cache for CERF lookup table
-  static void cacheCERF(Bool_t flag=kTRUE) ;
-
   // 1-D nth order polynomial interpolation routines
   static Double_t interpolate(Double_t yArr[],Int_t nOrder, Double_t x) ;
   static Double_t interpolate(Double_t xa[], Double_t ya[], Int_t n, Double_t x) ;
 
-  static Double_t erf(Double_t x) ;
-  static Double_t erfc(Double_t x) ;
+  static inline Double_t erf(Double_t x)
+  { return TMath::Erf(x); }
+
+  static inline Double_t erfc(Double_t x)
+  { return TMath::Erfc(x); }
   
-  static void cleanup() ;
-
-  // Allocate and initialize CERF lookup grid
-  static void initFastCERF(Int_t reBins= 800, Double_t reMin=-4.0, Double_t reMax=4.0, 
-			   Int_t imBins=1000, Double_t imMin=-4.0, Double_t imMax=6.0) ;
-
+  /// deprecated function
+  static RooComplex ComplexErrFunc(Double_t re, Double_t im = 0.)
+  { warn(__func__, "RooMath::faddeeva"); std::complex<Double_t> z = faddeeva(std::complex<Double_t>(re, im)); return RooComplex(z.real(), z.imag()); }
+  /// deprecated function
+  static RooComplex ComplexErrFunc(const RooComplex& zz)
+  { warn(__func__, "RooMath::faddeeva"); std::complex<Double_t> z = faddeeva(std::complex<Double_t>(zz.re(), zz.im())); return RooComplex(z.real(), z.imag()); }
+  /// deprecated function
+  static RooComplex ComplexErrFuncFast(const RooComplex& zz)
+  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return RooComplex(z.real(), z.imag()); }
+  /// deprecated function
+  static Double_t ComplexErrFuncFastRe(const RooComplex& zz)
+  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.real(); }
+  /// deprecated function
+  static Double_t ComplexErrFuncFastIm(const RooComplex& zz)
+  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.imag(); }
+  /// deprecated function
+  static RooComplex ITPComplexErrFuncFast(const RooComplex& zz, Int_t)
+  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return RooComplex(z.real(), z.imag()); }
+  /// deprecated function
+  static Double_t ITPComplexErrFuncFastRe(const RooComplex& zz, Int_t)
+  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.real(); }
+  /// deprecated function
+  static Double_t ITPComplexErrFuncFastIm(const RooComplex& zz, Int_t)
+  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.imag(); }
+  /// deprecated function
+  static void cacheCERF(Bool_t) { warn(__func__); }
+  /// deprecated function
+  static void cleanup() { warn(__func__); }
+  /// deprecated function
+  static void initFastCERF(Int_t reBins =  800, Double_t reMin = -4.0, Double_t reMax = 4.0, 
+			   Int_t imBins = 1000, Double_t imMin = -4.0, Double_t imMax = 6.0)
+  {
+    warn(__func__);
+    // silence warnings about unused variables
+    reBins = imBins = 0, reMin = reMax = imMin = imMax = 0.; reBins = reMin; reMin = reBins;
+  }
+  
 private:
+  // deprecation warnings
+  static void warn(const char* oldfun, const char* newfun = 0);
 
   ClassDef(RooMath,0) // math utility routines
 };
