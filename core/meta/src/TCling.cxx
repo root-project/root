@@ -306,6 +306,8 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
    }
 
    if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
+      // FIXME: Implement lazy TClass::GetListOfMethods, so that we don't need
+      // the that code, but rely on lookups.
       if (isDeserialized && isa<CXXMethodDecl>(FD))
          return;
       // While classes are read completely, functions in namespaces might
