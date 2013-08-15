@@ -684,7 +684,7 @@ private:
    Int_t    HandleInputMessage(TSlave *wrk, TMessage *m, Bool_t deactonfail = kFALSE);
    void     HandleSubmerger(TMessage *mess, TSlave *sl);
    void     SetMonitor(TMonitor *mon = 0, Bool_t on = kTRUE);
-   Bool_t   PollForNewWorkers();
+   Int_t    PollForNewWorkers();
 
    void     ReleaseMonitor(TMonitor *mon);
 
