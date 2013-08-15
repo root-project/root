@@ -234,7 +234,7 @@ template <typename T> struct IsPointer { enum { kVal = 0 }; };
 namespace std {}
 using namespace std;
 namespace genreflex {
-  bool verbose = true;
+  bool verbose = false;
   }
 
 #include "TClassEdit.h"
@@ -416,7 +416,9 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
    std::string declName;
    const std::string thisClassName(CXXRD.getName());
-   std::cout << "Inspecting class " << thisClassName << " for annotations\n";
+
+   if (genreflex::verbose)
+      std::cout << "Inspecting class declaration" << thisClassName << " for annotations\n";
 
    // See if the rule is a class selection rule (FIX dynamic_cast)  
    const ClassSelectionRule* thisClassSelectionRule = reinterpret_cast<const ClassSelectionRule*>(thisClassBaseSelectionRule);
