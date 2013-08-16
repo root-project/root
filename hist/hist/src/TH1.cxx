@@ -6684,9 +6684,10 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    }
    const char *hname = histName.Data();
 
-
+   TString t(GetTitle());
+   t.ReplaceAll("\\","\\\\");
    out << hname << " = new " << ClassName() << "(" << quote
-      << hname << quote << "," << quote<< GetTitle() << quote
+      << hname << quote << "," << quote<< t.Data() << quote
       << "," << GetXaxis()->GetNbins();
    if (nonEqiX)
       out << ", "<<sxaxis;

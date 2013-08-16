@@ -623,7 +623,9 @@ void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subn
 
    char quote = '"';
    if (strlen(GetTitle())) {
-      out<<"   "<<name<<subname<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
+      TString t(GetTitle());
+      t.ReplaceAll("\\","\\\\");
+      out<<"   "<<name<<subname<<"->SetTitle("<<quote<<t.Data()<<quote<<");"<<std::endl;
    }
    if (fTimeDisplay) {
       out<<"   "<<name<<subname<<"->SetTimeDisplay(1);"<<std::endl;
