@@ -2699,6 +2699,122 @@ const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
 }
 
 //______________________________________________________________________________
+namespace UNNAMED {
+   void GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const clang::Decl*> &netD, bool recurse)
+   {
+      // Get the data members that do not have a dictionary for a Decl.
+
+      // Get the name of the class
+      std::string buf;
+      if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(D)) {
+         PrintingPolicy Policy(ND->getASTContext().getPrintingPolicy());
+         llvm::raw_string_ostream stream(buf);
+         ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
+      }
+      const char* name = buf.c_str();
+
+      // Check for the dictionary of the curent class.
+      if (!gClassTable->GetDict(name)){
+         std::set<const clang::Decl*>::iterator it = netD.find(D);
+         if (it != netD.end()) return ;
+         netD.insert(D);   
+         if(!recurse) return ;
+      }
+      else return ;
+
+      if (const clang::CXXRecordDecl* RD = llvm::dyn_cast<clang::CXXRecordDecl>(D)) {
+      // Recurse for the data members.
+      for (clang::RecordDecl::field_iterator iField = RD->field_begin(),
+        eField = RD->field_end(); iField != eField; ++iField) {
+            
+               clang::QualType qualType = (*iField)->getType();
+               if (!qualType.isNull()) {
+            
+               //Repetion of code will be fixed with next commit.
+               //class 
+               if (qualType->isRecordType()) {
+                  if(clang::CXXRecordDecl* FD = qualType->getAsCXXRecordDecl()) {
+                     GetMissingDictionariesForDecl(FD, netD, recurse);
+                  }   
+               }
+               //pointer to class or to array or reference
+               if (qualType->isPointerType() || qualType->isReferenceType()) {
+                  QualType pointeeType = qualType->getPointeeType();
+                  if (pointeeType->isRecordType()) {
+                     if(clang::CXXRecordDecl* FD = pointeeType->getAsCXXRecordDecl()) {
+                     GetMissingDictionariesForDecl(FD, netD, recurse);
+                  }   
+                  }   
+                  else if(pointeeType->isArrayType()) {
+                     clang::CXXRecordDecl* FD = pointeeType->getAsCXXRecordDecl();
+                     const Type* elementType = pointeeType->getArrayElementTypeNoTypeQual();
+                     if (elementType->isRecordType()) {
+                        if(clang::CXXRecordDecl* FD = elementType->getAsCXXRecordDecl()) {
+                     GetMissingDictionariesForDecl(FD, netD, recurse);
+                  }   
+                     }            
+                  }
+               }
+               //array of class elements
+               if (qualType->isArrayType()) {
+                  const Type* elementType = qualType->getArrayElementTypeNoTypeQual();
+                  if (elementType->isRecordType()) {
+                     clang::CXXRecordDecl* FD = elementType->getAsCXXRecordDecl();
+                     GetMissingDictionariesForDecl(FD, netD, recurse);
+                  }
+               }
+            }   
+      }   
+   }
+      return ;
+   }
+}
+//______________________________________________________________________________
+std::set<TClass*> TCling::GetMissingDictionaries(TClass* cl, bool recurse /*recurse*/)
+{
+   // Get the Tclass-s that do not have a dictionary.
+
+   // Get the Decl for the class.
+   TClingClassInfo* cli = (TClingClassInfo*)cl->GetClassInfo();
+   const clang::Decl* D = cli->GetDecl();
+
+   // Get the Decls recursively for all data members of TClass cl
+
+   std::set<const clang::Decl*> netD;
+   // Convert to RecordDecl.
+   if (const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(D)) {
+      UNNAMED::GetMissingDictionariesForDecl(RD, netD, recurse);
+   }   
+
+   std::set<TClass*> classesMissingDict;
+
+   //convert set<Decl> to set<TClass>
+   for (std::set<const clang::Decl*>::const_iterator I = netD.begin(),
+           E = netD.end(); I != E; ++I) {
+      // Get name of the class.
+      std::string buf;
+      if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(*I)) {
+         PrintingPolicy Policy(ND->getASTContext().getPrintingPolicy());
+         llvm::raw_string_ostream stream(buf);
+         ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+      }
+      const char* name = buf.c_str();
+      if (TClass* clMissingDict = TClass::GetClass(name)) {
+         classesMissingDict.insert(clMissingDict);
+      } else {
+         Error("TCling::GetMissingDictionaries", "The class %s missing dictionary was not found.", name);
+      }
+   }
+
+   //return the classes the have missing dictionaries
+
+   if (netD.empty()) {
+      classesMissingDict.insert(0);
+   }   
+   return classesMissingDict;
+}
+
+//______________________________________________________________________________
 void TCling::Execute(const char* function, const char* params, int* error)
 {
    // Execute a global function with arguments params.

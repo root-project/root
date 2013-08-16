@@ -26,6 +26,8 @@
 #include "TDictionary.h"
 #endif
 
+#include <set>
+
 class TClass;
 class TEnv;
 class TFunction;
@@ -73,6 +75,7 @@ public:
    virtual const char *GetIncludePath() = 0;
    virtual const char *GetSTLIncludePath() const { return ""; }
    virtual TObjArray  *GetRootMapFiles() const = 0;
+   virtual std::set<TClass*> GetMissingDictionaries(TClass* cl, bool recurse) = 0;
    virtual void     Initialize() = 0;
    virtual void     InspectMembers(TMemberInspector&, void* obj, const TClass* cl) = 0;
    virtual Bool_t   IsLoaded(const char *filename) const = 0;
