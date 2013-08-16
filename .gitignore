@@ -334,6 +334,8 @@ cint/cint/src/loadfile_tmp.cxx
 /test/EventMTDict.h
 /test/EventMTDict.cxx
 /test/event.par
+/test/sqlitetest
+/test/testdb.sqlite
 /test/stress
 /test/stress.exe
 /test/stressEntryList

@@ -12,7 +12,10 @@
 #include "TSQLiteServer.h"
 #include "TSQLiteResult.h"
 #include "TSQLiteStatement.h"
-#include "TUrl.h"
+#include "TSQLColumnInfo.h"
+#include "TList.h"
+#include "TSQLTableInfo.h"
+#include "TSQLRow.h"
 
 ClassImp(TSQLiteServer)
 
@@ -183,26 +186,80 @@ TSQLResult *TSQLiteServer::GetTables(const char* /*dbname*/, const char *wild)
 }
 
 //______________________________________________________________________________
-TSQLResult *TSQLiteServer::GetColumns(const char* /*dbname*/, const char* /*table*/,
-      const char* /*wild*/)
+TSQLResult *TSQLiteServer::GetColumns(const char* /*dbname*/, const char* table,
+      const char* wild)
 {
    // List all columns in specified table (database argument is ignored).
    // Wild is for wildcarding "t%" list all columns starting with "t".
    // Returns a pointer to a TSQLResult object if successful, 0 otherwise.
    // The result object must be deleted by the user.
-   // For SQLite, this always fails, as the column names are not queryable!
+   // For SQLite, this fails with wildcard, as the column names are not queryable!
+   // If no wildcard is used, the result of PRAGMA table_info(table) is returned,
+   // which contains the names in field 1.
 
    if (!IsConnected()) {
       Error("GetColumns", "not connected");
       return 0;
    }
 
-   Error("GetColumns", "Not implementable for SQLite as a query, use GetFieldNames() after SELECT instead!");
+   if (wild) {
+      Error("GetColumns", "Not implementable for SQLite as a query with wildcard, use GetFieldNames() after SELECT instead!");
+      return NULL;
+   } else {
+      TString sql = Form("PRAGMA table_info('%s')", table);
+      return Query(sql);
+   }
+}
 
-   // "PRAGMA table_info (%s)", table only returns an ugly string, and
-   // this can not be used in a SELECT
+//______________________________________________________________________________
+TSQLTableInfo *TSQLiteServer::GetTableInfo(const char* tablename)
+{
+   // Produces SQL table info.
+   // Object must be deleted by user.
 
-   return NULL;
+   if (!IsConnected()) {
+      Error("GetTableInfo", "not connected");
+      return 0;
+   }
+
+   if ((tablename==0) || (*tablename==0)) return 0;
+
+   TSQLResult *columnRes = GetColumns("", tablename);
+
+   if (columnRes == NULL) {
+      Error("GetTableInfo", "could not query columns");
+      return NULL;
+   }
+
+   TList* lst = NULL;
+
+   TSQLRow *columnRow;
+
+   while ((columnRow = columnRes->Next()) != NULL) {
+      if (lst == NULL) {
+         lst = new TList();
+      }
+
+      // Field 3 is 'notnull', i.e. if it is 0, column is nullable
+      Bool_t isNullable = (strcmp(columnRow->GetField(3), "0") == 0);
+
+      lst->Add(new TSQLColumnInfo(columnRow->GetField(1), // column name
+                                  columnRow->GetField(2), // column type name
+                                  isNullable,  // isNullable defined above
+                                  -1,   // SQLite is totally free about types
+                                  -1,   // SQLite imposes no declarable size-limits
+                                  -1,   // Field length only available querying the field
+                                  -1,   // no data scale in SQLite
+                                  -1)); // SQLite does not enforce any sign(s)
+      delete columnRow;
+   }
+   delete columnRes;
+
+   // lst == NULL is ok as TSQLTableInfo accepts and handles this
+   TSQLTableInfo*  info = new TSQLTableInfo(tablename,
+                                            lst);
+
+   return info;
 }
 
 //______________________________________________________________________________
