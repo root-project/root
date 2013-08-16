@@ -37,7 +37,6 @@
 #pragma link C++ class TIterator;
 #pragma link C++ class TList-;
 #pragma link C++ class TListIter;
-#pragma link C++ class TListOfTypes+;
 #pragma link C++ class THashList;
 #pragma link C++ class TMap-;
 #pragma link C++ class TMapIter;
