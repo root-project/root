@@ -654,7 +654,7 @@ void TStreamerInfo::BuildCheck()
       // If the user has not specified a class version (this _used to_
       // always be the case when the class is Foreign) or if the user
       // has specified a version to be explicitly 1. [We can not
-      // distringuish the two cases using the information in the "on
+      // distinguish the two cases using the information in the "on
       // file" StreamerInfo.]
 
       Bool_t searchOnChecksum = kFALSE;
