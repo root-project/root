@@ -2801,7 +2801,8 @@ namespace UNNAMED {
                   }   
                   }   
                   else if(pointeeType->isArrayType()) {
-                     const Type* elementType = qualType->getArrayElementTypeNoTypeQual();
+                     clang::CXXRecordDecl* FD = pointeeType->getAsCXXRecordDecl();
+                     const Type* elementType = pointeeType->getArrayElementTypeNoTypeQual();
                      if (elementType->isRecordType()) {
                         if(clang::CXXRecordDecl* FD = elementType->getAsCXXRecordDecl()) {
                      GetMissingDictionariesForDecl(FD, netD, recurse);
