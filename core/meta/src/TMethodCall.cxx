@@ -171,7 +171,7 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinf
 }
 
 //______________________________________________________________________________
-void TMethodCall::Init(TClass *cl, const char *method, const char *params)
+void TMethodCall::Init(TClass *cl, const char *method, const char *params, Bool_t objectIsConst /* = kFALSE */)
 {
    // Initialize the method invocation environment. Necessary input
    // information: the class, method name and the parameter string
@@ -186,7 +186,7 @@ void TMethodCall::Init(TClass *cl, const char *method, const char *params)
       cl = R__FindScope(method,pos,cinfo);
       method = method+pos;
    }
-   InitImplementation(method,params,0,cl,cinfo);
+   InitImplementation(method,params,0,objectIsConst,cl,cinfo);
    gCling->ClassInfo_Delete(cinfo);
 }
 
@@ -203,14 +203,16 @@ void TMethodCall::Init(const char *function, const char *params)
    UInt_t pos = 0;
    ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    TClass *cl = R__FindScope(function,pos,cinfo);
-   InitImplementation(function+pos, params, 0, cl, cinfo);
+   InitImplementation(function+pos, params, 0, false, cl, cinfo);
    gCling->ClassInfo_Delete(cinfo);
 }
 
 //______________________________________________________________________________
 void TMethodCall::InitImplementation(const char *methodname, const char *params,
-                                     const char *proto, TClass *cl,
-                                     const ClassInfo_t *cinfo) 
+                                     const char *proto,
+                                     Bool_t objectIsConst, TClass *cl,
+                                     const ClassInfo_t *cinfo,
+                                     ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */) 
 {
    // This function implements Init and InitWithPrototype.
 
@@ -239,19 +241,19 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
 
    R__LOCKGUARD2(gClingMutex);
    if (params && params[0]) {
-      gCling->CallFunc_SetFunc(fFunc, scope, (char *)methodname, (char *)params, &fOffset);
+      gCling->CallFunc_SetFunc(fFunc, scope, (char *)methodname, (char *)params, objectIsConst, &fOffset);
    } else if (proto && proto[0]) {
-      gCling->CallFunc_SetFuncProto(fFunc, scope, (char *)methodname, (char *)proto, &fOffset);
+      gCling->CallFunc_SetFuncProto(fFunc, scope, (char *)methodname, (char *)proto, objectIsConst, &fOffset, mode);
    } else {
       // No parameters
-      gCling->CallFunc_SetFunc(fFunc, scope, (char *)methodname, "", &fOffset);
+      gCling->CallFunc_SetFuncProto(fFunc, scope, (char *)methodname, "", objectIsConst, &fOffset, mode);
    }
    
    gCling->ClassInfo_Delete(global);
 }
 
 //______________________________________________________________________________
-void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *proto)
+void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst /* = kFALSE */, ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */)
 {
    // Initialize the method invocation environment. Necessary input
    // information: the class, method name and the prototype string of
@@ -266,12 +268,12 @@ void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *
       cl = R__FindScope(method,pos,cinfo);
       method = method+pos;
    }
-   InitImplementation(method, 0, proto, cl, cinfo);
+   InitImplementation(method, 0, proto, objectIsConst, cl, cinfo, mode);
    gCling->ClassInfo_Delete(cinfo);
 }
 
 //______________________________________________________________________________
-void TMethodCall::InitWithPrototype(const char *function, const char *proto)
+void TMethodCall::InitWithPrototype(const char *function, const char *proto, ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */)
 {
    // Initialize the function invocation environment. Necessary input
    // information: the function name and the prototype string of
@@ -283,7 +285,7 @@ void TMethodCall::InitWithPrototype(const char *function, const char *proto)
    UInt_t pos = 0;
    ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    TClass *cl = R__FindScope(function,pos,cinfo);
-   InitImplementation(function+pos, 0, proto, cl, cinfo);
+   InitImplementation(function+pos, 0, proto, false, cl, cinfo, mode);
    gCling->ClassInfo_Delete(cinfo);
 }
 
