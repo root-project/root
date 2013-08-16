@@ -63,19 +63,20 @@ int check_file(const char *filename, int expected_count)
    while( f.getline(what,1000) ) {
       ++count;
       if (what[0]=='#') continue;
-      res = check_exist(what);
-      if (res) {
-         fprintf(stderr,"Failed on count == %d\n",count);
-         return res;
+      int lres = check_exist(what);
+      if (lres) {
+         fprintf(stderr,"Failed on count == %d in %s\n",count,filename);
+         res = lres;
       }
       ++found;
    }
    if (found != expected_count) {
-      fprintf(stderr,"Searched only %d typedefs (expected %d)\n",found, expected_count);
-      return 4;
+      fprintf(stderr,"Found only %d typedefs (expected %d)\n",found, expected_count);
+      if (!res)
+         res = 4;
    }
    f.close();
-   return 0;
+   return res;
 }
 
 int execTypedefList() {
