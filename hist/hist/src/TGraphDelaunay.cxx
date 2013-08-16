@@ -252,7 +252,7 @@ L1:
    if (swap) goto L1;
 
    // expand the triangles storage if needed
-   if (fNdt> fTriedSize) {
+   if (fNdt>=fTriedSize) {
       Int_t newN   = 2*fTriedSize;
       Int_t *savep = new Int_t [newN];
       Int_t *saven = new Int_t [newN];
