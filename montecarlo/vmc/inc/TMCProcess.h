@@ -75,7 +75,8 @@ enum TMCProcess
   kPCerenkov = 37,           // Cerenkov photon generation
   kPFeedBackPhoton = 38,     // Feed back photon in RICH -- ALICE specific
   kPLightReflection = 39,    // Cerenkov photon reflection
-  kPLightRefraction = 40,    // Cerenkov photon refraction
+  kPLightRefraction = 40,    // Cerenkov photon refraction or
+                             // dichroic mirror transmission
   kPSynchrotron = 41,        // synchrotron radiation generation
   kPScintillation = 42,      // scintillation
 
