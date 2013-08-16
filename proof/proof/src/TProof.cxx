@@ -1180,6 +1180,16 @@ void TProof::ParseConfigField(const char *config)
          Printf(" ---> (Reminder: this debug run makes sense only if you are running a debug version of ROOT)");
          Printf(" ");
 
+      } else if (opt.BeginsWith("igprof")) {
+
+         // IgProf profiling on master and worker. PROOF does not set the
+         // environment for you: proper environment variables (like PATH and
+         // LD_LIBRARY_PATH) should be set externally
+
+         Printf("*** Requested IgProf profiling ***");
+         TProof::AddEnvVar("PROOF_WRAPPERCMD", "igprof -d -pk -pp -t proofserv.exe -o <logfilewrk>.igprof.pp");
+         TProof::AddEnvVar("PROOF_ADDITIONALLOG", "igprof.pp*");
+
       } else if (opt.BeginsWith("workers=")) {
 
          // Request for a given number of workers (within the max) or worker
@@ -12200,8 +12210,12 @@ void TProof::SaveWorkerInfo()
 
    // Do we need to register an additional line for another log?
    TString addlogext;
+   TString addLogTag;
    if (gSystem->Getenv("PROOF_ADDITIONALLOG")) {
       addlogext = gSystem->Getenv("PROOF_ADDITIONALLOG");
+      if (addlogext == "igprof.pp*") addLogTag = "igprof";
+      else if (addlogext == "valgrind.log*") addLogTag = "valgrind";
+      else addLogTag = "+";
       if (gDebug > 0)
          Info("SaveWorkerInfo", "request for additional line with ext: '%s'",  addlogext.Data());
    }
@@ -12224,9 +12238,9 @@ void TProof::SaveWorkerInfo()
                    wrk->GetOrdinal(), logfile.Data());
       // Additional line, if required
       if (addlogext.Length() > 0) {
-         fprintf(fwrk,"%s@%s:%d %d %s %s.%s\n",
+         fprintf(fwrk,"%s@%s:%d %d %s(%s) %s.%s\n",
                      wrk->GetUser(), wrk->GetName(), wrk->GetPort(), status,
-                     wrk->GetOrdinal(), logfile.Data(), addlogext.Data());
+                     wrk->GetOrdinal(), addLogTag.Data(), logfile.Data(), addlogext.Data());
       }
 
    }
@@ -12257,6 +12271,12 @@ void TProof::SaveWorkerInfo()
       else continue;  // invalid (should not happen)
       fprintf(fwrk, "%s 2 %s %s.log\n",
               sli->GetName(), sli->GetOrdinal(), logfile.Data());
+      // Additional line, if required
+      if (addlogext.Length() > 0) {
+         fprintf(fwrk, "%s 2 %s(%s) %s.%s\n",
+                 sli->GetName(), sli->GetOrdinal(), addLogTag.Data(),
+                 logfile.Data(), addlogext.Data());
+      }
    }
 
    // Close file
