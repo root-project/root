@@ -421,9 +421,6 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
       }
    }
    
-
-   const std::string thisClassName(CXXRD.getName());
-
    if (genreflex::verbose)
       std::cout << "Inspecting class declaration" << thisClassName << " for annotations\n";
 
