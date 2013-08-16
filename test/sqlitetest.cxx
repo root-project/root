@@ -6,6 +6,7 @@
 #include "TSQLResult.h"
 #include "TSQLRow.h"
 #include "TSQLStatement.h"
+#include "TSQLTableInfo.h"
 #include "TTimeStamp.h"
 #include "TList.h"
 
@@ -181,8 +182,9 @@ int main() {
 			stmt->GetTimestamp(7, year, month, day, hour, minute, second, frac);
 			TTimeStamp ts(year,month,day,hour,minute,second);
 			TString id8;
-			id8.Form("%lu.%d", ts.GetSec(), frac);
-			std::cout << "|" << std::setw(19) << id8 << "|";
+			// Frac is in milliseconds for SQLite, thus use %3d here.
+			id8.Form("%04d-%02d-%02d %02d:%02d:%02d.%3d", year, month, day, hour, minute, second, frac);
+			std::cout << "|" << std::setw(23) << id8 << "|";
 
 			void* id9 = new unsigned char[1];
 			Long_t binSize=1;
@@ -201,6 +203,11 @@ int main() {
 		}
 	}
 	delete stmt;
+
+	// Test tableinfo:
+	std::cout << "Tableinfo:" << std::endl;
+	TSQLTableInfo *ti=serv->GetTableInfo("TESTTABLE");
+	ti->Print();
 
 	delete serv;
 
