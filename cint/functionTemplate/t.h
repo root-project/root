@@ -30,7 +30,7 @@ template <> float t::get<float>() const {
    std::cout << "called get<float>()" << std::endl;
    return 2.;}
 template <> double t::get<double>() const {
-   std::cout << "called get<double()" << std::endl;
+   std::cout << "called get<double>()" << std::endl;
    return 3.;}
 template <> void t::set<int>(int) {
    std::cout << "called set<int>()" << std::endl;
