@@ -325,7 +325,6 @@ binary_function<TObject*,TObject*,bool>::second_argument_type
 binary_function<unsigned int,unsigned int,bool>::first_argument_type
 binary_function<unsigned int,unsigned int,bool>::result_type
 binary_function<unsigned int,unsigned int,bool>::second_argument_type
-blkcnt64_t
 blkcnt_t
 blksize_t
 bool
@@ -340,18 +339,10 @@ Char_t
 CheckSecCtx_t
 ClassInfo_t
 ClassStreamerFunc_t
-clockid_t
 clock_t
 Colormap_t
 Color_t
-comparison_fn_t
-cookie_close_function_t
-cookie_io_functions_t
-cookie_read_function_t
-cookie_seek_function_t
-cookie_write_function_t
 Coord_t
-cpu_set_t
 CreateInterpreter_t
 Cursor_t
 daddr_t
@@ -411,14 +402,10 @@ Float_t
 FontH_t
 FontStruct_t
 Font_t
-fpos64_t
 fpos_t
 FreeHookFun_t
-fsblkcnt64_t
 fsblkcnt_t
-fsfilcnt64_t
 fsfilcnt_t
-fsid_t
 fstream
 FT_BBox
 FT_Bitmap
@@ -748,8 +735,6 @@ list<unsigned int>::size_type
 list<unsigned int>::_Tp_alloc_type
 list<unsigned int>::value_type
 lldiv_t
-locale_t
-loff_t
 long
 Long64_t
 long long
@@ -783,7 +768,6 @@ multimap<TObject*,TF1*>::size_type
 multimap<TObject*,TF1*>::value_type
 new_handler
 nlink_t
-off64_t
 off_t
 ofstream
 OldProofServAuthSetup_t
@@ -937,8 +921,6 @@ Pixel_t
 Pixmap_t
 PrintProgress_t
 pthread_attr_t
-pthread_barrierattr_t
-pthread_barrier_t
 pthread_condattr_t
 pthread_cond_t
 pthread_key_t
@@ -947,7 +929,6 @@ pthread_mutex_t
 pthread_once_t
 pthread_rwlockattr_t
 pthread_rwlock_t
-pthread_spinlock_t
 pthread_t
 ptrdiff_t
 quad_t
@@ -1140,7 +1121,6 @@ sigset_t
 Size3D
 size_t
 Size_t
-socklen_t
 SrvAuth_t
 SrvClup_t
 ssize_t
@@ -1204,7 +1184,6 @@ THnSparseF
 THnSparseI
 THnSparseL
 THnSparseS
-timer_t
 timespec_t
 time_t
 Time_t
@@ -1293,7 +1272,6 @@ uint_least8_t
 uintmax_t
 uintptr_t
 UInt_t
-ulong
 u_long
 ULong64_t
 ULong_t
