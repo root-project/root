@@ -23,19 +23,25 @@ END_HTML
 //#include "TClass.h"
 
 RooStats::HistFactory::Sample::Sample() : 
-  fNormalizeByTheory(false), fStatErrorActivate(false) { ; }
+  fNormalizeByTheory(false), fStatErrorActivate(false), fhNominal(), fhCountingHist(0) { ; }
 
 
 RooStats::HistFactory::Sample::Sample(std::string SampName, std::string SampHistoName, std::string SampInputFile, std::string SampHistoPath) : 
   fName( SampName ),   fInputFile( SampInputFile), 
   fHistoName( SampHistoName ), fHistoPath( SampHistoPath ),
-  fNormalizeByTheory(true), fStatErrorActivate(false)  { ; }
+  fNormalizeByTheory(true), fStatErrorActivate(false), fhNominal(),
+  fhCountingHist(0) { ; }
 
 RooStats::HistFactory::Sample::Sample(std::string SampName) : 
   fName( SampName ),   fInputFile( "" ), 
   fHistoName( "" ), fHistoPath( "" ),
-  fNormalizeByTheory(true), fStatErrorActivate(false)  { ; }
+  fNormalizeByTheory(true), fStatErrorActivate(false),fhNominal(),
+  fhCountingHist(0) { ; }
 
+RooStats::HistFactory::Sample::~Sample() {
+  if(fhCountingHist)
+    delete fhCountingHist;
+}
 
 TH1* RooStats::HistFactory::Sample::GetHisto()  {
   TH1* histo = (TH1*) fhNominal.GetObject();
@@ -88,12 +94,15 @@ void RooStats::HistFactory::Sample::SetValue( Double_t val ) {
   std::string SampleHistName = fName + "_hist";
   
   // Histogram has 1-bin (hard-coded)
-  TH1F* hSample = new TH1F( SampleHistName.c_str(), SampleHistName.c_str(), 1, 0, 1 );
-  hSample->SetBinContent( 1, val );
+  if(fhCountingHist)
+    delete fhCountingHist;
+  
+  fhCountingHist = new TH1F( SampleHistName.c_str(), SampleHistName.c_str(), 1, 0, 1 );
+  fhCountingHist->SetBinContent( 1, val );
 
   // Set the histogram of the internally held data
   // node of this channel to this newly created histogram
-  SetHisto( hSample );
+  SetHisto( fhCountingHist );
 
 }
 

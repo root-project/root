@@ -17,6 +17,7 @@
 #include <iostream>
 
 #include "TRef.h"
+#include "TH1.h"
 #include "RooStats/HistFactory/Systematics.h"
 
 namespace RooStats{
@@ -30,7 +31,7 @@ public:
   Sample();
   Sample(std::string Name);
   Sample(std::string Name, std::string HistoName, std::string InputFile, std::string HistoPath="");
-
+  ~Sample();
 
   void Print(std::ostream& = std::cout);  
   void PrintXML( std::ofstream& xml );
@@ -145,6 +146,7 @@ protected:
 
   // The Nominal Shape
   TRef fhNominal;
+  TH1* fhCountingHist;
 
 };
 
