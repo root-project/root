@@ -186,13 +186,14 @@ public: // Public Interface
    void    UpdateListOfDataMembers(TClass* cl) const;
    void    UpdateListOfEnums(TClass* cl) const;
 
-   TString GetMangledName(TClass* cl, const char* method, const char* params);
-   TString GetMangledNameWithPrototype(TClass* cl, const char* method, const char* proto);
-   void*   GetInterfaceMethod(TClass* cl, const char* method, const char* params);
-   void*   GetInterfaceMethodWithPrototype(TClass* cl, const char* method, const char* proto);
+   TString GetMangledName(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
+   TString GetMangledNameWithPrototype(TClass* cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   void*   GetInterfaceMethod(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
+   void*   GetInterfaceMethodWithPrototype(TClass* cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    const char* GetInterpreterTypeName(const char* name, Bool_t full = kFALSE);
    void    Execute(const char* function, const char* params, int* error = 0);
    void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, int* error = 0);
+   void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, Bool_t objectIsConst, int* error = 0);
    void    Execute(TObject* obj, TClass* cl, TMethod* method, TObjArray* params, int* error = 0);
    Long_t  ExecuteMacro(const char* filename, EErrorCode* error = 0);
    void    RecursiveRemove(TObject* obj);
@@ -261,8 +262,10 @@ public: // Public Interface
    virtual void   CallFunc_SetArgArray(CallFunc_t* func, Long_t* paramArr, Int_t nparam) const;
    virtual void   CallFunc_SetArgs(CallFunc_t* func, const char* param) const;
    virtual void   CallFunc_SetFunc(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* params, Long_t* Offset) const;
+   virtual void   CallFunc_SetFunc(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* params, bool objectIsConst, Long_t* Offset) const;
    virtual void   CallFunc_SetFunc(CallFunc_t* func, MethodInfo_t* info) const;
-   virtual void   CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, Long_t* Offset) const;
+   virtual void   CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, Long_t* Offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
+   virtual void   CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const char* proto, bool objectIsConst, Long_t* Offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
 
    // ClassInfo interface
    virtual Long_t ClassInfo_ClassProperty(ClassInfo_t* info) const;
@@ -273,7 +276,7 @@ public: // Public Interface
    virtual ClassInfo_t*  ClassInfo_Factory() const;
    virtual ClassInfo_t*  ClassInfo_Factory(ClassInfo_t* cl) const;
    virtual ClassInfo_t*  ClassInfo_Factory(const char* name) const;
-   virtual int    ClassInfo_GetMethodNArg(ClassInfo_t* info, const char* method, const char* proto) const;
+   virtual int    ClassInfo_GetMethodNArg(ClassInfo_t* info, const char* method, const char* proto, Bool_t objectIsConst = false, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    virtual bool   ClassInfo_HasDefaultConstructor(ClassInfo_t* info) const;
    virtual bool   ClassInfo_HasMethod(ClassInfo_t* info, const char* name) const;
    virtual void   ClassInfo_Init(ClassInfo_t* info, const char* funcname) const;
@@ -282,7 +285,8 @@ public: // Public Interface
    virtual bool   ClassInfo_IsEnum(const char* name) const;
    virtual bool   ClassInfo_IsLoaded(ClassInfo_t* info) const;
    virtual bool   ClassInfo_IsValid(ClassInfo_t* info) const;
-   virtual bool   ClassInfo_IsValidMethod(ClassInfo_t* info, const char* method, const char* proto, Long_t* offset) const;
+   virtual bool   ClassInfo_IsValidMethod(ClassInfo_t* info, const char* method, const char* proto, Long_t* offset, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const;
+   virtual bool   ClassInfo_IsValidMethod(ClassInfo_t* info, const char* method, const char* proto, Bool_t objectIsConst, Long_t* offset, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const;
    virtual int    ClassInfo_Next(ClassInfo_t* info) const;
    virtual void*  ClassInfo_New(ClassInfo_t* info) const;
    virtual void*  ClassInfo_New(ClassInfo_t* info, int n) const;

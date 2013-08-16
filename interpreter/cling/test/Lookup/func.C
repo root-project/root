@@ -85,6 +85,11 @@ public:
    void B_j(int vi, double vd) { int x = vi; double y = vd; }
    template <class T> void B_k(T v) { T x = v; }
    void B_m(const int& v) { int y = v; }
+   const long &B_n() const { return m_B_i; }
+   long &B_n() { return m_B_i; }
+   const long &B_o() const { return m_B_i; }
+   long B_p(float) const { return 0; }
+   int B_p(int) { return 0; }
    void* operator new(std::size_t sz) { return ::operator new(sz); }
    void* operator new(std::size_t sz, void* arena) { return arena; }
    void* operator new[](std::size_t sz) { return ::operator new[](sz); }
@@ -844,8 +849,6 @@ func_B_k2_proto->print(llvm::errs());
 //CHECK-NEXT:     double x = v;
 //CHECK-NEXT: }
 
-
-
 //
 //  Test finding a member function taking a const int reference arg in a base class.
 //
@@ -868,6 +871,99 @@ func_B_m_proto->print(llvm::errs());
 //CHECK-NEXT: }
 
 
+//
+//  Test finding a member function that const or not
+//
+
+const clang::FunctionDecl* func_B_n_args = lookup.findFunctionArgs(class_A, "B_n", "", false);
+const clang::FunctionDecl* func_B_n_proto = lookup.findFunctionProto(class_A, "B_n", "", false);
+
+printf("func_B_n_args: 0x%lx\n", (unsigned long) func_B_n_args);
+//CHECK: func_B_n_args: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_n_args->print(llvm::errs());
+//CHECK-NEXT: long &B_n() {
+//CHECK-NEXT:     return this->m_B_i;
+//CHECK-NEXT: }
+
+printf("func_B_n_proto: 0x%lx\n", (unsigned long) func_B_n_proto);
+//CHECK: func_B_n_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+func_B_n_proto->print(llvm::errs());
+//CHECK-NEXT: long &B_n() {
+//CHECK-NEXT:     return this->m_B_i;
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_const_B_n_args = lookup.findFunctionArgs(class_A, "B_n", "", true);
+const clang::FunctionDecl* func_const_B_n_proto = lookup.findFunctionProto(class_A, "B_n", "", true);
+printf("func_const_B_n_args: 0x%lx\n", (unsigned long) func_const_B_n_args);
+//CHECK: func_const_B_n_args: 0x{{[1-9a-f][0-9a-f]*$}}
+func_const_B_n_args->print(llvm::errs());
+//CHECK-NEXT: const long &B_n() const {
+//CHECK-NEXT:     return this->m_B_i;
+//CHECK-NEXT: }
+
+printf("func_const_B_n_proto: 0x%lx\n", (unsigned long) func_const_B_n_proto);
+//CHECK: func_const_B_n_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+func_const_B_n_proto->print(llvm::errs());
+//CHECK-NEXT: const long &B_n() const {
+//CHECK-NEXT:     return this->m_B_i;
+//CHECK-NEXT: }
+
+const clang::FunctionDecl* func_const_B_m_proto = lookup.findFunctionProto(class_A, "B_m", "const int&", true);
+const clang::FunctionDecl* func_const_B_o_proto = lookup.findFunctionProto(class_A, "B_o", "", true);
+printf("func_const_B_m_proto: 0x%lx\n", (unsigned long) func_const_B_m_proto);
+//CHECK: func_const_B_m_proto: 0x0
+
+printf("func_const_B_o_proto: 0x%lx\n", (unsigned long) func_const_B_o_proto);
+//CHECK: func_const_B_o_proto: 0x{{[1-9a-f][0-9a-f]*$}}
+func_const_B_o_proto->print(llvm::errs());
+//CHECK-NEXT: const long &B_o() const {
+//CHECK-NEXT:     return this->m_B_i; 
+//CHECK-NEXT: }
+
+// Test exact matches
+const clang::FunctionDecl* func_const_B_p_proto = lookup.findFunctionProto(class_A, "B_p", "double", true);
+printf("func_const_B_p_proto 1: 0x%lx\n", (unsigned long) func_const_B_p_proto);
+//CHECK: func_const_B_p_proto 1: 0x{{[1-9a-f][0-9a-f]*$}}
+func_const_B_p_proto->print(llvm::errs());
+//CHECK-NEXT: long B_p(float) const {
+//CHECK-NEXT:     return 0; 
+//CHECK-NEXT: }
+
+func_const_B_p_proto = lookup.matchFunctionProto(class_A, "B_p", "double", true);
+printf("func_const_B_p_proto 2: 0x%lx\n", (unsigned long) func_const_B_p_proto);
+//CHECK: func_const_B_p_proto 2: 0x0
+
+func_const_B_p_proto = lookup.matchFunctionProto(class_A, "B_p", "float", true);
+printf("func_const_B_p_proto 3: 0x%lx\n", (unsigned long) func_const_B_p_proto);
+//CHECK: func_const_B_p_proto 3: 0x{{[1-9a-f][0-9a-f]*$}}
+func_const_B_p_proto->print(llvm::errs());
+//CHECK-NEXT: long B_p(float) const {
+//CHECK-NEXT:     return 0; 
+//CHECK-NEXT: }
+
+func_const_B_p_proto = lookup.matchFunctionProto(class_A, "B_p", "float", false);
+printf("func_const_B_p_proto 4: 0x%lx\n", (unsigned long) func_const_B_p_proto);
+//CHECK: func_const_B_p_proto 4: 0x0
+
+func_const_B_p_proto = lookup.matchFunctionProto(class_A, "B_p", "int", false);
+printf("func_const_B_p_proto 5: 0x%lx\n", (unsigned long) func_const_B_p_proto);
+//CHECK: func_const_B_p_proto 5: 0x{{[1-9a-f][0-9a-f]*$}}
+func_const_B_p_proto->print(llvm::errs());
+//CHECK-NEXT: int B_p(int) {
+//CHECK-NEXT:     return 0; 
+//CHECK-NEXT: }
+
+func_const_B_p_proto = lookup.matchFunctionProto(class_A, "B_p", "int", true);
+printf("func_const_B_p_proto 6: 0x%lx\n", (unsigned long) func_const_B_p_proto);
+//CHECK: func_const_B_p_proto 6: 0x0
+
+func_const_B_p_proto = lookup.matchFunctionProto(class_A, "B_p", "short", false);
+printf("func_const_B_p_proto 6: 0x%lx\n", (unsigned long) func_const_B_p_proto);
+//CHECK: func_const_B_p_proto 6: 0x0
+
+func_const_B_p_proto = lookup.matchFunctionProto(class_A, "B_p", "long", false);
+printf("func_const_B_p_proto 6: 0x%lx\n", (unsigned long) func_const_B_p_proto);
+//CHECK: func_const_B_p_proto 6: 0x0
 
 //
 //  Test finding constructors.

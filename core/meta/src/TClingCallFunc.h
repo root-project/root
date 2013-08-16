@@ -28,6 +28,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TClingMethodInfo.h"
+#include "TClingClassInfo.h"
 
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "cling/Interpreter/StoredValueRef.h"
@@ -48,7 +49,6 @@ namespace llvm {
 class Function;
 }
 
-class TClingClassInfo;
 class TInterpreterValue;
 
 class TClingCallFunc {
@@ -168,8 +168,10 @@ public:
    void                SetArgArray(long *argArr, int narg);
    void                SetArgs(const char *args);
    void                SetFunc(const TClingClassInfo *info, const char *method, const char *arglist, long *poffset);
+   void                SetFunc(const TClingClassInfo *info, const char *method, const char *arglist, bool objectIsConst, long *poffset);
    void                SetFunc(const TClingMethodInfo *info);
-   void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, long *poffset);
+   void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, bool objectIsConst, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void                Init(const clang::FunctionDecl *);
    void                Invoke(cling::StoredValueRef* result = 0) const;
 };

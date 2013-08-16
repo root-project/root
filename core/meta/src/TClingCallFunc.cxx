@@ -66,6 +66,8 @@
 #include <string>
 #include <vector>
 
+using namespace ROOT;
+
 // This ought to be declared by the implementer .. oh well...
 extern void unresolvedSymbol();
 
@@ -556,7 +558,7 @@ void TClingCallFunc::CodeGenDecl(const clang::FunctionDecl* FD) {
    CO.DynamicScoping = 0;
    CO.Debug = 0;
    CO.CodeGeneration = 1;
-   
+
    cling::Transaction T(CO, FD->getASTContext());
 
    T.append(const_cast<clang::FunctionDecl*>(FD));
@@ -958,6 +960,14 @@ void TClingCallFunc::SetArgs(const char *params)
 void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method,
                              const char* arglist, long* poffset)
 {
+   SetFunc(info,method,arglist,false,poffset);
+}
+
+void TClingCallFunc::SetFunc(const TClingClassInfo* info,
+                             const char* method,
+                             const char* arglist,  bool objectIsConst, 
+                             long* poffset)
+{
    delete fMethod;
    fMethod = new TClingMethodInfo(fInterp);
    fEEFunc = 0;
@@ -974,7 +984,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method,
       // CINT accepted a single right paren as meaning no arguments.
       arglist = "";
    }
-   *fMethod = info->GetMethodWithArgs(method, arglist, poffset);
+   *fMethod = info->GetMethodWithArgs(method, arglist, objectIsConst, poffset);
    if (!fMethod->IsValid()) {
       //Error("TClingCallFunc::SetFunc", "Could not find method %s(%s)", method,
       //      arglist);
@@ -1010,7 +1020,19 @@ void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
                                   const char *method, const char *proto,
-                                  long *poffset)
+                                  long *poffset,
+                                  EFunctionMatchMode mode /* = kConversionMatch */
+                                  )
+{
+   SetFuncProto(info,method,proto,false,poffset, mode);
+}
+
+void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
+                                  const char *method, const char *proto,
+                                  bool objectIsConst,
+                                  long *poffset,
+                                  EFunctionMatchMode mode /* =kConversionMatch */
+                                  )
 {
    delete fMethod;
    fMethod = new TClingMethodInfo(fInterp);
@@ -1024,7 +1046,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
       Error("TClingCallFunc::SetFuncProto", "Class info is invalid!");
       return;
    }
-   *fMethod = info->GetMethod(method, proto, poffset);
+   *fMethod = info->GetMethod(method, proto, objectIsConst, poffset, mode);
    if (!fMethod->IsValid()) {
       //Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
       //      method, proto);
