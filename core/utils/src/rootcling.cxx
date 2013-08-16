@@ -357,7 +357,7 @@ void AnnotateFieldDecl(clang::NamedDecl& decl,
    std::string varName;
    for(std::list<VariableSelectionRule>::const_iterator it = fieldSelRules.begin();
        it != fieldSelRules.end(); ++it){
-      it->GetAttributeValue("name",varName);
+      if ( ! it->GetAttributeValue("name",varName)) continue;
       if (declName == varName){ // we have the rule!
          // Let's extract the attributes
          BaseSelectionRule::AttributesMap_t attrMap( it->GetAttributes() );
@@ -370,7 +370,7 @@ void AnnotateFieldDecl(clang::NamedDecl& decl,
             if (name == "transient" && value == "true") // special case
                userDefinedProperty="//!";
             else
-               userDefinedProperty=name+"@@@"+value;
+               userDefinedProperty=name+ROOT::TMetaUtils::PropertyNameValSeparator+value;
             std::cout << varName << " " << userDefinedProperty << std::endl;
             decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, userDefinedProperty));
          }
@@ -394,8 +394,14 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
    SourceRange commentRange;
 
+   std::string declName;
+   const std::string thisClassName(CXXRD.getName());
+
+   if (genreflex::verbose)
+      std::cout << "Inspecting class declaration" << thisClassName << " for annotations\n";
+
    // Fetch the selection rule associated to this class
-   clang::Decl* declBaseClassPtr = static_cast<clang::Decl*>(&CXXRD);   
+   clang::Decl* declBaseClassPtr = static_cast<clang::Decl*>(&CXXRD);
    const BaseSelectionRule* thisClassBaseSelectionRule (selectionRules.IsDeclSelected(declBaseClassPtr));
    BaseSelectionRule::AttributesMap_t attrMap;
    // If the rule is there
@@ -407,12 +413,14 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
       std::string userDefinedProperty;
       for(iter = attrMap.begin();iter!=attrMap.end();iter++){
          const std::string& name = iter->first;
-         if (name == "name") continue; 
+         if (name == "name") continue;
          const std::string& value = iter->second;
-         userDefinedProperty=name+"@@@"+value;
+         userDefinedProperty=name+ROOT::TMetaUtils::PropertyNameValSeparator+value;
+         if (genreflex::verbose) std::cout << " * " << userDefinedProperty << std::endl;
          CXXRD.addAttr(new (C) AnnotateAttr(commentRange, C, userDefinedProperty));
       }
    }
+   
 
    const std::string thisClassName(CXXRD.getName());
 
@@ -434,8 +442,9 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          SourceLocation maybeMacroLoc = (*I)->getLocation();
          bool isClassDefMacro = maybeMacroLoc.isMacroID() && S.findMacroSpelling(maybeMacroLoc, "ClassDef");
          if (isClassDefMacro) {
-            while (isa<NamedDecl>(*I) && cast<NamedDecl>(*I)->getName() != "DeclFileLine") // FIXME Why While?
+            while (isa<NamedDecl>(*I) && cast<NamedDecl>(*I)->getName() != "DeclFileLine") {
                ++I;
+            }
          }
 
          comment = ROOT::TMetaUtils::GetComment(**I, &commentSLoc);
@@ -3273,6 +3282,7 @@ int RootCling(int argc,
    (*dictHdrOut) << "#define G__DICTIONARY\n";
    (*dictHdrOut) << "#include \"RConfig.h\"\n"
                  << "#include \"TClass.h\"\n"
+                 << "#include \"TClassAttributeMap.h\"\n"
                  << "#include \"TInterpreter.h\"\n"
                  << "#include \"TROOT.h\"\n"
                  << "#include \"TBuffer.h\"\n"

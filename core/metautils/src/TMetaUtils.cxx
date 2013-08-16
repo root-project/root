@@ -1085,6 +1085,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
       }
    }
 
+
+
+   
    //--------------------------------------------------------------------------
    // Process the read raw rules
    //--------------------------------------------------------------------------
@@ -1284,9 +1287,43 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
       // Now manipulate tclass in order to percolate the properties expressed as
       // annotations of the decls.
       std::string manipString;
-      
+      std::size_t substrFound;
+      std::string attribute_s;
+      const int separatorLength(ROOT::TMetaUtils::PropertyNameValSeparator.size());
       // Class properties
-      // To be filled when the TClass interface allows this
+      bool attrMapExtracted = false;
+      if (decl->hasAttrs()){
+         // Loop on the attributes
+         for (clang::Decl::attr_iterator attrIt = decl->attr_begin();
+              attrIt!=decl->attr_end();++attrIt){
+            // Extract name
+            clang::AnnotateAttr* annAttr = clang::dyn_cast<clang::AnnotateAttr>(*attrIt);
+            if (!annAttr) continue;
+            attribute_s = annAttr->getAnnotation();
+            // if separator found, extract name and value
+            substrFound = attribute_s.find(ROOT::TMetaUtils::PropertyNameValSeparator);
+            if (substrFound==std::string::npos) continue;
+            size_t EndPart1 = attribute_s.find_first_of(ROOT::TMetaUtils::PropertyNameValSeparator)  ;          
+            std::string attrName (attribute_s.substr(0, EndPart1));
+            std::string attrValue (attribute_s.substr(EndPart1 + separatorLength));
+            // A general property
+            // 1) We need to create the property map (in the gen code)
+            // 2) we need to take out the map (in the gen code)
+            // 3) We need to bookkep the fact that the map is created and out (in this source)
+            // 4) We fill the map (in the gen code)
+            if (!attrMapExtracted){
+               manipString+="      theClass->CreateAttributeMap();\n";
+               manipString+="      TClassAttributeMap* attrMap( theClass->GetAttributeMap() );\n";
+               attrMapExtracted=true;
+            }
+            // If not an int, transform it in a string (for the gen code)
+            if (!ROOT::TMetaUtils::IsInt(attrValue)){
+               attrValue = "\""+attrValue+"\"";
+            }
+
+            manipString+="      attrMap->AddProperty(\""+attrName +"\","+attrValue+");\n";
+         }         
+      } // end of class has properties
 
       // Member properties
       // NOTE: Only transiency propagated
@@ -1298,18 +1335,19 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
             && (clang::isa<clang::FieldDecl>(*internalDeclIt) ||
                 clang::isa<clang::VarDecl>(*internalDeclIt)))) continue; // Check if it's a var or a field
          // Now let's check the attributes of the var/field
+         if (!internalDeclIt->hasAttrs()) continue;
          for (clang::Decl::attr_iterator attrIt = internalDeclIt->attr_begin();
               attrIt!=internalDeclIt->attr_end();++attrIt){
             // Convert the attribute to AnnotateAttr if possible
             clang::AnnotateAttr* annAttr = clang::dyn_cast<clang::AnnotateAttr>(*attrIt);
             if (!annAttr) continue;
             // Let's see if it's a transient attribute
-            std::string attribute_s (annAttr->getAnnotation());
-            std::string attributeNoSpaces_s (attribute_s);         
+            attribute_s = annAttr->getAnnotation();
+            std::string attributeNoSpaces_s (attribute_s);
             std::remove(attributeNoSpaces_s.begin(), attributeNoSpaces_s.end(), ' ');
             // 1) Let's see if it's a //!
-            std::size_t found = attributeNoSpaces_s.find("//!");
-            if (found != 0) continue;
+            substrFound = attributeNoSpaces_s.find("//!");
+            if (substrFound != 0) continue;
             // 2) Add the modification lines to the manipString.
             //    Get the TDataMamber and then set it Transient
             clang::NamedDecl* namedInternalDecl = clang::dyn_cast<clang::NamedDecl> (*internalDeclIt);
@@ -1326,10 +1364,10 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
       } // End loop on internal declarations
       
          
-         finalString << "   static void " << mappedname << "_TClassManip(TClass* " << (manipString.empty() ? "":"theClass") << "){\n"
+      finalString << "   static void " << mappedname << "_TClassManip(TClass* " << (manipString.empty() ? "":"theClass") << "){\n"
                   << manipString
                   << "   }\n\n";
-   }
+   } // End of !ClassInfo__HasMethod(decl,"Dictionary") || R__IsTemplate(*decl)) 
 
    finalString << "} // end of namespace ROOT" << "\n" << "\n";
 }
