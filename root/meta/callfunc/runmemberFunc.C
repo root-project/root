@@ -42,15 +42,12 @@ void runAllThroughTInterpreterInterfaces() {
    tagX = TClass::GetClass("A")->GetClassInfo();
    // Create an instance of A in memory
    gInterpreter->CallFunc_SetFuncProto(tagXCtor, tagX, "A", "", &offset);
-   // FIXME: Who should be deleting that?
+   // The interpreter owns temporaries, don't delete.
    tagXAddr = (void*)gInterpreter->CallFunc_ExecInt(tagXCtor, /*address*/(void*)0);
 
    // Run A::inlineNoArgsNoReturn()
    gInterpreter->CallFunc_SetFuncProto(mc, tagX, "inlineNoArgsNoReturn", "", &offset);
    gInterpreter->CallFunc_Exec(mc, tagXAddr);
-
-   // Done with class A now destroy it
-   gInterpreter->ClassInfo_Delete(tagX, tagXAddr);
 
    // Run A::outlinedNoArgsNoReturn()
    gInterpreter->CallFunc_SetFuncProto(mc, tagX, "outlinedNoArgsNoReturn", "", &offset);
@@ -60,7 +57,6 @@ void runAllThroughTInterpreterInterfaces() {
    // Cleanup
    gInterpreter->CallFunc_Delete(mc);
    gInterpreter->CallFunc_Delete(tagXCtor);
-   gInterpreter->ClassInfo_Delete(tagX);
 }
 
 #include "TMethodCall.h"
