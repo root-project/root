@@ -1146,8 +1146,6 @@ terminate_handler
 Text_t
 TFitEditor::FuncParams_t
 TFormLeafInfoReference::Proxy
-#TFunc2void::funcptr_and_voidptr::funcptr_t
-#TFunc2void::funcptr_t
 TGenCollectionProxy::ArrIterfunc_t
 TGenCollectionProxy::Collectfunc_t
 TGenCollectionProxy::EnvironBase_t
