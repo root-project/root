@@ -2,14 +2,17 @@
 
 class Holder {
    int fValue;
+   static const int fConfig;
 public:
    int data() const { return fValue; }
    int& data() { return fValue; }
    int const_only() const { return fValue; }
    int& value() { return fValue; }
+
+   static const int& config() { return fConfig; }
 };
 
-
+const int Holder::fConfig = 3;
 
 #include "TClass.h"
 #include "TMethod.h"
@@ -78,6 +81,26 @@ int execConstMethod()
    m = cl->GetMethod("value","",true);
    if (m) {
       fprintf(stderr,"Found a const version of the value method!. Got return type as: %s\n",m->GetReturnTypeName());
+      return 1;
+   }
+
+   m = cl->GetMethod("config","");
+   if (!m) {
+      fprintf(stderr,"Could not find the static method config with a non const search\n");
+      return 1;
+   }
+   if (strcmp(m->GetReturnTypeName(),"const int&")!=0) {
+      fprintf(stderr,"Did not find the non-const version of data. Got return type as: %s\n",m->GetReturnTypeName());
+      return 1;
+   }
+   
+   m = cl->GetMethod("config","",true);
+   if (!m) {
+      fprintf(stderr,"Could not find the static method config with a const search\n");
+      return 1;
+   }
+   if (strcmp(m->GetReturnTypeName(),"const int&")!=0) {
+      fprintf(stderr,"Did not find the const version of data. Got return type as: %s\n",m->GetReturnTypeName());
       return 1;
    }
 
