@@ -1539,6 +1539,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       PyObject* pya2 = BufFac_t::Instance()->PyBuffer_FromMemory( &a2,  1 );
       PyObject* pya3 = BufFac_t::Instance()->PyBuffer_FromMemory(  a3, -1 ); // size unknown
 
+      if ( ! (pya0 && pya1 && pya2 && pya3) ) {
+         Py_XDECREF( pya3 ); Py_XDECREF( pya2 ); Py_XDECREF( pya1 ); Py_XDECREF( pya0 );
+         return;
+      }
+
    // perform actual call
       PyObject* result = PyObject_CallFunction(
          pyfunc, (char*)"OOOOi", pya0, pya1, pya2, pya3, a4 );
@@ -1806,7 +1811,7 @@ namespace {
          const MethodProxy::Methods_t& methods = method->fMethodInfo->fMethods;
          for ( MethodProxy::Methods_t::const_iterator im = methods.begin(); im != methods.end(); ++im ) {
              PyObject* sig = (*im)->GetSignature();
-             if ( strstr( PyROOT_PyUnicode_AsString( sig ), "Double_t&" ) ) {
+             if ( sig && strstr( PyROOT_PyUnicode_AsString( sig ), "Double_t&" ) ) {
              // the comparison was not exact, but this is just a workaround
                 setFCN = *im;
                 Py_DECREF( sig );
@@ -1814,6 +1819,8 @@ namespace {
              }
              Py_DECREF( sig );
          }
+         if ( ! setFCN )     // this never happens but Coverity insists; it can be
+            return 0;        // removed with the workaround in due time
       // END CLING WORKAROUND
 
       // build new argument array
