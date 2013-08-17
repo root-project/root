@@ -412,7 +412,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    // or do the following silly thing:
    TString proto;
    for(j=0; j<nargs; j++) {
-      proto += "0.0,";
+      proto += "double,";
    }
    if (nargs) proto.Remove(proto.Length()-1);
 
@@ -420,9 +420,9 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    TClass *ns = (spaceName.Length()) ? TClass::GetClass(spaceName) : 0;
    TMethodCall *method = new TMethodCall();
    if (ns) {
-      method->Init(ns,functionName,proto);
+      method->InitWithPrototype(ns,functionName,proto,false,ROOT::kConversionMatch);
    } else {
-      method->Init(functionName,proto);
+      method->InitWithPrototype(functionName,proto,ROOT::kConversionMatch);
    }
 
    if (method->IsValid()) {
