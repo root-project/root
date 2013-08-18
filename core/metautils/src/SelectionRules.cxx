@@ -206,38 +206,67 @@ bool SelectionRules::GetHasFileNameRule() const
 
 void SelectionRules::SetDeep(bool deep)
 {
-   fIsDeep = deep;
-   if (fIsDeep) {
-      long count = 0;
-      if (!fClassSelectionRules.empty()) {
-         count = fClassSelectionRules.rbegin()->GetIndex() + 1;
-      }
-      ClassSelectionRule csr(count++, fInterp);
-      csr.SetAttributeValue("pattern", "*");
-      csr.SetSelected(BaseSelectionRule::kYes);
-      AddClassSelectionRule(csr);
-      
-      ClassSelectionRule csr2(count++, fInterp);
-      csr2.SetAttributeValue("pattern", "*::*");
-      csr2.SetSelected(BaseSelectionRule::kYes);
-      AddClassSelectionRule(csr2);
-      
-      
-      // Should I disable the built-in (automatically generated) structs/classes?
-      ClassSelectionRule csr3(count++, fInterp);
-      csr3.SetAttributeValue("pattern", "__va_*"); // <built-in> 
-      csr3.SetSelected(BaseSelectionRule::kNo);
-      AddClassSelectionRule(csr3);
+
+   fIsDeep=deep;
+   if (!fIsDeep) return; // the adventure stops here
+   // if no selection rules, nothing to go deep into
+   if (fClassSelectionRules.empty()) return;
+   // Get index of the last selection rule
+   long count = fClassSelectionRules.rbegin()->GetIndex() + 1;
+   // Deep for classes
+   // Loop on rules. If name or pattern exist, add a {pattern,name}* rule to go deep
+   std::string patternString;
+   for (std::list<ClassSelectionRule>::iterator classRuleIt = fClassSelectionRules.begin();
+        classRuleIt != fClassSelectionRules.end(); classRuleIt++){
+       if (classRuleIt->HasAttributeWithName("pattern") &&
+           classRuleIt->GetAttributeValue("pattern",patternString)){
+          // If the pattern already does not end with *
+          if (patternString.find_last_of("*")!=patternString.size()-1){
+             ClassSelectionRule csr(count++, fInterp);
+             csr.SetAttributeValue("pattern", patternString+"*");
+             csr.SetSelected(BaseSelectionRule::kYes);
+             AddClassSelectionRule(csr);
+          }
+       }
+       if (classRuleIt->HasAttributeWithName("name") &&
+           classRuleIt->GetAttributeValue("name",patternString)){
+           ClassSelectionRule csr(count++, fInterp);
+           csr.SetAttributeValue("pattern", patternString+"*");
+           csr.SetSelected(BaseSelectionRule::kYes);
+           AddClassSelectionRule(csr);
+       }
+    }
+//    fIsDeep = deep;
+//    if (fIsDeep) {
+//       long count = 0;
+//       if (!fClassSelectionRules.empty()) {
+//          count = fClassSelectionRules.rbegin()->GetIndex() + 1;
+//       }
+//       ClassSelectionRule csr(count++, fInterp);
+//       csr.SetAttributeValue("pattern", "*");
+//       csr.SetSelected(BaseSelectionRule::kYes);
+//       AddClassSelectionRule(csr);
+//       
+//       ClassSelectionRule csr2(count++, fInterp);
+//       csr2.SetAttributeValue("pattern", "*::*");
+//       csr2.SetSelected(BaseSelectionRule::kYes);
+//       AddClassSelectionRule(csr2);
+//       
+//       
+//       // Should I disable the built-in (automatically generated) structs/classes?
+//       ClassSelectionRule csr3(count++, fInterp);
+//       csr3.SetAttributeValue("pattern", "__va_*"); // <built-in> 
+//       csr3.SetSelected(BaseSelectionRule::kNo);
+//       AddClassSelectionRule(csr3);
       //HasFileNameRule = true;
       
       //SetSelectionXMLFile(true);
-   }
+//    }
 }
 
 bool SelectionRules::GetDeep() const
 {
-   if (fIsDeep) return true;
-   else return false;
+   return fIsDeep;
 }
 
 const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::RecordDecl *D) const
