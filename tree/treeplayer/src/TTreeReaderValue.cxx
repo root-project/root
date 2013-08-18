@@ -274,6 +274,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
 
                   if (fDict != finalDataType && fDict != elementClass){
                      Error("CreateProxy", "Wrong data type %s", finalDataType ? finalDataType->GetName() : elementClass ? elementClass->GetName() : "UNKNOWN");
+                     fProxy = 0;
                      return;
                   }
                }
@@ -290,6 +291,8 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
             myLeaf = branch->GetLeaf(TString(leafName(1, leafName.Length())));
             if (!myLeaf){
                Error("CreateProxy()", "The tree does not have a branch, nor a sub-branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+               fProxy = 0;
+               return;
             }
             else {
                TDictionary *tempDict = TDictionary::GetDictionary(myLeaf->GetTypeName());
