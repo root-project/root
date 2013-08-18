@@ -40,7 +40,7 @@ namespace ROOT {
 
    class TNamedBranchProxy: public TObject {
    public:
-      TNamedBranchProxy(): fDict(0) {}
+      TNamedBranchProxy(): fDict(0), fContentDict(0) {}
       TNamedBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername):
          fProxy(boss, branch, membername), fDict(0), fContentDict(0) {}
 
