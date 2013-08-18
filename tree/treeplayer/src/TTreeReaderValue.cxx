@@ -251,8 +251,11 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                         }
                         else {
                            finalDataType = TDataType::GetDataType((EDataType)tempStreamerElement->GetType());
-                           if (!finalDataType){
-                              finalDataType = TDataType::GetDataType((EDataType)((TDataType*)TDictionary::GetDictionary(tempStreamerElement->GetTypeName()))->GetType());
+                           if (!finalDataType) {
+                              TDictionary* seType = TDictionary::GetDictionary(tempStreamerElement->GetTypeName());
+                              if (seType && seType->IsA() == TDataType::Class()) {
+                                 finalDataType = TDataType::GetDataType((EDataType)((TDataType*)seType)->GetType());
+                              }
                            }
                         }
 
