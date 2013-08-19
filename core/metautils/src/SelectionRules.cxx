@@ -33,7 +33,7 @@ const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type**
 
 void SelectionRules::AddClassSelectionRule(const ClassSelectionRule& classSel)
 {
-   fClassSelectionRules.push_back(classSel);
+   fClassSelectionRules.push_front(classSel);
 }
 
 bool SelectionRules::HasClassSelectionRules() const
@@ -764,11 +764,11 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
                      return 0;
                }
                else if (it->GetSelected() == BaseSelectionRule::kDontCare && !(it->HasMethodSelectionRules()) && !(it->HasFieldSelectionRules())) {
-                  
+
 #ifdef SELECTION_DEBUG
                   std::cout<<"Empty dontC returned = No"<<std::endl;
 #endif
-                  
+
                   return 0;
                }
             }
