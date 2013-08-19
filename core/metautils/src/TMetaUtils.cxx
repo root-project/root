@@ -1329,6 +1329,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
       // NOTE: Only transiency propagated
   
       // Loop on declarations inside the class, including data members
+      bool tDataMemberPtrGot=false;
       for(clang::CXXRecordDecl::decl_iterator internalDeclIt = decl->decls_begin();
           internalDeclIt != decl->decls_end(); ++internalDeclIt){
          if (!(!(*internalDeclIt)->isImplicit()
@@ -1356,7 +1357,11 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
                continue;
             };
             std::string memberName(namedInternalDecl->getName());
-            manipString+="      TDataMember* theMember = theClass->GetDataMember(\""+memberName+"\");\n"
+            if (!tDataMemberPtrGot){
+               manipString+="      TDataMember* ";
+               tDataMemberPtrGot = true;
+            }
+            manipString+="      theMember = theClass->GetDataMember(\""+memberName+"\");\n"
                          "      theMember->ResetBit(BIT(2));\n"; //FIXME: Make it less cryptic
             
 
