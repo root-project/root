@@ -430,6 +430,7 @@ bool TClingClassInfo::HasDefaultConstructor() const
       }
    }
 
+   cling::Interpreter::PushTransactionRAII pushedT(fInterp);
    for (CXXRecordDecl::ctor_iterator iter = CRD->ctor_begin(),
          end = CRD->ctor_end(); iter != end; ++iter) {
       if (iter->getAccess() == AS_public) {
