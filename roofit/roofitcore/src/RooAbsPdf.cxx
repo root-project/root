@@ -964,7 +964,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const Ro
 {
   // Fit PDF to given dataset. If dataset is unbinned, an unbinned maximum likelihood is performed. If the dataset
   // is binned, a binned maximum likelihood is performed. By default the fit is executed through the MINUIT
-  // commands MIGRAD, HESSE and MINOS in succession.
+  // commands MIGRAD, HESSE in succession.
   //
   // The following named arguments are supported
   //
@@ -1021,7 +1021,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const Ro
   // InitialHesse(Bool_t flag)      -- Flag controls if HESSE before MIGRAD as well, off by default
   // Optimize(Bool_t flag)          -- Activate constant term optimization of test statistic during minimization (on by default)
   // Hesse(Bool_t flag)             -- Flag controls if HESSE is run after MIGRAD, on by default
-  // Minos(Bool_t flag)             -- Flag controls if MINOS is run after HESSE, on by default
+  // Minos(Bool_t flag)             -- Flag controls if MINOS is run after HESSE, off by default
   // Minos(const RooArgSet& set)    -- Only run MINOS on given subset of arguments
   // Save(Bool_t flag)              -- Flac controls if RooFitResult object is produced and returned, off by default
   // Strategy(Int_t flag)           -- Set Minuit strategy (0 through 2, default is 1)
