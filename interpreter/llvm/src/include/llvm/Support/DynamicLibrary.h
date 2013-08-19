@@ -67,6 +67,8 @@ namespace sys {
     static DynamicLibrary getPermanentLibrary(const char *filename,
                                               std::string *errMsg = 0);
 
+    static DynamicLibrary addPermanentLibrary(void *handle);
+
     /// This function permanently loads the dynamic library at the given path.
     /// Use this instead of getPermanentLibrary() when you won't need to get
     /// symbols from the library itself.

@@ -86,7 +86,10 @@ DynamicLibrary DynamicLibrary::getPermanentLibrary(const char *filename,
   if (filename == NULL)
     handle = RTLD_DEFAULT;
 #endif
+  return addPermanentLibrary(handle);
+}
 
+DynamicLibrary DynamicLibrary::addPermanentLibrary(void *handle) {
   if (OpenedHandles == 0)
     OpenedHandles = new DenseSet<void *>();
 
