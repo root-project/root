@@ -26,9 +26,12 @@
 #include "TDictionary.h"
 #endif
 
+class TMethodCall;
+
 class TFunction : public TDictionary {
 
 friend class TCling;
+friend class TMethodCall;
 
 protected:
    MethodInfo_t   *fInfo;            //pointer to CINT function info

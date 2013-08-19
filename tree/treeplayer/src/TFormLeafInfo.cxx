@@ -2039,7 +2039,8 @@ TFormLeafInfoMethod::TFormLeafInfoMethod(const TFormLeafInfoMethod& orig)
    fParams = orig.fParams ;
    fResult = orig.fResult;
    if (orig.fMethod) {
-      fMethod = new TMethodCall(fClass,fMethodName,fParams);
+      fMethod = new TMethodCall();
+      fMethod->Init(orig.fMethod->GetMethod());
    } else {
       fMethod = 0;
    }

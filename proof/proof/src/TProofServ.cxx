@@ -5681,7 +5681,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                   // Check the number of arguments
                   if (fun->GetNargs() == 0) {
                      // No arguments (basic signature)
-                     callEnv.InitWithPrototype(setup.Data(),"");
+                     callEnv.Init(fun);
                      if ((mess->BufferSize() > mess->Length())) {
                         (*mess) >> optls;
                         SendAsynMessage(TString::Format("%s: warning: loaded SETUP() does not take any argument:"
@@ -5690,16 +5690,15 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                   } else if (fun->GetNargs() == 1) {
                      TMethodArg *arg = (TMethodArg *) fun->GetListOfMethodArgs()->First();
                      if (arg) {
+                        callEnv.Init(fun);
                         // Get argument
                         if ((mess->BufferSize() > mess->Length())) (*mess) >> optls;
                         // Check argument type
                         TString argsig(arg->GetTitle());
                         if (argsig.BeginsWith("TList")) {
-                           callEnv.InitWithPrototype(setup.Data(),"TList *");
                            callEnv.ResetParam();
                            callEnv.SetParam((Long_t) optls);
                         } else if (argsig.BeginsWith("const char")) {
-                           callEnv.InitWithPrototype(setup.Data(),"const char *");
                            callEnv.ResetParam();
                            TObjString *os = optls ? dynamic_cast<TObjString *>(optls->First()) : 0;
                            if (os) {

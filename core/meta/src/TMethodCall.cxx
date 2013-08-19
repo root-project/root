@@ -171,6 +171,35 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinf
 }
 
 //______________________________________________________________________________
+void TMethodCall::Init(TFunction *function)
+{
+   // Initialize the method invocation environment based on 
+   // the TFunction object.
+
+   if (!function) return;
+
+   if (!fFunc)
+      fFunc = gCling->CallFunc_Factory();
+   else
+      gCling->CallFunc_Init(fFunc);
+  
+   TMethod *m = dynamic_cast<TMethod*>(function);
+   fClass = m ? m->GetClass() : 0;   
+   fMetPtr = function;
+   fMethod = function->GetName();
+   fParams = "";
+   fProto  = function->GetSignature()+1; // skip leading )
+   Ssiz_t s = fProto.Last(')');
+   fProto.Remove(s); // still need to remove default values :(
+    
+   fDtorOnly = kFALSE;
+   fRetType  = kNone;
+
+   gCling->CallFunc_SetFunc(fFunc,function->fInfo);
+
+}
+
+//______________________________________________________________________________
 void TMethodCall::Init(TClass *cl, const char *method, const char *params, Bool_t objectIsConst /* = kFALSE */)
 {
    // Initialize the method invocation environment. Necessary input
@@ -233,7 +262,6 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
    fRetType  = kNone;
 
    ClassInfo_t *scope = 0;
-   ClassInfo_t *global = gCling->ClassInfo_Factory(); // Note: Unused variable???
    if (cl) scope = (ClassInfo_t*)cl->GetClassInfo();
    else    scope = (ClassInfo_t*)cinfo;
   
@@ -248,8 +276,6 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
       // No parameters
       gCling->CallFunc_SetFuncProto(fFunc, scope, (char *)methodname, "", objectIsConst, &fOffset, mode);
    }
-   
-   gCling->ClassInfo_Delete(global);
 }
 
 //______________________________________________________________________________

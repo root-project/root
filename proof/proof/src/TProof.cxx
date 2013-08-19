@@ -8207,7 +8207,7 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
                // Check the number of arguments
                if (fun->GetNargs() == 0) {
                   // No arguments (basic signature)
-                  callEnv.InitWithPrototype(setup,"");
+                  callEnv.Init(fun);
                   // Warn that the argument (if any) if ignored
                   if (loadopts)
                      Warning("LoadPackageOnClient", "loaded SETUP() does not take any argument:"
@@ -8215,14 +8215,13 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
                } else if (fun->GetNargs() == 1) {
                   TMethodArg *arg = (TMethodArg *) fun->GetListOfMethodArgs()->First();
                   if (arg) {
+                     callEnv.Init(fun);
                      // Check argument type
                      TString argsig(arg->GetTitle());
                      if (argsig.BeginsWith("TList")) {
-                        callEnv.InitWithPrototype(setup,"TList *");
                         callEnv.ResetParam();
                         callEnv.SetParam((Long_t) loadopts);
                      } else if (argsig.BeginsWith("const char")) {
-                        callEnv.InitWithPrototype(setup,"const char *");
                         callEnv.ResetParam();
                         TObjString *os = loadopts ? dynamic_cast<TObjString *>(loadopts->First()) : 0;
                         if (os) {

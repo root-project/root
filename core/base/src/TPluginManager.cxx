@@ -213,7 +213,7 @@ void TPluginHandler::SetupCallEnv()
    }
 
    fCallEnv = new TMethodCall;
-   fCallEnv->InitWithPrototype(cl, method, proto);
+   fCallEnv->Init(fMethod);
 
    fCanCall = 1;
 
