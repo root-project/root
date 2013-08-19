@@ -520,8 +520,9 @@ extern "C" const Decl* TCling__GetObjectDecl(TObject *obj) {
    return ((TClingClassInfo*)obj->IsA()->GetClassInfo())->GetDecl();
 }
 
-extern "C" TInterpreter *CreateInterpreter()
+extern "C" TInterpreter *CreateInterpreter(void* interpLibHandle)
 {
+   cling::Interpreter::ExposeHiddenSharedLibrarySymbols(interpLibHandle);
    return new TCling("C++", "cling C++ Interpreter");
 }
 

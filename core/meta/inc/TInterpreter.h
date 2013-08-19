@@ -331,7 +331,7 @@ public:
 };
 
 
-typedef TInterpreter *CreateInterpreter_t();
+typedef TInterpreter *CreateInterpreter_t(void* shlibHandle);
 typedef void *DestroyInterpreter_t(TInterpreter*);
 
 #ifndef __CINT__
