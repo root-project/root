@@ -17,6 +17,7 @@ END_HTML
 */
 //
 
+#include "TH1.h"
 #include "RooStats/HistFactory/Sample.h"
 #include "RooStats/HistFactory/HistFactoryException.h"
 

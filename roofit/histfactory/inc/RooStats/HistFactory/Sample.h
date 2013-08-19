@@ -17,7 +17,7 @@
 #include <iostream>
 
 #include "TRef.h"
-#include "TH1.h"
+class TH1;
 #include "RooStats/HistFactory/Systematics.h"
 
 namespace RooStats{
