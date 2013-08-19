@@ -387,7 +387,13 @@ TFunction *TMethodCall::GetMethod()
    // we need to copy them.
 
    if (!fMetPtr) {
-      if (fClass) {
+      if (fFunc && gCling->CallFunc_IsValid(fFunc)) {
+         if (fClass) {
+            fMetPtr = new TMethod( gCling->CallFunc_FactoryMethod(fFunc), fClass );
+         } else {
+            fMetPtr = new TFunction( gCling->CallFunc_FactoryMethod(fFunc) );
+         }
+      } else if (fClass) {
          if (fProto == "") {
             fMetPtr = fClass->GetMethod(fMethod.Data(), fParams.Data());
          } else {
