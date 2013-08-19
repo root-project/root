@@ -2984,7 +2984,7 @@ int RootCling(int argc,
 
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
    
-   if (requestAllSymbols) {
+   if (requestAllSymbols && !isSelXML) {
       selectionRules.SetDeep(true);
    } else if (!linkdefLoc) {
       // There is no linkdef file, we added the 'default' #pragma to
@@ -3102,6 +3102,11 @@ int RootCling(int argc,
       LoadLibraryMap();
       scan.SetRecordDeclCallback(RecordDeclCallback);
    }
+
+   if (requestAllSymbols) {
+      selectionRules.SetDeep(true);
+   }
+
    scan.Scan(CI->getASTContext());
 
    bool has_input_error = false;
