@@ -267,6 +267,7 @@ public:
    bounding_box(const std::wstring string,
              const unsigned int family = FAMILY_PLAIN)
    {
+      if (TTF::fgCurFontIdx<0) return mathtext::bounding_box_t(0, 0, 0, 0, 0, 0);
       if (string.empty() || TTF::fgFace[TTF::fgCurFontIdx] == NULL ||
          TTF::fgFace[TTF::fgCurFontIdx]->units_per_EM == 0) {
          return mathtext::bounding_box_t(0, 0, 0, 0, 0, 0);
