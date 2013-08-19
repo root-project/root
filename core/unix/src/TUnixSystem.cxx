@@ -205,10 +205,6 @@ extern "C" {
 #   endif
 #endif
 
-#ifdef HAVE_U_STACK_TRACE
-   // HP-UX stack walker (http://devresource.hp.com/STK/partner/unwind.pdf)
-   extern "C" void U_STACK_TRACE(void);
-#endif
 #ifdef HAVE_BACKTRACE_SYMBOLS_FD
 #   include <execinfo.h>
 #endif
@@ -2182,25 +2178,6 @@ void TUnixSystem::StackTrace()
    }
    Exec(script);
    return;
-#elif defined(HAVE_U_STACK_TRACE)  // hp-ux
-/*
-   // FIXME: deal with inability to duplicate the file handle
-   int stderrfd = dup(STDERR_FILENO);
-   if (stderrfd == -1)
-      return;
-
-   int newfd = dup2(fd, STDERR_FILENO);
-   if (newfd == -1) {
-      close (stderrfd);
-      return;
-   }
-*/
-   U_STACK_TRACE();
-/*
-   fflush(stderr);
-   dup2(stderrfd, STDERR_FILENO);
-   close(newfd);
-*/
 #elif defined(HAVE_BACKTRACE_SYMBOLS_FD) && defined(HAVE_DLADDR)  // linux + MacOS X >= 10.5
    // we could have used backtrace_symbols_fd, except its output
    // format is pretty bad, so recode that here :-(
