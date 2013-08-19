@@ -71,13 +71,6 @@ protected:
    static int          UnixRecv(int sock, void *buf, int len, int flag);
    static int          UnixSend(int sock, const void *buf, int len, int flag);
 
-   static void        *FindDynLib(const char *lib);
-   static int          UnixDynLoad(const char *lib);
-   static Func_t       UnixDynFindSymbol(const char *lib, const char *entry);
-   static void         UnixDynUnload(const char *lib);
-   static void         UnixDynListSymbols(const char *lib, const char *re = "");
-   static void         UnixDynListLibs(const char *lib = "");
-
    static void        *SearchUtmpEntry(int nentries, const char *tty);
    static int          ReadUtmpFile();
 

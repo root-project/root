@@ -43,9 +43,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#if defined(R__SUN) || defined(R__HPUX) || \
-    defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
-    defined(R__HIUX) || defined(R__FBSD) || defined(R__OBSD) || \
+#if defined(R__SUN) || defined(R__AIX) || \
+    defined(R__LINUX) || defined(R__SOLARIS) || \
+    defined(R__FBSD) || defined(R__OBSD) || \
     defined(R__MACOSX) || defined(R__HURD)
 #define HAS_DIRENT
 #endif
@@ -58,7 +58,7 @@
 #   include <sgtty.h>
 #endif
 #if defined(R__AIX) || defined(R__LINUX) || \
-    defined(R__HIUX) || defined(R__FBSD) || defined(R__OBSD) || \
+    defined(R__FBSD) || defined(R__OBSD) || \
     defined(R__LYNXOS) || defined(R__MACOSX) || defined(R__HURD)
 #   include <sys/ioctl.h>
 #endif
@@ -74,7 +74,7 @@
 #   include <mach-o/dyld.h>
 #   include <sys/mount.h>
    extern "C" int statfs(const char *file, struct statfs *buffer);
-#elif defined(R__LINUX) || defined(R__HPUX) || defined(R__HURD)
+#elif defined(R__LINUX) || defined(R__HURD)
 #   include <sys/vfs.h>
 #elif defined(R__FBSD) || defined(R__OBSD)
 #   include <sys/param.h>
@@ -122,30 +122,6 @@
 #   ifndef INADDR_NONE
 #      define INADDR_NONE (UInt_t)-1
 #   endif
-#endif
-#if defined(R__HPUX)
-#   include <symlink.h>
-#   include <dl.h>
-#   if defined(R__GNU)
-   extern "C" {
-      extern shl_t cxxshl_load(const char *path, int flags, long address);
-      extern int   cxxshl_unload(shl_t handle);
-   }
-#   elif !defined(__STDCPP__)
-#      include <cxxdl.h>
-#   endif
-#   if defined(hpux9)
-   extern "C" {
-      extern void openlog(const char *, int, int);
-      extern void syslog(int, const char *, ...);
-      extern void closelog(void);
-      extern int setlogmask(int);
-   }
-#   define HASNOT_INETATON
-#   endif
-#endif
-#if defined(R__HIUX)
-#   define HASNOT_INETATON
 #endif
 
 #if defined(R__SOLARIS)
@@ -214,9 +190,6 @@ extern "C" {
 #endif
 
 // stack trace code
-#if defined(R__HPUX) && !defined(R__GNU)
-#   define HAVE_U_STACK_TRACE
-#endif
 #if (defined(R__LINUX) || defined(R__HURD)) && !defined(R__WINGCC)
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 1
 #      define HAVE_BACKTRACE_SYMBOLS_FD
@@ -1714,11 +1687,7 @@ needshell:
    // escape shell quote characters
    EscChar(patbuf, stuffedPat, sizeof(stuffedPat), (char*)kShellStuff, kShellEscape);
 
-#ifdef R__HPUX
-   TString cmd("/bin/echo ");
-#else
    TString cmd("echo ");
-#endif
 
    // emulate csh -> popen executes sh
    if (stuffedPat[0] == '~') {
@@ -2667,15 +2636,11 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
 //---- dynamic loading and linking ---------------------------------------------
 
 //______________________________________________________________________________
-Func_t TUnixSystem::DynFindSymbol(const char *module, const char *entry)
+Func_t TUnixSystem::DynFindSymbol(const char * /*module*/, const char *entry)
 {
    //dynamic linking of module
-   #ifdef NOCINT
-   return UnixDynFindSymbol(module,entry);
-#else
-   if (module) { }   // silence compiler about not using module
+
    return TSystem::DynFindSymbol("*", entry);
-#endif
 }
 
 //______________________________________________________________________________
@@ -2685,16 +2650,7 @@ int TUnixSystem::Load(const char *module, const char *entry, Bool_t system)
    // case lib was already loaded and -1 in case lib does not exist
    // or in case of error.
 
-#ifdef NOCINT
-   int i = UnixDynLoad(module);
-   if (!entry || !entry[0]) return i;
-
-   Func_t f = UnixDynFindSymbol(module, entry);
-   if (f) return 0;
-   return -1;
-#else
    return TSystem::Load(module, entry, system);
-#endif
 }
 
 //______________________________________________________________________________
@@ -2702,19 +2658,15 @@ void TUnixSystem::Unload(const char *module)
 {
    // Unload a shared library.
 
-#ifdef NOCINT
-   UnixDynUnload(module);
-#else
    if (module) { TSystem::Unload(module); }
-#endif
 }
 
 //______________________________________________________________________________
-void TUnixSystem::ListSymbols(const char *module, const char *regexp)
+void TUnixSystem::ListSymbols(const char * /*module*/, const char * /*regexp*/)
 {
    // List symbols in a shared library.
 
-   UnixDynListSymbols(module, regexp);
+   Error("ListSymbols", "not yet implemented");
 }
 
 //______________________________________________________________________________
@@ -2722,11 +2674,7 @@ void TUnixSystem::ListLibraries(const char *regexp)
 {
    // List all loaded shared libraries.
 
-#ifdef R__HPUX
-   UnixDynListLibs(regexp);
-#else
    TSystem::ListLibraries(regexp);
-#endif
 }
 
 //______________________________________________________________________________
@@ -3744,21 +3692,8 @@ int TUnixSystem::UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
 
    int retcode;
 
-#if defined(R__HPUX) && defined(R__B64)
-   fd_set frd;
-   fd_set fwr;
-   FD_ZERO(&frd);
-   FD_ZERO(&fwr);
-   for (int i = 0; i < nfds; i++) {
-      if (readready  && readready->IsSet(i))  FD_SET(i, &frd);
-      if (writeready && writeready->IsSet(i)) FD_SET(i, &fwr);
-   }
-   fd_set *rd = (readready)  ? &frd : 0;
-   fd_set *wr = (writeready) ? &fwr : 0;
-#else
    fd_set *rd = (readready)  ? (fd_set*)readready->GetBits()  : 0;
    fd_set *wr = (writeready) ? (fd_set*)writeready->GetBits() : 0;
-#endif
 
    if (timeout >= 0) {
       struct timeval tv;
@@ -3777,15 +3712,6 @@ int TUnixSystem::UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
          return -3;
       return -1;
    }
-
-#if defined(R__HPUX) && defined(R__B64)
-   if (rd) readready->Zero();
-   if (wr) writeready->Zero();
-   for (int i = 0; i < nfds; i++) {
-      if (rd && FD_ISSET(i, rd)) readready->Set(i);
-      if (wr && FD_ISSET(i, wr)) writeready->Set(i);
-   }
-#endif
 
    return retcode;
 }
@@ -4471,8 +4397,6 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       TString ldpath;
 #if defined (R__AIX)
       ldpath = gSystem->Getenv("LIBPATH");
-#elif defined(R__HPUX)
-      ldpath = gSystem->Getenv("SHLIB_PATH");
 #elif defined(R__MACOSX)
       ldpath = gSystem->Getenv("DYLD_LIBRARY_PATH");
       if (!ldpath.IsNull())
@@ -4592,178 +4516,6 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
             searchFor.Data(), GetDynamicPath());
 
    return 0;
-}
-
-//______________________________________________________________________________
-void *TUnixSystem::FindDynLib(const char *lib)
-{
-   // Returns the handle to a loaded shared library. Returns 0 when library
-   // not loaded.
-
-#ifdef R__HPUX
-   const char *path;
-
-   if ((path = gSystem->DynamicPathName(lib))) {
-      // find handle of shared library using its name
-      struct shl_descriptor *desc;
-      int index = 0;
-      while (shl_get(index++, &desc) == 0)
-         if (!strcmp(path, desc->filename))
-            return desc->handle;
-   }
-#endif
-
-   if (lib) { }  // avoid warning, use lib
-
-   return 0;
-}
-
-//______________________________________________________________________________
-int TUnixSystem::UnixDynLoad(const char *lib)
-{
-   // Load a shared library. Returns 0 on successful loading, 1 in
-   // case lib was already loaded and -1 in case lib does not exist
-   // or in case of error.
-
-   const char *path;
-
-   if ((path = gSystem->DynamicPathName(lib))) {
-#if defined(R__HPUX)
-#if !defined(__STDCPP__)
-      shl_t handle = cxxshl_load(path, BIND_IMMEDIATE | BIND_NONFATAL, 0L);
-#else
-      shl_t handle = shl_load(path, BIND_IMMEDIATE | BIND_NONFATAL, 0L);
-#endif
-      if (handle != 0) return 0;
-#else
-      if (path) { }  // use path remove warning
-      ::Error("TUnixSystem::UnixDynLoad", "not yet implemented for this platform");
-      return -1;
-#endif
-   }
-   return -1;
-}
-
-//______________________________________________________________________________
-Func_t TUnixSystem::UnixDynFindSymbol(const char *lib, const char *entry)
-{
-   // Finds and returns a function pointer to a symbol in the shared library.
-   // Returns 0 when symbol not found.
-
-#if defined(R__HPUX) && !defined(R__GNU)
-   shl_t handle;
-
-   if (handle = (shl_t)FindDynLib(lib)) {
-      Func_t addr = 0;
-      if (shl_findsym(&handle, entry, TYPE_PROCEDURE, addr) == -1)
-         ::SysError("TUnixSystem::UnixDynFindSymbol", "shl_findsym");
-      return addr;
-   }
-   return 0;
-#else
-   if (lib || entry) { }
-
-   // Always assume symbol not found
-   return 0;
-#endif
-}
-
-//______________________________________________________________________________
-void TUnixSystem::UnixDynListSymbols(const char *lib, const char *regexp)
-{
-   // List symbols in a shared library. One can use wildcards to list only
-   // the interesting symbols.
-
-#if defined(R__HPUX) && !defined(R__GNU)
-   shl_t handle;
-
-   if (handle = (shl_t)FindDynLib(lib)) {
-      struct shl_symbol *symbols;
-      int nsym = shl_getsymbols(handle, TYPE_PROCEDURE,
-                                EXPORT_SYMBOLS|NO_VALUES, (void *(*)())malloc,
-                                &symbols);
-      if (nsym != -1) {
-         if (nsym > 0) {
-            int cnt = 0;
-            TRegexp *re = 0;
-            if (regexp && strlen(regexp)) re = new TRegexp(regexp, kTRUE);
-            Printf("");
-            Printf("Functions exported by library %s", gSystem->DynamicPathName(lib));
-            Printf("=========================================================");
-            for (int i = 0; i < nsym; i++)
-               if (symbols[i].type == TYPE_PROCEDURE) {
-                  cnt++;
-                  char *dsym = cplus_demangle(symbols[i].name,
-                                              DMGL_PARAMS|DMGL_ANSI|DMGL_ARM);
-                  if (re) {
-                     TString s = dsym;
-                     if (s.Index(*re) != kNPOS) Printf("%s", dsym);
-                  } else
-                     Printf("%s", dsym);
-                  free(dsym);
-               }
-            Printf("---------------------------------------------------------");
-            Printf("%d exported functions", cnt);
-            Printf("=========================================================");
-            delete re;
-         }
-         free(symbols);
-      }
-   }
-#endif
-   if (lib || regexp) { }
-}
-
-//______________________________________________________________________________
-void TUnixSystem::UnixDynListLibs(const char *lib)
-{
-   // List all loaded shared libraries.
-
-#if defined(R__HPUX) && !defined(R__GNU)
-   TRegexp *re = 0;
-   if (lib && strlen(lib)) re = new TRegexp(lib, kTRUE);
-   struct shl_descriptor *desc;
-   int index = 0;
-
-   Printf("");
-   Printf("Loaded shared libraries");
-   Printf("=======================");
-
-   while (shl_get(index++, &desc) == 0)
-      if (re) {
-         TString s = desc->filename;
-         if (s.Index(*re) != kNPOS) Printf("%s", desc->filename);
-      } else
-         Printf("%s", desc->filename);
-   Printf("-----------------------");
-   Printf("%d libraries loaded", index-1);
-   Printf("=======================");
-   delete re;
-#else
-   if (lib) { }
-#endif
-}
-
-//______________________________________________________________________________
-void TUnixSystem::UnixDynUnload(const char *lib)
-{
-   // Unload a shared library.
-
-#if defined(R__HPUX)
-   shl_t handle;
-
-   if (handle = (shl_t)FindDynLib(lib))
-#if !defined(__STDCPP__)
-      if (cxxshl_unload(handle) == -1)
-#else
-      if (shl_unload(handle) == -1)
-#endif
-         ::SysError("TUnixSystem::UnixDynUnload", "could not unload library %s", lib);
-#else
-   if (lib) { }
-   // should call CINT unload file here, but does not work for sl's yet.
-   ::Error("TUnixSystem::UnixDynUnload", "not yet implemented for this platform");
-#endif
 }
 
 //______________________________________________________________________________

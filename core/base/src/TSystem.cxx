@@ -1761,11 +1761,6 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    // a permanent systen library that should not be unloaded during the
    // course of the session.
 
-#ifdef NOCINT
-   AbstractMethod("Load");
-   return 0;
-#else
-
    // don't load libraries that have already been loaded
    TString libs( GetLibraries() );
    TString moduleBasename( BaseName(module) );
@@ -1897,7 +1892,6 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    Func_t f = DynFindSymbol(module, entry);
    if (f) return 0;
    return -1;
-#endif
 }
 
 //______________________________________________________________________________
@@ -1931,12 +1925,7 @@ Func_t TSystem::DynFindSymbol(const char * /*lib*/, const char *entry)
    // Find specific entry point in specified library. Specify "*" for lib
    // to search in all libraries.
 
-#ifdef NOCINT
-   AbstractMethod("DynFindSymbol");
-   return 0;
-#else
    return (Func_t) gInterpreter->FindSym(entry);
-#endif
 }
 
 //______________________________________________________________________________
@@ -1944,15 +1933,11 @@ void TSystem::Unload(const char *module)
 {
    // Unload a shared library.
 
-#ifdef NOCINT
-   AbstractMethod("UnLoad");
-#else
    char *path;
    if ((path = DynamicPathName(module))) {
       gInterpreter->UnloadFile(path);
       delete [] path;
    }
-#endif
 }
 
 //______________________________________________________________________________
