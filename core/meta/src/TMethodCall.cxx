@@ -499,67 +499,7 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
          return kOther;
       }
 
-      // count the number of stars in the name.
-      Int_t nstar = 0;
-      const char* rettype = func->GetReturnTypeName();
-      const char* returntype = rettype;
-      while (*returntype) {
-         if (*returntype == '*') nstar++;
-         returntype++;
-      }
-
-      TypedefInfo_t *atype = gCling->TypedefInfo_Factory();
-      gCling->TypedefInfo_Init(atype,gCling->TypeName(rettype));
-      //be careful, below this point rettype cannot be reused (point to a static in TCling)
-      
-      const char *name = gCling->TypedefInfo_TrueName(atype);
-
-      Bool_t isEnum = kFALSE;
-      TypeInfo_t *typed = 0;
-      if (name && !strcmp("(unknown)",name)) {
-         typed = gCling->TypeInfo_Factory();         
-         gCling->TypeInfo_Init(typed,func->GetReturnTypeName());
-         name  = gCling->TypeInfo_TrueName(typed);
-         if (gCling->TypeInfo_Property(typed)&kIsEnum) {
-            isEnum = kTRUE;
-         }
-      }
-
-      if (name == 0) 
-         fRetType = kOther;
-      else if ((nstar==1) &&
-          (!strcmp("unsigned char", name)        || !strcmp("char", name)         ||
-           !strcmp("UChar_t", name)              || !strcmp("Char_t", name)       ||
-           !strcmp("const unsigned char", name)  || !strcmp("const char", name)   ||
-           !strcmp("const UChar_t", name)        || !strcmp("const Char_t", name) ||
-           !strcmp("unsigned char*", name)       || !strcmp("char*", name)        ||
-           !strcmp("UChar_t*", name)             || !strcmp("Char_t*", name)      ||
-           !strcmp("const unsigned char*", name) || !strcmp("const char*", name)  ||
-           !strcmp("const UChar_t*", name)       || !strcmp("const Char_t*", name)))
-         fRetType = kString;
-      else if (!strcmp("unsigned int", name)   || !strcmp("int", name)      ||
-               !strcmp("unsigned long", name)  || !strcmp("long", name)     ||
-               !strcmp("unsigned long long", name) || !strcmp("long long", name) ||
-               !strcmp("unsigned short", name) || !strcmp("short", name)    ||
-               !strcmp("unsigned char", name)  || !strcmp("char", name)     ||
-               !strcmp("UInt_t", name)         || !strcmp("Int_t", name)    ||
-               !strcmp("ULong_t", name)        || !strcmp("Long_t", name)   ||
-               !strcmp("ULong64_t", name)      || !strcmp("Long_t64", name) ||
-               !strcmp("UShort_t", name)       || !strcmp("Short_t", name)  ||
-               !strcmp("UChar_t", name)        || !strcmp("Char_t", name)   ||
-               !strcmp("Bool_t", name)         || !strcmp("bool", name)     ||
-               strstr(name, "enum"))
-         fRetType = kLong;
-      else if (!strcmp("float", name)   || !strcmp("double", name)    ||
-               !strcmp("Float_t", name) || !strcmp("Double_t", name))
-         fRetType = kDouble;
-      else if (isEnum)
-         fRetType = kLong;
-      else
-         fRetType = kOther;
-      gCling->TypeInfo_Delete(typed);
-      gCling->TypedefInfo_Delete(atype);
-
+      fRetType = gCling->MethodCallReturnType(func);
    }
 
    return fRetType;

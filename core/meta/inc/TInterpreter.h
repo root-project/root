@@ -26,6 +26,12 @@
 #include "TDictionary.h"
 #endif
 
+// We must include this as we can not forward
+// declare enums until C++11.
+#ifndef ROOT_TMethodCall
+#include "TMethodCall.h"
+#endif
+
 class TClass;
 class TEnv;
 class TFunction;
@@ -162,6 +168,9 @@ public:
    virtual int    UnloadFile(const char * /* path */) const {return 0;}
    virtual TInterpreterValue *CreateTemporary() { return 0; }
 
+   // core/meta helper functions.
+   virtual TMethodCall::EReturnType MethodCallReturnType(TFunction *func) const = 0;
+
    // CallFunc interface
    virtual void   CallFunc_Delete(void * /* func */) const {;}
    virtual void   CallFunc_Exec(CallFunc_t * /* func */, void * /* address */) const {;}
@@ -267,6 +276,7 @@ public:
    virtual int    MethodInfo_Next(MethodInfo_t * /* minfo */) const {return 0;}
    virtual Long_t MethodInfo_Property(MethodInfo_t * /* minfo */) const {return 0;}
    virtual TypeInfo_t  *MethodInfo_Type(MethodInfo_t * /* minfo */) const {return 0;}
+   virtual TMethodCall::EReturnType MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const = 0;
    virtual const char *MethodInfo_GetMangledName(MethodInfo_t * /* minfo */) const {return 0;}
    virtual const char *MethodInfo_GetPrototype(MethodInfo_t * /* minfo */) const {return 0;}
    virtual const char *MethodInfo_Name(MethodInfo_t * /* minfo */) const {return 0;}

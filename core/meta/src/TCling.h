@@ -241,6 +241,9 @@ public: // Public Interface
    void               RegisterTemporary(const TInterpreterValue& value);
    void               RegisterTemporary(const cling::StoredValueRef& value);
 
+   // core/meta helper functions.
+   virtual TMethodCall::EReturnType MethodCallReturnType(TFunction *func) const;
+
    // CallFunc interface
    virtual void   CallFunc_Delete(void* func) const;
    virtual void   CallFunc_Exec(CallFunc_t* func, void* address) const;
@@ -344,6 +347,7 @@ public: // Public Interface
    virtual int    MethodInfo_Next(MethodInfo_t* minfo) const;
    virtual Long_t MethodInfo_Property(MethodInfo_t* minfo) const;
    virtual TypeInfo_t*  MethodInfo_Type(MethodInfo_t* minfo) const;
+   virtual TMethodCall::EReturnType MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const;
    virtual const char* MethodInfo_GetMangledName(MethodInfo_t* minfo) const;
    virtual const char* MethodInfo_GetPrototype(MethodInfo_t* minfo) const;
    virtual const char* MethodInfo_Name(MethodInfo_t* minfo) const;

@@ -4557,6 +4557,63 @@ const char* TCling::MethodInfo_Title(MethodInfo_t* minfo) const
 }
 
 //______________________________________________________________________________
+TMethodCall::EReturnType TCling::MethodCallReturnType(TFunction *func) const
+{
+   if (func) {
+      return MethodInfo_MethodCallReturnType(func->fInfo);
+   } else {
+      return TMethodCall::kOther;
+   }
+}
+
+//______________________________________________________________________________
+TMethodCall::EReturnType TCling::MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const
+{
+   TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   if (info && info->IsValid()) {
+      TClingTypeInfo *typeinfo = info->Type();
+      clang::QualType QT( typeinfo->GetQualType().getCanonicalType() );
+      if (QT->isEnumeralType()) {
+         return TMethodCall::kLong;
+      } else if (QT->isPointerType()) {
+         // Look for char*
+         QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
+         if ( QT->isCharType() ) {
+            return TMethodCall::kString;
+         } else {
+            return TMethodCall::kOther;
+         }
+      } else if ( QT->isFloatingType() ) {
+         int sz = typeinfo->Size();
+         if (sz == 4 || sz == 8) {
+            // Support only float and double.
+            return TMethodCall::kDouble;
+         } else {
+            return TMethodCall::kOther;
+         }
+      } else if ( QT->isIntegerType() ) {
+         int sz = typeinfo->Size();
+         if (sz <= 8) {
+            // Support only up to long long ... but
+            // FIXME the TMethodCall::Execute only 
+            // return long (4 bytes) ...
+            // The v5 implementation of TMethodCall::ReturnType
+            // was not making the distinction so we let it go
+            // as is for now, but we really need to upgrade
+            // TMethodCall::Execute ...
+            return TMethodCall::kLong;
+         } else {
+            return TMethodCall::kOther;
+         }
+      } else {
+         return TMethodCall::kOther;
+      }
+   } else {
+      return TMethodCall::kOther;
+   }
+}
+
+//______________________________________________________________________________
 //
 //  MethodArgInfo interface
 //
