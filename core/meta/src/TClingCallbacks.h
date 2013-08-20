@@ -23,12 +23,17 @@ namespace cling {
    class Transaction;
 }
 
+namespace llvm {
+   class StringRef;
+}
+
 // The callbacks are used to update the list of globals in ROOT.
 //
 class TClingCallbacks : public cling::InterpreterCallbacks {
 private:
    void *fLastLookupCtx;
    clang::NamespaceDecl *fROOTSpecialNamespace;
+   clang::NamespaceDecl *fDeclContextToLookIn;
    bool fFirstRun;
    bool fIsAutoloading;
    bool fIsAutoloadingRecursively;
@@ -43,6 +48,8 @@ public:
    bool IsAutoloadingEnabled() { return fIsAutoloading; }
 
    virtual bool LookupObject(clang::LookupResult &R, clang::Scope *S);
+   virtual bool LookupObject(const clang::DeclContext* DC, 
+                             clang::DeclarationName Name);
 
    // The callback is used to update the list of globals in ROOT.
    //
@@ -57,7 +64,8 @@ public:
    virtual void DeclDeserialized(const clang::Decl* D);
 
 private:
-   bool tryAutoloadInternal(clang::LookupResult &R, clang::Scope *S);
+   bool tryAutoloadInternal(llvm::StringRef Name, clang::LookupResult &R, 
+                            clang::Scope *S);
    bool tryFindROOTSpecialInternal(clang::LookupResult &R, clang::Scope *S);
    bool tryResolveAtRuntimeInternal(clang::LookupResult &R, clang::Scope *S);
    bool shouldResolveAtRuntime(clang::LookupResult &R, clang::Scope *S);

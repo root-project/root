@@ -42,8 +42,8 @@ extern "C" {
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
    : InterpreterCallbacks(interp),
-     fLastLookupCtx(0), fROOTSpecialNamespace(0), fFirstRun(true), 
-     fIsAutoloading(false), fIsAutoloadingRecursively(false) {
+     fLastLookupCtx(0), fROOTSpecialNamespace(0), fDeclContextToLookIn(0),
+     fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false) {
    Transaction* T = 0;
    m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &T);
    fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl());
@@ -62,7 +62,7 @@ TClingCallbacks::~TClingCallbacks() {}
 //
 bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
-   if (tryAutoloadInternal(R, S))
+   if (tryAutoloadInternal(R.getLookupName().getAsString(), R, S))
       return true; // happiness.
 
    // If the autoload wasn't successful try ROOT specials.
@@ -81,9 +81,36 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
       return true;
    }
 
+   if (fIsAutoloadingRecursively)
+      return false;
+
    // Finally try to resolve this name as a dynamic name, i.e delay its 
    // resolution for runtime.
    return tryResolveAtRuntimeInternal(R, S);
+}
+
+bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name){
+   // Get the 'lookup' decl context.
+   if (!fDeclContextToLookIn)
+      return false;
+   const DeclContext* primaryDC = fDeclContextToLookIn->getPrimaryContext();
+   if (primaryDC != DC)
+      return false;
+
+   Sema &SemaR = m_Interpreter->getSema();
+   LookupResult R(SemaR, Name, SourceLocation(), Sema::LookupOrdinaryName);
+   llvm::StringRef qualName 
+      = fDeclContextToLookIn->getQualifiedNameAsString() + "::" + Name.getAsString();
+   fDeclContextToLookIn = 0;
+   if (tryAutoloadInternal(qualName, R, SemaR.getCurScope())) {
+      llvm::SmallVector<NamedDecl*, 4> lookupResults;
+      for(LookupResult::iterator I = R.begin(), E = R.end(); I < E; ++I)
+         lookupResults.push_back(*I);
+      UpdateWithNewDecls(DC, Name, llvm::makeArrayRef(lookupResults.data(), 
+                                                      lookupResults.size()));
+      return true;
+   }
+   return false;
 }
 
 // The symbol might be defined in the ROOT class autoloading map so we have to
@@ -91,9 +118,9 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 //
 // returns true when a declaration is found and no error should be emitted.
 //
-bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
+bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
+                                          Scope *S) {
    Sema &SemaR = m_Interpreter->getSema();
-   DeclarationName Name = R.getLookupName();
 
    // Try to autoload first if autoloading is enabled
    if (IsAutoloadingEnabled()) {
@@ -111,7 +138,7 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
 
      bool lookupSuccess = false;
      if (getenv("ROOT_MODULES")) {
-        if (TCling__AutoLoadCallback(Name.getAsString().c_str())) {
+        if (TCling__AutoLoadCallback(Name.data())) {
            lookupSuccess = SemaR.LookupName(R, S);
         }
      }
@@ -136,16 +163,25 @@ bool TClingCallbacks::tryAutoloadInternal(LookupResult &R, Scope *S) {
         // wrapper function so the parent context must be the global.
         Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
                                                SemaR.TUScope);
-        std::string missingName = Name.getAsString();
-        if (TCling__AutoLoadCallback(missingName.c_str())) {
+        if (TCling__AutoLoadCallback(Name.data())) {
            pushedDCAndS.pop();
            cleanupRAII.pop();
            lookupSuccess = SemaR.LookupName(R, S);
-        } else if (TCling__IsAutoLoadNamespaceCandidate(missingName.c_str())) {
-           m_Interpreter->declare("namespace " + missingName + "{}");
+        } else if (TCling__IsAutoLoadNamespaceCandidate(Name.data())) {
+           // FIXME: Since the current token is tok::semi and there is no 
+           // 'neutral' token, this will force clang to create the so called in
+           // C++11 EmptyDecl. It is not a big issue, but still suboptimal.
+           cling::Transaction* T = 0;
+           m_Interpreter->declare("namespace " + Name.str() + "{}", &T);
            pushedDCAndS.pop();
            cleanupRAII.pop();
-           lookupSuccess = SemaR.LookupName(R, S);
+           // The first decl in T will be EmptyDecl unless the FIXME above gets
+           // fixed.
+           NamespaceDecl* NSD = cast<NamespaceDecl>(T->getLastDecl().getSingleDecl());
+           NSD->setHasExternalVisibleStorage();
+           fDeclContextToLookIn = NSD;
+           R.addDecl(NSD);
+           lookupSuccess = true;
         }
  
         SemaR.getDiagnostics().setSuppressAllDiagnostics(oldSuppressDiags);
