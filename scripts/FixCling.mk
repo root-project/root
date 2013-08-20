@@ -15,7 +15,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncReturnInt"
 CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
-CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForNamespaces"
+#CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForNamespaces"
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForTemplates"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoading"
 CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
@@ -66,7 +66,7 @@ ClingWorkAroundMissingDynamicScope = yes
 ClingWorkAroundMissingUnloading = yes
 ClingWorkAroundCallfuncReturnInt = yes         # See http://savannah.cern.ch/bugs/?100652 
 #ClingWorkAroundCallfuncAndConversion = yes     # See https://savannah.cern.ch/bugs/index.php?99517
-ClingWorkAroundMissingAutoLoadingForNamespaces = yes # See: https://sft.its.cern.ch/jira/browse/ROOT-4779
+#ClingWorkAroundMissingAutoLoadingForNamespaces = yes # See: https://sft.its.cern.ch/jira/browse/ROOT-4779
 ClingWorkAroundMissingAutoLoadingForTemplates = yes  # See: https://sft.its.cern.ch/jira/browse/ROOT-4786
 #ClingWorkAroundMissingAutoLoading = yes        # See *also* the problem namespace and templates:
                                                #     https://sft.its.cern.ch/jira/browse/ROOT-4786
