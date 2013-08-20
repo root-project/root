@@ -310,7 +310,8 @@ public:
    TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
-   std::set<TClass*>  GetMissingClassDictionaries(bool recurse);
+   Bool_t             HasDictionary() const;
+   void               GetMissingDictionaries(bool recurse, TObjArray& result);
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
    Bool_t             InheritsFrom(const TClass *cl) const;
