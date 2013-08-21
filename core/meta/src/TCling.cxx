@@ -1147,6 +1147,11 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
    fInterpreter->parseForModule(code.Data());
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
+
+   // Might be pulled in through PCH
+   fInterpreter->declare("#ifdef __ROOTCLING__\n"
+                         "#undef __ROOTCLING__\n"
+                         "#endif");
 }
 
 //______________________________________________________________________________
