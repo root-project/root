@@ -892,17 +892,6 @@ TCling::TCling(const char *name, const char *title)
                          "#include <string>\n"
                          "using namespace std;");
 
-   // parseForModule does not yet codegen for inlines within a namespace
-   // So for now, parse explicitly a few header containing very widely
-   // used inline function wihtin namespace
-   fInterpreter->declare("#include \"TString.h\"\n"
-                         "#include \"TMath.h\"\n"
-                         "#include <cstring>\n" // for std::strstr for roottest/root/meta/drawing
-#ifdef R__MACOSX
-                         "#include <deque>\n" // this gets added indirectly by one of the module on MacOS
-#endif
-                         "#include <iomanip>\n");
-
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
    fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt);
