@@ -23,6 +23,10 @@
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Scope.h"
 
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Lex/PPCallbacks.h"
+#include "llvm/Support/FileSystem.h"
+
 using namespace clang;
 using namespace cling;
 
@@ -38,7 +42,99 @@ extern "C" {
    int TCling__AutoLoadCallback(const char* className);
    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
    void TCling__UpdateListsOnDeclDeserialized(const clang::Decl*);
+   int TCling__CompileMacro(const char *fileName, const char *options);
+   std::string TCling__SplitAclicMode(const char* fileName, std::string &mode,
+                                      std::string &args, std::string &io);
 }
+
+// Preprocessor callbacks used to handle special cases
+// like for example: #include "myMacro.C+"
+//
+class TPPClingCallbacks : public PPCallbacks {
+private:
+   cling::Interpreter *fInterpreter;
+   Preprocessor *fPreprocessor;
+   bool fOldFlag;
+   bool fChanged;
+public:
+   TPPClingCallbacks(cling::Interpreter *inter, Preprocessor *PP) :
+         fInterpreter(inter), fPreprocessor(PP), fOldFlag(false),
+         fChanged(false) { }
+   ~TPPClingCallbacks() { }
+
+   virtual bool FileNotFound(llvm::StringRef FileName,
+                             llvm::SmallVectorImpl<char> &RecoveryPath) {
+      // Method called via Callbacks->FileNotFound(Filename, RecoveryPath)
+      // in Preprocessor::HandleIncludeDirective(), initally allowing to
+      // change the include path, and allowing us to compile code via ACLiC
+      // when specifying #include "myfile.C+", and suppressing the preprocessor
+      // error message:
+      // input_line_23:1:10: fatal error: 'myfile.C+' file not found
+      if ((!fPreprocessor) || (!fInterpreter))
+         return false;
+
+      // remove any trailing "\n
+      std::string filename(FileName.str().substr(0,
+                           FileName.str().find_last_of('"')));
+      std::string mode, arguments, io;
+      // extract the filename and ACliC mode
+      std::string fname = TCling__SplitAclicMode(filename.c_str(), mode,
+                                                 arguments, io);
+      if (mode.length() > 0) {
+         if (llvm::sys::fs::exists(fname)) {
+            // format the CompileMacro() option string
+            std::string options = "k";
+            if (mode.find("++") != std::string::npos) options += "f";
+            if (mode.find("g")  != std::string::npos) options += "g";
+            if (mode.find("O")  != std::string::npos) options += "O";
+
+            // Save state of the preprocessor
+            Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(*fPreprocessor);
+            Parser& P = const_cast<Parser&>(fInterpreter->getParser());
+            // After we have saved the token reset the current one to
+            // something which is safe (semi colon usually means empty decl)
+            Token& Tok = const_cast<Token&>(P.getCurToken());
+            // We parsed 'include' token. We don't need to restore it, because
+            // we provide our own way of handling the entire #include "file.c+"
+            // Thus if we reverted the token back to the parser, we are in
+            // a trouble.
+            Tok.setKind(tok::semi);
+            // We can't PushDeclContext, because we go up and the routine that pops 
+            // the DeclContext assumes that we drill down always.
+            // We have to be on the global context. At that point we are in a 
+            // wrapper function so the parent context must be the global.
+            // This is needed to solve potential issues when using #include "myFile.C+"
+            // after a scope declaration like:
+            // void Check(TObject* obj) {
+            //   if (obj) cout << "Found the referenced object\n";
+            //   else cout << "Error: Could not find the referenced object\n";
+            // }
+            // #include "A.C+"
+            Sema& SemaR = fInterpreter->getSema();
+            ASTContext& C = SemaR.getASTContext();
+            Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
+                                                   SemaR.TUScope);
+            int retcode = TCling__CompileMacro(fname.c_str(), options.c_str());
+            if (retcode) {
+               // complation was successful, let's remember the original
+               // preprocessor "include not found" error suppression flag
+               if (!fChanged)
+                  fOldFlag = fPreprocessor->GetSuppressIncludeNotFoundError();
+               fPreprocessor->SetSuppressIncludeNotFoundError(true);
+               fChanged = true;
+            }
+            return false;
+         }
+      }
+      if (fChanged) {
+         // restore the original preprocessor "include not found" error
+         // suppression flag
+         fPreprocessor->SetSuppressIncludeNotFoundError(fOldFlag);
+         fChanged = false;
+      }
+      return false;
+   }
+};
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
    : InterpreterCallbacks(interp),
@@ -47,6 +143,10 @@ TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
    Transaction* T = 0;
    m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &T);
    fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl());
+   // Add PreProcessor callback implementing FileNotFound(Filename, RecoveryPath)
+   // in order to properly handle #include "myMacro.C+"
+   Preprocessor &PP = interp->getCI()->getPreprocessor();
+   PP.addPPCallbacks(new TPPClingCallbacks(interp, &PP));
 }
 
 //pin the vtable here

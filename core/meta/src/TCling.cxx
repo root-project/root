@@ -544,6 +544,23 @@ extern "C" int TCling__IsAutoLoadNamespaceCandidate(const char* name)
    return ((TCling*)gCling)->IsAutoLoadNamespaceCandidate(name);
 }
 
+extern "C" int TCling__CompileMacro(const char *fileName, const char *options)
+{
+   string file(fileName);
+   string opt(options);
+   return gSystem->CompileMacro(file.c_str(), opt.c_str());
+}
+
+extern "C" string TCling__SplitAclicMode(const char* fileName, string &mode,
+                                         string &args, string &io)
+{
+   string file(fileName);
+   TString fname, amode, arguments, aclicio;
+   fname = gSystem->SplitAclicMode(file.c_str(), amode, arguments, aclicio);
+   mode = amode.Data(); args = arguments.Data(); io = aclicio.Data();
+   return string(fname.Data());
+}
+
 //______________________________________________________________________________
 //
 //
