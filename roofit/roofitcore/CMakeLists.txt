@@ -49,8 +49,8 @@ ROOT_GENERATE_DICTIONARY(G__RooFitCore3 ${headers3} LINKDEF LinkDef3.h)
 ROOT_GENERATE_DICTIONARY(G__RooFitCore4 ${headers4} LINKDEF LinkDef4.h)
 
 ROOT_GENERATE_ROOTMAP(RooFitCore LINKDEF LinkDef1.h LinkDef2.h LinkDef3.h LinkDef4.h
-                                 DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam SMatrix )
+                                 DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam )
 ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore1.cxx G__RooFitCore2.cxx G__RooFitCore3.cxx G__RooFitCore4.cxx LIBRARIES Core Cint 
-                    DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam SMatrix)
+                    DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam)
 ROOT_INSTALL_HEADERS()
 
