@@ -779,14 +779,27 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
    bool ismaster = (access(wfile.c_str(), F_OK) == 0) ? 1 : 0;
    
    // Scan the directory to add the top master (only if top master)
-   XrdOucString xo;
-   int ilog, idas;
+   XrdOucString xo, logtag;
+   int ilog, idas, iund1, iund2;
    struct dirent *ent = 0;
    while ((ent = (struct dirent *)readdir(dir))) {         
       xo = ent->d_name;
       bool recordinfo = 0;
       if ((ilog = xo.find(".log")) != STR_NPOS) {
          xo.replace(".log", "");
+
+         // If it is an "additional" logfile, extract a "tag" identifying it
+         // from the filename. Tag is in format: __<tag>__
+         iund1 = xo.find("__");
+         if (iund1 != STR_NPOS) {
+            iund2 = xo.rfind("__");
+            if ((iund2 != STR_NPOS) && (iund2 != iund1)) {
+               logtag = xo;
+               logtag.erase(iund2);
+               logtag.erase(0, iund1+2);
+            }
+         }
+
          if ((idas = xo.find('-')) != STR_NPOS) xo.erase(0, idas + 1);
          if ((idas = xo.find('-')) != STR_NPOS) xo.erase(idas);
          if (ord.length() > 0 && (ord == xo)) {
@@ -800,6 +813,7 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
          }
          if (recordinfo) {
             rmsg += "|"; rmsg += xo;
+            if (logtag != "") { rmsg += '('; rmsg += logtag; rmsg += ')'; }
             rmsg += " proof://"; rmsg += fMgr->Host(); rmsg += ':';
             rmsg += fMgr->Port(); rmsg += '/';
             rmsg += sdir; rmsg += '/'; rmsg += ent->d_name;
