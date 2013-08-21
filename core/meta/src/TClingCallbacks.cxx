@@ -99,7 +99,7 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name){
 
    Sema &SemaR = m_Interpreter->getSema();
    LookupResult R(SemaR, Name, SourceLocation(), Sema::LookupOrdinaryName);
-   llvm::StringRef qualName 
+   std::string qualName 
       = fDeclContextToLookIn->getQualifiedNameAsString() + "::" + Name.getAsString();
    fDeclContextToLookIn = 0;
    if (tryAutoloadInternal(qualName, R, SemaR.getCurScope())) {
