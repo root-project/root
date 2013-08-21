@@ -208,12 +208,10 @@ public:
   /// deprecated function
   static void cleanup() { warn(__func__); }
   /// deprecated function
-  static void initFastCERF(Int_t reBins =  800, Double_t reMin = -4.0, Double_t reMax = 4.0, 
-			   Int_t imBins = 1000, Double_t imMin = -4.0, Double_t imMax = 6.0)
+  static void initFastCERF(Int_t /*reBins =  800*/, Double_t /*reMin = -4.0*/, Double_t /*reMax = 4.0*/, 
+			   Int_t /*imBins = 1000*/, Double_t /*imMin = -4.0*/, Double_t /*imMax = 6.0*/)
   {
     warn(__func__);
-    // silence warnings about unused variables
-    reBins = imBins = 0, reMin = reMax = imMin = imMax = 0.; reBins = reMin; reMin = reBins;
   }
   
 private:

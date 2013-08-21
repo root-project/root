@@ -24,6 +24,7 @@
 #include <math.h>
 #include "Rtypes.h"
 #include "Riosfwd.h"
+#include <complex>
 
 // This is a bare-bones complex class adapted from the CINT complex.h header,
 // and introduced to support the complex error function in RooMath. The main
@@ -33,6 +34,9 @@
 
 class RooComplex {
 public:
+
+  inline RooComplex(std::complex<Double_t> c) : _re(c.real()), _im(c.imag()) { }
+
   inline RooComplex(Double_t a=0, Double_t b=0) : _re(a), _im(b) { warn(); }
   virtual ~RooComplex() { }
   inline RooComplex& operator=(const RooComplex& other) {
