@@ -107,8 +107,8 @@ Int_t TProofLog::Retrieve(const char *ord, TProofLog::ERetrieveOpt opt,
          } else {
             nd++;
          }
-         Int_t frac = (nd + nb) / nel * 100;
-         msg.Form("Retrieving logs: %d ok, %d not ok (%d %% processed) \r", nd, nb, frac);
+         Float_t frac = ((Float_t)nd + (Float_t)nb) * 100. / (Float_t)nel;
+         msg.Form("Retrieving logs: %d ok, %d not ok (%.0f%% processed) \r", nd, nb, frac);
          Prt(msg.Data());
       }
    }
