@@ -23,6 +23,12 @@
 #include "TMath.h"
 #include "RooComplex.h"
 
+#if defined(WIN32)
+#define __my_func__ __FUNCTION__
+#else
+#define __my_func__ __func__
+#endif
+
 typedef Double_t* pDouble_t;
 
 class RooMath {
@@ -181,37 +187,37 @@ public:
   
   /// deprecated function
   static RooComplex ComplexErrFunc(Double_t re, Double_t im = 0.)
-  { warn(__func__, "RooMath::faddeeva"); std::complex<Double_t> z = faddeeva(std::complex<Double_t>(re, im)); return RooComplex(z.real(), z.imag()); }
+  { warn(__my_func__, "RooMath::faddeeva"); std::complex<Double_t> z = faddeeva(std::complex<Double_t>(re, im)); return RooComplex(z.real(), z.imag()); }
   /// deprecated function
   static RooComplex ComplexErrFunc(const RooComplex& zz)
-  { warn(__func__, "RooMath::faddeeva"); std::complex<Double_t> z = faddeeva(std::complex<Double_t>(zz.re(), zz.im())); return RooComplex(z.real(), z.imag()); }
+  { warn(__my_func__, "RooMath::faddeeva"); std::complex<Double_t> z = faddeeva(std::complex<Double_t>(zz.re(), zz.im())); return RooComplex(z.real(), z.imag()); }
   /// deprecated function
   static RooComplex ComplexErrFuncFast(const RooComplex& zz)
-  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return RooComplex(z.real(), z.imag()); }
+  { warn(__my_func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return RooComplex(z.real(), z.imag()); }
   /// deprecated function
   static Double_t ComplexErrFuncFastRe(const RooComplex& zz)
-  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.real(); }
+  { warn(__my_func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.real(); }
   /// deprecated function
   static Double_t ComplexErrFuncFastIm(const RooComplex& zz)
-  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.imag(); }
+  { warn(__my_func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.imag(); }
   /// deprecated function
   static RooComplex ITPComplexErrFuncFast(const RooComplex& zz, Int_t)
-  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return RooComplex(z.real(), z.imag()); }
+  { warn(__my_func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return RooComplex(z.real(), z.imag()); }
   /// deprecated function
   static Double_t ITPComplexErrFuncFastRe(const RooComplex& zz, Int_t)
-  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.real(); }
+  { warn(__my_func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.real(); }
   /// deprecated function
   static Double_t ITPComplexErrFuncFastIm(const RooComplex& zz, Int_t)
-  { warn(__func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.imag(); }
+  { warn(__my_func__, "RooMath::faddeeva_fast"); std::complex<Double_t> z = faddeeva_fast(std::complex<Double_t>(zz.re(), zz.im())); return z.imag(); }
   /// deprecated function
-  static void cacheCERF(Bool_t) { warn(__func__); }
+  static void cacheCERF(Bool_t) { warn(__my_func__); }
   /// deprecated function
-  static void cleanup() { warn(__func__); }
+  static void cleanup() { warn(__my_func__); }
   /// deprecated function
   static void initFastCERF(Int_t /*reBins =  800*/, Double_t /*reMin = -4.0*/, Double_t /*reMax = 4.0*/, 
 			   Int_t /*imBins = 1000*/, Double_t /*imMin = -4.0*/, Double_t /*imMax = 6.0*/)
   {
-    warn(__func__);
+    warn(__my_func__);
   }
   
 private:
