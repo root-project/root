@@ -108,8 +108,8 @@ Int_t TProofLog::Retrieve(const char *ord, TProofLog::ERetrieveOpt opt,
             nd++;
          }
          Float_t frac = ((Float_t)nd + (Float_t)nb) * 100. / (Float_t)nel;
-         msg.Form("Retrieving logs: %d ok, %d not ok (%.0f%% processed) \r", nd, nb, frac);
-         Prt(msg.Data());
+         msg.Form("Retrieving logs: %d ok, %d not ok (%.0f%% processed)\r", nd, nb, frac);
+         Prt(msg.Data(), kFALSE);
       }
    }
    Prt("\n");
@@ -177,7 +177,7 @@ void TProofLog::Print(Option_t *opt) const
 }
 
 //________________________________________________________________________
-void TProofLog::Prt(const char *what)
+void TProofLog::Prt(const char *what, Bool_t newline)
 {
    // Special printing procedure
 
@@ -187,7 +187,8 @@ void TProofLog::Prt(const char *what)
          Emit("Prt(const char*)", what);
       } else {
          FILE *where = (fFILE) ? (FILE *)fFILE : stderr;
-         fprintf(where, "%s\n", what);
+         fputs(what, where);
+         if (newline) fputc('\n', where);
       }
    }
 }
