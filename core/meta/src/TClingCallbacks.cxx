@@ -177,7 +177,8 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
            cleanupRAII.pop();
            // The first decl in T will be EmptyDecl unless the FIXME above gets
            // fixed.
-           NamespaceDecl* NSD = cast<NamespaceDecl>(T->getLastDecl().getSingleDecl());
+           DeclGroupRef DGR = (*(T->decls_begin() + 1)).m_DGR;
+           NamespaceDecl* NSD = cast<NamespaceDecl>(DGR.getSingleDecl());
            NSD->setHasExternalVisibleStorage();
            fDeclContextToLookIn = NSD;
            R.addDecl(NSD);
