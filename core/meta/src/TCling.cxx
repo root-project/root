@@ -552,14 +552,14 @@ extern "C" int TCling__CompileMacro(const char *fileName, const char *options)
    return gSystem->CompileMacro(file.c_str(), opt.c_str());
 }
 
-extern "C" string TCling__SplitAclicMode(const char* fileName, string &mode,
-                                         string &args, string &io)
+extern "C" void TCling__SplitAclicMode(const char* fileName, string &mode,
+                                       string &args, string &io, string &fname)
 {
    string file(fileName);
-   TString fname, amode, arguments, aclicio;
-   fname = gSystem->SplitAclicMode(file.c_str(), amode, arguments, aclicio);
-   mode = amode.Data(); args = arguments.Data(); io = aclicio.Data();
-   return string(fname.Data());
+   TString f, amode, arguments, aclicio;
+   f = gSystem->SplitAclicMode(file.c_str(), amode, arguments, aclicio);
+   mode = amode.Data(); args = arguments.Data();
+   io = aclicio.Data(); fname = f.Data();
 }
 
 //______________________________________________________________________________

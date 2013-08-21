@@ -43,8 +43,8 @@ extern "C" {
    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
    void TCling__UpdateListsOnDeclDeserialized(const clang::Decl*);
    int TCling__CompileMacro(const char *fileName, const char *options);
-   std::string TCling__SplitAclicMode(const char* fileName, std::string &mode,
-                                      std::string &args, std::string &io);
+   void TCling__SplitAclicMode(const char* fileName, std::string &mode,
+                  std::string &args, std::string &io, std::string &fname);
 }
 
 // Preprocessor callbacks used to handle special cases
@@ -76,10 +76,9 @@ public:
       // remove any trailing "\n
       std::string filename(FileName.str().substr(0,
                            FileName.str().find_last_of('"')));
-      std::string mode, arguments, io;
+      std::string fname, mode, arguments, io;
       // extract the filename and ACliC mode
-      std::string fname = TCling__SplitAclicMode(filename.c_str(), mode,
-                                                 arguments, io);
+      TCling__SplitAclicMode(filename.c_str(), mode, arguments, io, fname);
       if (mode.length() > 0) {
          if (llvm::sys::fs::exists(fname)) {
             // format the CompileMacro() option string
