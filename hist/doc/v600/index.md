@@ -87,6 +87,7 @@
 -   In `PaintStat2` the temporary string used to paint the fit parameters 
     was too small and in some cases the errors where truncated. The size 
     of the string is now the same as in `PaintStat`.
+-   Display the bin error for 2D histograms in the status bar.
 
 
 ### TGraphPainter
