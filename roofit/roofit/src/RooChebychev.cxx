@@ -31,8 +31,15 @@
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
-#include "RooMath.h"
 
+#if defined(__my_func__)
+#undef __my_func__
+#endif
+#if defined(WIN32)
+#define __my_func__ __FUNCTION__
+#else
+#define __my_func__ __func__
+#endif
 
 ClassImp(RooChebychev)
 ;
@@ -100,7 +107,7 @@ Double_t RooChebychev::evaluate() const
   case  2: sum+=((RooAbsReal&)_coefList[1]).getVal()*p1(x2,2,-1);
   case  1: sum+=((RooAbsReal&)_coefList[0]).getVal()*x;
   case  0: sum+=1; break;
-  default: std::cerr << "In " << __func__ << " (" << __FILE__ << ", line " <<
+  default: std::cerr << "In " << __my_func__ << " (" << __FILE__ << ", line " <<
 	       __LINE__ << "): Higher order Chebychev polynomials currently "
 	       "unimplemented." << std::endl;
 	   assert(false);
@@ -156,10 +163,12 @@ Double_t RooChebychev::evalAnaInt(const Double_t x) const
     case  1: sum+=((RooAbsReal&)_coefList[0]).getVal()*x2*.5;
     case  0: sum+=x; break;
 	     
-    default: std::cerr << "In " << __func__ << " (" << __FILE__ << ", line " <<
+    default: std::cerr << "In " << __my_func__ << " (" << __FILE__ << ", line " <<
 	     __LINE__ << "): Higher order Chebychev polynomials currently "
 		 "unimplemented." << std::endl;
 	     assert(false);
   }
   return sum;
 }
+
+#undef __my_func__

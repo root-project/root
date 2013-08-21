@@ -23,6 +23,9 @@
 #include "TMath.h"
 #include "RooComplex.h"
 
+#if defined(__my_func__)
+#undef __my_func__
+#endif
 #if defined(WIN32)
 #define __my_func__ __FUNCTION__
 #else
@@ -226,5 +229,7 @@ private:
 
   ClassDef(RooMath,0) // math utility routines
 };
+
+#undef __my_func__
 
 #endif
