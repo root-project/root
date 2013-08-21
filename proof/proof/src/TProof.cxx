@@ -1139,7 +1139,7 @@ void TProof::ParseConfigField(const char *config)
             // Check if we have to add a var
             if (wrk == "" || wrk.BeginsWith("valgrind_opts:")) {
                wrk.ReplaceAll("valgrind_opts:","");
-               var.Form("%s --log-file=<logfilewrk>.valgrind.log %s%s", cmd.Data(), wrk.Data(), cq);
+               var.Form("%s --log-file=<logfilewrk>.__valgrind__.log %s%s", cmd.Data(), wrk.Data(), cq);
                TProof::AddEnvVar("PROOF_SLAVE_WRAPPERCMD", var);
                TString nwrks("2");
                Int_t inw = opt.Index('#');
@@ -1155,8 +1155,8 @@ void TProof::ParseConfigField(const char *config)
                }
                wrklab = nwrks;
                // Register the additional worker log in the session file
-               // (for the master is done automatically)
-               TProof::AddEnvVar("PROOF_ADDITIONALLOG", "valgrind.log*");
+               // (for the master this is done automatically)
+               TProof::AddEnvVar("PROOF_ADDITIONALLOG", "__valgrind__.log*");
             } else if (wrk != "") {
                wrklab = "ALL";
             }
@@ -1187,8 +1187,17 @@ void TProof::ParseConfigField(const char *config)
          // LD_LIBRARY_PATH) should be set externally
 
          Printf("*** Requested IgProf profiling ***");
-         TProof::AddEnvVar("PROOF_WRAPPERCMD", "igprof -d -pk -pp -t proofserv.exe -o <logfilewrk>.igprof.pp");
-         TProof::AddEnvVar("PROOF_ADDITIONALLOG", "igprof.pp*");
+         TString addLogExt = "__igprof.pp__.log";
+         TString addLogFmt = "igprof -d -pk -pp -t proofserv.exe -o %s.%s";
+         TString tmp;
+
+         tmp.Form(addLogFmt.Data(), "<logfilemst>", addLogExt.Data());
+         TProof::AddEnvVar("PROOF_MASTER_WRAPPERCMD",  tmp.Data());
+
+         tmp.Form(addLogFmt.Data(), "<logfilewrk>", addLogExt.Data());
+         TProof::AddEnvVar("PROOF_SLAVE_WRAPPERCMD", tmp.Data() );
+
+         TProof::AddEnvVar("PROOF_ADDITIONALLOG", addLogExt.Data());
 
       } else if (opt.BeginsWith("workers=")) {
 
@@ -12213,9 +12222,13 @@ void TProof::SaveWorkerInfo()
    TString addLogTag;
    if (gSystem->Getenv("PROOF_ADDITIONALLOG")) {
       addlogext = gSystem->Getenv("PROOF_ADDITIONALLOG");
-      if (addlogext == "igprof.pp*") addLogTag = "igprof";
-      else if (addlogext == "valgrind.log*") addLogTag = "valgrind";
-      else addLogTag = "+";
+      TPMERegexp reLogTag("^__(.*)__\\.log");  // $
+      if (reLogTag.Match(addlogext) == 2) {
+         addLogTag = reLogTag[1];
+      }
+      else {
+         addLogTag = "+++";
+      }
       if (gDebug > 0)
          Info("SaveWorkerInfo", "request for additional line with ext: '%s'",  addlogext.Data());
    }
