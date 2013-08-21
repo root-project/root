@@ -258,7 +258,7 @@ Draw a lego plot with hidden surface removal.
 Draw a lego plot using colors to show the cell contents When the option "0" is
 used with any LEGO option, the empty bins are not drawn.
 </td></tr>
- 
+
 <tr><th valign=top>"LEGO3"</th><td>
 Draw a lego plot with hidden surface removal, like LEGO1 but the border lines
 of each lego-bar are not drawn.
@@ -840,9 +840,9 @@ and activate it again with:
       h->SetStats(1).
 </pre>
 
-<p>Labels used in the statistics box ("Mean", "RMS", ...) can be changed from 
-<a href="http://root.cern.ch/download/doc/primer/ROOTPrimer.html#configure-root-at-start-up">$ROOTSYS/etc/system.rootrc</a> or 
-<a href="http://root.cern.ch/download/doc/primer/ROOTPrimer.html#configure-root-at-start-up">.rootrc</a> 
+<p>Labels used in the statistics box ("Mean", "RMS", ...) can be changed from
+<a href="http://root.cern.ch/download/doc/primer/ROOTPrimer.html#configure-root-at-start-up">$ROOTSYS/etc/system.rootrc</a> or
+<a href="http://root.cern.ch/download/doc/primer/ROOTPrimer.html#configure-root-at-start-up">.rootrc</a>
 (look for the string <tt>"Hist.Stats."</tt>).
 </p>
 
@@ -1185,10 +1185,10 @@ Begin_Macro(source)
    for (Int_t i=0;i<1000;i++) {
       double x,y;
       gRandom->Rannor(x,y);
-      if(x>0 && y>0) hb1->Fill(x,y,4);
-      if(x<0 && y<0) hb2->Fill(x,y,3);
-      if(x>0 && y<0) hb3->Fill(x,y,2);
-      if(x<0 && y>0) hb4->Fill(x,y,1);
+      if (x>0 && y>0) hb1->Fill(x,y,4);
+      if (x<0 && y<0) hb2->Fill(x,y,3);
+      if (x>0 && y<0) hb3->Fill(x,y,2);
+      if (x<0 && y>0) hb4->Fill(x,y,1);
    }
    hb1->SetFillColor(1);
    hb2->SetFillColor(2);
@@ -1663,9 +1663,9 @@ Begin_Macro(source)
 }
 End_Macro
 Begin_Html
- 
+
 <p>The following example shows a 2D histogram plotted with the option
-<tt>"LEGO3"</tt>. Like the option <tt>"LEGO1"</tt>, the option <tt>"LEGO3"</tt> 
+<tt>"LEGO3"</tt>. Like the option <tt>"LEGO1"</tt>, the option <tt>"LEGO3"</tt>
 draws a lego plot using the hidden surface removal technique but doesn't draw
 the border lines of each individual lego-bar. This is very useful for histograms
 having many bins. With such histograms the option <tt>"LEGO1"</tt> gives a black
@@ -1992,12 +1992,12 @@ Begin_Macro(source)
       hlcc->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hlcc->SetFillColor(kYellow);
-   c3->cd(1) ; hlcc->Draw("LEGO1 CYL");
-   c3->cd(2) ; TH2F *hlpc = hlcc->DrawClone("LEGO1 POL");
+   c3->cd(1); hlcc->Draw("LEGO1 CYL");
+   c3->cd(2); TH2F *hlpc = hlcc->DrawClone("LEGO1 POL");
    hlpc->SetTitle("Polar coordinates");
-   c3->cd(3) ; TH2F *hlsc = hlcc->DrawClone("LEGO1 SPH");
+   c3->cd(3); TH2F *hlsc = hlcc->DrawClone("LEGO1 SPH");
    hlsc->SetTitle("Spherical coordinates");
-   c3->cd(4) ; TH2F *hlprpc = hlcc->DrawClone("LEGO1 PSR");
+   c3->cd(4); TH2F *hlprpc = hlcc->DrawClone("LEGO1 PSR");
    hlprpc->SetTitle("PseudoRapidity/Phi coordinates");
    return c3;
 }
@@ -2020,12 +2020,12 @@ Begin_Macro(source)
       hscc->Fill(2+0.5*px,2*py-10.,0.1);
    }
    gStyle->SetPalette(1);
-   c4->cd(1) ; hscc->Draw("SURF1 CYL");
-   c4->cd(2) ; TH2F *hspc = hscc->DrawClone("SURF1 POL");
+   c4->cd(1); hscc->Draw("SURF1 CYL");
+   c4->cd(2); TH2F *hspc = hscc->DrawClone("SURF1 POL");
    hspc->SetTitle("Polar coordinates");
-   c4->cd(3) ; TH2F *hssc = hscc->DrawClone("SURF1 SPH");
+   c4->cd(3); TH2F *hssc = hscc->DrawClone("SURF1 SPH");
    hssc->SetTitle("Spherical coordinates");
-   c4->cd(4) ; TH2F *hsprpc = hscc->DrawClone("SURF1 PSR");
+   c4->cd(4); TH2F *hsprpc = hscc->DrawClone("SURF1 PSR");
    hsprpc->SetTitle("PseudoRapidity/Phi coordinates");
    return c4;
 }
@@ -3198,6 +3198,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+
 //______________________________________________________________________________
 TList *THistPainter::GetContourList(Double_t contour) const
 {
@@ -3291,30 +3292,38 @@ char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
    if (fH->GetDimension() == 1) {
       if (fH->InheritsFrom(TProfile::Class())) {
          TProfile *tp = (TProfile*)fH;
-         snprintf(info,200,"(x=%g, y=%g, binx=%d, binc=%g, bine=%g, binn=%d)", x, y, binx, fH->GetBinContent(binx), fH->GetBinError(binx), (Int_t) tp->GetBinEntries(binx));
+         snprintf(info,200,"(x=%g, y=%g, binx=%d, binc=%g, bine=%g, binn=%d)",
+                  x, y, binx, fH->GetBinContent(binx), fH->GetBinError(binx),
+                  (Int_t) tp->GetBinEntries(binx));
       }
       else {
          Double_t integ = 0;
          for (Int_t bin=binmin;bin<=binx;bin++) {integ += fH->GetBinContent(bin);}
-         snprintf(info,200,"(x=%g, y=%g, binx=%d, binc=%g, Sum=%g)",x,y,binx,fH->GetBinContent(binx),integ);
+         snprintf(info,200,"(x=%g, y=%g, binx=%d, binc=%g, Sum=%g)",
+                  x,y,binx,fH->GetBinContent(binx),integ);
       }
-   } else if (fH->GetDimension() == 2){
+   } else if (fH->GetDimension() == 2) {
       if (fH->InheritsFrom(TH2Poly::Class())) {
          TH2Poly *th2 = (TH2Poly*)fH;
          biny = th2->FindBin(x,y);
-         snprintf(info,200,"%s (x=%g, y=%g, bin=%d, binc=%g)",th2->GetBinTitle(biny),x,y,biny,th2->GetBinContent(biny));
-      } 
+         snprintf(info,200,"%s (x=%g, y=%g, bin=%d, binc=%g)",
+                  th2->GetBinTitle(biny),x,y,biny,th2->GetBinContent(biny));
+      }
       else if (fH->InheritsFrom(TProfile2D::Class())) {
          TProfile2D *tp = (TProfile2D*)fH;
          biny = fYaxis->FindFixBin(y);
          Int_t bin = fH->GetBin(binx,biny);
-         snprintf(info,200,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g, bine=%g, binn=%d)", x, y, binx, biny, fH->GetBinContent(bin), fH->GetBinError(bin), (Int_t) tp->GetBinEntries(bin));
+         snprintf(info,200,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g, bine=%g, binn=%d)",
+                  x, y, binx, biny, fH->GetBinContent(bin),
+                  fH->GetBinError(bin), (Int_t) tp->GetBinEntries(bin));
       } else {
          biny = fYaxis->FindFixBin(y);
-         snprintf(info,200,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g)",x,y,binx,biny,fH->GetBinContent(binx,biny));
+         snprintf(info,200,"(x=%g, y=%g, binx=%d, biny=%d, binc=%g bine=%g)",
+                  x,y,binx,biny,fH->GetBinContent(binx,biny),
+                  fH->GetBinError(binx,biny));
       }
-   } else { 
-      // 3d case: retrieving the x,y,z bin is not yet implemented 
+   } else {
+      // 3d case: retrieving the x,y,z bin is not yet implemented
       // print just the x,y info
       snprintf(info,200,"(x=%g, y=%g)",x,y);
    }
@@ -3436,8 +3445,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       Hoption.AxisPos += 1;
       strncpy(l,"  ",2);
    }
-   if((Hoption.AxisPos == 10 || Hoption.AxisPos == 1) && (nch == 2)) Hoption.Hist = 1;
-   if(Hoption.AxisPos == 11 && nch == 4) Hoption.Hist = 1;
+   if ((Hoption.AxisPos == 10 || Hoption.AxisPos == 1) && (nch == 2)) Hoption.Hist = 1;
+   if (Hoption.AxisPos == 11 && nch == 4) Hoption.Hist = 1;
 
    l = strstr(chopt,"SAMES");
    if (l) {
@@ -3718,7 +3727,7 @@ Int_t THistPainter::MakeCuts(char *choptin)
    *right = 0;
    char *comma, *minus;
    Int_t i;
-   while(1) {
+   while (1) {
       comma = strchr(cuts,',');
       if (comma) *comma = 0;
       minus = strchr(cuts,'-');
@@ -5369,7 +5378,7 @@ void THistPainter::PaintErrors(Option_t *)
          if ((yi3 < yi1 - s2y) && (yi3 < ymax)) gPad->PaintLine(xi3,yi3,xi4,TMath::Min(yi1 - s2y,ymax));
          if ((yi1 + s2y < yi4) && (yi4 > ymin)) gPad->PaintLine(xi3,TMath::Max(yi1 + s2y, ymin),xi4,yi4);
          // don't duplicate the horizontal line
-         if (Hoption.Hist != 2){
+         if (Hoption.Hist != 2) {
             if (yi1<ymax && yi1>ymin) {
               if (xi1 < xi3 - s2x) gPad->PaintLine(xi1,yi1,xi3 - s2x,yi2);
               if (xi3 + s2x < xi2) gPad->PaintLine(xi3 + s2x,yi1,xi2,yi2);
@@ -5380,7 +5389,7 @@ void THistPainter::PaintErrors(Option_t *)
          if ((yi3 < yi1) && (yi3 < ymax)) gPad->PaintLine(xi3,yi3,xi4,TMath::Min(yi1,ymax));
          if ((yi1 < yi4) && (yi4 > ymin)) gPad->PaintLine(xi3,TMath::Max(yi1,ymin),xi4,yi4);
          // don't duplicate the horizontal line
-         if (Hoption.Hist != 2){
+         if (Hoption.Hist != 2) {
             if (yi1<ymax && yi1>ymin) {
                if (xi1 < xi3) gPad->PaintLine(xi1,yi1,xi3,yi2);
                if (xi3 < xi2) gPad->PaintLine(xi3,yi1,xi2,yi2);
@@ -5429,7 +5438,7 @@ L30:
       // 2*npoints. In such cases the array xline and yline must be arranged
       // before being plotted. The next loop does that.
       if (if2 > npoints) {
-         for(i=1; i<if1 ;i++) {
+         for (i=1; i<if1; i++) {
             xline[if1-2+i] = xline[if2-1+i];
             yline[if1-2+i] = yline[if2-1+i];
          }
@@ -5728,7 +5737,7 @@ void THistPainter::PaintHist(Option_t *)
          if (Hoption.Logy) yb = TMath::Log10(TMath::Max(c1,.1*logymin));
          else              yb = c1;
       }
-      if(!Hoption.Line){
+      if (!Hoption.Line) {
          yb = TMath::Max(yb, ymin);
          yb = TMath::Min(yb, ymax);
       }
@@ -5938,7 +5947,7 @@ Int_t THistPainter::PaintInit()
          if (Hoption.Same) {
             Hparam.xlowedge = TMath::Power(10, gPad->GetUxmin());
          } else {
-            for (i=first; i<=last ;i++) {
+            for (i=first; i<=last; i++) {
                Double_t binLow = fXaxis->GetBinLowEdge(i);
                if (binLow>0) {
                   Hparam.xlowedge = binLow;
@@ -6064,7 +6073,7 @@ Int_t THistPainter::PaintInit()
    }
 
    // In some cases, mainly because of precision issues, ymin and ymax could almost equal.
-   if(TMath::AreEqualRel(ymin,ymax,1E-15)) {
+   if (TMath::AreEqualRel(ymin,ymax,1E-15)) {
       ymin = ymin*(1-1E-14);
       ymax = ymax*(1+1E-14);
    }
@@ -6333,9 +6342,9 @@ void THistPainter::PaintH3Iso()
    Double_t *y = new Double_t[ny];
    Double_t *z = new Double_t[nz];
 
-   for ( i=0 ; i<nx ; i++) x[i] = xaxis->GetBinCenter(i+1);
-   for ( i=0 ; i<ny ; i++) y[i] = yaxis->GetBinCenter(i+1);
-   for ( i=0 ; i<nz ; i++) z[i] = zaxis->GetBinCenter(i+1);
+   for (i=0; i<nx; i++) x[i] = xaxis->GetBinCenter(i+1);
+   for (i=0; i<ny; i++) y[i] = yaxis->GetBinCenter(i+1);
+   for (i=0; i<nz; i++) z[i] = zaxis->GetBinCenter(i+1);
 
    fXbuf[0] = xaxis->GetBinLowEdge(xaxis->GetFirst());
    fYbuf[0] = xaxis->GetBinUpEdge(xaxis->GetLast());
@@ -6515,7 +6524,7 @@ void THistPainter::PaintLego(Option_t *)
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
 
    //     Initialize colors
-   if (!fStack) { 
+   if (!fStack) {
       fLego->SetEdgeAtt(fH->GetLineColor(),fH->GetLineStyle(),fH->GetLineWidth(),0);
    } else {
       for (Int_t id=0;id<=fStack->GetSize();id++) {
@@ -6533,7 +6542,7 @@ void THistPainter::PaintLego(Option_t *)
          colormain = hid->GetFillColor();
          if (colormain == 1) colormain = 17; //avoid drawing with black
          if (drawShadowsInLego1) colordark = TColor::GetColorDark(colormain);
-         else                    colordark = colormain ; 
+         else                    colordark = colormain;
          fLego->SetColorMain(colormain,id);
          fLego->SetColorDark(colordark,id);
          if (id <= 1)    fLego->SetColorMain(colormain,-1);  // Set Bottom color
@@ -6955,11 +6964,11 @@ void THistPainter::PaintScatterPlot(Option_t *option)
                }
                fXbuf[marker] = (random.Rndm(loop)*xstep) + xk;
                fYbuf[marker] = (random.Rndm(loop)*ystep) + yk;
-               if (Hoption.Logx){
+               if (Hoption.Logx) {
                   if (fXbuf[marker] > 0) fXbuf[marker] = TMath::Log10(fXbuf[marker]);
                   else                   break;
                }
-               if (Hoption.Logy){
+               if (Hoption.Logy) {
                   if (fYbuf[marker] > 0) fYbuf[marker] = TMath::Log10(fYbuf[marker]);
                   else                  break;
                }
@@ -7151,7 +7160,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
          snprintf(t,100,textstats,fH->GetRMS(1),fH->GetRMSError(1));
       }
       stats->AddText(t);
-      if(fH->InheritsFrom(TProfile::Class())) {
+      if (fH->InheritsFrom(TProfile::Class())) {
          if (print_rms == 1) {
             snprintf(textstats,50,"%s = %s%s",gStringRMSY.Data(),"%",stats->GetStatFormat());
             snprintf(t,100,textstats,fH->GetRMS(2));
@@ -9325,7 +9334,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    TVirtualPad *padsav = gPad;
    TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%lx_projection_%d",
                                                                               (ULong_t)fH, fShowProjection));
-   if(c) {
+   if (c) {
       c->Clear();
    } else {
       fShowProjection = 0;
@@ -9408,7 +9417,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    TVirtualPad *padsav = gPad;
    TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(Form("c_%lx_projection_%d",
                                                                               (ULong_t)fH, fShowProjection));
-   if(!c) {
+   if (!c) {
       fShowProjection = 0;
       return;
    }
@@ -9425,7 +9434,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             Int_t lastZ  = zaxis->GetLast();
             Int_t binz = firstZ + Int_t((lastZ-firstZ)*(py-pymin)/(pymax-pymin));
             zaxis->SetRange(binz,binz+nbins-1);
-            if(line1[0].GetX()) gVirtualX->DrawPolyLine(2,line1);
+            if (line1[0].GetX()) gVirtualX->DrawPolyLine(2,line1);
             if (nbins>1 && line1[0].GetX()) {
                gVirtualX->DrawPolyLine(2,line2);
                gVirtualX->DrawPolyLine(2,line3);
@@ -9532,7 +9541,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             Int_t lastZ  = zaxis->GetLast();
             Int_t binz = firstZ + Int_t((lastZ-firstZ)*(py-pymin)/(pymax-pymin));
             zaxis->SetRange(binz,binz+nbins-1);
-            if(line1[0].GetX()) gVirtualX->DrawPolyLine(2,line1);
+            if (line1[0].GetX()) gVirtualX->DrawPolyLine(2,line1);
             if (nbins>1 && line1[0].GetX()) {
                gVirtualX->DrawPolyLine(2,line2);
                gVirtualX->DrawPolyLine(2,line3);
@@ -9639,7 +9648,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             Int_t lastY  = yaxis->GetLast();
             Int_t biny = firstY + Int_t((lastY-firstY)*(py-pymin)/(pymax-pymin));
             yaxis->SetRange(biny,biny+nbins-1);
-            if(line1[0].GetX()) gVirtualX->DrawPolyLine(2,line1);
+            if (line1[0].GetX()) gVirtualX->DrawPolyLine(2,line1);
             if (nbins>1 && line1[0].GetX()) {
                gVirtualX->DrawPolyLine(2,line2);
                gVirtualX->DrawPolyLine(2,line3);
@@ -9742,8 +9751,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             Int_t last  = zaxis->GetLast();
             Int_t binz  = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
             zaxis->SetRange(binz,binz+nbins-1);
-            if(rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
-            if(nbins>1 && rect2[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
+            if (rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
+            if (nbins>1 && rect2[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
             xx[0] = xaxis->GetXmin();
             xx[1] = yaxis->GetXmax();
             xx[2] = zaxis->GetBinCenter(binz);
@@ -9797,7 +9806,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             zaxis->SetRange(first,last);
             if (hp) {
                hp->SetFillColor(38);
-               if(nbins==1)hp->SetTitle(Form("ProjectionXY of binz=%d (%.1f)", binz,value1));
+               if (nbins==1)hp->SetTitle(Form("ProjectionXY of binz=%d (%.1f)", binz,value1));
                else        hp->SetTitle(Form("ProjectionXY, binz range=%d-%d (%.1f-%.1f)", binz,binz+nbins-1,value1,value2));
                hp->SetXTitle(fH->GetYaxis()->GetTitle());
                hp->SetYTitle(fH->GetXaxis()->GetTitle());
@@ -9814,8 +9823,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             Int_t last  = zaxis->GetLast();
             Int_t binz = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
             zaxis->SetRange(binz,binz+nbins-1);
-            if(rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
-            if(nbins>1 && rect2[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
+            if (rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
+            if (nbins>1 && rect2[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
             xx[0] = xaxis->GetXmin();
             xx[1] = yaxis->GetXmax();
             xx[2] = zaxis->GetBinCenter(binz);
@@ -9868,7 +9877,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             zaxis->SetRange(first,last);
             if (hp) {
                hp->SetFillColor(38);
-               if(nbins==1)hp->SetTitle(Form("ProjectionYX of binz=%d (%.1f)", binz,value1));
+               if (nbins==1)hp->SetTitle(Form("ProjectionYX of binz=%d (%.1f)", binz,value1));
                else        hp->SetTitle(Form("ProjectionXY, binz range=%d-%d (%.1f-%.1f)", binz,binz+nbins-1,value1,value2));
                hp->SetXTitle(fH->GetXaxis()->GetTitle());
                hp->SetYTitle(fH->GetYaxis()->GetTitle());
@@ -9885,8 +9894,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             Int_t last  = yaxis->GetLast();
             Int_t biny = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
             yaxis->SetRange(biny,biny+nbins-1);
-            if(rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
-            if(nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
+            if (rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
+            if (nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
             xx[0] = xaxis->GetXmin();
             xx[2] = zaxis->GetXmax();
             xx[1] = yaxis->GetBinCenter(biny);
@@ -9939,7 +9948,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             yaxis->SetRange(first,last);
             if (hp) {
                hp->SetFillColor(38);
-               if(nbins==1)hp->SetTitle(Form("ProjectionXZ of biny=%d (%.1f)", biny,value1));
+               if (nbins==1)hp->SetTitle(Form("ProjectionXZ of biny=%d (%.1f)", biny,value1));
                else        hp->SetTitle(Form("ProjectionXZ, biny range=%d-%d (%.1f-%.1f)", biny,biny+nbins-1,value1,value2));
                hp->SetXTitle(fH->GetZaxis()->GetTitle());
                hp->SetYTitle(fH->GetXaxis()->GetTitle());
@@ -9956,8 +9965,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             Int_t last  = yaxis->GetLast();
             Int_t biny = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
             yaxis->SetRange(biny,biny+nbins-1);
-            if(rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
-            if(nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
+            if (rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
+            if (nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
             xx[0] = xaxis->GetXmin();
             xx[2] = zaxis->GetXmax();
             xx[1] = yaxis->GetBinCenter(biny);
@@ -10010,7 +10019,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             yaxis->SetRange(first,last);
             if (hp) {
                hp->SetFillColor(38);
-               if(nbins==1)hp->SetTitle(Form("ProjectionZX of biny=%d (%.1f)", biny,value1));
+               if (nbins==1)hp->SetTitle(Form("ProjectionZX of biny=%d (%.1f)", biny,value1));
                else        hp->SetTitle(Form("ProjectionZX, binY range=%d-%d (%.1f-%.1f)", biny,biny+nbins-1,value1,value2));
                hp->SetXTitle(fH->GetXaxis()->GetTitle());
                hp->SetYTitle(fH->GetZaxis()->GetTitle());
@@ -10027,8 +10036,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             Int_t last  = xaxis->GetLast();
             Int_t binx = first + Int_t((last-first)*(px-pxmin)/(pxmax-pxmin));
             xaxis->SetRange(binx,binx+nbins-1);
-            if(rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect1);
-            if(nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
+            if (rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect1);
+            if (nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
             xx[2] = zaxis->GetXmin();
             xx[1] = yaxis->GetXmax();
             xx[0] = xaxis->GetBinCenter(binx);
@@ -10081,7 +10090,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             xaxis->SetRange(first,last);
             if (hp) {
                hp->SetFillColor(38);
-               if(nbins==1)hp->SetTitle(Form("ProjectionYZ of binx=%d (%.1f)", binx,value1));
+               if (nbins==1)hp->SetTitle(Form("ProjectionYZ of binx=%d (%.1f)", binx,value1));
                else        hp->SetTitle(Form("ProjectionYZ, binx range=%d-%d (%.1f-%.1f)", binx,binx+nbins-1,value1,value2));
                hp->SetXTitle(fH->GetZaxis()->GetTitle());
                hp->SetYTitle(fH->GetYaxis()->GetTitle());
@@ -10098,8 +10107,8 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             Int_t last  = xaxis->GetLast();
             Int_t binx = first + Int_t((last-first)*(px-pxmin)/(pxmax-pxmin));
             xaxis->SetRange(binx,binx+nbins-1);
-            if(rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect1);
-            if(nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
+            if (rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect1);
+            if (nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
             xx[2] = zaxis->GetXmin();
             xx[1] = yaxis->GetXmax();
             xx[0] = xaxis->GetBinCenter(binx);
@@ -10152,7 +10161,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             xaxis->SetRange(first,last);
             if (hp) {
                hp->SetFillColor(38);
-               if(nbins==1)hp->SetTitle(Form("ProjectionZY of binx=%d (%.1f)", binx,value1));
+               if (nbins==1)hp->SetTitle(Form("ProjectionZY of binx=%d (%.1f)", binx,value1));
                else        hp->SetTitle(Form("ProjectionZY, binx range=%d-%d (%.1f-%.1f)", binx,binx+nbins-1,value1,value2));
                hp->SetXTitle(fH->GetYaxis()->GetTitle());
                hp->SetYTitle(fH->GetZaxis()->GetTitle());
