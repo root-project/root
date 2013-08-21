@@ -1,4 +1,4 @@
-// @(#)root/proof:$Id$
+// @(#)root/proof:$Id: 5d579564fccbadad9cd6f81ccb7726dddea80e0d $
 // Author: G. Ganis   31/08/06
 
 /*************************************************************************
@@ -64,7 +64,7 @@ public:
    TList *GetListOfLogs() const { return fElem; }
    Int_t  Grep(const char *txt, Int_t from = 0);
    void   Print(Option_t *opt = 0) const;
-   void   Prt(const char *what);
+   void   Prt(const char *what, Bool_t newline = kTRUE);
    Int_t  Retrieve(const char *ord = "*",
                   TProofLog::ERetrieveOpt opt = TProofLog::kTrailing,
                   const char *fname = 0, const char *pattern = 0);
