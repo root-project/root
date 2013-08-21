@@ -31,6 +31,7 @@
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
+#include "RooMath.h"
 
 
 ClassImp(RooChebychev)
