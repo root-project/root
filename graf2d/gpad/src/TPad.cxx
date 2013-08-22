@@ -5209,9 +5209,13 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
    TIter next(GetListOfPrimitives());
    TObject *obj;
+   Int_t grnum = 0;
 
-   while ((obj = next()))
-         obj->SavePrimitive(out, (Option_t *)next.GetOption());
+   while ((obj = next())) {
+      if (obj->InheritsFrom(TGraph::Class()))
+         if (!strcmp(obj->GetName(),"Graph")) ((TGraph*)obj)->SetName(Form("Graph%d",grnum++));
+      obj->SavePrimitive(out, (Option_t *)next.GetOption());
+   }
    out<<"   "<<cname<<"->Modified();"<<std::endl;
    out<<"   "<<GetMother()->GetName()<<"->cd();"<<std::endl;
    if (padsav) padsav->cd();
