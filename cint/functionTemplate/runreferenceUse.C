@@ -1,8 +1,17 @@
+#ifdef ClingWorkAroundUnnamedInclude
+#ifndef ClingWorkAroundMissingSmartInclude
+#include "MyClassReferenceUse.C+"
+#endif
+void runreferenceUse() {
+#else
 {
+#endif
 #ifdef ClingWorkAroundMissingSmartInclude
    gROOT->ProcessLine(".L MyClassReferenceUse.C+");
 #else
-  #include "MyClassReferenceUse.C+"
+#ifndef ClingWorkAroundUnnamedInclude
+   #include "MyClassReferenceUse.C+"
+#endif
 #endif
 #ifdef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine("MyClass& m = GetMyClassReference();");

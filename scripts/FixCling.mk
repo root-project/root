@@ -32,7 +32,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundExtraParensWithImplicitAuto"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoPrivateClassIO"
 # Convenience features, would be nice to have.
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
-CALLROOTEXE += -e "\#define ClingWorkAroundMissingSmartInclude"
+#CALLROOTEXE += -e "\#define ClingWorkAroundMissingSmartInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenUnnamedReturn"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedDetection"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedInclude"
@@ -72,7 +72,7 @@ ClingWorkAroundMissingAutoLoadingForTemplates = yes  # See: https://sft.its.cern
                                                #     https://sft.its.cern.ch/jira/browse/ROOT-4786
                                                #     https://sft.its.cern.ch/jira/browse/ROOT-4779
 ClingWorkAroundJITfullSymbolResolution = yes   # See https://savannah.cern.ch/bugs/index.php?98898
-ClingWorkAroundMissingSmartInclude = yes
+#ClingWorkAroundMissingSmartInclude = yes
 ClingWorkAroundBrokenUnnamedReturn = yes       # See https://savannah.cern.ch/bugs/index.php?99032
 ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://savannah.cern.ch/bugs/index.php?99236
 #ClingWorkAroundCallfuncAndInline = yes        # see https://savannah.cern.ch/bugs/index.php?98425

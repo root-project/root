@@ -3,7 +3,7 @@
 #ifdef ClingWorkAroundMissingSmartInclude
 #include "marker.h"
 #else
-#include "marker.h"
+#include "marker.h+"
 #endif
 
 void rewrite(const char *filename = "inherit.root")
