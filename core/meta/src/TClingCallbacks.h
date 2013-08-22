@@ -37,6 +37,8 @@ private:
    bool fFirstRun;
    bool fIsAutoloading;
    bool fIsAutoloadingRecursively;
+   bool fPPOldFlag;
+   bool fPPChanged;
 public:
    TClingCallbacks(cling::Interpreter* interp);
 
@@ -46,6 +48,12 @@ public:
 
    void SetAutoloadingEnabled(bool val = true) { fIsAutoloading = val; }
    bool IsAutoloadingEnabled() { return fIsAutoloading; }
+
+   // Preprocessor callbacks used to handle special cases like for example: 
+   // #include "myMacro.C+"
+   //
+   virtual bool FileNotFound(llvm::StringRef FileName, 
+                             llvm::SmallVectorImpl<char>& RecoveryPath);
 
    virtual bool LookupObject(clang::LookupResult &R, clang::Scope *S);
    virtual bool LookupObject(const clang::DeclContext* DC, 
