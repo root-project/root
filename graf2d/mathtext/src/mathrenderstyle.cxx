@@ -455,11 +455,13 @@ namespace mathtext {
 								  size);
 			const float remaining_height =
 				height - bounding_box_sum.height();
-			const unsigned long repeat_ratio =
+         unsigned long repeat_ratio = 0;
+         if (bounding_box_repeatable.height() !=0) {
+		      repeat_ratio =
 				(unsigned long)ceil(
 					remaining_height /
 					bounding_box_repeatable.height());
-
+         }
 			nrepeat = glyph[GLYPH_MIDDLE] == L'\0' ?
 				repeat_ratio : ((repeat_ratio + 1UL) >> 1);
 		}
