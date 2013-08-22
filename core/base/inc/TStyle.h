@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/base:$Id: 5214d7dc2746ceb518366bc6c4f4068b652d5241 $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -370,8 +370,8 @@ public:
    void             SetPaintTextFormat(const char *format="g") {fPaintTextFormat = format;}
    void             SetPaperSize(EPaperSize size);
    void             SetPaperSize(Float_t xsize=20, Float_t ysize=26);
-   void             SetStatColor(Int_t color=19) {fStatColor=color;}
-   void             SetStatTextColor(Int_t color=1) {fStatTextColor=color;}
+   void             SetStatColor(Color_t color=19) {fStatColor=color;}
+   void             SetStatTextColor(Color_t color=1) {fStatTextColor=color;}
    void             SetStatStyle(Style_t style=1001) {fStatStyle=style;}
    void             SetStatBorderSize(Width_t size=2) {fStatBorderSize=size;}
    void             SetStatFont(Style_t font=62) {fStatFont=font;}
