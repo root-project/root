@@ -136,7 +136,8 @@ public:
 };
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
-   : InterpreterCallbacks(interp),
+   : InterpreterCallbacks(interp, /*enableExternalSemaSourceCallbacks*/true,
+                          /*enableDeserializationListenerCallbacks*/true),
      fLastLookupCtx(0), fROOTSpecialNamespace(0), fDeclContextToLookIn(0),
      fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false) {
    Transaction* T = 0;
