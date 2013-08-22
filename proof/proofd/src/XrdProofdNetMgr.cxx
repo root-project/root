@@ -1390,10 +1390,14 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path,
    if (pat && strlen(pat) > 0) {
       lcmd = strlen(pat) + strlen(file) + 20;
       cmd = new char[lcmd];
-      if (opt == 2) {
-         snprintf(cmd, lcmd, "grep -v %s %s", pat, file);
-      } else {
+      if (opt == 1) {
          snprintf(cmd, lcmd, "grep %s %s", pat, file);
+      } else if (opt == 2) {
+         snprintf(cmd, lcmd, "grep -v %s %s", pat, file);
+      } else if (opt == 3) {
+         snprintf(cmd, lcmd, "cat %s | %s", file, pat);
+      } else { // should not be here
+         snprintf(cmd, lcmd, "cat %s", file);
       }
    } else {
       lcmd = strlen(file) + 10;
