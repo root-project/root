@@ -1436,7 +1436,7 @@ Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t 
    //  of iteration of the Brent algorithm
    //  If the flag logx is set the grid search is done in log step size
    //  This is done automatically if the log scale is set in the current Pad
-    //
+   //
    // NOTE: see also TF1::GetX
 
    if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
@@ -1491,6 +1491,7 @@ Double_t TF1::GetMinimum(Double_t xmin, Double_t xmax, Double_t epsilon, Int_t m
 
    return x;
 }
+
 
 //______________________________________________________________________________
 Double_t TF1::GetMinMaxNDim(Double_t * x , bool findmax, Double_t epsilon, Int_t maxiter  ) const
@@ -1653,6 +1654,7 @@ Double_t TF1::GetX(Double_t fy, Double_t xmin, Double_t xmax, Double_t epsilon, 
    return brf.Root();
 
 }
+
 
 //______________________________________________________________________________
 Int_t TF1::GetNDF() const
@@ -2031,10 +2033,12 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
    return x;
 }
 
+
 //______________________________________________________________________________
 void TF1::GetRange(Double_t *rmin, Double_t *rmax) const
 {
    // Return range of a generic N-D function.
+
    int ndim = GetNdim();
 
    double xmin = 0, ymin = 0, zmin = 0, xmax = 0, ymax = 0, zmax = 0;
@@ -2096,7 +2100,7 @@ void TF1::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
 //______________________________________________________________________________
 Double_t TF1::GetSave(const Double_t *xx)
 {
-    // Get value corresponding to X in array of fSave values
+   // Get value corresponding to X in array of fSave values
 
    if (fNsave <= 0) return 0;
    if (fSave == 0) return 0;
@@ -2181,7 +2185,6 @@ TAxis *TF1::GetZaxis() const
 }
 
 
-
 //______________________________________________________________________________
 Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
 {
@@ -2246,6 +2249,7 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
    return grad;
 }
 
+
 //______________________________________________________________________________
 void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
 {
@@ -2270,6 +2274,7 @@ void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
       grad[ipar] = GradientPar(ipar,x,eps);
    }
 }
+
 
 //______________________________________________________________________________
 void TF1::InitArgs(const Double_t *x, const Double_t *params)
@@ -2311,35 +2316,38 @@ void TF1::InitStandardFunctions()
 
    }
 }
+
+
 //______________________________________________________________________________
-Double_t TF1::Integral(Double_t a, Double_t b,  Double_t epsrel) 
+Double_t TF1::Integral(Double_t a, Double_t b,  Double_t epsrel)
 {
    // use IntegralOneDim
    Double_t error = 0;
    return IntegralOneDim(a,b, epsrel, epsrel, error);
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t epsabs, Double_t & error)
 {
-   // Return Integral of function between a and b using the given parameter values and 
-   // relative and absolute tolerance. 
-   // The defult integrator defined in ROOT::Math::IntegratorOneDimOptions::DefaultIntegrator() is used 
-   // If ROOT contains the MathMore library the default integrator is set to be 
-   // the adaptive ROOT::Math::GSLIntegrator (based on QUADPACK) or otherwise the 
+   // Return Integral of function between a and b using the given parameter values and
+   // relative and absolute tolerance.
+   // The defult integrator defined in ROOT::Math::IntegratorOneDimOptions::DefaultIntegrator() is used
+   // If ROOT contains the MathMore library the default integrator is set to be
+   // the adaptive ROOT::Math::GSLIntegrator (based on QUADPACK) or otherwise the
    // ROOT::Math::GaussIntegrator is used
-   // See the reference documentation of these classes for more information about the 
+   // See the reference documentation of these classes for more information about the
    // integration algorithms
-   // To change integration algorithm just do : 
+   // To change integration algorithm just do :
    // ROOT::Math::IntegratorOneDimOptions::SetDefaultIntegrator(IntegratorName);
-   // Valid integrator names are: 
+   // Valid integrator names are:
    //   - Gauss  :               for ROOT::Math::GaussIntegrator
    //   - GaussLegendre    :     for ROOT::Math::GaussLegendreIntegrator
-   //   - Adaptive         :     for ROOT::Math::GSLIntegrator adaptive method (QAG) 
-   //   - AdaptiveSingular :     for ROOT::Math::GSLIntegrator adaptive singular method (QAGS) 
-   //   - NonAdaptive      :     for ROOT::Math::GSLIntegrator non adaptive (QNG) 
+   //   - Adaptive         :     for ROOT::Math::GSLIntegrator adaptive method (QAG)
+   //   - AdaptiveSingular :     for ROOT::Math::GSLIntegrator adaptive singular method (QAGS)
+   //   - NonAdaptive      :     for ROOT::Math::GSLIntegrator non adaptive (QNG)
    //
-   // In order to use the GSL integrators one needs to have the MathMore library installed 
+   // In order to use the GSL integrators one needs to have the MathMore library installed
    //
    // Note 1:
    //   Values of the function f(x) at the interval end-points A and B are not
@@ -2389,34 +2397,34 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
 
 
    TF1_EvalWrapper wf1( this, fParams, fgAbsValue );
-   Double_t result = 0; 
+   Double_t result = 0;
 
-   if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS ) { 
+   if (ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationOneDim::kGAUSS ) {
       ROOT::Math::GaussIntegrator iod(epsabs, epsrel);
       iod.SetFunction(wf1);
-      if (a != - TMath::Infinity() && b != TMath::Infinity() ) 
+      if (a != - TMath::Infinity() && b != TMath::Infinity() )
          result =  iod.Integral(a, b);
       else if (a == - TMath::Infinity() && b != TMath::Infinity() )
-         result = iod.IntegralLow(b); 
+         result = iod.IntegralLow(b);
       else if (a != - TMath::Infinity() && b == TMath::Infinity() )
-         result = iod.IntegralUp(a); 
+         result = iod.IntegralUp(a);
       else if (a == - TMath::Infinity() && b == TMath::Infinity() )
          result = iod.Integral();
       error = iod.Error();
    }
-   else { 
-      ROOT::Math::IntegratorOneDim iod(wf1, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), epsabs, epsrel); 
-      if (a != - TMath::Infinity() && b != TMath::Infinity() ) 
+   else {
+      ROOT::Math::IntegratorOneDim iod(wf1, ROOT::Math::IntegratorOneDimOptions::DefaultIntegratorType(), epsabs, epsrel);
+      if (a != - TMath::Infinity() && b != TMath::Infinity() )
          result =  iod.Integral(a, b);
       else if (a == - TMath::Infinity() && b != TMath::Infinity() )
-         result = iod.IntegralLow(b); 
+         result = iod.IntegralLow(b);
       else if (a != - TMath::Infinity() && b == TMath::Infinity() )
-         result = iod.IntegralUp(a); 
+         result = iod.IntegralUp(a);
       else if (a == - TMath::Infinity() && b == TMath::Infinity() )
          result = iod.Integral();
       error = iod.Error();
    }
-   return result; 
+   return result;
 }
 
 
@@ -2430,6 +2438,7 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
 // }
 
 
+
 // //______________________________________________________________________________
 // Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t, Double_t, Double_t)
 // {
@@ -2438,6 +2447,7 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
 //    Error("Integral","Must be called with a TF3 only");
 //    return 0;
 // }
+
 
 //______________________________________________________________________________
 Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, const Double_t * covmat, Double_t epsilon)
@@ -2471,6 +2481,7 @@ Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t * params, con
    return ROOT::TF1Helper::IntegralError(this,1,x1,x2,params,covmat,epsilon);
 }
 
+
 //______________________________________________________________________________
 Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, const Double_t * params, const  Double_t * covmat, Double_t epsilon )
 {
@@ -2501,6 +2512,7 @@ Double_t TF1::IntegralError(Int_t n, const Double_t * a, const Double_t * b, con
 
    return ROOT::TF1Helper::IntegralError(this,n,a,b,params,covmat,epsilon);
 }
+
 
 #ifdef INTHEFUTURE
 //______________________________________________________________________________
@@ -2536,7 +2548,7 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
 {
    //  See more general prototype below.
    //  This interface kept for back compatibility
-   // It is reccomended to use the other interface where one can specify also epsabs and the maximum number of 
+   // It is reccomended to use the other interface where one can specify also epsabs and the maximum number of
    // points
 
    Int_t nfnevl,ifail;
@@ -2554,7 +2566,7 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
 {
    //
    // This function computes, to an attempted specified accuracy, the value of
-   // the integral 
+   // the integral
    //
    // Input parameters:
    //
@@ -2566,8 +2578,8 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
    //            if maxpts<minpts, maxpts is set to 10*minpts
    //    epsrel   : Specified relative accuracy.
    //    epsabs   : Specified absolute accuracy.
-   //               The integration algorithm will attempt to reach either the relative or the absolute accuracy. 
-   //               In case the maximum funcion called is reached the algorithm will stop earlier without having reached 
+   //               The integration algorithm will attempt to reach either the relative or the absolute accuracy.
+   //               In case the maximum funcion called is reached the algorithm will stop earlier without having reached
    //               the desired accuracy
    //
    // Output parameters:
@@ -2583,22 +2595,20 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
    //
    // Method:
    //
-   //    The defult method used is the Genz-Mallik adaptive multidimensional algorithm 
-   //    using the class ROOT::Math::AdaptiveIntegratorMultiDim 
+   //    The defult method used is the Genz-Mallik adaptive multidimensional algorithm
+   //    using the class ROOT::Math::AdaptiveIntegratorMultiDim
    //    (see the reference documentation of the class)
    //   Other methods can be used by setting ROOT::Math::IntegratorMultiDimOptions::SetDefaultIntegrator()
    //   to different integrators.
    //   Other possible integrators are MC integrators based on the ROOT::Math::GSLMCIntegrator class
    //   Possible methods are : Vegas, Miser or Plain
-   //   IN case of MC integration the accuracy is determined by the number of function calls, one should be 
-   //   careful not to use a too large value of maxpts 
-   //
-   // 
+   //   IN case of MC integration the accuracy is determined by the number of function calls, one should be
+   //   careful not to use a too large value of maxpts
 
    ROOT::Math::WrappedMultiFunction<TF1&> wf1(*this, n);
 
-   double result = 0; 
-   if (ROOT::Math::IntegratorMultiDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationMultiDim::kADAPTIVE ) { 
+   double result = 0;
+   if (ROOT::Math::IntegratorMultiDimOptions::DefaultIntegratorType() == ROOT::Math::IntegrationMultiDim::kADAPTIVE ) {
       ROOT::Math::AdaptiveIntegratorMultiDim aimd(wf1, epsabs, epsrel, maxpts);
       //aimd.SetMinPts(minpts); // use default minpts ( n^2 + 2 * n * (n+1) +1 )
       result = aimd.Integral(a,b);
@@ -2606,12 +2616,12 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
       nfnevl = aimd.NEval();
       ifail =  aimd.Status();
    }
-   else { 
+   else {
       // use default abs tolerance = relative tolerance
-      ROOT::Math::IntegratorMultiDim imd(wf1, ROOT::Math::IntegratorMultiDimOptions::DefaultIntegratorType(), epsabs, epsrel, maxpts); 
+      ROOT::Math::IntegratorMultiDim imd(wf1, ROOT::Math::IntegratorMultiDimOptions::DefaultIntegratorType(), epsabs, epsrel, maxpts);
       result = imd.Integral(a,b);
-      relerr = (result != 0) ? imd.Error()/ std::abs(result) : imd.Error(); 
-      nfnevl = 0; 
+      relerr = (result != 0) ? imd.Error()/ std::abs(result) : imd.Error();
+      nfnevl = 0;
       ifail = imd.Status();
    }
 
@@ -2893,7 +2903,7 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       ++f1Number;
    }
    f1Name += f1Number;
-   
+
    if (!fType) {
       out<<"   TF1 *"<<f1Name.Data()<<" = new TF1("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<");"<<std::endl;
       if (fNpx != 100) {
@@ -2991,6 +3001,7 @@ void TF1::SetCurrent(TF1 *f1)
 
    fgCurrent = f1;
 }
+
 
 //______________________________________________________________________________
 void TF1::SetFitResult(const ROOT::Fit::FitResult & result, const Int_t* indpar )
@@ -3297,6 +3308,7 @@ Bool_t TF1::RejectedPoint()
 
    return fgRejectPoint;
 }
+
 
 //______________________________________________________________________________
 Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
