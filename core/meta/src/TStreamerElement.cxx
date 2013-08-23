@@ -501,6 +501,7 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
       
       ResetBit(TStreamerElement::kCache);
+      ResetBit(TStreamerElement::kWrite);
    } else {
       R__b.WriteClassBuffer(TStreamerElement::Class(),this);
    }

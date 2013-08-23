@@ -2500,6 +2500,8 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
 {
    // Add a read action for the given element.
 
+   if (element->TestBit(TStreamerElement::kWrite)) return;
+
    switch (fType[i]) {
       // read basic types
       case TStreamerInfo::kBool:    fReadObjectWise->AddAction( ReadBasicType<Bool_t>, new TConfiguration(this,i,fOffset[i]) );    break;
@@ -2734,8 +2736,16 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
 }
 
 //______________________________________________________________________________
-void TStreamerInfo::AddWriteAction(Int_t i, TStreamerElement* /*element*/ )
+void TStreamerInfo::AddWriteAction(Int_t i, TStreamerElement *element )
 {
+   if (element->TestBit(TStreamerElement::kCache) && !element->TestBit(TStreamerElement::kWrite)) {
+      // Skip element cached for reading purposes.
+      return;
+   }
+   if (element->GetType() >= kArtificial &&  !element->TestBit(TStreamerElement::kWrite)) {
+      // Skip artificial element used for reading purposes.
+      return;
+   }
    switch (fType[i]) {
       // write basic types
       case TStreamerInfo::kBool:    fWriteObjectWise->AddAction( WriteBasicType<Bool_t>, new TConfiguration(this,i,fOffset[i]) );    break;
@@ -2895,6 +2905,10 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          // when it is making branches for a split object.
          continue;
       }
+      if (element->TestBit(TStreamerElement::kWrite)) {
+         // Skip element that only for writing.
+         continue;
+      }
       Int_t asize = element->GetSize();
       if (element->GetArrayLength()) {
          asize /= element->GetArrayLength();
@@ -2992,6 +3006,14 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             // base class and TClass::IgnoreTObjectStreamer() was called.  In this case the compiled version of the
             // elements omits the TObject base class element, which has to be compensated for by TTree::Bronch()
             // when it is making branches for a split object.
+            continue;
+         }
+         if (element->TestBit(TStreamerElement::kCache) && !element->TestBit(TStreamerElement::kWrite)) {
+            // Skip element cached for reading purposes.
+            continue;
+         }
+         if (element->GetType() >= TVirtualStreamerInfo::kArtificial &&  !element->TestBit(TStreamerElement::kWrite)) {
+            // Skip artificial element used for reading purposes.
             continue;
          }
          Int_t asize = element->GetSize();
