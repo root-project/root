@@ -111,7 +111,7 @@ private:
    TString            fContextMenuTitle;//context menu title
    const type_info   *fTypeInfo;        //pointer to the C++ type information.
    ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
-   mutable void      *fInterShowMembers;//Interpreter call setup for ShowMembers
+   mutable CallFunc_t*fInterShowMembers;//Interpreter call setup for ShowMembers
    TClassStreamer    *fStreamer;        //pointer to streamer function
    TString            fSharedLibs;      //shared libraries containing class code
 

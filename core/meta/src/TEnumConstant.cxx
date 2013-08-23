@@ -22,20 +22,20 @@
 ClassImp(TEnumConstant)
 //______________________________________________________________________________
 TEnumConstant::TEnumConstant(DataMemberInfo_t *info, const char* name, Long64_t value, TEnum* type)
-: TGlobal(info), fEnum(type), fValue(value) {
-	// Constructor of the TEnumConstant.
-	// Takes as parameters DataMemberInfo, value, and enum type.
+   : TGlobal(info), fEnum(type), fValue(value) {
+   // Constructor of the TEnumConstant.
+   // Takes as parameters DataMemberInfo, value, and enum type.
 
-    //Set name of constant
-    this->SetName(name);
-	// Add the constant to the enum type.
-	type->AddConstant(this);
+   //Set name of constant
+   this->SetName(name);
+   // Add the constant to the enum type.
+   type->AddConstant(this);
 }
 
 //______________________________________________________________________________
 TEnumConstant::~TEnumConstant()
 {
-	//Destructor
+   //Destructor
 }
 
 //______________________________________________________________________________

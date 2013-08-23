@@ -269,8 +269,8 @@ void TCling::HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl) con
          }
 
          // Create the TEnumConstant.
-         TEnumConstant* enumConstant = new TEnumConstant(new TClingDataMemberInfo(fInterpreter, *EDI)
-                                       , constantName, value, enumType);
+         TEnumConstant* enumConstant = new TEnumConstant((DataMemberInfo_t*)new TClingDataMemberInfo(fInterpreter, *EDI)
+                                                         , constantName, value, enumType);
          // Check that the constant was created.
          if (!enumConstant) {
             Error ("HandleEnumDecl", "The enum constant %s was not created.", constantName);
@@ -327,7 +327,7 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       // which has no information available about its arguments.
       if (!isa<FunctionNoProtoType>(FD->getType())
           && !gROOT->GetListOfGlobalFunctions()->FindObject(FD->getNameAsString().c_str())) {
-         gROOT->GetListOfGlobalFunctions()->Add(new TFunction(new TClingMethodInfo(fInterpreter, FD)));
+         gROOT->GetListOfGlobalFunctions()->Add(new TFunction((MethodInfo_t*)new TClingMethodInfo(fInterpreter, FD)));
       }
    }
    else if (const RecordDecl *TD = dyn_cast<RecordDecl>(D)) {
@@ -376,8 +376,9 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
             HandleEnumDecl(ED, true /* is global*/);
          }
       } else {
-         gROOT->GetListOfGlobals()->Add(new TGlobal(new TClingDataMemberInfo(fInterpreter,
-                                                              cast<ValueDecl>(ND))));
+         gROOT->GetListOfGlobals()->Add(new TGlobal((DataMemberInfo_t *)
+                                                    new TClingDataMemberInfo(fInterpreter,
+                                                                             cast<ValueDecl>(ND))));
       }
 
    }
@@ -2108,7 +2109,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
          return;
       }
    }
-   cl->fClassInfo = info; // Note: We are transfering ownership here.
+   cl->fClassInfo = (ClassInfo_t*)info; // Note: We are transfering ownership here.
    // In case a class contains an external enum, the enum will be seen as a
    // class. We must detect this special case and make the class a Zombie.
    // Here we assume that a class has at least one method.
@@ -2318,7 +2319,7 @@ void TCling::CreateListOfBaseClasses(TClass* cl) const
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name()) {
          TClingBaseClassInfo* a = new TClingBaseClassInfo(t);
-         cl->fBase->Add(new TBaseClass(a, cl));
+         cl->fBase->Add(new TBaseClass((BaseClassInfo_t *)a, cl));
       }
    }
 }
@@ -2364,7 +2365,7 @@ void TCling::CreateListOfDataMembers(TClass* cl) const
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name()) {
          TClingDataMemberInfo* a = new TClingDataMemberInfo(t);
-         cl->fData->Add(new TDataMember(a, cl));
+         cl->fData->Add(new TDataMember((DataMemberInfo_t *)a, cl));
       }
    }
 }
@@ -2387,7 +2388,7 @@ void TCling::CreateListOfMethods(TClass* cl) const
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name()) {
          TClingMethodInfo* a = new TClingMethodInfo(t);
-         cl->fMethod->Add(new TMethod(a, cl));
+         cl->fMethod->Add(new TMethod((MethodInfo_t*)a, cl));
       }
    }
 }
@@ -2434,7 +2435,7 @@ void TCling::CreateListOfMethodArgs(TFunction* m) const
    while (t.Next()) {
       if (t.IsValid()) {
          TClingMethodArgInfo* a = new TClingMethodArgInfo(t);
-         m->fMethodArgs->Add(new TMethodArg(a, m));
+         m->fMethodArgs->Add(new TMethodArg((MethodArgInfo_t*)a, m));
       }
    }
 }
@@ -3415,7 +3416,7 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
          // yes, this is almost a waste of time, but we do need to lookup
          // the 'type' corresponding to the TClass anyway in order to
          // preserve the opaque typedefs (Double32_t)
-         cl->fClassInfo = new TClingClassInfo(fInterpreter, cl->GetName());
+         cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, cl->GetName());
       }
    }
    SetClassAutoloading(storedAutoloading);
@@ -4510,7 +4511,7 @@ MethodInfo_t* TCling::MethodInfo_FactoryCopy(MethodInfo_t* minfo) const
 void* TCling::MethodInfo_InterfaceMethod(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
-   return (void*) info->InterfaceMethod();
+   return info->InterfaceMethod();
 }
 
 //______________________________________________________________________________
@@ -4549,10 +4550,10 @@ Long_t TCling::MethodInfo_Property(MethodInfo_t* minfo) const
 }
 
 //______________________________________________________________________________
-void* TCling::MethodInfo_Type(MethodInfo_t* minfo) const
+TypeInfo_t* TCling::MethodInfo_Type(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
-   return info->Type();
+   return (TypeInfo_t*)info->Type();
 }
 
 //______________________________________________________________________________
@@ -4839,8 +4840,8 @@ TypedefInfo_t* TCling::TypedefInfo_FactoryCopy(TypedefInfo_t* tinfo) const
 }
 
 //______________________________________________________________________________
-TypedefInfo_t TCling::TypedefInfo_Init(TypedefInfo_t* tinfo,
-                                      const char* name) const
+void TCling::TypedefInfo_Init(TypedefInfo_t* tinfo,
+                              const char* name) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    TClinginfo->Init(name);

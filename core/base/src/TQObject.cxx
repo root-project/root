@@ -166,7 +166,7 @@ TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
    Long_t faddr = 0;
    if (!cl->IsLoaded()) {
       // interpreted class
-      void *clinfo = cl->GetClassInfo();
+      ClassInfo_t *clinfo = cl->GetClassInfo();
       nargs = gCling->ClassInfo_GetMethodNArg(clinfo,method, proto);
       if (nargs >= 0)  return (TMethod *) -1;
       nargs = 0;
@@ -214,7 +214,7 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
       // interpreted class
       CallFunc_t *func = gCling->CallFunc_Factory();
       long         offset;
-      void *cinfo = cl->GetClassInfo();
+      ClassInfo_t *cinfo = cl->GetClassInfo();
       gCling->CallFunc_SetFunc(func, cinfo, method, params, &offset);
       Bool_t valid = gCling->CallFunc_IsValid(func);
       gCling->CallFunc_Delete(func);

@@ -248,7 +248,7 @@ public: // Public Interface
    virtual TMethodCall::EReturnType MethodCallReturnType(TFunction *func) const;
 
    // CallFunc interface
-   virtual void   CallFunc_Delete(void* func) const;
+   virtual void   CallFunc_Delete(CallFunc_t* func) const;
    virtual void   CallFunc_Exec(CallFunc_t* func, void* address) const;
    virtual void   CallFunc_Exec(CallFunc_t* func, void* address, TInterpreterValue& val) const;
    virtual Long_t    CallFunc_ExecInt(CallFunc_t* func, void* address) const;
@@ -343,7 +343,7 @@ public: // Public Interface
    virtual MethodInfo_t*  MethodInfo_Factory() const;
    virtual MethodInfo_t*  MethodInfo_Factory(ClassInfo_t *clinfo) const;
    virtual MethodInfo_t*  MethodInfo_FactoryCopy(MethodInfo_t* minfo) const;
-   virtual MethodInfo_t*  MethodInfo_InterfaceMethod(MethodInfo_t* minfo) const;
+   virtual void*  MethodInfo_InterfaceMethod(MethodInfo_t* minfo) const;
    virtual bool   MethodInfo_IsValid(MethodInfo_t* minfo) const;
    virtual int    MethodInfo_NArg(MethodInfo_t* minfo) const;
    virtual int    MethodInfo_NDefaultArg(MethodInfo_t* minfo) const;

@@ -45,15 +45,19 @@
 #include "TNamed.h"
 #endif
 
-typedef void CallFunc_t;
-typedef void ClassInfo_t;
-typedef void BaseClassInfo_t;
-typedef void DataMemberInfo_t;
-typedef void MethodInfo_t;
-typedef void MethodArgInfo_t;
-typedef void MethodArgInfo_t;
-typedef void TypeInfo_t;
-typedef void TypedefInfo_t;
+// The following are opaque type and are never really declared
+// The specific implemenation of TInterpreter will cast the
+// value of pointer to this types to correct (but possibly
+// distinct from these)
+class CallFunc_t;
+class ClassInfo_t;
+class BaseClassInfo_t;
+class DataMemberInfo_t;
+class MethodInfo_t;
+class MethodArgInfo_t;
+class MethodArgInfo_t;
+class TypeInfo_t;
+class TypedefInfo_t;
 
 enum EProperty {
    kIsClass         = 0x00000001,
