@@ -759,10 +759,15 @@ void TLegend::PaintPrimitives()
       if (halign == 2) x = 0.5*( (x1+entrymargin) + x2 );
       if (halign == 3) x = x2 - entrymargin/10.;
       Int_t valign = entry->GetTextAlign()%10;
+
+      // The vertical alignment "centered" is treated in a special to
+      // ensure a better spacing between lines.
+      if (valign == 2) entry->SetTextAlign(10*halign+1);
+
       if (valign == 1) y = ytext - (1. - fEntrySeparation)* yspace/2.;
-      if (valign == 2) y = ytext;
+      if (valign == 2) y = ytext - (1. - fEntrySeparation)* yspace/4.;
       if (valign == 3) y = ytext + (1. - fEntrySeparation)* yspace/2.;
-      //
+
       TLatex entrytex( x, y, entry->GetLabel() );
       entrytex.SetNDC();
       entry->TAttText::Copy(entrytex);
