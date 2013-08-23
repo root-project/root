@@ -446,9 +446,12 @@ protected:
 
   // Plot implementation functions
   virtual RooPlot *plotOn(RooPlot* frame, PlotOpt o) const;
+
+public:
   // PlotOn with command list
   virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
+ protected:
   virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const;
 
 
