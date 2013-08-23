@@ -62,24 +62,24 @@ Example:
      mg->Add(gr2,"cp");
      mg->Draw("a");
 </pre>
-A special option <tt>3D</tt> allows to draw the graphs in a 3D space. See the 
+A special option <tt>3D</tt> allows to draw the graphs in a 3D space. See the
 following example:
 End_Html
 Begin_Macro(source)
 {
    c0 = new TCanvas("c1","multigraph L3",200,10,700,500);
    c0->SetFrameFillColor(30);
- 
+
    TMultiGraph *mg = new TMultiGraph();
- 
+
    TGraph *gr1 = new TGraph(); gr1->SetLineColor(kBlue);
    TGraph *gr2 = new TGraph(); gr2->SetLineColor(kRed);
    TGraph *gr3 = new TGraph(); gr3->SetLineColor(kGreen);
    TGraph *gr4 = new TGraph(); gr4->SetLineColor(kOrange);
- 
+
    Double_t dx = 6.28/100;
    Double_t x  = -3.14;
- 
+
    for (int i=0; i<=100; i++) {
       x = x+dx;
       gr1->SetPoint(i,x,2.*TMath::Sin(x));
@@ -87,12 +87,12 @@ Begin_Macro(source)
       gr3->SetPoint(i,x,TMath::Cos(x*x));
       gr4->SetPoint(i,x,TMath::Cos(x*x*x));
    }
- 
+
    mg->Add(gr4); gr4->SetTitle("Cos(x*x*x)"); gr4->SetLineWidth(3);
    mg->Add(gr3); gr3->SetTitle("Cos(x*x)")  ; gr3->SetLineWidth(3);
    mg->Add(gr2); gr2->SetTitle("Cos(x)")    ; gr2->SetLineWidth(3);
    mg->Add(gr1); gr1->SetTitle("2*Sin(x)")  ; gr1->SetLineWidth(3);
- 
+
    mg->Draw("a fb l3d");
    return c0;
 }
@@ -276,7 +276,7 @@ End_Html */
 //______________________________________________________________________________
 TMultiGraph::TMultiGraph(): TNamed()
 {
-   // TMultiGraph default constructor
+   // TMultiGraph default constructor.
 
    fGraphs    = 0;
    fFunctions = 0;
@@ -290,7 +290,7 @@ TMultiGraph::TMultiGraph(): TNamed()
 TMultiGraph::TMultiGraph(const char *name, const char *title)
        : TNamed(name,title)
 {
-   // Constructor with name and title
+   // Constructor with name and title.
 
    fGraphs    = 0;
    fFunctions = 0;
@@ -309,16 +309,16 @@ TMultiGraph::TMultiGraph(const TMultiGraph& mg) :
   fMaximum(mg.fMaximum),
   fMinimum(mg.fMinimum)
 {
-   // Copy constructor
+   // Copy constructor.
 }
 
 
 //______________________________________________________________________________
 TMultiGraph& TMultiGraph::operator=(const TMultiGraph& mg)
 {
-   // Assignement operator
-   
-   if(this!=&mg) {
+   // Assignement operator.
+
+   if (this!=&mg) {
       TNamed::operator=(mg);
       fGraphs=mg.fGraphs;
       fFunctions=mg.fFunctions;
@@ -333,7 +333,7 @@ TMultiGraph& TMultiGraph::operator=(const TMultiGraph& mg)
 //______________________________________________________________________________
 TMultiGraph::~TMultiGraph()
 {
-   // TMultiGraph destructor
+   // TMultiGraph destructor.
 
    if (!fGraphs) return;
    TGraph *g;
@@ -354,7 +354,7 @@ TMultiGraph::~TMultiGraph()
       //drawing modes
       TObject *obj;
       while ((obj  = fFunctions->First())) {
-         while(fFunctions->Remove(obj)) { }
+         while (fFunctions->Remove(obj)) { }
          delete obj;
       }
       delete fFunctions;
@@ -380,18 +380,24 @@ void TMultiGraph::Add(TGraph *graph, Option_t *chopt)
 void TMultiGraph::Add(TMultiGraph *multigraph, Option_t *chopt)
 {
    // Add all the graphs in "multigraph" to the list of graphs.
+   // If "chopt" is defined all the graphs in "multigraph" will be added with
+   // the "chopt" option.
+   // If "chopt" is undefined each graph will be added with the option it had
+   // in "multigraph".
 
    TList *graphlist = multigraph->GetListOfGraphs();
    if (!graphlist) return;
 
    if (!fGraphs) fGraphs = new TList();
 
-   TGraph *gr;
-   gr = (TGraph*)graphlist->First();
-   fGraphs->Add(gr,chopt);
-   for(Int_t i = 1; i < graphlist->GetSize(); i++){
-      gr = (TGraph*)graphlist->After(gr);
-      fGraphs->Add(gr,chopt);
+   TObjOptLink *lnk = (TObjOptLink*)graphlist->FirstLink();
+   TObject *obj = 0;
+
+   while (lnk) {
+      obj = lnk->GetObject();
+      if (!strlen(chopt)) fGraphs->Add(obj,lnk->GetOption());
+      else                fGraphs->Add(obj,chopt);
+      lnk = (TObjOptLink*)lnk->Next();
    }
 }
 
@@ -409,7 +415,7 @@ void TMultiGraph::Browse(TBrowser *)
 //______________________________________________________________________________
 Int_t TMultiGraph::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to each graph
+   // Compute distance from point px,py to each graph.
 
    // Are we on the axis?
    const Int_t kMaxDiff = 10;
@@ -627,7 +633,7 @@ TFitResultPtr TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axi
 //______________________________________________________________________________
 void TMultiGraph::FitPanel()
 {
-   // Display a panel with all histogram fit options
+   // Display a panel with all histogram fit options.
    // See class TFitPanel for example
 
    if (!gPad)
@@ -651,7 +657,7 @@ void TMultiGraph::FitPanel()
 //______________________________________________________________________________
 Option_t *TMultiGraph::GetGraphDrawOption(const TGraph *gr) const
 {
-   // Return the draw option for the TGraph gr in this TMultiGraph
+   // Return the draw option for the TGraph gr in this TMultiGraph.
    // The return option is the one specified when calling TMultiGraph::Add(gr,option).
 
    if (!fGraphs || !gr) return "";
@@ -684,7 +690,7 @@ void TMultiGraph::InitGaus(Double_t xmin, Double_t xmax)
       px=g->GetX();
       py=g->GetY();
       npp=g->GetN();
-      for (bin=0; bin<npp; bin++){
+      for (bin=0; bin<npp; bin++) {
          x=px[bin];
          if (x<xmin || x>xmax) continue;
          np++;
@@ -774,7 +780,7 @@ void TMultiGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t x
    while ((g = (TGraph*) next())) {
       px=g->GetX();
       npp=g->GetN();
-      for (bin=0; bin<npp; bin++){
+      for (bin=0; bin<npp; bin++) {
          xk=px[bin];
          if (xk < xmin || xk > xmax) continue;
          n++;
@@ -837,7 +843,8 @@ void TMultiGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t x
 
 
 //______________________________________________________________________________
-void TMultiGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail, Double_t xmin, Double_t xmax)
+void TMultiGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1,
+                                       Int_t &ifail, Double_t xmin, Double_t xmax)
 {
    // Least square linear fit without weights.
    //
@@ -916,7 +923,7 @@ Int_t TMultiGraph::IsInside(Double_t x, Double_t y) const
 //______________________________________________________________________________
 TH1F *TMultiGraph::GetHistogram() const
 {
-   // Returns a pointer to the histogram used to draw the axis
+   // Returns a pointer to the histogram used to draw the axis.
    // Takes into account the two following cases.
    //    1- option 'A' was specified in TMultiGraph::Draw. Return fHistogram
    //    2- user had called TPad::DrawFrame. return pointer to hframe histogram
@@ -946,8 +953,8 @@ TF1 *TMultiGraph::GetFunction(const char *name) const
 //______________________________________________________________________________
 TList *TMultiGraph::GetListOfFunctions()
 {
-   // Return pointer to list of functions
-   // if pointer is null create the list
+   // Return pointer to list of functions.
+   // If pointer is null create the list
 
    if (!fFunctions) fFunctions = new TList();
    return fFunctions;
@@ -981,8 +988,8 @@ TAxis *TMultiGraph::GetYaxis() const
 //______________________________________________________________________________
 void TMultiGraph::Paint(Option_t *option)
 {
-   // Paint all the graphs of this multigraph
-   
+   // Paint all the graphs of this multigraph.
+
    const TPickerStackGuard pushGuard(this);
 
    if (!fGraphs) return;
@@ -1092,11 +1099,11 @@ void TMultiGraph::Paint(Option_t *option)
          //else                 uxmax = 0;
       }
       if (minimum < 0 && rwymin >= 0) {
-         if(gPad->GetLogy()) minimum = 0.9*rwymin;
+         if (gPad->GetLogy()) minimum = 0.9*rwymin;
          //else                minimum = 0;
       }
       if (maximum > 0 && rwymax <= 0) {
-         if(gPad->GetLogy()) maximum = 1.1*rwymax;
+         if (gPad->GetLogy()) maximum = 1.1*rwymax;
          //else                maximum = 0;
       }
       if (minimum <= 0 && gPad->GetLogy()) minimum = 0.001*maximum;
@@ -1138,11 +1145,11 @@ void TMultiGraph::Paint(Option_t *option)
       TObject *obj = 0;
 
       while (lnk) {
-      
+
          obj = lnk->GetObject();
-         
+
          gPad->PushSelectableObject(obj);
-         
+
          if (!gPad->PadInHighlightMode() || (gPad->PadInHighlightMode() && obj == gPad->GetSelected())) {
             if (strlen(lnk->GetOption()))
                obj->Paint(lnk->GetOption());
@@ -1177,7 +1184,7 @@ void TMultiGraph::Paint(Option_t *option)
 //______________________________________________________________________________
 void TMultiGraph::PaintPolyLine3D(Option_t *option)
 {
-   // Paint all the graphs of this multigraph as 3D lines
+   // Paint all the graphs of this multigraph as 3D lines.
 
    Int_t i, npt=0;
    char *l;
@@ -1202,7 +1209,7 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
    }
 
    Int_t ndiv = fGraphs->GetSize();
-   TH2F* frame = new TH2F("frame","", ndiv, 0., (Double_t)(ndiv), 
+   TH2F* frame = new TH2F("frame","", ndiv, 0., (Double_t)(ndiv),
                                       10, rwxmin, rwxmax);
 
    TAxis *Xaxis = frame->GetXaxis();
@@ -1216,15 +1223,15 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
    frame->SetStats(kFALSE);
    frame->SetMinimum(rwymin);
    frame->SetMaximum(rwymax);
-   
+
    l = (char*)strstr(option,"A");
    if (l) frame->Paint("lego0,fb,bb");
    l = (char*)strstr(option,"BB");
    if (!l) frame->Paint("lego0,fb,a,same");
-   
+
    Double_t *x, *y;
    Double_t xyz1[3], xyz2[3];
-   
+
    next.Reset();
    Int_t j = ndiv;
    while ((g = (TGraph*) next())) {
@@ -1246,7 +1253,7 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
       }
       j--;
    }
-   
+
    l = (char*)strstr(option,"FB");
    if (!l) frame->Paint("lego0,bb,a,same");
    delete frame;
@@ -1256,7 +1263,7 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
 //______________________________________________________________________________
 void TMultiGraph::Print(Option_t *option) const
 {
-   // Print the list of graphs
+   // Print the list of graphs.
 
    TGraph *g;
    if (fGraphs) {
@@ -1272,7 +1279,7 @@ void TMultiGraph::Print(Option_t *option) const
 void TMultiGraph::RecursiveRemove(TObject *obj)
 {
    // Recursively remove this object from a list. Typically implemented
-   // by classes that can contain mulitple references to a same object.
+   // by classes that can contain multiple references to a same object.
 
    if (!fGraphs) return;
    TObject *objr = fGraphs->Remove(obj);
@@ -1285,7 +1292,7 @@ void TMultiGraph::RecursiveRemove(TObject *obj)
 //______________________________________________________________________________
 void TMultiGraph::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
+   // Save primitive as a C++ statement(s) on output stream out.
 
    char quote = '"';
    out<<"   "<<endl;
