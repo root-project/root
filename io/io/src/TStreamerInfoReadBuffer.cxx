@@ -816,6 +816,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
       TStreamerElement * aElement  = (TStreamerElement*)fElem[i];
       fgElement = aElement;
 
+      if (aElement->TestBit(TStreamerElement::kWrite)) continue;
+
       if (R__TestUseCache<T>(aElement)) {
          Int_t bufpos = b.Length();
          if (((TBufferFile&)b).PeekDataCache()==0) {

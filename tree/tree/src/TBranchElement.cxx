@@ -1972,7 +1972,6 @@ void TBranchElement::InitInfo()
                for (size_t i = 0; i < ndata; ++i) {
                   if (((TStreamerElement*) elems[i]) == elt) {
                      if (elt->TestBit (TStreamerElement::kCache)
-                         && elt->TestBit(TStreamerElement::kRepeat)
                          && (i+1) < ndata
                          && s == ((TStreamerElement*) elems[i])->GetName())
                      {
@@ -1982,7 +1981,11 @@ void TBranchElement::InitInfo()
                         // ReadLeaves).
                         // fID = i+1;
                         fID = i;
-                        fIDs.push_back(fID+1);
+                        if (elt->TestBit(TStreamerElement::kRepeat)) {
+                           fIDs.push_back(fID+1);
+                        } else if (((TStreamerElement*) elems[i+1])->TestBit(TStreamerElement::kWrite)) {
+                           fIDs.push_back(fID+1);
+                        }
                      } else {
                         fID = i;
                      }
@@ -5397,6 +5400,9 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
          continue;
       }
       if (elem->TestBit(TStreamerElement::kRepeat)) {
+         continue;
+      }
+      if (elem->TestBit(TStreamerElement::kCache) && !elem->TestBit(TStreamerElement::kWrite)) {
          continue;
       }
       Int_t offset = elem->GetOffset();
