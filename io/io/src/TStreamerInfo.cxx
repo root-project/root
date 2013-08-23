@@ -3719,26 +3719,15 @@ void TStreamerInfo::ls(Option_t *option) const
    }
    for (Int_t i=0;i < fNdata;i++) {
       TStreamerElement *element = (TStreamerElement*)fElem[i];
-      TString sequenceType = " [";
-      Bool_t first = kTRUE;
-      if (element->TestBit(TStreamerElement::kCache)) {
-         first = kFALSE;
-         sequenceType += "cached";
+      TString sequenceType;
+      element->GetSequenceType(sequenceType);
+      if (sequenceType.Length()) {
+         sequenceType.Prepend(" [");
+         sequenceType += "]";
       }
-      if (element->TestBit(TStreamerElement::kRepeat)) {
-         if (!first) sequenceType += ",";
-         first = kFALSE;
-         sequenceType += "repeat";
-      }
-      if (element->TestBit(TStreamerElement::kDoNotDelete)) {
-         if (!first) sequenceType += ",";
-         first = kFALSE;
-         sequenceType += "nodelete";
-      }
-      if (first) sequenceType.Clear();
-      else sequenceType += "]";
-
-      Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i],sequenceType.Data());
+      Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
+             i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i],
+             sequenceType.Data());
    }
 }
 

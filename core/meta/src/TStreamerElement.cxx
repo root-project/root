@@ -306,6 +306,36 @@ const char *TStreamerElement::GetFullName() const
 }
 
 //______________________________________________________________________________
+void TStreamerElement::GetSequenceType(TString &sequenceType) const
+{
+   // Fill type with the string representation of sequence
+   // information including 'cached','repeat','write' or
+   // 'nodelete'.
+
+   sequenceType.Clear();
+   Bool_t first = kTRUE;
+   if (TestBit(TStreamerElement::kCache)) {
+      first = kFALSE;
+      sequenceType += "cached";
+   }
+   if (TestBit(TStreamerElement::kRepeat)) {
+      if (!first) sequenceType += ",";
+      first = kFALSE;
+      sequenceType += "repeat";
+   }
+   if (TestBit(TStreamerElement::kDoNotDelete)) {
+      if (!first) sequenceType += ",";
+      first = kFALSE;
+      sequenceType += "nodelete";
+   }
+   if (TestBit(TStreamerElement::kWrite)) {
+      if (!first) sequenceType += ",";
+      first = kFALSE;
+      sequenceType += "write";
+   }
+}
+
+//______________________________________________________________________________
 Int_t TStreamerElement::GetSize() const
 {
    // Returns size of this element in bytes.
@@ -375,9 +405,16 @@ void TStreamerElement::ls(Option_t *) const
 
    TString temp(GetTypeName());
    if (IsaPointer() && !fTypeName.Contains("*")) temp += "*";
+
+   TString sequenceType;
+   GetSequenceType(sequenceType);
+   if (sequenceType.Length()) {
+      sequenceType.Prepend(" (");
+      sequenceType += ") ";
+   }
    printf("  %-14s %-15s offset=%3d type=%2d %s%-20s\n",
-      temp.Data(),GetFullName(),fOffset,fType,TestBit(kCache)?"(cached) ":"",
-      GetTitle());
+          temp.Data(),GetFullName(),fOffset,fType,sequenceType.Data(),
+          GetTitle());
 }
 
 //______________________________________________________________________________
@@ -593,7 +630,13 @@ void TStreamerBase::ls(Option_t *) const
 {
    // Print the content of the element.
 
-   printf("  %-14s %-15s offset=%3d type=%2d %s%-20s\n",GetFullName(),GetTypeName(),fOffset,fType,TestBit(kCache)?"(cached) ":"",GetTitle());
+   TString sequenceType;
+   GetSequenceType(sequenceType);
+   if (sequenceType.Length()) {
+      sequenceType.Prepend(" (");
+      sequenceType += ") ";
+   }
+   printf("  %-14s %-15s offset=%3d type=%2d %s%-20s\n",GetFullName(),GetTypeName(),fOffset,fType,sequenceType.Data(),GetTitle());
 }
 
 //______________________________________________________________________________
@@ -1734,9 +1777,15 @@ void TStreamerSTL::ls(Option_t *) const
       cdim.Form("[%d]",fMaxIndex[i]);
       name += cdim;
    }
+   TString sequenceType;
+   GetSequenceType(sequenceType);
+   if (sequenceType.Length()) {
+      sequenceType.Prepend(" (");
+      sequenceType += ") ";
+   }
    printf("  %-14s %-15s offset=%3d type=%2d %s,stl=%d, ctype=%d, %-20s\n",
-      GetTypeName(),name.Data(),fOffset,fType,TestBit(kCache)?"(cached)":"",
-      fSTLtype,fCtype,GetTitle());
+          GetTypeName(),name.Data(),fOffset,fType,sequenceType.Data(),
+          fSTLtype,fCtype,GetTitle());
 }
 
 //______________________________________________________________________________

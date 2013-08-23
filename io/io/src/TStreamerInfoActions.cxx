@@ -79,11 +79,13 @@ namespace TStreamerInfoActions
 
       TStreamerInfo *info = (TStreamerInfo*)fInfo;
       TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
+      TString sequenceType;
+      aElement->GetSequenceType(sequenceType);
 
       printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-             " %s, offset=%d\n",
+             " %s, offset=%d (%s)\n",
              info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetTypes()[fElemId],
-             aElement->ClassName(), fOffset);
+             aElement->ClassName(), fOffset, sequenceType.Data());
    }
 
    void TConfiguration::PrintDebug(TBuffer &buf, void *addr) const
@@ -94,11 +96,13 @@ namespace TStreamerInfoActions
          // Idea: We should print the name of the action function.
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
          TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
-
+         TString sequenceType;
+         aElement->GetSequenceType(sequenceType);
+      
          printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-                " %s, bufpos=%d, arr=%p, offset=%d\n",
+                " %s, bufpos=%d, arr=%p, offset=%d (%s)\n",
                 info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetTypes()[fElemId],
-                aElement->ClassName(), buf.Length(), addr, fOffset);
+                aElement->ClassName(), buf.Length(), addr, fOffset, sequenceType.Data());
       }
    }
 
@@ -134,11 +138,13 @@ namespace TStreamerInfoActions
       void PrintDebug(TBuffer &, void *) const {
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
          TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
+         TString sequenceType;
+         aElement->GetSequenceType(sequenceType);
 
          printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-                " %s, offset=%d\n",
+                " %s, offset=%d (%s)\n",
                 info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetTypes()[fElemId],
-                aElement->ClassName(), fOffset);
+                aElement->ClassName(), fOffset, sequenceType.Data());
       }
 
       void AddToOffset(Int_t delta)
