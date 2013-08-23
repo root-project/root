@@ -86,6 +86,9 @@ file `simple.pdf`.
     account with the option "e".
 -   In case of automatic computation of the legend items' size, the 
     text size was wrong if the font precision was set to 3.
+-   Improve the spacing between lines. Due to the way the vertical 
+    text centring is done (bounding based) the spacing between lines 
+    may appeared irregular in some cases.. 
 
 ### TPie
 
