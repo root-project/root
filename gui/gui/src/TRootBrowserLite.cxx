@@ -661,7 +661,6 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
 
       fi->SetUserData(obj);
       AddItem(fi);
-      fTotal++;
       return;
    }
 
