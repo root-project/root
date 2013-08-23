@@ -3133,7 +3133,8 @@ void TStreamerInfoActions::TActionSequence::AddToOffset(Int_t delta)
        iter != end;
        ++iter) 
    {
-      iter->fConfiguration->AddToOffset(delta);
+      if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+         iter->fConfiguration->AddToOffset(delta);
    }
 }
 
@@ -3173,7 +3174,8 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
              ++iter) 
          {
             TConfiguration *conf = iter->fConfiguration->Copy();
-            conf->AddToOffset(offset);
+            if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+               conf->AddToOffset(offset);
             sequence->AddAction( iter->fAction, conf );
          }
       } else {
@@ -3183,7 +3185,8 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
              ++iter) {
             if ( iter->fConfiguration->fElemId == (UInt_t)element_ids[id] ) {
                TConfiguration *conf = iter->fConfiguration->Copy();
-               conf->AddToOffset(offset);
+               if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+                  conf->AddToOffset(offset);
                sequence->AddAction( iter->fAction, conf );
             }
          }
