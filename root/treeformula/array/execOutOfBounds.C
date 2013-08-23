@@ -1,4 +1,8 @@
+#ifdef ClingWorkAroundBrokenUnnamedReturn
+int execOutOfBounds() {
+#else
 {
+#endif
   TFile *_file0 = TFile::Open("run133.root");
   TTree *t; _file0->GetObject("t",t);
   TH2F *h2 = new TH2F("h2","h2",5,0,5,100,0,100);
