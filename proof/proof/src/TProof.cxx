@@ -1191,6 +1191,11 @@ void TProof::ParseConfigField(const char *config)
          TString addLogFmt = "igprof -d -pk -pp -t proofserv.exe -o %s.%s";
          TString tmp;
 
+         if (IsLite()) {
+            addLogFmt.Append("\"");
+            addLogFmt.Prepend("\"");
+         }
+
          tmp.Form(addLogFmt.Data(), "<logfilemst>", addLogExt.Data());
          TProof::AddEnvVar("PROOF_MASTER_WRAPPERCMD",  tmp.Data());
 
