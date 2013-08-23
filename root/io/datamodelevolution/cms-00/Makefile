@@ -158,3 +158,8 @@ reflex_test2: reflex_test1
 reflex_test3: reflex_test2
 
 endif
+
+execReadRename1.clog: execWriteRename.success
+
+execReadRename2.clog: execWriteRename.success
+
