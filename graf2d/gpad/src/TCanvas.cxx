@@ -271,9 +271,9 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       form     = -form;
       SetBit(kMenuBar,0);
    }
-   
+
    fCanvas = this;
-   
+
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
    if (old && old->IsOnHeap()) {
@@ -311,10 +311,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       if (form == 4) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 40, 40, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 5) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 50, 50, UInt_t(cx*500), UInt_t(cx*500));
       if (!fCanvasImp) return;
-      
+
       if (!gROOT->IsBatch() && fCanvasID == -1)
          fCanvasID = fCanvasImp->InitWindow();
-      
+
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
    }
@@ -387,7 +387,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       Float_t cx = gStyle->GetScreenFactor();
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, UInt_t(cx*ww), UInt_t(cx*wh));
       if (!fCanvasImp) return;
-      
+
       if (!gROOT->IsBatch() && fCanvasID == -1)
          fCanvasID = fCanvasImp->InitWindow();
 
@@ -471,7 +471,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       if (!fCanvasImp) return;
 
       if (!gROOT->IsBatch() && fCanvasID == -1)
-         fCanvasID = fCanvasImp->InitWindow();      
+         fCanvasID = fCanvasImp->InitWindow();
 
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fBatch = kFALSE;
@@ -1726,7 +1726,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       topx = 1;    topy = 1;
    }
 
-   TString mname(filename);
+   TString mname(fname);
    Int_t p = mname.Index(".");
    out <<"void " << mname(0,p) << "()" <<std::endl;
    out <<"{"<<std::endl;
@@ -2099,7 +2099,7 @@ void TCanvas::Update()
    // Update canvas pad buffers.
 
    if (fUpdating) return;
-   
+
    if (fPixmapID == -1) return;
 
    if (gThreadXAR) {
