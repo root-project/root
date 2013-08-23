@@ -3688,7 +3688,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    const Int_t real_instance = GetRealInstance(instance,0);                                     \
                                                                                                 \
    if (instance==0) fNeedLoading = kTRUE;                                                       \
-   if (real_instance>fNdata[0]) return 0;                                                       \
+   if (real_instance>=fNdata[0]) return 0;                                                      \
                                                                                                 \
    /* Since the only operation in this formula is reading this branch,                          \
       we are guaranteed that this function is first called with instance==0 and                 \
