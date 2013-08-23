@@ -90,7 +90,6 @@ static void R__TObjArray_InsertAt(TObjArray *arr, TObject *obj, Int_t at)
    arr->AddAt( obj, at);
 }
 
-#if 0
 static void R__TObjArray_InsertAfter(TObjArray *arr, TObject *newobj, TObject *oldobj)
 {
    // Slide by one.
@@ -99,12 +98,9 @@ static void R__TObjArray_InsertAfter(TObjArray *arr, TObject *newobj, TObject *o
    while (at<last && arr->At(at) != oldobj) {
       ++at;
    }
-   if (at!=0) {
-      ++at; // we found the object, insert after it
-   }
+   ++at; // we found the object, insert after it
    R__TObjArray_InsertAt(arr, newobj, at);
 }
-#endif
 
 static void R__TObjArray_InsertBefore(TObjArray *arr, TObject *newobj, TObject *oldobj)
 {
@@ -483,6 +479,15 @@ void TStreamerInfo::Build()
             cached = copy;
 
             // Warning("BuildOld","%s::%s is not set from the version %d of %s (You must add a rule for it)\n",GetName(), element->GetName(), GetClassVersion(), GetName() );
+         } else {
+            // If the element is just cached and not repeat, we need to inject an element
+            // to insure the writing.
+            TStreamerElement *writecopy = (TStreamerElement*)element->Clone();
+            fElements->Add(element);
+            writecopy->SetBit(TStreamerElement::kWrite);
+            writecopy->SetNewType( writecopy->GetType() );
+            // Put the write element after the read element (that does caching).
+            element = writecopy;
          }
          cached->SetBit(TStreamerElement::kCache);
          cached->SetNewType( cached->GetType() );
@@ -1945,16 +1950,26 @@ void TStreamerInfo::BuildOld()
 
             // Now that we are caching the unconverted element, we do not assign it to the real type even if we could have!
             if (element->GetNewType()>0 /* intentionally not including base class for now */
-                && !rules->HasRuleWithTarget( element->GetName(), kTRUE ) )
-               {
-                  TStreamerElement *copy = (TStreamerElement*)element->Clone();
-                  R__TObjArray_InsertBefore( fElements, copy, element );
-                  next(); // move the cursor passed the insert object.
-                  copy->SetBit(TStreamerElement::kRepeat);
-                  element = copy;
+                && !rules->HasRuleWithTarget( element->GetName(), kTRUE ) ) {
 
-                  // Warning("BuildOld","%s::%s is not set from the version %d of %s (You must add a rule for it)\n",GetName(), element->GetName(), GetClassVersion(), GetName() );
-               }
+               TStreamerElement *copy = (TStreamerElement*)element->Clone();
+               R__TObjArray_InsertBefore( fElements, copy, element );
+               next(); // move the cursor passed the insert object.
+               copy->SetBit(TStreamerElement::kRepeat);
+               element = copy;
+               
+               // Warning("BuildOld","%s::%s is not set from the version %d of %s (You must add a rule for it)\n",GetName(), element->GetName(), GetClassVersion(), GetName() );
+            } else {
+               // If the element is just cached and not repeat, we need to inject an element
+               // to insure the writing.
+               TStreamerElement *writecopy = (TStreamerElement*)element->Clone();
+               R__TObjArray_InsertAfter( fElements, writecopy, element );
+               next(); // move the cursor passed the insert object.
+               writecopy->SetBit(TStreamerElement::kWrite);
+               writecopy->SetNewType( writecopy->GetType() );
+               writecopy->SetBit(TStreamerElement::kCache);
+               writecopy->SetOffset(infoalloc ? infoalloc->GetOffset(element->GetName()) : 0);
+            }
             element->SetBit(TStreamerElement::kCache);
             element->SetNewType( element->GetType() );
             element->SetOffset(infoalloc ? infoalloc->GetOffset(element->GetName()) : 0);
@@ -3719,26 +3734,15 @@ void TStreamerInfo::ls(Option_t *option) const
    }
    for (Int_t i=0;i < fNdata;i++) {
       TStreamerElement *element = (TStreamerElement*)fElem[i];
-      TString sequenceType = " [";
-      Bool_t first = kTRUE;
-      if (element->TestBit(TStreamerElement::kCache)) {
-         first = kFALSE;
-         sequenceType += "cached";
+      TString sequenceType;
+      element->GetSequenceType(sequenceType);
+      if (sequenceType.Length()) {
+         sequenceType.Prepend(" [");
+         sequenceType += "]";
       }
-      if (element->TestBit(TStreamerElement::kRepeat)) {
-         if (!first) sequenceType += ",";
-         first = kFALSE;
-         sequenceType += "repeat";
-      }
-      if (element->TestBit(TStreamerElement::kDoNotDelete)) {
-         if (!first) sequenceType += ",";
-         first = kFALSE;
-         sequenceType += "nodelete";
-      }
-      if (first) sequenceType.Clear();
-      else sequenceType += "]";
-
-      Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i],sequenceType.Data());
+      Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
+             i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i],
+             sequenceType.Data());
    }
 }
 
@@ -4287,6 +4291,8 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          for (Int_t i = 0; i < nobjects; i++) {
             el = (TStreamerElement*)fElements->UncheckedAt(i);
             if( el != 0 && (el->IsA() == TStreamerArtificial::Class() || el->TestBit(TStreamerElement::kRepeat))) {
+               fElements->RemoveAt( i );
+            } else if( el !=0 && (el->TestBit(TStreamerElement::kCache) && !el->TestBit(TStreamerElement::kWrite)) ) {
                fElements->RemoveAt( i );
             }
          }

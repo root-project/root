@@ -79,11 +79,13 @@ namespace TStreamerInfoActions
 
       TStreamerInfo *info = (TStreamerInfo*)fInfo;
       TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
+      TString sequenceType;
+      aElement->GetSequenceType(sequenceType);
 
       printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-             " %s, offset=%d\n",
+             " %s, offset=%d (%s)\n",
              info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetTypes()[fElemId],
-             aElement->ClassName(), fOffset);
+             aElement->ClassName(), fOffset, sequenceType.Data());
    }
 
    void TConfiguration::PrintDebug(TBuffer &buf, void *addr) const
@@ -94,11 +96,13 @@ namespace TStreamerInfoActions
          // Idea: We should print the name of the action function.
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
          TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
-
+         TString sequenceType;
+         aElement->GetSequenceType(sequenceType);
+      
          printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-                " %s, bufpos=%d, arr=%p, offset=%d\n",
+                " %s, bufpos=%d, arr=%p, offset=%d (%s)\n",
                 info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetTypes()[fElemId],
-                aElement->ClassName(), buf.Length(), addr, fOffset);
+                aElement->ClassName(), buf.Length(), addr, fOffset, sequenceType.Data());
       }
    }
 
@@ -134,11 +138,13 @@ namespace TStreamerInfoActions
       void PrintDebug(TBuffer &, void *) const {
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
          TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
+         TString sequenceType;
+         aElement->GetSequenceType(sequenceType);
 
          printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-                " %s, offset=%d\n",
+                " %s, offset=%d (%s)\n",
                 info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetTypes()[fElemId],
-                aElement->ClassName(), fOffset);
+                aElement->ClassName(), fOffset, sequenceType.Data());
       }
 
       void AddToOffset(Int_t delta)
@@ -2494,6 +2500,8 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
 {
    // Add a read action for the given element.
 
+   if (element->TestBit(TStreamerElement::kWrite)) return;
+
    switch (fType[i]) {
       // read basic types
       case TStreamerInfo::kBool:    fReadObjectWise->AddAction( ReadBasicType<Bool_t>, new TConfiguration(this,i,fOffset[i]) );    break;
@@ -2728,8 +2736,16 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
 }
 
 //______________________________________________________________________________
-void TStreamerInfo::AddWriteAction(Int_t i, TStreamerElement* /*element*/ )
+void TStreamerInfo::AddWriteAction(Int_t i, TStreamerElement *element )
 {
+   if (element->TestBit(TStreamerElement::kCache) && !element->TestBit(TStreamerElement::kWrite)) {
+      // Skip element cached for reading purposes.
+      return;
+   }
+   if (element->GetType() >= kArtificial &&  !element->TestBit(TStreamerElement::kWrite)) {
+      // Skip artificial element used for reading purposes.
+      return;
+   }
    switch (fType[i]) {
       // write basic types
       case TStreamerInfo::kBool:    fWriteObjectWise->AddAction( WriteBasicType<Bool_t>, new TConfiguration(this,i,fOffset[i]) );    break;
@@ -2889,6 +2905,10 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          // when it is making branches for a split object.
          continue;
       }
+      if (element->TestBit(TStreamerElement::kWrite)) {
+         // Skip element that only for writing.
+         continue;
+      }
       Int_t asize = element->GetSize();
       if (element->GetArrayLength()) {
          asize /= element->GetArrayLength();
@@ -2986,6 +3006,14 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             // base class and TClass::IgnoreTObjectStreamer() was called.  In this case the compiled version of the
             // elements omits the TObject base class element, which has to be compensated for by TTree::Bronch()
             // when it is making branches for a split object.
+            continue;
+         }
+         if (element->TestBit(TStreamerElement::kCache) && !element->TestBit(TStreamerElement::kWrite)) {
+            // Skip element cached for reading purposes.
+            continue;
+         }
+         if (element->GetType() >= TVirtualStreamerInfo::kArtificial &&  !element->TestBit(TStreamerElement::kWrite)) {
+            // Skip artificial element used for reading purposes.
             continue;
          }
          Int_t asize = element->GetSize();
@@ -3105,7 +3133,8 @@ void TStreamerInfoActions::TActionSequence::AddToOffset(Int_t delta)
        iter != end;
        ++iter) 
    {
-      iter->fConfiguration->AddToOffset(delta);
+      if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+         iter->fConfiguration->AddToOffset(delta);
    }
 }
 
@@ -3145,7 +3174,8 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
              ++iter) 
          {
             TConfiguration *conf = iter->fConfiguration->Copy();
-            conf->AddToOffset(offset);
+            if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+               conf->AddToOffset(offset);
             sequence->AddAction( iter->fAction, conf );
          }
       } else {
@@ -3155,7 +3185,8 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
              ++iter) {
             if ( iter->fConfiguration->fElemId == (UInt_t)element_ids[id] ) {
                TConfiguration *conf = iter->fConfiguration->Copy();
-               conf->AddToOffset(offset);
+               if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+                  conf->AddToOffset(offset);
                sequence->AddAction( iter->fAction, conf );
             }
          }

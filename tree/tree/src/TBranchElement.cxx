@@ -1972,7 +1972,6 @@ void TBranchElement::InitInfo()
                for (size_t i = 0; i < ndata; ++i) {
                   if (((TStreamerElement*) elems[i]) == elt) {
                      if (elt->TestBit (TStreamerElement::kCache)
-                         && elt->TestBit(TStreamerElement::kRepeat)
                          && (i+1) < ndata
                          && s == ((TStreamerElement*) elems[i])->GetName())
                      {
@@ -1982,7 +1981,11 @@ void TBranchElement::InitInfo()
                         // ReadLeaves).
                         // fID = i+1;
                         fID = i;
-                        fIDs.push_back(fID+1);
+                        if (elt->TestBit(TStreamerElement::kRepeat)) {
+                           fIDs.push_back(fID+1);
+                        } else if (((TStreamerElement*) elems[i+1])->TestBit(TStreamerElement::kWrite)) {
+                           fIDs.push_back(fID+1);
+                        }
                      } else {
                         fID = i;
                      }
@@ -2672,6 +2675,12 @@ void TBranchElement::InitializeOffsets()
             Warning("InitializeOffsets", "Cannot get streamer element for branch: %s!", GetName());
             fInitOffsets = kTRUE;
             return;
+         } else if (branchElem->TestBit(TStreamerElement::kRepeat)) {
+            // If we have a repeating streamerElement, use the next
+            // one as it actually hold the 'real' data member('s offset)
+            if (elems[fID+1]) {
+               branchElem = (TStreamerElement*) elems[fID+1];
+            }
          }
          localOffset = branchElem->GetOffset();
          branchClass = branchElem->GetClassPointer();
@@ -2707,6 +2716,8 @@ void TBranchElement::InitializeOffsets()
 
       // Loop over our sub-branches and compute their offsets.
       for (Int_t subBranchIdx = 0; subBranchIdx < nbranches; ++subBranchIdx) {
+         bool alternateElement = false;
+
          fBranchOffset[subBranchIdx] = 0;
          TBranchElement* subBranch = dynamic_cast<TBranchElement*> (fBranches[subBranchIdx]);
          if (subBranch == 0) {
@@ -2739,6 +2750,31 @@ void TBranchElement::InitializeOffsets()
             Warning("InitializeOffsets", "No streamer element for branch: %s subbranch: %s", GetName(), subBranch->GetName());
             fInitOffsets = kTRUE;
             return;
+         } else if (subBranchElement->TestBit(TStreamerElement::kRepeat)) {
+            // If we have a repeating streamerElement, use the next
+            // one as it actually hold the 'real' data member('s offset)
+            if (subBranchElems[subBranch->fID+1]) {
+               subBranchElement = (TStreamerElement*) subBranchElems[subBranch->fID+1];
+            }
+         } else if (subBranchElement->TestBit(TStreamerElement::kCache)) {
+            // We have a cached item which is not a repeated but we might still
+            // have some Actions triggered by a rule that affect real 
+            // data member(s).
+            if (subBranch->fReadActionSequence && subBranch->fReadActionSequence->fActions.size() > 1) {
+               typedef TStreamerInfoActions::ActionContainer_t::iterator iterator;
+               iterator end = subBranch->fReadActionSequence->fActions.end();
+               for(iterator iter = subBranch->fReadActionSequence->fActions.begin();
+                   iter != end; ++iter) {
+                  TStreamerInfoActions::TConfiguration *config = iter->fConfiguration;
+                  UInt_t id = config->fElemId;
+                  TStreamerElement *e = (TStreamerElement*)config->fInfo->GetElements()->At(id);
+                  if (e && !e->TestBit(TStreamerElement::kCache)) {
+                     subBranchElement = e;
+                     alternateElement = true;
+                     break;
+                  }
+               }
+            }
          }
 
          localOffset = subBranchElement->GetOffset();
@@ -2973,7 +3009,8 @@ void TBranchElement::InitializeOffsets()
             // First check whether this sub-branch is part of the 'cache' (because the data member it
             // represents is no longer in the current class layout.
             TStreamerInfo *subInfo = subBranch->GetInfoImp();
-            if (subInfo && subBranch->TestBit(kCache)) { // subInfo->GetElements()->At(subBranch->GetID())->TestBit(TStreamerElement::kCache)) {
+            //if (subInfo && subBranch->TestBit(kCache)) { // subInfo->GetElements()->At(subBranch->GetID())->TestBit(TStreamerElement::kCache)) {
+            if (subBranchElement->TestBit(TStreamerElement::kCache)) {
                pClass = ((TStreamerElement*)subInfo->GetElements()->At(0))->GetClassPointer();
             }
             // FIXME: Do we need the other base class tests here?
@@ -3048,6 +3085,13 @@ void TBranchElement::InitializeOffsets()
             // Find our offset in our parent class using
             // a lookup by name in the dictionary meta info
             // for our parent class.
+           
+            if (alternateElement) {
+               Ssiz_t dotpos = dataName.Last('.');
+               Ssiz_t endpos = dataName.Length();
+               if (dotpos != kNPOS) ++dotpos; else dotpos = 0;
+               dataName.Replace(dotpos,endpos-dotpos,subBranchElement->GetFullName());
+            }
             TRealData* rd = pClass->GetRealData(dataName);
             if (rd && !rd->TestBit(TRealData::kTransient)) {
                // -- Data member exists in the dictionary meta info, get the offset.
@@ -5397,6 +5441,9 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
          continue;
       }
       if (elem->TestBit(TStreamerElement::kRepeat)) {
+         continue;
+      }
+      if (elem->TestBit(TStreamerElement::kCache) && !elem->TestBit(TStreamerElement::kWrite)) {
          continue;
       }
       Int_t offset = elem->GetOffset();
