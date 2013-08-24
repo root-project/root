@@ -1655,16 +1655,16 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          {
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_SENDOUTPUT",
                                  "worker was asked to send output to master");
-            rc = 0;
+            Int_t sorc = 0;
             if (SendResults(fSocket, fPlayer->GetOutputList()) != 0) {
                Error("HandleSocketInput:kPROOF_SENDOUTPUT", "problems sending output list");
-               rc = 1;
+               sorc = 1;
             }
             // Signal the master that we are idle
             fSocket->Send(kPROOF_SETIDLE);
             SetIdle(kTRUE);
             DeletePlayer();
-            SendLogFile(rc);
+            SendLogFile(sorc);
          }
          break;
 
@@ -1858,17 +1858,17 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          } else {
             TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_CACHE","enter");
-            Int_t status = HandleCache(mess, pslb);
+            Int_t hcrc = HandleCache(mess, pslb);
             // Notify
-            SendLogFile(status);
+            SendLogFile(hcrc);
          }
          break;
 
       case kPROOF_WORKERLISTS:
-         {  Int_t xrc = -1;
+         {  Int_t wlrc = -1;
             if (all) {
                if (IsMaster())
-                  xrc = HandleWorkerLists(mess);
+                  wlrc = HandleWorkerLists(mess);
                else
                   Warning("HandleSocketInput:kPROOF_WORKERLISTS",
                         "Action meaning-less on worker nodes: protocol error?");
@@ -1876,7 +1876,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                rc = -1;
             }
             // Notify
-            SendLogFile(xrc);
+            SendLogFile(wlrc);
          }
          break;
 
@@ -2033,13 +2033,13 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          break;
 
       case kPROOF_DATASETS:
-         {  Int_t xrc = -1;
+         {  Int_t dsrc = -1;
             if (fProtocol > 16) {
-               xrc = HandleDataSets(mess, pslb);
+               dsrc = HandleDataSets(mess, pslb);
             } else {
                Error("HandleSocketInput", "old client: no or incompatible dataset support");
             }
-            SendLogFile(xrc);
+            SendLogFile(dsrc);
          }
          break;
 
