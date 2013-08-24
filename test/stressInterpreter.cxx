@@ -293,7 +293,7 @@ bool InterpreterStress::stressReflection() {
          continue;
       }
 
-      MethodInfo_t* mk = gInterpreter->CallFunc_Factory();
+      CallFunc_t* mk = gInterpreter->CallFunc_Factory();
       Long_t offset = -1;
       gInterpreter->CallFunc_SetFuncProto(mk, k, fname, "double", &offset);
       if (!gInterpreter->CallFunc_IsValid(mk)) {
