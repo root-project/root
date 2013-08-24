@@ -312,7 +312,6 @@ auto_ptr<ROOT::Fit::Fitter>::element_type
 auto_ptr<ROOT::Math::Minimizer>::element_type
 auto_ptr<void>::element_type
 Axis_t
-BaseClassInfo_t
 binary_function<TClass*,TClass*,bool>::first_argument_type
 binary_function<TClass*,TClass*,bool>::result_type
 binary_function<TClass*,TClass*,bool>::second_argument_type
@@ -331,13 +330,11 @@ bool
 Bool_t
 Byte_t
 caddr_t
-CallFunc_t
 cfCAST_FUNCTION
 char
 char*
 Char_t
 CheckSecCtx_t
-ClassInfo_t
 ClassStreamerFunc_t
 clock_t
 Colormap_t
@@ -346,7 +343,6 @@ Coord_t
 CreateInterpreter_t
 Cursor_t
 daddr_t
-DataMemberInfo_t
 deque<int>::allocator_type
 deque<int>::_Alloc_value_type
 deque<int>::const_iterator
@@ -744,8 +740,6 @@ Marker_t
 Mask_t
 mbstate_t
 MemberStreamerFunc_t
-MethodArgInfo_t
-MethodInfo_t
 mmalloc_info
 mode_t
 multimap<TObject*,TF1*>::allocator_type
@@ -1244,8 +1238,6 @@ TVectorF
 TVirtualBranchBrowsable::MethodCreateListOfBrowsables_t
 TVirtualFitter::FCNFunc_t
 TVirtualVectorIterators::CreateIterators_t
-TypedefInfo_t
-TypeInfo_t
 u_char
 UChar_t
 uid_t

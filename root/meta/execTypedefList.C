@@ -92,8 +92,8 @@ int execTypedefList() {
    res = check("TBuffer::CacheList_t","vector<TVirtualArray*>"); if (res) return res;
    res = check_missing("TBuffer::CacheList_notAtype"); if (res) return res;
    
-   res = check_file("typelist.v5.txt",368); if (res) return res;
-   res = check_file("typelist.v6.txt",1708); if (res) return res;
+   res = check_file("typelist.v5.txt",360); if (res) return res;
+   res = check_file("typelist.v6.txt",1700); if (res) return res;
 
    return 0;
 }

@@ -15,7 +15,6 @@ unsigned short
 vector<vector<double,allocator<double> >,allocator<vector<double,allocator<double> > > >::reference
 FontStruct_t
 vector<int,allocator<int> >::iterator::pointer
-BaseClassInfo_t
 TVirtualCollectionProxy::Next_t
 Cursor_t
 Option_t
@@ -30,7 +29,6 @@ ROOT::Math::IParametricFunctionOneDim::BaseFunc
 basic_istream<char,char_traits<char> >::__streambuf_type
 #wchar_t
 ROOT::Fit::Chi2FCN<ROOT::Math::IBaseFunctionMultiDim>::Type_t
-TypedefInfo_t
 vector<string,allocator<string> >::value_type
 ReAllocCFun_t
 vector<int,allocator<int> >::const_pointer
@@ -48,7 +46,6 @@ basic_istringstream<char,char_traits<char>,allocator<char> >::__string_type
 stringstream
 vector<vector<double,allocator<double> >,allocator<vector<double,allocator<double> > > >::const_pointer
 streamsize
-DataMemberInfo_t
 UChar_t
 Handle_t
 Visual_t
@@ -137,7 +134,6 @@ Func_t
 vector<string,allocator<string> >::difference_type
 vector<ROOT::Fit::ParameterSettings,allocator<ROOT::Fit::ParameterSettings> >::difference_type
 vector<TString,allocator<TString> >::reference
-TypeInfo_t
 vector<double,allocator<double> >::iterator::pointer
 Double32_t
 ROOT::Math::IParamMultiGradFunction
@@ -307,7 +303,6 @@ Long_t
 TVirtualCollectionProxy::DeleteIterator_t
 MemberStreamerFunc_t
 ROOT::Math::Integrator
-ClassInfo_t
 ROOT::Fit::Chi2FCN<ROOT::Math::IGradientFunctionMultiDim>::IModelFunction
 ROOT::Fit::Fitter::IGradModelFunction
 ROOT::Math::TDataPoint1D
@@ -316,7 +311,6 @@ ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IGradientFunctionMultiDim>::BaseFunc
 ROOT::Math::ParamFunctor::FreeFunc
 char
 vector<pair<int,int>,allocator<pair<int,int> > >::const_reference
-MethodInfo_t
 ROOT::Fit::Fitter::IModelFunction
 ROOT::Math::KDTree<ROOT::Math::TDataPoint<1,double> >::point_type
 basic_stringbuf<char,char_traits<char>,allocator<char> >::char_type
@@ -329,7 +323,6 @@ ROOT::Math::BasicFitMethodFunction<ROOT::Math::IBaseFunctionMultiDim>::BaseFunct
 basic_ostream<char,char_traits<char> >::char_type
 basic_istream<char,char_traits<char> >::__ios_type
 vector<int,allocator<int> >::const_reference
-MethodArgInfo_t
 string::const_iterator
 ROOT::Fit::PoissonLLFunction
 vector<string,allocator<string> >::const_iterator
@@ -345,7 +338,6 @@ string::traits_type
 ROOT::Fit::Chi2Function
 basic_filebuf<char,char_traits<char> >::char_type
 vector<string,allocator<string> >::iterator::pointer
-CallFunc_t
 ROOT::Math::TDataPoint2F
 ROOT::Fit::LogLikelihoodGradFunction
 char_traits<char>::state_type
