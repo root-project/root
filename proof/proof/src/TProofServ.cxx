@@ -1649,16 +1649,16 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          {
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_SENDOUTPUT",
                                  "worker was asked to send output to master");
-            Int_t rc = 0;
+            Int_t so_rc = 0;
             if (SendResults(fSocket, fPlayer->GetOutputList()) != 0) {
                Error("HandleSocketInput:kPROOF_SENDOUTPUT", "problems sending output list");
-               rc = 1;
+               so_rc = 1;
             }
             // Signal the master that we are idle
             fSocket->Send(kPROOF_SETIDLE);
             SetIdle(kTRUE);
             DeletePlayer();
-            SendLogFile(rc);
+            SendLogFile(so_rc);
          }
          break;
 
