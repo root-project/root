@@ -425,9 +425,10 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    std::vector<TypeInfo_t*> proto(nargs,doubletype);
 
    CallFunc_t *callfunc = gInterpreter->CallFunc_Factory();
-   gInterpreter->CallFunc_SetFuncProto(callfunc,cinfo,functionName,proto,false,ROOT::kConversionMatch);
+   Long_t func_offset;
+   gInterpreter->CallFunc_SetFuncProto(callfunc,cinfo,functionName,proto,false,&func_offset,ROOT::kConversionMatch);
 
-   TMethodCall *method = new TMethodCall(ns,callfunc);
+   TMethodCall *method = new TMethodCall(ns,callfunc,func_offset);
    
    if (!ns) gInterpreter->ClassInfo_Delete(cinfo);
    gInterpreter->CallFunc_Delete(callfunc);

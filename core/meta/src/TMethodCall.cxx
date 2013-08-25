@@ -52,14 +52,14 @@ TMethodCall::TMethodCall()
 }
 
 //______________________________________________________________________________
-TMethodCall::TMethodCall(TClass *cl, CallFunc_t *callfunc)
+TMethodCall::TMethodCall(TClass *cl, CallFunc_t *callfunc, Long_t offset)
 {
    // Create a method invocation environment for a specific class, method
    // described by the callfunc.
 
    fFunc = 0;
    
-   Init(cl, callfunc);
+   Init(cl, callfunc, offset);
 }
 
 //______________________________________________________________________________
@@ -182,7 +182,7 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinf
 }
 
 //______________________________________________________________________________
-void TMethodCall::Init(TClass *cl, CallFunc_t *function)
+void TMethodCall::Init(TClass *cl, CallFunc_t *function, Long_t offset)
 {
    // Initialize the method invocation environment based on
    // the CallFunc object and the TClass describing the function context.
@@ -207,6 +207,8 @@ void TMethodCall::Init(TClass *cl, CallFunc_t *function)
    fProto  = fMetPtr->GetSignature()+1; // skip leading )
    Ssiz_t s = fProto.Last(')');
    fProto.Remove(s); // still need to remove default values :(
+   
+   fOffset = offset;
    
    fDtorOnly = kFALSE;
    fRetType  = kNone;
