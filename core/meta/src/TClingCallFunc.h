@@ -172,6 +172,8 @@ public:
    void                SetFunc(const TClingMethodInfo *info);
    void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, bool objectIsConst, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   void                SetFuncProto(const TClingClassInfo *info, const char *method, const llvm::SmallVector<clang::QualType, 4> &proto, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   void                SetFuncProto(const TClingClassInfo *info, const char *method, const llvm::SmallVector<clang::QualType, 4> &proto, bool objectIsConst, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void                Init(const clang::FunctionDecl *);
    void                Invoke(cling::StoredValueRef* result = 0) const;
 };

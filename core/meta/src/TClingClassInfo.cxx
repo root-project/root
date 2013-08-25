@@ -302,6 +302,64 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
    return tmi;
 }
 
+TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
+                                            const llvm::SmallVector<clang::QualType, 4> &proto,
+                                            long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
+                                            InheritanceMode imode /*= WithInheritance*/) const
+{
+   return GetMethod(fname,proto,false,poffset,mode,imode);
+}
+
+TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
+                                            const llvm::SmallVector<clang::QualType, 4> &proto, bool objectIsConst,
+                                            long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
+                                            InheritanceMode imode /*= WithInheritance*/) const
+{
+   if (poffset) {
+      *poffset = 0L;
+   }
+   if (!IsLoaded()) {
+      TClingMethodInfo tmi(fInterp);
+      return tmi;
+   }
+   const TagDecl *TD = llvm::dyn_cast<TagDecl>(fDecl);
+   if (TD && !TD->isEnum() && !strcmp(fname, Name())) {
+      // Constructor.
+      // These must be accessed through a wrapper, since they
+      // may call an operator new(), which can be a member
+      // function or a global function, as well as the actual
+      // constructor function itself.
+   }
+   const cling::LookupHelper& lh = fInterp->getLookupHelper();
+   const FunctionDecl *fd;
+   if (mode == kConversionMatch) {
+      fd = lh.findFunctionProto(fDecl, fname, proto, objectIsConst);
+   } else if (mode == kExactMatch) {
+      fd = lh.matchFunctionProto(fDecl, fname, proto, objectIsConst);
+   } else {
+      Error("TClingClassInfo::GetMethod",
+            "The MatchMode %d is not supported.", mode);
+      TClingMethodInfo tmi(fInterp);
+      return tmi;
+   }
+   if (!fd) {
+      // Function not found.
+      TClingMethodInfo tmi(fInterp);
+      return tmi;
+   }
+   if (poffset) {
+      // We have been asked to return a this pointer adjustment.
+      if (const CXXMethodDecl *md =
+          llvm::dyn_cast<CXXMethodDecl>(fd)) {
+         // This is a class member function.
+         *poffset = GetOffset(md);
+      }
+   }
+   TClingMethodInfo tmi(fInterp);
+   tmi.Init(fd);
+   return tmi;
+}
+
 TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       const char *arglist, long *poffset, EFunctionMatchMode mode /* = kConversionMatch*/,
       InheritanceMode imode /* = WithInheritance*/) const

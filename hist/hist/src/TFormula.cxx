@@ -22,6 +22,7 @@
 #include "TObjString.h"
 #include "TError.h"
 #include "TFormulaPrimitive.h"
+#include "TInterpreter.h"
 
 #ifdef WIN32
 #pragma optimize("",off)
@@ -334,7 +335,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
 //*-*   and DefaultVariable.
 //*-*
 
-   int i,j;
+   int i;
 
    // We have to decompose the chain is 3 potential components:
    //   namespace::functionName( args )
@@ -407,24 +408,30 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    }
 
    // Now we need to lookup the function and check its arguments.
-
-   // We have 2 choice ... parse more and replace x, y, z and [?] by 0.0 or
-   // or do the following silly thing:
-   TString proto;
-   for(j=0; j<nargs; j++) {
-      proto += "double,";
-   }
-   if (nargs) proto.Remove(proto.Length()-1);
-
-
    TClass *ns = (spaceName.Length()) ? TClass::GetClass(spaceName) : 0;
-   TMethodCall *method = new TMethodCall();
+   ClassInfo_t *cinfo = 0;
    if (ns) {
-      method->InitWithPrototype(ns,functionName,proto,false,ROOT::kConversionMatch);
+      cinfo = ns->GetClassInfo();
    } else {
-      method->InitWithPrototype(functionName,proto,ROOT::kConversionMatch);
+      cinfo = gInterpreter->ClassInfo_Factory();
    }
+   
+   // ROOT does yet have a complete TType class, but TCling does,
+   // so let's use that for now.
+   static TypeInfo_t *doubletype = 0;
+   if (doubletype == 0) {
+      doubletype = gInterpreter->TypeInfo_Factory("double");
+   }
+   std::vector<TypeInfo_t*> proto(nargs,doubletype);
 
+   CallFunc_t *callfunc = gInterpreter->CallFunc_Factory();
+   gInterpreter->CallFunc_SetFuncProto(callfunc,cinfo,functionName,proto,false,ROOT::kConversionMatch);
+
+   TMethodCall *method = new TMethodCall(ns,callfunc);
+   
+   if (!ns) gInterpreter->ClassInfo_Delete(cinfo);
+   gInterpreter->CallFunc_Delete(callfunc);
+   
    if (method->IsValid()) {
       if (method->ReturnType() == TMethodCall::kOther) {
          /*

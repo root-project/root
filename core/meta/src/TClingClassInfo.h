@@ -92,6 +92,12 @@ public:
    TClingMethodInfo     GetMethodWithArgs(const char *fname, const char *arglist, bool objectIsConst,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
+   TClingMethodInfo     GetMethod(const char *fname, const llvm::SmallVector<clang::QualType, 4> &proto,
+                                  long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
+                                  InheritanceMode imode = WithInheritance) const;
+   TClingMethodInfo     GetMethod(const char *fname, const llvm::SmallVector<clang::QualType, 4> &proto, bool objectIsConst,
+                                  long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
+                                  InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    long                 GetOffset(const clang::CXXMethodDecl* md) const;
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t

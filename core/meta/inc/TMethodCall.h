@@ -57,6 +57,7 @@ private:
 
 public:
    TMethodCall();
+   TMethodCall(TClass *cl, CallFunc_t *callfunc);
    TMethodCall(TClass *cl, const char *method, const char *params);
    TMethodCall(const char *function, const char *params);
    TMethodCall(const TMethodCall &org);
@@ -64,6 +65,7 @@ public:
    ~TMethodCall();
 
    void           Init(TFunction *func);
+   void           Init(TClass *cl, CallFunc_t *func);
    void           Init(TClass *cl, const char *method, const char *params, Bool_t objectIsConst = kFALSE);
    void           Init(const char *function, const char *params);
    void           InitWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
