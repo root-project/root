@@ -1008,6 +1008,7 @@ void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
    fMethod = 0;
    fEEFunc = 0;
    fEEAddr = 0;
+   ResetArg();
    fMethod = new TClingMethodInfo(*info);
    if (!fMethod->IsValid()) {
       return;
@@ -1029,6 +1030,50 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
                                   const char *method, const char *proto,
+                                  bool objectIsConst,
+                                  long *poffset,
+                                  EFunctionMatchMode mode /* =kConversionMatch */
+                                  )
+{
+   delete fMethod;
+   fMethod = new TClingMethodInfo(fInterp);
+   fEEFunc = 0;
+   fEEAddr = 0;
+   if (poffset) {
+      *poffset = 0L;
+   }
+   ResetArg();
+   if (!info->IsValid()) {
+      Error("TClingCallFunc::SetFuncProto", "Class info is invalid!");
+      return;
+   }
+   *fMethod = info->GetMethod(method, proto, objectIsConst, poffset, mode);
+   if (!fMethod->IsValid()) {
+      //Error("TClingCallFunc::SetFuncProto", "Could not find method %s(%s)",
+      //      method, proto);
+      return;
+   }
+   const clang::FunctionDecl *decl = fMethod->GetMethodDecl();
+   Init(decl);
+   if (!IsValid()) {
+      //Error("TClingCallFunc::SetFuncProto", "Method %s(%s) has no body.",
+      //      method, proto);
+   }
+}
+
+void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
+                                  const char *method,
+                                  const llvm::SmallVector<clang::QualType, 4> &proto,
+                                  long *poffset,
+                                  EFunctionMatchMode mode /* = kConversionMatch */
+                                  )
+{
+   SetFuncProto(info,method,proto,false,poffset, mode);
+}
+
+void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
+                                  const char *method,
+                                  const llvm::SmallVector<clang::QualType, 4> &proto,
                                   bool objectIsConst,
                                   long *poffset,
                                   EFunctionMatchMode mode /* =kConversionMatch */
