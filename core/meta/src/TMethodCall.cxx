@@ -52,6 +52,17 @@ TMethodCall::TMethodCall()
 }
 
 //______________________________________________________________________________
+TMethodCall::TMethodCall(TClass *cl, CallFunc_t *callfunc)
+{
+   // Create a method invocation environment for a specific class, method
+   // described by the callfunc.
+
+   fFunc = 0;
+   
+   Init(cl, callfunc);
+}
+
+//______________________________________________________________________________
 TMethodCall::TMethodCall(TClass *cl, const char *method, const char *params)
 {
    // Create a method invocation environment for a specific class, method and
@@ -168,6 +179,40 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinf
       }
    }
    return 0;
+}
+
+//______________________________________________________________________________
+void TMethodCall::Init(TClass *cl, CallFunc_t *function)
+{
+   // Initialize the method invocation environment based on
+   // the CallFunc object and the TClass describing the function context.
+   
+   if (!function) return;
+   
+   MethodInfo_t* info = gCling->CallFunc_FactoryMethod(function);
+
+   if (!fFunc)
+      fFunc = gCling->CallFunc_Factory();
+   else
+      gCling->CallFunc_Init(fFunc);
+   
+   fClass = cl;
+   if (fClass) {
+      fMetPtr = new TMethod(info,cl);
+   } else {
+      fMetPtr = new TFunction(info);
+   }
+   fMethod = fMetPtr->GetName();
+   fParams = "";
+   fProto  = fMetPtr->GetSignature()+1; // skip leading )
+   Ssiz_t s = fProto.Last(')');
+   fProto.Remove(s); // still need to remove default values :(
+   
+   fDtorOnly = kFALSE;
+   fRetType  = kNone;
+   
+   gCling->CallFunc_SetFunc(fFunc,info);
+   
 }
 
 //______________________________________________________________________________
