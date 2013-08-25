@@ -4055,6 +4055,34 @@ void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const ch
 }
 
 //______________________________________________________________________________
+void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const std::vector<TypeInfo_t*> &proto, Long_t* offset, EFunctionMatchMode mode /* = kConversionMatch */) const
+{
+   // Interface to cling function
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   TClingClassInfo* ci = (TClingClassInfo*) info;
+   llvm::SmallVector<clang::QualType, 4> funcProto;
+   for (std::vector<TypeInfo_t*>::const_iterator iter = proto.begin(), end = proto.end();
+        iter != end; ++iter) {
+      funcProto.push_back( ((TClingTypeInfo*)(*iter))->GetQualType() );
+   }
+   f->SetFuncProto(ci, method, funcProto, offset, mode);
+}
+
+//______________________________________________________________________________
+void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const std::vector<TypeInfo_t*> &proto, bool objectIsConst, Long_t* offset, EFunctionMatchMode mode /* = kConversionMatch */) const
+{
+   // Interface to cling function
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   TClingClassInfo* ci = (TClingClassInfo*) info;
+   llvm::SmallVector<clang::QualType, 4> funcProto;
+   for (std::vector<TypeInfo_t*>::const_iterator iter = proto.begin(), end = proto.end();
+        iter != end; ++iter) {
+      funcProto.push_back( ((TClingTypeInfo*)(*iter))->GetQualType() );
+   }
+   f->SetFuncProto(ci, method, funcProto, objectIsConst, offset, mode);
+}
+
+//______________________________________________________________________________
 //
 //  ClassInfo interface
 //
@@ -4752,6 +4780,12 @@ void TCling::TypeInfo_Delete(TypeInfo_t* tinfo) const
 TypeInfo_t* TCling::TypeInfo_Factory() const
 {
    return (TypeInfo_t*) new TClingTypeInfo(fInterpreter);
+}
+
+//______________________________________________________________________________
+TypeInfo_t* TCling::TypeInfo_Factory(const char *name) const
+{
+   return (TypeInfo_t*) new TClingTypeInfo(fInterpreter, name);
 }
 
 //______________________________________________________________________________
