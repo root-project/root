@@ -105,9 +105,7 @@ Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+
 *............................................................................*
 Info in <TTreePlayer::MakeClass>: Files: cmakeclass.h and cmakeclass.C generated from TTree: mytreemk
 Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+
-Info in <ACLiC>: modified script has already been compiled and loaded
-Info in <ACLiC>: it will be regenerated and reloaded!
-Error in <TCling::UnloadFile>: Unloading of shared libraries not yet implemented!
+Info in <ACLiC>: script has already been loaded in interpreted mode
 3,4c3,4
 < //   from TTree mytree/Icecube
 ---
