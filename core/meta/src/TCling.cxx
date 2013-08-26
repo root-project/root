@@ -1622,10 +1622,15 @@ Bool_t TCling::IsLoaded(const char* filename) const
       return kTRUE;
    }
 
-   const clang::DirectoryLookup *PWD;
+   const clang::DirectoryLookup *CurDir;
    llvm::StringRef srName(filename);
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
-   const clang::FileEntry *FE = PP.LookupFile(srName, false, 0, PWD, 0, 0, 0);
+   const clang::FileEntry *FE = PP.LookupFile(srName, /*isAngled*/ false,
+                                              /*FromDir*/ 0, CurDir,
+                                              /*CurFileEnt*/ 0,
+                                              /*SearchPath*/ 0,
+                                              /*RelativePath*/ 0,
+                                              /*SkipCache*/ false);
    if (FE) {
       // check in the source manager if the file is actually loaded
       clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
