@@ -376,8 +376,14 @@ Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
 
    // Make sure we have a reference manager
    if (!fLogger->fMgr || !fLogger->fMgr->IsValid()) {
-      Warning("Retrieve","No reference manager: corruption?");
+      Warning("Retrieve", "No reference manager: corruption?");
       return -1;
+   }
+
+   // Print some info on the file
+   if (gDebug >= 2) {
+      Info("Retrieve", "Retrieving from ordinal %s file %s with pattern %s",
+         GetName(), GetTitle(), (pattern ? pattern : "(no pattern)"));
    }
 
    // Determine offsets
@@ -385,20 +391,28 @@ Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
       // Re-read everything
       fFrom = 0;
       fTo = -1;
+      if (gDebug >= 1)
+         Info("Retrieve", "Retrieving the whole file");
    } else if (opt == TProofLog::kLeading) {
       // Read leading part
       fFrom = 0;
       fTo = fgMaxTransferSize;
+      if (gDebug >= 1)
+         Info("Retrieve", "Retrieving the leading %lld lines of file", fTo);
    } else if (opt == TProofLog::kGrep) {
       // Retrieve lines containing 'pattern', which must be defined
       if (!pattern || strlen(pattern) <= 0) {
          Error("Retrieve", "option 'Grep' requires a pattern");
          return -1;
       }
+      if (gDebug >= 1)
+         Info("Retrieve", "Retrieving only lines filtered with %s", pattern);
    } else {
       // Read trailing part
       fFrom = -fgMaxTransferSize;
       fTo = -1;
+      if (gDebug >= 1)
+         Info("Retrieve", "Retrieving the last %lld lines of file", -fFrom);
    }
 
    // Reset the macro
