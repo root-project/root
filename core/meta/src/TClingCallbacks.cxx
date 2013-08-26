@@ -530,7 +530,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    return false;
 }
 
-void TClingCallbacks::Initialize(const ASTContext& Ctx) {
+void TClingCallbacks::Initialize(ASTContext& Ctx) {
    // Replay existing decls from the AST.
    if (fFirstRun) {
       // Before setting up the callbacks register what cling have seen during init.
@@ -550,7 +550,7 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
    //if (!T.size())
    //   return;
    if (fFirstRun && T.size())
-      Initialize(T.getASTContext());
+      Initialize(const_cast<clang::ASTContext&>(T.getASTContext()));
 
    TCling__UpdateListsOnCommitted(T, m_Interpreter);
 }
