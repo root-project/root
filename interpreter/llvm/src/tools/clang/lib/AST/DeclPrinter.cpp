@@ -1147,7 +1147,7 @@ DeclPrinter::VisitUnresolvedUsingTypenameDecl(UnresolvedUsingTypenameDecl *D) {
 void DeclPrinter::VisitUnresolvedUsingValueDecl(UnresolvedUsingValueDecl *D) {
   Out << "using ";
   D->getQualifier()->print(Out, Policy);
-  Out << D->getName();
+  Out << D->getDeclName();
 }
 
 void DeclPrinter::VisitUsingShadowDecl(UsingShadowDecl *D) {
