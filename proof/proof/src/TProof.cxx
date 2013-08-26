@@ -1145,15 +1145,15 @@ void TProof::ParseConfigField(const char *config)
          Printf(" ---> (Reminder: this debug run makes sense only if you are running a debug version of ROOT)");
          Printf(" ");
 
-      } else if (opt.BeginsWith("igprof")) {
+      } else if (opt.BeginsWith("igprof-pp")) {
 
          // IgProf profiling on master and worker. PROOF does not set the
          // environment for you: proper environment variables (like PATH and
          // LD_LIBRARY_PATH) should be set externally
 
-         Printf("*** Requested IgProf profiling ***");
+         Printf("*** Requested IgProf performance profiling ***");
          TString addLogExt = "__igprof.pp__.log";
-         TString addLogFmt = "igprof -d -pk -pp -t proofserv.exe -o %s.%s";
+         TString addLogFmt = "igprof -pk -pp -t proofserv.exe -o %s.%s";
          TString tmp;
 
          if (IsLite()) {
