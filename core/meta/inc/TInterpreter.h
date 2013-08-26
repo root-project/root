@@ -297,7 +297,7 @@ public:
    virtual const char *MethodArgInfo_DefaultValue(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual const char *MethodArgInfo_Name(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual const char *MethodArgInfo_TypeName(MethodArgInfo_t * /* marginfo */) const {return 0;}
-   virtual std::string MethodArgInfo_TypeNormalizedName(MethodArgInfo_t * /* marginfo */) const {return 0;}
+   virtual std::string MethodArgInfo_TypeNormalizedName(MethodArgInfo_t * /* marginfo */) const = 0; 
 
 
    // TypeInfo interface
