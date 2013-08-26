@@ -1621,6 +1621,21 @@ Bool_t TCling::IsLoaded(const char* filename) const
        && fileMap.count(sFilename.Data())) {
       return kTRUE;
    }
+
+   const clang::DirectoryLookup *PWD;
+   llvm::StringRef srName(filename);
+   clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
+   const clang::FileEntry *FE = PP.LookupFile(srName, false, 0, PWD, 0, 0, 0);
+   if (FE) {
+      // check in the source manager if the file is actually loaded
+      clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
+      for (clang::SourceManager::fileinfo_iterator I = SM.fileinfo_begin(),
+           E = SM.fileinfo_end(); I != E; ++I) {
+         const clang::SrcMgr::ContentCache &C = *I->second;
+         const clang::FileEntry *SM_FE = C.OrigEntry;
+         if (SM_FE->getName() == FE->getName()) return kTRUE; // match
+      }
+   }
    return kFALSE;
 }
 
