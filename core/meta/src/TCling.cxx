@@ -1634,12 +1634,8 @@ Bool_t TCling::IsLoaded(const char* filename) const
    if (FE) {
       // check in the source manager if the file is actually loaded
       clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
-      for (clang::SourceManager::fileinfo_iterator I = SM.fileinfo_begin(),
-           E = SM.fileinfo_end(); I != E; ++I) {
-         const clang::SrcMgr::ContentCache &C = *I->second;
-         const clang::FileEntry *SM_FE = C.OrigEntry;
-         if (SM_FE->getName() == FE->getName()) return kTRUE; // match
-      }
+      clang::FileID FID = SM.translateFile(FE);
+      if (!FID.isInvalid()) return kTRUE;
    }
    return kFALSE;
 }
