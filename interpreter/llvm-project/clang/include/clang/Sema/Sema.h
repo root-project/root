@@ -13114,6 +13114,39 @@ public:
       bool SkipForSpecialization = false,
       bool ForDefaultArgumentSubstitution = false);
 
+  /// A RAII object to temporarily push a decl context and scope.
+  class ContextAndScopeRAII {
+  private:
+    Sema &S;
+    DeclContext *SavedContext;
+    Scope *SavedScope;
+    ProcessingContextState SavedContextState;
+    QualType SavedCXXThisTypeOverride;
+
+  public:
+    ContextAndScopeRAII(Sema &S, DeclContext *ContextToPush, Scope *ScopeToPush)
+        : S(S), SavedContext(S.CurContext), SavedScope(S.CurScope),
+          SavedContextState(S.DelayedDiagnostics.pushUndelayed()),
+          SavedCXXThisTypeOverride(S.CXXThisTypeOverride) {
+      assert(ContextToPush && "pushing null context");
+      S.CurContext = ContextToPush;
+      S.CurScope = ScopeToPush;
+    }
+
+    void pop() {
+      if (!SavedContext)
+        return;
+      S.CurContext = SavedContext;
+      S.CurScope = SavedScope;
+      S.DelayedDiagnostics.popUndelayed(SavedContextState);
+      S.CXXThisTypeOverride = SavedCXXThisTypeOverride;
+      SavedContext = 0;
+      SavedScope = 0;
+    }
+
+    ~ContextAndScopeRAII() { pop(); }
+  };
+
   /// RAII object to handle the state changes required to synthesize
   /// a function body.
   class SynthesizedFunctionScope {
