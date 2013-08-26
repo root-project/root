@@ -425,10 +425,21 @@ Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
    // Readout the buffer
    TObjString *os = 0;
    if (fLogger->fMgr) {
-      if (opt == TProofLog::kGrep)
-         os = fLogger->fMgr->ReadBuffer(GetTitle(), pattern);
+      TString fileName = GetTitle();
+      if (fileName.Contains("__igprof.pp__")) {
+         // File is an IgProf log. Override all patterns and preprocess it
+         if (gDebug >= 1)
+            Info("Retrieve", "Retrieving analyzed IgProf performance profile");
+         TString analyzeAndFilter = \
+           "|( T=`mktemp` && cat > \"$T\" ; igprof-analyse -d -g \"$T\" ; rm -f \"$T\" )";
+         if (*pattern == '|')
+            analyzeAndFilter.Append(pattern);
+         os = fLogger->fMgr->ReadBuffer(fileName.Data(), analyzeAndFilter.Data());
+      }
+      else if (opt == TProofLog::kGrep)
+         os = fLogger->fMgr->ReadBuffer(fileName.Data(), pattern);
       else
-         os = fLogger->fMgr->ReadBuffer(GetTitle(), fFrom, len);
+         os = fLogger->fMgr->ReadBuffer(fileName.Data(), fFrom, len);
    }
    if (os) {
       // Loop over lines
