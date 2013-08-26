@@ -445,17 +445,17 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
 
    // The above might trigger more decls to be deserialized.
    // Thus the iteration over the deserialized decls must be last.
-   std::vector<const void*> DeserDecls;
-   // HandleNewDecl() might cause a transaction; prevent it from handling
-   // our DeserDecls.
-   DeserDecls.swap(((TCling*)gCling)->GetDeserializedDecls());
-   if (!DeserDecls.empty()) {
-      for (size_t i = 0; i < DeserDecls.size(); ++i) {
-         if (TransactionDeclSet.find(DeserDecls[i])
-             == TransactionDeclSet.end())
-            ((TCling*)gCling)->HandleNewDecl(DeserDecls[i], true, modifiedTClasses);
-      }
+   for (cling::Transaction::const_iterator I = T.deserialized_decls_begin(), 
+           E = T.deserialized_decls_end(); I != E; ++I) {
+      for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
+              DE = I->m_DGR.end(); DI != DE; ++DI)
+         if (TransactionDeclSet.find(*DI) == TransactionDeclSet.end()) {
+            //FIXME: HandleNewDecl should take DeclGroupRef
+            ((TCling*)gCling)->HandleNewDecl(*DI, /*isDeserialized*/true, 
+                                             modifiedTClasses);
+         }
    }
+
 
    // When fully building the reflection info in TClass, a deserialization
    // could be triggered, which may result in request for building the 
