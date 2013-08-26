@@ -385,19 +385,6 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
 }
 
 extern "C"
-void TCling__UpdateListsOnDeclDeserialized(const clang::Decl* D) {
-   // We cache them because the decls and their types might not have
-   // been completely deserialized; we push them into root/meta once
-   // the transaction is done.
-   if ((D->getDeclContext() && !isa<TagDecl>(D->getDeclContext())) &&
-       (isa<NamespaceDecl>(D) || isa<FunctionDecl>(D)
-        || (isa<VarDecl>(D) && !isa<ParmVarDecl>(D))
-        || isa<TagDecl>(D) || isa<TypedefDecl>(D))) {
-      ((TCling*)gCling)->AddDeserializedDecl(D);
-   }
-}
-
-extern "C"
 void TCling__UpdateListsOnCommitted(const cling::Transaction &T, 
                                     cling::Interpreter* interp) {
 

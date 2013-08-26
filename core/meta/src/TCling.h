@@ -103,7 +103,6 @@ private: // Data Members
    void*           fPrevLoadedDynLibInfo; // Internal info to mark the last loaded libray.
    TClingCallbacks* fClingCallbacks; // cling::Interpreter owns it.
    Bool_t          fHaveSinglePCM; // Whether a single ROOT PCM was provided
-   std::vector<const void*> fDeserializedDecls; // Decls read from the AST
    struct CharPtrCmp_t {
       bool operator()(const char* a, const char *b) const {
          return strcmp(a, b) < 0;
@@ -401,8 +400,6 @@ public: // Public Interface
    virtual const char* TypedefInfo_Name(TypedefInfo_t* tinfo) const;
    virtual const char* TypedefInfo_Title(TypedefInfo_t* tinfo) const;
 
-   void AddDeserializedDecl(const void* D) { fDeserializedDecls.push_back(D); }
-   std::vector<const void*>& GetDeserializedDecls() { return fDeserializedDecls; }
    std::set<TClass*>& GetModTClasses() { return fModTClasses; }
 
    void HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*>& modifiedClasses);
