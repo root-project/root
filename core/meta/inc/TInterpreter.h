@@ -201,6 +201,12 @@ public:
    // core/meta helper functions.
    virtual TMethodCall::EReturnType MethodCallReturnType(TFunction *func) const = 0;
 
+   typedef const void* DeclId_t;
+   virtual DeclId_t GetDeclId(CallFunc_t *info) const = 0;   
+   virtual DeclId_t GetDeclId(ClassInfo_t *info) const = 0;
+   virtual DeclId_t GetDeclId(MethodInfo_t *info) const = 0;
+   virtual DeclId_t GetDeclId(TypedefInfo_t *info) const = 0;
+
    // CallFunc interface
    virtual void   CallFunc_Delete(CallFunc_t * /* func */) const {;}
    virtual void   CallFunc_Exec(CallFunc_t * /* func */, void * /* address */) const {;}

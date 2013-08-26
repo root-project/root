@@ -147,17 +147,20 @@ public:
    void ExecDestructor(const TClingClassInfo* info, void* address = 0,
                        unsigned long nary = 0UL, bool withFree = true);
    void ExecWithReturn(void* address, void* ret = 0);
-   void Exec(void* address, TInterpreterValue* interpVal = 0);
-   long ExecInt(void* address);
-   long long ExecInt64(void* address);
-   double ExecDouble(void* address);
+   void Exec(void* address, TInterpreterValue* interpVal = 0) const;
+   long ExecInt(void* address) const;
+   long long ExecInt64(void* address) const;
+   double ExecDouble(void* address) const;
    TClingMethodInfo* FactoryMethod() const;
    void IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
    void Init();
+   void Init(const clang::FunctionDecl *);
    void Init(TClingMethodInfo*);
+   void Invoke(cling::StoredValueRef* result = 0) const;
    void* InterfaceMethod() const;
    bool IsValid() const;
    TInterpreter::CallFuncIFacePtr_t IFacePtr();
+   const clang::FunctionDecl* GetDecl() const { return GetOriginalDecl(); }
    void ResetArg();
    void SetArg(long arg);
    void SetArg(double arg);

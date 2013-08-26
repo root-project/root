@@ -4276,6 +4276,53 @@ void TCling::AddFriendToClass(clang::FunctionDecl* function,
 
 //______________________________________________________________________________
 //
+//  DeclId getter.
+//
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDeclId(CallFunc_t* func) const 
+{
+   // Return a unique identifier of the declaration represented by the
+   // CallFunc
+   
+   if (func) return ((TClingCallFunc*)func)->GetDecl()->getCanonicalDecl();      
+   return 0;
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDeclId(ClassInfo_t* cinfo) const 
+{
+   // Return a (almost) unique identifier of the declaration represented by the
+   // ClassInfo.  In ROOT, this identifier can point to more than one TClass
+   // when the underlying class is a template instance involving one of the
+   // opaque typedef.
+
+   if (cinfo) return ((TClingClassInfo*)cinfo)->GetDecl()->getCanonicalDecl();
+   return 0;
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDeclId(MethodInfo_t* method) const 
+{
+   // Return a unique identifier of the declaration represented by the
+   // MethodInfo
+   
+   if (method) return ((TClingMethodInfo*)method)->GetMethodDecl()->getCanonicalDecl();
+   return 0;
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDeclId(TypedefInfo_t* tinfo) const 
+{
+   // Return a unique identifier of the declaration represented by the
+   // TypedefInfo
+
+   if (tinfo) return ((TClingTypedefInfo*)tinfo)->GetDecl()->getCanonicalDecl();
+   return 0;
+}
+
+//______________________________________________________________________________
+//
 //  CallFunc interface
 //
 
