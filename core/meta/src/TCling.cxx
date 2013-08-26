@@ -1625,6 +1625,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
    const clang::DirectoryLookup *CurDir;
    llvm::StringRef srName(filename);
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
+   if (PP.getCurrentFileLexer() == 0) return kFALSE;
    const clang::FileEntry *FE = PP.LookupFile(srName, /*isAngled*/ false,
                                               /*FromDir*/ 0, CurDir,
                                               /*CurFileEnt*/ 0,
