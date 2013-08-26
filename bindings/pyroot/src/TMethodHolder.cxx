@@ -156,16 +156,31 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
    if ( ! gcl )
       gcl = GetGlobalNamespaceInfo();
 
-// (CLING) TODO: this is NOT equal to the original CINT functionality, since it takes
-// up a ConversionMatch, not an ExactMatch, but does that matter for Cling?
    fMethodCall = gInterpreter->CallFunc_Factory();
    gInterpreter->CallFunc_SetFuncProto(
       fMethodCall,
       gcl,
       (Bool_t)fMethod == true ? fMethod.Name().c_str() : fClass.Name().c_str(),
       callString.c_str(),
-      &fOffset );
-      //, G__ClassInfo::ExactMatch );
+      fMethod.IsConstant(),
+      &fOffset,
+      ROOT::kExactMatch );
+
+// CLING WORKAROUND -- The number of arguments is not always correct (e.g. when there
+//                     are default parameters, causing the callString to be wrong and
+//                     the exact match to fail); or the method may have been inline or
+//                     be compiler generated. In all those cases the exact match fails,
+//                     whereas the conversion match sometimes works.
+   if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) ) {
+      gInterpreter->CallFunc_SetFuncProto(
+         fMethodCall,
+         gcl,
+         (Bool_t)fMethod == true ? fMethod.Name().c_str() : fClass.Name().c_str(),
+         callString.c_str(),
+         fMethod.IsConstant(),
+         &fOffset );
+   }
+// -- CLING WORKAROUND
 
 // CLING WORKAROUND -- (Actually, this may be a feature rather than workaround: the
 //                     question is whether this should live in TClass or here.)

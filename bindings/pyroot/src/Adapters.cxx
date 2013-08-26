@@ -136,6 +136,13 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
 }
 
 //____________________________________________________________________________
+Bool_t PyROOT::TMemberAdapter::IsConstant() const
+{
+// test if the adapted member is a const method
+   return fMember ? (fMember->Property() & kIsConstMethod) : kFALSE;
+}
+
+//____________________________________________________________________________
 Bool_t PyROOT::TMemberAdapter::IsEnum() const
 {
 // test if the adapted member is of an enum type
