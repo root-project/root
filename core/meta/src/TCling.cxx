@@ -2526,7 +2526,7 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
    // Generate a TClass for the given class.
 
    TClingClassInfo *info = (TClingClassInfo*)classinfo;
-   if (!info && !info->IsValid()) {
+   if (!info || !info->IsValid()) {
       Fatal("GenerateTClass","Requires a valid ClassInfo object");
       return 0;
    }
