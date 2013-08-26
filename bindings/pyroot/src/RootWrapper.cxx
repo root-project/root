@@ -88,7 +88,7 @@ namespace {
    }
 
 // (CLING) looks pretty wrong, no?
-   Long_t GetDataMemberAddress( TDataMember* mb )
+   inline Long_t GetDataMemberAddress( TDataMember* mb )
    {
    // Get the address of a data member (used for enums)
       return mb->GetOffsetCint();
@@ -116,6 +116,10 @@ namespace {
    }
 
    std::set< std::string > gSTLTypes, gSTLExceptions;
+// CLING WORKAROUND
+   std::map< std::string, std::string > gKnownSTDGlobals;
+// END CLING WORKAROUND
+
    struct InitSTLTypes_t {
       InitSTLTypes_t()
       {
@@ -137,6 +141,14 @@ namespace {
             gSTLExceptions.insert( stlExceptions[ i ] );
             gSTLExceptions.insert( nss + stlExceptions[ i ] );
          }
+
+// CLING WORKAROUND: these should be known and findable as globals, but they're not
+         gKnownSTDGlobals[ "cin"  ] = "std::istream";
+         gKnownSTDGlobals[ "cout" ] = "std::ostream";
+         gKnownSTDGlobals[ "cerr" ] = "std::ostream";
+         gKnownSTDGlobals[ "clog" ] = "std::ostream";
+// END CLING WORKAROUND
+
       }
    } initSTLTypes_;
 
@@ -694,6 +706,18 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 
    if ( ! overloads.empty() )
       return (PyObject*)MethodProxy_New( name, overloads );
+
+// CLING WORKAROUND
+   std::map< std::string, std::string >::iterator iglb = gKnownSTDGlobals.find( name );
+   if ( iglb != gKnownSTDGlobals.end() ) {
+      std::string clName = Utility::ResolveTypedef( iglb->second );
+      TClass* klass = TClass::GetClass( clName.c_str() );
+      PyObject* pyclass = MakeRootClassFromType( klass );
+      Py_XDECREF( pyclass );
+      return BindRootObjectNoCast(
+         (void*)gROOT->ProcessLine( ("&" + name + ";").c_str() ), klass );
+   }
+// END CLING WORKAROUND
 
 // nothing found
    PyErr_Format( PyExc_LookupError, "no such global: %s", name.c_str() );
