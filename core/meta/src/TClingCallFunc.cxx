@@ -2790,9 +2790,9 @@ exec_with_valref_return(void* address, cling::StoredValueRef* ret) const
 void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
 {
    ResetArg();
-   llvm::SmallVector<clang::Expr*, 4> exprs;
+   SmallVector<Expr*, 4> exprs;
    fInterp->getLookupHelper().findArgList(ArgList, exprs);
-   for (llvm::SmallVector<clang::Expr*, 4>::const_iterator I = exprs.begin(),
+   for (SmallVector<Expr*, 4>::const_iterator I = exprs.begin(),
          E = exprs.end(); I != E; ++I) {
       cling::StoredValueRef val = EvaluateExpr(*I);
       if (!val.isValid()) {
