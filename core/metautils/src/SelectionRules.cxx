@@ -710,99 +710,78 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, co
 const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_name) const
 {
    clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (D); //TagDecl has methods to understand of what kind is the Decl
-   if (T) {
-      if (IsLinkdefFile() || T->isClass() || T->isStruct()) {
-         const ClassSelectionRule *selector = 0;
-         int fImplNo = 0;
-         const ClassSelectionRule *explicit_selector = 0;
-         const ClassSelectionRule *specific_pattern_selector = 0;
-         int fFileNo = 0;
-         
-         std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
-         // iterate through all class selection rles
-         std::string name_value;
-         std::string pattern_value;
-         for(; it != fClassSelectionRules.end(); ++it) {
 
-            BaseSelectionRule::EMatchType match = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", true);
+   if (T==NULL) {
+      ROOT::TMetaUtils::Error(0,"Couldn't cast Decl to NamespaceDecl");
+      return 0;
+   }
 
-            if (match != BaseSelectionRule::kNoMatch) {
-               // If we have a match.
-               if (it->GetSelected() == BaseSelectionRule::kYes) {
-                  selector = &(*it);
-                  if (IsLinkdefFile()){
-                     // rootcint prefers explicit rules over pattern rules
-                     if (match == BaseSelectionRule::kName) {
-                        explicit_selector = &(*it);
-                     } else if (match == BaseSelectionRule::kPattern) {
-                        // NOTE: weird ...
-                        if (it->GetAttributeValue("pattern", pattern_value) && 
-                            pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(*it);
-                     }
-                  }
-               } else if (it->GetSelected() == BaseSelectionRule::kNo) {         
-                  if (!IsLinkdefFile()) {
-                     // in genreflex - we could explicitly select classes from other source files
-                     if (match == BaseSelectionRule::kFile) ++fFileNo; // if we have veto because of class defined in other source file -> implicit No
-                     else {
-                        
-#ifdef SELECTION_DEBUG
-                        std::cout<<"\tNo returned"<<std::endl;
-#endif
-                     
-                        return 0; // explicit No returned
-                     }
-                  }
-                  if (match == BaseSelectionRule::kPattern) {
-                     //this is for the Linkdef selection
-                     if (it->GetAttributeValue("pattern", pattern_value) &&
-                         (pattern_value == "*" || pattern_value == "*::*")) ++fImplNo;
-                     else 
-                        return 0;
-                  }
-                  else
-                     return 0;
-               }
-               else if (it->GetSelected() == BaseSelectionRule::kDontCare && !(it->HasMethodSelectionRules()) && !(it->HasFieldSelectionRules())) {
+   if (not ( IsLinkdefFile() || T->isClass() || T->isStruct() ))
+      return 0; // Union for Genreflex
+   
+   const ClassSelectionRule *selector = 0;
+   int fImplNo = 0;
+   const ClassSelectionRule *explicit_selector = 0;
+   const ClassSelectionRule *specific_pattern_selector = 0;
+   int fFileNo = 0;
 
-#ifdef SELECTION_DEBUG
-                  std::cout<<"Empty dontC returned = No"<<std::endl;
-#endif
+   // iterate through all class selection rles
+   std::string name_value;
+   std::string pattern_value;
+   
+   for(std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
+       it != fClassSelectionRules.end(); ++it) {
 
-                  return 0;
+      BaseSelectionRule::EMatchType match = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", IsLinkdefFile());
+
+      if (match != BaseSelectionRule::kNoMatch) {
+         // If we have a match.
+         if (it->GetSelected() == BaseSelectionRule::kYes) {
+            selector = &(*it);
+            if (IsLinkdefFile()){
+               // rootcint prefers explicit rules over pattern rules
+               if (match == BaseSelectionRule::kName) {
+                  explicit_selector = &(*it);
+               } else if (match == BaseSelectionRule::kPattern) {
+                  // NOTE: weird ...
+                  if (it->GetAttributeValue("pattern", pattern_value) &&
+                        pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(*it);
                }
             }
-         } // Loop over the rules.
-         if (IsLinkdefFile()) {            
-#ifdef SELECTION_DEBUG
-            std::cout<<"\n\tfYes = "<<fYes<<", fImplNo = "<<fImplNo<<std::endl;
-#endif
-            // for rootcint explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes
-            if (explicit_selector) return explicit_selector;
-            else if (specific_pattern_selector) return specific_pattern_selector;
-            else if (fImplNo > 0) return 0;
-            else return selector;
-         }
-         else {                                 
-            // for genreflex explicit Yes is stronger than implicit file No
-            
-#ifdef SELECTION_DEBUG
-            std::cout<<"\n\tfYes = "<<fYes<<", fFileNo = "<<fFileNo<<std::endl;
-#endif
-            
-            if (selector) 
-               return selector;
-            else 
+         } else if (it->GetSelected() == BaseSelectionRule::kNo) {
+            if (!IsLinkdefFile()) {
+               // in genreflex - we could explicitly select classes from other source files
+               if (match == BaseSelectionRule::kFile) ++fFileNo; // if we have veto because of class defined in other source file -> implicit No
+               else {
+                  return 0; // explicit No returned
+               }
+            }
+            if (match == BaseSelectionRule::kPattern) {
+               //this is for the Linkdef selection
+               if (it->GetAttributeValue("pattern", pattern_value) &&
+                     (pattern_value == "*" || pattern_value == "*::*")) ++fImplNo;
+               else
+                  return 0;
+            }
+            else
                return 0;
-         }         
+         }
+         else if (it->GetSelected() == BaseSelectionRule::kDontCare && !(it->HasMethodSelectionRules()) && !(it->HasFieldSelectionRules())) {
+            return 0;
+         }
       }
-      else { // Union (for genreflex)
-         return 0;
-      }
+   } // Loop over the rules.
+   
+   if (IsLinkdefFile()) {
+      // for rootcint explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes
+      if (explicit_selector) return explicit_selector;
+      else if (specific_pattern_selector) return specific_pattern_selector;
+      else if (fImplNo > 0) return 0;
+      else return selector;
    }
    else {
-      std::cout<<"\n\tCouldn't cast Decl to TagDecl";
-      return 0;
+      // for genreflex explicit Yes is stronger than implicit file No
+      return selector; // it can be nullptr
    }
    
 }

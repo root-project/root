@@ -398,7 +398,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
    const std::string thisClassName(CXXRD.getName());
 
    if (genreflex::verbose)
-      std::cout << "Inspecting class declaration" << thisClassName << " for annotations\n";
+      std::cout << "\nInspecting class declaration " << thisClassName << " for annotations\n";
 
    // Fetch the selection rule associated to this class
    clang::Decl* declBaseClassPtr = static_cast<clang::Decl*>(&CXXRD);
@@ -421,9 +421,6 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
       }
    }
    
-   if (genreflex::verbose)
-      std::cout << "Inspecting class declaration" << thisClassName << " for annotations\n";
-
    // See if the rule is a class selection rule (FIX dynamic_cast)  
    const ClassSelectionRule* thisClassSelectionRule = reinterpret_cast<const ClassSelectionRule*>(thisClassBaseSelectionRule);
    
@@ -2445,7 +2442,7 @@ void createRootMapFile(const std::string& rootmapFileName,
         selClassesIter!= scan.fSelectedClasses.end(); selClassesIter++){
       std::string className(selClassesIter->GetNormalizedName());
       manipForRootmap(className);
-      rootmapFile << "Library." << className << ":"
+      rootmapFile << "Library." << className << ": "
                   << std::setw(35-className.size()) << rootmapLibName
                   << std::endl;   
       }

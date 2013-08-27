@@ -439,21 +439,11 @@ void BaseSelectionRule::ProcessPattern(const std::string& pattern, std::list<std
 }
 
 bool BaseSelectionRule::BeginsWithStar(const std::string& pattern) {
-   if (pattern.at(0) == '*') {
-      return true;
-   }
-   else {
-      return false;
-   }
+   return pattern.at(0) == '*';
 }
 
 bool BaseSelectionRule::EndsWithStar(const std::string& pattern) {
-   if (pattern.at(pattern.length()-1) == '*') {
-      return true;
-   }
-   else {
-      return false;
-   }
+   return pattern.at(pattern.length()-1) == '*';
 }
 
 /*
@@ -468,15 +458,16 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
    }
 
    std::list<std::string>::const_iterator it = patterns_list.begin();
-   int pos1 = -1, pos2 = -1, pos_end = -1;
+   size_t pos1, pos2, pos3;
+   pos1= pos2= pos3= std::string::npos;
    bool begin = BeginsWithStar(pattern);
    bool end = EndsWithStar(pattern);
    
    // we first check if the last sub-pattern is contained in the test string 
    std::string last = patterns_list.back();
-   pos_end = test.rfind(last);
+   size_t pos_end = test.rfind(last);
    
-   if (pos_end == -1) { // the last sub-pattern isn't conatained in the test string
+   if (pos_end == std::string::npos) { // the last sub-pattern isn't conatained in the test string
       return false;
    }
    if (!end) {  // if the pattern doesn't end with '*', the match has to be complete 
@@ -504,11 +495,6 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
       int pos_colon = test.find("::", pos1+len);
       
       if (pos_colon > -1) {
-         
-#ifdef SELECTION_DEBUG
-         std::cout<<"\tNested - don't generate dict (ret false to isSelected)"<<std::endl;
-#endif
-         
          return false;
       }
       
@@ -528,13 +514,11 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
       // std::cout<<"sub-pattern = "<<*it<<std::endl; 
       pos2 = test.find(*it);
       if (pos2 <= pos1) {
-         // std::cout<<"\tNo match!"<<std::endl;
          return false;
       }
       pos1 = pos2;
    }
    
-   //std::cout<<"\tMatch complete!"<<std::endl;
    return true;
 }
 
