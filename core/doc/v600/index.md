@@ -175,3 +175,14 @@ of the `TDataType` describing a typedef.
     with the extension ".cc". The code as to save each objet should be
     implement in each `SavePrimitive` function like in `TF1`.
 
+### TAttText
+
+-   Mnemonic constants are available:
+``` {.cpp}
+    kHAlignLeft   = 10, kHAlignCenter = 20, kHAlignRight = 30,
+    kVAlignBottom = 1,  kVAlignCenter = 2,  kVAlignTop   = 3
+```
+    They allow to write:
+``` {.cpp}
+    object->SetTextAlign(kHAlignLeft+kVAlignTop);
+```
