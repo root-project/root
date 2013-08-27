@@ -730,6 +730,22 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
                      (isReference ? "&" : Compound( clName ));
          }
       }
+
+   // for std::map, extract the key_type
+      else {
+         pos = tclean.rfind( "::key_type" );
+         if ( pos != std::string::npos ) {
+            std::string clName = containing_scope ? containing_scope->GetName() : tclean;
+            std::string::size_type pos1 = clName.find( '<' );
+         // TODO: this is wrong for templates, but this code is a (temp?) workaround only
+            std::string::size_type pos2 = clName.find( ',' );
+            if ( pos1 != std::string::npos ) {
+               tclean = (isConst ? "const " : "") +
+                        clName.substr( pos1+1, pos2-pos1-1 ) +
+                        (isReference ? "&" : Compound( clName ));
+                        }
+         }
+      }
    }
 
 // -- END CLING WORKAROUND
