@@ -57,19 +57,7 @@ private:
 
    cling::Interpreter                *fInterp;  // Cling interpreter, we do *not* own.
    TClingMethodInfo                  *fMethod;  // Current method, we own. If it is virtual this holds the trampoline.
-   const clang::CXXMethodDecl        *fMethodAsWritten;
-   llvm::Function                    *fEEFunc;  // Execution Engine function for current method, we do *not* own.
-   void                              *fEEAddr;  // Pointer to actual compiled code, we do *not* own.
-   mutable std::vector<cling::StoredValueRef> fArgVals; // Argument values parsed and evaluated from a text string.
-                                                // We must keep this around because it is the owner of
-                                                // any storage created by constructor calls in the evaluated
-                                                // text string.  For example, if "2,TNamed(),3.0" is passed,
-                                                // the second argument is a reference to a constructed
-                                                // object of type TNamed (in the compiler this would be
-                                                // a temporary, but cling makes it the return value of a
-                                                // wrapper function call, so we must store it).  All of the
-                                                // value parts stored here are copied immediately into fArgs,
-                                                // but fArgs does not become the owner. 
+   mutable std::vector<cling::StoredValueRef> fArgVals; // Stored function arguments, we own.
    bool                                fIgnoreExtraArgs;
 
 
@@ -84,17 +72,13 @@ public:
    }
 
    explicit TClingCallFunc(cling::Interpreter *interp)
-      : fInterp(interp), fMethodAsWritten(0), fEEFunc(0), fEEAddr(0), 
-        fIgnoreExtraArgs(false)
+      : fInterp(interp), fIgnoreExtraArgs(false)
    {
       fMethod = new TClingMethodInfo(interp);
-      
-      PreallocatePtrs();
    }
 
    TClingCallFunc(const TClingCallFunc &rhs)
-      : fInterp(rhs.fInterp), fMethodAsWritten(0), fEEFunc(rhs.fEEFunc), 
-        fEEAddr(rhs.fEEAddr), fArgVals(rhs.fArgVals),
+      : fInterp(rhs.fInterp), fArgVals(rhs.fArgVals),
         fIgnoreExtraArgs(rhs.fIgnoreExtraArgs)
    {
       fMethod = new TClingMethodInfo(*rhs.fMethod);
@@ -106,9 +90,6 @@ public:
          fInterp = rhs.fInterp;
          delete fMethod;
          fMethod = new TClingMethodInfo(*rhs.fMethod);
-         fMethodAsWritten = rhs.fMethodAsWritten;
-         fEEFunc = rhs.fEEFunc;
-         fEEAddr = rhs.fEEAddr;
          fArgVals = rhs.fArgVals;
          fIgnoreExtraArgs = rhs.fIgnoreExtraArgs;
       }
