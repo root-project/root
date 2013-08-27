@@ -474,7 +474,7 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
       // i.e. if the last sub-pattern is "sub" the test string should end in "sub" ("1111sub" is OK, "1111sub1" is not OK)
       
       int len = last.length(); // length of last sub-pattern
-      if ((pos_end+len) < (int)test.length()) {
+      if ((pos_end+len) < test.length()) {
          return false;
       }
    }
@@ -483,7 +483,7 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
    pos1 = test.find(*it);
    
    
-   if (pos1 == -1 || (!begin && pos1 != 0)) { // if the first sub-pattern isn't found in test or if it is found but the
+   if (pos1 == std::string::npos || (!begin && pos1 != 0)) { // if the first sub-pattern isn't found in test or if it is found but the
       // pattern doesn't start with '*' and the sub-pattern is not at the first position
       //std::cout<<"\tNo match!"<<std::endl;
       return false;
@@ -501,7 +501,7 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
    }
    
    if (patterns_list.size() > 1) {
-      if ((int)((*it).length())+pos1 > pos_end) {
+      if (((*it).length())+pos1 > pos_end) {
          // std::cout<<"\tNo match";
          return false; // end is contained in begin -> test = "A::B" sub-patterns = "A::", "::" will return false
       } 
