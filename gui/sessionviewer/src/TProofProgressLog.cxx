@@ -403,7 +403,7 @@ void TProofProgressLog::DoLog(Bool_t grep)
    else if (!fGrepCheckCmd->IsOn()) {
       // Not a command: sanitize string
       TPMERegexp san("(^|[^\\\\])([^a-zA-Z0-9_=\\\\/.-])");
-      while ( san.Substitute(greptext, "$1\\$2") > 0 );
+      while (san.Substitute(greptext, "$1\\$2") > 0) { }
    }
 
    Int_t from, to;
