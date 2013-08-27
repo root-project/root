@@ -779,7 +779,7 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
    bool ismaster = (access(wfile.c_str(), F_OK) == 0) ? 1 : 0;
    
    // Scan the directory to add the top master (only if top master)
-   XrdOucString xo, logtag;
+   XrdOucString xo, logtag, xf;
    int ilog, idas, iund1, iund2;
    struct dirent *ent = 0;
    while ((ent = (struct dirent *)readdir(dir))) {
