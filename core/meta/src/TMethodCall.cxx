@@ -187,7 +187,12 @@ void TMethodCall::Init(TClass *cl, CallFunc_t *function, Long_t offset)
    // Initialize the method invocation environment based on
    // the CallFunc object and the TClass describing the function context.
    
-   if (!function) return;
+   if (!function) {
+      fOffset = 0;
+      fDtorOnly = kFALSE;
+      fRetType  = kNone;
+      return;
+   }
    
    MethodInfo_t* info = gCling->CallFunc_FactoryMethod(function);
 
