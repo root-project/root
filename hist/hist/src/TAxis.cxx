@@ -1078,7 +1078,7 @@ void TAxis::UnZoom()
 {
    // Reset first & last bin to the full range
 
-
+   if (!gPad) return;
    gPad->SetView();
 
    //unzoom object owning this axis
