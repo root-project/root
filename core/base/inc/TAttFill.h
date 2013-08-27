@@ -56,5 +56,14 @@ public:
 inline Bool_t TAttFill::IsTransparent() const
 { return fFillStyle >= 4000 && fFillStyle <= 4100 ? kTRUE : kFALSE; }
 
-#endif
+   enum EFillStyle {kFDotted1  = 3001, kFDotted2    = 3002, kFDotted3  = 3003,
+                    kFHatched1 = 3004, kHatched2    = 3005, kFHatched3 = 3006,
+                    kFHatched4 = 3007, kFWicker     = 3008, kFScales   = 3009,
+                    kFBricks   = 3010, kFSnowflakes = 3011, kFCircles  = 3012,
+                    kFTiles    = 3013, kFMondrian   = 3014, kFDiamonds = 3015,
+                    kFWaves1   = 3016, kFDashed1    = 3017, kFDashed2  = 3018,
+                    kFAlhambra = 3019, kFWaves2     = 3020, kFStars1   = 3021,
+                    kFStars2   = 3022, kFPyramids   = 3023, kFFrieze   = 3024,
+                    kFMetopes  = 3025, kFEmpty      = 0   , kFSolid    = 1};
 
+#endif
