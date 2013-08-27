@@ -41,7 +41,6 @@ extern "C" {
    Decl* TCling__GetObjectDecl(TObject *obj);
    int TCling__AutoLoadCallback(const char* className);
    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
-   void TCling__UpdateListsOnDeclDeserialized(const clang::Decl*);
    int TCling__CompileMacro(const char *fileName, const char *options);
    void TCling__SplitAclicMode(const char* fileName, std::string &mode,
                   std::string &args, std::string &io, std::string &fname);
@@ -565,5 +564,4 @@ void TClingCallbacks::TransactionUnloaded(const Transaction &T) {
 }
 
 void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
-   TCling__UpdateListsOnDeclDeserialized(D);
 }
