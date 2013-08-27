@@ -2787,6 +2787,22 @@ exec_with_valref_return(void* address, cling::StoredValueRef* ret) const
    return;
 }
 
+void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
+{
+   ResetArg();
+   llvm::SmallVector<clang::Expr*, 4> exprs;
+   fInterp->getLookupHelper().findArgList(ArgList, exprs);
+   for (llvm::SmallVector<clang::Expr*, 4>::const_iterator I = exprs.begin(),
+         E = exprs.end(); I != E; ++I) {
+      cling::StoredValueRef val = EvaluateExpr(*I);
+      if (!val.isValid()) {
+         // Bad expression, all done.
+         break;
+      }
+      PushArg(val);
+   }
+}
+
 void TClingCallFunc::Exec(void *address, TInterpreterValue* interpVal /* =0 */) const
 {
    if (!IsValid()) {
@@ -2899,22 +2915,6 @@ void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
    ResetArg();
    for (int i = 0; i < nparam; ++i) {
       SetArg(paramArr[i]);
-   }
-}
-
-void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
-{
-   ResetArg();
-   llvm::SmallVector<clang::Expr*, 4> exprs;
-   fInterp->getLookupHelper().findArgList(ArgList, exprs);
-   for (llvm::SmallVector<clang::Expr*, 4>::const_iterator I = exprs.begin(),
-         E = exprs.end(); I != E; ++I) {
-      cling::StoredValueRef val = EvaluateExpr(*I);
-      if (!val.isValid()) {
-         // Bad expression, all done.
-         break;
-      }
-      PushArg(val);
    }
 }
 
