@@ -172,6 +172,8 @@
     If `chopt` is defined all the graphs in `multigraph` will be added
     with the `chopt` option. If `chopt` is undefined each graph will
     be added with the option it had in `multigraph`.
+-   The option "A" in the `Draw()` was not cleaning properly the 
+    current pad.
 
 ### TF1
 
