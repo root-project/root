@@ -174,9 +174,6 @@ class STL3MapTestCase( MyTestCase ):
    def test2KeyedMapType( self ):
       """Test access to a map<std::string,int> (part of cintdlls)"""
 
-      if FIXCLING:       # failure b/c of no exact match
-         return
-
       a = std.map( std.string, int )()
       for i in range(self.N):
          a[str(i)] = i
@@ -196,9 +193,6 @@ class STL3MapTestCase( MyTestCase ):
 
    def test4UnsignedvalueTypeMapTypes( self ):
       """Test assignability of maps with unsigned value types (not part of cintdlls)"""
-
-      if FIXCLING:       # failure b/c of no exact match
-         return
 
       import math
 
