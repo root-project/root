@@ -86,7 +86,7 @@ public:
    long                                         Property() const;
    long                                         ExtraProperty() const;
    TClingTypeInfo                              *Type() const;
-   const char                                  *GetMangledName() const;
+   std::string                                  GetMangledName() const;
    const char                                  *GetPrototype(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char                                  *Name(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char                                  *TypeName() const;

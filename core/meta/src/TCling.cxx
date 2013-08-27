@@ -2664,9 +2664,8 @@ TString TCling::GetMangledName(TClass* cl, const char* method,
    }
    TClingMethodInfo* mi = (TClingMethodInfo*) func.FactoryMethod();
    if (!mi) return "";
-   const char* mangled_name = mi->GetMangledName();
+   TString mangled_name( mi->GetMangledName() );
    delete mi;
-   mi = 0;
    return mangled_name;
 }
 
@@ -5075,7 +5074,9 @@ TypeInfo_t* TCling::MethodInfo_Type(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_GetMangledName(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
-   return info->GetMangledName();
+   static TString mangled_name;
+   mangled_name = info->GetMangledName();
+   return mangled_name;
 }
 
 //______________________________________________________________________________

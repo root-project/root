@@ -438,12 +438,12 @@ TClingTypeInfo *TClingMethodInfo::Type() const
    return &ti;
 }
 
-const char *TClingMethodInfo::GetMangledName() const
+std::string TClingMethodInfo::GetMangledName() const
 {
    if (!IsValid()) {
-      return 0;
+      return "";
    }
-   static std::string mangled_name;
+   std::string mangled_name;
    mangled_name.clear();
    const FunctionDecl* D = GetMethodDecl();
    GlobalDecl GD;
@@ -454,7 +454,7 @@ const char *TClingMethodInfo::GetMangledName() const
    else
      GD = GlobalDecl(D);
    cling::utils::Analyze::maybeMangleDeclName(GD, mangled_name);
-   return mangled_name.c_str();
+   return mangled_name;
 }
 
 const char *TClingMethodInfo::GetPrototype(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
