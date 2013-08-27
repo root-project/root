@@ -2789,7 +2789,6 @@ exec_with_valref_return(void* address, cling::StoredValueRef* ret) const
 
 void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
 {
-   ResetArg();
    SmallVector<Expr*, 4> exprs;
    fInterp->getLookupHelper().findArgList(ArgList, exprs);
    for (SmallVector<Expr*, 4>::const_iterator I = exprs.begin(),
@@ -2799,7 +2798,7 @@ void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
          // Bad expression, all done.
          break;
       }
-      PushArg(val);
+      fArgVals.push_back(val);
    }
 }
 
