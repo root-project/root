@@ -202,9 +202,6 @@ class Regression07MatchConstWithProperReturn( MyTestCase ):
    def test1OverloadOrderWithProperReturn( self ):
       """Test return type against proper overload w/ const and covariance"""
 
-      if FIXCLING:       # failure b/c of no exact match
-         return
-
       gROOT.LoadMacro( "Scott2.C+" )
 
       self.assertEqual( MyOverloadOneWay().gime(), 1 )
@@ -282,9 +279,6 @@ class Regression11CoralAttributeListIterators( MyTestCase ):
 class Regression12ImportCout( MyTestCase ):
    def test1ImportCout( self ):
       """Test that ROOT.cout does not cause error messages"""
-
-      if FIXCLING:
-         return
 
       import ROOT
       c = ROOT.cout

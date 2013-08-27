@@ -145,15 +145,15 @@ class STL3MapTestCase( MyTestCase ):
    def test1BuiltinMapType( self ):
       """Test access to a map<int,int> (part of cintdlls)"""
 
-      if FIXCLING:       # failure b/c of no exact match
-         return
-
       a = std.map( int, int )()
       for i in range(self.N):
          a[i] = i
          self.assertEqual( a[i], i )
 
       self.assertEqual( len(a), self.N )
+
+      if FIXCLING:       # failure b/c of temporaries
+         return
 
       for key, value in a:
          self.assertEqual( key, value )
