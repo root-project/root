@@ -85,6 +85,16 @@ Begin_Macro(source)
 textangle.C
 End_Macro
 
+Mnemonic constants are available:
+<pre>
+kHAlignLeft   = 10, kHAlignCenter = 20, kHAlignRight = 30,
+kVAlignBottom = 1,  kVAlignCenter = 2,  kVAlignTop   = 3
+</pre>
+They allow to write:
+<pre>
+object->SetTextAlign(kHAlignLeft+kVAlignTop);
+</pre>
+
 Begin_Html
 <a name="T3"></a><h3>Text Color</h3>
 The text color is a color index (integer) pointing in the ROOT
