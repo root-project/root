@@ -34,7 +34,7 @@ if sys.version[0:3] == '2.2':
 try:
    import rlcompleter, readline
 
-   class FileNameCompleter( rlcompleter.Completer ):
+   class RootNameCompleter( rlcompleter.Completer ):
       def file_matches( self, text ):
          matches = []
          path, name = os.path.split( text )
@@ -69,11 +69,14 @@ try:
          matches = rlcompleter.Completer.attr_matches( self, text )
          if not matches: matches = []
          b = text.find('.')
-         if 0 <= b and self.namespace[text[:b]].__name__ == 'ROOT':
-            matches += self.root_global_matches( text[b+1:], text[:b+1] )
+         try:
+            if 0 <= b and self.namespace[text[:b]].__name__ == 'ROOT':
+               matches += self.root_global_matches( text[b+1:], text[:b+1] )
+         except AttributeError:    # not all objects have a __name__
+            pass
          return matches
 
-   readline.set_completer( FileNameCompleter().complete )
+   readline.set_completer( RootNameCompleter().complete )
    readline.set_completer_delims(
       readline.get_completer_delims().replace( os.sep , '' ) )
 
