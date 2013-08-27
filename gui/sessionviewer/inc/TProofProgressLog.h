@@ -39,7 +39,7 @@ class TGListBox;
 class TGSplitButton;
 class TGVerticalFrame;
 class TGCheckButton;
-
+class TGLabel;
 
 class TProofProgressLog : public TGTransientFrame {
 
