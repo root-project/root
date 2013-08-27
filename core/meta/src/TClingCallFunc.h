@@ -1,4 +1,4 @@
-// @(#)root/core/meta:$Id$
+// root/core/meta
 // Author: Paul Russo   30/07/2012
 
 /*************************************************************************
@@ -40,16 +40,16 @@ class Expr;
 class FuncionDecl;
 class CXXMethodDecl;
 }
+
 namespace cling {
 class Interpreter;
 class Value;
 }
 
-namespace llvm {
-class Function;
-}
-
+class TClingClassInfo;
 class TInterpreterValue;
+
+typedef void (*tcling_callfunc_Wrapper_t)(void*, int, void**, void*);
 
 class TClingCallFunc {
 
@@ -57,13 +57,40 @@ private:
 
    cling::Interpreter                *fInterp;  // Cling interpreter, we do *not* own.
    TClingMethodInfo                  *fMethod;  // Current method, we own. If it is virtual this holds the trampoline.
+   /// Pointer to compiled wrapper, we do *not* own.
+   tcling_callfunc_Wrapper_t fWrapper;
    mutable std::vector<cling::StoredValueRef> fArgVals; // Stored function arguments, we own.
    bool                                fIgnoreExtraArgs;
 
 
 private:
-   void EvaluateArgList(const std::string &ArgList);
-   cling::StoredValueRef EvaluateExpr(const clang::Expr* E) const;
+   void collect_type_info(clang::QualType& QT, std::ostringstream& typedefbuf,
+                          std::ostringstream& callbuf, std::string& type_name,
+                          bool& isReference, int& ptrCnt, int indent_level);
+
+   void make_narg_call(const unsigned N, std::ostringstream& typedefbuf,
+                       std::ostringstream& callbuf,
+                       const std::string& class_name, int indent_level);
+
+   void make_narg_ctor(const unsigned N, std::ostringstream& typedefbuf,
+                       std::ostringstream& callbuf,
+                       const std::string& class_name, int indent_level);
+
+   void make_narg_call_with_return(const unsigned N,
+                                   const std::string& class_name,
+                                   std::ostringstream& buf, int indent_level);
+
+   void make_narg_ctor_with_return(const unsigned N,
+                                   const std::string& class_name,
+                                   std::ostringstream& buf, int indent_level);
+
+   tcling_callfunc_Wrapper_t make_wrapper();
+
+   void exec(void* address, void* ret) const;
+   void exec_with_valref_return(void* address,
+                                cling::StoredValueRef* ret) const;
+
+   void EvaluateArgList(const std::string& ArgList);
 
 public:
 
@@ -72,13 +99,13 @@ public:
    }
 
    explicit TClingCallFunc(cling::Interpreter *interp)
-      : fInterp(interp), fIgnoreExtraArgs(false)
+      : fInterp(interp), fWrapper(0), fIgnoreExtraArgs(false)
    {
       fMethod = new TClingMethodInfo(interp);
    }
 
    TClingCallFunc(const TClingCallFunc &rhs)
-      : fInterp(rhs.fInterp), fArgVals(rhs.fArgVals),
+      : fInterp(rhs.fInterp), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals),
         fIgnoreExtraArgs(rhs.fIgnoreExtraArgs)
    {
       fMethod = new TClingMethodInfo(*rhs.fMethod);
@@ -90,19 +117,21 @@ public:
          fInterp = rhs.fInterp;
          delete fMethod;
          fMethod = new TClingMethodInfo(*rhs.fMethod);
+         fWrapper = rhs.fWrapper;
          fArgVals = rhs.fArgVals;
          fIgnoreExtraArgs = rhs.fIgnoreExtraArgs;
       }
       return *this;
    }
 
-   void                Exec(void *address, TInterpreterValue* interpVal = 0) const;
-   long                ExecInt(void *address) const;
-   long long           ExecInt64(void *address) const;
-   double              ExecDouble(void *address) const;
+   void                Exec(void *address, TInterpreterValue* interpVal = 0);
+   long                ExecInt(void *address);
+   long long           ExecInt64(void *address);
+   double              ExecDouble(void *address);
    TClingMethodInfo   *FactoryMethod() const;
    void                IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
    void                Init();
+   void                Init(TClingMethodInfo*);
    void               *InterfaceMethod() const;
    bool                IsValid() const;
    void                ResetArg();
