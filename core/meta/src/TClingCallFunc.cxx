@@ -87,28 +87,34 @@ static const string indent_string("   ");
 
 static map<const FunctionDecl*, void*> wrapper_store;
 
-cling::StoredValueRef TClingCallFunc::EvaluateExpr(const clang::Expr* E) const
+static cling::StoredValueRef EvaluateExpr(cling::Interpreter* interp, const clang::Expr* E)
 {
    // Evaluate an Expr* and return its cling::StoredValueRef
-   cling::StoredValueRef valref;
-
-   using namespace clang;
-   ASTContext& C = fInterp->getSema().getASTContext();
-   llvm::APSInt res;
+   ASTContext& C = interp->getCI()->getASTContext();
+   APSInt res;
    if (E->EvaluateAsInt(res, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
-      llvm::GenericValue gv;
+      GenericValue gv;
       gv.IntVal = res;
-      cling::Value val(gv, C.IntTy, fInterp->getLLVMType(C.IntTy));
-      return cling::StoredValueRef::bitwiseCopy(C, val);
+      return cling::StoredValueRef::bitwiseCopy(C, cling::Value(gv, C.IntTy));
    }
-
-   // TODO: Build a wrapper around the expression to avoid decompilation and 
+   // TODO: Build a wrapper around the expression to avoid decompilation and
    // compilation and other string operations.
-   cling::Interpreter::CompilationResult cr 
-      = fInterp->evaluate(ExprToString(E), valref);
-   if (cr == cling::Interpreter::kSuccess)
-      return valref;
-   return cling::StoredValueRef::invalidValue();
+   PrintingPolicy Policy(C.getPrintingPolicy());
+   Policy.SuppressTagKeyword = true;
+   Policy.SuppressUnwrittenScope = false;
+   Policy.SuppressInitializers = false;
+   Policy.AnonymousTagLocations = false;
+   string buf;
+   raw_string_ostream out(buf);
+   E->printPretty(out, /*Helper=*/0, Policy, /*Indentation=*/0);
+   out << ';'; // no value printing
+   out.flush();
+   cling::StoredValueRef valref;
+   cling::Interpreter::CompilationResult cr = interp->evaluate(buf, valref);
+   if (cr != cling::Interpreter::kSuccess) {
+      return cling::StoredValueRef::invalidValue();
+   }
+   return valref;
 }
 
 static
@@ -2793,7 +2799,7 @@ void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
    fInterp->getLookupHelper().findArgList(ArgList, exprs);
    for (SmallVector<Expr*, 4>::const_iterator I = exprs.begin(),
          E = exprs.end(); I != E; ++I) {
-      cling::StoredValueRef val = EvaluateExpr(*I);
+      cling::StoredValueRef val = EvaluateExpr(fInterp, *I);
       if (!val.isValid()) {
          // Bad expression, all done.
          break;
