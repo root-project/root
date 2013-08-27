@@ -37,7 +37,7 @@
 
 namespace clang {
 class Expr;
-class FuncionDecl;
+class FunctionDecl;
 class CXXMethodDecl;
 }
 
