@@ -58,6 +58,7 @@ public:
    void               *InterfaceMethod() const;
    Long_t              Property() const;
    Long_t              ExtraProperty() const;
+   virtual bool        Update(MethodInfo_t *info);
 
    ClassDef(TFunction,0)  //Dictionary for global function
 };

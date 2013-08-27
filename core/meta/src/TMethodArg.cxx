@@ -125,3 +125,15 @@ TDataMember *TMethodArg::GetDataMember() const
    return fDataMember;
 }
 
+//______________________________________________________________________________
+void TMethodArg::Update(MethodArgInfo_t *info)
+{
+   // Update fInfo (to 0 for unloading and non-zero for reloading).
+   // This takes ownership of 'info'
+
+   if (fInfo) gCling->MethodArgInfo_Delete(fInfo);
+   fInfo = info;
+   if (fInfo) {
+      SetTitle(gCling->MethodArgInfo_TypeName(fInfo));
+   }
+}

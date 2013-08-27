@@ -55,6 +55,8 @@ public:
    TDataMember   *GetDataMember() const;
    TList         *GetOptions() const;
 
+   void           Update(MethodArgInfo_t *info);
+
    ClassDef(TMethodArg,0)  //Dictionary for a method argument
 };
 
