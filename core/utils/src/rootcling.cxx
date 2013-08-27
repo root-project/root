@@ -2455,7 +2455,7 @@ void createRootMapFile(const std::string& rootmapFileName,
         selNsIter!= scan.fSelectedNamespaces.end(); selNsIter++){
       std::string className(ROOT::TMetaUtils::R__GetQualifiedName(* selNsIter->GetNamespaceDecl()));
       manipForRootmap(className);
-      rootmapFile << "Library." << className << ":"
+      rootmapFile << "Library." << className << ": "
                   << std::setw(35-className.size()) << rootmapLibName
                   << std::endl;
         }   

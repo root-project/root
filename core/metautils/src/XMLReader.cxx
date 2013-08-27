@@ -597,7 +597,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   // DEBUG std::cout << "\tAttrName[" << i << "]: " << attr[i].fName << " | AttrValue["<<i<<"]: "<<attr[i].fValue<<std::endl;
 
                   // Set the class version
-                  if (tagKind == kClass && "version" == attr[i].fName && csr){
+                  if (tagKind == kClass && "ClassVersion" == attr[i].fName && csr){
                      csr->SetRequestedVersionNumber(atoi(attr[i].fValue.c_str()));
                   }
                   
