@@ -70,48 +70,12 @@ private:
                                                 // wrapper function call, so we must store it).  All of the
                                                 // value parts stored here are copied immediately into fArgs,
                                                 // but fArgs does not become the owner. 
-   //   std::vector<llvm::GenericValue>    fArgs;    // Arguments to pass to the JIT when calling the function.
-                                                // Some arguments may be set by value with one of the SetArg()
-                                                // overloads, and some may be set by evaluating a text string
-                                                // with SetArgs() or SetFunc() (in which case the value
-                                                // stored here is a copy of the value stored in fArgVals).
-                                                // We do *not* own the data stored here.
    bool                                fIgnoreExtraArgs;
 
 
 private:
-   llvm::GenericValue convertIntegralToArg(const cling::Value& val, 
-                                           const llvm::Type* targetType) const;
-   std::string ExprToString(const clang::Expr* expr) const;
    void EvaluateArgList(const std::string &ArgList);
    cling::StoredValueRef EvaluateExpr(const clang::Expr* E) const;
-   bool IsTrampolineFunc() const { return fMethodAsWritten; }
-   bool DoesThatTrampolineFuncReturn() const;
-   bool DoesThatFuncReturnATemporary() const;
-   bool IsMemberFunc() const;
-   const clang::FunctionDecl* GetOriginalDecl() const;
-
-   void PushArg(const cling::Value& value) const;
-   void PushArg(cling::StoredValueRef value) const;
-   void SetThisPtr(const clang::CXXMethodDecl* MD, void* address) const;
-   void SetReturnPtr(const clang::FunctionDecl* FD, void* address) const;
-   void SetReturnPtr(cling::StoredValueRef val) const {
-      fArgVals[1] = val;
-   }
-   cling::StoredValueRef& GetReturnPtr() const { return fArgVals[1]; }
-   size_t GetArgValsSize() const { 
-      return fArgVals.size() - !fArgVals[0].isValid() - !fArgVals[1].isValid();
-   }
-
-   void PreallocatePtrs() const {
-      // fArgVals[0] to be used for this ptr.
-      fArgVals.push_back(cling::StoredValueRef::invalidValue());
-      // fArgVals[1] to be used for return result ptr.
-      fArgVals.push_back(cling::StoredValueRef::invalidValue());
-   }
-
-   void BuildTrampolineFunc(clang::CXXMethodDecl* MD);
-   void CodeGenDecl(const clang::FunctionDecl* FD);
 
 public:
 
@@ -174,8 +138,6 @@ public:
    void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, bool objectIsConst, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void                SetFuncProto(const TClingClassInfo *info, const char *method, const llvm::SmallVector<clang::QualType, 4> &proto, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void                SetFuncProto(const TClingClassInfo *info, const char *method, const llvm::SmallVector<clang::QualType, 4> &proto, bool objectIsConst, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
-   void                Init(const clang::FunctionDecl *);
-   void                Invoke(cling::StoredValueRef* result = 0) const;
 };
 
 #endif // ROOT_CallFunc
