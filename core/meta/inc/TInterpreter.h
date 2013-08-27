@@ -207,9 +207,9 @@ public:
    virtual void   ClassInfo_Delete(ClassInfo_t * /* info */, void * /* arena */) const {;}
    virtual void   ClassInfo_DeleteArray(ClassInfo_t * /* info */, void * /* arena */, bool /* dtorOnly */) const {;}
    virtual void   ClassInfo_Destruct(ClassInfo_t * /* info */, void * /* arena */) const {;}
-   virtual ClassInfo_t  *ClassInfo_Factory() const {return 0;}
-   virtual ClassInfo_t  *ClassInfo_Factory(ClassInfo_t * /* cl */) const {return 0;}
-   virtual ClassInfo_t  *ClassInfo_Factory(const char * /* name */) const {return 0;}
+   virtual ClassInfo_t  *ClassInfo_Factory() const = 0; 
+   virtual ClassInfo_t  *ClassInfo_Factory(ClassInfo_t * /* cl */) const = 0;
+   virtual ClassInfo_t  *ClassInfo_Factory(const char * /* name */) const = 0; 
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Bool_t /* objectIsConst */ = false, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {return 0;}
    virtual Bool_t ClassInfo_HasDefaultConstructor(ClassInfo_t * /* info */) const {return 0;}
    virtual Bool_t ClassInfo_HasMethod(ClassInfo_t * /* info */, const char * /* name */) const {return 0;}
