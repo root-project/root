@@ -186,3 +186,7 @@ of the `TDataType` describing a typedef.
 ``` {.cpp}
     object->SetTextAlign(kHAlignLeft+kVAlignTop);
 ```
+
+### TAttFill
+
+- Provide symbolic values for different styles.
