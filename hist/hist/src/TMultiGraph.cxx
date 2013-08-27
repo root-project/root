@@ -1136,6 +1136,7 @@ void TMultiGraph::Paint(Option_t *option)
          if (timedisplay) {fHistogram->GetXaxis()->SetTimeDisplay(timedisplay);}
          if (timeformat) {fHistogram->GetXaxis()->SetTimeFormat(timeformat); delete [] timeformat;}
       }
+      gPad->Clear();
       fHistogram->Paint("0");
    }
 
