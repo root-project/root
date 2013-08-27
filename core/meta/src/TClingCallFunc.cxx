@@ -2802,7 +2802,7 @@ void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
       cling::StoredValueRef val = EvaluateExpr(fInterp, *I);
       if (!val.isValid()) {
          // Bad expression, all done.
-         break;
+         return;
       }
       fArgVals.push_back(val);
    }
