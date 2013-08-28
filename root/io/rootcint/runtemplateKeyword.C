@@ -6,4 +6,5 @@ gROOT->ProcessLine("MyTest<double> d;");
 #else
 MyTest<double> d;
 #endif
+0;
 }
