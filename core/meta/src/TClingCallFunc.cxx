@@ -2926,6 +2926,33 @@ double TClingCallFunc::ExecDouble(void *address)
    return sv_to_double(ret);
 }
 
+void
+TClingCallFunc::
+ExecWithReturn(void* address, void* ret/*= 0*/)
+{
+   if (!IsValid()) {
+      Error("TClingCallFunc::ExecWithReturn(address, ret)",
+            "Attempt to execute while invalid.");
+      return;
+   }
+   const FunctionDecl* decl = fMethod->GetMethodDecl();
+   map<const FunctionDecl*, void*>::iterator I =
+      wrapper_store.find(decl);
+   if (I != wrapper_store.end()) {
+      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
+   }
+   else {
+      fWrapper = make_wrapper();
+   }
+   if (!fWrapper) {
+      Error("TClingCallFunc::ExecWithReturn(address, ret)",
+            "Called with no wrapper, not implemented!");
+      return;
+   }
+   exec(address, ret);
+   return;
+}
+
 TClingMethodInfo *TClingCallFunc::FactoryMethod() const
 {
    return new TClingMethodInfo(*fMethod);

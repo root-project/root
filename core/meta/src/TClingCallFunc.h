@@ -124,6 +124,7 @@ public:
       return *this;
    }
 
+   void ExecWithReturn(void* address, void* ret = 0);
    void                Exec(void *address, TInterpreterValue* interpVal = 0);
    long                ExecInt(void *address);
    long long           ExecInt64(void *address);
