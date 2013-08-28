@@ -2873,7 +2873,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
 
    // ======= Check if the library need to loaded or compiled
-   if ( gInterpreter->IsLoaded(expFileName) ) {
+   if ( gInterpreter->IsLoaded(expFileName) &&
+       !gInterpreter->IsLoaded(library) ) {
       // the script has already been loaded in interpreted mode
       // Let's warn the user and unload it.
 
