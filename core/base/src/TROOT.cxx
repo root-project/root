@@ -566,6 +566,9 @@ TROOT::~TROOT()
 
    if (ROOT::gROOTLocal == this) {
 
+      // If the interpreter has not yet been initialized, don't bother
+      ROOT::gGetROOT = &ROOT::GetROOT1;
+ 
       // Mark the object as invalid, so that we can veto some actions
       // (like autoloading) while we are in the destructor.
       SetBit(TObject::kInvalidObject);

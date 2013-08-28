@@ -193,7 +193,7 @@ namespace ROOT {
       delete fStreamer;
       if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
       fIsA = 0;
-      if (!gROOT || !gROOT->GetListOfClasses()) return;
+      if (!ROOT::gROOTLocal || !gROOT->GetListOfClasses()) return;
       if (fAction) GetAction().Unregister(GetClassName());
    }
 
