@@ -1084,7 +1084,10 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
       }
    }
 
-   TString code;
+   // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
+   // This is used to give Sema the same view on ACLiC'ed files (which
+   // are then #included through the dictionary) as rootcling had.
+   TString code = "#define __ROOTCLING__ 1\n";
    if (!getenv("ROOT_MODULES")) {
       for (int what = 0; what < 2; ++what) {
          const char** macros = macroDefines;
