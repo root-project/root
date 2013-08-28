@@ -32,9 +32,6 @@ Set(Dictionary ${CMAKE_CURRENT_BINARY_DIR}/G__${libname}.cxx)
 
 Set(INCLUDE_DIRS 
     ${CMAKE_SOURCE_DIR}/hist/hist/inc 
-    ${CMAKE_SOURCE_DIR}/cint/cint/include 
-    ${CMAKE_SOURCE_DIR}/cint/cint/stl 
-    ${CMAKE_SOURCE_DIR}/cint/cint/lib 
 )
 
 

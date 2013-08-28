@@ -94,7 +94,7 @@ make static
 #   html.MakeAll();
 # }
 # EOF
-# LD_LIBRARY_PATH=`pwd`/lib:`pwd`/cint/cint/include:`pwd`/cint/cint/stl:$LD_LIBRARY_PATH \
+# LD_LIBRARY_PATH=`pwd`/lib:$LD_LIBRARY_PATH \
 #     ./bin/roota -l -b -q html.C
 # rm -f html.C
 

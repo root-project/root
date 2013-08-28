@@ -75,13 +75,6 @@ but they have different copyright holders, as listed below:
   base/src/TRandom3.cxx
     Copyright (C) 1997 Makoto Matsumoto and Takuji Nishimura.
 
-  cint/lib/vcstream/fstrm.h
-  cint/lib/vcstream/strstrm.h
-    Copyright (c) 1996 Osamu Kotanigawa
-
-  cint/tool/ifdef/get.c
-    Copyright (c) Yokogawa-Hewlett-Packard, HSTD R&D
-
   clib/inc/Demangle.h
     Copyright 1992 Free Software Foundation, Inc.
 

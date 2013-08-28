@@ -388,14 +388,6 @@ namespace {
       }
 #endif
 
-#ifdef CINTINCDIR
-      TString cintinc(TString::Format("%s/cint/stl",CINTINCDIR));
-#else
-      TString cintinc(TString::Format("%s/cint/cint/stl",gRootDir));
-#endif
-      if (!dynpath.Contains( cintinc)) {
-         dynpath += ";"; dynpath += cintinc;
-      }
       return dynpath;
    }
 

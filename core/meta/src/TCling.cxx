@@ -3592,20 +3592,7 @@ const char* TCling::GetIncludePath()
 const char* TCling::GetSTLIncludePath() const
 {
    // Return the directory containing CINT's stl cintdlls.
-   static TString stldir;
-   if (!stldir.Length()) {
-#ifdef CINTINCDIR
-      stldir = CINTINCDIR;
-#else
-      stldir = gRootDir;
-      stldir += "/cint";
-#endif
-      if (!stldir.EndsWith("/")) {
-         stldir += '/';
-      }
-      stldir += "cint/stl";
-   }
-   return stldir;
+   return "";
 }
 
 //______________________________________________________________________________
