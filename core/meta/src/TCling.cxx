@@ -2892,7 +2892,7 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
    Long_t offset = 0L;
    TClingCallFunc func(fInterpreter);
    TClingMethodInfo *minfo = (TClingMethodInfo*)method->fInfo;
-   func.Init(minfo->GetMethodDecl());
+   func.Init(minfo);
    func.SetArgs(listpar);
    void* address = (void*)((Long_t)addr + offset);
    func.Exec(address);
