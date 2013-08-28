@@ -251,6 +251,7 @@ public: // Public Interface
    virtual void   CallFunc_Delete(CallFunc_t* func) const;
    virtual void   CallFunc_Exec(CallFunc_t* func, void* address) const;
    virtual void   CallFunc_Exec(CallFunc_t* func, void* address, TInterpreterValue& val) const;
+   virtual void   CallFunc_ExecWithReturn(CallFunc_t* func, void* address, void* ret) const;
    virtual Long_t    CallFunc_ExecInt(CallFunc_t* func, void* address) const;
    virtual Long64_t  CallFunc_ExecInt64(CallFunc_t* func, void* address) const;
    virtual Double_t  CallFunc_ExecDouble(CallFunc_t* func, void* address) const;
