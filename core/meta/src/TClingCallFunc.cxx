@@ -1686,11 +1686,9 @@ make_wrapper()
    //  Write the wrapper code.
    //
    int indent_level = 0;
-   string wrapper;
+   string wrapperFwdDecl = "void " + wrapper_name + "(void* obj, int nargs, void** args, void* ret)";
    ostringstream buf;
-   buf << "void " << wrapper_name
-       << "(void* obj, int nargs, void** args, void* ret) __attribute__((used))\n"
-       << "{\n";
+   buf << wrapperFwdDecl << "{\n";
    ++indent_level;
    if (min_args == num_params) {
       // No parameters with defaults.
@@ -1715,7 +1713,8 @@ make_wrapper()
    }
    --indent_level;
    buf << "}\n";
-   wrapper = buf.str();
+   string wrapper = wrapperFwdDecl + "__attribute__((used));\n"
+      + buf.str();
    //
    //  Compile the wrapper code.
    //
