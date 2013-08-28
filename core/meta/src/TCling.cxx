@@ -1625,21 +1625,28 @@ Bool_t TCling::IsLoaded(const char* filename) const
       return kTRUE;
    }
 
-   const clang::DirectoryLookup *CurDir;
-   llvm::StringRef srName(filename);
+   const clang::DirectoryLookup *CurDir = 0;
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
-   if (PP.getCurrentFileLexer() == 0) return kFALSE;
-   const clang::FileEntry *FE = PP.LookupFile(srName, /*isAngled*/ false,
+   clang::HeaderSearch &HS = PP.getHeaderSearchInfo();
+   const clang::FileEntry *FE = HS.LookupFile(filename, /*isAngled*/ false,
                                               /*FromDir*/ 0, CurDir,
                                               /*CurFileEnt*/ 0,
                                               /*SearchPath*/ 0,
                                               /*RelativePath*/ 0,
+                                              /*SuggestedModule*/ 0,
                                               /*SkipCache*/ false);
    if (FE) {
       // check in the source manager if the file is actually loaded
       clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
+      // this works only with header (and source) files...
       clang::FileID FID = SM.translateFile(FE);
       if (!FID.isInvalid()) return kTRUE;
+      // ...then check shared library again, but with full path now
+      sFilename = FE->getName();
+      if (gSystem->FindDynamicLibrary(sFilename, kTRUE)
+          && fileMap.count(sFilename.Data())) {
+         return kTRUE;
+      }
    }
    return kFALSE;
 }
