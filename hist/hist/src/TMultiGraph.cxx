@@ -453,6 +453,13 @@ void TMultiGraph::Draw(Option_t *option)
    //  TMultiGraph::Draw. Use GetDrawOption to return the option specified
    //  when drawing the TMultiGraph.
 
+   TString opt = option;
+   opt.ToLower();
+
+   if (gPad) {
+      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
+      if (opt.Contains("a")) gPad->Clear();
+   }
    AppendPad(option);
 }
 
