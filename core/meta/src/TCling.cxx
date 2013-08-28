@@ -323,7 +323,7 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       }
 
       // We skip functions without prototype
-      // FunctionNoProtoType - Represents a K&R-style 'int foo()' function, 
+      // FunctionNoProtoType - Represents a K&R-style 'int foo()' function,
       // which has no information available about its arguments.
       if (!isa<FunctionNoProtoType>(FD->getType())
           && !gROOT->GetListOfGlobalFunctions()->FindObject(FD->getNameAsString().c_str())) {
@@ -385,7 +385,7 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
 }
 
 extern "C"
-void TCling__UpdateListsOnCommitted(const cling::Transaction &T, 
+void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
                                     cling::Interpreter* interp) {
 
    std::set<TClass*> modifiedTClasses; // TClasses that require update after this transaction
@@ -432,23 +432,23 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
 
    // The above might trigger more decls to be deserialized.
    // Thus the iteration over the deserialized decls must be last.
-   for (cling::Transaction::const_iterator I = T.deserialized_decls_begin(), 
+   for (cling::Transaction::const_iterator I = T.deserialized_decls_begin(),
            E = T.deserialized_decls_end(); I != E; ++I) {
       for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
               DE = I->m_DGR.end(); DI != DE; ++DI)
          if (TransactionDeclSet.find(*DI) == TransactionDeclSet.end()) {
             //FIXME: HandleNewDecl should take DeclGroupRef
-            ((TCling*)gCling)->HandleNewDecl(*DI, /*isDeserialized*/true, 
+            ((TCling*)gCling)->HandleNewDecl(*DI, /*isDeserialized*/true,
                                              modifiedTClasses);
          }
    }
 
 
    // When fully building the reflection info in TClass, a deserialization
-   // could be triggered, which may result in request for building the 
+   // could be triggered, which may result in request for building the
    // reflection info for the same TClass. This in turn will clear the caches
    // for the TClass in-flight and cause null ptr derefs.
-   // FIXME: This is a quick fix, solving most of the issues. The actual 
+   // FIXME: This is a quick fix, solving most of the issues. The actual
    // question is: Shouldn't TClass provide a lock mechanism on update or lock
    // itself until the update is done.
    //
@@ -476,7 +476,7 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
       ((TCling*)gCling)->UpdateListOfEnums(*I);
       // Unlock the TClass for updates
       ((TCling*)gCling)->GetModTClasses().erase(*I);
-      
+
    }
 }
 
@@ -970,7 +970,7 @@ static const char *FindLibraryName(void (*func)())
    {
       return 0;
    }
-   return moduleName; 
+   return moduleName;
 #else
    Dl_info info;
    if (dladdr((void*)func,&info)==0) {
@@ -2352,7 +2352,7 @@ void TCling::CreateListOfEnums(TClass* cl) const
 
    // Recurse on the data member of the class and get the enums.
    if (isa<clang::RecordDecl>(D)) {
-      llvm::SmallVector<EnumDecl*, 128> enums; 
+      llvm::SmallVector<EnumDecl*, 128> enums;
       EnumVisitor E(enums);
       // Traverse the list of enums for this RecordDecl.
       // Iteration over the decls might cause deserialization.
@@ -2412,7 +2412,7 @@ void TCling::UpdateListOfMethods(TClass* cl) const
 {
    // Update the list of pointers to method for TClass cl
    delete cl->fAllPubMethod;
-   cl->fAllPubMethod = 0;   
+   cl->fAllPubMethod = 0;
    delete cl->fMethod;
    cl->fMethod = 0;
    CreateListOfMethods(cl);
@@ -2748,13 +2748,14 @@ Bool_t TCling::HasDictionary(TClass* cl)
    // Get the Decl for the class.
    TClingClassInfo* cli = (TClingClassInfo*)cl->GetClassInfo();
    const clang::Decl* D = cli->GetDecl();
+   const clang::Type* T = cli->GetType();
 
    // Convert to RecordDecl.
-   if (const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(D)) {
+   if (llvm::isa<clang::RecordDecl>(D)) {
 
       // Get the name of the class
       std::string buf;
-      ROOT::TMetaUtils::GetNormalizedName(buf, qType, *fInterpreter, *fNormalizedCtxt);
+      ROOT::TMetaUtils::GetNormalizedName(buf, QualType(T, 0), *fInterpreter, *fNormalizedCtxt);
       const char* name = buf.c_str();
 
       // Check for the dictionary of the curent class.
@@ -2765,24 +2766,25 @@ Bool_t TCling::HasDictionary(TClass* cl)
 }
 
 //______________________________________________________________________________
-clang::Decl* TCling::GetDeclFromQualType(clang::QualType& qualType) 
+clang::Decl* TCling::GetDeclFromQualType(clang::QualType& qualType)
 {
-   clang::Decl* D = 0; 
-   //class 
+   clang::Decl* D = 0;
+   //class
    if (qualType->isRecordType()) {
       if((D = qualType->getAsCXXRecordDecl())) {
          return D;
-      }   
+      }
    }
-   //pointer to class or to array or reference 
+   //pointer to class or to array or reference
    if (qualType->isPointerType() || qualType->isReferenceType()) {
       qualType = qualType->getPointeeType();
          if (qualType->isRecordType()) {
             if((D = qualType->getAsCXXRecordDecl())) {
                return D;
-            }   
+            }
          } else if(qualType->isArrayType()) {
             const Type* elementType = qualType->getArrayElementTypeNoTypeQual();
+            qualType = QualType(elementType, 0);
             if (elementType->isRecordType()) {
                if((D = elementType->getAsCXXRecordDecl())) {
                   return D;
@@ -2796,47 +2798,21 @@ clang::Decl* TCling::GetDeclFromQualType(clang::QualType& qualType)
                }
             }
          }
-   }   
+   }
    //array of class elements
    if (qualType->isArrayType()) {
       const Type* elementType = qualType->getArrayElementTypeNoTypeQual();
+      qualType = QualType(elementType, 0);
       if (elementType->isRecordType()) {
          if ((D = elementType->getAsCXXRecordDecl())) {
             return D;
-            }
-         }
-      }
-   }   
-   return D;
-}
-  
-//______________________________________________________________________________
-void TCling::GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, bool recurse, clang::QualType qType)
-{
-   // Get not have a dictionary for a Decl.
-   if (!TCling::InsertMissingDictionaryDecl(D, netD, qType)) return;
-
-   //Data members
-   if (const clang::CXXRecordDecl* RD = llvm::dyn_cast<clang::CXXRecordDecl>(D)) {
-      for (clang::RecordDecl::field_iterator iField = RD->field_begin(),
-           eField = RD->field_end(); iField != eField; ++iField) {
-
-         clang::QualType qualType = (*iField)->getType();
-         if (!qualType.isNull()) {
-            //check if not NullType
-            if (clang::Decl* DD = GetDeclFromQualType(qualType)) {
-               if(recurse) {
-                  GetMissingDictionariesForDecl(DD, netD, recurse, qualType);
-               } else {
-                  TCling::InsertMissingDictionaryDecl(DD, netD, qualType);
-               }
-            }   
          }
       }
    }
-}      
+   return D;
+}
 //______________________________________________________________________________
-bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, clang::QualType& qType)
+bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, bool recurse, clang::QualType& qType)
 {
    std::set<const clang::Type*>::iterator it = netD.find(qType.getTypePtr());
    if (it != netD.end()) return false;
@@ -2853,11 +2829,11 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
          // We need to make sure the collection proxy is not emulated
          if ((t->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) != 0) {
             // oups we are missing the dictionary for the collection.
-            netD.insert(qType.getTypePtr()); 
+            netD.insert(qType.getTypePtr());
          }
          // We need to *not* look at t but instead at its content
          // This may be duplicated code because I always check for template parameter,
-         // But if the collection has different kind of elements the check would be required. 
+         // But if the collection has different kind of elements the check would be required.
          if ((t = t->GetCollectionProxy()->GetValueClass())) {
             if (!gClassTable->GetDict(t->GetName())){
                if (TClingClassInfo* ti = (TClingClassInfo*)t->GetClassInfo()) {
@@ -2875,7 +2851,7 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
    if (!gClassTable->GetDict(name)) {
       netD.insert(qType.getTypePtr());
    }
-   //if it has dict or not? or only if it has dict?
+
    if (!qType.isNull()) {
       // Check whether the data member is a template
       if(const clang::TemplateSpecializationType* templateType = dyn_cast<clang::TemplateSpecializationType>(qType.getTypePtr())) {
@@ -2884,7 +2860,8 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
             if (tmpltArgKind == clang::TemplateArgument::Type) {
                qType = templateArg->getAsType();
                if (clang::Decl* tmplD = GetDeclFromQualType(qType)) {
-                  GetMissingDictionariesForDecl(tmplD, netD, false, qType);
+                  GetMissingDictionariesForDecl(tmplD, netD, recurse, qType);
+                  return recurse;
                }
             }
          }
@@ -2892,6 +2869,32 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
    }
    return true;
 }
+//______________________________________________________________________________
+void TCling::GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, bool recurse, clang::QualType qType)
+{
+   // Get not have a dictionary for a Decl.
+   if (!TCling::InsertMissingDictionaryDecl(D, netD, recurse, qType)) return;
+
+   //Data members
+   if (const clang::CXXRecordDecl* RD = llvm::dyn_cast<clang::CXXRecordDecl>(D)) {
+      for (clang::RecordDecl::field_iterator iField = RD->field_begin(),
+           eField = RD->field_end(); iField != eField; ++iField) {
+
+         clang::QualType qualType = (*iField)->getType();
+         if (!qualType.isNull()) {
+            //check if not NullType
+            if (clang::Decl* DD = GetDeclFromQualType(qualType)) {
+               if(recurse) {
+                  GetMissingDictionariesForDecl(DD, netD, recurse, qualType);
+               } else {
+                  TCling::InsertMissingDictionaryDecl(DD, netD, recurse, qualType);
+               }
+            }
+         }
+      }
+   }
+}
+
 //______________________________________________________________________________
 void TCling::GetMissingDictionaries(TClass* cl, bool recurse /*recurse*/, TObjArray& result)
 {
@@ -2916,7 +2919,7 @@ void TCling::GetMissingDictionaries(TClass* cl, bool recurse /*recurse*/, TObjAr
          result.Add(clMissingDict);
       } else {
          Error("TCling::GetMissingDictionaries", "The class %s missing dictionary was not found.", name);
-      }   
+      }
    }
 }
 
@@ -3328,7 +3331,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
             if (!fMapNamespaces->FindObject(namespaceCand.Data()))
                fMapNamespaces->Add(new TNamed(namespaceCand.Data(), 0));
          }
-            
+
 
          delete tokens;
       }
@@ -4856,7 +4859,7 @@ TMethodCall::EReturnType TCling::MethodInfo_MethodCallReturnType(MethodInfo_t* m
          int sz = typeinfo->Size();
          if (sz <= 8) {
             // Support only up to long long ... but
-            // FIXME the TMethodCall::Execute only 
+            // FIXME the TMethodCall::Execute only
             // return long (4 bytes) ...
             // The v5 implementation of TMethodCall::ReturnType
             // was not making the distinction so we let it go

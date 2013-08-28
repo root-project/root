@@ -41,6 +41,8 @@ namespace clang {
    class Decl;
    class EnumDecl;
    class FunctionDecl;
+   class Type;
+   class QualType;
 }
 namespace cling {
    class Interpreter;
@@ -64,7 +66,7 @@ namespace ROOT {
 }
 
 extern "C" {
-   void TCling__UpdateListsOnCommitted(const cling::Transaction&, 
+   void TCling__UpdateListsOnCommitted(const cling::Transaction&,
                                        cling::Interpreter*);
    void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
@@ -139,7 +141,7 @@ public: // Public Interface
    const char* GetIncludePath();
    virtual const char* GetSTLIncludePath() const;
    TObjArray*  GetRootMapFiles() const { return fRootmapFiles; }
-   Bool_t  HasDictionary(TClass* cl) const;
+   Bool_t  HasDictionary(TClass* cl);
    void    GetMissingDictionaries(TClass* cl, bool recurse, TObjArray& result);
    virtual void Initialize();
    void    InspectMembers(TMemberInspector&, void* obj, const TClass* cl);
@@ -423,6 +425,9 @@ private: // Private Utility Functions
    bool LoadPCM(TString pcmFileName, const char** headers,
                 void (*triggerFunc)()) const;
    void HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl = 0) const;
+   clang::Decl* GetDeclFromQualType(clang::QualType& qualType);
+   void GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, bool recurse, clang::QualType qType);
+   bool InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, bool recurse, clang::QualType& qType);
 
    ClassDef(TCling, 0) //Interface to cling C++ interpreter
 };
