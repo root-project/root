@@ -3159,6 +3159,20 @@ void TClass::GetMenuItems(TList *list)
    }
 }
 
+Bool_t TClass::HasDictionary()
+{
+   // Check whether a class has a dictionary or not.
+
+   return gInterpreter->HasDictionary(this);
+}
+
+void TClass::GetMissingDictionaries(bool recurse, TObjArray& result)
+{
+   // Get the classes that have a missing dictionary.
+
+   gInterpreter->GetMissingDictionaries(this, recurse, result);
+}
+
 //______________________________________________________________________________
 Bool_t TClass::IsFolder(void *obj) const
 {

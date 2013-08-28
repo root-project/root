@@ -2741,6 +2741,186 @@ const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
 }
 
 //______________________________________________________________________________
+Bool_t TCling::HasDictionary(TClass* cl)
+{
+   // Check whether a class has a dictionary or not.
+
+   // Get the Decl for the class.
+   TClingClassInfo* cli = (TClingClassInfo*)cl->GetClassInfo();
+   const clang::Decl* D = cli->GetDecl();
+
+   // Convert to RecordDecl.
+   if (const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(D)) {
+
+      // Get the name of the class
+      std::string buf;
+      ROOT::TMetaUtils::GetNormalizedName(buf, qType, *fInterpreter, *fNormalizedCtxt);
+      const char* name = buf.c_str();
+
+      // Check for the dictionary of the curent class.
+      if (gClassTable->GetDict(name))
+         return true;
+   }
+   return false;
+}
+
+//______________________________________________________________________________
+clang::Decl* TCling::GetDeclFromQualType(clang::QualType& qualType) 
+{
+   clang::Decl* D = 0; 
+   //class 
+   if (qualType->isRecordType()) {
+      if((D = qualType->getAsCXXRecordDecl())) {
+         return D;
+      }   
+   }
+   //pointer to class or to array or reference 
+   if (qualType->isPointerType() || qualType->isReferenceType()) {
+      qualType = qualType->getPointeeType();
+         if (qualType->isRecordType()) {
+            if((D = qualType->getAsCXXRecordDecl())) {
+               return D;
+            }   
+         } else if(qualType->isArrayType()) {
+            const Type* elementType = qualType->getArrayElementTypeNoTypeQual();
+            if (elementType->isRecordType()) {
+               if((D = elementType->getAsCXXRecordDecl())) {
+                  return D;
+               }
+            }
+         } else if(qualType->isPointerType()) {
+            qualType = qualType->getPointeeType();
+            if (qualType->isRecordType()) {
+               if((D = qualType->getAsCXXRecordDecl())) {
+                  return D;
+               }
+            }
+         }
+   }   
+   //array of class elements
+   if (qualType->isArrayType()) {
+      const Type* elementType = qualType->getArrayElementTypeNoTypeQual();
+      if (elementType->isRecordType()) {
+         if ((D = elementType->getAsCXXRecordDecl())) {
+            return D;
+            }
+         }
+      }
+   }   
+   return D;
+}
+  
+//______________________________________________________________________________
+void TCling::GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, bool recurse, clang::QualType qType)
+{
+   // Get not have a dictionary for a Decl.
+   if (!TCling::InsertMissingDictionaryDecl(D, netD, qType)) return;
+
+   //Data members
+   if (const clang::CXXRecordDecl* RD = llvm::dyn_cast<clang::CXXRecordDecl>(D)) {
+      for (clang::RecordDecl::field_iterator iField = RD->field_begin(),
+           eField = RD->field_end(); iField != eField; ++iField) {
+
+         clang::QualType qualType = (*iField)->getType();
+         if (!qualType.isNull()) {
+            //check if not NullType
+            if (clang::Decl* DD = GetDeclFromQualType(qualType)) {
+               if(recurse) {
+                  GetMissingDictionariesForDecl(DD, netD, recurse, qualType);
+               } else {
+                  TCling::InsertMissingDictionaryDecl(DD, netD, qualType);
+               }
+            }   
+         }
+      }
+   }
+}      
+//______________________________________________________________________________
+bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, clang::QualType& qType)
+{
+   std::set<const clang::Type*>::iterator it = netD.find(qType.getTypePtr());
+   if (it != netD.end()) return false;
+   // Get the name of the class
+   std::string buf;
+   ROOT::TMetaUtils::GetNormalizedName(buf, qType, *fInterpreter, *fNormalizedCtxt);
+   const char* name = buf.c_str();
+   // Check for the dictionary of the curent class.
+   if (TClass* t = TClass::GetClass(name)) {
+   //Check whether a custom streamer
+      if (t->TestBit(TClass::kHasCustomStreamerMember)) return false;
+      // Deal with proxies.
+      if (t->GetCollectionProxy()) {
+         // We need to make sure the collection proxy is not emulated
+         if ((t->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) != 0) {
+            // oups we are missing the dictionary for the collection.
+            netD.insert(qType.getTypePtr()); 
+         }
+         // We need to *not* look at t but instead at its content
+         // This may be duplicated code because I always check for template parameter,
+         // But if the collection has different kind of elements the check would be required. 
+         if ((t = t->GetCollectionProxy()->GetValueClass())) {
+            if (!gClassTable->GetDict(t->GetName())){
+               if (TClingClassInfo* ti = (TClingClassInfo*)t->GetClassInfo()) {
+                  if(const clang::Type* elemType = ti->GetType()) {
+                     std::set<const clang::Type*>::iterator it = netD.find(qType.getTypePtr());
+                     if (it != netD.end()) return false;
+                     netD.insert(elemType);
+                  }
+               }
+            }
+         }
+         return true;
+      }
+   }
+   if (!gClassTable->GetDict(name)) {
+      netD.insert(qType.getTypePtr());
+   }
+   //if it has dict or not? or only if it has dict?
+   if (!qType.isNull()) {
+      // Check whether the data member is a template
+      if(const clang::TemplateSpecializationType* templateType = dyn_cast<clang::TemplateSpecializationType>(qType.getTypePtr())) {
+         if(const TemplateArgument* templateArg = templateType->getArgs()) {
+            clang::TemplateArgument::ArgKind tmpltArgKind = templateArg->getKind();
+            if (tmpltArgKind == clang::TemplateArgument::Type) {
+               qType = templateArg->getAsType();
+               if (clang::Decl* tmplD = GetDeclFromQualType(qType)) {
+                  GetMissingDictionariesForDecl(tmplD, netD, false, qType);
+               }
+            }
+         }
+      }
+   }
+   return true;
+}
+//______________________________________________________________________________
+void TCling::GetMissingDictionaries(TClass* cl, bool recurse /*recurse*/, TObjArray& result)
+{
+   // Get the Decl for the class.
+   TClingClassInfo* cli = (TClingClassInfo*)cl->GetClassInfo();
+   const clang::Decl* D = cli->GetDecl();
+   const clang::Type* T = cli->GetType();
+
+   // Set containing all the decls of the classes that do not have a dictionary.
+   std::set<const clang::Type*> netD;
+   clang::QualType declType = QualType(T, 0);
+   GetMissingDictionariesForDecl(D, netD, recurse, declType);
+
+   //convert set<Decl> to TObjArray
+   for (std::set<const clang::Type*>::const_iterator I = netD.begin(),
+        E = netD.end(); I != E; ++I) {
+
+      std::string buf;
+      ROOT::TMetaUtils::GetNormalizedName(buf, QualType(*I, 0), *fInterpreter, *fNormalizedCtxt);
+      const char* name = buf.c_str();
+      if (TClass* clMissingDict = TClass::GetClass(name)) {
+         result.Add(clMissingDict);
+      } else {
+         Error("TCling::GetMissingDictionaries", "The class %s missing dictionary was not found.", name);
+      }   
+   }
+}
+
+//______________________________________________________________________________
 void TCling::Execute(const char* function, const char* params, int* error)
 {
    // Execute a global function with arguments params.

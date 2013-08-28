@@ -139,6 +139,8 @@ public: // Public Interface
    const char* GetIncludePath();
    virtual const char* GetSTLIncludePath() const;
    TObjArray*  GetRootMapFiles() const { return fRootmapFiles; }
+   Bool_t  HasDictionary(TClass* cl) const;
+   void    GetMissingDictionaries(TClass* cl, bool recurse, TObjArray& result);
    virtual void Initialize();
    void    InspectMembers(TMemberInspector&, void* obj, const TClass* cl);
    Bool_t  IsLoaded(const char* filename) const;
