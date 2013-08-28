@@ -432,7 +432,7 @@ Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
             Info("Retrieve", "Retrieving analyzed IgProf performance profile");
          TString analyzeAndFilter = \
            "|( T=`mktemp` && cat > \"$T\" ; igprof-analyse -d -g \"$T\" ; rm -f \"$T\" )";
-         if (*pattern == '|')
+         if (pattern && (*pattern == '|'))
             analyzeAndFilter.Append(pattern);
          os = fLogger->fMgr->ReadBuffer(fileName.Data(), analyzeAndFilter.Data());
       }
