@@ -1,4 +1,4 @@
-// @(#)root/io:$Id$
+// @(#)root/io
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -72,10 +72,10 @@ protected:
    TKey();
    TKey(TDirectory* motherDir);
    TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset);
-   TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, TDirectory* motherDir = 0);
-   TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes, TDirectory* motherDir = 0);
-   TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir = 0);
-   TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir = 0);
+   TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
+   TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
+   TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir);
+   TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir);
    TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = 0);
    virtual ~TKey();
 
