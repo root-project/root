@@ -589,7 +589,8 @@ void TProofProgressLog::SetGrepView()
    }
 
    // Ugly but necessary const_cast
-   dynamic_cast<TGFrame *>( const_cast<TGWindow *>(fGrepLabel->GetParent()) )->Layout();
+   TGFrame *frame = dynamic_cast<TGFrame *>( const_cast<TGWindow *>(fGrepLabel->GetParent()) );
+   if (frame) frame->Layout();
 
 }
 
