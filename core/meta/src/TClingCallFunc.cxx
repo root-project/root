@@ -2974,29 +2974,14 @@ void TClingCallFunc::SetArg(long param)
 
 void TClingCallFunc::SetArg(double param)
 {
-   clang::ASTContext& C = fInterp->getSema().getASTContext();
-   llvm::GenericValue gv;
-   clang::QualType QT = C.DoubleTy;
-   gv.DoubleVal = param;
-   PushArg(cling::Value(gv, QT, fInterp->getLLVMType(QT)));
 }
 
 void TClingCallFunc::SetArg(long long param)
 {
-   clang::ASTContext& C = fInterp->getSema().getASTContext();
-   llvm::GenericValue gv;
-   clang::QualType QT = C.LongLongTy;
-   gv.IntVal = llvm::APInt(C.getTypeSize(QT), param);
-   PushArg(cling::Value(gv, QT, fInterp->getLLVMType(QT)));
 }
 
 void TClingCallFunc::SetArg(unsigned long long param)
 {
-   clang::ASTContext& C = fInterp->getSema().getASTContext();
-   llvm::GenericValue gv;
-   clang::QualType QT = C.UnsignedLongLongTy;
-   gv.IntVal = llvm::APInt(C.getTypeSize(QT), param);
-   PushArg(cling::Value(gv, QT, fInterp->getLLVMType(QT)));
 }
 
 void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
