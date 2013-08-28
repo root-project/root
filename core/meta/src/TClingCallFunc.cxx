@@ -3025,7 +3025,7 @@ void TClingCallFunc::SetArgs(const char *params)
 void TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method,
                              const char* arglist, long* poffset)
 {
-   SetFunc(info,method,arglist,false,poffset);
+   SetFunc(info, method, arglist, false, poffset);
 }
 
 void TClingCallFunc::SetFunc(const TClingClassInfo* info,
@@ -3033,6 +3033,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo* info,
                              const char* arglist,  bool objectIsConst, 
                              long* poffset)
 {
+   fWrapper = 0;
    delete fMethod;
    fMethod = new TClingMethodInfo(fInterp);
    if (poffset) {
@@ -3061,12 +3062,10 @@ void TClingCallFunc::SetFunc(const TClingClassInfo* info,
 
 void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
 {
+   fWrapper = 0;
    delete fMethod;
-   fMethod = 0;
-   fEEFunc = 0;
-   fEEAddr = 0;
-   ResetArg();
    fMethod = new TClingMethodInfo(*info);
+   ResetArg();
    if (!fMethod->IsValid()) {
       return;
    }
@@ -3078,7 +3077,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
                                   EFunctionMatchMode mode /* = kConversionMatch */
                                   )
 {
-   SetFuncProto(info,method,proto,false,poffset, mode);
+   SetFuncProto(info, method, proto, false, poffset, mode);
 }
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
@@ -3088,6 +3087,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
                                   EFunctionMatchMode mode /* =kConversionMatch */
                                   )
 {
+   fWrapper = 0;
    delete fMethod;
    fMethod = new TClingMethodInfo(fInterp);
    if (poffset) {
@@ -3113,7 +3113,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
                                   EFunctionMatchMode mode /* = kConversionMatch */
                                   )
 {
-   SetFuncProto(info,method,proto,false,poffset, mode);
+   SetFuncProto(info, method, proto, false, poffset, mode);
 }
 
 void TClingCallFunc::SetFuncProto(const TClingClassInfo *info,
