@@ -3000,7 +3000,7 @@ InterfaceMethod() const
    if (!IsValid()) {
       return 0;
    }
-   return (void*) fMethod->GetMethodDecl();
+   return (void*) const_cast<FunctionDecl*>(fMethod->GetMethodDecl());
 }
 
 bool
