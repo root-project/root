@@ -1,4 +1,5 @@
 // root/core/meta
+// vim: sw=3
 // Author: Paul Russo   30/07/2012
 
 /*************************************************************************
@@ -55,13 +56,16 @@ class TClingCallFunc {
 
 private:
 
-   cling::Interpreter                *fInterp;  // Cling interpreter, we do *not* own.
-   TClingMethodInfo                  *fMethod;  // Current method, we own. If it is virtual this holds the trampoline.
+   /// Cling interpreter, we do *not* own.
+   cling::Interpreter* fInterp;
+   /// Current method, we own.
+   TClingMethodInfo* fMethod;
    /// Pointer to compiled wrapper, we do *not* own.
    tcling_callfunc_Wrapper_t fWrapper;
-   mutable std::vector<cling::StoredValueRef> fArgVals; // Stored function arguments, we own.
-   bool                                fIgnoreExtraArgs;
-
+   /// Stored function arguments, we own.
+   mutable std::vector<cling::StoredValueRef> fArgVals;
+   /// If true, do not limit number of function arguments to declared number.
+   bool fIgnoreExtraArgs;
 
 private:
    void collect_type_info(clang::QualType& QT, std::ostringstream& typedefbuf,
@@ -125,30 +129,42 @@ public:
    }
 
    void ExecWithReturn(void* address, void* ret = 0);
-   void                Exec(void *address, TInterpreterValue* interpVal = 0);
-   long                ExecInt(void *address);
-   long long           ExecInt64(void *address);
-   double              ExecDouble(void *address);
-   TClingMethodInfo   *FactoryMethod() const;
-   void                IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
-   void                Init();
-   void                Init(TClingMethodInfo*);
-   void               *InterfaceMethod() const;
-   bool                IsValid() const;
-   void                ResetArg();
-   void                SetArg(long arg);
-   void                SetArg(double arg);
-   void                SetArg(long long arg);
-   void                SetArg(unsigned long long arg);
-   void                SetArgArray(long *argArr, int narg);
-   void                SetArgs(const char *args);
-   void                SetFunc(const TClingClassInfo *info, const char *method, const char *arglist, long *poffset);
-   void                SetFunc(const TClingClassInfo *info, const char *method, const char *arglist, bool objectIsConst, long *poffset);
-   void                SetFunc(const TClingMethodInfo *info);
-   void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
-   void                SetFuncProto(const TClingClassInfo *info, const char *method, const char *proto, bool objectIsConst, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
-   void                SetFuncProto(const TClingClassInfo *info, const char *method, const llvm::SmallVector<clang::QualType, 4> &proto, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
-   void                SetFuncProto(const TClingClassInfo *info, const char *method, const llvm::SmallVector<clang::QualType, 4> &proto, bool objectIsConst, long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   void Exec(void* address, TInterpreterValue* interpVal = 0);
+   long ExecInt(void* address);
+   long long ExecInt64(void* address);
+   double ExecDouble(void* address);
+   TClingMethodInfo* FactoryMethod() const;
+   void IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
+   void Init();
+   void Init(TClingMethodInfo*);
+   void* InterfaceMethod() const;
+   bool IsValid() const;
+   void ResetArg();
+   void SetArg(long arg);
+   void SetArg(double arg);
+   void SetArg(long long arg);
+   void SetArg(unsigned long long arg);
+   void SetArgArray(long* argArr, int narg);
+   void SetArgs(const char* args);
+   void SetFunc(const TClingClassInfo* info, const char* method,
+                const char* arglist, long* poffset);
+   void SetFunc(const TClingClassInfo* info, const char* method,
+                const char* arglist, bool objectIsConst, long* poffset);
+   void SetFunc(const TClingMethodInfo* info);
+   void SetFuncProto(const TClingClassInfo* info, const char* method,
+                     const char* proto, long* poffset,
+                     ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   void SetFuncProto(const TClingClassInfo* info, const char* method,
+                     const char* proto, bool objectIsConst, long* poffset,
+                     ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   void SetFuncProto(const TClingClassInfo* info, const char* method,
+                     const llvm::SmallVector<clang::QualType, 4>& proto,
+                     long* poffset,
+                     ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   void SetFuncProto(const TClingClassInfo* info, const char* method,
+                     const llvm::SmallVector<clang::QualType, 4>& proto,
+                     bool objectIsConst, long* poffset,
+                     ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
 };
 
 #endif // ROOT_CallFunc
