@@ -96,7 +96,6 @@ public:
    virtual void      SetEND(Long64_t) {}
    virtual Int_t     Sizeof() const { return 0; }
 
-   virtual void      UseCache(Int_t = 10, Int_t = 0) {}
    virtual Bool_t    WriteBuffer(const char*, Int_t) { return kFALSE; }
    virtual Int_t     Write(const char* =0, Int_t=0, Int_t=0) { return 0; }
    virtual Int_t     Write(const char* =0, Int_t=0, Int_t=0) const { return 0; }
