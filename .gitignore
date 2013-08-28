@@ -18,8 +18,9 @@ G__*.cxx
 G__*.h
 etc/allDict.cxx
 etc/allDict.h
-etc/allDict_dictContent.h
-etc/allDict_dictUmbrella.h
+*_dictContent.h
+*_dictUmbrella.h
+*_rdict.pcm
 
 # Other Stuff
 *.d
