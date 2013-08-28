@@ -2970,18 +2970,42 @@ void TClingCallFunc::ResetArg()
 
 void TClingCallFunc::SetArg(long param)
 {
+   ASTContext& C = fInterp->getCI()->getASTContext();
+   GenericValue gv;
+   QualType QT = C.LongTy;
+   gv.IntVal = APInt(C.getTypeSize(QT), param);
+   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(C,
+                                                         cling::Value(gv, QT)));
 }
 
 void TClingCallFunc::SetArg(double param)
 {
+   ASTContext& C = fInterp->getCI()->getASTContext();
+   GenericValue gv;
+   QualType QT = C.DoubleTy;
+   gv.DoubleVal = param;
+   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(C,
+                                                         cling::Value(gv, QT)));
 }
 
 void TClingCallFunc::SetArg(long long param)
 {
+   ASTContext& C = fInterp->getCI()->getASTContext();
+   GenericValue gv;
+   QualType QT = C.LongLongTy;
+   gv.IntVal = APInt(C.getTypeSize(QT), param);
+   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(C,
+                                                         cling::Value(gv, QT)));
 }
 
 void TClingCallFunc::SetArg(unsigned long long param)
 {
+   ASTContext& C = fInterp->getCI()->getASTContext();
+   GenericValue gv;
+   QualType QT = C.UnsignedLongLongTy;
+   gv.IntVal = APInt(C.getTypeSize(QT), param);
+   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(C,
+                                                         cling::Value(gv, QT)));
 }
 
 void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
