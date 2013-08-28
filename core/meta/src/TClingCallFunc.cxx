@@ -2808,36 +2808,122 @@ void TClingCallFunc::EvaluateArgList(const std::string &ArgList)
    }
 }
 
-void TClingCallFunc::Exec(void *address, TInterpreterValue* interpVal /* =0 */) const
+void TClingCallFunc::Exec(void *address, TInterpreterValue* interpVal /* =0 */)
 {
    if (!IsValid()) {
-      Error("TClingCallFunc::Exec", "Attempt to execute while invalid.");
+      Error("TClingCallFunc::Exec(address, interpVal)",
+            "Attempt to execute while invalid.");
       return;
    }
+   const FunctionDecl* decl = fMethod->GetMethodDecl();
+   map<const FunctionDecl*, void*>::iterator I =
+      wrapper_store.find(decl);
+   if (I != wrapper_store.end()) {
+      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
+   }
+   else {
+      fWrapper = make_wrapper();
+   }
+   if (!fWrapper) {
+      Error("TClingCallFunc::Exec(address, interpVal)",
+            "Called with no wrapper, not implemented!");
+      return;
+   }
+   if (!interpVal) {
+      exec(address, 0);
+      return;
+   }
+   cling::StoredValueRef valref;
+   exec_with_valref_return(address, &valref);
+   reinterpret_cast<cling::StoredValueRef&>(interpVal->Get()) = valref;
+   return;
 }
 
-Long_t TClingCallFunc::ExecInt(void *address) const
+Long_t TClingCallFunc::ExecInt(void *address)
 {
    if (!IsValid()) {
       Error("TClingCallFunc::ExecInt", "Attempt to execute while invalid.");
       return 0L;
    }
+   const FunctionDecl* decl = fMethod->GetMethodDecl();
+   map<const FunctionDecl*, void*>::iterator I =
+      wrapper_store.find(decl);
+   if (I != wrapper_store.end()) {
+      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
+   }
+   else {
+      fWrapper = make_wrapper();
+   }
+   if (!fWrapper) {
+      Error("TClingCallFunc::ExecInt",
+            "Called with no wrapper, not implemented!");
+      return 0L;
+   }
+   cling::StoredValueRef ret;
+   exec_with_valref_return(address, &ret);
+   if (!ret.isValid()) {
+      // Sometimes we are called on a function returning void!
+      return 0L;
+   }
+   return static_cast<Long_t>(sv_to_long_long(ret));
 }
 
-long long TClingCallFunc::ExecInt64(void *address) const
+long long TClingCallFunc::ExecInt64(void *address)
 {
    if (!IsValid()) {
       Error("TClingCallFunc::ExecInt64", "Attempt to execute while invalid.");
       return 0LL;
    }
+   const FunctionDecl* decl = fMethod->GetMethodDecl();
+   map<const FunctionDecl*, void*>::iterator I =
+      wrapper_store.find(decl);
+   if (I != wrapper_store.end()) {
+      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
+   }
+   else {
+      fWrapper = make_wrapper();
+   }
+   if (!fWrapper) {
+      Error("TClingCallFunc::ExecInt64",
+            "Called with no wrapper, not implemented!");
+      return 0LL;
+   }
+   cling::StoredValueRef ret;
+   exec_with_valref_return(address, &ret);
+   if (!ret.isValid()) {
+      // Sometimes we are called on a function returning void!
+      return 0LL;
+   }
+   return sv_to_long_long(ret);
 }
 
-double TClingCallFunc::ExecDouble(void *address) const
+double TClingCallFunc::ExecDouble(void *address)
 {
    if (!IsValid()) {
       Error("TClingCallFunc::ExecDouble", "Attempt to execute while invalid.");
       return 0.0;
    }
+   const FunctionDecl* decl = fMethod->GetMethodDecl();
+   map<const FunctionDecl*, void*>::iterator I =
+      wrapper_store.find(decl);
+   if (I != wrapper_store.end()) {
+      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
+   }
+   else {
+      fWrapper = make_wrapper();
+   }
+   if (!fWrapper) {
+      Error("TClingCallFunc::ExecDouble",
+            "Called with no wrapper, not implemented!");
+      return 0.0;
+   }
+   cling::StoredValueRef ret;
+   exec_with_valref_return(address, &ret);
+   if (!ret.isValid()) {
+      // Sometimes we are called on a function returning void!
+      return 0.0;
+   }
+   return sv_to_double(ret);
 }
 
 TClingMethodInfo *TClingCallFunc::FactoryMethod() const
@@ -2849,6 +2935,7 @@ void TClingCallFunc::Init()
 {
    delete fMethod;
    fMethod = 0;
+   fWrapper = 0;
    ResetArg();
 }
 
@@ -2865,27 +2952,24 @@ void *TClingCallFunc::InterfaceMethod() const
    if (!IsValid()) {
       return 0;
    }
-   return const_cast<void*>(fMethod->GetMethodDecl());
+   return (void*) fMethod->GetMethodDecl();
 }
 
 bool TClingCallFunc::IsValid() const
 {
-   return false;
+   if (!fMethod) {
+      return false;
+   }
+   return fMethod->IsValid();
 }
 
 void TClingCallFunc::ResetArg()
 {
    fArgVals.clear();
-   PreallocatePtrs();
 }
 
 void TClingCallFunc::SetArg(long param)
 {
-   clang::ASTContext& C = fInterp->getSema().getASTContext();
-   llvm::GenericValue gv;
-   clang::QualType QT = C.LongTy;
-   gv.IntVal = llvm::APInt(C.getTypeSize(QT), param);
-   PushArg(cling::Value(gv, QT, fInterp->getLLVMType(QT)));
 }
 
 void TClingCallFunc::SetArg(double param)
