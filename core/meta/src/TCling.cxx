@@ -2785,8 +2785,8 @@ clang::Decl* TCling::GetDeclFromQualType(clang::QualType& qualType)
          } else if(qualType->isArrayType()) {
             const Type* elementType = qualType->getArrayElementTypeNoTypeQual();
             qualType = QualType(elementType, 0);
-            if (elementType->isRecordType()) {
-               if((D = elementType->getAsCXXRecordDecl())) {
+            if (qualType->isRecordType()) {
+               if((D = qualType->getAsCXXRecordDecl())) {
                   return D;
                }
             }
@@ -2803,8 +2803,8 @@ clang::Decl* TCling::GetDeclFromQualType(clang::QualType& qualType)
    if (qualType->isArrayType()) {
       const Type* elementType = qualType->getArrayElementTypeNoTypeQual();
       qualType = QualType(elementType, 0);
-      if (elementType->isRecordType()) {
-         if ((D = elementType->getAsCXXRecordDecl())) {
+      if (qualType->isRecordType()) {
+         if ((D = qualType->getAsCXXRecordDecl())) {
             return D;
          }
       }
@@ -2854,17 +2854,21 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
 
    if (!qType.isNull()) {
       // Check whether the data member is a template
-      if(const clang::TemplateSpecializationType* templateType = dyn_cast<clang::TemplateSpecializationType>(qType.getTypePtr())) {
-         if(const TemplateArgument* templateArg = templateType->getArgs()) {
-            clang::TemplateArgument::ArgKind tmpltArgKind = templateArg->getKind();
-            if (tmpltArgKind == clang::TemplateArgument::Type) {
-               qType = templateArg->getAsType();
-               if (clang::Decl* tmplD = GetDeclFromQualType(qType)) {
-                  GetMissingDictionariesForDecl(tmplD, netD, recurse, qType);
-                  return recurse;
+      if (const clang::TemplateSpecializationType* templateType = dyn_cast<clang::TemplateSpecializationType>(qType.getTypePtr())) {
+         for (clang::TemplateSpecializationType::iterator TIB = templateType->begin(),
+                    TIE = templateType->end(); TIB != TIE; ++TIB) {
+            if (TIB) {
+               clang::TemplateArgument::ArgKind tmpltArgKind = TIB->getKind();
+               if (tmpltArgKind == clang::TemplateArgument::Type) {
+                  qType = TIB->getAsType();
+                  if (clang::Decl* tmplD = GetDeclFromQualType(qType)) {
+                     GetMissingDictionariesForDecl(tmplD, netD, recurse, qType);
+                  }
                }
             }
          }
+         return recurse;
+
       }
    }
    return true;
