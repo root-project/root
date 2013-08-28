@@ -1689,7 +1689,7 @@ make_wrapper()
    string wrapper;
    ostringstream buf;
    buf << "void " << wrapper_name
-       << "(void* obj, int nargs, void** args, void* ret)\n"
+       << "(void* obj, int nargs, void** args, void* ret) __attribute__((used))\n"
        << "{\n";
    ++indent_level;
    if (min_args == num_params) {
@@ -1731,26 +1731,6 @@ make_wrapper()
       if (!WFD) {
          Error("TClingCallFunc::make_wrapper", 
                "Wrapper compile did not return a function decl!");
-         return 0;
-      }
-   }
-   //
-   //  Codegen the wrapper code.
-   //
-   {
-      cling::CompilationOptions CO;
-      CO.DeclarationExtraction = 0;
-      CO.ValuePrinting = cling::CompilationOptions::VPDisabled;
-      CO.ResultEvaluation = 0;
-      CO.DynamicScoping = 0;
-      CO.Debug = 0;
-      CO.CodeGeneration = 1;
-      cling::Transaction T(CO, Context);
-      T.append(const_cast<FunctionDecl*>(WFD));
-      T.setState(cling::Transaction::kCompleted);
-      fInterp->emitAllDecls(&T);
-      if (T.getState() != cling::Transaction::kCommitted) {
-         Error("TClingCallFunc::make_wrapper", "Wrapper codegen failed!");
          return 0;
       }
    }
