@@ -3043,6 +3043,15 @@ clang::QualType GetFullyQualifiedType(const clang::ASTContext& Ctx,
       const clang::Type *typeptr = GetFullyQualifiedLocalType(Ctx,QT.getTypePtr());
       QT = Ctx.getQualifiedType(typeptr, qualifiers);
 
+   } else if (llvm::isa<const clang::RecordType>(QT.getTypePtr())) {
+      // We are asked to fully qualify and we have a Record Type,
+      // which can point to a template instantiation with no sugar in any of
+      // its template argument, however we still need to fully qualify them.
+      
+      clang::Qualifiers qualifiers = QT.getLocalQualifiers();
+      const clang::Type *typeptr = GetFullyQualifiedLocalType(Ctx,QT.getTypePtr());
+      QT = Ctx.getQualifiedType(typeptr, qualifiers);
+     
    }
    if (prefix) {
       // We intentionally always use ETK_None, we never want
