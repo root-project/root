@@ -59,7 +59,80 @@
 
 int ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError;
 
-//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+ROOT::TMetaUtils::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl,
+                                                   bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber,
+                                                   const cling::Interpreter &interpreter, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) :
+   fRuleIndex(index), fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
+   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestedVersionNumber)
+{
+   // There is no requested type name.
+   // Still let's normalized the actual name.
+
+   TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl),interpreter,normCtxt);
+
+}
+
+
+//______________________________________________________________________________
+ROOT::TMetaUtils::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl, const char *requestName,
+                                                   bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber,
+                                                   const cling::Interpreter &interpreter, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) :
+   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
+   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+{
+   // Normalize the requested type name.
+
+   // For comparison purposes.
+   TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
+   splitname1.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
+
+   TMetaUtils::GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), interpreter, normCtxt);
+
+   // std::string canonicalName;
+   // R__GetQualifiedName(canonicalName,*decl);
+
+   // fprintf(stderr,"Created annotation with: requested name=%-22s normalized name=%-22s canonical name=%-22s\n",fRequestedName.c_str(),fNormalizedName.c_str(),canonicalName.c_str());
+}
+
+//______________________________________________________________________________
+ROOT::TMetaUtils::AnnotatedRecordDecl::AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestVersionNumber, const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt) : fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer), fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+{
+   // Normalize the requested name.
+
+   // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (decl);
+   // if (tmplt_specialization) {
+   //    tmplt_specialization->getTemplateArgs ().data()->print(decl->getASTContext().getPrintingPolicy(),llvm::outs());
+   //    llvm::outs() << "\n";
+   // }
+   // const char *current = requestName;
+   // Strips spaces and std::
+   if (requestName && requestName[0]) {
+      TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)(TClassEdit::kDropAllDefault | TClassEdit::kLong64 | TClassEdit::kDropStd));
+      splitname.ShortType( fRequestedName, TClassEdit::kDropAllDefault | TClassEdit::kLong64 | TClassEdit::kDropStd );
+
+      fNormalizedName = fRequestedName;
+   } else {
+      TMetaUtils::GetNormalizedName( fNormalizedName, decl->getASTContext().getTypeDeclType(decl),interpreter,normCtxt);
+   }
+}
+
+//______________________________________________________________________________
+// int ROOT::TMetaUtils::AnnotatedRecordDecl::RootFlag() const
+// {
+//    // Return the request (streamerInfo, has_version, etc.) combined in a single
+//    // int.  See RScanner::AnnotatedRecordDecl::ERootFlag.
+
+//    int result = 0;
+//    if (fRequestNoStreamer) result = kNoStreamer;
+//    if (fRequestNoInputOperator) result |= kNoInputOperator;
+//    if (fRequestStreamerInfo) result |= kStreamerInfo;
+//    if (fRequestedVersionNumber > -1) result |= kHasVersion;
+//    return result;
+// }
+
+//______________________________________________________________________________
 ROOT::TMetaUtils::TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh)
 {
    // Initialize the list of typedef to keep (i.e. make them opaque for normalization)
@@ -1001,9 +1074,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
    std::string mappedname;
    ROOT::TMetaUtils::GetCppName(mappedname,classname.c_str());
    std::string csymbol = classname;
-   std::string args;
-
-   
+   std::string args;  
 
    if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
 
@@ -1310,6 +1381,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
             if (substrFound==std::string::npos) continue;
             size_t EndPart1 = attribute_s.find_first_of(ROOT::TMetaUtils::PropertyNameValSeparator)  ;          
             std::string attrName (attribute_s.substr(0, EndPart1));
+            if (attrName == "name" || attrName == "pattern") continue;
             std::string attrValue (attribute_s.substr(EndPart1 + separatorLength));
             // A general property
             // 1) We need to create the property map (in the gen code)
@@ -3133,16 +3205,17 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    // adding default template argument for all types except the STL collections
    // where we remove the default template argument if any.
    //
-   // This routine might actually belongs in the interpreter because
+   // This routine might actually belong in the interpreter because
    // cache the clang::Type might be intepreter specific.
-
+   
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
 
    clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);
+
    // Readd missing default template parameter.
    normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, interpreter, normCtxt);
-
-   clang::PrintingPolicy policy(ctxt.getPrintingPolicy());
+   
+   clang::PrintingPolicy policy(ctxt.getPrintingPolicy());   
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
    policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
    // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an anonymous namespace.
@@ -3151,7 +3224,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
 
    std::string normalizedNameStep1;
    normalizedType.getAsStringInternal(normalizedNameStep1,policy);
-
+  
    // Still remove the std:: and default template argument and insert the Long64_t
    TClassEdit::TSplitType splitname(normalizedNameStep1.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
    splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
@@ -3162,7 +3235,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    if (norm_name.length()>2 && norm_name[0]==':' && norm_name[1]==':') {
       norm_name.erase(0,2);
    }
-
+   
    // And replace basic_string<char>.  NOTE: we should probably do this at the same time as the GetPartiallyDesugaredType ... but were do we stop ?
    static const char* basic_string_s = "basic_string<char>";
    static const unsigned int basic_string_len = strlen(basic_string_s);
@@ -3170,6 +3243,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    while( (pos = norm_name.find( basic_string_s,pos) ) >=0 ) {
       norm_name.replace(pos,basic_string_len, "string");
    }
+
 }
 
 //////////////////////////////////////////////////////////////////////////
