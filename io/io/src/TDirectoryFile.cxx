@@ -1026,13 +1026,18 @@ TKey *TDirectoryFile::GetKey(const char *name, Short_t cycle) const
 //*-*                  =====================================
 //  if cycle = 9999 returns highest cycle
 //
+
+   // TIter::TIter() already checks for null pointers
+   TIter next( ((THashList *)(GetListOfKeys()))->GetListForObject(name) );
+
    TKey *key;
-   TIter next(GetListOfKeys());
-   while ((key = (TKey *) next()))
+   while (( key = (TKey *)next() )) {
       if (!strcmp(name, key->GetName())) {
-         if (cycle == 9999)             return key;
-         if (cycle >= key->GetCycle())  return key;
+         if ((cycle == 9999) || (cycle >= key->GetCycle()))
+            return key;
       }
+   }
+
    return 0;
 }
 
