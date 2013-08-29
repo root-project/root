@@ -885,53 +885,50 @@ int BidirMMapPipe::doClose(bool force, bool holdlock)
 {
     if (m_flags & failbit) return 0;
     // flush data to be written
-    if (!force && -1 != m_outpipe && -1 != m_inpipe)
-	flush();
-    // close pipe ends
-    if (m_inpipe != m_outpipe) {
-	// close the write end first, so the other end can tell that the
-	// connection is going down because the its read end signals HUP
+    if (!force && -1 != m_outpipe && -1 != m_inpipe) flush();
+    // shut down the write direction (no more writes from our side)
+    if (m_inpipe == m_outpipe) {
+	if (-1 != m_outpipe && !force && -1 == ::shutdown(m_outpipe, SHUT_WR))
+	    throw Exception("shutdown", errno);
+	m_outpipe = -1;
+    } else {
 	if (-1 != m_outpipe && -1 == ::close(m_outpipe))
 	    if (!force) throw Exception("close", errno);
 	m_outpipe = -1;
-	if (-1 != m_inpipe && -1 == ::close(m_inpipe))
-	    if (!force) throw Exception("close", errno);
-	m_inpipe = -1;
-    } else {
-	if (!force) {
-	    if (-1 != m_outpipe && -1 == ::shutdown(m_outpipe, SHUT_WR))
-		throw Exception("shutdown", errno);
-	    // **************** THIS IS EXTREMELY UGLY: ****************
-	    // POLLHUP is not set reliably on socket shutdown on all
-	    // platforms, unfortunately, so we poll for readability here until
-	    // the other end closes, too
-	    //
-	    // so, the read loop below ensures that the other end sees the
-	    // POLLIN that is set on shutdown instead, and goes ahead to close
-	    // its end
-	    //
-	    // if we don't do this, and close straight away, the other end
-	    // will catch a SIGPIPE or similar, and we don't want that
-	    int err;
-	    struct pollfd fds;
-	    fds.fd = m_outpipe;
-	    fds.events = POLLIN;
-	    fds.revents = 0;
-	    do {
-		while ((err = ::poll(&fds, 1, 1 << 20)) >= 0) {
-		    if (fds.revents & (POLLERR | POLLHUP | POLLNVAL)) break;
-		    if (fds.revents & POLLIN) {
-			char c;
-			if (1 > ::read(m_outpipe, &c, 1)) break;
-		    }
-		}
-	    } while (0 > err && EINTR == errno);
-	    // ignore all other poll errors
-	}
-	if (-1 != m_outpipe && -1 == ::close(m_outpipe))
-	    if (!force) throw Exception("close", errno);
-	m_inpipe = m_outpipe = -1;
     }
+    // shut down the write direction (no more writes from our side)
+    // drain anything the other end might still want to send
+    if (!force && -1 != m_inpipe) {
+	// **************** THIS IS EXTREMELY UGLY: ****************
+	// POLLHUP is not set reliably on pipe/socket shutdown on all
+	// platforms, unfortunately, so we poll for readability here until
+	// the other end closes, too
+	//
+	// the read loop below ensures that the other end sees the POLLIN that
+	// is set on shutdown instead, and goes ahead to close its end
+	//
+	// if we don't do this, and close straight away, the other end
+	// will catch a SIGPIPE or similar, and we don't want that
+	int err;
+	struct pollfd fds;
+	fds.fd = m_inpipe;
+	fds.events = POLLIN;
+	fds.revents = 0;
+	do {
+	    while ((err = ::poll(&fds, 1, 1 << 20)) >= 0) {
+		if (fds.revents & (POLLERR | POLLHUP | POLLNVAL)) break;
+		if (fds.revents & POLLIN) {
+		    char c;
+		    if (1 > ::read(m_inpipe, &c, 1)) break;
+		}
+	    }
+	} while (0 > err && EINTR == errno);
+	// ignore all other poll errors
+    }
+    // close read end
+    if (-1 != m_inpipe && -1 == ::close(m_inpipe))
+	if (!force) throw Exception("close", errno);
+    m_inpipe = -1;
     // unmap memory
     try {
 	{ BidirMMapPipe_impl::Pages p; p.swap(m_pages); }
@@ -1802,7 +1799,7 @@ int main()
 			std::endl;
 childcloses:
 		    int retVal = it->pipe->close();
-		    std::cout << "[PARENT]:\tchild exit status: " <<
+		    std::cout << "[PARENT]: child exit status: " <<
 			retVal << ", number of children still alive: " <<
 			(pipes.size() - 1) << std::endl;
 		    if (retVal) return retVal;
