@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "TH1.h"
+#include "TH2.h"
 #include "TGraph.h"
 
 #include "TMVA/Results.h"
@@ -91,12 +92,28 @@ TObject* TMVA::Results::GetObject(const TString & alias) const
 }
 
 
+Bool_t TMVA::Results::DoesExist(const TString & alias) const
+{
+   TObject* test = GetObject(alias);
+   
+   return test;
+}
+
 //_______________________________________________________________________
 TH1* TMVA::Results::GetHist(const TString & alias) const 
 {
-   return (TH1*)GetObject(alias);
+   TH1* out=dynamic_cast<TH1*>(GetObject(alias));
+   if (!out) Log() <<kWARNING << "You have asked for histogram " << alias << " which does not seem to exist in *Results* .. better don't use it " << Endl;
+   return out;
 }
 
+//_______________________________________________________________________
+TH2* TMVA::Results::GetHist2D(const TString & alias) const 
+{
+   TH2* out=dynamic_cast<TH2*>(GetObject(alias));
+   if (!out) Log() <<kWARNING << "You have asked for 2D histogram " << alias << " which does not seem to exist in *Results* .. better don't use it " << Endl;
+   return out;
+}
 //_______________________________________________________________________
 TGraph* TMVA::Results::GetGraph(const TString & alias) const 
 {
