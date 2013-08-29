@@ -3191,7 +3191,6 @@ int RootCling(int argc,
 
          if (CRD) {
             ROOT::TMetaUtils::Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
-            std::string qualname( CRD->getQualifiedNameAsString() );
             if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
                // coverity[fun_call_w_exception] - that's just fine.
                RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
