@@ -1,6 +1,7 @@
 #include "TROOT.h"
 #include "TDataType.h"
 
+namespace  myNamespace { struct MyClass {}; }
 
 int check(const char *name, const char *target)
 {
@@ -13,7 +14,7 @@ int check(const char *name, const char *target)
       return 1;
    }
    if (strcmp(dobj->GetName(),name) != 0) {
-      fprintf(stderr,"Found the wrong TDataType for int: %s\n",dobj->GetName());
+      fprintf(stderr,"Found the wrong TDataType for: %s when searching for %s\n",dobj->GetName(),name);
       return 2;
    }
    if (strcmp(((TDataType*)dobj)->GetTypeName(),target) != 0) {
@@ -91,7 +92,8 @@ int execTypedefList() {
    res = check("KeySym_t","unsigned long"); if (res) return res;
    res = check("TBuffer::CacheList_t","vector<TVirtualArray*>"); if (res) return res;
    res = check_missing("TBuffer::CacheList_notAtype"); if (res) return res;
-   
+   res = check("vector<myNamespace::MyClass*>::const_iterator","vector<myNamespace::MyClass*>::const_iterator"); if (res) return res; 
+
    res = check_file("typelist.v5.txt",360); if (res) return res;
    res = check_file("typelist.v6.txt",1700); if (res) return res;
 
