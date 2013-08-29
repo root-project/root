@@ -2149,6 +2149,17 @@ void TFile::SumBuffer(Int_t bufsize)
    fSum2Buffer += bufsize*bufsize;
 }
 
+//_______________________________________________________________________
+void TFile::UseCache(Int_t /*maxCacheSize*/, Int_t /*pageSize*/)
+{
+   // Dummy function kept for backward compatibility.
+   // The read  cache is now managed by TFileCacheRead
+   // The write cache is now managed by TFileCacheWrite
+   // Both caches are created automatically by the system.
+
+   Obsolete("UseCache", "v5-30-00", "v5-32-00");
+}
+
 //______________________________________________________________________________
 Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 {

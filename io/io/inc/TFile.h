@@ -247,6 +247,7 @@ public:
    virtual void        ShowStreamerInfo();
    virtual Int_t       Sizeof() const;
    void                SumBuffer(Int_t bufsize);
+   virtual void        UseCache(Int_t maxCacheSize = 10, Int_t pageSize = 0);
    virtual Bool_t      WriteBuffer(const char *buf, Int_t len);
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const;
