@@ -2803,6 +2803,9 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
 	   { "Root.PSFont.CJKGothic", "/DroidSansFallback" }
    };
 
+   Int_t len = wcslen(chars);
+   if (len<=0) return;
+   
    const Double_t kDEGRAD = TMath::Pi()/180.;
    Double_t x = xx;
    Double_t y = yy;
@@ -2922,10 +2925,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
    PrintStr("@");
 
    // Output text.
-   Int_t len = wcslen(chars);
-   if(len > 1) {
-	   PrintStr(Form("%d ", len));
-   }
+   if (len > 1) PrintStr(Form("%d ", len));
    for(Int_t i = 0; i < len; i++) {
 	   // Adobe Glyph Naming Convention
 	   // http://www.adobe.com/devnet/opentype/archives/glyph.html
