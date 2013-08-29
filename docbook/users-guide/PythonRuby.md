@@ -51,12 +51,12 @@ box = QVBox()
 box.resize(QSize(40,10).expandedTo(box.minimumSizeHint()))
 
 class myButton(QPushButton):
-def __init__( self,label,master):
-QPushButton.__init__(self,label,master)
-self.setFont( QFont('Times',18,QFont.Bold))
+    def __init__( self,label,master):
+        QPushButton.__init__(self,label,master)
+        self.setFont( QFont('Times',18,QFont.Bold))
 
 def browse(self):
-self.b = ROOT.TBrowser()
+    self.b = ROOT.TBrowser()
 
 bb = myButton('browser',box)
 QObject.connect( bb,SIGNAL('clicked()'),bb.browse)
@@ -94,8 +94,8 @@ c1 = TCanvas('c1','Example',200,10,700,500)
 hpx = TH1F('hpx','px',100,-4,4)
 
 for i in xrange(25000):
-px = gRandom.Gaus()
-hpx.Fill(px)
+    px = gRandom.Gaus()
+    hpx.Fill(px)
 
 hpx.Draw()
 c1.Update()
@@ -402,19 +402,19 @@ class TPython {
 
 public:
    // load a Python script as if it were a macro
-static void LoadMacro(const char* name);
+    static void LoadMacro(const char* name);
 
    // execute a Python statement (e.g. "import ROOT")
-static void Exec(const char* cmd);
+    static void Exec(const char* cmd);
 
    // evaluate a Python expression (e.g. "1+1")
-static const TPyReturn& Eval(const char* expr);
+    static const TPyReturn& Eval(const char* expr);
 
    // bind a ROOT object with, at the Python side, the name "label"
-static bool Bind(TObject* obj,const char* label);
+    static bool Bind(TObject* obj,const char* label);
 
    // enter an interactive Python session (exit with ^D)
-static void Prompt();
+    static void Prompt();
 };
 ```
 
@@ -460,11 +460,11 @@ module is needed, as follows:
 ``` {.cpp}
 print 'creating class MyPyClass ... '
 class MyPyClass:
-def __init__(self):
-print 'in MyPyClass.__init__'
-self._browser = None
-def gime(self,what):
-return what
+    def __init__(self):
+    print 'in MyPyClass.__init__'
+    self._browser = None
+    def gime(self,what):
+        return what
 ```
 
 This module can now be loaded into a CINT session, the class used to
@@ -667,7 +667,7 @@ on a default canvas:
 from ROOT import TF1, TCanvas
 
 def identity( x ):
-return x[0]
+    return x[0]
 
 # create an identity function
 f = TF1('pyf1',identity,-1.,1.)
@@ -688,8 +688,8 @@ that is plotted on a default canvas:
 from ROOT import TF1, TCanvas
 
 class Linear:
-def __call__( self, x, par ):
-return par[0] + x[0]*par[1]
+    def __call__( self, x, par ):
+    return par[0] + x[0]*par[1]
 
 # create a linear function with offset 5, and pitch 2
 f = TF1('pyf2',Linear(),-1.,1.,2)
@@ -718,8 +718,8 @@ histogram. After the fit, you can retrieve the fit parameters from the
 from ROOT import TF1, TH1F, TCanvas
 
 class Linear:
-def __call__( self, x, par ):
-return par[0] + x[0]*par[1]
+    def __call__( self, x, par ):
+    return par[0] + x[0]*par[1]
 
 # create a linear function for fitting
 f = TF1('pyf3',Linear(),-1.,1.,2)
@@ -767,15 +767,15 @@ mychain = myfile.Get('t1')
 entries = mychain.GetEntriesFast()
 
 for jentry in xrange(entries):
-# get the next tree in the chain and verify
-ientry = mychain.LoadTree(jentry)
-if ientry < 0:
-break
+    # get the next tree in the chain and verify
+    ientry = mychain.LoadTree(jentry)
+    if ientry < 0:
+        break
 
 # copy next entry into memory and verify
 nb = mychain.GetEntry(jentry)
 if nb<=0:
-continue
+    continue
 
 # use the values directly from the tree
 nEvent = int(mychain.ev)
@@ -792,7 +792,7 @@ values actually read from the file. For example:
 ``` {.cpp}
 # loop over array tree element
 for d in mychain.mydoubles:
-print d
+    print d
 
 # direct access into an array tree element
 i5 = mychain.myints[5]
@@ -819,10 +819,10 @@ t.Branch('mynum',n,'mynum/I')
 t.Branch('myval',d,'myval[mynum]/F')
 
 for i in range(25):
-n[0] = min(i,maxn)
-for j in range(n[0]):
-d[j] = i*0.1+j
-t.Fill()
+    n[0] = min(i,maxn)
+    for j in range(n[0]):
+        d[j] = i*0.1+j
+        t.Fill()
 
 f.Write()
 f.Close()
@@ -898,7 +898,7 @@ return m_value;
 }
 
 private:
-int m_value;
+    int m_value;
 };
 
 $ echo .L MyClass.C+ | root.exe -b
