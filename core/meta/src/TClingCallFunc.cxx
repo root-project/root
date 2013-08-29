@@ -2786,6 +2786,10 @@ EvaluateArgList(const string& ArgList)
       cling::StoredValueRef val = EvaluateExpr(fInterp, *I);
       if (!val.isValid()) {
          // Bad expression, all done.
+         Error("TClingCallFunc::EvaluateArgList",
+               "Bad expression in parameter %d of '%s'!",
+               (int) (I - exprs.begin()),
+               ArgList.c_str());
          return;
       }
       fArgVals.push_back(val);
