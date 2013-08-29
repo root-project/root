@@ -248,6 +248,12 @@ class _ExpandMacroFunction( object ):
          return 1
       return 0
 
+   def __repr__( self ):
+      return repr( self.func() )
+
+   def __str__( self ):
+      return str( self.func() )
+
 _root.gPad         = _ExpandMacroFunction( "TVirtualPad",  "Pad" )
 _root.gVirtualX    = _ExpandMacroFunction( "TVirtualX",    "Instance" )
 _root.gDirectory   = _ExpandMacroFunction( "TDirectory",   "CurrentDirectory" )
