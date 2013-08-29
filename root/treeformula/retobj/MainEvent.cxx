@@ -155,7 +155,6 @@ int main(int argc, char **argv)
    if (read) {
       if (netf) {
          hfile = new TNetFile("root://localhost/root/test/EventNet.root");
-         hfile->UseCache(10);
       } else
          hfile = new TFile("Event.root");
       tree = (TTree*)hfile->Get("T");
@@ -189,7 +188,6 @@ int main(int argc, char **argv)
       // This file is now becoming the current directory.
       if (netf) {
          hfile = new TNetFile("root://localhost/root/test/EventNet.root","RECREATE","TTree benchmark ROOT file");
-         hfile->UseCache(10);
       } else
          hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);

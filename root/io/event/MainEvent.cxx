@@ -181,7 +181,6 @@ int main(int argc, char** argv)
       TFile* hfile = 0;
       if (netf) {
          hfile = new TNetFile("root://localhost/root/test/EventNet.root");
-         hfile->UseCache(10);
       } else {
          hfile = new TFile(gFilename);
       }
@@ -228,7 +227,6 @@ int main(int argc, char** argv)
       TFile* hfile = 0;
       if (netf) {
          hfile = new TNetFile("root://localhost/root/test/EventNet.root", "RECREATE", "TTree benchmark ROOT file");
-         hfile->UseCache(10);
       } else {
          hfile = new TFile(gFilename, "RECREATE", "TTree benchmark ROOT file");
       }
