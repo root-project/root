@@ -244,10 +244,16 @@ class _ExpandMacroFunction( object ):
    def __cmp__( self, other ):
       return cmp( self.func(), other )
 
-   def __len__( self ):
+   def __nonzero__( self ):
       if self.func():
-         return 1
-      return 0
+         return True
+      return False
+
+   def __repr__( self ):
+      return repr( self.func() )
+
+   def __str__( self ):
+      return str( self.func() )
 
 _root.gPad         = _ExpandMacroFunction( "TVirtualPad",  "Pad" )
 _root.gVirtualX    = _ExpandMacroFunction( "TVirtualX",    "Instance" )
