@@ -133,6 +133,11 @@ TClingMethodInfo::~TClingMethodInfo()
    delete fTemplateSpecIter;
 }
 
+TInterpreter::DeclId_t TClingMethodInfo::GetDeclId() const
+{
+   return (clang::Decl*)(GetMethodDecl()->getCanonicalDecl()); 
+}
+
 const clang::FunctionDecl *TClingMethodInfo::GetMethodDecl() const
 {
    if (!IsValid()) {

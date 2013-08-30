@@ -27,6 +27,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TString.h"
+#include "TInterpreter.h"
 
 #include "clang/AST/DeclBase.h"
 #include "llvm/ADT/SmallVector.h"
@@ -75,6 +76,7 @@ public:
    ~TClingMethodInfo();
 
    const clang::FunctionDecl                   *GetMethodDecl() const;
+   TInterpreter::DeclId_t                       GetDeclId() const;
    void                                         CreateSignature(TString &signature) const;
    void                                         Init(const clang::FunctionDecl *);
    void                                        *InterfaceMethod() const;

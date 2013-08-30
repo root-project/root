@@ -4296,7 +4296,7 @@ TInterpreter::DeclId_t TCling::GetDeclId(ClassInfo_t* cinfo) const
    // when the underlying class is a template instance involving one of the
    // opaque typedef.
 
-   if (cinfo) return ((TClingClassInfo*)cinfo)->GetDecl()->getCanonicalDecl();
+   if (cinfo) return ((TClingClassInfo*)cinfo)->GetDeclId();
    return 0;
 }
 
@@ -4306,7 +4306,7 @@ TInterpreter::DeclId_t TCling::GetDeclId(MethodInfo_t* method) const
    // Return a unique identifier of the declaration represented by the
    // MethodInfo
    
-   if (method) return ((TClingMethodInfo*)method)->GetMethodDecl()->getCanonicalDecl();
+   if (method) return ((TClingMethodInfo*)method)->GetDeclId();
    return 0;
 }
 
