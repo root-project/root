@@ -312,7 +312,7 @@ used to create object instances. An example usage:
 ...    v.push_back(i)
 ...
 >>> for i in v:
-...     print i,
+...     print(i, end=' ')
 1 2 3 4 5 6 7 8 9
 >>>
 >>> list(v)
@@ -369,18 +369,18 @@ following session shows that in detail:
 
 ``` {.cpp}
 >>> from ROOT import *
->>> print gDebug
+>>> print(gDebug)
 0
 >>> gROOT.ProcessLine( 'gDebug = 7;' )
->>> print gDebug
+>>> print(gDebug)
 0                                 # local gDebug is unchanged
 >>> gDebug = 5                    # changes _local_ reference only
->>> print gDebug
+>>> print(gDebug)
 5                                 # locally correct, but ...
 >>> gROOT.ProcessLine( 'cout << gDebug << endl;' )
 7                                 # ... ROOT global unchanged
 >>> import ROOT
->>> print ROOT.gDebug
+>>> print(ROOT.gDebug)
 7                                 # still the old value (not '5')
 >>> ROOT.gDebug = 3               # changes ROOT module reference
 >>> gROOT.ProcessLine( 'cout << gDebug << endl;' )
@@ -458,12 +458,12 @@ To show in detail how Python access can be used, an example Python
 module is needed, as follows:
 
 ``` {.cpp}
-print 'creating class MyPyClass ... '
+print('creating class MyPyClass ... ')
 class MyPyClass:
     def __init__(self):
-    print 'in MyPyClass.__init__'
-    self._browser = None
-    def gime(self,what):
+        print('in MyPyClass.__init__')
+        self._browser = None
+    def gime(self, what):
         return what
 ```
 
@@ -627,7 +627,7 @@ example:
 hpx = TH1F('hpx','px',100,-4,4)
 hpxFill = hpx.Fill                # cache bound method
 for i in xrange(25000):
-px = gRandom.Gaus()
+    px = gRandom.Gaus()
 hpxFill(px)                    # use bound method: no lookup needed
 del hpxFill                       # done with cached method
 ```
@@ -670,7 +670,7 @@ def identity( x ):
     return x[0]
 
 # create an identity function
-f = TF1('pyf1',identity,-1.,1.)
+f = TF1('pyf1', identity, -1., 1.)
 
 # plot the function
 c = TCanvas()
@@ -689,7 +689,7 @@ from ROOT import TF1, TCanvas
 
 class Linear:
     def __call__( self, x, par ):
-    return par[0] + x[0]*par[1]
+        return par[0] + x[0]*par[1]
 
 # create a linear function with offset 5, and pitch 2
 f = TF1('pyf2',Linear(),-1.,1.,2)
@@ -719,7 +719,7 @@ from ROOT import TF1, TH1F, TCanvas
 
 class Linear:
     def __call__( self, x, par ):
-    return par[0] + x[0]*par[1]
+        return par[0] + x[0]*par[1]
 
 # create a linear function for fitting
 f = TF1('pyf3',Linear(),-1.,1.,2)
@@ -734,7 +734,7 @@ h.Fit(f)
 
 # print results
 par = f.GetParameters()
-print 'fit results: const =',par[0],',pitch =',par[1]
+print('fit results: const =', par[0], ',pitch =', par[1])
 ```
 
 ### Working with Trees
@@ -772,17 +772,17 @@ for jentry in xrange(entries):
     if ientry < 0:
         break
 
-# copy next entry into memory and verify
-nb = mychain.GetEntry(jentry)
-if nb<=0:
-    continue
+    # copy next entry into memory and verify
+    nb = mychain.GetEntry(jentry)
+    if nb<=0:
+        continue
 
-# use the values directly from the tree
-nEvent = int(mychain.ev)
-if nEvent<0:
-continue
+    # use the values directly from the tree
+    nEvent = int(mychain.ev)
+    if nEvent<0:
+        continue
 
-print mychain.pz, '=', mychain.px*mychain.px, '+', mychain.py*mychain.py
+    print(mychain.pz, '=', mychain.px*mychain.px, '+', mychain.py*mychain.py)
 ```
 
 Access to arrays works the same way as access to single value tree
@@ -792,7 +792,7 @@ values actually read from the file. For example:
 ``` {.cpp}
 # loop over array tree element
 for d in mychain.mydoubles:
-    print d
+    print(d)
 
 # direct access into an array tree element
 i5 = mychain.myints[5]
@@ -853,12 +853,13 @@ tree = TTree('T','Just A Tree')
 tree.Branch('myints',mystruct,'MyInt1/I:MyInt2:MyInt3')
 tree.Branch('mycode',AddressOf(mystruct,'fMyCode'),'MyCode/C')
 for i in range(0,10):
-mystruct.fMyInt1   = i
-mystruct.fMyInt2   = i*i
-mystruct.fMyInt3   = i*i*i
-mystruct.fMyCode   = "%03d" % i      # note string assignment
+    mystruct.fMyInt1 = i
+    mystruct.fMyInt2 = i*i
+    mystruct.fMyInt3 = i*i*i
+    mystruct.fMyCode = "%03d" % i      # note string assignment
 
-tree.Fill()
+    tree.Fill()
+
 f.Write()
 f.Close()
 ```
@@ -919,7 +920,7 @@ gSystem.Load('MyClass_C')
 from ROOT import MyClass
 # use MyClass
 m = MyClass(42)
-print m.GetValue()
+print(m.GetValue())
 ```
 
 You can also load a macro directly, but if you do not use ACLiC, you
@@ -938,7 +939,7 @@ from ROOT import MyClass
 # use MyClass
 m = MyClass()
 m.SetValue(42)
-print m.GetValue()
+print(m.GetValue())
 ```
 
 ## How to Use ROOT with Ruby
