@@ -1726,7 +1726,22 @@ make_wrapper()
          Error("TClingCallFunc::make_wrapper", "Wrapper compile failed!");
          return 0;
       }
-      WFD = Tp->getCFWrapperFD();
+      for (cling::Transaction::const_iterator I = Tp->decls_begin(),
+              E = Tp->decls_end(); !WFD && I != E; ++I) {
+         if (I->m_Call == cling::Transaction::kCCIHandleTopLevelDecl) {
+            WFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin());
+            // ...unless not top level or different name:
+            if (!isa<TranslationUnitDecl>(WFD->getDeclContext()))
+               WFD = 0;
+            else {
+               DeclarationName FName = WFD->getDeclName();
+               if (const IdentifierInfo* FII = FName.getAsIdentifierInfo()) {
+                  if (FII->getName() != wrapper_name)
+                     WFD = 0;
+               }
+            }
+         }
+      }
       if (!WFD) {
          Error("TClingCallFunc::make_wrapper", 
                "Wrapper compile did not return a function decl!");
