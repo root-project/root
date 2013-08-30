@@ -310,6 +310,8 @@ void TWebFile::SetMsgReadBuffer10(const char *redirectLocation, Bool_t tempRedir
       fBasicUrl += fUrl.GetPort();
       fBasicUrl += "/";
       fBasicUrl += fUrl.GetFile();
+      fBasicUrl += "?";
+      fBasicUrl += fUrl.GetOptions();
    }
 
    if (fMsgReadBuffer10 == "") {
