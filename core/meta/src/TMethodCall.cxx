@@ -35,35 +35,26 @@
 ClassImp(TMethodCall)
 
 //______________________________________________________________________________
-TMethodCall::TMethodCall()
+TMethodCall::TMethodCall():
+fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 {
    // Default TMethodCall ctor. Use Init() to initialize the method call
    // environment.
-
-   fFunc     = 0;
-   fOffset   = 0;
-   fClass    = 0;
-   fMetPtr   = 0;
-   fMethod   = "";
-   fParams   = "";
-   fProto    = "";
-   fDtorOnly = kFALSE;
-   fRetType  = kNone;
 }
 
 //______________________________________________________________________________
-TMethodCall::TMethodCall(TClass *cl, CallFunc_t *callfunc, Long_t offset)
+TMethodCall::TMethodCall(TClass *cl, CallFunc_t *callfunc, Long_t offset):
+fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 {
    // Create a method invocation environment for a specific class, method
    // described by the callfunc.
 
-   fFunc = 0;
-   
    Init(cl, callfunc, offset);
 }
 
 //______________________________________________________________________________
-TMethodCall::TMethodCall(TClass *cl, const char *method, const char *params)
+TMethodCall::TMethodCall(TClass *cl, const char *method, const char *params):
+fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 {
    // Create a method invocation environment for a specific class, method and
    // parameters. The parameter string has the form: "\"aap\", 3, 4.35".
@@ -71,13 +62,12 @@ TMethodCall::TMethodCall(TClass *cl, const char *method, const char *params)
    // This two step method is much more efficient than calling for
    // every invocation TInterpreter::Execute(...).
 
-   fFunc = 0;
-
    Init(cl, method, params);
 }
 
 //______________________________________________________________________________
-TMethodCall::TMethodCall(const char *function, const char *params)
+TMethodCall::TMethodCall(const char *function, const char *params):
+fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 {
    // Create a global function invocation environment. The parameter
    // string has the form: "\"aap\", 3, 4,35". To execute the
@@ -85,26 +75,18 @@ TMethodCall::TMethodCall(const char *function, const char *params)
    // This two step method is much more efficient than calling for
    // every invocation TInterpreter::Execute(...).
 
-   fFunc = 0;
-
    Init(function, params);
 }
 
 //______________________________________________________________________________
-TMethodCall::TMethodCall(const TMethodCall &orig) : TObject(orig)
+TMethodCall::TMethodCall(const TMethodCall &orig) :
+TObject(orig),
+fFunc(orig.fFunc ? gCling->CallFunc_FactoryCopy(orig.fFunc) : 0),
+fOffset(orig.fOffset), fClass(orig.fClass), fMetPtr(0 /*!*/),
+fMethod(orig.fMethod), fParams(orig.fParams), fProto(orig.fProto),
+fDtorOnly(orig.fDtorOnly), fRetType(orig.fRetType)
 {
    // Copy ctor.
-
-   fFunc     = orig.fFunc ? gCling->CallFunc_FactoryCopy(orig.fFunc) : 0;
-   fOffset   = orig.fOffset;
-   fClass    = orig.fClass;
-   fMethod   = orig.fMethod;
-   fParams   = orig.fParams;
-   fProto    = orig.fProto;
-   fDtorOnly = orig.fDtorOnly;
-   fRetType  = orig.fRetType;
-
-   fMetPtr = 0;
 }
 
 //______________________________________________________________________________
