@@ -2734,6 +2734,30 @@ void* TCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
 }
 
 //______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetFunctionWithPrototype(ClassInfo_t *opaque_cl, const char* method,
+                                                        const char* proto,
+                                                        Bool_t objectIsConst /* = kFALSE */,
+                                                        EFunctionMatchMode mode /* = kConversionMatch */)
+{
+   // Return pointer to cling interface function for a method of a class with
+   // a certain prototype, i.e. "char*,int,float". If the class is 0 the global
+   // function list will be searched.
+   R__LOCKGUARD2(gClingMutex);
+   DeclId_t f;
+   TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
+   if (cl) {
+      Long_t offset;
+      f = cl->GetMethod(method, proto, objectIsConst, &offset, mode).GetDeclId();
+   }
+   else {
+      Long_t offset;
+      TClingClassInfo gcl(fInterpreter);
+      f = gcl.GetMethod(method, proto, objectIsConst, &offset, mode).GetDeclId();
+   }
+   return f;
+}
+
+//______________________________________________________________________________
 const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
 {
    // The 'name' is known to the interpreter, this function returns
