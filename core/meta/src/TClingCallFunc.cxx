@@ -905,6 +905,13 @@ collect_type_info(QualType& QT, ostringstream& typedefbuf,
    PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
    isReference = false;
    ptrCnt = 0;
+   if (QT->isRecordType()) {
+      // Note: We treat object of class type as if it were a reference
+      //       type because we hold it by pointer.
+      isReference = true;
+      QT.getAsStringInternal(type_name, Policy);
+      return;
+   }
    while (1) {
       if (QT->isArrayType()) {
          ++ptrCnt;
