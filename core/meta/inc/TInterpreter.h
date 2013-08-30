@@ -315,6 +315,7 @@ public:
    virtual void   MethodInfo_Delete(MethodInfo_t * /* minfo */) const {;}
    virtual MethodInfo_t  *MethodInfo_Factory() const {return 0;}
    virtual MethodInfo_t  *MethodInfo_Factory(ClassInfo_t * /*clinfo*/) const {return 0;}
+   virtual MethodInfo_t  *MethodInfo_Factory(DeclId_t declid) const = 0;
    virtual MethodInfo_t  *MethodInfo_FactoryCopy(MethodInfo_t * /* minfo */) const {return 0;}
    virtual void  *MethodInfo_InterfaceMethod(MethodInfo_t * /* minfo */) const {return 0;}
    virtual Bool_t MethodInfo_IsValid(MethodInfo_t * /* minfo */) const {return 0;}

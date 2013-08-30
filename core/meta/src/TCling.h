@@ -357,6 +357,7 @@ public: // Public Interface
    virtual void   MethodInfo_Delete(MethodInfo_t* minfo) const;
    virtual MethodInfo_t*  MethodInfo_Factory() const;
    virtual MethodInfo_t*  MethodInfo_Factory(ClassInfo_t *clinfo) const;
+   virtual MethodInfo_t  *MethodInfo_Factory(DeclId_t declid) const;
    virtual MethodInfo_t*  MethodInfo_FactoryCopy(MethodInfo_t* minfo) const;
    virtual void*  MethodInfo_InterfaceMethod(MethodInfo_t* minfo) const;
    virtual bool   MethodInfo_IsValid(MethodInfo_t* minfo) const;

@@ -5052,6 +5052,15 @@ MethodInfo_t* TCling::MethodInfo_Factory(ClassInfo_t* clinfo) const
 {
    return (MethodInfo_t*) new TClingMethodInfo(fInterpreter, (TClingClassInfo*)clinfo);
 }
+
+//______________________________________________________________________________
+MethodInfo_t* TCling::MethodInfo_Factory(DeclId_t declid) const
+{
+   const clang::Decl* decl = reinterpret_cast<const clang::Decl*>(declid);
+   const clang::FunctionDecl* fd = llvm::dyn_cast_or_null<clang::FunctionDecl>(decl);
+   return (MethodInfo_t*) new TClingMethodInfo(fInterpreter, fd);
+}
+
 //______________________________________________________________________________
 MethodInfo_t* TCling::MethodInfo_FactoryCopy(MethodInfo_t* minfo) const
 {
