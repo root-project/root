@@ -283,6 +283,7 @@ public: // Public Interface
 
    // ClassInfo interface
    virtual DeclId_t GetDeclId(ClassInfo_t *info) const;
+   virtual Bool_t ClassInfo_Contains(ClassInfo_t *info, DeclId_t declid) const;
    virtual Long_t ClassInfo_ClassProperty(ClassInfo_t* info) const;
    virtual void   ClassInfo_Delete(ClassInfo_t* info) const;
    virtual void   ClassInfo_Delete(ClassInfo_t* info, void* arena) const;

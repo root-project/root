@@ -4544,6 +4544,26 @@ void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const ch
 //  ClassInfo interface
 //
 
+//______________________________________________________________________________
+Bool_t TCling::ClassInfo_Contains(ClassInfo_t *info, DeclId_t declid) const
+{
+   // Return true if the entity pointed to by 'declid' is declared in
+   // the context described by 'info'.  If info is null, look into the 
+   // global scope (translation unit scope).
+
+   if (!declid) return kFALSE;
+
+   const clang::Decl *scope;
+   if (info) scope = ((TClingClassInfo*)info)->GetDecl();
+   else scope = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
+   
+   const clang::Decl *decl = reinterpret_cast<const clang::Decl*>(declid);
+   const clang::DeclContext *ctxt = clang::Decl::castToDeclContext(scope);
+   if (!decl || !ctxt) return kFALSE;
+   return decl->getLexicalDeclContext()->Equals(ctxt);
+}
+
+//______________________________________________________________________________
 Long_t TCling::ClassInfo_ClassProperty(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
