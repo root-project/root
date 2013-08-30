@@ -438,13 +438,13 @@ for (int i=1; i<20; i+=1) {
        Effect->SetFillColor(9);
      top->AddNodeOverlap(Effect,1,new TGeoTranslation(3,0,-280));
    }
-   if (6<i<10) {
+   if (6<i && i<10) {
      TGeoVolume *Effect=Robot->MakeCons("Effect",Iron,5,20/sin(i),21/sin(i),20/sin(i),21/sin(i),50,120);
        Effect->SetLineColor(38);
        Effect->SetFillColor(38);
      top->AddNodeOverlap(Effect,1,new TGeoTranslation(3,0,-280));
    }
-   if (9<i<20) {
+   if (9<i && i<20) {
      TGeoVolume *Effect=Robot->MakeCons("Effect",Iron,4,20/sin(i),21/sin(i),20/sin(i),21/sin(i),200,330);
        Effect->SetLineColor(33);
        Effect->SetFillColor(33);
