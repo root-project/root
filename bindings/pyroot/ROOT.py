@@ -558,15 +558,12 @@ class ModuleFacade( types.ModuleType ):
             self.__dict__[ 'PyGUIThread' ] = \
                threading.Thread( None, _processRootEvents, None, ( self, ) )
 
-            def _finishSchedule( ROOT = self ):
-               import threading
-               if threading.currentThread() != self.PyGUIThread:
-                  while self.PyConfig.GUIThreadScheduleOnce:
-                     self.PyGUIThread.join( 0.1 )
-
-            self.PyGUIThread.finishSchedule = _finishSchedule
             self.PyGUIThread.setDaemon( 1 )
             self.PyGUIThread.start()
+
+            if threading.currentThread() != self.PyGUIThread:
+               while self.PyConfig.GUIThreadScheduleOnce:
+                  self.PyGUIThread.join( 0.1 )
 
     # store already available ROOT objects to prevent spurious lookups
       for name in self.module.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:
