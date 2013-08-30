@@ -521,10 +521,10 @@ extern "C" void DestroyInterpreter(TInterpreter *interp)
 
 // Load library containing specified class. Returns 0 in case of error
 // and 1 in case if success.
-extern "C" int TCling__AutoLoadCallback(const char* className)
+// Takes 0 if it wasn't a template.
+extern "C" int TCling__AutoLoadCallback(const char* className, int isTemplate)
 {
-   string cls(className);
-   return gCling->AutoLoad(cls.c_str());
+   return ((TCling*)gCling)->AutoLoad(className, isTemplate);
 }
 
 // Returns 0 for failure 1 for success
@@ -915,6 +915,7 @@ TCling::TCling(const char *name, const char *title)
    fPrompt[0] = 0;
    fMapfile   = 0;
    fMapNamespaces   = 0;
+   fMapTemplates   = 0;
    fRootmapFiles = 0;
    fLockProcessLine = kTRUE;
    // Disable the autoloader until it is explicitly enabled.
@@ -949,6 +950,7 @@ TCling::~TCling()
    // Destroy the interpreter interface.
    delete fMapfile;
    delete fMapNamespaces;
+   delete fMapTemplates;
    delete fRootmapFiles;
    delete fMetaProcessor;
    delete fTemporaries;
@@ -3254,6 +3256,8 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
       fMapfile->IgnoreDuplicates(kTRUE);
       fMapNamespaces = new THashTable();
       fMapNamespaces->SetOwner();
+      fMapTemplates = new THashTable();
+      fMapTemplates->SetOwner();
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
    }
@@ -3360,14 +3364,24 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
             }
             delete[] wlib;
          }
+         Ssiz_t last = cls.Last('<');
+         if (last != kNPOS) {
+            // A::B<C::D> => A::B
+            // Also for fMapNamespaces below!
+            cls.Remove(last, cls.Length());
+            // This is a reference to a substring that lives in fMapfile
+            if (!fMapTemplates->FindObject(cls))
+               fMapTemplates->Add(new TNamed(cls.Data(), lib));
+         }
+
          // Fill in the namespace candidate list
-         Ssiz_t last = cls.Last(':');
+         last = cls.Last(':');
          if (last != kNPOS) {
             // Please note that the funny op overlaod does substring.
             TString namespaceCand = cls(0, last - 1);
             // This is a reference to a substring that lives in fMapfile
             if (!fMapNamespaces->FindObject(namespaceCand.Data()))
-               fMapNamespaces->Add(new TNamed(namespaceCand.Data(), 0));
+               fMapNamespaces->Add(new TNamed(namespaceCand.Data(), ""));
          }
 
 
@@ -3553,6 +3567,12 @@ Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
 //______________________________________________________________________________
 Int_t TCling::AutoLoad(const char* cls)
 {
+   return AutoLoad(cls, /*isTemplate*/false);
+}
+
+//______________________________________________________________________________
+Int_t TCling::AutoLoad(const char* cls, bool isTemplate)
+{
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
    R__LOCKGUARD(gClingMutex);
@@ -3563,7 +3583,7 @@ Int_t TCling::AutoLoad(const char* cls)
    // Prevent the recursion when the library dictionary are loaded.
    Int_t oldvalue = SetClassAutoloading(false);
    // lookup class to find list of dependent libraries
-   TString deplibs = GetClassSharedLibs(cls);
+   TString deplibs = GetClassSharedLibs(cls, isTemplate);
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray* tokens = deplibs.Tokenize(delim);
@@ -3694,6 +3714,12 @@ const char* TCling::GetSharedLibs()
 //______________________________________________________________________________
 const char* TCling::GetClassSharedLibs(const char* cls)
 {
+   return GetClassSharedLibs(cls, /*isTemplate*/false);
+}
+
+//______________________________________________________________________________
+const char* TCling::GetClassSharedLibs(const char* cls, bool isTemplate)
+{
    // Get the list of shared libraries containing the code for class cls.
    // The first library in the list is the one containing the class, the
    // others are the libraries the first one depends on. Returns 0
@@ -3713,7 +3739,13 @@ const char* TCling::GetClassSharedLibs(const char* cls)
       // Use TEnv::Lookup here as the rootmap file must start with Library.
       // and do not support using any stars (so we do not need to waste time
       // with the search made by TEnv::GetValue).
-      TEnvRec* libs_record = fMapfile->Lookup(c);
+      TEnvRec* libs_record = 0;
+      if (isTemplate) {
+         if (TNamed* result = (TNamed*)fMapTemplates->FindObject(cls))
+            return result->GetTitle();
+      }
+      else 
+         libs_record = fMapfile->Lookup(c);
       if (libs_record) {
          const char* libs = libs_record->GetValue();
          return (*libs) ? libs : 0;

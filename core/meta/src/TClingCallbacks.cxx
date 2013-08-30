@@ -39,7 +39,7 @@ extern "C" {
    void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    Decl* TCling__GetObjectDecl(TObject *obj);
-   int TCling__AutoLoadCallback(const char* className);
+   int TCling__AutoLoadCallback(const char* className, int isTemplate);
    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
    int TCling__CompileMacro(const char *fileName, const char *options);
    void TCling__SplitAclicMode(const char* fileName, std::string &mode,
@@ -222,7 +222,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
 
      bool lookupSuccess = false;
      if (getenv("ROOT_MODULES")) {
-        if (TCling__AutoLoadCallback(Name.data())) {
+        if (TCling__AutoLoadCallback(Name.data(), /*isTemplate*/false)) {
            lookupSuccess = SemaR.LookupName(R, S);
         }
      }
@@ -230,6 +230,9 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         // Save state of the PP
         ASTContext& C = SemaR.getASTContext();
         Preprocessor &PP = SemaR.getPreprocessor();
+        // Before we reset the PP we need to know whether this is a template
+        // candidate
+        bool isTemplate = PP.LookAhead(0).is(tok::less);
         Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
         Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
         Parser::ParserCurTokRestoreRAII savedCurToken(P);
@@ -247,7 +250,15 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         // wrapper function so the parent context must be the global.
         Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
                                                SemaR.TUScope);
-        if (TCling__AutoLoadCallback(Name.data())) {
+        if (isTemplate) {
+           // This would mean it is probably a template. Try autoload template.
+           if (TCling__AutoLoadCallback(Name.data(), /*isTemplate*/ true)) {
+              pushedDCAndS.pop();
+              cleanupRAII.pop();
+              lookupSuccess = SemaR.LookupName(R, S);
+           }
+        } 
+        else if (TCling__AutoLoadCallback(Name.data(), /*isTemplate*/false)) {
            pushedDCAndS.pop();
            cleanupRAII.pop();
            lookupSuccess = SemaR.LookupName(R, S);

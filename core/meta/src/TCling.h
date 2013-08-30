@@ -92,6 +92,7 @@ private: // Data Members
    TString         fRootmapLoadPath;  // Dynamic load path for rootmap files.
    TEnv*           fMapfile;          // Association of classes to libraries.
    THashTable*     fMapNamespaces;    // Entries for the namespaces, that we need to signal to clang.
+   THashTable*     fMapTemplates;     // Entries for the templates.
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
    Bool_t          fLockProcessLine;  // True if ProcessLine should lock gClingMutex.
 
@@ -123,6 +124,7 @@ public: // Public Interface
 
    void    AddIncludePath(const char* path);
    Int_t   AutoLoad(const char* cls);
+   Int_t   AutoLoad(const char* cls, bool isTemplate);
    Bool_t  IsAutoLoadNamespaceCandidate(const char* name);
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values
@@ -137,6 +139,7 @@ public: // Public Interface
    char*   GetPrompt() { return fPrompt; }
    const char* GetSharedLibs();
    const char* GetClassSharedLibs(const char* cls);
+   const char* GetClassSharedLibs(const char* cls, bool isTemplate);
    const char* GetSharedLibDeps(const char* lib);
    const char* GetIncludePath();
    virtual const char* GetSTLIncludePath() const;
