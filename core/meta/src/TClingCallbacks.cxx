@@ -233,7 +233,13 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
         // Before we reset the PP we need to know whether this is a template
         // candidate
-        bool isTemplate = PP.LookAhead(0).is(tok::less);
+        bool isTemplate = false;
+        {
+           // The PP.LookAhead(0) changes the state of the PP so we need to 
+           // recover from that too.
+           Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+           isTemplate = PP.LookAhead(0).is(tok::less);
+        }
         Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
         Parser::ParserCurTokRestoreRAII savedCurToken(P);
         // After we have saved the token reset the current one to something which 
