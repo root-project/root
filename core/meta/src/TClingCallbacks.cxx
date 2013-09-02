@@ -576,4 +576,14 @@ void TClingCallbacks::TransactionUnloaded(const Transaction &T) {
 }
 
 void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
+   if (const RecordDecl* RD = dyn_cast<RecordDecl>(D)) {
+      // FIXME: Our autoloading doesn't work (load the library) when the looked
+      // up decl is found in the PCH/PCM. We have to do that extra step, which
+      // loads the corresponding library when a decl was deserialized.
+      //
+      // Unfortunatelly we cannot do that with the current implementation,
+      // because the library load will pull in the header files of the library
+      // as well, even though they are in the PCH/PCM and available.
+      ;//TCling__AutoLoadCallback(RD->getNameAsString().c_str(), /*isTemplate*/false);
+   }
 }
