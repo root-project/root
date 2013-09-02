@@ -142,11 +142,12 @@ TObject::~TObject()
    // if (!TestBit(kNotDeleted))
    //    Fatal("~TObject", "object deleted twice");
 
-   if (gROOT) {
-      if (gROOT->MustClean()) {
-         if (gROOT == this) return;
+   TROOT *root = ROOT::gROOTLocal;
+   if (root) {
+      if (root->MustClean()) {
+         if (root == this) return;
          if (TestBit(kMustCleanup)) {
-            gROOT->GetListOfCleanups()->RecursiveRemove(this);
+            root->GetListOfCleanups()->RecursiveRemove(this);
          }
       }
    }
