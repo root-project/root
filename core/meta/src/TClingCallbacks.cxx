@@ -230,11 +230,11 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         // Save state of the PP
         ASTContext& C = SemaR.getASTContext();
         Preprocessor &PP = SemaR.getPreprocessor();
+        Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
         // Before we reset the PP we need to know whether this is a template
         // candidate
         bool isTemplate = PP.LookAhead(0).is(tok::less);
         Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-        Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
         Parser::ParserCurTokRestoreRAII savedCurToken(P);
         // After we have saved the token reset the current one to something which 
         // is safe (semi colon usually means empty decl)
