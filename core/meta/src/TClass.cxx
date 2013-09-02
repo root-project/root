@@ -3071,7 +3071,7 @@ TList *TClass::GetListOfAllPublicMethods()
    if (!fAllPubMethod) {
       // This would delete fAllPubMethod if the list of methods
       // has not been created yet.
-      TList *allMethod = GetListOfMethods(); 
+      TList *allMethod = GetListOfMethods();
 
       fAllPubMethod = new TList;
 
@@ -3166,11 +3166,13 @@ Bool_t TClass::HasDictionary()
    return gInterpreter->HasDictionary(this);
 }
 
-void TClass::GetMissingDictionaries(bool recurse, TObjArray& result)
+void TClass::GetMissingDictionaries(TObjArray& result, bool recurse)
 {
    // Get the classes that have a missing dictionary.
+   // Recurse over the data members using the flag recurse.
+   // By default is is not recursing on the data members.
 
-   gInterpreter->GetMissingDictionaries(this, recurse, result);
+   gInterpreter->GetMissingDictionaries(this, result, recurse);
 }
 
 //______________________________________________________________________________
@@ -3511,7 +3513,7 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
 
    Long_t faddr = (Long_t)gInterpreter->GetInterfaceMethodWithPrototype(this,
                                                                method, proto,
-                                                                        objectIsConst, 
+                                                                        objectIsConst,
                                                                         mode);
    if (!faddr) return 0;
 
