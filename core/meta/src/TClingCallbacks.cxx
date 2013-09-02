@@ -247,9 +247,6 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         Token& Tok = const_cast<Token&>(P.getCurToken());
         Tok.setKind(tok::semi);
 
-        bool oldSuppressDiags = SemaR.getDiagnostics().getSuppressAllDiagnostics();
-        SemaR.getDiagnostics().setSuppressAllDiagnostics();
-
         // We can't PushDeclContext, because we go up and the routine that pops 
         // the DeclContext assumes that we drill down always.
         // We have to be on the global context. At that point we are in a 
@@ -284,9 +281,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
            fDeclContextToLookIn = NSD;
            R.addDecl(NSD);
            lookupSuccess = true;
-        }
- 
-        SemaR.getDiagnostics().setSuppressAllDiagnostics(oldSuppressDiags);
+        } 
      }
 
      fIsAutoloadingRecursively = false;
