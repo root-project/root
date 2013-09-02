@@ -118,6 +118,8 @@ file `simple.pdf`.
 ```
 
    ![TMathText example](mathtext.png "TMathText example")
+   
+-   Implement `\\frac` using `\\over`.
 
 ### TLatex
 
