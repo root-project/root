@@ -2841,7 +2841,7 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
                }
             }
          }
-         return recurse;
+         return true;
       }
    }
    if (!gClassTable->GetDict(name)) {
@@ -2870,6 +2870,7 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
                }
             }
          }
+         return recurse;
       }
    }
 
