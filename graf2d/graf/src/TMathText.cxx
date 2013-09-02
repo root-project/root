@@ -627,7 +627,7 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
 
    if (newText.Length() == 0) return;
 
-   // Compatibility with the TLatex greek characters
+   // Compatibility with TLatex
    newText.ReplaceAll("\\omicron","o");
    newText.ReplaceAll("\\Alpha","A");
    newText.ReplaceAll("\\Beta","B");
