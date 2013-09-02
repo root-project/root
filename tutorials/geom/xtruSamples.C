@@ -25,7 +25,7 @@ void xtruSamples()
   geom->cd();
 
 // Define the complexity of the drawing
-  Float_t zseg   = 6;  // either 2 or 6
+  Int_t zseg     = 6;  // either 2 or 6
   Int_t extravis = 0;  // make extra z "arrow" visible
 
   Float_t unit = 1;
@@ -58,7 +58,7 @@ void xtruSamples()
      for (Int_t xycase = 0; xycase<3; xycase++) {
         if (xycase == 1 && !domalformed) continue;
 
-        Char_t *name = "txtruXYZ";
+        char name[9];
         sprintf(name,"txtru%1d%1d%1d",xycase,zcase,zseg);
         TXTRU* mytxtru = new TXTRU(name,name,"void",8,2);
 
