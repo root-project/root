@@ -24,9 +24,11 @@
 #include <cstddef>
 #include <cstdlib>
 #include "common/macros.h"
+#ifdef VC_CXX11
 #include <utility>
+#endif
 
-/*OUTER_NAMESPACE_BEGIN*/
+namespace ROOT {
 namespace Vc
 {
     using std::size_t;
@@ -45,7 +47,7 @@ namespace Vc
 #define VC_DECLARE_ALLOCATOR(Type) \
 namespace std \
 { \
-    template<> class allocator<Type> : public ::Vc::Allocator<Type> \
+    template<> class allocator<Type> : public ::ROOT::Vc::Allocator<Type> \
     { \
     public: \
         template<typename U> struct rebind { typedef ::std::allocator<U> other; }; \
@@ -56,7 +58,7 @@ namespace std \
 #define Vc_DECLARE_ALLOCATOR(Type) \
 namespace std \
 { \
-    template<> class allocator<Type> : public ::Vc::Allocator<Type> \
+    template<> class allocator<Type> : public ::ROOT::Vc::Allocator<Type> \
     { \
     public: \
         template<typename U> struct rebind { typedef ::std::allocator<U> other; }; \
@@ -120,10 +122,10 @@ namespace std \
 #elif defined(VC_HAVE_MAX_ALIGN_T)
             NaturalAlignment = alignof(::max_align_t),
 #else
-            NaturalAlignment = sizeof(void *) > alignof(long double) ? sizeof(void *) :
-                (alignof(long double) > alignof(long long) ? alignof(long double) : alignof(long long)),
+            NaturalAlignment = sizeof(void *) > Vc_ALIGNOF(long double) ? sizeof(void *) :
+                (Vc_ALIGNOF(long double) > Vc_ALIGNOF(long long) ? Vc_ALIGNOF(long double) : Vc_ALIGNOF(long long)),
 #endif
-            Alignment = alignof(T),
+            Alignment = Vc_ALIGNOF(T),
             /* The number of extra bytes allocated must be large enough to put a pointer right
              * before the adjusted address. This pointer stores the original address, which is
              * required to call ::operator delete in deallocate.
@@ -199,12 +201,15 @@ namespace std \
         // we still need the C++98 version:
         void construct(pointer p, const T& __val) { ::new(p) T(__val); }
         void destroy(pointer p) { p->~T(); }
-#else
+#elif defined(VC_CXX11)
         template<typename U, typename... Args> void construct(U* p, Args&&... args)
         {
             ::new(p) U(std::forward<Args>(args)...);
         }
         template<typename U> void destroy(U* p) { p->~U(); }
+#else
+        void construct(pointer p, const T& __val) { ::new(p) T(__val); }
+        void destroy(pointer p) { p->~T(); }
 #endif
     };
 
@@ -212,13 +217,13 @@ namespace std \
     template<typename T> inline bool operator!=(const Allocator<T>&, const Allocator<T>&) { return false; }
 
 } // namespace Vc
-/*OUTER_NAMESPACE_END*/
+} // namespace ROOT
 
 #include "common/undomacros.h"
 #include "vector.h"
 namespace std
 {
-    template<typename T> class allocator<Vc::Vector<T> > : public ::Vc::Allocator<Vc::Vector<T> >
+    template<typename T> class allocator<Vc::Vector<T> > : public ::ROOT::Vc::Allocator<Vc::Vector<T> >
     {
     public:
         template<typename U> struct rebind { typedef ::std::allocator<U> other; };

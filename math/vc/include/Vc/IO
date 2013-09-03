@@ -24,14 +24,12 @@
 #include "Memory"
 #include <iostream>
 
-#if defined(__GNUC__) && !defined(_WIN32)
-#define VC_HACK_OSTREAM_FOR_TTY 1
-#endif
-
-#ifdef VC_HACK_OSTREAM_FOR_TTY
+#ifdef __GNUC__
 #include <unistd.h>
 #include <ext/stdio_sync_filebuf.h>
 #endif
+
+#include "internal/namespace.h"
 
 namespace
 {
@@ -44,7 +42,7 @@ namespace
         static const Type normal = { "\033[0m" };
     } // namespace AnsiColor
 
-#ifdef VC_HACK_OSTREAM_FOR_TTY
+#ifdef __GNUC__
     class hacked_ostream : public std::ostream
     {
         public:
@@ -78,7 +76,7 @@ static inline std::ostream &operator<<(std::ostream &out, const AnsiColor::Type 
 }
 
 template<typename T>
-static std::ostream &operator<<(std::ostream &out, const Vc::Vc_IMPL_NAMESPACE::Vector<T> &v)
+static std::ostream &operator<<(std::ostream &out, const VECTOR_NAMESPACE::Vector<T> &v)
 {
     out << AnsiColor::green << "[";
     out << v[0];
@@ -89,7 +87,7 @@ static std::ostream &operator<<(std::ostream &out, const Vc::Vc_IMPL_NAMESPACE::
     return out;
 }
 
-static std::ostream &operator<<(std::ostream &out, const Vc::Vc_IMPL_NAMESPACE::Vector<char> &v)
+static std::ostream &operator<<(std::ostream &out, const VECTOR_NAMESPACE::Vector<char> &v)
 {
     out << AnsiColor::green << "[";
     out << int(v[0]);
@@ -99,7 +97,7 @@ static std::ostream &operator<<(std::ostream &out, const Vc::Vc_IMPL_NAMESPACE::
     out << "]" << AnsiColor::normal;
     return out;
 }
-static std::ostream &operator<<(std::ostream &out, const Vc::Vc_IMPL_NAMESPACE::Vector<unsigned char> &v)
+static std::ostream &operator<<(std::ostream &out, const VECTOR_NAMESPACE::Vector<unsigned char> &v)
 {
     out << AnsiColor::green << "[";
     out << int(v[0]);
@@ -112,18 +110,18 @@ static std::ostream &operator<<(std::ostream &out, const Vc::Vc_IMPL_NAMESPACE::
 
 #ifdef VC_HAVE_FMA
 template<typename T>
-static std::ostream &operator<<(std::ostream &out, const Vc::Vc_IMPL_NAMESPACE::VectorMultiplication<T> &v)
+static std::ostream &operator<<(std::ostream &out, const VECTOR_NAMESPACE::VectorMultiplication<T> &v)
 {
-    return out << Vc::Vc_IMPL_NAMESPACE::Vector<T>(v);
+    return out << VECTOR_NAMESPACE::Vector<T>(v);
 }
 #endif
 
 #ifdef VC_IMPL_AVX
 template<unsigned int VectorSize, size_t RegisterWidth>
-static std::ostream &operator<<(std::ostream &out, const Vc::Vc_IMPL_NAMESPACE::Mask<VectorSize, RegisterWidth> &m)
+static std::ostream &operator<<(std::ostream &out, const VECTOR_NAMESPACE::Mask<VectorSize, RegisterWidth> &m)
 #else
 template<unsigned int VectorSize>
-static std::ostream &operator<<(std::ostream &out, const Vc::Vc_IMPL_NAMESPACE::Mask<VectorSize> &m)
+static std::ostream &operator<<(std::ostream &out, const VECTOR_NAMESPACE::Mask<VectorSize> &m)
 #endif
 {
     out << AnsiColor::blue << "m[";
@@ -141,7 +139,7 @@ static std::ostream &operator<<(std::ostream &out, const Vc::Vc_IMPL_NAMESPACE::
     return out;
 }
 #ifdef VC_IMPL_SSE
-static std::ostream &operator<<(std::ostream &out, const Vc::Vc_IMPL_NAMESPACE::Float8Mask &m)
+static std::ostream &operator<<(std::ostream &out, const VECTOR_NAMESPACE::Float8Mask &m)
 {
     out << AnsiColor::blue << "m[";
     for (unsigned int i = 0; i < 8; ++i) {
@@ -187,6 +185,8 @@ static std::ostream &operator<<(std::ostream &out, const Vc::MemoryBase<V, Paren
     return out;
 }
 } // namespace std
+
+#undef VECTOR_NAMESPACE
 
 #endif // VECIO_H
 
