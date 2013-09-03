@@ -69,22 +69,27 @@ ROOT::TMetaUtils::TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh
 
    clang::QualType toSkip = lh.findType("Double32_t");
    if (!toSkip.isNull()) {
-      fTypeToSkip.insert(toSkip.getTypePtr());
+      fConfig.m_toSkip.insert(toSkip.getTypePtr());
       fTypeWithAlternative.insert(toSkip.getTypePtr());
    }
    toSkip = lh.findType("Float16_t");
    if (!toSkip.isNull()) {
-      fTypeToSkip.insert(toSkip.getTypePtr());
+      fConfig.m_toSkip.insert(toSkip.getTypePtr());
       fTypeWithAlternative.insert(toSkip.getTypePtr());
    }
    toSkip = lh.findType("Long64_t");
-   if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
+   if (!toSkip.isNull()) fConfig.m_toSkip.insert(toSkip.getTypePtr());
    toSkip = lh.findType("ULong64_t");
-   if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
+   if (!toSkip.isNull()) fConfig.m_toSkip.insert(toSkip.getTypePtr());
    toSkip = lh.findType("string");
-   if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
+   if (!toSkip.isNull()) fConfig.m_toSkip.insert(toSkip.getTypePtr());
    toSkip = lh.findType("std::string");
-   if (!toSkip.isNull()) fTypeToSkip.insert(toSkip.getTypePtr());
+   if (!toSkip.isNull()) {
+      fConfig.m_toSkip.insert(toSkip.getTypePtr());
+
+      clang::QualType canon = toSkip->getCanonicalTypeInternal();
+      fConfig.m_toReplace.insert(std::make_pair(canon.getTypePtr(),toSkip.getTypePtr()));
+   }
 }
 
 //______________________________________________________________________________
@@ -101,7 +106,7 @@ void ROOT::TMetaUtils::TClingLookupHelper::GetPartiallyDesugaredName(std::string
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    clang::QualType t = lh.findType(nameLong);
    if (!t.isNull()) {
-      clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetTypeToSkip(), true /* fully qualify */);
+      clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
       if (!dest.isNull() && (dest != t))
          dest.getAsStringInternal(nameLong, fInterpreter->getCI()->getASTContext().getPrintingPolicy());
    }
@@ -114,7 +119,7 @@ bool ROOT::TMetaUtils::TClingLookupHelper::IsAlreadyPartiallyDesugaredName(const
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    clang::QualType t = lh.findType(nondef.c_str());
    if (!t.isNull()) {
-      clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetTypeToSkip(), true /* fully qualify */);
+      clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
       if (!dest.isNull() && (dest != t) &&
           nameLong == t.getAsString(fInterpreter->getCI()->getASTContext().getPrintingPolicy()))
          return true;
@@ -140,7 +145,7 @@ bool ROOT::TMetaUtils::TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHan
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    clang::QualType t = lh.findType(tname.c_str());
    if (!t.isNull()) {
-      clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetTypeToSkip(), true /* fully qualify */);
+      clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
       if (!dest.isNull() && dest != t) {
          clang::PrintingPolicy policy(fInterpreter->getCI()->getASTContext().getPrintingPolicy());
          policy.SuppressTagKeyword = true; // Never get the class or struct keyword
@@ -2298,7 +2303,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                                                              TTP,
                                                              desArgs);
                clang::QualType BetterSubTy = ArgType.getArgument().getAsType();
-               SubTy = cling::utils::Transform::GetPartiallyDesugaredType(Ctx,BetterSubTy,normCtxt.GetTypeToSkip(),/*fullyQualified=*/ true);
+               SubTy = cling::utils::Transform::GetPartiallyDesugaredType(Ctx,BetterSubTy,normCtxt.GetConfig(),/*fullyQualified=*/ true);
             }
             SubTy = AddDefaultParameters(SubTy,interpreter,normCtxt);
             desArgs.push_back(clang::TemplateArgument(SubTy));
@@ -3133,7 +3138,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
 
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
 
-   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetTypeToSkip(), true /* fully qualify */);
+   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);
    // Readd missing default template parameter.
    normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, interpreter, normCtxt);
 
