@@ -23,7 +23,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
-CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
+#CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 # Features needed for the tutorials
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingImplicitAuto"
 CALLROOTEXE += -e "\#define ClingWorkAroundExtraParensWithImplicitAuto"
@@ -55,7 +55,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
 #CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndInline"
 #CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndVirtual"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundJITandInline"
-CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
+#CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundNoPrivateClassIO"
 
 # variable to be used in Makefiles.
@@ -76,7 +76,7 @@ ClingWorkAroundJITfullSymbolResolution = yes   # See https://savannah.cern.ch/bu
 ClingWorkAroundBrokenUnnamedReturn = yes       # See https://savannah.cern.ch/bugs/index.php?99032
 ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://savannah.cern.ch/bugs/index.php?99236
 #ClingWorkAroundCallfuncAndInline = yes        # see https://savannah.cern.ch/bugs/index.php?98425
-ClingWorkAroundCallfuncAndReturnByValue = yes  # See https://savannah.cern.ch/bugs/index.php?98317 and https://savannah.cern.ch/bugs/?98148
+#ClingWorkAroundCallfuncAndReturnByValue = yes  # See https://savannah.cern.ch/bugs/index.php?98317 and https://savannah.cern.ch/bugs/?98148
 ClingWorkAroundDeletedSourceFile = yes         # See https://savannah.cern.ch/bugs/index.php?100082 
 ClingWorkAroundUnnamedInclude = yes            # See https://savannah.cern.ch/bugs/index.php?99246
 ClingWorkAroundBrokenRecovery = yes
