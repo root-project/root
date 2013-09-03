@@ -987,7 +987,7 @@ make_narg_ctor(const unsigned N, ostringstream& typedefbuf,
       bool isReference = false;
       int ptrCnt = 0;
       collect_type_info(QT, typedefbuf, callbuf, type_name,
-                        isReference, ptrCnt, indent_level,false);
+                        isReference, ptrCnt, indent_level,true);
       if (i) {
          callbuf << ',';
          if (i % 2) {
@@ -2880,6 +2880,8 @@ ExecInt(void* address)
       // Sometimes we are called on a function returning void!
       return 0L;
    }
+   if (decl->getResultType().getCanonicalType()->isRecordType())
+      ((TCling*)gCling)->RegisterTemporary(ret);
    return static_cast<Long_t>(sv_to_long_long(ret));
 }
 
@@ -2911,6 +2913,8 @@ ExecInt64(void* address)
       // Sometimes we are called on a function returning void!
       return 0LL;
    }
+   if (decl->getResultType().getCanonicalType()->isRecordType())
+      ((TCling*)gCling)->RegisterTemporary(ret);
    return sv_to_long_long(ret);
 }
 
