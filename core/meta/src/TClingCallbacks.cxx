@@ -235,15 +235,6 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         // candidate
         bool isTemplate = false;
         {
-           // The PP.LookAhead(0) changes the state of the PP so we need to 
-           // recover from that too.
-           //Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP, /*doCleanup=*/false);
-           //PP.EnableBacktrackAtThisPos();
-           //const Token& Tok = PP.LookAhead(0);
-           //isTemplate = Tok.is(tok::less);
-           //PP.Backtrack();
-           //cleanupRAII.cleanup();
-           //PP.EnterToken(Tok);
            // Using the PP.LookAhead will cause a lot of caching headache, which
            // is *very* hard to heal. Instead use a lexer to peek ahead whether
            // this was an '<'
