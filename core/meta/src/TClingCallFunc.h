@@ -70,7 +70,8 @@ private:
 private:
    void collect_type_info(clang::QualType& QT, std::ostringstream& typedefbuf,
                           std::ostringstream& callbuf, std::string& type_name,
-                          bool& isReference, int& ptrCnt, int indent_level);
+                          bool& isReference, int& ptrCnt, int indent_level,
+                          bool forArgument);
 
    void make_narg_call(const unsigned N, std::ostringstream& typedefbuf,
                        std::ostringstream& callbuf,

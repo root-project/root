@@ -895,7 +895,8 @@ void
 TClingCallFunc::
 collect_type_info(QualType& QT, ostringstream& typedefbuf,
                   ostringstream& callbuf, string& type_name,
-                  bool& isReference, int& ptrCnt, int indent_level)
+                  bool& isReference, int& ptrCnt, int indent_level,
+                  bool forArgument)
 {
    //
    //  Collect information about type type of a function parameter
@@ -905,7 +906,7 @@ collect_type_info(QualType& QT, ostringstream& typedefbuf,
    PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
    isReference = false;
    ptrCnt = 0;
-   if (QT->isRecordType()) {
+   if (QT->isRecordType() && forArgument) {
       // Note: We treat object of class type as if it were a reference
       //       type because we hold it by pointer.
       isReference = true;
@@ -986,7 +987,7 @@ make_narg_ctor(const unsigned N, ostringstream& typedefbuf,
       bool isReference = false;
       int ptrCnt = 0;
       collect_type_info(QT, typedefbuf, callbuf, type_name,
-                        isReference, ptrCnt, indent_level);
+                        isReference, ptrCnt, indent_level,false);
       if (i) {
          callbuf << ',';
          if (i % 2) {
@@ -1056,7 +1057,7 @@ make_narg_call(const unsigned N, ostringstream& typedefbuf,
       bool isReference = false;
       int ptrCnt = 0;
       collect_type_info(QT, typedefbuf, callbuf, type_name,
-                        isReference, ptrCnt, indent_level);
+                        isReference, ptrCnt, indent_level, true);
       if (i) {
          callbuf << ',';
          if (i % 2) {
@@ -1224,7 +1225,7 @@ make_narg_call_with_return(const unsigned N, const string& class_name,
          bool isReference = false;
          int ptrCnt = 0;
          collect_type_info(QT, typedefbuf, callbuf, type_name,
-                           isReference, ptrCnt, indent_level);
+                           isReference, ptrCnt, indent_level, false);
          //
          //  Write the type part of the placement new.
          //
