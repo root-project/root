@@ -599,6 +599,6 @@ void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
       // Unfortunatelly we cannot do that with the current implementation,
       // because the library load will pull in the header files of the library
       // as well, even though they are in the PCH/PCM and available.
-      ;//TCling__AutoLoadCallback(RD->getNameAsString().c_str(), /*isTemplate*/false);
+      (void)RD;//TCling__AutoLoadCallback(RD->getNameAsString().c_str(), /*isTemplate*/false);
    }
 }
