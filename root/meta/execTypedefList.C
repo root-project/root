@@ -25,6 +25,28 @@ int check(const char *name, const char *target)
    return 0;
 }
 
+int check_target(const char *name, const char *target)
+{
+   TObject *dobj;
+   TCollection *l = gROOT->GetListOfTypes();
+
+   dobj = l->FindObject(name);
+   if (!dobj) {
+      fprintf(stderr,"Couldn't find the TDataType for %s\n",name);
+      return 1;
+   }
+   //if (strcmp(dobj->GetName(),name) != 0) {
+   //   fprintf(stderr,"Found the wrong TDataType for: %s when searching for %s\n",dobj->GetName(),name);
+   //   return 2;
+   //}
+   if (strcmp(((TDataType*)dobj)->GetTypeName(),target) != 0) {
+      fprintf(stderr,"Found the wrong TDataType for %s target is %s rather than %s\n",
+              name,((TDataType*)dobj)->GetTypeName(),target);
+      return 3;
+   }
+   return 0;
+}
+
 int check_missing(const char *name)
 {
    TObject *dobj;
@@ -93,6 +115,10 @@ int execTypedefList() {
    res = check("TBuffer::CacheList_t","vector<TVirtualArray*>"); if (res) return res;
    res = check_missing("TBuffer::CacheList_notAtype"); if (res) return res;
    res = check("vector<myNamespace::MyClass*>::const_iterator","vector<myNamespace::MyClass*>::const_iterator"); if (res) return res; 
+
+   res = check_target("std::map<std::string, int>::key_type","string"); if (res) return res;
+   res = check_target("std::map<std::string, int>::value_type","pair<const string,int>"); if (res) return res;
+   res = check_target("std::list<std::string>::const_iterator","list<string>::const_iterator"); if (res) return res;
 
    res = check_file("typelist.v5.txt",360); if (res) return res;
    res = check_file("typelist.v6.txt",1700); if (res) return res;
