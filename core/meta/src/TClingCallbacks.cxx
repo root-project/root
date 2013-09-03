@@ -237,8 +237,23 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         {
            // The PP.LookAhead(0) changes the state of the PP so we need to 
            // recover from that too.
-           Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
-           isTemplate = PP.LookAhead(0).is(tok::less);
+           //Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP, /*doCleanup=*/false);
+           //PP.EnableBacktrackAtThisPos();
+           //const Token& Tok = PP.LookAhead(0);
+           //isTemplate = Tok.is(tok::less);
+           //PP.Backtrack();
+           //cleanupRAII.cleanup();
+           //PP.EnterToken(Tok);
+           // Using the PP.LookAhead will cause a lot of caching headache, which
+           // is *very* hard to heal. Instead use a lexer to peek ahead whether
+           // this was an '<'
+           Token Tok;
+           SourceLocation Loc = P.getCurToken().getLastLoc().getLocWithOffset(1);
+           // The lexer requires 0 terminated memory buffer.
+           std::string buf(PP.getSourceManager().getCharacterData(Loc), 100);
+           Lexer l(Loc, PP.getLangOpts(), buf.c_str(), buf.c_str(), buf.c_str() + 100);
+           l.Lex(Tok);
+           isTemplate = Tok.is(tok::less);
         }
         Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
         Parser::ParserCurTokRestoreRAII savedCurToken(P);
