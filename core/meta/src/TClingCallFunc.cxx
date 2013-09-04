@@ -640,9 +640,9 @@ sv_to_ulong_long(const cling::StoredValueRef& svref)
    return 0ULL;
 }
 
-static
-double
-sv_to_double(const cling::StoredValueRef& svref)
+namespace {
+template <typename returnType>
+returnType sv_to(const cling::StoredValueRef& svref)
 {
    const cling::Value& valref = svref.get();
    QualType QT = valref.getClangType();
@@ -651,19 +651,19 @@ sv_to_double(const cling::StoredValueRef& svref)
       const MemberPointerType* MPT =
          QT->getAs<MemberPointerType>();
       if (MPT->isMemberDataPointer()) {
-         return (double) *(ptrdiff_t*)gv.PointerVal;
+         return (returnType) *(ptrdiff_t*)gv.PointerVal;
       }
-      return (double) (long) gv.PointerVal;
+      return (returnType) (long) gv.PointerVal;
    }
    if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
          QT->isReferenceType()) {
-      return (double) (long) gv.PointerVal;
+      return (returnType) (long) gv.PointerVal;
    }
    if (const EnumType* ET = dyn_cast<EnumType>(&*QT)) {
       // Note: We may need to worry about the underlying type
       //       of the enum here.
       (void) ET;
-      return (double) gv.IntVal.getSExtValue();
+      return (returnType) gv.IntVal.getSExtValue();
    }
    if (const BuiltinType* BT =
             dyn_cast<BuiltinType>(&*QT)) {
@@ -687,52 +687,52 @@ sv_to_double(const cling::StoredValueRef& svref)
             //
          case BuiltinType::Bool: {
                // bool
-               return (double) gv.IntVal.getZExtValue();
+               return (returnType) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::Char_U: {
                // char on targets where it is unsigned
-               return (double) gv.IntVal.getZExtValue();
+               return (returnType) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::UChar: {
                // unsigned char
-               return (double) gv.IntVal.getZExtValue();
+               return (returnType) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::WChar_U: {
                // wchar_t on targets where it is unsigned
-               return (double) gv.IntVal.getZExtValue();
+               return (returnType) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::Char16: {
                // char16_t
-               return (double) gv.IntVal.getZExtValue();
+               return (returnType) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::Char32: {
                // char32_t
-               return (double) gv.IntVal.getZExtValue();
+               return (returnType) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::UShort: {
                // unsigned short
-               return (double) gv.IntVal.getZExtValue();
+               return (returnType) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::UInt: {
                // unsigned int
-               return (double) gv.IntVal.getZExtValue();
+               return (returnType) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::ULong: {
                // unsigned long
-               return (double) gv.IntVal.getZExtValue();
+               return (returnType) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::ULongLong: {
                // unsigned long long
-               return (double) gv.IntVal.getZExtValue();
+               return (returnType) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::UInt128: {
@@ -744,37 +744,37 @@ sv_to_double(const cling::StoredValueRef& svref)
             //
          case BuiltinType::Char_S: {
                // char on targets where it is signed
-               return (double) gv.IntVal.getSExtValue();
+               return (returnType) gv.IntVal.getSExtValue();
             }
             break;
          case BuiltinType::SChar: {
                // signed char
-               return (double) gv.IntVal.getSExtValue();
+               return (returnType) gv.IntVal.getSExtValue();
             }
             break;
          case BuiltinType::WChar_S: {
                // wchar_t on targets where it is signed
-               return (double) gv.IntVal.getSExtValue();
+               return (returnType) gv.IntVal.getSExtValue();
             }
             break;
          case BuiltinType::Short: {
                // short
-               return (double) gv.IntVal.getSExtValue();
+               return (returnType) gv.IntVal.getSExtValue();
             }
             break;
          case BuiltinType::Int: {
                // int
-               return (double) gv.IntVal.getSExtValue();
+               return (returnType) gv.IntVal.getSExtValue();
             }
             break;
          case BuiltinType::Long: {
                // long
-               return (double) gv.IntVal.getSExtValue();
+               return (returnType) gv.IntVal.getSExtValue();
             }
             break;
          case BuiltinType::LongLong: {
                // long long
-               return (double) gv.IntVal.getSExtValue();
+               return (returnType) gv.IntVal.getSExtValue();
             }
             break;
          case BuiltinType::Int128: {
@@ -787,12 +787,12 @@ sv_to_double(const cling::StoredValueRef& svref)
             break;
          case BuiltinType::Float: {
                // float
-               return (double) gv.FloatVal;
+               return (returnType) gv.FloatVal;
             }
             break;
          case BuiltinType::Double: {
                // double
-               return gv.DoubleVal;
+               return (returnType) gv.DoubleVal;
             }
             break;
          case BuiltinType::LongDouble: {
@@ -895,10 +895,11 @@ sv_to_double(const cling::StoredValueRef& svref)
             break;
       }
    }
-   Error("TClingCallFunc::sv_to_double", "Invalid Type!");
+   Error("TClingCallFunc::sv_to", "Invalid Type!");
    QT->dump();
    return 0.0;
 }
+} // unnamed namespace.
 
 void
 TClingCallFunc::
@@ -2083,7 +2084,7 @@ exec(void* address, void* ret) const
             case BuiltinType::Float: {
                   // float
                   ValHolder vh;
-                  vh.u.flt = (float) fArgVals[i].get().getGV().FloatVal;
+                  vh.u.flt = sv_to<float>(fArgVals[i]);
                   vh_ary.push_back(vh);
                   vp_ary.push_back(&vh_ary.back());
                }
@@ -2091,7 +2092,7 @@ exec(void* address, void* ret) const
             case BuiltinType::Double: {
                   // double
                   ValHolder vh;
-                  vh.u.dbl = fArgVals[i].get().getGV().DoubleVal;
+                  vh.u.dbl = sv_to<double>(fArgVals[i]);
                   vh_ary.push_back(vh);
                   vp_ary.push_back(&vh_ary.back());
                }
@@ -2955,7 +2956,7 @@ ExecDouble(void* address)
       // Sometimes we are called on a function returning void!
       return 0.0;
    }
-   return sv_to_double(ret);
+   return sv_to<double>(ret);
 }
 
 void
