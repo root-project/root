@@ -972,6 +972,7 @@ TList *TMultiGraph::GetListOfFunctions()
 TAxis *TMultiGraph::GetXaxis() const
 {
    // Get x axis of the graph.
+   // This method returns a valid axis only after the TMultigraph has been drawn.
 
    if (!gPad) return 0;
    TH1 *h = GetHistogram();
@@ -984,6 +985,7 @@ TAxis *TMultiGraph::GetXaxis() const
 TAxis *TMultiGraph::GetYaxis() const
 {
    // Get y axis of the graph.
+   // This method returns a valid axis only after the TMultigraph has been drawn.
 
    if (!gPad) return 0;
    TH1 *h = GetHistogram();
