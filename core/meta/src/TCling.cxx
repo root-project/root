@@ -2767,7 +2767,7 @@ Bool_t TCling::HasDictionary(TClass* cl)
 }
 
 //______________________________________________________________________________
-void TCling::GetUnderlyingQualType(clang::QualType& qualType)
+bool TCling::GetUnderlyingQualType(clang::QualType& qType)
 {
 
    // Utility function to be able to obtain the underlying QualType for a given Type.
@@ -2775,31 +2775,32 @@ void TCling::GetUnderlyingQualType(clang::QualType& qualType)
    bool changed = true;
    while (changed) {
       changed = false;
-      if (qualType->isPointerType()) {
-         qualType = qualType->getPointeeType();
+      if (qType->isPointerType()) {
+         qType = qType->getPointeeType();
          changed = true;
       }
-      if (qualType->isReferenceType()) {
-         qualType = qualType->getPointeeType();
+      if (qType->isReferenceType()) {
+         qType = qType->getPointeeType();
          changed = true;
       }
-      if (qualType->isArrayType()) {
-         const Type* elementType = qualType->getArrayElementTypeNoTypeQual();
-         qualType = QualType(elementType, 0);
+      if (qType->isArrayType()) {
+         const Type* elementType = qType->getArrayElementTypeNoTypeQual();
+         qType = QualType(elementType, 0);
          changed = true;
       }
-      if (const clang::TemplateTypeParmType* TT = dyn_cast<clang::TemplateTypeParmType>(qualType.getTypePtr())) {
-         qualType = TT->desugar();
-         changed = true;
+      // Already checked in the template parameter list.
+      if (isa<clang::TemplateTypeParmType>(qType.getTypePtr())) {
+         return false;
       }
-      if (const clang::SubstTemplateTypeParmType* ST = dyn_cast<clang::SubstTemplateTypeParmType>(qualType.getTypePtr())) {
-         qualType = ST->getReplacementType();
-         changed = true;
+      // Already checked in the template parameter list.
+      if (isa<clang::SubstTemplateTypeParmType>(qType.getTypePtr())) {
+         return false;
       }
-      if (qualType->isRecordType()) {
-         changed = false;
+      if (qType->isRecordType()) {
+         return true;
       }
    }
+   return false;
 }
 
 //______________________________________________________________________________
@@ -2846,16 +2847,11 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
       }
    }
    if (!gClassTable->GetDict(name)) {
-      if (const clang::TemplateSpecializationType* TS = dyn_cast<clang::TemplateSpecializationType>(qType.getTypePtr())) {
-         QualType qualType = TS->desugar();
-         netD.insert(qualType.getTypePtr());
-      } else {
          netD.insert(qType.getTypePtr());
-      }
    }
    // Check for templates.
    if (!qType.isNull()) {
-      // Check whether the data member is a template
+      // Check whether the data member is a template and loop through the TemplateArguments
       if (const clang::TemplateSpecializationType* templateType = dyn_cast<clang::TemplateSpecializationType>(qType.getTypePtr())) {
          for (clang::TemplateSpecializationType::iterator TIB = templateType->begin(),
                     TIE = templateType->end(); TIB != TIE; ++TIB) {
@@ -2863,10 +2859,11 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
                clang::TemplateArgument::ArgKind tmpltArgKind = TIB->getKind();
                if (tmpltArgKind == clang::TemplateArgument::Type) {
                   qType = TIB->getAsType();
-                  GetUnderlyingQualType(qType);
-                  clang::Decl* tmplD = qType->getAsCXXRecordDecl();
-                  if (tmplD) {
-                     GetMissingDictionariesForDecl(tmplD, netD, qType, recurse);
+                  if (GetUnderlyingQualType(qType)) {
+                     clang::Decl* tmplD = qType->getAsCXXRecordDecl();
+                     if (tmplD) {
+                        GetMissingDictionariesForDecl(tmplD, netD, qType, recurse);
+                     }
                   }
                }
             }
@@ -2891,16 +2888,17 @@ void TCling::GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const 
       for (clang::RecordDecl::field_iterator iField = RD->field_begin(),
            eField = RD->field_end(); iField != eField; ++iField) {
 
-         clang::QualType fieldQualType = (*iField)->getType();
-         if (!fieldQualType.isNull()) {
+         clang::QualType fieldQType = (*iField)->getType();
+         if (!fieldQType.isNull()) {
             // Check if not NullType.
-            GetUnderlyingQualType(fieldQualType);
-            clang::Decl* FD = fieldQualType->getAsCXXRecordDecl();
-            if (FD) {
-               if(recurse) {
-                  GetMissingDictionariesForDecl(FD, netD, fieldQualType, recurse);
-               } else {
-                  InsertMissingDictionaryDecl(FD, netD, fieldQualType, recurse);
+            if (GetUnderlyingQualType(fieldQType)) {
+               clang::Decl* FD = fieldQType->getAsCXXRecordDecl();
+               if (FD) {
+                  if(recurse) {
+                     GetMissingDictionariesForDecl(FD, netD, fieldQType, recurse);
+                  } else {
+                     InsertMissingDictionaryDecl(FD, netD, fieldQType, recurse);
+                  }
                }
             }
          }
@@ -2920,8 +2918,8 @@ void TCling::GetMissingDictionaries(TClass* cl, TObjArray& result, bool recurse 
 
    // Set containing all the decls of the classes that do not have a dictionary.
    std::set<const clang::Type*> netD;
-   clang::QualType declType = QualType(T, 0);
-   GetMissingDictionariesForDecl(D, netD, declType, recurse);
+   clang::QualType qType = QualType(T, 0);
+   GetMissingDictionariesForDecl(D, netD, qType, recurse);
 
    // Convert set<Decl> to TObjArray.
    for (std::set<const clang::Type*>::const_iterator I = netD.begin(),
