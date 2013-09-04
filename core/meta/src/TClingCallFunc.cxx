@@ -172,38 +172,47 @@ sv_to_long_long(const cling::StoredValueRef& svref)
             break;
          case BuiltinType::Char_U: {
                // char on targets where it is unsigned
+               return (long long) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::UChar: {
                // unsigned char
+               return (long long) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::WChar_U: {
                // wchar_t on targets where it is unsigned
+               return (long long) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::Char16: {
                // char16_t
+               return (long long) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::Char32: {
                // char32_t
+               return (long long) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::UShort: {
                // unsigned short
+               return (long long) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::UInt: {
                // unsigned int
+               return (long long) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::ULong: {
                // unsigned long
+               return (long long) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::ULongLong: {
                // unsigned long long
+               return (long long) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::UInt128: {
