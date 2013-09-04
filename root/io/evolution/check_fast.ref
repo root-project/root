@@ -3,4 +3,4 @@ Reading int.root
 Reading double32.root
 Reading longlong.root
 Reading float.root
-(_Bool) false
+(bool) false

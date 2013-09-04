@@ -20,4 +20,4 @@ Reading float16enough.root
 Reading float16mantis.root
 Reading double32tooshort.root
 Reading float16tooshort.root
-(_Bool) false
+(bool) false
