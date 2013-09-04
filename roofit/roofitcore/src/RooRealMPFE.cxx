@@ -616,19 +616,26 @@ void RooRealMPFE::standby()
 
 #ifndef _WIN32
   if (_state==Client) {
-    // Terminate server process ;
-    int msg = Terminate;
-    *_pipe << msg << BidirMMapPipe::flush;
-    // read handshake
-    msg = 0;
-    *_pipe >> msg;
-    if (Terminate != msg || 0 != _pipe->close()) {
+    if (_pipe->good()) {
+      // Terminate server process ;
+      if (_verboseServer) cout << "RooRealMPFE::standby(" << GetName() 
+	<< ") IPC toServer> Terminate " << endl; 
+      int msg = Terminate;
+      *_pipe << msg << BidirMMapPipe::flush;
+      // read handshake
+      msg = 0;
+      *_pipe >> msg;
+      if (Terminate != msg || 0 != _pipe->close()) {
 	std::cerr << "In " << __func__ << "(" << __FILE__ ", " << __LINE__ <<
-	    "): Server shutdown failed." << std::endl;
+	  "): Server shutdown failed." << std::endl;
+      }
+    } else {
+      if (_verboseServer) {
+	std::cerr << "In " << __func__ << "(" << __FILE__ ", " <<
+	  __LINE__ << "): Pipe has already shut down, not sending "
+	  "Terminate to server." << std::endl;
+      }
     }
-    if (_verboseServer) cout << "RooRealMPFE::standby(" << GetName() 
-			     << ") IPC toServer> Terminate " << endl; 
-
     // Close pipes
     delete _pipe;
     _pipe = 0;
