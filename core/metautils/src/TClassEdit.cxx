@@ -371,6 +371,21 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 
    if (a==ts) return true;
 
+   stem = "allocator<std::pair<const ";
+   stem += k;
+   stem += ",";
+   stem += v;
+   
+   ts = stem;
+   ts += "> >";
+   
+   if (a==ts) return true;
+   
+   ts = stem;
+   ts += " > >";
+   
+   if (a==ts) return true;
+   
    if ( keyclassname[strlen(keyclassname)-1] == '*' ) {
 
       stem = "allocator<pair<";
@@ -405,6 +420,21 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 
       if (a==tss) return true;
 
+      stem = "allocator<std::pair<const ";
+      stem += k;
+      stem += "const";
+      stem += ",";
+      stem += v;
+      
+      tss = stem;
+      tss += "> >";
+      
+      if (a==tss) return true;
+      
+      tss = stem;
+      tss += " > >";
+      
+      if (a==tss) return true;
    }
 
    return false;
