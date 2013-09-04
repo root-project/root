@@ -484,7 +484,6 @@ const char *TClingMethodInfo::Name() const
    }
    static std::string buf;
    buf.clear();
-   clang::PrintingPolicy policy(GetMethodDecl()->getASTContext().getPrintingPolicy());
    const clang::FunctionDecl *decl = GetMethodDecl();
    if (llvm::isa<clang::CXXConstructorDecl>(decl))
    {
@@ -500,6 +499,7 @@ const char *TClingMethodInfo::Name() const
       buf.insert(buf.begin(), '~');
    } else {
       llvm::raw_string_ostream stream(buf);
+      clang::PrintingPolicy policy(GetMethodDecl()->getASTContext().getPrintingPolicy());
       GetMethodDecl()->getNameForDiagnostic(stream, policy, /*Qualified=*/false);
    }
    return buf.c_str();
