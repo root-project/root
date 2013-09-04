@@ -1045,12 +1045,12 @@ make_narg_call(const unsigned N, ostringstream& typedefbuf,
    // ((<class>*)obj)-><method>(*(<arg-i-type>*)args[i], ...)
    //
    const FunctionDecl* FD = fMethod->GetMethodDecl();
-   PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
-   if (const TypeDecl* TD =
-            dyn_cast<TypeDecl>(FD->getDeclContext())) {
+   if (const CXXMethodDecl* MD = dyn_cast<CXXMethodDecl>(FD)) {
       // This is a class, struct, or union member.
-      (void) TD;
-      callbuf << "((" << class_name << "*)obj)->";
+      if (MD->isConst())
+         callbuf << "((const " << class_name << "*)obj)->";
+      else
+         callbuf << "((" << class_name << "*)obj)->";
    }
    else if (const NamedDecl* ND =
                dyn_cast<NamedDecl>(FD->getDeclContext())) {
@@ -1312,6 +1312,7 @@ make_wrapper()
    const FunctionDecl* FD = fMethod->GetMethodDecl();
    ASTContext& Context = FD->getASTContext();
    PrintingPolicy Policy(Context.getPrintingPolicy());
+
    //
    //  Get the class or namespace name.
    //
