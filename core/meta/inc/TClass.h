@@ -33,8 +33,10 @@
 #ifndef ROOT_TObjString
 #include "TObjString.h"
 #endif
+
 #include <map>
 #include <string>
+#include <set>
 
 class TBaseClass;
 class TBrowser;
@@ -309,6 +311,8 @@ public:
    TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
+   Bool_t             HasDictionary();
+   void               GetMissingDictionaries(TObjArray& result, bool recurse = false);
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
    Bool_t             InheritsFrom(const TClass *cl) const;

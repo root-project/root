@@ -79,6 +79,8 @@ public:
    virtual const char *GetIncludePath() = 0;
    virtual const char *GetSTLIncludePath() const { return ""; }
    virtual TObjArray  *GetRootMapFiles() const = 0;
+   virtual Bool_t   HasDictionary(TClass* cl) = 0;
+   virtual void     GetMissingDictionaries(TClass* cl, TObjArray& result, bool recurse = false) = 0;
    virtual void     Initialize() = 0;
    virtual void     InspectMembers(TMemberInspector&, void* obj, const TClass* cl) = 0;
    virtual Bool_t   IsLoaded(const char *filename) const = 0;
@@ -298,7 +300,7 @@ public:
    virtual const char *MethodArgInfo_DefaultValue(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual const char *MethodArgInfo_Name(MethodArgInfo_t * /* marginfo */) const {return 0;}
    virtual const char *MethodArgInfo_TypeName(MethodArgInfo_t * /* marginfo */) const {return 0;}
-   virtual std::string MethodArgInfo_TypeNormalizedName(MethodArgInfo_t * /* marginfo */) const = 0; 
+   virtual std::string MethodArgInfo_TypeNormalizedName(MethodArgInfo_t * /* marginfo */) const = 0;
 
 
    // TypeInfo interface
