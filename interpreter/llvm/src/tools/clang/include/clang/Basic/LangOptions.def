@@ -60,7 +60,7 @@ BENIGN_LANGOPT(ObjCInferRelatedResultType , 1, 1,
                "Objective-C related result type inference")
 LANGOPT(Trigraphs         , 1, 0,"trigraphs")
 LANGOPT(LineComment       , 1, 0, "'//' comments")
-LANGOPT(Bool              , 1, 0, "bool, true, and false keywords")
+LANGOPT(Bool              , 1, 1, "bool, true, and false keywords")
 LANGOPT(WChar             , 1, CPlusPlus, "wchar_t keyword")
 BENIGN_LANGOPT(DollarIdents   , 1, 1, "'$' in identifiers")
 BENIGN_LANGOPT(AsmPreprocessor, 1, 0, "preprocessor in asm mode")
