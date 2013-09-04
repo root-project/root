@@ -987,7 +987,7 @@ make_narg_ctor(const unsigned N, ostringstream& typedefbuf,
    // new ClassName(args...)
    //
    const FunctionDecl* FD = fMethod->GetMethodDecl();
-   PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
+
    callbuf << "new " << class_name << "(";
    for (unsigned i = 0U; i < N; ++i) {
       const ParmVarDecl* PVD = FD->getParamDecl(i);
@@ -1845,7 +1845,7 @@ exec(void* address, void* ret) const
    vector<ValHolder> vh_ary;
    vector<void*> vp_ary;
    const FunctionDecl* FD = fMethod->GetMethodDecl();
-   PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
+
    //
    //  Convert the arguments from cling::StoredValueRef to their
    //  actual type and store them in a holder for passing to the
@@ -2282,7 +2282,7 @@ exec_with_valref_return(void* address, cling::StoredValueRef* ret) const
    }
    const FunctionDecl* FD = fMethod->GetMethodDecl();
    ASTContext& Context = FD->getASTContext();
-   PrintingPolicy Policy(Context.getPrintingPolicy());
+
    if (const CXXConstructorDecl* CD = dyn_cast<CXXConstructorDecl>(FD)) {
       const TypeDecl* TD = dyn_cast<TypeDecl>(CD->getDeclContext());
       QualType ClassTy(TD->getTypeForDecl(), 0);
