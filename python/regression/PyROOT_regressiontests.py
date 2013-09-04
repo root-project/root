@@ -74,9 +74,6 @@ class Regression03UserDefinedNewOperatorTestCase( MyTestCase ):
 
       gROOT.LoadMacro( "MuonTileID.C+" )
 
-      if FIXCLING:       # failure b/c of temporaries
-         return
-
       getID()
       getID()                 # used to crash
 
@@ -253,9 +250,6 @@ class Regression10TVector3Pythonize( MyTestCase ):
 class Regression11CoralAttributeListIterators( MyTestCase ):
    def test1IterateWithBaseIterator( self ):
       """Verify that the correct base class iterators is picked up"""
-
-      if FIXCLING:       # failure b/c of temporaries
-         return
 
       gROOT.LoadMacro( "CoralAttributeList.C+" )
 

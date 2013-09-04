@@ -30,9 +30,6 @@ class STL1VectorTestCase( MyTestCase ):
    def test1BuiltinVectorType( self ):
       """Test access to a vector<int> (part of cintdlls)"""
 
-      if FIXCLING:       # failure due to ctor not available and default expression
-         return
-
       a = std.vector( int )( self.N )
       self.assertEqual( len(a), self.N )
 
@@ -116,8 +113,6 @@ class STL2ListTestCase( MyTestCase ):
          a.push_back( i )
 
       self.assertEqual( len(a), self.N )
-      if FIXCLING:       # failure b/c of temporaries
-         return
       self.failUnless( 11 in a )
 
       ll = list(a)
@@ -129,9 +124,6 @@ class STL2ListTestCase( MyTestCase ):
 
    def test2EmptyListType( self ):
       """Test behavior of empty list<int> (part of cintdlls)"""
-
-      if FIXCLING:       # failure b/c of temporaries
-         return
 
       a = std.list( int )()
       for arg in a:
@@ -151,9 +143,6 @@ class STL3MapTestCase( MyTestCase ):
          self.assertEqual( a[i], i )
 
       self.assertEqual( len(a), self.N )
-
-      if FIXCLING:       # failure b/c of temporaries
-         return
 
       for key, value in a:
          self.assertEqual( key, value )
@@ -184,7 +173,7 @@ class STL3MapTestCase( MyTestCase ):
    def test3EmptyMapType( self ):
       """Test behavior of empty map<int,int> (part of cintdlls)"""
 
-      if FIXCLING:       # failure b/c of temporaries
+      if FIXCLING:       # ??? crashes
          return
 
       m = std.map( int, int )()
@@ -239,9 +228,6 @@ class STL5StringHandlingTestCase( MyTestCase ):
    def test1StringArgumentPassing( self ):
       """Test mapping of python strings and std::string"""
 
-      if FIXCLING:       # failure b/c of default expression
-         return
-
       c, s = StringyClass(), std.string( "test1" )
 
     # pass through const std::string&
@@ -269,9 +255,6 @@ class STL5StringHandlingTestCase( MyTestCase ):
    def test2StringDataAccess( self ):
       """Test access to std::string object data members"""
 
-      if FIXCLING:       # failure b/c of default expression
-         return
-
       c, s = StringyClass(), std.string( "test string" )
 
       c.m_string = s
@@ -285,16 +268,14 @@ class STL5StringHandlingTestCase( MyTestCase ):
    def test3StringWithNullCharacter( self ):
       """Test that strings with NULL do not get truncated"""
 
-      if FIXCLING:       # failure b/c of default expression
-         return
-
       t0 = "aap\0noot"
       self.assertEqual( t0, "aap\0noot" )
 
       c, s = StringyClass(), std.string( t0, len(t0) )
 
       c.SetString1( s )
-      self.assertEqual( t0, c.GetString1() )
+      if not FIXCLING:       # std.string constructor above is incorrect
+         self.assertEqual( t0, c.GetString1() )
       self.assertEqual( s, c.GetString1() )
 
 
@@ -303,13 +284,13 @@ class STL6IteratorComparisonTestCase( MyTestCase ):
    def test1BuiltinVectorIterators( self ):
       """Test iterator comparison with operator== reflected"""
 
-      if FIXCLING:       # failure b/c of temporaries and default expression
-         return
-
       v = std.vector( int )()
       v.resize( 1 )
 
       self.assertEqual( len(v), 1 )
+
+      if FIXCLING:       # failure b/c no operator== available
+         return
 
       b1, e1 = v.begin(), v.end()
       b2, e2 = v.begin(), v.end()
@@ -340,9 +321,6 @@ class STL6IteratorComparisonTestCase( MyTestCase ):
 
    def test2CustomVectorIterators( self ):
       """Test iterator comparison with operator== NOT reflected"""
-
-      if FIXCLING:       # failure b/c of temporaries and default expression
-         return
 
       v = std.vector( JustAClass )()
       v.resize( 1 )

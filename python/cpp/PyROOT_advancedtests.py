@@ -326,9 +326,6 @@ class Cpp09LongExpressionsTestCase( MyTestCase ):
       r = SomeClassWithData()
       self.assertEqual( SomeClassWithData.SomeData.s_numData, 1 )
 
-      if FIXCLING:       # failure b/c of temporaries
-         return
-
     # in this, GimeData() returns a datamember of the temporary result
     # from GimeCopy(); normal ref-counting would let it go too early
       self.assertEqual( r.GimeCopy().GimeData().s_numData, 2 )

@@ -116,8 +116,6 @@ class Func2FitFunctionTestCase( MyTestCase ):
 
       h = TH1F( "h", "test", 100, -4, 4 )
       h.FillRandom( "gaus", 200000 )
-      if FIXCLING:       # failure b/c of temporaries
-         return
       h.Fit( f, "0Q" )
 
       self.assertEqual( f.GetNDF(), 96 )
