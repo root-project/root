@@ -245,8 +245,8 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
    // CLING WORKAROUND --
       Bool_t isConstructor = kFALSE;
       if ( clName == "string" ) {
-         isConstructor = mtName == "basic_string<char>";
-      } else {
+         isConstructor = mtName == "basic_string<char,char_traits<char>,allocator<char> >";
+         } else {
    // -- CLING WORKAROUND
          isConstructor =
             TClassEdit::ShortType( mtName.c_str(), TClassEdit::kDropAlloc ) == clName;
