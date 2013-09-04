@@ -11,7 +11,7 @@ CALLROOTEXE = root.exe
 # (incorrect behavior of C++ compliant code)
 #CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndConversion"
-CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncReturnInt"
+#CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncReturnInt"
 CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
@@ -64,7 +64,7 @@ ClingWorkAroundLackOfModule = yes
 ClingWorkAroundExtraParensWithImplicitAuto = yes
 ClingWorkAroundMissingDynamicScope = yes
 ClingWorkAroundMissingUnloading = yes
-ClingWorkAroundCallfuncReturnInt = yes         # See http://savannah.cern.ch/bugs/?100652 
+#ClingWorkAroundCallfuncReturnInt = yes         # See http://savannah.cern.ch/bugs/?100652 
 #ClingWorkAroundCallfuncAndConversion = yes     # See https://savannah.cern.ch/bugs/index.php?99517
 #ClingWorkAroundMissingAutoLoadingForNamespaces = yes # See: https://sft.its.cern.ch/jira/browse/ROOT-4779
 ClingWorkAroundMissingAutoLoadingForTemplates = yes  # See: https://sft.its.cern.ch/jira/browse/ROOT-4786
