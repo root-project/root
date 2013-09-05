@@ -34,6 +34,10 @@
 #include <sstream>
 #include <utility>
 
+//- FOR CLING WORKAROUND
+#include <map>
+//
+
 
 //- data _____________________________________________________________________
 dict_lookup_func PyROOT::gDictLookupOrg = 0;
@@ -754,19 +758,29 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
 }
 
 //____________________________________________________________________________
+static std::map< std::string, std::map< ClassInfo_t*, Long_t > > sOffsets;
 Long_t PyROOT::Utility::GetObjectOffset(
       const std::string& clCurrent, ClassInfo_t* clDesired, void* obj ) {
 // root/meta base class offset (TClass:GetBaseClassOffset) fails in the case of
 // virtual inheritance, so take this little round-about way
 
-// TODO: figure out how to do this efficiently with Cling, or lacking that
-//       at least memoize these results
+// TODO: this memoization is likely inefficient, but it is very much needed
+   std::map< std::string, std::map< ClassInfo_t*, Long_t > >::iterator
+      mit1 = sOffsets.find( clCurrent );
+   if ( mit1 != sOffsets.end() ) {
+      std::map< ClassInfo_t*, Long_t >::iterator mit2 = mit1->second.find( clDesired );
+      if ( mit2 != mit1->second.end() )
+         return mit2->second;
+   }
+
    std::ostringstream interpcast;
    interpcast << "(long)(" << gInterpreter->ClassInfo_FullName( clDesired ) << "*)("
               << clCurrent << "*)" << (void*)obj
               << "-(long)(" << clCurrent << "*)" << (void*)obj
               << ";";
-   return (Long_t)gInterpreter->ProcessLine( interpcast.str().c_str() );
+   Long_t offset = (Long_t)gInterpreter->ProcessLine( interpcast.str().c_str() );
+   sOffsets[ clCurrent ][ clDesired ] = offset;
+   return offset;
 }
 
 //____________________________________________________________________________
