@@ -121,11 +121,6 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
       std::string::size_type pos = scoped_name.find(class_name + "::");
       if (pos == 0)      // only accept found at start
          scoped_name = scoped_name.substr(class_name.size() + 2 /* for :: */, std::string::npos);
-
-   // CLING WORKAROUND (ROOT-5204) -- operator _Bool -> operator bool
-      if ( scoped_name == "operator _Bool" )
-         scoped_name = "operator bool";
-   // -- CLING WORKAROUND
       return scoped_name;
    }
 
