@@ -32,11 +32,17 @@
 #include "llvm/ADT/SmallVector.h"
 
 namespace cling {
-class Interpreter;
+   class Interpreter;
 }
 
 namespace clang {
-class FunctionDecl;
+   class FunctionDecl;
+}
+
+namespace ROOT {
+   namespace TMetaUtils {
+      class TNormalizedCtxt;
+   }
 }
 
 class TClingClassInfo;
@@ -80,8 +86,8 @@ public:
    long                                         Property() const;
    TClingTypeInfo                              *Type() const;
    const char                                  *GetMangledName() const;
-   const char                                  *GetPrototype() const;
-   const char                                  *Name() const;
+   const char                                  *GetPrototype(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
+   const char                                  *Name(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char                                  *TypeName() const;
    const char                                  *Title();
 };

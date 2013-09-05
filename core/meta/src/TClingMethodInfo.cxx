@@ -424,7 +424,7 @@ const char *TClingMethodInfo::GetMangledName() const
    return mangled_name.c_str();
 }
 
-const char *TClingMethodInfo::GetPrototype() const
+const char *TClingMethodInfo::GetPrototype(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
       return 0;
@@ -448,7 +448,7 @@ const char *TClingMethodInfo::GetPrototype() const
       buf += name;
       buf += "::";
    }
-   buf += Name();
+   buf += Name(normCtxt);
    buf += '(';
    TClingMethodArgInfo arg(fInterp, this);
    int idx = 0;
@@ -477,7 +477,25 @@ const char *TClingMethodInfo::GetPrototype() const
    return buf.c_str();
 }
 
-const char *TClingMethodInfo::Name() const
+static void ConstructorName(std::string &name, const clang::FunctionDecl *decl,
+                            cling::Interpreter &interp,
+                            const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+{
+   const clang::TypeDecl* td = llvm::dyn_cast<clang::TypeDecl>(decl->getDeclContext());
+   clang::QualType qualType(td->getTypeForDecl(),0);
+   ROOT::TMetaUtils::GetNormalizedName(name, qualType, interp, normCtxt);
+   unsigned int level = 0;
+   for(size_t cursor = name.length()-1; cursor != 0; --cursor) {
+      if (name[cursor] == '>') ++level;
+      else if (name[cursor] == '<') --level;
+      else if (level == 0 && name[cursor] == ':') {
+         name.erase(0,cursor+1);
+         break;
+      }
+   }
+}
+
+const char *TClingMethodInfo::Name(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
       return 0;
@@ -487,20 +505,15 @@ const char *TClingMethodInfo::Name() const
    const clang::FunctionDecl *decl = GetMethodDecl();
    if (llvm::isa<clang::CXXConstructorDecl>(decl))
    {
-      const clang::TypeDecl* td = llvm::dyn_cast<clang::TypeDecl>(decl->getDeclContext());
-      clang::QualType qualType(td->getTypeForDecl(),0);
-      ROOT::TMetaUtils::GetFullyQualifiedTypeName(buf,qualType,*fInterp);
+      ConstructorName(buf, decl, *fInterp, normCtxt);
       
    } else if (llvm::isa<clang::CXXDestructorDecl>(decl))
    {
-      const clang::TypeDecl* td = llvm::dyn_cast<clang::TypeDecl>(decl->getDeclContext());
-      clang::QualType qualType(td->getTypeForDecl(),0);
-      ROOT::TMetaUtils::GetFullyQualifiedTypeName(buf,qualType,*fInterp);
+      ConstructorName(buf, decl, *fInterp, normCtxt);
       buf.insert(buf.begin(), '~');
    } else {
       llvm::raw_string_ostream stream(buf);
-      clang::PrintingPolicy policy(GetMethodDecl()->getASTContext().getPrintingPolicy());
-      GetMethodDecl()->getNameForDiagnostic(stream, policy, /*Qualified=*/false);
+      decl->getNameForDiagnostic(stream, decl->getASTContext().getPrintingPolicy(), /*Qualified=*/false);
    }
    return buf.c_str();
 }

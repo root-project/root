@@ -2400,7 +2400,7 @@ void TCling::CreateListOfMethods(TClass* cl) const
    TClingMethodInfo t(fInterpreter, (TClingClassInfo*)cl->GetClassInfo());
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
-      if (t.IsValid() && t.Name()) {
+      if (t.IsValid() && t.Name(*fNormalizedCtxt)) {
          TClingMethodInfo* a = new TClingMethodInfo(t);
          cl->fMethod->Add(new TMethod((MethodInfo_t*)a, cl));
       }
@@ -4800,14 +4800,14 @@ const char* TCling::MethodInfo_GetMangledName(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_GetPrototype(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
-   return info->GetPrototype();
+   return info->GetPrototype(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
 const char* TCling::MethodInfo_Name(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
-   return info->Name();
+   return info->Name(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________

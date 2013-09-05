@@ -1058,7 +1058,15 @@ make_narg_call(const unsigned N, ostringstream& typedefbuf,
       (void) ND;
       callbuf << class_name << "::";
    }
-   callbuf << fMethod->Name() << "(";
+   //   callbuf << fMethod->Name() << "(";
+   {
+      std::string name;
+      {
+         llvm::raw_string_ostream stream(name);
+         FD->getNameForDiagnostic(stream, FD->getASTContext().getPrintingPolicy(), /*Qualified=*/false);
+      }
+      callbuf << name << "(";
+   }
    for (unsigned i = 0U; i < N; ++i) {
       const ParmVarDecl* PVD = FD->getParamDecl(i);
       QualType Ty = PVD->getType();
