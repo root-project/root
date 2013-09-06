@@ -3472,12 +3472,12 @@ const clang::Type *ROOT::TMetaUtils::GetUnderlyingType(clang::QualType type)
             rawtype = rawtype->getCanonicalTypeInternal().getTypePtr();
          }
          if (rawtype->isArrayType()) {
-            rawtype = type.getTypePtr()->getBaseElementTypeUnsafe ();
+            rawtype = rawtype->getBaseElementTypeUnsafe ();
          }
       }
    }
    if (rawtype->isArrayType()) {
-      rawtype = type.getTypePtr()->getBaseElementTypeUnsafe ();
+      rawtype = rawtype->getBaseElementTypeUnsafe ();
    }
    return rawtype;
 }
