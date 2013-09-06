@@ -482,6 +482,8 @@ static void ConstructorName(std::string &name, const clang::FunctionDecl *decl,
                             const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    const clang::TypeDecl* td = llvm::dyn_cast<clang::TypeDecl>(decl->getDeclContext());
+   if (!td) return;
+
    clang::QualType qualType(td->getTypeForDecl(),0);
    ROOT::TMetaUtils::GetNormalizedName(name, qualType, interp, normCtxt);
    unsigned int level = 0;
