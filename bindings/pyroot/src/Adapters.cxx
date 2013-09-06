@@ -274,7 +274,10 @@ PyROOT::TScopeAdapter PyROOT::TScopeAdapter::ByName( const std::string& name, Bo
    if (klass.GetClass() && klass->GetListOfAllPublicMethods()->GetSize() == 0) {
    // sometimes I/O interferes, leading to zero methods: reload from CINT
       ClassInfo_t* cl = gInterpreter->ClassInfo_Factory( name.c_str() );
-      if ( cl ) gInterpreter->SetClassInfo( klass, kTRUE );
+      if ( cl ) {
+         gInterpreter->SetClassInfo( klass, kTRUE );
+         gInterpreter->ClassInfo_Delete(cl);
+      }
    }
 
    gErrorIgnoreLevel = oldEIL;
