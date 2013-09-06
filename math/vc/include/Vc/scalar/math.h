@@ -49,15 +49,20 @@ template<typename T> static Vc_ALWAYS_INLINE Vector<T> abs  (const Vector<T> &x)
     return Vector<T>(std::abs(x.data()));
 }
 
+template<> Vc_ALWAYS_INLINE int_v abs(const int_v &x) { return x < 0 ? -x : x; }
+template<> Vc_ALWAYS_INLINE uint_v abs(const uint_v &x) { return x; }
+template<> Vc_ALWAYS_INLINE short_v abs(const short_v &x) { return x < 0 ? -x : x; }
+template<> Vc_ALWAYS_INLINE ushort_v abs(const ushort_v &x) { return x; }
+
 template<typename T> static Vc_ALWAYS_INLINE void sincos(const Vector<T> &x, Vector<T> *sin, Vector<T> *cos)
 {
 #if (defined(VC_CLANG) && VC_HAS_BUILTIN(__builtin_sincosf)) || (!defined(VC_CLANG) && defined(__GNUC__) && !defined(_WIN32))
     __builtin_sincosf(x.data(), &sin->data(), &cos->data());
-#elif defined(_WIN32)
+#elif defined(_GNU_SOURCE)
+    sincosf(x.data(), &sin->data(), &cos->data());
+#else
     sin->data() = std::sin(x.data());
     cos->data() = std::cos(x.data());
-#else
-    sincosf(x.data(), &sin->data(), &cos->data());
 #endif
 }
 
@@ -65,11 +70,11 @@ template<> Vc_ALWAYS_INLINE void sincos(const Vector<double> &x, Vector<double> 
 {
 #if (defined(VC_CLANG) && VC_HAS_BUILTIN(__builtin_sincos)) || (!defined(VC_CLANG) && defined(__GNUC__) && !defined(_WIN32))
     __builtin_sincos(x.data(), &sin->data(), &cos->data());
-#elif defined(_WIN32)
+#elif defined(_GNU_SOURCE)
+    ::sincos(x.data(), &sin->data(), &cos->data());
+#else
     sin->data() = std::sin(x.data());
     cos->data() = std::cos(x.data());
-#else
-    ::sincos(x.data(), &sin->data(), &cos->data());
 #endif
 }
 

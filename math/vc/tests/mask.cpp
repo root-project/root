@@ -220,6 +220,54 @@ template<typename Vec> void testFirstOne()
     }
 }
 
+template<typename M1, typename M2> void testLogicalOperatorsImpl()
+{
+    VERIFY((M1(true) && M2(true)).isFull());
+    VERIFY((M1(true) && M2(false)).isEmpty());
+    VERIFY((M1(true) || M2(true)).isFull());
+    VERIFY((M1(true) || M2(false)).isFull());
+    VERIFY((M1(false) || M2(false)).isEmpty());
+}
+
+template<typename M1, typename M2> void testBinaryOperatorsImpl()
+{
+    testLogicalOperatorsImpl<M1, M2>();
+
+    VERIFY((M1(true) & M2(true)).isFull());
+    VERIFY((M1(true) & M2(false)).isEmpty());
+    VERIFY((M1(true) | M2(true)).isFull());
+    VERIFY((M1(true) | M2(false)).isFull());
+    VERIFY((M1(false) | M2(false)).isEmpty());
+    VERIFY((M1(true) ^ M2(true)).isEmpty());
+    VERIFY((M1(true) ^ M2(false)).isFull());
+}
+
+void testBinaryOperators()
+{
+    testLogicalOperatorsImpl< short_m, sfloat_m>();
+    testLogicalOperatorsImpl<ushort_m, sfloat_m>();
+    testLogicalOperatorsImpl<sfloat_m,  short_m>();
+    testLogicalOperatorsImpl<sfloat_m, ushort_m>();
+
+    testBinaryOperatorsImpl< short_m,  short_m>();
+    testBinaryOperatorsImpl< short_m, ushort_m>();
+    testBinaryOperatorsImpl<ushort_m,  short_m>();
+    testBinaryOperatorsImpl<ushort_m, ushort_m>();
+    testBinaryOperatorsImpl<sfloat_m, sfloat_m>();
+
+    testBinaryOperatorsImpl<   int_m,    int_m>();
+    testBinaryOperatorsImpl<   int_m,   uint_m>();
+    testBinaryOperatorsImpl<   int_m,  float_m>();
+    testBinaryOperatorsImpl<  uint_m,    int_m>();
+    testBinaryOperatorsImpl<  uint_m,   uint_m>();
+    testBinaryOperatorsImpl<  uint_m,  float_m>();
+    testBinaryOperatorsImpl< float_m,    int_m>();
+    testBinaryOperatorsImpl< float_m,   uint_m>();
+    testBinaryOperatorsImpl< float_m,  float_m>();
+
+    testBinaryOperatorsImpl<double_m, double_m>();
+}
+
 #ifdef VC_IMPL_SSE
 void testFloat8GatherMask()
 {
@@ -259,6 +307,7 @@ int main(int argc, char **argv)
     testAllTypes(testZero);
     testAllTypes(testCount);
     testAllTypes(testFirstOne);
+    runTest(testBinaryOperators);
 
 #ifdef VC_IMPL_SSE
     runTest(testFloat8GatherMask);

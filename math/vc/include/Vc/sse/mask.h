@@ -94,11 +94,6 @@ template<unsigned int VectorSize> class Mask
         Vc_ALWAYS_INLINE Vc_PURE bool operator==(const Mask &rhs) const { return MaskHelper<VectorSize>::cmpeq (k, rhs.k); }
         Vc_ALWAYS_INLINE Vc_PURE bool operator!=(const Mask &rhs) const { return MaskHelper<VectorSize>::cmpneq(k, rhs.k); }
 
-        Vc_ALWAYS_INLINE Vc_PURE Mask operator&&(const Mask &rhs) const { return _mm_and_ps(k, rhs.k); }
-        Vc_ALWAYS_INLINE Vc_PURE Mask operator& (const Mask &rhs) const { return _mm_and_ps(k, rhs.k); }
-        Vc_ALWAYS_INLINE Vc_PURE Mask operator||(const Mask &rhs) const { return _mm_or_ps (k, rhs.k); }
-        Vc_ALWAYS_INLINE Vc_PURE Mask operator| (const Mask &rhs) const { return _mm_or_ps (k, rhs.k); }
-        Vc_ALWAYS_INLINE Vc_PURE Mask operator^ (const Mask &rhs) const { return _mm_xor_ps(k, rhs.k); }
         Vc_ALWAYS_INLINE Vc_PURE Mask operator!() const { return _mm_andnot_si128(dataI(), _mm_setallone_si128()); }
 
         Vc_ALWAYS_INLINE Mask &operator&=(const Mask &rhs) { k = _mm_and_ps(k, rhs.k); return *this; }
@@ -543,6 +538,36 @@ class Float8GatherMask
 //X             _sse_vector_foreach_it > 0;
 //X             _sse_vector_foreach_it = _sse_bitscan_initialized(_sse_vector_foreach_it, mask.data()))
 //X         for (int _sse_vector_foreach_inner = 1, it = _sse_vector_foreach_it; _sse_vector_foreach_inner; --_sse_vector_foreach_inner)
+
+// Operators
+// let binary and/or/xor work for any combination of masks (as long as they have the same sizeof)
+template<unsigned int LSize, unsigned int RSize> Mask<LSize> operator& (const Mask<LSize> &lhs, const Mask<RSize> &rhs) { return _mm_and_ps(lhs.data(), rhs.data()); }
+template<unsigned int LSize, unsigned int RSize> Mask<LSize> operator| (const Mask<LSize> &lhs, const Mask<RSize> &rhs) { return _mm_or_ps (lhs.data(), rhs.data()); }
+template<unsigned int LSize, unsigned int RSize> Mask<LSize> operator^ (const Mask<LSize> &lhs, const Mask<RSize> &rhs) { return _mm_xor_ps(lhs.data(), rhs.data()); }
+
+// binary and/or/xor cannot work with one operand larger than the other
+template<unsigned int Size> void operator& (const Mask<Size> &lhs, const Float8Mask &rhs);
+template<unsigned int Size> void operator| (const Mask<Size> &lhs, const Float8Mask &rhs);
+template<unsigned int Size> void operator^ (const Mask<Size> &lhs, const Float8Mask &rhs);
+template<unsigned int Size> void operator& (const Float8Mask &rhs, const Mask<Size> &lhs);
+template<unsigned int Size> void operator| (const Float8Mask &rhs, const Mask<Size> &lhs);
+template<unsigned int Size> void operator^ (const Float8Mask &rhs, const Mask<Size> &lhs);
+
+// disable logical and/or for incompatible masks
+template<unsigned int LSize, unsigned int RSize> void operator&&(const Mask<LSize> &lhs, const Mask<RSize> &rhs);
+template<unsigned int LSize, unsigned int RSize> void operator||(const Mask<LSize> &lhs, const Mask<RSize> &rhs);
+template<unsigned int Size> void operator&&(const Mask<Size> &lhs, const Float8Mask &rhs);
+template<unsigned int Size> void operator||(const Mask<Size> &lhs, const Float8Mask &rhs);
+template<unsigned int Size> void operator&&(const Float8Mask &rhs, const Mask<Size> &lhs);
+template<unsigned int Size> void operator||(const Float8Mask &rhs, const Mask<Size> &lhs);
+
+// logical and/or for compatible masks
+template<unsigned int Size> Vc_ALWAYS_INLINE Vc_PURE Mask<Size> operator&&(const Mask<Size> &lhs, const Mask<Size> &rhs) { return _mm_and_ps(lhs.data(), rhs.data()); }
+template<unsigned int Size> Vc_ALWAYS_INLINE Vc_PURE Mask<Size> operator||(const Mask<Size> &lhs, const Mask<Size> &rhs) { return _mm_or_ps (lhs.data(), rhs.data()); }
+Vc_ALWAYS_INLINE Vc_PURE Mask<8> operator&&(const Float8Mask &rhs, const Mask<8> &lhs) { return static_cast<Mask<8> >(rhs) && lhs; }
+Vc_ALWAYS_INLINE Vc_PURE Mask<8> operator||(const Float8Mask &rhs, const Mask<8> &lhs) { return static_cast<Mask<8> >(rhs) || lhs; }
+Vc_ALWAYS_INLINE Vc_PURE Mask<8> operator&&(const Mask<8> &rhs, const Float8Mask &lhs) { return rhs && static_cast<Mask<8> >(lhs); }
+Vc_ALWAYS_INLINE Vc_PURE Mask<8> operator||(const Mask<8> &rhs, const Float8Mask &lhs) { return rhs || static_cast<Mask<8> >(lhs); }
 
 } // namespace SSE
 } // namespace Vc

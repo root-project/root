@@ -74,13 +74,13 @@
 #  define VC_RESTRICT __restrict__
 #  define VC_DEPRECATED(msg)
 #elif defined(__GNUC__)
-#  if VC_GCC < 0x40300 || defined(VC_OPEN64)
+#  if (defined(VC_GCC) && VC_GCC < 0x40300) || defined(VC_OPEN64)
 // GCC 4.1 and 4.2 ICE on may_alias. Since Open64 uses the GCC 4.2 frontend it has the same problem.
 #    define Vc_MAY_ALIAS
 #  else
 #    define Vc_MAY_ALIAS __attribute__((__may_alias__))
 #  endif
-#  if VC_GCC < 0x40300
+#  if (defined(VC_GCC) && VC_GCC < 0x40300)
 // GCC 4.1 fails with "sorry unimplemented: inlining failed"
 #    define Vc_INTRINSIC_R __attribute__((__flatten__))
 #  elif defined(VC_OPEN64)

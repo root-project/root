@@ -20,7 +20,6 @@
 #ifndef INCLUDE_VC_LIMITS
 #define INCLUDE_VC_LIMITS
 
-#include <limits>
 #include "vector.h"
 #include "common/macros.h"
 #include <limits>

@@ -240,6 +240,7 @@ template<typename T1, typename T2> static inline bool unittest_compareHelper( co
 template<> inline bool unittest_compareHelper<Vc::int_v, Vc::int_v>( const Vc::int_v &a, const Vc::int_v &b ) { return (a == b).isFull(); }
 template<> inline bool unittest_compareHelper<Vc::uint_v, Vc::uint_v>( const Vc::uint_v &a, const Vc::uint_v &b ) { return (a == b).isFull(); }
 template<> inline bool unittest_compareHelper<Vc::float_v, Vc::float_v>( const Vc::float_v &a, const Vc::float_v &b ) { return (a == b).isFull(); }
+template<> inline bool unittest_compareHelper<Vc::sfloat_v, Vc::sfloat_v>( const Vc::sfloat_v &a, const Vc::sfloat_v &b ) { return (a == b).isFull(); }
 template<> inline bool unittest_compareHelper<Vc::double_v, Vc::double_v>( const Vc::double_v &a, const Vc::double_v &b ) { return (a == b).isFull(); }
 template<> inline bool unittest_compareHelper<Vc::ushort_v, Vc::ushort_v>( const Vc::ushort_v &a, const Vc::ushort_v &b ) { return (a == b).isFull(); }
 template<> inline bool unittest_compareHelper<Vc::short_v, Vc::short_v>( const Vc::short_v &a, const Vc::short_v &b ) { return (a == b).isFull(); }
@@ -268,16 +269,16 @@ template<> inline bool unittest_fuzzyCompareHelper<float>( const float &a, const
     return ulpDiffToReferenceWrapper(a, b) <= _unit_test_global.float_fuzzyness;
 }
 template<> inline bool unittest_fuzzyCompareHelper<Vc::float_v>( const Vc::float_v &a, const Vc::float_v &b ) {
-    return ulpDiffToReferenceWrapper(a, b) <= _unit_test_global.float_fuzzyness;
+    return (ulpDiffToReferenceWrapper(a, b) <= _unit_test_global.float_fuzzyness).isFull();
 }
 template<> inline bool unittest_fuzzyCompareHelper<Vc::sfloat_v>( const Vc::sfloat_v &a, const Vc::sfloat_v &b ) {
-    return ulpDiffToReferenceWrapper(a, b) <= _unit_test_global.float_fuzzyness;
+    return (ulpDiffToReferenceWrapper(a, b) <= _unit_test_global.float_fuzzyness).isFull();
 }
 template<> inline bool unittest_fuzzyCompareHelper<double>( const double &a, const double &b ) {
     return ulpDiffToReferenceWrapper(a, b) <= _unit_test_global.double_fuzzyness;
 }
 template<> inline bool unittest_fuzzyCompareHelper<Vc::double_v>( const Vc::double_v &a, const Vc::double_v &b ) {
-    return ulpDiffToReferenceWrapper(a, b) <= _unit_test_global.double_fuzzyness;
+    return (ulpDiffToReferenceWrapper(a, b) <= _unit_test_global.double_fuzzyness).isFull();
 }
 
 template<typename T1, typename T2, typename M> inline void unitttest_comparePrintHelper(const T1 &a, const T2 &b, const M &m, const char *aa, const char *bb, const char *file, int line, double fuzzyness = 0.) {

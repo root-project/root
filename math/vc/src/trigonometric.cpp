@@ -138,7 +138,7 @@ template<> template<typename _T> Vector<_T> Trigonometric<Vc::Internal::Trigonom
 
     IV quadrant;
     const V z = foldInput(_x, quadrant);
-    const M sign = (_x < V::Zero()) ^ (quadrant > 3);
+    const M sign = (_x < V::Zero()) ^ static_cast<M>(quadrant > 3);
     quadrant(quadrant > 3) -= 4;
 
     V y = sinSeries(z);

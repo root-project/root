@@ -50,9 +50,18 @@ namespace
     template<typename T1, typename T2, size_t ToSelect> struct Decltype { typedef T1 Value; };
     template<typename T1, typename T2> struct Decltype<T1, T2, sizeof(one)> { typedef T1 Value; };
     template<typename T1, typename T2> struct Decltype<T1, T2, sizeof(two)> { typedef T2 Value; };
+#ifdef VC_CLANG
+    // this special case is only necessary to silence a warning (which is rather a note that clang
+    // did the expected optimization):
+    // warning: variable 'SOME_PTR' is not needed and will not be emitted [-Wunneeded-internal-declaration]
+    // Then again, I don't remember why the SOME_PTR hack was necessary in the first place - some
+    // strange compiler quirk...
+#define VC_DECLTYPE(T1, op, T2) typename Decltype<T1, T2, sizeof(DecltypeHelper<T1, T2>::test(T1() op T2()))>::Value
+#else
     static const void *SOME_PTR;
-} // anonymous namespace
 #define VC_DECLTYPE(T1, op, T2) typename Decltype<T1, T2, sizeof(DecltypeHelper<T1, T2>::test(*static_cast<const T1*>(SOME_PTR) op *static_cast<const T2*>(SOME_PTR)))>::Value
+#endif
+} // anonymous namespace
 #endif
 
 #define VC_MEM_OPERATOR_EQ(op) \

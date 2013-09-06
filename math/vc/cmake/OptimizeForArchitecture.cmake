@@ -73,6 +73,8 @@ macro(AutodetectHostArchitecture)
          # Any recent Intel CPU except NetBurst
          if(_cpu_model EQUAL 58)
             set(TARGET_ARCHITECTURE "ivy-bridge")
+         elseif(_cpu_model EQUAL 47) # Xeon E7 4860
+            set(TARGET_ARCHITECTURE "westmere")
          elseif(_cpu_model EQUAL 46) # Xeon 7500 series
             set(TARGET_ARCHITECTURE "westmere")
          elseif(_cpu_model EQUAL 45) # Xeon TNG
