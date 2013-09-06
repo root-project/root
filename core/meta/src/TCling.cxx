@@ -2632,6 +2632,7 @@ TString TCling::GetMangledName(TClass* cl, const char* method,
       func.SetFunc(&gcl, method, params, &offset);
    }
    TClingMethodInfo* mi = (TClingMethodInfo*) func.FactoryMethod();
+   if (!mi) return "";
    const char* mangled_name = mi->GetMangledName();
    delete mi;
    mi = 0;
