@@ -801,7 +801,7 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
       TNamed *env = 0;
       while ((env = (TNamed *)nxenv())) {
          TString senv(env->GetTitle());
-         ResolveKeywords(senv, logfile.Data());
+         ResolveKeywords(senv, ord, logfile.Data());
          fprintf(fenv, "export %s=%s\n", env->GetName(), senv.Data());
          if (namelist.Length() > 0)
             namelist += ',';
@@ -818,10 +818,11 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
 }
 
 //__________________________________________________________________________
-void TProofLite::ResolveKeywords(TString &s, const char *logfile)
+void TProofLite::ResolveKeywords(TString &s, const char *ord,
+   const char *logfile)
 {
    // Resolve some keywords in 's'
-   //    <logfileroot>, <user>, <rootsys>
+   //    <logfilewrk>, <user>, <rootsys>, <cpupin>
 
    if (!logfile) return;
 
@@ -840,6 +841,59 @@ void TProofLite::ResolveKeywords(TString &s, const char *logfile)
    // rootsys
    if (gSystem->Getenv("ROOTSYS") && s.Contains("<rootsys>")) {
       s.ReplaceAll("<rootsys>", gSystem->Getenv("ROOTSYS"));
+   }
+
+   // cpupin: pin to this CPU num (from 0 to ncpus-1)
+   if (s.Contains("<cpupin>")) {
+      TString o = ord;
+      Int_t n = o.Index('.');
+      if (n != kNPOS) {
+
+         o.Remove(0, n+1);
+         n = o.Atoi();  // n is ord
+
+         TString cpuPinList;
+         {
+            const TList *envVars = GetEnvVars();
+            TNamed *var;
+            if (envVars) {
+               var = dynamic_cast<TNamed *>(envVars->FindObject("PROOF_SLAVE_CPUPIN_ORDER"));
+               if (var) cpuPinList = var->GetTitle();
+            }
+         }
+
+         UInt_t nCpus = 1;
+         {
+            SysInfo_t si;
+            if (gSystem->GetSysInfo(&si) == 0 && (si.fCpus > 0))
+               nCpus = si.fCpus;
+            else nCpus = 1;  // fallback
+         }
+
+         if (cpuPinList.IsNull() || (cpuPinList == "*")) {
+            // Use processors in order
+            n = n % nCpus;
+         }
+         else {
+            // Use processors in user's order
+            // n is now the ordinal, converting to idx
+            n = n % (cpuPinList.CountChar('+')+1);
+            TString tok;
+            Ssiz_t from = 0;
+            for (Int_t i=0; cpuPinList.Tokenize(tok, from, "\\+"); i++) {
+               if (i == n) {
+                  n = (tok.Atoi() % nCpus);
+                  break;
+               }
+            }
+         }
+
+         o.Form("%d", n);
+      }
+      else {
+         o = "0";  // should not happen
+      }
+      s.ReplaceAll("<cpupin>", o);
    }
 }
 

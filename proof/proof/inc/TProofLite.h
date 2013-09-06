@@ -77,7 +77,7 @@ private:
    Int_t SetProofServEnv(const char *ord);
    Int_t InitDataSetManager();
 
-   void  ResolveKeywords(TString &s, const char *logfile);
+   void  ResolveKeywords(TString &s, const char *ord, const char *logfile);
 
    void  SendInputDataFile();
    void  ShowDataDir(const char *dirname);
