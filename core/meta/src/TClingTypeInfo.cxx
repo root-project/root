@@ -96,7 +96,7 @@ void TClingTypeInfo::Init(const char *name)
 const char *TClingTypeInfo::Name() const
 {
    if (!IsValid()) {
-      return 0;
+      return "";
    }
    // Note: This *must* be static because we are returning a pointer inside it!
    static std::string buf;
