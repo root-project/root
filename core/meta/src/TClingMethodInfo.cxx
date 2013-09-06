@@ -489,7 +489,7 @@ static void ConstructorName(std::string &name, const clang::FunctionDecl *decl,
    unsigned int level = 0;
    for(size_t cursor = name.length()-1; cursor != 0; --cursor) {
       if (name[cursor] == '>') ++level;
-      else if (name[cursor] == '<') --level;
+      else if (name[cursor] == '<' && level) --level;
       else if (level == 0 && name[cursor] == ':') {
          name.erase(0,cursor+1);
          break;
