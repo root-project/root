@@ -27,7 +27,7 @@ altcc=
 altcxx=
 altf77=
 altld=
-altcxxset=
+altccset=
 gcctoolchain=
 host=
 
@@ -2013,8 +2013,8 @@ if test $# -gt 0 ; then
       --with-xrootd=*)         xrootddir=$optarg     ; enable_xrootd="yes"  ;;
       --with-xrootd-incdir=*)  xrdincdir=$optarg     ; enable_xrootd="yes"  ;;
       --with-xrootd-libdir=*)  xrdlibdir=$optarg     ; enable_xrootd="yes"  ;;
-      --with-cc=*)             altcc=$optarg         ;;
-      --with-cxx=*)            altcxx=$optarg        ; altcxxset=1          ;;
+      --with-cc=*)             altcc=$optarg         ; altccset=1           ;;
+      --with-cxx=*)            altcxx=$optarg        ;;
       --with-f77=*)            altf77=$optarg        ;;
       --with-ld=*)             altld=$optarg         ;;
       --with-gcc-toolchain=*)  gcctoolchain=$optarg  ;;
@@ -2296,11 +2296,11 @@ gcctoolchainconf="/**/"
 if test "x$gcctoolchain" != "x"; then
    setgcctoolchain="define"
    gcctoolchainconf=\"$gcctoolchain\"
-   if test ! "x$altcxxset" = "x" ; then
-      gccincdirs=`echo "#include <bogus.h>" | ${altcxx} -v -x c - 2>&1 >/dev/null | awk '/^#include </,/^End of search/{if (!/^#include </ && !/^End of search/){ print }}'`
+   if test "x$altccset" != "x" ; then
+      gccincdirs=`echo "#include <bogus.h>" | ${altcc} -xc++ -E -v - 2>&1 >/dev/null | awk '/^#include </,/^End of search/{if (!/^#include </ && !/^End of search/){ print }}'`
       gccincdirarr=(${gccincdirs// / })
    else
-      result "`basename $0`: no alternative compiler specified, incompatible with --with-gcc-toolchain option"
+      result "`basename $0`: no alternative gcc compiler specified, incompatible with --with-gcc-toolchain option"
       exit 1
    fi
 fi
@@ -7025,7 +7025,7 @@ if test ! "x${gccincdirarr[0]}" = "x"; then
     echo "#ifndef ROOT_RConfigure_GCC" >> RConfigure-out.tmp
     echo "#define ROOT_RConfigure_GCC" >> RConfigure-out.tmp
     for i in "${!gccincdirarr[@]}"; do
-        echo "#define R__GCC_INC_DIR_$i ${gccincdirarr[$i]}" >> RConfigure-out.tmp
+        echo "#define R__GCC_INC_DIR_$i \"${gccincdirarr[$i]}\"" >> RConfigure-out.tmp
     done
     echo "#endif" >> RConfigure-out.tmp
 fi
