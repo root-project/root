@@ -2732,12 +2732,50 @@ int RootCling(int argc,
 #ifdef R__GCC_TOOLCHAIN   
    clingArgs.push_back("-gcc-toolchain");
    clingArgs.push_back(R__GCC_TOOLCHAIN);
+#endif
+#ifdef R__GCC_INC_DIR_0
    clingArgs.push_back("-cxx-isystem");
-   clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include");
+   clingArgs.push_back(R__GCC_INC_DIR_0);
+#endif
+#ifdef R__GCC_INC_DIR_1
    clingArgs.push_back("-I");
-   clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.6.2");
+   clingArgs.push_back(R__GCC_INC_DIR_1);
+#endif
+#ifdef R__GCC_INC_DIR_2
    clingArgs.push_back("-I");
-   clingArgs.push_back(std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.6.2/x86_64-unknown-linux-gnu");
+   clingArgs.push_back(R__GCC_INC_DIR_2);
+#endif
+#ifdef R__GCC_INC_DIR_3
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_3);
+#endif
+#ifdef R__GCC_INC_DIR_4
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_4);
+#endif
+#ifdef R__GCC_INC_DIR_5
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_5);
+#endif
+#ifdef R__GCC_INC_DIR_6
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_6);
+#endif
+#ifdef R__GCC_INC_DIR_7
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_7);
+#endif
+#ifdef R__GCC_INC_DIR_8
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_8);
+#endif
+#ifdef R__GCC_INC_DIR_9
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_9);
+#endif
+#ifdef R__GCC_INC_DIR_10
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_10);
 #endif
 
    std::vector<const char*> clingArgsC;

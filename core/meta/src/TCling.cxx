@@ -826,18 +826,43 @@ TCling::TCling(const char *name, const char *title)
    fTemporaries = new std::vector<cling::StoredValueRef>();
    std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
    std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
-#ifdef R__GCC_TOOLCHAIN
-   std::string sysIncludePath = std::string(R__GCC_TOOLCHAIN) + "/include";
-   std::string sysIncludePath1 = std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.6.2";
-   std::string sysIncludePath2 = std::string(R__GCC_TOOLCHAIN) + "/include/c++/4.6.2/x86_64-unknown-linux-gnu";
-#endif
    const char* interpArgs[]
       = {"cling4root", interpInclude.c_str(), "-include-pch", pchFilename.c_str()
 #ifdef R__GCC_TOOLCHAIN
          , "-gcc-toolchain", R__GCC_TOOLCHAIN
-         , "-cxx-isystem", sysIncludePath.c_str()
-         , "-I", sysIncludePath1.c_str()
-         , "-I", sysIncludePath2.c_str()
+#endif
+#ifdef R__GCC_INC_DIR_0
+         , "-cxx-isystem", R__GCC_INC_DIR_0
+#endif
+#ifdef R__GCC_INC_DIR_1
+         , "-I", R__GCC_INC_DIR_1
+#endif
+#ifdef R__GCC_INC_DIR_2
+         , "-I", R__GCC_INC_DIR_2
+#endif
+#ifdef R__GCC_INC_DIR_3
+         , "-I", R__GCC_INC_DIR_3
+#endif
+#ifdef R__GCC_INC_DIR_4
+         , "-I", R__GCC_INC_DIR_4
+#endif
+#ifdef R__GCC_INC_DIR_5
+         , "-I", R__GCC_INC_DIR_5
+#endif
+#ifdef R__GCC_INC_DIR_6
+         , "-I", R__GCC_INC_DIR_6
+#endif
+#ifdef R__GCC_INC_DIR_7
+         , "-I", R__GCC_INC_DIR_7
+#endif
+#ifdef R__GCC_INC_DIR_8
+         , "-I", R__GCC_INC_DIR_8
+#endif
+#ifdef R__GCC_INC_DIR_9
+         , "-I", R__GCC_INC_DIR_9
+#endif
+#ifdef R__GCC_INC_DIR_10
+         , "-I", R__GCC_INC_DIR_10
 #endif
         };
          //"-Xclang", "-fmodules"};
