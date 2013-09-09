@@ -16,6 +16,7 @@ namespace clang {
    class LookupResult;
    class NamespaceDecl;
    class Scope;
+   class TagDecl;
 }
 
 namespace cling {
@@ -58,6 +59,7 @@ public:
    virtual bool LookupObject(clang::LookupResult &R, clang::Scope *S);
    virtual bool LookupObject(const clang::DeclContext* DC, 
                              clang::DeclarationName Name);
+   virtual bool LookupObject(clang::TagDecl* Tag);
 
    // The callback is used to update the list of globals in ROOT.
    //

@@ -197,6 +197,44 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name){
    return false;
 }
 
+bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
+   if (ClassTemplateSpecializationDecl* Specialization 
+       = dyn_cast<ClassTemplateSpecializationDecl>(Tag)) {
+      Sema &SemaR = m_Interpreter->getSema();
+      ASTContext& C = SemaR.getASTContext();
+      Preprocessor &PP = SemaR.getPreprocessor();
+      Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
+      Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+      Parser::ParserCurTokRestoreRAII savedCurToken(P);
+      // After we have saved the token reset the current one to something which 
+      // is safe (semi colon usually means empty decl)
+      Token& Tok = const_cast<Token&>(P.getCurToken());
+      Tok.setKind(tok::semi);
+
+      // We can't PushDeclContext, because we go up and the routine that pops 
+      // the DeclContext assumes that we drill down always.
+      // We have to be on the global context. At that point we are in a 
+      // wrapper function so the parent context must be the global.
+      Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
+                                             SemaR.TUScope);
+      std::string Name;
+      llvm::raw_string_ostream strStream(Name);
+      PrintingPolicy Policy(m_Interpreter->getCI()->getLangOpts());
+      Specialization->getNameForDiagnostic(strStream, Policy, /*Qualified*/true);
+      strStream.flush();
+                     
+      // This would mean it is probably a template. Try autoload template.
+      if (TCling__AutoLoadCallback(Name.c_str(), false)) {
+         pushedDCAndS.pop();
+         cleanupRAII.pop();
+         //lookupSuccess = SemaR.LookupName(R, S);
+         return true;
+      }
+   }
+   return false;
+}
+
+
 // The symbol might be defined in the ROOT class autoloading map so we have to
 // try to autoload it first and do secondary lookup to try to find it.
 //
@@ -231,21 +269,6 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         ASTContext& C = SemaR.getASTContext();
         Preprocessor &PP = SemaR.getPreprocessor();
         Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
-        // Before we reset the PP we need to know whether this is a template
-        // candidate
-        bool isTemplate = false;
-        {
-           // Using the PP.LookAhead will cause a lot of caching headache, which
-           // is *very* hard to heal. Instead use a lexer to peek ahead whether
-           // this was an '<'
-           Token Tok;
-           SourceLocation Loc = P.getCurToken().getLastLoc().getLocWithOffset(1);
-           // The lexer requires 0 terminated memory buffer.
-           std::string buf(PP.getSourceManager().getCharacterData(Loc), 100);
-           Lexer l(Loc, PP.getLangOpts(), buf.c_str(), buf.c_str(), buf.c_str() + 100);
-           l.Lex(Tok);
-           isTemplate = Tok.is(tok::less);
-        }
         Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
         Parser::ParserCurTokRestoreRAII savedCurToken(P);
         // After we have saved the token reset the current one to something which 
@@ -259,15 +282,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         // wrapper function so the parent context must be the global.
         Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
                                                SemaR.TUScope);
-        if (isTemplate) {
-           // This would mean it is probably a template. Try autoload template.
-           if (TCling__AutoLoadCallback(Name.data(), /*isTemplate*/ true)) {
-              pushedDCAndS.pop();
-              cleanupRAII.pop();
-              lookupSuccess = SemaR.LookupName(R, S);
-           }
-        } 
-        else if (TCling__AutoLoadCallback(Name.data(), /*isTemplate*/false)) {
+        if (TCling__AutoLoadCallback(Name.data(), /*isTemplate*/false)) {
            pushedDCAndS.pop();
            cleanupRAII.pop();
            lookupSuccess = SemaR.LookupName(R, S);
