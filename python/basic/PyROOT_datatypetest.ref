@@ -5,6 +5,8 @@ Test conversions between builtin types ... ok
 Test read access to class public data and verify values ... ok
 Test write access to class public data and verify values ... ok
 Test usage of buffer sizing ... ok
+Used to fail executor and then crash ... ok
+General test of const-ref returns ... ok
 
 ----------------------------------------------------------------------
 

@@ -15,7 +15,8 @@ from common import *
 __all__ = [
    'DataTypes1InstanceDataTestCase',
    'DataTypes2ClassDataTestCase',
-   'DataTypes3BufferDataTestCase'
+   'DataTypes3BufferDataTestCase',
+   'DataTypes4RegressionTestCase'
 ]
 
 gROOT.LoadMacro( "DataTypes.C+" )
@@ -297,6 +298,28 @@ class DataTypes3BufferDataTestCase( MyTestCase ):
          l = list( arr )
          for i in range(N):
             self.assertEqual( arr[i], l[i] )
+
+
+### regression tests after bug reports =======================================
+class DataTypes4RegressionTestCase( MyTestCase ):
+   def test1ConstBoolRefReturn( self ):
+      """Used to fail executor and then crash"""
+
+      c = ClassWithData()
+
+      c.SetBool( False )
+      self.assertEqual( c.GetBoolConst(), False )
+
+      c.SetBool( True )
+      self.assertEqual( c.GetBoolConst(), True )
+
+   def test2ConstRefReturns( self ):
+      """General test of const-ref returns"""
+
+      c = ClassWithData()
+
+      c.SetInt( 1 )
+      self.assertEqual( c.GetInt(), 1 )
 
 
 ## actual test run

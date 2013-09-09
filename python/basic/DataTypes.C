@@ -126,6 +126,10 @@ public:
    Double_t* GetDoubleArray()  { return fDoubleArray; }
    Double_t* GetDoubleArray2() { return fDoubleArray2; }
 
+// getters (regression)
+   const Bool_t& GetBoolConst() { return fBool; }
+   const Int_t& GetIntConst()   { return fInt; }
+
 // setters
    void SetBool( Bool_t b )        { fBool   = b;   }
    void SetChar( Char_t c )        { fChar   = c;   }
