@@ -81,6 +81,15 @@ PyObject* PyROOT::TBoolExecutor::Execute( CallFunc_t* func, void* self, Bool_t r
    return result;
 }
 
+PyObject* PyROOT::TBoolConstRefExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
+{
+// execute <func> with argument <self>, construct python bool return value
+   PyObject* result =
+      *((Bool_t*)PRCallFuncExecInt( func, self, release_gil )) ? Py_True : Py_False;
+   Py_INCREF( result );
+   return result;
+}
+
 PyObject* PyROOT::TLongExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python long return value
@@ -454,6 +463,7 @@ namespace {
 
 // use macro rather than template for portability ...
    PYROOT_EXECUTOR_FACTORY( Bool )
+   PYROOT_EXECUTOR_FACTORY( BoolConstRef )
    PYROOT_EXECUTOR_FACTORY( Char )
    PYROOT_EXECUTOR_FACTORY( ShortRef )
    PYROOT_EXECUTOR_FACTORY( UShortRef )
@@ -517,6 +527,7 @@ namespace {
       NFp_t( "double&",            &CreateDoubleRefExecutor           ),
       NFp_t( "void",               &CreateVoidExecutor                ),
       NFp_t( "bool",               &CreateBoolExecutor                ),
+      NFp_t( "const bool&",        &CreateBoolConstRefExecutor        ),
       NFp_t( "const char*",        &CreateCStringExecutor             ),
       NFp_t( "char*",              &CreateCStringExecutor             ),
 
