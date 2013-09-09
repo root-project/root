@@ -14,12 +14,12 @@
  *
 */
 
-#define ROOT_RELEASE "5.99/02"
-#define ROOT_RELEASE_DATE "Jun 12 2013"
-#define ROOT_RELEASE_TIME "21:49:50"
-#define ROOT_GIT_COMMIT "5d48155"
+#define ROOT_RELEASE "5.99/03"
+#define ROOT_RELEASE_DATE "Sep  9 2013"
+#define ROOT_RELEASE_TIME "21:52:39"
+#define ROOT_GIT_COMMIT "1dcdafc"
 #define ROOT_GIT_BRANCH "heads/master"
-#define ROOT_VERSION_CODE 353026
+#define ROOT_VERSION_CODE 353027
 #define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 #endif
