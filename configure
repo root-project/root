@@ -2375,6 +2375,10 @@ if test "x$enable_cxx11" = "xyes"; then
 	result "no"
     else
 	usecxx11="define"
+        # on OS X libcxx11 is required for C++11 support so turn the option on
+        if test "x$platform" = "xmacosx"; then
+            enable_libcxx11="yes"
+        fi
 	result "yes"
     fi
 fi
