@@ -1212,7 +1212,7 @@ TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t load) const
    // force reading of all currently defined globals from CINT (more
    // expensive).
 
-   if (addr == 0 | ((Long_t)addr) == -1) return 0;
+   if (addr == 0 || ((Long_t)addr) == -1) return 0;
 
    TIter next(gROOT->GetListOfGlobals(load));
 
