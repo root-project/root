@@ -207,7 +207,7 @@ void fit3DHist()
    cout << "\n ******* Chi2Fit with Original BinData *******" << endl;
    ROOT::Fit::BinData bdOriginal;
    ROOT::Fit::FillData(bdOriginal, h1, 0);
-   ret = fitter.LikelihoodFit(bdOriginal, if1);
+   ret = fitter.LikelihoodFit(bdOriginal, if1, true);
    fitter.Result().Print(std::cout); 
    if (!ret)  
       std::cout << "Fit Failed " << std::endl;
@@ -219,7 +219,7 @@ void fit3DHist()
    opt.fIntegral = true;
    ROOT::Fit::BinData bdOriginalWithCeros(opt);
    ROOT::Fit::FillData(bdOriginalWithCeros, h1, 0);
-   ret = fitter.LikelihoodFit(bdOriginalWithCeros, if1);
+   ret = fitter.LikelihoodFit(bdOriginalWithCeros, if1, true);
    fitter.Result().Print(std::cout); 
    if (!ret)  
       std::cout << "Fit Failed " << std::endl;
@@ -228,7 +228,7 @@ void fit3DHist()
    cout << "\n ******* Chi2Fit with BinData and NoCeros *******" << endl;
    ROOT::Fit::BinData bdNoCeros;
    d.GetBinDataNoZeros(bdNoCeros);
-   ret = fitter.LikelihoodFit(bdNoCeros, if1);
+   ret = fitter.LikelihoodFit(bdNoCeros, if1, true);
    fitter.Result().Print(std::cout); 
    if (!ret)  
       std::cout << "Fit Failed " << std::endl;
@@ -240,7 +240,7 @@ void fit3DHist()
    cout << "\n ******* Chi2Fit with BinData with Ceros *******" << endl;
    ROOT::Fit::BinData bdWithCeros(opt);
    d.GetBinDataIntegral(bdWithCeros);
-   ret = fitter.LikelihoodFit(bdWithCeros, if1);
+   ret = fitter.LikelihoodFit(bdWithCeros, if1, true);
    fitter.Result().Print(std::cout); 
    if (!ret)  
       std::cout << "Fit Failed " << std::endl;
@@ -320,7 +320,7 @@ void fit2DHist()
    cout << "\n ******* Chi2Fit with Original BinData *******" << endl;
    ROOT::Fit::BinData bdOriginal;
    ROOT::Fit::FillData(bdOriginal, h1, 0);
-   ret = fitter.LikelihoodFit(bdOriginal, if2);
+   ret = fitter.LikelihoodFit(bdOriginal, if2, true);
    fitter.Result().Print(std::cout); 
    if (!ret)  
       std::cout << "Fit Failed " << std::endl;
@@ -332,7 +332,7 @@ void fit2DHist()
    opt.fIntegral = true;
    ROOT::Fit::BinData bdOriginalWithCeros(opt);
    ROOT::Fit::FillData(bdOriginalWithCeros, h1, 0);
-   ret = fitter.LikelihoodFit(bdOriginalWithCeros, if2);
+   ret = fitter.LikelihoodFit(bdOriginalWithCeros, if2, true);
    fitter.Result().Print(std::cout); 
    if (!ret)  
       std::cout << "Fit Failed " << std::endl;
@@ -341,7 +341,7 @@ void fit2DHist()
    cout << "\n ******* Chi2Fit with BinData and NoCeros *******" << endl;
    ROOT::Fit::BinData bdNoCeros;
    d.GetBinDataNoZeros(bdNoCeros);
-   ret = fitter.LikelihoodFit(bdNoCeros, if2);
+   ret = fitter.LikelihoodFit(bdNoCeros, if2, true);
    fitter.Result().Print(std::cout); 
    if (!ret)  
       std::cout << "Fit Failed " << std::endl;
@@ -353,7 +353,7 @@ void fit2DHist()
    cout << "\n ******* Chi2Fit with BinData with Ceros *******" << endl;
    ROOT::Fit::BinData bdWithCeros(opt);
    d.GetBinDataIntegral(bdWithCeros);
-   ret = fitter.LikelihoodFit(bdWithCeros, if2);
+   ret = fitter.LikelihoodFit(bdWithCeros, if2, true);
    fitter.Result().Print(std::cout); 
    if (!ret)  
       std::cout << "Fit Failed " << std::endl;

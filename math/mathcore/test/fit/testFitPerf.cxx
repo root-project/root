@@ -34,7 +34,7 @@
 #include "TStopwatch.h"
 
 #include "TVirtualFitter.h"
-#include "TFitterMinuit.h"
+//#include "TFitterMinuit.h"
 // #include "TFitterFumili.h"
 // #include "TFumili.h"
 
