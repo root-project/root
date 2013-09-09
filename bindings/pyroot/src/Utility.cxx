@@ -776,7 +776,7 @@ Long_t PyROOT::Utility::GetObjectOffset(
    std::ostringstream interpcast;
    interpcast << "(long)(" << gInterpreter->ClassInfo_FullName( clDesired ) << "*)("
               << clCurrent << "*)" << (void*)obj
-              << "-(long)(" << clCurrent << "*)" << (void*)obj
+              << " - (long)(" << clCurrent << "*)" << (void*)obj
               << ";";
    Long_t offset = (Long_t)gInterpreter->ProcessLine( interpcast.str().c_str() );
    sOffsets[ clCurrent ][ clDesired ] = offset;
