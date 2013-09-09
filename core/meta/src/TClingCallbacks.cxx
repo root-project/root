@@ -39,7 +39,7 @@ extern "C" {
    void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    Decl* TCling__GetObjectDecl(TObject *obj);
-   int TCling__AutoLoadCallback(const char* className, int isTemplate);
+   int TCling__AutoLoadCallback(const char* className);
    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
    int TCling__CompileMacro(const char *fileName, const char *options);
    void TCling__SplitAclicMode(const char* fileName, std::string &mode,
@@ -224,10 +224,7 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
       strStream.flush();
                      
       // This would mean it is probably a template. Try autoload template.
-      if (TCling__AutoLoadCallback(Name.c_str(), false)) {
-         pushedDCAndS.pop();
-         cleanupRAII.pop();
-         //lookupSuccess = SemaR.LookupName(R, S);
+      if (TCling__AutoLoadCallback(Name.c_str())) {
          return true;
       }
    }
@@ -260,7 +257,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
 
      bool lookupSuccess = false;
      if (getenv("ROOT_MODULES")) {
-        if (TCling__AutoLoadCallback(Name.data(), /*isTemplate*/false)) {
+        if (TCling__AutoLoadCallback(Name.data())) {
            lookupSuccess = SemaR.LookupName(R, S);
         }
      }
@@ -282,7 +279,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         // wrapper function so the parent context must be the global.
         Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
                                                SemaR.TUScope);
-        if (TCling__AutoLoadCallback(Name.data(), /*isTemplate*/false)) {
+        if (TCling__AutoLoadCallback(Name.data())) {
            pushedDCAndS.pop();
            cleanupRAII.pop();
            lookupSuccess = SemaR.LookupName(R, S);
@@ -605,6 +602,6 @@ void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
       // Unfortunatelly we cannot do that with the current implementation,
       // because the library load will pull in the header files of the library
       // as well, even though they are in the PCH/PCM and available.
-      (void)RD;//TCling__AutoLoadCallback(RD->getNameAsString().c_str(), /*isTemplate*/false);
+      (void)RD;//TCling__AutoLoadCallback(RD->getNameAsString().c_str());
    }
 }
