@@ -1212,6 +1212,8 @@ TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t load) const
    // force reading of all currently defined globals from CINT (more
    // expensive).
 
+   if (addr == 0 | ((Long_t)addr) == -1) return 0;
+
    TIter next(gROOT->GetListOfGlobals(load));
 
    TGlobal *g;
@@ -1220,10 +1222,12 @@ TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t load) const
       if (!strncmp(t, "class", 5) || !strncmp(t, "struct", 6)) {
          int ptr = 0;
          if (t[strlen(t)-1] == '*') ptr = 1;
+         void* gAddr = g->GetAddress();
+         if (gAddr == 0 || ((Long_t)gAddr) == -1) continue;
          if (ptr) {
-            if (*(Long_t *)g->GetAddress() == (Long_t)addr) return g;
+            if (*(Long_t *)gAddr == (Long_t)addr) return g;
          } else {
-            if ((Long_t)g->GetAddress() == (Long_t)addr) return g;
+            if ((Long_t)gAddr == (Long_t)addr) return g;
          }
       }
    }
