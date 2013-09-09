@@ -2850,7 +2850,7 @@ bool TCling::GetUnderlyingQualType(clang::QualType& qType)
 }
 
 //______________________________________________________________________________
-bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, clang::QualType& qType, bool recurse)
+bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, clang::QualType qType, bool recurse)
 {
 
    // Utility function to insert a type pointer to a decl that does not have a dictionary
@@ -2904,11 +2904,11 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
             if (TIB) {
                clang::TemplateArgument::ArgKind tmpltArgKind = TIB->getKind();
                if (tmpltArgKind == clang::TemplateArgument::Type) {
-                  qType = TIB->getAsType();
-                  if (GetUnderlyingQualType(qType)) {
-                     clang::Decl* tmplD = qType->getAsCXXRecordDecl();
+                  //qType = TIB->getAsType();
+                  if (const clang::Type* tt = ROOT::TMetaUtils::GetUnderlyingType(TIB->getAsType())) {
+                     clang::Decl* tmplD = tt->getAsCXXRecordDecl();
                      if (tmplD) {
-                        GetMissingDictionariesForDecl(tmplD, netD, qType, recurse);
+                        GetMissingDictionariesForDecl(tmplD, netD, QualType(tt, 0), recurse);
                      }
                   }
                }
@@ -2934,16 +2934,17 @@ void TCling::GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const 
       for (clang::RecordDecl::field_iterator iField = RD->field_begin(),
            eField = RD->field_end(); iField != eField; ++iField) {
 
-         clang::QualType fieldQType = (*iField)->getType();
-         if (!fieldQType.isNull()) {
+         clang::QualType fieldQualType = (*iField)->getType();
+         if (!fieldQualType.isNull() || !isa<clang::TemplateTypeParmType>(fieldQualType.getTypePtr())
+             || !isa<clang::SubstTemplateTypeParmType>(fieldQualType.getTypePtr())) {
             // Check if not NullType.
-            if (GetUnderlyingQualType(fieldQType)) {
-               clang::Decl* FD = fieldQType->getAsCXXRecordDecl();
+            if (const clang::Type* t = ROOT::TMetaUtils::GetUnderlyingType(fieldQualType)) {
+               clang::Decl* FD = t->getAsCXXRecordDecl();
                if (FD) {
                   if(recurse) {
-                     GetMissingDictionariesForDecl(FD, netD, fieldQType, recurse);
+                     GetMissingDictionariesForDecl(FD, netD, QualType(t, 0), recurse);
                   } else {
-                     InsertMissingDictionaryDecl(FD, netD, fieldQType, recurse);
+                     InsertMissingDictionaryDecl(FD, netD, QualType(t, 0), recurse);
                   }
                }
             }
