@@ -74,9 +74,9 @@ typedef TLorentzVector VecType;
 #else
 #include "Math/Vector4D.h"
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double_type> > VecType;
-#ifdef USE_VC
-Vc_DECLARE_ALLOCATOR(VecType)
-#endif
+//#ifdef USE_VC
+//Vc_DECLARE_ALLOCATOR(VecType)
+//#endif
 #endif
 
 #include "Math/VectorUtil.h"

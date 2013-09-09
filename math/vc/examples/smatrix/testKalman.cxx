@@ -65,7 +65,7 @@ double clockTime()
 #define NITER 1  // number of iterations
 
 #define NLOOP 500000 // number of time the test is repeted
-#define NLISTSIZE 100  // size of matrix/vector lists
+#define NLISTSIZE 64  // size of matrix/vector lists
 
 using namespace ROOT::Math;
 
@@ -627,7 +627,7 @@ int testKalman() {
 
    //int nlist = NLISTSIZE;
 #ifdef USE_VC
-   std::cout << "Using VC library - size = " << Vc::double_v::Size << " VC_IMPL = " << VC_IMPL << std::endl;
+   std::cout << "Using VC library - size = " << ROOT::Vc::double_v::Size << " VC_IMPL = " << VC_IMPL << std::endl;
    //nlist /= Vc::double_v::Size; 
 #endif     
 
@@ -650,5 +650,6 @@ int testKalman() {
 }
 
 int main() { 
+
    return testKalman(); 
 }

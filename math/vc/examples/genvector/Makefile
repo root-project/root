@@ -61,7 +61,7 @@ CXXFLAGS += -g -DDEBUG
 endif
 
 
-LIBS =  -L$(ROOTSYS)/lib -lCore -lCint -lMathCore -lMatrix -lGenVector
+LIBS =  -L$(ROOTSYS)/lib -lCore -lCling -lMathCore -lMatrix -lGenVector
 
 VECTOROPOBJ     = vectorOperation.$(ObjSuf)
 VECTOROPSRC     = vectorOperation.$(SrcSuf)

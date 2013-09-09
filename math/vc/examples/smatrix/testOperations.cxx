@@ -1,5 +1,10 @@
 #define  ENABLE_TEMPORARIES
 
+
+#ifdef USE_VC
+#include "Vc/Vc"
+#endif
+
 #include "Math/SVector.h"
 #include "Math/SMatrix.h"
 
@@ -25,7 +30,6 @@
 #define NLOOP_MIN 1000;
 #endif
 
-#define NLISTSIZE 100
 
 #ifdef HAVE_CLHEP
 #include "CLHEP/Matrix/SymMatrix.h"
@@ -46,18 +50,21 @@
 
 
 int NLOOP; 
-int NLIST; 
+
 
 //#define NLOOP 1
 
 //#define DEBUG
 
+#define NLISTSIZE 64  // size of matrix/vector lists
+
 
 #ifdef USE_VC
-#include "Vc/Vc"
 typedef Vc::double_v Stype;
+const int NLIST = NLISTSIZE / Vc::double_v::Size;
 #else 
 typedef double Stype;
+const int NLIST = NLISTSIZE; 
 #endif
 
 
@@ -796,11 +803,8 @@ void ROOT::Math::test::reportTime(std::string s, double time) {
 int testOperations() { 
 
    NLOOP = 1000*NLOOP_MIN; 
-   NLIST = NLISTSIZE;
 
 #ifdef USE_VC
-   NLIST = NLIST / Vc::double_v::Size;
-
    std::cout << "Using VC library - size = " << Vc::double_v::Size << " VC_IMPL = " << VC_IMPL << std::endl;
 #endif     
 
