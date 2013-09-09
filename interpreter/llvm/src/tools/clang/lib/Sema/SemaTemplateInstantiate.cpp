@@ -2349,6 +2349,14 @@ Sema::InstantiateClassTemplateSpecialization(
   } else {
     //   -- If no matches are found, the instantiation is generated
     //      from the primary template.
+
+    // Try first to get it externally:
+    if(getExternalSource()) {
+      getExternalSource()->CompleteType(ClassTemplateSpec);
+      if (ClassTemplateSpec->getDefinition())
+        return false; // happyness
+    }
+
     ClassTemplateDecl *OrigTemplate = Template;
     while (OrigTemplate->getInstantiatedFromMemberTemplate()) {
       // If we've found an explicit specialization of this class template,
