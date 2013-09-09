@@ -350,7 +350,7 @@ namespace CholeskyDecompHelpers {
          // cache starting address of rows of L for speed reasons
          F *base1 = &dst[0];
          for (unsigned i = 0; i < N; base1 += ++i) {
-            F tmpdiag = F(0);	// for element on diagonale
+            F tmpdiag = F(0.0);	// for element on diagonale
             // calculate off-diagonal elements
             F *base2 = &dst[0];
             for (unsigned j = 0; j < i; base2 += ++j) {
@@ -364,8 +364,8 @@ namespace CholeskyDecompHelpers {
             // keep truncation error small
             tmpdiag = src(i, i) - tmpdiag;
             // check if positive definite
-            if (tmpdiag <= F(0)) return false;
-            else base1[i] = std::sqrt(F(1) / tmpdiag);
+            if (tmpdiag <= F(0.0)) return false;
+            else base1[i] = std::sqrt(F(1.0) / tmpdiag);
          }
          return true;
       }
@@ -393,7 +393,7 @@ namespace CholeskyDecompHelpers {
          F* base1 = &l[1];
          for (unsigned i = 1; i < N; base1 += ++i) {
             for (unsigned j = 0; j < i; ++j) {
-               F tmp = F(0);
+               F tmp = F(0.0);
                const F *base2 = &l[(i * (i - 1)) / 2];
                for (unsigned k = i; k-- > j; base2 -= k)
                   tmp -= base1[k] * base2[j];
@@ -404,7 +404,7 @@ namespace CholeskyDecompHelpers {
          // Li = L^(-1) formed, now calculate M^(-1) = Li^T Li
          for (unsigned i = N; i--; ) {
             for (unsigned j = i + 1; j--; ) {
-               F tmp = F(0);
+               F tmp = F(0.0);
                base1 = &l[(N * (N - 1)) / 2];
                for (unsigned k = N; k-- > i; base1 -= k)
                   tmp += base1[i] * base1[j];
@@ -432,7 +432,7 @@ namespace CholeskyDecompHelpers {
          // solve Ly = rhs
          for (unsigned k = 0; k < N; ++k) {
             const unsigned base = (k * (k + 1)) / 2;
-            F sum = F(0);
+            F sum = F(0.0);
             for (unsigned i = k; i--; )
                sum += rhs[i] * l[base + i];
             // elements on diagonale are pre-inverted!
@@ -440,7 +440,7 @@ namespace CholeskyDecompHelpers {
          }
          // solve L^Tx = y
          for (unsigned k = N; k--; ) {
-            F sum = F(0);
+            F sum = F(0.0);
             for (unsigned i = N; --i > k; )
                sum += rhs[i] * l[(i * (i + 1)) / 2 + k];
             // elements on diagonale are pre-inverted!
@@ -463,38 +463,38 @@ namespace CholeskyDecompHelpers {
       /// method to do the decomposition
       bool operator()(F* dst, const M& src) const
       {
-         if (src(0,0) <= F(0)) return false;
-         dst[0] = std::sqrt(F(1) / src(0,0));
+         if (src(0,0) <= F(0.0)) return false;
+         dst[0] = std::sqrt(F(1.0) / src(0,0));
          dst[1] = src(1,0) * dst[0];
          dst[2] = src(1,1) - dst[1] * dst[1];
-         if (dst[2] <= F(0)) return false;
-         else dst[2] = std::sqrt(F(1) / dst[2]);
+         if (dst[2] <= F(0.0)) return false;
+         else dst[2] = std::sqrt(F(1.0) / dst[2]);
          dst[3] = src(2,0) * dst[0];
          dst[4] = (src(2,1) - dst[1] * dst[3]) * dst[2];
          dst[5] = src(2,2) - (dst[3] * dst[3] + dst[4] * dst[4]);
-         if (dst[5] <= F(0)) return false;
-         else dst[5] = std::sqrt(F(1) / dst[5]);
+         if (dst[5] <= F(0.0)) return false;
+         else dst[5] = std::sqrt(F(1.0) / dst[5]);
          dst[6] = src(3,0) * dst[0];
          dst[7] = (src(3,1) - dst[1] * dst[6]) * dst[2];
          dst[8] = (src(3,2) - dst[3] * dst[6] - dst[4] * dst[7]) * dst[5];
          dst[9] = src(3,3) - (dst[6] * dst[6] + dst[7] * dst[7] + dst[8] * dst[8]);
-         if (dst[9] <= F(0)) return false;
-         else dst[9] = std::sqrt(F(1) / dst[9]);
+         if (dst[9] <= F(0.0)) return false;
+         else dst[9] = std::sqrt(F(1.0) / dst[9]);
          dst[10] = src(4,0) * dst[0];
          dst[11] = (src(4,1) - dst[1] * dst[10]) * dst[2];
          dst[12] = (src(4,2) - dst[3] * dst[10] - dst[4] * dst[11]) * dst[5];
          dst[13] = (src(4,3) - dst[6] * dst[10] - dst[7] * dst[11] - dst[8] * dst[12]) * dst[9];
          dst[14] = src(4,4) - (dst[10]*dst[10]+dst[11]*dst[11]+dst[12]*dst[12]+dst[13]*dst[13]);
-         if (dst[14] <= F(0)) return false;
-         else dst[14] = std::sqrt(F(1) / dst[14]);
+         if (dst[14] <= F(0.0)) return false;
+         else dst[14] = std::sqrt(F(1.0) / dst[14]);
          dst[15] = src(5,0) * dst[0];
          dst[16] = (src(5,1) - dst[1] * dst[15]) * dst[2];
          dst[17] = (src(5,2) - dst[3] * dst[15] - dst[4] * dst[16]) * dst[5];
          dst[18] = (src(5,3) - dst[6] * dst[15] - dst[7] * dst[16] - dst[8] * dst[17]) * dst[9];
          dst[19] = (src(5,4) - dst[10] * dst[15] - dst[11] * dst[16] - dst[12] * dst[17] - dst[13] * dst[18]) * dst[14];
          dst[20] = src(5,5) - (dst[15]*dst[15]+dst[16]*dst[16]+dst[17]*dst[17]+dst[18]*dst[18]+dst[19]*dst[19]);
-         if (dst[20] <= F(0)) return false;
-         else dst[20] = std::sqrt(F(1) / dst[20]);
+         if (dst[20] <= F(0.0)) return false;
+         else dst[20] = std::sqrt(F(1.0) / dst[20]);
          return true;
       }
    };
@@ -504,30 +504,30 @@ namespace CholeskyDecompHelpers {
       /// method to do the decomposition
       bool operator()(F* dst, const M& src) const
       {
-         if (src(0,0) <= F(0)) return false;
-         dst[0] = std::sqrt(F(1) / src(0,0));
+         if (src(0,0) <= F(0.0)) return false;
+         dst[0] = std::sqrt(F(1.0) / src(0,0));
          dst[1] = src(1,0) * dst[0];
          dst[2] = src(1,1) - dst[1] * dst[1];
-         if (dst[2] <= F(0)) return false;
-         else dst[2] = std::sqrt(F(1) / dst[2]);
+         if (dst[2] <= F(0.0)) return false;
+         else dst[2] = std::sqrt(F(1.0) / dst[2]);
          dst[3] = src(2,0) * dst[0];
          dst[4] = (src(2,1) - dst[1] * dst[3]) * dst[2];
          dst[5] = src(2,2) - (dst[3] * dst[3] + dst[4] * dst[4]);
-         if (dst[5] <= F(0)) return false;
-         else dst[5] = std::sqrt(F(1) / dst[5]);
+         if (dst[5] <= F(0.0)) return false;
+         else dst[5] = std::sqrt(F(1.0) / dst[5]);
          dst[6] = src(3,0) * dst[0];
          dst[7] = (src(3,1) - dst[1] * dst[6]) * dst[2];
          dst[8] = (src(3,2) - dst[3] * dst[6] - dst[4] * dst[7]) * dst[5];
          dst[9] = src(3,3) - (dst[6] * dst[6] + dst[7] * dst[7] + dst[8] * dst[8]);
-         if (dst[9] <= F(0)) return false;
-         else dst[9] = std::sqrt(F(1) / dst[9]);
+         if (dst[9] <= F(0.0)) return false;
+         else dst[9] = std::sqrt(F(1.0) / dst[9]);
          dst[10] = src(4,0) * dst[0];
          dst[11] = (src(4,1) - dst[1] * dst[10]) * dst[2];
          dst[12] = (src(4,2) - dst[3] * dst[10] - dst[4] * dst[11]) * dst[5];
          dst[13] = (src(4,3) - dst[6] * dst[10] - dst[7] * dst[11] - dst[8] * dst[12]) * dst[9];
          dst[14] = src(4,4) - (dst[10]*dst[10]+dst[11]*dst[11]+dst[12]*dst[12]+dst[13]*dst[13]);
-         if (dst[14] <= F(0)) return false;
-         else dst[14] = std::sqrt(F(1) / dst[14]);
+         if (dst[14] <= F(0.0)) return false;
+         else dst[14] = std::sqrt(F(.1) / dst[14]);
          return true;
       }
    };
@@ -537,23 +537,23 @@ namespace CholeskyDecompHelpers {
       /// method to do the decomposition
       bool operator()(F* dst, const M& src) const
       {
-         if (src(0,0) <= F(0)) return false;
-         dst[0] = std::sqrt(F(1) / src(0,0));
+         if (src(0,0) <= F(0.0)) return false;
+         dst[0] = std::sqrt(F(1.0) / src(0,0));
          dst[1] = src(1,0) * dst[0];
          dst[2] = src(1,1) - dst[1] * dst[1];
-         if (dst[2] <= F(0)) return false;
-         else dst[2] = std::sqrt(F(1) / dst[2]);
+         if (dst[2] <= F(0.0)) return false;
+         else dst[2] = std::sqrt(F(1.0) / dst[2]);
          dst[3] = src(2,0) * dst[0];
          dst[4] = (src(2,1) - dst[1] * dst[3]) * dst[2];
          dst[5] = src(2,2) - (dst[3] * dst[3] + dst[4] * dst[4]);
-         if (dst[5] <= F(0)) return false;
-         else dst[5] = std::sqrt(F(1) / dst[5]);
+         if (dst[5] <= F(0.0)) return false;
+         else dst[5] = std::sqrt(F(1.0) / dst[5]);
          dst[6] = src(3,0) * dst[0];
          dst[7] = (src(3,1) - dst[1] * dst[6]) * dst[2];
          dst[8] = (src(3,2) - dst[3] * dst[6] - dst[4] * dst[7]) * dst[5];
          dst[9] = src(3,3) - (dst[6] * dst[6] + dst[7] * dst[7] + dst[8] * dst[8]);
-         if (dst[9] <= F(0)) return false;
-         else dst[9] = std::sqrt(F(1) / dst[9]);
+         if (dst[9] <= F(0.0)) return false;
+         else dst[9] = std::sqrt(F(1.0) / dst[9]);
          return true;
       }
    };
@@ -563,17 +563,17 @@ namespace CholeskyDecompHelpers {
       /// method to do the decomposition
       bool operator()(F* dst, const M& src) const
       {
-         if (src(0,0) <= F(0)) return false;
-         dst[0] = std::sqrt(F(1) / src(0,0));
+         if (src(0,0) <= F(0.0)) return false;
+         dst[0] = std::sqrt(F(1.0) / src(0,0));
          dst[1] = src(1,0) * dst[0];
          dst[2] = src(1,1) - dst[1] * dst[1];
-         if (dst[2] <= F(0)) return false;
-         else dst[2] = std::sqrt(F(1) / dst[2]);
+         if (dst[2] <= F(0.0)) return false;
+         else dst[2] = std::sqrt(F(1.0) / dst[2]);
          dst[3] = src(2,0) * dst[0];
          dst[4] = (src(2,1) - dst[1] * dst[3]) * dst[2];
          dst[5] = src(2,2) - (dst[3] * dst[3] + dst[4] * dst[4]);
-         if (dst[5] <= F(0)) return false;
-         else dst[5] = std::sqrt(F(1) / dst[5]);
+         if (dst[5] <= F(0.0)) return false;
+         else dst[5] = std::sqrt(F(1.0) / dst[5]);
          return true;
       }
    };
@@ -583,12 +583,12 @@ namespace CholeskyDecompHelpers {
       /// method to do the decomposition
       bool operator()(F* dst, const M& src) const
       {
-         if (src(0,0) <= F(0)) return false;
-         dst[0] = std::sqrt(F(1) / src(0,0));
+         if (src(0,0) <= F(0.0)) return false;
+         dst[0] = std::sqrt(F(1.0) / src(0,0));
          dst[1] = src(1,0) * dst[0];
          dst[2] = src(1,1) - dst[1] * dst[1];
-         if (dst[2] <= F(0)) return false;
-         else dst[2] = std::sqrt(F(1) / dst[2]);
+         if (dst[2] <= F(0.0)) return false;
+         else dst[2] = std::sqrt(F(1.0) / dst[2]);
          return true;
       }
    };
@@ -598,8 +598,8 @@ namespace CholeskyDecompHelpers {
       /// method to do the decomposition
       bool operator()(F* dst, const M& src) const
       {
-         if (src(0,0) <= F(0)) return false;
-         dst[0] = std::sqrt(F(1) / src(0,0));
+         if (src(0,0) <= F(0.0)) return false;
+         dst[0] = std::sqrt(F(1.0) / src(0,0));
          return true;
       }
    };
