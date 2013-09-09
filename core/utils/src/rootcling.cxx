@@ -23,8 +23,8 @@ const char *rootClingHelp =
 "                                                                            \n"
 "or                                                                          \n"
 "                                                                            \n"
-" rootcling [-v[0-4]][-f] dict.C [-s sharedLibrary] [-m pcm]                 \n"
-"          file.h[{+,-}][!] ... [LinkDef.h]                                  \n"
+" rootcling [-v[0-4]][-f] dict.C [-rmf rootMapFile] [-rml rootMapLibrary]    \n"
+"    [-s sharedLibrary] [-m pcm] file.h[{+,-}][!] ... [LinkDef.h]            \n"
 "                                                                            \n"
 "The difference between the two is that in the first case only the           \n"
 "Streamer() and ShowMembers() methods are generated while in the             \n"
@@ -38,6 +38,9 @@ const char *rootClingHelp =
 "Use the -f (force) option to overwite the output file. The output           \n"
 "file must have one of the following extensions: .cxx, .C, .cpp,             \n"
 ".cc, .cp.                                                                   \n"
+"The flags -rml and -rmf are used for the rootmaplib and the rootmap file    \n"
+"respectively. The rootmap file option can be omitted. In this case, the name\n"
+"is inferred from the name of the root map library.                          \n"
 "The flag -s must be followed by the name of the library that will           \n"
 "contain the object file corresponding to the dictionary produced by         \n"
 "this invocation of rootcling.  The name will be used as the stem            \n"
@@ -172,9 +175,11 @@ const char *rootClingHelp =
 #include "llvm/Support/PathV2.h"
 
 #ifdef WIN32
-const std::string gPathSeparator ("\\");
+ const std::string gPathSeparator ("\\");
+ const std::string gLibraryExtension (".dll");
 #else
-const std::string gPathSeparator ("/");
+ const std::string gPathSeparator ("/");
+ const std::string gLibraryExtension (".so"); // no dylib for the moment
 #endif
 
 
@@ -2025,12 +2030,14 @@ bool Which(cling::Interpreter &interp, const char *fname, string& pname)
 
    FILE *fp = 0;
 
+   #ifdef WIN32
+   static const char* fopenopts = "rb";
+   #else
+   static const char* fopenopts = "r";
+   #endif
+   
    pname = fname;
-#ifdef WIN32
-   fp = fopen(pname.c_str(), "rb");
-#else
-   fp = fopen(pname.c_str(), "r");
-#endif
+   fp = fopen(pname.c_str(), fopenopts);
    if (fp) {
       fclose(fp);
       return true;
@@ -2043,15 +2050,8 @@ bool Which(cling::Interpreter &interp, const char *fname, string& pname)
    const size_t nPaths = includePaths.size();
    for (size_t i = 0; i < nPaths; i += 1 /* 2 */) {
 
-      pname = includePaths[i].c_str();
-#ifdef WIN32
-      pname += "\\";
-      static const char* fopenopts = "rb";
-#else
-      pname += "/";
-      static const char* fopenopts = "r";
-#endif
-      pname += fname;
+      pname = includePaths[i].c_str()+gPathSeparator+fname;
+
       fp = fopen(pname.c_str(), fopenopts);
       if (fp) {
          fclose(fp);
@@ -2324,6 +2324,57 @@ void AddPlatformDefines(std::vector<std::string>& clingArgs)
    #endif
 }
 
+void AddGccToolChainDefines (std::vector<std::string>& clingArgs) {
+   #ifdef R__GCC_TOOLCHAIN
+   clingArgs.push_back("-gcc-toolchain");
+   clingArgs.push_back(R__GCC_TOOLCHAIN);
+   #endif
+   #ifdef R__GCC_INC_DIR_0
+   clingArgs.push_back("-cxx-isystem");
+   clingArgs.push_back(R__GCC_INC_DIR_0);
+   #endif
+   #ifdef R__GCC_INC_DIR_1
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_1);
+   #endif
+   #ifdef R__GCC_INC_DIR_2
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_2);
+   #endif
+   #ifdef R__GCC_INC_DIR_3
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_3);
+   #endif
+   #ifdef R__GCC_INC_DIR_4
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_4);
+   #endif
+   #ifdef R__GCC_INC_DIR_5
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_5);
+   #endif
+   #ifdef R__GCC_INC_DIR_6
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_6);
+   #endif
+   #ifdef R__GCC_INC_DIR_7
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_7);
+   #endif
+   #ifdef R__GCC_INC_DIR_8
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_8);
+   #endif
+   #ifdef R__GCC_INC_DIR_9
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_9);
+   #endif
+   #ifdef R__GCC_INC_DIR_10
+   clingArgs.push_back("-I");
+   clingArgs.push_back(R__GCC_INC_DIR_10);
+   #endif   
+}
+
 //______________________________________________________________________________
 void replaceAll(std::string& str, const std::string& from, const std::string& to)
 {
@@ -2429,8 +2480,21 @@ void createRootMapFile(const std::string& rootmapFileName,
 //                 << rootmapLibName << std::endl;
 //       }
 
+   std::string localRootmapFileName(rootmapFileName);
+   std::string localRootmapLibName(rootmapLibName);
+
+   // If the rootmap file name does not exist, create one following the libname
+   // I.E. put into the directory of the lib the rootmap and within the rootmap the normalised path to the lib
+   if (rootmapFileName.empty()){
+      size_t libExtensionPos= localRootmapLibName.find_last_of(gLibraryExtension) - gLibraryExtension.size() + 1;
+      localRootmapFileName = localRootmapLibName.substr(0,libExtensionPos) + ".rootmap";
+      size_t libCleanNamePos = localRootmapLibName.find_last_of(gPathSeparator)+1;
+      localRootmapLibName = localRootmapLibName.substr(libCleanNamePos,std::string::npos);
+   }
+
+
    // Create the rootmap file from the selected classes and namespaces
-   std::ofstream rootmapFile(rootmapFileName.c_str());
+   std::ofstream rootmapFile(localRootmapFileName.c_str());
 
    // Preamble
    time_t rawtime;  
@@ -2443,7 +2507,7 @@ void createRootMapFile(const std::string& rootmapFileName,
       std::string className(selClassesIter->GetNormalizedName());
       manipForRootmap(className);
       rootmapFile << "Library." << className << ": "
-                  << std::setw(35-className.size()) << rootmapLibName
+                  << std::setw(35-className.size()) << localRootmapLibName
                   << std::endl;   
       }
    
@@ -2453,7 +2517,7 @@ void createRootMapFile(const std::string& rootmapFileName,
       std::string className(ROOT::TMetaUtils::R__GetQualifiedName(* selNsIter->GetNamespaceDecl()));
       manipForRootmap(className);
       rootmapFile << "Library." << className << ": "
-                  << std::setw(35-className.size()) << rootmapLibName
+                  << std::setw(35-className.size()) << localRootmapLibName
                   << std::endl;
         }   
 }
@@ -2478,13 +2542,14 @@ void createRootMapFile(const std::string& rootmapFileName,
 //______________________________________________________________________________
 int RootCling(int argc,
               char **argv,
-              const std::string& rootmapFileName="",
-              const std::string& rootmapLibName="",
               bool isDeep=false)
 {
+
+   const std::string shortHelp("Usage: %s [-v][-v0-4] [-f] [out.cxx] [-rmf rootMapFile] [-rml rootMapLibrary] [-s sharedLibrary] [-m pcmfile] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n");
+   
    if (argc < 2) {
       fprintf(stderr,
-              "Usage: %s [-v][-v0-4] [-f] [out.cxx] [-s sharedLibrary] [-m pcmfile] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+              shortHelp.c_str(),
               argv[0]);
       fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
       return 1;
@@ -2567,7 +2632,7 @@ int RootCling(int argc,
       fprintf(stderr, "%s\n", rootClingHelp);
       return 1;
    } else if (ic < argc && !strncmp(argv[ic], "-",1)) {
-      fprintf(stderr,"Usage: %s [-v][-v0-4] [-f] [out.cxx] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+      fprintf(stderr, shortHelp.c_str(),
               argv[0]);
       fprintf(stderr,"Only one verbose flag is authorized (one of -v, -v0, -v1, -v2, -v3, -v4)\n"
               "and must be before the -f flags\n");
@@ -2675,9 +2740,25 @@ int RootCling(int argc,
 
    std::vector<std::string> baseModules;
    std::string sharedLibraryPathName;
+   std::string rootmapLibName;
+   std::string rootmapFileName;
+   
    int nextStart = 0;
    while (ic < argc) {
       if (*argv[ic] == '-' || *argv[ic] == '+') {
+
+         if (strcmp("-rml", argv[ic]) == 0 && (ic+1) < argc) {
+            // name of the lib for the rootmap
+            rootmapLibName = argv[ic+1];
+            ++ic;
+         }
+
+         if (strcmp("-rmf", argv[ic]) == 0 && (ic+1) < argc) {
+            // name for the rootmap file
+            rootmapFileName = argv[ic+1];
+            ++ic;
+         }
+         
          if (strcmp("-s", argv[ic]) == 0 && (ic+1) < argc) {
             // precompiled modules
             sharedLibraryPathName = argv[ic+1];
@@ -2727,57 +2808,9 @@ int RootCling(int argc,
    clingArgs.push_back("-Xclang");
    clingArgs.push_back((dictname + ".h").c_str());
 
-   // Hack present for the root workshop: root6 preview distributed on an USB
-   // stick with SLC5 + gcc46.
-#ifdef R__GCC_TOOLCHAIN   
-   clingArgs.push_back("-gcc-toolchain");
-   clingArgs.push_back(R__GCC_TOOLCHAIN);
-#endif
-#ifdef R__GCC_INC_DIR_0
-   clingArgs.push_back("-cxx-isystem");
-   clingArgs.push_back(R__GCC_INC_DIR_0);
-#endif
-#ifdef R__GCC_INC_DIR_1
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_1);
-#endif
-#ifdef R__GCC_INC_DIR_2
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_2);
-#endif
-#ifdef R__GCC_INC_DIR_3
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_3);
-#endif
-#ifdef R__GCC_INC_DIR_4
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_4);
-#endif
-#ifdef R__GCC_INC_DIR_5
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_5);
-#endif
-#ifdef R__GCC_INC_DIR_6
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_6);
-#endif
-#ifdef R__GCC_INC_DIR_7
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_7);
-#endif
-#ifdef R__GCC_INC_DIR_8
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_8);
-#endif
-#ifdef R__GCC_INC_DIR_9
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_9);
-#endif
-#ifdef R__GCC_INC_DIR_10
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_10);
-#endif
-
+   // Add defines for the toolchain
+   AddGccToolChainDefines(clingArgs);
+   
    std::vector<const char*> clingArgsC;
    for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
         iclingArgs < nclingArgs; ++iclingArgs) {
@@ -3364,7 +3397,7 @@ int RootCling(int argc,
    CleanupOnExit(0);
 
    // Create the rootmapfile if needed
-   if (!rootmapFileName.empty()){
+   if (!rootmapFileName.empty() || !rootmapLibName.empty()){
       createRootMapFile(rootmapFileName,
                         rootmapLibName,
                         scan);
@@ -3600,7 +3633,7 @@ int invokeRootCling(const std::string& verbosity,
 
 
    std::vector<char*> argvVector;
-   argvVector.reserve(7 + // 5 required, 2 optional
+   argvVector.reserve(9 + // 5 required, 4 optional
                       (headersNames.size()-1) + // 1 header already counted
                       pcmsNames.size()*2+ // -m pcmName N times => 2N
                       includes.size()*2+  // -I include.h
@@ -3612,6 +3645,39 @@ int invokeRootCling(const std::string& verbosity,
    argvVector.push_back(string2charptr("-f"));
    argvVector.push_back(string2charptr(ofilename));
 
+   // Rootmaps
+
+   // Prepare the correct rootmap libname if not already set.
+   std::string newRootmapLibName(rootmapLibName);
+   if (!rootmapFileName.empty() && newRootmapLibName.empty()){
+         if (headersNames.size() != 1){
+               ROOT::TMetaUtils::Warning(0,
+            "*** genreflex: No rootmap lib and several header specified!\n");
+      }
+      std::string cleanHeaderName;
+      extractFileName(headersNames[0],cleanHeaderName);
+      newRootmapLibName = "lib";
+      newRootmapLibName+=cleanHeaderName;
+      changeExtension(newRootmapLibName,gLibraryExtension);
+   }
+
+   // Prepend to the rootmap the directory of the directory of the header
+   std::string headerLocation("");
+   extractFilePath(ofilename,headerLocation);
+
+   
+   // RootMap filename 
+   if (!rootmapFileName.empty()){
+      argvVector.push_back(string2charptr("-rmf"));
+      argvVector.push_back(string2charptr(headerLocation+rootmapFileName));
+   }
+   
+   // RootMap Lib filename 
+   if (!newRootmapLibName.empty()){
+      argvVector.push_back(string2charptr("-rml"));
+      argvVector.push_back(string2charptr(newRootmapLibName));
+   }
+   
    if (!targetLibName.empty()){
       argvVector.push_back(string2charptr("-s"));
       argvVector.push_back(string2charptr(targetLibName));
@@ -3638,32 +3704,12 @@ int invokeRootCling(const std::string& verbosity,
       for (int i=0;i<argc;i++)
          std::cout << i << ") " << argvVector[i] <<std::endl;
    }
-
-   // Prepare the correct rootmap libname if not already set.
-   std::string newRootmapLibName(rootmapLibName);
-   if (!rootmapFileName.empty() && newRootmapLibName.empty()){
-      if (headersNames.size() != 1){
-         ROOT::TMetaUtils::Warning(0,
-            "*** genreflex: No rootmap lib and several header specified!\n");
-      }
-      std::string cleanHeaderName;
-      extractFileName(headersNames[0],cleanHeaderName);
-      newRootmapLibName = "lib";
-      newRootmapLibName+=cleanHeaderName;
-      changeExtension(newRootmapLibName,".so");
-   }
-
-   // Prepend to the rootmap the directory of the directory of the header
-   std::string headerLocation("");
-   extractFilePath(ofilename,headerLocation); 
    
    char** argv =  & (argvVector[0]);
    int rootclingReturnCode = RootCling(argc,
                                        argv,
-                                       headerLocation+rootmapFileName,
-                                       newRootmapLibName,
                                        isDeep);
-
+   
    for (int i=0;i<argc;i++)
       delete argvVector[i];
 
@@ -3775,8 +3821,10 @@ int GenReflex(int argc, char **argv)
    // --fail_on_warning                   Wrap ROOT::TMetaUtils::Warning and throw if selected
    //
    // New arguments:
-   // -l --library targetLib name         -l  targetLib name
-   // -m pcmname (can be many -m)         -m pcmname (can be many -m)
+   // -l --library targetLib name (new)   -s  targetLib name
+   // -m pcmname (can be many -m) (new)   -m pcmname (can be many -m)
+   // --rootmap                           -rmf (new)
+   // --rootmap-lib                       -rml (new)
    //
    // genreflex options which rise warnings (feedback is desirable)
    // -c, --capabilities (should not be needed with the new plufing system)
@@ -3793,8 +3841,6 @@ int GenReflex(int argc, char **argv)
    // Exceptions
    // The --deep option of genreflex is passed as function parameter to rootcling
    // since it's not needed at the moment there.
-   // Same is for the -I, -D and -U options.
-
 
    using namespace genreflex;
 
@@ -4056,9 +4102,10 @@ int GenReflex(int argc, char **argv)
    std::string targetLibName;
    if (options[TARGETLIB]){
       targetLibName = options[TARGETLIB].arg;
-      if (!endsWith(targetLibName, ".so")){
+      if (!endsWith(targetLibName, gLibraryExtension)){
          ROOT::TMetaUtils::Error(0,
-            "*** genreflex: Invalid target library extension: filename is %s and extension .so is expected!\n",
+            "*** genreflex: Invalid target library extension: filename is %s and extension %s is expected!\n",
+            gLibraryExtension.c_str(),
             targetLibName.c_str());
       }
       // Target lib has precedence over rootmap lib
@@ -4068,8 +4115,8 @@ int GenReflex(int argc, char **argv)
    // If the rootmaplib is not set, set one 
 
    // Add the .so extension to the rootmap lib if not there
-   if (!rootmapLibName.empty() && !endsWith(rootmapLibName,".so")){
-      rootmapLibName+=".so";
+   if (!rootmapLibName.empty() && !endsWith(rootmapLibName,gLibraryExtension)){
+      rootmapLibName+=gLibraryExtension;
    }
 
    // The list of pcms to be preloaded
