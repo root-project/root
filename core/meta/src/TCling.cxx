@@ -3387,6 +3387,19 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 
          delete tokens;
       }
+      else if (!strncmp(cls.Data(), "Declare.", 8) && cls.Length() > 8) {
+         cls.Remove(0, 8);
+         // convert "-" to " ", since class names may have
+         // blanks and TEnv considers a blank a terminator
+         cls.ReplaceAll("-", " ");
+         cling::Transaction* T = 0;
+         fInterpreter->declare(cls.Data(), &T);
+         ClassTemplateDecl* D 
+            = cast<ClassTemplateDecl>(T->getFirstDecl().getSingleDecl());
+         if (TagDecl* TD = dyn_cast<TagDecl>(D->getTemplatedDecl()))
+            TD->setHasExternalLexicalStorage();
+      }
+
    }
    return 0;
 }
