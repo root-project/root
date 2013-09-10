@@ -2819,10 +2819,6 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
    // Utility function to insert a type pointer to a decl that does not have a dictionary
    // In the set of pointer for the classes without dictionaries.
 
-   // Check whether the type pointer is not already in the set.
-   std::set<const clang::Type*>::iterator it = netD.find(qType.getTypePtr());
-   if (it != netD.end()) return false;
-
    if (const clang::TypedefType* TD = dyn_cast<clang::TypedefType>(qType)) {
       qType = (TD->desugar());
    }
@@ -2832,6 +2828,10 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
    if (const clang::SubstTemplateTypeParmType* TD = dyn_cast<clang::SubstTemplateTypeParmType>(qType)) {
       qType = (TD->desugar());
    }
+
+   // Check whether the type pointer is not already in the set.
+   std::set<const clang::Type*>::iterator it = netD.find(qType.getTypePtr());
+   if (it != netD.end()) return false;
 
    // Get the name of the class.
    std::string buf;
