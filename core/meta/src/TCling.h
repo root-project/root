@@ -425,7 +425,6 @@ private: // Private Utility Functions
    bool LoadPCM(TString pcmFileName, const char** headers,
                 void (*triggerFunc)()) const;
    void HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl = 0) const;
-   bool GetUnderlyingQualType(clang::QualType& qualType);
    void GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, clang::QualType qType, bool recurse);
    bool InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, clang::QualType qType, bool recurse);
 
