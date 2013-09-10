@@ -62,8 +62,8 @@ TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
 }
 
 TModuleGenerator::~TModuleGenerator() {
-   //unlink(fUmbrellaName.c_str());
-   //unlink(fContentName.c_str());
+   unlink(fUmbrellaName.c_str());
+   unlink(fContentName.c_str());
 }
 
 //______________________________________________________________________________
