@@ -1677,8 +1677,7 @@ with compiler options, prefix with --with-, overrides default value
   f77                alternative Fortran compiler and options to be used
   ld                 alternative Linker and options to be used
   gcc-toolchain      directory where gcc is installed (needed for compilation
-                     of clang/LLVM in case not the default gcc is used),
-                     will be automatically set if --with-cc is set
+                     of clang/LLVM in case not the default gcc is used)
   clang              use clang compiler instead of gcc (mutual exclusive with
                      the cc, cxx and ld options)
 
@@ -2294,10 +2293,6 @@ fi
 # at run-time to cling.
 setgcctoolchain="undef"
 gcctoolchainconf="/**/"
-if test "x$altccset" != "x" && test "x$gcctoolchain" = "x"; then
-   # try determining toolchain location by looking for --prefix
-   gcctoolchain=`$altcc -v 2>&1 > /dev/null | sed -n 's/^.*--prefix=//p' | sed 's/ .*//'`
-fi
 if test "x$gcctoolchain" != "x"; then
    setgcctoolchain="define"
    gcctoolchainconf=\"$gcctoolchain\"
