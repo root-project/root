@@ -3237,6 +3237,32 @@ const char* TCling::TypeName(const char* typeDesc)
    return t;
 }
 
+namespace {
+   using namespace clang;
+   class TmpltParamAnnotator: public RecursiveASTVisitor<TmpltParamAnnotator> {
+   public:
+      bool VisitTemplateDecl(TemplateDecl* CTD) {
+         ASTContext& Ctx = CTD->getASTContext();
+         for (TemplateParameterList::iterator I = CTD->getTemplateParameters()->begin(),
+                 E = CTD->getTemplateParameters()->end(); I != E; ++I) {
+            if (TemplateTypeParmDecl *ITypeParm = dyn_cast<TemplateTypeParmDecl>(*I)) {
+               if (!ITypeParm->hasDefaultArgument()) continue;
+            } else if (NonTypeTemplateParmDecl *INonTypeParm
+               = dyn_cast<NonTypeTemplateParmDecl>(*I)) {
+               if (!INonTypeParm->hasDefaultArgument()) continue;
+            } else {
+               TemplateTemplateParmDecl* ITemplateParm
+                  = cast<TemplateTemplateParmDecl>(*I);
+               if (!ITemplateParm->hasDefaultArgument()) continue;
+            }
+            // This template parameter has a default argument; add an annotation.
+            (*I)->addAttr(new (Ctx) clang::AnnotateAttr(SourceRange(), Ctx, "rootmap"));
+         }
+         return false;
+      }
+   };
+}
+
 //______________________________________________________________________________
 Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 {
@@ -3377,7 +3403,13 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
          // convert "-" to " ", since class names may have
          // blanks and TEnv considers a blank a terminator
          cls.ReplaceAll("-", " ");
-         fInterpreter->declare(cls.Data());
+         cling::Transaction* T = 0;
+         fInterpreter->declare(cls.Data(), &T);
+         // Annotate all template params with default args to come from
+         // a rootmap file, such that we avoid diagnostics about duplicate
+         // default arguments.
+         TmpltParamAnnotator TPA;
+         TPA.TraverseDecl(T->getFirstDecl().getSingleDecl());
       }
 
    }
