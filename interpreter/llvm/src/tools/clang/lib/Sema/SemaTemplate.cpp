@@ -1462,6 +1462,13 @@ bool Sema::CheckTemplateParameterList(TemplateParameterList *NewParams,
       Invalid = true;
     }
 
+    if (RedundantDefaultArg &&
+        (((*OldParam)->hasAttr<AnnotateAttr>() &&
+         (*OldParam)->getAttr<AnnotateAttr>()->getAnnotation() == "rootmap") ||
+        ((*NewParam)->hasAttr<AnnotateAttr>() &&
+         (*NewParam)->getAttr<AnnotateAttr>()->getAnnotation() == "rootmap"))) {
+      RedundantDefaultArg = false;
+    }
     if (RedundantDefaultArg) {
       // C++ [temp.param]p12:
       //   A template-parameter shall not be given default arguments
