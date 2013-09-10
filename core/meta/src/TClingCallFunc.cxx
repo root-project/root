@@ -1701,7 +1701,7 @@ make_wrapper()
    string wrapper_name;
    {
       ostringstream buf;
-      buf << cling::utils::Synthesize::UniquePrefix;
+      buf << "cf" << cling::utils::Synthesize::UniquePrefix;
       //const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
       //string mn;
       //fInterp->maybeMangleDeclName(ND, mn);
