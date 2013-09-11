@@ -9,7 +9,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log dt_reference.root Event.new.*.root \
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += missingInfo nospace namespace autoload mytest drawing testloadernotapp
+TEST_TARGETS += missingInfo nospace namespace autoload mytest drawing testloadernotapp templateAutoload templateAutoloadInclude
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -115,3 +115,9 @@ loadernotapp.success: loadernotapp.log
 execResolveTypedef.success: EXTRA_DIFFOPTS += -w
 
 execTypedefList.log: typelist.v5.txt typelist.v6.txt
+
+
+TEMPLATELIBS := TmpltInt0 TmpltInt1 TmpltFloat ANSTmpltInt
+templateAutoload.log templateAutoloadInclude.log: $(addsuffix _C.$(DllSuf),$(TEMPLATELIBS))
+
+templateAutoload templateAutoloadInclude: templateAutoload.log templateAutoloadInclude.log

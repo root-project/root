@@ -1,1 +1,10 @@
 Library.NotReal: libCore.so
+
+Declare.template<typename-T,int-I,typename-TAG,typename-TDEF=T,int-IDEF=I>class-Template;
+Declare.namespace-ANamespace{template<typename-T,int-I,typename-TAG,typename-TDEF=T,int-IDEF=I>class-Template;};
+
+Library.Template<float,-0,-TagClassWithoutDefinition,-float,-0>: TmpltFloat_C
+Library.Template<int,-0,-TagClassWithoutDefinition,-int,-0>: TmpltInt0_C
+Library.Template<int,-1,-TagClassWithoutDefinition,-int,-1>: TmpltInt1_C
+Library.ANamespace@@Template<int,-0,-TagClassWithoutDefinition,-int,-0>: ANSTmpltInt_C
+Library.ANamespace@@Template<int,-1,-TagClassWithoutDefinition,-int,-1>: ANSTmpltInt_C
