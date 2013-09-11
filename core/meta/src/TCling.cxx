@@ -1250,22 +1250,25 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             // We have a 2nd +
             aclicMode[1]='f'; // We want to force the recompilation.
          }
-         gSystem->CompileMacro(fname,aclicMode);
+         if (!gSystem->CompileMacro(fname,aclicMode)) {
+            // ACLiC failed.
+            compRes = cling::Interpreter::kFailure;
+         } else {
+            if (strncmp(sLine.Data(), ".L", 2) != 0) {
+               // if execution was requested.
 
-         if (strncmp(sLine.Data(), ".L", 2) != 0) {
-            // if execution was requested.
-
-            if (arguments.Length()==0) {
-               arguments = "()";
+               if (arguments.Length()==0) {
+                  arguments = "()";
+               }
+               // We need to remove the extension.
+               Ssiz_t ext = fname.Last('.');
+               if (ext != kNPOS) {
+                  fname.Remove(ext);
+               }
+               const char *function = gSystem->BaseName(fname);
+               mod_line = function + arguments + io;
+               indent = fMetaProcessor->process(mod_line, compRes, &result);
             }
-            // We need to remove the extension.
-            Ssiz_t ext = fname.Last('.');
-            if (ext != kNPOS) {
-               fname.Remove(ext);
-            }
-            const char *function = gSystem->BaseName(fname);
-            mod_line = function + arguments + io;
-            indent = fMetaProcessor->process(mod_line, compRes, &result);
          }
       } else {
          // not ACLiC
