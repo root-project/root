@@ -94,6 +94,7 @@
 #include <cassert>
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <stdint.h>
 #include <fstream>
 #include <string>
@@ -809,6 +810,21 @@ void* TCling::fgSetOfSpecials = 0;
 
 //______________________________________________________________________________
 //
+// llvm error handler through exceptions; see also cling/UserInterface
+//
+namespace {
+   // Handle fatal llvm errors by throwing an exception.
+   // Yes, throwing exceptions in error handlers is bad.
+   // Doing nothing is pretty terrible, too.
+   void exceptionErrorHandler(void * /*user_data*/,
+                              const std::string& reason,
+                              bool /*gen_crash_diag*/) {
+      throw std::runtime_error(reason);
+   }
+}
+
+//______________________________________________________________________________
+//
 //
 //
 
@@ -821,6 +837,8 @@ TCling::TCling(const char *name, const char *title)
    fClingCallbacks(0), fHaveSinglePCM(kFALSE)
 {
    // Initialize the cling interpreter interface.
+
+   llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
    fTemporaries = new std::vector<cling::StoredValueRef>();
    std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
