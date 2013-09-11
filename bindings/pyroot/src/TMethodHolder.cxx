@@ -131,16 +131,16 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
    for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
       std::string fullType =
          fMethod.TypeOf().FunctionParameterAt( iarg ).Name( Rflx::QUALIFIED | Rflx::SCOPED );
+   // CLING WORKAROUND -- 
+      fullType = Utility::ResolveTypedef( fullType, (TClass*)fClass.Id() );
+   // -- END CLING WORKAROUND
+
       fConverters[ iarg ] = CreateConverter( fullType );
 
       if ( ! fConverters[ iarg ] ) {
          PyErr_Format( PyExc_TypeError, "argument type %s not handled", fullType.c_str() );
          return kFALSE;
       }
-
-   // CLING WORKAROUND -- MAY NO LONGER BE NECESSARY
-      fullType = Utility::ResolveTypedef( fullType, (TClass*)fClass.Id() );
-   // -- END CLING WORKAROUND
 
    // setup call string
       if ( callString.length() == 0 )
