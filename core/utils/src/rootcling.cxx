@@ -2525,8 +2525,15 @@ public:
       int retval=0;
       // rename the temp files into the normal ones
       for (unsigned int i = 0; i < m_size; ++i){
-         if ( 0 != std::rename( m_tempNames[i].c_str() , m_names[i].c_str() )){
-            ROOT::TMetaUtils::Error(0, "Error renaming %s into %s!\n", m_tempNames[i].c_str() , m_names[i].c_str());
+         const char* tmpName=m_tempNames[i].c_str();
+         const char* name=m_names[i].c_str();
+         // Check if the file exists
+         std::ifstream ifile(tmpName);
+         if (!ifile)
+            ROOT::TMetaUtils::Error(0, "Cannot find %s!\n", tmpName);       
+         
+         if ( 0 != std::rename( tmpName , name )){
+            ROOT::TMetaUtils::Error(0, "Renaming %s into %s!\n", tmpName , name);
             retval++;
          }
       }
@@ -3417,9 +3424,9 @@ int RootCling(int argc,
       tmpCatalog.dump();
    
    // Before returning, rename the files
-   tmpCatalog.commit();
+   return tmpCatalog.commit();
+
    
-   return 0;
 }
 
 namespace genreflex{
