@@ -2447,13 +2447,18 @@ void adjustRootMapNames(std::string& rootmapFileName,
 }
 
 //______________________________________________________________________________
-void createRootMapFile(const std::string& rootmapFileName,
+int createRootMapFile(const std::string& rootmapFileName,
                        const std::string& rootmapLibName,
                        RScanner& scan)
 {
 
    // Create the rootmap file from the selected classes and namespaces
    std::ofstream rootmapFile(rootmapFileName.c_str());
+   if (!rootmapFile){
+      ROOT::TMetaUtils::Error(0,"Opening new rootmap file %s\n",rootmapFileName.c_str());
+      return 1;
+   }
+      
 
    // Preamble
    time_t rawtime;  
@@ -2478,7 +2483,8 @@ void createRootMapFile(const std::string& rootmapFileName,
       rootmapFile << "Library." << className << ": "
                   << std::setw(35-className.size()) << rootmapLibName
                   << std::endl;
-        }   
+        }
+   return 0;
 }
 
 
@@ -2513,11 +2519,13 @@ public:
    void addFileName(std::string& name){
       // Adds the name and the associated temp name to the catalog.
       // Changes the name into the temp name
-      if (name.empty()) return;
+      if (name.empty()) return;      
       m_names.push_back(name);
+      ROOT::TMetaUtils::Info(0,"File %s added to the tmp catalog.\n", name.c_str());
       name +="_tmp";
       m_tempNames.push_back(name);
       m_size++;
+      
    }
 
    //______________________________________________
@@ -3414,9 +3422,10 @@ int RootCling(int argc,
       adjustRootMapNames(rootmapFileName,
                          rootmapLibName);
       tmpCatalog.addFileName(rootmapFileName);
-      createRootMapFile(rootmapFileName,
-                        rootmapLibName,
-                        scan);
+      int rmStatusCode= createRootMapFile(rootmapFileName,
+                                          rootmapLibName,
+                                          scan);
+      if (0!=rmStatusCode) return 1;
    }
 
    
@@ -4063,12 +4072,12 @@ int GenReflex(int argc, char **argv)
    RiseWarningIfPresent(options,NOTEMPLATETYPEDEFS,"Exclusion of template typedefs");
 
    // The verbosity: debug wins over quiet
-   //std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
-   std::string verbosityOption("-v");
+   std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
+   //std::string verbosityOption("-v");
    if (options[QUIET]) verbosityOption="-v0";
    if (options[DEBUG]) verbosityOption="-v4";
 
-   genreflex::verbose=verbosityOption=="-v4";
+   genreflex::verbose= verbosityOption=="-v4";
 
    // The selection file
    std::string selectionFileName;
