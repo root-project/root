@@ -2813,30 +2813,20 @@ Bool_t TCling::HasDictionary(TClass* cl)
 }
 
 //______________________________________________________________________________
-bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, clang::QualType qType, bool recurse)
+bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<std::string> &netD, clang::QualType qType, bool recurse)
 {
 
    // Utility function to insert a type pointer to a decl that does not have a dictionary
    // In the set of pointer for the classes without dictionaries.
 
-   if (const clang::TypedefType* TD = dyn_cast<clang::TypedefType>(qType)) {
-      qType = (TD->desugar());
-   }
-   if (const clang::TemplateTypeParmType* TD = dyn_cast<clang::TemplateTypeParmType>(qType)) {
-      qType = (TD->desugar());
-   }
-   if (const clang::SubstTemplateTypeParmType* TD = dyn_cast<clang::SubstTemplateTypeParmType>(qType)) {
-      qType = (TD->desugar());
-   }
-
-   // Check whether the type pointer is not already in the set.
-   std::set<const clang::Type*>::iterator it = netD.find(qType.getTypePtr());
-   if (it != netD.end()) return false;
-
    // Get the name of the class.
    std::string buf;
    ROOT::TMetaUtils::GetNormalizedName(buf, qType, *fInterpreter, *fNormalizedCtxt);
    const char* name = buf.c_str();
+
+   // Check whether the type pointer is not already in the set.
+   std::set<std::string>::iterator it = netD.find(name);
+   if (it != netD.end()) return false;
 
    // Check for the dictionary of the curent class.
    if (TClass* t = TClass::GetClass(name)) {
@@ -2847,33 +2837,38 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const cl
          // We need to make sure the collection proxy is not emulated
          if ((t->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) != 0) {
             // oups we are missing the dictionary for the collection.
-            netD.insert(qType.getTypePtr());
-         }
-         // We need to *not* look at t but instead at its content
-         // This may be duplicated code because I always check for template parameter,
-         // But if the collection has different kind of elements the check would be required.
-         if ((t = t->GetCollectionProxy()->GetValueClass())) {
-            if (!gClassTable->GetDict(t->GetName())){
+            netD.insert(name);
+            return false;
+         } else {
+            // We need to *not* look at t but instead at its content
+            // The collection has different kind of elements the check would be required.
+            if ((t = t->GetCollectionProxy()->GetValueClass())) {
                if (TClingClassInfo* ti = (TClingClassInfo*)t->GetClassInfo()) {
                   if(const clang::Type* elemType = ti->GetType()) {
-                     std::set<const clang::Type*>::iterator it = netD.find(qType.getTypePtr());
-                     if (it != netD.end()) return false;
-                     netD.insert(elemType);
+                     // Get the name of the class.
+                     std::string elemBuf;
+                     ROOT::TMetaUtils::GetNormalizedName(elemBuf, QualType(elemType, 0), *fInterpreter, *fNormalizedCtxt);
+                     const char* elemName = elemBuf.c_str();
+                     if (!gClassTable->GetDict(elemName)) {
+                        std::set<std::string>::iterator it = netD.find(elemName);
+                        if (it != netD.end()) return false;
+                        netD.insert(elemName);
+                     }
                   }
                }
             }
+            return true;
          }
-         return true;
       }
    }
    if (!gClassTable->GetDict(name)) {
-         netD.insert(qType.getTypePtr());
+         netD.insert(name);
    }
 
    return true;
 }
 //______________________________________________________________________________
-void TCling::GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, clang::QualType qType, bool recurse)
+void TCling::GetMissingDictionariesForDecl(const clang::Decl* D, std::set<std::string> &netD, clang::QualType qType, bool recurse)
 {
    // Utility function to get the missing dictionaries for a record decl.
    // Checks all the data members and if the recurse flag is true it recurses over contents of the data members.
@@ -2916,21 +2911,18 @@ void TCling::GetMissingDictionaries(TClass* cl, TObjArray& result, bool recurse 
    const clang::Type* T = cli->GetType();
 
    // Set containing all the decls of the classes that do not have a dictionary.
-   std::set<const clang::Type*> netD;
+   std::set<std::string> netD;
    clang::QualType qType = QualType(T, 0);
    GetMissingDictionariesForDecl(D, netD, qType, recurse);
 
-   // Convert set<Decl> to TObjArray.
-   for (std::set<const clang::Type*>::const_iterator I = netD.begin(),
+   // Convert set<std::string> to TObjArray.
+   for (std::set<std::string>::const_iterator I = netD.begin(),
         E = netD.end(); I != E; ++I) {
 
-      std::string buf;
-      ROOT::TMetaUtils::GetNormalizedName(buf, QualType(*I, 0), *fInterpreter, *fNormalizedCtxt);
-      const char* name = buf.c_str();
-      if (TClass* clMissingDict = TClass::GetClass(name)) {
+      if (TClass* clMissingDict = TClass::GetClass((*I).c_str())) {
          result.Add(clMissingDict);
       } else {
-         Error("TCling::GetMissingDictionaries", "The class %s missing dictionary was not found.", name);
+         Error("TCling::GetMissingDictionaries", "The class %s missing dictionary was not found.", (*I).c_str());
       }
    }
 }

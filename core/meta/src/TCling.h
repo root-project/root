@@ -425,8 +425,8 @@ private: // Private Utility Functions
    bool LoadPCM(TString pcmFileName, const char** headers,
                 void (*triggerFunc)()) const;
    void HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl = 0) const;
-   void GetMissingDictionariesForDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, clang::QualType qType, bool recurse);
-   bool InsertMissingDictionaryDecl(const clang::Decl* D, std::set<const clang::Type*> &netD, clang::QualType qType, bool recurse);
+   void GetMissingDictionariesForDecl(const clang::Decl* D, std::set<std::string> &netD, clang::QualType qType, bool recurse);
+   bool InsertMissingDictionaryDecl(const clang::Decl* D, std::set<std::string> &netD, clang::QualType qType, bool recurse);
 
    ClassDef(TCling, 0) //Interface to cling C++ interpreter
 };
