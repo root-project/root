@@ -1,38 +1,7 @@
 
 Processing runtemplateAutoload.C...
-In file included from input_line_41:1:
-/home/axel/build/root/github/roottest/root/meta/./runtemplateAutoload.C:5:28: error: implicit instantiation of undefined template 'Template<float, 0, TagClassWithoutDefinition, float, 0>'
-   Template<float,0,Tag_t> inTmpltFloat_C;
-                           ^
-input_line_13:1:73: note: template is declared here
-template<typename T,int I,typename TAG,typename TDEF=T,int IDEF=I>class Template;
-                                                                        ^
-In file included from input_line_41:1:
-/home/axel/build/root/github/roottest/root/meta/./runtemplateAutoload.C:6:26: error: implicit instantiation of undefined template 'Template<int, 0, TagClassWithoutDefinition, int, 0>'
-   Template<int,0,Tag_t> inTmpltInt0_C;
-                         ^
-input_line_13:1:73: note: template is declared here
-template<typename T,int I,typename TAG,typename TDEF=T,int IDEF=I>class Template;
-                                                                        ^
-In file included from input_line_41:1:
-/home/axel/build/root/github/roottest/root/meta/./runtemplateAutoload.C:7:26: error: implicit instantiation of undefined template 'Template<int, 1, TagClassWithoutDefinition, int, 1>'
-   Template<int,1,Tag_t> inTmpltInt1_C;
-                         ^
-input_line_13:1:73: note: template is declared here
-template<typename T,int I,typename TAG,typename TDEF=T,int IDEF=I>class Template;
-                                                                        ^
-In file included from input_line_41:1:
-/home/axel/build/root/github/roottest/root/meta/./runtemplateAutoload.C:9:38: error: implicit instantiation of undefined template 'ANamespace::Template<int, 0, TagClassWithoutDefinition, int, 0>'
-   ANamespace::Template<int,0,Tag_t> inANSTmpltInt0_C;
-                                     ^
-input_line_14:1:94: note: template is declared here
-namespace ANamespace{template<typename T,int I,typename TAG,typename TDEF=T,int IDEF=I>class Template;};
-                                                                                             ^
-In file included from input_line_41:1:
-/home/axel/build/root/github/roottest/root/meta/./runtemplateAutoload.C:10:38: error: implicit instantiation of undefined template 'ANamespace::Template<int, 1, TagClassWithoutDefinition, int, 1>'
-   ANamespace::Template<int,1,Tag_t> inANSTmpltInt0_C_too;
-                                     ^
-input_line_14:1:94: note: template is declared here
-namespace ANamespace{template<typename T,int I,typename TAG,typename TDEF=T,int IDEF=I>class Template;};
-                                                                                             ^
-'Execution of runtemplateAutoload.C' exited with error code: 1
+Float template instance object created.
+Int0 template instance object created.
+Int1 template instance object created.
+Int0 ANamespace::Template object created.
+Int1 ANamespace::Template object created.

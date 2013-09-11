@@ -120,4 +120,7 @@ execTypedefList.log: typelist.v5.txt typelist.v6.txt
 TEMPLATELIBS := TmpltInt0 TmpltInt1 TmpltFloat ANSTmpltInt
 templateAutoload.log templateAutoloadInclude.log: $(addsuffix _C.$(DllSuf),$(TEMPLATELIBS))
 
-templateAutoload templateAutoloadInclude: templateAutoload.log templateAutoloadInclude.log
+templateAutoload: templateAutoload.log
+	$(TestDiff)
+templateAutoloadInclude: templateAutoloadInclude.log
+	$(TestDiff)
