@@ -2295,7 +2295,8 @@ void AddGccToolChainDefines (std::vector<std::string>& clingArgs) {
    clingArgs.push_back(R__GCC_TOOLCHAIN);
    #endif
    #ifdef R__GCC_INC_DIR_0
-   clingArgs.push_back("-cxx-isystem");
+   clingArgs.push_back("-nostdinc++");
+   clingArgs.push_back("-I");
    clingArgs.push_back(R__GCC_INC_DIR_0);
    #endif
    #ifdef R__GCC_INC_DIR_1

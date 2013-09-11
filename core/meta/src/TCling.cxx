@@ -849,7 +849,8 @@ TCling::TCling(const char *name, const char *title)
          , "-gcc-toolchain", R__GCC_TOOLCHAIN
 #endif
 #ifdef R__GCC_INC_DIR_0
-         , "-cxx-isystem", R__GCC_INC_DIR_0
+         , "-nostdinc++"
+         , "-I", R__GCC_INC_DIR_0
 #endif
 #ifdef R__GCC_INC_DIR_1
          , "-I", R__GCC_INC_DIR_1

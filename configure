@@ -2299,11 +2299,6 @@ if test "x$gcctoolchain" != "x"; then
    if test "x$altccset" != "x" ; then
       gccincdirs=`echo "#include <bogus.h>" | ${altcc} -xc++ -E -v - 2>&1 >/dev/null | awk '/^#include </,/^End of search/{if (!/^#include </ && !/^End of search/){ print }}'`
       gccincdirarr=(${gccincdirs// / })
-      if ((${#gccincdirarr[@]} > 10)); then
-         result "`basename $0`: more than 10 alternative gcc compiler include paths."
-         result "Code needs to be modified, call ROOT support."
-         exit 1
-      fi
    else
       result "`basename $0`: no alternative gcc compiler specified, incompatible with --with-gcc-toolchain option"
       exit 1
@@ -7033,8 +7028,17 @@ rm -f RConfigure.tmp
 if test ! "x${gccincdirarr[0]}" = "x"; then
     echo "#ifndef ROOT_RConfigure_GCC" >> RConfigure-out.tmp
     echo "#define ROOT_RConfigure_GCC" >> RConfigure-out.tmp
+    k=0
     for i in "${!gccincdirarr[@]}"; do
-        echo "#define R__GCC_INC_DIR_$i \"${gccincdirarr[$i]}\"" >> RConfigure-out.tmp
+        if `echo ${gccincdirarr[$i]} | grep "/c++/" > /dev/null  2>&1` ; then
+            echo "#define R__GCC_INC_DIR_$k \"${gccincdirarr[$i]}\"" >> RConfigure-out.tmp
+            k=`expr $k + 1`
+            if (($k > 10)); then
+                result "`basename $0`: more than 10 alternative gcc C++ library include paths."
+                result "Code needs to be modified, call ROOT support."
+                exit 1
+            fi
+        fi
     done
     echo "#endif" >> RConfigure-out.tmp
 fi
