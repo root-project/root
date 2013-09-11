@@ -158,6 +158,9 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
                   if (!clxx->isCompleteDefinition()) {
                      clang::SourceLocation Loc = clxx->getLocation ();
                      clang::Sema& S = interp.getCI()->getSema();
+                     // Here we might not have an active transaction to handle
+                     // the caused instantiation decl.
+                     cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interp));
                      /* bool result = */ S.RequireCompleteType( Loc,  arg.getAsType() , 0);
                      clxx = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
                   }
