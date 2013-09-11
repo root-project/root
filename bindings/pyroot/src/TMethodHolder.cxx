@@ -135,7 +135,15 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
       fullType = Utility::ResolveTypedef( fullType, (TClass*)fClass.Id() );
    // -- END CLING WORKAROUND
 
-      fConverters[ iarg ] = CreateConverter( fullType );
+   // CLING WORKAROUND -- std::string can not use kExactMatch as that will
+   //                     fail, but if no exact match is used, the const-ref
+   //                     std::string arguments will mask the const char* ones,
+   //                     even though the extra default arguments differ
+      if ( fClass.Name() == "string" && fMethod.Name() == "string" && fullType == "const std::string &" ) {
+         fConverters[ iarg ] = new TStrictRootObjectConverter( "string", kFALSE ); // TODO: this is sooo wrong
+   // -- CLING WORKAROUND
+      } else
+         fConverters[ iarg ] = CreateConverter( fullType );
 
       if ( ! fConverters[ iarg ] ) {
          PyErr_Format( PyExc_TypeError, "argument type %s not handled", fullType.c_str() );
@@ -166,6 +174,18 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
       &fOffset,
       ROOT::kExactMatch );
 
+// CLING WORKAROUND -- ROOT/meta thinks string is string, but gInterpreter disagrees
+   if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) && fClass.Name() == "string" ) {
+      gInterpreter->CallFunc_SetFuncProto(
+         fMethodCall,
+         gcl,
+         "basic_string<char,char_traits<char>,allocator<char> >",
+         callString.c_str(),
+         fMethod.IsConstant(),
+         &fOffset);      // <- no kExactMatch as that will fail
+   }
+// -- CLING WORKAROUND
+
 // CLING WORKAROUND -- The number of arguments is not always correct (e.g. when there
 //                     are default parameters, causing the callString to be wrong and
 //                     the exact match to fail); or the method may have been inline or
@@ -178,7 +198,7 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
          (Bool_t)fMethod == true ? fMethod.Name().c_str() : fClass.Name().c_str(),
          callString.c_str(),
          fMethod.IsConstant(),
-         &fOffset );
+         &fOffset );     // <- no kExactMatch as that will fail
    }
 // -- CLING WORKAROUND
 
