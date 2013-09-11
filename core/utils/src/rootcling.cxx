@@ -377,7 +377,7 @@ void AnnotateFieldDecl(clang::NamedDecl& decl,
                userDefinedProperty="//!";
             else
                userDefinedProperty=name+ROOT::TMetaUtils::PropertyNameValSeparator+value;
-            std::cout << varName << " " << userDefinedProperty << std::endl;
+            ROOT::TMetaUtils::Info(0,"%s %s\n",varName.c_str(),userDefinedProperty.c_str());
             decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, userDefinedProperty));
          }
       }
@@ -2452,14 +2452,6 @@ void createRootMapFile(const std::string& rootmapFileName,
                        RScanner& scan)
 {
 
-//    if (genreflex::verbose){
-//       std::cout << "*** genreflex: rootmapfile = "
-//                 << rootmapFileName
-//                 << " -- rootmaplib = "
-//                 << rootmapLibName << std::endl;
-//       }
-
-
    // Create the rootmap file from the selected classes and namespaces
    std::ofstream rootmapFile(rootmapFileName.c_str());
 
@@ -2591,7 +2583,7 @@ int RootCling(int argc,
    int verbosityLevel=0;
    ic = 1;
    if (!strcmp(argv[ic], "-v")) {
-      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kInfo; // The default is kError
+      ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError; // The default is kError
       ic++;
    } else if (!strcmp(argv[ic], "-v0")) {
       ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kFatal; // Explicitly remove all messages
@@ -2803,7 +2795,6 @@ int RootCling(int argc,
             if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
                 && strcmp("-p", argv[ic])) 
                {
-                  //std::cout << "Pushing to clingArgs " << argv[ic] << std::endl;
                   clingArgs.push_back(argv[ic]);
                }
          }
@@ -3104,7 +3095,7 @@ int RootCling(int argc,
 
          XMLReader xmlr(interp);
          if (!xmlr.Parse(file, selectionRules)) {
-            ROOT::TMetaUtils::Error(0,"Parsing XML file %s",linkdefFilename.c_str());
+            ROOT::TMetaUtils::Error(0,"Parsing XML file %s\n",linkdefFilename.c_str());
          }
          else {
             ROOT::TMetaUtils::Info(0,"XML file successfully parsed\n");
@@ -4040,9 +4031,7 @@ int GenReflex(int argc, char **argv)
    // The 4 is the minimum size of the abbreviation lenght.
    // For example, --selction_file can be abbreviated with --sele at least.
 
-   std::cout << "Parsing\n";
    option::Parser parse(genreflexUsageDescriptor, argc, argv, &options[0], &buffer[0], 5);
-   std::cout << "Parsing END\n";
    
    if (parse.error()){
       ROOT::TMetaUtils::Error(0, "*** genreflex: Argument parsing error!\n");

@@ -19,6 +19,7 @@
 
 #include "XMLReader.h"
 #include "SelectionRules.h"
+#include "TMetaUtils.h"
 
 std::map<std::string, XMLReader::ETagNames> XMLReader::fgMapTagNames;
 
@@ -138,19 +139,19 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
 bool XMLReader::CheckIsTagOK(const std::string& tag)
 {
    if (tag.length()<3){
-      std::cout<<"This is not a tag!"<<std::endl;
+      ROOT::TMetaUtils::Error(0,"This is not a tag!\n");
       return false;
    }
    
    // if tag doesn't begin with <, this is not a tag
    if (tag.at(0) != '<'){
-      std::cout<<"Malformed tag (tag doesn't begin with <)!"<<std::endl;
+      ROOT::TMetaUtils::Error(0,"Malformed tag (tag doesn't begin with <)!\n");
       return false;
    }
    
    // if the second symbol is space - this is malformed tag - name of the tag should go directly after the <
    if (isspace(tag.at(1))){
-      std::cout<<"Malformed tag (there should be no white-spaces between < and name-of-tag)!"<<std::endl;
+      ROOT::TMetaUtils::Error(0,"Malformed tag (there should be no white-spaces between < and name-of-tag)!\n");
       return false;
    }
    
@@ -164,7 +165,7 @@ bool XMLReader::CheckIsTagOK(const std::string& tag)
       }
       else {
          if (c == '/' && countWSp>0) {
-            std::cout<<"Malformed tag (there should be no white-spaces between / and >)!"<<std::endl;
+            ROOT::TMetaUtils::Error(0,"Malformed tag (there should be no white-spaces between / and >)!\n");
             return false;
          }
          break;
@@ -286,7 +287,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
          
          if (c == '=') {
             if (!namefound){ // if no name was read, report error (i.e. <class ="x">)
-               std::cout<<"Error - no name of attribute"<<std::endl;
+               ROOT::TMetaUtils::Error(0,"No name of attribute\n");
                return false;
             }
             else {
@@ -308,11 +309,11 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
                else { // if !value is false, then value is true which means that these are the closing quotes for the
                   // attribute value
                   if (attr_name.length() == 0) { // checks if attribute name is empty
-                     std::cout<<"Attribute error - missing attribute name!"<<std::endl;
+                     ROOT::TMetaUtils::Error(0,"Attribute - missing attribute name!\n");
                      return false;
                   }
                   if (attr_value.length() == 0) { // checks if the attribute value is empty
-                     std::cout<<"Attribute error - missing attibute value!"<<std::endl;
+                     ROOT::TMetaUtils::Error(0,"Attribute - missing attibute value!\n");
                      return false;
                   }
                   
@@ -322,7 +323,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
                      //int pos = attr_value.find_last_of("(");
                      printf("NOT IMPLEMENTED YET!\n");
                   }
-                  std::cout << "*** Attribute: " << attr_name << " " << attr_value << std::endl;
+                  ROOT::TMetaUtils::Info(0, "*** Attribute: %s %s\n", attr_name.c_str(), attr_value.c_str());
                   Attributes at(attr_name, attr_value);
                   out.push_back(at);
                   attr_name = "";
@@ -335,14 +336,14 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
             }
             else { // this is the case in which (name && equalfound) is false i.e. we miss either the attribute name or the 
                // = symbol
-               std::cout<<"Attribute error - missing attribute name or ="<<std::endl;
+               ROOT::TMetaUtils::Error(0,"Attribute - missing attribute name or =\n");
                return false;
             }
          }
          else if (lastsymbol == '=') { // this is the case in which the symbol is not ", space or = and the last symbol read
             // (diferent than space) is =. This is a situation which is represented by for example <class name = x"value">
             // this is an error
-            std::cout << "Error - wrong quotes placement or lack of quotes"<<std::endl;
+            ROOT::TMetaUtils::Error(0,"Wrong quotes placement or lack of quotes\n");
             return false;
          }
          else if ((newattr || namefound) && !value){ // else - if name or newattr is Set, we should write in the attr_name variable
@@ -357,7 +358,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
       }
       
       if (namefound && (!equalfound || !value)) { // this catches the situation <class name = "value" something >
-         std::cout<<"Attribute error - missing attribute value"<<std::endl;
+         ROOT::TMetaUtils::Error(0,"Attribute - missing attribute value\n");
          return false;
       }
    }
@@ -394,8 +395,13 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
       std::string tagStr;
       
       bool tagOK = GetNextTag(file, tagStr, lineNum);
+
+      const char* tagStrCharp = tagStr.c_str();
+      // convert number to string
+      std::string lineNumStr=static_cast<std::ostringstream*>( &(std::ostringstream() << lineNum) )->str();
+      const char* lineNumCharp = lineNumStr.c_str();
       if (!tagOK){
-         std::cout<<"Error at line "<<lineNum<<std::endl<<"Bad tag: "<<tagStr<<std::endl;
+         ROOT::TMetaUtils::Error(0,"At line %i. Bad tag: %s\n", lineNumCharp, tagStrCharp);
          out.ClearSelectionRules();
          return false;
       }
@@ -406,7 +412,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
          ETagNames tagKind = GetNameOfTag(tagStr, name);
          bool attrError = GetAttributes(tagStr, attr);
          if (!attrError) {
-            std::cout<<"Attribute error at line "<<lineNum<<std::endl<<"Bad tag: "<<tagStr<<std::endl;
+            ROOT::TMetaUtils::Error(0,"Attribute at line %i. Bad tag: %s\n", lineNumCharp, tagStrCharp);
             out.ClearSelectionRules();
             return false;
          }
@@ -414,7 +420,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
          // after we have the name of the tag, we react according to the type of the tag
          switch (tagKind){
             case kInvalid:
-               std::cout<<"Error at line "<<lineNum<<" - unrecognized name of tag"<<std::endl<<"Bad tag: "<<tagStr<<std::endl;
+               ROOT::TMetaUtils::Error(0,"At line %s. Unrecognized name of tag %s\n", lineNumCharp, tagStrCharp);
                out.ClearSelectionRules(); //Clear the selection rules up to now
                return false;
             case kClass: 
@@ -431,7 +437,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   // SelectionRules object; for standalone class tags we write the class sel rule at the end of the tag processing
                }
                else { // if we don't have parent information, it means that this closing tag doesn't have opening tag
-                  std::cout<<"Error - Lonely </class> tag at line "<<lineNum<<std::endl;
+                  ROOT::TMetaUtils::Error(0,"Single </class> tag at line %i",lineNumCharp);
                   out.ClearSelectionRules();
                   return false;
                }
@@ -448,7 +454,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   selEnd = true;
                }
                else { // if not, this is a closing tag without an opening such
-                  std::cout<<"Error at line "<<lineNum<<" - missing <selection> tag"<<std::endl;
+                  ROOT::TMetaUtils::Error(0,"At line %s. Missing <selection> tag", lineNumCharp);
                   out.ClearSelectionRules();
                   return false;
                }
@@ -457,7 +463,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                excl = true; // we need both exclusion (indicates that we are in the exclusion section) and excl (indicates we had
                // at a certain time an opening <exclusion> tag)
                if (selection) { // if selection is true, we didn't have fEndSelection type of tag
-                  std::cout<<"Error at line "<<lineNum<<" - missing </selection> tag"<<std::endl;
+                  ROOT::TMetaUtils::Error(0,"At line %s. Missing </selection> tag", lineNumCharp);
                   out.ClearSelectionRules();
                   return false;
                }
@@ -470,7 +476,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   exclEnd = true;
                }
                else { // if not we have a closing </exclusion> tag without an opening <exclusion> tag
-                  std::cout<<"Error at line "<<lineNum<<" - missing <exclusion> tag"<<std::endl;
+                  ROOT::TMetaUtils::Error(0,"At line %s. Missing <exclusion> tag", lineNumCharp);
                   out.ClearSelectionRules();
                   return false;
                }
@@ -478,12 +484,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             case kField:
                if (parent.empty()){ // if we have a <field>, <method> or <properties> tag outside a parent <clas>s tag, 
                   //this is an error
-                  std::cout<<"Error at line "<<lineNum<<" - Tag ("<<tagStr<<") not inside <class> element!"<<std::endl;
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s not inside a <class> element\n", lineNumCharp,tagStrCharp);
                   out.ClearSelectionRules();
                   return false;
                }
                if (!IsStandaloneTag(tagStr)) {
-                  std::cout<<"Error at line "<<lineNum<<" - tag should be standalone"<<std::endl;
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag should be standalone\n", lineNumCharp);
                   out.ClearSelectionRules();
                   return false;
                }
@@ -493,12 +499,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             case kMethod:
                if (parent.empty()){ // if we have a <field>, <method> or <properties> tag outside a parent <clas>s tag, 
                   //this is an error
-                  std::cout<<"Error at line "<<lineNum<<" - Tag ("<<tagStr<<") not inside <class> element!"<<std::endl;
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s not inside a <class> element\n", lineNumCharp,tagStrCharp);
                   out.ClearSelectionRules();
                   return false;
                }
                if (!IsStandaloneTag(tagStr)) {
-                  std::cout<<"Error at line "<<lineNum<<" - tag should be standalone"<<std::endl;
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag should be standalone\n", lineNumCharp);
                   out.ClearSelectionRules();
                   return false;
                }
@@ -508,12 +514,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             case kProperties:
                if (parent.empty()){ // if we have a <field>, <method> or <properties> tag outside a parent <clas>s tag, 
                   //this is an error
-                  std::cout<<"Error at line "<<lineNum<<" - Tag ("<<tagStr<<") not inside <class> element!"<<std::endl;
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s not inside a <class> element\n", lineNumCharp,tagStrCharp);
                   out.ClearSelectionRules();
                   return false;
                }
                if (!IsStandaloneTag(tagStr)) {
-                  std::cout<<"Error at line "<<lineNum<<" - tag should be standalone"<<std::endl;
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag should be standalone\n", lineNumCharp);
                   out.ClearSelectionRules();
                   return false;
                }
@@ -534,7 +540,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             case kLcgdict: 
             case kEndLcgdict: 
                break;
-            default: std::cout<<"Unknown tag name: ";
+            default: ROOT::TMetaUtils::Error(0,"Unknown tag name: %s \n",tagStrCharp);
          }
          
          
@@ -581,7 +587,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                // because these tag kinds cannot be children for a parent <class> tag
                else if (tagKind == kClass || tagKind == kEnum || tagKind == kVariable || tagKind == kFunction ||
                         tagKind == kEndSelection || tagKind == kExclusion || tagKind == kEndExclusion){
-                  std::cout<<"XML error at line "<<lineNum<<" - missing </class> tag"<<std::endl;
+                  ROOT::TMetaUtils::Error(0,"XML at line %i. Missing </class> tag\n",lineNumCharp);
                   out.ClearSelectionRules();
                   return false;
                }
@@ -604,7 +610,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   if (tagKind == kClass || tagKind == kProperties || tagKind == kEnum || tagKind == kFunction || 
                       tagKind == kVariable) {
                      if (bsr->HasAttributeWithName(attr[i].fName)) {
-                        std::cout<<"Error - duplicating attribute at line "<<lineNum<<std::endl;
+                        ROOT::TMetaUtils::Error(0,"Duplicating attribute at line %i\n",lineNumCharp);
                         out.ClearSelectionRules();
                         return false;
                      }
@@ -616,7 +622,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   }
                   else {
                      if (bsrChild->HasAttributeWithName(attr[i].fName)) {
-                        std::cout<<"Error - duplicating attribute at line "<<lineNum<<std::endl;
+                        ROOT::TMetaUtils::Error(0,"Duplicating attribute at line %i\n",lineNumCharp);
                         out.ClearSelectionRules();
                         return false;
                      }
@@ -657,13 +663,13 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
    // we are outside of the while cycle which means that we have read the whole XML document
    
    if (sel && !selEnd) { // if selEnd is true, it menas that we never had a closing </selection> tag
-      std::cout<<"Error - missing </selection> tag"<<std::endl;
+      ROOT::TMetaUtils::Error(0,"Error - missing </selection> tag\n");
       out.ClearSelectionRules();
       return false;
    }
    if (excl && !exclEnd ) { // if excl is true and exclEnd is false, it means that we had an opening <exclusion> tag but we
       // never had the closing </exclusion> tag
-      std::cout<<"Error - missing </exclusion> tag"<<std::endl;
+      ROOT::TMetaUtils::Error(0,"Error - missing </selection> tag\n");
       out.ClearSelectionRules();
       return false;    
    }
