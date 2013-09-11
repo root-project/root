@@ -168,13 +168,11 @@ class STL3MapTestCase( MyTestCase ):
          a[str(i)] = i
          self.assertEqual( a[str(i)], i )
 
+      self.assertEqual( i, self.N-1 )
       self.assertEqual( len(a), self.N )
 
    def test3EmptyMapType( self ):
       """Test behavior of empty map<int,int> (part of cintdlls)"""
-
-      if FIXCLING:       # ??? crashes
-         return
 
       m = std.map( int, int )()
       for key, value in m:
@@ -274,8 +272,7 @@ class STL5StringHandlingTestCase( MyTestCase ):
       c, s = StringyClass(), std.string( t0, len(t0) )
 
       c.SetString1( s )
-      if not FIXCLING:       # std.string constructor above is incorrect
-         self.assertEqual( t0, c.GetString1() )
+      self.assertEqual( t0, c.GetString1() )
       self.assertEqual( s, c.GetString1() )
 
 
