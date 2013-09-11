@@ -819,7 +819,7 @@ namespace {
    void exceptionErrorHandler(void * /*user_data*/,
                               const std::string& reason,
                               bool /*gen_crash_diag*/) {
-      throw std::runtime_error(reason);
+      throw std::runtime_error(std::string(">>> Interpreter compilation error:\n") + reason);
    }
 }
 
