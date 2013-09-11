@@ -102,7 +102,7 @@ enum EClassProperty {
    kClassHasImplicitDtor = 0x00000200,
    kClassHasDtor         = 0x00000300,
    kClassHasVirtual      = 0x00001000,
-   kClassIsAbstract      = 0x00002000,
+   kClassIsAbstract      = 0x00002000
 };
 
 enum ERefTypeValues {
