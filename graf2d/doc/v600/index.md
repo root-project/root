@@ -11,7 +11,9 @@
     
 ### TPDF and TPostScript
 
-- Parenthesis can be used in PDF and PS file names.
+-   Parenthesis can be used in PDF and PS file names.
+-   In PDF files, italic greek characters were not correct for non null
+    text angle.
     
 ### New class TTeXDump: Graphics interface to TeX
 
