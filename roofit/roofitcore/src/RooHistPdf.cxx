@@ -558,7 +558,7 @@ Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
   }
 
   // Check if dataset with given name already exists
-  RooAbsData* wsdata = ws.data(_dataHist->GetName()) ;
+  RooAbsData* wsdata = ws.embeddedData(_dataHist->GetName()) ;
 
   if (wsdata) {
 
@@ -574,34 +574,35 @@ Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
 
 	// not identical, clone rename and import
 	TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
-	Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data())) ;
+	Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
 	if (flag) {
 	  coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
 	  return kTRUE ;
 	}
-	_dataHist = (RooDataHist*) ws.data(uniqueName.Data()) ;
+	_dataHist = (RooDataHist*) ws.embeddedData(uniqueName.Data()) ;
       }
 
     } else {
 
       // Exists and is NOT of correct type: clone rename and import
       TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
-      Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data())) ;
+      Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
       if (flag) {
 	coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
 	return kTRUE ;
       }
-      _dataHist = (RooDataHist*) ws.data(uniqueName.Data()) ;
+      _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.Data()) ;
       
     }
     return kFALSE ;
   }
   
   // We need to import our datahist into the workspace
-  ws.import(*_dataHist) ;
+  ws.import(*_dataHist,RooFit::Embedded()) ;
 
   // Redirect our internal pointer to the copy in the workspace
-  _dataHist = (RooDataHist*) ws.data(_dataHist->GetName()) ;
+  _dataHist = (RooDataHist*) ws.embeddedData(_dataHist->GetName()) ;
+
   return kFALSE ;
 }
 
