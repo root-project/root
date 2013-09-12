@@ -1104,7 +1104,7 @@ void TProof::ParseConfigField(const char *config)
             // Check if we have to add a var
             if (wrk == "" || wrk.BeginsWith("valgrind_opts:")) {
                wrk.ReplaceAll("valgrind_opts:","");
-               var.Form("%s --log-file=<logfilewrk>.valgrind.log %s%s", cmd.Data(), wrk.Data(), cq);
+               var.Form("%s --log-file=<logfilewrk>.__valgrind__.log %s%s", cmd.Data(), wrk.Data(), cq);
                TProof::AddEnvVar("PROOF_SLAVE_WRAPPERCMD", var);
                TString nwrks("2");
                Int_t inw = opt.Index('#');
@@ -1120,8 +1120,8 @@ void TProof::ParseConfigField(const char *config)
                }
                wrklab = nwrks;
                // Register the additional worker log in the session file
-               // (for the master is done automatically)
-               TProof::AddEnvVar("PROOF_ADDITIONALLOG", "valgrind.log*");
+               // (for the master this is done automatically)
+               TProof::AddEnvVar("PROOF_ADDITIONALLOG", "__valgrind__.log*");
             } else if (wrk != "") {
                wrklab = "ALL";
             }
@@ -1144,6 +1144,30 @@ void TProof::ParseConfigField(const char *config)
          Printf(" ---> Logs will be available as special tags in the log window (from the progress dialog or TProof::LogViewer()) ");
          Printf(" ---> (Reminder: this debug run makes sense only if you are running a debug version of ROOT)");
          Printf(" ");
+
+      } else if (opt.BeginsWith("igprof-pp")) {
+
+         // IgProf profiling on master and worker. PROOF does not set the
+         // environment for you: proper environment variables (like PATH and
+         // LD_LIBRARY_PATH) should be set externally
+
+         Printf("*** Requested IgProf performance profiling ***");
+         TString addLogExt = "__igprof.pp__.log";
+         TString addLogFmt = "igprof -pk -pp -t proofserv.exe -o %s.%s";
+         TString tmp;
+
+         if (IsLite()) {
+            addLogFmt.Append("\"");
+            addLogFmt.Prepend("\"");
+         }
+
+         tmp.Form(addLogFmt.Data(), "<logfilemst>", addLogExt.Data());
+         TProof::AddEnvVar("PROOF_MASTER_WRAPPERCMD",  tmp.Data());
+
+         tmp.Form(addLogFmt.Data(), "<logfilewrk>", addLogExt.Data());
+         TProof::AddEnvVar("PROOF_SLAVE_WRAPPERCMD", tmp.Data() );
+
+         TProof::AddEnvVar("PROOF_ADDITIONALLOG", addLogExt.Data());
 
       } else if (opt.BeginsWith("workers=")) {
 
@@ -12149,8 +12173,16 @@ void TProof::SaveWorkerInfo()
 
    // Do we need to register an additional line for another log?
    TString addlogext;
+   TString addLogTag;
    if (gSystem->Getenv("PROOF_ADDITIONALLOG")) {
       addlogext = gSystem->Getenv("PROOF_ADDITIONALLOG");
+      TPMERegexp reLogTag("^__(.*)__\\.log");  // $
+      if (reLogTag.Match(addlogext) == 2) {
+         addLogTag = reLogTag[1];
+      }
+      else {
+         addLogTag = "+++";
+      }
       if (gDebug > 0)
          Info("SaveWorkerInfo", "request for additional line with ext: '%s'",  addlogext.Data());
    }
@@ -12173,9 +12205,9 @@ void TProof::SaveWorkerInfo()
                    wrk->GetOrdinal(), logfile.Data());
       // Additional line, if required
       if (addlogext.Length() > 0) {
-         fprintf(fwrk,"%s@%s:%d %d %s %s.%s\n",
+         fprintf(fwrk,"%s@%s:%d %d %s(%s) %s.%s\n",
                      wrk->GetUser(), wrk->GetName(), wrk->GetPort(), status,
-                     wrk->GetOrdinal(), logfile.Data(), addlogext.Data());
+                     wrk->GetOrdinal(), addLogTag.Data(), logfile.Data(), addlogext.Data());
       }
 
    }
@@ -12206,6 +12238,12 @@ void TProof::SaveWorkerInfo()
       else continue;  // invalid (should not happen)
       fprintf(fwrk, "%s 2 %s %s.log\n",
               sli->GetName(), sli->GetOrdinal(), logfile.Data());
+      // Additional line, if required
+      if (addlogext.Length() > 0) {
+         fprintf(fwrk, "%s 2 %s(%s) %s.%s\n",
+                 sli->GetName(), sli->GetOrdinal(), addLogTag.Data(),
+                 logfile.Data(), addlogext.Data());
+      }
    }
 
    // Close file

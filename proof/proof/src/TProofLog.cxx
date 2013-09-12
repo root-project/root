@@ -107,9 +107,9 @@ Int_t TProofLog::Retrieve(const char *ord, TProofLog::ERetrieveOpt opt,
          } else {
             nd++;
          }
-         Int_t frac = (nd + nb) / nel * 100;
-         msg.Form("Retrieving logs: %d ok, %d not ok (%d %% processed) \r", nd, nb, frac);
-         Prt(msg.Data());
+         Float_t frac = ((Float_t)nd + (Float_t)nb) * 100. / (Float_t)nel;
+         msg.Form("Retrieving logs: %d ok, %d not ok (%.0f%% processed)\r", nd, nb, frac);
+         Prt(msg.Data(), kFALSE);
       }
    }
    Prt("\n");
@@ -177,7 +177,7 @@ void TProofLog::Print(Option_t *opt) const
 }
 
 //________________________________________________________________________
-void TProofLog::Prt(const char *what)
+void TProofLog::Prt(const char *what, Bool_t newline)
 {
    // Special printing procedure
 
@@ -187,7 +187,8 @@ void TProofLog::Prt(const char *what)
          Emit("Prt(const char*)", what);
       } else {
          FILE *where = (fFILE) ? (FILE *)fFILE : stderr;
-         fprintf(where, "%s\n", what);
+         fputs(what, where);
+         if (newline) fputc('\n', where);
       }
    }
 }
@@ -375,8 +376,14 @@ Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
 
    // Make sure we have a reference manager
    if (!fLogger->fMgr || !fLogger->fMgr->IsValid()) {
-      Warning("Retrieve","No reference manager: corruption?");
+      Warning("Retrieve", "No reference manager: corruption?");
       return -1;
+   }
+
+   // Print some info on the file
+   if (gDebug >= 2) {
+      Info("Retrieve", "Retrieving from ordinal %s file %s with pattern %s",
+         GetName(), GetTitle(), (pattern ? pattern : "(no pattern)"));
    }
 
    // Determine offsets
@@ -384,20 +391,28 @@ Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
       // Re-read everything
       fFrom = 0;
       fTo = -1;
+      if (gDebug >= 1)
+         Info("Retrieve", "Retrieving the whole file");
    } else if (opt == TProofLog::kLeading) {
       // Read leading part
       fFrom = 0;
       fTo = fgMaxTransferSize;
+      if (gDebug >= 1)
+         Info("Retrieve", "Retrieving the leading %lld lines of file", fTo);
    } else if (opt == TProofLog::kGrep) {
       // Retrieve lines containing 'pattern', which must be defined
       if (!pattern || strlen(pattern) <= 0) {
          Error("Retrieve", "option 'Grep' requires a pattern");
          return -1;
       }
+      if (gDebug >= 1)
+         Info("Retrieve", "Retrieving only lines filtered with %s", pattern);
    } else {
       // Read trailing part
       fFrom = -fgMaxTransferSize;
       fTo = -1;
+      if (gDebug >= 1)
+         Info("Retrieve", "Retrieving the last %lld lines of file", -fFrom);
    }
 
    // Reset the macro
@@ -410,10 +425,21 @@ Int_t TProofLogElem::Retrieve(TProofLog::ERetrieveOpt opt, const char *pattern)
    // Readout the buffer
    TObjString *os = 0;
    if (fLogger->fMgr) {
-      if (opt == TProofLog::kGrep)
-         os = fLogger->fMgr->ReadBuffer(GetTitle(), pattern);
+      TString fileName = GetTitle();
+      if (fileName.Contains("__igprof.pp__")) {
+         // File is an IgProf log. Override all patterns and preprocess it
+         if (gDebug >= 1)
+            Info("Retrieve", "Retrieving analyzed IgProf performance profile");
+         TString analyzeAndFilter = \
+           "|( T=`mktemp` && cat > \"$T\" ; igprof-analyse -d -g \"$T\" ; rm -f \"$T\" )";
+         if (pattern && (*pattern == '|'))
+            analyzeAndFilter.Append(pattern);
+         os = fLogger->fMgr->ReadBuffer(fileName.Data(), analyzeAndFilter.Data());
+      }
+      else if (opt == TProofLog::kGrep)
+         os = fLogger->fMgr->ReadBuffer(fileName.Data(), pattern);
       else
-         os = fLogger->fMgr->ReadBuffer(GetTitle(), fFrom, len);
+         os = fLogger->fMgr->ReadBuffer(fileName.Data(), fFrom, len);
    }
    if (os) {
       // Loop over lines

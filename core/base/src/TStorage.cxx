@@ -177,10 +177,14 @@ void TStorage::Dealloc(void *ptr)
 //______________________________________________________________________________
 void *TStorage::ReAlloc(void *ovp, size_t size)
 {
-   // Reallocate (i.e. resize) block of memory.
+   // Reallocate (i.e. resize) block of memory. Don't use if size is larger
+   // than old size, use ReAlloc(void *, size_t, size_t) instead.
 
    // Needs to be protected by global mutex
    R__LOCKGUARD(gGlobalMutex);
+
+   ::Obsolete("ReAlloc(void*,size_t)", "v5-34-00", "v6-02-00");
+   ::Info("ReAlloc(void*,size_t)", "please use ReAlloc(void*,size_t,size_t)");
 
    if (fgReAllocHook && fgHasCustomNewDelete && !TROOT::MemCheck())
       return (*fgReAllocHook)(ovp, size);

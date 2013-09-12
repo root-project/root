@@ -963,7 +963,7 @@ public:
   long ref;
 #endif
 #if defined(G__PRIVATE_GVALUE) && !defined(_WIN32)
-private:
+   /*private:*/
 #if defined(G__alt_private) && defined(ROOT_RVersion)
 #define private public
 #endif

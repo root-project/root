@@ -21,6 +21,12 @@
 // mysql://pcroot.cern.ch:3456/test, oracle://srv1.cern.ch/main, ...    //
 // Depending on the <dbms> specified an appropriate plugin library      //
 // will be loaded which will provide the real interface.                //
+// For SQLite, the syntax is slightly different:                        //
+//   sqlite://<database>                                                //
+// The string 'database' is directly passed to sqlite3_open(_v2),       //
+// so e.g. a filename or ":memory:" are possible values.                //
+// For SQLite versions >= 3.7.7, SQLITE_OPEN_URI is activated to also   //
+// allow URI-parameters if needed.                                      //
 //                                                                      //
 // Related classes are TSQLResult and TSQLRow.                          //
 //                                                                      //

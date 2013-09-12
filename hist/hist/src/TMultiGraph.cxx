@@ -453,6 +453,13 @@ void TMultiGraph::Draw(Option_t *option)
    //  TMultiGraph::Draw. Use GetDrawOption to return the option specified
    //  when drawing the TMultiGraph.
 
+   TString opt = option;
+   opt.ToLower();
+
+   if (gPad) {
+      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
+      if (opt.Contains("a")) gPad->Clear();
+   }
    AppendPad(option);
 }
 
@@ -965,6 +972,7 @@ TList *TMultiGraph::GetListOfFunctions()
 TAxis *TMultiGraph::GetXaxis() const
 {
    // Get x axis of the graph.
+   // This method returns a valid axis only after the TMultigraph has been drawn.
 
    if (!gPad) return 0;
    TH1 *h = GetHistogram();
@@ -977,6 +985,7 @@ TAxis *TMultiGraph::GetXaxis() const
 TAxis *TMultiGraph::GetYaxis() const
 {
    // Get y axis of the graph.
+   // This method returns a valid axis only after the TMultigraph has been drawn.
 
    if (!gPad) return 0;
    TH1 *h = GetHistogram();

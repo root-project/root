@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TError.h"
+#include "TPRegexp.h"
 #include "TGFrame.h"
 #include "TGTextView.h"
 #include "TGScrollBar.h"
@@ -154,7 +155,7 @@ void TProofProgressLog::Init(Int_t w, Int_t h)
    hflogbox->AddFrame(fSave, new TGLayoutHints(kLHintsCenterY | kLHintsRight, 4, 0, 0, 0));
    fFileName = new TGTextEntry(hflogbox);
    fFileName->SetText("<session-tag>.log");
-   hflogbox->AddFrame(fFileName, new TGLayoutHints(kLHintsCenterY | kLHintsRight));
+   hflogbox->AddFrame(fFileName, new TGLayoutHints(kLHintsCenterY | kLHintsRight | kLHintsExpandX));
    TGLabel *label10 = new TGLabel(hflogbox, "Save to a file:");
    hflogbox->AddFrame(label10, new TGLayoutHints(kLHintsCenterY | kLHintsRight, 50, 2, 2, 2));
 
@@ -193,20 +194,48 @@ void TProofProgressLog::Init(Int_t w, Int_t h)
    vlines->AddFrame(vlines_buttons, new TGLayoutHints(kLHintsCenterY));
    hflogbox->AddFrame(vlines, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
 
-   //Grep controls
-   TGLabel *label4 = new TGLabel(hflogbox, "Grep for:");
-   hflogbox->AddFrame(label4, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 5, 2, 2, 2));
-   fGrepText = new TGTextEntry(hflogbox);
-   hflogbox->AddFrame(fGrepText, new TGLayoutHints(kLHintsCenterY | kLHintsLeft));
+   //
+   // Lowest line, with filter (grep or cmd pipe) controls
+   //
 
-   fGrepButton = new TGTextButton(hflogbox, "Grep");
+   TGHorizontalFrame *hfgrepbox = new TGHorizontalFrame(vtextbox, 550, 20);
+
+   // Grep/pipe label, textbox and button
+   fGrepLabel = new TGLabel(hfgrepbox, "");
+   hfgrepbox->AddFrame(fGrepLabel, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
+   fGrepText = new TGTextEntry(hfgrepbox);
+   {
+      TGDimension dim = fGrepText->GetDefaultSize();
+      fGrepText->SetDefaultSize(400, dim.fHeight);
+   }
+   hfgrepbox->AddFrame(fGrepText, new TGLayoutHints( kLHintsCenterY | kLHintsLeft | kLHintsExpandX));
+   fGrepButton = new TGTextButton(hfgrepbox, "Filter");
    fGrepButton->Connect("Clicked()", "TProofProgressLog", this, "DoLog(=kTRUE)");
-   hflogbox->AddFrame(fGrepButton, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 0, 0, 0));
+   hfgrepbox->AddFrame(fGrepButton, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 10, 0, 0));  // l r t b
 
-   vtextbox->AddFrame(hflogbox, new TGLayoutHints(kLHintsBottom | kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
+   // Checkbox for inverting selection or giving a pipe command
+   fGrepCheckInv = new TGCheckButton(hfgrepbox, "invert match");
+   fGrepCheckInv->Connect("Clicked()", "TProofProgressLog", this, "SetGrepView()");
+   hfgrepbox->AddFrame(fGrepCheckInv, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
+
+   fGrepCheckCmd = new TGCheckButton(hfgrepbox, "is a pipe command");
+   fGrepCheckCmd->Connect("Clicked()", "TProofProgressLog", this, "SetGrepView()");
+   hfgrepbox->AddFrame(fGrepCheckCmd, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
+
+   // fRawLines->SetToolTipText("Retrieve all type of lines, service messages included");
+   // fRawLines->SetState(kButtonUp);
+   // vlines_buttons->AddFrame(fRawLines, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
+
+   //
+   // Add frames to the global picture
+   //
+
+   vtextbox->AddFrame(hflogbox, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
+   vtextbox->AddFrame(hfgrepbox, new TGLayoutHints(kLHintsBottom | kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
    htotal->AddFrame(vtextbox, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY | kLHintsRight, 3, 3, 3, 3));
    AddFrame(htotal, new TGLayoutHints(kLHintsExpandX |
                                         kLHintsExpandY, 3, 3, 3, 3));
+   SetGrepView();
    MapSubwindows();
    Resize();
    CenterOnParent();
@@ -356,7 +385,8 @@ void TProofProgressLog::BuildLogList(Bool_t create)
 //______________________________________________________________________________
 void TProofProgressLog::DoLog(Bool_t grep)
 {
-   // Display the logs
+   // Display logs. 'grep' is set to kTRUE if it is invoked by pressing the
+   // 'Filter' button.
 
    Clear();
 
@@ -366,6 +396,16 @@ void TProofProgressLog::DoLog(Bool_t grep)
    }
 
    TString greptext = fGrepText->GetText();
+   greptext.Remove(TString::kBoth, ' ');
+   if (greptext.IsNull()) {
+      grep = kFALSE;
+   }
+   else if (!fGrepCheckCmd->IsOn()) {
+      // Not a command: sanitize string
+      TPMERegexp san("(^|[^\\\\])([^a-zA-Z0-9_=\\\\/.-])");
+      while (san.Substitute(greptext, "$1\\$2") > 0) { }
+   }
+
    Int_t from, to;
    if (fAllLines->IsOn()){
       from = 0;
@@ -389,9 +429,18 @@ void TProofProgressLog::DoLog(Bool_t grep)
       }
    }
 
+   // Pipe command for filtering
+   TString pipeCommand;
+
+   // Filter out SvcMsg
+   if (!fRawLines->IsOn()) {
+      pipeCommand = "grep -v \"| SvcMsg\"";
+   }
+
    // Default is not retrieving
    Bool_t retrieve = kFALSE;
    if (!grep) {
+      // Not invoked via 'Filter' button
       if (!fFullText ||
           ((fTextType != kRaw && fRawLines->IsOn())   ||
            (fTextType != kStd && !fRawLines->IsOn())) ||
@@ -408,6 +457,21 @@ void TProofProgressLog::DoLog(Bool_t grep)
    } else {
       retrieve = kTRUE;
       fTextType = kGrep;
+
+      if (!pipeCommand.IsNull())
+         pipeCommand.Append('|');
+
+      if (fGrepCheckCmd->IsOn()) {
+         pipeCommand.Append(greptext);
+      }
+      else {
+         pipeCommand.Append("grep ");
+         if (fGrepCheckInv->IsOn())
+            pipeCommand.Append("-v ");
+         pipeCommand.Append("-- ");
+         pipeCommand.Append(greptext);  // sanitized
+      }
+
       if (fDialog && fDialog->fStatus != TProofProgressDialog::kRunning)
          fFullText = kTRUE;
    }
@@ -428,12 +492,17 @@ void TProofProgressLog::DoLog(Bool_t grep)
          Int_t is = ord.Index(" ");
          if (is != kNPOS) ord.Remove(is);
          if (retrieve || !selentry->TestBit(kLogElemFilled)) {
-            if (fTextType == kGrep) {
-               fProofLog->Retrieve(ord.Data(), TProofLog::kGrep, 0, greptext.Data());
-            } else if (fTextType == kRaw) {
-               fProofLog->Retrieve(ord.Data(), TProofLog::kTrailing, 0, 0);
-            } else {
-               fProofLog->Retrieve(ord.Data(), TProofLog::kGrep, 0, "-v \"| SvcMsg\"");
+            pipeCommand.Prepend('|');
+            if (fTextType == kRaw) {
+               if (gDebug >= 2)
+                  Info("DoLog", "Retrieving unfiltered log for %s", ord.Data());
+               fProofLog->Retrieve(ord.Data(), TProofLog::kTrailing, 0, 0);               
+            }
+            else {
+               if (gDebug >= 2)
+                  Info("DoLog", "Retrieving log for %s filtered with %s",
+                     ord.Data(), pipeCommand.Data());
+               fProofLog->Retrieve(ord.Data(), TProofLog::kGrep, 0, pipeCommand.Data());
             }
             selentry->SetBit(kLogElemFilled);
          }
@@ -494,6 +563,35 @@ void TProofProgressLog::SaveToFile()
 
    Info("SaveToFile", "logs saved to file %s", filename.Data());
    return;
+}
+
+//______________________________________________________________________________
+void TProofProgressLog::SetGrepView()
+{
+   // Sets the view of grep filters according to the value of checkboxes
+
+   if (fGrepCheckCmd->IsOn()) {
+      fGrepLabel->SetText("Pipe log through command:");
+      fGrepCheckInv->SetDisabledAndSelected(kFALSE);
+   }
+   else {
+      fGrepLabel->SetText("Grep:");
+      Bool_t u = fGrepCheckInv->IsOn();
+      fGrepCheckInv->SetEnabled(kTRUE);
+      if (u) {
+         fGrepLabel->SetText("Show lines not matching:");
+         fGrepCheckInv->SetState(kButtonDown);
+      }
+      else {
+         fGrepLabel->SetText("Show lines matching:");
+         fGrepCheckInv->SetState(kButtonUp);
+      }
+   }
+
+   // Ugly but necessary const_cast
+   TGFrame *frame = dynamic_cast<TGFrame *>( const_cast<TGWindow *>(fGrepLabel->GetParent()) );
+   if (frame) frame->Layout();
+
 }
 
 //______________________________________________________________________________

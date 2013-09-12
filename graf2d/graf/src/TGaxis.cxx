@@ -1846,7 +1846,7 @@ L160:
                   Double_t u = gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1());
                   Double_t v = gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1());
                   if (firstintlab) {
-                     textaxis->GetBoundingBox(wi, hi); wi=(UInt_t)(wi*1.3); hi*=(UInt_t)(hi*1.3);
+                     textaxis->GetBoundingBox(wi, hi); wi=(UInt_t)(wi*1.3); hi=(UInt_t)(hi*1.3);
                      xi1 = gPad->XtoAbsPixel(u);
                      yi1 = gPad->YtoAbsPixel(v);
                      firstintlab = kFALSE;
@@ -1861,7 +1861,7 @@ L160:
                      } else {
                         xi1 = xi2;
                         yi1 = yi2;
-                        textaxis->GetBoundingBox(wi, hi); wi=(UInt_t)(wi*1.3); hi*=(UInt_t)(hi*1.3);
+                        textaxis->GetBoundingBox(wi, hi); wi=(UInt_t)(wi*1.3); hi=(UInt_t)(hi*1.3);
                         textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),chtemp);
                      }
                   }
@@ -2192,7 +2192,7 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
    Double_t ds = toffset-(Int_t)toffset;
    snprintf(tmp,20,"s%g",ds);
    fTimeFormat.Append(tmp);
-   
+
    // add GMT/local option
    if (opt.Contains("gmt")) fTimeFormat.Append(" GMT");
 }

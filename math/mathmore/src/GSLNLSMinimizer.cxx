@@ -236,6 +236,11 @@ void GSLNLSMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
       return;
    } 
    fSize = chi2Func->NPoints(); 
+
+   if (fSize == 0) { 
+      MATH_WARN_MSG("GSLNLSMinimizer::SetFunction","Objective function has zero elements");
+   }
+   
    fDim = chi2Func->NDim(); 
    fNFree = fDim;
 
@@ -265,6 +270,12 @@ bool GSLNLSMinimizer::Minimize() {
       MATH_ERROR_MSG("GSLNLSMinimizer::Minimize","Function has not been  set");
       return false; 
    }
+
+   if (fSize == 0) { 
+      MATH_ERROR_MSG("GSLNLSMinimizer::Minimize","Number of data points is zero");
+      return false; 
+   }
+
 
    unsigned int npar = fValues.size();
    if (npar == 0 || npar < fDim) { 

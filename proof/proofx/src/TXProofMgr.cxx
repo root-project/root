@@ -685,25 +685,37 @@ TObjString *TXProofMgr::ReadBuffer(const char *fin, Long64_t ofs, Int_t len)
 //______________________________________________________________________________
 TObjString *TXProofMgr::ReadBuffer(const char *fin, const char *pattern)
 {
-   // Read, via the coordinator, lines containing 'pattern' in 'file'.
-   // Returns a TObjString with the content or 0, in case of failure
+   // Read, via the coordinator, 'fin' filtered. If 'pattern' starts with '|',
+   // it represents a command filtering the output. Elsewhere, it is a grep
+   // pattern. Returns a TObjString with the content or 0 in case of failure
 
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
-      Warning("ReadBuffer","invalid TXProofMgr - do nothing");
+      Warning("ReadBuffer", "invalid TXProofMgr - do nothing");
       return (TObjString *)0;
    }
 
+   const char *ptr;
+   Int_t type;  // 1 = grep, 2 = grep -v, 3 = pipe through cmd
+   if (*pattern == '|') {
+      ptr = &pattern[1];  // strip first char if it is a command
+      type = 3;
+   }
+   else {
+      ptr = pattern;
+      type = 1;
+   }
+
    // Prepare the buffer
-   Int_t plen = strlen(pattern);
+   Int_t plen = strlen(ptr);
    Int_t lfi = strlen(fin);
    char *buf = new char[lfi + plen + 1];
    memcpy(buf, fin, lfi);
-   memcpy(buf+lfi, pattern, plen);
+   memcpy(buf+lfi, ptr, plen);
    buf[lfi+plen] = 0;
 
    // Send the request
-   return fSocket->SendCoordinator(kReadBuffer, buf, plen, 0, 1);
+   return fSocket->SendCoordinator(kReadBuffer, buf, plen, 0, type);
 }
 
 //______________________________________________________________________________

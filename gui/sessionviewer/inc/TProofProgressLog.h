@@ -1,4 +1,4 @@
-// @(#)root/sessionviewer:$Id$
+// @(#)root/sessionviewer:$Id: c52dc6cb225c25e34d388329d41570a484d98ce0 $
 // Author: G Ganis, Aug 2005
 
 /*************************************************************************
@@ -39,7 +39,7 @@ class TGListBox;
 class TGSplitButton;
 class TGVerticalFrame;
 class TGCheckButton;
-
+class TGLabel;
 
 class TProofProgressLog : public TGTransientFrame {
 
@@ -68,6 +68,9 @@ private:
    TGCheckButton        *fRawLines;  // display raw lines button
    TGSplitButton        *fAllWorkers; // display all workers button
    TGVerticalFrame      *fVworkers;  // Vertical frame
+   TGLabel              *fGrepLabel;  // label indicating if grepping or piping
+   TGCheckButton        *fGrepCheckCmd;  // checkbox active if piping
+   TGCheckButton        *fGrepCheckInv;  // checkbox active if inverting
 
    Bool_t                fFullText;    // 0 - when grep was called
    Int_t                 fTextType;   // Type of retrieval
@@ -93,6 +96,7 @@ public:
    void   Popup();
    void   SaveToFile();
    void   NoLineEntry();
+   void   SetGrepView();
    void   Select(Int_t id, Bool_t all = kTRUE);
 
    void   SetUrl(const char *url) { fSessionUrl = url; }

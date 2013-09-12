@@ -47,6 +47,11 @@ void th2polyUSA()
    TFile *f;
    f = TFile::Open("http://root.cern.ch/files/usa.root");
 
+   if (!f) {
+      printf("Cannot access usa.root. Is internet working ?\n");
+      return;
+   }
+
    // Define the TH2Poly bins.
    TMultiGraph *mg;
    TKey *key;

@@ -39,19 +39,19 @@ void th2polyEurope(Int_t npoints=500000)
    const Int_t nx = 36;
    // see http://en.wikipedia.org/wiki/Area_and_population_of_European_countries
    char *countries[nx] = { "france",     "spain",  "sweden",  "germany",       "finland",
-                           "norway",     "poland", "italy",   "yugoslavia",    "united_kingdom", 
-			   "romania",    "belarus","greece",  "czechoslovakia","bulgaria", 
-			   "iceland",    "hungary","portugal","austria",       "ireland", 
+                           "norway",     "poland", "italy",   "yugoslavia",    "united_kingdom",
+			   "romania",    "belarus","greece",  "czechoslovakia","bulgaria",
+			   "iceland",    "hungary","portugal","austria",       "ireland",
 			   "lithuania",  "latvia", "estonia", "denmark",       "netherlands",
-                           "switzerland","moldova","belgium", "albania",       "cyprus", 
-			   "luxembourg", "andorra","malta",   "liechtenstein", "san_marino", 
+                           "switzerland","moldova","belgium", "albania",       "cyprus",
+			   "luxembourg", "andorra","malta",   "liechtenstein", "san_marino",
 			   "monaco" };
-   Float_t surfaces[nx] = { 547030,        505580,   449964,      357021,        338145, 
-                            324220,        312685,   301230,      255438,        244820, 
-			    237500,        207600,   131940,      127711,        110910, 
-			    103000,         93030,    89242,       83870,         70280, 
-			     65200,         64589,    45226,       43094,         41526, 
-			     41290,         33843,    30528,       28748,          9250, 
+   Float_t surfaces[nx] = { 547030,        505580,   449964,      357021,        338145,
+                            324220,        312685,   301230,      255438,        244820,
+			    237500,        207600,   131940,      127711,        110910,
+			    103000,         93030,    89242,       83870,         70280,
+			     65200,         64589,    45226,       43094,         41526,
+			     41290,         33843,    30528,       28748,          9250,
 			      2586,           468,      316,         160,            61,
                                  2};
 
@@ -62,6 +62,11 @@ void th2polyEurope(Int_t npoints=500000)
    TFile::SetCacheFileDir(".");
    TFile *f;
    f = TFile::Open("http://root.cern.ch/files/europe.root","cacheread");
+
+   if (!f) {
+      printf("Cannot access europe.root. Is internet working ?\n");
+      return;
+   }
 
    TH2Poly *p = new TH2Poly(
              "Europe",
@@ -87,7 +92,7 @@ void th2polyEurope(Int_t npoints=500000)
    TRandom r;
    Double_t longitude, latitude;
    Double_t x, y, pi4 = TMath::Pi()/4, alpha = TMath::Pi()/360;
-   
+
    gBenchmark->Start("Partitioning");
    p->ChangePartition(100, 100);
    gBenchmark->Show("Partitioning");
@@ -157,7 +162,7 @@ void th2polyEurope(Int_t npoints=500000)
    leg->AddEntry(h2,"Countries surfaces from TH2Poly (with errors)","lp");
    leg->Draw();
    leg->Draw();
-   
+
    Double_t wikiSum = h->Integral();
    Double_t polySum = h2->Integral();
    Double_t error = TMath::Abs(wikiSum-polySum)/wikiSum;

@@ -19,27 +19,27 @@
 // This is alternative to TSQLServer::Query() method, which allows only pure
 // text queries and pure text result in TSQLResult classes.
 // TSQLStatement is designed to support following features:
-//   - usage of basic data type (like int or double) as parameters
+//   - usage of basic data types (like int or double) as parameters
 //     in SQL statements
-//   - bulk operation when inserting/updating/selecting data in data base
+//   - bulk operation when inserting/updating/selecting data in database
 //   - uasge of basic data types when accessing result set of executed query
 //
 //
 // 1. Creation of statement
 // ======================================
-// To create instance of TSQLStatement class, TSQLServer::Statement() method
-// should be used. Depending of the driver, used for connection to ODBC,
-// appropriate object instance will be created. For the moment there are
-// three different implementation of TSQLStatement class: for MySQL,
-// Oracle and ODBC. Hopefully, support of ODBC will allows usage of
-// statements for most existing RDBMS.
+// To create an instance of the TSQLStatement class, the TSQLServer::Statement() method
+// should be used. Depending on the driver used for an ODBC connection,
+// the appropriate object instance will be created. For the moment there are
+// six different implementations of the TSQLStatement class: for MySQL,
+// Oracle, SAPDB, PostgreSQL, SQLite3 and ODBC. Hopefully, support of ODBC will allow usage of
+// statements for most existing RDBMS. 
 //
-//   // first connect to data base
+//   // first, connect to the database
 //   TSQLServer* serv = TSQLServer::Connect("mysql://hostname.domain:3306/test",
 //                                          "user", "pass");
 //   // check if connection is ok
 //   if ((serv!=0) && serv->IsConnected()) {
-//       // create statement instance
+//       // create instance of sql-statement
 //       TSQLStatement* stmt = serv->Statement("CREATE TABLE TESTTABLE (ID1 INT, ID2 INT, FFIELD VARCHAR(255), FVALUE VARCHAR(255))";
 //       // process statement
 //       stmt->Process();
@@ -51,28 +51,29 @@
 //
 // 2. Insert data to data base
 // ===============================================
-// There is a special syntax of SQL queries, which allow to use values,
-// provided as parameters. For instance, insert one row in TESTTABLE, created
-// with previous example, one can simply execute query like:
+// There is a special syntax of SQL queries which allows to use values
+// provided as parameters. For instance, to insert one row into the TESTTABLE created
+// with the previous example, one can simply execute a query like:
 //
 //    serv->Query("INSERT INTO TESTTABLE VALUES (1, 2, \"name1\", \"value1\"");
 //
-// But when many (100-1000) rows should be inserted, each call of
+// However, when many (100-1000) rows should be inserted, each call of
 // TSQLServer::Query() method will cause communication loop with database
-// server. As a result, insertion of data will takes too much time.
+// server, and the statement has to be evaluated each time instead of using a prepared statement. 
+// As a result, insertion of data takes too much time. 
 //
-// TSQLStatement provides a mechanism to insert many rows at once. First of all,
-// appropriate statement should be created:
+// TSQLStatement provides a mechanism to insert many rows at once.
+// First of all, an appropriate statement should be created:
 //
 //    TSQLStatement* stmt = serv->Statement("INSERT INTO TESTTABLE (ID1, ID2, FFIELD, FVALUE) VALUES (?, ?, ?, ?)", 100);
 //
-// Here question marks "?" indicates where statement parameters can be inserted.
+// Here question marks "?" indicate where statement parameters can be inserted.
 // To specify values of parameters, SetInt(), SetDouble(), SetString() and other
-// methods of TSQLStatement class should be used. Before parameters values
-// can be specified, NextIteration() method of statement class should be called.
-// For each new row first, NextIteration() called, that parameters values are
-// specified. There is one limitation - once parameter set as integer via
-// SetInt(), for all other rows should be specified as integer. At the end,
+// methods of the TSQLStatement class should be used. Before parameters values
+// can be specified, the NextIteration() method of statement class should be called.
+// For each new row,  NextIteration() has to be called first, then parameters values are
+// specified. There is one limitation for most type-aware DBMS - once a parameter is set as integer via
+// SetInt(), all other rows should be specified as integer. At the end,
 // TSQLStatement::Process() should be called. Here a small example:
 //
 //    // first, create statement
@@ -89,57 +90,68 @@
 //     stmt->Process();
 //     delete stmt;
 //
-// Second argument in TSQLServer::Statement() method specifies depth of
-// of buffers, used to keep parameter values (100 in example). It is not
-// a limitation of rows number, which can be inserted with the statement.
+// The second argument in the TSQLServer::Statement() method specifies the depth of
+// of buffers which are used to keep parameter values (100 in the example). It is not
+// a limitation of the number of rows which can be inserted with the statement.
 // When buffers are filled, they will be submitted to database and can be
-// reused again. This happens transparent to the user in NextIteration()
+// reused again. This happens transparent to the user in the NextIteration()
 // method.
 //
 // Oracle and some ODBC drivers support buffering of parameter values and,
 // as a result, bulk insert (update) operation. MySQL (native driver and
-// MyODBC 3)  does not support such mode of operation, therefore adding
-// new rows will result in communication loop to database.
+// MyODBC 3) does not support such a mode of operation, therefore adding
+// new rows will result in communication loop to database. 
 //
-// One should also mention difference between Oracle and ODBC SQL syntax for
-// parameters. ODBC (and MySQL) uses question marks to specify position,
+// Local databases (SQLite3) do not use any buffering at all in the TSQLStatement
+// implementation (but inside the library). They still profit from the 
+// usage of prepared statements. When inserting many rows into a SQLite3 database, 
+// consider using a transaction via the methods StartTransaction() and Commit() 
+// of the TSQLServer, as autocommit is active by default and causes a sync to disk 
+// after each single insert. 
+//
+// One should also mention differences between Oracle and ODBC SQL syntax for
+// parameters. ODBC (and MySQL) use question marks to specify the position
 // where parameters should be inserted (as shown in the example). Oracle uses
-// :1, :2 and so on marks for specify position of parameter 0, 1, and so on.
-// Therefore, similar to example query will look like:
+// :1, :2 and so on as marks to specify the position of parameter 0, 1, and so on.
+// Therefore, similar to the example, a query will look like:
 //
 //    TSQLStatement* stmt = serv->Statement("INSERT INTO TESTTABLE (ID1, ID2, FFIELD, FVALUE) VALUES (:1, :2, :3, :4)", 100);
 //
-// There is a possibility to set parameter value to NULL with SetNull() method.
-// If this method called for first iteration, before one should call other Set...
-// to identify actual parameter type, which will be used for parameter later.
+// SQLite3 supports both these syntaxes and some more.
+//
+// There is a possibility to set a parameter value to NULL with the SetNull() method.
+// If this method is to be called for the first iteration, one should first call another Set...
+// method to identify the actual type which will be used for the parameter later.
 //
 //
 // 3. Getting data from database
 // =============================
-// To request data from data base, SELECT statement should be used.
-// After SELECT statement is created, it must be processed
-// (with TSQLStatement::Process()) method and result of statement
-// should be stored in internal buffers with TSQLStatement::StoreResult()
-// method. Information about selected fields (columns)
+// To request data from a database, the SELECT statement should be used.
+// After a SELECT statement is created, it must be processed
+// with the TSQLStatement::Process() method and the result of statement
+// should be stored in internal buffers with the method TSQLStatement::StoreResult(). 
+// Information about selected fields (columns)
 // can be obtained with GetNumFields() and GetFieldName() methods.
-// To receive data for next result row, NextResultRow() method should be called.
-// Value from each column can be taken with the GetInt(), GetDouble(),
+// To receive data for the next result row, NextResultRow() method should be called.
+// Value from each column can be retrieved with the GetInt(), GetDouble(),
 // GetString() and other methods.
 //
-// There are no strict limitation which method should be used
-// to get column values. GetString() can be used as generic method,
-// which should always return correct result, but also convertion between most
-// basic data types are supported. For instance, if column contains integer
+// There are no strict limitations on which method should be used
+// to get column values. GetString() can be used as a generic method,
+// which should always return correct result, but also conversions between most
+// basic data types are supported. For instance, if a column contains integer
 // values, GetInt(), GetLong64(), GetDouble() and GetString() methods can be used.
-// If column has float point format, GetDouble() and GetString() methods can
+// If column has floating point format, GetDouble() and GetString() methods can
 // be used without loss of precision while GetInt() or GetLong64() will return
-// integer part of the value. One also can test, if value is NULL with IsNull()
-// method.
+// only the integer part of the value. One also can test whether 
+// a value is NULL with the IsNull() method.
 //
-// Buffer length, specified for statement in TSQLServer::Statement() call,
+// The buffer length specified for a statement in the TSQLServer::Statement() call
 // will also be used to allocate buffers for column values. Usage of these
-// buffers is transparent for users and does not limit number of rows,
-// which can be accessed with  one statement. Example of select query:
+// buffers is transparent for users and does not limit the number of rows
+// which can be accessed with one statement. Again, local databases do not work 
+// with buffers inside TSQLStatement at all and ignore this value.
+// Example of select query:
 //
 //    stmt = serv->Statement("SELECT * FROM TESTTABLE", 100);
 //    // process statement
@@ -164,38 +176,45 @@
 //
 // 4. Working with date/time parameters
 // ====================================
-// Current implementation supports date, time, date&time and timestamp
-// data (all time intervals not supported yet). To set or get date/time values,
-// following methods should be used:
+// The current implementation supports date, time, date&time and timestamp
+// data (all time intervals are not supported yet). To set or get date/time values,
+// the following methods should be used:
 //   SetTime()/GetTime() - only time (hour:min:sec),
 //   SetDate()/GetDate() - only date (year-month-day),
 //   SetDatime()/GetDatime() - date and time
 //   SetTimestamp()/GetTimestamp() - timestamp with seconds fraction
 // For some of these methods TDatime type can be used as parameter / return value.
-// Be aware, that TDatime supports only dates after 1995-01-01.
-// There are also methods to get separately year, month, day, hour, minutes and seconds.
+// Be aware that TDatime supports only dates after 1995-01-01.
+// There are also methods to get year, month, day, hour, minutes and seconds separately.
 //
-// Different SQL databases has different treatement of date/time types.
+// Note that different SQL databases treat date/time types differently.
 // For instance, MySQL has all correspondent types (TIME, DATE, DATETIME and TIMESTAMP),
 // Oracle native driver supports only DATE (which is actually date and time) and TIMESTAMP
-// ODBC interface provides access for time, date and timestamps.
-// Therefore, one should use correct methods to access such data.
+// ODBC interface provides access for time, date and timestamps, 
+// for PostgreSQL, TIMESTAMP is available and can be retrieved via all methods, 
+// the implementation for SQLite interprets the column content as 
+// a timestamp with second fraction. 
+// Due to these differences, one should use correct methods to access such data.
 // For instance, in MySQL SQL type 'DATE' is only date (one should use GetDate() to
 // access such data), while in Oracle it is date and time. Therefore,
-// to get complete data from 'DATE' column in Oracle, one should use GetDatime() method.
+// to get complete data from a 'DATE' column in Oracle, one should use the GetDatime() method.
 //
-// The only difference of timestamp from date/time, that it has fractional
-// seconds part. Be aware, that fractional part can has different meaning
-// (actual value) in different SQL plugins.
+// The only difference between timestamp and date/time is that timestamp has a fractional
+// seconds part. Be aware that the fractional part has different meanings
+// (actual value) in different SQL plugins. 
+// For PostgreSQL, it is given back as microseconds, while for SQLite3, 
+// milliseconds correspond to the fraction (similar to the DATETIME-functions 
+// implemented in the SQLite3 language).
 //
 // 5. Binary data
 // ==============
-// Most of modern data bases support just binary data, which is
+// Most modern data bases support just binary data, which is
 // typically has SQL type name 'BLOB'. To access data in such
 // columns, GetBinary()/SetBinary() methods should be used.
-// Current implementation supposed, that complete content of the
-// column must be retrieved at once. Therefore very big data of
+// The current implementation implies that the complete content of the
+// column must be retrieved at once. Therefore, very big data of
 // gigabytes size may cause a problem.
+//
 // In addition, for PostgresSQL, the methods GetLargeObject()/SetLargeObject()
 // are implemented with similar syntax. They retrieve a large object for the OID
 // given in the column of the statement. For non-PostgreSQL databases,

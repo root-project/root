@@ -34,7 +34,7 @@ if sys.version[0:3] == '2.2':
 try:
    import rlcompleter, readline
 
-   class FileNameCompleter( rlcompleter.Completer ):
+   class RootNameCompleter( rlcompleter.Completer ):
       def file_matches( self, text ):
          matches = []
          path, name = os.path.split( text )
@@ -69,11 +69,14 @@ try:
          matches = rlcompleter.Completer.attr_matches( self, text )
          if not matches: matches = []
          b = text.find('.')
-         if 0 <= b and self.namespace[text[:b]].__name__ == 'ROOT':
-            matches += self.root_global_matches( text[b+1:], text[:b+1] )
+         try:
+            if 0 <= b and self.namespace[text[:b]].__name__ == 'ROOT':
+               matches += self.root_global_matches( text[b+1:], text[:b+1] )
+         except AttributeError:    # not all objects have a __name__
+            pass
          return matches
 
-   readline.set_completer( FileNameCompleter().complete )
+   readline.set_completer( RootNameCompleter().complete )
    readline.set_completer_delims(
       readline.get_completer_delims().replace( os.sep , '' ) )
 
@@ -244,6 +247,12 @@ class _ExpandMacroFunction( object ):
       if self.func():
          return 1
       return 0
+
+   def __repr__( self ):
+      return repr( self.func() )
+
+   def __str__( self ):
+      return str( self.func() )
 
 _root.gPad         = _ExpandMacroFunction( "TVirtualPad",  "Pad" )
 _root.gVirtualX    = _ExpandMacroFunction( "TVirtualX",    "Instance" )
@@ -549,15 +558,12 @@ class ModuleFacade( types.ModuleType ):
             self.__dict__[ 'PyGUIThread' ] = \
                threading.Thread( None, _processRootEvents, None, ( self, ) )
 
-            def _finishSchedule( ROOT = self ):
-               import threading
-               if threading.currentThread() != self.PyGUIThread:
-                  while self.PyConfig.GUIThreadScheduleOnce:
-                     self.PyGUIThread.join( 0.1 )
-
-            self.PyGUIThread.finishSchedule = _finishSchedule
             self.PyGUIThread.setDaemon( 1 )
             self.PyGUIThread.start()
+
+            if threading.currentThread() != self.PyGUIThread:
+               while self.PyConfig.GUIThreadScheduleOnce:
+                  self.PyGUIThread.join( 0.1 )
 
     # store already available ROOT objects to prevent spurious lookups
       for name in self.module.__pseudo__all__ + _memPolicyAPI + _sigPolicyAPI:

@@ -62,5 +62,8 @@ public:
    ClassDef(TAttText,1)  //Text attributes
 };
 
+   enum ETextAlign {kHAlignLeft=10, kHAlignCenter=20, kHAlignRight=30,
+                    kVAlignBottom=1, kVAlignCenter=2, kVAlignTop=3};
+
 #endif
 
