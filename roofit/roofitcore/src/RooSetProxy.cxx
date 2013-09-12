@@ -266,7 +266,9 @@ Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t 
       TIterator* iter = newServerList.createIterator() ;
       RooAbsArg* arg ;
       while((arg=(RooAbsArg*)iter->Next())) {
-	add(*arg,kTRUE) ;
+	if (arg!=_owner) {
+	  add(*arg,kTRUE) ;
+	}
       }
       delete iter ;
     } else {
@@ -280,7 +282,7 @@ Bool_t RooSetProxy::changePointer(const RooAbsCollection& newServerList, Bool_t 
   while ((arg=(RooAbsArg*)_iter->Next())) {
     
     RooAbsArg* newArg= arg->findNewServer(newServerList, nameChange);
-    if (newArg) error |= !RooArgSet::replace(*arg,*newArg) ;
+    if (newArg && newArg!=_owner) error |= !RooArgSet::replace(*arg,*newArg) ;
   }
   return !error ;
 }
