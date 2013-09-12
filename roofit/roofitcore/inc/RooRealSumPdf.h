@@ -52,6 +52,8 @@ public:
     return expectedEvents(&nset) ; 
   }
 
+  virtual Bool_t selfNormalized() const { return getAttribute("BinnedLikelihood") ; }
+
   void printMetaArgs(std::ostream& os) const ;
 
 
