@@ -192,49 +192,60 @@ Double_t FlexibleInterpVar::evaluate() const
   while((param=(RooAbsReal*)_paramIter->Next())) {
     //    param->Print("v");
 
-    if(_interpCode.at(i)==0){
+
+    Int_t icode = _interpCode[i] ;
+    switch(icode) {
+
+    case 0: {
       // piece-wise linear
       if(param->getVal()>0)
-	total +=  param->getVal()*(_high.at(i) - _nominal );
+	total +=  param->getVal()*(_high[i] - _nominal );
       else
-	total += param->getVal()*(_nominal - _low.at(i));
-    } else if(_interpCode.at(i)==1){
+	total += param->getVal()*(_nominal - _low[i]);
+      break ;
+    }
+    case 1: {
       // pice-wise log
       if(param->getVal()>=0)
-	total *= pow(_high.at(i)/_nominal, +param->getVal());
+	total *= pow(_high[i]/_nominal, +param->getVal());
       else
-	total *= pow(_low.at(i)/_nominal,  -param->getVal());
-    } else if(_interpCode.at(i)==2){
+	total *= pow(_low[i]/_nominal,  -param->getVal());
+      break ;
+    }
+    case 2: {
       // parabolic with linear
-      double a = 0.5*(_high.at(i)+_low.at(i))-_nominal;
-      double b = 0.5*(_high.at(i)-_low.at(i));
+      double a = 0.5*(_high[i]+_low[i])-_nominal;
+      double b = 0.5*(_high[i]-_low[i]);
       double c = 0;
       if(param->getVal()>1 ){
-	total += (2*a+b)*(param->getVal()-1)+_high.at(i)-_nominal;
+	total += (2*a+b)*(param->getVal()-1)+_high[i]-_nominal;
       } else if(param->getVal()<-1 ) {
-	total += -1*(2*a-b)*(param->getVal()+1)+_low.at(i)-_nominal;
+	total += -1*(2*a-b)*(param->getVal()+1)+_low[i]-_nominal;
       } else {
 	total +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
       }
-    } else if(_interpCode.at(i)==3){
+      break ;
+    }
+    case 3: {
       //parabolic version of log-normal
-      double a = 0.5*(_high.at(i)+_low.at(i))-_nominal;
-      double b = 0.5*(_high.at(i)-_low.at(i));
+      double a = 0.5*(_high[i]+_low[i])-_nominal;
+      double b = 0.5*(_high[i]-_low[i]);
       double c = 0;
       if(param->getVal()>1 ){
-	total += (2*a+b)*(param->getVal()-1)+_high.at(i)-_nominal;
+	total += (2*a+b)*(param->getVal()-1)+_high[i]-_nominal;
       } else if(param->getVal()<-1 ) {
-	total += -1*(2*a-b)*(param->getVal()+1)+_low.at(i)-_nominal;
+	total += -1*(2*a-b)*(param->getVal()+1)+_low[i]-_nominal;
       } else {
 	total +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
       }
-	
-    } else if(_interpCode.at(i)==4){ // Aaron Armbruster - exponential extrapolation, polynomial interpolation
+      break ;
+    }
+    case 4: {
       double boundary = _interpBoundary;
       // piece-wise log + parabolic
       if(param->getVal()>=boundary)
 	{
-	total *= pow(_high.at(i)/_nominal, +param->getVal());
+	total *= pow(_high[i]/_nominal, +param->getVal());
       }
       else if (param->getVal() < boundary && param->getVal() > -boundary && boundary != 0)
       {
@@ -264,42 +275,25 @@ Double_t FlexibleInterpVar::evaluate() const
 	  }
 	  
 	}
-
-// 	double pow_up       = pow(_high.at(i)/_nominal, x0);
-// 	double pow_down     = pow(_low.at(i)/_nominal,  x0);
-// 	double pow_up_log   = pow_up*TMath::Log(_high.at(i));
-// 	double pow_down_log =-pow_down*TMath::Log(_low.at(i));
-// 	double pow_up_log2  = pow_up_log*TMath::Log(_high.at(i));
-// 	double pow_down_log2=-pow_down*TMath::Log(_low.at(i));
-
-
-//fcns+der are eq at bd
-// 	  double a =  1./(4*pow(x0, 1))*(3*A0 - x0*S1);
-// 	double b =  1./(4*pow(x0, 2))*(4*S0 - x0*A1 - 8);
-// 	double c = -1./(4*pow(x0, 3))*(  A0 - x0*S1);
-// 	double d = -1./(4*pow(x0, 4))*(2*S0 - x0*A1 - 4);
-// 	total *= 1 + a*x + b*pow(x, 2) + c*pow(x, 3) + d*pow(x, 4);
-
-//fcns+der+2nd_der are eq at bd
+	
+	// GHL: Swagato's suggestions
+	// if( _low[i] == 0 ) _low[i] = 0.0001;
+	// if( _high[i] == 0 ) _high[i] = 0.0001;
 
 	// GHL: Swagato's suggestions
-	// if( _low.at(i) == 0 ) _low.at(i) = 0.0001;
-	// if( _high.at(i) == 0 ) _high.at(i) = 0.0001;
-
-	// GHL: Swagato's suggestions
-	double pow_up       = _powHi.at(i) ;
-	double pow_down     = _powLo.at(i) ;
-	double pow_up_log   = _high.at(i) <= 0.0 ? 0.0 : pow_up*_logHi.at(i) ;
-	double pow_down_log = _low.at(i) <= 0.0 ? 0.0 : -pow_down*_logLo.at(i) ;
-	double pow_up_log2  = _high.at(i) <= 0.0 ? 0.0 : pow_up_log*_logHi.at(i) ;
-	double pow_down_log2= _low.at(i) <= 0.0 ? 0.0 : pow_down_log*_logLo.at(i) ;
+	double pow_up       = _powHi[i] ;
+	double pow_down     = _powLo[i] ;
+	double pow_up_log   = _high[i] <= 0.0 ? 0.0 : pow_up*_logHi[i] ;
+	double pow_down_log = _low[i] <= 0.0 ? 0.0 : -pow_down*_logLo[i] ;
+	double pow_up_log2  = _high[i] <= 0.0 ? 0.0 : pow_up_log*_logHi[i] ;
+	double pow_down_log2= _low[i] <= 0.0 ? 0.0 : pow_down_log*_logLo[i] ;
 	/*
-	double pow_up       = pow(_high.at(i)/_nominal, x0);
-	double pow_down     = pow(_low.at(i)/_nominal,  x0);
-	double pow_up_log   = pow_up*TMath::Log(_high.at(i));
-	double pow_down_log = -pow_down*TMath::Log(_low.at(i));
-	double pow_up_log2  = pow_up_log*TMath::Log(_high.at(i));
-	double pow_down_log2= pow_down_log*TMath::Log(_low.at(i));
+	double pow_up       = pow(_high[i]/_nominal, x0);
+	double pow_down     = pow(_low[i]/_nominal,  x0);
+	double pow_up_log   = pow_up*TMath::Log(_high[i]);
+	double pow_down_log = -pow_down*TMath::Log(_low[i]);
+	double pow_up_log2  = pow_up_log*TMath::Log(_high[i]);
+	double pow_down_log2= pow_down_log*TMath::Log(_low[i]);
 	*/
 	double S0 = (pow_up+pow_down)/2;
 	double A0 = (pow_up-pow_down)/2;
@@ -321,12 +315,15 @@ Double_t FlexibleInterpVar::evaluate() const
 	total *= 1 + a*x + b*xx + c*xxx + d*xx*xx + e*xxx*xx + f*xxx*xxx;
       }
       else if (param->getVal()<=-boundary)
-      {
-	total *= pow(_low.at(i)/_nominal,  -param->getVal());
+	{
+	total *= pow(_low[i]/_nominal,  -param->getVal());
       }
-    } else {
+      break ;
+    }
+    default: {
       coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  " << param->GetName() 
 			    << " with unknown interpolation code" << endl ;
+    }
     }
     ++i;
   }
