@@ -5051,7 +5051,7 @@ Long64_t TH1::Merge(TCollection *li)
    //    list->Add(h3);
    //    TH1F *h = (TH1F*)h1->Clone("h");
    //    h->Reset();
-   //    h.Merge(list);
+   //    h->Merge(list);
    //    h->Draw();
    // }
 
