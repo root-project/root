@@ -48,6 +48,8 @@
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
 #include "TTimeStamp.h"
+#include "RooProdPdf.h"
+#include "RooRealSumPdf.h"
 
 #include <string>
 
@@ -520,15 +522,34 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName());
 
     if (pdf && dset && (0. != dset->sumEntries() || processEmptyDataSets())) {
-      ccoutD(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << n << " for state " << type->GetName()
+      ccoutI(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << n << " for state " << type->GetName()
 		     << " (" << dset->numEntries() << " dataset entries)" << endl;
 
+      
+      // WVE HACK determine if we have a RooRealSumPdf and then treat it like a binned likelihood
+      RooAbsPdf* binnedPdf = 0 ;
+      if (pdf->getAttribute("BinnedLikelihood") && pdf->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
+	// Simplest case: top-level of component is a RRSP
+	binnedPdf = pdf ;
+      } else if (pdf->IsA()->InheritsFrom(RooProdPdf::Class())) {
+	// Default case: top-level pdf is a product of RRSP and other pdfs
+	RooFIter iter = ((RooProdPdf*)pdf)->pdfList().fwdIterator() ;
+	RooAbsArg* component ;
+	while ((component = iter.next())) {
+	  if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
+	    binnedPdf = (RooAbsPdf*) component ;
+	  }
+	}
+      }
+      // WVE END HACK
+      // Below here directly pass binnedPdf instead of PROD(binnedPdf,constraints) as constraints are evaluated elsewhere anyway
+      // and omitting them reduces model complexity and associated handling/cloning times
       if (_splitRange && rangeName) {
-	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,
-			      Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_verbose,_splitRange);
+	_gofArray[n] = create(type->GetName(),type->GetName(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
+			      Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_verbose,_splitRange,(binnedPdf?kTRUE:kFALSE));
       } else {
-	_gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps,
-			      rangeName,addCoefRangeName,_nCPU,_mpinterl,_verbose,_splitRange);
+	_gofArray[n] = create(type->GetName(),type->GetName(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
+			      rangeName,addCoefRangeName,_nCPU,_mpinterl,_verbose,_splitRange,(binnedPdf?kTRUE:kFALSE));
       }
       _gofArray[n]->setSimCount(_nGof);
 
@@ -555,6 +576,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       delete actualParams;
 
       ++n;
+
     } else {
       if ((!dset || (0. != dset->sumEntries() && !processEmptyDataSets())) && pdf) {
 	if (_verbose) {
