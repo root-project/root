@@ -155,7 +155,6 @@ Double_t PiecewiseInterpolation::evaluate() const
   RooAbsReal* param ;
   RooAbsReal* high ;
   RooAbsReal* low ;
-  //  const RooArgSet* nset = _paramList.nset() ;
   int i=0;
 
   RooFIter lowIter(_lowSet.fwdIterator()) ;
@@ -166,26 +165,26 @@ Double_t PiecewiseInterpolation::evaluate() const
     low = (RooAbsReal*)lowIter.next() ;
     high = (RooAbsReal*)highIter.next() ;
 
-    /* // MB : old bit of interpolation code
-    if(param->getVal()>0)
-      sum += param->getVal()*(high->getVal() - nominal );
-    else
-      sum += param->getVal()*(nominal - low->getVal());
-    */
-    //cout << "interp code is " << _interpCode.at(i) << endl;
-    if(_interpCode.empty() || _interpCode.at(i)==0){
+    Int_t icode = _interpCode[i] ;
+
+    switch(icode) {
+    case 0: {
       // piece-wise linear
       if(param->getVal()>0)
 	sum +=  param->getVal()*(high->getVal() - nominal );
       else
 	sum += param->getVal()*(nominal - low->getVal());
-    } else if(_interpCode.at(i)==1){
+      break ;
+    }
+    case 1: {
       // pice-wise log
       if(param->getVal()>=0)
 	sum *= pow(high->getVal()/nominal, +param->getVal());
       else
 	sum *= pow(low->getVal()/nominal,  -param->getVal());
-    } else if(_interpCode.at(i)==2){
+      break ;
+    }
+    case 2: {
       // parabolic with linear
       double a = 0.5*(high->getVal()+low->getVal())-nominal;
       double b = 0.5*(high->getVal()-low->getVal());
@@ -197,7 +196,9 @@ Double_t PiecewiseInterpolation::evaluate() const
       } else {
 	sum +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
       }
-    } else if(_interpCode.at(i)==3){
+      break ;
+    }
+    case 3: {
       //parabolic version of log-normal
       double a = 0.5*(high->getVal()+low->getVal())-nominal;
       double b = 0.5*(high->getVal()-low->getVal());
@@ -209,41 +210,38 @@ Double_t PiecewiseInterpolation::evaluate() const
       } else {
 	sum +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
       }
-	
-    } else if (_interpCode.at(i) == 4){ // AA - 6th order poly interp + linear extrap
+      break ;
+    }
+    case 4: {
       
-      double x0 = 1.0;//boundary;
-      double x  = param->getVal();
+      // WVE ****************************************************************
+      // WVE *** THIS CODE IS CRITICAL TO HISTFACTORY FIT CPU PERFORMANCE ***
+      // WVE *** Do not modify unless you know what you are doing...      ***
+      // WVE ****************************************************************
 
-      if (x > x0 || x < -x0)
-      {
-	if(x>0)
-	  sum += x*(high->getVal() - nominal );
-	else
-	  sum += x*(nominal - low->getVal());
-      }
-      else
-      {
+      double x  = param->getVal();      
+      if (x>1) {
+	sum += x*(high->getVal() - nominal );
+      } else if (x<-1) {
+	sum += x*(nominal - low->getVal());
+      } else {
 	double eps_plus = high->getVal() - nominal;
 	double eps_minus = nominal - low->getVal();
 	double S = (eps_plus + eps_minus)/2;
-	double A = (eps_plus - eps_minus)/2;
-
-//fcns+der+2nd_der are eq at bd
-	double a = S;
-	double b = 15*A/(8*x0);
-	//double c = 0;
-	double d = -10*A/(8*x0*x0*x0);
-	//double e = 0;
-	double f = 3*A/(8*x0*x0*x0*x0*x0);
-
-	double val = nominal + a*x + b*x*x + 0/*c*pow(x, 3)*/ + d*x*x*x*x + 0/*e*pow(x, 5)*/ + f*x*x*x*x*x*x;
+	double A = (eps_plus - eps_minus)/16;
+	
+	//fcns+der+2nd_der are eq at bd
+	double xx = x*x ;
+	double xxxx = xx*xx ;
+	double val = nominal + S*x + A*(15*xx - 10*xxxx + 3*xxxx*xx);
 	if (val < 0) val = 0;
-	//cout << "Using interp code 4, val = " << val << endl;
 	sum += val-nominal;
       }
-	
-    } else if (_interpCode.at(i) == 5){ // AA - 4th order poly interp + linear extrap
+      break ;
+
+      // WVE ****************************************************************
+    }
+    case 5: {
       
       double x0 = 1.0;//boundary;
       double x  = param->getVal();
@@ -262,7 +260,7 @@ Double_t PiecewiseInterpolation::evaluate() const
 	double S = (eps_plus + eps_minus)/2;
 	double A = (eps_plus - eps_minus)/2;
 
-//fcns+der are eq at bd
+	//fcns+der are eq at bd
 	double a = S;
 	double b = 3*A/(2*x0);
 	//double c = 0;
@@ -275,16 +273,17 @@ Double_t PiecewiseInterpolation::evaluate() const
 
 	sum += val-nominal;
       }
-
-
-    } else {
-      coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << param->GetName() 
-			    << " with unknown interpolation code" << endl ;
+      break ;
     }
-
+    default: {
+      coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << param->GetName() 
+			    << " with unknown interpolation code" << icode << endl ;
+      break ;
+    }
+    }
     ++i;
   }
-
+  
   if(_positiveDefinite && (sum<0)){
     sum = 1e-6;
     sum = 0;
@@ -298,7 +297,6 @@ Double_t PiecewiseInterpolation::evaluate() const
   return sum;
 
 }
-
 
 //_____________________________________________________________________________
 Bool_t PiecewiseInterpolation::setBinIntegrator(RooArgSet& allVars) 
@@ -349,7 +347,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   RooFIter paramIterExtra(_paramSet.fwdIterator()) ;
   int i=0;
   while( paramIterExtra.next() ) {
-    if(!_interpCode.empty() && _interpCode.at(i)!=0){
+    if(!_interpCode.empty() && _interpCode[i]!=0){
       // can't factorize integral
       cout <<"can't factorize integral"<<endl;
       return 0;
