@@ -30,6 +30,7 @@
 
 #include "RooFit.h"
 #include "Riostream.h"
+#include "TMath.h"
 
 #include "RooNLLVar.h"
 #include "RooAbsData.h"
@@ -38,9 +39,9 @@
 #include "RooMsgService.h"
 #include "RooAbsDataStore.h"
 #include "RooRealMPFE.h"
-
+#include "RooRealSumPdf.h"
 #include "RooRealVar.h"
-
+#include "RooProdPdf.h"
 
 ClassImp(RooNLLVar)
 ;
@@ -91,6 +92,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
   _offsetSaveW2 = 0.;
   _offsetCarrySaveW2 = 0.;
 
+  _binnedPdf = 0 ;
 }
 
 
@@ -98,7 +100,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
 //_____________________________________________________________________________
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
 		     Bool_t extended, const char* rangeName, const char* addCoefRangeName,
-		     Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitRange, Bool_t cloneData) : 
+		     Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL) : 
   RooAbsOptTestStatistic(name,title,pdf,indata,RooArgSet(),rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
   _extended(extended),
   _weightSq(kFALSE),
@@ -107,6 +109,32 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
   // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   // For internal use.
 
+  // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
+  // for a binned likelihood calculation
+  _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
+
+  // Retrieve and cache bin widths needed to convert unnormalized binnedPdf values back to yields
+  if (_binnedPdf) {
+    
+    RooArgSet* obs = _funcClone->getObservables(_dataClone) ;
+    if (obs->getSize()!=1) {
+      _binnedPdf = 0 ;
+    } else {
+      RooRealVar* var = (RooRealVar*) obs->first() ;
+      list<Double_t>* boundaries = _binnedPdf->binBoundaries(*var,var->getMin(),var->getMax()) ;
+      list<Double_t>::iterator biter = boundaries->begin() ;
+      _binw.resize(boundaries->size()-1) ;
+      Double_t lastBound = (*biter) ;
+      biter++ ;
+      int ibin=0 ;
+      while (biter!=boundaries->end()) {
+	_binw[ibin] = (*biter) - lastBound ;
+	lastBound = (*biter) ;
+	ibin++ ;
+	biter++ ;
+      }
+    }
+  }
 }
 
 
@@ -114,7 +142,7 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 //_____________________________________________________________________________
 RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& indata,
 		     const RooArgSet& projDeps, Bool_t extended, const char* rangeName,const char* addCoefRangeName, 
-		     Int_t nCPU,RooFit::MPSplit interleave,Bool_t verbose, Bool_t splitRange, Bool_t cloneData) : 
+		     Int_t nCPU,RooFit::MPSplit interleave,Bool_t verbose, Bool_t splitRange, Bool_t cloneData, Bool_t binnedL) : 
   RooAbsOptTestStatistic(name,title,pdf,indata,projDeps,rangeName,addCoefRangeName,nCPU,interleave,verbose,splitRange,cloneData),
   _extended(extended),
   _weightSq(kFALSE),
@@ -123,7 +151,32 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
   // Construct likelihood from given p.d.f and (binned or unbinned dataset)
   // For internal use.  
 
+  // If binned likelihood flag is set, pdf is a RooRealSumPdf representing a yield vector
+  // for a binned likelihood calculation
+  _binnedPdf = binnedL ? (RooRealSumPdf*)_funcClone : 0 ;
 
+  // Retrieve and cache bin widths needed to convert unnormalized binnedPdf values back to yields
+  if (_binnedPdf) {
+    
+    RooArgSet* obs = _funcClone->getObservables(_dataClone) ;
+    if (obs->getSize()!=1) {
+      _binnedPdf = 0 ;
+    } else {
+      RooRealVar* var = (RooRealVar*) obs->first() ;
+      list<Double_t>* boundaries = _binnedPdf->binBoundaries(*var,var->getMin(),var->getMax()) ;
+      list<Double_t>::iterator biter = boundaries->begin() ;
+      _binw.resize(boundaries->size()-1) ;
+      Double_t lastBound = (*biter) ;
+      biter++ ;
+      int ibin=0 ;
+      while (biter!=boundaries->end()) {
+	_binw[ibin] = (*biter) - lastBound ;
+	lastBound = (*biter) ;
+	ibin++ ;
+	biter++ ;
+      }
+    }
+  }
 }
 
 
@@ -134,8 +187,11 @@ RooNLLVar::RooNLLVar(const RooNLLVar& other, const char* name) :
   _extended(other._extended),
   _weightSq(other._weightSq),
   _first(kTRUE), _offsetSaveW2(other._offsetSaveW2),
-  _offsetCarrySaveW2(other._offsetCarrySaveW2) {
+  _offsetCarrySaveW2(other._offsetCarrySaveW2),
+  _binw(other._binw) {
   // Copy constructor
+
+  _binnedPdf = other._binnedPdf ? (RooRealSumPdf*)_funcClone : 0 ;
 }
 
 
@@ -189,64 +245,93 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
   RooAbsPdf* pdfClone = (RooAbsPdf*) _funcClone ;
 
   // cout << "RooNLLVar::evaluatePartition(" << GetName() << ") projDeps = " << (_projDeps?*_projDeps:RooArgSet()) << endl ;
-
+  
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize ) ;
 
   Double_t sumWeight(0), sumWeightCarry(0);
-  for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
-    
-    // get the data values for this event
-    //Double_t wgt = _dataClone->weight(i) ;
-    //if (wgt==0) continue ;
 
-    _dataClone->get(i) ;
-    //cout << "NLL - now loading event #" << i << endl ;
-//     _funcObsSet->Print("v") ;
-    
+  // If pdf is marked as binned - do a binned likelihood calculation here (sum of log-Poisson for each bin)
+  if (_binnedPdf) {
 
-    if (!_dataClone->valid()) continue;
+    for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
+      
+      _dataClone->get(i) ;
+      
+      if (!_dataClone->valid()) continue;
+      
+      Double_t eventWeight = _dataClone->weight();
 
-    Double_t eventWeight = _dataClone->weight();
-    if (0. == eventWeight * eventWeight) continue ;
-    if (_weightSq) eventWeight = _dataClone->weightSquared() ;
+      // Calculate log(Poisson(N|mu) for this bin
+      Double_t N = eventWeight ;
+      Double_t mu = _binnedPdf->getVal()*_binw[i] ; 
+      Double_t term = -1*(-mu + N*log(mu) - TMath::LnGamma(N+1)) ;
 
-    Double_t term = -eventWeight * pdfClone->getLogVal(_normSet);
-
-    Double_t y = eventWeight - sumWeightCarry;
-    Double_t t = sumWeight + y;
-    sumWeightCarry = (t - sumWeight) - y;
-    sumWeight = t;
-
-    y = term - carry;
-    t = result + y;
-    carry = (t - result) - y;
-    result = t;
-  }
-  
-  // include the extended maximum likelihood term, if requested
-  if(_extended && _setNum==_extSet) {
-    if (_weightSq) {
-
-      // Calculate sum of weights-squared here for extended term
-      Double_t sumW2(0), sumW2carry(0);
-      for (i=0 ; i<_dataClone->numEntries() ; i++) {
-	_dataClone->get(i);
-	Double_t y = _dataClone->weightSquared() - sumW2carry;
-	Double_t t = sumW2 + y;
-	sumW2carry = (t - sumW2) - y;
-	sumW2 = t;
-      }
-      Double_t y = pdfClone->extendedTerm(sumW2 , _dataClone->get()) - carry;
-      Double_t t = result + y;
-      carry = (t - result) - y;
-      result = t;
-    } else {
-      Double_t y = pdfClone->extendedTerm(_dataClone->sumEntries(), _dataClone->get()) - carry;
-      Double_t t = result + y;
+      // Kahan summation of sumWeight
+      Double_t y = eventWeight - sumWeightCarry;
+      Double_t t = sumWeight + y;
+      sumWeightCarry = (t - sumWeight) - y;
+      sumWeight = t;
+      
+      // Kahan summation of result
+      y = term - carry;
+      t = result + y;
       carry = (t - result) - y;
       result = t;
     }
-  }    
+
+
+  } else {
+
+    for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
+            
+      _dataClone->get(i) ;
+      
+      if (!_dataClone->valid()) continue;
+      
+      Double_t eventWeight = _dataClone->weight();
+      if (0. == eventWeight * eventWeight) continue ;
+      if (_weightSq) eventWeight = _dataClone->weightSquared() ;
+      
+      Double_t term = -eventWeight * pdfClone->getLogVal(_normSet);
+      
+      
+      Double_t y = eventWeight - sumWeightCarry;
+      Double_t t = sumWeight + y;
+      sumWeightCarry = (t - sumWeight) - y;
+      sumWeight = t;
+      
+      y = term - carry;
+      t = result + y;
+      carry = (t - result) - y;
+      result = t;
+    }
+    
+    // include the extended maximum likelihood term, if requested
+    if(_extended && _setNum==_extSet) {
+      if (_weightSq) {
+	
+	// Calculate sum of weights-squared here for extended term
+	Double_t sumW2(0), sumW2carry(0);
+	for (i=0 ; i<_dataClone->numEntries() ; i++) {
+	  _dataClone->get(i);
+	  Double_t y = _dataClone->weightSquared() - sumW2carry;
+	  Double_t t = sumW2 + y;
+	  sumW2carry = (t - sumW2) - y;
+	  sumW2 = t;
+	}
+	Double_t y = pdfClone->extendedTerm(sumW2 , _dataClone->get()) - carry;
+	Double_t t = result + y;
+	carry = (t - result) - y;
+	result = t;
+      } else {
+	Double_t y = pdfClone->extendedTerm(_dataClone->sumEntries(), _dataClone->get()) - carry;
+	Double_t t = result + y;
+	carry = (t - result) - y;
+	result = t;
+      }
+    }    
+  }
+
 
   // If part of simultaneous PDF normalize probability over 
   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n) 
@@ -283,6 +368,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     carry = (t - result) - y;
     result = t;
   }
+
     
   _evalCarry = carry;
   return result ;
