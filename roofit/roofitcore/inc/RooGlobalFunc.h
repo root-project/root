@@ -269,6 +269,7 @@ RooCmdArg RenameAllVariablesExcept(const char* suffix,const char* exceptionList)
 RooCmdArg RenameVariable(const char* inputName, const char* outputName) ;
 RooCmdArg Rename(const char* suffix) ;
 RooCmdArg RecycleConflictNodes(Bool_t flag=kTRUE) ;
+RooCmdArg Embedded(Bool_t flag=kTRUE) ;
 
 // RooSimCloneTool::build() arguments
 RooCmdArg SplitParam(const char* varname, const char* catname) ;

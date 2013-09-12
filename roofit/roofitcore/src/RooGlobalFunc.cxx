@@ -306,6 +306,7 @@ namespace RooFit {
   RooCmdArg RenameAllVariablesExcept(const char* suffix, const char* except)    { return RooCmdArg("RenameAllVariables",0,0,0,0,suffix,except,0,0) ; }
   RooCmdArg RenameVariable(const char* in, const char* out) { return RooCmdArg("RenameVar",0,0,0,0,in,out,0,0) ; }
   RooCmdArg Rename(const char* suffix)                      { return RooCmdArg("Rename",0,0,0,0,suffix,0,0,0) ; }
+  RooCmdArg Embedded(Bool_t flag)                           { return RooCmdArg("Embedded",flag,0,0,0,0,0,0,0) ; }
 
   // RooSimCloneTool::build() arguments
   RooCmdArg SplitParam(const char* varname, const char* catname)         { return RooCmdArg("SplitParam",0,0,0,0,varname,catname,0,0) ; }
