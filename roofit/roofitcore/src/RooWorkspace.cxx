@@ -700,6 +700,7 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   pc.defineString("dsetName","Rename",0,"") ;
   pc.defineString("varChangeIn","RenameVar",0,"",kTRUE) ;
   pc.defineString("varChangeOut","RenameVar",1,"",kTRUE) ;
+  pc.defineInt("embedded","Embedded",0,0) ;
 
   // Process and check varargs 
   pc.process(args) ;
@@ -711,18 +712,21 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   const char* dsetName = pc.getString("dsetName") ;
   const char* varChangeIn = pc.getString("varChangeIn") ;
   const char* varChangeOut = pc.getString("varChangeOut") ;
+  Bool_t embedded = pc.getInt("embedded") ;
 
   // Transform emtpy string into null pointer
   if (dsetName && strlen(dsetName)==0) {
     dsetName=0 ;
   }
+  
+  RooLinkedList& dataList = embedded ? _embeddedDataList : _dataList ;
 
   // Check that no dataset with target name already exists
-  if (dsetName && _dataList.FindObject(dsetName)) {
+  if (dsetName && dataList.FindObject(dsetName)) {
     coutE(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") ERROR dataset with name " << dsetName << " already exists in workspace, import aborted" << endl ;
     return kTRUE ;
   }
-  if (!dsetName && _dataList.FindObject(inData.GetName())) {
+  if (!dsetName && dataList.FindObject(inData.GetName())) {
     coutE(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") ERROR dataset with name " << inData.GetName() << " already exists in workspace, import aborted" << endl ;
     return kTRUE ;
   }
@@ -774,13 +778,21 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   }
   delete iter ;
     
-  _dataList.Add(clone) ;
+  dataList.Add(clone) ;
   if (_dir) {	
     _dir->InternalAppend(clone) ;
   }
   if (_doExport) {
     exportObj(clone) ;
   }
+
+  // Set expensive object cache of dataset internal buffers to that of workspace
+  RooFIter iter2 = clone->get()->fwdIterator() ;
+  while ((carg=iter2.next())) {
+    carg->setExpensiveObjectCache(expensiveObjectCache()) ;
+  }
+
+
   return kFALSE ;
 }
 
@@ -1302,6 +1314,15 @@ RooAbsData* RooWorkspace::data(const char* name) const
 }
 
 
+//_____________________________________________________________________________
+RooAbsData* RooWorkspace::embeddedData(const char* name) const
+{
+  // Retrieve dataset (binned or unbinned) with given name. A null pointer is returned if not found
+
+  return (RooAbsData*)_embeddedDataList.FindObject(name) ;
+}
+
+
 
 
 //_____________________________________________________________________________
@@ -1434,6 +1455,22 @@ list<RooAbsData*> RooWorkspace::allData() const
 
   list<RooAbsData*> ret ;
   TIterator* iter = _dataList.MakeIterator() ;
+  RooAbsData* dat ;
+  while((dat=(RooAbsData*)iter->Next())) {
+    ret.push_back(dat) ;
+  }
+  delete iter ;
+  return ret ;
+}
+
+
+//_____________________________________________________________________________
+list<RooAbsData*> RooWorkspace::allEmbeddedData() const 
+{
+  // Return list of all dataset in the workspace
+
+  list<RooAbsData*> ret ;
+  TIterator* iter = _embeddedDataList.MakeIterator() ;
   RooAbsData* dat ;
   while((dat=(RooAbsData*)iter->Next())) {
     ret.push_back(dat) ;
@@ -2262,6 +2299,18 @@ void RooWorkspace::Print(Option_t* opts) const
     cout << "datasets" << endl ;
     cout << "--------" << endl ;
     iter = _dataList.MakeIterator() ;
+    RooAbsData* data2 ;
+    while((data2=(RooAbsData*)iter->Next())) {
+      cout << data2->IsA()->GetName() << "::" << data2->GetName() << *data2->get() << endl ;
+    }
+    delete iter ;
+    cout << endl ;
+  }
+
+  if (_embeddedDataList.GetSize()>0) {
+    cout << "embedded datasets (in pdfs and functions)" << endl ;
+    cout << "-----------------------------------------" << endl ;
+    iter = _embeddedDataList.MakeIterator() ;
     RooAbsData* data2 ;
     while((data2=(RooAbsData*)iter->Next())) {
       cout << data2->IsA()->GetName() << "::" << data2->GetName() << *data2->get() << endl ;

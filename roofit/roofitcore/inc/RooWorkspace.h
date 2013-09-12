@@ -105,6 +105,7 @@ public:
   RooCategory* cat(const char* name) const ;
   RooAbsCategory* catfunc(const char* name) const ;
   RooAbsData* data(const char* name) const ;
+  RooAbsData* embeddedData(const char* name) const ;
   RooAbsArg* arg(const char* name) const ;
   RooAbsArg* fundArg(const char* name) const ;
   RooArgSet argSet(const char* nameList) const ;
@@ -121,6 +122,7 @@ public:
   RooArgSet allPdfs() const ;
   RooArgSet allResolutionModels() const ;
   std::list<RooAbsData*> allData() const ;
+  std::list<RooAbsData*> allEmbeddedData() const ;
   std::list<TObject*> allGenericObjects() const ;
 
   Bool_t makeDir() ; 
@@ -253,6 +255,7 @@ public:
 
   RooArgSet _allOwnedNodes ; // List of owned pdfs and components
   RooLinkedList _dataList ; // List of owned datasets
+  RooLinkedList _embeddedDataList ; // List of owned datasets that are embedded in pdfs
   RooLinkedList _views ; // List of model views  
   RooLinkedList _snapshots ; // List of parameter snapshots
   RooLinkedList _genObjects ; // List of generic objects
@@ -271,7 +274,7 @@ public:
   Bool_t      _openTrans ;    //! Is there a transaction open?
   RooArgSet   _sandboxNodes ; //! Sandbox for incoming objects in a transaction
 
-  ClassDef(RooWorkspace,7)  // Persistable project container for (composite) pdfs, functions, variables and datasets
+  ClassDef(RooWorkspace,8)  // Persistable project container for (composite) pdfs, functions, variables and datasets
   
 } ;
 
