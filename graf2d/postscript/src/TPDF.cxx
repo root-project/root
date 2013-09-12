@@ -505,8 +505,8 @@ void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
 
    WriteReal(XtoPDF(xy[0].GetX()));
    WriteReal(YtoPDF(xy[0].GetY()));
-   if( n <= 1) {
-      if( n == 0) return;
+   if (n <= 1) {
+      if (n == 0) return;
       PrintFast(2," m");
       return;
    }
@@ -515,7 +515,7 @@ void TPDF::DrawPolyLine(Int_t nn, TPoints *xy)
 
    for (Int_t i=1;i<n;i++) LineTo(XtoPDF(xy[i].GetX()), YtoPDF(xy[i].GetY()));
 
-   if (nn > 0 ) {
+   if (nn > 0) {
       if (xy[0].GetX() == xy[n-1].GetX() && xy[0].GetY() == xy[n-1].GetY()) PrintFast(3," cl");
       PrintFast(2," S");
    } else {
@@ -558,8 +558,8 @@ void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 
    WriteReal(UtoPDF(xy[0].GetX()));
    WriteReal(VtoPDF(xy[0].GetY()));
-   if( n <= 1) {
-      if( n == 0) return;
+   if (n <= 1) {
+      if (n == 0) return;
       PrintFast(2," m");
       return;
    }
@@ -568,7 +568,7 @@ void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 
    for (Int_t i=1;i<n;i++) LineTo(UtoPDF(xy[i].GetX()), VtoPDF(xy[i].GetY()));
 
-   if (nn > 0 ) {
+   if (nn > 0) {
       if (xy[0].GetX() == xy[n-1].GetX() && xy[0].GetY() == xy[n-1].GetY()) PrintFast(3," cl");
       PrintFast(2," S");
    } else {
@@ -913,8 +913,8 @@ void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
 
    WriteReal(XtoPDF(xw[0]));
    WriteReal(YtoPDF(yw[0]));
-   if( n <= 1) {
-      if( n == 0) return;
+   if (n <= 1) {
+      if (n == 0) return;
       PrintFast(2," m");
       return;
    }
@@ -923,7 +923,7 @@ void TPDF::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
 
    for (Int_t i=1;i<n;i++) LineTo(XtoPDF(xw[i]), YtoPDF(yw[i]));
 
-   if (nn > 0 ) {
+   if (nn > 0) {
       if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(2," h");
       PrintFast(2," S");
    } else {
@@ -999,8 +999,8 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 
    WriteReal(XtoPDF(xw[0]));
    WriteReal(YtoPDF(yw[0]));
-   if( n <= 1) {
-      if( n == 0) return;
+   if (n <= 1) {
+      if (n == 0) return;
       PrintFast(2," m");
       return;
    }
@@ -1009,7 +1009,7 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 
    for (Int_t i=1;i<n;i++) LineTo(XtoPDF(xw[i]), YtoPDF(yw[i]));
 
-   if (nn > 0 ) {
+   if (nn > 0) {
       if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(2," h");
       PrintFast(2," S");
    } else {
@@ -1118,7 +1118,7 @@ void TPDF::NewPage()
 {
    // Start a new PDF page.
 
-   if(!fPageNotEmpty)return;
+   if (!fPageNotEmpty) return;
 
    // Compute pad conversion coefficients
    if (gPad) {
@@ -1364,7 +1364,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    //  orientation = 1 for portrait
    //  orientation = 2 for landscape
    fPageOrientation = fType%10;
-   if( fPageOrientation < 1 || fPageOrientation > 2) {
+   if (fPageOrientation < 1 || fPageOrientation > 2) {
       Error("Open", "Invalid page orientation %d", fPageOrientation);
       return;
    }
@@ -1374,8 +1374,8 @@ void TPDF::Open(const char *fname, Int_t wtype)
    // format = 200 is the US format  8.5x14.0 inch
    // format = 300 is the US format 11.0x17.0 inch
    fPageFormat = fType/1000;
-   if( fPageFormat == 0 )  fPageFormat = 4;
-   if( fPageFormat == 99 ) fPageFormat = 0;
+   if (fPageFormat == 0)  fPageFormat = 4;
+   if (fPageFormat == 99) fPageFormat = 0;
 
    fRange = kFALSE;
 
@@ -1923,9 +1923,9 @@ void TPDF::Range(Float_t xsize, Float_t ysize)
    xps = xsize;
    yps = ysize;
 
-   if( xsize <= xps && ysize < yps) {
-      if ( xps > yps ) xymax = xps;
-      else             xymax = yps;
+   if (xsize <= xps && ysize < yps) {
+      if ( xps > yps) xymax = xps;
+      else            xymax = yps;
       xncm  = xsize/xymax;
       yncm  = ysize/xymax;
       dxwn  = ((xps/xymax)-xncm)/2;
@@ -1941,7 +1941,7 @@ void TPDF::Range(Float_t xsize, Float_t ysize)
          yncm = ywkwn;
          dxwn = (xwkwn-xncm)/2;
          dywn = 0;
-         if( dxwn < 0) {
+         if (dxwn < 0) {
             xncm = xwkwn;
             dxwn = 0;
             yncm = xwkwn*ysize/xsize;
@@ -1952,7 +1952,7 @@ void TPDF::Range(Float_t xsize, Float_t ysize)
          yncm = xwkwn*ysize/xsize;
          dxwn = 0;
          dywn = (ywkwn-yncm)/2;
-         if( dywn < 0) {
+         if (dywn < 0) {
             yncm = ywkwn;
             dywn = 0;
             xncm = ywkwn*xsize/ysize;
@@ -2208,7 +2208,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
 
    // Font and text size
    Int_t font = abs(fTextFont)/10;
-   if( font > kNumberOfFonts || font < 1) font = 1;
+   if (font > kNumberOfFonts || font < 1) font = 1;
 
    Double_t wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
@@ -2223,7 +2223,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
       ftsize = (sizeTTF*fYsize*gPad->GetAbsHNDC())/hh;
    }
    Double_t fontsize = 72*(ftsize)/2.54;
-   if( fontsize <= 0) return;
+   if (fontsize <= 0) return;
 
    // Text alignment
    Float_t tsizex = gPad->AbsPixeltoX(Int_t(tsize))-gPad->AbsPixeltoX(0);
@@ -2232,10 +2232,10 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    if (txalh < 1) txalh = 1; if (txalh > 3) txalh = 3;
    Int_t txalv = fTextAlign%10;
    if (txalv < 1) txalv = 1; if (txalv > 3) txalv = 3;
-   if( txalv == 3) {
+   if (txalv == 3) {
       y -= 0.8*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
       x += 0.8*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
-   } else if( txalv == 2) {
+   } else if (txalv == 2) {
       y -= 0.4*tsizey*TMath::Cos(kDEGRAD*fTextAngle);
       x += 0.4*tsizex*TMath::Sin(kDEGRAD*fTextAngle);
    }
@@ -2248,49 +2248,29 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
       t.GetTextExtent(w, h, chars);
       Double_t twx = gPad->AbsPixeltoX(w)-gPad->AbsPixeltoX(0);
       Double_t twy = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(w);
-      if(txalh == 2){
+      if (txalh == 2) {
          x = x-(twx/2)*TMath::Cos(kDEGRAD*fTextAngle);
          y = y-(twy/2)*TMath::Sin(kDEGRAD*fTextAngle);
       }
-      if(txalh == 3){
+      if (txalh == 3) {
          x = x-twx*TMath::Cos(kDEGRAD*fTextAngle);
          y = y-twy*TMath::Sin(kDEGRAD*fTextAngle);
       }
    }
 
-   // Symbol Italic tan(15) = .26794
-   if (font == 15) {
-      Float_t tanAlpha = 0.26794;
-      Float_t dx = - tanAlpha * YtoPDF(y);
-      PrintStr(" q 1 0");
-      WriteReal(tanAlpha);
-      PrintStr(" 1");
-      WriteReal(dx);
-      PrintStr(" 0 cm");
-   }
-
-   PrintStr(" BT");
-
-   snprintf(str,8," /F%d",font);
-   PrintStr(str);
-   WriteReal(fontsize);
-   PrintStr(" Tf");
-
    // Text angle
-   if(fTextAngle == 0) {
+   if (fTextAngle == 0) {
+      PrintStr(" 1 0 0 1");
       WriteReal(XtoPDF(x));
       WriteReal(YtoPDF(y));
-      PrintStr(" Td");
    } else if (fTextAngle == 90) {
       PrintStr(" 0 1 -1 0");
       WriteReal(XtoPDF(x));
       WriteReal(YtoPDF(y));
-      PrintStr(" Tm");
    } else if (fTextAngle == 270) {
       PrintStr(" 0 -1 1 0");
       WriteReal(XtoPDF(x));
       WriteReal(YtoPDF(y));
-      PrintStr(" Tm");
    } else {
       WriteReal(TMath::Cos(kDEGRAD*fTextAngle));
       WriteReal(TMath::Sin(kDEGRAD*fTextAngle));
@@ -2298,8 +2278,18 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
       WriteReal(TMath::Cos(kDEGRAD*fTextAngle));
       WriteReal(XtoPDF(x));
       WriteReal(YtoPDF(y));
-      PrintStr(" Tm");
    }
+   PrintStr(" cm");
+
+   // Symbol Italic tan(15) = .26794
+   if (font == 15) PrintStr(" 1 0 0.26794 1 0 0 cm");
+
+   PrintStr(" BT");
+
+   snprintf(str,8," /F%d",font);
+   PrintStr(str);
+   WriteReal(fontsize);
+   PrintStr(" Tf");
 
    const Int_t len=strlen(chars);
 
@@ -2372,7 +2362,6 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
 
    if (kerning) PrintStr("] TJ ET Q");
    else         PrintStr(") Tj ET Q");
-   if (font == 15) PrintStr(" Q");
    if (!fCompress) PrintStr("@");
    if (kerning) delete [] charDeltas;
 }

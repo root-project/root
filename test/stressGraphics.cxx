@@ -372,7 +372,8 @@ void stressGraphics(Int_t verbose = 0)
       if (!gTestsFailed) {
          std::cout << "*  All the tests passed. :-)" <<std::endl;
       } else {
-         std::cout << "*  " << gTestsFailed <<" tests failed. :-(" <<std::endl;
+         if (gTestsFailed>1) std::cout << "*  " << gTestsFailed <<" tests failed. :-(" <<std::endl;
+         else                std::cout << "*  " << gTestsFailed <<" test failed. :-(" <<std::endl;
       }
       std::cout << "**********************************************************************" <<std::endl;
 
