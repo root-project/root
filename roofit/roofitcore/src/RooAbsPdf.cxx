@@ -3201,7 +3201,7 @@ RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet&
   while((arg=(RooAbsArg*)iter->Next())) {
     RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
     if (pdf && !ret->find(pdf->GetName())) {
-      RooArgSet* compRet = pdf->getConstraints(observables,constrainedParams,stripDisconnected) ;
+      RooArgSet* compRet = pdf->getConstraints(observables,constrainedParams,stripDisconnected) ; 
       if (compRet) {
 	ret->add(*compRet,kFALSE) ;
 	delete compRet ;
