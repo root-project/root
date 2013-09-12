@@ -2396,16 +2396,14 @@ void TCling::CreateListOfEnums(TClass* cl) const
    cl->fEnums->SetOwner();
    const Decl * D = ((TClingClassInfo*)cl->GetClassInfo())->GetDecl();
 
-   // Recurse on the data member of the class and get the enums.
-   if (isa<clang::RecordDecl>(D)) {
-      llvm::SmallVector<EnumDecl*, 128> enums;
-      EnumVisitor E(enums);
-      // Traverse the list of enums for this RecordDecl.
-      // Iteration over the decls might cause deserialization.
+   // Iterate on the decl of the class and get the enums.
+   if (const clang::DeclContext* DC = dyn_cast<clang::DeclContext>(D)) {
       cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
-      E.TraverseDecl(const_cast<clang::Decl*>(D));
-      for (size_t i = 0; i < enums.size(); ++i) {
-           HandleEnumDecl(enums[i], false /* not global*/, cl);
+      for (clang::DeclContext::decl_iterator DI = DC->decls_begin(),
+           DE = DC->decls_end(); DI != DE; ++DI) {
+         if (const clang::EnumDecl* ED = dyn_cast<clang::EnumDecl>(*DI)) {
+            HandleEnumDecl(ED, false /* not global*/, cl);
+         }
       }
    }
 }
