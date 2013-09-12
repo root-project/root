@@ -105,11 +105,12 @@ Bool_t RooArgProxy::changePointer(const RooAbsCollection& newServerList, Bool_t 
   // Change proxied object to object of same name in given list. If nameChange is true
   // the replacement object can have a different name and is identified as the replacement object by
   // the existence of a boolean attribute "origName:MyName" where MyName is the name of this instance
-  
+
   RooAbsArg* newArg ;
   Bool_t initEmpty = _arg ? kFALSE : kTRUE ;
   if (_arg) {
     newArg= _arg->findNewServer(newServerList, nameChange);
+    if (newArg==_owner) newArg = 0 ;
   } else if (factoryInitMode) {
     newArg = newServerList.first() ;
     _owner->addServer(*newArg,_valueServer,_shapeServer) ;
