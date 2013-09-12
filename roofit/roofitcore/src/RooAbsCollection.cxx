@@ -623,7 +623,8 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
       _list.Remove(arg) ;
       anyFound=kTRUE ;
     } else if (matchByNameOnly) {
-      if (!name.CompareTo(arg->GetName())) {
+      //if (!name.CompareTo(arg->GetName())) {
+      if (var.namePtr()==arg->namePtr()) {
 	TObject* contObj = _list.FindObject(arg) ;	  
 	_list.Remove(arg) ;
 	anyFound=kTRUE ;
