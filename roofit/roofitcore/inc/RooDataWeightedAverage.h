@@ -35,7 +35,7 @@ public:
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& adata,
 				      const RooArgSet& projDeps, const char* /*rangeName*/=0, const char* /*addCoefRangeName*/=0, 
-				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t /*splitCutRange*/=kFALSE) {
+				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t /*splitCutRange*/=kFALSE, Bool_t = kFALSE) {
     // Virtual constructor
     return new RooDataWeightedAverage(name,title,real,adata,projDeps,nCPU,interleave,verbose) ;
   }

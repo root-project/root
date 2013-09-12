@@ -51,7 +51,7 @@ public:
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& dhist,
 				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition,Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) {
+				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition,Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, Bool_t = kFALSE) {
     // Virtual constructor
     return new RooChi2Var(name,title,(RooAbsPdf&)pdf,(RooDataHist&)dhist,projDeps,_funcMode,rangeName,
 			  addCoefRangeName,nCPU,interleave,verbose, splitCutRange,_etype) ;
