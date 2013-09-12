@@ -3662,15 +3662,21 @@ int invokeRootCling(const std::string& verbosity,
       changeExtension(newRootmapLibName,gLibraryExtension);
    }
 
-   // Prepend to the rootmap the directory of the directory of the header
-   std::string headerLocation("");
-   extractFilePath(ofilename,headerLocation);
+   // Prepend to the rootmap the designed directory of the dictionary
+   // if no path is specified for the rootmap itself
+   std::string dictLocation("");
+   std::string newRootmapFileName(rootmapFileName);
+   extractFilePath(newRootmapFileName,dictLocation);
+   if (dictLocation.empty()){ //Add it. In the worst case it's ./
+      extractFilePath(ofilename,dictLocation);
+      newRootmapFileName = dictLocation+newRootmapFileName;
+   }
 
    
    // RootMap filename 
-   if (!rootmapFileName.empty()){
+   if (!newRootmapFileName.empty()){
       argvVector.push_back(string2charptr("-rmf"));
-      argvVector.push_back(string2charptr(headerLocation+rootmapFileName));
+      argvVector.push_back(string2charptr(newRootmapFileName));
    }
    
    // RootMap Lib filename 
