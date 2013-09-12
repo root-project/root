@@ -32,6 +32,7 @@
 class RooArgSet ;
 class RooErrorVar ;
 class RooVectorDataStore ;
+class RooExpensiveObjectCache ;
 
 class RooRealVar : public RooAbsRealLValue {
 public:
@@ -151,6 +152,8 @@ public:
     }
     return _sharedProp ;
   }
+
+  virtual void setExpensiveObjectCache(RooExpensiveObjectCache&) { ; } // variables don't need caches 
   
   static RooSharedPropertiesList _sharedPropList; // List of properties shared among clone sets 
   static RooRealVarSharedProperties _nullProp ; // Null property
