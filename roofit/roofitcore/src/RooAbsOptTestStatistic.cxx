@@ -724,10 +724,18 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     RooArgSet actualTrackNodes(_cachedNodes) ;
     actualTrackNodes.remove(*constNodes) ;
     if (constNodes->getSize()>0) {
-      coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << endl ;
+      if (constNodes->getSize()<20) {
+	coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << endl ;
+      } else {
+	coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions have been identified as constant and will be precalculated and cached." << endl ;
+      }
     }
     if (actualTrackNodes.getSize()>0) {
-      coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
+      if (actualTrackNodes.getSize()<20) {
+	coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
+      } else {
+	coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions will be evaluated in cache-and-track-mode." << endl ;
+      }
     }
     delete constNodes ;
     
@@ -767,19 +775,6 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
   // in the input dataset is made.  If the test statistic was constructed with
   // a range specification on the data, the cloneData argument is ignore and
   // the data is always cloned.
-
-//   static Bool_t first = kTRUE ;
-//   if (first) {
-//     cout << "RAOTS::setDataSlave(" << this << ") activating tracing" << endl ; 
-//     RooTrace::active(kTRUE) ;
-//     RooTrace::mark() ;
-//     first = kFALSE ;
-//   } else {
-//     cout << "RAOTS::setDataSlave(" << this << ") dump and mark" << endl ; 
-//     RooTrace::dump(cout,kTRUE) ;
-//     RooTrace::mark() ;
-//   }
-
 
 
   if (operMode()==SimMaster) {
