@@ -599,7 +599,8 @@ public:
     // First try a match by name
     std::vector<RealVector*>::iterator iter = _realStoreList.begin() ;
     for (; iter!=_realStoreList.end() ; ++iter) {
-      if (std::string((*iter)->bufArg()->GetName())==real->GetName()) {
+      //if (std::string((*iter)->bufArg()->GetName())==real->GetName()) {
+      if ((*iter)->bufArg()->namePtr()==real->namePtr()) {
 	rv = (*iter) ;
 	return rv ;
       }
@@ -608,7 +609,8 @@ public:
     // Then check if an entry already exists for a full real    
     std::vector<RealFullVector*>::iterator iter2 = _realfStoreList.begin() ;
     for (; iter2!=_realfStoreList.end() ; ++iter2) {
-      if (std::string((*iter2)->bufArg()->GetName())==real->GetName()) {
+      //if (std::string((*iter2)->bufArg()->GetName())==real->GetName()) {
+      if ((*iter2)->bufArg()->namePtr()==real->namePtr()) {
 	// Return full vector as RealVector base class here
 	return (*iter2) ;
       }
