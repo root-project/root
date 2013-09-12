@@ -242,7 +242,7 @@ RooLinkedList::Pool* RooLinkedList::_pool = 0;
 
 //_____________________________________________________________________________
 RooLinkedList::RooLinkedList(Int_t htsize) : 
-  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0)
+  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), _useNptr(kFALSE)
 {
   if (!_pool) _pool = new Pool;
   _pool->acquire();
@@ -251,7 +251,7 @@ RooLinkedList::RooLinkedList(Int_t htsize) :
 //_____________________________________________________________________________
 RooLinkedList::RooLinkedList(const RooLinkedList& other) :
   TObject(other), _hashThresh(other._hashThresh), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), 
-  _name(other._name)
+  _name(other._name), _useNptr(other._useNptr)
 {
   // Copy constructor
   if (!_pool) _pool = new Pool;
@@ -567,11 +567,25 @@ TObject* RooLinkedList::find(const char* name) const
   // Return pointer to object with given name in collection.
   // If no such object is found, return null pointer.
 
+  
   if (_htableName) return _htableName->find(name) ;
 
   RooLinkedListElem* ptr = _first ;
+
+  if (_useNptr) {
+    const TNamed* nptr = RooNameReg::instance().constPtr(name) ;
+    
+    while(ptr) {
+      if ((((RooAbsArg*)ptr->_arg)->namePtr() == nptr)) {
+	return ptr->_arg ;
+      }
+      ptr = ptr->_next ;
+    }
+    return 0 ;
+  }
+  
   while(ptr) {
-    if (!strcmp(ptr->_arg->GetName(),name)) {
+    if (!strcmp(ptr->_arg->GetName(),name)) {      
       return ptr->_arg ;
     }
     ptr = ptr->_next ;

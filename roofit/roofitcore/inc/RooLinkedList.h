@@ -84,6 +84,7 @@ public:
   
   const char* GetName() const { return _name.Data() ; }
   void SetName(const char* name) { _name = name ; }
+  void useNptr(Bool_t flag) { _useNptr = flag ; }
 
 protected:  
 
@@ -106,6 +107,7 @@ protected:
   RooHashTable*       _htableLink ; //! Hash table by link pointer
 
   TString             _name ; 
+  Bool_t              _useNptr ; //!
 
 private:
   template <bool ascending>
