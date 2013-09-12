@@ -70,9 +70,9 @@ public:
   virtual ~RooAbsArg();
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const = 0 ;
+  virtual TObject* clone(const char* newname=0) const = 0 ;
   virtual TObject* Clone(const char* newname=0) const { 
-    return clone(newname?newname:GetName()) ; 
+    return clone(newname) ; 
   }
   virtual RooAbsArg* cloneTree(const char* newname=0) const ;
 
@@ -490,7 +490,7 @@ public:
   RooAbsArg *findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const;
 
   RooExpensiveObjectCache& expensiveObjectCache() const ;
-  void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }  
+  virtual void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }  
 
   virtual Bool_t importWorkspaceHook(RooWorkspace&) { return kFALSE ; } ;
 

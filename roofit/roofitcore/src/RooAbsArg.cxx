@@ -149,7 +149,13 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
   // object. Transient properties and client-server links are not copied
 
   // Use name in argument, if supplied
-  if (name) SetName(name) ;
+  if (name) {
+    SetName(name) ;
+  } else {
+    // Same name, Ddon't recalculate name pointer (expensive)
+    TNamed::SetName(other.GetName()) ;
+    _namePtr = other._namePtr ;
+  }
 
   // Copy server list by hand
   RooFIter sIter = other._serverList.fwdIterator() ;
@@ -992,22 +998,15 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
   setValueDirty() ;
   setShapeDirty() ;
 
-  // Take self out of newset disallowing cyclical dependencies
-  RooAbsCollection* newSet2 = (RooAbsCollection*) newSet->clone("newSet2") ;
-  newSet2->remove(*this,kTRUE,kTRUE) ;
-
   // Process the proxies
   Bool_t allReplaced=kTRUE ;
   for (int i=0 ; i<numProxies() ; i++) {
-    // WVE: Need to make exception here too for newServer != this
     RooAbsProxy* p = getProxy(i) ;
     if (!p) continue ;
-    Bool_t ret2 = p->changePointer(*newSet2,nameChange) ;
+    Bool_t ret2 = p->changePointer(*newSet,nameChange,kFALSE) ; 
     allReplaced &= ret2 ;
   }
-
-  delete newSet2 ;
-
+  
   if (mustReplaceAll && !allReplaced) {
     coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName()
 			 << "): ERROR, some proxies could not be adjusted" << endl ;
