@@ -2187,15 +2187,15 @@ Int_t TFitEditor::CheckFunctionString(const char *fname)
    if ( fDim == 1 || fDim == 0 ) {
       TF1 form("tmpCheck", fname);
       // coverity[uninit_use_in_call]
-      rvalue = form.Compile();
+      rvalue = form.IsValid() ? 0 : -1;
    } else if ( fDim == 2 ) {
       TF2 form("tmpCheck", fname);
       // coverity[uninit_use_in_call]
-      rvalue = form.Compile();
+      rvalue = form.IsValid() ? 0 : -1;
    } else if ( fDim == 3 ) {
       TF3 form("tmpCheck", fname);
       // coverity[uninit_use_in_call]
-      rvalue = form.Compile();
+      rvalue = form.IsValid() ? 0 : -1;
    }
 
    return rvalue;

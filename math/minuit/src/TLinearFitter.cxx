@@ -1725,7 +1725,7 @@ Int_t TLinearFitter::GraphLinearFitter(Double_t h)
    Int_t fitResult = 0;
    //set the fitting formula
    SetDim(1);
-   SetFormula(f1);
+   SetFormula(f1->GetFormula());
 
    if (fitOption.Robust){
       fRobust=kTRUE;
@@ -1787,7 +1787,7 @@ Int_t TLinearFitter::Graph2DLinearFitter(Double_t h)
    Double_t z, e;
    Int_t fitResult=0;
    SetDim(2);
-   SetFormula(f2);
+   SetFormula(f2->GetFormula());
 
    if (fitOption.Robust){
       fRobust=kTRUE;
@@ -1859,7 +1859,7 @@ Int_t TLinearFitter::MultiGraphLinearFitter(Double_t h)
       fRobust=kTRUE;
       StoreData(kTRUE);
    }
-   SetFormula(f1);
+   SetFormula(f1->GetFormula());
 
    TGraph *gr;
    TIter next(mg->GetListOfGraphs());
@@ -1929,7 +1929,7 @@ Int_t TLinearFitter::HistLinearFitter()
    Foption_t fitOption = GetFitOption();
    //SetDim(hfit->GetDimension());
    SetDim(f1->GetNdim());
-   SetFormula(f1);
+   SetFormula(f1->GetFormula());
 
    Int_t hxfirst = GetXfirst();
    Int_t hxlast  = GetXlast();

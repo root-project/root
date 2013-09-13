@@ -40,13 +40,15 @@ public:
        Double_t ymax=1, Double_t zmin=0, Double_t zmax=1);
 #ifndef __CINT__
    TF3(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
-       Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0);
+       Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0, Int_t ndim = 3);
    TF3(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0,
-       Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0);
+       Double_t ymax=1, Double_t zmin=0, Double_t zmax=1, Int_t npar=0, Int_t ndim = 3);
 #endif
 
    // constructor using a functor
-   TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Double_t zmin=0, Double_t zmax=1, Int_t npar = 0);
+
+   TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Double_t zmin=0, Double_t zmax=1, Int_t npar = 0, Int_t ndim = 3);  
+
 
    // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
    // MemFn.
@@ -66,6 +68,15 @@ public:
    {
       fNdim = 3;
    }
+   TF3(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,Int_t ndim = 3, const char * c1 = 0, const char * c2 = 0) :
+      TF2(name,p,memFn,xmin,xmax,ymin,ymax,npar,ndim,c1,c2),
+      fZmin(zmin), fZmax(zmax), fNpz(30) { } 
+   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) 
+   // and returning a double.    
+   template <typename Func> 
+   TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,Int_t ndim = 3, const char * c1 = 0  ) : 
+      TF2(name,f,xmin,xmax,ymin,ymax,npar,ndim,c1),
+      fZmin(zmin), fZmax(zmax), fNpz(30) { } 
 
    TF3(const TF3 &f3);
    TF3& operator=(const TF3 &rhs);

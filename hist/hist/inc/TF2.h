@@ -42,33 +42,33 @@ public:
    TF2();
    TF2(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1);
 #ifndef __CINT__
-   TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
-   TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0);
+   TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0,Int_t ndim = 2);
+   TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0, Int_t ndim = 2);
 #endif
 
    // constructor using a functor
-   TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Int_t npar = 0);
+
+   TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Int_t npar = 0, Int_t ndim = 2);  
+
 
    // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
    // MemFn.
    template <class PtrObj, typename MemFn>
-   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * c1, const char * c2) :
-      TF1(name,p,memFn,xmin,xmax,npar,c1,c2),
-      fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
+   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2, const char * c1 = 0, const char * c2 = 0) : 
+      TF1(name,p,memFn,xmin,xmax,npar,ndim,c1,c2),
+	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
-      fNpx = 30;
-      fNdim = 2;
-   }
-   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *)
-   // and returning a double.
-   template <typename Func>
-   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * tmp  ) :
-      TF1(name,f,xmin,xmax,npar,tmp),
-      fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
+      fNpx = 30; 
+   } 
+   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) 
+   // and returning a double.    
+   template <typename Func> 
+   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,Int_t ndim = 2, const char * tmp = 0 ) : 
+      TF1(name,f,xmin,xmax,npar,ndim,tmp),
+	fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
-      fNpx = 30;
-      fNdim = 2;
-   }
+      fNpx = 30; 
+   } 
 
    TF2(const TF2 &f2);
    TF2 &operator=(const TF2& rhs);
