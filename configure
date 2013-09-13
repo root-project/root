@@ -1787,7 +1787,8 @@ macosx*)
    checklibcompat="yes"
    if test "x$macosxvers" = "x"; then
       # get most recent SDK version
-      macosxvers=`xcodebuild -showsdks | sed -n '/macosx/s/.*OS X //p'|sed 's/ .*//'|awk 'END{print}'`
+      macosxminor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
+      macosxvers=10.$macosxminor
    fi
    ;;
 ios*)
