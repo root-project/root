@@ -1786,14 +1786,16 @@ macosx*)
    logmsg "Will check for compatible libraries"
    checklibcompat="yes"
    if test "x$macosxvers" = "x"; then
-      macosxvers=`xcodebuild -showsdks | sed -n '/macosx/s/.*OS X //p'|sed 's/ .*//'`
+      # get most recent SDK version
+      macosxvers=`xcodebuild -showsdks | sed -n '/macosx/s/.*OS X //p'|sed 's/ .*//'|awk 'END{print}'`
    fi
    ;;
 ios*)
    logmsg "Will check iOS SDK libraries"
    message "Checking for iOS SDK"
    if test "x$iosvers" = "x"; then
-      iosvers=`xcodebuild -showsdks | sed -n '/iphoneos/s/.*iOS //p' | sed 's/ .*//'`
+      # get most recent SDK version
+      iosvers=`xcodebuild -showsdks | sed -n '/iphoneos/s/.*iOS //p' | sed 's/ .*//'|awk 'END{print}'`
    fi
    xcodepath=`/usr/bin/xcode-select -print-path`
    iossdk=$xcodepath/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS$iosvers.sdk
