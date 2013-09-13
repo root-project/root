@@ -9,7 +9,7 @@
  *************************************************************************/
 
 const char *shortHelp =
-"Usage: %s [-v][-v0-4] [-f] [out.cxx] [-rmf rootMapFile] [-rml rootMapLibrary] "
+"Usage: rootcling [-v][-v0-4] [-f] [out.cxx] [-rmf rootMapFile] [-rml rootMapLibrary] "
 "[-cap capabilitiesFile] [-s sharedLibrary] [-m pcmfile] "
 "file1.h[+][-][!] file2.h[+][-][!] ...[LinkDef.h]\n";
 
@@ -2526,6 +2526,9 @@ void adjustRootMapNames(std::string& rootmapFileName,
       rootmapFileName = rootmapLibName.substr(0,libExtensionPos) + ".rootmap";
       size_t libCleanNamePos = rootmapLibName.find_last_of(gPathSeparator)+1;
       rootmapLibName = rootmapLibName.substr(libCleanNamePos,std::string::npos);
+      ROOT::TMetaUtils::Info(0,"Rootmap file name %s built from rootmap lib name %s",
+                            rootmapLibName.c_str(),
+                            rootmapFileName.c_str());
    } 
 }
 
@@ -3537,7 +3540,7 @@ int RootCling(int argc,
    }
 
         
-   bool rootMapNeeded=!rootmapFileName.empty() || !rootmapLibName.empty();
+   bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
    bool capaNeeded=!capaFileName.empty();
 
    std::list<std::string> classesNames;
@@ -3553,8 +3556,12 @@ int RootCling(int argc,
    
    // Create the rootmapfile if needed
    if (rootMapNeeded){
+      std::cout << "Creating rootmaps\n";
       adjustRootMapNames(rootmapFileName,
                          rootmapLibName);
+      ROOT::TMetaUtils::Info(0,"Rootmap file name %s and lib name %s\n",
+                             rootmapLibName.c_str(),
+                             rootmapFileName.c_str());
       tmpCatalog.addFileName(rootmapFileName);
       int rmStatusCode= createRootMapFile(rootmapFileName,
                                           rootmapLibName,
@@ -3565,6 +3572,7 @@ int RootCling(int argc,
 
    // Create the capabilities file if needed
    if (capaNeeded){
+      std::cout << "Creating capa\n";
       tmpCatalog.addFileName(capaFileName);
       int capaStatusCode = createCapabilitiesFile(capaFileName,
                                                   dictpathname,
@@ -3791,10 +3799,12 @@ int invokeRootCling(const std::string& verbosity,
    // if no path is specified for the rootmap itself
    std::string dictLocation("");
    std::string newRootmapFileName(rootmapFileName);
-   extractFilePath(newRootmapFileName,dictLocation);
-   if (dictLocation.empty()){ //Add it. In the worst case it's ./
-      extractFilePath(ofilename,dictLocation);
-      newRootmapFileName = dictLocation+newRootmapFileName;
+   if (!newRootmapFileName.empty()){
+      extractFilePath(newRootmapFileName,dictLocation);
+      if (dictLocation.empty()){ //Add it. In the worst case it's ./
+         extractFilePath(ofilename,dictLocation);
+         newRootmapFileName = dictLocation+newRootmapFileName;
+      }
    }
 
    
