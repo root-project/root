@@ -1784,7 +1784,11 @@ solaris64CC5)
    checklib64="yes" ;;
 macosx*)
    logmsg "Will check for compatible libraries"
-   checklibcompat="yes" ;;
+   checklibcompat="yes"
+   if test "x$macosxvers" = "x"; then
+      macosxvers=`xcodebuild -showsdks | sed -n '/macosx/s/.*OS X //p'|sed 's/ .*//'`
+   fi
+   ;;
 ios*)
    logmsg "Will check iOS SDK libraries"
    message "Checking for iOS SDK"
@@ -2485,9 +2489,6 @@ if test "x$enable_cocoa" = "xyes"; then
     enable_x11="no"
     result "yes"
     message "Checking for OSX SDK"
-    if test "x$macosxvers" = "x"; then
-       macosxvers=`xcodebuild -showsdks | sed -n '/macosx/s/.*OS X //p'|sed 's/ .*//'`
-    fi
     xcodepath=`/usr/bin/xcode-select -print-path`
     osxsdk=$xcodepath/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$macosxvers.sdk
     result "$osxsdk"
