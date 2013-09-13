@@ -1,4 +1,4 @@
-// @(#)root/io:$Id$
+// @(#)root/io:
 // Author: Elvin Sindrilaru   19/05/2011
 
 /*************************************************************************
@@ -77,9 +77,9 @@ private:
    TMutex     *fMutexReadList;     // mutex for the list of read blocks
    TCondition *fNewBlockAdded;     // signal the addition of a new pending block
    TCondition *fReadBlockAdded;    // signal the addition of a new red block
-   TCondition *fCondNextFile;      // signal TChain that we can move to the next file
    TSemaphore *fSemMasterWorker;   // semaphore used to kill the consumer thread
    TSemaphore *fSemWorkerMaster;   // semaphore used to notify the master that worker is killed
+   TSemaphore *fSemChangeFile;     // semaphore used when changin a file in TChain
    TString     fPathCache;         // path to the cache directory
    TStopwatch  fWaitTime;          // time wating to prefetch a buffer (in usec)
    Bool_t      fThreadJoined;      // mark if async thread was joined
@@ -115,7 +115,7 @@ public:
    Long64_t  GetWaitTime();
 
    void      SetFile(TFile*);
-   TCondition* GetCondNextFile() const { return fCondNextFile; };
+   TCondition* GetCondNewBlock() const { return fNewBlockAdded; };
    void      WaitFinishPrefetch();
 
    ClassDef(TFilePrefetch, 0);  // File block prefetcher

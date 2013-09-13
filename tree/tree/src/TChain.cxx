@@ -1,4 +1,4 @@
-// @(#)root/tree:$Id$
+// @(#)root/tree:
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1417,11 +1417,8 @@ Long64_t TChain::LoadTree(Long64_t entry)
             tpf = (TTreeCache*) fFile->GetCacheRead(fTree);
             if (tpf) {
                tpf->ResetCache();
-               if (tpf->IsEnablePrefetching()){
-                  //wait for thread to finish current work
-                  tpf->GetPrefetchObj()->GetCondNextFile()->Wait();
                }
-            }
+            
             fFile->SetCacheRead(0, fTree);
             // If the tree has clones, copy them into the chain
             // clone list so we can change their branch addresses

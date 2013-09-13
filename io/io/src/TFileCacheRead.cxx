@@ -710,7 +710,7 @@ void TFileCacheRead::SetEnablePrefetchingImpl(Bool_t setPrefetching)
       const char* cacheDir = gEnv->GetValue("Cache.Directory", "");
       if (strcmp(cacheDir, ""))
         if (!fPrefetch->SetCache((char*) cacheDir))
-           fprintf(stderr, "Error while trying to set the cache directory.\n");
+           fprintf(stderr, "Error while trying to set the cache directory: %s.\n", cacheDir);
       if (fPrefetch->ThreadStart()){
          fprintf(stderr,"Error stating prefetching thread. Disabling prefetching.\n");
          fEnablePrefetching = 0;
