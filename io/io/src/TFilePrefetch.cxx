@@ -39,13 +39,17 @@ TFilePrefetch::TFilePrefetch(TFile* file) :
 
    fPendingBlocks    = new TList();
    fReadBlocks       = new TList();
+
+   fPendingBlocks->SetOwner();
+   fReadBlocks->SetOwner();
+   
    fMutexReadList    = new TMutex();
    fMutexPendingList = new TMutex();
    fNewBlockAdded    = new TCondition(0);
    fReadBlockAdded   = new TCondition(0);
-   fCondNextFile     = new TCondition(0);
    fSemMasterWorker  = new TSemaphore(0);
    fSemWorkerMaster  = new TSemaphore(0);
+   fSemChangeFile    = new TSemaphore(0);
 }
 
 //____________________________________________________________________________________________
@@ -64,9 +68,9 @@ TFilePrefetch::~TFilePrefetch()
    SafeDelete(fMutexPendingList);
    SafeDelete(fNewBlockAdded);
    SafeDelete(fReadBlockAdded);
-   SafeDelete(fCondNextFile);
    SafeDelete(fSemMasterWorker);
    SafeDelete(fSemWorkerMaster);
+   SafeDelete(fSemChangeFile);
 }
 
 
@@ -306,8 +310,26 @@ TThread* TFilePrefetch::GetThread() const
 void TFilePrefetch::SetFile(TFile *file) 
 {
    // Change the file
+   // When prefetching is enabled we also need to:
+   // - make sure the async thread is not doing any work 
+   // - clear all blocks from prefetching and read list
+   // - reset the file pointer
+  
+   fSemChangeFile->Wait();
 
+   if (fFile) {
+     // Remove all pending and read blocks
+     fMutexPendingList->Lock();
+     fPendingBlocks->Clear();
+     fMutexPendingList->UnLock();
+
+     fMutexReadList->Lock();
+     fReadBlocks->Clear();
+     fMutexReadList->UnLock();
+   }
+      
    fFile = file;
+   fSemChangeFile->Post();
 }
 
 
@@ -331,49 +353,25 @@ TThread::VoidRtnFunc_t TFilePrefetch::ThreadProc(void* arg)
 {
    // Execution loop of the consumer thread.
   
-   int val = 0;
    TFilePrefetch* pClass = (TFilePrefetch*) arg;
-   TMutex *mutexNextFile = pClass->fCondNextFile->GetMutex();
-   TMutex *mutexPendingList = pClass->fMutexPendingList;
-  
-   while ( pClass->fNewBlockAdded->TimedWaitRelative(50) != 0 ) {
-      // Deal with the situation in which the signal was already sent
-      // before entering the wait logic
-      mutexPendingList->Lock();
-      val = pClass->fPendingBlocks->GetSize();
-      mutexPendingList->UnLock();
-
-      if ( val ) {
-         break;
-      }
-   }
-
+   TSemaphore* semChangeFile = pClass->fSemChangeFile;
+   semChangeFile->Post();
+   pClass->fNewBlockAdded->Wait();
+   semChangeFile->Wait();
+   
    while( pClass->fSemMasterWorker->TryWait() != 0 ) {
       pClass->ReadListOfBlocks();
-
-     // Need to signal TChain that we finished work
-     // in the previous file, before we move on
-     mutexNextFile->Lock();
-     pClass->fCondNextFile->Signal();
-     mutexNextFile->UnLock();
-
-     while ( pClass->fNewBlockAdded->TimedWaitRelative(50) != 0 ) {
-        // Deal with the situation in which the signal was already sent
-        // before entering the wait logic
-        mutexPendingList->Lock();
-        val = pClass->fPendingBlocks->GetSize();
-        mutexPendingList->UnLock();
-        if ( val ) {
-           break;
-       }
-     }
+   
+      // Use the semaphore to deal with the case when the file pointer
+      // is changed on the fly by TChain
+      semChangeFile->Post();
+      pClass->fNewBlockAdded->Wait();
+      semChangeFile->Wait();
    }
 
    pClass->fSemWorkerMaster->Post();
    return (TThread::VoidRtnFunc_t) 1;
 }
-
-
 
 //############################# CACHING PART ###################################
 
@@ -537,10 +535,11 @@ Bool_t TFilePrefetch::CheckCachePath(const char* locationCache)
       TString directory(dir);
 
       for(Int_t i=0; i < directory.Sizeof()-1; i++)
-         if (!isdigit(directory[i]) && !isalpha(directory[i]) && directory[i] !='/' && directory[i] != ':'){
-            found = false;
-            break;
-         }
+        if (!isdigit(directory[i]) && !isalpha(directory[i]) && directory[i] !='/'
+            && directory[i] != ':' && directory[i] != '_'){
+           found = false;
+           break;
+        }
    } else
       found = false;
 
