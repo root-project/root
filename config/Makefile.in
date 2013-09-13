@@ -86,6 +86,10 @@ XPMLIB         := @xpmlib@
 XFTLIB         := @enable_xft@
 
 BUILDCOCOA     := @buildcocoa@
+MACOSXVERS     := @macosxvers@
+OSXSDK         := @osxsdk@
+IOSVERS        := @iosvers@
+IOSSDK         := @iossdk@
 
 CXX11          := @c++11@
 LIBCXX11       := @libc++11@
