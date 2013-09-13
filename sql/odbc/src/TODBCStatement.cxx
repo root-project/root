@@ -68,7 +68,7 @@ TODBCStatement::TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize, Bool_t errout) :
       SQLSetStmtAttr(fHstmt, SQL_ATTR_PARAM_BIND_TYPE, SQL_PARAM_BIND_BY_COLUMN, 0);
 
       SQLUINTEGER setsize = fBufferPreferredSize;
-      retcode = SQLSetStmtAttr(fHstmt, SQL_ATTR_PARAMSET_SIZE, (SQLPOINTER) setsize, 0);
+      retcode = SQLSetStmtAttr(fHstmt, SQL_ATTR_PARAMSET_SIZE, (SQLPOINTER) (long) setsize, 0);
       ExtractErrors(retcode,"Constructor");
 
       SQLUINTEGER getsize = 0;
@@ -134,7 +134,7 @@ Bool_t TODBCStatement::Process()
          // if buffer used not fully, set smaller size of buffer arrays
          if ((fBufferCounter>0) && (fBufferCounter<fBufferLength-1)) {
             SQLUINTEGER setsize = fBufferCounter+1;
-            SQLSetStmtAttr(fHstmt, SQL_ATTR_PARAMSET_SIZE, (SQLPOINTER) setsize, 0);
+            SQLSetStmtAttr(fHstmt, SQL_ATTR_PARAMSET_SIZE, (SQLPOINTER) (long) setsize, 0);
          }
          retcode = SQLExecute(fHstmt);
       }
