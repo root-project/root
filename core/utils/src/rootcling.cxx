@@ -3811,7 +3811,7 @@ int invokeRootCling(const std::string& verbosity,
    }
 
    // Capabilities file
-   if (!newRootmapLibName.empty()){
+   if (!capaFileName.empty()){
       argvVector.push_back(string2charptr("-cap"));
       argvVector.push_back(string2charptr(capaFileName));
    }   
