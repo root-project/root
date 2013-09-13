@@ -117,7 +117,7 @@ execResolveTypedef.success: EXTRA_DIFFOPTS += -w
 execTypedefList.log: typelist.v5.txt typelist.v6.txt
 
 
-TEMPLATELIBS := TmpltInt0 TmpltInt1 TmpltFloat ANSTmpltInt
+TEMPLATELIBS := TmpltInt0 TmpltInt1 TmpltFloat TmpltNoSpec ANSTmpltInt
 templateAutoload.log templateAutoloadInclude.log: $(addsuffix _C.$(DllSuf),$(TEMPLATELIBS))
 
 templateAutoload: templateAutoload.log
