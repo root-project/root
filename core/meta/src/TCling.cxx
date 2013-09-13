@@ -4086,7 +4086,15 @@ void TCling::RegisterTemporary(const TInterpreterValue& value)
 //______________________________________________________________________________
 void TCling::RegisterTemporary(const cling::StoredValueRef& value)
 {
-   fTemporaries->push_back(value);
+   // Register value as a temporary, extending its lifetime to that of the
+   // interpreter. This is needed for TCling's compatibility interfaces
+   // returning long - the address of the temporary objects.
+   // As such, "simple" types don't need to be stored; they are returned by
+   // value; only pointers / references / objects need to be stored.
+
+   if (value.isValid() && value.needsManagedAllocation()) {
+      fTemporaries->push_back(value);
+   }
 }
 
 //______________________________________________________________________________
