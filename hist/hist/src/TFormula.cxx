@@ -169,7 +169,6 @@ TFormula::TFormula(const char *name, Int_t nparams, Int_t ndims)
       TString parName = TString::Format("%d",i);
       AddParameter(parName,0);
    }
-   printf("name:%s\tpar=%d\tdim:%d\n",name,fNpar,fNdim);
 }
 
 TFormula::TFormula(const TString &name, TString formula)
@@ -248,7 +247,20 @@ TFormula& TFormula::operator=(const TFormula &rhs)
    }
    return *this;
 }
-
+void TFormula::Copy(TObject &obj) const
+{
+   ((TFormula&)obj).fFuncs = fFuncs;
+   ((TFormula&)obj).fVars = fVars;
+   ((TFormula&)obj).fParams = fParams;
+   ((TFormula&)obj).fConsts = fConsts;
+   ((TFormula&)obj).fFunctionsShortcuts = fFunctionsShortcuts;
+   ((TFormula&)obj).fFormula  = fFormula;
+   ((TFormula&)obj).fNdim = fNdim;
+   ((TFormula&)obj).fNpar = fNpar;
+   ((TFormula&)obj).fNumber = fNumber;
+   ((TFormula&)obj).fLinearParts = fLinearParts;
+   ((TFormula&)obj).SetParameters(GetParameters());
+}
 void TFormula::PrepareEvalMethod()
 {
    //*-*    
@@ -456,7 +468,7 @@ void TFormula::HandlePolN(TString &formula)
       {
          pattern = TString::Format("%spol%d(%d)",(defaultVariable ? "" : variable.Data()),degree,counter);   
       }
-      printf("f:%s\tdeg:%d\tcnt:%d\tpat:%s\tr:%s\n",formula.Data(),degree,counter,pattern.Data(),replacement.Data());
+      
       formula.ReplaceAll(pattern,replacement);
       polPos = formula.Index("pol");
    }
@@ -570,7 +582,6 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
                            (isNormalized ? "n" : ""),
                            counter);
          TString replacement = body;
-         printf("p:%s\tr:%s\n",pattern.Data(),replacement.Data());
          formula.Replace(funPos,pattern.Length(),replacement,replacement.Length());
 
          funPos = formula.Index(funName);

@@ -39,7 +39,7 @@
 #include <memory>
 #include <limits>
 
-#define DEBUG
+//#define DEBUG
 
 // utility functions used in TH1::Fit
 
