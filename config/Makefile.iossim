@@ -15,14 +15,7 @@ NOOPT         =
 endif
 
 # iOS version
-ifeq ($(IPHONEOS_DEPLOYMENT_TARGET),)
-IOSVERS       = 5.1
-else
-IOSVERS       = $(IPHONEOS_DEPLOYMENT_TARGET)
-endif
-XCODE_PATH   := $(shell /usr/bin/xcode-select -print-path)
 IOS_MAJOR    := $(shell echo $(IOSVERS) | cut -d . -f 1)
-IOSSDK       := $(XCODE_PATH)/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator$(IOSVERS).sdk
 
 # Compiler:
 ifeq ($(subst $(IOS_MAJOR),,1234),1234)
@@ -100,7 +93,4 @@ showld:
 
 showf77:
 	@echo "$(F77)"
-
-showsdk:
-	@echo "$(IOSSDK)"
 endif

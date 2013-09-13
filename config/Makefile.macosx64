@@ -21,13 +21,6 @@ endif
 MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 MACOSX_CPU   := $(shell uname -p)
 FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
-ifeq ($(MACOSX_DEPLOYMENT_TARGET),)
-MACOSXVERS    = 10.$(MACOSX_MINOR)
-else
-MACOSXVERS    = $(MACOSX_DEPLOYMENT_TARGET)
-endif
-XCODE_PATH   := $(shell /usr/bin/xcode-select -print-path)
-OSXSDK       := $(XCODE_PATH)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$(MACOSXVERS).sdk
 
 # Compiler:
 # From "Apple clang version ... (based on LLVM 3.0svn)"
@@ -155,7 +148,4 @@ showld:
 
 showf77:
 	@echo "$(F77ORG)"
-
-showsdk:
-	@echo "$(OSXSDK)"
 endif
