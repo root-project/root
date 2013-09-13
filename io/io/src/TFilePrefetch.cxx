@@ -497,7 +497,7 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
    dirName.Form("%i", value);
    fullPath += ("/" + dirName);
 
-   if (gSystem->OpenDirectory(fullPath) == false)
+   if (!gSystem->OpenDirectory(fullPath))
       gSystem->mkdir(fullPath);
 
    TFile* file = 0;
