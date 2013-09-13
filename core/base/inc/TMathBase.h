@@ -30,6 +30,7 @@
 #include "Rtypes.h"
 #endif
 
+#include <cstdlib>
 #include <cmath>
 
 namespace TMath {
@@ -100,16 +101,16 @@ inline Bool_t TMath::Odd(Long_t a)
 //---- Abs ---------------------------------------------------------------------
 
 inline Short_t TMath::Abs(Short_t d)
-{ return std::abs(d); }
+{ return (d >= 0) ? d : Short_t(-d);  }
 
 inline Int_t TMath::Abs(Int_t d)
-{ return std::abs(d); }
+{ return ::abs(d); }
 
 inline Long_t TMath::Abs(Long_t d)
-{ return std::abs(d); }
+{ return ::abs(d); }
 
 inline Long64_t TMath::Abs(Long64_t d)
-{ return std::abs(d); }
+{ return ::abs(d); }
 
 inline Float_t TMath::Abs(Float_t d)
 { return std::abs(d); }
