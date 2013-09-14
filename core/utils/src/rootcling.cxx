@@ -2905,30 +2905,35 @@ int RootCling(int argc,
          if (strcmp("-cap", argv[ic]) == 0 && (ic+1) < argc) {
             // name of the capabilities file
             capaFileName = argv[ic+1];
-            ++ic;
+            ic+=2;
+            continue;
          }
          
          if (strcmp("-rml", argv[ic]) == 0 && (ic+1) < argc) {
             // name of the lib for the rootmap
             rootmapLibName = argv[ic+1];
-            ++ic;
+            ic+=2;
+            continue;
          }
 
          if (strcmp("-rmf", argv[ic]) == 0 && (ic+1) < argc) {
             // name for the rootmap file
             rootmapFileName = argv[ic+1];
-            ++ic;
+            ic+=2;
+            continue;
          }
          
          if (strcmp("-s", argv[ic]) == 0 && (ic+1) < argc) {
             // precompiled modules
             sharedLibraryPathName = argv[ic+1];
-            ++ic;
+            ic+=2;
+            continue;
          }
          if (strcmp("-m", argv[ic]) == 0 && (ic+1) < argc) {
             // precompiled modules
             baseModules.push_back(argv[ic+1]);
-            ++ic;
+            ic+=2;
+            continue;
          }
          if (strcmp("+P", argv[ic]) == 0 ||
              strcmp("+V", argv[ic]) == 0 ||
