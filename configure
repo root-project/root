@@ -194,6 +194,9 @@ rm -f $logfile
 envvars="
 THREAD           \
 ZLIB             \
+LIBTIFF          \
+LIBJPEG          \
+LIBPNG           \
 LZMA             \
 OPENGL           \
 MYSQL            \
@@ -4328,11 +4331,13 @@ if test ! "x$enable_asimage" = "xno" ; then
     # to avoid system versions based on X11. 
     if test "x$enable_builtin_afterimage" = "xyes" && test ! "x$enable_cocoa" = "xyes"; then
        check_header "jpeglib.h" "" \
+          ${LIBJPEG:+$LIBJPEG/include} \
           $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
           ${finkdir:+$finkdir/include} \
           /usr/local/include /usr/include /opt/include
        asjpegincdir=$found_dir
        check_header "png.h" "" \
+          ${LIBPNG:+$LIBPNG/include} \
           $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
           ${ASPNG:+$ASPNG/include} \
           ${finkdir:+$finkdir/include} \
@@ -4341,6 +4346,7 @@ if test ! "x$enable_asimage" = "xno" ; then
        aspngincdir=$found_dir
        if test ! "x$enable_astiff" = "xno" ; then
            check_header "tiffio.h" "" \
+               ${LIBTIFF:+$LIBTIFF/include} \
                $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
                ${finkdir:+$finkdir/include} \
                /usr/local/include /usr/include /opt/include
@@ -4362,6 +4368,8 @@ if test ! "x$enable_asimage" = "xno" ; then
        fi
        for k in $aslibs ; do
            check_library $k "$enable_shared" "" \
+               ${LIBJPEG:+$LIBJPEG/lib} ${LIBPNG:+$LIBPNG/lib} \
+               ${LIBTIFF:+$LIBTIFF/lib} ${ZLIB:+$ZLIB/lib} \
                $ASIMAGE ${ASIMAGE:+$ASIMAGE/lib} ${ASPNG:+$ASPNG/lib} \
                ${finkdir:+$finkdir/lib} \
                /usr/local/lib /usr/X11/lib /usr/lib /opt/lib
