@@ -2617,13 +2617,17 @@ public:
    //______________________________________________
    tempFileNamesCatalog():m_size(0),m_emptyString(""){};
 
+   std::string getTmpFileName(const std::string& filename)
+   {
+      return filename + "_tmp";
+   }
    //______________________________________________
    void addFileName(std::string& nameStr){
       // Adds the name and the associated temp name to the catalog.
       // Changes the name into the temp name
       if (nameStr.empty()) return;
 
-      std::string tmpNameStr(nameStr +"_tmp");
+      std::string tmpNameStr(getTmpFileName(nameStr));
       
       // For brevity
       const char* name(nameStr.c_str());     
@@ -2804,6 +2808,9 @@ int RootCling(int argc,
    }
 #endif
 
+   // Store the temp files
+   tempFileNamesCatalog tmpCatalog;
+   
    if (ic < argc && (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
        strstr(argv[ic],".cp") || strstr(argv[ic],".cxx") ||
        strstr(argv[ic],".cc") || strstr(argv[ic],".c++"))) {
@@ -2851,7 +2858,9 @@ int RootCling(int argc,
       dictpathname = argv[ic];
       dictname = llvm::sys::path::filename(dictpathname);
 
-      fp = fopen(argv[ic], "w");
+      string tmpdictpathname(dictpathname);
+      tmpCatalog.addFileName(tmpdictpathname);
+      fp = fopen(tmpdictpathname.c_str(), "w");
       if (fp) fclose(fp);    // make sure file is created and empty
       ic++;
 
@@ -2941,9 +2950,6 @@ int RootCling(int argc,
       ic++;
    }
 
-   // Store the temp files
-   tempFileNamesCatalog tmpCatalog;
-     
    ic = nextStart;
    clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(ROOTBUILDVAL));
 
@@ -3135,7 +3141,7 @@ int RootCling(int argc,
    std::ofstream headerout;
    string main_dictname(dictpathname);
    if (!dictpathname.empty()) {
-      tmpCatalog.addFileName(dictpathname);
+      dictpathname = tmpCatalog.getTmpFileName(dictpathname); // This one has already been registered.
       fileout.open(dictpathname.c_str());
       dictSrcOut = &fileout;
       if (!(*dictSrcOut)) {
