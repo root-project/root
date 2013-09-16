@@ -266,13 +266,13 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
     {
         _M128I lo, hi, y;
         // sort pairs
-        y = _mm_shufflelo_epi16(_mm_shufflehi_epi16(x, _MM_SHUFFLE(2, 3, 0, 1)), _MM_SHUFFLE(2, 3, 0, 1));
+        y = Mem::permute<X1, X0, X3, X2, X5, X4, X7, X6>(x);  
         lo = _mm_min_epi16(x, y);
         hi = _mm_max_epi16(x, y);
         x = _mm_blend_epi16(lo, hi, 0xaa);
 
         // merge left and right quads
-        y = _mm_shufflelo_epi16(_mm_shufflehi_epi16(x, _MM_SHUFFLE(0, 1, 2, 3)), _MM_SHUFFLE(0, 1, 2, 3));
+        y = Mem::permute<X3, X2, X1, X0, X7, X6, X5, X4>(x);
         lo = _mm_min_epi16(x, y);
         hi = _mm_max_epi16(x, y);
         x = _mm_blend_epi16(lo, hi, 0xcc);
