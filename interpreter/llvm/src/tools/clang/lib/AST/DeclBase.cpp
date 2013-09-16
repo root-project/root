@@ -1082,7 +1082,7 @@ void DeclContext::removeDecl(Decl *D) {
     if (!Map) return;
 
     StoredDeclsMap::iterator Pos = Map->find(ND->getDeclName());
-#ifdef NDEBUG
+#ifndef NDEBUG
     assert(Pos != Map->end() && "no lookup entry for decl");
 #endif
     if (Pos != Map->end()
