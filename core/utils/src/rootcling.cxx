@@ -9,8 +9,8 @@
  *************************************************************************/
 
 const char *shortHelp =
-"Usage: rootcling [-v][-v0-4] [-f] [out.cxx] [-rmf rootMapFile] [-rml rootMapLibrary] "
-"[-cap capabilitiesFile] [-s sharedLibrary] [-m pcmfile] "
+"Usage: rootcling [-v][-v0-4] [-f] [out.cxx] [-rmf rootMapFile] "
+"[-rml rootMapLibrary] [-cap capabilitiesFile] [-s sharedLibrary] [-m pcmfile] "
 "file1.h[+][-][!] file2.h[+][-][!] ...[LinkDef.h]\n";
 
 // Write the help as a big string to have only one version of the documentation
@@ -28,8 +28,9 @@ const char *rootClingHelp =
 "                                                                            \n"
 "or                                                                          \n"
 "                                                                            \n"
-" rootcling [-v[0-4]][-f] dict.C [-rmf rootMapFile] [-rml rootMapLibrary]    \n"
-"    [-s sharedLibrary] [-m pcm] file.h[{+,-}][!] ... [LinkDef.h]            \n"
+"rootcling [-v][-v0-4] [-f] [out.cxx] [-rmf rootMapFile] [-rml rootMapLib] "
+"[-cap capabilitiesFile] [-s sharedLibrary] [-m pcmfile] "
+"file1.h[+][-][!] file2.h[+][-][!] ...[LinkDef.h]                            \n"
 "                                                                            \n"
 "The difference between the two is that in the first case only the           \n"
 "Streamer() and ShowMembers() methods are generated while in the             \n"
@@ -2551,19 +2552,25 @@ int createRootMapFile(const std::string& rootmapFileName,
    time_t rawtime;  
    time (&rawtime);
    rootmapFile << "# Automatically generated with genreflex on " << ctime(&rawtime);
-
-   // Loop on selected classes and insert them in the rootmap   
+   
+   // Loop on selected classes and insert them in the rootmap
+   std::string thisClassName;
    for (std::list<std::string>::const_iterator classNameIt=classesNames.begin();
         classNameIt!=classesNames.end();++classNameIt){
-      rootmapFile << "Library." << *classNameIt << ": "
+      thisClassName = *classNameIt;
+      manipForRootmap(thisClassName);
+      rootmapFile << "Library." << thisClassName << ": "
                   << std::setw(35-classNameIt->size()) << rootmapLibName
                   << std::endl;   
       }
    
    // Same for namespaces
+   std::string thisNsName;
    for (std::list<std::string>::const_iterator nsNameIt=nsNames.begin();
         nsNameIt!=nsNames.end();++nsNameIt){
-      rootmapFile << "Library." << *nsNameIt << ": "
+      thisNsName=*nsNameIt ;
+      manipForRootmap(thisNsName);
+   rootmapFile << "Library." << thisNsName << ": "
       << std::setw(35-nsNameIt->size()) << rootmapLibName
       << std::endl;
         }
@@ -3550,7 +3557,7 @@ int RootCling(int argc,
       }
    }
 
-        
+   // Create rootmap and capabilities files
    bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
    bool capaNeeded=!capaFileName.empty();
 
