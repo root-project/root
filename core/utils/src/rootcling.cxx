@@ -3870,7 +3870,7 @@ int invokeRootCling(const std::string& verbosity,
                                        isDeep);
    
    for (int i=0;i<argc;i++)
-      delete argvVector[i];
+      delete [] argvVector[i];
 
    return rootclingReturnCode;
 
