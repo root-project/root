@@ -106,7 +106,7 @@ TESTKALMAN        = testKalman$(ExeSuf)
 
 OBJS          = $(MATRIXOPOBJ)  $(TESTKALMANOBJ)
 
-PROGRAMS      = $(MATRIXOP)  $(TESTKALMAN)
+PROGRAMS      = $(MATRIXOP) $(TESTKALMAN)   
 
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -116,11 +116,14 @@ $(MATRIXOP):   	$(MATRIXOPOBJ)
 		    $(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS)  $(OutPutOpt)$@
 		    @echo "$@ done"
 
-$(TESTKALMAN):    $(TESTKALMANOBJ)
+
+$(TESTKALMAN): 	$(TESTKALMANOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
 
+
+all: 	$(PROGRAMS)
 
 
 check: 	all

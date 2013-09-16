@@ -79,7 +79,7 @@ CXXFLAGS += -DNDIM2=$(NDIM2)
 endif
 
 
-LIBS =  -L$(ROOTSYS)/lib -lCore -lCint -lMathCore -lMatrix -lHist -lTree
+LIBS =  -L$(ROOTSYS)/lib -lCore  -lMathCore -lMatrix -lHist -lTree
 
 
 TESTFITOBJ     = testFitPerf.$(ObjSuf)

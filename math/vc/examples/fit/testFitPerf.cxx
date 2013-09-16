@@ -55,11 +55,11 @@
 
 #ifdef USE_VC
 #include "Vc/Vc"
-#include "Vc/Allocator"
-Vc_DECLARE_ALLOCATOR(Vc::double_v)
+//#include "Vc/Allocator"
+//Vc_DECLARE_ALLOCATOR(Vc::double_v)
 #endif
 
-#define USE_AOS
+//#define USE_AOS
 
 #ifdef USE_VDT
 #include "vdtMath.h"
