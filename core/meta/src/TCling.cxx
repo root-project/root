@@ -2399,10 +2399,17 @@ void TCling::CreateListOfEnums(TClass* cl) const
    // Iterate on the decl of the class and get the enums.
    if (const clang::DeclContext* DC = dyn_cast<clang::DeclContext>(D)) {
       cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
-      for (clang::DeclContext::decl_iterator DI = DC->decls_begin(),
-           DE = DC->decls_end(); DI != DE; ++DI) {
-         if (const clang::EnumDecl* ED = dyn_cast<clang::EnumDecl>(*DI)) {
-            HandleEnumDecl(ED, false /* not global*/, cl);
+      // Collect all contexts of the namespace.
+      llvm::SmallVector< DeclContext *, 4> allDeclContexts;
+      const_cast< clang::DeclContext *>(DC)->collectAllContexts(allDeclContexts);
+      for (llvm::SmallVector<DeclContext*, 4>::iterator declIter = allDeclContexts.begin(), declEnd = allDeclContexts.end(); 
+           declIter != declEnd; ++declIter) {
+         // Iterate on all decls for each context.
+         for (clang::DeclContext::decl_iterator DI = (*declIter)->decls_begin(),
+              DE = (*declIter)->decls_end(); DI != DE; ++DI) {
+            if (const clang::EnumDecl* ED = dyn_cast<clang::EnumDecl>(*DI)) {
+               HandleEnumDecl(ED, false /* not global*/, cl);
+            }
          }
       }
    }
