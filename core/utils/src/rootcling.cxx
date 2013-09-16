@@ -3658,9 +3658,11 @@ unsigned int extractArgs(int argc, char** argv, std::vector<std::string>& args)
    for (int i=1;i<argc;++i){
       if (!beginsWith(argv[i-1],"-") && // so, if preceeding element starts with -, this is a value for an option
           !beginsWith(argv[i],"-")){ // and the element itself is not an option
-         args.push_back(argv[i]);         
+         args.push_back(argv[i]);
          argvCounter++;
-         }
+      } else  if (argvCounter) {
+         argv[i-argvCounter] = argv[i];
+      }
    }
 
    // Some debug
@@ -4198,8 +4200,8 @@ int GenReflex(int argc, char **argv)
    // The only args are the headers here
    const int extractedArgs = extractArgs(argc,argv,headersNames); 
 
-   const int offset = 1 + extractedArgs; // skip argv[0] and the headers
-   argc-=offset;
+   const int offset = 1; // skip argv[0]
+   argc-=offset+extractedArgs;
    argv+=offset;
 
    // Parse the options
