@@ -697,19 +697,6 @@ void TStyle::Reset(Option_t *opt)
 
 
 //______________________________________________________________________________
-Int_t TStyle::AxisChoice( Option_t *axis) const
-{
-   // Return axis number.
-
-   char achoice = toupper(axis[0]);
-   if (achoice == 'X') return 1;
-   if (achoice == 'Y') return 2;
-   if (achoice == 'Z') return 3;
-   return 0;
-}
-
-
-//______________________________________________________________________________
 Int_t TStyle::GetNdivisions( Option_t *axis) const
 {
    // Return number of divisions.
