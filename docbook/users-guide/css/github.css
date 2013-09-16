@@ -28,6 +28,18 @@ a.anchor {
   left: 0;
   bottom: 0; }
 
+div#TOC {
+  position: fixed;
+  margin: 1em;
+  padding: 1em;
+  right: 2px;
+  top: 2px;
+  width: 500px; 
+  height: 200px; 
+  overflow: scroll;
+  background-color: #EEEEEE;
+  border: 1px solid black; }
+
 h1, h2, h3, h4, h5, h6 {
   margin: 20px 0 10px;
   padding: 0;
