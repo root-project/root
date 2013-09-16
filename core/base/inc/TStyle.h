@@ -160,7 +160,12 @@ public:
    TStyle(const char *name, const char *title);
    TStyle(const TStyle &style);
    virtual          ~TStyle();
-   Int_t            AxisChoice(Option_t *axis) const;
+   inline Int_t     AxisChoice(Option_t *axis) const {
+      // Return axis number (1 for X, 2 for Y, 3 for Z)
+      UChar_t a = *axis;
+      a -= (a >= 'x') ? 'x' : 'X'; // toupper and a-='X'; intentional underflow
+      return (a > 2) ? 0 : (Int_t)(a+1);
+   };
    virtual void     Browse(TBrowser *b);
    static  void     BuildStyles();
    virtual void     Copy(TObject &style) const;
