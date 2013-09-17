@@ -809,7 +809,6 @@ TF1::~TF1()
    delete fHistogram;
    delete fMethodCall;
    
-
    if (fParent) fParent->RecursiveRemove(this);
 }
 

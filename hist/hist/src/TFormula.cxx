@@ -151,6 +151,7 @@ TFormula::TFormula(const char *name, Int_t nparams, Int_t ndims)
    //*-*  Constructor
    //*-*  When TF1 is constructed using C++ function, TF1 need space to keep parameters values.
    //*-*  
+
    fName = name;
    fTitle = "";
    fClingInput = "";
@@ -1118,8 +1119,8 @@ void TFormula::AddParameter(const TString &name, Double_t value)
    else
    {
       fNpar++;
-      TFormulaVariable par(name,value,fParams.size());
-      fParams[name] = par;
+      //TFormulaVariable(name,value,fParams.size());
+      fParams.insert(pair<TString,TFormulaVariable>(name,TFormulaVariable(name,value,fParams.size())));
       fClingParameters.push_back(value);
    }
 
@@ -1127,7 +1128,7 @@ void TFormula::AddParameter(const TString &name, Double_t value)
 Double_t TFormula::GetParameter(const TString &name)
 {
    //*-*    
-   //*-*    Returns parameter value.
+   //*-*    Returns parameter value given by string.
    //*-*    
    if(fParams.find(name) == fParams.end())
    {
@@ -1138,17 +1139,31 @@ Double_t TFormula::GetParameter(const TString &name)
 }
 Double_t TFormula::GetParameter(Int_t param)
 {
+   //*-*    
+   //*-*    Return parameter value given by integer.
+   //*-*    
+   //*-*    
    TString name = TString::Format("%d",param);
    return GetParameter(name);
 }
-const char* TFormula::GetParName(Int_t ipar) const
+TString TFormula::GetParName(Int_t ipar) const
 {
-   return TString::Format("p%d",ipar).Data();
+   //*-*    
+   //*-*    Return parameter name given by integer.
+   //*-*    
+   TString name = TString::Format("%d",ipar);
+   map<TString,TFormulaVariable>::const_iterator it = fParams.find(name);
+   if(it == fParams.end())
+   {
+      Error("GetParName","Parameter %s is not defined.",name.Data());
+      return "";
+   }
+   return it->second.GetName();
 }
 Double_t* TFormula::GetParameters() const
 {
    if(!fClingParameters.empty())
-      return const_cast<Double_t*>(&fClingParameters[0]);
+      return const_cast<Double_t*>(&fClingParameters[0]); 
    return 0;
 }
 
@@ -1256,7 +1271,32 @@ void TFormula::SetParNames(const char *name0,const char *name1,const char *name2
 }
 void TFormula::SetParName(Int_t ipar, const char * name)
 {
-   //TODO
+   Bool_t found = false;
+   TString curName = TString::Format("%d",ipar);
+   for(list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); ++it)
+   {
+      if(curName == it->GetName())
+      {
+         found = true;
+         it->fName = name;
+         break;
+      }
+   }
+   if(!found)
+   {
+      Error("SetParName","Parameter %d is not defined.",ipar);
+      return;
+   }
+   TString pattern = TString::Format("[%d]",ipar);
+   TString replacement = TString::Format("[%s]",name);
+   fFormula.ReplaceAll(pattern,replacement);
+
+   map<TString,TFormulaVariable>::iterator it = fParams.find(curName);
+   TFormulaVariable copy = it->second;
+   copy.fName = name;
+   fParams.erase(it);
+   fParams[name] = copy;
+
 }
 void TFormula::SetParameters(const Double_t *params, Int_t size)
 {

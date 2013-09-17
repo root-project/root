@@ -236,7 +236,7 @@ public:
    virtual Double_t GetParameter(const TString &name) { return fFormula->GetParameter(name);}
    virtual Double_t *GetParameters() const { return fFormula->GetParameters();}
    virtual void     GetParameters(Double_t *params) { return fFormula->GetParameters(params);}
-   virtual const char *GetParName(Int_t ipar) const { return fFormula->GetParName(ipar);}
+   virtual const char *GetParName(Int_t ipar) const { return fFormula->GetParName(ipar).Data();}
    virtual Double_t GetParError(Int_t ipar) const;
    virtual Double_t *GetParErrors() const {return fParErrors;}
    virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax) const;

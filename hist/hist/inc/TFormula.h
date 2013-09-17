@@ -37,10 +37,10 @@ public:
    Int_t    fNargs;
    Bool_t   fFound;
    Bool_t   fFuncCall;
-   TString  GetName()    { return fName; }
-   TString  GetBody()    { return fBody; }
-   Int_t    GetNargs()   { return fNargs;}
-   Bool_t   IsFuncCall() { return fFuncCall;}
+   TString  GetName() const    { return fName; }
+   TString  GetBody() const    { return fBody; }
+   Int_t    GetNargs() const   { return fNargs;}
+   Bool_t   IsFuncCall() const { return fFuncCall;}
    TFormulaFunction(){}
    TFormulaFunction(const TString &name, const TString &body, int numArgs)
       : fName(name),fBody(body),fNargs(numArgs),fFound(false),fFuncCall(true) {}
@@ -62,9 +62,9 @@ public:
    Double_t fValue;
    Int_t fArrayPos;
    Bool_t fFound;
-   TString  GetName()      { return fName; }
-   Double_t GetValue()     { return fValue; }
-   Int_t    GetArrayPos()  { return fArrayPos; }
+   TString  GetName() const     { return fName; }
+   Double_t GetValue() const    { return fValue; }
+   Int_t    GetArrayPos() const { return fArrayPos; }
    TFormulaVariable():fName(""),fValue(-1),fArrayPos(-1),fFound(false){}
    TFormulaVariable(const TString &name, Double_t value, Int_t pos)
    : fName(name), fValue(value), fArrayPos(pos),fFound(false) {}
@@ -73,6 +73,7 @@ public:
       return fName < rhv.fName;
    }
 };
+
 
 class TFormula : public TNamed
 {
@@ -129,16 +130,30 @@ public:
                   TFormula(const TString &name, TString formula);
                   TFormula(const TFormula &formula);
                   TFormula(const char *name, Int_t nparams, Int_t ndims);
-
+   
+   void           AddParameter(const TString &name, Double_t value);
    void           AddVariable(const TString &name, Double_t value);
    void           AddVariables(const pair<TString,Double_t> *vars, const Int_t size);
-   void           AddParameter(const TString &name, Double_t value);
-   Double_t       GetVariable(const TString &name);
    void           Copy(TObject &f1) const;
+   Double_t       Eval();
+   Double_t       Eval(Double_t x);
+   Double_t       Eval(Double_t x, Double_t y);
+   Double_t       Eval(Double_t x, Double_t y , Double_t z);
+   Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t );
+   Double_t       EvalPar(const Double_t *x, const Double_t *params=0);
+   TString        GetExpFormula() const { return fFormula; }
+   const TObject *GetLinearPart(Int_t i);
+   Int_t          GetNdim() const {return fNdim;}
+   Int_t          GetNpar() const {return fNpar;}
+   Int_t          GetNumber() const { return fNumber; }
+   TString        GetParName(Int_t ipar) const;
    Double_t       GetParameter(const TString &name);
    Double_t       GetParameter(Int_t param);
    Double_t*      GetParameters() const;
    void           GetParameters(Double_t *params);
+   Double_t       GetVariable(const TString &name);
+   Bool_t         IsValid() const { return fReadyToExecute && fAllParametersSetted; }
+   Bool_t         IsLinear() const { return TestBit(kLinear); } 
    void           SetParameter(const TString &name, Double_t value);
    void           SetParameter(Int_t param, Double_t value);
    void           SetParameters(const Double_t *params,Int_t size);
@@ -154,20 +169,6 @@ public:
                              *name8="p8",const char *name9="p9",const char *name10="p10"); // *MENU*
    void           SetVariable(const TString &name, Double_t value);
    void           SetVariables(const pair<TString,Double_t> *vars, const Int_t size);
-   TString        GetExpFormula() const { return fFormula; }
-   const char    *GetParName(Int_t ipar) const;
-   const TObject *GetLinearPart(Int_t i);
-   Int_t          GetNdim() const {return fNdim;}
-   Int_t          GetNpar() const {return fNpar;}
-   Bool_t         IsValid() const { return fReadyToExecute && fAllParametersSetted; }
-   Bool_t         IsLinear() const { return TestBit(kLinear); } 
-   Int_t          GetNumber() const { return fNumber; }
-   Double_t       EvalPar(const Double_t *x, const Double_t *params=0); // Back compatibility
-   Double_t       Eval();
-   Double_t       Eval(Double_t x);
-   Double_t       Eval(Double_t x, Double_t y);
-   Double_t       Eval(Double_t x, Double_t y , Double_t z);
-   Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t );
 
    ClassDef(TFormula,1)
 };
