@@ -5568,7 +5568,7 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
    } else if (fSelector) {
       retval = Process(dset, fSelector, option, nentries, first);
    } else {
-      Error("Process", "neither a selecrot file nor a selector object have"
+      Error("Process", "neither a selector file nor a selector object have"
                        " been specified: cannot process!");
    }
    // Cleanup
@@ -12446,49 +12446,94 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
    // defined: assume that a dataset, stored on the PROOF master by that
    // name, should be processed.
    if (!dataset) {
-      TString dsns(dsname.Data()), dsn1;
-      Int_t from1 = 0;
-      while (dsns.Tokenize(dsn1, from1, "[, ]")) {
-         TString dsn2, enl;
-         Int_t from2 = 0;
-         TFileCollection *fc = 0;
-         while (dsn1.Tokenize(dsn2, from2, "|")) {
-            enl = "";
-            Int_t ienl = dsn2.Index("?enl=");
-            if (ienl != kNPOS) {
-               enl = dsn2(ienl + 5, dsn2.Length());
-               dsn2.Remove(ienl);
-            }
-            if ((fc = mgr->GetDataSet(dsn2.Data()))) {
-               // Save dataset name in TFileInfo's title to use it in TDset 
-               TIter nxfi(fc->GetList());
-               TFileInfo *fi = 0;
-               while ((fi = (TFileInfo *) nxfi())) { fi->SetTitle(dsn2.Data()); }
-               dsnparse = dsn2;
-               if (!dataset) {
-                  // This is our dataset
-                  dataset = fc;
-               } else {
-                  // Add it to the dataset
-                  dataset->Add(fc);
-                  SafeDelete(fc);
+
+      // First of all check if the full string (except the "entry list" part)
+      // is the name of a single existing dataset: if it is, don't break it
+      // into parts
+      TString dsns( dsname.Data() ), enl;
+      Ssiz_t eli = dsns.Index("?enl=");
+      TFileCollection *fc = 0;
+      if (eli != kNPOS) {
+         dsns.Remove(eli, dsns.Length()-eli);
+         enl = dsns(eli+5, dsns.Length());
+      }
+
+      if (( fc = mgr->GetDataSet(dsns) )) {
+
+         //
+         // String corresponds to ONE dataset only
+         //
+
+         TIter nxfi(fc->GetList());
+         TFileInfo *fi;
+         while (( fi = (TFileInfo *)nxfi() ))
+            fi->SetTitle(dsns.Data());
+         dataset = fc;
+         dsnparse = dsns;  // without entry list
+
+         // Adds the entry list (or empty string if not specified)
+         datasets->Add( new TPair(dataset, new TObjString( enl.Data() )) );
+
+      }
+      else {
+
+         //
+         // String does NOT correspond to one dataset: check if many datasets
+         // were specified instead
+         //
+
+         dsns = dsname.Data();
+         TString dsn1;
+         Int_t from1 = 0;
+         while (dsns.Tokenize(dsn1, from1, "[, ]")) {
+            TString dsn2;
+            Int_t from2 = 0;
+            fc = 0;
+            while (dsn1.Tokenize(dsn2, from2, "|")) {
+               enl = "";
+               Int_t ienl = dsn2.Index("?enl=");
+               if (ienl != kNPOS) {
+                  enl = dsn2(ienl + 5, dsn2.Length());
+                  dsn2.Remove(ienl);
+               }
+               if ((fc = mgr->GetDataSet(dsn2.Data()))) {
+                  // Save dataset name in TFileInfo's title to use it in TDset 
+                  TIter nxfi(fc->GetList());
+                  TFileInfo *fi;
+                  while ((fi = (TFileInfo *) nxfi())) { fi->SetTitle(dsn2.Data()); }
+                  dsnparse = dsn2;
+                  if (!dataset) {
+                     // This is our dataset
+                     dataset = fc;
+                  } else {
+                     // Add it to the dataset
+                     dataset->Add(fc);
+                     SafeDelete(fc);
+                  }
                }
             }
-         }
-         // The dataset name(s) in the first element
-         if (dataset) {
-            if (dataset->GetList()->First())
-               ((TFileInfo *)(dataset->GetList()->First()))->SetTitle(dsn1.Data());
-            // Add it to the local list
-            if (enl.IsNull()) {
-               datasets->Add(new TPair(dataset, new TObjString("")));
-            } else {
-               datasets->Add(new TPair(dataset, new TObjString(enl.Data())));
+            // The dataset name(s) in the first element
+            if (dataset) {
+               if (dataset->GetList()->First())
+                  ((TFileInfo *)(dataset->GetList()->First()))->SetTitle(dsn1.Data());
+               // Add it to the local list
+               if (enl.IsNull()) {
+                  datasets->Add(new TPair(dataset, new TObjString("")));
+               } else {
+                  datasets->Add(new TPair(dataset, new TObjString(enl.Data())));
+               }
             }
+            // Reset the pointer
+            dataset = 0;
          }
-         // Reset the pointer
-         dataset = 0;
+
       }
+
+      //
+      // At this point the dataset(s) to be processed, if any, are found in the
+      // "datasets" variable
+      //
+
       if (!datasets || datasets->GetSize() <= 0) {
          emsg.Form("no dataset(s) found on the master corresponding to: %s", dsname.Data());
          return -1;
