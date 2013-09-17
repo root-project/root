@@ -7,7 +7,7 @@
 //   <!-- Custom streamer for the event format class: -->
 #pragma read sourceClass="EventFormat_p1" version="[1-]" \
          targetClass="edm::EventFormat" \
-         source="std::vector<std::string> m_branchNames; std::vector<std::string> m_classNames; std::vector<uint32_t> m_branchHashes;" \
+         source="std::vector<std::string> m_branchNames; std::vector<std::string> m_classNames; std::vector<UInt_t> m_branchHashes;" \
          target="" code = "{ newObj->clear(); \
          for( size_t i = 0; i < onfile.m_branchNames.size(); ++i ) { \
             newObj->add( edm::EventFormatElement( onfile.m_branchNames[ i ], \

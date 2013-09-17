@@ -30,7 +30,7 @@ namespace edm {
       /// Type of the key->data in-memory object
       typedef std::map< std::string, EventFormatElement > KeyedData_t;
       /// Type of the hash->data in-memory object
-      typedef std::map< uint32_t, EventFormatElement > HashedData_t;
+      typedef std::map< UInt_t, EventFormatElement > HashedData_t;
 
    public:
       /// Default constructor
@@ -42,12 +42,12 @@ namespace edm {
       /// Check if a description exists about a given branch
       bool exists( const std::string& key ) const;
       /// Check if a description exists about a given branch
-      bool exists( uint32_t hash ) const;
+      bool exists( UInt_t hash ) const;
 
       /// Get the description of a given branch
       const EventFormatElement* get( const std::string& key ) const;
       /// Get the description of a given branch
-      const EventFormatElement* get( uint32_t hash ) const;
+      const EventFormatElement* get( UInt_t hash ) const;
 
       /// Clear the object
       void clear();

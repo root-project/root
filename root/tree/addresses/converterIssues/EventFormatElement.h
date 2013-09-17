@@ -3,11 +3,6 @@
 #ifndef EVENTFORMAT_EVENTFORMATELEMENT_H
 #define EVENTFORMAT_EVENTFORMATELEMENT_H
 
-// System include(s):
-extern "C" {
-#   include <stdint.h>
-}
-
 // STL include(s):
 #include <string>
 #include <iosfwd>
@@ -34,14 +29,14 @@ namespace edm {
       /// Constructor with all members specified
       EventFormatElement( const std::string& branchName = "",
                           const std::string& className = "",
-                          uint32_t hash = 0 );
+                          UInt_t hash = 0 );
 
       /// Get the branch/key name
       const std::string& branchName() const;
       /// Get the class name of this branch/key
       const std::string& className() const;
       /// Get the hash belonging to this branch/key
-      uint32_t hash() const;
+      UInt_t hash() const;
 
    private:
       /// The branch/key name
@@ -49,7 +44,7 @@ namespace edm {
       /// The class name belonging to this branch/key
       std::string m_className;
       /// The hash belonging to this branch/key
-      uint32_t m_hash;
+      UInt_t m_hash;
 
    }; // class EventFormatElement
 

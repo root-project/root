@@ -41,7 +41,7 @@ namespace edm {
     * @returns <code>true</code> if the branch is knows,
     *          <code>false</code> if not
     */
-   bool EventFormat::exists( uint32_t hash ) const {
+   bool EventFormat::exists( UInt_t hash ) const {
 
       return ( m_hashedData.find( hash ) != m_hashedData.end() );
    }
@@ -75,7 +75,7 @@ namespace edm {
     * @param hash The hashed version of the name of the branch
     * @returns A pointer to the element describing the requested branch
     */
-   const EventFormatElement* EventFormat::get( uint32_t hash ) const {
+   const EventFormatElement* EventFormat::get( UInt_t hash ) const {
 
       HashedData_t::const_iterator itr = m_hashedData.find( hash );
       if( itr == m_hashedData.end() ) {

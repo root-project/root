@@ -16,7 +16,7 @@ namespace edm {
     */
    EventFormatElement::EventFormatElement( const std::string& ibranchName,
                                            const std::string& iclassName,
-                                           uint32_t ihash )
+                                           UInt_t ihash )
       : m_branchName( ibranchName ), m_className( iclassName ), m_hash( ihash ) {
 
    }
@@ -40,7 +40,7 @@ namespace edm {
    /**
     * @returns A hashed version of the branch's name
     */
-   uint32_t EventFormatElement::hash() const {
+   UInt_t EventFormatElement::hash() const {
 
       return m_hash;
    }
