@@ -38,7 +38,7 @@ protected:
    TObject          *fClient;         // Client object to notify
 
 public:
-   TGeoBranchArray() : TObject(), fLevel(0), fMaxLevel(10), fArray(NULL), fMatrix(NULL), fClient(NULL) {}
+   TGeoBranchArray() : TObject(), fLevel(-1), fMaxLevel(10), fArray(NULL), fMatrix(NULL), fClient(NULL) {}
    TGeoBranchArray(Int_t level);
    virtual ~TGeoBranchArray();
 
@@ -64,6 +64,7 @@ public:
    void              Init(TGeoNode **branch, TGeoMatrix *global, Int_t level);
    void              InitFromNavigator(TGeoNavigator *nav);
    virtual Bool_t    IsSortable() const {return kTRUE;}
+   Bool_t            IsOutside() const {return (fLevel<0)?kTRUE:kFALSE;}
    virtual Bool_t    Notify() {return (fClient)?fClient->Notify():kFALSE;}
    virtual void      Print(Option_t *option="") const;
    void              SetClient(TObject *client) {fClient = client;}

@@ -104,7 +104,7 @@ TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
 void TGeoBranchArray::AddLevel(Int_t dindex)
 {
 // Add and extra daughter to the current path array. No validity check performed !
-   if (!fLevel) {
+   if (fLevel<=0) {
       Error("AddLevel", "You must initialize from navigator or copy from another branch array first.");
       return;
    }
@@ -251,6 +251,7 @@ void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
    }
    fLevel = level;
    memcpy(fArray, branch, (fLevel+1)*sizeof(TGeoNode*));
+   if (nav->IsOutside()) fLevel = -1;
 }
 
 //______________________________________________________________________________
@@ -290,5 +291,6 @@ void TGeoBranchArray::UpdateNavigator(TGeoNavigator *nav) const
 {
 // Update the navigator to reflect the branch.
    nav->CdTop();
+   if (fLevel<0) {nav->SetOutside(kTRUE); return;}
    for (Int_t i=1; i<fLevel+1; i++) nav->CdDown(fArray[i]);
 }
