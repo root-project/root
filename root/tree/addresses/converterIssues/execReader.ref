@@ -6,4 +6,4 @@ Info in <fileReader>: Input tree accessed
 edm::EventFormat:
 1. element: Branch name:                          Test1, Class name:                           Bla1, Hash: 0x00000001
 2. element: Branch name:                          Test2, Class name:                           Bla2, Hash: 0x00000002
-(int)0
+(int) 0
