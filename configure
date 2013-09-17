@@ -1792,6 +1792,8 @@ macosx*)
       # get most recent SDK version
       macosxminor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
       macosxvers=10.$macosxminor
+      # make available to conftest.mk scripts
+      export MACOSXVERS=$macosxvers
    fi
    ;;
 ios*)
