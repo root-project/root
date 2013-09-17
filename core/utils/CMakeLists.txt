@@ -8,6 +8,7 @@ add_definitions(${CLING_CXXFLAGS} -Wno-shadow -Wno-unused-parameter)
 ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx 
                           src/TModuleGenerator.cxx src/rootcling.cxx
                           ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
+                          $<TARGET_OBJECTS:Clib>
                           $<TARGET_OBJECTS:MetaUtils> $<TARGET_OBJECTS:MetaUtilsLLVM>
                           LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 add_dependencies(rootcling CLING)
@@ -18,6 +19,7 @@ set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOTBU
 ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx 
                               src/TModuleGenerator.cxx rootcling_tmp.cxx
                               ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
+                              $<TARGET_OBJECTS:Clib> 
                               $<TARGET_OBJECTS:MetaUtils> $<TARGET_OBJECTS:MetaUtilsLLVM>
                               LIBRARIES ${CLING_LIBRARIES}  ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 add_dependencies(rootcling_tmp CLING)
