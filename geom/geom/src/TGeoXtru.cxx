@@ -457,7 +457,6 @@ Double_t TGeoXtru::DistToPlane(const Double_t *point, const Double_t *dir, Int_t
       if (safe<-1.E-8) return TGeoShape::Big(); // direction outwards plane
    }      
    snext = safe/ndotd;
-   if (snext<0) return 0.;
    if (snext>stepmax) return TGeoShape::Big();
    if (fZ[iz]<fZ[iz+1]) {
       znew = point[2] + snext*dir[2];
@@ -468,7 +467,7 @@ Double_t TGeoXtru::DistToPlane(const Double_t *point, const Double_t *dir, Int_t
    pt[1] = point[1]+snext*dir[1];
    pt[2] = point[2]+snext*dir[2];
    if (!IsPointInsidePlane(pt, vert, norm)) return TGeoShape::Big();
-   return snext;         
+   return TMath::Max(snext, 0.);
 }
 
 //_____________________________________________________________________________
@@ -568,10 +567,10 @@ Double_t TGeoXtru::DistFromInside(const Double_t *point, const Double_t *dir, In
          iznext = fNz-1;   // stop
       }   
       // ray may cross the lateral surfaces of section iz      
-      xtru->SetIz(iz);
       for (iv=0; iv<fNvert; iv++) {
          dist = DistToPlane(point,dir,iz,iv,TGeoShape::Big(),kTRUE); 
          if (dist<snext) {
+            xtru->SetIz(iz);
             xtru->SetSeg(iv);
             snext = dist;
             if (convex) return snext;

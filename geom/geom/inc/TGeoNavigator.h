@@ -183,6 +183,7 @@ public :
 //   void                   SetNormalChecked(Double_t norm) {fNormalChecked=norm;}
    void                   SetCldirChecked(Double_t *dir) {memcpy(fCldirChecked, dir, 3*sizeof(Double_t));}
    void                   SetLastSafetyForPoint(Double_t safe, const Double_t *point) {fLastSafety=safe; memcpy(fLastPoint,point,3*sizeof(Double_t));}
+   void                   SetLastSafetyForPoint(Double_t safe, Double_t x, Double_t y, Double_t z) {fLastSafety=safe; fLastPoint[0]=x; fLastPoint[1]=y, fLastPoint[2]=z;}
    
    //--- point/vector reference frame conversion
    void                   LocalToMaster(const Double_t *local, Double_t *master) const {fCache->LocalToMaster(local, master);}
