@@ -45,10 +45,10 @@ endif
 EXTRALIBS += $(ROOTSYS)/lib/libVc.a
 
 
-OBJS          = arithmetics.o casts.o deinterleave.o expandandmerge.o gather.o implicit_type_conversion.o implicit_type_conversion_failures.o linkTest1.o load.o \
+OBJS          = arithmetics.o casts.o deinterleave.o expandandmerge.o gather.o implicit_type_conversion.o  linkTest1.o load.o \
 		mask.o math.o memory.o scalaraccess.o scatter.o sse_blend.o stlcontainer.o store.o supportfunctions.o swizzles.o utils.o
 
-PROGRAMS      = arithmetics  casts deinterleave expandandmerge gather implicit_type_conversion implicit_type_conversion_failures linkTest1 load \
+PROGRAMS      = arithmetics  casts deinterleave expandandmerge gather implicit_type_conversion  linkTest1 load \
 		mask math memory scalaraccess scatter sse_blend stlcontainer store supportfunctions swizzles utils
 
 
@@ -79,9 +79,9 @@ implicit_type_conversion: 	implicit_type_conversion.o
 		$(LD) $(LDFLAGS) $^  $(EXTRALIBS)  $(OutPutOpt)$@
 		@echo "$@ done"
 
-implicit_type_conversion_failures: 	implicit_type_conversion_failures.o
-		$(LD) $(LDFLAGS) $^  $(EXTRALIBS)  $(OutPutOpt)$@
-		@echo "$@ done"
+# implicit_type_conversion_failures: 	implicit_type_conversion_failures.o
+# 		$(LD) $(LDFLAGS) $^  $(EXTRALIBS)  $(OutPutOpt)$@
+# 		@echo "$@ done"
 
 linkTest1: 	linkTest1.o
 		$(LD) $(LDFLAGS) $^  $(EXTRALIBS)  $(OutPutOpt)$@
