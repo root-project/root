@@ -314,6 +314,11 @@ void TStreamerElement::GetSequenceType(TString &sequenceType) const
 
    sequenceType.Clear();
    Bool_t first = kTRUE;
+   if (TestBit(TStreamerElement::kWholeObject)) {
+      if (!first) sequenceType += ",";
+      first = kFALSE;
+      sequenceType += "wholeObject";
+   }
    if (TestBit(TStreamerElement::kCache)) {
       first = kFALSE;
       sequenceType += "cached";

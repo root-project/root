@@ -68,7 +68,8 @@ public:
       kRepeat       = BIT(10),
       kRead         = BIT(11),
       kWrite        = BIT(12),
-      kDoNotDelete  = BIT(13)
+      kDoNotDelete  = BIT(13),
+      kWholeObject  = BIT(14)
    };
 
    TStreamerElement();
