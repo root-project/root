@@ -640,7 +640,8 @@ if(cling)
     )
     set(CLING_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CLING-install/include)
     set(CLING_LIBRARIES -L${CMAKE_BINARY_DIR}/CLING-install/lib -lclingInterpreter -lclingMetaProcessor -lclingUtils ${LLVM_LIBRARIES})
-    set(CLING_CXXFLAGS "-Wno-unused-parameter -Wwrite-strings -fno-strict-aliasing -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
+    #--Additional flags obtained from llvm-config --cxxflags
+    set(CLING_CXXFLAGS "-fvisibility-inlines-hidden -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wmissing-field-initializers -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
     add_dependencies(CLING LLVM)
 endif()
 

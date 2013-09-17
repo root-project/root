@@ -35,12 +35,10 @@ set(headers3 TRootGuiFactory.h TRootApplication.h TRootCanvas.h
              TGDNDManager.h TGCommandPlugin.h TGFileBrowser.h
              TRootBrowser.h TGSplitFrame.h TGShapedFrame.h TGEventHandler.h)
 
-
-ROOT_GENERATE_DICTIONARY(G__Gui1 ${headers1} LINKDEF LinkDef1.h)
-ROOT_GENERATE_DICTIONARY(G__Gui2 ${headers2} LINKDEF LinkDef2.h)
-ROOT_GENERATE_DICTIONARY(G__Gui3 ${headers3} LINKDEF LinkDef3.h)
+include_directories(${CMAKE_SOURCE_DIR}/)
+ROOT_GENERATE_DICTIONARY(libGui ${headers1} ${headers2} ${headers3} LINKDEF LinkDef.h)
 
 ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef1.h  LinkDef2.h LinkDef3.h DEPENDENCIES Gpad Graf RIO MathCore)
-ROOT_LINKER_LIBRARY(${libname} *.cxx G__Gui1.cxx G__Gui2.cxx G__Gui3.cxx LIBRARIES Core DEPENDENCIES Gpad Graf MathCore)
+ROOT_LINKER_LIBRARY(${libname} *.cxx libGui.cxx LIBRARIES Core DEPENDENCIES Gpad Graf MathCore) #Use 1 big dict
 ROOT_INSTALL_HEADERS()
 

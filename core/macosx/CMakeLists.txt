@@ -3,13 +3,11 @@
 ############################################################################
 
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm)
+ROOT_GLOB_SOURCES(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
 
-ROOT_GENERATE_DICTIONARY(G__Macosx T*.h LINKDEF LinkDef.h)
-set(MACOSX_DICTIONARY ${CMAKE_CURRENT_BINARY_DIR}/G__Macosx.cxx  PARENT_SCOPE)
+set(Macosx_dict_headers ${headers} PARENT_SCOPE)
 
-set(LibCore_SRCS ${LibCore_SRCS} ${sources} PARENT_SCOPE)
-set(LibCore_LINKDEF ${LibCore_LINKDEF} ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef.h PARENT_SCOPE)
-add_custom_target(MACOSX_DICTIONARY DEPENDS G__Macosx.cxx)
-set_target_properties(MACOSX_DICTIONARY PROPERTIES FOLDER Dictionaries)
+ROOT_OBJECT_LIBRARY(Macosx ${sources})
+set_source_files_properties(${sources} COMPILE_FLAGS "-ObjC++ -std=c++11")
 
 ROOT_INSTALL_HEADERS()
