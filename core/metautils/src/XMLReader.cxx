@@ -551,15 +551,10 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             default: ROOT::TMetaUtils::Error(0,"Unknown tag name: %s \n",tagStrCharp);
          }
          
-         
-         if (!tagStr.empty()) {
-            // DEBUG std::cout<<name<<"   (Tag: "<<tagStr<<")"<<std::endl;
-            
-            // DEBUG std::cout<<"Standalone: ";
-            // DEBUG if (IsStandaloneTag(tagStr) || IsClosingTag(tagStr)) std::cout<<"Yes"<<std::endl;
-            // DEBUG else std::cout<<"No"<<std::endl;
-            
-            // DEBUG std::cout<<"Selected: ";
+         // We do not want to propagate in the meta the values in the
+         // version tag
+         if (!tagStr.empty() && tagKind != kVersion) {
+
             if (!exclusion && !IsClosingTag(tagStr)) { // exclusion should be false, we are not interested in closing tags
                // as well as in key-tags such as <selection> and <lcgdict> 
                if (tagKind == kLcgdict || tagKind == kSelection) 
@@ -612,18 +607,18 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   iAttrName=attr[i].fName;
                   iAttrValue=attr[i].fValue;
                   // Set the class version
-                  if (csr &&
-                     "ClassVersion" == iAttrName &&
-                     ( tagKind == kClass || tagKind == kVersion ) ){
+                  if (tagKind == kClass &&
+                      csr &&
+                     "ClassVersion" == iAttrName){
                      csr->SetRequestedVersionNumber(atoi(iAttrValue.c_str()));
+                     continue;
                   }
                   
                   if (tagKind == kClass ||
                       tagKind == kProperties ||
                       tagKind == kEnum ||
                       tagKind == kFunction ||
-                      tagKind == kVariable ||
-                      tagKind == kVersion) {
+                      tagKind == kVariable) {
                      if (bsr->HasAttributeWithName(iAttrName)) {
                         std::string preExistingValue;                        
                         bsr->GetAttributeValue(iAttrName,preExistingValue);
