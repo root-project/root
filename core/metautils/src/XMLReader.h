@@ -59,6 +59,7 @@ private:
       kMethod,
       kField,
       kProperties,
+      kVersion,
       
       kStartIgnore,
       kLcgdict,

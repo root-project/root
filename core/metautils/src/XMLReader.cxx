@@ -45,6 +45,7 @@ void XMLReader::PopulateMap(){
    XMLReader::fgMapTagNames["exclusion"] = kExclusion;
    XMLReader::fgMapTagNames["/exclusion"] = kEndExclusion;
    XMLReader::fgMapTagNames["properties"] = kProperties;
+   XMLReader::fgMapTagNames["version"] = kVersion;
 }
 
 /*
@@ -442,6 +443,13 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   return false;
                }
                break;
+            case kVersion:
+               if (parent.empty()){
+                  ROOT::TMetaUtils::Error(0,"Version tag not within Class element at line %i",lineNumCharp);
+                  out.ClearSelectionRules();
+                  return false;                  
+               }
+               break;
             case kSelection: 
                sel = true; // we need both selection (indicates that we are in the selection section) and sel (indicates that
                // we had an opening <selection> tag)
@@ -603,12 +611,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   // DEBUG std::cout << "\tAttrName[" << i << "]: " << attr[i].fName << " | AttrValue["<<i<<"]: "<<attr[i].fValue<<std::endl;
 
                   // Set the class version
-                  if (tagKind == kClass && "ClassVersion" == attr[i].fName && csr){
+                  if (csr && "ClassVersion" == attr[i].fName && ( tagKind == kClass || tagKind == kVersion ) ){
                      csr->SetRequestedVersionNumber(atoi(attr[i].fValue.c_str()));
                   }
                   
                   if (tagKind == kClass || tagKind == kProperties || tagKind == kEnum || tagKind == kFunction || 
-                      tagKind == kVariable) {
+                     tagKind == kVariable || tagKind == kVersion) {
                      if (bsr->HasAttributeWithName(attr[i].fName)) {
                         ROOT::TMetaUtils::Error(0,"Duplicating attribute at line %i\n",lineNumCharp);
                         out.ClearSelectionRules();
