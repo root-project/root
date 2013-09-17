@@ -133,7 +133,7 @@ public:
    void           AddVariable(const TString &name, Double_t value);
    void           AddVariables(const pair<TString,Double_t> *vars, const Int_t size);
    void           AddParameter(const TString &name, Double_t value);
-   Double_t       GetVariableValue(const TString &name);
+   Double_t       GetVariable(const TString &name);
    void           Copy(TObject &f1) const;
    Double_t       GetParameter(const TString &name);
    Double_t       GetParameter(Int_t param);

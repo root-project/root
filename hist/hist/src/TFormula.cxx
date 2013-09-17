@@ -544,7 +544,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          }
          else
          {
-            counter = TString(formula(openingBracketPos,formula.Index(')',funPos) - openingBracketPos)).Atoi(); 
+            counter = TString(formula(openingBracketPos+1,formula.Index(')',funPos) - openingBracketPos -1)).Atoi(); 
          }
          for(int i = 0 ; i < body.Length() ; ++i)
          {
@@ -582,6 +582,10 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
                            (isNormalized ? "n" : ""),
                            counter);
          TString replacement = body;
+         if(!defaultVariable)
+         {
+            funPos -= variable.Length();
+         }
          formula.Replace(funPos,pattern.Length(),replacement,replacement.Length());
 
          funPos = formula.Index(funName);
@@ -687,6 +691,8 @@ void TFormula::HandleLinear(TString &formula)
       fLinearParts.Add(lin1);
       fLinearParts.Add(lin2);
       linPos = formula.Index("@");
+      delete lin1;
+      delete lin2;
    }
 }
 
@@ -926,7 +932,7 @@ void TFormula::ProcessFormula(TString &formula)
          break;
       }
    }
-   fAllParametersSetted = (fParams.size() == 0);
+   
    if(!fReadyToExecute && allFunctorsMatched)
    {
       fReadyToExecute = true;
@@ -1061,14 +1067,14 @@ void TFormula::SetVariables(const pair<TString,Double_t> *vars, const Int_t size
    }
 }
 
-Double_t TFormula::GetVariableValue(const TString &name)
+Double_t TFormula::GetVariable(const TString &name)
 {
    //*-*    
    //*-*    Returns variable value.
    //*-*    
    if(fVars.find(name) == fVars.end())
    {
-      Error("GetVariableValue","Variable %s is not defined.",name.Data());
+      Error("GetVariable","Variable %s is not defined.",name.Data());
       return -1;
    }
    return fVars[name].fValue;
@@ -1254,6 +1260,7 @@ void TFormula::SetParName(Int_t ipar, const char * name)
 }
 void TFormula::SetParameters(const Double_t *params, Int_t size)
 {
+   if(!params || size < 0 || size > fNpar) return;
    for(Int_t i = 0; i < size; ++i)
    {
       TString name = TString::Format("%d",i);

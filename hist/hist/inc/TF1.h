@@ -189,6 +189,8 @@ public:
    TF1(const TF1 &f1);
    TF1& operator=(const TF1 &rhs);
    virtual   ~TF1();
+   virtual void     AddVariable(const TString &name, Double_t value) { fFormula->AddVariable(name,value); }
+   virtual void     AddVariables(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddVariables(pairs,size); } 
    virtual void     Browse(TBrowser *b);
    virtual void     Copy(TObject &f1) const;
    virtual Double_t Derivative (Double_t x, Double_t *params=0, Double_t epsilon=0.001) const;
@@ -231,6 +233,7 @@ public:
    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
         TObject    *GetParent() const {return fParent;}
    virtual Double_t GetParameter(Int_t ipar) { return fFormula->GetParameter(ipar);}
+   virtual Double_t GetParameter(const TString &name) { return fFormula->GetParameter(name);}
    virtual Double_t *GetParameters() const { return fFormula->GetParameters();}
    virtual void     GetParameters(Double_t *params) { return fFormula->GetParameters(params);}
    virtual const char *GetParName(Int_t ipar) const { return fFormula->GetParName(ipar);}
@@ -251,6 +254,7 @@ public:
    TAxis           *GetXaxis() const ;
    TAxis           *GetYaxis() const ;
    TAxis           *GetZaxis() const ;
+   virtual Double_t GetVariable(const TString &name) { return fFormula->GetVariable(name);}
    virtual Double_t GradientPar(Int_t ipar, const Double_t *x, Double_t eps=0.01);
    virtual void     GradientPar(const Double_t *x, Double_t *grad, Double_t eps=0.01);
    virtual void     InitArgs(const Double_t *x, const Double_t *params);
@@ -270,6 +274,7 @@ public:
    virtual Bool_t   IsInside(const Double_t *x) const;
    virtual Bool_t   IsLinear() const { return fFormula->IsLinear();}
    virtual Bool_t   IsValid() const { return fFormula->IsValid() ; }
+   virtual void     Print(Option_t *option="") const;
    virtual void     Paint(Option_t *option="");
    virtual void     ReleaseParameter(Int_t ipar);
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
@@ -286,6 +291,7 @@ public:
    virtual void     SetNumberFitPoints(Int_t npfits) {fNpfits = npfits;}
    virtual void     SetNpx(Int_t npx=100); // *MENU*
    virtual void     SetParameter(Int_t param, Double_t value) { fFormula->SetParameter(param,value);}
+   virtual void     SetParameter(const TString &name, Double_t value) { fFormula->SetParameter(name,value);}
    virtual void     SetParameters(const Double_t *params,Int_t size) { fFormula->SetParameters(params,size);}
    virtual void     SetParameters(const Double_t *params) { fFormula->SetParameters(params);}
    virtual void     SetParameters(Double_t p0,Double_t p1,Double_t p2=0,Double_t p3=0,Double_t p4=0,

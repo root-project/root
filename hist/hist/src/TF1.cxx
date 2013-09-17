@@ -2662,6 +2662,15 @@ Bool_t TF1::IsInside(const Double_t *x) const
 
 
 //______________________________________________________________________________
+
+
+void TF1::Print(Option_t *option) const
+{
+   if (fFormula) fFormula->Print(option);
+   if (fHistogram) fHistogram->Print(option);
+}
+
+//______________________________________________________________________________
 void TF1::Paint(Option_t *option)
 {
    // Paint this function with its current attributes.
