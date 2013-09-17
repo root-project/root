@@ -70,6 +70,8 @@ private:
       kEndSelection,
       kEndExclusion,
       kEndLcgdict,
+      kBeginIoread,
+      kEndIoread,
       
       kInvalid,
       kNumTagNames
