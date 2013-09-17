@@ -3670,6 +3670,7 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
                                          fClass->GetDataMemberOffset(newName),
                                          TStreamerInfo::kArtificial,
                                          "void");
+         newel->SetBit(TStreamerElement::kWholeObject);
          newel->SetReadFunc( rule->GetReadFunctionPointer() );
          newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
          fElements->Add(newel);

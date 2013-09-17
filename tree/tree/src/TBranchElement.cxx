@@ -3096,6 +3096,10 @@ void TBranchElement::InitializeOffsets()
             if (rd && !rd->TestBit(TRealData::kTransient)) {
                // -- Data member exists in the dictionary meta info, get the offset.
                offset = rd->GetThisOffset();
+            } else if (subBranchElement->TestBit(TStreamerElement::kWholeObject)) {
+               // We are a rule with no specific target, it applies to the whole
+               // object, let's set the offset to zero
+               offset = 0;
             } else {
                // -- No dictionary meta info for this data member, it must no
                // longer exist 
