@@ -132,6 +132,14 @@ const llvm::MemoryBuffer *ContentCache::getBuffer(DiagnosticsEngine &Diag,
     if (Invalid) *Invalid = true;
     return Buffer.getPointer();
   }
+
+  // If there is no information about the size and the modification time,
+  // this means that we are in cling-like context and we should sync the 
+  // FileEntry and the invalidated cache.
+  if (!ContentsEntry->getSize() && !ContentsEntry->getModificationTime()) {
+     FileManager::modifyFileEntry(const_cast<FileEntry*>(ContentsEntry), 
+                                  getRawBuffer()->getBufferSize(), time(0));
+  }
   
   // Check that the file's size is the same as in the file entry (which may
   // have come from a stat cache).
