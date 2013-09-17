@@ -413,7 +413,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
          ETagNames tagKind = GetNameOfTag(tagStr, name);
          bool attrError = GetAttributes(tagStr, attr);
          if (!attrError) {
-            ROOT::TMetaUtils::Error(0,"Attribute at line %i. Bad tag: %s\n", lineNumCharp, tagStrCharp);
+            ROOT::TMetaUtils::Error(0,"Attribute at line %s. Bad tag: %s\n", lineNumCharp, tagStrCharp);
             out.ClearSelectionRules();
             return false;
          }
@@ -438,14 +438,14 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   // SelectionRules object; for standalone class tags we write the class sel rule at the end of the tag processing
                }
                else { // if we don't have parent information, it means that this closing tag doesn't have opening tag
-                  ROOT::TMetaUtils::Error(0,"Single </class> tag at line %i",lineNumCharp);
+                  ROOT::TMetaUtils::Error(0,"Single </class> tag at line %s",lineNumCharp);
                   out.ClearSelectionRules();
                   return false;
                }
                break;
             case kVersion:
                if (parent.empty()){
-                  ROOT::TMetaUtils::Error(0,"Version tag not within Class element at line %i",lineNumCharp);
+                  ROOT::TMetaUtils::Error(0,"Version tag not within Class element at line %s",lineNumCharp);
                   out.ClearSelectionRules();
                   return false;                  
                }
@@ -595,7 +595,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                // because these tag kinds cannot be children for a parent <class> tag
                else if (tagKind == kClass || tagKind == kEnum || tagKind == kVariable || tagKind == kFunction ||
                         tagKind == kEndSelection || tagKind == kExclusion || tagKind == kEndExclusion){
-                  ROOT::TMetaUtils::Error(0,"XML at line %i. Missing </class> tag\n",lineNumCharp);
+                  ROOT::TMetaUtils::Error(0,"XML at line %s. Missing </class> tag\n",lineNumCharp);
                   out.ClearSelectionRules();
                   return false;
                }
@@ -604,40 +604,58 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             // DEBUG else std::cout<<"No"<<std::endl;
             
             
-            if (attr.empty()) ;// DEBUG std::cout<<"Tag doesn't have attributes"<<std::endl<<std::endl;
-            else {
-               // DEBUG std::cout<<"Attributes:"<<std::endl;
+            if (!attr.empty()){               
+               // Cache the name and the value
+               std::string iAttrName;
+               std::string iAttrValue;               
                for (int i = 0, n = attr.size(); i < n; ++i) {
-                  // DEBUG std::cout << "\tAttrName[" << i << "]: " << attr[i].fName << " | AttrValue["<<i<<"]: "<<attr[i].fValue<<std::endl;
-
+                  iAttrName=attr[i].fName;
+                  iAttrValue=attr[i].fValue;
                   // Set the class version
-                  if (csr && "ClassVersion" == attr[i].fName && ( tagKind == kClass || tagKind == kVersion ) ){
-                     csr->SetRequestedVersionNumber(atoi(attr[i].fValue.c_str()));
+                  if (csr &&
+                     "ClassVersion" == iAttrName &&
+                     ( tagKind == kClass || tagKind == kVersion ) ){
+                     csr->SetRequestedVersionNumber(atoi(iAttrValue.c_str()));
                   }
                   
-                  if (tagKind == kClass || tagKind == kProperties || tagKind == kEnum || tagKind == kFunction || 
-                     tagKind == kVariable || tagKind == kVersion) {
-                     if (bsr->HasAttributeWithName(attr[i].fName)) {
-                        ROOT::TMetaUtils::Error(0,"Duplicating attribute at line %i\n",lineNumCharp);
-                        out.ClearSelectionRules();
-                        return false;
+                  if (tagKind == kClass ||
+                      tagKind == kProperties ||
+                      tagKind == kEnum ||
+                      tagKind == kFunction ||
+                      tagKind == kVariable ||
+                      tagKind == kVersion) {
+                     if (bsr->HasAttributeWithName(iAttrName)) {
+                        std::string preExistingValue;                        
+                        bsr->GetAttributeValue(iAttrName,preExistingValue);
+                        if (preExistingValue!=iAttrValue){ // If different from before
+                           ROOT::TMetaUtils::Error(0,
+                              "Line %s: assigning new value %s to attribue %s (it was %s)\n",
+                              lineNumCharp,iAttrValue.c_str(),iAttrName.c_str(),preExistingValue.c_str());
+                           out.ClearSelectionRules();
+                           return false;
+                        }
                      }
-                     bsr->SetAttributeValue(attr[i].fName, attr[i].fValue);
-                     if ((attr[i].fName == "file_name" || attr[i].fName == "file_pattern") && tagKind == kClass){
+                     bsr->SetAttributeValue(iAttrName, iAttrValue);
+                     if ((iAttrName == "file_name" || iAttrName == "file_pattern") && tagKind == kClass){
                         bsr->SetAttributeValue("pattern","*");
                         out.SetHasFileNameRule(true);
                      }
                   }
                   else {
-                     if (bsrChild->HasAttributeWithName(attr[i].fName)) {
-                        ROOT::TMetaUtils::Error(0,"Duplicating attribute at line %i\n",lineNumCharp);
-                        out.ClearSelectionRules();
-                        return false;
+                     if (bsrChild->HasAttributeWithName(iAttrName)) {
+                        std::string preExistingValue;
+                        bsrChild->GetAttributeValue(iAttrName,preExistingValue);
+                        if (preExistingValue!=iAttrValue){ // If different from before
+                           ROOT::TMetaUtils::Error(0,
+                             "Line %s: assigning new value %s to attribue %s (it was %s)\n",
+                             lineNumCharp,iAttrValue.c_str(),iAttrName.c_str(),preExistingValue.c_str());
+                           out.ClearSelectionRules();
+                           return false;
+                        }
                      }
-                     bsrChild->SetAttributeValue(attr[i].fName, attr[i].fValue);
+                     bsrChild->SetAttributeValue(iAttrName, iAttrValue);
                   }
                }
-               // DEBUG std::cout<<std::endl;
             }
          }
          
