@@ -8,6 +8,8 @@
 #include <TError.h>
 #include <TRandom.h>
 
+#define AODX_STANDALONE 1 
+
 // Local include(s):
 #include "EventFormat_p1.h"
 

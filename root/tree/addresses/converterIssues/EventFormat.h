@@ -3,11 +3,6 @@
 #ifndef EVENTFORMAT_EVENTFORMAT_H
 #define EVENTFORMAT_EVENTFORMAT_H
 
-// System include(s):
-extern "C" {
-#   include <stdint.h>
-}
-
 // STL include(s):
 #include <string>
 #include <map>

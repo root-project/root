@@ -3,11 +3,6 @@
 #ifndef EVENTFORMAT_EVENTFORMAT_P1_H
 #define EVENTFORMAT_EVENTFORMAT_P1_H
 
-// System include(s):
-extern "C" {
-#   include <stdint.h>
-}
-
 // STL include(s):
 #include <vector>
 #include <string>
@@ -42,7 +37,7 @@ public:
    /// Names of the transient objects belonging to the branch names
    std::vector< std::string > m_classNames;
    /// Hashed versions of the branch names
-   std::vector< uint32_t > m_branchHashes;
+   std::vector< UInt_t > m_branchHashes;
 
 }; // class EventFormat_p1
 
