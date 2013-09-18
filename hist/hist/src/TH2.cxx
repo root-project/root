@@ -1459,15 +1459,14 @@ Long64_t TH2::Merge(TCollection *list)
    TAxis newYAxis;
    Bool_t initialLimitsFound = kFALSE;
    Bool_t allSameLimits = kTRUE;
+   Bool_t sameLimitsX = kTRUE;
+   Bool_t sameLimitsY = kTRUE;
    Bool_t allHaveLimits = kTRUE;
    Bool_t firstNonEmptyHist = kTRUE;
 
    TIter next(&inlist);
    TH2 * h = this;
    do  {
-      // skip empty histograms 
-      if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
-
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
 
@@ -1497,31 +1496,38 @@ Long64_t TH2::Merge(TCollection *list)
                h->GetYaxis()->GetXmax());
          }
          else {
-            // check first if histograms have same bins 
-            if (!SameLimitsAndNBins(newXAxis, *(h->GetXaxis())) || 
-                !SameLimitsAndNBins(newYAxis, *(h->GetYaxis())) ) { 
-               
-               allSameLimits = kFALSE;
-               // recompute in this case the optimal limits
-               // The condition to works is that the histogram have same bin with 
-               // and one common bin edge
-               if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
-                  Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                        "first: (%d, %f, %f), second: (%d, %f, %f)",
-                        newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
-                        h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
-                        h->GetXaxis()->GetXmax());
-                  return -1;
-               }
-               if (!RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
-                  Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                        "first: (%d, %f, %f), second: (%d, %f, %f)",
-                        newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
-                        h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
-                        h->GetYaxis()->GetXmax());
-                  return -1;
-               }
-            }
+           // check first if histograms have same bins in X
+           if (!SameLimitsAndNBins(newXAxis, *(h->GetXaxis()))) {
+             sameLimitsX = kFALSE;
+             // recompute in this case the optimal limits
+             // The condition to works is that the histogram have same bin with
+             // and one common bin edge
+             if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
+               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+                     newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
+                     h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
+                     h->GetXaxis()->GetXmax());
+               return -1;
+             }
+           }
+
+           // check first if histograms have same bins in Y
+           if (!SameLimitsAndNBins(newYAxis, *(h->GetYaxis()))) {
+             sameLimitsY = kFALSE;
+             // recompute in this case the optimal limits
+             // The condition to works is that the histogram have same bin with
+             // and one common bin edge
+             if (!RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
+               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+                     newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
+                     h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
+                     h->GetYaxis()->GetXmax());
+               return -1;
+             }
+           }
+           allSameLimits = sameLimitsY && sameLimitsX;
          }
       }
    }  while ( ( h = dynamic_cast<TH2*> ( next() ) ) != NULL );
@@ -1610,7 +1616,7 @@ Long64_t TH2::Merge(TCollection *list)
                bin = binx +(nx+2)*biny;
                cu = h->GetBinContent(bin);
                if (!allSameLimits) { 
-                  if (cu != 0 && ( h->IsBinUnderflow(bin) || h->IsBinOverflow(bin) )) {
+                  if (cu != 0 && ( (!sameLimitsX && (binx == 0 || binx == nx+1)) || (!sameLimitsY && (biny == 0 || biny == ny+1)) )) {
                      Error("Merge", "Cannot merge histograms - the histograms have"
                            " different limits and undeflows/overflows are present."
                            " The initial histogram is now broken!");

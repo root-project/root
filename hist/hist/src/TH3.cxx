@@ -1491,15 +1491,15 @@ Long64_t TH3::Merge(TCollection *list)
    TAxis newZAxis;
    Bool_t initialLimitsFound = kFALSE;
    Bool_t allSameLimits = kTRUE;
+   Bool_t sameLimitsX = kTRUE;
+   Bool_t sameLimitsY = kTRUE;
+   Bool_t sameLimitsZ = kTRUE;
    Bool_t allHaveLimits = kTRUE;
    Bool_t firstNonEmptyHist = kTRUE;
 
    TIter next(&inlist);
    TH3* h = this;
    do { 
-      // skip empty histograms 
-      if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
-
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
 
@@ -1533,38 +1533,40 @@ Long64_t TH3::Merge(TCollection *list)
                h->GetZaxis()->GetXmax());
          }
          else {
-            // check first if histograms have same bins 
-            if (!SameLimitsAndNBins(newXAxis, *(h->GetXaxis())) || 
-                !SameLimitsAndNBins(newYAxis, *(h->GetYaxis())) ||
-                !SameLimitsAndNBins(newZAxis, *(h->GetZaxis())) ) { 
-               
-               allSameLimits = kFALSE;
- 
-               if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
-                  Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                  "first: (%d, %f, %f), second: (%d, %f, %f)",
-                        newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
-                        h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
-                        h->GetXaxis()->GetXmax());
-                  return -1; 
-               }
-               if (!RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
-                  Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                        "first: (%d, %f, %f), second: (%d, %f, %f)",
-                        newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
-                        h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
-                        h->GetYaxis()->GetXmax());
-                  return -1; 
-               }
-               if (!RecomputeAxisLimits(newZAxis, *(h->GetZaxis()))) {
-                  Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                        "first: (%d, %f, %f), second: (%d, %f, %f)",
-                        newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax(),
-                        h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
-                        h->GetZaxis()->GetXmax());
-                  return -1; 
-               }
-            }
+           if(!SameLimitsAndNBins(newXAxis, *(h->GetXaxis()))) {
+             sameLimitsX = kFALSE;
+             if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
+               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+                     newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
+                     h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
+                     h->GetXaxis()->GetXmax());
+               return -1;
+             }
+           }
+           if(!SameLimitsAndNBins(newYAxis, *(h->GetYaxis()))) {
+             sameLimitsY = kFALSE;
+             if (!RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
+               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+                     newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
+                     h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
+                     h->GetYaxis()->GetXmax());
+               return -1;
+             }
+           }
+           if(!SameLimitsAndNBins(newZAxis, *(h->GetZaxis()))) {
+             sameLimitsZ = kFALSE;
+             if (!RecomputeAxisLimits(newZAxis, *(h->GetZaxis()))) {
+               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+                     newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax(),
+                     h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
+                     h->GetZaxis()->GetXmax());
+               return -1;
+             }
+           }
+           allSameLimits = sameLimitsX && sameLimitsY && sameLimitsZ;
          }
       }
    } while ( ( h = dynamic_cast<TH3*> ( next() ) ) != NULL );
@@ -1667,7 +1669,7 @@ Long64_t TH3::Merge(TCollection *list)
                   cu  = h->GetBinContent(bin);
                   if (!allSameLimits) { 
                      // look at non-empty unerflow/overflows
-                     if (cu != 0 && ( h->IsBinUnderflow(bin) || h->IsBinOverflow(bin) )) {
+                     if (cu != 0 && ( (!sameLimitsX && (binx == 0 || binx == nx+1)) || (!sameLimitsY && (biny == 0 || biny == ny+1)) || (!sameLimitsZ && (binz == 0 || binz == nz+1)))) {
                         Error("Merge", "Cannot merge histograms - the histograms have"
                               " different limits and undeflows/overflows are present."
                               " The initial histogram is now broken!");

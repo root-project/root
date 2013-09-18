@@ -5136,6 +5136,21 @@ Bool_t TH1::SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2)
       return kFALSE;
 }
 
+static inline bool IsEquidistantBinning(const TAxis& axis)
+{
+  // not able to check if there is only one axis entry
+  bool isEquidistant = true;
+  const Double_t firstBinWidth = axis.GetBinWidth(1);
+  for (int i = 1; i < axis.GetNbins(); ++i) {
+    const Double_t binWidth = axis.GetBinWidth(i);
+    const bool match = TMath::AreEqualAbs(firstBinWidth, binWidth, DBL_MIN);
+    isEquidistant &= match;
+    if (!match)
+      break;
+  }
+  return isEquidistant;
+}
+
 //______________________________________________________________________________
 Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
 {
@@ -5144,8 +5159,8 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
    if (SameLimitsAndNBins(destAxis, anAxis))
       return kTRUE;
 
-   if (destAxis.GetXbins()->fN || anAxis.GetXbins()->fN)
-      return kFALSE;       // user binning not supported
+   if ((destAxis.GetXbins()->fN || anAxis.GetXbins()->fN) && (!IsEquidistantBinning(destAxis) || !IsEquidistantBinning(anAxis)))
+      return kFALSE;       // not equidistant user binning not supported
 
    Double_t width1 = destAxis.GetBinWidth(0);
    Double_t width2 = anAxis.GetBinWidth(0);
@@ -5257,10 +5272,6 @@ Long64_t TH1::Merge(TCollection *li)
    TH1 * h = this;
 
    do  {
-      // skip empty histograms
-      if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
-
-
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
 
