@@ -1660,7 +1660,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
    // Check shared library.
    sFilename = filename;
    if (gSystem->FindDynamicLibrary(sFilename, kTRUE)
-       && fileMap.count(sFilename.Data())) {
+       && fInterpreter->isDynamicLibraryLoaded(sFilename.Data())) {
       return kTRUE;
    }
 
