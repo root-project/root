@@ -2997,6 +2997,7 @@ int RootCling(int argc,
 #endif
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              gResourceDir.c_str());
+   interp.enableRawInput(true);
    if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
 // CINT uses to define a few header implicitly, we need to do it explicitly.
        || interp.declare("#include <assert.h>\n"
