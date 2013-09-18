@@ -80,7 +80,7 @@ namespace TMVA {
       // destructor
       virtual ~RegressionVariance(){}
 
-      // Return the gain in separation of the original sample is split in two sub-samples
+      // Return the gain in separation of the original sample is splitted in two sub-samples
       // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right) 
       Double_t GetSeparationGain( const Double_t &nLeft, const Double_t &targetLeft, const Double_t &target2Left,
                                   const Double_t &nTot, const Double_t &targetTot, const Double_t &target2Tot );

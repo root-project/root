@@ -110,10 +110,8 @@ TMVA::DecisionTree::DecisionTree():
    fUseNvars       (0),
    fUsePoissonNvars(kFALSE),
    fMyTrandom (NULL), 
-   fNNodesMax      (999999),
    fMaxDepth       (999999),
    fSigClass       (0),
-   fPairNegWeightsInNode(kFALSE),
    fTreeID         (0),
    fAnalysisType   (Types::kClassification)
 {
@@ -124,7 +122,7 @@ TMVA::DecisionTree::DecisionTree():
 
 //_______________________________________________________________________
 TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize, Int_t nCuts, UInt_t cls,
-                                  Bool_t randomisedTree, Int_t useNvars, Bool_t usePoissonNvars, UInt_t nNodesMax,
+                                  Bool_t randomisedTree, Int_t useNvars, Bool_t usePoissonNvars,
                                   UInt_t nMaxDepth, Int_t iSeed, Float_t purityLimit, Int_t treeID):
    BinaryTree(),
    fNvars          (0),
@@ -145,11 +143,10 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize
    fUseNvars       (useNvars),
    fUsePoissonNvars(usePoissonNvars),
    fMyTrandom      (new TRandom3(iSeed)),
-   fNNodesMax      (nNodesMax),
    fMaxDepth       (nMaxDepth),
    fSigClass       (cls),
-   fPairNegWeightsInNode(kFALSE),
-   fTreeID         (treeID)
+   fTreeID         (treeID),
+   fAnalysisType   (Types::kClassification)
 {
    // constructor specifying the separation type, the min number of
    // events in a no that is still subjected to further splitting, the
@@ -163,7 +160,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize
       fRegType = new RegressionVariance();
       if ( nCuts <=0 ) {
          fNCuts = 200;
-         Log() << kWARNING << " You had chosen the training mode using optimal cuts, not\n"
+         Log() << kWARNING << " You had choosen the training mode using optimal cuts, not\n"
                << " based on a grid of " << fNCuts << " by setting the option NCuts < 0\n"
                << " as this doesn't exist yet, I set it to " << fNCuts << " and use the grid"
                << Endl;
@@ -194,10 +191,8 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d ):
    fUseNvars       (d.fUseNvars),
    fUsePoissonNvars(d.fUsePoissonNvars),
    fMyTrandom      (new TRandom3(fgRandomSeed)),  // well, that means it's not an identical copy. But I only ever intend to really copy trees that are "outgrown" already. 
-   fNNodesMax  (d.fNNodesMax),
    fMaxDepth   (d.fMaxDepth),
    fSigClass   (d.fSigClass),
-   fPairNegWeightsInNode(d.fPairNegWeightsInNode),
    fTreeID     (d.fTreeID),
    fAnalysisType(d.fAnalysisType)
 {
@@ -272,9 +267,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    // building the decision tree by recursively calling the splitting of
    // one (root-) node into two daughter nodes (returns the number of nodes)
 
-   // Bool_t IsRootNode=kFALSE;
    if (node==NULL) {
-      // IsRootNode = kTRUE;
       //start with the root node
       node = new TMVA::DecisionTreeNode();
       fNNodes = 1;
@@ -284,13 +277,17 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
       this->GetRoot()->SetDepth(0);
       this->GetRoot()->SetParentTree(this);
       fMinSize = fMinNodeSize/100. * eventSample.size();
-      //Log() << kWARNING << "O.k. use fMinSize  = " << fMinSize << " fMinNodeSize="<<fMinNodeSize<< " size="<<eventSample.size()<<Endl;
+      if (GetTreeID()==0){
+         Log() << kINFO << "The minimal node size MinNodeSize=" << fMinNodeSize << " fMinNodeSize="<<fMinNodeSize<< "% is translated to an actual number of events = "<< fMinSize<<Endl;
+         Log() << kINFO << "Note: This number will be taken as absolute minimum in the node, " << Endl;
+         Log() << kINFO << "      in terms of 'weighted events' and unweighted ones !! " << Endl;
+      }
   }
 
    UInt_t nevents = eventSample.size();
 
    if (nevents > 0 ) {
-      fNvars = eventSample[0]->GetNVariables();
+      if (fNvars==0) fNvars = eventSample[0]->GetNVariables(); // should have been set before, but ... well..
       fVariableImportance.resize(fNvars);
    }
    else Log() << kFATAL << ":<BuildTree> eventsample Size == 0 " << Endl;
@@ -331,6 +328,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
          if (val > xmax[ivar]) xmax[ivar]=val;
       }
    }
+
 
    if (s+b < 0) {
       Log() << kWARNING << " One of the Decision Tree nodes has negative total number of signal or background events. "
@@ -378,7 +376,8 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    // ask here for actuall "events" independent of their weight.. OR the weighted events
    // to execeed the min requested number of events per dauther node
    // (NOTE: make sure that at the eventSample at the ROOT node has sum_of_weights == sample.size() !
-   if ((eventSample.size() >= 2*fMinSize  && s+b >= 2*fMinSize) && fNNodes < fNNodesMax && node->GetDepth() < fMaxDepth 
+   //   if ((eventSample.size() >= 2*fMinSize ||s+b >= 2*fMinSize) && node->GetDepth() < fMaxDepth 
+   if ((eventSample.size() >= 2*fMinSize  && s+b >= 2*fMinSize) && node->GetDepth() < fMaxDepth 
        && ( ( s!=0 && b !=0 && !DoRegression()) || ( (s+b)!=0 && DoRegression()) ) ) {
       Double_t separationGain;
       if (fNCuts > 0){
@@ -470,56 +469,6 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
          // is misclassified, find randomly as many events with positive weights in this
          // node as needed to get the same absolute number of weight, and mark them as 
          // "not to be boosted" in order to make up for not boosting the negative weight event
-         if (fPairNegWeightsInNode){
-            Double_t sumOfNegWeights = 0;
-            UInt_t    iClassID=99;  // the event class that misClassified in the current node
-            for (UInt_t iev=0; iev<eventSample.size(); iev++) {
-               if (eventSample[iev]->GetWeight() < 0) {
-                  if (eventSample[iev]->GetClass() == fSigClass){
-                     if (node->GetNodeType() != 1) { // classification is wrong
-                        sumOfNegWeights+=eventSample[iev]->GetWeight();
-                        iClassID=eventSample[iev]->GetClass();
-                     }
-                  } else {
-                     if (node->GetNodeType() == 1) { // classification is wrong
-                        sumOfNegWeights+=eventSample[iev]->GetWeight();
-                        iClassID=eventSample[iev]->GetClass();
-                     }
-                  }
-               }
-            }
-            if (iClassID == 99 && sumOfNegWeights < 0) Log() << kFATAL << " sorry.. something went wrong in treatment of neg. events" << Endl;
-            // I need to find "misclassified" events whose positive weights add up to "sumOfNegWeights"
-            while (sumOfNegWeights < 0 && 
-                   ( ( TMath::Abs(sumOfNegWeights) < node->GetNBkgEvents() && iClassID != fSigClass) || 
-                     ( TMath::Abs(sumOfNegWeights) < node->GetNSigEvents() && iClassID == fSigClass) ) ){
-               UInt_t iev=fMyTrandom->Integer(eventSample.size());
-
-               Log() << kWARNING
-                     << "  so far...  I have still " << sumOfNegWeights 
-                     << " now event " << iev << "("<<eventSample.size()<<") has " << eventSample[iev]->GetWeight()
-                     << " class " << eventSample[iev]->GetClass() << "("<<iClassID<<")"
-                     << " sig " << node->GetNSigEvents() << "("<<node->GetNSigEvents_unweighted()<< ")"
-                     << " bkg " << node->GetNBkgEvents() << "("<<node->GetNBkgEvents_unweighted()<< ")"
-                     << Endl;
-               if (eventSample[iev]->GetWeight() > 0  && iClassID==eventSample[iev]->GetClass() ){               
-                  sumOfNegWeights+=eventSample[iev]->GetWeight();
-                  eventSample[iev]->SetDoNotBoost();
-
-                  // Double_t dist=0, minDist=10E270;
-                  // for (UInt_t ivar=0; ivar < GetNvar(); ivar++){
-                  //    for (UInt_t jvar=0; jvar<GetNvar(); jvar++){
-                  //       dist += (negEvents[nev]->GetValue(ivar)-fEventSample[iev]->GetValue(ivar))*
-                  //          //                           (*invCov)[ivar][jvar]*
-                  //          (negEvents[nev]->GetValue(jvar)-fEventSample[iev]->GetValue(jvar));
-                  //    }
-                  // }
-                  // Log() << kWARNING << "pair with event in dist^2="<<dist << "  dist="<<TMath::Sqrt(dist) << Endl;
-
-
-               }
-            }
-         }
       }
       
       
@@ -623,7 +572,9 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
    // variable "fPruneMethod". 
   
    //   std::ofstream logfile("dt_pruning.log");
+
   
+
    IPruneTool* tool(NULL);
    PruningInfo* info(NULL);
 
@@ -939,13 +890,14 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
 
    Double_t  separationGainTotal = -1, sepTmp;
    Double_t *separationGain    = new Double_t[fNvars+1];
+   Int_t    *cutIndex          = new Int_t[fNvars+1];  //-1;
+
    for (UInt_t ivar=0; ivar <= fNvars; ivar++) {
       separationGain[ivar]=-1;
+      cutIndex[ivar]=-1;
    }
-   Double_t cutValue=-999;
-   Int_t mxVar= -1;
-   Int_t cutIndex=-1;
-   Bool_t cutType=kTRUE;
+   Int_t     mxVar = -1;
+   Bool_t    cutType = kTRUE;
    Double_t  nTotS, nTotB;
    Int_t     nTotS_unWeighted, nTotB_unWeighted; 
    UInt_t nevents = eventSample.size();
@@ -1146,7 +1098,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          }
       }
    }   
-   // now turn the "histogram" into a cummulative distribution
+   // now turn the "histogram" into a cumulative distribution
    for (UInt_t ivar=0; ivar < cNvars; ivar++) {
       if (useVariable[ivar]) {
          for (UInt_t ibin=1; ibin < nBins; ibin++) {
@@ -1204,8 +1156,9 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
             Double_t srW = sW-slW;
             Double_t brW = bW-blW;
             if ( ((sl+bl)>=fMinSize && (sr+br)>=fMinSize)
-                 && ((slW+blW)>=fMinSize && (srW+brW)>=fMinSize) ) {
-               //               if ( (sl+bl)>=fMinSize && (sr+br)>=fMinSize ) {
+                 && ((slW+blW)>=fMinSize && (srW+brW)>=fMinSize) 
+              ) {
+
                if (DoRegression()) {
                   sepTmp = fRegType->GetSeparationGain(nSelS[ivar][iBin]+nSelB[ivar][iBin], 
                                                        target[ivar][iBin],target2[ivar][iBin],
@@ -1215,19 +1168,25 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
                   sepTmp = fSepType->GetSeparationGain(nSelS[ivar][iBin], nSelB[ivar][iBin], nTotS, nTotB);
                }
                if (separationGain[ivar] < sepTmp) {
-                  separationGain[ivar] = sepTmp;  // used for variable importance calculation
-                  if (separationGainTotal < sepTmp) {
-                     separationGainTotal = sepTmp;
-                     mxVar = ivar;
-                     cutIndex = iBin;
-                     if (cutIndex >= fNCuts) Log()<<kFATAL<<"ibin for cut " << iBin << Endl; 
-                  }
+                  separationGain[ivar] = sepTmp;  
+                  cutIndex[ivar]       = iBin;
                }
             }
          }
       }
    }
-   
+
+
+   //now you have found the best separation cut for each variable, now compare the variables
+   for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+      if (useVariable[ivar] ) {
+         if (separationGainTotal < separationGain[ivar]) {
+            separationGainTotal = separationGain[ivar];
+            mxVar = ivar;
+         }
+      }
+   }
+
    if (DoRegression()) {
       node->SetSeparationIndex(fRegType->GetSeparationIndex(nTotS+nTotB,target[0][nBins-1],target2[0][nBins-1]));
       node->SetResponse(target[0][nBins-1]/(nTotS+nTotB));
@@ -1237,12 +1196,11 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       node->SetSeparationIndex(fSepType->GetSeparationIndex(nTotS,nTotB));
    }
    if (mxVar >= 0) { 
-      if (nSelS[mxVar][cutIndex]/nTotS > nSelB[mxVar][cutIndex]/nTotB) cutType=kTRUE;
+      if (nSelS[mxVar][cutIndex[mxVar]]/nTotS > nSelB[mxVar][cutIndex[mxVar]]/nTotB) cutType=kTRUE;
       else cutType=kFALSE;      
-      cutValue = cutValues[mxVar][cutIndex];
     
       node->SetSelector((UInt_t)mxVar);
-      node->SetCutValue(cutValue);
+      node->SetCutValue(cutValues[mxVar][cutIndex[mxVar]]);
       node->SetCutType(cutType);
       node->SetSeparationGain(separationGainTotal);
       if (mxVar < (Int_t) fNvars){ // the fisher cut is actually not used in this node, hence don't need to store fisher components

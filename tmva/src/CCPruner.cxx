@@ -24,6 +24,7 @@
 #include "TMVA/GiniIndex.h"
 #include "TMVA/MisClassificationError.h"
 #include "TMVA/CCTreeWrapper.h"
+#include "TMVA/DataSet.h"
 
 #include <iostream>
 #include <fstream>

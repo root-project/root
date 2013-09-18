@@ -592,14 +592,15 @@ void TMVA::MethodBase::DeclareCompatibilityOptions()
    AddPreDefVal( TString("Signal") );
    AddPreDefVal( TString("Background") );
    DeclareOptionRef( fTxtWeightsOnly=kTRUE, "TxtWeightFilesOnly", "If True: write all training results (weights) as text files (False: some are written in ROOT format)" );
-   DeclareOptionRef( fVerbosityLevelString="Default", "VerboseLevel", "Verbosity level" );
-   AddPreDefVal( TString("Default") ); // uses default defined in MsgLogger header
-   AddPreDefVal( TString("Debug")   );
-   AddPreDefVal( TString("Verbose") );
-   AddPreDefVal( TString("Info")    );
-   AddPreDefVal( TString("Warning") );
-   AddPreDefVal( TString("Error")   );
-   AddPreDefVal( TString("Fatal")   );
+   // Why on earth ?? was this here? Was the verbosity level option  meant to 'disapear? Not a good idea i think..
+   // DeclareOptionRef( fVerbosityLevelString="Default", "VerboseLevel", "Verbosity level" );
+   // AddPreDefVal( TString("Default") ); // uses default defined in MsgLogger header
+   // AddPreDefVal( TString("Debug")   );
+   // AddPreDefVal( TString("Verbose") );
+   // AddPreDefVal( TString("Info")    );
+   // AddPreDefVal( TString("Warning") );
+   // AddPreDefVal( TString("Error")   );
+   // AddPreDefVal( TString("Fatal")   );
    DeclareOptionRef( fNbinsMVAPdf   = 60, "NbinsMVAPdf",   "Number of bins used for the PDFs of classifier outputs" );
    DeclareOptionRef( fNsmoothMVAPdf = 2,  "NsmoothMVAPdf", "Number of smoothing iterations for classifier PDFs" );
 }
@@ -812,10 +813,16 @@ Double_t TMVA::MethodBase::GetMvaValue( const Event* const ev, Double_t* err, Do
    return val;
 }
 
+//_______________________________________________________________________
 Bool_t TMVA::MethodBase::IsSignalLike() { 
+   // uses a pre-set cut on the MVA output (SetSignalReferenceCut and SetSignalReferenceCutOrientation)
+   // for a quick determination if an event would be selected as signal or background
    return GetMvaValue()*GetSignalReferenceCutOrientation() > GetSignalReferenceCut()*GetSignalReferenceCutOrientation() ? kTRUE : kFALSE; 
 }
+//_______________________________________________________________________
 Bool_t TMVA::MethodBase::IsSignalLike(Double_t mvaVal) { 
+   // uses a pre-set cut on the MVA output (SetSignalReferenceCut and SetSignalReferenceCutOrientation)
+   // for a quick determination if an event with this mva output value would tbe selected as signal or background
    return mvaVal*GetSignalReferenceCutOrientation() > GetSignalReferenceCut()*GetSignalReferenceCutOrientation() ? kTRUE : kFALSE; 
 }
 
@@ -1309,7 +1316,6 @@ void TMVA::MethodBase::ReadStateFromFile()
 #else
       void* doc = gTools().xmlengine().ParseFile(tfname);
 #endif
-
       void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
       ReadStateFromXML(rootnode);
       gTools().xmlengine().FreeDoc(doc);
@@ -1339,7 +1345,7 @@ void TMVA::MethodBase::ReadStateFromFile()
 void TMVA::MethodBase::ReadStateFromXMLString( const char* xmlstr ) {
    // for reading from memory
 
-#if (ROOT_VERSION_CODE >= 334336) // 5.26/00
+#if (ROOT_SVN_REVISION >= 32259) && (ROOT_VERSION_CODE >= 334336) // 5.26/00
    void* doc = gTools().xmlengine().ParseString(xmlstr);
    void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
    ReadStateFromXML(rootnode);
@@ -2016,11 +2022,13 @@ void TMVA::MethodBase::CreateMVAPdfs()
 
    Data()->SetCurrentType(Types::kTraining);
 
+   // the PDF's are stored as results ONLY if the corresponding "results" are booked,
+   // otherwise they will be only used 'online'
    ResultsClassification * mvaRes = dynamic_cast<ResultsClassification*>
       ( Data()->GetResults(GetMethodName(), Types::kTraining, Types::kClassification) );
 
    if (mvaRes==0 || mvaRes->GetSize()==0) {
-      Log() << kFATAL << "<CreateMVAPdfs> No result of classifier testing available" << Endl;
+      Log() << kERROR<< "<CreateMVAPdfs> No result of classifier testing available" << Endl;
    }
 
    Double_t minVal = *std::min_element(mvaRes->GetValueVector()->begin(),mvaRes->GetValueVector()->end());
@@ -2070,6 +2078,20 @@ void TMVA::MethodBase::CreateMVAPdfs()
    delete histMVAPdfB;
 }
 
+Double_t TMVA::MethodBase::GetProba(const Event *ev){
+   // the simple one, automatically calcualtes the mvaVal and uses the
+   // SAME sig/bkg ratio as given in the training sample (typically 50/50
+   // .. (NormMode=EqualNumEvents) but can be different)
+   if (!fMVAPdfS || !fMVAPdfB) {
+      Log() << kINFO << "<GetProba> MVA PDFs for Signal and Background don't exist yet, we'll create them on demand" << Endl;
+      CreateMVAPdfs();
+   }
+   Double_t sigFraction = DataInfo().GetTrainingSumSignalWeights() / (DataInfo().GetTrainingSumSignalWeights() + DataInfo().GetTrainingSumBackgrWeights() );
+   Double_t mvaVal = GetMvaValue(ev);
+   
+   return GetProba(mvaVal,sigFraction);
+
+}
 //_______________________________________________________________________
 Double_t TMVA::MethodBase::GetProba( Double_t mvaVal, Double_t ap_sig )
 {
@@ -2094,7 +2116,7 @@ Double_t TMVA::MethodBase::GetRarity( Double_t mvaVal, Types::ESBType reftype ) 
    // where PDF(x) is the PDF of the classifier's signal or background distribution
 
    if ((reftype == Types::kSignal && !fMVAPdfS) || (reftype == Types::kBackground && !fMVAPdfB)) {
-      Log() << kWARNING << "<GetRarity> Required MVA PDF for Signal or Background does not exist: "
+      Log() << kWARNING << "<GetRarity> Required MVA PDF for Signal or Backgroud does not exist: "
             << "select option \"CreateMVAPdfs\"" << Endl;
       return 0.0;
    }
@@ -2146,7 +2168,7 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
    static Double_t nevtS;
 
    // first round ? --> create histograms
-   if (results->GetHist("MVA_EFF_S")==0) {
+   if (results->DoesExist("MVA_EFF_S")==0) {
 
       // for efficiency plot
       TH1* eff_s = new TH1D( GetTestvarName() + "_effS", GetTestvarName() + " (signal)",     fNbinsH, xmin, xmax );
@@ -2377,7 +2399,7 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
    Double_t xmax = effhist->GetXaxis()->GetXmax();
 
    // first round ? --> create and fill histograms
-   if (results->GetHist("MVA_TRAIN_S")==0) {
+   if (results->DoesExist("MVA_TRAIN_S")==0) {
 
       // classifier response distributions for test sample
       Double_t sxmax = fXmax+0.00001;
@@ -2560,7 +2582,7 @@ Double_t TMVA::MethodBase::GetSeparation( TH1* histoS, TH1* histoB ) const
 Double_t TMVA::MethodBase::GetSeparation( PDF* pdfS, PDF* pdfB ) const
 {
    // compute "separation" defined as
-   // <s2> = (1/2) Int_-oo..+oo { (S(x)2 - B(x)2)/(S(x) + B(x)) dx }
+   // <s2> = (1/2) Int_-oo..+oo { (S(x) - B(x))^2/(S(x) + B(x)) dx }
 
    // note, if zero pointers given, use internal pdf
    // sanity check first
@@ -2958,6 +2980,7 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "         if (IsNormalised()) {" << std::endl;
    fout << "            // normalise variables" << std::endl;
    fout << "            std::vector<double> iV;" << std::endl;
+   fout << "            iV.reserve(inputValues.size());" << std::endl;
    fout << "            int ivar = 0;" << std::endl;
    fout << "            for (std::vector<double>::const_iterator varIt = inputValues.begin();" << std::endl;
    fout << "                 varIt != inputValues.end(); varIt++, ivar++) {" << std::endl;

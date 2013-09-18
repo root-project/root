@@ -35,7 +35,7 @@ void BoostControlPlots( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
 
 void boostcontrolplots( TDirectory *boostdir ) {
 
-   const Int_t nPlots = 4;
+   const Int_t nPlots = 6;
 
    Int_t width  = 900;
    Int_t height = 900;
@@ -44,12 +44,16 @@ void boostcontrolplots( TDirectory *boostdir ) {
    sprintf( cn, "cv_%s", titName.Data() );
    TCanvas *c = new TCanvas( cn,  Form( "%s Control Plots", titName.Data() ),
                              width, height ); 
-   c->Divide(2,3);
+   c->Divide(2,4);
 
 
    const TString titName = boostdir->GetName();
+   //TString hname[nPlots]={"Booster_BoostWeight","Booster_MethodWeight","Booster_ErrFraction","Booster_OrigErrFraction"};
 
-   TString hname[nPlots]={"Booster_BoostWeight","Booster_MethodWeight","Booster_ErrFraction","Booster_OrigErrFraction"};
+   TString hname[nPlots]={"BoostWeight","MethodWeight","ErrFraction","SoverBtotal","SeparationGain", "SeparationGain"};
+
+   //   Note: the ROCIntegral plots are only filled for option "Boost_DetailedMonitoring=ture" currently not filled...
+   //   TString hname[nPlots]={"BoostWeight","MethodWeight","ErrFraction","ROCIntegral_test"};
 
    for (Int_t i=0; i<nPlots; i++){
       Int_t color = 4; 
@@ -69,8 +73,8 @@ void boostcontrolplots( TDirectory *boostdir ) {
 
    // draw combined ROC plots
 
-   TString hname_roctest[2] ={"Booster_ROCIntegral_test",  "Booster_ROCIntegralBoosted_test"};
-   TString hname_roctrain[2]={"Booster_ROCIntegral_train", "Booster_ROCIntegralBoosted_train"};
+   TString hname_roctest[2] ={"ROCIntegral_test",  "ROCIntegralBoosted_test"};
+   TString hname_roctrain[2]={"ROCIntegral_train", "ROCIntegralBoosted_train"};
    TString htitle[2] = {"ROC integral of single classifier", "ROC integral of boosted method"}
 
    for (Int_t i=0; i<2; i++){
@@ -80,7 +84,11 @@ void boostcontrolplots( TDirectory *boostdir ) {
       TH1 *htrain = (TH1*) boostdir->Get(hname_roctrain[i]);
 
       // check if filled 
-      Bool_t histFilled = (htest->GetMaximum() > 0 || htrain->GetMaximum() > 0);
+      //      Bool_t histFilled = (htest->GetMaximum() > 0 || htrain->GetMaximum() > 0);
+      Bool_t histFilled = (htest && htrain);
+
+      if (!htest)  htest  = new TH1F("htest","",2,0,1);
+      if (!htrain) htrain = new TH1F("htrain","",2,0,1);
 
       htest->SetTitle(htitle[i]);
       htest->SetMaximum(1.0);
@@ -116,8 +124,8 @@ void boostcontrolplots( TDirectory *boostdir ) {
          TText* t = new TText();
          t->SetTextSize( 0.056 );
          t->SetTextColor( 2 );
-         t->DrawText( 1, 0.6, "Use MethodBoost option: \"DetailedMonitoring\" " );        
-         t->DrawText( 1, 0.51, "to fill this histograms" );        
+         t->DrawTextNDC( .2, 0.6, "Use MethodBoost option: \"Boost_DetailedMonitoring\" " );        
+         t->DrawTextNDC( .2, 0.51, "to fill this histograms" );        
       }
 
       c->Update();
@@ -126,7 +134,7 @@ void boostcontrolplots( TDirectory *boostdir ) {
    // write to file
    TString fname = Form( "plots/%s_ControlPlots", titName.Data() );
    TMVAGlob::imgconv( c, fname );
-   
+
 }
 
 

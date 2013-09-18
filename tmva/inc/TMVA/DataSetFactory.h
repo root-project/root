@@ -311,6 +311,8 @@ namespace TMVA {
       Bool_t                     fVerbose;           //! Verbosity
       TString                    fVerboseLevel;      //! VerboseLevel
 
+      Bool_t                     fScaleWithPreselEff; //! how to deal with requested #events in connection with preselection cuts 
+
       // the event
       mutable TTree*             fCurrentTree;       //! the tree, events are currently read from
       mutable UInt_t             fCurrentEvtIdx;     //! the current event (to avoid reading of the same event)

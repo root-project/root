@@ -205,8 +205,8 @@ void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVASt
 
             // perform K-S test
             cout << "--- Perform Kolmogorov-Smirnov tests" << endl;
-            Double_t kolS = sig->KolmogorovTest( sigOv );
-            Double_t kolB = bgd->KolmogorovTest( bgdOv );
+            Double_t kolS = sig->KolmogorovTest( sigOv, "X" );
+            Double_t kolB = bgd->KolmogorovTest( bgdOv, "X" );
             cout << "--- Goodness of signal (background) consistency: " << kolS << " (" << kolB << ")" << endl;
 
             TString probatext = Form( "Kolmogorov-Smirnov test: signal (background) probability = %5.3g (%5.3g)", kolS, kolB );

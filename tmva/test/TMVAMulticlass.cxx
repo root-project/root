@@ -80,10 +80,10 @@ int main(int argc, char** argv )
       input = TFile::Open( fname );
    }
    else {
-      std::cout << "Creating testdata...." << std::endl;
+      cout << "Creating testdata...." << std::endl;
       gROOT->ProcessLine(".L createData.C+");
       gROOT->ProcessLine("create_MultipleBackground(2000)");
-      std::cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<std::endl;
+      cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<endl;
       input = TFile::Open( fname );
    }
    if (!input) {
@@ -105,7 +105,7 @@ int main(int argc, char** argv )
    factory->PrepareTrainingAndTestTree( "", "SplitMode=Random:NormMode=NumEvents:!V" );
 
    if (Use["BDTG"]) // gradient boosted decision trees
-      factory->BookMethod( TMVA::Types::kBDT, "BDTG", "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.10:UseBaggedGrad:GradBaggingFraction=0.50:nCuts=20:NNodesMax=8"); 
+      factory->BookMethod( TMVA::Types::kBDT, "BDTG", "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.10:UseBaggedGrad:GradBaggingFraction=0.50:nCuts=20:MaxDepth=2"); 
    if (Use["MLP"]) // neural network
       factory->BookMethod( TMVA::Types::kMLP, "MLP", "!H:!V:NeuronType=tanh:NCycles=300:HiddenLayers=N+5,5:TestRate=5:EstimatorType=MSE");   
    if (Use["FDA_GA"]) // functional discriminant with GA minimizer

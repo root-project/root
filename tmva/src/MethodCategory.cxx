@@ -554,6 +554,9 @@ const TMVA::Ranking* TMVA::MethodCategory::CreateRanking()
 Bool_t TMVA::MethodCategory::PassesCut( const Event* ev, UInt_t methodIdx )
 {
 
+   // if it's not a simple 'spectator' variable (0 or 1) that the categories are defined by
+   // (but rather some 'formula' (i.e. eta>0), then this formulas are stored in fCatTree and that
+   // one will be evaluated.. (the formulae return 'true' or 'false' 
    if (fCatTree) {
       if (methodIdx>=fCatFormulas.size()) {
          Log() << kFATAL << "Large method index " << methodIdx << ", number of category formulas = "
@@ -562,6 +565,7 @@ Bool_t TMVA::MethodCategory::PassesCut( const Event* ev, UInt_t methodIdx )
       TTreeFormula* f = fCatFormulas[methodIdx];
       return f->EvalInstance(0) > 0.5;
    } 
+   // otherwise, it simply looks if "variable == true"  ("greater 0.5 to be "sure" )
    else {
 
       // checks whether an event lies within a cut

@@ -88,14 +88,6 @@ namespace TMVA {
 
       Int_t          GetBoostNum() { return fBoostNum; }
 
-      // gives the monitoring historgram from the vector according to index of the
-      // histrogram added in the MonitorBoost function
-      TH1*           GetMonitoringHist( Int_t histInd ) { return (*fMonitorHist)[fDefaultHistNum+histInd]; }
-
-      void           AddMonitoringHist( TH1* hist )     { return fMonitorHist->push_back(hist); }
-
-      Types::EBoostStage    GetBoostStage() { return fBoostStage; }
-
       void CleanBoostOptions();
 
       Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper = 0 );
@@ -112,22 +104,27 @@ namespace TMVA {
       void InitHistos();
       void CheckSetup();
 
+      void MonitorBoost( Types::EBoostStage stage, UInt_t methodIdx=0);
+
       // the option handling methods
       void DeclareOptions();
       void DeclareCompatibilityOptions();
       void ProcessOptions();
 
 
-      MethodBoost* SetStage( Types::EBoostStage stage ) { fBoostStage = stage; return this; }
-
+      MethodBase*  CurrentMethod(){return fCurrentMethod;}
+      UInt_t       CurrentMethodIdx(){return fCurrentMethodIdx;}
       // training a single classifier
       void SingleTrain();
 
       // calculating a boosting weight from the classifier, storing it in the next one
-      void SingleBoost();
+      Double_t SingleBoost(MethodBase* method);
+      Double_t AdaBoost(MethodBase* method, Bool_t useYesNoLeaf );
+      Double_t Bagging();
+
 
       // calculate weight of single method
-      void CalcMethodWeight();
+      Double_t CalcMethodWeight();
 
       // return ROC integral on training/testing sample
       Double_t GetBoostROCIntegral(Bool_t, Types::ETreeType, Bool_t CalcOverlapIntergral=kFALSE);
@@ -142,7 +139,7 @@ namespace TMVA {
       virtual void TestClassification();
 
       // finding the MVA to cut between sig and bgd according to fMVACutPerc,fMVACutType
-      void FindMVACut();
+      void FindMVACut(MethodBase* method);
 
       // setting all the boost weights to 1
       void ResetBoostWeights();
@@ -154,26 +151,21 @@ namespace TMVA {
       // sample
       void CalcMVAValues();
       
-      Int_t              fBoostNum;           // Number of times the classifier is boosted
-      TString            fBoostType;          // string specifying the boost type      
-      TString            fMethodWeightType;   // string specifying the boost type
-      Double_t           fMethodError;        // estimation of the level error of the classifier 
-                                              // analysing the train dataset      
-      Double_t           fOrigMethodError;    // estimation of the level error of the classifier 
-                                              // analysing the train dataset (with unboosted weights)      
-      Double_t           fBoostWeight;        // the weight used to boost the next classifier      
-      TString            fTransformString;    // min and max values for the classifier response      
-      Bool_t             fDetailedMonitoring; // produce detailed monitoring histograms (boost-wise)
+      UInt_t                 fBoostNum;           // Number of times the classifier is boosted
+      TString                fBoostType;          // string specifying the boost type      
+
+      TString                fTransformString;    // min and max values for the classifier response      
+      Bool_t                 fDetailedMonitoring; // produce detailed monitoring histograms (boost-wise)
       
-      Double_t           fADABoostBeta;       // ADA boost parameter, default is 1      
-      UInt_t             fRandomSeed;         // seed for random number generator used for bagging
+      Double_t               fAdaBoostBeta;       // ADA boost parameter, default is 1      
+      UInt_t                 fRandomSeed;         // seed for random number generator used for bagging
+      Double_t               fBaggedSampleFraction;// rel.Size of bagged sample
       
-      TString            fBoostedMethodName;    // details of the boosted classifier
-      TString            fBoostedMethodTitle;   // title 
-      TString            fBoostedMethodOptions; // options
+      TString                fBoostedMethodName;    // details of the boosted classifier
+      TString                fBoostedMethodTitle;   // title 
+      TString                fBoostedMethodOptions; // options
       
-      std::vector<TH1*>* fMonitorHist;          // histograms to monitor values during the boosting     
-      Bool_t             fMonitorBoostedMethod; // monitor the MVA response of every classifier
+      Bool_t                 fMonitorBoostedMethod; // monitor the MVA response of every classifier
 
       // MVA output from each classifier over the training hist, using orignal events weights
       std::vector< TH1* >   fTrainSigMVAHist;
@@ -183,12 +175,14 @@ namespace TMVA {
       std::vector< TH1* >   fBTrainBgdMVAHist;
       // MVA output from each classifier over the testing hist
       std::vector< TH1* >   fTestSigMVAHist;
-      std::vector< TH1* >   fTestBgdMVAHist;
+      std::vector
+< TH1* >   fTestBgdMVAHist;
       
-      TTree*             fMonitorTree;        // tree  to monitor values during the boosting      
-      Types::EBoostStage fBoostStage;         // stage of the boosting      
-      Int_t              fDefaultHistNum;     // number of histogram filled for every type of boosted classifier      
-      Bool_t             fRecalculateMVACut;  // whether to recalculate the MVA cut at every boosting step      
+      //monitoring tree/ntuple and it's variables
+      TTree*                fMonitorTree;     // tree  to monitor values during the boosting      
+      Double_t              fBoostWeight;        // the weight used to boost the next classifier      
+      Double_t              fMethodError;     // estimation of the level error of the classifier 
+                                                  // analysing the train dataset      
       Double_t           fROC_training;       // roc integral of last trained method (on training sample)
 
       // overlap integral of mva distributions for signal and
@@ -200,6 +194,9 @@ namespace TMVA {
       DataSetManager*    fDataSetManager;     // DSMTEST
       friend class Factory;                   // DSMTEST
       friend class Reader;                    // DSMTEST      
+
+      TString fHistoricOption;    //historic variable, only needed for "CompatibilityOptions" 
+      Bool_t fHistoricBoolOption; //historic variable, only needed for "CompatibilityOptions" 
 
    protected:
 

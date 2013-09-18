@@ -146,7 +146,10 @@ void TMVA::MethodSVM::Init()
    // SVM always uses normalised input variables
    SetNormalised( kTRUE );
 
-   fInputData = new std::vector<TMVA::SVEvent*>(Data()->GetNEvents());
+   // Helge: do not book a event vector of given size but rather fill the vector
+   //        later with pus_back. Anyway, this is NOT what is time consuming in
+   //        SVM and it allows to skip totally events with weights == 0 ;)
+   fInputData = new std::vector<TMVA::SVEvent*>(0);
    fSupportVectors = new std::vector<TMVA::SVEvent*>(0);
 }
 
@@ -154,6 +157,10 @@ void TMVA::MethodSVM::Init()
 void TMVA::MethodSVM::DeclareOptions()
 {
    // declare options available for this method
+
+   // for gaussian kernel parameter(s)
+   DeclareOptionRef( fGamma = 1., "Gamma", "RBF kernel parameter: Gamma (size of the Kernel)");
+
    DeclareOptionRef( fCost,   "C",        "Cost parameter" );
    if (DoRegression()) {
       fCost = 0.002;
@@ -162,16 +169,15 @@ void TMVA::MethodSVM::DeclareOptions()
    }
    DeclareOptionRef( fTolerance = 0.01, "Tol",      "Tolerance parameter" );  //should be fixed
    DeclareOptionRef( fMaxIter   = 1000, "MaxIter",  "Maximum number of training loops" );
-   DeclareOptionRef( fNSubSets  = 1,    "NSubSets", "Number of training subsets" );
 
-   // for gaussian kernel parameter(s)
-   DeclareOptionRef( fGamma = 1., "Gamma", "RBF kernel parameter: Gamma");
 }
 
 //_______________________________________________________________________
 void TMVA::MethodSVM::DeclareCompatibilityOptions()
 {
+   // options that are used ONLY for the READER to ensure backward compatibility
    MethodBase::DeclareCompatibilityOptions();
+   DeclareOptionRef( fNSubSets  = 1,    "NSubSets", "Number of training subsets" );
    DeclareOptionRef( fTheKernel = "Gauss", "Kernel", "Uses kernel function");
    // for gaussian kernel parameter(s)
    DeclareOptionRef( fDoubleSigmaSquared = 2., "Sigma", "Kernel parameter: sigma");
@@ -200,14 +206,15 @@ void TMVA::MethodSVM::Train()
    // Train SVM
    Data()->SetCurrentType(Types::kTraining);
 
+   Log() << kDEBUG << "Create event vector"<< Endl;
    for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++){
-      Log() << kDEBUG << "Create event vector"<< Endl;
-      fInputData->at(ievt) = new SVEvent(GetEvent(ievt), fCost, DataInfo().IsSignal(GetEvent(ievt))); 
+      if (GetEvent(ievt)->GetWeight() != 0) 
+         fInputData->push_back(new SVEvent(GetEvent(ievt), fCost, DataInfo().IsSignal(GetEvent(ievt)))); 
    }
 
    fSVKernelFunction = new SVKernelFunction(fGamma);
 
-   Log()<< kINFO << "Building SVM Working Set..."<< Endl;
+   Log()<< kINFO << "Building SVM Working Set...with "<<fInputData->size()<<" event instances"<< Endl;
    Timer bldwstime( GetName());
    fWgSet = new SVWorkingSet( fInputData, fSVKernelFunction,fTolerance, DoRegression() );
    Log() << kINFO <<"Elapsed time for Working Set build: "<< bldwstime.GetElapsedTime()<<Endl;
@@ -223,6 +230,14 @@ void TMVA::MethodSVM::Train()
 
    fBparm          = fWgSet->GetBpar();
    fSupportVectors = fWgSet->GetSupportVectors();
+
+
+   delete fWgSet;
+   fWgSet=0;
+
+   //   for (UInt_t i=0; i<fInputData->size();i++) delete fInputData->at(i);
+   delete fInputData; 
+   fInputData=0;
 }
 
 //_______________________________________________________________________

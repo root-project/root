@@ -33,7 +33,7 @@
 //                                                                      //
 // Option                                                               //
 //                                                                      //
-// Class for MVA-option handling                                        //
+// Class for TMVA-option handling                                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

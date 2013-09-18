@@ -253,8 +253,8 @@ void TMVA::MethodFDA::ProcessOptions()
       TString pminS(str(1,istr-1));
       TString pmaxS(str(istr+1,str.Length()-2-istr));
 
-      stringstream stmin; Float_t pmin; stmin << pminS.Data(); stmin >> pmin;
-      stringstream stmax; Float_t pmax; stmax << pmaxS.Data(); stmax >> pmax;
+      stringstream stmin; Float_t pmin=0; stmin << pminS.Data(); stmin >> pmin;
+      stringstream stmax; Float_t pmax=0; stmax << pmaxS.Data(); stmax >> pmax;
 
       // sanity check
       if (TMath::Abs(pmax-pmin) < 1.e-30) pmax = pmin;
@@ -329,7 +329,7 @@ void TMVA::MethodFDA::ClearAll( void )
 {
    // delete and clear all class members
    
-   // if there is more than one output dimension, the parameter ranges are the same again (object has been copied).
+   // if there is more than one output dimension, the paramater ranges are the same again (object has been copied).
    // hence, ... erase the copied pointers to assure, that they are deleted only once.
 //   fParRange.erase( fParRange.begin()+(fNPars), fParRange.end() );
    for (UInt_t ipar=0; ipar<fParRange.size() && ipar<fNPars; ipar++) {

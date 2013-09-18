@@ -540,7 +540,7 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
    Double_t intTrue = ceSum[0]/(nevMC+0.000001);
    Double_t intDriv=0.;
 
-   Varedu(ceSum,kBest,xBest,yBest);        // determine the best division edge,
+   if (kBest == -1) Varedu(ceSum,kBest,xBest,yBest); // determine the best edge,
    intDriv =sqrt(ceSum[1]/nevMC) -intTrue; // Foam build-up, sqrt(<w**2>) -<w>
 
    //=================================================================================
@@ -1477,7 +1477,7 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
    // as rectangles in C++ format readable for ROOT.
    //
    // Parameters:
-   // - filename - filename of output root macro
+   // - filename - filename of ouput root macro
    //
    // - opt - cell_value, rms, rms_ov_mean
    //   If cell_value is set, the following values will be filled into

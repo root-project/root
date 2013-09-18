@@ -211,7 +211,7 @@ void mvasMulticlass( TString fin = "TMVAMulticlass.root", HistType htype = MVATy
             cout << "--- Goodness of consistency for class " << classnames.at(icls)<< endl;
             //TString probatext("Kolmogorov-Smirnov test: ");
             for(Int_t j=0; j<othists.GetEntriesFast(); ++j){
-               Float_t kol = ((TH1*)hists[j])->KolmogorovTest(((TH1*)othists[j]));
+               Float_t kol = ((TH1*)hists[j])->KolmogorovTest(((TH1*)othists[j]),"X");
                cout <<  classnames.at(j) << ": " << kol  << endl;
                //probatext.Append(classnames.at(j)+Form(" %.3f ",kol));
             }

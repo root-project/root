@@ -237,6 +237,7 @@ void TMVA::RuleFit::MakeForest()
          Int_t     iclass = 0; // event class being treated as signal during training
          Bool_t    useRandomisedTree = !useBoost;  
          dt = new DecisionTree( fMethodRuleFit->GetSeparationBase(), frnd, fMethodRuleFit->GetNCuts(), iclass, useRandomisedTree);
+         dt->SetNVars(fMethodBase->GetNvar());
 
          BuildTree(dt); // reads fNTreeSample events from fTrainingEventsRndm
          if (dt->GetNNodes()<3) {

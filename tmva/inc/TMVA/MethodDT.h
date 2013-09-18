@@ -91,28 +91,31 @@ namespace TMVA {
       // the option handling methods
       void DeclareOptions();
       void ProcessOptions();
+      void DeclareCompatibilityOptions();
 
       void GetHelpMessage() const;
 
       // ranking of input variables
       const Ranking* CreateRanking();
 
-      Double_t PruneTree(const Int_t methodIndex);
+      Double_t PruneTree( );
 
       Double_t TestTreeQuality( DecisionTree *dt );
 
       Double_t GetPruneStrength () { return fPruneStrength; }
 
-      Bool_t MonitorBoost( MethodBoost* booster);
-
       void SetMinNodeSize(Double_t sizeInPercent);
       void SetMinNodeSize(TString sizeInPercent);
+
+      Int_t GetNNodesBeforePruning(){return fTree->GetNNodesBeforePruning();}
+      Int_t GetNNodes(){return fTree->GetNNodes();}
 
    private:
       // Init used in the various constructors
       void Init( void );
 
    private:
+
 
       std::vector<Event*>             fEventSample;     // the training events
 
@@ -127,7 +130,6 @@ namespace TMVA {
       Int_t                           fNCuts;           // grid used in cut applied in node splitting
       Bool_t                          fUseYesNoLeaf;    // use sig or bkg classification in leave nodes or sig/bkg
       Double_t                        fNodePurityLimit; // purity limit for sig/bkg nodes
-      UInt_t                          fNNodesMax;       // max # of nodes
       UInt_t                          fMaxDepth;        // max depth
 
 
@@ -138,13 +140,15 @@ namespace TMVA {
       Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample 
       Bool_t                           fRandomisedTrees; // choose a random subset of possible cut variables at each node during training
       Int_t                            fUseNvars;        // the number of variables used in the randomised tree splitting
-      Bool_t                           fPruneBeforeBoost; //whether to prune right after the training (before the boosting)
-
+      Bool_t                           fUsePoissonNvars; // fUseNvars is used as a poisson mean, and the actual value of useNvars is at each step drawn form that distribution
       std::vector<Double_t>           fVariableImportance; // the relative importance of the different variables 
 
       Double_t                        fDeltaPruneStrength; // step size in pruning, is adjusted according to experience of previous trees        
       // debugging flags
       static const Int_t  fgDebugLevel = 0;     // debug level determining some printout/control plots etc.
+
+
+      Bool_t fPruneBeforeBoost; //aincient variable, only needed for "CompatibilityOptions" 
 
       ClassDef(MethodDT,0)  // Analysis of Decision Trees 
 

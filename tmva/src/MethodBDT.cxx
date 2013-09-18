@@ -153,13 +153,11 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
                             TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kBDT, methodTitle, theData, theOption, theTargetDir )
    , fNTrees(0)
-   , fRenormByClass(0)        // don't use this initialisation, only here to make  Coverity happy. Is set in DeclarOptions()
    , fSigToBkgFraction(0) 
    , fAdaBoostBeta(0)
    , fTransitionPoint(0)
    , fShrinkage(0)
    , fBaggedGradBoost(kFALSE)
-   , fSampleFraction(0)
    , fSumOfWeights(0)
    , fMinNodeEvents(0)
    , fMinNodeSize(5)
@@ -170,23 +168,20 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    , fUseExclusiveVars(0)     // don't use this initialisation, only here to make  Coverity happy. Is set in DeclarOptions()
    , fUseYesNoLeaf(kFALSE)
    , fNodePurityLimit(0)
-   , fUseWeightedTrees(kFALSE)
    , fNNodesMax(0)
    , fMaxDepth(0)
    , fPruneMethod(DecisionTree::kNoPruning)
    , fPruneStrength(0)
-   , fPruneBeforeBoost(kFALSE)
    , fFValidationEvents(0)
    , fAutomatic(kFALSE)
    , fRandomisedTrees(kFALSE)
    , fUseNvars(0)
    , fUsePoissonNvars(0)  // don't use this initialisation, only here to make  Coverity happy. Is set in Init()
    , fUseNTrainEvents(0)
-   , fSampleSizeFraction(0)
+   , fBaggedSampleFraction(0)
    , fNoNegWeightsInTraining(kFALSE)
    , fInverseBoostNegWeights(kFALSE)
    , fPairNegWeightsGlobal(kFALSE)
-   , fPairNegWeightsInNode(kFALSE)
    , fTrainWithNegWeights(kFALSE)
    , fDoBoostMonitor(kFALSE)
    , fITree(0)
@@ -196,6 +191,8 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    , fCts_sb(0)
    , fCtb_ss(0)
    , fCbb(0)
+   , fDoPreselection(kFALSE)
+
 {
    // the standard constructor for the "boosted decision trees"
    fMonitorNtuple = NULL;
@@ -208,12 +205,11 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
                             TDirectory* theTargetDir )
    : TMVA::MethodBase( Types::kBDT, theData, theWeightFile, theTargetDir )
    , fNTrees(0)
-   , fRenormByClass(0)        // don't use this initialisation, only here to make  Coverity happy. Is set in DeclarOptions()
+   , fSigToBkgFraction(0) 
    , fAdaBoostBeta(0)
    , fTransitionPoint(0)
    , fShrinkage(0)
    , fBaggedGradBoost(kFALSE)
-   , fSampleFraction(0)
    , fSumOfWeights(0)
    , fMinNodeEvents(0)
    , fMinNodeSize(5)
@@ -224,23 +220,20 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    , fUseExclusiveVars(0)     // don't use this initialisation, only here to make  Coverity happy. Is set in DeclarOptions()
    , fUseYesNoLeaf(kFALSE)
    , fNodePurityLimit(0)
-   , fUseWeightedTrees(kFALSE)
    , fNNodesMax(0)
    , fMaxDepth(0)
    , fPruneMethod(DecisionTree::kNoPruning)
    , fPruneStrength(0)
-   , fPruneBeforeBoost(kFALSE)
    , fFValidationEvents(0)
    , fAutomatic(kFALSE)
    , fRandomisedTrees(kFALSE)
    , fUseNvars(0)
    , fUsePoissonNvars(0)  // don't use this initialisation, only here to make  Coverity happy. Is set in Init()
    , fUseNTrainEvents(0)
-   , fSampleSizeFraction(0)
+   , fBaggedSampleFraction(0)
    , fNoNegWeightsInTraining(kFALSE)
    , fInverseBoostNegWeights(kFALSE)
    , fPairNegWeightsGlobal(kFALSE)
-   , fPairNegWeightsInNode(kFALSE)
    , fTrainWithNegWeights(kFALSE)
    , fDoBoostMonitor(kFALSE)
    , fITree(0)
@@ -250,6 +243,7 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    , fCts_sb(0)
    , fCtb_ss(0)
    , fCbb(0)
+   , fDoPreselection(kFALSE)
 {
    fMonitorNtuple = NULL;
    fSepType = NULL;
@@ -284,13 +278,11 @@ void TMVA::MethodBDT::DeclareOptions()
    // UseRandomisedTrees  choose at each node splitting a random set of variables
    // UseNvars         use UseNvars variables in randomised trees
    // UsePoission Nvars use UseNvars not as fixed number but as mean of a possion distribution 
-   // UseNTrainEvents  number of training events used in randomised (and bagged) trees
    // SeparationType   the separation criterion applied in the node splitting
    //                  known: GiniIndex
    //                         MisClassificationError
    //                         CrossEntropy
    //                         SDivSqrtSPlusB
-   // nEventsMin:      the minimum number of events in a node (leaf criteria, stop splitting)
    // MinNodeSize:     minimum percentage of training events in a leaf node (leaf criteria, stop splitting)
    // nCuts:           the number of steps in the optimisation of the cut for a node (if < 0, then
    //                  step size is determined by the events)
@@ -299,30 +291,36 @@ void TMVA::MethodBDT::DeclareOptions()
    //                  (from the training) in the leaf node
    // NodePurityLimit  the minimum purity to classify a node as a signal node (used in pruning and boosting to determine
    //                  misclassification error rate)
-   // UseWeightedTrees use average classification from the trees, or have the individual trees
-   //                  trees in the forest weighted (e.g. log(boostweight) from AdaBoost
    // PruneMethod      The Pruning method:
    //                  known: NoPruning  // switch off pruning completely
    //                         ExpectedError
    //                         CostComplexity
    // PruneStrength    a parameter to adjust the amount of pruning. Should be large enough such that overtraining is avoided.
-   // PruneBeforeBoost flag to prune the tree before applying boosting algorithm
    // PruningValFraction   number of events to use for optimizing pruning (only if PruneStrength < 0, i.e. automatic pruning)
    // NegWeightTreatment      IgnoreNegWeightsInTraining  Ignore negative weight events in the training.
    //                         DecreaseBoostWeight     Boost ev. with neg. weight with 1/boostweight instead of boostweight
    //                         PairNegWeightsGlobal    Pair ev. with neg. and pos. weights in traning sample and "annihilate" them 
-   //                         PairNegWeightsInNode    Randomly pair miscl. ev. with neg. and pos. weights in node and don't boost them
-   // NNodesMax        maximum number of nodes allwed in the tree splitting, then it stops.
    // MaxDepth         maximum depth of the decision tree allowed before further splitting is stopped
 
    DeclareOptionRef(fNTrees, "NTrees", "Number of trees in the forest");
-   DeclareOptionRef(fRenormByClass=kFALSE,"RenormByClass","Individually re-normalize each event class to the original size after boosting");
-   DeclareOptionRef(fSigToBkgFraction=1,"SigToBkgFraction","Sig to Bkg ratio used in Training (similar to NodePurityLimit, which cannot be used in real adaboost"); 
-   DeclareOptionRef(fBoostType, "BoostType", "Boosting type for the trees in the forest");
+   if (DoRegression()) {
+      DeclareOptionRef(fMaxDepth=50,"MaxDepth","Max depth of the decision tree allowed");
+   }else{
+      DeclareOptionRef(fMaxDepth=3,"MaxDepth","Max depth of the decision tree allowed");
+   }
+
+   TString tmp="5%"; if (DoRegression()) tmp="0.2%";
+   DeclareOptionRef(fMinNodeSizeS=tmp, "MinNodeSize", "Minimum percentage of training events required in a leaf node (default: Classification: 5%, Regression: 0.2%)");
+   // MinNodeSize:     minimum percentage of training events in a leaf node (leaf criteria, stop splitting)
+   DeclareOptionRef(fNCuts, "nCuts", "Number of grid points in variable range used in finding optimal cut in node splitting");
+
+   DeclareOptionRef(fBoostType, "BoostType", "Boosting type for the trees in the forest (note: AdaCost is still experimental)");
+
    AddPreDefVal(TString("AdaBoost"));
+   AddPreDefVal(TString("RealAdaBoost"));
    AddPreDefVal(TString("AdaCost"));
    AddPreDefVal(TString("Bagging"));
-   AddPreDefVal(TString("RegBoost"));
+   //   AddPreDefVal(TString("RegBoost"));
    AddPreDefVal(TString("AdaBoostR2"));
    AddPreDefVal(TString("Grad"));
    if (DoRegression()) {
@@ -330,37 +328,41 @@ void TMVA::MethodBDT::DeclareOptions()
    }else{
       fBoostType = "AdaBoost";
    }
-   DeclareOptionRef(fAdaBoostR2Loss="Quadratic", "AdaBoostR2Loss", "Type of Loss function in AdaBoostR2t (Linear,Quadratic or Exponential)");
+   DeclareOptionRef(fAdaBoostR2Loss="Quadratic", "AdaBoostR2Loss", "Type of Loss function in AdaBoostR2");
    AddPreDefVal(TString("Linear"));
    AddPreDefVal(TString("Quadratic"));
    AddPreDefVal(TString("Exponential"));
 
    DeclareOptionRef(fBaggedGradBoost=kFALSE, "UseBaggedGrad","Use only a random subsample of all events for growing the trees in each iteration. (Only valid for GradBoost)");
-   DeclareOptionRef(fSampleFraction=0.6, "GradBaggingFraction","Defines the fraction of events to be used in each iteration when UseBaggedGrad=kTRUE. (Only valid for GradBoost)");
    DeclareOptionRef(fShrinkage=1.0, "Shrinkage", "Learning rate for GradBoost algorithm");
    DeclareOptionRef(fAdaBoostBeta=.5, "AdaBoostBeta", "Learning rate  for AdaBoost algorithm");
-   DeclareOptionRef(fRandomisedTrees,"UseRandomisedTrees","Choose at each node splitting a random set of variables");
-   DeclareOptionRef(fUseNvars,"UseNvars","Number of variables used if randomised tree option is chosen");
-   DeclareOptionRef(fUsePoissonNvars,"UsePoissonNvars", "Interpret \"UseNvars\" not as fixed number but as mean of a Possion distribution in each split");
-   DeclareOptionRef(fUseNTrainEvents,"UseNTrainEvents","Number of randomly picked training events used in randomised (and bagged) trees");
+   DeclareOptionRef(fRandomisedTrees,"UseRandomisedTrees","Determine at each node splitting the cut variable only as the best out of a random subset of variables (like in RandomForests)");
+   DeclareOptionRef(fUseNvars,"UseNvars","Size of the subset of variables used with RandomisedTree option");
+   DeclareOptionRef(fUsePoissonNvars,"UsePoissonNvars", "Interpret \"UseNvars\" not as fixed number but as mean of a Possion distribution in each split with RandomisedTree option");
+   DeclareOptionRef(fBaggedSampleFraction=.6,"BaggedSampleFraction","Relative size of bagged event sample to original size of the data sample (used whenever bagging is used (i.e. UseBaggedGrad, Bagging,)" );
 
-
-   DeclareOptionRef(fUseWeightedTrees=kTRUE, "UseWeightedTrees",
-                    "Use weighted trees or simple average in classification from the forest");
    DeclareOptionRef(fUseYesNoLeaf=kTRUE, "UseYesNoLeaf",
-                    "Use Sig or Bkg categories, or the purity=S/(S+B) as classification of the leaf node");
+                    "Use Sig or Bkg categories, or the purity=S/(S+B) as classification of the leaf node -> Real-AdaBoost");
    if (DoRegression()) {
       fUseYesNoLeaf = kFALSE;
    }
 
-   DeclareOptionRef(fCss=0.5,   "Css",   "Cost: true signal selected signal"); 
-   DeclareOptionRef(fCts_sb=1., "Cts_sb","Cost: true signal selected bkg"); 
-   DeclareOptionRef(fCtb_ss=0.8,"Ctb_ss","Cost: true bkg    selected signal"); 
-   DeclareOptionRef(fCbb=0.3,    "Cbb",   "Cost: true bkg    selected bkg "); 
+   DeclareOptionRef(fNegWeightTreatment="InverseBoostNegWeights","NegWeightTreatment","How to treat events with negative weights in the BDT training (particular the boosting) : IgnoreInTraining;  Boost With inverse boostweight; Pair events with negative and positive weights in traning sample and *annihilate* them (experimental!)");
+   AddPreDefVal(TString("InverseBoostNegWeights"));
+   AddPreDefVal(TString("IgnoreNegWeightsInTraining"));
+   AddPreDefVal(TString("PairNegWeightsGlobal"));
+   AddPreDefVal(TString("Pray"));
 
-   DeclareOptionRef(fDoPreselection=kFALSE,"DoPreselection","and and apply automatic pre-selection for 100% efficient signal (bkg) cuts prior to training");
+
+
+   DeclareOptionRef(fCss=1.,   "Css",   "AdaCost: cost of true signal selected signal"); 
+   DeclareOptionRef(fCts_sb=1.,"Cts_sb","AdaCost: cost of true signal selected bkg"); 
+   DeclareOptionRef(fCtb_ss=1.,"Ctb_ss","AdaCost: cost of true bkg    selected signal"); 
+   DeclareOptionRef(fCbb=1.,   "Cbb",   "AdaCost: cost of true bkg    selected bkg "); 
 
    DeclareOptionRef(fNodePurityLimit=0.5, "NodePurityLimit", "In boosting/pruning, nodes with purity > NodePurityLimit are signal; background otherwise.");
+
+
    DeclareOptionRef(fSepTypeS, "SeparationType", "Separation criterion for node splitting");
    AddPreDefVal(TString("CrossEntropy"));
    AddPreDefVal(TString("GiniIndex"));
@@ -373,42 +375,49 @@ void TMVA::MethodBDT::DeclareOptions()
    }else{
       fSepTypeS = "GiniIndex";
    }
-   DeclareOptionRef(fMinNodeEvents=0, "nEventsMin", "deprecated !!! Minimum number of events required in a leaf node");
-   TString tmp="5%"; if (DoRegression()) tmp="0.2%";
-   DeclareOptionRef(fMinNodeSizeS=tmp, "MinNodeSize", "Minimum percentage of training events required in a leaf node (default: Classification: 5%, Regression: 0.2%)");
-   // MinNodeSize:     minimum percentage of training events in a leaf node (leaf criteria, stop splitting)
-   DeclareOptionRef(fNCuts, "nCuts", "Number of steps during node cut optimisation");
+
+   DeclareOptionRef(fDoBoostMonitor=kFALSE,"DoBoostMonitor","Create control plot with ROC integral vs tree number");
+
    DeclareOptionRef(fUseFisherCuts=kFALSE, "UseFisherCuts", "Use multivariate splits using the Fisher criterion");
    DeclareOptionRef(fMinLinCorrForFisher=.8,"MinLinCorrForFisher", "The minimum linear correlation between two variables demanded for use in Fisher criterion in node splitting");
    DeclareOptionRef(fUseExclusiveVars=kFALSE,"UseExclusiveVars","Variables already used in fisher criterion are not anymore analysed individually for node splitting");
 
-   DeclareOptionRef(fPruneStrength, "PruneStrength", "Pruning strength");
-   DeclareOptionRef(fPruneMethodS, "PruneMethod", "Method used for pruning (removal) of statistically insignificant branches");
+
+   DeclareOptionRef(fDoPreselection=kFALSE,"DoPreselection","and and apply automatic pre-selection for 100% efficient signal (bkg) cuts prior to training");
+
+
+   DeclareOptionRef(fSigToBkgFraction=1,"SigToBkgFraction","Sig to Bkg ratio used in Training (similar to NodePurityLimit, which cannot be used in real adaboost"); 
+
+   DeclareOptionRef(fPruneMethodS, "PruneMethod", "Note: for BDTs use small trees (e.g.MaxDepth=3) and NoPruning:  Pruning: Method used for pruning (removal) of statistically insignificant branches ");
    AddPreDefVal(TString("NoPruning"));
    AddPreDefVal(TString("ExpectedError"));
    AddPreDefVal(TString("CostComplexity"));
-   DeclareOptionRef(fPruneBeforeBoost=kFALSE, "PruneBeforeBoost", "Flag to prune the tree before applying boosting algorithm");
-   DeclareOptionRef(fFValidationEvents=0.5, "PruningValFraction", "Fraction of events to use for optimizing automatic pruning.");
-   DeclareOptionRef(fNNodesMax=100000,"NNodesMax","Max number of nodes in tree");
-   if (DoRegression()) {
-      DeclareOptionRef(fMaxDepth=50,"MaxDepth","Max depth of the decision tree allowed");
-   }else{
-      DeclareOptionRef(fMaxDepth=3,"MaxDepth","Max depth of the decision tree allowed");
-   }
-   DeclareOptionRef(fDoBoostMonitor=kFALSE,"DoBoostMonitor","Create control plot with ROC integral vs tree number");
 
-   DeclareOptionRef(fNegWeightTreatment="InverseBoostNegWeights","NegWeightTreatment","How to treat events with negative weights in the BDT training (particular the boosting) : Ignore;  Boost With inverse boostweight; Pair events with negative and positive weights in traning sample and *annihilate* them (experimental!); Randomly pair events with negative and positive weights in leaf node and do not boost them (experimental!) ");
-   AddPreDefVal(TString("IgnoreNegWeights"));
-   AddPreDefVal(TString("NoNegWeightsInTraining"));
-   AddPreDefVal(TString("InverseBoostNegWeights"));
-   AddPreDefVal(TString("PairNegWeightsGlobal"));
-   AddPreDefVal(TString("PairNegWeightsInNode"));
+   DeclareOptionRef(fPruneStrength, "PruneStrength", "Pruning strength");
+
+   DeclareOptionRef(fFValidationEvents=0.5, "PruningValFraction", "Fraction of events to use for optimizing automatic pruning.");
+
+   // deprecated options, still kept for the moment:
+   DeclareOptionRef(fMinNodeEvents=0, "nEventsMin", "deprecated: Use MinNodeSize (in % of training events) instead");
+
+   DeclareOptionRef(fBaggedSampleFraction, "GradBaggingFraction","deprecated: Use *BaggedSampleFraction* instead: Defines the fraction of events to be used in each iteration, e.g. when UseBaggedGrad=kTRUE. ");
+   DeclareOptionRef(fUseNTrainEvents,"UseNTrainEvents","deprecated: Use *BaggedSampleFraction* instead: Number of randomly picked training events used in randomised (and bagged) trees");
+   DeclareOptionRef(fNNodesMax,"NNodesMax","deprecated: Use MaxDepth instead to limit the tree size" );
+
 
 }
 
+//_______________________________________________________________________
 void TMVA::MethodBDT::DeclareCompatibilityOptions() {
+   // options that are used ONLY for the READER to ensure backward compatibility
+
    MethodBase::DeclareCompatibilityOptions();
-   DeclareOptionRef(fSampleSizeFraction=1.0,"SampleSizeFraction","Relative size of bagged event sample to original size of the data sample" );
+
+
+   DeclareOptionRef(fHistoricBool=kTRUE, "UseWeightedTrees",
+                    "Use weighted trees or simple average in classification from the forest");
+   DeclareOptionRef(fHistoricBool=kFALSE, "PruneBeforeBoost", "Flag to prune the tree before applying boosting algorithm");
+   DeclareOptionRef(fHistoricBool=kFALSE,"RenormByClass","Individually re-normalize each event class to the original size after boosting");
 
 }
 
@@ -470,10 +479,13 @@ void TMVA::MethodBDT::ProcessOptions()
    if (fBoostType=="Grad") {
       fPruneMethod = DecisionTree::kNoPruning;
       if (fNegWeightTreatment=="InverseBoostNegWeights"){
-         Log() << kWARNING << "the option *InverseBoostNegWeights* does not exist for BoostType=Grad --> change to *IgnoreNegWeights*" << Endl;
-         fNegWeightTreatment="IgnoreNegWeights";
+         Log() << kWARNING << "the option *InverseBoostNegWeights* does not exist for BoostType=Grad --> change to *IgnoreNegWeightsInTraining*" << Endl;
+         fNegWeightTreatment="IgnoreNegWeightsInTraining";
          fNoNegWeightsInTraining=kTRUE;
       }
+   } else if (fBoostType=="RealAdaBoost"){
+      fBoostType    = "AdaBoost";
+      fUseYesNoLeaf = kFALSE;
    } else if (fBoostType=="AdaCost"){
       fUseYesNoLeaf = kFALSE;
    }
@@ -527,11 +539,10 @@ void TMVA::MethodBDT::ProcessOptions()
    }
 
    fNegWeightTreatment.ToLower();
-   if      (fNegWeightTreatment == "ignorenegweights")       fNoNegWeightsInTraining = kTRUE;
-   else if (fNegWeightTreatment == "nonegweightsintraining") fNoNegWeightsInTraining = kTRUE;
+   if      (fNegWeightTreatment == "ignorenegweightsintraining")   fNoNegWeightsInTraining = kTRUE;
    else if (fNegWeightTreatment == "inverseboostnegweights") fInverseBoostNegWeights = kTRUE;
    else if (fNegWeightTreatment == "pairnegweightsglobal")   fPairNegWeightsGlobal   = kTRUE;
-   else if (fNegWeightTreatment == "pairnegweightsinnode")   fPairNegWeightsInNode   = kTRUE;
+   else if (fNegWeightTreatment == "pray")   Log() << kWARNING << "Yes, good luck with praying " << Endl;
    else {
       Log() << kINFO << GetOptions() << Endl;
       Log() << kFATAL << "<ProcessOptions> unknown option for treating negative event weights during training " << fNegWeightTreatment << " requested" << Endl;
@@ -539,10 +550,27 @@ void TMVA::MethodBDT::ProcessOptions()
    
    if (fNegWeightTreatment == "pairnegweightsglobal") 
       Log() << kWARNING << " you specified the option NegWeightTreatment=PairNegWeightsGlobal : This option is still considered EXPERIMENTAL !! " << Endl;
-   if (fNegWeightTreatment == "pairnegweightsginnode") 
-      Log() << kWARNING << " you specified the option NegWeightTreatment=PairNegWeightsInNode : This option is still considered EXPERIMENTAL !! " << Endl;
-   if (fNegWeightTreatment == "pairnegweightsginnode" && fNCuts <= 0) 
-      Log() << kFATAL << " sorry, the option NegWeightTreatment=PairNegWeightsInNode is not yet implemented for NCuts < 0" << Endl;
+
+
+   // dealing with deprecated options !
+   if (fNNodesMax>0) {
+      UInt_t tmp=1; // depth=0  == 1 node
+      fMaxDepth=0;
+      while (tmp < fNNodesMax){
+         tmp+=2*tmp;
+         fMaxDepth++;
+      }
+      Log() << kWARNING << "You have specified a deprecated option *NNodesMax="<<fNNodesMax
+            << "* \n this has been translated to MaxDepth="<<fMaxDepth<<Endl;
+   }
+
+
+   if (fUseNTrainEvents>0){
+      fBaggedSampleFraction  = (Double_t) fUseNTrainEvents/Data()->GetNTrainingEvents();
+      Log() << kWARNING << "You have specified a deprecated option *UseNTrainEvents="<<fUseNTrainEvents
+            << "* \n this has been translated to BaggedSampleFraction="<<fBaggedSampleFraction<<"(%)"<<Endl;
+   }      
+
 }
 
 
@@ -577,19 +605,20 @@ void TMVA::MethodBDT::Init( void )
 {
    // common initialisation with defaults for the BDT-Method
       
-   fNTrees         = 400;
+   fNTrees         = 800;
    if (fAnalysisType == Types::kClassification || fAnalysisType == Types::kMulticlass ) {
       fMaxDepth        = 3;
       fBoostType      = "AdaBoost";
       if(DataInfo().GetNClasses()!=0) //workaround for multiclass application
-         fMinNodeEvents  = TMath::Max( Int_t(40), Int_t( Data()->GetNTrainingEvents() / (10*GetNvar()*GetNvar())) );
+         fMinNodeSize = 5.;
    }else {
       fMaxDepth = 50;
       fBoostType      = "AdaBoostR2";
       fAdaBoostR2Loss = "Quadratic";
       if(DataInfo().GetNClasses()!=0) //workaround for multiclass application
-         fMinNodeEvents  = 10;
+         fMinNodeSize  = .2;
    }
+   
 
    fNCuts          = 20;
    fPruneMethodS   = "NoPruning";
@@ -601,15 +630,11 @@ void TMVA::MethodBDT::Init( void )
    //   fUseNvars        =  (GetNvar()>12) ? UInt_t(GetNvar()/8) : TMath::Max(UInt_t(2),UInt_t(GetNvar()/3));
    fUseNvars        =  UInt_t(TMath::Sqrt(GetNvar())+0.6);
    fUsePoissonNvars = kTRUE;
-   if(DataInfo().GetNClasses()!=0) //workaround for multiclass application
-      fUseNTrainEvents = Data()->GetNTrainingEvents();
-   fNNodesMax       = 1000000;
    fShrinkage       = 1.0;
    fSumOfWeights    = 0.0;
 
    // reference cut value to distinguish signal-like from background-like events
    SetSignalReferenceCut( 0 );
-
 }
 
 
@@ -641,6 +666,8 @@ void TMVA::MethodBDT::Reset( void )
 TMVA::MethodBDT::~MethodBDT( void )
 {
    //destructor
+   //   Note: fEventSample and ValidationSample are already deleted at the end of TRAIN
+   //         When they are not used anymore
    //   for (UInt_t i=0; i<fEventSample.size();      i++) delete fEventSample[i];
    //   for (UInt_t i=0; i<fValidationSample.size(); i++) delete fValidationSample[i];
    for (UInt_t i=0; i<fForest.size();           i++) delete fForest[i];
@@ -660,23 +687,25 @@ void TMVA::MethodBDT::InitEventSample( void )
       Data()->SetCurrentType(Types::kTraining);
       UInt_t nevents = Data()->GetNTrainingEvents();
 
-      std::vector<const TMVA::Event*> tmp;
+      std::vector<const TMVA::Event*> tmpEventSample;
       for (Long64_t ievt=0; ievt<nevents; ievt++) {
          //	 const Event *event = new Event(*(GetEvent(ievt)));
-         const Event* event = new Event( *GetTrainingEvent(ievt) );
-         tmp.push_back(event);
+         Event* event = new Event( *GetTrainingEvent(ievt) );
+         tmpEventSample.push_back(event);
       }
 
-      if (!DoRegression()) DeterminePreselectionCuts(tmp);
+      if (!DoRegression()) DeterminePreselectionCuts(tmpEventSample);
       else fDoPreselection = kFALSE; // just to make sure...
 
-      for (UInt_t i=0; i<tmp.size(); i++) delete tmp[i];
+      for (UInt_t i=0; i<tmpEventSample.size(); i++) delete tmpEventSample[i];
      
 
       Bool_t firstNegWeight=kTRUE;
+      Bool_t firstZeroWeight=kTRUE;
       for (Long64_t ievt=0; ievt<nevents; ievt++) {
          //         const Event *event = new Event(*(GetEvent(ievt)));
-         const Event* event = new Event( *GetTrainingEvent(ievt) );
+         // const Event* event = new Event( *GetTrainingEvent(ievt) );
+         Event* event = new Event( *GetTrainingEvent(ievt) );
          if (fDoPreselection){
            if (TMath::Abs(ApplyPreselectionCuts(event)) > 0.05) continue;
          }
@@ -687,17 +716,29 @@ void TMVA::MethodBDT::InitEventSample( void )
                firstNegWeight=kFALSE;
             }
             delete event;
+         }else if (event->GetWeight()==0){
+            if (firstZeroWeight) {
+               firstZeroWeight = kFALSE;
+               Log() << "Events with weight == 0 are going to be simply ignored " << Endl;
+            }
          }else{
             if (event->GetWeight() < 0) {
                fTrainWithNegWeights=kTRUE;
                if (firstNegWeight){
                   firstNegWeight = kFALSE;
-                  Log() << kWARNING << "Events with negative event weights are USED during "
-                        << "the BDT training. This might cause problems with small node sizes " 
-                        << "or with the boosting. Please remove negative events from training "
-                        << "using the option *IgnoreEventsWithNegWeightsInTraining* in case you "
-                        << "observe problems with the boosting"
+                  if (fPairNegWeightsGlobal){
+                     Log() << kWARNING << "Events with negative event weights are found and "
+                           << " will be removed prior to the actual BDT training by global "
+                           << " paring (and subsequent annihilation) with positiv weight events"
+                           << Endl;
+                  }else{
+                     Log() << kWARNING << "Events with negative event weights are USED during "
+                           << "the BDT training. This might cause problems with small node sizes " 
+                           << "or with the boosting. Please remove negative events from training "
+                           << "using the option *IgnoreEventsWithNegWeightsInTraining* in case you "
+                           << "observe problems with the boosting"
                         << Endl;
+                  }
                }
             }
             // if fAutomatic == true you need a validation sample to optimize pruning
@@ -721,8 +762,8 @@ void TMVA::MethodBDT::InitEventSample( void )
       }
       
       // some pre-processing for events with negative weights
-      //      if (fPairNegWeightsGlobal) PreProcessNegativeEventWeights();
-   }
+      if (fPairNegWeightsGlobal) PreProcessNegativeEventWeights();
+}
 
 
    // it does not make sense in decision trees to start with unequal number of signal/background
@@ -740,12 +781,23 @@ void TMVA::MethodBDT::InitEventSample( void )
 
    Double_t nevents = fEventSample.size();
    Double_t sumSigW=0, sumBkgW=0;
+   Int_t    sumSig=0, sumBkg=0;
    for (UInt_t ievt=0; ievt<fEventSample.size(); ievt++) {
-      if ((DataInfo().IsSignal(fEventSample[ievt])) ) sumSigW += fEventSample[ievt]->GetWeight();
-      else sumBkgW += fEventSample[ievt]->GetWeight(); 
+      if ((DataInfo().IsSignal(fEventSample[ievt])) ) {
+         sumSigW += fEventSample[ievt]->GetWeight();
+         sumSig++;
+      } else {
+         sumBkgW += fEventSample[ievt]->GetWeight(); 
+         sumBkg++;
+      }
   }
    Double_t normSig = nevents/((1+fSigToBkgFraction)*sumSigW)*fSigToBkgFraction;
    Double_t normBkg = nevents/((1+fSigToBkgFraction)*sumBkgW); ;
+   Log() << kINFO << "re-normlise events such that Sig and Bkg have respective sum of weights = " 
+         << fSigToBkgFraction << Endl;
+   Log() << kINFO << "  sig->sig*"<<normSig << "ev. bkg->bkg*"<<normBkg << "ev." <<Endl;
+   Log() << kINFO << "#events: (reweighted) sig: "<< sumSigW*normSig << " bkg: " << sumBkgW*normBkg << Endl;
+   Log() << kINFO << "#events: (unweighted) sig: "<< sumSig << " bkg: " << sumBkg << Endl;
    for (Long64_t ievt=0; ievt<nevents; ievt++) {
       if ((DataInfo().IsSignal(fEventSample[ievt])) ) fEventSample[ievt]->SetBoostWeight(normSig);
       else                                            fEventSample[ievt]->SetBoostWeight(normBkg);
@@ -763,6 +815,7 @@ void TMVA::MethodBDT::InitEventSample( void )
    */
 }
 
+//_______________________________________________________________________
 void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
    // o.k. you know there are events with negative event weights. This routine will remove
    // them by pairing them with the closest event(s) of the same event class with positive
@@ -816,7 +869,9 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
 
 
    Log() << kINFO << "Found a total of " << totalNegWeights << " in negative weights out of " << fEventSample.size() << " training events "  << Endl;
+   Timer timer(negEvents.size(),"Negative Event paired");
    for (UInt_t nev = 0; nev < negEvents.size(); nev++){
+      timer.DrawProgressBar( nev );
       Double_t weight = negEvents[nev]->GetWeight();
       UInt_t  iClassID = negEvents[nev]->GetClass();
       invCov = ((*cov)[iClassID]);
@@ -841,12 +896,12 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
          
          if (iMin > -1) { 
             //	    std::cout << "Happily pairing .. weight before : " << negEvents[nev]->GetWeight() << " and " << fEventSample[iMin]->GetWeight();
-	    Double_t newWeight= (negEvents[nev]->GetWeight() + fEventSample[iMin]->GetWeight());
+	    Double_t newWeight = (negEvents[nev]->GetWeight() + fEventSample[iMin]->GetWeight());
             if (newWeight > 0){
 	       negEvents[nev]->SetBoostWeight( 0 );
-	       fEventSample[iMin]->SetBoostWeight( newWeight );
+	       fEventSample[iMin]->SetBoostWeight( newWeight/fEventSample[iMin]->GetOriginalWeight() );  // note the weight*boostweight should be "newWeight"
 	    } else {
-	       negEvents[nev]->SetBoostWeight( newWeight );
+	       negEvents[nev]->SetBoostWeight( newWeight/negEvents[nev]->GetOriginalWeight() ); // note the weight*boostweight should be "newWeight"
 	       fEventSample[iMin]->SetBoostWeight( 0 );
 	    }	      
 	    //	    std::cout << " and afterwards " <<  negEvents[nev]->GetWeight() <<  " and the paired " << fEventSample[iMin]->GetWeight() << " dist="<<minDist<< std::endl;
@@ -854,6 +909,8 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
          weight = negEvents[nev]->GetWeight();
       }
    }
+   Log() << kINFO << "<Negative Event Pairing> took: " << timer.GetElapsedTime()
+         << "                              " << Endl;
 
    // just check.. now there should be no negative event weight left anymore
    totalNegWeights = 0;
@@ -875,7 +932,7 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
          totalWeights    += fEventSample[iev]->GetWeight();
       }
       if (fEventSample[iev]->GetWeight() > 0) {
-         newEventSample.push_back(fEventSample[iev]);
+         newEventSample.push_back(new Event(*fEventSample[iev]));
          if (fEventSample[iev]->GetClass() == fSignalClass){
             sigWeight += fEventSample[iev]->GetWeight();
             nSig+=1;
@@ -887,6 +944,7 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
    }
    if (totalNegWeights < 0) Log() << kFATAL << " compenstion of negative event weights with positive ones did not work " << totalNegWeights << Endl;
 
+   for (UInt_t i=0; i<fEventSample.size();      i++) delete fEventSample[i];
    fEventSample = newEventSample;
 
    Log() << kINFO  << " after PreProcessing, the Event sample is left with " << fEventSample.size() << " events (unweighted), all with positive weights, adding up to " << totalWeights << Endl;
@@ -1100,9 +1158,9 @@ void TMVA::MethodBDT::Train()
          UInt_t nClasses = DataInfo().GetNClasses();
          for (UInt_t i=0;i<nClasses;i++){            
             fForest.push_back( new DecisionTree( fSepType, fMinNodeSize, fNCuts, i,
-                                                 fRandomisedTrees, fUseNvars, fUsePoissonNvars, fNNodesMax, fMaxDepth,
+                                                 fRandomisedTrees, fUseNvars, fUsePoissonNvars, fMaxDepth,
                                                  itree*nClasses+i, fNodePurityLimit, itree*nClasses+i));
-            if (fPairNegWeightsInNode) fForest.back()->SetPairNegWeightsInNode();
+            fForest.back()->SetNVars(GetNvar());
             if (fUseFisherCuts) {
                fForest.back()->SetUseFisherCuts();
                fForest.back()->SetMinLinCorrForFisher(fMinLinCorrForFisher); 
@@ -1122,9 +1180,9 @@ void TMVA::MethodBDT::Train()
       }
       else{
          fForest.push_back( new DecisionTree( fSepType, fMinNodeSize, fNCuts, fSignalClass,
-                                              fRandomisedTrees, fUseNvars, fUsePoissonNvars, fNNodesMax, fMaxDepth,
+                                              fRandomisedTrees, fUseNvars, fUsePoissonNvars, fMaxDepth,
                                               itree, fNodePurityLimit, itree));
-         if (fPairNegWeightsInNode) fForest.back()->SetPairNegWeightsInNode();
+         fForest.back()->SetNVars(GetNvar());
          if (fUseFisherCuts) {
             fForest.back()->SetUseFisherCuts();
             fForest.back()->SetMinLinCorrForFisher(fMinLinCorrForFisher); 
@@ -1153,22 +1211,16 @@ void TMVA::MethodBDT::Train()
                fBoostWeights.push_back(this->Boost(fEventSample, fForest.back(), itree));
          }
          else {
-            if(!fPruneBeforeBoost) { // only prune after boosting
-               if(fBaggedGradBoost){
-                  fBoostWeights.push_back(this->Boost(fSubSample, fForest.back(), itree));
-               }else{
-                  fBoostWeights.push_back(this->Boost(fEventSample, fForest.back(), itree));
-               }
-   
-   // if fAutomatic == true, pruneStrength will be the optimal pruning strength
-               // determined by the pruning algorithm; otherwise, it is simply the strength parameter
-               // set by the user
-               if  (fPruneMethod != DecisionTree::kNoPruning) fForest.back()->PruneTree(validationSample);
+            if(fBaggedGradBoost){
+               fBoostWeights.push_back(this->Boost(fSubSample, fForest.back(), itree));
+            }else{
+               fBoostWeights.push_back(this->Boost(fEventSample, fForest.back(), itree));
             }
-            else { // prune first, then apply a boosting cycle
-               if  (fPruneMethod != DecisionTree::kNoPruning) fForest.back()->PruneTree(validationSample);
-               fBoostWeights.push_back( this->Boost(fEventSample, fForest.back(), itree) );
-            }
+            
+            // if fAutomatic == true, pruneStrength will be the optimal pruning strength
+            // determined by the pruning algorithm; otherwise, it is simply the strength parameter
+            // set by the user
+            if  (fPruneMethod != DecisionTree::kNoPruning) fForest.back()->PruneTree(validationSample);
             
             if (fUseYesNoLeaf && !DoRegression() ){ // remove leaf nodes where both daughter nodes are of same type
                fForest.back()->CleanTree();
@@ -1222,14 +1274,14 @@ void TMVA::MethodBDT::Train()
 //_______________________________________________________________________
 void TMVA::MethodBDT::GetRandomSubSample()
 {
-   // fills fEventSample with fSampleFraction*NEvents random training events
+   // fills fEventSample with fBaggedSampleFraction*NEvents random training events
    UInt_t nevents = fEventSample.size();
    
    if (!fSubSample.empty()) fSubSample.clear();
    TRandom3 *trandom   = new TRandom3(fForest.size()+1);
 
    for (UInt_t ievt=0; ievt<nevents; ievt++) { // recreate new random subsample
-      if(trandom->Rndm()<fSampleFraction)
+      if(trandom->Rndm()<fBaggedSampleFraction)
          fSubSample.push_back(fEventSample[ievt]);
    }
 }
@@ -1317,9 +1369,9 @@ Double_t TMVA::MethodBDT::GetWeightedQuantile(vector<  std::pair<Double_t, Doubl
    std::sort(vec.begin(), vec.end());
    UInt_t i = 0;
    while(i<vec.size() && temp <= norm*quantile){
-     temp += vec[i].second;
-     i++;
-   }      
+      temp += vec[i].second;
+      i++;
+   }
    if (i >= vec.size()) return 0.; // prevent uncontrolled memory access in return value calculation 
    return vec[i].first;
 }
@@ -1470,7 +1522,7 @@ Double_t TMVA::MethodBDT::Boost( std::vector<const TMVA::Event*>& eventSample, D
 
    if      (fBoostType=="AdaBoost")    returnVal = this->AdaBoost  (eventSample, dt);
    else if (fBoostType=="AdaCost")     returnVal = this->AdaCost   (eventSample, dt);
-   else if (fBoostType=="Bagging")     returnVal = this->Bagging   (eventSample, iTree);
+   else if (fBoostType=="Bagging")     returnVal = this->Bagging   (eventSample, iTree+1);
    else if (fBoostType=="RegBoost")    returnVal = this->RegBoost  (eventSample, dt);
    else if (fBoostType=="AdaBoostR2")  returnVal = this->AdaBoostR2(eventSample, dt);
    else if (fBoostType=="Grad"){
@@ -1702,6 +1754,8 @@ Double_t TMVA::MethodBDT::AdaBoost( std::vector<const TMVA::Event*>& eventSample
                if (DoRegression()) results->GetHist("BoostWeights")->Fill(boostfactor);
             } else {
                if ( fInverseBoostNegWeights )(*e)->ScaleBoostWeight( 1. / boostfactor); // if the original event weight is negative, and you want to "increase" the events "positive" influence, you'd reather make the event weight "smaller" in terms of it's absolute value while still keeping it something "negative"
+               else (*e)->SetBoostWeight( (*e)->GetBoostWeight() * boostfactor);
+               
             }
          }
 
@@ -1718,6 +1772,7 @@ Double_t TMVA::MethodBDT::AdaBoost( std::vector<const TMVA::Event*>& eventSample
             if (DoRegression()) results->GetHist("BoostWeights")->Fill(boostfactor);
          } else {
             if ( fInverseBoostNegWeights )(*e)->ScaleBoostWeight( 1. / boostfactor); // if the original event weight is negative, and you want to "increase" the events "positive" influence, you'd reather make the event weight "smaller" in terms of it's absolute value while still keeping it something "negative"
+            else (*e)->SetBoostWeight( (*e)->GetBoostWeight() * boostfactor);
          }
       }
       newSumGlobalw+=(*e)->GetWeight();
@@ -1889,20 +1944,18 @@ Double_t TMVA::MethodBDT::AdaCost( vector<const TMVA::Event*>& eventSample, Deci
 Double_t TMVA::MethodBDT::Bagging( vector<const TMVA::Event*>& eventSample, Int_t iTree )
 {
    // call it boot-strapping, re-sampling or whatever you like, in the end it is nothing
-   // else but applying "random" weights to each event.
+   // else but applying "random" poisson weights to each event.
    Double_t newSumw=0;
    Double_t newWeight;
    TRandom3 *trandom   = new TRandom3(iTree);
-   Double_t eventFraction = fUseNTrainEvents/Data()->GetNTrainingEvents();
    for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      newWeight = trandom->PoissonD(eventFraction);
+      newWeight = trandom->PoissonD(fBaggedSampleFraction);
       (*e)->SetBoostWeight(newWeight);
       newSumw+=(*e)->GetBoostWeight();
    }
    Double_t normWeight =  eventSample.size() / newSumw ;
    for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      (*e)->SetBoostWeight( (*e)->GetBoostWeight() * normWeight );
-      // change this backwards      (*e)->ScaleBoostWeight( normWeight );
+      (*e)->ScaleBoostWeight( normWeight );
    }
    delete trandom;
    return 1.;  //here as there are random weights for each event, just return a constant==1;
@@ -2206,14 +2259,8 @@ Double_t TMVA::MethodBDT::PrivateGetMvaValue(const TMVA::Event* ev, Double_t* er
    Double_t norm  = 0;
    for (UInt_t itree=0; itree<nTrees; itree++) {
       //
-      if (fUseWeightedTrees) {
-         myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(ev,fUseYesNoLeaf);
-         norm  += fBoostWeights[itree];
-      }
-      else {
-         myMVA += fForest[itree]->CheckEvent(ev,fUseYesNoLeaf);
-         norm  += 1;
-      }
+      myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(ev,fUseYesNoLeaf);
+      norm  += fBoostWeights[itree];
    }
    return ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 ;
 }
@@ -2321,14 +2368,8 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
    else{
       for (UInt_t itree=0; itree<fForest.size(); itree++) {
          //
-         if (fUseWeightedTrees) {
-            myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(ev,kFALSE);
-            norm  += fBoostWeights[itree];
-         }
-         else {
-            myMVA += fForest[itree]->CheckEvent(ev,kFALSE);
-            norm  += 1;
-         }
+         myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(ev,kFALSE);
+         norm  += fBoostWeights[itree];
       }
 //      fRegressionReturnVal->push_back( ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 );
       evT->SetTarget(0, ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 );
@@ -2453,14 +2494,14 @@ void TMVA::MethodBDT::GetHelpMessage() const
    Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
    Log() << Endl;
    Log() << "The two most important parameters in the configuration are the  " << Endl;
-   Log() << "minimal number of events requested by a leaf node (option " << Endl;
-   Log() << "\"nEventsMin\"). If this number is too large, detailed features " << Endl;
-   Log() << "in the parameter space cannot be modelled. If it is too small, " << Endl;
-   Log() << "the risk to overtrain rises." << Endl;
-   Log() << "   (Imagine the decision tree is split until the leaf node contains" << Endl;
-   Log() << "    only a single event. In such a case, no training event is  " << Endl;
-   Log() << "    misclassified, while the situation will look very different" << Endl;
-   Log() << "    for the test sample.)" << Endl;
+   Log() << "minimal number of events requested by a leaf node as percentage of the " <<Endl;
+   Log() << "   number of training events (option \"MinNodeSize\"  replacing the actual number " << Endl;
+   Log() << " of events \"nEventsMin\" as given in earlier versions" << Endl;
+   Log() << "If this number is too large, detailed features " << Endl;
+   Log() << "in the parameter space are hard to be modelled. If it is too small, " << Endl;
+   Log() << "the risk to overtrain rises and boosting seems to be less effective" << Endl;
+   Log() << "  typical values from our current expericience for best performance  " << Endl;
+   Log() << "  are between 0.5(\%) and 10(\%) " << Endl;
    Log() << Endl;
    Log() << "The default minimal number is currently set to " << Endl;
    Log() << "   max(20, (N_training_events / N_variables^2 / 10)) " << Endl;
@@ -2519,16 +2560,10 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
    fout << "      }" << std::endl;
    if (fBoostType=="Grad"){
       fout << "      myMVA += current->GetResponse();" << std::endl;
-   }
-   else if (fUseWeightedTrees) {
+   }else{
       if (fUseYesNoLeaf) fout << "      myMVA += fBoostWeights[itree] *  current->GetNodeType();" << std::endl;
       else               fout << "      myMVA += fBoostWeights[itree] *  current->GetPurity();" << std::endl;
       fout << "      norm  += fBoostWeights[itree];" << std::endl;
-   }
-   else {
-      if (fUseYesNoLeaf) fout << "      myMVA += current->GetNodeType();" << std::endl;
-      else               fout << "      myMVA += current->GetPurity();" << std::endl;
-      fout << "      norm  += 1.;" << std::endl;
    }
    fout << "   }" << std::endl;
    if (fBoostType=="Grad"){
@@ -2790,7 +2825,7 @@ void TMVA::MethodBDT::DeterminePreselectionCuts(const std::vector<const TMVA::Ev
       }
    }
 
-   Log() << kINFO << "found the following pre-selection cuts " << Endl;
+   Log() << kINFO << " found and suggest the following possible pre-selection cuts " << Endl;
    if (fDoPreselection) Log() << kINFO << "the training will be done after these cuts... and GetMVA value returns +1, (-1) for a signal (bkg) event that passes these cuts" << Endl;
    else  Log() << kINFO << "as option DoPreselection was not used, these cuts however will not be performed, but the training will see the full sample"<<Endl;
    for (UInt_t ivar=0; ivar < GetNvar(); ivar++ ) { // loop over all discriminating variables

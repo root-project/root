@@ -1657,7 +1657,7 @@ void TMVA::MethodMLP::GetHelpMessage() const
          << "only the TMlpANN performs an explicit separation of the" << Endl;
    Log() << "full training sample into independent training and validation samples." << Endl;
    Log() << "We have found that in most high-energy physics applications the " << Endl;
-   Log() << "available degrees of freedom (training events) are sufficient to " << Endl;
+   Log() << "avaliable degrees of freedom (training events) are sufficient to " << Endl;
    Log() << "constrain the weights of the relatively simple architectures required" << Endl;
    Log() << "to achieve good performance. Hence no overtraining should occur, and " << Endl;
    Log() << "the use of validation samples would only reduce the available training" << Endl;

@@ -130,6 +130,8 @@ void TMVA::MethodKNN::DeclareOptions()
 
 //_______________________________________________________________________
 void TMVA::MethodKNN::DeclareCompatibilityOptions() {
+   // options that are used ONLY for the READER to ensure backward compatibility
+
    MethodBase::DeclareCompatibilityOptions();
    DeclareOptionRef(fTreeOptDepth = 6, "TreeOptDepth", "Binary tree optimisation depth");
 }

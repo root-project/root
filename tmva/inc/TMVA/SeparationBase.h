@@ -98,7 +98,7 @@ namespace TMVA {
       // destructor
       virtual ~SeparationBase(){}
 
-      // Return the gain in separation of the original sample is split in two sub-samples
+      // Return the gain in separation of the original sample is splitted in two sub-samples
       // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right)
       virtual Double_t GetSeparationGain( const Double_t& nSelS, const Double_t& nSelB,
                                   const Double_t& nTotS, const Double_t& nTotB );

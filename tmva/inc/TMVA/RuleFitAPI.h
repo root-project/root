@@ -45,7 +45,6 @@
 namespace TMVA {
 
    class MethodRuleFit;
-   class RuleFit;
 
    class RuleFitAPI {
 
@@ -266,8 +265,7 @@ Bool_t TMVA::RuleFitAPI::WriteInt(std::ofstream &   f, const Int_t   *v, Int_t n
 {
    // write an int
    if (!f.is_open()) return kFALSE;
-   f.write(reinterpret_cast<char const *>(v), n*sizeof(Int_t));
-   return f.good();
+   return f.write(reinterpret_cast<char const *>(v), n*sizeof(Int_t));
 }
 
 //_______________________________________________________________________
@@ -275,8 +273,7 @@ Bool_t TMVA::RuleFitAPI::WriteFloat(std::ofstream & f, const Float_t *v, Int_t n
 {
    // write a float
    if (!f.is_open()) return kFALSE;
-   f.write(reinterpret_cast<char const *>(v), n*sizeof(Float_t));
-   return f.good();
+   return f.write(reinterpret_cast<char const *>(v), n*sizeof(Float_t));
 }
 
 //_______________________________________________________________________

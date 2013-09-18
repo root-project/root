@@ -35,12 +35,12 @@
 #include "TMVA/MsgLogger.h"
 
 //_______________________________________________________________________
-TMVA::Results::Results( const DataSetInfo* dsi ) 
+TMVA::Results::Results( const DataSetInfo* dsi, TString resultsName ) 
    : fTreeType(Types::kTraining),
      fDsi(dsi),
      fStorage( new TList() ),
      fHistAlias( new std::map<TString, TObject*> ),
-     fLogger( new MsgLogger("Results", kINFO) )
+     fLogger( new MsgLogger(Form("Results%s",resultsName.Data()), kINFO) )
 {
    // constructor
    fStorage->SetOwner();

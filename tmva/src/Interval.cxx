@@ -30,7 +30,7 @@
 //                                                                          //
 // Interval definition, continuous and discrete                             //
 //                                                                          //
-// Interval(min,max)  : a continuous interval [min,max]                      //
+// Interval(min,max)  : a continous interval [min,max]                      //
 // Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers: //
 //          min, min+step, min+2*step,...., min+(n-1)*step, min+n*step=max  //
 //   e.g.: Interval(1,5,5)=1,2,3,4,5                                        //
@@ -44,7 +44,7 @@
 <ul>
    <li> Interval definition, continuous and discrete
    <ul>
-         <li>  Interval(min,max)  : a continuous interval [min,max]
+         <li>  Interval(min,max)  : a continous interval [min,max]
          <li>  Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:<br>
          min, min+step, min+2*step,...., min+(n-1)*step=max <br>
          e.g.: Interval(1,5,5)=1,2,3,4,5                    <br>
@@ -87,7 +87,7 @@ TMVA::Interval::Interval( Double_t min, Double_t max, Int_t nbins ) :
 
    // defines minimum and maximum of an interval
    // when nbins > 0, interval describes a discrete distribution (equally distributed in the interval)
-   // when nbins == 0, interval describes a continuous interval
+   // when nbins == 0, interval describes a continous interval
    //
    if (fMax - fMin < 0) Log() << kFATAL << "maximum lower than minimum" << Endl;
    if (nbins < 0) {

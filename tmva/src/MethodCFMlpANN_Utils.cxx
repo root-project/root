@@ -267,7 +267,7 @@ void TMVA::MethodCFMlpANN_Utils::Entree_new( Int_t *, char *, Int_t *ntrain,
       ULog() << kINFO << "Number of layers for neuron(" << j << "): " << fNeur_1.neuron[j - 1] << Endl;
    }
    if (fNeur_1.neuron[fParam_1.layerm - 1] != 2) {
-      printf("Error: wrong number of classes at output layer: %i != 2 ==> abort\n",
+      printf("Error: wrong number of classes at ouput layer: %i != 2 ==> abort\n",
              fNeur_1.neuron[fParam_1.layerm - 1]);
       Arret("stop");
    }
@@ -695,7 +695,7 @@ void TMVA::MethodCFMlpANN_Utils::TestNN()
    }
    if (fParam_1.lclass < fNeur_1.neuron[fParam_1.layerm - 1]) {
       ktest = 1;
-      printf("Error: wrong number of classes at output layer: %i != %i ==> abort\n",
+      printf("Error: wrong number of classes at ouput layer: %i != %i ==> abort\n",
              fNeur_1.neuron[fParam_1.layerm - 1], fParam_1.lclass);
       Arret("problem needs to reported ");
    }

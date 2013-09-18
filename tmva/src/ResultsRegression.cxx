@@ -32,9 +32,9 @@
 #include "TMVA/DataSet.h"
 
 //_______________________________________________________________________
-TMVA::ResultsRegression::ResultsRegression( const DataSetInfo* dsi ) 
-   : Results( dsi ),
-     fLogger( new MsgLogger("ResultsRegression", kINFO) )
+TMVA::ResultsRegression::ResultsRegression( const DataSetInfo* dsi, TString resultsName  ) 
+   : Results( dsi, resultsName  ),
+     fLogger( new MsgLogger(Form("ResultsRegression%s",resultsName.Data()) , kINFO) )
 {
    // constructor
 }

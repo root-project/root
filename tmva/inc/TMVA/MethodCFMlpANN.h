@@ -91,8 +91,10 @@
 #ifndef ROOT_TMVA_MethodCFMlpANN_Utils
 #include "TMVA/MethodCFMlpANN_Utils.h"
 #endif
-#ifndef ROOT_TMatrixF
-#include "TMatrixF.h"
+#ifndef ROOT_TMVA_TMatrixFfwd
+#ifndef ROOT_TMatrixFfwd
+#include "TMatrixFfwd.h"
+#endif
 #endif
 
 namespace TMVA {

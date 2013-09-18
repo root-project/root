@@ -87,7 +87,6 @@ namespace TMVA {
          kMLP            ,
          kBayesClassifier,
          kFDA            ,
-         kCommittee      ,
          kBoost          ,
          kPDEFoam        ,
          kLD             ,
@@ -138,7 +137,6 @@ namespace TMVA {
          kBeforeTraining,
          kBeforeBoosting,
          kAfterBoosting,
-         kBoostValidation,
          kBoostProcEnd
       };
 

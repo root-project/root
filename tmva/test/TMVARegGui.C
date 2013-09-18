@@ -96,7 +96,7 @@ void TMVARegGui( const char* fName = "TMVAReg.root" )
    TListIter it( keylist );
    TObjString* str = 0;
    char ch = 'a';
-   while ((str = (TObjString*)it())) {
+   while (str = (TObjString*)it()) {
       TString tmp   = str->GetString();
       TString title = Form( "Input variables and target(s) '%s'-transformed (training sample)", 
                             tmp.ReplaceAll("InputVariables_","").Data() );
@@ -112,7 +112,7 @@ void TMVARegGui( const char* fName = "TMVAReg.root" )
 
    // correlation scatter plots 
    it.Reset(); ch = 'a';
-   while ((str = (TObjString*)it())) {
+   while (str = (TObjString*)it()) {
       TString tmp   = str->GetString();
       TString title = Form( "Input variable correlations '%s'-transformed (scatter profiles)", 
                             tmp.ReplaceAll("InputVariables_","").Data() );

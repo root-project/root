@@ -250,6 +250,8 @@ void TMVA::MethodLikelihood::DeclareOptions()
 
 void TMVA::MethodLikelihood::DeclareCompatibilityOptions()
 {
+   // options that are used ONLY for the READER to ensure backward compatibility
+
    MethodBase::DeclareCompatibilityOptions();
    DeclareOptionRef( fNsmooth = 1, "NSmooth",
                      "Number of smoothing iterations for the input histograms");

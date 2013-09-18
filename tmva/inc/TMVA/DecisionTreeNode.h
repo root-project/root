@@ -257,7 +257,7 @@ namespace TMVA {
       Float_t GetNEvents_unboosted( void ) const  { return fTrainInfo->fNEvents_unboosted; }
 
 
-      // set the chosen index, measure of "purity" (separation between S and B) AT this node
+      // set the choosen index, measure of "purity" (separation between S and B) AT this node
       void SetSeparationIndex( Float_t sep ){ fTrainInfo->fSeparationIndex =sep ; }
       // return the separation index AT this node
       Float_t GetSeparationIndex( void ) const  { return fTrainInfo->fSeparationIndex; }

@@ -201,6 +201,7 @@ namespace TMVA {
       }
 
       // probability of classifier response (mvaval) to be signal (requires "CreateMvaPdf" option set)
+      virtual Double_t GetProba( const Event *ev); // the simple one, automatically calcualtes the mvaVal and uses the SAME sig/bkg ratio as given in the training sample (typically 50/50 .. (NormMode=EqualNumEvents) but can be different) 
       virtual Double_t GetProba( Double_t mvaVal, Double_t ap_sig );
 
       // Rarity of classifier response (signal or background (default) is uniform in [0,1])
@@ -208,9 +209,6 @@ namespace TMVA {
 
       // create ranking
       virtual const Ranking* CreateRanking() = 0;
-
-      // perfrom extra actions during the boosting at different stages
-      virtual Bool_t   MonitorBoost(MethodBoost* /*booster*/) {return kFALSE;};
 
       // make ROOT-independent C++ class
       virtual void     MakeClass( const TString& classFileName = TString("") ) const;
@@ -234,7 +232,6 @@ namespace TMVA {
 
    private:
       friend class MethodCategory;
-      friend class MethodCommittee;
       friend class MethodCompositeBase;
       void WriteStateToXML      ( void* parent ) const;
       void ReadStateFromXML     ( void* parent );

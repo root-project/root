@@ -133,15 +133,15 @@ void TMVA::TNeuron::CalculateDelta()
    else {
       error = 0.0;
       TSynapse* synapse = NULL;
-      //      TObjArrayIter* iter = (TObjArrayIter*)fLinksOut->MakeIterator();
-      TObjArrayIter iter(fLinksOut);
+      TObjArrayIter* iter = (TObjArrayIter*)fLinksOut->MakeIterator();
+
       while (true) {
-         //synapse = (TSynapse*) iter->Next();
-         synapse = (TSynapse*) iter.Next();
+         synapse = (TSynapse*) iter->Next();
          if (synapse == NULL) break;
          error += synapse->GetWeightedDelta();
       }
-      //      delete iter;
+
+      delete iter;
    }
 
    fDelta = error * fActivation->EvalDerivative(GetValue());

@@ -94,9 +94,6 @@ namespace TMVA {
       // print help message
       virtual void PrintHelpMessage() const = 0;
 
-      // perfrom extra actions during the boosting at different stages
-      virtual Bool_t MonitorBoost( MethodBoost* boost) = 0;
-
       virtual void Init() = 0;
       virtual void DeclareOptions() = 0;
       virtual void ProcessOptions() = 0;

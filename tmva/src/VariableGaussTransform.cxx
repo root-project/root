@@ -770,7 +770,8 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
       
       fout << "   // copy the variables which are going to be transformed                                "<< std::endl;
       VariableTransformBase::MakeFunction(fout, fcncName, 0, trCounter, 0 );
-      fout << "   std::vector<double> dv(nvar);                                                          "<< std::endl;
+      fout << "   static std::vector<double> dv;                                                          "<< std::endl;
+      fout << "   dv.resize(nvar);                                                                       "<< std::endl;
       fout << "   for (int ivar=0; ivar<nvar; ivar++) dv[ivar] = iv[indicesGet.at(ivar)];                "<< std::endl;
       fout << "                                                                                          "<< std::endl;
       fout << "   bool FlatNotGauss = "<< (fFlatNotGauss? "true": "false") <<";                          "<< std::endl;

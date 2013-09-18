@@ -237,7 +237,7 @@ void TMVA::MethodCuts::Init( void )
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) (*fFitParams)[ivar] = kNotEnforced;
 
    fFitMethod = kUseMonteCarlo;
-   fTestSignalEff = 0.7;
+   fTestSignalEff = -1;
 
    // create LUT for cuts
    fCutMin = new Double_t*[GetNvar()];

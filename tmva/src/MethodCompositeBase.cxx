@@ -65,7 +65,7 @@ TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName,
                                                 const TString& theOption,
                                                 TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption, theTargetDir ),
-     fMethodIndex(0)
+   fCurrentMethodIdx(0), fCurrentMethod(0)
 {}
 
 //_______________________________________________________________________
@@ -74,7 +74,7 @@ TMVA::MethodCompositeBase::MethodCompositeBase( Types::EMVA methodType,
                                                 const TString& weightFile,
                                                 TDirectory* theTargetDir )
    : TMVA::MethodBase( methodType, dsi, weightFile, theTargetDir ),
-     fMethodIndex(0)
+   fCurrentMethodIdx(0), fCurrentMethod(0)     
 {}
 
 //_______________________________________________________________________
@@ -221,10 +221,10 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
    fMethods.clear();
    fMethodWeight.clear();
    for (UInt_t i=0; i<methodNum; i++) {
-      istr >> dummy >> methodName >>  dummy >> fMethodIndex >> dummy >> methodWeight;
-      if ((UInt_t)fMethodIndex != i) {
+      istr >> dummy >> methodName >>  dummy >> fCurrentMethodIdx >> dummy >> methodWeight;
+      if ((UInt_t)fCurrentMethodIdx != i) {
          Log() << kFATAL << "Error while reading weight file; mismatch MethodIndex="
-               << fMethodIndex << " i=" << i
+               << fCurrentMethodIdx << " i=" << i
                << " MethodName " << methodName
                << " dummy " << dummy
                << " MethodWeight= " << methodWeight
@@ -237,7 +237,7 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
          if (GetMethodType() == Types::kBoost)
             ((TMVA::MethodBoost*)this)->BookMethod( Types::Instance().GetMethodType( methodName), methodTitle,  optionString );
       }
-      else methodTitle=Form("%s (%04i)",GetMethodName().Data(),fMethodIndex);
+      else methodTitle=Form("%s (%04i)",GetMethodName().Data(),fCurrentMethodIdx);
       fMethods.push_back(ClassifierFactory::Instance().Create( std::string(methodName), jobName,
                                                                methodTitle,DataInfo(), optionString) );
       fMethodWeight.push_back( methodWeight );

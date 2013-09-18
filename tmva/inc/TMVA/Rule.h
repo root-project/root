@@ -55,7 +55,7 @@ namespace TMVA {
 
    class Rule {
 
-      // output operator for a Rule
+      // ouput operator for a Rule
       friend std::ostream& operator<< ( std::ostream& os, const Rule & rule );
 
    public:

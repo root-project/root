@@ -63,9 +63,6 @@
 #ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
 #endif
-#ifndef ROOT_TMVA_DataSet
-#include "TMVA/DataSet.h"
-#endif
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
 #endif

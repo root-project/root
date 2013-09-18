@@ -207,7 +207,6 @@ namespace TMVA {
       Int_t                           fNTrees;          // number of decision trees requested
       std::vector<DecisionTree*>      fForest;          // the collection of decision trees
       std::vector<double>             fBoostWeights;    // the weights applied in the individual boosts
-      Bool_t                          fRenormByClass;   // individually re-normalize each event class to the original size after boosting
       Double_t                        fSigToBkgFraction;// Signal to Background fraction assumed during training
       TString                         fBoostType;       // string specifying the boost type
       Double_t                        fAdaBoostBeta;    // beta parameter for AdaBoost algorithm
@@ -215,7 +214,6 @@ namespace TMVA {
       Double_t                        fTransitionPoint; // break-down point for gradient regression
       Double_t                        fShrinkage;       // learning rate for gradient boost;
       Bool_t                          fBaggedGradBoost; // turn bagging in combination with grad boost on/off
-      Double_t                        fSampleFraction;  // fraction of events used for bagged grad boost
       Double_t                        fSumOfWeights;    // sum of all event weights
       std::map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
       std::map< const TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
@@ -233,14 +231,12 @@ namespace TMVA {
       Bool_t                          fUseExclusiveVars; // individual variables already used in fisher criterium are not anymore analysed individually for node splitting
       Bool_t                          fUseYesNoLeaf;    // use sig or bkg classification in leave nodes or sig/bkg
       Double_t                        fNodePurityLimit; // purity limit for sig/bkg nodes
-      Bool_t                          fUseWeightedTrees;// use average classification from the trees, or have the individual trees trees in the forest weighted (e.g. log(boostweight) from AdaBoost
       UInt_t                          fNNodesMax;       // max # of nodes
       UInt_t                          fMaxDepth;        // max depth
 
       DecisionTree::EPruneMethod       fPruneMethod;     // method used for prunig
       TString                          fPruneMethodS;    // prune method option String
       Double_t                         fPruneStrength;   // a parameter to set the "amount" of pruning..needs to be adjusted
-      Bool_t                           fPruneBeforeBoost;// flag to prune before boosting
       Double_t                         fFValidationEvents;    // fraction of events to use for pruning
       Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample
       Bool_t                           fRandomisedTrees; // choose a random subset of possible cut variables at each node during training
@@ -248,12 +244,11 @@ namespace TMVA {
       Bool_t                           fUsePoissonNvars; // use "fUseNvars" not as fixed number but as mean of a possion distr. in each split
       UInt_t                           fUseNTrainEvents; // number of randomly picked training events used in randomised (and bagged) trees
 
-      Double_t                         fSampleSizeFraction;     // relative size of bagged event sample to original sample size
+      Double_t                         fBaggedSampleFraction;     // relative size of bagged event sample to original sample size
       TString                          fNegWeightTreatment;     // variable that holds the option of how to treat negative event weights in training
       Bool_t                           fNoNegWeightsInTraining; // ignore negative event weights in the training
       Bool_t                           fInverseBoostNegWeights; // boost ev. with neg. weights with 1/boostweight rathre than boostweight
       Bool_t                           fPairNegWeightsGlobal;   // pair ev. with neg. and pos. weights in traning sample and "annihilate" them 
-      Bool_t                           fPairNegWeightsInNode;   // randomly pair miscl. ev. with neg. and pos. weights in node and don't boost them
       Bool_t                           fTrainWithNegWeights; // yes there are negative event weights and we don't ignore them
       Bool_t                           fDoBoostMonitor; //create control plot with ROC integral vs tree number
 
@@ -287,6 +282,7 @@ namespace TMVA {
       std::vector<Bool_t>  fIsHighSigCut; 
       std::vector<Bool_t>  fIsHighBkgCut; 
       
+      Bool_t fHistoricBool; //historic variable, only needed for "CompatibilityOptions" 
 
 
       // debugging flags

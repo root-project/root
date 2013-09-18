@@ -38,10 +38,10 @@
 #include "TMVA/GeneticFitter.h"
 
 //_______________________________________________________________________
-TMVA::ResultsMulticlass::ResultsMulticlass( const DataSetInfo* dsi ) 
-   : Results( dsi ),
+TMVA::ResultsMulticlass::ResultsMulticlass( const DataSetInfo* dsi, TString resultsName  ) 
+   : Results( dsi, resultsName  ),
      IFitterTarget(),
-     fLogger( new MsgLogger("ResultsMulticlass", kINFO) ),
+     fLogger( new MsgLogger(Form("ResultsMultiClass%s",resultsName.Data()) , kINFO) ),
      fClassToOptimize(0),
      fAchievableEff(dsi->GetNClasses()),
      fAchievablePur(dsi->GetNClasses()),

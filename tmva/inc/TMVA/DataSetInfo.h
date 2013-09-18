@@ -132,6 +132,18 @@ namespace TMVA {
       const TString&                   GetNormalization() const { return fNormalization; }
       void                             SetNormalization( const TString& norm )   { fNormalization = norm; }
 
+      void SetTrainingSumSignalWeights(Double_t trainingSumSignalWeights){fTrainingSumSignalWeights = trainingSumSignalWeights;}
+      void SetTrainingSumBackgrWeights(Double_t trainingSumBackgrWeights){fTrainingSumBackgrWeights = trainingSumBackgrWeights;}
+      void SetTestingSumSignalWeights (Double_t testingSumSignalWeights ){fTestingSumSignalWeights  = testingSumSignalWeights ;}
+      void SetTestingSumBackgrWeights (Double_t testingSumBackgrWeights ){fTestingSumBackgrWeights  = testingSumBackgrWeights ;}
+
+      Double_t GetTrainingSumSignalWeights(){return fTrainingSumSignalWeights;}
+      Double_t GetTrainingSumBackgrWeights(){return fTrainingSumBackgrWeights;}
+      Double_t GetTestingSumSignalWeights (){return fTestingSumSignalWeights ;}
+      Double_t GetTestingSumBackgrWeights (){return fTestingSumBackgrWeights ;}
+
+
+
       // classification information
       Int_t              GetClassNameMaxLength() const;
       ClassInfo*         GetClassInfo( Int_t clNum ) const;
@@ -140,6 +152,7 @@ namespace TMVA {
       UInt_t             GetNClasses() const { return fClasses.size(); }
       Bool_t             IsSignal( const Event* ev ) const;
       std::vector<Float_t>* GetTargetsForMulticlass( const Event* ev );
+      UInt_t             GetSignalClassIndex(){return fSignalClass;}
 
       // by variable
       Int_t              FindVarIndex( const TString& )      const;
@@ -200,6 +213,13 @@ namespace TMVA {
 
       TString                    fNormalization;     //!
       TString                    fSplitOptions;      //!
+
+      Double_t                   fTrainingSumSignalWeights;
+      Double_t                   fTrainingSumBackgrWeights;
+      Double_t                   fTestingSumSignalWeights ;
+      Double_t                   fTestingSumBackgrWeights ;
+
+
       
       TDirectory*                fOwnRootDir;        //! ROOT output dir
       Bool_t                     fVerbose;           //! Verbosity

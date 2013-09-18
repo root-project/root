@@ -46,8 +46,6 @@
 #include "Rtypes.h"
 #endif
 
-#include <cstdlib>
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // MethodCFMlpANN_Utils                                                 //

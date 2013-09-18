@@ -737,6 +737,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TString theMethodName, TString meth
       return 0;
    }
 
+
    method->SetAnalysisType( fAnalysisType );
    method->SetupMethod();
    method->ParseOptions();
@@ -784,6 +785,7 @@ void TMVA::Factory::WriteDataInformation()
 
    DefaultDataSetInfo().GetDataSet(); // builds dataset (including calculation of correlation matrix)
 
+
    // correlation matrix of the default DS
    const TMatrixD* m(0);
    const TH2* h(0);
@@ -824,7 +826,7 @@ void TMVA::Factory::WriteDataInformation()
    
    // some default transformations to evaluate
    // NOTE: all transformations are destroyed after this test
-   TString processTrfs = ""; //"I;N;D;P;U;G,D;"
+   TString processTrfs = "I"; //"I;N;D;P;U;G,D;"
 
    // plus some user defined transformations
    processTrfs = fTransformations;

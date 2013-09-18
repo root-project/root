@@ -88,7 +88,7 @@ namespace TMVA {
                     Int_t nCuts,
                     UInt_t cls =0,
                     Bool_t randomisedTree=kFALSE, Int_t useNvars=0, Bool_t usePoissonNvars=kFALSE, 
-                    UInt_t nNodesMax=999999, UInt_t nMaxDepth=9999999, 
+                    UInt_t nMaxDepth=9999999, 
                     Int_t iSeed=fgRandomSeed, Float_t purityLimit=0.5,
                     Int_t treeID = 0);
 
@@ -183,7 +183,9 @@ namespace TMVA {
       // prune a node from the tree without deleting its descendants; allows one to
       // effectively prune a tree many times without making deep copies
       void PruneNodeInPlace( TMVA::DecisionTreeNode* node );
-    
+
+      Int_t GetNNodesBeforePruning(){return (fNNodesBeforePruning)?fNNodesBeforePruning:GetNNodes();}
+      
 
       UInt_t CountLeafNodes(TMVA::Node *n = NULL);
 
@@ -196,7 +198,8 @@ namespace TMVA {
       inline void SetUseFisherCuts(Bool_t t=kTRUE)  { fUseFisherCuts = t;}
       inline void SetMinLinCorrForFisher(Double_t min){fMinLinCorrForFisher = min;}
       inline void SetUseExclusiveVars(Bool_t t=kTRUE){fUseExclusiveVars = t;}
-      inline void SetPairNegWeightsInNode(){fPairNegWeightsInNode=kTRUE;}
+      inline void SetNVars(Int_t n){fNvars = n;}
+
 
    private:
       // utility functions
@@ -224,7 +227,8 @@ namespace TMVA {
       Double_t  fPruneStrength;  // a parameter to set the "amount" of pruning..needs to be adjusted 
     
       EPruneMethod fPruneMethod; // method used for prunig 
-    
+      Int_t    fNNodesBeforePruning; //remember this one (in case of pruning, it allows to monitor the before/after
+
       Double_t  fNodePurityLimit;// purity limit to decide whether a node is signal
     
       Bool_t    fRandomisedTree; // choose at each node splitting a random set of variables 
@@ -235,10 +239,8 @@ namespace TMVA {
     
       std::vector< Double_t > fVariableImportance; // the relative importance of the different variables 
 
-      UInt_t     fNNodesMax;     // max # of nodes
       UInt_t     fMaxDepth;      // max depth
       UInt_t     fSigClass;      // class which is treated as signal when building the tree
-      Bool_t     fPairNegWeightsInNode;  // randomly pair miscl. ev. with neg. and pos. weights in node and don't boost them
       static const Int_t  fgDebugLevel = 0;     // debug level determining some printout/control plots etc.
       Int_t     fTreeID;        // just an ID number given to the tree.. makes debugging easier as tree knows who he is.
 

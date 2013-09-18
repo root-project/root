@@ -465,9 +465,11 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
               << Endl;
    }
    if ( TMath::Abs(invCov.Determinant()) < 10E-120 ) {
+      theMat->Print();
       Log() << kFATAL << "<GetFisherCoeff> matrix is singular with determinant="
               << TMath::Abs(invCov.Determinant())  
-              << " did you use the variables that are linear combinations?" 
+              << " did you use the variables that are linear combinations? \n" 
+              << " do you any clue as to what went wrong in above printout of the covariance matrix? " 
               << Endl;
    }
 
@@ -555,6 +557,9 @@ void TMVA::MethodFisher::PrintCoefficients( void )
    vars  .push_back( "(offset)" );
    coeffs.push_back( fF0 );
    TMVA::gTools().FormattedOutput( coeffs, vars, "Variable" , "Coefficient", Log() );   
+
+   // for (int i=0; i<coeffs.size(); i++)
+   //    std::cout << "fisher coeff["<<i<<"]="<<coeffs[i]<<std::endl;
 
    if (IsNormalised()) {
       Log() << kINFO << "NOTE: You have chosen to use the \"Normalise\" booking option. Hence, the" << Endl;

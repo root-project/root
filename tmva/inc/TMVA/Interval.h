@@ -31,7 +31,7 @@
 //                                                                          //
 // Interval definition, continuous and discrete                             //
 //                                                                          //
-// Interval(min,max)  : a continuous interval [min,max]                      //
+// Interval(min,max)  : a continous interval [min,max]                      //
 // Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers: //
 //          min, min+step, min+2*step,...., min+(n-1)*step, min+n*step=max  //
 //   e.g.: Interval(1,5,5)=1,2,3,4,5                                        //
@@ -93,7 +93,7 @@ namespace TMVA {
       static MsgLogger* fgLogger;   // message logger
       MsgLogger& Log() const { return *fgLogger; }          
 
-      ClassDef(Interval,0)    // Interval definition, continuous and discrete
+      ClassDef(Interval,0)    // Interval definition, continous and discrete
    };
 
 } // namespace TMVA

@@ -61,7 +61,7 @@ namespace TMVA {
 
    public:
 
-      ResultsRegression( const DataSetInfo* dsi );
+      ResultsRegression( const DataSetInfo* dsi, TString resultsName  );
       ~ResultsRegression();
 
       // setters

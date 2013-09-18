@@ -230,6 +230,8 @@ void TMVA::MethodPDEFoam::DeclareOptions()
 
 //_______________________________________________________________________
 void TMVA::MethodPDEFoam::DeclareCompatibilityOptions() {
+   // options that are used ONLY for the READER to ensure backward compatibility
+
    MethodBase::DeclareCompatibilityOptions();
    DeclareOptionRef(fCutNmin = kTRUE, "CutNmin",  "Requirement for minimal number of events in cell");
    DeclareOptionRef(fPeekMax = kTRUE, "PeekMax",  "Peek cell with max. loss for the next split");
@@ -282,7 +284,6 @@ void TMVA::MethodPDEFoam::ProcessOptions()
 
    if (fTargetSelectionStr == "Mean" ) fTargetSelection = kMean;
    else                                fTargetSelection = kMpv;
-
    // sanity check: number of targets > 1 and MultiTargetRegression=F
    // makes no sense --> set MultiTargetRegression=T
    if (DoRegression() && Data()->GetNTargets() > 1 && !fMultiTargetRegression) {
@@ -585,6 +586,7 @@ void TMVA::MethodPDEFoam::TrainMonoTargetRegression()
       Log() << kFATAL << "Can't do mono-target regression with "
             << Data()->GetNTargets() << " targets!" << Endl;
    }
+
    Log() << kDEBUG << "MethodPDEFoam: number of Targets: " << Data()->GetNTargets() << Endl;
 
    fFoam.push_back( InitFoam("MonoTargetRegressionFoam", kMonoTarget) );
@@ -861,7 +863,7 @@ void TMVA::MethodPDEFoam::GetNCuts(PDEFoamCell *cell, std::vector<UInt_t> &nCuts
    //
    // - nCuts - the number of cuts are saved in this vector
 
-   if (cell->GetStat() == 1) // cell is active
+   if (cell == NULL || cell->GetStat() == 1) // cell is active
       return;
 
    nCuts.at(cell->GetBest())++;

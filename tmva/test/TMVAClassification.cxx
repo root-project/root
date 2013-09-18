@@ -278,11 +278,11 @@ int main( int argc, char** argv )
    // Cut optimisation
    if (Use["Cuts"])
       factory->BookMethod( TMVA::Types::kCuts, "Cuts",
-                           "!H:!V:FitMethod=MC:EffSel:SampleSize=200:VarProp=FSmart" );
+                           "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" );
 
    if (Use["CutsD"])
       factory->BookMethod( TMVA::Types::kCuts, "CutsD",
-                           "!H:!V:FitMethod=MC:EffSel:SampleSize=200:VarProp=FSmart:VarTransform=Decorrelate" );
+                           "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart:VarTransform=Decorrelate" );
 
    if (Use["CutsPCA"])
       factory->BookMethod( TMVA::Types::kCuts, "CutsPCA",
@@ -452,6 +452,7 @@ int main( int argc, char** argv )
 
    // ---- Now you can optimize the setting (configuration) of the MVAs using the set of training events
 
+   // ---- STILL EXPERIMENTAL and only implemented for BDT's ! 
    // factory->OptimizeAllMethods("SigEffAt001","Scan");
    // factory->OptimizeAllMethods("ROCIntegral","FitGA");
 

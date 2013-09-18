@@ -111,9 +111,20 @@ namespace TMVA {
       // this will have to be overridden by every subclass
       virtual void Train() = 0;
       
-      // print network, for debugging
+      // print network, for debugging  
       virtual void PrintNetwork() const;
-      
+
+
+      // call this function like that:
+      // ...
+      // MethodMLP* mlp = dynamic_cast<MethodMLP*>(method);
+      // std::vector<float> layerValues;
+      // mlp->GetLayerActivation (2, std::back_inserter(layerValues));
+      // ... do now something with the layerValues
+      // 
+      template <typename WriteIterator>
+      void GetLayerActivation (size_t layer, WriteIterator writeIterator);
+
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to file
@@ -144,6 +155,7 @@ namespace TMVA {
 
       enum EEstimator      { kMSE=0,kCE};
 
+
    protected:
 
       virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
@@ -161,8 +173,8 @@ namespace TMVA {
       
       // accessors
       Int_t    NumCycles()  { return fNcycles;   }
-      TNeuron* GetInputNeuron(Int_t index)       { return (TNeuron*)fInputLayer->At(index); }
-      TNeuron* GetOutputNeuron( Int_t index = 0) { return fOutputNeurons.at(index); }
+      TNeuron* GetInputNeuron (Int_t index)       { return (TNeuron*)fInputLayer->At(index); }
+      TNeuron* GetOutputNeuron(Int_t index = 0)   { return fOutputNeurons.at(index); }
       
       // protected variables
       TObjArray*    fNetwork;         // TObjArray of TObjArrays representing network
@@ -196,6 +208,12 @@ namespace TMVA {
    protected:
       Int_t                   fRandomSeed;      // random seed for initial synapse weights
 
+      Int_t                   fNcycles;         // number of epochs to train
+
+      TString                 fNeuronType;      // name of neuron activation function class
+      TString                 fNeuronInputType; // name of neuron input calculator class
+
+
    private:
       
       // helper functions for building network
@@ -217,9 +235,6 @@ namespace TMVA {
       void PrintNeuron(TNeuron* neuron) const;
       
       // private variables
-      Int_t                   fNcycles;         // number of epochs to train
-      TString                 fNeuronType;      // name of neuron activation function class
-      TString                 fNeuronInputType; // name of neuron input calculator class
       TObjArray*              fInputLayer;      // cache this for fast access
       std::vector<TNeuron*>   fOutputNeurons;   // cache this for fast access
       TString                 fLayerSpec;       // layout specification option
@@ -229,6 +244,30 @@ namespace TMVA {
     
       ClassDef(MethodANNBase,0) // Base class for TMVA ANNs
    };
+
+
+
+    template <typename WriteIterator>
+    inline void MethodANNBase::GetLayerActivation (size_t layerNumber, WriteIterator writeIterator)
+    {
+	// get the activation values of the nodes in layer "layer"
+	// write the node activation values into the writeIterator
+        // assumes, that the network has been computed already (by calling
+	// "GetRegressionValues")
+	TNeuron* neuron;
+
+	if (layerNumber >= fNetwork->GetEntriesFast())
+	    return;
+
+	TObjArray* layer = (TObjArray*)fNetwork->At(layerNumber);
+	UInt_t nNodes    = layer->GetEntriesFast();
+	for (UInt_t iNode = 0; iNode < nNodes; iNode++) 
+	{
+	    (*writeIterator) = ((TNeuron*)layer->At(iNode))->GetActivationValue();
+	    ++writeIterator;
+	}
+    }
+
    
 } // namespace TMVA
 

@@ -86,7 +86,7 @@ else
     root_in_ld=$?
     if [ ! $LD_LIBRARY_PATH ]; then
         if [ $root_in_ld -ne 0 ]; then
-            echo "Warning: so far you haven't setup your ROOT environment properly (no LD_LIBRARY_PATH): TMVA will not work"
+            echo "Warning: so far you haven't setup your ROOT enviroment properly (no LD_LIBRARY_PATH): TMVA will not work"
         fi
     fi
     export LD_LIBRARY_PATH=$TMVASYS/lib:${LD_LIBRARY_PATH}
