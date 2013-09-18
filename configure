@@ -6288,10 +6288,12 @@ if test "$enable_vc" = 'yes'; then
     # with GCC and Open64 check the binutils version. If it's less than 2.18.93 the assembler doesn't know xgetbv
     case $arch in
 	macos*)
-	    as_version="1038000";;
+	    as_version="1038000"
+	    ;;
 	*)
 	    as=`${altcxx} -print-prog-name=as`
-	    as_version=`${as} -version|head -n1|s"ed -e 's/^.*)//' -e 's/^.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/'|awk -F. '{print ($1*1000+$2)*1000+$3}'`
+            as_version=`${as} --version|head -n1|sed -e 's/^.*)//' -e 's/^.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/'|awk -F. '{print ($1*1000+$2)*1000+$3}'`
+	    ;;
     esac
     if test $as_version -lt 2018093; then
 	vcflags="$vcflags -DVC_NO_XGETBV"
