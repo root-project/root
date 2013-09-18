@@ -210,6 +210,36 @@ void TMVA::MethodBoost::DeclareOptions()
 }
 
 //_______________________________________________________________________
+void TMVA::MethodBase::DeclareCompatibilityOptions()
+{
+   // options that are used ONLY for the READER to ensure backward compatibility
+   //   they are hence without any effect (the reader is only reading the training 
+   //   options that HAD been used at the training of the .xml weightfile at hand
+
+   DeclareOptionRef( fMethodWeightType = "ByError", "Boost_MethodWeightType",
+                     "How to set the final weight of the boosted classifiers" );
+   AddPreDefVal(TString("ByError"));
+   AddPreDefVal(TString("Average"));
+   AddPreDefVal(TString("ByROC"));
+   AddPreDefVal(TString("ByOverlap"));
+   AddPreDefVal(TString("LastMethod"));
+
+   DeclareOptionRef( fTransformString = "step", "Boost_Transform",
+                     "Type of transform applied to every boosted method linear, log, step" );
+   AddPreDefVal(TString("step"));
+   AddPreDefVal(TString("linear"));
+   AddPreDefVal(TString("log"));
+   AddPreDefVal(TString("gauss"));
+
+   // this option here 
+   //DeclareOptionRef( fBoostType  = "AdaBoost", "Boost_Type", "Boosting type for the classifiers" );
+   // still exists, but these two possible values 
+   AddPreDefVal(TString("HighEdgeGauss"));
+   AddPreDefVal(TString("HighEdgeCoPara"));
+   // have been deleted .. hope that works :)
+
+
+//_______________________________________________________________________
 Bool_t TMVA::MethodBoost::BookMethod( Types::EMVA theMethod, TString methodTitle, TString theOption )
 {
    // just registering the string from which the boosted classifier will be created
