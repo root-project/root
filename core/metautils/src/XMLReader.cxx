@@ -405,7 +405,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
       std::string lineNumStr=static_cast<std::ostringstream*>( &(std::ostringstream() << lineNum) )->str();
       const char* lineNumCharp = lineNumStr.c_str();
       if (!tagOK){
-         ROOT::TMetaUtils::Error(0,"At line %i. Bad tag: %s\n", lineNumCharp, tagStrCharp);
+         ROOT::TMetaUtils::Error(0,"At line %s. Bad tag: %s\n", lineNumCharp, tagStrCharp);
          out.ClearSelectionRules();
          return false;
       }
@@ -468,32 +468,43 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                std::streampos initialPos(file.tellg());
                const unsigned int lineCharsSize=1000;
                char lineChars[lineCharsSize];
-               file.getline(lineChars,lineCharsSize); // carriage return
                file.getline(lineChars,lineCharsSize);
                std::string lineStr(lineChars);
-               if (lineStr.find("<![CDATA[")==std::string::npos){ // no data
+               // skip potential empty lines
+               while (lineStr == "" ||
+                      std::count(lineStr.begin(),lineStr.end(),' ') == (int)lineStr.size()){
+                  file.getline(lineChars,lineCharsSize);
+                  lineStr=lineChars;
+                  std::cout << "lineStr = *"<< lineStr<<"*\n";
+               }
+               // look for the start of the data section
+               size_t dataBeginPos = lineStr.find("<![CDATA[");
+               if (dataBeginPos==std::string::npos){ // no data
                   file.seekg(initialPos);
                   break;
                   }
+                  
+               // we put ourselves after the <![CDATA[
+               lineStr = lineStr.substr(dataBeginPos+9); 
+
                // if we are here, we have data. Let's put it in a string which
                // will become the code attribute
                std::string codeAttrVal;
                while(true){
-                  file.getline(lineChars,lineCharsSize);
-                  lineStr=lineChars;
-                  // if we found ]]>, it means we are at the end of the data,
+                  // while loop done to read the data
+                  // if we find ]]>, it means we are at the end of the data,
                   // we need to stop
-                  size_t dataEndPos = lineStr.find("]]>");
+                  size_t dataEndPos = lineStr.find("]]>");                  
                   if (dataEndPos!=std::string::npos) {
-                     // now go until the end of ]]>: a closing tab may be after it
-                     file.seekg(dataEndPos+3);
+                     // add code that may be before the ]]>
+                     codeAttrVal+=lineStr.substr(0,dataEndPos);
                      break;
                   }                  
-                  codeAttrVal+=lineChars;
-
-                  // remove carriage returns?                  
+                  codeAttrVal+=lineStr; // here because data can be on one line!
+                  file.getline(lineChars,lineCharsSize);
+                  lineStr=lineChars;
                }
-               Attributes at("code", "{"+codeAttrVal+"}");
+               Attributes at("code", codeAttrVal);
                attr.push_back(at);
                break;
             }
@@ -654,7 +665,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             // 6) code
             std::map<std::string,std::string> pragmaArgs;
             for (int i = 0, n = attr.size(); i < n; ++i) {
-               pragmaArgs[attr[i].fName]="\""+attr[i].fValue+"\"";
+               pragmaArgs[attr[i].fName]=attr[i].fValue;
             }
             
             bool mapIsSane= pragmaArgs.count("sourceClass") == 1 &&
@@ -670,12 +681,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
 
             std::stringstream pragmaLineStream;
-            pragmaLineStream << "sourceClass=" << pragmaArgs["sourceClass"]
-                             << " targetClass="<< pragmaArgs["sourceClass"]
-                             << " version="<< pragmaArgs["version"]
-                             << " source="<< pragmaArgs["source"]
-                             << " target="<< pragmaArgs["target"]
-                             << " code="<< pragmaArgs["code"];
+            pragmaLineStream << "sourceClass=\"" << pragmaArgs["sourceClass"] << "\""
+                             << " targetClass=\""<< pragmaArgs["sourceClass"] << "\""
+                             << " version=\""<< pragmaArgs["version"] << "\""
+                             << " source=\""<< pragmaArgs["source"] << "\""
+                             << " target=\""<< pragmaArgs["target"] << "\""
+                             << " code=\"{"+pragmaArgs["code"]+"}\"";
                              
             // Now send them to the pragma processor. The info will be put
             // in a global then read by the TMetaUtils
