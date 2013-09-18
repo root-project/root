@@ -1214,6 +1214,33 @@ check_explicit()
     fi
 }
 
+invoke_preprocessor() {
+    # This function will try to preprocess a given file. The result is stored in
+    # preprocessor_output, which should be immediately copied, since the
+    # variable will be overwritten at next invocation of this function.
+
+    cat > conftest.h
+    preprocessor_output=
+
+    logmsg " preprocessing"
+    cat <<EOF > conftest.mk
+include ${ac_srcdir}/config/Makefile.${arch}
+CXX = ${altcxx}
+conftest.out: conftest.h
+	\$(CXX) -E \$< -o \$@
+EOF
+
+    $gnumake -f conftest.mk >> $logfile 2>&1
+    if test $? -eq 0 ; then
+        preprocessor_output="`grep '^[^#]' conftest.out`"
+        logmsg " Preprocessing OK"
+    else
+        logmsg " Failed code was"
+        cat conftest.mk $1 >> $logfile
+    fi
+    rm -rf conftest.mk conftest.out conftest.h
+}
+
 #_____________________________________________________________________
 guess_architecture() {
     # Try to guess the architecture of the host system
@@ -6259,10 +6286,15 @@ if test "$enable_vc" = 'yes'; then
     message "Checking required compiler/assembler workarounds"
     vcflags=""
     # with GCC and Open64 check the binutils version. If it's less than 2.18.93 the assembler doesn't know xgetbv
-    as=`${altcxx} -print-prog-name=as`
-    as_version=`${as} --version|head -n1|sed -e 's/^.*)//' -e 's/^.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/'|awk -F. '{print ($1*1000+$2)*1000+$3}'`
+    case $arch in
+	macos*)
+	    as_version="1038000";;
+	*)
+	    as=`${altcxx} -print-prog-name=as`
+	    as_version=`${as} -version|head -n1|s"ed -e 's/^.*)//' -e 's/^.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/'|awk -F. '{print ($1*1000+$2)*1000+$3}'`
+    esac
     if test $as_version -lt 2018093; then
-       vcflags="$vcflags -DVC_NO_XGETBV"
+	vcflags="$vcflags -DVC_NO_XGETBV"
     fi
     invoke_preprocessor <<EOF
 #define _MAKE_VERSION(A, B, C) A##.##B##.##C
