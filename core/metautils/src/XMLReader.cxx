@@ -481,11 +481,16 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                while(true){
                   file.getline(lineChars,lineCharsSize);
                   lineStr=lineChars;
-                  codeAttrVal+=lineChars;
-                  if (lineStr.find("]]>")==std::string::npos) {
-                     file.getline(lineChars,lineCharsSize);
+                  // if we found ]]>, it means we are at the end of the data,
+                  // we need to stop
+                  size_t dataEndPos = lineStr.find("]]>");
+                  if (dataEndPos!=std::string::npos) {
+                     // now go until the end of ]]>: a closing tab may be after it
+                     file.seekg(dataEndPos+3);
                      break;
-                  }
+                  }                  
+                  codeAttrVal+=lineChars;
+
                   // remove carriage returns?                  
                }
                Attributes at("code", "{"+codeAttrVal+"}");
