@@ -2,7 +2,7 @@
 #define MYCLASS 1
 #endif
 
-#include <MyClass.h>
+#include "MyClass.h"
 #include <stdlib.h>
 #include <Riostream.h>
 #include <TObject.h>
