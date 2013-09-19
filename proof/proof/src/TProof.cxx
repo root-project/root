@@ -12403,11 +12403,17 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
       Ssiz_t eli = dsns.Index("?enl=");
       TFileCollection *fc;
       if (eli != kNPOS) {
-         dsns.Remove(eli, dsns.Length()-eli);
          enl = dsns(eli+5, dsns.Length());
+         dsns.Remove(eli, dsns.Length()-eli);
       }
 
-      if (( fc = mgr->GetDataSet(dsns) )) {
+      // Check if the entry list is valid. If it has spaces, commas, or pipes,
+      // it is not considered as valid and we revert to the "multiple datasets"
+      // case
+      Bool_t validEnl = ((enl.Index("|") == kNPOS) &&
+        (enl.Index(",") == kNPOS) && (enl.Index(" ") == kNPOS));
+
+      if (validEnl && (( fc = mgr->GetDataSet(dsns) ))) {
 
          //
          // String corresponds to ONE dataset only
