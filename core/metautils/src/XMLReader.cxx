@@ -402,7 +402,9 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
 
       const char* tagStrCharp = tagStr.c_str();
       // convert number to string
-      std::string lineNumStr=static_cast<std::ostringstream*>( &(std::ostringstream() << lineNum) )->str();
+      std::ostringstream buf;
+      buf << lineNum;
+      std::string lineNumStr = buf.str();
       const char* lineNumCharp = lineNumStr.c_str();
       if (!tagOK){
          ROOT::TMetaUtils::Error(0,"At line %s. Bad tag: %s\n", lineNumCharp, tagStrCharp);
