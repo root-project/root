@@ -254,7 +254,6 @@ namespace TMVA {
 	// write the node activation values into the writeIterator
         // assumes, that the network has been computed already (by calling
 	// "GetRegressionValues")
-	TNeuron* neuron;
 
 	if (layerNumber >= fNetwork->GetEntriesFast())
 	    return;

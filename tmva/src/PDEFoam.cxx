@@ -438,7 +438,7 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
    // information is used withing PeekMax() to avoid splitting cells
    // which contain less than fNmin events.
 
-   Double_t wt, dx, xBest, yBest;
+   Double_t wt, dx, xBest=0, yBest;
    Double_t intOld, driOld;
 
    Long_t iev;

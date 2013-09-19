@@ -42,7 +42,7 @@ Double_t TMVA::QuickMVAProbEstimator::GetMVAProbAt(Double_t value){
   EventInfo tmp; tmp.eventValue=value;
   std::vector<EventInfo>::iterator it = std::upper_bound(fEvtVector.begin(),fEvtVector.end(),tmp,TMVA::QuickMVAProbEstimator::compare);
   
-  Int_t iLeft=0, iRight=0;
+  UInt_t iLeft=0, iRight=0;
   Double_t nSignal=0;
   Double_t nBackgr=0;
 
