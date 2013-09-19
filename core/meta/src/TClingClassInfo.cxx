@@ -26,6 +26,7 @@
 
 #include "TClassEdit.h"
 #include "TClingBaseClassInfo.h"
+#include "TClingCallFunc.h"
 #include "TClingMethodInfo.h"
 #include "TDictionary.h"
 #include "TClingTypeInfo.h"
@@ -42,6 +43,7 @@
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/Specifiers.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 
@@ -178,18 +180,17 @@ void TClingClassInfo::Delete(void *arena) const
 {
    // Invoke operator delete on a pointer to an object
    // of this class type.
+   if (!IsValid()) {
+      Error("TClingClassInfo::Delete()", "Called while invalid!");
+      return;
+   }
    if (!IsLoaded()) {
+      Error("TClingClassInfo::Delete()", "Class is not loaded: %s",
+            FullyQualifiedName(fDecl).c_str());
       return;
    }
-   std::ostringstream os;
-   os << "delete (" << FullyQualifiedName(fDecl)  << "*)"
-      << reinterpret_cast<unsigned long>(arena) << ";";
-   cling::Interpreter::CompilationResult err =
-      fInterp->execute(os.str());
-   if (err != cling::Interpreter::kSuccess) {
-      return;
-   }
-   return;
+   TClingCallFunc cf(fInterp);
+   cf.ExecDestructor(this, arena, /*nary=*/0, /*withFree=*/true);
 }
 
 void TClingClassInfo::DeleteArray(void *arena, bool dtorOnly) const
@@ -201,21 +202,15 @@ void TClingClassInfo::DeleteArray(void *arena, bool dtorOnly) const
    }
    if (dtorOnly) {
       // There is no syntax in C++ for invoking the placement delete array
-      // operator, so we have to placement delete each element by hand.
+      // operator, so we have to placement destroy each element by hand.
       // Unfortunately we do not know how many elements to delete.
+      //TClingCallFunc cf(fInterp);
+      //cf.ExecDestructor(this, arena, nary, /*withFree=*/false);
       Error("DeleteArray", "Placement delete of an array is unsupported!\n");
+      return;
    }
-   else {
-      std::ostringstream os;
-      os << "delete[] (" << FullyQualifiedName(fDecl)  << "*)"
-         << reinterpret_cast<unsigned long>(arena) << ";";
-      cling::Interpreter::CompilationResult err =
-         fInterp->execute(os.str());
-      if (err != cling::Interpreter::kSuccess) {
-         return;
-      }
-   }
-   return;
+   TClingCallFunc cf(fInterp);
+   cf.ExecDestructor(this, arena, /*nary=*/1, /*withFree=*/true);
 }
 
 void TClingClassInfo::Destruct(void *arena) const
@@ -225,24 +220,8 @@ void TClingClassInfo::Destruct(void *arena) const
    if (!IsLoaded()) {
       return;
    }
-   const NamedDecl* ND = dyn_cast<NamedDecl>(fDecl);
-   if (!ND || !ND->getIdentifier()) {
-      Error("TClingClassInfo::Destruct",
-            "cannot destruct object of unnamed declaration.");
-      return;
-   }
-   
-   std::string name( FullyQualifiedName(fDecl) );
-   std::ostringstream os;
-   // compose "((Nsp1::Nsp2::C*)123456)->Nsp1::Nsp2::C::~C();
-   os << "((" << name << "*)" << reinterpret_cast<unsigned long>(arena)
-      << ")->" << name << "::~" << ND->getNameAsString() << "();";
-   cling::Interpreter::CompilationResult err =
-      fInterp->execute(os.str());
-   if (err != cling::Interpreter::kSuccess) {
-      return;
-   }
-   return;
+   TClingCallFunc cf(fInterp);
+   cf.ExecDestructor(this, arena, /*nary=*/0, /*withFree=*/false);
 }
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
@@ -454,51 +433,41 @@ long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
 
 bool TClingClassInfo::HasDefaultConstructor() const
 {
-   // Return true if there a public constructor taking no argument
-   // (including a constructor that has defaults for all its arguments).
+   // Return true if there a constructor taking no arguments (including
+   // a constructor that has defaults for all of its arguments) which
+   // is callable.  Either it has a body, or it is trivial and the
+   // compiler elides it.
+   //
    // Note: This is could enhanced to also know about the ROOT ioctor
    // but this was not the case in CINT.
+   //
    if (!IsLoaded()) {
       return false;
    }
-   const CXXRecordDecl *CRD =
-      llvm::dyn_cast<CXXRecordDecl>(fDecl);
-   if (!CRD) return true; 
-
-   // For now make the object of non-public class, not createable ...
-   // It would be better to find away to 'break' through
-   // the privacy.
-   if (CRD->getAccess() != AS_public && CRD->getAccess() != AS_none)
-      return false;
-   if (CRD->getName().equals("pair")) {
-      // Very special case ... oh well ...
-      const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (CRD);
-      if (tmplt_specialization) {
-         for(unsigned int i = 0; i <  tmplt_specialization->getTemplateArgs().size(); ++i) {
-            const clang::TemplateArgument &arg( tmplt_specialization->getTemplateArgs().get(i) );
-            clang::QualType tmplti = arg.getAsType();
-            const clang::Type *type = ROOT::TMetaUtils::GetUnderlyingType(tmplti);
-            if (type->isFundamentalType() || type->isEnumeralType()) {
-               continue;
-            }
-            clang::RecordDecl *tdecl = type->getAsCXXRecordDecl();
-            if (tdecl->getAccess() != AS_public && tdecl->getAccess() != AS_none)
-               return false;
-         }
-      }
+   const CXXRecordDecl* CRD = llvm::dyn_cast<CXXRecordDecl>(fDecl);
+   if (!CRD) {
+      // Namespaces do not have constructors.
+      return false; 
    }
-
+   if (CRD->hasTrivialDefaultConstructor()) {
+      // This class has a default constructor that can be called,
+      // but has no body.
+      return true;
+   }
+   // Note: This iteration may force template instantiations!
    cling::Interpreter::PushTransactionRAII pushedT(fInterp);
-   for (CXXRecordDecl::ctor_iterator iter = CRD->ctor_begin(),
-         end = CRD->ctor_end(); iter != end; ++iter) {
-      if (iter->getAccess() == AS_public) {
-         // We can reach this constructor.
-         if (iter->getNumParams() == 0) {
+   for (CXXRecordDecl::ctor_iterator I = CRD->ctor_begin(),
+         E = CRD->ctor_end(); I != E; ++I) {
+      if (I->getMinRequiredArguments() == 0) {
+         if (I->hasBody() && (I->getAccess() == AS_public)) {
             return true;
          }
-         // Most likely just this test is needed.
-         if (iter->getMinRequiredArguments() == 0) {
-            return true;
+         if (I->isTemplateInstantiation()) {
+            const clang::FunctionDecl* FD =
+               I->getInstantiatedFromMemberFunction();
+            if (FD->hasBody() && (FD->getAccess() == AS_public)) {
+               return true;
+            }
          }
       }
    }
@@ -760,21 +729,37 @@ void *TClingClassInfo::New() const
 {
    // Invoke a new expression to use the class constructor
    // that takes no arguments to create an object of this class type.
-
+   if (!IsValid()) {
+      Error("TClingClassInfo::New()", "Called while invalid!");
+      return 0;
+   }
+   if (!IsLoaded()) {
+      Error("TClingClassInfo::New()", "Class is not loaded: %s",
+            FullyQualifiedName(fDecl).c_str());
+      return 0;
+   }
+   const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
+   if (!RD) {
+      Error("TClingClassInfo::New()", "This is a namespace!: %s",
+            FullyQualifiedName(fDecl).c_str());
+      return 0;
+   }
    if (!HasDefaultConstructor()) {
+      // FIXME: We fail roottest root/io/newdelete if we issue this message!
+      //Error("TClingClassInfo::New()", "Class has no default constructor: %s",
+      //      FullyQualifiedName(fDecl).c_str());
       return 0;
    }
-   std::ostringstream os;
-   os << "new " << FullyQualifiedName(fDecl) << ";";
-   cling::StoredValueRef val;
-   cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str(), val);
-   if (err != cling::Interpreter::kSuccess) {
+   void* obj = 0;
+   TClingCallFunc cf(fInterp);
+   obj = cf.ExecDefaultConstructor(this, /*address=*/0, /*nary=*/0);
+   if (!obj) {
+      Error("TClingClassInfo::New()", "Call of default constructor "
+            "failed to return an object for class: %s",
+            FullyQualifiedName(fDecl).c_str());
       return 0;
    }
-   // The ref-counted pointer will get destructed by StoredValueRef,
-   // but not the allocation! I.e. the following is fine:
-   return llvm::GVTOP(val.get().getGV());
+   return obj;
 }
 
 void *TClingClassInfo::New(int n) const
@@ -782,20 +767,39 @@ void *TClingClassInfo::New(int n) const
    // Invoke a new expression to use the class constructor
    // that takes no arguments to create an array object
    // of this class type.
+   if (!IsValid()) {
+      Error("TClingClassInfo::New(n)", "Called while invalid!");
+      return 0;
+   }
+   if (!IsLoaded()) {
+      Error("TClingClassInfo::New(n)", "Class is not loaded: %s",
+            FullyQualifiedName(fDecl).c_str());
+      return 0;
+   }
+   const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
+   if (!RD) {
+      Error("TClingClassInfo::New(n)", "This is a namespace!: %s",
+            FullyQualifiedName(fDecl).c_str());
+      return 0;
+   }
    if (!HasDefaultConstructor()) {
+      // FIXME: We fail roottest root/io/newdelete if we issue this message!
+      //Error("TClingClassInfo::New(n)",
+      //      "Class has no default constructor: %s",
+      //      FullyQualifiedName(fDecl).c_str());
       return 0;
    }
-   std::ostringstream os;
-   os << "new " << FullyQualifiedName(fDecl) << "[" << n << "];";
-   cling::StoredValueRef val;
-   cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str(), val);
-   if (err != cling::Interpreter::kSuccess) {
+   void* obj = 0;
+   TClingCallFunc cf(fInterp);
+   obj = cf.ExecDefaultConstructor(this, /*address=*/0,
+                                   /*nary=*/(unsigned long)n);
+   if (!obj) {
+      Error("TClingClassInfo::New(n)", "Call of default constructor "
+            "failed to return an array of class: %s",
+            FullyQualifiedName(fDecl).c_str());
       return 0;
    }
-   // The ref-counted pointer will get destructed by StoredValueRef,
-   // but not the allocation! I.e. the following is fine:
-   return llvm::GVTOP(val.get().getGV());
+   return obj;
 }
 
 void *TClingClassInfo::New(int n, void *arena) const
@@ -804,21 +808,34 @@ void *TClingClassInfo::New(int n, void *arena) const
    // constructor that takes no arguments to create an
    // array of objects of this class type in the given
    // memory arena.
+   if (!IsValid()) {
+      Error("TClingClassInfo::New(n, arena)", "Called while invalid!");
+      return 0;
+   }
+   if (!IsLoaded()) {
+      Error("TClingClassInfo::New(n, arena)", "Class is not loaded: %s",
+            FullyQualifiedName(fDecl).c_str());
+      return 0;
+   }
+   const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
+   if (!RD) {
+      Error("TClingClassInfo::New(n, arena)", "This is a namespace!: %s",
+            FullyQualifiedName(fDecl).c_str());
+      return 0;
+   }
    if (!HasDefaultConstructor()) {
+      // FIXME: We fail roottest root/io/newdelete if we issue this message!
+      //Error("TClingClassInfo::New(n, arena)",
+      //      "Class has no default constructor: %s",
+      //      FullyQualifiedName(fDecl).c_str());
       return 0;
    }
-   std::ostringstream os;
-   os << "new ((void*)" << reinterpret_cast<unsigned long>(arena) << ") "
-      << FullyQualifiedName(fDecl) << "[" << n << "];";
-   cling::StoredValueRef val;
-   cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str(), val);
-   if (err != cling::Interpreter::kSuccess) {
-      return 0;
-   }
-   // The ref-counted pointer will get destructed by StoredValueRef,
-   // but not the allocation! I.e. the following is fine:
-   return llvm::GVTOP(val.get().getGV());
+   void* obj = 0;
+   TClingCallFunc cf(fInterp);
+   // Note: This will always return arena.
+   obj = cf.ExecDefaultConstructor(this, /*address=*/arena,
+                                   /*nary=*/(unsigned long)n);
+   return obj;
 }
 
 void *TClingClassInfo::New(void *arena) const
@@ -826,21 +843,33 @@ void *TClingClassInfo::New(void *arena) const
    // Invoke a placement new expression to use the class
    // constructor that takes no arguments to create an
    // object of this class type in the given memory arena.
+   if (!IsValid()) {
+      Error("TClingClassInfo::New(arena)", "Called while invalid!");
+      return 0;
+   }
+   if (!IsLoaded()) {
+      Error("TClingClassInfo::New(arena)", "Class is not loaded: %s",
+            FullyQualifiedName(fDecl).c_str());
+      return 0;
+   }
+   const CXXRecordDecl* RD = dyn_cast<CXXRecordDecl>(fDecl);
+   if (!RD) {
+      Error("TClingClassInfo::New(arena)", "This is a namespace!: %s",
+            FullyQualifiedName(fDecl).c_str());
+      return 0;
+   }
    if (!HasDefaultConstructor()) {
+      // FIXME: We fail roottest root/io/newdelete if we issue this message!
+      //Error("TClingClassInfo::New(arena)",
+      //      "Class has no default constructor: %s",
+      //      FullyQualifiedName(fDecl).c_str());
       return 0;
    }
-   std::ostringstream os;
-   os << "new ((void*)" << reinterpret_cast<unsigned long>(arena) << ") "
-      << FullyQualifiedName(fDecl) << ";";
-   cling::StoredValueRef val;
-   cling::Interpreter::CompilationResult err =
-      fInterp->evaluate(os.str(), val);
-   if (err != cling::Interpreter::kSuccess) {
-      return 0;
-   }
-   // The ref-counted pointer will get destructed by StoredValueRef,
-   // but not the allocation! I.e. the following is fine:
-   return llvm::GVTOP(val.get().getGV());
+   void* obj = 0;
+   TClingCallFunc cf(fInterp);
+   // Note: This will always return arena.
+   obj = cf.ExecDefaultConstructor(this, /*address=*/arena, /*nary=*/0);
+   return obj;
 }
 
 long TClingClassInfo::Property() const

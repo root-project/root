@@ -51,6 +51,8 @@ class TClingClassInfo;
 class TInterpreterValue;
 
 typedef void (*tcling_callfunc_Wrapper_t)(void*, int, void**, void*);
+typedef void (*tcling_callfunc_ctor_Wrapper_t)(void**, void*, unsigned long);
+typedef void (*tcling_callfunc_dtor_Wrapper_t)(void*, unsigned long, int);
 
 class TClingCallFunc {
 
@@ -68,6 +70,10 @@ private:
    bool fIgnoreExtraArgs;
 
 private:
+   void* compile_wrapper(const std::string& wrapper_name,
+                         const std::string& wrapper,
+                         bool withAccessControl = true);
+
    void collect_type_info(clang::QualType& QT, std::ostringstream& typedefbuf,
                           std::ostringstream& callbuf, std::string& type_name,
                           bool& isReference, int& ptrCnt, int indent_level,
@@ -90,6 +96,12 @@ private:
                                    std::ostringstream& buf, int indent_level);
 
    tcling_callfunc_Wrapper_t make_wrapper();
+
+   tcling_callfunc_ctor_Wrapper_t
+   make_ctor_wrapper(const TClingClassInfo* info);
+
+   tcling_callfunc_dtor_Wrapper_t
+   make_dtor_wrapper(const TClingClassInfo* info);
 
    void exec(void* address, void* ret) const;
    void exec_with_valref_return(void* address,
@@ -129,6 +141,10 @@ public:
       return *this;
    }
 
+   void* ExecDefaultConstructor(const TClingClassInfo* info, void* address = 0,
+                                unsigned long nary = 0UL);
+   void ExecDestructor(const TClingClassInfo* info, void* address = 0,
+                       unsigned long nary = 0UL, bool withFree = true);
    void ExecWithReturn(void* address, void* ret = 0);
    void Exec(void* address, TInterpreterValue* interpVal = 0);
    long ExecInt(void* address);

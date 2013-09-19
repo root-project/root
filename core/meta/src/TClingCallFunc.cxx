@@ -87,6 +87,18 @@ static unsigned long long wrapper_serial = 0LL;
 static const string indent_string("   ");
 
 static map<const FunctionDecl*, void*> wrapper_store;
+static map<const Decl*, void*> ctor_wrapper_store;
+static map<const Decl*, void*> dtor_wrapper_store;
+
+static
+inline
+void
+indent(ostringstream& buf, int indent_level)
+{
+   for (int i = 0; i < indent_level; ++i) {
+      buf << indent_string;
+   }
+}
 
 static
 cling::StoredValueRef
@@ -901,6 +913,94 @@ returnType sv_to(const cling::StoredValueRef& svref)
 }
 } // unnamed namespace.
 
+void*
+TClingCallFunc::
+compile_wrapper(const string& wrapper_name, const string& wrapper,
+                bool withAccessControl/*=true*/)
+{
+   //
+   //  Compile the wrapper code.
+   //
+   const FunctionDecl* WFD = 0;
+   {
+      LangOptions& LO = const_cast<LangOptions&>(
+         fInterp->getCI()->getLangOpts());
+      bool savedAccessControl = LO.AccessControl;
+      LO.AccessControl = withAccessControl;
+      cling::Transaction* T = 0;
+      cling::Interpreter::CompilationResult CR = fInterp->declare(wrapper, &T);
+      LO.AccessControl = savedAccessControl;
+      if (CR != cling::Interpreter::kSuccess) {
+         Error("TClingCallFunc::compile_wrapper", "Wrapper compile failed!");
+         return 0;
+      }
+      for (cling::Transaction::const_iterator I = T->decls_begin(),
+            E = T->decls_end(); I != E; ++I) {
+         if (I->m_Call != cling::Transaction::kCCIHandleTopLevelDecl) {
+            continue;
+         }
+         const FunctionDecl* D = dyn_cast<FunctionDecl>(*I->m_DGR.begin());
+         if (!isa<TranslationUnitDecl>(D->getDeclContext())) {
+            continue;
+         }
+         DeclarationName N = D->getDeclName();
+         const IdentifierInfo* II = N.getAsIdentifierInfo();
+         if (!II) {
+            continue;
+         }
+         if (II->getName() == wrapper_name) {
+            WFD = D;
+            break;
+         }
+      }
+      if (!WFD) {
+         Error("TClingCallFunc::compile_wrapper", 
+               "Wrapper compile did not return a function decl!");
+         return 0;
+      }
+   }
+   //
+   //  Lookup the new wrapper declaration.
+   //
+   string MN;
+   fInterp->maybeMangleDeclName(WFD, MN);
+   const NamedDecl* WND = dyn_cast<NamedDecl>(WFD);
+   if (!WND) {
+      Error("TClingCallFunc::make_wrapper", "Wrapper named decl is null!");
+      return 0;
+   }
+   {
+      //WND->dump();
+      //fInterp->getModule()->dump();
+      //gROOT->ProcessLine(".printIR");
+   }
+   //
+   //  Get the wrapper function pointer
+   //  from the ExecutionEngine (the JIT).
+   //
+   const GlobalValue* GV = fInterp->getModule()->getNamedValue(MN);
+   if (!GV) {
+      Error("TClingCallFunc::make_wrapper",
+            "Wrapper function name not found in Module!");
+      return 0;
+   }
+   ExecutionEngine* EE = fInterp->getExecutionEngine();
+   void* F = EE->getPointerToGlobalIfAvailable(GV);
+   if (!F) {
+      //
+      //  Wrapper function not yet codegened by the JIT,
+      //  force this to happen now.
+      //
+      F = EE->getPointerToGlobal(GV);
+      if (!F) {
+         Error("TClingCallFunc::make_wrapper", "Wrapper function has no "
+               "mapping in Module after forced codegen!");
+         return 0;
+      }
+   }
+   return F;
+}
+
 void
 TClingCallFunc::
 collect_type_info(QualType& QT, ostringstream& typedefbuf,
@@ -1320,7 +1420,6 @@ make_wrapper()
    const FunctionDecl* FD = fMethod->GetMethodDecl();
    ASTContext& Context = FD->getASTContext();
    PrintingPolicy Policy(Context.getPrintingPolicy());
-
    //
    //  Get the class or namespace name.
    //
@@ -1701,7 +1800,7 @@ make_wrapper()
    string wrapper_name;
    {
       ostringstream buf;
-      buf << "cf" << cling::utils::Synthesize::UniquePrefix;
+      buf << "__cf";
       //const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
       //string mn;
       //fInterp->maybeMangleDeclName(ND, mn);
@@ -1713,9 +1812,12 @@ make_wrapper()
    //  Write the wrapper code.
    //
    int indent_level = 0;
-   string wrapperFwdDecl = "void " + wrapper_name + "(void* obj, int nargs, void** args, void* ret)";
    ostringstream buf;
-   buf << wrapperFwdDecl << "{\n";
+   buf << "__attribute__((used)) ";
+   buf << "void ";
+   buf << wrapper_name;
+   buf << "(void* obj, int nargs, void** args, void* ret)\n";
+   buf << "{\n";
    ++indent_level;
    if (min_args == num_params) {
       // No parameters with defaults.
@@ -1740,82 +1842,344 @@ make_wrapper()
    }
    --indent_level;
    buf << "}\n";
-   string wrapper = wrapperFwdDecl + "__attribute__((used));\n"
-      + buf.str();
+   string wrapper(buf.str());
+   //fprintf(stderr, "%s\n", wrapper.c_str());
    //
    //  Compile the wrapper code.
    //
-   const FunctionDecl* WFD = 0;
+   void* F = compile_wrapper(wrapper_name, wrapper);
+   if (F) {
+      wrapper_store.insert(make_pair(FD, F));
+   }
+   return (tcling_callfunc_Wrapper_t)F;
+}
+
+tcling_callfunc_ctor_Wrapper_t
+TClingCallFunc::
+make_ctor_wrapper(const TClingClassInfo* info)
+{
+   // Make a code string that follows this pattern:
+   //
+   // void
+   // unique_wrapper_ddd(void** ret, void* arena, unsigned long nary)
+   // {
+   //    if (!arena) {
+   //       if (!nary) {
+   //          *ret = new ClassName;
+   //       }
+   //       else {
+   //          *ret = new ClassName[nary];
+   //       }
+   //    }
+   //    else {
+   //       if (!nary) {
+   //          *ret = new (arena) ClassName;
+   //       }
+   //       else {
+   //          *ret = new (arena) ClassName[nary];
+   //       }
+   //    }
+   // }
+   //
+   // Note:
+   //
+   // If the class is of POD type, the form:
+   //
+   //    new ClassName;
+   //
+   // does not initialize the object at all, and the form:
+   //
+   //    new ClassName();
+   //
+   // default-initializes the object.
+   //
+   // We are using the form without parentheses because that is what
+   // CINT did.
+   //
+   //--
+   ASTContext& Context = info->GetDecl()->getASTContext();
+   PrintingPolicy Policy(Context.getPrintingPolicy());
+   Policy.SuppressTagKeyword = true;
+   Policy.SuppressUnwrittenScope = true;
+   //
+   //  Get the class or namespace name.
+   //
+   string class_name;
+   if (const TypeDecl* TD = dyn_cast<TypeDecl>(info->GetDecl())) {
+      // This is a class, struct, or union member.
+      QualType QT(TD->getTypeForDecl(), 0);
+      //ROOT::TMetaUtils::GetFullyQualifiedTypeName(class_name, QT, *fInterp);
+      QT.getAsStringInternal(class_name, Policy);
+   }
+   else if (const NamedDecl* ND = dyn_cast<NamedDecl>(info->GetDecl())) {
+      // This is a namespace member.
+      raw_string_ostream stream(class_name);
+      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+      stream.flush();
+   }
+   //
+   //  Make the wrapper name.
+   //
+   string wrapper_name;
    {
-      cling::Transaction* Tp = 0;
-      cling::Interpreter::CompilationResult CR = fInterp->declare(wrapper, &Tp);
-      if (CR != cling::Interpreter::kSuccess) {
-         Error("TClingCallFunc::make_wrapper", "Wrapper compile failed!");
-         return 0;
-      }
-      for (cling::Transaction::const_iterator I = Tp->decls_begin(),
-              E = Tp->decls_end(); !WFD && I != E; ++I) {
-         if (I->m_Call == cling::Transaction::kCCIHandleTopLevelDecl) {
-            WFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin());
-            // ...unless not top level or different name:
-            if (!isa<TranslationUnitDecl>(WFD->getDeclContext()))
-               WFD = 0;
-            else {
-               DeclarationName FName = WFD->getDeclName();
-               if (const IdentifierInfo* FII = FName.getAsIdentifierInfo()) {
-                  if (FII->getName() != wrapper_name)
-                     WFD = 0;
-               }
-            }
-         }
-      }
-      if (!WFD) {
-         Error("TClingCallFunc::make_wrapper", 
-               "Wrapper compile did not return a function decl!");
-         return 0;
-      }
+      ostringstream buf;
+      buf << "__ctor";
+      //const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
+      //string mn;
+      //fInterp->maybeMangleDeclName(ND, mn);
+      //buf << '_dtor_' << mn;
+      buf << '_' << wrapper_serial++;
+      wrapper_name = buf.str();
    }
    //
-   //  Lookup the new wrapper declaration.
+   //  Write the wrapper code.
    //
-   string mn;
-   fInterp->maybeMangleDeclName(WFD, mn);
-   const NamedDecl* WND = dyn_cast<NamedDecl>(WFD);
-   if (!WND) {
-      Error("TClingCallFunc::make_wrapper", "Wrapper named decl is null!");
-      return 0;
+   int indent_level = 0;
+   ostringstream buf;
+   buf << "__attribute__((used)) ";
+   buf << "void ";
+   buf << wrapper_name;
+   buf << "(void** ret, void* arena, unsigned long nary)\n";
+   buf << "{\n";
+   //    if (!arena) {
+   //       if (!nary) {
+   //          *ret = new ClassName;
+   //       }
+   //       else {
+   //          *ret = new ClassName[nary];
+   //       }
+   //    }
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "if (!arena) {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "if (!nary) {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "*ret = new " << class_name << ";\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   indent(buf, indent_level);
+   buf << "else {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "*ret = new " << class_name << "[nary];\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   //    else {
+   //       if (!nary) {
+   //          *ret = new (arena) ClassName;
+   //       }
+   //       else {
+   //          *ret = new (arena) ClassName[nary];
+   //       }
+   //    }
+   indent(buf, indent_level);
+   buf << "else {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "if (!nary) {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "*ret = new (arena) " << class_name << ";\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   indent(buf, indent_level);
+   buf << "else {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "*ret = new (arena) " << class_name << "[nary];\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   // End wrapper.
+   --indent_level;
+   buf << "}\n";
+   // Done.
+   string wrapper(buf.str());
+   //fprintf(stderr, "%s\n", wrapper.c_str());
+   //
+   //  Compile the wrapper code.
+   //
+   void* F = compile_wrapper(wrapper_name, wrapper,
+                             /*withAccessControl=*/false);
+   if (F) {
+      ctor_wrapper_store.insert(make_pair(info->GetDecl(), F));
    }
+   return (tcling_callfunc_ctor_Wrapper_t)F;
+}
+
+tcling_callfunc_dtor_Wrapper_t
+TClingCallFunc::
+make_dtor_wrapper(const TClingClassInfo* info)
+{
+   // Make a code string that follows this pattern:
+   //
+   // void
+   // unique_wrapper_ddd(void* obj, unsigned long nary, int withFree)
+   // {
+   //    if (withFree) {
+   //       if (!nary) {
+   //          delete (ClassName*) obj;
+   //       }
+   //       else {
+   //          delete[] (ClassName*) obj;
+   //       }
+   //    }
+   //    else {
+   //       typedef ClassName DtorName;
+   //       if (!nary) {
+   //          ((ClassName*)obj)->~DtorName();
+   //       }
+   //       else {
+   //          for (unsigned long i = nary - 1; i > -1; --i) {
+   //             (((ClassName*)obj)+i)->~DtorName();
+   //          }
+   //       }
+   //    }
+   // }
+   //
+   //--
+   ASTContext& Context = info->GetDecl()->getASTContext();
+   PrintingPolicy Policy(Context.getPrintingPolicy());
+   Policy.SuppressTagKeyword = true;
+   Policy.SuppressUnwrittenScope = true;
+   //
+   //  Get the class or namespace name.
+   //
+   string class_name;
+   if (const TypeDecl* TD = dyn_cast<TypeDecl>(info->GetDecl())) {
+      // This is a class, struct, or union member.
+      QualType QT(TD->getTypeForDecl(), 0);
+      //ROOT::TMetaUtils::GetFullyQualifiedTypeName(class_name, QT, *fInterp);
+      QT.getAsStringInternal(class_name, Policy);
+   }
+   else if (const NamedDecl* ND = dyn_cast<NamedDecl>(info->GetDecl())) {
+      // This is a namespace member.
+      raw_string_ostream stream(class_name);
+      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+      stream.flush();
+   }
+   //
+   //  Make the wrapper name.
+   //
+   string wrapper_name;
    {
-      //WND->dump();
-      //fInterp->getModule()->dump();
-      //gROOT->ProcessLine(".printIR");
+      ostringstream buf;
+      buf << "__dtor";
+      //const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
+      //string mn;
+      //fInterp->maybeMangleDeclName(ND, mn);
+      //buf << '_dtor_' << mn;
+      buf << '_' << wrapper_serial++;
+      wrapper_name = buf.str();
    }
    //
-   //  Get the wrapper function pointer
-   //  from the ExecutionEngine (the JIT).
+   //  Write the wrapper code.
    //
-   const GlobalValue* GV = fInterp->getModule()->getNamedValue(mn);
-   if (!GV) {
-      Error("TClingCallFunc::make_wrapper",
-            "Wrapper function name not found in Module!");
-      return 0;
+   int indent_level = 0;
+   ostringstream buf;
+   buf << "__attribute__((used)) ";
+   buf << "void ";
+   buf << wrapper_name;
+   buf << "(void* obj, unsigned long nary, int withFree)\n";
+   buf << "{\n";
+   //    if (withFree) {
+   //       if (!nary) {
+   //          delete (ClassName*) obj;
+   //       }
+   //       else {
+   //          delete[] (ClassName*) obj;
+   //       }
+   //    }
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "if (withFree) {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "if (!nary) {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "delete (" << class_name << "*) obj;\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   indent(buf, indent_level);
+   buf << "else {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "delete[] (" << class_name << "*) obj;\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   //    else {
+   //       typedef ClassName Nm;
+   //       if (!nary) {
+   //          ((Nm*)obj)->~Nm();
+   //       }
+   //       else {
+   //          for (unsigned long i = nary - 1; i > -1; --i) {
+   //             (((Nm*)obj)+i)->~Nm();
+   //          }
+   //       }
+   //    }
+   indent(buf, indent_level);
+   buf << "else {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "typedef " << class_name << " Nm;\n";
+   buf << "if (!nary) {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "((Nm*)obj)->~Nm();\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   indent(buf, indent_level);
+   buf << "else {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "for (unsigned long i = nary - 1; i > -1; --i) {\n";
+   ++indent_level;
+   indent(buf, indent_level);
+   buf << "(((Nm*)obj)+i)->~Nm();\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   --indent_level;
+   indent(buf, indent_level);
+   buf << "}\n";
+   // End wrapper.
+   --indent_level;
+   buf << "}\n";
+   // Done.
+   string wrapper(buf.str());
+   //fprintf(stderr, "%s\n", wrapper.c_str());
+   //
+   //  Compile the wrapper code.
+   //
+   void* F = compile_wrapper(wrapper_name, wrapper,
+                             /*withAccessControl=*/false);
+   if (F) {
+      dtor_wrapper_store.insert(make_pair(info->GetDecl(), F));
    }
-   ExecutionEngine* EE = fInterp->getExecutionEngine();
-   void* f = EE->getPointerToGlobalIfAvailable(GV);
-   if (!f) {
-      //
-      //  Wrapper function not yet codegened by the JIT,
-      //  force this to happen now.
-      //
-      f = EE->getPointerToGlobal(GV);
-      if (!f) {
-         Error("TClingCallFunc::make_wrapper", "Wrapper function has no "
-               "mapping in Module after forced codegen!");
-         return 0;
-      }
-   }
-   wrapper_store.insert(make_pair(FD, f));
-   return (tcling_callfunc_Wrapper_t) f;
+   return (tcling_callfunc_dtor_Wrapper_t)F;
 }
 
 class ValHolder {
@@ -2993,6 +3357,68 @@ ExecWithReturn(void* address, void* ret/*= 0*/)
    }
    exec(address, ret);
    return;
+}
+
+void*
+TClingCallFunc::
+ExecDefaultConstructor(const TClingClassInfo* info, void* address /*=0*/,
+                       unsigned long nary /*= 0UL*/)
+{
+   if (!info->IsValid()) {
+      Error("TClingCallFunc::ExecDefaultConstructor", "Invalid class info!");
+      return 0;
+   }
+   const Decl* D = info->GetDecl();
+   //if (!info->HasDefaultConstructor()) {
+   //   // FIXME: We might have a ROOT ioctor, we might
+   //   //        have to check for that here.
+   //   Error("TClingCallFunc::ExecDefaultConstructor",
+   //         "Class has no default constructor: %s",
+   //         info->Name());
+   //   return 0;
+   //}
+   map<const Decl*, void*>::iterator I = ctor_wrapper_store.find(D);
+   tcling_callfunc_ctor_Wrapper_t wrapper = 0;
+   if (I != ctor_wrapper_store.end()) {
+      wrapper = (tcling_callfunc_ctor_Wrapper_t) I->second;
+   }
+   else {
+      wrapper = make_ctor_wrapper(info);
+   }
+   if (!wrapper) {
+      Error("TClingCallFunc::ExecDefaultConstructor",
+            "Called with no wrapper, not implemented!");
+      return 0;
+   }
+   void* obj = 0;
+   (*wrapper)(&obj, address, nary);
+   return obj;
+}
+
+void
+TClingCallFunc::
+ExecDestructor(const TClingClassInfo* info, void* address /*=0*/,
+               unsigned long nary /*= 0UL*/, bool withFree /*= true*/)
+{
+   if (!info->IsValid()) {
+      Error("TClingCallFunc::ExecDestructor", "Invalid class info!");
+      return;
+   }
+   const Decl* D = info->GetDecl();
+   map<const Decl*, void*>::iterator I = dtor_wrapper_store.find(D);
+   tcling_callfunc_dtor_Wrapper_t wrapper = 0;
+   if (I != dtor_wrapper_store.end()) {
+      wrapper = (tcling_callfunc_dtor_Wrapper_t) I->second;
+   }
+   else {
+      wrapper = make_dtor_wrapper(info);
+   }
+   if (!wrapper) {
+      Error("TClingCallFunc::ExecDestructor",
+            "Called with no wrapper, not implemented!");
+      return;
+   }
+   (*wrapper)(address, nary, withFree);
 }
 
 TClingMethodInfo*
