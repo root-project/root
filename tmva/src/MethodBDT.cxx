@@ -2501,7 +2501,7 @@ void TMVA::MethodBDT::GetHelpMessage() const
    Log() << "in the parameter space are hard to be modelled. If it is too small, " << Endl;
    Log() << "the risk to overtrain rises and boosting seems to be less effective" << Endl;
    Log() << "  typical values from our current expericience for best performance  " << Endl;
-   Log() << "  are between 0.5(\%) and 10(\%) " << Endl;
+   Log() << "  are between 0.5(%) and 10(%) " << Endl;
    Log() << Endl;
    Log() << "The default minimal number is currently set to " << Endl;
    Log() << "   max(20, (N_training_events / N_variables^2 / 10)) " << Endl;
