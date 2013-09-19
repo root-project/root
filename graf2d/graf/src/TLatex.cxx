@@ -1767,6 +1767,17 @@ TLatex *TLatex::DrawLatex(Double_t x, Double_t y, const char *text)
 
 
 //______________________________________________________________________________
+TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
+{
+   // Draw this TLatex with new coordinates in NDC.
+   
+   TLatex *newtext = DrawLatex(x, y, text);
+   newtext->SetNDC();
+   return newtext;
+}
+
+
+//______________________________________________________________________________
 void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSpec_t spec)
 {
    // Draw a line in a Latex formula
