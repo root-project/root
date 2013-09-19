@@ -127,3 +127,6 @@ templateAutoloadInclude: templateAutoloadInclude.log
 
 GetMissingDictionaries: GetMissingDictionaries.log
 	$(TestDiff)
+
+TEnum: TEnum.log
+	$(TestDiff)
