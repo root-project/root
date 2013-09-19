@@ -178,7 +178,7 @@ const char *rootClingHelp =
 #include "cling/Utils/AST.h"
 
 #include "llvm/Bitcode/BitstreamWriter.h"
-#include "llvm/Support/PathV2.h"
+#include "llvm/Support/Path.h"
 
 #ifdef WIN32
  const std::string gPathSeparator ("\\");
