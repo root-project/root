@@ -67,6 +67,7 @@ public:
    int           Next();
    int           Next(int onlyDirect);
    long          Offset() const;
+   long          Offset(void * address) const;
    long          Property() const;
    long          Tagnum() const;
    const char   *FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;

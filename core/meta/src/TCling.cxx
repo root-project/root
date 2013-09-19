@@ -4767,6 +4767,13 @@ Long_t TCling::BaseClassInfo_Offset(BaseClassInfo_t* bcinfo) const
 }
 
 //______________________________________________________________________________
+Long_t TCling::BaseClassInfo_Offset(BaseClassInfo_t* bcinfo, void * address) const
+{
+   TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
+   return TClinginfo->Offset();
+}
+
+//______________________________________________________________________________
 Long_t TCling::BaseClassInfo_Property(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;

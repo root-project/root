@@ -243,6 +243,7 @@ public:
    virtual int    BaseClassInfo_Next(BaseClassInfo_t * /* bcinfo */) const {return 0;}
    virtual int    BaseClassInfo_Next(BaseClassInfo_t * /* bcinfo */, int  /* onlyDirect */) const {return 0;}
    virtual Long_t BaseClassInfo_Offset(BaseClassInfo_t * /* bcinfo */) const {return 0;}
+   virtual Long_t BaseClassInfo_Offset(BaseClassInfo_t * /* bcinfo */, void * address) const {return 0;}
    virtual Long_t BaseClassInfo_Property(BaseClassInfo_t * /* bcinfo */) const {return 0;}
    virtual Long_t BaseClassInfo_Tagnum(BaseClassInfo_t * /* bcinfo */) const {return 0;}
    virtual const char *BaseClassInfo_FullName(BaseClassInfo_t * /* bcinfo */) const {return 0;}
