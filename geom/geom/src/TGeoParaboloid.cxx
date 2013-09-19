@@ -412,11 +412,11 @@ Double_t TGeoParaboloid::Safety(const Double_t *point, Bool_t in) const
    }   
    Double_t dr = TMath::Sqrt(rsq)-TMath::Sqrt(r0sq);
    if (in) {
-      if (dr>0) return 0.;
+      if (dr>-1.E-8) return 0.;
       Double_t dz = TMath::Abs(point[2]-z0);
       safr = -dr*dz/TMath::Sqrt(dr*dr+dz*dz);
    } else {
-      if (dr<0) return safz;   
+      if (dr<1.E-8) return safz;   
       Double_t talf = -2.*fA*TMath::Sqrt(r0sq);
       Double_t salf = talf/TMath::Sqrt(1.+talf*talf);
       safr = TMath::Abs(dr*salf);
