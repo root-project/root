@@ -2124,7 +2124,6 @@ void MethodUnitTestWithROCLimits::run()
   if (_methodType==Types::kCuts  // non-implemented makeclass methods BayesClassifier CFMlpANN Committee Cuts KNN PDERS RuleFit SVM
       || _methodType==Types::kBayesClassifier
       || _methodType==Types::kCFMlpANN
-      || _methodType==Types::kCommittee
       || _methodType==Types::kCuts
       || _methodType==Types::kKNN
       || _methodType==Types::kPDERS
