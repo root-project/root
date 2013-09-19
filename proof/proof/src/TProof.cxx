@@ -12401,7 +12401,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
       // into parts
       TString dsns( dsname.Data() ), enl;
       Ssiz_t eli = dsns.Index("?enl=");
-      TFileCollection *fc = 0;
+      TFileCollection *fc;
       if (eli != kNPOS) {
          dsns.Remove(eli, dsns.Length()-eli);
          enl = dsns(eli+5, dsns.Length());
@@ -12437,7 +12437,6 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
          while (dsns.Tokenize(dsn1, from1, "[, ]")) {
             TString dsn2;
             Int_t from2 = 0;
-            fc = 0;
             while (dsn1.Tokenize(dsn2, from2, "|")) {
                enl = "";
                Int_t ienl = dsn2.Index("?enl=");
@@ -12466,11 +12465,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
                if (dataset->GetList()->First())
                   ((TFileInfo *)(dataset->GetList()->First()))->SetTitle(dsn1.Data());
                // Add it to the local list
-               if (enl.IsNull()) {
-                  datasets->Add(new TPair(dataset, new TObjString("")));
-               } else {
-                  datasets->Add(new TPair(dataset, new TObjString(enl.Data())));
-               }
+               datasets->Add(new TPair(dataset, new TObjString(enl.Data())));
             }
             // Reset the pointer
             dataset = 0;
