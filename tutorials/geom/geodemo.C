@@ -1,9 +1,191 @@
+#include "TMath.h"
+#include "TControlBar.h"
+#include "TRandom3.h"
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TVirtualPad.h"
+#include "TCanvas.h"
+#include "TVirtualGeoPainter.h"
+#include "TGeoManager.h"
+#include "TGeoNode.h"
+#include "TView.h"
+#include "TPaveText.h"
+#include "TGeoBBox.h"
+#include "TGeoPara.h"
+#include "TGeoTube.h"
+#include "TGeoCone.h"
+#include "TGeoEltu.h"
+#include "TGeoSphere.h"
+#include "TGeoTorus.h"
+#include "TGeoTrd1.h"
+#include "TGeoTrd2.h"
+#include "TGeoParaboloid.h"
+#include "TGeoHype.h"
+#include "TGeoPcon.h"
+#include "TGeoPgon.h"
+#include "TGeoArb8.h"
+#include "TGeoXtru.h"
+#include "TGeoCompositeShape.h"
+#include "TGeoPhysicalNode.h"
+
+
 // GUI to draw the geometry shapes
 // Author: M.Gheata  06/16/03
 Bool_t comments = kTRUE;
 Bool_t raytracing = kFALSE;
-Bool_t rotate = kFALSE;
+Bool_t grotate = kFALSE;
 Bool_t axis = kTRUE;
+void autorotate();
+//______________________________________________________________________________
+void MakePicture()
+{
+   TView *view = gPad->GetView();
+   if (view) {
+//      view->RotateView(248,66);
+      if (axis) view->ShowAxis();
+   }
+   Bool_t is_raytracing = gGeoManager->GetGeomPainter()->IsRaytracing();
+   if (is_raytracing != raytracing) {
+      gGeoManager->GetGeomPainter()->SetRaytracing(raytracing);
+      gPad->Modified();
+      gPad->Update();
+   }   
+}
+      
+//______________________________________________________________________________
+void AddText(TPaveText *pave, const char *datamember, Double_t value, const char *comment)
+{
+   char line[128];
+   for (Int_t i=0; i<128; i++) line[i] = ' ';
+   memcpy(&line[0], datamember, strlen(datamember));
+   line[10] = '=';
+   char number[20];
+   sprintf(number, "%5.2f", value);
+   memcpy(&line[12], number, strlen(number));
+   line[26] = '=';
+   line[27] = '>';
+   sprintf(&line[30], "%s",comment);
+   TText *text = pave->AddText(line);
+//   text->SetTextColor(4);
+   text->SetTextAlign(12);//12
+}
+
+//______________________________________________________________________________
+void AddText(TPaveText *pave, const char *datamember, Int_t value, const char *comment)
+{
+   char line[128];
+   for (Int_t i=0; i<128; i++) line[i] = ' ';
+   memcpy(&line[0], datamember, strlen(datamember));
+   line[10] = '=';
+   char number[20];
+   sprintf(number, "%5i", value);
+   memcpy(&line[12], number, strlen(number));
+   line[26] = '=';
+   line[27] = '>';
+   sprintf(&line[30], "%s",comment);
+   TText *text = pave->AddText(line);
+//   text->SetTextColor(4);
+   text->SetTextAlign(12);
+}
+
+//______________________________________________________________________________
+void AddText(TPaveText *pave, TObject *pf, Int_t iaxis)
+{
+   char line[128];
+   TGeoPatternFinder *finder = (TGeoPatternFinder*)pf;
+   if (!pave || !pf) return;
+   for (Int_t i=0; i<128; i++) line[i] = ' ';
+   TGeoVolume *volume = finder->GetVolume();
+   TGeoShape *sh = volume->GetShape();
+   sprintf(line, "Division of %s on axis %d (%s)", volume->GetName(), iaxis,sh->GetAxisName(iaxis));
+   TText *text = pave->AddText(line);
+   text->SetTextColor(3);
+   text->SetTextAlign(12);
+   AddText(pave, "fNdiv",finder->GetNdiv(),"number of divisions");
+   AddText(pave, "fStart",finder->GetStart(),"start divisioning position");
+   AddText(pave, "fStep",finder->GetStep(),"division step");
+}
+
+//______________________________________________________________________________
+void SavePicture(const char *name, TObject *objcanvas, TObject *objvol, Int_t iaxis, Double_t step)
+{
+   TCanvas *c = (TCanvas*)objcanvas;
+   TGeoVolume *vol = (TGeoVolume*)objvol;
+   if (!c || !vol) return;
+   c->cd();
+   char fname[32];
+   switch (iaxis) {
+      case 0:
+         sprintf(fname,"t_%s.gif",name);
+	 break;
+      default:
+         if (step==0) sprintf(fname,"t_%sdiv%s.gif", name,vol->GetShape()->GetAxisName(iaxis));
+         else sprintf(fname,"t_%sdivstep%s.gif", name,vol->GetShape()->GetAxisName(iaxis));
+   }	 
+   c->Print(fname);
+}
+
+//______________________________________________________________________________
+Int_t randomColor()
+{
+   Double_t color = 7.*gRandom->Rndm();
+   return (1+Int_t(color));
+}   
+
+//______________________________________________________________________________
+void raytrace() {
+   raytracing = !raytracing;
+   if (!gGeoManager) return;
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   painter->SetRaytracing(raytracing);
+   if (!gPad) return;
+   gPad->Modified();
+   gPad->Update();
+}
+
+//______________________________________________________________________________
+void help() {
+   //
+  
+   new TCanvas("chelp","Help to run demos",200,10,700,600);
+
+   TPaveText *welcome = new TPaveText(.1,.8,.9,.97);
+   welcome->AddText("Welcome to the new geometry package");
+   welcome->SetTextFont(32);
+   welcome->SetTextColor(4);
+   welcome->SetFillColor(24);
+   welcome->Draw();
+
+   TPaveText *hdemo = new TPaveText(.05,.05,.95,.7);
+   hdemo->SetTextAlign(12);
+   hdemo->SetTextFont(52);
+   hdemo->AddText("- Demo for building TGeo basic shapes and simple geometry. Shape parameters are");
+   hdemo->AddText("  displayed in the right pad");
+   hdemo->AddText("- Click left mouse button to execute one demo");
+   hdemo->AddText("- While pointing the mouse to the pad containing the geometry, do:");
+   hdemo->AddText("- .... click-and-move to rotate");
+   hdemo->AddText("- .... press j/k to zoom/unzoom");
+   hdemo->AddText("- .... press l/h/u/i to move the view center arround");
+   hdemo->AddText("- Click Ray-trace ON/OFF to toggle ray-tracing");
+   hdemo->AddText("- Use <View with x3d> from the <View> menu to get an x3d view");
+   hdemo->AddText("- .... same methods to rotate/zoom/move the view");
+   hdemo->AddText("- Execute box(1,8) to divide a box in 8 equal slices along X");
+   hdemo->AddText("- Most shapes can be divided on X,Y,Z,Rxy or Phi :");
+   hdemo->AddText("- .... root[0] <shape>(IAXIS, NDIV, START, STEP);");
+   hdemo->AddText("  .... IAXIS = 1,2,3 meaning (X,Y,Z) or (Rxy, Phi, Z)");
+   hdemo->AddText("  .... NDIV  = number of slices");
+   hdemo->AddText("  .... START = start slicing position");
+   hdemo->AddText("  .... STEP  = division step");
+   hdemo->AddText("- Click Comments ON/OFF to toggle comments");
+   hdemo->AddText("- Click Ideal/Align geometry to see how alignment works");
+   hdemo->AddText(" ");
+   hdemo->SetAllWith("....","color",2);
+   hdemo->SetAllWith("....","font",72);
+   hdemo->SetAllWith("....","size",0.03);
+
+   hdemo->Draw();
+}
 
 //______________________________________________________________________________
 void geodemo ()
@@ -23,14 +205,8 @@ void geodemo ()
 // 
 // The same can procedure can be performed for visualizing other shapes.
 // When drawing one shape after another, the old geometry/canvas will be deleted.
-   gSystem->Load("libGeom");
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
-   dir.ReplaceAll("geodemo.C","");
-   dir.ReplaceAll("/./","/");
-   gROOT->LoadMacro(dir+"rootgeom.C");
-   bar = new TControlBar("vertical", "TGeo shapes",10,10);
+   TControlBar *bar = new TControlBar("vertical", "TGeo shapes",10,10);
    bar->AddButton("How to run  ","help()","Instructions for running this macro"); 
-   bar->AddButton("ROOTgeom    ","rootgeom()","A simple geometry example.");
    bar->AddButton("Arb8        ","arb8()","An arbitrary polyedron defined by vertices (max 8) sitting on 2 parallel planes");
    bar->AddButton("Box         ","box()","A box shape.");
    bar->AddButton("Composite   ","composite()","A composite shape");
@@ -64,10 +240,10 @@ void geodemo ()
 }
 
 //______________________________________________________________________________
-autorotate()
+void autorotate()
 {
-   rotate = !rotate;
-   if (!rotate) {
+   grotate = !grotate;
+   if (!grotate) {
       gROOT->SetInterrupt(kTRUE);
       return;
    }   
@@ -78,24 +254,24 @@ autorotate()
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    Double_t longit = view->GetLongitude();
-   Double_t lat = view->GetLatitude();
-   Double_t psi = view->GetPsi();
+//   Double_t lat = view->GetLatitude();
+//   Double_t psi = view->GetPsi();
    Double_t dphi = 1.;
-   Int_t i,irep;
+   Int_t irep;
    TProcessEventTimer *timer = new TProcessEventTimer(5);
    gROOT->SetInterrupt(kFALSE);
-   while (rotate) {
+   while (grotate) {
       if (timer->ProcessEvents()) break;
       if (gROOT->IsInterrupted()) break;
       longit += dphi;
       if (longit>360) longit -= 360.;
       if (!gPad) {
-         rotate = kFALSE;
+         grotate = kFALSE;
          return;
       } 
       view = gPad->GetView();  
       if (!view) {
-         rotate = kFALSE;
+         grotate = kFALSE;
          return;
       } 
       view->SetView(longit,view->GetLatitude(),view->GetPsi(),irep);
@@ -112,20 +288,6 @@ void axes()
    if (!gPad) return;
    TView *view = gPad->GetView();
    view->ShowAxis();
-}   
-
-//______________________________________________________________________________
-void rgeom()
-{
-   gROOT->GetListOfCanvases()->Delete();
-   rootgeom();
-   Bool_t is_raytracing = gGeoManager->GetGeomPainter()->IsRaytracing();
-   if (is_raytracing != raytracing) {
-      gGeoManager->GetTopVolume()->Draw();
-      gGeoManager->GetGeomPainter()->SetRaytracing(raytracing);
-      gPad->Modified();
-      gPad->Update();
-   }   
 }   
 
 //______________________________________________________________________________
@@ -1482,7 +1644,7 @@ void composite()
    pgon->DefineSection(0,0,0,20);
    pgon->DefineSection(1, 30,0,20);
 
-   TGeoSphere *sph = new TGeoSphere("sph", 40., 45.);
+   new TGeoSphere("sph", 40., 45.);
    // define named geometrical transformations with names
    TGeoTranslation *tr = new TGeoTranslation(0., 0., 45.);
    tr->SetName("tr");
@@ -1645,153 +1807,3 @@ void align()
    }   
 }
 
-//______________________________________________________________________________
-void MakePicture()
-{
-   TView *view = gPad->GetView();
-   if (view) {
-//      view->RotateView(248,66);
-      if (axis) view->ShowAxis();
-   }
-   Bool_t is_raytracing = gGeoManager->GetGeomPainter()->IsRaytracing();
-   if (is_raytracing != raytracing) {
-      gGeoManager->GetGeomPainter()->SetRaytracing(raytracing);
-      gPad->Modified();
-      gPad->Update();
-   }   
-}
-      
-//______________________________________________________________________________
-void AddText(TPaveText *pave, const char *datamember, Double_t value, const char *comment)
-{
-   char line[128];
-   for (Int_t i=0; i<128; i++) line[i] = ' ';
-   memcpy(&line[0], datamember, strlen(datamember));
-   line[10] = '=';
-   char number[20];
-   sprintf(number, "%5.2f", value);
-   memcpy(&line[12], number, strlen(number));
-   line[26] = '=';
-   line[27] = '>';
-   sprintf(&line[30], "%s",comment);
-   TText *text = pave->AddText(line);
-//   text->SetTextColor(4);
-   text->SetTextAlign(12);//12
-}
-
-//______________________________________________________________________________
-void AddText(TPaveText *pave, const char *datamember, Int_t value, const char *comment)
-{
-   char line[128];
-   for (Int_t i=0; i<128; i++) line[i] = ' ';
-   memcpy(&line[0], datamember, strlen(datamember));
-   line[10] = '=';
-   char number[20];
-   sprintf(number, "%5i", value);
-   memcpy(&line[12], number, strlen(number));
-   line[26] = '=';
-   line[27] = '>';
-   sprintf(&line[30], "%s",comment);
-   TText *text = pave->AddText(line);
-//   text->SetTextColor(4);
-   text->SetTextAlign(12);
-}
-
-//______________________________________________________________________________
-void AddText(TPaveText *pave, TObject *pf, Int_t iaxis)
-{
-   char line[128];
-   TGeoPatternFinder *finder = (TGeoPatternFinder*)pf;
-   if (!pave || !pf) return;
-   for (Int_t i=0; i<128; i++) line[i] = ' ';
-   TGeoVolume *volume = finder->GetVolume();
-   TGeoShape *sh = volume->GetShape();
-   sprintf(line, "Division of %s on axis %d (%s)", volume->GetName(), iaxis,sh->GetAxisName(iaxis));
-   TText *text = pave->AddText(line);
-   text->SetTextColor(3);
-   text->SetTextAlign(12);
-   AddText(pave, "fNdiv",finder->GetNdiv(),"number of divisions");
-   AddText(pave, "fStart",finder->GetStart(),"start divisioning position");
-   AddText(pave, "fStep",finder->GetStep(),"division step");
-}
-
-//______________________________________________________________________________
-void SavePicture(const char *name, TObject *objcanvas, TObject *objvol, Double_t iaxis, Double_t step)
-{
-   TCanvas *c = (TCanvas*)objcanvas;
-   TGeoVolume *vol = (TGeoVolume*)objvol;
-   if (!c || !vol) return;
-   c->cd();
-   char fname[32];
-   switch (iaxis) {
-      case 0:
-         sprintf(fname,"t_%s.gif",name);
-	 break;
-      default:
-         if (step==0) sprintf(fname,"t_%sdiv%s.gif", name,vol->GetShape()->GetAxisName(iaxis));
-         else sprintf(fname,"t_%sdivstep%s.gif", name,vol->GetShape()->GetAxisName(iaxis));
-   }	 
-   c->Print(fname);
-}
-
-//______________________________________________________________________________
-Int_t randomColor()
-{
-   Double_t color = 7.*gRandom->Rndm();
-   return (1+Int_t(color));
-}   
-
-//______________________________________________________________________________
-void raytrace() {
-   raytracing = !raytracing;
-   if (!gGeoManager) return;
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->SetRaytracing(raytracing);
-   if (!gPad) return;
-   gPad->Modified();
-   gPad->Update();
-}
-
-//______________________________________________________________________________
-void help() {
-   //
-  
-   new TCanvas("chelp","Help to run demos",200,10,700,600);
-
-   welcome = new TPaveText(.1,.8,.9,.97);
-   welcome->AddText("Welcome to the new geometry package");
-   welcome->SetTextFont(32);
-   welcome->SetTextColor(4);
-   welcome->SetFillColor(24);
-   welcome->Draw();
-
-   hdemo = new TPaveText(.05,.05,.95,.7);
-   hdemo->SetTextAlign(12);
-   hdemo->SetTextFont(52);
-   hdemo->AddText("- Demo for building TGeo basic shapes and simple geometry. Shape parameters are");
-   hdemo->AddText("  displayed in the right pad");
-   hdemo->AddText("- Click left mouse button to execute one demo");
-   hdemo->AddText("- While pointing the mouse to the pad containing the geometry, do:");
-   hdemo->AddText("- .... click-and-move to rotate");
-   hdemo->AddText("- .... press j/k to zoom/unzoom");
-   hdemo->AddText("- .... press l/h/u/i to move the view center arround");
-   hdemo->AddText("- Click Ray-trace ON/OFF to toggle ray-tracing");
-   hdemo->AddText("- Use <View with x3d> from the <View> menu to get an x3d view");
-   hdemo->AddText("- .... same methods to rotate/zoom/move the view");
-   hdemo->AddText("- Execute box(1,8) to divide a box in 8 equal slices along X");
-   hdemo->AddText("- Most shapes can be divided on X,Y,Z,Rxy or Phi :");
-   hdemo->AddText("- .... root[0] <shape>(IAXIS, NDIV, START, STEP);");
-   hdemo->AddText("  .... IAXIS = 1,2,3 meaning (X,Y,Z) or (Rxy, Phi, Z)");
-   hdemo->AddText("  .... NDIV  = number of slices");
-   hdemo->AddText("  .... START = start slicing position");
-   hdemo->AddText("  .... STEP  = division step");
-   hdemo->AddText("- Click Comments ON/OFF to toggle comments");
-   hdemo->AddText("- Click Ideal/Align geometry to see how alignment works");
-   hdemo->AddText(" ");
-   hdemo->SetAllWith("....","color",2);
-   hdemo->SetAllWith("....","font",72);
-   hdemo->SetAllWith("....","size",0.03);
-
-   hdemo->Draw();
-}
