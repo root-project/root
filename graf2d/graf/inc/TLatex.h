@@ -113,6 +113,8 @@ public:
       void             Copy(TObject &text) const;
 
       TLatex          *DrawLatex(Double_t x, Double_t y, const char *text);
+      TLatex          *DrawLatexNDC(Double_t x, Double_t y, const char *text);
+
       Double_t         GetHeight() const;
       Double_t         GetXsize();
       Double_t         GetYsize();
