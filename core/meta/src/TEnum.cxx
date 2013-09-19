@@ -23,27 +23,27 @@ ClassImp(TEnum)
 //______________________________________________________________________________
 TEnum::TEnum(const char* name, bool isGlobal, void* info)
 : TNamed(name, "An enum type"), fInfo(info) {
-	//Constructor for TEnum class.
-	//It take the name of the TEnum type, specification if it is global
-	//and interpreter info.
-	//Constant List is owner if enum not on global scope (thus constants not
-	//in TROOT::GetListOfGlobals).
+   //Constructor for TEnum class.
+   //It take the name of the TEnum type, specification if it is global
+   //and interpreter info.
+   //Constant List is owner if enum not on global scope (thus constants not
+   //in TROOT::GetListOfGlobals).
 
-	if (!isGlobal)
-	   fConstantList.SetOwner(kTRUE);
+   if (!isGlobal)
+      fConstantList.SetOwner(kTRUE);
 }
 
 //______________________________________________________________________________
 TEnum::~TEnum()
 {
-	//Destructor
+   //Destructor
 }
 
 //______________________________________________________________________________
 void TEnum::AddConstant(TEnumConstant* constant)
 {
-	//Add a EnumConstant to the list of constants of the Enum Type.
+   //Add a EnumConstant to the list of constants of the Enum Type.
 
-	fConstantList.Add(constant);
+   fConstantList.Add(constant);
 }
 
