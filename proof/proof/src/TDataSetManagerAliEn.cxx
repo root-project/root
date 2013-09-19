@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDataSetManagerAliEn.h"
+#include "TError.h"
 
 ClassImp(TAliEnFind);
 
@@ -541,43 +542,65 @@ Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
    TString &regexp)
 {
 
+  // Copy URI to a dummy URI parsed to look for unrecognized stuff; initial
+  // part is known ("Find;") and stripped
+  TString checkUri = uri(5, uri.Length());
+
   // Base path
-  TPMERegexp reBasePath("(^|;)BasePath=([^; ]+)(;|$)");
-  if (reBasePath.Match(uri) != 4) {
-    Error("ParseCustomFindUri", "Base path not specified");
+  TPMERegexp reBasePath("(^|;)(BasePath=([^; ]+))(;|$)");
+  if (reBasePath.Match(uri) != 5) {
+    ::Error("TDataSetManagerAliEn::ParseCustomFindUri",
+      "Base path not specified");
     return kFALSE;
   }
-  basePath = reBasePath[2];
+  checkUri.ReplaceAll(reBasePath[2], "");
+  basePath = reBasePath[3];
 
   // File name
-  TPMERegexp reFileName("(^|;)FileName=([^; ]+)(;|$)");
-  if (reFileName.Match(uri) != 4) {
-    Error("ParseCustomFindUri", "File name not specified");
+  TPMERegexp reFileName("(^|;)(FileName=([^; ]+))(;|$)");
+  if (reFileName.Match(uri) != 5) {
+    ::Error("TDataSetManagerAliEn::ParseCustomFindUri",
+      "File name not specified");
     return kFALSE;
   }
-  fileName = reFileName[2];
+  checkUri.ReplaceAll(reFileName[2], "");
+  fileName = reFileName[3];
 
   // Anchor (optional)
-  TPMERegexp reAnchor("(^|;)Anchor=([^; ]+)(;|$)");
-  if (reAnchor.Match(uri) != 4)
+  TPMERegexp reAnchor("(^|;)(Anchor=([^; ]+))(;|$)");
+  if (reAnchor.Match(uri) != 5)
     anchor = "";
-  else
-    anchor = reAnchor[2];
+  else {
+    checkUri.ReplaceAll(reAnchor[2], "");
+    anchor = reAnchor[3];
+  }
 
   // Tree name (optional)
-  TPMERegexp reTreeName("(^|;)Tree=(/[^; ]+)(;|$)");
-  if (reTreeName.Match(uri) != 4)
+  TPMERegexp reTreeName("(^|;)(Tree=(/[^; ]+))(;|$)");
+  if (reTreeName.Match(uri) != 5)
     treeName = "";
-  else
-    treeName = reTreeName[2];
+  else {
+    checkUri.ReplaceAll(reTreeName[2], "");
+    treeName = reTreeName[3];
+  }
 
   // Regexp (optional)
-  TPMERegexp reRegexp("(^|;)Regexp=([^; ]+)(;|$)");
-  if (reRegexp.Match(uri) != 4)
+  TPMERegexp reRegexp("(^|;)(Regexp=([^; ]+))(;|$)");
+  if (reRegexp.Match(uri) != 5)
     regexp = "";
-  else
-    regexp = reRegexp[2];
+  else {
+    checkUri.ReplaceAll(reRegexp[2], "");
+    regexp = reRegexp[3];
+  }
 
+  // Check for unparsed stuff; parsed stuff has been stripped from checkUri
+  checkUri.ReplaceAll(";", "");
+  checkUri.ReplaceAll(" ", "");
+  if (!checkUri.IsNull()) {
+    ::Error("TDataSetManagerAliEn::ParseCustomFindUri",
+      "There are unrecognized parameters in the dataset find string");
+    return kFALSE;
+  }
    return kTRUE;
 }
 
@@ -587,61 +610,83 @@ Bool_t TDataSetManagerAliEn::ParseOfficialDataUri(TString &uri, Bool_t sim,
   Int_t &aodNum, TString &pass)
 {
 
+  // Copy URI to a dummy URI parsed to look for unrecognized stuff
+  TString checkUri;
+
+  // Strip the initial part (either "Data;" or "Sim;")
+  {
+    Ssiz_t idx = uri.Index(";");
+    checkUri = uri(idx, uri.Length());
+  }
+
   //
   // Parse LHC period
   //
 
-  TPMERegexp rePeriod("(^|;)Period=(LHC([0-9]{2})[^;]*)(;|$)");
-  if (rePeriod.Match(uri) != 5) {
-    Error("ParseOfficialDataUri",
+  TPMERegexp rePeriod("(^|;)(Period=(LHC([0-9]{2})[^;]*))(;|$)");
+  if (rePeriod.Match(uri) != 6) {
+    ::Error("TDataSetManagerAliEn::ParseOfficialDataUri",
       "LHC period not specified (e.g. Period=LHC10h)");
     return kFALSE;
   }
 
-  period = rePeriod[2];
-  year = rePeriod[3].Atoi() + 2000;
+  checkUri.ReplaceAll(rePeriod[2], "");
+  period = rePeriod[3];
+  year = rePeriod[4].Atoi() + 2000;
 
   //
   // Parse data format (ESDs or AODXXX)
   //
 
-  TPMERegexp reFormat("(^|;)Variant=(ESDs?|AOD([0-9]{3}))(;|$)");
-  if (reFormat.Match(uri) != 5) {
-    Error("ParseOfficialDataUri",
+  TPMERegexp reFormat("(^|;)(Variant=(ESDs?|AOD([0-9]{3})))(;|$)");
+  if (reFormat.Match(uri) != 6) {
+    ::Error("TDataSetManagerAliEn::ParseOfficialDataUri",
       "Data variant (e.g., Variant=ESD or AOD079) not specified");
     return kFALSE;
   }
 
-  if (reFormat[2].BeginsWith("ESD")) esd = kTRUE;
+  checkUri.ReplaceAll(reFormat[2], "");
+  if (reFormat[3].BeginsWith("ESD")) esd = kTRUE;
   else {
     esd = kFALSE;
-    aodNum = reFormat[3].Atoi();
+    aodNum = reFormat[4].Atoi();
   }
 
   //
   // Parse pass: mandatory on Data, useless on Sim
   //
 
-  TPMERegexp rePass("(^|;)Pass=([a-zA-Z_0-9-]+)(;|$)");
-  if ((rePass.Match(uri) != 4) && (!sim)) {
-    Error("ParseOfficialDataUri",
+  TPMERegexp rePass("(^|;)(Pass=([a-zA-Z_0-9-]+))(;|$)");
+  if ((!sim) && (rePass.Match(uri) != 5)) {
+    ::Error("TDataSetManagerAliEn::ParseOfficialDataUri",
       "Pass (e.g., Pass=cpass1_muon) is mandatory on real data");
     return kFALSE;
   }
-  pass = rePass[2];
+  checkUri.ReplaceAll(rePass[2], "");
+  pass = rePass[3];
 
   //
   // Parse run list
   //
 
-  TPMERegexp reRun("(^|;)Run=([0-9,-]+)(;|$)");
-  if (reRun.Match(uri) != 4) {
-    Error("ParseOfficialDataUri",
+  TPMERegexp reRun("(^|;)(Run=([0-9,-]+))(;|$)");
+  if (reRun.Match(uri) != 5) {
+    ::Error("TDataSetManagerAliEn::ParseOfficialDataUri",
       "Run or run range not specified (e.g., Run=139104-139107,139306)");
     return kFALSE;
   }
-  TString runListStr = reRun[2];
+  checkUri.ReplaceAll(reRun[2], "");
+  TString runListStr = reRun[3];
   runList = ExpandRunSpec(runListStr);  // must be freed by caller
+
+  // Check for unparsed stuff; parsed stuff has been stripped from checkUri
+  checkUri.ReplaceAll(";", "");
+  checkUri.ReplaceAll(" ", "");
+  if (!checkUri.IsNull()) {
+    ::Error("TDataSetManagerAliEn::ParseOfficialDataUri",
+      "There are unrecognized parameters in dataset string");
+    return kFALSE;
+  }
 
   return kTRUE;
 }
