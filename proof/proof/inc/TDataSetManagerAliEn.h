@@ -103,13 +103,13 @@ class TDataSetManagerAliEn : public TDataSetManager {
       TDataSetManagerFile *fCache;
       Long_t               fCacheExpire_s;
 
-      std::vector<Int_t> *ExpandRunSpec(TString &runSpec);
+      static std::vector<Int_t> *ExpandRunSpec(TString &runSpec);
 
-      virtual Bool_t ParseCustomFindUri(TString &uri, TString &basePath,
+      static Bool_t ParseCustomFindUri(TString &uri, TString &basePath,
          TString &fileName, TString &anchor, TString &treeName,
          TString &regexp);
 
-      virtual Bool_t ParseOfficialDataUri(TString &uri, Bool_t sim,
+      static Bool_t ParseOfficialDataUri(TString &uri, Bool_t sim,
          TString &period, Int_t &year, std::vector<Int_t> *&runList,
          Bool_t &esd, Int_t &aodNum, TString &pass);
 
