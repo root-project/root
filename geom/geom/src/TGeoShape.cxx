@@ -480,7 +480,7 @@ Double_t TGeoShape::SafetySeg(Double_t r, Double_t z, Double_t r1, Double_t z1, 
    crossp *= (outer) ? 1. : -1.;
    // Positive crossp means point on the requested side of the (1,2) segment
    if (crossp < 0) {
-      if (((z-z1)*(z2-z)) > 0) return 0;
+      if (((z-z1)*(z2-z)) > -1.E-10) return 0;
       return TGeoShape::Big();
    }   
    // Compute (1,P) dot (1,2)

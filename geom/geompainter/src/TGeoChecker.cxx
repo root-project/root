@@ -1864,12 +1864,12 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
    // Number of tracks shot for every point inside the shape
    const Int_t kNtracks = 1000;
    Int_t n10 = nsamples/10;
-   Int_t itot = 0;
+   Int_t itot = 0, errcnt = 0, errsame=0;
    Int_t i;
-   Double_t dist, safe;
-   Double_t point[3];
-   Double_t dir[3];
-   Double_t norm[3];
+   Double_t dist, olddist, safe, dot;
+   Double_t point[3],newpoint[3], oldpoint[3];
+   Double_t dir[3], olddir[3];
+   Double_t norm[3], newnorm[3], oldnorm[3];
    Double_t theta, phi, ndotd;
    TCanvas *errcanvas = 0;
    TPolyMarker3D *pm1 = 0;
@@ -1884,25 +1884,37 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
    while (itot<nsamples) {
       Bool_t inside = kFALSE;
       while (!inside) {
-         point[0] = gRandom->Uniform(-dx,dx);
-         point[1] = gRandom->Uniform(-dy,dy);
-         point[2] = gRandom->Uniform(-dz,dz);
+         oldpoint[0] = point[0] = gRandom->Uniform(-dx,dx);
+         oldpoint[1] = point[1] = gRandom->Uniform(-dy,dy);
+         oldpoint[2] = point[2] = gRandom->Uniform(-dz,dz);
          inside = shape->Contains(point);
       }   
       phi = 2*TMath::Pi()*gRandom->Rndm();
       theta= TMath::ACos(1.-2.*gRandom->Rndm());
-      dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
-      dir[1]=TMath::Sin(theta)*TMath::Sin(phi);
-      dir[2]=TMath::Cos(theta);
+      olddir[0]=dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
+      olddir[1]=dir[1]=TMath::Sin(theta)*TMath::Sin(phi);
+      olddir[2]=dir[2]=TMath::Cos(theta);
+      oldnorm[0] = oldnorm[1] = oldnorm[2] = 0.;
+      olddist = 0.;
       itot++;
       if (n10) {
          if ((itot%n10) == 0) printf("%i percent\n", Int_t(100*itot/nsamples));
       }
       for (i=0; i<kNtracks; i++) {
+         if (errcnt>0) break;
          dist = shape->DistFromInside(point,dir,3);
-         if (dist<TGeoShape::Tolerance() || dist>dmax) {         
-            printf("Error DistFromInside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) =%g\n",
-                    point[0],point[1],point[2], dir[0], dir[1], dir[2], dist);
+         for (Int_t j=0; j<3; j++) {
+            newpoint[j] = point[j] + dist*dir[j];
+         }   
+         shape->ComputeNormal(newpoint,dir,newnorm);
+
+         dot = olddir[0]*oldnorm[0]+olddir[1]*oldnorm[1]+ olddir[2]*oldnorm[2];
+         if (!shape->Contains(point) && shape->Safety(point,kFALSE)>1.E-3) {
+            errcnt++;
+            printf("Error point outside (%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) =%g olddist=%g\n",
+                       point[0],point[1],point[2], dir[0], dir[1], dir[2], dist, olddist);
+            printf("         old point: (%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f)\n",
+                       oldpoint[0],oldpoint[1],oldpoint[2], olddir[0], olddir[1], olddir[2]);
             if (!errcanvas) errcanvas = new TCanvas("shape_err03", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
             if (!pm1) {
                pm1 = new TPolyMarker3D();
@@ -1911,12 +1923,40 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
                pm1->SetMarkerColor(kRed);
             }   
             pm1->SetNextPoint(point[0],point[1],point[2]);
+            pm1->SetNextPoint(oldpoint[0],oldpoint[1],oldpoint[2]);
             break;
          }
+         if ((dist<TGeoShape::Tolerance() && olddist*dot>1.E-3) || dist>dmax) {
+            errsame++;
+            if (errsame>1) {
+               errcnt++;         
+               printf("Error DistFromInside(%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) =%g olddist=%g\n",
+                       point[0],point[1],point[2], dir[0], dir[1], dir[2], dist, olddist);
+               printf("         new norm:  (%g, %g, %g)\n", newnorm[0], newnorm[1], newnorm[2]);
+               printf("         old point: (%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f)\n",
+                       oldpoint[0],oldpoint[1],oldpoint[2], olddir[0], olddir[1], olddir[2]);
+               printf("         old norm:  (%g, %g, %g)\n", oldnorm[0], oldnorm[1], oldnorm[2]);
+               if (!errcanvas) errcanvas = new TCanvas("shape_err03", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
+               if (!pm1) {
+                  pm1 = new TPolyMarker3D();
+                  pm1->SetMarkerStyle(24);
+                  pm1->SetMarkerSize(0.4);
+                  pm1->SetMarkerColor(kRed);
+               }   
+               pm1->SetNextPoint(point[0],point[1],point[2]);
+               pm1->SetNextPoint(oldpoint[0],oldpoint[1],oldpoint[2]);
+               break;
+            }
+         } else errsame = 0;   
+         olddist = dist;
          
-         for (Int_t j=0; j<3; j++) point[j] += dist*dir[j];
+         for (Int_t j=0; j<3; j++) {
+            oldpoint[j] = point[j];
+            point[j] += dist*dir[j];
+         }   
          safe = shape->Safety(point, kTRUE);
-         if (safe>1.E-6) {
+         if (safe>1.E-3) {
+            errcnt++;         
             printf("Error safety (%19.15f, %19.15f, %19.15f) safe=%g\n",
                     point[0],point[1],point[2], safe);
             if (!errcanvas) errcanvas = new TCanvas("shape_err03", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
@@ -1931,6 +1971,28 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
          }
          // Compute normal
          shape->ComputeNormal(point,dir,norm);
+         if (TGeoShape::IsSameWithinTolerance(norm[0],oldnorm[0]) &&
+            TGeoShape::IsSameWithinTolerance(norm[1],oldnorm[1]) &&
+            TGeoShape::IsSameWithinTolerance(norm[2],oldnorm[2])) {
+            errcnt++;
+            printf("Error: same normal for: (%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f) = (%g,%g,%g)\n",
+                    point[0],point[1],point[2], dir[0], dir[1], dir[2], norm[0], norm[1], norm[2]);
+            printf("                as for: (%19.15f, %19.15f, %19.15f, %19.15f, %19.15f, %19.15f)\n",
+                    oldpoint[0],oldpoint[1],oldpoint[2], olddir[0], olddir[1], olddir[2]);
+            if (!errcanvas) errcanvas = new TCanvas("shape_err03", Form("Shape %s (%s)",shape->GetName(),shape->ClassName()), 1000, 800);
+            if (!pm1) {
+               pm1 = new TPolyMarker3D();
+               pm1->SetMarkerStyle(24);
+               pm1->SetMarkerSize(0.4);
+               pm1->SetMarkerColor(kRed);
+            }
+            pm1->SetNextPoint(point[0],point[1],point[2]);
+            pm1->SetNextPoint(oldpoint[0],oldpoint[1],oldpoint[2]);
+            memcpy(oldnorm, norm, 3*sizeof(Double_t));
+            break;
+         }
+         memcpy(oldnorm, norm, 3*sizeof(Double_t));
+         memcpy(olddir, dir, 3*sizeof(Double_t));
          while (1) {
             phi = 2*TMath::Pi()*gRandom->Rndm();
             theta= TMath::ACos(1.-2.*gRandom->Rndm());
