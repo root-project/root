@@ -9,7 +9,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log dt_reference.root Event.new.*.root \
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += missingInfo nospace namespace autoload mytest drawing testloadernotapp templateAutoload templateAutoloadInclude
+TEST_TARGETS += missingInfo nospace namespace autoload mytest drawing testloadernotapp templateAutoload templateAutoloadInclude GetMissingDictionaries TEnum
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -123,4 +123,7 @@ templateAutoload.log templateAutoloadInclude.log: $(addsuffix _C.$(DllSuf),$(TEM
 templateAutoload: templateAutoload.log
 	$(TestDiff)
 templateAutoloadInclude: templateAutoloadInclude.log
+	$(TestDiff)
+
+GetMissingDictionaries: GetMissingDictionaries.log
 	$(TestDiff)
