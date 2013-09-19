@@ -475,7 +475,6 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                       std::count(lineStr.begin(),lineStr.end(),' ') == (int)lineStr.size()){
                   file.getline(lineChars,lineCharsSize);
                   lineStr=lineChars;
-                  std::cout << "lineStr = *"<< lineStr<<"*\n";
                }
                // look for the start of the data section
                size_t dataBeginPos = lineStr.find("<![CDATA[");
@@ -690,7 +689,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                              
             // Now send them to the pragma processor. The info will be put
             // in a global then read by the TMetaUtils
-            std::cout << pragmaLineStream.str() << std::endl;
+            ROOT::TMetaUtils::Info(0,"Pragma generated for ioread rule: %s", pragmaLineStream.str().c_str());
             ROOT::ProcessReadPragma( pragmaLineStream.str().c_str() );
 
             continue; // no need to go further

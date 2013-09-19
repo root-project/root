@@ -409,8 +409,8 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
    std::string declName;
    const std::string thisClassName(CXXRD.getName());
 
-   if (genreflex::verbose)
-      std::cout << "\nInspecting class declaration " << thisClassName << " for annotations\n";
+//    if (genreflex::verbose)
+//       std::cout << "\nInspecting class declaration " << thisClassName << " for annotations\n";
 
    // Fetch the selection rule associated to this class
    clang::Decl* declBaseClassPtr = static_cast<clang::Decl*>(&CXXRD);
@@ -3575,7 +3575,6 @@ int RootCling(int argc,
    
    // Create the rootmapfile if needed
    if (rootMapNeeded){
-      std::cout << "Creating rootmaps\n";
       adjustRootMapNames(rootmapFileName,
                          rootmapLibName);
       ROOT::TMetaUtils::Info(0,"Rootmap file name %s and lib name %s\n",
@@ -3591,7 +3590,6 @@ int RootCling(int argc,
 
    // Create the capabilities file if needed
    if (capaNeeded){
-      std::cout << "Creating capa\n";
       tmpCatalog.addFileName(capaFileName);
       int capaStatusCode = createCapabilitiesFile(capaFileName,
                                                   dictpathname,
