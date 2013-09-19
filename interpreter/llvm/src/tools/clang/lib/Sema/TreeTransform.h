@@ -2815,12 +2815,21 @@ TreeTransform<Derived>::TransformNestedNameSpecifierLoc(
       if (!TL)
         return NestedNameSpecifierLoc();
 
-      if (TL.getType()->isDependentType() || TL.getType()->isRecordType() ||
+      // When using ROOT the type being passed can still be sugared
+      // so that we can construct template instance name with template
+      // default added that still uses the original spelling of the 
+      // arguments. [This is part of adding support for opaque typedef
+      // and 'shorter' names]
+      QualType tlType = TL.getType();
+      if (HackForDefaultTemplateArg::AllowNonCanonicalSubst()) {
+        tlType = tlType->getCanonicalTypeInternal().getUnqualifiedType();
+      }
+      if (tlType->isDependentType() || tlType->isRecordType() ||
           (SemaRef.getLangOpts().CPlusPlus11 &&
-           TL.getType()->isEnumeralType())) {
-        assert(!TL.getType().hasLocalQualifiers() &&
+           tlType->isEnumeralType())) {
+        assert(!tlType.hasLocalQualifiers() &&
                "Can't get cv-qualifiers here");
-        if (TL.getType()->isEnumeralType())
+        if (tlType->isEnumeralType())
           SemaRef.Diag(TL.getBeginLoc(),
                        diag::warn_cxx98_compat_enum_nested_name_spec);
         SS.Extend(SemaRef.Context, /*FIXME:*/SourceLocation(), TL,

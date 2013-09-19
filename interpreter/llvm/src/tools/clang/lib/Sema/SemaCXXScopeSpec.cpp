@@ -25,6 +25,8 @@
 #include "llvm/Support/raw_ostream.h"
 using namespace clang;
 
+#include "HackForDefaultTemplateArg.h"
+
 /// \brief Find the current instantiation that associated with the given type.
 static CXXRecordDecl *getCurrentInstantiationOf(QualType T,
                                                 DeclContext *CurContext) {
@@ -142,6 +144,12 @@ DeclContext *Sema::computeDeclContext(const CXXScopeSpec &SS,
   case NestedNameSpecifier::TypeSpec:
   case NestedNameSpecifier::TypeSpecWithTemplate: {
     const TagType *Tag = NNS->getAsType()->getAs<TagType>();
+    if (!Tag 
+	&& sema::HackForDefaultTemplateArg::AllowNonCanonicalSubst()) {
+      // In case we are in the middle of a template name creation
+      // that tries to keep some of the typedef
+      Tag = NNS->getAsType()->getCanonicalTypeInternal()->getAs<TagType>();
+    }
     assert(Tag && "Non-tag type in nested-name-specifier");
     return Tag->getDecl();
   }

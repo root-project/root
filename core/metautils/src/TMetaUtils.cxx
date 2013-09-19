@@ -2403,6 +2403,8 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
             clang::TemplateTypeParmDecl *TTP = llvm::dyn_cast<clang::TemplateTypeParmDecl>(*Param);
             {
+               // We may induce template instantiation
+               cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
                clang::sema::HackForDefaultTemplateArg raii;
                clang::TemplateArgumentLoc ArgType = S.SubstDefaultTemplateArgumentIfAvailable(
                                                              Template,
@@ -2410,6 +2412,17 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                                                              RAngleLoc,
                                                              TTP,
                                                              desArgs);
+	       // The substition can fail, in which case there would have been compilation
+	       // error printed on the screen.
+	       if (ArgType.getArgument().isNull() 
+		   || ArgType.getArgument().getKind() != clang::TemplateArgument::Type) {
+		 ROOT::TMetaUtils::Error("ROOT::TMetaUtils::AddDefaultParameters",
+					 "Template parameter substitution failed for %s around %s",
+					 instanceType.getAsString().c_str(),
+					 SubTy.getAsString().c_str()
+					 );
+		   break;
+	       }
                clang::QualType BetterSubTy = ArgType.getArgument().getAsType();
                SubTy = cling::utils::Transform::GetPartiallyDesugaredType(Ctx,BetterSubTy,normCtxt.GetConfig(),/*fullyQualified=*/ true);
             }
