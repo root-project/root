@@ -139,4 +139,5 @@ file `simple.pdf`.
 ```
 
 -   Implement `#backslash`.
+-   Implement `DrawLatexNDC`
 
