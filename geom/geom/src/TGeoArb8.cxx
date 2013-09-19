@@ -645,25 +645,29 @@ Double_t TGeoArb8::DistFromInside(const Double_t *point, const Double_t *dir, In
 {
 // Compute distance from inside point to surface of the shape.
    Int_t i;
-   Double_t dist[6];
-   dist[0]=dist[1]=TGeoShape::Big();
+   Double_t distz = TGeoShape::Big();
+   Double_t distl = TGeoShape::Big();
+   Double_t dist;
+   Double_t pt[3] = {0.,0.,0.};
    if (dir[2]<0) {
-      dist[0]=(-fDz-point[2])/dir[2];
+      distz=(-fDz-point[2])/dir[2];
+      pt[2] = -fDz;
    } else {
-      if (dir[2]>0) dist[1]=(fDz-point[2])/dir[2];
+      if (dir[2]>0) distz=(fDz-point[2])/dir[2];
+      pt[2] = fDz;
    }
    for (i=0; i<4; i++) {
-      dist[i+2]=DistToPlane(point, dir, i, kTRUE);
-   }   
-      
-   Double_t distmin = dist[0];
-   for (i=1;i<6;i++) if (dist[i] < distmin) distmin = dist[i];
-   if (distmin<0) return 0.;
-   if (distmin>1E10) {
-      Error("DistFromInside", "Big value from point=(%19.16f, %19.16f, %19.16f) dir=(%19.16f, %19.16f, %19.16f)\n", 
-            point[0],point[1],point[2],dir[0],dir[1],dir[2]);
-   }         
-   return distmin;
+      dist=DistToPlane(point, dir, i, kTRUE);
+      if (dist<distl) distl = dist;
+   }
+   if (distz<distl) {
+      pt[0] = point[0]+distz*dir[0];
+      pt[1] = point[1]+distz*dir[1];
+      if (!Contains(pt)) distz = TGeoShape::Big();
+   }
+   dist = TMath::Min(distz, distl);
+   if (dist<0 || dist>1.E10) return 0.;   
+   return dist;
 #ifdef OLDALGORITHM
 //#else
 // compute distance to plane ipl :
