@@ -51,7 +51,7 @@ namespace TMVA {
 
    public:
 
-      ResultsClassification( const DataSetInfo* dsi );
+      ResultsClassification( const DataSetInfo* dsi, TString resultsName );
       ~ResultsClassification();
 
       // setters

@@ -79,7 +79,7 @@ namespace TMVA {
       std::vector<TMVA::GeneticRange*>& GetRanges()   { return fRanges; }
 
       void Print( Int_t untilIndex = -1 );
-      void Print( ostream & out, Int_t utilIndex = -1 );
+      void Print( std::ostream & out, Int_t utilIndex = -1 );
 
       TH1F* VariableDistribution( Int_t varNumber, Int_t bins, Int_t min, Int_t max  );
       std::vector< Double_t > VariableDistribution( Int_t varNumber );

@@ -77,14 +77,21 @@ Double_t TMVA::SeparationBase::GetSeparationGain(const Double_t &nSelS, const Do
 
    if ( (nTotS-nSelS)==nSelS && (nTotB-nSelB)==nSelB) return 0.;
 
-   Double_t parentIndex = (nTotS+nTotB) *this->GetSeparationIndex(nTotS,nTotB);
+   // Double_t parentIndex = (nTotS+nTotB) *this->GetSeparationIndex(nTotS,nTotB);
 
-   Double_t leftIndex   = ( ((nTotS - nSelS) + (nTotB - nSelB))
+   // Double_t leftIndex   = ( ((nTotS - nSelS) + (nTotB - nSelB))
+   //                          * this->GetSeparationIndex(nTotS-nSelS,nTotB-nSelB) );
+   // Double_t rightIndex  = (nSelS+nSelB) * this->GetSeparationIndex(nSelS,nSelB);
+
+
+   Double_t parentIndex = this->GetSeparationIndex(nTotS,nTotB);
+
+   Double_t leftIndex   = ( ((nTotS - nSelS) + (nTotB - nSelB))/(nTotS+nTotB)
                             * this->GetSeparationIndex(nTotS-nSelS,nTotB-nSelB) );
-   Double_t rightIndex  = (nSelS+nSelB) * this->GetSeparationIndex(nSelS,nSelB);
+   Double_t rightIndex  = (nSelS+nSelB)/(nTotS+nTotB) * this->GetSeparationIndex(nSelS,nSelB);
 
-   //Double_t diff = parentIndex - leftIndex - rightIndex;
-   Double_t diff = (parentIndex - leftIndex - rightIndex)/(nTotS+nTotB);
+   Double_t diff = parentIndex - leftIndex - rightIndex;
+   //Double_t diff = (parentIndex - leftIndex - rightIndex)/(nTotS+nTotB);
 
    if(diff<fPrecisionCut ) {
       // std::cout << " Warning value in GetSeparation is below numerical presicion " 

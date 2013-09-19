@@ -58,7 +58,7 @@ namespace TMVA {
       virtual ~VariableDecorrTransform( void );
 
       void   Initialize();
-      Bool_t PrepareTransformation( const std::vector<Event*>& );
+      Bool_t PrepareTransformation (const std::vector<Event*>&);
 
       //      virtual const Event* Transform(const Event* const, Types::ESBType type = Types::kMaxSBType) const;
       virtual const Event* Transform(const Event* const, Int_t cls ) const;
@@ -70,7 +70,7 @@ namespace TMVA {
       virtual void AttachXMLTo(void* parent);
       virtual void ReadFromXML( void* trfnode );
 
-      virtual void PrintTransformation( ostream & o );
+      virtual void PrintTransformation( std::ostream & o );
 
       // writer of function code
       virtual void MakeFunction( std::ostream& fout, const TString& fncName, Int_t part, UInt_t trCounter, Int_t cls );
@@ -83,8 +83,8 @@ namespace TMVA {
       //      mutable Event*          fTransformedEvent;   //! local event copy
       std::vector<TMatrixD*>  fDecorrMatrices;     //! Decorrelation matrix [class0/class1/.../all classes]
 
-      void CalcSQRMats( const std::vector<Event*>&, Int_t maxCls );
-      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls );
+      void CalcSQRMats( const std::vector< Event*>&, Int_t maxCls );
+      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls );
 
       ClassDef(VariableDecorrTransform,0) // Variable transformation: decorrelation
    };

@@ -79,6 +79,10 @@
 
 REGISTER_METHOD(CFMlpANN)
 
+using std::stringstream;
+using std::make_pair;
+using std::atoi;
+
 ClassImp(TMVA::MethodCFMlpANN)
 
 // initialization of global variable
@@ -216,7 +220,7 @@ void TMVA::MethodCFMlpANN::ProcessOptions()
     
       // Data LUT
       fData  = new TMatrix( nEvtTrain, GetNvar() );
-      fClass = new vector<Int_t>( nEvtTrain );
+      fClass = new std::vector<Int_t>( nEvtTrain );
 
       // ---- fill LUTs
 
@@ -312,7 +316,7 @@ Double_t TMVA::MethodCFMlpANN::GetMvaValue( Double_t* err, Double_t* errUpper )
    const Event* ev = GetEvent();
 
    // copy of input variables
-   vector<Double_t> inputVec( GetNvar() );
+   std::vector<Double_t> inputVec( GetNvar() );
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) inputVec[ivar] = ev->GetValue(ivar);
 
    Double_t myMVA = EvalANN( inputVec, isOK );
@@ -325,7 +329,7 @@ Double_t TMVA::MethodCFMlpANN::GetMvaValue( Double_t* err, Double_t* errUpper )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodCFMlpANN::EvalANN( vector<Double_t>& inVar, Bool_t& isOK )
+Double_t TMVA::MethodCFMlpANN::EvalANN( std::vector<Double_t>& inVar, Bool_t& isOK )
 {
    // evaluates NN value as function of input variables
 
@@ -394,7 +398,7 @@ Double_t TMVA::MethodCFMlpANN::NN_fonc( Int_t i, Double_t u ) const
 }
 
 //_______________________________________________________________________
-void TMVA::MethodCFMlpANN::ReadWeightsFromStream( istream & istr )
+void TMVA::MethodCFMlpANN::ReadWeightsFromStream( std::istream & istr )
 {
    // read back the weight from the training from file (stream)
    TString var;
@@ -568,7 +572,7 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromXML( void* wghtnode )
    gTools().ReadAttr( wghtnode, "NLayers",fParam_1.layerm );
    void* minmaxnode = gTools().GetChild(wghtnode);
    const char* minmaxcontent = gTools().GetContent(minmaxnode);
-   std::stringstream content(minmaxcontent);
+   stringstream content(minmaxcontent);
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) 
       content >> fVarn_1.xmin[ivar] >> fVarn_1.xmax[ivar];
    if (fYNN != 0) {
@@ -615,21 +619,21 @@ void TMVA::MethodCFMlpANN::PrintWeights( std::ostream & o ) const
    // write the weights of the neural net
 
    // write number of variables and classes
-   o << "Number of vars " << fParam_1.nvar << endl;
-   o << "Output nodes   " << fParam_1.lclass << endl;
+   o << "Number of vars " << fParam_1.nvar << std::endl;
+   o << "Output nodes   " << fParam_1.lclass << std::endl;
    
    // write extrema of input variables
    for (Int_t ivar=0; ivar<fParam_1.nvar; ivar++) 
-      o << "Var " << ivar << " [" << fVarn_1.xmin[ivar] << " - " << fVarn_1.xmax[ivar] << "]" << endl;
+      o << "Var " << ivar << " [" << fVarn_1.xmin[ivar] << " - " << fVarn_1.xmax[ivar] << "]" << std::endl;
         
    // write number of layers (sum of: input + output + hidden)
-   o << "Number of layers " << fParam_1.layerm << endl;
+   o << "Number of layers " << fParam_1.layerm << std::endl;
    
    o << "Nodes per layer ";
    for (Int_t layer=0; layer<fParam_1.layerm; layer++)
       // write number of neurons for each layer
       o << fNeur_1.neuron[layer] << "     ";   
-   o << endl;
+   o << std::endl;
         
    // write weights
    for (Int_t layer=1; layer<=fParam_1.layerm-1; layer++) { 
@@ -652,22 +656,22 @@ void TMVA::MethodCFMlpANN::PrintWeights( std::ostream & o ) const
             o << Ww_ref(fNeur_1.ww, layer+1, j) << "   ";
 
          }
-         o << endl;
+         o << std::endl;
          //for (i=1; i<=fNeur_1.neuron[layer-1]; i++) {
          for (i=1; i<=fNeur_1.neuron[layer-1]; i++) {
             for (j=jmin; j<=jmax; j++) {
                //               o << fNeur_1.w[(i*max_nNodes_ + j)*max_nLayers_ + layer - 186] << "   ";
                o << W_ref(fNeur_1.w, layer+1, j, i) << "   ";
             }
-            o << endl;
+            o << std::endl;
          }
             
          // skip two empty lines
-         o << endl;
+         o << std::endl;
       }
    }
    for (Int_t layer=0; layer<fParam_1.layerm; layer++) {
-      o << "Del.temp in layer " << layer << " :  " << fDel_1.temp[layer] << endl;
+      o << "Del.temp in layer " << layer << " :  " << fDel_1.temp[layer] << std::endl;
    }      
 }
 //_______________________________________________________________________
@@ -679,8 +683,8 @@ TMVA::MethodCFMlpANN* TMVA::MethodCFMlpANN::This( void )
 void TMVA::MethodCFMlpANN::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write specific classifier response
-   fout << "   // not implemented for class: \"" << className << "\"" << endl;
-   fout << "};" << endl;
+   fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
+   fout << "};" << std::endl;
 }
 
 //_______________________________________________________________________

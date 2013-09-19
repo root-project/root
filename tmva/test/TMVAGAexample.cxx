@@ -35,7 +35,7 @@ class MyFitness : public IFitterTarget {
        // to (int). In this case the variable-range has to be chosen +1 ( to get 0..5, take Interval(0,6) )
        // since the introduction of "Interval" ranges can be defined with a third parameter
        // which gives the number of bins within the interval. With that technique discrete values
-       // can be achieved easier. The random selection out of this discrete numbers is completely uniform.
+       // can be achieved easier. The random selection out of this discrete numbers is completly uniform.
        // 
        Double_t EstimatorFunction( std::vector<Double_t> & factors ){
            //return (10.- (int)factors.at(0) *factors.at(1) + (int)factors.at(2));

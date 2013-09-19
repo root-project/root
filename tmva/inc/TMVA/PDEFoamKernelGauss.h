@@ -56,7 +56,7 @@ namespace TMVA
    public:
       PDEFoamKernelGauss(Float_t sigma);    // Constructor
       PDEFoamKernelGauss(const PDEFoamKernelGauss&); // Copy Constructor
-      virtual ~PDEFoamKernelGauss() {};     // Destructor
+      virtual ~PDEFoamKernelGauss() {}      // Destructor
 
       // kernel estimator
       virtual Float_t Estimate(PDEFoam*, std::vector<Float_t>&, ECellValue);

@@ -42,6 +42,8 @@
 #include "TMVA/PDF.h"
 #include "TMVA/ClassifierFactory.h"
 
+using std::vector;
+
 REGISTER_METHOD(LD)
 
 ClassImp(TMVA::MethodLD)
@@ -83,7 +85,9 @@ void TMVA::MethodLD::Init( void )
    else                fNRegOut = 1;
 
    fLDCoeff = new vector< vector< Double_t >* >(fNRegOut);
-   for (Int_t iout = 0; iout<fNRegOut; iout++) (*fLDCoeff)[iout] = new std::vector<Double_t>( GetNvar()+1 );
+   for (Int_t iout = 0; iout<fNRegOut; iout++){
+      (*fLDCoeff)[iout] = new std::vector<Double_t>( GetNvar()+1 ); 
+   }
 
    // the minimum requirement to declare an event signal-like
    SetSignalReferenceCut( 0.0 );
@@ -97,8 +101,9 @@ TMVA::MethodLD::~MethodLD( void )
    if (fSumValMatx) { delete fSumValMatx; fSumValMatx = 0; }
    if (fCoeffMatx)  { delete fCoeffMatx;  fCoeffMatx  = 0; }
    if (fLDCoeff) {
-      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++)
+      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++){
          if (*vi) { delete *vi; *vi = 0; }
+      }
       delete fLDCoeff; fLDCoeff = 0;
    }
 }
@@ -204,8 +209,9 @@ void TMVA::MethodLD::GetSum( void )
    // and X the coordinates values
    const UInt_t nvar = DataInfo().GetNVariables();
 
-   for (UInt_t ivar = 0; ivar<=nvar; ivar++)
+   for (UInt_t ivar = 0; ivar<=nvar; ivar++){
       for (UInt_t jvar = 0; jvar<=nvar; jvar++) (*fSumMatx)( ivar, jvar ) = 0;
+   }
 
    // compute sample means
    Long64_t nevts = Data()->GetNEvents();
@@ -225,9 +231,11 @@ void TMVA::MethodLD::GetSum( void )
       }
 
       // Sum of products of coordinates
-      for (UInt_t ivar=0; ivar<nvar; ivar++)
-         for (UInt_t jvar=0; jvar<nvar; jvar++)
+      for (UInt_t ivar=0; ivar<nvar; ivar++){
+         for (UInt_t jvar=0; jvar<nvar; jvar++){
             (*fSumMatx)( ivar+1, jvar+1 ) += ev->GetValue( ivar ) * ev->GetValue( jvar ) * weight;
+         }
+      }
    }
 }
 
@@ -237,9 +245,11 @@ void TMVA::MethodLD::GetSumVal( void )
    //Calculates the vector transposed(X)*W*Y with Y being the target vector
    const UInt_t nvar = DataInfo().GetNVariables();
 
-   for (Int_t ivar = 0; ivar<fNRegOut; ivar++)
-      for (UInt_t jvar = 0; jvar<=nvar; jvar++)
+   for (Int_t ivar = 0; ivar<fNRegOut; ivar++){
+      for (UInt_t jvar = 0; jvar<=nvar; jvar++){
          (*fSumValMatx)(jvar,ivar) = 0;
+      }
+   }
 
    // Sum of coordinates multiplied by values
    for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
@@ -255,14 +265,15 @@ void TMVA::MethodLD::GetSumVal( void )
 
          Double_t val = weight;
 
-         if (!DoRegression())
-            val *= DataInfo().IsSignal(ev);
-         else //for regression
+         if (!DoRegression()){
+            val *= DataInfo().IsSignal(ev); // yes it works.. but I'm still surprised (Helge).. would have not set y_B to zero though..
+         }else {//for regression
             val *= ev->GetTarget( ivar ); 
-
+         }
          (*fSumValMatx)( 0,ivar ) += val; 
-         for (UInt_t jvar=0; jvar<nvar; jvar++) 
+         for (UInt_t jvar=0; jvar<nvar; jvar++) {
             (*fSumValMatx)(jvar+1,ivar ) += ev->GetValue(jvar) * val;
+         }
       }
    }
 }
@@ -295,8 +306,9 @@ void TMVA::MethodLD::GetLDCoeff( void )
       }
       if (!DoRegression()) {
          (*(*fLDCoeff)[ivar])[0]=0.0;
-         for (UInt_t jvar = 1; jvar<nvar+1; jvar++)
+         for (UInt_t jvar = 1; jvar<nvar+1; jvar++){
             (*(*fLDCoeff)[ivar])[0]+=(*fCoeffMatx)(jvar,ivar)*(*fSumMatx)(0,jvar)/(*fSumMatx)( 0, 0 );
+         }
          (*(*fLDCoeff)[ivar])[0]/=-2.0;
       }
       
@@ -304,12 +316,14 @@ void TMVA::MethodLD::GetLDCoeff( void )
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodLD::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodLD::ReadWeightsFromStream( std::istream& istr )
 {
    // read LD coefficients from weight file
-   for (Int_t iout=0; iout<fNRegOut; iout++)
-      for (UInt_t icoeff=0; icoeff<GetNvar()+1; icoeff++)
+   for (Int_t iout=0; iout<fNRegOut; iout++){
+      for (UInt_t icoeff=0; icoeff<GetNvar()+1; icoeff++){
          istr >> (*(*fLDCoeff)[iout])[icoeff];
+      }
+   }
 }
 
 //_______________________________________________________________________
@@ -345,8 +359,9 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
 
    // create vector with coefficients (double vector due to arbitrary output dimension)
    if (fLDCoeff) { 
-      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++)
+      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); vi++){
          if (*vi) { delete *vi; *vi = 0; }
+      }
       delete fLDCoeff; fLDCoeff = 0;
    }
    fLDCoeff = new vector< vector< Double_t >* >(fNRegOut);
@@ -370,42 +385,42 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
 void TMVA::MethodLD::MakeClassSpecific( std::ostream& fout, const TString& className ) const
 {
    // write LD-specific classifier response
-   fout << "   std::vector<double> fLDCoefficients;" << endl;
-   fout << "};" << endl;
-   fout << "" << endl;
-   fout << "inline void " << className << "::Initialize() " << endl;
-   fout << "{" << endl;
+   fout << "   std::vector<double> fLDCoefficients;" << std::endl;
+   fout << "};" << std::endl;
+   fout << "" << std::endl;
+   fout << "inline void " << className << "::Initialize() " << std::endl;
+   fout << "{" << std::endl;
    for (UInt_t ivar=0; ivar<GetNvar()+1; ivar++) {
       Int_t dp = fout.precision();
       fout << "   fLDCoefficients.push_back( "
            << std::setprecision(12) << (*(*fLDCoeff)[0])[ivar]
-           << std::setprecision(dp) << " );" << endl;
+           << std::setprecision(dp) << " );" << std::endl;
    }
-   fout << endl;
-   fout << "   // sanity check" << endl;
-   fout << "   if (fLDCoefficients.size() != fNvars+1) {" << endl;
-   fout << "      std::cout << \"Problem in class \\\"\" << fClassName << \"\\\"::Initialize: mismatch in number of input values\"" << endl;
-   fout << "                << fLDCoefficients.size() << \" != \" << fNvars+1 << std::endl;" << endl;
-   fout << "      fStatusIsClean = false;" << endl;
-   fout << "   }         " << endl;
-   fout << "}" << endl;
-   fout << endl;
-   fout << "inline double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << endl;
-   fout << "{" << endl;
-   fout << "   double retval = fLDCoefficients[0];" << endl;
-   fout << "   for (size_t ivar = 1; ivar < fNvars+1; ivar++) {" << endl;
-   fout << "      retval += fLDCoefficients[ivar]*inputValues[ivar-1];" << endl;
-   fout << "   }" << endl;
-   fout << endl;
-   fout << "   return retval;" << endl;
-   fout << "}" << endl;
-   fout << endl;
-   fout << "// Clean up" << endl;
-   fout << "inline void " << className << "::Clear() " << endl;
-   fout << "{" << endl;
-   fout << "   // clear coefficients" << endl;
-   fout << "   fLDCoefficients.clear(); " << endl;
-   fout << "}" << endl;
+   fout << std::endl;
+   fout << "   // sanity check" << std::endl;
+   fout << "   if (fLDCoefficients.size() != fNvars+1) {" << std::endl;
+   fout << "      std::cout << \"Problem in class \\\"\" << fClassName << \"\\\"::Initialize: mismatch in number of input values\"" << std::endl;
+   fout << "                << fLDCoefficients.size() << \" != \" << fNvars+1 << std::endl;" << std::endl;
+   fout << "      fStatusIsClean = false;" << std::endl;
+   fout << "   }         " << std::endl;
+   fout << "}" << std::endl;
+   fout << std::endl;
+   fout << "inline double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   double retval = fLDCoefficients[0];" << std::endl;
+   fout << "   for (size_t ivar = 1; ivar < fNvars+1; ivar++) {" << std::endl;
+   fout << "      retval += fLDCoefficients[ivar]*inputValues[ivar-1];" << std::endl;
+   fout << "   }" << std::endl;
+   fout << std::endl;
+   fout << "   return retval;" << std::endl;
+   fout << "}" << std::endl;
+   fout << std::endl;
+   fout << "// Clean up" << std::endl;
+   fout << "inline void " << className << "::Clear() " << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // clear coefficients" << std::endl;
+   fout << "   fLDCoefficients.clear(); " << std::endl;
+   fout << "}" << std::endl;
 }
 //_______________________________________________________________________
 const TMVA::Ranking* TMVA::MethodLD::CreateRanking()
@@ -468,12 +483,12 @@ void TMVA::MethodLD::PrintCoefficients( void )
       // Print normalisation expression (see Tools.cxx): "2*(x - xmin)/(xmax - xmin) - 1.0"
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
          Log() << kINFO 
-                 << setw(maxL+9) << TString("[") + GetInputLabel(ivar) + "]' = 2*(" 
-                 << setw(maxL+2) << TString("[") + GetInputLabel(ivar) + "]"
-                 << setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
-                 << setw(6) << TMath::Abs(GetXmin(ivar)) << setw(3) << ")/"
-                 << setw(6) << (GetXmax(ivar) -  GetXmin(ivar) )
-                 << setw(3) << " - 1"
+                 << std::setw(maxL+9) << TString("[") + GetInputLabel(ivar) + "]' = 2*(" 
+                 << std::setw(maxL+2) << TString("[") + GetInputLabel(ivar) + "]"
+                 << std::setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
+                 << std::setw(6) << TMath::Abs(GetXmin(ivar)) << std::setw(3) << ")/"
+                 << std::setw(6) << (GetXmax(ivar) -  GetXmin(ivar) )
+                 << std::setw(3) << " - 1"
                  << Endl;
       }
       Log() << kINFO << "The TMVA Reader will properly account for this normalisation, but if the" << Endl;

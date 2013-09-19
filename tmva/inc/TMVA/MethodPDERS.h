@@ -91,7 +91,7 @@ namespace TMVA {
       void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
-      void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( std::istream& istr );
       void ReadWeightsFromStream( TFile& istr );
       void ReadWeightsFromXML( void* wghtnode );
 

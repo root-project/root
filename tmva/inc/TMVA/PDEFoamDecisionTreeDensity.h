@@ -59,7 +59,7 @@ namespace TMVA
       PDEFoamDecisionTreeDensity();
       PDEFoamDecisionTreeDensity(std::vector<Double_t> box, UInt_t cls);
       PDEFoamDecisionTreeDensity(const PDEFoamDecisionTreeDensity&);
-      virtual ~PDEFoamDecisionTreeDensity() {};
+      virtual ~PDEFoamDecisionTreeDensity() {}
 
       // returns allways 0
       virtual Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density);

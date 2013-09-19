@@ -51,12 +51,12 @@ namespace TMVA {
    class MsgLogger;
    class Rule;
 
-   ostream& operator<<( ostream& os, const Rule & rule );
+   std::ostream& operator<<( std::ostream& os, const Rule & rule );
 
    class Rule {
 
-      // output operator for a Rule
-      friend ostream& operator<< ( ostream& os, const Rule & rule );
+      // ouput operator for a Rule
+      friend std::ostream& operator<< ( std::ostream& os, const Rule & rule );
 
    public:
 
@@ -155,10 +155,10 @@ namespace TMVA {
       void PrintLogger( const char *title=0 ) const;
 
       // print just the raw info, used for weight file generation
-      void  PrintRaw   ( ostream& os  ) const; // obsolete
+      void  PrintRaw   ( std::ostream& os  ) const; // obsolete
       void* AddXMLTo   ( void* parent ) const;
 
-      void  ReadRaw    ( istream& os    ); // obsolete
+      void  ReadRaw    ( std::istream& os    ); // obsolete
       void  ReadFromXML( void* wghtnode );
 
    private:
@@ -167,7 +167,7 @@ namespace TMVA {
       void SetSigma(Double_t v)         { fSigma=v; }
 
       // print info about the Rule
-      void Print( ostream& os ) const;
+      void Print( std::ostream& os ) const;
 
       // copy from another rule
       void Copy( const Rule & other );

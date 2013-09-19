@@ -33,7 +33,7 @@
 //                                                                      //
 // Option                                                               //
 //                                                                      //
-// Class for MVA-option handling                                        //
+// Class for TMVA-option handling                                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -80,7 +80,7 @@ namespace TMVA {
       virtual Bool_t SetValue( const TString& vs, Int_t i=-1 );
 
       using TObject::Print;
-      virtual void Print( ostream&, Int_t levelofdetail=0 ) const = 0;
+      virtual void Print( std::ostream&, Int_t levelofdetail=0 ) const = 0;
 
    private:
 
@@ -120,8 +120,8 @@ namespace TMVA {
       // setters
       virtual void AddPreDefVal(const T&);
       using OptionBase::Print;
-      virtual void Print       ( ostream&, Int_t levelofdetail=0 ) const;
-      virtual void PrintPreDefs( ostream&, Int_t levelofdetail=0 ) const;
+      virtual void Print       ( std::ostream&, Int_t levelofdetail=0 ) const;
+      virtual void PrintPreDefs( std::ostream&, Int_t levelofdetail=0 ) const;
 
    protected:
 
@@ -153,7 +153,7 @@ namespace TMVA {
       virtual Int_t  GetArraySize() const { return fSize; }
    
       using Option<T>::Print;
-      virtual void Print( ostream&, Int_t levelofdetail=0 ) const;
+      virtual void Print( std::ostream&, Int_t levelofdetail=0 ) const;
 
       virtual Bool_t SetValue( const TString& val, Int_t i=0 );
 
@@ -262,7 +262,7 @@ namespace TMVA {
    }
 
    template<class T>
-   inline void TMVA::Option<T>::Print( ostream& os, Int_t levelofdetail ) const 
+   inline void TMVA::Option<T>::Print( std::ostream& os, Int_t levelofdetail ) const 
    {
       // template specialization for TString printing
       os << TheName() << ": " << "\"" << GetValue() << "\"" << " [" << Description() << "]";
@@ -270,7 +270,7 @@ namespace TMVA {
    }
 
    template<class T>
-   inline void TMVA::Option<T*>::Print( ostream& os, Int_t levelofdetail ) const 
+   inline void TMVA::Option<T*>::Print( std::ostream& os, Int_t levelofdetail ) const 
    {
       // template specialization for TString printing
       for (Int_t i=0; i<fSize; i++) {
@@ -285,7 +285,7 @@ namespace TMVA {
 
    //______________________________________________________________________
    template<class T>
-   inline void TMVA::Option<T>::PrintPreDefs( ostream& os, Int_t levelofdetail ) const 
+   inline void TMVA::Option<T>::PrintPreDefs( std::ostream& os, Int_t levelofdetail ) const 
    {
       // template specialization for TString printing
       if (HasPreDefinedVal() && levelofdetail>0) {

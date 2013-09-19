@@ -88,7 +88,7 @@ namespace TMVA {
       void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
-      void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( std::istream& istr );
       void ReadWeightsFromStream( TFile& istr );
       void ReadWeightsFromXML( void* wghtnode );
       // calculate the MVA value
@@ -101,7 +101,7 @@ namespace TMVA {
       // ranking of input variables
       const Ranking* CreateRanking();
 
-      virtual void WriteOptionsToStream ( ostream& o, const TString& prefix ) const;
+      virtual void WriteOptionsToStream ( std::ostream& o, const TString& prefix ) const;
 
    protected:
 

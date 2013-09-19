@@ -77,7 +77,7 @@ namespace TMVA {
       using MethodBase::GetMvaValue;
 
       // read weights from file
-      void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( std::istream& istr );
 
       // performs classifier training
       virtual void Train() = 0;
@@ -86,15 +86,6 @@ namespace TMVA {
       virtual const Ranking* CreateRanking() = 0;
 
       virtual ~MethodCompositeBase( void );
-
-      UInt_t GetMethodIndex() { return fMethodIndex; }
-
-      IMethod* GetLastMethod() { return fMethods.back(); }
-
-      IMethod* GetPreviousMethod() { return (fMethodIndex>0)?fMethods[fMethodIndex-1]:0; }
-
-      IMethod* GetCurrentMethod()
-      { return (fMethodIndex>0)?fMethods[fMethodIndex]:0; }
 
    protected:
 
@@ -106,7 +97,18 @@ namespace TMVA {
       IMethod* GetMethod( const Int_t index ) const;  // accessor by index in vector
 
       //the index of the classifier currently boosted
-      Int_t          fMethodIndex;
+      UInt_t             fCurrentMethodIdx;
+      MethodBase*        fCurrentMethod;
+      UInt_t GetCurrentMethodIndex() { return fCurrentMethodIdx; }
+
+      IMethod* GetLastMethod() { return fMethods.back(); }
+
+      IMethod* GetPreviousMethod() { return (fCurrentMethodIdx>0)?fMethods[fCurrentMethodIdx-1]:0; }
+
+      MethodBase* GetCurrentMethod(){ return fCurrentMethod;}
+      MethodBase* GetCurrentMethod(UInt_t idx){return dynamic_cast<MethodBase*>(fMethods.at(idx)); }
+
+
 
       std::vector<IMethod*>      fMethods;          // vector of all classifiers
 

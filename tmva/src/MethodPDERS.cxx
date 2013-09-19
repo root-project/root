@@ -1102,7 +1102,7 @@ void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
 }
 
 //_______________________________________________________________________
-void TMVA::MethodPDERS::ReadWeightsFromStream( istream& istr)
+void TMVA::MethodPDERS::ReadWeightsFromStream( std::istream& istr)
 {
    // read weight info from file
    if (NULL != fBinaryTree) delete fBinaryTree;

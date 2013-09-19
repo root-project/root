@@ -76,7 +76,7 @@ namespace TMVA {
       virtual ~VariableTransformBase( void );
 
       virtual void         Initialize() = 0;
-      virtual Bool_t       PrepareTransformation( const std::vector<Event*>&  ) = 0;
+      virtual Bool_t       PrepareTransformation (const std::vector<Event*>&  ) = 0;
       virtual const Event* Transform       ( const Event* const, Int_t cls ) const = 0;
       virtual const Event* InverseTransform( const Event* const, Int_t cls ) const = 0;
 
@@ -118,7 +118,7 @@ namespace TMVA {
 
       // provides string vector giving explicit transformation
       virtual std::vector<TString>* GetTransformationStrings( Int_t cls ) const;
-      virtual void PrintTransformation( ostream & ) {}
+      virtual void PrintTransformation( std::ostream & ) {}
 
       const std::vector<TMVA::VariableInfo>& Variables() const { return fVariables; }
       const std::vector<TMVA::VariableInfo>& Targets()   const { return fTargets;   }
@@ -130,7 +130,7 @@ namespace TMVA {
 
    protected:
 
-      void CalcNorm( const std::vector<Event*>& );
+      void CalcNorm( const std::vector<const Event*>& );
 
       void SetCreated( Bool_t c = kTRUE ) { fCreated = c; }
       void SetNVariables( UInt_t i )      { fNVars = i; }

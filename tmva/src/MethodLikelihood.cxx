@@ -250,6 +250,8 @@ void TMVA::MethodLikelihood::DeclareOptions()
 
 void TMVA::MethodLikelihood::DeclareCompatibilityOptions()
 {
+   // options that are used ONLY for the READER to ensure backward compatibility
+
    MethodBase::DeclareCompatibilityOptions();
    DeclareOptionRef( fNsmooth = 1, "NSmooth",
                      "Number of smoothing iterations for the input histograms");
@@ -312,7 +314,7 @@ void TMVA::MethodLikelihood::Train( void )
    // the transformations are applied using both classes, also the corresponding boundaries
    // need to take this into account
    UInt_t nvar=GetNvar();
-   vector<Double_t> xmin(nvar), xmax(nvar);
+   std::vector<Double_t> xmin(nvar), xmax(nvar);
    for (UInt_t ivar=0; ivar<nvar; ivar++) {xmin[ivar]=1e30; xmax[ivar]=-1e30;}
 
    UInt_t nevents=Data()->GetNEvents();
@@ -527,23 +529,23 @@ Double_t TMVA::MethodLikelihood::TransformLikelihoodOutput( Double_t ps, Double_
 }
 
 //______________________________________________________________________
-void TMVA::MethodLikelihood::WriteOptionsToStream( ostream& o, const TString& prefix ) const
+void TMVA::MethodLikelihood::WriteOptionsToStream( std::ostream& o, const TString& prefix ) const
 {
    // write options to stream
    Configurable::WriteOptionsToStream( o, prefix);
 
    // writing the options defined for the different pdfs
    if (fDefaultPDFLik != 0) {
-      o << prefix << endl << prefix << "#Default Likelihood PDF Options:" << endl << prefix << endl;
+      o << prefix << std::endl << prefix << "#Default Likelihood PDF Options:" << std::endl << prefix << std::endl;
       fDefaultPDFLik->WriteOptionsToStream( o, prefix );
    }
    for (UInt_t ivar = 0; ivar < fPDFSig->size(); ivar++) {
       if ((*fPDFSig)[ivar] != 0) {
-         o << prefix << endl << prefix << Form("#Signal[%d] Likelihood PDF Options:",ivar) << endl << prefix << endl;
+         o << prefix << std::endl << prefix << Form("#Signal[%d] Likelihood PDF Options:",ivar) << std::endl << prefix << std::endl;
          (*fPDFSig)[ivar]->WriteOptionsToStream( o, prefix );
       }
       if ((*fPDFBgd)[ivar] != 0) {
-         o << prefix << endl << prefix << "#Background[%d] Likelihood PDF Options:" << endl << prefix << endl;
+         o << prefix << std::endl << prefix << "#Background[%d] Likelihood PDF Options:" << std::endl << prefix << std::endl;
          (*fPDFBgd)[ivar]->WriteOptionsToStream( o, prefix );
       }
    }
@@ -660,7 +662,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromXML(void* wghtnode)
    TH1::AddDirectory(addDirStatus);
 }
 //_______________________________________________________________________
-void  TMVA::MethodLikelihood::ReadWeightsFromStream( istream & istr )
+void  TMVA::MethodLikelihood::ReadWeightsFromStream( std::istream & istr )
 {
    // read weight info from file
    // nothing to do for this method
@@ -747,8 +749,8 @@ void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
 void TMVA::MethodLikelihood::MakeClassSpecificHeader( std::ostream& fout, const TString& ) const
 {
    // write specific header of the classifier (mostly include files)
-   fout << "#include <math.h>" << endl;
-   fout << "#include <cstdlib>" << endl;
+   fout << "#include <math.h>" << std::endl;
+   fout << "#include <cstdlib>" << std::endl;
 }
 
 //_______________________________________________________________________
@@ -756,7 +758,7 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
 {
    // write specific classifier response
    Int_t dp = fout.precision();
-   fout << "   double       fEpsilon;" << endl;
+   fout << "   double       fEpsilon;" << std::endl;
 
    Int_t * nbin = new Int_t[GetNvar()];
 
@@ -767,26 +769,26 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    }
 
    fout << "   static float fRefS[][" << nbinMax << "]; "
-        << "// signal reference vector [nvars][max_nbins]" << endl;
+        << "// signal reference vector [nvars][max_nbins]" << std::endl;
    fout << "   static float fRefB[][" << nbinMax << "]; "
-        << "// backgr reference vector [nvars][max_nbins]" << endl << endl;
-   fout << "// if a variable has its PDF encoded as a spline0 --> treat it like an Integer valued one" <<endl;
-   fout << "   bool    fHasDiscretPDF[" << GetNvar() <<"]; "<< endl;
+        << "// backgr reference vector [nvars][max_nbins]" << std::endl << std::endl;
+   fout << "// if a variable has its PDF encoded as a spline0 --> treat it like an Integer valued one" <<std::endl;
+   fout << "   bool    fHasDiscretPDF[" << GetNvar() <<"]; "<< std::endl;
    fout << "   int    fNbin[" << GetNvar() << "]; "
-        << "// number of bins (discrete variables may have less bins)" << endl;
-   fout << "   double    fHistMin[" << GetNvar() << "]; " << endl;
-   fout << "   double    fHistMax[" << GetNvar() << "]; " << endl;
+        << "// number of bins (discrete variables may have less bins)" << std::endl;
+   fout << "   double    fHistMin[" << GetNvar() << "]; " << std::endl;
+   fout << "   double    fHistMax[" << GetNvar() << "]; " << std::endl;
 
-   fout << "   double TransformLikelihoodOutput( double, double ) const;" << endl;
-   fout << "};" << endl;
-   fout << "" << endl;
-   fout << "inline void " << className << "::Initialize() " << endl;
-   fout << "{" << endl;
-   fout << "   fEpsilon = " << fEpsilon << ";" << endl;
+   fout << "   double TransformLikelihoodOutput( double, double ) const;" << std::endl;
+   fout << "};" << std::endl;
+   fout << "" << std::endl;
+   fout << "inline void " << className << "::Initialize() " << std::endl;
+   fout << "{" << std::endl;
+   fout << "   fEpsilon = " << fEpsilon << ";" << std::endl;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-      fout << "   fNbin[" << ivar << "] = " << (*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() << ";" << endl;
-      fout << "   fHistMin[" << ivar << "] = " << (*fPDFSig)[ivar]->GetPDFHist()->GetXaxis()->GetXmin() << ";" << endl;
-      fout << "   fHistMax[" << ivar << "] = " << (*fPDFSig)[ivar]->GetPDFHist()->GetXaxis()->GetXmax() << ";" << endl;
+      fout << "   fNbin[" << ivar << "] = " << (*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() << ";" << std::endl;
+      fout << "   fHistMin[" << ivar << "] = " << (*fPDFSig)[ivar]->GetPDFHist()->GetXaxis()->GetXmin() << ";" << std::endl;
+      fout << "   fHistMax[" << ivar << "] = " << (*fPDFSig)[ivar]->GetPDFHist()->GetXaxis()->GetXmax() << ";" << std::endl;
       // sanity check (for previous code lines)
       if ((((*fPDFSig)[ivar]->GetPDFHist()->GetNbinsX() != nbin[ivar] ||
             (*fPDFBgd)[ivar]->GetPDFHist()->GetNbinsX() != nbin[ivar])
@@ -803,116 +805,116 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
    }
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
       if ((*fPDFSig)[ivar]->GetInterpolMethod() == TMVA::PDF::kSpline0)
-         fout << "   fHasDiscretPDF[" << ivar <<"] = true;  " << endl;
+         fout << "   fHasDiscretPDF[" << ivar <<"] = true;  " << std::endl;
       else
-         fout << "   fHasDiscretPDF[" << ivar <<"] = false; " << endl;
+         fout << "   fHasDiscretPDF[" << ivar <<"] = false; " << std::endl;
    }
 
-   fout << "}" << endl << endl;
+   fout << "}" << std::endl << std::endl;
 
    fout << "inline double " << className
-        << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << endl;
-   fout << "{" << endl;
-   fout << "   double ps(1), pb(1);" << endl;
-   fout << "   std::vector<double> inputValuesSig = inputValues;" << endl;
-   fout << "   std::vector<double> inputValuesBgd = inputValues;" << endl;
+        << "::GetMvaValue__( const std::vector<double>& inputValues ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   double ps(1), pb(1);" << std::endl;
+   fout << "   std::vector<double> inputValuesSig = inputValues;" << std::endl;
+   fout << "   std::vector<double> inputValuesBgd = inputValues;" << std::endl;
    if (GetTransformationHandler().GetTransformationList().GetSize() != 0) {
-      fout << "   Transform(inputValuesSig,0);" << endl;
-      fout << "   Transform(inputValuesBgd,1);" << endl;
+      fout << "   Transform(inputValuesSig,0);" << std::endl;
+      fout << "   Transform(inputValuesBgd,1);" << std::endl;
    }
-   fout << "   for (size_t ivar = 0; ivar < GetNvar(); ivar++) {" << endl;
-   fout << endl;
-   fout << "      // dummy at present... will be used for variable transforms" << endl;
-   fout << "      double x[2] = { inputValuesSig[ivar], inputValuesBgd[ivar] };" << endl;
-   fout << endl;
-   fout << "      for (int itype=0; itype < 2; itype++) {" << endl;
-   fout << endl;
-   fout << "         // interpolate linearly between adjacent bins" << endl;
-   fout << "         // this is not useful for discrete variables (or forced Spline0)" << endl;
-   fout << "         int bin = int((x[itype] - fHistMin[ivar])/(fHistMax[ivar] - fHistMin[ivar])*fNbin[ivar]) + 0;" << endl;
-   fout << endl;
-   fout << "         // since the test data sample is in general different from the training sample" << endl;
-   fout << "         // it can happen that the min/max of the training sample are trespassed --> correct this" << endl;
-   fout << "         if      (bin < 0) {" << endl;
-   fout << "            bin = 0;" << endl;
-   fout << "            x[itype] = fHistMin[ivar];" << endl;
-   fout << "         }" << endl;
-   fout << "         else if (bin >= fNbin[ivar]) {" << endl;
-   fout << "            bin = fNbin[ivar]-1;" << endl;
-   fout << "            x[itype] = fHistMax[ivar];" << endl;
-   fout << "         }" << endl;
-   fout << endl;
-   fout << "         // find corresponding histogram from cached indices" << endl;
-   fout << "         float ref = (itype == 0) ? fRefS[ivar][bin] : fRefB[ivar][bin];" << endl;
-   fout << endl;
-   fout << "         // sanity check" << endl;
-   fout << "         if (ref < 0) {" << endl;
+   fout << "   for (size_t ivar = 0; ivar < GetNvar(); ivar++) {" << std::endl;
+   fout << std::endl;
+   fout << "      // dummy at present... will be used for variable transforms" << std::endl;
+   fout << "      double x[2] = { inputValuesSig[ivar], inputValuesBgd[ivar] };" << std::endl;
+   fout << std::endl;
+   fout << "      for (int itype=0; itype < 2; itype++) {" << std::endl;
+   fout << std::endl;
+   fout << "         // interpolate linearly between adjacent bins" << std::endl;
+   fout << "         // this is not useful for discrete variables (or forced Spline0)" << std::endl;
+   fout << "         int bin = int((x[itype] - fHistMin[ivar])/(fHistMax[ivar] - fHistMin[ivar])*fNbin[ivar]) + 0;" << std::endl;
+   fout << std::endl;
+   fout << "         // since the test data sample is in general different from the training sample" << std::endl;
+   fout << "         // it can happen that the min/max of the training sample are trespassed --> correct this" << std::endl;
+   fout << "         if      (bin < 0) {" << std::endl;
+   fout << "            bin = 0;" << std::endl;
+   fout << "            x[itype] = fHistMin[ivar];" << std::endl;
+   fout << "         }" << std::endl;
+   fout << "         else if (bin >= fNbin[ivar]) {" << std::endl;
+   fout << "            bin = fNbin[ivar]-1;" << std::endl;
+   fout << "            x[itype] = fHistMax[ivar];" << std::endl;
+   fout << "         }" << std::endl;
+   fout << std::endl;
+   fout << "         // find corresponding histogram from cached indices" << std::endl;
+   fout << "         float ref = (itype == 0) ? fRefS[ivar][bin] : fRefB[ivar][bin];" << std::endl;
+   fout << std::endl;
+   fout << "         // sanity check" << std::endl;
+   fout << "         if (ref < 0) {" << std::endl;
    fout << "            std::cout << \"Fatal error in " << className
-        << ": bin entry < 0 ==> abort\" << std::endl;" << endl;
-   fout << "            std::exit(1);" << endl;
-   fout << "         }" << endl;
-   fout << endl;
-   fout << "         double p = ref;" << endl;
-   fout << endl;
-   fout << "         if (GetType(ivar) != 'I' && !fHasDiscretPDF[ivar]) {" << endl;
-   fout << "            float bincenter = (bin + 0.5)/fNbin[ivar]*(fHistMax[ivar] - fHistMin[ivar]) + fHistMin[ivar];" << endl;
-   fout << "            int nextbin = bin;" << endl;
-   fout << "            if ((x[itype] > bincenter && bin != fNbin[ivar]-1) || bin == 0) " << endl;
-   fout << "               nextbin++;" << endl;
-   fout << "            else" << endl;
-   fout << "               nextbin--;  " << endl;
-   fout << endl;
-   fout << "            double refnext      = (itype == 0) ? fRefS[ivar][nextbin] : fRefB[ivar][nextbin];" << endl;
-   fout << "            float nextbincenter = (nextbin + 0.5)/fNbin[ivar]*(fHistMax[ivar] - fHistMin[ivar]) + fHistMin[ivar];" << endl;
-   fout << endl;
-   fout << "            double dx = bincenter - nextbincenter;" << endl;
-   fout << "            double dy = ref - refnext;" << endl;
-   fout << "            p += (x[itype] - bincenter) * dy/dx;" << endl;
-   fout << "         }" << endl;
-   fout << endl;
-   fout << "         if (p < fEpsilon) p = fEpsilon; // avoid zero response" << endl;
-   fout << endl;
-   fout << "         if (itype == 0) ps *= p;" << endl;
-   fout << "         else            pb *= p;" << endl;
-   fout << "      }            " << endl;
-   fout << "   }     " << endl;
-   fout << endl;
-   fout << "   // the likelihood ratio (transform it ?)" << endl;
-   fout << "   return TransformLikelihoodOutput( ps, pb );   " << endl;
-   fout << "}" << endl << endl;
+        << ": bin entry < 0 ==> abort\" << std::endl;" << std::endl;
+   fout << "            std::exit(1);" << std::endl;
+   fout << "         }" << std::endl;
+   fout << std::endl;
+   fout << "         double p = ref;" << std::endl;
+   fout << std::endl;
+   fout << "         if (GetType(ivar) != 'I' && !fHasDiscretPDF[ivar]) {" << std::endl;
+   fout << "            float bincenter = (bin + 0.5)/fNbin[ivar]*(fHistMax[ivar] - fHistMin[ivar]) + fHistMin[ivar];" << std::endl;
+   fout << "            int nextbin = bin;" << std::endl;
+   fout << "            if ((x[itype] > bincenter && bin != fNbin[ivar]-1) || bin == 0) " << std::endl;
+   fout << "               nextbin++;" << std::endl;
+   fout << "            else" << std::endl;
+   fout << "               nextbin--;  " << std::endl;
+   fout << std::endl;
+   fout << "            double refnext      = (itype == 0) ? fRefS[ivar][nextbin] : fRefB[ivar][nextbin];" << std::endl;
+   fout << "            float nextbincenter = (nextbin + 0.5)/fNbin[ivar]*(fHistMax[ivar] - fHistMin[ivar]) + fHistMin[ivar];" << std::endl;
+   fout << std::endl;
+   fout << "            double dx = bincenter - nextbincenter;" << std::endl;
+   fout << "            double dy = ref - refnext;" << std::endl;
+   fout << "            p += (x[itype] - bincenter) * dy/dx;" << std::endl;
+   fout << "         }" << std::endl;
+   fout << std::endl;
+   fout << "         if (p < fEpsilon) p = fEpsilon; // avoid zero response" << std::endl;
+   fout << std::endl;
+   fout << "         if (itype == 0) ps *= p;" << std::endl;
+   fout << "         else            pb *= p;" << std::endl;
+   fout << "      }            " << std::endl;
+   fout << "   }     " << std::endl;
+   fout << std::endl;
+   fout << "   // the likelihood ratio (transform it ?)" << std::endl;
+   fout << "   return TransformLikelihoodOutput( ps, pb );   " << std::endl;
+   fout << "}" << std::endl << std::endl;
 
-   fout << "inline double " << className << "::TransformLikelihoodOutput( double ps, double pb ) const" << endl;
-   fout << "{" << endl;
-   fout << "   // returns transformed or non-transformed output" << endl;
-   fout << "   if (ps < fEpsilon) ps = fEpsilon;" << endl;
-   fout << "   if (pb < fEpsilon) pb = fEpsilon;" << endl;
-   fout << "   double r = ps/(ps + pb);" << endl;
-   fout << "   if (r >= 1.0) r = 1. - 1.e-15;" << endl;
-   fout << endl;
-   fout << "   if (" << (fTransformLikelihoodOutput ? "true" : "false") << ") {" << endl;
-   fout << "      // inverse Fermi function" << endl;
-   fout << endl;
-   fout << "      // sanity check" << endl;
-   fout << "      if      (r <= 0.0) r = fEpsilon;" << endl;
-   fout << "      else if (r >= 1.0) r = 1. - 1.e-15;" << endl;
-   fout << endl;
-   fout << "      double tau = 15.0;" << endl;
-   fout << "      r = - log(1.0/r - 1.0)/tau;" << endl;
-   fout << "   }" << endl;
-   fout << endl;
-   fout << "   return r;" << endl;
-   fout << "}" << endl;
-   fout << endl;
+   fout << "inline double " << className << "::TransformLikelihoodOutput( double ps, double pb ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // returns transformed or non-transformed output" << std::endl;
+   fout << "   if (ps < fEpsilon) ps = fEpsilon;" << std::endl;
+   fout << "   if (pb < fEpsilon) pb = fEpsilon;" << std::endl;
+   fout << "   double r = ps/(ps + pb);" << std::endl;
+   fout << "   if (r >= 1.0) r = 1. - 1.e-15;" << std::endl;
+   fout << std::endl;
+   fout << "   if (" << (fTransformLikelihoodOutput ? "true" : "false") << ") {" << std::endl;
+   fout << "      // inverse Fermi function" << std::endl;
+   fout << std::endl;
+   fout << "      // sanity check" << std::endl;
+   fout << "      if      (r <= 0.0) r = fEpsilon;" << std::endl;
+   fout << "      else if (r >= 1.0) r = 1. - 1.e-15;" << std::endl;
+   fout << std::endl;
+   fout << "      double tau = 15.0;" << std::endl;
+   fout << "      r = - log(1.0/r - 1.0)/tau;" << std::endl;
+   fout << "   }" << std::endl;
+   fout << std::endl;
+   fout << "   return r;" << std::endl;
+   fout << "}" << std::endl;
+   fout << std::endl;
 
-   fout << "// Clean up" << endl;
-   fout << "inline void " << className << "::Clear() " << endl;
-   fout << "{" << endl;
-   fout << "   // nothing to clear" << endl;
-   fout << "}" << endl << endl;
+   fout << "// Clean up" << std::endl;
+   fout << "inline void " << className << "::Clear() " << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // nothing to clear" << std::endl;
+   fout << "}" << std::endl << std::endl;
 
-   fout << "// signal map" << endl;
-   fout << "float " << className << "::fRefS[][" << nbinMax << "] = " << endl;
-   fout << "{ " << endl;
+   fout << "// signal map" << std::endl;
+   fout << "float " << className << "::fRefS[][" << nbinMax << "] = " << std::endl;
+   fout << "{ " << std::endl;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       fout << "   { ";
       for (Int_t ibin=1; ibin<=nbinMax; ibin++) {
@@ -923,14 +925,14 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
 
          if (ibin < nbinMax) fout << ", ";
       }
-      fout << "   }, " << endl;
+      fout << "   }, " << std::endl;
    }
-   fout << "}; " << endl;
-   fout << endl;
+   fout << "}; " << std::endl;
+   fout << std::endl;
 
-   fout << "// background map" << endl;
-   fout << "float " << className << "::fRefB[][" << nbinMax << "] = " << endl;
-   fout << "{ " << endl;
+   fout << "// background map" << std::endl;
+   fout << "float " << className << "::fRefB[][" << nbinMax << "] = " << std::endl;
+   fout << "{ " << std::endl;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       fout << "   { ";
       fout << std::setprecision(8);
@@ -942,10 +944,10 @@ void TMVA::MethodLikelihood::MakeClassSpecific( std::ostream& fout, const TStrin
 
          if (ibin < nbinMax) fout << ", ";
       }
-      fout << "   }, " << endl;
+      fout << "   }, " << std::endl;
    }
-   fout << "}; " << endl;
-   fout << endl;
+   fout << "}; " << std::endl;
+   fout << std::endl;
    fout << std::setprecision(dp);
 
    delete[] nbin;

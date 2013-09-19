@@ -67,7 +67,7 @@ namespace TMVA {
 
       void SetMsgType( EMsgType t );
 
-      void SetTrainingEvents( const std::vector<TMVA::Event *> & el );
+      void SetTrainingEvents( const std::vector<const TMVA::Event *> & el );
 
       void ReshuffleEvents() { std::random_shuffle(fTrainingEventsRndm.begin(),fTrainingEventsRndm.end()); }
 
@@ -95,7 +95,7 @@ namespace TMVA {
       Double_t EvalEvent( const Event& e );
 
       // calculate sum of 
-      Double_t CalcWeightSum( const std::vector<TMVA::Event *> *events, UInt_t neve=0 );
+      Double_t CalcWeightSum( const std::vector<const TMVA::Event *> *events, UInt_t neve=0 );
 
       // do the fitting of the coefficients
       void     FitCoefficients();
@@ -138,7 +138,7 @@ namespace TMVA {
 
       //      const Event*  GetTrainingEvent(UInt_t i, UInt_t isub)  const { return &(fTrainingEvents[fSubsampleEvents[isub]])[i]; }
 
-      const std::vector< TMVA::Event * > & GetTrainingEvents()  const { return fTrainingEvents; }
+      const std::vector< const TMVA::Event * > & GetTrainingEvents()  const { return fTrainingEvents; }
       //      const std::vector< Int_t >               & GetSubsampleEvents() const { return fSubsampleEvents; }
 
       //      void  GetSubsampleEvents(Int_t sub, UInt_t & ibeg, UInt_t & iend) const;
@@ -160,8 +160,8 @@ namespace TMVA {
       // copy method
       void Copy( const RuleFit & other );
 
-      std::vector<TMVA::Event *>          fTrainingEvents;      // all training events
-      std::vector<TMVA::Event *>          fTrainingEventsRndm;  // idem, but randomly shuffled
+      std::vector<const TMVA::Event *>    fTrainingEvents;      // all training events
+      std::vector<const TMVA::Event *>    fTrainingEventsRndm;  // idem, but randomly shuffled
       std::vector<Double_t>               fEventWeights;        // original weights of the events - follows fTrainingEvents
       UInt_t                              fNTreeSample;         // number of events in sub sample = frac*neve
 

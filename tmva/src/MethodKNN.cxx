@@ -130,6 +130,8 @@ void TMVA::MethodKNN::DeclareOptions()
 
 //_______________________________________________________________________
 void TMVA::MethodKNN::DeclareCompatibilityOptions() {
+   // options that are used ONLY for the READER to ensure backward compatibility
+
    MethodBase::DeclareCompatibilityOptions();
    DeclareOptionRef(fTreeOptDepth = 6, "TreeOptDepth", "Binary tree optimisation depth");
 }
@@ -572,10 +574,10 @@ void TMVA::MethodKNN::ReadWeightsFromXML( void* wghtnode ) {
 }
 
 //_______________________________________________________________________
-void TMVA::MethodKNN::ReadWeightsFromStream(istream& is)
+void TMVA::MethodKNN::ReadWeightsFromStream(std::istream& is)
 {
    // read the weights
-   Log() << kINFO << "Starting ReadWeightsFromStream(istream& is) function..." << Endl;
+   Log() << kINFO << "Starting ReadWeightsFromStream(std::istream& is) function..." << Endl;
 
    if (!fEvent.empty()) {
       Log() << kINFO << "Erasing " << fEvent.size() << " previously stored events" << Endl;

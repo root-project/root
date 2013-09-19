@@ -135,7 +135,7 @@ Bool_t TMVA::BinarySearchTreeNode::EqualsMe(const TMVA::Event& e) const
 }
 
 //_______________________________________________________________________
-void TMVA::BinarySearchTreeNode::Print( ostream& os ) const
+void TMVA::BinarySearchTreeNode::Print( std::ostream& os ) const
 {
    // print the node
    os << "< ***  " << std::endl << " node.Data: ";
@@ -155,7 +155,7 @@ void TMVA::BinarySearchTreeNode::Print( ostream& os ) const
 }
 
 //_______________________________________________________________________
-void TMVA::BinarySearchTreeNode::PrintRec( ostream& os ) const
+void TMVA::BinarySearchTreeNode::PrintRec( std::ostream& os ) const
 {
    // recursively print the node and its daughters (--> print the 'tree')
    os << this->GetDepth() << " " << this->GetPos() << " " << this->GetSelector()
@@ -171,7 +171,7 @@ void TMVA::BinarySearchTreeNode::PrintRec( ostream& os ) const
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::BinarySearchTreeNode::ReadDataRecord( istream& is, UInt_t /* Tmva_Version_Code */  ) 
+Bool_t TMVA::BinarySearchTreeNode::ReadDataRecord( std::istream& is, UInt_t /* Tmva_Version_Code */  ) 
 {
    // Read the data block
    Int_t       itmp;

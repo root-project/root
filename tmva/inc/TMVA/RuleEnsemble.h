@@ -63,12 +63,12 @@ namespace TMVA {
    class RuleEnsemble;
    class MsgLogger;
 
-   ostream& operator<<( ostream& os, const RuleEnsemble& event );
+   std::ostream& operator<<( std::ostream& os, const RuleEnsemble& event );
 
    class RuleEnsemble {
 
       // output operator for a RuleEnsemble
-      friend ostream& operator<< ( ostream& os, const RuleEnsemble& rules );
+      friend std::ostream& operator<< ( std::ostream& os, const RuleEnsemble& rules );
       
    public:
 
@@ -159,7 +159,7 @@ namespace TMVA {
       void UpdateEventVal();
 
       // fill binary rule respons for all events (or selected subset)
-      void MakeRuleMap(const std::vector<TMVA::Event *> *events=0, UInt_t ifirst=0, UInt_t ilast=0);
+      void MakeRuleMap(const std::vector<const TMVA::Event *> *events=0, UInt_t ifirst=0, UInt_t ilast=0);
 
       // clear rule map
       void ClearRuleMap() { fRuleMap.clear(); fRuleMapEvents=0; }
@@ -261,7 +261,7 @@ namespace TMVA {
       const MethodBase*                      GetMethodBase()      const;
       const RuleFit*                         GetRuleFit()         const { return fRuleFit; }
       //
-      const std::vector<TMVA::Event *>*     GetTrainingEvents()  const;
+      const std::vector<const TMVA::Event *>*     GetTrainingEvents()  const;
       const Event*                    GetTrainingEvent(UInt_t i) const;
       const Event*                    GetEvent() const { return fEvent; }
       //
@@ -320,11 +320,11 @@ namespace TMVA {
       void  Print() const;
 
       // print the model in a cryptic way
-      void  PrintRaw   ( ostream& os  ) const; // obsolete
+      void  PrintRaw   ( std::ostream& os  ) const; // obsolete
       void* AddXMLTo   ( void* parent ) const;
    
       // read the model from input stream
-      void  ReadRaw    ( istream& istr ); // obsolete
+      void  ReadRaw    ( std::istream& istr ); // obsolete
       void  ReadFromXML( void* wghtnode ); 
 
 
@@ -389,7 +389,7 @@ namespace TMVA {
       std::vector< std::vector<UInt_t> > fRuleMap;           // map of rule responses
       UInt_t                        fRuleMapInd0;       // start index
       UInt_t                        fRuleMapInd1;       // last index
-      const std::vector<TMVA::Event *> *fRuleMapEvents; // pointer to vector of events used
+      const std::vector<const TMVA::Event *> *fRuleMapEvents; // pointer to vector of events used
       //
       const RuleFit*                fRuleFit;           // pointer to rule fit object 
 

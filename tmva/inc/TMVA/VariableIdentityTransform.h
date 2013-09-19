@@ -50,7 +50,7 @@ namespace TMVA {
       virtual ~VariableIdentityTransform( void ) {}
 
       void   Initialize();
-      Bool_t PrepareTransformation( const std::vector<Event*>& );
+      Bool_t PrepareTransformation (const std::vector<Event*>& );
 
       void WriteTransformationToStream ( std::ostream& ) const {}
       void ReadTransformationFromStream( std::istream&, const TString& ) { SetCreated(); }

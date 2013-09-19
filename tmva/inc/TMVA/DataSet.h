@@ -50,15 +50,15 @@
 #ifndef ROOT_TTree
 #include "TTree.h"
 #endif
-#ifndef ROOT_TCut
-#include "TCut.h"
-#endif
-#ifndef ROOT_TMatrixDfwd
-#include "TMatrixDfwd.h"
-#endif
-#ifndef ROOT_TPrincipal
-#include "TPrincipal.h"
-#endif
+//#ifndef ROOT_TCut
+//#include "TCut.h"
+//#endif
+//#ifndef ROOT_TMatrixDfwd
+//#include "TMatrixDfwd.h"
+//#endif
+//#ifndef ROOT_TPrincipal
+//#include "TPrincipal.h"
+//#endif
 #ifndef ROOT_TRandom3
 #include "TRandom3.h"
 #endif
@@ -89,16 +89,22 @@ namespace TMVA {
       Long64_t  GetNEvents( Types::ETreeType type = Types::kMaxTreeType ) const;
       Long64_t  GetNTrainingEvents()              const { return GetNEvents(Types::kTraining); }
       Long64_t  GetNTestEvents()                  const { return GetNEvents(Types::kTesting); }
-      Event*    GetEvent()                        const; // returns event without transformations
-      Event*    GetEvent        ( Long64_t ievt ) const { fCurrentEventIdx = ievt; return GetEvent(); } // returns event without transformations
-      Event*    GetTrainingEvent( Long64_t ievt ) const { return GetEvent(ievt, Types::kTraining); }
-      Event*    GetTestEvent    ( Long64_t ievt ) const { return GetEvent(ievt, Types::kTesting); }
-      Event*    GetEvent        ( Long64_t ievt, Types::ETreeType type ) const {
+
+      // const getters
+      const Event*    GetEvent()                        const; // returns event without transformations
+      const Event*    GetEvent        ( Long64_t ievt ) const { fCurrentEventIdx = ievt; return GetEvent(); } // returns event without transformations
+      const Event*    GetTrainingEvent( Long64_t ievt ) const { return GetEvent(ievt, Types::kTraining); }
+      const Event*    GetTestEvent    ( Long64_t ievt ) const { return GetEvent(ievt, Types::kTesting); }
+      const Event*    GetEvent        ( Long64_t ievt, Types::ETreeType type ) const 
+      {
          fCurrentTreeIdx = TreeIndex(type); fCurrentEventIdx = ievt; return GetEvent();
       }
 
-      UInt_t    GetNVariables() const;
-      UInt_t    GetNTargets()   const;
+
+
+
+      UInt_t    GetNVariables()   const;
+      UInt_t    GetNTargets()     const;
       UInt_t    GetNSpectators()  const;
 
       void      SetCurrentEvent( Long64_t ievt         ) const { fCurrentEventIdx = ievt; }
@@ -162,7 +168,7 @@ namespace TMVA {
       mutable Long64_t           fCurrentEventIdx;
 
       // event sampling
-      std::vector<Char_t>        fSampling;                    // random or importance sampling (not all events are taken) !! Bool_t are stored ( no vector<bool> taken for speed (performance) issues )
+      std::vector<Char_t>        fSampling;                    // random or importance sampling (not all events are taken) !! Bool_t are stored ( no std::vector<bool> taken for speed (performance) issues )
       std::vector<Int_t>         fSamplingNEvents;            // number of events which should be sampled
       std::vector<Float_t>       fSamplingWeight;              // weight change factor [weight is indicating if sampling is random (1.0) or importance (<1.0)] 
       mutable std::vector< std::vector< std::pair< Float_t, Long64_t >* > > fSamplingEventList;  // weights and indices for sampling
@@ -181,7 +187,7 @@ namespace TMVA {
       std::vector<Char_t>        fBlockBelongToTraining;       // when dividing the dataset to blocks, sets whether 
                                                                // the certain block is in the Training set or else 
                                                                // in the validation set 
-                                                               // boolean are stored, taken vector<Char_t> for performance reasons (instead of vector<Bool_t>)
+                                                               // boolean are stored, taken std::vector<Char_t> for performance reasons (instead of std::vector<Bool_t>)
       Long64_t                   fTrainingBlockSize;           // block size into which the training dataset is divided
 
       void  ApplyTrainingBlockDivision();

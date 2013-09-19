@@ -75,7 +75,7 @@ TMVA::TActivation*
 TMVA::TActivationChooser::CreateActivation(EActivationType type) const
 {
    // instantiate the correct activation object according to the
-   // type chosen (given as the enumeration type)
+   // type choosen (given as the enumeration type)
    
    switch (type) {
    case kLinear:  return new TActivationIdentity();
@@ -93,7 +93,7 @@ TMVA::TActivation*
 TMVA::TActivationChooser::CreateActivation(const TString& type) const
 {
    // instantiate the correct activation object according to the
-   // type chosen (given by a TString)
+   // type choosen (given by a TString)
 
    if      (type == fLINEAR)  return CreateActivation(kLinear);
    else if (type == fSIGMOID) return CreateActivation(kSigmoid);

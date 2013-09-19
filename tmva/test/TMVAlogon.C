@@ -4,10 +4,10 @@
    // -----------------------------------------------
    
    TString curDynamicPath( gSystem->GetDynamicPath() );
-   gSystem->SetDynamicPath( "../lib:" + curDynamicPath );
+   gSystem->SetDynamicPath( "$TMVASYS/lib:" + curDynamicPath );
 
    TString curIncludePath(gSystem->GetIncludePath());
-   gSystem->SetIncludePath( " -I../inc " + curIncludePath );
+   gSystem->SetIncludePath( " -I$TMVASYS/inc " + curIncludePath );
 
    // load TMVA shared library created in local release 
    // (not required anymore with the use of rootmaps, but problems with MAC OSX)

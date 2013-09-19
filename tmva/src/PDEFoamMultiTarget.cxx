@@ -196,7 +196,7 @@ void TMVA::PDEFoamMultiTarget::CalculateMpv(std::map<Int_t, Float_t>& target, co
    // loop over all cells and find cell with maximum event density
    for (std::vector<PDEFoamCell*>::const_iterator cell_it = cells.begin();
         cell_it != cells.end(); ++cell_it) {
-      
+
       // get event density of cell
       const Double_t cell_density = GetCellValue(*cell_it, kValueDensity);
 
@@ -242,7 +242,7 @@ void TMVA::PDEFoamMultiTarget::CalculateMean(std::map<Int_t, Float_t>& target, c
    // loop over all cells and find cell with maximum event density
    for (std::vector<PDEFoamCell*>::const_iterator cell_it = cells.begin();
         cell_it != cells.end(); ++cell_it) {
-      
+
       // get event density of cell
       const Double_t cell_density = GetCellValue(*cell_it, kValueDensity);
 

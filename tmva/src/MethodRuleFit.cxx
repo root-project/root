@@ -51,6 +51,8 @@
 #include "TMVA/Config.h"
 #include "TMVA/MsgLogger.h"
 
+using std::min;
+
 REGISTER_METHOD(RuleFit)
 
 ClassImp(TMVA::MethodRuleFit)
@@ -512,7 +514,14 @@ void TMVA::MethodRuleFit::TrainJFRuleFit( void )
    // training of rules using Jerome Friedmans implementation
 
    fRuleFit.InitPtrs( this );
-   fRuleFit.SetTrainingEvents( GetTrainingEvents() );
+   Data()->SetCurrentType(Types::kTraining);
+   UInt_t nevents = Data()->GetNTrainingEvents();
+   std::vector<const TMVA::Event*> tmp;
+   for (Long64_t ievt=0; ievt<nevents; ievt++) {
+     const Event *event = GetEvent(ievt);
+     tmp.push_back(event);
+   }
+   fRuleFit.SetTrainingEvents( tmp );
 
    RuleFitAPI *rfAPI = new RuleFitAPI( this, &fRuleFit, Log().GetMinType() );
 
@@ -565,9 +574,9 @@ void TMVA::MethodRuleFit::AddWeightsXMLTo( void* parent ) const
 }
 
 //_______________________________________________________________________
-void TMVA::MethodRuleFit::ReadWeightsFromStream( istream & istr )
+void TMVA::MethodRuleFit::ReadWeightsFromStream( std::istream & istr )
 {
-   // read rules from an istream
+   // read rules from an std::istream
 
    fRuleFit.GetRuleEnsemblePtr()->ReadRaw( istr );
 }
@@ -609,7 +618,7 @@ void TMVA::MethodRuleFit::MakeClassSpecific( std::ostream& fout, const TString& 
    fout << "void   " << className << "::Initialize(){}" << std::endl;
    fout << "void   " << className << "::Clear(){}" << std::endl;
    fout << "double " << className << "::GetMvaValue__( const std::vector<double>& inputValues ) const {" << std::endl;
-   fout << "   double rval=" << setprecision(10) << fRuleFit.GetRuleEnsemble().GetOffset() << ";" << std::endl;
+   fout << "   double rval=" << std::setprecision(10) << fRuleFit.GetRuleEnsemble().GetOffset() << ";" << std::endl;
    MakeClassRuleCuts(fout);
    MakeClassLinear(fout);
    fout << "   return rval;" << std::endl;
@@ -659,16 +668,16 @@ void TMVA::MethodRuleFit::MakeClassRuleCuts( std::ostream& fout ) const
          //
          if (ic>0) fout << "&&" << std::flush;
          if (domin) {
-            fout << "(" << setprecision(10) << valmin << std::flush;
+            fout << "(" << std::setprecision(10) << valmin << std::flush;
             fout << "<inputValues[" << sel << "])" << std::flush;
          }
          if (domax) {
             if (domin) fout << "&&" << std::flush;
             fout << "(inputValues[" << sel << "]" << std::flush;
-            fout << "<" << setprecision(10) << valmax << ")" <<std::flush;
+            fout << "<" << std::setprecision(10) << valmax << ")" <<std::flush;
          }
       }
-      fout << ") rval+=" << setprecision(10) << (*rules)[ir]->GetCoefficient() << ";" << std::flush;
+      fout << ") rval+=" << std::setprecision(10) << (*rules)[ir]->GetCoefficient() << ";" << std::flush;
       fout << "   // importance = " << Form("%3.3f",impr) << std::endl;
    }
    fout << std::setprecision(dp);
@@ -695,11 +704,11 @@ void TMVA::MethodRuleFit::MakeClassLinear( std::ostream& fout ) const
          Double_t norm = rens->GetLinNorm(il);
          Double_t imp  = rens->GetLinImportance(il)/rens->GetImportanceRef();
          fout << "   rval+="
-   //           << setprecision(10) << rens->GetLinCoefficients(il)*norm << "*std::min(" << setprecision(10) << rens->GetLinDP(il)
-   //           << ", std::max( inputValues[" << il << "]," << setprecision(10) << rens->GetLinDM(il) << "));"
-              << setprecision(10) << rens->GetLinCoefficients(il)*norm 
-              << "*std::min( double(" << setprecision(10) << rens->GetLinDP(il)
-              << "), std::max( double(inputValues[" << il << "]), double(" << setprecision(10) << rens->GetLinDM(il) << ")));"
+   //           << std::setprecision(10) << rens->GetLinCoefficients(il)*norm << "*std::min(" << setprecision(10) << rens->GetLinDP(il)
+   //           << ", std::max( inputValues[" << il << "]," << std::setprecision(10) << rens->GetLinDM(il) << "));"
+              << std::setprecision(10) << rens->GetLinCoefficients(il)*norm 
+              << "*std::min( double(" << std::setprecision(10) << rens->GetLinDP(il)
+              << "), std::max( double(inputValues[" << il << "]), double(" << std::setprecision(10) << rens->GetLinDM(il) << ")));"
               << std::flush;
          fout << "   // importance = " << Form("%3.3f",imp) << std::endl;
       }

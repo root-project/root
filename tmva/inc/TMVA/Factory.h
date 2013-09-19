@@ -184,8 +184,8 @@ namespace TMVA {
       MethodBase* BookMethod( TMVA::Types::EMVA /*theMethod*/, 
                               TString /*methodTitle*/, 
                               TString /*methodOption*/, 
-                              TMVA::Types::EMVA /*theCommittee*/, 
-                              TString /*committeeOption = ""*/ ) { return 0; } 
+                              TMVA::Types::EMVA /*theComposite*/, 
+                              TString /*compositeOption = ""*/ ) { return 0; } 
 
       // optimize all booked methods (well, if desired by the method)
       void OptimizeAllMethods                 (TString fomType="ROCIntegral", TString fitType="FitGA");

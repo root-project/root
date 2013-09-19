@@ -65,7 +65,7 @@ namespace TMVA {
    public:
       
       //default constructor
-      OptimizeConfigParameters(MethodBase * const method, std::map<TString,TMVA::Interval> tuneParameters, TString fomType="Separation", TString optimizationType = "GA"); 
+      OptimizeConfigParameters(MethodBase * const method, std::map<TString,TMVA::Interval*> tuneParameters, TString fomType="Separation", TString optimizationType = "GA"); 
       
       // destructor
       virtual ~OptimizeConfigParameters();
@@ -94,7 +94,7 @@ namespace TMVA {
      
       MethodBase* const fMethod; // The MVA method to be evaluated
       std::vector<Float_t>             fFOMvsIter; // graph showing the develompment of the Figure Of Merit values during the fit
-      std::map<TString,TMVA::Interval> fTuneParameters; // parameters included in the tuning
+      std::map<TString,TMVA::Interval*> fTuneParameters; // parameters included in the tuning
       std::map<TString,Double_t>       fTunedParameters; // parameters included in the tuning
       std::map< std::vector<Double_t> , Double_t>  fAlreadyTrainedParCombination; // save parameters for which the FOM is already known (GA seems to evaluate the same parameters several times)
       TString           fFOMType;    // the FOM type (Separation, ROC integra.. whaeter you implemented..
@@ -105,6 +105,7 @@ namespace TMVA {
       TH1D             *fMvaSigFineBin; // MVA distrituion for signal events
       TH1D             *fMvaBkgFineBin; // MVA distrituion for bakgr. events
 
+      Bool_t           fNotDoneYet; // flat to indicate of Method Transformations have been optained yet or not (normally done in MethodBase::TrainMethod)
 
       mutable MsgLogger*         fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }

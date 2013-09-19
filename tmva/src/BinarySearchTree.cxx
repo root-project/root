@@ -63,9 +63,6 @@
 #ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
 #endif
-#ifndef ROOT_TMVA_DataSet
-#include "TMVA/DataSet.h"
-#endif
 #ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
 #endif
@@ -332,13 +329,13 @@ void TMVA::BinarySearchTree::NormalizeTree ( std::vector< std::pair<Double_t, co
 
    Insert( mid->second );
 
-   //    Print(cout);
-   //    cout << endl << endl;
+   //    Print(std::cout);
+   //    std::cout << std::endl << std::endl;
 
    NormalizeTree( leftBound, mid, actDim+1 );
    mid++;
-   //    Print(cout);
-   //    cout << endl << endl;
+   //    Print(std::cout);
+   //    std::cout << std::endl << std::endl;
    NormalizeTree( mid, rightBound, actDim+1 );
 
 

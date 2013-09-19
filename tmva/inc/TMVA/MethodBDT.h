@@ -100,7 +100,7 @@ namespace TMVA {
       void AddWeightsXMLTo( void* parent ) const;
 
       // read weights from file
-      void ReadWeightsFromStream( istream& istr );
+      void ReadWeightsFromStream( std::istream& istr );
       void ReadWeightsFromXML(void* parent);
 
       // write method specific histos to target file
@@ -111,7 +111,7 @@ namespace TMVA {
 
    private:
       Double_t GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t useNTrees );
-      Double_t PrivateGetMvaValue( TMVA::Event& ev, Double_t* err=0, Double_t* errUpper=0, UInt_t useNTrees=0 );
+      Double_t PrivateGetMvaValue( const TMVA::Event *ev, Double_t* err=0, Double_t* errUpper=0, UInt_t useNTrees=0 );
       void     BoostMonitor(Int_t iTree);
 
    public:
@@ -121,7 +121,7 @@ namespace TMVA {
       const std::vector<Float_t>& GetRegressionValues();
 
       // apply the boost algorithm to a tree in the collection
-      Double_t Boost( std::vector<TMVA::Event*>, DecisionTree *dt, Int_t iTree, UInt_t cls = 0);
+      Double_t Boost( std::vector<const TMVA::Event*>&, DecisionTree *dt, Int_t iTree, UInt_t cls = 0);
 
       // ranking of input variables
       const Ranking* CreateRanking();
@@ -130,17 +130,21 @@ namespace TMVA {
       void DeclareOptions();
       void ProcessOptions();
       void SetMaxDepth(Int_t d){fMaxDepth = d;}
-      void SetNodeMinEvents(Int_t d){fNodeMinEvents = d;}
+      void SetMinNodeSize(Double_t sizeInPercent);
+      void SetMinNodeSize(TString sizeInPercent);
+
       void SetNTrees(Int_t d){fNTrees = d;}
       void SetAdaBoostBeta(Double_t b){fAdaBoostBeta = b;}
-      void SetNodePurityLimit(Double_t l){fNodePurityLimit = l;}
+      void SetNodePurityLimit(Double_t l){fNodePurityLimit = l;} 
+      void SetShrinkage(Double_t s){fShrinkage = s;}
+      void SetUseNvars(Int_t n){fUseNvars = n;}
 
 
       // get the forest
       inline const std::vector<TMVA::DecisionTree*> & GetForest() const;
 
       // get the forest
-      inline const std::vector<TMVA::Event*> & GetTrainingEvents() const;
+      inline const std::vector<const TMVA::Event*> & GetTrainingEvents() const;
 
       inline const std::vector<double> & GetBoostWeights() const;
 
@@ -171,51 +175,55 @@ namespace TMVA {
       void PreProcessNegativeEventWeights();
 
       // boosting algorithm (adaptive boosting)
-      Double_t AdaBoost( std::vector<TMVA::Event*>, DecisionTree *dt );
+      Double_t AdaBoost( std::vector<const TMVA::Event*>&, DecisionTree *dt );
+
+      // boosting algorithm (adaptive boosting with cost matrix)
+      Double_t AdaCost( std::vector<const TMVA::Event*>&, DecisionTree *dt );
 
       // boosting as a random re-weighting
-      Double_t Bagging( std::vector<TMVA::Event*>, Int_t iTree );
+      Double_t Bagging( std::vector<const TMVA::Event*>&, Int_t iTree );
 
       // boosting special for regression
-      Double_t RegBoost( std::vector<TMVA::Event*>, DecisionTree *dt );
+      Double_t RegBoost( std::vector<const TMVA::Event*>&, DecisionTree *dt );
 
       // adaboost adapted to regression
-      Double_t AdaBoostR2( std::vector<TMVA::Event*>, DecisionTree *dt );
+      Double_t AdaBoostR2( std::vector<const TMVA::Event*>&, DecisionTree *dt );
 
       // binomial likelihood gradient boost for classification
       // (see Friedman: "Greedy Function Approximation: a Gradient Boosting Machine"
       // Technical report, Dept. of Statistics, Stanford University)
-      Double_t GradBoost( std::vector<TMVA::Event*>, DecisionTree *dt, UInt_t cls = 0);
-      Double_t GradBoostRegression(std::vector<TMVA::Event*>, DecisionTree *dt );
-      void InitGradBoost( std::vector<TMVA::Event*>);
-      void UpdateTargets( std::vector<TMVA::Event*>, UInt_t cls = 0);
-      void UpdateTargetsRegression( std::vector<TMVA::Event*>,Bool_t first=kFALSE);
-      Double_t GetGradBoostMVA(TMVA::Event& e, UInt_t nTrees);
+      Double_t GradBoost( std::vector<const TMVA::Event*>&, DecisionTree *dt, UInt_t cls = 0);
+      Double_t GradBoostRegression(std::vector<const TMVA::Event*>&, DecisionTree *dt );
+      void InitGradBoost( std::vector<const TMVA::Event*>&);
+      void UpdateTargets( std::vector<const TMVA::Event*>&, UInt_t cls = 0);
+      void UpdateTargetsRegression( std::vector<const TMVA::Event*>&,Bool_t first=kFALSE);
+      Double_t GetGradBoostMVA(const TMVA::Event *e, UInt_t nTrees);
       void GetRandomSubSample();
       Double_t GetWeightedQuantile(std::vector<std::pair<Double_t, Double_t> > vec, const Double_t quantile, const Double_t SumOfWeights = 0.0);
 
-      std::vector<TMVA::Event*>       fEventSample;     // the training events
-      std::vector<TMVA::Event*>       fValidationSample;// the Validation events
-      std::vector<TMVA::Event*>       fSubSample;       // subsample for bagged grad boost
+      std::vector<const TMVA::Event*>       fEventSample;     // the training events
+      std::vector<const TMVA::Event*>       fValidationSample;// the Validation events
+      std::vector<const TMVA::Event*>       fSubSample;       // subsample for bagged grad boost
       Int_t                           fNTrees;          // number of decision trees requested
       std::vector<DecisionTree*>      fForest;          // the collection of decision trees
       std::vector<double>             fBoostWeights;    // the weights applied in the individual boosts
-      Bool_t                          fRenormByClass;   // individually re-normalize each event class to the original size after boosting
+      Double_t                        fSigToBkgFraction;// Signal to Background fraction assumed during training
       TString                         fBoostType;       // string specifying the boost type
       Double_t                        fAdaBoostBeta;    // beta parameter for AdaBoost algorithm
       TString                         fAdaBoostR2Loss;  // loss type used in AdaBoostR2 (Linear,Quadratic or Exponential)
       Double_t                        fTransitionPoint; // break-down point for gradient regression
       Double_t                        fShrinkage;       // learning rate for gradient boost;
       Bool_t                          fBaggedGradBoost; // turn bagging in combination with grad boost on/off
-      Double_t                        fSampleFraction;  // fraction of events used for bagged grad boost
       Double_t                        fSumOfWeights;    // sum of all event weights
-      std::map< TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
-      std::map< TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
+      std::map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
+      std::map< const TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
 
       //options for the decision Tree
       SeparationBase                 *fSepType;         // the separation used in node splitting
       TString                         fSepTypeS;        // the separation (option string) used in node splitting
-      Int_t                           fNodeMinEvents;   // min number of events in node
+      Int_t                           fMinNodeEvents;   // min number of events in node
+      Float_t                         fMinNodeSize;     // min percentage of training events in node
+      TString                         fMinNodeSizeS;    // string containing min percentage of training events in node
 
       Int_t                           fNCuts;           // grid used in cut applied in node splitting
       Bool_t                          fUseFisherCuts;   // use multivariate splits using the Fisher criterium
@@ -223,14 +231,12 @@ namespace TMVA {
       Bool_t                          fUseExclusiveVars; // individual variables already used in fisher criterium are not anymore analysed individually for node splitting
       Bool_t                          fUseYesNoLeaf;    // use sig or bkg classification in leave nodes or sig/bkg
       Double_t                        fNodePurityLimit; // purity limit for sig/bkg nodes
-      Bool_t                          fUseWeightedTrees;// use average classification from the trees, or have the individual trees trees in the forest weighted (e.g. log(boostweight) from AdaBoost
       UInt_t                          fNNodesMax;       // max # of nodes
       UInt_t                          fMaxDepth;        // max depth
 
       DecisionTree::EPruneMethod       fPruneMethod;     // method used for prunig
       TString                          fPruneMethodS;    // prune method option String
       Double_t                         fPruneStrength;   // a parameter to set the "amount" of pruning..needs to be adjusted
-      Bool_t                           fPruneBeforeBoost;// flag to prune before boosting
       Double_t                         fFValidationEvents;    // fraction of events to use for pruning
       Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample
       Bool_t                           fRandomisedTrees; // choose a random subset of possible cut variables at each node during training
@@ -238,12 +244,11 @@ namespace TMVA {
       Bool_t                           fUsePoissonNvars; // use "fUseNvars" not as fixed number but as mean of a possion distr. in each split
       UInt_t                           fUseNTrainEvents; // number of randomly picked training events used in randomised (and bagged) trees
 
-      Double_t                         fSampleSizeFraction;     // relative size of bagged event sample to original sample size
+      Double_t                         fBaggedSampleFraction;     // relative size of bagged event sample to original sample size
       TString                          fNegWeightTreatment;     // variable that holds the option of how to treat negative event weights in training
       Bool_t                           fNoNegWeightsInTraining; // ignore negative event weights in the training
       Bool_t                           fInverseBoostNegWeights; // boost ev. with neg. weights with 1/boostweight rathre than boostweight
       Bool_t                           fPairNegWeightsGlobal;   // pair ev. with neg. and pos. weights in traning sample and "annihilate" them 
-      Bool_t                           fPairNegWeightsInNode;   // randomly pair miscl. ev. with neg. and pos. weights in node and don't boost them
       Bool_t                           fTrainWithNegWeights; // yes there are negative event weights and we don't ignore them
       Bool_t                           fDoBoostMonitor; //create control plot with ROC integral vs tree number
 
@@ -254,7 +259,31 @@ namespace TMVA {
       Double_t                         fBoostWeight;     // ntuple var: boost weight
       Double_t                         fErrorFraction;   // ntuple var: misclassification error fraction
 
+      Double_t                         fCss;             // Cost factor
+      Double_t                         fCts_sb;          // Cost factor
+      Double_t                         fCtb_ss;          // Cost factor
+      Double_t                         fCbb;             // Cost factor
+      
+      Bool_t                           fDoPreselection;  // do or do not perform automatic pre-selection of 100% eff. cuts
+
       std::vector<Double_t>            fVariableImportance; // the relative importance of the different variables
+
+
+      void                             DeterminePreselectionCuts(const std::vector<const TMVA::Event*>& eventSample);
+      Double_t                         ApplyPreselectionCuts(const Event* ev);
+      
+      std::vector<Double_t> fLowSigCut;
+      std::vector<Double_t> fLowBkgCut;
+      std::vector<Double_t> fHighSigCut;
+      std::vector<Double_t> fHighBkgCut;
+      
+      std::vector<Bool_t>  fIsLowSigCut;  
+      std::vector<Bool_t>  fIsLowBkgCut;  
+      std::vector<Bool_t>  fIsHighSigCut; 
+      std::vector<Bool_t>  fIsHighBkgCut; 
+      
+      Bool_t fHistoricBool; //historic variable, only needed for "CompatibilityOptions" 
+
 
       // debugging flags
       static const Int_t               fgDebugLevel;     // debug level determining some printout/control plots etc.
@@ -267,7 +296,7 @@ namespace TMVA {
 } // namespace TMVA
 
 const std::vector<TMVA::DecisionTree*>& TMVA::MethodBDT::GetForest()         const { return fForest; }
-const std::vector<TMVA::Event*>&        TMVA::MethodBDT::GetTrainingEvents() const { return fEventSample; }
+const std::vector<const TMVA::Event*> & TMVA::MethodBDT::GetTrainingEvents() const { return fEventSample; }
 const std::vector<double>&              TMVA::MethodBDT::GetBoostWeights()   const { return fBoostWeights; }
 
 #endif

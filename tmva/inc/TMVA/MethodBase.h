@@ -201,6 +201,7 @@ namespace TMVA {
       }
 
       // probability of classifier response (mvaval) to be signal (requires "CreateMvaPdf" option set)
+      virtual Double_t GetProba( const Event *ev); // the simple one, automatically calcualtes the mvaVal and uses the SAME sig/bkg ratio as given in the training sample (typically 50/50 .. (NormMode=EqualNumEvents) but can be different) 
       virtual Double_t GetProba( Double_t mvaVal, Double_t ap_sig );
 
       // Rarity of classifier response (signal or background (default) is uniform in [0,1])
@@ -208,9 +209,6 @@ namespace TMVA {
 
       // create ranking
       virtual const Ranking* CreateRanking() = 0;
-
-      // perfrom extra actions during the boosting at different stages
-      virtual Bool_t   MonitorBoost(MethodBoost* /*booster*/) {return kFALSE;};
 
       // make ROOT-independent C++ class
       virtual void     MakeClass( const TString& classFileName = TString("") ) const;
@@ -234,7 +232,6 @@ namespace TMVA {
 
    private:
       friend class MethodCategory;
-      friend class MethodCommittee;
       friend class MethodCompositeBase;
       void WriteStateToXML      ( void* parent ) const;
       void ReadStateFromXML     ( void* parent );
@@ -361,11 +358,15 @@ namespace TMVA {
       // ---------- event accessors ------------------------------------------------
 
       // returns reference to data set
+      // NOTE: this DataSet is the "original" dataset, i.e. the one seen by ALL Classifiers WITHOUT transformation
+      DataSet* Data() const { return DataInfo().GetDataSet(); }
       DataSetInfo&     DataInfo() const { return fDataSetInfo; }
 
       mutable const Event*   fTmpEvent; //! temporary event when testing on a different DataSet than the own one
 
       // event reference and update
+      // NOTE: these Event accessors make sure that you get the events transformed according to the 
+      //        particular clasifiers transformation chosen
       UInt_t           GetNEvents      () const { return Data()->GetNEvents(); }
       const Event*     GetEvent        () const;
       const Event*     GetEvent        ( const TMVA::Event* ev ) const;
@@ -383,7 +384,6 @@ namespace TMVA {
       virtual Bool_t        IsSignalLike();
       virtual Bool_t        IsSignalLike(Double_t mvaVal);
 
-      DataSet* Data() const { return DataInfo().GetDataSet(); }
 
       Bool_t                HasMVAPdfs() const { return fHasMVAPdfs; }
       virtual void          SetAnalysisType( Types::EAnalysisType type ) { fAnalysisType = type; }
@@ -451,16 +451,7 @@ namespace TMVA {
 
       // access to event information that needs method-specific information
 
-      Float_t GetTWeight( const Event* ev ) const {
-         return (fIgnoreNegWeightsInTraining && (ev->GetWeight() < 0)) ? 0. : ev->GetWeight();
-      }
-
       Bool_t           IsConstructedFromWeightFile() const { return fConstructedFromWeightFile; }
-
-   public:
-      virtual void SetCurrentEvent( Long64_t ievt ) const {
-         Data()->SetCurrentEvent(ievt);
-      }
 
 
    private:

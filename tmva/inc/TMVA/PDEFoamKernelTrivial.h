@@ -44,7 +44,7 @@ namespace TMVA
    public:
       PDEFoamKernelTrivial();                 // Constructor
       PDEFoamKernelTrivial(const PDEFoamKernelTrivial&); // Copy Constructor
-      virtual ~PDEFoamKernelTrivial() {};     // Destructor
+      virtual ~PDEFoamKernelTrivial() {}      // Destructor
 
       // kernel estimator
       virtual Float_t Estimate(PDEFoam*, std::vector<Float_t>&, ECellValue);

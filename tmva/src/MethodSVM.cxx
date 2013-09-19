@@ -65,6 +65,8 @@
 
 #include <string>
 
+using std::vector;
+
 const Int_t basketsize__ = 1280000;
 REGISTER_METHOD(SVM)
 
@@ -144,7 +146,10 @@ void TMVA::MethodSVM::Init()
    // SVM always uses normalised input variables
    SetNormalised( kTRUE );
 
-   fInputData = new std::vector<TMVA::SVEvent*>(Data()->GetNEvents());
+   // Helge: do not book a event vector of given size but rather fill the vector
+   //        later with pus_back. Anyway, this is NOT what is time consuming in
+   //        SVM and it allows to skip totally events with weights == 0 ;)
+   fInputData = new std::vector<TMVA::SVEvent*>(0);
    fSupportVectors = new std::vector<TMVA::SVEvent*>(0);
 }
 
@@ -152,6 +157,10 @@ void TMVA::MethodSVM::Init()
 void TMVA::MethodSVM::DeclareOptions()
 {
    // declare options available for this method
+
+   // for gaussian kernel parameter(s)
+   DeclareOptionRef( fGamma = 1., "Gamma", "RBF kernel parameter: Gamma (size of the Kernel)");
+
    DeclareOptionRef( fCost,   "C",        "Cost parameter" );
    if (DoRegression()) {
       fCost = 0.002;
@@ -160,16 +169,15 @@ void TMVA::MethodSVM::DeclareOptions()
    }
    DeclareOptionRef( fTolerance = 0.01, "Tol",      "Tolerance parameter" );  //should be fixed
    DeclareOptionRef( fMaxIter   = 1000, "MaxIter",  "Maximum number of training loops" );
-   DeclareOptionRef( fNSubSets  = 1,    "NSubSets", "Number of training subsets" );
 
-   // for gaussian kernel parameter(s)
-   DeclareOptionRef( fGamma = 1., "Gamma", "RBF kernel parameter: Gamma");
 }
 
 //_______________________________________________________________________
 void TMVA::MethodSVM::DeclareCompatibilityOptions()
 {
+   // options that are used ONLY for the READER to ensure backward compatibility
    MethodBase::DeclareCompatibilityOptions();
+   DeclareOptionRef( fNSubSets  = 1,    "NSubSets", "Number of training subsets" );
    DeclareOptionRef( fTheKernel = "Gauss", "Kernel", "Uses kernel function");
    // for gaussian kernel parameter(s)
    DeclareOptionRef( fDoubleSigmaSquared = 2., "Sigma", "Kernel parameter: sigma");
@@ -198,14 +206,15 @@ void TMVA::MethodSVM::Train()
    // Train SVM
    Data()->SetCurrentType(Types::kTraining);
 
+   Log() << kDEBUG << "Create event vector"<< Endl;
    for (Int_t ievt=0; ievt<Data()->GetNEvents(); ievt++){
-      Log() << kDEBUG << "Create event vector"<< Endl;
-      fInputData->at(ievt) = new SVEvent(GetEvent(ievt), fCost, DataInfo().IsSignal(GetEvent(ievt))); 
+      if (GetEvent(ievt)->GetWeight() != 0) 
+         fInputData->push_back(new SVEvent(GetEvent(ievt), fCost, DataInfo().IsSignal(GetEvent(ievt)))); 
    }
 
    fSVKernelFunction = new SVKernelFunction(fGamma);
 
-   Log()<< kINFO << "Building SVM Working Set..."<< Endl;
+   Log()<< kINFO << "Building SVM Working Set...with "<<fInputData->size()<<" event instances"<< Endl;
    Timer bldwstime( GetName());
    fWgSet = new SVWorkingSet( fInputData, fSVKernelFunction,fTolerance, DoRegression() );
    Log() << kINFO <<"Elapsed time for Working Set build: "<< bldwstime.GetElapsedTime()<<Endl;
@@ -221,6 +230,14 @@ void TMVA::MethodSVM::Train()
 
    fBparm          = fWgSet->GetBpar();
    fSupportVectors = fWgSet->GetSupportVectors();
+
+
+   delete fWgSet;
+   fWgSet=0;
+
+   //   for (UInt_t i=0; i<fInputData->size();i++) delete fInputData->at(i);
+   delete fInputData; 
+   fInputData=0;
 }
 
 //_______________________________________________________________________
@@ -310,7 +327,7 @@ void TMVA::MethodSVM::WriteWeightsToStream( TFile& ) const
 }
 
 //_______________________________________________________________________
-void  TMVA::MethodSVM::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodSVM::ReadWeightsFromStream( std::istream& istr )
 {
    if (fSupportVectors !=0) { delete fSupportVectors; fSupportVectors = 0;}
    fSupportVectors = new std::vector<TMVA::SVEvent*>(0);
@@ -432,75 +449,75 @@ void TMVA::MethodSVM::MakeClassSpecific( std::ostream& fout, const TString& clas
 {
    // write specific classifier response
    const int fNsupv = fSupportVectors->size();
-   fout << "   // not implemented for class: \"" << className << "\"" << endl;
-   fout << "   float        fBparameter;" << endl;
-   fout << "   int          fNOfSuppVec;" << endl;
-   fout << "   static float fAllSuppVectors[][" << fNsupv << "];" << endl;
-   fout << "   static float fAlphaTypeCoef[" << fNsupv << "];" << endl;
-   fout << endl;
-   fout << "   // Kernel parameter(s) " << endl;
-   fout << "   float fGamma;"  << endl;
-   fout << "};" << endl;
-   fout << "" << endl;
+   fout << "   // not implemented for class: \"" << className << "\"" << std::endl;
+   fout << "   float        fBparameter;" << std::endl;
+   fout << "   int          fNOfSuppVec;" << std::endl;
+   fout << "   static float fAllSuppVectors[][" << fNsupv << "];" << std::endl;
+   fout << "   static float fAlphaTypeCoef[" << fNsupv << "];" << std::endl;
+   fout << std::endl;
+   fout << "   // Kernel parameter(s) " << std::endl;
+   fout << "   float fGamma;"  << std::endl;
+   fout << "};" << std::endl;
+   fout << "" << std::endl;
 
    //Initialize function definition
-   fout << "inline void " << className << "::Initialize() " << endl;
-   fout << "{" << endl;
-   fout << "   fBparameter = " << fBparm << ";" << endl;
-   fout << "   fNOfSuppVec = " << fNsupv << ";" << endl;
-   fout << "   fGamma = " << fGamma << ";" <<endl;
-   fout << "}" << endl;
-   fout << endl;
+   fout << "inline void " << className << "::Initialize() " << std::endl;
+   fout << "{" << std::endl;
+   fout << "   fBparameter = " << fBparm << ";" << std::endl;
+   fout << "   fNOfSuppVec = " << fNsupv << ";" << std::endl;
+   fout << "   fGamma = " << fGamma << ";" <<std::endl;
+   fout << "}" << std::endl;
+   fout << std::endl;
 
    // GetMvaValue__ function defninition
-   fout << "inline double " << className << "::GetMvaValue__(const std::vector<double>& inputValues ) const" << endl;
-   fout << "{" << endl;
-   fout << "   double mvaval = 0; " << endl;
-   fout << "   double temp = 0; " << endl;
-   fout << endl;
-   fout << "   for (int ievt = 0; ievt < fNOfSuppVec; ievt++ ){" << endl;
-   fout << "      temp = 0;" << endl;
-   fout << "      for ( unsigned int ivar = 0; ivar < GetNvar(); ivar++ ) {" << endl;
+   fout << "inline double " << className << "::GetMvaValue__(const std::vector<double>& inputValues ) const" << std::endl;
+   fout << "{" << std::endl;
+   fout << "   double mvaval = 0; " << std::endl;
+   fout << "   double temp = 0; " << std::endl;
+   fout << std::endl;
+   fout << "   for (int ievt = 0; ievt < fNOfSuppVec; ievt++ ){" << std::endl;
+   fout << "      temp = 0;" << std::endl;
+   fout << "      for ( unsigned int ivar = 0; ivar < GetNvar(); ivar++ ) {" << std::endl;
 
-   fout << "         temp += (fAllSuppVectors[ivar][ievt] - inputValues[ivar])  " << endl;
-   fout << "               * (fAllSuppVectors[ivar][ievt] - inputValues[ivar]); " << endl;
-   fout << "      }" << endl;
-   fout << "      mvaval += fAlphaTypeCoef[ievt] * exp( -fGamma * temp ); " << endl;
+   fout << "         temp += (fAllSuppVectors[ivar][ievt] - inputValues[ivar])  " << std::endl;
+   fout << "               * (fAllSuppVectors[ivar][ievt] - inputValues[ivar]); " << std::endl;
+   fout << "      }" << std::endl;
+   fout << "      mvaval += fAlphaTypeCoef[ievt] * exp( -fGamma * temp ); " << std::endl;
 
-   fout << "   }" << endl;
-   fout << "   mvaval -= fBparameter;" << endl;
-   fout << "   return 1./(1. + exp(mvaval));" << endl;
-   fout << "}" << endl;
-   fout << "// Clean up" << endl;
-   fout << "inline void " << className << "::Clear() " << endl;
-   fout << "{" << endl;
-   fout << "   // nothing to clear " << endl;
-   fout << "}" << endl;
-   fout << "" << endl;
+   fout << "   }" << std::endl;
+   fout << "   mvaval -= fBparameter;" << std::endl;
+   fout << "   return 1./(1. + exp(mvaval));" << std::endl;
+   fout << "}" << std::endl;
+   fout << "// Clean up" << std::endl;
+   fout << "inline void " << className << "::Clear() " << std::endl;
+   fout << "{" << std::endl;
+   fout << "   // nothing to clear " << std::endl;
+   fout << "}" << std::endl;
+   fout << "" << std::endl;
 
    // define support vectors
-   fout << "float " << className << "::fAlphaTypeCoef[] =" << endl;
+   fout << "float " << className << "::fAlphaTypeCoef[] =" << std::endl;
    fout << "{ ";
    for (Int_t isv = 0; isv < fNsupv; isv++) {
       fout << fSupportVectors->at(isv)->GetDeltaAlpha() * fSupportVectors->at(isv)->GetTypeFlag();
       if (isv < fNsupv-1) fout << ", ";
    }
-   fout << " };" << endl << endl;
+   fout << " };" << std::endl << std::endl;
 
-   fout << "float " << className << "::fAllSuppVectors[][" << fNsupv << "] =" << endl;
+   fout << "float " << className << "::fAllSuppVectors[][" << fNsupv << "] =" << std::endl;
    fout << "{";
    for (UInt_t ivar = 0; ivar < GetNvar(); ivar++) {
-      fout << endl;
+      fout << std::endl;
       fout << "   { ";
       for (Int_t isv = 0; isv < fNsupv; isv++){
          fout << fSupportVectors->at(isv)->GetDataVector()->at(ivar);
          if (isv < fNsupv-1) fout << ", ";
       }
       fout << " }";
-      if (ivar < GetNvar()-1) fout << ", " << endl;
-      else                    fout << endl;
+      if (ivar < GetNvar()-1) fout << ", " << std::endl;
+      else                    fout << std::endl;
    }
-   fout << "};" << endl<< endl;
+   fout << "};" << std::endl<< std::endl;
 }
 
 //_______________________________________________________________________

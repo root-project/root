@@ -63,6 +63,9 @@ namespace TMVA {
                            fNSigEvents_unweighted ( 0 ),
                            fNBkgEvents_unweighted ( 0 ),
                            fNEvents_unweighted ( 0 ),
+                           fNSigEvents_unboosted ( 0 ),
+                           fNBkgEvents_unboosted ( 0 ),
+                           fNEvents_unboosted ( 0 ),
                            fSeparationIndex (-1 ),
                            fSeparationGain ( -1 )
       {
@@ -86,6 +89,9 @@ namespace TMVA {
       Float_t  fNSigEvents_unweighted;      // sum of signal event in the node
       Float_t  fNBkgEvents_unweighted;      // sum of backgr event in the node
       Float_t  fNEvents_unweighted;         // number of events in that entered the node (during training)
+      Float_t  fNSigEvents_unboosted;      // sum of signal event in the node
+      Float_t  fNBkgEvents_unboosted;      // sum of backgr event in the node
+      Float_t  fNEvents_unboosted;         // number of events in that entered the node (during training)
       Float_t  fSeparationIndex; // measure of "purity" (separation between S and B) AT this node
       Float_t  fSeparationGain;  // measure of "purity", separation, or information gained BY this nodes selection
 
@@ -196,6 +202,15 @@ namespace TMVA {
       // set the number of unweighted events that entered the node (during training)
       void SetNEvents_unweighted( Float_t nev ){ fTrainInfo->fNEvents_unweighted =nev ; }
 
+      // set the sum of the unboosted signal events in the node
+      void SetNSigEvents_unboosted( Float_t s ) { fTrainInfo->fNSigEvents_unboosted = s; }
+
+      // set the sum of the unboosted backgr events in the node
+      void SetNBkgEvents_unboosted( Float_t b ) { fTrainInfo->fNBkgEvents_unboosted = b; }
+
+      // set the number of unboosted events that entered the node (during training)
+      void SetNEvents_unboosted( Float_t nev ){ fTrainInfo->fNEvents_unboosted =nev ; }
+
       // increment the sum of the signal weights in the node
       void IncrementNSigEvents( Float_t s ) { fTrainInfo->fNSigEvents += s; }
 
@@ -232,8 +247,17 @@ namespace TMVA {
       // return  the number of unweighted events that entered the node (during training)
       Float_t GetNEvents_unweighted( void ) const  { return fTrainInfo->fNEvents_unweighted; }
 
+      // return the sum of unboosted signal weights in the node
+      Float_t GetNSigEvents_unboosted( void ) const  { return fTrainInfo->fNSigEvents_unboosted; }
 
-      // set the chosen index, measure of "purity" (separation between S and B) AT this node
+      // return the sum of unboosted backgr weights in the node
+      Float_t GetNBkgEvents_unboosted( void ) const  { return fTrainInfo->fNBkgEvents_unboosted; }
+
+      // return  the number of unboosted events that entered the node (during training)
+      Float_t GetNEvents_unboosted( void ) const  { return fTrainInfo->fNEvents_unboosted; }
+
+
+      // set the choosen index, measure of "purity" (separation between S and B) AT this node
       void SetSeparationIndex( Float_t sep ){ fTrainInfo->fSeparationIndex =sep ; }
       // return the separation index AT this node
       Float_t GetSeparationIndex( void ) const  { return fTrainInfo->fSeparationIndex; }
@@ -244,10 +268,10 @@ namespace TMVA {
       Float_t GetSeparationGain( void ) const  { return fTrainInfo->fSeparationGain; }
 
       // printout of the node
-      virtual void Print( ostream& os ) const;
+      virtual void Print( std::ostream& os ) const;
 
       // recursively print the node and its daughters (--> print the 'tree')
-      virtual void PrintRec( ostream&  os ) const;
+      virtual void PrintRec( std::ostream&  os ) const;
 
       virtual void AddAttributesToNode(void* node) const;
       virtual void AddContentToNode(std::stringstream& s) const;
@@ -315,8 +339,8 @@ namespace TMVA {
       // flag indicates whether this node is terminal
       inline Bool_t IsTerminal() const            { return fIsTerminalNode; }
       inline void SetTerminal( Bool_t s = kTRUE ) { fIsTerminalNode = s;    }
-      void PrintPrune( ostream& os ) const ;
-      void PrintRecPrune( ostream& os ) const;
+      void PrintPrune( std::ostream& os ) const ;
+      void PrintRecPrune( std::ostream& os ) const;
 
       void     SetCC(Double_t cc);
       Double_t GetCC() const {return (fTrainInfo? fTrainInfo->fCC : -1.);}
@@ -350,7 +374,7 @@ namespace TMVA {
    private:
 
       virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
-      virtual Bool_t ReadDataRecord( istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
+      virtual Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       virtual void ReadContent(std::stringstream& s);
 
       ClassDef(DecisionTreeNode,0) // Node for the Decision Tree 

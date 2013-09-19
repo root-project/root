@@ -1229,7 +1229,7 @@ void TMVA::MethodMLP::UpdateNetwork(Double_t desired, Double_t eventWeight)
 }
 
 //______________________________________________________________________________
-void TMVA::MethodMLP::UpdateNetwork(std::vector<Float_t>& desired, Double_t eventWeight)
+void TMVA::MethodMLP::UpdateNetwork(const std::vector<Float_t>& desired, Double_t eventWeight)
 {
    // update the network based on how closely
    // the output matched the desired output
@@ -1286,7 +1286,7 @@ void TMVA::MethodMLP::GeneticMinimize()
    fGA_nsteps    = 30;
 
    // ranges
-   vector<Interval*> ranges;
+   std::vector<Interval*> ranges;
 
    Int_t numWeights = fSynapses->GetEntriesFast();
    for (Int_t ivar=0; ivar< numWeights; ivar++) {
@@ -1391,8 +1391,8 @@ void TMVA::MethodMLP::UpdateRegulators()  //zjh
    Int_t numRegulators=fRegulators.size();
    Float_t gamma=0,
       variance=1.;    // Gaussian noise
-   vector<Int_t> nWDP(numRegulators);
-   vector<Double_t> trace(numRegulators),weightSum(numRegulators);
+   std::vector<Int_t> nWDP(numRegulators);
+   std::vector<Double_t> trace(numRegulators),weightSum(numRegulators);
    for (int i=0;i<numSynapses;i++) {
       TSynapse* synapses = (TSynapse*)fSynapses->At(i);
       Int_t idx=fRegulatorIdx[i];
@@ -1657,7 +1657,7 @@ void TMVA::MethodMLP::GetHelpMessage() const
          << "only the TMlpANN performs an explicit separation of the" << Endl;
    Log() << "full training sample into independent training and validation samples." << Endl;
    Log() << "We have found that in most high-energy physics applications the " << Endl;
-   Log() << "available degrees of freedom (training events) are sufficient to " << Endl;
+   Log() << "avaliable degrees of freedom (training events) are sufficient to " << Endl;
    Log() << "constrain the weights of the relatively simple architectures required" << Endl;
    Log() << "to achieve good performance. Hence no overtraining should occur, and " << Endl;
    Log() << "the use of validation samples would only reduce the available training" << Endl;

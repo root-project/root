@@ -74,7 +74,7 @@ void TMVA::VariablePCATransform::Initialize()
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::VariablePCATransform::PrepareTransformation( const std::vector<Event*>& events )
+Bool_t TMVA::VariablePCATransform::PrepareTransformation (const std::vector<Event*>& events)
 {
    // calculate the principal components using the ROOT class TPrincipal
    // and the normalization
@@ -189,7 +189,7 @@ const TMVA::Event* TMVA::VariablePCATransform::InverseTransform( const Event* co
 }
 
 //_______________________________________________________________________
-void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector<Event*>& events )
+void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector< Event*>& events )
 {
    // calculate the principal components for the signal and the background data
    // it uses the MakePrincipal method of ROOT's TPrincipal class
@@ -218,7 +218,7 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector
    std::vector<Float_t> input;
    std::vector<Char_t>  mask;
    for (ievt=0; ievt<entries; ievt++) {
-      Event* ev = events[ievt];
+      const Event* ev = events[ievt];
       UInt_t cls = ev->GetClass();
 
       Bool_t hasMaskedEntries = GetInput( ev, input, mask );

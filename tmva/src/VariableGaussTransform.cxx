@@ -88,7 +88,7 @@ void TMVA::VariableGaussTransform::Initialize()
 }
 
 //_______________________________________________________________________
-Bool_t TMVA::VariableGaussTransform::PrepareTransformation( const std::vector<Event*>& events )
+Bool_t TMVA::VariableGaussTransform::PrepareTransformation (const std::vector<Event*>& events)
 {
    // calculate the cumulative distributions
    Initialize();
@@ -187,7 +187,7 @@ const TMVA::Event* TMVA::VariableGaussTransform::Transform(const Event* const ev
 }
 
 //_______________________________________________________________________
-const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform( const Event* const ev, Int_t cls ) const
+const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform(const  Event* const ev, Int_t cls ) const
 {
    // apply the inverse Gauss or inverse uniform transformation
 
@@ -247,7 +247,7 @@ const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform( const Event* 
 }
 
 //_______________________________________________________________________
-void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector<Event*>& events )
+void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>& events )
 {
    // fill the cumulative distributions
 
@@ -674,7 +674,7 @@ Double_t TMVA::VariableGaussTransform::OldCumulant(Float_t x, TH1* h ) const {
 
 
 //_______________________________________________________________________
-void TMVA::VariableGaussTransform::PrintTransformation( ostream& ) 
+void TMVA::VariableGaussTransform::PrintTransformation( std::ostream& ) 
 {
    // prints the transformation 
    Int_t cls = 0;
@@ -770,7 +770,8 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
       
       fout << "   // copy the variables which are going to be transformed                                "<< std::endl;
       VariableTransformBase::MakeFunction(fout, fcncName, 0, trCounter, 0 );
-      fout << "   std::vector<double> dv(nvar);                                                          "<< std::endl;
+      fout << "   static std::vector<double> dv;                                                          "<< std::endl;
+      fout << "   dv.resize(nvar);                                                                       "<< std::endl;
       fout << "   for (int ivar=0; ivar<nvar; ivar++) dv[ivar] = iv[indicesGet.at(ivar)];                "<< std::endl;
       fout << "                                                                                          "<< std::endl;
       fout << "   bool FlatNotGauss = "<< (fFlatNotGauss? "true": "false") <<";                          "<< std::endl;

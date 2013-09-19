@@ -37,6 +37,7 @@
 
 #if not defined(__CINT__) || defined(__MAKECINT__)
 // needs to be included when makecint runs (ACLIC)
+#include "TMVA/MethodCategory.h"
 #include "TMVA/Factory.h"
 #include "TMVA/Tools.h"
 #endif

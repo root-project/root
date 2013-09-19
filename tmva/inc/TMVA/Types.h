@@ -87,7 +87,6 @@ namespace TMVA {
          kMLP            ,
          kBayesClassifier,
          kFDA            ,
-         kCommittee      ,
          kBoost          ,
          kPDEFoam        ,
          kLD             ,
@@ -128,9 +127,9 @@ namespace TMVA {
       enum ETreeType {
          kTraining = 0,
          kTesting,
-         kMaxTreeType,
-         kValidation,
-         kTrainingOriginal
+         kMaxTreeType,  // also used as temporary storage for trees not yet assigned for testing;training... 
+         kValidation,   // these are placeholders... currently not used, but could be moved "forward" if
+         kTrainingOriginal     // ever needed 
       };
 
       enum EBoostStage {
@@ -138,7 +137,6 @@ namespace TMVA {
          kBeforeTraining,
          kBeforeBoosting,
          kAfterBoosting,
-         kBoostValidation,
          kBoostProcEnd
       };
 

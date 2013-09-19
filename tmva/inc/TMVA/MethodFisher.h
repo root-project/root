@@ -95,6 +95,10 @@ namespace TMVA {
       // ranking of input variables
       const Ranking* CreateRanking();
 
+      // nice output
+      void PrintCoefficients( void );
+
+
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
@@ -126,9 +130,6 @@ namespace TMVA {
 
       // get discriminating power
       void GetDiscrimPower( void );
-
-      // nice output
-      void PrintCoefficients( void );
 
       // get Fisher coefficients
       void GetFisherCoeff( void );

@@ -65,6 +65,8 @@ End_Html */
 #include "TMVA/Tools.h"
 #endif
 
+using std::atoi;
+
 // some additional TMlpANN options
 const Bool_t EnforceNormalization__=kTRUE;
 #if ROOT_VERSION_CODE > ROOT_VERSION(5,13,06)
@@ -425,7 +427,7 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromXML( void* wghtnode )
 }
  
 //_______________________________________________________________________
-void  TMVA::MethodTMlpANN::ReadWeightsFromStream( istream& istr )
+void  TMVA::MethodTMlpANN::ReadWeightsFromStream( std::istream& istr )
 {
    // read weights from stream
    // since the MLP can not read from the stream, we

@@ -87,7 +87,7 @@ namespace TMVA {
       void SetOptions(const TString& s) { fOptions = s; }
 
       void WriteOptionsToStream ( std::ostream& o, const TString& prefix ) const;
-      void ReadOptionsFromStream( istream& istr );
+      void ReadOptionsFromStream( std::istream& istr );
 
       void AddOptionsXMLTo( void* parent ) const;
       void ReadOptionsFromXML( void* node );

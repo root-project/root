@@ -227,7 +227,7 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
    // for automatic pruning, at each step, we calculate the current quality of the 
    //     tree and in the end we will prune at the minimum of the tree quality   
    // for the fixed parameter pruing, the cut is simply set at a relative position
-   //     in the sequence according to the "length" of the sequence of pruned trees.
+   //     in the sequence according to the "lenght" of the sequence of pruned trees.
    //     100: at the end (pruned until the root node would be the next pruning candidate
    //     50: in the middle of the sequence
    //     etc...

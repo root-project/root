@@ -32,10 +32,10 @@
 
 
 //_______________________________________________________________________
-TMVA::ResultsClassification::ResultsClassification( const DataSetInfo* dsi ) 
-   : Results( dsi ),
+TMVA::ResultsClassification::ResultsClassification( const DataSetInfo* dsi, TString resultsName  ) 
+   : Results( dsi,resultsName  ),
      fRet(1),
-     fLogger( new MsgLogger("ResultsClassification", kINFO) )
+     fLogger( new MsgLogger(Form("ResultsClassification%s",resultsName.Data()) , kINFO) )
 {
    // constructor
 }

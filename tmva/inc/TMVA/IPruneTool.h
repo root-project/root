@@ -73,7 +73,7 @@ namespace TMVA {
     
    public:
 
-      typedef std::vector<Event*> EventSample;
+      typedef std::vector<const Event*> EventSample;
     
       IPruneTool( );
       virtual ~IPruneTool();

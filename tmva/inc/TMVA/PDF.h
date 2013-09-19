@@ -62,13 +62,13 @@ namespace TMVA {
    class MsgLogger;
 
    class PDF;
-   ostream& operator<< ( ostream& os, const PDF& tree );
-   istream& operator>> ( istream& istr, PDF& tree);
+   std::ostream& operator<< ( std::ostream& os, const PDF& tree );
+   std::istream& operator>> ( std::istream& istr, PDF& tree);
 
    class PDF : public Configurable {
 
-      friend ostream& operator<< ( ostream& os, const PDF& tree );
-      friend istream& operator>> ( istream& istr, PDF& tree);
+      friend std::ostream& operator<< ( std::ostream& os, const PDF& tree );
+      friend std::istream& operator>> ( std::istream& istr, PDF& tree);
       
    public:
 
@@ -124,7 +124,7 @@ namespace TMVA {
       void   SetReadingVersion( UInt_t rv ) { fReadingVersion = rv; }      
       UInt_t GetReadingVersion() const { return fReadingVersion; }
 
-      //void WriteOptionsToStream ( ostream& o, const TString& prefix ) const;
+      //void WriteOptionsToStream ( std::ostream& o, const TString& prefix ) const;
       void ProcessOptions();
 
       // reads from and option string the definitions for pdf returns it

@@ -28,6 +28,7 @@
  **********************************************************************************/
 
 #include <vector>
+#include <limits>
 
 #include "TMVA/ResultsMulticlass.h"
 #include "TMVA/MsgLogger.h"
@@ -37,10 +38,10 @@
 #include "TMVA/GeneticFitter.h"
 
 //_______________________________________________________________________
-TMVA::ResultsMulticlass::ResultsMulticlass( const DataSetInfo* dsi ) 
-   : Results( dsi ),
+TMVA::ResultsMulticlass::ResultsMulticlass( const DataSetInfo* dsi, TString resultsName  ) 
+   : Results( dsi, resultsName  ),
      IFitterTarget(),
-     fLogger( new MsgLogger("ResultsMulticlass", kINFO) ),
+     fLogger( new MsgLogger(Form("ResultsMultiClass%s",resultsName.Data()) , kINFO) ),
      fClassToOptimize(0),
      fAchievableEff(dsi->GetNClasses()),
      fAchievablePur(dsi->GetNClasses()),
@@ -74,7 +75,7 @@ Double_t TMVA::ResultsMulticlass::EstimatorFunction( std::vector<Double_t> & cut
    Float_t sumWeights = 0;
  
    for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-      Event* ev = ds->GetEvent(ievt);
+      const Event* ev = ds->GetEvent(ievt);
       Float_t w = ev->GetWeight();
       if(ev->GetClass()==fClassToOptimize)
          sumWeights += w;
@@ -163,7 +164,7 @@ void  TMVA::ResultsMulticlass::CreateMulticlassHistos( TString prefix, Int_t nbi
    }
 
    for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-      Event* ev = ds->GetEvent(ievt);
+      const Event* ev = ds->GetEvent(ievt);
       Int_t cls = ev->GetClass();
       Float_t w = ev->GetWeight();
       for (UInt_t jCls = 0; jCls < dsi->GetNClasses(); jCls++) {
@@ -192,7 +193,7 @@ void  TMVA::ResultsMulticlass::CreateMulticlassHistos( TString prefix, Int_t nbi
       }
       
       for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-         Event* ev = ds->GetEvent(ievt);
+         const Event* ev = ds->GetEvent(ievt);
          Int_t cls = ev->GetClass();
          Float_t w = ev->GetWeight();
          for (UInt_t jCls = 0; jCls < dsi->GetNClasses(); jCls++) {
