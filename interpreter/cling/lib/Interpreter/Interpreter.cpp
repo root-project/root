@@ -11,6 +11,7 @@
 #include "IncrementalParser.h"
 
 #include "cling/Interpreter/CIFactory.h"
+#include "cling/Interpreter/ClangInternalState.h"
 #include "cling/Interpreter/CompilationOptions.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/LookupHelper.h"
@@ -162,7 +163,6 @@ namespace cling {
     m_DynamicLookupEnabled(false), m_RawInputEnabled(false) {
 
     m_AtExitFuncs.reserve(200);
-    m_LoadedFiles.reserve(20);
 
     m_LLVMContext.reset(new llvm::LLVMContext);
     std::vector<unsigned> LeftoverArgsIdx;
@@ -307,484 +307,27 @@ namespace cling {
   }
 
   void Interpreter::storeInterpreterState(const std::string& name) const {
-    llvm::sys::Path LookupFile = llvm::sys::Path::GetCurrentDirectory();
-    std::string ErrMsg;
-    if (LookupFile.isEmpty()) {
-      llvm::errs() << "Error: " << ErrMsg << "\n";
-      return;
-    }
-    LookupFile.appendComponent(name + ".includedFiles.tmp");
-    std::ofstream ofs (LookupFile.c_str(), std::ofstream::out);  
-    llvm::raw_os_ostream Out(ofs);
-    printIncludedFiles(Out);
-    dumpAST(name);
-    dumpLookupTable(name);
+    ClangInternalState* state 
+      = new ClangInternalState(getCI()->getASTContext(), name);
+    m_StoredStates.push_back(state);
   }
 
   void Interpreter::compareInterpreterState(const std::string& name) const {
-    // Store new state
-    std::string compareTo = name + "cmp";
-    storeInterpreterState(compareTo);
-    // Compare with the previous one
-    compareAST(name);
-    compareIncludedFiles(name);
-    compareLookup(name);
-  }
-
-  void Interpreter::dumpAST(const std::string& name) const {
-    ASTContext& C = getSema().getASTContext();
-    TranslationUnitDecl* TU = C.getTranslationUnitDecl();
-    unsigned Indentation = 0;
-    bool PrintInstantiation = false;
-    std::string ErrMsg;
-    llvm::sys::Path Filename = llvm::sys::Path::GetCurrentDirectory();
-    if (Filename.isEmpty()) {
-      llvm::errs() << "Error: " << ErrMsg << "\n";
-      return;
-    }
-    //Test that the filename isn't already used
-    std::string testFilename = name + "AST.diff";
-    Filename.appendComponent(testFilename);
-    if (llvm::sys::fs::exists(Filename.str())) {
-      llvm::errs() << Filename.str() << "\n";
-      llvm::errs() << "Filename already exists. Please choose a new one \n";
-      exit (1);
-    }
-    else {
-    std::string rename = name + "AST.tmp";
-    Filename.eraseComponent();
-    Filename.appendComponent(rename);
-    std::ofstream ofs (Filename.c_str(), std::ofstream::out);  
-    llvm::raw_os_ostream Out(ofs);
-    clang::PrintingPolicy policy = C.getPrintingPolicy();
-    // Iteration over the decls might cause deserialization.
-    cling::Interpreter::PushTransactionRAII deserRAII(this);
-    TU->print(Out, policy, Indentation, PrintInstantiation);
-    Out.flush();
-    }
-  }
-
-  class DumpDeclContexts : public RecursiveASTVisitor<DumpDeclContexts> {
-  private:
-    //llvm::raw_ostream& m_OS;
-  public:
-    //DumpDeclContexts(llvm::raw_ostream& OS) : m_OS(OS) { }
-    DumpDeclContexts(llvm::raw_ostream&) { }
-    bool VisitDeclContext(DeclContext* DC) {
-      //DC->dumpLookups(m_OS);
-      return true;
-    }
-  };
-
-  void Interpreter::dumpLookupTable(const std::string& name) const {
-    std::string ErrMsg;
-    llvm::sys::Path LookupFile = llvm::sys::Path::GetCurrentDirectory();
-    if (LookupFile.isEmpty()) {
-      llvm::errs() << "Error: " << ErrMsg << "\n";
-      return;
-    }
-    //Test that the filename isn't already used
-    std::string testFilename = name + "LookupFile.diff";
-    LookupFile.appendComponent(testFilename);
-    if (llvm::sys::fs::exists(LookupFile.str())) {
-      llvm::errs() << LookupFile.str() << "\n";
-      llvm::errs() << "Filename already exists. Please choose a new one \n";
-      exit (1);
-    }
-    else {
-    std::string fileName = name + "Lookup.tmp";
-    LookupFile.eraseComponent();
-    LookupFile.appendComponent(fileName);
-    std::ofstream ofs (LookupFile.c_str(), std::ofstream::out);  
-    llvm::raw_os_ostream Out(ofs);
-    ASTContext& C = getSema().getASTContext();
-    DumpDeclContexts dumper(Out);
-    dumper.TraverseDecl(C.getTranslationUnitDecl());
+    ClangInternalState* state 
+      = new ClangInternalState(getCI()->getASTContext(), name);    
+    for (unsigned i = 0, e = m_StoredStates.size(); i != e; ++i) {
+      if (m_StoredStates[i]->getName() == name) {
+        state->compare(*m_StoredStates[i]);
+        m_StoredStates.erase(m_StoredStates.begin() + i);
+        break;
+      }
     }
   }
 
   void Interpreter::printIncludedFiles(llvm::raw_ostream& Out) const {
-    std::vector<std::string> loadedFiles;
-    typedef std::vector<Interpreter::LoadedFileInfo*> LoadedFiles_t;
-    const LoadedFiles_t& LoadedFiles = getLoadedFiles();
-    for (LoadedFiles_t::const_iterator I = LoadedFiles.begin(),
-           E = LoadedFiles.end(); I != E; ++I) {
-      char cType[] = { 'S', 'D', 'B' };
-      Out << '[' << cType[(*I)->getType()] << "] "<< (*I)->getName() << '\n';
-      loadedFiles.push_back((*I)->getName());
-    }
-    clang::SourceManager &SM = getCI()->getSourceManager();
-    for (clang::SourceManager::fileinfo_iterator I = SM.fileinfo_begin(),
-           E = SM.fileinfo_end(); I != E; ++I) {
-      const clang::SrcMgr::ContentCache &C = *I->second;
-      const clang::FileEntry *FE = C.OrigEntry;
-      std::string fileName(FE->getName());
-      // avoid duplicates (i.e. already printed in the previous for loop)
-      if (std::find(loadedFiles.begin(),
-                    loadedFiles.end(), fileName) == loadedFiles.end()) {
-        // filter out any /usr/...../bits/* file names
-        if (!(fileName.compare(0, 5, "/usr/") == 0 &&
-            fileName.find("/bits/") != std::string::npos)) {
-          Out << fileName << '\n';
-        }
-      }
-    }
+    ClangInternalState::printIncludedFiles(Out, getCI()->getSourceManager());
   }
 
-  void Interpreter::compareAST(const std::string& name) const {
-   // Diff between the two existing file
-    llvm::sys::Path tmpDir1 = llvm::sys::Path::GetCurrentDirectory();
-     std::string ErrMsg;
-    if (tmpDir1.isEmpty()) {
-      llvm::errs() << "Error: " << ErrMsg << "\n";
-      return;
-    }
-    llvm::sys::Path stateFile1 = tmpDir1;
-    std::string state1 = name + "AST.tmp";
-    stateFile1.appendComponent(state1);
-    llvm::sys::Path tmpDir2 = llvm::sys::Path::GetCurrentDirectory();
-    if (tmpDir2.isEmpty()) {
-      llvm::errs() << "Error: " << ErrMsg << "\n";
-      return;
-    }
-    llvm::sys::Path stateFile2 = tmpDir2;
-    std::string state2 = name + "cmpAST.tmp";
-    stateFile2.appendComponent(state2);
-    std::string command = "diff -u " + stateFile1.str() + " " 
-      + stateFile2.str();
-    // printing the results
-#ifndef LLVM_ON_WIN32
-      FILE* pipe = popen(command.c_str(), "r");
-      if (!pipe) {
-	perror( "Error" );
-      }
-      char buffer[128];
-      std::string result = "";
-      while(!feof(pipe)) {
-	if(fgets(buffer, 128, pipe) != NULL) 
-    		result += buffer;
-	  }
-      pclose(pipe);     
-      if(!result.empty()){
-	std::string ErrMsg;
-	llvm::sys::Path DiffFile = llvm::sys::Path::GetCurrentDirectory();
-	if (DiffFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-	}
-	// Test if nameAST.diff already exists
-        std::string file;
-	llvm::sys::Path testFile = llvm::sys::Path::GetCurrentDirectory();
-	if (testFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-        }
-	std::string testName = name + "AST.diff";
-	testFile.appendComponent(testName);
-	if (llvm::sys::fs::exists(testFile.str())){
-	  file = name + "1AST.diff";
-	}
-	else {
-	  file = name + "AST.diff";
-	}
-	DiffFile.appendComponent(file);
-	std::ofstream ofs (DiffFile.c_str(), std::ofstream::out);  
-	llvm::raw_os_ostream Out(ofs);
-	Out << result;
-	Out.flush();
-	llvm::errs() << "File with AST differencies stored in: ";
-	llvm::errs() << file << "\n";
-	llvm::errs() << DiffFile.c_str();
-	llvm::errs() << "\n";
-      }
-#else
-      FILE* pipe = _popen(command.c_str(), "r");
-      if (!pipe) {
-	perror( "Error" );
-      }
-      char buffer[128];
-      std::string result = "";
-      while(!feof(pipe)) {
-	  if(fgets(buffer, 128, pipe) != NULL)
-    		result += buffer;
-	  }
-      _pclose(pipe);  
-      if(!result.empty()){
-	std::string ErrMsg;
-	llvm::sys::Path DiffFile = llvm::sys::Path::GetCurrentDirectory();
-	if (DiffFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-	}
-	// Test if nameAST.diff already exists
-        std::string file;
-	llvm::sys::Path testFile = llvm::sys::Path::GetCurrentDirectory();
-	if (testFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-        }
-	std::string testName = name + "AST.diff";
-	testFile.appendComponent(testName);
-	if (llvm::sys::fs::exists(testFile.str())){
-	  file = name + "1AST.diff";
-	}
-	else {
-	  file = name + "AST.diff";
-	}
-	DiffFile.appendComponent(file);
-	std::ofstream ofs (DiffFile.c_str(), std::ofstream::out);  
-	llvm::raw_os_ostream Out(ofs);
-	Out.flush();
-	llvm::errs() << "File with AST differencies stored in: ";
-	llvm::errs() << file << "\n";
-	llvm::errs() << DiffFile.c_str();
-	llvm::errs() << "\n";
-      }
-#endif   
-      std::string command2 = stateFile1.str();
-      std::string command3 = stateFile2.str();
-      int result1 = std::remove(command2.c_str());
-      int result2 = std::remove(command3.c_str());
-      if((result1 != 0) && (result2 != 0))
-	perror( "Error deleting files were AST were stored" );
-  }
-
-
-  void Interpreter::compareIncludedFiles(const std::string& name) const {
-    // Diff between the two existing file
-    llvm::sys::Path tmpDir1 = llvm::sys::Path::GetCurrentDirectory();
-     std::string ErrMsg;
-    if (tmpDir1.isEmpty()) {
-      llvm::errs() << "Error: " << ErrMsg << "\n";
-      return;
-    }
-    llvm::sys::Path stateFile1 = tmpDir1;
-    std::string state1 = name + ".includedFiles.tmp";
-    stateFile1.appendComponent(state1);
-    llvm::sys::Path tmpDir2 = llvm::sys::Path::GetCurrentDirectory();
-    if (tmpDir2.isEmpty()) {
-      llvm::errs() << "Error: " << ErrMsg << "\n";
-      return;
-    }
-    llvm::sys::Path stateFile2 = tmpDir2;
-    std::string state2 = name + "cmp.includedFiles.tmp";
-    stateFile2.appendComponent(state2);
-    std::string command = "diff -u " + stateFile1.str() + " " 
-      + stateFile2.str();
-// printing the results
-#ifndef LLVM_ON_WIN32
-      FILE* pipe = popen(command.c_str(), "r");
-      if (!pipe) {
-	perror( "Error" );
-      }
-      char buffer[128];
-      std::string result = "";
-      while(!feof(pipe)) {
-	if(fgets(buffer, 128, pipe) != NULL) 
-    		result += buffer;
-	  }
-      pclose(pipe);     
-      if(!result.empty()){
-	std::string ErrMsg;
-	llvm::sys::Path DiffFile = llvm::sys::Path::GetCurrentDirectory();
-	if (DiffFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-	}
-	// Test if nameIncludedFiles.diff already exists
-        std::string file;
-	llvm::sys::Path testFile = llvm::sys::Path::GetCurrentDirectory();
-	if (testFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-        }
-	std::string testName = name + "IncludedFiles.diff";
-	testFile.appendComponent(testName);
-	if (llvm::sys::fs::exists(testFile.str())){
-	  file = name + "1IncludedFiles.diff";
-	}
-	else {
-	  file = name + "IncludedFiles.diff";
-	}
-	DiffFile.appendComponent(file);
-	std::ofstream ofs (DiffFile.c_str(), std::ofstream::out);  
-	llvm::raw_os_ostream Out(ofs);
-	Out << result;
-	Out.flush();
-	llvm::errs() << "File with included files differencies stored in: ";
-	llvm::errs() << file << "\n";
-	llvm::errs() << DiffFile.c_str();
-	llvm::errs() << "\n";
-      }
-#else
-      FILE* pipe = _popen(command.c_str(), "r");
-      if (!pipe) {
-	perror( "Error" );
-      }
-      char buffer[128];
-      std::string result = "";
-      while(!feof(pipe)) {
-	  if(fgets(buffer, 128, pipe) != NULL)
-    		result += buffer;
-	  }
-      _pclose(pipe);  
-      if(!result.empty()){
-	std::string ErrMsg;
-	llvm::sys::Path DiffFile = llvm::sys::Path::GetCurrentDirectory();
-	if (DiffFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-	}
-	// Test if nameIncludedFiles.diff already exists
-        std::string file;
-	llvm::sys::Path testFile = llvm::sys::Path::GetCurrentDirectory();
-	if (testFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-        }
-	std::string testName = name + "IncludedFiles.diff";
-	testFile.appendComponent(testName);
-	if (llvm::sys::fs::exists(testFile.str())){
-	  file = name + "1IncludedFiles.diff";
-	}
-	else {
-	  file = name + "IncludedFiles.diff";
-	}
-	DiffFile.appendComponent(file);
-	std::ofstream ofs (DiffFile.c_str(), std::ofstream::out);  
-	llvm::raw_os_ostream Out(ofs);
-	Out.flush();
-	llvm::errs() << "File with included files differencies stored in: ";
-	llvm::errs() << file << "\n";
-	llvm::errs() << DiffFile.c_str();
-	llvm::errs() << "\n";
-      }
-#endif   
-      std::string command2 = stateFile1.str();
-      std::string command3 = stateFile2.str();
-      int result1 = std::remove(command2.c_str());
-      int result2 = std::remove(command3.c_str());
-      if((result1 != 0) && (result2 != 0))
-	perror( "Error deleting files were included files were stored" );
-  }
-
- void Interpreter::compareLookup(const std::string& name) const {
-    // Diff between the two existing file
-    llvm::sys::Path tmpDir1 = llvm::sys::Path::GetCurrentDirectory();
-     std::string ErrMsg;
-    if (tmpDir1.isEmpty()) {
-      llvm::errs() << "Error: " << ErrMsg << "\n";
-      return;
-    }
-    llvm::sys::Path stateFile1 = tmpDir1;
-    std::string state1 = name + "Lookup.tmp";
-    stateFile1.appendComponent(state1);
-    llvm::sys::Path tmpDir2 = llvm::sys::Path::GetCurrentDirectory();
-    if (tmpDir2.isEmpty()) {
-      llvm::errs() << "Error: " << ErrMsg << "\n";
-      return;
-    }
-    llvm::sys::Path stateFile2 = tmpDir2;
-    std::string state2 = name + "cmpLookup.tmp";
-    stateFile2.appendComponent(state2);
-    std::string command = "diff -u " + stateFile1.str() + " " 
-      + stateFile2.str();
-// printing the results
-#ifndef LLVM_ON_WIN32
-      FILE* pipe = popen(command.c_str(), "r");
-      if (!pipe) {
-	perror( "Error" );
-      }
-      char buffer[128];
-      std::string result = "";
-      while(!feof(pipe)) {
-	if(fgets(buffer, 128, pipe) != NULL) 
-    		result += buffer;
-	  }
-      pclose(pipe);     
-      if(!result.empty()){
-	std::string ErrMsg;
-	llvm::sys::Path DiffFile = llvm::sys::Path::GetCurrentDirectory();
-	if (DiffFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-	}
-	// Test if lookup.diff already exists
-        std::string file;
-	llvm::sys::Path testFile = llvm::sys::Path::GetCurrentDirectory();
-	if (testFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-        }
-	std::string testName = name + "Lookup.diff";
-	testFile.appendComponent(testName);
-	if (llvm::sys::fs::exists(testFile.str())){
-	  file = name + "1Lookup.diff";
-	}
-	else {
-	  file = name + "Lookup.diff";
-	}
-	DiffFile.appendComponent(file);
-	std::ofstream ofs (DiffFile.c_str(), std::ofstream::out);  
-	llvm::raw_os_ostream Out(ofs);
-	Out << result;
-	Out.flush();
-	llvm::errs() << "File with lookup tables differencies stored in: ";
-	llvm::errs() << file << "\n";
-	llvm::errs() << DiffFile.c_str();
-	llvm::errs() << "\n";
-      }
-#else
-      FILE* pipe = _popen(command.c_str(), "r");
-      if (!pipe) {
-	perror( "Error" );
-      }
-      char buffer[128];
-      std::string result = "";
-      while(!feof(pipe)) {
-	  if(fgets(buffer, 128, pipe) != NULL)
-    		result += buffer;
-	  }
-      _pclose(pipe);  
-      if(!result.empty()){
-	std::string ErrMsg;
-	llvm::sys::Path DiffFile = llvm::sys::Path::GetCurrentDirectory();
-	if (DiffFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-	}
-	// Test if Lookup.diff already exists
-        std::string file;
-	llvm::sys::Path testFile = llvm::sys::Path::GetCurrentDirectory();
-	if (testFile.isEmpty()) {
-	  llvm::errs() << "Error: " << ErrMsg << "\n";
-	  return;
-        }
-	std::string testName = name + "Lookup.diff";
-	testFile.appendComponent(testName);
-	if (llvm::sys::fs::exists(testFile.str())){
-	  file = name + "1Lookup.diff";
-	}
-	else {
-	  file = name + "Lookup.diff";
-	}
-	DiffFile.appendComponent(file);
-	std::ofstream ofs (DiffFile.c_str(), std::ofstream::out);  
-	llvm::raw_os_ostream Out(ofs);
-	Out.flush();
-	llvm::errs() << "File with lookup tables differencies stored in: ";
-	llvm::errs() << file << "\n";
-	llvm::errs() << DiffFile.c_str();
-	llvm::errs() << "\n";
-      }
-#endif   
-      std::string command2 = stateFile1.str();
-      std::string command3 = stateFile2.str();
-      int result1 = std::remove(command2.c_str());
-      int result2 = std::remove(command3.c_str());
-      if((result1 != 0) && (result2 != 0))
-	perror( "Error deleting files were lookup tables were stored" );
-  }
 
   // Adapted from clang/lib/Frontend/CompilerInvocation.cpp
   void Interpreter::GetIncludePaths(llvm::SmallVectorImpl<std::string>& incpaths,
@@ -1200,12 +743,6 @@ namespace cling {
     return Interpreter::kFailure;
   }
 
-  void Interpreter::addLoadedFile(const std::string& name,
-                                  Interpreter::LoadedFileInfo::FileType type,
-                                  const void* dyLibHandle) {
-    m_LoadedFiles.push_back(new LoadedFileInfo(name, type, dyLibHandle));
-  }
-
   Interpreter::CompilationResult
   Interpreter::loadFile(const std::string& filename,
                         bool allowSharedLib /*=true*/) {
@@ -1220,8 +757,6 @@ namespace cling {
     std::string code;
     code += "#include \"" + filename + "\"";
     CompilationResult res = declare(code);
-    if (res == kSuccess)
-      addLoadedFile(filename, LoadedFileInfo::kSource);
     return res;
   }
 
@@ -1289,26 +824,25 @@ namespace cling {
 
     // TODO: !permanent case
 #ifdef WIN32
-    void* DyLibHandle = needs to be implemented!;
+    void* dyLibHandle = needs to be implemented!;
     std::string errMsg;
 #else
-    const void* DyLibHandle
+    const void* dyLibHandle
       = dlopen(FoundDyLib.str().c_str(), RTLD_LAZY|RTLD_GLOBAL);
     std::string errMsg;
     if (const char* DyLibError = dlerror()) {
       errMsg = DyLibError;
     }
 #endif
-    if (!DyLibHandle) {
+    if (!dyLibHandle) {
       llvm::errs() << "cling::Interpreter::tryLinker(): " << errMsg << '\n';
       return kLoadLibError;
     }
-    std::pair<std::set<const void*>::iterator, bool> insRes
-      = m_DyLibs.insert(DyLibHandle);
+    std::pair<DyLibs::iterator, bool> insRes
+      = m_DyLibs.insert(std::pair<DyLibHandle, std::string>(dyLibHandle, 
+                                                            FoundDyLib.str()));
     if (!insRes.second)
       return kLoadLibExists;
-    addLoadedFile(FoundDyLib.str(), LoadedFileInfo::kDynamicLibrary,
-                  DyLibHandle);
     return kLoadLibSuccess;
   }
 
@@ -1347,6 +881,15 @@ namespace cling {
         return res;
     }
     return kLoadLibError;
+  }
+
+  bool Interpreter::isDynamicLibraryLoaded(llvm::StringRef fullPath) const {
+    for(DyLibs::const_iterator I = m_DyLibs.begin(), E = m_DyLibs.end(); 
+        I != E; ++I) {
+      if (fullPath.equals((I->second)))
+        return true;
+    }
+    return false;
   }
 
   void

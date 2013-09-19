@@ -78,6 +78,7 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
 
+#include "cling/Interpreter/ClangInternalState.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/StoredValueRef.h"
@@ -1615,17 +1616,22 @@ Bool_t TCling::IsLoaded(const char* filename) const
    //            the shared library path
    R__LOCKGUARD(gClingMutex);
 
-   typedef cling::Interpreter::LoadedFileInfo FileInfo_t;
-   typedef std::vector<FileInfo_t*> AllFileInfos_t;
 
-   llvm::StringMap<const FileInfo_t*> fileMap;
+   std::string filesStr = "";
+   llvm::raw_string_ostream filesOS(filesStr);
+   clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
+   cling::ClangInternalState::printIncludedFiles(filesOS, SM);
+   filesOS.flush();
 
+   llvm::SmallVector<llvm::StringRef, 100> files;
+   llvm::StringRef(filesStr).split(files, "\n");
+
+   std::set<std::string> fileMap;
    // Fill fileMap; return early on exact match.
-   const AllFileInfos_t& allFiles = fInterpreter->getLoadedFiles();
-   for (AllFileInfos_t::const_iterator iF = allFiles.begin(), iE = allFiles.end();
-        iF != iE; ++iF) {
-      if ((*iF)->getName() == filename) return kTRUE; // exact match
-      fileMap[(*iF)->getName()] = *iF;
+   for (llvm::SmallVector<llvm::StringRef, 100>::const_iterator 
+           iF = files.begin(), iE = files.end(); iF != iE; ++iF) {
+      if ((*iF) == filename) return kTRUE; // exact match
+      fileMap.insert(*iF);
    }
 
    if (fileMap.empty()) return kFALSE;
@@ -1654,7 +1660,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
    // Check shared library.
    sFilename = filename;
    if (gSystem->FindDynamicLibrary(sFilename, kTRUE)
-       && fileMap.count(sFilename.Data())) {
+       && fInterpreter->isDynamicLibraryLoaded(sFilename.Data())) {
       return kTRUE;
    }
 
@@ -4033,25 +4039,8 @@ void TCling::SetTempLevel(int val) const
 //______________________________________________________________________________
 int TCling::UnloadFile(const char* path) const
 {
-   // Unload a shared library or a source file.
 
-   // Check fInterpreter->getLoadedFiles() to determine whether this is a shared
-   // library or code. If it's not in there complain.
-   typedef std::vector<cling::Interpreter::LoadedFileInfo*> LoadedFiles_t;
-   const LoadedFiles_t& loadedFiles = fInterpreter->getLoadedFiles();
-   const cling::Interpreter::LoadedFileInfo* fileInfo = 0;
-   for (LoadedFiles_t::const_iterator iF = loadedFiles.begin(),
-           eF = loadedFiles.end(); iF != eF; ++iF) {
-      if ((*iF)->getName() == path) {
-         fileInfo = *iF;
-      }
-   }
-   if (!fileInfo) {
-      Error("UnloadFile", "File %s has not been loaded!", path);
-      return -1;
-   }
-
-   if (fileInfo->getType() == cling::Interpreter::LoadedFileInfo::kDynamicLibrary) {
+   if (fInterpreter->isDynamicLibraryLoaded(path)) {
       // Signal that the list of shared libs needs to be updated.
       const_cast<TCling*>(this)->fPrevLoadedDynLibInfo = 0;
       const_cast<TCling*>(this)->fSharedLibs = "";
@@ -4060,13 +4049,36 @@ int TCling::UnloadFile(const char* path) const
             "Not unloading file %s!", path);
 
       return -1;
-   } else if (fileInfo->getType() == cling::Interpreter::LoadedFileInfo::kSource) {
-      Error("UnloadFile", "Unloading of source files not yet implemented!\n"
-            "Not unloading file %s!", path);
+   }
+
+   // Unload a shared library or a source file.
+
+   // Check fInterpreter->getLoadedFiles() to determine whether this is a shared
+   // library or code. If it's not in there complain.
+   std::string filesStr = "";
+   llvm::raw_string_ostream filesOS(filesStr);
+   clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
+   cling::ClangInternalState::printIncludedFiles(filesOS, SM);
+   filesOS.flush();
+
+   llvm::SmallVector<llvm::StringRef, 100> files;
+   llvm::StringRef(filesStr).split(files, "\n");
+
+   std::set<std::string> fileMap;
+   // Fill fileMap; return early on exact match.
+   std::string foundFile = "";
+   for (llvm::SmallVector<llvm::StringRef, 100>::const_iterator 
+           iF = files.begin(), iE = files.end(); iF != iE; ++iF) {
+      if ((*iF) == path)
+         foundFile = *iF;
+   }
+
+   if (foundFile.empty()) {
+      Error("UnloadFile", "File %s has not been loaded!", path);
       return -1;
    } else {
-      Error("UnloadFile", "Unloading of files of type %d not yet implemented!\n"
-            "Not unloading file %s!", (int)fileInfo->getType(), path);
+      Error("UnloadFile", "Unloading of source files not yet implemented!\n"
+            "Not unloading file %s!", path);
       return -1;
    }
 
