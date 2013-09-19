@@ -471,7 +471,7 @@ private:
    TString     weightexpr;
 
    TMVA::Event*                    event;
-   TMVA::ClassInfo*                classinfo;
+   //   TMVA::ClassInfo*                classinfo;
    TMVA::VariableInfo              varinfo;
    std::vector<TMVA::VariableInfo> vecvarinfo;
 };
@@ -661,7 +661,7 @@ private:
    TMVA::Event*              event2;
    TMVA::Event*              event3;
    TMVA::Event*              event4;
-   std::vector<TMVA::Event>* vecevent;
+   //  std::vector<TMVA::Event>* vecevent;
    //  TMVA::Results*            result;
 };
 #endif // UTDATASET_H
