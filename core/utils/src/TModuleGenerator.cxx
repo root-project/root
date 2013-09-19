@@ -25,7 +25,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
-#include "llvm/Support/PathV2.h"
+#include "llvm/Support/Path.h"
 
 #ifndef R__WIN32
 #include <unistd.h>
