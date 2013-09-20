@@ -78,6 +78,16 @@ namespace Math {
       GSLRandomEngine( GSLRngWrapper * rng);  
 
       /**
+         Copy constructor : clone the contained GSL generator
+       */
+      GSLRandomEngine(const GSLRandomEngine & eng);  
+
+      /**
+         Assignment operator : make a deep copy of the contained GSL generator
+       */
+      GSLRandomEngine & operator=(const GSLRandomEngine & eng);  
+
+      /**
          initialize the generator 
          If no rng is present the default one based on Mersenne and Twister is created 
        */

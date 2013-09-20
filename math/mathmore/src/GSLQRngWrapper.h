@@ -8,11 +8,12 @@
  *                                                                    *
  **********************************************************************/
 
-// Header file for class GSLRngWrapper
+// Header file for class GSLQRngWrapper
 
-#ifndef ROOT_Math_GSLRngWrapper
-#define ROOT_Math_GSLRngWrapper
+#ifndef ROOT_Math_GSLQRngWrapper
+#define ROOT_Math_GSLQRngWrapper
 
+#include "gsl/gsl_qrng.h"
 
 namespace ROOT { 
 
@@ -20,9 +21,9 @@ namespace ROOT {
 
 
 /** 
-   GSLRngWrapper class to wrap gsl_rng structure 
+   GSLQRngWrapper class to wrap gsl_qrng structure 
 */ 
-class GSLRngWrapper {
+class GSLQRngWrapper {
 
 public: 
 
@@ -30,7 +31,7 @@ public:
    /** 
       Default constructor 
    */ 
-   GSLRngWrapper () : 
+   GSLQRngWrapper () : 
       fOwn(0),
       fRng(0),
       fRngType(0) 
@@ -40,7 +41,7 @@ public:
    /** 
       Constructor with type 
    */ 
-   GSLRngWrapper(const gsl_rng_type * type) : 
+   GSLQRngWrapper(const gsl_qrng_type * type) : 
       fOwn(1),
       fRng(0),
       fRngType(type) 
@@ -48,40 +49,40 @@ public:
     }
 
    /** 
-       construct from an existing gsl_rng
+       construct from an existing gsl_qrng
        it is managed externally - so will not be deleted at the end
    */
-   GSLRngWrapper(const gsl_rng * r ) : 
+   GSLQRngWrapper(const gsl_qrng * r ) : 
       fOwn(0),
       fRngType(0) 
     {
-       fRng = const_cast<gsl_rng *>(r); 
+       fRng = const_cast<gsl_qrng *>(r); 
     }
 
    /** 
       Copy constructor - clone the GSL object and manage it
    */ 
-   GSLRngWrapper(GSLRngWrapper & r) :
+   GSLQRngWrapper(GSLQRngWrapper & r) :
       fOwn(1),
       fRngType(r.fRngType)
    { 
-      fRng = gsl_rng_clone(r.fRng);
+      fRng = gsl_qrng_clone(r.fRng);
    } 
 
    /** 
       Assignment operator
    */ 
-   GSLRngWrapper & operator = (const GSLRngWrapper & rhs)  {
+   GSLQRngWrapper & operator = (const GSLQRngWrapper & rhs)  {
       if (this == &rhs) return *this;  // time saving self-test
       fRngType = rhs.fRngType;
       int iret = 0; 
       if (fRngType == rhs.fRngType) { 
-         iret = gsl_rng_memcpy(fRng, rhs.fRng); 
+         iret = gsl_qrng_memcpy(fRng, rhs.fRng); 
          if (!iret) return *this;
       }
       // otherwise create a new copy
       if (fOwn) Free(); 
-      fRng = gsl_rng_clone(rhs.fRng);
+      fRng = gsl_qrng_clone(rhs.fRng);
       fOwn = true;
       return *this;
    }
@@ -89,50 +90,48 @@ public:
    /**
       Destructor  (free the rng if not done before)
     */
-    ~GSLRngWrapper() { 
+    ~GSLQRngWrapper() { 
        if (fOwn) Free();
     } 
 
-    void Allocate() { 
+    void Allocate(unsigned int dimension) { 
       if (fRngType == 0) SetDefaultType();
       if (fRng != 0 && fOwn) Free(); 
-      fRng = gsl_rng_alloc( fRngType );
+      fRng = gsl_qrng_alloc( fRngType, dimension );
       //std::cout << " allocate   " << fRng <<  std::endl;
     }
 
     void Free() { 
        if (!fOwn) return; // no operation if pointer is not own 
       //std::cout << "free gslrng " << fRngType <<  "  " << fRng <<  std::endl;
-      if (fRng != 0) gsl_rng_free(fRng);       
+      if (fRng != 0) gsl_qrng_free(fRng);       
       fRng = 0; 
     }
 
 
-    void SetType(const gsl_rng_type * type) { 
+    void SetType(const gsl_qrng_type * type) { 
       fRngType = type; 
     }
 
     void SetDefaultType() { 
-      // construct default engine
-      gsl_rng_env_setup(); 
-      fRngType =  gsl_rng_default; 
+      // construct default engine (Sobol)
+      fRngType =  gsl_qrng_sobol; 
     }
 
-   void PrintState() const { 
-      gsl_rng_print_state(fRng);
-   }
 
-    inline gsl_rng * Rng()  { return fRng; } 
+   unsigned int Dimension() const { return fRng->dimension; }
 
-    inline const gsl_rng * Rng() const { return fRng; } 
+    inline gsl_qrng * Rng()  { return fRng; } 
+
+    inline const gsl_qrng * Rng() const { return fRng; } 
 
 
 
 private: 
 
    bool fOwn; // ownership of contained pointer
-   gsl_rng * fRng; 
-   const gsl_rng_type * fRngType; 
+   gsl_qrng * fRng; 
+   const gsl_qrng_type * fRngType; 
 };
       
 
@@ -141,4 +140,4 @@ private:
 } // end namespace ROOT
 
 
-#endif /* ROOT_Math_GSLRngWrapper */
+#endif /* ROOT_Math_GSLQRngWrapper */
