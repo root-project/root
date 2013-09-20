@@ -255,7 +255,7 @@ namespace TMVA {
         // assumes, that the network has been computed already (by calling
 	// "GetRegressionValues")
 
-	if (layerNumber >= fNetwork->GetEntriesFast())
+	if (layerNumber >= (size_t)fNetwork->GetEntriesFast())
 	    return;
 
 	TObjArray* layer = (TObjArray*)fNetwork->At(layerNumber);
