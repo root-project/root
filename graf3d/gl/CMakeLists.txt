@@ -15,9 +15,17 @@ list(REMOVE_ITEM headers  gl2ps.h CsgOps.h TGLIncludes.h TGLWSIncludes.h TGLCont
                      TGLMarchingCubes.h TKDEAdapter.h TGL5DPainter.h TKDEFGT.h TGLIsoMesh.h)
 ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 
-if(WIN32)
+if(WIN32 OR cocoa)
   list(REMOVE_ITEM headers TX11GL.h)
-  list(REMOVE_ITEM sources TX11GL.cxx)  
+  list(REMOVE_ITEM sources TX11GL.cxx) 
+endif()
+
+if(WIN32)
+  set(gllibs opengl32.lib glu32.lib)
+elseif(cocoa)
+  set(gllibs "-framework OpenGL")
+else()
+  set(gllibs ${OPENGL_LIBRARIES})
 endif()
 
 set_source_files_properties(src/TGLFontManager.cxx PROPERTIES COMPILE_FLAGS "-I${FREETYPE_INCLUDE_DIR} -DBUILTIN_FTGL")
@@ -25,6 +33,6 @@ set_source_files_properties(src/TGLText.cxx PROPERTIES COMPILE_FLAGS "-I${FREETY
 
 ROOT_GENERATE_DICTIONARY(G__GL ${headers} LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(RGL LINKDEF LinkDef.h DEPENDENCIES Graf3d Gui Graf Hist Ged MathCore Tree TreePlayer)
-ROOT_LINKER_LIBRARY(RGL ${sources} G__GL.cxx  LIBRARIES ${OPENGL_LIBRARIES} GLEW FTGL DEPENDENCIES Hist Gui Ged)
+ROOT_LINKER_LIBRARY(RGL ${sources} G__GL.cxx  LIBRARIES ${gllibs} GLEW FTGL DEPENDENCIES Hist Gui Ged)
 
 ROOT_INSTALL_HEADERS()

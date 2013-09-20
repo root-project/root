@@ -18,5 +18,6 @@ if(builtin_lzma)
   add_dependencies(Lzma LZMA)
 endif()
 
-install(FILES ${headers} DESTINATION include)
+ROOT_INSTALL_HEADERS()
+
 

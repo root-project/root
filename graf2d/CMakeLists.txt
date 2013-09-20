@@ -10,7 +10,7 @@ add_subdirectory(postscript)
 add_subdirectory(mathtext)
 if(WIN32)
   add_subdirectory(win32gdk)
-else()
+elseif(x11)
   add_subdirectory(x11)         # special CMakeLists.txt
   add_subdirectory(x11ttf)      # special CMakeLists.txt
 endif()

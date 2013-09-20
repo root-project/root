@@ -1,5 +1,5 @@
 add_subdirectory(g3d) # special CMakeLists.txt
-if(NOT WIN32)
+if(NOT WIN32 AND x11)
   add_subdirectory(x3d) # special CMakeLists.txt
 endif()
 if (opengl)
