@@ -214,7 +214,7 @@ TMVA::DecisionTree::~DecisionTree()
    // destruction of the tree nodes done in the "base class" BinaryTree
 
    if (fMyTrandom) delete fMyTrandom;
-   if (fSepType) delete fSepType;
+   if (fRegType) delete fRegType;
 }
 
 //_______________________________________________________________________
