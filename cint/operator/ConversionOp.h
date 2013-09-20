@@ -6,6 +6,7 @@ template <typename T>
 class A {
  public:
    A(){}
+   A(const A& a): fT(a.fT) {printf("A::A(const A&)");}
    A(const T& t): fT(t) {}
    operator T*() {printf("A::op T*()\n"); return &fT;}
    operator T() {printf("A::op T()\n"); return fT;}
@@ -20,6 +21,7 @@ class A {
 class B {
  public:
    B() {}
+   B(const B&) {}
 };
 
 namespace N {
