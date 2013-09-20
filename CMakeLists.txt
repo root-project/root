@@ -87,6 +87,7 @@ add_custom_command(OUTPUT etc/allDict.cxx.pch
                   COMMAND bin/rootcling_tmp -1 -f etc/allDict.cxx -c ${__cxxflags} include/allHeaders.h include/allLinkDef.h
                   COMMAND ${CMAKE_COMMAND} -E copy etc/allDict_rdict.pch etc/allDict.cxx.pch
                   DEPENDS include/allLinkDef.h include/allHeaders.h rootcling_tmp)
+install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION etc)
 
 #------------------------------------------------------------------------------------------------
 
