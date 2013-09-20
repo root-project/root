@@ -68,15 +68,23 @@ namespace Math {
       fCurTime(0)
    {}
 
-//    // constructor from external rng
-//    GSLRandomEngine( GSLRngWrapper & rng) : 
-//       fRng(new GSLRngWrapper(rng) ),
-//       fCurTime(0)
-//    {}
+   // copy constructor 
+   GSLRandomEngine::GSLRandomEngine(const GSLRandomEngine & eng) : 
+      fRng(new GSLRngWrapper(*eng.fRng) ),
+      fCurTime(0)
+   {}
 
    GSLRandomEngine::~GSLRandomEngine() {
       // destructor : call terminate if not yet called
       if (fRng) Terminate();
+   }
+
+   // assignment operator 
+   GSLRandomEngine & GSLRandomEngine::operator=(const GSLRandomEngine & eng) {
+      if (this == &eng) return *this;
+      *fRng = *eng.fRng;
+      fCurTime = eng.fCurTime;
+      return *this;
    }
 
 
