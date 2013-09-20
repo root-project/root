@@ -1444,8 +1444,10 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
 {
    // compute covariance matrices
 
-   if (events.empty()) return 0;
-
+   if (events.empty()) {
+      Log() << kWARNING << " Asked to calculate a covariance matrix for an empty event vectors.. sorry cannot do that -> return NULL"<<Endl;
+      return 0;
+   }
 
    UInt_t nvars=0, ntgts=0, nspcts=0;
    if (transformBase) 

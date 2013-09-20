@@ -477,6 +477,7 @@ Double_t TMVA::Reader::EvaluateMVA( const std::vector<Float_t>& inputVec, const 
    for (UInt_t i=0; i<inputVec.size(); i++){
      if (TMath::IsNaN(inputVec[i])) {
        Log() << kERROR << i << "-th variable of the event is NaN --> return MVA value -999, \n that's all I can do, please fix or remove this event." << Endl;
+       delete tmpEvent;
        return -999;
      }
    }

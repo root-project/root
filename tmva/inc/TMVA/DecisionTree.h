@@ -184,7 +184,7 @@ namespace TMVA {
       // effectively prune a tree many times without making deep copies
       void PruneNodeInPlace( TMVA::DecisionTreeNode* node );
 
-      Int_t GetNNodesBeforePruning(){return (fNNodesBeforePruning)?fNNodesBeforePruning:GetNNodes();}
+      Int_t GetNNodesBeforePruning(){return (fNNodesBeforePruning)?fNNodesBeforePruning:fNNodesBeforePruning=GetNNodes();}
       
 
       UInt_t CountLeafNodes(TMVA::Node *n = NULL);
