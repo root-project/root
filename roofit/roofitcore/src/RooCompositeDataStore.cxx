@@ -170,6 +170,7 @@ const RooArgSet* RooCompositeDataStore::get(Int_t idx) const
       continue ;
     }    
     const_cast<RooCompositeDataStore*>(this)->_vars = (*iter->second->get(idx-offset)) ;
+
     _indexCat->setIndex(iter->first) ;
     _curStore = iter->second ;
     _curIndex = idx-offset ;
@@ -284,6 +285,9 @@ RooAbsArg* RooCompositeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRang
   for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
     ret = iter->second->addColumn(newVar,adjustRange) ;
   }
+  if (ret) {
+    _vars.add(*ret) ;
+  }
   return ret ;
 }
 
@@ -298,6 +302,9 @@ RooArgSet* RooCompositeDataStore::addColumns(const RooArgList& varList)
   map<int,RooAbsDataStore*>::const_iterator iter ;
   for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
     ret = iter->second->addColumns(varList) ;
+  }
+  if (ret) {
+    _vars.add(*ret) ;
   }
   return ret ;
 }

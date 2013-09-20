@@ -74,6 +74,9 @@ public:
 
 protected:
 
+  Bool_t importWorkspaceHook(RooWorkspace& ws) ;
+  Bool_t areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
+
   Double_t evaluate() const;
   Double_t totalVolume() const ;
   friend class RooAbsCachedReal ;

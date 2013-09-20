@@ -16,7 +16,7 @@
 /////////////////////////////////////////
 #include "Rtypes.h"
 
-#if !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
+#if !defined(R__ALPHA) && !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
 NamespaceImp(RooStats)
 #endif
 

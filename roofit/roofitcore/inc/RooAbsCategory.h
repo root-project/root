@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsCategory.h,v 1.38 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,6 +48,7 @@ public:
   Bool_t operator!=(const char* label) { return !operator==(label);}
   virtual Bool_t operator==(const RooAbsArg& other) ;
   Bool_t         operator!=(const RooAbsArg& other) { return !operator==(other);}
+  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE)  ;
   
   Bool_t isValidIndex(Int_t index) const ;
   Bool_t isValidLabel(const char* label) const ;  

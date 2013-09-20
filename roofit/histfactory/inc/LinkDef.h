@@ -5,6 +5,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+
 #pragma link C++ namespace RooStats;
 #pragma link C++ namespace RooStats::HistFactory;
 
@@ -27,8 +28,9 @@
 #pragma link C++ class RooStats::HistFactory::HistFactoryNavigation+ ;  
 
 #pragma link C++ class RooStats::HistFactory::ConfigParser+ ;
-
 #pragma link C++ class RooStats::HistFactory::Measurement+ ;
+#pragma read sourceClass="RooStats::HistFactory::Measurement" targetClass="RooStats::HistFactory::Measurement" checksum="[973506941]" source="std::string fPOI" target="fPOI"  code="{ fPOI.push_back(onfile.fPOI) ; }" 
+
 #pragma link C++ class RooStats::HistFactory::Channel+ ;
 #pragma link C++ class RooStats::HistFactory::Sample+ ;
 #pragma link C++ class RooStats::HistFactory::Data+ ;
@@ -38,19 +40,12 @@
 #pragma link C++ class RooStats::HistFactory::StatErrorConfig+ ;
 #pragma link C++ class RooStats::HistFactory::PreprocessFunction+ ;
 
-
 #pragma link C++ class std::vector< RooStats::HistFactory::Channel >+ ;
 #pragma link C++ class std::vector< RooStats::HistFactory::Sample >+ ;
 
 // make dictionary for all the C++ classes defined in these following files
-#ifndef _WIN32   // on Windows rootcint -I seemes not to work 
 #pragma link C++ defined_in "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"; 
 #pragma link C++ defined_in "RooStats/HistFactory/Systematics.h"; 
 #pragma link C++ defined_in "RooStats/HistFactory/HistFactoryModelUtils.h"; 
-#else 
-#pragma link C++ defined_in "roofit/histfactory/inc/RooStats/HistFactory/MakeModelAndMeasurementsFast.h"; 
-#pragma link C++ defined_in "roofit/histfactory/inc/RooStats/HistFactory/Systematics.h"; 
-#pragma link C++ defined_in "roofit/histfactory/inc/RooStats/HistFactory/HistFactoryModelUtils.h"; 
-#endif
 
 #endif

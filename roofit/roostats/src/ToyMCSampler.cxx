@@ -439,15 +439,14 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
       RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>( &pdf );
       if (!simPdf) {
          RooDataSet *one = pdf.generate(*fGlobalObservables, 1);
-         if (one) { 
-            const RooArgSet *values = one->get(0);
-            if (!_allVars) {
-               _allVars = pdf.getVariables();
-            }
-            *_allVars = *values;
-            delete one;
-
-         }  
+   
+         const RooArgSet *values = one->get(0);
+         if (!_allVars) {
+            _allVars = pdf.getVariables();
+         }
+         *_allVars = *values;
+         delete one;
+   
       } else {
    
          if (_pdfList.size() == 0) {

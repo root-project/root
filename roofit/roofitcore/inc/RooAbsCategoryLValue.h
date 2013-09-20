@@ -52,6 +52,7 @@ public:
   virtual void randomize(const char* rangeName=0);
 
   virtual const RooAbsBinning* getBinningPtr(const char* /*rangeName*/) const { return 0 ; }
+  virtual std::list<std::string> getBinningNames() const { return std::list<std::string>(1, "") ; }
   virtual Int_t getBin(const RooAbsBinning* /*ptr*/) const { return getBin((const char*)0) ; }
 
 

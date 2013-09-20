@@ -40,7 +40,7 @@ public:
     BarlowCache() : hasStatUncert(false), gamma(NULL), 
 		    observables(NULL), bin_center(NULL), 
 		    tau(NULL), nom_pois_mean(NULL),
-		    sumPdf(NULL), nData(-1), binVolume(-1) {}
+		    sumPdf(NULL),  nData(-1) {}
     bool hasStatUncert;
     RooRealVar* gamma;
     RooArgSet* observables;

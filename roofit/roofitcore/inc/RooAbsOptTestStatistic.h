@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsOptGoodnessOfFit.h,v 1.15 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,7 +33,7 @@ public:
   RooAbsOptTestStatistic() ;
   RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 			 const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0,
-			 Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE,
+			 Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE,
 			 Bool_t cloneInputData=kTRUE) ;
   RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=0);
   virtual ~RooAbsOptTestStatistic();

@@ -761,6 +761,7 @@ RooRealIntegral::~RooRealIntegral()
   delete _facListIter ;
   delete _jacListIter ;
   if (_sumCatIter)  delete _sumCatIter ;
+  if (_params) delete _params ;
 }
 
 

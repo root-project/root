@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooNormSetCache.h,v 1.12 2007/08/09 19:55:47 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,7 +31,7 @@ typedef RooArgSet* pRooArgSet ;
 class RooNormSetCache {
 
 public:
-  RooNormSetCache(Int_t regSize=64) ;
+  RooNormSetCache(Int_t regSize=32) ;
   RooNormSetCache(const RooNormSetCache& other) ;
   virtual ~RooNormSetCache() ;
 

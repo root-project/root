@@ -66,10 +66,32 @@ Double_t RooGaussian::evaluate() const
   Double_t arg= x - mean;  
   Double_t sig = sigma ;
   Double_t ret =exp(-0.5*arg*arg/(sig*sig)) ;
-//   cout << "gauss(" << GetName() << ") x = " << x << " mean = " << mean << " sigma = " << sigma << " ret = " << ret << endl ;
+//   if (gDebug>2) {
+//     cout << "gauss(" << GetName() << ") x = " << x << " mean = " << mean << " sigma = " << sigma << " ret = " << ret << endl ;
+//   }
   return ret ;
 }
 
+
+
+//_____________________________________________________________________________
+Double_t RooGaussian::getLogVal(const RooArgSet* set) const 
+{
+  // calculate and return the negative log-likelihood of the Poisson                                                                                                                                    
+  return RooAbsPdf::getLogVal(set) ;
+//   Double_t prob = getVal(set) ;
+//   return log(prob) ;
+
+  Double_t arg= x - mean;  
+  Double_t sig = sigma ;
+  
+  //static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
+  //Double_t extra = -0.5*arg*arg/(sig*sig) - log(2*rootPiBy2*sig) ;
+  Double_t extra = -0.5*arg*arg/(sig*sig) - log(analyticalIntegral(1,0)) ;
+  
+  return extra ; 
+  
+}
 
 
 //_____________________________________________________________________________
@@ -93,7 +115,9 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
   Double_t ret = 0;
   if(code==1){  
     ret = rootPiBy2*sigma*(RooMath::erf((x.max(rangeName)-mean)/xscale)-RooMath::erf((x.min(rangeName)-mean)/xscale));
-//     cout << "Int_gauss_dx(mean=" << mean << ",sigma=" << sigma << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
+//     if (gDebug>2) {
+//       cout << "Int_gauss_dx(mean=" << mean << ",sigma=" << sigma << ", xmin=" << x.min(rangeName) << ", xmax=" << x.max(rangeName) << ")=" << ret << endl ;
+//     }
   } else if(code==2) {
     ret = rootPiBy2*sigma*(RooMath::erf((mean.max(rangeName)-x)/xscale)-RooMath::erf((mean.min(rangeName)-x)/xscale));
   } else{

@@ -6,7 +6,10 @@
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *
  *                                                                           *
- * Copyright (c) 2000-2005, Regents of the University of California          *
+ *   Updated version with analytical integral                                *
+ *   MP, Marko Petric,   J. Stefan Institute,  marko.petric@ijs.si           *
+ *                                                                           *
+ * Copyright (c) 2000-2013, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
@@ -17,7 +20,11 @@
 //////////////////////////////////////////////////////////////////////////////
 //
 // BEGIN_HTML
+//
 // RooNovosibirsk implements the Novosibirsk function 
+//
+// Function taken from H. Ikeda et al. NIM A441 (2000), p. 401 (Belle Collaboration)
+// 
 // END_HTML
 //
 
@@ -51,6 +58,7 @@ RooNovosibirsk::RooNovosibirsk(const char *name, const char *title,
 }
 
 
+
 //_____________________________________________________________________________
 RooNovosibirsk::RooNovosibirsk(const RooNovosibirsk& other, const char *name):
   RooAbsPdf(other,name),
@@ -62,31 +70,154 @@ RooNovosibirsk::RooNovosibirsk(const RooNovosibirsk& other, const char *name):
 }
 
 
+
 //_____________________________________________________________________________
-Double_t RooNovosibirsk::evaluate() const {
-  // Put the formula for your PDF's value here. Use the pre-computed
-  // value of _norm to normalize the result.
-
-  double qa=0,qb=0,qc=0,qx=0,qy=0;
-
-  if(TMath::Abs(tail) < 1.e-7) 
-    qc = 0.5*TMath::Power(((x-peak)/width),2);
-  else {
-    qa = tail*sqrt(log(4.));
-    qb = sinh(qa)/qa;
-    qx = (x-peak)/width*qb;
-    qy = 1.+tail*qx;
+Double_t RooNovosibirsk::evaluate() const
+{ 
+  //If tail=eta=0 the Belle distribution becomes gaussian
+  if (TMath::Abs(tail) < 1.e-7) {
+    return TMath::Exp( -0.5 * TMath::Power( ( (x - peak) / width ), 2 ));
+  }
   
-    //---- Cutting curve from right side
+  Double_t arg = 1.0 - ( x - peak ) * tail / width;
+  
+  if (arg < 1.e-7) {
+    //Argument of logaritem negative. Real continuation -> function equals zero
+    return 0.0;
+  }
+    
+  Double_t log = TMath::Log(arg);    
+  static const Double_t xi = 2.3548200450309494; // 2 Sqrt( Ln(4) )
+    
+  Double_t width_zero = ( 2.0 / xi ) * TMath::ASinH( tail * xi * 0.5 );
+  Double_t width_zero2 = width_zero * width_zero;
+  Double_t exponent = ( -0.5 / (width_zero2) * log * log ) - ( width_zero2 * 0.5 );
+    
+  return TMath::Exp(exponent) ;
+}
 
-    if( qy > 1.E-7) 
-      qc = 0.5*(TMath::Power((log(qy)/tail),2) + tail*tail);
-    else
-      qc = 15.0;
+
+
+
+//_____________________________________________________________________________
+Int_t RooNovosibirsk::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* ) const
+{
+  if (matchArgs(allVars,analVars,x)) return 1 ;
+  if (matchArgs(allVars,analVars,peak)) return 2 ;
+    
+  //The other two integrals over tali and width are not integrable
+    
+  return 0 ;
+}
+
+
+
+//_____________________________________________________________________________
+Double_t RooNovosibirsk::analyticalIntegral(Int_t code, const char* rangeName) const
+{
+  assert(code==1 || code==2) ;
+  
+  //The range is defined as [A,B]
+  
+  //Numerical values need for the evaluation of the integral
+  static const Double_t sqrt2 = 1.4142135623730950; // Sqrt(2)
+  static const Double_t sqlog2 = 0.832554611157697756; //Sqrt( Log(2) )
+  static const Double_t sqlog4 = 1.17741002251547469; //Sqrt( Log(4) )
+  static const Double_t log4 = 1.38629436111989062; //Log(2)
+  static const Double_t rootpiby2 = 1.2533141373155003; // Sqrt(pi/2)
+  static const Double_t sqpibylog2 = 2.12893403886245236; //Sqrt( pi/Log(2) )
+    
+  if (code==1) {
+    Double_t A = x.min(rangeName);
+    Double_t B = x.max(rangeName);
+        
+    Double_t result = 0;
+
+        
+    //If tail==0 the function becomes gaussian, thus we return a gassian integral
+    if (TMath::Abs(tail) < 1.e-7) {
+
+      Double_t xscale = sqrt2*width;
+            
+      result = rootpiby2*width*(TMath::Erf((B-peak)/xscale)-TMath::Erf((A-peak)/xscale));
+            
+      return result;
+            
+    }
+        
+    // If the range is not defined correctly the function becomes complex
+    Double_t log_argument_A = ( (peak - A)*tail + width ) / width ;
+    Double_t log_argument_B = ( (peak - B)*tail + width ) / width ;
+        
+    //lower limit
+    if ( log_argument_A < 1.e-7) {
+      log_argument_A = 1.e-7;
+    }
+        
+    //upper limit
+    if ( log_argument_B < 1.e-7) {
+      log_argument_B = 1.e-7;
+    }
+        
+    Double_t term1 =  TMath::ASinH( tail * sqlog4 );
+    Double_t term1_2 =  term1 * term1;
+        
+    //Calculate the error function arguments
+    Double_t erf_termA = ( term1_2 - log4 * TMath::Log( log_argument_A ) ) / ( 2 * term1 * sqlog2 );
+    Double_t erf_termB = ( term1_2 - log4 * TMath::Log( log_argument_B ) ) / ( 2 * term1 * sqlog2 );
+        
+    result = 0.5 / tail * width * term1 * ( TMath::Erf(erf_termB) - TMath::Erf(erf_termA)) * sqpibylog2;
+        
+    return result;
+        
+  } else if (code==2) {
+    Double_t A = x.min(rangeName);
+    Double_t B = x.max(rangeName);
+        
+    Double_t result = 0;
+        
+        
+    //If tail==0 the function becomes gaussian, thus we return a gassian integral
+    if (TMath::Abs(tail) < 1.e-7) {
+            
+      Double_t xscale = sqrt2*width;
+            
+      result = rootpiby2*width*(TMath::Erf((B-x)/xscale)-TMath::Erf((A-x)/xscale));
+            
+      return result;
+            
+    }
+        
+    // If the range is not defined correctly the function becomes complex
+    Double_t log_argument_A = ( (A - x)*tail + width ) / width;
+    Double_t log_argument_B = ( (B - x)*tail + width ) / width;
+        
+    //lower limit
+    if ( log_argument_A < 1.e-7) {
+      log_argument_A = 1.e-7;
+    }
+        
+    //upper limit
+    if ( log_argument_B < 1.e-7) {
+      log_argument_B = 1.e-7;
+    }
+        
+    Double_t term1 =  TMath::ASinH( tail * sqlog4 );
+    Double_t term1_2 =  term1 * term1;
+        
+    //Calculate the error function arguments
+    Double_t erf_termA = ( term1_2 - log4 * TMath::Log( log_argument_A ) ) / ( 2 * term1 * sqlog2 );
+    Double_t erf_termB = ( term1_2 - log4 * TMath::Log( log_argument_B ) ) / ( 2 * term1 * sqlog2 );
+        
+    result = 0.5 / tail * width * term1 * ( TMath::Erf(erf_termB) - TMath::Erf(erf_termA)) * sqpibylog2;
+        
+    return result;
+        
   }
 
-  //---- Normalize the result
+  // Emit fatal error
+  coutF(Eval) << "Error in RooNovosibirsk::analyticalIntegral" << std::endl;  
 
-  return exp(-qc);
-
+  // Put dummy return here to avoid compiler warnings
+  return 1.0 ;
 }

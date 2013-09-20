@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooWorkspace.h,v 1.3 2007/07/16 21:04:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -54,10 +54,22 @@ public:
   Bool_t importClassCode(TClass* theClass, Bool_t doReplace=kFALSE) ;
 
   // Import functions for dataset, functions, generic objects
-  Bool_t import(const RooAbsArg& arg, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
-  Bool_t import(const RooArgSet& args, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
-  Bool_t import(RooAbsData& data, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
-  Bool_t import(const char *fileSpec, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
+  Bool_t import(const RooAbsArg& arg, 
+		const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
+		const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
+		const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
+  Bool_t import(const RooArgSet& args, 
+		const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
+		const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
+		const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
+  Bool_t import(RooAbsData& data, 
+		const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
+		const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
+		const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
+  Bool_t import(const char *fileSpec, 
+		const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
+		const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
+		const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
   Bool_t import(TObject& object, Bool_t replaceExisting=kFALSE) ;
   Bool_t import(TObject& object, const char* aliasName, Bool_t replaceExisting=kFALSE) ;
 
@@ -78,6 +90,7 @@ public:
   Bool_t saveSnapshot(const char* name, const char* paramNames) ;
   Bool_t saveSnapshot(const char* name, const RooArgSet& params, Bool_t importValues=kFALSE) ;
   Bool_t loadSnapshot(const char* name) ;  
+  const RooArgSet* getSnapshot(const char* name) const ;
 
   void merge(const RooWorkspace& /*other*/) {} ;
 
@@ -92,6 +105,7 @@ public:
   RooCategory* cat(const char* name) const ;
   RooAbsCategory* catfunc(const char* name) const ;
   RooAbsData* data(const char* name) const ;
+  RooAbsData* embeddedData(const char* name) const ;
   RooAbsArg* arg(const char* name) const ;
   RooAbsArg* fundArg(const char* name) const ;
   RooArgSet argSet(const char* nameList) const ;
@@ -108,6 +122,7 @@ public:
   RooArgSet allPdfs() const ;
   RooArgSet allResolutionModels() const ;
   std::list<RooAbsData*> allData() const ;
+  std::list<RooAbsData*> allEmbeddedData() const ;
   std::list<TObject*> allGenericObjects() const ;
 
   Bool_t makeDir() ; 
@@ -141,6 +156,14 @@ public:
   class CodeRepo : public TObject {
   public:
     CodeRepo(RooWorkspace* wspace=0) : _wspace(wspace), _compiledOK(kTRUE) {} ;
+
+    CodeRepo(const CodeRepo& other, RooWorkspace* wspace=0) : TObject(other) ,
+          _wspace(wspace?wspace:other._wspace), 
+          _c2fmap(other._c2fmap),
+          _fmap(other._fmap),
+          _ehmap(other._ehmap),
+          _compiledOK(other._compiledOK) {} ;
+
     virtual ~CodeRepo() {} ;
 
     Bool_t autoImportClass(TClass* tc, Bool_t doReplace=kFALSE) ;
@@ -149,6 +172,8 @@ public:
     Bool_t compiledOK() const { return _compiledOK ; }
 
     std::string listOfClassNames() const ;
+
+       
 
     class ClassRelInfo {
     public:
@@ -165,13 +190,21 @@ public:
       Bool_t _extracted ; 
     } ;    
     
+
+    class ExtraHeader {     
+    public:
+      TString _hname ;
+      TString _hfile ;
+   } ;
+
   protected:
     RooWorkspace* _wspace ; // owning workspace
     std::map<TString,ClassRelInfo> _c2fmap ; // List of contained classes
     std::map<TString,ClassFiles> _fmap ; // List of contained files
+    std::map<TString,ExtraHeader> _ehmap ; // List of extra header files
     Bool_t _compiledOK ; //! Flag indicating that classes compiled OK
 
-    ClassDef(CodeRepo,1) ; // Code repository for RooWorkspace
+    ClassDef(CodeRepo,2) ; // Code repository for RooWorkspace
   } ;
 
 
@@ -222,6 +255,7 @@ public:
 
   RooArgSet _allOwnedNodes ; // List of owned pdfs and components
   RooLinkedList _dataList ; // List of owned datasets
+  RooLinkedList _embeddedDataList ; // List of owned datasets that are embedded in pdfs
   RooLinkedList _views ; // List of model views  
   RooLinkedList _snapshots ; // List of parameter snapshots
   RooLinkedList _genObjects ; // List of generic objects
@@ -240,7 +274,7 @@ public:
   Bool_t      _openTrans ;    //! Is there a transaction open?
   RooArgSet   _sandboxNodes ; //! Sandbox for incoming objects in a transaction
 
-  ClassDef(RooWorkspace,7)  // Persistable project container for (composite) pdfs, functions, variables and datasets
+  ClassDef(RooWorkspace,8)  // Persistable project container for (composite) pdfs, functions, variables and datasets
   
 } ;
 

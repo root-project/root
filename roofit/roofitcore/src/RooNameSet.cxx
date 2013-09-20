@@ -25,6 +25,10 @@
 // END_HTML
 //
 
+#include <cstring>
+#include <algorithm>
+#include <cassert>
+
 #include "RooFit.h"
 #include "Riostream.h"
 
@@ -34,109 +38,138 @@
 #include "RooArgSet.h"
 #include "RooArgList.h"
 
-
-
-using namespace std;
-
 ClassImp(RooNameSet)
 ;
 
+//_____________________________________________________________________________
+void RooNameSet::strdup(Int_t& dstlen, char* &dstbuf, const char* src)
+{
+  // copy src to dst, keep dstlen up to date, make sure zero length strings
+  // do not take memory
+  dstlen = src ? std::strlen(src) : 0;
+  if (dstlen) ++dstlen;
+  char *buf = dstlen ? new char[dstlen] : 0;
+  if (buf) std::strcpy(buf, src);
+  delete[] dstbuf;
+  dstbuf = buf;
+}
 
 //_____________________________________________________________________________
-RooNameSet::RooNameSet()
+RooNameSet::RooNameSet() : _len(0), _nameList(0)
 {
   // Default constructor
-
-  _len = 256 ;
-  _nameList = new char[_len] ;
-  _nameList[0] = 0 ;
-  
 }
 
-
-
-
 //_____________________________________________________________________________
-RooNameSet::RooNameSet(const RooArgSet& argSet)
+RooNameSet::RooNameSet(const RooArgSet& argSet) : _len(0), _nameList(0)
 {
   // Construct from RooArgSet
-
-  _len = 256 ;
-  _nameList = new char[_len] ;
-  _nameList[0] = 0 ;
-  refill(argSet) ;
+  refill(argSet);
 }
-
-
 
 //_____________________________________________________________________________
-RooNameSet::RooNameSet(const RooNameSet& other) : TObject(other), RooPrintable(other), _nameList()
+RooNameSet::RooNameSet(const RooNameSet& other) :
+  TObject(other), RooPrintable(other), _len(0), _nameList(0)
 {
   // Copy constructor
-
-  _len = other._len ;
-  _nameList = new char[_len] ;
-  strlcpy(_nameList,other._nameList,_len) ;
+  strdup(_len, _nameList, other._nameList);
 }
 
+//_____________________________________________________________________________
+RooNameSet::~RooNameSet() 
+{
+  // Destructor
+  delete[] _nameList;
+}
 
+//_____________________________________________________________________________
+RooNameSet& RooNameSet::operator=(const RooNameSet& other) 
+{
+  // Assignment operator
+
+  // Check comparison against self
+  if (&other == this || _nameList == other._nameList) return *this;
+
+  strdup(_len, _nameList, other._nameList);
+
+  return *this;
+}
+
+//_____________________________________________________________________________
+Bool_t RooNameSet::operator==(const RooNameSet& other) const
+{
+  // Comparison operator
+
+  // Check comparison against self
+  if (&other == this || _nameList == other._nameList) return kTRUE;
+
+  return _nameList && other._nameList &&
+    0 == std::strcmp(_nameList, other._nameList);
+}
+
+//_____________________________________________________________________________
+Bool_t RooNameSet::operator<(const RooNameSet& other) const 
+{
+  if (&other == this) return kFALSE;
+  if (!_nameList) return other._nameList;
+  if (!other._nameList) return kFALSE;
+  return std::strcmp(_nameList, other._nameList) < 0;
+}
 
 //_____________________________________________________________________________
 void RooNameSet::extendBuffer(Int_t inc)
 {
-  // Increment internal buffer by specified amount
-  char * newbuf = new char[_len+inc] ;
-  strncpy(newbuf,_nameList,_len) ;
-  delete[] _nameList ;
-  _nameList = newbuf ;
-  _len += inc ;
+  if (!inc) return;
+  assert(inc > 0 || _len >= -inc);
+  int newsz = _len + inc;
+  if (newsz <= 1 || !_len) newsz = 0;
+  char* newbuf = newsz ? new char[newsz] : 0;
+  if (newbuf && _nameList) {
+    std::strncpy(newbuf, _nameList, std::min(_len, newsz));
+    newbuf[newsz - 1] = 0;
+  }
+  delete[] _nameList;
+  _nameList = newbuf;
+  _len = newsz;
 }
-
-
 
 //_____________________________________________________________________________
 void RooNameSet::setNameList(const char* givenList) 
 {
-  // Increment internal buffer by specified amount
-  _len = strlen(givenList) ;
-  char * newbuf = new char[_len+1] ;
-  strncpy(newbuf,givenList,_len+1) ;
-  delete[] _nameList ;
-  _nameList = newbuf ;
+  strdup(_len, _nameList, givenList);
 }
-
-
 
 //_____________________________________________________________________________
 void RooNameSet::refill(const RooArgSet& argSet) 
 {
   // Refill internal contents from names in given argSet
+  delete[] _nameList;
+  _nameList = 0;
+  _len = 0;
+  if (0 == argSet.getSize()) return;
 
-  RooArgList tmp(argSet) ;
-  tmp.sort() ;
-  TIterator* iter = tmp.createIterator() ;
-  RooAbsArg* arg ;
-  char *ptr=_nameList ;
-  char *end=_nameList+_len-2 ;
-  *ptr = 0 ;
-  while((arg=(RooAbsArg*)iter->Next())) {    
-    const char* argName = arg->GetName() ;
-    while((*ptr++ = *argName++)) {
-      if (ptr>=end) {
-	// Extend buffer
-	Int_t offset = ptr-_nameList ;
-	extendBuffer(256) ;
-	ptr = _nameList + offset ;
-	end = _nameList + _len - 2;
-      }
+  RooArgList tmp(argSet);
+  tmp.sort();
+  // figure out the length of the array we need
+  RooAbsArg* arg = 0;
+  for (RooFIter it = tmp.fwdIterator(); 0 != (arg = it.next());
+      _len += 1 + std::strlen(arg->GetName())) { }
+  if (_len <= 1) _len = 0;
+  // allocate it
+  _nameList = _len ? new char[_len] : 0;
+  if (_nameList) {
+    // copy in the names of the objects
+    char *p = _nameList;
+    for (RooFIter it = tmp.fwdIterator(); 0 != (arg = it.next()); ) {
+      const char *name = arg->GetName();
+      std::strcpy(p, name);
+      while (*p) ++p;
+      *p++ = ':';
     }
-    *(ptr-1) = ':' ;
+    // zero-terminate properly
+    *--p = 0;
   }
-  if (ptr>_nameList) *(ptr-1)= 0 ;
-  delete iter ;
 }
-
-
 
 //_____________________________________________________________________________
 RooArgSet* RooNameSet::select(const RooArgSet& list) const 
@@ -145,104 +178,49 @@ RooArgSet* RooNameSet::select(const RooArgSet& list) const
   // whose names match to those in the internal name
   // list of RooNameSet
 
-  RooArgSet* output = new RooArgSet ;
+  RooArgSet* output = new RooArgSet;
+  if (!_nameList || !std::strlen(_nameList)) return output;
 
-  char *buffer = new char[strlen(_nameList)+1] ;
-  strlcpy(buffer,_nameList,strlen(_nameList)+1) ;
-  char* token = strtok(buffer,":") ;
-  
-  while(token) {
-    RooAbsArg* arg =  list.find(token) ;
-    if (arg) output->add(*arg) ;
-    token = strtok(0,":") ;
+  // need to copy _nameList because std::strtok modifies the string
+  char* tmp = 0;
+  int dummy = 0;
+  strdup(dummy, tmp, _nameList);
+
+  char* token = std::strtok(tmp, ":"); 
+  while (token) {
+    RooAbsArg* arg = list.find(token);
+    if (arg) output->add(*arg);
+    token = std::strtok(0, ":");
   }
+  delete[] tmp;
 
-  delete[] buffer ;
-
-  return output ;
+  return output;
 }
 
-
-
 //_____________________________________________________________________________
-RooNameSet::~RooNameSet() 
-{
-  // Destructor
-
-  delete[] _nameList ;
-}
-
-
-
-//_____________________________________________________________________________
-Bool_t RooNameSet::operator==(const RooNameSet& other) 
-{
-  // Comparison operator
-
-  // Check comparison against self
-  if (&other==this) return kTRUE ;
-
-  // First check for equal length
-  if (strlen(_nameList) != strlen(other._nameList)) return kFALSE ;
-
-  return (!strcmp(_nameList,other._nameList)) ;
-}
-
-
-
-//_____________________________________________________________________________
-Bool_t RooNameSet::operator<(const RooNameSet& other) const 
-{
-  return (strcmp(_nameList,other._nameList)) ;
-}
-
-
-
-//_____________________________________________________________________________
-RooNameSet& RooNameSet::operator=(const RooNameSet& other) 
-{
-  // Assignment operator
-
-  // Check comparison against self
-  if (&other==this) return *this ;
-  
-  delete[] _nameList ;
-
-  _len = other._len ;
-  _nameList = new char[_len] ;
-  strlcpy(_nameList,other._nameList,_len) ;  
-
-  return *this ;
-}
-
-
-//_____________________________________________________________________________
-void RooNameSet::printName(ostream& os) const 
+void RooNameSet::printName(std::ostream& os) const 
 {
   // Print name of nameset
-  os << GetName() ;
+  os << GetName();
 }
 
-
 //_____________________________________________________________________________
-void RooNameSet::printTitle(ostream& os) const 
+void RooNameSet::printTitle(std::ostream& os) const 
 {
   // Print title of nameset
-  os << GetTitle() ;
+  os << GetTitle();
 }
 
-
 //_____________________________________________________________________________
-void RooNameSet::printClassName(ostream& os) const 
+void RooNameSet::printClassName(std::ostream& os) const 
 {
   // Print class name of nameset
-  os << IsA()->GetName() ;
+  os << IsA()->GetName();
 }
 
-
 //_____________________________________________________________________________
-void RooNameSet::printValue(ostream& os) const 
+void RooNameSet::printValue(std::ostream& os) const 
 {
   // Print value of nameset, i.e the list of names
-  os << _nameList ;
+  os << content();
 }

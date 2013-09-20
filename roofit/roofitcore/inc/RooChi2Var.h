@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooChi2Var.h,v 1.12 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,18 +40,18 @@ public:
 
   RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
 	    Bool_t extended=kFALSE, const char* rangeName=0, const char* addCoefRangeName=0, 
-	     Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, RooDataHist::ErrorType=RooDataHist::SumW2) ;
+	     Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, RooDataHist::ErrorType=RooDataHist::SumW2) ;
 
   RooChi2Var(const char *name, const char *title, RooAbsReal& func, RooDataHist& data,
 	     const RooArgSet& projDeps, FuncMode funcMode, const char* rangeName=0, const char* addCoefRangeName=0, 
-	     Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, RooDataHist::ErrorType=RooDataHist::SumW2) ;
+	     Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, RooDataHist::ErrorType=RooDataHist::SumW2) ;
 
   RooChi2Var(const RooChi2Var& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooChi2Var(*this,newname); }
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& dhist,
 				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, Bool_t interleave=kFALSE,Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) {
+				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition,Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, Bool_t = kFALSE) {
     // Virtual constructor
     return new RooChi2Var(name,title,(RooAbsPdf&)pdf,(RooDataHist&)dhist,projDeps,_funcMode,rangeName,
 			  addCoefRangeName,nCPU,interleave,verbose, splitCutRange,_etype) ;

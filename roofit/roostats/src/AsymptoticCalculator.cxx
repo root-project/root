@@ -63,7 +63,7 @@ void AsymptoticCalculator::SetPrintLevel(int level) {
 AsymptoticCalculator::AsymptoticCalculator(
    RooAbsData &data,
    const ModelConfig &altModel,
-   const ModelConfig &nullModel, bool nominalAsimov, unsigned int asimovBins) :
+   const ModelConfig &nullModel, bool nominalAsimov) :
       HypoTestCalculatorGeneric(data, altModel, nullModel, 0), 
       fOneSided(false), fOneSidedDiscovery(false), fUseQTilde(-1), 
       fNLLObs(0), fNLLAsimov(0), 
@@ -145,32 +145,17 @@ AsymptoticCalculator::AsymptoticCalculator(
    // with the number of bins  in the observed data 
    // This number will be used for making the Asimov data set so it will be more consistent with the 
    // observed data
+   int prevBins = 0; 
    RooRealVar * xobs = 0;
-   std::vector<int> prevBins;
-   RooArgList obsList; 
-   if (GetNullModel()->GetObservables() ) {
-      obsList.add(*GetNullModel()->GetObservables());
-      if (asimovBins > 0) { 
-         prevBins.resize(obsList.getSize());
-         for (int iobs = 0; iobs < obsList.getSize(); ++iobs) {
-            RooRealVar * arg = dynamic_cast<RooRealVar*>( &obsList[iobs]); 
-            if (arg)  { 
-               prevBins[iobs] = arg->getBins();
-               arg->setBins(asimovBins);
-            }
-         }
-      }
-      else if (obsList.getSize() == 1) {
-         // just fix first obervables according to the data in teh case of 1D
-         xobs = (RooRealVar*) (GetNullModel()->GetObservables())->first();
-         if (data.IsA() == RooDataHist::Class() ) { 
-            if (data.numEntries() != xobs->getBins() ) { 
-               prevBins.push_back(xobs->getBins() );
-               oocoutW((TObject*)0,InputArguments) << "AsymptoticCalculator: number of bins in " << xobs->GetName() << " are different than data bins " 
-                                                   << " set the same data bins " << data.numEntries() << " in range " 
-                                                   << " [ " << xobs->getMin() << " , " << xobs->getMax() << " ]" << std::endl;
-               xobs->setBins(data.numEntries());
-            }
+   if (GetNullModel()->GetObservables() && GetNullModel()->GetObservables()->getSize() == 1 ) {
+      xobs = (RooRealVar*) (GetNullModel()->GetObservables())->first();
+      if (data.IsA() == RooDataHist::Class() ) { 
+         if (data.numEntries() != xobs->getBins() ) { 
+            prevBins = xobs->getBins();
+            oocoutW((TObject*)0,InputArguments) << "AsymptoticCalculator: number of bins in " << xobs->GetName() << " are different than data bins " 
+                                                << " set the same data bins " << data.numEntries() << " in range " 
+                                                << " [ " << xobs->getMin() << " , " << xobs->getMax() << " ]" << std::endl;
+            xobs->setBins(data.numEntries());
          }
       }
    }
@@ -235,15 +220,7 @@ AsymptoticCalculator::AsymptoticCalculator(
    }
 
    // restore number of bins 
-   if (prevBins.size() > 0) { 
-      for (unsigned int iobs = 0; iobs < prevBins.size(); ++iobs) { 
-         RooRealVar * arg = dynamic_cast<RooRealVar*>( &obsList[iobs]); 
-         if (arg )  { 
-            arg->setBins(prevBins[iobs]);
-         }
-      }
-   }
-
+   if (prevBins > 0 && xobs) xobs->setBins(prevBins);
 
 }
 

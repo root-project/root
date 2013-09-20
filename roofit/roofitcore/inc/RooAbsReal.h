@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsReal.h,v 1.75 2007/07/13 21:50:24 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -77,6 +77,9 @@ public:
 
   Bool_t operator==(Double_t value) const ;
   virtual Bool_t operator==(const RooAbsArg& other) ;
+  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE)  ;
+
+
   inline const Text_t *getUnit() const { 
     // Return string with unit description
     return _unit.Data(); 
@@ -108,6 +111,7 @@ public:
     // and all integrals are calculated numerically
     _forceNumInt = flag ; 
   }
+  Bool_t getForceNumInt() const { return _forceNumInt ; }
 
   // Chi^2 fits to histograms
   virtual RooFitResult* chi2FitTo(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),  
@@ -247,12 +251,12 @@ public:
   // Evaluation error logging 
   class EvalError {
   public:
-    EvalError() { _msg[0] = 0 ; _srvval[0] = 0 ; }
-    EvalError(const EvalError& other) { strlcpy(_msg,other._msg,1024) ; strlcpy(_srvval,other._srvval,1024) ; } ;
-    void setMessage(const char* tmp) ;
-    void setServerValues(const char* tmp) ;
-    char _msg[1024] ;
-    char _srvval[1024] ;
+    EvalError() { }
+    EvalError(const EvalError& other) : _msg(other._msg), _srvval(other._srvval) { }
+    void setMessage(const char* tmp) { std::string s(tmp); s.swap(_msg); }
+    void setServerValues(const char* tmp) { std::string s(tmp); s.swap(_srvval); }
+    std::string _msg;
+    std::string _srvval;
   } ;
 
   enum ErrorLoggingMode { PrintErrors, CollectErrors, CountErrors, Ignore } ;
@@ -300,11 +304,14 @@ public:
 
   virtual Bool_t setData(RooAbsData& /*data*/, Bool_t /*cloneData*/=kTRUE) { return kTRUE ; }
 
+  virtual void enableOffsetting(Bool_t) {} ;
+  virtual Bool_t isOffsetting() const { return kFALSE ; }
+  virtual Double_t offset() const { return 0 ; }
+  
+  static void setHideOffset(Bool_t flag);
+  static Bool_t hideOffset() ;
+
 protected:
-
-  // PlotOn with command list
-  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
-
   // Hook for objects with normalization-dependent parameters interperetation
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
   virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
@@ -319,7 +326,7 @@ protected:
 
   Bool_t isSelectedComp() const ;
 
-
+  
  public:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
@@ -385,6 +392,7 @@ protected:
 
   mutable Float_t _floatValue ; //! Transient cache for floating point values from tree branches 
   mutable Int_t   _intValue   ; //! Transient cache for integer values from tree branches 
+  mutable Bool_t  _boolValue  ; //! Transient cache for bool values from tree branches 
   mutable UChar_t _byteValue  ; //! Transient cache for byte values from tree branches 
   mutable Char_t  _sbyteValue ; //! Transient cache for signed byte values from tree branches 
   mutable UInt_t  _uintValue  ; //! Transient cache for unsigned integer values from tree branches 
@@ -406,7 +414,7 @@ protected:
    PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), binProjData(kFALSE), projSet(0), precision(1e-3), 
                shiftToZero(kFALSE),projDataSet(0),normRangeName(0),rangeLo(0),rangeHi(0),postRangeFracScale(kFALSE),wmode(RooCurve::Extended),
                projectionRangeName(0),curveInvisible(kFALSE), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.),
-               numCPU(1),interleave(kTRUE),curveNameSuffix(""), numee(10), eeval(0), doeeval(kFALSE), progress(kFALSE) {} ;
+               numCPU(1),interleave(RooFit::Interleave),curveNameSuffix(""), numee(10), eeval(0), doeeval(kFALSE), progress(kFALSE) {} ;
    Option_t* drawOptions ;
    Double_t scaleFactor ;	 
    ScaleType stype ;
@@ -428,7 +436,7 @@ protected:
    Double_t addToWgtSelf ;
    Double_t addToWgtOther ;
    Int_t    numCPU ;
-   Bool_t interleave ;
+   RooFit::MPSplit interleave ;
    const char* curveNameSuffix ; 
    Int_t    numee ;
    Double_t eeval ;
@@ -438,6 +446,9 @@ protected:
 
   // Plot implementation functions
   virtual RooPlot *plotOn(RooPlot* frame, PlotOpt o) const;
+  // PlotOn with command list
+  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
+
   virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const;
 
 
@@ -464,7 +475,7 @@ protected:
   static Bool_t _globalSelectComp ;  // Global activation switch for component selection
 
   mutable RooArgSet* _lastNSet ; //!
-
+  static Bool_t _hideOffset ; // Offset hiding flag
 
   ClassDef(RooAbsReal,2) // Abstract real-valued variable
 };

@@ -16,14 +16,21 @@
 #ifndef ROO_LINKED_LIST
 #define ROO_LINKED_LIST
 
+#include <map>
+#include <list>
+
 #include "TNamed.h"
 #include "RooLinkedListElem.h"
 #include "RooHashTable.h"
-#include <list>
 class RooLinkedListIter ;
 class RooFIter ;
 class TIterator ;
 class RooAbsArg ;
+
+namespace RooLinkedListImplDetails {
+    class Chunk;
+    class Pool;
+}
 
 class RooLinkedList : public TObject {
 public:
@@ -77,6 +84,7 @@ public:
   
   const char* GetName() const { return _name.Data() ; }
   void SetName(const char* name) { _name = name ; }
+  void useNptr(Bool_t flag) { _useNptr = flag ; }
 
 protected:  
 
@@ -89,8 +97,6 @@ protected:
 
   virtual void Add(TObject* arg, Int_t refCount) ;
 
-  void swapWithNext(RooLinkedListElem* elem) ;
-
   RooLinkedListElem* findLink(const TObject* arg) const ;
     
   Int_t _hashThresh ;          //  Size threshold for hashing
@@ -100,14 +106,19 @@ protected:
   RooHashTable*       _htableName ; //! Hash table by name 
   RooHashTable*       _htableLink ; //! Hash table by link pointer
 
-  Int_t _curStoreSize ; //!
-  Int_t _curStoreUsed ; //!
-  std::list<std::pair<Int_t,RooLinkedListElem*> > _storeList ; //!
-  RooLinkedListElem* _curStore ; //!
-
   TString             _name ; 
+  Bool_t              _useNptr ; //!
 
-  ClassDef(RooLinkedList,2) // Doubly linked list for storage of RooAbsArg objects
+private:
+  template <bool ascending>
+  static RooLinkedListElem* mergesort_impl(RooLinkedListElem* l1,
+	  const unsigned sz, RooLinkedListElem** tail = 0);
+  /// memory pool for quick allocation of RooLinkedListElems
+  typedef RooLinkedListImplDetails::Pool Pool;
+  /// shared memory pool for allocation of RooLinkedListElems
+  static Pool* _pool; //!
+
+  ClassDef(RooLinkedList,3) // Doubly linked list for storage of RooAbsArg objects
 };
 
 

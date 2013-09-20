@@ -29,7 +29,6 @@
 #include "Riostream.h"
 #include "Riostream.h"
 #include "RooGaussModel.h"
-#include "RooMath.h"
 #include "RooRealConstant.h"
 #include "RooRandom.h"
 
@@ -140,9 +139,9 @@ Double_t RooGaussModel::evaluate() const
   //cout << "RooGaussModel::evaluate(" << GetName() << ") basisCode = " << _basisCode << endl ;
   
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
-  static Double_t root2(sqrt(2.)) ;
-  static Double_t root2pi(sqrt(2*atan2(0.,-1.))) ;
-  static Double_t rootpi(sqrt(atan2(0.,-1.))) ;
+  static Double_t root2(std::sqrt(2.)) ;
+  static Double_t root2pi(std::sqrt(2.*std::atan2(0.,-1.))) ;
+  static Double_t rootpi(std::sqrt(std::atan2(0.,-1.))) ;
 
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
@@ -157,7 +156,7 @@ Double_t RooGaussModel::evaluate() const
     Double_t xprime = (x-(mean*msf))/(sigma*ssf) ;
     if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 1st form" << endl ;
     
-    Double_t result = exp(-0.5*xprime*xprime)/(sigma*ssf*root2pi) ;
+    Double_t result = std::exp(-0.5*xprime*xprime)/(sigma*ssf*root2pi) ;
     if (_basisCode!=0 && basisSign==Both) result *= 2 ;
     return result ;
   }
@@ -180,8 +179,8 @@ Double_t RooGaussModel::evaluate() const
   if (basisType==expBasis || (basisType==cosBasis && _x==0.)) {
     if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 3d form tau=" << tau << endl ;
     Double_t result(0) ;
-    if (basisSign!=Minus) result += evalCerfRe(0,-u,c) ; 
-    if (basisSign!=Plus)  result += evalCerfRe(0, u,c) ; 
+    if (basisSign!=Minus) result += evalCerf(0,-u,c).real(); 
+    if (basisSign!=Plus)  result += evalCerf(0, u,c).real(); 
     if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 1 " << endl; }
     return result ;
   }
@@ -191,8 +190,8 @@ Double_t RooGaussModel::evaluate() const
     if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 4th form omega = " << omega << ", tau = " << tau << endl ;
     Double_t result(0) ;
     if (_x==0.) return result ;
-    if (basisSign!=Minus) result += -evalCerfIm(-_x,-u,c) ; 
-    if (basisSign!=Plus)  result += -evalCerfIm( _x, u,c) ; 
+    if (basisSign!=Minus) result += -evalCerf(-_x,-u,c).imag(); 
+    if (basisSign!=Plus)  result += -evalCerf( _x, u,c).imag(); 
     if (TMath::IsNaN(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 3 " << endl; 
     return result ;
   }
@@ -201,8 +200,8 @@ Double_t RooGaussModel::evaluate() const
   if (basisType==cosBasis) {
     if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 5th form omega = " << omega << ", tau = " << tau << endl ;
     Double_t result(0) ;
-    if (basisSign!=Minus) result += evalCerfRe(-_x,-u,c) ; 
-    if (basisSign!=Plus)  result += evalCerfRe( _x, u,c) ; 
+    if (basisSign!=Minus) result += evalCerf(-_x,-u,c).real(); 
+    if (basisSign!=Plus)  result += evalCerf( _x, u,c).real(); 
     if (TMath::IsNaN(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 4 " << endl; 
     return result ;  
   }
@@ -212,8 +211,8 @@ Double_t RooGaussModel::evaluate() const
     if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 8th form tau = " << tau << endl ;
     Double_t result(0);   
     int sgn = ( basisType == coshBasis ? +1 : -1 );
-    if (basisSign!=Minus) result += 0.5*(    evalCerfRe(0,-u,c*(1-_y))+sgn*evalCerfRe(0,-u,c*(1+_y))) ; 
-    if (basisSign!=Plus)  result += 0.5*(sgn*evalCerfRe(0, u,c*(1-_y))+    evalCerfRe(0, u,c*(1+_y))) ; 
+    if (basisSign!=Minus) result += 0.5*(    evalCerf(0,-u,c*(1-_y)).real()+sgn*evalCerf(0,-u,c*(1+_y)).real()) ; 
+    if (basisSign!=Plus)  result += 0.5*(sgn*evalCerf(0, u,c*(1-_y)).real()+    evalCerf(0, u,c*(1+_y)).real()) ; 
     if (TMath::IsNaN(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 8 " << endl; 
     return result ;
   }
@@ -223,8 +222,8 @@ Double_t RooGaussModel::evaluate() const
     if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 6th form tau = " << tau << endl ;
     assert(basisSign==Plus);  // This should only be for positive times
 
-    Double_t f0 = exp(-xprime+c*c) * RooMath::erfc(-u+c);
-    Double_t f1 = exp(-u*u);
+    Double_t f0 = std::exp(-xprime+c*c) * RooMath::erfc(-u+c);
+    Double_t f1 = std::exp(-u*u);
     return (xprime - 2*c*c)*f0 + (2*c/rootpi)*f1 ; 
   }
 
@@ -233,8 +232,8 @@ Double_t RooGaussModel::evaluate() const
     if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 7th form tau = " << tau << endl ;
     assert(basisSign==Plus);  // This should only be for positive times
 
-    Double_t f0 = exp(-xprime+c*c) * RooMath::erfc(-u+c);
-    Double_t f1 = exp(-u*u);
+    Double_t f0 = std::exp(-xprime+c*c) * RooMath::erfc(-u+c);
+    Double_t f1 = std::exp(-u*u);
     Double_t x2c2 = xprime - 2*c*c; 
     return ( x2c2*x2c2*f0 + (2*c/rootpi)*x2c2*f1 + 2*c*c*f0 );
   }
@@ -300,9 +299,9 @@ Int_t RooGaussModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 //_____________________________________________________________________________
 Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  static Double_t root2 = sqrt(2.) ;
-  //static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
-  static Double_t rootpi = sqrt(atan2(0.0,-1.0));
+  static const Double_t root2 = std::sqrt(2.) ;
+  //static Double_t rootPiBy2 = std::sqrt(std::atan2(0.0,-1.0)/2.0);
+  static const Double_t rootpi = std::sqrt(std::atan2(0.0,-1.0));
   Double_t ssfInt(1.0) ;
 
   // Code must be 1 or 2
@@ -358,8 +357,8 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
   if (basisType==expBasis || (basisType==cosBasis && omega==0.)) {
     if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 3d form tau=" << tau << endl ;
     Double_t result(0) ;
-    if (basisSign!=Minus) result += evalCerfInt(+1,0,tau,-umin,-umax,c).re();   
-    if (basisSign!=Plus)  result += evalCerfInt(-1,0,tau, umin, umax,c).re();
+    if (basisSign!=Minus) result += evalCerfInt(+1,0,tau,-umin,-umax,c).real();   
+    if (basisSign!=Plus)  result += evalCerfInt(-1,0,tau, umin, umax,c).real();
     if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 3 " << endl; }
     return result*ssfInt ;
   }
@@ -372,8 +371,8 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 4th form omega = " << omega << ", tau = " << tau << endl ;
     Double_t result(0) ;
     if (_x==0) return result*ssfInt ;
-    if (basisSign!=Minus) result += -1*evalCerfInt(+1,-_x,tau,-umin,-umax,c).im();
-    if (basisSign!=Plus)  result += -1*evalCerfInt(-1, _x,tau, umin, umax,c).im();      
+    if (basisSign!=Minus) result += -1*evalCerfInt(+1,-_x,tau,-umin,-umax,c).imag();
+    if (basisSign!=Plus)  result += -1*evalCerfInt(-1, _x,tau, umin, umax,c).imag();      
     if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 4 " << endl; }
     return result*ssfInt ;
   }
@@ -382,8 +381,8 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
   if (basisType==cosBasis) {
     if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 5th form omega = " << omega << ", tau = " << tau << endl ;
     Double_t result(0) ;
-    if (basisSign!=Minus) result += evalCerfInt(+1,-_x,tau,-umin,-umax,c).re();
-    if (basisSign!=Plus)  result += evalCerfInt(-1, _x,tau, umin, umax,c).re();      
+    if (basisSign!=Minus) result += evalCerfInt(+1,-_x,tau,-umin,-umax,c).real();
+    if (basisSign!=Plus)  result += evalCerfInt(-1, _x,tau, umin, umax,c).real();      
     if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 5 " << endl; }
     return result*ssfInt ;
   }
@@ -394,8 +393,8 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     if (verboseEval()>0) {cout << "RooGaussModel::analyticalIntegral(" << GetName()                             << ") 8th form tau=" << tau << endl ; }
     Double_t result(0) ;
     int sgn = ( basisType == coshBasis ? +1 : -1 );
-    if (basisSign!=Minus) result += 0.5*(    evalCerfInt(+1,0,tau/(1-_y),-umin,-umax,c*(1-_y)).re()+ sgn*evalCerfInt(+1,0,tau/(1+_y),-umin,-umax,c*(1+_y)).re());
-    if (basisSign!=Plus)  result += 0.5*(sgn*evalCerfInt(-1,0,tau/(1-_y), umin, umax,c*(1-_y)).re()+     evalCerfInt(-1,0,tau/(1+_y), umin, umax,c*(1+_y)).re());
+    if (basisSign!=Minus) result += 0.5*(    evalCerfInt(+1,0,tau/(1-_y),-umin,-umax,c*(1-_y)).real()+ sgn*evalCerfInt(+1,0,tau/(1+_y),-umin,-umax,c*(1+_y)).real());
+    if (basisSign!=Plus)  result += 0.5*(sgn*evalCerfInt(-1,0,tau/(1-_y), umin, umax,c*(1-_y)).real()+     evalCerfInt(-1,0,tau/(1+_y), umin, umax,c*(1+_y)).real());
     if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::analyticalIntegral(" << GetName() << ") got nan during case 6 " << endl; }
     return result*ssfInt ;
   }
@@ -405,15 +404,15 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
     if (verboseEval()>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 6th form tau=" << tau << endl ;
 
     Double_t f0 = RooMath::erf(-umax) - RooMath::erf(-umin);
-    Double_t f1 = exp(-umax*umax) - exp(-umin*umin);
+    Double_t f1 = std::exp(-umax*umax) - std::exp(-umin*umin);
 
-    Double_t tmp1 = exp(-xpmax)*RooMath::erfc(-umax + c);
-    Double_t tmp2 = exp(-xpmin)*RooMath::erfc(-umin + c);
+    Double_t tmp1 = std::exp(-xpmax)*RooMath::erfc(-umax + c);
+    Double_t tmp2 = std::exp(-xpmin)*RooMath::erfc(-umin + c);
 
     Double_t f2 = tmp1 - tmp2;
     Double_t f3 = xpmax*tmp1 - xpmin*tmp2;
 
-    Double_t expc2 = exp(c*c);
+    Double_t expc2 = std::exp(c*c);
 
     return -tau*(              f0 +
 		  (2*c/rootpi)*f1 +
@@ -428,20 +427,20 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
     Double_t f0 = RooMath::erf(-umax) - RooMath::erf(-umin);
 
-    Double_t tmpA1 = exp(-umax*umax);
-    Double_t tmpA2 = exp(-umin*umin);
+    Double_t tmpA1 = std::exp(-umax*umax);
+    Double_t tmpA2 = std::exp(-umin*umin);
 
     Double_t f1 = tmpA1 - tmpA2;
     Double_t f2 = umax*tmpA1 - umin*tmpA2;
 
-    Double_t tmpB1 = exp(-xpmax)*RooMath::erfc(-umax + c);
-    Double_t tmpB2 = exp(-xpmin)*RooMath::erfc(-umin + c);
+    Double_t tmpB1 = std::exp(-xpmax)*RooMath::erfc(-umax + c);
+    Double_t tmpB2 = std::exp(-xpmin)*RooMath::erfc(-umin + c);
 
     Double_t f3 = tmpB1 - tmpB2;
     Double_t f4 = xpmax*tmpB1 - xpmin*tmpB2;
     Double_t f5 = xpmax*xpmax*tmpB1 - xpmin*xpmin*tmpB2;
 
-    Double_t expc2 = exp(c*c);
+    Double_t expc2 = std::exp(c*c);
 
     return -tau*( 2*f0 +
 		  (4*c/rootpi)*((1-c*c)*f1 + c*f2) +
@@ -452,34 +451,38 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
   return 0 ;
 }
 
-
-
 //_____________________________________________________________________________
-RooComplex RooGaussModel::evalCerfApprox(Double_t _x, Double_t u, Double_t c) const
+std::complex<Double_t> RooGaussModel::evalCerfApprox(Double_t _x, Double_t u, Double_t c)
 {
-  // use the approximation: erf(z) = exp(-z*z)/(sqrt(pi)*z)
+  // use the approximation: erf(z) = exp(-z*z)/(std::sqrt(pi)*z)
   // to explicitly cancel the divergent exp(y*y) behaviour of
   // CWERF for z = x + i y with large negative y
 
-  static Double_t rootpi= sqrt(atan2(0.,-1.));
-  RooComplex z(_x*c,u+c);  
-  RooComplex zc(u+c,-_x*c);
-  RooComplex zsq= z*z;
-  RooComplex v= -zsq - u*u;
+  static const Double_t rootpi= std::sqrt(std::atan2(0.,-1.));
+  const std::complex<Double_t> z(_x * c, u + c);  
+  const std::complex<Double_t> zc(u + c, - _x * c);
+  const std::complex<Double_t> zsq((z.real() + z.imag()) * (z.real() - z.imag()),
+	  2. * z.real() * z.imag());
+  const std::complex<Double_t> v(-zsq.real() - u*u, -zsq.imag());
+  const std::complex<Double_t> ev = std::exp(v);
+  const std::complex<Double_t> mez2zcrootpi = -std::exp(zsq)/(zc*rootpi);
 
-  return v.exp()*(-zsq.exp()/(zc*rootpi) + 1)*2 ;
+  return 2. * (ev * (mez2zcrootpi + 1.));
 }
 
 //_____________________________________________________________________________
-RooComplex RooGaussModel::evalCerfInt(Double_t sign, Double_t _x, Double_t tau, Double_t umin, Double_t umax, Double_t c) const
+std::complex<Double_t> RooGaussModel::evalCerfInt(Double_t sign, Double_t _x, Double_t tau, Double_t umin, Double_t umax, Double_t c) const
 {
-  RooComplex diff;
-  if (_asympInt) {
-    diff = RooComplex(2,0) ;
-  } else {
-    diff = RooComplex(sign,0.)*(evalCerf(_x,umin,c) - evalCerf(_x,umax,c) + RooMath::erf(umin) - RooMath::erf(umax));
+  std::complex<Double_t> diff(2., 0.);
+  if (!_asympInt) {
+    diff = evalCerf(_x,umin,c);
+    diff -= evalCerf(_x,umax,c);
+    diff += RooMath::erf(umin) - RooMath::erf(umax);
+    diff *= sign;
   }
-  return RooComplex(tau/(1.+_x*_x),0)*RooComplex(1,_x)*diff;
+  diff *= std::complex<Double_t>(1., _x);
+  diff *= tau / (1.+_x*_x);
+  return diff;
 }
 
 //_____________________________________________________________________________

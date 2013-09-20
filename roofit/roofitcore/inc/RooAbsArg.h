@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsArg.h,v 1.93 2007/07/16 21:04:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,6 +50,18 @@ class RooWorkspace ;
 class RooRealProxy ;
 /* class TGraphStruct ; */
 
+class RooRefArray : public TObjArray {
+ public:
+  RooRefArray() : TObjArray() {
+  } ;
+  RooRefArray(const RooRefArray& other) : TObjArray(other) {
+  }     
+  virtual ~RooRefArray() {} ;
+ protected:
+  ClassDef(RooRefArray,1) // Helper class for proxy lists
+} ;
+
+
 class RooAbsArg : public TNamed, public RooPrintable {
 public:
 
@@ -58,9 +70,9 @@ public:
   virtual ~RooAbsArg();
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const = 0 ;
+  virtual TObject* clone(const char* newname=0) const = 0 ;
   virtual TObject* Clone(const char* newname=0) const { 
-    return clone(newname?newname:GetName()) ; 
+    return clone(newname) ; 
   }
   virtual RooAbsArg* cloneTree(const char* newname=0) const ;
 
@@ -252,7 +264,7 @@ public:
 
   inline Bool_t isConstant() const { 
     // Returns true if 'Constant' attribute is set
-    return getAttribute("Constant") ; 
+    return _isConstant ; //getAttribute("Constant") ; 
   }
   RooLinkedList getCloningAncestors() const ;
 
@@ -270,6 +282,7 @@ public:
   static void setDirtyInhibit(Bool_t flag) ;
 
   virtual Bool_t operator==(const RooAbsArg& other) = 0 ;
+  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) = 0 ;
 
   // Range management
   virtual Bool_t inRange(const char*) const { 
@@ -382,7 +395,16 @@ public:
   inline OperMode operMode() const { return _operMode  ; }
   void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ; 
 
-  static UInt_t crc32(const char* data) ;
+  static UInt_t crc32(const char* data);
+  static UInt_t crc32(const char* data, ULong_t sz, UInt_t crc = 0);
+
+  static const UInt_t fnv1a32start = 2166136261u;
+  static UInt_t fnv1a32(const char* data);
+  static UInt_t fnv1a32(const char* data, ULong_t sz, UInt_t hash = fnv1a32start);
+
+  static const ULong64_t fnv1a64start = (ULong64_t(3421674724u) << 32) | ULong64_t(2216829733u);
+  static ULong64_t fnv1a64(const char* data);
+  static ULong64_t fnv1a64(const char* data, ULong_t sz, ULong64_t hash = fnv1a64start);
   
   Bool_t addOwnedComponents(const RooArgSet& comps) ;
   const RooArgSet* ownedComponents() const { return _ownedComponents ; }
@@ -448,7 +470,7 @@ public:
   RooRefCountList _clientList       ; // list of client objects
   RooRefCountList _clientListShape  ; // subset of clients that requested shape dirty flag propagation
   RooRefCountList _clientListValue  ; // subset of clients that requested value dirty flag propagation
-  TRefArray _proxyList        ; // list of proxies
+  RooRefArray _proxyList        ; // list of proxies
   std::deque<RooAbsCache*> _cacheList ; // list of caches
   TIterator* _clientShapeIter ; //! Iterator over _clientListShape 
   TIterator* _clientValueIter ; //! Iterator over _clientListValue 
@@ -468,7 +490,7 @@ public:
   RooAbsArg *findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const;
 
   RooExpensiveObjectCache& expensiveObjectCache() const ;
-  void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }  
+  virtual void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }  
 
   virtual Bool_t importWorkspaceHook(RooWorkspace&) { return kFALSE ; } ;
 
@@ -546,8 +568,14 @@ public:
   mutable RooExpensiveObjectCache* _eocache ; // Pointer to global cache manager for any expensive components created by this object
 
   mutable TNamed* _namePtr ; //! Do not persist. Pointer to global instance of string that matches object named
+  Bool_t _isConstant ; //! Cached isConstant status 
+
+ public:  
+  virtual void ioStreamerPass2() ;
+  static void ioStreamerPass2Finalize() ;
+  static std::map<RooAbsArg*,TRefArray*> _ioEvoList ; // temporary holding list for proxies needed in schema evolution  
   
-  ClassDef(RooAbsArg,5) // Abstract variable
+  ClassDef(RooAbsArg,6) // Abstract variable
 };
 
 std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);  

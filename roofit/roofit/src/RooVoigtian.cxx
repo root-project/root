@@ -26,17 +26,16 @@
 // END_HTML
 //
 
+#include <cmath>
+#include <complex>
 
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
 
 #include "RooVoigtian.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
-#include "RooComplex.h"
 #include "RooMath.h"
 
 using namespace std;
@@ -94,14 +93,14 @@ Double_t RooVoigtian::evaluate() const
   Double_t c = 1./(sqrt(2.)*s);
   Double_t a = 0.5*c*w;
   Double_t u = c*arg;
-  RooComplex z(u,a) ;
-  RooComplex v(0.) ;
+  std::complex<Double_t> z(u,a) ;
+  std::complex<Double_t> v(0.) ;
 
   if (_doFast) {
-    v = RooMath::FastComplexErrFunc(z);
+    v = RooMath::faddeeva_fast(z);
   } else {
-    v = RooMath::ComplexErrFunc(z);
+    v = RooMath::faddeeva(z);
   }
-  return c*_invRootPi*v.re();
+  return c*_invRootPi*v.real();
 
 }

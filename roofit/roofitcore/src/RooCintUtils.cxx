@@ -25,6 +25,7 @@
 
 #include "RooMsgService.h"
 #include "TInterpreter.h"
+
 #include <string.h>
 #include <string>
 #include <iostream>
@@ -70,9 +71,11 @@ namespace RooCintUtils
       
       MethodArgInfo_t* arg = gInterpreter->MethodArgInfo_Factory(func);
       while (gInterpreter->MethodArgInfo_Next(arg)) {
-        // Require that first to arguments are of type const char*
-         const char* argTypeName = gInterpreter->MethodArgInfo_TypeName(arg);
-        if (nreq<2 && string("const char*") != argTypeName) {
+        // Require that first two arguments are of type const char*
+        const char* argTypeName = gInterpreter->MethodArgInfo_TypeName(arg);
+        if (nreq<2 && ((string("char*") != argTypeName 
+                        && !(gInterpreter->MethodArgInfo_Property(arg) & kIsConstPointer))
+                       && string("const char*") != argTypeName)) {
 	  continue ;
 	}
 	ret.push_back(argTypeName) ;

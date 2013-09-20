@@ -174,6 +174,7 @@ Double_t RooAddition::evaluate() const
   return sum ;
 }
 
+
 //_____________________________________________________________________________
 Double_t RooAddition::defaultErrorLevel() const 
 {
@@ -220,6 +221,18 @@ Double_t RooAddition::defaultErrorLevel() const
   }
 
   return 1.0 ;
+}
+
+
+//_____________________________________________________________________________
+void RooAddition::enableOffsetting(Bool_t flag) 
+{
+  _setIter->Reset() ;
+
+  RooAbsReal* arg;
+  while((arg=(RooAbsReal*)_setIter->Next())) {
+    arg->enableOffsetting(flag) ;
+  }  
 }
 
 

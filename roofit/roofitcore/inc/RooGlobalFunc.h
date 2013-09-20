@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGlobalFunc.h,v 1.14 2007/07/16 21:04:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,6 +57,7 @@ enum MsgLevel { DEBUG=0, INFO=1, PROGRESS=2, WARNING=3, ERROR=4, FATAL=5 } ;
 enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration=16, LinkStateMgmt=32, 
 	 Eval=64, Caching=128, Optimization=256, ObjectHandling=512, InputArguments=1024, Tracing=2048, 
 	 Contents=4096, DataHandling=8192, NumIntegration=16384 } ;
+enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
 // RooAbsReal::plotOn arguments
 RooCmdArg DrawOption(const char* opt) ;
@@ -135,7 +136,7 @@ RooCmdArg OwnLinked() ;
 // RooChi2Var::ctor arguments
 RooCmdArg Extended(Bool_t flag=kTRUE) ;
 RooCmdArg DataError(Int_t) ;
-RooCmdArg NumCPU(Int_t nCPU, Bool_t interleave=kFALSE) ;
+RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
 
 // RooAbsPdf::printLatex arguments
 RooCmdArg Columns(Int_t ncol) ;
@@ -192,6 +193,7 @@ RooCmdArg SumW2Error(Bool_t flag) ;
 RooCmdArg CloneData(Bool_t flag) ;
 RooCmdArg Integrate(Bool_t flag) ;
 RooCmdArg Minimizer(const char* type, const char* alg=0) ;
+RooCmdArg Offset(Bool_t flag=kTRUE) ;
 
 // RooAbsPdf::paramOn arguments
 RooCmdArg Label(const char* str) ;
@@ -259,7 +261,6 @@ RooCmdArg OutputStream(std::ostream& os) ;
 RooCmdArg Prefix(Bool_t flag) ;
 RooCmdArg Color(Color_t color) ;
 
-
 // RooWorkspace::import() arguments
 RooCmdArg RenameConflictNodes(const char* suffix) ;
 RooCmdArg RenameAllNodes(const char* suffix) ; 
@@ -268,6 +269,7 @@ RooCmdArg RenameAllVariablesExcept(const char* suffix,const char* exceptionList)
 RooCmdArg RenameVariable(const char* inputName, const char* outputName) ;
 RooCmdArg Rename(const char* suffix) ;
 RooCmdArg RecycleConflictNodes(Bool_t flag=kTRUE) ;
+RooCmdArg Embedded(Bool_t flag=kTRUE) ;
 
 // RooSimCloneTool::build() arguments
 RooCmdArg SplitParam(const char* varname, const char* catname) ;
@@ -283,6 +285,12 @@ RooCmdArg ScanNumCdf() ;
 RooCmdArg ScanAllCdf() ;
 RooCmdArg ScanNoCdf() ;
 
+// Generic container arguments (to be able to supply more command line arguments)
+RooCmdArg MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,
+		   const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
+		   const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
+		   const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
+ 
 RooConstVar& RooConst(Double_t val) ; 
 
 

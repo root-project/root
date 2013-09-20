@@ -85,6 +85,8 @@ public:
 
 protected:
 
+  Bool_t areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
+
   Bool_t importWorkspaceHook(RooWorkspace& ws) ;
   
   Double_t evaluate() const;

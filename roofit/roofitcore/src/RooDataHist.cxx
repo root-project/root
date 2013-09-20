@@ -1132,6 +1132,13 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
 
 
 //_____________________________________________________________________________
+Double_t RooDataHist::weightSquared() const {
+  return _curSumW2 ;
+}
+
+
+
+//_____________________________________________________________________________
 Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries, Bool_t oneSafe) 
 {
   // Return the weight at given coordinates with optional
@@ -1148,6 +1155,7 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
     coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") ERROR: interpolation order must be positive" << endl ;
     return 0 ;
   }
+
 
   // Handle no-interpolation case
   if (intOrder==0) {    
@@ -1252,7 +1260,11 @@ void RooDataHist::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const
   switch (etype) {
 
   case Auto:
-    throw string(Form("RooDataHist::weightError(%s) weight type Auto not allowed here",GetName())) ;
+    throw string(Form("RooDataHist::weightError(%s) error type Auto not allowed here",GetName())) ;
+    break ;
+
+  case Expected:
+    throw string(Form("RooDataHist::weightError(%s) error type Expected not allowed here",GetName())) ;
     break ;
 
   case Poisson:
@@ -1501,12 +1513,15 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize, Bool_t inverseBinCor) const
   checkInit() ;
 
   Int_t i ;
-  Double_t total(0) ;
+  Double_t total(0), carry(0);
   for (i=0 ; i<_arrSize ; i++) {
     
     Double_t theBinVolume = correctForBinSize ? (inverseBinCor ? 1/_binv[i] : _binv[i]) : 1.0 ;
     // cout << "total += " << _wgt[i] << "*" << theBinVolume << endl ;
-    total += _wgt[i]*theBinVolume ;
+    Double_t y = _wgt[i]*theBinVolume - carry;
+    Double_t t = total + y;
+    carry = (t - total) - y;
+    total = t;
   }
 
   return total ;
@@ -1560,7 +1575,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   }
     
   // Loop over entire data set, skipping masked entries
-  Double_t total(0) ;
+  Double_t total(0), carry(0);
   Int_t ibin ;
   for (ibin=0 ; ibin<_arrSize ; ibin++) {
 
@@ -1580,7 +1595,10 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
     if (!skip) {
       Double_t theBinVolume = correctForBinSize ? (inverseBinCor ? 1/(*_pbinv)[i] : (*_pbinv)[i] ) : 1.0 ;
 //       cout << "adding bin[" << ibin << "] to sum wgt = " << _wgt[ibin] << " binv = " << theBinVolume << endl ;
-      total += _wgt[ibin]*theBinVolume ;
+      Double_t y = _wgt[ibin]*theBinVolume - carry;
+      Double_t t = total + y;
+      carry = (t - total) - y;
+      total = t;
     }
   }
   delete ssIter ;
@@ -1662,10 +1680,13 @@ Int_t RooDataHist::numEntries() const
 Double_t RooDataHist::sumEntries() const 
 {
   Int_t i ;
-  Double_t n(0) ;
+  Double_t n(0), carry(0);
   for (i=0 ; i<_arrSize ; i++) {
     if (!_binValid || _binValid[i]) {
-      n+= _wgt[i] ;
+      Double_t y = _wgt[i] - carry;
+      Double_t t = n + y;
+      carry = (t - n) - y;
+      n = t;
     }
   }
   return n ;
@@ -1682,14 +1703,7 @@ Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) cons
   checkInit() ;
 
   if (cutSpec==0 && cutRange==0) {
-    Int_t i ;
-    Double_t n(0) ;
-    for (i=0 ; i<_arrSize ; i++) {
-      if (!_binValid || _binValid[i]) {
-	n+= _wgt[i] ;
-      }
-    }
-    return n ;
+    return sumEntries();
   } else {
     
     // Setup RooFormulaVar for cutSpec if it is present
@@ -1699,7 +1713,7 @@ Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) cons
     }
     
     // Otherwise sum the weights in the event
-    Double_t sumw(0) ;
+    Double_t sumw(0), carry(0);
     Int_t i ;
     for (i=0 ; i<numEntries() ; i++) {
       get(i) ;
@@ -1707,7 +1721,10 @@ Double_t RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) cons
       if (cutRange && !_vars.allInRange(cutRange)) continue ;
 
       if (!_binValid || _binValid[i]) {
-	sumw += weight() ;
+	Double_t y = weight() - carry;
+	Double_t t = sumw + y;
+	carry = (t - sumw) - y;
+	sumw = t;
       }
     }
     

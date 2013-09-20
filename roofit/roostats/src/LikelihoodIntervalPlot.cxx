@@ -195,7 +195,6 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
    else { 
       newProfile = oldProfile;
    }
-   if (!newProfile) return;
 
    it.Reset();
    RooRealVar *myparam = (RooRealVar*) it.Next();

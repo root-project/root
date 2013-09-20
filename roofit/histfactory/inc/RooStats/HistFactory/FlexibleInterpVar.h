@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id$
+// @(#)root/roostats:$Id:  cranmer $
 // Author: Kyle Cranmer, Akira Shibata
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
@@ -14,6 +14,7 @@
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
+#include <vector>
 
 class RooRealVar;
 class RooArgList ;
@@ -56,6 +57,12 @@ namespace HistFactory{
     Double_t _interpBoundary;
 
     TIterator* _paramIter ;  //! do not persist
+
+    mutable Bool_t         _logInit ; //! 
+    mutable std::vector<double> _logLo ; //! cached logs 
+    mutable std::vector<double> _logHi ; //! cached logs
+    mutable std::vector<double> _powLo ; //! cached powers
+    mutable std::vector<double> _powHi ; //! cached powers
 
     Double_t evaluate() const;
 

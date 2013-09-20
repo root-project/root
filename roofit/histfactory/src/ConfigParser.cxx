@@ -51,6 +51,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
     if( parseError ) { 
       std::cerr << "Loading of xml document \"" << input
 		<< "\" failed" << std::endl;
+      throw hf_exc();
     } 
 
 
@@ -334,7 +335,7 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
 	throw hf_exc();
       }
       //poi// measurement.SetPOI( child->GetText() );
-      measurement.AddPOI( child->GetText() );
+     AddSubStrings( measurement.GetPOIList(), child->GetText() );
     }
 
     else if( child->GetNodeName() == TString( "ParamSetting" ) ) {
@@ -551,6 +552,7 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
   if( parseError ) { 
     std::cout << "Loading of xml document \"" << filen
 	      << "\" failed" << std::endl;
+    throw hf_exc();
   } 
 
   TXMLDocument* xmldoc = xmlparser.GetXMLDocument();
@@ -1024,6 +1026,24 @@ HistFactory::NormFactor ConfigParser::MakeNormFactor( TXMLNode* node ) {
     throw hf_exc();
   }
 
+  if( norm.GetLow() >= norm.GetHigh() ) {
+    std::cout << "Error: NormFactor: " << norm.GetName()
+	      << " has lower limit >= its upper limit: " 
+	      << " Lower: " << norm.GetLow()
+	      << " Upper: " << norm.GetHigh()
+	      << ". Please Fix" << std::endl;
+    throw hf_exc();
+  }
+  if( norm.GetVal() > norm.GetHigh() || norm.GetVal() < norm.GetLow() ) {
+    std::cout << "Error: NormFactor: " << norm.GetName()
+	      << " has initial value not within its range: "
+	      << " Val: " << norm.GetVal()
+	      << " Lower: " << norm.GetLow()
+	      << " Upper: " << norm.GetHigh()
+	      << ". Please Fix" << std::endl;
+    throw hf_exc();
+  }
+
   norm.Print();
 
   return norm;
@@ -1203,7 +1223,14 @@ HistFactory::ShapeFactor ConfigParser::MakeShapeFactor( TXMLNode* node ) {
 
   TListIter attribIt = node->GetAttributes();
   TXMLAttr* curAttr = 0;
-  string Name="";
+
+  // A Shape Factor may or may not include an initial shape
+  // This will be set by strings pointing to a histogram
+  // If we don't see a 'HistoName' attribute, we assume
+  // that an initial shape is not being set
+  std::string ShapeInputFile = m_currentInputFile;
+  std::string ShapeInputPath = m_currentHistoPath;
+
   while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
 
     // Get the Name, Val of this node
@@ -1217,6 +1244,21 @@ HistFactory::ShapeFactor ConfigParser::MakeShapeFactor( TXMLNode* node ) {
 
     else if( attrName == TString( "Name" ) ) {
       shapeFactor.SetName( attrVal );
+    }
+    else if( attrName == TString( "Const" ) ) {
+      shapeFactor.SetConstant( CheckTrueFalse(attrVal, "ShapeFactor" ) );
+    }
+    
+    else if( attrName == TString( "HistoName" ) ) {
+      shapeFactor.SetHistoName( attrVal );
+    }
+    
+    else if( attrName == TString( "InputFile" ) ) {
+      ShapeInputFile = attrVal;
+    }
+    
+    else if( attrName == TString( "HistoPath" ) ) {
+      ShapeInputPath = attrVal;
     }
 
     else {
@@ -1232,6 +1274,20 @@ HistFactory::ShapeFactor ConfigParser::MakeShapeFactor( TXMLNode* node ) {
     throw hf_exc();
   }
 
+  // Set the Histogram name, path, and file
+  // if an InitialHist is set
+  if( shapeFactor.HasInitialShape() ) {
+    if( shapeFactor.GetHistoName() == "" ) {
+      std::cout << "Error: ShapeFactor: " << shapeFactor.GetName()
+		<< " is configured to have an initial shape, but "
+		<< "its histogram doesn't have a name"
+		<< std::endl;
+      throw hf_exc();
+    }
+    shapeFactor.SetHistoPath( ShapeInputPath );
+    shapeFactor.SetInputFile( ShapeInputFile );
+  }
+  
   shapeFactor.Print();
 
   return shapeFactor;

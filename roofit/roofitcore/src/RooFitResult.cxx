@@ -1248,7 +1248,7 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
   // Calculate offset vectors mu1 and mu2
   RooArgList mu1 ;
   for (UInt_t i=0 ; i<map1.size() ; i++) {
-    RooRealVar* parclone = (RooRealVar*) _finalPars->at(map1[i])->Clone(Form("%s_centralvalue",_finalPars->at(i)->GetName())) ;
+    RooRealVar* parclone = (RooRealVar*) _finalPars->at(map1[i])->Clone(Form("%s_centralvalue",_finalPars->at(map1[i])->GetName())) ;
     parclone->setConstant(kTRUE) ;
     mu1.add(*parclone) ;      
   }

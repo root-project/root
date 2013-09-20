@@ -150,7 +150,7 @@ RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooRealVar& co
      convVar.setBinning(convVar.getBinning(),"cache") ;
    }
    
-   _shift2 = (convVar.getMax()+convVar.getMin())/2 ;
+   _shift2 = (convVar.getMax("cache")+convVar.getMin("cache"))/2 ;
 
    calcParams() ;
 
@@ -180,7 +180,7 @@ RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooAbsReal& pd
      convVar.setBinning(convVar.getBinning(),"cache") ;
    }
    
-   _shift2 = (convVar.getMax()+convVar.getMin())/2 ;
+   _shift2 = (convVar.getMax("cache")+convVar.getMin("cache"))/2 ;
 
    calcParams() ;
  } 
@@ -244,20 +244,19 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
   PdfCacheElem(self,nsetIn),
   fftr2c1(0),fftr2c2(0),fftc2r(0) 
 {
-
   // Clone input pdf and attach to dataset
   RooAbsPdf* clonePdf1 = (RooAbsPdf*) self._pdf1.arg().cloneTree() ;
   RooAbsPdf* clonePdf2 = (RooAbsPdf*) self._pdf2.arg().cloneTree() ;
   clonePdf1->attachDataSet(*hist()) ;
   clonePdf2->attachDataSet(*hist()) ;
-   
+
    // Shift observable
    RooRealVar* convObs = (RooRealVar*) hist()->get()->find(self._x.arg().GetName()) ;
 
    // Install FFT reference range 
    string refName = Form("refrange_fft_%s",self.GetName()) ;
    convObs->setRange(refName.c_str(),convObs->getMin(),convObs->getMax()) ;   
-  
+
    if (self._shift1!=0) {
      RooLinearVar* shiftObs1 = new RooLinearVar(Form("%s_shifted_FFTBuffer1",convObs->GetName()),"shiftObs1",
 					       *convObs,RooFit::RooConst(1),RooFit::RooConst(-1*self._shift1)) ;
@@ -390,7 +389,7 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
     delete histArg ;
   } 
 
-//   cout << "RooFFTConvPdf::fillCacheObject() otherObs = " << otherObs << endl ;
+  //cout << "RooFFTConvPdf::fillCacheObject() otherObs = " << otherObs << endl ;
 
   // Handle trivial scenario -- no other observables
   if (otherObs.getSize()==0) {

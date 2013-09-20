@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooNDKeysPdf.h 44368 2012-05-30 15:38:44Z axel $
  * Authors:                                                                  *
  *   Max Baak, CERN, mbaak@cern.ch *
  *                                                                           *
@@ -12,8 +12,8 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_KEYS_PDF
-#define ROO_KEYS_PDF
+#ifndef ROO_NDKEYS_PDF
+#define ROO_NDKEYS_PDF
 
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
@@ -55,6 +55,10 @@ public:
   RooNDKeysPdf(const char *name, const char *title,
                const RooArgList& varList, RooDataSet& data, 
 	       TString options="a", Double_t rho=1, Double_t nSigma=3, Bool_t rotate=kTRUE) ; 
+
+  RooNDKeysPdf(const char *name, const char *title,
+               const RooArgList& varList, RooDataSet& data, const TVectorD& rho, 
+	       TString options="a", Double_t nSigma=3, Bool_t rotate=kTRUE) ; 
 
   RooNDKeysPdf(const char *name, const char *title,
                RooAbsReal& x, RooDataSet& data, 
@@ -191,7 +195,7 @@ protected:
     }
   };
 
-  ClassDef(RooNDKeysPdf,0) // General N-dimensional non-parametric kernel estimation p.d.f
+  ClassDef(RooNDKeysPdf,1) // General N-dimensional non-parametric kernel estimation p.d.f
 };
 
 #endif

@@ -103,6 +103,10 @@ ClassImp(RooAbsReal)
 
 Bool_t RooAbsReal::_cacheCheck(kFALSE) ;
 Bool_t RooAbsReal::_globalSelectComp = kFALSE ;
+Bool_t RooAbsReal::_hideOffset = kTRUE ;
+
+void RooAbsReal::setHideOffset(Bool_t flag) { _hideOffset = flag ; }
+Bool_t RooAbsReal::hideOffset() { return _hideOffset ; }
 
 RooAbsReal::ErrorLoggingMode RooAbsReal::_evalErrorMode = RooAbsReal::PrintErrors ;
 Int_t RooAbsReal::_evalErrorCount = 0 ;
@@ -148,8 +152,8 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t inMinVal,
 //_____________________________________________________________________________
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) : 
   RooAbsArg(other,name), _plotMin(other._plotMin), _plotMax(other._plotMax), 
-  _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _forceNumInt(other._forceNumInt), 
-  _treeVar(other._treeVar), _selectComp(other._selectComp), _lastNSet(0)
+  _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _label(other._label), 
+  _forceNumInt(other._forceNumInt), _treeVar(other._treeVar), _selectComp(other._selectComp), _lastNSet(0)
 {
   // coverity[UNINIT_CTOR]
   // Copy constructor
@@ -193,6 +197,17 @@ Bool_t RooAbsReal::operator==(const RooAbsArg& other)
 }
 
 
+//_____________________________________________________________________________
+Bool_t RooAbsReal::isIdentical(const RooAbsArg& other, Bool_t assumeSameType)  
+{
+  if (!assumeSameType) {
+    const RooAbsReal* otherReal = dynamic_cast<const RooAbsReal*>(&other) ;
+    return otherReal ? operator==(otherReal->getVal()) : kFALSE ;
+  } else {
+    return getVal()==((RooAbsReal&)other).getVal() ;
+  }
+}
+
 
 //_____________________________________________________________________________
 TString RooAbsReal::getTitle(Bool_t appendUnit) const 
@@ -227,9 +242,12 @@ Double_t RooAbsReal::getValV(const RooArgSet* nset) const
     _value = traceEval(nset) ;
     //     clearValueDirty() ; 
   } 
-//   cout << "RooAbsReal::getValV(" << GetName() << ") writing _value = " << _value << endl ;
+  //   cout << "RooAbsReal::getValV(" << GetName() << ") writing _value = " << _value << endl ;
 
-  return _value ;
+  Double_t ret(_value) ;
+  if (hideOffset()) ret += offset() ;    
+
+  return ret ;
 }
 
 
@@ -634,7 +652,7 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
       RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*integral,*cacheParams) ;
       cachedIntegral->setInterpolationOrder(2) ;
       cachedIntegral->addOwnedComponents(*integral) ;
-      //cachedIntegral->setCacheSource(kTRUE) ;
+      cachedIntegral->setCacheSource(kTRUE) ;
       if (integral->operMode()==ADirty) {
 	cachedIntegral->setOperMode(ADirty) ;
       }
@@ -678,7 +696,7 @@ void RooAbsReal::findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& in
     if (arglv) {
 
       // Check if range is parameterized
-      RooAbsBinning& binning = arglv->getBinning(rangeName,kTRUE,kTRUE) ;
+      RooAbsBinning& binning = arglv->getBinning(rangeName,kFALSE,kTRUE) ;
       if (binning.isParameterized()) { 
 	RooArgSet* loBoundObs = binning.lowBoundFunc()->getObservables(allObs) ;
 	RooArgSet* hiBoundObs = binning.highBoundFunc()->getObservables(allObs) ;
@@ -1576,7 +1594,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   o.binProjData = pc.getInt("binProjData") ;
   o.projDataSet = (const RooArgSet*) pc.getObject("projDataSet") ;
   o.numCPU = pc.getInt("numCPU") ;
-  o.interleave = pc.getInt("interleave") ;
+  o.interleave = (RooFit::MPSplit) pc.getInt("interleave") ;
   o.eeval      = pc.getDouble("evalErrorVal") ;
   o.doeeval   = pc.getInt("doEvalError") ;
 
@@ -2245,8 +2263,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   depPos.add(projDataVars) ;
   depNeg.add(projDataVars) ;
 
-  const RooAbsReal *posProj = funcPos->createPlotProjection(depPos, &projectedVars, posProjCompList) ;
-  const RooAbsReal *negProj = funcNeg->createPlotProjection(depNeg, &projectedVars, negProjCompList) ;
+  const RooAbsReal *posProj = funcPos->createPlotProjection(depPos, &projectedVars, posProjCompList, o.projectionRangeName) ;
+  const RooAbsReal *negProj = funcNeg->createPlotProjection(depNeg, &projectedVars, negProjCompList, o.projectionRangeName) ;
   if (!posProj || !negProj) {
     coutE(Plotting) << "RooAbsReal::plotAsymOn(" << GetName() << ") Unable to create projections, abort" << endl ;
     return frame ; 
@@ -2514,10 +2532,24 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   // that at least 30 curves are expected to be outside the N% interval, and is minimally 100 (e.g. Z=1->Ncurve=100, Z=2->Ncurve=659, Z=3->Ncurve=11111)
   // Intervals from the sampling method can be asymmetric, and may perform better in the presence of strong correlations
 
-  RooLinkedList plotArgList(argList) ;
+  RooLinkedList plotArgListTmp(argList) ;
   RooCmdConfig pc(Form("RooAbsPdf::plotOn(%s)",GetName())) ;
-  pc.stripCmdList(plotArgList,"VisualizeError,MoveToBack") ;  
+  pc.stripCmdList(plotArgListTmp,"VisualizeError,MoveToBack") ;  
 
+  // Strip any 'internal normalization' arguments from list
+  RooLinkedList plotArgList ;
+  RooFIter iter = plotArgListTmp.fwdIterator() ;
+  RooCmdArg* cmd ;
+  while ((cmd=(RooCmdArg*)iter.next())) {
+    if (std::string("Normalization")==cmd->GetName()) {
+      if (((RooCmdArg*)cmd)->getInt(1)!=0) {
+      } else {
+	plotArgList.Add(cmd) ;
+      }
+    } else {
+      plotArgList.Add(cmd) ;
+    }
+  }
 
   // Generate central value curve
   RooLinkedList tmp(plotArgList) ;
@@ -2609,8 +2641,9 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
 		  fr.covarianceMatrix():
 		  fr.reducedCovarianceMatrix(paramList)) ;
     
+
     for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
-      
+
       RooRealVar& rrv = (RooRealVar&)fpf[fpf_idx[ivar]] ;
       
       Double_t cenVal = rrv.getVal() ;
@@ -2618,11 +2651,14 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
       
       // Make Plus variation
       ((RooRealVar*)paramList.at(ivar))->setVal(cenVal+Z*errVal) ;
+
+
       RooLinkedList tmp2(plotArgList) ;
       cloneFunc->plotOn(frame,tmp2) ;
       plusVar.push_back(frame->getCurve()) ;
       frame->remove(0,kFALSE) ;
       
+
       // Make Minus variation
       ((RooRealVar*)paramList.at(ivar))->setVal(cenVal-Z*errVal) ;
       RooLinkedList tmp3(plotArgList) ;
@@ -2875,6 +2911,8 @@ void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t
       _value = other->_intValue ;
     } else if (source->getAttribute("BYTE_TREE_BRANCH")) {
       _value = other->_byteValue ;
+    } else if (source->getAttribute("BOOL_TREE_BRANCH")) {
+      _value = other->_boolValue ;
     } else if (source->getAttribute("SIGNEDBYTE_TREE_BRANCH")) {
       _value = other->_sbyteValue ;
     } else if (source->getAttribute("UNSIGNED_INTEGER_TREE_BRANCH")) {
@@ -2949,6 +2987,12 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
       setAttribute("BYTE_TREE_BRANCH",kTRUE) ;
       _treeVar = kTRUE ;
       t.SetBranchAddress(cleanName,&_byteValue) ;
+    } else if (!typeName.CompareTo("Bool_t")) {
+      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree Bool_t branch " << GetName() 
+		  << " will be converted to double precision" << endl ;
+      setAttribute("BOOL_TREE_BRANCH",kTRUE) ;
+      _treeVar = kTRUE ;
+      t.SetBranchAddress(cleanName,&_boolValue) ;
     } else if (!typeName.CompareTo("Char_t")) {
       coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree Char_t branch " << GetName() 
 		  << " will be converted to double precision" << endl ;
@@ -3307,34 +3351,6 @@ Double_t RooAbsReal::maxVal(Int_t /*code*/) const
 
   assert(1) ;
   return 0 ;
-}
-
-
-
-//_____________________________________________________________________________
-void RooAbsReal::EvalError::setMessage(const char* tmp) 
-{ 
-  if (strlen(tmp)<1023) {
-    strlcpy(_msg,tmp,1023) ; 
-  } else {
-    strncpy(_msg,tmp,1020); 
-    _msg[1020]='.' ; _msg[1021]='.' ; 
-    _msg[1022]='.' ; _msg[1023]=0 ;    
-  }
-}
-
-
-
-//_____________________________________________________________________________
-void RooAbsReal::EvalError::setServerValues(const char* tmp) 
-{ 
-  if (strlen(tmp)<1023) {
-    strlcpy(_srvval,tmp,1023) ; 
-  } else {
-    strncpy(_srvval,tmp,1020); 
-    _srvval[1020]='.' ; _srvval[1021]='.' ;
-    _srvval[1022]='.' ; _srvval[1023]=0 ;    
-  }
 }
 
 
@@ -4099,9 +4115,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
   }
   delete iter ;
   
-  // Construct chi2
-  string name = Form("chi2_%s_%s",GetName(),data.GetName()) ;
-  return new RooChi2Var(name.c_str(),name.c_str(),*this,data,*cmds[0],*cmds[1],*cmds[2],*cmds[3],*cmds[4],*cmds[5],*cmds[6],*cmds[7]) ;
+  return createChi2(data,*cmds[0],*cmds[1],*cmds[2],*cmds[3],*cmds[4],*cmds[5],*cmds[6],*cmds[7]) ;
   
 }
 

@@ -104,7 +104,12 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
 
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
+
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
+
+  
   TH1::AddDirectory(histAddDirStatus) ;
 
 
@@ -124,7 +129,11 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
 
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
+
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
+
   TH1::AddDirectory(histAddDirStatus) ;
 
   SetMinimum(ymin);
@@ -143,7 +152,11 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
 
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
+
   _hist = new TH1D(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
+
   TH1::AddDirectory(histAddDirStatus) ;
 
   if(!var1.hasMin() || !var1.hasMax()) {
@@ -176,7 +189,11 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
+
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
+
   TH1::AddDirectory(histAddDirStatus) ;
 
   SetMinimum(ymin);
@@ -197,7 +214,11 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
 
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
+
   _hist = new TH1D(name,title,nbins,xmin,xmax) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
+
   TH1::AddDirectory(histAddDirStatus) ;
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
@@ -223,7 +244,11 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
 
   Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
   TH1::AddDirectory(kFALSE) ;
+
   _hist = new TH1D(histName(),"RooPlot",nbins,xmin,xmax) ;
+  _hist->Sumw2(kFALSE) ;
+  _hist->GetSumw2()->Set(0) ;
+
   TH1::AddDirectory(histAddDirStatus) ;
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
@@ -523,15 +548,22 @@ void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label)
 
 
 //_____________________________________________________________________________
-void RooPlot::Draw(Option_t *)
+void RooPlot::Draw(Option_t *option)
 {
   // Draw this plot and all of the elements it contains. The specified options
   // only apply to the drawing of our frame. The options specified in our add...()
   // methods will be used to draw each object we contain.
 
+  TString optArg = option ;
+  optArg.ToLower() ;
+
   // This draw options prevents the histogram with one dummy entry 
   // to be drawn 
-  _hist->Draw("FUNC");
+  if (optArg.Contains("same")) {
+    _hist->Draw("FUNCSAME");
+  } else {
+    _hist->Draw("FUNC");
+  }
 
   _iterator->Reset();
   TObject *obj = 0;

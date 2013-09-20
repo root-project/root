@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsGoodnessOfFit.h,v 1.15 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,7 @@
 #include "RooAbsReal.h"
 #include "RooSetProxy.h"
 #include "RooRealProxy.h"
+#include "TStopwatch.h"
 #include <string>
 
 class RooArgSet ;
@@ -34,18 +35,19 @@ typedef RooAbsData* pRooAbsData ;
 typedef RooRealMPFE* pRooRealMPFE ;
 
 class RooAbsTestStatistic : public RooAbsReal {
+    friend class RooRealMPFE;
 public:
 
   // Constructors, assignment etc
   RooAbsTestStatistic() ;
   RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 		      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-		      Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
+		      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
   RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name=0);
   virtual ~RooAbsTestStatistic();
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, Bool_t interleave=kFALSE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE) = 0 ;
+				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE, Bool_t binnedL=kFALSE) = 0 ;
 
   virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
 
@@ -54,8 +56,13 @@ public:
     // Default value of global normalization factor is 1.0
     return 1.0 ; 
   }
-
+  
   Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
+
+  void enableOffsetting(Bool_t flag) ;
+  Bool_t isOffsetting() const { return _doOffset ; }
+  virtual Double_t offset() const { return _offset ; }
+  virtual Double_t offsetCarry() const { return _offsetCarry; }
 
 protected:
 
@@ -65,6 +72,7 @@ protected:
   virtual Double_t evaluate() const ;
 
   virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const = 0 ;
+  virtual Double_t getCarry() const;
 
   void setMPSet(Int_t setNum, Int_t numSets) ; 
   void setSimCount(Int_t simCount) { 
@@ -121,18 +129,25 @@ protected:
   Int_t       _nEvents ;          // Total number of events in test statistic calculation
   Int_t       _setNum ;           // Partition number of this instance in parallel calculation mode
   Int_t       _numSets ;          // Total number of partitions in parallel calculation mode
+  Int_t       _extSet ;           //! Number of designated set to calculated extended term
 
   // Simultaneous mode data
   Int_t          _nGof        ; // Number of sub-contexts 
   pRooAbsTestStatistic* _gofArray ; //! Array of sub-contexts representing part of the combined test statistic
-
+  std::vector<RooFit::MPSplit> _gofSplitMode ; //! GOF MP Split mode specified by component (when Auto is active)
+  
   // Parallel mode data
   Int_t          _nCPU ;      //  Number of processors to use in parallel calculation mode
   pRooRealMPFE*  _mpfeArray ; //! Array of parallel execution frond ends
 
-  Bool_t         _mpinterl ; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
+  RooFit::MPSplit        _mpinterl ; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
+  Bool_t         _doOffset ; // Apply interval value offset to control numeric precision?
+  mutable Double_t _offset ; //! Offset
+  mutable Double_t _offsetCarry; //! avoids loss of precision
+  mutable Double_t _evalCarry; //! carry of Kahan sum in evaluatePartition
 
-  ClassDef(RooAbsTestStatistic,1) // Abstract base class for real-valued test statistics
+  ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
+
 };
 
 #endif

@@ -31,32 +31,42 @@ public:
 
   Channel();
   Channel(std::string Name, std::string InputFile="");
-  
 
+  // set name of channel
   void SetName( const std::string& Name ) { fName = Name; }
+  // get name of channel
   std::string GetName() { return fName; }
-
+  // set name of input file containing histograms
   void SetInputFile( const std::string& file ) { fInputFile = file; }
+  // get name of input file
   std::string GetInputFile() { return fInputFile; }
-
+  // set path for histograms in input file
   void SetHistoPath( const std::string& file ) { fHistoPath = file; }
+  // get path to histograms in input file
   std::string GetHistoPath() { return fHistoPath; }
 
+  // set data object
   void SetData( const RooStats::HistFactory::Data& data ) { fData = data; }
   void SetData( std::string HistoName, std::string InputFile, std::string HistoPath="" );
   void SetData( double Val );
   void SetData( TH1* hData );
+  // get data object
   RooStats::HistFactory::Data& GetData() { return fData; }
 
-  void AddAdditionalData( const RooStats::HistFactory::Data& data ) { fAdditionalData.push_back(data); } 
+  // add additional data object
+  void AddAdditionalData( const RooStats::HistFactory::Data& data ) { fAdditionalData.push_back(data); }
+  // retrieve vector of additional data objects
   std::vector<RooStats::HistFactory::Data>& GetAdditionalData() { return fAdditionalData; }
 
   void SetStatErrorConfig( double RelErrorThreshold, Constraint::Type ConstraintType );
   void SetStatErrorConfig( double RelErrorThreshold, std::string ConstraintType );
+  // define treatment of statistical uncertainties
   void SetStatErrorConfig( RooStats::HistFactory::StatErrorConfig Config ) { fStatErrorConfig = Config; }
+  // get information about threshold for statistical uncertainties and constraint term
   HistFactory::StatErrorConfig& GetStatErrorConfig() { return fStatErrorConfig; }
 
   void AddSample( RooStats::HistFactory::Sample sample );
+  // get vector of samples for this channel
   std::vector< RooStats::HistFactory::Sample >& GetSamples() { return fSamples; }
 
   void Print(std::ostream& = std::cout);  

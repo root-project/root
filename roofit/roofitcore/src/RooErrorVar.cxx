@@ -149,7 +149,21 @@ RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t /*verbose*/, Boo
   return *binning ;
 }
 
+//_____________________________________________________________________________
+std::list<std::string> RooErrorVar::getBinningNames() const
+{
+  // Get a list of all binning names. An empty name implies the default binning.
+  // A 0 pointer should be passed to getBinning in this case.
+  std::list<std::string> binningNames(1, "");
 
+  RooFIter iter = _altBinning.fwdIterator();
+  const RooAbsArg* binning = 0;
+  while((binning = iter.next())) {
+    const char* name = binning->GetName();
+    binningNames.push_back(name);
+  }
+  return binningNames;
+}
 
 //_____________________________________________________________________________
 void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name) 

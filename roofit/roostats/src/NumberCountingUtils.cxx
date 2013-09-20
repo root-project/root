@@ -19,7 +19,7 @@
 #endif
 
 // // Without this macro the THtml doc  can not be generated
-// #if !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
+// #if !defined(R__ALPHA) && !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
 // NamespaceImp(RooStats)
 // //NamespaceImp(NumberCountingUtils)
 // #endif

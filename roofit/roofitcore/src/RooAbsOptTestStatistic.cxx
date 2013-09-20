@@ -95,7 +95,7 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
 //_____________________________________________________________________________
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& indata,
 					       const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
-					       Int_t nCPU, Bool_t interleave, Bool_t verbose, Bool_t splitCutRange, Bool_t /*cloneInputData*/) : 
+					       Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange, Bool_t /*cloneInputData*/) : 
   RooAbsTestStatistic(name,title,real,indata,projDeps,rangeName, addCoefRangeName, nCPU, interleave, verbose, splitCutRange),
   _projDeps(0),
   _sealed(kFALSE), 
@@ -279,10 +279,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   }
   _ownData = kTRUE ;  
  
-  _dataClone->attachBuffers(*_funcObsSet) ;
-  setEventCount(_dataClone->numEntries()) ;
-
-
 
   // ******************************************************************
   // *** PART 3 *** Make adjustments for fit ranges, if specified     *
@@ -292,7 +288,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   RooArgSet* dataObsSet = (RooArgSet*) _dataClone->get() ;
   if (rangeName && strlen(rangeName)) {    
     cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing test statistic for sub-range named " << rangeName << endl ;    
-//     cout << "now adjusting observable ranges to requested fit range" << endl ;
+    //cout << "now adjusting observable ranges to requested fit range" << endl ;
 
     // Adjust FUNC normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
     iter = _funcObsSet->fwdIterator() ;
@@ -310,8 +306,8 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
 	// Adjust range of function observable to those of given named range
 	realObs->setRange(realObs->getMin(rangeName),realObs->getMax(rangeName)) ;	
-// 	cout << "RAOTS::ctor() setting normalization range on observable " 
-// 	     << realObs->GetName() << " to [" << realObs->getMin() << "," << realObs->getMax() << "]" << endl ;
+//  	cout << "RAOTS::ctor() setting normalization range on observable " 
+//  	     << realObs->GetName() << " to [" << realObs->getMin() << "," << realObs->getMax() << "]" << endl ;
 
 	// Adjust range of data observable to those of given named range
 	RooRealVar* dataObs = (RooRealVar*) dataObsSet->find(realObs->GetName()) ;
@@ -361,6 +357,12 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   }
 
 
+  // This is deferred from part 2 - but must happen after part 3 - otherwise invalid bins cannot be properly marked in cacheValidEntries
+  _dataClone->attachBuffers(*_funcObsSet) ;
+  setEventCount(_dataClone->numEntries()) ;
+
+
+
 
   // *********************************************************************
   // *** PART 4 *** Adjust normalization range for projected observables *
@@ -371,17 +373,17 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
     _projDeps = (RooArgSet*) projDeps.snapshot(kFALSE) ;
     
-    RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
+    //RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
     _normSet->remove(*_projDeps,kTRUE,kTRUE) ;
 
-    // Delete owned projected dependent copy in _normSet
-    TIterator* ii = tobedel->createIterator() ;
-    RooAbsArg* aa ;
-    while((aa=(RooAbsArg*)ii->Next())) {
-      delete aa ;
-    }
-    delete ii ;
-    delete tobedel ;
+//     // Delete owned projected dependent copy in _normSet
+//     TIterator* ii = tobedel->createIterator() ;
+//     RooAbsArg* aa ;
+//     while((aa=(RooAbsArg*)ii->Next())) {
+//       delete aa ;
+//     }
+//     delete ii ;
+//     delete tobedel ;
 
     // Mark all projected dependents as such
     RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(*_projDeps) ;
@@ -447,13 +449,16 @@ Double_t RooAbsOptTestStatistic::combinedValue(RooAbsReal** array, Int_t n) cons
   // values
   
   // Default implementation returns sum of components
-  Double_t sum(0) ;
-  Int_t i ;
-  for (i=0 ; i<n ; i++) {
-    Double_t tmp = array[i]->getVal() ;
-    // if (tmp==0) return 0 ; WVE no longer needed
-    sum += tmp ;
+  Double_t sum(0), carry(0);
+  for (Int_t i = 0; i < n; ++i) {
+    Double_t y = array[i]->getValV();
+    carry += reinterpret_cast<RooAbsOptTestStatistic*>(array[i])->getCarry();
+    y -= carry;
+    const Double_t t = sum + y;
+    carry = (t - sum) - y;
+    sum = t;
   }
+  _evalCarry = carry;
   return sum ;
 }
 
@@ -719,10 +724,18 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     RooArgSet actualTrackNodes(_cachedNodes) ;
     actualTrackNodes.remove(*constNodes) ;
     if (constNodes->getSize()>0) {
-      coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << endl ;
+      if (constNodes->getSize()<20) {
+	coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << endl ;
+      } else {
+	coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions have been identified as constant and will be precalculated and cached." << endl ;
+      }
     }
     if (actualTrackNodes.getSize()>0) {
-      coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
+      if (actualTrackNodes.getSize()<20) {
+	coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
+      } else {
+	coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions will be evaluated in cache-and-track-mode." << endl ;
+      }
     }
     delete constNodes ;
     
@@ -762,19 +775,6 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
   // in the input dataset is made.  If the test statistic was constructed with
   // a range specification on the data, the cloneData argument is ignore and
   // the data is always cloned.
-
-//   static Bool_t first = kTRUE ;
-//   if (first) {
-//     cout << "RAOTS::setDataSlave(" << this << ") activating tracing" << endl ; 
-//     RooTrace::active(kTRUE) ;
-//     RooTrace::mark() ;
-//     first = kFALSE ;
-//   } else {
-//     cout << "RAOTS::setDataSlave(" << this << ") dump and mark" << endl ; 
-//     RooTrace::dump(cout,kTRUE) ;
-//     RooTrace::mark() ;
-//   }
-
 
 
   if (operMode()==SimMaster) {

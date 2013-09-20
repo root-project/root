@@ -1,4 +1,4 @@
-// @(#)root/roostats:$Id$
+// @(#)root/roostats:$Id: MinNLLTestStat.h 43035 2012-02-16 16:48:57Z sven $
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
 // Additional Contributions: Giovanni Petrucciani 
 /*************************************************************************
@@ -62,7 +62,7 @@ namespace RooStats {
 	fProflts = new ProfileLikelihoodTestStat(pdf);
      }
 
-     MinNLLTestStat(const MinNLLTestStat& rhs) : fProflts(0) {
+     MinNLLTestStat(const MinNLLTestStat& rhs) : TestStatistic(rhs), fProflts(0) {
         RooAbsPdf * pdf = rhs.fProflts->GetPdf();
         if (pdf)  fProflts = new ProfileLikelihoodTestStat(*pdf);
      }
@@ -87,10 +87,11 @@ namespace RooStats {
      void SetStrategy(Int_t strategy){ fProflts->SetStrategy(strategy); }
      void SetTolerance(double tol){ fProflts->SetTolerance(tol); }
      void SetPrintLevel(Int_t printlevel){ fProflts->SetPrintLevel(printlevel); }
+     void SetLOffset(Bool_t flag=kTRUE) { fProflts->SetLOffset(flag) ; }
     
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
-        return fProflts->EvaluateProfileLikelihood(1, data, paramsOfInterest); //find unconditional NLL minimum
+       return fProflts->EvaluateProfileLikelihood(1, data, paramsOfInterest); //find unconditional NLL minimum
      }
 
      virtual void EnableDetailedOutput( bool e=true ) { fProflts->EnableDetailedOutput(e); }

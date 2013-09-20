@@ -68,6 +68,7 @@ public:
 			  const RooCmdArg& arg9=RooCmdArg(), const RooCmdArg& arg10=RooCmdArg()) const {
     return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10) ;
   }
+  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
   // Backward compatibility function
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor=1.0, 
@@ -87,7 +88,6 @@ public:
 protected:
 
   void initialize(RooAbsCategoryLValue& inIndexCat, std::map<std::string,RooAbsPdf*> pdfMap) ;
-  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
   virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;

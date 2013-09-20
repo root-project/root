@@ -1,13 +1,12 @@
-/***************************************************************************** 
-  * Project: RooFit                                                           * 
-  *                                                                           * 
-  * Copyright (c) 2000-2005, Regents of the University of California          * 
-  *                          and Stanford University. All rights reserved.    * 
-  *                                                                           * 
-  * Redistribution and use in source and binary forms,                        * 
-  * with or without modification, are permitted according to the terms        * 
-  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
-  *****************************************************************************/ 
+// @(#)root/roostats:$Id$
+// Author: Kyle Cranmer, George Lewis 
+/*************************************************************************
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
 //

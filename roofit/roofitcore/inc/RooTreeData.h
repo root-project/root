@@ -26,8 +26,7 @@ class RooTreeData : public RooAbsData {
 public:
 
   // Constructors, factory methods etc.
-  RooTreeData() : _tree(0) {} ; 
-  const TTree *GetTree() const { return _tree; }
+  RooTreeData() {} ; 
   
 private:
 

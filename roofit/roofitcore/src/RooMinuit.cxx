@@ -249,6 +249,14 @@ void RooMinuit::setEps(Double_t eps)
 
 
 //_____________________________________________________________________________
+void RooMinuit::setOffsetting(Bool_t flag) 
+{ 
+  // Enable internal likelihood offsetting for enhanced numeric precision
+  _func->enableOffsetting(flag) ; 
+}
+
+
+//_____________________________________________________________________________
 RooFitResult* RooMinuit::fit(const char* options)
 {
   // Parse traditional RooAbsPdf::fitTo driver options
@@ -379,14 +387,18 @@ Int_t RooMinuit::minos()
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1);
+  // check also the status of Minos looking at fCstatu
+  if (_status == 0 && gMinuit->fCstatu != "SUCCESSFUL") {
+    if (gMinuit->fCstatu == "FAILURE" || 
+	gMinuit->fCstatu == "PROBLEMS") _status = 5; 
+    _status = 6; 
+  } 
+  
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
 
-  cout << "MINOS: status = " << _status << endl ;
-  
   saveStatus("MINOS",_status) ;
-
   return _status ;
 }
 
@@ -430,6 +442,12 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1+nMinosPar);
+  // check also the status of Minos looking at fCstatu
+  if (_status == 0 && gMinuit->fCstatu != "SUCCESSFUL") {
+    if (gMinuit->fCstatu == "FAILURE" || 
+	gMinuit->fCstatu == "PROBLEMS") _status = 5; 
+    _status = 6; 
+  } 
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
@@ -1141,7 +1159,7 @@ void RooMinuit::updateFloatVec()
   _floatParamVec.clear() ;
   RooFIter iter = _floatParamList->fwdIterator() ;
   RooAbsArg* arg ;
-  _floatParamVec.reserve(_floatParamList->getSize()) ;
+  _floatParamVec.resize(_floatParamList->getSize()) ;
   Int_t i(0) ;
   while((arg=iter.next())) {
     _floatParamVec[i++] = arg ;
@@ -1164,6 +1182,7 @@ void RooMinuit::applyCovarianceMatrix(TMatrixDSym& V)
     if (_floatParamList->at(i)->isConstant()) {
       continue ;
     }
+    cout << "setting parameter " << i << " error to " << sqrt((*_extV)(i,i)) << endl ;
     setPdfParamErr(i, sqrt((*_extV)(i,i))) ;
   }
 
@@ -1191,7 +1210,9 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
   }
 
   // Calculate the function for these parameters
+  RooAbsReal::setHideOffset(kFALSE) ;
   f= context->_func->getVal() ;
+  RooAbsReal::setHideOffset(kTRUE) ;
   context->_evalCounter++ ;
   if ( RooAbsPdf::evalError() || RooAbsReal::numEvalErrors()>0 || f>1e30) {
 
@@ -1230,11 +1251,11 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
   } else if (f>maxFCN) {
     maxFCN = f ;
   }
-
+  
   // Optional logging
   if (logf) (*logf) << setprecision(15) << f << setprecision(4) << endl;
   if (verbose) {
-    cout << "\nprevFCN = " << setprecision(10) << f << setprecision(4) << "  " ;
+    cout << "\nprevFCN" << (context->_func->isOffsetting()?"-offset":"") << " = " << setprecision(10) << f << setprecision(4) << "  " ;
     cout.flush() ;
   }
 }

@@ -89,6 +89,7 @@ void RooHashTable::add(TObject* arg, TObject* hashArg)
   Int_t slot = hash(hashArg?hashArg:arg) % _size ;
   if (!_arr[slot]) {
     _arr[slot] = new RooLinkedList(0) ;
+    _arr[slot]->useNptr(kFALSE) ;
     _usedSlots++ ;
    }
    _arr[slot]->Add(arg);

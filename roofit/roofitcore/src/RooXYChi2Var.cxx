@@ -61,7 +61,7 @@ RooXYChi2Var::RooXYChi2Var()
 
 //_____________________________________________________________________________
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),0,0,1,1,0,0), 
+  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0), 
   _extended(kFALSE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
@@ -89,7 +89,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func
 
 //_____________________________________________________________________________
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, RooRealVar& yvar, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),0,0,1,1,0,0), 
+  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0), 
   _extended(kFALSE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
@@ -116,7 +116,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func
 
 //_____________________________________________________________________________
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),0,0,1,1,0,0), 
+  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0), 
   _extended(kTRUE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
@@ -149,7 +149,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPd
 
 //_____________________________________________________________________________
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, RooRealVar& yvar, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),0,0,1,1,0,0), 
+  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0), 
   _extended(kTRUE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
@@ -381,7 +381,7 @@ Double_t RooXYChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_
 {
   // Calculate chi^2 in partition from firstEvent to lastEvent using given stepSize
 
-  Double_t result(0) ;
+  Double_t result(0), carry(0);
 
   // Loop over bins of dataset
   RooDataSet* xydata = (RooDataSet*) _dataClone ;
@@ -435,9 +435,14 @@ Double_t RooXYChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_
     }
 
     // Add chi2 term
-    result += eExt*eExt/(eInt*eInt+ eIntX2) ;
+    Double_t term = eExt*eExt/(eInt*eInt+ eIntX2);
+    Double_t y = term - carry;
+    Double_t t = result + y;
+    carry = (t - result) - y;
+    result = t;
   }
 
+  _evalCarry = carry;
   return result ;
 }
 

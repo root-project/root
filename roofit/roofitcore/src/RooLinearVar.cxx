@@ -64,20 +64,20 @@ ClassImp(RooLinearVar)
 
 //_____________________________________________________________________________
 RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue& variable, 
-			   const RooAbsReal& slope, const RooAbsReal& offset, const char *unit) :
+			   const RooAbsReal& slope, const RooAbsReal& offs, const char *unit) :
   RooAbsRealLValue(name, title, unit), 
-  _binning(variable.getBinning(),slope.getVal(),offset.getVal()),
+  _binning(variable.getBinning(),slope.getVal(),offs.getVal()),
   _var("var","variable",this,variable,kTRUE,kTRUE),
   _slope("slope","slope",this,(RooAbsReal&)slope),
-  _offset("offset","offset",this,(RooAbsReal&)offset)
+  _offset("offset","offset",this,(RooAbsReal&)offs)
 {
   // Constructor with RooAbsRealLValue variable and RooAbsReal slope and offset
 
   // Slope and offset may not depend on variable
-  if (slope.dependsOnValue(variable) || offset.dependsOnValue(variable)) {
+  if (slope.dependsOnValue(variable) || offs.dependsOnValue(variable)) {
     coutE(InputArguments) << "RooLinearVar::RooLinearVar(" << GetName() 
 			  << "): ERROR, slope(" << slope.GetName() << ") and offset(" 
-			  << offset.GetName() << ") may not depend on variable(" 
+			  << offs.GetName() << ") may not depend on variable(" 
 			  << variable.GetName() << ")" << endl ;
     assert(0) ;
   }
@@ -248,6 +248,22 @@ const RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose, 
   return const_cast<RooLinearVar*>(this)->getBinning(name,verbose,createOnTheFly) ;
 }
 
+//_____________________________________________________________________________
+std::list<std::string> RooLinearVar::getBinningNames() const
+{
+  // Get a list of all binning names. An empty name implies the default binning.
+  // A 0 pointer should be passed to getBinning in this case.
+  std::list<std::string> binningNames(1, "");
+
+  RooFIter iter = _altBinning.fwdIterator();
+  const RooAbsArg* binning = 0;
+  while((binning = iter.next())) {
+    const char* name = binning->GetName();
+    binningNames.push_back(name);
+  }
+
+  return binningNames;
+}
 
 //_____________________________________________________________________________
 Bool_t RooLinearVar::hasBinning(const char* name) const 

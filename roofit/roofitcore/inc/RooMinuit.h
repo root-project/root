@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooMinuit.h,v 1.15 2007/07/12 20:30:28 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,6 +49,7 @@ public:
   void setEps(Double_t eps) ;
   void optimizeConst(Int_t flag) ;
   void setEvalErrorWall(Bool_t flag) { _doEvalErrorWall = flag ; }
+  void setOffsetting(Bool_t flag) ;
 
   RooFitResult* fit(const char* options) ;
 

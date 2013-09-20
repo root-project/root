@@ -83,7 +83,6 @@ RooAICRegistry::~RooAICRegistry()
     if (_asArr2[i]) delete   _asArr2[i];
     if (_asArr3[i]) delete   _asArr3[i];
     if (_asArr4[i]) delete   _asArr4[i];
-    i++ ;
   }
 }
 

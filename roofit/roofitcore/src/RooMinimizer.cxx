@@ -121,6 +121,7 @@ RooMinimizer::RooMinimizer(RooAbsReal& function)
   _optConst = kFALSE ;
   _verbose = kFALSE ;
   _profile = kFALSE ;
+  _profileStart = kFALSE ;
   _printLevel = 1 ;
   _minimizerType = "Minuit"; // default minimizer
 
@@ -185,6 +186,28 @@ void RooMinimizer::setStrategy(Int_t istrat)
 
 
 //_____________________________________________________________________________
+void RooMinimizer::setMaxIterations(Int_t n) 
+{
+  // Change maximum number of MINUIT iterations 
+  // (RooMinimizer default 500 * #parameters)
+  _theFitter->Config().MinimizerOptions().SetMaxIterations(n);
+}
+
+
+
+
+//_____________________________________________________________________________
+void RooMinimizer::setMaxFunctionCalls(Int_t n) 
+{
+  // Change maximum number of likelihood function calss from MINUIT
+  // (RooMinimizer default 500 * #parameters)
+  _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(n);
+}
+
+
+
+
+//_____________________________________________________________________________
 void RooMinimizer::setErrorLevel(Double_t level)
 {
   // Set the level for MINUIT error analysis to the given
@@ -208,6 +231,14 @@ void RooMinimizer::setEps(Double_t eps)
 }
 
 
+//_____________________________________________________________________________
+void RooMinimizer::setOffsetting(Bool_t flag) 
+{
+  // Enable internal likelihood offsetting for enhanced numeric precision
+  _func->enableOffsetting(flag) ; 
+}
+
+
 
 
 //_____________________________________________________________________________
@@ -217,6 +248,23 @@ void RooMinimizer::setMinimizerType(const char* type)
   _minimizerType = type;
 }
 
+
+
+
+//_____________________________________________________________________________
+ROOT::Fit::Fitter* RooMinimizer::fitter()
+{
+  // Return underlying ROOT fitter object 
+  return _theFitter ;
+}
+
+
+//_____________________________________________________________________________
+const ROOT::Fit::Fitter* RooMinimizer::fitter() const 
+{
+  // Return underlying ROOT fitter object 
+  return _theFitter ;
+}
 
 
 
@@ -730,7 +778,8 @@ void RooMinimizer::profileStart()
   // Start profiling timer
   if (_profile) {
     _timer.Start() ;
-    _cumulTimer.Start(kFALSE) ;
+    _cumulTimer.Start(_profileStart?kFALSE:kTRUE) ;
+    _profileStart = kTRUE ;
   }
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooNovosibirsk.h,v 1.7 2007/07/12 20:30:49 wouter Exp $
  * Authors:                                                                  *
  *   DB, Dieter Best,     UC Irvine,         best@slac.stanford.edu          *
  *   HT, Hirohisa Tanaka  SLAC               tanaka@slac.stanford.edu        *
@@ -36,6 +36,9 @@ public:
   RooNovosibirsk(const RooNovosibirsk& other,const char* name=0) ;	
 
   virtual TObject* clone(const char* newname) const { return new RooNovosibirsk(*this,newname);	}
+
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
   // An empty constructor is usually ok
   inline virtual ~RooNovosibirsk() { }

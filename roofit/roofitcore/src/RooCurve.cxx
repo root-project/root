@@ -375,7 +375,12 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
       break ;
     }
     x2= *iter2 ;
-    addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx,numee,doEEVal,eeVal);
+    if (prec<0) {
+      // If precision is <0, no attempt at recursive interpolation is made
+      addPoint(x2,yval[step]) ;
+    } else {
+      addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx,numee,doEEVal,eeVal);
+    }
     step++ ;
   }
   addPoint(xhi,yval[minPoints-1]) ;
@@ -555,7 +560,6 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
     // Check if point is in range of curve
     if (x<xstart || x>xstop) continue ;
 
-    nbin++ ;
     eyl = hist.GetEYlow()[i] ;
     eyh = hist.GetEYhigh()[i] ;
     exl = hist.GetEXlow()[i] ;
@@ -568,6 +572,7 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
     if (y!=0) {      
       Double_t pull = (y>avg) ? ((y-avg)/eyl) : ((y-avg)/eyh) ;
       chisq += pull*pull ;
+      nbin++ ;
     }
   }
 
@@ -871,7 +876,7 @@ Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const
       ret=kFALSE ;
     }
   }
-
+      
   return ret ;
 }
 

@@ -215,6 +215,7 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
     delete output ;
     return 0 ;
   }
+  output->setHashTableSize(0) ;
   return output ;
 }
 
@@ -622,9 +623,15 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
       _list.Remove(arg) ;
       anyFound=kTRUE ;
     } else if (matchByNameOnly) {
-      if (!name.CompareTo(arg->GetName())) {
+      //if (!name.CompareTo(arg->GetName())) {
+      if (var.namePtr()==arg->namePtr()) {
+	TObject* contObj = _list.FindObject(arg) ;	  
 	_list.Remove(arg) ;
 	anyFound=kTRUE ;
+	if (_ownCont && contObj) {
+	  //cout << "RooAbsCollection::remove() deleting instance " << contObj << " named " << contObj->GetName() << endl ;
+	  delete contObj ;
+	}
       }
     }
   }

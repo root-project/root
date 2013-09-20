@@ -259,4 +259,21 @@ void ModelConfig::ImportDataInWS(RooAbsData & data) {
 }
 
 
+  Bool_t ModelConfig::SetHasOnlyParameters(const RooArgSet& set, const char* errorMsgPrefix) {
+
+    RooArgSet nonparams ;
+    RooFIter iter = set.fwdIterator() ;
+    RooAbsArg* arg ;
+    while ((arg=iter.next())) {
+      if (!arg->isFundamental()) {
+	nonparams.add(*arg) ;
+      }
+    }
+    
+    if (errorMsgPrefix && nonparams.getSize()>0) {
+      cout << errorMsgPrefix << " ERROR: specified set contains non-parameters: " << nonparams << endl ;
+    }
+    return (nonparams.getSize()==0) ;
+  }
+
 } // end namespace RooStats

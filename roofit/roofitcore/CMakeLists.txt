@@ -14,7 +14,7 @@ set(headers1 Roo1DTable.h RooAbsArg.h RooAbsBinning.h RooAbsCategory.h RooAbsCat
              RooConvGenContext.h RooConvIntegrandBinding.h RooCurve.h RooCustomizer.h RooDataHist.h RooDataProjBinding.h RooDataSet.h
              RooDirItem.h RooDLLSignificanceMCSModule.h RooAbsAnaConvPdf.h RooAddPdf.h RooEfficiency.h RooEffProd.h RooExtendPdf.h )
 set(headers2 RooDouble.h RooEffGenContext.h RooEllipse.h RooErrorHandler.h RooErrorVar.h RooFit.h RooFitResult.h RooFormula.h
-             RooFormulaVar.h RooGaussKronrodIntegrator1D.h RooGenCategory.h RooGenContext.h RooGenericPdf.h RooGenProdProj.h RooGlobalFunc.h
+             RooFormulaVar.h RooGaussKronrodIntegrator1D.h RooGenContext.h RooGenericPdf.h RooGenProdProj.h RooGlobalFunc.h
              RooGrid.h RooHashTable.h RooHistError.h RooHist.h RooImproperIntegrator1D.h RooBinIntegrator.h
              RooIntegrator1D.h RooIntegrator2D.h RooIntegratorBinding.h RooInt.h RooInvTransform.h RooLinearVar.h RooLinkedListElem.h
              RooLinkedList.h RooLinkedListIter.h RooLinTransBinning.h RooList.h RooListProxy.h RooMapCatEntry.h RooMappedCategory.h RooMath.h
@@ -31,7 +31,8 @@ set(headers3 RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic.h Ro
              RooProjectedPdf.h RooWorkspace.h RooProfileLL.h RooAbsCachedPdf.h RooAbsSelfCachedPdf.h
              RooHistPdf.h RooCachedPdf.h RooFFTConvPdf.h RooDataHistSliceIter.h RooCacheManager.h
              RooAbsCache.h RooAbsCacheElement.h RooObjCacheManager.h RooExtendedTerm.h RooSentinel.h
-             RooParamBinning.h RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
+             RooParamBinning.h)
+set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
              RooSimWSTool.h RooFracRemainder.h RooAbsCachedReal.h RooAbsSelfCachedReal.h RooCachedReal.h RooNumCdf.h RooChangeTracker.h
              RooNumRunningInt.h RooHistFunc.h RooExpensiveObjectCache.h
              RooBinningCategory.h RooCintUtils.h RooFactoryWSTool.h RooTFoamBinding.h RooFunctor.h
@@ -40,15 +41,16 @@ set(headers3 RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic.h Ro
              RooMultiVarGaussian.h RooXYChi2Var.h RooAbsDataStore.h RooTreeDataStore.h RooTreeData.h
              RooMinimizer.h RooMinimizerFcn.h RooMoment.h RooStudyManager.h RooAbsStudy.h
              RooGenFitStudy.h RooProofDriverSelector.h RooStudyPackage.h RooCompositeDataStore.h RooRangeBoolean.h 
-             RooVectorDataStore.h RooUnitTest.h)
+             RooVectorDataStore.h RooUnitTest.h RooExtendedBinding.h)
 
 ROOT_GENERATE_DICTIONARY(G__RooFitCore1 ${headers1} LINKDEF LinkDef1.h)
 ROOT_GENERATE_DICTIONARY(G__RooFitCore2 ${headers2} LINKDEF LinkDef2.h)
 ROOT_GENERATE_DICTIONARY(G__RooFitCore3 ${headers3} LINKDEF LinkDef3.h)
+ROOT_GENERATE_DICTIONARY(G__RooFitCore4 ${headers4} LINKDEF LinkDef4.h)
 
-ROOT_GENERATE_ROOTMAP(RooFitCore LINKDEF LinkDef1.h LinkDef2.h LinkDef3.h
+ROOT_GENERATE_ROOTMAP(RooFitCore LINKDEF LinkDef1.h LinkDef2.h LinkDef3.h LinkDef4.h
                                  DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam )
-ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore1.cxx G__RooFitCore2.cxx G__RooFitCore3.cxx LIBRARIES Core
+ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore1.cxx G__RooFitCore2.cxx G__RooFitCore3.cxx G__RooFitCore4.cxx LIBRARIES Core Cint 
                     DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam)
 ROOT_INSTALL_HEADERS()
 

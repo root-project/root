@@ -69,6 +69,7 @@ namespace RooStats {
         fDetailedOutputWithErrorsAndPulls = false;
         fDetailedOutputEnabled = false;
         fDetailedOutput = NULL;
+	fLOffset = kFALSE ;
       
         fVarName = "Profile Likelihood Ratio";
         fReuseNll = false;
@@ -88,6 +89,7 @@ namespace RooStats {
        fDetailedOutputWithErrorsAndPulls = false;
        fDetailedOutputEnabled = false;
        fDetailedOutput = NULL;
+       fLOffset = kFALSE ;
       
        fVarName = "Profile Likelihood Ratio";
        fReuseNll = false;
@@ -116,6 +118,7 @@ namespace RooStats {
      static void SetAlwaysReuseNLL(Bool_t flag);
 
      void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
+     void SetLOffset(Bool_t flag=kTRUE) { fLOffset = flag ; }
 
      void SetMinimizer(const char* minimizer){ fMinimizer=minimizer;}
      void SetStrategy(Int_t strategy){fStrategy=strategy;}
@@ -165,7 +168,7 @@ namespace RooStats {
    private:
 
       RooAbsPdf* fPdf;
-      RooAbsReal* fNll; //! pointer to negative log-likelihood function
+      RooAbsReal* fNll; //!
       const RooArgSet* fCachedBestFitParams;
       RooAbsData* fLastData;
       //      Double_t fLastMLE;
@@ -187,10 +190,11 @@ namespace RooStats {
       Int_t fStrategy;
       Double_t fTolerance; 
       Int_t fPrintLevel;
+      Bool_t fLOffset ;
 
    protected:
 
-      ClassDef(ProfileLikelihoodTestStat,8)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+      ClassDef(ProfileLikelihoodTestStat,9)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 

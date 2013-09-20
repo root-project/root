@@ -1,23 +1,48 @@
+// @(#)root/roostats:$Id$
+// Author: Kyle Cranmer, George Lewis 
+/*************************************************************************
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
+//_________________________________________________
+/*
+BEGIN_HTML
+<p>
+</p>
+END_HTML
+*/
+//
+
+#include "TH1.h"
 #include "RooStats/HistFactory/Sample.h"
 #include "RooStats/HistFactory/HistFactoryException.h"
 
 //#include "TClass.h"
 
 RooStats::HistFactory::Sample::Sample() : 
-  fNormalizeByTheory(false), fStatErrorActivate(false) { ; }
+  fNormalizeByTheory(false), fStatErrorActivate(false), fhNominal(), fhCountingHist(0) { ; }
 
 
 RooStats::HistFactory::Sample::Sample(std::string SampName, std::string SampHistoName, std::string SampInputFile, std::string SampHistoPath) : 
   fName( SampName ),   fInputFile( SampInputFile), 
   fHistoName( SampHistoName ), fHistoPath( SampHistoPath ),
-  fNormalizeByTheory(true), fStatErrorActivate(false)  { ; }
+  fNormalizeByTheory(true), fStatErrorActivate(false), fhNominal(),
+  fhCountingHist(0) { ; }
 
 RooStats::HistFactory::Sample::Sample(std::string SampName) : 
   fName( SampName ),   fInputFile( "" ), 
   fHistoName( "" ), fHistoPath( "" ),
-  fNormalizeByTheory(true), fStatErrorActivate(false)  { ; }
+  fNormalizeByTheory(true), fStatErrorActivate(false),fhNominal(),
+  fhCountingHist(0) { ; }
 
+RooStats::HistFactory::Sample::~Sample() {
+  if(fhCountingHist)
+    delete fhCountingHist;
+}
 
 TH1* RooStats::HistFactory::Sample::GetHisto()  {
   TH1* histo = (TH1*) fhNominal.GetObject();
@@ -37,6 +62,24 @@ void RooStats::HistFactory::Sample::writeToFile( std::string OutputFileName, std
   fHistoName = histNominal->GetName();
   fHistoPath = DirName;
 
+  // Write this sample's StatError
+  GetStatError().writeToFile( OutputFileName, DirName );
+
+  // Must write all systematics that contain internal histograms
+  // (This is not all systematics)
+  for( unsigned int i = 0; i < GetHistoSysList().size(); ++i ) {
+    GetHistoSysList().at(i).writeToFile( OutputFileName, DirName );
+  }
+  for( unsigned int i = 0; i < GetHistoFactorList().size(); ++i ) {
+    GetHistoFactorList().at(i).writeToFile( OutputFileName, DirName );
+  }
+  for( unsigned int i = 0; i < GetShapeSysList().size(); ++i ) {
+    GetShapeSysList().at(i).writeToFile( OutputFileName, DirName );
+  }
+  for( unsigned int i = 0; i < GetShapeFactorList().size(); ++i ) {
+    GetShapeFactorList().at(i).writeToFile( OutputFileName, DirName );
+  }
+
   return;
 
 }
@@ -52,12 +95,15 @@ void RooStats::HistFactory::Sample::SetValue( Double_t val ) {
   std::string SampleHistName = fName + "_hist";
   
   // Histogram has 1-bin (hard-coded)
-  TH1F* hSample = new TH1F( SampleHistName.c_str(), SampleHistName.c_str(), 1, 0, 1 );
-  hSample->SetBinContent( 1, val );
+  if(fhCountingHist)
+    delete fhCountingHist;
+  
+  fhCountingHist = new TH1F( SampleHistName.c_str(), SampleHistName.c_str(), 1, 0, 1 );
+  fhCountingHist->SetBinContent( 1, val );
 
   // Set the histogram of the internally held data
   // node of this channel to this newly created histogram
-  SetHisto( hSample );
+  SetHisto( fhCountingHist );
 
 }
 
@@ -114,7 +160,10 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) {
       << " NormalizeByTheory=\"" << (fNormalizeByTheory ? std::string("True") : std::string("False"))  << "\" "
       << ">" << std::endl;
 
+
   // Print Stat Error (if necessary)
+  fStatError.PrintXML( xml );
+  /*
   if( fStatError.GetActivate() ) {
     xml << "      <StatError Activate=\"" << (fStatError.GetActivate() ? std::string("True") : std::string("False"))  << "\" "
 	<< " InputFile=\"" << fStatError.GetInputFile() << "\" "
@@ -122,26 +171,36 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) {
 	<< " HistoPath=\"" << fStatError.GetHistoPath() << "\" "
 	<< " /> " << std::endl;
   }
-  
+  */
+
+
   // Now, print the systematics:
   for( unsigned int i = 0; i < fOverallSysList.size(); ++i ) {
     RooStats::HistFactory::OverallSys sys = fOverallSysList.at(i);
+    sys.PrintXML(xml);
+    /*
     xml << "      <OverallSys Name=\"" << sys.GetName() << "\" "
 	<< " High=\"" << sys.GetHigh() << "\" "
 	<< " Low=\""  << sys.GetLow()  << "\" "
 	<< "  /> " << std::endl;
+    */
   }
   for( unsigned int i = 0; i < fNormFactorList.size(); ++i ) {
     RooStats::HistFactory::NormFactor sys = fNormFactorList.at(i);
+    sys.PrintXML(xml);
+    /*
     xml << "      <NormFactor Name=\"" << sys.GetName() << "\" "
 	<< " Val=\""   << sys.GetVal()   << "\" "
 	<< " High=\""  << sys.GetHigh()  << "\" "
 	<< " Low=\""   << sys.GetLow()   << "\" "
 	<< " Const=\"" << (sys.GetConst() ? std::string("True") : std::string("False")) << "\" "
 	<< "  /> " << std::endl;
+    */
   }
   for( unsigned int i = 0; i < fHistoSysList.size(); ++i ) {
     RooStats::HistFactory::HistoSys sys = fHistoSysList.at(i);
+    sys.PrintXML(xml);
+    /*
     xml << "      <HistoSys Name=\"" << sys.GetName() << "\" "
 
 	<< " InputFileLow=\""  << sys.GetInputFileLow()  << "\" "
@@ -152,9 +211,12 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) {
 	<< " HistoNameHigh=\""  << sys.GetHistoNameHigh()  << "\" "
 	<< " HistoPathHigh=\""  << sys.GetHistoPathHigh()  << "\" "
 	<< "  /> " << std::endl;
+    */
   }
   for( unsigned int i = 0; i < fHistoFactorList.size(); ++i ) {
     RooStats::HistFactory::HistoFactor sys = fHistoFactorList.at(i);
+    sys.PrintXML(xml);
+    /*
     xml << "      <HistoFactor Name=\"" << sys.GetName() << "\" "
 
 	<< " InputFileLow=\""  << sys.GetInputFileLow()  << "\" "
@@ -165,9 +227,12 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) {
 	<< " HistoNameHigh=\""  << sys.GetHistoNameHigh()  << "\" "
 	<< " HistoPathHigh=\""  << sys.GetHistoPathHigh()  << "\" "
 	<< "  /> " << std::endl;
+    */
   }
   for( unsigned int i = 0; i < fShapeSysList.size(); ++i ) {
     RooStats::HistFactory::ShapeSys sys = fShapeSysList.at(i);
+    sys.PrintXML(xml);
+    /*
     xml << "      <ShapeSys Name=\"" << sys.GetName() << "\" "
 
 	<< " InputFile=\""  << sys.GetInputFile()  << "\" "
@@ -175,17 +240,19 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) {
 	<< " HistoPath=\""  << sys.GetHistoPath()  << "\" "
 	<< " ConstraintType=\"" << std::string(Constraint::Name(sys.GetConstraintType())) << "\" "
 	<< "  /> " << std::endl;
+    */
   }
   for( unsigned int i = 0; i < fShapeFactorList.size(); ++i ) {
     RooStats::HistFactory::ShapeFactor sys = fShapeFactorList.at(i);
+    sys.PrintXML(xml);
+    /*
     xml << "      <ShapeFactor Name=\"" << sys.GetName() << "\" "
 	<< "  /> " << std::endl;
+    */
   }
-
 
   // Finally, close the tag
   xml << "    </Sample>" << std::endl;
-
 
 }
 

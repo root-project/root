@@ -119,11 +119,6 @@ namespace RooStats {
 	 if (fNllNull) delete fNllNull ;
 	 if (fNllAlt) delete fNllAlt ;
 	 if (fDetailedOutput) delete fDetailedOutput;
-         if (!fFirstEval) { 
-            // the pdf have been replaced with new unconstrained ones 
-            delete fNullPdf;
-            delete fAltPdf; 
-         }
       }
 
       static void SetAlwaysReuseNLL(Bool_t flag);

@@ -56,6 +56,7 @@ RooConstraintSum::RooConstraintSum()
 
 
 
+
 //_____________________________________________________________________________
 RooConstraintSum::RooConstraintSum(const char* name, const char* title, const RooArgSet& constraintSet, const RooArgSet& normSet) :
   RooAbsReal(name, title),
@@ -114,7 +115,6 @@ RooConstraintSum::~RooConstraintSum()
 Double_t RooConstraintSum::evaluate() const 
 {
   // Return sum of -log of constraint p.d.f.s
-
   Double_t sum(0);
   RooAbsReal* comp ;
   RooFIter setIter1 = _set1.fwdIterator() ;

@@ -636,7 +636,9 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
     }
   }
 
-  if (!anyField && !_allowUndefined) {
+  Bool_t multiArg = !TString("MultiArg").CompareTo(opc) ;
+
+  if (!anyField && !_allowUndefined && !multiArg) {
     coutE(InputArguments) << _name << " ERROR: unrecognized command: " << opc << endl ;
   }
 

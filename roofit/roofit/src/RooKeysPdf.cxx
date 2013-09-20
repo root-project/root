@@ -16,6 +16,8 @@
  *****************************************************************************/
 #include "RooFit.h"
 
+#include <limits>
+#include <algorithm>
 #include <math.h>
 #include "Riostream.h"
 #include "TMath.h"
@@ -215,6 +217,67 @@ Double_t RooKeysPdf::evaluate() const {
   return (_lookupTable[i]+dx*(_lookupTable[i+1]-_lookupTable[i]));
 }
 
+Int_t RooKeysPdf::getAnalyticalIntegral(
+	RooArgSet& allVars, RooArgSet& analVars, const char* /* rangeName */) const
+{
+  if (matchArgs(allVars, analVars, _x)) return 1;
+  return 0;
+}
+
+Double_t RooKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
+{
+  assert(1 == code);
+  // this code is based on _lookupTable and uses linear interpolation, just as
+  // evaluate(); integration is done using the trapez rule
+  const Double_t xmin = std::max(_lo, _x.min(rangeName));
+  const Double_t xmax = std::min(_hi, _x.max(rangeName));
+  const Int_t imin = (Int_t)floor((xmin - _lo) / _binWidth);
+  const Int_t imax = std::min((Int_t)floor((xmax - _lo) / _binWidth),
+      _nPoints - 1);
+  Double_t sum = 0.;
+  // sum up complete bins in middle
+  if (imin + 1 < imax)
+    sum += _lookupTable[imin + 1] + _lookupTable[imax];
+  for (Int_t i = imin + 2; i < imax; ++i)
+    sum += 2. * _lookupTable[i];
+  sum *= _binWidth * 0.5;
+  // treat incomplete bins
+  const Double_t dxmin = (xmin - (_lo + imin * _binWidth)) / _binWidth;
+  const Double_t dxmax = (xmax - (_lo + imax * _binWidth)) / _binWidth;
+  if (imin < imax) {
+    // first bin
+    sum += _binWidth * (1. - dxmin) * 0.5 * (_lookupTable[imin + 1] +
+	_lookupTable[imin] + dxmin *
+	(_lookupTable[imin + 1] - _lookupTable[imin]));
+    // last bin
+    sum += _binWidth * dxmax * 0.5 * (_lookupTable[imax] +
+	_lookupTable[imax] + dxmax *
+	(_lookupTable[imax + 1] - _lookupTable[imax]));
+  } else if (imin == imax) {
+    // first bin == last bin
+    sum += _binWidth * (dxmax - dxmin) * 0.5 * (
+	_lookupTable[imin] + dxmin *
+	(_lookupTable[imin + 1] - _lookupTable[imin]) +
+	_lookupTable[imax] + dxmax *
+	(_lookupTable[imax + 1] - _lookupTable[imax]));
+  }
+  return sum;
+}
+
+Int_t RooKeysPdf::getMaxVal(const RooArgSet& vars) const
+{
+  if (vars.contains(*_x.absArg())) return 1;
+  return 0;
+}
+
+Double_t RooKeysPdf::maxVal(Int_t code) const
+{
+  assert(1 == code);
+  Double_t max = -std::numeric_limits<Double_t>::max();
+  for (Int_t i = 0; i <= _nPoints; ++i)
+    if (max < _lookupTable[i]) max = _lookupTable[i];
+  return max;
+}
 
 //_____________________________________________________________________________
 Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
@@ -248,7 +311,6 @@ Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
   static const Double_t sqrt2pi(sqrt(2*TMath::Pi()));  
   return y/(sqrt2pi*_sumWgt);
 }
-
 
 //_____________________________________________________________________________
 Double_t RooKeysPdf::g(Double_t x,Double_t sigmav) const {

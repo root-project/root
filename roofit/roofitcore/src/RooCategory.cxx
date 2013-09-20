@@ -259,9 +259,14 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
 //_____________________________________________________________________________
 Bool_t RooCategory::isStateInRange(const char* rangeName, const char* stateName) const
 {
+  // If no range is specified [ i.e. the default range ] all category states are in range
+  if (!rangeName) {
+    return kTRUE ;
+  }
+
   // Check that both input arguments are not null pointers
-  if (!rangeName||!stateName) {
-    coutE(InputArguments) << "RooCategory::isStateInRange(" << GetName() << ") ERROR: must specificy valid range name and state name" << endl ;
+  if (!stateName) {
+    coutE(InputArguments) << "RooCategory::isStateInRange(" << GetName() << ") ERROR: must specificy valid state name" << endl ;
     return kFALSE ;
   }
 

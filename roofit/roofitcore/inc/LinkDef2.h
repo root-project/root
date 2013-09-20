@@ -1,5 +1,7 @@
 #ifdef __CINT__ 
-
+#pragma link off all globals;
+#pragma link off all classes;
+#pragma link off all functions;
 #pragma link C++ function Roo* ;
 #ifdef USE_FOR_AUTLOADING
 #pragma link C++ class RooFit ;
@@ -17,7 +19,6 @@
 #pragma link C++ class RooFormula+ ;
 #pragma link C++ class RooFormulaVar+ ;
 #pragma link C++ class RooGaussKronrodIntegrator1D+ ;
-#pragma link C++ class RooGenCategory+ ;
 #pragma link C++ class RooGenContext+ ;
 #pragma link C++ class RooGenericPdf+ ;
 #pragma link C++ class RooGenProdProj+ ;
@@ -68,6 +69,6 @@
 #pragma link C++ class RooPullVar+ ;
 #pragma link C++ class RooQuasiRandomGenerator+ ;
 #pragma link C++ class RooRandom+ ;
-// # pragma link off class RooErrorHandler+ ;
+#pragma link off class RooErrorHandler+ ;
 #endif 
  

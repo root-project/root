@@ -36,6 +36,7 @@ class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {
 
   RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, 
 	       bool verbose = false);
+  RooMinimizerFcn(const RooMinimizerFcn& other);
   virtual ~RooMinimizerFcn();
 
   virtual ROOT::Math::IBaseFunctionMultiDim* Clone() const;
@@ -60,6 +61,10 @@ class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {
   void BackProp(const ROOT::Fit::FitResult &results);  
   void ApplyCovarianceMatrix(TMatrixDSym& V); 
 
+  Int_t evalCounter() const { return _evalCounter ; }
+  void zeroEvalCount() { _evalCounter = 0 ; }
+
+
  private:
   
   Double_t GetPdfParamVal(Int_t index);
@@ -75,6 +80,8 @@ class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {
   void updateFloatVec() ;
 
 private:
+
+  mutable Int_t _evalCounter ;
   
   RooAbsReal *_funct;
   RooMinimizer *_context;

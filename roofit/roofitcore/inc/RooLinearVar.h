@@ -43,6 +43,7 @@ public:
   virtual Bool_t hasBinning(const char* name) const ;
   virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const ;
   virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE)  ;
+  virtual std::list<std::string> getBinningNames() const;
 
   virtual Double_t jacobian() const ;
   virtual Bool_t isJacobianOK(const RooArgSet& depList) const ;

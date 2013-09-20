@@ -42,6 +42,7 @@ private:
   RooListProxy _coefList ;
 
   Double_t evaluate() const;
+  Double_t evalAnaInt(const Double_t x) const;
 
   ClassDef(RooChebychev,1) // Chebychev polynomial PDF
 };

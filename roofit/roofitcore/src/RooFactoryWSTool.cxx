@@ -400,7 +400,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 	}
       }
     }
-    cintExpr += ")" ;
+    cintExpr += ") ;" ;
   } catch (string err) {
     coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR constructing " << className << "::" << objName << ": " << err << endl ;
     logError() ;

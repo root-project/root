@@ -996,6 +996,17 @@ Double_t RooDataSet::weight() const
 
 
 //_____________________________________________________________________________
+Double_t RooDataSet::weightSquared() const 
+{
+  // Return event weight of current event
+
+  return store()->weight()*store()->weight() ; 
+}
+
+
+
+
+//_____________________________________________________________________________
 void RooDataSet::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const 
 {
   store()->weightError(lo,hi,etype) ;
@@ -1033,11 +1044,14 @@ Double_t RooDataSet::sumEntries() const
   }
 
   // Otherwise sum the weights in the event
-  Double_t sumw(0) ;
+  Double_t sumw(0), carry(0);
   Int_t i ;
   for (i=0 ; i<numEntries() ; i++) {
     get(i) ;
-    sumw += weight() ;
+    Double_t y = weight() - carry;
+    Double_t t = sumw + y;
+    carry = (t - sumw) - y;
+    sumw = t;
   }  
 
   return sumw ;  
@@ -1062,13 +1076,16 @@ Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
   }
 
   // Otherwise sum the weights in the event
-  Double_t sumw(0) ;
+  Double_t sumw(0), carry(0);
   Int_t i ;
   for (i=0 ; i<numEntries() ; i++) {
     get(i) ;
     if (select && select->eval()==0.) continue ;
     if (cutRange && !_vars.allInRange(cutRange)) continue ;
-    sumw += weight() ;
+    Double_t y = weight() - carry;
+    Double_t t = sumw + y;
+    carry = (t - sumw) - y;
+    sumw = t;
   }
 
   if (select) delete select ;

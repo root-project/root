@@ -46,13 +46,10 @@ $(ROOFITLIB):   $(ROOFITO) $(ROOFITDO) $(ORDER_) $(MAINLIBS) $(ROOFITLIBDEP)
 		   "$(SOFLAGS)" libRooFit.$(SOEXT) $@ "$(ROOFITO) $(ROOFITDO)" \
 		   "$(ROOFITLIBEXTRA)"
 
-$(call pcmrule,ROOFIT)
-	$(noop)
-
-$(ROOFITDS):    $(ROOFITH) $(ROOFITL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOFIT)
+$(ROOFITDS):    $(ROOFITH) $(ROOFITL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,ROOFIT) -c $(ROOFITH) $(ROOFITL)
+		$(ROOTCINTTMP) -f $@ -c $(ROOFITH) $(ROOFITL)
 
 $(ROOFITMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(ROOFITL)
 		$(RLIBMAP) -o $@ -l $(ROOFITLIB) \

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRealVar.h,v 1.54 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,6 +16,8 @@
 #ifndef ROO_REAL_VAR
 #define ROO_REAL_VAR
 
+#include <list>
+#include <string>
 #include "Riosfwd.h"
 #include <math.h>
 #include <float.h>
@@ -30,6 +32,7 @@
 class RooArgSet ;
 class RooErrorVar ;
 class RooVectorDataStore ;
+class RooExpensiveObjectCache ;
 
 class RooRealVar : public RooAbsRealLValue {
 public:
@@ -79,6 +82,7 @@ public:
   Bool_t hasBinning(const char* name) const ;
   const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) const ;
   RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) ; 
+  std::list<std::string> getBinningNames() const ;
 
   // Set infinite fit range limits
   inline void removeMin(const char* name=0) { getBinning(name).setMin(-RooNumber::infinity()) ; }
@@ -95,7 +99,7 @@ public:
   // Force to be a leaf-node of any expression tree, even if we have (shape) servers
   virtual Bool_t isDerived() const { 
     // Does value or shape of this arg depend on any other arg?
-    return (_serverList.GetSize()>0 || _proxyList.GetSize()>0)?kTRUE:kFALSE; 
+    return (_serverList.GetSize()>0 || _proxyList.GetEntries()>0)?kTRUE:kFALSE; 
   }
 
   // Printing interface (human readable)
@@ -148,6 +152,8 @@ public:
     }
     return _sharedProp ;
   }
+
+  virtual void setExpensiveObjectCache(RooExpensiveObjectCache&) { ; } // variables don't need caches 
   
   static RooSharedPropertiesList _sharedPropList; // List of properties shared among clone sets 
   static RooRealVarSharedProperties _nullProp ; // Null property

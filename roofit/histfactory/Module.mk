@@ -67,12 +67,12 @@ HISTFACTORYH    := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/RooSta
 HISTFACTORYS    := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTFACTORYO    := $(call stripsrc,$(HISTFACTORYS:.cxx=.o))
 #location of header files for rootcint (cannot use absolute path for win32)
-#ifeq ($(PLATFORM),win32)
-## look for Windows in $ROOTSYS/include (don't know why?)
-#HISTFACTORYDICTI    := include
-#else
-HISTFACTORYDICTI    := $(call stripsrc,$(MODDIRI))
-#endif	
+ifeq ($(PLATFORM),win32)
+# convert mingw's /x/ to x:/ such that rootcint can handle it.
+HISTFACTORYDICTI    := $(shell echo $(MODDIRI) | sed 's,^/\(.\)/,\1:/,')
+else
+HISTFACTORYDICTI    := $(MODDIRI)
+endif
 
 HISTFACTORYDEP  := $(HISTFACTORYO:.o=.d) $(HISTFACTORYDO:.o=.d)
 
@@ -105,13 +105,10 @@ $(HISTFACTORYLIB): $(HISTFACTORYO) $(HISTFACTORYDO) $(ORDER_) $(MAINLIBS) \
 		   "$(HISTFACTORYO) $(HISTFACTORYDO)" \
 		   "$(HISTFACTORYLIBEXTRA)"
 
-$(call pcmrule,HISTFACTORY)
-	$(noop)
-
-$(HISTFACTORYDS):  $(HISTFACTORYH) $(HISTFACTORYL) $(ROOTCINTTMPDEP) $(call pcmdep,HISTFACTORY)
+$(HISTFACTORYDS):  $(HISTFACTORYH) $(HISTFACTORYL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,HISTFACTORY) -c -I$(HISTFACTORYDICTI) $(HISTFACTORYH)  $(HISTFACTORYL) 
+		$(ROOTCINTTMP) -f $@  -c -I$(HISTFACTORYDICTI) $(HISTFACTORYH)  $(HISTFACTORYL) 
 
 $(HISTFACTORYMAP): $(RLIBMAP) $(MAKEFILEDEP) $(HISTFACTORYL)
 		$(RLIBMAP) -o  $@ -l $(HISTFACTORYLIB) \

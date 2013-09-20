@@ -763,7 +763,11 @@ void RooTreeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::Error
     switch (etype) {
       
     case RooAbsData::Auto:
-      throw string(Form("RooDataHist::weightError(%s) weight type Auto not allowed here",GetName())) ;
+      throw string(Form("RooDataHist::weightError(%s) error type Auto not allowed here",GetName())) ;
+      break ;
+      
+    case RooAbsData::Expected:
+      throw string(Form("RooDataHist::weightError(%s) error type Expected not allowed here",GetName())) ;
       break ;
       
     case RooAbsData::Poisson:
@@ -1076,20 +1080,28 @@ Double_t RooTreeDataStore::sumEntries() const
 {
   if (_wgtVar) {
 
-    Double_t sum(0) ;
+    Double_t sum(0), carry(0);
     Int_t nevt = numEntries() ;
     for (int i=0 ; i<nevt ; i++) {  
       get(i) ;
-      sum += _wgtVar->getVal() ;
+      // Kahan's algorithm for summing to avoid loss of precision
+      Double_t y = _wgtVar->getVal() - carry;
+      Double_t t = sum + y;
+      carry = (t - sum) - y;
+      sum = t;
     }    
     return sum ;
 
   } else if (_extWgtArray) {
     
-    Double_t sum(0) ;
+    Double_t sum(0) , carry(0);
     Int_t nevt = numEntries() ;
     for (int i=0 ; i<nevt ; i++) {  
-      sum += _extWgtArray[i] ;
+      // Kahan's algorithm for summing to avoid loss of precision
+      Double_t y = _extWgtArray[i] - carry;
+      Double_t t = sum + y;
+      carry = (t - sum) - y;
+      sum = t;
     }    
     return sum ;
     

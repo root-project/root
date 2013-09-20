@@ -1,3 +1,21 @@
+// @(#)root/roostats:$Id$
+// Author: Kyle Cranmer, George Lewis 
+/*************************************************************************
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//_________________________________________________
+/*
+BEGIN_HTML
+<p>
+</p>
+END_HTML
+*/
+//
 
 #include "RooStats/HistFactory/PreprocessFunction.h"
 
@@ -22,4 +40,11 @@ void RooStats::HistFactory::PreprocessFunction::Print( std::ostream& stream ) {
 	 << "\t \t Dependents: " << fDependents
 	 << std::endl;  
   
+}
+
+void RooStats::HistFactory::PreprocessFunction::PrintXML( std::ostream& xml ) {
+  xml << "<Function Name=\"" << GetName() << "\" "
+      << "Expression=\""     << GetExpression() << "\" "
+      << "Dependents=\""     << GetDependents() << "\" "
+      << "/>" << std::endl;
 }

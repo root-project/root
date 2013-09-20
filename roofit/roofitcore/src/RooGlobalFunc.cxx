@@ -153,7 +153,7 @@ namespace RooFit {
   // RooChi2Var::ctor arguments
   RooCmdArg Extended(Bool_t flag) { return RooCmdArg("Extended",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg DataError(Int_t etype) { return RooCmdArg("DataError",(Int_t)etype,0,0,0,0,0,0,0) ; }
-  RooCmdArg NumCPU(Int_t nCPU, Bool_t interleave)   { return RooCmdArg("NumCPU",nCPU,interleave,0,0,0,0,0,0) ; }
+  RooCmdArg NumCPU(Int_t nCPU, Int_t interleave)   { return RooCmdArg("NumCPU",nCPU,interleave,0,0,0,0,0,0) ; }
   
   // RooAbsCollection::printLatex arguments
   RooCmdArg Columns(Int_t ncol)                           { return RooCmdArg("Columns",ncol,0,0,0,0,0,0,0) ; }
@@ -205,6 +205,7 @@ namespace RooFit {
   RooCmdArg CloneData(Bool_t flag)                       { return RooCmdArg("CloneData",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Integrate(Bool_t flag)                       { return RooCmdArg("Integrate",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Minimizer(const char* type, const char* alg) { return RooCmdArg("Minimizer",0,0,0,0,type,alg,0,0) ; }
+  RooCmdArg Offset(Bool_t flag)                          { return RooCmdArg("OffsetLikelihood",flag,0,0,0,0,0,0,0) ; }
 
   
   // RooAbsPdf::paramOn arguments
@@ -305,6 +306,7 @@ namespace RooFit {
   RooCmdArg RenameAllVariablesExcept(const char* suffix, const char* except)    { return RooCmdArg("RenameAllVariables",0,0,0,0,suffix,except,0,0) ; }
   RooCmdArg RenameVariable(const char* in, const char* out) { return RooCmdArg("RenameVar",0,0,0,0,in,out,0,0) ; }
   RooCmdArg Rename(const char* suffix)                      { return RooCmdArg("Rename",0,0,0,0,suffix,0,0,0) ; }
+  RooCmdArg Embedded(Bool_t flag)                           { return RooCmdArg("Embedded",flag,0,0,0,0,0,0,0) ; }
 
   // RooSimCloneTool::build() arguments
   RooCmdArg SplitParam(const char* varname, const char* catname)         { return RooCmdArg("SplitParam",0,0,0,0,varname,catname,0,0) ; }
@@ -319,6 +321,14 @@ namespace RooFit {
   RooCmdArg ScanNumCdf() { return RooCmdArg("ScanNumCdf",1,0,0,0,0,0,0,0) ; }
   RooCmdArg ScanAllCdf() { return RooCmdArg("ScanAllCdf",1,0,0,0,0,0,0,0) ; }
   RooCmdArg ScanNoCdf() { return RooCmdArg("ScanNoCdf",1,0,0,0,0,0,0,0) ; }
+
+
+  RooCmdArg MultiArg(const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,const RooCmdArg& arg4,
+                     const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) {
+    RooCmdArg ret("MultiArg",0,0,0,0,0,0,0,0) ; ret.addArg(arg1) ; ret.addArg(arg2) ; 
+    ret.addArg(arg3) ; ret.addArg(arg4) ; ret.addArg(arg5) ; ret.addArg(arg6) ; ret.addArg(arg7) ; ret.addArg(arg8) ;
+    ret.setProcessRecArgs(kTRUE,kFALSE) ; return ret ;
+  }
 
   RooConstVar& RooConst(Double_t val) { return RooRealConstant::value(val) ; }
 

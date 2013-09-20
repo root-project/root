@@ -1,22 +1,33 @@
-/*****************************************************************************
+// @(#)root/roostats:$Id:  cranmer $
+// Author: Kyle Cranmer, George Lewis 
+/*************************************************************************
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
- *****************************************************************************/
-
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// ParamHistFunc 
-// END_HTML
+//_________________________________________________
+/*
+BEGIN_HTML
+<p>
+</p>
+END_HTML
+*/
 //
 
 
 #include <sstream>
+#include <math.h>
+#include <stdexcept>
+
 #include "TMath.h"
 #include "TH1.h"
 
 #include "Riostream.h"
 #include "Riostream.h"
-#include <math.h>
+
 
 #include "RooFit.h"
 #include "RooStats/HistFactory/ParamHistFunc.h"
@@ -40,13 +51,40 @@
 #include "RooWorkspace.h"
 #include "RooBinning.h"
 
-using namespace std;
+//using namespace std;
 
 ClassImp(ParamHistFunc);
 
 
+/*
+  
+  A class which maps the current values of a RooRealVar
+  (or a set of RooRealVars) to one of a number of RooRealVars:
+
+  ParamHistFunc: {val1, val2, ...} -> {gamma (RooRealVar)}
+  
+  The intended interpretation is that each parameter in the
+  range represent the height of a bin over the domain
+  space.
+
+  The 'createParamSet' is an easy way to create these
+  parameters from a set of observables.  They are
+  stored using the "TH1" ordering convention (as compared
+  to the RooDataHist convention, which is used internally
+  and one must map between the two).
+
+  All indices include '0'
+
+  gamma_i_j = paramSet[ size(i)*j + i ]
+
+  ie assuming the dimensions are 5*5:
+  gamma_2_1 = paramSet[ 5*1 + 2 ] = paramSet[7]
+
+ */
+
+
 //_____________________________________________________________________________
-ParamHistFunc::ParamHistFunc() : _numBins(0), _Normalized(false)
+ParamHistFunc::ParamHistFunc() : _numBins(0)
 {
   ;
 }
@@ -59,8 +97,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin parameters",  this),
   _numBins(0),
-  _dataSet( (string(name)+"_dataSet").c_str(), "", vars),
-  _Normalized( false )
+  _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars) 
 {
   
   // Create a function which returns binewise-values
@@ -105,8 +142,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin parameters",  this),
   _numBins(0),
-  _dataSet( (string(name)+"_dataSet").c_str(), "", vars, Hist),
-  _Normalized( false )
+  _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars, Hist) 
 {
 
   // Create a function which returns binewise-values
@@ -133,7 +169,6 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
 
 Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
   
-  
   // A helper method to get the number of bins
   
   if( vars.getSize() == 0 ) return 0;
@@ -144,7 +179,8 @@ Int_t ParamHistFunc::GetNumBins( const RooArgSet& vars ) {
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*) varIter.next())) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
-      cout << "ParamHistFunc::GetNumBins" << vars.GetName() << ") ERROR: component " << comp->GetName() 
+      std::cout << "ParamHistFunc::GetNumBins" << vars.GetName() << ") ERROR: component " 
+	   << comp->GetName() 
 	   << " in vars list is not of type RooRealVar" << std::endl ;
       RooErrorHandler::softAbort() ;
       return -1;
@@ -167,8 +203,7 @@ ParamHistFunc::ParamHistFunc(const ParamHistFunc& other, const char* name) :
   _paramSet("!paramSet", this, other._paramSet),
   _numBins( other._numBins ),
   _binMap( other._binMap ),
-  _dataSet( other._dataSet ),
-  _Normalized( other._Normalized )
+  _dataSet( other._dataSet )
 {
   ;
   // Copy constructor
@@ -188,33 +223,26 @@ Int_t ParamHistFunc::getCurrentBin() const {
 
   // Get the index of the gamma parameter associated
   // with the current bin
+  // This number is the "RooDataSet" style index
+  // and it must be because it uses the RooDataSet method directly
+  // This is intended to be fed into the getParameter(Int_t) method:
+  //
+  // RooRealVar currentParam = getParameter( getCurrentBin() );
 
   Int_t dataSetIndex = _dataSet.getIndex( _dataVars ); // calcTreeIndex();
-
   return dataSetIndex;
 
-  /*
-  Int_t currentIndex = -1;
-  if( _binMap.find( dataSetIndex ) != _binMap.end() ) {
-    currentIndex = _binMap[ dataSetIndex ];
-  }
-  else {
-    std::cout << "Error: ParamHistFunc internal bin index map "
-	      << "not properly configured" << std::endl;
-    throw -1;
-    return -1;
-  }
-
-  return currentIndex;
-  */
-
 }
+
 
 //_____________________________________________________________________________
 RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
 
   // Get the parameter associate with the the
   // input RooDataHist style index
+  // It uses the binMap to convert the RooDataSet style index
+  // into the TH1 style index (which is how they are stored
+  // internally in the '_paramSet' vector
 
   Int_t gammaIndex = -1;
   if( _binMap.find( index ) != _binMap.end() ) {
@@ -229,44 +257,86 @@ RooRealVar& ParamHistFunc::getParameter( Int_t index ) const {
   return (RooRealVar&) _paramSet[gammaIndex];
 }
 
+
 //_____________________________________________________________________________
 RooRealVar& ParamHistFunc::getParameter() const {
   Int_t index = getCurrentBin();
   return getParameter( index );
 }
 
-void ParamHistFunc::setParamConst( Int_t index, Bool_t varConst ) {
 
+void ParamHistFunc::setParamConst( Int_t index, Bool_t varConst ) {
   RooRealVar& var = getParameter( index );
   var.setConstant( varConst );
 }
 
 
+void ParamHistFunc::setConstant( bool constant ) {
+  for( int i=0; i < numBins(); ++i) {
+    setParamConst(i, constant);
+  }
+}
+
 
 //_____________________________________________________________________________
-RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Prefix, const RooArgList& vars) {
+void ParamHistFunc::setShape( TH1* shape ) {
+  
+  int num_hist_bins = shape->GetNbinsX()*shape->GetNbinsY()*shape->GetNbinsZ();
+
+  if( num_hist_bins != numBins() ) {
+    std::cout << "Error - ParamHistFunc: cannot set Shape of ParamHistFunc: " << GetName()
+	      << " using histogram: " << shape->GetName()
+	      << ". Bins don't match" << std::endl;
+    throw std::runtime_error("setShape");
+  }
+
+
+  Int_t TH1BinNumber = 0;
+  for( Int_t i = 0; i < numBins(); ++i) {
+    
+    TH1BinNumber++;
+    
+    while( shape->IsBinUnderflow(TH1BinNumber) || shape->IsBinOverflow(TH1BinNumber) ){
+      TH1BinNumber++;
+    }
+
+    //RooRealVar& var = dynamic_cast<RooRealVar&>(getParameter(i));
+    RooRealVar& var = dynamic_cast<RooRealVar&>(_paramSet[i]);
+    var.setVal( shape->GetBinContent(TH1BinNumber) );
+  }
+
+}
+
+
+//_____________________________________________________________________________
+RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Prefix, 
+					 const RooArgList& vars) {
   
   // Create the list of RooRealVar
   // parameters which represent the
   // height of the histogram bins.
-  // Store them in a list
+  // The list 'vars' represents the 
+  // observables (corresponding to histogram bins)
+  // that these newly created parameters will 
+  // be mapped to. (ie, we create one parameter
+  // per observable in vars and per bin in each observable)
 
+  // Store them in a list using:
   // _paramSet.add( createParamSet() );
+  // This list is stored in the "TH1" index order
 
   // Get the number of bins
   // in the nominal histogram
-
 
   RooArgList paramSet;
 
   Int_t numVars = vars.getSize();
   Int_t numBins = GetNumBins( vars );
 
-
   if( numVars == 0 ) {
-    cout << "Warning - ParamHistFunc::createParamSet() :"
+    std::cout << "Warning - ParamHistFunc::createParamSet() :"
 	 << " No Variables provided.  Not making constraint terms." 
-	 << endl;
+	 << std::endl;
     return paramSet;
   }
 
@@ -366,57 +436,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
   }
 
   else {
- 
-    cout << " Error: ParamHistFunc doesn't support dimensions > 3D " <<  endl;
-    
-    /*
-    // Create a vector of indices
-    // all starting at 0
-    std::vector< Int_t > Indices(numVars, 0);
-
-    // Loop over vars:
-    RooFIter varIter = vars.fwdIterator() ;
-    Int_t VarIndex = 0;
-    RooAbsArg* comp ;
-    while((comp = (RooAbsArg*) varIter.next())) {
-    
-      RooRealVar* var = (RooRealVar*) comp;
-
-      // For each bin, create a RooRealVar
-      for( Int_t i = 0; i < var->numBins(); ++i) {
-
-	if( i != 0 ) Indices.at(VarIndex)++;
-	
-	// Make the name of the var:
-	// Varname_bin_0_2_1  where x=0, y=2, z=1 (etc)
-	std::stringstream VarNameStream;
-	VarNameStream << Prefix << "_bin";
-	for(Int_t j = 0; j < numVars; ++j) {
-	  VarNameStream << "_" << Indices.at(j);;
-	}
-	std::string VarName = VarNameStream.str();
-	
-	RooRealVar gamma( VarName.c_str(), VarName.c_str(), 1.0 ); 
-	// "Hard-Code" a minimum of 0.0
-	gamma.setMin( 0.0 );
-	gamma.setConstant( false );
-	
-	w.import( gamma, RooFit::RecycleConflictNodes() );
-	RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName.c_str() );
-	
-	paramSet.add( *gamma_wspace );
-	
-	// Increase the bin index on this var
-	// (Used in naming)
-
-      }
-
-      // Increase the Int_t iterator
-      // over variables
-      VarIndex++;
-
-    }
-    */
+    std::cout << " Error: ParamHistFunc doesn't support dimensions > 3D " <<  std::endl;
   }
 
   return paramSet;  
@@ -425,8 +445,27 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 
 
 //_____________________________________________________________________________
-RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Prefix, const RooArgList& vars, 
+RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Prefix, 
+					 const RooArgList& vars, 
 					 Double_t gamma_min, Double_t gamma_max) {
+
+  // Create the list of RooRealVar
+  // parameters which represent the
+  // height of the histogram bins.
+  // The list 'vars' represents the 
+  // observables (corresponding to histogram bins)
+  // that these newly created parameters will 
+  // be mapped to. (ie, we create one parameter
+  // per observable in vars and per bin in each observable)
+
+  // Store them in a list using:
+  // _paramSet.add( createParamSet() );
+  // This list is stored in the "TH1" index order
+
+  // Get the number of bins
+  // in the nominal histogram
+
+  // We also set the parameters to have nominal min and max values
 
   RooArgList params = ParamHistFunc::createParamSet( w, Prefix, vars );
 
@@ -442,69 +481,12 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 
   return params;
 
-  /*  
-
-  // Create the list of RooRealVar
-  // parameters which represent the
-  // height of the histogram bins.
-  // Store them in a list
-
-  // _paramSet.add( createParamSet() );
-
-  // Get the number of bins
-  // in the nominal histogram
- 
-
-  RooArgList paramSet;
-
-  if( gamma_max <= gamma_min ) {
-
-    std::cout << "Warming: gamma_min <= gamma_max: Using default values (0, 10)" << std::endl;
-
-    gamma_min = 0.0;
-    gamma_max = 10.0;
-
-  }
-
-  Double_t gamma_nominal = 1.0;
-
-  if( gamma_nominal < gamma_min ) {
-    gamma_nominal = gamma_min;
-  }
-
-  if( gamma_nominal > gamma_max ) {
-    gamma_nominal = gamma_max;
-  }
-
-
-  // For each bin, create a RooRealVar
-  for( Int_t i = 0; i < numBins; ++i) {
-
-    std::stringstream VarNameStream;
-    VarNameStream << Prefix << "_bin_" << i;
-    std::string VarName = VarNameStream.str();
-
-    RooRealVar gamma( VarName.c_str(), VarName.c_str(), 
-		      gamma_nominal, gamma_min, gamma_max );
-    gamma.setConstant( false );
-
-    w.import( gamma, RooFit::RecycleConflictNodes() );
-    RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName.c_str() );
-
-    paramSet.add( *gamma_wspace );
-
-  }
-
-
-  return paramSet;
-  */
-
 }
 
 
-
 //_____________________________________________________________________________
-RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBins, Double_t gamma_min, Double_t gamma_max) {
+RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBins, 
+					 Double_t gamma_min, Double_t gamma_max) {
 
   // Create the list of RooRealVar
   // parameters which represent the
@@ -555,6 +537,7 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
 
 }
 
+
 //_____________________________________________________________________________
 Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
   
@@ -572,8 +555,9 @@ Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*) varIter.next())) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
-      coutE(InputArguments) << "ParamHistFunc::(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " in variables list is not of type RooRealVar" << std::endl ;
+      coutE(InputArguments) << "ParamHistFunc::(" << GetName() << ") ERROR: component " 
+			    << comp->GetName() << " in variables list is not of type RooRealVar" 
+			    << std::endl;
       RooErrorHandler::softAbort() ;
       return 1;
     }
@@ -634,6 +618,7 @@ Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
 
 }
 
+
 //_____________________________________________________________________________
 Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   
@@ -665,8 +650,9 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*) paramIter.next())) {
     if (!dynamic_cast<RooRealVar*>(comp)) {
-      coutE(InputArguments) << "ParamHistFunc::(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " in parameter list is not of type RooRealVar" << std::endl ;
+      coutE(InputArguments) << "ParamHistFunc::(" << GetName() << ") ERROR: component " 
+			    << comp->GetName() << " in paramater list is not of type RooRealVar" 
+			    << std::endl;
       RooErrorHandler::softAbort() ;
       return 1;
     }
@@ -687,30 +673,17 @@ Double_t ParamHistFunc::evaluate() const
   // Find the bin cooresponding to the current
   // value of the RooRealVar:
 
-  /*
-  Int_t currentBin = getCurrentBin();
-  RooRealVar* param = (RooRealVar*) &(_paramSet[currentBin]);
-  */
-
   RooRealVar* param = (RooRealVar*) &(getParameter());
-
   Double_t value = param->getVal();
-
-  // If we don't require the function to
-  // be normalized, return right away
-  if( !_Normalized ) return value;
-  
-  // Else, we divide the value by the integral
-  // which effectively normalizes the function over bins
-  Double_t scale = 1.0 / analyticalIntegralWN(0, NULL, NULL);
-  return scale*value;
+  return value;
   
 }
 
 
 //_____________________________________________________________________________
 Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
-						      const RooArgSet* normSet, const char* /*rangeName*/) const 
+					     const RooArgSet* normSet, 
+					     const char* /*rangeName*/) const 
 {
   // Advertise that all integrals can be handled internally.
 
@@ -718,11 +691,9 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   if (allVars.getSize()==0) return 0 ;
   if (_forceNumInt) return 0 ;
 
+
   // Select subset of allVars that are actual dependents
   analVars.add(allVars) ;
-  //  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : 0 ;
-  //  RooArgSet* normSet = getObservables();
-  //  RooArgSet* normSet = 0;
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
@@ -739,45 +710,12 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
   return code+1 ; 
 
-  // Make list of function projection and normalization integrals 
-  //  RooAbsReal* param ;
-  // RooAbsReal *func ;
-  //  const RooArgSet* nset = _paramList.nset() ;
-
-  // do nominal
-  /*
-  func = (RooAbsReal*) &( _dataVar.arg() );
-  RooAbsReal* funcInt = func->createIntegral(analVars) ;
-  cache->_funcIntList.addOwned(*funcInt) ;
-
-  // Implement integration here
-
-  // do variations
-  //_lowIter->Reset() ;
-  //_highIter->Reset() ;
-  _paramIter->Reset() ;
-  int i=0;
-  while((param=(RooAbsReal*)_paramIter->Next())) {
-
-    / *
-    func = (RooAbsReal*)_lowIter->Next() ;
-    funcInt = func->createIntegral(analVars) ;
-    cache->_lowIntList.addOwned(*funcInt) ;
-
-    func = (RooAbsReal*)_highIter->Next() ;
-    funcInt = func->createIntegral(analVars) ;
-    cache->_highIntList.addOwned(*funcInt) ;
-    * /
-    ++i;
-
-  }
-*/
-
 }
 
 
 //_____________________________________________________________________________
-Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*normSet2*/,const char* /*rangeName*/) const 
+Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*normSet2*/,
+					     const char* /*rangeName*/) const 
 {
   // Implement analytical integrations by doing appropriate weighting from  component integrals
   // functions to integrators of components
@@ -824,13 +762,15 @@ Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*
 
 
 //_____________________________________________________________________________
-list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const
+std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, 
+						Double_t /*xhi*/) const
 {
   // Return sampling hint for making curves of (projections) of this function
   // as the recursive division strategy of RooCurve cannot deal efficiently
   // with the vertical lines that occur in a non-interpolated histogram
 
   return 0;
+
   /*
   // copied and edited from RooHistFunc
   RooAbsLValue* lvarg = &obs;
@@ -862,7 +802,8 @@ list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, Doubl
 
 
 //______________________________________________________________________________
-std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const 
+std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, 
+						  Double_t /*xhi*/) const 
 {
   // Return sampling hint for making curves of (projections) of this function
   // as the recursive division strategy of RooCurve cannot deal efficiently
