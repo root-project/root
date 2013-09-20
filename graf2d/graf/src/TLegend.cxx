@@ -848,6 +848,9 @@ void TLegend::PaintPrimitives()
       // Draw error only
 
       if (opt.Contains("e") && !(opt.Contains("l") || opt.Contains("f"))) {
+         if (eobj && eobj->InheritsFrom(TAttLine::Class())) {
+            dynamic_cast<TAttLine*>(eobj)->Copy(*entry);
+         }
          TLine entryline(xsym, ysym - yspace*0.30,
                          xsym, ysym + yspace*0.30);
          entryline.SetBit(TLine::kLineNDC);
