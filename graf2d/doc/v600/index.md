@@ -90,7 +90,9 @@ file `simple.pdf`.
     text size was wrong if the font precision was set to 3.
 -   Improve the spacing between lines. Due to the way the vertical 
     text centring is done (bounding based) the spacing between lines 
-    may appeared irregular in some cases.. 
+    may appeared irregular in some cases.
+-   The error bar in the legend (option "E") didn't have the line
+    attributes when drawn alone (without option "L"). 
 
 ### TPie
 
