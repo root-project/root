@@ -2,3 +2,107 @@
 <hr/> 
 <a name="tmva"></a> 
 <h3>TMVA Package</h3>
+
+
+<h3>Factory</h3> 
+
+<ul>
+<li> <tt>NormMode</tt>: as called in PrepareTrainingAndTestTree <br>
+
+The default has changed and is now "<tt>EqualNumEvents</tt>" (with fixed meaning)
+
+While previously <tt>NumEvents</tt> and <tt>EqualNumEvents</tt>  (by mistake/miscommunication)
+took into account training+test events, they are now correctly
+normalising only "Training Events" (note the reason for these
+normalisations was to have the possibility to easily force the
+effective (weighted) number of training events used for Signal (class
+0) to equal the number of training events in the Backgr. (sum of all
+remaining classes in multiclass mode)
+
+<dl>
+  <dt>  <tt>NumEvents:</tt></dt> 
+  <dd> - the weighted number of events is scaled, independently for signal and
+backgroundm, such that the sum of weights equals  the number of events given in the
+Factory::PrepareTrainingAndTestTree("",nTrain_Signal=3000,nTrain_Background=6000) call.
+This example call will give hence end up in having 2x more background
+events in the training compared to the signal, no matter what the
+individual event weights have been.  (watch out! if you specify
+nTrain_Signal=0,nTrain_Background=0), then the ratio will be according
+to total numbers of MC events in the signal and background
+respectively, which could be very different from the usually good
+ratio of having about the same weighted number signal and background
+events in the training. In that case it is better to use: </dd>
+
+<dt> <tt>EqualNumEvents:</tt></dt> 
+<dd> - for the signal events, the same is done as for <tt>NumEvents</tt>.
+   The background events however are reweighted such, that their sum of weights
+  equals that for the signal events. This results in the same effective (weighted)
+  number of signal and background events to be seen in the training.
+
+</dl>
+
+</li>
+
+<li>  <tt>Transformations=I</tt> is default again in Factory (this defines which
+variables distribution plots are added to the TMVA output file - and
+hence displayable via the TMVAGui) </li>
+
+</ul>
+
+<h3>Boosted Decision Trees</h3>
+
+some changes to the training options:
+
+
+<dl>
+  <dt> <tt>nEventsMin</tt> (deprecated)  please replace by --> <tt>MinNodeSize</tt> </dt> 
+  <dd>The option nEventsMin which specified the minimum number of training event
+in a leaf node as an absolute number has been replaced by "MinNodeSize" 
+which is given in "percentage of the trainin sample". Like this the training
+options become less dependent on the actual number of training sample size</dd>
+
+  <dt>  <tt>NNodesMax</tt>  (deprecated)  please replace by --> MaxDepth </dt>
+
+  <dt>  <tt>GradBaggingFraction</tt> and  <tt>UseNTrainEvents</tt> replaced by <tt>BaggedSampleFraction</tt> </dt>
+  <dd> - they both meant the same thing and are now
+deprecated --> use <tt>BaggedSampleFraction</tt> instead </dd>
+
+  <dt>  <tt>UseWeightedTrees</tt> --> removed<dt>
+               <dd> - it was default anyway and the only reasonable choice there is</dt>
+  <dt>  <tt>PruneBeforeBoost</tt> --> removed<dt>
+               <dd> - it has been mostly a debug/trial option</dt>
+
+  <dt>  <tt>NegWeightTreatment=IgnoreNegWeights</tt> --> removed </dt>
+
+  <dd> - Unfortunatly the default "IgnoreNegWeights" to the BDT option  "NegWeightTreatment"
+collided with the a global option and had to be removed. Unfortunatly that may
+cause some -backward incompatibility- as reading old weightfiles that have this
+option set cannot be read anymore. If you are affected, please take the .xml weight file and do the following
+change in there: <br>
+<tt>
+&ltOption name="NegWeightTreatment" modified="No" &gt ignorenegweights &lt&#47Option&gt<br></tt>
+needs to be changed to<br>
+ <tt>
+&ltOption name="NegWeightTreatment" modified="No" &gt ignorenegweightsintraining &lt&#47Option&gt <br> 
+    </dd></tt>
+
+</dl>
+
+
+
+<h3>MethodBoost</h3> 
+<ui>
+<li> some cleanup (removed strange experimental boosting option  <tt>HighEdgeGaus,
+    HighEdgeCoPara .....</tt> )</li>
+
+<li>remove options  <tt>MethodWeightType</tt>... have it defined by the Boost Method
+    (these have been trial options.. but for clarity it is much better to stick
+     to the "standard" ones (i.e log(alpha) for AdaBoost etc)</li>
+
+
+<li>up to now, the first classifier  was trained with
+    the full sample, I think however, it should also be a bagged
+    sample (i.e. particularily if smaller sample sizes for the bagged
+    samples were demanded) .. it's changed now, accordingly</li>
+</ui>
+
