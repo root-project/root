@@ -47,7 +47,7 @@
 #include "cling/Utils/AST.h"
 #include "cling/Interpreter/LookupHelper.h"
 
-#include "llvm/Support/PathV2.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Support/FileSystem.h"
 
 #include "cling/Interpreter/Interpreter.h"
