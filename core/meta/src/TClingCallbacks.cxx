@@ -538,7 +538,8 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    IdentifierInfo* II = Name.getAsIdentifierInfo();
    SourceLocation Loc = R.getNameLoc();
    VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, 
-                                     C.getAutoType(QualType()),
+                                     C.getAutoType(QualType(),
+                                                   /*IsDecltypeAuto*/true),
                                      /*TypeSourceInfo*/0, SC_None);
 
    // Annotate the decl to give a hint in cling. FIXME: Current implementation
