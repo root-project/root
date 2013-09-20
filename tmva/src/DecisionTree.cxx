@@ -105,6 +105,7 @@ TMVA::DecisionTree::DecisionTree():
    fUseSearchTree(kFALSE),
    fPruneStrength(0),
    fPruneMethod    (kNoPruning),
+   fNNodesBeforePruning(0),
    fNodePurityLimit(0.5),
    fRandomisedTree (kFALSE),
    fUseNvars       (0),
@@ -138,6 +139,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize
    fUseSearchTree  (kFALSE),
    fPruneStrength  (0),
    fPruneMethod    (kNoPruning),
+   fNNodesBeforePruning(0),
    fNodePurityLimit(purityLimit),
    fRandomisedTree (randomisedTree),
    fUseNvars       (useNvars),
@@ -212,6 +214,7 @@ TMVA::DecisionTree::~DecisionTree()
    // destruction of the tree nodes done in the "base class" BinaryTree
 
    if (fMyTrandom) delete fMyTrandom;
+   if (fRegType) delete fRegType;
 }
 
 //_______________________________________________________________________
@@ -595,36 +598,40 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
 
    tool->SetPruneStrength(GetPruneStrength());
    if(tool->IsAutomatic()) {
-      if(validationSample == NULL) 
+      if(validationSample == NULL){ 
          Log() << kFATAL << "Cannot automate the pruning algorithm without an "
                << "independent validation sample!" << Endl;
-      if(validationSample->size() == 0) 
+      }else if(validationSample->size() == 0) {
          Log() << kFATAL << "Cannot automate the pruning algorithm with "
                << "independent validation sample of ZERO events!" << Endl;
+      }
    }
 
    info = tool->CalculatePruningInfo(this,validationSample);
+   Double_t pruneStrength=0;
    if(!info) {
-      delete tool;
       Log() << kFATAL << "Error pruning tree! Check prune.log for more information." 
             << Endl;
-   }
-   Double_t pruneStrength = info->PruneStrength;
-
-   //   Log() << kDEBUG << "Optimal prune strength (alpha): " << pruneStrength
-   //           << " has quality index " << info->QualityIndex << Endl;
-   
-
-   for (UInt_t i = 0; i < info->PruneSequence.size(); ++i) {
+   } else {
+      pruneStrength = info->PruneStrength;
       
-      PruneNode(info->PruneSequence[i]);
+      //   Log() << kDEBUG << "Optimal prune strength (alpha): " << pruneStrength
+      //           << " has quality index " << info->QualityIndex << Endl;
+      
+      
+      for (UInt_t i = 0; i < info->PruneSequence.size(); ++i) {
+         
+         PruneNode(info->PruneSequence[i]);
+      }
+      // update the number of nodes after the pruning
+      this->CountNodes();
    }
-   // update the number of nodes after the pruning
-   this->CountNodes();
+   
 
    delete tool;
    delete info;
 
+   
    return pruneStrength;
 };
 
@@ -936,6 +943,10 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       
       std::vector<TMatrixDSym*>* covMatrices;
       covMatrices = gTools().CalcCovarianceMatrices( eventSample, 2 ); // currently for 2 classes only
+      if (!covMatrices){
+         Log() << kFATAL << " in TrainNodeFast, I tried to calculate the covariance Matrices needed for the Fisher-Cuts, but \n got a NULL-Pointer back... don't know what to do other than to abort. Sorry " << Endl;
+         return 0; //hope this return,although totally irrelevant after a kFATAL will make coverity happy !
+      }
       TMatrixD *ss = new TMatrixD(*(covMatrices->at(0)));
       TMatrixD *bb = new TMatrixD(*(covMatrices->at(1)));
       const TMatrixD *s = gTools().GetCorrelationMatrix(ss);
@@ -1250,6 +1261,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    delete [] mapVariable;
 
    delete [] separationGain;
+   delete [] cutIndex;
 
    return separationGainTotal;
 

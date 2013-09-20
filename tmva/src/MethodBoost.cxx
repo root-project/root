@@ -379,6 +379,7 @@ void TMVA::MethodBoost::Train()
 
       if (fCurrentMethod==0) {
          Log() << kFATAL << "uups.. guess the booking of the " << fCurrentMethodIdx << "-th classifier somehow failed" << Endl;
+         return; // hope that makes coverity happy (as if fears I migh use the pointer later on, not knowing that FATAL exits
       }
 
       // set fDataSetManager if MethodCategory (to enable Category to create datasetinfo objects) // DSMTEST
@@ -914,83 +915,81 @@ Double_t TMVA::MethodBoost::AdaBoost(MethodBase* method, Bool_t discreteAdaBoost
    // calculating the fMethodError and the boostWeight out of it uses the formula 
    // w = ((1-err)/err)^beta
 
+   Double_t boostWeight=0;
    if (fMethodError == 0) { //no misclassification made.. perfect, no boost ;)
       Log() << kWARNING << "Your classifier worked perfectly on the training sample --> serious overtraining expected and no boosting done " << Endl;
-      return 1;
-   }
+   }else{
 
-   Double_t boostWeight;
-   if (discreteAdaBoost)
-      boostWeight = TMath::Log((1.-fMethodError)/fMethodError)*fAdaBoostBeta;
-   else
-      boostWeight = TMath::Log((1.+fMethodError)/(1-fMethodError))*fAdaBoostBeta;
-
-
-   //   std::cout << "boostweight = " << boostWeight << std::endl;
-
-   // ADA boosting, rescaling the weight of the wrong events according to the error level
-   // over the entire test sample rescaling all the weights to have the same sum, but without
-   // touching the original weights (changing only the boosted weight of all the events)
-   // first reweight
-
-   Double_t newSum=0., oldSum=0.;
-
-
-   Double_t boostfactor = TMath::Exp(boostWeight);
-
-
-   for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
-      const Event* ev =  Data()->GetEvent(ievt);
-      oldSum += ev->GetWeight();
-      if (discreteAdaBoost){
-         // events are classified as Signal OR background .. right or wrong
-         if (WrongDetection[ievt] && boostWeight != 0) {
+      if (discreteAdaBoost)
+         boostWeight = TMath::Log((1.-fMethodError)/fMethodError)*fAdaBoostBeta;
+      else
+         boostWeight = TMath::Log((1.+fMethodError)/(1-fMethodError))*fAdaBoostBeta;
+      
+      
+      //   std::cout << "boostweight = " << boostWeight << std::endl;
+      
+      // ADA boosting, rescaling the weight of the wrong events according to the error level
+      // over the entire test sample rescaling all the weights to have the same sum, but without
+      // touching the original weights (changing only the boosted weight of all the events)
+      // first reweight
+      
+      Double_t newSum=0., oldSum=0.;
+      
+      
+      Double_t boostfactor = TMath::Exp(boostWeight);
+      
+      
+      for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
+         const Event* ev =  Data()->GetEvent(ievt);
+         oldSum += ev->GetWeight();
+         if (discreteAdaBoost){
+            // events are classified as Signal OR background .. right or wrong
+            if (WrongDetection[ievt] && boostWeight != 0) {
+               if (ev->GetWeight() > 0) ev->ScaleBoostWeight(boostfactor);
+               else                     ev->ScaleBoostWeight(1./boostfactor);
+            }
+            //         if (ievt<30) std::cout<<ievt<<" var0="<<ev->GetValue(0)<<" var1="<<ev->GetValue(1)<<" weight="<<ev->GetWeight() << "  boostby:"<<boostfactor<<std::endl;
+            
+         }else{
+            // events are classified by their probability of being signal or background
+            // (eventually you should write this one - i.e. re-use the MVA value that were already
+            // calcualted and stroed..   however ,for the moement ..
+            Double_t mvaProb = MVAProb->GetMVAProbAt((Float_t)fMVAvalues->at(ievt));
+            mvaProb = 2*(mvaProb-0.5);
+            // mvaProb = (1-mvaProb);
+            
+            Int_t    trueType=1;
+            if (DataInfo().IsSignal(ev)) trueType = 1;
+            else trueType = -1;
+            
+            boostfactor = TMath::Exp(-1*boostWeight*trueType*mvaProb);
             if (ev->GetWeight() > 0) ev->ScaleBoostWeight(boostfactor);
             else                     ev->ScaleBoostWeight(1./boostfactor);
+            
          }
-         //         if (ievt<30) std::cout<<ievt<<" var0="<<ev->GetValue(0)<<" var1="<<ev->GetValue(1)<<" weight="<<ev->GetWeight() << "  boostby:"<<boostfactor<<std::endl;
-
-      }else{
-         // events are classified by their probability of being signal or background
-         // (eventually you should write this one - i.e. re-use the MVA value that were already
-         // calcualted and stroed..   however ,for the moement ..
-         Double_t mvaProb = MVAProb->GetMVAProbAt((Float_t)fMVAvalues->at(ievt));
-         mvaProb = 2*(mvaProb-0.5);
-         // mvaProb = (1-mvaProb);
-
-         Int_t    trueType=1;
-         if (DataInfo().IsSignal(ev)) trueType = 1;
-         else trueType = -1;
-         
-         boostfactor = TMath::Exp(-1*boostWeight*trueType*mvaProb);
-         if (ev->GetWeight() > 0) ev->ScaleBoostWeight(boostfactor);
-         else                     ev->ScaleBoostWeight(1./boostfactor);
-        
+         newSum += ev->GetWeight();
       }
-      newSum += ev->GetWeight();
+      
+      Double_t normWeight = oldSum/newSum;
+      // next normalize the weights
+      Double_t normSig=0, normBkg=0;
+      for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
+         const Event* ev = Data()->GetEvent(ievt);
+         ev->ScaleBoostWeight(normWeight);
+         if (ev->GetClass()) normSig+=ev->GetWeight();
+         else                normBkg+=ev->GetWeight();
+      }
+      
+      Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
+      results->GetHist("SoverBtotal")->SetBinContent(fCurrentMethodIdx+1, normSig/normBkg);
+      
+      for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
+         const Event* ev = Data()->GetEvent(ievt);
+         
+         if (ev->GetClass()) ev->ScaleBoostWeight(oldSum/normSig/2); 
+         else                ev->ScaleBoostWeight(oldSum/normBkg/2); 
+      }
    }
-   
-   Double_t normWeight = oldSum/newSum;
-   // next normalize the weights
-   Double_t normSig=0, normBkg=0;
-   for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
-      const Event* ev = Data()->GetEvent(ievt);
-      ev->ScaleBoostWeight(normWeight);
-      if (ev->GetClass()) normSig+=ev->GetWeight();
-      else                normBkg+=ev->GetWeight();
-   }
-
-   Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
-   results->GetHist("SoverBtotal")->SetBinContent(fCurrentMethodIdx+1, normSig/normBkg);
-
-   for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
-      const Event* ev = Data()->GetEvent(ievt);
-   
-      if (ev->GetClass()) ev->ScaleBoostWeight(oldSum/normSig/2); 
-      else                ev->ScaleBoostWeight(oldSum/normBkg/2); 
-   }
-
-   //   std::cout << "NewSum="<<newSum<<"  OldSum="<<oldSum<<std::endl;
 
    delete[] WrongDetection;
    if (MVAProb) delete MVAProb;
@@ -1280,25 +1279,28 @@ void TMVA::MethodBoost::MonitorBoost( Types::EBoostStage stage , UInt_t methodIn
    Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
 
    if (GetCurrentMethod(methodIndex)->GetMethodType() == TMVA::Types::kDT) {
-      if (stage == Types::kBoostProcBegin){
-         results->Store(new TH1I("NodesBeforePruning","nodes before pruning",this->GetBoostNum(),0,this->GetBoostNum()),"NodesBeforePruning");
-         results->Store(new TH1I("NodesAfterPruning","nodes after pruning",this->GetBoostNum(),0,this->GetBoostNum()),"NodesAfterPruning");
-      }
-      
-      if (stage == Types::kBeforeTraining){
-      }
-      else if (stage == Types::kBeforeBoosting){
-         results->GetHist("NodesBeforePruning")->SetBinContent(methodIndex+1,dynamic_cast<TMVA::MethodDT*>(GetCurrentMethod(methodIndex))->GetNNodesBeforePruning());
-         results->GetHist("NodesAfterPruning")->SetBinContent(methodIndex+1,dynamic_cast<TMVA::MethodDT*>(GetCurrentMethod(methodIndex))->GetNNodes());
-      }
-      else if (stage == Types::kAfterBoosting){
-
-      }
-      else if (stage != Types::kBoostProcEnd){
-         Log() << kINFO << "<Train> average number of nodes before/after pruning : " 
-               <<   results->GetHist("NodesBeforePruning")->GetMean() << " / " 
-               <<   results->GetHist("NodesAfterPruning")->GetMean()
-               << Endl;
+      TMVA::MethodDT* currentDT=dynamic_cast<TMVA::MethodDT*>(GetCurrentMethod(methodIndex));
+      if (currentDT){
+         if (stage == Types::kBoostProcBegin){
+            results->Store(new TH1I("NodesBeforePruning","nodes before pruning",this->GetBoostNum(),0,this->GetBoostNum()),"NodesBeforePruning");
+            results->Store(new TH1I("NodesAfterPruning","nodes after pruning",this->GetBoostNum(),0,this->GetBoostNum()),"NodesAfterPruning");
+         }
+         
+         if (stage == Types::kBeforeTraining){
+         }
+         else if (stage == Types::kBeforeBoosting){
+            results->GetHist("NodesBeforePruning")->SetBinContent(methodIndex+1,currentDT->GetNNodesBeforePruning());
+            results->GetHist("NodesAfterPruning")->SetBinContent(methodIndex+1,currentDT->GetNNodes());
+         }
+         else if (stage == Types::kAfterBoosting){
+            
+         }
+         else if (stage != Types::kBoostProcEnd){
+            Log() << kINFO << "<Train> average number of nodes before/after pruning : " 
+                  <<   results->GetHist("NodesBeforePruning")->GetMean() << " / " 
+                  <<   results->GetHist("NodesAfterPruning")->GetMean()
+                  << Endl;
+         }
       }
       
    }else if (GetCurrentMethod(methodIndex)->GetMethodType() == TMVA::Types::kFisher) {
@@ -1318,20 +1320,25 @@ void TMVA::MethodBoost::MonitorBoost( Types::EBoostStage stage , UInt_t methodIn
    if (stage == Types::kBeforeBoosting){
       // if you want to display the weighted events for 2D case at each boost step:
       if (fDetailedMonitoring){
-         results->Store(new TH2F(Form("EventDistSig_%d",methodIndex),Form("EventDistSig_%d",methodIndex),100,0,7,100,0,7));
-         results->GetHist(Form("EventDistSig_%d",methodIndex))->SetMarkerColor(4);
-         results->Store(new TH2F(Form("EventDistBkg_%d",methodIndex),Form("EventDistBkg_%d",methodIndex),100,0,7,100,0,7));
-         results->GetHist(Form("EventDistBkg_%d",methodIndex))->SetMarkerColor(2);
-         
-         Data()->SetCurrentType(Types::kTraining);
-         for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
-            const Event* ev = GetEvent(ievt);
-            Float_t w = ev->GetWeight();
-            Float_t v0= ev->GetValue(0);
-            Float_t v1= ev->GetValue(1);
-            //         if (ievt<3) std::cout<<ievt<<" var0="<<v0<<" var1="<<v1<<" weight="<<w<<std::endl;
-            if (DataInfo().IsSignal(ev)) results->GetHist2D(Form("EventDistSig_%d",methodIndex))->Fill(v0,v1,w);
-            else                         results->GetHist2D(Form("EventDistBkg_%d",methodIndex))->Fill(v0,v1,w);
+         // the following code is useful only for 2D examples - mainly illustration for debug/educational purposes:
+         if (DataInfo().GetNVariables() == 2) {
+            results->Store(new TH2F(Form("EventDistSig_%d",methodIndex),Form("EventDistSig_%d",methodIndex),100,0,7,100,0,7));
+            results->GetHist(Form("EventDistSig_%d",methodIndex))->SetMarkerColor(4);
+            results->Store(new TH2F(Form("EventDistBkg_%d",methodIndex),Form("EventDistBkg_%d",methodIndex),100,0,7,100,0,7));
+            results->GetHist(Form("EventDistBkg_%d",methodIndex))->SetMarkerColor(2);
+            
+            Data()->SetCurrentType(Types::kTraining);
+            for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
+               const Event* ev = GetEvent(ievt);
+               Float_t w = ev->GetWeight();
+               Float_t v0= ev->GetValue(0);
+               Float_t v1= ev->GetValue(1);
+               //         if (ievt<3) std::cout<<ievt<<" var0="<<v0<<" var1="<<v1<<" weight="<<w<<std::endl;
+               TH2* h;
+               if (DataInfo().IsSignal(ev)) h=results->GetHist2D(Form("EventDistSig_%d",methodIndex));      
+               else                         h=results->GetHist2D(Form("EventDistBkg_%d",methodIndex));
+               if (h) h->Fill(v0,v1,w);
+            }
          }
       }
    }

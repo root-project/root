@@ -98,6 +98,7 @@ namespace TMVA {
 TMVA::DataSetFactory::DataSetFactory() :
    fVerbose(kFALSE),
    fVerboseLevel(TString("Info")),
+   fScaleWithPreselEff(0),
    fCurrentTree(0),
    fCurrentEvtIdx(0),
    fInputFormulas(0),

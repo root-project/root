@@ -137,10 +137,10 @@ namespace TMVA {
       void SetTestingSumSignalWeights (Double_t testingSumSignalWeights ){fTestingSumSignalWeights  = testingSumSignalWeights ;}
       void SetTestingSumBackgrWeights (Double_t testingSumBackgrWeights ){fTestingSumBackgrWeights  = testingSumBackgrWeights ;}
 
-      Double_t GetTrainingSumSignalWeights(){return fTrainingSumSignalWeights;}
-      Double_t GetTrainingSumBackgrWeights(){return fTrainingSumBackgrWeights;}
-      Double_t GetTestingSumSignalWeights (){return fTestingSumSignalWeights ;}
-      Double_t GetTestingSumBackgrWeights (){return fTestingSumBackgrWeights ;}
+      Double_t GetTrainingSumSignalWeights();
+      Double_t GetTrainingSumBackgrWeights();
+      Double_t GetTestingSumSignalWeights ();
+      Double_t GetTestingSumBackgrWeights ();
 
 
 
