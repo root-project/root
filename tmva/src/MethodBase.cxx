@@ -459,7 +459,7 @@ void TMVA::MethodBase::ProcessBaseOptions()
       Log() << kFATAL << "<ProcessOptions> Verbosity level type '"
             << fVerbosityLevelString << "' unknown." << Endl;
    }
-   Event::fIgnoreNegWeightsInTraining = fIgnoreNegWeightsInTraining;
+   Event::SetIgnoreNegWeightsInTraining(fIgnoreNegWeightsInTraining);
 }
 
 //_______________________________________________________________________
@@ -638,7 +638,7 @@ void TMVA::MethodBase::SetTuneParameters(std::map<TString,Double_t> /* tuneParam
 void TMVA::MethodBase::TrainMethod()
 {
    Data()->SetCurrentType(Types::kTraining);
-   Event::fIsTraining = kTRUE; // used to set negative event weights to zero if chosen to do so
+   Event::SetIsTraining(kTRUE); // used to set negative event weights to zero if chosen to do so
 
    // train the MVA method
    if (Help()) PrintHelpMessage();

@@ -202,9 +202,9 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
       GetMethod()->BaseDir()->cd();
       if (i==0) GetMethod()->GetTransformationHandler().CalcTransformations(
                                                                   GetMethod()->Data()->GetEventCollection());
-      Event::fIsTraining = kTRUE;
+      Event::SetIsTraining(kTRUE);
       GetMethod()->Train();
-      Event::fIsTraining = kFALSE;
+      Event::SetIsTraining(kFALSE);
       currentFOM = GetFOM(); 
       Log() << kINFO << "FOM was found : " << currentFOM << "; current best is " << bestFOM << Endl;
       
@@ -309,9 +309,9 @@ Double_t TMVA::OptimizeConfigParameters::EstimatorFunction( std::vector<Double_t
             CalcTransformations(GetMethod()->Data()->GetEventCollection());
          fNotDoneYet=kFALSE;
       }
-      Event::fIsTraining = kTRUE;
+      Event::SetIsTraining(kTRUE);
       GetMethod()->Train();
-      Event::fIsTraining = kFALSE;
+      Event::SetIsTraining(kFALSE);
 
       
       Double_t currentFOM = GetFOM(); 

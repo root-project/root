@@ -75,9 +75,7 @@ namespace TMVA {
       Bool_t  IsDynamic()         const {return fDynamic; }
 
       //      Double_t GetWeight()         const { return fWeight*fBoostWeight; }
-      Double_t GetWeight()         const {
-        return (fIgnoreNegWeightsInTraining && fIsTraining && fWeight < 0) ? 0. : fWeight*fBoostWeight;
-      }
+      Double_t GetWeight()         const;
       Double_t GetOriginalWeight() const { return fWeight; }
       Double_t GetBoostWeight()    const { return TMath::Max(Double_t(0.0001),fBoostWeight); }
       UInt_t   GetClass()          const { return fClass; }  
@@ -117,10 +115,13 @@ namespace TMVA {
       void     CopyVarValues( const Event& other );
       void     Print        ( std::ostream & o ) const;
 
-      static   Bool_t          fIsTraining;    // mark if we are in an actual training or "evaluation/testing" phase --> ignoreNegWeights only in actual training !
-      static   Bool_t          fIgnoreNegWeightsInTraining;
-
+      static   void SetIsTraining(Bool_t);
+      static   void SetIgnoreNegWeightsInTraining(Bool_t);
    private:
+
+      static   Bool_t          fgIsTraining;    // mark if we are in an actual training or "evaluation/testing" phase --> ignoreNegWeights only in actual training !
+      static   Bool_t          fgIgnoreNegWeightsInTraining;
+
 
       mutable std::vector<Float_t>   fValues;          // the event values ; mutable, to be able to copy the dynamic values in there
       mutable std::vector<Float_t*>* fValuesDynamic;   // the event values
