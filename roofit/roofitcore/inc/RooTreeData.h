@@ -26,7 +26,7 @@ class RooTreeData : public RooAbsData {
 public:
 
   // Constructors, factory methods etc.
-  RooTreeData() {} ; 
+  RooTreeData() : _tree(0) {} ; 
   
 private:
 
