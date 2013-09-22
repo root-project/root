@@ -36,8 +36,8 @@
 #include <cassert>
 #include "TCut.h"
 
-Bool_t TMVA::Event::fIsTraining = kFALSE;
-Bool_t TMVA::Event::fIgnoreNegWeightsInTraining = kFALSE;
+Bool_t TMVA::Event::fgIsTraining = kFALSE;
+Bool_t TMVA::Event::fgIgnoreNegWeightsInTraining = kFALSE;
 
 //____________________________________________________________
 TMVA::Event::Event()
@@ -296,6 +296,37 @@ void TMVA::Event::SetSpectator( UInt_t ivar, Float_t value )
 
    if (fSpectators.size() <= ivar) fSpectators.resize( ivar+1 );
    fSpectators.at(ivar) = value;
+}
+
+//_____________________________________________________________
+Double_t TMVA::Event::GetWeight() const 
+{
+  // return the event weight - depending on whether the flag 
+  // *IgnoreNegWeightsInTraining* is or not. If it is set AND it is 
+  // used for training, then negetive event weights are set to zero !
+  // NOTE! For events used in Testing, the ORIGINAL possibly negative
+  // event weight is used  no matter what 
+
+  return (fgIgnoreNegWeightsInTraining && fgIsTraining && fWeight < 0) ? 0. : fWeight*fBoostWeight;
+}
+
+//_____________________________________________________________
+void TMVA::Event::SetIsTraining(Bool_t b)
+{
+  // when this static function is called, it sets the flag whether 
+  // events with negative event weight should be ignored in the 
+  // training, or not.
+
+  fgIsTraining=b;
+}
+//_____________________________________________________________
+void TMVA::Event::SetIgnoreNegWeightsInTraining(Bool_t b)
+{
+  // when this static function is called, it sets the flag whether 
+  // events with negative event weight should be ignored in the 
+  // training, or not.
+
+  fgIgnoreNegWeightsInTraining=b;
 }
 
 //_______________________________________________________________________

@@ -67,7 +67,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode()
    // constructor of an essentially "empty" node floating in space
    if (!fgLogger) fgLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
 
-   if (fgIsTraining){
+   if (DecisionTreeNode::fgIsTraining){
       fTrainInfo = new DTNodeTrainingInfo();
       //std::cout << "Node constructor with TrainingINFO"<<std::endl;
    }
@@ -92,7 +92,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
    // constructor of a daughter node as a daughter of 'p'
    if (!fgLogger) fgLogger = new TMVA::MsgLogger( "DecisionTreeNode" );
 
-   if (fgIsTraining){
+   if (DecisionTreeNode::fgIsTraining){
       fTrainInfo = new DTNodeTrainingInfo();
       //std::cout << "Node constructor with TrainingINFO"<<std::endl;
    }
@@ -126,7 +126,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
    if (n.GetRight() == 0 ) this->SetRight(NULL);
    else this->SetRight( new DecisionTreeNode( *((DecisionTreeNode*)(n.GetRight())),this));
 
-   if (fgIsTraining){
+   if (DecisionTreeNode::fgIsTraining){
       fTrainInfo = new DTNodeTrainingInfo(*(n.fTrainInfo));
       //std::cout << "Node constructor with TrainingINFO"<<std::endl;
    }
