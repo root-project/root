@@ -419,6 +419,8 @@ void TMVA::MethodBDT::DeclareCompatibilityOptions() {
    DeclareOptionRef(fHistoricBool=kFALSE, "PruneBeforeBoost", "Flag to prune the tree before applying boosting algorithm");
    DeclareOptionRef(fHistoricBool=kFALSE,"RenormByClass","Individually re-normalize each event class to the original size after boosting");
 
+   AddPreDefVal(TString("NegWeightTreatment"),TString("IgnoreNegWeights"));
+
 }
 
 

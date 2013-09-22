@@ -444,3 +444,4 @@ void TMVA::Configurable::ReadOptionsFromStream(std::istream& istr)
       istr.getline(buf,512); // reading the next line
    }
 }
+
