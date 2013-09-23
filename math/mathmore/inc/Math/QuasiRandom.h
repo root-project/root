@@ -93,6 +93,14 @@ namespace Math {
     bool Next(double * x) { 
       return fEngine(x); 
     }
+
+    /**
+       Generate next quasi random numbers point (1 - dimension)
+     */
+    double Next() { 
+      return fEngine(); 
+    }
+
     /** 
        Generate quasi random numbers between ]0,1[
        0 and 1 are excluded 
@@ -107,8 +115,8 @@ namespace Math {
        Function to preserve ROOT Trandom compatibility 
        The array will be filled as   x1,y1,z1,....x2,y2,z2,...
      */ 
-    void RndmArray(int n, double * array) { 
-       fEngine.GenerateArray(array, array+n*NDim());
+    bool RndmArray(int n, double * array) { 
+       return fEngine.GenerateArray(array, array+n*NDim());
     }
 
     /**
