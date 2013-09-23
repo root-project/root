@@ -1050,7 +1050,7 @@ void TTreeCache::SetEntryRange(Long64_t emin, Long64_t emax)
 
    fEntryMin  = emin;
    fEntryMax  = emax;
-   fEntryNext  = fEntryMin + fgLearnEntries;
+   fEntryNext  = fEntryMin + fgLearnEntries * needLearningStart;
    if (gDebug > 0)
       Info("SetEntryRange", "fEntryMin=%lld, fEntryMax=%lld, fEntryNext=%lld",
                              fEntryMin, fEntryMax, fEntryNext);
