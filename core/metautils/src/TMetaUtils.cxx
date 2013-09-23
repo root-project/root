@@ -1107,7 +1107,7 @@ int ROOT::TMetaUtils::extractAttrString(clang::Attr* attribute, std::string& att
    // Extract attr string
    clang::AnnotateAttr* annAttr = clang::dyn_cast<clang::AnnotateAttr>(attribute);
    if (!annAttr) {
-      TMetaUtils::Error(0,"Could not cast Attribute to AnnotatedAttribute\n");
+      //TMetaUtils::Error(0,"Could not cast Attribute to AnnotatedAttribute\n");
       return 1;
    }
    attrString = annAttr->getAnnotation();
@@ -1120,7 +1120,7 @@ int ROOT::TMetaUtils::extractPropertyNameValFromString(const std::string attribu
    // if separator found, extract name and value
    size_t substrFound (attributeStr.find(ROOT::TMetaUtils::PropertyNameValSeparator));
    if (substrFound==std::string::npos) {
-      TMetaUtils::Error(0,"Could not find property name-value separator (%s)\n",ROOT::TMetaUtils::PropertyNameValSeparator.c_str());
+      //TMetaUtils::Error(0,"Could not find property name-value separator (%s)\n",ROOT::TMetaUtils::PropertyNameValSeparator.c_str());
       return 1;
    }
    size_t EndPart1 = attributeStr.find_first_of(ROOT::TMetaUtils::PropertyNameValSeparator)  ;
