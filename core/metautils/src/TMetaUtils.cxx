@@ -1102,6 +1102,43 @@ bool ROOT::TMetaUtils::hasOpaqueTypedef(const ROOT::TMetaUtils::AnnotatedRecordD
    }
 }
 
+//______________________________________________________________________________
+int ROOT::TMetaUtils::extractAttrString(clang::Attr* attribute, std::string& attrString){
+   // Extract attr string
+   clang::AnnotateAttr* annAttr = clang::dyn_cast<clang::AnnotateAttr>(attribute);
+   if (!annAttr) {
+      TMetaUtils::Error(0,"Could not cast Attribute to AnnotatedAttribute\n");
+      return 1;
+   }
+   attrString = annAttr->getAnnotation();
+   return 0;
+}
+
+//______________________________________________________________________________
+int ROOT::TMetaUtils::extractPropertyNameValFromString(const std::string attributeStr,std::string& attrName, std::string& attrValue){
+
+   // if separator found, extract name and value
+   size_t substrFound (attributeStr.find(ROOT::TMetaUtils::PropertyNameValSeparator));
+   if (substrFound==std::string::npos) {
+      TMetaUtils::Error(0,"Could not find property name-value separator (%s)\n",ROOT::TMetaUtils::PropertyNameValSeparator.c_str());
+      return 1;
+   }
+   size_t EndPart1 = attributeStr.find_first_of(ROOT::TMetaUtils::PropertyNameValSeparator)  ;
+   attrName = attributeStr.substr(0, EndPart1);
+   const int separatorLength(ROOT::TMetaUtils::PropertyNameValSeparator.size());
+   attrValue = attributeStr.substr(EndPart1 + separatorLength);
+   return 0;
+}
+
+//______________________________________________________________________________
+int ROOT::TMetaUtils::extractPropertyNameVal(clang::Attr* attribute, std::string& attrName, std::string& attrValue){
+   std::string attrString;
+   int ret = ROOT::TMetaUtils::extractAttrString(attribute, attrString);
+   if (0!=ret) return ret;
+   return ROOT::TMetaUtils::extractPropertyNameValFromString(attrString, attrName,attrValue);   
+}
+
+//______________________________________________________________________________
 void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const clang::CXXRecordDecl *decl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, bool& needCollectionProxy)
 {
 
@@ -1401,24 +1438,20 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
       std::string manipString;
       std::size_t substrFound;
       std::string attribute_s;
-      const int separatorLength(ROOT::TMetaUtils::PropertyNameValSeparator.size());
+      std::string attrName, attrValue;
       // Class properties
       bool attrMapExtracted = false;
       if (decl->hasAttrs()){
          // Loop on the attributes
          for (clang::Decl::attr_iterator attrIt = decl->attr_begin();
-              attrIt!=decl->attr_end();++attrIt){
-            // Extract name
-            clang::AnnotateAttr* annAttr = clang::dyn_cast<clang::AnnotateAttr>(*attrIt);
-            if (!annAttr) continue;
-            attribute_s = annAttr->getAnnotation();
-            // if separator found, extract name and value
-            substrFound = attribute_s.find(ROOT::TMetaUtils::PropertyNameValSeparator);
-            if (substrFound==std::string::npos) continue;
-            size_t EndPart1 = attribute_s.find_first_of(ROOT::TMetaUtils::PropertyNameValSeparator)  ;          
-            std::string attrName (attribute_s.substr(0, EndPart1));
-            if (attrName == "name" || attrName == "pattern") continue;
-            std::string attrValue (attribute_s.substr(EndPart1 + separatorLength));
+              attrIt!=decl->attr_end();++attrIt){            
+            if ( 0!=ROOT::TMetaUtils::extractAttrString(*attrIt,attribute_s)){
+               continue;
+            }            
+            if (0!=ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)){
+               continue;
+            }
+            if (attrName == "name" || attrName == "pattern") continue;            
             // A general property
             // 1) We need to create the property map (in the gen code)
             // 2) we need to take out the map (in the gen code)
