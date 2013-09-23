@@ -82,6 +82,21 @@
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngRanLuxD2>+;
 #pragma link C++ class ROOT::Math::Random<ROOT::Math::GSLRngGFSR4>+;
 
+#pragma link C++ typedef ROOT::Math::RandomMT;
+#pragma link C++ typedef ROOT::Math::RandomTaus;
+#pragma link C++ typedef ROOT::Math::RandomRanLux;
+#pragma link C++ typedef ROOT::Math::RandomGFSR4;
+
+
+#pragma link C++ class ROOT::Math::GSLQRngSobol+;
+#pragma link C++ class ROOT::Math::GSLQRngNiederreiter2+;
+#pragma link C++ class ROOT::Math::QuasiRandom<ROOT::Math::GSLQRngSobol>+;
+#pragma link C++ class ROOT::Math::QuasiRandom<ROOT::Math::GSLQRngNiederreiter2>+;
+#pragma link C++ typedef ROOT::Math::QuasiRandomSobol;
+#pragma link C++ typedef ROOT::Math::QuasiRandomNiederreiter;
+
+
+
 #pragma link C++ class ROOT::Math::KelvinFunctions+;
 
 #pragma link C++ class ROOT::Math::GSLMinimizer+;

@@ -110,11 +110,11 @@ namespace Math {
    }
 
 
-   bool GSLQuasiRandomEngine::RandomArray(double * begin, double * end )  const { 
+   bool GSLQuasiRandomEngine::GenerateArray(double * begin, double * end )  const { 
       // generate array of randoms betweeen 0 and 1. 0 is excluded 
       // specialization for double * (to be faster)       
       int status = 0;
-      for ( double * itr = begin; itr != end; ++itr ) { 
+      for ( double * itr = begin; itr != end; itr+=fQRng->Dimension() ) { 
          status |= gsl_qrng_get(fQRng->Rng(), itr ); 
       }
       return status == 0;

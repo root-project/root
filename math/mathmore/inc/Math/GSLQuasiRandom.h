@@ -28,8 +28,8 @@
 // 
 // Last update: Sun Nov 21 16:26:03 2004
 // 
-#ifndef ROOT_Math_GSLRndmEngines
-#define ROOT_Math_GSLRndmEngines
+#ifndef ROOT_Math_GSLQuasiRandom
+#define ROOT_Math_GSLQuasiRandom
 
 #include <string>
 #include <vector>
@@ -109,7 +109,7 @@ namespace Math {
          Generate an array of quasi random numbers 
          The iterators points to the random numbers 
       */
-      bool RandomArray(double * begin, double * end) const;  
+      bool GenerateArray(double * begin, double * end) const;  
 
       /**
          return name of generator
@@ -176,5 +176,5 @@ namespace Math {
 } // namespace ROOT
 
 
-#endif /* ROOT_Math_GSLRndmEngines */
+#endif /* ROOT_Math_GSLQuasiRandom */
 
