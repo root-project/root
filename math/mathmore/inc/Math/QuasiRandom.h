@@ -75,8 +75,8 @@ namespace Math {
        Engine will  be initialized via Initialize() function in order to 
        allocate resources
      */
-    explicit QuasiRandom(const Engine & e) : fEngine(e) {
-      fEngine.Initialize(); 
+     explicit QuasiRandom(const Engine & e, unsigned int dimension = 1) : fEngine(e) {
+      fEngine.Initialize(dimension); 
     } 
 
     /**
@@ -88,15 +88,15 @@ namespace Math {
     }
 
     /**
-       Generate next random numbers points
+       Generate next quasi random numbers points
      */
     bool Next(double * x) { 
       return fEngine(x); 
     }
     /** 
-       Generate random numbers between ]0,1[
+       Generate quasi random numbers between ]0,1[
        0 and 1 are excluded 
-       Function to preserve ROOT TRandom compatibility 
+       Function to be compatible with  ROOT TRandom compatibility 
      */  
    double Rndm() { 
       return fEngine(); 
@@ -108,7 +108,7 @@ namespace Math {
        The array will be filled as   x1,y1,z1,....x2,y2,z2,...
      */ 
     void RndmArray(int n, double * array) { 
-      fEngine.QuasiRandomArray(array, array+n);
+       fEngine.GenerateArray(array, array+n*NDim());
     }
 
     /**
@@ -140,6 +140,24 @@ namespace Math {
 
   }; 
 
+
+
+} // namespace Math
+} // namespace ROOT
+
+#ifndef ROOT_Math_GSLQuasiRandom
+#include "Math/GSLQuasiRandom.h"
+#endif
+
+
+
+
+namespace ROOT {
+namespace Math {
+
+
+typedef QuasiRandom<ROOT::Math::GSLQRngSobol> QuasiRandomSobol;
+typedef QuasiRandom<ROOT::Math::GSLQRngNiederreiter2> QuasiRandomNiederreiter;
 
 } // namespace Math
 } // namespace ROOT

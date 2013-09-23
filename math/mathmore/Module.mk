@@ -42,6 +42,8 @@ MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
                 $(MODDIRI)/Math/ChebyshevApprox.h  \
                 $(MODDIRI)/Math/Random.h \
                 $(MODDIRI)/Math/GSLRndmEngines.h \
+                $(MODDIRI)/Math/QuasiRandom.h \
+                $(MODDIRI)/Math/GSLQuasiRandom.h \
                 $(MODDIRI)/Math/KelvinFunctions.h \
                 $(MODDIRI)/Math/GSLMinimizer.h \
                 $(MODDIRI)/Math/GSLNLSMinimizer.h \

@@ -87,6 +87,10 @@ RANDOMDISTOBJ      = testRandomDist.$(ObjSuf)
 RANDOMDISTSRC      = testRandomDist.$(SrcSuf)
 RANDOMDIST         = testRandomDist$(ExeSuf)
 
+QUASIRANDOMOBJ      = testQuasiRandom.$(ObjSuf)
+QUASIRANDOMSRC      = testQuasiRandom.$(SrcSuf)
+QUASIRANDOM         = testQuasiRandom$(ExeSuf)
+
 SPECFUNCOBJ      = testSpecFunc.$(ObjSuf)
 SPECFUNCSRC      = testSpecFunc.$(SrcSuf)
 SPECFUNC         = testSpecFunc$(ExeSuf)
@@ -111,11 +115,11 @@ SIMANTSP         = simanTSP$(ExeSuf)
 
 
 OBJS          = $(CHEBYSHEVOBJ) $(DERIVATIONOBJ) $(INTEGRATIONOBJ) $(INTEGRATIONMDOBJ) $(ROOTFINDEROBJ) $(MULTIROOTFINDEROBJ)\
-                  $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) $(RANDOMDISTOBJ) \
+                  $(MINIMIZATION1DOBJ) $(INTERPOLATIONOBJ)  $(RANDOMOBJ) $(RANDOMDISTOBJ) $(QUASIRANDOMOBJ) \
 	          $(SPECFUNCOBJ) $(STATFUNCOBJ) $(TESTFUNCTOROBJ)  $(TESTPERMUTEOBJ) $(TESTVAVILOVOBJ) $(SIMANTSPOBJ)
 
 PROGRAMS      = $(CHEBYSHEV)  $(DERIVATION) $(INTEGRATION) $(INTEGRATIONMD) $(ROOTFINDER) $(MULTIROOTFINDER) \
-                  $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM) $(RANDOMDIST)  \
+                  $(MINIMIZATION1D) $(INTERPOLATION) $(RANDOM) $(RANDOMDIST)  $(QUASIRANDOM) \
 	          $(SPECFUNC) $(STATFUNC) $(TESTFUNCTOR) $(TESTPERMUTE) $(TESTVAVILOV) $(SIMANTSP)
 		  
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
@@ -165,6 +169,10 @@ testRandomDist.$(ObjSuf):       UnuRanDist.h
 
 $(RANDOMDIST):  $(RANDOMDISTOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(UNURANLIB) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(QUASIRANDOM): $(QUASIRANDOMOBJ)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
 $(SPECFUNC):  	$(SPECFUNCOBJ)
