@@ -350,6 +350,7 @@ void TMVA::MethodBDT::DeclareOptions()
    DeclareOptionRef(fNegWeightTreatment="InverseBoostNegWeights","NegWeightTreatment","How to treat events with negative weights in the BDT training (particular the boosting) : IgnoreInTraining;  Boost With inverse boostweight; Pair events with negative and positive weights in traning sample and *annihilate* them (experimental!)");
    AddPreDefVal(TString("InverseBoostNegWeights"));
    AddPreDefVal(TString("IgnoreNegWeightsInTraining"));
+   AddPreDefVal(TString("NoNegWeightsInTraining"));    // well, let's be nice to users and keep at least this old name anyway .. 
    AddPreDefVal(TString("PairNegWeightsGlobal"));
    AddPreDefVal(TString("Pray"));
 
@@ -542,6 +543,7 @@ void TMVA::MethodBDT::ProcessOptions()
 
    fNegWeightTreatment.ToLower();
    if      (fNegWeightTreatment == "ignorenegweightsintraining")   fNoNegWeightsInTraining = kTRUE;
+   else if (fNegWeightTreatment == "nonegweightsintraining")   fNoNegWeightsInTraining = kTRUE;
    else if (fNegWeightTreatment == "inverseboostnegweights") fInverseBoostNegWeights = kTRUE;
    else if (fNegWeightTreatment == "pairnegweightsglobal")   fPairNegWeightsGlobal   = kTRUE;
    else if (fNegWeightTreatment == "pray")   Log() << kWARNING << "Yes, good luck with praying " << Endl;

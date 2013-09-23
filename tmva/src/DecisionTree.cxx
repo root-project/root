@@ -929,6 +929,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    }
    useVariable[fNvars] = kFALSE; //by default fisher is not used..
 
+   Bool_t fisherOK = kFALSE; // flag to show that the fisher discriminant could be calculated correctly or not;
    if (fUseFisherCuts) {
       useVariable[fNvars] = kTRUE; // that's were I store the "fisher MVA"
 
@@ -944,48 +945,50 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       std::vector<TMatrixDSym*>* covMatrices;
       covMatrices = gTools().CalcCovarianceMatrices( eventSample, 2 ); // currently for 2 classes only
       if (!covMatrices){
-         Log() << kFATAL << " in TrainNodeFast, I tried to calculate the covariance Matrices needed for the Fisher-Cuts, but \n got a NULL-Pointer back... don't know what to do other than to abort. Sorry " << Endl;
-         return 0; //hope this return,although totally irrelevant after a kFATAL will make coverity happy !
-      }
-      TMatrixD *ss = new TMatrixD(*(covMatrices->at(0)));
-      TMatrixD *bb = new TMatrixD(*(covMatrices->at(1)));
-      const TMatrixD *s = gTools().GetCorrelationMatrix(ss);
-      const TMatrixD *b = gTools().GetCorrelationMatrix(bb);
-      
-      for (UInt_t ivar=0; ivar < fNvars; ivar++) {
-         for (UInt_t jvar=ivar+1; jvar < fNvars; jvar++) {
-            if (  ( TMath::Abs( (*s)(ivar, jvar)) > fMinLinCorrForFisher) ||
-                  ( TMath::Abs( (*b)(ivar, jvar)) > fMinLinCorrForFisher) ){
-               useVarInFisher[ivar] = kTRUE;
-               useVarInFisher[jvar] = kTRUE;
+         Log() << kWARNING << " in TrainNodeFast, the covariance Matrices needed for the Fisher-Cuts returned error --> revert to just normal cuts for this node" << Endl;
+         fisherOK = kFALSE;
+      }else{
+         TMatrixD *ss = new TMatrixD(*(covMatrices->at(0)));
+         TMatrixD *bb = new TMatrixD(*(covMatrices->at(1)));
+         const TMatrixD *s = gTools().GetCorrelationMatrix(ss);
+         const TMatrixD *b = gTools().GetCorrelationMatrix(bb);
+         
+         for (UInt_t ivar=0; ivar < fNvars; ivar++) {
+            for (UInt_t jvar=ivar+1; jvar < fNvars; jvar++) {
+               if (  ( TMath::Abs( (*s)(ivar, jvar)) > fMinLinCorrForFisher) ||
+                     ( TMath::Abs( (*b)(ivar, jvar)) > fMinLinCorrForFisher) ){
+                  useVarInFisher[ivar] = kTRUE;
+                  useVarInFisher[jvar] = kTRUE;
+               }
             }
          }
-      }
-      // now as you know which variables you want to use, count and map them:
-      // such that you can use an array/matrix filled only with THOSE variables
-      // that you used
-      UInt_t nFisherVars = 0;
-      for (UInt_t ivar=0; ivar < fNvars; ivar++) {
-         //now .. pick those variables that are used in the FIsher and are also
-         //  part of the "allowed" variables in case of Randomized Trees)
-         if (useVarInFisher[ivar] && useVariable[ivar]) {
-            mapVarInFisher[nFisherVars++]=ivar;
-            // now exclud the the variables used in the Fisher cuts, and don't 
-            // use them anymore in the individual variable scan
-            if (fUseExclusiveVars) useVariable[ivar] = kFALSE;
+         // now as you know which variables you want to use, count and map them:
+         // such that you can use an array/matrix filled only with THOSE variables
+         // that you used
+         UInt_t nFisherVars = 0;
+         for (UInt_t ivar=0; ivar < fNvars; ivar++) {
+            //now .. pick those variables that are used in the FIsher and are also
+            //  part of the "allowed" variables in case of Randomized Trees)
+            if (useVarInFisher[ivar] && useVariable[ivar]) {
+               mapVarInFisher[nFisherVars++]=ivar;
+               // now exclud the the variables used in the Fisher cuts, and don't 
+               // use them anymore in the individual variable scan
+               if (fUseExclusiveVars) useVariable[ivar] = kFALSE;
+            }
          }
+         
+         
+         fisherCoeff = this->GetFisherCoefficients(eventSample, nFisherVars, mapVarInFisher);
+         fisherOK = kTRUE;
+         delete [] useVarInFisher;
+         delete [] mapVarInFisher;
       }
-      
-      
-      fisherCoeff = this->GetFisherCoefficients(eventSample, nFisherVars, mapVarInFisher);
-      delete [] useVarInFisher;
-      delete [] mapVarInFisher;
    }
 
 
    const UInt_t nBins = fNCuts+1;
    UInt_t cNvars = fNvars;
-   if (fUseFisherCuts) cNvars++;  // use the Fisher output simple as additional variable
+   if (fUseFisherCuts && fisherOK) cNvars++;  // use the Fisher output simple as additional variable
 
    Double_t** nSelS = new Double_t* [cNvars];
    Double_t** nSelB = new Double_t* [cNvars];
