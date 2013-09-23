@@ -18,6 +18,7 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Lookup.h"
