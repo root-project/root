@@ -509,11 +509,13 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
       if (ceSum[3]>wt) ceSum[3]=wt;  // minimum weight;
       if (ceSum[4]<wt) ceSum[4]=wt;  // maximum weight
       // test MC loop exit condition
-      nevEff = ceSum[0]*ceSum[0]/ceSum[1];
+      if (ceSum[1]>0) nevEff = ceSum[0]*ceSum[0]/ceSum[1];
+      else            nevEff = 0;
       if ( nevEff >= fNBin*fEvPerBin) break;
    }   // ||||||||||||||||||||||||||END MC LOOP|||||||||||||||||||||||||||||
    totevents *= dx;
-   totevents /= fNSampl;
+   
+   if (fNSampl>0) totevents /= fNSampl;
 
    // make shure that, if root cell is explored, more than zero
    // events were found.
