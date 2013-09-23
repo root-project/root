@@ -72,21 +72,11 @@ deprecated --> use <tt>BaggedSampleFraction</tt> instead </dd>
   <dt>  <tt>PruneBeforeBoost</tt> --> removed<dt>
                <dd> - it has been mostly a debug/trial option</dt>
 
-  <dt>  <tt>NegWeightTreatment=IgnoreNegWeights</tt> --> removed </dt>
+  <dt>  <tt>NegWeightTreatment=IgnoreNegWeights</tt> --> replaced by NegWeightTreatment=IgnoreNegWeightsInTraining </dt>
 
   <dd> - Unfortunatly the default "IgnoreNegWeights" to the BDT option  "NegWeightTreatment"
-collided with the a global option and had to be removed. Unfortunatly that may
-cause some -backward incompatibility- as reading old weightfiles that have this
-option set cannot be read anymore. If you are affected, please take the .xml weight file and do the following
-change in there: <br>
-<tt>
-&ltOption name="NegWeightTreatment" modified="No" &gt ignorenegweights &lt&#47Option&gt<br></tt>
-needs to be changed to<br>
- <tt>
-&ltOption name="NegWeightTreatment" modified="No" &gt ignorenegweightsintraining &lt&#47Option&gt <br> 
-    </dd></tt>
+collided with the a global option and had to be replaced. 
 
-</dl>
 
 
 
