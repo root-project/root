@@ -32,7 +32,6 @@
 #define ROOT_Math_QuasiRandom
 
 #include <string> 
-#include <vector> 
 
 /**
    @defgroup QuasiRandom QuasiRandom number generators and distributions
@@ -140,7 +139,12 @@ namespace Math {
       return fEngine.NDim();
     }
 
-    
+    /**
+       Return the name of the generator  
+     */
+    std::string Name() const { 
+       return fEngine.Name();
+    }
 
   private: 
 
