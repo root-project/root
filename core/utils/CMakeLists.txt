@@ -12,6 +12,8 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx
                           $<TARGET_OBJECTS:MetaUtils> $<TARGET_OBJECTS:MetaUtilsLLVM>
                           LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 add_dependencies(rootcling CLING LLVMRES)
+add_custom_command(TARGET rootcling POST_BUILD
+                  COMMAND ${CMAKE_COMMAND} -E create_symlink rootcling ../../bin/rootcint)
 
 add_custom_command(OUTPUT rootcling_tmp.cxx
                    COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx rootcling_tmp.cxx )

@@ -167,8 +167,8 @@ include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 #---according to the setting of CMAKE_INSTALL_DIR
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  message(STATUS "Setting default installation prefix CMAKE_INSTALL_PREFIX to ${ROOTSYS}")
-  set(CMAKE_INSTALL_PREFIX ${ROOTSYS} CACHE PATH "Default installation of ROOT" FORCE)
+#  message(STATUS "Setting default installation prefix CMAKE_INSTALL_PREFIX to ${ROOTSYS}")
+#  set(CMAKE_INSTALL_PREFIX ${ROOTSYS} CACHE PATH "Default installation of ROOT" FORCE)
 endif()
 
 #if(ROOT_INSTALL_DIR)

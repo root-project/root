@@ -111,7 +111,7 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(DIRECTORY macros/ DESTINATION macros PATTERN ".svn" EXCLUDE)
   install(DIRECTORY man/    DESTINATION man PATTERN ".svn" EXCLUDE)
   install(DIRECTORY test/      DESTINATION test COMPONENT tests PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY tutorials/ DESTINATION tutorials COMPONENT tests PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY tutorials/ DESTINATION tutorials COMPONENT tutorials PATTERN ".svn" EXCLUDE)
   install(DIRECTORY cmake/modules DESTINATION cmake PATTERN ".svn" EXCLUDE)
 endif()
 
@@ -119,6 +119,11 @@ endif()
 if(testing)
   include(RootCTest)
   add_subdirectory(test)
+  #---Install the headers which are needed to run the tests from the binary tree-----------------
+  add_custom_target(move_headers ALL 
+                    ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
+                                     -DCOMPONENTS="headers\;tutorials"
+                                     -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake )
 endif()
 
 #---Packaging-------------------------------------------------------------------------------------
