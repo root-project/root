@@ -23,15 +23,30 @@ System requirements:
 Getting Started: 
 ----------------
 
-  How to compile the code:
-  ------------------------
+  How to compile the code (as standalone TMVA, outside the general ROOT built) :
+  -------------------------------------------------------------------------------
   /home> cd TMVA
   /home/TMVA> make                   # compile and build the library lib/libTMVA.1.so
+  then, in order to pick up THIS TMVA libraries, and not those that are probably 
+  included in your ROOT distribution, you have to go into your working directory and
+  do:
+
+  /home/YOURWORKDIR> cp /home/TMVA/test/setup.(c)sh  .    
+  /home/YOURWORKDIR> source setup.(c)sh /home/TMVA  (or whatever the path of your TMVA installation is) 
+
+  (where /home/TMVA shuld be replaced by whatever directory your TMVA installation might be in)
 
   How to run the code as ROOT macro: # training/testing of an academic example
-  ----------------------------------
-  /home/TMVA> cd test
-  /home/TMVA/test> source setup.sh   # setup script must be exectuted before running macros (use setup.csh for c-shell)
+  In the directory /home/TMVA/test  
+  you find a number of example macros  AND utility macros that are used by TMVA
+  (like the TMVAGui.C  etc) As these macros are needed for everything including
+  the 'evaluation macros' called by the TMVAGui.C, make sure the path to this
+  directory is included in your ROOT macro paths:
+  i.e. you find a line in the .rootrc like:
+       Unix.*.Root.MacroPath:   .:$TMVASYS/test
+  (this will be done by running the 'setup.sh' .. unless you already have a
+  different .rootrc in your workig directory)
+  ----------------------------------------------------------------------------
 
   --- For classification:
   /home/TMVA/test> root -l TMVAClassification.C                       # run all standard classifiers (takes a while)
