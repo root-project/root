@@ -770,36 +770,25 @@ void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
   RooAbsArg* real ;
   _iterator->Reset() ;
   while((real=(RooAbsArg*)_iterator->Next())) {
-    if (dynamic_cast<RooAbsReal*>(real)) _realVars.add(*real) ;
+    if (dynamic_cast<RooAbsReal*>(real)) _realVars.add(*real);
   }
   _realIter = _realVars.createIterator() ;
 
   // Fill array of LValue pointers to variables
-  _iterator->Reset() ;
-  RooAbsArg* rvarg ;
+  _iterator->Reset();
+  RooAbsArg* rvarg;
   while((rvarg=(RooAbsArg*)_iterator->Next())) {
     if (binningName) {
-      RooRealVar* rrv = dynamic_cast<RooRealVar*>(rvarg) ; 
+      RooRealVar* rrv = dynamic_cast<RooRealVar*>(rvarg); 
       if (rrv) {
-	rrv->setBinning(rrv->getBinning(binningName)) ;
+	rrv->setBinning(rrv->getBinning(binningName));
       }
     }
     // coverity[FORWARD_NULL]
-    _lvvars.push_back(dynamic_cast<RooAbsLValue*>(rvarg)) ;    
+    _lvvars.push_back(dynamic_cast<RooAbsLValue*>(rvarg));    
     // coverity[FORWARD_NULL]
-    const RooAbsBinning* binning = dynamic_cast<RooAbsLValue*>(rvarg)->getBinningPtr(0) ;
-    _lvbins.push_back(binning ? binning->clone() : 0);    
-    if (binning) {
-	_binbounds.push_back(std::vector<Double_t>());
-	std::vector<Double_t>& bounds = _binbounds.back();
-	bounds.reserve(2 * binning->numBins());
-	for (Int_t i = 0; i < binning->numBins(); ++i) {
-	  bounds.push_back(binning->binLow(i));
-	  bounds.push_back(binning->binHigh(i));
-	}
-    } else {
-	_binbounds.push_back(std::vector<Double_t>());
-    }
+    const RooAbsBinning* binning = dynamic_cast<RooAbsLValue*>(rvarg)->getBinningPtr(0);
+    _lvbins.push_back(binning ? binning->clone() : 0);
   }
 
   
@@ -872,6 +861,23 @@ void RooDataHist::initialize(const char* binningName, Bool_t fillTree)
 }
 
 
+//_____________________________________________________________________________
+void RooDataHist::checkBinBounds() const
+{
+  if (!_binbounds.empty()) return;
+  for (std::vector<const RooAbsBinning*>::const_iterator it = _lvbins.begin();
+      _lvbins.end() != it; ++it) {
+    _binbounds.push_back(std::vector<Double_t>());
+    if (*it) {
+      std::vector<Double_t>& bounds = _binbounds.back();
+      bounds.reserve(2 * (*it)->numBins());
+      for (Int_t i = 0; i < (*it)->numBins(); ++i) {
+	bounds.push_back((*it)->binLow(i));
+	bounds.push_back((*it)->binHigh(i));
+      }
+    }
+  }
+}
 
 //_____________________________________________________________________________
 RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
@@ -1643,6 +1649,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
   // binVolumeInRange/totalBinVolume.
 
   checkInit();
+  checkBinBounds();
   RooArgSet varSave;
   varSave.addClone(_vars);
   {
@@ -1675,7 +1682,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
       rangeHi[i] = it->second.second;
     }
   }
-    
+
   // Loop over entire data set, skipping masked entries
   Double_t total(0), carry(0);
   for (Int_t ibin = 0; ibin < _arrSize; ++ibin) {
@@ -1697,15 +1704,16 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
 	(arg=(RooAbsArg*)_iterator->Next()); ++ivar) {
       const Int_t idx = tmp / _idxMult[ivar];
       tmp -= idx*_idxMult[ivar];
-	const Double_t binLo = _binbounds[ivar][2 * idx];
-	const Double_t binHi = _binbounds[ivar][2 * idx + 1];
-	if (binHi < rangeLo[ivar] || binLo > rangeHi[ivar]) {
-	  // bin is outside of allowed range - effective bin volume is zero
-	  theBinVolume = 0.;
-	  break;
-	}
-	theBinVolume *= 
-	  (std::min(rangeHi[ivar], binHi) - std::max(rangeLo[ivar], binLo));
+      if (_binbounds[ivar].empty()) continue;
+      const Double_t binLo = _binbounds[ivar][2 * idx];
+      const Double_t binHi = _binbounds[ivar][2 * idx + 1];
+      if (binHi < rangeLo[ivar] || binLo > rangeHi[ivar]) {
+	// bin is outside of allowed range - effective bin volume is zero
+	theBinVolume = 0.;
+	break;
+      }
+      theBinVolume *= 
+	(std::min(rangeHi[ivar], binHi) - std::max(rangeLo[ivar], binLo));
     }
     Double_t corr = theBinVolume;
     if (!correctForBinSize) corr /= _binv[ibin];

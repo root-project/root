@@ -149,6 +149,7 @@ protected:
 	                Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) ;
   Double_t interpolateDim(RooRealVar& dim, const RooAbsBinning* binning, Double_t xval, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) ;
   void calculatePartialBinVolume(const RooArgSet& dimSet) const ;
+  void checkBinBounds() const;
 
   void adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset=0) ;
   void importTH1(const RooArgList& vars, TH1& histo, Double_t initWgt, Bool_t doDensityCorrection) ;
@@ -182,7 +183,7 @@ protected:
   mutable RooCacheManager<std::vector<Double_t> > _pbinvCacheMgr ; //! Cache manager for arrays of partial bin volumes
   std::vector<RooAbsLValue*> _lvvars ; //! List of observables casted as RooAbsLValue
   std::vector<const RooAbsBinning*> _lvbins ; //! List of used binnings associated with lvalues
-  std::vector<std::vector<Double_t> > _binbounds; //! list of bin bounds per dimension
+  mutable std::vector<std::vector<Double_t> > _binbounds; //! list of bin bounds per dimension
 
 private:
 
