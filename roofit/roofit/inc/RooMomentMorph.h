@@ -26,7 +26,7 @@ class RooChangeTracker ;
 class RooMomentMorph : public RooAbsPdf {
 public:
 
-  enum Setting { Linear, NonLinear, NonLinearPosFractions, NonLinearLinFractions } ;
+  enum Setting { Linear, NonLinear, NonLinearPosFractions, NonLinearLinFractions, SineLinear } ;
 
   RooMomentMorph() ;
 
@@ -40,6 +40,8 @@ public:
 
   void     setMode(const Setting& setting) { _setting = setting; }
 
+  void useHorizontalMorphing(bool val) { _useHorizMorph = val; }
+
   virtual Bool_t selfNormalized() const { 
     // P.d.f is self normalized
     return kTRUE ; 
@@ -47,6 +49,7 @@ public:
 
   virtual Double_t getVal(const RooArgSet* set=0) const ;
   RooAbsPdf* sumPdf(const RooArgSet* nset) ;
+
 
 protected:
 
@@ -89,7 +92,9 @@ protected:
 
   Setting _setting;
 
-  ClassDef(RooMomentMorph,1) // Your description goes here...
+  bool _useHorizMorph;
+
+  ClassDef(RooMomentMorph,3) // Your description goes here...
 };
  
 #endif

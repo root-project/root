@@ -46,6 +46,8 @@ namespace HistFactory{
     virtual TObject* clone(const char* newname) const { return new FlexibleInterpVar(*this, newname); }
     virtual ~FlexibleInterpVar() ;
 
+    virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose = kFALSE, TString indent = "") const;
+    virtual void printFlexibleInterpVars(ostream& os) const;
 
   protected:
 

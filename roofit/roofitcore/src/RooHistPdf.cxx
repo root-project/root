@@ -333,7 +333,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   iter = _histObsList.createIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
-    if (allVars.find(arg->GetName())) {
+    if (allVarsHist.find(arg->GetName())) {
       code |= (1<<n) ;
       analVars.add(*pobsl.at(n)) ;
     }
@@ -602,7 +602,6 @@ Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
 
   // Redirect our internal pointer to the copy in the workspace
   _dataHist = (RooDataHist*) ws.embeddedData(_dataHist->GetName()) ;
-
   return kFALSE ;
 }
 
