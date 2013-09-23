@@ -103,6 +103,16 @@ TClingClassInfo *TClingBaseClassInfo::GetBase() const
    return fBaseInfo;
 }
 
+long * TClingBaseClassInfo:GenerateBaseOffsetFunction(ClassInfo_t * derivedClass, ClassInto_t* targetClass, void * address) const
+{
+   // Generate a function at run-time that would calculate the offset 
+   // from the parameter derived class to the parameter target class for the
+   // address.
+
+   long * function = 0; 
+   return function;
+}
+
 bool TClingBaseClassInfo::IsValid() const
 {
    return
@@ -214,32 +224,6 @@ int TClingBaseClassInfo::Next(int onlyDirect)
 int TClingBaseClassInfo::Next()
 {
    return Next(1);
-}
-
-long TClingBaseClassInfo::Offset() const
-{
-   if (!IsValid()) {
-      return -1;
-   }
-   const clang::RecordType* Ty = fIter->getType()->getAs<clang::RecordType>();
-   if (!Ty) {
-      // A dependent type (uninstantiated template), invalid.
-      return -1;
-   }
-   // Check if current base class has a definition.
-   const clang::CXXRecordDecl* Base =
-      llvm::cast_or_null<clang::CXXRecordDecl>(Ty->getDecl()->
-            getDefinition());
-   if (!Base) {
-      // No definition yet (just forward declared), invalid.
-      return -1;
-   }
-   clang::ASTContext& Context = Base->getASTContext();
-   const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
-   const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
-   int64_t offset = Layout.getBaseClassOffset(Base).getQuantity();
-   long clang_val = fOffset + static_cast<long>(offset);
-   return clang_val;
 }
 
 long TClingBaseClassInfo::Offset(void * address) const
