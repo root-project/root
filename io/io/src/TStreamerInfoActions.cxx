@@ -1202,7 +1202,8 @@ namespace TStreamerInfoActions
          for(Int_t i = 0 ; i < nvalues; ++i) {
             (*vec)[i] = items[i];
          }
-            
+         delete [] items;
+
          // We could avoid the call to ReadFastArray, and we could
          // the following, however this breaks TBufferXML ...
          // for(Int_t i = 0 ; i < nvalues; ++i) {
