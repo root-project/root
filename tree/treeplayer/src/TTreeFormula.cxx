@@ -3339,7 +3339,7 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                   // NOTE: Should we check that this is a valid index?
                   if (check) {
                      Int_t index_real_instance = fVarIndexes[codeindex][0]->GetRealInstance(local_index,-1);
-                     if (index_real_instance > fVarIndexes[codeindex][0]->fNdata[0]) {
+                     if (index_real_instance >= fVarIndexes[codeindex][0]->fNdata[0]) {
                         // out of bounds
                         return fNdata[0]+1;
                      }
@@ -3628,7 +3628,7 @@ void* TTreeFormula::EvalObject(int instance)
                     leaf->GetBranch()->GetTree()->GetReadEntry(),
                     fQuickLoad);
    }
-   else if (real_instance>fNdata[0]) return 0;
+   else if (real_instance>=fNdata[0]) return 0;
    if (fAxis) {
       return 0;
    }
@@ -3717,7 +3717,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
 #define TREE_EVAL_INIT                                                                          \
    const Int_t real_instance = GetRealInstance(instance,0);                                     \
                                                                                                 \
-   if (real_instance>fNdata[0]) return 0;                                                       \
+   if (real_instance>=fNdata[0]) return 0;                                                      \
                                                                                                 \
    if (fAxis) {                                                                                 \
       char * label;                                                                             \
@@ -3754,13 +3754,13 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );                        \
       }                                                                                         \
    }                                                                                            \
-   if (real_instance>fNdata[code]) return 0;
+   if (real_instance>=fNdata[code]) return 0;
 
 #define TREE_EVAL_INIT_LOOP                                                                     \
    /* Now let calculate what physical instance we really need.  */                              \
    const Int_t real_instance = GetRealInstance(instance,code);                                  \
                                                                                                 \
-   if (real_instance>fNdata[code]) return 0;
+   if (real_instance>=fNdata[code]) return 0;
 
 namespace {
    Double_t Summing(TTreeFormula *sum) {
@@ -4290,7 +4290,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                      Long64_t treeEntry = br->GetTree()->GetReadEntry();
                      R__LoadBranch(br,treeEntry,kTRUE);
                   }
-                  if (real_instance>fNdata[string_code]) return 0;
+                  if (real_instance>=fNdata[string_code]) return 0;
                }
                pos2++;
                if (fLookupType[string_code]==kDirect) {
