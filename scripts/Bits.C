@@ -2,7 +2,7 @@
 // $Id$
 //
 
-#include <Riosfwd.h>
+#include <Riostream.h>
 
 void Bits()
 {
