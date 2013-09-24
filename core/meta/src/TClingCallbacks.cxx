@@ -174,6 +174,7 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 }
 
 bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name){
+   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
    // Get the 'lookup' decl context.
    if (!fDeclContextToLookIn)
       return false;
@@ -198,6 +199,7 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name){
 }
 
 bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
+   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
    if (ClassTemplateSpecializationDecl* Specialization 
        = dyn_cast<ClassTemplateSpecializationDecl>(Tag)) {
       Sema &SemaR = m_Interpreter->getSema();
