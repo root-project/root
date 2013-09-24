@@ -2578,11 +2578,27 @@ int createRootMapFile(const std::string& rootmapFileName,
 }
 
 //_____________________________________________________________________________
-void extractSelectedClasses(RScanner& scan, std::list<std::string>& classesList){
+void extractSelectedClasses(RScanner& scan,
+                            std::list<std::string>& classesList,
+                            std::list<std::string>& classesListForRootmap){
+
+   std::string attrName,attrValue;
    // Loop on selected classes and put them in a list
    for (RScanner::ClassColl_t::const_iterator selClassesIter = scan.fSelectedClasses.begin();
         selClassesIter!= scan.fSelectedClasses.end(); selClassesIter++){
-      classesList.push_back(selClassesIter->GetNormalizedName());   
+      const char* normalizedName=selClassesIter->GetNormalizedName();
+      classesList.push_back(normalizedName);
+      const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
+      for (clang::RecordDecl::attr_iterator ait = rDecl->attr_begin ();
+           ait != rDecl->attr_end ();++ait){
+         if ( 0==ROOT::TMetaUtils::extractPropertyNameVal(*ait,attrName,attrValue) &&
+              attrName=="rootmap" &&
+              attrValue=="false"){
+            continue;
+         } else {
+            classesListForRootmap.push_back(normalizedName);
+         }
+      }
    }
 }
 
@@ -3252,6 +3268,7 @@ int RootCling(int argc,
          XMLReader xmlr(interp);
          if (!xmlr.Parse(file, selectionRules)) {
             ROOT::TMetaUtils::Error(0,"Parsing XML file %s\n",linkdefFilename.c_str());
+            return 1; // Return here to propagate the failure up to the build system
          }
          else {
             ROOT::TMetaUtils::Info(0,"XML file successfully parsed\n");
@@ -3563,10 +3580,11 @@ int RootCling(int argc,
    bool capaNeeded=!capaFileName.empty();
 
    std::list<std::string> classesNames;
+   std::list<std::string> classesNamesForRootmap;
    std::list<std::string> nsNames;
 
    if (rootMapNeeded || capaNeeded){
-      extractSelectedClasses(scan,classesNames);
+      extractSelectedClasses(scan,classesNames,classesNamesForRootmap);
    }
    if (rootMapNeeded){      
       extractSelectedNamespaces(scan,nsNames);
@@ -3583,7 +3601,7 @@ int RootCling(int argc,
       tmpCatalog.addFileName(rootmapFileName);
       int rmStatusCode= createRootMapFile(rootmapFileName,
                                           rootmapLibName,
-                                          classesNames,
+                                          classesNamesForRootmap,
                                           nsNames);
       if (0!=rmStatusCode) return 1;
    }

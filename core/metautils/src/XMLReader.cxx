@@ -70,6 +70,26 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
    while(file.good())
    {
       c = file.get();
+      // Temp fix: the stream should become a string
+      if (c=='&'){
+         std::string pattern;
+         int i=0;
+         for (;i<3 && file.good();++i){
+            pattern+=file.get();
+         }
+         if (pattern == "lt;"){
+            c = '<';
+         }
+         else if (pattern == "rt;"){
+            c = '>';
+         }
+         else {
+            for (;i!=0 && file.good();--i){
+               file.unget();
+            }            
+         }
+      }
+      
       if (file.good()){
          bool br = false; // break - we Set it when we have found the end of the tag
          

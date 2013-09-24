@@ -14,6 +14,7 @@
 
 #include "RConversionRuleParser.h"
 
+// #include "llvm/Attr.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/StringRef.h"
 
@@ -35,6 +36,7 @@ namespace clang {
    class SourceLocation;
    class Type;
    class TypedefNameDecl;
+   class Attr;
 }
 
 namespace cling {
@@ -56,7 +58,10 @@ namespace ROOT {
 
       // Convention used to separate name/value of properties in the ast annotations
       static const std::string PropertyNameValSeparator("@@@");
-      
+
+      int extractAttrString(clang::Attr* attribute, std::string& attrString);
+      int extractPropertyNameValFromString(const std::string attributeStr,std::string& attrName, std::string& attrValue);
+      int extractPropertyNameVal(clang::Attr* attribute, std::string& attrName, std::string& attrValue);
       bool IsInt(const std::string& s);
 
       class TNormalizedCtxt {

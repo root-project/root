@@ -12,7 +12,7 @@ set(headers Math/DistFuncMathMore.h Math/SpecFuncMathMore.h Math/PdfFuncMathMore
             Math/InterpolationTypes.h Math/GSLRootFinder.h Math/GSLRootFinderDeriv.h
             Math/RootFinderAlgorithms.h Math/GSLIntegrator.h Math/GSLMCIntegrator.h 
             Math/MCParameters.h Math/GSLMinimizer1D.h Math/ChebyshevApprox.h 
-            Math/Random.h Math/GSLRndmEngines.h Math/KelvinFunctions.h
+            Math/Random.h Math/GSLRndmEngines.h Math/QuasiRandom.h  Math/GSLQuasiRandom.h  Math/KelvinFunctions.h
             Math/GSLMinimizer.h Math/GSLNLSMinimizer.h Math/GSLSimAnMinimizer.h
 			Math/GSLMultiRootFinder.h 
             Math/Vavilov.h Math/VavilovAccurate.h Math/VavilovAccuratePdf.h
