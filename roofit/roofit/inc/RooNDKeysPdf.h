@@ -143,8 +143,8 @@ protected:
   mutable std::vector<std::vector<Double_t> >* _weights; //!
 
 #ifndef __CINT__
-  mutable std::vector<iiVec> _sortIdcs;
-  mutable std::vector<itVec> _sortTVIdcs;
+  mutable std::vector<iiVec> _sortIdcs;   //!
+  mutable std::vector<itVec> _sortTVIdcs; //!
 #endif
 
   mutable std::vector<std::string> _varName;
