@@ -76,6 +76,27 @@ protected:
 } ;
 
 
+class RooSimWSTool::SplitRule : public TNamed {
+public:
+   SplitRule(const char* pdfName="") : TNamed(pdfName,pdfName) {} ;
+   virtual ~SplitRule() {} ;
+   void splitParameter(const char* paramList, const char* categoryList) ;
+   void splitParameterConstrained(const char* paramNameList, const char* categoryNameList, const char* remainderStateName) ;
+   
+protected:
+   
+   friend class RooSimWSTool ;
+   friend class BuildConfig ;
+   friend class MultiBuildConfig ;
+   void configure(const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
+                  const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
+                  const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+   
+   std::list<std::string>                                             _miStateNameList ;
+   std::map<std::string, std::pair<std::list<std::string>,std::string> > _paramSplitMap  ; //<paramName,<std::list<splitCatSet>,remainderStateName>>
+   ClassDef(SplitRule,0) // Split rule specification for prototype p.d.f
+} ;
+
 
 class RooSimWSTool::BuildConfig
 {
@@ -123,26 +144,6 @@ class RooSimWSTool::MultiBuildConfig : public RooSimWSTool::BuildConfig
 
 
   
-class RooSimWSTool::SplitRule : public TNamed {
-public:
-  SplitRule(const char* pdfName="") : TNamed(pdfName,pdfName) {} ;  
-  virtual ~SplitRule() {} ;  
-  void splitParameter(const char* paramList, const char* categoryList) ;
-  void splitParameterConstrained(const char* paramNameList, const char* categoryNameList, const char* remainderStateName) ;
-  
-protected:
-
-  friend class RooSimWSTool ;
-  friend class BuildConfig ;
-  friend class MultiBuildConfig ;  
-  void configure(const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
-		 const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-		 const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
-
-  std::list<std::string>                                             _miStateNameList ;
-  std::map<std::string, std::pair<std::list<std::string>,std::string> > _paramSplitMap  ; //<paramName,<std::list<splitCatSet>,remainderStateName>>
-  ClassDef(SplitRule,0) // Split rule specification for prototype p.d.f
- } ;
 
 
 
