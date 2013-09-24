@@ -79,6 +79,7 @@
 #include "clang/Sema/Sema.h"
 
 #include "cling/Interpreter/ClangInternalState.h"
+#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/StoredValueRef.h"
@@ -512,7 +513,7 @@ extern "C" const Decl* TCling__GetObjectDecl(TObject *obj) {
 
 extern "C" TInterpreter *CreateInterpreter(void* interpLibHandle)
 {
-   cling::Interpreter::ExposeHiddenSharedLibrarySymbols(interpLibHandle);
+   cling::DynamicLibraryManager::ExposeHiddenSharedLibrarySymbols(interpLibHandle);
    return new TCling("C++", "cling C++ Interpreter");
 }
 
@@ -1659,8 +1660,10 @@ Bool_t TCling::IsLoaded(const char* filename) const
 
    // Check shared library.
    sFilename = filename;
+   cling::DynamicLibraryManager* dyLibManager 
+      = fInterpreter->getDynamicLibraryManager();
    if (gSystem->FindDynamicLibrary(sFilename, kTRUE)
-       && fInterpreter->isDynamicLibraryLoaded(sFilename.Data())) {
+       && dyLibManager->isDynamicLibraryLoaded(sFilename.Data())) {
       return kTRUE;
    }
 
@@ -1766,7 +1769,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
 
    // Tell the interpreter that this library is available; all libraries can be
    // used to resolve symbols.
-   fInterpreter->loadLibrary(filename, true /*permanent*/);
+   fInterpreter->getDynamicLibraryManager()->loadLibrary(filename, true /*permanent*/);
 
 #if defined(R__MACOSX)
    // Check that this is not a system library
@@ -1827,14 +1830,14 @@ Int_t TCling::Load(const char* filename, Bool_t system)
 
    // Used to return 0 on success, 1 on duplicate, -1 on failure, -2 on "fatal".
    R__LOCKGUARD2(gClingMutex);
-   cling::Interpreter::LoadLibResult res
-      = fInterpreter->loadLibrary(filename, system);
-   if (res == cling::Interpreter::kLoadLibSuccess) {
+   cling::DynamicLibraryManager::LoadLibResult res
+      = fInterpreter->getDynamicLibraryManager()->loadLibrary(filename, system);
+   if (res == cling::DynamicLibraryManager::kLoadLibSuccess) {
       UpdateListOfLoadedSharedLibraries();
    }
    switch (res) {
-   case cling::Interpreter::kLoadLibSuccess: return 0;
-   case cling::Interpreter::kLoadLibExists:  return 1;
+   case cling::DynamicLibraryManager::kLoadLibSuccess: return 0;
+   case cling::DynamicLibraryManager::kLoadLibExists:  return 1;
    default: break;
    };
    return -1;
@@ -4040,7 +4043,7 @@ void TCling::SetTempLevel(int val) const
 int TCling::UnloadFile(const char* path) const
 {
 
-   if (fInterpreter->isDynamicLibraryLoaded(path)) {
+   if (fInterpreter->getDynamicLibraryManager()->isDynamicLibraryLoaded(path)) {
       // Signal that the list of shared libs needs to be updated.
       const_cast<TCling*>(this)->fPrevLoadedDynLibInfo = 0;
       const_cast<TCling*>(this)->fSharedLibs = "";
