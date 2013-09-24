@@ -176,7 +176,7 @@ public:
       static Double_t BetaMean(Double_t alpha,Double_t beta);
       static Double_t BetaMode(Double_t alpha,Double_t beta);
       
-      ClassDef(TEfficiency,1)     //calculating efficiencies
+      ClassDef(TEfficiency,2)     //calculating efficiencies
 };
 
 const TEfficiency operator+(const TEfficiency& lhs,const TEfficiency& rhs);
