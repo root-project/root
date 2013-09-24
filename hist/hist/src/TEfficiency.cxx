@@ -1040,6 +1040,9 @@ TEfficiency::TEfficiency(const TEfficiency& rEff):
    //        by calling SetDirectory(TDirectory*) or write it explicitly to disk
    //        by calling Write().
 
+   // copy TObject bits
+   ((TObject&)rEff).Copy(*this);
+
    Bool_t bStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(kFALSE);
    fTotalHistogram = (TH1*)((rEff.fTotalHistogram)->Clone());
@@ -1056,10 +1059,6 @@ TEfficiency::TEfficiency(const TEfficiency& rEff):
    SetStatisticOption(rEff.GetStatisticOption());
 
    SetDirectory(0);
-
-   SetBit(kPosteriorMode,TestBit(rEff.kPosteriorMode));
-   SetBit(kShortestInterval,TestBit(rEff.kShortestInterval));
-   SetBit(kUseWeights,TestBit(rEff.kUseWeights));
    
    //copy style
    rEff.TAttLine::Copy(*this);
