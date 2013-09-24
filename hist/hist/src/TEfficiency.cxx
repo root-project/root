@@ -2722,8 +2722,15 @@ void TEfficiency::Paint(const Option_t* opt)
       //refresh title before painting if changed 
       TString oldTitle = fPaintGraph->GetTitle(); 
       TString newTitle = GetTitle();
-      if (oldTitle != newTitle )
+      if (oldTitle != newTitle ) {
          fPaintGraph->SetTitle(newTitle);
+      }
+
+      // set the axis labels
+      TString xlabel = fTotalHistogram->GetXaxis()->GetTitle();
+      TString ylabel = fTotalHistogram->GetYaxis()->GetTitle();
+      if (xlabel) fPaintGraph->GetXaxis()->SetTitle(xlabel);
+      if (ylabel) fPaintGraph->GetYaxis()->SetTitle(ylabel);
 
       //copying style information
       TAttLine::Copy(*fPaintGraph);
@@ -2781,6 +2788,12 @@ void TEfficiency::Paint(const Option_t* opt)
       }
       //refresh title before each painting
       fPaintHisto->SetTitle(GetTitle());
+
+      // set the axis labels
+      TString xlabel = fTotalHistogram->GetXaxis()->GetTitle();
+      TString ylabel = fTotalHistogram->GetYaxis()->GetTitle();
+      if (xlabel) fPaintHisto->GetXaxis()->SetTitle(xlabel);
+      if (ylabel) fPaintHisto->GetYaxis()->SetTitle(ylabel);
 
       Int_t bin;
       for(Int_t i = 0; i < nbinsx + 2; ++i) {
