@@ -914,8 +914,7 @@ returnType sv_to(const cling::StoredValueRef& svref)
 } // unnamed namespace.
 
 void*
-TClingCallFunc::
-compile_wrapper(const string& wrapper_name, const string& wrapper,
+TClingCallFunc::compile_wrapper(const string& wrapper_name, const string& wrapper,
                 bool withAccessControl/*=true*/)
 {
    //
@@ -1002,8 +1001,7 @@ compile_wrapper(const string& wrapper_name, const string& wrapper,
 }
 
 void
-TClingCallFunc::
-collect_type_info(QualType& QT, ostringstream& typedefbuf,
+TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
                   ostringstream& callbuf, string& type_name,
                   bool& isReference, int& ptrCnt, int indent_level,
                   bool forArgument)
@@ -1077,8 +1075,7 @@ collect_type_info(QualType& QT, ostringstream& typedefbuf,
 }
 
 void
-TClingCallFunc::
-make_narg_ctor(const unsigned N, ostringstream& typedefbuf,
+TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream& typedefbuf,
                ostringstream& callbuf, const string& class_name,
                int indent_level)
 {
@@ -1134,8 +1131,7 @@ make_narg_ctor(const unsigned N, ostringstream& typedefbuf,
 }
 
 void
-TClingCallFunc::
-make_narg_call(const unsigned N, ostringstream& typedefbuf,
+TClingCallFunc::make_narg_call(const unsigned N, ostringstream& typedefbuf,
                ostringstream& callbuf, const string& class_name,
                int indent_level)
 {
@@ -1212,8 +1208,7 @@ make_narg_call(const unsigned N, ostringstream& typedefbuf,
 }
 
 void
-TClingCallFunc::
-make_narg_ctor_with_return(const unsigned N, const string& class_name,
+TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string& class_name,
                            ostringstream& buf, int indent_level)
 {
    // Make a code string that follows this pattern:
@@ -1289,8 +1284,7 @@ make_narg_ctor_with_return(const unsigned N, const string& class_name,
 }
 
 void
-TClingCallFunc::
-make_narg_call_with_return(const unsigned N, const string& class_name,
+TClingCallFunc::make_narg_call_with_return(const unsigned N, const string& class_name,
                            ostringstream& buf, int indent_level)
 {
    // Make a code string that follows this pattern:
@@ -1414,8 +1408,7 @@ make_narg_call_with_return(const unsigned N, const string& class_name,
 }
 
 tcling_callfunc_Wrapper_t
-TClingCallFunc::
-make_wrapper()
+TClingCallFunc::make_wrapper()
 {
    const FunctionDecl* FD = fMethod->GetMethodDecl();
    ASTContext& Context = FD->getASTContext();
@@ -1855,8 +1848,7 @@ make_wrapper()
 }
 
 tcling_callfunc_ctor_Wrapper_t
-TClingCallFunc::
-make_ctor_wrapper(const TClingClassInfo* info)
+TClingCallFunc::make_ctor_wrapper(const TClingClassInfo* info)
 {
    // Make a code string that follows this pattern:
    //
@@ -2020,8 +2012,7 @@ make_ctor_wrapper(const TClingClassInfo* info)
 }
 
 tcling_callfunc_dtor_Wrapper_t
-TClingCallFunc::
-make_dtor_wrapper(const TClingClassInfo* info)
+TClingCallFunc::make_dtor_wrapper(const TClingClassInfo* info)
 {
    // Make a code string that follows this pattern:
    //
@@ -2211,8 +2202,7 @@ public:
 };
 
 void
-TClingCallFunc::
-exec(void* address, void* ret) const
+TClingCallFunc::exec(void* address, void* ret) const
 {
    vector<ValHolder> vh_ary;
    vector<void*> vp_ary;
@@ -2645,8 +2635,7 @@ exec(void* address, void* ret) const
 }
 
 void
-TClingCallFunc::
-exec_with_valref_return(void* address, cling::StoredValueRef* ret) const
+TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* ret) const
 {
    if (!ret) {
       exec(address, 0);
@@ -3182,8 +3171,7 @@ exec_with_valref_return(void* address, cling::StoredValueRef* ret) const
 }
 
 void
-TClingCallFunc::
-EvaluateArgList(const string& ArgList)
+TClingCallFunc::EvaluateArgList(const string& ArgList)
 {
    SmallVector<Expr*, 4> exprs;
    fInterp->getLookupHelper().findArgList(ArgList, exprs);
@@ -3203,8 +3191,7 @@ EvaluateArgList(const string& ArgList)
 }
 
 void
-TClingCallFunc::
-Exec(void* address, TInterpreterValue* interpVal/*=0*/)
+TClingCallFunc::Exec(void* address, TInterpreterValue* interpVal/*=0*/)
 {
    if (!IsValid()) {
       Error("TClingCallFunc::Exec(address, interpVal)",
@@ -3236,8 +3223,7 @@ Exec(void* address, TInterpreterValue* interpVal/*=0*/)
 }
 
 Long_t
-TClingCallFunc::
-ExecInt(void* address)
+TClingCallFunc::ExecInt(void* address)
 {
    if (!IsValid()) {
       Error("TClingCallFunc::ExecInt", "Attempt to execute while invalid.");
@@ -3269,8 +3255,7 @@ ExecInt(void* address)
 }
 
 long long
-TClingCallFunc::
-ExecInt64(void* address)
+TClingCallFunc::ExecInt64(void* address)
 {
    if (!IsValid()) {
       Error("TClingCallFunc::ExecInt64", "Attempt to execute while invalid.");
@@ -3302,8 +3287,7 @@ ExecInt64(void* address)
 }
 
 double
-TClingCallFunc::
-ExecDouble(void* address)
+TClingCallFunc::ExecDouble(void* address)
 {
    if (!IsValid()) {
       Error("TClingCallFunc::ExecDouble", "Attempt to execute while invalid.");
@@ -3333,8 +3317,7 @@ ExecDouble(void* address)
 }
 
 void
-TClingCallFunc::
-ExecWithReturn(void* address, void* ret/*= 0*/)
+TClingCallFunc::ExecWithReturn(void* address, void* ret/*= 0*/)
 {
    if (!IsValid()) {
       Error("TClingCallFunc::ExecWithReturn(address, ret)",
@@ -3360,8 +3343,7 @@ ExecWithReturn(void* address, void* ret/*= 0*/)
 }
 
 void*
-TClingCallFunc::
-ExecDefaultConstructor(const TClingClassInfo* info, void* address /*=0*/,
+TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo* info, void* address /*=0*/,
                        unsigned long nary /*= 0UL*/)
 {
    if (!info->IsValid()) {
@@ -3396,8 +3378,7 @@ ExecDefaultConstructor(const TClingClassInfo* info, void* address /*=0*/,
 }
 
 void
-TClingCallFunc::
-ExecDestructor(const TClingClassInfo* info, void* address /*=0*/,
+TClingCallFunc::ExecDestructor(const TClingClassInfo* info, void* address /*=0*/,
                unsigned long nary /*= 0UL*/, bool withFree /*= true*/)
 {
    if (!info->IsValid()) {
@@ -3422,15 +3403,13 @@ ExecDestructor(const TClingClassInfo* info, void* address /*=0*/,
 }
 
 TClingMethodInfo*
-TClingCallFunc::
-FactoryMethod() const
+TClingCallFunc::FactoryMethod() const
 {
    return new TClingMethodInfo(*fMethod);
 }
 
 void
-TClingCallFunc::
-Init()
+TClingCallFunc::Init()
 {
    delete fMethod;
    fMethod = 0;
@@ -3439,8 +3418,7 @@ Init()
 }
 
 void
-TClingCallFunc::
-Init(TClingMethodInfo* minfo)
+TClingCallFunc::Init(TClingMethodInfo* minfo)
 {
    delete fMethod;
    fMethod = new TClingMethodInfo(*minfo);
@@ -3449,8 +3427,7 @@ Init(TClingMethodInfo* minfo)
 }
 
 void*
-TClingCallFunc::
-InterfaceMethod() const
+TClingCallFunc::InterfaceMethod() const
 {
    if (!IsValid()) {
       return 0;
@@ -3459,8 +3436,7 @@ InterfaceMethod() const
 }
 
 bool
-TClingCallFunc::
-IsValid() const
+TClingCallFunc::IsValid() const
 {
    if (!fMethod) {
       return false;
@@ -3469,15 +3445,13 @@ IsValid() const
 }
 
 void
-TClingCallFunc::
-ResetArg()
+TClingCallFunc::ResetArg()
 {
    fArgVals.clear();
 }
 
 void
-TClingCallFunc::
-SetArg(long param)
+TClingCallFunc::SetArg(long param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
    GenericValue gv;
@@ -3488,8 +3462,7 @@ SetArg(long param)
 }
 
 void
-TClingCallFunc::
-SetArg(double param)
+TClingCallFunc::SetArg(double param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
    GenericValue gv;
@@ -3500,8 +3473,7 @@ SetArg(double param)
 }
 
 void
-TClingCallFunc::
-SetArg(long long param)
+TClingCallFunc::SetArg(long long param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
    GenericValue gv;
@@ -3512,8 +3484,7 @@ SetArg(long long param)
 }
 
 void
-TClingCallFunc::
-SetArg(unsigned long long param)
+TClingCallFunc::SetArg(unsigned long long param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
    GenericValue gv;
@@ -3524,8 +3495,7 @@ SetArg(unsigned long long param)
 }
 
 void
-TClingCallFunc::
-SetArgArray(long* paramArr, int nparam)
+TClingCallFunc::SetArgArray(long* paramArr, int nparam)
 {
    ResetArg();
    for (int i = 0; i < nparam; ++i) {
@@ -3534,24 +3504,21 @@ SetArgArray(long* paramArr, int nparam)
 }
 
 void
-TClingCallFunc::
-SetArgs(const char* params)
+TClingCallFunc::SetArgs(const char* params)
 {
    ResetArg();
    EvaluateArgList(params);
 }
 
 void
-TClingCallFunc::
-SetFunc(const TClingClassInfo* info, const char* method, const char* arglist,
+TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, const char* arglist,
         long* poffset)
 {
    SetFunc(info, method, arglist, false, poffset);
 }
 
 void
-TClingCallFunc::
-SetFunc(const TClingClassInfo* info, const char* method, const char* arglist,
+TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, const char* arglist,
         bool objectIsConst, long* poffset)
 {
    fWrapper = 0;
@@ -3582,8 +3549,7 @@ SetFunc(const TClingClassInfo* info, const char* method, const char* arglist,
 }
 
 void
-TClingCallFunc::
-SetFunc(const TClingMethodInfo* info)
+TClingCallFunc::SetFunc(const TClingMethodInfo* info)
 {
    fWrapper = 0;
    delete fMethod;
@@ -3595,8 +3561,7 @@ SetFunc(const TClingMethodInfo* info)
 }
 
 void
-TClingCallFunc::
-SetFuncProto(const TClingClassInfo* info, const char* method,
+TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
              const char* proto, long* poffset,
              EFunctionMatchMode mode/*=kConversionMatch*/)
 {
@@ -3604,8 +3569,7 @@ SetFuncProto(const TClingClassInfo* info, const char* method,
 }
 
 void
-TClingCallFunc::
-SetFuncProto(const TClingClassInfo* info, const char* method,
+TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
              const char* proto, bool objectIsConst, long* poffset,
              EFunctionMatchMode mode/*=kConversionMatch*/)
 {
@@ -3629,8 +3593,7 @@ SetFuncProto(const TClingClassInfo* info, const char* method,
 }
 
 void
-TClingCallFunc::
-SetFuncProto(const TClingClassInfo* info, const char* method,
+TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
              const llvm::SmallVector<clang::QualType, 4>& proto, long* poffset,
              EFunctionMatchMode mode/*=kConversionMatch*/)
 {
@@ -3638,8 +3601,7 @@ SetFuncProto(const TClingClassInfo* info, const char* method,
 }
 
 void
-TClingCallFunc::
-SetFuncProto(const TClingClassInfo* info, const char* method,
+TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
              const llvm::SmallVector<clang::QualType, 4>& proto,
              bool objectIsConst, long* poffset,
              EFunctionMatchMode mode/*=kConversionMatch*/)
