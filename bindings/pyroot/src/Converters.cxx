@@ -191,6 +191,7 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Bool,      Bool_t,    PyInt_AsLong )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Short,     Short_t,   PyInt_AsLong )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UShort,    UShort_t,  PyInt_AsLong )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Int,       Int_t,     PyInt_AsLong )
@@ -1035,16 +1036,6 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
    if ( h != gConvFactories.end() )
       return (h->second)( user );
 
-//-- nothing? collect qualifier information
-   Bool_t isConst = resolvedType.substr(0, 5) == "const";
-
-// accept const <type>& as converter by value (as python copies most types)
-   if ( isConst && cpd == "&" ) {
-      h = gConvFactories.find( realType );
-      if ( h != gConvFactories.end() )
-         return (h->second)( user );
-   }
-
 //-- still nothing? try pointer instead of ref, if ref
    if ( cpd == "&" ) {
       h = gConvFactories.find( realType + "*" );
@@ -1053,6 +1044,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
    }
 
 //-- still nothing? use a generalized converter
+   Bool_t isConst = resolvedType.substr(0, 5) == "const";
    Bool_t control = cpd == "&" || isConst;
 
 // converters for known/ROOT classes and default (void*)
@@ -1115,6 +1107,7 @@ namespace {
 
 // use macro rather than template for portability ...
    PYROOT_BASIC_CONVERTER_FACTORY( Bool )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstBoolRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Char )
    PYROOT_BASIC_CONVERTER_FACTORY( UChar )
    PYROOT_BASIC_CONVERTER_FACTORY( Short )
@@ -1168,10 +1161,11 @@ namespace {
    NFp_t factories_[] = {
    // factories for built-ins
       NFp_t( "bool",                      &CreateBoolConverter               ),
+      NFp_t( "const bool&",               &CreateConstBoolRefConverter       ),
       NFp_t( "char",                      &CreateCharConverter               ),
       NFp_t( "unsigned char",             &CreateUCharConverter              ),
       NFp_t( "short",                     &CreateShortConverter              ),
-      NFp_t( "const short &",             &CreateConstShortRefConverter      ),
+      NFp_t( "const short&",              &CreateConstShortRefConverter      ),
       NFp_t( "unsigned short",            &CreateUShortConverter             ),
       NFp_t( "const unsigned short&",     &CreateConstUShortRefConverter     ),
       NFp_t( "int",                       &CreateIntConverter                ),
