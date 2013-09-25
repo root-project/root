@@ -325,7 +325,7 @@ class Regression16ConsRef( MyTestCase ):
             "bool PyROOT_Regression_TakesRef%d(const %s& arg) { return arg; }" % (i, tnames[i]) )
          self.assert_( not eval( "PyROOT_Regression_TakesRef%d(0)" % (i,) ) )
          self.assert_( eval( "PyROOT_Regression_TakesRef%d(1)" % (i,) ) )
-      self.assertEqual( len(tnames), i )
+      self.assertEqual( len(tnames)-1, i )
 
 
 ## actual test run
