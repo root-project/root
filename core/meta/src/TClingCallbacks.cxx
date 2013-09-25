@@ -487,9 +487,9 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
    //   or function template.
    //
    // We want to ignore object(.|->)member<template>
-   if (R.getSema().PP.LookAhead(0).getKind() == tok::less)
+   //if (R.getSema().PP.LookAhead(0).getKind() == tok::less)
       // TODO: check for . or -> in the cached token stream
-      return false;
+   //   return false;
    
    for (Scope* DepScope = S; DepScope; DepScope = DepScope->getParent()) {
       if (DeclContext* Ctx = static_cast<DeclContext*>(DepScope->getEntity())) {
