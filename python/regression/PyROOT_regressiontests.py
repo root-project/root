@@ -31,7 +31,8 @@ __all__ = [
    'Regression12ImportCout',
    'Regression13WriteTGraph',
    'Regression14BaseClassUsing',
-   'Regression15TPyException'
+   'Regression15TPyException',
+   'Regression16ConsRef'
 ]
 
 
@@ -311,6 +312,20 @@ class Regression15TPyException( MyTestCase ):
       e = PyROOT.TPyException()
       self.assert_( e )
       self.assertEqual( e.what(), "python exception" )
+
+
+### const-ref passing differs between CINT and Cling =========================
+class Regression16ConsRef( MyTestCase ):
+   def test1PassByConstRef( self ):
+      """Test passing arguments by const reference"""
+
+      tnames = [ "bool", "short", "int", "long" ]
+      for i in range(len(tnames)):
+         gInterpreter.LoadText(
+            "bool PyROOT_Regression_TakesRef%d(const %s& arg) { return arg; }" % (i, tnames[i]) )
+         self.assert_( not eval( "PyROOT_Regression_TakesRef%d(0)" % (i,) ) )
+         self.assert_( eval( "PyROOT_Regression_TakesRef%d(1)" % (i,) ) )
+      self.assertEqual( len(tnames), i )
 
 
 ## actual test run

@@ -17,6 +17,7 @@ Test that ROOT.cout does not cause error messages ... ok
 Write a TGraph object and read it back correctly ... ok
 Access a base class data member made availabe by 'using' ... ok
 Load TPyException into python and make sure its usable ... ok
+Test passing arguments by const reference ... ok
 
 ----------------------------------------------------------------------
 
