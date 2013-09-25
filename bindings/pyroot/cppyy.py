@@ -9,31 +9,37 @@ import sys, string
 
 ### PyPy has 'cppyy' builtin (if enabled, that is)
 if 'cppyy' in sys.builtin_module_names:
-   builtin_cppyy = True
+   _builtin_cppyy = True
 
    import imp
    sys.modules[ __name__ ] = \
       imp.load_module( 'cppyy', *(None, 'cppyy', ('', '', imp.C_BUILTIN) ) )
    del imp
 
-   backend = sys.modules[ __name__ ].gbl
+   _thismodule = sys.modules[ __name__ ]
+   _backend = _thismodule.gbl
 
    # custom behavior that is not yet part of PyPy's cppyy
    def _MakeRootClass( self, name ):
       return getattr( self, name )
-   type(backend).MakeRootClass = _MakeRootClass
-   del _MakeRootClass
+   type(_backend).MakeRootClass = _MakeRootClass
 
    def _LookupRootEntity( self, name ):
       return getattr( self, name )
-   type(backend).LookupRootEntity = _LookupRootEntity
-   del _LookupRootEntity
+   type(_backend).LookupRootEntity = _LookupRootEntity
 
    class _Double(float): pass
-   type(backend).Double = _Double
-   del _Double
+   type(_backend).Double = _Double
+
+   def _AddressOf( self, obj ):
+      import array
+      return array.array('L', [_thismodule.addressof( obj )] )
+   type(_backend).AddressOf = _AddressOf
+
+   del _AddressOf, _Double, _LookupRootEntity, _MakeRootClass
+
 else:
-   builtin_cppyy = False
+   _builtin_cppyy = False
 
    # load PyROOT C++ extension module, special case for linux and Sun
    needsGlobal =  ( 0 <= string.find( sys.platform, 'linux' ) ) or\
@@ -43,7 +49,7 @@ else:
       dlflags = sys.getdlopenflags()
       sys.setdlopenflags( 0x100 | 0x2 )    # RTLD_GLOBAL | RTLD_NOW
 
-   import libPyROOT as backend
+   import libPyROOT as _backend
 
    # reset dl flags if needed
    if needsGlobal:
@@ -51,18 +57,18 @@ else:
    del needsGlobal
 
 # PyCintex tests rely on this, but they should not:
-sys.modules[ __name__ ].libPyROOT = backend
+sys.modules[ __name__ ].libPyROOT = _backend
 
-if not builtin_cppyy:
-   backend.SetMemoryPolicy( backend.kMemoryStrict )
+if not _builtin_cppyy:
+   _backend.SetMemoryPolicy( _backend.kMemoryStrict )
 
 #--- Enable Autoloading ignoring possible error for the time being
-try:    backend.gInterpreter.EnableAutoLoading()
+try:    _backend.gInterpreter.EnableAutoLoading()
 except: pass
 
 
 ### template support ------------------------------------------------------------
-if not builtin_cppyy:
+if not _builtin_cppyy:
    class Template:
       def __init__( self, name ):
          self.__name__ = name
@@ -73,7 +79,7 @@ if not builtin_cppyy:
             if type(arg) == str:
                arg = ','.join( map( lambda x: x.strip(), arg.split(',') ) )
             newargs.append( arg )
-         result = backend.MakeRootTemplateClass( *newargs )
+         result = _backend.MakeRootTemplateClass( *newargs )
 
        # special case pythonization (builtin_map is not available from the C-API)
          if hasattr( result, 'push_back' ):
@@ -85,7 +91,7 @@ if not builtin_cppyy:
 
          return result
 
-   backend.Template = Template
+   _backend.Template = Template
 
 
 #--- LoadDictionary function and aliases -----------------------------
@@ -93,16 +99,16 @@ def loadDictionary(name) :
    # prepend "lib" 
    if sys.platform != 'win32' and name[:3] != 'lib' :
        name = 'lib' + name
-   sc = backend.gSystem.Load(name)
+   sc = _backend.gSystem.Load(name)
    if sc == -1 : raise RuntimeError("Error Loading dictionary")
 loadDict = loadDictionary
 
 
 #--- Other functions needed -------------------------------------------
-if not builtin_cppyy:
+if not _builtin_cppyy:
    class _stdmeta( type ):
       def __getattr__( cls, attr ):   # for non-templated classes in std
-         klass = backend.MakeRootClass( attr, cls )
+         klass = _backend.MakeRootClass( attr, cls )
          setattr( cls, attr, klass )
          return klass
 
@@ -116,22 +122,22 @@ if not builtin_cppyy:
          for name in stlclasses:
             locals()[ name ] = Template( 'std::%s' % name )
 
-         string = backend.MakeRootClass( 'string' )
+         string = _backend.MakeRootClass( 'string' )
 
-   backend.SetRootLazyLookup( _global_cpp.__dict__ )
+   _backend.SetRootLazyLookup( _global_cpp.__dict__ )
 else:
-   _global_cpp = backend
+   _global_cpp = _backend
  
 def Namespace( name ) :
    if name == '' : return _global_cpp
-   else :          return backend.LookupRootEntity( name )
+   else :          return _backend.LookupRootEntity( name )
 makeNamespace = Namespace
 
 def makeClass( name ) :
-   return backend.MakeRootClass( name )
+   return _backend.MakeRootClass( name )
   
 def addressOf( obj ) :
-   return backend.AddressOf( obj )[0]
+   return _backend.AddressOf( obj )[0]
        
 def getAllClasses() :
    TClassTable = makeClass( 'TClassTable' )
@@ -145,10 +151,15 @@ def getAllClasses() :
 
 #--- Global namespace and global objects -------------------------------
 gbl  = _global_cpp
-NULL = 0 # backend.GetRootGlobal returns a descriptor, which needs a class
+NULL = 0 # _backend.GetRootGlobal returns a descriptor, which needs a class
 class double(float): pass
 class short(int): pass
 class long_int(int): pass
 class unsigned_short(int): pass
 class unsigned_int(int): pass
 class unsigned_long(long): pass
+
+#--- Copy over locally defined names ------------------------------------
+if _builtin_cppyy:
+   for name in dir():
+      if name[0] != '_': setattr( _thismodule, name, eval(name) )
