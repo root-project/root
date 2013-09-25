@@ -236,6 +236,21 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
       InheritanceMode imode /*= WithInheritance*/) const
 {
+   if (fType) {
+      const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
+      if (TT) {
+         llvm::StringRef tname(TT->getDecl()->getName());
+         if (tname.equals(fname)) {
+            const NamedDecl *ndecl = llvm::dyn_cast<NamedDecl>(fDecl);
+            if (ndecl && !ndecl->getName().equals(fname)) {
+               // Constructor name matching the typedef type, use the decl name instead.
+               return GetMethod(ndecl->getName().str().c_str(),proto,objectIsConst,poffset,
+                                mode,imode);
+            }
+         }
+      }
+      
+   }
    if (poffset) {
       *poffset = 0L;
    }
@@ -286,6 +301,21 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
                                             long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
                                             InheritanceMode imode /*= WithInheritance*/) const
 {
+   if (fType) {
+      const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
+      if (TT) {
+         llvm::StringRef tname(TT->getDecl()->getName());
+         if (tname.equals(fname)) {
+            const NamedDecl *ndecl = llvm::dyn_cast<NamedDecl>(fDecl);
+            if (ndecl && !ndecl->getName().equals(fname)) {
+               // Constructor name matching the typedef type, use the decl name instead.
+               return GetMethod(ndecl->getName().str().c_str(),proto,objectIsConst,poffset,
+                                mode,imode);
+            }
+         }
+      }
+      
+   }
    if (poffset) {
       *poffset = 0L;
    }
@@ -335,6 +365,22 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       long *poffset, EFunctionMatchMode /*mode = kConversionMatch*/,
       InheritanceMode /* imode = WithInheritance*/) const
 {
+   if (fType) {
+      const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
+      if (TT) {
+         llvm::StringRef tname(TT->getDecl()->getName());
+         if (tname.equals(fname)) {
+            const NamedDecl *ndecl = llvm::dyn_cast<NamedDecl>(fDecl);
+            if (ndecl && !ndecl->getName().equals(fname)) {
+               // Constructor name matching the typedef type, use the decl name instead.
+               return GetMethod(ndecl->getName().str().c_str(),arglist,
+                                objectIsConst,poffset
+                                /* ,mode,imode */);
+            }
+         }
+      }
+      
+   }
    if (poffset) {
       *poffset = 0L;
    }
