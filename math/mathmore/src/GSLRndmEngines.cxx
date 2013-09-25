@@ -82,7 +82,10 @@ namespace Math {
    // assignment operator 
    GSLRandomEngine & GSLRandomEngine::operator=(const GSLRandomEngine & eng) {
       if (this == &eng) return *this;
-      *fRng = *eng.fRng;
+      if (fRng) 
+         *fRng = *eng.fRng;
+      else  
+         fRng = new GSLRngWrapper(*eng.fRng);
       fCurTime = eng.fCurTime;
       return *this;
    }

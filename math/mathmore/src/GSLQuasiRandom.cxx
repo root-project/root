@@ -71,7 +71,10 @@ namespace Math {
    // assignment operator 
    GSLQuasiRandomEngine & GSLQuasiRandomEngine::operator=(const GSLQuasiRandomEngine & eng) {
       if (this == &eng) return *this;
-      *fQRng = *eng.fQRng;
+      if (fQRng) 
+         *fQRng = *eng.fQRng;
+      else 
+         fQRng = new GSLQRngWrapper(*eng.fQRng);
       return *this;
    }
 
@@ -123,8 +126,11 @@ namespace Math {
 
    std::string GSLQuasiRandomEngine::Name() const { 
       //----------------------------------------------------
-      assert ( fQRng != 0); 
-      return std::string( gsl_qrng_name( fQRng->Rng() ) ); 
+      assert (fQRng != 0); 
+      assert(fQRng->Rng() != 0);
+      const char * name = gsl_qrng_name( fQRng->Rng() );
+      if (!name)  return std::string();      
+      return std::string( name);
    }
 
    unsigned int GSLQuasiRandomEngine::Size() const { 
