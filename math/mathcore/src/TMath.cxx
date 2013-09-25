@@ -483,6 +483,8 @@ Double_t TMath::Gaus(Double_t x, Double_t mean, Double_t sigma, Bool_t norm)
 
    if (sigma == 0) return 1.e30;
    Double_t arg = (x-mean)/sigma;
+   // for |arg| > 39  result is zero in double precision
+   if (arg < -39.0 || arg > 39.0) return 0.0; 
    Double_t res = TMath::Exp(-0.5*arg*arg);
    if (!norm) return res;
    return res/(2.50662827463100024*sigma); //sqrt(2*Pi)=2.50662827463100024
