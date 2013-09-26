@@ -462,7 +462,7 @@ Begin_Html
 
 <a name="GP03c"></a><h4><u>TGraphBentErrors</u></h4>
 A <tt>TGraphBentErrors</tt> is like a <tt>TGraphAsymmErrors</tt>.
-An extra parameter allows to bent the error bars to better see them
+An extra parameter allows to bend the error bars to better see them
 when several graphs are drawn on the same plot.
 
 End_Html

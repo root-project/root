@@ -62,7 +62,7 @@ TPaveText::TPaveText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_
    // pavetext normal constructor.
    //
    // a PaveText is a Pave with several lines of text
-   // The Pave is by default defined bith bordersize=5 and option ="br".
+   // The Pave is by default defined with bordersize=5 and option ="br".
    //  option = "T" Top frame
    //  option = "B" Bottom frame
    //  option = "R" Right frame
