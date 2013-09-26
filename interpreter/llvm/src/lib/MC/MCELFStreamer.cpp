@@ -109,14 +109,15 @@ void MCELFStreamer::EmitAssemblerFlag(MCAssemblerFlag Flag) {
   llvm_unreachable("invalid assembler flag!");
 }
 
-void MCELFStreamer::ChangeSection(const MCSection *Section) {
+void MCELFStreamer::ChangeSection(const MCSection *Section,
+                                  const MCExpr *Subsection) {
   MCSectionData *CurSection = getCurrentSectionData();
   if (CurSection && CurSection->isBundleLocked())
     report_fatal_error("Unterminated .bundle_lock when changing a section");
   const MCSymbol *Grp = static_cast<const MCSectionELF *>(Section)->getGroup();
   if (Grp)
     getAssembler().getOrCreateSymbolData(*Grp);
-  this->MCObjectStreamer::ChangeSection(Section);
+  this->MCObjectStreamer::ChangeSection(Section, Subsection);
 }
 
 void MCELFStreamer::EmitWeakReference(MCSymbol *Alias, const MCSymbol *Symbol) {
@@ -147,8 +148,8 @@ static unsigned CombineSymbolTypes(unsigned T1, unsigned T2) {
   return T2;
 }
 
-void MCELFStreamer::EmitSymbolAttribute(MCSymbol *Symbol,
-                                          MCSymbolAttr Attribute) {
+bool MCELFStreamer::EmitSymbolAttribute(MCSymbol *Symbol,
+                                        MCSymbolAttr Attribute) {
   // Indirect symbols are handled differently, to match how 'as' handles
   // them. This makes writing matching .o files easier.
   if (Attribute == MCSA_IndirectSymbol) {
@@ -158,7 +159,7 @@ void MCELFStreamer::EmitSymbolAttribute(MCSymbol *Symbol,
     ISD.Symbol = Symbol;
     ISD.SectionData = getCurrentSectionData();
     getAssembler().getIndirectSymbols().push_back(ISD);
-    return;
+    return true;
   }
 
   // Adding a symbol attribute always introduces the symbol, note that an
@@ -181,7 +182,7 @@ void MCELFStreamer::EmitSymbolAttribute(MCSymbol *Symbol,
   case MCSA_WeakDefAutoPrivate:
   case MCSA_Invalid:
   case MCSA_IndirectSymbol:
-    llvm_unreachable("Invalid symbol attribute for ELF!");
+    return false;
 
   case MCSA_NoDeadStrip:
   case MCSA_ELF_TypeGnuUniqueObject:
@@ -250,6 +251,8 @@ void MCELFStreamer::EmitSymbolAttribute(MCSymbol *Symbol,
     MCELF::SetVisibility(SD, ELF::STV_INTERNAL);
     break;
   }
+
+  return true;
 }
 
 void MCELFStreamer::EmitCommonSymbol(MCSymbol *Symbol, uint64_t Size,
@@ -269,7 +272,8 @@ void MCELFStreamer::EmitCommonSymbol(MCSymbol *Symbol, uint64_t Size,
                                                          ELF::SHF_WRITE |
                                                          ELF::SHF_ALLOC,
                                                          SectionKind::getBSS());
-    Symbol->setSection(*Section);
+
+    AssignSection(Symbol, Section);
 
     struct LocalCommon L = {&SD, Size, ByteAlignment};
     LocalCommons.push_back(L);
@@ -295,12 +299,11 @@ void MCELFStreamer::EmitLocalCommonSymbol(MCSymbol *Symbol, uint64_t Size,
   EmitCommonSymbol(Symbol, Size, ByteAlignment);
 }
 
-void MCELFStreamer::EmitValueImpl(const MCExpr *Value, unsigned Size,
-                                  unsigned AddrSpace) {
+void MCELFStreamer::EmitValueImpl(const MCExpr *Value, unsigned Size) {
   if (getCurrentSectionData()->isBundleLocked())
     report_fatal_error("Emitting values inside a locked bundle is forbidden");
   fixSymbolsInTLSFixups(Value);
-  MCObjectStreamer::EmitValueImpl(Value, Size, AddrSpace);
+  MCObjectStreamer::EmitValueImpl(Value, Size);
 }
 
 void MCELFStreamer::EmitValueToAlignment(unsigned ByteAlignment,
@@ -318,7 +321,7 @@ void MCELFStreamer::EmitValueToAlignment(unsigned ByteAlignment,
 // entry in the module's symbol table (the first being the null symbol).
 void MCELFStreamer::EmitFileDirective(StringRef Filename) {
   MCSymbol *Symbol = getAssembler().getContext().GetOrCreateSymbol(Filename);
-  Symbol->setSection(*getCurrentSection());
+  Symbol->setSection(*getCurrentSection().first);
   Symbol->setAbsolute();
 
   MCSymbolData &SD = getAssembler().getOrCreateSymbolData(*Symbol);
@@ -362,18 +365,41 @@ void  MCELFStreamer::fixSymbolsInTLSFixups(const MCExpr *expr) {
     case MCSymbolRefExpr::VK_Mips_GOTTPREL:
     case MCSymbolRefExpr::VK_Mips_TPREL_HI:
     case MCSymbolRefExpr::VK_Mips_TPREL_LO:
-    case MCSymbolRefExpr::VK_PPC_TPREL16_HA:
-    case MCSymbolRefExpr::VK_PPC_TPREL16_LO:
-    case MCSymbolRefExpr::VK_PPC_DTPREL16_HA:
-    case MCSymbolRefExpr::VK_PPC_DTPREL16_LO:
-    case MCSymbolRefExpr::VK_PPC_GOT_TPREL16_HA:
-    case MCSymbolRefExpr::VK_PPC_GOT_TPREL16_LO:
+    case MCSymbolRefExpr::VK_PPC_DTPMOD:
+    case MCSymbolRefExpr::VK_PPC_TPREL:
+    case MCSymbolRefExpr::VK_PPC_TPREL_LO:
+    case MCSymbolRefExpr::VK_PPC_TPREL_HI:
+    case MCSymbolRefExpr::VK_PPC_TPREL_HA:
+    case MCSymbolRefExpr::VK_PPC_TPREL_HIGHER:
+    case MCSymbolRefExpr::VK_PPC_TPREL_HIGHERA:
+    case MCSymbolRefExpr::VK_PPC_TPREL_HIGHEST:
+    case MCSymbolRefExpr::VK_PPC_TPREL_HIGHESTA:
+    case MCSymbolRefExpr::VK_PPC_DTPREL:
+    case MCSymbolRefExpr::VK_PPC_DTPREL_LO:
+    case MCSymbolRefExpr::VK_PPC_DTPREL_HI:
+    case MCSymbolRefExpr::VK_PPC_DTPREL_HA:
+    case MCSymbolRefExpr::VK_PPC_DTPREL_HIGHER:
+    case MCSymbolRefExpr::VK_PPC_DTPREL_HIGHERA:
+    case MCSymbolRefExpr::VK_PPC_DTPREL_HIGHEST:
+    case MCSymbolRefExpr::VK_PPC_DTPREL_HIGHESTA:
+    case MCSymbolRefExpr::VK_PPC_GOT_TPREL:
+    case MCSymbolRefExpr::VK_PPC_GOT_TPREL_LO:
+    case MCSymbolRefExpr::VK_PPC_GOT_TPREL_HI:
+    case MCSymbolRefExpr::VK_PPC_GOT_TPREL_HA:
+    case MCSymbolRefExpr::VK_PPC_GOT_DTPREL:
+    case MCSymbolRefExpr::VK_PPC_GOT_DTPREL_LO:
+    case MCSymbolRefExpr::VK_PPC_GOT_DTPREL_HI:
+    case MCSymbolRefExpr::VK_PPC_GOT_DTPREL_HA:
     case MCSymbolRefExpr::VK_PPC_TLS:
-    case MCSymbolRefExpr::VK_PPC_GOT_TLSGD16_HA:
-    case MCSymbolRefExpr::VK_PPC_GOT_TLSGD16_LO:
+    case MCSymbolRefExpr::VK_PPC_GOT_TLSGD:
+    case MCSymbolRefExpr::VK_PPC_GOT_TLSGD_LO:
+    case MCSymbolRefExpr::VK_PPC_GOT_TLSGD_HI:
+    case MCSymbolRefExpr::VK_PPC_GOT_TLSGD_HA:
     case MCSymbolRefExpr::VK_PPC_TLSGD:
-    case MCSymbolRefExpr::VK_PPC_GOT_TLSLD16_HA:
-    case MCSymbolRefExpr::VK_PPC_GOT_TLSLD16_LO:
+    case MCSymbolRefExpr::VK_PPC_GOT_TLSLD:
+    case MCSymbolRefExpr::VK_PPC_GOT_TLSLD_LO:
+    case MCSymbolRefExpr::VK_PPC_GOT_TLSLD_HI:
+    case MCSymbolRefExpr::VK_PPC_GOT_TLSLD_HA:
     case MCSymbolRefExpr::VK_PPC_TLSLD:
       break;
     }
@@ -434,11 +460,13 @@ void MCELFStreamer::EmitInstToData(const MCInst &Inst) {
       // Optimize memory usage by emitting the instruction to a
       // MCCompactEncodedInstFragment when not in a bundle-locked group and
       // there are no fixups registered.
-      MCCompactEncodedInstFragment *CEIF = new MCCompactEncodedInstFragment(SD);
+      MCCompactEncodedInstFragment *CEIF = new MCCompactEncodedInstFragment();
+      insert(CEIF);
       CEIF->getContents().append(Code.begin(), Code.end());
       return;
     } else {
-      DF = new MCDataFragment(SD);
+      DF = new MCDataFragment();
+      insert(DF);
       if (SD->getBundleLockState() == MCSectionData::BundleLockedAlignToEnd) {
         // If this is a new fragment created for a bundle-locked group, and the
         // group was marked as "align_to_end", set a flag in the fragment.
@@ -500,9 +528,7 @@ void MCELFStreamer::EmitBundleUnlock() {
   SD->setBundleLockState(MCSectionData::NotBundleLocked);
 }
 
-void MCELFStreamer::FinishImpl() {
-  EmitFrames(true);
-
+void MCELFStreamer::Flush() {
   for (std::vector<LocalCommon>::const_iterator i = LocalCommons.begin(),
                                                 e = LocalCommons.end();
        i != e; ++i) {
@@ -523,8 +549,17 @@ void MCELFStreamer::FinishImpl() {
       SectData.setAlignment(ByteAlignment);
   }
 
+  LocalCommons.clear();
+}
+
+void MCELFStreamer::FinishImpl() {
+  EmitFrames(NULL, true);
+
+  Flush();
+
   this->MCObjectStreamer::FinishImpl();
 }
+
 void MCELFStreamer::EmitTCEntry(const MCSymbol &S) {
   // Creates a R_PPC64_TOC relocation
   MCObjectStreamer::EmitSymbolValue(&S, 8);

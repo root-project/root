@@ -202,6 +202,12 @@ public:
   DefinedSVal getBlockPointer(const BlockDecl *block, CanQualType locTy,
                               const LocationContext *locContext);
 
+  /// Returns the value of \p E, if it can be determined in a non-path-sensitive
+  /// manner.
+  ///
+  /// If \p E is not a constant or cannot be modeled, returns \c None.
+  Optional<SVal> getConstantVal(const Expr *E);
+
   NonLoc makeCompoundVal(QualType type, llvm::ImmutableList<SVal> vals) {
     return nonloc::CompoundVal(BasicVals.getCompoundValData(type, vals));
   }

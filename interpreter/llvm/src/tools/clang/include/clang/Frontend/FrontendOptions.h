@@ -142,6 +142,8 @@ public:
                                            ///< global module index if available.
   unsigned GenerateGlobalModuleIndex : 1;  ///< Whether we can generate the
                                            ///< global module index if needed.
+  unsigned ASTDumpLookups : 1;             ///< Whether we include lookup table
+                                           ///< dumps in AST dumps.
 
   CodeCompleteOptions CodeCompleteOpts;
 
@@ -157,7 +159,11 @@ public:
     /// \brief Enable migration to modern ObjC literals.
     ObjCMT_Literals = 0x1,
     /// \brief Enable migration to modern ObjC subscripting.
-    ObjCMT_Subscripting = 0x2
+    ObjCMT_Subscripting = 0x2,
+    /// \brief Enable migration to modern ObjC property.
+    ObjCMT_Property = 0x4,
+    /// \brief Enable migration to modern ObjC readonly property.
+    ObjCMT_ReadonlyProperty = 0x8
   };
   unsigned ObjCMTAction;
 
@@ -215,7 +221,7 @@ public:
     FixWhatYouCan(false), FixOnlyWarnings(false), FixAndRecompile(false),
     FixToTemporaries(false), ARCMTMigrateEmitARCErrors(false),
     SkipFunctionBodies(false), UseGlobalModuleIndex(true),
-    GenerateGlobalModuleIndex(true),
+    GenerateGlobalModuleIndex(true), ASTDumpLookups(false),
     ARCMTAction(ARCMT_None), ObjCMTAction(ObjCMT_None),
     ProgramAction(frontend::ParseSyntaxOnly)
   {}

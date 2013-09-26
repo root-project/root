@@ -346,7 +346,7 @@ void CallInst::removeAttribute(unsigned i, Attribute attr) {
   setAttributes(PAL);
 }
 
-bool CallInst::hasFnAttr(Attribute::AttrKind A) const {
+bool CallInst::hasFnAttrImpl(Attribute::AttrKind A) const {
   if (AttributeList.hasAttribute(AttributeSet::FunctionIndex, A))
     return true;
   if (const Function *F = getCalledFunction())
@@ -574,7 +574,7 @@ void InvokeInst::setSuccessorV(unsigned idx, BasicBlock *B) {
   return setSuccessor(idx, B);
 }
 
-bool InvokeInst::hasFnAttr(Attribute::AttrKind A) const {
+bool InvokeInst::hasFnAttrImpl(Attribute::AttrKind A) const {
   if (AttributeList.hasAttribute(AttributeSet::FunctionIndex, A))
     return true;
   if (const Function *F = getCalledFunction())
@@ -2224,12 +2224,20 @@ unsigned CastInst::isEliminableCastPair(
       if (SrcTy->isFloatingPointTy())
         return secondOp;
       return 0;
-    case 7: { 
-      // ptrtoint, inttoptr -> bitcast (ptr -> ptr) if int size is >= ptr size
+    case 7: {
+      unsigned MidSize = MidTy->getScalarSizeInBits();
+      // Check the address spaces first. If we know they are in the same address
+      // space, the pointer sizes must be the same so we can still fold this
+      // without knowing the actual sizes as long we know that the intermediate
+      // pointer is the largest possible pointer size.
+      if (MidSize == 64 &&
+          SrcTy->getPointerAddressSpace() == DstTy->getPointerAddressSpace())
+        return Instruction::BitCast;
+
+      // ptrtoint, inttoptr -> bitcast (ptr -> ptr) if int size is >= ptr size.
       if (!SrcIntPtrTy || DstIntPtrTy != SrcIntPtrTy)
         return 0;
       unsigned PtrSize = SrcIntPtrTy->getScalarSizeInBits();
-      unsigned MidSize = MidTy->getScalarSizeInBits();
       if (MidSize >= PtrSize)
         return Instruction::BitCast;
       return 0;
@@ -2254,17 +2262,46 @@ unsigned CastInst::isEliminableCastPair(
       if (SrcTy == DstTy)
         return Instruction::BitCast;
       return 0; // If the types are not the same we can't eliminate it.
-    case 11:
-      // bitcast followed by ptrtoint is allowed as long as the bitcast
-      // is a pointer to pointer cast.
-      if (SrcTy->isPointerTy() && MidTy->isPointerTy())
+    case 11: {
+      // bitcast followed by ptrtoint is allowed as long as the bitcast is a
+      // pointer to pointer cast, and the pointers are the same size.
+      PointerType *SrcPtrTy = dyn_cast<PointerType>(SrcTy);
+      PointerType *MidPtrTy = dyn_cast<PointerType>(MidTy);
+      if (!SrcPtrTy || !MidPtrTy)
+        return 0;
+
+      // If the address spaces are the same, we know they are the same size
+      // without size information
+      if (SrcPtrTy->getAddressSpace() == MidPtrTy->getAddressSpace())
         return secondOp;
+
+      if (!SrcIntPtrTy || !MidIntPtrTy)
+        return 0;
+
+      if (SrcIntPtrTy->getScalarSizeInBits() ==
+          MidIntPtrTy->getScalarSizeInBits())
+        return secondOp;
+
       return 0;
-    case 12:
-      // inttoptr, bitcast -> intptr  if bitcast is a ptr to ptr cast
-      if (MidTy->isPointerTy() && DstTy->isPointerTy())
+    }
+    case 12: {
+      // inttoptr, bitcast -> inttoptr if bitcast is a ptr to ptr cast
+      // and the ptrs are to address spaces of the same size
+      PointerType *MidPtrTy = dyn_cast<PointerType>(MidTy);
+      PointerType *DstPtrTy = dyn_cast<PointerType>(DstTy);
+      if (!MidPtrTy || !DstPtrTy)
+        return 0;
+
+      if (MidPtrTy->getAddressSpace() == DstPtrTy->getAddressSpace())
+        return firstOp;
+
+      if (MidIntPtrTy &&
+          DstIntPtrTy &&
+          MidIntPtrTy->getScalarSizeInBits() ==
+          DstIntPtrTy->getScalarSizeInBits())
         return firstOp;
       return 0;
+    }
     case 13: {
       // inttoptr, ptrtoint -> bitcast if SrcSize<=PtrSize and SrcSize==DstSize
       if (!MidIntPtrTy)
@@ -2378,21 +2415,29 @@ CastInst *CastInst::CreateTruncOrBitCast(Value *S, Type *Ty,
 CastInst *CastInst::CreatePointerCast(Value *S, Type *Ty,
                                       const Twine &Name,
                                       BasicBlock *InsertAtEnd) {
-  assert(S->getType()->isPointerTy() && "Invalid cast");
-  assert((Ty->isIntegerTy() || Ty->isPointerTy()) &&
+  assert(S->getType()->isPtrOrPtrVectorTy() && "Invalid cast");
+  assert((Ty->isIntOrIntVectorTy() || Ty->isPtrOrPtrVectorTy()) &&
+         "Invalid cast");
+  assert(Ty->isVectorTy() == S->getType()->isVectorTy() && "Invalid cast");
+  assert((!Ty->isVectorTy() ||
+          Ty->getVectorNumElements() == S->getType()->getVectorNumElements()) &&
          "Invalid cast");
 
-  if (Ty->isIntegerTy())
+  if (Ty->isIntOrIntVectorTy())
     return Create(Instruction::PtrToInt, S, Ty, Name, InsertAtEnd);
   return Create(Instruction::BitCast, S, Ty, Name, InsertAtEnd);
 }
 
 /// @brief Create a BitCast or a PtrToInt cast instruction
-CastInst *CastInst::CreatePointerCast(Value *S, Type *Ty, 
-                                      const Twine &Name, 
+CastInst *CastInst::CreatePointerCast(Value *S, Type *Ty,
+                                      const Twine &Name,
                                       Instruction *InsertBefore) {
   assert(S->getType()->isPtrOrPtrVectorTy() && "Invalid cast");
   assert((Ty->isIntOrIntVectorTy() || Ty->isPtrOrPtrVectorTy()) &&
+         "Invalid cast");
+  assert(Ty->isVectorTy() == S->getType()->isVectorTy() && "Invalid cast");
+  assert((!Ty->isVectorTy() ||
+          Ty->getVectorNumElements() == S->getType()->getVectorNumElements()) &&
          "Invalid cast");
 
   if (Ty->isIntOrIntVectorTy())
@@ -2517,8 +2562,48 @@ bool CastInst::isCastable(Type *SrcTy, Type *DestTy) {
   }
 }
 
-// Provide a way to get a "cast" where the cast opcode is inferred from the 
-// types and size of the operand. This, basically, is a parallel of the 
+bool CastInst::isBitCastable(Type *SrcTy, Type *DestTy) {
+  if (!SrcTy->isFirstClassType() || !DestTy->isFirstClassType())
+    return false;
+
+  if (SrcTy == DestTy)
+    return true;
+
+  if (VectorType *SrcVecTy = dyn_cast<VectorType>(SrcTy)) {
+    if (VectorType *DestVecTy = dyn_cast<VectorType>(DestTy)) {
+      if (SrcVecTy->getNumElements() == DestVecTy->getNumElements()) {
+        // An element by element cast. Valid if casting the elements is valid.
+        SrcTy = SrcVecTy->getElementType();
+        DestTy = DestVecTy->getElementType();
+      }
+    }
+  }
+
+  if (PointerType *DestPtrTy = dyn_cast<PointerType>(DestTy)) {
+    if (PointerType *SrcPtrTy = dyn_cast<PointerType>(SrcTy)) {
+      return SrcPtrTy->getAddressSpace() == DestPtrTy->getAddressSpace();
+    }
+  }
+
+  unsigned SrcBits = SrcTy->getPrimitiveSizeInBits();   // 0 for ptr
+  unsigned DestBits = DestTy->getPrimitiveSizeInBits(); // 0 for ptr
+
+  // Could still have vectors of pointers if the number of elements doesn't
+  // match
+  if (SrcBits == 0 || DestBits == 0)
+    return false;
+
+  if (SrcBits != DestBits)
+    return false;
+
+  if (DestTy->isX86_MMXTy() || SrcTy->isX86_MMXTy())
+    return false;
+
+  return true;
+}
+
+// Provide a way to get a "cast" where the cast opcode is inferred from the
+// types and size of the operand. This, basically, is a parallel of the
 // logic in the castIsValid function below.  This axiom should hold:
 //   castIsValid( getCastOpcode(Val, Ty), Val, Ty)
 // should not assert in castIsValid. In other words, this produces a "correct"
@@ -2535,6 +2620,7 @@ CastInst::getCastOpcode(
   if (SrcTy == DestTy)
     return BitCast;
 
+  // FIXME: Check address space sizes here
   if (VectorType *SrcVecTy = dyn_cast<VectorType>(SrcTy))
     if (VectorType *DestVecTy = dyn_cast<VectorType>(DestTy))
       if (SrcVecTy->getNumElements() == DestVecTy->getNumElements()) {
@@ -2601,6 +2687,7 @@ CastInst::getCastOpcode(
     return BitCast;
   } else if (DestTy->isPointerTy()) {
     if (SrcTy->isPointerTy()) {
+      // TODO: Address space pointer sizes may not match
       return BitCast;                               // ptr -> ptr
     } else if (SrcTy->isIntegerTy()) {
       return IntToPtr;                              // int -> ptr
@@ -3180,7 +3267,6 @@ SwitchInst::SwitchInst(const SwitchInst &SI)
     OL[i] = InOL[i];
     OL[i+1] = InOL[i+1];
   }
-  TheSubsets = SI.TheSubsets;
   SubclassOptionalData = SI.SubclassOptionalData;
 }
 
@@ -3192,16 +3278,6 @@ SwitchInst::~SwitchInst() {
 /// addCase - Add an entry to the switch instruction...
 ///
 void SwitchInst::addCase(ConstantInt *OnVal, BasicBlock *Dest) {
-  IntegersSubsetToBB Mapping;
-  
-  // FIXME: Currently we work with ConstantInt based cases.
-  // So inititalize IntItem container directly from ConstantInt.
-  Mapping.add(IntItem::fromConstantInt(OnVal));
-  IntegersSubset CaseRanges = Mapping.getCase();
-  addCase(CaseRanges, Dest);
-}
-
-void SwitchInst::addCase(IntegersSubset& OnVal, BasicBlock *Dest) {
   unsigned NewCaseIdx = getNumCases(); 
   unsigned OpNo = NumOperands;
   if (OpNo+2 > ReservedSpace)
@@ -3209,17 +3285,14 @@ void SwitchInst::addCase(IntegersSubset& OnVal, BasicBlock *Dest) {
   // Initialize some new operands.
   assert(OpNo+1 < ReservedSpace && "Growing didn't work!");
   NumOperands = OpNo+2;
-
-  SubsetsIt TheSubsetsIt = TheSubsets.insert(TheSubsets.end(), OnVal);
-  
-  CaseIt Case(this, NewCaseIdx, TheSubsetsIt);
-  Case.updateCaseValueOperand(OnVal);
+  CaseIt Case(this, NewCaseIdx);
+  Case.setValue(OnVal);
   Case.setSuccessor(Dest);
 }
 
 /// removeCase - This method removes the specified case and its successor
 /// from the switch instruction.
-void SwitchInst::removeCase(CaseIt& i) {
+void SwitchInst::removeCase(CaseIt i) {
   unsigned idx = i.getCaseIndex();
   
   assert(2 + idx*2 < getNumOperands() && "Case index out of range!!!");
@@ -3236,16 +3309,6 @@ void SwitchInst::removeCase(CaseIt& i) {
   // Nuke the last value.
   OL[NumOps-2].set(0);
   OL[NumOps-2+1].set(0);
-
-  // Do the same with TheCases collection:
-  if (i.SubsetIt != --TheSubsets.end()) {
-    *i.SubsetIt = TheSubsets.back();
-    TheSubsets.pop_back();
-  } else {
-    TheSubsets.pop_back();
-    i.SubsetIt = TheSubsets.end();
-  }
-  
   NumOperands = NumOps-2;
 }
 

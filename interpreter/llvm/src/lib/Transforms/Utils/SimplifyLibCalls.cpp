@@ -118,6 +118,21 @@ static bool callHasFloatingPointArgument(const CallInst *CI) {
   return false;
 }
 
+/// \brief Check whether the overloaded unary floating point function
+/// corresponing to \a Ty is available.
+static bool hasUnaryFloatFn(const TargetLibraryInfo *TLI, Type *Ty,
+                            LibFunc::Func DoubleFn, LibFunc::Func FloatFn,
+                            LibFunc::Func LongDoubleFn) {
+  switch (Ty->getTypeID()) {
+  case Type::FloatTyID:
+    return TLI->has(FloatFn);
+  case Type::DoubleTyID:
+    return TLI->has(DoubleFn);
+  default:
+    return TLI->has(LongDoubleFn);
+  }
+}
+
 //===----------------------------------------------------------------------===//
 // Fortified Library Call Optimizations
 //===----------------------------------------------------------------------===//
@@ -477,7 +492,7 @@ struct StrChrOpt : public LibCallOptimization {
 
     // Compute the offset, make sure to handle the case when we're searching for
     // zero (a weird way to spell strlen).
-    size_t I = CharC->getSExtValue() == 0 ?
+    size_t I = (0xFF & CharC->getSExtValue()) == 0 ?
         Str.size() : Str.find(CharC->getSExtValue());
     if (I == StringRef::npos) // Didn't find the char.  strchr returns null.
       return Constant::getNullValue(CI->getType());
@@ -513,7 +528,7 @@ struct StrRChrOpt : public LibCallOptimization {
     }
 
     // Compute the offset.
-    size_t I = CharC->getSExtValue() == 0 ?
+    size_t I = (0xFF & CharC->getSExtValue()) == 0 ?
         Str.size() : Str.rfind(CharC->getSExtValue());
     if (I == StringRef::npos) // Didn't find the char. Return null.
       return Constant::getNullValue(CI->getType());
@@ -774,7 +789,7 @@ struct StrPBrkOpt : public LibCallOptimization {
     // Constant folding.
     if (HasS1 && HasS2) {
       size_t I = S1.find_first_of(S2);
-      if (I == std::string::npos) // No match.
+      if (I == StringRef::npos) // No match.
         return Constant::getNullValue(CI->getType());
 
       return B.CreateGEP(CI->getArgOperand(0), B.getInt64(I), "strpbrk");
@@ -912,7 +927,7 @@ struct StrStrOpt : public LibCallOptimization {
 
     // If both strings are known, constant fold it.
     if (HasStr1 && HasStr2) {
-      std::string::size_type Offset = SearchStr.find(ToFindStr);
+      size_t Offset = SearchStr.find(ToFindStr);
 
       if (Offset == StringRef::npos) // strstr("foo", "bar") -> null
         return Constant::getNullValue(CI->getType());
@@ -1133,9 +1148,13 @@ struct PowOpt : public UnsafeFPLibCallOptimization {
 
     Value *Op1 = CI->getArgOperand(0), *Op2 = CI->getArgOperand(1);
     if (ConstantFP *Op1C = dyn_cast<ConstantFP>(Op1)) {
-      if (Op1C->isExactlyValue(1.0))  // pow(1.0, x) -> 1.0
+      // pow(1.0, x) -> 1.0
+      if (Op1C->isExactlyValue(1.0))
         return Op1C;
-      if (Op1C->isExactlyValue(2.0))  // pow(2.0, x) -> exp2(x)
+      // pow(2.0, x) -> exp2(x)
+      if (Op1C->isExactlyValue(2.0) &&
+          hasUnaryFloatFn(TLI, Op1->getType(), LibFunc::exp2, LibFunc::exp2f,
+                          LibFunc::exp2l))
         return EmitUnaryFloatFnCall(Op2, "exp2", B, Callee->getAttributes());
     }
 
@@ -1145,7 +1164,11 @@ struct PowOpt : public UnsafeFPLibCallOptimization {
     if (Op2C->getValueAPF().isZero())  // pow(x, 0.0) -> 1.0
       return ConstantFP::get(CI->getType(), 1.0);
 
-    if (Op2C->isExactlyValue(0.5)) {
+    if (Op2C->isExactlyValue(0.5) &&
+        hasUnaryFloatFn(TLI, Op2->getType(), LibFunc::sqrt, LibFunc::sqrtf,
+                        LibFunc::sqrtl) &&
+        hasUnaryFloatFn(TLI, Op2->getType(), LibFunc::fabs, LibFunc::fabsf,
+                        LibFunc::fabsl)) {
       // Expand pow(x, 0.5) to (x == -infinity ? +infinity : fabs(sqrt(x))).
       // This is faster than calling pow, and still handles negative zero
       // and negative infinity correctly.
@@ -1178,7 +1201,7 @@ struct Exp2Opt : public UnsafeFPLibCallOptimization {
   virtual Value *callOptimizer(Function *Callee, CallInst *CI, IRBuilder<> &B) {
     Value *Ret = NULL;
     if (UnsafeFPShrink && Callee->getName() == "exp2" &&
-        TLI->has(LibFunc::exp2)) {
+        TLI->has(LibFunc::exp2f)) {
       UnaryDoubleFPOpt UnsafeUnaryDoubleFP(true);
       Ret = UnsafeUnaryDoubleFP.callOptimizer(Callee, CI, B);
     }
@@ -1361,7 +1384,7 @@ struct PrintFOpt : public LibCallOptimization {
 
     // printf("foo\n") --> puts("foo")
     if (FormatStr[FormatStr.size()-1] == '\n' &&
-        FormatStr.find('%') == std::string::npos) {  // no format characters.
+        FormatStr.find('%') == StringRef::npos) { // No format characters.
       // Create a string literal with no \n on it.  We expect the constant merge
       // pass to be run after this pass, to merge duplicate strings.
       FormatStr = FormatStr.drop_back();
@@ -1518,6 +1541,12 @@ struct FPrintFOpt : public LibCallOptimization {
     if (!getConstantStringInfo(CI->getArgOperand(1), FormatStr))
       return 0;
 
+    // Do not do any of the following transformations if the fprintf return
+    // value is used, in general the fprintf return value is not compatible
+    // with fwrite(), fputc() or fputs().
+    if (!CI->use_empty())
+      return 0;
+
     // fprintf(F, "foo") --> fwrite("foo", 3, 1, F)
     if (CI->getNumArgOperands() == 2) {
       for (unsigned i = 0, e = FormatStr.size(); i != e; ++i)
@@ -1527,11 +1556,10 @@ struct FPrintFOpt : public LibCallOptimization {
       // These optimizations require DataLayout.
       if (!TD) return 0;
 
-      Value *NewCI = EmitFWrite(CI->getArgOperand(1),
-                                ConstantInt::get(TD->getIntPtrType(*Context),
-                                                 FormatStr.size()),
-                                CI->getArgOperand(0), B, TD, TLI);
-      return NewCI ? ConstantInt::get(CI->getType(), FormatStr.size()) : 0;
+      return EmitFWrite(CI->getArgOperand(1),
+                        ConstantInt::get(TD->getIntPtrType(*Context),
+                                         FormatStr.size()),
+                        CI->getArgOperand(0), B, TD, TLI);
     }
 
     // The remaining optimizations require the format string to be "%s" or "%c"
@@ -1544,14 +1572,12 @@ struct FPrintFOpt : public LibCallOptimization {
     if (FormatStr[1] == 'c') {
       // fprintf(F, "%c", chr) --> fputc(chr, F)
       if (!CI->getArgOperand(2)->getType()->isIntegerTy()) return 0;
-      Value *NewCI = EmitFPutC(CI->getArgOperand(2), CI->getArgOperand(0), B,
-                               TD, TLI);
-      return NewCI ? ConstantInt::get(CI->getType(), 1) : 0;
+      return EmitFPutC(CI->getArgOperand(2), CI->getArgOperand(0), B, TD, TLI);
     }
 
     if (FormatStr[1] == 's') {
       // fprintf(F, "%s", str) --> fputs(str, F)
-      if (!CI->getArgOperand(2)->getType()->isPointerTy() || !CI->use_empty())
+      if (!CI->getArgOperand(2)->getType()->isPointerTy())
         return 0;
       return EmitFPutS(CI->getArgOperand(2), CI->getArgOperand(0), B, TD, TLI);
     }
@@ -1937,7 +1963,7 @@ LibCallSimplifier::~LibCallSimplifier() {
 }
 
 Value *LibCallSimplifier::optimizeCall(CallInst *CI) {
-  if (CI->hasFnAttr(Attribute::NoBuiltin)) return 0;
+  if (CI->isNoBuiltin()) return 0;
   return Impl->optimizeCall(CI);
 }
 
@@ -1947,3 +1973,53 @@ void LibCallSimplifier::replaceAllUsesWith(Instruction *I, Value *With) const {
 }
 
 }
+
+// TODO:
+//   Additional cases that we need to add to this file:
+//
+// cbrt:
+//   * cbrt(expN(X))  -> expN(x/3)
+//   * cbrt(sqrt(x))  -> pow(x,1/6)
+//   * cbrt(sqrt(x))  -> pow(x,1/9)
+//
+// exp, expf, expl:
+//   * exp(log(x))  -> x
+//
+// log, logf, logl:
+//   * log(exp(x))   -> x
+//   * log(x**y)     -> y*log(x)
+//   * log(exp(y))   -> y*log(e)
+//   * log(exp2(y))  -> y*log(2)
+//   * log(exp10(y)) -> y*log(10)
+//   * log(sqrt(x))  -> 0.5*log(x)
+//   * log(pow(x,y)) -> y*log(x)
+//
+// lround, lroundf, lroundl:
+//   * lround(cnst) -> cnst'
+//
+// pow, powf, powl:
+//   * pow(exp(x),y)  -> exp(x*y)
+//   * pow(sqrt(x),y) -> pow(x,y*0.5)
+//   * pow(pow(x,y),z)-> pow(x,y*z)
+//
+// round, roundf, roundl:
+//   * round(cnst) -> cnst'
+//
+// signbit:
+//   * signbit(cnst) -> cnst'
+//   * signbit(nncst) -> 0 (if pstv is a non-negative constant)
+//
+// sqrt, sqrtf, sqrtl:
+//   * sqrt(expN(x))  -> expN(x*0.5)
+//   * sqrt(Nroot(x)) -> pow(x,1/(2*N))
+//   * sqrt(pow(x,y)) -> pow(|x|,y*0.5)
+//
+// strchr:
+//   * strchr(p, 0) -> strlen(p)
+// tan, tanf, tanl:
+//   * tan(atan(x)) -> x
+//
+// trunc, truncf, truncl:
+//   * trunc(cnst) -> cnst'
+//
+//

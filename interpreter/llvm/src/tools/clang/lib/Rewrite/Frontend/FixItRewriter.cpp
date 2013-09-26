@@ -92,7 +92,7 @@ bool FixItRewriter::WriteFixedFiles(
       OS.reset(new llvm::raw_fd_ostream(fd, /*shouldClose=*/true));
     } else {
       OS.reset(new llvm::raw_fd_ostream(Filename.c_str(), Err,
-                                        llvm::raw_fd_ostream::F_Binary));
+                                        llvm::sys::fs::F_Binary));
     }
     if (!Err.empty()) {
       Diags.Report(clang::diag::err_fe_unable_to_open_output)
@@ -195,11 +195,6 @@ void FixItRewriter::Diag(SourceLocation Loc, unsigned DiagID) {
   Diags.Report(Loc, DiagID);
   Diags.takeClient();
   Diags.setClient(this);
-}
-
-DiagnosticConsumer *FixItRewriter::clone(DiagnosticsEngine &Diags) const {
-  return new FixItRewriter(Diags, Diags.getSourceManager(), 
-                           Rewrite.getLangOpts(), FixItOpts);
 }
 
 FixItOptions::~FixItOptions() {}

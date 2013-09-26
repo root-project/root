@@ -191,6 +191,11 @@ static void InitLibcallNames(const char **Names, const TargetMachine &TM) {
   Names[RTLIB::NEARBYINT_F80] = "nearbyintl";
   Names[RTLIB::NEARBYINT_F128] = "nearbyintl";
   Names[RTLIB::NEARBYINT_PPCF128] = "nearbyintl";
+  Names[RTLIB::ROUND_F32] = "roundf";
+  Names[RTLIB::ROUND_F64] = "round";
+  Names[RTLIB::ROUND_F80] = "roundl";
+  Names[RTLIB::ROUND_F128] = "roundl";
+  Names[RTLIB::ROUND_PPCF128] = "roundl";
   Names[RTLIB::FLOOR_F32] = "floorf";
   Names[RTLIB::FLOOR_F64] = "floor";
   Names[RTLIB::FLOOR_F80] = "floorl";
@@ -355,6 +360,13 @@ static void InitLibcallNames(const char **Names, const TargetMachine &TM) {
     Names[RTLIB::SINCOS_F80] = 0;
     Names[RTLIB::SINCOS_F128] = 0;
     Names[RTLIB::SINCOS_PPCF128] = 0;
+  }
+
+  if (Triple(TM.getTargetTriple()).getOS() != Triple::OpenBSD) {
+    Names[RTLIB::STACKPROTECTOR_CHECK_FAIL] = "__stack_chk_fail";
+  } else {
+    // These are generally not available.
+    Names[RTLIB::STACKPROTECTOR_CHECK_FAIL] = 0;
   }
 }
 
@@ -647,7 +659,6 @@ TargetLoweringBase::TargetLoweringBase(const TargetMachine &tm,
   PrefFunctionAlignment = 0;
   PrefLoopAlignment = 0;
   MinStackArgumentAlignment = 1;
-  ShouldFoldAtomicFences = false;
   InsertFencesForAtomic = false;
   SupportJumpTables = true;
   MinimumJumpTableEntries = 4;
@@ -683,6 +694,14 @@ void TargetLoweringBase::initActions() {
     // These operations default to expand.
     setOperationAction(ISD::FGETSIGN, (MVT::SimpleValueType)VT, Expand);
     setOperationAction(ISD::CONCAT_VECTORS, (MVT::SimpleValueType)VT, Expand);
+
+    // These library functions default to expand.
+    setOperationAction(ISD::FROUND, (MVT::SimpleValueType)VT, Expand);
+
+    // These operations default to expand for vector types.
+    if (VT >= MVT::FIRST_VECTOR_VALUETYPE &&
+        VT <= MVT::LAST_VECTOR_VALUETYPE)
+      setOperationAction(ISD::FCOPYSIGN, (MVT::SimpleValueType)VT, Expand);
   }
 
   // Most targets ignore the @llvm.prefetch intrinsic.
@@ -746,6 +765,19 @@ void TargetLoweringBase::initActions() {
   // here is to inform DAG Legalizer to replace DEBUGTRAP with TRAP.
   //
   setOperationAction(ISD::DEBUGTRAP, MVT::Other, Expand);
+}
+
+MVT TargetLoweringBase::getPointerTy(uint32_t AS) const {
+  return MVT::getIntegerVT(getPointerSizeInBits(AS));
+}
+
+unsigned TargetLoweringBase::getPointerSizeInBits(uint32_t AS) const {
+  return TD->getPointerSizeInBits(AS);
+}
+
+unsigned TargetLoweringBase::getPointerTypeSizeInBits(Type *Ty) const {
+  assert(Ty->isPointerTy());
+  return getPointerSizeInBits(Ty->getPointerAddressSpace());
 }
 
 MVT TargetLoweringBase::getScalarShiftAmountTy(EVT LHSTy) const {
@@ -1034,7 +1066,7 @@ void TargetLoweringBase::computeRegisterProperties() {
   }
 }
 
-EVT TargetLoweringBase::getSetCCResultType(EVT VT) const {
+EVT TargetLoweringBase::getSetCCResultType(LLVMContext &, EVT VT) const {
   assert(!VT.isVector() && "No default SetCC type for vectors!");
   return getPointerTy(0).SimpleTy;
 }

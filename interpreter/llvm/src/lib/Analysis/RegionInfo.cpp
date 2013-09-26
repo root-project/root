@@ -9,6 +9,7 @@
 // Detects single entry single exit regions in the control flow graph.
 //===----------------------------------------------------------------------===//
 
+#define DEBUG_TYPE "region"
 #include "llvm/Analysis/RegionInfo.h"
 #include "llvm/ADT/PostOrderIterator.h"
 #include "llvm/ADT/Statistic.h"
@@ -17,12 +18,9 @@
 #include "llvm/Assembly/Writer.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorHandling.h"
-
-#define DEBUG_TYPE "region"
 #include "llvm/Support/Debug.h"
-
-#include <set>
 #include <algorithm>
+#include <set>
 
 using namespace llvm;
 
@@ -114,7 +112,8 @@ void Region::replaceExitRecursive(BasicBlock *NewExit) {
 bool Region::contains(const BasicBlock *B) const {
   BasicBlock *BB = const_cast<BasicBlock*>(B);
 
-  assert(DT->getNode(BB) && "BB not part of the dominance tree");
+  if (!DT->getNode(BB))
+    return false;
 
   BasicBlock *entry = getEntry(), *exit = getExit();
 

@@ -18,6 +18,7 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Lookup.h"
@@ -486,9 +487,9 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
    //   or function template.
    //
    // We want to ignore object(.|->)member<template>
-   if (R.getSema().PP.LookAhead(0).getKind() == tok::less)
+   //if (R.getSema().PP.LookAhead(0).getKind() == tok::less)
       // TODO: check for . or -> in the cached token stream
-      return false;
+   //   return false;
    
    for (Scope* DepScope = S; DepScope; DepScope = DepScope->getParent()) {
       if (DeclContext* Ctx = static_cast<DeclContext*>(DepScope->getEntity())) {
@@ -538,17 +539,19 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    IdentifierInfo* II = Name.getAsIdentifierInfo();
    SourceLocation Loc = R.getNameLoc();
    VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, 
-                                     C.getAutoType(QualType()),
+                                     C.getAutoType(QualType(),
+                                                   /*IsDecltypeAuto*/false,
+                                                   /*IsDependent*/true),
                                      /*TypeSourceInfo*/0, SC_None);
 
-   // Annotate the decl to give a hint in cling. FIXME: Current implementation
-   // is a gross hack, because TClingCallbacks shouldn't know about 
-   // EvaluateTSynthesizer at all!
-    
-   SourceRange invalidRange;
-   Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__Auto"));
-
    if (Result) {
+      // Annotate the decl to give a hint in cling. FIXME: Current implementation
+      // is a gross hack, because TClingCallbacks shouldn't know about 
+      // EvaluateTSynthesizer at all!
+    
+      SourceRange invalidRange;
+      Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__Auto"));
+
       R.addDecl(Result);
       // Here we have the scope but we cannot do Sema::PushDeclContext, because
       // on pop it will try to go one level up, which we don't want.

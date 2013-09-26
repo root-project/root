@@ -47,7 +47,7 @@
 #include "cling/Utils/AST.h"
 #include "cling/Interpreter/LookupHelper.h"
 
-#include "llvm/Support/PathV2.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Support/FileSystem.h"
 
 #include "cling/Interpreter/Interpreter.h"
@@ -2402,12 +2402,14 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                // We may induce template instantiation
                cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
                clang::sema::HackForDefaultTemplateArg raii;
+               bool HasDefaultArgs;
                clang::TemplateArgumentLoc ArgType = S.SubstDefaultTemplateArgumentIfAvailable(
                                                              Template,
                                                              TemplateLoc,
                                                              RAngleLoc,
                                                              TTP,
-                                                             desArgs);
+                                                             desArgs,
+                                                             HasDefaultArgs);
 	       // The substition can fail, in which case there would have been compilation
 	       // error printed on the screen.
 	       if (ArgType.getArgument().isNull() 
@@ -3377,7 +3379,8 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
          }
       }
 
-      ModuleMap.addHeader(modCreation.first, hdrFileEntry, /*Excluded=*/ false);
+      ModuleMap.addHeader(modCreation.first, hdrFileEntry,
+                          clang::ModuleMap::NormalHeader);
    } // for headers
    return modCreation.first;
 }

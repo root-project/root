@@ -14,6 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Analysis/ScalarEvolutionExpander.h"
+#include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
@@ -294,8 +295,8 @@ static bool FactorOutConstant(const SCEV *&S,
     const SCEV *Start = A->getStart();
     if (!FactorOutConstant(Start, Remainder, Factor, SE, TD))
       return false;
-    // FIXME: can use A->getNoWrapFlags(FlagNW)
-    S = SE.getAddRecExpr(Start, Step, A->getLoop(), SCEV::FlagAnyWrap);
+    S = SE.getAddRecExpr(Start, Step, A->getLoop(),
+                         A->getNoWrapFlags(SCEV::FlagNW));
     return true;
   }
 
@@ -348,8 +349,7 @@ static void SplitAddRecs(SmallVectorImpl<const SCEV *> &Ops,
       AddRecs.push_back(SE.getAddRecExpr(Zero,
                                          A->getStepRecurrence(SE),
                                          A->getLoop(),
-                                         // FIXME: A->getNoWrapFlags(FlagNW)
-                                         SCEV::FlagAnyWrap));
+                                         A->getNoWrapFlags(SCEV::FlagNW)));
       if (const SCEVAddExpr *Add = dyn_cast<SCEVAddExpr>(Start)) {
         Ops[i] = Zero;
         Ops.append(Add->op_begin(), Add->op_end());
@@ -407,6 +407,10 @@ Value *SCEVExpander::expandAddToGEP(const SCEV *const *op_begin,
   // without the other.
   SplitAddRecs(Ops, Ty, SE);
 
+  Type *IntPtrTy = SE.TD
+                 ? SE.TD->getIntPtrType(PTy)
+                 : Type::getInt64Ty(PTy->getContext());
+
   // Descend down the pointer's type and attempt to convert the other
   // operands into GEP indices, at each level. The first index in a GEP
   // indexes into the array implied by the pointer operand; the rest of
@@ -417,7 +421,7 @@ Value *SCEVExpander::expandAddToGEP(const SCEV *const *op_begin,
     // array indexing.
     SmallVector<const SCEV *, 8> ScaledOps;
     if (ElTy->isSized()) {
-      const SCEV *ElSize = SE.getSizeOfExpr(ElTy);
+      const SCEV *ElSize = SE.getSizeOfExpr(IntPtrTy, ElTy);
       if (!ElSize->isZero()) {
         SmallVector<const SCEV *, 8> NewOps;
         for (unsigned i = 0, e = Ops.size(); i != e; ++i) {
@@ -846,8 +850,7 @@ static void ExposePointerBase(const SCEV *&Base, const SCEV *&Rest,
                          SE.getAddRecExpr(SE.getConstant(A->getType(), 0),
                                           A->getStepRecurrence(SE),
                                           A->getLoop(),
-                                          // FIXME: A->getNoWrapFlags(FlagNW)
-                                          SCEV::FlagAnyWrap));
+                                          A->getNoWrapFlags(SCEV::FlagNW)));
   }
   if (const SCEVAddExpr *A = dyn_cast<SCEVAddExpr>(Base)) {
     Base = A->getOperand(A->getNumOperands()-1);
@@ -1137,7 +1140,12 @@ SCEVExpander::getAddRecExprPHILiterally(const SCEVAddRecExpr *Normalized,
       IVIncInsertPos : Pred->getTerminator();
     Builder.SetInsertPoint(InsertPos);
     Value *IncV = expandIVInc(PN, StepV, L, ExpandTy, IntTy, useSubtract);
-
+    if (isa<OverflowingBinaryOperator>(IncV)) {
+      if (Normalized->getNoWrapFlags(SCEV::FlagNUW))
+        cast<BinaryOperator>(IncV)->setHasNoUnsignedWrap();
+      if (Normalized->getNoWrapFlags(SCEV::FlagNSW))
+        cast<BinaryOperator>(IncV)->setHasNoSignedWrap();
+    }
     PN->addIncoming(IncV, Pred);
   }
 
@@ -1180,8 +1188,7 @@ Value *SCEVExpander::expandAddRecExprLiterally(const SCEVAddRecExpr *S) {
     Normalized = cast<SCEVAddRecExpr>(
       SE.getAddRecExpr(Start, Normalized->getStepRecurrence(SE),
                        Normalized->getLoop(),
-                       // FIXME: Normalized->getNoWrapFlags(FlagNW)
-                       SCEV::FlagAnyWrap));
+                       Normalized->getNoWrapFlags(SCEV::FlagNW)));
   }
 
   // Strip off any non-loop-dominating component from the addrec step.
@@ -1191,11 +1198,9 @@ Value *SCEVExpander::expandAddRecExprLiterally(const SCEVAddRecExpr *S) {
     PostLoopScale = Step;
     Step = SE.getConstant(Normalized->getType(), 1);
     Normalized =
-      cast<SCEVAddRecExpr>(SE.getAddRecExpr(Start, Step,
-                                            Normalized->getLoop(),
-                                            // FIXME: Normalized
-                                            // ->getNoWrapFlags(FlagNW)
-                                            SCEV::FlagAnyWrap));
+      cast<SCEVAddRecExpr>(SE.getAddRecExpr(
+                             Start, Step, Normalized->getLoop(),
+                             Normalized->getNoWrapFlags(SCEV::FlagNW)));
   }
 
   // Expand the core addrec. If we need post-loop scaling, force it to
@@ -1288,8 +1293,7 @@ Value *SCEVExpander::visitAddRecExpr(const SCEVAddRecExpr *S) {
     for (unsigned i = 0, e = S->getNumOperands(); i != e; ++i)
       NewOps[i] = SE.getAnyExtendExpr(S->op_begin()[i], CanonicalIV->getType());
     Value *V = expand(SE.getAddRecExpr(NewOps, S->getLoop(),
-                                       // FIXME: S->getNoWrapFlags(FlagNW)
-                                       SCEV::FlagAnyWrap));
+                                       S->getNoWrapFlags(SCEV::FlagNW)));
     BasicBlock *SaveInsertBB = Builder.GetInsertBlock();
     BasicBlock::iterator SaveInsertPt = Builder.GetInsertPoint();
     BasicBlock::iterator NewInsertPt =
@@ -1307,8 +1311,8 @@ Value *SCEVExpander::visitAddRecExpr(const SCEVAddRecExpr *S) {
   if (!S->getStart()->isZero()) {
     SmallVector<const SCEV *, 4> NewOps(S->op_begin(), S->op_end());
     NewOps[0] = SE.getConstant(Ty, 0);
-    // FIXME: can use S->getNoWrapFlags()
-    const SCEV *Rest = SE.getAddRecExpr(NewOps, L, SCEV::FlagAnyWrap);
+    const SCEV *Rest = SE.getAddRecExpr(NewOps, L,
+                                        S->getNoWrapFlags(SCEV::FlagNW));
 
     // Turn things like ptrtoint+arithmetic+inttoptr into GEP. See the
     // comments on expandAddToGEP for details.
@@ -1343,9 +1347,13 @@ Value *SCEVExpander::visitAddRecExpr(const SCEVAddRecExpr *S) {
                                   Header->begin());
     rememberInstruction(CanonicalIV);
 
+    SmallSet<BasicBlock *, 4> PredSeen;
     Constant *One = ConstantInt::get(Ty, 1);
     for (pred_iterator HPI = HPB; HPI != HPE; ++HPI) {
       BasicBlock *HP = *HPI;
+      if (!PredSeen.insert(HP))
+        continue;
+
       if (L->contains(HP)) {
         // Insert a unit add instruction right before the terminator
         // corresponding to the back-edge.

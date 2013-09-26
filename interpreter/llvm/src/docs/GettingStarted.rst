@@ -81,7 +81,7 @@ Here's the short story for getting up and running quickly with LLVM:
 
    * ``make [-j]`` --- The ``-j`` specifies the number of jobs (commands) to run
      simultaneously.  This builds both LLVM and Clang for Debug+Asserts mode.
-     The ``--enabled-optimized`` configure option is used to specify a Release
+     The ``--enable-optimized`` configure option is used to specify a Release
      build.
 
    * ``make check-all`` --- This run the regression tests to ensure everything
@@ -229,6 +229,8 @@ uses the package and provides other details.
 +--------------------------------------------------------------+-----------------+---------------------------------------------+
 | `libtool <http://savannah.gnu.org/projects/libtool>`_        | 1.5.22          | Shared library manager\ :sup:`4`            |
 +--------------------------------------------------------------+-----------------+---------------------------------------------+
+| `zlib <http://zlib.net>`_                                    | >=1.2.3.4       | Compression library\ :sup:`5`               |
++--------------------------------------------------------------+-----------------+---------------------------------------------+
 
 .. note::
 
@@ -243,6 +245,8 @@ uses the package and provides other details.
    #. If you want to make changes to the configure scripts, you will need GNU
       autoconf (2.60), and consequently, GNU M4 (version 1.4 or higher). You
       will also need automake (1.9.6). We only use aclocal from that package.
+   #. Optional, adds compression/uncompression capabilities to selected LLVM
+      tools.
 
 Additionally, your compilation host is expected to have the usual plethora of
 Unix utilities. Specifically:
@@ -455,15 +459,6 @@ The files are as follows, with *x.y* marking the version number:
 
   Source release for the LLVM test-suite.
 
-``llvm-gcc-4.2-x.y.source.tar.gz``
-
-  Source release of the llvm-gcc-4.2 front end.  See README.LLVM in the root
-  directory for build instructions.
-
-``llvm-gcc-4.2-x.y-platform.tar.gz``
-
-  Binary release of the llvm-gcc-4.2 front end for a specific platform.
-
 .. _checkout:
 
 Checkout LLVM from Subversion
@@ -659,35 +654,20 @@ This leaves your working directories on their master branches, so you'll need to
 ``checkout`` each working branch individually and ``rebase`` it on top of its
 parent branch.
 
-For those who wish to be able to update an llvm repo in a simpler fashion,
-consider placing the following Git script in your path under the name
-``git-svnup``:
+For those who wish to be able to update an llvm repo/revert patches easily using
+git-svn, please look in the directory for the scripts ``git-svnup`` and
+``git-svnrevert``.
 
-.. code-block:: bash
+To perform the aforementioned update steps go into your source directory and
+just type ``git-svnup`` or ``git svnup`` and everything will just work.
 
-  #!/bin/bash
+If one wishes to revert a commit with git-svn, but do not want the git hash to
+escape into the commit message, one can use the script ``git-svnrevert`` or
+``git svnrevert`` which will take in the git hash for the commit you want to
+revert, look up the appropriate svn revision, and output a message where all
+references to the git hash have been replaced with the svn revision.
 
-  STATUS=$(git status -s | grep -v "??")
-
-  if [ ! -z "$STATUS" ]; then
-      STASH="yes"
-      git stash >/dev/null
-  fi
-
-  git fetch
-  OLD_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-  git checkout master 2> /dev/null
-  git svn rebase -l
-  git checkout $OLD_BRANCH 2> /dev/null
-
-  if [ ! -z $STASH ]; then
-      git stash pop >/dev/null
-  fi
-
-Then to perform the aforementioned update steps go into your source directory
-and just type ``git-svnup`` or ``git svnup`` and everything will just work.
-
-To commit back changes via git-svn, use ``dcommit``:
+To commit back changes via git-svn, use ``git svn dcommit``:
 
 .. code-block:: console
 
@@ -769,8 +749,8 @@ The following options can be used to set or enable LLVM specific options:
   target names that you want available in llc. The target names use all lower
   case. The current set of targets is:
 
-    ``arm, cpp, hexagon, mblaze, mips, mipsel, msp430, powerpc, ptx, sparc, spu,
-    x86, x86_64, xcore``.
+    ``arm, cpp, hexagon, mips, mipsel, msp430, powerpc, ptx, sparc, spu,
+    systemz, x86, x86_64, xcore``.
 
 ``--enable-doxygen``
 
@@ -950,6 +930,10 @@ GCC compiler supports.
 The result of such a build is executables that are not runnable on on the build
 host (--build option) but can be executed on the compile host (--host option).
 
+Check :doc:`HowToCrossCompileLLVM` and `Clang docs on how to cross-compile in general
+<http://clang.llvm.org/docs/CrossCompilation.html>`_ for more information
+about cross-compiling.
+
 The Location of LLVM Object Files
 ---------------------------------
 
@@ -1085,7 +1069,7 @@ different `tools`_.
   This directory holds the source code for the LLVM assembly language parser
   library.
 
-``llvm/lib/BitCode/``
+``llvm/lib/Bitcode/``
 
   This directory holds code for reading and write LLVM bitcode.
 
@@ -1323,7 +1307,7 @@ Example with clang
      Clang works just like GCC by default.  The standard -S and -c arguments
      work as usual (producing a native .s or .o file, respectively).
 
-#. Next, compile the C file into a LLVM bitcode file:
+#. Next, compile the C file into an LLVM bitcode file:
 
    .. code-block:: console
 

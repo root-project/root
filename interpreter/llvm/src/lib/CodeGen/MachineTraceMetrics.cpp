@@ -853,8 +853,7 @@ computeInstrDepths(const MachineBasicBlock *MBB) {
         // Add latency if DefMI is a real instruction. Transients get latency 0.
         if (!Dep.DefMI->isTransient())
           DepCycle += MTM.SchedModel
-            .computeOperandLatency(Dep.DefMI, Dep.DefOp, UseMI, Dep.UseOp,
-                                   /* FindMin = */ false);
+            .computeOperandLatency(Dep.DefMI, Dep.DefOp, UseMI, Dep.UseOp);
         Cycle = std::max(Cycle, DepCycle);
       }
       // Remember the instruction depth.
@@ -902,8 +901,7 @@ static unsigned updatePhysDepsUpwards(const MachineInstr *MI, unsigned Height,
         // We may not know the UseMI of this dependency, if it came from the
         // live-in list. SchedModel can handle a NULL UseMI.
         DepHeight += SchedModel
-          .computeOperandLatency(MI, MO.getOperandNo(), I->MI, I->Op,
-                                 /* FindMin = */ false);
+          .computeOperandLatency(MI, MO.getOperandNo(), I->MI, I->Op);
       }
       Height = std::max(Height, DepHeight);
       // This regunit is dead above MI.
@@ -941,7 +939,7 @@ static bool pushDepHeight(const DataDep &Dep,
   // Adjust height by Dep.DefMI latency.
   if (!Dep.DefMI->isTransient())
     UseHeight += SchedModel.computeOperandLatency(Dep.DefMI, Dep.DefOp,
-                                                  UseMI, Dep.UseOp, false);
+                                                  UseMI, Dep.UseOp);
 
   // Update Heights[DefMI] to be the maximum height seen.
   MIHeightMap::iterator I;
@@ -1171,7 +1169,7 @@ MachineTraceMetrics::Trace::getPHIDepth(const MachineInstr *PHI) const {
   // Add latency if DefMI is a real instruction. Transients get latency 0.
   if (!Dep.DefMI->isTransient())
     DepCycle += TE.MTM.SchedModel
-      .computeOperandLatency(Dep.DefMI, Dep.DefOp, PHI, Dep.UseOp, false);
+      .computeOperandLatency(Dep.DefMI, Dep.DefOp, PHI, Dep.UseOp);
   return DepCycle;
 }
 
@@ -1200,8 +1198,10 @@ unsigned MachineTraceMetrics::Trace::getResourceDepth(bool Bottom) const {
   return std::max(Instrs, PRMax);
 }
 
+
 unsigned MachineTraceMetrics::Trace::
-getResourceLength(ArrayRef<const MachineBasicBlock*> Extrablocks) const {
+getResourceLength(ArrayRef<const MachineBasicBlock*> Extrablocks,
+                  ArrayRef<const MCSchedClassDesc*> ExtraInstrs) const {
   // Add up resources above and below the center block.
   ArrayRef<unsigned> PRDepths = TE.getProcResourceDepths(getBlockNum());
   ArrayRef<unsigned> PRHeights = TE.getProcResourceHeights(getBlockNum());
@@ -1210,6 +1210,18 @@ getResourceLength(ArrayRef<const MachineBasicBlock*> Extrablocks) const {
     unsigned PRCycles = PRDepths[K] + PRHeights[K];
     for (unsigned I = 0; I != Extrablocks.size(); ++I)
       PRCycles += TE.MTM.getProcResourceCycles(Extrablocks[I]->getNumber())[K];
+    for (unsigned I = 0; I != ExtraInstrs.size(); ++I) {
+      const MCSchedClassDesc* SC = ExtraInstrs[I];
+      if (!SC->isValid())
+        continue;
+      for (TargetSchedModel::ProcResIter
+             PI = TE.MTM.SchedModel.getWriteProcResBegin(SC),
+             PE = TE.MTM.SchedModel.getWriteProcResEnd(SC); PI != PE; ++PI) {
+        if (PI->ProcResourceIdx != K)
+          continue;
+        PRCycles += (PI->Cycles * TE.MTM.SchedModel.getResourceFactor(K));
+      }
+    }
     PRMax = std::max(PRMax, PRCycles);
   }
   // Convert to cycle count.

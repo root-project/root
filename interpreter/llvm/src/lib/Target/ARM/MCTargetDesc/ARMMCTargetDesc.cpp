@@ -26,8 +26,42 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/TargetRegistry.h"
 
+using namespace llvm;
+
 #define GET_REGINFO_MC_DESC
 #include "ARMGenRegisterInfo.inc"
+
+static bool getMCRDeprecationInfo(MCInst &MI, MCSubtargetInfo &STI,
+                                  std::string &Info) {
+  if (STI.getFeatureBits() & llvm::ARM::HasV7Ops &&
+      (MI.getOperand(0).isImm() && MI.getOperand(0).getImm() == 15) &&
+      (MI.getOperand(1).isImm() && MI.getOperand(1).getImm() == 0) &&
+      // Checks for the deprecated CP15ISB encoding:
+      // mcr p15, #0, rX, c7, c5, #4
+      (MI.getOperand(3).isImm() && MI.getOperand(3).getImm() == 7)) {
+    if ((MI.getOperand(5).isImm() && MI.getOperand(5).getImm() == 4)) {
+      if (MI.getOperand(4).isImm() && MI.getOperand(4).getImm() == 5) {
+        Info = "deprecated since v7, use 'isb'";
+        return true;
+      }
+
+      // Checks for the deprecated CP15DSB encoding:
+      // mcr p15, #0, rX, c7, c10, #4
+      if (MI.getOperand(4).isImm() && MI.getOperand(4).getImm() == 10) {
+        Info = "deprecated since v7, use 'dsb'";
+        return true;
+      }
+    }
+    // Checks for the deprecated CP15DMB encoding:
+    // mcr p15, #0, rX, c7, c10, #5
+    if (MI.getOperand(4).isImm() && MI.getOperand(4).getImm() == 10 &&
+        (MI.getOperand(5).isImm() && MI.getOperand(5).getImm() == 5)) {
+      Info = "deprecated since v7, use 'dmb'";
+      return true;
+    }
+  }
+  return false;
+}
 
 #define GET_INSTRINFO_MC_DESC
 #include "ARMGenInstrInfo.inc"
@@ -35,7 +69,6 @@
 #define GET_SUBTARGETINFO_MC_DESC
 #include "ARMGenSubtargetInfo.inc"
 
-using namespace llvm;
 
 std::string ARM_MC::ParseARMTriple(StringRef TT, StringRef CPU) {
   Triple triple(TT);
@@ -59,8 +92,12 @@ std::string ARM_MC::ParseARMTriple(StringRef TT, StringRef CPU) {
   std::string ARMArchFeature;
   if (Idx) {
     unsigned SubVer = TT[Idx];
-    if (SubVer >= '7' && SubVer <= '9') {
+    if (SubVer == '8') {
+      // FIXME: Parse v8 features
+      ARMArchFeature = "+v8,+db";
+    } else if (SubVer == '7') {
       if (Len >= Idx+2 && TT[Idx+1] == 'm') {
+        isThumb = true;
         if (NoCPU)
           // v7m: FeatureNoARM, FeatureDB, FeatureHWDiv, FeatureMClass
           ARMArchFeature = "+v7,+noarm,+db,+hwdiv,+mclass";
@@ -99,6 +136,7 @@ std::string ARM_MC::ParseARMTriple(StringRef TT, StringRef CPU) {
       if (Len >= Idx+3 && TT[Idx+1] == 't' && TT[Idx+2] == '2')
         ARMArchFeature = "+v6t2";
       else if (Len >= Idx+2 && TT[Idx+1] == 'm') {
+        isThumb = true;
         if (NoCPU)
           // v6m: FeatureNoARM, FeatureMClass
           ARMArchFeature = "+v6,+noarm,+mclass";
@@ -159,7 +197,7 @@ static MCRegisterInfo *createARMMCRegisterInfo(StringRef Triple) {
   return X;
 }
 
-static MCAsmInfo *createARMMCAsmInfo(const Target &T, StringRef TT) {
+static MCAsmInfo *createARMMCAsmInfo(const MCRegisterInfo &MRI, StringRef TT) {
   Triple TheTriple(TT);
 
   if (TheTriple.isOSDarwin())
@@ -212,6 +250,15 @@ static MCInstPrinter *createARMMCInstPrinter(const Target &T,
   return 0;
 }
 
+static MCRelocationInfo *createARMMCRelocationInfo(StringRef TT,
+                                                   MCContext &Ctx) {
+  Triple TheTriple(TT);
+  if (TheTriple.isEnvironmentMachO())
+    return createARMMachORelocationInfo(Ctx);
+  // Default to the stock relocation info.
+  return llvm::createMCRelocationInfo(TT, Ctx);
+}
+
 namespace {
 
 class ARMMCInstrAnalysis : public MCInstrAnalysis {
@@ -232,15 +279,16 @@ public:
     return MCInstrAnalysis::isConditionalBranch(Inst);
   }
 
-  uint64_t evaluateBranch(const MCInst &Inst, uint64_t Addr,
-                          uint64_t Size) const {
+  bool evaluateBranch(const MCInst &Inst, uint64_t Addr,
+                      uint64_t Size, uint64_t &Target) const {
     // We only handle PCRel branches for now.
     if (Info->get(Inst.getOpcode()).OpInfo[0].OperandType!=MCOI::OPERAND_PCREL)
-      return -1ULL;
+      return false;
 
     int64_t Imm = Inst.getOperand(0).getImm();
     // FIXME: This is not right for thumb.
-    return Addr+Imm+8; // In ARM mode the PC is always off by 8 bytes.
+    Target = Addr+Imm+8; // In ARM mode the PC is always off by 8 bytes.
+    return true;
   }
 };
 
@@ -295,4 +343,10 @@ extern "C" void LLVMInitializeARMTargetMC() {
   // Register the MCInstPrinter.
   TargetRegistry::RegisterMCInstPrinter(TheARMTarget, createARMMCInstPrinter);
   TargetRegistry::RegisterMCInstPrinter(TheThumbTarget, createARMMCInstPrinter);
+
+  // Register the MC relocation info.
+  TargetRegistry::RegisterMCRelocationInfo(TheARMTarget,
+                                           createARMMCRelocationInfo);
+  TargetRegistry::RegisterMCRelocationInfo(TheThumbTarget,
+                                           createARMMCRelocationInfo);
 }

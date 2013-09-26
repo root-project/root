@@ -14,7 +14,7 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseMapInfo.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/ADT/Twine.h"
@@ -323,6 +323,7 @@ public:
   virtual bool preflightElement(unsigned, void *&) = 0;
   virtual void postflightElement(void*) = 0;
   virtual void endSequence() = 0;
+  virtual bool canElideEmptySequence() = 0;
 
   virtual unsigned beginFlowSequence() = 0;
   virtual bool preflightFlowElement(unsigned, void *&) = 0;
@@ -388,7 +389,7 @@ public:
   typename llvm::enable_if_c<has_SequenceTraits<T>::value,void>::type
   mapOptional(const char* Key, T& Val) {
     // omit key/value instead of outputting empty sequence
-    if ( this->outputting() && !(Val.begin() != Val.end()) )
+    if ( this->canElideEmptySequence() && !(Val.begin() != Val.end()) )
       return;
     this->processKey(Key, Val, false);
   }
@@ -715,6 +716,7 @@ private:
   virtual void endBitSetScalar();
   virtual void scalarString(StringRef &);
   virtual void setError(const Twine &message);
+  virtual bool canElideEmptySequence();
 
   class HNode {
   public:
@@ -760,15 +762,7 @@ private:
     }
     static inline bool classof(const MapHNode *) { return true; }
 
-    struct StrMappingInfo {
-      static StringRef getEmptyKey() { return StringRef(); }
-      static StringRef getTombstoneKey() { return StringRef(" ", 0); }
-      static unsigned getHashValue(StringRef const val) {
-                                                return llvm::HashString(val); }
-      static bool isEqual(StringRef const lhs,
-                          StringRef const rhs) { return lhs.equals(rhs); }
-    };
-    typedef llvm::DenseMap<StringRef, HNode*, StrMappingInfo> NameToNode;
+    typedef llvm::StringMap<HNode*> NameToNode;
 
     bool isValidKey(StringRef key);
 
@@ -845,7 +839,7 @@ public:
   virtual void endBitSetScalar();
   virtual void scalarString(StringRef &);
   virtual void setError(const Twine &message);
-
+  virtual bool canElideEmptySequence();
 public:
   // These are only used by operator<<. They could be private
   // if that templated operator could be made a friend.

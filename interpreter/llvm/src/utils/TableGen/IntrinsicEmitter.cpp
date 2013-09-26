@@ -131,6 +131,20 @@ void IntrinsicEmitter::EmitEnumInfo(const std::vector<CodeGenIntrinsic> &Ints,
   OS << "#endif\n\n";
 }
 
+struct IntrinsicNameSorter {
+  IntrinsicNameSorter(const std::vector<CodeGenIntrinsic> &I)
+  : Ints(I) {}
+
+  // Sort in reverse order of intrinsic name so "abc.def" appears after
+  // "abd.def.ghi" in the overridden name matcher
+  bool operator()(unsigned i, unsigned j) {
+    return Ints[i].Name > Ints[j].Name;
+  }
+
+private:
+  const std::vector<CodeGenIntrinsic> &Ints;
+};
+
 void IntrinsicEmitter::
 EmitFnNameRecognizer(const std::vector<CodeGenIntrinsic> &Ints, 
                      raw_ostream &OS) {
@@ -144,11 +158,15 @@ EmitFnNameRecognizer(const std::vector<CodeGenIntrinsic> &Ints,
   OS << "  StringRef NameR(Name+6, Len-6);   // Skip over 'llvm.'\n";
   OS << "  switch (Name[5]) {                  // Dispatch on first letter.\n";
   OS << "  default: break;\n";
+  IntrinsicNameSorter Sorter(Ints);
   // Emit the intrinsic matching stuff by first letter.
   for (std::map<char, std::vector<unsigned> >::iterator I = IntMapping.begin(),
        E = IntMapping.end(); I != E; ++I) {
     OS << "  case '" << I->first << "':\n";
     std::vector<unsigned> &IntList = I->second;
+
+    // Sort intrinsics in reverse order of their names
+    std::sort(IntList.begin(), IntList.end(), Sorter);
 
     // Emit all the overloaded intrinsics first, build a table of the
     // non-overloaded ones.
@@ -242,7 +260,8 @@ enum IIT_Info {
   IIT_STRUCT5 = 22,
   IIT_EXTEND_VEC_ARG = 23,
   IIT_TRUNC_VEC_ARG = 24,
-  IIT_ANYPTR = 25
+  IIT_ANYPTR = 25,
+  IIT_V1   = 26
 };
 
 
@@ -332,6 +351,7 @@ static void EncodeFixedType(Record *R, std::vector<unsigned char> &ArgCodes,
     EVT VVT = VT;
     switch (VVT.getVectorNumElements()) {
     default: PrintFatalError("unhandled vector type width in intrinsic!");
+    case 1: Sig.push_back(IIT_V1); break;
     case 2: Sig.push_back(IIT_V2); break;
     case 4: Sig.push_back(IIT_V4); break;
     case 8: Sig.push_back(IIT_V8); break;
@@ -578,6 +598,12 @@ EmitAttributes(const std::vector<CodeGenIntrinsic> &Ints, raw_ostream &OS) {
           switch (intrinsic.ArgumentAttributes[ai].second) {
           case CodeGenIntrinsic::NoCapture:
             OS << "      AttrVec.push_back(Attribute::NoCapture);\n";
+            break;
+          case CodeGenIntrinsic::ReadOnly:
+            OS << "      AttrVec.push_back(Attribute::ReadOnly);\n";
+            break;
+          case CodeGenIntrinsic::ReadNone:
+            OS << "      AttrVec.push_back(Attribute::ReadNone);\n";
             break;
           }
 

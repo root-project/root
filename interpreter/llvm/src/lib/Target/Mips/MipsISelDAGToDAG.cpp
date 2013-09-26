@@ -17,7 +17,6 @@
 #include "MipsSEISelDAGToDAG.h"
 #include "Mips.h"
 #include "MCTargetDesc/MipsBaseInfo.h"
-#include "MipsAnalyzeImmediate.h"
 #include "MipsMachineFunction.h"
 #include "MipsRegisterInfo.h"
 #include "llvm/CodeGen/MachineConstantPool.h"
@@ -58,12 +57,19 @@ bool MipsDAGToDAGISel::runOnMachineFunction(MachineFunction &MF) {
 /// GOT address into a register.
 SDNode *MipsDAGToDAGISel::getGlobalBaseReg() {
   unsigned GlobalBaseReg = MF->getInfo<MipsFunctionInfo>()->getGlobalBaseReg();
-  return CurDAG->getRegister(GlobalBaseReg, TLI.getPointerTy()).getNode();
+  return CurDAG->getRegister(GlobalBaseReg,
+                             getTargetLowering()->getPointerTy()).getNode();
 }
 
 /// ComplexPattern used on MipsInstrInfo
 /// Used on Mips Load/Store instructions
 bool MipsDAGToDAGISel::selectAddrRegImm(SDValue Addr, SDValue &Base,
+                                        SDValue &Offset) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectAddrRegReg(SDValue Addr, SDValue &Base,
                                         SDValue &Offset) const {
   llvm_unreachable("Unimplemented function.");
   return false;
@@ -81,8 +87,54 @@ bool MipsDAGToDAGISel::selectIntAddr(SDValue Addr, SDValue &Base,
   return false;
 }
 
+bool MipsDAGToDAGISel::selectIntAddrMM(SDValue Addr, SDValue &Base,
+                                       SDValue &Offset) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
 bool MipsDAGToDAGISel::selectAddr16(SDNode *Parent, SDValue N, SDValue &Base,
                                     SDValue &Offset, SDValue &Alias) {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplat(SDNode *N, APInt &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplatUimm3(SDValue N, SDValue &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplatUimm4(SDValue N, SDValue &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplatUimm5(SDValue N, SDValue &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplatUimm6(SDValue N, SDValue &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplatUimm8(SDValue N, SDValue &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplatSimm5(SDValue N, SDValue &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplatUimmPow2(SDValue N, SDValue &Imm) const {
   llvm_unreachable("Unimplemented function.");
   return false;
 }
@@ -98,6 +150,7 @@ SDNode* MipsDAGToDAGISel::Select(SDNode *Node) {
   // If we have a custom node, we already have selected!
   if (Node->isMachineOpcode()) {
     DEBUG(errs() << "== "; Node->dump(CurDAG); errs() << "\n");
+    Node->setNodeId(-1);
     return NULL;
   }
 

@@ -38,6 +38,7 @@ protected:
 
   enum {
     ID_Archive,
+    ID_MachOUniversalBinary,
     // Object and children.
     ID_StartObjects,
     ID_COFF,
@@ -87,6 +88,10 @@ public:
     return TypeID == ID_Archive;
   }
 
+  bool isMachOUniversalBinary() const {
+    return TypeID == ID_MachOUniversalBinary;
+  }
+
   bool isELF() const {
     return TypeID >= ID_ELF32L && TypeID <= ID_ELF64B;
   }
@@ -100,7 +105,8 @@ public:
   }
 
   bool isLittleEndian() const {
-    return !(TypeID == ID_ELF32B || TypeID == ID_ELF64B);
+    return !(TypeID == ID_ELF32B || TypeID == ID_ELF64B ||
+             TypeID == ID_MachO32B || TypeID == ID_MachO64B);
   }
 };
 

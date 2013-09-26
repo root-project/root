@@ -453,7 +453,8 @@ namespace llvm {
     ExitLimit ComputeExitLimitFromCond(const Loop *L,
                                        Value *ExitCond,
                                        BasicBlock *TBB,
-                                       BasicBlock *FBB);
+                                       BasicBlock *FBB,
+                                       bool IsSubExpr);
 
     /// ComputeExitLimitFromICmp - Compute the number of times the backedge of
     /// the specified loop will execute if its exit condition were a conditional
@@ -461,7 +462,8 @@ namespace llvm {
     ExitLimit ComputeExitLimitFromICmp(const Loop *L,
                                        ICmpInst *ExitCond,
                                        BasicBlock *TBB,
-                                       BasicBlock *FBB);
+                                       BasicBlock *FBB,
+                                       bool IsSubExpr);
 
     /// ComputeLoadConstantCompareExitLimit - Given an exit condition
     /// of 'icmp op load X, cst', try to see if we can compute the
@@ -483,7 +485,7 @@ namespace llvm {
     /// HowFarToZero - Return the number of times an exit condition comparing
     /// the specified value to zero will execute.  If not computable, return
     /// CouldNotCompute.
-    ExitLimit HowFarToZero(const SCEV *V, const Loop *L);
+    ExitLimit HowFarToZero(const SCEV *V, const Loop *L, bool IsSubExpr);
 
     /// HowFarToNonZero - Return the number of times an exit condition checking
     /// the specified value for nonzero will execute.  If not computable, return
@@ -495,7 +497,7 @@ namespace llvm {
     /// computable, return CouldNotCompute. isSigned specifies whether the
     /// less-than is signed.
     ExitLimit HowManyLessThans(const SCEV *LHS, const SCEV *RHS,
-                               const Loop *L, bool isSigned);
+                               const Loop *L, bool isSigned, bool IsSubExpr);
 
     /// getPredecessorWithUniqueSuccessorForBB - Return a predecessor of BB
     /// (which may not be an immediate predecessor) which has exactly one
@@ -542,6 +544,10 @@ namespace llvm {
 
     /// forgetMemoizedResults - Drop memoized information computed for S.
     void forgetMemoizedResults(const SCEV *S);
+
+    /// Return false iff given SCEV contains a SCEVUnknown with NULL value-
+    /// pointer.
+    bool checkValidity(const SCEV *S) const;
 
   public:
     static char ID; // Pass identification, replacement for typeid
@@ -630,21 +636,24 @@ namespace llvm {
     const SCEV *getUnknown(Value *V);
     const SCEV *getCouldNotCompute();
 
-    /// getSizeOfExpr - Return an expression for sizeof on the given type.
+    /// getSizeOfExpr - Return an expression for sizeof AllocTy that is type
+    /// IntTy
     ///
-    const SCEV *getSizeOfExpr(Type *AllocTy);
+    const SCEV *getSizeOfExpr(Type *IntTy, Type *AllocTy);
 
-    /// getAlignOfExpr - Return an expression for alignof on the given type.
+    /// getAlignOfExpr - Return an expression for alignof AllocTy
     ///
     const SCEV *getAlignOfExpr(Type *AllocTy);
 
-    /// getOffsetOfExpr - Return an expression for offsetof on the given field.
+    /// getOffsetOfExpr - Return an expression for offsetof on the given field
+    /// with type IntTy
     ///
-    const SCEV *getOffsetOfExpr(StructType *STy, unsigned FieldNo);
+    const SCEV *getOffsetOfExpr(Type *IntTy, StructType *STy, unsigned FieldNo);
 
-    /// getOffsetOfExpr - Return an expression for offsetof on the given field.
+    /// getOffsetOfExpr - Return an expression for offsetof on the given field
+    /// that is type IntTy
     ///
-    const SCEV *getOffsetOfExpr(Type *CTy, Constant *FieldNo);
+    const SCEV *getOffsetOfExpr(Type *IntTy, Type *CTy, Constant *FieldNo);
 
     /// getNegativeSCEV - Return the SCEV object corresponding to -V.
     ///

@@ -23,8 +23,10 @@ namespace llvm {
 
   class FunctionPass;
   class MachineFunctionPass;
+  struct MachineSchedContext;
   class PassInfo;
   class PassManagerBase;
+  class ScheduleDAGInstrs;
   class TargetLoweringBase;
   class TargetLowering;
   class TargetRegisterClass;
@@ -204,6 +206,20 @@ public:
   /// Fully developed targets will not generally override this.
   virtual void addMachinePasses();
 
+  /// createTargetScheduler - Create an instance of ScheduleDAGInstrs to be run
+  /// within the standard MachineScheduler pass for this function and target at
+  /// the current optimization level.
+  ///
+  /// This can also be used to plug a new MachineSchedStrategy into an instance
+  /// of the standard ScheduleDAGMI:
+  ///   return new ScheduleDAGMI(C, new MyStrategy(C))
+  ///
+  /// Return NULL to select the default (generic) machine scheduler.
+  virtual ScheduleDAGInstrs *
+  createMachineScheduler(MachineSchedContext *C) const {
+    return 0;
+  }
+
 protected:
   // Helper to verify the analysis is really immutable.
   void setOpt(bool &Opt, bool Val);
@@ -308,7 +324,8 @@ protected:
   AnalysisID addPass(AnalysisID PassID);
 
   /// Add a pass to the PassManager if that pass is supposed to be run, as
-  /// determined by the StartAfter and StopAfter options.
+  /// determined by the StartAfter and StopAfter options. Takes ownership of the
+  /// pass.
   void addPass(Pass *P);
 
   /// addMachinePasses helper to create the target-selected or overriden
@@ -329,7 +346,7 @@ namespace llvm {
   /// This pass implements the target transform info analysis using the target
   /// independent information available to the LLVM code generator.
   ImmutablePass *
-  createBasicTargetTransformInfoPass(const TargetLoweringBase *TLI);
+  createBasicTargetTransformInfoPass(const TargetMachine *TM);
 
   /// createUnreachableBlockEliminationPass - The LLVM code generator does not
   /// work well with unreachable basic blocks (what live ranges make sense for a
@@ -518,7 +535,7 @@ namespace llvm {
 
   /// createStackProtectorPass - This pass adds stack protectors to functions.
   ///
-  FunctionPass *createStackProtectorPass(const TargetLoweringBase *tli);
+  FunctionPass *createStackProtectorPass(const TargetMachine *TM);
 
   /// createMachineVerifierPass - This pass verifies cenerated machine code
   /// instructions for correctness.
@@ -527,12 +544,12 @@ namespace llvm {
 
   /// createDwarfEHPass - This pass mulches exception handling code into a form
   /// adapted to code generation.  Required if using dwarf exception handling.
-  FunctionPass *createDwarfEHPass(const TargetMachine *tm);
+  FunctionPass *createDwarfEHPass(const TargetMachine *TM);
 
   /// createSjLjEHPreparePass - This pass adapts exception handling code to use
   /// the GCC-style builtin setjmp/longjmp (sjlj) to handling EH control flow.
   ///
-  FunctionPass *createSjLjEHPreparePass(const TargetLoweringBase *tli);
+  FunctionPass *createSjLjEHPreparePass(const TargetMachine *TM);
 
   /// LocalStackSlotAllocation - This pass assigns local frame indices to stack
   /// slots relative to one another and allocates base registers to access them

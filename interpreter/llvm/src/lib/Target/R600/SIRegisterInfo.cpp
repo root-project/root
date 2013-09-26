@@ -18,11 +18,9 @@
 
 using namespace llvm;
 
-SIRegisterInfo::SIRegisterInfo(AMDGPUTargetMachine &tm,
-    const TargetInstrInfo &tii)
-: AMDGPURegisterInfo(tm, tii),
-  TM(tm),
-  TII(tii)
+SIRegisterInfo::SIRegisterInfo(AMDGPUTargetMachine &tm)
+: AMDGPURegisterInfo(tm),
+  TM(tm)
   { }
 
 BitVector SIRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
@@ -50,4 +48,36 @@ const TargetRegisterClass * SIRegisterInfo::getCFGStructurizerRegClass(
     default:
     case MVT::i32: return &AMDGPU::VReg_32RegClass;
   }
+}
+
+const TargetRegisterClass *SIRegisterInfo::getPhysRegClass(unsigned Reg) const {
+  assert(!TargetRegisterInfo::isVirtualRegister(Reg));
+
+  const TargetRegisterClass *BaseClasses[] = {
+    &AMDGPU::VReg_32RegClass,
+    &AMDGPU::SReg_32RegClass,
+    &AMDGPU::VReg_64RegClass,
+    &AMDGPU::SReg_64RegClass,
+    &AMDGPU::SReg_128RegClass,
+    &AMDGPU::SReg_256RegClass
+  };
+
+  for (unsigned i = 0, e = sizeof(BaseClasses) /
+                           sizeof(const TargetRegisterClass*); i != e; ++i) {
+    if (BaseClasses[i]->contains(Reg)) {
+      return BaseClasses[i];
+    }
+  }
+  return NULL;
+}
+
+bool SIRegisterInfo::isSGPRClass(const TargetRegisterClass *RC) const {
+  if (!RC) {
+    return false;
+  }
+  return RC == &AMDGPU::SReg_32RegClass ||
+         RC == &AMDGPU::SReg_64RegClass ||
+         RC == &AMDGPU::SReg_128RegClass ||
+         RC == &AMDGPU::SReg_256RegClass ||
+         RC == &AMDGPU::SReg_512RegClass;
 }

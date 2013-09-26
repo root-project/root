@@ -14,14 +14,19 @@
 #include "textinput/StreamReader.h"
 #include "textinput/TerminalDisplay.h"
 
+#include "llvm/ADT/SmallString.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/PathV1.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Config/config.h"
 
 // Fragment copied from LLVM's raw_ostream.cpp
 #if defined(HAVE_UNISTD_H)
 # include <unistd.h>
+#endif
+
+#if defined(LLVM_ON_WIN32)
+#include <Shlobj.h>
 #endif
 
 #if defined(_MSC_VER)
@@ -45,6 +50,32 @@ namespace {
                              bool /*gen_crash_diag*/) {
     throw cling::CompilationException(reason);
   }
+#if defined(LLVM_ON_UNIX)
+  static void GetUserHomeDirectory(llvm::SmallVectorImpl<char>& str) {
+    str.clear();
+    const char* home = getenv("HOME");
+    if (!home)
+      home = "/";
+    llvm::StringRef SRhome(home);
+    str.insert(str.begin(), SRhome.begin(), SRhome.end());
+  }
+#elif defined(LLVM_ON_WIN32)
+  static void GetUserHomeDirectory(llvm::SmallVectorImpl<char>& str) {
+    str.reserve(MAX_PATH);
+    HRESULT res = SHGetFolderPathA(NULL,
+                                   CSIDL_FLAG_CREATE | CSIDL_APPDATA,
+                                   NULL,
+                                   SHGFP_TYPE_CURRENT,
+                                   str.data());
+    if (res != S_OK) {
+      assert(0 && "Failed to get user home directory");
+      llvm::StringRef SRhome("\\");
+      str.insert(str.begin(), SRhome.begin(), SRhome.end());
+    }
+  }
+#else
+# error "Unsupported platform."
+#endif
 }
 
 namespace cling {
@@ -69,8 +100,9 @@ namespace cling {
 
     // History file is $HOME/.cling_history
     static const char* histfile = ".cling_history";
-    llvm::sys::Path histfilePath = llvm::sys::Path::GetUserHomeDirectory();
-    histfilePath.appendComponent(histfile);
+    llvm::SmallString<512> histfilePath;
+    GetUserHomeDirectory(histfilePath);
+    llvm::sys::path::append(histfilePath, histfile);
 
     using namespace textinput;
     StreamReader* R = StreamReader::Create();

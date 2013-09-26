@@ -13,14 +13,32 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm-c/lto.h"
-#include "LTOCodeGenerator.h"
-#include "LTOModule.h"
+#include "llvm/LTO/LTOCodeGenerator.h"
+#include "llvm/LTO/LTOModule.h"
 #include "llvm-c/Core.h"
+#include "llvm-c/Target.h"
 
 
 // Holds most recent error string.
 // *** Not thread safe ***
 static std::string sLastErrorString;
+
+// Holds the initialization state of the LTO module.
+// *** Not thread safe ***
+static bool initialized = false;
+
+// Initialize the configured targets if they have not been initialized.
+static void lto_initialize() {
+  if (!initialized) {
+    LLVMInitializeAllTargetInfos();
+    LLVMInitializeAllTargets();
+    LLVMInitializeAllTargetMCs();
+    LLVMInitializeAllAsmParsers();
+    LLVMInitializeAllAsmPrinters();
+    LLVMInitializeAllDisassemblers();
+    initialized = true;
+  }
+}
 
 /// lto_get_version - Returns a printable string.
 extern const char* lto_get_version() {
@@ -63,12 +81,14 @@ lto_module_is_object_file_in_memory_for_target(const void* mem,
 /// lto_module_create - Loads an object file from disk. Returns NULL on error
 /// (check lto_get_error_message() for details).
 lto_module_t lto_module_create(const char* path) {
+  lto_initialize();
   return LTOModule::makeLTOModule(path, sLastErrorString);
 }
 
 /// lto_module_create_from_fd - Loads an object file from disk. Returns NULL on
 /// error (check lto_get_error_message() for details).
 lto_module_t lto_module_create_from_fd(int fd, const char *path, size_t size) {
+  lto_initialize();
   return LTOModule::makeLTOModule(fd, path, size, sLastErrorString);
 }
 
@@ -78,13 +98,14 @@ lto_module_t lto_module_create_from_fd_at_offset(int fd, const char *path,
                                                  size_t file_size,
                                                  size_t map_size,
                                                  off_t offset) {
-  return LTOModule::makeLTOModule(fd, path, file_size, map_size,
-                                  offset, sLastErrorString);
+  lto_initialize();
+  return LTOModule::makeLTOModule(fd, path, map_size, offset, sLastErrorString);
 }
 
 /// lto_module_create_from_memory - Loads an object file from memory. Returns
 /// NULL on error (check lto_get_error_message() for details).
 lto_module_t lto_module_create_from_memory(const void* mem, size_t length) {
+  lto_initialize();
   return LTOModule::makeLTOModule(mem, length, sLastErrorString);
 }
 
@@ -128,6 +149,7 @@ lto_symbol_attributes lto_module_get_symbol_attribute(lto_module_t mod,
 /// lto_codegen_create - Instantiates a code generator. Returns NULL if there
 /// is an error.
 lto_code_gen_t lto_codegen_create(void) {
+  lto_initialize();
   return new LTOCodeGenerator();
 }
 
@@ -141,20 +163,22 @@ void lto_codegen_dispose(lto_code_gen_t cg) {
 /// which code will be generated. Returns true on error (check
 /// lto_get_error_message() for details).
 bool lto_codegen_add_module(lto_code_gen_t cg, lto_module_t mod) {
-  return cg->addModule(mod, sLastErrorString);
+  return !cg->addModule(mod, sLastErrorString);
 }
 
 /// lto_codegen_set_debug_model - Sets what if any format of debug info should
 /// be generated. Returns true on error (check lto_get_error_message() for
 /// details).
 bool lto_codegen_set_debug_model(lto_code_gen_t cg, lto_debug_model debug) {
-  return cg->setDebugInfo(debug, sLastErrorString);
+  cg->setDebugInfo(debug);
+  return false;
 }
 
 /// lto_codegen_set_pic_model - Sets what code model to generated. Returns true
 /// on error (check lto_get_error_message() for details).
 bool lto_codegen_set_pic_model(lto_code_gen_t cg, lto_codegen_model model) {
-  return cg->setCodePICModel(model, sLastErrorString);
+  cg->setCodePICModel(model);
+  return false;
 }
 
 /// lto_codegen_set_cpu - Sets the cpu to generate code for.
@@ -186,7 +210,7 @@ void lto_codegen_add_must_preserve_symbol(lto_code_gen_t cg,
 /// that contains the merged contents of all modules added so far. Returns true
 /// on error (check lto_get_error_message() for details).
 bool lto_codegen_write_merged_modules(lto_code_gen_t cg, const char *path) {
-  return cg->writeMergedModules(path, sLastErrorString);
+  return !cg->writeMergedModules(path, sLastErrorString);
 }
 
 /// lto_codegen_compile - Generates code for all added modules into one native
@@ -203,7 +227,7 @@ const void *lto_codegen_compile(lto_code_gen_t cg, size_t *length) {
 /// native object file. The name of the file is written to name. Returns true on
 /// error.
 bool lto_codegen_compile_to_file(lto_code_gen_t cg, const char **name) {
-  return cg->compile_to_file(name, sLastErrorString);
+  return !cg->compile_to_file(name, sLastErrorString);
 }
 
 /// lto_codegen_debug_options - Used to pass extra options to the code

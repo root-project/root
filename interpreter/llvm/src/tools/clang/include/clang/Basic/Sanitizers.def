@@ -54,6 +54,9 @@ SANITIZER("memory", Memory)
 // ThreadSanitizer
 SANITIZER("thread", Thread)
 
+// LeakSanitizer
+SANITIZER("leak", Leak)
+
 // UndefinedBehaviorSanitizer
 SANITIZER("alignment", Alignment)
 SANITIZER("bool", Bool)
@@ -73,6 +76,9 @@ SANITIZER("vptr", Vptr)
 
 // IntegerSanitizer
 SANITIZER("unsigned-integer-overflow", UnsignedIntegerOverflow)
+
+// DataFlowSanitizer
+SANITIZER("dataflow", DataFlow)
 
 // -fsanitize=undefined includes all the sanitizers which have low overhead, no
 // ABI or address space layout implications, and only catch undefined behavior.

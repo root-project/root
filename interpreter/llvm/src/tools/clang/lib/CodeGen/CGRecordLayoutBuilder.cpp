@@ -78,9 +78,6 @@ public:
 
   /// Packed - Whether the resulting LLVM struct will be packed or not.
   bool Packed;
-  
-  /// IsMsStruct - Whether ms_struct is in effect or not
-  bool IsMsStruct;
 
 private:
   CodeGenTypes &Types;
@@ -195,8 +192,7 @@ public:
   CGRecordLayoutBuilder(CodeGenTypes &Types)
     : BaseSubobjectType(0),
       IsZeroInitializable(true), IsZeroInitializableAsBase(true),
-      Packed(false), IsMsStruct(false),
-      Types(Types) { }
+      Packed(false), Types(Types) { }
 
   /// Layout - Will layout a RecordDecl.
   void Layout(const RecordDecl *D);
@@ -207,8 +203,6 @@ public:
 void CGRecordLayoutBuilder::Layout(const RecordDecl *D) {
   Alignment = Types.getContext().getASTRecordLayout(D).getAlignment();
   Packed = D->hasAttr<PackedAttr>();
-  
-  IsMsStruct = D->isMsStruct(Types.getContext());
 
   if (D->isUnion()) {
     LayoutUnion(D);
@@ -276,7 +270,7 @@ bool CGRecordLayoutBuilder::LayoutBitfields(const ASTRecordLayout &Layout,
   uint64_t FirstFieldOffset = Layout.getFieldOffset(FirstFieldNo);
   uint64_t NextFieldOffsetInBits = Types.getContext().toBits(NextFieldOffset);
 
-  unsigned CharAlign = Types.getContext().getTargetInfo().getCharAlign();
+  unsigned CharAlign = Types.getTarget().getCharAlign();
   assert(FirstFieldOffset % CharAlign == 0 &&
          "First field offset is misaligned");
   CharUnits FirstFieldOffsetInBytes
@@ -352,7 +346,7 @@ bool CGRecordLayoutBuilder::LayoutBitfields(const ASTRecordLayout &Layout,
   assert(EndOffset >= (FirstFieldOffset + TotalBits) &&
          "End offset is not past the end of the known storage bits.");
   uint64_t SpaceBits = EndOffset - FirstFieldOffset;
-  uint64_t LongBits = Types.getContext().getTargetInfo().getLongWidth();
+  uint64_t LongBits = Types.getTarget().getLongWidth();
   uint64_t WidenedBits = (StorageBits / LongBits) * LongBits +
                          llvm::NextPowerOf2(StorageBits % LongBits - 1);
   assert(WidenedBits >= StorageBits && "Widening shrunk the bits!");
@@ -455,7 +449,7 @@ CGRecordLayoutBuilder::LayoutUnionField(const FieldDecl *Field,
       return 0;
 
     unsigned StorageBits = llvm::RoundUpToAlignment(
-      FieldSize, Types.getContext().getTargetInfo().getCharAlign());
+      FieldSize, Types.getTarget().getCharAlign());
     CharUnits NumBytesToAppend
       = Types.getContext().toCharUnitsFromBits(StorageBits);
 
@@ -764,20 +758,10 @@ bool CGRecordLayoutBuilder::LayoutFields(const RecordDecl *D) {
       return false;
 
   unsigned FieldNo = 0;
-  const FieldDecl *LastFD = 0;
   
   for (RecordDecl::field_iterator FI = D->field_begin(), FE = D->field_end();
        FI != FE; ++FI, ++FieldNo) {
     FieldDecl *FD = *FI;
-    if (IsMsStruct) {
-      // Zero-length bitfields following non-bitfield members are
-      // ignored:
-      if (Types.getContext().ZeroBitfieldFollowsNonBitfield(FD, LastFD)) {
-        --FieldNo;
-        continue;
-      }
-      LastFD = FD;
-    }
 
     // If this field is a bitfield, layout all of the consecutive
     // non-zero-length bitfields and the last zero-length bitfield; these will
@@ -814,7 +798,7 @@ bool CGRecordLayoutBuilder::LayoutFields(const RecordDecl *D) {
 
     // Lay out the virtual bases.  The MS ABI uses a different
     // algorithm here due to the lack of primary virtual bases.
-    if (Types.getContext().getTargetInfo().getCXXABI().hasPrimaryVBases()) {
+    if (Types.getTarget().getCXXABI().hasPrimaryVBases()) {
       RD->getIndirectPrimaryBases(IndirectPrimaryBases);
       if (Layout.isPrimaryBaseVirtual())
         IndirectPrimaryBases.insert(Layout.getPrimaryBase());
@@ -992,11 +976,11 @@ CGRecordLayout *CodeGenTypes::ComputeRecordLayout(const RecordDecl *D,
 
   // Dump the layout, if requested.
   if (getContext().getLangOpts().DumpRecordLayouts) {
-    llvm::errs() << "\n*** Dumping IRgen Record Layout\n";
-    llvm::errs() << "Record: ";
-    D->dump();
-    llvm::errs() << "\nLayout: ";
-    RL->dump();
+    llvm::outs() << "\n*** Dumping IRgen Record Layout\n";
+    llvm::outs() << "Record: ";
+    D->dump(llvm::outs());
+    llvm::outs() << "\nLayout: ";
+    RL->print(llvm::outs());
   }
 
 #ifndef NDEBUG
@@ -1028,8 +1012,6 @@ CGRecordLayout *CodeGenTypes::ComputeRecordLayout(const RecordDecl *D,
 
   const ASTRecordLayout &AST_RL = getContext().getASTRecordLayout(D);
   RecordDecl::field_iterator it = D->field_begin();
-  const FieldDecl *LastFD = 0;
-  bool IsMsStruct = D->isMsStruct(getContext());
   for (unsigned i = 0, e = AST_RL.getFieldCount(); i != e; ++i, ++it) {
     const FieldDecl *FD = *it;
 
@@ -1039,25 +1021,12 @@ CGRecordLayout *CodeGenTypes::ComputeRecordLayout(const RecordDecl *D,
       unsigned FieldNo = RL->getLLVMFieldNo(FD);
       assert(AST_RL.getFieldOffset(i) == SL->getElementOffsetInBits(FieldNo) &&
              "Invalid field offset!");
-      LastFD = FD;
       continue;
-    }
-
-    if (IsMsStruct) {
-      // Zero-length bitfields following non-bitfield members are
-      // ignored:
-      if (getContext().ZeroBitfieldFollowsNonBitfield(FD, LastFD)) {
-        --i;
-        continue;
-      }
-      LastFD = FD;
     }
     
     // Ignore unnamed bit-fields.
-    if (!FD->getDeclName()) {
-      LastFD = FD;
+    if (!FD->getDeclName())
       continue;
-    }
 
     // Don't inspect zero-length bitfields.
     if (FD->getBitWidthValue(getContext()) == 0)

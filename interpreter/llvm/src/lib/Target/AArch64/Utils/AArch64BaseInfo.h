@@ -289,6 +289,7 @@ namespace A64SE {
     enum ShiftExtSpecifiers {
         Invalid = -1,
         LSL,
+        MSL,
         LSR,
         ASR,
         ROR,
@@ -1037,7 +1038,14 @@ namespace AArch64II {
 
     // MO_LO12 - On a symbol operand, this represents a relocation containing
     // lower 12 bits of the address. Used in add/sub/ldr/str.
-    MO_LO12
+    MO_LO12,
+
+    // MO_ABS_G* - Represent the 16-bit granules of an absolute reference using
+    // movz/movk instructions.
+    MO_ABS_G3,
+    MO_ABS_G2_NC,
+    MO_ABS_G1_NC,
+    MO_ABS_G0_NC
   };
 }
 
@@ -1061,7 +1069,10 @@ namespace A64Imms {
   // MOVN but *not* with a MOVZ (because that would take priority).
   bool isOnlyMOVNImm(int RegWidth, uint64_t Value, int &UImm16, int &Shift);
 
-}
+  uint64_t decodeNeonModImm(unsigned Val, unsigned OpCmode, unsigned &EltBits);
+  bool decodeNeonModShiftImm(unsigned OpCmode, unsigned &ShiftImm,
+                             unsigned &ShiftOnesIn);
+  }
 
 } // end namespace llvm;
 

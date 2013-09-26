@@ -43,7 +43,7 @@ static cl::opt<bool, true>
 VerifyRegAlloc("verify-regalloc", cl::location(RegAllocBase::VerifyEnabled),
                cl::desc("Verify during register allocation"));
 
-const char *RegAllocBase::TimerGroupName = "Register Allocation";
+const char RegAllocBase::TimerGroupName[] = "Register Allocation";
 bool RegAllocBase::VerifyEnabled = false;
 
 //===----------------------------------------------------------------------===//
@@ -100,7 +100,7 @@ void RegAllocBase::allocatePhysRegs() {
     DEBUG(dbgs() << "\nselectOrSplit "
                  << MRI->getRegClass(VirtReg->reg)->getName()
                  << ':' << PrintReg(VirtReg->reg) << ' ' << *VirtReg << '\n');
-    typedef SmallVector<LiveInterval*, 4> VirtRegVec;
+    typedef SmallVector<unsigned, 4> VirtRegVec;
     VirtRegVec SplitVRegs;
     unsigned AvailablePhysReg = selectOrSplit(*VirtReg, SplitVRegs);
 
@@ -128,7 +128,7 @@ void RegAllocBase::allocatePhysRegs() {
 
     for (VirtRegVec::iterator I = SplitVRegs.begin(), E = SplitVRegs.end();
          I != E; ++I) {
-      LiveInterval *SplitVirtReg = *I;
+      LiveInterval *SplitVirtReg = &LIS->getInterval(*I);
       assert(!VRM->hasPhys(SplitVirtReg->reg) && "Register already assigned");
       if (MRI->reg_nodbg_empty(SplitVirtReg->reg)) {
         DEBUG(dbgs() << "not queueing unused  " << *SplitVirtReg << '\n');

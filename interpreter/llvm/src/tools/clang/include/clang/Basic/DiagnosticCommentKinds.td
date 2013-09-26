@@ -156,5 +156,13 @@ def warn_verbatim_block_end_without_start : Warning<
   "'%select{\\|@}0%1' command does not terminate a verbatim text block">,
   InGroup<Documentation>, DefaultIgnore;
 
+def warn_unknown_comment_command_name : Warning<
+  "unknown command tag name">,
+  InGroup<DocumentationUnknownCommand>, DefaultIgnore;
+
+def warn_correct_comment_command_name : Warning<
+  "unknown command tag name '%0'; did you mean '%1'?">,
+  InGroup<Documentation>, DefaultIgnore;
+
 } // end of documentation issue category
 } // end of AST component

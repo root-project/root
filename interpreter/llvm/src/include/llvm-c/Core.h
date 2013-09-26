@@ -18,13 +18,6 @@
 #include "llvm/Support/DataTypes.h"
 
 #ifdef __cplusplus
-
-/* Need these includes to support the LLVM 'cast' template for the C++ 'wrap' 
-   and 'unwrap' conversion functions. */
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/Module.h"
-#include "llvm/PassRegistry.h"
-
 extern "C" {
 #endif
 
@@ -59,11 +52,6 @@ extern "C" {
  * Many exotic languages can interoperate with C code but have a harder time
  * with C++ due to name mangling. So in addition to C, this interface enables
  * tools written in such languages.
- *
- * When included into a C++ source file, also declares 'wrap' and 'unwrap'
- * helpers to perform opaque reference<-->pointer conversions. These helpers
- * are shorter and more tightly typed than writing the casts by hand when
- * authoring bindings. In assert builds, they will do runtime type checking.
  *
  * @{
  */
@@ -177,7 +165,9 @@ typedef enum {
        a temporary measure until the API/ABI impact to the C API is understood
        and the path forward agreed upon.
     LLVMAddressSafety = 1ULL << 32,
-    LLVMStackProtectStrongAttribute = 1ULL<<33
+    LLVMStackProtectStrongAttribute = 1ULL<<33,
+    LLVMCold = 1ULL << 34,
+    LLVMOptimizeNone = 1ULL << 35
     */
 } LLVMAttribute;
 
@@ -352,6 +342,63 @@ typedef enum {
   LLVMLandingPadFilter    /**< A filter clause  */
 } LLVMLandingPadClauseTy;
 
+typedef enum {
+  LLVMNotThreadLocal = 0,
+  LLVMGeneralDynamicTLSModel,
+  LLVMLocalDynamicTLSModel,
+  LLVMInitialExecTLSModel,
+  LLVMLocalExecTLSModel
+} LLVMThreadLocalMode;
+
+typedef enum {
+  LLVMAtomicOrderingNotAtomic = 0, /**< A load or store which is not atomic */
+  LLVMAtomicOrderingUnordered = 1, /**< Lowest level of atomicity, guarantees
+                                     somewhat sane results, lock free. */
+  LLVMAtomicOrderingMonotonic = 2, /**< guarantees that if you take all the 
+                                     operations affecting a specific address, 
+                                     a consistent ordering exists */
+  LLVMAtomicOrderingAcquire = 4, /**< Acquire provides a barrier of the sort 
+                                   necessary to acquire a lock to access other 
+                                   memory with normal loads and stores. */
+  LLVMAtomicOrderingRelease = 5, /**< Release is similar to Acquire, but with 
+                                   a barrier of the sort necessary to release 
+                                   a lock. */
+  LLVMAtomicOrderingAcquireRelease = 6, /**< provides both an Acquire and a 
+                                          Release barrier (for fences and 
+                                          operations which both read and write
+                                           memory). */
+  LLVMAtomicOrderingSequentiallyConsistent = 7 /**< provides Acquire semantics 
+                                                 for loads and Release 
+                                                 semantics for stores. 
+                                                 Additionally, it guarantees 
+                                                 that a total ordering exists 
+                                                 between all 
+                                                 SequentiallyConsistent 
+                                                 operations. */
+} LLVMAtomicOrdering;
+
+typedef enum {
+    LLVMAtomicRMWBinOpXchg, /**< Set the new value and return the one old */
+    LLVMAtomicRMWBinOpAdd, /**< Add a value and return the old one */
+    LLVMAtomicRMWBinOpSub, /**< Subtract a value and return the old one */
+    LLVMAtomicRMWBinOpAnd, /**< And a value and return the old one */
+    LLVMAtomicRMWBinOpNand, /**< Not-And a value and return the old one */
+    LLVMAtomicRMWBinOpOr, /**< OR a value and return the old one */
+    LLVMAtomicRMWBinOpXor, /**< Xor a value and return the old one */
+    LLVMAtomicRMWBinOpMax, /**< Sets the value if it's greater than the
+                             original using a signed comparison and return 
+                             the old one */
+    LLVMAtomicRMWBinOpMin, /**< Sets the value if it's Smaller than the
+                             original using a signed comparison and return 
+                             the old one */
+    LLVMAtomicRMWBinOpUMax, /**< Sets the value if it's greater than the
+                             original using an unsigned comparison and return 
+                             the old one */
+    LLVMAtomicRMWBinOpUMin /**< Sets the value if it's greater than the
+                             original using an unsigned comparison  and return 
+                             the old one */
+} LLVMAtomicRMWBinOp;
+
 /**
  * @}
  */
@@ -366,6 +413,7 @@ void LLVMShutdown();
 
 /*===-- Error handling ----------------------------------------------------===*/
 
+char *LLVMCreateMessage(const char *Message);
 void LLVMDisposeMessage(char *Message);
 
 
@@ -413,7 +461,7 @@ unsigned LLVMGetMDKindID(const char* Name, unsigned SLen);
 /**
  * @defgroup LLVMCCoreModule Modules
  *
- * Modules represent the top-level structure in a LLVM program. An LLVM
+ * Modules represent the top-level structure in an LLVM program. An LLVM
  * module is effectively a translation unit or a collection of
  * translation units merged together.
  *
@@ -994,7 +1042,7 @@ LLVMTypeRef LLVMX86MMXType(void);
  * hierarchy of classes within this type. Depending on the instance
  * obtained, not all APIs are available.
  *
- * Callers can determine the type of a LLVMValueRef by calling the
+ * Callers can determine the type of an LLVMValueRef by calling the
  * LLVMIsA* family of functions (e.g. LLVMIsAArgument()). These
  * functions are defined by a macro, so it isn't obvious which are
  * available by looking at the Doxygen source code. Instead, look at the
@@ -1057,24 +1105,24 @@ LLVMTypeRef LLVMX86MMXType(void);
         macro(SwitchInst)                   \
         macro(UnreachableInst)              \
         macro(ResumeInst)                   \
-    macro(UnaryInstruction)                 \
-      macro(AllocaInst)                     \
-      macro(CastInst)                       \
-        macro(BitCastInst)                  \
-        macro(FPExtInst)                    \
-        macro(FPToSIInst)                   \
-        macro(FPToUIInst)                   \
-        macro(FPTruncInst)                  \
-        macro(IntToPtrInst)                 \
-        macro(PtrToIntInst)                 \
-        macro(SExtInst)                     \
-        macro(SIToFPInst)                   \
-        macro(TruncInst)                    \
-        macro(UIToFPInst)                   \
-        macro(ZExtInst)                     \
-      macro(ExtractValueInst)               \
-      macro(LoadInst)                       \
-      macro(VAArgInst)
+      macro(UnaryInstruction)               \
+        macro(AllocaInst)                   \
+        macro(CastInst)                     \
+          macro(BitCastInst)                \
+          macro(FPExtInst)                  \
+          macro(FPToSIInst)                 \
+          macro(FPToUIInst)                 \
+          macro(FPTruncInst)                \
+          macro(IntToPtrInst)               \
+          macro(PtrToIntInst)               \
+          macro(SExtInst)                   \
+          macro(SIToFPInst)                 \
+          macro(TruncInst)                  \
+          macro(UIToFPInst)                 \
+          macro(ZExtInst)                   \
+        macro(ExtractValueInst)             \
+        macro(LoadInst)                     \
+        macro(VAArgInst)
 
 /**
  * @defgroup LLVMCCoreValueGeneral General APIs
@@ -1134,7 +1182,7 @@ LLVMBool LLVMIsUndef(LLVMValueRef Val);
 /**
  * Convert value instances between types.
  *
- * Internally, a LLVMValueRef is "pinned" to a specific type. This
+ * Internally, an LLVMValueRef is "pinned" to a specific type. This
  * series of functions allows you to cast an instance to a specific
  * type.
  *
@@ -1156,7 +1204,7 @@ LLVM_FOR_EACH_VALUE_SUBCLASS(LLVM_DECLARE_VALUE_CAST)
  * This module defines functions that allow you to inspect the uses of a
  * LLVMValueRef.
  *
- * It is possible to obtain a LLVMUseRef for any LLVMValueRef instance.
+ * It is possible to obtain an LLVMUseRef for any LLVMValueRef instance.
  * Each LLVMUseRef (which corresponds to a llvm::Use instance) holds a
  * llvm::User and llvm::Value.
  *
@@ -1606,6 +1654,10 @@ LLVMBool LLVMIsThreadLocal(LLVMValueRef GlobalVar);
 void LLVMSetThreadLocal(LLVMValueRef GlobalVar, LLVMBool IsThreadLocal);
 LLVMBool LLVMIsGlobalConstant(LLVMValueRef GlobalVar);
 void LLVMSetGlobalConstant(LLVMValueRef GlobalVar, LLVMBool IsConstant);
+LLVMThreadLocalMode LLVMGetThreadLocalMode(LLVMValueRef GlobalVar);
+void LLVMSetThreadLocalMode(LLVMValueRef GlobalVar, LLVMThreadLocalMode Mode);
+LLVMBool LLVMIsExternallyInitialized(LLVMValueRef GlobalVar);
+void LLVMSetExternallyInitialized(LLVMValueRef GlobalVar, LLVMBool IsExtInit);
 
 /**
  * @}
@@ -1694,6 +1746,13 @@ void LLVMSetGC(LLVMValueRef Fn, const char *Name);
 void LLVMAddFunctionAttr(LLVMValueRef Fn, LLVMAttribute PA);
 
 /**
+ * Add a target-dependent attribute to a fuction
+ * @see llvm::AttrBuilder::addAttribute()
+ */
+void LLVMAddTargetDependentFunctionAttr(LLVMValueRef Fn, const char *A,
+                                        const char *V);
+
+/**
  * Obtain an attribute from a function.
  *
  * @see llvm::Function::getAttributes()
@@ -1748,7 +1807,7 @@ LLVMValueRef LLVMGetParam(LLVMValueRef Fn, unsigned Index);
 /**
  * Obtain the function to which this argument belongs.
  *
- * Unlike other functions in this group, this one takes a LLVMValueRef
+ * Unlike other functions in this group, this one takes an LLVMValueRef
  * that corresponds to a llvm::Attribute.
  *
  * The returned LLVMValueRef is the llvm::Function to which this
@@ -1773,7 +1832,7 @@ LLVMValueRef LLVMGetLastParam(LLVMValueRef Fn);
 /**
  * Obtain the next parameter to a function.
  *
- * This takes a LLVMValueRef obtained from LLVMGetFirstParam() (which is
+ * This takes an LLVMValueRef obtained from LLVMGetFirstParam() (which is
  * actually a wrapped iterator) and obtains the next parameter from the
  * underlying iterator.
  */
@@ -1922,12 +1981,12 @@ void LLVMGetMDNodeOperands(LLVMValueRef V, LLVMValueRef *Dest);
 LLVMValueRef LLVMBasicBlockAsValue(LLVMBasicBlockRef BB);
 
 /**
- * Determine whether a LLVMValueRef is itself a basic block.
+ * Determine whether an LLVMValueRef is itself a basic block.
  */
 LLVMBool LLVMValueIsBasicBlock(LLVMValueRef Val);
 
 /**
- * Convert a LLVMValueRef to a LLVMBasicBlockRef instance.
+ * Convert an LLVMValueRef to an LLVMBasicBlockRef instance.
  */
 LLVMBasicBlockRef LLVMValueAsBasicBlock(LLVMValueRef Val);
 
@@ -2084,7 +2143,7 @@ LLVMValueRef LLVMGetFirstInstruction(LLVMBasicBlockRef BB);
 /**
  * Obtain the last instruction in a basic block.
  *
- * The returned LLVMValueRef corresponds to a LLVM:Instruction.
+ * The returned LLVMValueRef corresponds to an LLVM:Instruction.
  */
 LLVMValueRef LLVMGetLastInstruction(LLVMBasicBlockRef BB);
 
@@ -2266,12 +2325,12 @@ void LLVMAddIncoming(LLVMValueRef PhiNode, LLVMValueRef *IncomingValues,
 unsigned LLVMCountIncoming(LLVMValueRef PhiNode);
 
 /**
- * Obtain an incoming value to a PHI node as a LLVMValueRef.
+ * Obtain an incoming value to a PHI node as an LLVMValueRef.
  */
 LLVMValueRef LLVMGetIncomingValue(LLVMValueRef PhiNode, unsigned Index);
 
 /**
- * Obtain an incoming value to a PHI node as a LLVMBasicBlockRef.
+ * Obtain an incoming value to a PHI node as an LLVMBasicBlockRef.
  */
 LLVMBasicBlockRef LLVMGetIncomingBlock(LLVMValueRef PhiNode, unsigned Index);
 
@@ -2515,6 +2574,10 @@ LLVMValueRef LLVMBuildIsNotNull(LLVMBuilderRef, LLVMValueRef Val,
                                 const char *Name);
 LLVMValueRef LLVMBuildPtrDiff(LLVMBuilderRef, LLVMValueRef LHS,
                               LLVMValueRef RHS, const char *Name);
+LLVMValueRef LLVMBuildAtomicRMW(LLVMBuilderRef B,LLVMAtomicRMWBinOp op,  
+                                LLVMValueRef PTR, LLVMValueRef Val, 
+                                LLVMAtomicOrdering ordering, 
+                                LLVMBool singleThread);
 
 /**
  * @}
@@ -2560,6 +2623,8 @@ LLVMMemoryBufferRef LLVMCreateMemoryBufferWithMemoryRange(const char *InputData,
 LLVMMemoryBufferRef LLVMCreateMemoryBufferWithMemoryRangeCopy(const char *InputData,
                                                               size_t InputDataLength,
                                                               const char *BufferName);
+const char *LLVMGetBufferStart(LLVMMemoryBufferRef MemBuf);
+size_t LLVMGetBufferSize(LLVMMemoryBufferRef MemBuf);
 void LLVMDisposeMemoryBuffer(LLVMMemoryBufferRef MemBuf);
 
 /**
@@ -2669,100 +2734,6 @@ LLVMBool LLVMIsMultithreaded();
 
 #ifdef __cplusplus
 }
-
-namespace llvm {
-  class MemoryBuffer;
-  class PassManagerBase;
-  
-  #define DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ty, ref)   \
-    inline ty *unwrap(ref P) {                          \
-      return reinterpret_cast<ty*>(P);                  \
-    }                                                   \
-                                                        \
-    inline ref wrap(const ty *P) {                      \
-      return reinterpret_cast<ref>(const_cast<ty*>(P)); \
-    }
-  
-  #define DEFINE_ISA_CONVERSION_FUNCTIONS(ty, ref)  \
-    DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ty, ref)         \
-                                                        \
-    template<typename T>                                \
-    inline T *unwrap(ref P) {                           \
-      return cast<T>(unwrap(P));                        \
-    }
-  
-  #define DEFINE_STDCXX_CONVERSION_FUNCTIONS(ty, ref)   \
-    DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ty, ref)         \
-                                                        \
-    template<typename T>                                \
-    inline T *unwrap(ref P) {                           \
-      T *Q = (T*)unwrap(P);                             \
-      assert(Q && "Invalid cast!");                     \
-      return Q;                                         \
-    }
-  
-  DEFINE_ISA_CONVERSION_FUNCTIONS   (Type,               LLVMTypeRef          )
-  DEFINE_ISA_CONVERSION_FUNCTIONS   (Value,              LLVMValueRef         )
-  DEFINE_SIMPLE_CONVERSION_FUNCTIONS(Module,             LLVMModuleRef        )
-  DEFINE_SIMPLE_CONVERSION_FUNCTIONS(BasicBlock,         LLVMBasicBlockRef    )
-  DEFINE_SIMPLE_CONVERSION_FUNCTIONS(IRBuilder<>,        LLVMBuilderRef       )
-  DEFINE_SIMPLE_CONVERSION_FUNCTIONS(MemoryBuffer,       LLVMMemoryBufferRef  )
-  DEFINE_SIMPLE_CONVERSION_FUNCTIONS(LLVMContext,        LLVMContextRef       )
-  DEFINE_SIMPLE_CONVERSION_FUNCTIONS(Use,                LLVMUseRef           )
-  DEFINE_STDCXX_CONVERSION_FUNCTIONS(PassManagerBase,    LLVMPassManagerRef   )
-  DEFINE_STDCXX_CONVERSION_FUNCTIONS(PassRegistry,       LLVMPassRegistryRef  )
-  /* LLVMModuleProviderRef exists for historical reasons, but now just holds a
-   * Module.
-   */
-  inline Module *unwrap(LLVMModuleProviderRef MP) {
-    return reinterpret_cast<Module*>(MP);
-  }
-  
-  #undef DEFINE_STDCXX_CONVERSION_FUNCTIONS
-  #undef DEFINE_ISA_CONVERSION_FUNCTIONS
-  #undef DEFINE_SIMPLE_CONVERSION_FUNCTIONS
-
-  /* Specialized opaque context conversions.
-   */
-  inline LLVMContext **unwrap(LLVMContextRef* Tys) {
-    return reinterpret_cast<LLVMContext**>(Tys);
-  }
-  
-  inline LLVMContextRef *wrap(const LLVMContext **Tys) {
-    return reinterpret_cast<LLVMContextRef*>(const_cast<LLVMContext**>(Tys));
-  }
-  
-  /* Specialized opaque type conversions.
-   */
-  inline Type **unwrap(LLVMTypeRef* Tys) {
-    return reinterpret_cast<Type**>(Tys);
-  }
-  
-  inline LLVMTypeRef *wrap(Type **Tys) {
-    return reinterpret_cast<LLVMTypeRef*>(const_cast<Type**>(Tys));
-  }
-  
-  /* Specialized opaque value conversions.
-   */ 
-  inline Value **unwrap(LLVMValueRef *Vals) {
-    return reinterpret_cast<Value**>(Vals);
-  }
-  
-  template<typename T>
-  inline T **unwrap(LLVMValueRef *Vals, unsigned Length) {
-    #ifdef DEBUG
-    for (LLVMValueRef *I = Vals, *E = Vals + Length; I != E; ++I)
-      cast<T>(*I);
-    #endif
-    (void)Length;
-    return reinterpret_cast<T**>(Vals);
-  }
-  
-  inline LLVMValueRef *wrap(const Value **Vals) {
-    return reinterpret_cast<LLVMValueRef*>(const_cast<Value**>(Vals));
-  }
-}
-
 #endif /* !defined(__cplusplus) */
 
 #endif /* !defined(LLVM_C_CORE_H) */

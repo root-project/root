@@ -22,7 +22,6 @@ PPCMCAsmInfoDarwin::PPCMCAsmInfoDarwin(bool is64Bit) {
   }
   IsLittleEndian = false;
 
-  PCSymbol = ".";
   CommentString = ";";
   ExceptionsType = ExceptionHandling::DwarfCFI;
 
@@ -55,16 +54,17 @@ PPCLinuxMCAsmInfo::PPCLinuxMCAsmInfo(bool is64Bit) {
   // Debug Information
   SupportsDebugInformation = true;
 
-  PCSymbol = ".";
+  DollarIsPC = true;
 
   // Set up DWARF directives
   HasLEB128 = true;  // Target asm supports leb128 directives (little-endian)
+  MinInstAlignment = 4;
 
   // Exceptions handling
   ExceptionsType = ExceptionHandling::DwarfCFI;
     
   ZeroDirective = "\t.space\t";
   Data64bitsDirective = is64Bit ? "\t.quad\t" : 0;
-  AssemblerDialect = 0;           // Old-Style mnemonics.
+  AssemblerDialect = 1;           // New-Style mnemonics.
 }
 

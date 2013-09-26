@@ -67,14 +67,12 @@ class DeclarationVerbatimLineCommand<string name> :
 }
 
 class FunctionDeclarationVerbatimLineCommand<string name> :
-      VerbatimLineCommand<name> {
-  let IsDeclarationCommand = 1;
+      DeclarationVerbatimLineCommand<name> {
   let IsFunctionDeclarationCommand = 1;
 }
 
 class RecordLikeDeclarationVerbatimLineCommand<string name> :
-      VerbatimLineCommand<name> {
-  let IsDeclarationCommand = 1;
+      DeclarationVerbatimLineCommand<name> {
   let IsRecordLikeDeclarationCommand = 1;
 }
 
@@ -131,6 +129,7 @@ def Date       : BlockCommand<"date">;
 def Invariant  : BlockCommand<"invariant">;
 def Li         : BlockCommand<"li">;
 def Note       : BlockCommand<"note">;
+def Par        : BlockCommand<"par">;
 def Post       : BlockCommand<"post">;
 def Pre        : BlockCommand<"pre">;
 def Remark     : BlockCommand<"remark">;
@@ -200,6 +199,11 @@ def Paragraph     : VerbatimLineCommand<"paragraph">;
 def Mainpage : VerbatimLineCommand<"mainpage">;
 def Subpage  : VerbatimLineCommand<"subpage">;
 def Ref      : VerbatimLineCommand<"ref">;
+
+def Relates     : VerbatimLineCommand<"relates">;
+def Related     : VerbatimLineCommand<"related">;
+def RelatesAlso : VerbatimLineCommand<"relatesalso">;
+def RelatedAlso : VerbatimLineCommand<"relatedalso">;
 
 //===----------------------------------------------------------------------===//
 // DeclarationVerbatimLineCommand

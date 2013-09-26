@@ -260,6 +260,8 @@ void DeclPrinter::VisitDeclContext(DeclContext *DC, bool Indent) {
     QualType CurDeclType = getDeclType(*D);
     if (!Decls.empty() && !CurDeclType.isNull()) {
       QualType BaseType = GetBaseType(CurDeclType);
+      if (!BaseType.isNull() && isa<ElaboratedType>(BaseType))
+        BaseType = cast<ElaboratedType>(BaseType)->getNamedType();
       if (!BaseType.isNull() && isa<TagType>(BaseType) &&
           cast<TagType>(BaseType)->getDecl() == Decls[0]) {
         Decls.push_back(*D);
@@ -337,12 +339,14 @@ void DeclPrinter::VisitTypedefDecl(TypedefDecl *D) {
     if (D->isModulePrivate())
       Out << "__module_private__ ";
   }
-  D->getUnderlyingType().print(Out, Policy, D->getName());
+  D->getTypeSourceInfo()->getType().print(Out, Policy, D->getName());
   prettyPrintAttributes(D);
 }
 
 void DeclPrinter::VisitTypeAliasDecl(TypeAliasDecl *D) {
-  Out << "using " << *D << " = " << D->getUnderlyingType().getAsString(Policy);
+  Out << "using " << *D;
+  prettyPrintAttributes(D);
+  Out << " = " << D->getTypeSourceInfo()->getType().getAsString(Policy);
 }
 
 void DeclPrinter::VisitEnumDecl(EnumDecl *D) {
@@ -487,7 +491,7 @@ void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
       for (CXXConstructorDecl::init_const_iterator B = CDecl->init_begin(),
            E = CDecl->init_end();
            B != E; ++B) {
-        CXXCtorInitializer * BMInitializer = (*B);
+        CXXCtorInitializer *BMInitializer = (*B);
         if (BMInitializer->isInClassMemberInitializer())
           continue;
 
@@ -617,7 +621,8 @@ void DeclPrinter::VisitFieldDecl(FieldDecl *D) {
   if (!Policy.SuppressSpecifiers && D->isModulePrivate())
     Out << "__module_private__ ";
 
-  Out << D->getType().stream(Policy, D->getName());
+  Out << D->getASTContext().getUnqualifiedObjCPointerType(D->getType()).
+            stream(Policy, D->getName());
 
   if (D->isBitField()) {
     Out << " : ";
@@ -641,18 +646,32 @@ void DeclPrinter::VisitLabelDecl(LabelDecl *D) {
 
 
 void DeclPrinter::VisitVarDecl(VarDecl *D) {
-  StorageClass SC = D->getStorageClass();
-  if (!Policy.SuppressSpecifiers && SC != SC_None)
-    Out << VarDecl::getStorageClassSpecifierString(SC) << " ";
+  if (!Policy.SuppressSpecifiers) {
+    StorageClass SC = D->getStorageClass();
+    if (SC != SC_None)
+      Out << VarDecl::getStorageClassSpecifierString(SC) << " ";
 
-  if (!Policy.SuppressSpecifiers && D->isThreadSpecified())
-    Out << "__thread ";
-  if (!Policy.SuppressSpecifiers && D->isModulePrivate())
-    Out << "__module_private__ ";
+    switch (D->getTSCSpec()) {
+    case TSCS_unspecified:
+      break;
+    case TSCS___thread:
+      Out << "__thread ";
+      break;
+    case TSCS__Thread_local:
+      Out << "_Thread_local ";
+      break;
+    case TSCS_thread_local:
+      Out << "thread_local ";
+      break;
+    }
 
-  QualType T = D->getType();
-  if (ParmVarDecl *Parm = dyn_cast<ParmVarDecl>(D))
-    T = Parm->getOriginalType();
+    if (D->isModulePrivate())
+      Out << "__module_private__ ";
+  }
+
+  QualType T = D->getTypeSourceInfo()
+    ? D->getTypeSourceInfo()->getType()
+    : D->getASTContext().getUnqualifiedObjCPointerType(D->getType());
   T.print(Out, Policy, D->getName());
   Expr *Init = D->getInit();
   if (!Policy.SuppressInitializers && Init) {
@@ -899,7 +918,8 @@ void DeclPrinter::VisitObjCMethodDecl(ObjCMethodDecl *OMD) {
   else
     Out << "+ ";
   if (!OMD->getResultType().isNull())
-    Out << '(' << OMD->getResultType().getAsString(Policy) << ")";
+    Out << '(' << OMD->getASTContext().getUnqualifiedObjCPointerType(OMD->getResultType()).
+                    getAsString(Policy) << ")";
 
   std::string name = OMD->getSelector().getAsString();
   std::string::size_type pos, lastPos = 0;
@@ -908,7 +928,8 @@ void DeclPrinter::VisitObjCMethodDecl(ObjCMethodDecl *OMD) {
     // FIXME: selector is missing here!
     pos = name.find_first_of(':', lastPos);
     Out << " " << name.substr(lastPos, pos - lastPos);
-    Out << ":(" << (*PI)->getType().getAsString(Policy) << ')' << **PI;
+    Out << ":(" << (*PI)->getASTContext().getUnqualifiedObjCPointerType((*PI)->getType()).
+                      getAsString(Policy) << ')' << **PI;
     lastPos = pos + 1;
   }
 
@@ -941,7 +962,8 @@ void DeclPrinter::VisitObjCImplementationDecl(ObjCImplementationDecl *OID) {
     Indentation += Policy.Indentation;
     for (ObjCImplementationDecl::ivar_iterator I = OID->ivar_begin(),
          E = OID->ivar_end(); I != E; ++I) {
-      Indent() << I->getType().getAsString(Policy) << ' ' << **I << ";\n";
+      Indent() << I->getASTContext().getUnqualifiedObjCPointerType(I->getType()).
+                    getAsString(Policy) << ' ' << **I << ";\n";
     }
     Indentation -= Policy.Indentation;
     Out << "}\n";
@@ -979,7 +1001,8 @@ void DeclPrinter::VisitObjCInterfaceDecl(ObjCInterfaceDecl *OID) {
     Indentation += Policy.Indentation;
     for (ObjCInterfaceDecl::ivar_iterator I = OID->ivar_begin(),
          E = OID->ivar_end(); I != E; ++I) {
-      Indent() << I->getType().getAsString(Policy) << ' ' << **I << ";\n";
+      Indent() << I->getASTContext().getUnqualifiedObjCPointerType(I->getType()).
+                    getAsString(Policy) << ' ' << **I << ";\n";
     }
     Indentation -= Policy.Indentation;
     Out << "}\n";
@@ -1030,7 +1053,8 @@ void DeclPrinter::VisitObjCCategoryDecl(ObjCCategoryDecl *PID) {
     Indentation += Policy.Indentation;
     for (ObjCCategoryDecl::ivar_iterator I = PID->ivar_begin(),
          E = PID->ivar_end(); I != E; ++I) {
-      Indent() << I->getType().getAsString(Policy) << ' ' << **I << ";\n";
+      Indent() << I->getASTContext().getUnqualifiedObjCPointerType(I->getType()).
+                    getAsString(Policy) << ' ' << **I << ";\n";
     }
     Indentation -= Policy.Indentation;
     Out << "}\n";
@@ -1116,7 +1140,8 @@ void DeclPrinter::VisitObjCPropertyDecl(ObjCPropertyDecl *PDecl) {
     (void) first; // Silence dead store warning due to idiomatic code.
     Out << " )";
   }
-  Out << ' ' << PDecl->getType().getAsString(Policy) << ' ' << *PDecl;
+  Out << ' ' << PDecl->getASTContext().getUnqualifiedObjCPointerType(PDecl->getType()).
+                  getAsString(Policy) << ' ' << *PDecl;
   if (Policy.PolishForDeclaration)
     Out << ';';
 }
@@ -1132,7 +1157,10 @@ void DeclPrinter::VisitObjCPropertyImplDecl(ObjCPropertyImplDecl *PID) {
 }
 
 void DeclPrinter::VisitUsingDecl(UsingDecl *D) {
-  Out << "using ";
+  if (!D->isAccessDeclaration())
+    Out << "using ";
+  if (D->hasTypename())
+    Out << "typename ";
   D->getQualifier()->print(Out, Policy);
   Out << *D;
 }
@@ -1145,7 +1173,8 @@ DeclPrinter::VisitUnresolvedUsingTypenameDecl(UnresolvedUsingTypenameDecl *D) {
 }
 
 void DeclPrinter::VisitUnresolvedUsingValueDecl(UnresolvedUsingValueDecl *D) {
-  Out << "using ";
+  if (!D->isAccessDeclaration())
+    Out << "using ";
   D->getQualifier()->print(Out, Policy);
   Out << D->getDeclName();
 }
@@ -1159,9 +1188,10 @@ void DeclPrinter::VisitOMPThreadPrivateDecl(OMPThreadPrivateDecl *D) {
   if (!D->varlist_empty()) {
     for (OMPThreadPrivateDecl::varlist_iterator I = D->varlist_begin(),
                                                 E = D->varlist_end();
-         I != E; ++I) {
-      Out << (I == D->varlist_begin() ? '(' : ',')
-          << *cast<NamedDecl>((*I)->getDecl());
+                                                I != E; ++I) {
+      Out << (I == D->varlist_begin() ? '(' : ',');
+      NamedDecl *ND = cast<NamedDecl>(cast<DeclRefExpr>(*I)->getDecl());
+      ND->printQualifiedName(Out);
     }
     Out << ")";
   }

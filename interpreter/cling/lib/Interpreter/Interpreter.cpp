@@ -129,11 +129,11 @@ namespace cling {
   // GetMainExecutable (since some platforms don't support taking the
   // address of main, and some platforms can't implement GetMainExecutable
   // without being given the address of a function in the main executable).
-  llvm::sys::Path GetExecutablePath(const char *Argv0) {
+  std::string GetExecutablePath(const char *Argv0) {
     // This just needs to be some symbol in the binary; C++ doesn't
     // allow taking the address of ::main however.
     void *MainAddr = (void*) (intptr_t) GetExecutablePath;
-    return llvm::sys::Path::GetMainExecutable(Argv0, MainAddr);
+    return llvm::sys::fs::getMainExecutable(Argv0, MainAddr);
   }
 
   const Parser& Interpreter::getParser() const {
@@ -183,24 +183,28 @@ namespace cling {
     // Add path to interpreter's include files
     // Try to find the headers in the src folder first
 #ifdef CLING_SRCDIR_INCL
-    llvm::sys::Path SrcP(CLING_SRCDIR_INCL);
-    if (SrcP.canRead())
-      AddIncludePath(SrcP.str());
+    llvm::StringRef SrcIncl(CLING_SRCDIR_INCL);
+    if (llvm::sys::fs::is_directory(SrcIncl))
+      AddIncludePath(SrcIncl);
 #endif
 
-    llvm::sys::Path P = GetExecutablePath(argv[0]);
-    if (!P.isEmpty()) {
-      P.eraseComponent();  // Remove /cling from foo/bin/clang
-      P.eraseComponent();  // Remove /bin   from foo/bin
+    llvm::SmallString<512> P(GetExecutablePath(argv[0]));
+    if (!P.empty()) {
+      // Remove /cling from foo/bin/clang
+      llvm::StringRef ExeIncl = llvm::sys::path::parent_path(P);
+      // Remove /bin   from foo/bin
+      ExeIncl = llvm::sys::path::parent_path(ExeIncl);
+      P.resize(ExeIncl.size() + 1);
+      P[ExeIncl.size()] = 0;
       // Get foo/include
-      P.appendComponent("include");
-      if (P.canRead())
+      llvm::sys::path::append(P, "include");
+      if (llvm::sys::fs::is_directory(P.str()))
         AddIncludePath(P.str());
       else {
 #ifdef CLING_INSTDIR_INCL
-        llvm::sys::Path InstP(CLING_INSTDIR_INCL);
-        if (InstP.canRead())
-          AddIncludePath(InstP.str());
+        llvm::StringRef InstIncl(CLING_INSTDIR_INCL);
+        if (llvm::sys::fs::is_directory(InstIncl))
+          AddIncludePath(InstIncl);
 #endif
       }
     }
@@ -480,15 +484,24 @@ namespace cling {
     const DirectoryLookup* LookupFrom = 0;
     const DirectoryLookup* CurDir = 0;
 
-    Module* module = 0;
-    PP.LookupFile(headerFile, isAngled, LookupFrom, CurDir, /*SearchPath*/0,
-                  /*RelativePath*/ 0, &module, /*SkipCache*/false);
-    if (!module)
+    ModuleMap::KnownHeader suggestedModule;
+    // PP::LookupFile uses it to issue 'nice' diagnostic
+    SourceLocation fileNameLoc;
+    PP.LookupFile(fileNameLoc, headerFile, isAngled, LookupFrom, CurDir, 
+                  /*SearchPath*/0, /*RelativePath*/ 0, &suggestedModule, 
+                  /*SkipCache*/false);
+    if (!suggestedModule)
       return Interpreter::kFailure;
 
-    SourceLocation fileNameLoc;
-    ModuleIdPath path = std::make_pair(PP.getIdentifierInfo(module->Name),
-                                       fileNameLoc);
+    // Copied from PPDirectives.cpp
+    SmallVector<std::pair<IdentifierInfo *, SourceLocation>, 2> path;
+    for (Module *mod = suggestedModule.getModule(); mod; mod = mod->Parent) {
+      IdentifierInfo* II 
+        = &getSema().getPreprocessor().getIdentifierTable().get(mod->Name);
+      path.push_back(std::make_pair(II, fileNameLoc));
+    }
+
+    std::reverse(path.begin(), path.end());
 
     // Pretend that the module came from an inclusion directive, so that clang
     // will create an implicit import declaration to capture it in the AST.
@@ -615,7 +628,7 @@ namespace cling {
     Lexer WrapLexer(SourceLocation(), getSema().getLangOpts(), input.c_str(), 
                     input.c_str(), input.c_str() + input.size());
     Token Tok;
-    WrapLexer.Lex(Tok);
+    WrapLexer.LexFromRawLexer(Tok);
 
     const tok::TokenKind kind = Tok.getKind();
 
@@ -631,7 +644,7 @@ namespace cling {
         return false;
     }
     else if (kind == tok::hash) {
-      WrapLexer.Lex(Tok);
+      WrapLexer.LexFromRawLexer(Tok);
       if (Tok.is(tok::raw_identifier) && !Tok.needsCleaning()) {
         StringRef keyword(Tok.getRawIdentifierData(), Tok.getLength());
         if (keyword.equals("include"))

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:   TableGen
 " Maintainer: The LLVM team, http://llvm.org/
-" Version:    $Revision: 151164 $
+" Version:    $Revision$
 
 if version < 600
   syntax clear

@@ -171,240 +171,240 @@ void CodeGenFunction::EmitAnyExprToMem(const Expr *E,
   llvm_unreachable("bad evaluation kind");
 }
 
-static llvm::Value *
-CreateReferenceTemporary(CodeGenFunction &CGF, QualType Type,
-                         const NamedDecl *InitializedDecl) {
-  if (const VarDecl *VD = dyn_cast_or_null<VarDecl>(InitializedDecl)) {
-    if (VD->hasGlobalStorage()) {
-      SmallString<256> Name;
-      llvm::raw_svector_ostream Out(Name);
-      CGF.CGM.getCXXABI().getMangleContext().mangleReferenceTemporary(VD, Out);
-      Out.flush();
-
-      llvm::Type *RefTempTy = CGF.ConvertTypeForMem(Type);
-  
-      // Create the reference temporary.
-      llvm::GlobalValue *RefTemp =
-        new llvm::GlobalVariable(CGF.CGM.getModule(), 
-                                 RefTempTy, /*isConstant=*/false,
-                                 llvm::GlobalValue::InternalLinkage,
-                                 llvm::Constant::getNullValue(RefTempTy),
-                                 Name.str());
-      return RefTemp;
-    }
-  }
-
-  return CGF.CreateMemTemp(Type, "ref.tmp");
-}
-
-static llvm::Value *
-EmitExprForReferenceBinding(CodeGenFunction &CGF, const Expr *E,
-                            llvm::Value *&ReferenceTemporary,
-                            const CXXDestructorDecl *&ReferenceTemporaryDtor,
-                            const InitListExpr *&ReferenceInitializerList,
-                            QualType &ObjCARCReferenceLifetimeType,
-                            const NamedDecl *InitializedDecl) {
-  const MaterializeTemporaryExpr *M = NULL;
-  E = E->findMaterializedTemporary(M);
+static void
+pushTemporaryCleanup(CodeGenFunction &CGF, const MaterializeTemporaryExpr *M,
+                     const Expr *E, llvm::Value *ReferenceTemporary) {
   // Objective-C++ ARC:
   //   If we are binding a reference to a temporary that has ownership, we
   //   need to perform retain/release operations on the temporary.
-  if (M && CGF.getLangOpts().ObjCAutoRefCount &&
-      M->getType()->isObjCLifetimeType() &&
-      (M->getType().getObjCLifetime() == Qualifiers::OCL_Strong ||
-       M->getType().getObjCLifetime() == Qualifiers::OCL_Weak ||
-       M->getType().getObjCLifetime() == Qualifiers::OCL_Autoreleasing))
-    ObjCARCReferenceLifetimeType = M->getType();
+  //
+  // FIXME: This should be looking at E, not M.
+  if (CGF.getLangOpts().ObjCAutoRefCount &&
+      M->getType()->isObjCLifetimeType()) {
+    QualType ObjCARCReferenceLifetimeType = M->getType();
+    switch (Qualifiers::ObjCLifetime Lifetime =
+                ObjCARCReferenceLifetimeType.getObjCLifetime()) {
+    case Qualifiers::OCL_None:
+    case Qualifiers::OCL_ExplicitNone:
+      // Carry on to normal cleanup handling.
+      break;
 
-  if (const ExprWithCleanups *EWC = dyn_cast<ExprWithCleanups>(E)) {
-    CGF.enterFullExpression(EWC);
-    CodeGenFunction::RunCleanupsScope Scope(CGF);
+    case Qualifiers::OCL_Autoreleasing:
+      // Nothing to do; cleaned up by an autorelease pool.
+      return;
 
-    return EmitExprForReferenceBinding(CGF, EWC->getSubExpr(), 
-                                       ReferenceTemporary, 
-                                       ReferenceTemporaryDtor,
-                                       ReferenceInitializerList,
-                                       ObjCARCReferenceLifetimeType,
-                                       InitializedDecl);
-  }
+    case Qualifiers::OCL_Strong:
+    case Qualifiers::OCL_Weak:
+      switch (StorageDuration Duration = M->getStorageDuration()) {
+      case SD_Static:
+        // Note: we intentionally do not register a cleanup to release
+        // the object on program termination.
+        return;
 
-  if (E->isGLValue()) {
-    // Emit the expression as an lvalue.
-    LValue LV = CGF.EmitLValue(E);
-    assert(LV.isSimple());
-    return LV.getAddress();
-  }
-  
-  if (!ObjCARCReferenceLifetimeType.isNull()) {
-    ReferenceTemporary = CreateReferenceTemporary(CGF, 
-                                                ObjCARCReferenceLifetimeType, 
-                                                  InitializedDecl);
-    
-    
-    LValue RefTempDst = CGF.MakeAddrLValue(ReferenceTemporary, 
-                                           ObjCARCReferenceLifetimeType);
+      case SD_Thread:
+        // FIXME: We should probably register a cleanup in this case.
+        return;
 
-    CGF.EmitScalarInit(E, dyn_cast_or_null<ValueDecl>(InitializedDecl),
-                       RefTempDst, false);
-    
-    bool ExtendsLifeOfTemporary = false;
-    if (const VarDecl *Var = dyn_cast_or_null<VarDecl>(InitializedDecl)) {
-      if (Var->extendsLifetimeOfTemporary())
-        ExtendsLifeOfTemporary = true;
-    } else if (InitializedDecl && isa<FieldDecl>(InitializedDecl)) {
-      ExtendsLifeOfTemporary = true;
-    }
-    
-    if (!ExtendsLifeOfTemporary) {
-      // Since the lifetime of this temporary isn't going to be extended,
-      // we need to clean it up ourselves at the end of the full expression.
-      switch (ObjCARCReferenceLifetimeType.getObjCLifetime()) {
-      case Qualifiers::OCL_None:
-      case Qualifiers::OCL_ExplicitNone:
-      case Qualifiers::OCL_Autoreleasing:
-        break;
-          
-      case Qualifiers::OCL_Strong: {
+      case SD_Automatic:
+      case SD_FullExpression:
         assert(!ObjCARCReferenceLifetimeType->isArrayType());
-        CleanupKind cleanupKind = CGF.getARCCleanupKind();
-        CGF.pushDestroy(cleanupKind, 
-                        ReferenceTemporary,
-                        ObjCARCReferenceLifetimeType,
-                        CodeGenFunction::destroyARCStrongImprecise,
-                        cleanupKind & EHCleanup);
-        break;
-      }
-        
-      case Qualifiers::OCL_Weak:
-        assert(!ObjCARCReferenceLifetimeType->isArrayType());
-        CGF.pushDestroy(NormalAndEHCleanup, 
-                        ReferenceTemporary,
-                        ObjCARCReferenceLifetimeType,
-                        CodeGenFunction::destroyARCWeak,
-                        /*useEHCleanupForArray*/ true);
-        break;
-      }
-      
-      ObjCARCReferenceLifetimeType = QualType();
-    }
-    
-    return ReferenceTemporary;
-  }
-
-  SmallVector<SubobjectAdjustment, 2> Adjustments;
-  E = E->skipRValueSubobjectAdjustments(Adjustments);
-  if (const OpaqueValueExpr *opaque = dyn_cast<OpaqueValueExpr>(E))
-    if (opaque->getType()->isRecordType())
-      return CGF.EmitOpaqueValueLValue(opaque).getAddress();
-
-  // Create a reference temporary if necessary.
-  AggValueSlot AggSlot = AggValueSlot::ignored();
-  if (CGF.hasAggregateEvaluationKind(E->getType())) {
-    ReferenceTemporary = CreateReferenceTemporary(CGF, E->getType(), 
-                                                  InitializedDecl);
-    CharUnits Alignment = CGF.getContext().getTypeAlignInChars(E->getType());
-    AggValueSlot::IsDestructed_t isDestructed
-      = AggValueSlot::IsDestructed_t(InitializedDecl != 0);
-    AggSlot = AggValueSlot::forAddr(ReferenceTemporary, Alignment,
-                                    Qualifiers(), isDestructed,
-                                    AggValueSlot::DoesNotNeedGCBarriers,
-                                    AggValueSlot::IsNotAliased);
-  }
-  
-  if (InitializedDecl) {
-    if (const InitListExpr *ILE = dyn_cast<InitListExpr>(E)) {
-      if (ILE->initializesStdInitializerList()) {
-        ReferenceInitializerList = ILE;
-      }
-    }
-    else if (const RecordType *RT =
-               E->getType()->getBaseElementTypeUnsafe()->getAs<RecordType>()){
-      // Get the destructor for the reference temporary.
-      CXXRecordDecl *ClassDecl = cast<CXXRecordDecl>(RT->getDecl());
-      if (!ClassDecl->hasTrivialDestructor())
-        ReferenceTemporaryDtor = ClassDecl->getDestructor();
-    }
-  }
-
-  RValue RV = CGF.EmitAnyExpr(E, AggSlot);
-
-  // Check if need to perform derived-to-base casts and/or field accesses, to
-  // get from the temporary object we created (and, potentially, for which we
-  // extended the lifetime) to the subobject we're binding the reference to.
-  if (!Adjustments.empty()) {
-    llvm::Value *Object = RV.getAggregateAddr();
-    for (unsigned I = Adjustments.size(); I != 0; --I) {
-      SubobjectAdjustment &Adjustment = Adjustments[I-1];
-      switch (Adjustment.Kind) {
-      case SubobjectAdjustment::DerivedToBaseAdjustment:
-        Object = 
-            CGF.GetAddressOfBaseClass(Object, 
-                                      Adjustment.DerivedToBase.DerivedClass, 
-                            Adjustment.DerivedToBase.BasePath->path_begin(),
-                            Adjustment.DerivedToBase.BasePath->path_end(),
-                                      /*NullCheckValue=*/false);
-        break;
-          
-      case SubobjectAdjustment::FieldAdjustment: {
-        LValue LV = CGF.MakeAddrLValue(Object, E->getType());
-        LV = CGF.EmitLValueForField(LV, Adjustment.Field);
-        if (LV.isSimple()) {
-          Object = LV.getAddress();
-          break;
+        CodeGenFunction::Destroyer *Destroy;
+        CleanupKind CleanupKind;
+        if (Lifetime == Qualifiers::OCL_Strong) {
+          const ValueDecl *VD = M->getExtendingDecl();
+          bool Precise =
+              VD && isa<VarDecl>(VD) && VD->hasAttr<ObjCPreciseLifetimeAttr>();
+          CleanupKind = CGF.getARCCleanupKind();
+          Destroy = Precise ? &CodeGenFunction::destroyARCStrongPrecise
+                            : &CodeGenFunction::destroyARCStrongImprecise;
+        } else {
+          // __weak objects always get EH cleanups; otherwise, exceptions
+          // could cause really nasty crashes instead of mere leaks.
+          CleanupKind = NormalAndEHCleanup;
+          Destroy = &CodeGenFunction::destroyARCWeak;
         }
-        
-        // For non-simple lvalues, we actually have to create a copy of
-        // the object we're binding to.
-        QualType T = Adjustment.Field->getType().getNonReferenceType()
-                                                .getUnqualifiedType();
-        Object = CreateReferenceTemporary(CGF, T, InitializedDecl);
-        LValue TempLV = CGF.MakeAddrLValue(Object,
-                                           Adjustment.Field->getType());
-        CGF.EmitStoreThroughLValue(CGF.EmitLoadOfLValue(LV), TempLV);
-        break;
-      }
+        if (Duration == SD_FullExpression)
+          CGF.pushDestroy(CleanupKind, ReferenceTemporary,
+                          ObjCARCReferenceLifetimeType, *Destroy,
+                          CleanupKind & EHCleanup);
+        else
+          CGF.pushLifetimeExtendedDestroy(CleanupKind, ReferenceTemporary,
+                                          ObjCARCReferenceLifetimeType,
+                                          *Destroy, CleanupKind & EHCleanup);
+        return;
 
-      case SubobjectAdjustment::MemberPointerAdjustment: {
-        llvm::Value *Ptr = CGF.EmitScalarExpr(Adjustment.Ptr.RHS);
-        Object = CGF.CGM.getCXXABI().EmitMemberDataPointerAddress(
-                      CGF, Object, Ptr, Adjustment.Ptr.MPT);
-        break;
+      case SD_Dynamic:
+        llvm_unreachable("temporary cannot have dynamic storage duration");
       }
-      }
+      llvm_unreachable("unknown storage duration");
     }
-
-    return Object;
   }
 
-  if (RV.isAggregate())
-    return RV.getAggregateAddr();
+  CXXDestructorDecl *ReferenceTemporaryDtor = 0;
+  if (const RecordType *RT =
+          E->getType()->getBaseElementTypeUnsafe()->getAs<RecordType>()) {
+    // Get the destructor for the reference temporary.
+    CXXRecordDecl *ClassDecl = cast<CXXRecordDecl>(RT->getDecl());
+    if (!ClassDecl->hasTrivialDestructor())
+      ReferenceTemporaryDtor = ClassDecl->getDestructor();
+  }
 
-  // Create a temporary variable that we can bind the reference to.
-  ReferenceTemporary = CreateReferenceTemporary(CGF, E->getType(), 
-                                                InitializedDecl);
+  if (!ReferenceTemporaryDtor)
+    return;
 
+  // Call the destructor for the temporary.
+  switch (M->getStorageDuration()) {
+  case SD_Static:
+  case SD_Thread: {
+    llvm::Constant *CleanupFn;
+    llvm::Constant *CleanupArg;
+    if (E->getType()->isArrayType()) {
+      CleanupFn = CodeGenFunction(CGF.CGM).generateDestroyHelper(
+          cast<llvm::Constant>(ReferenceTemporary), E->getType(),
+          CodeGenFunction::destroyCXXObject, CGF.getLangOpts().Exceptions,
+          dyn_cast_or_null<VarDecl>(M->getExtendingDecl()));
+      CleanupArg = llvm::Constant::getNullValue(CGF.Int8PtrTy);
+    } else {
+      CleanupFn =
+        CGF.CGM.GetAddrOfCXXDestructor(ReferenceTemporaryDtor, Dtor_Complete);
+      CleanupArg = cast<llvm::Constant>(ReferenceTemporary);
+    }
+    CGF.CGM.getCXXABI().registerGlobalDtor(
+        CGF, *cast<VarDecl>(M->getExtendingDecl()), CleanupFn, CleanupArg);
+    break;
+  }
 
-  LValue tempLV = CGF.MakeNaturalAlignAddrLValue(ReferenceTemporary,
-                                                 E->getType());
-  if (RV.isScalar())
-    CGF.EmitStoreOfScalar(RV.getScalarVal(), tempLV, /*init*/ true);
-  else
-    CGF.EmitStoreOfComplex(RV.getComplexVal(), tempLV, /*init*/ true);
-  return ReferenceTemporary;
+  case SD_FullExpression:
+    CGF.pushDestroy(NormalAndEHCleanup, ReferenceTemporary, E->getType(),
+                    CodeGenFunction::destroyCXXObject,
+                    CGF.getLangOpts().Exceptions);
+    break;
+
+  case SD_Automatic:
+    CGF.pushLifetimeExtendedDestroy(NormalAndEHCleanup,
+                                    ReferenceTemporary, E->getType(),
+                                    CodeGenFunction::destroyCXXObject,
+                                    CGF.getLangOpts().Exceptions);
+    break;
+
+  case SD_Dynamic:
+    llvm_unreachable("temporary cannot have dynamic storage duration");
+  }
+}
+
+static llvm::Value *
+createReferenceTemporary(CodeGenFunction &CGF,
+                         const MaterializeTemporaryExpr *M, const Expr *Inner) {
+  switch (M->getStorageDuration()) {
+  case SD_FullExpression:
+  case SD_Automatic:
+    return CGF.CreateMemTemp(Inner->getType(), "ref.tmp");
+
+  case SD_Thread:
+  case SD_Static:
+    return CGF.CGM.GetAddrOfGlobalTemporary(M, Inner);
+
+  case SD_Dynamic:
+    llvm_unreachable("temporary can't have dynamic storage duration");
+  }
+  llvm_unreachable("unknown storage duration");
+}
+
+LValue CodeGenFunction::EmitMaterializeTemporaryExpr(
+                                           const MaterializeTemporaryExpr *M) {
+  const Expr *E = M->GetTemporaryExpr();
+
+  if (getLangOpts().ObjCAutoRefCount &&
+      M->getType()->isObjCLifetimeType() &&
+      M->getType().getObjCLifetime() != Qualifiers::OCL_None &&
+      M->getType().getObjCLifetime() != Qualifiers::OCL_ExplicitNone) {
+    // FIXME: Fold this into the general case below.
+    llvm::Value *Object = createReferenceTemporary(*this, M, E);
+    LValue RefTempDst = MakeAddrLValue(Object, M->getType());
+
+    if (llvm::GlobalVariable *Var = dyn_cast<llvm::GlobalVariable>(Object)) {
+      // We should not have emitted the initializer for this temporary as a
+      // constant.
+      assert(!Var->hasInitializer());
+      Var->setInitializer(CGM.EmitNullConstant(E->getType()));
+    }
+
+    EmitScalarInit(E, M->getExtendingDecl(), RefTempDst, false);
+
+    pushTemporaryCleanup(*this, M, E, Object);
+    return RefTempDst;
+  }
+
+  SmallVector<const Expr *, 2> CommaLHSs;
+  SmallVector<SubobjectAdjustment, 2> Adjustments;
+  E = E->skipRValueSubobjectAdjustments(CommaLHSs, Adjustments);
+
+  for (unsigned I = 0, N = CommaLHSs.size(); I != N; ++I)
+    EmitIgnoredExpr(CommaLHSs[I]);
+
+  if (const OpaqueValueExpr *opaque = dyn_cast<OpaqueValueExpr>(E)) {
+    if (opaque->getType()->isRecordType()) {
+      assert(Adjustments.empty());
+      return EmitOpaqueValueLValue(opaque);
+    }
+  }
+
+  // Create and initialize the reference temporary.
+  llvm::Value *Object = createReferenceTemporary(*this, M, E);
+  if (llvm::GlobalVariable *Var = dyn_cast<llvm::GlobalVariable>(Object)) {
+    // If the temporary is a global and has a constant initializer, we may
+    // have already initialized it.
+    if (!Var->hasInitializer()) {
+      Var->setInitializer(CGM.EmitNullConstant(E->getType()));
+      EmitAnyExprToMem(E, Object, Qualifiers(), /*IsInit*/true);
+    }
+  } else {
+    EmitAnyExprToMem(E, Object, Qualifiers(), /*IsInit*/true);
+  }
+  pushTemporaryCleanup(*this, M, E, Object);
+
+  // Perform derived-to-base casts and/or field accesses, to get from the
+  // temporary object we created (and, potentially, for which we extended
+  // the lifetime) to the subobject we're binding the reference to.
+  for (unsigned I = Adjustments.size(); I != 0; --I) {
+    SubobjectAdjustment &Adjustment = Adjustments[I-1];
+    switch (Adjustment.Kind) {
+    case SubobjectAdjustment::DerivedToBaseAdjustment:
+      Object =
+          GetAddressOfBaseClass(Object, Adjustment.DerivedToBase.DerivedClass,
+                                Adjustment.DerivedToBase.BasePath->path_begin(),
+                                Adjustment.DerivedToBase.BasePath->path_end(),
+                                /*NullCheckValue=*/ false);
+      break;
+
+    case SubobjectAdjustment::FieldAdjustment: {
+      LValue LV = MakeAddrLValue(Object, E->getType());
+      LV = EmitLValueForField(LV, Adjustment.Field);
+      assert(LV.isSimple() &&
+             "materialized temporary field is not a simple lvalue");
+      Object = LV.getAddress();
+      break;
+    }
+
+    case SubobjectAdjustment::MemberPointerAdjustment: {
+      llvm::Value *Ptr = EmitScalarExpr(Adjustment.Ptr.RHS);
+      Object = CGM.getCXXABI().EmitMemberDataPointerAddress(
+                    *this, Object, Ptr, Adjustment.Ptr.MPT);
+      break;
+    }
+    }
+  }
+
+  return MakeAddrLValue(Object, M->getType());
 }
 
 RValue
-CodeGenFunction::EmitReferenceBindingToExpr(const Expr *E,
-                                            const NamedDecl *InitializedDecl) {
-  llvm::Value *ReferenceTemporary = 0;
-  const CXXDestructorDecl *ReferenceTemporaryDtor = 0;
-  const InitListExpr *ReferenceInitializerList = 0;
-  QualType ObjCARCReferenceLifetimeType;
-  llvm::Value *Value = EmitExprForReferenceBinding(*this, E, ReferenceTemporary,
-                                                   ReferenceTemporaryDtor,
-                                                   ReferenceInitializerList,
-                                                   ObjCARCReferenceLifetimeType,
-                                                   InitializedDecl);
+CodeGenFunction::EmitReferenceBindingToExpr(const Expr *E) {
+  // Emit the expression as an lvalue.
+  LValue LV = EmitLValue(E);
+  assert(LV.isSimple());
+  llvm::Value *Value = LV.getAddress();
+
   if (SanitizePerformTypeCheck && !E->getType()->isFunctionType()) {
     // C++11 [dcl.ref]p5 (as amended by core issue 453):
     //   If a glvalue to which a reference is directly bound designates neither
@@ -414,77 +414,7 @@ CodeGenFunction::EmitReferenceBindingToExpr(const Expr *E,
     QualType Ty = E->getType();
     EmitTypeCheck(TCK_ReferenceBinding, E->getExprLoc(), Value, Ty);
   }
-  if (!ReferenceTemporaryDtor && !ReferenceInitializerList &&
-      ObjCARCReferenceLifetimeType.isNull())
-    return RValue::get(Value);
-  
-  // Make sure to call the destructor for the reference temporary.
-  const VarDecl *VD = dyn_cast_or_null<VarDecl>(InitializedDecl);
-  if (VD && VD->hasGlobalStorage()) {
-    if (ReferenceTemporaryDtor) {
-      llvm::Constant *CleanupFn;
-      llvm::Constant *CleanupArg;
-      if (E->getType()->isArrayType()) {
-        CleanupFn = CodeGenFunction(CGM).generateDestroyHelper(
-            cast<llvm::Constant>(ReferenceTemporary), E->getType(),
-            destroyCXXObject, getLangOpts().Exceptions);
-        CleanupArg = llvm::Constant::getNullValue(Int8PtrTy);
-      } else {
-        CleanupFn =
-          CGM.GetAddrOfCXXDestructor(ReferenceTemporaryDtor, Dtor_Complete);
-        CleanupArg = cast<llvm::Constant>(ReferenceTemporary);
-      }
-      CGM.getCXXABI().registerGlobalDtor(*this, CleanupFn, CleanupArg);
-    } else if (ReferenceInitializerList) {
-      EmitStdInitializerListCleanup(ReferenceTemporary,
-                                    ReferenceInitializerList);
-    } else {
-      assert(!ObjCARCReferenceLifetimeType.isNull());
-      // Note: We intentionally do not register a global "destructor" to
-      // release the object.
-    }
-    
-    return RValue::get(Value);
-  }
 
-  if (ReferenceTemporaryDtor) {
-    if (E->getType()->isArrayType())
-      pushDestroy(NormalAndEHCleanup, ReferenceTemporary, E->getType(),
-                  destroyCXXObject, getLangOpts().Exceptions);
-    else
-      PushDestructorCleanup(ReferenceTemporaryDtor, ReferenceTemporary);
-  } else if (ReferenceInitializerList) {
-    EmitStdInitializerListCleanup(ReferenceTemporary,
-                                  ReferenceInitializerList);
-  } else {
-    switch (ObjCARCReferenceLifetimeType.getObjCLifetime()) {
-    case Qualifiers::OCL_None:
-      llvm_unreachable(
-                      "Not a reference temporary that needs to be deallocated");
-    case Qualifiers::OCL_ExplicitNone:
-    case Qualifiers::OCL_Autoreleasing:
-      // Nothing to do.
-      break;        
-        
-    case Qualifiers::OCL_Strong: {
-      bool precise = VD && VD->hasAttr<ObjCPreciseLifetimeAttr>();
-      CleanupKind cleanupKind = getARCCleanupKind();
-      pushDestroy(cleanupKind, ReferenceTemporary, ObjCARCReferenceLifetimeType,
-                  precise ? destroyARCStrongPrecise : destroyARCStrongImprecise,
-                  cleanupKind & EHCleanup);
-      break;
-    }
-        
-    case Qualifiers::OCL_Weak: {
-      // __weak objects always get EH cleanups; otherwise, exceptions
-      // could cause really nasty crashes instead of mere leaks.
-      pushDestroy(NormalAndEHCleanup, ReferenceTemporary,
-                  ObjCARCReferenceLifetimeType, destroyARCWeak, true);
-      break;        
-    }
-    }
-  }
-  
   return RValue::get(Value);
 }
 
@@ -735,12 +665,12 @@ CodeGenFunction::ComplexPairTy CodeGenFunction::
 EmitComplexPrePostIncDec(const UnaryOperator *E, LValue LV,
                          bool isInc, bool isPre) {
   ComplexPairTy InVal = EmitLoadOfComplex(LV);
-  
+
   llvm::Value *NextVal;
   if (isa<llvm::IntegerType>(InVal.first->getType())) {
     uint64_t AmountVal = isInc ? 1 : -1;
     NextVal = llvm::ConstantInt::get(InVal.first->getType(), AmountVal, true);
-    
+
     // Add the inc/dec to the real part.
     NextVal = Builder.CreateAdd(InVal.first, NextVal, isInc ? "inc" : "dec");
   } else {
@@ -749,16 +679,16 @@ EmitComplexPrePostIncDec(const UnaryOperator *E, LValue LV,
     if (!isInc)
       FVal.changeSign();
     NextVal = llvm::ConstantFP::get(getLLVMContext(), FVal);
-    
+
     // Add the inc/dec to the real part.
     NextVal = Builder.CreateFAdd(InVal.first, NextVal, isInc ? "inc" : "dec");
   }
-  
+
   ComplexPairTy IncVal(NextVal, InVal.second);
-  
+
   // Store the updated result through the lvalue.
   EmitStoreOfComplex(IncVal, LV, /*init*/ false);
-  
+
   // If this is a postinc, return the value read from memory, otherwise use the
   // updated value.
   return isPre ? IncVal : InVal;
@@ -780,7 +710,7 @@ RValue CodeGenFunction::GetUndefRValue(QualType Ty) {
     llvm::Value *U = llvm::UndefValue::get(EltTy);
     return RValue::getComplex(std::make_pair(U, U));
   }
-  
+
   // If this is a use of an undefined aggregate type, the aggregate must have an
   // identifiable address.  Just because the contents of the value are undefined
   // doesn't mean that the address can't be taken and compared.
@@ -892,10 +822,12 @@ LValue CodeGenFunction::EmitLValue(const Expr *E) {
     return EmitLValue(cleanups->getSubExpr());
   }
 
-  case Expr::CXXScalarValueInitExprClass:
-    return EmitNullInitializationLValue(cast<CXXScalarValueInitExpr>(E));
   case Expr::CXXDefaultArgExprClass:
     return EmitLValue(cast<CXXDefaultArgExpr>(E)->getExpr());
+  case Expr::CXXDefaultInitExprClass: {
+    CXXDefaultInitExprScope Scope(*this);
+    return EmitLValue(cast<CXXDefaultInitExpr>(E)->getExpr());
+  }
   case Expr::CXXTypeidExprClass:
     return EmitCXXTypeidLValue(cast<CXXTypeidExpr>(E));
 
@@ -920,7 +852,7 @@ LValue CodeGenFunction::EmitLValue(const Expr *E) {
   case Expr::BinaryConditionalOperatorClass:
     return EmitConditionalOperatorLValue(cast<BinaryConditionalOperator>(E));
   case Expr::ChooseExprClass:
-    return EmitLValue(cast<ChooseExpr>(E)->getChosenSubExpr(getContext()));
+    return EmitLValue(cast<ChooseExpr>(E)->getChosenSubExpr());
   case Expr::OpaqueValueExprClass:
     return EmitOpaqueValueLValue(cast<OpaqueValueExpr>(E));
   case Expr::SubstNonTypeTemplateParmExprClass:
@@ -1036,7 +968,7 @@ CodeGenFunction::tryEmitAsConstant(DeclRefExpr *refExpr) {
   llvm::Constant *C = CGM.EmitConstantValue(result.Val, resultType, this);
 
   // Make sure we emit a debug reference to the global variable.
-  // This should probably fire even for 
+  // This should probably fire even for
   if (isa<VarDecl>(value)) {
     if (!getContext().DeclMustBeEmitted(cast<VarDecl>(value)))
       EmitDeclRefExprDbgValue(refExpr, C);
@@ -1126,12 +1058,12 @@ llvm::Value *CodeGenFunction::EmitLoadOfScalar(llvm::Value *Addr, bool Volatile,
     llvm::Value *V;
     const llvm::Type *EltTy =
     cast<llvm::PointerType>(Addr->getType())->getElementType();
-    
+
     const llvm::VectorType *VTy = cast<llvm::VectorType>(EltTy);
-      
+
     // Handle vectors of size 3, like size 4 for better performance.
     if (VTy->getNumElements() == 3) {
-        
+
       // Bitcast to vec4 type.
       llvm::VectorType *vec4Ty = llvm::VectorType::get(VTy->getElementType(),
                                                          4);
@@ -1166,7 +1098,7 @@ llvm::Value *CodeGenFunction::EmitLoadOfScalar(llvm::Value *Addr, bool Volatile,
                                      getContext(), TBAAInfo);
     return EmitAtomicLoad(lvalue).getScalarVal();
   }
-  
+
   llvm::LoadInst *Load = Builder.CreateLoad(Addr);
   if (Volatile)
     Load->setVolatile(true);
@@ -1175,7 +1107,7 @@ llvm::Value *CodeGenFunction::EmitLoadOfScalar(llvm::Value *Addr, bool Volatile,
   if (TBAAInfo) {
     llvm::MDNode *TBAAPath = CGM.getTBAAStructTagInfo(TBAABaseType, TBAAInfo,
                                                       TBAAOffset);
-    CGM.DecorateInstruction(Load, TBAAPath);
+    CGM.DecorateInstruction(Load, TBAAPath, false/*ConvertTypeToTag*/);
   }
 
   if ((SanOpts->Bool && hasBooleanRepresentation(Ty)) ||
@@ -1236,7 +1168,7 @@ void CodeGenFunction::EmitStoreOfScalar(llvm::Value *Value, llvm::Value *Addr,
                                         llvm::MDNode *TBAAInfo,
                                         bool isInit, QualType TBAABaseType,
                                         uint64_t TBAAOffset) {
-  
+
   // Handle vectors differently to get better performance.
   if (Ty->isVectorType()) {
     llvm::Type *SrcTy = Value->getType();
@@ -1244,7 +1176,7 @@ void CodeGenFunction::EmitStoreOfScalar(llvm::Value *Value, llvm::Value *Addr,
     // Handle vec3 special.
     if (VecTy->getNumElements() == 3) {
       llvm::LLVMContext &VMContext = getLLVMContext();
-      
+
       // Our source is a vec3, do a shuffle vector to make it a vec4.
       SmallVector<llvm::Constant*, 4> Mask;
       Mask.push_back(llvm::ConstantInt::get(
@@ -1257,7 +1189,7 @@ void CodeGenFunction::EmitStoreOfScalar(llvm::Value *Value, llvm::Value *Addr,
                                             llvm::Type::getInt32Ty(VMContext),
                                             2));
       Mask.push_back(llvm::UndefValue::get(llvm::Type::getInt32Ty(VMContext)));
-      
+
       llvm::Value *MaskV = llvm::ConstantVector::get(Mask);
       Value = Builder.CreateShuffleVector(Value,
                                           llvm::UndefValue::get(VecTy),
@@ -1271,7 +1203,7 @@ void CodeGenFunction::EmitStoreOfScalar(llvm::Value *Value, llvm::Value *Addr,
       Addr = Builder.CreateBitCast(Addr, MemTy, "storetmp");
     }
   }
-  
+
   Value = EmitToMemory(Value, Ty);
 
   if (Ty->isAtomicType()) {
@@ -1289,7 +1221,7 @@ void CodeGenFunction::EmitStoreOfScalar(llvm::Value *Value, llvm::Value *Addr,
   if (TBAAInfo) {
     llvm::MDNode *TBAAPath = CGM.getTBAAStructTagInfo(TBAABaseType, TBAAInfo,
                                                       TBAAOffset);
-    CGM.DecorateInstruction(Store, TBAAPath);
+    CGM.DecorateInstruction(Store, TBAAPath, false/*ConvertTypeToTag*/);
   }
 }
 
@@ -1478,7 +1410,7 @@ void CodeGenFunction::EmitStoreThroughLValue(RValue Src, LValue Dst, bool isInit
       llvm::Value *RHS = EmitScalarExpr(Dst.getBaseIvarExp());
       llvm::Value *dst = RHS;
       RHS = Builder.CreatePtrToInt(RHS, ResultType, "sub.ptr.rhs.cast");
-      llvm::Value *LHS = 
+      llvm::Value *LHS =
         Builder.CreatePtrToInt(LvalueDst, ResultType, "sub.ptr.lhs.cast");
       llvm::Value *BytesBetween = Builder.CreateSub(LHS, RHS, "ivar.offset");
       CGM.getObjCRuntime().EmitObjCIvarAssign(*this, src, dst,
@@ -1643,12 +1575,12 @@ static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
                                  bool IsMemberAccess=false) {
   if (Ctx.getLangOpts().getGC() == LangOptions::NonGC)
     return;
-  
+
   if (isa<ObjCIvarRefExpr>(E)) {
     QualType ExpTy = E->getType();
     if (IsMemberAccess && ExpTy->isPointerType()) {
       // If ivar is a structure pointer, assigning to field of
-      // this struct follows gcc's behavior and makes it a non-ivar 
+      // this struct follows gcc's behavior and makes it a non-ivar
       // writer-barrier conservatively.
       ExpTy = ExpTy->getAs<PointerType>()->getPointeeType();
       if (ExpTy->isRecordType()) {
@@ -1662,23 +1594,23 @@ static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
     LV.setObjCArray(E->getType()->isArrayType());
     return;
   }
-  
+
   if (const DeclRefExpr *Exp = dyn_cast<DeclRefExpr>(E)) {
     if (const VarDecl *VD = dyn_cast<VarDecl>(Exp->getDecl())) {
       if (VD->hasGlobalStorage()) {
         LV.setGlobalObjCRef(true);
-        LV.setThreadLocalRef(VD->isThreadSpecified());
+        LV.setThreadLocalRef(VD->getTLSKind() != VarDecl::TLS_None);
       }
     }
     LV.setObjCArray(E->getType()->isArrayType());
     return;
   }
-  
+
   if (const UnaryOperator *Exp = dyn_cast<UnaryOperator>(E)) {
     setObjCGCLValueClass(Ctx, Exp->getSubExpr(), LV, IsMemberAccess);
     return;
   }
-  
+
   if (const ParenExpr *Exp = dyn_cast<ParenExpr>(E)) {
     setObjCGCLValueClass(Ctx, Exp->getSubExpr(), LV, IsMemberAccess);
     if (LV.isObjCIvar()) {
@@ -1688,7 +1620,7 @@ static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
       if (ExpTy->isPointerType())
         ExpTy = ExpTy->getAs<PointerType>()->getPointeeType();
       if (ExpTy->isRecordType())
-        LV.setObjCIvar(false); 
+        LV.setObjCIvar(false);
     }
     return;
   }
@@ -1702,7 +1634,7 @@ static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
     setObjCGCLValueClass(Ctx, Exp->getSubExpr(), LV, IsMemberAccess);
     return;
   }
-  
+
   if (const CStyleCastExpr *Exp = dyn_cast<CStyleCastExpr>(E)) {
     setObjCGCLValueClass(Ctx, Exp->getSubExpr(), LV, IsMemberAccess);
     return;
@@ -1715,12 +1647,12 @@ static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
 
   if (const ArraySubscriptExpr *Exp = dyn_cast<ArraySubscriptExpr>(E)) {
     setObjCGCLValueClass(Ctx, Exp->getBase(), LV);
-    if (LV.isObjCIvar() && !LV.isObjCArray()) 
-      // Using array syntax to assigning to what an ivar points to is not 
+    if (LV.isObjCIvar() && !LV.isObjCArray())
+      // Using array syntax to assigning to what an ivar points to is not
       // same as assigning to the ivar itself. {id *Names;} Names[i] = 0;
-      LV.setObjCIvar(false); 
+      LV.setObjCIvar(false);
     else if (LV.isGlobalObjCRef() && !LV.isObjCArray())
-      // Using array syntax to assigning to what global points to is not 
+      // Using array syntax to assigning to what global points to is not
       // same as assigning to the global itself. {id *G;} G[i] = 0;
       LV.setGlobalObjCRef(false);
     return;
@@ -1782,6 +1714,13 @@ static LValue EmitFunctionDeclLValue(CodeGenFunction &CGF,
   return CGF.MakeAddrLValue(V, E->getType(), Alignment);
 }
 
+static LValue EmitCapturedFieldLValue(CodeGenFunction &CGF, const FieldDecl *FD,
+                                      llvm::Value *ThisValue) {
+  QualType TagType = CGF.getContext().getTagDeclType(FD->getParent());
+  LValue LV = CGF.MakeNaturalAlignAddrLValue(ThisValue, TagType);
+  return CGF.EmitLValueForField(LV, FD);
+}
+
 LValue CodeGenFunction::EmitDeclRefLValue(const DeclRefExpr *E) {
   const NamedDecl *ND = E->getDecl();
   CharUnits Alignment = getContext().getDeclAlign(ND);
@@ -1817,22 +1756,27 @@ LValue CodeGenFunction::EmitDeclRefLValue(const DeclRefExpr *E) {
 
   if (const VarDecl *VD = dyn_cast<VarDecl>(ND)) {
     // Check if this is a global variable.
-    if (VD->hasLinkage() || VD->isStaticDataMember())
+    if (VD->hasLinkage() || VD->isStaticDataMember()) {
+      // If it's thread_local, emit a call to its wrapper function instead.
+      if (VD->getTLSKind() == VarDecl::TLS_Dynamic)
+        return CGM.getCXXABI().EmitThreadLocalDeclRefExpr(*this, E);
       return EmitGlobalVarDeclLValue(*this, E, VD);
+    }
 
     bool isBlockVariable = VD->hasAttr<BlocksAttr>();
 
     llvm::Value *V = LocalDeclMap.lookup(VD);
-    if (!V && VD->isStaticLocal()) 
+    if (!V && VD->isStaticLocal())
       V = CGM.getStaticLocalDeclAddress(VD);
 
     // Use special handling for lambdas.
     if (!V) {
       if (FieldDecl *FD = LambdaCaptureFields.lookup(VD)) {
-        QualType LambdaTagType = getContext().getTagDeclType(FD->getParent());
-        LValue LambdaLV = MakeNaturalAlignAddrLValue(CXXABIThisValue,
-                                                     LambdaTagType);
-        return EmitLValueForField(LambdaLV, FD);
+        return EmitCapturedFieldLValue(*this, FD, CXXABIThisValue);
+      } else if (CapturedStmtInfo) {
+        if (const FieldDecl *FD = CapturedStmtInfo->lookup(VD))
+          return EmitCapturedFieldLValue(*this, FD,
+                                         CapturedStmtInfo->getContextValue());
       }
 
       assert(isa<BlockDecl>(CurCodeDecl) && E->refersToEnclosingLocal());
@@ -1930,7 +1874,7 @@ LValue CodeGenFunction::EmitUnaryOpLValue(const UnaryOperator *E) {
   case UO_PreDec: {
     LValue LV = EmitLValue(E->getSubExpr());
     bool isInc = E->getOpcode() == UO_PreInc;
-    
+
     if (E->getType()->isAnyComplexType())
       EmitComplexPrePostIncDec(E, LV, isInc, true/*isPre*/);
     else
@@ -1994,7 +1938,7 @@ LValue CodeGenFunction::EmitPredefinedLValue(const PredefinedExpr *E) {
   case PredefinedExpr::Function:
   case PredefinedExpr::LFunction:
   case PredefinedExpr::PrettyFunction: {
-    unsigned IdentType = E->getIdentType();
+    PredefinedExpr::IdentType IdentType = E->getIdentType();
     std::string GlobalVarName;
 
     switch (IdentType) {
@@ -2018,17 +1962,28 @@ LValue CodeGenFunction::EmitPredefinedLValue(const PredefinedExpr *E) {
       FnName = FnName.substr(1);
     GlobalVarName += FnName;
 
+    // If this is outside of a function use the top level decl.
     const Decl *CurDecl = CurCodeDecl;
-    if (CurDecl == 0)
+    if (CurDecl == 0 || isa<VarDecl>(CurDecl))
       CurDecl = getContext().getTranslationUnitDecl();
 
-    std::string FunctionName =
-        (isa<BlockDecl>(CurDecl)
-         ? FnName.str()
-         : PredefinedExpr::ComputeName((PredefinedExpr::IdentType)IdentType,
-                                       CurDecl));
+    const Type *ElemType = E->getType()->getArrayElementTypeNoTypeQual();
+    std::string FunctionName;
+    if (isa<BlockDecl>(CurDecl)) {
+      // Blocks use the mangled function name.
+      // FIXME: ComputeName should handle blocks.
+      FunctionName = FnName.str();
+    } else if (isa<CapturedDecl>(CurDecl)) {
+      // For a captured statement, the function name is its enclosing
+      // function name not the one compiler generated.
+      FunctionName = PredefinedExpr::ComputeName(IdentType, CurDecl);
+    } else {
+      FunctionName = PredefinedExpr::ComputeName(IdentType, CurDecl);
+      assert(cast<ConstantArrayType>(E->getType())->getSize() - 1 ==
+                 FunctionName.size() &&
+             "Computed __func__ length differs from type!");
+    }
 
-    const Type* ElemType = E->getType()->getArrayElementTypeNoTypeQual();
     llvm::Constant *C;
     if (ElemType->isWideCharType()) {
       SmallString<32> RawChars;
@@ -2140,8 +2095,8 @@ llvm::Constant *CodeGenFunction::EmitCheckSourceLocation(SourceLocation Loc) {
     PLoc.isValid() ? cast<llvm::Constant>(
                        Builder.CreateGlobalStringPtr(PLoc.getFilename()))
                    : llvm::Constant::getNullValue(Int8PtrTy),
-    Builder.getInt32(PLoc.getLine()),
-    Builder.getInt32(PLoc.getColumn())
+    Builder.getInt32(PLoc.isValid() ? PLoc.getLine() : 0),
+    Builder.getInt32(PLoc.isValid() ? PLoc.getColumn() : 0)
   };
 
   return llvm::ConstantStruct::getAnon(Data);
@@ -2256,12 +2211,12 @@ static const Expr *isSimpleArrayDecayOperand(const Expr *E) {
   const CastExpr *CE = dyn_cast<CastExpr>(E);
   if (CE == 0 || CE->getCastKind() != CK_ArrayToPointerDecay)
     return 0;
-  
+
   // If this is a decay from variable width array, bail out.
   const Expr *SubExpr = CE->getSubExpr();
   if (SubExpr->getType()->isVariableArrayType())
     return 0;
-  
+
   return SubExpr;
 }
 
@@ -2345,7 +2300,7 @@ LValue CodeGenFunction::EmitArraySubscriptExpr(const ArraySubscriptExpr *E,
     llvm::Value *ArrayPtr = ArrayLV.getAddress();
     llvm::Value *Zero = llvm::ConstantInt::get(Int32Ty, 0);
     llvm::Value *Args[] = { Zero, Idx };
-    
+
     // Propagate the alignment from the array itself to the result.
     ArrayAlignment = ArrayLV.getAlignment();
 
@@ -2366,7 +2321,7 @@ LValue CodeGenFunction::EmitArraySubscriptExpr(const ArraySubscriptExpr *E,
   assert(!T.isNull() &&
          "CodeGenFunction::EmitArraySubscriptExpr(): Illegal base type");
 
-  
+
   // Limit the alignment to that of the result type.
   LValue LV;
   if (!ArrayAlignment.isZero()) {
@@ -2389,7 +2344,7 @@ LValue CodeGenFunction::EmitArraySubscriptExpr(const ArraySubscriptExpr *E,
 
 static
 llvm::Constant *GenerateConstantVector(CGBuilderTy &Builder,
-                                       SmallVector<unsigned, 4> &Elts) {
+                                       SmallVectorImpl<unsigned> &Elts) {
   SmallVector<llvm::Constant*, 4> CElts;
   for (unsigned i = 0, e = Elts.size(); i != e; ++i)
     CElts.push_back(Builder.getInt32(Elts[i]));
@@ -2420,7 +2375,7 @@ EmitExtVectorElementExpr(const ExtVectorElementExpr *E) {
     assert(E->getBase()->getType()->isVectorType() &&
            "Result must be a vector");
     llvm::Value *Vec = EmitScalarExpr(E->getBase());
-    
+
     // Store the vector to memory (because LValue wants an address).
     llvm::Value *VecMem = CreateMemTemp(E->getBase()->getType());
     Builder.CreateStore(Vec, VecMem);
@@ -2429,7 +2384,7 @@ EmitExtVectorElementExpr(const ExtVectorElementExpr *E) {
 
   QualType type =
     E->getType().withCVRQualifiers(Base.getQuals().getCVRQualifiers());
-  
+
   // Encode the element access list into a vector of unsigned indices.
   SmallVector<unsigned, 4> Indices;
   E->getEncodedElementAccess(Indices);
@@ -2470,7 +2425,7 @@ LValue CodeGenFunction::EmitMemberExpr(const MemberExpr *E) {
     setObjCGCLValueClass(getContext(), E, LV);
     return LV;
   }
-  
+
   if (VarDecl *VD = dyn_cast<VarDecl>(ND))
     return EmitGlobalVarDeclLValue(*this, E, VD);
 
@@ -2478,6 +2433,17 @@ LValue CodeGenFunction::EmitMemberExpr(const MemberExpr *E) {
     return EmitFunctionDeclLValue(*this, E, FD);
 
   llvm_unreachable("Unhandled member declaration!");
+}
+
+/// Given that we are currently emitting a lambda, emit an l-value for
+/// one of its members.
+LValue CodeGenFunction::EmitLValueForLambdaField(const FieldDecl *Field) {
+  assert(cast<CXXMethodDecl>(CurCodeDecl)->getParent()->isLambda());
+  assert(cast<CXXMethodDecl>(CurCodeDecl)->getParent() == Field->getParent());
+  QualType LambdaTagType =
+    getContext().getTagDeclType(Field->getParent());
+  LValue LambdaLV = MakeNaturalAlignAddrLValue(CXXABIThisValue, LambdaTagType);
+  return EmitLValueForField(LambdaLV, Field);
 }
 
 LValue CodeGenFunction::EmitLValueForField(LValue base,
@@ -2554,7 +2520,7 @@ LValue CodeGenFunction::EmitLValueForField(LValue base,
       cvr = 0; // qualifiers don't recursively apply to referencee
     }
   }
-  
+
   // Make sure that the address is pointing to the right type.  This is critical
   // for both unions and structs.  A union needs a bitcast, a struct element
   // will need a bitcast if the LLVM type laid out doesn't match the desired
@@ -2573,8 +2539,8 @@ LValue CodeGenFunction::EmitLValueForField(LValue base,
         getContext().getASTRecordLayout(field->getParent());
     // Set the base type to be the base type of the base LValue and
     // update offset to be relative to the base type.
-    LV.setTBAABaseType(base.getTBAABaseType());
-    LV.setTBAAOffset(base.getTBAAOffset() +
+    LV.setTBAABaseType(mayAlias ? getContext().CharTy : base.getTBAABaseType());
+    LV.setTBAAOffset(mayAlias ? 0 : base.getTBAAOffset() +
                      Layout.getFieldOffset(field->getFieldIndex()) /
                                            getContext().getCharWidth());
   }
@@ -2592,11 +2558,11 @@ LValue CodeGenFunction::EmitLValueForField(LValue base,
   return LV;
 }
 
-LValue 
-CodeGenFunction::EmitLValueForFieldInitialization(LValue Base, 
+LValue
+CodeGenFunction::EmitLValueForFieldInitialization(LValue Base,
                                                   const FieldDecl *Field) {
   QualType FieldType = Field->getType();
-  
+
   if (!FieldType->isReferenceType())
     return EmitLValueForField(Base, Field);
 
@@ -2631,7 +2597,7 @@ LValue CodeGenFunction::EmitCompoundLiteralLValue(const CompoundLiteralExpr *E){
   if (E->getType()->isVariablyModifiedType())
     // make sure to emit the VLA size.
     EmitVariablyModifiedType(E->getType());
-  
+
   llvm::Value *DeclPtr = CreateMemTemp(E->getType(), ".compoundliteral");
   const Expr *InitExpr = E->getInitializer();
   LValue Result = MakeAddrLValue(DeclPtr, E->getType());
@@ -2679,19 +2645,19 @@ EmitConditionalOperatorLValue(const AbstractConditionalOperator *expr) {
 
   ConditionalEvaluation eval(*this);
   EmitBranchOnBoolExpr(condExpr, lhsBlock, rhsBlock);
-    
+
   // Any temporaries created here are conditional.
   EmitBlock(lhsBlock);
   eval.begin(*this);
   LValue lhs = EmitLValue(expr->getTrueExpr());
   eval.end(*this);
-    
+
   if (!lhs.isSimple())
     return EmitUnsupportedLValue(expr, "conditional operator");
 
   lhsBlock = Builder.GetInsertBlock();
   Builder.CreateBr(contBlock);
-    
+
   // Any temporaries created here are conditional.
   EmitBlock(rhsBlock);
   eval.begin(*this);
@@ -2720,26 +2686,6 @@ EmitConditionalOperatorLValue(const AbstractConditionalOperator *expr) {
 LValue CodeGenFunction::EmitCastLValue(const CastExpr *E) {
   switch (E->getCastKind()) {
   case CK_ToVoid:
-    return EmitUnsupportedLValue(E, "unexpected cast lvalue");
-
-  case CK_Dependent:
-    llvm_unreachable("dependent cast kind in IR gen!");
-
-  case CK_BuiltinFnToFnPtr:
-    llvm_unreachable("builtin functions are handled elsewhere");
-
-  // These two casts are currently treated as no-ops, although they could
-  // potentially be real operations depending on the target's ABI.
-  case CK_NonAtomicToAtomic:
-  case CK_AtomicToNonAtomic:
-
-  case CK_NoOp:
-  case CK_LValueToRValue:
-    if (!E->getSubExpr()->Classify(getContext()).isPRValue() 
-        || E->getType()->isRecordType())
-      return EmitLValue(E->getSubExpr());
-    // Fall through to synthesize a temporary.
-
   case CK_BitCast:
   case CK_ArrayToPointerDecay:
   case CK_FunctionToPointerDecay:
@@ -2773,16 +2719,20 @@ LValue CodeGenFunction::EmitCastLValue(const CastExpr *E) {
   case CK_ARCProduceObject:
   case CK_ARCConsumeObject:
   case CK_ARCReclaimReturnedObject:
-  case CK_ARCExtendBlockObject: 
-  case CK_CopyAndAutoreleaseBlockObject: {
-    // These casts only produce lvalues when we're binding a reference to a 
-    // temporary realized from a (converted) pure rvalue. Emit the expression
-    // as a value, copy it into a temporary, and return an lvalue referring to
-    // that temporary.
-    llvm::Value *V = CreateMemTemp(E->getType(), "ref.temp");
-    EmitAnyExprToMem(E, V, E->getType().getQualifiers(), false);
-    return MakeAddrLValue(V, E->getType());
-  }
+  case CK_ARCExtendBlockObject:
+  case CK_CopyAndAutoreleaseBlockObject:
+    return EmitUnsupportedLValue(E, "unexpected cast lvalue");
+
+  case CK_Dependent:
+    llvm_unreachable("dependent cast kind in IR gen!");
+
+  case CK_BuiltinFnToFnPtr:
+    llvm_unreachable("builtin functions are handled elsewhere");
+
+  // These are never l-values; just use the aggregate emission code.
+  case CK_NonAtomicToAtomic:
+  case CK_AtomicToNonAtomic:
+    return EmitAggExprToLValue(E);
 
   case CK_Dynamic: {
     LValue LV = EmitLValue(E->getSubExpr());
@@ -2795,53 +2745,55 @@ LValue CodeGenFunction::EmitCastLValue(const CastExpr *E) {
   case CK_UserDefinedConversion:
   case CK_CPointerToObjCPointerCast:
   case CK_BlockPointerToObjCPointerCast:
+  case CK_NoOp:
+  case CK_LValueToRValue:
     return EmitLValue(E->getSubExpr());
-  
+
   case CK_UncheckedDerivedToBase:
   case CK_DerivedToBase: {
-    const RecordType *DerivedClassTy = 
+    const RecordType *DerivedClassTy =
       E->getSubExpr()->getType()->getAs<RecordType>();
-    CXXRecordDecl *DerivedClassDecl = 
+    CXXRecordDecl *DerivedClassDecl =
       cast<CXXRecordDecl>(DerivedClassTy->getDecl());
-    
+
     LValue LV = EmitLValue(E->getSubExpr());
     llvm::Value *This = LV.getAddress();
-    
+
     // Perform the derived-to-base conversion
-    llvm::Value *Base = 
-      GetAddressOfBaseClass(This, DerivedClassDecl, 
+    llvm::Value *Base =
+      GetAddressOfBaseClass(This, DerivedClassDecl,
                             E->path_begin(), E->path_end(),
                             /*NullCheckValue=*/false);
-    
+
     return MakeAddrLValue(Base, E->getType());
   }
   case CK_ToUnion:
     return EmitAggExprToLValue(E);
   case CK_BaseToDerived: {
     const RecordType *DerivedClassTy = E->getType()->getAs<RecordType>();
-    CXXRecordDecl *DerivedClassDecl = 
+    CXXRecordDecl *DerivedClassDecl =
       cast<CXXRecordDecl>(DerivedClassTy->getDecl());
-    
+
     LValue LV = EmitLValue(E->getSubExpr());
+
+    // Perform the base-to-derived conversion
+    llvm::Value *Derived =
+      GetAddressOfDerivedClass(LV.getAddress(), DerivedClassDecl,
+                               E->path_begin(), E->path_end(),
+                               /*NullCheckValue=*/false);
 
     // C++11 [expr.static.cast]p2: Behavior is undefined if a downcast is
     // performed and the object is not of the derived type.
     if (SanitizePerformTypeCheck)
       EmitTypeCheck(TCK_DowncastReference, E->getExprLoc(),
-                    LV.getAddress(), E->getType());
+                    Derived, E->getType());
 
-    // Perform the base-to-derived conversion
-    llvm::Value *Derived = 
-      GetAddressOfDerivedClass(LV.getAddress(), DerivedClassDecl, 
-                               E->path_begin(), E->path_end(),
-                               /*NullCheckValue=*/false);
-    
     return MakeAddrLValue(Derived, E->getType());
   }
   case CK_LValueBitCast: {
     // This must be a reinterpret_cast (or c-style equivalent).
     const ExplicitCastExpr *CE = cast<ExplicitCastExpr>(E);
-    
+
     LValue LV = EmitLValue(E->getSubExpr());
     llvm::Value *V = Builder.CreateBitCast(LV.getAddress(),
                                            ConvertType(CE->getTypeAsWritten()));
@@ -2850,34 +2802,20 @@ LValue CodeGenFunction::EmitCastLValue(const CastExpr *E) {
   case CK_ObjCObjectLValueCast: {
     LValue LV = EmitLValue(E->getSubExpr());
     QualType ToType = getContext().getLValueReferenceType(E->getType());
-    llvm::Value *V = Builder.CreateBitCast(LV.getAddress(), 
+    llvm::Value *V = Builder.CreateBitCast(LV.getAddress(),
                                            ConvertType(ToType));
     return MakeAddrLValue(V, E->getType());
   }
   case CK_ZeroToOCLEvent:
     llvm_unreachable("NULL to OpenCL event lvalue cast is not valid");
   }
-  
-  llvm_unreachable("Unhandled lvalue cast kind?");
-}
 
-LValue CodeGenFunction::EmitNullInitializationLValue(
-                                              const CXXScalarValueInitExpr *E) {
-  QualType Ty = E->getType();
-  LValue LV = MakeAddrLValue(CreateMemTemp(Ty), Ty);
-  EmitNullInitialization(LV.getAddress(), Ty);
-  return LV;
+  llvm_unreachable("Unhandled lvalue cast kind?");
 }
 
 LValue CodeGenFunction::EmitOpaqueValueLValue(const OpaqueValueExpr *e) {
   assert(OpaqueValueMappingData::shouldBindAsLValue(e));
   return getOpaqueLValueMapping(e);
-}
-
-LValue CodeGenFunction::EmitMaterializeTemporaryExpr(
-                                           const MaterializeTemporaryExpr *E) {
-  RValue RV = EmitReferenceBindingToExpr(E, /*InitializedDecl=*/0);
-  return MakeAddrLValue(RV.getScalarVal(), E->getType());
 }
 
 RValue CodeGenFunction::EmitRValueForField(LValue LV,
@@ -2899,7 +2837,7 @@ RValue CodeGenFunction::EmitRValueForField(LValue LV,
 //                             Expression Emission
 //===--------------------------------------------------------------------===//
 
-RValue CodeGenFunction::EmitCallExpr(const CallExpr *E, 
+RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
                                      ReturnValueSlot ReturnValue) {
   if (CGDebugInfo *DI = getDebugInfo()) {
     SourceLocation Loc = E->getLocStart();
@@ -2930,7 +2868,7 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
     if (const CXXMethodDecl *MD = dyn_cast_or_null<CXXMethodDecl>(TargetDecl))
       return EmitCXXOperatorMemberCallExpr(CE, MD, ReturnValue);
 
-  if (const CXXPseudoDestructorExpr *PseudoDtor 
+  if (const CXXPseudoDestructorExpr *PseudoDtor
           = dyn_cast<CXXPseudoDestructorExpr>(E->getCallee()->IgnoreParens())) {
     QualType DestroyedType = PseudoDtor->getDestroyedType();
     if (getLangOpts().ObjCAutoRefCount &&
@@ -2943,7 +2881,7 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
       Expr *BaseExpr = PseudoDtor->getBase();
       llvm::Value *BaseValue = NULL;
       Qualifiers BaseQuals;
-      
+
       // If this is s.x, emit s as an lvalue. If it is s->x, emit s as a scalar.
       if (PseudoDtor->isArrow()) {
         BaseValue = EmitScalarExpr(BaseExpr);
@@ -2955,15 +2893,15 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
         QualType BaseTy = BaseExpr->getType();
         BaseQuals = BaseTy.getQualifiers();
       }
-          
+
       switch (PseudoDtor->getDestroyedType().getObjCLifetime()) {
       case Qualifiers::OCL_None:
       case Qualifiers::OCL_ExplicitNone:
       case Qualifiers::OCL_Autoreleasing:
         break;
-        
+
       case Qualifiers::OCL_Strong:
-        EmitARCRelease(Builder.CreateLoad(BaseValue, 
+        EmitARCRelease(Builder.CreateLoad(BaseValue,
                           PseudoDtor->getDestroyedType().isVolatileQualified()),
                        ARCPreciseLifetime);
         break;
@@ -2977,10 +2915,10 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
       //   The result shall only be used as the operand for the function call
       //   operator (), and the result of such a call has type void. The only
       //   effect is the evaluation of the postfix-expression before the dot or
-      //   arrow.      
+      //   arrow.
       EmitScalarExpr(E->getCallee());
     }
-    
+
     return RValue::get(0);
   }
 
@@ -3042,7 +2980,7 @@ LValue CodeGenFunction::EmitCallExprLValue(const CallExpr *E) {
 
   if (!RV.isScalar())
     return MakeAddrLValue(RV.getAggregateAddr(), E->getType());
-    
+
   assert(E->getCallReturnType()->isReferenceType() &&
          "Can't have a scalar return unless the return type is a "
          "reference type!");
@@ -3069,7 +3007,8 @@ CodeGenFunction::EmitCXXTypeidLValue(const CXXTypeidExpr *E) {
 }
 
 llvm::Value *CodeGenFunction::EmitCXXUuidofExpr(const CXXUuidofExpr *E) {
-  return CGM.GetAddrOfUuidDescriptor(E);
+  return Builder.CreateBitCast(CGM.GetAddrOfUuidDescriptor(E),
+                               ConvertType(E->getType())->getPointerTo());
 }
 
 LValue CodeGenFunction::EmitCXXUuidofLValue(const CXXUuidofExpr *E) {
@@ -3094,19 +3033,19 @@ CodeGenFunction::EmitLambdaLValue(const LambdaExpr *E) {
 
 LValue CodeGenFunction::EmitObjCMessageExprLValue(const ObjCMessageExpr *E) {
   RValue RV = EmitObjCMessageExpr(E);
-  
+
   if (!RV.isScalar())
     return MakeAddrLValue(RV.getAggregateAddr(), E->getType());
-  
+
   assert(E->getMethodDecl()->getResultType()->isReferenceType() &&
          "Can't have a scalar return unless the return type is a "
          "reference type!");
-  
+
   return MakeAddrLValue(RV.getScalarVal(), E->getType());
 }
 
 LValue CodeGenFunction::EmitObjCSelectorLValue(const ObjCSelectorExpr *E) {
-  llvm::Value *V = 
+  llvm::Value *V =
     CGM.getObjCRuntime().GetSelector(*this, E->getSelector(), true);
   return MakeAddrLValue(V, E->getType());
 }
@@ -3142,7 +3081,7 @@ LValue CodeGenFunction::EmitObjCIvarRefLValue(const ObjCIvarRefExpr *E) {
     BaseQuals = ObjectTy.getQualifiers();
   }
 
-  LValue LV = 
+  LValue LV =
     EmitLValueForIvar(ObjectTy, BaseValue, E->getDecl(),
                       BaseQuals.getCVRQualifiers());
   setObjCGCLValueClass(getContext(), E, LV);
@@ -3170,8 +3109,15 @@ RValue CodeGenFunction::EmitCall(QualType CalleeType, llvm::Value *Callee,
   const FunctionType *FnType
     = cast<FunctionType>(cast<PointerType>(CalleeType)->getPointeeType());
 
+  // Force column info to differentiate multiple inlined call sites on
+  // the same line, analoguous to EmitCallExpr.
+  bool ForceColumnInfo = false;
+  if (const FunctionDecl* FD = dyn_cast_or_null<const FunctionDecl>(TargetDecl))
+    ForceColumnInfo = FD->isInlineSpecified();
+
   CallArgList Args;
-  EmitCallArgs(Args, dyn_cast<FunctionProtoType>(FnType), ArgBeg, ArgEnd);
+  EmitCallArgs(Args, dyn_cast<FunctionProtoType>(FnType), ArgBeg, ArgEnd,
+               ForceColumnInfo);
 
   const CGFunctionInfo &FnInfo =
     CGM.getTypes().arrangeFreeFunctionCall(Args, FnType);

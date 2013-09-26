@@ -34,6 +34,7 @@ namespace clang {
 class DirectoryEntry;
 class FileEntry;
 class FileManager;
+class IdentifierIterator;
 
 namespace serialization {
   class ModuleFile;
@@ -145,6 +146,11 @@ public:
   /// the error code.
   static std::pair<GlobalModuleIndex *, ErrorCode>
   readIndex(StringRef Path);
+
+  /// \brief Returns an iterator for identifiers stored in the index table.
+  ///
+  /// The caller accepts ownership of the returned object.
+  IdentifierIterator *createIdentifierIterator() const;
 
   /// \brief Retrieve the set of modules that have up-to-date indexes.
   ///

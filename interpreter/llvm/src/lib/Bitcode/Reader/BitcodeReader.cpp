@@ -12,6 +12,7 @@
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/AutoUpgrade.h"
+#include "llvm/Bitcode/LLVMBitCodes.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/InlineAsm.h"
@@ -22,6 +23,7 @@
 #include "llvm/Support/DataStream.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
 enum {
@@ -405,7 +407,7 @@ Value *BitcodeReaderMDValueList::getValueFwdRef(unsigned Idx) {
   }
 
   // Create and return a placeholder, which will later be RAUW'd.
-  Value *V = MDNode::getTemporary(Context, ArrayRef<Value*>());
+  Value *V = MDNode::getTemporary(Context, None);
   MDValuePtrs[Idx] = V;
   return V;
 }
@@ -506,6 +508,128 @@ bool BitcodeReader::ParseAttributeBlock() {
   }
 }
 
+bool BitcodeReader::ParseAttrKind(uint64_t Code, Attribute::AttrKind *Kind) {
+  switch (Code) {
+  case bitc::ATTR_KIND_ALIGNMENT:
+    *Kind = Attribute::Alignment;
+    return false;
+  case bitc::ATTR_KIND_ALWAYS_INLINE:
+    *Kind = Attribute::AlwaysInline;
+    return false;
+  case bitc::ATTR_KIND_BUILTIN:
+    *Kind = Attribute::Builtin;
+    return false;
+  case bitc::ATTR_KIND_BY_VAL:
+    *Kind = Attribute::ByVal;
+    return false;
+  case bitc::ATTR_KIND_COLD:
+    *Kind = Attribute::Cold;
+    return false;
+  case bitc::ATTR_KIND_INLINE_HINT:
+    *Kind = Attribute::InlineHint;
+    return false;
+  case bitc::ATTR_KIND_IN_REG:
+    *Kind = Attribute::InReg;
+    return false;
+  case bitc::ATTR_KIND_MIN_SIZE:
+    *Kind = Attribute::MinSize;
+    return false;
+  case bitc::ATTR_KIND_NAKED:
+    *Kind = Attribute::Naked;
+    return false;
+  case bitc::ATTR_KIND_NEST:
+    *Kind = Attribute::Nest;
+    return false;
+  case bitc::ATTR_KIND_NO_ALIAS:
+    *Kind = Attribute::NoAlias;
+    return false;
+  case bitc::ATTR_KIND_NO_BUILTIN:
+    *Kind = Attribute::NoBuiltin;
+    return false;
+  case bitc::ATTR_KIND_NO_CAPTURE:
+    *Kind = Attribute::NoCapture;
+    return false;
+  case bitc::ATTR_KIND_NO_DUPLICATE:
+    *Kind = Attribute::NoDuplicate;
+    return false;
+  case bitc::ATTR_KIND_NO_IMPLICIT_FLOAT:
+    *Kind = Attribute::NoImplicitFloat;
+    return false;
+  case bitc::ATTR_KIND_NO_INLINE:
+    *Kind = Attribute::NoInline;
+    return false;
+  case bitc::ATTR_KIND_NON_LAZY_BIND:
+    *Kind = Attribute::NonLazyBind;
+    return false;
+  case bitc::ATTR_KIND_NO_RED_ZONE:
+    *Kind = Attribute::NoRedZone;
+    return false;
+  case bitc::ATTR_KIND_NO_RETURN:
+    *Kind = Attribute::NoReturn;
+    return false;
+  case bitc::ATTR_KIND_NO_UNWIND:
+    *Kind = Attribute::NoUnwind;
+    return false;
+  case bitc::ATTR_KIND_OPTIMIZE_FOR_SIZE:
+    *Kind = Attribute::OptimizeForSize;
+    return false;
+  case bitc::ATTR_KIND_OPTIMIZE_NONE:
+    *Kind = Attribute::OptimizeNone;
+    return false;
+  case bitc::ATTR_KIND_READ_NONE:
+    *Kind = Attribute::ReadNone;
+    return false;
+  case bitc::ATTR_KIND_READ_ONLY:
+    *Kind = Attribute::ReadOnly;
+    return false;
+  case bitc::ATTR_KIND_RETURNED:
+    *Kind = Attribute::Returned;
+    return false;
+  case bitc::ATTR_KIND_RETURNS_TWICE:
+    *Kind = Attribute::ReturnsTwice;
+    return false;
+  case bitc::ATTR_KIND_S_EXT:
+    *Kind = Attribute::SExt;
+    return false;
+  case bitc::ATTR_KIND_STACK_ALIGNMENT:
+    *Kind = Attribute::StackAlignment;
+    return false;
+  case bitc::ATTR_KIND_STACK_PROTECT:
+    *Kind = Attribute::StackProtect;
+    return false;
+  case bitc::ATTR_KIND_STACK_PROTECT_REQ:
+    *Kind = Attribute::StackProtectReq;
+    return false;
+  case bitc::ATTR_KIND_STACK_PROTECT_STRONG:
+    *Kind = Attribute::StackProtectStrong;
+    return false;
+  case bitc::ATTR_KIND_STRUCT_RET:
+    *Kind = Attribute::StructRet;
+    return false;
+  case bitc::ATTR_KIND_SANITIZE_ADDRESS:
+    *Kind = Attribute::SanitizeAddress;
+    return false;
+  case bitc::ATTR_KIND_SANITIZE_THREAD:
+    *Kind = Attribute::SanitizeThread;
+    return false;
+  case bitc::ATTR_KIND_SANITIZE_MEMORY:
+    *Kind = Attribute::SanitizeMemory;
+    return false;
+  case bitc::ATTR_KIND_UW_TABLE:
+    *Kind = Attribute::UWTable;
+    return false;
+  case bitc::ATTR_KIND_Z_EXT:
+    *Kind = Attribute::ZExt;
+    return false;
+  default:
+    std::string Buf;
+    raw_string_ostream fmt(Buf);
+    fmt << "Unknown attribute kind (" << Code << ")";
+    fmt.flush();
+    return Error(Buf.c_str());
+  }
+}
+
 bool BitcodeReader::ParseAttributeGroupBlock() {
   if (Stream.EnterSubBlock(bitc::PARAMATTR_GROUP_BLOCK_ID))
     return Error("Malformed block record");
@@ -545,9 +669,16 @@ bool BitcodeReader::ParseAttributeGroupBlock() {
       AttrBuilder B;
       for (unsigned i = 2, e = Record.size(); i != e; ++i) {
         if (Record[i] == 0) {        // Enum attribute
-          B.addAttribute(Attribute::AttrKind(Record[++i]));
+          Attribute::AttrKind Kind;
+          if (ParseAttrKind(Record[++i], &Kind))
+            return true;
+
+          B.addAttribute(Kind);
         } else if (Record[i] == 1) { // Align attribute
-          if (Attribute::AttrKind(Record[++i]) == Attribute::Alignment)
+          Attribute::AttrKind Kind;
+          if (ParseAttrKind(Record[++i], &Kind))
+            return true;
+          if (Kind == Attribute::Alignment)
             B.addAlignmentAttr(Record[++i]);
           else
             B.addStackAlignmentAttr(Record[++i]);
@@ -975,9 +1106,11 @@ uint64_t BitcodeReader::decodeSignRotatedValue(uint64_t V) {
 bool BitcodeReader::ResolveGlobalAndAliasInits() {
   std::vector<std::pair<GlobalVariable*, unsigned> > GlobalInitWorklist;
   std::vector<std::pair<GlobalAlias*, unsigned> > AliasInitWorklist;
+  std::vector<std::pair<Function*, unsigned> > FunctionPrefixWorklist;
 
   GlobalInitWorklist.swap(GlobalInits);
   AliasInitWorklist.swap(AliasInits);
+  FunctionPrefixWorklist.swap(FunctionPrefixes);
 
   while (!GlobalInitWorklist.empty()) {
     unsigned ValID = GlobalInitWorklist.back().second;
@@ -1005,6 +1138,20 @@ bool BitcodeReader::ResolveGlobalAndAliasInits() {
     }
     AliasInitWorklist.pop_back();
   }
+
+  while (!FunctionPrefixWorklist.empty()) {
+    unsigned ValID = FunctionPrefixWorklist.back().second;
+    if (ValID >= ValueList.size()) {
+      FunctionPrefixes.push_back(FunctionPrefixWorklist.back());
+    } else {
+      if (Constant *C = dyn_cast<Constant>(ValueList[ValID]))
+        FunctionPrefixWorklist.back().first->setPrefixData(C);
+      else
+        return Error("Function prefix is not a constant!");
+    }
+    FunctionPrefixWorklist.pop_back();
+  }
+
   return false;
 }
 
@@ -1256,14 +1403,23 @@ bool BitcodeReader::ParseConstants() {
                                            bitc::CST_CODE_CE_INBOUNDS_GEP);
       break;
     }
-    case bitc::CST_CODE_CE_SELECT:  // CE_SELECT: [opval#, opval#, opval#]
+    case bitc::CST_CODE_CE_SELECT: {  // CE_SELECT: [opval#, opval#, opval#]
       if (Record.size() < 3) return Error("Invalid CE_SELECT record");
-      V = ConstantExpr::getSelect(
-                          ValueList.getConstantFwdRef(Record[0],
-                                                      Type::getInt1Ty(Context)),
-                          ValueList.getConstantFwdRef(Record[1],CurTy),
-                          ValueList.getConstantFwdRef(Record[2],CurTy));
+
+      Type *SelectorTy = Type::getInt1Ty(Context);
+
+      // If CurTy is a vector of length n, then Record[0] must be a <n x i1>
+      // vector. Otherwise, it must be a single bit.
+      if (VectorType *VTy = dyn_cast<VectorType>(CurTy))
+        SelectorTy = VectorType::get(Type::getInt1Ty(Context),
+                                     VTy->getNumElements());
+
+      V = ConstantExpr::getSelect(ValueList.getConstantFwdRef(Record[0],
+                                                              SelectorTy),
+                                  ValueList.getConstantFwdRef(Record[1],CurTy),
+                                  ValueList.getConstantFwdRef(Record[2],CurTy));
       break;
+    }
     case bitc::CST_CODE_CE_EXTRACTELT: { // CE_EXTRACTELT: [opty, opval, opval]
       if (Record.size() < 3) return Error("Invalid CE_EXTRACTELT record");
       VectorType *OpTy =
@@ -1741,6 +1897,8 @@ bool BitcodeReader::ParseModule(bool Resume) {
       if (Record.size() > 9)
         UnnamedAddr = Record[9];
       Func->setUnnamedAddr(UnnamedAddr);
+      if (Record.size() > 10 && Record[10] != 0)
+        FunctionPrefixes.push_back(std::make_pair(Func, Record[10]-1));
       ValueList.push_back(Func);
 
       // If this is a function with a body, remember the prototype we are
@@ -2360,7 +2518,10 @@ bool BitcodeReader::ParseFunctionBody(Function *F) {
     case bitc::FUNC_CODE_INST_SWITCH: { // SWITCH: [opty, op0, op1, ...]
       // Check magic
       if ((Record[0] >> 16) == SWITCH_INST_MAGIC) {
-        // New SwitchInst format with case ranges.
+        // "New" SwitchInst format with case ranges. The changes to write this
+        // format were reverted but we still recognize bitcode that uses it.
+        // Hopefully someday we will have support for case ranges and can use
+        // this format again.
 
         Type *OpTy = getTypeByID(Record[1]);
         unsigned ValueBitWidth = cast<IntegerType>(OpTy)->getBitWidth();
@@ -2377,7 +2538,7 @@ bool BitcodeReader::ParseFunctionBody(Function *F) {
 
         unsigned CurIdx = 5;
         for (unsigned i = 0; i != NumCases; ++i) {
-          IntegersSubsetToBB CaseBuilder;
+          SmallVector<ConstantInt*, 1> CaseVals;
           unsigned NumItems = Record[CurIdx++];
           for (unsigned ci = 0; ci != NumItems; ++ci) {
             bool isSingleNumber = Record[CurIdx++];
@@ -2397,20 +2558,22 @@ bool BitcodeReader::ParseFunctionBody(Function *F) {
               APInt High =
                   ReadWideAPInt(makeArrayRef(&Record[CurIdx], ActiveWords),
                                 ValueBitWidth);
-
-              CaseBuilder.add(IntItem::fromType(OpTy, Low),
-                              IntItem::fromType(OpTy, High));
               CurIdx += ActiveWords;
+
+              // FIXME: It is not clear whether values in the range should be
+              // compared as signed or unsigned values. The partially
+              // implemented changes that used this format in the past used
+              // unsigned comparisons.
+              for ( ; Low.ule(High); ++Low)
+                CaseVals.push_back(ConstantInt::get(Context, Low));
             } else
-              CaseBuilder.add(IntItem::fromType(OpTy, Low));
+              CaseVals.push_back(ConstantInt::get(Context, Low));
           }
           BasicBlock *DestBB = getBasicBlock(Record[CurIdx++]);
-          IntegersSubset Case = CaseBuilder.getCase();
-          SI->addCase(Case, DestBB);
+          for (SmallVector<ConstantInt*, 1>::iterator cvi = CaseVals.begin(),
+                 cve = CaseVals.end(); cvi != cve; ++cvi)
+            SI->addCase(*cvi, DestBB);
         }
-        uint16_t Hash = SI->hash();
-        if (Hash != (Record[0] & 0xFFFF))
-          return Error("Invalid SWITCH record");
         I = SI;
         break;
       }
@@ -3010,7 +3173,7 @@ bool BitcodeReader::InitLazyStream() {
   Stream.init(*StreamFile);
 
   unsigned char buf[16];
-  if (Bytes->readBytes(0, 16, buf, NULL) == -1)
+  if (Bytes->readBytes(0, 16, buf) == -1)
     return Error("Bitcode stream must be at least 16 bytes in length");
 
   if (!isBitcode(buf, buf + 16))

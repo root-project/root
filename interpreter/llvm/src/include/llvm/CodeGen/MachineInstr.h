@@ -397,8 +397,8 @@ public:
     return isBranch(Type) & isBarrier(Type) & !isIndirectBranch(Type);
   }
 
-  // isPredicable - Return true if this instruction has a predicate operand that
-  // controls execution.  It may be set to 'always', or may be set to other
+  /// Return true if this instruction has a predicate operand that
+  /// controls execution.  It may be set to 'always', or may be set to other
   /// values.   There are various methods in TargetInstrInfo that can be used to
   /// control and modify the predicate in this instruction.
   bool isPredicable(QueryType Type = AllInBundle) const {
@@ -637,6 +637,13 @@ public:
   bool isEHLabel() const { return getOpcode() == TargetOpcode::EH_LABEL; }
   bool isGCLabel() const { return getOpcode() == TargetOpcode::GC_LABEL; }
   bool isDebugValue() const { return getOpcode() == TargetOpcode::DBG_VALUE; }
+  /// A DBG_VALUE is indirect iff the first operand is a register and
+  /// the second operand is an immediate.
+  bool isIndirectDebugValue() const {
+    return isDebugValue()
+      && getOperand(0).isReg()
+      && getOperand(1).isImm();
+  }
 
   bool isPHI() const { return getOpcode() == TargetOpcode::PHI; }
   bool isKill() const { return getOpcode() == TargetOpcode::KILL; }
@@ -907,11 +914,6 @@ public:
   /// the instruction's location and its intended destination.
   bool isSafeToMove(const TargetInstrInfo *TII, AliasAnalysis *AA,
                     bool &SawStore) const;
-
-  /// isSafeToReMat - Return true if it's safe to rematerialize the specified
-  /// instruction which defined the specified register instead of copying it.
-  bool isSafeToReMat(const TargetInstrInfo *TII, AliasAnalysis *AA,
-                     unsigned DstReg) const;
 
   /// hasOrderedMemoryRef - Return true if this instruction may have an ordered
   /// or volatile memory reference, or if the information describing the memory

@@ -41,6 +41,46 @@ bool MipsSEDAGToDAGISel::runOnMachineFunction(MachineFunction &MF) {
   return MipsDAGToDAGISel::runOnMachineFunction(MF);
 }
 
+void MipsSEDAGToDAGISel::addDSPCtrlRegOperands(bool IsDef, MachineInstr &MI,
+                                               MachineFunction &MF) {
+  MachineInstrBuilder MIB(MF, &MI);
+  unsigned Mask = MI.getOperand(1).getImm();
+  unsigned Flag = IsDef ? RegState::ImplicitDefine : RegState::Implicit;
+
+  if (Mask & 1)
+    MIB.addReg(Mips::DSPPos, Flag);
+
+  if (Mask & 2)
+    MIB.addReg(Mips::DSPSCount, Flag);
+
+  if (Mask & 4)
+    MIB.addReg(Mips::DSPCarry, Flag);
+
+  if (Mask & 8)
+    MIB.addReg(Mips::DSPOutFlag, Flag);
+
+  if (Mask & 16)
+    MIB.addReg(Mips::DSPCCond, Flag);
+
+  if (Mask & 32)
+    MIB.addReg(Mips::DSPEFI, Flag);
+}
+
+unsigned MipsSEDAGToDAGISel::getMSACtrlReg(const SDValue RegIdx) const {
+  switch (cast<ConstantSDNode>(RegIdx)->getZExtValue()) {
+  default:
+    llvm_unreachable("Could not map int to register");
+  case 0: return Mips::MSAIR;
+  case 1: return Mips::MSACSR;
+  case 2: return Mips::MSAAccess;
+  case 3: return Mips::MSASave;
+  case 4: return Mips::MSAModify;
+  case 5: return Mips::MSARequest;
+  case 6: return Mips::MSAMap;
+  case 7: return Mips::MSAUnmap;
+  }
+}
+
 bool MipsSEDAGToDAGISel::replaceUsesWithZeroReg(MachineRegisterInfo *MRI,
                                                 const MachineInstr& MI) {
   unsigned DstReg = 0, ZeroReg = 0;
@@ -94,9 +134,9 @@ void MipsSEDAGToDAGISel::initGlobalBaseReg(MachineFunction &MF) {
   const TargetRegisterClass *RC;
 
   if (Subtarget.isABI_N64())
-    RC = (const TargetRegisterClass*)&Mips::CPU64RegsRegClass;
+    RC = (const TargetRegisterClass*)&Mips::GPR64RegClass;
   else
-    RC = (const TargetRegisterClass*)&Mips::CPURegsRegClass;
+    RC = (const TargetRegisterClass*)&Mips::GPR32RegClass;
 
   V0 = RegInfo.createVirtualRegister(RC);
   V1 = RegInfo.createVirtualRegister(RC);
@@ -178,33 +218,18 @@ void MipsSEDAGToDAGISel::processFunctionAfterISel(MachineFunction &MF) {
 
   for (MachineFunction::iterator MFI = MF.begin(), MFE = MF.end(); MFI != MFE;
        ++MFI)
-    for (MachineBasicBlock::iterator I = MFI->begin(); I != MFI->end(); ++I)
-      replaceUsesWithZeroReg(MRI, *I);
-}
-
-/// Select multiply instructions.
-std::pair<SDNode*, SDNode*>
-MipsSEDAGToDAGISel::selectMULT(SDNode *N, unsigned Opc, DebugLoc DL, EVT Ty,
-                               bool HasLo, bool HasHi) {
-  SDNode *Lo = 0, *Hi = 0;
-  SDNode *Mul = CurDAG->getMachineNode(Opc, DL, MVT::Glue, N->getOperand(0),
-                                       N->getOperand(1));
-  SDValue InFlag = SDValue(Mul, 0);
-
-  if (HasLo) {
-    unsigned Opcode = (Ty == MVT::i32 ? Mips::MFLO : Mips::MFLO64);
-    Lo = CurDAG->getMachineNode(Opcode, DL, Ty, MVT::Glue, InFlag);
-    InFlag = SDValue(Lo, 1);
-  }
-  if (HasHi) {
-    unsigned Opcode = (Ty == MVT::i32 ? Mips::MFHI : Mips::MFHI64);
-    Hi = CurDAG->getMachineNode(Opcode, DL, Ty, InFlag);
-  }
-  return std::make_pair(Lo, Hi);
+    for (MachineBasicBlock::iterator I = MFI->begin(); I != MFI->end(); ++I) {
+      if (I->getOpcode() == Mips::RDDSP)
+        addDSPCtrlRegOperands(false, *I, MF);
+      else if (I->getOpcode() == Mips::WRDSP)
+        addDSPCtrlRegOperands(true, *I, MF);
+      else
+        replaceUsesWithZeroReg(MRI, *I);
+    }
 }
 
 SDNode *MipsSEDAGToDAGISel::selectAddESubE(unsigned MOp, SDValue InFlag,
-                                           SDValue CmpLHS, DebugLoc DL,
+                                           SDValue CmpLHS, SDLoc DL,
                                            SDNode *Node) const {
   unsigned Opc = InFlag.getOpcode(); (void)Opc;
 
@@ -216,7 +241,7 @@ SDNode *MipsSEDAGToDAGISel::selectAddESubE(unsigned MOp, SDValue InFlag,
   SDValue LHS = Node->getOperand(0), RHS = Node->getOperand(1);
   EVT VT = LHS.getValueType();
 
-  SDNode *Carry = CurDAG->getMachineNode(Mips::SLTu, DL, VT, Ops, 2);
+  SDNode *Carry = CurDAG->getMachineNode(Mips::SLTu, DL, VT, Ops);
   SDNode *AddCarry = CurDAG->getMachineNode(Mips::ADDu, DL, VT,
                                             SDValue(Carry, 0), RHS);
   return CurDAG->SelectNodeTo(Node, MOp, VT, MVT::Glue, LHS,
@@ -291,6 +316,20 @@ bool MipsSEDAGToDAGISel::selectAddrRegImm(SDValue Addr, SDValue &Base,
   return false;
 }
 
+/// ComplexPattern used on MipsInstrInfo
+/// Used on Mips Load/Store instructions
+bool MipsSEDAGToDAGISel::selectAddrRegReg(SDValue Addr, SDValue &Base,
+                                          SDValue &Offset) const {
+  // Operand is a result from an ADD.
+  if (Addr.getOpcode() == ISD::ADD) {
+    Base = Addr.getOperand(0);
+    Offset = Addr.getOperand(1);
+    return true;
+  }
+
+  return false;
+}
+
 bool MipsSEDAGToDAGISel::selectAddrDefault(SDValue Addr, SDValue &Base,
                                            SDValue &Offset) const {
   Base = Addr;
@@ -304,17 +343,187 @@ bool MipsSEDAGToDAGISel::selectIntAddr(SDValue Addr, SDValue &Base,
     selectAddrDefault(Addr, Base, Offset);
 }
 
+/// Used on microMIPS Load/Store unaligned instructions (12-bit offset)
+bool MipsSEDAGToDAGISel::selectAddrRegImm12(SDValue Addr, SDValue &Base,
+                                            SDValue &Offset) const {
+  EVT ValTy = Addr.getValueType();
+
+  // Addresses of the form FI+const or FI|const
+  if (CurDAG->isBaseWithConstantOffset(Addr)) {
+    ConstantSDNode *CN = dyn_cast<ConstantSDNode>(Addr.getOperand(1));
+    if (isInt<12>(CN->getSExtValue())) {
+
+      // If the first operand is a FI then get the TargetFI Node
+      if (FrameIndexSDNode *FIN = dyn_cast<FrameIndexSDNode>
+                                  (Addr.getOperand(0)))
+        Base = CurDAG->getTargetFrameIndex(FIN->getIndex(), ValTy);
+      else
+        Base = Addr.getOperand(0);
+
+      Offset = CurDAG->getTargetConstant(CN->getZExtValue(), ValTy);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool MipsSEDAGToDAGISel::selectIntAddrMM(SDValue Addr, SDValue &Base,
+                                         SDValue &Offset) const {
+  return selectAddrRegImm12(Addr, Base, Offset) ||
+    selectAddrDefault(Addr, Base, Offset);
+}
+
+// Select constant vector splats.
+//
+// Returns true and sets Imm if:
+// * MSA is enabled
+// * N is a ISD::BUILD_VECTOR representing a constant splat
+// * The splat value fits in a signed 32-bit value.
+//
+// That last requirement isn't strictly a requirement of the instruction set
+// but it simplifies the callers by allowing them to assume they don't have to
+// handle 64-bit values. The callers will also be placing stricter requirements
+// on the immediates so this doesn't prohibit selection of legal immediates.
+bool MipsSEDAGToDAGISel::selectVSplat(SDNode *N, APInt &Imm) const {
+  if (!Subtarget.hasMSA())
+    return false;
+
+  BuildVectorSDNode *Node = dyn_cast<BuildVectorSDNode>(N);
+
+  if (Node == NULL)
+    return false;
+
+  APInt SplatValue, SplatUndef;
+  unsigned SplatBitSize;
+  bool HasAnyUndefs;
+
+  if (!Node->isConstantSplat(SplatValue, SplatUndef, SplatBitSize,
+                             HasAnyUndefs, 8,
+                             !Subtarget.isLittle()))
+    return false;
+
+  // None of the immediate forms can handle more than 32 bits
+  if (!SplatValue.isIntN(32))
+    return false;
+
+  Imm = SplatValue;
+
+  return true;
+}
+
+// Select constant vector splats.
+//
+// In addition to the requirements of selectVSplat(), this function returns
+// true and sets Imm if:
+// * The splat value is the same width as the elements of the vector
+// * The splat value fits in an integer with the specified signed-ness and
+//   width.
+//
+// This function looks through ISD::BITCAST nodes.
+// TODO: This might not be appropriate for big-endian MSA since BITCAST is
+//       sometimes a shuffle in big-endian mode.
+//
+// It's worth noting that this function is not used as part of the selection
+// of ldi.[bhwd] since it does not permit using the wrong-typed ldi.[bhwd]
+// instruction to achieve the desired bit pattern. ldi.[bhwd] is selected in
+// MipsSEDAGToDAGISel::selectNode.
+bool MipsSEDAGToDAGISel::
+selectVSplatCommon(SDValue N, SDValue &Imm, bool Signed,
+                   unsigned ImmBitSize) const {
+  APInt ImmValue;
+  EVT EltTy = N->getValueType(0).getVectorElementType();
+
+  if (N->getOpcode() == ISD::BITCAST)
+    N = N->getOperand(0);
+
+  if (selectVSplat (N.getNode(), ImmValue) &&
+      ImmValue.getBitWidth() == EltTy.getSizeInBits()) {
+    if (( Signed && ImmValue.isSignedIntN(ImmBitSize)) ||
+        (!Signed && ImmValue.isIntN(ImmBitSize))) {
+      Imm = CurDAG->getTargetConstant(ImmValue, EltTy);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// Select constant vector splats.
+bool MipsSEDAGToDAGISel::
+selectVSplatUimm3(SDValue N, SDValue &Imm) const {
+  return selectVSplatCommon(N, Imm, false, 3);
+}
+
+// Select constant vector splats.
+bool MipsSEDAGToDAGISel::
+selectVSplatUimm4(SDValue N, SDValue &Imm) const {
+  return selectVSplatCommon(N, Imm, false, 4);
+}
+
+// Select constant vector splats.
+bool MipsSEDAGToDAGISel::
+selectVSplatUimm5(SDValue N, SDValue &Imm) const {
+  return selectVSplatCommon(N, Imm, false, 5);
+}
+
+// Select constant vector splats.
+bool MipsSEDAGToDAGISel::
+selectVSplatUimm6(SDValue N, SDValue &Imm) const {
+  return selectVSplatCommon(N, Imm, false, 6);
+}
+
+// Select constant vector splats.
+bool MipsSEDAGToDAGISel::
+selectVSplatUimm8(SDValue N, SDValue &Imm) const {
+  return selectVSplatCommon(N, Imm, false, 8);
+}
+
+// Select constant vector splats.
+bool MipsSEDAGToDAGISel::
+selectVSplatSimm5(SDValue N, SDValue &Imm) const {
+  return selectVSplatCommon(N, Imm, true, 5);
+}
+
+// Select constant vector splats whose value is a power of 2.
+//
+// In addition to the requirements of selectVSplat(), this function returns
+// true and sets Imm if:
+// * The splat value is the same width as the elements of the vector
+// * The splat value is a power of two.
+//
+// This function looks through ISD::BITCAST nodes.
+// TODO: This might not be appropriate for big-endian MSA since BITCAST is
+//       sometimes a shuffle in big-endian mode.
+bool MipsSEDAGToDAGISel::selectVSplatUimmPow2(SDValue N, SDValue &Imm) const {
+  APInt ImmValue;
+  EVT EltTy = N->getValueType(0).getVectorElementType();
+
+  if (N->getOpcode() == ISD::BITCAST)
+    N = N->getOperand(0);
+
+  if (selectVSplat (N.getNode(), ImmValue) &&
+      ImmValue.getBitWidth() == EltTy.getSizeInBits()) {
+    int32_t Log2 = ImmValue.exactLogBase2();
+
+    if (Log2 != -1) {
+      Imm = CurDAG->getTargetConstant(Log2, EltTy);
+      return true;
+    }
+  }
+
+  return false;
+}
+
 std::pair<bool, SDNode*> MipsSEDAGToDAGISel::selectNode(SDNode *Node) {
   unsigned Opcode = Node->getOpcode();
-  DebugLoc DL = Node->getDebugLoc();
+  SDLoc DL(Node);
 
   ///
   // Instruction Selection not handled by the auto-generated
   // tablegen selection should be handled here.
   ///
-  EVT NodeTy = Node->getValueType(0);
   SDNode *Result;
-  unsigned MultOpc;
 
   switch(Opcode) {
   default: break;
@@ -326,48 +535,10 @@ std::pair<bool, SDNode*> MipsSEDAGToDAGISel::selectNode(SDNode *Node) {
   }
 
   case ISD::ADDE: {
+    if (Subtarget.hasDSP()) // Select DSP instructions, ADDSC and ADDWC.
+      break;
     SDValue InFlag = Node->getOperand(2);
     Result = selectAddESubE(Mips::ADDu, InFlag, InFlag.getValue(0), DL, Node);
-    return std::make_pair(true, Result);
-  }
-
-  /// Mul with two results
-  case ISD::SMUL_LOHI:
-  case ISD::UMUL_LOHI: {
-    if (NodeTy == MVT::i32)
-      MultOpc = (Opcode == ISD::UMUL_LOHI ? Mips::MULTu : Mips::MULT);
-    else
-      MultOpc = (Opcode == ISD::UMUL_LOHI ? Mips::DMULTu : Mips::DMULT);
-
-    std::pair<SDNode*, SDNode*> LoHi = selectMULT(Node, MultOpc, DL, NodeTy,
-                                                  true, true);
-
-    if (!SDValue(Node, 0).use_empty())
-      ReplaceUses(SDValue(Node, 0), SDValue(LoHi.first, 0));
-
-    if (!SDValue(Node, 1).use_empty())
-      ReplaceUses(SDValue(Node, 1), SDValue(LoHi.second, 0));
-
-    return std::make_pair(true, (SDNode*)NULL);
-  }
-
-  /// Special Muls
-  case ISD::MUL: {
-    // Mips32 has a 32-bit three operand mul instruction.
-    if (Subtarget.hasMips32() && NodeTy == MVT::i32)
-      break;
-    MultOpc = NodeTy == MVT::i32 ? Mips::MULT : Mips::DMULT;
-    Result = selectMULT(Node, MultOpc, DL, NodeTy, true, false).first;
-    return std::make_pair(true, Result);
-  }
-  case ISD::MULHS:
-  case ISD::MULHU: {
-    if (NodeTy == MVT::i32)
-      MultOpc = (Opcode == ISD::MULHU ? Mips::MULTu : Mips::MULT);
-    else
-      MultOpc = (Opcode == ISD::MULHU ? Mips::DMULTu : Mips::DMULT);
-
-    Result = selectMULT(Node, MultOpc, DL, NodeTy, false, true).second;
     return std::make_pair(true, Result);
   }
 
@@ -404,7 +575,7 @@ std::pair<bool, SDNode*> MipsSEDAGToDAGISel::selectNode(SDNode *Node) {
       AnalyzeImm.Analyze(Imm, Size, false);
 
     MipsAnalyzeImmediate::InstSeq::const_iterator Inst = Seq.begin();
-    DebugLoc DL = CN->getDebugLoc();
+    SDLoc DL(CN);
     SDNode *RegOpnd;
     SDValue ImmOpnd = CurDAG->getTargetConstant(SignExtend64<16>(Inst->ImmOpnd),
                                                 MVT::i64);
@@ -431,24 +602,71 @@ std::pair<bool, SDNode*> MipsSEDAGToDAGISel::selectNode(SDNode *Node) {
     return std::make_pair(true, RegOpnd);
   }
 
+  case ISD::INTRINSIC_W_CHAIN: {
+    switch (cast<ConstantSDNode>(Node->getOperand(1))->getZExtValue()) {
+    default:
+      break;
+
+    case Intrinsic::mips_cfcmsa: {
+      SDValue ChainIn = Node->getOperand(0);
+      SDValue RegIdx = Node->getOperand(2);
+      SDValue Reg = CurDAG->getCopyFromReg(ChainIn, DL,
+                                           getMSACtrlReg(RegIdx), MVT::i32);
+      return std::make_pair(true, Reg.getNode());
+    }
+    }
+    break;
+  }
+
+  case ISD::INTRINSIC_WO_CHAIN: {
+    switch (cast<ConstantSDNode>(Node->getOperand(0))->getZExtValue()) {
+    default:
+      break;
+
+    case Intrinsic::mips_move_v:
+      // Like an assignment but will always produce a move.v even if
+      // unnecessary.
+      return std::make_pair(true,
+                            CurDAG->getMachineNode(Mips::MOVE_V, DL,
+                                                   Node->getValueType(0),
+                                                   Node->getOperand(1)));
+    }
+    break;
+  }
+
+  case ISD::INTRINSIC_VOID: {
+    switch (cast<ConstantSDNode>(Node->getOperand(1))->getZExtValue()) {
+    default:
+      break;
+
+    case Intrinsic::mips_ctcmsa: {
+      SDValue ChainIn = Node->getOperand(0);
+      SDValue RegIdx  = Node->getOperand(2);
+      SDValue Value   = Node->getOperand(3);
+      SDValue ChainOut = CurDAG->getCopyToReg(ChainIn, DL,
+                                              getMSACtrlReg(RegIdx), Value);
+      return std::make_pair(true, ChainOut.getNode());
+    }
+    }
+    break;
+  }
+
   case MipsISD::ThreadPointer: {
-    EVT PtrVT = TLI.getPointerTy();
-    unsigned RdhwrOpc, SrcReg, DestReg;
+    EVT PtrVT = getTargetLowering()->getPointerTy();
+    unsigned RdhwrOpc, DestReg;
 
     if (PtrVT == MVT::i32) {
       RdhwrOpc = Mips::RDHWR;
-      SrcReg = Mips::HWR29;
       DestReg = Mips::V1;
     } else {
       RdhwrOpc = Mips::RDHWR64;
-      SrcReg = Mips::HWR29_64;
       DestReg = Mips::V1_64;
     }
 
     SDNode *Rdhwr =
-      CurDAG->getMachineNode(RdhwrOpc, Node->getDebugLoc(),
+      CurDAG->getMachineNode(RdhwrOpc, SDLoc(Node),
                              Node->getValueType(0),
-                             CurDAG->getRegister(SrcReg, PtrVT));
+                             CurDAG->getRegister(Mips::HWR29, MVT::i32));
     SDValue Chain = CurDAG->getCopyToReg(CurDAG->getEntryNode(), DL, DestReg,
                                          SDValue(Rdhwr, 0));
     SDValue ResNode = CurDAG->getCopyFromReg(Chain, DL, DestReg, PtrVT);
@@ -457,17 +675,93 @@ std::pair<bool, SDNode*> MipsSEDAGToDAGISel::selectNode(SDNode *Node) {
   }
 
   case MipsISD::InsertLOHI: {
-    unsigned RCID = Subtarget.hasDSP() ? Mips::ACRegsDSPRegClassID :
-                                         Mips::ACRegsRegClassID;
+    unsigned RCID = Subtarget.hasDSP() ? Mips::ACC64DSPRegClassID :
+                                         Mips::ACC64RegClassID;
     SDValue RegClass = CurDAG->getTargetConstant(RCID, MVT::i32);
     SDValue LoIdx = CurDAG->getTargetConstant(Mips::sub_lo, MVT::i32);
     SDValue HiIdx = CurDAG->getTargetConstant(Mips::sub_hi, MVT::i32);
     const SDValue Ops[] = { RegClass, Node->getOperand(0), LoIdx,
                             Node->getOperand(1), HiIdx };
     SDNode *Res = CurDAG->getMachineNode(TargetOpcode::REG_SEQUENCE, DL,
-                                         MVT::Untyped, Ops, 5);
+                                         MVT::Untyped, Ops);
     return std::make_pair(true, Res);
   }
+
+  case ISD::BUILD_VECTOR: {
+    // Select appropriate ldi.[bhwd] instructions for constant splats of
+    // 128-bit when MSA is enabled. Fixup any register class mismatches that
+    // occur as a result.
+    //
+    // This allows the compiler to use a wider range of immediates than would
+    // otherwise be allowed. If, for example, v4i32 could only use ldi.h then
+    // it would not be possible to load { 0x01010101, 0x01010101, 0x01010101,
+    // 0x01010101 } without using a constant pool. This would be sub-optimal
+    // when // 'ldi.b wd, 1' is capable of producing that bit-pattern in the
+    // same set/ of registers. Similarly, ldi.h isn't capable of producing {
+    // 0x00000000, 0x00000001, 0x00000000, 0x00000001 } but 'ldi.d wd, 1' can.
+
+    BuildVectorSDNode *BVN = cast<BuildVectorSDNode>(Node);
+    APInt SplatValue, SplatUndef;
+    unsigned SplatBitSize;
+    bool HasAnyUndefs;
+    unsigned LdiOp;
+    EVT ResVecTy = BVN->getValueType(0);
+    EVT ViaVecTy;
+
+    if (!Subtarget.hasMSA() || !BVN->getValueType(0).is128BitVector())
+      return std::make_pair(false, (SDNode*)NULL);
+
+    if (!BVN->isConstantSplat(SplatValue, SplatUndef, SplatBitSize,
+                              HasAnyUndefs, 8,
+                              !Subtarget.isLittle()))
+      return std::make_pair(false, (SDNode*)NULL);
+
+    switch (SplatBitSize) {
+    default:
+      return std::make_pair(false, (SDNode*)NULL);
+    case 8:
+      LdiOp = Mips::LDI_B;
+      ViaVecTy = MVT::v16i8;
+      break;
+    case 16:
+      LdiOp = Mips::LDI_H;
+      ViaVecTy = MVT::v8i16;
+      break;
+    case 32:
+      LdiOp = Mips::LDI_W;
+      ViaVecTy = MVT::v4i32;
+      break;
+    case 64:
+      LdiOp = Mips::LDI_D;
+      ViaVecTy = MVT::v2i64;
+      break;
+    }
+
+    if (!SplatValue.isSignedIntN(10))
+      return std::make_pair(false, (SDNode*)NULL);
+
+    SDValue Imm = CurDAG->getTargetConstant(SplatValue,
+                                            ViaVecTy.getVectorElementType());
+
+    SDNode *Res = CurDAG->getMachineNode(LdiOp, SDLoc(Node), ViaVecTy, Imm);
+
+    if (ResVecTy != ViaVecTy) {
+      // If LdiOp is writing to a different register class to ResVecTy, then
+      // fix it up here. This COPY_TO_REGCLASS should never cause a move.v
+      // since the source and destination register sets contain the same
+      // registers.
+      const TargetLowering *TLI = getTargetLowering();
+      MVT ResVecTySimple = ResVecTy.getSimpleVT();
+      const TargetRegisterClass *RC = TLI->getRegClassFor(ResVecTySimple);
+      Res = CurDAG->getMachineNode(Mips::COPY_TO_REGCLASS, SDLoc(Node),
+                                   ResVecTy, SDValue(Res, 0),
+                                   CurDAG->getTargetConstant(RC->getID(),
+                                                             MVT::i32));
+    }
+
+    return std::make_pair(true, Res);
+  }
+
   }
 
   return std::make_pair(false, (SDNode*)NULL);

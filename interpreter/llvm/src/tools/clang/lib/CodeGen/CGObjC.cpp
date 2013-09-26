@@ -21,6 +21,7 @@
 #include "clang/AST/StmtObjC.h"
 #include "clang/Basic/Diagnostic.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/Support/CallSite.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/InlineAsm.h"
 using namespace clang;
@@ -467,8 +468,8 @@ void CodeGenFunction::StartObjCMethod(const ObjCMethodDecl *OMD,
                                       SourceLocation StartLoc) {
   FunctionArgList args;
   // Check if we should generate debug info for this method.
-  if (!OMD->hasAttr<NoDebugAttr>())
-    maybeInitializeDebugInfo();
+  if (OMD->hasAttr<NoDebugAttr>())
+    DebugInfo = NULL; // disable debug info indefinitely for this function
 
   llvm::Function *Fn = CGM.getObjCRuntime().GenerateMethod(OMD, CD);
 
@@ -713,7 +714,7 @@ PropertyImplStrategy::PropertyImplStrategy(CodeGenModule &CGM,
   }
 
   llvm::Triple::ArchType arch =
-    CGM.getContext().getTargetInfo().getTriple().getArch();
+    CGM.getTarget().getTriple().getArch();
 
   // Most architectures require memory to fit within a single cache
   // line, so the alignment has to be at least the size of the access.
@@ -1400,8 +1401,10 @@ bool CodeGenFunction::IvarTypeWithAggrGCObjects(QualType Ty) {
 }
 
 llvm::Value *CodeGenFunction::LoadObjCSelf() {
-  const ObjCMethodDecl *OMD = cast<ObjCMethodDecl>(CurFuncDecl);
-  return Builder.CreateLoad(LocalDeclMap[OMD->getSelfDecl()], "self");
+  VarDecl *Self = cast<ObjCMethodDecl>(CurFuncDecl)->getSelfDecl();
+  DeclRefExpr DRE(Self, /*is enclosing local*/ (CurFuncDecl != CurCodeDecl),
+                  Self->getType(), VK_LValue, SourceLocation());
+  return EmitLoadOfScalar(EmitDeclRefLValue(&DRE));
 }
 
 QualType CodeGenFunction::TypeOfSelfObject() {
@@ -2256,7 +2259,8 @@ void CodeGenFunction::EmitObjCAutoreleasePoolPop(llvm::Value *value) {
     fn = createARCRuntimeFunction(CGM, fnType, "objc_autoreleasePoolPop");
   }
 
-  EmitNounwindRuntimeCall(fn, value);
+  // objc_autoreleasePoolPop can throw.
+  EmitRuntimeCallOrInvoke(fn, value);
 }
 
 /// Produce the code to do an MRR version objc_autoreleasepool_push.
@@ -2901,9 +2905,6 @@ CodeGenFunction::GenerateObjCAtomicSetterCopyHelperFunction(
                            "__assign_helper_atomic_property_",
                            &CGM.getModule());
   
-  // Initialize debug info if needed.
-  maybeInitializeDebugInfo();
-  
   StartFunction(FD, C.VoidTy, Fn, FI, args, SourceLocation());
   
   DeclRefExpr DstExpr(&dstDecl, false, DestTy,
@@ -2983,9 +2984,6 @@ CodeGenFunction::GenerateObjCAtomicGetterCopyHelperFunction(
   llvm::Function *Fn =
   llvm::Function::Create(LTy, llvm::GlobalValue::InternalLinkage,
                          "__copy_helper_atomic_property_", &CGM.getModule());
-  
-  // Initialize debug info if needed.
-  maybeInitializeDebugInfo();
   
   StartFunction(FD, C.VoidTy, Fn, FI, args, SourceLocation());
   

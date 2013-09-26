@@ -16,6 +16,7 @@
 #include "clang/Basic/LangOptions.h"
 #include "clang/Basic/TargetInfo.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
 using namespace clang;
 
 static const Builtin::Info BuiltinInfo[] = {
@@ -44,6 +45,21 @@ void Builtin::Context::InitializeTarget(const TargetInfo &Target) {
   Target.getTargetBuiltins(TSRecords, NumTSRecords);  
 }
 
+bool Builtin::Context::BuiltinIsSupported(const Builtin::Info &BuiltinInfo,
+                                          const LangOptions &LangOpts) {
+  bool BuiltinsUnsupported = LangOpts.NoBuiltin &&
+                             strchr(BuiltinInfo.Attributes, 'f');
+  bool MathBuiltinsUnsupported =
+    LangOpts.NoMathBuiltin && BuiltinInfo.HeaderName &&      
+    llvm::StringRef(BuiltinInfo.HeaderName).equals("math.h");
+  bool GnuModeUnsupported = !LangOpts.GNUMode &&
+                            (BuiltinInfo.builtin_lang & GNU_LANG);
+  bool ObjCUnsupported = !LangOpts.ObjC1 &&
+                         BuiltinInfo.builtin_lang == OBJC_LANG;
+  return !BuiltinsUnsupported && !MathBuiltinsUnsupported &&
+         !GnuModeUnsupported && !ObjCUnsupported;
+}
+
 /// InitializeBuiltins - Mark the identifiers for all the builtins with their
 /// appropriate builtin ID # and mark any non-portable builtin identifiers as
 /// such.
@@ -51,10 +67,8 @@ void Builtin::Context::InitializeBuiltins(IdentifierTable &Table,
                                           const LangOptions& LangOpts) {
   // Step #1: mark all target-independent builtins with their ID's.
   for (unsigned i = Builtin::NotBuiltin+1; i != Builtin::FirstTSBuiltin; ++i)
-    if (!LangOpts.NoBuiltin || !strchr(BuiltinInfo[i].Attributes, 'f')) {
-      if (LangOpts.ObjC1 || 
-          BuiltinInfo[i].builtin_lang != clang::OBJC_LANG)
-        Table.get(BuiltinInfo[i].Name).setBuiltinID(i);
+    if (BuiltinIsSupported(BuiltinInfo[i], LangOpts)) {
+      Table.get(BuiltinInfo[i].Name).setBuiltinID(i);
     }
 
   // Step #2: Register target-specific builtins.
@@ -64,16 +78,15 @@ void Builtin::Context::InitializeBuiltins(IdentifierTable &Table,
 }
 
 void
-Builtin::Context::GetBuiltinNames(SmallVectorImpl<const char *> &Names,
-                                  bool NoBuiltins) {
+Builtin::Context::GetBuiltinNames(SmallVectorImpl<const char *> &Names) {
   // Final all target-independent names
   for (unsigned i = Builtin::NotBuiltin+1; i != Builtin::FirstTSBuiltin; ++i)
-    if (!NoBuiltins || !strchr(BuiltinInfo[i].Attributes, 'f'))
+    if (!strchr(BuiltinInfo[i].Attributes, 'f'))
       Names.push_back(BuiltinInfo[i].Name);
 
   // Find target-specific names.
   for (unsigned i = 0, e = NumTSRecords; i != e; ++i)
-    if (!NoBuiltins || !strchr(TSRecords[i].Attributes, 'f'))
+    if (!strchr(TSRecords[i].Attributes, 'f'))
       Names.push_back(TSRecords[i].Name);
 }
 

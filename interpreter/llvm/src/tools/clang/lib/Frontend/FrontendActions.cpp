@@ -54,7 +54,8 @@ ASTConsumer *ASTPrintAction::CreateASTConsumer(CompilerInstance &CI,
 
 ASTConsumer *ASTDumpAction::CreateASTConsumer(CompilerInstance &CI,
                                               StringRef InFile) {
-  return CreateASTDumper(CI.getFrontendOpts().ASTDumpFilter);
+  return CreateASTDumper(CI.getFrontendOpts().ASTDumpFilter,
+                         CI.getFrontendOpts().ASTDumpLookups);
 }
 
 ASTConsumer *ASTDeclListAction::CreateASTConsumer(CompilerInstance &CI,
@@ -172,11 +173,12 @@ static void collectModuleHeaderIncludes(const LangOptions &LangOpts,
     return;
 
   // Add includes for each of these headers.
-  for (unsigned I = 0, N = Module->Headers.size(); I != N; ++I) {
-    const FileEntry *Header = Module->Headers[I];
+  for (unsigned I = 0, N = Module->NormalHeaders.size(); I != N; ++I) {
+    const FileEntry *Header = Module->NormalHeaders[I];
     Module->addTopHeader(Header);
     addHeaderInclude(Header, Includes, LangOpts);
   }
+  // Note that Module->PrivateHeaders will not be a TopHeader.
 
   if (const FileEntry *UmbrellaHeader = Module->getUmbrellaHeader()) {
     Module->addTopHeader(UmbrellaHeader);
@@ -231,7 +233,7 @@ bool GenerateModuleAction::BeginSourceFileAction(CompilerInstance &CI,
   
   // Parse the module map file.
   HeaderSearch &HS = CI.getPreprocessor().getHeaderSearchInfo();
-  if (HS.loadModuleMapFile(ModuleMap))
+  if (HS.loadModuleMapFile(ModuleMap, IsSystem))
     return false;
   
   if (CI.getLangOpts().CurrentModule.empty()) {

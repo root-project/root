@@ -11,6 +11,7 @@
 #define LLVM_MC_TARGETPARSER_H
 
 #include "llvm/MC/MCParser/MCAsmParserExtension.h"
+#include "llvm/MC/MCExpr.h"
 
 namespace llvm {
 class MCStreamer;
@@ -22,7 +23,8 @@ class MCInst;
 template <typename T> class SmallVectorImpl;
 
 enum AsmRewriteKind {
-  AOK_Align = 0,      // Rewrite align as .align.
+  AOK_Delete = 0,     // Rewrite should be ignored.
+  AOK_Align,          // Rewrite align as .align.
   AOK_DotOperator,    // Rewrite a dot operator expression as an immediate.
                       // E.g., [eax].foo.bar -> [eax].8
   AOK_Emit,           // Rewrite _emit as .byte.
@@ -35,15 +37,16 @@ enum AsmRewriteKind {
 };
 
 const char AsmRewritePrecedence [] = {
-  0, // AOK_Align
-  0, // AOK_DotOperator
-  0, // AOK_Emit
-  2, // AOK_Imm
-  2, // AOK_ImmPrefix
-  1, // AOK_Input
-  1, // AOK_Output
-  3, // AOK_SizeDirective
-  0  // AOK_Skip
+  0, // AOK_Delete
+  1, // AOK_Align
+  1, // AOK_DotOperator
+  1, // AOK_Emit
+  3, // AOK_Imm
+  3, // AOK_ImmPrefix
+  2, // AOK_Input
+  2, // AOK_Output
+  4, // AOK_SizeDirective
+  1  // AOK_Skip
 };
 
 struct AsmRewrite {
@@ -141,7 +144,7 @@ public:
 
   /// mnemonicIsValid - This returns true if this is a valid mnemonic and false
   /// otherwise.
-  virtual bool mnemonicIsValid(StringRef Mnemonic) = 0;
+  virtual bool mnemonicIsValid(StringRef Mnemonic, unsigned VariantID) = 0;
 
   /// MatchAndEmitInstruction - Recognize a series of operands of a parsed
   /// instruction as an actual MCInst and emit it to the specified MCStreamer.
@@ -172,6 +175,12 @@ public:
 
   virtual void convertToMapAndConstraints(unsigned Kind,
                       const SmallVectorImpl<MCParsedAsmOperand*> &Operands) = 0;
+
+  virtual const MCExpr *applyModifierToExpr(const MCExpr *E,
+                                            MCSymbolRefExpr::VariantKind,
+                                            MCContext &Ctx) {
+    return 0;
+  }
 };
 
 } // End llvm namespace

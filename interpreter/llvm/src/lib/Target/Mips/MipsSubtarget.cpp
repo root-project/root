@@ -48,6 +48,11 @@ static cl::opt<bool> Mips_Os16(
            "floating point as Mips 16"),
   cl::Hidden);
 
+static cl::opt<bool>
+Mips16HardFloat("mips16-hard-float", cl::NotHidden,
+                cl::desc("MIPS: mips16 hard float enable."),
+                cl::init(false));
+
 void MipsSubtarget::anchor() { }
 
 MipsSubtarget::MipsSubtarget(const std::string &TT, const std::string &CPU,
@@ -58,8 +63,9 @@ MipsSubtarget::MipsSubtarget(const std::string &TT, const std::string &CPU,
   IsSingleFloat(false), IsFP64bit(false), IsGP64bit(false), HasVFPU(false),
   IsLinux(true), HasSEInReg(false), HasCondMov(false), HasSwap(false),
   HasBitCount(false), HasFPIdx(false),
-  InMips16Mode(false), InMicroMipsMode(false), HasDSP(false), HasDSPR2(false),
-  AllowMixed16_32(Mixed16_32 | Mips_Os16), Os16(Mips_Os16),
+  InMips16Mode(false), InMips16HardFloat(Mips16HardFloat),
+  InMicroMipsMode(false), HasDSP(false), HasDSPR2(false),
+  AllowMixed16_32(Mixed16_32 | Mips_Os16), Os16(Mips_Os16), HasMSA(false),
   RM(_RM), OverrideMode(NoOverride), TM(_TM)
 {
   std::string CPUName = CPU;
@@ -89,6 +95,9 @@ MipsSubtarget::MipsSubtarget(const std::string &TT, const std::string &CPU,
 
   // Set UseSmallSection.
   UseSmallSection = !IsLinux && (RM == Reloc::Static);
+  // set some subtarget specific features
+  if (inMips16Mode())
+    HasBitCount=false;
 }
 
 bool
@@ -98,7 +107,7 @@ MipsSubtarget::enablePostRAScheduler(CodeGenOpt::Level OptLevel,
   Mode = TargetSubtargetInfo::ANTIDEP_NONE;
   CriticalPathRCs.clear();
   CriticalPathRCs.push_back(hasMips64() ?
-                            &Mips::CPU64RegsRegClass : &Mips::CPURegsRegClass);
+                            &Mips::GPR64RegClass : &Mips::GPR32RegClass);
   return OptLevel >= CodeGenOpt::Aggressive;
 }
 
@@ -146,3 +155,6 @@ void MipsSubtarget::resetSubtarget(MachineFunction *MF) {
   }
 }
 
+bool MipsSubtarget::mipsSEUsesSoftFloat() const {
+  return TM->Options.UseSoftFloat && !InMips16HardFloat;
+}

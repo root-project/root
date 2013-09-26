@@ -529,8 +529,16 @@ ObjCPropertyDecl *Sema::CreatePropertyDecl(Scope *S,
           if (IDecl->ClassImplementsProtocol(PNSCopying, true))
             Diag(AtLoc, diag::warn_implements_nscopying) << PropertyId;
     }
-  if (T->isObjCObjectType())
-    Diag(FD.D.getIdentifierLoc(), diag::err_statically_allocated_object);
+
+  if (T->isObjCObjectType()) {
+    SourceLocation StarLoc = TInfo->getTypeLoc().getLocEnd();
+    StarLoc = PP.getLocForEndOfToken(StarLoc);
+    Diag(FD.D.getIdentifierLoc(), diag::err_statically_allocated_object)
+      << FixItHint::CreateInsertion(StarLoc, "*");
+    T = Context.getObjCObjectPointerType(T);
+    SourceLocation TLoc = TInfo->getTypeLoc().getLocStart();
+    TInfo = Context.getTrivialTypeSourceInfo(T, TLoc);
+  }
 
   DeclContext *DC = cast<DeclContext>(CDecl);
   ObjCPropertyDecl *PDecl = ObjCPropertyDecl::Create(Context, DC,
@@ -714,6 +722,59 @@ static void setImpliedPropertyAttributeForReadOnlyProperty(
   return;
 }
 
+/// DiagnosePropertyMismatchDeclInProtocols - diagnose properties declared
+/// in inherited protocols with mismatched types. Since any of them can
+/// be candidate for synthesis.
+static void
+DiagnosePropertyMismatchDeclInProtocols(Sema &S, SourceLocation AtLoc,
+                                        ObjCInterfaceDecl *ClassDecl,
+                                        ObjCPropertyDecl *Property) {
+  ObjCInterfaceDecl::ProtocolPropertyMap PropMap;
+  for (ObjCInterfaceDecl::all_protocol_iterator
+       PI = ClassDecl->all_referenced_protocol_begin(),
+       E = ClassDecl->all_referenced_protocol_end(); PI != E; ++PI) {
+    if (const ObjCProtocolDecl *PDecl = (*PI)->getDefinition())
+      PDecl->collectInheritedProtocolProperties(Property, PropMap);
+  }
+  if (ObjCInterfaceDecl *SDecl = ClassDecl->getSuperClass())
+    while (SDecl) {
+      for (ObjCInterfaceDecl::all_protocol_iterator
+           PI = SDecl->all_referenced_protocol_begin(),
+           E = SDecl->all_referenced_protocol_end(); PI != E; ++PI) {
+        if (const ObjCProtocolDecl *PDecl = (*PI)->getDefinition())
+          PDecl->collectInheritedProtocolProperties(Property, PropMap);
+      }
+      SDecl = SDecl->getSuperClass();
+    }
+  
+  if (PropMap.empty())
+    return;
+  
+  QualType RHSType = S.Context.getCanonicalType(Property->getType());
+  bool FirsTime = true;
+  for (ObjCInterfaceDecl::ProtocolPropertyMap::iterator
+       I = PropMap.begin(), E = PropMap.end(); I != E; I++) {
+    ObjCPropertyDecl *Prop = I->second;
+    QualType LHSType = S.Context.getCanonicalType(Prop->getType());
+    if (!S.Context.propertyTypesAreCompatible(LHSType, RHSType)) {
+      bool IncompatibleObjC = false;
+      QualType ConvertedType;
+      if (!S.isObjCPointerConversion(RHSType, LHSType, ConvertedType, IncompatibleObjC)
+          || IncompatibleObjC) {
+        if (FirsTime) {
+          S.Diag(Property->getLocation(), diag::warn_protocol_property_mismatch)
+            << Property->getType();
+          FirsTime = false;
+        }
+        S.Diag(Prop->getLocation(), diag::note_protocol_property_declare)
+          << Prop->getType();
+      }
+    }
+  }
+  if (!FirsTime && AtLoc.isValid())
+    S.Diag(AtLoc, diag::note_property_synthesize);
+}
+
 /// DiagnoseClassAndClassExtPropertyMismatch - diagnose inconsistant property
 /// attribute declared in primary class and attributes overridden in any of its
 /// class extensions.
@@ -879,6 +940,8 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
         }
       }
     }
+    if (Synthesize && isa<ObjCProtocolDecl>(property->getDeclContext()))
+      DiagnosePropertyMismatchDeclInProtocols(*this, AtLoc, IDecl, property);
     
     DiagnoseClassAndClassExtPropertyMismatch(*this, IDecl, property);
         
@@ -996,8 +1059,10 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
                 PropertyIvarType->getAs<ObjCObjectPointerType>()) {
               const ObjCInterfaceDecl *ObjI = ObjT->getInterfaceDecl();
               if (ObjI && ObjI->isArcWeakrefUnavailable()) {
-                Diag(PropertyDiagLoc, diag::err_arc_weak_unavailable_property);
-                Diag(property->getLocation(), diag::note_property_declare);
+                Diag(property->getLocation(),
+                     diag::err_arc_weak_unavailable_property) << PropertyIvarType;
+                Diag(ClassImpDecl->getLocation(), diag::note_implemented_by_class)
+                  << ClassImpDecl->getName();
                 err = true;
               }
             }
@@ -1025,8 +1090,14 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
                                   PropertyIvarType, /*Dinfo=*/0,
                                   ObjCIvarDecl::Private,
                                   (Expr *)0, true);
-      if (CompleteTypeErr)
+      if (RequireNonAbstractType(PropertyIvarLoc,
+                                 PropertyIvarType,
+                                 diag::err_abstract_type_in_decl,
+                                 AbstractSynthesizedIvarType)) {
+        Diag(property->getLocation(), diag::note_property_declare);
         Ivar->setInvalidDecl();
+      } else if (CompleteTypeErr)
+          Ivar->setInvalidDecl();
       ClassImpDecl->addDecl(Ivar);
       IDecl->makeDeclVisibleInContext(Ivar);
 
@@ -1156,6 +1227,18 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
            diag::warn_property_getter_owning_mismatch);
       Diag(property->getLocation(), diag::note_property_declare);
     }
+    if (getLangOpts().ObjCAutoRefCount && Synthesize)
+      switch (getterMethod->getMethodFamily()) {
+        case OMF_retain:
+        case OMF_retainCount:
+        case OMF_release:
+        case OMF_autorelease:
+          Diag(getterMethod->getLocation(), diag::err_arc_illegal_method_def)
+            << 1 << getterMethod->getSelector();
+          break;
+        default:
+          break;
+      }
   }
   if (ObjCMethodDecl *setterMethod = property->getSetterMethodDecl()) {
     setterMethod->createImplicitParams(Context, IDecl);
@@ -1376,110 +1459,6 @@ bool Sema::DiagnosePropertyAccessorMismatch(ObjCPropertyDecl *property,
   return false;
 }
 
-/// MatchOneProtocolPropertiesInClass - This routine goes thru the list
-/// of properties declared in a protocol and compares their attribute against
-/// the same property declared in the class or category.
-void
-Sema::MatchOneProtocolPropertiesInClass(Decl *CDecl, ObjCProtocolDecl *PDecl) {
-  if (!CDecl)
-    return;
-
-  // Category case.
-  if (ObjCCategoryDecl *CatDecl = dyn_cast<ObjCCategoryDecl>(CDecl)) {
-    // FIXME: We should perform this check when the property in the category
-    // is declared.
-    assert (CatDecl && "MatchOneProtocolPropertiesInClass");
-    if (!CatDecl->IsClassExtension())
-      for (ObjCProtocolDecl::prop_iterator P = PDecl->prop_begin(),
-           E = PDecl->prop_end(); P != E; ++P) {
-        ObjCPropertyDecl *ProtoProp = *P;
-        DeclContext::lookup_result R
-          = CatDecl->lookup(ProtoProp->getDeclName());
-        for (unsigned I = 0, N = R.size(); I != N; ++I) {
-          if (ObjCPropertyDecl *CatProp = dyn_cast<ObjCPropertyDecl>(R[I])) {
-            if (CatProp != ProtoProp) {
-              // Property protocol already exist in class. Diagnose any mismatch.
-              DiagnosePropertyMismatch(CatProp, ProtoProp,
-                                       PDecl->getIdentifier());
-            }
-          }
-        }
-      }
-    return;
-  }
-
-  // Class
-  // FIXME: We should perform this check when the property in the class
-  // is declared.
-  ObjCInterfaceDecl *IDecl = cast<ObjCInterfaceDecl>(CDecl);
-  for (ObjCProtocolDecl::prop_iterator P = PDecl->prop_begin(),
-                                       E = PDecl->prop_end(); P != E; ++P) {
-    ObjCPropertyDecl *ProtoProp = *P;
-    DeclContext::lookup_result R
-      = IDecl->lookup(ProtoProp->getDeclName());
-    for (unsigned I = 0, N = R.size(); I != N; ++I) {
-      if (ObjCPropertyDecl *ClassProp = dyn_cast<ObjCPropertyDecl>(R[I])) {
-        if (ClassProp != ProtoProp) {
-          // Property protocol already exist in class. Diagnose any mismatch.
-          DiagnosePropertyMismatch(ClassProp, ProtoProp,
-                                   PDecl->getIdentifier());
-        }
-      }
-    }
-  }
-}
-
-/// isPropertyReadonly - Return true if property is readonly, by searching
-/// for the property in the class and in its categories and implementations
-///
-bool Sema::isPropertyReadonly(ObjCPropertyDecl *PDecl,
-                              ObjCInterfaceDecl *IDecl) {
-  // by far the most common case.
-  if (!PDecl->isReadOnly())
-    return false;
-  // Even if property is ready only, if interface has a user defined setter,
-  // it is not considered read only.
-  if (IDecl->getInstanceMethod(PDecl->getSetterName()))
-    return false;
-
-  // Main class has the property as 'readonly'. Must search
-  // through the category list to see if the property's
-  // attribute has been over-ridden to 'readwrite'.
-  for (ObjCInterfaceDecl::visible_categories_iterator
-         Cat = IDecl->visible_categories_begin(),
-         CatEnd = IDecl->visible_categories_end();
-       Cat != CatEnd; ++Cat) {
-    if (Cat->getInstanceMethod(PDecl->getSetterName()))
-      return false;
-    ObjCPropertyDecl *P =
-      Cat->FindPropertyDeclaration(PDecl->getIdentifier());
-    if (P && !P->isReadOnly())
-      return false;
-  }
-
-  // Also, check for definition of a setter method in the implementation if
-  // all else failed.
-  if (ObjCMethodDecl *OMD = dyn_cast<ObjCMethodDecl>(CurContext)) {
-    if (ObjCImplementationDecl *IMD =
-        dyn_cast<ObjCImplementationDecl>(OMD->getDeclContext())) {
-      if (IMD->getInstanceMethod(PDecl->getSetterName()))
-        return false;
-    } else if (ObjCCategoryImplDecl *CIMD =
-               dyn_cast<ObjCCategoryImplDecl>(OMD->getDeclContext())) {
-      if (CIMD->getInstanceMethod(PDecl->getSetterName()))
-        return false;
-    }
-  }
-  // Lastly, look through the implementation (if one is in scope).
-  if (ObjCImplementationDecl *ImpDecl = IDecl->getImplementation())
-    if (ImpDecl->getInstanceMethod(PDecl->getSetterName()))
-      return false;
-  // If all fails, look at the super class.
-  if (ObjCInterfaceDecl *SIDecl = IDecl->getSuperClass())
-    return isPropertyReadonly(PDecl, SIDecl);
-  return true;
-}
-
 /// CollectImmediateProperties - This routine collects all properties in
 /// the class and its conforming protocols; but not those in its super class.
 void Sema::CollectImmediateProperties(ObjCContainerDecl *CDecl,
@@ -1586,6 +1565,19 @@ void Sema::DefaultSynthesizeProperties(Scope *S, ObjCImplDecl* IMPDecl,
   
   for (unsigned i = 0, e = PropertyOrder.size(); i != e; i++) {
     ObjCPropertyDecl *Prop = PropertyOrder[i];
+    // Is there a matching property synthesize/dynamic?
+    if (Prop->isInvalidDecl() ||
+        Prop->getPropertyImplementation() == ObjCPropertyDecl::Optional)
+      continue;
+    // Property may have been synthesized by user.
+    if (IMPDecl->FindPropertyImplDecl(Prop->getIdentifier()))
+      continue;
+    if (IMPDecl->getInstanceMethod(Prop->getGetterName())) {
+      if (Prop->getPropertyAttributes() & ObjCPropertyDecl::OBJC_PR_readonly)
+        continue;
+      if (IMPDecl->getInstanceMethod(Prop->getSetterName()))
+        continue;
+    }
     // If property to be implemented in the super class, ignore.
     if (SuperPropMap[Prop->getIdentifier()]) {
       ObjCPropertyDecl *PropInSuperClass = SuperPropMap[Prop->getIdentifier()];
@@ -1600,28 +1592,15 @@ void Sema::DefaultSynthesizeProperties(Scope *S, ObjCImplDecl* IMPDecl,
       }
       continue;
     }
-    // Is there a matching property synthesize/dynamic?
-    if (Prop->isInvalidDecl() ||
-        Prop->getPropertyImplementation() == ObjCPropertyDecl::Optional)
-      continue;
     if (ObjCPropertyImplDecl *PID =
-          IMPDecl->FindPropertyImplIvarDecl(Prop->getIdentifier())) {
+        IMPDecl->FindPropertyImplIvarDecl(Prop->getIdentifier())) {
       if (PID->getPropertyDecl() != Prop) {
         Diag(Prop->getLocation(), diag::warn_no_autosynthesis_shared_ivar_property)
-          << Prop->getIdentifier()->getName();
+        << Prop->getIdentifier()->getName();
         if (!PID->getLocation().isInvalid())
           Diag(PID->getLocation(), diag::note_property_synthesize);
       }
       continue;
-    }
-    // Property may have been synthesized by user.
-    if (IMPDecl->FindPropertyImplDecl(Prop->getIdentifier()))
-      continue;
-    if (IMPDecl->getInstanceMethod(Prop->getGetterName())) {
-      if (Prop->getPropertyAttributes() & ObjCPropertyDecl::OBJC_PR_readonly)
-        continue;
-      if (IMPDecl->getInstanceMethod(Prop->getSetterName()))
-        continue;
     }
     if (isa<ObjCProtocolDecl>(Prop->getDeclContext())) {
       // We won't auto-synthesize properties declared in protocols.
@@ -1660,8 +1639,7 @@ void Sema::DefaultSynthesizeProperties(Scope *S, Decl *D) {
 }
 
 void Sema::DiagnoseUnimplementedProperties(Scope *S, ObjCImplDecl* IMPDecl,
-                                      ObjCContainerDecl *CDecl,
-                                      const SelectorSet &InsMap) {
+                                      ObjCContainerDecl *CDecl) {
   ObjCContainerDecl::PropertyMap NoNeedToImplPropMap;
   ObjCInterfaceDecl *IDecl;
   // Gather properties which need not be implemented in this class
@@ -1690,6 +1668,26 @@ void Sema::DiagnoseUnimplementedProperties(Scope *S, ObjCImplDecl* IMPDecl,
        EI = IMPDecl->propimpl_end(); I != EI; ++I)
     PropImplMap.insert(I->getPropertyDecl());
 
+  SelectorSet InsMap;
+  // Collect property accessors implemented in current implementation.
+  for (ObjCImplementationDecl::instmeth_iterator
+       I = IMPDecl->instmeth_begin(), E = IMPDecl->instmeth_end(); I!=E; ++I)
+    InsMap.insert((*I)->getSelector());
+  
+  ObjCCategoryDecl *C = dyn_cast<ObjCCategoryDecl>(CDecl);
+  ObjCInterfaceDecl *PrimaryClass = 0;
+  if (C && !C->IsClassExtension())
+    if ((PrimaryClass = C->getClassInterface()))
+      // Report unimplemented properties in the category as well.
+      if (ObjCImplDecl *IMP = PrimaryClass->getImplementation()) {
+        // When reporting on missing setter/getters, do not report when
+        // setter/getter is implemented in category's primary class
+        // implementation.
+        for (ObjCImplementationDecl::instmeth_iterator
+             I = IMP->instmeth_begin(), E = IMP->instmeth_end(); I!=E; ++I)
+          InsMap.insert((*I)->getSelector());
+      }
+
   for (ObjCContainerDecl::PropertyMap::iterator
        P = PropMap.begin(), E = PropMap.end(); P != E; ++P) {
     ObjCPropertyDecl *Prop = P->second;
@@ -1699,7 +1697,13 @@ void Sema::DiagnoseUnimplementedProperties(Scope *S, ObjCImplDecl* IMPDecl,
         PropImplMap.count(Prop) ||
         Prop->getAvailability() == AR_Unavailable)
       continue;
-    if (!InsMap.count(Prop->getGetterName())) {
+    // When reporting on missing property getter implementation in
+    // categories, do not report when they are declared in primary class,
+    // class's protocol, or one of it super classes. This is because,
+    // the class is going to implement them.
+    if (!InsMap.count(Prop->getGetterName()) &&
+        (PrimaryClass == 0 ||
+         !PrimaryClass->lookupPropertyAccessor(Prop->getGetterName(), C))) {
       Diag(IMPDecl->getLocation(),
            isa<ObjCCategoryDecl>(CDecl) ?
             diag::warn_setter_getter_impl_required_in_category :
@@ -1713,8 +1717,13 @@ void Sema::DiagnoseUnimplementedProperties(Scope *S, ObjCImplDecl* IMPDecl,
             Diag(RID->getLocation(), diag::note_suppressed_class_declare);
             
     }
-
-    if (!Prop->isReadOnly() && !InsMap.count(Prop->getSetterName())) {
+    // When reporting on missing property setter implementation in
+    // categories, do not report when they are declared in primary class,
+    // class's protocol, or one of it super classes. This is because,
+    // the class is going to implement them.
+    if (!Prop->isReadOnly() && !InsMap.count(Prop->getSetterName()) &&
+        (PrimaryClass == 0 ||
+         !PrimaryClass->lookupPropertyAccessor(Prop->getSetterName(), C))) {
       Diag(IMPDecl->getLocation(),
            isa<ObjCCategoryDecl>(CDecl) ?
            diag::warn_setter_getter_impl_required_in_category :
@@ -1934,6 +1943,10 @@ void Sema::ProcessPropertyDecl(ObjCPropertyDecl *property,
     if (property->hasAttr<NSReturnsNotRetainedAttr>())
       GetterMethod->addAttr(
         ::new (Context) NSReturnsNotRetainedAttr(Loc, Context));
+    
+    if (property->hasAttr<ObjCReturnsInnerPointerAttr>())
+      GetterMethod->addAttr(
+        ::new (Context) ObjCReturnsInnerPointerAttr(Loc, Context));
 
     if (getLangOpts().ObjCAutoRefCount)
       CheckARCMethodDecl(GetterMethod);
@@ -1975,8 +1988,7 @@ void Sema::ProcessPropertyDecl(ObjCPropertyDecl *property,
                                                   /*TInfo=*/0,
                                                   SC_None,
                                                   0);
-      SetterMethod->setMethodParams(Context, Argument,
-                                    ArrayRef<SourceLocation>());
+      SetterMethod->setMethodParams(Context, Argument, None);
 
       AddPropertyAttrs(*this, SetterMethod, property);
 
@@ -2120,6 +2132,8 @@ void Sema::CheckObjCPropertyAttributes(Decl *PDecl,
         << "assign" << "weak";
       Attributes &= ~ObjCDeclSpec::DQ_PR_weak;
     }
+    if (PropertyDecl->getAttr<IBOutletCollectionAttr>())
+      Diag(Loc, diag::warn_iboutletcollection_property_assign);
   } else if (Attributes & ObjCDeclSpec::DQ_PR_unsafe_unretained) {
     if (Attributes & ObjCDeclSpec::DQ_PR_copy) {
       Diag(Loc, diag::err_objc_property_attr_mutually_exclusive)

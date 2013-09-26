@@ -52,7 +52,7 @@ NumConstraints
 /// AnalysisDiagClients - Set of available diagnostic clients for rendering
 ///  analysis results.
 enum AnalysisDiagClients {
-#define ANALYSIS_DIAGNOSTICS(NAME, CMDFLAG, DESC, CREATFN, AUTOCREAT) PD_##NAME,
+#define ANALYSIS_DIAGNOSTICS(NAME, CMDFLAG, DESC, CREATFN) PD_##NAME,
 #include "clang/StaticAnalyzer/Core/Analyses.def"
 NUM_ANALYSIS_DIAG_CLIENTS
 };
@@ -201,6 +201,9 @@ private:
   /// \sa mayInlineCXXContainerCtorsAndDtors
   Optional<bool> InlineCXXContainerCtorsAndDtors;
 
+  /// \sa mayInlineCXXSharedPtrDtor
+  Optional<bool> InlineCXXSharedPtrDtor;
+
   /// \sa mayInlineObjCMethod
   Optional<bool> ObjCInliningMode;
 
@@ -223,6 +226,9 @@ private:
   /// \sa shouldSuppressFromCXXStandardLibrary
   Optional<bool> SuppressFromCXXStandardLibrary;
 
+  /// \sa reportIssuesInMainSourceFile
+  Optional<bool> ReportIssuesInMainSourceFile;
+
   /// \sa getGraphTrimInterval
   Optional<unsigned> GraphTrimInterval;
 
@@ -232,6 +238,7 @@ private:
   /// \sa getMaxNodesPerTopLevelFunction
   Optional<unsigned> MaxNodesPerTopLevelFunction;
 
+public:
   /// Interprets an option's string value as a boolean.
   ///
   /// Accepts the strings "true" and "false".
@@ -244,7 +251,6 @@ private:
   /// Interprets an option's string value as an integer value.
   int getOptionAsInteger(StringRef Name, int DefaultVal);
 
-public:
   /// \brief Retrieves and sets the UserMode. This is a high-level option,
   /// which is used to set other low-level options. It is not accessible
   /// outside of AnalyzerOptions.
@@ -291,6 +297,16 @@ public:
   /// accepts the values "true" and "false".
   bool mayInlineCXXContainerCtorsAndDtors();
 
+  /// Returns whether or not the destructor of C++ 'shared_ptr' may be
+  /// considered for inlining.
+  ///
+  /// This covers std::shared_ptr, std::tr1::shared_ptr, and boost::shared_ptr,
+  /// and indeed any destructor named "~shared_ptr".
+  ///
+  /// This is controlled by the 'c++-shared_ptr-inlining' config option, which
+  /// accepts the values "true" and "false".
+  bool mayInlineCXXSharedPtrDtor();
+
   /// Returns whether or not paths that go through null returns should be
   /// suppressed.
   ///
@@ -325,6 +341,13 @@ public:
   /// This is controlled by the 'suppress-c++-stdlib' config option,
   /// which accepts the values "true" and "false".
   bool shouldSuppressFromCXXStandardLibrary();
+
+  /// Returns whether or not the diagnostic report should be always reported
+  /// in the main source file and not the headers.
+  ///
+  /// This is controlled by the 'report-in-main-source-file' config option,
+  /// which accepts the values "true" and "false".
+  bool shouldReportIssuesInMainSourceFile();
 
   /// Returns whether irrelevant parts of a bug report path should be pruned
   /// out of the final output.

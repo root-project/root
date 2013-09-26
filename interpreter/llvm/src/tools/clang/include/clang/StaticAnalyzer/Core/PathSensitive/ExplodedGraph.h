@@ -184,7 +184,7 @@ public:
 
   bool isSink() const { return Succs.getFlag(); }
 
-   bool hasSinglePred() const {
+  bool hasSinglePred() const {
     return (pred_size() == 1);
   }
 
@@ -194,6 +194,10 @@ public:
 
   const ExplodedNode *getFirstPred() const {
     return const_cast<ExplodedNode*>(this)->getFirstPred();
+  }
+
+  const ExplodedNode *getFirstSucc() const {
+    return succ_empty() ? NULL : *(succ_begin());
   }
 
   // Iterators over successor and predecessor vertices.

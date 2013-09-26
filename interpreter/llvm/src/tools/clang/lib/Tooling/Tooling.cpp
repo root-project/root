@@ -22,6 +22,7 @@
 #include "clang/Tooling/ArgumentsAdjusters.h"
 #include "clang/Tooling/CompilationDatabase.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/Option/Option.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
@@ -57,7 +58,7 @@ static clang::driver::Driver *newDriver(clang::DiagnosticsEngine *Diagnostics,
 /// \brief Retrieves the clang CC1 specific flags out of the compilation's jobs.
 ///
 /// Returns NULL on error.
-static const clang::driver::ArgStringList *getCC1Arguments(
+static const llvm::opt::ArgStringList *getCC1Arguments(
     clang::DiagnosticsEngine *Diagnostics,
     clang::driver::Compilation *Compilation) {
   // We expect to get back exactly one Command job, if we didn't something
@@ -66,7 +67,7 @@ static const clang::driver::ArgStringList *getCC1Arguments(
   if (Jobs.size() != 1 || !isa<clang::driver::Command>(*Jobs.begin())) {
     SmallString<256> error_msg;
     llvm::raw_svector_ostream error_stream(error_msg);
-    Compilation->PrintJob(error_stream, Compilation->getJobs(), "; ", true);
+    Jobs.Print(error_stream, "; ", true);
     Diagnostics->Report(clang::diag::err_fe_expected_compiler_job)
         << error_stream.str();
     return NULL;
@@ -86,13 +87,14 @@ static const clang::driver::ArgStringList *getCC1Arguments(
 /// \brief Returns a clang build invocation initialized from the CC1 flags.
 static clang::CompilerInvocation *newInvocation(
     clang::DiagnosticsEngine *Diagnostics,
-    const clang::driver::ArgStringList &CC1Args) {
+    const llvm::opt::ArgStringList &CC1Args) {
   assert(!CC1Args.empty() && "Must at least contain the program name!");
   clang::CompilerInvocation *Invocation = new clang::CompilerInvocation;
   clang::CompilerInvocation::CreateFromArgs(
       *Invocation, CC1Args.data() + 1, CC1Args.data() + CC1Args.size(),
       *Diagnostics);
   Invocation->getFrontendOpts().DisableFree = false;
+  Invocation->getCodeGenOpts().DisableFree = false;
   return Invocation;
 }
 
@@ -122,25 +124,18 @@ bool runToolOnCodeWithArgs(clang::FrontendAction *ToolAction, const Twine &Code,
 }
 
 std::string getAbsolutePath(StringRef File) {
-  SmallString<1024> BaseDirectory;
-  if (const char *PWD = ::getenv("PWD"))
-    BaseDirectory = PWD;
-  else
-    llvm::sys::fs::current_path(BaseDirectory);
-  SmallString<1024> PathStorage;
-  if (llvm::sys::path::is_absolute(File)) {
-    llvm::sys::path::native(File, PathStorage);
-    return PathStorage.str();
-  }
   StringRef RelativePath(File);
   // FIXME: Should '.\\' be accepted on Win32?
   if (RelativePath.startswith("./")) {
     RelativePath = RelativePath.substr(strlen("./"));
   }
-  SmallString<1024> AbsolutePath(BaseDirectory);
-  llvm::sys::path::append(AbsolutePath, RelativePath);
-  llvm::sys::path::native(Twine(AbsolutePath), PathStorage);
-  return PathStorage.str();
+
+  SmallString<1024> AbsolutePath = RelativePath;
+  llvm::error_code EC = llvm::sys::fs::make_absolute(AbsolutePath);
+  assert(!EC);
+  (void)EC;
+  llvm::sys::path::native(AbsolutePath);
+  return AbsolutePath.str();
 }
 
 ToolInvocation::ToolInvocation(
@@ -173,7 +168,7 @@ bool ToolInvocation::run() {
   Driver->setCheckInputsExist(false);
   const OwningPtr<clang::driver::Compilation> Compilation(
       Driver->BuildCompilation(llvm::makeArrayRef(Argv)));
-  const clang::driver::ArgStringList *const CC1Args = getCC1Arguments(
+  const llvm::opt::ArgStringList *const CC1Args = getCC1Arguments(
       &Diagnostics, Compilation.get());
   if (CC1Args == NULL) {
     return false;
@@ -190,7 +185,7 @@ bool ToolInvocation::runInvocation(
   // Show the invocation, with -v.
   if (Invocation->getHeaderSearchOpts().Verbose) {
     llvm::errs() << "clang Invocation:\n";
-    Compilation->PrintJob(llvm::errs(), Compilation->getJobs(), "\n", true);
+    Compilation->getJobs().Print(llvm::errs(), "\n", true);
     llvm::errs() << "\n";
   }
 
@@ -236,8 +231,9 @@ void ToolInvocation::addFileMappingsTo(SourceManager &Sources) {
 
 ClangTool::ClangTool(const CompilationDatabase &Compilations,
                      ArrayRef<std::string> SourcePaths)
-    : Files((FileSystemOptions())),
-      ArgsAdjuster(new ClangSyntaxOnlyAdjuster()) {
+    : Files((FileSystemOptions())) {
+  ArgsAdjusters.push_back(new ClangStripOutputAdjuster());
+  ArgsAdjusters.push_back(new ClangSyntaxOnlyAdjuster());
   for (unsigned I = 0, E = SourcePaths.size(); I != E; ++I) {
     SmallString<1024> File(getAbsolutePath(SourcePaths[I]));
 
@@ -264,7 +260,18 @@ void ClangTool::mapVirtualFile(StringRef FilePath, StringRef Content) {
 }
 
 void ClangTool::setArgumentsAdjuster(ArgumentsAdjuster *Adjuster) {
-  ArgsAdjuster.reset(Adjuster);
+  clearArgumentsAdjusters();
+  appendArgumentsAdjuster(Adjuster);
+}
+
+void ClangTool::appendArgumentsAdjuster(ArgumentsAdjuster *Adjuster) {
+  ArgsAdjusters.push_back(Adjuster);
+}
+
+void ClangTool::clearArgumentsAdjusters() {
+  for (unsigned I = 0, E = ArgsAdjusters.size(); I != E; ++I)
+    delete ArgsAdjusters[I];
+  ArgsAdjusters.clear();
 }
 
 int ClangTool::run(FrontendActionFactory *ActionFactory) {
@@ -277,7 +284,7 @@ int ClangTool::run(FrontendActionFactory *ActionFactory) {
   // first argument, thus allowing ClangTool and runToolOnCode to just
   // pass in made-up names here. Make sure this works on other platforms.
   std::string MainExecutable =
-    llvm::sys::Path::GetMainExecutable("clang_tool", &StaticSymbol).str();
+      llvm::sys::fs::getMainExecutable("clang_tool", &StaticSymbol);
 
   bool ProcessingFailed = false;
   for (unsigned I = 0; I < CompileCommands.size(); ++I) {
@@ -292,8 +299,9 @@ int ClangTool::run(FrontendActionFactory *ActionFactory) {
     if (chdir(CompileCommands[I].second.Directory.c_str()))
       llvm::report_fatal_error("Cannot chdir into \"" +
                                CompileCommands[I].second.Directory + "\n!");
-    std::vector<std::string> CommandLine =
-      ArgsAdjuster->Adjust(CompileCommands[I].second.CommandLine);
+    std::vector<std::string> CommandLine = CompileCommands[I].second.CommandLine;
+    for (unsigned I = 0, E = ArgsAdjusters.size(); I != E; ++I)
+      CommandLine = ArgsAdjusters[I]->Adjust(CommandLine);
     assert(!CommandLine.empty());
     CommandLine[0] = MainExecutable;
     // FIXME: We need a callback mechanism for the tool writer to output a

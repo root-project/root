@@ -40,8 +40,12 @@ namespace llvm {
 
       CALL,        // A call instruction.
       RET_FLAG,    // Return with a flag operand.
-      GLOBAL_BASE_REG, // Global base reg for PIC
-      FLUSHW       // FLUSH register windows to stack
+      GLOBAL_BASE_REG, // Global base reg for PIC.
+      FLUSHW,      // FLUSH register windows to stack.
+
+      TLS_ADD,     // For Thread Local Storage (TLS).
+      TLS_LD,
+      TLS_CALL
     };
   }
 
@@ -68,28 +72,29 @@ namespace llvm {
 
     ConstraintType getConstraintType(const std::string &Constraint) const;
     std::pair<unsigned, const TargetRegisterClass*>
-    getRegForInlineAsmConstraint(const std::string &Constraint, EVT VT) const;
+    getRegForInlineAsmConstraint(const std::string &Constraint, MVT VT) const;
 
     virtual bool isOffsetFoldingLegal(const GlobalAddressSDNode *GA) const;
+    virtual MVT getScalarShiftAmountTy(EVT LHSTy) const { return MVT::i32; }
 
     virtual SDValue
       LowerFormalArguments(SDValue Chain,
                            CallingConv::ID CallConv,
                            bool isVarArg,
                            const SmallVectorImpl<ISD::InputArg> &Ins,
-                           DebugLoc dl, SelectionDAG &DAG,
+                           SDLoc dl, SelectionDAG &DAG,
                            SmallVectorImpl<SDValue> &InVals) const;
     SDValue LowerFormalArguments_32(SDValue Chain,
                                     CallingConv::ID CallConv,
                                     bool isVarArg,
                                     const SmallVectorImpl<ISD::InputArg> &Ins,
-                                    DebugLoc dl, SelectionDAG &DAG,
+                                    SDLoc dl, SelectionDAG &DAG,
                                     SmallVectorImpl<SDValue> &InVals) const;
     SDValue LowerFormalArguments_64(SDValue Chain,
                                     CallingConv::ID CallConv,
                                     bool isVarArg,
                                     const SmallVectorImpl<ISD::InputArg> &Ins,
-                                    DebugLoc dl, SelectionDAG &DAG,
+                                    SDLoc dl, SelectionDAG &DAG,
                                     SmallVectorImpl<SDValue> &InVals) const;
 
     virtual SDValue
@@ -105,22 +110,45 @@ namespace llvm {
                   CallingConv::ID CallConv, bool isVarArg,
                   const SmallVectorImpl<ISD::OutputArg> &Outs,
                   const SmallVectorImpl<SDValue> &OutVals,
-                  DebugLoc dl, SelectionDAG &DAG) const;
+                  SDLoc dl, SelectionDAG &DAG) const;
     SDValue LowerReturn_32(SDValue Chain,
                            CallingConv::ID CallConv, bool IsVarArg,
                            const SmallVectorImpl<ISD::OutputArg> &Outs,
                            const SmallVectorImpl<SDValue> &OutVals,
-                           DebugLoc DL, SelectionDAG &DAG) const;
+                           SDLoc DL, SelectionDAG &DAG) const;
     SDValue LowerReturn_64(SDValue Chain,
                            CallingConv::ID CallConv, bool IsVarArg,
                            const SmallVectorImpl<ISD::OutputArg> &Outs,
                            const SmallVectorImpl<SDValue> &OutVals,
-                           DebugLoc DL, SelectionDAG &DAG) const;
+                           SDLoc DL, SelectionDAG &DAG) const;
 
     SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerGlobalTLSAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerConstantPool(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerBlockAddress(SDValue Op, SelectionDAG &DAG) const;
 
     unsigned getSRetArgSize(SelectionDAG &DAG, SDValue Callee) const;
+    SDValue withTargetFlags(SDValue Op, unsigned TF, SelectionDAG &DAG) const;
+    SDValue makeHiLoPair(SDValue Op, unsigned HiTF, unsigned LoTF,
+                         SelectionDAG &DAG) const;
+    SDValue makeAddress(SDValue Op, SelectionDAG &DAG) const;
+
+    SDValue LowerF128_LibCallArg(SDValue Chain, ArgListTy &Args,
+                                 SDValue Arg, SDLoc DL,
+                                 SelectionDAG &DAG) const;
+    SDValue LowerF128Op(SDValue Op, SelectionDAG &DAG,
+                        const char *LibFuncName,
+                        unsigned numArgs) const;
+    SDValue LowerF128Compare(SDValue LHS, SDValue RHS,
+                             unsigned &SPCC,
+                             SDLoc DL,
+                             SelectionDAG &DAG) const;
+
+    bool ShouldShrinkFPConstant(EVT VT) const {
+      // Do not shrink FP constpool if VT == MVT::f128.
+      // (ldd, call _Q_fdtoq) is more expensive than two ldds.
+      return VT != MVT::f128;
+    }
   };
 } // end namespace llvm
 

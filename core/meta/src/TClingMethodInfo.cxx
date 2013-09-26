@@ -275,6 +275,9 @@ int TClingMethodInfo::InternalNext()
       clang::FunctionTemplateDecl *templateDecl = 
          llvm::dyn_cast<clang::FunctionTemplateDecl>(*fIter);
       if ( templateDecl ) {
+         // SpecIterator calls clang::FunctionTemplateDecl::spec_begin
+         // which calls clang::FunctionTemplateDecl::LoadLazySpecializations
+         cling::Interpreter::PushTransactionRAII RAII(fInterp);
          SpecIterator subiter(templateDecl);
          if (subiter) {
             delete fTemplateSpecIter;

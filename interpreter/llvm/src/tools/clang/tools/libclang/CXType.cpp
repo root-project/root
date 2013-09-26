@@ -85,6 +85,9 @@ static CXTypeKind GetTypeKind(QualType T) {
     TKCASE(FunctionNoProto);
     TKCASE(FunctionProto);
     TKCASE(ConstantArray);
+    TKCASE(IncompleteArray);
+    TKCASE(VariableArray);
+    TKCASE(DependentSizedArray);
     TKCASE(Vector);
     default:
       return CXType_Unexposed;
@@ -106,6 +109,11 @@ CXType cxtype::MakeCXType(QualType T, CXTranslationUnit TU) {
         TK = CXType_ObjCClass;
       else if (Ctx.isObjCSelType(UnqualT))
         TK = CXType_ObjCSel;
+    }
+
+    /* Handle decayed types as the original type */
+    if (const DecayedType *DT = T->getAs<DecayedType>()) {
+      return MakeCXType(DT->getOriginalType(), TU);
     }
   }
   if (TK == CXType_Invalid)
@@ -149,14 +157,20 @@ CXType clang_getCursorType(CXCursor C) {
       return MakeCXType(Context.getTypeDeclType(TD), TU);
     if (const ObjCInterfaceDecl *ID = dyn_cast<ObjCInterfaceDecl>(D))
       return MakeCXType(Context.getObjCInterfaceType(ID), TU);
+    if (const DeclaratorDecl *DD = dyn_cast<DeclaratorDecl>(D)) {
+      if (TypeSourceInfo *TSInfo = DD->getTypeSourceInfo())
+        return MakeCXType(TSInfo->getType(), TU);
+      return MakeCXType(DD->getType(), TU);      
+    }
     if (const ValueDecl *VD = dyn_cast<ValueDecl>(D))
       return MakeCXType(VD->getType(), TU);
     if (const ObjCPropertyDecl *PD = dyn_cast<ObjCPropertyDecl>(D))
       return MakeCXType(PD->getType(), TU);
-    if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D))
-      return MakeCXType(FD->getType(), TU);
-    if (const FunctionTemplateDecl *FTD = dyn_cast<FunctionTemplateDecl>(D))
+    if (const FunctionTemplateDecl *FTD = dyn_cast<FunctionTemplateDecl>(D)) {
+      if (TypeSourceInfo *TSInfo = FTD->getTemplatedDecl()->getTypeSourceInfo())
+        return MakeCXType(TSInfo->getType(), TU);
       return MakeCXType(FTD->getTemplatedDecl()->getType(), TU);
+    }
     return MakeCXType(QualType(), TU);
   }
   
@@ -460,6 +474,9 @@ CXString clang_getTypeKindSpelling(enum CXTypeKind K) {
     TKIND(FunctionNoProto);
     TKIND(FunctionProto);
     TKIND(ConstantArray);
+    TKIND(IncompleteArray);
+    TKIND(VariableArray);
+    TKIND(DependentSizedArray);
     TKIND(Vector);
   }
 #undef TKIND
@@ -492,12 +509,13 @@ CXCallingConv clang_getFunctionTypeCallingConv(CXType X) {
   if (const FunctionType *FD = T->getAs<FunctionType>()) {
 #define TCALLINGCONV(X) case CC_##X: return CXCallingConv_##X
     switch (FD->getCallConv()) {
-      TCALLINGCONV(Default);
       TCALLINGCONV(C);
       TCALLINGCONV(X86StdCall);
       TCALLINGCONV(X86FastCall);
       TCALLINGCONV(X86ThisCall);
       TCALLINGCONV(X86Pascal);
+      TCALLINGCONV(X86_64Win64);
+      TCALLINGCONV(X86_64SysV);
       TCALLINGCONV(AAPCS);
       TCALLINGCONV(AAPCS_VFP);
       TCALLINGCONV(PnaclCall);
@@ -584,6 +602,15 @@ CXType clang_getElementType(CXType CT) {
     case Type::ConstantArray:
       ET = cast<ConstantArrayType> (TP)->getElementType();
       break;
+    case Type::IncompleteArray:
+      ET = cast<IncompleteArrayType> (TP)->getElementType();
+      break;
+    case Type::VariableArray:
+      ET = cast<VariableArrayType> (TP)->getElementType();
+      break;
+    case Type::DependentSizedArray:
+      ET = cast<DependentSizedArrayType> (TP)->getElementType();
+      break;
     case Type::Vector:
       ET = cast<VectorType> (TP)->getElementType();
       break;
@@ -626,6 +653,15 @@ CXType clang_getArrayElementType(CXType CT) {
     switch (TP->getTypeClass()) {
     case Type::ConstantArray:
       ET = cast<ConstantArrayType> (TP)->getElementType();
+      break;
+    case Type::IncompleteArray:
+      ET = cast<IncompleteArrayType> (TP)->getElementType();
+      break;
+    case Type::VariableArray:
+      ET = cast<VariableArrayType> (TP)->getElementType();
+      break;
+    case Type::DependentSizedArray:
+      ET = cast<DependentSizedArrayType> (TP)->getElementType();
       break;
     default:
       break;
@@ -727,11 +763,13 @@ long long clang_Type_getOffsetOf(CXType PT, const char *S) {
     return CXTypeLayoutError_Invalid;
   const RecordDecl *RD =
         dyn_cast_or_null<RecordDecl>(cxcursor::getCursorDecl(PC));
-  if (!RD)
+  if (!RD || RD->isInvalidDecl())
     return CXTypeLayoutError_Invalid;
   RD = RD->getDefinition();
   if (!RD)
     return CXTypeLayoutError_Incomplete;
+  if (RD->isInvalidDecl())
+    return CXTypeLayoutError_Invalid;
   QualType RT = GetQualType(PT);
   if (RT->isIncompleteType())
     return CXTypeLayoutError_Incomplete;

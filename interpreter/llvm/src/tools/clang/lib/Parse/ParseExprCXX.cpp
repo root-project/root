@@ -195,6 +195,13 @@ bool Parser::ParseOptionalCXXScopeSpecifier(CXXScopeSpec &SS,
     return false;
   }
 
+  if (Tok.is(tok::annot_template_id)) {
+    // If the current token is an annotated template id, it may already have
+    // a scope specifier. Restore it.
+    TemplateIdAnnotation *TemplateId = takeTemplateIdAnnotation(Tok);
+    SS = TemplateId->SS;
+  }
+
   if (LastII)
     *LastII = 0;
 
@@ -465,8 +472,8 @@ bool Parser::ParseOptionalCXXScopeSpecifier(CXXScopeSpec &SS,
                                     TemplateName, false))
           return true;
         continue;
-      } 
-      
+      }
+
       if (MemberOfUnknownSpecialization && (ObjectType || SS.isSet()) && 
           (IsTypename || IsTemplateArgumentList(1))) {
         // We have something like t::getAs<T>, where getAs is a 
@@ -583,7 +590,7 @@ ExprResult Parser::ParseCXXIdExpression(bool isAddressOfOperand) {
                                    Tok.is(tok::l_paren), isAddressOfOperand);
 }
 
-/// ParseLambdaExpression - Parse a C++0x lambda expression.
+/// ParseLambdaExpression - Parse a C++11 lambda expression.
 ///
 ///       lambda-expression:
 ///         lambda-introducer lambda-declarator[opt] compound-statement
@@ -605,9 +612,17 @@ ExprResult Parser::ParseCXXIdExpression(bool isAddressOfOperand) {
 ///         capture-list ',' capture
 ///
 ///       capture:
+///         simple-capture
+///         init-capture     [C++1y]
+///
+///       simple-capture:
 ///         identifier
 ///         '&' identifier
 ///         'this'
+///
+///       init-capture:      [C++1y]
+///         identifier initializer
+///         '&' identifier initializer
 ///
 ///       lambda-declarator:
 ///         '(' parameter-declaration-clause ')' attribute-specifier[opt]
@@ -671,10 +686,17 @@ ExprResult Parser::TryParseLambdaExpression() {
   return ParseLambdaExpressionAfterIntroducer(Intro);
 }
 
-/// ParseLambdaExpression - Parse a lambda introducer.
-///
-/// Returns a DiagnosticID if it hit something unexpected.
-Optional<unsigned> Parser::ParseLambdaIntroducer(LambdaIntroducer &Intro) {
+/// \brief Parse a lambda introducer.
+/// \param Intro A LambdaIntroducer filled in with information about the
+///        contents of the lambda-introducer.
+/// \param SkippedInits If non-null, we are disambiguating between an Obj-C
+///        message send and a lambda expression. In this mode, we will
+///        sometimes skip the initializers for init-captures and not fully
+///        populate \p Intro. This flag will be set to \c true if we do so.
+/// \return A DiagnosticID if it hit something unexpected. The location for
+///         for the diagnostic is that of the current token.
+Optional<unsigned> Parser::ParseLambdaIntroducer(LambdaIntroducer &Intro,
+                                                 bool *SkippedInits) {
   typedef Optional<unsigned> DiagResult;
 
   assert(Tok.is(tok::l_square) && "Lambda expressions begin with '['.");
@@ -737,6 +759,7 @@ Optional<unsigned> Parser::ParseLambdaIntroducer(LambdaIntroducer &Intro) {
     SourceLocation Loc;
     IdentifierInfo* Id = 0;
     SourceLocation EllipsisLoc;
+    ExprResult Init;
     
     if (Tok.is(tok::kw_this)) {
       Kind = LCK_This;
@@ -757,9 +780,6 @@ Optional<unsigned> Parser::ParseLambdaIntroducer(LambdaIntroducer &Intro) {
       if (Tok.is(tok::identifier)) {
         Id = Tok.getIdentifierInfo();
         Loc = ConsumeToken();
-        
-        if (Tok.is(tok::ellipsis))
-          EllipsisLoc = ConsumeToken();
       } else if (Tok.is(tok::kw_this)) {
         // FIXME: If we want to suggest a fixit here, will need to return more
         // than just DiagnosticID. Perhaps full DiagnosticBuilder that can be
@@ -768,9 +788,81 @@ Optional<unsigned> Parser::ParseLambdaIntroducer(LambdaIntroducer &Intro) {
       } else {
         return DiagResult(diag::err_expected_capture);
       }
+
+      if (Tok.is(tok::l_paren)) {
+        BalancedDelimiterTracker Parens(*this, tok::l_paren);
+        Parens.consumeOpen();
+
+        ExprVector Exprs;
+        CommaLocsTy Commas;
+        if (SkippedInits) {
+          Parens.skipToEnd();
+          *SkippedInits = true;
+        } else if (ParseExpressionList(Exprs, Commas)) {
+          Parens.skipToEnd();
+          Init = ExprError();
+        } else {
+          Parens.consumeClose();
+          Init = Actions.ActOnParenListExpr(Parens.getOpenLocation(),
+                                            Parens.getCloseLocation(),
+                                            Exprs);
+        }
+      } else if (Tok.is(tok::l_brace) || Tok.is(tok::equal)) {
+        if (Tok.is(tok::equal))
+          ConsumeToken();
+
+        if (!SkippedInits)
+          Init = ParseInitializer();
+        else if (Tok.is(tok::l_brace)) {
+          BalancedDelimiterTracker Braces(*this, tok::l_brace);
+          Braces.consumeOpen();
+          Braces.skipToEnd();
+          *SkippedInits = true;
+        } else {
+          // We're disambiguating this:
+          //
+          //   [..., x = expr
+          //
+          // We need to find the end of the following expression in order to
+          // determine whether this is an Obj-C message send's receiver, or a
+          // lambda init-capture.
+          //
+          // Parse the expression to find where it ends, and annotate it back
+          // onto the tokens. We would have parsed this expression the same way
+          // in either case: both the RHS of an init-capture and the RHS of an
+          // assignment expression are parsed as an initializer-clause, and in
+          // neither case can anything be added to the scope between the '[' and
+          // here.
+          //
+          // FIXME: This is horrible. Adding a mechanism to skip an expression
+          // would be much cleaner.
+          // FIXME: If there is a ',' before the next ']' or ':', we can skip to
+          // that instead. (And if we see a ':' with no matching '?', we can
+          // classify this as an Obj-C message send.)
+          SourceLocation StartLoc = Tok.getLocation();
+          InMessageExpressionRAIIObject MaybeInMessageExpression(*this, true);
+          Init = ParseInitializer();
+
+          if (Tok.getLocation() != StartLoc) {
+            // Back out the lexing of the token after the initializer.
+            PP.RevertCachedTokens(1);
+
+            // Replace the consumed tokens with an appropriate annotation.
+            Tok.setLocation(StartLoc);
+            Tok.setKind(tok::annot_primary_expr);
+            setExprAnnotation(Tok, Init);
+            Tok.setAnnotationEndLoc(PP.getLastCachedTokenLocation());
+            PP.AnnotateCachedTokens(Tok);
+
+            // Consume the annotated initializer.
+            ConsumeToken();
+          }
+        }
+      } else if (Tok.is(tok::ellipsis))
+        EllipsisLoc = ConsumeToken();
     }
 
-    Intro.addCapture(Kind, Loc, Id, EllipsisLoc);
+    Intro.addCapture(Kind, Loc, Id, EllipsisLoc, Init);
   }
 
   T.consumeClose();
@@ -785,11 +877,21 @@ Optional<unsigned> Parser::ParseLambdaIntroducer(LambdaIntroducer &Intro) {
 bool Parser::TryParseLambdaIntroducer(LambdaIntroducer &Intro) {
   TentativeParsingAction PA(*this);
 
-  Optional<unsigned> DiagID(ParseLambdaIntroducer(Intro));
+  bool SkippedInits = false;
+  Optional<unsigned> DiagID(ParseLambdaIntroducer(Intro, &SkippedInits));
 
   if (DiagID) {
     PA.Revert();
     return true;
+  }
+
+  if (SkippedInits) {
+    // Parse it again, but this time parse the init-captures too.
+    PA.Revert();
+    Intro = LambdaIntroducer();
+    DiagID = ParseLambdaIntroducer(Intro);
+    assert(!DiagID && "parsing lambda-introducer failed on reparse");
+    return false;
   }
 
   PA.Commit();
@@ -805,6 +907,9 @@ ExprResult Parser::ParseLambdaExpressionAfterIntroducer(
 
   PrettyStackTraceLoc CrashInfo(PP.getSourceManager(), LambdaBeginLoc,
                                 "lambda expression parsing");
+
+  // FIXME: Call into Actions to add any init-capture declarations to the
+  // scope while parsing the lambda-declarator and compound-statement.
 
   // Parse lambda-declarator[opt].
   DeclSpec DS(AttrFactory);
@@ -1455,7 +1560,9 @@ bool Parser::ParseCXXCondition(ExprResult &ExprOut,
 
   if (!InitExpr.isInvalid())
     Actions.AddInitializerToDecl(DeclOut, InitExpr.take(), !CopyInitialization,
-                                 DS.getTypeSpecType() == DeclSpec::TST_auto);
+                                 DS.containsPlaceholderType());
+  else
+    Actions.ActOnInitializerError(DeclOut);
 
   // FIXME: Build a reference to this declaration? Convert it to bool?
   // (This is currently handled by Sema).
@@ -2033,7 +2140,7 @@ bool Parser::ParseUnqualifiedIdOperator(CXXScopeSpec &SS, bool EnteringContext,
   
   // Parse the conversion-declarator, which is merely a sequence of
   // ptr-operators.
-  Declarator D(DS, Declarator::TypeNameContext);
+  Declarator D(DS, Declarator::ConversionIdContext);
   ParseDeclaratorInternal(D, /*DirectDeclParser=*/0);
   
   // Finish up the type.

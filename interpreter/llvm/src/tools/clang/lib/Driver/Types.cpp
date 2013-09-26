@@ -8,6 +8,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Driver/Types.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringSwitch.h"
 #include <cassert>
 #include <string.h>
@@ -28,7 +29,7 @@ static const TypeInfo TypeInfos[] = {
 #include "clang/Driver/Types.def"
 #undef TYPE
 };
-static const unsigned numTypes = sizeof(TypeInfos) / sizeof(TypeInfos[0]);
+static const unsigned numTypes = llvm::array_lengthof(TypeInfos);
 
 static const TypeInfo &getInfo(unsigned id) {
   assert(id > 0 && id - 1 < numTypes && "Invalid Type ID.");
@@ -43,7 +44,11 @@ types::ID types::getPreprocessedType(ID Id) {
   return getInfo(Id).PreprocessedType;
 }
 
-const char *types::getTypeTempSuffix(ID Id) {
+const char *types::getTypeTempSuffix(ID Id, bool CLMode) {
+  if (Id == TY_Object && CLMode)
+    return "obj";
+  if (Id == TY_Image && CLMode)
+    return "exe";
   return getInfo(Id).TempSuffix;
 }
 
@@ -134,6 +139,7 @@ types::ID types::lookupTypeForExtension(const char *Ext) {
            .Case("s", TY_PP_Asm)
            .Case("S", TY_Asm)
            .Case("o", TY_Object)
+           .Case("obj", TY_Object)
            .Case("ii", TY_PP_CXX)
            .Case("mi", TY_PP_ObjC)
            .Case("mm", TY_ObjCXX)
@@ -180,9 +186,7 @@ types::ID types::lookupTypeForTypeSpecifier(const char *Name) {
 }
 
 // FIXME: Why don't we just put this list in the defs file, eh.
-void types::getCompilationPhases(
-  ID Id,
-  llvm::SmallVector<phases::ID, phases::MaxNumberOfPhases> &P) {
+void types::getCompilationPhases(ID Id, llvm::SmallVectorImpl<phases::ID> &P) {
   if (Id != TY_Object) {
     if (getPreprocessedType(Id) != TY_INVALID) {
       P.push_back(phases::Preprocess);

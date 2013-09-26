@@ -16,9 +16,6 @@
 
 #include "clang/Basic/LLVM.h"
 
-namespace llvm {
-  namespace sys { class Path; }
-}
 namespace clang {
 
 class ASTConsumer;
@@ -37,7 +34,7 @@ ASTConsumer *CreateASTPrinter(raw_ostream *OS, StringRef FilterString);
 
 // AST dumper: dumps the raw AST in human-readable form to stderr; this is
 // intended for debugging.
-ASTConsumer *CreateASTDumper(StringRef FilterString);
+ASTConsumer *CreateASTDumper(StringRef FilterString, bool DumpLookups = false);
 
 // AST Decl node lister: prints qualified names of all filterable AST Decl
 // nodes.

@@ -115,6 +115,13 @@ Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies,
     OpenMPHandler.reset(new PragmaNoOpenMPHandler());
   PP.AddPragmaHandler(OpenMPHandler.get());
 
+  if (getLangOpts().MicrosoftExt) {
+    MSCommentHandler.reset(new PragmaCommentHandler(actions));
+    PP.AddPragmaHandler(MSCommentHandler.get());
+    MSDetectMismatchHandler.reset(new PragmaDetectMismatchHandler(actions));
+    PP.AddPragmaHandler(MSDetectMismatchHandler.get());
+  }
+
   CommentSemaHandler.reset(new ActionCommentHandler(actions));
   if (!IsTemporary)
     PP.addCommentHandler(CommentSemaHandler.get());
@@ -287,6 +294,16 @@ bool Parser::SkipUntil(ArrayRef<tok::TokenKind> Toks, bool StopAtSemi,
       }
     }
 
+    // Important special case: The caller has given up and just wants us to
+    // skip the rest of the file. Do this without recursing, since we can
+    // get here precisely because the caller detected too much recursion.
+    if (Toks.size() == 1 && Toks[0] == tok::eof && !StopAtSemi &&
+        !StopAtCodeCompletion) {
+      while (Tok.getKind() != tok::eof)
+        ConsumeAnyToken();
+      return true;
+    }
+
     switch (Tok.getKind()) {
     case tok::eof:
       // Ran out of tokens.
@@ -414,53 +431,55 @@ Parser::ParseScopeFlags::~ParseScopeFlags() {
 Parser::~Parser() {
   // If we still have scopes active, delete the scope tree.
   if (!IsTemporary) {
-    delete getCurScope();
-    Actions.CurScope = 0;
+  delete getCurScope();
+  Actions.CurScope = 0;
   }
 
   // Free the scope cache.
   for (unsigned i = 0, e = NumCachedScopes; i != e; ++i)
     delete ScopeCache[i];
 
-  // Free LateParsedTemplatedFunction nodes.
-  for (LateParsedTemplateMapT::iterator it = LateParsedTemplateMap.begin();
-      it != LateParsedTemplateMap.end(); ++it)
-    delete it->second;
-
   if (!IsTemporary) {
-    // Remove the pragma handlers we installed.
-    PP.RemovePragmaHandler(AlignHandler.get());
-    AlignHandler.reset();
-    PP.RemovePragmaHandler("GCC", GCCVisibilityHandler.get());
-    GCCVisibilityHandler.reset();
-    PP.RemovePragmaHandler(OptionsHandler.get());
-    OptionsHandler.reset();
-    PP.RemovePragmaHandler(PackHandler.get());
-    PackHandler.reset();
-    PP.RemovePragmaHandler(MSStructHandler.get());
-    MSStructHandler.reset();
-    PP.RemovePragmaHandler(UnusedHandler.get());
-    UnusedHandler.reset();
-    PP.RemovePragmaHandler(WeakHandler.get());
-    WeakHandler.reset();
-    PP.RemovePragmaHandler(RedefineExtnameHandler.get());
-    RedefineExtnameHandler.reset();
+  // Remove the pragma handlers we installed.
+  PP.RemovePragmaHandler(AlignHandler.get());
+  AlignHandler.reset();
+  PP.RemovePragmaHandler("GCC", GCCVisibilityHandler.get());
+  GCCVisibilityHandler.reset();
+  PP.RemovePragmaHandler(OptionsHandler.get());
+  OptionsHandler.reset();
+  PP.RemovePragmaHandler(PackHandler.get());
+  PackHandler.reset();
+  PP.RemovePragmaHandler(MSStructHandler.get());
+  MSStructHandler.reset();
+  PP.RemovePragmaHandler(UnusedHandler.get());
+  UnusedHandler.reset();
+  PP.RemovePragmaHandler(WeakHandler.get());
+  WeakHandler.reset();
+  PP.RemovePragmaHandler(RedefineExtnameHandler.get());
+  RedefineExtnameHandler.reset();
 
-    if (getLangOpts().OpenCL) {
-      PP.RemovePragmaHandler("OPENCL", OpenCLExtensionHandler.get());
-      OpenCLExtensionHandler.reset();
-      PP.RemovePragmaHandler("OPENCL", FPContractHandler.get());
-    }
+  if (getLangOpts().OpenCL) {
+    PP.RemovePragmaHandler("OPENCL", OpenCLExtensionHandler.get());
+    OpenCLExtensionHandler.reset();
+    PP.RemovePragmaHandler("OPENCL", FPContractHandler.get());
+  }
   PP.RemovePragmaHandler(OpenMPHandler.get());
   OpenMPHandler.reset();
 
-    PP.RemovePragmaHandler("STDC", FPContractHandler.get());
-    FPContractHandler.reset();
-
-    PP.removeCommentHandler(CommentSemaHandler.get());
-
-    PP.clearCodeCompletionHandler();
+  if (getLangOpts().MicrosoftExt) {
+    PP.RemovePragmaHandler(MSCommentHandler.get());
+    MSCommentHandler.reset();
+    PP.RemovePragmaHandler(MSDetectMismatchHandler.get());
+    MSDetectMismatchHandler.reset();
   }
+
+  PP.RemovePragmaHandler("STDC", FPContractHandler.get());
+  FPContractHandler.reset();
+
+  PP.removeCommentHandler(CommentSemaHandler.get());
+
+  PP.clearCodeCompletionHandler();
+  } // if !IsTemporary
 
   assert(TemplateIds.empty() && "Still alive TemplateIdAnnotations around?");
 }
@@ -493,6 +512,7 @@ void Parser::Initialize() {
   if (getLangOpts().AltiVec) {
     Ident_vector = &PP.getIdentifierTable().get("vector");
     Ident_pixel = &PP.getIdentifierTable().get("pixel");
+    Ident_bool = &PP.getIdentifierTable().get("bool");
   }
 
   Ident_introduced = 0;
@@ -980,22 +1000,18 @@ Decl *Parser::ParseFunctionDefinition(ParsingDeclarator &D,
     D.complete(DP);
     D.getMutableDeclSpec().abort();
 
-    if (DP) {
-      LateParsedTemplatedFunction *LPT = new LateParsedTemplatedFunction(DP);
+    CachedTokens Toks;
+    LexTemplateFunctionForLateParsing(Toks);
 
+    if (DP) {
       FunctionDecl *FnD = 0;
       if (FunctionTemplateDecl *FunTmpl = dyn_cast<FunctionTemplateDecl>(DP))
         FnD = FunTmpl->getTemplatedDecl();
       else
         FnD = cast<FunctionDecl>(DP);
-      Actions.CheckForFunctionRedefinition(FnD);
 
-      LateParsedTemplateMap[FnD] = LPT;
-      Actions.MarkAsLateParsedTemplate(FnD);
-      LexTemplateFunctionForLateParsing(LPT->Toks);
-    } else {
-      CachedTokens Toks;
-      LexTemplateFunctionForLateParsing(Toks);
+      Actions.CheckForFunctionRedefinition(FnD);
+      Actions.MarkAsLateParsedTemplate(FnD, DP, Toks);
     }
     return DP;
   }
@@ -1138,8 +1154,8 @@ void Parser::ParseKNRParamDeclarations(Declarator &D) {
            diag::err_invalid_storage_class_in_func_decl);
       DS.ClearStorageClassSpecs();
     }
-    if (DS.isThreadSpecified()) {
-      Diag(DS.getThreadSpecLoc(),
+    if (DS.getThreadStorageClassSpec() != DeclSpec::TSCS_unspecified) {
+      Diag(DS.getThreadStorageClassSpecLoc(),
            diag::err_invalid_storage_class_in_func_decl);
       DS.ClearStorageClassSpecs();
     }
@@ -1409,8 +1425,9 @@ Parser::TryAnnotateName(bool IsAddressOfOperand,
       return ANK_TemplateName;
     }
     // Fall through.
+  case Sema::NC_VarTemplate:
   case Sema::NC_FunctionTemplate: {
-    // We have a type or function template followed by '<'.
+    // We have a type, variable or function template followed by '<'.
     ConsumeToken();
     UnqualifiedId Id;
     Id.setIdentifier(Name, NameLoc);
@@ -1460,6 +1477,23 @@ bool Parser::TryAnnotateTypeOrScopeToken(bool EnteringContext, bool NeedType) {
           && "Cannot be a type or scope token!");
 
   if (Tok.is(tok::kw_typename)) {
+    // MSVC lets you do stuff like:
+    //   typename typedef T_::D D;
+    //
+    // We will consume the typedef token here and put it back after we have
+    // parsed the first identifier, transforming it into something more like:
+    //   typename T_::D typedef D;
+    if (getLangOpts().MicrosoftMode && NextToken().is(tok::kw_typedef)) {
+      Token TypedefToken;
+      PP.Lex(TypedefToken);
+      bool Result = TryAnnotateTypeOrScopeToken(EnteringContext, NeedType);
+      PP.EnterToken(Tok);
+      Tok = TypedefToken;
+      if (!Result)
+        Diag(Tok.getLocation(), diag::warn_expected_qualified_after_typename);
+      return Result;
+    }
+
     // Parse a C++ typename-specifier, e.g., "typename T::type".
     //
     //   typename-specifier:
@@ -1478,7 +1512,7 @@ bool Parser::TryAnnotateTypeOrScopeToken(bool EnteringContext, bool NeedType) {
         // Attempt to recover by skipping the invalid 'typename'
         if (Tok.is(tok::annot_decltype) ||
             (!TryAnnotateTypeOrScopeToken(EnteringContext, NeedType) &&
-            Tok.isAnnotation())) {
+             Tok.isAnnotation())) {
           unsigned DiagID = diag::err_expected_qualified_after_typename;
           // MS compatibility: MSVC permits using known types with typename.
           // e.g. "typedef typename T* pointer_type"
@@ -1625,7 +1659,8 @@ bool Parser::TryAnnotateTypeOrScopeTokenAfterScopeSpec(bool EnteringContext,
       // annotation token to a type annotation token now.
       AnnotateTemplateIdTokenAsType();
       return false;
-    }
+    } else if (TemplateId->Kind == TNK_Var_template)
+      return false;
   }
 
   if (SS.isEmpty())
@@ -1871,7 +1906,13 @@ Parser::DeclGroupPtrTy Parser::ParseModuleImport(SourceLocation AtLoc) {
     
     break;
   } while (true);
-  
+
+  if (PP.hadModuleLoaderFatalFailure()) {
+    // With a fatal failure in the module loader, we abort parsing.
+    cutOffParsing();
+    return DeclGroupPtrTy();
+  }
+
   DeclResult Import = Actions.ActOnModuleImport(AtLoc, ImportLoc, Path);
   ExpectAndConsumeSemi(diag::err_module_expected_semi);
   if (Import.isInvalid())
@@ -1884,7 +1925,7 @@ bool BalancedDelimiterTracker::diagnoseOverflow() {
   P.Diag(P.Tok, diag::err_bracket_depth_exceeded)
     << P.getLangOpts().BracketDepth;
   P.Diag(P.Tok, diag::note_bracket_depth);
-  P.SkipUntil(tok::eof);
+  P.SkipUntil(tok::eof, false);
   return true;  
 }
 
@@ -1914,7 +1955,8 @@ bool BalancedDelimiterTracker::diagnoseMissingClose() {
   }
   P.Diag(P.Tok, DID);
   P.Diag(LOpen, diag::note_matching) << LHSName;
-  if (P.SkipUntil(Close, /*StopAtSemi*/ true, /*DontConsume*/ true))
+  if (P.SkipUntil(Close, FinalToken, /*StopAtSemi*/ true, /*DontConsume*/ true)
+      && P.Tok.is(Close))
     LClose = P.ConsumeAnyToken();
   return true;
 }

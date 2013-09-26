@@ -15,6 +15,7 @@
 #include "llvm/Support/YAMLParser.h"
 #include "llvm/Support/raw_ostream.h"
 #include <cstring>
+#include <cctype>
 using namespace llvm;
 using namespace yaml;
 
@@ -40,15 +41,14 @@ void IO::setContext(void *Context) {
 //  Input
 //===----------------------------------------------------------------------===//
 
-Input::Input(StringRef InputContent, void *Ctxt) 
-  : IO(Ctxt), 
+Input::Input(StringRef InputContent, void *Ctxt)
+  : IO(Ctxt),
     Strm(new Stream(InputContent, SrcMgr)),
     CurrentNode(NULL) {
   DocIterator = Strm->begin();
 }
 
 Input::~Input() {
-  
 }
 
 error_code Input::error() {
@@ -127,8 +127,8 @@ void Input::endMapping() {
     return;
   for (MapHNode::NameToNode::iterator i = MN->Mapping.begin(),
        End = MN->Mapping.end(); i != End; ++i) {
-    if (!MN->isValidKey(i->first)) {
-      setError(i->second, Twine("unknown key '") + i->first + "'");
+    if (!MN->isValidKey(i->first())) {
+      setError(i->second, Twine("unknown key '") + i->first() + "'");
       break;
     }
   }
@@ -322,7 +322,7 @@ Input::HNode *Input::createHNodes(Node *N) {
 }
 
 bool Input::MapHNode::isValidKey(StringRef Key) {
-  for (SmallVector<const char *, 6>::iterator i = ValidKeys.begin(),
+  for (SmallVectorImpl<const char *>::iterator i = ValidKeys.begin(),
        End = ValidKeys.end(); i != End; ++i) {
     if (Key.equals(*i))
       return true;
@@ -332,6 +332,10 @@ bool Input::MapHNode::isValidKey(StringRef Key) {
 
 void Input::setError(const Twine &Message) {
   this->setError(CurrentNode, Message);
+}
+
+bool Input::canElideEmptySequence() {
+  return false;
 }
 
 Input::MapHNode::~MapHNode() {
@@ -505,9 +509,20 @@ void Output::endBitSetScalar() {
 }
 
 void Output::scalarString(StringRef &S) {
+  const char ScalarSafeChars[] = "abcdefghijklmnopqrstuvwxyz"
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-/^., \t";
+
   this->newLineCheck();
-  if (S.find('\n') == StringRef::npos) {
-    // No embedded new-line chars, just print string.
+  if (S.empty()) {
+    // Print '' for the empty string because leaving the field empty is not
+    // allowed.
+    this->outputUpToEndOfLine("''");
+    return;
+  }
+  if (S.find_first_not_of(ScalarSafeChars) == StringRef::npos &&
+      !isspace(S.front()) && !isspace(S.back())) {
+    // If the string consists only of safe characters, print it out without
+    // quotes.
     this->outputUpToEndOfLine(S);
     return;
   }
@@ -530,6 +545,19 @@ void Output::scalarString(StringRef &S) {
 }
 
 void Output::setError(const Twine &message) {
+}
+
+bool Output::canElideEmptySequence() {
+  // Normally, with an optional key/value where the value is an empty sequence,
+  // the whole key/value can be not written.  But, that produces wrong yaml
+  // if the key/value is the only thing in the map and the map is used in
+  // a sequence.  This detects if the this sequence is the first key/value
+  // in map that itself is embedded in a sequnce.
+  if (StateStack.size() < 2)
+    return true;
+  if (StateStack.back() != inMapFirstKey)
+    return true;
+  return (StateStack[StateStack.size()-2] != inSeq);
 }
 
 void Output::output(StringRef s) {

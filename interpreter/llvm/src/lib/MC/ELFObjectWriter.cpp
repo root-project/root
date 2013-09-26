@@ -759,9 +759,6 @@ void ELFObjectWriter::RecordRelocation(const MCAssembler &Asm,
   uint64_t RelocOffset = Layout.getFragmentOffset(Fragment) +
     Fixup.getOffset();
 
-  // FIXME: no tests cover this. Is adjustFixupOffset dead code?
-  TargetObjectWriter->adjustFixupOffset(Fixup, RelocOffset);
-
   if (!hasRelocationAddend())
     Addend = 0;
 
@@ -1005,11 +1002,18 @@ void ELFObjectWriter::CreateRelocationSections(MCAssembler &Asm,
     else
       EntrySize = is64Bit() ? sizeof(ELF::Elf64_Rel) : sizeof(ELF::Elf32_Rel);
 
+    unsigned Flags = 0;
+    StringRef Group = "";
+    if (Section.getFlags() & ELF::SHF_GROUP) {
+        Flags = ELF::SHF_GROUP;
+        Group = Section.getGroup()->getName();
+    }
+
     const MCSectionELF *RelaSection =
       Ctx.getELFSection(RelaSectionName, hasRelocationAddend() ?
-                        ELF::SHT_RELA : ELF::SHT_REL, 0,
+                        ELF::SHT_RELA : ELF::SHT_REL, Flags,
                         SectionKind::getReadOnly(),
-                        EntrySize, "");
+                        EntrySize, Group);
     RelMap[&Section] = RelaSection;
     Asm.getOrCreateSectionData(*RelaSection);
   }
@@ -1100,11 +1104,10 @@ void ELFObjectWriter::WriteRelocationsFragment(const MCAssembler &Asm,
   }
 }
 
-static int compareBySuffix(const void *a, const void *b) {
-  const MCSectionELF *secA = *static_cast<const MCSectionELF* const *>(a);
-  const MCSectionELF *secB = *static_cast<const MCSectionELF* const *>(b);
-  const StringRef &NameA = secA->getSectionName();
-  const StringRef &NameB = secB->getSectionName();
+static int compareBySuffix(const MCSectionELF *const *a,
+                           const MCSectionELF *const *b) {
+  const StringRef &NameA = (*a)->getSectionName();
+  const StringRef &NameB = (*b)->getSectionName();
   const unsigned sizeA = NameA.size();
   const unsigned sizeB = NameB.size();
   const unsigned len = std::min(sizeA, sizeB);

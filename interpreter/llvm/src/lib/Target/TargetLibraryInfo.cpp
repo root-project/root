@@ -27,7 +27,9 @@ const char* TargetLibraryInfo::StandardNames[LibFunc::NumLibFuncs] =
     "_IO_getc",
     "_IO_putc",
     "_ZdaPv",
+    "_ZdaPvRKSt9nothrow_t",
     "_ZdlPv",
+    "_ZdlPvRKSt9nothrow_t",
     "_Znaj",
     "_ZnajRKSt9nothrow_t",
     "_Znam",
@@ -43,6 +45,9 @@ const char* TargetLibraryInfo::StandardNames[LibFunc::NumLibFuncs] =
     "__isoc99_scanf",
     "__isoc99_sscanf",
     "__memcpy_chk",
+    "__sqrt_finite",
+    "__sqrtf_finite",
+    "__sqrtl_finite",
     "__strdup",
     "__strndup",
     "__strtok_r",
@@ -165,6 +170,7 @@ const char* TargetLibraryInfo::StandardNames[LibFunc::NumLibFuncs] =
     "getlogin_r",
     "getpwnam",
     "gets",
+    "gettimeofday",
     "htonl",
     "htons",
     "iprintf",
@@ -344,7 +350,7 @@ static void initialize(TargetLibraryInfo &TLI, const Triple &T,
   if (T.isMacOSX()) {
     if (T.isMacOSXVersionLT(10, 5))
       TLI.setUnavailable(LibFunc::memset_pattern16);
-  } else if (T.getOS() == Triple::IOS) {
+  } else if (T.isiOS()) {
     if (T.isOSVersionLT(3, 0))
       TLI.setUnavailable(LibFunc::memset_pattern16);
   } else {
@@ -487,6 +493,7 @@ static void initialize(TargetLibraryInfo &TLI, const Triple &T,
     TLI.setUnavailable(LibFunc::getitimer);
     TLI.setUnavailable(LibFunc::getlogin_r);
     TLI.setUnavailable(LibFunc::getpwnam);
+    TLI.setUnavailable(LibFunc::gettimeofday);
     TLI.setUnavailable(LibFunc::htonl);
     TLI.setUnavailable(LibFunc::htons);
     TLI.setUnavailable(LibFunc::lchown);
@@ -555,7 +562,7 @@ static void initialize(TargetLibraryInfo &TLI, const Triple &T,
   }
 
   // The following functions are available on at least Linux:
-  if (T.getOS() != Triple::Linux) {
+  if (!T.isOSLinux()) {
     TLI.setUnavailable(LibFunc::dunder_strdup);
     TLI.setUnavailable(LibFunc::dunder_strtok_r);
     TLI.setUnavailable(LibFunc::dunder_isoc99_scanf);

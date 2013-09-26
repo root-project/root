@@ -84,10 +84,10 @@ struct EffectiveContext {
     : Inner(DC),
       Dependent(DC->isDependentContext()) {
 
-    // C++ [class.access.nest]p1:
+    // C++11 [class.access.nest]p1:
     //   A nested class is a member and as such has the same access
     //   rights as any other member.
-    // C++ [class.access]p2:
+    // C++11 [class.access]p2:
     //   A member of a class can also access all the names to which
     //   the class has access.  A local class of a member function
     //   may access the same names that the member function itself
@@ -315,8 +315,7 @@ static AccessResult IsDerivedFromInclusive(const CXXRecordDecl *Derived,
 
     if (Queue.empty()) break;
 
-    Derived = Queue.back();
-    Queue.pop_back();
+    Derived = Queue.pop_back_val();
   }
 
   return OnFailure;
@@ -1476,18 +1475,20 @@ static Sema::AccessResult CheckAccess(Sema &S, SourceLocation Loc,
   llvm_unreachable("falling off end");
 }
 
-void Sema::HandleDelayedAccessCheck(DelayedDiagnostic &DD, Decl *decl) {
+void Sema::HandleDelayedAccessCheck(DelayedDiagnostic &DD, Decl *D) {
   // Access control for names used in the declarations of functions
   // and function templates should normally be evaluated in the context
   // of the declaration, just in case it's a friend of something.
   // However, this does not apply to local extern declarations.
 
-  DeclContext *DC = decl->getDeclContext();
-  if (FunctionDecl *fn = dyn_cast<FunctionDecl>(decl)) {
-    if (!DC->isFunctionOrMethod()) DC = fn;
-  } else if (FunctionTemplateDecl *fnt = dyn_cast<FunctionTemplateDecl>(decl)) {
-    // Never a local declaration.
-    DC = fnt->getTemplatedDecl();
+  DeclContext *DC = D->getDeclContext();
+  if (FunctionDecl *FN = dyn_cast<FunctionDecl>(D)) {
+    if (D->getLexicalDeclContext()->isFunctionOrMethod())
+      DC = D->getLexicalDeclContext();
+    else
+      DC = FN;
+  } else if (TemplateDecl *TD = dyn_cast<TemplateDecl>(D)) {
+    DC = cast<DeclContext>(TD->getTemplatedDecl());
   }
 
   EffectiveContext EC(DC);
@@ -1710,6 +1711,21 @@ Sema::AccessResult Sema::CheckAllocationAccess(SourceLocation OpLoc,
   return CheckAccess(*this, OpLoc, Entity);
 }
 
+/// \brief Checks access to a member.
+Sema::AccessResult Sema::CheckMemberAccess(SourceLocation UseLoc,
+                                           CXXRecordDecl *NamingClass,
+                                           NamedDecl *D) {
+  if (!getLangOpts().AccessControl ||
+      !NamingClass ||
+      D->getAccess() == AS_public)
+    return AR_accessible;
+
+  AccessTarget Entity(Context, AccessTarget::Member, NamingClass,
+                      DeclAccessPair::make(D, D->getAccess()), QualType());
+
+  return CheckAccess(*this, UseLoc, Entity);
+}
+
 /// Checks access to an overloaded member operator, including
 /// conversion operators.
 Sema::AccessResult Sema::CheckMemberOperatorAccess(SourceLocation OpLoc,
@@ -1872,9 +1888,7 @@ bool Sema::IsSimplyAccessible(NamedDecl *Decl, DeclContext *Ctx) {
     if (Ivar->getCanonicalAccessControl() == ObjCIvarDecl::Public ||
         Ivar->getCanonicalAccessControl() == ObjCIvarDecl::Package)
       return true;
-    
-    
-    
+
     // If we are inside a class or category implementation, determine the
     // interface we're in.
     ObjCInterfaceDecl *ClassOfMethodDecl = 0;
