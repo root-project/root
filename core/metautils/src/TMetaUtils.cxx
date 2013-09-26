@@ -624,43 +624,6 @@ bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl, ROOT::TM
             }
          } // has one argument.
       } // for each constructor
-
-      // Look for a potential templated constructor.
-      for(clang::CXXRecordDecl::decl_iterator iter = cl->decls_begin(), end = cl->decls_end();
-          iter != end;
-          ++iter)
-      {
-         const clang::FunctionTemplateDecl *func = llvm::dyn_cast<clang::FunctionTemplateDecl>(*iter);
-         if (func) {
-            const clang::CXXConstructorDecl *ctor = llvm::dyn_cast<clang::CXXConstructorDecl>(func->getTemplatedDecl ());
-            if (ctor && ctor->getNumParams() == 1) {
-               clang::QualType argType( (*ctor->param_begin())->getType() );
-               argType = argType.getDesugaredType(cl->getASTContext());
-
-               // Check for either of:
-               //   ClassName::ClassName( T *&);
-               //   ClassName::ClassName( T *);
-               //   ClassName::ClassName( T );
-               // which all could be used for a call to new ClassName( (ioctor*)0)
-
-               // // Strip one reference type
-               if (argType->isReferenceType()) {
-                  if (argType->getPointeeType()->isPointerType()) {
-                     argType = argType->getPointeeType();
-                     argType = argType.getDesugaredType(cl->getASTContext());
-                  }
-               }
-               // Strip one pointer type
-               if (argType->isPointerType()) {
-                  argType = argType->getPointeeType();
-                  argType = argType.getDesugaredType(cl->getASTContext());
-               }
-               if (argType->isTemplateTypeParmType()) {
-                  return true;
-               }
-            }
-         }
-      }
    }
 
    return false;
