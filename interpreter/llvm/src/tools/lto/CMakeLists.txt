@@ -1,17 +1,13 @@
 set(LLVM_LINK_COMPONENTS
   ${LLVM_TARGETS_TO_BUILD}
-  ipo scalaropts linker bitreader bitwriter mcdisassembler vectorize)
+  ipo scalaropts linker bitreader bitwriter lto mcdisassembler vectorize)
 
 add_definitions( -DLLVM_VERSION_INFO=\"${PACKAGE_VERSION}\" )
 
 set(SOURCES
-  LTOCodeGenerator.cpp
   LTODisassembler.cpp
   lto.cpp
-  LTOModule.cpp
   )
-
-set(LLVM_COMMON_DEPENDS intrinsics_gen)
 
 if( NOT WIN32 AND LLVM_ENABLE_PIC )
   set(bsl ${BUILD_SHARED_LIBS})
@@ -27,4 +23,9 @@ endif()
 if( NOT BUILD_SHARED_LIBS )
   add_llvm_library(${LTO_STATIC_TARGET_NAME} ${SOURCES})
   set_property(TARGET ${LTO_STATIC_TARGET_NAME} PROPERTY OUTPUT_NAME "LTO")
+endif()
+
+if( NOT WIN32 )
+  install(FILES ${LLVM_MAIN_INCLUDE_DIR}/llvm-c/lto.h
+          DESTINATION include/llvm-c)
 endif()

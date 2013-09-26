@@ -212,18 +212,15 @@ llvm::Value *CGCXXABI::readArrayCookieImpl(CodeGenFunction &CGF,
   return llvm::ConstantInt::get(CGF.SizeTy, 0);
 }
 
-void CGCXXABI::EmitGuardedInit(CodeGenFunction &CGF,
-                               const VarDecl &D,
-                               llvm::GlobalVariable *GV,
-                               bool PerformInit) {
-  ErrorUnsupportedABI(CGF, "static local variable initialization");
-}
-
 void CGCXXABI::registerGlobalDtor(CodeGenFunction &CGF,
+                                  const VarDecl &D,
                                   llvm::Constant *dtor,
                                   llvm::Constant *addr) {
+  if (D.getTLSKind())
+    CGM.ErrorUnsupported(&D, "non-trivial TLS destruction");
+
   // The default behavior is to use atexit.
-  CGF.registerGlobalDtorWithAtExit(dtor, addr);
+  CGF.registerGlobalDtorWithAtExit(D, dtor, addr);
 }
 
 /// Returns the adjustment, in bytes, required for the given
@@ -247,11 +244,49 @@ llvm::Constant *CGCXXABI::getMemberPointerAdjustment(const CastExpr *E) {
                                           E->path_end());
 }
 
-llvm::BasicBlock *CGCXXABI::EmitCtorCompleteObjectHandler(
-                                                         CodeGenFunction &CGF) {
+CharUnits CGCXXABI::getMemberPointerPathAdjustment(const APValue &MP) {
+  // TODO: Store base specifiers in APValue member pointer paths so we can
+  // easily reuse CGM.GetNonVirtualBaseClassOffset().
+  const ValueDecl *MPD = MP.getMemberPointerDecl();
+  CharUnits ThisAdjustment = CharUnits::Zero();
+  ArrayRef<const CXXRecordDecl*> Path = MP.getMemberPointerPath();
+  bool DerivedMember = MP.isMemberPointerToDerivedMember();
+  const CXXRecordDecl *RD = cast<CXXRecordDecl>(MPD->getDeclContext());
+  for (unsigned I = 0, N = Path.size(); I != N; ++I) {
+    const CXXRecordDecl *Base = RD;
+    const CXXRecordDecl *Derived = Path[I];
+    if (DerivedMember)
+      std::swap(Base, Derived);
+    ThisAdjustment +=
+      getContext().getASTRecordLayout(Derived).getBaseClassOffset(Base);
+    RD = Path[I];
+  }
+  if (DerivedMember)
+    ThisAdjustment = -ThisAdjustment;
+  return ThisAdjustment;
+}
+
+llvm::BasicBlock *
+CGCXXABI::EmitCtorCompleteObjectHandler(CodeGenFunction &CGF,
+                                        const CXXRecordDecl *RD) {
   if (CGM.getTarget().getCXXABI().hasConstructorVariants())
     llvm_unreachable("shouldn't be called in this ABI");
 
   ErrorUnsupportedABI(CGF, "complete object detection in ctor");
   return 0;
+}
+
+void CGCXXABI::EmitThreadLocalInitFuncs(
+    llvm::ArrayRef<std::pair<const VarDecl *, llvm::GlobalVariable *> > Decls,
+    llvm::Function *InitFunc) {
+}
+
+LValue CGCXXABI::EmitThreadLocalDeclRefExpr(CodeGenFunction &CGF,
+                                          const DeclRefExpr *DRE) {
+  ErrorUnsupportedABI(CGF, "odr-use of thread_local global");
+  return LValue();
+}
+
+bool CGCXXABI::NeedsVTTParameter(GlobalDecl GD) {
+  return false;
 }

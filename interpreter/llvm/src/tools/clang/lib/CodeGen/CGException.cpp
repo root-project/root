@@ -89,7 +89,7 @@ static llvm::Constant *getEndCatchFn(CodeGenModule &CGM) {
 }
 
 static llvm::Constant *getUnexpectedFn(CodeGenModule &CGM) {
-  // void __cxa_call_unexepcted(void *thrown_exception);
+  // void __cxa_call_unexpected(void *thrown_exception);
 
   llvm::FunctionType *FTy =
     llvm::FunctionType::get(CGM.VoidTy, CGM.Int8PtrTy, /*IsVarArgs=*/false);
@@ -419,14 +419,16 @@ llvm::Value *CodeGenFunction::getSelectorFromSlot() {
   return Builder.CreateLoad(getEHSelectorSlot(), "sel");
 }
 
-void CodeGenFunction::EmitCXXThrowExpr(const CXXThrowExpr *E) {
+void CodeGenFunction::EmitCXXThrowExpr(const CXXThrowExpr *E,
+                                       bool KeepInsertionPoint) {
   if (!E->getSubExpr()) {
     EmitNoreturnRuntimeCallOrInvoke(getReThrowFn(CGM),
                                     ArrayRef<llvm::Value*>());
 
     // throw is an expression, and the expression emitters expect us
     // to leave ourselves at a valid insertion point.
-    EmitBlock(createBasicBlock("throw.cont"));
+    if (KeepInsertionPoint)
+      EmitBlock(createBasicBlock("throw.cont"));
 
     return;
   }
@@ -440,7 +442,8 @@ void CodeGenFunction::EmitCXXThrowExpr(const CXXThrowExpr *E) {
     CGM.getObjCRuntime().EmitThrowStmt(*this, S, false);
     // This will clear insertion point which was not cleared in
     // call to EmitThrowStmt.
-    EmitBlock(createBasicBlock("throw.cont"));
+    if (KeepInsertionPoint)
+      EmitBlock(createBasicBlock("throw.cont"));
     return;
   }
   
@@ -478,7 +481,8 @@ void CodeGenFunction::EmitCXXThrowExpr(const CXXThrowExpr *E) {
 
   // throw is an expression, and the expression emitters expect us
   // to leave ourselves at a valid insertion point.
-  EmitBlock(createBasicBlock("throw.cont"));
+  if (KeepInsertionPoint)
+    EmitBlock(createBasicBlock("throw.cont"));
 }
 
 void CodeGenFunction::EmitStartEHSpec(const Decl *D) {
@@ -762,6 +766,11 @@ llvm::BasicBlock *CodeGenFunction::EmitLandingPad() {
 
   // Save the current IR generation state.
   CGBuilderTy::InsertPoint savedIP = Builder.saveAndClearIP();
+  SourceLocation SavedLocation;
+  if (CGDebugInfo *DI = getDebugInfo()) {
+    SavedLocation = DI->getLocation();
+    DI->EmitLocation(Builder, CurEHLocation);
+  }
 
   const EHPersonality &personality = EHPersonality::get(getLangOpts());
 
@@ -883,6 +892,8 @@ llvm::BasicBlock *CodeGenFunction::EmitLandingPad() {
 
   // Restore the old IR generation state.
   Builder.restoreIP(savedIP);
+  if (CGDebugInfo *DI = getDebugInfo())
+    DI->EmitLocation(Builder, SavedLocation);
 
   return lpad;
 }
@@ -1608,8 +1619,15 @@ llvm::BasicBlock *CodeGenFunction::getTerminateHandler() {
   // end of the function by FinishFunction.
   TerminateHandler = createBasicBlock("terminate.handler");
   Builder.SetInsertPoint(TerminateHandler);
-  llvm::CallInst *TerminateCall = EmitNounwindRuntimeCall(getTerminateFn(CGM));
-  TerminateCall->setDoesNotReturn();
+  llvm::CallInst *terminateCall;
+  if (useClangCallTerminate(CGM)) {
+    // Load the exception pointer.
+    llvm::Value *exn = getExceptionFromSlot();
+    terminateCall = EmitNounwindRuntimeCall(getClangCallTerminateFn(CGM), exn);
+  } else {
+    terminateCall = EmitNounwindRuntimeCall(getTerminateFn(CGM));
+  }
+  terminateCall->setDoesNotReturn();
   Builder.CreateUnreachable();
 
   // Restore the saved insertion state.
@@ -1678,4 +1696,8 @@ llvm::BasicBlock *CodeGenFunction::getEHResumeBlock(bool isCleanup) {
   Builder.restoreIP(SavedIP);
 
   return EHResumeBlock;
+}
+
+void CodeGenFunction::EmitSEHTryStmt(const SEHTryStmt &S) {
+  CGM.ErrorUnsupported(&S, "SEH __try");
 }

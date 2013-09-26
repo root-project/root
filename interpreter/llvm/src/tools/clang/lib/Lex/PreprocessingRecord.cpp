@@ -398,7 +398,8 @@ void PreprocessingRecord::Ifndef(SourceLocation Loc, const Token &MacroNameTok,
 }
 
 void PreprocessingRecord::Defined(const Token &MacroNameTok,
-                                  const MacroDirective *MD) {
+                                  const MacroDirective *MD,
+                                  SourceRange Range) {
   // This is not actually a macro expansion but record it as a macro reference.
   if (MD)
     addMacroExpansion(MacroNameTok, MD->getMacroInfo(),
@@ -406,7 +407,8 @@ void PreprocessingRecord::Defined(const Token &MacroNameTok,
 }
 
 void PreprocessingRecord::MacroExpands(const Token &Id,const MacroDirective *MD,
-                                       SourceRange Range) {
+                                       SourceRange Range,
+                                       const MacroArgs *Args) {
   addMacroExpansion(Id, MD->getMacroInfo(), Range);
 }
 

@@ -20,11 +20,23 @@
 
 namespace llvm {
 
+class AMDGPUMachineFunction;
 class MachineRegisterInfo;
 
 class AMDGPUTargetLowering : public TargetLowering {
 private:
+  void ExtractVectorElements(SDValue Op, SelectionDAG &DAG,
+                             SmallVectorImpl<SDValue> &Args,
+                             unsigned Start, unsigned Count) const;
+  SDValue LowerEXTRACT_SUBVECTOR(SDValue Op, SelectionDAG &DAG) const;
+  SDValue LowerCONCAT_VECTORS(SDValue Op, SelectionDAG &DAG) const;
   SDValue LowerINTRINSIC_WO_CHAIN(SDValue Op, SelectionDAG &DAG) const;
+  /// \brief Lower vector stores by merging the vector elements into an integer
+  /// of the same bitwidth.
+  SDValue MergeVectorStore(const SDValue &Op, SelectionDAG &DAG) const;
+  /// \brief Split a vector store into multiple scalar stores.
+  /// \returns The resulting chain. 
+  SDValue SplitVectorStore(SDValue Op, SelectionDAG &DAG) const;
   SDValue LowerUDIVREM(SDValue Op, SelectionDAG &DAG) const;
 
 protected:
@@ -33,9 +45,14 @@ protected:
   /// MachineFunction.
   ///
   /// \returns a RegisterSDNode representing Reg.
-  SDValue CreateLiveInRegister(SelectionDAG &DAG, const TargetRegisterClass *RC,
-                                                  unsigned Reg, EVT VT) const;
-
+  virtual SDValue CreateLiveInRegister(SelectionDAG &DAG,
+                                       const TargetRegisterClass *RC,
+                                       unsigned Reg, EVT VT) const;
+  SDValue LowerGlobalAddress(AMDGPUMachineFunction *MFI, SDValue Op,
+                             SelectionDAG &DAG) const;
+  /// \brief Split a vector load into multiple scalar loads.
+  SDValue SplitVectorLoad(const SDValue &Op, SelectionDAG &DAG) const;
+  SDValue LowerSTORE(SDValue Op, SelectionDAG &DAG) const;
   bool isHWTrueValue(SDValue Op) const;
   bool isHWFalseValue(SDValue Op) const;
 
@@ -45,11 +62,14 @@ protected:
 public:
   AMDGPUTargetLowering(TargetMachine &TM);
 
+  virtual bool isFAbsFree(EVT VT) const;
+  virtual bool isFNegFree(EVT VT) const;
+  virtual MVT getVectorIdxTy() const;
   virtual SDValue LowerReturn(SDValue Chain, CallingConv::ID CallConv,
                               bool isVarArg,
                               const SmallVectorImpl<ISD::OutputArg> &Outs,
                               const SmallVectorImpl<SDValue> &OutVals,
-                              DebugLoc DL, SelectionDAG &DAG) const;
+                              SDLoc DL, SelectionDAG &DAG) const;
   virtual SDValue LowerCall(CallLoweringInfo &CLI,
                             SmallVectorImpl<SDValue> &InVals) const {
     CLI.Callee.dump();
@@ -115,10 +135,10 @@ enum {
   RET_FLAG,
   BRANCH_COND,
   // End AMDIL ISD Opcodes
-  BITALIGN,
-  BUFFER_STORE,
   DWORDADDR,
   FRACT,
+  COS_HW,
+  SIN_HW,
   FMAX,
   SMAX,
   UMAX,
@@ -126,10 +146,21 @@ enum {
   SMIN,
   UMIN,
   URECIP,
+  DOT4,
+  TEXTURE_FETCH,
   EXPORT,
   CONST_ADDRESS,
   REGISTER_LOAD,
   REGISTER_STORE,
+  LOAD_INPUT,
+  SAMPLE,
+  SAMPLEB,
+  SAMPLED,
+  SAMPLEL,
+  FIRST_MEM_OPCODE_NUMBER = ISD::FIRST_TARGET_MEMORY_OPCODE,
+  STORE_MSKOR,
+  LOAD_CONSTANT,
+  TBUFFER_STORE_FORMAT,
   LAST_AMDGPU_ISD_NUMBER
 };
 

@@ -46,8 +46,11 @@ public:
   bool GVIsIndirectSymbol(const GlobalValue *GV, Reloc::Model RelocM) const;
 
   bool isTargetELF() const { return TargetTriple.isOSBinFormatELF(); }
-  bool isTargetLinux() const { return TargetTriple.getOS() == Triple::Linux; }
+  bool isTargetLinux() const { return TargetTriple.isOSLinux(); }
 
+  bool hasNEON() const { return HasNEON; }
+
+  bool hasCrypto() const { return HasCrypto; }
 };
 } // End llvm namespace
 

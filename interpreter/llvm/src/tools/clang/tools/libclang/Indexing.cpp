@@ -31,6 +31,7 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Mutex.h"
 #include "llvm/Support/MutexGuard.h"
+#include <cstdio>
 
 using namespace clang;
 using namespace cxtu;
@@ -88,25 +89,23 @@ public:
 ///   #3 is identified as the location of "#ifdef CAKE"
 ///
 class PPRegion {
-  ino_t ino;
+  llvm::sys::fs::UniqueID UniqueID;
   time_t ModTime;
-  dev_t dev;
   unsigned Offset;
 public:
-  PPRegion() : ino(), ModTime(), dev(), Offset() {}
-  PPRegion(dev_t dev, ino_t ino, unsigned offset, time_t modTime)
-    : ino(ino), ModTime(modTime), dev(dev), Offset(offset) {}
+  PPRegion() : UniqueID(0, 0), ModTime(), Offset() {}
+  PPRegion(llvm::sys::fs::UniqueID UniqueID, unsigned offset, time_t modTime)
+      : UniqueID(UniqueID), ModTime(modTime), Offset(offset) {}
 
-  ino_t getIno() const { return ino; }
-  dev_t getDev() const { return dev; }
+  const llvm::sys::fs::UniqueID &getUniqueID() const { return UniqueID; }
   unsigned getOffset() const { return Offset; }
   time_t getModTime() const { return ModTime; }
 
   bool isInvalid() const { return *this == PPRegion(); }
 
   friend bool operator==(const PPRegion &lhs, const PPRegion &rhs) {
-    return lhs.dev == rhs.dev && lhs.ino == rhs.ino &&
-        lhs.Offset == rhs.Offset && lhs.ModTime == rhs.ModTime;
+    return lhs.UniqueID == rhs.UniqueID && lhs.Offset == rhs.Offset &&
+           lhs.ModTime == rhs.ModTime;
   }
 };
 
@@ -122,16 +121,17 @@ namespace llvm {
   template <>
   struct DenseMapInfo<PPRegion> {
     static inline PPRegion getEmptyKey() {
-      return PPRegion(0, 0, unsigned(-1), 0);
+      return PPRegion(llvm::sys::fs::UniqueID(0, 0), unsigned(-1), 0);
     }
     static inline PPRegion getTombstoneKey() {
-      return PPRegion(0, 0, unsigned(-2), 0);
+      return PPRegion(llvm::sys::fs::UniqueID(0, 0), unsigned(-2), 0);
     }
 
     static unsigned getHashValue(const PPRegion &S) {
       llvm::FoldingSetNodeID ID;
-      ID.AddInteger(S.getIno());
-      ID.AddInteger(S.getDev());
+      const llvm::sys::fs::UniqueID &UniqueID = S.getUniqueID();
+      ID.AddInteger(UniqueID.getFile());
+      ID.AddInteger(UniqueID.getDevice());
       ID.AddInteger(S.getOffset());
       ID.AddInteger(S.getModTime());
       return ID.ComputeHash();
@@ -208,9 +208,10 @@ private:
   PPRegion getRegion(SourceLocation Loc, FileID FID, const FileEntry *FE) {
     SourceLocation RegionLoc = PPRec.findConditionalDirectiveRegionLoc(Loc);
     if (RegionLoc.isInvalid()) {
-      if (isParsedOnceInclude(FE))
-        return PPRegion(FE->getDevice(), FE->getInode(), 0,
-                        FE->getModificationTime());
+      if (isParsedOnceInclude(FE)) {
+        const llvm::sys::fs::UniqueID &ID = FE->getUniqueID();
+        return PPRegion(ID, 0, FE->getModificationTime());
+      }
       return PPRegion();
     }
 
@@ -221,14 +222,15 @@ private:
     llvm::tie(RegionFID, RegionOffset) = SM.getDecomposedLoc(RegionLoc);
 
     if (RegionFID != FID) {
-      if (isParsedOnceInclude(FE))
-        return PPRegion(FE->getDevice(), FE->getInode(), 0,
-                        FE->getModificationTime());
+      if (isParsedOnceInclude(FE)) {
+        const llvm::sys::fs::UniqueID &ID = FE->getUniqueID();
+        return PPRegion(ID, 0, FE->getModificationTime());
+      }
       return PPRegion();
     }
 
-    return PPRegion(FE->getDevice(), FE->getInode(), RegionOffset,
-                    FE->getModificationTime());
+    const llvm::sys::fs::UniqueID &ID = FE->getUniqueID();
+    return PPRegion(ID, RegionOffset, FE->getModificationTime());
   }
 
   bool isParsedOnceInclude(const FileEntry *FE) {
@@ -292,7 +294,7 @@ public:
 
   /// MacroExpands - This is called by when a macro invocation is found.
   virtual void MacroExpands(const Token &MacroNameTok, const MacroDirective *MD,
-                            SourceRange Range) {
+                            SourceRange Range, const MacroArgs *Args) {
   }
 
   /// SourceRangeSkipped - This hook is called when a source range is skipped.
@@ -397,10 +399,6 @@ public:
                                 const Diagnostic &Info) {
     if (level >= DiagnosticsEngine::Error)
       Errors.push_back(StoredDiagnostic(level, Info));
-  }
-
-  DiagnosticConsumer *clone(DiagnosticsEngine &Diags) const {
-    return new IgnoringDiagConsumer();
   }
 };
 
@@ -549,8 +547,7 @@ static void clang_indexSourceFile_Impl(void *UserData) {
   IntrusiveRefCntPtr<DiagnosticsEngine>
     Diags(CompilerInstance::createDiagnostics(new DiagnosticOptions,
                                               CaptureDiag,
-                                              /*ShouldOwnClient=*/true,
-                                              /*ShouldCloneClient=*/false));
+                                              /*ShouldOwnClient=*/true));
 
   // Recover resources if we crash before exiting this function.
   llvm::CrashRecoveryContextCleanupRegistrar<DiagnosticsEngine,

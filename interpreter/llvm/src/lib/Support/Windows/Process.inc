@@ -40,7 +40,7 @@ using namespace sys;
 
 
 process::id_type self_process::get_id() {
-  return GetCurrentProcess();
+  return GetCurrentProcessId();
 }
 
 static TimeValue getTimeValueFromFILETIME(FILETIME Time) {
@@ -83,6 +83,8 @@ static unsigned getPageSize() {
   // that LLVM ought to run as 64-bits on a 64-bit system, anyway.
   SYSTEM_INFO info;
   GetSystemInfo(&info);
+  // FIXME: FileOffset in MapViewOfFile() should be aligned to not dwPageSize,
+  // but dwAllocationGranularity.
   return static_cast<unsigned>(info.dwPageSize);
 }
 
@@ -119,26 +121,53 @@ void Process::GetTimeUsage(TimeValue &elapsed, TimeValue &user_time,
   sys_time = getTimeValueFromFILETIME(KernelTime);
 }
 
-int Process::GetCurrentUserId()
-{
-  return 65536;
-}
-
-int Process::GetCurrentGroupId()
-{
-  return 65536;
-}
-
 // Some LLVM programs such as bugpoint produce core files as a normal part of
-// their operation. To prevent the disk from filling up, this configuration item
-// does what's necessary to prevent their generation.
+// their operation. To prevent the disk from filling up, this configuration
+// item does what's necessary to prevent their generation.
 void Process::PreventCoreFiles() {
-  // Windows doesn't do core files, but it does do modal pop-up message
-  // boxes.  As this method is used by bugpoint, preventing these pop-ups
-  // is the moral equivalent of suppressing core files.
+  // Windows does have the concept of core files, called minidumps.  However,
+  // disabling minidumps for a particular application extends past the lifetime
+  // of that application, which is the incorrect behavior for this API.
+  // Additionally, the APIs require elevated privileges to disable and re-
+  // enable minidumps, which makes this untenable. For more information, see
+  // WerAddExcludedApplication and WerRemoveExcludedApplication (Vista and
+  // later).
+  //
+  // Windows also has modal pop-up message boxes.  As this method is used by
+  // bugpoint, preventing these pop-ups is additionally important.
   SetErrorMode(SEM_FAILCRITICALERRORS |
                SEM_NOGPFAULTERRORBOX |
                SEM_NOOPENFILEERRORBOX);
+}
+
+/// Returns the environment variable \arg Name's value as a string encoded in
+/// UTF-8. \arg Name is assumed to be in UTF-8 encoding.
+Optional<std::string> Process::GetEnv(StringRef Name) {
+  // Convert the argument to UTF-16 to pass it to _wgetenv().
+  SmallVector<wchar_t, 128> NameUTF16;
+  if (error_code ec = windows::UTF8ToUTF16(Name, NameUTF16))
+    return None;
+
+  // Environment variable can be encoded in non-UTF8 encoding, and there's no
+  // way to know what the encoding is. The only reliable way to look up
+  // multibyte environment variable is to use GetEnvironmentVariableW().
+  std::vector<wchar_t> Buf(16);
+  size_t Size = 0;
+  for (;;) {
+    Size = GetEnvironmentVariableW(&NameUTF16[0], &Buf[0], Buf.size());
+    if (Size < Buf.size())
+      break;
+    // Try again with larger buffer.
+    Buf.resize(Size + 1);
+  }
+  if (Size == 0)
+    return None;
+
+  // Convert the result from UTF-16 to UTF-8.
+  SmallVector<char, 128> Res;
+  if (error_code ec = windows::UTF16ToUTF8(&Buf[0], Size, Res))
+    return None;
+  return std::string(&Res[0]);
 }
 
 bool Process::StandardInIsUserInput() {
@@ -187,6 +216,11 @@ bool Process::StandardErrHasColors() {
   return FileDescriptorHasColors(2);
 }
 
+static bool UseANSI = false;
+void Process::UseANSIEscapeCodes(bool enable) {
+  UseANSI = enable;
+}
+
 namespace {
 class DefaultColors
 {
@@ -208,10 +242,12 @@ DefaultColors defaultColors;
 }
 
 bool Process::ColorNeedsFlush() {
-  return true;
+  return !UseANSI;
 }
 
 const char *Process::OutputBold(bool bg) {
+  if (UseANSI) return "\033[1m";
+
   WORD colors = DefaultColors::GetCurrentColor();
   if (bg)
     colors |= BACKGROUND_INTENSITY;
@@ -222,6 +258,8 @@ const char *Process::OutputBold(bool bg) {
 }
 
 const char *Process::OutputColor(char code, bool bold, bool bg) {
+  if (UseANSI) return colorcodes[bg?1:0][bold?1:0][code&7];
+
   WORD colors;
   if (bg) {
     colors = ((code&1) ? BACKGROUND_RED : 0) |
@@ -247,6 +285,8 @@ static WORD GetConsoleTextAttribute(HANDLE hConsoleOutput) {
 }
 
 const char *Process::OutputReverse() {
+  if (UseANSI) return "\033[7m";
+
   const WORD attributes
    = GetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE));
 
@@ -273,6 +313,7 @@ const char *Process::OutputReverse() {
 }
 
 const char *Process::ResetColor() {
+  if (UseANSI) return "\033[0m";
   SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), defaultColors());
   return 0;
 }

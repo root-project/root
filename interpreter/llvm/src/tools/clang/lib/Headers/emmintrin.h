@@ -245,13 +245,15 @@ _mm_cmple_sd(__m128d __a, __m128d __b)
 static __inline__ __m128d __attribute__((__always_inline__, __nodebug__))
 _mm_cmpgt_sd(__m128d __a, __m128d __b)
 {
-  return (__m128d)__builtin_ia32_cmpsd(__b, __a, 1);
+  __m128d __c = __builtin_ia32_cmpsd(__b, __a, 1);
+  return (__m128d) { __c[0], __a[1] };
 }
 
 static __inline__ __m128d __attribute__((__always_inline__, __nodebug__))
 _mm_cmpge_sd(__m128d __a, __m128d __b)
 {
-  return (__m128d)__builtin_ia32_cmpsd(__b, __a, 2);
+  __m128d __c = __builtin_ia32_cmpsd(__b, __a, 2);
+  return (__m128d) { __c[0], __a[1] };
 }
 
 static __inline__ __m128d __attribute__((__always_inline__, __nodebug__))
@@ -287,13 +289,15 @@ _mm_cmpnle_sd(__m128d __a, __m128d __b)
 static __inline__ __m128d __attribute__((__always_inline__, __nodebug__))
 _mm_cmpngt_sd(__m128d __a, __m128d __b)
 {
-  return (__m128d)__builtin_ia32_cmpsd(__b, __a, 5);
+  __m128d __c = __builtin_ia32_cmpsd(__b, __a, 5);
+  return (__m128d) { __c[0], __a[1] };
 }
 
 static __inline__ __m128d __attribute__((__always_inline__, __nodebug__))
 _mm_cmpnge_sd(__m128d __a, __m128d __b)
 {
-  return (__m128d)__builtin_ia32_cmpsd(__b, __a, 6);
+  __m128d __c = __builtin_ia32_cmpsd(__b, __a, 6);
+  return (__m128d) { __c[0], __a[1] };
 }
 
 static __inline__ int __attribute__((__always_inline__, __nodebug__))
@@ -1210,6 +1214,14 @@ _mm_stream_si32(int *__p, int __a)
   __builtin_ia32_movnti(__p, __a);
 }
 
+#ifdef __x86_64__
+static __inline__ void __attribute__((__always_inline__, __nodebug__))
+_mm_stream_si64(long long *__p, long long __a)
+{
+  __builtin_ia32_movnti64(__p, __a);
+}
+#endif
+
 static __inline__ void __attribute__((__always_inline__, __nodebug__))
 _mm_clflush(void const *__p)
 {
@@ -1379,39 +1391,39 @@ _mm_movemask_pd(__m128d __a)
   __builtin_shufflevector(__a, __b, (i) & 1, (((i) & 2) >> 1) + 2); })
 
 static __inline__ __m128 __attribute__((__always_inline__, __nodebug__))
-_mm_castpd_ps(__m128d __in)
+_mm_castpd_ps(__m128d __a)
 {
-  return (__m128)__in;
+  return (__m128)__a;
 }
 
 static __inline__ __m128i __attribute__((__always_inline__, __nodebug__))
-_mm_castpd_si128(__m128d __in)
+_mm_castpd_si128(__m128d __a)
 {
-  return (__m128i)__in;
+  return (__m128i)__a;
 }
 
 static __inline__ __m128d __attribute__((__always_inline__, __nodebug__))
-_mm_castps_pd(__m128 __in)
+_mm_castps_pd(__m128 __a)
 {
-  return (__m128d)__in;
+  return (__m128d)__a;
 }
 
 static __inline__ __m128i __attribute__((__always_inline__, __nodebug__))
-_mm_castps_si128(__m128 __in)
+_mm_castps_si128(__m128 __a)
 {
-  return (__m128i)__in;
+  return (__m128i)__a;
 }
 
 static __inline__ __m128 __attribute__((__always_inline__, __nodebug__))
-_mm_castsi128_ps(__m128i __in)
+_mm_castsi128_ps(__m128i __a)
 {
-  return (__m128)__in;
+  return (__m128)__a;
 }
 
 static __inline__ __m128d __attribute__((__always_inline__, __nodebug__))
-_mm_castsi128_pd(__m128i __in)
+_mm_castsi128_pd(__m128i __a)
 {
-  return (__m128d)__in;
+  return (__m128d)__a;
 }
 
 static __inline__ void __attribute__((__always_inline__, __nodebug__))

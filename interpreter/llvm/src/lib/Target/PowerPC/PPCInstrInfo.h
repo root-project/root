@@ -148,12 +148,6 @@ public:
                                     const TargetRegisterClass *RC,
                                     const TargetRegisterInfo *TRI) const;
 
-  virtual MachineInstr *emitFrameIndexDebugValue(MachineFunction &MF,
-                                                 int FrameIx,
-                                                 uint64_t Offset,
-                                                 const MDNode *MDPtr,
-                                                 DebugLoc DL) const;
-
   virtual
   bool ReverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const;
 
@@ -204,6 +198,18 @@ public:
                                 std::vector<MachineOperand> &Pred) const;
 
   virtual bool isPredicable(MachineInstr *MI) const;
+
+  // Comparison optimization.
+
+
+  virtual bool analyzeCompare(const MachineInstr *MI,
+                              unsigned &SrcReg, unsigned &SrcReg2,
+                              int &Mask, int &Value) const;
+
+  virtual bool optimizeCompareInstr(MachineInstr *CmpInstr,
+                                    unsigned SrcReg, unsigned SrcReg2,
+                                    int Mask, int Value,
+                                    const MachineRegisterInfo *MRI) const;
 
   /// GetInstSize - Return the number of bytes of code the specified
   /// instruction may be.  This returns the maximum number of bytes.

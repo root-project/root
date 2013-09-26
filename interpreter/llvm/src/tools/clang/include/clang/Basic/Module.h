@@ -16,6 +16,7 @@
 #define LLVM_CLANG_BASIC_MODULE_H
 
 #include "clang/Basic/SourceLocation.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/ADT/PointerUnion.h"
 #include "llvm/ADT/SetVector.h"
@@ -75,12 +76,18 @@ private:
   /// \brief top-level header filenames that aren't resolved to FileEntries yet.
   std::vector<std::string> TopHeaderNames;
 
+  /// \brief Cache of modules visible to lookup in this module.
+  mutable llvm::DenseSet<const Module*> VisibleModulesCache;
+
 public:
   /// \brief The headers that are part of this module.
-  SmallVector<const FileEntry *, 2> Headers;
+  SmallVector<const FileEntry *, 2> NormalHeaders;
 
   /// \brief The headers that are explicitly excluded from this module.
   SmallVector<const FileEntry *, 2> ExcludedHeaders;
+
+  /// \brief The headers that are private to this module.
+  llvm::SmallVector<const FileEntry *, 2> PrivateHeaders;
 
   /// \brief The set of language features required to use this module.
   ///
@@ -175,6 +182,12 @@ public:
   
   /// \brief The set of export declarations that have yet to be resolved.
   SmallVector<UnresolvedExportDecl, 2> UnresolvedExports;
+
+  /// \brief The directly used modules.
+  SmallVector<Module *, 2> DirectUses;
+
+  /// \brief The set of use declarations that have yet to be resolved.
+  SmallVector<ModuleId, 2> UnresolvedDirectUses;
 
   /// \brief A library or framework to link against when an entity from this
   /// module is used.
@@ -366,6 +379,14 @@ public:
   /// \returns The submodule if found, or NULL otherwise.
   Module *findSubmodule(StringRef Name) const;
 
+  /// \brief Determine whether the specified module would be visible to
+  /// a lookup at the end of this module.
+  bool isModuleVisible(const Module *M) const {
+    if (VisibleModulesCache.empty())
+      buildVisibleModulesCache();
+    return VisibleModulesCache.count(M);
+  }
+
   typedef std::vector<Module *>::iterator submodule_iterator;
   typedef std::vector<Module *>::const_iterator submodule_const_iterator;
   
@@ -387,6 +408,9 @@ public:
   
   /// \brief Dump the contents of this module to the given output stream.
   void dump() const;
+
+private:
+  void buildVisibleModulesCache() const;
 };
 
 } // end namespace clang

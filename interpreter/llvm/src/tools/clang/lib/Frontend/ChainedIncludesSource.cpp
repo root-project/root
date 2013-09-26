@@ -26,9 +26,9 @@
 using namespace clang;
 
 static ASTReader *createASTReader(CompilerInstance &CI,
-                                  StringRef pchFile,  
-                                  SmallVector<llvm::MemoryBuffer *, 4> &memBufs,
-                                  SmallVector<std::string, 4> &bufNames,
+                             StringRef pchFile,
+                             SmallVectorImpl<llvm::MemoryBuffer *> &memBufs,
+                             SmallVectorImpl<std::string> &bufNames,
                              ASTDeserializationListener *deserialListener = 0) {
   Preprocessor &PP = CI.getPreprocessor();
   OwningPtr<ASTReader> Reader;
@@ -143,6 +143,7 @@ ChainedIncludesSource *ChainedIncludesSource::create(CompilerInstance &CI) {
         Clang->getASTConsumer().GetASTDeserializationListener()));
       if (!Reader)
         return 0;
+      Clang->setModuleManager(static_cast<ASTReader*>(Reader.get()));
       Clang->getASTContext().setExternalSource(Reader);
     }
     

@@ -10,6 +10,7 @@
 #include "llvm/MC/MCSectionELF.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCContext.h"
+#include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/Support/ELF.h"
 #include "llvm/Support/raw_ostream.h"
@@ -32,10 +33,14 @@ bool MCSectionELF::ShouldOmitSectionDirective(StringRef Name,
 }
 
 void MCSectionELF::PrintSwitchToSection(const MCAsmInfo &MAI,
-                                        raw_ostream &OS) const {
+                                        raw_ostream &OS,
+                                        const MCExpr *Subsection) const {
 
   if (ShouldOmitSectionDirective(SectionName, MAI)) {
-    OS << '\t' << getSectionName() << '\n';
+    OS << '\t' << getSectionName();
+    if (Subsection)
+      OS << '\t' << *Subsection;
+    OS << '\n';
     return;
   }
 
@@ -70,6 +75,8 @@ void MCSectionELF::PrintSwitchToSection(const MCAsmInfo &MAI,
       OS << ",#execinstr";
     if (Flags & ELF::SHF_WRITE)
       OS << ",#write";
+    if (Flags & ELF::SHF_EXCLUDE)
+      OS << ",#exclude";
     if (Flags & ELF::SHF_TLS)
       OS << ",#tls";
     OS << '\n';
@@ -79,6 +86,8 @@ void MCSectionELF::PrintSwitchToSection(const MCAsmInfo &MAI,
   OS << ",\"";
   if (Flags & ELF::SHF_ALLOC)
     OS << 'a';
+  if (Flags & ELF::SHF_EXCLUDE)
+    OS << 'e';
   if (Flags & ELF::SHF_EXECINSTR)
     OS << 'x';
   if (Flags & ELF::SHF_GROUP)
@@ -129,6 +138,9 @@ void MCSectionELF::PrintSwitchToSection(const MCAsmInfo &MAI,
   if (Flags & ELF::SHF_GROUP)
     OS << "," << Group->getName() << ",comdat";
   OS << '\n';
+
+  if (Subsection)
+    OS << "\t.subsection\t" << *Subsection << '\n';
 }
 
 bool MCSectionELF::UseCodeAlign() const {

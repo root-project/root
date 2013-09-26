@@ -144,17 +144,6 @@ namespace llvm {
     Ranges ranges;       // the ranges in which this register is live
     VNInfoList valnos;   // value#'s
 
-    struct InstrSlots {
-      enum {
-        LOAD  = 0,
-        USE   = 1,
-        DEF   = 2,
-        STORE = 3,
-        NUM   = 4
-      };
-
-    };
-
     LiveInterval(unsigned Reg, float Weight)
       : reg(Reg), weight(Weight) {}
 
@@ -205,6 +194,10 @@ namespace llvm {
       ranges.clear();
     }
 
+    size_t size() const {
+      return ranges.size();
+    }
+
     bool hasAtLeastOneValue() const { return !valnos.empty(); }
 
     bool containsOneValue() const { return valnos.size() == 1; }
@@ -251,9 +244,9 @@ namespace llvm {
 
     /// RenumberValues - Renumber all values in order of appearance and remove
     /// unused values.
-    void RenumberValues(LiveIntervals &lis);
+    void RenumberValues();
 
-    /// MergeValueNumberInto - This method is called when two value nubmers
+    /// MergeValueNumberInto - This method is called when two value numbers
     /// are found to be equivalent.  This eliminates V1, replacing all
     /// LiveRanges with the V1 value number with the V2 value number.  This can
     /// cause merging of V1/V2 values numbers and compaction of the value space.
@@ -296,14 +289,6 @@ namespace llvm {
     bool liveAt(SlotIndex index) const {
       const_iterator r = find(index);
       return r != end() && r->start <= index;
-    }
-
-    /// killedAt - Return true if a live range ends at index. Note that the kill
-    /// point is not contained in the half-open live range. It is usually the
-    /// getDefIndex() slot following its last use.
-    bool killedAt(SlotIndex index) const {
-      const_iterator r = find(index.getRegSlot(true));
-      return r != end() && r->end == index;
     }
 
     /// getLiveRangeContaining - Return the live range that contains the
@@ -389,14 +374,15 @@ namespace llvm {
     void join(LiveInterval &Other,
               const int *ValNoAssignments,
               const int *RHSValNoAssignments,
-              SmallVector<VNInfo*, 16> &NewVNInfo,
-              MachineRegisterInfo *MRI);
+              SmallVectorImpl<VNInfo *> &NewVNInfo);
 
-    /// isInOneLiveRange - Return true if the range specified is entirely in the
-    /// a single LiveRange of the live interval.
-    bool isInOneLiveRange(SlotIndex Start, SlotIndex End) const {
-      const_iterator r = find(Start);
-      return r != end() && r->containsRange(Start, End);
+    /// True iff this live range is a single segment that lies between the
+    /// specified boundaries, exclusively. Vregs live across a backedge are not
+    /// considered local. The boundaries are expected to lie within an extended
+    /// basic block, so vregs that are not live out should contain no holes.
+    bool isLocal(SlotIndex Start, SlotIndex End) const {
+      return beginIndex() > Start.getBaseIndex() &&
+        endIndex() < End.getBoundaryIndex();
     }
 
     /// removeRange - Remove the specified range from this interval.  Note that
@@ -457,9 +443,9 @@ namespace llvm {
 
   private:
 
-    Ranges::iterator addRangeFrom(LiveRange LR, Ranges::iterator From);
-    void extendIntervalEndTo(Ranges::iterator I, SlotIndex NewEnd);
-    Ranges::iterator extendIntervalStartTo(Ranges::iterator I, SlotIndex NewStr);
+    iterator addRangeFrom(LiveRange LR, iterator From);
+    void extendIntervalEndTo(iterator I, SlotIndex NewEnd);
+    iterator extendIntervalStartTo(iterator I, SlotIndex NewStr);
     void markValNoForDeletion(VNInfo *V);
 
     LiveInterval& operator=(const LiveInterval& rhs) LLVM_DELETED_FUNCTION;

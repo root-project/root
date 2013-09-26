@@ -63,6 +63,11 @@ input. Otherwise, it will read from the specified ``filenames``.
 
  Display unwind information.
 
+.. option:: -expand-relocs
+
+ When used with ``-relocations``, display each relocation in an expanded
+ multi-line format.
+
 .. option:: -dynamic-table
 
  Display the ELF .dynamic section table (only for ELF object files).
@@ -70,6 +75,10 @@ input. Otherwise, it will read from the specified ``filenames``.
 .. option:: -needed-libs
 
  Display the needed libraries (only for ELF object files).
+
+.. option:: -program-headers
+
+ Display the ELF program headers (only for ELF object files).
 
 EXIT STATUS
 -----------

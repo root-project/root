@@ -10,6 +10,7 @@
 #include "IndexingContext.h"
 #include "CIndexDiagnostic.h"
 #include "CXTranslationUnit.h"
+#include "clang/AST/Attr.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/Frontend/ASTUnit.h"
@@ -210,11 +211,13 @@ bool IndexingContext::isFunctionLocalDecl(const Decl *D) {
     return false;
 
   if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
-    switch (ND->getLinkage()) {
+    switch (ND->getFormalLinkage()) {
     case NoLinkage:
+    case VisibleNoLinkage:
     case InternalLinkage:
       return true;
     case UniqueExternalLinkage:
+      llvm_unreachable("Not a sema linkage");
     case ExternalLinkage:
       return false;
     }
@@ -391,6 +394,12 @@ bool IndexingContext::handleVar(const VarDecl *D) {
 }
 
 bool IndexingContext::handleField(const FieldDecl *D) {
+  DeclInfo DInfo(/*isRedeclaration=*/false, /*isDefinition=*/true,
+                 /*isContainer=*/false);
+  return handleDecl(D, D->getLocation(), getCursor(D), DInfo);
+}
+
+bool IndexingContext::handleMSProperty(const MSPropertyDecl *D) {
   DeclInfo DInfo(/*isRedeclaration=*/false, /*isDefinition=*/true,
                  /*isContainer=*/false);
   return handleDecl(D, D->getLocation(), getCursor(D), DInfo);

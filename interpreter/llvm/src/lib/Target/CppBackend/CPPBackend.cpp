@@ -497,6 +497,7 @@ void CppWriter::printAttributes(const AttributeSet &PAL,
       HANDLE_ATTR(ReadOnly);
       HANDLE_ATTR(NoInline);
       HANDLE_ATTR(AlwaysInline);
+      HANDLE_ATTR(OptimizeNone);
       HANDLE_ATTR(OptimizeForSize);
       HANDLE_ATTR(StackProtect);
       HANDLE_ATTR(StackProtectReq);
@@ -1139,7 +1140,7 @@ void CppWriter::printInstruction(const Instruction *I,
     nl(Out);
     for (SwitchInst::ConstCaseIt i = SI->case_begin(), e = SI->case_end();
          i != e; ++i) {
-      const IntegersSubset CaseVal = i.getCaseValueEx();
+      const ConstantInt* CaseVal = i.getCaseValue();
       const BasicBlock *BB = i.getCaseSuccessor();
       Out << iName << "->addCase("
           << getOpName(CaseVal) << ", "
@@ -1160,8 +1161,7 @@ void CppWriter::printInstruction(const Instruction *I,
     break;
   }
   case Instruction::Resume: {
-    Out << "ResumeInst::Create(mod->getContext(), " << opNames[0]
-        << ", " << bbname << ");";
+    Out << "ResumeInst::Create(" << opNames[0] << ", " << bbname << ");";
     break;
   }
   case Instruction::Invoke: {
@@ -1175,7 +1175,7 @@ void CppWriter::printInstruction(const Instruction *I,
     }
     // FIXME: This shouldn't use magic numbers -3, -2, and -1.
     Out << "InvokeInst *" << iName << " = InvokeInst::Create("
-        << getOpName(inv->getCalledFunction()) << ", "
+        << getOpName(inv->getCalledValue()) << ", "
         << getOpName(inv->getNormalDest()) << ", "
         << getOpName(inv->getUnwindDest()) << ", "
         << iName << "_params, \"";
@@ -1589,6 +1589,20 @@ void CppWriter::printInstruction(const Instruction *I,
     Out << "\");";
     break;
   }
+  case Instruction::LandingPad: {
+    const LandingPadInst *lpi = cast<LandingPadInst>(I);
+    Out << "LandingPadInst* " << iName << " = LandingPadInst::Create(";
+    printCppName(lpi->getType());
+    Out << ", " << opNames[0] << ", " << lpi->getNumClauses() << ", \"";
+    printEscapedString(lpi->getName());
+    Out << "\", " << bbname << ");";
+    nl(Out) << iName << "->setCleanup("
+            << (lpi->isCleanup() ? "true" : "false")
+            << ");";
+    for (unsigned i = 0, e = lpi->getNumClauses(); i != e; ++i)
+      nl(Out) << iName << "->addClause(" << opNames[i+1] << ");";
+    break;
+  }
   }
   DefinedValues.insert(I);
   nl(Out);
@@ -1832,7 +1846,7 @@ void CppWriter::printInline(const std::string& fname,
   unsigned arg_count = 1;
   for (Function::const_arg_iterator AI = F->arg_begin(), AE = F->arg_end();
        AI != AE; ++AI) {
-    Out << ", Value* arg_" << arg_count;
+    Out << ", Value* arg_" << arg_count++;
   }
   Out << ") {";
   nl(Out);

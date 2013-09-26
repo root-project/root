@@ -16,30 +16,35 @@
 
 #include "llvm/IR/Use.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/CBindingWrapping.h"
 #include "llvm/Support/Compiler.h"
+#include "llvm-c/Core.h"
 
 namespace llvm {
 
-class Constant;
+class APInt;
 class Argument;
-class Instruction;
+class AssemblyAnnotationWriter;
 class BasicBlock;
-class GlobalValue;
+class Constant;
+class DataLayout;
 class Function;
-class GlobalVariable;
 class GlobalAlias;
+class GlobalValue;
+class GlobalVariable;
 class InlineAsm;
+class Instruction;
+class LLVMContext;
+class MDNode;
+class StringRef;
+class Twine;
+class Type;
+class ValueHandleBase;
 class ValueSymbolTable;
+class raw_ostream;
+
 template<typename ValueTy> class StringMapEntry;
 typedef StringMapEntry<Value*> ValueName;
-class raw_ostream;
-class AssemblyAnnotationWriter;
-class ValueHandleBase;
-class LLVMContext;
-class Twine;
-class MDNode;
-class Type;
-class StringRef;
 
 //===----------------------------------------------------------------------===//
 //                                 Value Class
@@ -258,27 +263,53 @@ public:
   /// this value.
   bool hasValueHandle() const { return HasValueHandle; }
 
-  /// stripPointerCasts - This method strips off any unneeded pointer casts and
-  /// all-zero GEPs from the specified value, returning the original uncasted
-  /// value. If this is called on a non-pointer value, it returns 'this'.
+  /// \brief Strips off any unneeded pointer casts, all-zero GEPs and aliases
+  /// from the specified value, returning the original uncasted value.
+  ///
+  /// If this is called on a non-pointer value, it returns 'this'.
   Value *stripPointerCasts();
   const Value *stripPointerCasts() const {
     return const_cast<Value*>(this)->stripPointerCasts();
   }
 
-  /// stripInBoundsConstantOffsets - This method strips off unneeded pointer casts and
-  /// all-constant GEPs from the specified value, returning the original
-  /// pointer value. If this is called on a non-pointer value, it returns
-  /// 'this'.
+  /// \brief Strips off any unneeded pointer casts and all-zero GEPs from the
+  /// specified value, returning the original uncasted value.
+  ///
+  /// If this is called on a non-pointer value, it returns 'this'.
+  Value *stripPointerCastsNoFollowAliases();
+  const Value *stripPointerCastsNoFollowAliases() const {
+    return const_cast<Value*>(this)->stripPointerCastsNoFollowAliases();
+  }
+
+  /// \brief Strips off unneeded pointer casts and all-constant GEPs from the
+  /// specified value, returning the original pointer value.
+  ///
+  /// If this is called on a non-pointer value, it returns 'this'.
   Value *stripInBoundsConstantOffsets();
   const Value *stripInBoundsConstantOffsets() const {
     return const_cast<Value*>(this)->stripInBoundsConstantOffsets();
   }
 
-  /// stripInBoundsOffsets - This method strips off unneeded pointer casts and
-  /// any in-bounds Offsets from the specified value, returning the original
-  /// pointer value. If this is called on a non-pointer value, it returns
-  /// 'this'.
+  /// \brief Strips like \c stripInBoundsConstantOffsets but also accumulates
+  /// the constant offset stripped.
+  ///
+  /// Stores the resulting constant offset stripped into the APInt provided.
+  /// The provided APInt will be extended or truncated as needed to be the
+  /// correct bitwidth for an offset of this pointer type.
+  ///
+  /// If this is called on a non-pointer value, it returns 'this'.
+  Value *stripAndAccumulateInBoundsConstantOffsets(const DataLayout &DL,
+                                                   APInt &Offset);
+  const Value *stripAndAccumulateInBoundsConstantOffsets(const DataLayout &DL,
+                                                         APInt &Offset) const {
+    return const_cast<Value *>(this)
+        ->stripAndAccumulateInBoundsConstantOffsets(DL, Offset);
+  }
+
+  /// \brief Strips off unneeded pointer casts and any in-bounds offsets from
+  /// the specified value, returning the original pointer value.
+  ///
+  /// If this is called on a non-pointer value, it returns 'this'.
   Value *stripInBoundsOffsets();
   const Value *stripInBoundsOffsets() const {
     return const_cast<Value*>(this)->stripInBoundsOffsets();
@@ -405,6 +436,29 @@ public:
   }
   enum { NumLowBitsAvailable = 2 };
 };
+
+// Create wrappers for C Binding types (see CBindingWrapping.h).
+DEFINE_ISA_CONVERSION_FUNCTIONS(Value, LLVMValueRef)
+
+/* Specialized opaque value conversions.
+ */ 
+inline Value **unwrap(LLVMValueRef *Vals) {
+  return reinterpret_cast<Value**>(Vals);
+}
+
+template<typename T>
+inline T **unwrap(LLVMValueRef *Vals, unsigned Length) {
+#ifdef DEBUG
+  for (LLVMValueRef *I = Vals, *E = Vals + Length; I != E; ++I)
+    cast<T>(*I);
+#endif
+  (void)Length;
+  return reinterpret_cast<T**>(Vals);
+}
+
+inline LLVMValueRef *wrap(const Value **Vals) {
+  return reinterpret_cast<LLVMValueRef*>(const_cast<Value**>(Vals));
+}
 
 } // End llvm namespace
 

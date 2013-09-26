@@ -1,5 +1,5 @@
 =====================================
-Clang 3.3 (In-Progress) Release Notes
+Clang 3.4 (In-Progress) Release Notes
 =====================================
 
 .. contents::
@@ -10,15 +10,15 @@ Written by the `LLVM Team <http://llvm.org/>`_
 
 .. warning::
 
-   These are in-progress notes for the upcoming Clang 3.3 release. You may
-   prefer the `Clang 3.2 Release Notes
-   <http://llvm.org/releases/3.2/docs/ClangReleaseNotes.html>`_.
+   These are in-progress notes for the upcoming Clang 3.4 release. You may
+   prefer the `Clang 3.3 Release Notes
+   <http://llvm.org/releases/3.3/tools/clang/docs/ReleaseNotes.html>`_.
 
 Introduction
 ============
 
 This document contains the release notes for the Clang C/C++/Objective-C
-frontend, part of the LLVM Compiler Infrastructure, release 3.3. Here we
+frontend, part of the LLVM Compiler Infrastructure, release 3.4. Here we
 describe the status of Clang in some detail, including major
 improvements from the previous release and new feature work. For the
 general LLVM release notes, see `the LLVM
@@ -36,7 +36,7 @@ main Clang web page, this document applies to the *next* release, not
 the current one. To see the release notes for a specific release, please
 see the `releases page <http://llvm.org/releases/>`_.
 
-What's New in Clang 3.3?
+What's New in Clang 3.4?
 ========================
 
 Some of the major new features and improvements to Clang are listed
@@ -52,26 +52,22 @@ Improvements to Clang's diagnostics
 
 Clang's diagnostics are constantly being improved to catch more issues,
 explain them more clearly, and provide more accurate source information
-about them. The improvements since the 3.2 release include:
+about them. The improvements since the 3.3 release include:
 
 -  ...
-
-Extended Identifiers: Unicode Support and Universal Character Names
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Clang 3.3 includes support for *extended identifiers* in C99 and C++.
-This feature allows identifiers to contain certain Unicode characters, as
-specified by the active language standard; these characters can be written
-directly in the source file using the UTF-8 encoding, or referred to using
-*universal character names* (``\u00E0``, ``\U000000E0``).
 
 New Compiler Flags
 ------------------
 
--  ...
+- Clang no longer special cases -O4 to enable lto. Explicitly pass -flto to
+  enable it.
+- Command line "clang -O3 -flto a.c -c" and "clang -emit-llvm a.c -c" 
+  are no longer equivalent.
 
 C Language Changes in Clang
 ---------------------------
+
+- Added new checked arithmetic builtins for security critical applications.
 
 C11 Feature Support
 ^^^^^^^^^^^^^^^^^^^
@@ -81,11 +77,11 @@ C11 Feature Support
 C++ Language Changes in Clang
 -----------------------------
 
-- Clang now correctly implements language linkage for functions and variables.
-  This means that, for example, it is now possible to overload static functions
-  declared in an ``extern "C"`` context. For backwards compatibility, an alias
-  with the unmangled name is still emitted if it is the only one and has the
-  ``used`` attribute.
+- Fixed an ABI regression, introduced in Clang 3.2, which affected
+  member offsets for classes inheriting from certain classes with tail padding.
+  See PR16537.
+
+- ...
 
 C++11 Feature Support
 ^^^^^^^^^^^^^^^^^^^^^
@@ -100,33 +96,42 @@ Objective-C Language Changes in Clang
 Internal API Changes
 --------------------
 
-These are major API changes that have happened since the 3.2 release of
+These are major API changes that have happened since the 3.3 release of
 Clang. If upgrading an external codebase that uses Clang as a library,
 this section should help get you past the largest hurdles of upgrading.
 
-Value Casting
-^^^^^^^^^^^^^
+Wide Character Types
+^^^^^^^^^^^^^^^^^^^^
 
-Certain type hierarchies (TypeLoc, CFGElement, ProgramPoint, and SVal) were
-misusing the llvm::cast machinery to perform undefined operations. Their APIs
-have been changed to use two member function templates that return values
-instead of pointers or references - "T castAs" and "Optional<T> getAs" (in the
-case of the TypeLoc hierarchy the latter is "T getAs" and you can use the
-boolean testability of a TypeLoc (or its 'validity') to verify that the cast
-succeeded). Essentially all previous 'cast' usage should be replaced with
-'castAs' and 'dyn_cast' should be replaced with 'getAs'. See r175462 for the
-first example of such a change along with many examples of how code was
-migrated to the new API.
-
-Storage Class
-^^^^^^^^^^^^^
-
-For each variable and function Clang used to keep the storage class as written
-in the source, the linkage and a semantic storage class. This was a bit
-redundant and the semantic storage class has been removed. The method
-getStorageClass now returns what is written it the source code for that decl.
+The ASTContext class now keeps track of two different types for wide character
+types: WCharTy and WideCharTy. WCharTy represents the built-in wchar_t type
+available in C++. WideCharTy is the type used for wide character literals; in
+C++ it is the same as WCharTy, but in C99, where wchar_t is a typedef, it is an
+integer type.
 
 ...
+
+libclang
+--------
+
+...
+
+Static Analyzer
+---------------
+
+The static analyzer (which contains additional code checking beyond compiler
+warnings) has improved significantly in both in the core analysis engine and 
+also in the kinds of issues it can find.
+
+Core Analysis Improvements
+==========================
+
+- ...
+
+New Issues Found
+================
+
+- ...
 
 Python Binding Changes
 ----------------------

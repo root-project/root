@@ -14,14 +14,18 @@
 //===----------------------------------------------------------------------===//
 
 #include "AMDGPUISelLowering.h"
+#include "AMDGPU.h"
 #include "AMDGPURegisterInfo.h"
-#include "AMDILIntrinsicInfo.h"
 #include "AMDGPUSubtarget.h"
+#include "AMDILIntrinsicInfo.h"
+#include "R600MachineFunctionInfo.h"
+#include "SIMachineFunctionInfo.h"
 #include "llvm/CodeGen/CallingConvLower.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/SelectionDAG.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
+#include "llvm/IR/DataLayout.h"
 
 using namespace llvm;
 
@@ -46,25 +50,141 @@ AMDGPUTargetLowering::AMDGPUTargetLowering(TargetMachine &TM) :
   setOperationAction(ISD::FFLOOR, MVT::f32, Legal);
   setOperationAction(ISD::FRINT,  MVT::f32, Legal);
 
+  // The hardware supports ROTR, but not ROTL
+  setOperationAction(ISD::ROTL, MVT::i32, Expand);
+
   // Lower floating point store/load to integer store/load to reduce the number
   // of patterns in tablegen.
   setOperationAction(ISD::STORE, MVT::f32, Promote);
   AddPromotedToType(ISD::STORE, MVT::f32, MVT::i32);
 
+  setOperationAction(ISD::STORE, MVT::v2f32, Promote);
+  AddPromotedToType(ISD::STORE, MVT::v2f32, MVT::v2i32);
+
   setOperationAction(ISD::STORE, MVT::v4f32, Promote);
   AddPromotedToType(ISD::STORE, MVT::v4f32, MVT::v4i32);
+
+  setOperationAction(ISD::STORE, MVT::f64, Promote);
+  AddPromotedToType(ISD::STORE, MVT::f64, MVT::i64);
+
+  // Custom lowering of vector stores is required for local address space
+  // stores.
+  setOperationAction(ISD::STORE, MVT::v4i32, Custom);
+  // XXX: Native v2i32 local address space stores are possible, but not
+  // currently implemented.
+  setOperationAction(ISD::STORE, MVT::v2i32, Custom);
+
+  setTruncStoreAction(MVT::v2i32, MVT::v2i16, Custom);
+  setTruncStoreAction(MVT::v2i32, MVT::v2i8, Custom);
+  setTruncStoreAction(MVT::v4i32, MVT::v4i8, Custom);
+  // XXX: This can be change to Custom, once ExpandVectorStores can
+  // handle 64-bit stores.
+  setTruncStoreAction(MVT::v4i32, MVT::v4i16, Expand);
 
   setOperationAction(ISD::LOAD, MVT::f32, Promote);
   AddPromotedToType(ISD::LOAD, MVT::f32, MVT::i32);
 
+  setOperationAction(ISD::LOAD, MVT::v2f32, Promote);
+  AddPromotedToType(ISD::LOAD, MVT::v2f32, MVT::v2i32);
+
   setOperationAction(ISD::LOAD, MVT::v4f32, Promote);
   AddPromotedToType(ISD::LOAD, MVT::v4f32, MVT::v4i32);
+
+  setOperationAction(ISD::LOAD, MVT::f64, Promote);
+  AddPromotedToType(ISD::LOAD, MVT::f64, MVT::i64);
+
+  setOperationAction(ISD::CONCAT_VECTORS, MVT::v4i32, Custom);
+  setOperationAction(ISD::CONCAT_VECTORS, MVT::v4f32, Custom);
+  setOperationAction(ISD::EXTRACT_SUBVECTOR, MVT::v2i32, Custom);
+  setOperationAction(ISD::EXTRACT_SUBVECTOR, MVT::v2f32, Custom);
+
+  setLoadExtAction(ISD::EXTLOAD, MVT::v2i8, Expand);
+  setLoadExtAction(ISD::SEXTLOAD, MVT::v2i8, Expand);
+  setLoadExtAction(ISD::ZEXTLOAD, MVT::v2i8, Expand);
+  setLoadExtAction(ISD::EXTLOAD, MVT::v4i8, Expand);
+  setLoadExtAction(ISD::SEXTLOAD, MVT::v4i8, Expand);
+  setLoadExtAction(ISD::ZEXTLOAD, MVT::v4i8, Expand);
+  setLoadExtAction(ISD::EXTLOAD, MVT::v2i16, Expand);
+  setLoadExtAction(ISD::SEXTLOAD, MVT::v2i16, Expand);
+  setLoadExtAction(ISD::ZEXTLOAD, MVT::v2i16, Expand);
+  setLoadExtAction(ISD::EXTLOAD, MVT::v4i16, Expand);
+  setLoadExtAction(ISD::SEXTLOAD, MVT::v4i16, Expand);
+  setLoadExtAction(ISD::ZEXTLOAD, MVT::v4i16, Expand);
+
+  setOperationAction(ISD::FNEG, MVT::v2f32, Expand);
+  setOperationAction(ISD::FNEG, MVT::v4f32, Expand);
 
   setOperationAction(ISD::MUL, MVT::i64, Expand);
 
   setOperationAction(ISD::UDIV, MVT::i32, Expand);
   setOperationAction(ISD::UDIVREM, MVT::i32, Custom);
   setOperationAction(ISD::UREM, MVT::i32, Expand);
+  setOperationAction(ISD::VSELECT, MVT::v2f32, Expand);
+  setOperationAction(ISD::VSELECT, MVT::v4f32, Expand);
+
+  static const MVT::SimpleValueType IntTypes[] = {
+    MVT::v2i32, MVT::v4i32
+  };
+  const size_t NumIntTypes = array_lengthof(IntTypes);
+
+  for (unsigned int x  = 0; x < NumIntTypes; ++x) {
+    MVT::SimpleValueType VT = IntTypes[x];
+    //Expand the following operations for the current type by default
+    setOperationAction(ISD::ADD,  VT, Expand);
+    setOperationAction(ISD::AND,  VT, Expand);
+    setOperationAction(ISD::FP_TO_SINT, VT, Expand);
+    setOperationAction(ISD::FP_TO_UINT, VT, Expand);
+    setOperationAction(ISD::MUL,  VT, Expand);
+    setOperationAction(ISD::OR,   VT, Expand);
+    setOperationAction(ISD::SHL,  VT, Expand);
+    setOperationAction(ISD::SINT_TO_FP, VT, Expand);
+    setOperationAction(ISD::SRL,  VT, Expand);
+    setOperationAction(ISD::SRA,  VT, Expand);
+    setOperationAction(ISD::SUB,  VT, Expand);
+    setOperationAction(ISD::UDIV, VT, Expand);
+    setOperationAction(ISD::UINT_TO_FP, VT, Expand);
+    setOperationAction(ISD::UREM, VT, Expand);
+    setOperationAction(ISD::VSELECT, VT, Expand);
+    setOperationAction(ISD::XOR,  VT, Expand);
+  }
+
+  static const MVT::SimpleValueType FloatTypes[] = {
+    MVT::v2f32, MVT::v4f32
+  };
+  const size_t NumFloatTypes = array_lengthof(FloatTypes);
+
+  for (unsigned int x = 0; x < NumFloatTypes; ++x) {
+    MVT::SimpleValueType VT = FloatTypes[x];
+    setOperationAction(ISD::FADD, VT, Expand);
+    setOperationAction(ISD::FDIV, VT, Expand);
+    setOperationAction(ISD::FFLOOR, VT, Expand);
+    setOperationAction(ISD::FMUL, VT, Expand);
+    setOperationAction(ISD::FRINT, VT, Expand);
+    setOperationAction(ISD::FSUB, VT, Expand);
+  }
+}
+
+//===----------------------------------------------------------------------===//
+// Target Information
+//===----------------------------------------------------------------------===//
+
+MVT AMDGPUTargetLowering::getVectorIdxTy() const {
+  return MVT::i32;
+}
+
+
+//===---------------------------------------------------------------------===//
+// Target Properties
+//===---------------------------------------------------------------------===//
+
+bool AMDGPUTargetLowering::isFAbsFree(EVT VT) const {
+  assert(VT.isFloatingPoint());
+  return VT == MVT::f32;
+}
+
+bool AMDGPUTargetLowering::isFNegFree(EVT VT) const {
+  assert(VT.isFloatingPoint());
+  return VT == MVT::f32;
 }
 
 //===---------------------------------------------------------------------===//
@@ -83,7 +203,7 @@ SDValue AMDGPUTargetLowering::LowerReturn(
                                      bool isVarArg,
                                      const SmallVectorImpl<ISD::OutputArg> &Outs,
                                      const SmallVectorImpl<SDValue> &OutVals,
-                                     DebugLoc DL, SelectionDAG &DAG) const {
+                                     SDLoc DL, SelectionDAG &DAG) const {
   return DAG.getNode(AMDGPUISD::RET_FLAG, DL, MVT::Other, Chain);
 }
 
@@ -105,16 +225,88 @@ SDValue AMDGPUTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG)
   case ISD::SIGN_EXTEND_INREG: return LowerSIGN_EXTEND_INREG(Op, DAG);
   case ISD::BRCOND: return LowerBRCOND(Op, DAG);
   // AMDGPU DAG lowering
+  case ISD::CONCAT_VECTORS: return LowerCONCAT_VECTORS(Op, DAG);
+  case ISD::EXTRACT_SUBVECTOR: return LowerEXTRACT_SUBVECTOR(Op, DAG);
   case ISD::INTRINSIC_WO_CHAIN: return LowerINTRINSIC_WO_CHAIN(Op, DAG);
+  case ISD::STORE: return LowerSTORE(Op, DAG);
   case ISD::UDIVREM: return LowerUDIVREM(Op, DAG);
   }
   return Op;
 }
 
+SDValue AMDGPUTargetLowering::LowerGlobalAddress(AMDGPUMachineFunction* MFI,
+                                                 SDValue Op,
+                                                 SelectionDAG &DAG) const {
+
+  const DataLayout *TD = getTargetMachine().getDataLayout();
+  GlobalAddressSDNode *G = cast<GlobalAddressSDNode>(Op);
+
+  assert(G->getAddressSpace() == AMDGPUAS::LOCAL_ADDRESS);
+  // XXX: What does the value of G->getOffset() mean?
+  assert(G->getOffset() == 0 &&
+         "Do not know what to do with an non-zero offset");
+
+  const GlobalValue *GV = G->getGlobal();
+
+  unsigned Offset;
+  if (MFI->LocalMemoryObjects.count(GV) == 0) {
+    uint64_t Size = TD->getTypeAllocSize(GV->getType()->getElementType());
+    Offset = MFI->LDSSize;
+    MFI->LocalMemoryObjects[GV] = Offset;
+    // XXX: Account for alignment?
+    MFI->LDSSize += Size;
+  } else {
+    Offset = MFI->LocalMemoryObjects[GV];
+  }
+
+  return DAG.getConstant(Offset, getPointerTy(G->getAddressSpace()));
+}
+
+void AMDGPUTargetLowering::ExtractVectorElements(SDValue Op, SelectionDAG &DAG,
+                                         SmallVectorImpl<SDValue> &Args,
+                                         unsigned Start,
+                                         unsigned Count) const {
+  EVT VT = Op.getValueType();
+  for (unsigned i = Start, e = Start + Count; i != e; ++i) {
+    Args.push_back(DAG.getNode(ISD::EXTRACT_VECTOR_ELT, SDLoc(Op),
+                               VT.getVectorElementType(),
+                               Op, DAG.getConstant(i, MVT::i32)));
+  }
+}
+
+SDValue AMDGPUTargetLowering::LowerCONCAT_VECTORS(SDValue Op,
+                                                  SelectionDAG &DAG) const {
+  SmallVector<SDValue, 8> Args;
+  SDValue A = Op.getOperand(0);
+  SDValue B = Op.getOperand(1);
+
+  ExtractVectorElements(A, DAG, Args, 0,
+                        A.getValueType().getVectorNumElements());
+  ExtractVectorElements(B, DAG, Args, 0,
+                        B.getValueType().getVectorNumElements());
+
+  return DAG.getNode(ISD::BUILD_VECTOR, SDLoc(Op), Op.getValueType(),
+                     &Args[0], Args.size());
+}
+
+SDValue AMDGPUTargetLowering::LowerEXTRACT_SUBVECTOR(SDValue Op,
+                                                     SelectionDAG &DAG) const {
+
+  SmallVector<SDValue, 8> Args;
+  EVT VT = Op.getValueType();
+  unsigned Start = cast<ConstantSDNode>(Op.getOperand(1))->getZExtValue();
+  ExtractVectorElements(Op.getOperand(0), DAG, Args, Start,
+                        VT.getVectorNumElements());
+
+  return DAG.getNode(ISD::BUILD_VECTOR, SDLoc(Op), Op.getValueType(),
+                     &Args[0], Args.size());
+}
+
+
 SDValue AMDGPUTargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
     SelectionDAG &DAG) const {
   unsigned IntrinsicID = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
-  DebugLoc DL = Op.getDebugLoc();
+  SDLoc DL(Op);
   EVT VT = Op.getValueType();
 
   switch (IntrinsicID) {
@@ -154,7 +346,7 @@ SDValue AMDGPUTargetLowering::LowerINTRINSIC_WO_CHAIN(SDValue Op,
 SDValue AMDGPUTargetLowering::LowerIntrinsicIABS(SDValue Op,
     SelectionDAG &DAG) const {
 
-  DebugLoc DL = Op.getDebugLoc();
+  SDLoc DL(Op);
   EVT VT = Op.getValueType();
   SDValue Neg = DAG.getNode(ISD::SUB, DL, VT, DAG.getConstant(0, VT),
                                               Op.getOperand(1));
@@ -166,7 +358,7 @@ SDValue AMDGPUTargetLowering::LowerIntrinsicIABS(SDValue Op,
 /// LRP(a, b, c) = muladd(a,  b, (1 - a) * c)
 SDValue AMDGPUTargetLowering::LowerIntrinsicLRP(SDValue Op,
     SelectionDAG &DAG) const {
-  DebugLoc DL = Op.getDebugLoc();
+  SDLoc DL(Op);
   EVT VT = Op.getValueType();
   SDValue OneSubA = DAG.getNode(ISD::FSUB, DL, VT,
                                 DAG.getConstantFP(1.0f, MVT::f32),
@@ -181,7 +373,7 @@ SDValue AMDGPUTargetLowering::LowerIntrinsicLRP(SDValue Op,
 /// \brief Generate Min/Max node
 SDValue AMDGPUTargetLowering::LowerMinMax(SDValue Op,
     SelectionDAG &DAG) const {
-  DebugLoc DL = Op.getDebugLoc();
+  SDLoc DL(Op);
   EVT VT = Op.getValueType();
 
   SDValue LHS = Op.getOperand(0);
@@ -238,11 +430,125 @@ SDValue AMDGPUTargetLowering::LowerMinMax(SDValue Op,
   return Op;
 }
 
+SDValue AMDGPUTargetLowering::SplitVectorLoad(const SDValue &Op,
+                                              SelectionDAG &DAG) const {
+  LoadSDNode *Load = dyn_cast<LoadSDNode>(Op);
+  EVT MemEltVT = Load->getMemoryVT().getVectorElementType();
+  EVT EltVT = Op.getValueType().getVectorElementType();
+  EVT PtrVT = Load->getBasePtr().getValueType();
+  unsigned NumElts = Load->getMemoryVT().getVectorNumElements();
+  SmallVector<SDValue, 8> Loads;
+  SDLoc SL(Op);
 
+  for (unsigned i = 0, e = NumElts; i != e; ++i) {
+    SDValue Ptr = DAG.getNode(ISD::ADD, SL, PtrVT, Load->getBasePtr(),
+                    DAG.getConstant(i * (MemEltVT.getSizeInBits() / 8), PtrVT));
+    Loads.push_back(DAG.getExtLoad(Load->getExtensionType(), SL, EltVT,
+                        Load->getChain(), Ptr,
+                        MachinePointerInfo(Load->getMemOperand()->getValue()),
+                        MemEltVT, Load->isVolatile(), Load->isNonTemporal(),
+                        Load->getAlignment()));
+  }
+  return DAG.getNode(ISD::BUILD_VECTOR, SL, Op.getValueType(), &Loads[0],
+                     Loads.size());
+}
+
+SDValue AMDGPUTargetLowering::MergeVectorStore(const SDValue &Op,
+                                               SelectionDAG &DAG) const {
+  StoreSDNode *Store = dyn_cast<StoreSDNode>(Op);
+  EVT MemVT = Store->getMemoryVT();
+  unsigned MemBits = MemVT.getSizeInBits();
+
+  // Byte stores are really expensive, so if possible, try to pack
+  // 32-bit vector truncatating store into an i32 store.
+  // XXX: We could also handle optimize other vector bitwidths
+  if (!MemVT.isVector() || MemBits > 32) {
+    return SDValue();
+  }
+
+  SDLoc DL(Op);
+  const SDValue &Value = Store->getValue();
+  EVT VT = Value.getValueType();
+  const SDValue &Ptr = Store->getBasePtr();
+  EVT MemEltVT = MemVT.getVectorElementType();
+  unsigned MemEltBits = MemEltVT.getSizeInBits();
+  unsigned MemNumElements = MemVT.getVectorNumElements();
+  EVT PackedVT = EVT::getIntegerVT(*DAG.getContext(), MemVT.getSizeInBits());
+  SDValue Mask;
+  switch(MemEltBits) {
+  case 8:
+    Mask = DAG.getConstant(0xFF, PackedVT);
+    break;
+  case 16:
+    Mask = DAG.getConstant(0xFFFF, PackedVT);
+    break;
+  default:
+    llvm_unreachable("Cannot lower this vector store");
+  }
+  SDValue PackedValue;
+  for (unsigned i = 0; i < MemNumElements; ++i) {
+    EVT ElemVT = VT.getVectorElementType();
+    SDValue Elt = DAG.getNode(ISD::EXTRACT_VECTOR_ELT, DL, ElemVT, Value,
+                              DAG.getConstant(i, MVT::i32));
+    Elt = DAG.getZExtOrTrunc(Elt, DL, PackedVT);
+    Elt = DAG.getNode(ISD::AND, DL, PackedVT, Elt, Mask);
+    SDValue Shift = DAG.getConstant(MemEltBits * i, PackedVT);
+    Elt = DAG.getNode(ISD::SHL, DL, PackedVT, Elt, Shift);
+    if (i == 0) {
+      PackedValue = Elt;
+    } else {
+      PackedValue = DAG.getNode(ISD::OR, DL, PackedVT, PackedValue, Elt);
+    }
+  }
+  return DAG.getStore(Store->getChain(), DL, PackedValue, Ptr,
+                      MachinePointerInfo(Store->getMemOperand()->getValue()),
+                      Store->isVolatile(),  Store->isNonTemporal(),
+                      Store->getAlignment());
+}
+
+SDValue AMDGPUTargetLowering::SplitVectorStore(SDValue Op,
+                                            SelectionDAG &DAG) const {
+  StoreSDNode *Store = cast<StoreSDNode>(Op);
+  EVT MemEltVT = Store->getMemoryVT().getVectorElementType();
+  EVT EltVT = Store->getValue().getValueType().getVectorElementType();
+  EVT PtrVT = Store->getBasePtr().getValueType();
+  unsigned NumElts = Store->getMemoryVT().getVectorNumElements();
+  SDLoc SL(Op);
+
+  SmallVector<SDValue, 8> Chains;
+
+  for (unsigned i = 0, e = NumElts; i != e; ++i) {
+    SDValue Val = DAG.getNode(ISD::EXTRACT_VECTOR_ELT, SL, EltVT,
+                              Store->getValue(), DAG.getConstant(i, MVT::i32));
+    SDValue Ptr = DAG.getNode(ISD::ADD, SL, PtrVT,
+                              Store->getBasePtr(),
+                            DAG.getConstant(i * (MemEltVT.getSizeInBits() / 8),
+                                            PtrVT));
+    Chains.push_back(DAG.getTruncStore(Store->getChain(), SL, Val, Ptr,
+                         MachinePointerInfo(Store->getMemOperand()->getValue()),
+                         MemEltVT, Store->isVolatile(), Store->isNonTemporal(),
+                         Store->getAlignment()));
+  }
+  return DAG.getNode(ISD::TokenFactor, SL, MVT::Other, &Chains[0], NumElts);
+}
+
+SDValue AMDGPUTargetLowering::LowerSTORE(SDValue Op, SelectionDAG &DAG) const {
+  SDValue Result = AMDGPUTargetLowering::MergeVectorStore(Op, DAG);
+  if (Result.getNode()) {
+    return Result;
+  }
+
+  StoreSDNode *Store = cast<StoreSDNode>(Op);
+  if (Store->getAddressSpace() == AMDGPUAS::LOCAL_ADDRESS &&
+      Store->getValue().getValueType().isVector()) {
+    return SplitVectorStore(Op, DAG);
+  }
+  return SDValue();
+}
 
 SDValue AMDGPUTargetLowering::LowerUDIVREM(SDValue Op,
     SelectionDAG &DAG) const {
-  DebugLoc DL = Op.getDebugLoc();
+  SDLoc DL(Op);
   EVT VT = Op.getValueType();
 
   SDValue Num = Op.getOperand(0);
@@ -345,6 +651,7 @@ SDValue AMDGPUTargetLowering::LowerUDIVREM(SDValue Op,
   return DAG.getMergeValues(Ops, 2, DL);
 }
 
+
 //===----------------------------------------------------------------------===//
 // Helper functions
 //===----------------------------------------------------------------------===//
@@ -410,5 +717,13 @@ const char* AMDGPUTargetLowering::getTargetNodeName(unsigned Opcode) const {
   NODE_NAME_CASE(CONST_ADDRESS)
   NODE_NAME_CASE(REGISTER_LOAD)
   NODE_NAME_CASE(REGISTER_STORE)
+  NODE_NAME_CASE(LOAD_CONSTANT)
+  NODE_NAME_CASE(LOAD_INPUT)
+  NODE_NAME_CASE(SAMPLE)
+  NODE_NAME_CASE(SAMPLEB)
+  NODE_NAME_CASE(SAMPLED)
+  NODE_NAME_CASE(SAMPLEL)
+  NODE_NAME_CASE(STORE_MSKOR)
+  NODE_NAME_CASE(TBUFFER_STORE_FORMAT)
   }
 }

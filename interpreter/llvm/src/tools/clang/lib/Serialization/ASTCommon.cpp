@@ -119,6 +119,7 @@ serialization::getDefinitiveDeclContext(const DeclContext *DC) {
   case Decl::CXXConversion:
   case Decl::ObjCMethod:
   case Decl::Block:
+  case Decl::Captured:
     // Objective C categories, category implementations, and class
     // implementations can only be defined in one place.
   case Decl::ObjCCategory:
@@ -157,6 +158,8 @@ bool serialization::isRedeclarableDeclKind(unsigned Kind) {
   case Decl::CXXRecord:
   case Decl::ClassTemplateSpecialization:
   case Decl::ClassTemplatePartialSpecialization:
+  case Decl::VarTemplateSpecialization:
+  case Decl::VarTemplatePartialSpecialization:
   case Decl::Function:
   case Decl::CXXMethod:
   case Decl::CXXConstructor:
@@ -165,6 +168,7 @@ bool serialization::isRedeclarableDeclKind(unsigned Kind) {
   case Decl::Var:
   case Decl::FunctionTemplate:
   case Decl::ClassTemplate:
+  case Decl::VarTemplate:
   case Decl::TypeAliasTemplate:
   case Decl::ObjCProtocol:
   case Decl::ObjCInterface:
@@ -180,6 +184,7 @@ bool serialization::isRedeclarableDeclKind(unsigned Kind) {
   case Decl::UnresolvedUsingValue:
   case Decl::IndirectField:
   case Decl::Field:
+  case Decl::MSProperty:
   case Decl::ObjCIvar:
   case Decl::ObjCAtDefsField:
   case Decl::ImplicitParam:
@@ -202,6 +207,7 @@ bool serialization::isRedeclarableDeclKind(unsigned Kind) {
   case Decl::FriendTemplate:
   case Decl::StaticAssert:
   case Decl::Block:
+  case Decl::Captured:
   case Decl::ClassScopeFunctionSpecialization:
   case Decl::Import:
   case Decl::OMPThreadPrivate:

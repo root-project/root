@@ -17,10 +17,14 @@ class InstSI <dag outs, dag ins, string asm, list<dag> pattern> :
   field bits<1> VM_CNT = 0;
   field bits<1> EXP_CNT = 0;
   field bits<1> LGKM_CNT = 0;
+  field bits<1> MIMG = 0;
+  field bits<1> SMRD = 0;
 
   let TSFlags{0} = VM_CNT;
   let TSFlags{1} = EXP_CNT;
   let TSFlags{2} = LGKM_CNT;
+  let TSFlags{3} = MIMG;
+  let TSFlags{4} = SMRD;
 }
 
 class Enc32 <dag outs, dag ins, string asm, list<dag> pattern> :
@@ -140,6 +144,7 @@ class SMRD <bits<5> op, bits<1> imm, dag outs, dag ins, string asm,
   let Inst{31-27} = 0x18; //encoding
 
   let LGKM_CNT = 1;
+  let SMRD = 1;
 }
 
 //===----------------------------------------------------------------------===//
@@ -185,25 +190,25 @@ class VOP2 <bits<6> op, dag outs, dag ins, string asm, list<dag> pattern> :
 class VOP3 <bits<9> op, dag outs, dag ins, string asm, list<dag> pattern> :
     Enc64 <outs, ins, asm, pattern> {
 
-  bits<8> VDST;
-  bits<9> SRC0;
-  bits<9> SRC1;
-  bits<9> SRC2;
-  bits<3> ABS; 
-  bits<1> CLAMP;
-  bits<2> OMOD;
-  bits<3> NEG;
+  bits<8> dst;
+  bits<9> src0;
+  bits<9> src1;
+  bits<9> src2;
+  bits<3> abs;
+  bits<1> clamp;
+  bits<2> omod;
+  bits<3> neg;
 
-  let Inst{7-0} = VDST;
-  let Inst{10-8} = ABS;
-  let Inst{11} = CLAMP;
+  let Inst{7-0} = dst;
+  let Inst{10-8} = abs;
+  let Inst{11} = clamp;
   let Inst{25-17} = op;
   let Inst{31-26} = 0x34; //encoding
-  let Inst{40-32} = SRC0;
-  let Inst{49-41} = SRC1;
-  let Inst{58-50} = SRC2;
-  let Inst{60-59} = OMOD;
-  let Inst{63-61} = NEG;
+  let Inst{40-32} = src0;
+  let Inst{49-41} = src1;
+  let Inst{58-50} = src2;
+  let Inst{60-59} = omod;
+  let Inst{63-61} = neg;
   
   let mayLoad = 0;
   let mayStore = 0;
@@ -213,23 +218,23 @@ class VOP3 <bits<9> op, dag outs, dag ins, string asm, list<dag> pattern> :
 class VOP3b <bits<9> op, dag outs, dag ins, string asm, list<dag> pattern> :
     Enc64 <outs, ins, asm, pattern> {
 
-  bits<8> VDST;
-  bits<9> SRC0;
-  bits<9> SRC1;
-  bits<9> SRC2;
-  bits<7> SDST;
-  bits<2> OMOD;
-  bits<3> NEG;
+  bits<8> dst;
+  bits<9> src0;
+  bits<9> src1;
+  bits<9> src2;
+  bits<7> sdst;
+  bits<2> omod;
+  bits<3> neg;
 
-  let Inst{7-0} = VDST;
-  let Inst{14-8} = SDST;
+  let Inst{7-0} = dst;
+  let Inst{14-8} = sdst;
   let Inst{25-17} = op;
   let Inst{31-26} = 0x34; //encoding
-  let Inst{40-32} = SRC0;
-  let Inst{49-41} = SRC1;
-  let Inst{58-50} = SRC2;
-  let Inst{60-59} = OMOD;
-  let Inst{63-61} = NEG;
+  let Inst{40-32} = src0;
+  let Inst{49-41} = src1;
+  let Inst{58-50} = src2;
+  let Inst{60-59} = omod;
+  let Inst{63-61} = neg;
 
   let mayLoad = 0;
   let mayStore = 0;
@@ -280,6 +285,30 @@ class VINTRP <bits <2> op, dag outs, dag ins, string asm, list<dag> pattern> :
 //===----------------------------------------------------------------------===//
 
 let Uses = [EXEC] in {
+
+class DS <bits<8> op, dag outs, dag ins, string asm, list<dag> pattern> :
+    Enc64 <outs, ins, asm, pattern> {
+
+  bits<8> vdst;
+  bits<1> gds;
+  bits<8> addr;
+  bits<8> data0;
+  bits<8> data1;
+  bits<8> offset0;
+  bits<8> offset1;
+
+  let Inst{7-0} = offset0;
+  let Inst{15-8} = offset1;
+  let Inst{17} = gds;
+  let Inst{25-18} = op;
+  let Inst{31-26} = 0x36; //encoding
+  let Inst{39-32} = addr;
+  let Inst{47-40} = data0;
+  let Inst{55-48} = data1;
+  let Inst{63-56} = vdst;
+
+  let LGKM_CNT = 1;
+}
 
 class MUBUF <bits<7> op, dag outs, dag ins, string asm, list<dag> pattern> :
     Enc64<outs, ins, asm, pattern> {
@@ -390,6 +419,7 @@ class MIMG <bits<7> op, dag outs, dag ins, string asm, list<dag> pattern> :
 
   let VM_CNT = 1;
   let EXP_CNT = 1;
+  let MIMG = 1;
 }
 
 def EXP : Enc64<

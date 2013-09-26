@@ -559,7 +559,7 @@ namespace clang {
         
   private:
     virtual void MacroExpands(const Token &Id, const MacroDirective *MD,
-                              SourceRange Range);
+                              SourceRange Range, const MacroArgs *Args);
     virtual void MacroDefined(const Token &Id, const MacroDirective *MD);
     virtual void MacroUndefined(const Token &Id, const MacroDirective *MD);
     virtual void InclusionDirective(SourceLocation HashLoc,
@@ -576,7 +576,8 @@ namespace clang {
     virtual void Ifndef(SourceLocation Loc, const Token &MacroNameTok,
                         const MacroDirective *MD);
     /// \brief Hook called whenever the 'defined' operator is seen.
-    virtual void Defined(const Token &MacroNameTok, const MacroDirective *MD);
+    virtual void Defined(const Token &MacroNameTok, const MacroDirective *MD,
+                         SourceRange Range);
 
     void addMacroExpansion(const Token &Id, const MacroInfo *MI,
                            SourceRange Range);

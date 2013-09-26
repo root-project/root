@@ -124,6 +124,22 @@ bool Argument::hasStructRetAttr() const {
     hasAttribute(1, Attribute::StructRet);
 }
 
+/// hasReturnedAttr - Return true if this argument has the returned attribute on
+/// it in its containing function.
+bool Argument::hasReturnedAttr() const {
+  return getParent()->getAttributes().
+    hasAttribute(getArgNo()+1, Attribute::Returned);
+}
+
+/// Return true if this argument has the readonly or readnone attribute on it
+/// in its containing function.
+bool Argument::onlyReadsMemory() const {
+  return getParent()->getAttributes().
+      hasAttribute(getArgNo()+1, Attribute::ReadOnly) ||
+      getParent()->getAttributes().
+      hasAttribute(getArgNo()+1, Attribute::ReadNone);
+}
+
 /// addAttr - Add attributes to an argument.
 void Argument::addAttr(AttributeSet AS) {
   assert(AS.getNumSlots() <= 1 &&
@@ -260,6 +276,9 @@ void Function::dropAllReferences() {
   // blockaddresses, but BasicBlock's destructor takes care of those.
   while (!BasicBlocks.empty())
     BasicBlocks.begin()->eraseFromParent();
+
+  // Prefix data is stored in a side table.
+  setPrefixData(0);
 }
 
 void Function::addAttribute(unsigned i, Attribute::AttrKind attr) {
@@ -335,6 +354,10 @@ void Function::copyAttributesFrom(const GlobalValue *Src) {
     setGC(SrcF->getGC());
   else
     clearGC();
+  if (SrcF->hasPrefixData())
+    setPrefixData(SrcF->getPrefixData());
+  else
+    setPrefixData(0);
 }
 
 /// getIntrinsicID - This method returns the ID number of the specified
@@ -430,7 +453,8 @@ enum IIT_Info {
   IIT_STRUCT5 = 22,
   IIT_EXTEND_VEC_ARG = 23,
   IIT_TRUNC_VEC_ARG = 24,
-  IIT_ANYPTR = 25
+  IIT_ANYPTR = 25,
+  IIT_V1   = 26
 };
 
 
@@ -473,6 +497,10 @@ static void DecodeIITType(unsigned &NextElt, ArrayRef<unsigned char> Infos,
     return;
   case IIT_I64:
     OutputTable.push_back(IITDescriptor::get(IITDescriptor::Integer, 64));
+    return;
+  case IIT_V1:
+    OutputTable.push_back(IITDescriptor::get(IITDescriptor::Vector, 1));
+    DecodeIITType(NextElt, Infos, OutputTable);
     return;
   case IIT_V2:
     OutputTable.push_back(IITDescriptor::get(IITDescriptor::Vector, 2));
@@ -705,3 +733,31 @@ bool Function::callsFunctionThatReturnsTwice() const {
   return false;
 }
 
+Constant *Function::getPrefixData() const {
+  assert(hasPrefixData());
+  const LLVMContextImpl::PrefixDataMapTy &PDMap =
+      getContext().pImpl->PrefixDataMap;
+  assert(PDMap.find(this) != PDMap.end());
+  return cast<Constant>(PDMap.find(this)->second->getReturnValue());
+}
+
+void Function::setPrefixData(Constant *PrefixData) {
+  if (!PrefixData && !hasPrefixData())
+    return;
+
+  unsigned SCData = getSubclassDataFromValue();
+  LLVMContextImpl::PrefixDataMapTy &PDMap = getContext().pImpl->PrefixDataMap;
+  ReturnInst *&PDHolder = PDMap[this];
+  if (PrefixData) {
+    if (PDHolder)
+      PDHolder->setOperand(0, PrefixData);
+    else
+      PDHolder = ReturnInst::Create(getContext(), PrefixData);
+    SCData |= 2;
+  } else {
+    delete PDHolder;
+    PDMap.erase(this);
+    SCData &= ~2;
+  }
+  setValueSubclassData(SCData);
+}

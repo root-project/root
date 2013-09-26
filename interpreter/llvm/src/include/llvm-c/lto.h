@@ -16,9 +16,11 @@
 #ifndef LLVM_C_LTO_H
 #define LLVM_C_LTO_H
 
+#ifndef __cplusplus
 #include <stdbool.h>
+#endif
 #include <stddef.h>
-#include <unistd.h>
+#include <sys/types.h>
 
 /**
  * @defgroup LLVMCLTO LTO

@@ -16,6 +16,7 @@
 #define LLVM_CLANG_GR_BUGREPORTER
 
 #include "clang/Basic/SourceLocation.h"
+#include "clang/StaticAnalyzer/Core/AnalyzerOptions.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugReporterVisitor.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/PathDiagnostic.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
@@ -375,6 +376,7 @@ public:
   virtual ArrayRef<PathDiagnosticConsumer*> getPathDiagnosticConsumers() = 0;
   virtual ASTContext &getASTContext() = 0;
   virtual SourceManager& getSourceManager() = 0;
+  virtual AnalyzerOptions& getAnalyzerOptions() = 0;
 };
 
 /// BugReporter is a utility class for generating PathDiagnostics for analysis.
@@ -405,11 +407,6 @@ private:
   llvm::FoldingSet<BugReportEquivClass> EQClasses;
   /// A vector of BugReports for tracking the allocated pointers and cleanup.
   std::vector<BugReportEquivClass *> EQClassesVector;
-
-  /// A map from PathDiagnosticPiece to the LocationContext of the inlined
-  /// function call it represents.
-  llvm::DenseMap<const PathDiagnosticCallPiece*,
-                 const LocationContext*> LocationContextMap;
 
 protected:
   BugReporter(BugReporterData& d, Kind k) : BugTypes(F.getEmptySet()), kind(k),
@@ -447,6 +444,8 @@ public:
 
   SourceManager& getSourceManager() { return D.getSourceManager(); }
 
+  AnalyzerOptions& getAnalyzerOptions() { return D.getAnalyzerOptions(); }
+
   virtual bool generatePathDiagnostic(PathDiagnostic& pathDiagnostic,
                                       PathDiagnosticConsumer &PC,
                                       ArrayRef<BugReport *> &bugReports) {
@@ -482,10 +481,6 @@ public:
     EmitBasicReport(DeclWithIssue, BugName, Category, BugStr, Loc, &R, 1);
   }
 
-  void addCallPieceLocationContextPair(const PathDiagnosticCallPiece *C,
-                                       const LocationContext *LC) {
-    LocationContextMap[C] = LC;
-  }
 private:
   llvm::StringMap<BugType *> StrBugTypes;
 

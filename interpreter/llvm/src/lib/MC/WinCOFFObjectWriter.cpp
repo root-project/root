@@ -18,6 +18,7 @@
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/MC/MCAsmLayout.h"
 #include "llvm/MC/MCAssembler.h"
 #include "llvm/MC/MCContext.h"
@@ -147,15 +148,11 @@ public:
   object_t *createCOFFEntity(StringRef Name, list_t &List);
 
   void DefineSection(MCSectionData const &SectionData);
-  void DefineSymbol(MCSymbol const &Symbol,
-                    MCSymbolData const &SymbolData,
-                    MCAssembler &Assembler);
+  void DefineSymbol(MCSymbolData const &SymbolData, MCAssembler &Assembler,
+                    const MCAsmLayout &Layout);
 
   void MakeSymbolReal(COFFSymbol &S, size_t Index);
   void MakeSectionReal(COFFSection &S, size_t Number);
-
-  bool ExportSection(COFFSection const *S);
-  bool ExportSymbol(MCSymbolData const &SymbolData, MCAssembler &Asm);
 
   bool IsPhysicalSection(COFFSection *S);
 
@@ -188,17 +185,6 @@ static inline void write_uint32_le(void *Data, uint32_t const &Value) {
   Ptr[1] = (Value & 0x0000FF00) >>  8;
   Ptr[2] = (Value & 0x00FF0000) >> 16;
   Ptr[3] = (Value & 0xFF000000) >> 24;
-}
-
-static inline void write_uint16_le(void *Data, uint16_t const &Value) {
-  uint8_t *Ptr = reinterpret_cast<uint8_t *>(Data);
-  Ptr[0] = (Value & 0x00FF) >> 0;
-  Ptr[1] = (Value & 0xFF00) >> 8;
-}
-
-static inline void write_uint8_le(void *Data, uint8_t const &Value) {
-  uint8_t *Ptr = reinterpret_cast<uint8_t *>(Data);
-  Ptr[0] = (Value & 0xFF) >> 0;
 }
 
 //------------------------------------------------------------------------------
@@ -410,25 +396,24 @@ void WinCOFFObjectWriter::DefineSection(MCSectionData const &SectionData) {
 
 /// This function takes a section data object from the assembler
 /// and creates the associated COFF symbol staging object.
-void WinCOFFObjectWriter::DefineSymbol(MCSymbol const &Symbol,
-                                       MCSymbolData const &SymbolData,
-                                       MCAssembler &Assembler) {
+void WinCOFFObjectWriter::DefineSymbol(MCSymbolData const &SymbolData,
+                                       MCAssembler &Assembler,
+                                       const MCAsmLayout &Layout) {
+  MCSymbol const &Symbol = SymbolData.getSymbol();
   COFFSymbol *coff_symbol = GetOrCreateCOFFSymbol(&Symbol);
-
-  coff_symbol->Data.Type         = (SymbolData.getFlags() & 0x0000FFFF) >>  0;
-  coff_symbol->Data.StorageClass = (SymbolData.getFlags() & 0x00FF0000) >> 16;
+  SymbolMap[&Symbol] = coff_symbol;
 
   if (SymbolData.getFlags() & COFF::SF_WeakExternal) {
     coff_symbol->Data.StorageClass = COFF::IMAGE_SYM_CLASS_WEAK_EXTERNAL;
 
     if (Symbol.isVariable()) {
-      coff_symbol->Data.StorageClass = COFF::IMAGE_SYM_CLASS_WEAK_EXTERNAL;
+      const MCSymbolRefExpr *SymRef =
+        dyn_cast<MCSymbolRefExpr>(Symbol.getVariableValue());
 
-      // FIXME: This assert message isn't very good.
-      assert(Symbol.getVariableValue()->getKind() == MCExpr::SymbolRef &&
-              "Value must be a SymbolRef!");
+      if (!SymRef)
+        report_fatal_error("Weak externals may only alias symbols");
 
-      coff_symbol->Other = GetOrCreateCOFFSymbol(&Symbol);
+      coff_symbol->Other = GetOrCreateCOFFSymbol(&SymRef->getSymbol());
     } else {
       std::string WeakName = std::string(".weak.")
                            +  Symbol.getName().str()
@@ -448,41 +433,58 @@ void WinCOFFObjectWriter::DefineSymbol(MCSymbol const &Symbol,
     coff_symbol->Aux[0].Aux.WeakExternal.TagIndex = 0;
     coff_symbol->Aux[0].Aux.WeakExternal.Characteristics =
       COFF::IMAGE_WEAK_EXTERN_SEARCH_LIBRARY;
+
+    coff_symbol->MCData = &SymbolData;
+  } else {
+    const MCSymbolData &ResSymData =
+      Assembler.getSymbolData(Symbol.AliasedSymbol());
+
+    if (Symbol.isVariable()) {
+      int64_t Addr;
+      if (Symbol.getVariableValue()->EvaluateAsAbsolute(Addr, Layout))
+        coff_symbol->Data.Value = Addr;
+    }
+
+    coff_symbol->Data.Type         = (ResSymData.getFlags() & 0x0000FFFF) >>  0;
+    coff_symbol->Data.StorageClass = (ResSymData.getFlags() & 0x00FF0000) >> 16;
+
+    // If no storage class was specified in the streamer, define it here.
+    if (coff_symbol->Data.StorageClass == 0) {
+      bool external = ResSymData.isExternal() || (ResSymData.Fragment == NULL);
+
+      coff_symbol->Data.StorageClass =
+       external ? COFF::IMAGE_SYM_CLASS_EXTERNAL : COFF::IMAGE_SYM_CLASS_STATIC;
+    }
+
+    if (Symbol.isAbsolute() || Symbol.AliasedSymbol().isVariable())
+      coff_symbol->Data.SectionNumber = COFF::IMAGE_SYM_ABSOLUTE;
+    else if (ResSymData.Fragment != NULL)
+      coff_symbol->Section =
+        SectionMap[&ResSymData.Fragment->getParent()->getSection()];
+
+    coff_symbol->MCData = &ResSymData;
   }
-
-  // If no storage class was specified in the streamer, define it here.
-  if (coff_symbol->Data.StorageClass == 0) {
-    bool external = SymbolData.isExternal() || (SymbolData.Fragment == NULL);
-
-    coff_symbol->Data.StorageClass =
-      external ? COFF::IMAGE_SYM_CLASS_EXTERNAL : COFF::IMAGE_SYM_CLASS_STATIC;
-  }
-
-  if (SymbolData.Fragment != NULL)
-    coff_symbol->Section =
-      SectionMap[&SymbolData.Fragment->getParent()->getSection()];
-
-  // Bind internal COFF symbol to MC symbol.
-  coff_symbol->MCData = &SymbolData;
-  SymbolMap[&Symbol] = coff_symbol;
 }
 
 /// making a section real involves assigned it a number and putting
 /// name into the string table if needed
 void WinCOFFObjectWriter::MakeSectionReal(COFFSection &S, size_t Number) {
   if (S.Name.size() > COFF::NameSize) {
-    size_t StringTableEntry = Strings.insert(S.Name.c_str());
+    const unsigned Max6DecimalSize = 999999;
+    const unsigned Max7DecimalSize = 9999999;
+    uint64_t StringTableEntry = Strings.insert(S.Name.c_str());
 
-    // FIXME: Why is this number 999999? This number is never mentioned in the
-    // spec. I'm assuming this is due to the printed value needing to fit into
-    // the S.Header.Name field. In which case why not 9999999 (7 9's instead of
-    // 6)? The spec does not state if this entry should be null terminated in
-    // this case, and thus this seems to be the best way to do it. I think I
-    // just solved my own FIXME...
-    if (StringTableEntry > 999999)
-      report_fatal_error("COFF string table is greater than 999999 bytes.");
-
-    std::sprintf(S.Header.Name, "/%d", unsigned(StringTableEntry));
+    if (StringTableEntry <= Max6DecimalSize) {
+      std::sprintf(S.Header.Name, "/%d", unsigned(StringTableEntry));
+    } else if (StringTableEntry <= Max7DecimalSize) {
+      // With seven digits, we have to skip the terminating null. Because
+      // sprintf always appends it, we use a larger temporary buffer.
+      char buffer[9] = { };
+      std::sprintf(buffer, "/%d", unsigned(StringTableEntry));
+      std::memcpy(S.Header.Name, buffer, 8);
+    } else {
+      report_fatal_error("COFF string table is greater than 9,999,999 bytes.");
+    }
   } else
     std::memcpy(S.Header.Name, S.Name.c_str(), S.Name.size());
 
@@ -499,22 +501,6 @@ void WinCOFFObjectWriter::MakeSymbolReal(COFFSymbol &S, size_t Index) {
   } else
     std::memcpy(S.Data.Name, S.Name.c_str(), S.Name.size());
   S.Index = Index;
-}
-
-bool WinCOFFObjectWriter::ExportSection(COFFSection const *S) {
-  return !S->MCData->getFragmentList().empty();
-}
-
-bool WinCOFFObjectWriter::ExportSymbol(MCSymbolData const &SymbolData,
-                                       MCAssembler &Asm) {
-  // This doesn't seem to be right. Strings referred to from the .data section
-  // need symbols so they can be linked to code in the .text section right?
-
-  // return Asm.isSymbolLinkerVisible (&SymbolData);
-
-  // For now, all non-variable symbols are exported,
-  // the linker will sort the rest out for us.
-  return SymbolData.isExternal() || !SymbolData.getSymbol().isVariable();
 }
 
 bool WinCOFFObjectWriter::IsPhysicalSection(COFFSection *S) {
@@ -618,13 +604,9 @@ void WinCOFFObjectWriter::ExecutePostLayoutBinding(MCAssembler &Asm,
     DefineSection(*i);
 
   for (MCAssembler::const_symbol_iterator i = Asm.symbol_begin(),
-                                          e = Asm.symbol_end(); i != e; i++) {
-    if (ExportSymbol(*i, Asm)) {
-      const MCSymbol &Alias = i->getSymbol();
-      const MCSymbol &Symbol = Alias.AliasedSymbol();
-      DefineSymbol(Alias, Asm.getSymbolData(Symbol), Asm);
-    }
-  }
+                                          e = Asm.symbol_end();
+       i != e; i++)
+    DefineSymbol(*i, Asm, Layout);
 }
 
 void WinCOFFObjectWriter::RecordRelocation(const MCAssembler &Asm,
@@ -635,8 +617,9 @@ void WinCOFFObjectWriter::RecordRelocation(const MCAssembler &Asm,
                                            uint64_t &FixedValue) {
   assert(Target.getSymA() != NULL && "Relocation must reference a symbol!");
 
-  const MCSymbol *A = &Target.getSymA()->getSymbol();
-  MCSymbolData &A_SD = Asm.getSymbolData(*A);
+  const MCSymbol &Symbol = Target.getSymA()->getSymbol();
+  const MCSymbol &A = Symbol.AliasedSymbol();
+  MCSymbolData &A_SD = Asm.getSymbolData(A);
 
   MCSectionData const *SectionData = Fragment->getParent();
 
@@ -706,10 +689,13 @@ void WinCOFFObjectWriter::WriteObject(MCAssembler &Asm,
   // Assign symbol and section indexes and offsets.
   Header.NumberOfSections = 0;
 
+  DenseMap<COFFSection *, uint16_t> SectionIndices;
   for (sections::iterator i = Sections.begin(),
                           e = Sections.end(); i != e; i++) {
     if (Layout.getSectionAddressSize((*i)->MCData) > 0) {
-      MakeSectionReal(**i, ++Header.NumberOfSections);
+      size_t Number = ++Header.NumberOfSections;
+      SectionIndices[*i] = Number;
+      MakeSectionReal(**i, Number);
     } else {
       (*i)->Number = -1;
     }
@@ -752,6 +738,31 @@ void WinCOFFObjectWriter::WriteObject(MCAssembler &Asm,
       coff_symbol->Aux[0].Aux.WeakExternal.TagIndex = coff_symbol->Other->Index;
     }
   }
+
+  // Fixup associative COMDAT sections.
+  for (sections::iterator i = Sections.begin(),
+                          e = Sections.end(); i != e; i++) {
+    if ((*i)->Symbol->Aux[0].Aux.SectionDefinition.Selection !=
+        COFF::IMAGE_COMDAT_SELECT_ASSOCIATIVE)
+      continue;
+
+    const MCSectionCOFF &MCSec = static_cast<const MCSectionCOFF &>(
+                                                    (*i)->MCData->getSection());
+
+    COFFSection *Assoc = SectionMap.lookup(MCSec.getAssocSection());
+    if (!Assoc) {
+      report_fatal_error(Twine("Missing associated COMDAT section ") +
+                         MCSec.getAssocSection()->getSectionName() +
+                         " for section " + MCSec.getSectionName());
+    }
+
+    // Skip this section if the associated section is unused.
+    if (Assoc->Number == -1)
+      continue;
+
+    (*i)->Symbol->Aux[0].Aux.SectionDefinition.Number = SectionIndices[Assoc];
+  }
+
 
   // Assign file offsets to COFF object file structures.
 

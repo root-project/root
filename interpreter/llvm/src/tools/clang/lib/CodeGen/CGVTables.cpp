@@ -29,7 +29,14 @@ using namespace clang;
 using namespace CodeGen;
 
 CodeGenVTables::CodeGenVTables(CodeGenModule &CGM)
-  : CGM(CGM), VTContext(CGM.getContext()) { }
+  : CGM(CGM), VTContext(CGM.getContext()) {
+  if (CGM.getTarget().getCXXABI().isMicrosoft()) {
+    // FIXME: Eventually, we should only have one of V*TContexts available.
+    // Today we use both in the Microsoft ABI as MicrosoftVFTableContext
+    // is not completely supported in CodeGen yet.
+    VFTContext.reset(new MicrosoftVFTableContext(CGM.getContext()));
+  }
+}
 
 llvm::Constant *CodeGenModule::GetAddrOfThunk(GlobalDecl GD, 
                                               const ThunkInfo &Thunk) {
@@ -287,8 +294,9 @@ void CodeGenFunction::GenerateThunk(llvm::Function *Fn,
                                     GlobalDecl GD, const ThunkInfo &Thunk) {
   const CXXMethodDecl *MD = cast<CXXMethodDecl>(GD.getDecl());
   const FunctionProtoType *FPT = MD->getType()->getAs<FunctionProtoType>();
-  QualType ResultType = FPT->getResultType();
   QualType ThisType = MD->getThisType(getContext());
+  QualType ResultType =
+    CGM.getCXXABI().HasThisReturn(GD) ? ThisType : FPT->getResultType();
 
   FunctionArgList FunctionArgs;
 
@@ -306,9 +314,6 @@ void CodeGenFunction::GenerateThunk(llvm::Function *Fn,
     
     FunctionArgs.push_back(Param);
   }
-
-  // Initialize debug info if needed.
-  maybeInitializeDebugInfo();
 
   StartFunction(GlobalDecl(), ResultType, Fn, FnInfo, FunctionArgs,
                 SourceLocation());
@@ -379,7 +384,7 @@ void CodeGenFunction::GenerateThunk(llvm::Function *Fn,
   FinishFunction();
 
   // Set the right linkage.
-  CGM.setFunctionLinkage(MD, Fn);
+  CGM.setFunctionLinkage(GD, Fn);
   
   // Set the right visibility.
   setThunkVisibility(CGM, MD, Thunk, Fn);
@@ -388,6 +393,11 @@ void CodeGenFunction::GenerateThunk(llvm::Function *Fn,
 void CodeGenVTables::EmitThunk(GlobalDecl GD, const ThunkInfo &Thunk, 
                                bool UseAvailableExternallyLinkage)
 {
+  if (CGM.getTarget().getCXXABI().isMicrosoft()) {
+    // Emission of thunks is not supported yet in Microsoft ABI.
+    return;
+  }
+
   const CGFunctionInfo &FnInfo = CGM.getTypes().arrangeGlobalDeclaration(GD);
 
   // FIXME: re-use FnInfo in this computation.
@@ -437,7 +447,7 @@ void CodeGenVTables::EmitThunk(GlobalDecl GD, const ThunkInfo &Thunk,
            "Function should have available_externally linkage!");
 
     // Change the linkage.
-    CGM.setFunctionLinkage(cast<CXXMethodDecl>(GD.getDecl()), ThunkFn);
+    CGM.setFunctionLinkage(GD, ThunkFn);
     return;
   }
 
@@ -483,6 +493,12 @@ void CodeGenVTables::EmitThunks(GlobalDecl GD)
   // We don't need to generate thunks for the base destructor.
   if (isa<CXXDestructorDecl>(MD) && GD.getDtorType() == Dtor_Base)
     return;
+
+  if (VFTContext.isValid()) {
+    // FIXME: This is a temporary solution to force generation of vftables in
+    // Microsoft ABI. Remove when we thread VFTableContext through CodeGen.
+    VFTContext->getVFPtrOffsets(MD->getParent());
+  }
 
   const VTableContext::ThunkInfoVectorTy *ThunkInfoVector =
     VTContext.getThunkInfo(MD);
@@ -666,6 +682,9 @@ CodeGenVTables::GenerateConstructionVTable(const CXXRecordDecl *RD,
                                       bool BaseIsVirtual, 
                                    llvm::GlobalVariable::LinkageTypes Linkage,
                                       VTableAddressPointsMapTy& AddressPoints) {
+  if (CGDebugInfo *DI = CGM.getModuleDebugInfo())
+    DI->completeClassData(Base.getBase());
+
   OwningPtr<VTableLayout> VTLayout(
     VTContext.createConstructionVTableLayout(Base.getBase(),
                                              Base.getBaseOffset(),
@@ -719,7 +738,7 @@ CodeGenVTables::GenerateConstructionVTable(const CXXRecordDecl *RD,
 /// Note that we only call this at the end of the translation unit.
 llvm::GlobalVariable::LinkageTypes 
 CodeGenModule::getVTableLinkage(const CXXRecordDecl *RD) {
-  if (RD->getLinkage() != ExternalLinkage)
+  if (!RD->isExternallyVisible())
     return llvm::GlobalVariable::InternalLinkage;
 
   // We're at the end of the translation unit, so the current key
@@ -734,12 +753,7 @@ CodeGenModule::getVTableLinkage(const CXXRecordDecl *RD) {
     switch (keyFunction->getTemplateSpecializationKind()) {
       case TSK_Undeclared:
       case TSK_ExplicitSpecialization:
-        // When compiling with optimizations turned on, we emit all vtables,
-        // even if the key function is not defined in the current translation
-        // unit. If this is the case, use available_externally linkage.
-        if (!def && CodeGenOpts.OptimizationLevel)
-          return llvm::GlobalVariable::AvailableExternallyLinkage;
-
+        assert(def && "Should not have been asked to emit this");
         if (keyFunction->isInlined())
           return !Context.getLangOpts().AppleKext ?
                    llvm::GlobalVariable::LinkOnceODRLinkage :
@@ -758,9 +772,7 @@ CodeGenModule::getVTableLinkage(const CXXRecordDecl *RD) {
                  llvm::Function::InternalLinkage;
   
       case TSK_ExplicitInstantiationDeclaration:
-        return !Context.getLangOpts().AppleKext ?
-                 llvm::GlobalVariable::AvailableExternallyLinkage :
-                 llvm::Function::InternalLinkage;
+        llvm_unreachable("Should not have been asked to emit this");
     }
   }
 
@@ -776,7 +788,7 @@ CodeGenModule::getVTableLinkage(const CXXRecordDecl *RD) {
     return llvm::GlobalVariable::LinkOnceODRLinkage;
 
   case TSK_ExplicitInstantiationDeclaration:
-    return llvm::GlobalVariable::AvailableExternallyLinkage;
+    llvm_unreachable("Should not have been asked to emit this");
 
   case TSK_ExplicitInstantiationDefinition:
       return llvm::GlobalVariable::WeakODRLinkage;
@@ -803,6 +815,15 @@ void CodeGenModule::EmitVTable(CXXRecordDecl *theClass, bool isRequired) {
 
 void 
 CodeGenVTables::GenerateClassData(const CXXRecordDecl *RD) {
+  if (CGDebugInfo *DI = CGM.getModuleDebugInfo())
+    DI->completeClassData(RD);
+
+  if (VFTContext.isValid()) {
+    // FIXME: This is a temporary solution to force generation of vftables in
+    // Microsoft ABI. Remove when we thread VFTableContext through CodeGen.
+    VFTContext->getVFPtrOffsets(RD);
+  }
+
   // First off, check whether we've already emitted the v-table and
   // associated stuff.
   llvm::GlobalVariable *VTable = GetAddrOfVTable(RD);
@@ -812,14 +833,8 @@ CodeGenVTables::GenerateClassData(const CXXRecordDecl *RD) {
   llvm::GlobalVariable::LinkageTypes Linkage = CGM.getVTableLinkage(RD);
   EmitVTableDefinition(VTable, Linkage, RD);
 
-  if (RD->getNumVBases()) {
-    if (!CGM.getTarget().getCXXABI().isMicrosoft()) {
-      llvm::GlobalVariable *VTT = GetAddrOfVTT(RD);
-      EmitVTTDefinition(VTT, Linkage, RD);
-    } else {
-      // FIXME: Emit vbtables here.
-    }
-  }
+  if (RD->getNumVBases())
+    CGM.getCXXABI().EmitVirtualInheritanceTables(Linkage, RD);
 
   // If this is the magic class __cxxabiv1::__fundamental_type_info,
   // we will emit the typeinfo for the fundamental types. This is the
@@ -875,16 +890,6 @@ bool CodeGenVTables::isVTableExternal(const CXXRecordDecl *RD) {
 /// we define that v-table?
 static bool shouldEmitVTableAtEndOfTranslationUnit(CodeGenModule &CGM,
                                                    const CXXRecordDecl *RD) {
-  // If we're building with optimization, we always emit v-tables
-  // since that allows for virtual function calls to be devirtualized.
-  // If the v-table is defined strongly elsewhere, this definition
-  // will be emitted available_externally.
-  //
-  // However, we don't want to do this in -fapple-kext mode, because
-  // kext mode does not permit devirtualization.
-  if (CGM.getCodeGenOpts().OptimizationLevel && !CGM.getLangOpts().AppleKext)
-    return true;
-
   return !CGM.getVTables().isVTableExternal(RD);
 }
 

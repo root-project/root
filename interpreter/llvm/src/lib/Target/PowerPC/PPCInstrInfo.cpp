@@ -32,6 +32,7 @@
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/raw_ostream.h"
 
+#define GET_INSTRMAP_INFO
 #define GET_INSTRINFO_CTOR
 #include "PPCGenInstrInfo.inc"
 
@@ -41,9 +42,12 @@ static cl::
 opt<bool> DisableCTRLoopAnal("disable-ppc-ctrloop-analysis", cl::Hidden,
             cl::desc("Disable analysis for CTR loops"));
 
+static cl::opt<bool> DisableCmpOpt("disable-ppc-cmp-opt",
+cl::desc("Disable compare instruction optimization"), cl::Hidden);
+
 PPCInstrInfo::PPCInstrInfo(PPCTargetMachine &tm)
   : PPCGenInstrInfo(PPC::ADJCALLSTACKDOWN, PPC::ADJCALLSTACKUP),
-    TM(tm), RI(*TM.getSubtargetImpl(), *this) {}
+    TM(tm), RI(*TM.getSubtargetImpl()) {}
 
 /// CreateTargetHazardRecognizer - Return the hazard recognizer to use for
 /// this target when scheduling the DAG.
@@ -70,10 +74,9 @@ ScheduleHazardRecognizer *PPCInstrInfo::CreateTargetPostRAHazardRecognizer(
   // Most subtargets use a PPC970 recognizer.
   if (Directive != PPC::DIR_440 && Directive != PPC::DIR_A2 &&
       Directive != PPC::DIR_E500mc && Directive != PPC::DIR_E5500) {
-    const TargetInstrInfo *TII = TM.getInstrInfo();
-    assert(TII && "No InstrInfo?");
+    assert(TM.getInstrInfo() && "No InstrInfo?");
 
-    return new PPCHazardRecognizer970(*TII);
+    return new PPCHazardRecognizer970(TM);
   }
 
   return new PPCScoreboardHazardRecognizer(II, DAG);
@@ -149,7 +152,8 @@ PPCInstrInfo::commuteInstruction(MachineInstr *MI, bool NewMI) const {
   MachineFunction &MF = *MI->getParent()->getParent();
 
   // Normal instructions can be commuted the obvious way.
-  if (MI->getOpcode() != PPC::RLWIMI)
+  if (MI->getOpcode() != PPC::RLWIMI &&
+      MI->getOpcode() != PPC::RLWIMIo)
     return TargetInstrInfo::commuteInstruction(MI, NewMI);
 
   // Cannot commute if it has a non-zero rotate count.
@@ -444,7 +448,9 @@ bool PPCInstrInfo::canInsertSelect(const MachineBasicBlock &MBB,
 
   // isel is for regular integer GPRs only.
   if (!PPC::GPRCRegClass.hasSubClassEq(RC) &&
-      !PPC::G8RCRegClass.hasSubClassEq(RC))
+      !PPC::GPRC_NOR0RegClass.hasSubClassEq(RC) &&
+      !PPC::G8RCRegClass.hasSubClassEq(RC) &&
+      !PPC::G8RC_NOX0RegClass.hasSubClassEq(RC))
     return false;
 
   // FIXME: These numbers are for the A2, how well they work for other cores is
@@ -474,12 +480,15 @@ void PPCInstrInfo::insertSelect(MachineBasicBlock &MBB,
   const TargetRegisterClass *RC =
     RI.getCommonSubClass(MRI.getRegClass(TrueReg), MRI.getRegClass(FalseReg));
   assert(RC && "TrueReg and FalseReg must have overlapping register classes");
-  assert((PPC::GPRCRegClass.hasSubClassEq(RC) ||
-          PPC::G8RCRegClass.hasSubClassEq(RC)) &&
+
+  bool Is64Bit = PPC::G8RCRegClass.hasSubClassEq(RC) ||
+                 PPC::G8RC_NOX0RegClass.hasSubClassEq(RC);
+  assert((Is64Bit ||
+          PPC::GPRCRegClass.hasSubClassEq(RC) ||
+          PPC::GPRC_NOR0RegClass.hasSubClassEq(RC)) &&
          "isel is for regular integer GPRs only");
 
-  unsigned OpCode =
-    PPC::GPRCRegClass.hasSubClassEq(RC) ? PPC::ISEL : PPC::ISEL8;
+  unsigned OpCode = Is64Bit ? PPC::ISEL8 : PPC::ISEL;
   unsigned SelectPred = Cond[0].getImm();
 
   unsigned SubIdx;
@@ -787,16 +796,6 @@ PPCInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
   NewMIs.back()->addMemOperand(MF, MMO);
 }
 
-MachineInstr*
-PPCInstrInfo::emitFrameIndexDebugValue(MachineFunction &MF,
-                                       int FrameIx, uint64_t Offset,
-                                       const MDNode *MDPtr,
-                                       DebugLoc DL) const {
-  MachineInstrBuilder MIB = BuildMI(MF, DL, get(PPC::DBG_VALUE));
-  addFrameReference(MIB, FrameIx, 0, false).addImm(Offset).addMetadata(MDPtr);
-  return &*MIB;
-}
-
 bool PPCInstrInfo::
 ReverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const {
   assert(Cond.size() == 2 && "Invalid PPC branch opcode!");
@@ -1052,6 +1051,305 @@ bool PPCInstrInfo::isPredicable(MachineInstr *MI) const {
   case PPC::BCTRL8:
     return true;
   }
+}
+
+bool PPCInstrInfo::analyzeCompare(const MachineInstr *MI,
+                                  unsigned &SrcReg, unsigned &SrcReg2,
+                                  int &Mask, int &Value) const {
+  unsigned Opc = MI->getOpcode();
+
+  switch (Opc) {
+  default: return false;
+  case PPC::CMPWI:
+  case PPC::CMPLWI:
+  case PPC::CMPDI:
+  case PPC::CMPLDI:
+    SrcReg = MI->getOperand(1).getReg();
+    SrcReg2 = 0;
+    Value = MI->getOperand(2).getImm();
+    Mask = 0xFFFF;
+    return true;
+  case PPC::CMPW:
+  case PPC::CMPLW:
+  case PPC::CMPD:
+  case PPC::CMPLD:
+  case PPC::FCMPUS:
+  case PPC::FCMPUD:
+    SrcReg = MI->getOperand(1).getReg();
+    SrcReg2 = MI->getOperand(2).getReg();
+    return true;
+  }
+}
+
+bool PPCInstrInfo::optimizeCompareInstr(MachineInstr *CmpInstr,
+                                        unsigned SrcReg, unsigned SrcReg2,
+                                        int Mask, int Value,
+                                        const MachineRegisterInfo *MRI) const {
+  if (DisableCmpOpt)
+    return false;
+
+  int OpC = CmpInstr->getOpcode();
+  unsigned CRReg = CmpInstr->getOperand(0).getReg();
+
+  // FP record forms set CR1 based on the execption status bits, not a
+  // comparison with zero.
+  if (OpC == PPC::FCMPUS || OpC == PPC::FCMPUD)
+    return false;
+
+  // The record forms set the condition register based on a signed comparison
+  // with zero (so says the ISA manual). This is not as straightforward as it
+  // seems, however, because this is always a 64-bit comparison on PPC64, even
+  // for instructions that are 32-bit in nature (like slw for example).
+  // So, on PPC32, for unsigned comparisons, we can use the record forms only
+  // for equality checks (as those don't depend on the sign). On PPC64,
+  // we are restricted to equality for unsigned 64-bit comparisons and for
+  // signed 32-bit comparisons the applicability is more restricted.
+  bool isPPC64 = TM.getSubtargetImpl()->isPPC64();
+  bool is32BitSignedCompare   = OpC ==  PPC::CMPWI || OpC == PPC::CMPW;
+  bool is32BitUnsignedCompare = OpC == PPC::CMPLWI || OpC == PPC::CMPLW;
+  bool is64BitUnsignedCompare = OpC == PPC::CMPLDI || OpC == PPC::CMPLD;
+
+  // Get the unique definition of SrcReg.
+  MachineInstr *MI = MRI->getUniqueVRegDef(SrcReg);
+  if (!MI) return false;
+  int MIOpC = MI->getOpcode();
+
+  bool equalityOnly = false;
+  bool noSub = false;
+  if (isPPC64) {
+    if (is32BitSignedCompare) {
+      // We can perform this optimization only if MI is sign-extending.
+      if (MIOpC == PPC::SRAW  || MIOpC == PPC::SRAWo ||
+          MIOpC == PPC::SRAWI || MIOpC == PPC::SRAWIo ||
+          MIOpC == PPC::EXTSB || MIOpC == PPC::EXTSBo ||
+          MIOpC == PPC::EXTSH || MIOpC == PPC::EXTSHo ||
+          MIOpC == PPC::EXTSW || MIOpC == PPC::EXTSWo) {
+        noSub = true;
+      } else
+        return false;
+    } else if (is32BitUnsignedCompare) {
+      // We can perform this optimization, equality only, if MI is
+      // zero-extending.
+      if (MIOpC == PPC::CNTLZW || MIOpC == PPC::CNTLZWo ||
+          MIOpC == PPC::SLW    || MIOpC == PPC::SLWo ||
+          MIOpC == PPC::SRW    || MIOpC == PPC::SRWo) {
+        noSub = true;
+        equalityOnly = true;
+      } else
+        return false;
+    } else
+      equalityOnly = is64BitUnsignedCompare;
+  } else
+    equalityOnly = is32BitUnsignedCompare;
+
+  if (equalityOnly) {
+    // We need to check the uses of the condition register in order to reject
+    // non-equality comparisons.
+    for (MachineRegisterInfo::use_iterator I = MRI->use_begin(CRReg),
+         IE = MRI->use_end(); I != IE; ++I) {
+      MachineInstr *UseMI = &*I;
+      if (UseMI->getOpcode() == PPC::BCC) {
+        unsigned Pred = UseMI->getOperand(0).getImm();
+        if (Pred != PPC::PRED_EQ && Pred != PPC::PRED_NE)
+          return false;
+      } else if (UseMI->getOpcode() == PPC::ISEL ||
+                 UseMI->getOpcode() == PPC::ISEL8) {
+        unsigned SubIdx = UseMI->getOperand(3).getSubReg();
+        if (SubIdx != PPC::sub_eq)
+          return false;
+      } else
+        return false;
+    }
+  }
+
+  MachineBasicBlock::iterator I = CmpInstr;
+
+  // Scan forward to find the first use of the compare.
+  for (MachineBasicBlock::iterator EL = CmpInstr->getParent()->end();
+       I != EL; ++I) {
+    bool FoundUse = false;
+    for (MachineRegisterInfo::use_iterator J = MRI->use_begin(CRReg),
+         JE = MRI->use_end(); J != JE; ++J)
+      if (&*J == &*I) {
+        FoundUse = true;
+        break;
+      }
+
+    if (FoundUse)
+      break;
+  }
+
+  // There are two possible candidates which can be changed to set CR[01].
+  // One is MI, the other is a SUB instruction.
+  // For CMPrr(r1,r2), we are looking for SUB(r1,r2) or SUB(r2,r1).
+  MachineInstr *Sub = NULL;
+  if (SrcReg2 != 0)
+    // MI is not a candidate for CMPrr.
+    MI = NULL;
+  // FIXME: Conservatively refuse to convert an instruction which isn't in the
+  // same BB as the comparison. This is to allow the check below to avoid calls
+  // (and other explicit clobbers); instead we should really check for these
+  // more explicitly (in at least a few predecessors).
+  else if (MI->getParent() != CmpInstr->getParent() || Value != 0) {
+    // PPC does not have a record-form SUBri.
+    return false;
+  }
+
+  // Search for Sub.
+  const TargetRegisterInfo *TRI = &getRegisterInfo();
+  --I;
+
+  // Get ready to iterate backward from CmpInstr.
+  MachineBasicBlock::iterator E = MI,
+                              B = CmpInstr->getParent()->begin();
+
+  for (; I != E && !noSub; --I) {
+    const MachineInstr &Instr = *I;
+    unsigned IOpC = Instr.getOpcode();
+
+    if (&*I != CmpInstr && (
+        Instr.modifiesRegister(PPC::CR0, TRI) ||
+        Instr.readsRegister(PPC::CR0, TRI)))
+      // This instruction modifies or uses the record condition register after
+      // the one we want to change. While we could do this transformation, it
+      // would likely not be profitable. This transformation removes one
+      // instruction, and so even forcing RA to generate one move probably
+      // makes it unprofitable.
+      return false;
+
+    // Check whether CmpInstr can be made redundant by the current instruction.
+    if ((OpC == PPC::CMPW || OpC == PPC::CMPLW ||
+         OpC == PPC::CMPD || OpC == PPC::CMPLD) &&
+        (IOpC == PPC::SUBF || IOpC == PPC::SUBF8) &&
+        ((Instr.getOperand(1).getReg() == SrcReg &&
+          Instr.getOperand(2).getReg() == SrcReg2) ||
+        (Instr.getOperand(1).getReg() == SrcReg2 &&
+         Instr.getOperand(2).getReg() == SrcReg))) {
+      Sub = &*I;
+      break;
+    }
+
+    if (I == B)
+      // The 'and' is below the comparison instruction.
+      return false;
+  }
+
+  // Return false if no candidates exist.
+  if (!MI && !Sub)
+    return false;
+
+  // The single candidate is called MI.
+  if (!MI) MI = Sub;
+
+  int NewOpC = -1;
+  MIOpC = MI->getOpcode();
+  if (MIOpC == PPC::ANDIo || MIOpC == PPC::ANDIo8)
+    NewOpC = MIOpC;
+  else {
+    NewOpC = PPC::getRecordFormOpcode(MIOpC);
+    if (NewOpC == -1 && PPC::getNonRecordFormOpcode(MIOpC) != -1)
+      NewOpC = MIOpC;
+  }
+
+  // FIXME: On the non-embedded POWER architectures, only some of the record
+  // forms are fast, and we should use only the fast ones.
+
+  // The defining instruction has a record form (or is already a record
+  // form). It is possible, however, that we'll need to reverse the condition
+  // code of the users.
+  if (NewOpC == -1)
+    return false;
+
+  SmallVector<std::pair<MachineOperand*, PPC::Predicate>, 4> PredsToUpdate;
+  SmallVector<std::pair<MachineOperand*, unsigned>, 4> SubRegsToUpdate;
+
+  // If we have SUB(r1, r2) and CMP(r2, r1), the condition code based on CMP
+  // needs to be updated to be based on SUB.  Push the condition code
+  // operands to OperandsToUpdate.  If it is safe to remove CmpInstr, the
+  // condition code of these operands will be modified.
+  bool ShouldSwap = false;
+  if (Sub) {
+    ShouldSwap = SrcReg2 != 0 && Sub->getOperand(1).getReg() == SrcReg2 &&
+      Sub->getOperand(2).getReg() == SrcReg;
+
+    // The operands to subf are the opposite of sub, so only in the fixed-point
+    // case, invert the order.
+    ShouldSwap = !ShouldSwap;
+  }
+
+  if (ShouldSwap)
+    for (MachineRegisterInfo::use_iterator I = MRI->use_begin(CRReg),
+         IE = MRI->use_end(); I != IE; ++I) {
+      MachineInstr *UseMI = &*I;
+      if (UseMI->getOpcode() == PPC::BCC) {
+        PPC::Predicate Pred = (PPC::Predicate) UseMI->getOperand(0).getImm();
+        assert((!equalityOnly ||
+                Pred == PPC::PRED_EQ || Pred == PPC::PRED_NE) &&
+               "Invalid predicate for equality-only optimization");
+        PredsToUpdate.push_back(std::make_pair(&((*I).getOperand(0)),
+                                PPC::getSwappedPredicate(Pred)));
+      } else if (UseMI->getOpcode() == PPC::ISEL ||
+                 UseMI->getOpcode() == PPC::ISEL8) {
+        unsigned NewSubReg = UseMI->getOperand(3).getSubReg();
+        assert((!equalityOnly || NewSubReg == PPC::sub_eq) &&
+               "Invalid CR bit for equality-only optimization");
+
+        if (NewSubReg == PPC::sub_lt)
+          NewSubReg = PPC::sub_gt;
+        else if (NewSubReg == PPC::sub_gt)
+          NewSubReg = PPC::sub_lt;
+
+        SubRegsToUpdate.push_back(std::make_pair(&((*I).getOperand(3)),
+                                                 NewSubReg));
+      } else // We need to abort on a user we don't understand.
+        return false;
+    }
+
+  // Create a new virtual register to hold the value of the CR set by the
+  // record-form instruction. If the instruction was not previously in
+  // record form, then set the kill flag on the CR.
+  CmpInstr->eraseFromParent();
+
+  MachineBasicBlock::iterator MII = MI;
+  BuildMI(*MI->getParent(), llvm::next(MII), MI->getDebugLoc(),
+          get(TargetOpcode::COPY), CRReg)
+    .addReg(PPC::CR0, MIOpC != NewOpC ? RegState::Kill : 0);
+
+  if (MIOpC != NewOpC) {
+    // We need to be careful here: we're replacing one instruction with
+    // another, and we need to make sure that we get all of the right
+    // implicit uses and defs. On the other hand, the caller may be holding
+    // an iterator to this instruction, and so we can't delete it (this is
+    // specifically the case if this is the instruction directly after the
+    // compare).
+
+    const MCInstrDesc &NewDesc = get(NewOpC);
+    MI->setDesc(NewDesc);
+
+    if (NewDesc.ImplicitDefs)
+      for (const uint16_t *ImpDefs = NewDesc.getImplicitDefs();
+           *ImpDefs; ++ImpDefs)
+        if (!MI->definesRegister(*ImpDefs))
+          MI->addOperand(*MI->getParent()->getParent(),
+                         MachineOperand::CreateReg(*ImpDefs, true, true));
+    if (NewDesc.ImplicitUses)
+      for (const uint16_t *ImpUses = NewDesc.getImplicitUses();
+           *ImpUses; ++ImpUses)
+        if (!MI->readsRegister(*ImpUses))
+          MI->addOperand(*MI->getParent()->getParent(),
+                         MachineOperand::CreateReg(*ImpUses, false, true));
+  }
+
+  // Modify the condition code of operands in OperandsToUpdate.
+  // Since we have SUB(r1, r2) and CMP(r2, r1), the condition code needs to
+  // be changed from r2 > r1 to r1 < r2, from r2 < r1 to r1 > r2, etc.
+  for (unsigned i = 0, e = PredsToUpdate.size(); i < e; i++)
+    PredsToUpdate[i].first->setImm(PredsToUpdate[i].second);
+
+  for (unsigned i = 0, e = SubRegsToUpdate.size(); i < e; i++)
+    SubRegsToUpdate[i].first->setSubReg(SubRegsToUpdate[i].second);
+
+  return true;
 }
 
 /// GetInstSize - Return the number of bytes of code the specified

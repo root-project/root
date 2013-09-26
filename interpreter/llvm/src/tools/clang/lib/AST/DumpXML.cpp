@@ -915,12 +915,13 @@ struct XMLDumper : public XMLDeclVisitor<XMLDumper>,
 
   void setCallingConv(CallingConv CC) {
     switch (CC) {
-    case CC_Default: return;
     case CC_C: return set("cc", "cdecl");
     case CC_X86FastCall: return set("cc", "x86_fastcall");
     case CC_X86StdCall: return set("cc", "x86_stdcall");
     case CC_X86ThisCall: return set("cc", "x86_thiscall");
     case CC_X86Pascal: return set("cc", "x86_pascal");
+    case CC_X86_64Win64: return set("cc", "x86_64_win64");
+    case CC_X86_64SysV: return set("cc", "x86_64_sysv");
     case CC_AAPCS: return set("cc", "aapcs");
     case CC_AAPCS_VFP: return set("cc", "aapcs_vfp");
     case CC_PnaclCall: return set("cc", "pnaclcall");

@@ -28,6 +28,7 @@
 #include "clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramStateTrait.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/SymbolManager.h"
+#include "clang/StaticAnalyzer/Checkers/ObjCRetainCount.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/ImmutableList.h"
@@ -37,118 +38,40 @@
 #include "llvm/ADT/StringExtras.h"
 #include <cstdarg>
 
+#include "AllocationDiagnostics.h"
+
 using namespace clang;
 using namespace ento;
+using namespace objc_retain;
 using llvm::StrInStrNoCase;
 
 //===----------------------------------------------------------------------===//
-// Primitives used for constructing summaries for function/method calls.
+// Adapters for FoldingSet.
 //===----------------------------------------------------------------------===//
-
-/// ArgEffect is used to summarize a function/method call's effect on a
-/// particular argument.
-enum ArgEffect { DoNothing, Autorelease, Dealloc, DecRef, DecRefMsg,
-                 DecRefBridgedTransfered,
-                 IncRefMsg, IncRef, MakeCollectable, MayEscape,
-
-                 // Stop tracking the argument - the effect of the call is
-                 // unknown.
-                 StopTracking,
-
-                 // In some cases, we obtain a better summary for this checker
-                 // by looking at the call site than by inlining the function.
-                 // Signifies that we should stop tracking the symbol even if
-                 // the function is inlined.
-                 StopTrackingHard,
-
-                 // The function decrements the reference count and the checker 
-                 // should stop tracking the argument.
-                 DecRefAndStopTrackingHard, DecRefMsgAndStopTrackingHard
-               };
 
 namespace llvm {
 template <> struct FoldingSetTrait<ArgEffect> {
-static inline void Profile(const ArgEffect X, FoldingSetNodeID& ID) {
+static inline void Profile(const ArgEffect X, FoldingSetNodeID &ID) {
   ID.AddInteger((unsigned) X);
 }
 };
+template <> struct FoldingSetTrait<RetEffect> {
+  static inline void Profile(const RetEffect &X, FoldingSetNodeID &ID) {
+    ID.AddInteger((unsigned) X.getKind());
+    ID.AddInteger((unsigned) X.getObjKind());
+}
+};
 } // end llvm namespace
+
+//===----------------------------------------------------------------------===//
+// Reference-counting logic (typestate + counts).
+//===----------------------------------------------------------------------===//
 
 /// ArgEffects summarizes the effects of a function/method call on all of
 /// its arguments.
 typedef llvm::ImmutableMap<unsigned,ArgEffect> ArgEffects;
 
 namespace {
-
-///  RetEffect is used to summarize a function/method call's behavior with
-///  respect to its return value.
-class RetEffect {
-public:
-  enum Kind { NoRet, OwnedSymbol, OwnedAllocatedSymbol,
-              NotOwnedSymbol, GCNotOwnedSymbol, ARCNotOwnedSymbol,
-              OwnedWhenTrackedReceiver,
-              // Treat this function as returning a non-tracked symbol even if
-              // the function has been inlined. This is used where the call
-              // site summary is more presise than the summary indirectly produced 
-              // by inlining the function
-              NoRetHard
-            };
-
-  enum ObjKind { CF, ObjC, AnyObj };
-
-private:
-  Kind K;
-  ObjKind O;
-
-  RetEffect(Kind k, ObjKind o = AnyObj) : K(k), O(o) {}
-
-public:
-  Kind getKind() const { return K; }
-
-  ObjKind getObjKind() const { return O; }
-
-  bool isOwned() const {
-    return K == OwnedSymbol || K == OwnedAllocatedSymbol ||
-           K == OwnedWhenTrackedReceiver;
-  }
-
-  bool operator==(const RetEffect &Other) const {
-    return K == Other.K && O == Other.O;
-  }
-
-  static RetEffect MakeOwnedWhenTrackedReceiver() {
-    return RetEffect(OwnedWhenTrackedReceiver, ObjC);
-  }
-
-  static RetEffect MakeOwned(ObjKind o, bool isAllocated = false) {
-    return RetEffect(isAllocated ? OwnedAllocatedSymbol : OwnedSymbol, o);
-  }
-  static RetEffect MakeNotOwned(ObjKind o) {
-    return RetEffect(NotOwnedSymbol, o);
-  }
-  static RetEffect MakeGCNotOwned() {
-    return RetEffect(GCNotOwnedSymbol, ObjC);
-  }
-  static RetEffect MakeARCNotOwned() {
-    return RetEffect(ARCNotOwnedSymbol, ObjC);
-  }
-  static RetEffect MakeNoRet() {
-    return RetEffect(NoRet);
-  }
-  static RetEffect MakeNoRetHard() {
-    return RetEffect(NoRetHard);
-  }
-
-  void Profile(llvm::FoldingSetNodeID& ID) const {
-    ID.AddInteger((unsigned) K);
-    ID.AddInteger((unsigned) O);
-  }
-};
-
-//===----------------------------------------------------------------------===//
-// Reference-counting logic (typestate + counts).
-//===----------------------------------------------------------------------===//
-
 class RefVal {
 public:
   enum Kind {
@@ -324,7 +247,7 @@ void RefVal::print(raw_ostream &Out) const {
       break;
 
     case RefVal::ErrorOverAutorelease:
-      Out << "Over autoreleased";
+      Out << "Over-autoreleased";
       break;
 
     case RefVal::ErrorReturnedNotOwned:
@@ -394,7 +317,7 @@ public:
 
     return DefaultArgEffect;
   }
-  
+
   void addArg(ArgEffects::Factory &af, unsigned idx, ArgEffect e) {
     Args = af.add(Args, idx, e);
   }
@@ -494,8 +417,6 @@ template <> struct DenseMapInfo<ObjCSummaryKey> {
   }
 
 };
-template <>
-struct isPodLike<ObjCSummaryKey> { static const bool value = true; };
 } // end llvm namespace
 
 namespace {
@@ -1114,12 +1035,14 @@ RetainSummaryManager::getFunctionSummary(const FunctionDecl *FD) {
       // correctly.
       ScratchArgs = AF.add(ScratchArgs, 12, StopTracking);
       S = getPersistentSummary(RetEffect::MakeNoRet(), DoNothing, DoNothing);
-    } else if (FName == "dispatch_set_context") {
+    } else if (FName == "dispatch_set_context" ||
+               FName == "xpc_connection_set_context") {
       // <rdar://problem/11059275> - The analyzer currently doesn't have
       // a good way to reason about the finalizer function for libdispatch.
       // If we pass a context object that is memory managed, stop tracking it.
+      // <rdar://problem/13783514> - Same problem, but for XPC.
       // FIXME: this hack should possibly go away once we can handle
-      // libdispatch finalizers.
+      // libdispatch and XPC finalizers.
       ScratchArgs = AF.add(ScratchArgs, 1, StopTracking);
       S = getPersistentSummary(RetEffect::MakeNoRet(), DoNothing, DoNothing);
     } else if (FName.startswith("NSLog")) {
@@ -1660,10 +1583,10 @@ namespace {
   class OverAutorelease : public CFRefBug {
   public:
     OverAutorelease()
-    : CFRefBug("Object sent -autorelease too many times") {}
+    : CFRefBug("Object autoreleased too many times") {}
 
     const char *getDescription() const {
-      return "Object sent -autorelease too many times";
+      return "Object autoreleased too many times";
     }
   };
 
@@ -1773,11 +1696,11 @@ namespace {
 
   class CFRefLeakReport : public CFRefReport {
     const MemRegion* AllocBinding;
-
   public:
     CFRefLeakReport(CFRefBug &D, const LangOptions &LOpts, bool GCEnabled,
                     const SummaryLogTy &Log, ExplodedNode *n, SymbolRef sym,
-                    CheckerContext &Ctx);
+                    CheckerContext &Ctx,
+                    bool IncludeAllocationLine);
 
     PathDiagnosticLocation getLocation(const SourceManager &SM) const {
       assert(Location.isValid());
@@ -1817,16 +1740,6 @@ void CFRefReport::addGCModeDescription(const LangOptions &LOpts,
 
   assert(GCModeDescription && "invalid/unknown GC mode");
   addExtraText(GCModeDescription);
-}
-
-// FIXME: This should be a method on SmallVector.
-static inline bool contains(const SmallVectorImpl<ArgEffect>& V,
-                            ArgEffect X) {
-  for (SmallVectorImpl<ArgEffect>::const_iterator I=V.begin(), E=V.end();
-       I!=E; ++I)
-    if (*I == X) return true;
-
-  return false;
 }
 
 static bool isNumericLiteralExpression(const Expr *E) {
@@ -1990,7 +1903,8 @@ PathDiagnosticPiece *CFRefReportVisitor::VisitNode(const ExplodedNode *N,
     RefVal PrevV = *PrevT;
 
     // Specially handle -dealloc.
-    if (!GCEnabled && contains(AEffects, Dealloc)) {
+    if (!GCEnabled && std::find(AEffects.begin(), AEffects.end(), Dealloc) !=
+                          AEffects.end()) {
       // Determine if the object's reference count was pushed to zero.
       assert(!(PrevV == CurrV) && "The typestate *must* have changed.");
       // We may not have transitioned to 'release' if we hit an error.
@@ -2003,7 +1917,8 @@ PathDiagnosticPiece *CFRefReportVisitor::VisitNode(const ExplodedNode *N,
     }
 
     // Specially handle CFMakeCollectable and friends.
-    if (contains(AEffects, MakeCollectable)) {
+    if (std::find(AEffects.begin(), AEffects.end(), MakeCollectable) !=
+        AEffects.end()) {
       // Get the name of the function.
       const Stmt *S = N->getLocation().castAs<StmtPoint>().getStmt();
       SVal X =
@@ -2048,7 +1963,7 @@ PathDiagnosticPiece *CFRefReportVisitor::VisitNode(const ExplodedNode *N,
               return 0;
 
             assert(PrevV.getAutoreleaseCount() < CurrV.getAutoreleaseCount());
-            os << "Object sent -autorelease message";
+            os << "Object autoreleased";
             break;
           }
 
@@ -2190,7 +2105,7 @@ GetAllocationSite(ProgramStateManager& StateMgr, const ExplodedNode *N,
     if (!InitMethodContext)
       if (Optional<CallEnter> CEP = N->getLocation().getAs<CallEnter>()) {
         const Stmt *CE = CEP->getCallExpr();
-        if (const ObjCMessageExpr *ME = dyn_cast<ObjCMessageExpr>(CE)) {
+        if (const ObjCMessageExpr *ME = dyn_cast_or_null<ObjCMessageExpr>(CE)) {
           const Stmt *RecExpr = ME->getInstanceReceiver();
           if (RecExpr) {
             SVal RecV = St->getSVal(RecExpr, NContext);
@@ -2323,8 +2238,9 @@ CFRefLeakReportVisitor::getEndPath(BugReporterContext &BRC,
 CFRefLeakReport::CFRefLeakReport(CFRefBug &D, const LangOptions &LOpts,
                                  bool GCEnabled, const SummaryLogTy &Log, 
                                  ExplodedNode *n, SymbolRef sym,
-                                 CheckerContext &Ctx)
-: CFRefReport(D, LOpts, GCEnabled, Log, n, sym, false) {
+                                 CheckerContext &Ctx,
+                                 bool IncludeAllocationLine)
+  : CFRefReport(D, LOpts, GCEnabled, Log, n, sym, false) {
 
   // Most bug reports are cached at the location where they occurred.
   // With leaks, we want to unique them by the location where they were
@@ -2355,8 +2271,17 @@ CFRefLeakReport::CFRefLeakReport(CFRefBug &D, const LangOptions &LOpts,
   else
     AllocStmt = P.castAs<PostStmt>().getStmt();
   assert(AllocStmt && "All allocations must come from explicit calls");
-  Location = PathDiagnosticLocation::createBegin(AllocStmt, SMgr,
-                                                  n->getLocationContext());
+
+  PathDiagnosticLocation AllocLocation =
+    PathDiagnosticLocation::createBegin(AllocStmt, SMgr,
+                                        AllocNode->getLocationContext());
+  Location = AllocLocation;
+
+  // Set uniqieing info, which will be used for unique the bug reports. The
+  // leaks should be uniqued on the allocation site.
+  UniqueingLocation = AllocLocation;
+  UniqueingDecl = AllocNode->getLocationContext()->getDecl();
+
   // Fill in the description of the bug.
   Description.clear();
   llvm::raw_string_ostream os(Description);
@@ -2365,9 +2290,13 @@ CFRefLeakReport::CFRefLeakReport(CFRefBug &D, const LangOptions &LOpts,
     os << "(when using garbage collection) ";
   os << "of an object";
 
-  // FIXME: AllocBinding doesn't get populated for RegionStore yet.
-  if (AllocBinding)
+  if (AllocBinding) {
     os << " stored into '" << AllocBinding->getString() << '\'';
+    if (IncludeAllocationLine) {
+      FullSourceLoc SL(AllocStmt->getLocStart(), Ctx.getSourceManager());
+      os << " (allocated on line " << SL.getSpellingLineNumber() << ")";
+    }
+  }
 
   addVisitor(new CFRefLeakReportVisitor(sym, GCEnabled, Log));
 }
@@ -2408,8 +2337,14 @@ class RetainCountChecker
   mutable SummaryLogTy SummaryLog;
   mutable bool ShouldResetSummaryLog;
 
+  /// Optional setting to indicate if leak reports should include
+  /// the allocation line.
+  mutable bool IncludeAllocationLine;
+
 public:  
-  RetainCountChecker() : ShouldResetSummaryLog(false) {}
+  RetainCountChecker(AnalyzerOptions &AO)
+    : ShouldResetSummaryLog(false),
+      IncludeAllocationLine(shouldIncludeAllocationSiteInLeakDiagnostics(AO)) {}
 
   virtual ~RetainCountChecker() {
     DeleteContainerSeconds(DeadSymbolTags);
@@ -3354,7 +3289,8 @@ void RetainCountChecker::checkReturnWithRetEffect(const ReturnStmt *S,
           CFRefReport *report =
             new CFRefLeakReport(*getLeakAtReturnBug(LOpts, GCEnabled),
                                 LOpts, GCEnabled, SummaryLog,
-                                N, Sym, C);
+                                N, Sym, C, IncludeAllocationLine);
+
           C.emitReport(report);
         }
       }
@@ -3417,6 +3353,16 @@ void RetainCountChecker::checkBind(SVal loc, SVal val, const Stmt *S,
       // assigned to a struct field, so be conservative here and let the symbol
       // go. TODO: This could definitely be improved upon.
       escapes = !isa<VarRegion>(regionLoc->getRegion());
+    }
+  }
+
+  // If we are storing the value into an auto function scope variable annotated
+  // with (__attribute__((cleanup))), stop tracking the value to avoid leak
+  // false positives.
+  if (const VarRegion *LVR = dyn_cast_or_null<VarRegion>(loc.getAsRegion())) {
+    const VarDecl *VD = LVR->getDecl();
+    if (VD->getAttr<CleanupAttr>()) {
+      escapes = true;
     }
   }
 
@@ -3540,10 +3486,12 @@ RetainCountChecker::handleAutoreleaseCounts(ProgramStateRef state,
   if (N) {
     SmallString<128> sbuf;
     llvm::raw_svector_ostream os(sbuf);
-    os << "Object over-autoreleased: object was sent -autorelease ";
+    os << "Object was autoreleased ";
     if (V.getAutoreleaseCount() > 1)
-      os << V.getAutoreleaseCount() << " times ";
-    os << "but the object has a +" << V.getCount() << " retain count";
+      os << V.getAutoreleaseCount() << " times but the object ";
+    else
+      os << "but ";
+    os << "has a +" << V.getCount() << " retain count";
 
     if (!overAutorelease)
       overAutorelease.reset(new OverAutorelease());
@@ -3594,7 +3542,8 @@ RetainCountChecker::processLeaks(ProgramStateRef state,
       assert(BT && "BugType not initialized.");
 
       CFRefLeakReport *report = new CFRefLeakReport(*BT, LOpts, GCEnabled, 
-                                                    SummaryLog, N, *I, Ctx);
+                                                    SummaryLog, N, *I, Ctx,
+                                                    IncludeAllocationLine);
       Ctx.emitReport(report);
     }
   }
@@ -3607,6 +3556,13 @@ void RetainCountChecker::checkEndFunction(CheckerContext &Ctx) const {
   RefBindingsTy B = state->get<RefBindings>();
   ExplodedNode *Pred = Ctx.getPredecessor();
 
+  // Don't process anything within synthesized bodies.
+  const LocationContext *LCtx = Pred->getLocationContext();
+  if (LCtx->getAnalysisDeclContext()->isBodyAutosynthesized()) {
+    assert(LCtx->getParent());
+    return;
+  }
+
   for (RefBindingsTy::iterator I = B.begin(), E = B.end(); I != E; ++I) {
     state = handleAutoreleaseCounts(state, Pred, /*Tag=*/0, Ctx,
                                     I->first, I->second);
@@ -3618,7 +3574,7 @@ void RetainCountChecker::checkEndFunction(CheckerContext &Ctx) const {
   // We will do that later.
   // FIXME: we should instead check for imbalances of the retain/releases,
   // and suggest annotations.
-  if (Ctx.getLocationContext()->getParent())
+  if (LCtx->getParent())
     return;
   
   B = state->get<RefBindings>();
@@ -3716,6 +3672,40 @@ void RetainCountChecker::printState(raw_ostream &Out, ProgramStateRef State,
 //===----------------------------------------------------------------------===//
 
 void ento::registerRetainCountChecker(CheckerManager &Mgr) {
-  Mgr.registerChecker<RetainCountChecker>();
+  Mgr.registerChecker<RetainCountChecker>(Mgr.getAnalyzerOptions());
 }
 
+//===----------------------------------------------------------------------===//
+// Implementation of the CallEffects API.
+//===----------------------------------------------------------------------===//
+
+namespace clang { namespace ento { namespace objc_retain {
+
+// This is a bit gross, but it allows us to populate CallEffects without
+// creating a bunch of accessors.  This kind is very localized, so the
+// damage of this macro is limited.
+#define createCallEffect(D, KIND)\
+  ASTContext &Ctx = D->getASTContext();\
+  LangOptions L = Ctx.getLangOpts();\
+  RetainSummaryManager M(Ctx, L.GCOnly, L.ObjCAutoRefCount);\
+  const RetainSummary *S = M.get ## KIND ## Summary(D);\
+  CallEffects CE(S->getRetEffect());\
+  CE.Receiver = S->getReceiverEffect();\
+  unsigned N = D->param_size();\
+  for (unsigned i = 0; i < N; ++i) {\
+    CE.Args.push_back(S->getArg(i));\
+  }
+
+CallEffects CallEffects::getEffect(const ObjCMethodDecl *MD) {
+  createCallEffect(MD, Method);
+  return CE;
+}
+
+CallEffects CallEffects::getEffect(const FunctionDecl *FD) {
+  createCallEffect(FD, Function);
+  return CE;
+}
+
+#undef createCallEffect
+
+}}}

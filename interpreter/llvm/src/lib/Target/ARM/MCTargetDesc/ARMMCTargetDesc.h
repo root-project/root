@@ -25,6 +25,7 @@ class MCInstrInfo;
 class MCObjectWriter;
 class MCRegisterInfo;
 class MCSubtargetInfo;
+class MCRelocationInfo;
 class StringRef;
 class Target;
 class raw_ostream;
@@ -46,7 +47,8 @@ MCCodeEmitter *createARMMCCodeEmitter(const MCInstrInfo &MCII,
                                       const MCSubtargetInfo &STI,
                                       MCContext &Ctx);
 
-MCAsmBackend *createARMAsmBackend(const Target &T, StringRef TT, StringRef CPU);
+MCAsmBackend *createARMAsmBackend(const Target &T, const MCRegisterInfo &MRI,
+                                  StringRef TT, StringRef CPU);
 
 /// createARMELFObjectWriter - Construct an ELF Mach-O object writer.
 MCObjectWriter *createARMELFObjectWriter(raw_ostream &OS,
@@ -58,6 +60,9 @@ MCObjectWriter *createARMMachObjectWriter(raw_ostream &OS,
                                           uint32_t CPUType,
                                           uint32_t CPUSubtype);
 
+
+/// createARMMachORelocationInfo - Construct ARM Mach-O relocation info.
+MCRelocationInfo *createARMMachORelocationInfo(MCContext &Ctx);
 } // End llvm namespace
 
 // Defines symbolic names for ARM registers.  This defines a mapping from

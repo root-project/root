@@ -7,7 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "DWARFFormValue.h"
+#include "llvm/DebugInfo/DWARFFormValue.h"
 #include "DWARFCompileUnit.h"
 #include "DWARFContext.h"
 #include "llvm/Support/Debug.h"
@@ -18,40 +18,41 @@
 using namespace llvm;
 using namespace dwarf;
 
-template <uint8_t AddrSize, uint8_t RefAddrSize>
-struct FixedFormSizes {
+namespace {
+template <uint8_t AddrSize, uint8_t RefAddrSize> struct FixedFormSizes {
   static const uint8_t sizes[];
 };
+}
 
 template <uint8_t AddrSize, uint8_t RefAddrSize>
 const uint8_t FixedFormSizes<AddrSize, RefAddrSize>::sizes[] = {
-  0, // 0x00 unused
-  AddrSize, // 0x01 DW_FORM_addr
-  0, // 0x02 unused
-  0, // 0x03 DW_FORM_block2
-  0, // 0x04 DW_FORM_block4
-  2, // 0x05 DW_FORM_data2
-  4, // 0x06 DW_FORM_data4
-  8, // 0x07 DW_FORM_data8
-  0, // 0x08 DW_FORM_string
-  0, // 0x09 DW_FORM_block
-  0, // 0x0a DW_FORM_block1
-  1, // 0x0b DW_FORM_data1
-  1, // 0x0c DW_FORM_flag
-  0, // 0x0d DW_FORM_sdata
-  4, // 0x0e DW_FORM_strp
-  0, // 0x0f DW_FORM_udata
+  0,           // 0x00 unused
+  AddrSize,    // 0x01 DW_FORM_addr
+  0,           // 0x02 unused
+  0,           // 0x03 DW_FORM_block2
+  0,           // 0x04 DW_FORM_block4
+  2,           // 0x05 DW_FORM_data2
+  4,           // 0x06 DW_FORM_data4
+  8,           // 0x07 DW_FORM_data8
+  0,           // 0x08 DW_FORM_string
+  0,           // 0x09 DW_FORM_block
+  0,           // 0x0a DW_FORM_block1
+  1,           // 0x0b DW_FORM_data1
+  1,           // 0x0c DW_FORM_flag
+  0,           // 0x0d DW_FORM_sdata
+  4,           // 0x0e DW_FORM_strp
+  0,           // 0x0f DW_FORM_udata
   RefAddrSize, // 0x10 DW_FORM_ref_addr
-  1, // 0x11 DW_FORM_ref1
-  2, // 0x12 DW_FORM_ref2
-  4, // 0x13 DW_FORM_ref4
-  8, // 0x14 DW_FORM_ref8
-  0, // 0x15 DW_FORM_ref_udata
-  0, // 0x16 DW_FORM_indirect
-  4, // 0x17 DW_FORM_sec_offset
-  0, // 0x18 DW_FORM_exprloc
-  0, // 0x19 DW_FORM_flag_present
-  8, // 0x20 DW_FORM_ref_sig8
+  1,           // 0x11 DW_FORM_ref1
+  2,           // 0x12 DW_FORM_ref2
+  4,           // 0x13 DW_FORM_ref4
+  8,           // 0x14 DW_FORM_ref8
+  0,           // 0x15 DW_FORM_ref_udata
+  0,           // 0x16 DW_FORM_indirect
+  4,           // 0x17 DW_FORM_sec_offset
+  0,           // 0x18 DW_FORM_exprloc
+  0,           // 0x19 DW_FORM_flag_present
+  8,           // 0x20 DW_FORM_ref_sig8
 };
 
 static uint8_t getRefAddrSize(uint8_t AddrSize, uint16_t Version) {
@@ -73,9 +74,8 @@ DWARFFormValue::getFixedFormSizes(uint8_t AddrSize, uint16_t Version) {
   return 0;
 }
 
-bool
-DWARFFormValue::extractValue(DataExtractor data, uint32_t *offset_ptr,
-                             const DWARFCompileUnit *cu) {
+bool DWARFFormValue::extractValue(DataExtractor data, uint32_t *offset_ptr,
+                                  const DWARFUnit *cu) {
   bool indirect = false;
   bool is_block = false;
   Value.data = NULL;
@@ -125,9 +125,13 @@ DWARFFormValue::extractValue(DataExtractor data, uint32_t *offset_ptr,
       Value.uval = data.getU16(offset_ptr);
       break;
     case DW_FORM_data4:
-    case DW_FORM_ref4:
+    case DW_FORM_ref4: {
+      RelocAddrMap::const_iterator AI = cu->getRelocMap()->find(*offset_ptr);
       Value.uval = data.getU32(offset_ptr);
+      if (AI != cu->getRelocMap()->end())
+        Value.uval += AI->second.second;
       break;
+    }
     case DW_FORM_data8:
     case DW_FORM_ref8:
       Value.uval = data.getU64(offset_ptr);
@@ -178,10 +182,9 @@ DWARFFormValue::extractValue(DataExtractor data, uint32_t *offset_ptr,
       Value.uval = data.getU64(offset_ptr);
       break;
     case DW_FORM_GNU_addr_index:
-      Value.uval = data.getULEB128(offset_ptr);
-      break;
     case DW_FORM_GNU_str_index:
       Value.uval = data.getULEB128(offset_ptr);
+      Value.IsDWOIndex = true;
       break;
     default:
       return false;
@@ -202,16 +205,15 @@ DWARFFormValue::extractValue(DataExtractor data, uint32_t *offset_ptr,
 
 bool
 DWARFFormValue::skipValue(DataExtractor debug_info_data, uint32_t* offset_ptr,
-                          const DWARFCompileUnit *cu) const {
+                          const DWARFUnit *cu) const {
   return DWARFFormValue::skipValue(Form, debug_info_data, offset_ptr, cu);
 }
 
 bool
 DWARFFormValue::skipValue(uint16_t form, DataExtractor debug_info_data,
-                          uint32_t *offset_ptr, const DWARFCompileUnit *cu) {
+                          uint32_t *offset_ptr, const DWARFUnit *cu) {
   bool indirect = false;
   do {
-    indirect = false;
     switch (form) {
     // Blocks if inlined data that have a length field and the data bytes
     // inlined in the .debug_info
@@ -309,7 +311,7 @@ DWARFFormValue::skipValue(uint16_t form, DataExtractor debug_info_data,
 }
 
 void
-DWARFFormValue::dump(raw_ostream &OS, const DWARFCompileUnit *cu) const {
+DWARFFormValue::dump(raw_ostream &OS, const DWARFUnit *cu) const {
   DataExtractor debug_str_data(cu->getStringSection(), true, 0);
   DataExtractor debug_str_offset_data(cu->getStringOffsetSection(), true, 0);
   uint64_t uvalue = getUnsigned();
@@ -318,12 +320,11 @@ DWARFFormValue::dump(raw_ostream &OS, const DWARFCompileUnit *cu) const {
   switch (Form) {
   case DW_FORM_addr:      OS << format("0x%016" PRIx64, uvalue); break;
   case DW_FORM_GNU_addr_index: {
-    StringRef AddrOffsetSec = cu->getAddrOffsetSection();
     OS << format(" indexed (%8.8x) address = ", (uint32_t)uvalue);
-    if (AddrOffsetSec.size() != 0) {
-      DataExtractor DA(AddrOffsetSec, true, cu->getAddressByteSize());
-      OS << format("0x%016" PRIx64, getIndirectAddress(&DA, cu));
-    } else
+    uint64_t Address;
+    if (cu->getAddrOffsetSectionItem(uvalue, Address))
+      OS << format("0x%016" PRIx64, Address);
+    else
       OS << "<no .debug_addr section>";
     break;
   }
@@ -372,7 +373,7 @@ DWARFFormValue::dump(raw_ostream &OS, const DWARFCompileUnit *cu) const {
   case DW_FORM_udata:     OS << getUnsigned(); break;
   case DW_FORM_strp: {
     OS << format(" .debug_str[0x%8.8x] = ", (uint32_t)uvalue);
-    const char* dbg_str = getAsCString(&debug_str_data);
+    const char* dbg_str = getAsCString(cu);
     if (dbg_str) {
       OS << '"';
       OS.write_escaped(dbg_str);
@@ -382,8 +383,7 @@ DWARFFormValue::dump(raw_ostream &OS, const DWARFCompileUnit *cu) const {
   }
   case DW_FORM_GNU_str_index: {
     OS << format(" indexed (%8.8x) string = ", (uint32_t)uvalue);
-    const char *dbg_str = getIndirectCString(&debug_str_data,
-                                             &debug_str_offset_data);
+    const char *dbg_str = getAsCString(cu);
     if (dbg_str) {
       OS << '"';
       OS.write_escaped(dbg_str);
@@ -435,37 +435,35 @@ DWARFFormValue::dump(raw_ostream &OS, const DWARFCompileUnit *cu) const {
     OS << format(" => {0x%8.8" PRIx64 "}", uvalue + (cu ? cu->getOffset() : 0));
 }
 
-const char*
-DWARFFormValue::getAsCString(const DataExtractor *debug_str_data_ptr) const {
-  if (isInlinedCStr()) {
+const char *DWARFFormValue::getAsCString(const DWARFUnit *CU) const {
+  if (isInlinedCStr())
     return Value.cstr;
-  } else if (debug_str_data_ptr) {
-    uint32_t offset = Value.uval;
-    return debug_str_data_ptr->getCStr(&offset);
+  if (!CU)
+    return NULL;
+  uint32_t Offset = Value.uval;
+  if (Value.IsDWOIndex) {
+    uint32_t StrOffset;
+    if (!CU->getStringOffsetSectionItem(Offset, StrOffset))
+      return NULL;
+    Offset = StrOffset;
   }
-  return NULL;
+  return CU->getStringExtractor().getCStr(&Offset);
 }
 
-const char*
-DWARFFormValue::getIndirectCString(const DataExtractor *DS,
-                                   const DataExtractor *DSO) const {
-  if (!DS || !DSO) return NULL;
-
-  uint32_t offset = Value.uval * 4;
-  uint32_t soffset = DSO->getU32(&offset);
-  return DS->getCStr(&soffset);
+uint64_t DWARFFormValue::getAsAddress(const DWARFUnit *CU) const {
+  if (!CU)
+    return 0;
+  if (Value.IsDWOIndex) {
+    uint32_t Index = Value.uval;
+    uint64_t Address;
+    if (!CU->getAddrOffsetSectionItem(Index, Address))
+      return 0;
+    return Address;
+  }
+  return Value.uval;
 }
 
-uint64_t
-DWARFFormValue::getIndirectAddress(const DataExtractor *DA,
-                                   const DWARFCompileUnit *cu) const {
-  if (!DA) return 0;
-
-  uint32_t offset = Value.uval * cu->getAddressByteSize();
-  return DA->getAddress(&offset);
-}
-
-uint64_t DWARFFormValue::getReference(const DWARFCompileUnit *cu) const {
+uint64_t DWARFFormValue::getReference(const DWARFUnit *cu) const {
   uint64_t die_offset = Value.uval;
   switch (Form) {
   case DW_FORM_ref1:
@@ -480,23 +478,6 @@ uint64_t DWARFFormValue::getReference(const DWARFCompileUnit *cu) const {
   }
 
   return die_offset;
-}
-
-bool
-DWARFFormValue::resolveCompileUnitReferences(const DWARFCompileUnit *cu) {
-  switch (Form) {
-  case DW_FORM_ref1:
-  case DW_FORM_ref2:
-  case DW_FORM_ref4:
-  case DW_FORM_ref8:
-  case DW_FORM_ref_udata:
-    Value.uval += cu->getOffset();
-    Form = DW_FORM_ref_addr;
-    return true;
-  default:
-    break;
-  }
-  return false;
 }
 
 const uint8_t *DWARFFormValue::BlockData() const {

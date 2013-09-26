@@ -134,6 +134,7 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
     // FIXME: ObjC++0x might have different rules
   case Expr::ObjCIvarRefExprClass:
   case Expr::FunctionParmPackExprClass:
+  case Expr::MSPropertyRefExprClass:
     return Cl::CL_LValue;
 
     // C99 6.5.2.5p5 says that compound literals are lvalues.
@@ -154,6 +155,7 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::OffsetOfExprClass:
   case Expr::CXXThrowExprClass:
   case Expr::ShuffleVectorExprClass:
+  case Expr::ConvertVectorExprClass:
   case Expr::IntegerLiteralClass:
   case Expr::CharacterLiteralClass:
   case Expr::AddrLabelExprClass:
@@ -285,17 +287,24 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
 
     // __builtin_choose_expr is equivalent to the chosen expression.
   case Expr::ChooseExprClass:
-    return ClassifyInternal(Ctx, cast<ChooseExpr>(E)->getChosenSubExpr(Ctx));
+    return ClassifyInternal(Ctx, cast<ChooseExpr>(E)->getChosenSubExpr());
 
     // Extended vector element access is an lvalue unless there are duplicates
     // in the shuffle expression.
   case Expr::ExtVectorElementExprClass:
-    return cast<ExtVectorElementExpr>(E)->containsDuplicateElements() ?
-      Cl::CL_DuplicateVectorComponents : Cl::CL_LValue;
+    if (cast<ExtVectorElementExpr>(E)->containsDuplicateElements())
+      return Cl::CL_DuplicateVectorComponents;
+    if (cast<ExtVectorElementExpr>(E)->isArrow())
+      return Cl::CL_LValue;
+    return ClassifyInternal(Ctx, cast<ExtVectorElementExpr>(E)->getBase());
 
     // Simply look at the actual default argument.
   case Expr::CXXDefaultArgExprClass:
     return ClassifyInternal(Ctx, cast<CXXDefaultArgExpr>(E)->getExpr());
+
+    // Same idea for default initializers.
+  case Expr::CXXDefaultInitExprClass:
+    return ClassifyInternal(Ctx, cast<CXXDefaultInitExpr>(E)->getExpr());
 
     // Same idea for temporary binding.
   case Expr::CXXBindTemporaryExprClass:
@@ -348,6 +357,7 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::CXXConstructExprClass:
   case Expr::CXXTemporaryObjectExprClass:
   case Expr::LambdaExprClass:
+  case Expr::CXXStdInitializerListExprClass:
     return Cl::CL_ClassTemporary;
 
   case Expr::VAArgExprClass:

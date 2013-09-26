@@ -36,7 +36,7 @@ using namespace llvm;
 
 AArch64InstrInfo::AArch64InstrInfo(const AArch64Subtarget &STI)
   : AArch64GenInstrInfo(AArch64::ADJCALLSTACKDOWN, AArch64::ADJCALLSTACKUP),
-    RI(*this, STI), Subtarget(STI) {}
+    Subtarget(STI) {}
 
 void AArch64InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                    MachineBasicBlock::iterator I, DebugLoc DL,
@@ -68,23 +68,49 @@ void AArch64InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     BuildMI(MBB, I, DL, get(AArch64::MRSxi), DestReg)
       .addImm(A64SysReg::NZCV);
   } else if (AArch64::GPR64RegClass.contains(DestReg)) {
-    assert(AArch64::GPR64RegClass.contains(SrcReg));
-    Opc = AArch64::ORRxxx_lsl;
-    ZeroReg = AArch64::XZR;
+    if(AArch64::GPR64RegClass.contains(SrcReg)){
+      Opc = AArch64::ORRxxx_lsl;
+      ZeroReg = AArch64::XZR;
+    } else{
+      assert(AArch64::FPR64RegClass.contains(SrcReg));
+      BuildMI(MBB, I, DL, get(AArch64::FMOVxd), DestReg)
+        .addReg(SrcReg);
+      return;
+    }
   } else if (AArch64::GPR32RegClass.contains(DestReg)) {
-    assert(AArch64::GPR32RegClass.contains(SrcReg));
-    Opc = AArch64::ORRwww_lsl;
-    ZeroReg = AArch64::WZR;
+    if(AArch64::GPR32RegClass.contains(SrcReg)){
+      Opc = AArch64::ORRwww_lsl;
+      ZeroReg = AArch64::WZR;
+    } else{
+      assert(AArch64::FPR32RegClass.contains(SrcReg));
+      BuildMI(MBB, I, DL, get(AArch64::FMOVws), DestReg)
+        .addReg(SrcReg);
+      return;
+    }
   } else if (AArch64::FPR32RegClass.contains(DestReg)) {
-    assert(AArch64::FPR32RegClass.contains(SrcReg));
-    BuildMI(MBB, I, DL, get(AArch64::FMOVss), DestReg)
-      .addReg(SrcReg);
-    return;
+    if(AArch64::FPR32RegClass.contains(SrcReg)){
+      BuildMI(MBB, I, DL, get(AArch64::FMOVss), DestReg)
+        .addReg(SrcReg);
+      return;
+    }
+    else {
+      assert(AArch64::GPR32RegClass.contains(SrcReg));
+      BuildMI(MBB, I, DL, get(AArch64::FMOVsw), DestReg)
+        .addReg(SrcReg);
+      return;
+    }
   } else if (AArch64::FPR64RegClass.contains(DestReg)) {
-    assert(AArch64::FPR64RegClass.contains(SrcReg));
-    BuildMI(MBB, I, DL, get(AArch64::FMOVdd), DestReg)
-      .addReg(SrcReg);
-    return;
+    if(AArch64::FPR64RegClass.contains(SrcReg)){
+      BuildMI(MBB, I, DL, get(AArch64::FMOVdd), DestReg)
+        .addReg(SrcReg);
+      return;
+    }
+    else {
+      assert(AArch64::GPR64RegClass.contains(SrcReg));
+      BuildMI(MBB, I, DL, get(AArch64::FMOVdx), DestReg)
+        .addReg(SrcReg);
+      return;
+    }
   } else if (AArch64::FPR128RegClass.contains(DestReg)) {
     assert(AArch64::FPR128RegClass.contains(SrcReg));
 
@@ -114,17 +140,6 @@ void AArch64InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     .addReg(ZeroReg)
     .addReg(SrcReg)
     .addImm(0);
-}
-
-MachineInstr *
-AArch64InstrInfo::emitFrameIndexDebugValue(MachineFunction &MF, int FrameIx,
-                                           uint64_t Offset, const MDNode *MDPtr,
-                                           DebugLoc DL) const {
-  MachineInstrBuilder MIB = BuildMI(MF, DL, get(AArch64::DBG_VALUE))
-    .addFrameIndex(FrameIx).addImm(0)
-    .addImm(Offset)
-    .addMetadata(MDPtr);
-  return &*MIB;
 }
 
 /// Does the Opcode represent a conditional branch that we can remove and re-add

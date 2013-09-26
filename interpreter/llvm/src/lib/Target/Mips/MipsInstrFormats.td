@@ -36,6 +36,24 @@ def FrmFR     : Format<4>;
 def FrmFI     : Format<5>;
 def FrmOther  : Format<6>; // Instruction w/ a custom format
 
+class MMRel;
+
+def Std2MicroMips : InstrMapping {
+  let FilterClass = "MMRel";
+  // Instructions with the same BaseOpcode and isNVStore values form a row.
+  let RowFields = ["BaseOpcode"];
+  // Instructions with the same predicate sense form a column.
+  let ColFields = ["Arch"];
+  // The key column is the unpredicated instructions.
+  let KeyCol = ["se"];
+  // Value columns are PredSense=true and PredSense=false
+  let ValueCols = [["se"], ["micromips"]];
+}
+
+class StdArch {
+  string Arch = "se";
+}
+
 // Generic Mips Format
 class MipsInst<dag outs, dag ins, string asmstr, list<dag> pattern,
                InstrItinClass itin, Format f>: Instruction
@@ -74,9 +92,11 @@ class MipsInst<dag outs, dag ins, string asmstr, list<dag> pattern,
 
 // Mips32/64 Instruction Format
 class InstSE<dag outs, dag ins, string asmstr, list<dag> pattern,
-             InstrItinClass itin, Format f>:
+             InstrItinClass itin, Format f, string opstr = ""> :
   MipsInst<outs, ins, asmstr, pattern, itin, f> {
   let Predicates = [HasStdEnc];
+  string BaseOpcode = opstr;
+  string Arch;
 }
 
 // Mips Pseudo Instructions Format
@@ -192,7 +212,7 @@ class MFC3OP_FM<bits<6> op, bits<5> mfmt>
   let Inst{2-0}   = sel;
 }
 
-class ADD_FM<bits<6> op, bits<6> funct> {
+class ADD_FM<bits<6> op, bits<6> funct> : StdArch {
   bits<5> rd;
   bits<5> rs;
   bits<5> rt;
@@ -207,7 +227,7 @@ class ADD_FM<bits<6> op, bits<6> funct> {
   let Inst{5-0}   = funct;
 }
 
-class ADDI_FM<bits<6> op> {
+class ADDI_FM<bits<6> op> : StdArch {
   bits<5>  rs;
   bits<5>  rt;
   bits<16> imm16;
@@ -220,7 +240,7 @@ class ADDI_FM<bits<6> op> {
   let Inst{15-0}  = imm16;
 }
 
-class SRA_FM<bits<6> funct, bit rotate> {
+class SRA_FM<bits<6> funct, bit rotate> : StdArch {
   bits<5> rd;
   bits<5> rt;
   bits<5> shamt;
@@ -236,7 +256,7 @@ class SRA_FM<bits<6> funct, bit rotate> {
   let Inst{5-0}   = funct;
 }
 
-class SRLV_FM<bits<6> funct, bit rotate> {
+class SRLV_FM<bits<6> funct, bit rotate> : StdArch {
   bits<5> rd;
   bits<5> rt;
   bits<5> rs;
@@ -277,18 +297,7 @@ class BGEZ_FM<bits<6> op, bits<5> funct> {
   let Inst{15-0}  = offset;
 }
 
-class B_FM {
-  bits<16> offset;
-
-  bits<32> Inst;
-
-  let Inst{31-26} = 4;
-  let Inst{25-21} = 0;
-  let Inst{20-16} = 0;
-  let Inst{15-0}  = offset;
-}
-
-class SLTI_FM<bits<6> op> {
+class SLTI_FM<bits<6> op> : StdArch {
   bits<5> rt;
   bits<5> rs;
   bits<16> imm16;
@@ -301,7 +310,7 @@ class SLTI_FM<bits<6> op> {
   let Inst{15-0}  = imm16;
 }
 
-class MFLO_FM<bits<6> funct> {
+class MFLO_FM<bits<6> funct> : StdArch {
   bits<5> rd;
 
   bits<32> Inst;
@@ -313,7 +322,7 @@ class MFLO_FM<bits<6> funct> {
   let Inst{5-0}   = funct;
 }
 
-class MTLO_FM<bits<6> funct> {
+class MTLO_FM<bits<6> funct> : StdArch {
   bits<5> rs;
 
   bits<32> Inst;
@@ -324,7 +333,7 @@ class MTLO_FM<bits<6> funct> {
   let Inst{5-0}   = funct;
 }
 
-class SEB_FM<bits<5> funct, bits<6> funct2> {
+class SEB_FM<bits<5> funct, bits<6> funct2> : StdArch {
   bits<5> rd;
   bits<5> rt;
 
@@ -338,7 +347,7 @@ class SEB_FM<bits<5> funct, bits<6> funct2> {
   let Inst{5-0}   = funct2;
 }
 
-class CLO_FM<bits<6> funct> {
+class CLO_FM<bits<6> funct> : StdArch {
   bits<5> rd;
   bits<5> rs;
   bits<5> rt;
@@ -354,7 +363,7 @@ class CLO_FM<bits<6> funct> {
   let rt = rd;
 }
 
-class LUI_FM {
+class LUI_FM : StdArch {
   bits<5> rt;
   bits<16> imm16;
 
@@ -380,17 +389,6 @@ class JALR_FM {
   let Inst{5-0}   = 9;
 }
 
-class BAL_FM {
-  bits<16> offset;
-
-  bits<32> Inst;
-
-  let Inst{31-26} = 1;
-  let Inst{25-21} = 0;
-  let Inst{20-16} = 0x11;
-  let Inst{15-0}  = offset;
-}
-
 class BGEZAL_FM<bits<5> funct> {
   bits<5>  rs;
   bits<16> offset;
@@ -413,7 +411,7 @@ class SYNC_FM {
   let Inst{5-0}   = 0xf;
 }
 
-class MULT_FM<bits<6> op, bits<6> funct> {
+class MULT_FM<bits<6> op, bits<6> funct> : StdArch {
   bits<5>  rs;
   bits<5>  rt;
 
@@ -426,7 +424,7 @@ class MULT_FM<bits<6> op, bits<6> funct> {
   let Inst{5-0}   = funct;
 }
 
-class EXT_FM<bits<6> funct> {
+class EXT_FM<bits<6> funct> : StdArch {
   bits<5> rt;
   bits<5> rs;
   bits<5> pos;
@@ -454,6 +452,90 @@ class RDHWR_FM {
   let Inst{15-11} = rd;
   let Inst{10-6}  = 0;
   let Inst{5-0}   = 0x3b;
+}
+
+class TEQ_FM<bits<6> funct> {
+  bits<5> rs;
+  bits<5> rt;
+  bits<10> code_;
+
+  bits<32> Inst;
+
+  let Inst{31-26} = 0;
+  let Inst{25-21} = rs;
+  let Inst{20-16} = rt;
+  let Inst{15-6}  = code_;
+  let Inst{5-0}   = funct;
+}
+
+class TEQI_FM<bits<5> funct> {
+  bits<5> rs;
+  bits<16> imm16;
+
+  bits<32> Inst;
+
+  let Inst{31-26} = 1;
+  let Inst{25-21} = rs;
+  let Inst{20-16}   = funct;
+  let Inst{15-0}  = imm16;
+}
+//===----------------------------------------------------------------------===//
+//  System calls format <op|code_|funct>
+//===----------------------------------------------------------------------===//
+
+class SYS_FM<bits<6> funct>
+{
+  bits<20> code_;
+  bits<32> Inst;
+  let Inst{31-26} = 0x0;
+  let Inst{25-6} = code_;
+  let Inst{5-0}  = funct;
+}
+
+//===----------------------------------------------------------------------===//
+//  Break instruction format <op|code_1|funct>
+//===----------------------------------------------------------------------===//
+
+class BRK_FM<bits<6> funct>
+{
+  bits<10> code_1;
+  bits<10> code_2;
+  bits<32> Inst;
+  let Inst{31-26} = 0x0;
+  let Inst{25-16} = code_1;
+  let Inst{15-6}  = code_2;
+  let Inst{5-0}   = funct;
+}
+
+//===----------------------------------------------------------------------===//
+//  Exception return format <Cop0|1|0|funct>
+//===----------------------------------------------------------------------===//
+
+class ER_FM<bits<6> funct>
+{
+  bits<32> Inst;
+  let Inst{31-26} = 0x10;
+  let Inst{25}    = 1;
+  let Inst{24-6}  = 0;
+  let Inst{5-0}   = funct;
+}
+
+
+//===----------------------------------------------------------------------===//
+//  Enable/disable interrupt instruction format <Cop0|MFMC0|rt|12|0|sc|0|0>
+//===----------------------------------------------------------------------===//
+
+class EI_FM<bits<1> sc>
+{
+  bits<32> Inst;
+  bits<5> rt;
+  let Inst{31-26} = 0x10;
+  let Inst{25-21} = 0xb;
+  let Inst{20-16} = rt;
+  let Inst{15-11} = 0xc;
+  let Inst{10-6}  = 0;
+  let Inst{5}     = sc;
+  let Inst{4-0}   = 0;
 }
 
 //===----------------------------------------------------------------------===//
@@ -529,7 +611,7 @@ class MFC1_FM<bits<5> funct> {
   let Inst{10-0}  = 0;
 }
 
-class LW_FM<bits<6> op> {
+class LW_FM<bits<6> op> : StdArch {
   bits<5> rt;
   bits<21> addr;
 
@@ -589,13 +671,14 @@ class SWXC1_FM<bits<6> funct> {
 }
 
 class BC1F_FM<bit nd, bit tf> {
+  bits<3>  fcc;
   bits<16> offset;
 
   bits<32> Inst;
 
   let Inst{31-26} = 0x11;
   let Inst{25-21} = 0x8;
-  let Inst{20-18} = 0; // cc
+  let Inst{20-18} = fcc;
   let Inst{17} = nd;
   let Inst{16} = tf;
   let Inst{15-0} = offset;
@@ -617,6 +700,10 @@ class CEQS_FM<bits<5> fmt> {
   let Inst{3-0} = cond;
 }
 
+class C_COND_FM<bits<5> fmt, bits<4> c> : CEQS_FM<fmt> {
+  let cond = c;
+}
+
 class CMov_I_F_FM<bits<6> funct, bits<5> fmt> {
   bits<5> fd;
   bits<5> fs;
@@ -632,15 +719,16 @@ class CMov_I_F_FM<bits<6> funct, bits<5> fmt> {
   let Inst{5-0} = funct;
 }
 
-class CMov_F_I_FM<bit tf> {
+class CMov_F_I_FM<bit tf> : StdArch {
   bits<5> rd;
   bits<5> rs;
+  bits<3> fcc;
 
   bits<32> Inst;
 
   let Inst{31-26} = 0;
   let Inst{25-21} = rs;
-  let Inst{20-18} = 0; // cc
+  let Inst{20-18} = fcc;
   let Inst{17} = 0;
   let Inst{16} = tf;
   let Inst{15-11} = rd;
@@ -651,12 +739,13 @@ class CMov_F_I_FM<bit tf> {
 class CMov_F_F_FM<bits<5> fmt, bit tf> {
   bits<5> fd;
   bits<5> fs;
+  bits<3> fcc;
 
   bits<32> Inst;
 
   let Inst{31-26} = 0x11;
   let Inst{25-21} = fmt;
-  let Inst{20-18} = 0; // cc
+  let Inst{20-18} = fcc;
   let Inst{17} = 0;
   let Inst{16} = tf;
   let Inst{15-11} = fs;

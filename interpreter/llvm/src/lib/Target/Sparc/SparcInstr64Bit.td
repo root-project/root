@@ -59,10 +59,6 @@ defm SRAX : F3_S<"srax", 0b100111, 1, sra, i64, I64Regs>;
 // preferable to use a constant pool load instead, depending on the
 // microarchitecture.
 
-// The %g0 register is constant 0.
-// This is useful for stx %g0, [...], for example.
-def : Pat<(i64 0), (i64 G0)>, Requires<[Is64Bit]>;
-
 // Single-instruction patterns.
 
 // The ALU instructions want their simm13 operands as i32 immediates.
@@ -133,7 +129,7 @@ def HM10 : SDNodeXForm<imm, [{
   return CurDAG->getTargetConstant(Val, MVT::i32);
 }]>;
 def : Pat<(i64 imm:$val),
-          (ORrr (SLLXri (ORri (SETHIi (HH22 $val)), (HM10 $val)), (i64 32)),
+          (ORrr (SLLXri (ORri (SETHIi (HH22 $val)), (HM10 $val)), (i32 32)),
                 (ORri (SETHIi (HI22 $val)), (LO10 $val)))>,
       Requires<[Is64Bit]>;
 
@@ -164,7 +160,10 @@ def : Pat<(sube i64:$a, i64:$b), (SUBXrr $a, $b)>;
 def : Pat<(addc i64:$a, i64:$b), (ADDCCrr $a, $b)>;
 def : Pat<(subc i64:$a, i64:$b), (SUBCCrr $a, $b)>;
 
-def : Pat<(SPcmpicc i64:$a, i64:$b), (SUBCCrr $a, $b)>;
+def : Pat<(SPcmpicc i64:$a, i64:$b), (CMPrr $a, $b)>;
+
+def : Pat<(tlsadd i64:$a, i64:$b, tglobaltlsaddr:$sym),
+          (TLS_ADDrr $a, $b, $sym)>;
 
 // Register-immediate instructions.
 
@@ -175,7 +174,46 @@ def : Pat<(xor i64:$a, (i64 simm13:$b)), (XORri $a, (as_i32imm $b))>;
 def : Pat<(add i64:$a, (i64 simm13:$b)), (ADDri $a, (as_i32imm $b))>;
 def : Pat<(sub i64:$a, (i64 simm13:$b)), (SUBri $a, (as_i32imm $b))>;
 
-def : Pat<(SPcmpicc i64:$a, (i64 simm13:$b)), (SUBCCri $a, (as_i32imm $b))>;
+def : Pat<(SPcmpicc i64:$a, (i64 simm13:$b)), (CMPri $a, (as_i32imm $b))>;
+
+} // Predicates = [Is64Bit]
+
+
+//===----------------------------------------------------------------------===//
+// 64-bit Integer Multiply and Divide.
+//===----------------------------------------------------------------------===//
+
+let Predicates = [Is64Bit] in {
+
+def MULXrr : F3_1<2, 0b001001,
+                  (outs I64Regs:$rd), (ins I64Regs:$rs1, I64Regs:$rs2),
+                  "mulx $rs1, $rs2, $rd",
+                  [(set i64:$rd, (mul i64:$rs1, i64:$rs2))]>;
+def MULXri : F3_2<2, 0b001001,
+                  (outs IntRegs:$rd), (ins IntRegs:$rs1, i64imm:$i),
+                  "mulx $rs1, $i, $rd",
+                  [(set i64:$rd, (mul i64:$rs1, (i64 simm13:$i)))]>;
+
+// Division can trap.
+let hasSideEffects = 1 in {
+def SDIVXrr : F3_1<2, 0b101101,
+                   (outs I64Regs:$rd), (ins I64Regs:$rs1, I64Regs:$rs2),
+                   "sdivx $rs1, $rs2, $rd",
+                   [(set i64:$rd, (sdiv i64:$rs1, i64:$rs2))]>;
+def SDIVXri : F3_2<2, 0b101101,
+                   (outs IntRegs:$rd), (ins IntRegs:$rs1, i64imm:$i),
+                   "sdivx $rs1, $i, $rd",
+                   [(set i64:$rd, (sdiv i64:$rs1, (i64 simm13:$i)))]>;
+
+def UDIVXrr : F3_1<2, 0b001101,
+                   (outs I64Regs:$rd), (ins I64Regs:$rs1, I64Regs:$rs2),
+                   "udivx $rs1, $rs2, $rd",
+                   [(set i64:$rd, (udiv i64:$rs1, i64:$rs2))]>;
+def UDIVXri : F3_2<2, 0b001101,
+                   (outs IntRegs:$rd), (ins IntRegs:$rs1, i64imm:$i),
+                   "udivx $rs1, $i, $rd",
+                   [(set i64:$rd, (udiv i64:$rs1, (i64 simm13:$i)))]>;
+} // hasSideEffects = 1
 
 } // Predicates = [Is64Bit]
 
@@ -202,8 +240,19 @@ def LDXri  : F3_2<3, 0b001011,
                   (outs I64Regs:$dst), (ins MEMri:$addr),
                   "ldx [$addr], $dst",
                   [(set i64:$dst, (load ADDRri:$addr))]>;
+let mayLoad = 1 in
+  def TLS_LDXrr : F3_1<3, 0b001011,
+                       (outs IntRegs:$dst), (ins MEMrr:$addr, TLSSym:$sym),
+                       "ldx [$addr], $dst, $sym",
+                       [(set i64:$dst,
+                           (tlsld ADDRrr:$addr, tglobaltlsaddr:$sym))]>;
 
 // Extending loads to i64.
+def : Pat<(i64 (zextloadi1 ADDRrr:$addr)), (LDUBrr ADDRrr:$addr)>;
+def : Pat<(i64 (zextloadi1 ADDRri:$addr)), (LDUBri ADDRri:$addr)>;
+def : Pat<(i64 (extloadi1 ADDRrr:$addr)), (LDUBrr ADDRrr:$addr)>;
+def : Pat<(i64 (extloadi1 ADDRri:$addr)), (LDUBri ADDRri:$addr)>;
+
 def : Pat<(i64 (zextloadi8 ADDRrr:$addr)), (LDUBrr ADDRrr:$addr)>;
 def : Pat<(i64 (zextloadi8 ADDRri:$addr)), (LDUBri ADDRri:$addr)>;
 def : Pat<(i64 (extloadi8 ADDRrr:$addr)),  (LDUBrr ADDRrr:$addr)>;
@@ -251,6 +300,10 @@ def : Pat<(truncstorei16 i64:$src, ADDRri:$addr), (STHri ADDRri:$addr, $src)>;
 def : Pat<(truncstorei32 i64:$src, ADDRrr:$addr), (STrr  ADDRrr:$addr, $src)>;
 def : Pat<(truncstorei32 i64:$src, ADDRri:$addr), (STri  ADDRri:$addr, $src)>;
 
+// store 0, addr -> store %g0, addr
+def : Pat<(store (i64 0), ADDRrr:$dst), (STXrr ADDRrr:$dst, (i64 G0))>;
+def : Pat<(store (i64 0), ADDRri:$dst), (STXri ADDRri:$dst, (i64 G0))>;
+
 } // Predicates = [Is64Bit]
 
 
@@ -268,9 +321,9 @@ def : Pat<(truncstorei32 i64:$src, ADDRri:$addr), (STri  ADDRri:$addr, $src)>;
 let Predicates = [Is64Bit] in {
 
 let Uses = [ICC] in
-def BPXCC : BranchSP<0, (ins brtarget:$dst, CCOp:$cc),
-                     "bp$cc %xcc, $dst",
-                     [(SPbrxcc bb:$dst, imm:$cc)]>;
+def BPXCC : BranchSP<(ins brtarget:$imm22, CCOp:$cond),
+                     "b$cond %xcc, $imm22",
+                     [(SPbrxcc bb:$imm22, imm:$cond)]>;
 
 // Conditional moves on %xcc.
 let Uses = [ICC], Constraints = "$f = $rd" in {
@@ -283,12 +336,32 @@ def MOVXCCri : Pseudo<(outs IntRegs:$rd),
                       (ins i32imm:$i, IntRegs:$f, CCOp:$cond),
                       "mov$cond %xcc, $i, $rd",
                       [(set i32:$rd,
-                       (SPselecticc simm11:$i, i32:$f, imm:$cond))]>;
+                       (SPselectxcc simm11:$i, i32:$f, imm:$cond))]>;
+def FMOVS_XCC : Pseudo<(outs FPRegs:$rd),
+                      (ins FPRegs:$rs2, FPRegs:$f, CCOp:$cond),
+                      "fmovs$cond %xcc, $rs2, $rd",
+                      [(set f32:$rd,
+                       (SPselectxcc f32:$rs2, f32:$f, imm:$cond))]>;
+def FMOVD_XCC : Pseudo<(outs DFPRegs:$rd),
+                      (ins DFPRegs:$rs2, DFPRegs:$f, CCOp:$cond),
+                      "fmovd$cond %xcc, $rs2, $rd",
+                      [(set f64:$rd,
+                       (SPselectxcc f64:$rs2, f64:$f, imm:$cond))]>;
 } // Uses, Constraints
 
 def : Pat<(SPselectxcc i64:$t, i64:$f, imm:$cond),
           (MOVXCCrr $t, $f, imm:$cond)>;
 def : Pat<(SPselectxcc (i64 simm11:$t), i64:$f, imm:$cond),
           (MOVXCCri (as_i32imm $t), $f, imm:$cond)>;
+
+def : Pat<(SPselecticc i64:$t, i64:$f, imm:$cond),
+          (MOVICCrr $t, $f, imm:$cond)>;
+def : Pat<(SPselecticc (i64 simm11:$t), i64:$f, imm:$cond),
+          (MOVICCri (as_i32imm $t), $f, imm:$cond)>;
+
+def : Pat<(SPselectfcc i64:$t, i64:$f, imm:$cond),
+          (MOVFCCrr $t, $f, imm:$cond)>;
+def : Pat<(SPselectfcc (i64 simm11:$t), i64:$f, imm:$cond),
+          (MOVFCCri (as_i32imm $t), $f, imm:$cond)>;
 
 } // Predicates = [Is64Bit]

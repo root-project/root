@@ -110,6 +110,12 @@ public:
                                raw_ostream &) = 0;
   virtual void mangleCXXVTT(const CXXRecordDecl *RD,
                             raw_ostream &) = 0;
+  /// \brief Mangle vbtable symbols.  Only a subset of the bases along the path
+  /// to the vbtable are included in the name.  It's up to the caller to pick
+  /// them correctly.
+  virtual void mangleCXXVBTable(const CXXRecordDecl *Derived,
+                                ArrayRef<const CXXRecordDecl *> BasePath,
+                                raw_ostream &Out) = 0;
   virtual void mangleCXXCtorVTable(const CXXRecordDecl *RD, int64_t Offset,
                                    const CXXRecordDecl *Type,
                                    raw_ostream &) = 0;
@@ -129,18 +135,28 @@ public:
                        const BlockDecl *BD, raw_ostream &Out);
   void mangleBlock(const DeclContext *DC, const BlockDecl *BD,
                    raw_ostream &Out);
-  // Do the right thing.
-  void mangleBlock(const BlockDecl *BD, raw_ostream &Out,
-                   const NamedDecl *ID=0);
 
   void mangleObjCMethodName(const ObjCMethodDecl *MD,
                             raw_ostream &);
 
-  // This is pretty lame.
-  virtual void mangleItaniumGuardVariable(const VarDecl *D,
-                                          raw_ostream &) {
-    llvm_unreachable("Target does not support mangling guard variables");
+  virtual void mangleStaticGuardVariable(const VarDecl *D,
+                                         raw_ostream &Out) = 0;
+
+  virtual void mangleDynamicInitializer(const VarDecl *D, raw_ostream &Out) = 0;
+
+  virtual void mangleDynamicAtExitDestructor(const VarDecl *D,
+                                             raw_ostream &Out) = 0;
+
+  // FIXME: Revisit this once we know what we need to do for MSVC compatibility.
+  virtual void mangleItaniumThreadLocalInit(const VarDecl *D,
+                                            raw_ostream &) {
+    llvm_unreachable("Target does not support mangling thread_local variables");
   }
+  virtual void mangleItaniumThreadLocalWrapper(const VarDecl *D,
+                                               raw_ostream &) {
+    llvm_unreachable("Target does not support mangling thread_local variables");
+  }
+
   /// @}
 };
 

@@ -37,11 +37,12 @@ class StackFrameContext;
 
 namespace ento {
 
+class CodeTextRegion;
 class MemRegionManager;
 class MemSpaceRegion;
 class SValBuilder;
+class SymbolicRegion;
 class VarRegion;
-class CodeTextRegion;
 
 /// Represent a region's offset within the top level base region.
 class RegionOffset {
@@ -145,6 +146,10 @@ public:
 
   const MemRegion *StripCasts(bool StripBaseCasts = true) const;
 
+  /// \brief If this is a symbolic region, returns the region. Otherwise,
+  /// goes up the base chain looking for the first symbolic base region.
+  const SymbolicRegion *getSymbolicBase() const;
+
   bool hasGlobalsOrParametersStorage() const;
 
   bool hasStackStorage() const;
@@ -168,6 +173,16 @@ public:
 
   /// \brief Print the region for use in diagnostics.
   virtual void printPretty(raw_ostream &os) const;
+
+  /// \brief Returns true if this region's textual representation can be used
+  /// as part of a larger expression.
+  virtual bool canPrintPrettyAsExpr() const;
+
+  /// \brief Print the region as expression.
+  ///
+  /// When this region represents a subexpression, the method is for printing
+  /// an expression containing it.
+  virtual void printPrettyAsExpr(raw_ostream &os) const;
 
   Kind getKind() const { return kind; }
 
@@ -874,8 +889,9 @@ public:
     return R->getKind() == VarRegionKind;
   }
 
-  bool canPrintPretty() const;
-  void printPretty(raw_ostream &os) const;
+  bool canPrintPrettyAsExpr() const;
+
+  void printPrettyAsExpr(raw_ostream &os) const;
 };
   
 /// CXXThisRegion - Represents the region for the implicit 'this' parameter
@@ -937,6 +953,8 @@ public:
 
   bool canPrintPretty() const;
   void printPretty(raw_ostream &os) const;
+  bool canPrintPrettyAsExpr() const;
+  void printPrettyAsExpr(raw_ostream &os) const;
 };
 
 class ObjCIvarRegion : public DeclRegion {
@@ -952,8 +970,8 @@ public:
   const ObjCIvarDecl *getDecl() const;
   QualType getValueType() const;
 
-  bool canPrintPretty() const;
-  void printPretty(raw_ostream &os) const;
+  bool canPrintPrettyAsExpr() const;
+  void printPrettyAsExpr(raw_ostream &os) const;
 
   void dumpToStream(raw_ostream &os) const;
 
@@ -1082,6 +1100,10 @@ public:
   static bool classof(const MemRegion *region) {
     return region->getKind() == CXXBaseObjectRegionKind;
   }
+
+  bool canPrintPrettyAsExpr() const;
+  
+  void printPrettyAsExpr(raw_ostream &os) const;
 };
 
 template<typename RegionTy>
@@ -1250,6 +1272,11 @@ public:
   const BlockDataRegion *getBlockDataRegion(const BlockTextRegion *bc,
                                             const LocationContext *lc = NULL);
 
+  /// Create a CXXTempObjectRegion for temporaries which are lifetime-extended
+  /// by static references. This differs from getCXXTempObjectRegion in the
+  /// super-region used.
+  const CXXTempObjectRegion *getCXXStaticTempObjectRegion(const Expr *Ex);
+
 private:
   template <typename RegionTy, typename A1>
   RegionTy* getRegion(const A1 a1);
@@ -1282,6 +1309,37 @@ private:
 inline ASTContext &MemRegion::getContext() const {
   return getMemRegionManager()->getContext();
 }
+
+//===----------------------------------------------------------------------===//
+// Means for storing region/symbol handling traits.
+//===----------------------------------------------------------------------===//
+
+/// Information about invalidation for a particular region/symbol.
+class RegionAndSymbolInvalidationTraits {
+  typedef unsigned char StorageTypeForKinds;
+  llvm::DenseMap<const MemRegion *, StorageTypeForKinds> MRTraitsMap;
+  llvm::DenseMap<SymbolRef, StorageTypeForKinds> SymTraitsMap;
+
+  typedef llvm::DenseMap<const MemRegion *, StorageTypeForKinds>::const_iterator
+      const_region_iterator;
+  typedef llvm::DenseMap<SymbolRef, StorageTypeForKinds>::const_iterator
+      const_symbol_iterator;
+
+public:
+  /// \brief Describes different invalidation traits.
+  enum InvalidationKinds {
+    /// Tells that a region's contents is not changed.
+    TK_PreserveContents = 0x1
+
+    // Do not forget to extend StorageTypeForKinds if number of traits exceed 
+    // the number of bits StorageTypeForKinds can store.
+  };
+
+  void setTrait(SymbolRef Sym, InvalidationKinds IK);
+  void setTrait(const MemRegion *MR, InvalidationKinds IK);
+  bool hasTrait(SymbolRef Sym, InvalidationKinds IK);
+  bool hasTrait(const MemRegion *MR, InvalidationKinds IK);
+};
   
 } // end GR namespace
 

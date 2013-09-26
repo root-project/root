@@ -297,8 +297,7 @@ void WalkAST::checkCall_gets(const CallExpr *CE, const FunctionDecl *FD) {
   if (!filter.check_gets)
     return;
   
-  const FunctionProtoType *FPT
-    = dyn_cast<FunctionProtoType>(FD->getType().IgnoreParens());
+  const FunctionProtoType *FPT = FD->getType()->getAs<FunctionProtoType>();
   if (!FPT)
     return;
 
@@ -307,7 +306,7 @@ void WalkAST::checkCall_gets(const CallExpr *CE, const FunctionDecl *FD) {
     return;
 
   // Is the argument a 'char*'?
-  const PointerType *PT = dyn_cast<PointerType>(FPT->getArgType(0));
+  const PointerType *PT = FPT->getArgType(0)->getAs<PointerType>();
   if (!PT)
     return;
 
@@ -335,8 +334,7 @@ void WalkAST::checkCall_getpw(const CallExpr *CE, const FunctionDecl *FD) {
   if (!filter.check_getpw)
     return;
 
-  const FunctionProtoType *FPT
-    = dyn_cast<FunctionProtoType>(FD->getType().IgnoreParens());
+  const FunctionProtoType *FPT = FD->getType()->getAs<FunctionProtoType>();
   if (!FPT)
     return;
 
@@ -349,7 +347,7 @@ void WalkAST::checkCall_getpw(const CallExpr *CE, const FunctionDecl *FD) {
     return;
 
   // Verify the second argument type is char*.
-  const PointerType *PT = dyn_cast<PointerType>(FPT->getArgType(1));
+  const PointerType *PT = FPT->getArgType(1)->getAs<PointerType>();
   if (!PT)
     return;
 
@@ -381,8 +379,7 @@ void WalkAST::checkCall_mktemp(const CallExpr *CE, const FunctionDecl *FD) {
     return;
   }
 
-  const FunctionProtoType *FPT
-    = dyn_cast<FunctionProtoType>(FD->getType().IgnoreParens());
+  const FunctionProtoType *FPT = FD->getType()->getAs<FunctionProtoType>();
   if(!FPT)
     return;
 
@@ -391,7 +388,7 @@ void WalkAST::checkCall_mktemp(const CallExpr *CE, const FunctionDecl *FD) {
     return;
 
   // Verify that the argument is Pointer Type.
-  const PointerType *PT = dyn_cast<PointerType>(FPT->getArgType(0));
+  const PointerType *PT = FPT->getArgType(0)->getAs<PointerType>();
   if (!PT)
     return;
 
@@ -555,8 +552,7 @@ void WalkAST::checkCall_strcat(const CallExpr *CE, const FunctionDecl *FD) {
 // Common check for str* functions with no bounds parameters.
 //===----------------------------------------------------------------------===//
 bool WalkAST::checkCall_strCommon(const CallExpr *CE, const FunctionDecl *FD) {
-  const FunctionProtoType *FPT
-    = dyn_cast<FunctionProtoType>(FD->getType().IgnoreParens());
+  const FunctionProtoType *FPT = FD->getType()->getAs<FunctionProtoType>();
   if (!FPT)
     return false;
 
@@ -568,7 +564,7 @@ bool WalkAST::checkCall_strCommon(const CallExpr *CE, const FunctionDecl *FD) {
   // Verify the type for both arguments.
   for (int i = 0; i < 2; i++) {
     // Verify that the arguments are pointers.
-    const PointerType *PT = dyn_cast<PointerType>(FPT->getArgType(i));
+    const PointerType *PT = FPT->getArgType(i)->getAs<PointerType>();
     if (!PT)
       return false;
 
@@ -590,15 +586,14 @@ void WalkAST::checkCall_rand(const CallExpr *CE, const FunctionDecl *FD) {
   if (!filter.check_rand || !CheckRand)
     return;
 
-  const FunctionProtoType *FTP
-    = dyn_cast<FunctionProtoType>(FD->getType().IgnoreParens());
+  const FunctionProtoType *FTP = FD->getType()->getAs<FunctionProtoType>();
   if (!FTP)
     return;
 
   if (FTP->getNumArgs() == 1) {
     // Is the argument an 'unsigned short *'?
     // (Actually any integer type is allowed.)
-    const PointerType *PT = dyn_cast<PointerType>(FTP->getArgType(0));
+    const PointerType *PT = FTP->getArgType(0)->getAs<PointerType>();
     if (!PT)
       return;
 
@@ -635,8 +630,7 @@ void WalkAST::checkCall_random(const CallExpr *CE, const FunctionDecl *FD) {
   if (!CheckRand || !filter.check_rand)
     return;
 
-  const FunctionProtoType *FTP
-    = dyn_cast<FunctionProtoType>(FD->getType().IgnoreParens());
+  const FunctionProtoType *FTP = FD->getType()->getAs<FunctionProtoType>();
   if (!FTP)
     return;
 
@@ -713,8 +707,7 @@ void WalkAST::checkUncheckedReturnValue(CallExpr *CE) {
   if (identifierid >= num_setids)
     return;
 
-  const FunctionProtoType *FTP
-    = dyn_cast<FunctionProtoType>(FD->getType().IgnoreParens());
+  const FunctionProtoType *FTP = FD->getType()->getAs<FunctionProtoType>();
   if (!FTP)
     return;
 

@@ -76,21 +76,6 @@ public:
   /// \param L the location whose binding should be removed.
   virtual StoreRef killBinding(Store ST, Loc L) = 0;
 
-  /// \brief Create a new store that binds a value to a compound literal.
-  ///
-  /// \param ST The original store whose bindings are the basis for the new
-  ///        store.
-  ///
-  /// \param CL The compound literal to bind (the binding key).
-  ///
-  /// \param LC The LocationContext for the binding.
-  ///
-  /// \param V The value to bind to the compound literal.
-  virtual StoreRef bindCompoundLiteral(Store ST,
-                                       const CompoundLiteralExpr *CL,
-                                       const LocationContext *LC,
-                                       SVal V) = 0;
-
   /// getInitialStore - Returns the initial "empty" store representing the
   ///  value bindings upon entry to an analyzed function.
   virtual StoreRef getInitialStore(const LocationContext *InitLoc) = 0;
@@ -126,7 +111,7 @@ public:
 
   /// ArrayToPointer - Used by ExprEngine::VistCast to handle implicit
   ///  conversions between arrays and pointers.
-  virtual SVal ArrayToPointer(Loc Array) = 0;
+  virtual SVal ArrayToPointer(Loc Array, QualType ElementTy) = 0;
 
   /// Evaluates a chain of derived-to-base casts through the path specified in
   /// \p Cast.
@@ -179,8 +164,6 @@ public:
   ///  the given regions. Optionally, invalidates non-static globals as well.
   /// \param[in] store The initial store
   /// \param[in] Values The values to invalidate.
-  /// \param[in] ConstValues The values to invalidate; these are known to be
-  ///   const, so only regions accesible from them should be invalidated.
   /// \param[in] E The current statement being evaluated. Used to conjure
   ///   symbols to mark the values of invalidated regions.
   /// \param[in] Count The current block count. Used to conjure
@@ -189,13 +172,10 @@ public:
   ///   globals should get invalidated.
   /// \param[in,out] IS A set to fill with any symbols that are no longer
   ///   accessible. Pass \c NULL if this information will not be used.
-  /// \param[in,out] ConstIS A set to fill with any symbols corresponding to
-  ///   the ConstValues.
+  /// \param[in] ITraits Information about invalidation for a particular 
+  ///   region/symbol.
   /// \param[in,out] InvalidatedTopLevel A vector to fill with regions
-  ////  explicitely being invalidated. Pass \c NULL if this
-  ///   information will not be used.
-  /// \param[in,out] InvalidatedTopLevelConst A vector to fill with const 
-  ////  regions explicitely being invalidated. Pass \c NULL if this
+  ////  explicitly being invalidated. Pass \c NULL if this
   ///   information will not be used.
   /// \param[in,out] Invalidated A vector to fill with any regions being
   ///   invalidated. This should include any regions explicitly invalidated
@@ -203,14 +183,12 @@ public:
   ///   information will not be used.
   virtual StoreRef invalidateRegions(Store store,
                                   ArrayRef<SVal> Values,
-                                  ArrayRef<SVal> ConstValues,
                                   const Expr *E, unsigned Count,
                                   const LocationContext *LCtx,
                                   const CallEvent *Call,
                                   InvalidatedSymbols &IS,
-                                  InvalidatedSymbols &ConstIS,
+                                  RegionAndSymbolInvalidationTraits &ITraits,
                                   InvalidatedRegions *InvalidatedTopLevel,
-                                  InvalidatedRegions *InvalidatedTopLevelConst,
                                   InvalidatedRegions *Invalidated) = 0;
 
   /// enterStackFrame - Let the StoreManager to do something when execution
@@ -246,7 +224,7 @@ public:
 
     bool HandleBinding(StoreManager& SMgr, Store store, const MemRegion* R,
                        SVal val);
-    operator bool() { return First && Binding; }
+    LLVM_EXPLICIT operator bool() { return First && Binding; }
     const MemRegion *getRegion() { return Binding; }
   };
 

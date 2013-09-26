@@ -170,6 +170,26 @@ bool X86Subtarget::IsLegalToCallImmediateAddr(const TargetMachine &TM) const {
   return isTargetELF() || TM.getRelocationModel() == Reloc::Static;
 }
 
+static bool OSHasAVXSupport() {
+#if defined(i386) || defined(__i386__) || defined(__x86__) || defined(_M_IX86)\
+    || defined(__x86_64__) || defined(_M_AMD64) || defined (_M_X64)
+#if defined(__GNUC__)
+  // Check xgetbv; this uses a .byte sequence instead of the instruction
+  // directly because older assemblers do not include support for xgetbv and
+  // there is no easy way to conditionally compile based on the assembler used.
+  int rEAX, rEDX;
+  __asm__ (".byte 0x0f, 0x01, 0xd0" : "=a" (rEAX), "=d" (rEDX) : "c" (0));
+#elif defined(_MSC_FULL_VER) && defined(_XCR_XFEATURE_ENABLED_MASK)
+  unsigned long long rEAX = _xgetbv(_XCR_XFEATURE_ENABLED_MASK);
+#else
+  int rEAX = 0; // Ensures we return false
+#endif
+  return (rEAX & 6) == 6;
+#else
+  return false;
+#endif
+}
+
 void X86Subtarget::AutoDetectSubtargetFeatures() {
   unsigned EAX = 0, EBX = 0, ECX = 0, EDX = 0;
   unsigned MaxLevel;
@@ -192,7 +212,9 @@ void X86Subtarget::AutoDetectSubtargetFeatures() {
   if ((ECX >> 9)  & 1) { X86SSELevel = SSSE3; ToggleFeature(X86::FeatureSSSE3);}
   if ((ECX >> 19) & 1) { X86SSELevel = SSE41; ToggleFeature(X86::FeatureSSE41);}
   if ((ECX >> 20) & 1) { X86SSELevel = SSE42; ToggleFeature(X86::FeatureSSE42);}
-  if ((ECX >> 28) & 1) { X86SSELevel = AVX;   ToggleFeature(X86::FeatureAVX); }
+  if (((ECX >> 27) & 1) && ((ECX >> 28) & 1) && OSHasAVXSupport()) {
+    X86SSELevel = AVX;   ToggleFeature(X86::FeatureAVX);
+  }
 
   bool IsIntel = memcmp(text.c, "GenuineIntel", 12) == 0;
   bool IsAMD   = !IsIntel && memcmp(text.c, "AuthenticAMD", 12) == 0;
@@ -259,14 +281,18 @@ void X86Subtarget::AutoDetectSubtargetFeatures() {
       ToggleFeature(X86::FeatureFastUAMem);
     }
 
-    // Set processor type. Currently only Atom is detected.
+    // Set processor type. Currently only Atom or Silvermont (SLM) is detected.
     if (Family == 6 &&
-        (Model == 28 || Model == 38 || Model == 39
-         || Model == 53 || Model == 54)) {
+        (Model == 28 || Model == 38 || Model == 39 ||
+         Model == 53 || Model == 54)) {
       X86ProcFamily = IntelAtom;
 
       UseLeaForSP = true;
       ToggleFeature(X86::FeatureLeaForSP);
+    }
+    else if (Family == 6 &&
+        (Model == 55 || Model == 74 || Model == 77)) {
+      X86ProcFamily = IntelSLM;
     }
 
     unsigned MaxExtLevel;
@@ -329,14 +355,38 @@ void X86Subtarget::AutoDetectSubtargetFeatures() {
         HasRTM = true;
         ToggleFeature(X86::FeatureRTM);
       }
-      if (IsIntel && ((EBX >> 19) & 0x1)) {
-        HasADX = true;
-        ToggleFeature(X86::FeatureADX);
+      if (IsIntel && ((EBX >> 16) & 0x1)) {
+        X86SSELevel = AVX512F;
+        ToggleFeature(X86::FeatureAVX512);
       }
       if (IsIntel && ((EBX >> 18) & 0x1)) {
         HasRDSEED = true;
         ToggleFeature(X86::FeatureRDSEED);
       }
+      if (IsIntel && ((EBX >> 19) & 0x1)) {
+        HasADX = true;
+        ToggleFeature(X86::FeatureADX);
+      }
+      if (IsIntel && ((EBX >> 26) & 0x1)) {
+        HasPFI = true;
+        ToggleFeature(X86::FeaturePFI);
+      }
+      if (IsIntel && ((EBX >> 27) & 0x1)) {
+        HasERI = true;
+        ToggleFeature(X86::FeatureERI);
+      }
+      if (IsIntel && ((EBX >> 28) & 0x1)) {
+        HasCDI = true;
+        ToggleFeature(X86::FeatureCDI);
+      }
+      if (IsIntel && ((EBX >> 29) & 0x1)) {
+        HasSHA = true;
+        ToggleFeature(X86::FeatureSHA);
+      }
+    }
+    if (IsAMD && ((ECX >> 21) & 0x1)) {
+      HasTBM = true;
+      ToggleFeature(X86::FeatureTBM);
     }
   }
 }
@@ -394,8 +444,8 @@ void X86Subtarget::resetSubtargetFeatures(StringRef CPU, StringRef FS) {
 
     // Make sure 64-bit features are available in 64-bit mode.
     if (In64BitMode) {
-      HasX86_64 = true; ToggleFeature(X86::Feature64Bit);
-      HasCMov = true;   ToggleFeature(X86::FeatureCMOV);
+      if (!HasX86_64) { HasX86_64 = true; ToggleFeature(X86::Feature64Bit); }
+      if (!HasCMov)   { HasCMov   = true; ToggleFeature(X86::FeatureCMOV); }
 
       if (X86SSELevel < SSE2) {
         X86SSELevel = SSE2;
@@ -407,9 +457,9 @@ void X86Subtarget::resetSubtargetFeatures(StringRef CPU, StringRef FS) {
 
   // CPUName may have been set by the CPU detection code. Make sure the
   // new MCSchedModel is used.
-  InitMCProcessorInfo(CPUName, FS);
+  InitCPUSchedModel(CPUName);
 
-  if (X86ProcFamily == IntelAtom)
+  if (X86ProcFamily == IntelAtom || X86ProcFamily == IntelSLM)
     PostRAScheduler = true;
 
   InstrItins = getInstrItineraryForCPU(CPUName);
@@ -446,6 +496,7 @@ void X86Subtarget::initializeEnvironment() {
   HasFMA = false;
   HasFMA4 = false;
   HasXOP = false;
+  HasTBM = false;
   HasMOVBE = false;
   HasRDRAND = false;
   HasF16C = false;
@@ -455,7 +506,11 @@ void X86Subtarget::initializeEnvironment() {
   HasBMI2 = false;
   HasRTM = false;
   HasHLE = false;
+  HasERI = false;
+  HasCDI = false;
+  HasPFI = false;
   HasADX = false;
+  HasSHA = false;
   HasPRFCHW = false;
   HasRDSEED = false;
   IsBTMemSlow = false;
@@ -467,6 +522,7 @@ void X86Subtarget::initializeEnvironment() {
   PostRAScheduler = false;
   PadShortFunctions = false;
   CallRegIndirect = false;
+  LEAUsesAG = false;
   stackAlignment = 4;
   // FIXME: this is a known good value for Yonah. How about others?
   MaxInlineSizeThreshold = 128;
