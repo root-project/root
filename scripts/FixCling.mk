@@ -47,6 +47,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundTypeinfoToTypename"
 # Most likely no longer supported.
 # CALLROOTEXE += -e "\#define ClingReinstateRedeclarationAllowed"
 # CALLROOTEXE += -e "\#define ClingReinstateImplicitDynamicCast"
+# CALLROOTEXE += -e "\#define ClingReinstateTemplateRootIOCtor"
 
 # Not for 6.0
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
@@ -95,6 +96,7 @@ ClingWorkAroundNoPrivateClassIO = yes          # See https://savannah.cern.ch/bu
 # Most likely no longer supported.
 # ClingReinstateRedeclarationAllowed = yes     # See https://savannah.cern.ch/bugs/index.php?99396 
 # ClingReinstateImplicitDynamicCast = yes      # See https://savannah.cern.ch/bugs/index.php?99395
+# ClingReinstateTemplateRootIOCtor = yes       # Allow templated constructor to be used as I/O constructor
 ClingWorkAroundTypeinfoToTypename = yes        # See https://sft.its.cern.ch/jira/browse/ROOT-186
 
 ifneq ($(ClingReinstateRedeclarationAllowed)-$(ClingWorkAroundMissingImplicitAuto),yes-)

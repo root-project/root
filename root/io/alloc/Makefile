@@ -72,8 +72,12 @@ customConstructor.$(DllSuf): customConstructor.$(ObjSuf) customConstructorDict.$
 customConstructor.log: runcustomConstructor.C customConstructor.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q $< 2>&1 | sed -e 's/P13OTHER_ROOT_IO/class OTHER_ROOT_IO */' > $@  || handleError.sh --result=$$? --log=$@ --test=$<
 
+ifeq ($(ClingReinstateTemplateRootIOCtor),)
+customConstructor: CINT_VERSION := notemplateCtor
+endif
+
 customConstructor: customConstructor.log
-	$(TestDiff)
+	$(TestDiffCintSpecific)
 
 customLoader_C.$(DllSuf): customLoader.C customConstructor.C linkdef.h
 
