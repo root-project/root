@@ -540,17 +540,18 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    SourceLocation Loc = R.getNameLoc();
    VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, 
                                      C.getAutoType(QualType(),
-                                                   /*IsDecltypeAuto*/false),
+                                                   /*IsDecltypeAuto*/false,
+                                                   /*IsDependent*/true),
                                      /*TypeSourceInfo*/0, SC_None);
 
-   // Annotate the decl to give a hint in cling. FIXME: Current implementation
-   // is a gross hack, because TClingCallbacks shouldn't know about 
-   // EvaluateTSynthesizer at all!
-    
-   SourceRange invalidRange;
-   Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__Auto"));
-
    if (Result) {
+      // Annotate the decl to give a hint in cling. FIXME: Current implementation
+      // is a gross hack, because TClingCallbacks shouldn't know about 
+      // EvaluateTSynthesizer at all!
+    
+      SourceRange invalidRange;
+      Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__Auto"));
+
       R.addDecl(Result);
       // Here we have the scope but we cannot do Sema::PushDeclContext, because
       // on pop it will try to go one level up, which we don't want.
