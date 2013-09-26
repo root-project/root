@@ -254,10 +254,12 @@ long *valp;
          }
          /* fall out */
       case '_':
-         if (strncmp(cp, "__has_feature", 13) == 0 && !isalnum(cp[13])) {
-            int paren = 0;
+         if (strncmp(cp, "__has_", 6) == 0) {
+            cp += 6;
+            while (isalnum(*cp) || *cp == '_')
+               ++cp;
 
-            cp += 13;
+            int paren = 0;
             SKIPSPACE(cp);
             if (*cp == '(') {
                paren = 1;
@@ -267,9 +269,16 @@ long *valp;
             SKIPSPACE(cp);
             if (paren && *cp != ')')
                return CALLFUNC(g, handle_error)(g, cp, ")");
-            *valp = 0; /* no features by default */
+            *valp = 0; /* no features / attributes by default */
            return cp + paren;  /* skip the right paren */            
+         } else if (strncmp(cp, "__GNUC_PREREQ", 13) == 0 && (cp += 7)) {
+            cp += 13;
+            while (*cp != '(' && *cp) ++cp;
+            while (*cp != ')' && *cp) ++cp;
+            *valp = 0; // assume old GCC
+            return cp;
          }
+
          /* fall out */
    }
 
