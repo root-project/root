@@ -279,7 +279,8 @@ public:
    virtual int    MethodInfo_NArg(MethodInfo_t * /* minfo */) const {return 0;}
    virtual int    MethodInfo_NDefaultArg(MethodInfo_t * /* minfo */) const {return 0;}
    virtual int    MethodInfo_Next(MethodInfo_t * /* minfo */) const {return 0;}
-   virtual Long_t MethodInfo_Property(MethodInfo_t * /* minfo */) const {return 0;}
+   virtual Long_t MethodInfo_Property(MethodInfo_t * /* minfo */) const = 0;
+   virtual Long_t MethodInfo_ExtraProperty(MethodInfo_t * /* minfo */) const = 0;
    virtual TypeInfo_t  *MethodInfo_Type(MethodInfo_t * /* minfo */) const {return 0;}
    virtual TMethodCall::EReturnType MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const = 0;
    virtual const char *MethodInfo_GetMangledName(MethodInfo_t * /* minfo */) const {return 0;}

@@ -355,6 +355,7 @@ public: // Public Interface
    virtual int    MethodInfo_NDefaultArg(MethodInfo_t* minfo) const;
    virtual int    MethodInfo_Next(MethodInfo_t* minfo) const;
    virtual Long_t MethodInfo_Property(MethodInfo_t* minfo) const;
+   virtual Long_t MethodInfo_ExtraProperty(MethodInfo_t* minfo) const;
    virtual TypeInfo_t*  MethodInfo_Type(MethodInfo_t* minfo) const;
    virtual TMethodCall::EReturnType MethodInfo_MethodCallReturnType(MethodInfo_t* minfo) const;
    virtual const char* MethodInfo_GetMangledName(MethodInfo_t* minfo) const;

@@ -91,6 +91,35 @@ enum EProperty {
    kIsDefinedInStd  = 0x40000000
 };
 
+enum EFunctionProperty {
+/* The following are already defined
+   in EProperty and 'could' be part of this enums */
+/*
+   kIsAbstract      = 0x00000040,
+   kIsVirtual       = 0x00000080,
+   kIsPureVirtual   = 0x00000100,
+   kIsPublic        = 0x00000200,
+   kIsProtected     = 0x00000400,
+   kIsPrivate       = 0x00000800,
+   kIsStatic        = 0x00004000,
+   kIsDefault       = 0x00008000,
+   kIsExplicit      = 0x04000000,
+   kIsConstMethod   = 0x10000000,
+*/
+/* The following are already defined
+   in EProperty and related to the type of the return value */
+/*
+ kIsConstant      = 0x00100000,
+ kIsPointer       = 0x00001000,
+ kIsArray         = 0x00002000,
+ kIsReference     = 0x00010000,
+ kIsConstPointer  = 0x00400000,
+*/
+   kIsConstructor = 0x00000001,
+   kIsConversion  = 0x00000002,
+   kIsDestructor  = 0x00000004
+};
+
 enum EClassProperty {
    kClassIsValid         = 0x00000001,
    kClassHasExplicitCtor = 0x00000010,

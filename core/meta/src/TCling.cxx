@@ -4842,6 +4842,13 @@ Long_t TCling::MethodInfo_Property(MethodInfo_t* minfo) const
 }
 
 //______________________________________________________________________________
+Long_t TCling::MethodInfo_ExtraProperty(MethodInfo_t* minfo) const
+{
+   TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   return info->ExtraProperty();
+}
+
+//______________________________________________________________________________
 TypeInfo_t* TCling::MethodInfo_Type(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;

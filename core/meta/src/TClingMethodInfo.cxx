@@ -389,6 +389,26 @@ long TClingMethodInfo::Property() const
    return property;
 }
 
+long TClingMethodInfo::ExtraProperty() const
+{
+   // Return the property not already defined in Property
+   // See TDictionary's EFunctionProperty
+   if (!IsValid()) {
+      return 0L;
+   }
+   long property = 0;
+   const clang::FunctionDecl *fd = GetMethodDecl();
+   
+   if (llvm::isa<clang::CXXConversionDecl>(fd)) {
+      property |= kIsConversion;
+   } else if (llvm::isa<clang::CXXConstructorDecl>(fd)) {
+      property |= kIsConstructor;
+   } else if (llvm::isa<clang::CXXDestructorDecl>(fd)) {
+      property |= kIsDestructor;
+   }
+   return property;
+}
+
 TClingTypeInfo *TClingMethodInfo::Type() const
 {
    static TClingTypeInfo ti(fInterp);

@@ -57,6 +57,7 @@ public:
    Int_t               GetNargsOpt() const;
    void               *InterfaceMethod() const;
    Long_t              Property() const;
+   Long_t              ExtraProperty() const;
 
    ClassDef(TFunction,0)  //Dictionary for global function
 };

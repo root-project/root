@@ -172,8 +172,16 @@ Int_t TFunction::GetNargsOpt() const
 Long_t TFunction::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
-
+   
    return gCling->MethodInfo_Property(fInfo);
+}
+
+//______________________________________________________________________________
+Long_t TFunction::ExtraProperty() const
+{
+   // Get property description word. For meaning of bits see EProperty.
+   
+   return gCling->MethodInfo_ExtraProperty(fInfo);
 }
 
 //______________________________________________________________________________
