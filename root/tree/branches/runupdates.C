@@ -2,14 +2,15 @@
 #include "TTree.h"
 #include "Riostream.h"
 
+struct mys {
+   Float_t x[3];
+};
+mys mys_t;
+
 void runupdates() { 
 
    TFile *f = new TFile("blah.root","RECREATE"); 
    f->cd(); 
-   struct mys{
-      Float_t x[3];
-   }; 
-   mys mys_t; 
 
    mys_t.x[0] = 1.1; 
    mys_t.x[1] = 12.2; 
