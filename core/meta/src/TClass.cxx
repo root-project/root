@@ -2338,10 +2338,10 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl, void *address)
          gCling->BaseClassInfo_Delete(t);
       }
       offset = -1;*/
-      R__LOCKGUARD(gClingMutex); 
+      R__LOCKGUARD(gClingMutex);
       ClassInfo_t* derived = GetClassInfo();
       ClassInfo_t* target = cl->GetClassInfo();
-      return gCling->ClassInfo_GetBaseOffset(derived, target, address); 
+      return gCling->ClassInfo_GetBaseOffset(derived, target, address);
    //}
    //return offset; 
    //return -1;
