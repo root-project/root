@@ -1414,7 +1414,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString, const ROOT::TMe
             if (0!=ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)){
                continue;
             }
-            if (attrName == "name" || attrName == "pattern") continue;            
+            if (attrName == "name" ||
+                attrName == "pattern" ||
+                attrName == "rootmap") continue;
             // A general property
             // 1) We need to create the property map (in the gen code)
             // 2) we need to take out the map (in the gen code)
