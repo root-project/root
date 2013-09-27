@@ -579,7 +579,7 @@ TGraphPainter::~TGraphPainter()
 void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
 {
    /* Begin_Html
-   Compute the lorarithm of global variables <tt>gxwork</tt> and <tt>gywork</tt>
+   Compute the logarithm of global variables <tt>gxwork</tt> and <tt>gywork</tt>
    according to the value of Options and put the results in the global
    variables <tt>gxworkl</tt> and <tt>gyworkl</tt>.
    <p>
