@@ -379,7 +379,8 @@ void AnnotateFieldDecl(clang::NamedDecl& decl,
             const std::string& name = iter->first;
             if (name == "name") continue;
             const std::string& value = iter->second;
-            if (name == "transient" && value == "true") // special case
+            if ( (name == "transient" && value == "true") or
+                 (name == "persistent" && value == "false")) // special case
                userDefinedProperty="//!";
             else
                userDefinedProperty=name+ROOT::TMetaUtils::PropertyNameValSeparator+value;
