@@ -1,0 +1,19 @@
+<lcgdict>
+  <class name="PCaloHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="682759659"/>
+  </class>
+  <class name="std::vector<PCaloHit>"/>
+  <class name="std::vector<const PCaloHit*> "/>
+  <class name="edm::Wrapper<std::vector<PCaloHit>>" splitLevel="0"/>
+  <class name="HFShowerPhoton" ClassVersion="10">
+   <version ClassVersion="10" checksum="3736969110"/>
+  </class>
+  <class name="std::vector<HFShowerPhoton>"/>
+  <class name="edm::Wrapper<std::vector<HFShowerPhoton> >"/>
+  <class name="HFShowerLibraryEventInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="1929526838"/>
+  </class>
+  <class name="std::vector<HFShowerLibraryEventInfo>"/>
+  <class name="edm::Wrapper<HFShowerLibraryEventInfo>" />
+  <class name="edm::Wrapper<std::vector<HFShowerLibraryEventInfo> >"/>
+</lcgdict>

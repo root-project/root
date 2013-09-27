@@ -1,0 +1,35 @@
+<lcgdict>
+  <class name="DTChamberId" ClassVersion="10">
+   <version ClassVersion="10" checksum="1566132205"/>
+  </class>
+  <class name="DTSuperLayerId" ClassVersion="10">
+   <version ClassVersion="10" checksum="2373077448"/>
+  </class>
+  <class name="DTLayerId" ClassVersion="10">
+   <version ClassVersion="10" checksum="3694998457"/>
+  </class>
+  <class name="DTWireId" ClassVersion="10">
+    <version ClassVersion="10" checksum="506517840"/>
+  </class>
+  <class name="CSCDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="56607943"/>
+  </class>
+  <class name="RPCDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="3608243239"/>
+  </class>
+  <class name="RPCCompDetId" ClassVersion="-1">
+   <version ClassVersion="-1" checksum="2042478999"/>
+  </class>
+  <class name="DTBtiId" ClassVersion="10">
+   <version ClassVersion="10" checksum="3911181252"/>
+  </class>
+  <class name="DTTracoId" ClassVersion="10">
+   <version ClassVersion="10" checksum="917766974"/>
+  </class>
+  <class name="DTSectCollId" ClassVersion="10">
+   <version ClassVersion="10" checksum="1624682691"/>
+  </class>
+  <class name="GEMDetId" ClassVersion="10">
+   <version ClassVersion="10" checksum="3587583837"/>
+  </class>
+</lcgdict>

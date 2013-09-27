@@ -1,0 +1,23 @@
+
+<lcgdict>
+  <class name="PFRootEventManager">
+    <!-- <field name="pdgTable_" transient="true"/> -->
+  </class>
+  <class name="PFRootEventManagerColin"/>
+  <class name="TauEvent"/>
+  <class name="NeutralEvent"/>
+  <class name="EventColin"/>
+  <class name="EventColin::Particle"/>
+  <class name="std::vector<EventColin::Particle>"/>
+  <class name="EventColin::Cluster"/>
+  <class name="std::vector<EventColin::Cluster>"/>
+  <class name="EventColin::Jet"/>
+  <class name="std::vector<EventColin::Jet>"/>
+  <class name="EventColin::CaloTower"/>
+  <class name="std::vector<EventColin::CaloTower>"/>
+  <class name="EventColin::Block"/>
+  <class name="std::vector<EventColin::Block>"/>
+  <class name="ResidualFitter"/>
+  <class name="DialogFrame"/>
+  <class name="DisplayManager"/>
+</lcgdict>

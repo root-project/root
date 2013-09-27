@@ -1,0 +1,27 @@
+<lcgdict>
+  <!-- for LAS interface to track-based alignment !-->
+  <class name="SiStripLaserRecHit2D" ClassVersion="10">
+   <version ClassVersion="10" checksum="3516129645"/>
+  </class>
+  <class name="std::vector<SiStripLaserRecHit2D>"/>
+  <class name="TkLasBeam" ClassVersion="10">
+   <version ClassVersion="10" checksum="1460656577"/>
+  </class>
+  <class name="TkLasBeamCollection"/>
+  <class name="edm::Wrapper<TkLasBeamCollection>"/>
+
+  <class name="TkFittedLasBeam" ClassVersion="10">
+   <version ClassVersion="10" checksum="903692518"/>
+  </class>
+  <class name="TkFittedLasBeamCollection"/>
+  <class name="edm::Wrapper<TkFittedLasBeamCollection>"/>
+
+  <!-- for AlCaSkim !-->
+  <class name="AliClusterValueMap"/>
+  <class name="edm::ValueMap<AlignmentClusterFlag >"/>
+  <class name="edm::Wrapper< edm::ValueMap<AlignmentClusterFlag >  >"/>
+  <class name="AlignmentClusterFlag" ClassVersion="10">
+   <version ClassVersion="10" checksum="3955968420"/>
+  </class>
+  <class name="std::vector<AlignmentClusterFlag>"/>
+</lcgdict>

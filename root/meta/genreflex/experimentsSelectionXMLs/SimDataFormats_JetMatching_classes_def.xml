@@ -1,0 +1,44 @@
+<lcgdict>
+  <class name="reco::JetFlavour" ClassVersion="10">
+   <version ClassVersion="10" checksum="2885862487"/>
+  </class>
+  <class name="reco::JetFlavour::Leptons" ClassVersion="10">
+   <version ClassVersion="10" checksum="1787336562"/>
+  </class>
+  <class name="std::vector<reco::JetFlavour>"/>
+  <class name="std::pair<edm::RefToBase<reco::Jet>, reco::JetFlavour>"/>
+  <class name="std::vector<std::pair<edm::RefToBase<reco::Jet>, reco::JetFlavour> >"/>
+  <class name="reco::JetFlavourMatchingCollectionBase">
+    <field name="transientVector_" transient="true"/>
+    <field name="fixed_" transient="true"/>
+  </class>
+  <class name="reco::JetFlavourMatchingCollection" ClassVersion="10">
+   <version ClassVersion="10" checksum="344297371"/>
+    <!-- <field name="transientVector_" transient="true"/> -->
+    <!-- <field name="fixed_" transient="true"/> -->
+  </class>
+  <class name="reco::JetFlavourMatchingRef"/>
+  <class name="reco::JetFlavourMatchingRefProd"/>
+  <class name="reco::JetFlavourMatchingRefVector"/>
+  <class name="edm::Wrapper<reco::JetFlavourMatchingCollection>"/>
+
+  <class name="reco::MatchedPartons" ClassVersion="10">
+   <version ClassVersion="10" checksum="4065573666"/>
+  </class>
+  <class name="std::vector<reco::MatchedPartons>"/>
+  <class name="std::pair<edm::RefToBase<reco::Jet>, reco::MatchedPartons>"/>
+  <class name="std::vector<std::pair<edm::RefToBase<reco::Jet>, reco::MatchedPartons> >"/>
+  <class name="reco::JetMatchedPartonsCollectionBase">
+    <field name="transientVector_" transient="true"/>  
+    <field name="fixed_" transient="true"/>
+  </class>
+  <class name="reco::JetMatchedPartonsCollection" ClassVersion="10">
+   <version ClassVersion="10" checksum="1343220703"/>
+    <!-- <field name="transientVector_" transient="true"/> -->
+    <!-- <field name="fixed_" transient="true"/> -->
+  </class>
+  <class name="reco::JetMatchedPartonsRef"/>
+  <class name="reco::JetMatchedPartonsRefProd"/>
+  <class name="reco::JetMatchedPartonsRefVector"/>
+  <class name="edm::Wrapper<reco::JetMatchedPartonsCollection>"/>
+</lcgdict>

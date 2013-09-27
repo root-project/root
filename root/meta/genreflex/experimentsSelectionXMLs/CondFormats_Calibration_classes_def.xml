@@ -1,0 +1,77 @@
+<lcgdict>
+ <class name="Pedestals::Item"/>
+ <class name="std::vector<Pedestals::Item>"/>
+ <class name="std::vector<Pedestals::Item>::const_iterator"/>
+ <class name="Pedestals" class_version="0"/>
+
+ <class name="BlobPedestals" class_version="0">
+  <field name="m_pedestals" mapping="blob" />
+ </class>
+
+ <class name="BlobNoises" class_version="0" >
+  <field name="v_noises" mapping="blob" />
+  <field name="indexes" mapping="blob" />
+ </class>
+ <class name="BlobNoises::DetRegistry"/>  
+ <class name="std::vector<BlobNoises::DetRegistry>"/>
+
+ <class name="mySiStripNoises" class_version="0">
+  <field name="v_noises" mapping="blob" />
+  <field name="indexes" mapping="blob" />
+ </class>
+ <class name="mySiStripNoises::DetRegistry"/>
+ <class name="std::vector<mySiStripNoises::DetRegistry>"/>
+
+
+ <class name="CalibHistograms" class_version="0">
+   <field name="m_data" mapping="blob" />
+ </class>
+ <class name="std::vector<CalibHistogram>"/>
+ <class name="CalibHistogram"/>
+
+
+ <class name="BlobComplexData"/>
+ <class name="BlobComplexContent::Data"/>
+ <class name="BlobComplexContent"/>
+ <class name="std::vector<BlobComplexContent>"/>
+ <class name="BlobComplexObjects"/>
+ <class name="std::vector<BlobComplexObjects>"/>
+
+ <class name="BlobComplex"  class_version="0">
+ <field name="objects" mapping="blob" />
+ </class>
+ 
+ 
+ <class name="boostTypeObj"/>
+ <class name="fixedArray<unsigned short,2097>"/>
+ <class name="mypt"/>
+ <class name="std::pair<std::string,Algo>"/>
+ <class name="std::map<std::string,Algo>"/>
+ <class name="std::pair<std::string,Algob>"/>
+ <class name="std::map<std::string,Algob>"/>
+ <class name="Algo"/>
+ <class name="AlgoMap"/>
+ <class name="fakeMenu"/>
+ <class name="Algob"/>
+ <class name="strKeyMap"/>
+ <class name="mybase"/>
+ <class name="child"/>
+
+ <class name="condex::Efficiency"/>
+ <class name="condex::ParametricEfficiencyInPt" class_version="0"/>
+ <class name="condex::ParametricEfficiencyInEta" class_version="0"/>
+
+<class name="condex::ConfI" class_version="0"/>
+<class name="condex::ConfF" class_version="0"/>
+
+
+ <class name="big"/>
+ <class name="big::bigEntry"/>
+ <class name="big::bigHeader"/>
+ <class name="big::bigStore"/>
+ <class name="std::vector<big::bigEntry>"/>
+ <class name="std::vector<big::bigHeader>"/>
+ <class name="std::vector<big::bigStore>"/>
+
+</lcgdict>   
+

@@ -1,0 +1,49 @@
+<lcgdict>
+  <class name="EcalUncalibratedRecHit" ClassVersion="11">
+   <version ClassVersion="11" checksum="4183938955"/>
+   <version ClassVersion="10" checksum="2325626302"/>
+  </class>
+  <class name="std::vector<EcalUncalibratedRecHit>"/>
+  <class name="edm::SortedCollection<EcalUncalibratedRecHit,edm::StrictWeakOrdering<EcalUncalibratedRecHit> >"/>
+  <class name="edm::Wrapper<edm::SortedCollection<EcalUncalibratedRecHit,edm::StrictWeakOrdering<EcalUncalibratedRecHit> > >" splitLevel="0"/>
+  <class name="edm::Ref<edm::SortedCollection<EcalUncalibratedRecHit,edm::StrictWeakOrdering<EcalUncalibratedRecHit> >,EcalUncalibratedRecHit,edm::refhelper::FindUsingAdvance<edm::SortedCollection<EcalUncalibratedRecHit,edm::StrictWeakOrdering<EcalUncalibratedRecHit> >,EcalUncalibratedRecHit> >"/>
+  <class name="edm::RefVector<edm::SortedCollection<EcalUncalibratedRecHit,edm::StrictWeakOrdering<EcalUncalibratedRecHit> >,EcalUncalibratedRecHit,edm::refhelper::FindUsingAdvance<edm::SortedCollection<EcalUncalibratedRecHit,edm::StrictWeakOrdering<EcalUncalibratedRecHit> >,EcalUncalibratedRecHit> >"/>
+  <class name="edm::RefProd<edm::SortedCollection<EcalUncalibratedRecHit,edm::StrictWeakOrdering<EcalUncalibratedRecHit> > >"/>
+
+  <class name="EcalRecHit" ClassVersion="10">
+   <version ClassVersion="10" checksum="283504841"/>
+  </class>
+  <class name="std::vector<EcalRecHit>"/>
+  <class name="edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >"/>
+  <class name="edm::Wrapper<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > >" />
+  <class name="edm::Ref<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >,EcalRecHit,edm::refhelper::FindUsingAdvance<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >,EcalRecHit> >"/>
+  <class name="edm::RefVector<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >,EcalRecHit,edm::refhelper::FindUsingAdvance<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> >,EcalRecHit> >"/>
+  <class name="edm::RefProd<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > >"/>
+
+  <class name="EcalRecHitCollection"/>
+  <class name="edm::Wrapper<EcalRecHitCollection>"/>
+ 
+  <class name="edm::DetSet<EcalRecHit>"/>
+  <class name="edm::DetSetVector<EcalRecHit>"/>
+  <class name="std::vector<edm::DetSet<EcalRecHit> >"/>
+  <class name="std::vector<std::vector<edm::DetSet<EcalRecHit> > >"/>
+  <class name="edm::Wrapper<edm::DetSet<EcalRecHit> >"/>
+  <class name="edm::Wrapper<std::vector<edm::DetSet<EcalRecHit> > >"/>
+  <class name="edm::Wrapper<edm::DetSetVector<EcalRecHit> >"/>
+  <class name="edm::Wrapper<std::vector<std::vector<edm::DetSet<EcalRecHit> > > >"/>
+
+  <class name="edm::RegionIndex<EcalRecHit>"><field name="getter_" transient="true"/> </class>
+  <class name="std::vector< edm::RegionIndex<EcalRecHit> >"/>
+  <class name="edm::LazyGetter<EcalRecHit>"><field name="unpacker_" transient="true"/> </class>
+  <class name="edm::Ref<edm::LazyGetter<EcalRecHit>,edm::RegionIndex<EcalRecHit>,edm::FindRegion<EcalRecHit> >"/>
+  <class name="std::vector<edm::Ref<edm::LazyGetter<EcalRecHit>,edm::RegionIndex<EcalRecHit>,edm::FindRegion<EcalRecHit> > >"/>
+  <class name="edm::RefGetter<EcalRecHit>"/>
+
+  <class name="edm::Wrapper<edm::LazyGetter<EcalRecHit> >"/>
+  <class name="edm::Wrapper<edm::RefGetter<EcalRecHit> >"/>
+ 
+  <class name="edm::Ref< edm::LazyGetter<EcalRecHit>, EcalRecHit, edm::FindValue<EcalRecHit> >"/>
+
+  <class name="edm::reftobase::Holder<CaloRecHit, edm::Ref<edm::SortedCollection<EcalRecHit, edm::StrictWeakOrdering<EcalRecHit> >, EcalRecHit, edm::refhelper::FindUsingAdvance<edm::SortedCollection<EcalRecHit, edm::StrictWeakOrdering<EcalRecHit> >, EcalRecHit> > >" />
+  <enum name="EcalSeverityLevel::SeverityLevel"/> 
+</lcgdict>

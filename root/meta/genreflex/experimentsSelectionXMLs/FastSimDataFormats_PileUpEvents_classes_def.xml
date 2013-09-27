@@ -1,0 +1,15 @@
+
+<lcgdict>
+  <class name="PUEvent" ClassVersion="10">
+   <version ClassVersion="10" checksum="2450009293"/>
+  </class>
+  <class name="PUEvent::PUParticle" ClassVersion="10">
+   <version ClassVersion="10" checksum="560457191"/>
+  </class>
+  <class name="std::vector<PUEvent::PUParticle>"/>
+  <class name="PUEvent::PUMinBiasEvt" ClassVersion="10">
+   <version ClassVersion="10" checksum="2220512467"/>
+  </class>
+  <class name="std::vector<PUEvent::PUMinBiasEvt>"/>
+</lcgdict>
+

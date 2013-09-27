@@ -1,0 +1,18 @@
+<lcgdict>
+<class name="DTDigi" ClassVersion="10">
+ <version ClassVersion="10" checksum="942813146"/>
+</class>
+<class name="std::vector<DTDigi>"/>
+<class name="std::map<DTLayerId,std::vector<DTDigi> >"/>
+<class name="MuonDigiCollection<DTLayerId,DTDigi>"/> 
+<class name="edm::Wrapper<MuonDigiCollection<DTLayerId,DTDigi>>" splitLevel="0"/> 
+
+<class name="DTLocalTrigger" ClassVersion="10">
+ <version ClassVersion="10" checksum="3765470897"/>
+</class>
+<class name="std::vector<DTLocalTrigger>"/>
+<class name="std::map<DTChamberId,std::vector<DTLocalTrigger> >"/>
+<class name="MuonDigiCollection<DTChamberId,DTLocalTrigger>"/> 
+<class name="edm::Wrapper<MuonDigiCollection<DTChamberId,DTLocalTrigger>>" splitLevel="0"/> 
+
+</lcgdict>

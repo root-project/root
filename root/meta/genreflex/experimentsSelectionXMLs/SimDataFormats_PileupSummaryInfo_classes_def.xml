@@ -1,0 +1,14 @@
+<lcgdict>
+  <class name="PileupSummaryInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="3627878797"/>
+  </class>
+  <class name="std::vector<PileupSummaryInfo>"/>  
+  <class name="edm::Wrapper<PileupSummaryInfo>"/>
+  <class name="edm::Wrapper<std::vector<PileupSummaryInfo> >"/>
+  <class name="PileupMixingContent" ClassVersion="10">
+   <version ClassVersion="10" checksum="3729936984"/>
+  </class>
+  <class name="std::vector<PileupMixingContent>"/>  
+  <class name="edm::Wrapper<PileupMixingContent>"/>
+  <class name="edm::Wrapper<std::vector<PileupMixingContent> >"/>
+</lcgdict>

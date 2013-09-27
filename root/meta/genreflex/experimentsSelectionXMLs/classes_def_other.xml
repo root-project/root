@@ -1,0 +1,69 @@
+<lcgdict>
+ <selection>
+
+   <class name="std::pair<std::string,std::vector<float> >" />
+  <class name="edm::Wrapper<std::pair<std::string,std::vector<float> > >" />
+  <class name="std::vector<pat::JetCorrFactors::CorrectionFactor>" />
+  <class name="edm::Wrapper<std::vector<pat::JetCorrFactors::CorrectionFactor> >" />
+  <class name="pat::JetCorrFactors"  ClassVersion="10">
+   <version ClassVersion="10" checksum="4064502830"/>
+  </class>
+  <class name="std::vector<pat::JetCorrFactors>" />
+  <class name="edm::ValueMap<pat::JetCorrFactors>" />
+  <class name="edm::Wrapper<edm::ValueMap<pat::JetCorrFactors> >" />
+  <!-- <class name="std::vector<pat::TauJetCorrFactors::CorrectionFactor>" /> -->
+  <!-- <class name="edm::Wrapper<std::vector<pat::TauJetCorrFactors::CorrectionFactor> >" /> -->
+  <class name="pat::TauJetCorrFactors" />
+  <class name="std::vector<pat::TauJetCorrFactors>" />
+  <class name="edm::ValueMap<pat::TauJetCorrFactors>" />
+  <class name="edm::Wrapper<edm::ValueMap<pat::TauJetCorrFactors> >" />
+
+  <class name="StringMap"  ClassVersion="10">
+   <version ClassVersion="10" checksum="2534181505"/>
+  </class>
+  <class name="edm::Wrapper<StringMap>" />
+
+  <class name="pat::VertexAssociation"  ClassVersion="10">
+   <version ClassVersion="10" checksum="1319279281"/>
+  </class>
+  <class name="std::vector<pat::VertexAssociation>" />
+  <class name="edm::ValueMap<pat::VertexAssociation>" />
+  <class name="edm::Wrapper<edm::ValueMap<pat::VertexAssociation> >" />
+
+  <class name="pat::EventHypothesis"  ClassVersion="10">
+   <version ClassVersion="10" checksum="1415498305"/>
+  </class>
+  <class name="std::vector<pat::EventHypothesis>" />
+
+  <class name="edm::Wrapper<std::vector<pat::EventHypothesis> >" />
+
+  <enum name ="pat::IsolationKeys" />
+  <class name="std::pair<pat::IsolationKeys,reco::IsoDeposit>" />
+  <class name="std::vector<std::pair<pat::IsolationKeys,reco::IsoDeposit> >" />
+
+  <class name="pat::LookupTableRecord"  ClassVersion="10">
+   <version ClassVersion="10" checksum="3701346054"/>
+  </class>
+  <class name="std::vector<pat::LookupTableRecord>" />
+  <class name="edm::ValueMap<pat::LookupTableRecord>" />
+  <class name="edm::Wrapper<edm::ValueMap<pat::LookupTableRecord> >" />
+
+  <class name="pat::CandKinResolution"  ClassVersion="12">
+   <field name="covmatrix_" transient="true"/>
+   <field name="hasMatrix_" transient="true"/>
+   <version ClassVersion="12" checksum="811710989"/>
+   <version ClassVersion="11" checksum="3628324235"/>
+   <version ClassVersion="10" checksum="932672721"/>
+  </class>
+  <ioread sourceClass="pat::CandKinResolution" targetClass="pat::CandKinResolution" version="[1-]" source="" target="hasMatrix_">
+  <![CDATA[hasMatrix_ = false;]]>
+  </ioread>
+  <class name="std::vector<pat::CandKinResolution>" />
+  <class name="pat::CandKinResolutionValueMap" />
+  <class name="edm::Wrapper<pat::CandKinResolutionValueMap>" />
+
+  </selection>
+ <exclusion>
+ </exclusion>
+</lcgdict>
+

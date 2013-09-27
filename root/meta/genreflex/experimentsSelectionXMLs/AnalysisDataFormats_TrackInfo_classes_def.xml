@@ -1,0 +1,45 @@
+<lcgdict>
+  <class name="std::pair<LocalVector,LocalVector>"/>
+  <class name="std::pair<LocalPoint,LocalPoint>"/>
+  <class name="reco::TrackingRecHitInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="2470257581"/>
+  </class>
+  <class name="reco::TrackingStateInfo "/>
+  <class name="std::pair<reco::StateType, reco::TrackingStateInfo> "/>
+  <class name="std::map<reco::StateType, reco::TrackingStateInfo> "/>
+  <class name="std::pair< edm::Ref< edm::OwnVector< TrackingRecHit, edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit,edm::refhelper::FindUsingAdvance<edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit>  >, reco::TrackingRecHitInfo >"/>
+  <class name="std::map< edm::Ref< edm::OwnVector< TrackingRecHit, edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit,edm::refhelper::FindUsingAdvance<edm::OwnVector<TrackingRecHit,edm::ClonePolicy<TrackingRecHit> >,TrackingRecHit>  >, reco::TrackingRecHitInfo >"/>
+  <class name="reco::TrackInfo" ClassVersion="10">
+   <version ClassVersion="10" checksum="604971424"/>
+  </class>
+  <class name="std::vector<reco::TrackInfo>"/>
+  <class name="edm::Wrapper<std::vector<reco::TrackInfo> >"/>
+ <class name="edm::RefProd<std::vector<reco::TrackInfo> >"/>
+ <class name="edm::Ref<std::vector<reco::TrackInfo>,reco::TrackInfo,edm::refhelper::FindUsingAdvance<std::vector<reco::TrackInfo>,reco::TrackInfo> >"/>
+ <class name="edm::RefVector<std::vector<reco::TrackInfo>,reco::TrackInfo,edm::refhelper::FindUsingAdvance<std::vector<reco::TrackInfo>,reco::TrackInfo> >"/>
+ <class name="edm::Wrapper<edm::RefVector<std::vector<reco::TrackInfo>,reco::TrackInfo,edm::refhelper::FindUsingAdvance<std::vector<reco::TrackInfo>,reco::TrackInfo> > >"/>
+ 
+  <class name="edm::helpers::KeyVal<edm::RefProd<std::vector<reco::Track> >,edm::RefProd<std::vector<reco::TrackInfo> > >" />
+  <class name="edm::AssociationMap<edm::OneToOne< std::vector<reco::Track>,std::vector<reco::TrackInfo>, unsigned int > >" >
+    <field name="transientMap_" transient="true" />
+  </class>
+  <class name="edm::Wrapper<edm::AssociationMap<edm::OneToOne<std::vector<reco::Track>,std::vector<reco::TrackInfo>,unsigned int> > >" />
+
+  <class name="TPtoRecoTrack" ClassVersion="10">
+   <version ClassVersion="10" checksum="909265596"/>
+  </class>
+  <class name="edm::Wrapper<TPtoRecoTrack>"/>
+  
+  <class name="std::vector<TPtoRecoTrack>"/>
+  <class name="edm::Wrapper<std::vector<TPtoRecoTrack> >"/>
+
+  <class name="RecoTracktoTP" ClassVersion="10">
+   <version ClassVersion="10" checksum="3470602586"/>
+  </class>
+  <class name="edm::Wrapper<RecoTracktoTP>"/>
+  
+  <class name="std::vector<RecoTracktoTP>"/>
+  <class name="edm::Wrapper<std::vector<RecoTracktoTP> >"/>
+
+
+</lcgdict>

@@ -1,0 +1,19 @@
+<lcgdict>
+<selection>
+  <class name="RPCRecHit" splitLevel="0" ClassVersion="10">
+   <version ClassVersion="10" checksum="247761974"/>
+  </class>
+  <class name="std::vector<RPCRecHit>" splitLevel="0"/>
+  <class name="std::vector<RPCRecHit*>" splitLevel="0"/>
+  <class name="std::map<RPCDetId, std::pair<unsigned int, unsigned int> >" splitLevel="0"/>
+  <class name="std::map<RPCDetId, std::pair<unsigned long, unsigned long> >" splitLevel="0"/>
+  <class name="edm::OwnVector<RPCRecHit, edm::ClonePolicy<RPCRecHit> >" splitLevel="0"/>
+  <class name="edm::RangeMap<RPCDetId, edm::OwnVector<RPCRecHit, edm::ClonePolicy<RPCRecHit> >, edm::ClonePolicy<RPCRecHit> >" splitLevel="0"/>
+  <class name="edm::Wrapper<edm::RangeMap<RPCDetId, edm::OwnVector<RPCRecHit, edm::ClonePolicy<RPCRecHit> >, edm::ClonePolicy<RPCRecHit> > >" splitLevel="0"/>
+</selection>
+<exclusion>
+  <class name="edm::OwnVector<RPCRecHit, edm::ClonePolicy<RPCRecHit> >">
+    <method name="sort" splitLevel="0"/>
+  </class>
+</exclusion>
+</lcgdict>

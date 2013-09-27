@@ -1,0 +1,27 @@
+ <lcgdict>
+<!-- the class you need -->
+  <class name="std::vector<cond::PayloadRef<Pedestals> >"/>
+  <class name="CondIter<Pedestals>"/>
+  <class name="CondCachedIter<Pedestals>"/>
+  <class name="std::vector<cond::PayloadRef<AlignmentErrors> >"/>
+  <class name="CondIter<AlignmentErrors>"/>
+  <class name="CondCachedIter<AlignmentErrors>"/>
+  <class name="std::vector<cond::PayloadRef<EcalPedestals> >"/>
+  <class name="CondIter<EcalPedestals>"/>
+  <class name="CondCachedIter<EcalPedestals>"/>
+  <class name="std::vector<cond::PayloadRef<EcalLaserAPDPNRatios> >"/>
+  <class name="CondIter<EcalLaserAPDPNRatios>"/>
+  <class name="CondCachedIter<EcalLaserAPDPNRatios>"/>
+  <class name="std::vector<cond::PayloadRef<SiPixelGainCalibration> >"/>
+  <class name="CondIter<SiPixelGainCalibration>"/>
+  <class name="CondCachedIter<SiPixelGainCalibration>"/>    
+  <class name="std::vector<cond::PayloadRef<SiStripFedCabling> >"/>
+  <class name="CondIter<SiStripFedCabling>"/>
+  <class name="CondCachedIter<SiStripFedCabling>"/>   
+  <class name="std::vector<cond::PayloadRef<DTReadOutMapping> >"/>
+  <class name="CondIter<DTReadOutMapping>"/>
+  <class name="CondCachedIter<DTReadOutMapping>"/>   
+  <class name="std::vector<cond::PayloadRef<mySiStripNoises> >"/>
+  <class name="CondIter<mySiStripNoises>"/>
+  <class name="CondCachedIter<mySiStripNoises>"/>
+</lcgdict>   

@@ -1,0 +1,5 @@
+<lcgdict>
+ <class name="edm::Wrapper<TsosVectorCollection>" persistent="false"/>
+  <!-- persistent="false" qualifier for non-wrappers is deprecated. Will be removed when no longer needed.-->
+  <class name="TsosVectorCollection" persistent="false"/>
+</lcgdict>

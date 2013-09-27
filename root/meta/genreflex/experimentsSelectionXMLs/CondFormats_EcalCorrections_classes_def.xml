@@ -1,0 +1,7 @@
+<lcgdict>
+ <class name="EcalGlobalShowerContainmentCorrectionsVsEta"/>
+ <class name="EcalGlobalShowerContainmentCorrectionsVsEta::Coefficients"/>
+
+ <class name="EcalShowerContainmentCorrections"/>
+ <class name="EcalShowerContainmentCorrections::Coefficients"/>
+</lcgdict>

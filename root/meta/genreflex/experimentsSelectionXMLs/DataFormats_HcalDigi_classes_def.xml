@@ -1,0 +1,93 @@
+<lcgdict>
+   <class name="HcalQIESample" ClassVersion="10">
+    <version ClassVersion="10" checksum="3046719551"/>
+   </class>
+   <class name="HBHEDataFrame" ClassVersion="10">
+    <version ClassVersion="10" checksum="2048585142"/>
+   </class>
+   <class name="HODataFrame" ClassVersion="10">
+    <version ClassVersion="10" checksum="3593478166"/>
+   </class>
+   <class name="HFDataFrame" ClassVersion="10">
+    <version ClassVersion="10" checksum="1002969467"/>
+   </class>
+   <class name="HcalCalibDataFrame" ClassVersion="10">
+    <version ClassVersion="10" checksum="1026454157"/>
+   </class>
+   <class name="HcalTriggerPrimitiveSample" ClassVersion="10">
+    <version ClassVersion="10" checksum="4281939433"/>
+   </class>
+   <class name="HcalTriggerPrimitiveDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="1988665638"/>
+   </class>
+   <class name="HOTriggerPrimitiveDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="3812852628"/>
+   </class>
+   <class name="HcalHistogramDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="1578148269"/>
+   </class>
+   <class name="ZDCDataFrame" ClassVersion="10">
+    <version ClassVersion="10" checksum="3263886031"/>
+   </class>
+   <class name="CastorDataFrame" ClassVersion="10">
+    <version ClassVersion="10" checksum="2398501110"/>
+   </class>
+   <class name="CastorTriggerPrimitiveDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="4248257989"/>
+   </class>
+   <class name="HcalUnpackerReport" ClassVersion="11">
+    <version ClassVersion="10" checksum="2469069632"/>
+    <version ClassVersion="11" checksum="2110607657"/>
+   </class>
+   <class name="HcalTTPDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="3127055275"/>
+   </class>
+   <class name="HcalUpgradeDataFrame" ClassVersion="11">
+    <version ClassVersion="10" checksum="2143388425"/>
+    <version ClassVersion="11" checksum="2135202573"/>
+   </class>
+   <class name="std::vector<HcalQIESample>"/>
+   <class name="std::vector<HcalTriggerPrimitiveSample>"/>
+   <class name="std::vector<HBHEDataFrame>"/>
+   <class name="std::vector<HODataFrame>"/>
+   <class name="std::vector<HFDataFrame>"/>
+   <class name="std::vector<HcalCalibDataFrame>"/>
+   <class name="std::vector<HcalTriggerPrimitiveDigi>"/>
+   <class name="std::vector<HOTriggerPrimitiveDigi>"/>
+   <class name="std::vector<HcalHistogramDigi>"/>
+   <class name="std::vector<ZDCDataFrame>"/>
+   <class name="std::vector<CastorDataFrame>"/>
+   <class name="std::vector<CastorTriggerPrimitiveDigi>"/>
+   <class name="std::vector<HcalTTPDigi>"/>
+   <class name="std::vector<HcalUpgradeDataFrame>"/>
+   <class name="edm::SortedCollection<HBHEDataFrame,edm::StrictWeakOrdering<HBHEDataFrame> >"/>
+   <class name="edm::SortedCollection<HODataFrame,edm::StrictWeakOrdering<HODataFrame> >"/>
+   <class name="edm::SortedCollection<HFDataFrame,edm::StrictWeakOrdering<HFDataFrame> >"/>
+   <class name="edm::SortedCollection<HcalCalibDataFrame,edm::StrictWeakOrdering<HcalCalibDataFrame> >"/>
+   <class name="edm::SortedCollection<HcalTriggerPrimitiveDigi,edm::StrictWeakOrdering<HcalTriggerPrimitiveDigi> >"/>
+   <class name="edm::SortedCollection<HOTriggerPrimitiveDigi,edm::StrictWeakOrdering<HOTriggerPrimitiveDigi> >"/>
+   <class name="edm::SortedCollection<HcalHistogramDigi,edm::StrictWeakOrdering<HcalHistogramDigi> >"/>
+   <class name="edm::SortedCollection<ZDCDataFrame,edm::StrictWeakOrdering<ZDCDataFrame> >"/>
+   <class name="edm::SortedCollection<CastorDataFrame,edm::StrictWeakOrdering<CastorDataFrame> >"/>
+   <class name="edm::SortedCollection<CastorTriggerPrimitiveDigi,edm::StrictWeakOrdering<CastorTriggerPrimitiveDigi> >"/>
+   <class name="edm::SortedCollection<HcalTTPDigi,edm::StrictWeakOrdering<HcalTTPDigi> >"/>
+   <class name="edm::SortedCollection<HcalUpgradeDataFrame,edm::StrictWeakOrdering<HcalUpgradeDataFrame> >"/>
+
+   <class name="edm::Wrapper<edm::SortedCollection<HBHEDataFrame,edm::StrictWeakOrdering<HBHEDataFrame> > >" splitLevel="0" />
+   <class name="edm::Wrapper<edm::SortedCollection<HODataFrame,edm::StrictWeakOrdering<HODataFrame> > >" splitLevel="0" />
+   <class name="edm::Wrapper<edm::SortedCollection<HFDataFrame,edm::StrictWeakOrdering<HFDataFrame> > >" splitLevel="0" />
+   <class name="edm::Wrapper<edm::SortedCollection<HcalCalibDataFrame,edm::StrictWeakOrdering<HcalCalibDataFrame> > >"/>
+   <class name="edm::Wrapper<edm::SortedCollection<HcalTriggerPrimitiveDigi,edm::StrictWeakOrdering<HcalTriggerPrimitiveDigi> > >" splitLevel="0"/>
+   <class name="edm::Wrapper<edm::SortedCollection<HOTriggerPrimitiveDigi,edm::StrictWeakOrdering<HOTriggerPrimitiveDigi> > >" splitLevel="0"/>
+   <class name="edm::Wrapper<edm::SortedCollection<HcalHistogramDigi,edm::StrictWeakOrdering<HcalHistogramDigi> > >" splitLevel="0"/>
+   <class name="edm::Wrapper<edm::SortedCollection<ZDCDataFrame,edm::StrictWeakOrdering<ZDCDataFrame> > >" splitLevel="0" />
+   <class name="edm::Wrapper<edm::SortedCollection<CastorDataFrame,edm::StrictWeakOrdering<CastorDataFrame> > >" splitLevel="0" />
+   <class name="edm::Wrapper<edm::SortedCollection<CastorTriggerPrimitiveDigi,edm::StrictWeakOrdering<CastorTriggerPrimitiveDigi> > >" splitLevel="0" />
+   <class name="edm::Wrapper<edm::SortedCollection<HcalTTPDigi,edm::StrictWeakOrdering<HcalTTPDigi> > >" splitLevel="0" />
+   <class name="edm::Wrapper<edm::SortedCollection<HcalUpgradeDataFrame,edm::StrictWeakOrdering<HcalUpgradeDataFrame> > >" splitLevel="0" />
+   <class name="edm::Wrapper<HcalUnpackerReport>"/>
+   <class name="HcalLaserDigi" ClassVersion="10">
+    <version ClassVersion="10" checksum="2447500554"/>
+   </class>
+   <class name="edm::Wrapper<HcalLaserDigi>" splitLevel="0"/>
+</lcgdict>

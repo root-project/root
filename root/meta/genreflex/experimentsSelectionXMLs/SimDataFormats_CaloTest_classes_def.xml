@@ -1,0 +1,17 @@
+<lcgdict>
+  <class name="HcalTestHistoClass" ClassVersion="10">
+   <version ClassVersion="10" checksum="4077122487"/>
+  </class>
+  <class name="HcalTestHistoClass::Layer" ClassVersion="10">
+   <version ClassVersion="10" checksum="2361923361"/>
+  </class>
+  <class name="HcalTestHistoClass::Hit" ClassVersion="10">
+   <version ClassVersion="10" checksum="161472878"/>
+  </class>
+  <class name="HcalTestHistoClass::QIE" ClassVersion="10">
+   <version ClassVersion="10" checksum="4053248214"/>
+  </class>
+  <class name="std::vector<HcalTestHistoClass::Layer>"/>
+  <class name="std::vector<HcalTestHistoClass::Hit>"/>
+  <class name="std::vector<HcalTestHistoClass::QIE>"/>
+</lcgdict>

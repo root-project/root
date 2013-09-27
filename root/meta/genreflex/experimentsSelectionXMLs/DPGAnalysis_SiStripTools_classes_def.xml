@@ -1,0 +1,17 @@
+<lcgdict>
+  <class name="TinyEvent"/>
+  <!-- persistent="false" qualifier for non-wrappers is deprecated. Will be removed when no longer needed.-->
+  <class name="std::vector<TinyEvent>" persistent="false"/>
+  <class name="EventWithHistory" persistent="false"/>
+  <class name="APVCyclePhaseCollection" persistent="false"/>
+  <class name="SingleSiStripDigiMultiplicity" persistent="false"/>
+  <class name="SingleSiStripClusterMultiplicity" persistent="false"/>
+  <class name="SingleSiPixelClusterMultiplicity" persistent="false"/>
+  <class name="SiPixelClusterSiStripClusterMultiplicityPair" persistent="false"/>
+  <class name="ClusterSummarySingleMultiplicity" persistent="false"/>
+  <class name="ClusterSummaryMultiplicityPair" persistent="false"/>
+
+  <class name="edm::Wrapper<std::vector<TinyEvent> >" persistent="false"/>
+  <class name="edm::Wrapper<EventWithHistory>" persistent="false"/>
+  <class name="edm::Wrapper<APVCyclePhaseCollection>" persistent="false"/>
+</lcgdict>

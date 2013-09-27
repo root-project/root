@@ -1,0 +1,61 @@
+<lcgdict>
+ <class name="ora::OId"/>
+ <class name="cond::IOVElement">
+   <field name="m_wrapper" persistency="loose_on_writing" />
+   <field name="m_oid" persistency="loose_on_reading" />
+ </class>
+ <class name="cond::UpdateStamp"/>
+ <class name="ora::QueryableVector<cond::IOVElement>"/>
+ <class name="ora::PVector<cond::IOVElement>"/>
+ <class name="std::vector<cond::IOVElement>"/>
+ <class name="cond::IOVSequence" id="3F16F0A9-79D5-4881-CE0B-C301DD84A7F1" class_version="0">
+  <field name="m_payloadClasses" persistency="loose_on_reading" />
+  <field name="m_sorted" transient="true" />
+  <field name="m_scope" persistency="loose_on_reading" />
+ </class>
+
+
+ <class name="cond::IOVProvenance"/>
+ <class name="cond::IOVDescription"/>
+ <class name="cond::IOVUserMetaData"/>
+
+ <class name="FileBlob" class_version="0">
+   <field name="blob" mapping="blob"/>
+ </class>
+
+ <class name="std::pair <const std::string, unsigned long long>" />
+ <class name="std::map <std::string, unsigned long long>" />
+
+ <class name="MultiFileBlob" class_version="0">
+   <field name="blob" mapping="blob"/>
+   <field name="positions" mapping="blob"/>
+   <field name="expanded" transient="true" />
+  </class>
+
+
+<class name="cond::SmallWORMDict"/>
+<class name="cond::IOVKeysDescription"/>
+ 
+
+ <class name="cond::Summary"/>
+ <class name="cond::GenericSummary"/>
+
+
+ <class name="cond::BaseKeyed"/>
+
+  <class name="std::map<unsigned long long,unsigned long long>"/>
+  <class name="std::map<unsigned long long,unsigned long long>::value_type" />
+
+ <class name="ConfObject"/>
+
+ <class name="DropBoxMetadata" class_version="0"/>
+ <class name="DropBoxMetadata::Parameters">
+ <field name="theParameters" mapping="blob" />
+ </class>
+ <class name="std::pair<const std::basic_string<char>, DropBoxMetadata::Parameters>"/>
+ <class name="std::map<const std::basic_string<char>, DropBoxMetadata::Parameters>"/>
+ <class name="std::pair<std::string, DropBoxMetadata::Parameters>"/>
+ <class name="std::map<std::string, DropBoxMetadata::Parameters>"/>
+
+
+</lcgdict>   

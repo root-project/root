@@ -1,0 +1,19 @@
+<lcgdict>
+  <selection>
+  <class pattern="GaudiMath::*"       />
+  <class pattern="Genfun::GaudiMath*" />
+  <class pattern="Genfun::A*"         />
+  <class pattern="IGsl*"              />
+  <class pattern="Gsl*"               />
+  <class pattern="Gsl*"               />
+  </selection>
+
+  <exclusion>
+    <!-- These are typedef to vector<double> and cause problems. -->
+    <class pattern="Genfun::GaudiMathImplementation::Numerical*Integral::Points"/>
+    <class pattern="Genfun::GaudiMathImplementation::*::Data1D" />
+    <!-- There are causing troubles on Windows (VC9) -->
+    <class pattern="gsl_interp*"/>
+    <class name="gsl_spline"/>
+  </exclusion>
+</lcgdict>
