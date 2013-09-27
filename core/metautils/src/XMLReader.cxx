@@ -38,6 +38,7 @@ void XMLReader::PopulateMap(){
    XMLReader::fgMapTagNames["enum"] = kEnum;
    XMLReader::fgMapTagNames["method"] = kMethod;
    XMLReader::fgMapTagNames["field"] = kField;
+   XMLReader::fgMapTagNames["member"] = kField; // field and member treated identically
    XMLReader::fgMapTagNames["lcgdict"] = kLcgdict;
    XMLReader::fgMapTagNames["/lcgdict"] = kEndLcgdict;
    XMLReader::fgMapTagNames["selection"] = kSelection;
@@ -62,8 +63,10 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
    std::string str;
    bool angleBraceLevel = false;
    bool quotes = false;
-   bool comment = false;
+   bool comment = false;   
    bool tagIsComment = false;
+   bool xmlDecl = false;
+   bool tagIsXMLDecl = false;   // like <?xml version="1.0" encoding="ISO-8859-1"?>
    char charMinus1= '@';
    char charMinus2= '@';
    char charMinus3= '@';
@@ -111,9 +114,16 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
                   if (comment) { tagIsComment=true; br=true; } // comment ended!
                   else { return false; } // a comment ends w/o starting
                }
+               if (charMinus1=='?'){
+                  if (xmlDecl) {tagIsXMLDecl=true;br=true;} // xmlDecl ended
+                  else {return false;} // an xmlDecl ends w/o starting
+               }
                break;
             case '-':
                if (charMinus3=='<' && charMinus2=='!' && charMinus1=='-') comment = !comment; // We are in a comment
+               break;
+            case '?': // treat the xml standard declaration 
+               if (charMinus1=='<') xmlDecl=!xmlDecl;
                break;
          }
          charMinus3=charMinus2;
@@ -141,7 +151,7 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
    // if tag isn't empty, check if everything is OK with the tag format
    if (!out.empty()){
       bool isTagOk = CheckIsTagOK(out);
-      if (tagIsComment){
+      if (tagIsComment or tagIsXMLDecl){
          out="";
          return GetNextTag(file,out,lineCount);
       }
