@@ -4746,6 +4746,15 @@ BaseClassInfo_t* TCling::BaseClassInfo_Factory(ClassInfo_t* cinfo) const
 }
 
 //______________________________________________________________________________
+BaseClassInfo_t* TCling::BaseClassInfo_Factory(ClassInfo_t* derived,
+   ClassInfo_t* base) const
+{
+   TClingClassInfo* TClinginfo = (TClingClassInfo*) derived;
+   TClingClassInfo* TClinginfoBase = (TClingClassInfo*) base;
+   return (BaseClassInfo_t*) new TClingBaseClassInfo(fInterpreter, TClinginfo, TClinginfoBase);
+}
+
+//______________________________________________________________________________
 int TCling::BaseClassInfo_Next(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
@@ -4760,17 +4769,19 @@ int TCling::BaseClassInfo_Next(BaseClassInfo_t* bcinfo, int onlyDirect) const
 }
 
 //______________________________________________________________________________
-Long_t TCling::BaseClassInfo_Offset(BaseClassInfo_t* bcinfo) const
-{
-   TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
-   return TClinginfo->Offset();
-}
-
-//______________________________________________________________________________
 Long_t TCling::BaseClassInfo_Offset(BaseClassInfo_t* bcinfo, void * address) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
-   return TClinginfo->Offset();
+   return TClinginfo->Offset(address);
+}
+
+//______________________________________________________________________________
+Long_t TCling::ClassInfo_GetBaseOffset(ClassInfo_t* derived, ClassInfo_t* target, void * address) const
+{
+   TClingClassInfo* TClinginfo = (TClingClassInfo*) derived;
+   TClingClassInfo* TClinginfoTarget = (TClingClassInfo*) target;
+   TClingBaseClassInfo* binfo =  new TClingBaseClassInfo(fInterpreter, TClinginfo, TClinginfoTarget);
+   return binfo->Offset(address);
 }
 
 //______________________________________________________________________________

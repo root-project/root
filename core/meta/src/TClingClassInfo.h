@@ -46,6 +46,8 @@ namespace ROOT {
    }
 }
 
+typedef long (*OffsetPtrFunc_t)(void*);
+
 class TClingClassInfo {
 
 private:
@@ -59,22 +61,25 @@ private:
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
    std::string           fTitle; // The meta info for the class.
    std::string           fDeclFileName; // Name of the file where the underlying entity is declared.
+   llvm::DenseMap<const clang::Decl*, OffsetPtrFunc_t> fOffsetFunctions; // Functions already generated for offsets.
 
    explicit TClingClassInfo() /* = delete */; // NOT IMPLEMENTED
    TClingClassInfo &operator=(const TClingClassInfo &) /* = delete */; // NOT IMPLEMENTED
+
 public: // Types
 
    enum InheritanceMode {
       InThisScope = 0,
       WithInheritance = 1
    };
-
+   
 public:
 
    explicit TClingClassInfo(cling::Interpreter *);
    explicit TClingClassInfo(cling::Interpreter *, const char *);
    explicit TClingClassInfo(cling::Interpreter *, const clang::Type &);
-
+   
+   void                 AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFunc_t func);
    long                 ClassProperty() const;
    void                 Delete(void *arena) const;
    void                 DeleteArray(void *arena, bool dtorOnly) const;
@@ -100,6 +105,7 @@ public:
                                   InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    long                 GetOffset(const clang::CXXMethodDecl* md) const;
+   OffsetPtrFunc_t      FindBaseOffsetFunction(const clang::Decl* decl) const;          
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    bool                 HasDefaultConstructor() const;
    bool                 HasMethod(const char *name) const;

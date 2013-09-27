@@ -58,22 +58,22 @@ public:
    ~TClingBaseClassInfo() { delete fClassInfo; delete fBaseInfo; }
 
    TClingBaseClassInfo(cling::Interpreter*, TClingClassInfo*);
+   TClingBaseClassInfo(cling::Interpreter*, TClingClassInfo* derived, TClingClassInfo* base);
    TClingBaseClassInfo(const TClingBaseClassInfo&);
    TClingBaseClassInfo& operator=(const TClingBaseClassInfo&);
 
+   OffsetPtrFunc_t GenerateBaseOffsetFunction(TClingClassInfo* derivedClass, TClingClassInfo* targetClass, void* address) const;
    TClingClassInfo *GetBase() const;
    int           InternalNext(int onlyDirect);
    bool          IsValid() const;
    int           Next();
    int           Next(int onlyDirect);
-   long          Offset() const;
-   long          Offset(void * address) const;
+   long          Offset(void * address = 0) const;
    long          Property() const;
    long          Tagnum() const;
    const char   *FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char   *Name() const;
    const char   *TmpltName() const;
-
 };
 
 #endif // ROOT_TClingBaseClassInfo

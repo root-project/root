@@ -69,7 +69,7 @@ static std::string FullyQualifiedName(const Decl *decl) {
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), fOffsetFunctions(0)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
@@ -96,7 +96,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
-     fTitle("")
+     fTitle(""), fOffsetFunctions(0)
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const Type *type = 0;
@@ -118,9 +118,14 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const Type &tag)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), 
-     fTitle("")
+     fTitle(""), fOffsetFunctions(0)
 {
    Init(tag);
+}
+
+void TClingClassInfo::AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFunc_t func)
+{
+   fOffsetFunctions.insert(std::make_pair<const clang::Decl*, OffsetPtrFunc_t>(decl, func));
 }
 
 long TClingClassInfo::ClassProperty() const
@@ -222,6 +227,11 @@ void TClingClassInfo::Destruct(void *arena) const
    }
    TClingCallFunc cf(fInterp);
    cf.ExecDestructor(this, arena, /*nary=*/0, /*withFree=*/false);
+}
+
+OffsetPtrFunc_t TClingClassInfo::FindBaseOffsetFunction(const clang::Decl* decl) const
+{
+   return fOffsetFunctions.lookup(decl);
 }
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,

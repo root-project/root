@@ -29,7 +29,11 @@
 #include "TDictionary.h"
 #include "TMetaUtils.h"
 
+#include "TError.h"
+
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/Transaction.h"
+
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -40,8 +44,19 @@
 
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/IR/Module.h"
 
 #include <string>
+#include <sstream>
+#include <iostream>
+
+using namespace llvm;
+using namespace clang;
+using namespace std;
+using namespace std;
+
+static const string indent_string("   ");
 
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
                                          TClingClassInfo* ci)
@@ -64,6 +79,28 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
       return;
    }
    fDecl = CRD;
+   fIter = CRD->bases_begin();
+}
+
+TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
+                                         TClingClassInfo* derived,
+                                         TClingClassInfo* base)
+   : fInterp(interp), fClassInfo(derived), fFirstTime(true), fDescend(false),
+     fDecl(0), fIter(0), fBaseInfo(base), fOffset(0L)
+{
+   if (!derived->GetDecl()) {
+      return;
+   }
+   const clang::CXXRecordDecl* CRD =
+      llvm::dyn_cast<clang::CXXRecordDecl>(derived->GetDecl());
+   if (!CRD) {
+      // We were initialized with something that is not a class.
+      // FIXME: We should prevent this from happening!
+      return;
+   }
+   //fClassInfo = new TClingClassInfo(*derived);
+   fDecl = CRD;
+   //fBaseInfo = new TClingClassInfo(*base);
    fIter = CRD->bases_begin();
 }
 
@@ -103,14 +140,143 @@ TClingClassInfo *TClingBaseClassInfo::GetBase() const
    return fBaseInfo;
 }
 
-long * TClingBaseClassInfo:GenerateBaseOffsetFunction(ClassInfo_t * derivedClass, ClassInto_t* targetClass, void * address) const
+OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo * derivedClass, TClingClassInfo* targetClass, void* address) const
 {
    // Generate a function at run-time that would calculate the offset 
    // from the parameter derived class to the parameter target class for the
    // address.
 
-   long * function = 0; 
-   return function;
+   //
+   //  Get the class or namespace name.
+   //
+   string derived_class_name;
+   if (derivedClass->GetType()) {
+      // This is a class, struct, or union member.
+      clang::QualType QTDerived(derivedClass->GetType(), 0);
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(derived_class_name, QTDerived, *fInterp);
+   }
+   else if (const clang::NamedDecl* ND =
+               clang::dyn_cast<clang::NamedDecl>(derivedClass->GetDecl()->getDeclContext())) {
+      // This is a namespace member.
+      raw_string_ostream stream(derived_class_name);
+      ND->getNameForDiagnostic(stream, ND->getASTContext().getPrintingPolicy(), /*Qualified=*/true);
+      stream.flush();
+   }
+   string target_class_name;
+   if (targetClass->GetType()) {
+      // This is a class, struct, or union member.
+      clang::QualType QTTarget(targetClass->GetType(), 0);
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(target_class_name, QTTarget, *fInterp);
+   }
+   else if (const clang::NamedDecl* ND =
+               dyn_cast<clang::NamedDecl>(targetClass->GetDecl()->getDeclContext())) {
+      // This is a namespace member.
+      raw_string_ostream stream(target_class_name);
+      ND->getNameForDiagnostic(stream, ND->getASTContext().getPrintingPolicy(), /*Qualified=*/true);
+      stream.flush();
+   }
+   //
+   //  Make the wrapper name.
+   //
+   string wrapper_name;
+   {
+      ostringstream buf;
+      buf << derived_class_name;
+      buf << '_';
+      buf << target_class_name;
+      //buf << wrapper_serial++;
+      wrapper_name = buf.str();
+   }
+   //
+   //  Write the wrapper code.
+   //
+   string wrapperFwdDecl = "long " + wrapper_name + "(void* address)";
+   ostringstream buf;
+   buf << wrapperFwdDecl << "{\n";
+   /*if (min_args == num_params) {
+      // No parameters with defaults.
+      make_narg_call_with_return(num_params, class_name, buf, indent_level);
+   }*/
+   buf << indent_string << derived_class_name << " *object = (" << derived_class_name << "*)address;";
+   buf << "\n";
+   buf << indent_string << target_class_name << " *target = object;";
+   buf << "\n";
+   buf << indent_string << "return ((long)target - (long)object);";
+   buf << "\n";
+   buf << "}\n";
+   string wrapper = "extern \"C\" " + wrapperFwdDecl + ";\n"
+      + buf.str();
+
+   cout<<wrapper<<"\n";
+   //
+   //  Compile the wrapper code.
+   //
+   const FunctionDecl* WFD = 0;
+   {
+      cling::Transaction* Tp = 0;
+      cling::Interpreter::CompilationResult CR = fInterp->declare(wrapper, &Tp);
+      if (CR != cling::Interpreter::kSuccess) {
+         Error("TClingBaseClassInfo::GenerateBaseOffsetFunction", "Wrapper compile failed!");
+         return 0;
+      }
+      for (cling::Transaction::const_iterator I = Tp->decls_begin(),
+              E = Tp->decls_end(); !WFD && I != E; ++I) {
+         if (I->m_Call == cling::Transaction::kCCIHandleTopLevelDecl) {
+            WFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin());
+            // ...unless not top level or different name:
+            if(WFD){
+               if (!isa<TranslationUnitDecl>(WFD->getDeclContext()))
+                  WFD = 0;
+               else {
+                  DeclarationName FName = WFD->getDeclName();
+                  if (const IdentifierInfo* FII = FName.getAsIdentifierInfo()) {
+                     if (FII->getName() != wrapper_name)
+                        WFD = 0;
+                  }
+               }
+            }
+         }
+      }
+      if (!WFD) {
+         Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
+               "Wrapper compile did not return a function decl!");
+         return 0;
+      }
+   }
+   //
+   //  Lookup the new wrapper declaration.
+   //
+   const NamedDecl* WND = dyn_cast<NamedDecl>(WFD);
+   if (!WND) {
+      Error("TClingBaseClassInfo::GenerateBaseOffsetFunction", "Wrapper named decl is null!");
+      return 0;
+   }
+   //
+   //  Get the wrapper function pointer
+   //  from the ExecutionEngine (the JIT).
+   //
+   const GlobalValue* GV = fInterp->getModule()->getNamedValue(wrapper_name);
+   if (!GV) {
+      Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
+            "Wrapper function name not found in Module!");
+      return 0;
+   }
+   ExecutionEngine* EE = fInterp->getExecutionEngine();
+   OffsetPtrFunc_t f = (OffsetPtrFunc_t)EE->getPointerToGlobalIfAvailable(GV);
+   if (!f) {
+      //
+      //  Wrapper function not yet codegened by the JIT,
+      //  force this to happen now.
+      //
+      f = (OffsetPtrFunc_t)EE->getPointerToGlobal(GV);
+      if (!f) {
+         Error("TClingBaseClassInfo::GenerateBaseOffsetFunction", "Wrapper function has no "
+               "mapping in Module after forced codegen!");
+         return 0;
+      }
+   }
+   cout<<"Generation ptr:"<<f<<endl;
+   return f;
 }
 
 bool TClingBaseClassInfo::IsValid() const
@@ -231,6 +397,14 @@ long TClingBaseClassInfo::Offset(void * address) const
    if (!IsValid()) {
       return -1;
    }
+   // Offset to the class itself.
+   if (fClassInfo->GetDecl() == fBaseInfo->GetDecl()) {
+      return 0;
+   }
+   // The base class is not in the inheritance hierarchy of the class.
+   if (!fClassInfo->IsBase(fBaseInfo->Name())) {
+      return -1;
+   }
    const clang::RecordType* Ty = fIter->getType()->getAs<clang::RecordType>();
    if (!Ty) {
       // A dependent type (uninstantiated template), invalid.
@@ -244,12 +418,32 @@ long TClingBaseClassInfo::Offset(void * address) const
       // No definition yet (just forward declared), invalid.
       return -1;
    }
-   clang::ASTContext& Context = Base->getASTContext();
-   const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
-   const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
-   int64_t offset = Layout.getBaseClassOffset(Base).getQuantity();
-   long clang_val = fOffset + static_cast<long>(offset);
-   return clang_val;
+   // If the base class has no virtual inheritance.
+   if (!(fBaseInfo->ClassProperty() & kClassHasVirtual)) {
+      clang::ASTContext& Context = Base->getASTContext();
+      const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
+      const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
+      int64_t offset = Layout.getBaseClassOffset(Base).getQuantity();
+      long clang_val = fOffset + static_cast<long>(offset);
+      return clang_val;
+   }
+   
+   // Virtual inheritance case
+   OffsetPtrFunc_t executableFunc = fClassInfo->FindBaseOffsetFunction(fBaseInfo->GetDecl());
+   if (!executableFunc) {
+      executableFunc = GenerateBaseOffsetFunction(fClassInfo, fBaseInfo, address);
+      if (!executableFunc) {
+      Error ("TClingBaseClassInfo::Offset"
+             , "Could not generate function for virtual base offset calculation.");
+      return -1;
+      }
+      fClassInfo->AddBaseOffsetFunction(fBaseInfo->GetDecl(), executableFunc);
+   }
+   cout<<"Runed ptr:"<<executableFunc<<endl;
+   if(address)
+      return (*executableFunc)(address);
+   
+   return -1;   
 }
 
 

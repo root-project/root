@@ -282,7 +282,7 @@ public:
    TClass            *GetActualClass(const void *object) const;
    TClass            *GetBaseClass(const char *classname);
    TClass            *GetBaseClass(const TClass *base);
-   Int_t              GetBaseClassOffset(const TClass *base);
+   Int_t              GetBaseClassOffset(const TClass *base, void *address = 0);
    TClass            *GetBaseDataMember(const char *datamember);
    ROOT::DirAutoAdd_t GetDirectoryAutoAdd() const;
    UInt_t             GetInstanceCount() const { return fInstanceCount; }
