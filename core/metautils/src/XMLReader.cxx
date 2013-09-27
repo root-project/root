@@ -444,7 +444,6 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
    bool exclEnd = false;
    bool excl = false;
    bool inIoread=false;
-   bool inClass=false;
    std::string parent="";
    
    BaseSelectionRule *bsr      = 0; // Pointer to the base class, in it is written information about the current sel. rule
@@ -492,7 +491,6 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kClass:
             {
-               inClass=true;
                if (!IsStandaloneTag(tagStr)){ // if the class tag is not standalone, then it has (probably) some child nodes
                   parent = tagStr;
                }
@@ -506,7 +504,6 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   parent = "";
                   out.AddClassSelectionRule(*csr); // if we have a closing tag - we should write the class selection rule to the 
                   // SelectionRules object; for standalone class tags we write the class sel rule at the end of the tag processing
-                  inClass=false;
                }
                else { // if we don't have parent information, it means that this closing tag doesn't have opening tag
                   ROOT::TMetaUtils::Error(0,"Single </class> tag at line %s",lineNumCharp);
