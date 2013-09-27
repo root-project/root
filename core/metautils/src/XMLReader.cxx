@@ -67,6 +67,8 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
    bool tagIsComment = false;
    bool xmlDecl = false;
    bool tagIsXMLDecl = false;   // like <?xml version="1.0" encoding="ISO-8859-1"?>
+   bool isCR=false;
+   bool isInlineComment = false ; // Support comments like in c++ "// Mycomment"
    char charMinus1= '@';
    char charMinus2= '@';
    char charMinus3= '@';
@@ -98,6 +100,9 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
          
          //count quotes - we don't want to count < and > inside quotes as opening/closing brackets
          switch (c) {
+            case '\r': // skip these
+               isCR=true;
+               break;
             case '\n': ++lineCount; // if new line increment lineCount
                break;
             case '"': quotes = !quotes; // we are allowed to have only pair number of quotes per tag - for the attr. values
@@ -125,10 +130,30 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
             case '?': // treat the xml standard declaration 
                if (charMinus1=='<') xmlDecl=!xmlDecl;
                break;
+            case '/': // if char is /, preceeding is / and we are not between a < > pair or an xml comment:
+               if (charMinus1=='/' && !angleBraceLevel && !comment){
+                  isInlineComment=true;
+               }
+               break;
          }
+         if (isCR){
+            isCR=false;
+            continue;
+         }
+         if (isInlineComment){
+            out.erase(out.size()-1,1);
+            while (file.good() && c!='\n'){ // continue up to the end of the line or the file
+               c = file.get();
+            }
+            break;
+         }         
          charMinus3=charMinus2;
          charMinus2=charMinus1;
          charMinus1=c;
+         // check if the comment ended
+         if (comment && !(charMinus3=='-' && charMinus2=='-' && charMinus1=='>')){
+            continue;
+         }
          out += c; // if c != {<,>,"}, add it to the tag 
          if (br) break; // if br = true, we have reached the end of the tag and we stop reading from the input stream
          
@@ -177,14 +202,14 @@ bool XMLReader::CheckIsTagOK(const std::string& tag)
    }
    
    // if tag doesn't begin with <, this is not a tag
-   if (tag.at(0) != '<'){
-      ROOT::TMetaUtils::Error(0,"Malformed tag (tag doesn't begin with <)!\n");
+   if (tag.at(0) != '<'){      
+      ROOT::TMetaUtils::Error(0,"Malformed tag %s (tag doesn't begin with <)!\n", tag.c_str());
       return false;
    }
    
    // if the second symbol is space - this is malformed tag - name of the tag should go directly after the <
    if (isspace(tag.at(1))){
-      ROOT::TMetaUtils::Error(0,"Malformed tag (there should be no white-spaces between < and name-of-tag)!\n");
+      ROOT::TMetaUtils::Error(0,"Malformed tag %s (there should be no white-spaces between < and name-of-tag)!\n", tag.c_str());
       return false;
    }
    
@@ -198,7 +223,7 @@ bool XMLReader::CheckIsTagOK(const std::string& tag)
       }
       else {
          if (c == '/' && countWSp>0) {
-            ROOT::TMetaUtils::Error(0,"Malformed tag (there should be no white-spaces between / and >)!\n");
+            ROOT::TMetaUtils::Error(0,"Malformed tag %s (there should be no white-spaces between / and >)!\n", tag.c_str());
             return false;
          }
          break;
@@ -298,7 +323,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
       //cut off any last spaces, tabs or end of lines
       int pos = attrstr.find_last_not_of(" \t\n");
       attrstr = attrstr.substr(1, pos+1);
-      
+
       /*
        The logic here is the following - we have bool name - it shows if we have read (or are reading) an attribute name
        bool equalfound - shows if we have found the = symbol after the name
@@ -311,6 +336,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
       bool equalfound = false;
       bool value = false;
       bool newattr = true;
+      bool inString = false;
       std::string attr_name;
       std::string attr_value;
       char lastsymbol = '\0';
@@ -332,8 +358,9 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
                
             }
          }
-         else if (isspace(c)) continue;
+         else if (isspace(c) and !inString) continue;
          else if (c == '"') {
+            inString=!inString;
             lastsymbol = '"';
             if (namefound && equalfound){ //if name was read and = was found
                if (!value){ // in this case we are starting to read the value of the attribute
@@ -357,7 +384,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
                      //int pos = attr_value.find_last_of("(");
                      printf("NOT IMPLEMENTED YET!\n");
                   }
-                  ROOT::TMetaUtils::Info(0, "*** Attribute: %s %s\n", attr_name.c_str(), attr_value.c_str());
+                  ROOT::TMetaUtils::Info(0, "*** Attribute: %s = \"%s\"\n", attr_name.c_str(), attr_value.c_str());
                   Attributes at(attr_name, attr_value);
                   out.push_back(at);
                   attr_name = "";
@@ -416,6 +443,8 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
    bool selEnd = false;
    bool exclEnd = false;
    bool excl = false;
+   bool inIoread=false;
+   bool inClass=false;
    std::string parent="";
    
    BaseSelectionRule *bsr      = 0; // Pointer to the base class, in it is written information about the current sel. rule
@@ -463,6 +492,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kClass:
             {
+               inClass=true;
                if (!IsStandaloneTag(tagStr)){ // if the class tag is not standalone, then it has (probably) some child nodes
                   parent = tagStr;
                }
@@ -476,6 +506,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   parent = "";
                   out.AddClassSelectionRule(*csr); // if we have a closing tag - we should write the class selection rule to the 
                   // SelectionRules object; for standalone class tags we write the class sel rule at the end of the tag processing
+                  inClass=false;
                }
                else { // if we don't have parent information, it means that this closing tag doesn't have opening tag
                   ROOT::TMetaUtils::Error(0,"Single </class> tag at line %s",lineNumCharp);
@@ -495,7 +526,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kBeginIoread:
             {
-               parent = tagStr;
+               inIoread = true;
                // Try to see if we have CDATA to be put into the attributes
                std::streampos initialPos(file.tellg());
                const unsigned int lineCharsSize=1000;
@@ -541,11 +572,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kEndIoread:
             {
-               if (parent.empty()){
+               if (!inIoread){
                   ROOT::TMetaUtils::Error(0,"Single </ioread> at line %s",lineNumCharp);
                   out.ClearSelectionRules();
                   return false;
                }
+               inIoread = false;
                break;
             }
             case kSelection:
@@ -721,7 +753,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                              
             // Now send them to the pragma processor. The info will be put
             // in a global then read by the TMetaUtils
-            ROOT::TMetaUtils::Info(0,"Pragma generated for ioread rule: %s", pragmaLineStream.str().c_str());
+            ROOT::TMetaUtils::Info(0,"Pragma generated for ioread rule: %s\n", pragmaLineStream.str().c_str());
             ROOT::ProcessReadPragma( pragmaLineStream.str().c_str() );
 
             continue; // no need to go further
