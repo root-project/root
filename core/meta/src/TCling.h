@@ -164,6 +164,11 @@ public: // Public Interface
                           const char** macroDefines,
                           const char** macroUndefines,
                           void (*triggerFunc)());
+
+   void    RegisterModule(const char* modulename,
+                          const char* header,
+                          const char** includePaths);
+   
    Int_t   SetClassSharedLibs(const char *cls, const char *libs);
    void    SetGetline(const char * (*getlineFunc)(const char* prompt),
                       void (*histaddFunc)(const char* line));

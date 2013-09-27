@@ -1180,6 +1180,45 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
 }
 
 //______________________________________________________________________________
+void TCling::RegisterModule(const char* modulename, const char* header,
+                            const char** includePaths)
+{
+
+   if (getenv("ROOT_MODULES")){
+      ::Error("TCling::RegisterModule",
+              "Variable ROOT_MODULES defined even if this module was created with an inlined umbrella.");
+      return ;
+   }
+   
+   for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
+      TCling::AddIncludePath(*inclPath);
+   }
+   
+   // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
+   // This is used to give Sema the same view on ACLiC'ed files (which
+   // are then #included through the dictionary) as rootcling had.
+   TString code = "#define __ROOTCLING__ 1\n";
+
+   code += header;
+   
+   
+   bool oldValue = false;
+   if (fClingCallbacks)
+      oldValue = SetClassAutoloading(false);
+      
+   fInterpreter->parseForModule(code.Data());
+
+   if (fClingCallbacks)
+      SetClassAutoloading(oldValue);
+   
+   // Might be pulled in through PCH
+   fInterpreter->declare("#ifdef __ROOTCLING__\n"
+                         "#undef __ROOTCLING__\n"
+                         "#endif");
+}
+
+
+//______________________________________________________________________________
 Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 {
    // Let cling process a command line.

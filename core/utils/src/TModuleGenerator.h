@@ -19,6 +19,8 @@
 #define ROOT_TModuleGenerator
 
 #include <ostream>
+#include <sstream>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -55,7 +57,8 @@ public:
 
    const std::vector<std::string>& GetHeaders() const { return fHeaders; }
 
-   void WriteRegistrationSource(std::ostream& out) const;
+   void WriteRegistrationSource(std::ostream& out, bool inlineHeader=false) const;
+   void WriteSingleHeaderRegistrationSource(std::ostream& out) const;
    void WriteContentHeader(std::ostream& out) const;
    void WriteUmbrellaHeader(std::ostream& out) const;
 

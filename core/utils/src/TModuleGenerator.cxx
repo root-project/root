@@ -268,8 +268,9 @@ std::ostream& TModuleGenerator::WriteStringPairVec(const StringPairVec_t& vec,
 }
 
 //______________________________________________________________________________
-void TModuleGenerator::WriteRegistrationSource(std::ostream& out) const
-{
+void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHeader) const
+{  
+   
    // Dictionary initialization code for loading the module
    out << "void TriggerDictionaryInitalization_"
        << GetDictionaryName() << "() {\n"
@@ -304,7 +305,90 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out) const
       "  } __TheDictionaryInitializer;\n"
       "}" << std::endl;
 }
+#include <iostream>
+//______________________________________________________________________________
+void TModuleGenerator::WriteSingleHeaderRegistrationSource(std::ostream& out) const
+{
 
+   const std::string& headerName = fHeaders[0];
+   
+   // Build the defines and undefines
+   std::ostringstream definesAndUndefines;
+   definesAndUndefines << "// Defines and undefines\n";
+   WritePPDefines(definesAndUndefines);
+   WritePPUndefines(definesAndUndefines);
+   definesAndUndefines << "// Input Header Content\n";
+   
+   // Read in the header, replace the " with \" and inline
+   std::ifstream headerFile(headerName.c_str());  
+   std::string headerFileContent;
+   headerFileContent.reserve(3000);
+   headerFileContent+="\"";
+   char c;
+   char cminus1 = '@';
+   char cminus2 = '@';
+   bool addChar=true;
+   while (EOF != (c = headerFile.get())){
+
+      if (cminus1 == '\n' && c == '\n') {
+         addChar=false;
+      }
+               
+      // If char is a ", just put an escaped "
+      if (c == '"'){
+         headerFileContent+="\\\"";
+         addChar=false;
+      }
+      // If a char is a \, just put an escaped 
+      if (c == '\\'){
+         headerFileContent+="\\\\";
+         addChar=false;
+      }
+      
+      // if char is a \n just add a " and goto next line and add a "
+      if (c=='\n' && cminus1 != '\n'){
+         headerFileContent+="\\n\"\n\"";
+         addChar=false;
+      }
+      cminus2=cminus1;
+      cminus1=c;
+      if (addChar){
+         headerFileContent+=c;
+      }
+      
+      addChar=true;
+   }
+   // To fix headers not having a trailing \n
+   if (cminus1!='\n') headerFileContent+="\"";
+   else headerFileContent.erase(headerFileContent.size()-1);
+
+
+   
+   
+   
+   // Dictionary initialization code for loading the module
+   out << "void TriggerDictionaryInitalization_"
+   << GetDictionaryName() << "() {\n"
+   "      static const char* header = "<< headerFileContent << ";\n"
+   "      static const char* includePaths[] = {\n";
+   WriteIncludePathArray(out) <<
+   "      };\n"
+   "      static bool sInitialized = false;\n"
+   "      if (!sInitialized) {\n"
+   "        TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
+   "          header, includePaths);\n"
+   "        sInitialized = true;\n"
+   "      }\n"
+   "    }\n"
+   "namespace {\n"
+   "  static struct DictInit {\n"
+   "    DictInit() {\n"
+   "      TriggerDictionaryInitalization_" << GetDictionaryName() << "();\n"
+   "    }\n"
+   "  } __TheDictionaryInitializer;\n"
+   "}" << std::endl;
+   }
+   
 //______________________________________________________________________________
 void TModuleGenerator::WriteContentHeader(std::ostream& out) const
 {

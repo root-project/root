@@ -209,18 +209,28 @@ namespace {
                          const char** macroDefines,
                          const char** macroUndefines,
                          void (*triggerFunc)() ):
-         fModuleName(moduleName), fHeaders(headers), fAllHeaders(allHeaders),
+         fModuleName(moduleName), fHeaders(headers), fHeader(NULL), fAllHeaders(allHeaders),
          fIncludePaths(includePaths), fMacroDefines(macroDefines),
          fMacroUndefines(macroUndefines), fTriggerFunc(triggerFunc) {}
+      ModuleHeaderInfo_t(const char* moduleName,
+                         const char* header,
+                         const char** includePaths):
+         fModuleName(moduleName), fHeaders(NULL), fHeader(header), fAllHeaders(NULL),
+         fIncludePaths(includePaths), fMacroDefines(NULL),
+         fMacroUndefines(NULL), fTriggerFunc(NULL) {}
+
+      bool HasInlinedHeader() const {return fHeader != NULL;};
+         
       const char* fModuleName; // module name
       const char** fHeaders; // 0-terminated array of header files
+      const char* fHeader; // Content of the unique array
       const char** fAllHeaders; // 0-terminated array of all seen header files
       const char** fIncludePaths; // 0-terminated array of header files
       const char** fMacroDefines; // 0-terminated array of header files
       const char** fMacroUndefines; // 0-terminated array of header files
       void (*fTriggerFunc)(); // Pointer to the dict initialization used to find the library name
-   };
-
+   };   
+   
    std::vector<ModuleHeaderInfo_t>& GetModuleHeaderInfoBuffer() {
       static std::vector<ModuleHeaderInfo_t> moduleHeaderInfoBuffer;
       return moduleHeaderInfoBuffer;
@@ -1589,14 +1599,21 @@ void TROOT::InitInterpreter()
            li = GetModuleHeaderInfoBuffer().begin(),
            le = GetModuleHeaderInfoBuffer().end(); li != le; ++li) {
          // process buffered module registrations
-      fInterpreter->RegisterModule(li->fModuleName,
-                                   li->fHeaders,
-                                   li->fAllHeaders,
-                                   li->fIncludePaths,
-                                   li->fMacroDefines,
-                                   li->fMacroUndefines,
-                                   li->fTriggerFunc);
+      if (li->HasInlinedHeader()){
+         fInterpreter->RegisterModule(li->fModuleName,
+                                      li->fHeaders,
+                                      li->fAllHeaders,
+                                      li->fIncludePaths,
+                                      li->fMacroDefines,
+                                      li->fMacroUndefines,
+                                      li->fTriggerFunc);
       }
+      else{
+         fInterpreter->RegisterModule(li->fModuleName,
+                                      li->fHeader,
+                                      li->fIncludePaths);
+      }
+   }
    GetModuleHeaderInfoBuffer().clear();
 
    fInterpreter->Initialize();
@@ -2016,6 +2033,24 @@ void TROOT::RegisterModule(const char* modulename,
                                        includePaths, macroDefines,
                                        macroUndefines, triggerFunc));
    }
+}
+
+//______________________________________________________________________________
+void TROOT::RegisterModule(const char* modulename,
+                           const char* header,
+                           const char** includePaths)
+{
+   // Called by static dictionary initialization to register clang modules
+   // for headers. Calls TCling::RegisterModule() 
+   
+   if (gCling) {
+      gCling->RegisterModule(modulename, header, includePaths);
+   } else {
+      GetModuleHeaderInfoBuffer()
+      .push_back(ModuleHeaderInfo_t(modulename, header, 
+                                    includePaths));
+   }
+   
 }
 
 //______________________________________________________________________________
