@@ -326,46 +326,45 @@ void TModuleGenerator::WriteSingleHeaderRegistrationSource(std::ostream& out) co
    headerFileContent+="\"";
    char c;
    char cminus1 = '@';
-   char cminus2 = '@';
    bool addChar=true;
    while (EOF != (c = headerFile.get())){
 
       if (cminus1 == '\n' && c == '\n') {
          addChar=false;
       }
-               
+
       // If char is a ", just put an escaped "
       if (c == '"'){
          headerFileContent+="\\\"";
          addChar=false;
       }
-      // If a char is a \, just put an escaped 
+      // If a char is a \, just put an escaped
       if (c == '\\'){
          headerFileContent+="\\\\";
          addChar=false;
       }
-      
+
       // if char is a \n just add a " and goto next line and add a "
       if (c=='\n' && cminus1 != '\n'){
          headerFileContent+="\\n\"\n\"";
          addChar=false;
       }
-      cminus2=cminus1;
+
       cminus1=c;
       if (addChar){
          headerFileContent+=c;
       }
-      
+
       addChar=true;
    }
    // To fix headers not having a trailing \n
-   if (cminus1!='\n') headerFileContent+="\"";
-   else headerFileContent.erase(headerFileContent.size()-1);
+   if (cminus1!='\n') {
+      headerFileContent+="\"";
+   }
+   else if (!headerFileContent.empty()){
+      headerFileContent.erase(headerFileContent.size()-1);
+   }
 
-
-   
-   
-   
    // Dictionary initialization code for loading the module
    out << "void TriggerDictionaryInitalization_"
    << GetDictionaryName() << "() {\n"
