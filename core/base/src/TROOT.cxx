@@ -1599,7 +1599,7 @@ void TROOT::InitInterpreter()
            li = GetModuleHeaderInfoBuffer().begin(),
            le = GetModuleHeaderInfoBuffer().end(); li != le; ++li) {
          // process buffered module registrations
-      if (li->HasInlinedHeader()){
+      if (!li->HasInlinedHeader()){
          fInterpreter->RegisterModule(li->fModuleName,
                                       li->fHeaders,
                                       li->fAllHeaders,
