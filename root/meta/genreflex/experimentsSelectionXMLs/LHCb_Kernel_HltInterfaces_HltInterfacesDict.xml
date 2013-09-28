@@ -1,0 +1,14 @@
+<lcgdict>
+  <class name = "IANNSvc"       />
+  <class name = "IANSvc"        />
+  <class name = "IConfigAccessSvc" />
+  <class name = "IPropertyConfigSvc" />
+  <class name = "PropertyConfig" />
+  <class name = "ConfigTreeNode" />
+  <class name = "ConfigTreeNodeAlias" />
+  <class name = "std::vector<ConfigTreeNodeAlias>" />
+  <class name = "boost::optional<ConfigTreeNode>" />
+  <class name = "boost::optional<PropertyConfig>" />
+  <class name = "ConfigTreeNodeAlias::alias_type" />
+  <class name = "IConfigTreeEditor" />
+</lcgdict>

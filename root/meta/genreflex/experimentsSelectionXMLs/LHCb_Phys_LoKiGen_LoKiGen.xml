@@ -1,0 +1,168 @@
+<!-- 
+     * $Id: LoKiGen.xml 132877 2011-12-13 19:09:00Z ibelyaev $ 
+     * ========================================================================
+     * @file
+     * The seleciton file to build Reflex dictionaries for Phys/LoKiGen package
+     *
+     *  This file is a part of LoKi project - 
+     *    "C++ ToolKit  for Smart and Friendly Physics Analysis"
+     *
+     *  The package has been designed with the kind help from
+     *  Galina PAKHLOVA and Sergey BARSUK.  Many bright ideas, 
+     *  contributions and advices from G.Raven, J.van Tilburg, 
+     *  A.Golutvin, P.Koppenburg have been used in the design.
+     *
+     * @author Vanya BELYAEV ibelyaev@physics.syr.edu
+     * @date 2006-02-06
+     * ========================================================================
+-->
+
+<lcgdict>
+  
+  <class name      = "LoKi::GetHepMC"                />
+  
+  <class pattern   = "Gaudi::Range_<*HepMC::*>"      />
+  <class pattern   = "Gaudi::NamedRange_<*HepMC::*>" />
+  <class pattern   = "LoKi::RangeList_<*HepMC::*>"   />
+  
+  <class pattern   = "LoKi::Keeper<HepMC::*>"        />
+  <class pattern   = "LoKi::UniqueKeeper<HepMC::*>"  />
+  <class pattern   = "LoKi::Interface<*>"            />
+  
+
+  <class pattern   = "LoKi::BasicFunctors<*HepMC::*>"      />
+  <class pattern   = "LoKi::Functor<*HepMC::*>"            />
+  <class pattern   = "LoKi::FunctorFromFunctor<*HepMC::*>" />
+  <class pattern   = "LoKi::Constant<*HepMC::*>"           />
+
+  <class pattern   = "LoKi::Functors::Empty<*HepMC::*>"  />
+  <class pattern   = "LoKi::Functors::Size<*HepMC::*>"   />
+  
+  <class pattern   = "LoKi::Valid<*HepMC::*>"            />
+  <class pattern   = "LoKi::TheSame<*HepMC::*>"          />
+  
+  <class pattern   = "LoKi::GenParticles::*"             />
+  <class pattern   = "LoKi::GenVertices::*"              />
+  
+  <function pattern = "LoKi::GenKinematics::*"           />
+  <function pattern = "LoKi::PrintHepMC::*"              />
+  <function pattern = "LoKi::GenChild::*"                />
+  <function pattern = "LoKi::GenExtract::*"              />
+  <function pattern = "LoKi::Dicts::GenAlgs::*"          />
+  
+  <class name = "LoKi::GenChild::Selector"         />
+  
+  <class pattern   = "LoKi::Dicts::FuncOps<*HepMC::*>"    />
+  <class pattern   = "LoKi::Dicts::CutsOps<*HepMC::*>"    />
+  <class pattern   = "LoKi::Dicts::FuncOps_<*HepMC::*>"   />
+  <class pattern   = "LoKi::Dicts::CutsOps_<*HepMC::*>"   />
+
+  <class pattern   = "LoKi::Dicts::MapsOps<*HepMC::*>"    />
+  <class pattern   = "LoKi::Dicts::PipeOps<*HepMC::*>"    />
+  <class pattern   = "LoKi::Dicts::FunValOps<*HepMC::*>"  />
+  <class pattern   = "LoKi::Dicts::CutValOps<*HepMC::*>"  />
+  <class pattern   = "LoKi::Dicts::SourceOps<*HepMC::*>"  />
+
+  <class pattern   = "LoKi::Dicts::PIDOps<LoKi::Gen*>"    />
+  <class pattern   = "LoKi::Dicts::Maths<*HepMC*>"        />
+  <class pattern   = "LoKi::Dicts::FunCalls<HepMC::Gen*>" />
+  <class pattern   = "LoKi::Dicts::CutCalls<HepMC::Gen*>" />
+  
+  
+  <class name    = "LoKi::IGenHybridFactory"  />
+  <class name    = "LoKi::IGenHybridTool"     />
+  <class pattern = "LoKi::Hybrid::*"    />
+  
+  <class name = "std::vector<const HepMC::GenParticle*>"  />
+  <class name = "std::vector<const HepMC::GenVertex*>"    />  
+  
+  <class name = "Decays::Trees::Any_<const HepMC::GenParticle*>"    />
+  <class name = "Decays::Trees::None_<const HepMC::GenParticle*>"   />
+  <class name = "Decays::Trees::Stable_<const HepMC::GenParticle*>" />
+  <class name = "Decays::Trees::GenExclusive" />
+  <class name = "Decays::Trees::GenInclusive" />
+  <class name = "Decays::Trees::GenOptional"  />
+  <class name = "Decays::Trees::GenPhotos"  />
+  <class name = "Decays::Trees::GenPhotosOptional"  />
+  <class name = "LoKi::Dicts::TreeOps<const HepMC::GenParticle*>" />
+  <class name = "Decays::iTree_<const HepMC::GenParticle*>"            />
+  <class name = "Decays::Tree_<const HepMC::GenParticle*>"             />
+  <class name = "Decays::Trees::_Tree_<const HepMC::GenParticle*>"     />
+  <class name = "Decays::TreeList_<const HepMC::GenParticle*>"         />
+  <class name = "Decays::TreeList_<const HepMC::GenParticle*>::Trees_" />
+
+  <class name = "Decays::IGenDecay"         />
+  <class name = "Decays::IGenDecay::Finder" />
+  <class name = "Decays::IGenDecay::Tree"   />
+  <class name = "LoKi::Dicts::FinderDicts_<const HepMC::GenParticle*>"   />
+  
+  <class name = "LoKi::GenDecayChain"     />
+  
+  <exclusion>
+    <class name ="LoKi::GenParticles::FromHepMCTree::VERTICES" />
+    <class name ="LoKi::Interface<LoKi::ILoKiSvc>"   />
+    <class name ="LoKi::Interface<IDataProviderSvc>" />
+
+    <class pattern="LoKi::GenParticles::*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::GenVertices::*">
+      <method name="=" />
+    </class>
+
+    <class pattern="LoKi::Dicts::*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Interface&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::I*">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Hybrid::*">
+      <method name="=" />
+    </class>
+    
+    <class pattern="LoKi::Functor&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Constant&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Valid&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::TheSame&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Identity&lt;*&gt;">
+      <method name="=" />
+    </class>
+    
+    <class pattern="Gaudi::Range_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="Gaudi::NamedRange_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::RangeList_&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::Keeper&lt;*&gt;">
+      <method name="=" />
+    </class>
+    <class pattern="LoKi::UniqueKeeper&lt;*&gt;">
+      <method name="=" />
+    </class>
+
+    <class pattern="LoKi::Functors::*">
+      <method name="=" />
+    </class>
+    
+    <class pattern="Decays::*">
+      <method name="=" />
+    </class>
+
+  </exclusion>
+  
+</lcgdict>

@@ -1,0 +1,107 @@
+<lcgdict>
+<!-- Produce dictionary for the packed classes
+  The magic number is just the class ID in Hex, followed by the given pattern of zeroes
+  -->
+
+  <class name="LHCb::PackedMCParticle"/>
+  <class name="std::vector<LHCb::PackedMCParticle>"/>
+  <class name="LHCb::PackedMCParticles" id="000005E6-0000-0000-0000-000000000000"/>
+
+  <class name="LHCb::PackedMCVertex"/>
+  <class name="std::vector<LHCb::PackedMCVertex>"/>
+  <class name="LHCb::PackedMCVertices" id="000005E7-0000-0000-0000-000000000000"/>
+
+  <class name="LHCb::PackedTrack" />
+  <class name="std::vector<LHCb::PackedTrack>" />
+  <class name="LHCb::PackedTracks" id="0000060E-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedState" />
+  <class name="std::vector<LHCb::PackedState>" />
+
+  <class name="LHCb::PackedCaloHypo" />
+  <class name="std::vector<LHCb::PackedCaloHypo>" />
+  <class name="LHCb::PackedCaloHypos" id="0000060F-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedProtoParticle" />
+  <class name="std::vector<LHCb::PackedProtoParticle>" />
+  <class name="LHCb::PackedProtoParticles" id="00000610-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedRecVertex" />
+  <class name="std::vector<LHCb::PackedRecVertex>" />
+  <class name="LHCb::PackedRecVertices" id="00000611-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedTwoProngVertex" />
+  <class name="std::vector<LHCb::PackedTwoProngVertex>" />
+  <class name="LHCb::PackedTwoProngVertices" id="00000612-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedMCHit" />
+  <class name="std::vector<LHCb::PackedMCHit>" />
+  <class name="LHCb::PackedMCHits" id="000005F5-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedMCCaloHit" />
+  <class name="std::vector<LHCb::PackedMCCaloHit>" />
+  <class name="LHCb::PackedMCCaloHits" id="000005F6-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedMCRichHit" />
+  <class name="std::vector<LHCb::PackedMCRichHit>" />
+  <class name="LHCb::PackedMCRichHits" id="000005F1-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedMCRichOpticalPhoton" />
+  <class name="std::vector<LHCb::PackedMCRichOpticalPhoton>" />
+  <class name="LHCb::PackedMCRichOpticalPhotons" id="000005F2-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedMCRichSegment" />
+  <class name="std::vector<LHCb::PackedMCRichSegment>" />
+  <class name="LHCb::PackedMCRichSegments" id="000005F3-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedMCRichTrack" />
+  <class name="std::vector<LHCb::PackedMCRichTrack>" />
+  <class name="LHCb::PackedMCRichTracks" id="000005F4-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedMCRichDigitSummary" />
+  <class name="std::vector<LHCb::PackedMCRichDigitSummary>" />
+  <class name="LHCb::PackedMCRichDigitSummarys" id="000005F7-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedRichPID" />
+  <class name="std::vector<LHCb::PackedRichPID>" />
+  <class name="LHCb::PackedRichPIDs" id="00000619-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedMuonPID" />
+  <class name="std::vector<LHCb::PackedMuonPID>" />
+  <class name="LHCb::PackedMuonPIDs" id="00000623-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedParticle" />
+  <class name="std::vector<LHCb::PackedParticle>" />
+  <class name="LHCb::PackedParticles" id="0000062D-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedVertex" />
+  <class name="std::vector<LHCb::PackedVertex>" />
+  <class name="LHCb::PackedVertices" id="0000062E-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedWeight" />
+  <class name="std::vector<LHCb::PackedWeight>" />
+  <class name="LHCb::PackedWeights" />
+  <class name="std::vector<LHCb::PackedWeights>" />
+  <class name="LHCb::PackedWeightsVector" id="00000613-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedDecReport" id="00000617-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedRelation" />
+  <class name="std::vector<LHCb::PackedRelation>" />
+  <class name="LHCb::PackedRelations" id="00000618-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedParticle2Int" />
+  <class name="std::vector<LHCb::PackedParticle2Int>" />
+  <class name="LHCb::PackedParticle2Ints" id="00000637-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedCluster" />
+  <class name="std::vector<LHCb::PackedCluster>" />
+  <class name="LHCb::PackedClusters" id="00000604-0000-0000-0000-000000000000" />
+
+  <class name="LHCb::PackedCaloCluster" />
+  <class name="std::vector<LHCb::PackedCaloCluster>" />
+  <class name="LHCb::PackedCaloClusterEntry" />
+  <class name="std::vector<LHCb::PackedCaloClusterEntry>" />
+  <class name="LHCb::PackedCaloClusters" id="00000605-0000-0000-0000-000000000000" />
+
+</lcgdict>

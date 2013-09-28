@@ -1,0 +1,47 @@
+<lcgdict>
+
+  <class name = "Tf::TStationID" />
+  <class name = "Tf::TLayerID" />
+  <class name = "Tf::TRegionID" />
+  <class name = "Tf::ITRegionID" />
+  <class name = "Tf::OTRegionID" />
+  <class name = "Tf::TTStationID" />
+  <class name = "Tf::TTLayerID" />
+  <class name = "Tf::TTRegionID" />
+  <class name = "Tf::UTStationID" />
+  <class name = "Tf::UTLayerID" />
+  <class name = "Tf::UTRegionID" />
+  <class name = "Tf::VeloSensorID" />
+  <class name = "Tf::VeloHalfID" />
+
+  <class name = "Tf::RegionID" />
+
+  <class name = "Tf::OTHit" />
+  <class name = "Tf::STHit" />
+  <class name = "Tf::VeloRHit" />
+  <class name = "Tf::VeloPhiHit" />
+  <class name = "Tf::STHits" />
+  <class name = "Tf::OTHits" />
+  <class name = "Tf::STHitRange" />
+  <class name = "Tf::OTHitRange" />
+
+  <class name = "Tf::ITTHitCreator" />
+  <class name = "Tf::IUTHitCreator" />
+  <class name = "Tf::IITHitCreator" />
+  <class name = "Tf::IOTHitCreator" />
+  <class name = "Tf::ISTHitCleaner" />
+  <class name = "Tf::IOTHitCleaner" />
+
+  <class name = "Tf::EnvelopeBase" />
+  <class name = "Tf::Envelope&lt;Tf::STHit::DetectorElementType&gt;" />
+  <class name = "Tf::Envelope&lt;Tf::OTHit::DetectorElementType&gt;" />
+  <class name = "Tf::IITHitCreator::STRegion" />
+  <class name = "Tf::ITTHitCreator::STRegion" />
+  <class name = "Tf::IUTHitCreator::STRegion" />
+  <class name = "Tf::IOTHitCreator::OTRegion" />
+  
+  <class name = "Tf::IStationSelector" />
+  <class name = "std::vector<Tf::IStationSelector*>" />
+  <class name = "Tf::XYSearchWindow" />
+
+</lcgdict>
