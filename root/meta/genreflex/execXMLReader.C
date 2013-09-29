@@ -2,7 +2,7 @@
 // The testbed is composed by all xml selection files of LHCb and CMS, downloaded
 // on September the 25th 2013.
 
-int runassertXMLReader (){
+int execXMLReader (){
    
    
    
