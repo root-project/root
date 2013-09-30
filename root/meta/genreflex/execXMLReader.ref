@@ -1,5 +1,5 @@
 
-Processing runassertXMLReader.C...
+Processing execXMLReader.C...
 Testing: DataFormats_EcalRawData_classes_def.xml
 Testing: DataFormats_EcalRecHit_classes_def.xml
 Testing: DataFormats_FP420Digi_classes_def.xml
