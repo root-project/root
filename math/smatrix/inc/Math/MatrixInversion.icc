@@ -572,7 +572,7 @@ int Inverter<idim,n>::DfinvMatrix(MatRepStd<T,idim,n> & rhs,unsigned int * ir) {
 
 
    double s31, s32;
-   register double s33, s34;
+   double s33, s34;
 
    mIter m11 = rhs.Array();
    mIter m12 = m11 + 1;
@@ -623,8 +623,8 @@ int Inverter<idim,n>::DfinvMatrix(MatRepStd<T,idim,n> & rhs,unsigned int * ir) {
       //int j;
       for (unsigned j=1; j<=i;j++) {
          s33 = *mij;
-         register mIter mikj = mi + n + j - 1;
-         register mIter miik = mii + 1;
+         mIter mikj = mi + n + j - 1;
+         mIter miik = mii + 1;
          mIter min_end = mi + n;
          for (;miik<min_end;) {
             s33 += (*mikj) * (*(miik++));
