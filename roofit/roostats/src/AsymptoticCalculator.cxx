@@ -1039,6 +1039,9 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
   //look at category of simpdf 
   RooCategory& channelCat = (RooCategory&)simPdf->indexCat();
   int nrIndices = channelCat.numTypes();
+  if( nrIndices == 0 ) {
+    oocoutW((TObject*)0,Generation) << "Simultaneous pdf does not contain any categories." << endl;
+  }
   for (int i=0;i<nrIndices;i++){
     channelCat.setIndex(i);
     //iFrame++;

@@ -30,6 +30,7 @@ public:
   friend class Measurement;
 
   Channel();
+  Channel(const Channel& other);
   Channel(std::string Name, std::string InputFile="");
 
   // set name of channel

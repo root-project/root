@@ -26,6 +26,36 @@ END_HTML
 RooStats::HistFactory::Sample::Sample() : 
   fNormalizeByTheory(false), fStatErrorActivate(false), fhNominal(), fhCountingHist(0) { ; }
 
+// copy constructor (important for python)
+RooStats::HistFactory::Sample::Sample(const Sample& other) :
+  fName(other.fName), fInputFile(other.fInputFile),
+  fHistoName(other.fHistoName), fHistoPath(other.fHistoPath),
+  fChannelName(other.fChannelName),
+
+  fOverallSysList(other.fOverallSysList),
+  fNormFactorList(other.fNormFactorList),
+  fHistoSysList(other.fHistoSysList),
+  fHistoFactorList(other.fHistoFactorList),
+  fShapeSysList(other.fShapeSysList),
+  fShapeFactorList(other.fShapeFactorList),
+
+  fNormalizeByTheory(other.fNormalizeByTheory),
+  fStatErrorActivate(other.fStatErrorActivate),
+  fhNominal(),
+  fhCountingHist(0)
+  {
+    SetHisto( (TH1*)other.fhNominal.GetObject() );
+  }
+  // { 
+  //   if( other.fhCountingHist ) {
+  //     fhCountingHist = (TH1*)other.fhCountingHist->Clone();
+  //     SetHisto( fhCountingHist ); // sets fhNominal to the local copy of fhCountingHist
+  //   }else{
+  //     fhCountingHist = NULL;
+  //     fhNominal = other.fhNominal;
+  //   }
+  // }
+
 
 RooStats::HistFactory::Sample::Sample(std::string SampName, std::string SampHistoName, std::string SampInputFile, std::string SampHistoPath) : 
   fName( SampName ),   fInputFile( SampInputFile), 

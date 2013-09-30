@@ -30,6 +30,7 @@ public:
 
   Sample();
   Sample(std::string Name);
+  Sample(const Sample& other);
   Sample(std::string Name, std::string HistoName, std::string InputFile, std::string HistoPath="");
   ~Sample();
 
