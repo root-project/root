@@ -596,6 +596,8 @@ AutoDict_*.cxx
 /root/meta/evolution/data1.root
 /root/meta/evolution/data3.root
 
+# /root/meta/genreflex
+/root/meta/genreflex/dicts/*
 
 # /root/meta/tclass/
 /root/meta/tclass/pairs.root

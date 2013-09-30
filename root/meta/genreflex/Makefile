@@ -30,28 +30,19 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 XMLFILES := $(wildcard experimentsSelectionXMLs/*.xml)
-XMLLOGFILES := $(notdir $(patsubst %.xml,%.log,$(XMLFILES)))
-XMLTARGETS := $(patsubst %.xml,,$(XMLFILES))
-TEST_TARGET += $(XMLTARGETS)
+XMLLOGFILES := $(addprefix genreflex_,$(notdir $(patsubst %.xml,%.log,$(XMLFILES))))
+XMLSUCCESS := $(patsubst %.log,%.success,$(XMLLOGFILES))
+XMLTARGETS := $(patsubst %.log,%,$(XMLLOGFILES))
+
+TEST_TARGETS += $(XMLTARGETS)
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-# Outputs a message if the FAIL variable is null
+$(XMLLOGFILES): genreflex_%.log: experimentsSelectionXMLs/%.xml
+	$(CMDECHO) genreflex emptyHeader.h  --quiet -o dicts/$*.cxx -s experimentsSelectionXMLs/$*.xml >$@ 2>&1
 
-testWithFailure:
-ifeq ($(FAIL),)
-	$(WarnFailTest)
-endif
+$(XMLSUCCESS): %.success: %.log %.ref
+	$(SuccessTestDiff) && touch $@
 
-# Old test
-# assertXMLReader: assertXMLReader.log
-# 	$(TestDiff)
+$(XMLTARGETS): genreflex_%: genreflex_%.success
 
-assertXMLReader: $(XMLLOGFILES)
-$(XMLLOGFILES) : %.log : experimentsSelectionXMLs/%.xml
-	$(CMDECHO) genreflex emptyHeader.h  --quiet -o $*.cxx -s experimentsSelectionXMLs/$*.xml >  $@
-
-
-# $(XMLTARGETS) : genreflex%.success: %.log %.ref
-# 	$(SuccessTestDiff) && touch $@
-# 	$(subst .log,,$(XMLLOGFILES)) : genreflex%: genreflex%.success
