@@ -67,10 +67,14 @@ private:
    TList        *fListPerfPlots;            //list of performance plots
    TProfile     *fProfile_perfstat_event;
    TH2          *fHist_perfstat_event;
+   TProfile     *fProfile_perfstat_evtmax;
+   TProfile     *fNorm_perfstat_evtmax;
    TProfile     *fProfile_queryresult_event;
    TProfile     *fNorm_queryresult_event;
    TProfile     *fProfile_perfstat_IO;
    TH2          *fHist_perfstat_IO;
+   TProfile     *fProfile_perfstat_IOmax;
+   TProfile     *fNorm_perfstat_IOmax;
    TProfile     *fProfile_queryresult_IO;
    TProfile     *fNorm_queryresult_IO;
 

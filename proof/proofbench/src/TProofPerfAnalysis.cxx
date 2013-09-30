@@ -231,6 +231,7 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
       SafeDelete(fFile);
       Error("TProofPerfAnalysis", "problems opening file '%s'",
                               perffile ? perffile : "<undef>"); 
+      SetBit(TObject::kInvalidObject);
       return;
    }
 
@@ -251,6 +252,7 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
          Error("TProofPerfAnalysis", "directory '%s' not found or not loadable", fDirName.Data());
          fFile->Close();
          SafeDelete(fFile);
+         SetBit(TObject::kInvalidObject);
          return;
       }
    }
@@ -261,8 +263,52 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
       Error("TProofPerfAnalysis", "tree '%s' not found or not loadable", fTreeName.Data());
       fFile->Close();
       SafeDelete(fFile);
+      SetBit(TObject::kInvalidObject);
       return;
    }
+   if (fgDebug)
+      Printf(" +++ TTree '%s' has %lld entries", fTreeName.Data(), fTree->GetEntries());
+
+   // Init worker information
+   FillWrkInfo();
+
+   // Init file information
+   FillFileInfo();
+   
+   // Done
+   return;
+}
+
+//________________________________________________________________________
+TProofPerfAnalysis::TProofPerfAnalysis(TTree *tree, const char *title)
+               : TNamed("", title), fFile(0),
+                 fInitTime(-1.), fMergeTime(-1.), fMaxTime(-1.),
+                 fEvents(0), fPackets(0),
+                 fEvtRateMax(-1.), fMBRateMax(-1.), fLatencyMax(-1.),
+                 fEvtRate(0), fEvtRateRun(0), fMBRate(0), fMBRateRun(0),
+                 fEvtRateAvgMax(-1.), fMBRateAvgMax(-1.),
+                 fEvtRateAvg(-1.), fMBRateAvg(0),
+                 fDebug(0)
+{
+   // Constructor: open the file and attach to the tree
+
+   // The tree must be defined
+   if (!tree) {
+      SetBit(TObject::kInvalidObject);
+      return;
+   }
+
+   // Use default title, if not specified
+   if (!title) SetTitle("PROOF Performance Analysis");
+
+   fTree = tree;
+   fTreeName = fTree->GetName();
+   SetName(TString::Format("heap_%s", fTreeName.Data()));
+
+   // Adjust the name, if requested
+   if (fTreeName.BeginsWith("+"))
+      fTreeName.Replace(0, 1, "PROOF_PerfStats");
+
    if (fgDebug)
       Printf(" +++ TTree '%s' has %lld entries", fTreeName.Data(), fTree->GetEntries());
 
