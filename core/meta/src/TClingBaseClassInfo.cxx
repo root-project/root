@@ -146,9 +146,7 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo 
    // from the parameter derived class to the parameter target class for the
    // address.
 
-   //
    //  Get the class or namespace name.
-   //
    string derived_class_name;
    if (derivedClass->GetType()) {
       // This is a class, struct, or union member.
@@ -156,7 +154,7 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo 
       ROOT::TMetaUtils::GetFullyQualifiedTypeName(derived_class_name, QTDerived, *fInterp);
    }
    else if (const clang::NamedDecl* ND =
-               clang::dyn_cast<clang::NamedDecl>(derivedClass->GetDecl()->getDeclContext())) {
+            dyn_cast<clang::NamedDecl>(derivedClass->GetDecl()->getDeclContext())) {
       // This is a namespace member.
       raw_string_ostream stream(derived_class_name);
       ND->getNameForDiagnostic(stream, ND->getASTContext().getPrintingPolicy(), /*Qualified=*/true);
@@ -169,34 +167,25 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo 
       ROOT::TMetaUtils::GetFullyQualifiedTypeName(target_class_name, QTTarget, *fInterp);
    }
    else if (const clang::NamedDecl* ND =
-               dyn_cast<clang::NamedDecl>(targetClass->GetDecl()->getDeclContext())) {
+            dyn_cast<clang::NamedDecl>(targetClass->GetDecl()->getDeclContext())) {
       // This is a namespace member.
       raw_string_ostream stream(target_class_name);
       ND->getNameForDiagnostic(stream, ND->getASTContext().getPrintingPolicy(), /*Qualified=*/true);
       stream.flush();
    }
-   //
    //  Make the wrapper name.
-   //
    string wrapper_name;
    {
       ostringstream buf;
       buf << derived_class_name;
       buf << '_';
       buf << target_class_name;
-      //buf << wrapper_serial++;
       wrapper_name = buf.str();
    }
-   //
    //  Write the wrapper code.
-   //
    string wrapperFwdDecl = "long " + wrapper_name + "(void* address)";
    ostringstream buf;
    buf << wrapperFwdDecl << "{\n";
-   /*if (min_args == num_params) {
-      // No parameters with defaults.
-      make_narg_call_with_return(num_params, class_name, buf, indent_level);
-   }*/
    buf << indent_string << derived_class_name << " *object = (" << derived_class_name << "*)address;";
    buf << "\n";
    buf << indent_string << target_class_name << " *target = object;";
@@ -205,12 +194,9 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo 
    buf << "\n";
    buf << "}\n";
    string wrapper = "extern \"C\" " + wrapperFwdDecl + ";\n"
-      + buf.str();
+                    + buf.str();
 
-   cout<<wrapper<<"\n";
-   //
    //  Compile the wrapper code.
-   //
    const FunctionDecl* WFD = 0;
    {
       cling::Transaction* Tp = 0;
@@ -220,7 +206,7 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo 
          return 0;
       }
       for (cling::Transaction::const_iterator I = Tp->decls_begin(),
-              E = Tp->decls_end(); !WFD && I != E; ++I) {
+           E = Tp->decls_end(); !WFD && I != E; ++I) {
          if (I->m_Call == cling::Transaction::kCCIHandleTopLevelDecl) {
             WFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin());
             // ...unless not top level or different name:
@@ -243,18 +229,16 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo 
          return 0;
       }
    }
-   //
+
    //  Lookup the new wrapper declaration.
-   //
    const NamedDecl* WND = dyn_cast<NamedDecl>(WFD);
    if (!WND) {
       Error("TClingBaseClassInfo::GenerateBaseOffsetFunction", "Wrapper named decl is null!");
       return 0;
    }
-   //
+
    //  Get the wrapper function pointer
    //  from the ExecutionEngine (the JIT).
-   //
    const GlobalValue* GV = fInterp->getModule()->getNamedValue(wrapper_name);
    if (!GV) {
       Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
@@ -264,10 +248,8 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo 
    ExecutionEngine* EE = fInterp->getExecutionEngine();
    OffsetPtrFunc_t f = (OffsetPtrFunc_t)EE->getPointerToGlobalIfAvailable(GV);
    if (!f) {
-      //
       //  Wrapper function not yet codegened by the JIT,
       //  force this to happen now.
-      //
       f = (OffsetPtrFunc_t)EE->getPointerToGlobal(GV);
       if (!f) {
          Error("TClingBaseClassInfo::GenerateBaseOffsetFunction", "Wrapper function has no "
@@ -275,7 +257,7 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo 
          return 0;
       }
    }
-   cout<<"Generation ptr:"<<f<<endl;
+
    return f;
 }
 
@@ -394,6 +376,8 @@ int TClingBaseClassInfo::Next()
 
 long TClingBaseClassInfo::Offset(void * address) const
 {
+   // Compute the offset of the derived class to the base class.
+
    if (!IsValid()) {
       return -1;
    }
@@ -439,7 +423,6 @@ long TClingBaseClassInfo::Offset(void * address) const
       }
       fClassInfo->AddBaseOffsetFunction(fBaseInfo->GetDecl(), executableFunc);
    }
-   cout<<"Runed ptr:"<<executableFunc<<endl;
    if(address)
       return (*executableFunc)(address);
    

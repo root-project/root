@@ -125,6 +125,9 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
 
 void TClingClassInfo::AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFunc_t func)
 {
+   // Add a function pointer for the offset from this class to the base class
+   // determined by the parameter decl.
+
    fOffsetFunctions.insert(std::make_pair<const clang::Decl*, OffsetPtrFunc_t>(decl, func));
 }
 
@@ -231,6 +234,9 @@ void TClingClassInfo::Destruct(void *arena) const
 
 OffsetPtrFunc_t TClingClassInfo::FindBaseOffsetFunction(const clang::Decl* decl) const
 {
+   // Find a pointer function for computing the offset to the base class determined 
+   // by the parameter decl.
+   
    return fOffsetFunctions.lookup(decl);
 }
 

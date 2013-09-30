@@ -84,6 +84,7 @@ public:
    void                 Delete(void *arena) const;
    void                 DeleteArray(void *arena, bool dtorOnly) const;
    void                 Destruct(void *arena) const;
+   OffsetPtrFunc_t      FindBaseOffsetFunction(const clang::Decl* decl) const;
    const clang::Decl   *GetDecl() const { return fDecl; } // Underlying representation without Double32_t
    TClingMethodInfo     GetMethod(const char *fname, const char *proto,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
@@ -104,8 +105,7 @@ public:
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
-   long                 GetOffset(const clang::CXXMethodDecl* md) const;
-   OffsetPtrFunc_t      FindBaseOffsetFunction(const clang::Decl* decl) const;          
+   long                 GetOffset(const clang::CXXMethodDecl* md) const;          
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    bool                 HasDefaultConstructor() const;
    bool                 HasMethod(const char *name) const;

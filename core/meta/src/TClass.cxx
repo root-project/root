@@ -2316,35 +2316,10 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl, void *address)
    // Returns -1 in case "cl" is not a base class.
    // Takes care of multiple inheritance.
 
-   //Int_t offset = GetBaseClassOffsetRecurse (cl);
-   //if (offset == -2) {
-      // Can we get the offset from CINT?
-      // FIXME: use BaseClassInfo_Factory(derived,base)
-      /*if (cl->GetClassInfo()) {
-         R__LOCKGUARD(gClingMutex); 
-         Long_t base_tagnum = gCling->ClassInfo_Tagnum(cl->GetClassInfo());
-         BaseClassInfo_t *t = gCling->BaseClassInfo_Factory(GetClassInfo());
-         cout<<"MEMMM"<<endl;
-         while (gCling->BaseClassInfo_Next(t,0)) {
-            if (gCling->BaseClassInfo_Tagnum(t) == base_tagnum) {
-               if (!address && (gCling->BaseClassInfo_Property(t) & kIsVirtualBase) != 0) {
-                  break;
-               }
-               int off = gCling->BaseClassInfo_Offset(t, address);
-               gCling->BaseClassInfo_Delete(t);
-               return off;
-            }
-         }
-         gCling->BaseClassInfo_Delete(t);
-      }
-      offset = -1;*/
-      R__LOCKGUARD(gClingMutex);
-      ClassInfo_t* derived = GetClassInfo();
-      ClassInfo_t* target = cl->GetClassInfo();
-      return gCling->ClassInfo_GetBaseOffset(derived, target, address);
-   //}
-   //return offset; 
-   //return -1;
+   R__LOCKGUARD(gClingMutex);
+   ClassInfo_t* derived = GetClassInfo();
+   ClassInfo_t* target = cl->GetClassInfo();
+   return gCling->ClassInfo_GetBaseOffset(derived, target, address);
 }
 
 //______________________________________________________________________________
