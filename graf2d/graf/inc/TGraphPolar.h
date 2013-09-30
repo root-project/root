@@ -48,8 +48,8 @@ protected:
 
 public:
    TGraphPolar();
-   TGraphPolar(Int_t n, const Double_t* x=0, const Double_t* y=0,
-                        const Double_t* ex=0, const Double_t* ey=0);
+   TGraphPolar(Int_t n, const Double_t* theta=0, const Double_t* r=0,
+                        const Double_t* etheta=0, const Double_t* er=0);
    virtual ~TGraphPolar();
 
    TGraphPolargram *GetPolargram() {return fPolargram;};
