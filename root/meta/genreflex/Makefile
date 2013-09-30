@@ -29,15 +29,12 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME:=$(shell expr $(CURDIR) : '\(.*/roottest/\)')
 endif
 
+XMLFILES := $(wildcard experimentsSelectionXMLs/*.xml)
+XMLLOGFILES := $(notdir $(patsubst %.xml,%.log,$(XMLFILES)))
+XMLTARGETS := $(patsubst %.xml,,$(XMLFILES))
+TEST_TARGET += $(XMLTARGETS)
+
 include $(ROOTTEST_HOME)/scripts/Rules.mk
-
-
-# The name of this target should be changed according to the test being run.  Any name changes
-#  should also be reflected in the TEST_TARGETS variable above.
-
-mytest:
-	$(CMDECHO) echo mytest > /dev/null
-
 
 # Outputs a message if the FAIL variable is null
 
@@ -46,20 +43,15 @@ ifeq ($(FAIL),)
 	$(WarnFailTest)
 endif
 
+# Old test
+# assertXMLReader: assertXMLReader.log
+# 	$(TestDiff)
 
-# Remember that sometest.log can be made automatically from
-#  from runsometest.C
-# This target attempts to create a log file (which should be the output of running the test), and
-#  compares its output with a prebuilt reference file.  The reference file should be copied from
-#  the log files produced during what is considered a successful run of the test.  The testWithDiff
-#  files should be renamed according to the test being run.
-# By default the TestDiff variable is set to compare the .log and .ref files
-# To run a diff and ignore whitespacing use $(TestDiffW)
-
-testWithDiff: testWithDiff.log testWithDiff.ref
-	$(TestDiff)
+assertXMLReader: $(XMLLOGFILES)
+$(XMLLOGFILES) : %.log : experimentsSelectionXMLs/%.xml
+	$(CMDECHO) genreflex emptyHeader.h  --quiet -o $*.cxx -s experimentsSelectionXMLs/$*.xml >  $@
 
 
-
-assertXMLReader: assertXMLReader.log
-	$(TestDiff)
+# $(XMLTARGETS) : genreflex%.success: %.log %.ref
+# 	$(SuccessTestDiff) && touch $@
+# 	$(subst .log,,$(XMLLOGFILES)) : genreflex%: genreflex%.success
