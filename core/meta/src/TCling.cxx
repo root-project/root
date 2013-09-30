@@ -1184,6 +1184,9 @@ void TCling::RegisterModule(const char* modulename, const char* header,
                             const char** includePaths)
 {
 
+   // Register the module using only the header code and the include paths
+   // This should disappear when pcms are there.
+   
    if (getenv("ROOT_MODULES")){
       ::Error("TCling::RegisterModule",
               "Variable ROOT_MODULES defined even if this module was created with an inlined umbrella.");

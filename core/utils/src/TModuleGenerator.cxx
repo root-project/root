@@ -310,6 +310,9 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHea
 void TModuleGenerator::WriteSingleHeaderRegistrationSource(std::ostream& out) const
 {
 
+   // Produce the dictionary code and inline the header
+   // Fixme: extract the manipulation of text.
+   
    const std::string& headerName = fHeaders[0];
    
    // Build the defines and undefines

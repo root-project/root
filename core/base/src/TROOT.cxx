@@ -2041,7 +2041,10 @@ void TROOT::RegisterModule(const char* modulename,
                            const char** includePaths)
 {
    // Called by static dictionary initialization to register clang modules
-   // for headers. Calls TCling::RegisterModule() 
+   // for headers. Calls TCling::RegisterModule() unless gCling
+   // is NULL, i.e. during startup, where the information is buffered in
+   // the static GetModuleHeaderInfoBuffer().
+   // The "header" variable contains the code of the header and not its path
    
    if (gCling) {
       gCling->RegisterModule(modulename, header, includePaths);
