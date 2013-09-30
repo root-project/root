@@ -85,6 +85,7 @@ public:
 
    TProofPerfAnalysis(const char *perffile, const char *title = "",
                   const char *treename = "PROOF_PerfStats");
+   TProofPerfAnalysis(TTree *tree, const char *title = "");
    virtual ~TProofPerfAnalysis();
 
    Bool_t IsValid() const { return (fFile && fTree) ? kTRUE : kFALSE; } 
@@ -102,6 +103,13 @@ public:
    void  PrintFileInfo(const char *fn, const char *opt = "P", const char *out = 0);        // Print file info by name
    void  FileProcPlot(const char *fn, const char *out = 0); // Plot info about file processing
    void  FileRatePlot(const char *fns = 0);    // Plot info about file processing rates
+
+   Double_t GetEvtRateAvgMax() const { return fEvtRateAvgMax; }      // Max running event processing rate
+   Double_t GetMBRateAvgMax() const { return fMBRateAvgMax; }       // Max running MB processing rate
+   Double_t GetEvtRateAvg() const { return fEvtRateAvg; }         // Average event processing rate
+   Double_t GetMBRateAvg() const { return fMBRateAvg; }          // Average MB processing rate
+   void GetAverages(Double_t &evtmax, Double_t &mbmax, Double_t &evt, Double_t &mb) const 
+        { evtmax = fEvtRateAvgMax; mbmax = fMBRateAvgMax; evt = fEvtRateAvg; mb = fMBRateAvg; return; }
 
    void  Summary(Option_t *opt = "", const char *out = "");
   
