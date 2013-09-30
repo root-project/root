@@ -46,7 +46,7 @@ namespace ROOT {
    }
 }
 
-typedef long (*OffsetPtrFunc_t)(void*);
+extern "C" typedef long (*OffsetPtrFunc_t)(void*);
 
 class TClingClassInfo {
 
@@ -65,14 +65,13 @@ private:
 
    explicit TClingClassInfo() /* = delete */; // NOT IMPLEMENTED
    TClingClassInfo &operator=(const TClingClassInfo &) /* = delete */; // NOT IMPLEMENTED
-
 public: // Types
 
    enum InheritanceMode {
       InThisScope = 0,
       WithInheritance = 1
    };
-   
+
 public:
 
    explicit TClingClassInfo(cling::Interpreter *);
@@ -105,7 +104,7 @@ public:
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
-   long                 GetOffset(const clang::CXXMethodDecl* md) const;          
+   long                 GetOffset(const clang::CXXMethodDecl* md) const;
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    bool                 HasDefaultConstructor() const;
    bool                 HasMethod(const char *name) const;
