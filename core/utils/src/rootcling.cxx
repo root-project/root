@@ -2175,7 +2175,7 @@ static int GenerateModule(TModuleGenerator& modGen,
    // Returns != 0 on error.
 
    if (inlineInputHeader){      
-      modGen.WriteSingleHeaderRegistrationSource(*dictSrcOut);
+      modGen.WriteRegistrationSource(*dictSrcOut,true);
       return 0;
    }
 
@@ -4286,7 +4286,7 @@ int GenReflex(int argc, char **argv)
    // The verbosity: debug wins over quiet
    std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
    //std::string verbosityOption("-v");
-   if (options[QUIET]) verbosityOption="-v0";
+   if (options[QUIET]) verbosityOption="-v1";
    if (options[DEBUG]) verbosityOption="-v4";
 
    genreflex::verbose= verbosityOption=="-v4";

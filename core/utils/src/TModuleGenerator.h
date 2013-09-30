@@ -30,7 +30,7 @@ namespace clang {
 }
 
 namespace ROOT {
-
+   
 //______________________________________________________________________________
 class TModuleGenerator {
 public:
@@ -58,11 +58,11 @@ public:
    const std::vector<std::string>& GetHeaders() const { return fHeaders; }
 
    void WriteRegistrationSource(std::ostream& out, bool inlineHeader=false) const;
-   void WriteSingleHeaderRegistrationSource(std::ostream& out) const;
    void WriteContentHeader(std::ostream& out) const;
    void WriteUmbrellaHeader(std::ostream& out) const;
 
 private:
+   void ConvertToCppString(std::string& text) const;
    std::ostream& WritePPCode(std::ostream& out) const {
       // Write defines, undefiles, includes, corrsponding to a rootcling
       // invocation with -c -DFOO -UBAR header.h.

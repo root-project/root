@@ -206,28 +206,19 @@ namespace {
                          const char** headers,
                          const char** allHeaders,
                          const char** includePaths,
-                         const char** macroDefines,
-                         const char** macroUndefines,
-                         void (*triggerFunc)() ):
-         fModuleName(moduleName), fHeaders(headers), fHeader(NULL), fAllHeaders(allHeaders),
-         fIncludePaths(includePaths), fMacroDefines(macroDefines),
-         fMacroUndefines(macroUndefines), fTriggerFunc(triggerFunc) {}
-      ModuleHeaderInfo_t(const char* moduleName,
-                         const char* header,
-                         const char** includePaths):
-         fModuleName(moduleName), fHeaders(NULL), fHeader(header), fAllHeaders(NULL),
-         fIncludePaths(includePaths), fMacroDefines(NULL),
-         fMacroUndefines(NULL), fTriggerFunc(NULL) {}
-
-      bool HasInlinedHeader() const {return fHeader != NULL;};
-         
+                         const char* payloadCode,
+                         void (*triggerFunc)() ): fModuleName(moduleName),
+                                                  fHeaders(headers),
+                                                  fPayloadCode(payloadCode),
+                                                  fAllHeaders(allHeaders),
+                                                  fIncludePaths(includePaths),
+                                                  fTriggerFunc(triggerFunc) {}
+        
       const char* fModuleName; // module name
       const char** fHeaders; // 0-terminated array of header files
-      const char* fHeader; // Content of the unique array
+      const char* fPayloadCode; // Additional code to be given to cling at library load
       const char** fAllHeaders; // 0-terminated array of all seen header files
       const char** fIncludePaths; // 0-terminated array of header files
-      const char** fMacroDefines; // 0-terminated array of header files
-      const char** fMacroUndefines; // 0-terminated array of header files
       void (*fTriggerFunc)(); // Pointer to the dict initialization used to find the library name
    };   
    
@@ -1599,20 +1590,12 @@ void TROOT::InitInterpreter()
            li = GetModuleHeaderInfoBuffer().begin(),
            le = GetModuleHeaderInfoBuffer().end(); li != le; ++li) {
          // process buffered module registrations
-      if (!li->HasInlinedHeader()){
-         fInterpreter->RegisterModule(li->fModuleName,
-                                      li->fHeaders,
-                                      li->fAllHeaders,
-                                      li->fIncludePaths,
-                                      li->fMacroDefines,
-                                      li->fMacroUndefines,
-                                      li->fTriggerFunc);
-      }
-      else{
-         fInterpreter->RegisterModule(li->fModuleName,
-                                      li->fHeader,
-                                      li->fIncludePaths);
-      }
+      fInterpreter->RegisterModule(li->fModuleName,
+                                   li->fHeaders,
+                                   li->fAllHeaders,
+                                   li->fIncludePaths,
+                                   li->fPayloadCode,
+                                   li->fTriggerFunc);
    }
    GetModuleHeaderInfoBuffer().clear();
 
@@ -2011,49 +1994,25 @@ void TROOT::RefreshBrowsers()
 
 //______________________________________________________________________________
 void TROOT::RegisterModule(const char* modulename,
-                           const char** headers,
+                           const char** headers,                           
                            const char** allHeaders,
                            const char** includePaths,
-                           const char** macroDefines,
-                           const char** macroUndefines,
+                           const char* payloadCode,
                            void (*triggerFunc)() )
 {
    // Called by static dictionary initialization to register clang modules
    // for headers. Calls TCling::RegisterModule() unless gCling
    // is NULL, i.e. during startup, where the information is buffered in
-   // the static GetModuleHeaderInfoBuffer().
+   // the static GetModuleHeaderInfoBuffer().   
 
-   if (gCling) {
-      gCling->RegisterModule(modulename, headers, allHeaders, includePaths,
-                             macroDefines, macroUndefines,
-                             triggerFunc);
-   } else {
-      GetModuleHeaderInfoBuffer()
-         .push_back(ModuleHeaderInfo_t(modulename, headers, allHeaders,
-                                       includePaths, macroDefines,
-                                       macroUndefines, triggerFunc));
-   }
-}
-
-//______________________________________________________________________________
-void TROOT::RegisterModule(const char* modulename,
-                           const char* header,
-                           const char** includePaths)
-{
-   // Called by static dictionary initialization to register clang modules
-   // for headers. Calls TCling::RegisterModule() unless gCling
-   // is NULL, i.e. during startup, where the information is buffered in
-   // the static GetModuleHeaderInfoBuffer().
-   // The "header" variable contains the code of the header and not its path
    
    if (gCling) {
-      gCling->RegisterModule(modulename, header, includePaths);
+      gCling->RegisterModule(modulename, headers, allHeaders,
+                             includePaths, payloadCode, triggerFunc);
    } else {
-      GetModuleHeaderInfoBuffer()
-      .push_back(ModuleHeaderInfo_t(modulename, header, 
-                                    includePaths));
+      GetModuleHeaderInfoBuffer().push_back(ModuleHeaderInfo_t (modulename, headers, allHeaders,
+                                                                includePaths, payloadCode, triggerFunc));
    }
-   
 }
 
 //______________________________________________________________________________

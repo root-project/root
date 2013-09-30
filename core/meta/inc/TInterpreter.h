@@ -98,12 +98,8 @@ public:
                                    const char** /*headers*/,
                                    const char** /*allHeaders*/,
                                    const char** /*includePaths*/,
-                                   const char** /*macroDefines*/,
-                                   const char** /*macroUndefines*/,
+                                   const char* /*payloadCode*/,
                                    void (* /*triggerFunc*/)()) {}
-   virtual void     RegisterModule(const char* /*modulename*/,
-                                   const char* /*header content*/,
-                                   const char** /*includePaths*/) {}
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;
    virtual void     SetGetline(const char*(*getlineFunc)(const char* prompt),
                                void (*histaddFunc)(const char* line)) = 0;

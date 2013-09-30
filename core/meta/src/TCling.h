@@ -161,13 +161,8 @@ public: // Public Interface
                           const char** headers,
                           const char** allHeaders,
                           const char** includePaths,
-                          const char** macroDefines,
-                          const char** macroUndefines,
+                          const char* payloadCode,
                           void (*triggerFunc)());
-
-   void    RegisterModule(const char* modulename,
-                          const char* header,
-                          const char** includePaths);
    
    Int_t   SetClassSharedLibs(const char *cls, const char *libs);
    void    SetGetline(const char * (*getlineFunc)(const char* prompt),

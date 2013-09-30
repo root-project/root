@@ -1082,9 +1082,11 @@ bool TCling::LoadPCM(TString pcmFileName,
 }
 
 //______________________________________________________________________________
-void TCling::RegisterModule(const char* modulename, const char** headers,
-                            const char** allHeaders, const char** includePaths,
-                            const char** macroDefines, const char** macroUndefines,
+void TCling::RegisterModule(const char* modulename,
+                            const char** headers,
+                            const char** allHeaders,
+                            const char** includePaths,
+                            const char* payloadCode,
                             void (*triggerFunc)())
 {
    // Inject the module named "modulename" into cling; load all headers.
@@ -1093,8 +1095,11 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
    // entries (or %PATH% on Windows).
    // This function gets called by the static initialization of dictionary
    // libraries.
-   // the value of 'triggerFunc' is used to find the shared library location.
+   // The payload code is injected "as is" in the interpreter.
+   // The value of 'triggerFunc' is used to find the shared library location.
 
+   bool rootModulesDefined (getenv("ROOT_MODULES"));
+   
    if (fHaveSinglePCM && !strncmp(modulename, "G__", 3))
       modulename = "allDict";
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
@@ -1120,33 +1125,9 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
    // This is used to give Sema the same view on ACLiC'ed files (which
    // are then #included through the dictionary) as rootcling had.
    TString code = "#define __ROOTCLING__ 1\n";
-   if (!getenv("ROOT_MODULES")) {
-      for (int what = 0; what < 2; ++what) {
-         const char** macros = macroDefines;
-         const char* defundef = "#define ";
-         const char* ifdefndef = "#ifndef ";
-         if (what) {
-            macros = macroUndefines;
-            defundef = "#undef ";
-            ifdefndef = "#ifdef ";
-         }
-         for (const char** macro = macros; *macro; ++macro) {
-            TString macroPP(*macro);
-            // comes in as "A=B" from "-DA=B", need "#define A B":
-            Ssiz_t posAssign = macroPP.Index('=');
-            TString ifdef = ifdefndef ;
-            if (posAssign != kNPOS) {
-               ifdef += macroPP(0, posAssign) + '\n';
-               macroPP[posAssign] = ' ';
-            } else {
-               ifdef += macroPP + '\n';
-            }
-            code += ifdef + defundef + macroPP + "\n#endif\n";
-         }
-      }
-   }
+   code += payloadCode;
 
-   if (getenv("ROOT_MODULES")) {
+   if (rootModulesDefined) {
       fInterpreter->declare(code.Data());
       code = "";
       if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
@@ -1163,7 +1144,7 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
       if (gDebug > 5) {
          ::Info("TCling::RegisterModule", "   #including %s...", *hdr);
       }
-      if(!getenv("ROOT_MODULES"))
+      if(!rootModulesDefined)
          code += TString::Format("#include \"%s\"\n", *hdr);
       else
          fInterpreter->loadModuleForHeader(*hdr);
@@ -1178,48 +1159,6 @@ void TCling::RegisterModule(const char* modulename, const char** headers,
                          "#undef __ROOTCLING__\n"
                          "#endif");
 }
-
-//______________________________________________________________________________
-void TCling::RegisterModule(const char* modulename, const char* header,
-                            const char** includePaths)
-{
-
-   // Register the module using only the header code and the include paths
-   // This should disappear when pcms are there.
-   
-   if (getenv("ROOT_MODULES")){
-      ::Error("TCling::RegisterModule",
-              "Variable ROOT_MODULES defined even if this module was created with an inlined umbrella.");
-      return ;
-   }
-   
-   for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
-      TCling::AddIncludePath(*inclPath);
-   }
-   
-   // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
-   // This is used to give Sema the same view on ACLiC'ed files (which
-   // are then #included through the dictionary) as rootcling had.
-   TString code = "#define __ROOTCLING__ 1\n";
-
-   code += header;
-   
-   
-   bool oldValue = false;
-   if (fClingCallbacks)
-      oldValue = SetClassAutoloading(false);
-      
-   fInterpreter->parseForModule(code.Data());
-
-   if (fClingCallbacks)
-      SetClassAutoloading(oldValue);
-   
-   // Might be pulled in through PCH
-   fInterpreter->declare("#ifdef __ROOTCLING__\n"
-                         "#undef __ROOTCLING__\n"
-                         "#endif");
-}
-
 
 //______________________________________________________________________________
 Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)

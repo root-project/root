@@ -27,6 +27,8 @@
 #include "clang/Lex/Preprocessor.h"
 #include "llvm/Support/Path.h"
 
+#include <map>
+
 #ifndef R__WIN32
 #include <unistd.h>
 #endif
@@ -64,6 +66,51 @@ TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
 TModuleGenerator::~TModuleGenerator() {
    unlink(fUmbrellaName.c_str());
    unlink(fContentName.c_str());
+}
+
+//______________________________________________________________________________
+void TModuleGenerator::ConvertToCppString(std::string& text) const{
+   // Convert input string to cpp code
+   // FIXME: Optimisations for size could be put in
+   // * Remove empty lines
+   // * Remove comments
+   
+   typedef std::vector<std::pair<std::string,std::string> > strPairs;
+   
+   // Will be replaced by an initialiser list
+   strPairs fromToPatterns;
+   fromToPatterns.reserve(4);
+   // Remove empty lines
+//    fromToPatterns.push_back(std::make_pair("\n\n",""));
+   // \ -> \\'
+   fromToPatterns.push_back(std::make_pair("\\","\\\\"));
+   // " -> \"
+   fromToPatterns.push_back(std::make_pair("\"","\\\""));   
+   // \n -> \\n"\n" (carriage return, ",carriage return, ")
+   fromToPatterns.push_back(std::make_pair("\n","\\n\"\n\""));
+      
+   for (strPairs::iterator fromToIter=fromToPatterns.begin();
+        fromToIter!=fromToPatterns.end();fromToIter++){
+      size_t start_pos = 0;
+      const std::string& from = fromToIter->first;
+      const std::string& to = fromToIter->second;
+      while((start_pos = text.find(from, start_pos)) != std::string::npos) {
+         text.replace(start_pos, from.length(), to);
+         start_pos += to.length();
+      }
+   }
+   size_t textSize (text.length());
+   if (textSize>=2 && text[textSize-1] == '"'&& text[textSize-2] == '\n'){
+      text.erase(textSize-1);
+      textSize-=1;
+   }
+   if (textSize>=1 && text[textSize-1] != '\"' && text[textSize-1] != '\n'){
+      text+='\"';
+   }
+      
+
+   text="\""+text;
+   
 }
 
 //______________________________________________________________________________
@@ -268,31 +315,52 @@ std::ostream& TModuleGenerator::WriteStringPairVec(const StringPairVec_t& vec,
 }
 
 //______________________________________________________________________________
-void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHeader) const
+void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHeaders) const
 {  
+
+   std::string payloadCode;
+   
+   // Add defines and undefines to the payloadCode
+   std::ostringstream definesAndUndefines;
+   WritePPDefines(definesAndUndefines);
+   WritePPUndefines(definesAndUndefines);
+   payloadCode += definesAndUndefines.str();
+   
+   // If necessary, inline the first header
+   if (inlineHeaders){
+      for (std::vector<std::string>::const_iterator hdrNameIt=fHeaders.begin();
+           hdrNameIt!=fHeaders.end();hdrNameIt++){
+         std::ifstream headerFile(hdrNameIt->c_str());
+         const std::string headerFileAsStr((std::istreambuf_iterator<char>(headerFile)),
+                                            std::istreambuf_iterator<char>());
+         payloadCode += headerFileAsStr;
+      }
+   }
+
+   // Make it usable as string
+   ConvertToCppString(payloadCode);
    
    // Dictionary initialization code for loading the module
    out << "void TriggerDictionaryInitalization_"
        << GetDictionaryName() << "() {\n"
       "      static const char* headers[] = {\n";
-   WriteHeaderArray(out) <<
-      "      };\n"
+   if ( inlineHeaders ){
+      out << 0 ;
+   } else {
+      WriteHeaderArray(out);
+   };
+   out << "      };\n"
       "      static const char* allHeaders[] = {\n";
    WriteAllSeenHeadersArray(out) << 
       "      };\n"
       "      static const char* includePaths[] = {\n";
    WriteIncludePathArray(out) << 
       "      };\n"
-      "      static const char* macroDefines[] = {\n";
-   WriteDefinesArray(out) << 
-      "      };\n"
-      "      static const char* macroUndefines[] = {\n";
-   WriteUndefinesArray(out) << 
-      "      };\n"
+      "      static const char* payloadCode = "<< payloadCode << ";\n"
       "      static bool sInitialized = false;\n"
       "      if (!sInitialized) {\n"
       "        TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
-      "          headers, allHeaders, includePaths, macroDefines, macroUndefines,\n"
+      "          headers, allHeaders, includePaths, payloadCode,\n"
       "          TriggerDictionaryInitalization_" << GetDictionaryName() << ");\n"
       "        sInitialized = true;\n"
       "      }\n"
@@ -305,91 +373,6 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHea
       "  } __TheDictionaryInitializer;\n"
       "}" << std::endl;
 }
-#include <iostream>
-//______________________________________________________________________________
-void TModuleGenerator::WriteSingleHeaderRegistrationSource(std::ostream& out) const
-{
-
-   // Produce the dictionary code and inline the header
-   // Fixme: extract the manipulation of text.
-   
-   const std::string& headerName = fHeaders[0];
-   
-   // Build the defines and undefines
-   std::ostringstream definesAndUndefines;
-   definesAndUndefines << "// Defines and undefines\n";
-   WritePPDefines(definesAndUndefines);
-   WritePPUndefines(definesAndUndefines);
-   definesAndUndefines << "// Input Header Content\n";
-   
-   // Read in the header, replace the " with \" and inline
-   std::ifstream headerFile(headerName.c_str());  
-   std::string headerFileContent;
-   headerFileContent.reserve(3000);
-   headerFileContent+="\"";
-   char c;
-   char cminus1 = '@';
-   bool addChar=true;
-   while (EOF != (c = headerFile.get())){
-
-      if (cminus1 == '\n' && c == '\n') {
-         addChar=false;
-      }
-
-      // If char is a ", just put an escaped "
-      if (c == '"'){
-         headerFileContent+="\\\"";
-         addChar=false;
-      }
-      // If a char is a \, just put an escaped
-      if (c == '\\'){
-         headerFileContent+="\\\\";
-         addChar=false;
-      }
-
-      // if char is a \n just add a " and goto next line and add a "
-      if (c=='\n' && cminus1 != '\n'){
-         headerFileContent+="\\n\"\n\"";
-         addChar=false;
-      }
-
-      cminus1=c;
-      if (addChar){
-         headerFileContent+=c;
-      }
-
-      addChar=true;
-   }
-   // To fix headers not having a trailing \n
-   if (cminus1!='\n') {
-      headerFileContent+="\"";
-   }
-   else if (!headerFileContent.empty()){
-      headerFileContent.erase(headerFileContent.size()-1);
-   }
-
-   // Dictionary initialization code for loading the module
-   out << "void TriggerDictionaryInitalization_"
-   << GetDictionaryName() << "() {\n"
-   "      static const char* header = "<< headerFileContent << ";\n"
-   "      static const char* includePaths[] = {\n";
-   WriteIncludePathArray(out) <<
-   "      };\n"
-   "      static bool sInitialized = false;\n"
-   "      if (!sInitialized) {\n"
-   "        TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
-   "          header, includePaths);\n"
-   "        sInitialized = true;\n"
-   "      }\n"
-   "    }\n"
-   "namespace {\n"
-   "  static struct DictInit {\n"
-   "    DictInit() {\n"
-   "      TriggerDictionaryInitalization_" << GetDictionaryName() << "();\n"
-   "    }\n"
-   "  } __TheDictionaryInitializer;\n"
-   "}" << std::endl;
-   }
    
 //______________________________________________________________________________
 void TModuleGenerator::WriteContentHeader(std::ostream& out) const
@@ -411,12 +394,12 @@ void TModuleGenerator::WriteContentHeader(std::ostream& out) const
 
    out << "const char* arrIncludePaths[] = {\n";
    WriteIncludePathArray(out) << "};\n";
-
+/*
    out << "const char* arrDefines[] = {\n";
    WriteDefinesArray(out) << "};\n";
 
    out << "const char* arrUndefines[] = {\n";
-   WriteUndefinesArray(out) << "};\n";
+   WriteUndefinesArray(out) << "};\n";*/
 
    out << "} } }" << std::endl;
 }
