@@ -188,8 +188,6 @@ const char *rootClingHelp =
  const std::string gLibraryExtension (".so"); // no dylib for the moment
 #endif
 
- static bool gIsGenreflex=false;
-
 // FIXME To ease the option parsing.
 // Presently used for the genreflex mode and not for the rootcling mode for
 // historical reasons.
@@ -2170,6 +2168,10 @@ static int GenerateModule(TModuleGenerator& modGen,
                           bool inlineInputHeader)
 {
    // Generate the clang module given the arguments.
+   // Two codepaths are present:
+   // If the inlining of the input header is required, the necessary lines are
+   // added to the dictionary and the function returns.
+   // If not, full blown procedure is followed and the the pcm module is created
    // Returns != 0 on error.
 
    if (inlineInputHeader){      
@@ -4052,8 +4054,6 @@ int GenReflex(int argc, char **argv)
    // Exceptions
    // The --deep option of genreflex is passed as function parameter to rootcling
    // since it's not needed at the moment there.
-
-   gIsGenreflex=true;
    
    using namespace genreflex;
 
