@@ -27,6 +27,7 @@ public:
   //friend class Channel;
 
   Data();
+  Data( const Data& other );
   Data( std::string HistoName, std::string InputFile, std::string HistoPath="" );
 
   std::string GetName() { return fName; }
