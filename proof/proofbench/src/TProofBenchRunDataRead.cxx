@@ -818,7 +818,7 @@ void TProofBenchRunDataRead::BuildHistos(Int_t start, Int_t stop, Int_t step, Bo
    fNorm_perfstat_evtmax->SetDirectory(fDirProofBench);
    fNorm_perfstat_evtmax->GetYaxis()->SetTitle("Events/sec");
    fNorm_perfstat_evtmax->GetXaxis()->SetTitle(axtitle);
-   fNorm_perfstat_evtmax->SetMarkerStyle(22);
+   fNorm_perfstat_evtmax->SetMarkerStyle(23);
    if ((o = fListPerfPlots->FindObject(name))) {
       fListPerfPlots->Remove(o);
       delete o;
@@ -902,7 +902,7 @@ void TProofBenchRunDataRead::BuildHistos(Int_t start, Int_t stop, Int_t step, Bo
    fNorm_perfstat_IOmax->SetDirectory(fDirProofBench);
    fNorm_perfstat_IOmax->GetYaxis()->SetTitle("MB/sec");
    fNorm_perfstat_IOmax->GetXaxis()->SetTitle(axtitle);
-   fNorm_perfstat_IOmax->SetMarkerStyle(22);
+   fNorm_perfstat_IOmax->SetMarkerStyle(23);
    if ((o = fListPerfPlots->FindObject(name))) {
       fListPerfPlots->Remove(o);
       delete o;
