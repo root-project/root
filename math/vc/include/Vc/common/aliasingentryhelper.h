@@ -54,6 +54,11 @@ template<class StorageType> class AliasingEntryHelper
         Vc_ALWAYS_INLINE AliasingEntryHelper &operator %=(T x) { m_storage->assign(m_index, m_storage->m(m_index) % x); return *this; }
         Vc_ALWAYS_INLINE AliasingEntryHelper &operator<<=(T x) { m_storage->assign(m_index, m_storage->m(m_index)<< x); return *this; }
         Vc_ALWAYS_INLINE AliasingEntryHelper &operator>>=(T x) { m_storage->assign(m_index, m_storage->m(m_index)>> x); return *this; }
+
+        Vc_ALWAYS_INLINE AliasingEntryHelper &operator++() { m_storage->assign(m_index, m_storage->m(m_index) + T(1)); return *this; }
+        Vc_ALWAYS_INLINE T operator++(int) { T r = m_storage->m(m_index); m_storage->assign(m_index, m_storage->m(m_index) + T(1)); return r; }
+        Vc_ALWAYS_INLINE AliasingEntryHelper &operator--() { m_storage->assign(m_index, m_storage->m(m_index) - T(1)); return *this; }
+        Vc_ALWAYS_INLINE T operator--(int) { T r = m_storage->m(m_index); m_storage->assign(m_index, m_storage->m(m_index) - T(1)); return r; }
 #define m_data m_storage->read(m_index)
 #else
         typedef T A Vc_MAY_ALIAS;
@@ -79,6 +84,11 @@ template<class StorageType> class AliasingEntryHelper
         Vc_ALWAYS_INLINE AliasingEntryHelper &operator%=(T x) { m_data %= x; return *this; }
         Vc_ALWAYS_INLINE AliasingEntryHelper &operator<<=(T x) { m_data <<= x; return *this; }
         Vc_ALWAYS_INLINE AliasingEntryHelper &operator>>=(T x) { m_data >>= x; return *this; }
+
+        Vc_ALWAYS_INLINE AliasingEntryHelper &operator++() { ++m_data; return *this; }
+        Vc_ALWAYS_INLINE T operator++(int) { T r = m_data; ++m_data; return r; }
+        Vc_ALWAYS_INLINE AliasingEntryHelper &operator--() { --m_data; return *this; }
+        Vc_ALWAYS_INLINE T operator--(int) { T r = m_data; --m_data; return r; }
 #endif
 
         Vc_ALWAYS_INLINE Vc_PURE operator const T() const { return m_data; }

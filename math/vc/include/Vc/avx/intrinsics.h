@@ -34,6 +34,8 @@ extern "C" {
 #endif
 }
 
+#include "../common/fix_clang_emmintrin.h"
+
 #if defined(VC_CLANG) && VC_CLANG < 0x30100
 // _mm_permute_ps is broken: http://llvm.org/bugs/show_bug.cgi?id=12401
 #undef _mm_permute_ps

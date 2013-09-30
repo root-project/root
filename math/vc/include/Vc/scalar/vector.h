@@ -190,8 +190,10 @@ class Vector
 
         //prefix
         Vc_ALWAYS_INLINE Vector &operator++() { ++m_data; return *this; }
+        Vc_ALWAYS_INLINE Vector &operator--() { --m_data; return *this; }
         //postfix
         Vc_ALWAYS_INLINE Vector operator++(int) { return m_data++; }
+        Vc_ALWAYS_INLINE Vector operator--(int) { return m_data--; }
 
         Vc_ALWAYS_INLINE EntryType &operator[](size_t index) {
             assert(index == 0); if(index) {}

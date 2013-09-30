@@ -266,7 +266,7 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
     {
         _M128I lo, hi, y;
         // sort pairs
-        y = Mem::permute<X1, X0, X3, X2, X5, X4, X7, X6>(x);  
+        y = Mem::permute<X1, X0, X3, X2, X5, X4, X7, X6>(x);
         lo = _mm_min_epi16(x, y);
         hi = _mm_max_epi16(x, y);
         x = _mm_blend_epi16(lo, hi, 0xaa);

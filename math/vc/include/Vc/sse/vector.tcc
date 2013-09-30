@@ -1466,6 +1466,64 @@ template<> Vc_INTRINSIC Vc_PURE sfloat_v sfloat_v::rotated(int amount) const
     return Zero();
 }
 // }}}1
+// sorted specializations {{{1
+template<> inline Vc_PURE uint_v uint_v::sorted() const
+{
+    __m128i x = data();
+    __m128i y = _mm_shuffle_epi32(x, _MM_SHUFFLE(2, 3, 0, 1));
+    __m128i l = _mm_min_epu32(x, y);
+    __m128i h = _mm_max_epu32(x, y);
+    x = _mm_unpacklo_epi32(l, h);
+    y = _mm_unpackhi_epi32(h, l);
+
+    // sort quads
+    l = _mm_min_epu32(x, y);
+    h = _mm_max_epu32(x, y);
+    x = _mm_unpacklo_epi32(l, h);
+    y = _mm_unpackhi_epi64(x, x);
+
+    l = _mm_min_epu32(x, y);
+    h = _mm_max_epu32(x, y);
+    return _mm_unpacklo_epi32(l, h);
+}
+template<> inline Vc_PURE ushort_v ushort_v::sorted() const
+{
+    __m128i lo, hi, y, x = data();
+    // sort pairs
+    y = Mem::permute<X1, X0, X3, X2, X5, X4, X7, X6>(x);
+    lo = _mm_min_epu16(x, y);
+    hi = _mm_max_epu16(x, y);
+    x = _mm_blend_epi16(lo, hi, 0xaa);
+
+    // merge left and right quads
+    y = Mem::permute<X3, X2, X1, X0, X7, X6, X5, X4>(x);
+    lo = _mm_min_epu16(x, y);
+    hi = _mm_max_epu16(x, y);
+    x = _mm_blend_epi16(lo, hi, 0xcc);
+    y = _mm_srli_si128(x, 2);
+    lo = _mm_min_epu16(x, y);
+    hi = _mm_max_epu16(x, y);
+    x = _mm_blend_epi16(lo, _mm_slli_si128(hi, 2), 0xaa);
+
+    // merge quads into octs
+    y = _mm_shuffle_epi32(x, _MM_SHUFFLE(1, 0, 3, 2));
+    y = _mm_shufflelo_epi16(y, _MM_SHUFFLE(0, 1, 2, 3));
+    lo = _mm_min_epu16(x, y);
+    hi = _mm_max_epu16(x, y);
+
+    x = _mm_unpacklo_epi16(lo, hi);
+    y = _mm_srli_si128(x, 8);
+    lo = _mm_min_epu16(x, y);
+    hi = _mm_max_epu16(x, y);
+
+    x = _mm_unpacklo_epi16(lo, hi);
+    y = _mm_srli_si128(x, 8);
+    lo = _mm_min_epu16(x, y);
+    hi = _mm_max_epu16(x, y);
+
+    return _mm_unpacklo_epi16(lo, hi);
+}
+// }}}1
 } // namespace SSE
 } // namespace Vc
 } // namespace ROOT
