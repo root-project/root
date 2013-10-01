@@ -38,8 +38,6 @@ public:
    virtual TObject   *FindObject(const char *name) const;
    
    TDataType *FindType(const char *name) const;
-   
-   ClassDef(TListOfTypes,2); // Specical container for the list of types.
 };
 
 

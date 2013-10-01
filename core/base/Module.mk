@@ -27,7 +27,7 @@ BASEH3       := GuiTypes.h KeySymbols.h Buttons.h TTimeStamp.h TVirtualMutex.h \
 BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
 BASEH1       := $(filter-out $(BASEH3),$(BASEH1))
 BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-BASEDICTH    := $(BASEH1) $(BASEH3) $(wildcard $(MODDIR)/src/TListOf*.h)
+BASEDICTH    := $(BASEH1) $(BASEH3)
 BASES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 BASEO        := $(call stripsrc,$(BASES:.cxx=.o))
 
@@ -49,7 +49,7 @@ include/%.h:    $(BASEDIRI)/%.h
 # rmkdepend does not pick it up if $(COMPILEDATA) doesn't exist yet.
 $(call stripsrc,$(BASEDIRS)/TSystem.d $(BASEDIRS)/TSystem.o): $(COMPILEDATA)
 $(call stripsrc,$(BASEDIRS)/TROOT.d $(BASEDIRS)/TROOT.o): $(COMPILEDATA)
- 
+
 all-$(MODNAME): $(BASEO)
 
 clean-$(MODNAME):
