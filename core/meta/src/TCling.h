@@ -428,8 +428,6 @@ private: // Private Utility Functions
    void HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl = 0) const;
    void GetMissingDictionariesForDecl(const clang::Decl* D, std::set<std::string> &netD, clang::QualType qType, bool recurse);
    bool InsertMissingDictionaryDecl(const clang::Decl* D, std::set<std::string> &netD, clang::QualType qType, bool recurse);
-
-   ClassDef(TCling, 0) //Interface to cling C++ interpreter
 };
 
 #endif

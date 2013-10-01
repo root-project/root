@@ -830,8 +830,6 @@ namespace {
 //
 //
 
-ClassImp(TCling)
-
 //______________________________________________________________________________
 TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
