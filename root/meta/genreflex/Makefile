@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog dicts/*
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -38,7 +38,10 @@ TEST_TARGETS += $(XMLTARGETS)
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-$(XMLLOGFILES): genreflex_%.log: experimentsSelectionXMLs/%.xml
+dicts:
+	$(CMDECHO) mkdir dicts
+
+$(XMLLOGFILES): genreflex_%.log: experimentsSelectionXMLs/%.xml dicts
 	$(CMDECHO) genreflex emptyHeader.h  --quiet -o dicts/$*.cxx -s experimentsSelectionXMLs/$*.xml >$@ 2>&1
 
 $(XMLSUCCESS): %.success: %.log %.ref
