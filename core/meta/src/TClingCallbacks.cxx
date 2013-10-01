@@ -541,7 +541,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, 
                                      C.getAutoType(QualType(),
                                                    /*IsDecltypeAuto*/false,
-                                                   /*IsDependent*/true),
+                                                   /*IsDependent*/false),
                                      /*TypeSourceInfo*/0, SC_None);
 
    if (Result) {
