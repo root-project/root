@@ -33,7 +33,7 @@ endif
 # endif
 AVXCXXFLAG     := -mavx
 SIMDCXXFLAGS   := -mavx -msse4.2 -msse4.1 -msse4a -mssse3 -msse3 -msse2
-VCFLAGS        := -fabi-version=0  -Wno-unused-function
+#VCFLAGS        := -fabi-version=0  -Wno-unused-function
 
 CXXFLAGS+=  $(VCFLAGS) 
 

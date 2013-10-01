@@ -27,7 +27,7 @@
 #define NITER 1  // number of iterations
 #endif
 #ifndef NLOOP_MIN
-#define NLOOP_MIN 1000;
+#define NLOOP_MIN 100;
 #endif
 
 
