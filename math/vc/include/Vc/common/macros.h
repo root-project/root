@@ -247,8 +247,13 @@ namespace Vc {
     }; };
     template<int center> struct exponentToMultiplier<center,center> { enum { X = 1, Value = X }; };
     template<int center> struct exponentToMultiplier<   -1, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -128, center> { enum { X = 0, Value = 1 }; };
     template<int center> struct exponentToMultiplier< -256, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -384, center> { enum { X = 0, Value = 1 }; };
     template<int center> struct exponentToMultiplier< -512, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -640, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -768, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToMultiplier< -896, center> { enum { X = 0, Value = 1 }; };
     template<int center> struct exponentToMultiplier<-1024, center> { enum { X = 0, Value = 1 }; };
 
     template<int e, int center> struct exponentToDivisor { enum {
@@ -257,8 +262,13 @@ namespace Vc {
     }; };
     template<int center> struct exponentToDivisor<center, center> { enum { X = 1, Value = X }; };
     template<int center> struct exponentToDivisor<     1, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   128, center> { enum { X = 0, Value = 1 }; };
     template<int center> struct exponentToDivisor<   256, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   384, center> { enum { X = 0, Value = 1 }; };
     template<int center> struct exponentToDivisor<   512, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   640, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   768, center> { enum { X = 0, Value = 1 }; };
+    template<int center> struct exponentToDivisor<   896, center> { enum { X = 0, Value = 1 }; };
     template<int center> struct exponentToDivisor<  1024, center> { enum { X = 0, Value = 1 }; };
 #endif // VC_COMMON_MACROS_H_ONCE
 
