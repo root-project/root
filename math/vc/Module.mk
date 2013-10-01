@@ -49,15 +49,14 @@ $(VCLIBVC): $(VCLIBVCOBJ)
 
 $(VCBUILDDIR)/avx_%.cpp.o: $(MODDIRS)/avx_%.cpp
 	$(MAKEDIR)
-	@echo "Compiling ($(AVXCXXFLAG)) $<"
-	@$(CXX) $(VCFLAGS) $(AVXCXXFLAG) -c $(CXXOUT)$@ $<
+	$(CXX) $(VCFLAGS) $(AVXCXXFLAG) -c $(CXXOUT)$@ $<
 
 $(VCBUILDDIR)/trigonometric_%.cpp.o: $(MODDIRS)/trigonometric.cpp
 	$(MAKEDIR)
 	@for flag in $(SIMDCXXFLAGS); do \
 		flag=`echo $$flag|tr '~' ' '`; \
 		if test "$*" = "`echo "$$flag"|tr ' /:=.-' '______'`"; then \
-			echo "Compiling ($$flag) $<"; \
+			echo "$(CXX) $(VCFLAGS) $$flag -c $(CXXOUT)$@ $<"; \
 			$(CXX) $(VCFLAGS) $$flag -c $(CXXOUT)$@ $<; \
 			break; \
 		fi; \
@@ -65,8 +64,7 @@ $(VCBUILDDIR)/trigonometric_%.cpp.o: $(MODDIRS)/trigonometric.cpp
 
 $(VCBUILDDIR)/%.cpp.o: $(MODDIRS)/%.cpp
 	$(MAKEDIR)
-	@echo "Compiling $<"
-	@$(CXX) $(VCFLAGS) -c $(CXXOUT)$@ $<
+	$(CXX) $(VCFLAGS) -c $(CXXOUT)$@ $<
 
 
 all-$(MODNAME): $(VCLIBVC)
