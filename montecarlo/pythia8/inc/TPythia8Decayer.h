@@ -7,7 +7,7 @@
 #ifndef TPYTHIA8DECAYER_H
 #define TPYTHIA8DECAYER_H
 
-#include <TVirtualMCDecayer.h>
+#include "TVirtualMCDecayer.h"
 
 class TClonesArrray;
 class TLorentzVector;

@@ -16,8 +16,8 @@
  * provided "as is" without express or implied warranty.                  *
  **************************************************************************/
 
-#include <TLorentzVector.h>
-#include <TPythia8.h>
+#include "TLorentzVector.h"
+#include "TPythia8.h"
 #include "TPythia8Decayer.h"
 
 ClassImp(TPythia8Decayer)
