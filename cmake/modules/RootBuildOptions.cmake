@@ -95,6 +95,7 @@ ROOT_BUILD_OPTION(fitsio ON "Read images and data from FITS files, requires cfit
 set(gcctoolchain "" CACHE PATH "Path for the gcctoolchain in case not the system gcc is used to build clang/LLVM")
 ROOT_BUILD_OPTION(gviz ON "Graphs visualization support, requires graphviz")
 ROOT_BUILD_OPTION(gdml OFF "GDML writer and reader")
+ROOT_BUILD_OPTION(geocad OFF "ROOT-CAD Interface")
 ROOT_BUILD_OPTION(genvector ON "Build the new libGenVector library")
 ROOT_BUILD_OPTION(gfal ON "GFAL support, requires libgfal")
 ROOT_BUILD_OPTION(glite ON "gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)")
@@ -143,7 +144,20 @@ ROOT_BUILD_OPTION(xrootd ON "Build xrootd file server and its client (if support
 option(fail-on-missing "Fail the configure step if a required external package is missing" OFF)
 option(minimal "Do not automatically search for support libraries" OFF)
 option(gminimal "Do not automatically search for support libraries, but include X11" OFF)
+option(all "Enable all optional components" OFF)
 option(testing "Enable testing with CTest" OFF)
+
+if(all)
+ set(gdml    ON CACHE BOOL "" FORCE)
+ #set(geocad  ON CACHE BOOL "" FORCE)  #not supported yet
+ set(qt      ON CACHE BOOL "" FORCE)
+ set(qtgsi   ON CACHE BOOL "" FORCE)
+ set(roofit  ON CACHE BOOL "" FORCE)
+ #set(ruby    ON CACHE BOOL "" FORCE)  #not supported in ROOT v6.0.0 yet
+ set(minuit2 ON CACHE BOOL "" FORCE)
+ set(table   ON CACHE BOOL "" FORCE)
+ set(unuran  ON CACHE BOOL "" FORCE)
+endif()
 
 #---General Build options----------------------------------------------------------------------
 # use, i.e. don't skip the full RPATH for the build tree

@@ -55,6 +55,7 @@ endif()
 if(CMAKE_PROJECT_NAME STREQUAL ROOT)
   set(rootcint_cmd rootcling_tmp)
   set(rlibmap_cmd rlibmap)
+  set(genreflex_cmd genreflex)
   if(CMAKE_VERSION VERSION_GREATER 2.8.3)
     set(ROOTCINTDEP ROOTCINTTARGET)
   else()
@@ -63,6 +64,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
 else()
   set(rootcint_cmd rootcling)
   set(rlibmap_cmd rlibmap)   
+  set(genreflex_cmd genreflex)
   set(ROOTCINTDEP)
 endif()
 
@@ -155,14 +157,7 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
     set(selectionfile ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_SELECTION})
   endif()
  
-  set(gensrcdict ${dictionary}_dict.cpp)
-  if(MSVC)
-    set(gccxmlopts "--gccxmlopt=\"--gccxml-compiler cl\"")
-  else()
-    #set(gccxmlopts "--gccxmlopt=\'--gccxml-cxxflags -m64 \'")
-    set(gccxmlopts)
-  endif()
-  
+  set(gensrcdict ${dictionary}.cxx)
   set(rootmapname ${dictionary}Dict.rootmap)
   set(rootmapopts --rootmap=${rootmapname} --rootmap-lib=${libprefix}${dictionary}Dict)
 
@@ -180,7 +175,7 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
   add_custom_command(
     OUTPUT ${gensrcdict} ${rootmapname}     
     COMMAND ${ROOT_genreflex_cmd}       
-    ARGS ${headerfiles} -o ${gensrcdict} ${gccxmlopts} ${rootmapopts} --select=${selectionfile}
+    ARGS ${headerfiles} -o ${gensrcdict} ${rootmapopts} --select=${selectionfile}
          --gccxmlpath=${GCCXML_home}/bin ${ARG_OPTIONS} ${include_dirs} ${definitions}
     DEPENDS ${headerfiles} ${selectionfile})  
 
