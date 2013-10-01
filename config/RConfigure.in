@@ -24,6 +24,7 @@
 #@hasxft@ R__HAS_XFT    /**/
 #@hascling@ R__HAS_CLING   /**/
 #@hascocoa@ R__HAS_COCOA    /**/
+#@hasvc@ R__HAS_VC    /**/
 #@usec++11@ R__USE_CXX11    /**/
 #@uselibc++@ R__USE_LIBCXX    /**/
 
