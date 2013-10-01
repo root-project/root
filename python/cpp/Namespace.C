@@ -1,6 +1,10 @@
 namespace PR_NS_A {
    int sa = 1;
 
+   typedef int TD_NS_A_t;
+   TD_NS_A_t tsa = -1;
+   const TD_NS_A_t ctsa = -1;
+
    struct PR_ST_B {
       PR_ST_B() { fb = -2; }
       int fb;

@@ -115,6 +115,10 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual( PR_NS_A.PR_NS_D.PR_ST_E.PR_ST_F.sf,    6 )
       self.assertEqual( PR_NS_A.PR_NS_D.PR_ST_E.PR_ST_F().ff, -6 )
 
+    # a few more, with namespaced typedefs
+      self.assertEqual( PR_NS_A.tsa,                          -1 )
+      self.assertEqual( PR_NS_A.ctsa,                         -1 )
+
    def test08VoidPointerPassing( self ):
       """Test passing of variants of void pointer arguments"""
 
