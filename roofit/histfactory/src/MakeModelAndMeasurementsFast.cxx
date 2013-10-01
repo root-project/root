@@ -277,7 +277,7 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
 					    RooWorkspace * combined, std::string channel, 
 					    std::string data_name, 
 					    TFile* outFile, FILE* tableFile  ) {
-    
+
   if( outFile == NULL ) {
     std::cout << "Error: Output File in FitModelAndPlot is NULL" << std::endl;
     throw hf_exc();
@@ -323,7 +323,10 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   }
 
   // Save a Snapshot
-  RooArgSet PoiPlusNuisance( *combined_config->GetNuisanceParameters() );
+  RooArgSet PoiPlusNuisance;
+  if( combined_config->GetNuisanceParameters() ) {
+    PoiPlusNuisance.add( *combined_config->GetNuisanceParameters() );
+  }
   PoiPlusNuisance.add( *combined_config->GetParametersOfInterest() );
   combined->saveSnapshot("InitialValues", PoiPlusNuisance);
 
