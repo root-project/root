@@ -175,6 +175,9 @@ etc/allDict.h
 # /interpreter/llvm/src/utils/lit/lit/
 /interpreter/llvm/src/utils/lit/lit/*.pyc
 
+# symlink standalone cling within ROOT
+/interpreter/llvm/src/tools/cling
+
 # /interpreter/llvm/src/utils/llvm-build/llvmbuild/
 /interpreter/llvm/src/utils/llvm-build/llvmbuild/util.pyc
 /interpreter/llvm/src/utils/llvm-build/llvmbuild/componentinfo.pyc
