@@ -185,6 +185,7 @@ if test "x$ENABLEALL" = "xyes"; then
     #enable_ruby=yes     #not supported in ROOT v6.0.0 yet
     enable_table=yes
     enable_unuran=yes
+    enable_vc=yes
 fi
 
 # Remove old log file
