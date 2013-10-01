@@ -101,6 +101,7 @@ public:
    static Double_t       Tolerance() {return 1.E-10;}
    static Double_t       ComputeEpsMch();
    static Double_t       EpsMch();
+   virtual void          AfterStreamer() {};
    virtual Double_t      Capacity() const                        = 0;
    void                  CheckShape(Int_t testNo, Int_t nsamples=10000, Option_t *option="");
    virtual void          ComputeBBox()                           = 0;
