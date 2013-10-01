@@ -283,7 +283,9 @@ void GetWindowAttributes(NSObject<X11Window> *window, WindowAttributes_t *dst);
 NSPoint ConvertPointFromBaseToScreen(NSWindow *window, NSPoint windowPoint);
 NSPoint ConvertPointFromScreenToBase(NSPoint screenPoint, NSWindow *window);
 
+int GlobalXCocoaToROOT(CGFloat xCocoa);
 int GlobalYCocoaToROOT(CGFloat yCocoa);
+int GlobalXROOTToCocoa(CGFloat xROOT);
 int GlobalYROOTToCocoa(CGFloat yROOT);
 
 int LocalYCocoaToROOT(NSView<X11Window> *parentView, CGFloat yCocoa);

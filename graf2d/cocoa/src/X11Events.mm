@@ -363,7 +363,7 @@ void ConvertEventLocationToROOTXY(NSEvent *cocoaEvent, NSView<X11Window> *eventV
    rootEvent->fX = viewPoint.x;
    rootEvent->fY = viewPoint.y;
 
-   rootEvent->fXRoot = screenPoint.x;
+   rootEvent->fXRoot = GlobalXCocoaToROOT(screenPoint.x);
    rootEvent->fYRoot = GlobalYCocoaToROOT(screenPoint.y);
 }
 
