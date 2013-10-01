@@ -20,6 +20,7 @@
 #include "TClassEdit.h"
 #include "TClassRef.h"
 #include "TCollection.h"
+#include "TDataType.h"
 #include "TFunction.h"
 #include "TMethodArg.h"
 #include "TError.h"
@@ -694,6 +695,9 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
 // Helper; captures common code needed to find the real class name underlying
 // a typedef (if any).
    std::string tclean = TClassEdit::CleanType( tname.c_str() );
+
+   TDataType* dt = gROOT->GetType( tclean.c_str() );
+   if ( dt ) return dt->GetFullTypeName();
 
 // CLING WORKAROUND -- see: #100392; this does NOT attempt to cover all cases,
 //   as hopefully the bug will be resolved one way or another
