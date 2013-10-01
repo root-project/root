@@ -47,7 +47,8 @@ METAO        := $(filter-out $(METAOLLVM),$(METAO))
 
 CLINGL       := $(MODDIRI)/LinkDefCling.h
 CLINGDS      := $(call stripsrc,$(MODDIRS)/G__Cling.cxx)
-CLINGDO      := $(CLINGDS:.cxx=.o)
+#CLINGDO      := $(CLINGDS:.cxx=.o)
+CLINGDO      :=
 CLINGDH      := $(CLINGDS:.cxx=.h)
 CLINGH       := $(MODDIRS)/TCling.h
 
