@@ -44,6 +44,8 @@ private:
 
 public:
 
+   typedef Double_t Scalar;   // to be able to use it with the ROOT::Math::VectorUtil functions
+
    enum { kX=0, kY=1, kZ=2, kT=3, kNUM_COORDINATES=4, kSIZE=kNUM_COORDINATES };
    // Safe indexing of the coordinates when using with matrices, arrays, etc.
 

@@ -726,7 +726,7 @@ namespace CholeskyDecompHelpers {
          dst[13] = (src(4,3) - dst[6] * dst[10] - dst[7] * dst[11] - dst[8] * dst[12]) * dst[9];
          dst[14] = src(4,4) - (dst[10]*dst[10]+dst[11]*dst[11]+dst[12]*dst[12]+dst[13]*dst[13]);
          if (dst[14] <= F(0.0)) return false;
-         else dst[14] = std::sqrt(F(.1) / dst[14]);
+         else dst[14] = std::sqrt(F(1.0) / dst[14]);
          return true;
       }
    };

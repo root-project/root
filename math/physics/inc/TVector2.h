@@ -28,6 +28,8 @@ protected:
 //------------------------------------------------------------------------------
 public:
 
+   typedef Double_t Scalar;   // to be able to use it with the ROOT::Math::VectorUtil functions
+
    TVector2 ();
    TVector2 (Double_t *s);
    TVector2 (Double_t x0, Double_t y0);
