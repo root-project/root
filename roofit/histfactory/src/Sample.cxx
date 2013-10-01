@@ -43,18 +43,14 @@ RooStats::HistFactory::Sample::Sample(const Sample& other) :
   fStatErrorActivate(other.fStatErrorActivate),
   fhNominal(),
   fhCountingHist(0)
-  {
-    SetHisto( (TH1*)other.fhNominal.GetObject() );
+  { 
+    if( other.fhCountingHist ) {
+      SetValue( other.fhCountingHist->GetBinContent(1) );
+    }else{
+      fhCountingHist = NULL;
+      SetHisto( (TH1*)other.fhNominal.GetObject() );
+    }
   }
-  // { 
-  //   if( other.fhCountingHist ) {
-  //     fhCountingHist = (TH1*)other.fhCountingHist->Clone();
-  //     SetHisto( fhCountingHist ); // sets fhNominal to the local copy of fhCountingHist
-  //   }else{
-  //     fhCountingHist = NULL;
-  //     fhNominal = other.fhNominal;
-  //   }
-  // }
 
 
 RooStats::HistFactory::Sample::Sample(std::string SampName, std::string SampHistoName, std::string SampInputFile, std::string SampHistoPath) : 
