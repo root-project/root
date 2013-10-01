@@ -47,7 +47,7 @@ QuartzWindow *CreateTopLevelWindow(Int_t x, Int_t y, UInt_t w, UInt_t h, UInt_t 
 {
    NSRect winRect = {};
    winRect.origin.x = GlobalXROOTToCocoa(x);
-   winRect.origin.y = GlobalYROOTToCocoa(y);
+   winRect.origin.y = GlobalYROOTToCocoa(y + h);
    winRect.size.width = w;
    winRect.size.height = h;
 
