@@ -28,6 +28,8 @@ class TVector3 : public TObject {
 
 public:
 
+   typedef Double_t Scalar;   // to be able to use it with the ROOT::Math::VectorUtil functions
+
    TVector3();
 
    TVector3(Double_t x, Double_t y, Double_t z);
