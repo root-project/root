@@ -82,7 +82,7 @@ public:
       /* Initialized data */
      unsigned int work[n+1] = {0};
 
-     static typename MatrixRep::value_type det(0);
+     static typename MatrixRep::value_type det(0.0);
       
       if (DfactMatrix(rhs,det,work) != 0) {
 	std::cerr << "Dfact_matrix failed!!" << std::endl;

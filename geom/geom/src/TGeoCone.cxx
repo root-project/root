@@ -1152,6 +1152,8 @@ ClassImp(TGeoConeSeg)
 
 //_____________________________________________________________________________
 TGeoConeSeg::TGeoConeSeg()
+            :TGeoCone(),
+             fPhi1(0.), fPhi2(0.), fS1(0.), fC1(0.), fS2(0.), fC2(0.), fSm(0.), fCm(0.), fCdfi(0.)
 {
 // Default constructor
    SetShapeBit(TGeoShape::kGeoConeSeg);
@@ -1161,7 +1163,9 @@ TGeoConeSeg::TGeoConeSeg()
 //_____________________________________________________________________________
 TGeoConeSeg::TGeoConeSeg(Double_t dz, Double_t rmin1, Double_t rmax1,
                           Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
-            :TGeoCone(dz, rmin1, rmax1, rmin2, rmax2)
+            :TGeoCone(dz, rmin1, rmax1, rmin2, rmax2),
+             fPhi1(0.), fPhi2(0.), fS1(0.), fC1(0.), fS2(0.), fC2(0.), fSm(0.), fCm(0.), fCdfi(0.)
+            
 {
 // Default constructor specifying minimum and maximum radius
    SetShapeBit(TGeoShape::kGeoConeSeg);
@@ -1172,7 +1176,8 @@ TGeoConeSeg::TGeoConeSeg(Double_t dz, Double_t rmin1, Double_t rmax1,
 //_____________________________________________________________________________
 TGeoConeSeg::TGeoConeSeg(const char *name, Double_t dz, Double_t rmin1, Double_t rmax1,
                           Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
-            :TGeoCone(name, dz, rmin1, rmax1, rmin2, rmax2)
+            :TGeoCone(name, dz, rmin1, rmax1, rmin2, rmax2),
+             fPhi1(0.), fPhi2(0.), fS1(0.), fC1(0.), fS2(0.), fC2(0.), fSm(0.), fCm(0.), fCdfi(0.)
 {
 // Default constructor specifying minimum and maximum radius
    SetShapeBit(TGeoShape::kGeoConeSeg);
@@ -1182,7 +1187,8 @@ TGeoConeSeg::TGeoConeSeg(const char *name, Double_t dz, Double_t rmin1, Double_t
 
 //_____________________________________________________________________________
 TGeoConeSeg::TGeoConeSeg(Double_t *param)
-            :TGeoCone(0,0,0,0,0)
+            :TGeoCone(0,0,0,0,0),
+             fPhi1(0.), fPhi2(0.), fS1(0.), fC1(0.), fS2(0.), fC2(0.), fSm(0.), fCm(0.), fCdfi(0.)
 {
 // Default constructor specifying minimum and maximum radius
 // param[0] = dz
@@ -1201,6 +1207,30 @@ TGeoConeSeg::TGeoConeSeg(Double_t *param)
 TGeoConeSeg::~TGeoConeSeg()
 {
 // destructor
+}
+
+//_____________________________________________________________________________
+void TGeoConeSeg::AfterStreamer()
+{
+// Function called after streaming an object of this class.
+   InitTrigonometry();
+}   
+
+//_____________________________________________________________________________
+void TGeoConeSeg::InitTrigonometry()
+{
+// Init frequently used trigonometric values
+   Double_t phi1 = fPhi1*TMath::DegToRad();
+   Double_t phi2 = fPhi2*TMath::DegToRad();
+   fC1 = TMath::Cos(phi1);
+   fS1 = TMath::Sin(phi1);
+   fC2 = TMath::Cos(phi2);
+   fS2 = TMath::Sin(phi2);
+   Double_t fio = 0.5*(phi1+phi2);
+   fCm = TMath::Cos(fio);
+   fSm = TMath::Sin(fio);
+   Double_t dfi = 0.5*(phi2-phi1);
+   fCdfi = TMath::Cos(dfi);
 }
 
 //_____________________________________________________________________________
@@ -1230,14 +1260,14 @@ void TGeoConeSeg::ComputeBBox()
 
    Double_t xc[4];
    Double_t yc[4];
-   xc[0] = rmax*TMath::Cos(fPhi1*TMath::DegToRad());
-   yc[0] = rmax*TMath::Sin(fPhi1*TMath::DegToRad());
-   xc[1] = rmax*TMath::Cos(fPhi2*TMath::DegToRad());
-   yc[1] = rmax*TMath::Sin(fPhi2*TMath::DegToRad());
-   xc[2] = rmin*TMath::Cos(fPhi1*TMath::DegToRad());
-   yc[2] = rmin*TMath::Sin(fPhi1*TMath::DegToRad());
-   xc[3] = rmin*TMath::Cos(fPhi2*TMath::DegToRad());
-   yc[3] = rmin*TMath::Sin(fPhi2*TMath::DegToRad());
+   xc[0] = rmax*fC1;
+   yc[0] = rmax*fS1;
+   xc[1] = rmax*fC2;
+   yc[1] = rmax*fS2;
+   xc[2] = rmin*fC1;
+   yc[2] = rmin*fS1;
+   xc[3] = rmin*fC2;
+   yc[3] = rmin*fS2;
 
    Double_t xmin = xc[TMath::LocMin(4, &xc[0])];
    Double_t xmax = xc[TMath::LocMax(4, &xc[0])];
@@ -1277,11 +1307,6 @@ void TGeoConeSeg::ComputeNormal(const Double_t *point, const Double_t *dir, Doub
    Double_t tg2 = 0.5*(fRmax2-fRmax1)/fDz;
    Double_t cr2 = 1./TMath::Sqrt(1.+tg2*tg2);
 
-   Double_t c1 = TMath::Cos(fPhi1*TMath::DegToRad());
-   Double_t s1 = TMath::Sin(fPhi1*TMath::DegToRad());
-   Double_t c2 = TMath::Cos(fPhi2*TMath::DegToRad());
-   Double_t s2 = TMath::Sin(fPhi2*TMath::DegToRad());
-
    Double_t r=TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
    Double_t rin = tg1*point[2]+ro1;
    Double_t rout = tg2*point[2]+ro2;
@@ -1289,8 +1314,8 @@ void TGeoConeSeg::ComputeNormal(const Double_t *point, const Double_t *dir, Doub
    saf[1] = (ro1>0)?(TMath::Abs((r-rin)*cr1)):TGeoShape::Big();
    saf[2] = TMath::Abs((rout-r)*cr2);
    Int_t i = TMath::LocMin(3,saf);
-   if (((fPhi2-fPhi1)<360.) && TGeoShape::IsCloseToPhi(saf[i], point,c1,s1,c2,s2)) {
-      TGeoShape::NormalPhi(point,dir,norm,c1,s1,c2,s2);
+   if (((fPhi2-fPhi1)<360.) && TGeoShape::IsCloseToPhi(saf[i], point,fC1,fS1,fC2,fS2)) {
+      TGeoShape::NormalPhi(point,dir,norm,fC1,fS1,fC2,fS2);
       return;
    }
    if (i==0) {
@@ -1515,20 +1540,9 @@ Double_t TGeoConeSeg::DistFromInside(const Double_t *point, const Double_t *dir,
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
    if ((fPhi2-fPhi1)>=360.) return TGeoCone::DistFromInsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2);
-   Double_t phi1 = fPhi1*TMath::DegToRad();
-   Double_t phi2 = fPhi2*TMath::DegToRad();
-   Double_t c1 = TMath::Cos(phi1);
-   Double_t c2 = TMath::Cos(phi2);
-   Double_t s1 = TMath::Sin(phi1);
-   Double_t s2 = TMath::Sin(phi2);
-   Double_t phim = 0.5*(phi1+phi2);
-   Double_t cm = TMath::Cos(phim);
-   Double_t sm = TMath::Sin(phim);
-   Double_t dfi = 0.5*(phi2-phi1);
-   Double_t cdfi = TMath::Cos(dfi);
 
    // compute distance to surface
-   return TGeoConeSeg::DistFromInsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2,c1,s1,c2,s2,cm,sm,cdfi);
+   return TGeoConeSeg::DistFromInsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2,fC1,fS1,fC2,fS2,fCm,fSm,fCdfi);
 }
 
 //_____________________________________________________________________________
@@ -1819,18 +1833,7 @@ Double_t TGeoConeSeg::DistFromOutside(const Double_t *point, const Double_t *dir
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
    if ((fPhi2-fPhi1)>=360.) return TGeoCone::DistFromOutsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2);
-   Double_t phi1 = fPhi1*TMath::DegToRad();
-   Double_t phi2 = fPhi2*TMath::DegToRad();
-   Double_t c1 = TMath::Cos(phi1);
-   Double_t c2 = TMath::Cos(phi2);
-   Double_t s1 = TMath::Sin(phi1);
-   Double_t s2 = TMath::Sin(phi2);
-   Double_t phim = 0.5*(phi1+phi2);
-   Double_t cm = TMath::Cos(phim);
-   Double_t sm = TMath::Sin(phim);
-   Double_t dfi = 0.5*(phi2-phi1);
-   Double_t cdfi = TMath::Cos(dfi);
-   return TGeoConeSeg::DistFromOutsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2,c1,s1,c2,s2,cm,sm,cdfi);
+   return TGeoConeSeg::DistFromOutsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2,fC1,fS1,fC2,fS2,fCm,fSm,fCdfi);
 }
 
 //_____________________________________________________________________________
@@ -2152,7 +2155,8 @@ void TGeoConeSeg::SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
    while (fPhi1<0) fPhi1+=360.;
    fPhi2 = phi2;
    while (fPhi2<=fPhi1) fPhi2+=360.;
-   if (TGeoShape::IsSameWithinTolerance(fPhi1,fPhi2)) Error("SetConsDimensions", "In shape %s invalid phi1=%g, phi2=%g\n", GetName(), fPhi1, fPhi2);
+   if (TGeoShape::IsSameWithinTolerance(fPhi1,fPhi2)) Fatal("SetConsDimensions", "In shape %s invalid phi1=%g, phi2=%g\n", GetName(), fPhi1, fPhi2);
+   InitTrigonometry();
 }
 
 //_____________________________________________________________________________

@@ -6,6 +6,7 @@
 
 
 #include "Math/SVector.h"
+#include "Math/Math.h"
 #include <limits>
 
 
@@ -28,11 +29,14 @@ namespace ROOT {
       
   */
 
+
+
 template <unsigned int idim, unsigned int N>
 template<class T> 
 void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 
-
+   typedef T value_type; 
+   //typedef double value_type;  // for making inversions in double's
 
 
    int i, j, k, s;
@@ -63,10 +67,10 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
    pivIter piv = pivv.begin();
    // piv[i] is used to store details of exchanges
       
-   double temp1, temp2;
+   value_type temp1, temp2;
    mIter ip, mjj, iq;
-   double lambda, sigma;
-   const double alpha = .6404; // = (1+sqrt(17))/8
+   value_type lambda, sigma;
+   const value_type alpha = .6404; // = (1+sqrt(17))/8
    // LM (04/2009) remove this useless check (it is not in LAPACK) which fails inversion of 
    // a matrix with  values < epsilon in the diagonal
    //
@@ -444,15 +448,18 @@ int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned in
 
    typedef T* mIter; 
 
+   typedef T value_type; 
+   //typedef double value_type;  // for making inversions in double's
 
-   double tf;
-   double g1 = 1.0e-19, g2 = 1.0e19;
 
-   double p, q, t;
-   double s11, s12;
+   value_type tf;
+   value_type g1 = 1.0e-19, g2 = 1.0e19;
+
+   value_type p, q, t;
+   value_type s11, s12;
 
    // LM (04.09) : remove useless check on epsilon and set it to zero
-   const double epsilon = 0.0;
+   const value_type epsilon = 0.0;
    //double epsilon = 8*std::numeric_limits<T>::epsilon();
    // could be set to zero (like it was before)
    // but then the algorithm often doesn't detect
@@ -568,11 +575,15 @@ int Inverter<idim,n>::DfinvMatrix(MatRepStd<T,idim,n> & rhs,unsigned int * ir) {
 
    typedef T* mIter; 
 
+   typedef T value_type; 
+   //typedef double value_type;  // for making inversions in double's
+
+
    if (idim != n) return   -1; 
 
 
-   double s31, s32;
-   double s33, s34;
+   value_type s31, s32;
+   value_type s33, s34;
 
    mIter m11 = rhs.Array();
    mIter m12 = m11 + 1;
