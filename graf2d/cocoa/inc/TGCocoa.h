@@ -19,6 +19,9 @@
 #include <string>
 #include <map>
 
+#ifndef ROOT_CocoaGuiTypes
+#include "CocoaGuiTypes.h"
+#endif
 #ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
 #endif
@@ -44,6 +47,7 @@ namespace MacOSX {
 namespace X11 {
 class EventTranslator;
 class CommandBuffer;
+
 }
 
 namespace Details {
@@ -76,12 +80,16 @@ public:
    virtual UInt_t      ScreenWidthMM()const;
    virtual Int_t       GetDepth()const;
    virtual void        Update(Int_t mode);
+   
+   //Non-virtual functions.
+           void                         ReconfigureDisplay();
+           ROOT::MacOSX::X11::Rectangle GetDisplayGeometry()const;
    //End of general.
    ///////////////////////////////////////
    
    ///////////////////////////////////////
    //Window management part:
-   virtual Window_t  GetDefaultRootWindow() const;
+   virtual Window_t  GetDefaultRootWindow()const;
    //-Functions used by TCanvas/TPad (work with window, selected by SelectWindow).
    virtual Int_t     InitWindow(ULong_t window);
    virtual Window_t  GetWindowID(Int_t wid);//TGCocoa simply returns wid.
@@ -92,7 +100,7 @@ public:
    virtual void      RescaleWindow(Int_t wid, UInt_t w, UInt_t h);
    virtual void      ResizeWindow(Int_t wid);
    virtual void      UpdateWindow(Int_t mode);
-   virtual Window_t  GetCurrentWindow() const;
+   virtual Window_t  GetCurrentWindow()const;
    virtual void      CloseWindow();
    virtual Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h); //-"Qt ROOT".
    virtual void      RemoveWindow(ULong_t qwid); //-"Qt ROOT".
@@ -136,7 +144,7 @@ public:
    virtual void      SetWindowBackground(Window_t wid, ULong_t color);
    virtual void      SetWindowBackgroundPixmap(Window_t wid, Pixmap_t pxm);
 
-   virtual Window_t  GetParent(Window_t wid) const;
+   virtual Window_t  GetParent(Window_t wid)const;
    
    virtual void      SetWindowName(Window_t wid, char *name);
    virtual void      SetIconName(Window_t wid, char *name);
@@ -419,7 +427,7 @@ public:
    virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
    //
 
-   virtual Bool_t       IsCmdThread() const { return kTRUE; }
+   virtual Bool_t       IsCmdThread()const { return kTRUE; }
    
    //Non virtual, non-overriding functions.
    ROOT::MacOSX::X11::EventTranslator *GetEventTranslator()const;
@@ -455,6 +463,8 @@ private:
    typedef std::map<Atom_t, Window_t>::iterator selection_iterator;
    
    bool fSetApp;
+   mutable bool fDisplayShapeChanged;
+   mutable ROOT::MacOSX::X11::Rectangle fDisplayRect;
 
 public:
    static Atom_t fgDeleteWindowAtom;

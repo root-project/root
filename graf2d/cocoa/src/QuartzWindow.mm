@@ -46,7 +46,7 @@ QuartzWindow *CreateTopLevelWindow(Int_t x, Int_t y, UInt_t w, UInt_t h, UInt_t 
                                    UInt_t clss, void */*visual*/, SetWindowAttributes_t *attr, UInt_t)
 {
    NSRect winRect = {};
-   winRect.origin.x = x; 
+   winRect.origin.x = GlobalXROOTToCocoa(x);
    winRect.origin.y = GlobalYROOTToCocoa(y);
    winRect.size.width = w;
    winRect.size.height = h;
@@ -86,22 +86,24 @@ void GetRootWindowAttributes(WindowAttributes_t *attr)
 {
    //'root' window does not exist, but we can request its attributes.
    assert(attr != 0 && "GetRootWindowAttributes, attr parameter is null");
+
    
    NSArray * const screens = [NSScreen screens];
    assert(screens != nil && "screens array is nil");
-   
    NSScreen * const mainScreen = [screens objectAtIndex : 0];
    assert(mainScreen != nil && "screen with index 0 is nil");
-
+   
    *attr = WindowAttributes_t();
+
+   TGCocoa * const gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(gCocoa != 0 && "GetRootWindowAttributes, gVirtualX is either null or has a wrong type");
+   
+   const Rectangle &frame = gCocoa->GetDisplayGeometry();
    
    attr->fX = 0;
    attr->fY = 0;
-   
-   const NSRect frame = [mainScreen frame];
-   
-   attr->fWidth = frame.size.width;
-   attr->fHeight = frame.size.height;
+   attr->fWidth = frame.fWidth;
+   attr->fHeight = frame.fHeight;
    attr->fBorderWidth = 0;
    attr->fYourEventMask = 0;
    attr->fAllEventMasks = 0;//???
@@ -151,26 +153,47 @@ NSPoint ConvertPointFromScreenToBase(NSPoint screenPoint, NSWindow *window)
 //______________________________________________________________________________
 int GlobalYCocoaToROOT(CGFloat yCocoa)
 {
-   NSArray * const screens = [NSScreen screens];
-   assert(screens != nil && "GlobalYCocoaToROOT, screens array is nil");
+   //We can have several physical displays and thus several NSScreens in some arbitrary order.
+   //With Cocoa, some screens can have negative coordinates - to the left ro down to the primary
+   //screen (whatever it means). With X11 (XQuartz) though it's always 0,0.
+
+   TGCocoa * gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(gCocoa != 0 && "GlobalYCocoaToROOT, gVirtualX is either nul or has a wrong type");
+   const Rectangle frame = gCocoa->GetDisplayGeometry();
    
-   NSScreen * const mainScreen = [screens objectAtIndex : 0];
-   assert(mainScreen != nil && "GlobalYCocoaToROOT, screen at index 0 is nil");
+   return int(frame.fHeight - (yCocoa - frame.fY));
+}
+
+//______________________________________________________________________________
+int GlobalXCocoaToROOT(CGFloat xCocoa)
+{
+   TGCocoa * gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(gCocoa != 0 && "GlobalXCocoaToROOT, gVirtualX is either nul or has a wrong type");
+   const Rectangle frame = gCocoa->GetDisplayGeometry();
    
-   return int(mainScreen.frame.size.height - yCocoa);
+   //With X11 coordinate space always starts from 0, 0
+   return int(xCocoa - frame.fX);
 }
 
 //______________________________________________________________________________
 int GlobalYROOTToCocoa(CGFloat yROOT)
 {
-   //hehe :)) actually, no need in this function.
-   NSArray * const screens = [NSScreen screens];
-   assert(screens != nil && "GlobalYROOTToCocoa, screens array is nil");
+   TGCocoa * gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(gCocoa != 0 && "GlobalYROOTToCocoa, gVirtualX is either nul or has a wrong type");
+   const Rectangle frame = gCocoa->GetDisplayGeometry();
    
-   NSScreen * const mainScreen = [screens objectAtIndex : 0];
-   assert(mainScreen != nil && "GlobalYROOTToCocoa, screen at index 0 is nil");
+   return int(frame.fY + (frame.fHeight - yROOT));
+}
+
+//______________________________________________________________________________
+int GlobalXROOTToCocoa(CGFloat xROOT)
+{
+   TGCocoa * gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
+   assert(gCocoa != 0 && "GlobalXROOTToCocoa, gVirtualX is either nul or has a wrong type");
+   const Rectangle frame = gCocoa->GetDisplayGeometry();
    
-   return int(mainScreen.frame.size.height - yROOT);
+   //With X11 coordinate space always starts from 0, 0
+   return int(frame.fX + xROOT);
 }
 
 //______________________________________________________________________________
@@ -208,6 +231,7 @@ NSPoint TranslateToScreen(NSView<X11Window> *from, NSPoint point)
    const NSPoint winPoint = [from convertPoint : point toView : nil];
 
    NSPoint screenPoint = ConvertPointFromBaseToScreen([from window], winPoint);
+   screenPoint.x = GlobalXCocoaToROOT(screenPoint.x);
    screenPoint.y = GlobalYCocoaToROOT(screenPoint.y);
    
    return screenPoint;
@@ -218,6 +242,7 @@ NSPoint TranslateFromScreen(NSPoint point, NSView<X11Window> *to)
 {
    assert(to != nil && "TranslateFromScreen, 'to' parameter is nil");
    
+   point.x = GlobalXROOTToCocoa(point.x);
    point.y = GlobalYROOTToCocoa(point.y);
    point = ConvertPointFromScreenToBase(point, [to window]);
 
@@ -1047,7 +1072,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (int) fX
 {
-   return self.frame.origin.x;
+   return X11::GlobalXCocoaToROOT(self.frame.origin.x);
 }
 
 //______________________________________________________________________________
@@ -1093,7 +1118,7 @@ void print_mask_info(ULong_t mask)
    
    //Check how this is affected by title bar's height.
    NSPoint topLeft = {};
-   topLeft.x = x;
+   topLeft.x = X11::GlobalXROOTToCocoa(x);
    topLeft.y = X11::GlobalYROOTToCocoa(y);
 
    [self setFrameTopLeftPoint : topLeft];
@@ -1103,7 +1128,7 @@ void print_mask_info(ULong_t mask)
 - (void) setX : (int) x Y : (int) y
 {
    NSPoint topLeft = {};
-   topLeft.x = x;
+   topLeft.x = X11::GlobalXROOTToCocoa(x);
    topLeft.y = X11::GlobalYROOTToCocoa(y);
 
    [self setFrameTopLeftPoint : topLeft];

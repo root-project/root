@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <limits>
 
+#include <ApplicationServices/ApplicationServices.h>
 #include <OpenGL/OpenGL.h>
 #include <Cocoa/Cocoa.h>
 #include <OpenGL/gl.h>
@@ -74,6 +75,21 @@ namespace Quartz = ROOT::Quartz;
 namespace OpenGL = ROOT::MacOSX::OpenGL;
 
 namespace {
+
+//Display configuration management.
+
+//______________________________________________________________________________
+void DisplayReconfigurationCallback(CGDirectDisplayID /*display*/, CGDisplayChangeSummaryFlags flags, void * /*userInfo*/)
+{
+   if (flags & kCGDisplayBeginConfigurationFlag)
+      return;
+
+   if (flags & kCGDisplayDesktopShapeChangedFlag) {
+      TGCocoa * const gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
+      assert(gCocoa != 0 && "DisplayReconfigurationCallback, gVirtualX is either null or has a wrong type");
+      gCocoa->ReconfigureDisplay();
+   }
+}
 
 //Aux. functions called from GUI-rendering part.
 
@@ -354,7 +370,8 @@ TGCocoa::TGCocoa()
               fDrawMode(kCopy),
               fDirectDraw(false),
               fForegroundProcess(false),
-              fSetApp(true)
+              fSetApp(true),
+              fDisplayShapeChanged(true)
 {
    assert(dynamic_cast<TMacOSXSystem *>(gSystem) != nullptr && "TGCocoa, gSystem is eihter null or has a wrong type");
    TMacOSXSystem * const system = (TMacOSXSystem *)gSystem;
@@ -366,6 +383,8 @@ TGCocoa::TGCocoa()
 
    X11::InitWithPredefinedAtoms(fNameToAtom, fAtomToName);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
+   
+   CGDisplayRegisterReconfigurationCallback (DisplayReconfigurationCallback, 0);
 }
 
 //______________________________________________________________________________
@@ -376,7 +395,8 @@ TGCocoa::TGCocoa(const char *name, const char *title)
               fDrawMode(kCopy),
               fDirectDraw(false),
               fForegroundProcess(false),
-              fSetApp(true)
+              fSetApp(true),
+              fDisplayShapeChanged(true)
 {
    assert(dynamic_cast<TMacOSXSystem *>(gSystem) != nullptr && "TGCocoa, gSystem is eihter null or has a wrong type");
    TMacOSXSystem * const system = (TMacOSXSystem *)gSystem;
@@ -388,12 +408,15 @@ TGCocoa::TGCocoa(const char *name, const char *title)
    
    X11::InitWithPredefinedAtoms(fNameToAtom, fAtomToName);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
+   
+   CGDisplayRegisterReconfigurationCallback (DisplayReconfigurationCallback, 0);
 }
 
 //______________________________________________________________________________
 TGCocoa::~TGCocoa()
 {
    //
+   CGDisplayRemoveReconfigurationCallback (DisplayReconfigurationCallback, 0);
 }
 
 //General part (empty, since it's not an X server.
@@ -495,6 +518,42 @@ void TGCocoa::Update(Int_t mode)
    
    if (fDirectDraw && mode != 2)
       fPimpl->fX11CommandBuffer.FlushXOROps(fPimpl.get());
+}
+
+//______________________________________________________________________________
+void TGCocoa::ReconfigureDisplay()
+{
+   fDisplayShapeChanged = true;
+}
+
+//______________________________________________________________________________
+X11::Rectangle TGCocoa::GetDisplayGeometry()const
+{
+   if (fDisplayShapeChanged) {
+      NSArray * const screens = [NSScreen screens];
+      assert(screens != nil && screens.count != 0 && "GetDisplayGeometry, no screens found");
+
+      CGRect frame = [(NSScreen *)screens[0] frame];
+      CGFloat xMin = frame.origin.x, xMax = xMin + frame.size.width;
+      CGFloat yMin = frame.origin.y, yMax = yMin + frame.size.height;
+
+      for (NSUInteger i = 1, e = screens.count; i < e; ++i) {
+         frame = [(NSScreen *)screens[i] frame];
+         xMin = std::min(xMin, frame.origin.x);
+         xMax = std::max(xMax, frame.origin.x + frame.size.width);
+         yMin = std::min(yMin, frame.origin.y);
+         yMax = std::max(yMax, frame.origin.y + frame.size.height);
+      }
+      
+      fDisplayRect.fX = int(xMin);
+      fDisplayRect.fY = int(yMin);
+      fDisplayRect.fWidth = unsigned(xMax - xMin);
+      fDisplayRect.fHeight = unsigned(yMax - yMin);
+      
+      fDisplayShapeChanged = false;
+   }
+   
+   return fDisplayRect;
 }
 
 //Window management part.
@@ -1088,7 +1147,7 @@ void TGCocoa::MoveWindow(Window_t wid, Int_t x, Int_t y)
    
    if (!wid)//From TGX11.
       return;
-      
+
    assert(!fPimpl->IsRootWindow(wid) && "MoveWindow, called for 'root' window");
    
    [fPimpl->GetWindow(wid) setX : x Y : y];
@@ -2986,7 +3045,7 @@ void TGCocoa::QueryPointer(Int_t &x, Int_t &y)
    
    //I ignore fSelectedDrawable here. If you have any problems with this, hehe, you can ask me :)
    const NSPoint screenPoint = [NSEvent mouseLocation];
-   x = screenPoint.x;
+   x = X11::GlobalXCocoaToROOT(screenPoint.x);
    y = X11::GlobalYCocoaToROOT(screenPoint.y);
 }
 
@@ -3003,6 +3062,7 @@ void TGCocoa::QueryPointer(Window_t winID, Window_t &rootWinID, Window_t &childW
    rootWinID = fPimpl->GetRootWindowID();
    //Find cursor position (screen coordinates).
    NSPoint screenPoint = [NSEvent mouseLocation];
+   screenPoint.x = X11::GlobalXCocoaToROOT(screenPoint.x);
    screenPoint.y = X11::GlobalYCocoaToROOT(screenPoint.y);
    rootX = screenPoint.x;
    rootY = screenPoint.y;
