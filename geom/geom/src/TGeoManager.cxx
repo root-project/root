@@ -1448,6 +1448,9 @@ void TGeoManager::CloseGeometry(Option_t *option)
       // Create a geometry navigator if not present
       if (!GetCurrentNavigator()) fCurrentNavigator = AddNavigator();
       nnavigators = GetListOfNavigators()->GetEntriesFast();
+      TIter next(fShapes);
+      TGeoShape *shape;
+      while ((shape = (TGeoShape*)next())) shape->AfterStreamer();
       Voxelize("ALL");
       CountLevels();
       for (Int_t i=0; i<nnavigators; i++) {
@@ -3355,9 +3358,7 @@ void TGeoManager::CheckGeometryFull(Int_t ntracks, Double_t vx, Double_t vy, Dou
 //_____________________________________________________________________________
 void TGeoManager::CheckGeometry(Option_t * /*option*/)
 {
-// Instanciate a TGeoChecker object and investigates the geometry according to
-// option. Not implemented yet.
-   // check shapes first
+   // Perform last checks on the geometry
    if (fgVerboseLevel>0) Info("CheckGeometry","Fixing runtime shapes...");
    TIter next(fShapes);
    TIter nextv(fVolumes);
@@ -3368,6 +3369,7 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
       if (shape->IsRunTimeShape()) {
          has_runtime = kTRUE;
       }
+      if (fIsGeomReading) shape->AfterStreamer();
       if (shape->TestShapeBit(TGeoShape::kGeoPcon) || shape->TestShapeBit(TGeoShape::kGeoArb8))
          if (!shape->TestShapeBit(TGeoShape::kGeoClosedShape)) shape->ComputeBBox();
    }
