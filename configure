@@ -6131,6 +6131,7 @@ EOF
 	    test -n "$abiversioncxxflag" && result "$abiversioncxxflag" || result 'N/A'
     esac
 fi
+
 sed -e "s|@avxcxxflag@|$avxcxxflag|"               \
     -e "s|@ssecxxflags@|$ssecxxflags|"             \
     -e "s|@abiversioncxxflag@|$abiversioncxxflag|" \
