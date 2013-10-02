@@ -58,7 +58,7 @@ using namespace std;
 static const string indent_string("   ");
 
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
-                                         TClingClassInfo* ci)
+                                         const TClingClassInfo* ci)
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
      fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L)
 {
@@ -66,11 +66,10 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
       fClassInfo = new TClingClassInfo(interp);
       return;
    }
-   fClassInfo = new TClingClassInfo(*ci);
+   fClassInfo = ci;
    if (!fClassInfo->GetDecl()) {
       return;
    }
-   fClassInfo->SetOffsetFunctions(ci->GetOffsetFunctions());
    const clang::CXXRecordDecl* CRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(fClassInfo->GetDecl());
    if (!CRD) {
@@ -83,7 +82,7 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
 }
 
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
-                                         TClingClassInfo* derived,
+                                         const TClingClassInfo* derived,
                                          TClingClassInfo* base)
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
      fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L)
@@ -98,8 +97,7 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
       // FIXME: We should prevent this from happening!
       return;
    }
-   fClassInfo = new TClingClassInfo(*derived);
-   fClassInfo->SetOffsetFunctions(derived->GetOffsetFunctions());
+   fClassInfo = derived;
    fDecl = CRD;
    fBaseInfo = new TClingClassInfo(*base);
    fIter = CRD->bases_begin();
@@ -141,7 +139,7 @@ TClingClassInfo *TClingBaseClassInfo::GetBase() const
    return fBaseInfo;
 }
 
-OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo * derivedClass, TClingClassInfo* targetClass, void* address) const
+OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * derivedClass, TClingClassInfo* targetClass, void* address) const
 {
    // Generate a function at run-time that would calculate the offset 
    // from the parameter derived class to the parameter target class for the
@@ -406,7 +404,7 @@ long TClingBaseClassInfo::Offset(void * address) const
    if (!executableFunc) {
       // Error generated already by GenerateBaseOffsetFunction if executableFunc = 0.
       executableFunc = GenerateBaseOffsetFunction(fClassInfo, fBaseInfo, address);
-      fClassInfo->AddBaseOffsetFunction(fBaseInfo->GetDecl(), executableFunc);
+      const_cast<TClingClassInfo*>(fClassInfo)->AddBaseOffsetFunction(fBaseInfo->GetDecl(), executableFunc);
    }
    if (address)
       return (*executableFunc)(address);
