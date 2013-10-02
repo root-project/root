@@ -902,6 +902,18 @@ TCling::TCling(const char *name, const char *title)
    // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
    TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
 
+   // FIXME: enables relocatability for experiments' framework headers until PCMs
+   // are available.
+   const char* envInclPath = getenv("ROOT_INCLUDE_PATH");
+   if (envInclPath) {
+      TString strEnvInclPath(envInclPath);
+      TString tok;
+      Ssiz_t from = 0;
+      while (strEnvInclPath.Tokenize(tok, from, ":")) {
+         TCling::AddIncludePath(tok);
+      }
+   }
+
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
    // We need stream that doesn't close its file descriptor, thus we are not
