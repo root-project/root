@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT core/base package
 ############################################################################
 
-ROOT_GLOB_HEADERS(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h ${CMAKE_CURRENT_SOURCE_DIR}/src/TListOf*.h)
+ROOT_GLOB_HEADERS(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
 set(Base_dict_headers ${headers} PARENT_SCOPE)
 
 include_directories(${CMAKE_SOURCE_DIR}/graf3d/g3d/inc)

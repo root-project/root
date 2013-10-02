@@ -91,7 +91,6 @@ ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} G__Core.cxx
                     ${winnt_objects}
                     LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} 
                               ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} )
-                    #          ${CLING_LIBRARIES})
 
 add_dependencies(Core TEXTINPUT_DICTIONARY)
 
