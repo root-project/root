@@ -2375,12 +2375,13 @@ void extractFileName(const std::string& path, std::string& filename)
 {
    // Extract the filename from a fullpath finding the last \ or /
    // according to the content in gPathSeparator
-   const size_t pos = path.find_last_of(gPathSeparator);
-   if(std::string::npos != pos){
-      filename.assign(path.begin() + pos + 1, path.end());
-   } else {
-      filename.assign(path);
-   }
+//    const size_t pos = path.find_last_of(gPathSeparator);
+//    if(std::string::npos != pos){
+//       filename.assign(path.begin() + pos + 1, path.end());
+//    } else {
+//       filename.assign(path);
+//    }
+   filename = llvm::sys::path::filename (path);
 }
 
 //______________________________________________________________________________
@@ -3672,7 +3673,8 @@ bool beginsWith(const std::string& theString, const std::string& theSubstring)
 //______________________________________________________________________________
 bool isHeaderName(const std::string& filename)
 {
-   return endsWith(filename,".h") || endsWith(filename,".hpp");
+   return llvm::sys::path::extension(filename) ==".h" ||
+          llvm::sys::path::extension(filename) == ".hpp";
 }
 
 //______________________________________________________________________________
@@ -3838,6 +3840,10 @@ int invokeRootCling(const std::string& verbosity,
    argvVector.push_back(string2charptr("-f"));
    argvVector.push_back(string2charptr(ofilename));
 
+   // Extract the path to the dictionary
+   std::string dictLocation;
+   extractFilePath(ofilename,dictLocation);
+   
    // Rootmaps
 
    // Prepare the correct rootmap libname if not already set.
@@ -3856,14 +3862,9 @@ int invokeRootCling(const std::string& verbosity,
 
    // Prepend to the rootmap the designed directory of the dictionary
    // if no path is specified for the rootmap itself
-   std::string dictLocation("");
    std::string newRootmapFileName(rootmapFileName);
    if (!newRootmapFileName.empty()){
-      extractFilePath(newRootmapFileName,dictLocation);
-      if (dictLocation.empty()){ //Add it. In the worst case it's ./
-         extractFilePath(ofilename,dictLocation);
-         newRootmapFileName = dictLocation+newRootmapFileName;
-      }
+      newRootmapFileName = dictLocation+newRootmapFileName;
    }
 
    
@@ -3879,10 +3880,12 @@ int invokeRootCling(const std::string& verbosity,
       argvVector.push_back(string2charptr(newRootmapLibName));
    }
 
-   // Capabilities file
+   // Capabilities file   
    if (!capaFileName.empty()){
+      std::string newCapaFileName(capaFileName);
+      newCapaFileName=dictLocation+newCapaFileName;
       argvVector.push_back(string2charptr("-cap"));
-      argvVector.push_back(string2charptr(capaFileName));
+      argvVector.push_back(string2charptr(newCapaFileName));
    }   
    
    if (!targetLibName.empty()){
