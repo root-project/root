@@ -22,6 +22,7 @@
 #@haspthread@ R__HAS_PTHREAD    /**/
 #@hasxft@ R__HAS_XFT    /**/
 #@hascocoa@ R__HAS_COCOA    /**/
+#@hasvc@ R__HAS_VC    /**/
 #@usec++11@ R__USE_CXX11    /**/
 #@uselibc++11@ R__USE_LIBCXX11    /**/
 #@hasllvm@ R__EXTERN_LLVMDIR @llvmdir@

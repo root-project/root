@@ -6370,9 +6370,11 @@ message "Checking whether to build libVc"
 if test "x$enable_vc" = "xyes" || test ! "x$VC" = "x"; then
     enable_vc="yes"
     result "yes"
+    hasvc="define"
 else
     enable_vc=""
     result "no"
+    hasvc="undef"
 fi
 
 ######################################################################
@@ -7248,6 +7250,7 @@ sed \
     -e "s|@haspthread@|$haspthread|"       \
     -e "s|@hasxft@|$hasxft|"               \
     -e "s|@hascocoa@|$hascocoa|"           \
+    -e "s|@hasvc@|$hasvc|"                 \
     -e "s|@usec++11@|$usecxx11|"           \
     -e "s|@uselibc++11@|$uselibcxx11|"     \
     -e "s|@hasllvm@|$hasllvm|"             \
