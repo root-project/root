@@ -1596,8 +1596,10 @@ void TSelectorDraw::TakeEstimate()
             pm->Draw("p");
          }
          else {
-            if (fOption.Contains("a")) {
-               TString temp(fOption);
+            TString opt = fOption;
+            opt.ToLower();
+            if (opt.Contains("a")) {
+               TString temp(opt);
                temp.ReplaceAll("same","");
                if (temp.Contains("a")) {
                   if (h2->TestBit(kCanDelete)) {
