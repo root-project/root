@@ -6050,7 +6050,7 @@ EOF
         GCC)
             vcflags="$vcflags -Wno-unused-function"
             if test $compiler_version -lt 40500; then
-                vcflags="$vcflags -Wno-parentheses"
+                vcflags="$vcflags -Wno-parentheses  -Wno-strict-aliasing -Wno-uninitialized"
                 if test $compiler_version -lt 40406; then
                     avx_broken=true
                     if test $compiler_version -lt 40300; then
@@ -6117,8 +6117,7 @@ EOF
 
     # check for ABI version compiler flags
     case $compiler in
-	clang) ;;
-	*)
+	GCC) 
 	    message "Checking ABI version compiler flags"
 	    abiversioncxxflag=""
 	    for flag in '-fabi-version=0' '-fabi-version=4'; do
