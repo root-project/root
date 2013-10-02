@@ -2319,7 +2319,16 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl, void *address)
    R__LOCKGUARD(gClingMutex);
    ClassInfo_t* derived = GetClassInfo();
    ClassInfo_t* target = cl->GetClassInfo();
-   return gCling->ClassInfo_GetBaseOffset(derived, target, address);
+   if(derived && target) {
+      return gCling->ClassInfo_GetBaseOffset(derived, target, address);
+   }
+   else {
+      Int_t offset = GetBaseClassOffsetRecurse (cl);
+      if (offset != -2) {
+         return offset;
+      }
+   }
+   return -1;
 }
 
 //______________________________________________________________________________

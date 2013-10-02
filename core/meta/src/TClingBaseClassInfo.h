@@ -62,7 +62,6 @@ public:
    TClingBaseClassInfo(const TClingBaseClassInfo&);
    TClingBaseClassInfo& operator=(const TClingBaseClassInfo&);
 
-   OffsetPtrFunc_t GenerateBaseOffsetFunction(TClingClassInfo* derivedClass, TClingClassInfo* targetClass, void* address) const;
    TClingClassInfo *GetBase() const;
    int           InternalNext(int onlyDirect);
    bool          IsValid() const;
@@ -74,6 +73,9 @@ public:
    const char   *FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char   *Name() const;
    const char   *TmpltName() const;
+
+private:
+   OffsetPtrFunc_t GenerateBaseOffsetFunction(TClingClassInfo* derivedClass, TClingClassInfo* targetClass, void* address) const;
 };
 
 #endif // ROOT_TClingBaseClassInfo

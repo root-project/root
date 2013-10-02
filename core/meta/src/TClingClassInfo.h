@@ -77,7 +77,6 @@ public:
    explicit TClingClassInfo(cling::Interpreter *);
    explicit TClingClassInfo(cling::Interpreter *, const char *);
    explicit TClingClassInfo(cling::Interpreter *, const clang::Type &);
-   
    void                 AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFunc_t func);
    long                 ClassProperty() const;
    void                 Delete(void *arena) const;
@@ -105,6 +104,7 @@ public:
                                   InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    long                 GetOffset(const clang::CXXMethodDecl* md) const;
+   llvm::DenseMap<const clang::Decl*, OffsetPtrFunc_t> GetOffsetFunctions() const { return fOffsetFunctions;}
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    bool                 HasDefaultConstructor() const;
    bool                 HasMethod(const char *name) const;
@@ -126,6 +126,7 @@ public:
    long                 Property() const;
    int                  RootFlag() const;
    int                  Size() const;
+   void                 SetOffsetFunctions(llvm::DenseMap<const clang::Decl*, OffsetPtrFunc_t> offsetFunctions) { fOffsetFunctions = offsetFunctions; }
    long                 Tagnum() const;
    const char          *FileName();
    const char          *FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;

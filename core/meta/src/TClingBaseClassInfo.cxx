@@ -54,7 +54,6 @@
 using namespace llvm;
 using namespace clang;
 using namespace std;
-using namespace std;
 
 static const string indent_string("   ");
 
@@ -71,6 +70,7 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
    if (!fClassInfo->GetDecl()) {
       return;
    }
+   fClassInfo->SetOffsetFunctions(ci->GetOffsetFunctions());
    const clang::CXXRecordDecl* CRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(fClassInfo->GetDecl());
    if (!CRD) {
@@ -85,8 +85,8 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
                                          TClingClassInfo* derived,
                                          TClingClassInfo* base)
-   : fInterp(interp), fClassInfo(derived), fFirstTime(true), fDescend(false),
-     fDecl(0), fIter(0), fBaseInfo(base), fOffset(0L)
+   : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
+     fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L)
 {
    if (!derived->GetDecl()) {
       return;
@@ -98,9 +98,10 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
       // FIXME: We should prevent this from happening!
       return;
    }
-   //fClassInfo = new TClingClassInfo(*derived);
+   fClassInfo = new TClingClassInfo(*derived);
+   fClassInfo->SetOffsetFunctions(derived->GetOffsetFunctions());
    fDecl = CRD;
-   //fBaseInfo = new TClingClassInfo(*base);
+   fBaseInfo = new TClingClassInfo(*base);
    fIter = CRD->bases_begin();
 }
 
@@ -208,16 +209,12 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo 
       for (cling::Transaction::const_iterator I = Tp->decls_begin(),
            E = Tp->decls_end(); !WFD && I != E; ++I) {
          if (I->m_Call == cling::Transaction::kCCIHandleTopLevelDecl) {
-            WFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin());
-            // ...unless not top level or different name:
-            if(WFD){
-               if (!isa<TranslationUnitDecl>(WFD->getDeclContext()))
-                  WFD = 0;
-               else {
-                  DeclarationName FName = WFD->getDeclName();
-                  if (const IdentifierInfo* FII = FName.getAsIdentifierInfo()) {
-                     if (FII->getName() != wrapper_name)
-                        WFD = 0;
+         const FunctionDecl* createWFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin());
+            if (createWFD && isa<TranslationUnitDecl>(createWFD->getDeclContext())) {
+               DeclarationName FName = createWFD->getDeclName();
+               if (const IdentifierInfo* FII = FName.getAsIdentifierInfo()) {
+                  if (FII->getName() == wrapper_name) {
+                     WFD = createWFD;
                   }
                }
             }
@@ -228,13 +225,6 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo 
                "Wrapper compile did not return a function decl!");
          return 0;
       }
-   }
-
-   //  Lookup the new wrapper declaration.
-   const NamedDecl* WND = dyn_cast<NamedDecl>(WFD);
-   if (!WND) {
-      Error("TClingBaseClassInfo::GenerateBaseOffsetFunction", "Wrapper named decl is null!");
-      return 0;
    }
 
    //  Get the wrapper function pointer
@@ -411,19 +401,14 @@ long TClingBaseClassInfo::Offset(void * address) const
       long clang_val = fOffset + static_cast<long>(offset);
       return clang_val;
    }
-   
    // Virtual inheritance case
    OffsetPtrFunc_t executableFunc = fClassInfo->FindBaseOffsetFunction(fBaseInfo->GetDecl());
    if (!executableFunc) {
+      // Error generated already by GenerateBaseOffsetFunction if executableFunc = 0.
       executableFunc = GenerateBaseOffsetFunction(fClassInfo, fBaseInfo, address);
-      if (!executableFunc) {
-      Error ("TClingBaseClassInfo::Offset"
-             , "Could not generate function for virtual base offset calculation.");
-      return -1;
-      }
       fClassInfo->AddBaseOffsetFunction(fBaseInfo->GetDecl(), executableFunc);
    }
-   if(address)
+   if (address)
       return (*executableFunc)(address);
    
    return -1;   
