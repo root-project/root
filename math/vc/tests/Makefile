@@ -23,6 +23,7 @@ ifeq ($(ROOTSYS),)
 ROOTSYS = ..
 endif
 include $(ROOTSYS)/etc/Makefile.arch
+include $(ROOTSYS)/config/Makefile.config
 endif
 
 #------------------------------------------------------------------------------
@@ -31,9 +32,9 @@ endif
 # #unroll loop better on gcc > 4
 #CXXFLAGS+= -O3 -g  
 # endif
-AVXCXXFLAG     := -mavx
-SIMDCXXFLAGS   := -mavx -msse4.2 -msse4.1 -msse4a -mssse3 -msse3 -msse2
-VCFLAGS        := -fabi-version=0  -Wno-unused-function
+#AVXCXXFLAG     := -mavx
+#SIMDCXXFLAGS   := -mavx -msse4.2 -msse4.1 -msse4a -mssse3 -msse3 -msse2
+#VCFLAGS        := -fabi-version=0  -Wno-unused-function
 
 CXXFLAGS+=  $(VCFLAGS) 
 

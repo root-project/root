@@ -26,7 +26,6 @@
 #include "unittest.h"
 
 
-
 template<typename Vec> size_t alignmentMask()
 {
     if (Vec::Size == 1) {
@@ -61,8 +60,12 @@ template<typename V> void stdVectorAlignment()
 
 int main(int argc, char **argv)
 {
+
+
+
     initTest(argc, argv);
 
+    using namespace Vc;
     testAllTypes(stdVectorAlignment);
 
     return 0;
