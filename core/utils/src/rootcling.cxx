@@ -2336,7 +2336,7 @@ void replaceAll(std::string& str, const std::string& from, const std::string& to
 }
 
 //______________________________________________________________________________
-void extractFileName(const std::string& path, std::string& filename)
+void ExtractFileName(const std::string& path, std::string& filename)
 {
    // Extract the filename from a fullpath finding the last \ or /
    // according to the content in gPathSeparator
@@ -2350,7 +2350,7 @@ void extractFileName(const std::string& path, std::string& filename)
 }
 
 //______________________________________________________________________________
-void extractFilePath(const std::string& path, std::string& dirname)
+void ExtractFilePath(const std::string& path, std::string& dirname)
 {
    // Extract the path from a fullpath finding the last \ or /
    // according to the content in gPathSeparator
@@ -2360,6 +2360,15 @@ void extractFilePath(const std::string& path, std::string& dirname)
    } else {
       dirname.assign("");
    }
+}
+
+//______________________________________________________________________________
+bool HasPath(const std::string& name)
+{
+   // Check if file has a path
+   std::string dictLocation;
+   ExtractFilePath(name,dictLocation);
+   return !dictLocation.empty();
 }
 
 //______________________________________________________________________________
@@ -3808,7 +3817,7 @@ int invokeRootCling(const std::string& verbosity,
 
    // Extract the path to the dictionary
    std::string dictLocation;
-   extractFilePath(ofilename,dictLocation);
+   ExtractFilePath(ofilename,dictLocation);
    
    // Rootmaps
 
@@ -3820,7 +3829,7 @@ int invokeRootCling(const std::string& verbosity,
             "*** genreflex: No rootmap lib and several header specified!\n");
       }
       std::string cleanHeaderName;
-      extractFileName(headersNames[0],cleanHeaderName);
+      ExtractFileName(headersNames[0],cleanHeaderName);
       newRootmapLibName = "lib";
       newRootmapLibName+=cleanHeaderName;
       changeExtension(newRootmapLibName,gLibraryExtension);
@@ -3829,7 +3838,7 @@ int invokeRootCling(const std::string& verbosity,
    // Prepend to the rootmap the designed directory of the dictionary
    // if no path is specified for the rootmap itself
    std::string newRootmapFileName(rootmapFileName);
-   if (!newRootmapFileName.empty()){
+   if (!newRootmapFileName.empty() && !HasPath(newRootmapFileName)){
       newRootmapFileName = dictLocation+newRootmapFileName;
    }
 
@@ -3849,7 +3858,9 @@ int invokeRootCling(const std::string& verbosity,
    // Capabilities file   
    if (!capaFileName.empty()){
       std::string newCapaFileName(capaFileName);
-      newCapaFileName=dictLocation+newCapaFileName;
+      if (!HasPath(newCapaFileName)){
+         newCapaFileName=dictLocation+newCapaFileName;
+      }
       argvVector.push_back(string2charptr("-cap"));
       argvVector.push_back(string2charptr(newCapaFileName));
    }   
@@ -4376,7 +4387,7 @@ int main(int argc, char **argv)
    const std::string exePath ( GetExePath() );
 
    std::string exeName;
-   extractFileName(exePath,exeName);
+   ExtractFileName(exePath,exeName);
 
    // Select according to the name of the executable the procedure to follow:
    // 1) RootCling
