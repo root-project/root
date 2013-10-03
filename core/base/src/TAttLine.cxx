@@ -48,7 +48,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *c = new TCanvas("c","Line colors",0,0,500,200);
-   c.DrawColorTable();
+   c->DrawColorTable();
    return c;
 }
 End_Macro
@@ -64,7 +64,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *Lw = new TCanvas("Lw","test",500,200);
-   TText  t;
+   TText t;
    t.SetTextAlign(32);
    t.SetTextSize(0.08);
    Int_t i=1;
@@ -89,7 +89,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *Ls = new TCanvas("Ls","test",500,200);
-   TText  t;
+   TText t;
    t.SetTextAlign(32);
    t.SetTextSize(0.08);
    Int_t i=1;
