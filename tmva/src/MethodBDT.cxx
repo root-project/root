@@ -152,11 +152,13 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
                             const TString& theOption,
                             TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kBDT, methodTitle, theData, theOption, theTargetDir )
+   , fTrainSample(0)
    , fNTrees(0)
    , fSigToBkgFraction(0) 
    , fAdaBoostBeta(0)
    , fTransitionPoint(0)
    , fShrinkage(0)
+   , fBaggedBoost(kFALSE)
    , fBaggedGradBoost(kFALSE)
    , fSumOfWeights(0)
    , fMinNodeEvents(0)
@@ -204,11 +206,13 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
                             const TString& theWeightFile,
                             TDirectory* theTargetDir )
    : TMVA::MethodBase( Types::kBDT, theData, theWeightFile, theTargetDir )
+   , fTrainSample(0)
    , fNTrees(0)
    , fSigToBkgFraction(0) 
    , fAdaBoostBeta(0)
    , fTransitionPoint(0)
    , fShrinkage(0)
+   , fBaggedBoost(kFALSE)
    , fBaggedGradBoost(kFALSE)
    , fSumOfWeights(0)
    , fMinNodeEvents(0)
@@ -333,13 +337,13 @@ void TMVA::MethodBDT::DeclareOptions()
    AddPreDefVal(TString("Quadratic"));
    AddPreDefVal(TString("Exponential"));
 
-   DeclareOptionRef(fBaggedGradBoost=kFALSE, "UseBaggedGrad","Use only a random subsample of all events for growing the trees in each iteration. (Only valid for GradBoost)");
+   DeclareOptionRef(fBaggedBoost=kFALSE, "UseBaggedBoost","Use only a random subsample of all events for growing the trees in each boost iteration.");
    DeclareOptionRef(fShrinkage=1.0, "Shrinkage", "Learning rate for GradBoost algorithm");
    DeclareOptionRef(fAdaBoostBeta=.5, "AdaBoostBeta", "Learning rate  for AdaBoost algorithm");
    DeclareOptionRef(fRandomisedTrees,"UseRandomisedTrees","Determine at each node splitting the cut variable only as the best out of a random subset of variables (like in RandomForests)");
    DeclareOptionRef(fUseNvars,"UseNvars","Size of the subset of variables used with RandomisedTree option");
    DeclareOptionRef(fUsePoissonNvars,"UsePoissonNvars", "Interpret \"UseNvars\" not as fixed number but as mean of a Possion distribution in each split with RandomisedTree option");
-   DeclareOptionRef(fBaggedSampleFraction=.6,"BaggedSampleFraction","Relative size of bagged event sample to original size of the data sample (used whenever bagging is used (i.e. UseBaggedGrad, Bagging,)" );
+   DeclareOptionRef(fBaggedSampleFraction=.6,"BaggedSampleFraction","Relative size of bagged event sample to original size of the data sample (used whenever bagging is used (i.e. UseBaggedBoost, Bagging,)" );
 
    DeclareOptionRef(fUseYesNoLeaf=kTRUE, "UseYesNoLeaf",
                     "Use Sig or Bkg categories, or the purity=S/(S+B) as classification of the leaf node -> Real-AdaBoost");
@@ -401,6 +405,7 @@ void TMVA::MethodBDT::DeclareOptions()
    // deprecated options, still kept for the moment:
    DeclareOptionRef(fMinNodeEvents=0, "nEventsMin", "deprecated: Use MinNodeSize (in % of training events) instead");
 
+   DeclareOptionRef(fBaggedGradBoost=kFALSE, "UseBaggedGrad","deprecated: Use *UseBaggedBoost* instead:  Use only a random subsample of all events for growing the trees in each iteration.");
    DeclareOptionRef(fBaggedSampleFraction, "GradBaggingFraction","deprecated: Use *BaggedSampleFraction* instead: Defines the fraction of events to be used in each iteration, e.g. when UseBaggedGrad=kTRUE. ");
    DeclareOptionRef(fUseNTrainEvents,"UseNTrainEvents","deprecated: Use *BaggedSampleFraction* instead: Number of randomly picked training events used in randomised (and bagged) trees");
    DeclareOptionRef(fNNodesMax,"NNodesMax","deprecated: Use MaxDepth instead to limit the tree size" );
@@ -574,6 +579,12 @@ void TMVA::MethodBDT::ProcessOptions()
       Log() << kWARNING << "You have specified a deprecated option *UseNTrainEvents="<<fUseNTrainEvents
             << "* \n this has been translated to BaggedSampleFraction="<<fBaggedSampleFraction<<"(%)"<<Endl;
    }      
+
+   if (fBoostType=="Bagging") fBaggedBoost = kTRUE;
+   if (fBaggedGradBoost){
+      fBaggedBoost = kTRUE;
+      Log() << kWARNING << "You have specified a deprecated option *UseBaggedGrad* --> please use  *UseBaggedBoost* instead" << Endl;
+   }
 
 }
 
@@ -805,6 +816,13 @@ void TMVA::MethodBDT::InitEventSample( void )
    for (Long64_t ievt=0; ievt<nevents; ievt++) {
       if ((DataInfo().IsSignal(fEventSample[ievt])) ) fEventSample[ievt]->SetBoostWeight(normSig);
       else                                            fEventSample[ievt]->SetBoostWeight(normBkg);
+   }
+
+
+   fTrainSample = &fEventSample;
+   if (fBaggedBoost){
+      GetBaggedSubSample(fEventSample);
+      fTrainSample = &fSubSample;
    }
 
    //just for debug purposes..
@@ -1147,8 +1165,6 @@ void TMVA::MethodBDT::Train()
 
    if(fBoostType=="Grad"){
       InitGradBoost(fEventSample);
-   } else {
-      if (fBaggedGradBoost) GetRandomSubSample();
    }
 
    for (int itree=0; itree<fNTrees; itree++) {
@@ -1172,14 +1188,8 @@ void TMVA::MethodBDT::Train()
             }
             // the minimum linear correlation between two variables demanded for use in fisher criterion in node splitting
 
-            if (fBaggedGradBoost){
-               nNodesBeforePruning = fForest.back()->BuildTree(fSubSample);
-               fBoostWeights.push_back(this->Boost(fSubSample, fForest.back(), itree, i));
-            }
-            else{
-               nNodesBeforePruning = fForest.back()->BuildTree(fEventSample);  
-               fBoostWeights.push_back(this->Boost(fEventSample, fForest.back(), itree, i));
-            }
+            nNodesBeforePruning = fForest.back()->BuildTree(*fTrainSample);
+            fBoostWeights.push_back(this->Boost(fEventSample, fForest.back(),i));
          }
       }
       else{
@@ -1192,13 +1202,13 @@ void TMVA::MethodBDT::Train()
             fForest.back()->SetMinLinCorrForFisher(fMinLinCorrForFisher); 
             fForest.back()->SetUseExclusiveVars(fUseExclusiveVars); 
          }
-         if (fBaggedGradBoost) nNodesBeforePruning = fForest.back()->BuildTree(fSubSample);
-         else                  nNodesBeforePruning = fForest.back()->BuildTree(fEventSample);
          
-         if (fBoostType!="Grad")
-            if (fUseYesNoLeaf && !DoRegression() ){ // remove leaf nodes where both daughter nodes are of same type
-               nNodesBeforePruning = fForest.back()->CleanTree();
-            }
+         nNodesBeforePruning = fForest.back()->BuildTree(*fTrainSample);
+         
+         if (fUseYesNoLeaf && !DoRegression() && fBoostType!="Grad") { // remove leaf nodes where both daughter nodes are of same type
+            nNodesBeforePruning = fForest.back()->CleanTree();
+         }
+
          nNodesBeforePruningCount += nNodesBeforePruning;
          nodesBeforePruningVsTree->SetBinContent(itree+1,nNodesBeforePruning);
          
@@ -1208,27 +1218,16 @@ void TMVA::MethodBDT::Train()
          std::vector<const Event*> * validationSample = NULL;
          if(fAutomatic) validationSample = &fValidationSample;
          
-         if(fBoostType=="Grad"){
-            if(fBaggedGradBoost)
-               fBoostWeights.push_back(this->Boost(fSubSample, fForest.back(), itree));
-            else
-               fBoostWeights.push_back(this->Boost(fEventSample, fForest.back(), itree));
-         }
-         else {
-            if(fBaggedGradBoost){
-               fBoostWeights.push_back(this->Boost(fSubSample, fForest.back(), itree));
-            }else{
-               fBoostWeights.push_back(this->Boost(fEventSample, fForest.back(), itree));
-            }
-            
-            // if fAutomatic == true, pruneStrength will be the optimal pruning strength
-            // determined by the pruning algorithm; otherwise, it is simply the strength parameter
-            // set by the user
-            if  (fPruneMethod != DecisionTree::kNoPruning) fForest.back()->PruneTree(validationSample);
-            
-            if (fUseYesNoLeaf && !DoRegression() ){ // remove leaf nodes where both daughter nodes are of same type
-               fForest.back()->CleanTree();
-            }
+         fBoostWeights.push_back(this->Boost(fEventSample, fForest.back()));
+
+         
+         // if fAutomatic == true, pruneStrength will be the optimal pruning strength
+         // determined by the pruning algorithm; otherwise, it is simply the strength parameter
+         // set by the user
+         if  (fPruneMethod != DecisionTree::kNoPruning) fForest.back()->PruneTree(validationSample);
+         
+         if (fUseYesNoLeaf && !DoRegression() && fBoostType!="Grad"){ // remove leaf nodes where both daughter nodes are of same type
+            fForest.back()->CleanTree();
          }
          nNodesAfterPruning = fForest.back()->GetNNodes();
          nNodesAfterPruningCount += nNodesAfterPruning;
@@ -1275,20 +1274,6 @@ void TMVA::MethodBDT::Train()
 
 }
 
-//_______________________________________________________________________
-void TMVA::MethodBDT::GetRandomSubSample()
-{
-   // fills fEventSample with fBaggedSampleFraction*NEvents random training events
-   UInt_t nevents = fEventSample.size();
-   
-   if (!fSubSample.empty()) fSubSample.clear();
-   TRandom3 *trandom   = new TRandom3(fForest.size()+1);
-
-   for (UInt_t ievt=0; ievt<nevents; ievt++) { // recreate new random subsample
-      if(trandom->Rndm()<fBaggedSampleFraction)
-         fSubSample.push_back(fEventSample[ievt]);
-   }
-}
 
 //_______________________________________________________________________
 Double_t TMVA::MethodBDT::GetGradBoostMVA(const TMVA::Event* e, UInt_t nTrees)
@@ -1405,9 +1390,7 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
    }
    
    //call UpdateTargets before next tree is grown
-   if (fBaggedGradBoost){
-      GetRandomSubSample();
-   }
+
    DoMulticlass() ? UpdateTargets(fEventSample, cls) : UpdateTargets(fEventSample);
    return 1; //trees all have the same weight
 }
@@ -1437,12 +1420,7 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
       (iLeave->first)->SetResponse(fShrinkage*(ResidualMedian+shift));          
    }
    
-   if (fBaggedGradBoost){
-      GetRandomSubSample();
-      UpdateTargetsRegression(fSubSample);
-   }
-   else
-      UpdateTargetsRegression(fEventSample);
+   UpdateTargetsRegression(*fTrainSample);
    return 1;
 }
 
@@ -1468,12 +1446,9 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
          //substract the gloabl median from all residuals
          (*res).second.first -= weightedMedian;  
       }
-      if (fBaggedGradBoost){
-         GetRandomSubSample();
-         UpdateTargetsRegression(fSubSample,kTRUE);
-      }
-      else
-         UpdateTargetsRegression(fEventSample,kTRUE);
+
+      UpdateTargetsRegression(*fTrainSample,kTRUE);
+
       return;
    }
    else if(DoMulticlass()){
@@ -1494,7 +1469,7 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
          fResiduals[*e].push_back(0);         
       }
    }
-   if (fBaggedGradBoost) GetRandomSubSample(); 
+
 }
 //_______________________________________________________________________
 Double_t TMVA::MethodBDT::TestTreeQuality( DecisionTree *dt )
@@ -1517,7 +1492,7 @@ Double_t TMVA::MethodBDT::TestTreeQuality( DecisionTree *dt )
 }
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBDT::Boost( std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, Int_t iTree, UInt_t cls )
+Double_t TMVA::MethodBDT::Boost( std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls )
 {
    // apply the boosting alogrithim (the algorithm is selecte via the the "option" given
    // in the constructor. The return value is the boosting weight
@@ -1526,7 +1501,7 @@ Double_t TMVA::MethodBDT::Boost( std::vector<const TMVA::Event*>& eventSample, D
 
    if      (fBoostType=="AdaBoost")    returnVal = this->AdaBoost  (eventSample, dt);
    else if (fBoostType=="AdaCost")     returnVal = this->AdaCost   (eventSample, dt);
-   else if (fBoostType=="Bagging")     returnVal = this->Bagging   (eventSample, iTree+1);
+   else if (fBoostType=="Bagging")     returnVal = this->Bagging   ( );
    else if (fBoostType=="RegBoost")    returnVal = this->RegBoost  (eventSample, dt);
    else if (fBoostType=="AdaBoostR2")  returnVal = this->AdaBoostR2(eventSample, dt);
    else if (fBoostType=="Grad"){
@@ -1541,6 +1516,11 @@ Double_t TMVA::MethodBDT::Boost( std::vector<const TMVA::Event*>& eventSample, D
       Log() << kINFO << GetOptions() << Endl;
       Log() << kFATAL << "<Boost> unknown boost option " << fBoostType<< " called" << Endl;
    }
+
+   if (fBaggedBoost){
+      GetBaggedSubSample(fEventSample);
+   }
+
 
    return returnVal;
 }
@@ -1785,7 +1765,7 @@ Double_t TMVA::MethodBDT::AdaBoost( std::vector<const TMVA::Event*>& eventSample
 
 
    //   Double_t globalNormWeight=sumGlobalw/newSumGlobalw;
-   Double_t globalNormWeight=( (Double_t) fEventSample.size())/newSumGlobalw;
+   Double_t globalNormWeight=( (Double_t) eventSample.size())/newSumGlobalw;
    Log() << kDEBUG << "new Nsig="<<newSumw[0]*globalNormWeight << " new Nbkg="<<newSumw[1]*globalNormWeight << Endl;
 
 
@@ -1803,10 +1783,6 @@ Double_t TMVA::MethodBDT::AdaBoost( std::vector<const TMVA::Event*>& eventSample
 
    fBoostWeight = boostWeight;
    fErrorFraction = err;
-
-   if (fBaggedGradBoost){
-      GetRandomSubSample();
-   }
 
    return boostWeight;
 }
@@ -1917,7 +1893,7 @@ Double_t TMVA::MethodBDT::AdaCost( vector<const TMVA::Event*>& eventSample, Deci
 
 
    //  Double_t globalNormWeight=sumGlobalWeights/newSumGlobalWeights;
-   Double_t globalNormWeight=Double_t(fEventSample.size())/newSumGlobalWeights;
+   Double_t globalNormWeight=Double_t(eventSample.size())/newSumGlobalWeights;
    Log() << kDEBUG << "new Nsig="<<newSumClassWeights[0]*globalNormWeight << " new Nbkg="<<newSumClassWeights[1]*globalNormWeight << Endl;
 
 
@@ -1936,33 +1912,55 @@ Double_t TMVA::MethodBDT::AdaCost( vector<const TMVA::Event*>& eventSample, Deci
    fBoostWeight = boostWeight;
    fErrorFraction = err;
 
-   if (fBaggedGradBoost){
-      GetRandomSubSample();
-   }
 
    return boostWeight;
 }
 
 
 //_______________________________________________________________________
-Double_t TMVA::MethodBDT::Bagging( vector<const TMVA::Event*>& eventSample, Int_t iTree )
+Double_t TMVA::MethodBDT::Bagging( )
 {
    // call it boot-strapping, re-sampling or whatever you like, in the end it is nothing
    // else but applying "random" poisson weights to each event.
-   Double_t newSumw=0;
-   Double_t newWeight;
-   TRandom3 *trandom   = new TRandom3(iTree);
+
+   // this is now done in "MethodBDT::Boost  as it might be used by other boost methods, too
+   // GetBaggedSample(eventSample);
+
+   return 1.;  //here as there are random weights for each event, just return a constant==1;
+}
+
+//_______________________________________________________________________
+void TMVA::MethodBDT::GetBaggedSubSample(std::vector<const TMVA::Event*>& eventSample)
+{
+   // fills fEventSample with fBaggedSampleFraction*NEvents random training events
+
+  
+   Double_t n;
+   TRandom3 *trandom   = new TRandom3(100*fForest.size()+1234);
+
+   if (!fSubSample.empty()) fSubSample.clear();
+
    for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      newWeight = trandom->PoissonD(fBaggedSampleFraction);
-      (*e)->SetBoostWeight(newWeight);
-      newSumw+=(*e)->GetBoostWeight();
+      n = trandom->PoissonD(fBaggedSampleFraction);
+      for (Int_t i=0;i<n;i++) fSubSample.push_back(*e);
    }
-   Double_t normWeight =  eventSample.size() / newSumw ;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      (*e)->ScaleBoostWeight( normWeight );
+   
+   delete trandom;
+   return;
+
+   /*
+   UInt_t nevents = fEventSample.size();
+   
+   if (!fSubSample.empty()) fSubSample.clear();
+   TRandom3 *trandom   = new TRandom3(fForest.size()+1);
+
+   for (UInt_t ievt=0; ievt<nevents; ievt++) { // recreate new random subsample
+      if(trandom->Rndm()<fBaggedSampleFraction)
+         fSubSample.push_back(fEventSample[ievt]);
    }
    delete trandom;
-   return 1.;  //here as there are random weights for each event, just return a constant==1;
+   */
+
 }
 
 //_______________________________________________________________________
