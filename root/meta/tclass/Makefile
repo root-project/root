@@ -37,3 +37,5 @@ pairs: pairs.clog
 	$(TestDiff)
 
 execProperties.success: EXTRA_DIFFOPTS += -w
+
+execInterpClassNew.log: classlib_cxx.$(DllSuf)
