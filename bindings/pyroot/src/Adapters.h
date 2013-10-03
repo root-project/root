@@ -62,6 +62,7 @@ public:
    std::string Name( unsigned int mod = 0 ) const;
 
    Bool_t IsConstant() const;
+   Bool_t IsConstructor() const;
    Bool_t IsEnum() const;
    Bool_t IsPublic() const;
    Bool_t IsStatic() const;

@@ -138,6 +138,13 @@ Bool_t PyROOT::TMemberAdapter::IsConstant() const
 }
 
 //____________________________________________________________________________
+Bool_t PyROOT::TMemberAdapter::IsConstructor() const
+{
+// test if the adapted member is a const method
+   return ((TFunction*)fMember) ? (((TFunction*)fMember)->ExtraProperty() & kIsConstructor) : kFALSE;
+}
+
+//____________________________________________________________________________
 Bool_t PyROOT::TMemberAdapter::IsEnum() const
 {
 // test if the adapted member is of an enum type
