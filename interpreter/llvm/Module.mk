@@ -86,9 +86,9 @@ $(LLVMRES): $(LLVMLIB)
 $(LLVMLIB): $(LLVMDEPO) $(FORCELLVMTARGET)
 		@(echo "*** Building $@..."; \
 		cd $(LLVMDIRO) && \
-		$(MAKE) NOCLING=1 VERBOSE=1 $(ROOT_BUILDCLANG) && \
+		$(MAKE) ONLY_TOOLS=clang NOCLING=1 VERBOSE=1 $(ROOT_BUILDCLANG) && \
 		rm -rf ../inst/lib/clang && \
-		$(MAKE) NOCLING=1 install $(ROOT_BUILDCLANG) \
+		$(MAKE) ONLY_TOOLS=clang NOCLING=1 install $(ROOT_BUILDCLANG) \
                 $(ENDLLVMBUILD) )
 
 $(LLVMGOODO): $(LLVMGOODS) $(LLVMLIB)
