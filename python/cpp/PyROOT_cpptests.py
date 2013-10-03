@@ -227,6 +227,21 @@ class Cpp2ClassNamingTestCase( MyTestCase ):
       self.assert_( hasattr( z, 'myint' ) )
       self.assert_( z.GimeZ_( z ) )
 
+   def test02DefaultCtorInNamespace( self ):
+      """Check that constructor with default argument is found in namespace"""
+
+      a = CtorWithDefaultInGBL()
+      self.assertEqual( a.data, -1 )
+
+      b = CtorWithDefaultInGBL( 1 )
+      self.assertEqual( b.data, 1 )
+
+      c = PR_NS_A.CtorWithDefaultInNS()
+      self.assertEqual( c.data, -1 )
+
+      c = PR_NS_A.CtorWithDefaultInNS( 2 )
+      self.assertEqual( c.data, 2 )
+
 
 ## actual test run
 if __name__ == '__main__':
