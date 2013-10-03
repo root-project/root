@@ -28,6 +28,9 @@ endif()
 if(fftw3)
   add_subdirectory(fftw)
 endif()
+if(vc)
+  add_subdirectory(vc)
+endif()
 
 
 

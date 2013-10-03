@@ -22,7 +22,7 @@ ROOT_GENERATE_ROOTMAP(Cling LINKDEF LinkDefCling.h)
 ROOT_LINKER_LIBRARY(Cling ${sources}  # G__Cling.cxx 
                     ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx 
                     $<TARGET_OBJECTS:MetaUtilsLLVM>
-                    LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} 
+                    LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS}
                     DEPENDENCIES Core)
 
 ROOT_INSTALL_HEADERS()

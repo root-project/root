@@ -588,7 +588,7 @@ if(xrootd)
 endif()
 
 #---Check for cling and llvm ----------------------------------------------------------------
-find_package(Curses)
+find_library(CMAKE_TINFO_LIBS NAMES tinfo ncurses)
 if(cling)
   if(builtin_llvm)
     set(LLVM_SOURCE_DIR ${CMAKE_SOURCE_DIR}/interpreter/llvm/src)
@@ -622,7 +622,7 @@ if(cling)
                        -lLLVMAArch64Desc -lLLVMAArch64Info -lLLVMAArch64AsmPrinter -lLLVMAArch64Utils -lLLVMMCDisassembler
                        -lLLVMMCParser -lLLVMInterpreter -lLLVMMCJIT -lLLVMJIT -lLLVMCodeGen -lLLVMObjCARCOpts -lLLVMScalarOpts 
                        -lLLVMInstCombine -lLLVMTransformUtils -lLLVMipa -lLLVMAnalysis -lLLVMRuntimeDyld -lLLVMExecutionEngine
-                       -lLLVMTarget -lLLVMMC -lLLVMObject -lLLVMCore -lLLVMSupport ${CURSES_LIBRARIES})
+                       -lLLVMTarget -lLLVMMC -lLLVMObject -lLLVMCore -lLLVMSupport)
     file(READ ${LLVM_SOURCE_DIR}/configure _filestr)
     string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+).*" "\\1" LLVM_VERSION ${_filestr})
   else()
