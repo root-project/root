@@ -29,12 +29,14 @@
 #include "TClingMethodInfo.h"
 #include "TClingTypeInfo.h"
 
+#include "cling/Interpreter/Interpreter.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/Type.h"
+#include "clang/Sema/Sema.h"
 
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
@@ -108,7 +110,19 @@ const char *TClingMethodArgInfo::DefaultValue() const
    }
    const clang::FunctionDecl *fd = fMethodInfo->GetMethodDecl();
    const clang::ParmVarDecl *pvd = fd->getParamDecl(fIdx);
-   const clang::Expr *expr = pvd->getDefaultArg();
+   // Instantiate default arg if needed
+   if (pvd->hasUninstantiatedDefaultArg()) {
+      fInterp->getSema().BuildCXXDefaultArgExpr(clang::SourceLocation(),
+                                                const_cast<clang::FunctionDecl*>(fd),
+                                                const_cast<clang::ParmVarDecl*>(pvd));
+   }
+   const clang::Expr *expr = 0;
+   if (pvd->hasUninstantiatedDefaultArg()) {
+      // We tried to instantiate it above; if we fail, use the uninstantiated one.
+      expr = pvd->getUninstantiatedDefaultArg();
+   } else {
+      expr = pvd->getDefaultArg();
+   }
    clang::ASTContext &context = pvd->getASTContext();
    clang::PrintingPolicy policy(context.getPrintingPolicy());
    static std::string buf;
