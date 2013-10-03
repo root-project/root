@@ -453,6 +453,19 @@ long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
    return offset;
 }
 
+static bool HasBody(const clang::FunctionDecl &decl, const cling::Interpreter &interp)
+{
+   if (decl.hasBody()) return true;
+   
+   std::string mangledName;
+   interp.maybeMangleDeclName(&decl, mangledName);
+
+   void *GV = interp.getAddressOfGlobal(mangledName.c_str());
+   if (GV) return true;
+
+   return false;
+}
+
 bool TClingClassInfo::HasDefaultConstructor() const
 {
    // Return true if there a constructor taking no arguments (including
@@ -481,13 +494,13 @@ bool TClingClassInfo::HasDefaultConstructor() const
    for (CXXRecordDecl::ctor_iterator I = CRD->ctor_begin(),
          E = CRD->ctor_end(); I != E; ++I) {
       if (I->getMinRequiredArguments() == 0) {
-         if (I->hasBody() && (I->getAccess() == AS_public)) {
+         if ((I->getAccess() == AS_public) && HasBody(**I,*fInterp)) {
             return true;
          }
          if (I->isTemplateInstantiation()) {
             const clang::FunctionDecl* FD =
                I->getInstantiatedFromMemberFunction();
-            if (FD->hasBody() && (FD->getAccess() == AS_public)) {
+            if ((FD->getAccess() == AS_public) && HasBody(*FD,*fInterp)) {
                return true;
             }
          }
