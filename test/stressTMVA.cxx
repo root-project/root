@@ -2774,7 +2774,7 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
    if (full) TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kTMlpANN, "TMlpANN", "!H:!V:NCycles=200:HiddenLayers=N+1,N:LearningMethod=BFGS:ValidationFraction=0.3"  , 0.7, 0.98) ); // n_cycles:#nodes:#nodes:...
    TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001:VarTransform=Norm" , 0.88, 0.98) );
    TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kBDT, "BDTG",
-                                                      "!H:!V:NTrees=400:BoostType=Grad:Shrinkage=0.30:UseBaggedGrad:GradBaggingFraction=0.6:SeparationType=GiniIndex:nCuts=20:NNodesMax=7" , 0.88, 0.98) );
+                                                      "!H:!V:NTrees=400:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:GradBaggingFraction=0.6:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" , 0.88, 0.98) );
    TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kBDT, "BDT",
                                                       "!H:!V:NTrees=400:nEventsMin=100:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=10:PruneMethod=NoPruning" , 0.88, 0.98) );
    if (full) TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kBDT, "BDTB",
@@ -2790,8 +2790,8 @@ void addRegressionTests( UnitTestSuite& TMVA_test, bool full=true)
    TMVA_test.addTest(new RegressionUnitTestWithDeviation( TMVA::Types::kLD, "LD", "!H:!V:VarTransform=None",      15., 25.,    10., 20. ));
    //                       full low/high , 90 low/high
    TMVA_test.addTest(new RegressionUnitTestWithDeviation( TMVA::Types::kMLP, "MLPBFGSN", "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=300:HiddenLayers=N+20:TestRate=6:TrainingMethod=BFGS:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-7:ConvergenceTests=15:!UseRegulator:VarTransform=N" , 0.4, 0.85, 0.3, 0.55 ));
-   if (full) TMVA_test.addTest(new RegressionUnitTestWithDeviation( TMVA::Types::kBDT, "BDTG","!H:!V:NTrees=1000::BoostType=Grad:Shrinkage=0.3:!UseBaggedGrad:SeparationType=GiniIndex:nCuts=20:MinNodeSize=.2:MaxDepth=3" ,  5., 8., 3., 5. ));
-   TMVA_test.addTest(new RegressionUnitTestWithDeviation( TMVA::Types::kBDT, "BDTG2","!H:!V:NTrees=2000::BoostType=Grad:Shrinkage=0.1:UseBaggedGrad:GradBaggingFraction=0.5:nCuts=20:MaxDepth=3" ,  2., 5., 1., 3. ));
+   if (full) TMVA_test.addTest(new RegressionUnitTestWithDeviation( TMVA::Types::kBDT, "BDTG","!H:!V:NTrees=1000::BoostType=Grad:Shrinkage=0.3:!UseBaggedBoost:SeparationType=GiniIndex:nCuts=20:MinNodeSize=.2:MaxDepth=3" ,  5., 8., 3., 5. ));
+   TMVA_test.addTest(new RegressionUnitTestWithDeviation( TMVA::Types::kBDT, "BDTG2","!H:!V:NTrees=2000::BoostType=Grad:Shrinkage=0.1:UseBaggedBoost:GradBaggingFraction=0.5:nCuts=20:MaxDepth=3" ,  2., 5., 1., 3. ));
 
    if (!full) return;
 
@@ -2847,7 +2847,7 @@ void addComplexClassificationTests( UnitTestSuite& TMVA_test, bool full=true )
    TMVA_test.addTest(new MethodUnitTestWithComplexData(trees, prep, TMVA::Types::kMLP, "MLP", "H:!V:RandomSeed=9:NeuronType=tanh:VarTransform=N:NCycles=50:HiddenLayers=N+10:TestRate=5:TrainingMethod=BFGS:!UseRegulator" , 0.955, 0.975) );
    TMVA_test.addTest(new MethodUnitTestWithComplexData(trees, prep, TMVA::Types::kMLP, "MLP", "H:!V:RandomSeed=9:NeuronType=tanh:VarTransform=N:NCycles=50:HiddenLayers=N+10:TestRate=5:TrainingMethod=BP:!UseRegulator" , 0.955, 0.975) );
    // BDT
-   TMVA_test.addTest(new MethodUnitTestWithComplexData(trees, prep, TMVA::Types::kBDT, "BDTG8_50", "!H:!V:NTrees=50:BoostType=Grad:Shrinkage=0.30:UseBaggedGrad:BaggedSampleFraction=0.6:nCuts=20:MaxDepth=3:SeparationType=GiniIndex" , 0.950, 0.975) );
+   TMVA_test.addTest(new MethodUnitTestWithComplexData(trees, prep, TMVA::Types::kBDT, "BDTG8_50", "!H:!V:NTrees=50:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:BaggedSampleFraction=0.6:nCuts=20:MaxDepth=3:SeparationType=GiniIndex" , 0.950, 0.975) );
    // SVM
    TMVA_test.addTest(new MethodUnitTestWithComplexData(trees, prep, TMVA::Types::kSVM, "SVM", "Gamma=0.4:Tol=0.001" , 0.955, 0.975) );
 }
