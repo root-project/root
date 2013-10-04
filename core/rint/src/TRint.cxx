@@ -485,8 +485,12 @@ void TRint::PrintLogo(Bool_t lite)
       Printf("  *                                         *");
       Printf("  *   Version%10s %17s   *", root_version, version_date);
       Printf("  *                                         *");
-      Printf("  *  You are welcome to visit our Web site  *");
+      Printf("  *  You are welcome to visit our web site  *");
       Printf("  *          http://root.cern.ch            *");
+      Printf("  *                                         *");
+      Printf("  * !!! THIS IS A PREPRODUCTION VERSION !!! *");
+      Printf("  * Please use 5.34 for any real work until *");
+      Printf("  * ROOT 6 is released.                     *");
       Printf("  *                                         *");
       Printf("  *******************************************\n");
    }
