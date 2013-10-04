@@ -151,11 +151,14 @@ namespace TMath {
    /* ************************ */
    /* * Elementary Functions * */
    /* ************************ */
-   inline Double_t Sqrt(Double_t x);
    inline Double_t Ceil(Double_t x);
    inline Int_t    CeilNint(Double_t x);
    inline Double_t Floor(Double_t x);
    inline Int_t    FloorNint(Double_t x);
+   template<typename T>
+   inline Int_t    Nint(T x); 
+
+   inline Double_t Sqrt(Double_t x);
    inline Double_t Exp(Double_t x);
    inline Double_t Ldexp(Double_t x, Int_t exp);
           Double_t Factorial(Int_t i);
@@ -164,8 +167,6 @@ namespace TMath {
    inline Double_t Log(Double_t x);
           Double_t Log2(Double_t x);
    inline Double_t Log10(Double_t x);
-          Int_t    Nint(Float_t x);
-          Int_t    Nint(Double_t x);
    inline Int_t    Finite(Double_t x);
    inline Int_t    IsNaN(Double_t x);
 
@@ -465,6 +466,22 @@ inline Double_t TMath::Floor(Double_t x)
 
 inline Int_t TMath::FloorNint(Double_t x)
    { return TMath::Nint(floor(x)); }
+
+template<typename T> 
+inline Int_t TMath::Nint(T x)
+{
+   // Round to nearest integer. Rounds half integers to the nearest
+   // even integer.
+   int i;
+   if (x >= 0) {
+      i = int(x + 0.5);
+      if ( i & 1 && x + 0.5 == T(i) ) i--;
+   } else {
+      i = int(x - 0.5);
+      if ( i & 1 && x - 0.5 == T(i) ) i++;
+   }
+   return i;
+}
 
 inline Double_t TMath::Exp(Double_t x)
    { return exp(x); }
