@@ -498,67 +498,92 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    //*-*    
    //*-*    Handling parametrized functions
    //*-*    Function can be normalized, and have different variable then x.
-   //*-*    Name before function will be used as variable inside.
-   //*-*    Empty name is treated like varibale x.
+   //*-*    Variables should be placed in brackets after function name.
+   //*-*    No brackets are treated like [x].
    //*-*    Normalized function has char 'n' after name, eg.
-   //*-*    vargausn(0) will be replaced with [0]*exp(-0.5*((var-[1])/[2])^2)/(sqrt(2*pi)*[2])
+   //*-*    gausn[var](0) will be replaced with [0]*exp(-0.5*((var-[1])/[2])^2)/(sqrt(2*pi)*[2])
    //*-*    
    //*-*    Adding function is easy, just follow these rules:
-   //*-*    - first tuple argument is name of function 
-   //*-*    - second tuple argument is function body
-   //*-*    - third tuple argument is normalized function body 
-   //*-*    - {V} is a place where variable appear
+   //*-*    - Key for function map is pair of name and dimension of function
+   //*-*    - value of key is a pair function body and normalized function body
+   //*-*    - {Vn} is a place where variable appear, n represents n-th variable from variable list.
+   //*-*      Count starts from 0.
    //*-*    - [num] stands for parameter number. 
    //*-*      If user pass to function argument 5, num will stand for (5 + num) parameter.
    //*-*    
-   map<TString,pair<TString,TString> > functions;
-   functions["gaus"] = pair<TString,TString>("[0]*exp(-0.5*(({V}-[1])/[2])^2)","[0]*exp(-0.5*(({V}-[1])/[2])^2)/(sqrt(2*pi)*[2])");
-   functions["landau"] = pair<TString,TString>("TMath::Landau({V},[0],[1],false)","TMath::Landau({V},[0],[1],true)");
-   functions["expo"] = pair<TString,TString>("exp([0]+[1]*{V})","");
-   //functions["xygau"] = pair<TString,TString>("[0]*exp(-0.5*(({X}-[1])/[2])^2 - 0.5*(({Y}-[3])/[4])^2)","");
+   map< pair<TString,Int_t> ,pair<TString,TString> > functions; 
+   functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2)","[0]*exp(-0.5*(({V0}-[1])/[2])^2)/(sqrt(2*pi)*[2])")));
+   functions.insert(make_pair(make_pair("gaus",2),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2)","")));
+   functions.insert(make_pair(make_pair("landau",1),make_pair("TMath::Landau({V0},[0],[1],false)","TMath::Landau({V0},[0],[1],true)")));
+   functions.insert(make_pair(make_pair("expo",1),make_pair("exp([0]+[1]*{V0})","")));
 
    map<TString,Int_t> functionsNumbers;
    functionsNumbers["gaus"] = 100;
    functionsNumbers["landau"] = 200;
    functionsNumbers["expo"] = 400;
-   for(map<TString,pair<TString,TString> >::iterator it = functions.begin(); it != functions.end(); ++it) 
+   for(map<pair<TString,Int_t>,pair<TString,TString> >::iterator it = functions.begin(); it != functions.end(); ++it) 
    {
 
-      TString funName = it->first;
+      TString funName = it->first.first;
       Int_t funPos = formula.Index(funName);
       while(funPos != kNPOS)
       {
          fNumber = functionsNumbers[funName];
          Bool_t isNormalized = (formula[funPos + funName.Length()] == 'n');
-         TString body = (isNormalized ? it->second.second : it->second.first);
-         if(isNormalized && body == "")
-         {
-            Error("PreprocessFormula","Function %s has no normalized form.",funName.Data());
-            break;
-         }
          if(isNormalized)
          {
             SetBit(kNormalized,1);
          }
-         TString variable;
+         TString *variables = 0;
+         Int_t dim = 0;
+         TString varList = "";
          Bool_t defaultVariable = false;
-         if(funPos - 1 < 0 || !IsFunctionNameChar(formula[funPos-1]))
+
+         Int_t openingBracketPos = funPos + funName.Length() + (isNormalized ? 1 : 0);
+         if(openingBracketPos > formula.Length() || formula[openingBracketPos] != '[')
          {
-            variable = "x";
+            dim = 1;
+            variables = new TString[dim];
+            variables[0] = "x";
             defaultVariable = true;
          }
          else
          {
-            Int_t tmp = funPos - 1;
-            while(tmp >= 0 && IsFunctionNameChar(formula[tmp]))
+            varList = formula(openingBracketPos+1,formula.Index(']',funPos) - openingBracketPos - 1);
+            dim = varList.CountChar(',') + 1;
+            variables = new TString[dim];
+            Int_t Nvar = 0;
+            TString varName = "";
+            for(Int_t i = 0 ; i < varList.Length(); ++i)
             {
-               tmp--;
+               if(IsFunctionNameChar(varList[i]))
+               {
+                  varName.Append(varList[i]);
+               }
+               if(varList[i] == ',')
+               {
+                  variables[Nvar] = varName;
+                  varName = "";
+                  Nvar++;
+               }  
             }
-            variable = formula(tmp + 1, funPos - (tmp+1));
-
+            if(varName != "") // we will miss last variable
+            {
+               variables[Nvar] = varName;
+            }
          }
-         Int_t openingBracketPos = formula.Index('(',funPos);
-         Bool_t defaultCounter = (openingBracketPos == kNPOS);
+         if(dim != it->first.second)
+         {
+            pair<TString,Int_t> key = make_pair(funName,dim);
+            if(functions.find(key) == functions.end())
+            {
+               Error("PreProcessFormula","%d dimension function %s is not defined as parametrized function.",dim,funName.Data());
+               return;
+            }
+            break;
+         }
+         Int_t openingParenthesisPos = formula.Index('(',funPos);
+         Bool_t defaultCounter = (openingParenthesisPos == kNPOS);
          Int_t counter;
          if(defaultCounter)
          {
@@ -566,14 +591,23 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          }
          else
          {
-            counter = TString(formula(openingBracketPos+1,formula.Index(')',funPos) - openingBracketPos -1)).Atoi(); 
+            counter = TString(formula(openingParenthesisPos+1,formula.Index(')',funPos) - openingParenthesisPos -1)).Atoi(); 
+         }
+         TString body = (isNormalized ? it->second.second : it->second.first);
+         if(isNormalized && body == "")
+         {
+            Error("PreprocessFormula","%d dimension function %s has no normalized form.",it->first.second,funName.Data());
+            break;
          }
          for(int i = 0 ; i < body.Length() ; ++i)
          {
             if(body[i] == '{')
             {
-               body.Replace(i,3,variable,variable.Length());
-               i += variable.Length();
+               i += 2; // skip '{' and 'V'
+               Int_t num = TString(body(i,body.Index('}',i) - i)).Atoi();
+               TString variable = variables[num];
+               TString pattern = TString::Format("{V%d}",num);
+               body.Replace(i - 2, pattern.Length(),variable,variable.Length());
             }
             else if(body[i] == '[')
             {
@@ -591,23 +625,36 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             }
          }
          TString pattern;
-         if(defaultCounter)
+         if(defaultCounter && defaultVariable)
          {
-            pattern = TString::Format("%s%s%s",
-                           (defaultVariable ? "" : variable.Data()),
+            pattern = TString::Format("%s%s",
                            funName.Data(),
                            (isNormalized ? "n" : ""));
          }
-            pattern = TString::Format("%s%s%s(%d)",
-                           (defaultVariable ? "" : variable.Data()),
+         if(!defaultCounter && defaultVariable)
+         {
+            pattern = TString::Format("%s%s(%d)",
                            funName.Data(),
                            (isNormalized ? "n" : ""),
                            counter);
-         TString replacement = body;
-         if(!defaultVariable)
-         {
-            funPos -= variable.Length();
          }
+         if(defaultCounter && !defaultVariable)
+         {
+            pattern = TString::Format("%s%s[%s]",
+                           funName.Data(),
+                           (isNormalized ? "n":""),
+                           varList.Data());
+         }
+         if(!defaultCounter && !defaultVariable)
+         {
+            pattern = TString::Format("%s%s[%s](%d)",
+                           funName.Data(),
+                           (isNormalized ? "n" : ""),
+                           varList.Data(),
+                           counter);
+         }
+         TString replacement = body;
+         
          formula.Replace(funPos,pattern.Length(),replacement,replacement.Length());
 
          funPos = formula.Index(funName);
@@ -960,6 +1007,10 @@ void TFormula::ProcessFormula(TString &formula)
       fReadyToExecute = true;
       Bool_t hasVariables = (fNdim > 0);
       Bool_t hasParameters = (fNpar > 0);
+      if(!hasParameters)
+      {
+         fAllParametersSetted = true;
+      }
       // assume a function without variables is always 1-dimenional
       if (hasParameters && ! hasVariables) { 
          fNdim = 1; 
