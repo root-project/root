@@ -229,7 +229,8 @@ double WrappedMultiTF1::DoParameterDerivative(const double * x, const double * p
    if (fPolynomial) {
       // case of polynomial function (no parameter dependency)  (case for dim = 1)
       assert (fDim == 1);
-      return std::pow(x[0], static_cast<int>(ipar) );
+      if (ipar == 0) return 1.0;
+      return std::pow(x[0], static_cast<int>(ipar) );  
    }
    else {
       // case of general linear function (built in TFormula with ++ )

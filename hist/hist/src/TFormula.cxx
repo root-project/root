@@ -250,6 +250,11 @@ TFormula& TFormula::operator=(const TFormula &rhs)
 }
 void TFormula::Copy(TObject &obj) const
 {
+   // need to copy also cling parameters
+
+   ((TFormula&)obj).fClingParameters = fClingParameters;
+   ((TFormula&)obj).fClingVariables = fClingVariables;
+
    ((TFormula&)obj).fFuncs = fFuncs;
    ((TFormula&)obj).fVars = fVars;
    ((TFormula&)obj).fParams = fParams;
@@ -261,6 +266,20 @@ void TFormula::Copy(TObject &obj) const
    ((TFormula&)obj).fNumber = fNumber;
    ((TFormula&)obj).fLinearParts = fLinearParts;
    ((TFormula&)obj).SetParameters(GetParameters());
+
+   ((TFormula&)obj).fClingInput = fClingInput;
+   ((TFormula&)obj).fReadyToExecute = fReadyToExecute;
+   ((TFormula&)obj).fClingInitialized = fClingInitialized;
+   ((TFormula&)obj).fAllParametersSetted = fAllParametersSetted;
+   ((TFormula&)obj).fNamePrefix = fNamePrefix;
+
+   if (fMethod) {
+      if (((TFormula&)obj).fMethod) delete ((TFormula&)obj).fMethod;
+      // use copy-constructor of TMethodCall
+      TMethodCall *m = new TMethodCall(*fMethod);
+      ((TFormula&)obj).fMethod  = m;
+   }
+
 }
 void TFormula::PrepareEvalMethod()
 {
@@ -364,7 +383,7 @@ void TFormula::FillDefaults()
 
    TString  defconstsNames[] = {"pi","sqrt2","infinity","e","ln10","loge","c","g","h","k","sigma","r","eg","true","false"};
    Double_t defconstsValues[] = {TMath::Pi(),TMath::Sqrt2(),TMath::Infinity(),TMath::E(),TMath::Ln10(),TMath::LogE(),
-                                 TMath::C(),TMath::G(),TMath::H(),TMath::K(),TMath::Sigma(),TMath::R(),TMath::EulerGamma()};
+                                 TMath::C(),TMath::G(),TMath::H(),TMath::K(),TMath::Sigma(),TMath::R(),TMath::EulerGamma(), 1, 0};
    Int_t    defconstsLength = sizeof(defconstsNames)/sizeof(TString);
 
    TString  funShortcutsNames[] = {"sin","cos","exp","log","tan","sinh","cosh","tanh","asin","acos","atan","atan2","sqrt",
@@ -842,10 +861,10 @@ void TFormula::ProcessFormula(TString &formula)
             formula.ReplaceAll(shortcut,full);
             fun.fFound = true;
          }
-         if(fun.GetName().Contains("::")) // restrict to only TMath?
+         if(fun.fName.Contains("::")) // restrict to only TMath?
          {
-            TString className = fun.GetName()(0,fun.GetName()(0,fun.GetName().Index("::")).Length());
-            TString functionName = fun.GetName()(fun.GetName().Index("::") + 2, fun.GetName().Length());
+            TString className = fun.fName(0,fun.fName(0,fun.fName.Index("::")).Length());
+            TString functionName = fun.fName(fun.fName.Index("::") + 2, fun.fName.Length());
             Bool_t silent = true;
             TClass *tclass = new TClass(className,silent);
             TList *methodList = tclass->GetListOfAllPublicMethods();
@@ -863,16 +882,16 @@ void TFormula::ProcessFormula(TString &formula)
          }
          if(!fun.fFound)
          {
-            Error("TFormula","Could not find %s function with %d argument(s)",fun.GetName().Data(),fun.GetNargs());
+            Error("TFormula","Could not find %s function with %d argument(s)",fun.GetName(),fun.GetNargs());
          }
       }
       else
       {
-         TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(fNamePrefix + fun.GetName());
+         TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(fNamePrefix + fun.fName);
          if(old)
          {
             fun.fFound = true;
-            TString pattern = TString::Format("{%s}",fun.GetName().Data());
+            TString pattern = TString::Format("{%s}",fun.GetName());
             TString replacement = old->GetExpFormula();
             PreProcessFormula(replacement);
             ExtractFunctors(replacement);
@@ -900,7 +919,7 @@ void TFormula::ProcessFormula(TString &formula)
          map<TString,Double_t>::iterator constIt = fConsts.find(fun.GetName());
          if(constIt != fConsts.end())
          {
-            TString pattern = TString::Format("{%s}",fun.GetName().Data());
+            TString pattern = TString::Format("{%s}",fun.GetName());
             TString value = TString::Format("%lf",(*constIt).second);
             formula.ReplaceAll(pattern,value);
             fun.fFound = true;
@@ -911,7 +930,7 @@ void TFormula::ProcessFormula(TString &formula)
          if(paramsIt != fParams.end())
          {
             TString name = (*paramsIt).second.GetName();
-            TString pattern = TString::Format("{[%s]}",fun.GetName().Data());
+            TString pattern = TString::Format("{[%s]}",fun.GetName());
             if(formula.Index(pattern) != kNPOS)
             {
                TString replacement = TString::Format("p[%d]",(*paramsIt).second.fArrayPos);
@@ -1317,7 +1336,7 @@ void TFormula::SetParameters(const Double_t *params, Int_t size)
 }
 Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params)
 {
-   SetParameters(params);
+   if (params) SetParameters(params);
    if(fNdim >= 1) SetVariable("x",x[0]);
    if(fNdim >= 2) SetVariable("y",x[1]);
    if(fNdim >= 3) SetVariable("z",x[2]);
@@ -1385,7 +1404,7 @@ Double_t TFormula::Eval()
          TFormulaFunction fun = *it;
          if(!fun.fFound)
          {
-            printf("%s is uknown.\n",fun.GetName().Data());
+            printf("%s is uknown.\n",fun.GetName());
          }
       }
       return -1;

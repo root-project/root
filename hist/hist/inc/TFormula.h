@@ -37,15 +37,15 @@ public:
    Int_t    fNargs;
    Bool_t   fFound;
    Bool_t   fFuncCall;
-   TString  GetName() const    { return fName; }
-   TString  GetBody() const    { return fBody; }
+   const char *  GetName() const    { return fName.Data(); }
+   const char *  GetBody() const    { return fBody.Data(); }
    Int_t    GetNargs() const   { return fNargs;}
    Bool_t   IsFuncCall() const { return fFuncCall;}
    TFormulaFunction(){}
    TFormulaFunction(const TString &name, const TString &body, int numArgs)
       : fName(name),fBody(body),fNargs(numArgs),fFound(false),fFuncCall(true) {}
    TFormulaFunction(const TString& name)
-      : fName(name),fNargs(0),fFound(false),fFuncCall(false){}
+   : fName(name),fBody(""),fNargs(0),fFound(false),fFuncCall(false){}
    Bool_t operator<(const TFormulaFunction &rhv) const
    {  
       return fName < rhv.fName && fBody < rhv.fBody;

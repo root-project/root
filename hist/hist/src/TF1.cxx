@@ -720,7 +720,8 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    fMaximum   ( -1111 ),
    fMinimum   ( -1111 ),
    fMethodCall( 0 ),
-   fFunctor   ( ROOT::Math::ParamFunctor(f) )
+   fFunctor   ( ROOT::Math::ParamFunctor(f) ), 
+   fFormula(0)
 {
    // F1 constructor using the Functor class.
    //
@@ -918,7 +919,8 @@ void TF1::Copy(TObject &obj) const
       ((TF1&)obj).fSave = new Double_t[fNsave];
       for (Int_t j=0;j<fNsave;j++) ((TF1&)obj).fSave[j] = fSave[j];
    }
-   Int_t npar = fFormula->GetNpar();
+   Int_t npar = 0;
+   if (fFormula) npar = fFormula->GetNpar();
    if (npar) {
       ((TF1&)obj).fParErrors = new Double_t[npar];
       ((TF1&)obj).fParMin    = new Double_t[npar];
@@ -930,13 +932,18 @@ void TF1::Copy(TObject &obj) const
    }
    if (fMethodCall) {
       // use copy-constructor of TMethodCall
+      if (((TF1&)obj).fMethodCall) delete ((TF1&)obj).fMethodCall;
       TMethodCall *m = new TMethodCall(*fMethodCall);
 //       m->InitWithPrototype(fMethodCall->GetMethodName(),fMethodCall->GetProto());
       ((TF1&)obj).fMethodCall  = m;
    }
    if(fFormula)
    {
-      ((TF1&)obj).fFormula = fFormula;
+      TFormula * formulaToCopy = ((TF1&)obj).fFormula; 
+      if (formulaToCopy) delete formulaToCopy;   
+      formulaToCopy = new TFormula();
+      fFormula->Copy( *formulaToCopy );
+      ((TF1&)obj).fFormula =  formulaToCopy;
    }
 }
 
