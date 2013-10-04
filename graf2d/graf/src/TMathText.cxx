@@ -36,7 +36,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 <p>
-The list of all available symbol is givern in the following example:
+The list of all available symbol is given in the following example:
 End_Html
 Begin_Macro(source)
 ../../../tutorials/graphics/tmathtext2.C
@@ -379,7 +379,7 @@ TMathText::TMathText(const TMathText &text)
 //______________________________________________________________________________
 TMathText &TMathText::operator=(const TMathText &rhs)
 {
-   // Assignemnt operator.
+   // Assignment operator.
 
    if (this != &rhs) {
       TText::operator    = (rhs);
