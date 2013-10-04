@@ -249,15 +249,10 @@ private:
 
    double fEdm;                                   // edm value
    double fLSTolerance;                           // Line Search Tolerance
-   std::vector<double> fValues;
    std::vector<double> fErrors;
    std::vector<double> fCovMatrix;              //  cov matrix (stored as cov[ i * dim + j]
-   std::vector<double> fSteps;
-   std::vector<std::string> fNames;
    std::vector<LSResidualFunc> fResiduals;   //! transient Vector of the residual functions
 
-   std::vector<ROOT::Math::EMinimVariableType> fVarTypes;  // vector specifyng the type of variables
-   std::map< unsigned int, std::pair<double, double> > fBounds; // map specifying the bound using as key the parameter index
 
 
 };

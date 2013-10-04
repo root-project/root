@@ -313,7 +313,7 @@ bool GSLNLSMinimizer::Minimize() {
 
    SetFinalValues(x);
 
-   SetMinValue( (*fChi2Func)(&fValues.front() ) );
+   SetMinValue( (*fChi2Func)(x) );
    fStatus = status; 
 
    fErrors.resize(NDim());
