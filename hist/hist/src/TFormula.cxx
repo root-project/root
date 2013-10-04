@@ -515,6 +515,8 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    functions["gaus"] = pair<TString,TString>("[0]*exp(-0.5*(({V}-[1])/[2])^2)","[0]*exp(-0.5*(({V}-[1])/[2])^2)/(sqrt(2*pi)*[2])");
    functions["landau"] = pair<TString,TString>("TMath::Landau({V},[0],[1],false)","TMath::Landau({V},[0],[1],true)");
    functions["expo"] = pair<TString,TString>("exp([0]+[1]*{V})","");
+   //functions["xygau"] = pair<TString,TString>("[0]*exp(-0.5*(({X}-[1])/[2])^2 - 0.5*(({Y}-[3])/[4])^2)","");
+
    map<TString,Int_t> functionsNumbers;
    functionsNumbers["gaus"] = 100;
    functionsNumbers["landau"] = 200;

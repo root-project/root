@@ -809,6 +809,12 @@ TF1::~TF1()
    if (fSave)      delete [] fSave;
    delete fHistogram;
    delete fMethodCall;
+
+   // this was before in TFormula destructor
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      if (gROOT) gROOT->GetListOfFunctions()->Remove(this);
+   }
    
    if (fParent) fParent->RecursiveRemove(this);
 }
