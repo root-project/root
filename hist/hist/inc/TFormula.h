@@ -62,7 +62,7 @@ public:
    Double_t fValue;
    Int_t fArrayPos;
    Bool_t fFound;
-   TString  GetName() const     { return fName; }
+   const char * GetName() const     { return fName.Data(); }
    Double_t GetValue() const    { return fValue; }
    Int_t    GetArrayPos() const { return fArrayPos; }
    TFormulaVariable():fName(""),fValue(-1),fArrayPos(-1),fFound(false){}
@@ -146,7 +146,7 @@ public:
    Int_t          GetNdim() const {return fNdim;}
    Int_t          GetNpar() const {return fNpar;}
    Int_t          GetNumber() const { return fNumber; }
-   TString        GetParName(Int_t ipar) const;
+   const char *   GetParName(Int_t ipar) const;
    Double_t       GetParameter(const TString &name);
    Double_t       GetParameter(Int_t param);
    Double_t*      GetParameters() const;

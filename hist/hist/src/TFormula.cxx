@@ -939,6 +939,12 @@ void TFormula::ProcessFormula(TString &formula)
       fReadyToExecute = true;
       Bool_t hasVariables = (fNdim > 0);
       Bool_t hasParameters = (fNpar > 0);
+      // assume a function without variables is always 1-dimenional
+      if (hasParameters && ! hasVariables) { 
+         fNdim = 1; 
+         AddVariable("x",0);
+         hasVariables = true; 
+      }
       Bool_t hasBoth = hasVariables && hasParameters;
       Bool_t inputIntoCling = (formula.Length() > 0);
       TString argumentsPrototype = 
@@ -962,6 +968,8 @@ void TFormula::ProcessFormula(TString &formula)
 const TObject* TFormula::GetLinearPart(Int_t i)
 {
    // Return linear part.
+
+   printf("flinearparts size %d \n",fLinearParts.GetSize() );
 
    if (!fLinearParts.IsEmpty())
       return fLinearParts.UncheckedAt(i);
@@ -1146,7 +1154,7 @@ Double_t TFormula::GetParameter(Int_t param)
    TString name = TString::Format("%d",param);
    return GetParameter(name);
 }
-TString TFormula::GetParName(Int_t ipar) const
+const char * TFormula::GetParName(Int_t ipar) const
 {
    //*-*    
    //*-*    Return parameter name given by integer.
@@ -1156,7 +1164,7 @@ TString TFormula::GetParName(Int_t ipar) const
    if(it == fParams.end())
    {
       Error("GetParName","Parameter %s is not defined.",name.Data());
-      return "";
+      return 0;
    }
    return it->second.GetName();
 }
@@ -1367,6 +1375,7 @@ Double_t TFormula::Eval()
    //*-*    print these which are not known.
    //*-*    If parameter has default value, and has not been setted, appropriate warning is shown.
    //*-*    
+
 
    if(!fReadyToExecute)
    {
