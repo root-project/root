@@ -101,42 +101,6 @@ Double_t TMath::Log2(Double_t x)
 }
 
 //______________________________________________________________________________
-Int_t TMath::Nint(Float_t x)
-{
-   // Round to nearest integer. Rounds half integers to the nearest
-   // even integer.
-
-   int i;
-   if (x >= 0) {
-      i = int(x + 0.5);
-      if (x + 0.5 == Float_t(i) && i & 1) i--;
-   } else {
-      i = int(x - 0.5);
-      if (x - 0.5 == Float_t(i) && i & 1) i++;
-
-   }
-   return i;
-}
-
-//______________________________________________________________________________
-Int_t TMath::Nint(Double_t x)
-{
-   // Round to nearest integer. Rounds half integers to the nearest
-   // even integer.
-
-   int i;
-   if (x >= 0) {
-      i = int(x + 0.5);
-      if (x + 0.5 == Double_t(i) && i & 1) i--;
-   } else {
-      i = int(x - 0.5);
-      if (x - 0.5 == Double_t(i) && i & 1) i++;
-
-   }
-   return i;
-}
-
-//______________________________________________________________________________
 Double_t TMath::DiLog(Double_t x)
 {
    // The DiLogarithm function
