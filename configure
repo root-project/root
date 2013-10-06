@@ -2418,8 +2418,9 @@ if test "x$enable_cxx11" = "xyes"; then
         result "no"
     else
         usecxx11="define"
-        # on OS X libcxx11 is required for C++11 support so turn the option on
-        if test "x$platform" = "xmacosx"; then
+        # on OS X libcxx11 is required for C++11 support  with clang
+        # so turn the option on when using clang
+        if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
             enable_libcxx11="yes"
         fi
         result "yes"
@@ -2475,7 +2476,7 @@ rm -f conftest.mk conftest conftest.cxx
 
 ######################################################################
 #
-### echo %%% Cling - LLVM/clang based interpreter prototype
+### echo %%% Check for builtin or external LLVM/Clang
 #
 hasllvm="undef"
 llvmdir="/**/"
