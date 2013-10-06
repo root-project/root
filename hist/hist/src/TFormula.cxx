@@ -1041,8 +1041,6 @@ const TObject* TFormula::GetLinearPart(Int_t i)
 {
    // Return linear part.
 
-   printf("flinearparts size %d \n",fLinearParts.GetSize() );
-
    if (!fLinearParts.IsEmpty())
       return fLinearParts.UncheckedAt(i);
    return 0;
