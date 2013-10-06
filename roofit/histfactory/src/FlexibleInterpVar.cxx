@@ -166,6 +166,47 @@ void FlexibleInterpVar::setAllInterpCodes(int code){
 }
 
 //_____________________________________________________________________________
+void FlexibleInterpVar::setNominal(Double_t newNominal){
+
+  coutW(InputArguments) << "FlexibleInterpVar::setNominal : nominal is now " << newNominal << endl ;
+  _nominal = newNominal;
+
+  setValueDirty();
+}
+
+//_____________________________________________________________________________
+void FlexibleInterpVar::setLow(RooAbsReal& param, Double_t newLow){
+
+  int index = _paramList.index(&param);
+  if(index<0){
+      coutE(InputArguments) << "FlexibleInterpVar::setLow ERROR:  " << param.GetName() 
+			    << " is not in list" << endl ;
+  } else {
+      coutW(InputArguments) << "FlexibleInterpVar::setLow :  " << param.GetName() 
+			    << " is now " << newLow << endl ;
+    _low.at(index) = newLow;
+  }
+
+  setValueDirty();
+}
+
+//_____________________________________________________________________________
+void FlexibleInterpVar::setHigh(RooAbsReal& param, Double_t newHigh){
+
+  int index = _paramList.index(&param);
+  if(index<0){
+      coutE(InputArguments) << "FlexibleInterpVar::setHigh ERROR:  " << param.GetName() 
+			    << " is not in list" << endl ;
+  } else {
+      coutW(InputArguments) << "FlexibleInterpVar::setHigh :  " << param.GetName() 
+			    << " is now " << newHigh << endl ;
+    _high.at(index) = newHigh;
+  }
+
+  setValueDirty();
+}
+
+//_____________________________________________________________________________
 void FlexibleInterpVar::printAllInterpCodes(){
 
   for(unsigned int i=0; i<_interpCode.size(); ++i){
