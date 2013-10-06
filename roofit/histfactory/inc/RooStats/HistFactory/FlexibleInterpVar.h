@@ -40,6 +40,9 @@ namespace HistFactory{
     void setInterpCode(RooAbsReal& param, int code);
     void setAllInterpCodes(int code);
     void setGlobalBoundary(double boundary) {_interpBoundary = boundary;}
+    void setNominal(Double_t newNominal);
+    void setLow(RooAbsReal& param, Double_t newLow);
+    void setHigh(RooAbsReal& param, Double_t newHigh);
 
     void printAllInterpCodes();
 
