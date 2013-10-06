@@ -1530,7 +1530,7 @@ enable/disable options, prefix with either --enable- or --disable-
   oracle             Oracle support, requires libocci
   pgsql              PostgreSQL support, requires libpq
   pythia6            Pythia6 EG support, requires libPythia6
-  pythia8            Pythia8 EG support, requires libPythia8
+  pythia8            Pythia8 EG support, requires libPythia8 >= 8180
   python             Python ROOT bindings, requires python >= 2.2
   qt                 Qt graphics backend, requires libqt >= 4.x
   qtgsi              GSI's Qt integration, requires libqt >= 3
@@ -3863,7 +3863,7 @@ check_explicit "$enable_pythia6" "$enable_pythia6_explicit" \
 #
 # (See http://root.cern.ch and Lund)
 #
-# Check for libpythia8
+# Check for libpythia8 >= 8180
 #
 if test ! "x$enable_pythia8" = "xno" ; then
     # Check for PYTHIA8 include and library
