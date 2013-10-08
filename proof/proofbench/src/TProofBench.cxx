@@ -96,7 +96,7 @@ Double_t funp2n(Double_t *xx, Double_t *par)
 TProofBench::TProofBench(const char *url, const char *outfile, const char *proofopt)
             : fUnlinkOutfile(kFALSE), fProofDS(0), fOutFile(0),
               fNtries(4), fHistType(0), fNHist(16), fReadType(0),
-              fDataSet("BenchDataSet"), fNFilesWrk(4),
+              fDataSet("BenchDataSet"), fNFilesWrk(4), fReleaseCache(kTRUE),
               fDataGenSel(kPROOF_BenchSelDataGenDef),
               fRunCPU(0), fRunDS(0), fDS(0), fDebug(kFALSE), fDescription(0)
 {
@@ -760,13 +760,14 @@ Int_t TProofBench::RunDataSet(const char *dset,
    }
    fUnlinkOutfile = kFALSE;
 
-   ReleaseCache(dset);
+   if (fReleaseCache) ReleaseCache(dset);
    SafeDelete(fRunDS);
    TPBReadType *readType = fReadType;
    if (!readType) readType = new TPBReadType(TPBReadType::kReadOpt);
    fRunDS = new TProofBenchRunDataRead(fDS, readType, fOutFile); 
    if (!fDataSel.IsNull()) fRunDS->SetSelName(fDataSel);
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
+   fRunDS->SetReleaseCache(fReleaseCache);
    fRunDS->Run(dset, start, stop, step, fNtries, fDebug, -1);
    if (!fReadType) SafeDelete(readType);
    

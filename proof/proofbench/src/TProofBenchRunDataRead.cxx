@@ -62,7 +62,8 @@ TProofBenchRunDataRead::TProofBenchRunDataRead(TProofBenchDataSet *pbds, TPBRead
                        : TProofBenchRun(proof, kPROOF_BenchSelDataDef), fProof(proof),
                          fReadType(readtype), fDS(pbds),
                          fNEvents(nevents), fNTries(ntries), fStart(start), fStop(stop), fStep(step),
-                         fDebug(debug), fFilesPerWrk(2), fDirProofBench(dirproofbench), fNodes(nodes),
+                         fDebug(debug), fFilesPerWrk(2), fReleaseCache(kTRUE),
+                         fDirProofBench(dirproofbench), fNodes(nodes),
                          fListPerfPlots(0), fProfile_perfstat_event(0), fHist_perfstat_event(0),
                          fProfile_perfstat_evtmax(0), fNorm_perfstat_evtmax(0),
                          fProfile_queryresult_event(0), fNorm_queryresult_event(0),
@@ -272,7 +273,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
 
          // Cleanup run
          const char *dsnr = (fDS->IsProof(fProof)) ? dsn.Data() : dsname.Data();
-         fDS->ReleaseCache(dsnr);
+         if (fReleaseCache) fDS->ReleaseCache(dsnr);
 
          DeleteParameters();
          SetParameters();
