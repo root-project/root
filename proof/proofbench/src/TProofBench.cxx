@@ -373,13 +373,14 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    TGraphErrors *grmx = 0;
    if (doMax) {
       if (!(grmx = GetGraph(d, hmaxn, nbins, xmin, xmax, mmi, mmx, kmmx, pfmx))) {
-         ::Warning("DrawCPU", "could not find '%s': support added in 5.34/11", hmaxn.Data());
+         ::Warning("DrawCPU", "could not find '%s': feature added in 5.34/11", hmaxn.Data());
          if (!grav) {
             // Nothing to do if not asked for the average
             fout->Close();
             delete fout;
             return;
          }
+         doMax = kFALSE;
       }
       if (mmx > ymx) ymx = mmx;
       if ((ymi > 0 && mmi < ymi) || (ymi < 0.)) ymi = mmi;
@@ -419,7 +420,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    if (doAvg) {
       grav->SetFillColor(1);
       grav->SetLineColor(13);
-      grmx->SetMarkerColor(4);
+      grav->SetMarkerColor(4);
       grav->SetMarkerStyle(21);
       grav->SetMarkerSize(1.2);
       grav->SetHistogram(hgr);
@@ -895,13 +896,14 @@ void TProofBench::DrawDataSet(const char *outfile,
    TGraphErrors *grmx = 0;
    if (doMax) {
       if (!(grmx = GetGraph(d, hmaxn, nbins, xmin, xmax, mmi, mmx, kmmx, pfmx))) {
-         ::Warning("DrawCPU", "could not find '%s': support added in 5.34/11", hmaxn.Data());
+         ::Warning("DrawCPU", "could not find '%s': feature added in 5.34/11", hmaxn.Data());
          if (!grav) {
             // Nothing to do if not asked for the average
             fout->Close();
             delete fout;
             return;
          }
+         doMax = kFALSE;
       }
       if (mmx > ymx) ymx = mmx;
       if ((ymi > 0 && mmi < ymi) || (ymi < 0.)) ymi = mmi;
@@ -944,7 +946,7 @@ void TProofBench::DrawDataSet(const char *outfile,
    if (doAvg) {
       grav->SetFillColor(1);
       grav->SetLineColor(13);
-      grmx->SetMarkerColor(4);
+      grav->SetMarkerColor(4);
       grav->SetMarkerStyle(21);
       grav->SetMarkerSize(1.2);
       grav->SetHistogram(hgr);
