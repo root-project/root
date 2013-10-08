@@ -60,6 +60,7 @@ private:
    Int_t fStep;                  //test to be performed every fStep workers
    Int_t fDebug;                 //debug switch
    Int_t fFilesPerWrk;           //# of files to be processed per worker
+   Bool_t fReleaseCache;         // Release cache for data reads between runs 
 
    TDirectory  *fDirProofBench;   //directory for proof outputs
 
@@ -125,6 +126,7 @@ public:
    void SetDebug(Int_t debug) { fDebug = debug; }
    void SetDirProofBench(TDirectory* dir) { fDirProofBench = dir; }
    void SetFilesPerWrk(Int_t fpw) { fFilesPerWrk = fpw; }
+   void SetReleaseCache(Bool_t on = kTRUE) { fReleaseCache = on; }
 
    TPBReadType *GetReadType() const { return fReadType; }
    Long64_t GetNEvents() const { return fNEvents; }

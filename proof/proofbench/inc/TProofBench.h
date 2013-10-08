@@ -58,6 +58,7 @@ protected:
    TString fDataSet;             // Name of the dataset
    Int_t   fNFilesWrk;           // Number of files generated files per worker
    Int_t   fNumWrkMax;           // Max number of workers (required for dynamic setups)
+   Bool_t  fReleaseCache;        // Release cache for data reads between runs 
 
    TString fCPUSel;              // Selector to be used for CPU benchmarks
    TString fCPUPar;              // List of par files to be loaded for CPU benchmarks
@@ -113,6 +114,7 @@ public:
    void  SetHistType(TPBHistType *histtype) { fHistType = histtype; }
    void  SetNHist(Int_t nh) { fNHist = nh; }
    void  SetReadType(TPBReadType *readtype) { fReadType = readtype; }
+   void  SetReleaseCache(Bool_t on = kTRUE) { fReleaseCache = on; }
 
    void  SetCPUSel(const char *sel) { fCPUSel = sel; }
    void  SetCPUPar(const char *par) { fCPUPar = par; }
