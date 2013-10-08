@@ -3236,6 +3236,137 @@ namespace {
 }
 
 //______________________________________________________________________________
+int TCling::ReadRootmapFile(const char *rootmapfile)
+{
+   // Read and parse a rootmapfile in its new format, and return 0 in case of
+   // success, -1 if the file has already been read, and -3 in case its format
+   // is the old one (e.g. containing "Library.ClassName")
+
+   if (rootmapfile && *rootmapfile) {
+      // Add content of a specific rootmap file
+      if (fRootmapFiles->FindObject(rootmapfile)) return -1;
+      std::ifstream file(rootmapfile);
+      TString lib_name = "";
+      std::string line;
+      while (getline(file, line, '\n')) {
+         if ((line.substr(0, 8) == "Library.") || 
+             (line.substr(0, 8) == "Declare.")) {
+            file.close();
+            return -3; // old format
+         }
+         if (line.substr(0, 9) == "{ decls }") {
+            // forward declarations
+            while (getline(file, line, '\n')) {
+               if (line[0] == '[') break;
+               cling::Transaction* T = 0;
+               fInterpreter->declare(line.c_str(), &T);
+               // Annotate all template params with default args to come from
+               // a rootmap file, such that we avoid diagnostics about duplicate
+               // default arguments.
+               TmpltParamAnnotator TPA;
+               TPA.TraverseDecl(T->getFirstDecl().getSingleDecl());
+            }
+         }
+         if (line[0] == '[') {
+            // new section (library)
+            std::string libs = line.substr(1, line.find(']')-1);
+            while( libs[0] == ' ' ) libs.replace(0, 1, "");
+            if (libs == "")
+               continue;
+            lib_name = libs;
+            TString delim(" ");
+            TObjArray* tokens = lib_name.Tokenize(delim);
+            const char* lib = ((TObjString *)tokens->At(0))->GetName();
+            if (gDebug > 3) {
+               const char* wlib = gSystem->DynamicPathName(lib, kTRUE);
+               if (wlib) {
+                  Info("LoadLibraryMap", "new section for %s", lib_name.Data());
+               }
+               else {
+                  Info("LoadLibraryMap", "section for %s (library does not exist)", lib_name.Data());
+               }
+               delete[] wlib;
+            }
+         }
+         else if (line.substr(0, 6) == "class ") {
+            std::string classname = line.substr(6, line.length()-6);
+            if (gDebug > 6)
+               Info("LoadLibraryMap", "class %s in %s", classname.c_str(), lib_name.Data());
+            if (!fMapfile->Lookup(classname.c_str()))
+               fMapfile->SetValue(classname.c_str(), lib_name.Data());
+         }
+         else if (line.substr(0, 10) == "namespace ") {
+            std::string classname = line.substr(10, line.length()-10);
+            // This is a reference to a substring that lives in fMapfile
+            if (!fMapNamespaces->FindObject(classname.c_str()))
+               fMapNamespaces->Add(new TNamed(classname.c_str(), ""));
+            if (gDebug > 6)
+               Info("LoadLibraryMap", "namespace %s in %s", classname.c_str(), lib_name.Data());
+         }
+      }
+      file.close();
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+void TCling::InitRootmapFile(const char *name)
+{
+   // Create a resource table and read the (possibly) three resource files, i.e
+   // $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>), $HOME/<name> and
+   // ./<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
+   // read additional user defined resource files by creating addtional TEnv
+   // objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of
+   // the $HOME/<name> resource file will be skipped. This might be useful in
+   // case the home directory resides on an automounted remote file system
+   // and one wants to avoid the file system from being mounted.
+
+   Bool_t ignore = fMapfile->IgnoreDuplicates(kFALSE);
+
+   fMapfile->SetRcName(name);
+
+   TString sname = "system";
+   sname += name;
+#ifdef ROOTETCDIR
+   char *s = gSystem->ConcatFileName(ROOTETCDIR, sname);
+#else
+   TString etc = gRootDir;
+#ifdef WIN32
+   etc += "\\etc";
+#else
+   etc += "/etc";
+#endif
+#if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+   // on iOS etc does not exist and system<name> resides in $ROOTSYS
+   etc = gRootDir;
+#endif
+   char *s = gSystem->ConcatFileName(etc, sname);
+#endif
+
+   Int_t ret = ReadRootmapFile(s);
+   if (ret == -3) // old format
+      fMapfile->ReadFile(s, kEnvGlobal);
+   delete [] s;
+   if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
+      s = gSystem->ConcatFileName(gSystem->HomeDirectory(), name);
+      ret = ReadRootmapFile(s);
+      if (ret == -3) // old format
+         fMapfile->ReadFile(s, kEnvUser);
+      delete [] s;
+      if (strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory())) {
+         ret = ReadRootmapFile(name);
+         if (ret == -3) // old format
+            fMapfile->ReadFile(name, kEnvLocal);
+      }
+   } else {
+      ret = ReadRootmapFile(name);
+      if (ret == -3) // old format
+         fMapfile->ReadFile(name, kEnvLocal);
+   }
+   fMapfile->IgnoreDuplicates(ignore);
+}
+
+//______________________________________________________________________________
 Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 {
    // Load map between class and library. If rootmapfile is specified a
@@ -3247,12 +3378,13 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
    R__LOCKGUARD(gClingMutex);
    // open the [system].rootmap files
    if (!fMapfile) {
-      fMapfile = new TEnv(".rootmap");
+      fMapfile = new TEnv();
       fMapfile->IgnoreDuplicates(kTRUE);
       fMapNamespaces = new THashTable();
       fMapNamespaces->SetOwner();
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
+      InitRootmapFile(".rootmap");
    }
    // Load all rootmap files in the dynamic load path ((DY)LD_LIBRARY_PATH, etc.).
    // A rootmap file must end with the string ".rootmap".
@@ -3266,11 +3398,11 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 #endif
       TString d;
       for (Int_t i = 0; i < paths->GetEntriesFast(); i++) {
-         d = ((TObjString*)paths->At(i))->GetString();
+         d = ((TObjString *)paths->At(i))->GetString();
          // check if directory already scanned
          Int_t skip = 0;
          for (Int_t j = 0; j < i; j++) {
-            TString pd = ((TObjString*)paths->At(j))->GetString();
+            TString pd = ((TObjString *)paths->At(j))->GetString();
             if (pd == d) {
                skip++;
                break;
@@ -3293,8 +3425,14 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
                            if (gDebug > 4) {
                               Info("LoadLibraryMap", "   rootmap file: %s", p.Data());
                            }
-                           fMapfile->ReadFile(p, kEnvGlobal);
-                           fRootmapFiles->Add(new TNamed(f, p));
+                           Int_t ret = ReadRootmapFile(p);
+                           if (ret == 0)
+                              fRootmapFiles->Add(new TNamed(gSystem->BaseName(f), p.Data()));
+                           if (ret == -3) {
+                              // old format
+                              fMapfile->ReadFile(p, kEnvGlobal);
+                              fRootmapFiles->Add(new TNamed(f, p));
+                           }
                         }
                         // else {
                         //    fprintf(stderr,"Reject %s because %s is already there\n",p.Data(),f.Data());
@@ -3321,11 +3459,19 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
       }
    }
    if (rootmapfile && *rootmapfile) {
-      // Add content of a specific rootmap file
-      Bool_t ignore = fMapfile->IgnoreDuplicates(kFALSE);
-      fMapfile->ReadFile(rootmapfile, kEnvGlobal);
-      fRootmapFiles->Add(new TNamed(gSystem->BaseName(rootmapfile), rootmapfile));
-      fMapfile->IgnoreDuplicates(ignore);
+      Int_t res = ReadRootmapFile(gSystem->BaseName(rootmapfile));
+      if (res == 0) {
+         //TString p = gSystem->ConcatFileName(gSystem->pwd(), rootmapfile);
+         //fRootmapFiles->Add(new TNamed(gSystem->BaseName(rootmapfile), p.Data()));
+         fRootmapFiles->Add(new TNamed(gSystem->BaseName(rootmapfile), rootmapfile));
+      }
+      else if (res == -3) {
+         // old format
+         Bool_t ignore = fMapfile->IgnoreDuplicates(kFALSE);
+         fMapfile->ReadFile(rootmapfile, kEnvGlobal);
+         fRootmapFiles->Add(new TNamed(gSystem->BaseName(rootmapfile), rootmapfile));
+         fMapfile->IgnoreDuplicates(ignore);
+      }
    }
    TEnvRec* rec;
    TIter next(fMapfile->GetTable());
@@ -3366,8 +3512,6 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
             if (!fMapNamespaces->FindObject(namespaceCand.Data()))
                fMapNamespaces->Add(new TNamed(namespaceCand.Data(), ""));
          }
-
-
          delete tokens;
       }
       else if (!strncmp(cls.Data(), "Declare.", 8) && cls.Length() > 8) {
@@ -3383,7 +3527,6 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
          TmpltParamAnnotator TPA;
          TPA.TraverseDecl(T->getFirstDecl().getSingleDecl());
       }
-
    }
    return 0;
 }
@@ -3486,13 +3629,19 @@ Int_t TCling::UnloadLibraryMap(const char* library)
    if (!fMapfile || !library || !*library) {
       return 0;
    }
-   TEnvRec* rec;
+   TString libname(library);
+   Ssiz_t idx = libname.Last('.');
+   if (idx != kNPOS) {
+      libname.Remove(idx);
+   }
+   size_t len = libname.Length();
+   TEnvRec *rec;
    TIter next(fMapfile->GetTable());
    R__LOCKGUARD(gClingMutex);
    Int_t ret = 0;
-   while ((rec = (TEnvRec*) next())) {
+   while ((rec = (TEnvRec *) next())) {
       TString cls = rec->GetName();
-      if (!strncmp(cls.Data(), "Library.", 8) && cls.Length() > 8) {
+      if (cls.Length() > 2) {
          // get the first lib from the list of lib and dependent libs
          TString libs = rec->GetValue();
          if (libs == "") {
@@ -3500,17 +3649,19 @@ Int_t TCling::UnloadLibraryMap(const char* library)
          }
          TString delim(" ");
          TObjArray* tokens = libs.Tokenize(delim);
-         const char* lib = ((TObjString*)tokens->At(0))->GetName();
-         // convert "@@" to "::", we used "@@" because TEnv
-         // considers "::" a terminator
-         cls.Remove(0, 8);
-         cls.ReplaceAll("@@", "::");
-         // convert "-" to " ", since class names may have
-         // blanks and TEnv considers a blank a terminator
-         cls.ReplaceAll("-", " ");
-         if (!strcmp(library, lib)) {
+         const char* lib = ((TObjString *)tokens->At(0))->GetName();
+         if (!strncmp(cls.Data(), "Library.", 8) && cls.Length() > 8) {
+            // convert "@@" to "::", we used "@@" because TEnv
+            // considers "::" a terminator
+            cls.Remove(0, 8);
+            cls.ReplaceAll("@@", "::");
+            // convert "-" to " ", since class names may have
+            // blanks and TEnv considers a blank a terminator
+            cls.ReplaceAll("-", " ");
+         }
+         if (!strncmp(lib, libname.Data(), len)) {
             if (fMapfile->GetTable()->Remove(rec) == 0) {
-               Error("UnloadLibraryMap", "entry for <%s,%s> not found in library map table", cls.Data(), lib);
+               Error("UnloadLibraryMap", "entry for <%s, %s> not found in library map table", cls.Data(), lib);
                ret = -1;
             }
          }
@@ -3519,9 +3670,10 @@ Int_t TCling::UnloadLibraryMap(const char* library)
    }
    if (ret >= 0) {
       TString library_rootmap(library);
-      library_rootmap.Append(".rootmap");
+      if (!library_rootmap.EndsWith(".rootmap"))
+         library_rootmap.Append(".rootmap");
       TNamed* mfile = 0;
-      while ((mfile = (TNamed*)fRootmapFiles->FindObject(library_rootmap))) {
+      while ((mfile = (TNamed *)fRootmapFiles->FindObject(library_rootmap))) {
          fRootmapFiles->Remove(mfile);
          delete mfile;
       }
@@ -3530,6 +3682,7 @@ Int_t TCling::UnloadLibraryMap(const char* library)
    return ret;
 }
 
+//______________________________________________________________________________
 Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
 {
    // Register the autoloading information for a class.
@@ -3548,7 +3701,7 @@ Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
 
    R__LOCKGUARD(gClingMutex);
    if (!fMapfile) {
-      fMapfile = new TEnv(".rootmap");
+      fMapfile = new TEnv();
       fMapfile->IgnoreDuplicates(kTRUE);
       fMapNamespaces = new THashTable();
       fMapNamespaces->SetOwner();
@@ -3556,8 +3709,10 @@ Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
 
+      InitRootmapFile(".rootmap");
    }
-   fMapfile->SetValue(key,libs);
+   //fMapfile->SetValue(key, libs);
+   fMapfile->SetValue(cls, libs);
    return 1;
 }
 
@@ -3709,26 +3864,36 @@ const char* TCling::GetClassSharedLibs(const char* cls)
    // The first library in the list is the one containing the class, the
    // others are the libraries the first one depends on. Returns 0
    // in case the library is not found.
+
    if (!cls || !*cls) {
       return 0;
    }
    // lookup class to find list of libraries
    if (fMapfile) {
-      TString c = TString("Library.") + cls;
-      // convert "::" to "@@", we used "@@" because TEnv
-      // considers "::" a terminator
-      c.ReplaceAll("::", "@@");
-      // convert "-" to " ", since class names may have
-      // blanks and TEnv considers a blank a terminator
-      c.ReplaceAll(" ", "-");
-      // Use TEnv::Lookup here as the rootmap file must start with Library.
-      // and do not support using any stars (so we do not need to waste time
-      // with the search made by TEnv::GetValue).
       TEnvRec* libs_record = 0;
-      libs_record = fMapfile->Lookup(c);
+      libs_record = fMapfile->Lookup(cls);
       if (libs_record) {
          const char* libs = libs_record->GetValue();
          return (*libs) ? libs : 0;
+      } 
+      else {
+         // Try the old format...
+         TString c = TString("Library.") + cls;
+         // convert "::" to "@@", we used "@@" because TEnv
+         // considers "::" a terminator
+         c.ReplaceAll("::", "@@");
+         // convert "-" to " ", since class names may have
+         // blanks and TEnv considers a blank a terminator
+         c.ReplaceAll(" ", "-");
+         // Use TEnv::Lookup here as the rootmap file must start with Library.
+         // and do not support using any stars (so we do not need to waste time
+         // with the search made by TEnv::GetValue).
+         TEnvRec* libs_record = 0;
+         libs_record = fMapfile->Lookup(c);
+         if (libs_record) {
+            const char* libs = libs_record->GetValue();
+            return (*libs) ? libs : 0;
+         }
       }
    }
    return 0;

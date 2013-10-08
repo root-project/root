@@ -730,9 +730,14 @@ void LoadLibraryMap()
 
       string line;
       string classname;
+      bool new_format = false;
 
       while ( file >> line ) {
 
+         if ((line[0] == '[') || ((line[0] == '{'))) {
+            new_format = true;
+            break;
+         }
          if (line.substr(0,8)=="Library.") {
 
             int pos = line.find(":",8);
@@ -792,6 +797,61 @@ void LoadLibraryMap()
          }
       }
       file.close();
+      if (new_format) {
+         string libs = "";
+         ifstream newfile(filename.c_str());
+         while (getline(newfile, line, '\n')) {
+            if (line == "{ decls }") {
+               while (getline(newfile, line, '\n')) {
+                  if (line[0] == '[') break;
+               }
+            }
+            if (line[0] == '[') {
+               // new section
+               libs = line.substr(1, line.find(']')-1);
+               while( libs[0] == ' ' ) libs.replace(0, 1, "");
+            }
+            else if (line.substr(0, 6) == "class ") {
+               classname = line.substr(6, line.length()-6);
+               if ( strchr(classname.c_str(),':') != 0 ) {
+                  // We have a namespace and we have to check it first
+
+                  int slen = classname.size();
+                  for(int k=0;k<slen;++k) {
+                     if (classname[k] == ':') {
+                        if (k+1 >= slen || classname[k+1] != ':') {
+                           // we expected another ':'
+                           break;
+                        }
+                        if (k) {
+                           string base = classname.substr(0, k);
+                           if (base=="std") {
+                              // std is not declared but is also ignored by CINT!
+                              break;
+                           } else {
+                              gAutoloads[base] = ""; // We never load namespaces on their own.
+                           }
+                           ++k;
+                        }
+                     } else if (classname[k] == '<') {
+                        // We do not want to look at the namespace inside the template parameters!
+                        break;
+                     }
+                  }
+               }
+               gAutoloads[classname] = libs;
+               if (sbuffer < classname.size()+20) {
+                  delete [] buffer;
+                  sbuffer = classname.size()+20;
+                  buffer = new char[sbuffer];
+               }
+               strlcpy(buffer,classname.c_str(),sbuffer);
+            }
+            else if (line.substr(0, 10) == "namespace ") {
+            }
+         }
+         newfile.close();
+      }
    }
 }
 
