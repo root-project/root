@@ -180,7 +180,7 @@ all-$(MODNAME): $(LLVMLIB)
 clean-llvm:
 		-@(if [ -d $(LLVMDIRO) ]; then \
 			cd $(LLVMDIRO); \
-			$(MAKE) clean $(ROOT_BUILDCLANG); \
+			$(MAKE) clean ONLY_TOOLS=clang NOCLING=1 $(ROOT_BUILDCLANG); \
 		fi)
 
 clean::         clean-$(MODNAME)
