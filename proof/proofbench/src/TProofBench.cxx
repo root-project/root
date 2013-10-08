@@ -373,10 +373,13 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    TGraphErrors *grmx = 0;
    if (doMax) {
       if (!(grmx = GetGraph(d, hmaxn, nbins, xmin, xmax, mmi, mmx, kmmx, pfmx))) {
-         ::Error("DrawCPU", "could not find '%s' ...", hmaxn.Data());
-         fout->Close();
-         delete fout;
-         return;
+         ::Warning("DrawCPU", "could not find '%s': support added in 5.34/11", hmaxn.Data());
+         if (!grav) {
+            // Nothing to do if not asked for the average
+            fout->Close();
+            delete fout;
+            return;
+         }
       }
       if (mmx > ymx) ymx = mmx;
       if ((ymi > 0 && mmi < ymi) || (ymi < 0.)) ymi = mmi;
@@ -892,10 +895,13 @@ void TProofBench::DrawDataSet(const char *outfile,
    TGraphErrors *grmx = 0;
    if (doMax) {
       if (!(grmx = GetGraph(d, hmaxn, nbins, xmin, xmax, mmi, mmx, kmmx, pfmx))) {
-         ::Error("DrawCPU", "could not find '%s' ...", hmaxn.Data());
-         fout->Close();
-         delete fout;
-         return;
+         ::Warning("DrawCPU", "could not find '%s': support added in 5.34/11", hmaxn.Data());
+         if (!grav) {
+            // Nothing to do if not asked for the average
+            fout->Close();
+            delete fout;
+            return;
+         }
       }
       if (mmx > ymx) ymx = mmx;
       if ((ymi > 0 && mmi < ymi) || (ymi < 0.)) ymi = mmi;
