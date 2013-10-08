@@ -16,6 +16,7 @@
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
 
+#include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
@@ -557,6 +558,8 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
       // on pop it will try to go one level up, which we don't want.
       Sema::ContextRAII pushedDC(SemaRef, DC);
       SemaRef.PushOnScopeChains(Result, SemaRef.TUScope, /*Add to ctx*/true);
+      // Put the decl in the transaction so that we can codegen.
+      SemaRef.Consumer.HandleTopLevelDecl(DeclGroupRef(Result));
       // Say that we can handle the situation. Clang should try to recover
       return true;
    }
