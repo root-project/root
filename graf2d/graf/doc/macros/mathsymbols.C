@@ -107,6 +107,8 @@
    y -= step ; Tl.DrawLatex(x1, y-0.015, "#int")      ; Tl.DrawText(x2, y, "#int");
    y -= step ; Tl.DrawLatex(x1, y, "#odot")           ; Tl.DrawText(x2, y, "#odot");
    y -= step ; Tl.DrawLatex(x1, y, "#exists")         ; Tl.DrawText(x2, y, "#exists");
+   y -= step ; Tl.DrawLatex(x1, y, "#plus")           ; Tl.DrawText(x2, y, "#plus");
+   y -= step ; Tl.DrawLatex(x1, y, "#minus")          ; Tl.DrawText(x2, y, "#minus");
 
    return Ms;
 }
