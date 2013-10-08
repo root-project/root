@@ -141,5 +141,6 @@ file `simple.pdf`.
 ```
 
 -   Implement `#backslash`.
--   Implement `DrawLatexNDC`
-
+-   Implement `DrawLatexNDC`.
+-   Implement `#minus` and `#plus` typographically better than the 
+    standard `"-"` and `"+"`.
