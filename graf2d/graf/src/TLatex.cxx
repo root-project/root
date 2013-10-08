@@ -556,6 +556,8 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
    Int_t opPerp          = 0;    // position of #perp
    Int_t opOdot          = 0;    // position of #odot
    Int_t opHbar          = 0;    // position of #hbar
+   Int_t opMinus         = 0;    // position of #minus
+   Int_t opPlus          = 0;    // position of #plus
    Int_t opMp            = 0;    // position of #mp
    Int_t opBackslash     = 0;    // position of #backslash
    Int_t opParallel      = 0;    // position of #parallel
@@ -720,6 +722,11 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                continue ;
             }
+            if (!opMinus && strncmp(buf,"minus",5)==0) {
+               opMinus=1; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue;
+            }
          }
          if (length>i+4) {
             Char_t buf[5];
@@ -736,6 +743,11 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
             }
             if (!opPerp && strncmp(buf,"perp",4)==0) {
                opPerp=1; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue;
+            }
+            if (!opPlus && strncmp(buf,"plus",4)==0) {
+               opPlus=1; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                continue;
             }
@@ -1085,6 +1097,46 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
          hbar.PaintText(xx,yy,"h");
          DrawLine(x,y-0.8*square,x+0.75*square,y-square,spec);
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opMinus) {
+      Double_t square = GetHeight()*spec.fSize/2;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+6,length-6);
+      } else {
+         fs1 = Analyse(x+square,y,spec,text+6,length-6);
+         TText minus;
+         minus.SetTextFont(122);
+         minus.SetTextColor(fTextColor);
+         minus.SetTextSize(spec.fSize);
+         minus.SetTextAngle(fTextAngle);
+         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t angle   = kPI*spec.fAngle/180.;
+         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         minus.PaintText(xx,yy,"-");
+      }
+      result = fs1 + TLatexFormSize(square,square,0);
+   }
+   else if (opPlus) {
+      Double_t square = GetHeight()*spec.fSize/2;
+      if (!fShow) {
+         fs1 = Anal1(spec,text+5,length-5);
+      } else {
+         fs1 = Analyse(x+square,y,spec,text+5,length-5);
+         TText plus;
+         plus.SetTextFont(122);
+         plus.SetTextColor(fTextColor);
+         plus.SetTextSize(spec.fSize);
+         plus.SetTextAngle(fTextAngle);
+         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t angle   = kPI*spec.fAngle/180.;
+         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         plus.PaintText(xx,yy,"+");
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
@@ -1770,7 +1822,7 @@ TLatex *TLatex::DrawLatex(Double_t x, Double_t y, const char *text)
 TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
 {
    // Draw this TLatex with new coordinates in NDC.
-   
+
    TLatex *newtext = DrawLatex(x, y, text);
    newtext->SetNDC();
    return newtext;
@@ -1890,7 +1942,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
    TAttText::Modify();  // Change text attributes only if necessary.
 
    TVirtualPS *saveps = gVirtualPS;
-               
+
    if (gVirtualPS) {
       if (gVirtualPS->InheritsFrom("TTeXDump")) {
          gVirtualPS->SetTextAngle(angle);
@@ -1905,7 +1957,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          gVirtualPS = 0;
       }
    }
-   
+
    // Do not use Latex if font is low precision.
    if (fTextFont%10 < 2) {
       if (gVirtualX) gVirtualX->SetTextAngle(angle);
