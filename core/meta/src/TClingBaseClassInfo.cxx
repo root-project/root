@@ -430,10 +430,6 @@ long TClingBaseClassInfo::Offset(void * address) const
    if (!IsValid()) {
       return -1;
    }
-   // The base class is not in the inheritance hierarchy of the class.
-   if (!fClassInfo->IsBase(fBaseInfo->Name())) {
-      return -1;
-   }
    // Check if current base class has a definition.
    const clang::CXXRecordDecl* Base =
       llvm::cast_or_null<clang::CXXRecordDecl>(fBaseInfo->GetDecl());
