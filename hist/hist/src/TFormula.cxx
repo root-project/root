@@ -22,7 +22,7 @@
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TFormula.h"
-
+#include <cassert>
 
 #ifdef WIN32
 #pragma optimize("",off)
@@ -910,10 +910,15 @@ void TFormula::ProcessFormula(TString &formula)
             formula.ReplaceAll(shortcut,full);
             fun.fFound = true;
          }
-         if(fun.fName.Contains("::")) // restrict to only TMath?
+         if(fun.fName.Contains("::")) // add support for nexted namespaces
          {
-            TString className = fun.fName(0,fun.fName(0,fun.fName.Index("::")).Length());
-            TString functionName = fun.fName(fun.fName.Index("::") + 2, fun.fName.Length());
+            std::string name(fun.fName); 
+            size_t index = name.rfind("::");
+            assert(index != std::string::npos);               
+            TString className = fun.fName(0,fun.fName(0,index).Length());           
+            TString functionName = fun.fName(index + 2, fun.fName.Length());
+                                                   
+            printf ( "%s  %s %s \n", fun.fName.Data(), className.Data(), functionName.Data()); 
             Bool_t silent = true;
             TClass *tclass = new TClass(className,silent);
             TList *methodList = tclass->GetListOfAllPublicMethods();
@@ -1477,3 +1482,30 @@ Double_t TFormula::Eval()
    fMethod->Execute(result);
    return result;
 }
+
+//______________________________________________________________________________
+void TFormula::Print(Option_t *option) const
+{
+   // print the formula and its attributes
+   printf(" %20s : %s Ndim= %d, Npar= %d, Number= %d \n",GetName(),GetTitle(), fNdim,fNpar,fNumber);
+   printf(" Formula expression: \n");
+   printf("\t%s \n",fFormula.Data() );
+   TString opt(option);
+   opt.ToUpper();
+   if (opt.Contains("V") ) { 
+      if (fNdim > 0) {
+         printf("List of  Variables: \n");
+         for ( map<TString,TFormulaVariable>::const_iterator it = fVars.begin(); it != fVars.end(); ++it) { 
+            printf(" %20s =  %10f \n",it->first.Data(), it->second.GetValue() );
+         }
+      }
+      if (fNpar > 0) {
+         printf("List of  Parameters: \n");
+         for ( map<TString,TFormulaVariable>::const_iterator it = fParams.begin(); it != fParams.end(); ++it) { 
+            printf(" %20s =  %10f \n",it->first.Data(), it->second.GetValue() );
+         }
+      }
+      printf("Expression passed to Cling:\n");
+      printf("\t%s\n",fClingInput.Data() );
+   }
+} 

@@ -154,6 +154,7 @@ public:
    Double_t       GetVariable(const TString &name);
    Bool_t         IsValid() const { return fReadyToExecute && fAllParametersSetted; }
    Bool_t         IsLinear() const { return TestBit(kLinear); } 
+   void           Print(Option_t *option) const;
    void           SetParameter(const TString &name, Double_t value);
    void           SetParameter(Int_t param, Double_t value);
    void           SetParameters(const Double_t *params,Int_t size);
