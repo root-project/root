@@ -45,6 +45,7 @@
 #include "TMath.h"
 #include "TProfile.h"
 #include "TStyle.h"
+#include "TLegend.h"
 
 ClassImp(TProofBench)
 
@@ -304,10 +305,14 @@ Int_t TProofBench::RunCPUx(Long64_t nevents, Int_t start, Int_t stop)
 void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, Int_t dofit)
 {
    // Draw the CPU speedup plot.
-   //  opt =    'std:'      draw standard evt/s plot
+   //  opt = 'typewhat', e.g. 'std:max:'
+   //    type = 'std:'      draw standard evt/s plot
    //           'stdx:'     draw standard evt/s plot, 1 worker per node
    //           'norm:'     draw normalized plot
    //           'normx:'    draw normalized plot, 1 worker per node
+   //    what = 'max:'      draw max rate
+   //           'avg:'      draw average rate
+   //           'all:'      draw max and average rate on same plot (default)
    //  dofit =  0           no fit
    //           1           fit with the relevant '1st degree related' function
    //           2           fit with the relevant '2nd degree related' function
@@ -325,87 +330,71 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    TNamed *nmdesc = (TNamed *) fout->Get("PB_description");
    if (nmdesc) description = nmdesc->GetTitle();
 
+   // Parse option
    TString oo(opt);
-   const char *dirn = (oo.Contains("x:")) ? "RunCPUx" : "RunCPU";
+   Bool_t isNorm = (oo.Contains("norm")) ? kTRUE : kFALSE;
+   Bool_t isX = (oo.Contains("stdx:") || oo.Contains("normx:")) ? kTRUE : kFALSE;
+   Bool_t doAvg = kTRUE, doMax = kTRUE;
+   if (oo.Contains("avg:")) doMax = kFALSE;
+   if (oo.Contains("max:")) doAvg = kFALSE;
+
+   const char *dirn = (isX) ? "RunCPUx" : "RunCPU";
    TDirectory *d = (TDirectory *) fout->Get(dirn);
    if (!d) {
-      ::Error("DrawCPU", "could not find directory 'RunCPU' ...");
+      ::Error("DrawCPU", "could not find directory '%s' ...", dirn);
       fout->Close();
       delete fout;
       return;
    }
    d->cd();
-   TString hprofn;
-   Bool_t isnorm = kFALSE;
-   if (!strcmp(opt, "std:")) {
-      hprofn = "Prof_CPU_QR_Evts";
-   } else if (!strcmp(opt, "stdx:")) {
-      hprofn = "Prof_x_CPU_QR_Evts";
-   } else if (!strcmp(opt, "norm:")) {
-      hprofn = "Norm_CPU_QR_Evts";
-      isnorm = kTRUE;
-    } else if (!strcmp(opt, "normx:")) {
-      hprofn = "Norm_x_CPU_QR_Evts";
-      isnorm = kTRUE;
-   } else {
-      ::Error("DrawCPU", "unknown option '%s'", opt);
-      fout->Close();
-      delete fout;
-      return;
-   }
-   TProfile *pf = 0;
-   TList *keylist = d->GetListOfKeys();
-   TKey *key = 0;
-   TIter nxk(keylist);
-   while ((key = (TKey *) nxk())) {
-      if (TString(key->GetName()).BeginsWith(hprofn)) {
-         pf = (TProfile *) d->Get(key->GetName());
-         break;
+
+   TString hprofn, hmaxn;
+   const char *lx = (isX) ? "_x" : "";
+   const char *ln = (isNorm) ? "Norm" : "Prof";
+   hprofn.Form("%s%s_CPU_QR_Evts", ln, lx);
+   hmaxn.Form("%s%s_CPU_PS_MaxEvts", ln, lx);
+
+   Double_t xmin = -1., xmax = -1.;
+   Double_t ami = -1., amx = -1., mmi = -1., mmx = -1.;
+   Int_t kamx = -1, kmmx = -1, nbins = -1;
+   Double_t ymx = -1., ymi = -1.;
+
+   TProfile *pfav = 0;
+   TGraphErrors *grav = 0;
+   if (doAvg) {
+      if (!(grav = GetGraph(d, hprofn, nbins, xmin, xmax, ami, amx, kamx, pfav))) {
+         ::Error("DrawCPU", "could not find '%s' ...", hprofn.Data());
+         fout->Close();
+         delete fout;
+         return;
       }
+      ymx = amx;
+      ymi = ami;
    }
-   if (!pf) {
-      ::Error("DrawCPU", "could not find '%s' ...", hprofn.Data());
-      fout->Close();
-      delete fout;
-      return;
+   TProfile *pfmx = 0;
+   TGraphErrors *grmx = 0;
+   if (doMax) {
+      if (!(grmx = GetGraph(d, hmaxn, nbins, xmin, xmax, mmi, mmx, kmmx, pfmx))) {
+         ::Error("DrawCPU", "could not find '%s' ...", hmaxn.Data());
+         fout->Close();
+         delete fout;
+         return;
+      }
+      if (mmx > ymx) ymx = mmx;
+      if ((ymi > 0 && mmi < ymi) || (ymi < 0.)) ymi = mmi;
    }
 
-   Int_t nbins = pf->GetNbinsX();
-   TGraphErrors *gr = new TGraphErrors(nbins);
-   Double_t xx, ex, yy, ey, ymi = pf->GetBinContent(1), ymx = ymi;
-   Double_t xlow = pf->GetBinCenter(1) - pf->GetBinWidth(1)/2. ;
-   Double_t xhigh = pf->GetBinCenter(nbins) + pf->GetBinWidth(nbins)/2. ;
-   Int_t k =1, kmx = -1;
-   for (;k <= nbins; k++) {
-      xx = pf->GetBinCenter(k);
-      ex = pf->GetBinWidth(k) * .001;
-      yy = pf->GetBinContent(k);
-      ey = pf->GetBinError(k);
-      if (k == 1) {
-         ymi = yy;
-         ymx = yy;
-         kmx = k;
-      } else {
-         if (yy < ymi) ymi = yy; 
-         if (yy > ymx) { ymx = yy; kmx = k; }
-      }
-      gr->SetPoint(k-1, xx, yy);
-      gr->SetPointError(k-1, ex, ey);
-   }
+   TProfile *pf = (doMax) ? pfmx : pfav;   
+   Int_t kmx = (doMax) ? kmmx : kamx; 
 
    // Create the canvas
    TCanvas *cpu = new TCanvas("cpu", "Rate vs wrks",204,69,1050,502);
    cpu->Range(-3.106332,0.7490716,28.1362,1.249867);
 
-   gStyle->SetOptTitle(0);
-   gr->SetFillColor(1);
-   gr->SetLineColor(13);
-   gr->SetMarkerStyle(21);
-   gr->SetMarkerSize(1.2);
-
-   TH1F *hgr = new TH1F("Graph-CPU"," CPU speed-up", nbins*4, xlow, xhigh);
+   TH1F *hgr = new TH1F("Graph-CPU"," CPU speed-up", nbins*4, xmin, xmax);
    hgr->SetMaximum(ymx + (ymx-ymi)*0.2);
    hgr->SetMinimum(0);
+   if (isNorm) hgr->SetMinimum(ymi - (ymx-ymi)*0.5);
    hgr->SetDirectory(0);
    hgr->SetStats(0);
 //   hgr->CenterTitle(true);
@@ -414,14 +403,51 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    hgr->GetXaxis()->SetLabelSize(0.05);
    hgr->GetXaxis()->SetTitleSize(0.06);
    hgr->GetXaxis()->SetTitleOffset(0.62);
-   hgr->GetYaxis()->SetLabelSize(0.06);
-   gr->SetHistogram(hgr);
+   hgr->GetYaxis()->SetTitleSize(0.08);
+   hgr->GetYaxis()->SetTitleOffset(0.52);
+   hgr->GetYaxis()->SetTitle("Rate (events/s)");      
 
-   if (verbose) gr->Print();
-   
-   gr->Draw("alp");
+   TLegend *leg = 0;
+   if (isNorm) {
+      leg = new TLegend(0.7, 0.8, 0.9, 0.9);
+   } else {
+      leg = new TLegend(0.1, 0.8, 0.3, 0.9);
+   }
+
+   gStyle->SetOptTitle(0);
+   if (doAvg) {
+      grav->SetFillColor(1);
+      grav->SetLineColor(13);
+      grmx->SetMarkerColor(4);
+      grav->SetMarkerStyle(21);
+      grav->SetMarkerSize(1.2);
+      grav->SetHistogram(hgr);
+
+      if (verbose) grav->Print();
+      grav->Draw("alp");
+      leg->AddEntry(grav, "Average", "P");
+   }
+   if (doMax) {
+      grmx->SetFillColor(1);
+      grmx->SetLineColor(13);
+      grmx->SetMarkerColor(2);
+      grmx->SetMarkerStyle(29);
+      grmx->SetMarkerSize(1.8);
+      grmx->SetHistogram(hgr);
+
+      if (verbose) grmx->Print();
+      if (doAvg) {
+         grmx->Draw("lpSAME");
+      } else {
+         grmx->Draw("alp");
+      }
+      leg->AddEntry(grmx, "Maximum", "P");
+   }
+   leg->Draw();
+   gPad->Update();
 
    if (dofit > 0) {
+      TGraphErrors *gr = (doMax) ? grmx : grav;   
       // Make sure the fitting functions are defined
       Double_t xmi = 0.9;
       if (nbins > 5) xmi = 1.5;
@@ -430,7 +456,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
       // Starting point for the parameters and fit
       Double_t normrate = -1.;
       if (dofit == 1) {
-         if (isnorm) {
+         if (isNorm) {
             fgFp1n->SetParameter(0, pf->GetBinContent(1));
             fgFp1n->SetParameter(1, pf->GetBinContent(nbins-1));
             gr->Fit(fgFp1n);
@@ -444,7 +470,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
             normrate = fgFp1->GetParameter(1);
          }
       } else {
-         if (isnorm) {
+         if (isNorm) {
             fgFp2n->SetParameter(0, pf->GetBinContent(1));
             fgFp2n->SetParameter(1, pf->GetBinContent(nbins-1));
             fgFp2n->SetParameter(2, 0.);
@@ -462,7 +488,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
       }
 
       // Notify the cluster performance parameters
-      if (!isnorm) {
+      if (!isNorm) {
          printf("* ************************************************************ *\n");
          printf("*                                                              *\r");
          printf("* Cluster: %s\n", description.Data());
@@ -483,6 +509,64 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    }
    // Close the file
    fout->Close();
+}
+
+//______________________________________________________________________________
+TGraphErrors *TProofBench::GetGraph(TDirectory *d, const char *pfn, Int_t &nb,
+                                    Double_t &xmi, Double_t &xmx,
+                                    Double_t &ymi, Double_t &ymx, Int_t &kmx, TProfile *&pf)
+{
+   // Get from TDirectory 'd' the TProfile named 'pfn' and create the graph.
+   // Return also the max y in mx.
+
+   // Sanity checks
+   if (!d || !pfn || (pfn && strlen(pfn) <= 0)) {
+      ::Error("TProofBench::GetGraph", "directory or name not defined!");
+      return (TGraphErrors *)0;
+   }
+
+   TList *keylist = d->GetListOfKeys();
+   TKey *key = 0;
+   TIter nxk(keylist);
+   while ((key = (TKey *) nxk())) {
+      if (TString(key->GetName()).BeginsWith(pfn)) {
+         pf = (TProfile *) d->Get(key->GetName());
+         break;
+      }
+   }
+   // Sanity checks
+   if (!pf) {
+      ::Error("TProofBench::GetGraph", "TProfile for '%s' not found in directory '%s'", pfn, d->GetName());
+      return (TGraphErrors *)0;
+   }
+
+   nb = pf->GetNbinsX();
+   TGraphErrors *gr = new TGraphErrors(nb);
+   Double_t xx, ex, yy, ey;
+   ymi = pf->GetBinContent(1);
+   ymx = ymi;
+   xmi = pf->GetBinCenter(1) - pf->GetBinWidth(1)/2. ;
+   xmx = pf->GetBinCenter(nb) + pf->GetBinWidth(nb)/2. ;
+   kmx = -1;
+   for (Int_t k = 1;k <= nb; k++) {
+      xx = pf->GetBinCenter(k);
+      ex = pf->GetBinWidth(k) * .001;
+      yy = pf->GetBinContent(k);
+      ey = pf->GetBinError(k);
+      if (k == 1) {
+         ymi = yy;
+         ymx = yy;
+         kmx = k;
+      } else {
+         if (yy < ymi) ymi = yy; 
+         if (yy > ymx) { ymx = yy; kmx = k; }
+      }
+      gr->SetPoint(k-1, xx, yy);
+      gr->SetPointError(k-1, ex, ey);
+   }
+
+   // Done  
+   return gr;
 }
 
 //______________________________________________________________________________
@@ -735,10 +819,14 @@ void TProofBench::DrawDataSet(const char *outfile,
                               const char *opt, const char *type, Bool_t verbose)
 {
    // Draw the CPU speedup plot.
-   //  opt =    'std:'          Standard scaling plot
-   //           'norm:'         Normalized scaling plot
-   //           'stdx:'         Standard scaling plot, 1 worker per node
-   //           'normx:'        Normalized scaling plot, 1 worker per node
+   //  opt = 'typewhat', e.g. 'std:max:'
+   //    type = 'std:'      draw standard plot
+   //           'stdx:'     draw standard plot, 1 worker per node
+   //           'norm:'     draw normalized plot
+   //           'normx:'    draw normalized plot, 1 worker per node
+   //    what = 'max:'      draw max rate
+   //           'avg:'      draw average rate
+   //           'all:'      draw max and average rate on same plot (default)
    // type =    'mbs'           MB/s scaling plots (default)
    //           'evts'          Event/s scaling plots
    //
@@ -749,101 +837,153 @@ void TProofBench::DrawDataSet(const char *outfile,
       ::Error("DrawDataSet", "could not open file '%s' ...", outfile);
       return;
    }
+   
+   // Get description
+   TString description("<not available>");
+   TNamed *nmdesc = (TNamed *) fout->Get("PB_description");
+   if (nmdesc) description = nmdesc->GetTitle();
+
+   // Parse option
    TString oo(opt);
-   const char *dirn = (oo.Contains("x:")) ? "RunDataReadx" : "RunDataRead";
+   Bool_t isNorm = (oo.Contains("norm")) ? kTRUE : kFALSE;
+   Bool_t isX = (oo.Contains("stdx:") || oo.Contains("normx:")) ? kTRUE : kFALSE;
+   Bool_t doAvg = kTRUE, doMax = kTRUE;
+   if (oo.Contains("avg:")) doMax = kFALSE;
+   if (oo.Contains("max:")) doAvg = kFALSE;
+
+   const char *dirn = (isX) ? "RunDataReadx" : "RunDataRead";
    TDirectory *d = (TDirectory *) fout->Get(dirn);
    if (!d) {
-      ::Error("DrawDataSet", "could not find directory 'RunDataRead' ...");
+      ::Error("DrawCPU", "could not find directory '%s' ...", dirn);
       fout->Close();
       delete fout;
       return;
    }
    d->cd();
 
-   TString hprofn, typ("QR_IO");
-   if (type && !strcmp(type, "evts")) typ = "QR_Evts";
-
-   if (!strcmp(opt, "std:")) {
-      hprofn.Form("Prof_DataRead_%s", typ.Data());
-   } else if (!strcmp(opt, "stdx:")) {
-      hprofn.Form("Prof_x_DataRead_%s", typ.Data());
-   } else if (!strcmp(opt, "norm:")) {
-      hprofn.Form("Norm_DataRead_%s", typ.Data());
-   } else if (!strcmp(opt, "normx:")) {
-      hprofn.Form("Norm_x_DataRead_%s", typ.Data());
+   TString hprofn, hmaxn;
+   const char *lx = (isX) ? "_x" : "";
+   const char *ln = (isNorm) ? "Norm" : "Prof";
+   Bool_t isIO = kTRUE;
+   if (type && !strcmp(type, "evts")) {
+      hprofn.Form("%s%s_DataRead_QR_Evts", ln, lx);
+      hmaxn.Form("%s%s_DataRead_PS_MaxEvts", ln, lx);
+      isIO = kFALSE;
    } else {
-      ::Error("DrawDataSet", "unknown option '%s'", opt);
-      fout->Close();
-      delete fout;
-      return;
+      hprofn.Form("%s%s_DataRead_QR_IO", ln, lx);
+      hmaxn.Form("%s%s_DataRead_PS_MaxIO", ln, lx);      
    }
-   TProfile *pf = 0;
-   TList *keylist = d->GetListOfKeys();
-   TKey *key = 0;
-   TIter nxk(keylist);
-   while ((key = (TKey *) nxk())) {
-      if (TString(key->GetName()).BeginsWith(hprofn)) {
-         pf = (TProfile *) d->Get(key->GetName());
-         break;
+
+   Double_t xmin = -1., xmax = -1.;
+   Double_t ami = -1., amx = -1., mmi = -1., mmx = -1.;
+   Int_t kamx = -1, kmmx = -1, nbins = -1;
+   Double_t ymx = -1., ymi = -1.;
+ 
+   TProfile *pfav = 0;
+   TGraphErrors *grav = 0;
+   if (doAvg) {
+      if (!(grav = GetGraph(d, hprofn, nbins, xmin, xmax, ami, amx, kamx, pfav))) {
+         ::Error("DrawCPU", "could not find '%s' ...", hprofn.Data());
+         fout->Close();
+         delete fout;
+         return;
       }
+      ymx = amx;
+      ymi = ami;
    }
-   if (!pf) {
-      ::Error("DrawDataSet", "could not find '%s' ...", hprofn.Data());
-      fout->Close();
-      delete fout;
-      return;
-   }
-   Int_t nbins = pf->GetNbinsX();
-   TGraphErrors *gr = new TGraphErrors(nbins);
-   Double_t xx, ex, yy, ey, ymi = pf->GetBinContent(1), ymx = ymi;
-   Double_t xlow = pf->GetBinCenter(1) - pf->GetBinWidth(1)/2. ;
-   Double_t xhigh = pf->GetBinCenter(nbins) + pf->GetBinWidth(nbins)/2. ;
-   Int_t k =1;
-   for (;k <= nbins; k++) {
-      xx = pf->GetBinCenter(k);
-      ex = pf->GetBinWidth(k) * .001;
-      yy = pf->GetBinContent(k);
-      ey = pf->GetBinError(k);
-      if (k == 1) {
-         ymi = yy;
-         ymx = yy;
-      } else {
-         if (yy < ymi) ymi = yy; 
-         if (yy > ymx) ymx = yy;
+   TProfile *pfmx = 0;
+   TGraphErrors *grmx = 0;
+   if (doMax) {
+      if (!(grmx = GetGraph(d, hmaxn, nbins, xmin, xmax, mmi, mmx, kmmx, pfmx))) {
+         ::Error("DrawCPU", "could not find '%s' ...", hmaxn.Data());
+         fout->Close();
+         delete fout;
+         return;
       }
-      gr->SetPoint(k-1, xx, yy);
-      gr->SetPointError(k-1, ex, ey);
-      Printf("%d %f %f", (Int_t)xx, yy, ey);
+      if (mmx > ymx) ymx = mmx;
+      if ((ymi > 0 && mmi < ymi) || (ymi < 0.)) ymi = mmi;
    }
+
+   TProfile *pf = (doMax) ? pfmx : pfav;   
+   Int_t kmx = (doMax) ? kmmx : kamx; 
 
    // Create the canvas
    TCanvas *cpu = new TCanvas("dataset", "Rate vs wrks",204,69,1050,502);
    cpu->Range(-3.106332,0.7490716,28.1362,1.249867);
 
-   gStyle->SetOptTitle(0);
-   gr->SetFillColor(1);
-   gr->SetLineColor(13);
-   gr->SetMarkerStyle(21);
-   gr->SetMarkerSize(1.2);
-
-   TH1F *hgr = new TH1F("Graph-DataSet"," Data Read speed-up", nbins*4, xlow, xhigh);
+   TH1F *hgr = new TH1F("Graph-DataSet"," Data Read speed-up", nbins*4, xmin, xmax);
    hgr->SetMaximum(ymx + (ymx-ymi)*0.2);
    hgr->SetMinimum(0);
+   if (isNorm) hgr->SetMinimum(ymi - (ymx-ymi)*0.5);
    hgr->SetDirectory(0);
    hgr->SetStats(0);
-//   hgr->CenterTitle(true);
    hgr->GetXaxis()->SetTitle(pf->GetXaxis()->GetTitle());
    hgr->GetXaxis()->CenterTitle(true);
    hgr->GetXaxis()->SetLabelSize(0.05);
    hgr->GetXaxis()->SetTitleSize(0.06);
    hgr->GetXaxis()->SetTitleOffset(0.62);
    hgr->GetYaxis()->SetLabelSize(0.06);
-   gr->SetHistogram(hgr);
+   hgr->GetYaxis()->SetTitleSize(0.08);
+   hgr->GetYaxis()->SetTitleOffset(0.52);
+   if (isIO) {
+      hgr->GetYaxis()->SetTitle("Rate (MB/s)");
+   } else {
+      hgr->GetYaxis()->SetTitle("Rate (events/s)");      
+   }
 
-   if (verbose) gr->Print();
-   
-   gr->Draw("alp");
-  
+   TLegend *leg = 0;
+   if (isNorm) {
+      leg = new TLegend(0.7, 0.8, 0.9, 0.9);
+   } else {
+      leg = new TLegend(0.1, 0.8, 0.3, 0.9);
+   }
+
+   if (doAvg) {
+      grav->SetFillColor(1);
+      grav->SetLineColor(13);
+      grmx->SetMarkerColor(4);
+      grav->SetMarkerStyle(21);
+      grav->SetMarkerSize(1.2);
+      grav->SetHistogram(hgr);
+
+      if (verbose) grav->Print();
+      grav->Draw("alp");
+      leg->AddEntry(grav, "Average", "P");
+   }
+   if (doMax) {
+      grmx->SetFillColor(1);
+      grmx->SetLineColor(13);
+      grmx->SetMarkerColor(2);
+      grmx->SetMarkerStyle(29);
+      grmx->SetMarkerSize(1.8);
+      grmx->SetHistogram(hgr);
+
+      if (verbose) grmx->Print();
+      if (doAvg) {
+         grmx->Draw("lpSAME");
+      } else {
+         grmx->Draw("alp");
+      }
+      leg->AddEntry(grmx, "Maximum", "P");
+   }
+   leg->Draw();
+   gPad->Update();
+
+   // Notify the cluster performance parameters
+   if (!isNorm) {
+      printf("* ************************************************************ *\n");
+      printf("*                                                              *\r");
+      printf("* Cluster: %s\n", description.Data());
+      printf("* Performance measurement from scalability plot:               *\n");
+      printf("*                                                              *\r");
+      if (isIO) {
+      printf("*    rate max:         %.3f\tMB/s (@ %d workers)\n", ymx, kmx);
+      } else {
+      printf("*    rate max:         %.3f\tevts/s (@ %d workers)\n", ymx, kmx);
+      }
+      printf("* ************************************************************ *\n");
+   }
+
    fout->Close();
 }
 
