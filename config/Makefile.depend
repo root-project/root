@@ -40,7 +40,7 @@ PROOFDRAWLIBDEPM       = $(TREEPLAYERLIB) $(G3DLIB) $(GRAFLIB) $(GPADLIB) \
                          $(PROOFPLAYERLIB) $(HISTLIB) $(TREELIB) $(PROOFLIB)
 PROOFXLIBDEPM          = $(NETLIB) $(PROOFLIB) $(THREADLIB)
 PROOFBENCHLIBDEPM      = $(PROOFLIB) $(PROOFDRAWLIB) $(PROOFPLAYERLIB) \
-                         $(TREELIB) $(HISTLIB) $(GPADLIB) $(IOLIB)
+                         $(TREELIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(IOLIB)
 SESSIONVIEWERLIBDEPM   = $(PROOFLIB) $(GUILIB) $(HISTLIB) $(GPADLIB) \
                          $(GRAFLIB) $(TREELIB) $(MATHCORELIB)
 X3DLIBDEPM             = $(G3DLIB) $(GUILIB)
@@ -289,7 +289,7 @@ PROOFDRAWLIBEXTRA       = lib/libTreePlayer.lib lib/libGraf3d.lib \
                           lib/libTree.lib lib/libProof.lib
 PROOFXLIBEXTRA          = lib/libNet.lib lib/libProof.lib lib/libThread.lib
 PROOFBENCHLIBEXTRA      = lib/libProof.lib lib/libProofDraw.lib \
-                          lib/libProofPlayer.lib lib/libTree.lib \
+                          lib/libProofPlayer.lib lib/libTree.lib lib/libGraf.lib \
                           lib/libHist.lib lib/libGpad.lib lib/libRIO.lib
 SESSIONVIEWERLIBEXTRA   = lib/libProof.lib lib/libGui.lib lib/libHist.lib \
                           lib/libGpad.lib lib/libGraf.lib lib/libTree.lib \
@@ -444,7 +444,7 @@ PROOFDRAWLIBEXTRA       = -Llib -lTreePlayer -lGraf3d -lGraf -lGpad \
                           -lProofPlayer -lHist -lTree -lProof
 PROOFXLIBEXTRA          = -Llib -lNet -lProof -lThread
 PROOFBENCHLIBEXTRA      = -Llib -lProof -lProofDraw -lProofPlayer -lTree \
-                          -lHist -lGpad -lRIO
+                          -lGraf -lHist -lGpad -lRIO
 SESSIONVIEWERLIBEXTRA   = -Llib -lProof -lGui -lHist -lGpad -lGraf -lTree \
                           -lMathCore
 CLARENSLIBEXTRA         = -Llib -lMathCore

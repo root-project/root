@@ -33,6 +33,8 @@
 
 class TF1;
 class TFile;
+class TGraphErrors;
+class TProfile;
 class TProof;
 class TProofBenchRunCPU;
 class TProofBenchRunDataRead;
@@ -71,6 +73,10 @@ protected:
    Bool_t fDebug;                // Debug switch
 
    TNamed *fDescription;         // Strings describing the cluster for this test (saved in the output file)
+
+   static TGraphErrors *GetGraph(TDirectory *d, const char *pfn,
+                                 Int_t &nb, Double_t &xmi, Double_t &xmx,
+                                 Double_t &ymi, Double_t &ymx, Int_t &kmx, TProfile *&pf);
 
    static TF1 *fgFp1;                 // Simple 1st degree polynomial
    static TF1 *fgFp1n;                // Normalized 1st degree
