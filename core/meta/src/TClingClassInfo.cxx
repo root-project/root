@@ -128,7 +128,7 @@ void TClingClassInfo::AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFu
    // Add a function pointer for the offset from this class to the base class
    // determined by the parameter decl.
 
-   fOffsetFunctions.insert(std::make_pair<const clang::Decl*, OffsetPtrFunc_t>(decl, func));
+   fOffsetFunctions[decl] = func;
 }
 
 long TClingClassInfo::ClassProperty() const
