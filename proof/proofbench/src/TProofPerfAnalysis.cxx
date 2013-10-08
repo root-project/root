@@ -1128,9 +1128,11 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
          TIter nxp(gwl);
          TWrkEntry *we = 0;
          while ((we = (TWrkEntry *) nxp())) {
-            er += we->fEvtRate * we->fProcTime;
-            br += we->fMBRate * we->fProcTime;
-            pt += we->fProcTime;
+            if (we->fProcTime > 0) {
+               er += we->fEvtRate * we->fProcTime;
+               br += we->fMBRate * we->fProcTime;
+               pt += we->fProcTime;
+            }
             xx = we->fXx;
          }
          if (pt > 0.) {
