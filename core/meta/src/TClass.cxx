@@ -2296,7 +2296,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
       c = inh->GetClassPointer(kTRUE); // kFALSE);
       if (c) {
          if (cl == c) {
-            if ((inh->Property() & kIsVirtual) != 0)
+            if ((inh->Property() & kIsVirtualBase) != 0)
                return -2;
             return inh->GetDelta();
          }

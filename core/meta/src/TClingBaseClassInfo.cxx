@@ -41,6 +41,8 @@
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/CXXInheritance.h"
+
 
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
@@ -92,15 +94,26 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
    }
    const clang::CXXRecordDecl* CRD =
       llvm::dyn_cast<clang::CXXRecordDecl>(derived->GetDecl());
-   if (!CRD) {
+   const clang::CXXRecordDecl* BaseCRD =
+      llvm::dyn_cast<clang::CXXRecordDecl>(base->GetDecl());
+   if (!CRD || !BaseCRD) {
       // We were initialized with something that is not a class.
       // FIXME: We should prevent this from happening!
       return;
    }
+
    fClassInfo = derived;
    fDecl = CRD;
+   //CRD->isDerivedFrom(BaseCRD, Paths);
+   // Check that base derives from derived.
+   clang::CXXBasePaths Paths;
+   if (!CRD->isDerivedFrom(BaseCRD, Paths)) {
+      //Not valid fBaseInfo = 0.
+      return;
+   }
+
    fBaseInfo = new TClingClassInfo(*base);
-   fIter = CRD->bases_begin();
+   fIter = CRD->bases_end();
 }
 
 TClingBaseClassInfo::TClingBaseClassInfo(const TClingBaseClassInfo& rhs)
@@ -172,7 +185,7 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClas
       ND->getNameForDiagnostic(stream, ND->getASTContext().getPrintingPolicy(), /*Qualified=*/true);
       stream.flush();
    }
-   //  Make the wrapper name.
+   // Make the wrapper name.
    string wrapper_name;
    {
       ostringstream buf;
@@ -256,9 +269,6 @@ bool TClingBaseClassInfo::IsValid() const
       fClassInfo->IsValid() &&
       // the base class we are iterating over is valid, and
       fDecl &&
-      // our internal iterator is currently valid, and
-      fIter &&
-      (fIter != llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end()) &&
       // our current base has a TClingClassInfo, and
       fBaseInfo &&
       // our current base is a valid class
@@ -362,6 +372,57 @@ int TClingBaseClassInfo::Next()
    return Next(1);
 }
 
+// This function is updating original one on http://clang.llvm.org/doxygen/CGExprCXX_8cpp_source.html#l01647
+// To fit the needs.
+static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
+                                   const clang::CXXRecordDecl *Src,
+                                   const clang::CXXRecordDecl *Dst)
+{
+   clang::CXXBasePaths Paths(/*FindAmbiguities=*/true, /*RecordPaths=*/true,
+                      /*DetectVirtual=*/false);
+
+   // If Dst is not derived from Src we can skip the whole computation below and
+   // return that Src is not a public base of Dst.  Record all inheritance paths.
+   if (!Dst->isDerivedFrom(Src, Paths))
+     return clang::CharUnits::fromQuantity(-2ULL);
+
+   unsigned NumPublicPaths = 0;
+   clang::CharUnits Offset;
+
+   // Now walk all possible inheritance paths.
+   for (clang::CXXBasePaths::paths_iterator I = Paths.begin(), E = Paths.end();
+        I != E; ++I) {
+
+     ++NumPublicPaths;
+
+     for (clang::CXXBasePath::iterator J = I->begin(), JE = I->end(); J != JE; ++J) {
+       // If the path contains a virtual base class we can't give any hint.
+       // -1: no hint.
+       if (J->Base->isVirtual())
+         return clang::CharUnits::fromQuantity(-1ULL);
+
+       if (NumPublicPaths > 1) // Won't use offsets, skip computation.
+         continue;
+
+       // Accumulate the base class offsets.
+       const clang::ASTRecordLayout &L = Context.getASTRecordLayout(J->Class);
+       Offset += L.getBaseClassOffset(J->Base->getType()->getAsCXXRecordDecl());
+     }
+   }
+
+   // -2: Src is not a public base of Dst.
+   if (NumPublicPaths == 0)
+     return clang::CharUnits::fromQuantity(-2ULL);
+
+   // -3: Src is a multiple public base type but never a virtual base type.
+   if (NumPublicPaths > 1)
+     return clang::CharUnits::fromQuantity(-3ULL);
+
+   // Otherwise, the Src type is a unique public nonvirtual base type of Dst.
+   // Return the offset of Src from the origin of Dst.
+   return Offset;
+ }
+
 long TClingBaseClassInfo::Offset(void * address) const
 {
    // Compute the offset of the derived class to the base class.
@@ -369,34 +430,32 @@ long TClingBaseClassInfo::Offset(void * address) const
    if (!IsValid()) {
       return -1;
    }
-   // Offset to the class itself.
-   if (fClassInfo->GetDecl() == fBaseInfo->GetDecl()) {
-      return 0;
-   }
    // The base class is not in the inheritance hierarchy of the class.
    if (!fClassInfo->IsBase(fBaseInfo->Name())) {
       return -1;
    }
-   const clang::RecordType* Ty = fIter->getType()->getAs<clang::RecordType>();
-   if (!Ty) {
-      // A dependent type (uninstantiated template), invalid.
-      return -1;
-   }
    // Check if current base class has a definition.
    const clang::CXXRecordDecl* Base =
-      llvm::cast_or_null<clang::CXXRecordDecl>(Ty->getDecl()->
-            getDefinition());
+      llvm::cast_or_null<clang::CXXRecordDecl>(fBaseInfo->GetDecl());
    if (!Base) {
       // No definition yet (just forward declared), invalid.
       return -1;
    }
    // If the base class has no virtual inheritance.
-   if (!(fBaseInfo->ClassProperty() & kClassHasVirtual)) {
+   if (!(Property() & kIsVirtualBase)) {
       clang::ASTContext& Context = Base->getASTContext();
-      const clang::RecordDecl* RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
-      const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
-      int64_t offset = Layout.getBaseClassOffset(Base).getQuantity();
-      long clang_val = fOffset + static_cast<long>(offset);
+      const clang::CXXRecordDecl* RD = llvm::dyn_cast<clang::CXXRecordDecl>(fDecl);
+      /*const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
+      int64_t offset = Layout.getBaseClassOffset(Base).getQuantity(); */
+      long clang_val = computeOffsetHint(Context, Base, RD).getQuantity();
+      if (clang_val == -2) {
+         clang_val = -1;
+         Error("TClingBaseClassInfo::Offset", "The class does not derive from the base.");
+      }
+      else if (clang_val == -3) {
+         clang_val = -1;
+         Error("TClingBaseClassInfo::Offset", "There are multiple paths from derived class to base class.");
+      }
       return clang_val;
    }
    // Virtual inheritance case
@@ -406,9 +465,8 @@ long TClingBaseClassInfo::Offset(void * address) const
       executableFunc = GenerateBaseOffsetFunction(fClassInfo, fBaseInfo, address);
       const_cast<TClingClassInfo*>(fClassInfo)->AddBaseOffsetFunction(fBaseInfo->GetDecl(), executableFunc);
    }
-   if (address)
+   if (address && executableFunc)
       return (*executableFunc)(address);
-   
    return -1;   
 }
 
@@ -419,13 +477,37 @@ long TClingBaseClassInfo::Property() const
       return 0L;
    }
    long property = 0L;
-   if (fIter->isVirtual()) {
+   const clang::CXXRecordDecl* CRD
+      = llvm::dyn_cast<CXXRecordDecl>(fDecl);
+   const clang::CXXRecordDecl* BaseCRD
+      = llvm::dyn_cast<CXXRecordDecl>(fBaseInfo->GetDecl());
+
+   clang::CXXBasePaths Paths(/*FindAmbiguities=*/false, /*RecordPaths=*/true,
+                             /*DetectVirtual=*/true);
+   if (!CRD->isDerivedFrom(BaseCRD, Paths)) {
+      // Error really unexpected here, because contruction / iteration guarantees
+      //inheritance;
+      Error("TClingBaseClassInfo", "Class not derived from given base.");
+   }
+   if (Paths.getDetectedVirtual()) {
       property |= kIsVirtualBase;
    }
    if (fDecl == fClassInfo->GetDecl()) {
       property |= kIsDirectInherit;
    }
-   switch (fIter->getAccessSpecifier()) {
+   clang::AccessSpecifier AS = clang::AS_public;
+   // Derived: public Mid; Mid : protected Base: Derived inherits protected Base?
+   for (clang::CXXBasePaths::const_paths_iterator IB = Paths.begin(), EB = Paths.end();
+        AS != clang::AS_private && IB != EB; ++IB) {
+      switch (IB->Access) {
+         // keep AS unchanged?
+         case clang::AS_public: break;
+         case clang::AS_protected: AS = clang::AS_protected; break;
+         case clang::AS_private: AS = clang::AS_private; break;
+         case clang::AS_none: break;
+      }
+   }
+   switch (AS) {
       case clang::AS_public:
          property |= kIsPublic;
          break;
@@ -436,9 +518,6 @@ long TClingBaseClassInfo::Property() const
          property |= kIsPrivate;
          break;
       case clang::AS_none:
-         // IMPOSSIBLE
-         break;
-      default:
          // IMPOSSIBLE
          break;
    }

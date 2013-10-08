@@ -75,7 +75,11 @@ public:
    const char   *TmpltName() const;
 
 private:
-   OffsetPtrFunc_t GenerateBaseOffsetFunction(const TClingClassInfo* derivedClass, TClingClassInfo* targetClass, void* address) const;
+   OffsetPtrFunc_t GenerateBaseOffsetFunction(const TClingClassInfo* derivedClass, TClingClassInfo* targetClass, void* address) const;  
 };
+
+static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
+                                      const clang::CXXRecordDecl *Src,
+                                      const clang::CXXRecordDecl *Dst);
 
 #endif // ROOT_TClingBaseClassInfo
