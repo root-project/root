@@ -288,6 +288,7 @@ public: // Public Interface
    virtual ClassInfo_t*  ClassInfo_Factory() const;
    virtual ClassInfo_t*  ClassInfo_Factory(ClassInfo_t* cl) const;
    virtual ClassInfo_t*  ClassInfo_Factory(const char* name) const;
+   virtual Long_t   ClassInfo_GetBaseOffset(ClassInfo_t* derived, ClassInfo_t* target, void * address) const;
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t* info, const char* method, const char* proto, Bool_t objectIsConst = false, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    virtual bool   ClassInfo_HasDefaultConstructor(ClassInfo_t* info) const;
    virtual bool   ClassInfo_HasMethod(ClassInfo_t* info, const char* name) const;
@@ -316,9 +317,11 @@ public: // Public Interface
    // BaseClassInfo interface
    virtual void   BaseClassInfo_Delete(BaseClassInfo_t* bcinfo) const;
    virtual BaseClassInfo_t*  BaseClassInfo_Factory(ClassInfo_t* info) const;
+   virtual BaseClassInfo_t*  BaseClassInfo_Factory(ClassInfo_t* derived,
+                                                   ClassInfo_t* base) const;
    virtual int    BaseClassInfo_Next(BaseClassInfo_t* bcinfo) const;
    virtual int    BaseClassInfo_Next(BaseClassInfo_t* bcinfo, int onlyDirect) const;
-   virtual Long_t BaseClassInfo_Offset(BaseClassInfo_t* bcinfo) const;
+   virtual Long_t BaseClassInfo_Offset(BaseClassInfo_t* bcinfo, void * address) const;
    virtual Long_t BaseClassInfo_Property(BaseClassInfo_t* bcinfo) const;
    virtual Long_t BaseClassInfo_Tagnum(BaseClassInfo_t* bcinfo) const;
    virtual const char* BaseClassInfo_FullName(BaseClassInfo_t* bcinfo) const;

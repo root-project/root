@@ -2296,7 +2296,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
       c = inh->GetClassPointer(kTRUE); // kFALSE);
       if (c) {
          if (cl == c) {
-            if ((inh->Property() & kIsVirtual) != 0)
+            if ((inh->Property() & kIsVirtualBase) != 0)
                return -2;
             return inh->GetDelta();
          }
@@ -2310,34 +2310,25 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
 }
 
 //______________________________________________________________________________
-Int_t TClass::GetBaseClassOffset(const TClass *cl)
+Int_t TClass::GetBaseClassOffset(const TClass *cl, void *address)
 {
    // Return data member offset to the base class "cl".
    // Returns -1 in case "cl" is not a base class.
    // Takes care of multiple inheritance.
 
-   Int_t offset = GetBaseClassOffsetRecurse (cl);
-   if (offset == -2) {
-      // Can we get the offset from CINT?
-      if (cl->GetClassInfo()) {
-         R__LOCKGUARD(gClingMutex);
-         Long_t base_tagnum = gCling->ClassInfo_Tagnum(cl->GetClassInfo());
-         BaseClassInfo_t *t = gCling->BaseClassInfo_Factory(GetClassInfo());
-         while (gCling->BaseClassInfo_Next(t,0)) {
-            if (gCling->BaseClassInfo_Tagnum(t) == base_tagnum) {
-               if ((gCling->BaseClassInfo_Property(t) & kIsVirtualBase) != 0) {
-                  break;
-               }
-               int off = gCling->BaseClassInfo_Offset(t);
-               gCling->BaseClassInfo_Delete(t);
-               return off;
-            }
-         }
-         gCling->BaseClassInfo_Delete(t);
-      }
-      offset = -1;
+   R__LOCKGUARD(gClingMutex);
+   ClassInfo_t* derived = GetClassInfo();
+   ClassInfo_t* target = cl->GetClassInfo();
+   if(derived && target) {
+      return gCling->ClassInfo_GetBaseOffset(derived, target, address);
    }
-   return offset;
+   else {
+      Int_t offset = GetBaseClassOffsetRecurse (cl);
+      if (offset != -2) {
+         return offset;
+      }
+   }
+   return -1;
 }
 
 //______________________________________________________________________________
