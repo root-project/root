@@ -36,6 +36,7 @@ class TProof;
 class TCanvas;
 class TH2;
 class TProfile;
+class TLegend;
 class TTree;
 class TFileCollection;
 
@@ -77,6 +78,11 @@ private:
    TProfile     *fNorm_perfstat_IOmax;
    TProfile     *fProfile_queryresult_IO;
    TProfile     *fNorm_queryresult_IO;
+
+   TLegend     *fProfLegend_evt;            // Legend for profiles evts
+   TLegend     *fNormLegend_evt;            // Legend for norms evts
+   TLegend     *fProfLegend_mb;            // Legend for profiles mbs
+   TLegend     *fNormLegend_mb;            // Legend for norms mbs
 
    TCanvas *fCPerfProfiles;      //canvas for performance profile histograms
 
