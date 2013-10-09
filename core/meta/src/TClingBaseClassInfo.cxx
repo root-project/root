@@ -444,13 +444,36 @@ long TClingBaseClassInfo::Offset(void * address) const
       /*const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
       int64_t offset = Layout.getBaseClassOffset(Base).getQuantity(); */
       long clang_val = computeOffsetHint(Context, Base, RD).getQuantity();
-      if (clang_val == -2) {
+      if (clang_val == -2 || clang_val == -3) {
          clang_val = -1;
-         Error("TClingBaseClassInfo::Offset", "The class does not derive from the base.");
-      }
-      else if (clang_val == -3) {
-         clang_val = -1;
-         Error("TClingBaseClassInfo::Offset", "There are multiple paths from derived class to base class.");
+         TString baseName;
+         TString derivedName;
+         {
+            // Need TNormalizedCtxt otherwise...
+            std::string buf;
+            PrintingPolicy Policy(fBaseInfo->GetDecl()->getASTContext().
+                                  getPrintingPolicy());
+            llvm::raw_string_ostream stream(buf);
+            ((clang::NamedDecl*)fBaseInfo->GetDecl())
+               ->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+            stream.flush();
+            baseName = buf;
+
+            buf.clear();
+            ((clang::NamedDecl*)fClassInfo->GetDecl())
+               ->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+            stream.flush();
+            derivedName = buf;
+         }
+         if (clang_val == -2) {
+            Error("TClingBaseClassInfo::Offset", "The class %s does not derive from the base %s.",
+                  derivedName.Data(), baseName.Data());
+         } else {
+            // clang_val == -3
+            Error("TClingBaseClassInfo::Offset",
+                  "There are multiple paths from derived class %s to base class %s.",
+                  derivedName.Data(), baseName.Data());
+         }
       }
       return clang_val;
    }
