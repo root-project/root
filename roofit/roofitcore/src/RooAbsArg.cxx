@@ -512,7 +512,8 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
   // Decide if to add current node
   if ((doBranch&&doLeaf) ||
       (doBranch&&arg->isDerived()) ||
-      (doLeaf&&arg->isFundamental()&&(!(recurseFundamental&&arg->isDerived()))) ) {
+      (doLeaf&&arg->isFundamental()&&(!(recurseFundamental&&arg->isDerived()))) ||
+      (doLeaf && !arg->isFundamental() && !arg->isDerived())) {
 
     list->add(*arg,kTRUE) ;
   }

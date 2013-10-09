@@ -22,6 +22,7 @@
 #include "RooChangeTracker.h"
 
 #include "TMath.h"
+#include "TH1.h"
 
 using namespace std;
 
@@ -29,7 +30,7 @@ ClassImp(RooMomentMorph)
 
 
 //_____________________________________________________________________________
-RooMomentMorph::RooMomentMorph() : _curNormSet(0), _mref(0), _M(0) 
+RooMomentMorph::RooMomentMorph() : _curNormSet(0), _mref(0), _M(0), _useHorizMorph(true)
 {
   // coverity[UNINIT_CTOR]
   _varItr    = _varList.createIterator() ;
@@ -50,7 +51,8 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
   m("m","m",this,_m),
   _varList("varList","List of variables",this),
   _pdfList("pdfList","List of pdfs",this),
-  _setting(setting)
+  _setting(setting),
+  _useHorizMorph(true)
 { 
   // CTOR
 
@@ -100,7 +102,8 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
   m("m","m",this,_m),
   _varList("varList","List of variables",this),
   _pdfList("pdfList","List of pdfs",this),
-  _setting(setting)
+  _setting(setting),
+  _useHorizMorph(true)
 { 
   // CTOR
 
@@ -161,7 +164,8 @@ RooMomentMorph::RooMomentMorph(const RooMomentMorph& other, const char* name) :
   m("m",this,other.m),
   _varList("varList",this,other._varList),
   _pdfList("pdfList",this,other._pdfList),
-  _setting(other._setting)
+  _setting(other._setting),
+  _useHorizMorph(other._useHorizMorph)
 { 
   _mref = new TVectorD(*other._mref) ;
   _varItr    = _varList.createIterator() ;
@@ -215,9 +219,9 @@ void RooMomentMorph::initialize()
 }
 
 //_____________________________________________________________________________
-RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* nset) const
+RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) const
 {
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(nset,(RooArgSet*)0) ;
+  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(0,(RooArgSet*)0) ;
   if (cache) {
     return cache ;
   }
@@ -248,79 +252,129 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* nset) const
     else coefList2.add(*(RooRealVar*)(fracl.at(i))) ;
     ownedComps.add(*(RooRealVar*)(fracl.at(i))) ;
   }
-  // mean and sigma
-  RooArgList varList(_varList) ;
-  for (Int_t i=0; i<nPdf; ++i) {
-    for (Int_t j=0; j<nVar; ++j) {
 
-      std::string meanName = Form("%s_mean_%d_%d",GetName(),i,j);
-      std::string sigmaName = Form("%s_sigma_%d_%d",GetName(),i,j);      
-      
-//       cout << "RooMomentMorph::getCache(" << GetName() << ") nset = " << (nset?*nset:RooArgSet()) << " creating moment for pdf "
-// 	   << _pdfList.at(i)->GetName() << " for observable " << varList.at(j)->GetName() << endl ;
-      
-       RooMoment* mom = nset ? ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*varList.at(j),*nset) 
-	 : ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*varList.at(j)) ;
-       
-       sigmarv[ij(i,j)] = mom ;
-       meanrv[ij(i,j)]  = mom->mean() ;
-       
-       ownedComps.add(*sigmarv[ij(i,j)]) ;
-    }
-  }
-  // slope and offset (to be set later, depend on m)
-  for (Int_t j=0; j<nVar; ++j) {
-    RooArgList meanList("meanList");
-    RooArgList rmsList("rmsList");
-    for (Int_t i=0; i<nPdf; ++i) {
-      meanList.add(*meanrv[ij(i,j)]);
-      rmsList.add(*sigmarv[ij(i,j)]);
-    }
-    std::string myrmsName = Form("%s_rms_%d",GetName(),j);
-    std::string myposName = Form("%s_pos_%d",GetName(),j);
-    myrms[j] = new RooAddition(myrmsName.c_str(),myrmsName.c_str(),rmsList,coefList2);
-    mypos[j] = new RooAddition(myposName.c_str(),myposName.c_str(),meanList,coefList2);
-    ownedComps.add(RooArgSet(*myrms[j],*mypos[j])) ;
-  }
-  // construction of unit pdfs
-  _pdfItr->Reset();
-  RooAbsPdf* pdf;
-  RooArgList transPdfList;
-
-  for (Int_t i=0; i<nPdf; ++i) {
-    _varItr->Reset() ;
-    RooRealVar* var ;
-
-    pdf = (RooAbsPdf*)_pdfItr->Next();
-    std::string pdfName = Form("pdf_%d",i);
-    RooCustomizer cust(*pdf,pdfName.c_str());
-
-    for (Int_t j=0; j<nVar; ++j) {
-      // slope and offset formulas
-      std::string slopeName = Form("%s_slope_%d_%d",GetName(),i,j);
-      std::string offsetName = Form("%s_offset_%d_%d",GetName(),i,j);
-      slope[ij(i,j)]  = new RooFormulaVar(slopeName.c_str(),"@0/@1",RooArgList(*sigmarv[ij(i,j)],*myrms[j]));
-      offs[ij(i,j)] = new RooFormulaVar(offsetName.c_str(),"@0-(@1*@2)",RooArgList(*meanrv[ij(i,j)],*mypos[j],*slope[ij(i,j)]));
-      ownedComps.add(RooArgSet(*slope[ij(i,j)],*offs[ij(i,j)])) ;
-      // linear transformations, so pdf can be renormalized
-      var = (RooRealVar*)(_varItr->Next());
-      std::string transVarName = Form("%s_transVar_%d_%d",GetName(),i,j);
-      //transVar[ij(i,j)] = new RooFormulaVar(transVarName.c_str(),transVarName.c_str(),"@0*@1+@2",RooArgList(*var,*slope[ij(i,j)],*offs[ij(i,j)]));
-      transVar[ij(i,j)] = new RooLinearVar(transVarName.c_str(),transVarName.c_str(),*var,*slope[ij(i,j)],*offs[ij(i,j)]);
-
-      ownedComps.add(*transVar[ij(i,j)]) ;
-      cust.replaceArg(*var,*transVar[ij(i,j)]);
-    }
-    transPdf[i] = (RooAbsPdf*) cust.build() ;
-    transPdfList.add(*transPdf[i]);
-    ownedComps.add(*transPdf[i]) ;
-  }
-  // sum pdf
-  
+  RooAddPdf* theSumPdf = 0;
   std::string sumpdfName = Form("%s_sumpdf",GetName());
+    
+  if (_useHorizMorph) {
+    // mean and sigma
+    RooArgList varList(_varList) ;
+    for (Int_t i=0; i<nPdf; ++i) {
+      for (Int_t j=0; j<nVar; ++j) {
+	
+	std::string meanName = Form("%s_mean_%d_%d",GetName(),i,j);
+	std::string sigmaName = Form("%s_sigma_%d_%d",GetName(),i,j);      
+	
+	RooAbsPdf* thisPdf = (RooAbsPdf*)_pdfList.at(i);
+	
+	// fast calculation of mean and RMS for RooHistPdfs
+	if (thisPdf->IsA()->InheritsFrom("RooHistPdf") && nVar>1) {
+	  
+	  RooRealVar& var_j = (RooRealVar&)*varList.at(j);
+	  
+	  RooArgList notJ(_varList);
+	  notJ.remove(var_j);
+	  
+	  //Make a ROOT histogram from the RooHistPdf
+	  RooCmdArg zVarArg=RooCmdArg::none();
+	  if (nVar==3) zVarArg=RooFit::ZVar(*(RooRealVar*)notJ.at(1)); 
+	  
+	  TH1 * hist = thisPdf->createHistogram("testProjection", var_j, 
+						RooFit::YVar(*(RooRealVar*)notJ.at(0)),
+						zVarArg);	
+	  
+	  //Read out the mean and sigma (RMS is historical name)
+	  double histmean  = hist->GetMean(1); // 1 gives mean along x-axis
+	  double histsigma = hist->GetRMS(1);
+	  
+	  delete hist;
+	  
+	  sigmarv[ij(i,j)] = new RooRealVar(sigmaName.c_str(),sigmaName.c_str(), histsigma);
+	  meanrv [ij(i,j)] = new RooRealVar(meanName.c_str(), meanName.c_str(), histmean);
+	  
+	}
+	else {
+	  
+	  if (nVar>1) {
+	    
+	    //Create an integral over all observables except the j-th positioned one (and any variables in nset)
+	    RooArgSet * notJ = new RooArgSet( varList, "notJ" );
+	    RooRealVar& var_j = (RooRealVar&)*varList.at(j);
+	    notJ->remove( var_j );
+	    
+	    RooAbsReal * intTest = thisPdf->createIntegral( *notJ );
+	    
+	    //Get the mean and sigma with respect to the j-th observable
+	    sigmarv[ij(i,j)] = intTest->sigma( var_j );
+	    meanrv [ij(i,j)] = intTest->mean ( var_j );		  
+	  }
+	  else {
+	    RooMoment* mom = ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*varList.at(j)) ;
+	    
+	    sigmarv[ij(i,j)] = mom ;
+	    meanrv[ij(i,j)]  = mom->mean() ;
+	  }
+	}
+	ownedComps.add(*sigmarv[ij(i,j)]) ;      
+      }
+    }
+    
+    // slope and offset (to be set later, depend on m)
+    for (Int_t j=0; j<nVar; ++j) {
+      RooArgList meanList("meanList");
+      RooArgList rmsList("rmsList");
+      for (Int_t i=0; i<nPdf; ++i) {
+	meanList.add(*meanrv[ij(i,j)]);
+	rmsList.add(*sigmarv[ij(i,j)]);
+      }
+      std::string myrmsName = Form("%s_rms_%d",GetName(),j);
+      std::string myposName = Form("%s_pos_%d",GetName(),j);
+      myrms[j] = new RooAddition(myrmsName.c_str(),myrmsName.c_str(),rmsList,coefList2);
+      mypos[j] = new RooAddition(myposName.c_str(),myposName.c_str(),meanList,coefList2);
+      ownedComps.add(RooArgSet(*myrms[j],*mypos[j])) ;
+    }
+    // construction of unit pdfs
+    _pdfItr->Reset();
+    RooAbsPdf* pdf;
+    RooArgList transPdfList;
+    
+    for (Int_t i=0; i<nPdf; ++i) {
+      _varItr->Reset() ;
+      RooRealVar* var ;
+      
+      pdf = (RooAbsPdf*)_pdfItr->Next();
+      std::string pdfName = Form("pdf_%d",i);
+      RooCustomizer cust(*pdf,pdfName.c_str());
+      
+      for (Int_t j=0; j<nVar; ++j) {
+	// slope and offset formulas
+	std::string slopeName = Form("%s_slope_%d_%d",GetName(),i,j);
+	std::string offsetName = Form("%s_offset_%d_%d",GetName(),i,j);
+	slope[ij(i,j)]  = new RooFormulaVar(slopeName.c_str(),"@0/@1",RooArgList(*sigmarv[ij(i,j)],*myrms[j]));
+	offs[ij(i,j)] = new RooFormulaVar(offsetName.c_str(),"@0-(@1*@2)",RooArgList(*meanrv[ij(i,j)],*mypos[j],*slope[ij(i,j)]));
+	ownedComps.add(RooArgSet(*slope[ij(i,j)],*offs[ij(i,j)])) ;
+	// linear transformations, so pdf can be renormalized
+	var = (RooRealVar*)(_varItr->Next());
+	std::string transVarName = Form("%s_transVar_%d_%d",GetName(),i,j);
+	//transVar[ij(i,j)] = new RooFormulaVar(transVarName.c_str(),transVarName.c_str(),"@0*@1+@2",RooArgList(*var,*slope[ij(i,j)],*offs[ij(i,j)]));
+	transVar[ij(i,j)] = new RooLinearVar(transVarName.c_str(),transVarName.c_str(),*var,*slope[ij(i,j)],*offs[ij(i,j)]);
+	
+	ownedComps.add(*transVar[ij(i,j)]) ;
+	cust.replaceArg(*var,*transVar[ij(i,j)]);
+      }
+      transPdf[i] = (RooAbsPdf*) cust.build() ;
+      transPdfList.add(*transPdf[i]);
+      ownedComps.add(*transPdf[i]) ;
+    }
+    // sum pdf
+    
+    
+    theSumPdf = new RooAddPdf(sumpdfName.c_str(),sumpdfName.c_str(),transPdfList,coefList);
+  }
+  else {
+    theSumPdf = new RooAddPdf(sumpdfName.c_str(),sumpdfName.c_str(),_pdfList,coefList);
+  }
 
-
-  RooAbsPdf* theSumPdf = new RooAddPdf(sumpdfName.c_str(),sumpdfName.c_str(),transPdfList,coefList);
   theSumPdf->addOwnedComponents(ownedComps) ;
 
   // change tracker for fraction parameters
@@ -330,7 +384,7 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* nset) const
 
   // Store it in the cache
   cache = new CacheElem(*theSumPdf,*tracker,fracl) ;
-  _cacheMgr.setObj(nset,0,cache,0) ;
+  _cacheMgr.setObj(0,0,cache,0) ;
 
   return cache ;
 }
@@ -433,6 +487,12 @@ void RooMomentMorph::CacheElem::calculateFractions(const RooMomentMorph& self, B
     case NonLinear:
       // default already set above
     break;
+
+    case SineLinear:
+      mfrac = TMath::Sin( TMath::PiOver2()*mfrac ); // this gives a continuous differentiable transition between grid points. 
+
+      // now fall through to Linear case
+
     case Linear: 
       for (Int_t i=0; i<2*nPdf; ++i)
         ((RooRealVar*)frac(i))->setVal(0.);      

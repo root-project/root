@@ -13,7 +13,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 #ifndef ROO_MULTIBINOMIAL
-#define ROO_MULTIBINOMIAL
+#define ROO_MUTLIBINOMIAL
 
 #include "RooAbsReal.h"
 #include "RooListProxy.h"

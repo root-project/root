@@ -69,6 +69,9 @@
 #include "RooCmdConfig.h"
 #include "RooXYChi2Var.h"
 #include "RooMinuit.h"
+#ifndef __ROOFIT_NOROOMINIMIZER
+#include "RooMinimizer.h"
+#endif
 #include "RooChi2Var.h"
 #include "RooFitResult.h"
 #include "RooMoment.h"
@@ -4283,6 +4286,8 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   pc.defineInt("ext","Extended",0,2) ;
   pc.defineInt("numee","PrintEvalErrors",0,10) ;
   pc.defineInt("doWarn","Warnings",0,1) ;
+  pc.defineString("mintype","Minimizer",0,"OldMinuit") ;
+  pc.defineString("minalg","Minimizer",1,"minuit") ;
   pc.defineObject("minosSet","Minos",0,0) ;
 
   pc.defineMutex("FitOptions","Verbose") ;
@@ -4301,6 +4306,12 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
 
   // Decode command line arguments
   const char* fitOpt = pc.getString("fitOpt",0,kTRUE) ;
+#ifdef __ROOFIT_NOROOMINIMIZER
+  const char* minType =0 ;
+#else
+  const char* minType = pc.getString("mintype","OldMinuit") ;
+  const char* minAlg = pc.getString("minalg","minuit") ;
+#endif
   Int_t optConst = pc.getInt("optConst") ;
   Int_t verbose  = pc.getInt("verbose") ;
   Int_t doSave   = pc.getInt("doSave") ;
@@ -4314,77 +4325,154 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   Int_t doWarn   = pc.getInt("doWarn") ;
   const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
 
-  // Instantiate MINUIT
-  RooMinuit m(fcn) ;
-
-  if (doWarn==0) {
-    m.setNoWarn() ;
-  }
-  
-  m.setPrintEvalErrors(numee) ;
-  if (plevel!=1) {
-    m.setPrintLevel(plevel) ;
-  }
-
-  if (optConst) {
-    // Activate constant term optimization
-    m.optimizeConst(1) ;
-  }
-
   RooFitResult *ret = 0 ;
 
-  if (fitOpt) {
+#ifdef __ROOFIT_NOROOMINIMIZER
+  if (true) {
+#else
+  if ("OldMinuit" == string(minType)) {
+#endif
+    // Instantiate MINUIT
+    RooMinuit m(fcn) ;
 
-    // Play fit options as historically defined
-    ret = m.fit(fitOpt) ;
-    
-  } else {
-
-    if (verbose) {
-      // Activate verbose options
-      m.setVerbose(1) ;
-    }
-    if (doTimer) {
-      // Activate timer options
-      m.setProfile(1) ;
-    }
-    
-    if (strat!=1) {
-      // Modify fit strategy
-      m.setStrategy(strat) ;
+    if (doWarn==0) {
+      m.setNoWarn() ;
     }
 
-    if (initHesse) {
-      // Initialize errors with hesse
-      m.hesse() ;
+    m.setPrintEvalErrors(numee) ;
+    if (plevel!=1) {
+      m.setPrintLevel(plevel) ;
     }
 
-    // Minimize using migrad
-    m.migrad() ;
-
-    if (hesse) {
-      // Evaluate errors with Hesse
-      m.hesse() ;
+    if (optConst) {
+      // Activate constant term optimization
+      m.optimizeConst(optConst);
     }
 
-    if (minos) {
-      // Evaluate errs with Minos
-      if (minosSet) {
-	m.minos(*minosSet) ;
-      } else {
-	m.minos() ;
+    if (fitOpt) {
+
+      // Play fit options as historically defined
+      ret = m.fit(fitOpt) ;
+
+    } else {
+
+      if (verbose) {
+	// Activate verbose options
+	m.setVerbose(1) ;
       }
+      if (doTimer) {
+	// Activate timer options
+	m.setProfile(1) ;
+      }
+
+      if (strat!=1) {
+	// Modify fit strategy
+	m.setStrategy(strat) ;
+      }
+
+      if (initHesse) {
+	// Initialize errors with hesse
+	m.hesse() ;
+      }
+
+      // Minimize using migrad
+      m.migrad() ;
+
+      if (hesse) {
+	// Evaluate errors with Hesse
+	m.hesse() ;
+      }
+
+      if (minos) {
+	// Evaluate errs with Minos
+	if (minosSet) {
+	  m.minos(*minosSet) ;
+	} else {
+	  m.minos() ;
+	}
+      }
+
+      // Optionally return fit result
+      if (doSave) {
+	string name = Form("fitresult_%s",fcn.GetName()) ;
+	string title = Form("Result of fit of %s ",GetName()) ;
+	ret = m.save(name.c_str(),title.c_str()) ;
+      } 
+
+    }
+  } else {
+#ifndef __ROOFIT_NOROOMINIMIZER
+    // Instantiate MINUIT
+    RooMinimizer m(fcn) ;
+    m.setMinimizerType(minType);
+
+    if (doWarn==0) {
+      // m.setNoWarn() ; WVE FIX THIS
     }
 
-    // Optionally return fit result
-    if (doSave) {
-      string name = Form("fitresult_%s",fcn.GetName()) ;
-      string title = Form("Result of fit of %s ",GetName()) ;
-      ret = m.save(name.c_str(),title.c_str()) ;
-    } 
+    m.setPrintEvalErrors(numee) ;
+    if (plevel!=1) {
+      m.setPrintLevel(plevel) ;
+    }
 
+    if (optConst) {
+      // Activate constant term optimization
+      m.optimizeConst(optConst);
+    }
+
+    if (fitOpt) {
+
+      // Play fit options as historically defined
+      ret = m.fit(fitOpt) ;
+
+    } else {
+
+      if (verbose) {
+	// Activate verbose options
+	m.setVerbose(1) ;
+      }
+      if (doTimer) {
+	// Activate timer options
+	m.setProfile(1) ;
+      }
+
+      if (strat!=1) {
+	// Modify fit strategy
+	m.setStrategy(strat) ;
+      }
+
+      if (initHesse) {
+	// Initialize errors with hesse
+	m.hesse() ;
+      }
+
+      // Minimize using migrad
+      m.minimize(minType, minAlg) ;
+
+      if (hesse) {
+	// Evaluate errors with Hesse
+	m.hesse() ;
+      }
+
+      if (minos) {
+	// Evaluate errs with Minos
+	if (minosSet) {
+	  m.minos(*minosSet) ;
+	} else {
+	  m.minos() ;
+	}
+      }
+
+      // Optionally return fit result
+      if (doSave) {
+	string name = Form("fitresult_%s",fcn.GetName()) ;
+	string title = Form("Result of fit of %s ",GetName()) ;
+	ret = m.save(name.c_str(),title.c_str()) ;
+      } 
+    }
+#endif
   }
-  
+
   // Cleanup
   return ret ;
 

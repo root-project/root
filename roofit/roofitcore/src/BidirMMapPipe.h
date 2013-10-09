@@ -13,6 +13,7 @@
 #include <list>
 #include <vector>
 #include <cassert>
+#include <cstring>
 
 #define BEGIN_NAMESPACE_ROOFIT namespace RooFit {
 #define END_NAMESPACE_ROOFIT }

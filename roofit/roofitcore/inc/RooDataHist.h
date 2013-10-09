@@ -16,15 +16,16 @@
 #ifndef ROO_DATA_HIST
 #define ROO_DATA_HIST
 
+#include <map>
+#include <vector>
+#include <string>
+#include <utility>
+
 #include "RooAbsData.h"
 #include "RooDirItem.h"
 #include "RooArgSet.h"
 #include "RooNameSet.h"
 #include "RooCacheManager.h"
-#include <vector>
-#include <list>
-#include <map>
-#include <string>
 
 class TObject ;
 class RooAbsArg;
@@ -90,6 +91,7 @@ public:
 
   Double_t sum(Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) const ;
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) ;
+  Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseCorr, const std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >& ranges);
 
   virtual Double_t weight() const { 
     // Return weight of current bin
@@ -147,6 +149,7 @@ protected:
 	                Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) ;
   Double_t interpolateDim(RooRealVar& dim, const RooAbsBinning* binning, Double_t xval, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) ;
   void calculatePartialBinVolume(const RooArgSet& dimSet) const ;
+  void checkBinBounds() const;
 
   void adjustBinning(const RooArgList& vars, TH1& href, Int_t* offset=0) ;
   void importTH1(const RooArgList& vars, TH1& histo, Double_t initWgt, Bool_t doDensityCorrection) ;
@@ -178,8 +181,9 @@ protected:
 
   mutable std::vector<Double_t>* _pbinv ; //! Partial bin volume array
   mutable RooCacheManager<std::vector<Double_t> > _pbinvCacheMgr ; //! Cache manager for arrays of partial bin volumes
-  std::list<RooAbsLValue*> _lvvars ; //! List of observables casted as RooAbsLValue
-  std::list<const RooAbsBinning*> _lvbins ; //! List of used binnings associated with lvalues
+  std::vector<RooAbsLValue*> _lvvars ; //! List of observables casted as RooAbsLValue
+  std::vector<const RooAbsBinning*> _lvbins ; //! List of used binnings associated with lvalues
+  mutable std::vector<std::vector<Double_t> > _binbounds; //! list of bin bounds per dimension
 
 private:
 

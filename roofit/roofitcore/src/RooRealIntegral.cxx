@@ -266,6 +266,16 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       }
     }
   }
+
+  // Eliminate exclLVBranches that do not depend on any LVServer
+  bIter->Reset() ;
+  while((branch=(RooAbsArg*)bIter->Next())) {    
+    if (!branch->dependsOnValue(exclLVServers)) {
+      //cout << "LV branch " << branch->GetName() << " does not depend on any LVServer (" << exclLVServers << ") and will be removed" << endl ; 
+      exclLVBranches.remove(*branch,kTRUE,kTRUE) ;
+    }
+  } 
+
   delete sIter ;
   delete bIter ;
 

@@ -270,11 +270,20 @@ Double_t RooHistPdf::totVolume() const
 }
 
 namespace {
-    bool fullRange(const RooAbsArg& x ,const char* range)  {
-      if (range == 0 || strlen(range) == 0 ) return true;
+    bool fullRange(const RooAbsArg& x, const RooAbsArg& y ,const char* range)
+    {
       const RooAbsRealLValue *_x = dynamic_cast<const RooAbsRealLValue*>(&x);
-      if (!_x) return false;
-      return ( _x->getMin(range) == _x->getMin() && _x->getMax(range) == _x->getMax() ) ; 
+      const RooAbsRealLValue *_y = dynamic_cast<const RooAbsRealLValue*>(&y);
+      if (!_x || !_y) return false;
+      if (!range || !strlen(range) || !_x->hasRange(range) ||
+	  _x->getBinningPtr(range)->isParameterized()) {
+	// parameterized ranges may be full range now, but that might change,
+	// so return false
+	if (range && strlen(range) && _x->getBinningPtr(range)->isParameterized())
+	    return false;
+	return (_x->getMin() == _y->getMin() && _x->getMax() == _y->getMax());
+      }
+      return (_x->getMin(range) == _y->getMin() && _x->getMax(range) == _y->getMax());
     }
 }
 
@@ -288,108 +297,90 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   // histogram. If interpolation is used on the integral over
   // all histogram observables is supported
 
-
   // First make list of pdf observables to histogram observables
   // and select only those for which the integral is over the full range
-  RooArgList hobsl(_histObsList),pobsl(_pdfObsList) ;
-  RooArgSet allVarsHist ;
-  TIterator* iter = allVars.createIterator() ;
-  RooAbsArg* pdfobs ;
-  while((pdfobs=(RooAbsArg*)iter->Next())) {
-    Int_t idx = pobsl.index(pdfobs) ;
-    if (idx>=0) {
-      RooAbsArg* hobs = hobsl.at(idx) ;
-      if (hobs && fullRange( *hobs, rangeName ) ) {
-	allVarsHist.add(*hobs) ;
+  RooFIter it = _pdfObsList.fwdIterator();
+  RooFIter jt = _histObsList.fwdIterator();
+  Int_t code = 0, frcode = 0, n = 0;
+  for (RooAbsArg *pa = 0, *ha = 0; (pa = it.next()) && (ha = jt.next()); ++n) {
+    if (allVars.find(*pa)) {
+      code |= 2 << n;
+      analVars.add(*pa);
+      if (fullRange(*pa, *ha, rangeName)) {
+	frcode = 2 << n;
       }
     }
   }
-  delete iter ;
 
-  // Simplest scenario, integrate over all dependents
-  RooAbsCollection *allVarsCommon = allVarsHist.selectCommon(_histObsList) ;  
-  Bool_t intAllObs = (allVarsCommon->getSize()==_histObsList.getSize()) ;
-  delete allVarsCommon ;
-  if (intAllObs) {
-    analVars.add(allVars) ;
-    return 1000 ;
+  if (code == frcode) {
+    // integrate over full range of all observables - use bit 0 to indicate
+    // full range integration over all observables
+    code |= 1;
+  }
+  // Disable partial analytical integrals if interpolation is used, and we
+  // integrate over sub-ranges
+  if (_intOrder > 0 && code != ((2 << _histObsList.getSize()) - 1)) {
+    analVars.removeAll();
+    return 0;
   }
 
-  // Disable partial analytical integrals if interpolation is used
-//   if (_intOrder>0) {
-//     return 0 ;
-//   }
-
-  // Find subset of _histObsList that integration is requested over
-  RooArgSet* allVarsSel = (RooArgSet*) allVarsHist.selectCommon(_histObsList) ;
-  if (allVarsSel->getSize()==0) {
-    delete allVarsSel ;
-    return 0 ;
-  }
-
-  // Partial integration scenarios.
-  // Build unique code from bit mask of integrated variables in depList
-  Int_t code(0),n(0) ;
-  iter = _histObsList.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    if (allVars.find(arg->GetName())) {
-      code |= (1<<n) ;
-      analVars.add(*pobsl.at(n)) ;
-    }
-    n++ ;
-  }
-  delete iter ;
-
-  return code ;
-
+  return (code >= 2) ? code : 0;
 }
 
 
 
 //_____________________________________________________________________________
-Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
+Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   // Return integral identified by 'code'. The actual integration
   // is deferred to RooDataHist::sum() which implements partial
   // or complete summation over the histograms contents
 
-  // WVE needs adaptation for rangeName feature
-  // Simplest scenario, integration over all dependents
-  if (code==1000) {    
-    return _dataHist->sum(kFALSE) ;
+  // Simplest scenario, full-range integration over all dependents
+  if (((2 << _histObsList.getSize()) - 1) == code) {
+    return _dataHist->sum(kFALSE);
   }
 
-  // Partial integration scenario, retrieve set of variables, calculate partial sum
-  RooArgSet intSet ;
-  TIterator* iter = _histObsList.createIterator() ;
-  RooAbsArg* arg ;
-  Int_t n(0) ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    if (code & (1<<n)) {
-      intSet.add(*arg) ;
+  // Partial integration scenario, retrieve set of variables, calculate partial
+  // sum, figure out integration ranges (if needed)
+  RooArgSet intSet;
+  std::map<const RooAbsArg*, std::pair<Double_t, Double_t> > ranges;
+  RooFIter it = _pdfObsList.fwdIterator();
+  RooFIter jt = _histObsList.fwdIterator();
+  Int_t n(0);
+  for (RooAbsArg *pa = 0, *ha = 0; (pa = it.next()) && (ha = jt.next()); ++n) {
+    if (code & (2 << n)) {
+      intSet.add(*ha);
     }
-    n++ ;
-  }
-  delete iter ;
-
-  // WVE must sync hist slice list values to pdf slice list
-  // Transfer values from   
-  if (_pdfObsList.getSize()>0) {
-    _histObsIter->Reset() ;
-    _pdfObsIter->Reset() ;
-    RooAbsArg* harg, *parg ;
-    while((harg=(RooAbsArg*)_histObsIter->Next())) {
-      parg = (RooAbsArg*)_pdfObsIter->Next() ;
-      if (harg != parg) {
-	parg->syncCache() ;
-	harg->copyCache(parg,kTRUE) ;
+    if (!(code & 1)) {
+      RooAbsRealLValue* rlv = dynamic_cast<RooAbsRealLValue*>(pa);
+      if (rlv) {
+	const RooAbsBinning* binning = rlv->getBinningPtr(rangeName);
+	if (rlv->hasRange(rangeName)) {
+	  ranges[ha] = std::make_pair(
+	      rlv->getMin(rangeName), rlv->getMax(rangeName));
+	} else if (binning) {
+	  if (!binning->isParameterized()) {
+	    ranges[ha] = std::make_pair(
+		binning->lowBound(), binning->highBound());
+	  } else {
+	    ranges[ha] = std::make_pair(
+		binning->lowBoundFunc()->getVal(), binning->highBoundFunc()->getVal());
+	  }
+	}
       }
     }
-  }  
+    // WVE must sync hist slice list values to pdf slice list
+    // Transfer values from
+    if (ha != pa) {
+      pa->syncCache();
+      ha->copyCache(pa,kTRUE);
+    }
+  }
 
-
-  Double_t ret =  _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE) ;
+  Double_t ret = (code & 1) ?
+      _dataHist->sum(intSet,_histObsList,kFALSE,kFALSE) :
+      _dataHist->sum(intSet,_histObsList,kFALSE,kFALSE, ranges);
 
 //    cout << "intSet = " << intSet << endl ;
 //    cout << "slice position = " << endl ;
@@ -602,7 +593,6 @@ Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
 
   // Redirect our internal pointer to the copy in the workspace
   _dataHist = (RooDataHist*) ws.embeddedData(_dataHist->GetName()) ;
-
   return kFALSE ;
 }
 
