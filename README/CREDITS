@@ -732,10 +732,11 @@ D: improvements in TTreePlayer::DrawSelect()
 N: Manuel Schiller
 E: schiller@physi.uni-heidelberg.de
 D: contribution on the Cholesly decomposition in SMatrix
+D: contributions in RooFit
 
 N: Gregory Schoot
 E: Gregory.Schott@cern.ch
-D: Contributions in RooStats
+D: contributions in RooStats
 
 N: Jason Seely
 E: seely@mit.edu
