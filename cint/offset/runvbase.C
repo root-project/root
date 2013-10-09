@@ -1,0 +1,126 @@
+#include "TInterpreter.h"
+#include "TClass.h"
+#include <iostream>
+
+using std::cerr;
+using std::endl;
+
+// Inheritance structure to test.
+struct Fill {
+   char S[1024];
+};
+
+// Virtual base class.
+struct Top {
+  int fValue;
+  virtual ~Top() {}
+};
+
+struct Mid1 : public virtual Top
+{
+   int fMid1;
+};
+
+struct Mid2 : public virtual Top
+{
+   int fMid2;
+};
+
+struct Bottom : public Mid1, Mid2
+{
+   int fBottom;
+};
+
+struct Basement: public Fill, public Mid2, public Bottom {
+   char FillMore[17];
+};
+
+extern "C" int printf(const char*,...);
+
+// Compiler computed offset.
+template <typename DERIVED, typename TARGET>
+long CompOffset(const DERIVED* obj) {
+   char* addrDerived = (char*) obj;
+   // NOTE: this casts even unrelated types, yielding a 0 offset!
+   char* addrBase = (char*)((const TARGET*)obj);
+   // [base1 base2 base3]
+   // ^-- obj starts here
+   //                   ^-- obj + sizeof(obj)
+   //              ^-- offset to base3
+   return addrBase - addrDerived;
+}
+
+// Interpreter computes offset.
+long InterpOffset(void* obj, const char* derivedClassName, const char* targetClassName) {
+#ifdef USE_CLASSINFO
+   ClassInfo_t* cliDerived = gInterpreter->ClassInfo_Factory(derivedClassName);
+   ClassInfo_t* cliTarget = gInterpreter->ClassInfo_Factory(targetClassName);
+   long offset = -1;
+   offset = gInterpreter->ClassInfo_GetBaseOffset(cliDerived, cliTarget, obj);
+   gInterpreter->ClassInfo_Delete(cliDerived);
+   gInterpreter->ClassInfo_Delete(cliTarget);
+   return offset;
+#else
+   TClass* clDerived = TClass::GetClass(derivedClassName);
+   TClass* clBase = TClass::GetClass(targetClassName);
+   return clDerived->GetBaseClassOffset(clBase, obj);
+#endif
+}
+
+template <typename DERIVED, typename TARGET>
+void CheckFor(DERIVED* obj,
+              const char* derivedClassName, const char* targetClassName) {
+   printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
+          derivedClassName, targetClassName,
+          CompOffset<DERIVED, TARGET>(obj),
+          InterpOffset(obj, derivedClassName, targetClassName));
+}
+
+void runvbase() {
+   Basement *obj = new Basement;
+
+   CheckFor<Basement, Top>(obj, "Basement", "Top");
+   // Check for the caching of the function pointer in TClingClassInfo.
+   CheckFor<Basement, Top>(obj, "Basement", "Top");
+   CheckFor<Basement, Fill>(obj, "Basement", "Fill");
+   CheckFor<Basement, Mid1>(obj, "Basement", "Mid1");
+   // This will result in an error from the Compiler function first.
+   // Ambiguous:
+   //   struct Basement -> struct Mid2
+   //   struct Basement -> struct Bottom -> struct Mid2
+   // Also see check for error at the end.
+   //CheckFor<Basement, Mid2>(obj, "Basement", "Mid2");
+   CheckFor<Basement, Bottom>(obj, "Basement", "Bottom");
+   // Basement doesn't derive from Basement, but this should still be
+   // handled (offset 0)
+   CheckFor<Basement, Basement>(obj, "Basement", "Basement");
+
+   CheckFor<Bottom, Top>(obj, "Bottom", "Top");
+   CheckFor<Bottom, Mid1>(obj, "Bottom", "Mid1");
+   CheckFor<Bottom, Mid2>(obj, "Bottom", "Mid2");
+   CheckFor<Bottom, Bottom>(obj, "Bottom", "Bottom");
+
+   CheckFor<Mid1, Top>(obj, "Mid1", "Top");
+   CheckFor<Mid1, Mid1>(obj, "Mid1", "Mid1");
+   // Classes are unrelated so should return -1.
+   cerr << "The derived class does not derive from base, thus we expect "
+      "different results from compiler and cling.\n";
+   CheckFor<Mid1, Mid2>(obj, "Mid1", "Mid2");
+
+   //to Bottom or to Mid2, did we not already check for Bottom?
+   // Need to cast to Bottom or ambiguous:
+   //  struct Basement -> struct Mid2
+   //  struct Basement -> struct Bottom -> struct Mid2
+   CheckFor<Mid2, Top>((Bottom*)obj, "Mid2", "Top");
+   CheckFor<Mid2, Mid2>((Bottom*)obj, "Mid2", "Mid2");
+
+   // Assert that this cannot be determined, i.e. that after this call
+   // Root survives and complains about the ambiguous cast:
+   //  struct Basement -> struct Mid2
+   //  struct Basement -> struct Bottom -> struct Mid2
+   cerr << "Multiple paths case:\n";
+   Int_t ambiguousOffset = InterpOffset(obj, "Basement", "Mid2");
+
+   cerr << "derived Basement -> base Mid2: TClass says "
+        << ambiguousOffset << '\n';
+}
