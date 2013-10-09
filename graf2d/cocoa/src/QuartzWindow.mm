@@ -894,8 +894,6 @@ void print_mask_info(ULong_t mask)
 
 @synthesize fMainWindow;
 
-#ifdef MAC_OS_X_VERSION_10_9
-
 //______________________________________________________________________________
 - (BOOL) canBecomeKeyWindow
 {
@@ -906,8 +904,6 @@ void print_mask_info(ULong_t mask)
    //(it's always a popup and derived classes), but now it's not enough :(
    return YES;
 }
-
-#endif
 
 //QuartzWindow's life cycle.
 //______________________________________________________________________________
