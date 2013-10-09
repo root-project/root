@@ -894,6 +894,21 @@ void print_mask_info(ULong_t mask)
 
 @synthesize fMainWindow;
 
+#ifdef MAC_OS_X_VERSION_10_9
+
+//______________________________________________________________________________
+- (BOOL) canBecomeKeyWindow
+{
+   //Before I did not need this. Default implementation returns NO for a window
+   //without a title-bar and ... when (for example) switching between applications
+   //with alt-tab, the Z-order breaks :( Strange enough, for previous versions
+   //it was enough to make such a window a child of another window
+   //(it's always a popup and derived classes), but now it's not enough :(
+   return YES;
+}
+
+#endif
+
 //QuartzWindow's life cycle.
 //______________________________________________________________________________
 - (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle backing : (NSBackingStoreType) bufferingType 

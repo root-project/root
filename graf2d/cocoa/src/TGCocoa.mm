@@ -4258,7 +4258,7 @@ bool TGCocoa::MakeProcessForeground()
    //if it tries to create and manage windows.
    //So, first time we convert process to foreground, next time
    //we make it front.
-   
+
    if (!fForegroundProcess) {
       ProcessSerialNumber psn = {0, kCurrentProcess};
 
@@ -4271,15 +4271,23 @@ bool TGCocoa::MakeProcessForeground()
          Error("MakeProcessForeground", "TransformProcessType failed with code %d", res1);
          return false;
       }
-   
+#ifdef MAC_OS_X_VERSION_10_9
+      //Instead of quite transparent Carbon calls we now have another black-box function.
+      [[NSApplication sharedApplication] activateIgnoringOtherApps : YES];
+#else
       const OSErr res2 = SetFrontProcess(&psn);
       if (res2 != noErr) {
          Error("MakeProcessForeground", "SetFrontProcess failed with code %d", res2);
          return false;
       }
+#endif
 
       fForegroundProcess = true;
    } else {
+#ifdef MAC_OS_X_VERSION_10_9
+      //Instead of quite transparent Carbon calls we now have another black-box function.
+      [[NSApplication sharedApplication] activateIgnoringOtherApps : YES];
+#else
       ProcessSerialNumber psn = {};    
 
       OSErr res = GetCurrentProcess(&psn);
@@ -4293,6 +4301,7 @@ bool TGCocoa::MakeProcessForeground()
          Error("MapProcessForeground", "SetFrontProcess failed with code %d", res);
          return false;
       }
+#endif
    }
    
    return true;

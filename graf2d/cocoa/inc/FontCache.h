@@ -105,7 +105,7 @@ private:
    FontList fDummyList;
    
    typedef std::map<std::string, std::string> PSNameMap_t;
-   mutable PSNameMap_t fXLFDtoPostscriptNames;
+   PSNameMap_t fXLFDtoPostscriptNames;
 
    FontCache(const FontCache &rhs);
    FontCache &operator = (const FontCache &rhs);
