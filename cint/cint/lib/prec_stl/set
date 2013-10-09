@@ -106,8 +106,10 @@ class set {
     iterator& operator--();
     iterator operator--(int a);
 #if defined (G__VISUAL) || (defined(G__GNUC) && G__GNUC_VER>=3004)
+#if !defined(G__APPLE_LIBCXX)
     bool operator==(const iterator& x) ;
     bool operator!=(const iterator& x) ;
+#endif
 #endif
 #ifdef G__HPUX
     bool operator==(const iterator& x) ;

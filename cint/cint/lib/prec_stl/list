@@ -96,8 +96,10 @@ class list {
     iterator operator++(int a);
     iterator& operator--();
     iterator operator--(int a);
+#ifndef G__APPLE_LIBCXX
     bool operator==(const iterator& x) ;
-#ifndef G__HPUX
+#endif
+#if !defined(G__HPUX) && !defined(G__APPLE_LIBCXX)
     bool operator!=(const iterator& x) ;
 #endif
 #if defined(G__VISUAL) && (G__MSC_VER>=1600)

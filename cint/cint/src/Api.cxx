@@ -542,7 +542,7 @@ extern "C" const char* G__saveconststring(const char* s)
 
 extern "C" void G__initcxx() 
 {
-#if defined(__HP_aCC)||defined(__SUNPRO_CC)||defined(__BCPLUSPLUS__)||defined(__KCC)||defined(__INTEL_COMPILER)
+#if defined(__HP_aCC)||defined(__SUNPRO_CC)||defined(__BCPLUSPLUS__)||defined(__KCC)||defined(__INTEL_COMPILER)||defined(_LIBCPP_ABI_VERSION)
   G__FastAllocString temp(G__ONELINE);
 #endif
 #ifdef __HP_aCC     /* HP aCC C++ compiler */
@@ -562,6 +562,9 @@ extern "C" void G__initcxx()
 #endif
 #if defined(__INTEL_COMPILER) && (__INTEL_COMPILER<810) /* icc and ecc C++ compilers */
   temp.Format("G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
+#endif
+#if defined(_LIBCPP_ABI_VERSION)
+ temp.Format("G__APPLE_LIBCXX=%ld",(long)_LIBCPP_ABI_VERSION); G__add_macro(temp);
 #endif
   /*
 #ifdef __cplusplus 

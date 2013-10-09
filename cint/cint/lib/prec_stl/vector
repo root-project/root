@@ -210,6 +210,57 @@ class vector {
 	typedef std::reverse_iterator<iterator> reverse_iterator;
 	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
+#elif (defined(G__APPLE_LIBCXX))
+
+#define G__VECTOR_HAS_CLASS_ITERATOR
+   
+   class iterator {
+   public:
+      typedef vector::pointer pointer;
+      typedef vector::const_pointer const_pointer;
+      typedef vector::reference reference;
+      typedef vector::const_reference const_reference;
+      typedef vector::size_type size_type;
+      typedef vector::difference_type difference_type;
+      
+      iterator();
+      //explicit iterator(const pointer& __i) ;
+      // Allow iterator to const_iterator conversion
+      template<typename _Iter> inline iterator(const iterator& __i);
+      
+      // Forward iterator requirements
+      reference operator*() const ;
+      pointer operator->() const ;
+      iterator& operator++();
+      iterator operator++(int) ;
+      
+      // Bidirectional iterator requirements
+      iterator& operator--() ;
+      iterator operator--(int) ;
+      
+      // Random access iterator requirements
+      reference operator[](const difference_type& __n) const;
+      iterator& operator+=(const difference_type& __n);
+      iterator operator+(const difference_type& __n) const;
+      iterator& operator-=(const difference_type& __n);
+      iterator operator-(const difference_type& __n) const;
+      const pointer& base() const ;
+#ifndef G__OLDIMPLEMENTATION2165
+      iterator operator=(const iterator& x) ;
+#endif
+   };
+   
+   friend bool operator==(const vector::iterator& x,const vector::iterator& y)const;
+   friend bool operator!=(const vector::iterator& x,const vector::iterator& y)const;
+   friend bool operator<(const vector::iterator& x,const vector::iterator& y)const;
+   friend bool operator>(const vector::iterator& x,const vector::iterator& y)const;
+   friend bool operator<=(const vector::iterator& x,const vector::iterator& y)const;
+   friend bool operator>=(const vector::iterator& x,const vector::iterator& y)const;
+   friend vector::iterator::difference_type operator-(const vector::iterator& x,const vector::iterator& y)const;
+   friend vector::iterator operator+(const vector::iterator::difference_type x,const vector::iterator& y)const;
+   
+   typedef const iterator const_iterator;
+
 #elif (!defined(G__INTEL_COMPILER) && (G__GNUC_VER>3001))
 
   #define G__VECTOR_HAS_CLASS_ITERATOR
@@ -740,11 +791,18 @@ template <class Allocator = allocator<bool> > class vector<bool, Allocator> {
   class reference {
     //friend class vector;
     reference();
+    reference(const reference&);
+#ifdef G__APPLE_LIBCXX
+     reference& operator=(const bool x);
+     reference& operator=(const reference& x);
+#endif
   public:
     ~reference();
     operator bool() const;
+#ifndef G__APPLE_LIBCXX
     reference& operator=(const bool x);
     reference& operator=(const reference& x);
+#endif
     void flip();              // flips the bit
   };
   // construct/copy/destroy:
