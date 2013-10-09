@@ -60,3 +60,6 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 $(FTGLO):     $(FREETYPEDEP)
 $(FTGLO):     CXXFLAGS += $(FREETYPEINC) $(OPENGLINCDIR:%=-I%)
+ifeq ($(MACOSX_GLU_DEPRECATED),yes)
+$(FTGLO):     CXXFLAGS += -Wno-deprecated-declarations
+endif
