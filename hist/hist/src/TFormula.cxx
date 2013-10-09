@@ -397,7 +397,8 @@ void TFormula::FillDefaults()
    {
       TString var = defvarsNames[i];
       Double_t value = 0;
-      fVars[var] = TFormulaVariable(var,value,fVars.size());
+      unsigned int size = fVars.size();
+      fVars[var] = TFormulaVariable(var,value,size);
       fClingVariables.push_back(value);
    }
 
