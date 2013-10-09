@@ -48,6 +48,7 @@
 #include "TClassMenuItem.h"
 #include "TObjectSpy.h"
 #include "KeySymbols.h"
+#include "RConfigure.h"
 
 enum EContextMenu {
    kToggleStart       = 1000, // first id of toggle menu items
@@ -116,6 +117,13 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
 
    xx = topx + x + 1;
    yy = topy + y + 1;
+
+#ifdef R__HAS_COCOA
+   //Context menu must be transient for a canvas, otherwise,
+   if (TVirtualPad * const pad = fContextMenu->GetSelectedCanvas())
+      if (TRootCanvas * const canvasImp = dynamic_cast<TRootCanvas *>(pad->GetCanvasImp()))
+         gVirtualX->SetWMTransientHint(GetId(), canvasImp->GetId());
+#endif
 
    PlaceMenu(xx, yy, kTRUE, kTRUE);
    // add some space for the right-side '?' (help)
