@@ -64,6 +64,7 @@ IOSVERS        := @iosvers@
 IOSSDK         := @iossdk@
 
 CXX11          := @c++11@
+LIBCXX         := @libc++@
 
 EXPLICITLINK   := @explicitlink@
 

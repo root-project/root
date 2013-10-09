@@ -12,7 +12,13 @@
 #ifndef __GNU_CXX_HASH_H
 #define __GNU_CXX_HASH_H
 
-#if defined(__GNUC__)
+#if defined(_LIBCPP_ABI_VERSION)
+// using libc++
+# include <unordered_map>
+# define hash_map unordered_map
+# define hash_multimap unordered_multimap
+# define __gnu_cxx std
+#elif defined(__GNUC__)
 # if defined(__INTEL_COMPILER) && (__INTEL_COMPILER <= 800)
 #  define __gnu_cxx std
 # endif
@@ -124,10 +130,10 @@ public:
  */
 } // namespace __gnu_cxx
 
-#endif // __ICC, __ECC, _WIN32
+#endif // _WIN32
 
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(_LIBCPP_ABI_VERSION)
 namespace __gnu_cxx {
 template <> struct hash<const char**> {
    size_t

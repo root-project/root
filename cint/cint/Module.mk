@@ -157,6 +157,10 @@ ifneq ($(CLANG_MAJOR),)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc4strm.cxx
 endif
+ifneq ($(LIBCXX),)
+CINTS2       := $(filter-out $(MODDIRSD)/gcc4strm.%,$(CINTS2))
+CINTS2       += $(MODDIRSD)/libcxxstrm.cxx
+endif
 ifeq ($(CXXCMD),xlC)
 ifeq ($(PLATFORM),macosx)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))

@@ -4308,7 +4308,7 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
 
    // Bind socket
    if (port > 0) {
-      if (bind(sock, (struct sockaddr*) &inserver, sizeof(inserver))) {
+      if (::bind(sock, (struct sockaddr*) &inserver, sizeof(inserver))) {
          ::SysError("TUnixSystem::UnixTcpService", "bind");
          close(sock);
          return -2;
@@ -4317,7 +4317,7 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
       int bret;
       do {
          inserver.sin_port = htons(tryport++);
-         bret = bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
+         bret = ::bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
       } while (bret < 0 && GetErrno() == EADDRINUSE && tryport < kSOCKET_MAXPORT);
       if (bret < 0) {
          ::SysError("TUnixSystem::UnixTcpService", "bind (port scan)");
@@ -4327,7 +4327,7 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
    }
 
    // Start accepting connections
-   if (listen(sock, backlog)) {
+   if (::listen(sock, backlog)) {
       ::SysError("TUnixSystem::UnixTcpService", "listen");
       close(sock);
       return -3;
@@ -4369,7 +4369,7 @@ int TUnixSystem::UnixUdpService(int port, int backlog)
 
    // Bind socket
    if (port > 0) {
-      if (bind(sock, (struct sockaddr*) &inserver, sizeof(inserver))) {
+      if (::bind(sock, (struct sockaddr*) &inserver, sizeof(inserver))) {
          ::SysError("TUnixSystem::UnixUdpService", "bind");
          close(sock);
          return -2;
@@ -4378,7 +4378,7 @@ int TUnixSystem::UnixUdpService(int port, int backlog)
       int bret;
       do {
          inserver.sin_port = htons(tryport++);
-         bret = bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
+         bret = ::bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
       } while (bret < 0 && GetErrno() == EADDRINUSE && tryport < kSOCKET_MAXPORT);
       if (bret < 0) {
          ::SysError("TUnixSystem::UnixUdpService", "bind (port scan)");
@@ -4388,7 +4388,7 @@ int TUnixSystem::UnixUdpService(int port, int backlog)
    }
 
    // Start accepting connections
-   if (listen(sock, backlog)) {
+   if (::listen(sock, backlog)) {
       ::SysError("TUnixSystem::UnixUdpService", "listen");
       close(sock);
       return -3;
@@ -4454,14 +4454,14 @@ int TUnixSystem::UnixUnixService(const char *sockpath, int backlog)
       return -1;
    }
 
-   if (bind(sock, (struct sockaddr*) &unserver, strlen(unserver.sun_path)+2)) {
+   if (::bind(sock, (struct sockaddr*) &unserver, strlen(unserver.sun_path)+2)) {
       ::SysError("TUnixSystem::UnixUnixService", "bind");
       close(sock);
       return -1;
    }
 
    // Start accepting connections
-   if (listen(sock, backlog)) {
+   if (::listen(sock, backlog)) {
       ::SysError("TUnixSystem::UnixUnixService", "listen");
       close(sock);
       return -1;

@@ -25,5 +25,6 @@
 #@hascling@ R__HAS_CLING   /**/
 #@hascocoa@ R__HAS_COCOA    /**/
 #@usec++11@ R__USE_CXX11    /**/
+#@uselibc++@ R__USE_LIBCXX    /**/
 
 #endif

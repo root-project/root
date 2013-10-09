@@ -36,6 +36,9 @@
 
 #if defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_7)
 namespace __cxxabiv1 {
+#ifdef _LIBCPP_ABI_VERSION
+class __class_type_info;
+#endif
 extern "C" void*
 __dynamic_cast(const void* __src_ptr, // Starting object.
                const __class_type_info* __src_type, // Static type of object.
