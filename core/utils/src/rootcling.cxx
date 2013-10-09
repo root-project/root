@@ -3094,7 +3094,7 @@ int RootCling(int argc,
 #endif
        ) {
       // There was an error.
-      ROOT::TMetaUtils::Error(0,"Error loading the default header files.");
+      ROOT::TMetaUtils::Error(0,"Error loading the default header files.\n");
       return 1;
    }
 
@@ -3306,14 +3306,14 @@ int RootCling(int argc,
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        gResourceDir.c_str())) {
-         ROOT::TMetaUtils::Error(0,"Parsing #pragma failed %s",linkdefFilename.c_str());
+         ROOT::TMetaUtils::Error(0,"Parsing #pragma failed %s\n",linkdefFilename.c_str());
       }
       else {
          ROOT::TMetaUtils::Info(0,"#pragma successfully parsed.\n");
       }
 
       if (!ldefr.LoadIncludes(extraIncludes)) {
-         ROOT::TMetaUtils::Error(0,"Error loading the #pragma extra_include.");
+         ROOT::TMetaUtils::Error(0,"Error loading the #pragma extra_include.\n");
          return 1;
       }
    } else if (isSelXML) {
@@ -3357,19 +3357,19 @@ int RootCling(int argc,
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        gResourceDir.c_str())) {
-         ROOT::TMetaUtils::Error(0,"Parsing Linkdef file %s",linkdefFilename.c_str());
+         ROOT::TMetaUtils::Error(0,"Parsing Linkdef file %s\n",linkdefFilename.c_str());
       }
       else {
          ROOT::TMetaUtils::Info(0,"Linkdef file successfully parsed.\n");
       }
 
       if(! ldefr.LoadIncludes(extraIncludes) ) {
-         ROOT::TMetaUtils::Error(0,"Error loading the #pragma extra_include.");
+         ROOT::TMetaUtils::Error(0,"Error loading the #pragma extra_include.\n");
          return 1;
       }
    } else {
 
-      ROOT::TMetaUtils::Error(0,"Unrecognized selection file: %s",linkdefFilename.c_str());
+      ROOT::TMetaUtils::Error(0,"Unrecognized selection file: %s\n",linkdefFilename.c_str());
 
    }
 
