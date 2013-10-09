@@ -404,7 +404,7 @@ freebsd* | openbsd* | linux*)
       if test "x$f" = "xcxx11" ; then
          auxcflags="-std=c++11 -Wno-deprecated-declarations $auxcflags"
       fi
-      if test "x$f" = "xlibcxx11" ; then
+      if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
       fi
@@ -429,7 +429,7 @@ macosx*)
       if test "x$f" = "xcxx11" ; then
          auxcflags="-std=c++11 $auxcflags"
       fi
-      if test "x$f" = "xlibcxx11" ; then
+      if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
       fi
