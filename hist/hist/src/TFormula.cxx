@@ -511,6 +511,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    //*-*    - [num] stands for parameter number. 
    //*-*      If user pass to function argument 5, num will stand for (5 + num) parameter.
    //*-*    
+
    map< pair<TString,Int_t> ,pair<TString,TString> > functions; 
    functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2)","[0]*exp(-0.5*(({V0}-[1])/[2])^2)/(sqrt(2*pi)*[2])")));
    functions.insert(make_pair(make_pair("gaus",2),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2)","")));
@@ -603,14 +604,18 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          {
             if(body[i] == '{')
             {
+               // replace {Vn} with variable names
                i += 2; // skip '{' and 'V'
                Int_t num = TString(body(i,body.Index('}',i) - i)).Atoi();
                TString variable = variables[num];
                TString pattern = TString::Format("{V%d}",num);
-               body.Replace(i - 2, pattern.Length(),variable,variable.Length());
+               i -= 2; // restore original position
+               body.Replace(i, pattern.Length(),variable,variable.Length());
+               i += variable.Length()-1;   // update i to reflect change in body string
             }
             else if(body[i] == '[')
             {
+               // update parameter counters in case of many functions (e.g. gaus(0)+gaus(3) ) 
                Int_t tmp = i;
                while(tmp < body.Length() && body[tmp] != ']')
                {
@@ -659,6 +664,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
          funPos = formula.Index(funName);
       }
+
    }
 }
 void TFormula::HandleExponentiation(TString &formula)
@@ -910,15 +916,15 @@ void TFormula::ProcessFormula(TString &formula)
             formula.ReplaceAll(shortcut,full);
             fun.fFound = true;
          }
-         if(fun.fName.Contains("::")) // add support for nexted namespaces
+         if(fun.fName.Contains("::")) // add support for nested namespaces
          {
+            // look for last occurence of "::"
             std::string name(fun.fName); 
             size_t index = name.rfind("::");
             assert(index != std::string::npos);               
             TString className = fun.fName(0,fun.fName(0,index).Length());           
             TString functionName = fun.fName(index + 2, fun.fName.Length());
                                                    
-            printf ( "%s  %s %s \n", fun.fName.Data(), className.Data(), functionName.Data()); 
             Bool_t silent = true;
             TClass *tclass = new TClass(className,silent);
             TList *methodList = tclass->GetListOfAllPublicMethods();
