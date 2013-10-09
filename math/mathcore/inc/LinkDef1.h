@@ -45,6 +45,9 @@
 //#pragma link C++ function TMath::Limits<Long64_t>::Max();
 //#pragma link C++ function TMath::Limits<Long64_t>::Min();
 
+#pragma link C++ function TMath::Nint<Float_t>(Float_t);
+#pragma link C++ function TMath::Nint<Double_t>(Double_t);
+
 #pragma link C++ function TMath::MinElement(Long64_t, const Short_t*);
 #pragma link C++ function TMath::MinElement(Long64_t, const Int_t*);
 #pragma link C++ function TMath::MinElement(Long64_t, const Float_t*);
