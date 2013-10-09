@@ -209,6 +209,9 @@ void CreateXLFDString(const X11::XLFDName &xlfd, std::string &xlfdString)
 FontCache::FontCache()
              : fSymbolFontRegistered(false)
 {
+   //XLFD name is not exactly PS name thus generating a warning with a new Core Text.
+   fXLFDtoPostscriptNames["helvetica"] = "Helvetica";
+   fXLFDtoPostscriptNames["courier"] = "Courier";
 }
 
 //______________________________________________________________________________
@@ -216,8 +219,15 @@ FontStruct_t FontCache::LoadFont(const X11::XLFDName &xlfd)
 {
    using Util::CFScopeGuard;
    using Util::CFStrongReference;
-   
+
+#ifdef MAC_OS_X_VERSION_10_9
+   PSNameMap_t::const_iterator nameIt = fXLFDtoPostscriptNames.find(xlfd.fFamilyName);
+   const std::string &psName = nameIt == fXLFDtoPostscriptNames.end() ? xlfd.fFamilyName : nameIt->second;
+   const CFScopeGuard<CFStringRef> fontName(CFStringCreateWithCString(kCFAllocatorDefault, psName.c_str(), kCFStringEncodingMacRoman));
+#else
    const CFScopeGuard<CFStringRef> fontName(CFStringCreateWithCString(kCFAllocatorDefault, xlfd.fFamilyName.c_str(), kCFStringEncodingMacRoman));
+#endif
+
    const CFStrongReference<CTFontRef> baseFont(CTFontCreateWithName(fontName.Get(), xlfd.fPixelSize, 0), false);//false == do not retain
    
    if (!baseFont.Get()) {
@@ -518,7 +528,6 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
 
    return fSelectedFont = it->second.Get();
 }
-
 
 //_________________________________________________________________   
 void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
