@@ -1921,6 +1921,9 @@ if test "x$platform" = "xmacosx" ; then
    if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 8 ]; then
       macosx108=yes
    fi
+   if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 9 ]; then
+      macosx109=yes
+   fi
 fi
 
 if test "x$platform" = "xlinux" ; then
@@ -2445,13 +2448,19 @@ fi
 
 ######################################################################
 #
-### echo %%% libc++ - compile and link using libc++ (need OSX and cxx11 option)
+### echo %%% libc++ - compile and link using libc++
 #
 # needs gcc > 4.7.x or clang
+
+# OSX 10.9 only has libc++ with clang so make sure this option is turned on
+if test "x$macosx109" = "xyes" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
+    enable_libcxx="yes"
+fi
+
 uselibcxx="undef"
-if test "x$enable_cxx11" = "xyes" && test "x$enable_libcxx" = "xyes" ; then
+if test "x$enable_libcxx" = "xyes" ; then
     message "Checking whether libc++ is supported"
-    check_cxxopt -std=c++11 -stdlib=libc++
+    check_cxxopt -stdlib=libc++
     if test $cxxopt_result -eq 0 ; then
         enable_libcxx="no"
         result "no"
