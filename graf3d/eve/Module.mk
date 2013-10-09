@@ -106,6 +106,9 @@ else
 $(EVEO) $(EVEDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 $(EVEO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 endif
+ifeq ($(MACOSX_GLU_DEPRECATED),yes)
+$(EVEO) $(EVEDO): CXXFLAGS += -Wno-deprecated-declarations
+endif
 
 $(MODNAME)-echo-h1:
 	@echo $(EVEH1)

@@ -77,3 +77,6 @@ distclean::     distclean-$(MODNAME)
 $(KRB5AUTHDO): CXXFLAGS += $(KRB5INCDIR:%=-I%)
 
 $(KRB5AUTHO): CXXFLAGS += $(EXTRA_AUTHFLAGS) -DR__KRB5INIT="\"$(KRB5INIT)\"" $(KRB5INCDIR:%=-I%) $(SSLINCDIR:%=-I%)
+ifeq ($(MACOSX_KRB5_DEPRECATED),yes)
+$(KRB5AUTHO) $(KRB5AUTHDO): CXXFLAGS += -Wno-deprecated-declarations
+endif

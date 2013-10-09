@@ -121,3 +121,7 @@ $(GLO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 
 # Optimize dictionary with stl containers.
 $(GLDO): NOOPT = $(OPT)
+
+ifeq ($(MACOSX_GLU_DEPRECATED),yes)
+$(GLO) $(GLDO): CXXFLAGS += -Wno-deprecated-declarations
+endif
