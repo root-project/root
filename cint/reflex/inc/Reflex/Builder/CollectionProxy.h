@@ -14,6 +14,8 @@
 
 #include <cstddef>
 #include <assert.h>
+#include <vector>
+#include <map>
 
 // Macro indicating the version of the Collection Proxy interface followed
 // by this Reflex build, this must match the version number of
@@ -24,15 +26,15 @@
 // Forward declarations
 namespace std {
    template <class T, class A> class deque;
-   template <class T, class A> class vector;
+   //template <class T, class A> class vector;
    template <class T, class A> class list;
    template <class T, class A> class queue;
    template <class T, class A> class stack;
    template <class K, class T, class A> class set;
    template <class K, class T, class A> class multiset;
-   template <class K, class T, class R, class A> class map;
+   //template <class K, class T, class R, class A> class map;
    template <class K, class T, class R, class A> class multimap;
-   template <class T> class allocator;
+   //template <class T> class allocator;
 }
 // Hash map forward declarations
 #if defined(__GNUC__)
