@@ -25,7 +25,6 @@
 
 #include "RooMsgService.h"
 #include "TInterpreter.h"
-#include "Api.h"
 
 #include <string.h>
 #include <string>

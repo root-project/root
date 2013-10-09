@@ -58,7 +58,6 @@
 #include "TROOT.h"
 #include "TFile.h"
 #include "TH1.h"
-#include "Api.h"
 #include <map>
 #include <string>
 #include <list>
@@ -1555,11 +1554,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   // Require that class meets technical criteria to be persistable (i.e it has a default ctor)
   // (We also need a default ctor of abstract classes, but cannot check that through is interface
   //  as TClass::HasDefaultCtor only returns true for callable default ctors)
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
-  if (!(tc->GetClassInfo()->Property()&G__BIT_ISABSTRACT) && !tc->HasDefaultConstructor()) {
-#else
-  if (!(gCint->ClassInfo_Property(tc->GetClassInfo())&G__BIT_ISABSTRACT) && !tc->HasDefaultConstructor()) {
-#endif
+  if (!(tc->Property() & kIsAbstract) && !tc->HasDefaultConstructor()) {
     oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING cannot import class " 
 				    << tc->GetName() << " : it cannot be persisted because it doesn't have a default constructor. Please fix " << endl ;
     return kFALSE ;      
@@ -2986,7 +2981,7 @@ void RooWorkspace::unExport()
   while((wobj=iter->Next())) {
     if (isValidCPPID(wobj->GetName())) {
       strlcpy(buf,Form("%s::%s",_exportNSName.c_str(),wobj->GetName()),10240) ;
-      G__deletevariable(buf) ;
+      gInterpreter->DeleteVariable(buf); 
     }
   }
   delete iter ;

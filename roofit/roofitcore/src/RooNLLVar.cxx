@@ -121,8 +121,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
       _binnedPdf = 0 ;
     } else {
       RooRealVar* var = (RooRealVar*) obs->first() ;
-      list<Double_t>* boundaries = _binnedPdf->binBoundaries(*var,var->getMin(),var->getMax()) ;
-      list<Double_t>::iterator biter = boundaries->begin() ;
+      std::list<Double_t>* boundaries = _binnedPdf->binBoundaries(*var,var->getMin(),var->getMax()) ;
+      std::list<Double_t>::iterator biter = boundaries->begin() ;
       _binw.resize(boundaries->size()-1) ;
       Double_t lastBound = (*biter) ;
       biter++ ;
@@ -163,8 +163,8 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
       _binnedPdf = 0 ;
     } else {
       RooRealVar* var = (RooRealVar*) obs->first() ;
-      list<Double_t>* boundaries = _binnedPdf->binBoundaries(*var,var->getMin(),var->getMax()) ;
-      list<Double_t>::iterator biter = boundaries->begin() ;
+      std::list<Double_t>* boundaries = _binnedPdf->binBoundaries(*var,var->getMin(),var->getMax()) ;
+      std::list<Double_t>::iterator biter = boundaries->begin() ;
       _binw.resize(boundaries->size()-1) ;
       Double_t lastBound = (*biter) ;
       biter++ ;
@@ -357,7 +357,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
     
     // If no offset is stored enable this feature now
     if (_offset==0 && result !=0 ) {
-      coutI(Minimization) << "RooNLLVar::evaluatePartition(" << GetName() << ") first = "<< firstEvent << " last = " << lastEvent << " Likelihood offset now set to " << result << endl ;
+      coutI(Minimization) << "RooNLLVar::evaluatePartition(" << GetName() << ") first = "<< firstEvent << " last = " << lastEvent << " Likelihood offset now set to " << result << std::endl ;
       _offset = result ;
       _offsetCarry = carry;
     }

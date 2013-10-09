@@ -16,7 +16,7 @@
 #ifndef ROO_COMPLEX
 #define ROO_COMPLEX
 
-#if !defined(ROO_MATH) && !defined(ROO_COMPLEX_CXX) && !defined(__CINT__) && \
+#if !defined(ROO_MATH) && !defined(ROO_COMPLEX_CXX) && !defined(__CINT__) && !defined(__CLING__) && \
     !defined(R__DICTIONARY_FILENAME)
 #warning "RooComplex is deprecated, use std::complex instead!"
 #endif

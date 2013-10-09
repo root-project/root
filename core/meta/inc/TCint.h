@@ -117,6 +117,7 @@ public:
    void    ResetGlobalVar(void *obj);
    void    RewindDictionary();
    Int_t   DeleteGlobal(void *obj);
+   Int_t   DeleteVariable(const char* name) ;
    void    SaveContext();
    void    SaveGlobalsContext();
    void    UpdateListOfGlobals();

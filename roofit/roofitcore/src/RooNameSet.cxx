@@ -198,28 +198,28 @@ RooArgSet* RooNameSet::select(const RooArgSet& list) const
 }
 
 //_____________________________________________________________________________
-void RooNameSet::printName(ostream& os) const 
+void RooNameSet::printName(std::ostream& os) const 
 {
   // Print name of nameset
   os << GetName();
 }
 
 //_____________________________________________________________________________
-void RooNameSet::printTitle(ostream& os) const 
+void RooNameSet::printTitle(std::ostream& os) const 
 {
   // Print title of nameset
   os << GetTitle();
 }
 
 //_____________________________________________________________________________
-void RooNameSet::printClassName(ostream& os) const 
+void RooNameSet::printClassName(std::ostream& os) const 
 {
   // Print class name of nameset
   os << IsA()->GetName();
 }
 
 //_____________________________________________________________________________
-void RooNameSet::printValue(ostream& os) const 
+void RooNameSet::printValue(std::ostream& os) const 
 {
   // Print value of nameset, i.e the list of names
   os << content();

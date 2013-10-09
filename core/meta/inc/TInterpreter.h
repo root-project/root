@@ -92,6 +92,7 @@ public:
    virtual void     ResetGlobalVar(void *obj) = 0;
    virtual void     RewindDictionary() = 0;
    virtual Int_t    DeleteGlobal(void *obj) = 0;
+   virtual Int_t    DeleteVariable(const char* name) = 0;
    virtual void     SaveContext() = 0;
    virtual void     SaveGlobalsContext() = 0;
    virtual void     UpdateListOfGlobals() = 0;
