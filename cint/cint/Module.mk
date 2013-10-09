@@ -157,7 +157,7 @@ ifneq ($(CLANG_MAJOR),)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc4strm.cxx
 endif
-ifneq ($(LIBCXX),)
+ifeq ($(LIBCXX),yes)
 CINTS2       := $(filter-out $(MODDIRSD)/gcc4strm.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/libcxxstrm.cxx
 endif
