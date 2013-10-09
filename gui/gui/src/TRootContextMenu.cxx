@@ -124,7 +124,9 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
    //different aplications). This hint works ONLY for canvas though
    //(otherwise selected canvas is null).
    TGWindow *parent = 0;
-   if (TVirtualPad * const pad = fContextMenu->GetSelectedCanvas())
+   if (TVirtualPad *pad = fContextMenu->GetSelectedCanvas())
+      parent = dynamic_cast<TGWindow *>(pad->GetCanvasImp());
+   else if ((pad = fContextMenu->GetSelectedPad()) && pad->GetCanvasImp())
       parent = dynamic_cast<TGWindow *>(pad->GetCanvasImp());
    else if (TBrowser * const browser = fContextMenu->GetBrowser())
       parent = dynamic_cast<TGWindow *>(browser->GetBrowserImp());
