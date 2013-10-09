@@ -17,5 +17,5 @@ derived Mid1 -> base Mid2: Compiler says 0, TClass says -1
 derived Mid2 -> base Top: Compiler says 40, TClass says 40
 derived Mid2 -> base Mid2: Compiler says 0, TClass says 0
 Multiple paths case:
-Error in <TClingBaseClassInfo::Offset>: There are multiple paths from derived class to base class.
--1
+Error in <TClingBaseClassInfo::Offset>: There are multiple paths from derived class Basement to base class Mid2.
+derived Basement -> base Mid2: TClass says -1
