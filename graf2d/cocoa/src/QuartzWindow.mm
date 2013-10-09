@@ -894,7 +894,7 @@ void print_mask_info(ULong_t mask)
 
 @synthesize fMainWindow;
 
-
+/*
 //______________________________________________________________________________
 - (BOOL) canBecomeKeyWindow
 {
@@ -904,7 +904,7 @@ void print_mask_info(ULong_t mask)
    //it was enough to make such a window a child of another window
    //(it's always a popup and derived classes), but now it's not enough :(
    return YES;
-}
+}*/
 
 //QuartzWindow's life cycle.
 //______________________________________________________________________________
