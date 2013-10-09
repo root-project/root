@@ -13,7 +13,7 @@ BASEDIRS     := $(BASEDIR)/src
 BASEDIRI     := $(BASEDIR)/inc
 
 ##### libBase (part of libCore) #####
-BASEL        := $(MODDIRI)/LinkDef1.h
+BASEL1       := $(MODDIRI)/LinkDef1.h
 BASEL2       := $(MODDIRI)/LinkDef2.h
 BASEL3       := $(MODDIRI)/LinkDef3.h
 
