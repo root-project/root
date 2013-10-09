@@ -25,7 +25,7 @@
 //Begin_Html <img src="gif/hsumDialog.gif"> End_Html                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
+#include <iostream>
 #include "TRootContextMenu.h"
 #include "TROOT.h"
 #include "TGClient.h"
@@ -119,7 +119,10 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
    yy = topy + y + 1;
 
 #ifdef R__HAS_COCOA
-   //Context menu must be transient for a canvas, otherwise,
+   //Context menu must be transient for a canvas, otherwise it's possible
+   //to break the z-order (for example, using alt-tab to switch between
+   //different aplications). This hint works ONLY for canvas though
+   //(otherwise selected canvas is null).
    if (TVirtualPad * const pad = fContextMenu->GetSelectedCanvas())
       if (TRootCanvas * const canvasImp = dynamic_cast<TRootCanvas *>(pad->GetCanvasImp()))
          gVirtualX->SetWMTransientHint(GetId(), canvasImp->GetId());
