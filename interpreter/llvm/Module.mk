@@ -146,8 +146,8 @@ $(LLVMDEPO): $(LLVMDEPS)
 		if [ $(CXX11) = "yes" ]; then \
 			LLVMCXX11="--enable-cxx11"; \
 		fi; \
-		if [ $(LIBCXX11) = "yes" ]; then \
-			LLVMLIBCXX11="--enable-libcpp"; \
+		if [ $(LIBCXX) = "yes" ]; then \
+			LLVMLIBCXX="--enable-libcpp"; \
 		fi; \
 		if [ "x$$LLVM_EXTRA_OPTIONS" = "x" ]; then \
 			LLVM_EXTRA_OPTIONS="--with-extra-options="; \
@@ -166,7 +166,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		--disable-docs --disable-bindings \
 		--disable-visibility-inlines-hidden \
 		$$LLVMCXX11 \
-		$$LLVMLIBCXX11 \
+		$$LLVMLIBCXX \
 		$(LLVMOPTFLAGS) \
 		--enable-targets=host \
 		"$$LLVM_EXTRA_OPTIONS" \

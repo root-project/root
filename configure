@@ -56,7 +56,7 @@ options="                    \
    enable_builtin_lzma       \
    enable_builtin_llvm       \
    enable_cxx11              \
-   enable_libcxx11           \
+   enable_libcxx             \
    enable_castor             \
    enable_chirp              \
    enable_cocoa              \
@@ -144,7 +144,7 @@ done
 for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_cxx11=no
-enable_libcxx11=no
+enable_libcxx=no
 enable_cocoa=
 enable_afs=no
 enable_alloc=no
@@ -367,7 +367,7 @@ check_libpic() {
 
 #_____________________________________________________________________
 check_libcompat() {
-    # This function will try to find out if a library [$1] contains 
+    # This function will try to find out if a library [$1] contains
     # compatible 64 bit or 32 bit code matching the selected architecture.
     # Currently only MacOS X supports universal libs.
     # The result of the check is stored in is_libcompat, 1 if true,
@@ -410,6 +410,69 @@ check_libcompat() {
     else
         is_libnotcompat=1
         logmsg " is a not-compatible library"
+    fi
+}
+
+#_____________________________________________________________________
+check_libcxxcompat() {
+    # This function will try to find out if a library [$1] is linked
+    # against a compatible C++ run-time library (either libstdc++ or libc++).
+    # Currently only MacOS X and Linux support libc++ and libstdc++.
+    # The result of the check is stored in is_libcxxcompat, 1 if true,
+    # 0 otherwise, which should be immediately copied, since the variable
+    # will be overwritten at next invocation of this function.
+
+    is_libcxxcompat=1
+    ret=0
+
+    # Assert that we got enough arguments
+    if test $# -ne 1 ; then
+        echo "check_libcxxcompat: not 1 argument"
+        return 1
+    fi
+
+    # Save arguments in logical names
+    chklibcxxcompat=$1
+    logmsg "Checking if $chklibcxxcompat is linked against compatible C++ run-time"
+
+    if test "x$enable_libcxx" = "xyes"; then
+        case $arch in
+        macosx*)
+            logmsg " otool -L $chklibcxxcompat | grep libstdc++"
+            if otool -L $chklibcxxcompat | grep 'libstdc++' > /dev/null 2>& 1 ; then
+                ret=1
+            fi
+            ;;
+        linux*)
+            logmsg " ldd $chklibcxxcompat | grep libstdc++"
+            if ldd $chklibcxxcompat | grep 'libstdc++' > /dev/null 2>& 1 ; then
+                ret=1
+            fi
+            ;;
+        esac
+    else
+        case $arch in
+        macosx*)
+            logmsg " otool -L $chklibcxxcompat | grep libc++"
+            if otool -L $chklibcxxcompat | grep 'libc++' > /dev/null 2>& 1 ; then
+                ret=1
+            fi
+            ;;
+        linux*)
+            logmsg " ldd $chklibcxxcompat | grep libc++"
+            if ldd $chklibcxxcompat | grep 'libc++' > /dev/null 2>& 1 ; then
+                ret=1
+            fi
+            ;;
+        esac
+    fi
+
+    logmsg " result: $ret"
+    if test $ret -eq 1 ; then
+        is_libcxxcompat=0
+        logmsg " is linked against not-compatible C++ run-time library"
+    else
+        logmsg " is linked against compatible C++ run-time library"
     fi
 }
 
@@ -608,6 +671,12 @@ check_library() {
                                     break 4
                                 fi
                             fi
+                            if test "x$checklibcxxcompat" = "xyes" ; then
+                                check_libcxxcompat $n
+                                if test $is_libcxxcompat -eq 0 ; then
+                                    break 4
+                                fi
+                            fi
                             found_dir=$l
                             found_lib=$j
                             if test "x$arch" = "xlinux"; then
@@ -665,14 +734,14 @@ check_library() {
 
         if (test "x$found_lib" = "x$flib" && test "x$shared" = "xno") || \
            test "x$maclib" = "xyes" ; then
-                found_raw_lib=${found_lib}
+            found_raw_lib=${found_lib}
             found_lib=${found_dir}/${found_lib}
             found_raw_dir=${found_dir}
             found_dir=""
         else
             found_raw_lib=${found_lib}
             if test ! "x$shared" = "xstaticonly" ; then
-              found_lib=`echo $found_lib | sed 's|^lib\(.*\)\..*|-l\1|'`
+                found_lib=`echo $found_lib | sed 's|^lib\(.*\)\..*|-l\1|'`
             fi
             found_raw_dir=${found_dir}
             if test ! "x$shared" = "xstaticonly" ; then
@@ -1519,7 +1588,7 @@ To reduce the output of configure by removing the trailing howto message, use:
 
 Use the flag:
 
-  --fail-on-missing 
+  --fail-on-missing
 
 to force configure to fail if a component that has been explicitly enabled
 is missing some dependencies and can not be built.
@@ -1541,7 +1610,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-lzma       Build included liblzma, or use system liblzma
   builtin-llvm       Build included libclang, or use system libclang
   cxx11              Build using C++11 compatible mode, requires gcc > 4.7.x or clang
-  libcxx11           Build using libc++, requires cxx11 option (MacOS X only, for the time being)
+  libcxx             Build using libc++, required by clang cxx11 option (MacOS X only, for the time being)
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
   cocoa              Use native Cocoa/Quartz graphics backend (MacOS X only)
@@ -1820,6 +1889,8 @@ solaris64CC5)
 macosx*)
    logmsg "Will check for compatible libraries"
    checklibcompat="yes"
+   logmsg "Will check for compatible C++ run-time libraries"
+   checklibcxxcompat="yes"
    if test "x$macosxvers" = "x"; then
       # get most recent SDK version
       macosxminor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
@@ -1902,7 +1973,7 @@ if test "x$platform" = "xlinux" ; then
        fi
        if lsb_release -d | grep -i 'mint' > /dev/null 2>& 1; then
           linuxdist="multiarch"
-       fi 
+       fi
     fi
 
     debmultiarch=
@@ -2418,10 +2489,10 @@ if test "x$enable_cxx11" = "xyes"; then
         result "no"
     else
         usecxx11="define"
-        # on OS X libcxx11 is required for C++11 support  with clang
+        # on OS X libcxx is required for C++11 support with clang
         # so turn the option on when using clang
         if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
-            enable_libcxx11="yes"
+            enable_libcxx="yes"
         fi
         result "yes"
     fi
@@ -2432,15 +2503,15 @@ fi
 ### echo %%% libc++ - compile and link using libc++ (need OSX and cxx11 option)
 #
 # needs gcc > 4.7.x or clang
-uselibcxx11="undef"
-if test "x$enable_cxx11" = "xyes" && test "x$enable_libcxx11" = "xyes" ; then
+uselibcxx="undef"
+if test "x$enable_cxx11" = "xyes" && test "x$enable_libcxx" = "xyes" ; then
     message "Checking whether libc++ is supported"
     check_cxxopt -std=c++11 -stdlib=libc++
     if test $cxxopt_result -eq 0 ; then
-        enable_libcxx11="no"
+        enable_libcxx="no"
         result "no"
     else
-        uselibcxx11="define"
+        uselibcxx="define"
         result "yes"
     fi
 fi
@@ -3209,10 +3280,13 @@ if test ! "x$enable_oracle" = "xno"; then
     check_library "libocci oraocci10" "$enable_shared" "$keeplibdir" \
        $ORACLE ${ORACLE:+$ORACLE/lib} $ORACLELIBDIR \
        /usr/local/lib /usr/lib /usr/lib/oracle/*/client/lib
-    oraclelib="$oraclelib $found_lib"
+    if test "x$found_lib" = "x"; then
+       oraclelib=""
+    elif test ! "x$oraclelib" = "x"; then
+        oraclelib="$oraclelib $found_lib"
+    fi
 
-    # space in "x " is intentional
-    if test "x$oracleincdir" = "x" || test "x$oraclelib" = "x "; then
+    if test "x$oracleincdir" = "x" || test "x$oraclelib" = "x"; then
         enable_oracle="no"
     fi
 fi
@@ -4362,7 +4436,7 @@ if test ! "x$enable_asimage" = "xno" ; then
     # If we didn't find the system libAfterImage, or the user didn't ask
     # for a system library, then see if we have various headers needed.
     # For Cocoa backend force libAfterImage builtin jpeg and png libs
-    # to avoid system versions based on X11. 
+    # to avoid system versions based on X11.
     if test "x$enable_builtin_afterimage" = "xyes" && test ! "x$enable_cocoa" = "xyes"; then
        check_header "jpeglib.h" "" \
           ${LIBJPEG:+$LIBJPEG/include} \
@@ -4749,7 +4823,7 @@ if test "x$enable_xrootd" = "xyes" ; then
    xrdcomm=""
    vercomm=""
    extraxrdflags=""
-   
+
    # Localize the version header; priority to specific inc and lib settings,
    # followed by global dir setting and standard paths
    xrdincone=""
@@ -4780,13 +4854,13 @@ if test "x$enable_xrootd" = "xyes" ; then
    if test ! "x$found_hdr" = "x" ; then
       xrdinc="$found_dir/$found_hdr"
       # Find out which path was the good one
-      if test "x$xrdinc" = "x$xrdincone" ; then 
+      if test "x$xrdinc" = "x$xrdincone" ; then
          xrdincdir="$found_dir"
          xrdlibdir="$xrdlibone"
-      elif test "x$xrdinc" = "x$xrdinctwoa" ; then 
+      elif test "x$xrdinc" = "x$xrdinctwoa" ; then
          xrdincdir="$xrdlibtwo/include/xrootd"
          xrdlibdir="$xrdlibtwo/lib"
-      elif test "x$xrdinc" = "x$xrdinctwob" ; then 
+      elif test "x$xrdinc" = "x$xrdinctwob" ; then
          xrdincdir="$xrdlibtwo/src"
          xrdlibdir="$xrdlibtwo/lib"
       else
@@ -4794,10 +4868,10 @@ if test "x$enable_xrootd" = "xyes" ; then
             rdir=`dirname $ll`
             xinca="$rdir/include/xrootd/XrdVersion.hh"
             xincb="$rdir/include/XrdVersion.hh"
-            if test "x$xrdinc" = "x$xinca" ; then 
+            if test "x$xrdinc" = "x$xinca" ; then
                xrdincdir="$rdir/include/xrootd"
                xrdlibdir="$ll"
-            elif test "x$xrdinc" = "x$xincb" ; then 
+            elif test "x$xrdinc" = "x$xincb" ; then
                xrdincdir="$rdir/include"
                xrdlibdir="$ll"
             fi
@@ -4883,7 +4957,7 @@ if test "x$enable_xrootd" = "xyes" ; then
    # Check libraries now
    hasxrdutils="no"
    libxrdoucbjr=""
-   # 
+   #
    # Release date of version 3.1.0 containing the new lib packaging
    decreftre=300000000
    decrefutils=300010000
@@ -4892,16 +4966,16 @@ if test "x$enable_xrootd" = "xyes" ; then
    fi
    decrefnetut=20100729
    if [ $decver -ge $decrefutils ] ; then
-      xrdlibs="libXrdMain libXrdUtils libXrdClient" 
+      xrdlibs="libXrdMain libXrdUtils libXrdClient"
       hasxrdutils="yes"
    elif [ $decver -ge $decrefnetut ] ; then
-      xrdlibs="libXrdNet libXrdNetUtil libXrdOuc libXrdSys libXrdClient libXrd" 
+      xrdlibs="libXrdNet libXrdNetUtil libXrdOuc libXrdSys libXrdClient libXrd"
    else
-      xrdlibs="libXrdNet libXrdOuc libXrdSys libXrdClient libXrd" 
+      xrdlibs="libXrdNet libXrdOuc libXrdSys libXrdClient libXrd"
    fi
    tmpxrdlibdir=""
    xrdlibext=""
-   for ll in $xrdlibs ; do 
+   for ll in $xrdlibs ; do
       #
       # Check if packaging has libXrdUtils or the old libXrdOuc, libXrdSys, ...
       check_library $ll "$enable_shared" "$xrdlibdir" "$xrdlibdir"
@@ -6118,7 +6192,7 @@ EOF
 
     # check for ABI version compiler flags
     case $compiler in
-	GCC) 
+	GCC)
 	    message "Checking ABI version compiler flags"
 	    abiversioncxxflag=""
 	    for flag in '-fabi-version=0' '-fabi-version=4'; do
@@ -7199,7 +7273,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildglite@|$enable_glite|"          \
     -e "s|@buildcocoa@|$enable_cocoa|"          \
     -e "s|@c++11@|$enable_cxx11|"               \
-    -e "s|@libc++11@|$enable_libcxx11|"         \
+    -e "s|@libc++@|$enable_libcxx|"             \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 
@@ -7253,7 +7327,7 @@ sed \
     -e "s|@hascocoa@|$hascocoa|"           \
     -e "s|@hasvc@|$hasvc|"                 \
     -e "s|@usec++11@|$usecxx11|"           \
-    -e "s|@uselibc++11@|$uselibcxx11|"     \
+    -e "s|@uselibc++@|$uselibcxx|"         \
     -e "s|@hasllvm@|$hasllvm|"             \
     -e "s|@llvmdir@|$llvmdir|"             \
     -e "s|@setgcctoolchain@|$setgcctoolchain|" \

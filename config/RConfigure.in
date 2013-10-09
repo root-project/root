@@ -24,7 +24,7 @@
 #@hascocoa@ R__HAS_COCOA    /**/
 #@hasvc@ R__HAS_VC    /**/
 #@usec++11@ R__USE_CXX11    /**/
-#@uselibc++11@ R__USE_LIBCXX11    /**/
+#@uselibc++@ R__USE_LIBCXX    /**/
 #@hasllvm@ R__EXTERN_LLVMDIR @llvmdir@
 #@setgcctoolchain@ R__GCC_TOOLCHAIN @gcctoolchain@
 
