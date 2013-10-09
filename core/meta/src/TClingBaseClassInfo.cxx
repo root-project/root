@@ -454,13 +454,13 @@ long TClingBaseClassInfo::Offset(void * address) const
             PrintingPolicy Policy(fBaseInfo->GetDecl()->getASTContext().
                                   getPrintingPolicy());
             llvm::raw_string_ostream stream(buf);
-            ((clang::NamedDecl*)fBaseInfo->GetDecl())
+            ((const clang::NamedDecl*)fBaseInfo->GetDecl())
                ->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
             stream.flush();
             baseName = buf;
 
             buf.clear();
-            ((clang::NamedDecl*)fClassInfo->GetDecl())
+            ((const clang::NamedDecl*)fClassInfo->GetDecl())
                ->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
             stream.flush();
             derivedName = buf;
