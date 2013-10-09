@@ -509,7 +509,7 @@ inline Double_t TMath::Log10(Double_t x)
 inline Int_t TMath::Finite(Double_t x)
 #if defined(R__HPUX11)
    { return isfinite(x); }
-#elif defined(R__MACOSX) && defined(__arm__)
+#elif defined(R__MACOSX)
 #ifdef isfinite
    // from math.h
    { return isfinite(x); }
