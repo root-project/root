@@ -575,7 +575,7 @@ int getsocket(struct hostent *h, int port)
    localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
    localAddr.sin_port = htons(0);
   
-   rc = bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
+   rc = ::bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
    if(rc < 0) {
       perror("error ");
       return -1;
