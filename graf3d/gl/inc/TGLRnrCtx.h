@@ -14,6 +14,7 @@
 
 #include "Rtypes.h"
 #include "TGLStopwatch.h"
+#include <list>
 
 class TGLViewerBase;
 class TGLCamera;
@@ -31,11 +32,6 @@ class TGLRect;
 
 class GLUquadric;
 
-namespace std
-{
-   template<typename _Tp> class allocator;
-   template<typename _Tp, typename _Alc> class list;
-}
 
 /**************************************************************************/
 // TGLRnrCtx
@@ -92,7 +88,7 @@ private:
    TGLRnrCtx(const TGLRnrCtx&);            // Not implemented
    TGLRnrCtx& operator=(const TGLRnrCtx&); // Not implemented
 
-   typedef std::list<TGLColorSet*, std::allocator<TGLColorSet*> > lpTGLColorSet_t;
+   typedef std::list<TGLColorSet*> lpTGLColorSet_t;
 
 protected:
    TGLViewerBase  *fViewer;
