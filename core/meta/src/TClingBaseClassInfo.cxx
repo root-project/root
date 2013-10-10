@@ -470,7 +470,8 @@ long TClingBaseClassInfo::Offset(void * address) const
             derivedName = buf;
          }
          if (clang_val == -2) {
-            Error("TClingBaseClassInfo::Offset", "The class %s does not derive from the base %s.",
+            Error("TClingBaseClassInfo::Offset",
+                  "The class %s does not derive from the base %s.",
                   derivedName.Data(), baseName.Data());
          } else {
             // clang_val == -3
@@ -511,8 +512,8 @@ long TClingBaseClassInfo::Property() const
    const clang::CXXRecordDecl* BaseCRD
       = llvm::dyn_cast<CXXRecordDecl>(fBaseInfo->GetDecl());
    if (!CRD || !BaseCRD) {
-      Error("TClingBaseClassInfo::Property"
-            , "The derived class and the base class do not have a CXXRecordDecl.");
+      Error("TClingBaseClassInfo::Property",
+            "The derived class or the base class do not have a CXXRecordDecl.");
       return property;
    } 
 
