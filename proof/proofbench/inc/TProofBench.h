@@ -135,6 +135,7 @@ public:
    static void DrawCPU(const char *outfile, const char *opt = "std:", Bool_t verbose = kFALSE, Int_t dofit = 0);
    static void DrawDataSet(const char *outfile, const char *opt = "std:", const char *type = "mbs", Bool_t verbose = kFALSE);
    static void GetPerfSpecs(const char *path = ".", Int_t degfit = 1);
+   static void DrawEfficiency(const char *outfile, const char *opt = "", Bool_t verbose = kFALSE);
 
    static TList *GetGraphs() { return fgGraphs; }
 
