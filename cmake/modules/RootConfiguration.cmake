@@ -331,6 +331,8 @@ set(hascling ${has${cling}})
 set(haslzmacompression ${has${lzma}})
 set(hascocoa ${has${cocoa}})
 set(usec++11 ${has${c++11}})
+set(uselibc++ ${has${libcxx}})
+
 
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_SHOW_OPTIONS(features)
