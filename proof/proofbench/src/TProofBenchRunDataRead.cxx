@@ -228,10 +228,14 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
    Int_t npad = 1; //pad number
 
    Int_t nnodes = fNodes->GetNNodes(); // Number of machines
+   Int_t ncores = fNodes->GetNCores(); // Number of cores
    
    Bool_t drawpf = kFALSE;
    Double_t ymi = -1., ymx = -1., emx =- 1, ymiio = -1., ymxio = -1., mbmx = -1.;
    for (Int_t nactive = start; nactive <= stop; nactive += step) {
+
+      // For CPU effectiveness (ok for lite; should do it properly for standard clusters)
+      Int_t ncoren = (nactive < ncores) ? nactive : ncores;
 
       // Actvate the wanted workers
       Int_t nw = -1;
@@ -397,7 +401,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
             // Calculate and fill CPU efficiency
             Float_t qr_cpu_eff = -1.;
             if (qr_proc > 0.) {
-               qr_cpu_eff = queryresult->GetUsedCPU() / nactive / qr_proc ;
+               qr_cpu_eff = queryresult->GetUsedCPU() / ncoren / qr_proc ;
                fProfile_cpu_eff->Fill(nactive, qr_cpu_eff);
                Printf("cpu_eff: %f", qr_cpu_eff);
             }
