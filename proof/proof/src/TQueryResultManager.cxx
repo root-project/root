@@ -660,12 +660,15 @@ Bool_t TQueryResultManager::FinalizeQuery(TProofQueryResult *pq,
               "query %d: unknown exit status (%d)", qn, player->GetExitStatus());
    }
 
-   // Fill some variables; in the CPU time we include also the time used on the
-   // master fro preparing and merging
+   // Fill some variables; in the CPU time we do not include anymore the time
+   // used on the master for preparing and merging, because we want to measure
+   // the efficiency or farction of time useful for work doen by workers
    PDB(kGlobal, 1)
       Info("FinalizeQuery", "cpu: %.4f, saved: %.4f, master: %.4f",
                             cpu, pq->GetUsedCPU() ,GetCpuTime());
-   pq->SetProcessInfo(np, cpu - pq->GetUsedCPU() + GetCpuTime());
+//   pq->SetProcessInfo(np, cpu - pq->GetUsedCPU() + GetCpuTime());
+   // We take the difference because this is the total CPU time of the session
+   pq->SetProcessInfo(np, cpu - pq->GetUsedCPU());
    pq->RecordEnd(st, out);
 
    // Save the logs into the query result instance
