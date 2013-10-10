@@ -87,7 +87,7 @@ TGQuartz::TGQuartz()
    if (!TTF::IsInitialized())
       TTF::Init();
 
-   //I do not know why TTF::Init returns void and I have to check fgInit again.
+   //I do not know why TTF::Init returns void and I have to check IsInitialized() again.
    if (!TTF::IsInitialized())
       Error("TGQuartz", "TTF::Init() failed");
 
@@ -104,7 +104,7 @@ TGQuartz::TGQuartz(const char *name, const char *title)
    if (!TTF::IsInitialized())
       TTF::Init();
 
-   //I do not know why TTF::Init returns void and I have to check fgInit again.
+   //I do not know why TTF::Init returns void and I have to check IsInitialized() again.
    if (!TTF::IsInitialized())
       Error("TGQuartz", "TTF::Init() failed");
 
@@ -576,7 +576,7 @@ void TGQuartz::SetTextSize(Float_t textsize)
       Error("SetTextSize", "TTF is not initialized");
       return;
    }
-
+   
    TTF::SetTextSize(textsize);
 }
 

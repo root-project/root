@@ -12,6 +12,7 @@
 #ifndef ROOT_FontCache
 #define ROOT_FontCache
 
+#include <string>
 #include <vector>
 #include <list>
 #include <map>
@@ -101,7 +102,10 @@ private:
    };
 
    std::list<FontList> fFontLists;//list of "lists" of fonts :)
-   FontList fDummyList;   
+   FontList fDummyList;
+   
+   typedef std::map<std::string, std::string> PSNameMap_t;
+   PSNameMap_t fXLFDtoPostscriptNames;
 
    FontCache(const FontCache &rhs);
    FontCache &operator = (const FontCache &rhs);

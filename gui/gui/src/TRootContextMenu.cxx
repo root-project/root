@@ -48,6 +48,7 @@
 #include "TClassMenuItem.h"
 #include "TObjectSpy.h"
 #include "KeySymbols.h"
+#include "RConfigure.h"
 
 enum EContextMenu {
    kToggleStart       = 1000, // first id of toggle menu items
@@ -116,6 +117,23 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
 
    xx = topx + x + 1;
    yy = topy + y + 1;
+   
+#ifdef R__HAS_COCOA
+   //Context menu must be transient for a canvas, otherwise it's possible
+   //to break the z-order (for example, using alt-tab to switch between
+   //different aplications). This hint works ONLY for canvas though
+   //(otherwise selected canvas is null).
+   TGWindow *parent = 0;
+   if (TVirtualPad *pad = fContextMenu->GetSelectedCanvas())
+      parent = dynamic_cast<TGWindow *>(pad->GetCanvasImp());
+   else if ((pad = fContextMenu->GetSelectedPad()) && pad->GetCanvasImp())
+      parent = dynamic_cast<TGWindow *>(pad->GetCanvasImp());
+   else if (TBrowser * const browser = fContextMenu->GetBrowser())
+      parent = dynamic_cast<TGWindow *>(browser->GetBrowserImp());
+   
+   if (parent)
+      gVirtualX->SetWMTransientHint(GetId(), parent->GetId());
+#endif
 
    PlaceMenu(xx, yy, kTRUE, kTRUE);
    // add some space for the right-side '?' (help)

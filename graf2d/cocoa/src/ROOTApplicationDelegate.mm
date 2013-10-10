@@ -33,7 +33,7 @@
    //alt-tab back and ... popup or menu is now behind the main window.
    //I have to save/restore this z-stack order here.
 
-   //Popups were fixed using transient hint, noop now.
+   //Popups were fixed using transient hint, noop now
    (void) aNotification;
 }
 
@@ -64,6 +64,5 @@
    [self performSelector : @selector(quitROOT) withObject : nil afterDelay : 0.1];
    return NSTerminateCancel;
 }
-
 
 @end
