@@ -100,9 +100,6 @@ const Double_t maxRange = 5;
 const Double_t minRebin = 3;
 const Double_t maxRebin = 7;
 
-const int minBinValue = 1;
-const int maxBinValue = 10;
-
 const int nEvents = 1000;
 const int numberOfBins = 10;
 
