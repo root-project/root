@@ -231,7 +231,7 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClas
                      }
                   }
                }
-            }   
+            }
          }
       }
       if (!WFD) {
