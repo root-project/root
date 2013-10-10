@@ -63,7 +63,7 @@ TProofBenchRunCPU::TProofBenchRunCPU(TPBHistType *histtype, Int_t nhists,
                     fNodes(nodes), fListPerfPlots(0),
                     fCanvas(0), fProfile_perfstat_event(0), fHist_perfstat_event(0),
                     fProfile_perfstat_evtmax(0), fNorm_perfstat_evtmax(0),
-                    fProfile_queryresult_event(0), fNorm_queryresult_event(0),
+                    fProfile_queryresult_event(0), fNorm_queryresult_event(0), fProfile_cpu_eff(0),
                     fProfLegend(0), fNormLegend(0), fName(0)
 {
    // Default constructor
@@ -211,6 +211,20 @@ void TProofBenchRunCPU::BuildHistos(Int_t start, Int_t stop, Int_t step, Bool_t 
    }
    fListPerfPlots->Add(fNorm_queryresult_event);
    fNormLegend->AddEntry(fNorm_queryresult_event, "Average");
+
+   // Book CPU efficiency profile
+   name.Form("Prof_%s_CPU_eff_%s", namelab.Data(), sellab.Data());
+   title.Form("Profile %s CPU efficiency - %s", namelab.Data(), sellab.Data());
+   fProfile_cpu_eff = new TProfile(name, title, ndiv, ns_min, ns_max);
+   fProfile_cpu_eff->SetDirectory(fDirProofBench);
+   fProfile_cpu_eff->GetYaxis()->SetTitle("Efficiency");
+   fProfile_cpu_eff->GetXaxis()->SetTitle(axtitle);
+   fProfile_cpu_eff->SetMarkerStyle(22);
+   if ((o = fListPerfPlots->FindObject(name))) {
+      fListPerfPlots->Remove(o);
+      delete o;
+   }
+   fListPerfPlots->Add(fProfile_cpu_eff);
 }
 
 //______________________________________________________________________________
@@ -442,6 +456,7 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
          const char *drawopt = t ? "LSAME" : "L";
          TQueryResult *queryresult = fProof->GetQueryResult();
          if (queryresult) {
+            queryresult->Print("F");
             TDatime qr_start = queryresult->GetStartTime();
             TDatime qr_end = queryresult->GetEndTime();
             Float_t qr_proc = queryresult->GetProcTime();
@@ -451,6 +466,14 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
             // Calculate event rate
             Double_t qr_eventrate = qr_entries / Double_t(qr_proc);
             if (qr_eventrate > emx) emx = qr_eventrate;
+
+            // Calculate and fill CPU efficiency
+            Float_t qr_cpu_eff = -1.;
+            if (qr_proc > 0.) {
+               qr_cpu_eff = queryresult->GetUsedCPU() / nactive / qr_proc ;
+               fProfile_cpu_eff->Fill(nactive, qr_cpu_eff);
+               Printf("cpu_eff: %f", qr_cpu_eff);
+            }
 
             // Fill and draw
             fProfile_queryresult_event->Fill(nactive, qr_eventrate);
@@ -473,8 +496,9 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
             if (ymx < 0.) ymx = y1 + dy;
             if (fNorm_queryresult_event->GetBinContent(nactive) > ymx)
                ymx = fNorm_queryresult_event->GetBinContent(nactive) * 1.5;
-//            fNorm_queryresult_event->SetMaximum(ymx);
-            fNorm_queryresult_event->SetMinimum(ymi);
+            fNorm_queryresult_event->SetMaximum(ymx);
+//            fNorm_queryresult_event->SetMinimum(ymi);
+            fNorm_queryresult_event->SetMinimum(0.);
             fCanvas->cd(npad+1);
             fNorm_queryresult_event->Draw(drawopt);
             fNormLegend->Draw();

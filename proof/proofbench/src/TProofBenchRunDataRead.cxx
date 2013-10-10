@@ -69,7 +69,7 @@ TProofBenchRunDataRead::TProofBenchRunDataRead(TProofBenchDataSet *pbds, TPBRead
                          fProfile_queryresult_event(0), fNorm_queryresult_event(0),
                          fProfile_perfstat_IO(0), fHist_perfstat_IO(0),
                          fProfile_perfstat_IOmax(0),
-                         fProfile_queryresult_IO(0), fNorm_queryresult_IO(0),
+                         fProfile_queryresult_IO(0), fNorm_queryresult_IO(0), fProfile_cpu_eff(0),
                          fProfLegend_evt(0), fNormLegend_evt(0), fProfLegend_mb(0), fNormLegend_mb(0),
                          fCPerfProfiles(0), fName(0)
 {
@@ -393,6 +393,14 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
             Long64_t qr_bytes = queryresult->GetBytes();
 
             Long64_t qr_entries = queryresult->GetEntries();
+
+            // Calculate and fill CPU efficiency
+            Float_t qr_cpu_eff = -1.;
+            if (qr_proc > 0.) {
+               qr_cpu_eff = queryresult->GetUsedCPU() / nactive / qr_proc ;
+               fProfile_cpu_eff->Fill(nactive, qr_cpu_eff);
+               Printf("cpu_eff: %f", qr_cpu_eff);
+            }
 
             // Calculate event rate, fill and draw
             Double_t qr_eventrate=0;
@@ -977,4 +985,18 @@ void TProofBenchRunDataRead::BuildHistos(Int_t start, Int_t stop, Int_t step, Bo
    }
    fListPerfPlots->Add(fNorm_queryresult_IO);
    fNormLegend_mb->AddEntry(fNorm_queryresult_IO, "Average");
+
+   // Book CPU efficiency profile
+   name.Form("Prof_%s_CPU_eff_%s", namelab.Data(), sellab.Data());
+   title.Form("Profile %s CPU efficiency - %s", namelab.Data(), sellab.Data());
+   fProfile_cpu_eff = new TProfile(name, title, ndiv, ns_min, ns_max);
+   fProfile_cpu_eff->SetDirectory(fDirProofBench);
+   fProfile_cpu_eff->GetYaxis()->SetTitle("Efficiency");
+   fProfile_cpu_eff->GetXaxis()->SetTitle(axtitle);
+   fProfile_cpu_eff->SetMarkerStyle(22);
+   if ((o = fListPerfPlots->FindObject(name))) {
+      fListPerfPlots->Remove(o);
+      delete o;
+   }
+   fListPerfPlots->Add(fProfile_cpu_eff);
 }
