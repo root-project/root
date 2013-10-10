@@ -85,6 +85,8 @@ protected:
    static TF1 *fgFp2;                 // Simple 2nd degree polynomial
    static TF1 *fgFp2n;                // Normalized 2nd degree
 
+   static TList *fgGraphs;        // List of TGraphErrors created by Draw actions
+
    static void AssertFittingFun(Double_t mi, Double_t mx);
 
 public:
@@ -133,6 +135,8 @@ public:
    static void DrawCPU(const char *outfile, const char *opt = "std:", Bool_t verbose = kFALSE, Int_t dofit = 0);
    static void DrawDataSet(const char *outfile, const char *opt = "std:", const char *type = "mbs", Bool_t verbose = kFALSE);
    static void GetPerfSpecs(const char *path = ".", Int_t degfit = 1);
+
+   static TList *GetGraphs() { return fgGraphs; }
 
    ClassDef(TProofBench, 0)   // Steering class for PROOF benchmarks
 };

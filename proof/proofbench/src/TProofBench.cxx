@@ -56,6 +56,8 @@ TF1 *TProofBench::fgFp1n = 0;
 TF1 *TProofBench::fgFp2 = 0;
 TF1 *TProofBench::fgFp2n = 0;
 
+TList *TProofBench::fgGraphs = new TList;
+
 //_____________________________________________________________________
 Double_t funp1(Double_t *xx, Double_t *par)
 {
@@ -398,7 +400,8 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    TH1F *hgr = new TH1F("Graph-CPU"," CPU speed-up", nbins*4, xmin, xmax);
    hgr->SetMaximum(ymx + (ymx-ymi)*0.2);
    hgr->SetMinimum(0);
-   if (isNorm) hgr->SetMinimum(ymi - (ymx-ymi)*0.5);
+//   if (isNorm) hgr->SetMinimum(ymi - (ymx-ymi)*0.5);
+   if (isNorm) hgr->SetMaximum(ymx*1.2);
    hgr->SetDirectory(0);
    hgr->SetStats(0);
 //   hgr->CenterTitle(true);
@@ -513,6 +516,8 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    }
    // Close the file
    fout->Close();
+   if (grav) fgGraphs->Add(grav);
+   if (grmx) fgGraphs->Add(grmx);
 }
 
 //______________________________________________________________________________
@@ -546,6 +551,7 @@ TGraphErrors *TProofBench::GetGraph(TDirectory *d, const char *pfn, Int_t &nb,
 
    nb = pf->GetNbinsX();
    TGraphErrors *gr = new TGraphErrors(nb);
+   gr->SetName(TString::Format("Graph_%s", pfn));
    Double_t xx, ex, yy, ey;
    ymi = pf->GetBinContent(1);
    ymx = ymi;
@@ -923,7 +929,8 @@ void TProofBench::DrawDataSet(const char *outfile,
    TH1F *hgr = new TH1F("Graph-DataSet"," Data Read speed-up", nbins*4, xmin, xmax);
    hgr->SetMaximum(ymx + (ymx-ymi)*0.2);
    hgr->SetMinimum(0);
-   if (isNorm) hgr->SetMinimum(ymi - (ymx-ymi)*0.5);
+//   if (isNorm) hgr->SetMinimum(ymi - (ymx-ymi)*0.5);
+   if (isNorm) hgr->SetMaximum(ymx*1.2);
    hgr->SetDirectory(0);
    hgr->SetStats(0);
    hgr->GetXaxis()->SetTitle(pf->GetXaxis()->GetTitle());
@@ -992,8 +999,10 @@ void TProofBench::DrawDataSet(const char *outfile,
       }
       printf("* ************************************************************ *\n");
    }
-
+   // Close the file
    fout->Close();
+   if (grav) fgGraphs->Add(grav);
+   if (grmx) fgGraphs->Add(grmx);
 }
 
 //______________________________________________________________________________
