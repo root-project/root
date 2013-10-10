@@ -62,14 +62,15 @@ static const string indent_string("   ");
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
                                          const TClingClassInfo* ci)
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
-     fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L), fClassInfoOwnership(false)
+     fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L), fClassInfoOwnership(true)
 {
+   // Constructs a base class iterator on ci; ci == 0 means global scope (which
+   // is meaningless). The derived class info passed in as ci is copied.
    if (!ci) {
       fClassInfo = new TClingClassInfo(interp);
-      fClassInfoOwnership = true;
       return;
    }
-   fClassInfo = ci;
+   fClassInfo = new TClingClassInfo(*ci);
    if (!fClassInfo->GetDecl()) {
       return;
    }
@@ -90,6 +91,8 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
      fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L), fClassInfoOwnership(false)
 {
+   // Constructs a single base class base (no iterator) of derived; derived must be != 0.
+   // The derived class info is referenced during the lifetime of the TClingBaseClassInfo.
    if (!derived->GetDecl()) {
       return;
    }
@@ -120,9 +123,10 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
 TClingBaseClassInfo::TClingBaseClassInfo(const TClingBaseClassInfo& rhs)
    : fInterp(rhs.fInterp), fClassInfo(0), fFirstTime(rhs.fFirstTime),
      fDescend(rhs.fDescend), fDecl(rhs.fDecl), fIter(rhs.fIter), fBaseInfo(0),
-     fIterStack(rhs.fIterStack), fOffset(rhs.fOffset), fClassInfoOwnership(false)
+     fIterStack(rhs.fIterStack), fOffset(rhs.fOffset), fClassInfoOwnership(true)
 {
-   fClassInfo = rhs.fClassInfo;
+   // Copies a base class info including the base and derived class infos.
+   fClassInfo = new TClingClassInfo(*rhs.fClassInfo);
    fBaseInfo = new TClingClassInfo(*rhs.fBaseInfo);
 }
 
