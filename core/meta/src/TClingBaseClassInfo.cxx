@@ -62,10 +62,11 @@ static const string indent_string("   ");
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
                                          const TClingClassInfo* ci)
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
-     fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L)
+     fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L), fClassInfoOwnership(false)
 {
    if (!ci) {
       fClassInfo = new TClingClassInfo(interp);
+      fClassInfoOwnership = true;
       return;
    }
    fClassInfo = ci;
@@ -87,7 +88,7 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
                                          const TClingClassInfo* derived,
                                          TClingClassInfo* base)
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
-     fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L)
+     fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L), fClassInfoOwnership(false)
 {
    if (!derived->GetDecl()) {
       return;
@@ -119,9 +120,9 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
 TClingBaseClassInfo::TClingBaseClassInfo(const TClingBaseClassInfo& rhs)
    : fInterp(rhs.fInterp), fClassInfo(0), fFirstTime(rhs.fFirstTime),
      fDescend(rhs.fDescend), fDecl(rhs.fDecl), fIter(rhs.fIter), fBaseInfo(0),
-     fIterStack(rhs.fIterStack), fOffset(rhs.fOffset)
+     fIterStack(rhs.fIterStack), fOffset(rhs.fOffset), fClassInfoOwnership(false)
 {
-   fClassInfo = new TClingClassInfo(*rhs.fClassInfo);
+   fClassInfo = rhs.fClassInfo;
    fBaseInfo = new TClingClassInfo(*rhs.fBaseInfo);
 }
 
@@ -140,6 +141,7 @@ TClingBaseClassInfo& TClingBaseClassInfo::operator=(
       fBaseInfo = new TClingClassInfo(*rhs.fBaseInfo);
       fIterStack = rhs.fIterStack;
       fOffset = rhs.fOffset;
+      fClassInfoOwnership = true;
    }
    return *this;
 }
@@ -220,12 +222,13 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClas
       for (cling::Transaction::const_iterator I = Tp->decls_begin(),
            E = Tp->decls_end(); !WFD && I != E; ++I) {
          if (I->m_Call == cling::Transaction::kCCIHandleTopLevelDecl) {
-         const FunctionDecl* createWFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin());
-            if (createWFD && isa<TranslationUnitDecl>(createWFD->getDeclContext())) {
-               DeclarationName FName = createWFD->getDeclName();
-               if (const IdentifierInfo* FII = FName.getAsIdentifierInfo()) {
-                  if (FII->getName() == wrapper_name) {
-                     WFD = createWFD;
+            if (const FunctionDecl* createWFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin())) {
+               if (createWFD && isa<TranslationUnitDecl>(createWFD->getDeclContext())) {
+                  DeclarationName FName = createWFD->getDeclName();
+                  if (const IdentifierInfo* FII = FName.getAsIdentifierInfo()) {
+                     if (FII->getName() == wrapper_name) {
+                        WFD = createWFD;
+                     }
                   }
                }
             }
@@ -441,11 +444,12 @@ long TClingBaseClassInfo::Offset(void * address) const
    if (!(Property() & kIsVirtualBase)) {
       clang::ASTContext& Context = Base->getASTContext();
       const clang::CXXRecordDecl* RD = llvm::dyn_cast<clang::CXXRecordDecl>(fDecl);
-      /*const clang::ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
-      int64_t offset = Layout.getBaseClassOffset(Base).getQuantity(); */
+      if (!RD) {
+         // No RecordDecl for the class.
+         return -1;
+      }
       long clang_val = computeOffsetHint(Context, Base, RD).getQuantity();
       if (clang_val == -2 || clang_val == -3) {
-         clang_val = -1;
          TString baseName;
          TString derivedName;
          {
@@ -466,7 +470,8 @@ long TClingBaseClassInfo::Offset(void * address) const
             derivedName = buf;
          }
          if (clang_val == -2) {
-            Error("TClingBaseClassInfo::Offset", "The class %s does not derive from the base %s.",
+            Error("TClingBaseClassInfo::Offset",
+                  "The class %s does not derive from the base %s.",
                   derivedName.Data(), baseName.Data());
          } else {
             // clang_val == -3
@@ -474,6 +479,7 @@ long TClingBaseClassInfo::Offset(void * address) const
                   "There are multiple paths from derived class %s to base class %s.",
                   derivedName.Data(), baseName.Data());
          }
+         clang_val = -1;
       }
       return clang_val;
    }
@@ -496,10 +502,20 @@ long TClingBaseClassInfo::Property() const
       return 0L;
    }
    long property = 0L;
+
+   if (fDecl == fClassInfo->GetDecl()) {
+      property |= kIsDirectInherit;
+   }
+
    const clang::CXXRecordDecl* CRD
       = llvm::dyn_cast<CXXRecordDecl>(fDecl);
    const clang::CXXRecordDecl* BaseCRD
       = llvm::dyn_cast<CXXRecordDecl>(fBaseInfo->GetDecl());
+   if (!CRD || !BaseCRD) {
+      Error("TClingBaseClassInfo::Property",
+            "The derived class or the base class do not have a CXXRecordDecl.");
+      return property;
+   } 
 
    clang::CXXBasePaths Paths(/*FindAmbiguities=*/false, /*RecordPaths=*/true,
                              /*DetectVirtual=*/true);
@@ -511,9 +527,7 @@ long TClingBaseClassInfo::Property() const
    if (Paths.getDetectedVirtual()) {
       property |= kIsVirtualBase;
    }
-   if (fDecl == fClassInfo->GetDecl()) {
-      property |= kIsDirectInherit;
-   }
+   
    clang::AccessSpecifier AS = clang::AS_public;
    // Derived: public Mid; Mid : protected Base: Derived inherits protected Base?
    for (clang::CXXBasePaths::const_paths_iterator IB = Paths.begin(), EB = Paths.end();
