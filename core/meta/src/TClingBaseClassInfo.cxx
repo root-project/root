@@ -131,7 +131,8 @@ TClingBaseClassInfo& TClingBaseClassInfo::operator=(
 {
    if (this != &rhs) {
       fInterp = rhs.fInterp;
-      delete fClassInfo;
+      if (fClassInfoOwnership)
+         delete fClassInfo;
       fClassInfo = new TClingClassInfo(*rhs.fClassInfo);
       fFirstTime = rhs.fFirstTime;
       fDescend = rhs.fDescend;

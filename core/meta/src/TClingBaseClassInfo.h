@@ -56,7 +56,10 @@ private:
 
 public:
 
-   ~TClingBaseClassInfo() { delete fBaseInfo; }
+   ~TClingBaseClassInfo() {
+      if (fClassInfoOwnership) delete fClassInfo;
+      delete fBaseInfo;
+   }
 
    TClingBaseClassInfo(cling::Interpreter*, const TClingClassInfo*);
    TClingBaseClassInfo(cling::Interpreter*, const TClingClassInfo* derived, TClingClassInfo* base);
