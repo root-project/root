@@ -37,6 +37,7 @@ private:
    Int_t   fNNodes;       // Number of nodes
    Int_t   fNWrks;        // Number of workers
    Int_t   fNActiveWrks;  // Number of active workers
+   Int_t   fNCores;       // Number of total cores
 
    void Build();
 public:
@@ -48,6 +49,7 @@ public:
    Int_t GetMaxWrksPerNode() const { return fMaxWrksNode; }
    Int_t GetNWorkersCluster() const { return fNWrks; }
    Int_t GetNNodes() const { return fNNodes; }
+   Int_t GetNCores() const { return fNCores; }
    Int_t GetMinWrksPerNode() const { return fMinWrksNode; }
    Int_t GetNActives() const { return fNActiveWrks; }
    TMap* GetMapOfNodes() const { return fNodes; }

@@ -29,7 +29,7 @@ ClassImp(TProofNodes)
 TProofNodes::TProofNodes(TProof* proof)
             : fProof(proof), fNodes(0), fActiveNodes(0),
               fMaxWrksNode(-1), fMinWrksNode(-1),
-              fNNodes(0), fNWrks(0), fNActiveWrks(0)  
+              fNNodes(0), fNWrks(0), fNActiveWrks(0), fNCores(0) 
 {
    // Constructor
 
@@ -105,6 +105,10 @@ void TProofNodes::Build()
       node = dynamic_cast<TList *>(fNodes->GetValue(key));
       if (node) {
          fNNodes++;
+         // Number of cores
+         si = (TSlaveInfo *) node->First();
+         fNCores += si->fSysInfo.fCpus;
+         // Number of workers
          fNWrks += node->GetSize();
          if (fMinWrksNode == -1 || (node->GetSize() < fMinWrksNode)) {
             fMinWrksNode = node->GetSize();
