@@ -145,7 +145,7 @@ public:
    static MacOSXSystem *fgInstance;
 };
 
-MacOSXSystem *MacOSXSystem::fgInstance = nullptr;
+MacOSXSystem *MacOSXSystem::fgInstance = 0;
 
 extern "C" {
 
@@ -156,7 +156,7 @@ void TMacOSXSystem_ReadCallback(CFFileDescriptorRef fdref, CFOptionFlags /*callB
    const int nativeFD = CFFileDescriptorGetNativeDescriptor(fdref);
 
    //We do not need this descriptor anymore.
-   assert(MacOSXSystem::fgInstance != nullptr && "TMacOSXSystem_ReadCallback, MacOSXSystem's singleton is null");   
+   assert(MacOSXSystem::fgInstance != 0 && "TMacOSXSystem_ReadCallback, MacOSXSystem's singleton is null");
    MacOSXSystem::fgInstance->UnregisterFileDescriptor(fdref);
    
    CFFileDescriptorInvalidate(fdref);
@@ -174,7 +174,7 @@ void TMacOSXSystem_WriteCallback(CFFileDescriptorRef fdref, CFOptionFlags /*call
    const int nativeFD = CFFileDescriptorGetNativeDescriptor(fdref);
 
    //We do not need this descriptor anymore.
-   assert(MacOSXSystem::fgInstance != nullptr && "TMacOSXSystem_WriteCallback, MacOSXSystem's singleton is null");   
+   assert(MacOSXSystem::fgInstance != 0 && "TMacOSXSystem_WriteCallback, MacOSXSystem's singleton is null");
    MacOSXSystem::fgInstance->UnregisterFileDescriptor(fdref);
 
    CFFileDescriptorInvalidate(fdref);
