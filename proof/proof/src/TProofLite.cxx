@@ -982,6 +982,7 @@ void TProofLite::SetQueryRunning(TProofQueryResult *pq)
    pq->SetRunning(startlog, parlist, GetParallel());
 
    // Bytes and CPU at start (we will calculate the differential at end)
+   AskStatistics();
    pq->SetProcessInfo(pq->GetEntries(), GetCpuTime(), GetBytesRead());
 }
 
