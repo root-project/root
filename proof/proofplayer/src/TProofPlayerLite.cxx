@@ -127,6 +127,8 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
    TPerfStats::Setup(fInput);
    TPerfStats::Start(fInput, fOutput);
 
+   TStopwatch elapsed;
+
    TMessage mesg(kPROOF_PROCESS);
    TString fn(gSystem->BaseName(selector_file));
 
@@ -281,10 +283,11 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
          // The progress timer will now stop itself at the next call
          fPacketizer->SetBit(TVirtualPacketizer::kIsDone);
          // Store process info
+         elapsed.Stop();
          if (fQuery)
             fQuery->SetProcessInfo(0, 0., fPacketizer->GetBytesRead(),
                                           fPacketizer->GetInitTime(),
-                                          fPacketizer->GetProcTime());
+                                          elapsed.RealTime());
       }
       StopFeedback();
 
