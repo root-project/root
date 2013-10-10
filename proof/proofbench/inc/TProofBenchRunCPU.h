@@ -72,6 +72,7 @@ private:
    TProfile    *fNorm_perfstat_evtmax;
    TProfile    *fProfile_queryresult_event;
    TProfile    *fNorm_queryresult_event;
+   TProfile    *fProfile_cpu_eff;
 
    TLegend     *fProfLegend;            // Legend for profiles
    TLegend     *fNormLegend;            // Legend for norms
