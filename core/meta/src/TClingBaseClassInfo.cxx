@@ -220,15 +220,16 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClas
       for (cling::Transaction::const_iterator I = Tp->decls_begin(),
            E = Tp->decls_end(); !WFD && I != E; ++I) {
          if (I->m_Call == cling::Transaction::kCCIHandleTopLevelDecl) {
-         const FunctionDecl* createWFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin());
-            if (createWFD && isa<TranslationUnitDecl>(createWFD->getDeclContext())) {
-               DeclarationName FName = createWFD->getDeclName();
-               if (const IdentifierInfo* FII = FName.getAsIdentifierInfo()) {
-                  if (FII->getName() == wrapper_name) {
-                     WFD = createWFD;
+            if (const FunctionDecl* createWFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin())) {
+               if (createWFD && isa<TranslationUnitDecl>(createWFD->getDeclContext())) {
+                  DeclarationName FName = createWFD->getDeclName();
+                  if (const IdentifierInfo* FII = FName.getAsIdentifierInfo()) {
+                     if (FII->getName() == wrapper_name) {
+                        WFD = createWFD;
+                     }
                   }
                }
-            }
+            }   
          }
       }
       if (!WFD) {
@@ -496,10 +497,20 @@ long TClingBaseClassInfo::Property() const
       return 0L;
    }
    long property = 0L;
+
+   if (fDecl == fClassInfo->GetDecl()) {
+      property |= kIsDirectInherit;
+   }
+
    const clang::CXXRecordDecl* CRD
       = llvm::dyn_cast<CXXRecordDecl>(fDecl);
    const clang::CXXRecordDecl* BaseCRD
       = llvm::dyn_cast<CXXRecordDecl>(fBaseInfo->GetDecl());
+   if (!CRD || !BaseCRD) {
+      Error("TClingBaseClassInfo::Property"
+            , "The derived class and the base class do not have a CXXRecordDecl.");
+      return property;
+   } 
 
    clang::CXXBasePaths Paths(/*FindAmbiguities=*/false, /*RecordPaths=*/true,
                              /*DetectVirtual=*/true);
@@ -511,9 +522,7 @@ long TClingBaseClassInfo::Property() const
    if (Paths.getDetectedVirtual()) {
       property |= kIsVirtualBase;
    }
-   if (fDecl == fClassInfo->GetDecl()) {
-      property |= kIsDirectInherit;
-   }
+   
    clang::AccessSpecifier AS = clang::AS_public;
    // Derived: public Mid; Mid : protected Base: Derived inherits protected Base?
    for (clang::CXXBasePaths::const_paths_iterator IB = Paths.begin(), EB = Paths.end();
