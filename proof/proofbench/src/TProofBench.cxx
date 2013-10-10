@@ -1002,6 +1002,121 @@ void TProofBench::DrawDataSet(const char *outfile,
 }
 
 //______________________________________________________________________________
+void TProofBench::DrawEfficiency(const char *outfile,
+                                 const char *opt, Bool_t verbose)
+{
+   // Draw the efficiency plot.
+   //  opt = 'cpu' or 'data' (default the first found)
+   //
+
+   // Get the TProfile an create the graphs
+   TFile *fout = TFile::Open(outfile, "READ");
+   if (!fout || (fout && fout->IsZombie())) {
+      ::Error("DrawEfficiency", "could not open file '%s' ...", outfile);
+      return;
+   }
+   
+   // Get description
+   TString description("<not available>");
+   TNamed *nmdesc = (TNamed *) fout->Get("PB_description");
+   if (nmdesc) description = nmdesc->GetTitle();
+
+   // Parse option
+   TString oo(opt), ln("CPU");
+   const char *dirs[4] = { "RunCPU", "RunCPUx", "RunDataRead", "RunDataReadx"};
+   const char *labs[4] = { "CPU", "CPU", "DataRead", "DataRead"};
+   Int_t fst = 0, lst = 3;
+   if (oo == "cpu") {
+      lst = 0;
+   } else if (oo == "cpux") {
+      fst = 1;
+      lst = 1;
+   } else if (oo.BeginsWith("data")) {
+      if (oo.EndsWith("x")) {
+         fst = 3;
+         lst = 3;
+      } else {
+         fst = 2;
+         lst = 2;
+      }
+   }
+   const char *dirn = 0;
+   TDirectory *d = 0;
+   for (Int_t i = fst; i <= lst; i++) {
+      if ((d = (TDirectory *) fout->Get(dirs[i]))) {
+         dirn = dirs[i];
+         ln = labs[i]; 
+         break;
+      }
+   }
+   if (!d && !dirn) {
+      ::Error("DrawEfficiency", "could not find directory ...");
+      fout->Close();
+      delete fout;
+      return;
+   }
+   d->cd();
+
+   TString hprof;
+   hprof.Form("Prof_%s_CPU_eff", ln.Data());
+
+   Double_t xmin = -1., xmax = -1.;
+   Int_t kmx = -1, nbins = -1;
+   Double_t ymx = -1., ymi = -1.;
+ 
+   TProfile *pf = 0;
+   TGraphErrors *gr = 0;
+   if (!(gr = GetGraph(d, hprof, nbins, xmin, xmax, ymi, ymx, kmx, pf))) {
+      ::Error("DrawEfficiency", "could not find '%s' ...", hprof.Data());
+      fout->Close();
+      delete fout;
+      return;
+   }
+
+   // Create the canvas
+   TCanvas *cpu = new TCanvas("efficiency", "efficiency vs wrks",204,69,1050,502);
+   cpu->Range(-3.106332,0.7490716,28.1362,1.249867);
+
+   TH1F *hgr = new TH1F("Graph-Efficiency","CPU effectiveness", nbins*4, xmin, xmax);
+   hgr->SetMaximum(1.2);
+   hgr->SetMinimum(0);
+   hgr->SetDirectory(0);
+   hgr->SetStats(0);
+   hgr->GetXaxis()->SetTitle(pf->GetXaxis()->GetTitle());
+   hgr->GetXaxis()->CenterTitle(true);
+   hgr->GetXaxis()->SetLabelSize(0.05);
+   hgr->GetXaxis()->SetTitleSize(0.06);
+   hgr->GetXaxis()->SetTitleOffset(0.62);
+   hgr->GetYaxis()->SetLabelSize(0.06);
+   hgr->GetYaxis()->SetTitleSize(0.08);
+   hgr->GetYaxis()->SetTitleOffset(0.52);
+   hgr->GetYaxis()->SetTitle("CPU effectiveness");
+
+   gr->SetFillColor(1);
+   gr->SetLineColor(13);
+   gr->SetMarkerColor(4);
+   gr->SetMarkerStyle(21);
+   gr->SetMarkerSize(1.2);
+   gr->SetHistogram(hgr);
+
+   if (verbose) gr->Print();
+   gr->Draw("alp");
+
+   // Notify the cluster performance parameters
+   printf("* ************************************************************ *\n");
+   printf("*                                                              *\r");
+   printf("* Cluster: %s\n", description.Data());
+   printf("* CPU effectiveness measurement:                               *\n");
+   printf("*                                                              *\r");
+   printf("*    effectiveness max:     %.3f (@ %d workers)\n", ymx, kmx);
+   printf("*                                                              *\r");
+   printf("* ************************************************************ *\n");
+   // Close the file
+   fout->Close();
+   if (gr) fgGraphs->Add(gr);
+}
+
+//______________________________________________________________________________
 Int_t TProofBench::ReleaseCache(const char *dset)
 {
    // Release memory cache for dataset 'dset'
