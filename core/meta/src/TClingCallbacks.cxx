@@ -455,7 +455,7 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
       // on pop it will try to go one level up, which we don't want.
       Sema::ContextRAII pushedDC(SemaRef, DC);
       R.addDecl(Result);
-      SemaRef.PushOnScopeChains(Result, SemaRef.TUScope, /*Add to ctx*/true);
+      //SemaRef.PushOnScopeChains(Result, SemaRef.TUScope, /*Add to ctx*/true);
       // Say that we can handle the situation. Clang should try to recover
       return true;
    }
@@ -523,7 +523,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
 
    Sema& SemaRef = R.getSema();
    ASTContext& C = SemaRef.getASTContext();
-   DeclContext* DC = C.getTranslationUnitDecl();
+   DeclContext* DC = SemaRef.CurContext;
    assert(DC && "Must not be null.");
 
 
@@ -546,20 +546,13 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
                                      /*TypeSourceInfo*/0, SC_None);
 
    if (Result) {
-      // Annotate the decl to give a hint in cling. FIXME: Current implementation
-      // is a gross hack, because TClingCallbacks shouldn't know about 
-      // EvaluateTSynthesizer at all!
-    
+      // Annotate the decl to give a hint in cling.
+      // FIXME: We should move this in cling, when we implement turning it on 
+      // and off.
       SourceRange invalidRange;
       Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__Auto"));
 
       R.addDecl(Result);
-      // Here we have the scope but we cannot do Sema::PushDeclContext, because
-      // on pop it will try to go one level up, which we don't want.
-      Sema::ContextRAII pushedDC(SemaRef, DC);
-      SemaRef.PushOnScopeChains(Result, SemaRef.TUScope, /*Add to ctx*/true);
-      // Put the decl in the transaction so that we can codegen.
-      SemaRef.Consumer.HandleTopLevelDecl(DeclGroupRef(Result));
       // Say that we can handle the situation. Clang should try to recover
       return true;
    }
