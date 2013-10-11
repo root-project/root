@@ -382,15 +382,6 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       fileSysName += plusplus;
       fileSysName.ReplaceAll("\\", "\\\\");
       fileSysName.ReplaceAll("\"", "\\\"");
-      TString tmpFileName = gSystem->TempDirectory();
-      tmpFileName += "/";
-      tmpFileName += gSystem->BaseName(filename);
-      tmpFileName += ".C";
-      {
-         std::ofstream wrapper(tmpFileName);
-         wrapper << 
-                 << fileSysName << "\");}\n";
-      }
       TString invoc("root.exe -l ");
       if (wantBatch) {
          invoc += "-b ";
