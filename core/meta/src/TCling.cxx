@@ -4385,6 +4385,14 @@ bool TCling::CallFunc_IsValid(CallFunc_t* func) const
 }
 
 //______________________________________________________________________________
+TInterpreter::CallFuncIFacePtr_t
+TCling::CallFunc_IFacePtr(CallFunc_t * func) const
+{
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   return f->IFacePtr();
+}
+
+//______________________________________________________________________________
 void TCling::CallFunc_ResetArg(CallFunc_t* func) const
 {
    TClingCallFunc* f = (TClingCallFunc*) func;

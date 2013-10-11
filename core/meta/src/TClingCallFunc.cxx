@@ -3193,20 +3193,7 @@ TClingCallFunc::EvaluateArgList(const string& ArgList)
 void
 TClingCallFunc::Exec(void* address, TInterpreterValue* interpVal/*=0*/)
 {
-   if (!IsValid()) {
-      Error("TClingCallFunc::Exec(address, interpVal)",
-            "Attempt to execute while invalid.");
-      return;
-   }
-   const FunctionDecl* decl = fMethod->GetMethodDecl();
-   map<const FunctionDecl*, void*>::iterator I =
-      wrapper_store.find(decl);
-   if (I != wrapper_store.end()) {
-      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
-   }
-   else {
-      fWrapper = make_wrapper();
-   }
+   IFacePtr();
    if (!fWrapper) {
       Error("TClingCallFunc::Exec(address, interpVal)",
             "Called with no wrapper, not implemented!");
@@ -3225,19 +3212,7 @@ TClingCallFunc::Exec(void* address, TInterpreterValue* interpVal/*=0*/)
 Long_t
 TClingCallFunc::ExecInt(void* address)
 {
-   if (!IsValid()) {
-      Error("TClingCallFunc::ExecInt", "Attempt to execute while invalid.");
-      return 0L;
-   }
-   const FunctionDecl* decl = fMethod->GetMethodDecl();
-   map<const FunctionDecl*, void*>::iterator I =
-      wrapper_store.find(decl);
-   if (I != wrapper_store.end()) {
-      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
-   }
-   else {
-      fWrapper = make_wrapper();
-   }
+   IFacePtr();
    if (!fWrapper) {
       Error("TClingCallFunc::ExecInt",
             "Called with no wrapper, not implemented!");
@@ -3249,6 +3224,7 @@ TClingCallFunc::ExecInt(void* address)
       // Sometimes we are called on a function returning void!
       return 0L;
    }
+   const FunctionDecl* decl = fMethod->GetMethodDecl();
    if (decl->getResultType().getCanonicalType()->isRecordType())
       ((TCling*)gCling)->RegisterTemporary(ret);
    return static_cast<Long_t>(sv_to_long_long(ret));
@@ -3257,19 +3233,7 @@ TClingCallFunc::ExecInt(void* address)
 long long
 TClingCallFunc::ExecInt64(void* address)
 {
-   if (!IsValid()) {
-      Error("TClingCallFunc::ExecInt64", "Attempt to execute while invalid.");
-      return 0LL;
-   }
-   const FunctionDecl* decl = fMethod->GetMethodDecl();
-   map<const FunctionDecl*, void*>::iterator I =
-      wrapper_store.find(decl);
-   if (I != wrapper_store.end()) {
-      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
-   }
-   else {
-      fWrapper = make_wrapper();
-   }
+   IFacePtr();
    if (!fWrapper) {
       Error("TClingCallFunc::ExecInt64",
             "Called with no wrapper, not implemented!");
@@ -3281,6 +3245,7 @@ TClingCallFunc::ExecInt64(void* address)
       // Sometimes we are called on a function returning void!
       return 0LL;
    }
+   const FunctionDecl* decl = fMethod->GetMethodDecl();
    if (decl->getResultType().getCanonicalType()->isRecordType())
       ((TCling*)gCling)->RegisterTemporary(ret);
    return sv_to_long_long(ret);
@@ -3289,19 +3254,7 @@ TClingCallFunc::ExecInt64(void* address)
 double
 TClingCallFunc::ExecDouble(void* address)
 {
-   if (!IsValid()) {
-      Error("TClingCallFunc::ExecDouble", "Attempt to execute while invalid.");
-      return 0.0;
-   }
-   const FunctionDecl* decl = fMethod->GetMethodDecl();
-   map<const FunctionDecl*, void*>::iterator I =
-      wrapper_store.find(decl);
-   if (I != wrapper_store.end()) {
-      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
-   }
-   else {
-      fWrapper = make_wrapper();
-   }
+   IFacePtr();
    if (!fWrapper) {
       Error("TClingCallFunc::ExecDouble",
             "Called with no wrapper, not implemented!");
@@ -3319,20 +3272,7 @@ TClingCallFunc::ExecDouble(void* address)
 void
 TClingCallFunc::ExecWithReturn(void* address, void* ret/*= 0*/)
 {
-   if (!IsValid()) {
-      Error("TClingCallFunc::ExecWithReturn(address, ret)",
-            "Attempt to execute while invalid.");
-      return;
-   }
-   const FunctionDecl* decl = fMethod->GetMethodDecl();
-   map<const FunctionDecl*, void*>::iterator I =
-      wrapper_store.find(decl);
-   if (I != wrapper_store.end()) {
-      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
-   }
-   else {
-      fWrapper = make_wrapper();
-   }
+   IFacePtr();
    if (!fWrapper) {
       Error("TClingCallFunc::ExecWithReturn(address, ret)",
             "Called with no wrapper, not implemented!");
@@ -3443,6 +3383,26 @@ TClingCallFunc::IsValid() const
    }
    return fMethod->IsValid();
 }
+
+TInterpreter::CallFuncIFacePtr_t
+TClingCallFunc::IFacePtr() {
+   if (!IsValid()) {
+      Error("TClingCallFunc::IFacePtr(kind)",
+            "Attempt to get interface while invalid.");
+      return TInterpreter::CallFuncIFacePtr_t();
+   }
+   const FunctionDecl* decl = fMethod->GetMethodDecl();
+   map<const FunctionDecl*, void*>::iterator I =
+      wrapper_store.find(decl);
+   if (I != wrapper_store.end()) {
+      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
+   }
+   else {
+      fWrapper = make_wrapper();
+   }
+   return TInterpreter::CallFuncIFacePtr_t(fWrapper);
+}
+
 
 void
 TClingCallFunc::ResetArg()

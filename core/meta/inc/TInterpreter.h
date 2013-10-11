@@ -56,6 +56,35 @@ public:
       kProcessing  = 99
    };
 
+   struct CallFuncIFacePtr_t {
+      enum EKind {
+         kUninitialized,
+         kGeneric,
+         kCtor,
+         kDtor
+      };
+
+      typedef void (*Generic_t)(void*, int, void**, void*);
+      typedef void (*Ctor_t)(void**, void*, unsigned long);
+      typedef void (*Dtor_t)(void*, unsigned long, int);
+
+      CallFuncIFacePtr_t():
+         fKind(kUninitialized), fGeneric(0) {}
+      CallFuncIFacePtr_t(Generic_t func):
+         fKind(kGeneric), fGeneric(func) {}
+      CallFuncIFacePtr_t(Ctor_t func):
+         fKind(kCtor), fCtor(func) {}
+      CallFuncIFacePtr_t(Dtor_t func):
+         fKind(kDtor), fDtor(func) {}
+
+      EKind fKind;
+      union {
+         Generic_t fGeneric;
+         Ctor_t fCtor;
+         Dtor_t fDtor;
+      };
+   };
+
    TInterpreter() { }   // for Dictionary
    TInterpreter(const char *name, const char *title = "Generic Interpreter");
    virtual ~TInterpreter() { }
@@ -186,6 +215,7 @@ public:
    virtual void   CallFunc_IgnoreExtraArgs(CallFunc_t * /*func */, bool /*ignore*/) const {;}
    virtual void   CallFunc_Init(CallFunc_t * /* func */) const {;}
    virtual Bool_t CallFunc_IsValid(CallFunc_t * /* func */) const {return 0;}
+   virtual CallFuncIFacePtr_t CallFunc_IFacePtr(CallFunc_t * /* func */) const {return CallFuncIFacePtr_t();}
    virtual void   CallFunc_ResetArg(CallFunc_t * /* func */) const {;}
    virtual void   CallFunc_SetArg(CallFunc_t * /*func */, Long_t /* param */) const {;}
    virtual void   CallFunc_SetArg(CallFunc_t * /* func */, Double_t /* param */) const {;}

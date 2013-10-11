@@ -30,6 +30,7 @@
 
 #include "TClingMethodInfo.h"
 #include "TClingClassInfo.h"
+#include "TInterpreter.h"
 
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "cling/Interpreter/StoredValueRef.h"
@@ -156,6 +157,7 @@ public:
    void Init(TClingMethodInfo*);
    void* InterfaceMethod() const;
    bool IsValid() const;
+   TInterpreter::CallFuncIFacePtr_t IFacePtr();
    void ResetArg();
    void SetArg(long arg);
    void SetArg(double arg);

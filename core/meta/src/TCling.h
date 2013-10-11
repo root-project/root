@@ -264,6 +264,7 @@ public: // Public Interface
    virtual void   CallFunc_IgnoreExtraArgs(CallFunc_t* func, bool ignore) const;
    virtual void   CallFunc_Init(CallFunc_t* func) const;
    virtual bool   CallFunc_IsValid(CallFunc_t* func) const;
+   virtual CallFuncIFacePtr_t CallFunc_IFacePtr(CallFunc_t * func) const;
    virtual void   CallFunc_ResetArg(CallFunc_t* func) const;
    virtual void   CallFunc_SetArg(CallFunc_t* func, Long_t param) const;
    virtual void   CallFunc_SetArg(CallFunc_t* func, Double_t param) const;
