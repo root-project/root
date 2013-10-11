@@ -249,6 +249,11 @@ TDocMacroDirective::~TDocMacroDirective()
 }
 
 //______________________________________________________________________________
+void TDocMacroDirective::SubProcess(const TString& what) {
+   
+}
+
+//______________________________________________________________________________
 void TDocMacroDirective::AddLine(const TSubString& line)
 {
    // Add a macro line.
@@ -293,25 +298,16 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
          fMacro->GetName(), fMacro->GetListOfLines() ? fMacro->GetListOfLines()->GetEntries() + 1 : 0);
 
    Bool_t wasBatch = gROOT->IsBatch();
+   Bool_t wantBatch = kFALSE;
    if (!wasBatch && !fNeedGraphics)
-      gROOT->SetBatch();
+      wantBatch = kTRUE;
    else if (fNeedGraphics) {
       if (fHtml->IsBatch()) {
          Warning("GetResult()", "Will not initialize the graphics system; skipping macro %s!", GetName());
          result = "";
          return kFALSE;
       }
-      gROOT->SetBatch(0);
-      TApplication::NeedGraphicsLibs();
-      gApplication->InitializeGraphics();
-      if (gROOT->IsBatch()) {
-         Warning("GetResult()", "Cannot initialize the graphics system; skipping macro %s!", GetName());
-         result = "";
-         return kFALSE;
-      }
    }
-
-   TVirtualPad* padSave = gPad;
 
    Int_t error = TInterpreter::kNoError;
    Long_t ret = 0;
@@ -384,8 +380,40 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       fileSysName.Prepend(".x ");
       fileSysName += params;
       fileSysName += plusplus;
-      gInterpreter->SaveContext();
-      gInterpreter->SaveGlobalsContext();
+      fileSysName.ReplaceAll("\\", "\\\\");
+      fileSysName.ReplaceAll("\"", "\\\"");
+      TString tmpFileName = gSystem->TempDirectory();
+      tmpFileName += "/";
+      tmpFileName += gSystem->BaseName(filename);
+      tmpFileName += ".C";
+      {
+         std::ofstream wrapper(tmpFileName);
+         wrapper << 
+                 << fileSysName << "\");}\n";
+      }
+      TString invoc("root.exe -l ");
+      if (wantBatch) {
+         invoc += "-b ";
+      }
+      invoc += "-E 'TDocMacroDirective::SubProcess(\""
+         + fileSysName + "\",\"" + outfilename + "\");'";
+      TString subProcOut = gSystem->GetFromPipe(invoc.Data());
+      Ssiz_t posResult = subProcOut.Index("TDOCDIRECTIVE RESULT=");
+      if (posResult == TString::kNPOS) {
+         Error("GetResult", "Error running %s!", invoc.Data());
+         result = "";
+         return kFALSE;
+      }
+      TString tok;
+      for (Int_t i = 0; i < 2; ++i) {
+         if (!subProcOut.Tokenize(tok, posResult, "\n")) {
+            Error("GetResult", "Cannot find expected output running %s!", invoc.Data());
+            result = "";
+            return kFALSE;
+         }
+         Long_t tok(strlen("TDOCDIRECTIVE RESULT="), (Ssiz_t)-1).
+         
+
       ret = gROOT->ProcessLine(fileSysName, &error);
    } else {
       gInterpreter->SaveContext();
