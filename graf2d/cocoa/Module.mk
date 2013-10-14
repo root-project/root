@@ -3,6 +3,11 @@
 #
 # Author: Timur Pocheptsov, 22/11/2011
 
+COCOANDEBUG := -DNDEBUG
+ifeq ($(ROOTBUILD),debug)
+   COCOANDEBUG :=
+endif
+
 MODNAME      := cocoa
 MODDIR       := $(ROOT_SRCDIR)/graf2d/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
@@ -73,4 +78,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
-$(COCOAOBJCPPO) $(COCOADO) $(COCOAO): CXXFLAGS += $(FREETYPEINC)
+$(COCOAOBJCPPO) $(COCOADO) $(COCOAO): CXXFLAGS += $(COCOANDEBUG) $(FREETYPEINC)
+
