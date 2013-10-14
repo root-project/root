@@ -1948,10 +1948,63 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          gVirtualPS->SetTextAngle(angle);
          TString t(text1);
          if (t.Index("#")>=0 || t.Index("^")>=0 || t.Index("\\")>=0) {
+            t.ReplaceAll("#LT","\\langle");
+            t.ReplaceAll("#GT","\\rangle");
+            t.ReplaceAll("#club","\\clubsuit");
+            t.ReplaceAll("#spade","\\spadesuit");
+            t.ReplaceAll("#heart","\\heartsuit");
+            t.ReplaceAll("#diamond","\\diamondsuit");
+            t.ReplaceAll("#voidn","\\wp");
+            t.ReplaceAll("#voidb","f");
+            t.ReplaceAll("#ocopyright","\\copyright");
+            t.ReplaceAll("#trademark","TM");
+            t.ReplaceAll("#void3","TM");
+            t.ReplaceAll("#oright","R");
+            t.ReplaceAll("#void1","R");
+            t.ReplaceAll("#3dots","\\ldots");
+            t.ReplaceAll("#lbar","\\mid");
+            t.ReplaceAll("#void8","\\mid");
+            t.ReplaceAll("#divide","\\div");
+            t.ReplaceAll("#Jgothic","\\Im");
+            t.ReplaceAll("#Rgothic","\\Re");
+            t.ReplaceAll("#doublequote","\"");
+            t.ReplaceAll("#plus","+");
+            t.ReplaceAll("#minus","-");
+            t.ReplaceAll("#/","/");
+            t.ReplaceAll("#upoint",".");
+            t.ReplaceAll("#aa","\\mbox{\\aa}");
+            t.ReplaceAll("#AA","\\mbox{\\AA}");
+
+            t.ReplaceAll("#omicron","o");
+            t.ReplaceAll("#Alpha","A");
+            t.ReplaceAll("#Beta","B");
+            t.ReplaceAll("#Epsilon","E");
+            t.ReplaceAll("#Zeta","Z");
+            t.ReplaceAll("#Eta","H");
+            t.ReplaceAll("#Iota","I");
+            t.ReplaceAll("#Kappa","K");
+            t.ReplaceAll("#Mu","M");
+            t.ReplaceAll("#Nu","N");
+            t.ReplaceAll("#Omicron","O");
+            t.ReplaceAll("#Rho","P");
+            t.ReplaceAll("#Tau","T");
+            t.ReplaceAll("#Chi","X");
+            t.ReplaceAll("#varomega","\\varpi");
+
+            t.ReplaceAll("#varUpsilon","?");
+            t.ReplaceAll("#corner","?");
+            t.ReplaceAll("#ltbar","?");
+            t.ReplaceAll("#bottombar","?");
+            t.ReplaceAll("#notsubset","?");
+            t.ReplaceAll("#arcbottom","?");
+            t.ReplaceAll("#cbar","?");
+            t.ReplaceAll("#arctop","?");
+            t.ReplaceAll("#topbar","?");
+            t.ReplaceAll("#arcbar","?");
+            t.ReplaceAll("#downleftarrow","?");
+
             t.ReplaceAll("#","\\");
             t.ReplaceAll("%","\\%");
-            t.Prepend("$");
-            t.Append("$");
          }
          gVirtualPS->Text(x,y,t.Data());
          gVirtualPS = 0;

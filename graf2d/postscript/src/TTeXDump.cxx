@@ -728,10 +728,16 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    ftsize *= 2.22097;
 
    TString t(chars);
+   if (t.Index("\\")>=0) {
+      t.Prepend("$");
+      t.Append("$");
+   } else {
+      t.ReplaceAll("<","$<$");
+      t.ReplaceAll(">","$>$");
+   }
    t.ReplaceAll("&","\\&");
-   t.ReplaceAll("<","$<$");
-   t.ReplaceAll(">","$>$");
-
+   t.ReplaceAll("#","\\#");
+   
    Int_t txalh = fTextAlign/10;
    if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
    Int_t txalv = fTextAlign%10;
