@@ -3,6 +3,12 @@
 #
 # Author: Timur Pocheptsov, 5/12/2011
 
+MACOSXNDEBUG := -DNDEBUG
+ifeq ($(ROOTBUILD),debug)
+   MACOSXNDEBUG :=
+endif
+
+
 MODNAME      := macosx
 MODDIR       := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS      := $(MODDIR)/src
@@ -45,3 +51,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(MACOSXDEP)
 
 distclean::     distclean-$(MODNAME)
+
+$(MACOSXO): CXXFLAGS += $(MACOSXNDEBUG)
