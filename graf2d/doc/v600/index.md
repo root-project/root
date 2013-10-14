@@ -144,3 +144,4 @@ file `simple.pdf`.
 -   Implement `DrawLatexNDC`.
 -   Implement `#minus` and `#plus` typographically better than the 
     standard `"-"` and `"+"`.
+-   Make sure all greek and math symbols are printed correctly by `TTexDump`. 
