@@ -49,6 +49,8 @@ void XMLReader::PopulateMap(){
    XMLReader::fgMapTagNames["version"] = kVersion;
    XMLReader::fgMapTagNames["ioread"] = kBeginIoread;
    XMLReader::fgMapTagNames["/ioread"] = kEndIoread;
+   XMLReader::fgMapTagNames["read"] = kBeginIoread;
+   XMLReader::fgMapTagNames["/read"] = kEndIoread;
 }
 
 /*
