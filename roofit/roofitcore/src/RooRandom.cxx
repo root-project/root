@@ -21,6 +21,7 @@
 // By default a private copy of TRandom3 is used to generate all random numbers.
 // END_HTML
 //
+#include <cassert>
 
 #include "RooFit.h"
 
@@ -30,14 +31,19 @@
 
 #include "TRandom3.h"
 
-#include <assert.h>
-
 using namespace std;
 
 ClassImp(RooRandom)
   ;
 
 
+TRandom* RooRandom::_theGenerator = 0;
+RooQuasiRandomGenerator* RooRandom::_theQuasiGenerator = 0;
+RooRandom::Guard RooRandom::guard;
+
+//_____________________________________________________________________________
+RooRandom::Guard::~Guard()
+{ delete RooRandom::_theGenerator; delete RooRandom::_theQuasiGenerator; }
 
 //_____________________________________________________________________________
 TRandom *RooRandom::randomGenerator() 
@@ -45,11 +51,18 @@ TRandom *RooRandom::randomGenerator()
   // Return a pointer to a singleton random-number generator
   // implementation. Creates the object the first time it is called.
   
-  static TRandom *_theGenerator= 0;
-  if(0 == _theGenerator) _theGenerator= new TRandom3();
+  if (!_theGenerator) _theGenerator= new TRandom3();
   return _theGenerator;
 }
 
+
+//_____________________________________________________________________________
+void RooRandom::setRandomGenerator(TRandom* gen)
+{
+  // set the random number generator; takes ownership of the object passed as parameter
+  if (_theGenerator) delete _theGenerator;
+  _theGenerator = gen;
+}
 
 //_____________________________________________________________________________
 RooQuasiRandomGenerator *RooRandom::quasiGenerator() 
@@ -57,9 +70,8 @@ RooQuasiRandomGenerator *RooRandom::quasiGenerator()
   // Return a pointer to a singleton quasi-random generator
   // implementation. Creates the object the first time it is called.
   
-  static RooQuasiRandomGenerator *_theGenerator= 0;
-  if(0 == _theGenerator) _theGenerator= new RooQuasiRandomGenerator();
-  return _theGenerator;
+  if(!_theQuasiGenerator) _theQuasiGenerator= new RooQuasiRandomGenerator();
+  return _theQuasiGenerator;
 }
 
 
@@ -76,8 +88,7 @@ Double_t RooRandom::uniform(TRandom *generator)
 void RooRandom::uniform(UInt_t dimension, Double_t vector[], TRandom *generator) 
 {
   // Fill the vector provided with random numbers uniformly distributed from (0,1)
-  
-  for(UInt_t index= 0; index < dimension; index++) vector[index]= uniform(generator);
+  generator->RndmArray(dimension, vector);
 }
 
 
