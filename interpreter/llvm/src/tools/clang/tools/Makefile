@@ -12,7 +12,7 @@ CLANG_LEVEL := ..
 include $(CLANG_LEVEL)/../../Makefile.config
 
 DIRS := 
-ifneq ($(ROOT_BUILDCLANG),)
+ifneq ($(ROOT_NOCLANG),yes)
 PARALLEL_DIRS := driver diagtool
 
 ifeq ($(ENABLE_CLANG_REWRITER),1)

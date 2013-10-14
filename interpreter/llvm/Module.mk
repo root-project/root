@@ -44,10 +44,11 @@ LLVMVERSION  := $(shell echo $(subst rc,,$(subst svn,,$(subst PACKAGE_VERSION=,,
 LLVMRES      := etc/cling/lib/clang/$(LLVMVERSION)/include/stddef.h
 LLVMDEP      := $(LLVMLIB) $(LLVMRES)
 
+ROOT_NOCLANG := "ROOT_NOCLANG=yes"
 ifeq ($(LLVMDEV),)
 LLVMOPTFLAGS := --enable-optimized --disable-assertions
 else
-ROOT_BUILDCLANG := "ROOT_BUILDCLANG=yes"
+ROOT_NOCLANG := "ROOT_NOCLANG=no"
 ifeq (,$(findstring debug,$(ROOTBUILD)))
 LLVMOPTFLAGS := --enable-optimized --enable-debug-symbols
 else
@@ -86,9 +87,9 @@ $(LLVMRES): $(LLVMLIB)
 $(LLVMLIB): $(LLVMDEPO) $(FORCELLVMTARGET)
 		@(echo "*** Building $@..."; \
 		cd $(LLVMDIRO) && \
-		$(MAKE) ONLY_TOOLS=clang NOCLING=1 VERBOSE=1 $(ROOT_BUILDCLANG) && \
+		$(MAKE) ONLY_TOOLS=clang NOCLING=1 VERBOSE=1 $(ROOT_NOCLANG) && \
 		rm -rf ../inst/lib/clang && \
-		$(MAKE) ONLY_TOOLS=clang NOCLING=1 install $(ROOT_BUILDCLANG) \
+		$(MAKE) ONLY_TOOLS=clang NOCLING=1 install $(ROOT_NOCLANG) \
                 $(ENDLLVMBUILD) )
 
 $(LLVMGOODO): $(LLVMGOODS) $(LLVMLIB)
@@ -180,7 +181,7 @@ all-$(MODNAME): $(LLVMLIB)
 clean-llvm:
 		-@(if [ -d $(LLVMDIRO) ]; then \
 			cd $(LLVMDIRO); \
-			$(MAKE) clean ONLY_TOOLS=clang NOCLING=1 $(ROOT_BUILDCLANG); \
+			$(MAKE) clean ONLY_TOOLS=clang NOCLING=1 $(ROOT_NOCLANG); \
 		fi)
 
 clean::         clean-$(MODNAME)
