@@ -3,9 +3,9 @@
 #
 # Author: Olivier Couet, 24/01/2012
 
-QUARTZDEBUG := -DNDEBUG
+QUARTZNDEBUG := -DNDEBUG
 ifeq ($(ROOTBUILD),debug)
-   QUARTZDEBUG :=
+   QUARTZNDEBUG :=
 endif
 
 MODNAME      := quartz
@@ -78,4 +78,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
-$(QUARTZOBJCPPO): CXXFLAGS += $(QUARTZDEBUG)
+$(QUARTZOBJCPPO): CXXFLAGS += $(QUARTZNDEBUG)
