@@ -842,13 +842,8 @@ TCling::TCling(const char *name, const char *title)
 
    fTemporaries = new std::vector<cling::StoredValueRef>();
 
-   std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
-   std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
    std::vector<std::string> clingArgsStorage;
    clingArgsStorage.push_back("cling4root");
-   clingArgsStorage.push_back(interpInclude);
-   clingArgsStorage.push_back("-include-pch");
-   clingArgsStorage.push_back(pchFilename);
 
    // FIXME: enables relocatability for experiments' framework headers until PCMs
    // are available.
@@ -856,8 +851,10 @@ TCling::TCling(const char *name, const char *title)
    const char* envInclPath = getenv("ROOT_INCLUDE_PATH");
 
    if (gccToolchain) {
-      clingArgsStorage.push_back("-gcc-toolchain");
-      clingArgsStorage.push_back(gccToolchain);
+      // We don't actually need to pass this (it will be "unused").
+      // But we do need to signal "-nostdinc++":
+      //clingArgsStorage.push_back("-gcc-toolchain");
+      //clingArgsStorage.push_back(gccToolchain);
       clingArgsStorage.push_back("-nostdinc++");
       if (!envInclPath) {
          ::Error("TCling::TCling", "Must also set ROOT_INCLUDE_PATH when ROOT_GCC_TOOLCHAIN is set!");
@@ -925,6 +922,13 @@ TCling::TCling(const char *name, const char *title)
       clingArgsStorage.push_back(R__GCC_INC_DIR_10);
 #endif
    } // if no ROOT_GCC_TOOLCHAIN
+
+   std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
+   clingArgsStorage.push_back(interpInclude);
+
+   std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
+   clingArgsStorage.push_back("-include-pch");
+   clingArgsStorage.push_back(pchFilename);
 
    // clingArgsStorage.push_back("-Xclang");
    // clingArgsStorage.push_back("-fmodules");
