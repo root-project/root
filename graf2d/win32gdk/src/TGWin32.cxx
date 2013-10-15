@@ -438,7 +438,6 @@ static void W32ChangeProperty(HWND w, Atom_t property, Atom_t type,
 
    char *atomName;
    char buffer[256];
-   char *p, *s;
    int len;
    char propName[32];
 
@@ -466,11 +465,9 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
 
    if (!id) return 0;
 
-   char *atomName;
    char *data, *destPtr;
    char propName[32];
    HGLOBAL handle;
-   HGLOBAL hMem;
    HWND w;
 
    w = (HWND) GDK_DRAWABLE_XID(id);
@@ -2091,12 +2088,10 @@ Int_t TGWin32::OpenPixmap(unsigned int w, unsigned int h)
    // Open a new pixmap.
    // w,h : Width and height of the pixmap.
 
-   GdkWindow root;
-   int wval, hval;
-   int xx, yy, i, wid;
-   int ww, hh, border, depth;
-   wval = w;
-   hval = h;
+   int i, wid;
+   int ww, hh, depth;
+   int wval = w;
+   int hval = h;
 
    // Select next free window number
  again:
@@ -2153,10 +2148,8 @@ Int_t TGWin32::InitWindow(ULong_t win)
 
    GdkWindowAttr attributes;
    unsigned long attr_mask = 0;
-   int wid;
-   int xval, yval;
-   int wval, hval, border, depth;
-   GdkWindow root;
+   int wid, xval, yval;
+   int wval, hval, depth;
 
    GdkWindow *wind = (GdkWindow *) win;
 
@@ -2305,7 +2298,6 @@ Int_t TGWin32::RequestLocator(Int_t mode, Int_t ctyp, Int_t & x, Int_t & y)
    Int_t  xtmp, ytmp;
 
    GdkEvent *event;
-   GdkEvent *next_event;
    int button_press;
    int radius;
 
@@ -2457,14 +2449,12 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    static int percent = 0;      // bell volume
    static GdkWindow *CurWnd;
    HWND focuswindow;
-   int focusrevert;
    GdkEvent *event;
    KeySym keysym;
    int key = -1;
    int len_text = strlen(text);
    int nt;                      // defined length of text
    int pt;                      // cursor position in text
-   MSG msg;
 
    CurWnd = (GdkWindow *)gCws->window;
    // change the cursor shape
@@ -2732,12 +2722,9 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
    // wid : pixmap to be resized
    // w,h : Width and height of the pixmap
 
-   GdkWindow root;
-   int wval, hval;
-   int xx, yy, i;
-   int ww, hh, border, depth;
-   wval = w;
-   hval = h;
+   int i, ww, hh, depth;
+   int wval = w;
+   int hval = h;
 
    if (!fWindows) return 0;
 
@@ -3067,8 +3054,6 @@ void TGWin32::SetDoubleBufferON()
 {
    // Turn double buffer mode on.
 
-   Int_t depth;
-
    if (!fWindows || gTws->double_buffer || gTws->ispixmap) return;
 
    if (!gTws->buffer) {
@@ -3172,7 +3157,6 @@ void TGWin32::UpdateFillStyle()
 {
    // Set fill area style index.
 
-   char* pchar;
    static int current_fasi = 0;
 
    Int_t style = fFillStyle / 1000;
@@ -3261,7 +3245,7 @@ void TGWin32::SetLineType(int n, int *dash)
                                  (GdkCapStyle) gCapStyle,
                                  (GdkJoinStyle) gJoinStyle);
    } else {
-      int i, j;
+      int i;
       gDashSize = TMath::Min((int)sizeof(gDashList),n);
       gDashLength = 0;
       for (i = 0; i < gDashSize; i++) {
@@ -4363,8 +4347,6 @@ void TGWin32::MapSubwindows(Window_t id)
    //
 
    if (!id) return;
-
-   HWND wp;
    EnumChildWindows((HWND)GDK_DRAWABLE_XID((GdkWindow *)id),
                     EnumChildProc, (LPARAM) NULL);
 }
@@ -4548,12 +4530,10 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
 {
    // Return handle to newly created gdk window.
 
-   GdkWMDecoration deco;
    GdkWindowAttr xattr;
    GdkWindow *newWin;
    GdkColor background_color;
    ULong_t xmask = 0;
-   UInt_t xevmask;
 
    if (attr) {
       MapSetWindowAttributes(attr, xmask, xattr);
@@ -5034,7 +5014,6 @@ void TGWin32::GetWindowAttributes(Window_t id, WindowAttributes_t & attr)
 
    if (!id) return;
 
-   GdkWindowAttr xattr;
    RECT rcClient, rcWind;
    ::GetClientRect((HWND)GDK_DRAWABLE_XID((GdkWindow *) id), &rcClient);
    ::GetWindowRect((HWND)GDK_DRAWABLE_XID((GdkWindow *) id), &rcWind);
@@ -6075,12 +6054,9 @@ void TGWin32::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t * attr)
 
    if (!id) return;
 
-   GdkWMDecoration deco;
    GdkColor color;
-   GdkEventMask xevent_mask;
    UInt_t xevmask;
    Mask_t evmask;
-   HWND w, flag;
 
    if (attr && (attr->fMask & kWAEventMask)) {
       evmask = (Mask_t) attr->fEventMask;
@@ -6285,7 +6261,7 @@ void TGWin32::SetClassHints(Window_t id, char *className, char *resourceName)
    char *class_string;
    char *s;
    int len_nm, len_cl;
-   GdkAtom type, prop;
+   GdkAtom prop;
 
    prop = gdk_atom_intern("WM_CLASS", kFALSE);
 
@@ -6607,7 +6583,6 @@ void TGWin32::LookupString(Event_t * event, char *buf, Int_t buflen,
    // keyboard mapping). In buf a null terminated ASCII string is returned
    // representing the string that is currently mapped to the key code.
 
-   KeySym xkeysym;
    _lookup_string(event, buf, buflen);
    UInt_t ks, xks = (UInt_t) event->fCode;
    MapKeySym(ks, xks, kFALSE);
@@ -6769,7 +6744,7 @@ void TGWin32::QueryPointer(Window_t id, Window_t &rootw,
 
    if (!id) return;
 
-   POINT mousePt, sPt, currPt;
+   POINT currPt;
    HWND chw, window;
    UInt_t umask = 0;
    BYTE kbd[256];
@@ -7446,7 +7421,7 @@ void TGWin32::ChangeProperties(Window_t id, Atom_t property, Atom_t type,
    // Put data into Clipboard.
 
    HGLOBAL hdata;
-   Int_t i, length;
+   Int_t i;
    UChar_t *ptr;
 
    if (data == 0 || len == 0)
@@ -7482,11 +7457,9 @@ Window_t TGWin32::FindRWindow(Window_t root, Window_t dragwin, Window_t input,
    // location x, y and is DND aware, with a maximum depth of maxd.
    // Possibility to exclude dragwin and input.
 
-   POINT screen_point, point;
-   POINT cpt;
+   POINT cpt, point;
    RECT  rect;
-   HWND hwnd, hwndc;
-   HWND hwndt;
+   HWND hwnd, hwndc, hwndt;
    Window_t win, retwin = kNone;
    Atom_t version = 0;
    Atom_t dndaware = InternAtom("XdndAware", kFALSE);
