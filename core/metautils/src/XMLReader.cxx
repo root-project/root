@@ -744,10 +744,10 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
 
             std::stringstream pragmaLineStream;
             pragmaLineStream << "sourceClass=\"" << pragmaArgs["sourceClass"] << "\""
-                             << " targetClass=\""<< pragmaArgs["sourceClass"] << "\""
                              << " version=\""<< pragmaArgs["version"] << "\""
-                             << " source=\""<< pragmaArgs["source"] << "\""
+                             << " targetClass=\""<< pragmaArgs["targetClass"] << "\""
                              << " target=\""<< pragmaArgs["target"] << "\""
+                             << " source=\""<< pragmaArgs["source"] << "\""
                              << " code=\"{"+pragmaArgs["code"]+"}\"";
                              
             // Now send them to the pragma processor. The info will be put
