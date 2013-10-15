@@ -841,52 +841,101 @@ TCling::TCling(const char *name, const char *title)
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
    fTemporaries = new std::vector<cling::StoredValueRef>();
+
    std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
    std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
-   const char* interpArgs[]
-      = {"cling4root", interpInclude.c_str(), "-include-pch", pchFilename.c_str()
+   std::vector<std::string> clingArgsStorage;
+   clingArgsStorage.push_back("cling4root");
+   clingArgsStorage.push_back(interpInclude);
+   clingArgsStorage.push_back("-include-pch");
+   clingArgsStorage.push_back(pchFilename);
+
+   // FIXME: enables relocatability for experiments' framework headers until PCMs
+   // are available.
+   const char* gccToolchain = getenv("ROOT_GCC_TOOLCHAIN");
+   const char* envInclPath = getenv("ROOT_INCLUDE_PATH");
+
+   if (gccToolchain) {
+      clingArgsStorage.push_back("-gcc-toolchain");
+      clingArgsStorage.push_back(gccToolchain);
+      clingArgsStorage.push_back("-nostdinc++");
+      if (!envInclPath) {
+         ::Error("TCling::TCling", "Must also set ROOT_INCLUDE_PATH when ROOT_GCC_TOOLCHAIN is set!");
+      }
+   }
+
+   if (envInclPath) {
+      TString strEnvInclPath(envInclPath);
+      TString tok;
+      Ssiz_t from = 0;
+      while (strEnvInclPath.Tokenize(tok, from, ":")) {
+         clingArgsStorage.push_back("-I");
+         clingArgsStorage.push_back(tok.Data());
+      }
+   }
+
+   if (!gccToolchain) {
 #ifdef R__GCC_TOOLCHAIN
-         , "-gcc-toolchain", R__GCC_TOOLCHAIN
+      clingArgsStorage.push_back("-gcc-toolchain");
+      clingArgsStorage.push_back(R__GCC_TOOLCHAIN);
 #endif
 #ifdef R__GCC_INC_DIR_0
-         , "-nostdinc++"
-         , "-I", R__GCC_INC_DIR_0
+      clingArgsStorage.push_back("-nostdinc++");
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(R__GCC_INC_DIR_0);
 #endif
 #ifdef R__GCC_INC_DIR_1
-         , "-I", R__GCC_INC_DIR_1
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(R__GCC_INC_DIR_1);
 #endif
 #ifdef R__GCC_INC_DIR_2
-         , "-I", R__GCC_INC_DIR_2
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(R__GCC_INC_DIR_2);
 #endif
 #ifdef R__GCC_INC_DIR_3
-         , "-I", R__GCC_INC_DIR_3
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(R__GCC_INC_DIR_3);
 #endif
 #ifdef R__GCC_INC_DIR_4
-         , "-I", R__GCC_INC_DIR_4
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(R__GCC_INC_DIR_4);
 #endif
 #ifdef R__GCC_INC_DIR_5
-         , "-I", R__GCC_INC_DIR_5
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(R__GCC_INC_DIR_5);
 #endif
 #ifdef R__GCC_INC_DIR_6
-         , "-I", R__GCC_INC_DIR_6
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(R__GCC_INC_DIR_6);
 #endif
 #ifdef R__GCC_INC_DIR_7
-         , "-I", R__GCC_INC_DIR_7
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(R__GCC_INC_DIR_7);
 #endif
 #ifdef R__GCC_INC_DIR_8
-         , "-I", R__GCC_INC_DIR_8
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(R__GCC_INC_DIR_8);
 #endif
 #ifdef R__GCC_INC_DIR_9
-         , "-I", R__GCC_INC_DIR_9
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(R__GCC_INC_DIR_9);
 #endif
 #ifdef R__GCC_INC_DIR_10
-         , "-I", R__GCC_INC_DIR_10
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(R__GCC_INC_DIR_10);
 #endif
-        };
-         //"-Xclang", "-fmodules"};
+   } // if no ROOT_GCC_TOOLCHAIN
 
-   fInterpreter = new cling::Interpreter(sizeof(interpArgs) / sizeof(char*),
-                                         interpArgs,
+   // clingArgsStorage.push_back("-Xclang");
+   // clingArgsStorage.push_back("-fmodules");
+
+   std::vector<const char*> interpArgs;
+   for (std::vector<std::string>::const_iterator iArg = clingArgsStorage.begin(),
+           eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
+      interpArgs.push_back(iArg->c_str());
+
+   fInterpreter = new cling::Interpreter(interpArgs.size(),
+                                         &(interpArgs[0]),
                                          ROOT::TMetaUtils::GetLLVMResourceDir(false).c_str());
    fInterpreter->installLazyFunctionCreator(autoloadCallback);
 
@@ -901,18 +950,6 @@ TCling::TCling(const char *name, const char *title)
    // Add the root include directory and etc/ to list searched by default.
    // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
    TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
-
-   // FIXME: enables relocatability for experiments' framework headers until PCMs
-   // are available.
-   const char* envInclPath = getenv("ROOT_INCLUDE_PATH");
-   if (envInclPath) {
-      TString strEnvInclPath(envInclPath);
-      TString tok;
-      Ssiz_t from = 0;
-      while (strEnvInclPath.Tokenize(tok, from, ":")) {
-         TCling::AddIncludePath(tok);
-      }
-   }
 
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
