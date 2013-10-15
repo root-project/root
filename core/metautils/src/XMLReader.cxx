@@ -562,6 +562,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                      break;
                   }                  
                   codeAttrVal+=lineStr; // here because data can be on one line!
+                  codeAttrVal+="\n";
                   file.getline(lineChars,lineCharsSize);
                   lineStr=lineChars;
                }
