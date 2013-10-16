@@ -190,7 +190,7 @@ Begin_Macro(source)
          z = sin(sqrt(x*x+y*y))+1;
          dt->SetPoint(k,x,y,z);
          k++;
-         y = y+dx;
+         y = y+dy;
       }
       x = x+dx;
       y = -P;
