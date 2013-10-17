@@ -364,7 +364,7 @@ void AnnotateFieldDecl(clang::NamedDecl& decl,
    clang::ASTContext &C = decl.getASTContext();
    clang::SourceRange commentRange; // Empty: this is a fake comment
    
-   const std::string declName (decl.getName());
+   const std::string declName (decl.getNameAsString());
    std::string varName;
    for(std::list<VariableSelectionRule>::const_iterator it = fieldSelRules.begin();
        it != fieldSelRules.end(); ++it){
