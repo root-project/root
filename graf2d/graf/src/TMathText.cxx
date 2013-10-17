@@ -627,7 +627,7 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
 
    if (newText.Length() == 0) return;
 
-   // Compatibility with TLatex
+   // Compatibility with TLatex and Latex
    newText.ReplaceAll("\\omicron","o");
    newText.ReplaceAll("\\Alpha","A");
    newText.ReplaceAll("\\Beta","B");
@@ -643,6 +643,7 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
    newText.ReplaceAll("\\Tau","T");
    newText.ReplaceAll("\\Chi","X");
    newText.ReplaceAll("\\varomega","\\varpi");
+   newText.ReplaceAll("\\mbox","\\hbox");
    if (newText.Contains("\\frac")) {
       Int_t len,i1,i2;
       TString str;
