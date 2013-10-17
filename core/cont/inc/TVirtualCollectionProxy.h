@@ -1,4 +1,4 @@
-// @(#)root/cont:$Id$
+// @(#)root/cont:$Id: f761e5ab393bb556962776de666bc9dd0b6e738b $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -159,7 +159,7 @@ public:
    // Set of functions to iterate easily throught the collection
    static const Int_t fgIteratorArenaSize = 16; // greater than sizeof(void*) + sizeof(UInt_t)
 
-   typedef void (*CreateIterators_t)(void *collection, void **begin_arena, void **end_arena);
+   typedef void (*CreateIterators_t)(void *collection, void **begin_arena, void **end_arena, TVirtualCollectionProxy *proxy);
    virtual CreateIterators_t GetFunctionCreateIterators(Bool_t read = kTRUE) = 0; 
    // begin_arena and end_arena should contain the location of a memory arena of size fgIteratorSize. 
    // If the collection iterator are of that size or less, the iterators will be constructed in place in those location (new with placement)
