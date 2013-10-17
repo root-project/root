@@ -566,6 +566,8 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
    Int_t opLower         = -1;   // Position of first #lower
    Int_t opBf            = -1;   // Position of first #bf
    Int_t opIt            = -1;   // Position of first #it
+   Int_t opMbox          = -1;   // Position of first #mbox
+
    Bool_t opFound = kFALSE;
    Bool_t quote1 = kFALSE, quote2 = kFALSE ;
 
@@ -726,6 +728,11 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                opMinus=1; opFound = kTRUE;
                if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
                continue;
+            }
+            if (strncmp(buf,"mbox[",5)==0 || strncmp(buf,"mbox{",5)==0) {
+               opMbox=i; opFound = kTRUE;
+               if (i>0 && opCloseCurly==-2) opCloseCurly=i-1;
+               continue ;
             }
          }
          if (length>i+4) {
@@ -1730,6 +1737,17 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
       }
       result = fs1;
    }
+   else if (opMbox>-1) { // dummy operator #mbox{arg}
+      TextSpec_t newSpec = spec;
+      if (!fShow) {
+         fs1 = Anal1(newSpec,text+5,length-5);
+         Savefs(&fs1);
+      } else {
+         fs1 = Readfs();
+         Analyse(x,y,newSpec,text+5,length-5);
+      }
+      result = fs1;
+   }
    else if (opIt>-1) { // operator #it{arg}
       TextSpec_t newSpec = spec;
       Int_t lut[] = {13, 3, 2, 5, 4, 7, 6, 9, 8, 11, 10, 15, 1, 14, 12};
@@ -2031,6 +2049,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 
    TString newText = text1;
    if( newText.Length() == 0) return;
+   newText.ReplaceAll("#hbox","#mbox");
 
    Double_t saveSize = size;
    Int_t saveFont = fTextFont;
@@ -2117,18 +2136,18 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    // Check if the Latex syntax is correct
 
    const Char_t *kWord1[] = {"{}^{","{}_{","^{","_{","#scale{","#color{","#font{","#sqrt{","#[]{","#{}{","#||{",
-                       "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{","#slash{","#bf{","#it{",
+                       "#bar{","#vec{","#dot{","#hat{","#ddot{","#acute{","#grave{","#check{","#tilde{","#slash{","#bf{","#it{","#mbox{",
                        "\\scale{","\\color{","\\font{","\\sqrt{","\\[]{","\\{}{","\\||{","#(){","\\(){",
-                       "\\bar{","\\vec{","\\dot{","\\hat{","\\ddot{","\\acute{","\\grave{","\\check{","\\bf{","\\it{"}; // check for }
+                       "\\bar{","\\vec{","\\dot{","\\hat{","\\ddot{","\\acute{","\\grave{","\\check{","\\bf{","\\it{","\\mbox{"}; // check for }
    const Char_t *kWord2[] = {"#scale[","#color[","#font[","#sqrt[","#kern[","#lower[","\\scale[","\\color[","\\font[","\\sqrt[","\\kern[","\\lower["}; // check for ]{ + }
    const Char_t *kWord3[] = {"#frac{","\\frac{","#splitline{","\\splitline{"}; // check for }{ then }
    const Char_t *kLeft1[] = {"#left[","\\left[","#left{","\\left{","#left|","\\left|","#left(","\\left("};
    const Char_t *kLeft2[] = {"#[]{","#[]{","#{}{","#{}{","#||{","#||{","#(){","#(){"};
    const Char_t *kRight[] = {"#right]","\\right]","#right}","\\right}","#right|","\\right|","#right)","\\right)"};
-   const Int_t lkWord1[]  = {4,4,2,2,7,7,6,6,4,4,4,5,5,5,5,6,7,7,7,7,7,4,4,7,7,6,6,4,4,4,4,4,5,5,5,5,6,7,7,7,4,4};
+   const Int_t lkWord1[]  = {4,4,2,2,7,7,6,6,4,4,4,5,5,5,5,6,7,7,7,7,7,4,4,6,7,7,6,6,4,4,4,4,4,5,5,5,5,6,7,7,7,4,4,6};
    const Int_t lkWord2[]  = {7,7,6,6,6,7,7,7,6,6,6,7} ;
    const Int_t lkWord3[]  = {6,6,11,11} ;
-   Int_t nkWord1 = 42, nkWord2 = 12, nkWord3 = 4;
+   Int_t nkWord1 = 44, nkWord2 = 12, nkWord3 = 4;
    Int_t i,k ;
    Int_t nLeft1 , nRight , nOfLeft, nOfRight;
    Int_t lLeft1 = 6 ;
