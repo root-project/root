@@ -124,6 +124,7 @@ file `simple.pdf`.
    ![TMathText example](mathtext.png "TMathText example")
    
 -   Implement `\\frac` using `\\over`.
+-   Treat `\\mbox` as `\\hbox` to improve the compatibility with TTexDump.
 
 ### TLatex
 
