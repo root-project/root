@@ -63,11 +63,11 @@ public:
    {
    }
    
-   inline void CreateIterators(void *collection)
+   inline void CreateIterators(void *collection, TVirtualCollectionProxy *proxy)
    {
       // Initialize the fBegin and fEnd iterators.
       
-      fCreateIterators(collection, &fBegin, &fEnd);
+      fCreateIterators(collection, &fBegin, &fEnd, proxy);
    }
    
    inline ~TVirtualCollectionIterators() 
@@ -143,13 +143,13 @@ public:
       }
    }
    
-   inline void CreateIterators(void *collection)
+   inline void CreateIterators(void *collection, TVirtualCollectionProxy *proxy)
    {
       // Initialize the fBegin and fEnd iterators.
       
       fBegin = &(fRawBeginBuffer[0]);
       fEnd = &(fRawEndBuffer[0]);
-      fCreateIterators(collection, &fBegin, &fEnd);
+      fCreateIterators(collection, &fBegin, &fEnd, proxy);
       if (fBegin != &(fRawBeginBuffer[0])) {
          // The iterator where too large to buffer in the  buffer
          fAllocated = kTRUE;
