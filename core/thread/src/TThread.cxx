@@ -246,9 +246,14 @@ TThread::TThread(Long_t id)
    fPriority  = kNormalPriority;
    fThreadArg = 0;
    Constructor();
+
+   // Changing the id must be protected as it will be look at by multiple
+   // threads (see TThread::GetThread)
+   ThreadInternalLock();
    fNamed     = kFALSE;
    fId = (id ? id : SelfId());
    fState = kRunningState;
+   ThreadInternalUnLock();
 
    if (gDebug)
       Info("TThread::TThread", "TThread attached to running thread");
