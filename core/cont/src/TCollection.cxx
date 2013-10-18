@@ -581,14 +581,16 @@ void TCollection::GarbageCollect(TObject *obj)
 {
    // Add to the list of things to be cleaned up.
 
-   R__LOCKGUARD2(gCollectionMutex);
-   if (fgGarbageCollection) {
-      if (!fgEmptyingGarbage) {
-         fgGarbageCollection->Add(obj);
-      } else
-         delete obj;
-   } else
-      delete obj;
+   {
+      R__LOCKGUARD2(gCollectionMutex);
+      if (fgGarbageCollection) {
+         if (!fgEmptyingGarbage) {
+            fgGarbageCollection->Add(obj);
+            return;
+         }
+      }
+   }
+   delete obj;
 }
 
 //______________________________________________________________________________
