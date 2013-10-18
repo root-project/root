@@ -516,9 +516,11 @@ TFile::~TFile()
    SafeDelete(fInfoCache);
    SafeDelete(fOpenPhases);
 
-   R__LOCKGUARD2(gROOTMutex);
-   gROOT->GetListOfClosedObjects()->Remove(this);
-   gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfClosedObjects()->Remove(this);
+      gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
+   }
 
    if (IsOnHeap()) {
       // Delete object from CINT symbol table so it can not be used anymore.
