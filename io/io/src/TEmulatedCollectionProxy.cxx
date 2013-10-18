@@ -32,6 +32,7 @@
 #include "Riostream.h"
 
 #include "TVirtualMutex.h" // For R__LOCKGUARD
+#include "TInterpreter.h"  // For gCINTMutex
 
 //
 // Utility function to allow the creation of a TClass for a std::pair without
@@ -110,7 +111,7 @@ void TEmulatedCollectionProxy::DeleteArray(void* p, Bool_t dtorOnly) const
 TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
 {
    // Proxy initializer
-   R__LOCKGUARD2(gCollectionMutex);
+   R__LOCKGUARD2(gCINTMutex);
    if (fClass) return this;
 
 
