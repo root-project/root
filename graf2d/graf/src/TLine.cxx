@@ -369,6 +369,16 @@ Bool_t TLine::IsVertical()
 
 
 //______________________________________________________________________________
+void TLine::SetNDC(Bool_t isNDC)
+{
+   // Set NDC mode on if isNDC = kTRUE, off otherwise
+
+   ResetBit(kLineNDC);
+   if (isNDC) SetBit(kLineNDC);
+}
+
+
+//______________________________________________________________________________
 void TLine::SetHorizontal(Bool_t set /*= kTRUE*/)
 {
    // Force the line to be drawn horizontally.

@@ -98,6 +98,10 @@ file `simple.pdf`.
 
 -   New drawing option "SC" to draw the labels with the slices' colors.
 
+### TLine
+
+-   Add `SetNDC`.
+
 ### TMathText
 
 -   TMathText's purpose is to write mathematical equations, exactly as
