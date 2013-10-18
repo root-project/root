@@ -304,8 +304,72 @@ enum {
 // End FPE handling includes
 
 
-static STRUCT_UTMP *gUtmpContents;
+struct TUtmpContent {
+   STRUCT_UTMP *fUtmpContents;
+   UInt_t       fEntries; // Number of entries in utmp file.
+   
+   TUtmpContent() : fUtmpContents(0) {}
+   ~TUtmpContent() { free(fUtmpContents); }
+   
+   STRUCT_UTMP *SearchUtmpEntry(const char *tty)
+   {
+      // Look for utmp entry which is connected to terminal tty.
+      
+      STRUCT_UTMP *ue = fUtmpContents;
+      
+      UInt_t n = fEntries;
+      while (n--) {
+         if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
+            return ue;
+         ue++;
+      }
+      return 0;
+   }
+   
+   int ReadUtmpFile()
+   {
+      // Read utmp file. Returns number of entries in utmp file.
+      
+      FILE  *utmp;
+      struct stat file_stats;
+      size_t n_read, size;
+      
+      fEntries = 0;
+      
+      R__LOCKGUARD2(gSystemMutex);
+      
+      utmp = fopen(UTMP_FILE, "r");
+      if (!utmp)
+         return 0;
+      
+      fstat(fileno(utmp), &file_stats);
+      size = file_stats.st_size;
+      if (size <= 0) {
+         fclose(utmp);
+         return 0;
+      }
+      
+      fUtmpContents = (STRUCT_UTMP *) malloc(size);
+      if (!fUtmpContents) {
+         fclose(utmp);
+         return 0;
+      }
+      
+      n_read = fread(fUtmpContents, 1, size, utmp);
+      if (!ferror(utmp)) {
+         if (fclose(utmp) != EOF && n_read == size) {
+            fEntries = size / sizeof(STRUCT_UTMP);
+            return fEntries;
+         }
+      } else
+         fclose(utmp);
+      
+      free(fUtmpContents);
+      fUtmpContents = 0;
+      return 0;
+   }
 
+};
 
 const char *kServerPath     = "/tmp";
 const char *kProtocolName   = "tcp";
@@ -618,9 +682,10 @@ void TUnixSystem::SetDisplay()
       if (tty) {
          tty += 5;               // remove "/dev/"
 
-         R__LOCKGUARD2(gSystemMutex);
+         TUtmpContent utmp;
+         utmp.ReadUtmpFile();
 
-         STRUCT_UTMP *utmp_entry = (STRUCT_UTMP *)SearchUtmpEntry(ReadUtmpFile(), tty);
+         STRUCT_UTMP *utmp_entry = utmp.SearchUtmpEntry(tty);
          if (utmp_entry) {
             if (utmp_entry->ut_host[0]) {
                if (strchr(utmp_entry->ut_host, ':')) {
@@ -649,7 +714,6 @@ void TUnixSystem::SetDisplay()
             }
 #endif
          }
-         free(gUtmpContents);
       }
    }
 }
@@ -4890,63 +4954,6 @@ void TUnixSystem::UnixDynUnload(const char *lib)
    // should call CINT unload file here, but does not work for sl's yet.
    ::Error("TUnixSystem::UnixDynUnload", "not yet implemented for this platform");
 #endif
-}
-
-//______________________________________________________________________________
-int TUnixSystem::ReadUtmpFile()
-{
-   // Read utmp file. Returns number of entries in utmp file.
-
-   FILE  *utmp;
-   struct stat file_stats;
-   size_t n_read, size;
-
-   R__LOCKGUARD2(gSystemMutex);
-
-   gUtmpContents = 0;
-
-   utmp = fopen(UTMP_FILE, "r");
-   if (!utmp)
-      return 0;
-
-   fstat(fileno(utmp), &file_stats);
-   size = file_stats.st_size;
-   if (size <= 0) {
-      fclose(utmp);
-      return 0;
-   }
-
-   gUtmpContents = (STRUCT_UTMP *) malloc(size);
-   if (!gUtmpContents) {
-      fclose(utmp);
-      return 0;
-   }
-
-   n_read = fread(gUtmpContents, 1, size, utmp);
-   if (!ferror(utmp)) {
-      if (fclose(utmp) != EOF && n_read == size)
-         return size / sizeof(STRUCT_UTMP);
-   } else
-      fclose(utmp);
-
-   free(gUtmpContents);
-   gUtmpContents = 0;
-   return 0;
-}
-
-//______________________________________________________________________________
-void *TUnixSystem::SearchUtmpEntry(int n, const char *tty)
-{
-   // Look for utmp entry which is connected to terminal tty.
-
-   STRUCT_UTMP *ue = gUtmpContents;
-
-   while (n--) {
-      if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
-         return ue;
-      ue++;
-   }
-   return 0;
 }
 
 //---- System, CPU and Memory info ---------------------------------------------

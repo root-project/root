@@ -78,9 +78,6 @@ protected:
    static void         UnixDynListSymbols(const char *lib, const char *re = "");
    static void         UnixDynListLibs(const char *lib = "");
 
-   static void        *SearchUtmpEntry(int nentries, const char *tty);
-   static int          ReadUtmpFile();
-
 public:
    TUnixSystem();
    virtual ~TUnixSystem();
