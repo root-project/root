@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 06/27/11
+# Last: 10/17/13
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -267,6 +267,18 @@ class Cpp05AssignToRefArbitraryClassTestCase( MyTestCase ):
       a[0] = RefTester( 33 )
       self.assertEqual( len(a), 1 )
       self.assertEqual( a[0].m_i, 33 )
+
+   def test2NiceErrorMessageReturnByRef( self ):
+      """Want nice error message of failing assign by reference"""
+
+      a = RefTesterNoAssign()
+      self.assertEqual( type(a), type(a[0]) )
+
+      self.assertRaises( TypeError, a.__setitem__, 0, RefTesterNoAssign() )
+      try:
+         a[0] = RefTesterNoAssign()
+      except TypeError, e:
+         self.assert_( 'can not assign' in str(e) )
 
 
 ### Check availability of math conversions ===================================

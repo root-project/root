@@ -2,7 +2,7 @@
   File: roottest/python/cpp/AdvancedCpp.C
   Author: WLavrijsen@lbl.gov
   Created: 06/04/05
-  Last: 03/12/12
+  Last: 10/17/13
 */
 
 #include <vector>
@@ -110,9 +110,15 @@ public:
    int m_i;
 };
 
-#ifdef __CINT__
-#pragma link C++ class std::vector< RefTester >;
-#endif
+class RefTesterNoAssign {
+public:
+   RefTesterNoAssign& operator[]( int ) { return *this; }
+
+private:
+   RefTesterNoAssign& operator=( const RefTesterNoAssign& ) {
+      return *this;
+   }
+};
 
 template class std::vector< RefTester >;
 

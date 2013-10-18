@@ -11,6 +11,7 @@ Test parameter passing of builtins through const reference ... ok
 Test abstract class in a hierarchy ... ok
 Test non-instatiatability of abstract classes ... ok
 Test assignment to an instance returned by reference ... ok
+Want nice error message of failing assign by reference ... ok
 Test operator int/long/double incl. typedef ... ok
 Check that the global operator!=/== is picked up ... ok
 Verify access to array of doubles ... ok
