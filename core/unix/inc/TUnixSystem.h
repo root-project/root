@@ -71,9 +71,6 @@ protected:
    static int          UnixRecv(int sock, void *buf, int len, int flag);
    static int          UnixSend(int sock, const void *buf, int len, int flag);
 
-   static void        *SearchUtmpEntry(int nentries, const char *tty);
-   static int          ReadUtmpFile();
-
 public:
    TUnixSystem();
    virtual ~TUnixSystem();
