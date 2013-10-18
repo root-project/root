@@ -208,7 +208,7 @@ void TStreamerInfo::Build()
    // A list of TStreamerElement derived classes is built by scanning
    // one by one the list of data members of the analyzed class.
 
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    // This is used to avoid unwanted recursive call to Build
    fIsBuilt = kTRUE;
@@ -554,7 +554,7 @@ void TStreamerInfo::BuildCheck()
    // Check if built and consistent with the class dictionary.
    // This method is called by TFile::ReadStreamerInfo.
 
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    TObjArray* array = 0;
    fClass = TClass::GetClass(GetName());
@@ -1010,7 +1010,7 @@ void TStreamerInfo::BuildEmulated(TFile *file)
 {
    // Create an Emulation TStreamerInfo object.
 
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    TString duName;
    R__ASSERT(file);
@@ -1052,7 +1052,7 @@ Bool_t TStreamerInfo::BuildFor( const TClass *in_memory_cl )
    // Check if we can build this for foreign class - do we have some rules
    // to do that
    //---------------------------------------------------------------------------
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    if( !in_memory_cl || !in_memory_cl->GetSchemaRules() ) {
       return kFALSE;
@@ -1272,7 +1272,7 @@ void TStreamerInfo::BuildOld()
 {
    // rebuild the TStreamerInfo structure
 
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    if (gDebug > 0) {
       printf("\n====>Rebuilding TStreamerInfo for class: %s, version: %d\n", GetName(), fClassVersion);
@@ -4314,7 +4314,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       } else
 #endif
       {
-         R__LOCKGUARD(gClingMutex);
+         R__LOCKGUARD(gInterpreterMutex);
          Int_t nobjects = fElements->GetEntriesFast();
          TObjArray store( *fElements );
          TStreamerElement *el;

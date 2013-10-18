@@ -93,7 +93,7 @@ private: // Data Members
    TEnv*           fMapfile;          // Association of classes to libraries.
    THashTable*     fMapNamespaces;    // Entries for the namespaces, that we need to signal to clang.
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
-   Bool_t          fLockProcessLine;  // True if ProcessLine should lock gClingMutex.
+   Bool_t          fLockProcessLine;  // True if ProcessLine should lock gInterpreterMutex.
 
    cling::Interpreter*   fInterpreter;   // The interpreter.
    cling::MetaProcessor* fMetaProcessor; // The metaprocessor.

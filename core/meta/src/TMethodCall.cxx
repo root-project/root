@@ -301,7 +301,7 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
   
    if (!scope) return;
 
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (params && params[0]) {
       gCling->CallFunc_SetFunc(fFunc, scope, (char *)methodname, (char *)params, objectIsConst, &fOffset);
    } else if (proto && proto[0]) {
@@ -402,7 +402,7 @@ void TMethodCall::Execute(void *object)
 
    if (!fFunc) return;
    
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    if (!fDtorOnly && fMethod[0]=='~') {
@@ -418,7 +418,7 @@ void TMethodCall::Execute(void *object, const char *params)
 
    if (!fFunc) return;
    
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
@@ -435,7 +435,7 @@ void TMethodCall::Execute(void *object, Long_t &retLong)
 
    if (!fFunc) return;
    
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    gCling->SetTempLevel(1);
@@ -450,7 +450,7 @@ void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
 
    if (!fFunc) return;
    
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
@@ -467,7 +467,7 @@ void TMethodCall::Execute(void *object, Double_t &retDouble)
 
    if (!fFunc) return;
    
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    gCling->SetTempLevel(1);
@@ -482,7 +482,7 @@ void TMethodCall::Execute(void *object, const char *params, Double_t &retDouble)
 
    if (!fFunc) return;
    
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
@@ -499,7 +499,7 @@ void TMethodCall::Execute(void *object, char **retText)
 
    if (!fFunc) return;
    
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    gCling->SetTempLevel(1);
@@ -514,7 +514,7 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
 
    if (!fFunc) return;
    
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
    void *address = 0;
@@ -555,7 +555,7 @@ void TMethodCall::SetParamPtrs(void *paramArr, Int_t nparam)
    // of default arguments.
 
    if (!fFunc) return;
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_SetArgArray(fFunc,(Long_t *)paramArr, nparam);
 }
 

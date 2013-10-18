@@ -121,7 +121,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
       if ((params = strchr(proto,'='))) *params = ' ';
    }
 
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    fFunc = gCling->CallFunc_Factory();
 
    // initiate class method (function) with proto
@@ -186,7 +186,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
       if ((params = strchr(proto,'='))) *params = ' ';
    }
 
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    fFunc = gCling->CallFunc_Factory();
    gCling->CallFunc_IgnoreExtraArgs(fFunc, true);
 
@@ -237,7 +237,7 @@ inline void TQSlot::ExecuteMethod(void *object)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    fExecuting++;
    gCling->CallFunc_Exec(fFunc,address);
    fExecuting--;
@@ -267,7 +267,7 @@ inline void TQSlot::ExecuteMethod(void *object, Int_t nargs, va_list ap)
    }
 
    void *address = 0;
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
 
    gCling->CallFunc_ResetArg(fFunc);
 
@@ -322,7 +322,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t param)
    // with single argument value.
 
    void *address = 0;
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_ResetArg(fFunc);
    gCling->CallFunc_SetArg(fFunc,param);
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -340,7 +340,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long64_t param)
    // with single argument value.
 
    void *address = 0;
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_ResetArg(fFunc);
    gCling->CallFunc_SetArg(fFunc,param);
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -358,7 +358,7 @@ inline void TQSlot::ExecuteMethod(void *object, Double_t param)
    // with single argument value.
 
    void *address = 0;
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_ResetArg(fFunc);
    gCling->CallFunc_SetArg(fFunc,param);
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -375,7 +375,7 @@ inline void TQSlot::ExecuteMethod(void *object, const char *param)
    // ExecuteMethod the method for the specified object and text param.
 
    void *address = 0;
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gTQSlotParams = (char*)param;
    gCling->CallFunc_SetArgs(fFunc,"gTQSlotParams");
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -398,7 +398,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam)
    // of default arguments.
 
    void *address = 0;
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_SetArgArray(fFunc,paramArr, nparam);
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;

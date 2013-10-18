@@ -40,7 +40,7 @@ class TMethod;
 class TObjArray;
 class TVirtualMutex;
 
-R__EXTERN TVirtualMutex *gClingMutex;
+R__EXTERN TVirtualMutex *gInterpreterMutex;
 
 class TInterpreter : public TNamed {
 

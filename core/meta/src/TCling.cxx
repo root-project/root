@@ -1235,13 +1235,13 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       // and is implemented by
       if (gApplication) {
          if (gApplication->IsCmdThread()) {
-            if (gGlobalMutex && !gClingMutex && fLockProcessLine) {
+            if (gGlobalMutex && !gInterpreterMutex && fLockProcessLine) {
                gGlobalMutex->Lock();
-               if (!gClingMutex)
-                  gClingMutex = gGlobalMutex->Factory(kTRUE);
+               if (!gInterpreterMutex)
+                  gInterpreterMutex = gGlobalMutex->Factory(kTRUE);
                gGlobalMutex->UnLock();
             }
-            R__LOCKGUARD(fLockProcessLine ? gClingMutex : 0);
+            R__LOCKGUARD(fLockProcessLine ? gInterpreterMutex : 0);
             gROOT->SetLineIsProcessing();
 
             UpdateAllCanvases();
@@ -1252,13 +1252,13 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       return 0;
    }
 
-   if (gGlobalMutex && !gClingMutex && fLockProcessLine) {
+   if (gGlobalMutex && !gInterpreterMutex && fLockProcessLine) {
       gGlobalMutex->Lock();
-      if (!gClingMutex)
-         gClingMutex = gGlobalMutex->Factory(kTRUE);
+      if (!gInterpreterMutex)
+         gInterpreterMutex = gGlobalMutex->Factory(kTRUE);
       gGlobalMutex->UnLock();
    }
-   R__LOCKGUARD(fLockProcessLine ? gClingMutex : 0);
+   R__LOCKGUARD(fLockProcessLine ? gInterpreterMutex : 0);
    gROOT->SetLineIsProcessing();
 
    // A non-zero returned value means the given line was
@@ -1380,7 +1380,7 @@ void TCling::AddIncludePath(const char *path)
    // looks for include files. Only one path item can be specified at a
    // time, i.e. "path1:path2" is not supported.
 
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    fInterpreter->AddIncludePath(path);
 }
 
@@ -1647,7 +1647,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
    //   filename as a path relative to
    //            the include path
    //            the shared library path
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
 
    std::string filesStr = "";
@@ -1861,7 +1861,7 @@ Int_t TCling::Load(const char* filename, Bool_t system)
    // Return 0 on success, -1 on failure.
 
    // Used to return 0 on success, 1 on duplicate, -1 on failure, -2 on "fatal".
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    cling::DynamicLibraryManager::LoadLibResult res
       = fInterpreter->getDynamicLibraryManager()->loadLibrary(filename, system);
    if (res == cling::DynamicLibraryManager::kLoadLibSuccess) {
@@ -1897,7 +1897,7 @@ Long_t TCling::ProcessLineSynch(const char* line, EErrorCode* error)
 {
    // Let cling process a command line synchronously, i.e we are waiting
    // it will be finished.
-   R__LOCKGUARD(fLockProcessLine ? gClingMutex : 0);
+   R__LOCKGUARD(fLockProcessLine ? gInterpreterMutex : 0);
    if (gApplication) {
       if (gApplication->IsCmdThread()) {
          return ProcessLine(line, error);
@@ -1924,7 +1924,7 @@ Long_t TCling::Calc(const char* line, EErrorCode* error)
       gROOT->SetLineIsProcessing();
    }
 #endif // R__WIN32
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (error) {
       *error = TInterpreter::kNoError;
    }
@@ -1981,7 +1981,7 @@ void TCling::RecursiveRemove(TObject* obj)
 {
    // Delete object from cling symbol table so it can not be used anymore.
    // cling objects are always on the heap.
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    // Note that fgSetOfSpecials is supposed to be updated by TClingCallbacks::tryFindROOTSpecialInternal
    // (but isn't at the moment).
    if (obj->IsOnHeap() && fgSetOfSpecials && !((std::set<TObject*>*)fgSetOfSpecials)->empty()) {
@@ -2001,7 +2001,7 @@ void TCling::Reset()
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Warning("Reset","Cling should support the equivalent of scratch_upto(&fDictPos)");
 #endif
 #endif
@@ -2014,7 +2014,7 @@ void TCling::ResetAll()
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Warning("ResetAll","Cling should support the equivalent of complete reset (unload everything but the startup decls.");
 #endif
 #endif
@@ -2028,7 +2028,7 @@ void TCling::ResetGlobals()
    //
    // Note: Right now, all we do is run the global destructors.
    //
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    fInterpreter->runStaticDestructorsOnce();
 }
 
@@ -2040,7 +2040,7 @@ void TCling::ResetGlobalVar(void* obj)
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Warning("ResetGlobalVar","Cling should support the equivalent of resetglobalvar(obj)");
 #endif
 #endif
@@ -2055,7 +2055,7 @@ void TCling::RewindDictionary()
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Warning("RewindDictionary","Cling should provide a way to revert transaction similar to rewinddictionary()");
 #endif
 #endif
@@ -2069,7 +2069,7 @@ Int_t TCling::DeleteGlobal(void* obj)
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Warning("DeleteGlobal","Cling should provide the equivalent of deleteglobal(obj), see also DeleteVariable.");
 #endif
 #endif
@@ -2088,7 +2088,7 @@ Int_t TCling::DeleteVariable(const char* name)
 #endif
 #endif
 
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    llvm::StringRef srName(name);
    const char* unscopedName = name;
    llvm::StringRef::size_type posScope = srName.rfind("::");
@@ -2139,7 +2139,7 @@ void TCling::SaveContext()
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Warning("SaveContext","Cling should provide a way to record a state watermark similar to store_dictposition(&fDictPos)");
 #endif
 #endif
@@ -2152,7 +2152,7 @@ void TCling::SaveGlobalsContext()
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Warning("SaveGlobalsContext","Cling should provide a way to record a watermark for the list of global variable similar to store_dictposition(&fDictPosGlobals)");
 #endif
 #endif
@@ -2180,7 +2180,7 @@ void TCling::UpdateListOfTypes()
 void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 {
    // Set pointer to the TClingClassInfo in TClass.
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (cl->fClassInfo && !reload) {
       return;
    }
@@ -2253,7 +2253,7 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
    // In case of templates the idea is that everything between the outer
    // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
 
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    static const char *anonEnum = "anonymous enum ";
    static int cmplen = strlen(anonEnum);
 
@@ -2409,7 +2409,7 @@ Bool_t TCling::CheckClassTemplate(const char *name)
 void TCling::CreateListOfBaseClasses(TClass* cl) const
 {
    // Create list of pointers to base class(es) for TClass cl.
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (cl->fBase) {
       return;
    }
@@ -2429,7 +2429,7 @@ void TCling::CreateListOfBaseClasses(TClass* cl) const
 void TCling::CreateListOfEnums(TClass* cl) const
 {
    // Create list of pointers to enums for TClass cl.
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (cl->fEnums) {
       return;
    }
@@ -2460,7 +2460,7 @@ void TCling::CreateListOfEnums(TClass* cl) const
 void TCling::CreateListOfDataMembers(TClass* cl) const
 {
    // Create list of pointers to data members for TClass cl.
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (cl->fData) {
       return;
    }
@@ -2480,7 +2480,7 @@ void TCling::CreateListOfDataMembers(TClass* cl) const
 void TCling::CreateListOfMethods(TClass* cl) const
 {
    // Create list of pointers to methods for TClass cl.
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (cl->fMethod) {
       return;
    }
@@ -2532,7 +2532,7 @@ void TCling::UpdateListOfDataMembers(TClass* cl) const
 void TCling::CreateListOfMethodArgs(TFunction* m) const
 {
    // Create list of pointers to method arguments for TMethod m.
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (m->fMethodArgs) {
       return;
    }
@@ -2711,7 +2711,7 @@ TString TCling::GetMangledName(TClass* cl, const char* method,
    // Return the cling mangled name for a method of a class with parameters
    // params (params is a string of actual arguments, not formal ones). If the
    // class is 0 the global function list will be searched.
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    TClingCallFunc func(fInterpreter);
    if (cl) {
       Long_t offset;
@@ -2739,7 +2739,7 @@ TString TCling::GetMangledNameWithPrototype(TClass* cl, const char* method,
    // Return the cling mangled name for a method of a class with a certain
    // prototype, i.e. "char*,int,float". If the class is 0 the global function
    // list will be searched.
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    Long_t offset;
    if (cl) {
       return ((TClingClassInfo*)cl->GetClassInfo())->
@@ -2756,7 +2756,7 @@ void* TCling::GetInterfaceMethod(TClass* cl, const char* method,
    // Return pointer to cling interface function for a method of a class with
    // parameters params (params is a string of actual arguments, not formal
    // ones). If the class is 0 the global function list will be searched.
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    TClingCallFunc func(fInterpreter);
    if (cl) {
       Long_t offset;
@@ -2780,7 +2780,7 @@ void* TCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
    // Return pointer to cling interface function for a method of a class with
    // a certain prototype, i.e. "char*,int,float". If the class is 0 the global
    // function list will be searched.
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    void* f;
    if (cl) {
       Long_t offset;
@@ -2804,7 +2804,7 @@ const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
    // by rootcling and by the run-time enviroment (TClass)
    // Return 0 if the name is not known.
 
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    // This first step is likely redundant if
    // the next step never issue any warnings.
@@ -2986,7 +2986,7 @@ void TCling::Execute(const char* function, const char* params, int* error)
    //        should enhance these interfaces so that we can report
    //        compilation and runtime errors properly.
    //
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (error) {
       *error = TInterpreter::kNoError;
    }
@@ -3011,7 +3011,7 @@ void TCling::Execute(TObject* obj, TClass* cl, const char* method,
    //        should enhance these interfaces so that we can report
    //        compilation and runtime errors properly.
    //
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (error) {
       *error = TInterpreter::kNoError;
    }
@@ -3111,7 +3111,7 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
    }
 
    // And now execute it.
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (error) {
       *error = TInterpreter::kNoError;
    }
@@ -3132,7 +3132,7 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
 Long_t TCling::ExecuteMacro(const char* filename, EErrorCode* error)
 {
    // Execute a cling macro.
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    return TApplication::ExecuteFile(filename, (int*)error);
 }
 
@@ -3212,7 +3212,7 @@ const char* TCling::TypeName(const char* typeDesc)
    // You need to use the result immediately before it is being overwritten.
    static char* t = 0;
    static unsigned int tlen = 0;
-   R__LOCKGUARD(gClingMutex); // Because of the static array.
+   R__LOCKGUARD(gInterpreterMutex); // Because of the static array.
    unsigned int dlen = strlen(typeDesc);
    if (dlen > tlen) {
       delete[] t;
@@ -3416,7 +3416,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
    // The interpreter uses this information to automatically load the shared
    // library for a class (autoload mechanism).
    // See also the AutoLoadCallback() method below.
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    // open the [system].rootmap files
    if (!fMapfile) {
       fMapfile = new TEnv();
@@ -3678,7 +3678,7 @@ Int_t TCling::UnloadLibraryMap(const char* library)
    size_t len = libname.Length();
    TEnvRec *rec;
    TIter next(fMapfile->GetTable());
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Int_t ret = 0;
    while ((rec = (TEnvRec *) next())) {
       TString cls = rec->GetName();
@@ -3740,7 +3740,7 @@ Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
    // blanks and TEnv considers a blank a terminator
    key.ReplaceAll(" ", "-");
 
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    if (!fMapfile) {
       fMapfile = new TEnv();
       fMapfile->IgnoreDuplicates(kTRUE);
@@ -3762,7 +3762,7 @@ Int_t TCling::AutoLoad(const char* cls)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Int_t status = 0;
    if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) {
       return status;
@@ -4000,7 +4000,7 @@ const char* TCling::GetIncludePath()
    // Refresh the list of include paths known to the interpreter and return it
    // with -I prepended.
 
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    fIncludePath = "";
 

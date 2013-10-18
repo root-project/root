@@ -2256,7 +2256,7 @@ void TStreamerInfo::Compile()
    // Store predigested information into local arrays. This saves a huge amount
    // of time compared to an explicit iteration on all elements.
 
-   R__LOCKGUARD(gClingMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    // fprintf(stderr,"Running Compile for %s %d %d req=%d,%d\n",GetName(),fClassVersion,fOptimized,CanOptimize(),TestBit(kCannotOptimize));
 

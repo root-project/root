@@ -375,7 +375,7 @@ Int_t TXProofServ::CreateServer()
       }
 
       // Make sure that parallel startup via threads is not active
-      // (it is broken for xpd because of the locks on gClingMutex)
+      // (it is broken for xpd because of the locks on gInterpreterMutex)
       gEnv->SetValue("Proof.ParallelStartup", 0);
 
       // Get plugin manager to load appropriate TProof from

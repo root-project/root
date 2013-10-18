@@ -161,7 +161,7 @@ TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
    nargs = 0;
 
    if (!gInterpreter) return 0;
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
 
    Long_t faddr = 0;
    if (!cl->IsLoaded()) {
@@ -207,7 +207,7 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
    // Almost the same as TClass::GetMethod().
 
    if (!gInterpreter) return 0;
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
 
    Long_t faddr = 0;
    if (!cl->IsLoaded()) {

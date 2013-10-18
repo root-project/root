@@ -208,7 +208,7 @@ namespace ROOT {
    {
       // Generate and return the TClass object.
       if (!fClass && fAction) {
-         R__LOCKGUARD2(gClingMutex);
+         R__LOCKGUARD2(gInterpreterMutex);
          fClass = GetAction().CreateClass(GetClassName(),
                                           GetVersion(),
                                           GetInfo(),

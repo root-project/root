@@ -36,7 +36,7 @@
 #include "TStreamerInfoActions.h"
 #include <stdlib.h>
 
-#include "TInterpreter.h" // For gClingMutex
+#include "TInterpreter.h" // For gInterpreterMutex
 
 #define MESSAGE(which,text)
 
@@ -771,7 +771,7 @@ static TGenCollectionProxy::Value *R__CreateValue(const std::string &name, Bool_
 TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
 {
    // Proxy initializer
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if (fValue) return this;
 
    TClass *cl = fClass ? fClass.GetClass() : TClass::GetClass(fTypeinfo,kTRUE,silent);

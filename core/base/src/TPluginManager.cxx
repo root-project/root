@@ -277,7 +277,7 @@ Long_t TPluginHandler::ExecPlugin(Int_t va_(nargs), ...)
       return 0;
    }
 
-   R__LOCKGUARD2(gClingMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
 
    fCallEnv->ResetParam();
 
