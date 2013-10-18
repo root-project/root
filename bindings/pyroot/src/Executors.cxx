@@ -348,12 +348,27 @@ PyObject* PyROOT::TRootObjectRefExecutor::Execute( CallFunc_t* func, void* self,
       return result;
    else {
    // this generic code is quite slow compared to its C++ equivalent ...
-      PyObject* res2 = PyObject_CallMethod( result,
-         const_cast< char* >( "__assign__" ), const_cast< char* >( "O" ), fAssignable );
+      PyObject* assign = PyObject_GetAttrString( result, const_cast< char* >( "__assign__" ) );
+      if ( ! assign ) {
+         PyErr_Clear();
+         PyObject* descr = PyObject_Str( result );
+         if ( descr && PyString_CheckExact( descr ) ) {
+            PyErr_Format( PyExc_TypeError, "can not assign to return object (%s)",
+                          PyString_AS_STRING( descr ) );
+         } else {
+            PyErr_SetString( PyExc_TypeError, "can not assign to result" );
+         }
+         Py_XDECREF( descr );
+         Py_DECREF( result );
+         Py_DECREF( fAssignable ); fAssignable = 0;
+         return 0;
+      }
 
+      PyObject* res2 = PyObject_CallFunction( assign, const_cast< char* >( "O" ), fAssignable );
+
+      Py_DECREF( assign );
       Py_DECREF( result );
-      Py_DECREF( fAssignable );
-      fAssignable = 0;
+      Py_DECREF( fAssignable ); fAssignable = 0;
 
       if ( res2 ) {
          Py_DECREF( res2 );             // typically, *this from operator=()

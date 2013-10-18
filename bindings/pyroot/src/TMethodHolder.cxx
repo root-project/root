@@ -312,25 +312,30 @@ void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
 
    std::string details = "";
    if ( evalue ) {
-      PyObject* s = PyObject_Str( evalue );
-      details = PyROOT_PyUnicode_AsString( s );
-      Py_DECREF( s );
+      PyObject* descr = PyObject_Str( evalue );
+      if ( descr ) {
+         details = PyROOT_PyUnicode_AsString( descr );
+         Py_DECREF( descr );
+      }
    }
 
    Py_XDECREF( etype ); Py_XDECREF( evalue ); Py_XDECREF( etrace );
 
    PyObject* doc = GetDocString();
 
-   if ( details != "" ) {
+   if ( details.empty() ) {
+      PyErr_Format( PyExc_TypeError, "%s =>\n    %s", PyROOT_PyUnicode_AsString( doc ),
+         msg ? PyROOT_PyUnicode_AsString( msg ) : ""  );
+   } else if ( msg ) {
       PyErr_Format( PyExc_TypeError, "%s =>\n    %s (%s)",
-          PyROOT_PyUnicode_AsString( doc ), PyROOT_PyUnicode_AsString( msg ), details.c_str() );
+         PyROOT_PyUnicode_AsString( doc ), PyROOT_PyUnicode_AsString( msg ), details.c_str() );
    } else {
       PyErr_Format( PyExc_TypeError, "%s =>\n    %s",
-          PyROOT_PyUnicode_AsString( doc ), PyROOT_PyUnicode_AsString( msg ) );
+         PyROOT_PyUnicode_AsString( doc ), details.c_str() );
    }
 
    Py_DECREF( doc );
-   Py_DECREF( msg );
+   Py_XDECREF( msg );
 }
 
 //- constructors and destructor ----------------------------------------------
@@ -606,7 +611,8 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self, Bool_t release_gil )
    // can happen in the case of a CINT error: trigger exception processing
       Py_DECREF( result );
       result = 0;
-   }
+   } else if ( ! result && PyErr_Occurred() )
+      SetPyError_( 0 );
 
    return result;
 }
