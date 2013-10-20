@@ -115,4 +115,8 @@ endif()
 add_custom_target(AFTERIMAGE DEPENDS ${afterimagelib} )
 set_target_properties(AFTERIMAGE PROPERTIES FOLDER Builtins)
 
+if(builtin_freetype)
+  add_dependencies(AFTERIMAGE FREETYPE)
+endif()
+
 install(FILES ${afterimagelib} DESTINATION lib)
