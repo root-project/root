@@ -30,6 +30,7 @@
 #include <string>
 #include <string.h>
 #include <vector>
+#include <set>
 #ifndef WIN32
 #   include <unistd.h>
 #else
@@ -262,7 +263,7 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
 {
    // Write libmap. Returns -1 in case of error.
 
-   vector<string> classes;
+   set<string> classes;
 
    vector<string>::const_iterator lk;
    for (lk = linkdefs.begin(); lk != linkdefs.end(); lk++) {
@@ -312,7 +313,7 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
                         *s = '-';
                      s++;
                   }
-                  classes.push_back(cls);
+                  classes.insert(cls);
                }
             }
          }
@@ -330,7 +331,7 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
          libbase = solib.c_str();
    }
 
-   vector<string>::const_iterator it;
+   set<string>::const_iterator it;
    for (it = classes.begin(); it != classes.end(); it++) {
       fprintf(fp, "Library.%-35s %s", ((*it)+":").c_str(), libbase);
 
