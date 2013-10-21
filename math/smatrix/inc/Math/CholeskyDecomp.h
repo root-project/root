@@ -16,9 +16,12 @@
  *	factored code to provide a nice Cholesky decomposition class, along
  *	with separate methods for solving a single linear system and to
  *	obtain the inverse matrix from the decomposition
- * @data July 15th 2013
+ * @date July 15th 2013
  * 	provide a version of that class which works if the dimension of the
  * 	problem is only known at run time
+ * @date September 30th 2013
+ * 	provide routines to access the result of the decomposition L and its
+ * 	inverse
  */
 
 #include <cmath>
@@ -122,8 +125,7 @@ public:
    /** @returns true if decomposition was successful */
    operator bool() const { return fOk; }
 
-   /// solves a linear system for the given right hand side
-   /** solves a linear system for the given right hand side
+   /** @brief solves a linear system for the given right hand side
     *
     * Note that you can use both SVector classes and plain arrays for
     * rhs. (Make sure that the sizes match!). It will work with any vector 
@@ -137,8 +139,7 @@ public:
       if (fOk) _solver<F,N,V>()(rhs, fL); return fOk;
    }
 
-   /// place the inverse into m
-   /** place the inverse into m
+   /** @brief place the inverse into m
     *
     * This is the method to use with an SMatrix.
     *
@@ -150,8 +151,7 @@ public:
       if (fOk) _inverter<F,N,M>()(m, fL); return fOk;
    }
 
-   /// place the inverse into m
-   /** place the inverse into m
+   /** @brief place the inverse into m
     *
     * This is the method to use with a plain array.
     *
@@ -170,6 +170,107 @@ public:
          _inverter<F,N,PackedArrayAdapter<G> >()(adapted, fL);
       }
       return fOk;
+   }
+
+   /** @brief obtain the decomposed matrix L
+    *
+    * This is the method to use with a plain array.
+    *
+    * @returns if the decomposition was successful
+    */
+   template<class M> bool getL(M& m) const
+   {
+       if (!fOk) return false;
+       for (unsigned i = 0; i < N; ++i) {
+	   // zero upper half of matrix
+	   for (unsigned j = i + 1; j < N; ++j)
+	       m(i, j) = F(0);
+	   // copy the rest
+	   for (unsigned j = 0; j <= i; ++j)
+	       m(i, j) = fL[i * (i + 1) / 2 + j];
+	   // adjust the diagonal - we save 1/L(i, i) in that position, so
+	   // convert to what caller expects
+	   m(i, i) = F(1) / m(i, i);
+       }
+       return true;
+   }
+
+   /** @brief obtain the decomposed matrix L
+    *
+    * @returns if the decomposition was successful
+    *
+    * NOTE: the matrix is given in packed representation, matrix
+    * element m(i,j) (j <= i) is supposed to be in array element
+    * (i * (i + 1)) / 2 + j
+    */
+   template<typename G> bool getL(G* m) const
+   {
+       if (!fOk) return false;
+       // copy L
+       for (unsigned i = 0; i < (N * (N + 1)) / 2; ++i)
+	   m[i] = fL[i];
+       // adjust diagonal - we save 1/L(i, i) in that position, so convert to
+       // what caller expects
+       for (unsigned i = 0; i < N; ++i)
+	   m[(i * (i + 1)) / 2 + i] = F(1) / fL[(i * (i + 1)) / 2 + i];
+       return true;
+   }
+
+   /** @brief obtain the inverse of the decomposed matrix L
+    *
+    * This is the method to use with a plain array.
+    *
+    * @returns if the decomposition was successful
+    */
+   template<class M> bool getLi(M& m) const
+   {
+       if (!fOk) return false;
+       for (unsigned i = 0; i < N; ++i) {
+	   // zero lower half of matrix
+	   for (unsigned j = i + 1; j < N; ++j)
+	       m(j, i) = F(0);
+	   // copy the rest
+	   for (unsigned j = 0; j <= i; ++j)
+	       m(j, i) = fL[i * (i + 1) / 2 + j];
+       }
+       // invert the off-diagonal part of what we just copied
+       for (unsigned i = 1; i < N; ++i) {
+	   for (unsigned j = 0; j < i; ++j) {
+	       typename M::value_type tmp = F(0);
+	       for (unsigned k = i; k-- > j;)
+		   tmp -= m(k, i) * m(j, k);
+	       m(j, i) = tmp * m(i, i);
+	   }
+       }
+       return true;
+   }
+
+   /** @brief obtain the inverse of the decomposed matrix L
+    *
+    * @returns if the decomposition was successful
+    *
+    * NOTE: the matrix is given in packed representation, matrix
+    * element m(j,i) (j <= i) is supposed to be in array element
+    * (i * (i + 1)) / 2 + j
+    */
+   template<typename G> bool getLi(G* m) const
+   {
+       if (!fOk) return false;
+       // copy L
+       for (unsigned i = 0; i < (N * (N + 1)) / 2; ++i)
+	   m[i] = fL[i];
+       // invert the off-diagonal part of what we just copied
+       G* base1 = &m[1];
+       for (unsigned i = 1; i < N; base1 += ++i) {
+	   for (unsigned j = 0; j < i; ++j) {
+	       G tmp = F(0);
+	       const G *base2 = &m[(i * (i - 1)) / 2];
+	       for (unsigned k = i; k-- > j; base2 -= k)
+		   tmp -= base1[k] * base2[j];
+	       base1[j] = tmp * base1[i];
+	   }
+       }
+       return true;
    }
 };
 
@@ -190,7 +291,7 @@ public:
  * @code
  * // let m be a symmetric positive definite SMatrix (use type float
  * // for internal computations, matrix size is 4x4)
- * CholeskyDecomp<float, 4> decomp(m);
+ * CholeskyDecompGenDim<float> decomp(4, m);
  * // check if the decomposition succeeded
  * if (!decomp) {
  *   std::cerr << "decomposition failed!" << std::endl;
@@ -262,8 +363,7 @@ public:
    /** @returns true if decomposition was successful */
    operator bool() const { return fOk; }
 
-   /// solves a linear system for the given right hand side
-   /** solves a linear system for the given right hand side
+   /** @brief solves a linear system for the given right hand side
     *
     * Note that you can use both SVector classes and plain arrays for
     * rhs. (Make sure that the sizes match!). It will work with any vector 
@@ -277,8 +377,7 @@ public:
       if (fOk) _solverGenDim<F,V>()(rhs, fL, fN); return fOk;
    }
 
-   /// place the inverse into m
-   /** place the inverse into m
+   /** @brief place the inverse into m
     *
     * This is the method to use with an SMatrix.
     *
@@ -290,8 +389,7 @@ public:
       if (fOk) _inverterGenDim<F,M>()(m, fL, fN); return fOk;
    }
 
-   /// place the inverse into m
-   /** place the inverse into m
+   /** @brief place the inverse into m
     *
     * This is the method to use with a plain array.
     *
@@ -310,6 +408,107 @@ public:
          _inverterGenDim<F,PackedArrayAdapter<G> >()(adapted, fL, fN);
       }
       return fOk;
+   }   
+
+   /** @brief obtain the decomposed matrix L
+    *
+    * This is the method to use with a plain array.
+    *
+    * @returns if the decomposition was successful
+    */
+   template<class M> bool getL(M& m) const
+   {
+       if (!fOk) return false;
+       for (unsigned i = 0; i < fN; ++i) {
+	   // zero upper half of matrix
+	   for (unsigned j = i + 1; j < fN; ++j)
+	       m(i, j) = F(0);
+	   // copy the rest
+	   for (unsigned j = 0; j <= i; ++j)
+	       m(i, j) = fL[i * (i + 1) / 2 + j];
+	   // adjust the diagonal - we save 1/L(i, i) in that position, so
+	   // convert to what caller expects
+	   m(i, i) = F(1) / m(i, i);
+       }
+       return true;
+   }
+
+   /** @brief obtain the decomposed matrix L
+    *
+    * @returns if the decomposition was successful
+    *
+    * NOTE: the matrix is given in packed representation, matrix
+    * element m(i,j) (j <= i) is supposed to be in array element
+    * (i * (i + 1)) / 2 + j
+    */
+   template<typename G> bool getL(G* m) const
+   {
+       if (!fOk) return false;
+       // copy L
+       for (unsigned i = 0; i < (fN * (fN + 1)) / 2; ++i)
+	   m[i] = fL[i];
+       // adjust diagonal - we save 1/L(i, i) in that position, so convert to
+       // what caller expects
+       for (unsigned i = 0; i < fN; ++i)
+	   m[(i * (i + 1)) / 2 + i] = F(1) / fL[(i * (i + 1)) / 2 + i];
+       return true;
+   }
+
+   /** @brief obtain the inverse of the decomposed matrix L
+    *
+    * This is the method to use with a plain array.
+    *
+    * @returns if the decomposition was successful
+    */
+   template<class M> bool getLi(M& m) const
+   {
+       if (!fOk) return false;
+       for (unsigned i = 0; i < fN; ++i) {
+	   // zero lower half of matrix
+	   for (unsigned j = i + 1; j < fN; ++j)
+	       m(j, i) = F(0);
+	   // copy the rest
+	   for (unsigned j = 0; j <= i; ++j)
+	       m(j, i) = fL[i * (i + 1) / 2 + j];
+       }
+       // invert the off-diagonal part of what we just copied
+       for (unsigned i = 1; i < fN; ++i) {
+	   for (unsigned j = 0; j < i; ++j) {
+	       typename M::value_type tmp = F(0);
+	       for (unsigned k = i; k-- > j;)
+		   tmp -= m(k, i) * m(j, k);
+	       m(j, i) = tmp * m(i, i);
+	   }
+       }
+       return true;
+   }
+
+   /** @brief obtain the inverse of the decomposed matrix L
+    *
+    * @returns if the decomposition was successful
+    *
+    * NOTE: the matrix is given in packed representation, matrix
+    * element m(j,i) (j <= i) is supposed to be in array element
+    * (i * (i + 1)) / 2 + j
+    */
+   template<typename G> bool getLi(G* m) const
+   {
+       if (!fOk) return false;
+       // copy L
+       for (unsigned i = 0; i < (fN * (fN + 1)) / 2; ++i)
+	   m[i] = fL[i];
+       // invert the off-diagonal part of what we just copied
+       G* base1 = &m[1];
+       for (unsigned i = 1; i < fN; base1 += ++i) {
+	   for (unsigned j = 0; j < i; ++j) {
+	       G tmp = F(0);
+	       const G *base2 = &m[(i * (i - 1)) / 2];
+	       for (unsigned k = i; k-- > j; base2 -= k)
+		   tmp -= base1[k] * base2[j];
+	       base1[j] = tmp * base1[i];
+	   }
+       }
+       return true;
    }
 };
 
