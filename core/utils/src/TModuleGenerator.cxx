@@ -80,15 +80,15 @@ void TModuleGenerator::ConvertToCppString(std::string& text) const{
    // Will be replaced by an initialiser list
    strPairs fromToPatterns;
    fromToPatterns.reserve(4);
-   // Remove empty lines
-//    fromToPatterns.push_back(std::make_pair("\n\n",""));
+   // \r -> "" (carriage return, empty char )
+   fromToPatterns.push_back(std::make_pair("\r",""));   
    // \ -> \\'
    fromToPatterns.push_back(std::make_pair("\\","\\\\"));
    // " -> \"
    fromToPatterns.push_back(std::make_pair("\"","\\\""));   
-   // \n -> \\n"\n" (carriage return, ",carriage return, ")
+   // \n -> \\n"\n" (new line, ",new line, ")
    fromToPatterns.push_back(std::make_pair("\n","\\n\"\n\""));
-      
+   
    for (strPairs::iterator fromToIter=fromToPatterns.begin();
         fromToIter!=fromToPatterns.end();fromToIter++){
       size_t start_pos = 0;
