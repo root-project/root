@@ -270,12 +270,25 @@ std::ostream& TModuleGenerator::WritePPIncludes(std::ostream& out) const
 
 std::ostream& TModuleGenerator::WriteAllSeenHeadersArray(std::ostream& out) const
 {
+   
+   std::vector<std::string> headerNames;
+   headerNames.reserve(200);
+   
    SourceManager& srcMgr = fCI->getSourceManager();
    for (SourceManager::fileinfo_iterator i = srcMgr.fileinfo_begin(),
            e = srcMgr.fileinfo_end(); i != e; ++i) {
       const FileEntry* fileEntry = i->first;
-      out << "\"" << fileEntry->getName() << "\",\n";
+      headerNames.push_back(fileEntry->getName());
    }
+
+   // Sort them in order to obtain always identical dictionaries
+   std::sort(headerNames.begin(),headerNames.end());
+
+   for (std::vector<std::string>::iterator headerNameIt = headerNames.begin();
+        headerNameIt != headerNames.end(); ++headerNameIt){
+      out << "\"" << *headerNameIt << "\",\n";
+   }   
+   
    out << "0" << std::endl;
    return out;
 }
