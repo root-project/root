@@ -441,6 +441,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
    
    for(CXXRecordDecl::decl_iterator I = CXXRD.decls_begin(),
           E = CXXRD.decls_end(); I != E; ++I) {
+      
       // CXXMethodDecl,FieldDecl and VarDecl inherit from NamedDecl
       // See: http://clang.llvm.org/doxygen/classclang_1_1DeclaratorDecl.html
       if (!(*I)->isImplicit()
@@ -479,8 +480,13 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          if (selectionRules.IsSelectionXMLFile() && thisClassSelectionRule!=0){            
             const std::list<VariableSelectionRule>& fieldSelRules = thisClassSelectionRule->GetFieldSelectionRules();
 
-            NamedDecl* namedDecl (cast<NamedDecl>(*I));
-            AnnotateFieldDecl(*namedDecl,fieldSelRules);
+            // This check is here to avoid asserts in debug mode (LLVMDEV env variable set)
+            // 1) Check if this is a NamedDecl
+            // 2) Use a cast (not runtime checked) for the conversion
+            if(isa<NamedDecl>(**I)){
+               NamedDecl* namedDecl = cast<NamedDecl>(*I);
+               AnnotateFieldDecl(*namedDecl,fieldSelRules);
+            }
          } // End presence of XML selection file
       }
    }
