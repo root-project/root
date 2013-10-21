@@ -5264,7 +5264,7 @@ Long64_t TH1::Merge(TCollection *li)
    Bool_t allHaveLimits = kTRUE;
    Bool_t allSameLimits = kTRUE;
    Bool_t foundLabelHist = kFALSE;
-   Bool_t firstNonEmptyHist = kTRUE;
+   Bool_t firstHistWithLimits = kTRUE;
 
 
    TIter next(&inlist);
@@ -5280,20 +5280,21 @@ Long64_t TH1::Merge(TCollection *li)
 
          // this is done in case the first histograms are empty and
          // the histogram have different limits
-         if (firstNonEmptyHist ) {
-            // set axis limits in the case the first histogram was empty
+         if (firstHistWithLimits ) {
+            // set axis limits in the case the first histogram did not have limits
             if (h != this && !SameLimitsAndNBins( fXaxis, *h->GetXaxis()) ) {
-               fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),h->GetXaxis()->GetXmax());
+              if (h->GetXaxis()->GetXbins()->GetSize() != 0) fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
+              else                                           fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
             }
-            firstNonEmptyHist = kFALSE;
+            firstHistWithLimits = kFALSE;
          }
 
          // this is executed the first time an histogram with limits is found
          // to set some initial values on the new axis
          if (!initialLimitsFound) {
             initialLimitsFound = kTRUE;
-            newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
-               h->GetXaxis()->GetXmax());
+            if (h->GetXaxis()->GetXbins()->GetSize() != 0) newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
+            else                                           newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
          }
          else {
             // check first if histograms have same bins
@@ -5376,8 +5377,10 @@ Long64_t TH1::Merge(TCollection *li)
       inlist.AddFirst(hclone);
    }
 
-   if (!allSameLimits && initialLimitsFound)
-      SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax());
+   if (!allSameLimits && initialLimitsFound) {
+     if (newXAxis.GetXbins()->GetSize() != 0) SetBins(newXAxis.GetNbins(), newXAxis.GetXbins()->GetArray());
+     else                                     SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax());
+   }
 
    if (!allHaveLimits && !allHaveLabels) {
       // fill this histogram with all the data from buffers of histograms without limits

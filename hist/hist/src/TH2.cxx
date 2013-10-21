@@ -1462,7 +1462,7 @@ Long64_t TH2::Merge(TCollection *list)
    Bool_t sameLimitsX = kTRUE;
    Bool_t sameLimitsY = kTRUE;
    Bool_t allHaveLimits = kTRUE;
-   Bool_t firstNonEmptyHist = kTRUE;
+   Bool_t firstHistWithLimits = kTRUE;
 
    TIter next(&inlist);
    TH2 * h = this;
@@ -1475,25 +1475,29 @@ Long64_t TH2::Merge(TCollection *list)
 
          // this is done in case the first histograms are empty and 
          // the histogram have different limits
-         if (firstNonEmptyHist ) { 
-            // set axis limits in the case the first histogram was empty
+         if (firstHistWithLimits ) { 
+            // set axis limits in the case the first histogram did not have limits
             if (h != this ) { 
-               if (!SameLimitsAndNBins(fXaxis, *(h->GetXaxis())) ) 
-                  fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),h->GetXaxis()->GetXmax());
-               if (!SameLimitsAndNBins(fYaxis, *(h->GetYaxis())) ) 
-                  fYaxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),h->GetYaxis()->GetXmax());
+              if (!SameLimitsAndNBins(fXaxis, *(h->GetXaxis())) ) {
+                if (h->GetXaxis()->GetXbins()->GetSize() != 0) fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
+                else                                           fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
+              }
+              if (!SameLimitsAndNBins(fYaxis, *(h->GetYaxis())) ) {
+                if (h->GetYaxis()->GetXbins()->GetSize() != 0) fYaxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXbins()->GetArray());
+                else                                           fYaxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(), h->GetYaxis()->GetXmax());
+              }
             }
-            firstNonEmptyHist = kFALSE;     
+            firstHistWithLimits = kFALSE;
          }
 
          if (!initialLimitsFound) {
             // this is executed the first time an histogram with limits is found
             // to set some initial values on the new axes
             initialLimitsFound = kTRUE;
-            newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
-               h->GetXaxis()->GetXmax());
-            newYAxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
-               h->GetYaxis()->GetXmax());
+            if (h->GetXaxis()->GetXbins()->GetSize() != 0) newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
+            else                                           newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
+            if (h->GetYaxis()->GetXbins()->GetSize() != 0) newYAxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXbins()->GetArray());
+            else                                           newYAxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(), h->GetYaxis()->GetXmax());
          }
          else {
            // check first if histograms have same bins in X
@@ -1558,9 +1562,24 @@ Long64_t TH2::Merge(TCollection *list)
       inlist.AddFirst(hclone);
    }
 
-   if (!allSameLimits && initialLimitsFound)
-      SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
-      newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax());
+   if (!allSameLimits && initialLimitsFound) {
+     if (!sameLimitsX) {
+       fXaxis.SetRange(0,0);
+       if (newXAxis.GetXbins()->GetSize() != 0) fXaxis.Set(newXAxis.GetNbins(),newXAxis.GetXbins()->GetArray());
+       else                                     fXaxis.Set(newXAxis.GetNbins(),newXAxis.GetXmin(), newXAxis.GetXmax());
+     }
+     if (!sameLimitsY) {
+       fYaxis.SetRange(0,0);
+       if (newYAxis.GetXbins()->GetSize() != 0) fYaxis.Set(newYAxis.GetNbins(),newYAxis.GetXbins()->GetArray());
+       else                                     fYaxis.Set(newYAxis.GetNbins(),newYAxis.GetXmin(), newYAxis.GetXmax());
+     }
+     fZaxis.Set(1,0,1);
+     fNcells = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
+     SetBinsLength(fNcells);
+     if (fSumw2.fN) {
+       fSumw2.Set(fNcells);
+     }
+   }
 
    if (!allHaveLimits) {
       // fill this histogram with all the data from buffers of histograms without limits

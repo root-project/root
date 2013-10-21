@@ -1495,7 +1495,7 @@ Long64_t TH3::Merge(TCollection *list)
    Bool_t sameLimitsY = kTRUE;
    Bool_t sameLimitsZ = kTRUE;
    Bool_t allHaveLimits = kTRUE;
-   Bool_t firstNonEmptyHist = kTRUE;
+   Bool_t firstHistWithLimits = kTRUE;
 
    TIter next(&inlist);
    TH3* h = this;
@@ -1508,29 +1508,35 @@ Long64_t TH3::Merge(TCollection *list)
 
          // this is done in case the first histograms are empty and 
          // the histogram have different limits
-         if (firstNonEmptyHist ) { 
-            // set axis limits in the case the first histogram was empty
+         if (firstHistWithLimits ) { 
+            // set axis limits in the case the first histogram did not have limits
             if (h != this ) { 
-               if (!SameLimitsAndNBins(fXaxis, *(h->GetXaxis())) ) 
-                  fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),h->GetXaxis()->GetXmax());
-               if (!SameLimitsAndNBins(fYaxis, *(h->GetYaxis())) ) 
-                  fYaxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),h->GetYaxis()->GetXmax());
-               if (!SameLimitsAndNBins(fZaxis, *(h->GetZaxis())) ) 
-                  fZaxis.Set(h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),h->GetZaxis()->GetXmax());
+              if (!SameLimitsAndNBins(fXaxis, *(h->GetXaxis())) ) {
+                if (h->GetXaxis()->GetXbins()->GetSize() != 0) fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
+                else                                           fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
+              }
+              if (!SameLimitsAndNBins(fYaxis, *(h->GetYaxis())) ) {
+                if (h->GetYaxis()->GetXbins()->GetSize() != 0) fYaxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXbins()->GetArray());
+                else                                           fYaxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(), h->GetYaxis()->GetXmax());
+              }
+              if (!SameLimitsAndNBins(fZaxis, *(h->GetZaxis())) ) {
+                if (h->GetZaxis()->GetXbins()->GetSize() != 0) fZaxis.Set(h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXbins()->GetArray());
+                else                                           fZaxis.Set(h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(), h->GetZaxis()->GetXmax());
+              }
             }
-            firstNonEmptyHist = kFALSE;     
+            firstHistWithLimits = kFALSE;
          }
 
          if (!initialLimitsFound) {
             // this is executed the first time an histogram with limits is found
             // to set some initial values on the new axes
             initialLimitsFound = kTRUE;
-            newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
-               h->GetXaxis()->GetXmax());
-            newYAxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
-               h->GetYaxis()->GetXmax());
-            newZAxis.Set(h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
-               h->GetZaxis()->GetXmax());
+            if (h->GetXaxis()->GetXbins()->GetSize() != 0) newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
+            else                                           newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
+            if (h->GetYaxis()->GetXbins()->GetSize() != 0) newYAxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXbins()->GetArray());
+            else                                           newYAxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(), h->GetYaxis()->GetXmax());
+            if (h->GetZaxis()->GetXbins()->GetSize() != 0) newZAxis.Set(h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXbins()->GetArray());
+            else                                           newZAxis.Set(h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(), h->GetZaxis()->GetXmax());
          }
          else {
            if(!SameLimitsAndNBins(newXAxis, *(h->GetXaxis()))) {
@@ -1598,9 +1604,26 @@ Long64_t TH3::Merge(TCollection *list)
    }
 
    if (!allSameLimits && initialLimitsFound) {
-      SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
-              newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
-              newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax());
+     if (!sameLimitsX) {
+       fXaxis.SetRange(0,0);
+       if (newXAxis.GetXbins()->GetSize() != 0) fXaxis.Set(newXAxis.GetNbins(),newXAxis.GetXbins()->GetArray());
+       else                                     fXaxis.Set(newXAxis.GetNbins(),newXAxis.GetXmin(), newXAxis.GetXmax());
+     }
+     if (!sameLimitsY) {
+       fYaxis.SetRange(0,0);
+       if (newYAxis.GetXbins()->GetSize() != 0) fYaxis.Set(newYAxis.GetNbins(),newYAxis.GetXbins()->GetArray());
+       else                                     fYaxis.Set(newYAxis.GetNbins(),newYAxis.GetXmin(), newYAxis.GetXmax());
+     }
+     if (!sameLimitsZ) {
+       fZaxis.SetRange(0,0);
+       if (newZAxis.GetXbins()->GetSize() != 0) fZaxis.Set(newZAxis.GetNbins(),newZAxis.GetXbins()->GetArray());
+       else                                     fZaxis.Set(newZAxis.GetNbins(),newZAxis.GetXmin(), newZAxis.GetXmax());
+     }
+     fNcells = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
+     SetBinsLength(fNcells);
+     if (fSumw2.fN) {
+       fSumw2.Set(fNcells);
+     }
    }
 
    if (!allHaveLimits) {
