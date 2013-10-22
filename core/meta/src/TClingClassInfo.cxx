@@ -36,6 +36,7 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/StoredValueRef.h"
+#include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -474,7 +475,7 @@ static bool HasBody(const clang::FunctionDecl &decl, const cling::Interpreter &i
    if (decl.hasBody()) return true;
    
    std::string mangledName;
-   interp.maybeMangleDeclName(&decl, mangledName);
+   cling::utils::Analyze::maybeMangleDeclName(&decl, mangledName);
 
    void *GV = interp.getAddressOfGlobal(mangledName.c_str());
    if (GV) return true;

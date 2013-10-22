@@ -34,6 +34,7 @@
 #include "TMetaUtils.h"
 
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -443,7 +444,7 @@ const char *TClingMethodInfo::GetMangledName() const
    }
    static std::string mangled_name;
    mangled_name.clear();
-   fInterp->maybeMangleDeclName(GetMethodDecl(),mangled_name);
+   cling::utils::Analyze::maybeMangleDeclName(GetMethodDecl(), mangled_name);
    return mangled_name.c_str();
 }
 
