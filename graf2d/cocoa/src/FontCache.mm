@@ -212,6 +212,7 @@ FontCache::FontCache()
    //XLFD name is not exactly PS name thus generating a warning with a new Core Text.
    fXLFDtoPostscriptNames["helvetica"] = "Helvetica";
    fXLFDtoPostscriptNames["courier"] = "Courier";
+   fXLFDtoPostscriptNames["times"] = "Times-Roman";   
 }
 
 //______________________________________________________________________________
