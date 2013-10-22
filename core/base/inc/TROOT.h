@@ -143,6 +143,7 @@ public:
    void              Browse(TBrowser *b);
    Bool_t            ClassSaved(TClass *cl);
    void              CloseFiles();
+   void              EndOfProcessCleanups();
    virtual TObject  *FindObject(const char *name) const;
    virtual TObject  *FindObject(const TObject *obj) const;
    virtual TObject  *FindObjectAny(const char *name) const;
