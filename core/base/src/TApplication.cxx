@@ -76,11 +76,11 @@ Bool_t TIdleTimer::Notify()
 
 ClassImp(TApplication)
 
-static void CallCloseFiles()
+static void CallEndOfProcessCleanups()
 {
   // Insure that the files, canvases and sockets are closed.
 
-  gROOT->CloseFiles();
+  gROOT->EndOfProcessCleanups();
 }
 
 //______________________________________________________________________________
@@ -137,7 +137,7 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
 
    if (!gApplication) {
       // If we are the first TApplication register the atexit)
-      atexit(CallCloseFiles);
+      atexit(CallEndOfProcessCleanups);
    }
    gApplication = this;
    gROOT->SetApplication(this);
@@ -222,9 +222,8 @@ TApplication::~TApplication()
    // unloaded).
    if (fgApplications == 0 || fgApplications->FirstLink() == 0 ) {
       if (gROOT) {
-         gROOT->CloseFiles();
-      }
-      if (gInterpreter) {
+         gROOT->EndOfProcessCleanups();
+      } else if (gInterpreter) {
          gInterpreter->ResetGlobals();
       }
    }

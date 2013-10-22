@@ -835,6 +835,20 @@ void TROOT::CloseFiles()
       R__ListSlowClose(static_cast<TList*>(fMappedFiles));
    }
 
+}
+
+//______________________________________________________________________________
+void TROOT::EndOfProcessCleanups()
+{
+   // Execute the cleanups necessary at the end of the process, in particular
+   // those that must be executed before the library start being unloaded.
+
+   CloseFiles();
+   
+   if (gInterpreter) {
+      gInterpreter->ResetGlobals();
+   }
+
    // Now a set of simpler things to delete.  See the same ordering in
    // TROOT::~TROOT
    fFunctions->Delete();
@@ -844,6 +858,7 @@ void TROOT::CloseFiles()
    fBrowsers->Delete();
    fCanvases->Delete();
 }
+
 
 //______________________________________________________________________________
 TObject *TROOT::FindObject(const TObject *) const
