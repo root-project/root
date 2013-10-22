@@ -811,7 +811,7 @@ void LoadLibraryMap(const std::string& fileListName, map<string,string>& autoloa
    
    while ( filelist >> filename ) {
       
-      if (IsExistingDir(filename) <=0) continue;
+      if (IsExistingDir(filename)) continue;
       
       ifstream file(filename.c_str());
 
