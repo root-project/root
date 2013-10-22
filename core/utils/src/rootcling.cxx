@@ -2657,22 +2657,31 @@ void extractSelectedClasses(RScanner& scan,
                             std::list<std::string>& classesList,
                             std::list<std::string>& classesListForRootmap){
 
+   // Loop on selected classes. If they don't have the attribute "rootmap"
+   // set to "false", store them in the list of classes for the rootmap
+   
    std::string attrName,attrValue;
+   bool isClassSelected;
    // Loop on selected classes and put them in a list
    for (RScanner::ClassColl_t::const_iterator selClassesIter = scan.fSelectedClasses.begin();
         selClassesIter!= scan.fSelectedClasses.end(); selClassesIter++){
+      isClassSelected = true;
       const char* normalizedName=selClassesIter->GetNormalizedName();
       classesList.push_back(normalizedName);
       const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
+      // Loop on attributes, if rootmap=false, don't put it in the list!
       for (clang::RecordDecl::attr_iterator ait = rDecl->attr_begin ();
            ait != rDecl->attr_end ();++ait){
          if ( 0==ROOT::TMetaUtils::extractPropertyNameVal(*ait,attrName,attrValue) &&
               attrName=="rootmap" &&
               attrValue=="false"){
-            continue;
-         } else {
-            classesListForRootmap.push_back(normalizedName);
+            attrName=attrValue="";
+            isClassSelected=false;
+            break;
          }
+      }
+      if (isClassSelected){
+         classesListForRootmap.push_back(normalizedName);
       }
    }
 }
