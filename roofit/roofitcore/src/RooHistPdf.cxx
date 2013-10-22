@@ -307,7 +307,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
       code |= 2 << n;
       analVars.add(*pa);
       if (fullRange(*pa, *ha, rangeName)) {
-	frcode = 2 << n;
+	frcode |= 2 << n;
       }
     }
   }
@@ -318,12 +318,12 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
     code |= 1;
   }
   // Disable partial analytical integrals if interpolation is used, and we
-  // integrate over sub-ranges
-  if (_intOrder > 0 && code != ((2 << _histObsList.getSize()) - 1)) {
+  // integrate over sub-ranges, but leave them enabled when we integrate over
+  // the full range of one or several variables
+  if (_intOrder > 0 && !(code & 1)) {
     analVars.removeAll();
     return 0;
   }
-
   return (code >= 2) ? code : 0;
 }
 
@@ -379,8 +379,8 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
   }
 
   Double_t ret = (code & 1) ?
-      _dataHist->sum(intSet,_histObsList,kFALSE,kFALSE) :
-      _dataHist->sum(intSet,_histObsList,kFALSE,kFALSE, ranges);
+      _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE) :
+      _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE, ranges);
 
 //    cout << "intSet = " << intSet << endl ;
 //    cout << "slice position = " << endl ;

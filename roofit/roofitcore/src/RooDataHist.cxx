@@ -1715,14 +1715,13 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
       theBinVolume *= 
 	(std::min(rangeHi[ivar], binHi) - std::max(rangeLo[ivar], binLo));
     }
-    Double_t corr = theBinVolume;
-    if (!correctForBinSize) corr /= _binv[ibin];
-    if (inverseBinCor) corr = 1. / corr;
-    if (0. == corr) continue;
+    const Double_t corrPartial = theBinVolume / _binv[ibin];
+    if (0. == corrPartial) continue;
+    const Double_t corr = correctForBinSize ? (inverseBinCor ? 1. / _binv[ibin] : _binv[ibin] ) : 1.0;
     //cout << "adding bin[" << ibin << "] to sum wgt = " << _wgt[ibin] << " binv = " << theBinVolume << " _binv[" << ibin << "] " << _binv[ibin] << endl;
     
-    Double_t y = _wgt[ibin]*corr - carry;
-    Double_t t = total + y;
+    const Double_t y = _wgt[ibin] * corr * corrPartial - carry;
+    const Double_t t = total + y;
     carry = (t - total) - y;
     total = t;
   }
