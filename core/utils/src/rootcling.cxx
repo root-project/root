@@ -2412,7 +2412,7 @@ bool HasPath(const std::string& name)
 }
 
 //______________________________________________________________________________
-int createCapabilitiesFile(const std::string& capaFileName,
+int CreateCapabilitiesFile(const std::string& capaFileName,
                            const std::string& dictFileName,
                            const std::list<std::string>& classesNames)
 {
@@ -2544,7 +2544,7 @@ void manipForRootmap(std::string& name)
 }
 
 //______________________________________________________________________________
-void adjustRootMapNames(std::string& rootmapFileName,
+void AdjustRootMapNames(std::string& rootmapFileName,
                         std::string& rootmapLibName){
   
    // If the rootmap file name does not exist, create one following the libname
@@ -2561,7 +2561,7 @@ void adjustRootMapNames(std::string& rootmapFileName,
 }
 
 //______________________________________________________________________________
-int createRootMapFile(const std::string& rootmapFileName,
+int CreateRootMapFile(const std::string& rootmapFileName,
                       const std::string& rootmapLibName,
                       const std::list<std::string>& classesNames,
                       const std::list<std::string>& nsNames)
@@ -2579,6 +2579,8 @@ int createRootMapFile(const std::string& rootmapFileName,
    time_t rawtime;  
    time (&rawtime);
    rootmapFile << "# Automatically generated with genreflex on " << ctime(&rawtime);
+
+   rootmapFile << "#--Begin " << rootmapFileName << std::endl;
    
    // Loop on selected classes and insert them in the rootmap
    std::string thisClassName;
@@ -2601,11 +2603,15 @@ int createRootMapFile(const std::string& rootmapFileName,
       << std::setw(35-nsNameIt->size()) << rootmapLibName
       << std::endl;
         }
+
+   rootmapFile << "#--End " << rootmapFileName << std::endl;
+   rootmapFile << "#--Final End" << std::endl;
+   
    return 0;
 }
 
 //______________________________________________________________________________
-int createNewRootMapFile(const std::string& rootmapFileName,
+int CreateNewRootMapFile(const std::string& rootmapFileName,
                          const std::string& rootmapLibName,
                          const std::list<std::string>& classesNames,
                          const std::list<std::string>& nsNames)
@@ -2653,7 +2659,7 @@ int createNewRootMapFile(const std::string& rootmapFileName,
 }
 
 //_____________________________________________________________________________
-void extractSelectedClasses(RScanner& scan,
+void ExtractSelectedClasses(RScanner& scan,
                             std::list<std::string>& classesList,
                             std::list<std::string>& classesListForRootmap){
 
@@ -2687,7 +2693,7 @@ void extractSelectedClasses(RScanner& scan,
 }
 
 //_____________________________________________________________________________
-void extractSelectedNamespaces(RScanner& scan, std::list<std::string>& nsList){
+void ExtractSelectedNamespaces(RScanner& scan, std::list<std::string>& nsList){
    // Loop on selected classes and put them in a list
    for (RScanner::NamespaceColl_t::const_iterator selNsIter = scan.fSelectedNamespaces.begin();
      selNsIter!= scan.fSelectedNamespaces.end(); selNsIter++){
@@ -3690,30 +3696,32 @@ int RootCling(int argc,
    std::list<std::string> nsNames;
 
    if (rootMapNeeded || capaNeeded){
-      extractSelectedClasses(scan,classesNames,classesNamesForRootmap);
+      ExtractSelectedClasses(scan,classesNames,classesNamesForRootmap);
    }
    if (rootMapNeeded){      
-      extractSelectedNamespaces(scan,nsNames);
+      ExtractSelectedNamespaces(scan,nsNames);
    }
    
    
    // Create the rootmapfile if needed
    if (rootMapNeeded){
-      adjustRootMapNames(rootmapFileName,
+      AdjustRootMapNames(rootmapFileName,
                          rootmapLibName);
+      
       ROOT::TMetaUtils::Info(0,"Rootmap file name %s and lib name %s\n",
                              rootmapLibName.c_str(),
                              rootmapFileName.c_str());
+      
       tmpCatalog.addFileName(rootmapFileName);
       int rmStatusCode = 0;
       if (useNewRmfFormat){
-         rmStatusCode = createNewRootMapFile(rootmapFileName,
+         rmStatusCode = CreateNewRootMapFile(rootmapFileName,
                                              rootmapLibName,
                                              classesNamesForRootmap,
                                              nsNames);
       }
       else{
-         rmStatusCode = createRootMapFile(rootmapFileName,
+         rmStatusCode = CreateRootMapFile(rootmapFileName,
                                           rootmapLibName,
                                           classesNamesForRootmap,
                                           nsNames);
@@ -3724,7 +3732,7 @@ int RootCling(int argc,
    // Create the capabilities file if needed
    if (capaNeeded){
       tmpCatalog.addFileName(capaFileName);
-      int capaStatusCode = createCapabilitiesFile(capaFileName,
+      int capaStatusCode = CreateCapabilitiesFile(capaFileName,
                                                   dictpathname,
                                                   classesNames);
       if (0!=capaStatusCode) return 1;
