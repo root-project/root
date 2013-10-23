@@ -184,7 +184,13 @@ Long_t TFunction::ExtraProperty() const
 {
    // Get property description word. For meaning of bits see EProperty.
    
-   return gCling->MethodInfo_ExtraProperty(fInfo);
+   return fInfo ? gCling->MethodInfo_ExtraProperty(fInfo) : 0;
+}
+
+//______________________________________________________________________________
+TDictionary::DeclId_t TFunction::GetDeclId() const
+{
+   return gInterpreter->GetDeclId(fInfo);
 }
 
 //______________________________________________________________________________
