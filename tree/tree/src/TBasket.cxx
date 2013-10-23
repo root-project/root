@@ -1,4 +1,4 @@
-// @(#)root/tree:$Id$
+// @(#)root/tree:$Id: 4e77188fbf1e7fd026a984989de66663c49b12fc $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -229,15 +229,15 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tr
 
    if (fBufferRef) {
       // Reuse the buffer if it exist.
-      fBufferRef->SetReadMode();
       fBufferRef->Reset();
+
       // We use this buffer both for reading and writing, we need to
       // make sure it is properly sized for writing.
+      fBufferRef->SetWriteMode();
       if (fBufferRef->BufferSize() < len) {
-         fBufferRef->SetWriteMode();
          fBufferRef->Expand(len);
-         fBufferRef->SetReadMode();
       }
+      fBufferRef->SetReadMode();
    } else {
       fBufferRef = new TBufferFile(TBuffer::kRead, len);
    }
