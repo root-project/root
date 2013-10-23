@@ -733,6 +733,18 @@ void CheckClassNameForRootMap(const std::string& classname, map<string,string>& 
 }
 
 //______________________________________________________________________________
+void ReplaceAll(std::string& str, const std::string& from, const std::string& to)
+{
+   if(from.empty())
+      return;
+   size_t start_pos = 0;
+   while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+      str.replace(start_pos, from.length(), to);
+      start_pos += to.length();
+   }
+}
+
+//______________________________________________________________________________
 void ParseRootMapFile(ifstream& file, map<string,string>& autoloads)
 {
    // Parse the rootmap and add entries to the autoload map
@@ -745,15 +757,9 @@ void ParseRootMapFile(ifstream& file, map<string,string>& autoloads)
       int pos = line.find(":",8);
       classname = line.substr(8,pos-8);
 
-      pos = 0;
-      while ( (pos=classname.find("@@",pos)) >= 0 ) {
-         classname.replace(pos,2,"::");
-      }
-      pos = 0;
-      while ( (pos=classname.find("-",pos)) >= 0 ) {
-         classname.replace(pos,1," ");
-      }
-
+      ReplaceAll (classname, "@@", "::");
+      ReplaceAll (classname, "-", " ");
+      
       getline(file,line,'\n');
       while( line[0]==' ' ) line.replace(0,1,"");
 
@@ -2364,18 +2370,6 @@ void AddGccToolChainDefines (std::vector<std::string>& clingArgs) {
 }
 
 //______________________________________________________________________________
-void replaceAll(std::string& str, const std::string& from, const std::string& to)
-{
-   if(from.empty())
-      return;
-   size_t start_pos = 0;
-   while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-      str.replace(start_pos, from.length(), to);
-      start_pos += to.length();
-   }
-}
-
-//______________________________________________________________________________
 void ExtractFileName(const std::string& path, std::string& filename)
 {
    // Extract the filename from a fullpath finding the last \ or /
@@ -2490,7 +2484,7 @@ int CreateCapabilitiesFile(const std::string& capaFileName,
 }
 
 //______________________________________________________________________________
-void manipForRootmap(std::string& name)
+void ManipForRootmap(std::string& name)
 {
    // A set of rules are applied in order to transform the name for the rootmap
    // file
@@ -2505,7 +2499,7 @@ void manipForRootmap(std::string& name)
 
 
    // * "::" becomes "@@"
-   replaceAll(name,"::","@@");
+   ReplaceAll(name,"::","@@");
 
 
    // * "{const,unsigned,signed} " become "{const,unsigned,signed}-"
@@ -2513,23 +2507,23 @@ void manipForRootmap(std::string& name)
    // 1
    name.erase(name.find_last_not_of(" \n\r\t")+1);
    // 2
-   replaceAll(name,"const ","const-");
-   replaceAll(name,"signed ","signed-");
+   ReplaceAll(name,"const ","const-");
+   ReplaceAll(name,"signed ","signed-");
    
    // * "short int" becomes "short"
-   replaceAll(name,"short int","short");
+   ReplaceAll(name,"short int","short");
    
    // * "long int" becomes "long"
-   replaceAll(name,"long int","long");
+   ReplaceAll(name,"long int","long");
    
    // * "long long" becomes "long-long"
-   replaceAll(name,"long long","long-long");
+   ReplaceAll(name,"long long","long-long");
    
    // * "long double" becomes "long-double"
-   replaceAll(name,"long double","long-double");
+   ReplaceAll(name,"long double","long-double");
    
    // * " " becomes ""
-   replaceAll(name," ","");
+   ReplaceAll(name," ","");
    // But this is could be more efficient
    //name.erase(std::remove_if(name.begin(), name.end(), isspace), name.end());
    
@@ -2537,9 +2531,9 @@ void manipForRootmap(std::string& name)
    // We replace blindly and recursively and then roll back for operator>->
    // in other words "Better to Say Sorry than to Ask Permission"
    while (name.find(">>") != std::string::npos){
-      replaceAll(name,">>",">->");
+      ReplaceAll(name,">>",">->");
    }
-   replaceAll(name,"operator>->","operator>>");
+   ReplaceAll(name,"operator>->","operator>>");
 
 }
 
@@ -2587,7 +2581,7 @@ int CreateRootMapFile(const std::string& rootmapFileName,
    for (std::list<std::string>::const_iterator classNameIt=classesNames.begin();
         classNameIt!=classesNames.end();++classNameIt){
       thisClassName = *classNameIt;
-      manipForRootmap(thisClassName);
+      ManipForRootmap(thisClassName);
       rootmapFile << "Library." << thisClassName << ": "
                   << std::setw(35-classNameIt->size()) << rootmapLibName
                   << std::endl;   
@@ -2598,7 +2592,7 @@ int CreateRootMapFile(const std::string& rootmapFileName,
    for (std::list<std::string>::const_iterator nsNameIt=nsNames.begin();
         nsNameIt!=nsNames.end();++nsNameIt){
       thisNsName=*nsNameIt ;
-      manipForRootmap(thisNsName);
+      ManipForRootmap(thisNsName);
    rootmapFile << "Library." << thisNsName << ": "
       << std::setw(35-nsNameIt->size()) << rootmapLibName
       << std::endl;
@@ -2613,13 +2607,17 @@ int CreateRootMapFile(const std::string& rootmapFileName,
 //______________________________________________________________________________
 int CreateNewRootMapFile(const std::string& rootmapFileName,
                          const std::string& rootmapLibName,
+                         const std::list<std::string>& templateDefsList,
                          const std::list<std::string>& classesNames,
                          const std::list<std::string>& nsNames)
 {
    // Generate a rootmap file in the new format, like
+   // { decls }
+   // namespace A { namespace B { template <typename T> class myTemplate; } }
    // [libGpad.so libGraf.so libHist.so libMathCore.so]
    // class TAttCanvas
    // class TButton
+   // ...
 
    // Create the rootmap file from the selected classes and namespaces
    std::ofstream rootmapFile(rootmapFileName.c_str());
@@ -2633,35 +2631,114 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
    time (&rawtime);
    rootmapFile << "# Automatically generated with genreflex on " << ctime(&rawtime);   
 
-   // Add the "section"
-   rootmapFile << "\n[" << rootmapLibName << "]\n";   
+   // Add the template definitions
+   if (!templateDefsList.empty()){
+      rootmapFile << "\n{ decls }\n";
+      for (std::list<std::string>::const_iterator tdefIt=templateDefsList.begin();
+         tdefIt!=templateDefsList.end();++tdefIt){
+         rootmapFile << *tdefIt << std::endl;
+      }
+   }
    
-   // Loop on selected classes and insert them in the rootmap
-   std::string thisClassName;
-   for (std::list<std::string>::const_iterator classNameIt=classesNames.begin();
-        classNameIt!=classesNames.end();++classNameIt){
-      thisClassName = *classNameIt;
-      manipForRootmap(thisClassName);
-      rootmapFile << "class " << thisClassName << std::endl;
+   // Add the "section"
+   if (!nsNames.empty() || !classesNames.empty()){
+      rootmapFile << "\n[" << rootmapLibName << "]\n";
+
+      // Loop on selected classes and insert them in the rootmap
+      for (std::list<std::string>::const_iterator classNameIt=classesNames.begin();
+         classNameIt!=classesNames.end();++classNameIt){
+         rootmapFile << "class " << *classNameIt << std::endl;
       }
 
-   // Same for namespaces
-   std::string thisNsName;
-   for (std::list<std::string>::const_iterator nsNameIt=nsNames.begin();
-        nsNameIt!=nsNames.end();++nsNameIt){
-      thisNsName=*nsNameIt ;
-      manipForRootmap(thisNsName);
-      rootmapFile << "namespace " << thisNsName << std::endl;
-        }   
+      // Same for namespaces
+      for (std::list<std::string>::const_iterator nsNameIt=nsNames.begin();
+         nsNameIt!=nsNames.end();++nsNameIt){
+         rootmapFile << "namespace " << *nsNameIt << std::endl;
+      }
+   }
    
    return 0;
 
 }
 
-//_____________________________________________________________________________
-void ExtractSelectedClasses(RScanner& scan,
-                            std::list<std::string>& classesList,
-                            std::list<std::string>& classesListForRootmap){
+//______________________________________________________________________________
+void ExtractEnclosingNameSpaces(const clang::DeclContext& definition,
+                                std::list<std::string>& enclosingNamespaces)
+{
+   // Extract enclosing namespaces recusrively
+   const clang::DeclContext* enclosingNamespaceDeclCtxt = definition.getParent ();
+
+   // If no parent is found, nothing more to be done
+   if (!enclosingNamespaceDeclCtxt) return;
+
+   // Check if the parent is a namespace (it could be a class for example)
+   // if not, nothing to be done here 
+   const clang::NamespaceDecl* enclosingNamespace = clang::dyn_cast<clang::NamespaceDecl>(enclosingNamespaceDeclCtxt);
+   if (!enclosingNamespace) return;
+
+   // Add to the list of parent namespaces
+   enclosingNamespaces.push_back(enclosingNamespace->getNameAsString());
+
+   // here the recursion
+   ExtractEnclosingNameSpaces(*enclosingNamespace, enclosingNamespaces);
+}
+
+//______________________________________________________________________________
+int ExtractTemplateDefinition(const clang::RecordDecl& rDecl,
+                              clang::CompilerInstance& compilerInstance,
+                              std::string& definitionStr)
+{
+   // Construct a template definition for the declaration
+   // A typical template definition looks like:
+   // namespace A { template <typename T, int I, typename S = T, int J = I> class MyClass; }
+   
+   const clang::RecordDecl* definition = rDecl.getDefinition();
+   if (!definition){      
+      TMetaUtils::Info(0, "Template definition of %s is absent", rDecl.getNameAsString().c_str());
+      return 1;
+   }
+
+   // Get the string of the full template definition
+   clang::SourceRange sr =  definition->getSourceRange();
+   clang::SourceLocation sourceBegin = sr.getBegin();
+   clang::SourceLocation sourceEnd = sr.getEnd();
+   clang::SourceManager& srcMgr = compilerInstance.getSourceManager();
+
+   const char* sourceBeginChar = srcMgr.getCharacterData(sourceBegin);
+   const char* sourceEndChar = srcMgr.getCharacterData(sourceEnd);
+   std::string fullTemplateDefSrcStr(sourceBeginChar, sourceEndChar-sourceBeginChar +1);
+
+   // Remove everything after the first { included since the
+   // implementation could be in the header
+   definitionStr = fullTemplateDefSrcStr.substr(0, fullTemplateDefSrcStr.find("{"));
+
+   // Make it on a single line
+   ReplaceAll(definitionStr,"\n","");
+   ReplaceAll(definitionStr,"\r","");
+
+   definitionStr+=";";
+   
+   // Check if we have enclosing namespaces
+   std::list<std::string> enclosingNamespaces;
+   ExtractEnclosingNameSpaces(*definition,enclosingNamespaces);
+
+   // iterate over the nested namespaces and complete the definition
+   for (std::list<std::string>::iterator enclosingNamespaceIt = enclosingNamespaces.begin();
+      enclosingNamespaceIt != enclosingNamespaces.end(); enclosingNamespaceIt++){
+      definitionStr = "namespace " + *enclosingNamespaceIt + " { " + definitionStr + " }";
+   }
+
+   
+   return 0;
+}
+
+//______________________________________________________________________________
+void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
+                                           std::list<std::string>& classesList,
+                                           std::list<std::string>& classesListForRootmap,
+                                           std::list<std::string>& templateDefsList,
+                                           clang::CompilerInstance& compilerInstance)
+{
 
    // Loop on selected classes. If they don't have the attribute "rootmap"
    // set to "false", store them in the list of classes for the rootmap
@@ -2675,6 +2752,16 @@ void ExtractSelectedClasses(RScanner& scan,
       const char* normalizedName=selClassesIter->GetNormalizedName();
       classesList.push_back(normalizedName);
       const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
+
+      // Get template definition if needed
+      if ( clang::isa<clang::ClassTemplateSpecializationDecl>(*rDecl) ){
+         std::string templateDefSrcStr;
+         int retCode = ExtractTemplateDefinition(*rDecl,compilerInstance,templateDefSrcStr);
+         if (retCode==0)
+            templateDefsList.push_back(templateDefSrcStr);                
+      }
+
+   
       // Loop on attributes, if rootmap=false, don't put it in the list!
       for (clang::RecordDecl::attr_iterator ait = rDecl->attr_begin ();
            ait != rDecl->attr_end ();++ait){
@@ -3693,10 +3780,15 @@ int RootCling(int argc,
 
    std::list<std::string> classesNames;
    std::list<std::string> classesNamesForRootmap;
+   std::list<std::string> templateDefsList;
    std::list<std::string> nsNames;
 
    if (rootMapNeeded || capaNeeded){
-      ExtractSelectedClasses(scan,classesNames,classesNamesForRootmap);
+      ExtractSelectedClassesAndTemplateDefs(scan,
+                                            classesNames,
+                                            classesNamesForRootmap,
+                                            templateDefsList,
+                                            *interp.getCI());
    }
    if (rootMapNeeded){      
       ExtractSelectedNamespaces(scan,nsNames);
@@ -3717,6 +3809,7 @@ int RootCling(int argc,
       if (useNewRmfFormat){
          rmStatusCode = CreateNewRootMapFile(rootmapFileName,
                                              rootmapLibName,
+                                             templateDefsList,
                                              classesNamesForRootmap,
                                              nsNames);
       }
