@@ -23,6 +23,7 @@
 #include "TObjArray.h"
 #endif
 #include "TMethodCall.h"
+#include "TInterpreter.h"
 #include <vector>
 #include <list>
 #include <map>
@@ -87,6 +88,8 @@ private:
    Bool_t            fAllParametersSetted;
    TMethodCall*      fMethod;
    TString           fNamePrefix;
+
+   TInterpreter::CallFuncIFacePtr_t::Generic_t fFuncPtr;
 
    void     InputFormulaIntoCling();
    void     PrepareEvalMethod();

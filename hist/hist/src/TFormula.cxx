@@ -24,6 +24,14 @@
 #include "TFormula.h"
 #include <cassert>
 
+// #define __STDC_LIMIT_MACROS
+// #define __STDC_CONSTANT_MACROS
+
+// #include  "cling/Interpreter/Interpreter.h"
+// #include  "cling/Interpreter/Value.h"
+// #include  "cling/Interpreter/StoredValueRef.h"
+
+
 #ifdef WIN32
 #pragma optimize("",off)
 #endif
@@ -280,6 +288,8 @@ void TFormula::Copy(TObject &obj) const
       ((TFormula&)obj).fMethod  = m;
    }
 
+   ((TFormula&)obj).fFuncPtr = fFuncPtr;
+
 }
 void TFormula::PrepareEvalMethod()
 {
@@ -313,19 +323,25 @@ void TFormula::PrepareEvalMethod()
          Error("Eval","Can't find %s function prototype with arguments %s",fName.Data(),prototypeArguments.Data());
          return ;
       }
-      if(hasParameters)
-      {
-         Long_t args[2];
-         args[0] = (Long_t)fClingVariables.data();
-         args[1] = (Long_t)fClingParameters.data();
-         fMethod->SetParamPtrs(args,2);
-      }
-      else
-      {
-         Long_t args[1];
-         args[0] = (Long_t)fClingVariables.data();
-         fMethod->SetParamPtrs(args,1);
-      }
+
+      // not needed anymore since we use the function pointer 
+      // if(hasParameters)
+      // {
+      //    Long_t args[2];
+      //    args[0] = (Long_t)fClingVariables.data();
+      //    args[1] = (Long_t)fClingParameters.data();
+      //    fMethod->SetParamPtrs(args,2);
+      // }
+      // else
+      // {
+      //    Long_t args[1];
+      //    args[0] = (Long_t)fClingVariables.data();
+      //    fMethod->SetParamPtrs(args,1);
+      // }
+
+      CallFunc_t * callfunc = fMethod->GetCallFunc();
+      TInterpreter::CallFuncIFacePtr_t faceptr = gCling->CallFunc_IFacePtr(callfunc);
+      fFuncPtr = faceptr.fGeneric; 
    }
 }
 
@@ -343,6 +359,14 @@ void TFormula::InputFormulaIntoCling()
       gCling->ProcessLine(rawInputOff);
       PrepareEvalMethod();
       fClingInitialized = true;
+
+      // // store function pointer 
+      // TString funcAddress = "&" + TString(GetName() );
+      // cling::StoredValueRef valref;
+      // cling::runtime::gCling->evaluate(funcAddress,valref);
+      // typedef Double_t (* FuncPointerType)(Double_t *, Double_t *);
+      // void * ptr = valref.get().getAs(&ptr);
+      // FuncPointerType fFuncPointer = (FuncPointerType) ptr; 
    }
 }
 void TFormula::FillDefaults()
@@ -514,7 +538,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    //*-*    
 
    map< pair<TString,Int_t> ,pair<TString,TString> > functions; 
-   functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2)","[0]*exp(-0.5*(({V0}-[1])/[2])^2)/(sqrt(2*pi)*[2])")));
+   functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))","[0]*exp(({V0}-[1])/[2])*(({V0}-[1])/[2]))/(sqrt(2*pi)*[2])")));
    functions.insert(make_pair(make_pair("gaus",2),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2)","")));
    functions.insert(make_pair(make_pair("landau",1),make_pair("TMath::Landau({V0},[0],[1],false)","TMath::Landau({V0},[0],[1],true)")));
    functions.insert(make_pair(make_pair("expo",1),make_pair("exp([0]+[1]*{V0})","")));
@@ -1399,11 +1423,17 @@ void TFormula::SetParameters(const Double_t *params, Int_t size)
 }
 Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params)
 {
-   if (params) SetParameters(params);
-   if(fNdim >= 1) SetVariable("x",x[0]);
-   if(fNdim >= 2) SetVariable("y",x[1]);
-   if(fNdim >= 3) SetVariable("z",x[2]);
-   if(fNdim >= 4) SetVariable("t",x[3]);
+   if (params) SetParameters(params, fNpar);
+
+   if(fNdim >= 1) fClingVariables[0] = x[0];
+   if(fNdim >= 2) fClingVariables[1] = x[1];
+   if(fNdim >= 3) fClingVariables[2] = x[2];
+   if(fNdim >= 4) fClingVariables[3] = x[3];
+
+   // if(fNdim >= 1) SetVariable("x",x[1]);
+   // if(fNdim >= 2) SetVariable("y",x[1]);
+   // if(fNdim >= 3) SetVariable("z",x[2]);
+   // if(fNdim >= 4) SetVariable("t",x[3]);
 
    return Eval();
 }
@@ -1486,7 +1516,16 @@ Double_t TFormula::Eval()
 
    }
    Double_t result = 0;
-   fMethod->Execute(result);
+   void* args[2]; 
+   double * vars = fClingVariables.data();
+   args[0] = &vars; 
+   if (fNpar <= 0) 
+      (*fFuncPtr)(0, 1, args, &result);
+   else {
+      double * pars = fClingParameters.data();
+      args[1] = &pars;
+      (*fFuncPtr)(0, 2, args, &result);
+   }
    return result;
 }
 

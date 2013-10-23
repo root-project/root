@@ -1340,13 +1340,13 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 
    if (fType == 0)
    {
-      Int_t ndim = fFormula->GetNdim();
-      if(ndim >= 1) fFormula->SetVariable("x",x[0]);
-      if(ndim >= 2) fFormula->SetVariable("y",x[1]);
-      if(ndim >= 3) fFormula->SetVariable("z",x[2]);
-      if(ndim >= 4) fFormula->SetVariable("t",x[3]);
-      fFormula->SetParameters(params);
-      return fFormula->Eval(); 
+      // Int_t ndim = fFormula->GetNdim();
+      // if(ndim >= 1) fFormula->SetVariable("x",x[0]);
+      // if(ndim >= 2) fFormula->SetVariable("y",x[1]);
+      // if(ndim >= 3) fFormula->SetVariable("z",x[2]);
+      // if(ndim >= 4) fFormula->SetVariable("t",x[3]);
+      // fFormula->SetParameters(params);
+      return fFormula->EvalPar(x,params); 
    } 
    Double_t result = 0;
    if (fType == 1)  {
