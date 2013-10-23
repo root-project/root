@@ -528,7 +528,7 @@ void convert_2d(Int_t id)
          h2->Fill(x+offsetx,y+offsety,hij(id,i,j));
          if (lw) {
             Double_t err2 = hije(id,i,j);
-            h2->SetCellError(i,j,err2);
+            h2->SetBinError(i,j,err2);
          }
       }
    }

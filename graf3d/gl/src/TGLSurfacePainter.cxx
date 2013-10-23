@@ -503,7 +503,7 @@ Bool_t TGLSurfacePainter::InitGeometryCartesian()
          fCoord->GetYLog() ? fMesh[i][j].Y() = TMath::Log10(fYAxis->GetBinCenter(jr)) * fCoord->GetYScale()
                            : fMesh[i][j].Y() = fYAxis->GetBinCenter(jr) * fCoord->GetYScale();
 
-         Double_t z = fHist->GetCellContent(ir, jr);
+         Double_t z = fHist->GetBinContent(ir, jr);
          ClampZ(z);
          fMesh[i][j].Z() = z;
       }
@@ -651,7 +651,7 @@ Bool_t TGLSurfacePainter::InitGeometryCylindrical()
    for (Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for (Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
          angle = (fXAxis->GetBinLowEdge(ir) - phiLow) / fullAngle * TMath::TwoPi();
-         Double_t r = fType != kSurf5 ? legoR + (fHist->GetCellContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc : legoR;
+         Double_t r = fType != kSurf5 ? legoR + (fHist->GetBinContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc : legoR;
          fMesh[i][j].X() = r * TMath::Cos(angle);
          fMesh[i][j].Y() = fCoord->GetYLog() ?
                               TMath::Log10(fYAxis->GetBinCenter(jr)) * fCoord->GetYScale()
@@ -731,7 +731,7 @@ Bool_t TGLSurfacePainter::InitGeometrySpherical()
       for (Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
 
          const Double_t phi = (fYAxis->GetBinCenter(jr) - phiLow) / fullPhi * TMath::Pi();
-         const Double_t r   = fType != kSurf5 ? legoR + (fHist->GetCellContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc
+         const Double_t r   = fType != kSurf5 ? legoR + (fHist->GetBinContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc
                                              : legoR;
 
          fMesh[i][j].X() = r * TMath::Sin(phi) * TMath::Cos(theta);
@@ -1160,7 +1160,7 @@ void TGLSurfacePainter::GenTexMap()const
 
    for (Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for (Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
-         Double_t z = fHist->GetCellContent(ir, jr);
+         Double_t z = fHist->GetBinContent(ir, jr);
          if (fCoord->GetCoordType() == kGLCartesian)
             ClampZ(z);
          fTexMap[i][j] = fPalette.GetTexCoord(z);

@@ -544,7 +544,7 @@ void TGLLegoPainter::DrawLegoCartesian()const
 
    for(Int_t i = iInit, ir = irInit; addI > 0 ? i < nX : i >= 0; i += addI, ir += addI) {
       for(Int_t j = jInit, jr = jrInit; addJ > 0 ? j < nY : j >= 0; j += addJ, jr += addJ) {
-         Double_t zMax = fHist->GetCellContent(ir, jr) * fCoord->GetFactor();
+         Double_t zMax = fHist->GetBinContent(ir, jr) * fCoord->GetFactor();
          if (!ClampZ(zMax))
             continue;
 
@@ -592,7 +592,7 @@ void TGLLegoPainter::DrawLegoCartesian()const
 
       for(Int_t i = iInit, ir = irInit; addI > 0 ? i < nX : i >= 0; i += addI, ir += addI) {
          for(Int_t j = jInit, jr = jrInit; addJ > 0 ? j < nY : j >= 0; j += addJ, jr += addJ) {
-            Double_t zMax = fHist->GetCellContent(ir, jr) * fCoord->GetFactor();
+            Double_t zMax = fHist->GetBinContent(ir, jr) * fCoord->GetFactor();
             if (!ClampZ(zMax))
                continue;
             if (fLegoType != kCylindricBars) {
@@ -600,7 +600,7 @@ void TGLLegoPainter::DrawLegoCartesian()const
                                  fYEdges[j].second, fMinZ, zMax, frontPoint);
             }
             if (fDrawErrors && zMax > 0.) {
-               Double_t errorZMax = (fHist->GetCellContent(ir, jr) + fHist->GetCellError(ir, jr)) * fCoord->GetFactor();
+               Double_t errorZMax = (fHist->GetBinContent(ir, jr) + fHist->GetBinError(ir, jr)) * fCoord->GetFactor();
                ClampZ(errorZMax);
                Rgl::DrawError(fXEdges[i].first, fXEdges[i].second, fYEdges[j].first,
                               fYEdges[j].second, zMax, errorZMax);
@@ -643,7 +643,7 @@ void TGLLegoPainter::DrawLegoPolar()const
 
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
-         Double_t zMax = fHist->GetCellContent(ir, jr);
+         Double_t zMax = fHist->GetBinContent(ir, jr);
          if (!ClampZ(zMax))
             continue;
          points[0][0] = fYEdges[j].first  * fCosSinTableX[i].first;
@@ -689,7 +689,7 @@ void TGLLegoPainter::DrawLegoPolar()const
 
       for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
          for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
-            Double_t zMax = fHist->GetCellContent(ir, jr);
+            Double_t zMax = fHist->GetBinContent(ir, jr);
             if (!ClampZ(zMax))
                continue;
             points[0][0] = fYEdges[j].first  * fCosSinTableX[i].first;
@@ -746,7 +746,7 @@ void TGLLegoPainter::DrawLegoCylindrical()const
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
          Double_t zMin = legoR + (fMinZ - fCoord->GetZRange().first) / rRange * sc;
-         Double_t zMax = legoR + (fHist->GetCellContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
+         Double_t zMax = legoR + (fHist->GetBinContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
          if (zMin > zMax)
             std::swap(zMin, zMax);
 
@@ -768,7 +768,7 @@ void TGLLegoPainter::DrawLegoCylindrical()const
 
          if (fLegoType == kColorLevel && !fSelectionPass){
             Rgl::DrawTrapezoidTextured2(points, fYEdges[j].first, fYEdges[j].second,
-                                        fPalette.GetTexCoord(fMinZ), fPalette.GetTexCoord(fHist->GetCellContent(ir, jr)));
+                                        fPalette.GetTexCoord(fMinZ), fPalette.GetTexCoord(fHist->GetBinContent(ir, jr)));
          }else
             Rgl::DrawTrapezoid(points, fYEdges[j].first, fYEdges[j].second);
 
@@ -795,7 +795,7 @@ void TGLLegoPainter::DrawLegoCylindrical()const
       for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
          for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
             Double_t zMin = legoR + (fMinZ - fCoord->GetZRange().first) / rRange * sc;
-            Double_t zMax = legoR + (fHist->GetCellContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
+            Double_t zMax = legoR + (fHist->GetBinContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
             if (zMin > zMax)
                std::swap(zMin, zMax);
 
@@ -852,7 +852,7 @@ void TGLLegoPainter::DrawLegoSpherical()const
    for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
       for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
          Double_t zMin = legoR + (fMinZ - fCoord->GetZRange().first) / rRange * sc;
-         Double_t zMax = legoR + (fHist->GetCellContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
+         Double_t zMax = legoR + (fHist->GetBinContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
          if (zMin > zMax)
             std::swap(zMin, zMax);
 
@@ -889,7 +889,7 @@ void TGLLegoPainter::DrawLegoSpherical()const
             glMaterialfv(GL_FRONT, GL_EMISSION, Rgl::gOrangeEmission);
          if (fLegoType == kColorLevel && !fSelectionPass)
             Rgl::DrawTrapezoidTextured(points, fPalette.GetTexCoord(fMinZ),
-                                       fPalette.GetTexCoord(fHist->GetCellContent(ir, jr)));
+                                       fPalette.GetTexCoord(fHist->GetBinContent(ir, jr)));
          else
             Rgl::DrawTrapezoid(points);
 
@@ -915,7 +915,7 @@ void TGLLegoPainter::DrawLegoSpherical()const
       for(Int_t i = 0, ir = fCoord->GetFirstXBin(); i < nX; ++i, ++ir) {
          for(Int_t j = 0, jr = fCoord->GetFirstYBin(); j < nY; ++j, ++jr) {
             Double_t zMin = legoR + (fMinZ - fCoord->GetZRange().first) / rRange * sc;
-            Double_t zMax = legoR + (fHist->GetCellContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
+            Double_t zMax = legoR + (fHist->GetBinContent(ir, jr) - fCoord->GetZRange().first) / rRange * sc;
             if (zMin > zMax)
                std::swap(zMin, zMax);
 
