@@ -46,7 +46,7 @@ private:
   // free resources when library is unloaded
   struct Guard { ~Guard(); };
   static struct Guard guard;
-  friend class RooRandom::Guard;
+  friend struct RooRandom::Guard;
 
   ClassDef(RooRandom,0) // Random number generator interface
 };
