@@ -3119,11 +3119,14 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
    // 'obj' is unlikely to be the start of the object (as described by IsA()),
    // hence gInterpreter->Execute will improperly correct the offset.
    void* addr = cl->DynamicCast(TObject::Class(), obj, kFALSE);
-   Long_t offset = 0L;
    TClingCallFunc func(fInterpreter);
    TClingMethodInfo *minfo = (TClingMethodInfo*)method->fInfo;
    func.Init(minfo);
    func.SetArgs(listpar);
+   // Now calculate the 'this' pointer offset for the method
+   // when starting from the class described by cl.
+   const CXXMethodDecl * mdecl = dyn_cast<CXXMethodDecl>(minfo->GetMethodDecl());
+   Long_t offset = ((TClingClassInfo*)cl->GetClassInfo())->GetOffset(mdecl);
    void* address = (void*)((Long_t)addr + offset);
    func.Exec(address);
 }
