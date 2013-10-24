@@ -3023,7 +3023,8 @@ ASTContext::getSubstTemplateTypeParmType(const TemplateTypeParmType *Parm,
 
   if (!SubstParm) {
     SubstParm = new (*this, TypeAlignment)
-      SubstTemplateTypeParmType(Parm, Replacement);
+      SubstTemplateTypeParmType(Parm, Replacement,
+                                Replacement.getCanonicalType());
     Types.push_back(SubstParm);
     SubstTemplateTypeParmTypes.InsertNode(SubstParm, InsertPos);
   }
