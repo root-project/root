@@ -533,12 +533,12 @@ X11::Rectangle TGCocoa::GetDisplayGeometry()const
       NSArray * const screens = [NSScreen screens];
       assert(screens != nil && screens.count != 0 && "GetDisplayGeometry, no screens found");
 
-      CGRect frame = [(NSScreen *)screens[0] frame];
+      CGRect frame = [(NSScreen *)[screens objectAtIndex : 0] frame];
       CGFloat xMin = frame.origin.x, xMax = xMin + frame.size.width;
       CGFloat yMin = frame.origin.y, yMax = yMin + frame.size.height;
 
       for (NSUInteger i = 1, e = screens.count; i < e; ++i) {
-         frame = [(NSScreen *)screens[i] frame];
+         frame = [(NSScreen *)[screens objectAtIndex : i] frame];
          xMin = std::min(xMin, frame.origin.x);
          xMax = std::max(xMax, frame.origin.x + frame.size.width);
          yMin = std::min(yMin, frame.origin.y);
