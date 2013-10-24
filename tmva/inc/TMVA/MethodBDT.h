@@ -109,6 +109,8 @@ namespace TMVA {
       // calculate the MVA value
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0);
 
+      // get the actual forest size (might be less than fNTrees, the requested one, if boosting is stopped early
+      UInt_t   GetNTrees() const {return fForest.size();}
    private:
       Double_t GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t useNTrees );
       Double_t PrivateGetMvaValue( const TMVA::Event *ev, Double_t* err=0, Double_t* errUpper=0, UInt_t useNTrees=0 );
@@ -138,6 +140,7 @@ namespace TMVA {
       void SetNodePurityLimit(Double_t l){fNodePurityLimit = l;} 
       void SetShrinkage(Double_t s){fShrinkage = s;}
       void SetUseNvars(Int_t n){fUseNvars = n;}
+      void SetBaggedSampleFraction(Double_t f){fBaggedSampleFraction = f;}
 
 
       // get the forest
