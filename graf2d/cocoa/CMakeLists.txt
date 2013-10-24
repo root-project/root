@@ -6,7 +6,7 @@
 ROOT_USE_PACKAGE(graf2d/quartz)
 ROOT_USE_PACKAGE(gui/gui)
 
-add_definitions("-ObjC++ -std=c++11")
+add_definitions("-ObjC++")
 
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
