@@ -49,6 +49,9 @@ AutoDict_*.cxx
 /cint/dict/AutoDict_*.cxx
 /cint/dict/*.shortlog
 
+#cint/dict/typedefs
+/cint/dict/typedefs/cmsdict*
+
 # /cint/other/
 /cint/other/runStaticDataMemberDict.C
 /cint/other/runStaticDataMemberDict.h
