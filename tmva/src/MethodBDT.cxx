@@ -778,7 +778,7 @@ void TMVA::MethodBDT::InitEventSample( void )
       
       // some pre-processing for events with negative weights
       if (fPairNegWeightsGlobal) PreProcessNegativeEventWeights();
-}
+   }
 
 
    // it does not make sense in decision trees to start with unequal number of signal/background
@@ -995,9 +995,10 @@ std::map<TString,Double_t>  TMVA::MethodBDT::OptimizeTuningParameters(TString fo
    // find some reasonable ranges for the optimisation of MinNodeEvents:
 
    tuneParameters.insert(std::pair<TString,Interval*>("NTrees",         new Interval(10,1000,5))); //  stepsize 50
-   tuneParameters.insert(std::pair<TString,Interval*>("MaxDepth",       new Interval(2,3,3)));    // stepsize 1
+   tuneParameters.insert(std::pair<TString,Interval*>("MaxDepth",       new Interval(2,4,3)));    // stepsize 1
    tuneParameters.insert(std::pair<TString,Interval*>("MinNodeSize",    new LogInterval(1,30,30)));    // 
    //tuneParameters.insert(std::pair<TString,Interval*>("NodePurityLimit",new Interval(.4,.6,3)));   // stepsize .1
+   //tuneParameters.insert(std::pair<TString,Interval*>("BaggedSampleFraction",new Interval(.4,.9,6)));   // stepsize .1
 
    // method-specific parameters
    if        (fBoostType=="AdaBoost"){
@@ -1043,6 +1044,7 @@ void TMVA::MethodBDT::SetTuneParameters(std::map<TString,Double_t> tuneParameter
       else if (it->first ==  "AdaBoostBeta"   ) SetAdaBoostBeta    (it->second);
       else if (it->first ==  "Shrinkage"      ) SetShrinkage       (it->second);
       else if (it->first ==  "UseNvars"       ) SetUseNvars        ((Int_t)it->second);
+      else if (it->first ==  "BaggedSampleFraction" ) SetBaggedSampleFraction (it->second);
       else Log() << kFATAL << " SetParameter for " << it->first << " not yet implemented " <<Endl;
    }
    
@@ -1167,7 +1169,10 @@ void TMVA::MethodBDT::Train()
       InitGradBoost(fEventSample);
    }
 
-   for (int itree=0; itree<fNTrees; itree++) {
+   Int_t itree=0;
+   Bool_t continueBoost=kTRUE;
+   //for (int itree=0; itree<fNTrees; itree++) {
+   while (itree < fNTrees && continueBoost){
       timer.DrawProgressBar( itree );
       if(DoMulticlass()){
          if (fBoostType!="Grad"){
@@ -1189,7 +1194,15 @@ void TMVA::MethodBDT::Train()
             // the minimum linear correlation between two variables demanded for use in fisher criterion in node splitting
 
             nNodesBeforePruning = fForest.back()->BuildTree(*fTrainSample);
-            fBoostWeights.push_back(this->Boost(fEventSample, fForest.back(),i));
+            Double_t bw = this->Boost(fEventSample, fForest.back(),i);
+            if (bw > 0) {
+               fBoostWeights.push_back(bw);
+            }else{
+               fBoostWeights.push_back(0);
+               Log() << kWARNING << "stopped boosting at itree="<<itree << Endl;
+               //               fNTrees = itree+1; // that should stop the boosting
+               continueBoost=kFALSE; 
+            }
          }
       }
       else{
@@ -1218,7 +1231,15 @@ void TMVA::MethodBDT::Train()
          std::vector<const Event*> * validationSample = NULL;
          if(fAutomatic) validationSample = &fValidationSample;
          
-         fBoostWeights.push_back(this->Boost(fEventSample, fForest.back()));
+         Double_t bw = this->Boost(fEventSample, fForest.back());
+         if (bw > 0) {
+            fBoostWeights.push_back(bw);
+         }else{
+            fBoostWeights.push_back(0);
+            Log() << kWARNING << "stopped boosting at itree="<<itree << Endl;
+            continueBoost=kFALSE;
+         }
+         
 
          
          // if fAutomatic == true, pruneStrength will be the optimal pruning strength
@@ -1248,6 +1269,7 @@ void TMVA::MethodBDT::Train()
             }
          }
       }
+      itree++;
    }
 
    // get elapsed time
@@ -1255,12 +1277,12 @@ void TMVA::MethodBDT::Train()
          << "                              " << Endl;
    if (fPruneMethod == DecisionTree::kNoPruning) {
       Log() << kINFO << "<Train> average number of nodes (w/o pruning) : "
-            << nNodesBeforePruningCount/fNTrees << Endl;
+            << nNodesBeforePruningCount/GetNTrees() << Endl;
    }
    else {
       Log() << kINFO << "<Train> average number of nodes before/after pruning : "
-            << nNodesBeforePruningCount/fNTrees << " / "
-            << nNodesAfterPruningCount/fNTrees
+            << nNodesBeforePruningCount/GetNTrees() << " / "
+            << nNodesAfterPruningCount/GetNTrees()
             << Endl;
    }
    TMVA::DecisionTreeNode::fgIsTraining=false;
@@ -1271,6 +1293,8 @@ void TMVA::MethodBDT::Train()
    Log() << kDEBUG << "Now I delete the privat data sample"<< Endl;
    for (UInt_t i=0; i<fEventSample.size();      i++) delete fEventSample[i];
    for (UInt_t i=0; i<fValidationSample.size(); i++) delete fValidationSample[i];
+   fEventSample.clear();
+   fValidationSample.clear();
 
 }
 
@@ -1704,7 +1728,8 @@ Double_t TMVA::MethodBDT::AdaBoost( std::vector<const TMVA::Event*>& eventSample
       }else{
          Log() << kERROR << " The error rate in the BDT boosting is > 0.5. ("<< err
                << ") That should not happen, please check your code (i.e... the BDT code), I "
-               << " set it to 0.5.. just to continue.." <<  Endl;
+               << " stop boosting here" <<  Endl;
+         return -1;
       }
       err = 0.5;
    } else if (err < 0) {
@@ -2028,7 +2053,8 @@ Double_t TMVA::MethodBDT::AdaBoostR2( std::vector<const TMVA::Event*>& eventSamp
          Log() << kERROR << " The error rate in the BDT boosting is > 0.5. ("<< err
                << ") That should not happen, but is possible for regression trees, and"
 	       << " should trigger a stop for the boosting. please check your code (i.e... the BDT code), I "
-               << " set it to 0.5.. just to continue.." <<  Endl;
+               << " stop boosting " <<  Endl;
+         return -1;
       }
       err = 0.5;
    } else if (err < 0) {
@@ -2413,7 +2439,7 @@ vector< Double_t > TMVA::MethodBDT::GetVariableImportance()
       fVariableImportance[ivar]=0;
    }
    Double_t  sum=0;
-   for (int itree = 0; itree < fNTrees; itree++) {
+   for (UInt_t itree = 0; itree < GetNTrees(); itree++) {
       std::vector<Double_t> relativeImportance(fForest[itree]->GetVariableImportance());
       for (UInt_t i=0; i< relativeImportance.size(); i++) {
          fVariableImportance[i] +=  fBoostWeights[itree] * relativeImportance[i];
@@ -2576,7 +2602,7 @@ void TMVA::MethodBDT::MakeClassSpecific( std::ostream& fout, const TString& clas
    fout << "void " << className << "::Initialize()" << std::endl;
    fout << "{" << std::endl;
    //Now for each decision tree, write directly the constructors of the nodes in the tree structure
-   for (int itree=0; itree<fNTrees; itree++) {
+   for (UInt_t itree=0; itree<GetNTrees(); itree++) {
       fout << "  // itree = " << itree << std::endl;
       fout << "  fBoostWeights.push_back(" << fBoostWeights[itree] << ");" << std::endl;
       fout << "  fForest.push_back( " << std::endl;
