@@ -3795,7 +3795,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
    // Insures that the files and sockets are closed before any library is unloaded
    // and before emptying CINT.
    if (gROOT) {
-      gROOT->CloseFiles();
+      gROOT->EndOfProcessCleanups();
       if (gROOT->GetListOfBrowsers()) {
          // GetListOfBrowsers()->Delete() creates problems when a browser is
          // created on the stack, calling CloseWindow() solves the problem
@@ -3806,8 +3806,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
             gROOT->ProcessLine(Form("((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
                                     (ULong_t)b));
       }
-   }
-   if (gInterpreter) {
+   } else if (gInterpreter) {
       gInterpreter->ResetGlobals();
    }
    gVirtualX->CloseDisplay();
