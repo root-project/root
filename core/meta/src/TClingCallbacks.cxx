@@ -20,6 +20,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/GlobalDecl.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Lookup.h"
@@ -376,8 +377,8 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
                                                         fROOTSpecialNamespace));
       if (VD) {
          //TODO: Check for same types.
-
-         TObject **address = (TObject**)m_Interpreter->getAddressOfGlobal(VD);
+         GlobalDecl GD(VD);
+         TObject **address = (TObject**)m_Interpreter->getAddressOfGlobal(GD);
          // Since code was generated already we cannot rely on the initializer 
          // of the decl in the AST, however we will update that init so that it
          // will be easier while debugging.

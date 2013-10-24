@@ -66,6 +66,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclarationName.h"
+#include "clang/AST/GlobalDecl.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Type.h"
@@ -2059,7 +2060,7 @@ Int_t TCling::DeleteVariable(const char* name)
    clang::QualType qType = varDecl->getType();
    const clang::Type* type = qType->getUnqualifiedDesugaredType();
    if (type->isPointerType() || type->isReferenceType()) {
-      int** ppInt = (int**)fInterpreter->getAddressOfGlobal(varDecl);
+      int** ppInt = (int**)fInterpreter->getAddressOfGlobal(GlobalDecl(varDecl));
       // set pointer / reference to invalid.
       if (ppInt) *ppInt = 0;
    }

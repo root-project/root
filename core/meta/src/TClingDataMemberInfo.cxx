@@ -33,6 +33,7 @@
 #include "clang/AST/Attr.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/GlobalDecl.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/PrettyPrinter.h"
@@ -271,7 +272,7 @@ long TClingDataMemberInfo::Offset() const
          APValue* val = VD->evaluateValue();
          return reinterpret_cast<long>(val->getInt().getRawData());
       }
-      return reinterpret_cast<long>(fInterp->getAddressOfGlobal(VD));
+      return reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD)));
    }
    // FIXME: We have to explicitly check for not enum constant because the 
    // implementation of getAddressOfGlobal relies on mangling the name and in 
