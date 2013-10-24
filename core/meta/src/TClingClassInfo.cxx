@@ -41,6 +41,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/GlobalDecl.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
@@ -475,7 +476,7 @@ static bool HasBody(const clang::FunctionDecl &decl, const cling::Interpreter &i
    if (decl.hasBody()) return true;
    
    std::string mangledName;
-   cling::utils::Analyze::maybeMangleDeclName(&decl, mangledName);
+   cling::utils::Analyze::maybeMangleDeclName(GlobalDecl(&decl), mangledName);
 
    void *GV = interp.getAddressOfGlobal(mangledName.c_str());
    if (GV) return true;

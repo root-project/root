@@ -47,6 +47,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/GlobalDecl.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
@@ -508,7 +509,7 @@ TClingCallFunc::compile_wrapper(const string& wrapper_name, const string& wrappe
    //  Lookup the new wrapper declaration.
    //
    string MN;
-   cling::utils::Analyze::maybeMangleDeclName(WFD, MN);
+   cling::utils::Analyze::maybeMangleDeclName(GlobalDecl(WFD), MN);
    const NamedDecl* WND = dyn_cast<NamedDecl>(WFD);
    if (!WND) {
       Error("TClingCallFunc::make_wrapper", "Wrapper named decl is null!");

@@ -40,6 +40,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/GlobalDecl.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/Type.h"
@@ -444,7 +445,7 @@ const char *TClingMethodInfo::GetMangledName() const
    }
    static std::string mangled_name;
    mangled_name.clear();
-   cling::utils::Analyze::maybeMangleDeclName(GetMethodDecl(), mangled_name);
+   cling::utils::Analyze::maybeMangleDeclName(GlobalDecl(GetMethodDecl()), mangled_name);
    return mangled_name.c_str();
 }
 
