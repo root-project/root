@@ -3,7 +3,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-add_definitions("-ObjC++ -std=c++11")
+add_definitions("-ObjC++")
 
 ROOT_GENERATE_DICTIONARY(G__Quartz "" LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(GQuartz LINKDEF LinkDef.h DEPENDENCIES )

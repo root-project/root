@@ -6,7 +6,7 @@
 ROOT_USE_PACKAGE(graf2d/quartz)
 ROOT_USE_PACKAGE(gui/gui)
 
-add_definitions("-ObjC++ -std=c++11")
+add_definitions("-ObjC++")
 
 ROOT_GENERATE_DICTIONARY(G__Cocoa T*.h LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(GCocoa LINKDEF LinkDef.h DEPENDENCIES Gui GQuartz )

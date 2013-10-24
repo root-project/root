@@ -122,7 +122,7 @@ endif()
 #---Add flags to compile ObjC++
 foreach(src ${LibCore_SRCS})
   if(${src} MATCHES "\\.mm$")
-    set_source_files_properties(${src} COMPILE_FLAGS "-ObjC++ -std=c++11")
+    set_source_files_properties(${src} COMPILE_FLAGS "-ObjC++")
   endif()
 endforeach()
 
