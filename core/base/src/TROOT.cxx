@@ -2009,6 +2009,13 @@ void TROOT::RefreshBrowsers()
    while ((b = (TBrowser*) next()))
       b->SetRefreshFlag(kTRUE);
 }
+//______________________________________________________________________________
+static void CallCloseFiles()
+{
+   // Insure that the files, canvases and sockets are closed.
+   
+   if (gROOT) gROOT->CloseFiles();
+}
 
 //______________________________________________________________________________
 void TROOT::RegisterModule(const char* modulename,
@@ -2023,7 +2030,65 @@ void TROOT::RegisterModule(const char* modulename,
    // is NULL, i.e. during startup, where the information is buffered in
    // the static GetModuleHeaderInfoBuffer().   
 
+
+   // First a side track to insure proper end of process behavior.
+
+   // Register for each loaded dictionary (and thus for each library),
+   // that we need to Close the ROOT files as soon as this library
+   // might start being unloaded after main.
+   //
+   // By calling atexit here (rather than directly from within the
+   // library) we make sure that this is not called if the library is
+   // 'only' dlclosed.
+
+   // On Ubuntu the linker strips the unused libraries.  Eventhough
+   // stressHistogram is explicitly linked against libNet, it is not
+   // retained and thus is loaded only as needed in the middle part of
+   // the execution.  Concretely this also means that it is loaded
+   // *after* the construction of the TApplication object and thus
+   // after the registration (atexit) of the EndOfProcessCleanups
+   // routine.  Consequently, after the end of main, libNet is
+   // unloaded before EndOfProcessCleanups is called.  When
+   // EndOfProcessCleanups is executed it indirectly needs the TClass
+   // for TSocket and its search will use resources that have already
+   // been unloaded (technically the function static in TUnixSystem's
+   // DynamicPath and the dictionary from libNet).
+
+   // Similarly, the ordering (before this commit) was broken in the
+   // following case:
+
+   //    TApplication creation (EndOfProcessCleanups registration)
+   //    load UserLibrary
+   //    create TFile
+   //    Append UserObject to TFile
+
+   // and after the end of main the order of execution was
+
+   //    unload UserLibrary
+   //    call EndOfProcessCleanups
+   //       Write the TFile
+   //         attempt to write the user object.
+   //    ....
+
+   // where what we need is to have the files closen/written before
+   // the unloading of the library.
+
+   // To solve the problem we now register an atexit function for
+   // every dictionary thus making sure there is at least one executed
+   // before the first library tear down after main.
+
+   // If atexit is called directly within a library's code, the
+   // function will called *either* when the library is 'dlclose'd or
+   // after then end of main (whichever comes first).  We do *not*
+   // want the files to be closed whenever a library is unloaded via
+   // dlclose.  To avoid this, we add the function (CallCloseFiles)
+   // from the dictionary indirectly (via ROOT::RegisterModule).  In
+   // this case the function will only only be called either when
+   // libCore is 'dlclose'd or right after the end of main.
+
+   atexit(CallCloseFiles);
    
+   // Now register with TCling.
    if (gCling) {
       gCling->RegisterModule(modulename, headers, allHeaders,
                              includePaths, payloadCode, triggerFunc);
