@@ -36,6 +36,13 @@ namespace PR_NS_A {
 
 } // namespace PR_NS_A
 
+namespace PR_NS_A {      // second namespace to check for updates
+
+   TD_NS_A_t tsa2 = -1;
+   const TD_NS_A_t ctsa2 = -1;
+
+} // namespace PR_NS_A
+
 int PR_NS_A::PR_ST_B::sb                   = 2;
 int PR_NS_A::PR_ST_B::PR_ST_C::sc          = 3;
 int PR_NS_A::PR_NS_D::PR_ST_E::se          = 5;

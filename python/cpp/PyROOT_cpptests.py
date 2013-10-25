@@ -119,6 +119,11 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual( PR_NS_A.tsa,                          -1 )
       self.assertEqual( PR_NS_A.ctsa,                         -1 )
 
+    # and even more that are currently failing (is ROOT-5469)
+      if not FIXCLING:
+         self.assertEqual( PR_NS_A.tsa2,                         -1 )
+         self.assertEqual( PR_NS_A.ctsa2,                        -1 )
+
    def test08VoidPointerPassing( self ):
       """Test passing of variants of void pointer arguments"""
 

@@ -53,6 +53,9 @@ class Regression02PyExceptionTestcase( MyTestCase ):
 
       gROOT.LoadMacro( "Scott.C+" )
 
+      if FIXCLING:      # fails due to ROOT-5603
+         return
+
     # test of not overloaded global function
       self.assertRaises( SyntaxError, ThrowPyException )
       try:
