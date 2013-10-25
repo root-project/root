@@ -316,7 +316,6 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
    if ( ! (mod & Rflx::SCOPED) ) {
    // remove scope from the name
       Int_t tpl_open = 0;
-      std::string::size_type last = 0;
       for ( std::string::size_type pos = name.size() - 1; 0 < pos; --pos ) {
          std::string::value_type c = name[ pos ];
 
