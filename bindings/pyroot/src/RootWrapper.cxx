@@ -488,7 +488,7 @@ PyObject* PyROOT::MakeRootClassFromString(
       Py_INCREF( scope );
    }
 
-// retrieve ROOT class (this verifies name)
+// retrieve ROOT class (this verifies name, and is therefore done first)
    const std::string& lookup = scope ? (scName+"::"+name) : name;
    TScopeAdapter klass = TScopeAdapter::ByName( lookup );
    if ( ! (Bool_t)klass || klass.FunctionMemberSize() == 0 ) {
