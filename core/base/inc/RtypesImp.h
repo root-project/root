@@ -56,4 +56,8 @@ namespace ROOT {                                                     \
 }
 #endif
 
+namespace ROOT {
+   void RegisterModule();
+}
+
 #endif
