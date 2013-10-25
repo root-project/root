@@ -2151,7 +2151,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
    //   To invert the cut, it is enough to put a "-" in front of its name:
    //      myhist->ProfileX(" ",firstybin,lastybin,"[-cutg]");
    //   It is possible to apply several cuts ("," means logical AND):
-   //      myhist->ProfileX(" ",firstybin,lastybin,[cutg1,cutg2]");
+   //      myhist->ProfileX(" ",firstybin,lastybin,"[cutg1,cutg2]");
    //
    //   NOTE that if a TProfile named "name" exists in the current directory or pad with
    //   a compatible axis the profile is reset and filled again with the projected contents of the TH2.
@@ -2196,7 +2196,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    //   To invert the cut, it is enough to put a "-" in front of its name:
    //      myhist->ProfileY(" ",firstybin,lastybin,"[-cutg]");
    //   It is possible to apply several cuts:
-   //      myhist->ProfileY(" ",firstybin,lastybin,[cutg1,cutg2]");
+   //      myhist->ProfileY(" ",firstybin,lastybin,"[cutg1,cutg2]");
    //
    //   NOTE that if a TProfile named "name" exists in the current directory or pad with
    //   a compatible axis the profile is reset and filled again with the projected contents of the TH2.
@@ -2475,7 +2475,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
    //   To invert the cut, it is enough to put a "-" in front of its name:
    //      myhist->ProjectionX(" ",firstybin,lastybin,"[-cutg]");
    //   It is possible to apply several cuts:
-   //      myhist->ProjectionX(" ",firstybin,lastybin,[cutg1,cutg2]");
+   //      myhist->ProjectionX(" ",firstybin,lastybin,"[cutg1,cutg2]");
    //
    //   NOTE that if a TH1D named "name" exists in the current directory or pad 
    //   the histogram is reset and filled again with the projected contents of the TH2.
@@ -2515,7 +2515,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
    //   To invert the cut, it is enough to put a "-" in front of its name:
    //      myhist->ProjectionY(" ",firstxbin,lastxbin,"[-cutg]");
    //   It is possible to apply several cuts:
-   //      myhist->ProjectionY(" ",firstxbin,lastxbin,[cutg1,cutg2]");
+   //      myhist->ProjectionY(" ",firstxbin,lastxbin,"[cutg1,cutg2]");
    //
    //   NOTE that if a TH1D named "name" exists in the current directory or pad and having
    //   a compatible axis, the histogram is reset and filled again with the projected contents of the TH2.
