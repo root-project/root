@@ -2014,7 +2014,7 @@ static void CallCloseFiles()
 {
    // Insure that the files, canvases and sockets are closed.
    
-   if (gROOT) gROOT->CloseFiles();
+   if (TROOT::Initialized() && ROOT::gROOTLocal) gROOT->CloseFiles();
 }
 
 //______________________________________________________________________________
