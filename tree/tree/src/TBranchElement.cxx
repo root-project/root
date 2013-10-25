@@ -3075,7 +3075,7 @@ void TBranchElement::InitializeOffsets()
             // If we have the are the sub-branch of the TBranchSTL, we need
             // to remove it's name to get the correct real data offsets
             //-----------------------------------------------------------------
-            if( stlParentName.Length() )
+            if( dynamic_cast<TBranchSTL*>(fParent) && stlParentName.Length() )
             {
                if( !strncmp( stlParentName.Data(), dataName.Data(), stlParentName.Length()-1 )
                    && dataName[ stlParentName.Length() ] == '.' )
