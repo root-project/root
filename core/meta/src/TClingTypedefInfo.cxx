@@ -144,6 +144,8 @@ int TClingTypedefInfo::InternalNext()
       }
       return 0;
    }
+   // Deserialization might happen during the iteration.
+   cling::Interpreter::PushTransactionRAII pushedT(fInterp);
    while (true) {
       // Advance to next usable decl, or return if
       // there is no next usable decl.
