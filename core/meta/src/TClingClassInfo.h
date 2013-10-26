@@ -27,7 +27,6 @@
 
 #include "TClingMethodInfo.h"
 #include "TDictionary.h"
-#include "TInterpreter.h"
 
 #include <vector>
 #include <string>
@@ -85,7 +84,7 @@ public:
    void                 Destruct(void *arena) const;
    OffsetPtrFunc_t      FindBaseOffsetFunction(const clang::Decl* decl) const;
    const clang::Decl   *GetDecl() const { return fDecl; } // Underlying representation without Double32_t
-   TInterpreter::DeclId_t GetDeclId() const { return (clang::Decl*)(fDecl->getCanonicalDecl()); }
+   TDictionary::DeclId_t GetDeclId() const { return (clang::Decl*)(fDecl->getCanonicalDecl()); }
    TClingMethodInfo     GetMethod(const char *fname, const char *proto,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;

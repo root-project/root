@@ -55,6 +55,7 @@ public:
    TList              *GetListOfMethodArgs();
    Int_t               GetNargs() const;
    Int_t               GetNargsOpt() const;
+   DeclId_t            GetDeclId() const;
    void               *InterfaceMethod() const;
    Long_t              Property() const;
    Long_t              ExtraProperty() const;

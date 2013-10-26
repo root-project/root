@@ -201,7 +201,7 @@ public:
    // core/meta helper functions.
    virtual TMethodCall::EReturnType MethodCallReturnType(TFunction *func) const = 0;
 
-   typedef const void* DeclId_t;
+   typedef TDictionary::DeclId_t DeclId_t;
    virtual DeclId_t GetDeclId(CallFunc_t *info) const = 0;   
    virtual DeclId_t GetDeclId(ClassInfo_t *info) const = 0;
    virtual DeclId_t GetDeclId(MethodInfo_t *info) const = 0;
