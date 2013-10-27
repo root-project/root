@@ -2419,34 +2419,17 @@ void TCling::CreateListOfDataMembers(TClass* cl) const
 void TCling::CreateListOfMethods(TClass* cl) const
 {
    // Create list of pointers to methods for TClass cl.
-   R__LOCKGUARD2(gInterpreterMutex);
-   if (cl->fMethod) {
-      return;
-   }
-   if (cl->GetClassInfo() == 0) {
-      return;
-   }
-   cl->fMethod = new THashList;
-   cl->fMethod->SetOwner();
-   TClingMethodInfo t(fInterpreter, (TClingClassInfo*)cl->GetClassInfo());
-   while (t.Next()) {
-      // if name cannot be obtained no use to put in list
-      if (t.IsValid() && t.Name(*fNormalizedCtxt)) {
-         TClingMethodInfo* a = new TClingMethodInfo(t);
-         cl->fMethod->Add(new TMethod((MethodInfo_t*)a, cl));
-      }
-   }
+   // This is now a nop.  The creation and updating is handled in
+   // TListOfFunctions.
+
 }
 
 //______________________________________________________________________________
 void TCling::UpdateListOfMethods(TClass* cl) const
 {
    // Update the list of pointers to method for TClass cl
-   delete cl->fAllPubMethod;
-   cl->fAllPubMethod = 0;
-   delete cl->fMethod;
-   cl->fMethod = 0;
-   CreateListOfMethods(cl);
+   // This is now a nop.  The creation and updating is handled in
+   // TListOfFunctions.
 }
 
 //______________________________________________________________________________
