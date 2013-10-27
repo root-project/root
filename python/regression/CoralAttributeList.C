@@ -79,6 +79,7 @@ namespace coral_pyroot_regression {
     const_iterator begin() const;
     const_iterator end() const;
 
+    bool useVar() { return m_specification && m_ownSpecification; }
 
   private:
     AttributeListSpecification* m_specification;
