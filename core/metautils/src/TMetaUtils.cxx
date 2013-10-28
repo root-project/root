@@ -3785,7 +3785,6 @@ void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& cling
       std::string inclPath;
       while (std::getline(envInclPathsStream, inclPath, ':')) {
          clingArgs.push_back("-I");
-         std::cout << " o " <<  inclPath << std::endl;
          clingArgs.push_back(inclPath);
       }
    }
