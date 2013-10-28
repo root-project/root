@@ -152,3 +152,5 @@ file `simple.pdf`.
 -   Make sure all greek and math symbols are printed correctly by `TTexDump`.
 -   Implement dummy operators `#mbox` and `#hbox` to improve the compatibility 
     between `TLatex`, `TMathText` and `TTexDump`.
+-   Some operators like `#minus`, `#plus`, `#mp`, `#hbar` etc ... 
+    ignored the color  defined by the operator `#color`. 
