@@ -1649,6 +1649,9 @@ Bool_t TCling::IsLoaded(const char* filename) const
    //            the shared library path
    R__LOCKGUARD(gInterpreterMutex);
 
+   std::string file_name = filename;
+   while (file_name.find("/./") != std::string::npos)
+       file_name.replace(file_name.find("/./"), 3, "/");
 
    std::string filesStr = "";
    llvm::raw_string_ostream filesOS(filesStr);
@@ -1663,14 +1666,14 @@ Bool_t TCling::IsLoaded(const char* filename) const
    // Fill fileMap; return early on exact match.
    for (llvm::SmallVector<llvm::StringRef, 100>::const_iterator 
            iF = files.begin(), iE = files.end(); iF != iE; ++iF) {
-      if ((*iF) == filename) return kTRUE; // exact match
+      if ((*iF) == file_name.c_str()) return kTRUE; // exact match
       fileMap.insert(*iF);
    }
 
    if (fileMap.empty()) return kFALSE;
 
    // Check MacroPath.
-   TString sFilename(filename);
+   TString sFilename(file_name.c_str());
    if (gSystem->FindFile(TROOT::GetMacroPath(), sFilename, kReadPermission)
        && fileMap.count(sFilename.Data())) {
       return kTRUE;
@@ -1684,25 +1687,31 @@ Bool_t TCling::IsLoaded(const char* filename) const
       incPath.ReplaceAll(" :", ":");
    }
    incPath.Prepend(".:");
-   sFilename = filename;
+   sFilename = file_name.c_str();
    if (gSystem->FindFile(incPath, sFilename, kReadPermission)
        && fileMap.count(sFilename.Data())) {
       return kTRUE;
    }
 
    // Check shared library.
-   sFilename = filename;
+   sFilename = file_name.c_str();
+   const char *found = gSystem->FindDynamicLibrary(sFilename, kTRUE);
    cling::DynamicLibraryManager* dyLibManager 
       = fInterpreter->getDynamicLibraryManager();
-   if (gSystem->FindDynamicLibrary(sFilename, kTRUE)
-       && dyLibManager->isDynamicLibraryLoaded(sFilename.Data())) {
-      return kTRUE;
+   if (found) {
+      std::string sname = found;
+      while (sname.find("/./") != std::string::npos)
+          sname.replace(sname.find("/./"), 3, "/");
+      if (dyLibManager->isDynamicLibraryLoaded(sname)) {
+         return kTRUE;
+      }
    }
 
    const clang::DirectoryLookup *CurDir = 0;
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
    clang::HeaderSearch &HS = PP.getHeaderSearchInfo();
-   const clang::FileEntry *FE = HS.LookupFile(filename, /*isAngled*/ false,
+   const clang::FileEntry *FE = HS.LookupFile(file_name.c_str(),
+                                              /*isAngled*/ false,
                                               /*FromDir*/ 0, CurDir,
                                               /*CurFileEnt*/ 0,
                                               /*SearchPath*/ 0,

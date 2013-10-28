@@ -4520,6 +4520,7 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
    // On a MAC, a library might not have any extensions, so let's try the raw
    // name first.
    if (gSystem->FindFile(GetDynamicPath(), sLib, kReadPermission)) {
+      sLib.ReplaceAll("/./", "/");
       return sLib;
    }
    sLib = searchFor;
@@ -4533,8 +4534,10 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
                    !strcmp(lib+len-6, ".dylib") ||
                    !strcmp(lib+len-3, ".sl")    ||
                    !strcmp(lib+len-2, ".a"))) {
-      if (gSystem->FindFile(GetDynamicPath(), sLib, kReadPermission))
+      if (gSystem->FindFile(GetDynamicPath(), sLib, kReadPermission)) {
+         sLib.ReplaceAll("/./", "/");
          return sLib;
+      }
       if (!quiet)
          Error("FindDynamicLibrary",
                "%s does not exist in %s", searchFor.Data(), GetDynamicPath());
@@ -4549,6 +4552,7 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
       ++ext;
       if (gSystem->FindFile(GetDynamicPath(), fname, kReadPermission)) {
          sLib.Swap(fname);
+         sLib.ReplaceAll("/./", "/");
          return sLib;
       }
    }
