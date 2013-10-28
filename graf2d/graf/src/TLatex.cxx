@@ -1094,7 +1094,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          fs1 = Analyse(x+square,y,spec,text+5,length-5);
          TText hbar;
          hbar.SetTextFont(12);
-         hbar.SetTextColor(fTextColor);
+         hbar.SetTextColor(spec.fColor);
          hbar.SetTextSize(spec.fSize);
          hbar.SetTextAngle(fTextAngle);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1115,7 +1115,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          fs1 = Analyse(x+square,y,spec,text+6,length-6);
          TText minus;
          minus.SetTextFont(122);
-         minus.SetTextColor(fTextColor);
+         minus.SetTextColor(spec.fColor);
          minus.SetTextSize(spec.fSize);
          minus.SetTextAngle(fTextAngle);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1135,7 +1135,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          fs1 = Analyse(x+square,y,spec,text+5,length-5);
          TText plus;
          plus.SetTextFont(122);
-         plus.SetTextColor(fTextColor);
+         plus.SetTextColor(spec.fColor);
          plus.SetTextSize(spec.fSize);
          plus.SetTextAngle(fTextAngle);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1155,7 +1155,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          fs1 = Analyse(x+square,y,spec,text+3,length-3);
          TText mp;
          mp.SetTextFont(122);
-         mp.SetTextColor(fTextColor);
+         mp.SetTextColor(spec.fColor);
          mp.SetTextSize(spec.fSize);
          mp.SetTextAngle(fTextAngle+180);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1191,7 +1191,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
          fs1 = Analyse(x+square,y,spec,text+10,length-10);
          TText bs;
          bs.SetTextFont(GetTextFont());
-         bs.SetTextColor(fTextColor);
+         bs.SetTextColor(spec.fColor);
          bs.SetTextSize(spec.fSize);
          bs.SetTextAngle(fTextAngle);
          Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1365,7 +1365,7 @@ TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Ch
                Double_t yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
                TText tilde;
                tilde.SetTextFont(fTextFont);
-               tilde.SetTextColor(fTextColor);
+               tilde.SetTextColor(spec.fColor);
                tilde.SetTextSize(0.9*spec.fSize);
                tilde.SetTextAlign(22);
                tilde.SetTextAngle(fTextAngle);
