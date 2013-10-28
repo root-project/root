@@ -2844,7 +2844,8 @@ private:
 //______________________________________________________________________________
 int RootCling(int argc,
               char **argv,
-              bool isDeep=false)
+              bool isDeep=false,
+              bool isGenreflex=true)
 {
    
    if (argc < 2) {
@@ -3654,7 +3655,12 @@ int RootCling(int argc,
       end = scan.fSelectedClasses.end();
       for( ; iter != end; ++iter)
       {
-         ROOT::TMetaUtils::WriteClassCode(&CallWriteStreamer, *iter, interp, normCtxt, *dictSrcOut);
+         ROOT::TMetaUtils::WriteClassCode(&CallWriteStreamer,
+                                          *iter,
+                                          interp,
+                                          normCtxt,
+                                          *dictSrcOut,
+                                          isGenreflex);
       }
    }
 
@@ -4055,7 +4061,8 @@ int invokeRootCling(const std::string& verbosity,
    char** argv =  & (argvVector[0]);
    int rootclingReturnCode = RootCling(argc,
                                        argv,
-                                       isDeep);
+                                       isDeep,
+                                       true);
    
    for (int i=0;i<argc;i++)
       delete [] argvVector[i];

@@ -2114,8 +2114,17 @@ clang::RecordDecl *ROOT::TMetaUtils::R__GetUnderlyingRecordDecl(clang::QualType 
    return rawtype->getAsCXXRecordDecl();
 }
 
-void ROOT::TMetaUtils::WriteClassCode(ROOT::TMetaUtils::CallWriteStreamer_t WriteStreamerFunc, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, std::ostream& finalString)
+//______________________________________________________________________________
+void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
+                                      const AnnotatedRecordDecl &cl,
+                                      const cling::Interpreter &interp,
+                                      const TNormalizedCtxt &normCtxt,
+                                      std::ostream& finalString,
+                                      bool isGenreflex=false)
 {
+   // Generate the code of the class
+   // If the requestor is genreflex, request the new streamer format
+   
    const clang::CXXRecordDecl* decl = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
 
    if (!decl->isCompleteDefinition()) {
@@ -2132,15 +2141,7 @@ void ROOT::TMetaUtils::WriteClassCode(ROOT::TMetaUtils::CallWriteStreamer_t Writ
    if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"Streamer")) {
       if (cl.RootFlag()) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt); // In particular this detect if the class has a version number.
       if (!(cl.RequestNoStreamer())) {
-         (*WriteStreamerFunc)(cl, interp, normCtxt, cl.RequestStreamerInfo() /*G__AUTOSTREAMER*/);
-         // ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, bool isAutoStreamer
-
-         /*
-         if ((cl.RequestStreamerInfo() / *G__AUTOSTREAMER* /)) {
-            WriteAutoStreamer(cl, interp, normCtxt);
-         } else {
-            WriteStreamer(cl, interp, normCtxt);
-         }*/
+         (*WriteStreamerFunc)(cl, interp, normCtxt, isGenreflex || cl.RequestStreamerInfo());
       } else
          ROOT::TMetaUtils::Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n",fullname.c_str());
    } else {
@@ -2158,6 +2159,7 @@ void ROOT::TMetaUtils::WriteClassCode(ROOT::TMetaUtils::CallWriteStreamer_t Writ
    ROOT::TMetaUtils::WriteAuxFunctions(finalString, cl, decl, interp, normCtxt);
 }
 
+//______________________________________________________________________________
 void ROOT::TMetaUtils::AddConstructorType(const char *arg, const cling::Interpreter &interp)
 {
    if (arg) gIoConstructorTypes.push_back(ROOT::TMetaUtils::RConstructorType(arg, interp));
@@ -2704,17 +2706,6 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Field
    return indexvar.c_str();
 
 }
-
-
-void WriteEverything(ROOT::TMetaUtils::CallWriteStreamer_t WriteStreamerFunc, std::ostream& finalString, const ROOT::TMetaUtils::AnnotatedRecordDecl &cl, const clang::CXXRecordDecl *decl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
-{
-   bool needCollectionProxy = false;
-   ROOT::TMetaUtils::WriteClassInit(finalString, cl, decl, interp, normCtxt, needCollectionProxy);
-   ROOT::TMetaUtils::WriteClassCode(WriteStreamerFunc, cl, interp, normCtxt, finalString);
-   ROOT::RStl::Instance().WriteClassInit(finalString, interp, normCtxt, needCollectionProxy);
-}
-
-
 
 //////////////////////////////////////////////////////////////////////////
 void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
