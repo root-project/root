@@ -1,0 +1,46 @@
+Extracting multiple args: 0/6 CMS_DICT_IMPL
+Extracting multiple args: 1/6 _REENTRANT
+Extracting multiple args: 2/6 GNUSOURCE
+Extracting multiple args: 3/6 __STRICT_ANSI__
+Extracting multiple args: 4/6 GNU_GCC
+Extracting multiple args: 5/6 _GNU_SOURCE
+Rootcling commandline:
+0) rootcling
+1) -v4
+2) -f
+3) xr.cc
+4) -inlineInputHeader
+5) -DCMS_DICT_IMPL
+6) -D_REENTRANT
+7) -DGNUSOURCE
+8) -D__STRICT_ANSI__
+9) -DGNU_GCC
+10) -D_GNU_SOURCE
+11) classes.h
+12) classes_def.xml
+Info: File xr.cc added to the tmp catalog.
+Info: File xr.h added to the tmp catalog.
+Info: Selection XML file
+Info: *** Attribute: name = "TH2Analyzer"
+Info: XML file successfully parsed
+	Selected class -> TH2Analyzer
+Printing Selection Rules:
+	Class sel rule 0:
+		Selected: Yes
+		Attributes: 
+		pattern = TH2Analyzer*
+		No field sel rules
+		No method sel rules
+	Class sel rule 1:
+		Selected: Yes
+		Attributes: 
+		name = TH2Analyzer
+		No field sel rules
+		No method sel rules
+	No function sel rules
+	No variable sel rules
+	No enum sel rules
+Info: Generating code for class TH2Analyzer
+Restoring files in temporary file catalog:
+xr.cc_tmp --> xr.cc
+xr.h_tmp --> xr.h
