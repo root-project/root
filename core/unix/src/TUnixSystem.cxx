@@ -1140,14 +1140,14 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
             if (fReadmask->IsSet(fd)) {
                rc = UnixSelect(fd+1, &t, 0, 0);
                if (rc < 0 && rc != -2) {
-                  SysError("DispatchOneEvent", "select: read error on %d\n", fd);
+                  SysError("DispatchOneEvent", "select: read error on %d", fd);
                   fReadmask->Clr(fd);
                }
             }
             if (fWritemask->IsSet(fd)) {
                rc = UnixSelect(fd+1, 0, &t, 0);
                if (rc < 0 && rc != -2) {
-                  SysError("DispatchOneEvent", "select: write error on %d\n", fd);
+                  SysError("DispatchOneEvent", "select: write error on %d", fd);
                   fWritemask->Clr(fd);
                }
             }
