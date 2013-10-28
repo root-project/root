@@ -378,6 +378,9 @@ namespace ROOT {
       // Kind of stl container
       TClassEdit::ESTLType STLKind(const llvm::StringRef type);
 
+      // Set the toolchain and the include paths for the relocatability
+      void SetPathsForRelocatability(std::vector<std::string>& clingArgs);
+      
    } // namespace TMetaUtils
 
 

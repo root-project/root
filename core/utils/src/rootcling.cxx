@@ -2315,60 +2315,7 @@ void AddPlatformDefines(std::vector<std::string>& clingArgs)
    clingArgs.push_back(platformDefines);
    #endif
 }
-
-//______________________________________________________________________________
-void AddGccToolChainDefines (std::vector<std::string>& clingArgs) {
-   #ifdef R__GCC_TOOLCHAIN
-   clingArgs.push_back("-gcc-toolchain");
-   clingArgs.push_back(R__GCC_TOOLCHAIN);
-   #endif
-   #ifdef R__GCC_INC_DIR_0
-   clingArgs.push_back("-nostdinc++");
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_0);
-   #endif
-   #ifdef R__GCC_INC_DIR_1
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_1);
-   #endif
-   #ifdef R__GCC_INC_DIR_2
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_2);
-   #endif
-   #ifdef R__GCC_INC_DIR_3
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_3);
-   #endif
-   #ifdef R__GCC_INC_DIR_4
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_4);
-   #endif
-   #ifdef R__GCC_INC_DIR_5
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_5);
-   #endif
-   #ifdef R__GCC_INC_DIR_6
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_6);
-   #endif
-   #ifdef R__GCC_INC_DIR_7
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_7);
-   #endif
-   #ifdef R__GCC_INC_DIR_8
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_8);
-   #endif
-   #ifdef R__GCC_INC_DIR_9
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_9);
-   #endif
-   #ifdef R__GCC_INC_DIR_10
-   clingArgs.push_back("-I");
-   clingArgs.push_back(R__GCC_INC_DIR_10);
-   #endif   
-}
-
+   
 //______________________________________________________________________________
 void ExtractFileName(const std::string& path, std::string& filename)
 {
@@ -3195,8 +3142,7 @@ int RootCling(int argc,
    clingArgs.push_back("-Xclang");
    clingArgs.push_back((dictname + ".h").c_str());
 
-   // Add defines for the toolchain
-   AddGccToolChainDefines(clingArgs);
+   ROOT::TMetaUtils::SetPathsForRelocatability(clingArgs);
    
    std::vector<const char*> clingArgsC;
    for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();

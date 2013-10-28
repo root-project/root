@@ -3758,3 +3758,89 @@ ROOT::TMetaUtils::GetAnnotatedRedeclarable(const clang::TypedefNameDecl* TND) {
 
    return TND;
 }
+
+//______________________________________________________________________________
+void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& clingArgs )
+{
+   // Organise the parameters for cling in order to guarantee relocatability
+   // It treats the gcc toolchain and the root include path
+   // FIXME: enables relocatability for experiments' framework headers until PCMs
+   // are available.
+   
+   const char* gccToolchain = getenv("ROOT_GCC_TOOLCHAIN");
+   const char* envInclPath = getenv("ROOT_INCLUDE_PATH");
+   
+   if (gccToolchain) {
+      if (!envInclPath) {
+         TMetaUtils::Error(0,
+                           "Must also set ROOT_INCLUDE_PATH when ROOT_GCC_TOOLCHAIN is set!");
+      }
+      clingArgs.push_back("-gcc-toolchain");
+      clingArgs.push_back(gccToolchain);
+      clingArgs.push_back("-nostdinc++");
+   }
+   
+   if (envInclPath) {
+      std::istringstream envInclPathsStream(envInclPath);
+      std::string inclPath;
+      while (std::getline(envInclPathsStream, inclPath, ':')) {
+         clingArgs.push_back("-I");
+         std::cout << " o " <<  inclPath << std::endl;
+         clingArgs.push_back(inclPath);
+      }
+   }
+   
+   // Add defines for the toolchain
+   if (!gccToolchain) {
+      #ifdef R__GCC_TOOLCHAIN
+      clingArgs.push_back("-gcc-toolchain");
+      clingArgs.push_back(R__GCC_TOOLCHAIN);
+      #endif
+      #ifdef R__GCC_INC_DIR_0
+      clingArgs.push_back("-nostdinc++");
+      clingArgs.push_back("-I");
+      clingArgs.push_back(R__GCC_INC_DIR_0);
+      #endif
+      #ifdef R__GCC_INC_DIR_1
+      clingArgs.push_back("-I");
+      clingArgs.push_back(R__GCC_INC_DIR_1);
+      #endif
+      #ifdef R__GCC_INC_DIR_2
+      clingArgs.push_back("-I");
+      clingArgs.push_back(R__GCC_INC_DIR_2);
+      #endif
+      #ifdef R__GCC_INC_DIR_3
+      clingArgs.push_back("-I");
+      clingArgs.push_back(R__GCC_INC_DIR_3);
+      #endif
+      #ifdef R__GCC_INC_DIR_4
+      clingArgs.push_back("-I");
+      clingArgs.push_back(R__GCC_INC_DIR_4);
+      #endif
+      #ifdef R__GCC_INC_DIR_5
+      clingArgs.push_back("-I");
+      clingArgs.push_back(R__GCC_INC_DIR_5);
+      #endif
+      #ifdef R__GCC_INC_DIR_6
+      clingArgs.push_back("-I");
+      clingArgs.push_back(R__GCC_INC_DIR_6);
+      #endif
+      #ifdef R__GCC_INC_DIR_7
+      clingArgs.push_back("-I");
+      clingArgs.push_back(R__GCC_INC_DIR_7);
+      #endif
+      #ifdef R__GCC_INC_DIR_8
+      clingArgs.push_back("-I");
+      clingArgs.push_back(R__GCC_INC_DIR_8);
+      #endif
+      #ifdef R__GCC_INC_DIR_9
+      clingArgs.push_back("-I");
+      clingArgs.push_back(R__GCC_INC_DIR_9);
+      #endif
+      #ifdef R__GCC_INC_DIR_10
+      clingArgs.push_back("-I");
+      clingArgs.push_back(R__GCC_INC_DIR_10);
+      #endif
+   }
+   
+}
