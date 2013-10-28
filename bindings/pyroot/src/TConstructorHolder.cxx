@@ -88,7 +88,16 @@ PyObject* PyROOT::TConstructorHolder::operator()(
 // there is no (default) contructor, so just return a right-size bit of memory.
    if ( ! address ) {
       PyErr_Clear();
-      address = (Long_t)klass->New();
+      // CLING WORKAROUND --
+      // Theoretically, #100389 is fixed, but there are subtle ways that this
+      // still fails. For whatever reason (TBD) simply calling the method again
+      // has a high success rate
+      address = (Long_t)this->Execute( 0, release_gil );
+      // -- END (NESTED) CLING WORKAROUND
+      if ( ! address ) {
+         PyErr_Clear();
+         address = (Long_t)klass->New();
+      }
    }
 // -- END CLING WORKAROUND
 
