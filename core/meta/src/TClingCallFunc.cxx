@@ -166,20 +166,20 @@ T sv_to_long_long_u_or_not(const cling::StoredValueRef& svref)
       if (BT->isSignedInteger()) {
          return gv.IntVal.getSExtValue();
       } else if (BT->isUnsignedInteger()) {
-         return (long long) gv.IntVal.getZExtValue();
+         return (T) gv.IntVal.getZExtValue();
       } else {
          switch (BT->getKind()) {
          case BuiltinType::Float:
-            return (long long) gv.FloatVal;
+            return (T) gv.FloatVal;
          case BuiltinType::Double:
-            return (long long) gv.DoubleVal;
+            return (T) gv.DoubleVal;
          case BuiltinType::LongDouble:
             // FIXME: Implement this!
             break;
          case BuiltinType::NullPtr:
             // C++11 nullptr
             return 0;
-         default: ;
+         default: break;
          }
       }
    }
