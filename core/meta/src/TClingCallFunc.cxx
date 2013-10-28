@@ -132,9 +132,9 @@ EvaluateExpr(cling::Interpreter* interp, const Expr* E)
    return valref;
 }
 
-static
-long long
-sv_to_long_long(const cling::StoredValueRef& svref)
+namespace {
+template <typename T>
+T sv_to_long_long_u_or_not(const cling::StoredValueRef& svref)
 {
    const cling::Value& valref = svref.get();
    QualType QT = valref.getClangType();
@@ -147,517 +147,55 @@ sv_to_long_long(const cling::StoredValueRef& svref)
       const MemberPointerType* MPT =
          QT->getAs<MemberPointerType>();
       if (MPT->isMemberDataPointer()) {
-         return (long long) (ptrdiff_t) gv.PointerVal;
+         return (T) (ptrdiff_t) gv.PointerVal;
       }
-      return (long long) gv.PointerVal;
+      return (T) gv.PointerVal;
    }
    if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
          QT->isReferenceType()) {
-      return (long long) gv.PointerVal;
+      return (T) gv.PointerVal;
    }
    if (const EnumType* ET = dyn_cast<EnumType>(&*QT)) {
-      // Note: We may need to worry about the underlying type
-      //       of the enum here.
-      (void) ET;
-      return gv.IntVal.getSExtValue();
+      if (ET->getDecl()->getIntegerType()->hasSignedIntegerRepresentation())
+         return (T) gv.IntVal.getSExtValue();
+      else
+         return (T) gv.IntVal.getZExtValue();
    }
    if (const BuiltinType* BT =
             dyn_cast<BuiltinType>(&*QT)) {
-      //
-      //  WARNING!!!
-      //
-      //  This switch is organized in order-of-declaration
-      //  so that the produced assembly code is optimal.
-      //  Do not reorder!
-      //
-      switch (BT->getKind()) {
-            //
-            //  Builtin Types
-            //
-         case BuiltinType::Void: {
-               // void
-            }
+      if (BT->isSignedInteger()) {
+         return gv.IntVal.getSExtValue();
+      } else if (BT->isUnsignedInteger()) {
+         return (long long) gv.IntVal.getZExtValue();
+      } else {
+         switch (BT->getKind()) {
+         case BuiltinType::Float:
+            return (long long) gv.FloatVal;
+         case BuiltinType::Double:
+            return (long long) gv.DoubleVal;
+         case BuiltinType::LongDouble:
+            // FIXME: Implement this!
             break;
-            //
-            //  Unsigned Types
-            //
-         case BuiltinType::Bool: {
-               // bool
-               return (long long) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::Char_U: {
-               // char on targets where it is unsigned
-               return (long long) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::UChar: {
-               // unsigned char
-               return (long long) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::WChar_U: {
-               // wchar_t on targets where it is unsigned
-               return (long long) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::Char16: {
-               // char16_t
-               return (long long) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::Char32: {
-               // char32_t
-               return (long long) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::UShort: {
-               // unsigned short
-               return (long long) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::UInt: {
-               // unsigned int
-               return (long long) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::ULong: {
-               // unsigned long
-               return (long long) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::ULongLong: {
-               // unsigned long long
-               return (long long) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::UInt128: {
-               // __uint128_t
-            }
-            break;
-            //
-            //  Signed Types
-            //
-         case BuiltinType::Char_S: {
-               // char on targets where it is signed
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::SChar: {
-               // signed char
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::WChar_S: {
-               // wchar_t on targets where it is signed
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::Short: {
-               // short
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::Int: {
-               // int
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::Long: {
-               // long
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::LongLong: {
-               // long long
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::Int128: {
-               // __int128_t
-            }
-            break;
-         case BuiltinType::Half: {
-               // half in OpenCL, __fp16 in ARM NEON
-            }
-            break;
-         case BuiltinType::Float: {
-               // float
-               return (long long) gv.FloatVal;
-            }
-            break;
-         case BuiltinType::Double: {
-               // double
-               return (long long) gv.DoubleVal;
-            }
-            break;
-         case BuiltinType::LongDouble: {
-               // long double
-               // FIXME: Implement this!
-            }
-            break;
-            //
-            //  Language-Specific Types
-            //
-         case BuiltinType::NullPtr: {
-               // C++11 nullptr
-            }
-            break;
-         case BuiltinType::ObjCId: {
-               // Objective C 'id' type
-            }
-            break;
-         case BuiltinType::ObjCClass: {
-               // Objective C 'Class' type
-            }
-            break;
-         case BuiltinType::ObjCSel: {
-               // Objective C 'SEL' type
-            }
-            break;
-         case BuiltinType::OCLImage1d: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage1dArray: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage1dBuffer: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage2d: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage2dArray: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage3d: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLSampler: {
-               // OpenCL sampler_t
-            }
-            break;
-         case BuiltinType::OCLEvent: {
-               // OpenCL event_t
-            }
-            break;
-            //
-            //  Placeholder types.
-            //
-            //  These types are used during intermediate phases
-            //  of semantic analysis.  They are eventually resolved
-            //  to one of the preceeding types.
-            //
-         case BuiltinType::Dependent: {
-               // dependent on a template argument
-            }
-            break;
-         case BuiltinType::Overload: {
-               // an unresolved function overload set
-            }
-            break;
-         case BuiltinType::BoundMember: {
-               // a bound C++ non-static member function
-            }
-            break;
-         case BuiltinType::PseudoObject: {
-               // Object C @property or VS.NET __property
-            }
-            break;
-         case BuiltinType::UnknownAny: {
-               // represents an unknown type
-            }
-            break;
-         case BuiltinType::BuiltinFn: {
-               // a compiler builtin function
-            }
-            break;
-         case BuiltinType::ARCUnbridgedCast: {
-               // Objective C Automatic Reference Counting cast
-               // which would normally require __bridge, but which
-               // may be ok because of the context.
-            }
-            break;
-         default: {
-               // There should be no others.  This is here in case
-               // this changes in the future.
-            }
-            break;
+         case BuiltinType::NullPtr:
+            // C++11 nullptr
+            return 0;
+         default: ;
+         }
       }
    }
-   Error("TClingCallFunc::sv_to_long_long", "Invalid Type!");
+   Error("TClingCallFunc::sv_to_long_long", "Cannot handle this type!");
    QT->dump();
-   return 0LL;
+   return 0;
+}
 }
 
 static
-unsigned long long
-sv_to_ulong_long(const cling::StoredValueRef& svref)
-{
-   const cling::Value& valref = svref.get();
-   QualType QT = valref.getClangType();
-   if (QT.isNull()) {
-      Error("TClingCallFunc::sv_to_ulong_long", "Null Type!");
-      return 0;
-   }
-   GenericValue gv = valref.getGV();
-   if (QT->isMemberPointerType()) {
-      const MemberPointerType* MPT =
-         QT->getAs<MemberPointerType>();
-      if (MPT->isMemberDataPointer()) {
-         return (unsigned long long) (ptrdiff_t) gv.PointerVal;
-      }
-      return (unsigned long long) gv.PointerVal;
-   }
-   if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
-         QT->isReferenceType()) {
-      return (unsigned long long) gv.PointerVal;
-   }
-   if (const EnumType* ET = dyn_cast<EnumType>(&*QT)) {
-      // Note: We may need to worry about the underlying type
-      //       of the enum here.
-      (void) ET;
-      return gv.IntVal.getZExtValue();
-   }
-   if (const BuiltinType* BT =
-            dyn_cast<BuiltinType>(&*QT)) {
-      //
-      //  WARNING!!!
-      //
-      //  This switch is organized in order-of-declaration
-      //  so that the produced assembly code is optimal.
-      //  Do not reorder!
-      //
-      switch (BT->getKind()) {
-            //
-            //  Builtin Types
-            //
-         case BuiltinType::Void: {
-               // void
-            }
-            break;
-            //
-            //  Unsigned Types
-            //
-         case BuiltinType::Bool: {
-               // bool
-               return gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::Char_U: {
-               // char on targets where it is unsigned
-               return gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::UChar: {
-               // unsigned char
-               return gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::WChar_U: {
-               // wchar_t on targets where it is unsigned
-               return gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::Char16: {
-               // char16_t
-               return gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::Char32: {
-               // char32_t
-               return gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::UShort: {
-               // unsigned short
-               return gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::UInt: {
-               // unsigned int
-               return gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::ULong: {
-               // unsigned long
-               return gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::ULongLong: {
-               // unsigned long long
-               return gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::UInt128: {
-               // __uint128_t
-            }
-            break;
-            //
-            //  Signed Types
-            //
-         case BuiltinType::Char_S: {
-               // char on targets where it is signed
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::SChar: {
-               // signed char
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::WChar_S: {
-               // wchar_t on targets where it is signed
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::Short: {
-               // short
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::Int: {
-               // int
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::Long: {
-               // long
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::LongLong: {
-               // long long
-               return gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::Int128: {
-               // __int128_t
-            }
-            break;
-         case BuiltinType::Half: {
-               // half in OpenCL, __fp16 in ARM NEON
-            }
-            break;
-         case BuiltinType::Float: {
-               // float
-               return (unsigned long long) gv.FloatVal;
-            }
-            break;
-         case BuiltinType::Double: {
-               // double
-               return (unsigned long long) gv.DoubleVal;
-            }
-            break;
-         case BuiltinType::LongDouble: {
-               // long double
-               // FIXME: Implement this!
-            }
-            break;
-            //
-            //  Language-Specific Types
-            //
-         case BuiltinType::NullPtr: {
-               // C++11 nullptr
-            }
-            break;
-         case BuiltinType::ObjCId: {
-               // Objective C 'id' type
-            }
-            break;
-         case BuiltinType::ObjCClass: {
-               // Objective C 'Class' type
-            }
-            break;
-         case BuiltinType::ObjCSel: {
-               // Objective C 'SEL' type
-            }
-            break;
-         case BuiltinType::OCLImage1d: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage1dArray: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage1dBuffer: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage2d: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage2dArray: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage3d: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLSampler: {
-               // OpenCL sampler_t
-            }
-            break;
-         case BuiltinType::OCLEvent: {
-               // OpenCL event_t
-            }
-            break;
-            //
-            //  Placeholder types.
-            //
-            //  These types are used during intermediate phases
-            //  of semantic analysis.  They are eventually resolved
-            //  to one of the preceeding types.
-            //
-         case BuiltinType::Dependent: {
-               // dependent on a template argument
-            }
-            break;
-         case BuiltinType::Overload: {
-               // an unresolved function overload set
-            }
-            break;
-         case BuiltinType::BoundMember: {
-               // a bound C++ non-static member function
-            }
-            break;
-         case BuiltinType::PseudoObject: {
-               // Object C @property or VS.NET __property
-            }
-            break;
-         case BuiltinType::UnknownAny: {
-               // represents an unknown type
-            }
-            break;
-         case BuiltinType::BuiltinFn: {
-               // a compiler builtin function
-            }
-            break;
-         case BuiltinType::ARCUnbridgedCast: {
-               // Objective C Automatic Reference Counting cast
-               // which would normally require __bridge, but which
-               // may be ok because of the context.
-            }
-            break;
-         default: {
-               // There should be no others.  This is here in case
-               // this changes in the future.
-            }
-            break;
-      }
-   }
-   Error("TClingCallFunc::sv_to_ulong_long", "Invalid Type!");
-   QT->dump();
-   return 0ULL;
+long long sv_to_long_long(const cling::StoredValueRef& svref) {
+   return sv_to_long_long_u_or_not<long long>(svref);
+}
+static
+unsigned long long sv_to_ulong_long(const cling::StoredValueRef& svref) {
+   return sv_to_long_long_u_or_not<unsigned long long>(svref);
 }
 
 namespace {
