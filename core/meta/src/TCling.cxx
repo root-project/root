@@ -1650,8 +1650,9 @@ Bool_t TCling::IsLoaded(const char* filename) const
    R__LOCKGUARD(gInterpreterMutex);
 
    std::string file_name = filename;
-   while (file_name.find("/./") != std::string::npos)
-       file_name.replace(file_name.find("/./"), 3, "/");
+   size_t at = std::string::npos;
+   while ((at = file_name.find("/./")) != std::string::npos)
+       file_name.replace(at, 3, "/");
 
    std::string filesStr = "";
    llvm::raw_string_ostream filesOS(filesStr);
