@@ -138,6 +138,10 @@ sv_to_long_long(const cling::StoredValueRef& svref)
 {
    const cling::Value& valref = svref.get();
    QualType QT = valref.getClangType();
+   if (QT.isNull()) {
+      Error("TClingCallFunc::sv_to_long_long", "Null Type!");
+      return 0;
+   }
    GenericValue gv = valref.getGV();
    if (QT->isMemberPointerType()) {
       const MemberPointerType* MPT =
@@ -398,6 +402,10 @@ sv_to_ulong_long(const cling::StoredValueRef& svref)
 {
    const cling::Value& valref = svref.get();
    QualType QT = valref.getClangType();
+   if (QT.isNull()) {
+      Error("TClingCallFunc::sv_to_ulong_long", "Null Type!");
+      return 0;
+   }
    GenericValue gv = valref.getGV();
    if (QT->isMemberPointerType()) {
       const MemberPointerType* MPT =
