@@ -2845,7 +2845,7 @@ private:
 int RootCling(int argc,
               char **argv,
               bool isDeep=false,
-              bool isGenreflex=true)
+              bool isGenreflex=false)
 {
    
    if (argc < 2) {
