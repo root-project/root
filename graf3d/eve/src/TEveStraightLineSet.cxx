@@ -183,7 +183,7 @@ void TEveStraightLineSet::ComputeBBox()
    // Compute bounding-box.
    // Virtual from TAttBBox.
 
-   if(fLinePlex.Size() == 0) {
+   if (fLinePlex.Size() == 0 && fMarkerPlex.Size() == 0) {
       BBoxZero();
       return;
    }
