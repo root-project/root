@@ -146,8 +146,6 @@
 #define IfDebug(x)  if(gDebug==TTabCom::kDebug) x
 
 #ifdef R__WIN32
-#undef tmpnam
-#define tmpnam(a) _tempnam(a, 0)
 const char kDelim = ';';
 #else
 const char kDelim = ':';
@@ -428,19 +426,18 @@ const TSeqCollection *TTabCom::GetListOfClasses()
    // Return the list of classes.
    if (!fpClasses) {
       // generate a text list of classes on disk
-      const char *tmpfilename = tmpnam(0);
-      if (!tmpfilename) return 0;
-      FILE *fout = fopen(tmpfilename, "w");
+      TString outf = ".TTabCom-";
+      FILE *fout = gSystem->TempFileName(outf);
       if (!fout) return 0;
       gCint->DisplayClass(fout, (char*)"", 0, 0);
       fclose(fout);
 
       // open the file
-      ifstream file1(tmpfilename);
+      ifstream file1(outf);
       if (!file1) {
          Error("TTabCom::GetListOfClasses", "could not open file \"%s\"",
-               tmpfilename);
-         gSystem->Unlink(tmpfilename);
+               outf.Data());
+         gSystem->Unlink(outf);
          return 0;
       }
       // skip the first 2 lines (which are just header info)
@@ -494,7 +491,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
 
       // done with this file
       file1.close();
-      gSystem->Unlink(tmpfilename);
+      gSystem->Unlink(outf);
    }
 
    return fpClasses;
@@ -550,8 +547,10 @@ const TSeqCollection *TTabCom::GetListOfEnvVars()
    // Uses "env" (Unix) or "set" (Windows) to get list of environment variables.
 
    if (!fpEnvVars) {
-      const char *tmpfilename = tmpnam(0);
-      if (!tmpfilename) return 0;
+      TString outf = ".TTabCom-";
+      FILE *fout = gSystem->TempFileName(outf);
+      if (!fout) return 0;
+      fclose(fout);
       TString cmd;
 
 #ifndef WIN32
@@ -564,16 +563,16 @@ const TSeqCollection *TTabCom::GetListOfEnvVars()
 #else
       cmd = "set > ";
 #endif
-      cmd += tmpfilename;
+      cmd += outf;
       cmd += "\n";
       gSystem->Exec(cmd.Data());
 
       // open the file
-      ifstream file1(tmpfilename);
+      ifstream file1(outf);
       if (!file1) {
          Error("TTabCom::GetListOfEnvVars", "could not open file \"%s\"",
-               tmpfilename);
-         gSystem->Unlink(tmpfilename);
+               outf.Data());
+         gSystem->Unlink(outf);
          return 0;
       }
       // parse, add
@@ -589,7 +588,7 @@ const TSeqCollection *TTabCom::GetListOfEnvVars()
       }
 
       file1.close();
-      gSystem->Unlink(tmpfilename);
+      gSystem->Unlink(outf);
    }
 
    return fpEnvVars;
@@ -893,13 +892,15 @@ TString TTabCom::DetermineClass(const char varName[])
    assert(varName != 0);
    IfDebug(cerr << "DetermineClass(\"" << varName << "\");" << endl);
 
-   const char *tmpfile = tmpnam(0);
-   if (!tmpfile) return "";
+   TString outf = ".TTabCom-";
+   FILE *fout = gSystem->TempFileName(outf);
+   if (!fout) return "";
+   fclose(fout);
 
    TString cmd("gROOT->ProcessLine(\"");
    cmd += varName;
    cmd += "\"); > ";
-   cmd += tmpfile;
+   cmd += outf;
    cmd += "\n";
 
    gROOT->ProcessLineSync(cmd.Data());
@@ -910,10 +911,10 @@ TString TTabCom::DetermineClass(const char varName[])
    int c;
 
    // open the file
-   ifstream file1(tmpfile);
+   ifstream file1(outf);
    if (!file1) {
       Error("TTabCom::DetermineClass", "could not open file \"%s\"",
-            tmpfile);
+            outf.Data());
       goto cleanup;
    }
    // first char should be '(', which we can ignore.
@@ -953,7 +954,7 @@ TString TTabCom::DetermineClass(const char varName[])
 cleanup:
    // done reading from file
    file1.close();
-   gSystem->Unlink(tmpfile);
+   gSystem->Unlink(outf);
 
    return type;
 }
@@ -1043,20 +1044,18 @@ TString TTabCom::GetSysIncludePath()
 
    // get this part of the include path from the interpreter
    // and stick it in a tmp file.
-   const char *tmpfilename = tmpnam(0);
-   if (!tmpfilename) return "";
-
-   FILE *fout = fopen(tmpfilename, "w");
+   TString outf = ".TTabCom-";
+   FILE *fout = gSystem->TempFileName(outf);
    if (!fout) return "";
    gCint->DisplayIncludePath(fout);
    fclose(fout);
 
    // open the tmp file
-   ifstream file1(tmpfilename);
+   ifstream file1(outf);
    if (!file1) {                // error
       Error("TTabCom::GetSysIncludePath", "could not open file \"%s\"",
-            tmpfilename);
-      gSystem->Unlink(tmpfilename);
+            outf.Data());
+      gSystem->Unlink(outf);
       return "";
    }
    // parse it.
@@ -1075,7 +1074,7 @@ TString TTabCom::GetSysIncludePath()
 
    // done with the tmp file
    file1.close();
-   gSystem->Unlink(tmpfilename);
+   gSystem->Unlink(outf);
 
    // 3) standard directories
    // ----------------------------------------------
@@ -1108,9 +1107,9 @@ Bool_t TTabCom::IsDirectory(const char fileName[])
    ///////////////////////////////////////////////////////
 
    FileStat_t stat;
-   if (!gSystem->GetPathInfo(fileName, stat)) 
+   if (!gSystem->GetPathInfo(fileName, stat))
       return R_ISDIR(stat.fMode);
-   else 
+   else
       return false;
 }
 
@@ -1596,7 +1595,7 @@ TString TTabCom::DeterminePath(const TString & fileName,
          IfDebug(cerr << " defaultPath: " << defaultPath << endl);
       } else {
          IfDebug(cerr << " defaultPath: " << endl);
-      }         
+      }
       IfDebug(cerr << "extendedPath: " << extendedPath << endl);
       IfDebug(cerr << endl);
 
