@@ -475,8 +475,15 @@ static bool HasBody(const clang::FunctionDecl &decl, const cling::Interpreter &i
 {
    if (decl.hasBody()) return true;
    
+   GlobalDecl GD;
+   if (const CXXConstructorDecl* Ctor = dyn_cast<CXXConstructorDecl>(&decl))
+     GD = GlobalDecl(Ctor, Ctor_Complete);
+   else if (const CXXDestructorDecl* Dtor = dyn_cast<CXXDestructorDecl>(&decl))
+     GD = GlobalDecl(Dtor, Dtor_Deleting);
+   else
+     GD = GlobalDecl(&decl);
    std::string mangledName;
-   cling::utils::Analyze::maybeMangleDeclName(GlobalDecl(&decl), mangledName);
+   cling::utils::Analyze::maybeMangleDeclName(GD, mangledName);
 
    void *GV = interp.getAddressOfGlobal(mangledName.c_str());
    if (GV) return true;

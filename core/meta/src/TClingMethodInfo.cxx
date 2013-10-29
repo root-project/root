@@ -445,7 +445,15 @@ const char *TClingMethodInfo::GetMangledName() const
    }
    static std::string mangled_name;
    mangled_name.clear();
-   cling::utils::Analyze::maybeMangleDeclName(GlobalDecl(GetMethodDecl()), mangled_name);
+   const FunctionDecl* D = GetMethodDecl();
+   GlobalDecl GD;
+   if (const CXXConstructorDecl* Ctor = dyn_cast<CXXConstructorDecl>(D))
+     GD = GlobalDecl(Ctor, Ctor_Complete);
+   else if (const CXXDestructorDecl* Dtor = dyn_cast<CXXDestructorDecl>(D))
+     GD = GlobalDecl(Dtor, Dtor_Deleting);
+   else
+     GD = GlobalDecl(D);
+   cling::utils::Analyze::maybeMangleDeclName(GD, mangled_name);
    return mangled_name.c_str();
 }
 

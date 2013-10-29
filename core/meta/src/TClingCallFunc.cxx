@@ -509,7 +509,15 @@ TClingCallFunc::compile_wrapper(const string& wrapper_name, const string& wrappe
    //  Lookup the new wrapper declaration.
    //
    string MN;
-   cling::utils::Analyze::maybeMangleDeclName(GlobalDecl(WFD), MN);
+   GlobalDecl GD;
+   if (const CXXConstructorDecl* Ctor = dyn_cast<CXXConstructorDecl>(WFD))
+     GD = GlobalDecl(Ctor, Ctor_Complete);
+   else if (const CXXDestructorDecl* Dtor = dyn_cast<CXXDestructorDecl>(WFD))
+     GD = GlobalDecl(Dtor, Dtor_Deleting);
+   else
+     GD = GlobalDecl(WFD);
+
+   cling::utils::Analyze::maybeMangleDeclName(GD, MN);
    const NamedDecl* WND = dyn_cast<NamedDecl>(WFD);
    if (!WND) {
       Error("TClingCallFunc::make_wrapper", "Wrapper named decl is null!");
