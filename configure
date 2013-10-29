@@ -2490,6 +2490,8 @@ if test "x$enable_cxx11" = "xyes"; then
     if test $cxxopt_result -eq 0 ; then
         enable_cxx11="no"
         result "no"
+        result "`basename $0`: c++11 mode is requested but the current compiler does not support it."
+        exit 1
     else
         usecxx11="define"
         # on OS X libcxx is required for C++11 support with clang
