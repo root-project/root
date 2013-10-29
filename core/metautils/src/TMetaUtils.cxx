@@ -2572,8 +2572,8 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
    // If the requestor is genreflex, request the new streamer format
    
    const clang::CXXRecordDecl* decl = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
-
-   if (!decl->isCompleteDefinition()) {
+   
+   if (!decl  || !decl->isCompleteDefinition()) {
       return;
    }
 
