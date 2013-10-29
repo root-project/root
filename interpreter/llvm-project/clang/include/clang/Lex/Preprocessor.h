@@ -1427,6 +1427,11 @@ public:
     return appendDefMacroDirective(II, MI, MI->getDefinitionLoc());
   }
 
+  /// Remove a IdentifierInfo and MacroDirective from the history.
+  /// Given an IdentifierInfo and a MacroDirective we can remove them from
+  /// the macros vector.
+  void removeMacro(IdentifierInfo *II, MacroDirective *MD);
+
   /// Set a MacroDirective that was loaded from a PCH file.
   void setLoadedMacroDirective(IdentifierInfo *II, MacroDirective *ED,
                                MacroDirective *MD);
@@ -2284,6 +2289,12 @@ public:
   void DumpLocation(SourceLocation Loc) const;
   void DumpMacro(const MacroInfo &MI) const;
   void dumpMacroInfo(const IdentifierInfo *II);
+
+  /// Print a Macro to an ostream used for ClangInternalState
+  /// Same as dump, but without orinting source location.
+  void printMacros(raw_ostream &OS) const;
+  void printMacro(const IdentifierInfo* II, const MacroDirective *MD,
+                  llvm::raw_ostream &OS) const;
 
   /// Given a location that specifies the start of a
   /// token, return a new location that specifies a character within the token.
