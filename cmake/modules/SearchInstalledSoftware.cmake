@@ -275,8 +275,7 @@ if(opengl)
     endif()
   endif()
   if(APPLE)
-    find_path(OPENGL_INCLUDE_DIR GL/gl.h DOC "Include for OpenGL on OSX"
-              PATHS /opt/X11/include)
+    find_path(OPENGL_INCLUDE_DIR GL/gl.h DOC "Include for OpenGL on OSX")
   endif()
 endif()
 
