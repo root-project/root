@@ -1870,16 +1870,15 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       }
 
       FILE *hf;
-      TString stmp, tmpfilename = ".Proxy-";
+      TString tmpfilename = ".Proxy-";
       if (updating) {
          hf = gSystem->TempFileName(tmpfilename, "./");
-         stmp = tmpfilename;
       } else {
          hf = fopen(fHeaderFileName, "w");
-         stmp = fHeaderFileName;
       }
       if (hf == 0) {
-         Error("WriteProxy","Unable to open the file %s for writing.", stmp.Data());
+         Error("WriteProxy","Unable to open the file %s for writing.",
+               updating ? tmpfilename.Data() : fHeaderFileName.Data());
          delete [] filename;
          delete [] cutfilename;
          return;
