@@ -199,6 +199,39 @@ template <> struct equal_to<const std::string*> :
 
 #endif // __GNUC__
 
+
+#if defined(_LIBCPP_ABI_VERSION)
+namespace std {
+
+template <> struct equal_to<const char*> {
+   bool
+   operator ()(const char* const& _Left,
+               const char* const& _Right) const {
+      return strcmp(_Left, _Right) == 0;
+   }
+};
+
+template <> struct equal_to<const char**> {
+   bool
+   operator ()(const char** const& _Left,
+               const char** const& _Right) const {
+      return strcmp(*_Left, *_Right) == 0;
+   }
+};
+
+template <> struct equal_to<const std::string*> {
+   bool
+   operator ()(const std::string* const& _Left,
+               const std::string* const& _Right) const {
+      return * _Left == * _Right;
+   }
+};
+
+} // namespace std
+
+#endif  // _LIBCPP_ABI_VERSION
+
+
 #if defined(__INTEL_COMPILER) && (__INTEL_COMPILER <= 800)
 
 namespace __gnu_cxx {
