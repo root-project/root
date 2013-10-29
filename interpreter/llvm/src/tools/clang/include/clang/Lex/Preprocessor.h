@@ -425,6 +425,7 @@ public:
   /// \param Target Information about the target.
   void Initialize(const TargetInfo &Target);
 
+
   /// \brief Retrieve the preprocessor options used to initialize this
   /// preprocessor.
   PreprocessorOptions &getPreprocessorOpts() const { return *PPOpts; }
@@ -565,6 +566,12 @@ public:
   DefMacroDirective *appendDefMacroDirective(IdentifierInfo *II, MacroInfo *MI){
     return appendDefMacroDirective(II, MI, MI->getDefinitionLoc(), false);
   }
+  
+  /// \brief Remove a IdentifierInfo and MacroDirective from the history.
+  /// Given an IdentifierInfo and a MacroDirective we can remove them from 
+  /// the macros vector.
+  void removeMacro(IdentifierInfo *II, const MacroDirective *MD);
+
   /// \brief Set a MacroDirective that was loaded from a PCH file.
   void setLoadedMacroDirective(IdentifierInfo *II, MacroDirective *MD);
 
@@ -685,6 +692,7 @@ public:
   void EnterTokenStream(const Token *Toks, unsigned NumToks,
                         bool DisableMacroExpansion, bool OwnsTokens);
 
+  
   /// A RAII object to temporarily reset PP's state and restore it.
   class CleanupAndRestoreCacheRAII {
   private:
@@ -1144,6 +1152,10 @@ public:
   void DumpToken(const Token &Tok, bool DumpFlags = false) const;
   void DumpLocation(SourceLocation Loc) const;
   void DumpMacro(const MacroInfo &MI) const;
+
+  /// Print a Macro to an ostream used for ClangInternalState
+  /// Same as dump, but without orinting source location.
+  void printMacro(const MacroInfo &MI, raw_ostream &OS) const;
 
   /// AdvanceToTokenCharacter - Given a location that specifies the start of a
   /// token, return a new location that specifies a character within the token.
