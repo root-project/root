@@ -478,6 +478,12 @@ Module *Preprocessor::getCurrentModule() {
 void Preprocessor::removeMacro(IdentifierInfo *II, const MacroDirective *MD) {
   assert(II && MD);
   assert(!MD->getPrevious() && "Already attached to a MacroDirective history.");
+  
+  //Release the MacroInfo allocated space so it can be reused.
+  MacroInfo* MI = MD->getMacroInfo();
+  if (MI) {
+    ReleaseMacroInfo(MI);
+  }  
 
   Macros.erase(II);
 }
