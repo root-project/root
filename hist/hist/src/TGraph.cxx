@@ -1268,7 +1268,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //  TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
    //  Double_t chi2   = r->Chi2(); // to retrieve the fit chi2
    //  Double_t par0   = r->Value(0); // retrieve the value for the parameter 0
-   //  Double_t err0   = r->Error(0); // retrieve the error for the parameter 0
+   //  Double_t err0   = r->ParError(0); // retrieve the error for the parameter 0
    //  r->Print("V");     // print full information of fit including covariance matrix
    //  r->Write();        // store the result in a file
    //

@@ -56,6 +56,14 @@ public:
 
    TMatrixDSym GetCorrelationMatrix() const;
 
+
+   using TObject::Error; 
+
+   // need to re-implement to solve conflict with TObject::Error
+   double Error(unsigned int i) const { 
+      return ParError(i);
+   }
+
 private:
    ClassDef(TFitResult,1)  // Class holding the result of the fit 
 };
