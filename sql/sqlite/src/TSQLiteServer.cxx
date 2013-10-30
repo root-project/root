@@ -87,7 +87,12 @@ void TSQLiteServer::Close(Option_t *)
       return;
    }
 
-   sqlite3_close(fSQLite);
+   if (IsConnected()) {
+      sqlite3_close(fSQLite);
+      // Mark as disconnected:
+      fPort = -1;
+      fSQLite = NULL;
+   }
 }
 
 //______________________________________________________________________________
@@ -133,6 +138,11 @@ Bool_t TSQLiteServer::Exec(const char *sql)
 {
    // Execute SQL command which does not produce any result sets.
    // Returns kTRUE if successful.
+
+   if (!IsConnected()) {
+      Error("Exec", "not connected");
+      return kFALSE;
+   }
 
    char *sqlite_err_msg;
    int ret = sqlite3_exec(fSQLite, sql, NULL, NULL, &sqlite_err_msg);
@@ -333,6 +343,11 @@ TSQLStatement* TSQLiteServer::Statement(const char *sql, Int_t)
       return 0;
    }
 
+   if (!IsConnected()) {
+      Error("Statement", "not connected");
+      return 0;
+   }
+
    sqlite3_stmt *preparedStmt = NULL;
 
    // -1 as we read until we encounter a \0.
@@ -366,4 +381,3 @@ const char *TSQLiteServer::ServerInfo()
 
    return fSrvInfo.Data();
 }
-
