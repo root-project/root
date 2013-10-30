@@ -146,7 +146,6 @@ template <> struct hash<const char**> {
    }
 };
 
-
 template <> struct hash<const std::string*> {
    size_t
    operator ()(const std::string* __s) const {
@@ -156,8 +155,6 @@ template <> struct hash<const std::string*> {
       return __stl_hash_string(__s->c_str());
 # endif
    }
-
-
 };
 }
 
@@ -169,8 +166,6 @@ template <> struct equal_to<const char*> :
                const char* const& _Right) const {
       return strcmp(_Left, _Right) == 0;
    }
-
-
 };
 
 template <> struct equal_to<const char**> :
@@ -180,8 +175,6 @@ template <> struct equal_to<const char**> :
                const char** const& _Right) const {
       return strcmp(*_Left, *_Right) == 0;
    }
-
-
 };
 
 template <> struct equal_to<const std::string*> :
@@ -191,8 +184,6 @@ template <> struct equal_to<const std::string*> :
                const std::string* const& _Right) const {
       return * _Left == * _Right;
    }
-
-
 };
 
 } // namespace std
@@ -201,7 +192,22 @@ template <> struct equal_to<const std::string*> :
 
 
 #if defined(_LIBCPP_ABI_VERSION)
+#include <stdio.h>
 namespace std {
+
+template <> struct hash<const char**> {
+   size_t
+   operator ()(const char** const& __s) const {
+      return __do_string_hash<const char*>(*__s, *__s + strlen(*__s));
+   }
+};
+
+template <> struct hash<const std::string*> {
+   size_t
+   operator ()(const std::string* const& __s) const {
+      return __do_string_hash<const char*>(__s->c_str(), __s->c_str() + strlen(__s->c_str()));
+   }
+};
 
 template <> struct equal_to<const char*> {
    bool
