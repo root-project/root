@@ -22,7 +22,7 @@
 
 #include <Vc/common/macros.h>
 
-namespace Vc
+namespace ROOT { namespace Vc
 {
     template<typename T> struct Math;
     template<> struct Math<float>
@@ -57,7 +57,7 @@ namespace Vc
         static _VC_CONSTEXPR double sqrt2()     { return 1.4142135623730950488016887242096981; }
         static _VC_CONSTEXPR double sqrt1_2()   { return 0.7071067811865475244008443621048490; }
     };
-} // namespace Vc
+}} // namespace Vc
 
 #include <Vc/common/undomacros.h>
 

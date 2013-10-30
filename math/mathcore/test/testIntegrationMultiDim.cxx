@@ -103,7 +103,7 @@ double integral_TF1(unsigned int dim, double* a, double* b, double* p)
   function.SetParameters(p);
   double error, result;
   int iter, fail;
-  result = function.IntegralMultiple(dim, a, b, 0, (unsigned int) 1.E7, 1.E-5, error, iter, fail);
+  result = function.IntegralMultiple(dim, a, b, 0, (int) 1.E7, 1.E-5, error, iter, fail);
 
 //   ROOT::Math::GSLMCIntegrator ig1;
 //   ig1.SetType(ROOT::Math::MCIntegration::VEGAS);

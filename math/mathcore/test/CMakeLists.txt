@@ -1,4 +1,13 @@
-Set(TestSource
+project(mathcore-tests)
+find_package(ROOT REQUIRED)
+
+include(${ROOT_USE_FILE})
+include_directories(${ROOT_INCLUDE_DIRS})
+
+set(Libraries Core RIO Net Hist Graf Graf3d Gpad Tree
+              Rint Postscript Matrix Physics MathCore Thread)
+
+set(TestSource
     testTMath.cxx
     testBinarySearch.cxx
     testSortOrder.cxx
@@ -7,45 +16,45 @@ Set(TestSource
     testIntegration.cxx
     testRootFinder.cxx
     kDTreeTest.cxx
-   )
+    fit/testFit.cxx )
 
-Set(TestSourceGraphics
-     binarySearchTime.cxx
-     stdsort.cxx
-     testSpecFuncErf.cxx
-     testSpecFuncGamma.cxx
-     testSpecFuncBeta.cxx
-     testSpecFuncBetaI.cxx
-     testIntegrationMultiDim.cxx
-)
+set(TestSourceGraphics
+    binarySearchTime.cxx
+    stdsort.cxx
+    testSpecFuncErf.cxx
+    testSpecFuncGamma.cxx
+    testSpecFuncBeta.cxx
+    testSpecFuncBetaI.cxx
+    testIntegrationMultiDim.cxx
+    fit/SparseDataComparer.cxx
+    fit/SparseFit4.cxx 
+    fit/SparseFit3.cxx )
 
-Set(DEPENDENCIES Core RIO Net Hist Graf Graf3d Gpad Tree 
-                 Rint Postscript Matrix Physics MathCore Thread 
-                 freetype
-   ) 
+if(ROOT_roofit_FOUND)
+  list(APPEND TestSource fit/testRooFit.cxx)
+  list(APPEND Libraries RooFit)
+endif()
 
-Set(INCLUDE_DIRECTORIES
-    ${CMAKE_CURRENT_SOURCE_DIR}/inc
-    ${ROOT_INCLUDE_DIR} 
-   ) 
-include_directories(${INCLUDE_DIRECTORIES})
+if(ROOT_mathmore_FOUND)
+  list(APPEND TestSource fit/testFitPerf.cxx)
+  list(APPEND Libraries MathMore)
+endif()
 
-ForEach(_file ${TestSource})
-  Get_Filename_Component(_testname ${_file} NAME_WE)
-  Add_Executable(${_testname} ${_file})
-  Target_Link_Libraries(${_testname} ${DEPENDENCIES} GX11 GX11TTF Gui ${CMAKE_THREAD_LIBS_INIT}) 
-  Configure_File(${PROJECT_SOURCE_DIR}/cmake/scripts/root_test.sh.in
-               ${CMAKE_CURRENT_BINARY_DIR}/${_testname}.sh) 
-  Add_Test(mathcore/${_testname} ${CMAKE_CURRENT_BINARY_DIR}/${_testname}.sh)
-  Add_Dependencies(check ${_testname})
-EndForEach(_file ${TestSource})
+if(ROOT_minuit2_FOUND)
+  list(APPEND TestSource fit/testMinim.cxx)
+  list(APPEND Libraries Minuit2)
+endif()
 
-ForEach(_file ${TestSourceGraphics})
-  Get_Filename_Component(_testname ${_file} NAME_WE)
-  Add_Executable(${_testname} ${_file})
-  Target_Link_Libraries(${_testname} ${DEPENDENCIES} GX11 GX11TTF Gui ${CMAKE_THREAD_LIBS_INIT}) 
-  Configure_File(${PROJECT_SOURCE_DIR}/cmake/scripts/root_test_nographic.sh.in
-               ${CMAKE_CURRENT_BINARY_DIR}/${_testname}.sh) 
-  Add_Test(mathcore/${_testname} ${CMAKE_CURRENT_BINARY_DIR}/${_testname}.sh)
-  Add_Dependencies(check ${_testname})
-EndForEach(_file ${TestSourceGraphics})
+
+#---For the non-graphics tests build and defined them---------------
+foreach(file ${TestSource})
+  get_filename_component(testname ${file} NAME_WE)
+  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname})
+endforeach()
+
+#---For the graphics tests we only build them-----------------------
+foreach(file ${TestSourceGraphics})
+  get_filename_component(testname ${file} NAME_WE)
+  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries})
+endforeach()
