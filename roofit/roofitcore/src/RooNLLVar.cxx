@@ -333,8 +333,24 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
 	  Double_t t = sumW2 + y;
 	  sumW2carry = (t - sumW2) - y;
 	  sumW2 = t;
+
+
 	}
-	Double_t y = pdfClone->extendedTerm(sumW2 , _dataClone->get()) - carry;
+
+	Double_t expected= pdfClone->expectedEvents(_dataClone->get());
+		
+	// Adjust calculation of extended term with W^2 weighting: adjust poisson such that 
+	// estimate of Nexpected stays at the same value, but has a different variance, rescale
+        // both the observed and expected count of the Poisson with a factor sum[w] / sum[w^2]
+	// i.e. change Poisson(Nobs = sum[w]| Nexp ) --> Poisson( sum[w] * sum[w] / sum[w^2] | Nexp * sum[w] / sum[w^2] )
+
+	Double_t observedW2 = ( _dataClone->sumEntries() * _dataClone->sumEntries() ) / sumW2 ;
+	Double_t expectedW2 = expected * _dataClone->sumEntries() / sumW2 ;
+	Double_t extra= expectedW2 - observedW2*log(expectedW2);	
+
+	// Double_t y = pdfClone->extendedTerm(sumW2, _dataClone->get()) - carry;
+	    
+	Double_t y = extra - carry ;
 	Double_t t = result + y;
 	carry = (t - result) - y;
 	result = t;
