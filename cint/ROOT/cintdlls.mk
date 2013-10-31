@@ -134,7 +134,7 @@ $(CINTDLLDIRDLLSTL)/G__cpp_pair.cxx:	$(CINTDLLDIRL)/dll_stl/pr.h $(CINTCPPDEP)
 $(CINTDLLDIRL)/G__cpp_stdcxxfunc.cxx: 	$(CINTDLLDIRL)/stdstrct/stdcxxfunc.h $(CINTCPPDEP)
 $(CINTDLLDIRL)/G__c_stdfunc.c:		$(CINTDLLDIRL)/stdstrct/stdfunc.h $(CINTCPPDEP)
 $(CINTDLLDIRL)/G__c_posix.c:		$(CINTDLLDIRL)/posix/exten.h $(CINTCPPDEP)
-$(CINTDLLDIRL)/G__c_ipc.c:			$(CINTDLLDIRL)/ipc/ipcif.h $(CINTCPPDEP)
+$(CINTDLLDIRL)/G__c_ipc.c:		$(CINTDLLDIRL)/ipc/ipcif.h $(CINTCPPDEP)
 
 ##### all cintdlls end on .dll
 ifneq ($(SOEXT),dll)
@@ -234,6 +234,9 @@ CINTDLLCDEPR := -Wno-deprecated-declarations
 endif
 endif
 endif
+endif
+ifeq ($(MACOSX_TMPNAM_DEPRECATED),yes)
+CINTDLLCDEPR := -Wno-deprecated-declarations
 endif
 
 $(CINTDLLDIRL)/G__c_%.o: CFLAGS := $(filter-out -Iinclude,$(CINTDLLCFLAGS)) -I. -DG__SYSTYPES_H $(CINTDLLCDEPR)
