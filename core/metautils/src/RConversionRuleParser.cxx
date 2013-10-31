@@ -20,7 +20,7 @@ namespace ROOT
    SchemaRuleClassMap_t G__ReadRules;
    SchemaRuleClassMap_t G__ReadRawRules;
 
-   static Bool_t ValidateRule( const std::map<std::string, std::string>& rule, string &error_string );
+   static Bool_t ValidateRule( const std::map<std::string, std::string>& rule, std::string &error_string );
    
    static std::string::size_type FindEndSymbol(std::string &command) 
    {
@@ -208,7 +208,7 @@ namespace ROOT
    }
 
    //--------------------------------------------------------------------------
-   static Bool_t ValidateRule( const std::map<std::string, std::string>& rule, string &error_string )
+   static Bool_t ValidateRule( const std::map<std::string, std::string>& rule, std::string &error_string )
    {
       // Validate if the user specified rules are correct
 
