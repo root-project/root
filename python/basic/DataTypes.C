@@ -12,12 +12,15 @@ struct Pod {
    Double_t fDouble;
 };
 
+typedef signed char SChar_t;
+
 class ClassWithData {
 public:
    ClassWithData() : fOwnsArrays( false )
    {
       fBool    = kFALSE;
       fChar    = 'a';
+      fSChar   = 'b';
       fUChar   = 'c';
       fShort   = -11;
       fUShort  =  11u;
@@ -94,6 +97,7 @@ public:
 // getters
    Bool_t    GetBool()    { return fBool; }
    Char_t    GetChar()    { return fChar; }
+   SChar_t   GetSChar()   { return fSChar; }
    UChar_t   GetUChar()   { return fUChar; }
    Short_t   GetShort()   { return fShort; }
    UShort_t  GetUShort()  { return fUShort; }
@@ -133,6 +137,7 @@ public:
 // setters
    void SetBool( Bool_t b )        { fBool   = b;   }
    void SetChar( Char_t c )        { fChar   = c;   }
+   void SetSChar( SChar_t sc )     { fSChar  = sc;  }
    void SetUChar( UChar_t uc )     { fUChar  = uc;  }
    void SetShort( Short_t s )      { fShort  = s;   }
    void SetUShort( UShort_t us )   { fUShort = us;  }
@@ -149,6 +154,7 @@ public:
 // basic types
    Bool_t    fBool;
    Char_t    fChar;
+   SChar_t   fSChar;
    UChar_t   fUChar;
    Short_t   fShort;
    UShort_t  fUShort;
@@ -188,6 +194,7 @@ public:
 public:
    static Bool_t    sBool;
    static Char_t    sChar;
+   static SChar_t   sSChar;
    static UChar_t   sUChar;
    static Short_t   sShort;
    static UShort_t  sUShort;
@@ -206,6 +213,7 @@ private:
 
 Bool_t    ClassWithData::sBool    = kFALSE;
 Char_t    ClassWithData::sChar    = 's';
+SChar_t   ClassWithData::sSChar   = 'S';
 UChar_t   ClassWithData::sUChar   = 'u';
 Short_t   ClassWithData::sShort   = -101;
 UShort_t  ClassWithData::sUShort  =  255u;

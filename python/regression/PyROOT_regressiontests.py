@@ -32,7 +32,8 @@ __all__ = [
    'Regression13WriteTGraph',
    'Regression14BaseClassUsing',
    'Regression15TPyException',
-   'Regression16ConsRef'
+   'Regression16ConsRef',
+   'Regression17NestedNamespace',
 ]
 
 
@@ -329,6 +330,14 @@ class Regression16ConsRef( MyTestCase ):
          self.assert_( not eval( "PyROOT_Regression_TakesRef%d(0)" % (i,) ) )
          self.assert_( eval( "PyROOT_Regression_TakesRef%d(1)" % (i,) ) )
       self.assertEqual( len(tnames)-1, i )
+
+### nested namespace had a bug in the lookup loop ============================
+class Regression17NestedNamespace( MyTestCase ):
+   def test1NestedNamespace( self ):
+      """Test nested namespace lookup"""
+
+      gROOT.ProcessLine('#include "NestedNamespace.h"')
+      self.assert_( ABCDEFG.ABCD.Nested )
 
 
 ## actual test run

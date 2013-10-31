@@ -34,6 +34,7 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
 
       self.assertEqual( c.fBool,  False )
       self.assertEqual( c.fChar,    'a' )
+      self.assertEqual( c.fSChar,   'b' )
       self.assertEqual( c.fUChar,   'c' )
       self.assertEqual( c.fShort,   -11 )
       self.assertEqual( c.fUShort,   11 )
@@ -108,12 +109,15 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
       c.fChar = 40;       self.assertEqual( c.GetChar(),  chr(40) )
       c.SetChar( 'c' );   self.assertEqual( c.fChar,          'c' )
       c.SetChar( 41 );    self.assertEqual( c.fChar,      chr(41) )
-      c.fUChar = 'd';     self.assertEqual( c.GetUChar(),     'd' )
-      c.fUChar = 42;      self.assertEqual( c.GetUChar(), chr(42) )
-      c.SetUChar( 'e' );  self.assertEqual( c.fUChar,         'e' )
-      c.SetUChar( 43 );   self.assertEqual( c.fUChar,     chr(43) )
+      c.fSChar = 'd';     self.assertEqual( c.GetSChar(),     'd' )
+      c.fSChar = 42;      self.assertEqual( c.GetSChar(), chr(42) )
+      c.fUChar = 'e';     self.assertEqual( c.GetUChar(),     'e' )
+      c.fUChar = 43;      self.assertEqual( c.GetUChar(), chr(43) )
+      c.SetUChar( 'f' );  self.assertEqual( c.fUChar,         'f' )
+      c.SetUChar( 44 );   self.assertEqual( c.fUChar,     chr(44) )
 
       self.failUnlessRaises( TypeError, c.SetChar,  "string" )
+      self.failUnlessRaises( TypeError, c.SetSChar, "string" )
       self.failUnlessRaises( TypeError, c.SetUChar,       -1 )
       self.failUnlessRaises( TypeError, c.SetUChar, "string" )
 
@@ -187,6 +191,8 @@ class DataTypes2ClassDataTestCase( MyTestCase ):
       self.assertEqual( ClassWithData.sBool,   False )
       self.assertEqual( ClassWithData.sChar,     's' )
       self.assertEqual( c.sChar,                 's' )
+      self.assertEqual( c.sSChar,                'S' )
+      self.assertEqual( ClassWithData.sSChar,    'S' )
       self.assertEqual( c.sUChar,                'u' )
       self.assertEqual( ClassWithData.sUChar,    'u' )
       self.assertEqual( ClassWithData.sShort,   -101 )
@@ -223,6 +229,10 @@ class DataTypes2ClassDataTestCase( MyTestCase ):
       self.assertEqual( c.sChar,                'a' )
       c.sChar                                =  'b'
       self.assertEqual( ClassWithData.sChar,    'b' )
+      ClassWithData.sSChar                   =  'b'
+      self.assertEqual( c.sSChar,               'b' )
+      c.sSChar                               =  'c'
+      self.assertEqual( ClassWithData.sSChar,   'c' )
       ClassWithData.sUChar                   =  'c'
       self.assertEqual( c.sUChar,               'c' )
       c.sUChar                               =  'd'
