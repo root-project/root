@@ -1291,13 +1291,15 @@ std::string ROOT::TMetaUtils::R__GetQualifiedName(const AnnotatedRecordDecl &ann
 }
 
 //______________________________________________________________________________
-void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::MembersTypeMap_t& nameType )
+void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::MembersTypeMap_t& nameType)
 {
    // Create the data member name-type map for given class
-
+   
    std::stringstream dims;
    std::string typenameStr;
-
+   
+   const clang::ASTContext& astContext =  cl.getASTContext();
+   
    // Loop over the non static data member.
    for(clang::RecordDecl::field_iterator field_iter = cl.field_begin(), end = cl.field_end();
        field_iter != end;
@@ -1306,7 +1308,7 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
       // the list starting with field_begin in clang), and const enums (which should
       // also not be part of this list).
       // It was also filtering out the 'G__virtualinfo' artificial member.
-
+      
       typenameStr.clear();
       dims.clear();
       clang::QualType fieldType(field_iter->getType());
@@ -1318,11 +1320,12 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
             arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
          }
       }
-      ROOT::TMetaUtils::R__GetQualifiedName(typenameStr, fieldType, *(*field_iter));
 
-      nameType[field_iter->getName().str()] = ROOT::TSchemaType(typenameStr.c_str(),dims.str().c_str());
+      GetFullyQualifiedTypeName(typenameStr, fieldType, astContext);
+      
+      nameType[field_iter->getName().str()] = ROOT::TSchemaType(typenameStr.c_str(),dims.str().c_str());      
    }
-
+   
    // And now the base classes
    // We also need to look at the base classes.
    for(clang::CXXRecordDecl::base_class_const_iterator iter = cl.bases_begin(), end = cl.bases_end();
@@ -1605,7 +1608,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    ROOT::SchemaRuleClassMap_t::iterator rulesIt2 = ROOT::gReadRawRules.find( ROOT::TMetaUtils::R__GetQualifiedName(*decl).c_str() );
 
    ROOT::MembersTypeMap_t nameTypeMap;
-   CreateNameTypeMap( *decl, nameTypeMap );
+   CreateNameTypeMap( *decl, nameTypeMap ); // here types for schema evo are written
 
    //--------------------------------------------------------------------------
    // Process the read rules
@@ -3271,10 +3274,34 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
 
 //______________________________________________________________________________
 clang::QualType ROOT::TMetaUtils::GetFullyQualifiedType(const clang::QualType &qtype,
+                                                        const clang::ASTContext &astContext)
+{
+   return ::GetFullyQualifiedType(astContext,qtype);
+}
+
+//______________________________________________________________________________
+clang::QualType ROOT::TMetaUtils::GetFullyQualifiedType(const clang::QualType &qtype,
                                                         const cling::Interpreter &interpreter)
 {
    const clang::ASTContext& Ctx = interpreter.getCI()->getASTContext();
-   return ::GetFullyQualifiedType(Ctx,qtype);
+   return GetFullyQualifiedType(qtype,Ctx);
+}
+
+//______________________________________________________________________________
+void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
+                                                 const clang::QualType &qtype,
+                                                 const clang::ASTContext &astContext)
+{
+   
+   clang::QualType typeForName = ::GetFullyQualifiedType(astContext,qtype);
+   clang::PrintingPolicy policy(astContext.getPrintingPolicy());
+   policy.SuppressScope = false;
+   policy.AnonymousTagLocations = false;
+   
+   TClassEdit::TSplitType splitname(typeForName.getAsString(policy).c_str(),
+                                    (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
+   splitname.ShortType(typenamestr,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst);
+   
 }
 
 //______________________________________________________________________________
@@ -3282,17 +3309,10 @@ void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
                                                  const clang::QualType &qtype,
                                                  const cling::Interpreter &interpreter)
 {
-   clang::QualType typeForName = ROOT::TMetaUtils::GetFullyQualifiedType(qtype, interpreter);
 
-   clang::PrintingPolicy policy(interpreter.getCI()->getASTContext().
-                                getPrintingPolicy());
-   policy.SuppressScope = false;
-   policy.AnonymousTagLocations = false;
-
-   TClassEdit::TSplitType splitname(typeForName.getAsString(policy).c_str(),
-                                    (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
-   splitname.ShortType(typenamestr,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst);
-
+   GetFullyQualifiedTypeName(typenamestr,
+                             qtype,
+                             interpreter.getCI()->getASTContext());   
 }
 
 //______________________________________________________________________________
