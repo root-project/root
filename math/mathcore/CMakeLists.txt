@@ -31,10 +31,8 @@ ROOT_LINKER_LIBRARY(MathCore *.cxx G__Math.cxx G__MathCore.cxx G__MathFit.cxx LI
 
 ROOT_INSTALL_HEADERS()
 
+ROOT_ADD_TEST_SUBDIRECTORY(test)
 
-if(testing)
-  add_subdirectory(test)
-endif()
 
 
 
