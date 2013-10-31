@@ -41,6 +41,8 @@ projects/*
 # Clang, which is tracked independently.
 # but not for ROOT!
 # tools/clang
+# Cling, which is tracked independently.
+tools/cling
 # LLDB, which is tracked independently.
 tools/lldb
 # lld, which is tracked independently.
