@@ -158,6 +158,7 @@ if(all)
  set(minuit2 ON CACHE BOOL "" FORCE)
  set(table   ON CACHE BOOL "" FORCE)
  set(unuran  ON CACHE BOOL "" FORCE)
+ set(vc      ON CACHE BOOL "" FORCE)
 endif()
 
 #---General Build options----------------------------------------------------------------------
