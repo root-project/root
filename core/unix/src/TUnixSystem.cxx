@@ -2379,7 +2379,12 @@ void TUnixSystem::StackTrace()
                Bool_t nodebug = kTRUE;
 #ifdef R__MACOSX
                if (libaddr) { }  // use libaddr
+#if defined(MAC_OS_X_VERSION_10_9)
+               // suppress deprecation warning with option -d
+               snprintf(buffer, sizeof(buffer), "%s -d -p %d 0x%016lx", addr2line, GetPid(), addr);
+#else
                snprintf(buffer, sizeof(buffer), "%s -p %d 0x%016lx", addr2line, GetPid(), addr);
+#endif
 #else
                ULong_t offset = (addr >= libaddr) ? addr - libaddr :
                                                     libaddr - addr;
