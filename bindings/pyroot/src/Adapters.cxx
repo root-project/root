@@ -327,6 +327,7 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
          else if ( tpl_open == 0 && c == ':' && 0 < pos && name[ pos-1 ] == ':' ) {
          // found scope, strip name from it
             name = name.substr( pos+1, std::string::npos );
+            break;
          }
       }
    }
