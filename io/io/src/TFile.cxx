@@ -4445,9 +4445,8 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
 
    EFileType type = kDefault;
 
-   TRegexp re("^root.*:");
-   TString sname = name;
-   if (sname.Index(re) != kNPOS) {
+   TPMERegexp re("^(root|xroot).*", "i");
+   if (re.Match(name)) {
       //
       // Should be a network file ...
       type = kNet;
