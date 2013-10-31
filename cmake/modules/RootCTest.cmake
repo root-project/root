@@ -17,5 +17,9 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/i
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts)
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros)
 
+#--Add all subdirectories with tests-----------------------------------------------------------
 
-
+get_property(test_dirs GLOBAL PROPERTY ROOT_TEST_SUBDIRS)
+foreach(d ${test_dirs})
+  add_subdirectory(${d})
+endforeach()

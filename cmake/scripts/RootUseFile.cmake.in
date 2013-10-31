@@ -14,8 +14,3 @@ endif()
 #---Set Link and include directories--------------------------------------------------------------
 set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
 include_directories(${ROOT_INCLUDE_DIRS})
-
-#---Set testing-----------------------------------------------------------------------------------
-if(testing)
-  include(RootCTest)
-endif()

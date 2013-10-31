@@ -70,6 +70,7 @@ endif()
 if(roofit)
   add_subdirectory(roofit)
 endif()
+ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 include(PostInstalledSoftware)
 
@@ -97,7 +98,6 @@ endif()
 #---Configure Testing using CTest----------------------------------------------------------------
 if(testing)
   include(RootCTest)
-  add_subdirectory(test)
 endif()
 
 #---Packaging-------------------------------------------------------------------------------------
