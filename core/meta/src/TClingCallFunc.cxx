@@ -1358,6 +1358,7 @@ TClingCallFunc::make_wrapper()
    }
    //
    //  Write the wrapper code.
+   // FIXME: this should be synthesized into the AST!
    //
    int indent_level = 0;
    ostringstream buf;
