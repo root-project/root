@@ -503,6 +503,11 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 
    TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl),interpreter,normCtxt);
 
+   std::string canonicalName;
+//    R__GetQualifiedName(canonicalName,*decl);
+//    
+//    fprintf(stderr,"Created annotation with: requested name=%-22s normalized name=%-22s canonical name=%-22s\n",fRequestedName.c_str(),fNormalizedName.c_str(),canonicalName.c_str());
+   
 }
 
 
@@ -529,10 +534,6 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 
    TMetaUtils::GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), interpreter, normCtxt);
 
-   // std::string canonicalName;
-   // R__GetQualifiedName(canonicalName,*decl);
-
-   // fprintf(stderr,"Created annotation with: requested name=%-22s normalized name=%-22s canonical name=%-22s\n",fRequestedName.c_str(),fNormalizedName.c_str(),canonicalName.c_str());
 }
 
 //______________________________________________________________________________
@@ -565,6 +566,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
    } else {
       TMetaUtils::GetNormalizedName( fNormalizedName, decl->getASTContext().getTypeDeclType(decl),interpreter,normCtxt);
    }
+
+   
 }
 
 
@@ -1217,15 +1220,47 @@ bool ROOT::TMetaUtils::HasCustomStreamerMemberFunction(const AnnotatedRecordDecl
 //______________________________________________________________________________
 void ROOT::TMetaUtils::R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext)
 {
-   clang::PrintingPolicy policy( forcontext.getASTContext().getPrintingPolicy() );
-   policy.SuppressTagKeyword = true; // Never get the class or struct keyword
-   policy.SuppressUnwrittenScope = true; // Don't write the inline or anonymous namespace names.
-   type.getAsStringInternal(qual_name,policy);
+   // Main implementation relying on GetFullyQualifiedTypeName
+   // All other R__GetQualifiedName functions leverage this one except the
+   // one for namespaces.
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(qual_name, type, forcontext.getASTContext());
+}
+
+//----
+std::string ROOT::TMetaUtils::R__GetQualifiedName(const clang::QualType &type, const clang::NamedDecl &forcontext)
+{
+   std::string result;
+   ROOT::TMetaUtils::R__GetQualifiedName(result,
+                                         type,
+                                         forcontext);   
+   return result;
+}
+
+
+//______________________________________________________________________________
+void  ROOT::TMetaUtils::R__GetQualifiedName(std::string& qual_type, const clang::Type &type, const clang::NamedDecl &forcontext)
+{
+   clang::QualType qualType(&type,0);
+   ROOT::TMetaUtils::R__GetQualifiedName(qual_type,
+                                         qualType,
+                                         forcontext);
+}
+
+//---
+std::string ROOT::TMetaUtils::R__GetQualifiedName(const clang::Type &type, const clang::NamedDecl &forcontext)
+{
+   std::string result;
+   ROOT::TMetaUtils::R__GetQualifiedName(result,
+                                         type,
+                                         forcontext);
+   return result;
 }
 
 //______________________________________________________________________________
-void ROOT::TMetaUtils::R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl)
+void ROOT::TMetaUtils::R__GetQualifiedName(std::string &qual_name, const clang::NamespaceDecl &cl)
 {
+   // This implementation does not rely on GetFullyQualifiedTypeName
+   // It is done for namespaces, no type involved.
    llvm::raw_string_ostream stream(qual_name);
    clang::PrintingPolicy policy( cl.getASTContext().getPrintingPolicy() );
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
@@ -1234,60 +1269,49 @@ void ROOT::TMetaUtils::R__GetQualifiedName(std::string &qual_name, const clang::
    cl.getNameForDiagnostic(stream,policy,true);
    stream.flush(); // flush to string.
 
-   if ( strncmp(qual_name.c_str(),"<anonymous ",strlen("<anonymous ") ) == 0) {
+   if ( qual_name ==  "<anonymous " ) {
       size_t pos = qual_name.find(':');
       qual_name.erase(0,pos+2);
    }
 }
 
+//----
+std::string ROOT::TMetaUtils::R__GetQualifiedName(const clang::NamespaceDecl &cl){
+   std::string result;
+   ROOT::TMetaUtils::R__GetQualifiedName(result, cl);
+   return result;
+}
+
+//______________________________________________________________________________
+void ROOT::TMetaUtils::R__GetQualifiedName(std::string &qual_name, const clang::RecordDecl &recordDecl)
+{
+   const clang::Type* declType ( recordDecl.getTypeForDecl() );
+   clang::QualType qualType(declType,0);
+   ROOT::TMetaUtils::R__GetQualifiedName(qual_name,
+                                         qualType,
+                                         recordDecl);
+}
+
+//----
+std::string ROOT::TMetaUtils::R__GetQualifiedName(const clang::RecordDecl &recordDecl)
+{
+   std::string result;
+   ROOT::TMetaUtils::R__GetQualifiedName(result,recordDecl);
+   return result;
+}
+
 //______________________________________________________________________________
 void ROOT::TMetaUtils::R__GetQualifiedName(std::string &qual_name, const ROOT::TMetaUtils::AnnotatedRecordDecl &annotated)
 {
-   ROOT::TMetaUtils::R__GetQualifiedName(qual_name,*annotated.GetRecordDecl());
+   ROOT::TMetaUtils::R__GetQualifiedName(qual_name, *annotated.GetRecordDecl());
 }
 
-//______________________________________________________________________________
-std::string ROOT::TMetaUtils::R__GetQualifiedName(const clang::QualType &type, const clang::NamedDecl &forcontext)
-{
-   std::string result;
-   ROOT::TMetaUtils::R__GetQualifiedName(result,type,forcontext);
-   return result;
-}
-
-//______________________________________________________________________________
-std::string ROOT::TMetaUtils::R__GetQualifiedName(const clang::Type &type, const clang::NamedDecl &forcontext)
-{
-   std::string result;
-   ROOT::TMetaUtils::R__GetQualifiedName(result,clang::QualType(&type,0),forcontext);
-   return result;
-}
-
-//______________________________________________________________________________
-std::string ROOT::TMetaUtils::R__GetQualifiedName(const clang::NamedDecl &cl)
-{
-   clang::PrintingPolicy policy( cl.getASTContext().getPrintingPolicy() );
-   policy.SuppressTagKeyword = true; // Never get the class or struct keyword
-   policy.SuppressUnwrittenScope = true; // Don't write the inline or anonymous namespace names.
-
-   std::string result;
-   llvm::raw_string_ostream stream(result);
-   cl.getNameForDiagnostic(stream,policy,true); // qual_name = N->getQualifiedNameAsString();
-   stream.flush();
-   return result;
-}
-
-//______________________________________________________________________________
-std::string ROOT::TMetaUtils::R__GetQualifiedName(const clang::CXXBaseSpecifier &base)
-{
-   std::string result;
-   ROOT::TMetaUtils::R__GetQualifiedName(result,*base.getType()->getAsCXXRecordDecl());
-   return result;
-}
-
-//______________________________________________________________________________
+//----
 std::string ROOT::TMetaUtils::R__GetQualifiedName(const AnnotatedRecordDecl &annotated)
 {
-   return ROOT::TMetaUtils::R__GetQualifiedName(*annotated.GetRecordDecl());
+   std::string result;
+   ROOT::TMetaUtils::R__GetQualifiedName(result, annotated);
+   return result;
 }
 
 //______________________________________________________________________________
@@ -1543,7 +1567,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
                                       const cling::Interpreter &interp,
                                       const TNormalizedCtxt &normCtxt,
                                       bool& needCollectionProxy)
-{
+{   
    // FIXME: a function of ~300 lines!
    std::string classname = TClassEdit::GetLong64_Name(cl.GetNormalizedName());
 
@@ -1604,8 +1628,10 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    //--------------------------------------------------------------------------
    // Check if we have any schema evolution rules for this class
    //--------------------------------------------------------------------------
-   ROOT::SchemaRuleClassMap_t::iterator rulesIt1 = ROOT::gReadRules.find( ROOT::TMetaUtils::R__GetQualifiedName(*decl).c_str() );
-   ROOT::SchemaRuleClassMap_t::iterator rulesIt2 = ROOT::gReadRawRules.find( ROOT::TMetaUtils::R__GetQualifiedName(*decl).c_str() );
+   std::string declName;
+   ROOT::TMetaUtils::R__GetQualifiedName(declName,*decl);
+   ROOT::SchemaRuleClassMap_t::iterator rulesIt1 = ROOT::gReadRules.find( declName.c_str() );
+   ROOT::SchemaRuleClassMap_t::iterator rulesIt2 = ROOT::gReadRawRules.find( declName.c_str() );
 
    ROOT::MembersTypeMap_t nameTypeMap;
    CreateNameTypeMap( *decl, nameTypeMap ); // here types for schema evo are written
@@ -1988,7 +2014,7 @@ bool ROOT::TMetaUtils::R__GetNameWithinNamespace(std::string &fullname,
    if (ctxt && ctxt!=cl) {
       const clang::NamespaceDecl *nsdecl = llvm::dyn_cast<clang::NamespaceDecl>(ctxt);
       if (nsdecl == 0 || !nsdecl->isAnonymousNamespace()) {
-         ROOT::TMetaUtils::R__GetQualifiedName(nsname,*ctxt);
+         ROOT::TMetaUtils::R__GetQualifiedName(nsname,*nsdecl);
          clsname.erase (0, nsname.size() + 2);
          return true;
       }
@@ -2384,7 +2410,9 @@ int ROOT::TMetaUtils::GetClassVersion(const clang::RecordDecl *cl)
             if (inst && inst->getBody()) {
                func = llvm::dyn_cast<clang::CompoundStmt>(inst->getBody());
             } else {
-               ROOT::TMetaUtils::Error("GetClassVersion","Could not find the body for %s::ClassVersion!\n",ROOT::TMetaUtils::R__GetQualifiedName(*cl).c_str());
+               std::string qualName;
+               ROOT::TMetaUtils::R__GetQualifiedName(qualName,*cl);
+               ROOT::TMetaUtils::Error("GetClassVersion","Could not find the body for %s::ClassVersion!\n",qualName.c_str());
             }
          }
          if (func && !func->body_empty()) {

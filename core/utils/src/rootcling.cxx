@@ -910,15 +910,15 @@ bool CheckInputOperator(const clang::RecordDecl *cl, cling::Interpreter &interp)
 }
 
 //______________________________________________________________________________
-bool CheckClassDef(const clang::RecordDecl *cl, const cling::Interpreter &interp)
+bool CheckClassDef(const clang::RecordDecl& cl, const cling::Interpreter &interp)
 {
    // Return false if the class does not have ClassDef even-though it should.
 
 
    // Detect if the class has a ClassDef
-   bool hasClassDef = ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"Class_Version");
+   bool hasClassDef = ROOT::TMetaUtils::ClassInfo__HasMethod(&cl,"Class_Version");
 
-   const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
+   const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(&cl);
    if (!clxx) {
       return false;
    }
@@ -926,7 +926,12 @@ bool CheckClassDef(const clang::RecordDecl *cl, const cling::Interpreter &interp
 
    bool result = true;
    if (!isAbstract && InheritsFromTObject(clxx, interp) && !InheritsFromTSelector(clxx, interp) && !hasClassDef) {
-      ROOT::TMetaUtils::Error(ROOT::TMetaUtils::R__GetQualifiedName(*cl).c_str(),"CLING: %s inherits from TObject but does not have its own ClassDef\n",ROOT::TMetaUtils::R__GetQualifiedName(*cl).c_str());
+      std::string qualName;
+      ROOT::TMetaUtils::R__GetQualifiedName(qualName,cl);
+      const char* qualName_c=qualName.c_str();
+      ROOT::TMetaUtils::Error(qualName_c,
+                              "%s inherits from TObject but does not have its own ClassDef\n",
+                              qualName_c);
       // We do want to always output the message (hence the Error level)
       // but still want rootcling to succeed.
       result = true;
@@ -1979,7 +1984,7 @@ void WriteBodyShowMembers(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                           bool outside)
 {
    string csymbol;
-   ROOT::TMetaUtils::R__GetQualifiedName(csymbol,*cl);
+   ROOT::TMetaUtils::R__GetQualifiedName(csymbol,cl);
 
    if ( !TMetaUtils::IsStdClass(*cl) ) {
 
@@ -3533,7 +3538,7 @@ int RootCling(int argc,
             }
          }
       }
-      has_input_error |= !CheckClassDef(*iter, interp);
+      has_input_error |= !CheckClassDef(**iter, interp);
    }
 
    if (has_input_error) {
@@ -3578,7 +3583,7 @@ int RootCling(int argc,
       for( ; iter != end; ++iter)
       {
          if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-            ROOT::TMetaUtils::Error(0,"A dictionary has been requested for %s but there is no declaration!\n",ROOT::TMetaUtils::R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
+            ROOT::TMetaUtils::Error(0,"A dictionary has been requested for %s but there is no declaration!\n",ROOT::TMetaUtils::R__GetQualifiedName(* iter).c_str());
             continue;
          }
          if (iter->RequestOnlyTClass()) {

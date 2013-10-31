@@ -297,26 +297,32 @@ bool R__GetNameWithinNamespace(std::string&, std::string&, std::string&, clang::
 //______________________________________________________________________________
 void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext);
 
+//----
+std::string R__GetQualifiedName(const clang::QualType &type, const clang::NamedDecl &forcontext);
+
 //______________________________________________________________________________
-void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl);
+void R__GetQualifiedName(std::string &qual_name, const clang::Type &type, const clang::NamedDecl &forcontext);
+
+//----
+std::string R__GetQualifiedName(const clang::Type &type, const clang::NamedDecl &forcontext);
+
+//______________________________________________________________________________
+void R__GetQualifiedName(std::string &qual_name, const clang::NamespaceDecl &nsd);
+
+//----
+std::string R__GetQualifiedName(const clang::NamespaceDecl &nsd);
 
 //______________________________________________________________________________
 void R__GetQualifiedName(std::string &qual_name, const AnnotatedRecordDecl &annotated);
 
-//______________________________________________________________________________
-std::string R__GetQualifiedName(const clang::QualType &type, const clang::NamedDecl &forcontext);
-
-//______________________________________________________________________________
-std::string R__GetQualifiedName(const clang::Type &type, const clang::NamedDecl &forcontext);
-
-//______________________________________________________________________________
-std::string R__GetQualifiedName(const clang::NamedDecl &cl);
-
-//______________________________________________________________________________
-std::string R__GetQualifiedName(const clang::CXXBaseSpecifier &base);
-
-//______________________________________________________________________________
+//----
 std::string R__GetQualifiedName(const AnnotatedRecordDecl &annotated);
+
+//______________________________________________________________________________
+void R__GetQualifiedName(std::string &qual_name, const clang::RecordDecl &recordDecl);
+
+//----
+std::string R__GetQualifiedName(const clang::RecordDecl &recordDecl);
 
 //______________________________________________________________________________
 int WriteNamespaceHeader(std::ostream&, const clang::RecordDecl *);
