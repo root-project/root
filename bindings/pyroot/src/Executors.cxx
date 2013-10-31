@@ -518,6 +518,7 @@ namespace {
    NFp_t factories_[] = {
    // factories for built-ins
       NFp_t( "char",               &CreateCharExecutor                ),
+      NFp_t( "signed char",        &CreateCharExecutor                ),
       NFp_t( "unsigned char",      &CreateCharExecutor                ),
       NFp_t( "short",              &CreateIntExecutor                 ),
       NFp_t( "short&",             &CreateShortRefExecutor            ),

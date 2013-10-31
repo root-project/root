@@ -1163,6 +1163,7 @@ namespace {
       NFp_t( "bool",                      &CreateBoolConverter               ),
       NFp_t( "const bool&",               &CreateConstBoolRefConverter       ),
       NFp_t( "char",                      &CreateCharConverter               ),
+      NFp_t( "signed char",               &CreateCharConverter               ),
       NFp_t( "unsigned char",             &CreateUCharConverter              ),
       NFp_t( "short",                     &CreateShortConverter              ),
       NFp_t( "const short&",              &CreateConstShortRefConverter      ),
