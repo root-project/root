@@ -55,6 +55,12 @@ TF1 *TProofBench::fgFp1 = 0;
 TF1 *TProofBench::fgFp1n = 0;
 TF1 *TProofBench::fgFp2 = 0;
 TF1 *TProofBench::fgFp2n = 0;
+TF1 *TProofBench::fgFp3 = 0;
+TF1 *TProofBench::fgFp3n = 0;
+TF1 *TProofBench::fgFio = 0;
+TF1 *TProofBench::fgFioV = 0;
+static Int_t gFioVn0 = -1;             // Number of real cores for fgFioV
+static Int_t gFioVn1 = -1;             // Number of real+hyper cores for fgFioV
 
 TList *TProofBench::fgGraphs = new TList;
 
@@ -92,6 +98,74 @@ Double_t funp2n(Double_t *xx, Double_t *par)
    
    Double_t res = par[0] / xx[0] + par[1] + par[2] * xx[0];
    return res;
+}
+
+//_____________________________________________________________________
+Double_t funio(Double_t *xx, Double_t *par)
+{
+   // I/O saturated rate function
+   
+   Double_t sat = par[0] / par[1] * (xx[0] * par[1] / par[2] - 1.);
+   if (xx[0] < par[2] / par[1]) sat = 0.;
+   Double_t res = par[0] * xx[0] / (1. + sat);
+   return res;
+}
+
+//_____________________________________________________________________
+Double_t funiov(Double_t *xx, Double_t *par)
+{
+   // I/O saturated rate function with varying Rcpu
+   
+   // par[0] = rio
+   // par[1] = b1
+   // par[2] = b2
+   // par[3] = nc
+   // par[4] = ri
+
+   Double_t rio = par[0] / par[3] * xx[0];
+   if (xx[0] > par[3]) rio = par[0];
+
+   Double_t rcpu = par[1] * xx[0];
+   if (xx[0] > gFioVn0) rcpu = par[1]*gFioVn0 + par[2]*(xx[0] - gFioVn0);
+   if (xx[0] > gFioVn1) rcpu = par[1]*gFioVn0 + par[2]*(gFioVn1 - gFioVn0);
+
+   Double_t res = 1. / (1./par[4] + 1./rio + 1./rcpu);
+
+   return res;
+}
+
+//_____________________________________________________________________
+Double_t funcpuv(Double_t *xx, Double_t *par)
+{
+   // Function with varying Rcpu
+   
+   // par[0] = offset
+   // par[1] = rate contribution from real cores 
+   // par[2] = rate contribution from hyper cores 
+
+   Double_t n = (xx[0] - par[0]);
+   Double_t rcpu = par[1] * n;
+   if (xx[0] > gFioVn0) rcpu = par[1]*gFioVn0 + par[2]*(n - gFioVn0);
+   if (xx[0] > gFioVn1) rcpu = par[1]*gFioVn0 + par[2]*(gFioVn1 - gFioVn0);
+
+   return rcpu;
+}
+
+//_____________________________________________________________________
+Double_t funcpuvn(Double_t *xx, Double_t *par)
+{
+   // Function with varying Rcpu normalized
+   
+   // par[0] = offset
+   // par[1] = rate contribution from real cores 
+   // par[2] = rate contribution from hyper cores 
+
+   Double_t n = (xx[0] - par[0]);
+   Double_t rcpu = par[1] * n;
+   if (xx[0] > gFioVn0) rcpu = par[1]*gFioVn0 + par[2]*(n - gFioVn0);
+   if (xx[0] > gFioVn1) rcpu = par[1]*gFioVn0 + par[2]*(gFioVn1 - gFioVn0);
+
+   return rcpu / xx[0];
 }
 
 //______________________________________________________________________________
@@ -302,7 +376,8 @@ Int_t TProofBench::RunCPUx(Long64_t nevents, Int_t start, Int_t stop)
 }
 
 //______________________________________________________________________________
-void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, Int_t dofit)
+void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
+                          Int_t dofit, Int_t n0, Int_t n1)
 {
    // Draw the CPU speedup plot.
    //  opt = 'typewhat', e.g. 'std:max:'
@@ -316,7 +391,10 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    //  dofit =  0           no fit
    //           1           fit with the relevant '1st degree related' function
    //           2           fit with the relevant '2nd degree related' function
-   //
+   //           3           fit with varying rcpu function
+   //     n0 = for dofit == 3, number of real cores
+   //     n1 = for dofit == 3, number of total cores (real + hyperthreaded)
+    //
 
    // Get the TProfile an create the graphs
    TFile *fout = TFile::Open(outfile, "READ");
@@ -398,11 +476,9 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
    TH1F *hgr = new TH1F("Graph-CPU"," CPU speed-up", nbins*4, xmin, xmax);
    hgr->SetMaximum(ymx + (ymx-ymi)*0.2);
    hgr->SetMinimum(0);
-//   if (isNorm) hgr->SetMinimum(ymi - (ymx-ymi)*0.5);
    if (isNorm) hgr->SetMaximum(ymx*1.2);
    hgr->SetDirectory(0);
    hgr->SetStats(0);
-//   hgr->CenterTitle(true);
    hgr->GetXaxis()->SetTitle(pf->GetXaxis()->GetTitle());
    hgr->GetXaxis()->CenterTitle(true);
    hgr->GetXaxis()->SetLabelSize(0.05);
@@ -472,9 +548,9 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
             fgFp1->SetParameter(1, pf->GetBinContent(1));
             gr->Fit(fgFp1);
             if (verbose) fgFp1->Print();
-            normrate = fgFp1->GetParameter(1);
+            normrate = fgFp1->Derivative(1.);
          }
-      } else {
+      } else if (dofit == 2) {
          if (isNorm) {
             fgFp2n->SetParameter(0, pf->GetBinContent(1));
             fgFp2n->SetParameter(1, pf->GetBinContent(nbins-1));
@@ -488,7 +564,26 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose, 
             fgFp2->SetParameter(2, 0.);
             gr->Fit(fgFp2);
             if (verbose) fgFp2->Print();
-            normrate = fgFp2->GetParameter(1);
+            normrate = fgFp2->Derivative(1.);
+         }
+      } else {
+         // Starting point for the parameters and fit
+         gFioVn0 = (n0 > 0) ? n0 : (Int_t) (nbins + .1)/2.;
+         gFioVn1 = (n1 > 0) ? n1 : (Int_t) (nbins + .1);
+         if (isNorm) {
+            fgFp3n->SetParameter(0, 0.);
+            fgFp3n->SetParameter(1, pf->GetBinContent(1));
+            fgFp3n->SetParameter(2, pf->GetBinContent(nbins-1));
+            gr->Fit(fgFp3n);
+            if (verbose) fgFp3n->Print();
+            normrate = pf->GetBinContent(1);
+         } else {
+            fgFp3->SetParameter(0, 0.);
+            fgFp3->SetParameter(1, 0.);
+            fgFp3->SetParameter(2, pf->GetBinContent(1));
+            gr->Fit(fgFp3);
+            if (verbose) fgFp3->Print();
+            normrate = fgFp3->Derivative(1.);
          }
       }
 
@@ -600,6 +695,25 @@ void TProofBench::AssertFittingFun(Double_t mi, Double_t mx)
    if (!fgFp2n) {
       fgFp2n = new TF1("funp2n", funp2n, mi, mx, 3);
       fgFp2n->SetParNames("decay", "norm rate", "deviation");
+   }
+
+   if (!fgFp3) {
+      fgFp3 = new TF1("funcpuv", funcpuv, mi, mx, 3);
+      fgFp3->SetParNames("offset", "slope real", "slope hyper");
+   }
+
+   if (!fgFp3n) {
+      fgFp3n = new TF1("funcpuvn", funcpuvn, mi, mx, 3);
+      fgFp3n->SetParNames("offset", "slope real", "slope hyper");
+   }
+
+   if (!fgFio) {
+      fgFio = new TF1("funio", funio, mi, mx, 3);
+      fgFio->SetParNames("R1", "RIO", "TotIO");
+   }
+   if (!fgFioV) {
+      fgFioV = new TF1("funiov", funiov, mi, mx, 5);
+      fgFioV->SetParNames("rio", "b1", "b2", "nc", "ri");
    }
 
 }
@@ -823,7 +937,8 @@ Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
 
 //______________________________________________________________________________
 void TProofBench::DrawDataSet(const char *outfile,
-                              const char *opt, const char *type, Bool_t verbose)
+                              const char *opt, const char *type, Bool_t verbose,
+                              Int_t dofit, Int_t n0, Int_t n1)
 {
    // Draw the CPU speedup plot.
    //  opt = 'typewhat', e.g. 'std:max:'
@@ -836,6 +951,11 @@ void TProofBench::DrawDataSet(const char *outfile,
    //           'all:'      draw max and average rate on same plot (default)
    // type =    'mbs'           MB/s scaling plots (default)
    //           'evts'          Event/s scaling plots
+   //  dofit =  0           no fit
+   //           1           fit with default 3 parameter saturated I/O formula
+   //           2           fit with 4 parameter saturated I/O formula (varying Rcpu)
+   //     n0 = for dofit == 2, number of real cores
+   //     n1 = for dofit == 2, number of total cores (real + hyperthreaded)
    //
 
    // Get the TProfile an create the graphs
@@ -925,7 +1045,6 @@ void TProofBench::DrawDataSet(const char *outfile,
    TH1F *hgr = new TH1F("Graph-DataSet"," Data Read speed-up", nbins*4, xmin, xmax);
    hgr->SetMaximum(ymx + (ymx-ymi)*0.2);
    hgr->SetMinimum(0);
-//   if (isNorm) hgr->SetMinimum(ymi - (ymx-ymi)*0.5);
    if (isNorm) hgr->SetMaximum(ymx*1.2);
    hgr->SetDirectory(0);
    hgr->SetStats(0);
@@ -981,6 +1100,38 @@ void TProofBench::DrawDataSet(const char *outfile,
    leg->Draw();
    gPad->Update();
 
+   Double_t normrate = -1.;
+   if (dofit > 0) {
+      TGraphErrors *gr = (doMax) ? grmx : grav;   
+      // Make sure the fitting functions are defined
+      Double_t xmi = 0.9;
+      if (nbins > 5) xmi = 1.5;
+      AssertFittingFun(xmi, nbins + .1);
+
+      if (dofit == 1) {
+         // Starting point for the parameters and fit
+         fgFio->SetParameter(0, pf->GetBinContent(1));
+         fgFio->SetParameter(1, pf->GetBinContent(nbins-1));
+         fgFio->SetParameter(2, pf->GetBinContent(nbins-1));
+         gr->Fit(fgFio);
+         if (verbose) fgFio->Print();
+         normrate = fgFio->Derivative(1.);
+      } else if (dofit > 1) {
+         // Starting point for the parameters and fit
+         gFioVn0 = (n0 > 0) ? n0 : (Int_t) (nbins + .1)/2.;
+         gFioVn1 = (n1 > 0) ? n1 : (Int_t) (nbins + .1);
+         fgFioV->SetParameter(0, 20.);
+         fgFioV->SetParameter(1, pf->GetBinContent(1));
+         fgFioV->SetParameter(2, pf->GetBinContent(1));
+         fgFioV->SetParameter(3, 4.);
+         fgFioV->SetParameter(4, 1000.);
+
+         gr->Fit(fgFioV);
+         if (verbose) fgFio->Print();
+         normrate = fgFioV->Derivative(1.);
+      }
+   }
+
    // Notify the cluster performance parameters
    if (!isNorm) {
       printf("* ************************************************************ *\n");
@@ -989,9 +1140,11 @@ void TProofBench::DrawDataSet(const char *outfile,
       printf("* Performance measurement from scalability plot:               *\n");
       printf("*                                                              *\r");
       if (isIO) {
-      printf("*    rate max:         %.3f\tMB/s (@ %d workers)\n", ymx, kmx);
+         printf("*    rate max:         %.3f\tMB/s (@ %d workers)\n", ymx, kmx);
+         printf("*                                                              *\r");
+         printf("*    per-worker rate:  %.3f\tMB/s \n", normrate);
       } else {
-      printf("*    rate max:         %.3f\tevts/s (@ %d workers)\n", ymx, kmx);
+         printf("*    rate max:         %.3f\tevts/s (@ %d workers)\n", ymx, kmx);
       }
       printf("* ************************************************************ *\n");
    }

@@ -83,6 +83,11 @@ protected:
    static TF1 *fgFp1n;                // Normalized 1st degree
    static TF1 *fgFp2;                 // Simple 2nd degree polynomial
    static TF1 *fgFp2n;                // Normalized 2nd degree
+   static TF1 *fgFp3;                 // Function with varying Rcpu
+   static TF1 *fgFp3n;                // Normalized Function with varying Rcpu
+
+   static TF1 *fgFio;                 // Function used for I/O rate fits
+   static TF1 *fgFioV;                // Function used for I/O rate fits with non-constant Rcpu
 
    static TList *fgGraphs;        // List of TGraphErrors created by Draw actions
 
@@ -130,8 +135,10 @@ public:
 
    Bool_t GetDebug() { return fDebug; }
 
-   static void DrawCPU(const char *outfile, const char *opt = "std:", Bool_t verbose = kFALSE, Int_t dofit = 0);
-   static void DrawDataSet(const char *outfile, const char *opt = "std:", const char *type = "mbs", Bool_t verbose = kFALSE);
+   static void DrawCPU(const char *outfile, const char *opt = "std:", Bool_t verbose = kFALSE,
+                      Int_t dofit = 0, Int_t n0 = -1, Int_t n1 = -1);
+   static void DrawDataSet(const char *outfile, const char *opt = "std:", const char *type = "mbs", Bool_t verbose = kFALSE,
+                           Int_t dofit = 0, Int_t n0 = -1, Int_t n1 = -1);
    static void GetPerfSpecs(const char *path = ".", Int_t degfit = 1);
    static void DrawEfficiency(const char *outfile, const char *opt = "", Bool_t verbose = kFALSE);
 
