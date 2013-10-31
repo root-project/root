@@ -348,6 +348,10 @@ $(call stripsrc,$(CINTDIRS)/loadfile_tmp.o): $(CINTCONF) $(ORDER_) $(CINTINCLUDE
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.o): CINTCXXFLAGS += -UR__HAVE_CONFIG -DROOTBUILD
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): OPT := $(filter-out -Wshadow,$(OPT))
 $(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): CXXFLAGS:=$(filter-out -Wshadow,$(CXXFLAGS))
+ifeq ($(MACOSX_TMPNAM_DEPRECATED),yes)
+$(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): CINTCXXFLAGS += -Wno-deprecated-declarations
+$(call stripsrc,$(CINTDIRS)/loadfile_tmp.o) $(CINTO): CINTCFLAGS += -Wno-deprecated-declarations
+endif
 
 $(call stripsrc,$(CINTDIRSD)/stdstrct.o):    CINTCXXFLAGS += -I$(CINTDIRL)/stdstrct
 
