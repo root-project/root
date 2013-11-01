@@ -325,11 +325,15 @@ void TListOfFunctions::Load()
    // Load all the functions known to the intepreter for the scope 'fClass'
    // into this collection.
 
-   if (fClass->GetClassInfo() == 0) return;
+   if (fClass && fClass->GetClassInfo() == 0) return;
    
    R__LOCKGUARD(gInterpreterMutex);
 
-   MethodInfo_t *t = gInterpreter->MethodInfo_Factory(fClass->GetClassInfo());
+   ClassInfo_t *info;
+   if (fClass) info = fClass->GetClassInfo();
+   else info = gInterpreter->ClassInfo_Factory();
+
+   MethodInfo_t *t = gInterpreter->MethodInfo_Factory(info);
    while (gInterpreter->MethodInfo_Next(t)) {
       // if the name cannot be obtained there is no use to put in list
       if (gInterpreter->MethodInfo_IsValid(t) && gInterpreter->MethodInfo_Name(t)) {
@@ -339,6 +343,7 @@ void TListOfFunctions::Load()
          Get(mid);
       }
    }
+   if (!fClass) gInterpreter->ClassInfo_Delete(info);
 }
 
 //______________________________________________________________________________
