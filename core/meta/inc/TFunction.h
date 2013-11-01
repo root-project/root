@@ -57,6 +57,7 @@ public:
    Int_t               GetNargsOpt() const;
    DeclId_t            GetDeclId() const;
    void               *InterfaceMethod() const;
+   virtual Bool_t      IsValid() const;
    Long_t              Property() const;
    Long_t              ExtraProperty() const;
    virtual bool        Update(MethodInfo_t *info);

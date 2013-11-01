@@ -204,6 +204,16 @@ void *TFunction::InterfaceMethod() const
 }
 
 //______________________________________________________________________________
+Bool_t TFunction::IsValid() const
+{
+   // Return true if this function object is pointing to a currently
+   // loaded function.  If a function is unloaded after the TFunction
+   // is created, the TFunction will be set to be invalid.
+
+   return fInfo != 0;
+}
+
+//______________________________________________________________________________
 const char *TFunction::GetMangledName() const
 {
    // Returns the mangled name as defined by CINT, or 0 in case of error.
