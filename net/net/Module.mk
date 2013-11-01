@@ -28,6 +28,9 @@ NETS         := $(filter-out $(MODDIRS)/TS3WebFile.cxx,$(NETS))
 NETS         := $(filter-out $(MODDIRS)/TS3HTTPRequest.cxx,$(NETS))
 else
 NETNOCRYPTO  :=
+ifeq ($(ARCH),win32gcc)
+CRYPTOLIB    += -lz
+endif
 endif
 
 ifeq ($(SSLLIB),)
