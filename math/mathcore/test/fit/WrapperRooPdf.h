@@ -36,8 +36,10 @@ public:
       fParams = fPdf->getParameters(obsList);
       assert(fX!=0);
       assert(fParams!=0);
+#ifdef DEBUG
       fX->Print("v");
       fParams->Print("v");
+#endif
    }
  
    
@@ -58,9 +60,10 @@ public:
       fParams = fPdf->getParameters(obsList);
       assert(fX!=0);
       assert(fParams!=0);
+#ifdef DEBUG
       fX->Print("v");
       fParams->Print("v");
-
+#endif
 //       // iterate on fX
 //       TIterator* itr = fX->createIterator() ;
 //       RooAbsArg* arg = 0;
