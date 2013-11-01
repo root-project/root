@@ -34,7 +34,7 @@
 #include "TStopwatch.h"
 
 #include "TVirtualFitter.h"
-#include "TFitterMinuit.h"
+//#include "TFitterMinuit.h"
 // #include "TFitterFumili.h"
 // #include "TFumili.h"
 
@@ -655,6 +655,9 @@ int  FitUsingRooFit2(TTree * tree) {
          else if (j > 1) { 
             pdf[j] = new RooProdPdf(pname.c_str(),pname.c_str(),RooArgSet(*g[j],*pdf[j-1]) );
          }
+//          else
+//             pdf[0] = g[0];
+
       } 
 
          
@@ -667,7 +670,7 @@ int  FitUsingRooFit2(TTree * tree) {
       (pdf[N-1]->getVariables())->Print("v"); // print the parameters 
       std::cout << "\n\nDo the fit now \n\n"; 
 #else 
-      int level = -1; 
+      int level = -1;
       bool save = false; 
 #endif
 
@@ -685,7 +688,7 @@ int  FitUsingRooFit2(TTree * tree) {
 #endif
 
 
-      iret |= (result == 0);
+      iret |= (result != 0);
 
       // free
       for (int j = 0; j < N; ++j) { 
@@ -693,7 +696,7 @@ int  FitUsingRooFit2(TTree * tree) {
          delete m[j]; 
          delete s[j]; 
          delete g[j];
-         delete pdf[j]; 
+         if (j> 0) delete pdf[j]; 
       }
 
       if (iret != 0) return iret; 
