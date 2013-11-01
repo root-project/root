@@ -902,7 +902,7 @@ TCling::TCling(const char *name, const char *title)
                          "#include <string>\n"
                          "using namespace std;\n"
                          "#define BOOST_SP_USE_SPINLOCK\n"
-                         "#include <assert.h>"
+                         "#include <assert.h>\n"
                          "#define __asm__(X) {assert(false && #X \"Inline __asm__ not supported!\");}");
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
