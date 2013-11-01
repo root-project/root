@@ -193,7 +193,7 @@ void TPluginHandler::SetupCallEnv()
 
    if (fIsGlobal) {
       cl = 0;
-      fMethod = gROOT->GetGlobalFunctionWithPrototype(method, proto, kTRUE);
+      fMethod = gROOT->GetGlobalFunctionWithPrototype(method, proto, kFALSE);
    } else {
       fMethod = cl->GetMethodWithPrototype(method, proto);
    }
