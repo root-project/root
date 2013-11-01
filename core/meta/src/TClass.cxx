@@ -3479,7 +3479,9 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
          if (f) return (TMethod*)f;
       }
    }
-   Error("GetMethodWithPrototype", "Did not find TMethod matching an existing decl (should never happen)");
+   Error("GetMethodWithPrototype",
+         "\nDid not find matching TMethod <%s> with \"%s\" %sfor %s",
+         method,proto,objectIsConst ? "const " : "", GetName());
    return 0;
 }
 
