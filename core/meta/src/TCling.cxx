@@ -309,32 +309,7 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
          return;
    }
 
-   if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
-      // FIXME: Implement lazy TClass::GetListOfMethods, so that we don't need
-      // the that code, but rely on lookups.
-      if (isDeserialized && isa<CXXMethodDecl>(FD))
-         return;
-      // While classes are read completely, functions in namespaces might
-      // show up at any time.
-      if (const NamespaceDecl* NCtx = dyn_cast<NamespaceDecl>(FD->getDeclContext())){
-         if (NCtx->getIdentifier()) {
-            TClass* cl = TClass::GetClass(NCtx->getNameAsString().c_str());
-            if (cl) {
-               modifiedTClasses.insert(cl);
-            }
-         }
-         return;
-      }
-
-      // We skip functions without prototype
-      // FunctionNoProtoType - Represents a K&R-style 'int foo()' function,
-      // which has no information available about its arguments.
-      if (!isa<FunctionNoProtoType>(FD->getType())
-          && !gROOT->GetListOfGlobalFunctions()->FindObject(FD->getNameAsString().c_str())) {
-         gROOT->GetListOfGlobalFunctions()->Add(new TFunction((MethodInfo_t*)new TClingMethodInfo(fInterpreter, FD)));
-      }
-   }
-   else if (const RecordDecl *TD = dyn_cast<RecordDecl>(D)) {
+   if (const RecordDecl *TD = dyn_cast<RecordDecl>(D)) {
       TCling__UpdateClassInfo(TD);
    }
    else if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
