@@ -31,7 +31,7 @@ CINTCFLAGS    = -pipe -Wall $(EXTRA_CFLAGS) \
 COMPILER      = gnu
 
 # Linker:
-LD            = build/unix/wingcc_ld.sh
+LD            = $(ROOT_SRCDIR)/build/unix/wingcc_ld.sh
 LDFLAGS       = $(OPT) -Wl,--enable-auto-import \
                 -Wl,--enable-runtime-pseudo-reloc \
                 -L/usr/X11R6/lib \

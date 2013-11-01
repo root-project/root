@@ -172,7 +172,7 @@ elif [ $PLATFORM = "ios" ]; then
    if [ $linkstat -ne 0 ]; then
       exit $linkstat
    fi
-elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
+elif test "${LD#*wingcc_ld.sh}" != "$LD"; then
    EXPLLNKCORE=
    if [ $SONAME != "libCint.dll" ] \
        && [ $SONAME != "libCling.dll" ] \
