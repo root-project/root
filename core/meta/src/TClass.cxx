@@ -3434,7 +3434,7 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
    while ((base = (TBaseClass *) next())) {
       TClass *c = base->GetClassPointer();
       if (c) {
-         c->GetMethodList()->Get(decl);
+         f = c->GetMethodList()->Get(decl);
          if (f) return (TMethod*)f;
       }
    }
@@ -3472,7 +3472,7 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
    while ((base = (TBaseClass *) next())) {
       TClass *c = base->GetClassPointer();
       if (c) {
-         c->GetMethodList()->Get(decl);
+         f = c->GetMethodList()->Get(decl);
          if (f) return (TMethod*)f;
       }
    }
