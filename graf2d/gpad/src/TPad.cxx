@@ -400,7 +400,7 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    // primitives in a TPad. Only those deriving from TAttLine,
    // TAttMarker and TAttFill are added, excluding TPave and TFrame
    // derived classes. x1, y1, x2, y2 are the TLegend coordinates.
-   // title is the legend title. By default it is " ". The caller 
+   // title is the legend title. By default it is " ". The caller
    // program owns the returned TLegend.
    //
    // If the pad contains some TMultiGraph or THStack the individual
@@ -3194,8 +3194,10 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 
                GetPainter()->SetOpacity(style - 4000);
             }
-         } else {
+         } else if (style >= 1000 && style <= 1999) {
             GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
+         } else {
+            GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
          }
          if (option[0] == 'l') GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kHollow);
       } else {
@@ -4456,7 +4458,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
       return;
    }
-   
+
    //==============Save pad/canvas as a TeX file================================
    if (strstr(opt,"tex")) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
