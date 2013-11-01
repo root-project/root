@@ -76,6 +76,7 @@
 #include <assert.h>
 
 #include "TListOfFunctions.h"
+#include "TViewPubFunctions.h"
 
 using namespace std;
 
@@ -3036,7 +3037,7 @@ TList *TClass::GetListOfMethods(Bool_t load /* = kTRUE */)
 }
 
 //______________________________________________________________________________
-TList *TClass::GetListOfAllPublicMethods(Bool_t /* load = kTRUE */)
+const TList *TClass::GetListOfAllPublicMethods(Bool_t load /* = kTRUE */)
 {
    // Returns a list of all public methods of this class and its base classes.
    // Refers to a subset of the methods in GetListOfMethods() so don't do
@@ -3050,37 +3051,9 @@ TList *TClass::GetListOfAllPublicMethods(Bool_t /* load = kTRUE */)
    //   protected methods.
 
    R__LOCKGUARD(gInterpreterMutex);
-   if (!fAllPubMethod) {
-      // This would delete fAllPubMethod if the list of methods
-      // has not been created yet.
-      TList *allMethod = GetListOfMethods();
 
-      fAllPubMethod = new TList;
-
-      // put all methods in the list
-      fAllPubMethod->AddAll(allMethod);
-
-      // loop over all base classes and add new methods
-      TIter nextBaseClass(GetListOfBases());
-      TBaseClass *pB;
-      TMethod    *p;
-      while ((pB = (TBaseClass*) nextBaseClass())) {
-         if (!pB->GetClassPointer()) continue;
-         if (!(pB->Property() & kIsPublic)) continue;
-         TIter next(pB->GetClassPointer()->GetListOfAllPublicMethods());
-         TList temp;
-         while ((p = (TMethod*) next()))
-            if (!fAllPubMethod->Contains(p->GetName()))
-               temp.Add(p);
-         fAllPubMethod->AddAll(&temp);
-         temp.Clear();
-      }
-
-      // loop over list and remove all non-public methods
-      TIter next(fAllPubMethod);
-      while ((p = (TMethod*) next()))
-         if (!(p->Property() & kIsPublic)) fAllPubMethod->Remove(p);
-   }
+   if (!fAllPubMethod) fAllPubMethod = new TViewPubFunctions(this);
+   if (load) fAllPubMethod->Load();
    return fAllPubMethod;
 }
 
@@ -4866,7 +4839,6 @@ void TClass::SetUnloaded()
 
    if (fMethod) {
       fMethod->Unload();
-      if (fAllPubMethod) fAllPubMethod->Clear();
    }
 
    SetBit(kUnloaded);

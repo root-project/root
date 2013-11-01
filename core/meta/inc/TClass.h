@@ -54,6 +54,7 @@ class TVirtualIsAProxy;
 class TVirtualRefProxy;
 class THashTable;
 class TListOfFunctions;
+class TViewPubFunctions;
 
 namespace clang {
    class Decl;
@@ -98,7 +99,7 @@ private:
    TList             *fEnums;           //linked list for the enums
    TListOfFunctions  *fMethod;          //linked list for methods
    TList             *fAllPubData;      //all public data members (including from base classes)
-   TList             *fAllPubMethod;    //all public methods (including from base classes)
+   TViewPubFunctions *fAllPubMethod;    //all public methods (including from base classes)
    mutable TList     *fClassMenuList;   //list of class menu items
 
    const char        *fDeclFileName;    //name of class declaration file
@@ -277,7 +278,7 @@ public:
    TList             *GetListOfBases();
    TList             *GetListOfMethods(Bool_t load = kTRUE);
    TList             *GetListOfRealData() const { return fRealData; }
-   TList             *GetListOfAllPublicMethods(Bool_t load = kTRUE);
+   const TList       *GetListOfAllPublicMethods(Bool_t load = kTRUE);
    TList             *GetListOfAllPublicDataMembers();
    const char        *GetImplFileName() const { return fImplFileName; }
    Short_t            GetImplFileLine() const { return fImplFileLine; }
