@@ -210,6 +210,22 @@ void TListOfFunctions::Delete(Option_t *option /* ="" */)
 }
 
 //______________________________________________________________________________
+TObject *TListOfFunctions::FindObject(const char *name) const
+{
+   // Specialize FindObject to do search for the
+   // a function just by name if its not already in the list
+
+   TObject *result = THashList::FindObject(name);
+   if (!result) {
+      TInterpreter::DeclId_t decl;
+      if (fClass) decl = gInterpreter->GetFunction(fClass->GetClassInfo(),name);
+      else        decl = gInterpreter->GetFunction(0,name);
+      if (decl) result = const_cast<TListOfFunctions*>(this)->Get(decl);
+   }
+   return result;
+}
+
+//______________________________________________________________________________
 TFunction *TListOfFunctions::Get(DeclId_t id)
 {
    // Return (after creating it if necessary) the TMethod or TFunction

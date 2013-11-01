@@ -53,6 +53,9 @@ public:
    virtual void Clear(Option_t *option);
    virtual void Delete(Option_t *option="");
 
+   using THashList::FindObject;
+   virtual TObject   *FindObject(const char *name) const;
+
    TFunction *Get(DeclId_t id);
 
    void       AddFirst(TObject *obj);
