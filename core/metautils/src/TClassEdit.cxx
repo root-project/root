@@ -224,7 +224,11 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       bool hasconst = 0==strncmp("const ",fElements[i].c_str(),6);
       //NOTE: Should we also check the end of the type for 'const'?
       fElements[i] = TClassEdit::ShortType(fElements[i].c_str(),mode);
-      if (hasconst) {
+      if (hasconst && !(mode & TClassEdit::kKeepOuterConst)) {
+         // if mode is set to keep the outer const, it will be kept
+         // and we do not need to put it back ... 
+         // FIXME: why are passing a flag meant for the outer
+         // to the handling of the inner?
          fElements[i] = "const " + fElements[i];
       }
    }
