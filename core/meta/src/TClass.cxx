@@ -3364,6 +3364,7 @@ TListOfFunctions *TClass::GetMethodList()
    // Return (create an empty one if needed) the list of functions.
    // The major difference with GetListOfMethod is that this returns
    // the internal type of fMethod and thus can not be made public.
+   // It also never 'loads' the content of the list.
    
    if (!fMethod) fMethod = new TListOfFunctions(this);
    return fMethod;
@@ -3375,6 +3376,8 @@ TMethod *TClass::GetMethodAny(const char *method)
 {
    // Return pointer to method without looking at parameters.
    // Does not look in (possible) base classes.
+   // Has the side effect of loading all the TMethod object in the list
+   // of the class.
 
    if (!fClassInfo) return 0;
    return (TMethod*) GetListOfMethods()->FindObject(method);
@@ -3570,6 +3573,9 @@ Int_t TClass::GetNmethods()
    // Return the number of methods of this class
    // Note that in case the list of methods is not yet created, it will be done
    // by GetListOfMethods().
+   // This will also load/populate the list of methods, to get 'just' the
+   // number of currently loaded methods use:
+   //    cl->GetListOfMethods(false)->GetSize();
 
    if (!fClassInfo) return 0;
 
