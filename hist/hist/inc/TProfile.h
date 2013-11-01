@@ -55,6 +55,10 @@ static Bool_t   fgApproximate;    //bin error approximation option
    void SetBins(const Int_t* nbins, const Double_t* range) { SetBins(nbins[0], range[0], range[1]); };
    Int_t Fill(const Double_t* v) { return Fill(v[0], v[1], v[2]); };
 
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return (fBinEntries.fArray[bin] > 0) ? fArray[bin]/fBinEntries.fArray[bin] : 0; }
+   //virtual void     UpdateBinContent(Int_t bin, Double_t content);
+   virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { Double_t err = GetBinError(bin); return err*err; }
+
 private:
    Int_t Fill(Double_t) { MayNotUse("Fill(Double_t)"); return -1;}
    void FillN(Int_t, const Double_t *, const Double_t *, Int_t) { MayNotUse("FillN(Int_t, Double_t*, Double_t*, Int_t)"); }

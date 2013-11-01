@@ -65,6 +65,10 @@ protected:
    Int_t             Fill(Double_t, const char *, Double_t, Double_t) {return TH3::Fill(0); } //MayNotUse
    Int_t             Fill(Double_t, Double_t, const char *, Double_t) {return TH3::Fill(0); } //MayNotUse
 
+   virtual Double_t RetrieveBinContent(Int_t bin) const { return (fBinEntries.fArray[bin] > 0) ? fArray[bin]/fBinEntries.fArray[bin] : 0; }
+   //virtual void     UpdateBinContent(Int_t bin, Double_t content);
+   virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { Double_t err = GetBinError(bin); return err*err; }
+
    
 private:
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
