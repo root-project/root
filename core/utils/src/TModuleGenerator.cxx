@@ -335,8 +335,17 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHea
    
    // Add defines and undefines to the payloadCode
    std::ostringstream definesAndUndefines;
-   WritePPDefines(definesAndUndefines);
+   //    Anticipate the undefines.
+   //    Suppose to have a namespace called "declarations" used in R5 for template
+   //    instantiations in the header given to genreflex.
+   //    Now, in this namespace, objects with some names, typically dummy, will be
+   //    present.
+   //    If you give such headers to cling to parse, problems will occour, as the
+   //    names appear multiple times. One possible solution is to get out of this
+   //    with preprocessor defines given to genreflex, redefining "declarations"
+   //    to a hash or <project>_<package> via the build system.
    WritePPUndefines(definesAndUndefines);
+   WritePPDefines(definesAndUndefines);
    payloadCode += definesAndUndefines.str();
    
    // If necessary, inline the first header
