@@ -37,11 +37,12 @@
 #include "Math/WrappedParamFunction.h"
 #include <cmath>
 
-const int N = 1; // n must be greater than 1
+const int N = 3; // n must be greater than 1
 const int nfit = 1; 
 const int nEvents = 10000;
 double iniPar[2*N];
 
+//#define DEBUG
 
 typedef ROOT::Math::IParamMultiFunction Func;  
 
@@ -93,10 +94,13 @@ void FillUnBinData(ROOT::Fit::UnBinData &d, TTree * tree ) {
       for (int j = 0; j < N; ++j) 
          m[j] += vx[j];
    }
+
+#ifdef DEBUG
    std::cout << "average values of means :\n"; 
    for (int j = 0; j < N; ++j) 
       std::cout << m[j]/n << "  ";
    std::cout << "\n";
+#endif
       
    return; 
 
@@ -134,14 +138,14 @@ class MultiGaussRooPdf {
             g[j] = new RooGaussian(gname.c_str(),"gauss(x,mean,sigma)",*x[j],*m[j],*s[j]);
             
             std::string pname = "prod_" + ROOT::Math::Util::ToString(j);
-            if (j == 1) { 
+            if (j == 0) 
+               pdf[0] = g[0];  
+            else if (j == 1) { 
                pdf[1] = new RooProdPdf(pname.c_str(),pname.c_str(),RooArgSet(*g[1],*g[0]) );
             }
             else if (j > 1) { 
                pdf[j] = new RooProdPdf(pname.c_str(),pname.c_str(),RooArgSet(*g[j],*pdf[j-1]) );
             }
-            else if (j == 0) 
-               pdf[0] = g[0];  
          } 
 
         
@@ -164,7 +168,7 @@ class MultiGaussRooPdf {
          delete m[j]; 
          delete s[j]; 
          delete g[j];
-         delete pdf[j]; 
+         if (j> 0) delete pdf[j]; // no pdf allocated for j = 0
       }
    }
 
@@ -199,13 +203,13 @@ int  FitUsingRooFit(TTree & tree, RooAbsPdf & pdf, RooArgSet & xvars) {
          
      
 #ifdef DEBUG
-      int level = 3; 
+      int level = 2; 
       std::cout << "num entries = " << data.numEntries() << std::endl;
       bool save = true; 
-      (pdf[N-1]->getVariables())->Print("v"); // print the parameters 
+      pdf.getVariables()->Print("v"); // print the parameters 
       std::cout << "\n\nDo the fit now \n\n"; 
 #else 
-      int level = 1; 
+      int level = -1; 
       bool save = false; 
 #endif
 
@@ -226,6 +230,7 @@ int  FitUsingRooFit(TTree & tree, RooAbsPdf & pdf, RooArgSet & xvars) {
 
    w.Stop(); 
 
+   std::cout << "RooFit result " << std::endl;
    RooArgSet * params = pdf.getParameters(xvars); 
    params->Print("v");
    delete params; 
@@ -248,7 +253,7 @@ int DoFit(TTree * tree, Func & func, bool debug = false, bool = false ) {
    //std::cout << "Fit parameter 2  " << f.Parameters()[2] << std::endl;
 
    ROOT::Fit::Fitter fitter; 
-   fitter.Config().MinimizerOptions().SetPrintLevel(2);
+   fitter.Config().MinimizerOptions().SetPrintLevel(0);
    fitter.Config().SetMinimizer(MinType::name().c_str(),MinType::name2().c_str());
    fitter.Config().MinimizerOptions().SetTolerance(1.); // to be consistent with RooFit
 
@@ -267,8 +272,7 @@ int DoFit(TTree * tree, Func & func, bool debug = false, bool = false ) {
       std::cout << " Fit Failed " << std::endl;
       return -1; 
    }
-   if (debug) 
-      fitter.Result().Print(std::cout);    
+   fitter.Result().Print(std::cout);    
    return 0; 
 
 }
@@ -301,13 +305,29 @@ int FitUsingNewFitter(FitObj * fitobj, Func & func, bool useGrad=false) {
    return iret; 
 }
 
-double gausnorm(const double *x, const double *p) { 
-   //return p[0]*TMath::Gaus(x[0],p[1],p[2]);
-   double invsig = 1./p[1]; 
-   double tmp = (x[0]-p[0]) * invsig; 
-   const double sqrt_2pi = 1./std::sqrt(2.* 3.14159 );
-   return std::exp(-0.5 * tmp*tmp ) * sqrt_2pi * invsig; 
-}
+template <int N> 
+struct GausNorm { 
+   static double F(const double *x, const double *p) { 
+      return ROOT::Math::normal_pdf(x[N-1], p[2*N-1], p[2*N-2] ) * GausNorm<N-1>::F(x,p);
+   }
+};
+template <> 
+struct GausNorm<1> { 
+   
+   static double F(const double *x, const double *p) { 
+      return ROOT::Math::normal_pdf(x[0], p[1], p[0] );
+   }
+};
+
+
+// double gausnorm(
+//    return ROOT::Math::normal_pdf(x[0], p[1], p[0] );
+//    // //return p[0]*TMath::Gaus(x[0],p[1],p[2]);
+//    // double invsig = 1./p[1]; 
+//    // double tmp = (x[0]-p[0]) * invsig; 
+//    // const double sqrt_2pi = 1./std::sqrt(2.* 3.14159 );
+//    // return std::exp(-0.5 * tmp*tmp ) * sqrt_2pi * invsig; 
+// }
 
 
 
@@ -346,10 +366,10 @@ int main() {
 
    // in case of N = 1 do also a simple gauss fit
    // using TF1 gausN
-   if (N == 1) { 
-      ROOT::Math::WrappedParamFunction<> gausn(&gausnorm,2,iniPar,iniPar+1);       
-      FitUsingNewFitter<TMINUIT>(&tree,gausn);
-   }
+//   if (N == 1) { 
+   ROOT::Math::WrappedParamFunction<> gausn(&GausNorm<N>::F,2*N,iniPar,iniPar+2*N);       
+   FitUsingNewFitter<TMINUIT>(&tree,gausn);
+   //}
 
 
 

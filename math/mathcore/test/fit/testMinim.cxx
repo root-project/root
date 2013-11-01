@@ -19,17 +19,19 @@
 #include "TRandom3.h"
 #include "TMath.h"
 
+#include "RVersion.h"
+
 //#define DEBUG
 
 int gNCall = 0;
 int gNCall2 = 0;
-int gNmin = 1000; 
-int gVerbose = 0; 
+int gNmin = 1; 
+int gVerbose = 1; 
 
 
 bool minos = false; 
 
-double gAbsTolerance = 0.001;
+double gAbsTolerance = 5.E-6;   // otherwise gsl_conjugate_PR fails
 
 // Rosenbrok function to be minimize
 
@@ -62,10 +64,14 @@ public :
       return new RosenBrockFunction();  
    }
    
-   const double *  TrueMinimum() const { 
+   const double *  TrueXMinimum() const { 
       fTrueMin[0] = 1;
       fTrueMin[1] = 1;
       return fTrueMin;
+   }
+   
+   double TrueMinimum() const { 
+      return 0; 
    }
 
    private: 
@@ -153,10 +159,11 @@ public :
    }
    
 
-   const double *  TrueMinimum() const { 
+   const double *  TrueXMinimum() const { 
       return x0.GetMatrixArray();
    }
 
+   double TrueMinimum() const { return 0; }
 
    void  Gradient (const double * x, double * g) const { 
       gNCall2++;
@@ -270,9 +277,11 @@ public :
       return new ChebyQuadFunction(*this);  
    }
    
-   const double *  TrueMinimum() const { 
+   const double *  TrueXMinimum() const { 
       return &fTrueMin[0];
    }
+
+   double TrueMinimum() const { return 0; }
 
    // use equally spaced points
    void StartPoints(double * x, double * s) {
@@ -367,14 +376,24 @@ public :
 
 
 
-const double *  TrueMinimum(const  ROOT::Math::IMultiGenFunction & func) {
+const double *  TrueXMinimum(const  ROOT::Math::IMultiGenFunction & func) {
+
+   const RosenBrockFunction * fRB = dynamic_cast< const RosenBrockFunction *> (&func); 
+   if (fRB != 0) return fRB->TrueXMinimum();
+   const TrigoFletcherFunction * fTF = dynamic_cast< const TrigoFletcherFunction *> (&func); 
+   if (fTF != 0) return fTF->TrueXMinimum();
+//    const ChebyQuadFunction * fCQ = dynamic_cast< const ChebyQuadFunction *> (&func); 
+//    if (fCQ != 0) return fCQ->TrueXMinimum();
+   return 0;
+}
+double TrueMinimum(const  ROOT::Math::IMultiGenFunction & func) {
 
    const RosenBrockFunction * fRB = dynamic_cast< const RosenBrockFunction *> (&func); 
    if (fRB != 0) return fRB->TrueMinimum();
    const TrigoFletcherFunction * fTF = dynamic_cast< const TrigoFletcherFunction *> (&func); 
    if (fTF != 0) return fTF->TrueMinimum();
 //    const ChebyQuadFunction * fCQ = dynamic_cast< const ChebyQuadFunction *> (&func); 
-//    if (fCQ != 0) return fCQ->TrueMinimum();
+//    if (fCQ != 0) return fCQ->TrueXMinimum();
    return 0;
 }
 
@@ -399,10 +418,11 @@ int DoNewMinimization( const ROOT::Math::IMultiGenFunction & func, const double 
    if (func.NDim() >= 10) { 
       min->SetMaxFunctionCalls(1000000);
       min->SetMaxIterations(100000);
-      min->SetTolerance(0.001);
-      if (func.NDim() >= 10) min->SetTolerance(0.01);
-      
+      min->SetTolerance(0.01);      
    }
+   else 
+      min->SetTolerance(0.001);
+
 
    min->SetPrintLevel(gVerbose);
    // check if func provides gradient
@@ -428,10 +448,11 @@ int DoNewMinimization( const ROOT::Math::IMultiGenFunction & func, const double 
    const double * xmin = min->X(); 
 
    bool ok = true; 
-   const double *  trueMin = TrueMinimum(func); 
+   const double *  trueMin = TrueXMinimum(func); 
    if (trueMin != 0) { 
+      ok &= (std::fabs(minval - TrueMinimum(func) ) < gAbsTolerance );
       for (unsigned int i = 0; i < func.NDim(); ++i) 
-         ok &= (std::fabs(xmin[i]-trueMin[i] ) < gAbsTolerance); 
+         ok &= (std::fabs(xmin[i]-trueMin[i] ) < sqrt(gAbsTolerance)); 
    }
 
    if (!ok) iret = -2;
@@ -487,13 +508,15 @@ int DoOldMinimization( FCN  func, TVirtualFitter * min, double &minval, double &
   min->GetParameter(0,parName,parx,we,al,bl);
   min->GetParameter(1,parName,pary,we,al,bl);
   
-  bool ok = ( TMath::Abs(parx-1.) < gAbsTolerance &&
-         TMath::Abs(pary-1.) < gAbsTolerance );
-
+  bool ok = ( TMath::Abs(parx-1.) < sqrt(gAbsTolerance) &&
+              TMath::Abs(pary-1.) < sqrt(gAbsTolerance) );
+  
+  
 
   double errdef = 0; 
   int nvpar, nparx;
   min->GetStats(minval,edm,errdef,nvpar,nparx);
+
   if (!ok) iret = -2;
 
   min->Clear(); // for further use
@@ -520,7 +543,6 @@ int testNewMinimizer( const ROOT::Math::IMultiGenFunction & func, const double *
       std::cout << "Error using minimizer " << minimizer << "  " << algoType << std::endl;
       return -1;
    }
-
 
    for (int i = 0; i < gNmin; ++i) { 
       gNCall = 0; gNCall2 = 0; 
@@ -599,10 +621,14 @@ int testRosenBrock() {
    
    // minimize using Rosenbrock Function
 #ifndef DEBUG
-   gNmin = 10000;
+   gNmin = 1;
 #endif
+
+
+#if ROOT_VERSION_CODE < ROOT_VERSION(5,99,00)
    iret |= testOldMinimizer(RosenBrock,"Minuit",2);
    iret |= testOldMinimizer(RosenBrock,"Minuit2",2);
+#endif
     
    RosenBrockFunction fRB;
    double xRB[2] = { -1.,1.2};
