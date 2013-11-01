@@ -897,11 +897,13 @@ TCling::TCling(const char *name, const char *title)
       ::Info("TCling::TCling", "Using one PCM.");
 
    // For the list to also include string, we have to include it now.
-   // FIXME: remove BOOST_SP_USE_SPINLOCK below once we use MCJIT.
+   // FIXME: remove BOOST_SP_USE_SPINLOCK, __asm__ below once we use MCJIT.
    fInterpreter->declare("#include \"Rtypes.h\"\n"
                          "#include <string>\n"
                          "using namespace std;\n"
-                         "#define BOOST_SP_USE_SPINLOCK"); // no inline ASM
+                         "#define BOOST_SP_USE_SPINLOCK\n"
+                         "#include <assert.h>"
+                         "#define __asm__(X) {assert(false && #X \"Inline __asm__ not supported!\");}");
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
