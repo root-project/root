@@ -46,25 +46,7 @@ TMethod::TMethod(MethodInfo_t *info, TClass *cl) : TFunction(info)
    fMenuItem     = kMenuNoMenu;
 
    if (fInfo) {
-      const char *t = gCling->MethodInfo_Title(fInfo);
-
-      if (t && strstr(t, "*TOGGLE")) {
-         fMenuItem = kMenuToggle;
-         const char *s;
-         if ((s = strstr(t, "*GETTER="))) {
-            fGetter = s+8;
-            fGetter = fGetter.Strip(TString::kBoth);
-         }
-      } else
-      if (t && strstr(t, "*MENU"))
-         fMenuItem = kMenuDialog;
-      else
-      if (t && strstr(t, "*SUBMENU"))
-         {
-         fMenuItem = kMenuSubMenu;
-         }
-      else
-         fMenuItem = kMenuNoMenu;
+      SetMenuItem(gCling->MethodInfo_Title(fInfo));
    }
 }
 
@@ -124,7 +106,7 @@ const char *TMethod::GetCommentString()
 {
    // Returns a comment string from the class declaration.
 
-   return gCling->MethodInfo_Title(fInfo);
+   return fInfo ? gCling->MethodInfo_Title(fInfo) : "";
 }
 
 
@@ -310,4 +292,46 @@ TList *TMethod::GetListOfMethodArgs()
       FindDataMember();
    }
    return fMethodArgs;
+}
+
+//______________________________________________________________________________
+void TMethod::SetMenuItem(const char *docstring)
+{
+   // Set the menu item as prescribed in the doctstring.
+
+   if (docstring && strstr(docstring, "*TOGGLE")) {
+      fMenuItem = kMenuToggle;
+      const char *s;
+      if ((s = strstr(docstring, "*GETTER="))) {
+         fGetter = s+8;
+         fGetter = fGetter.Strip(TString::kBoth);
+      }
+   } else
+      if (docstring && strstr(docstring, "*MENU"))
+         fMenuItem = kMenuDialog;
+      else
+         if (docstring && strstr(docstring, "*SUBMENU"))
+            fMenuItem = kMenuSubMenu;
+         else
+            fMenuItem = kMenuNoMenu;
+}
+
+//______________________________________________________________________________
+Bool_t TMethod::Update(MethodInfo_t *info)
+{
+   // Update the TMethod to reflect the new info.
+   //
+   // This can be used to implement unloading (info == 0) and then reloading
+   // (info being the 'new' decl address).
+
+   if (TFunction::Update(info)) {
+      delete fGetterMethod; fGetterMethod = 0;
+      delete fSetterMethod; fSetterMethod = 0;
+      if (fInfo) {
+         SetMenuItem(gCling->MethodInfo_Title(fInfo));
+      }  
+      return kTRUE;
+   } else {
+      return kFALSE;
+   }
 }

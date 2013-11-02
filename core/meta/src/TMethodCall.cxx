@@ -385,9 +385,9 @@ TFunction *TMethodCall::GetMethod()
          if (met) fMetPtr = new TMethod(*met);
       } else {
          if (fProto == "")
-            fMetPtr = gROOT->GetGlobalFunction(fMethod.Data(), fParams.Data(), kTRUE);
+            fMetPtr = gROOT->GetGlobalFunction(fMethod.Data(), fParams.Data(), kFALSE);
          else
-            fMetPtr = gROOT->GetGlobalFunctionWithPrototype(fMethod.Data(), fProto.Data(), kTRUE);
+            fMetPtr = gROOT->GetGlobalFunctionWithPrototype(fMethod.Data(), fProto.Data(), kFALSE);
          if (fMetPtr) fMetPtr = new TFunction(*fMetPtr);
       }
    }

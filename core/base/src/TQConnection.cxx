@@ -139,10 +139,10 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
       fClass = gCling->ClassInfo_Factory();
       if (params) {
          gCling->CallFunc_SetFunc(fFunc,fClass, (char*)funcname, params, &fOffset);
-         fMethod = gROOT->GetGlobalFunction(funcname, params, kTRUE);
+         fMethod = gROOT->GetGlobalFunction(funcname, params, kFALSE);
       } else {
          gCling->CallFunc_SetFuncProto(fFunc,fClass, (char*)funcname, proto, &fOffset);
-         fMethod = gROOT->GetGlobalFunctionWithPrototype(funcname, proto, kTRUE);
+         fMethod = gROOT->GetGlobalFunctionWithPrototype(funcname, proto, kFALSE);
       }
    }
 

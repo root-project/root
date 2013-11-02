@@ -160,45 +160,11 @@ TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
 
    nargs = 0;
 
-   if (!gInterpreter) return 0;
-   R__LOCKGUARD2(gInterpreterMutex);
+   if (!gInterpreter || cl == 0) return 0;
 
-   Long_t faddr = 0;
-   if (!cl->IsLoaded()) {
-      // interpreted class
-      ClassInfo_t *clinfo = cl->GetClassInfo();
-      nargs = gCling->ClassInfo_GetMethodNArg(clinfo,method, proto);
-      if (nargs >= 0)  return (TMethod *) -1;
-      nargs = 0;
-      return 0;
-   } else {
-      faddr = (Long_t)gInterpreter->GetInterfaceMethodWithPrototype(cl, method,
-                                                                    proto);
-      if (!faddr) return 0;
-   }
-
-   TMethod *m;
-   TIter next_method(cl->GetListOfMethods());
-
-   // Look for a method in this class
-   while ((m = (TMethod *) next_method())) {
-      if (faddr == (Long_t)m->InterfaceMethod()) {
-         nargs = m->GetNargs();
-         return m;
-      }
-   }
-
-   TIter next_base(cl->GetListOfBases());
-   TBaseClass *base;
-
-   // loop over all base classes
-   while ((base = (TBaseClass *)next_base())) {
-      TClass *c;
-      if ((c = base->GetClassPointer())) {
-         if ((m = GetMethodWithPrototype(c, method, proto, nargs))) return m;
-      }
-   }
-   return 0;
+   TMethod *m = cl->GetMethodWithPrototype(method,proto);
+   if (m) nargs = m->GetNargs();
+   return m;
 }
 
 //______________________________________________________________________________
@@ -206,45 +172,8 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
 {
    // Almost the same as TClass::GetMethod().
 
-   if (!gInterpreter) return 0;
-   R__LOCKGUARD2(gInterpreterMutex);
-
-   Long_t faddr = 0;
-   if (!cl->IsLoaded()) {
-      // interpreted class
-      CallFunc_t *func = gCling->CallFunc_Factory();
-      long         offset;
-      ClassInfo_t *cinfo = cl->GetClassInfo();
-      gCling->CallFunc_SetFunc(func, cinfo, method, params, &offset);
-      Bool_t valid = gCling->CallFunc_IsValid(func);
-      gCling->CallFunc_Delete(func);
-      if (valid)
-         return (TMethod *) -1;
-      return 0;
-   } else {
-      faddr = (Long_t)gCling->GetInterfaceMethod(cl, method, params);
-      if (!faddr) return 0;
-   }
-
-   TMethod *m;
-   TIter next_method(cl->GetListOfMethods());
-
-   // Look for a method in this class
-   while ((m = (TMethod *) next_method())) {
-      if (faddr == (Long_t)m->InterfaceMethod()) return m;
-   }
-
-   TIter next_base(cl->GetListOfBases());
-   TBaseClass *base;
-
-   // loop over all base classes
-   while ((base = (TBaseClass *)next_base())) {
-      TClass *c;
-      if ((c = base->GetClassPointer())) {
-         if ((m = GetMethod(c,method,params))) return m;
-      }
-   }
-   return 0;
+   if (!gInterpreter || cl == 0) return 0;
+   return cl->GetMethod(method,params);
 }
 
 }
@@ -338,7 +267,7 @@ Int_t TQObject::CheckConnectArgs(TQObject *sender,
    TFunction *slotMethod = 0;
    if (!receiver_class) {
       // case of slot_method is compiled/intrepreted function
-      slotMethod = (TFunction*)gROOT->GetListOfGlobalFunctions(kTRUE)->
+      slotMethod = (TFunction*)gROOT->GetListOfGlobalFunctions()->
                                              FindObject(slot_method);
    } else {
       slotMethod  = !slot_params ?

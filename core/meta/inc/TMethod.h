@@ -47,7 +47,7 @@ private:
    TMethodCall            *fSetterMethod;    //methodcall for state setter in case this is a *TOGGLE method
 
    void                    CreateSignature();
-
+   void                    SetMenuItem(const char *docstring);    //Must not be virtual. Used in constructor.
 public:
                            TMethod(MethodInfo_t *info = 0, TClass *cl = 0);
                            TMethod(const TMethod &org);
@@ -63,6 +63,8 @@ public:
    virtual TDataMember    *FindDataMember();
    virtual TList          *GetListOfMethodArgs();
    virtual void            SetMenuItem(EMenuItemKind menuItem) {fMenuItem=menuItem;}
+
+   virtual Bool_t          Update(MethodInfo_t *info); 
 
    ClassDef(TMethod,0)  //Dictionary for a class member function (method)
 };

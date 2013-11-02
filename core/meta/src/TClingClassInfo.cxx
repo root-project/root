@@ -242,6 +242,40 @@ OffsetPtrFunc_t TClingClassInfo::FindBaseOffsetFunction(const clang::Decl* decl)
    return fOffsetFunctions.lookup(decl);
 }
 
+TClingMethodInfo TClingClassInfo::GetMethod(const char *fname) const
+{
+   // Return any method or function in this scope with the name 'fname'.
+
+   if (!IsLoaded()) {
+      TClingMethodInfo tmi(fInterp);
+      return tmi;
+   }
+
+   if (fType) {
+      const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
+      if (TT) {
+         llvm::StringRef tname(TT->getDecl()->getName());
+         if (tname.equals(fname)) {
+            const NamedDecl *ndecl = llvm::dyn_cast<NamedDecl>(fDecl);
+            if (ndecl && !ndecl->getName().equals(fname)) {
+               // Constructor name matching the typedef type, use the decl name instead.
+               return GetMethod(ndecl->getName().str().c_str());
+            }
+         }
+      }
+   }
+   const cling::LookupHelper &lh = fInterp->getLookupHelper();
+   const FunctionDecl *fd = lh.findAnyFunction(fDecl, fname, false);
+   if (!fd) {
+      // Function not found.
+      TClingMethodInfo tmi(fInterp);
+      return tmi;
+   }
+   TClingMethodInfo tmi(fInterp);
+   tmi.Init(fd);
+   return tmi;
+}
+
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       const char *proto, long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
       InheritanceMode imode /*= WithInheritance*/) const
@@ -254,6 +288,13 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
       InheritanceMode imode /*= WithInheritance*/) const
 {
+   if (poffset) {
+      *poffset = 0L;
+   }
+   if (!IsLoaded()) {
+      TClingMethodInfo tmi(fInterp);
+      return tmi;
+   }
    if (fType) {
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
@@ -262,19 +303,13 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
             const NamedDecl *ndecl = llvm::dyn_cast<NamedDecl>(fDecl);
             if (ndecl && !ndecl->getName().equals(fname)) {
                // Constructor name matching the typedef type, use the decl name instead.
-               return GetMethod(ndecl->getName().str().c_str(),proto,objectIsConst,poffset,
+               return GetMethod(ndecl->getName().str().c_str(),proto,
+                                objectIsConst,poffset,
                                 mode,imode);
             }
          }
       }
       
-   }
-   if (poffset) {
-      *poffset = 0L;
-   }
-   if (!IsLoaded()) {
-      TClingMethodInfo tmi(fInterp);
-      return tmi;
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const FunctionDecl *fd;
@@ -319,6 +354,13 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
                                             long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
                                             InheritanceMode imode /*= WithInheritance*/) const
 {
+   if (poffset) {
+      *poffset = 0L;
+   }
+   if (!IsLoaded()) {
+      TClingMethodInfo tmi(fInterp);
+      return tmi;
+   }
    if (fType) {
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);
       if (TT) {
@@ -333,13 +375,6 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
          }
       }
       
-   }
-   if (poffset) {
-      *poffset = 0L;
-   }
-   if (!IsLoaded()) {
-      TClingMethodInfo tmi(fInterp);
-      return tmi;
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const FunctionDecl *fd;

@@ -2501,7 +2501,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
          // Check if it's a method
          TMethod *mptr = 0; // pclass->GetMethodAny(memberName.Data());
-         TList  *mlist = pclass->GetListOfAllPublicMethods();
+         const TList  *mlist = pclass->GetListOfAllPublicMethods();
          next = mlist;
          while ((mptr = (TMethod *) next())) {
             if (strcmp(memberName.Data(),mptr->GetName())==0) break;

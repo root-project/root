@@ -154,10 +154,13 @@ public:
    TClingMethodInfo* FactoryMethod() const;
    void IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
    void Init();
+   void Init(const clang::FunctionDecl *);
    void Init(TClingMethodInfo*);
-   void* InterfaceMethod() const;
+   void Invoke(cling::StoredValueRef* result = 0) const;
+   void* InterfaceMethod();
    bool IsValid() const;
    TInterpreter::CallFuncIFacePtr_t IFacePtr();
+   const clang::FunctionDecl* GetDecl() const { return fMethod->GetMethodDecl(); }
    void ResetArg();
    void SetArg(long arg);
    void SetArg(double arg);

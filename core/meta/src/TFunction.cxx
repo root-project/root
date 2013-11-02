@@ -121,7 +121,7 @@ TList *TFunction::GetListOfMethodArgs()
 {
    // Return list containing the TMethodArgs of a TFunction.
 
-   if (!fMethodArgs) {
+   if (!fMethodArgs && fInfo) {
       if (!gInterpreter)
          Fatal("GetListOfMethodArgs", "gInterpreter not initialized");
 
@@ -135,7 +135,7 @@ const char *TFunction::GetReturnTypeName() const
 {
    // Get full type description of function return type, e,g.: "class TDirectory*".
 
-   if (gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
+   if (fInfo == 0 || gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
    return gCling->MethodInfo_TypeName(fInfo);
 }
 
@@ -148,7 +148,7 @@ std::string TFunction::GetReturnTypeNormalizedName() const
    // also has std:: removed [This is subject to change].
    //
    
-   if (gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
+   if (fInfo == 0 || gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
    return gCling->MethodInfo_TypeNormalizedName(fInfo);
 }
 
@@ -157,7 +157,9 @@ Int_t TFunction::GetNargs() const
 {
    // Number of function arguments.
 
-   return gCling->MethodInfo_NArg(fInfo);
+   if (fInfo) return gCling->MethodInfo_NArg(fInfo);
+   else if (fMethodArgs) return fMethodArgs->GetEntries();
+   else return 0;
 }
 
 //______________________________________________________________________________
@@ -165,15 +167,16 @@ Int_t TFunction::GetNargsOpt() const
 {
    // Number of function optional (default) arguments.
 
-   return gCling->MethodInfo_NDefaultArg(fInfo);
+   // FIXME: when unload this is an over-estimate.
+   return fInfo ? gCling->MethodInfo_NDefaultArg(fInfo) : GetNargs();
 }
 
 //______________________________________________________________________________
 Long_t TFunction::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
-   
-   return gCling->MethodInfo_Property(fInfo);
+
+   return fInfo ? gCling->MethodInfo_Property(fInfo) : 0;
 }
 
 //______________________________________________________________________________
@@ -181,7 +184,13 @@ Long_t TFunction::ExtraProperty() const
 {
    // Get property description word. For meaning of bits see EProperty.
    
-   return gCling->MethodInfo_ExtraProperty(fInfo);
+   return fInfo ? gCling->MethodInfo_ExtraProperty(fInfo) : 0;
+}
+
+//______________________________________________________________________________
+TDictionary::DeclId_t TFunction::GetDeclId() const
+{
+   return gInterpreter->GetDeclId(fInfo);
 }
 
 //______________________________________________________________________________
@@ -191,7 +200,17 @@ void *TFunction::InterfaceMethod() const
    // can find which TFunction belongs to a CINT MethodInfo object.
    // Both need to have the same InterfaceMethod pointer.
 
-   return gCling->MethodInfo_InterfaceMethod(fInfo);
+   return fInfo ? gCling->MethodInfo_InterfaceMethod(fInfo) : 0;
+}
+
+//______________________________________________________________________________
+Bool_t TFunction::IsValid() const
+{
+   // Return true if this function object is pointing to a currently
+   // loaded function.  If a function is unloaded after the TFunction
+   // is created, the TFunction will be set to be invalid.
+
+   return fInfo != 0;
 }
 
 //______________________________________________________________________________
@@ -199,16 +218,7 @@ const char *TFunction::GetMangledName() const
 {
    // Returns the mangled name as defined by CINT, or 0 in case of error.
 
-   // This function is being used by TROOT to determine the full identity of
-   // of the function.  It has to work even if the function has been
-   // unloaded by cint (in which case fInfo is actually hold reference to
-   // memory that is (likely) not valid anymore.  So we cache the information.
-   // Maybe we should also cache the rest of the information .. but this might
-   // be too much duplication of information.
-   if (fInfo)
-      return fMangledName;
-   else
-      return 0;
+   return fMangledName;
 }
 
 //______________________________________________________________________________
@@ -221,4 +231,48 @@ const char *TFunction::GetPrototype() const
       return gCling->MethodInfo_GetPrototype(fInfo);
    else
       return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TFunction::Update(MethodInfo_t *info)
+{
+   // Update the TFunction to reflect the new info.
+   //
+   // This can be used to implement unloading (info == 0) and then reloading
+   // (info being the 'new' decl address).
+
+   if (info == 0) {
+      if (fInfo) gCling->MethodInfo_Delete(fInfo);
+      fInfo = 0;      
+      if (fMethodArgs) {
+        for (Int_t i = 0; i < fMethodArgs->LastIndex() + 1; i ++) {
+           TMethodArg *arg = (TMethodArg *) fMethodArgs->At( i );
+           arg->Update(0);
+        }
+      }
+      return kTRUE;
+   } else {
+      if (fInfo) gCling->MethodInfo_Delete(fInfo);
+      fInfo = info;
+      TString newMangledName = gCling->MethodInfo_GetMangledName(fInfo);
+      if (newMangledName != fMangledName) {
+         Error("Update","TFunction object updated with the 'wrong' MethodInfo (%s vs %s).",
+               fMangledName.Data(),newMangledName.Data());
+         fInfo = 0;
+         return false;
+      }
+      SetTitle(gCling->MethodInfo_Title(fInfo));
+      if (fMethodArgs) {
+         MethodArgInfo_t *arg = gCling->MethodArgInfo_Factory(fInfo);
+         Int_t i = 0;
+         while (gCling->MethodArgInfo_Next(arg)) {
+            if (gCling->MethodArgInfo_IsValid(arg)) {
+               MethodArgInfo_t *new_arg = gCling->MethodArgInfo_FactoryCopy(arg);
+               ((TMethodArg *) fMethodArgs->At( i ))->Update(new_arg);
+               ++i;
+            }
+         }
+      }
+      return kTRUE;
+   }
 }

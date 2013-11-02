@@ -53,6 +53,7 @@ class TProcessUUID;
 class TClassGenerator;
 class TVirtualMutex;
 class TROOT;
+class TListOfFunctions;
 
 
 
@@ -109,7 +110,7 @@ protected:
    TCollection     *fClasses;             //List of classes definition
    TCollection     *fTypes;               //List of data types definition
    TCollection     *fGlobals;             //List of global variables
-   TCollection     *fGlobalFunctions;     //List of global functions
+   TListOfFunctions*fGlobalFunctions;     //List of global functions
    TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl. 
    TSeqCollection  *fFiles;               //List of files
    TSeqCollection  *fMappedFiles;         //List of memory mapped files
@@ -147,6 +148,8 @@ protected:
    void          *operator new(size_t l, void *ptr) { return TObject::operator new(l,ptr); }
 
    friend class ::ROOT::TROOTAllocator;
+
+   TListOfFunctions*GetGlobalFunctions();
 
 public:
                      TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);

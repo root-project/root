@@ -108,6 +108,7 @@
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
 #include "TListOfTypes.h"
+#include "TListOfFunctions.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -1252,14 +1253,25 @@ TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t load) const
    }
    return 0;
 }
+//______________________________________________________________________________
+TListOfFunctions *TROOT::GetGlobalFunctions()
+{
+   // Internal routine returning, and creating if necessary, the list
+   // of global function.
+
+   if (!fGlobalFunctions) fGlobalFunctions = new TListOfFunctions(0);
+   return fGlobalFunctions;
+}
 
 //______________________________________________________________________________
 TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
                                     Bool_t load)
 {
-   // Return pointer to global function by name. If params != 0
-   // it will also resolve overloading. If load is true force reading
-   // of all currently defined global functions from CINT (more expensive).
+   // Return pointer to global function by name.
+   // If params != 0 it will also resolve overloading other it returns the first
+   // name match.
+   // If params == 0 and load is true force reading of all currently defined
+   // global functions from Cling.
    // The param string must be of the form: "3189,\"aap\",1.3".
 
    if (!params)
@@ -1268,14 +1280,18 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
       if (!fInterpreter)
          Fatal("GetGlobalFunction", "fInterpreter not initialized");
 
-      TFunction *f;
-      TIter      next(GetListOfGlobalFunctions(load));
+      TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithValues(0,
+                                                                 function, params,
+                                                                 false);
 
-      TString mangled = gInterpreter->GetMangledName(0, function, params);
-      while ((f = (TFunction *) next())) {
-         if (mangled == f->GetMangledName()) return f;
-      }
+      if (!decl) return 0;
 
+      TFunction *f = GetGlobalFunctions()->Get(decl);
+      if (f) return f;
+
+      Error("GetGlobalFunction",
+            "\nDid not find matching TFunction <%s> with \"%s\".",
+            function,params);
       return 0;
    }
 }
@@ -1295,15 +1311,17 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
       if (!fInterpreter)
          Fatal("GetGlobalFunctionWithPrototype", "fInterpreter not initialized");
 
-      TFunction *f;
-      TIter      next(GetListOfGlobalFunctions(load));
+      TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithPrototype(0,
+                                                                           function, proto);
 
-      TString mangled = gInterpreter->GetMangledNameWithPrototype(0,
-                                                                     function,
-                                                                     proto);
-      while ((f = (TFunction *) next())) {
-         if (mangled == f->GetMangledName()) return f;
-      }
+      if (!decl) return 0;
+
+      TFunction *f = GetGlobalFunctions()->Get(decl);
+      if (f) return f;
+
+      Error("GetGlobalFunctionWithPrototype",
+            "\nDid not find matching TFunction <%s> with \"%s\".",
+            function,proto);
       return 0;
    }
 }
@@ -1351,15 +1369,13 @@ TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fGlobalFunctions) {
-      fGlobalFunctions = new THashTable(100, 3);
-      load = kTRUE;
+      fGlobalFunctions = new TListOfFunctions(0);
    }
 
    if (!fInterpreter)
       Fatal("GetListOfGlobalFunctions", "fInterpreter not initialized");
 
-   if (load)
-      gInterpreter->UpdateListOfGlobalFunctions();
+   if (load) fGlobalFunctions->Load();
 
    return fGlobalFunctions;
 }

@@ -166,6 +166,7 @@ public:
    // Type of STL container (returned by IsSTLContainer).
    enum ESTLType {kNone=0, kVector=1, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 
+   typedef const void *DeclId_t;
    ClassDef(TDictionary,0)  //ABC defining interface to dictionary
 };
 

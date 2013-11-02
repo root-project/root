@@ -24,6 +24,7 @@
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
+#include "TMethod.h"
 #include "TMethodCall.h"
 #include "TRealData.h"
 #include "TFolder.h"
@@ -605,7 +606,14 @@ void TStreamerBase::Init(TObject *)
    if (fType == TVirtualStreamerInfo::kTObject || fType == TVirtualStreamerInfo::kTNamed) return;
    fBaseClass = TClass::GetClass(GetName());
    if (!fBaseClass) return;
-   if (!fBaseClass->GetMethodAny("StreamerNVirtual")) return;
+   if (!fBaseClass->GetListOfMethods(kFALSE)->FindObject("StreamerNVirtual")) {
+      // the function does not exist or has not been loaded yet, let's check.
+      TMethod *m = fBaseClass->GetMethodWithPrototype("StreamerNVirtual","TBuffer&");
+      if (!m || m->GetClass() != fBaseClass) {
+         // StreamerNVirtual is not defined in the base class.
+         return;
+      }
+   }
    fStreamerFunc = fBaseClass->GetStreamerFunc();
 }
 
