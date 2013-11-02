@@ -2923,12 +2923,21 @@ TClingCallFunc::Init(TClingMethodInfo* minfo)
 }
 
 void*
-TClingCallFunc::InterfaceMethod() const
+TClingCallFunc::InterfaceMethod()
 {
    if (!IsValid()) {
       return 0;
    }
-   return (void*) const_cast<FunctionDecl*>(fMethod->GetMethodDecl());
+   const FunctionDecl* decl = fMethod->GetMethodDecl();
+   map<const FunctionDecl*, void*>::iterator I =
+   wrapper_store.find(decl);
+   if (I != wrapper_store.end()) {
+      fWrapper = (tcling_callfunc_Wrapper_t) I->second;
+   }
+   else {
+      fWrapper = make_wrapper();
+   }
+   return (void*)fWrapper;
 }
 
 bool

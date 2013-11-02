@@ -157,7 +157,7 @@ public:
    void Init(const clang::FunctionDecl *);
    void Init(TClingMethodInfo*);
    void Invoke(cling::StoredValueRef* result = 0) const;
-   void* InterfaceMethod() const;
+   void* InterfaceMethod();
    bool IsValid() const;
    TInterpreter::CallFuncIFacePtr_t IFacePtr();
    const clang::FunctionDecl* GetDecl() const { return fMethod->GetMethodDecl(); }
