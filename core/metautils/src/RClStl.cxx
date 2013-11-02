@@ -31,13 +31,6 @@ using namespace TClassEdit;
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/AST/DeclTemplate.h"
 
-// From the not-existing yet rootcint.h
-// void WriteClassInit(const ROOT::TMetaUtils::AnnotatedRecordDecl &decl, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
-// void WriteAuxFunctions(const ROOT::TMetaUtils::AnnotatedRecordDecl &decl);
-// std::string R__GetQualifiedName(const clang::NamedDecl &cl);
-
-// int ElementStreamer(const clang::NamedDecl &forcontext, const clang::QualType &qti, const char *R__t,int rwmode,const char *tcl=0);
-
 #ifndef ROOT_Varargs
 #include "Varargs.h"
 #endif
