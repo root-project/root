@@ -2724,6 +2724,7 @@ def ClassDefImplementation(selclasses, self) :
       else :
         specclname = clname
 
+      returnValue += template + 'TClass* ' + specclname + '::fgIsA = 0;\n'
       returnValue += template + 'TClass* ' + specclname + '::Class() {\n'
       returnValue += '   if (!fgIsA)\n'
       returnValue += '      fgIsA = TClass::GetClass("' + clname[2:] + '");\n'
@@ -2814,7 +2815,6 @@ def ClassDefImplementation(selclasses, self) :
       returnValue += '      b.WriteClassBuffer(' + clname  + '::Class(),this);\n'
       returnValue += '   }\n'
       returnValue += '}\n'
-      returnValue += template + 'TClass* ' + specclname + '::fgIsA = 0;\n'
       returnValue += namespacelevel * '}' + '\n'
     elif derivesFromTObject :
       # no fgIsA etc members but derives from TObject!
