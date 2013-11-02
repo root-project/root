@@ -4585,7 +4585,7 @@ Bool_t TCling::ClassInfo_Contains(ClassInfo_t *info, DeclId_t declid) const
    const clang::Decl *decl = reinterpret_cast<const clang::Decl*>(declid);
    const clang::DeclContext *ctxt = clang::Decl::castToDeclContext(scope);
    if (!decl || !ctxt) return kFALSE;
-   return decl->getLexicalDeclContext()->Equals(ctxt);
+   return decl->getDeclContext()->Equals(ctxt);
 }
 
 //______________________________________________________________________________
