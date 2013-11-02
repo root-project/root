@@ -495,12 +495,12 @@ void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inarg
    /* Loop if we have to, i.e. there are T_OBJECTS ^= TObjects and the first
     * combination is not correct.
     */
-   if( nobjects > 0 and !(minfo->InterfaceMethod()) ) {
+   if( nobjects > 0 and !(minfo->IsValid()) ) {
       for( UInt_t reference_map=0x1; reference_map < bitmap_end; reference_map++) {
          cproto[0] = static_cast<char>( 0 ); // reset cproto
          drr_map_args2 (inargs, cproto, cproto_size, 0, offset, reference_map);
          minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &dummy_offset));
-         if (minfo->InterfaceMethod())
+         if (minfo->IsValid())
             break;
       }
    } 
@@ -664,7 +664,7 @@ static VALUE drr_init(int argc, VALUE argv[], VALUE self)
    }
 
    G__MethodInfo minfo(klass.GetMethod(classname, cproto, &offset));
-   if (minfo.InterfaceMethod())
+   if (minfo.IsValid())
       func->SetFunc(minfo);
    else
       rb_raise( rb_eArgError, "You provided an unknown prototype (%s) for (%s#%s).",
@@ -769,7 +769,7 @@ static VALUE drr_singleton_missing(int argc, VALUE argv[], VALUE self)
 
    /* FIXME: minfo is really used only for the return type.  */
    minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset));
-   if (minfo->InterfaceMethod())
+   if (minfo->IsValid())
       func->SetFunc(*minfo);
    else
       rb_raise( rb_eArgError, "You provided an unknown prototype (%s) for (%s#%s).",
@@ -827,7 +827,7 @@ static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self)
 
    /* FIXME: minfo is really used only for the return type.  */
    minfo = new G__MethodInfo(klass->GetMethod(methname, cproto, &offset));
-   if (minfo->InterfaceMethod())
+   if (minfo->IsValid())
       func->SetFunc(*minfo);
    else
       rb_raise( rb_eArgError, "You provided an unknown prototype (%s) for (%s#%s).",
