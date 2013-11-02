@@ -76,7 +76,7 @@ public:
    void Unload();
    void Unload(TFunction *func);
    
-   // ClassDef(TListOfFunctions,0);  // List of TFunctions for a class
+   ClassDef(TListOfFunctions,0);  // List of TFunctions for a class
 };
 
 #endif // ROOT_TListOfFunctions

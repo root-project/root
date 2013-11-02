@@ -27,7 +27,7 @@
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 
-// ClassImp(TListOfFunctions)
+ClassImp(TListOfFunctions)
 
 //______________________________________________________________________________
 TListOfFunctions::TListOfFunctions(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0)
