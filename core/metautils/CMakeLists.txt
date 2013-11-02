@@ -6,7 +6,7 @@ ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 set(sources_llvm  ${CMAKE_CURRENT_SOURCE_DIR}/src/BaseSelectionRule.cxx
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/ClassSelectionRule.cxx
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/VariableSelectionRule.cxx
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/RClStl.cxx
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/RStl.cxx
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/Scanner.cxx
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/SelectionRules.cxx
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/XMLReader.cxx)

@@ -24,7 +24,7 @@ METAUTILSTS     += $(MODDIRS)/TMetaUtils.cxx
 METAUTILSSLLVM := $(MODDIRS)/BaseSelectionRule.cxx \
                   $(MODDIRS)/ClassSelectionRule.cxx \
                   $(MODDIRS)/VariableSelectionRule.cxx \
-                  $(MODDIRS)/RClStl.cxx \
+                  $(MODDIRS)/RStl.cxx \
                   $(MODDIRS)/Scanner.cxx \
                   $(MODDIRS)/SelectionRules.cxx \
                   $(MODDIRS)/XMLReader.cxx

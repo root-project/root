@@ -23,7 +23,7 @@
 #include "RConfig.h"
 #include "Rtypes.h"
 
-#include "RClStl.h"
+#include "RStl.h"
 
 #include <iostream>
 #include <sstream>

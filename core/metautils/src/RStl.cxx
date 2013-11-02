@@ -12,7 +12,7 @@
 #include "RConfigure.h"
 #include "RConfig.h"
 
-#include "RClStl.h"
+#include "RStl.h"
 #include "TClassEdit.h"
 #include "TMetaUtils.h"
 using namespace TClassEdit;
