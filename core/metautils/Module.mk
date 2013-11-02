@@ -41,7 +41,7 @@ METAUTILSTO    := $(call stripsrc,$(METAUTILSTS:.cxx=.o))
 
 METAUTILSL     := $(MODDIRI)/LinkDef.h
 
-METAUTILSDEP   := $(METAUTILSO:.o=.d) $(METAUTILSTO:.o=.d)
+METAUTILSDEP   := $(METAUTILSO:.o=.d) $(METAUTILSTO:.o=.d) $(METAUTILSOLLVM:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAUTILSH) $(METAUTILSTH))
