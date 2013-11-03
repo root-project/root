@@ -55,6 +55,7 @@ class TVirtualRefProxy;
 class THashTable;
 class TListOfFunctions;
 class TViewPubFunctions;
+class TViewPubDataMembers;
 class TFunctionTemplate;
 
 namespace clang {
@@ -100,7 +101,7 @@ private:
    TList             *fEnums;           //linked list for the enums
    TList             *fFuncTemplate;    //linked list for function templates [Not public until implemented as active list]
    TListOfFunctions  *fMethod;          //linked list for methods
-   TList             *fAllPubData;      //all public data members (including from base classes)
+   TViewPubDataMembers*fAllPubData;      //all public data members (including from base classes)
    TViewPubFunctions *fAllPubMethod;    //all public methods (including from base classes)
    mutable TList     *fClassMenuList;   //list of class menu items
 
@@ -281,7 +282,7 @@ public:
    TList             *GetListOfMethods(Bool_t load = kTRUE);
    TList             *GetListOfRealData() const { return fRealData; }
    const TList       *GetListOfAllPublicMethods(Bool_t load = kTRUE);
-   TList             *GetListOfAllPublicDataMembers();
+   TList             *GetListOfAllPublicDataMembers(Bool_t load = kTRUE);
    const char        *GetImplFileName() const { return fImplFileName; }
    Short_t            GetImplFileLine() const { return fImplFileLine; }
    TClass            *GetActualClass(const void *object) const;

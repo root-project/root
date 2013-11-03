@@ -78,6 +78,7 @@
 
 #include "TListOfFunctions.h"
 #include "TViewPubFunctions.h"
+#include "TViewPubDataMembers.h"
 
 using namespace std;
 
@@ -3078,29 +3079,16 @@ const TList *TClass::GetListOfAllPublicMethods(Bool_t load /* = kTRUE */)
 }
 
 //______________________________________________________________________________
-TList *TClass::GetListOfAllPublicDataMembers()
+TList *TClass::GetListOfAllPublicDataMembers(Bool_t load /* = kTRUE */)
 {
    // Returns a list of all public data members of this class and its base
    // classes. Refers to a subset of the data members in GetListOfDatamembers()
    // so don't do GetListOfAllPublicDataMembers()->Delete().
 
    R__LOCKGUARD(gInterpreterMutex);
-   if (!fAllPubData) {
-      fAllPubData = new TList;
-      TIter next(GetListOfDataMembers());
-      TDataMember *p;
 
-      while ((p = (TDataMember*) next()))
-         if (p->Property() & kIsPublic) fAllPubData->Add(p);
-
-      TIter next_BaseClass(GetListOfBases());
-      TBaseClass *pB;
-      while ((pB = (TBaseClass*) next_BaseClass())) {
-         if (!pB->GetClassPointer()) continue;
-         if (!(pB->Property() & kIsPublic)) continue;
-         fAllPubData->AddAll(pB->GetClassPointer()->GetListOfAllPublicDataMembers() );
-      }
-   }
+   if (!fAllPubData) fAllPubData = new TViewPubDataMembers(this);
+   if (load) fAllPubData->Load();
    return fAllPubData;
 }
 
