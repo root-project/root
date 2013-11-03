@@ -61,12 +61,16 @@ private:
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested transparent scopes.
    std::string            fTitle; // The meta info for the member.
    const clang::ValueDecl *fSingleDecl; // The single member
+
+   llvm::SmallVector<clang::DeclContext *, 2>   fContexts; // Set of DeclContext that we will iterate over.
+   unsigned int                                 fContextIdx; // Index in fContexts of DeclContext we are iterating over.
+
 public:
    
    ~TClingDataMemberInfo() { delete fClassInfo; }
    
    explicit TClingDataMemberInfo(cling::Interpreter *interp)
-   : fInterp(interp), fClassInfo(0), fFirstTime(true), fSingleDecl(0)
+   : fInterp(interp), fClassInfo(0), fFirstTime(true), fSingleDecl(0), fContextIdx(0U)
    {
       fClassInfo = new TClingClassInfo(fInterp);
       fIter = fInterp->getCI()->getASTContext().getTranslationUnitDecl()->decls_begin();

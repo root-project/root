@@ -47,7 +47,7 @@ using namespace clang;
 
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            TClingClassInfo *ci)
-: fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fSingleDecl(0)
+: fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fSingleDecl(0), fContextIdx(0U)
 {
    if (!ci) {
       // We are meant to iterate over the global namespace (well at least CINT did).
@@ -56,7 +56,11 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
       fClassInfo = new TClingClassInfo(*ci);
    }
    if (fClassInfo->IsValid()) {
-      const Decl *D = fClassInfo->GetDecl();
+      Decl *D = const_cast<Decl*>(fClassInfo->GetDecl());
+
+      clang::DeclContext *dc = llvm::cast<clang::DeclContext>(D);
+      dc->collectAllContexts(fContexts);
+
       // Could trigger deserialization of decls.
       cling::Interpreter::PushTransactionRAII RAII(interp);
       fIter = llvm::cast<clang::DeclContext>(D)->decls_begin();
@@ -73,7 +77,7 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp, 
                                            const clang::ValueDecl *ValD)
   : fInterp(interp), fClassInfo(new TClingClassInfo(interp)), fFirstTime(true), 
-    fTitle(""), fSingleDecl(ValD) {
+    fTitle(""), fSingleDecl(ValD), fContextIdx(0U) {
    using namespace llvm;
    assert((isa<TranslationUnitDecl>(ValD->getDeclContext()) || 
            isa<EnumConstantDecl>(ValD)) && "Not TU?");
@@ -215,16 +219,31 @@ int TClingDataMemberInfo::InternalNext()
       }
 
       // Handle reaching end of current decl context.
-      if (!*fIter && fIterStack.size()) {
-         // End of current decl context, and we have more to go.
-         fIter = fIterStack.back();
-         fIterStack.pop_back();
-         continue;
-      }
-      // Handle final termination.
       if (!*fIter) {
-         return 0;
+         if (fIterStack.size()) {
+            // End of current decl context, and we have more to go.
+            fIter = fIterStack.back();
+            fIterStack.pop_back();
+            continue;
+         }
+         while (!*fIter) {
+            // Check the next decl context (of namespace)
+            ++fContextIdx;
+            if (fContextIdx >= fContexts.size()) {
+               // Iterator is now invalid.
+               return 0;
+            }
+            clang::DeclContext *dc = fContexts[fContextIdx];
+            // Could trigger deserialization of decls.
+            cling::Interpreter::PushTransactionRAII RAII(fInterp);
+            fIter = dc->decls_begin();
+            if (*fIter) {
+               // Good, a non-empty context.
+               break;
+            }
+         }
       }
+
       // Valid decl, recurse into it, accept it, or reject it.
       clang::Decl::Kind DK = fIter->getKind();
       if (DK == clang::Decl::Enum) {
