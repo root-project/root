@@ -450,7 +450,6 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
       }
       // Could trigger deserialization of decls.
       cling::Interpreter::PushTransactionRAII RAII(interp);
-      ((TCling*)gCling)->UpdateListOfMethods(*I);
       ((TCling*)gCling)->UpdateListOfDataMembers(*I);
       ((TCling*)gCling)->UpdateListOfEnums(*I);
       // Unlock the TClass for updates
