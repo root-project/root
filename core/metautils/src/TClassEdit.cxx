@@ -327,6 +327,19 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    return false;
 }
 
+namespace {
+   static void ReplaceAll(std::string& str, const std::string& from, const std::string& to)
+   {
+      if(from.empty())
+         return;
+      size_t start_pos = 0;
+      while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+         str.replace(start_pos, from.length(), to);
+         start_pos += to.length();
+      }
+   }
+}
+
 //______________________________________________________________________________
 bool TClassEdit::IsDefAlloc(const char *allocname,
                             const char *keyclassname,
@@ -339,11 +352,12 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 
 
    string a = allocname;
-   if (strncmp(a.c_str(),"std::",5)==0) {
-      a.erase(0,5);
-   }
    string k = keyclassname;
    string v = valueclassname;
+
+   ReplaceAll(a,"std::","");
+   ReplaceAll(k,"std::","");
+   ReplaceAll(v,"std::","");
 
    string stem("allocator<pair<");
    stem += k;
