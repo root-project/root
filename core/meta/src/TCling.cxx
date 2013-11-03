@@ -872,11 +872,10 @@ TCling::TCling(const char *name, const char *title)
       ::Info("TCling::TCling", "Using one PCM.");
 
    // For the list to also include string, we have to include it now.
-   // FIXME: remove BOOST_SP_USE_SPINLOCK, __asm__ below once we use MCJIT.
+   // FIXME: remove __asm__ below once we use MCJIT.
    fInterpreter->declare("#include \"Rtypes.h\"\n"
                          "#include <string>\n"
                          "using namespace std;\n"
-                         "#define BOOST_SP_USE_SPINLOCK\n"
                          "#include <assert.h>\n"
                          "#define __asm__(X) {assert(false && #X \"Inline __asm__ not supported!\");}");
 
