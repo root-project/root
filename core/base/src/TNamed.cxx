@@ -99,13 +99,18 @@ void TNamed::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-void TNamed::ls(Option_t *) const
+void TNamed::ls(Option_t *opt) const
 {
    // List TNamed name and title.
 
    TROOT::IndentLevel();
-   std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
-        << Int_t(TestBit(kCanDelete)) << " at: "<<this<< std::endl;
+   if (strstr(opt,"noaddr")) {
+      std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
+                << Int_t(TestBit(kCanDelete)) << std::endl;
+   } else {
+      std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
+                 << Int_t(TestBit(kCanDelete)) << " at: "<<this<< std::endl;
+   }
 }
 
 //______________________________________________________________________________
