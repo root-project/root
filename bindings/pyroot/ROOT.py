@@ -225,6 +225,8 @@ class std( object ):
    for name in stlclasses:
       locals()[ name ] = Template( "std::%s" % name )
 
+   if sys.platform == 'darwin':
+      _root.gROOT.ProcessLine( '#include <string>' )
    string = _root.MakeRootClass( 'string' )
 
 _root.std = std
