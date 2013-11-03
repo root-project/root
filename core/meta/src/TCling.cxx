@@ -295,7 +295,8 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
 
    const clang::Decl* D = static_cast<const clang::Decl*>(DV);
 
-   if (!D->isCanonicalDecl()) return;
+   if (!D->isCanonicalDecl() && !isa<clang::NamespaceDecl>(D)) return;
+
    if (isa<clang::FunctionDecl>(D->getDeclContext())
        || isa<clang::TagDecl>(D->getDeclContext()))
       return;
@@ -322,6 +323,20 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
          TCling__UpdateClassInfo(NSD);
       }
 
+      // While classes are read completely (except for function template instances,
+      // enum, data (and functions) can be added to namespaces at any time.
+      // [this section can be removed when both the list of data member and the list
+      //  of enums has been update to be active list]
+      if (const NamespaceDecl* NCtx = dyn_cast<NamespaceDecl>(ND->getDeclContext())) {
+         if (NCtx->getIdentifier()) {
+            TClass* cl = TClass::GetClass(NCtx->getNameAsString().c_str());
+            if (cl) {
+               modifiedTClasses.insert(cl);
+            }
+         }
+         return;
+      }
+
       // We care about declarations on the global scope.
       if (!isa<TranslationUnitDecl>(ND->getDeclContext()))
          return;
@@ -332,19 +347,6 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       if (!(isa<EnumDecl>(ND) || isa<VarDecl>(ND)))
          return;
 
-      if (isDeserialized) {
-         // While classes are read completely, functions in namespaces might
-         // show up at any time.
-         if (const NamespaceDecl* NCtx = dyn_cast<NamespaceDecl>(ND->getDeclContext())) {
-            if (NCtx->getIdentifier()) {
-               TClass* cl = TClass::GetClass(NCtx->getNameAsString().c_str());
-               if (cl) {
-                  modifiedTClasses.insert(cl);
-               }
-            }
-            return;
-         }
-      }
       // Skip if already in the list.
       if (gROOT->GetListOfGlobals()->FindObject(ND->getNameAsString().c_str()))
          return;
