@@ -3023,7 +3023,7 @@ TList *TClass::GetListOfEnums()
 }
 
 //______________________________________________________________________________
-TList *TClass::GetListOfDataMembers()
+TList *TClass::GetListOfDataMembers(Bool_t /* load = kTRUE */)
 {
    // Return list containing the TDataMembers of a class.
 

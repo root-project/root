@@ -275,7 +275,7 @@ public:
       if (fCurrentInfo) return fCurrentInfo;
       else return (fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
    }
-   TList             *GetListOfDataMembers();
+   TList             *GetListOfDataMembers(Bool_t load = kTRUE);
    TList             *GetListOfEnums();
    TList             *GetListOfBases();
    TList             *GetListOfMethods(Bool_t load = kTRUE);
