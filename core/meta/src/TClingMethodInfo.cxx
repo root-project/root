@@ -138,7 +138,7 @@ TDictionary::DeclId_t TClingMethodInfo::GetDeclId() const
    if (!IsValid()) {
       return TDictionary::DeclId_t();
    }
-   return (clang::Decl*)(GetMethodDecl()->getCanonicalDecl()); 
+   return (const clang::Decl*)(GetMethodDecl()->getCanonicalDecl()); 
 }
 
 const clang::FunctionDecl *TClingMethodInfo::GetMethodDecl() const
