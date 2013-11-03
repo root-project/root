@@ -213,7 +213,7 @@ void TListOfFunctions::Delete(Option_t *option /* ="" */)
 TObject *TListOfFunctions::FindObject(const char *name) const
 {
    // Specialize FindObject to do search for the
-   // a function just by name if its not already in the list
+   // a function just by name or create it if its not already in the list
 
    TObject *result = THashList::FindObject(name);
    if (!result) {
