@@ -118,12 +118,12 @@ Bool_t RooCompositeDataStore::valid() const
 
 
 //_____________________________________________________________________________
-void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstEvent, Int_t lastEvent, Int_t stepSize) 
+void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, Bool_t skipZeroWeights) 
 {
   // Forward recalculate request to all subsets
   map<int,RooAbsDataStore*>::const_iterator iter ;
   for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
-    iter->second->recalculateCache(proj,firstEvent,lastEvent,stepSize) ;
+    iter->second->recalculateCache(proj,firstEvent,lastEvent,stepSize,skipZeroWeights) ;
   }
 }
 
@@ -360,11 +360,11 @@ void RooCompositeDataStore::reset()
 
 
 //_____________________________________________________________________________
-void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset) 
+void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, Bool_t skipZeroWeights) 
 {
   map<int,RooAbsDataStore*>::const_iterator iter ;
   for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
-    iter->second->cacheArgs(owner,newVarSet,nset) ;
+    iter->second->cacheArgs(owner,newVarSet,nset,skipZeroWeights) ;
   }
 }
 

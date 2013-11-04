@@ -259,7 +259,7 @@ Double_t RooRealSumPdf::evaluate() const
   if (value<0 && (_doFloor || _doFloorGlobal)) {
     value = 0 ;
   }
-
+  
   return value ;
 }
 
