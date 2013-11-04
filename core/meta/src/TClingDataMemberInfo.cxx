@@ -538,9 +538,12 @@ const char *TClingDataMemberInfo::Title()
    // Try to get the comment either from the annotation or the header file if present
    if (AnnotateAttr *A = GetDecl()->getAttr<AnnotateAttr>())
       fTitle = A->getAnnotation().str();
-   else
+   else if (!GetDecl()->isFromASTFile()) {
       // Try to get the comment from the header file if present
+      // but not for decls from AST file, where rootcling would have
+      // created an annotation
       fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
+   }
    
    return fTitle.c_str();
 }

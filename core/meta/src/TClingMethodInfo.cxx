@@ -591,9 +591,12 @@ const char *TClingMethodInfo::Title()
             return fTitle.c_str();
          }
       }
+   } else if (!FD->isFromASTFile()) {
+      // Try to get the comment from the header file if present
+      // but not for decls from AST file, where rootcling would have
+      // created an annotation
+      fTitle = ROOT::TMetaUtils::GetComment(*FD).str();
    }
-   // Try to get the comment from the header file if present
-   fTitle = ROOT::TMetaUtils::GetComment(*GetMethodDecl()).str();
 
    return fTitle.c_str();
 }
