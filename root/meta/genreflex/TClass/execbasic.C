@@ -1,0 +1,139 @@
+#include "TSystem.h"
+#include "TClass.h"
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TObject.h"
+#include "TDataMember.h"
+#include "TMethod.h"
+#include "TMethodArg.h"
+#include "TClassAttributeMap.h"
+#include <iostream>
+
+enum propType {kString, kInt};
+typedef std::vector<std::pair<std::string,int> > strIntPairs;
+
+//______________________________________________________________________________
+void loadLib(const char* libname)
+{
+   std::cout << "Loading library " << libname << std::endl;
+   gSystem->Load(libname);
+}
+
+//______________________________________________________________________________
+void printMemberNames(const std::string& className, const std::string indent="")
+{
+   TClass* theClass = TClass::GetClass(className.c_str());
+   TList* listOfDataMembers(theClass->GetListOfDataMembers());
+   TIter next(listOfDataMembers);
+   TDataMember* dm;   
+   while ( ( dm = static_cast<TDataMember*> (next()) ) ){
+      std::cout << indent <<  dm->GetTrueTypeName() << " " << dm->GetName();
+      bool isPtr=dm->IsaPointer();
+      bool isBasic=dm->IsBasic();
+      bool isEnum=dm->IsEnum();
+      bool isTransient=!dm->IsPersistent();
+      if (isPtr || isBasic || isEnum || isTransient){
+         std::cout << " [ ";
+         if (isPtr) std::cout << "isPtr ";
+         if (isBasic) std::cout << "isBasic ";
+         if (isEnum) std::cout << "isEnum ";
+         if (isTransient) std::cout << "isTransient";
+         std::cout << " ]\n";
+      }
+      else
+         std::cout << std::endl;
+   }   
+}
+
+//______________________________________________________________________________
+void getMethodArgsAsStr(TMethod* method, std::string& argsAsString)
+{
+   TList* args = method->GetListOfMethodArgs();
+   TIter next(args);
+   TMethodArg* mArg;
+   while ( ( mArg = static_cast<TMethodArg*> (next()) ) ){
+      argsAsString+= mArg->GetTitle();
+      argsAsString+= " ";
+      argsAsString+= mArg->GetName();
+      argsAsString+= ", ";
+   }
+   if (argsAsString.size()>=2)
+      argsAsString.erase (argsAsString.end()-2, argsAsString.end());
+}
+//______________________________________________________________________________
+void printMethodNames(const std::string& className,const std::string indent="")
+{
+   TClass* theClass = TClass::GetClass(className.c_str());
+   TList* listOfMethods(theClass->GetListOfMethods());
+   TIter next(listOfMethods);
+   TMethod* method;
+
+   while ( ( method = static_cast<TMethod*> (next()) ) ){
+      std::cout << indent << method->GetPrototype() << std::endl;
+   }
+}
+//______________________________________________________________________________
+void printClassInfo(const std::string& className,
+                    const strIntPairs& properties = strIntPairs())
+{
+   TClass* theClass = TClass::GetClass(className.c_str());
+   if (!theClass){
+      std::cerr << "ERROR: The information about " << className << " is not in TClass!\n";
+      return;
+   }
+   std::cout << "\n--- Class " << className << std::endl;
+   std::cout << "Class category: ";
+   if (theClass->IsForeign()) std::cout << "foreign.\n";
+   if (theClass->IsTObject()) std::cout << "TObject.\n";
+
+   // Get the attribute map
+   TClassAttributeMap* attrMap = theClass->GetAttributeMap();
+   if (attrMap) {
+      for (auto& propValType : properties){
+         std::string prop (propValType.first);
+         if (attrMap->HasKey(prop.c_str())){
+            if (propValType.second==kString){
+               const char* propVals = attrMap->GetPropertyAsString(prop.c_str());
+               std::cout << "  - " << prop << ": " << propVals <<  std::endl;
+               }
+            else{
+               long int propVali = attrMap->GetPropertyAsInt(prop.c_str());
+               std::cout << "  - " << prop << ": " <<  propVali <<  std::endl;
+               }
+         } else
+            std::cout << " - " << prop << " not found!\n";
+      }
+   }
+
+   int classVersion ( theClass->GetClassVersion());
+   std::cout << " * Version: " << classVersion;
+   if (classVersion == 1) std::cout << " --> Class available to the interpreter but not Selected!";
+   std::cout << std::endl;
+   std::cout << " o Methods (" << theClass->GetNmethods() << "):\n";
+   printMethodNames(className,"  * ");
+   std::cout << " o Members (" << theClass->GetNdata() << "):\n";
+   printMemberNames(className,"  * ");
+   std::cout << "--- End Class " << className << std::endl;
+}
+
+//______________________________________________________________________________
+int execbasic()
+{
+
+   std::cout << "*** Stress TClass ***\n";
+
+   loadLib("libbasic_allClasses_dictrflx.so");
+
+   // Start the tests
+   strIntPairs properties1 ={{"checksum",kString}};
+   printClassInfo("class1",properties1);
+   printClassInfo("class2");
+   printClassInfo("class3");
+   printClassInfo("class3_1");
+   printClassInfo("class3_2");
+   strIntPairs properties4 ={{"id",kString},{"myProp",kInt}};
+   printClassInfo("class4", properties4);
+   printClassInfo("class5");
+
+   return 0;
+}
