@@ -104,7 +104,7 @@ void TNamed::ls(Option_t *opt) const
    // List TNamed name and title.
 
    TROOT::IndentLevel();
-   if (strstr(opt,"noaddr")) {
+   if (opt && strstr(opt,"noaddr")) {
       std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
                 << Int_t(TestBit(kCanDelete)) << std::endl;
    } else {
