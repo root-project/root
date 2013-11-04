@@ -15,6 +15,9 @@
 -   In PDF files, italic greek characters were not correct for non null
     text angle.
     
+### TImageDump
+-   Fix a `TBox` clipping issue.
+    
 ### New class TTeXDump: Graphics interface to TeX
 
 This class allow to generate `PGF/TikZ` vector graphics output
