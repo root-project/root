@@ -34,15 +34,6 @@ static char *R__NoReAllocChar(char *, size_t, size_t)
 }
 
 //______________________________________________________________________________
-static inline ULong_t Void_Hash(const void *ptr)
-{
-   // Return hash value for this object.
-
-   return TString::Hash(&ptr, sizeof(void*));
-}
-
-
-//______________________________________________________________________________
 TBuffer::TBuffer(EMode mode)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
