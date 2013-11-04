@@ -85,12 +85,12 @@ public:
   virtual void resetBuffers() ;
    
   // Constant term  optimizer interface
-  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0) ;
+  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) ;
   virtual const RooAbsArg* cacheOwner() { return 0 ; }
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) ;
   virtual void resetCache() ;
 
-  virtual void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/) ;
+  virtual void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/, Bool_t /*skipZeroWeights*/) ;
   
   void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) ;
   
