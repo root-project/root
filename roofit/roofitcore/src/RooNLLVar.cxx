@@ -246,7 +246,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
 
   // cout << "RooNLLVar::evaluatePartition(" << GetName() << ") projDeps = " << (_projDeps?*_projDeps:RooArgSet()) << endl ;
   
-  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize ) ;
+  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,(_binnedPdf?kFALSE:kTRUE) ) ;
 
   Double_t sumWeight(0), sumWeightCarry(0);
 
@@ -265,6 +265,7 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
       // Calculate log(Poisson(N|mu) for this bin
       Double_t N = eventWeight ;
       Double_t mu = _binnedPdf->getVal()*_binw[i] ; 
+      //cout << "RooNLLVar::binnedL(" << GetName() << ") N=" << N << " mu = " << mu << endl ;
 
       if (mu<=0 && N>0) {
 

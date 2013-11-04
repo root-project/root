@@ -1132,7 +1132,7 @@ void RooTreeDataStore::reset()
 
 
 //_____________________________________________________________________________
-void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset) 
+void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, Bool_t /*skipZeroWeights*/) 
 {
   // Cache given RooAbsArgs with this tree: The tree is
   // given direct write access of the args internal cache

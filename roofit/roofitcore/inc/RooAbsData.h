@@ -238,7 +238,7 @@ protected:
   friend class RooAbsOptTestStatistic ;
   friend class RooAbsCachedPdf ;
 
-  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0) ;
+  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) ;
   virtual void resetCache() ;
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) ;
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;

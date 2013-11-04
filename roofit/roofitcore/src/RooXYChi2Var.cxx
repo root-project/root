@@ -386,7 +386,7 @@ Double_t RooXYChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_
   // Loop over bins of dataset
   RooDataSet* xydata = (RooDataSet*) _dataClone ;
 
-  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize ) ;
+  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,kFALSE ) ;
 
   for (Int_t i=firstEvent ; i<lastEvent ; i+=stepSize) {
     

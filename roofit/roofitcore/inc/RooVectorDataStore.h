@@ -98,10 +98,10 @@ public:
   
   // Constant term  optimizer interface
   virtual const RooAbsArg* cacheOwner() { return _cacheOwner ; }
-  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0) ;
+  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kTRUE) ;
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
   virtual void resetCache() ;
-  virtual void recalculateCache(const RooArgSet* /*proj*/, Int_t firstEvent, Int_t lastEvent, Int_t stepSize) ;
+  virtual void recalculateCache(const RooArgSet* /*proj*/, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, Bool_t skipZeroWeights) ;
 
   virtual void setArgStatus(const RooArgSet& set, Bool_t active) ;
 

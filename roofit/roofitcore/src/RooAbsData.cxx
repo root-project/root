@@ -303,10 +303,10 @@ const RooArgSet* RooAbsData::get(Int_t index) const
 
 
 //_____________________________________________________________________________
-void RooAbsData::cacheArgs(const RooAbsArg* cacheOwner, RooArgSet& varSet, const RooArgSet* nset) 
+void RooAbsData::cacheArgs(const RooAbsArg* cacheOwner, RooArgSet& varSet, const RooArgSet* nset, Bool_t skipZeroWeights) 
 {
   // Internal method -- Cache given set of functions with data
-  _dstore->cacheArgs(cacheOwner,varSet,nset) ;
+  _dstore->cacheArgs(cacheOwner,varSet,nset,skipZeroWeights) ;
 }
 
 
