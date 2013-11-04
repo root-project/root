@@ -132,10 +132,10 @@
 #pragma link C++ class TSystem+;
 #pragma link C++ class TSystemFile+;
 #pragma link C++ class TSystemDirectory+;
-#pragma linl C++ class SysInfo_t+;
-#pragma linl C++ class CpuInfo_t+;
-#pragma linl C++ class MemInfo_t+;
-#pragma linl C++ class ProcInfo_t+;
+#pragma link C++ class SysInfo_t+;
+#pragma link C++ class CpuInfo_t+;
+#pragma link C++ class MemInfo_t+;
+#pragma link C++ class ProcInfo_t+;
 #pragma link C++ class TTask+;
 #pragma link C++ class TTime;
 #pragma link C++ class TTimer;
