@@ -43,7 +43,7 @@ fi
 
 if [ -n "${old_rootsys}" ] ; then
    if [ -n "${PATH}" ]; then
-      drop_from_path $PATH ${old_rootsys}/bin
+      drop_from_path "$PATH" ${old_rootsys}/bin
       PATH=$newpath
    fi
    if [ -n "${LD_LIBRARY_PATH}" ]; then
