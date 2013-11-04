@@ -120,12 +120,12 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual( PR_NS_A.ctsa,                         -1 )
 
     # and even more that are currently failing (is ROOT-5469)
-      if not FIXCLING:
-         self.assertEqual( PR_NS_A.tsa2,                         -1 )
-         self.assertEqual( PR_NS_A.ctsa2,                        -1 )
+      self.assertEqual( PR_NS_A.tsa2,                         -1 )
+      self.assertEqual( PR_NS_A.ctsa2,                        -1 )
 
-    # TODO: test equality of different lookup methods
+    # test equality of different lookup methods
       # self.assertEqual( getattr( PR_NS_A, "PR_ST_B::PR_ST_C" ), PR_NS_A.PR_ST_B.PR_ST_C )
+      # self.assertEqual( getattr( PR_NS_A.PR_ST_B,  "PR_ST_C" ), PR_NS_A.PR_ST_B.PR_ST_C )
 
    def test08VoidPointerPassing( self ):
       """Test passing of variants of void pointer arguments"""
