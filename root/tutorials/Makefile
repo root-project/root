@@ -92,6 +92,10 @@ ifeq ($(findstring fitsio, $(shell root-config --features)),)
   TUTORIALSTESTS_VETO += fitsio/%
 endif
 
+ifeq ($(findstring mathmore, $(shell root-config --features)),)
+  TUTORIALSTESTS_VETO += math/quasirandom
+endif
+
 # I believe these fail due to CINT bugs:
 TUTORIALSTESTS_VETOCINT := hist/hbars unuran/unuranDemo unuran/unuranFoamTest
 TUTORIALSTESTS_VETOCINT := $(shell echo Failing because of CINT: $(TUTORIALSTESTS_VETOCINT))
