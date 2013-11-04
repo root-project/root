@@ -134,6 +134,9 @@ void TImageDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    Int_t ix2 = x1 < x2 ? XtoPixel(x2) : XtoPixel(x1);
    Int_t iy1 = y1 < y2 ? YtoPixel(y1) : YtoPixel(y2);
    Int_t iy2 = y1 < y2 ? YtoPixel(y2) : YtoPixel(y1);
+
+   if (ix1<0 || ix2 <0 || iy1 < 0 || iy2 <0) return; // box is not visible
+
    if (TMath::Abs(ix2-ix1) < 1) ix2 = ix1+1;
    if (TMath::Abs(iy1-iy2) < 1) iy1 = iy2+1;
 
@@ -376,7 +379,7 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          pt[1].fX = Short_t(ix+m2); pt[1].fY = Short_t(iy-m2);
          pt[2].fX = Short_t(ix);    pt[2].fY = Short_t(iy+m2);
          pt[3].fX = Short_t(ix-m2); pt[3].fY = Short_t(iy-m2);
-	 ms == 32 ? fImage->DrawPolyLine(4, pt, col->AsHexString()) :
+         ms == 32 ? fImage->DrawPolyLine(4, pt, col->AsHexString()) :
                     fImage->FillPolygon(3, pt, col->AsHexString());
          break;
       // Up triangle
@@ -678,13 +681,13 @@ void TImageDump::Text(Double_t x, Double_t y, const wchar_t *chars)
    //
    // x: x position of the text
    // y: y position of the text
-   
+
    if (!gPad || !fImage) {
       return;
    }
-   
+
    fImage->BeginPaint();
-   
+
    TText t(x, y, chars);
    t.SetTextSize(fTextSize);
    t.SetTextFont(fTextFont);
