@@ -3571,6 +3571,7 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    if (skipToSemi) {
       while (*commentStart && *commentStart != ';' && *commentStart != '\r' && *commentStart != '\n')
          ++commentStart;
+      if (*commentStart == ';') ++commentStart;
    }
 
    // Now skip the spaces and beginning of comments.
