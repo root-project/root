@@ -3529,9 +3529,9 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    // CXXMethodDecls declarations and FieldDecls are annotated as follows:
    // Eg. void f(); // comment1
    //     int member; // comment2
-   // Inline definitions of CXXMethodDecls - after the closing ) and before {. Eg:
-   // void f() // comment3
-   // {...}
+   // Inline definitions of CXXMethodDecls after the closing } \n. Eg:
+   // void f()
+   // {...}  // comment3
    // TagDecls are annotated in the end of the ClassDef macro. Eg.
    // class MyClass {
       // ...
@@ -3539,34 +3539,7 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
       //
       
    clang::SourceManager& sourceManager = decl.getASTContext().getSourceManager();
-   clang::SourceLocation sourceLocation;
-   // Guess where the comment start.
-   // if (const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(&decl)) {
-   //    if (TD->isThisDeclarationADefinition())
-   //       sourceLocation = TD->getBodyRBrace();
-   // }
-   //else
-   if (const clang::FunctionDecl *FD = llvm::dyn_cast<clang::FunctionDecl>(&decl)) {
-      if (FD->isThisDeclarationADefinition()) {
-         // We have to consider the argument list, because the end of decl is end of its name
-         // Maybe this will be better when we have { in the arg list (eg. lambdas)
-         if (FD->getNumParams())
-            sourceLocation = FD->getParamDecl(FD->getNumParams() - 1)->getLocEnd();
-         else
-            sourceLocation = FD->getLocEnd();
-
-         // Skip the last )
-         sourceLocation = sourceLocation.getLocWithOffset(1);
-
-         //sourceLocation = FD->getBodyLBrace();
-      }
-      else {
-         //SkipUntil(commentStart, ';');
-      }
-   }
-
-   if (sourceLocation.isInvalid())
-      sourceLocation = decl.getLocEnd();
+   clang::SourceLocation sourceLocation = decl.getLocEnd();
 
    // If the location is a macro get the expansion location.
    sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
@@ -3576,33 +3549,46 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    if (invalid)
       return "";
 
-   // The decl end of FieldDecl is the end of the type, sometimes excluding the declared name
-   if (llvm::isa<clang::FieldDecl>(&decl)) {
-      // Find the semicolon.
-      while(*commentStart != ';')
-         ++commentStart;
+   bool skipToSemi = true;
+   if (const clang::FunctionDecl* FD = clang::dyn_cast<clang::FunctionDecl>(&decl)) {
+      if (FD->doesThisDeclarationHaveABody()) {
+         // commentStart is at body's '}'
+         if (*commentStart) ++commentStart;
+         skipToSemi = false;
+      }
+      // FIXME: handle ctor() = delete; //COMMENT
+   } else if (const clang::EnumConstantDecl* ECD
+              = clang::dyn_cast<clang::EnumConstantDecl>(&decl)) {
+      // either "konstant = 12, //COMMENT" or "lastkonstant // COMMENT"
+      if (ECD->getNextDeclInContext())
+         while (*commentStart && *commentStart != ',' && *commentStart != '\r' && *commentStart != '\n')
+            ++commentStart;
+      // else commentStart already points to the end.
+
+      skipToSemi = false;
    }
 
-   // Find the end of declaration:
-   // When there is definition Comments must be between ) { when there is definition.
-   // Eg. void f() //comment
-   //     {}
-   if (!decl.hasBody())
-      while (*commentStart !=';' && *commentStart != '\n' && *commentStart != '\r' && *commentStart != '\0')
+   if (skipToSemi) {
+      while (*commentStart && *commentStart != ';' && *commentStart != '\r' && *commentStart != '\n')
          ++commentStart;
-
-   // Eat up the last char of the declaration if wasn't newline or comment terminator
-   if (*commentStart != '\n' && *commentStart != '\r' && *commentStart != '{' && *commentStart != '\0')
-      ++commentStart;
+   }
 
    // Now skip the spaces and beginning of comments.
-   while ( (isspace(*commentStart) || *commentStart == '/')
-           && *commentStart != '\n' && *commentStart != '\r' && *commentStart != '\0') {
+   while ( *commentStart && isspace(*commentStart)
+           && *commentStart != '\n' && *commentStart != '\r') {
       ++commentStart;
    }
 
+   if (commentStart[0] != '/' ||
+       (commentStart[1] != '/' && commentStart[1] != '*')) {
+      // not a comment
+      return "";
+   }
+   commentStart += 2;
+
    const char* commentEnd = commentStart;
-   while (*commentEnd != '\n' && *commentEnd != '\r' && *commentEnd != '{' && *commentStart != '\0') {
+   // Even for /* comments we only take the first line into account.
+   while (*commentEnd && *commentEnd != '\n' && *commentEnd != '\r') {
       ++commentEnd;
    }
 
