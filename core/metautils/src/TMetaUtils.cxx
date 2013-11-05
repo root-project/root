@@ -3553,6 +3553,10 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
 
    bool skipToSemi = true;
    if (const clang::FunctionDecl* FD = clang::dyn_cast<clang::FunctionDecl>(&decl)) {
+      if (FD->isDefaulted() && !FD->isExplicitlyDefaulted()) {
+         // Compiler generated function.
+         return "";
+      }
       if (FD->doesThisDeclarationHaveABody()) {
          // commentStart is at body's '}'
          // But we might end up at the ')' of a ClassDef invocation here!
