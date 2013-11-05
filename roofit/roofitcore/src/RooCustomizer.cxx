@@ -332,7 +332,7 @@ RooAbsArg* RooCustomizer::build(Bool_t verbose)
   // that were created in the cloning proces
 
   // Execute build
-  RooAbsArg* ret =  doBuild(_name,verbose) ;
+  RooAbsArg* ret =  doBuild(_name.Length()>0?_name.Data():0,verbose) ;
 
   // Make root object own all cloned nodes
 
@@ -410,7 +410,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   nodeList.add(_masterBranchList) ;
   TIterator* nIter = nodeList.createIterator() ;
 
-//   cout << "loop over " << nodeList.getSize() << " nodes" << endl ;
+  //   cout << "loop over " << nodeList.getSize() << " nodes" << endl ;
   while((node=(RooAbsArg*)nIter->Next())) {
     RooAbsArg* theSplitArg = !_sterile?(RooAbsArg*) _splitArgList.FindObject(node->GetName()):0 ;
     if (theSplitArg) {
@@ -421,8 +421,10 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
       }
       
       TString newName(node->GetName()) ;
-      newName.Append("_") ;
-      newName.Append(splitCat->getLabel()) ;	
+      if (masterCatState) {
+	newName.Append("_") ;
+	newName.Append(splitCat->getLabel()) ;	
+      }
 
       // Check if this node instance already exists
       RooAbsArg* specNode = _cloneNodeListAll ? _cloneNodeListAll->find(newName) : _cloneNodeListOwned->find(newName) ;
@@ -455,6 +457,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
       
 	// Create a new clone
 	RooAbsArg* clone = (RooAbsArg*) node->Clone(newName.Data()) ;
+	clone->setStringAttribute("factory_tag",0) ;
 	clone->SetTitle(newTitle) ;
 
 	// Affix attribute with old name to clone to support name changing server redirect
@@ -540,11 +543,14 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   TIterator* iter = masterBranchesToBeCloned.createIterator() ;
   while((branch=(RooAbsArg*)iter->Next())) {
     TString newName(branch->GetName()) ;
-    newName.Append("_") ;
-    newName.Append(masterCatState) ;
+    if (masterCatState) {
+      newName.Append("_") ;
+      newName.Append(masterCatState) ;
+    }
 
     // Affix attribute with old name to clone to support name changing server redirect
     RooAbsArg* clone = (RooAbsArg*) branch->Clone(newName.Data()) ;
+    clone->setStringAttribute("factory_tag",0) ;
     TString nameAttrib("ORIGNAME:") ;
     nameAttrib.Append(branch->GetName()) ;
     clone->setAttribute(nameAttrib) ;
@@ -656,6 +662,7 @@ void RooCustomizer::setCloneBranchSet(RooArgSet& cloneBranchSet)
 //_____________________________________________________________________________
 std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) 
 {
+
   // Check number of arguments
   if (args.size()<2) {
     throw string(Form("RooCustomizer::CustIFace::create() ERROR: expect at least 2 arguments for EDIT: the input object and at least one $Replace() rule")) ;
@@ -665,11 +672,15 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
     throw string(Form("RooCustomizer::CustIFace::create() ERROR: unknown type requested: %s",typeName)) ;
   }
 
-
   // Check that first arg exists as RooAbsArg
   RooAbsArg* arg = ft.ws().arg(args[0].c_str()) ;
   if (!arg) {
     throw string(Form("RooCustomizer::CustIFace::create() ERROR: input RooAbsArg %s does not exist",args[0].c_str())) ;
+  }
+
+  // If name of new object is same as original, execute in sterile mode (i.e no suffixes attached), and rename original nodes in workspace upon import
+  if (args[0]==instanceName) {
+    instanceName=0 ;
   }
 
   // Create a customizer
@@ -726,10 +737,14 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
   }
 
   // Set the desired name of the top level node
-  targ->SetName(instanceName) ;
 
   // Import the object into the workspace
-  ft.ws().import(*targ,RooFit::Silence()) ;
+  if (instanceName) {
+    targ->SetName(instanceName) ;
+    ft.ws().import(*targ,RooFit::Silence()) ;
+  } else {
+    ft.ws().import(*targ,RooFit::Silence(),RooFit::RenameConflictNodes("orig",1)) ;    
+  }
       
-  return string(instanceName) ;
+  return string(instanceName?instanceName:targ->GetName()) ;
 }

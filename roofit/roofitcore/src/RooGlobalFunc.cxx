@@ -299,7 +299,7 @@ namespace RooFit {
 
 
   // RooWorkspace::import() arguments
-  RooCmdArg RenameConflictNodes(const char* suffix)         { return RooCmdArg("RenameConflictNodes",0,0,0,0,suffix,0,0,0) ; }
+  RooCmdArg RenameConflictNodes(const char* suffix, Bool_t ro) { return RooCmdArg("RenameConflictNodes",ro,0,0,0,suffix,0,0,0) ; }
   RooCmdArg RecycleConflictNodes(Bool_t flag)               { return RooCmdArg("RecycleConflictNodes",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg RenameAllNodes(const char* suffix)              { return RooCmdArg("RenameAllNodes",0,0,0,0,suffix,0,0,0) ; }
   RooCmdArg RenameAllVariables(const char* suffix)          { return RooCmdArg("RenameAllVariables",0,0,0,0,suffix,0,0,0) ; }
