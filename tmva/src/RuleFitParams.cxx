@@ -28,6 +28,7 @@
 #include <iomanip>
 #include <numeric>
 #include <algorithm>
+#include <functional>
 
 #include "TTree.h"
 #include "TMath.h"

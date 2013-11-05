@@ -66,6 +66,7 @@
 // _____________________________________________________________________
 
 #include <numeric>
+#include <functional>
 
 #ifndef ROOT_TMVA_PDEFoamDensityBase
 #include "TMVA/PDEFoamDensityBase.h"
