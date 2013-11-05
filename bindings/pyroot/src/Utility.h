@@ -109,7 +109,7 @@ namespace PyROOT {
       const std::string ResolveTypedef( const std::string& name, TClass* containing_scope = 0 );
 
    // the inconsistent interface of the next call is to be fixed once #100740 resolves
-      Long_t GetObjectOffset( const std::string& clCurrent, ClassInfo_t* clDesired, void* obj );
+      Long_t GetObjectOffset( ClassInfo_t* clCurrent, ClassInfo_t* clDesired, void* obj );
 
    // CINT integration
       void ErrMsgCallback( char* msg );

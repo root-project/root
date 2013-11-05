@@ -765,28 +765,28 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
 }
 
 //____________________________________________________________________________
-static std::map< std::string, std::map< ClassInfo_t*, Long_t > > sOffsets;
+static std::map< ClassInfo_t*, std::vector< std::pair< ClassInfo_t*, Long_t > > > sOffsets;
 Long_t PyROOT::Utility::GetObjectOffset(
-      const std::string& clCurrent, ClassInfo_t* clDesired, void* obj ) {
-// root/meta base class offset (TClass:GetBaseClassOffset) fails in the case of
-// virtual inheritance, so take this little round-about way
+      ClassInfo_t* clCurrent, ClassInfo_t* clDesired, void* obj ) {
+// Forwards to TInterpreter->ClassInfo_GetBaseOffset(), just adds caching
+   if ( clCurrent == clDesired || !(clCurrent && clDesired) )
+      return 0;
 
-// TODO: this memoization is likely inefficient, but it is very much needed
-   std::map< std::string, std::map< ClassInfo_t*, Long_t > >::iterator
+   std::map< ClassInfo_t*, std::vector< std::pair< ClassInfo_t*, Long_t > > >::iterator
       mit1 = sOffsets.find( clCurrent );
    if ( mit1 != sOffsets.end() ) {
-      std::map< ClassInfo_t*, Long_t >::iterator mit2 = mit1->second.find( clDesired );
-      if ( mit2 != mit1->second.end() )
-         return mit2->second;
+      for ( std::vector< std::pair< ClassInfo_t*, Long_t > >::iterator ioff = mit1->second.begin();
+            ioff != mit1->second.end(); ++ioff ) {
+         if ( ioff->first == clDesired )
+            return ioff->second;
+      }
    }
 
-   std::ostringstream interpcast;
-   interpcast << "(long)(" << gInterpreter->ClassInfo_FullName( clDesired ) << "*)("
-              << clCurrent << "*)" << (void*)obj
-              << " - (long)(" << clCurrent << "*)" << (void*)obj
-              << ";";
-   Long_t offset = (Long_t)gInterpreter->ProcessLine( interpcast.str().c_str() );
-   sOffsets[ clCurrent ][ clDesired ] = offset;
+   Long_t offset = gInterpreter->ClassInfo_GetBaseOffset( clCurrent, clDesired, obj );
+   if ( 0 <= offset )
+      sOffsets[ clCurrent ].push_back( std::make_pair( clDesired, offset ) );
+   else
+      offset = 0;
    return offset;
 }
 

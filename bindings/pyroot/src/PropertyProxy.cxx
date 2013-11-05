@@ -195,7 +195,7 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
    fConverter = CreateConverter( fullType, dm->GetMaxIndex( 0 ) );
    fName      = dm->GetName();
 
-   if (dm->GetClass())
+   if ( dm->GetClass() )
       fParent = dm->GetClass()->GetClassInfo();
    else
       fParent = NULL;    // namespaces
@@ -243,9 +243,8 @@ Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
       return 0;
    }
 
-   Long_t offset = 0;
-   if ( fParent != (pyobj->ObjectIsA()->GetClassInfo()) )
-      offset = Utility::GetObjectOffset( pyobj->ObjectIsA()->GetName(), fParent, obj );
+   Long_t offset = Utility::GetObjectOffset(
+      pyobj->ObjectIsA()->GetClassInfo(), fParent, obj );
 
    return (Long_t)obj + offset + fOffset;
 }

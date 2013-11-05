@@ -656,9 +656,8 @@ PyObject* PyROOT::TMethodHolder::operator()(
    if ( derived ) {
    // reset this method's offset for the object as appropriate
       TClass* base = (TClass*)fClass.Id();
-      if ( derived != base )
-         fOffset = Utility::GetObjectOffset( derived->GetName(), base->GetClassInfo(), object );
-      else fOffset = 0;
+      fOffset = Utility::GetObjectOffset(
+         derived->GetClassInfo(), base->GetClassInfo(), object );
    }
 
 // actual call; recycle self instead of returning new object for same address objects
