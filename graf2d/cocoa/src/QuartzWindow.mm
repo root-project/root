@@ -1117,7 +1117,17 @@ void print_mask_info(ULong_t mask)
    assert(!(newSize.width < 0) && "setDrawableSize, width is negative");
    assert(!(newSize.height < 0) && "setDrawableSize, height is negative");
    
-   [self setContentSize : newSize];
+   NSRect frame = self.frame;
+   //dY is potentially a titlebar height.
+   const CGFloat dY = fContentView ? frame.size.height - fContentView.frame.size.height : 0.;
+   //Adjust the frame.
+   frame.origin.y = frame.origin.y + frame.size.height - newSize.height - dY;
+   frame.size = newSize;
+   frame.size.height += dY;
+   [self setFrame : frame display : YES];
+   
+   //Was before: MOVES window (top-left corner).
+   //[self setContentSize : newSize];
 }
 
 //______________________________________________________________________________
