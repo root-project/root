@@ -4192,6 +4192,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                TTreeFormula *subform = static_cast<TTreeFormula*>(fAliases.UncheckedAt(aliasN));
                R__ASSERT(subform);
 
+               subform->fDidBooleanOptimization = fDidBooleanOptimization;
                Double_t param = subform->EvalInstance(instance);
 
                tab[pos] = param; pos++;
@@ -4204,6 +4205,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                R__ASSERT(subform);
 
                pos2++;
+               subform->fDidBooleanOptimization = fDidBooleanOptimization;
                stringStack[pos2-1] = subform->EvalStringInstance(instance);
                continue;
             }
