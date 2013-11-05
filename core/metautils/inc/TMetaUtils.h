@@ -34,6 +34,7 @@ namespace clang {
    class QualType;
    class RecordDecl;
    class SourceLocation;
+   class TagDecl;
    class Type;
    class TypedefNameDecl;
    class Attr;
@@ -492,8 +493,7 @@ llvm::StringRef GetClassComment(const clang::CXXRecordDecl &decl, clang::SourceL
 const clang::Type *GetUnderlyingType(clang::QualType type);
 
 //______________________________________________________________________________
-// Scans the redeclaration chain for a definition of the redeclarable which
-// is annotated.
+// Scans the redeclaration chain for an annotation.
 //
 // returns 0 if no annotation was found.
 //
@@ -503,7 +503,7 @@ const T* GetAnnotatedRedeclarable(const T* Redecl) {
       return 0;
 
    Redecl = Redecl->getMostRecentDecl();
-   while (Redecl && !(Redecl->hasAttrs() && Redecl->isThisDeclarationADefinition()))
+   while (Redecl && !Redecl->hasAttrs())
       Redecl = Redecl->getPreviousDecl();
 
    return Redecl;
@@ -513,6 +513,10 @@ const T* GetAnnotatedRedeclarable(const T* Redecl) {
 // Overload the template for typedefs, because they don't contain
 // isThisDeclarationADefinition method. (Use inline to avoid violating ODR)
 const clang::TypedefNameDecl* GetAnnotatedRedeclarable(const clang::TypedefNameDecl* TND);
+
+//______________________________________________________________________________
+// Overload the template for tags, because we only check definitions.
+const clang::TagDecl* GetAnnotatedRedeclarable(const clang::TagDecl* TND);
 
 //______________________________________________________________________________
 // Return true if the decl is part of the std namespace.

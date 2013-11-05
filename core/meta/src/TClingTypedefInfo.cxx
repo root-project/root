@@ -336,9 +336,12 @@ const char *TClingTypedefInfo::Title()
          }
       }
    }
-
-   // Try to get the comment from the header file if present
-   fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
+   else if (!GetDecl()->isFromASTFile()) {
+      // Try to get the comment from the header file if present
+      // but not for decls from AST file, where rootcling would have
+      // created an annotation
+      fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
+   }
    return fTitle.c_str();
 }
 

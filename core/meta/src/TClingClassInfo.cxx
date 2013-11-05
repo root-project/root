@@ -1130,9 +1130,11 @@ const char *TClingClassInfo::Title()
       }
    }
    // Try to get the comment from the header file, if present.
+   // but not for decls from AST file, where rootcling would have
+   // created an annotation
    const CXXRecordDecl *CRD =
       llvm::dyn_cast<CXXRecordDecl>(GetDecl());
-   if (CRD) {
+   if (CRD && !CRD->isFromASTFile()) {
       fTitle = ROOT::TMetaUtils::GetClassComment(*CRD,0,*fInterp).str();
    }
    return fTitle.c_str();

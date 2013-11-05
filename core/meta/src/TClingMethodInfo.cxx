@@ -584,16 +584,20 @@ const char *TClingMethodInfo::Title()
 
    // Iterate over the redeclarations, we can have muliple definitions in the 
    // redecl chain (came from merging of pcms).
-   if (const FunctionDecl *FD = llvm::dyn_cast<FunctionDecl>(GetMethodDecl())) {
-      if ( (FD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(FD)) ) {
-         if (AnnotateAttr *A = FD->getAttr<AnnotateAttr>()) {
-            fTitle = A->getAnnotation().str();
-            return fTitle.c_str();
-         }
+   const FunctionDecl *FD = GetMethodDecl();
+   if (const FunctionDecl *AnnotFD
+       = ROOT::TMetaUtils::GetAnnotatedRedeclarable(FD)) {
+      if (AnnotateAttr *A = AnnotFD->getAttr<AnnotateAttr>()) {
+         fTitle = A->getAnnotation().str();
+         return fTitle.c_str();
       }
    }
-   // Try to get the comment from the header file if present
-   fTitle = ROOT::TMetaUtils::GetComment(*GetMethodDecl()).str();
+   if (!FD->isFromASTFile()) {
+      // Try to get the comment from the header file if present
+      // but not for decls from AST file, where rootcling would have
+      // created an annotation
+      fTitle = ROOT::TMetaUtils::GetComment(*FD).str();
+   }
 
    return fTitle.c_str();
 }

@@ -3667,6 +3667,18 @@ int RootCling(int argc,
                                           *dictSrcOut,
                                           isGenreflex);
       }
+   } else {
+      // We need annotations even in the PCH
+      iter = scan.fSelectedClasses.begin();
+      end = scan.fSelectedClasses.end();
+      for( ; iter != end; ++iter)
+      {
+         // Very important: here we decide if we want to attach attributes to the decl.
+         if (clang::CXXRecordDecl* CXXRD =
+              llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
+            AnnotateDecl(*CXXRD,selectionRules,interp);
+         }
+      }
    }
 
    // coverity[fun_call_w_exception] - that's just fine.
