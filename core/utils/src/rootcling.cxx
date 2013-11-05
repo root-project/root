@@ -3673,9 +3673,6 @@ int RootCling(int argc,
       end = scan.fSelectedClasses.end();
       for( ; iter != end; ++iter)
       {
-         if (iter->RequestOnlyTClass()) {
-            continue;
-         }
          // Very important: here we decide if we want to attach attributes to the decl.
          if (clang::CXXRecordDecl* CXXRD =
               llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
