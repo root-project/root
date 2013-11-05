@@ -235,7 +235,6 @@ find $srcdir -path '*/test' -prune -o \
              -path '*/graf2d/x11/*' -prune -o \
              -path '*/graf2d/x11ttf/*' -prune -o \
              -path '*/graf3d/eve/*' -prune -o \
-             -path '*/graf3d/g3d/*' -prune -o \
              -path '*/graf3d/gl/*' -prune -o \
              -path '*/graf3d/gviz3d/*' -prune -o \
              -path '*/graf3d/x3d/*' -prune -o \
