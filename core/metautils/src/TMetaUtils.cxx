@@ -3542,8 +3542,7 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    clang::SourceLocation sourceLocation = decl.getLocEnd();
 
    // If the location is a macro get the expansion location.
-   clang::SourceLocation expansionLoc = sourceManager.getExpansionRange(sourceLocation).second;
-   sourceLocation = expansionLoc;
+   sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
 
    bool invalid;
    const char *commentStart = sourceManager.getCharacterData(sourceLocation, &invalid);
@@ -3559,7 +3558,7 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
       if (FD->doesThisDeclarationHaveABody()) {
          // commentStart is at body's '}'
          // But we might end up e.g. at the ')' of a CPP macro
-         assert((expansionLoc != sourceLocation || *commentStart == '}')
+         assert((decl.getLocEnd() != sourceLocation || *commentStart == '}')
                 && "Expected macro or end of body at '}'");
          if (*commentStart) ++commentStart;
 
