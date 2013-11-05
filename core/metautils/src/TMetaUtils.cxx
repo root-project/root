@@ -3574,7 +3574,7 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
       if (*commentStart == ';') ++commentStart;
    }
 
-   // Now skip the spaces and beginning of comments.
+   // Now skip the spaces until beginning of comments or EOL.
    while ( *commentStart && isspace(*commentStart)
            && *commentStart != '\n' && *commentStart != '\r') {
       ++commentStart;
@@ -3587,6 +3587,11 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    }
    commentStart += 2;
 
+   // Now skip the spaces after comment start until EOL.
+   while ( *commentStart && isspace(*commentStart)
+           && *commentStart != '\n' && *commentStart != '\r') {
+      ++commentStart;
+   }
    const char* commentEnd = commentStart;
    // Even for /* comments we only take the first line into account.
    while (*commentEnd && *commentEnd != '\n' && *commentEnd != '\r') {
