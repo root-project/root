@@ -152,8 +152,6 @@ private:
 
    TListOfFunctions  *GetMethodList();
    TMethod           *GetClassMethod(Long_t faddr);
-   TMethod           *GetClassMethod(const char *name, const char *params, Bool_t objectIsConst = kFALSE);
-   TMethod           *GetClassMethodWithPrototype(const char *name, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    Int_t              GetBaseClassOffsetRecurse(const TClass *base);
    void Init(const char *name, Version_t cversion, const type_info *info,
              TVirtualIsAProxy *isa, ShowMembersFunc_t showmember,
@@ -258,6 +256,8 @@ public:
    UInt_t             GetCheckSum(UInt_t code=0) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
+   TMethod           *GetClassMethod(const char *name, const char *params, Bool_t objectIsConst = kFALSE);
+   TMethod           *GetClassMethodWithPrototype(const char *name, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    Version_t          GetClassVersion() const { fVersionUsed = kTRUE; return fClassVersion; }
    Int_t              GetClassSize() const { return Size(); }
    TDataMember       *GetDataMember(const char *datamember) const;
