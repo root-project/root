@@ -3598,6 +3598,12 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
       ++commentEnd;
    }
 
+   // "Skip" (don't include) trailing space.
+   // *commentEnd points behind comment end thus check commentEnd[-1]
+   while (commentEnd > commentStart && isspace(commentEnd[-1])) {
+      --commentEnd;
+   }
+
    if (loc) {
       // Find the true beginning of a comment.
       unsigned offset = commentStart - sourceManager.getCharacterData(sourceLocation);
