@@ -30,5 +30,5 @@ TChain* makeChain(TString KEY="") {
 int execAliasTest()
 {
    TChain *u = makeChain();
-   return 0 != u->Scan("TracksFilter:TkrNumTracks:FT1Energy","radlenAtHit>0.0&&TkrNumTracks==0&&TracksFilter","",2,26);
+   return 0 != u->Scan("TracksFilter:TkrNumTracks:FT1Energy","radlenAtHit>0.0&&TracksFilter&&TkrNumTracks==0","",2,26);
 }
