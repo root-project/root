@@ -356,6 +356,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   RooCmdConfig pc(Form("RooWorkspace::import(%s)",GetName())) ;
 
   pc.defineString("conflictSuffix","RenameConflictNodes",0) ;
+  pc.defineInt("renameConflictOrig","RenameConflictNodes",0,0) ;
   pc.defineString("allSuffix","RenameAllNodes",0) ;
   pc.defineString("allVarsSuffix","RenameAllVariables",0) ;
   pc.defineString("allVarsExcept","RenameAllVariables",1) ;
@@ -382,6 +383,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   const char* exceptVars = pc.getString("allVarsExcept") ;
   const char* varChangeIn = pc.getString("varChangeIn") ;
   const char* varChangeOut = pc.getString("varChangeOut") ;
+  Bool_t renameConflictOrig = pc.getInt("renameConflictOrig") ;
   Int_t useExistingNodes = pc.getInt("useExistingNodes") ;
   Int_t silence = pc.getInt("silence") ;
 
@@ -504,35 +506,79 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Mark nodes that are to be renamed with special attribute
-  TIterator* citer = conflictNodes.createIterator() ;
+
   string topName2 = cloneTop->GetName() ;
-  RooAbsArg* cnode ;
-  while ((cnode=(RooAbsArg*)citer->Next())) {
-    RooAbsArg* cnode2 = cloneSet->find(cnode->GetName()) ;
-    string origName = cnode2->GetName() ;
-    cnode2->SetName(Form("%s_%s",cnode2->GetName(),suffix)) ;
-    cnode2->SetTitle(Form("%s (%s)",cnode2->GetTitle(),suffix)) ;
-    string tag = Form("ORIGNAME:%s",origName.c_str()) ;
-    cnode2->setAttribute(tag.c_str()) ;
+  if (!renameConflictOrig) {
+    // Mark all nodes to be imported for renaming following conflict resolution protocol
+    TIterator* citer = conflictNodes.createIterator() ;
+    RooAbsArg* cnode ;
+    while ((cnode=(RooAbsArg*)citer->Next())) {
+      RooAbsArg* cnode2 = cloneSet->find(cnode->GetName()) ;
+      string origName = cnode2->GetName() ;
+      cnode2->SetName(Form("%s_%s",cnode2->GetName(),suffix)) ;
+      cnode2->SetTitle(Form("%s (%s)",cnode2->GetTitle(),suffix)) ;
+      string tag = Form("ORIGNAME:%s",origName.c_str()) ;
+      cnode2->setAttribute(tag.c_str()) ;
+      
+      // Save name of new top level node for later use
+      if (cnode2==cloneTop) {
+	topName2 = cnode2->GetName() ;      
+      }
+      
+      if (!silence) {
+	coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() 
+			      << ") Resolving name conflict in workspace by changing name of imported node  " 
+			      << origName << " to " << cnode2->GetName() << endl ;
+      }
+    }  
+    delete citer ;
+  } else {
 
-    // Save name of new top level node for later use
-    if (cnode2==cloneTop) {
-      topName2 = cnode2->GetName() ;      
-    }
+    // Rename all nodes already in the workspace to 'clear the way' for the imported nodes
+    TIterator* citer = conflictNodes.createIterator() ;
+    RooAbsArg* cnode ;
+    while ((cnode=(RooAbsArg*)citer->Next())) {
 
-    if (!silence) {
-      coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() 
-			    << ") Resolving name conflict in workspace by changing name of imported node  " 
-			    << origName << " to " << cnode2->GetName() << endl ;
-    }
-  }  
-  delete citer ;
+      string origName = cnode->GetName() ;
+      RooAbsArg* wsnode = _allOwnedNodes.find(origName.c_str()) ;      
+      if (wsnode) {	
+	if (!_allOwnedNodes.find(Form("%s_%s",cnode->GetName(),suffix))) {
+	  wsnode->SetName(Form("%s_%s",cnode->GetName(),suffix)) ;
+	  wsnode->SetTitle(Form("%s (%s)",cnode->GetTitle(),suffix)) ;
+	} else {	  
+	  // Name with suffix already taken, add additional suffix
+	  Int_t n=1 ;
+	  while (true) {
+	    string newname = Form("%s_%s_%d",cnode->GetName(),suffix,n) ;
+	    if (!_allOwnedNodes.find(newname.c_str())) {
+	      wsnode->SetName(newname.c_str()) ;
+	      wsnode->SetTitle(Form("%s (%s %d)",cnode->GetTitle(),suffix,n)) ;
+	      break ;
+	    }
+	    n++ ;
+	  }
+	}
+	if (!silence) {
+	  coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() 
+				<< ") Resolving name conflict in workspace by changing name of original node " 
+				<< origName << " to " << wsnode->GetName() << endl ;
+	}
+      } else {
+	coutW(ObjectHandling) << "RooWorkspce::import(" << GetName() << ") Internal error: expected to find existing node " 
+			      << origName << " to be renamed, but didn't find it..." << endl ;
+      }
+      
+    }  
+    delete citer ;
+
+  }
 
   // Process any change in variable names 
   if (strlen(varChangeIn)>0 || (suffixV && strlen(suffixV)>0)) {
     
     // Process all changes in variable names
     TIterator* cliter = cloneSet->createIterator() ;
+    RooAbsArg* cnode ;
     while ((cnode=(RooAbsArg*)cliter->Next())) {
       
       if (varMap.find(cnode->GetName())!=varMap.end()) { 	

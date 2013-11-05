@@ -262,7 +262,7 @@ RooCmdArg Prefix(Bool_t flag) ;
 RooCmdArg Color(Color_t color) ;
 
 // RooWorkspace::import() arguments
-RooCmdArg RenameConflictNodes(const char* suffix) ;
+RooCmdArg RenameConflictNodes(const char* suffix, Bool_t renameOrigNodes=kFALSE) ;
 RooCmdArg RenameAllNodes(const char* suffix) ; 
 RooCmdArg RenameAllVariables(const char* suffix) ; 
 RooCmdArg RenameAllVariablesExcept(const char* suffix,const char* exceptionList) ; 
