@@ -380,8 +380,8 @@ public:
     *   By default the maximum / minimum value used in drawing is the maximum / minimum value of the histogram
     * plus a margin of 10%. If these functions are called, the values are used without any extra margin.
     */
-   virtual void     SetMaximum(Double_t maximum = -1111) { fMaximum = maximum; };
-   virtual void     SetMinimum(Double_t minimum = -1111) { fMinimum = minimum; }; 
+   virtual void     SetMaximum(Double_t maximum = -1111) { fMaximum = maximum; }; // *MENU*
+   virtual void     SetMinimum(Double_t minimum = -1111) { fMinimum = minimum; }; // *MENU*
 
    virtual void     SetName(const char *name); // *MENU*
    virtual void     SetNameTitle(const char *name, const char *title);
