@@ -89,10 +89,11 @@ void printClassInfo(const std::string& className,
    // Get the attribute map
    TClassAttributeMap* attrMap = theClass->GetAttributeMap();
    if (attrMap) {
-      for (auto& propValType : properties){
-         std::string prop (propValType.first);
+      for (strIntPairs::const_iterator propValType=properties.begin(); 
+           propValType!=properties.end();propValType++){
+         std::string prop (propValType->first);
          if (attrMap->HasKey(prop.c_str())){
-            if (propValType.second==kString){
+            if (propValType->second==kString){
                const char* propVals = attrMap->GetPropertyAsString(prop.c_str());
                std::cout << "  - " << prop << ": " << propVals <<  std::endl;
                }
