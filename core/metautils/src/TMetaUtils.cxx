@@ -3542,7 +3542,9 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    clang::SourceLocation sourceLocation = decl.getLocEnd();
 
    // If the location is a macro get the expansion location.
-   sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
+   clang::SourceLocation expansionLoc = sourceManager.getExpansionRange(sourceLocation).second;
+   bool isFromMacro = expansionLoc != sourceLocation;
+   sourceLocation = expansionLoc;
 
    bool invalid;
    const char *commentStart = sourceManager.getCharacterData(sourceLocation, &invalid);
@@ -3553,7 +3555,18 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    if (const clang::FunctionDecl* FD = clang::dyn_cast<clang::FunctionDecl>(&decl)) {
       if (FD->doesThisDeclarationHaveABody()) {
          // commentStart is at body's '}'
+         // But we might end up at the ')' of a ClassDef invocation here!
+         assert((isFromMacro || *commentStart == '}')
+                && "Expected macro or end of body at '}'");
          if (*commentStart) ++commentStart;
+
+         // We might still have a ';'; skip the spaces and check.
+         while (*commentStart && isspace(*commentStart)
+                && *commentStart != '\n' && *commentStart != '\r') {
+            ++commentStart;
+         }
+         if (*commentStart == ';') ++commentStart;
+
          skipToSemi = false;
       }
       // FIXME: handle ctor() = delete; //COMMENT
