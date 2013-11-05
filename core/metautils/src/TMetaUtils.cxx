@@ -3882,6 +3882,19 @@ const clang::TypedefNameDecl* ROOT::TMetaUtils::GetAnnotatedRedeclarable(const c
 }
 
 //______________________________________________________________________________
+const clang::TagDecl* ROOT::TMetaUtils::GetAnnotatedRedeclarable(const clang::TagDecl* TD)
+{
+   if (!TD)
+      return 0;
+
+   TD = TD->getMostRecentDecl();
+   while (TD && !(TD->hasAttrs() && TD->isThisDeclarationADefinition()))
+      TD = TD->getPreviousDecl();
+
+   return TD;
+}
+
+//______________________________________________________________________________
 void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& clingArgs )
 {
    // Organise the parameters for cling in order to guarantee relocatability
