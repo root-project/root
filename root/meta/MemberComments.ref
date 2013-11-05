@@ -1,0 +1,299 @@
+
+Processing runMemberComments.C...
+
+TH1F::Class()->GetListOfAllPublicDataMembers():
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TDataMember	kNormal	 : 0
+ OBJ: TDataMember	kPoisson	 : 0
+ OBJ: TDataMember	kPoisson2	 : 0
+ OBJ: TDataMember	kNoAxis	 : 0
+ OBJ: TDataMember	kXaxis	 : 0
+ OBJ: TDataMember	kYaxis	 : 0
+ OBJ: TDataMember	kZaxis	 : 0
+ OBJ: TDataMember	kAllAxes	 : 0
+ OBJ: TDataMember	kNoStats	 : 0
+ OBJ: TDataMember	kUserContour	 : 0
+ OBJ: TDataMember	kCanRebin	 : 0
+ OBJ: TDataMember	kLogX	 : 0
+ OBJ: TDataMember	kIsZoomed	 : 0
+ OBJ: TDataMember	kNoTitle	 : 0
+ OBJ: TDataMember	kIsAverage	 : 0
+ OBJ: TDataMember	kNstat	 : 0
+ OBJ: TDataMember	kCanDelete	 : 0
+ OBJ: TDataMember	kMustCleanup	 : 0
+ OBJ: TDataMember	kObjInCanvas	 : 0
+ OBJ: TDataMember	kIsReferenced	 : 0
+ OBJ: TDataMember	kHasUUID	 : 0
+ OBJ: TDataMember	kCannotPick	 : 0
+ OBJ: TDataMember	kNoContextMenu	 : 0
+ OBJ: TDataMember	kInvalidObject	 : 0
+ OBJ: TDataMember	kIsOnHeap	 : 0
+ OBJ: TDataMember	kNotDeleted	 : 0
+ OBJ: TDataMember	kZombie	 : 0
+ OBJ: TDataMember	kBitMask	 : 0
+ OBJ: TDataMember	kSingleKey	 : 0
+ OBJ: TDataMember	kOverwrite	 : 0
+ OBJ: TDataMember	kWriteDelete	 : 0
+ OBJ: TDataMember	fArray	[fN] Array of fN floats : 0
+ OBJ: TDataMember	fN	Number of array elements : 0
+
+TArrow::Class()->GetListOfAllPublicMethods():
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TMethod	TArrow	 : 0
+ OBJ: TMethod	TArrow	 : 0
+ OBJ: TMethod	TArrow	 : 0
+ OBJ: TMethod	~TArrow	 : 0
+ OBJ: TMethod	Copy	 : 0
+ OBJ: TMethod	Draw	 : 0
+ OBJ: TMethod	DrawArrow	 : 0
+ OBJ: TMethod	GetAngle	 : 0
+ OBJ: TMethod	GetArrowSize	 : 0
+ OBJ: TMethod	GetOption	 : 0
+ OBJ: TMethod	Paint	 : 0
+ OBJ: TMethod	PaintArrow	 : 0
+ OBJ: TMethod	SavePrimitive	 : 0
+ OBJ: TMethod	SetAngle	*MENU* : 0
+ OBJ: TMethod	SetArrowSize	*MENU* : 0
+ OBJ: TMethod	SetOption	 : 0
+ OBJ: TMethod	SetDefaultAngle	 : 0
+ OBJ: TMethod	SetDefaultArrowSize	 : 0
+ OBJ: TMethod	SetDefaultOption	 : 0
+ OBJ: TMethod	GetDefaultAngle	 : 0
+ OBJ: TMethod	GetDefaultArrowSize	 : 0
+ OBJ: TMethod	GetDefaultOption	 : 0
+ OBJ: TMethod	Class	 : 0
+ OBJ: TMethod	Class_Name	 : 0
+ OBJ: TMethod	Class_Version	 : 0
+ OBJ: TMethod	Dictionary	 : 0
+ OBJ: TMethod	IsA	 : 0
+ OBJ: TMethod	ShowMembers	 : 0
+ OBJ: TMethod	Streamer	 : 0
+ OBJ: TMethod	StreamerNVirtual	 : 0
+ OBJ: TMethod	DeclFileName	 : 0
+ OBJ: TMethod	ImplFileLine	 : 0
+ OBJ: TMethod	ImplFileName	 : 0
+ OBJ: TMethod	DeclFileLine	 : 0
+ OBJ: TMethod	operator=	 : 0
+ OBJ: TMethod	TLine	 : 0
+ OBJ: TMethod	TLine	 : 0
+ OBJ: TMethod	TLine	 : 0
+ OBJ: TMethod	~TLine	 : 0
+ OBJ: TMethod	Copy	 : 0
+ OBJ: TMethod	DistancetoPrimitive	 : 0
+ OBJ: TMethod	DrawLine	 : 0
+ OBJ: TMethod	DrawLineNDC	 : 0
+ OBJ: TMethod	ExecuteEvent	 : 0
+ OBJ: TMethod	GetX1	 : 0
+ OBJ: TMethod	GetX2	 : 0
+ OBJ: TMethod	GetY1	 : 0
+ OBJ: TMethod	GetY2	 : 0
+ OBJ: TMethod	IsHorizontal	 : 0
+ OBJ: TMethod	IsVertical	 : 0
+ OBJ: TMethod	ls	 : 0
+ OBJ: TMethod	Paint	 : 0
+ OBJ: TMethod	PaintLine	 : 0
+ OBJ: TMethod	PaintLineNDC	 : 0
+ OBJ: TMethod	Print	 : 0
+ OBJ: TMethod	SavePrimitive	 : 0
+ OBJ: TMethod	SetNDC	 : 0
+ OBJ: TMethod	SetHorizontal	*TOGGLE* *GETTER=IsHorizontal : 0
+ OBJ: TMethod	SetVertical	*TOGGLE* *GETTER=IsVertical : 0
+ OBJ: TMethod	SetX1	 : 0
+ OBJ: TMethod	SetX2	 : 0
+ OBJ: TMethod	SetY1	 : 0
+ OBJ: TMethod	SetY2	 : 0
+ OBJ: TMethod	Class	 : 0
+ OBJ: TMethod	Class_Name	 : 0
+ OBJ: TMethod	Class_Version	 : 0
+ OBJ: TMethod	Dictionary	 : 0
+ OBJ: TMethod	IsA	 : 0
+ OBJ: TMethod	ShowMembers	 : 0
+ OBJ: TMethod	Streamer	 : 0
+ OBJ: TMethod	StreamerNVirtual	 : 0
+ OBJ: TMethod	DeclFileName	 : 0
+ OBJ: TMethod	ImplFileLine	 : 0
+ OBJ: TMethod	ImplFileName	 : 0
+ OBJ: TMethod	DeclFileLine	 : 0
+ OBJ: TMethod	operator=	 : 0
+ OBJ: TMethod	TObject	 : 0
+ OBJ: TMethod	TObject	 : 0
+ OBJ: TMethod	operator=	 : 0
+ OBJ: TMethod	~TObject	 : 0
+ OBJ: TMethod	AppendPad	 : 0
+ OBJ: TMethod	Browse	 : 0
+ OBJ: TMethod	ClassName	 : 0
+ OBJ: TMethod	Clear	 : 0
+ OBJ: TMethod	Clone	 : 0
+ OBJ: TMethod	Compare	 : 0
+ OBJ: TMethod	Copy	 : 0
+ OBJ: TMethod	Delete	*MENU* : 0
+ OBJ: TMethod	DistancetoPrimitive	 : 0
+ OBJ: TMethod	Draw	 : 0
+ OBJ: TMethod	DrawClass	*MENU* : 0
+ OBJ: TMethod	DrawClone	*MENU* : 0
+ OBJ: TMethod	Dump	*MENU* : 0
+ OBJ: TMethod	Execute	 : 0
+ OBJ: TMethod	Execute	 : 0
+ OBJ: TMethod	ExecuteEvent	 : 0
+ OBJ: TMethod	FindObject	 : 0
+ OBJ: TMethod	FindObject	 : 0
+ OBJ: TMethod	GetDrawOption	 : 0
+ OBJ: TMethod	GetUniqueID	 : 0
+ OBJ: TMethod	GetName	 : 0
+ OBJ: TMethod	GetIconName	 : 0
+ OBJ: TMethod	GetOption	 : 0
+ OBJ: TMethod	GetObjectInfo	 : 0
+ OBJ: TMethod	GetTitle	 : 0
+ OBJ: TMethod	HandleTimer	 : 0
+ OBJ: TMethod	Hash	 : 0
+ OBJ: TMethod	InheritsFrom	 : 0
+ OBJ: TMethod	InheritsFrom	 : 0
+ OBJ: TMethod	Inspect	*MENU* : 0
+ OBJ: TMethod	IsFolder	 : 0
+ OBJ: TMethod	IsEqual	 : 0
+ OBJ: TMethod	IsSortable	 : 0
+ OBJ: TMethod	IsOnHeap	 : 0
+ OBJ: TMethod	IsZombie	 : 0
+ OBJ: TMethod	Notify	 : 0
+ OBJ: TMethod	ls	 : 0
+ OBJ: TMethod	Paint	 : 0
+ OBJ: TMethod	Pop	 : 0
+ OBJ: TMethod	Print	 : 0
+ OBJ: TMethod	Read	 : 0
+ OBJ: TMethod	RecursiveRemove	 : 0
+ OBJ: TMethod	SaveAs	*MENU* : 0
+ OBJ: TMethod	SavePrimitive	 : 0
+ OBJ: TMethod	SetDrawOption	*MENU* : 0
+ OBJ: TMethod	SetUniqueID	 : 0
+ OBJ: TMethod	UseCurrentStyle	 : 0
+ OBJ: TMethod	Write	 : 0
+ OBJ: TMethod	Write	 : 0
+ OBJ: TMethod	operator new	 : 0
+ OBJ: TMethod	operator new[]	 : 0
+ OBJ: TMethod	operator new	 : 0
+ OBJ: TMethod	operator new[]	 : 0
+ OBJ: TMethod	operator delete	 : 0
+ OBJ: TMethod	operator delete[]	 : 0
+ OBJ: TMethod	operator delete	 : 0
+ OBJ: TMethod	operator delete[]	 : 0
+ OBJ: TMethod	SetBit	 : 0
+ OBJ: TMethod	SetBit	 : 0
+ OBJ: TMethod	ResetBit	 : 0
+ OBJ: TMethod	TestBit	 : 0
+ OBJ: TMethod	TestBits	 : 0
+ OBJ: TMethod	InvertBit	 : 0
+ OBJ: TMethod	Info	 : 0
+ OBJ: TMethod	Warning	 : 0
+ OBJ: TMethod	Error	 : 0
+ OBJ: TMethod	SysError	 : 0
+ OBJ: TMethod	Fatal	 : 0
+ OBJ: TMethod	AbstractMethod	 : 0
+ OBJ: TMethod	MayNotUse	 : 0
+ OBJ: TMethod	Obsolete	 : 0
+ OBJ: TMethod	GetDtorOnly	 : 0
+ OBJ: TMethod	SetDtorOnly	 : 0
+ OBJ: TMethod	GetObjectStat	 : 0
+ OBJ: TMethod	SetObjectStat	 : 0
+ OBJ: TMethod	Class	 : 0
+ OBJ: TMethod	Class_Name	 : 0
+ OBJ: TMethod	Class_Version	 : 0
+ OBJ: TMethod	Dictionary	 : 0
+ OBJ: TMethod	IsA	 : 0
+ OBJ: TMethod	ShowMembers	 : 0
+ OBJ: TMethod	Streamer	 : 0
+ OBJ: TMethod	StreamerNVirtual	 : 0
+ OBJ: TMethod	DeclFileName	 : 0
+ OBJ: TMethod	ImplFileLine	 : 0
+ OBJ: TMethod	ImplFileName	 : 0
+ OBJ: TMethod	DeclFileLine	 : 0
+ OBJ: TMethod	TAttLine	 : 0
+ OBJ: TMethod	TAttLine	 : 0
+ OBJ: TMethod	~TAttLine	 : 0
+ OBJ: TMethod	Copy	 : 0
+ OBJ: TMethod	DistancetoLine	 : 0
+ OBJ: TMethod	GetLineColor	 : 0
+ OBJ: TMethod	GetLineStyle	 : 0
+ OBJ: TMethod	GetLineWidth	 : 0
+ OBJ: TMethod	Modify	 : 0
+ OBJ: TMethod	ResetAttLine	 : 0
+ OBJ: TMethod	SaveLineAttributes	 : 0
+ OBJ: TMethod	SetLineAttributes	*MENU* : 0
+ OBJ: TMethod	SetLineColor	 : 0
+ OBJ: TMethod	SetLineStyle	 : 0
+ OBJ: TMethod	SetLineWidth	 : 0
+ OBJ: TMethod	Class	 : 0
+ OBJ: TMethod	Class_Name	 : 0
+ OBJ: TMethod	Class_Version	 : 0
+ OBJ: TMethod	Dictionary	 : 0
+ OBJ: TMethod	IsA	 : 0
+ OBJ: TMethod	ShowMembers	 : 0
+ OBJ: TMethod	Streamer	 : 0
+ OBJ: TMethod	StreamerNVirtual	 : 0
+ OBJ: TMethod	DeclFileName	 : 0
+ OBJ: TMethod	ImplFileLine	 : 0
+ OBJ: TMethod	ImplFileName	 : 0
+ OBJ: TMethod	DeclFileLine	 : 0
+ OBJ: TMethod	operator=	 : 0
+ OBJ: TMethod	TAttLine	 : 0
+ OBJ: TMethod	TAttFill	 : 0
+ OBJ: TMethod	TAttFill	 : 0
+ OBJ: TMethod	~TAttFill	 : 0
+ OBJ: TMethod	Copy	 : 0
+ OBJ: TMethod	GetFillColor	 : 0
+ OBJ: TMethod	GetFillStyle	 : 0
+ OBJ: TMethod	IsTransparent	 : 0
+ OBJ: TMethod	Modify	 : 0
+ OBJ: TMethod	ResetAttFill	 : 0
+ OBJ: TMethod	SaveFillAttributes	 : 0
+ OBJ: TMethod	SetFillAttributes	*MENU* : 0
+ OBJ: TMethod	SetFillColor	 : 0
+ OBJ: TMethod	SetFillStyle	 : 0
+ OBJ: TMethod	Class	 : 0
+ OBJ: TMethod	Class_Name	 : 0
+ OBJ: TMethod	Class_Version	 : 0
+ OBJ: TMethod	Dictionary	 : 0
+ OBJ: TMethod	IsA	 : 0
+ OBJ: TMethod	ShowMembers	 : 0
+ OBJ: TMethod	Streamer	 : 0
+ OBJ: TMethod	StreamerNVirtual	 : 0
+ OBJ: TMethod	DeclFileName	 : 0
+ OBJ: TMethod	ImplFileLine	 : 0
+ OBJ: TMethod	ImplFileName	 : 0
+ OBJ: TMethod	DeclFileLine	 : 0
+ OBJ: TMethod	operator=	 : 0
+ OBJ: TMethod	TAttFill	 : 0
+
+TH1::Class()->GetMenuItems():
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TMethod	Add	*MENU* : 0
+ OBJ: TMethod	Divide	*MENU* : 0
+ OBJ: TMethod	DrawPanel	*MENU* : 0
+ OBJ: TMethod	Fit	*MENU* : 0
+ OBJ: TMethod	FitPanel	*MENU* : 0
+ OBJ: TMethod	Multiply	*MENU* : 0
+ OBJ: TMethod	Rebin	*MENU* : 0
+ OBJ: TMethod	SetMaximum	*MENU* : 0
+ OBJ: TMethod	SetMinimum	*MENU* : 0
+ OBJ: TMethod	SetStats	*MENU* : 0
+ OBJ: TMethod	ShowBackground	*MENU* : 0
+ OBJ: TMethod	ShowPeaks	*MENU* : 0
+ OBJ: TMethod	Smooth	*MENU* : 0
+ OBJ: TMethod	SetName	*MENU* : 0
+ OBJ: TMethod	SetTitle	*MENU* : 0
+ OBJ: TMethod	Delete	*MENU* : 0
+ OBJ: TMethod	DrawClass	*MENU* : 0
+ OBJ: TMethod	DrawClone	*MENU* : 0
+ OBJ: TMethod	Dump	*MENU* : 0
+ OBJ: TMethod	Inspect	*MENU* : 0
+ OBJ: TMethod	SaveAs	*MENU* : 0
+ OBJ: TMethod	SetDrawOption	*MENU* : 0
+ OBJ: TMethod	SetLineAttributes	*MENU* : 0
+ OBJ: TMethod	SetFillAttributes	*MENU* : 0
+ OBJ: TMethod	SetMarkerAttributes	*MENU* : 0
+
+childCl::Class()->GetListOfAllPublicMethods():
+childCl::fGetIndex(Int_t aIndex) // Title Derived
+childCl::operator=(const childCl&) // 
+childCl::~childCl() // 
+childCl::childCl() // 
+childCl::childCl(const childCl&) // 
