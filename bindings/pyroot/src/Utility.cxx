@@ -351,11 +351,18 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const char* op, co
 
 //____________________________________________________________________________
 static inline TFunction* FindAndAddOperator( const std::string& lcname, const std::string& rcname,
-     const char* op, TCollection* funcs ) {
+     const char* op, TCollection* funcs = 0 ) {
 // Helper to find a function with matching signature in 'funcs'.
    std::string opname = "operator";
    opname += op;
 
+// case of global namespace
+   if ( ! funcs ) {
+      std::string proto = lcname + ", " + rcname;
+      return gROOT->GetGlobalFunctionWithPrototype( opname.c_str(), proto.c_str() );
+   }
+
+// case of specific namespace
    TIter ifunc( funcs );
 
    TFunction* func = 0;
@@ -387,23 +394,20 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 // using information).
    static TClassRef gnucxx( "__gnu_cxx" );
 
-   TFunction* func = 0;
+   PyCallable* pyfunc = 0;
    if ( gnucxx.GetClass() ) {
-      func = FindAndAddOperator( lcname, rcname, op, gnucxx->GetListOfMethods() );
-      if ( func ) {
-         PyCallable* pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "__gnu_cxx" ), func );
-         return Utility::AddToClass( pyclass, label ? label : gC2POperatorMapping[ op ].c_str(), pyfunc );
-      }
+      TFunction* func = FindAndAddOperator( lcname, rcname, op, gnucxx->GetListOfMethods() );
+      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "__gnu_cxx" ), func );
    }
 
-   if ( ! func )
-      func = FindAndAddOperator( lcname, rcname, op, gROOT->GetListOfGlobalFunctions( kTRUE ) );
-
-   if ( func ) {
-   // found a matching overload; add to class
-      PyCallable* pyfunc = new TFunctionHolder( func );
-      return Utility::AddToClass( pyclass, label ? label : gC2POperatorMapping[ op ].c_str(), pyfunc );
+   if ( ! pyfunc ) {
+      TFunction* func = FindAndAddOperator( lcname, rcname, op );
+      if ( func ) pyfunc = new TFunctionHolder( func );
    }
+
+   if ( pyfunc )    // found a matching overload; add to class
+      return Utility::AddToClass(
+         pyclass, label ? label : gC2POperatorMapping[ op ].c_str(), pyfunc );
 
    return kFALSE;
 }
