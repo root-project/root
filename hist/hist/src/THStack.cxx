@@ -52,7 +52,7 @@ ClassImp(THStack)
 //      c1.cd(1);
 //      hs.Draw();
 //      c1.cd(2);
-//      hs->Draw("nostack");
+//      hs.Draw("nostack");
 //
 //  See a more complex example in $ROOTSYS/tutorials/hist/hstack.C
 //
