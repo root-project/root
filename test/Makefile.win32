@@ -47,6 +47,13 @@ ExeSuf        = .exe
 DllSuf        = dll
 OutPutOpt     = -out:
 
+## VS2012 (VC11): configure subsystem version
+## See: https://blogs.msdn.com/b/vcblog/archive/2012/10/08/10357555.aspx
+## (APPVER used in win32.mak to set subsystem version)
+!if ([nmake /? 2>&1 | findstr /c:"Version 11\." > nul ] == 0)
+APPVER        = 5.01
+!endif
+
 # Win32 system with Microsoft Visual C/C++
 !include <win32.mak>
 CC            = $(cc)
