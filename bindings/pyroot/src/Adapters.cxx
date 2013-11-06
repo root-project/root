@@ -31,11 +31,11 @@ std::string PyROOT::TReturnTypeAdapter::Name( unsigned int mod ) const
 // get the name of the return type that is being adapted
    std::string name = fName;
 
-   if ( ! ( mod & Rflx::QUALIFIED ) )
-      name = UnqualifiedTypeName( fName );
-
    if ( mod & Rflx::FINAL )
       name = Utility::ResolveTypedef( name );
+
+   if ( ! ( mod & Rflx::QUALIFIED ) )
+      name = UnqualifiedTypeName( fName );
 
    return name;
 }
