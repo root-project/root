@@ -170,7 +170,7 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
       gcl,
       (Bool_t)fMethod == true ? fMethod.Name().c_str() : fClass.Name().c_str(),
       callString.c_str(),
-      fMethod.IsConstant(),
+      (Bool_t)fMethod == true ? fMethod.IsConstant() : kFALSE,
       &fOffset,
       ROOT::kExactMatch );
 
@@ -181,7 +181,7 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
          gcl,
          "basic_string<char,char_traits<char>,allocator<char> >",
          callString.c_str(),
-         fMethod.IsConstant(),
+         (Bool_t)fMethod == true ? fMethod.IsConstant() : kFALSE,
          &fOffset);      // <- no kExactMatch as that will fail
    }
 // -- CLING WORKAROUND
@@ -197,7 +197,7 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
          gcl,
          (Bool_t)fMethod == true ? fMethod.Name().c_str() : fClass.Name().c_str(),
          callString.c_str(),
-         fMethod.IsConstant(),
+         (Bool_t)fMethod == true ? fMethod.IsConstant() : kFALSE,
          &fOffset );     // <- no kExactMatch as that will fail
    }
 // -- CLING WORKAROUND

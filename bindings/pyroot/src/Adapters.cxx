@@ -113,17 +113,14 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
    } else if ( mod & Rflx::FINAL )
       return Utility::ResolveTypedef( fMember->GetName() );
 
-// CLING WORKAROUND -- should not be null, but can be due #100389
-   if ( fMember != 0 )
-      return fMember->GetName();
-   return "<unknown>";
+   return fMember->GetName();
 }
 
 //____________________________________________________________________________
 Bool_t PyROOT::TMemberAdapter::IsConstant() const
 {
 // test if the adapted member is a const method
-   return fMember ? (fMember->Property() & kIsConstMethod) : kFALSE;
+   return fMember->Property() & kIsConstMethod;
 }
 
 //____________________________________________________________________________
