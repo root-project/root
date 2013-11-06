@@ -24,6 +24,8 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
+GENREFLEXCXXFLAGS += --deep -DCMS_DICT_IMPL -D_REENTRANT -DGNUSOURCE -D__STRICT_ANSI__ -DGNU_GCC -D_GNU_SOURCE
+
 classes_rflx.cpp: TH2Analyzer.h
 
 exec5627.log:  libclasses_dictrflx.$(DllSuf)
