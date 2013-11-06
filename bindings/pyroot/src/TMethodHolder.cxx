@@ -190,25 +190,6 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
    }
 // -- CLING WORKAROUND
 
-// CLING WORKAROUND -- (Actually, this may be a feature rather than workaround: the
-//                     question is whether this should live in TClass or here.)
-//                     For some reason this code does not work (crashes) for several
-//                     vector types (but not all) from "cintdlls", so skip on int.
-//                     Note that vector<double> is instantiated at application startup.
-   if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) &&
-        fClass.Name().find( '<' ) != std::string::npos &&
-        fClass.Name().find( "int" ) == std::string::npos ) {
-      const std::string& cName = fClass.Name();
-      if ( TClassEdit::IsSTLCont( cName.c_str() ) ) {
-         gROOT->ProcessLine( (std::string("template class ") +
-            (cName.find( "std::", 0, 5 ) == std::string::npos ? "std::" : "") +
-            fClass.Name() + ";").c_str() );
-      } else {
-         gROOT->ProcessLine( ("template class " + fClass.Name() + ";").c_str() );
-      }
-   }
-// -- CLING WORKAROUND
-
    if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) ) {
    // CLING WORKAROUND -- checking (Bool_t)fMethod (i.e. whether this is a method
    //                     rather than a ctor), remains necessary (for ctors, there

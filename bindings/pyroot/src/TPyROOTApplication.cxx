@@ -61,13 +61,6 @@ PyROOT::TPyROOTApplication::TPyROOTApplication(
       ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
       ProcessLine( "#include <utility>",  kTRUE ); //  core ROOT dicts and CINT won't be able
                                                    //  to properly unload these files
-// CLING WORKAROUND -- #100572
-// add some of the expected classes from "cintdlls" right here with explicit
-// instantiations (doing this late typically does not work, as they need to
-// be done before any partial instantiations, e.g. due to #include-ing a
-// class that has one of these as a data member)
-      gROOT->ProcessLine( "template class std::vector<double>;" );
-// -- CLING WORKAROUND
    }
 
 #ifdef WIN32
