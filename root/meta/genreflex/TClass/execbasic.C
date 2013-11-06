@@ -126,13 +126,13 @@ int execbasic()
    loadLib("libbasic_allClasses_dictrflx.so");
 
    // Start the tests
-   strIntPairs properties1 ={{"checksum",kString}};
+   strIntPairs properties1; properties1.push_back(make_pair("checksum",kString));
    printClassInfo("class1",properties1);
    printClassInfo("class2");
    printClassInfo("class3");
    printClassInfo("class3_1");
    printClassInfo("class3_2");
-   strIntPairs properties4 ={{"id",kString},{"myProp",kInt}};
+   strIntPairs properties4; properties4.push_back(make_pair("id",kString)); properties4.push_back(make_pair("myProp",kInt));
    printClassInfo("class4", properties4);
    printClassInfo("class5");
 
