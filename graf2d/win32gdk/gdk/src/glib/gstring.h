@@ -27,7 +27,8 @@
 #ifndef __G_STRING_H__
 #define __G_STRING_H__
 
-#include <g_types.h>
+#include <glib/gtypes.h>
+#include <glib/gunicode.h>
 
 G_BEGIN_DECLS
 
@@ -36,13 +37,14 @@ typedef struct _GStringChunk	GStringChunk;
 
 struct _GString
 {
-  gchar *str;
-  gint len;
+  gchar  *str;
+  gsize len;    
+  gsize allocated_len;
 };
 
 /* String Chunks
  */
-GStringChunk* g_string_chunk_new	   (gint size);
+GStringChunk* g_string_chunk_new	   (gsize size);  
 void	      g_string_chunk_free	   (GStringChunk *chunk);
 gchar*	      g_string_chunk_insert	   (GStringChunk *chunk,
 					    const gchar	 *string);
@@ -54,8 +56,8 @@ gchar*	      g_string_chunk_insert_const  (GStringChunk *chunk,
  */
 GString*     g_string_new	        (const gchar	 *init);
 GString*     g_string_new_len           (const gchar     *init,
-                                         gint             len);
-GString*     g_string_sized_new         (guint		  dfl_size);
+                                         gssize           len);   
+GString*     g_string_sized_new         (gsize            dfl_size);  
 gchar*	     g_string_free	        (GString	 *string,
 					 gboolean	  free_segment);
 gboolean     g_string_equal             (const GString	 *v,
@@ -64,42 +66,67 @@ guint        g_string_hash              (const GString   *str);
 GString*     g_string_assign            (GString	 *string,
 					 const gchar	 *rval);
 GString*     g_string_truncate          (GString	 *string,
-					 guint		  len);
+					 gsize		  len);    
+GString*     g_string_set_size          (GString         *string,
+					 gsize            len);
 GString*     g_string_insert_len        (GString         *string,
-                                         gint             pos,
+                                         gssize           pos,   
                                          const gchar     *val,
-                                         gint             len);
+                                         gssize           len);  
 GString*     g_string_append            (GString	 *string,
 			                 const gchar	 *val);
 GString*     g_string_append_len        (GString	 *string,
 			                 const gchar	 *val,
-                                         gint             len);
+                                         gssize           len);  
 GString*     g_string_append_c          (GString	 *string,
 					 gchar		  c);
+GString*     g_string_append_unichar    (GString	 *string,
+					 gunichar	  wc);
 GString*     g_string_prepend           (GString	 *string,
 					 const gchar	 *val);
 GString*     g_string_prepend_c         (GString	 *string,
 					 gchar		  c);
+GString*     g_string_prepend_unichar   (GString	 *string,
+					 gunichar	  wc);
 GString*     g_string_prepend_len       (GString	 *string,
 			                 const gchar	 *val,
-                                         gint             len);
+                                         gssize           len);  
 GString*     g_string_insert            (GString	 *string,
-					 gint		  pos,
+					 gssize		  pos,    
 					 const gchar	 *val);
 GString*     g_string_insert_c          (GString	 *string,
-					 gint		  pos,
+					 gssize		  pos,    
 					 gchar		  c);
+GString*     g_string_insert_unichar    (GString	 *string,
+					 gssize		  pos,    
+					 gunichar	  wc);
 GString*     g_string_erase	        (GString	 *string,
-					 gint		  pos,
-					 gint		  len);
+					 gsize		  pos,    
+					 gsize		  len);   
+GString*     g_string_ascii_down        (GString	 *string);
+GString*     g_string_ascii_up          (GString	 *string);
+void         g_string_printf            (GString	 *string,
+					 const gchar	 *format,
+					 ...) G_GNUC_PRINTF (2, 3);
+void         g_string_printfa           (GString	 *string,
+					 const gchar	 *format,
+					 ...) G_GNUC_PRINTF (2, 3);
+
+#ifndef G_DISABLE_DEPRECATED
+
+/* The following two functions are deprecated and will be removed in
+ * the next major release. They use the locale-specific tolower and
+ * toupper, which is almost never the right thing.
+ */
+
 GString*     g_string_down              (GString	 *string);
 GString*     g_string_up                (GString	 *string);
-void         g_string_sprintf           (GString	 *string,
-					 const gchar	 *format,
-					 ...) G_GNUC_PRINTF (2, 3);
-void         g_string_sprintfa          (GString	 *string,
-					 const gchar	 *format,
-					 ...) G_GNUC_PRINTF (2, 3);
+
+/* These aliases are included for compatibility. */
+#define	g_string_sprintf	g_string_printf
+#define	g_string_sprintfa	g_string_printfa
+
+#endif /* G_DISABLE_DEPRECATED */
 
 G_END_DECLS
 

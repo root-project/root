@@ -28,13 +28,13 @@
 #define __G_MESSAGES_H__
 
 #include <stdarg.h>
-#include <g_types.h>
+#include <glib/gtypes.h>
 
 G_BEGIN_DECLS
 
 /* calculate a string size, guarranteed to fit format + args.
  */
-guint	g_printf_string_upper_bound (const gchar* format,
+gsize	g_printf_string_upper_bound (const gchar* format,
 				     va_list	  args);
 
 /* Log level shift offset for user defined
@@ -71,7 +71,7 @@ typedef void            (*GLogFunc)             (const gchar   *log_domain,
 
 /* Logging mechanism
  */
-extern          const gchar             *g_log_domain_glib;
+GLIB_VAR        const gchar             *g_log_domain_glib;
 guint           g_log_set_handler       (const gchar    *log_domain,
                                          GLogLevelFlags  log_levels,
                                          GLogFunc        log_func,
@@ -97,7 +97,7 @@ GLogLevelFlags  g_log_set_always_fatal  (GLogLevelFlags  fatal_mask);
 #ifndef G_LOG_DOMAIN
 #define G_LOG_DOMAIN    ((gchar*) 0)
 #endif  /* G_LOG_DOMAIN */
-#if defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#ifdef G_HAVE_ISO_VARARGS
 #define g_error(...)    g_log (G_LOG_DOMAIN,         \
                                G_LOG_LEVEL_ERROR,    \
                                __VA_ARGS__)
@@ -110,7 +110,7 @@ GLogLevelFlags  g_log_set_always_fatal  (GLogLevelFlags  fatal_mask);
 #define g_warning(...)  g_log (G_LOG_DOMAIN,         \
                                G_LOG_LEVEL_WARNING,  \
                                __VA_ARGS__)
-#elif __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 4)
+#elif defined(G_HAVE_GNUC_VARARGS)
 #define g_error(format...)      g_log (G_LOG_DOMAIN,         \
                                        G_LOG_LEVEL_ERROR,    \
                                        format)
@@ -123,7 +123,7 @@ GLogLevelFlags  g_log_set_always_fatal  (GLogLevelFlags  fatal_mask);
 #define g_warning(format...)    g_log (G_LOG_DOMAIN,         \
                                        G_LOG_LEVEL_WARNING,  \
                                        format)
-#else   /* !__GNUC__ */
+#else   /* no varargs macros */
 static void
 g_error (const gchar *format,
          ...)
@@ -170,12 +170,6 @@ void            g_printerr              (const gchar    *format,
                                          ...) G_GNUC_PRINTF (1, 2);
 GPrintFunc      g_set_printerr_handler  (GPrintFunc      func);
 
-/* deprecated compatibility functions, use g_log_set_handler() instead */
-typedef void            (*GErrorFunc)           (const gchar *str);
-typedef void            (*GWarningFunc)         (const gchar *str);
-GErrorFunc   g_set_error_handler   (GErrorFunc   func);
-GWarningFunc g_set_warning_handler (GWarningFunc func);
-GPrintFunc   g_set_message_handler (GPrintFunc func);
 
 /* Provide macros for error handling. The "assert" macros will
  *  exit on failure. The "return" macros will exit the current
@@ -186,8 +180,8 @@ GPrintFunc   g_set_message_handler (GPrintFunc func);
 
 #ifdef G_DISABLE_ASSERT
 
-#define g_assert(expr)
-#define g_assert_not_reached()
+#define g_assert(expr)		G_STMT_START{ }G_STMT_END
+#define g_assert_not_reached()	G_STMT_START{ }G_STMT_END
 
 #else /* !G_DISABLE_ASSERT */
 
@@ -236,10 +230,10 @@ GPrintFunc   g_set_message_handler (GPrintFunc func);
 
 #ifdef G_DISABLE_CHECKS
 
-#define g_return_if_fail(expr)
-#define g_return_val_if_fail(expr,val)
-#define g_return_if_reached() return
-#define g_return_val_if_reached(val) return (val)
+#define g_return_if_fail(expr)			G_STMT_START{ }G_STMT_END
+#define g_return_val_if_fail(expr,val)		G_STMT_START{ }G_STMT_END
+#define g_return_if_reached()			G_STMT_START{ return; }G_STMT_END
+#define g_return_val_if_reached(val)		G_STMT_START{ return (val); }G_STMT_END
 
 #else /* !G_DISABLE_CHECKS */
 

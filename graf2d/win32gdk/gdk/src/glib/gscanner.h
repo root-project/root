@@ -27,7 +27,7 @@
 #ifndef __G_SCANNER_H__
 #define __G_SCANNER_H__
 
-#include <ghash.h>
+#include <glib/ghash.h>
 
 G_BEGIN_DECLS
 
@@ -168,8 +168,8 @@ struct	_GScanner
   /* name of input stream, featured by the default message handler */
   const gchar		*input_name;
   
-  /* data pointer for derived structures */
-  gpointer		derived_data;
+  /* quarked data */
+  GData			*qdata;
   
   /* link into the scanner configuration */
   GScannerConfig	*config;
@@ -198,7 +198,7 @@ struct	_GScanner
   GScannerMsgFunc	msg_handler;
 };
 
-GScanner*	g_scanner_new			(GScannerConfig *config_templ);
+GScanner*	g_scanner_new			(const GScannerConfig *config_templ);
 void		g_scanner_destroy		(GScanner	*scanner);
 void		g_scanner_input_file		(GScanner	*scanner,
 						 gint		input_fd);
@@ -244,7 +244,6 @@ void		g_scanner_error			(GScanner	*scanner,
 void		g_scanner_warn			(GScanner	*scanner,
 						 const gchar	*format,
 						 ...) G_GNUC_PRINTF (2,3);
-gint		g_scanner_stat_mode		(const gchar	*filename);
 /* keep downward source compatibility */
 #define		g_scanner_add_symbol( scanner, symbol, value )	G_STMT_START { \
   g_scanner_scope_add_symbol ((scanner), 0, (symbol), (value)); \
@@ -256,10 +255,14 @@ gint		g_scanner_stat_mode		(const gchar	*filename);
   g_scanner_scope_foreach_symbol ((scanner), 0, (func), (data)); \
 } G_STMT_END
 
+#ifndef G_DISABLE_DEPRECATED
+
 /* The following two functions are deprecated and will be removed in
  * the next major release. They do no good. */
-void		g_scanner_freeze_symbol_table	(GScanner	*scanner);
-void		g_scanner_thaw_symbol_table	(GScanner	*scanner);
+#define g_scanner_freeze_symbol_table(scanner) ((void)0)
+#define g_scanner_thaw_symbol_table(scanner) ((void)0)
+
+#endif /* G_DISABLE_DEPRECATED */
 
 G_END_DECLS
 

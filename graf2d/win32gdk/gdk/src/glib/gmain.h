@@ -20,8 +20,8 @@
 #ifndef __G_MAIN_H__
 #define __G_MAIN_H__
 
-#include <gslist.h>
-#include <gthread.h>
+#include <glib/gslist.h>
+#include <glib/gthread.h>
 
 G_BEGIN_DECLS
 
@@ -59,9 +59,12 @@ struct _GSourceCallbackFuncs
   void (*ref)   (gpointer     cb_data);
   void (*unref) (gpointer     cb_data);
   void (*get)   (gpointer     cb_data,
+		 GSource     *source, 
 		 GSourceFunc *func,
 		 gpointer    *data);
 };
+
+typedef void (*GSourceDummyMarshal) (void);
 
 struct _GSourceFuncs
 {
@@ -71,7 +74,11 @@ struct _GSourceFuncs
   gboolean (*dispatch) (GSource    *source,
 			GSourceFunc callback,
 			gpointer    user_data);
-  void     (*destroy)  (GSource    *source); /* Can be NULL */
+  void     (*finalize) (GSource    *source); /* Can be NULL */
+
+  /* For use by g_source_set_closure */
+  GSourceFunc     closure_callback;	   
+  GSourceDummyMarshal closure_marshal; /* Really is of type GClosureMarshal */
 };
 
 /* Any definitions using GPollFD or GPollFunc are primarily
@@ -124,7 +131,9 @@ struct _GPollFD
 
 /* GMainContext: */
 
-GMainContext *g_main_context_get       (GThread      *thread);
+GMainContext *g_main_context_new       (void);
+void          g_main_context_ref       (GMainContext *context);
+void          g_main_context_unref     (GMainContext *context);
 GMainContext *g_main_context_default   (void);
 
 gboolean      g_main_context_iteration (GMainContext *context,
@@ -143,6 +152,13 @@ GSource      *g_main_context_find_source_by_funcs_user_data (GMainContext *conte
 
 /* Low level functions for implementing custom main loops.
  */
+void     g_main_context_wakeup  (GMainContext *context);
+gboolean g_main_context_acquire (GMainContext *context);
+void     g_main_context_release (GMainContext *context);
+gboolean g_main_context_wait    (GMainContext *context,
+				 GCond        *cond,
+				 GMutex       *mutex);
+
 gboolean g_main_context_prepare  (GMainContext *context,
 				  gint         *priority);
 gint     g_main_context_query    (GMainContext *context,
@@ -174,8 +190,10 @@ GMainLoop *g_main_loop_new        (GMainContext *context,
 			    	   gboolean      is_running);
 void       g_main_loop_run        (GMainLoop    *loop);
 void       g_main_loop_quit       (GMainLoop    *loop);
-void       g_main_loop_destroy    (GMainLoop    *loop);
+GMainLoop *g_main_loop_ref        (GMainLoop    *loop);
+void       g_main_loop_unref      (GMainLoop    *loop);
 gboolean   g_main_loop_is_running (GMainLoop    *loop);
+GMainContext *g_main_loop_get_context (GMainLoop    *loop);
 
 /* GSource: */
 
@@ -232,19 +250,15 @@ void g_get_current_time		        (GTimeVal	*result);
 
 /* ============== Compat main loop stuff ================== */
 
+#ifndef G_DISABLE_DEPRECATED
+
 /* Legacy names for GMainLoop functions
  */
 #define 	g_main_new(is_running)	g_main_loop_new (NULL, is_running);
 #define         g_main_run(loop)        g_main_loop_run(loop)
 #define         g_main_quit(loop)       g_main_loop_quit(loop)
-#define         g_main_destroy(loop)    g_main_loop_destroy(loop)
+#define         g_main_destroy(loop)    g_main_loop_unref(loop)
 #define         g_main_is_running(loop) g_main_loop_is_running(loop)
-
-/* Source manipulation by ID */
-gboolean g_source_remove                     (guint          tag);
-gboolean g_source_remove_by_user_data        (gpointer       user_data);
-gboolean g_source_remove_by_funcs_user_data  (GSourceFuncs  *funcs,
-					      gpointer       user_data);
 
 /* Functions to manipulate the default main loop
  */
@@ -253,6 +267,14 @@ gboolean g_source_remove_by_funcs_user_data  (GSourceFuncs  *funcs,
 #define g_main_pending()            g_main_context_pending        (NULL)
 
 #define g_main_set_poll_func(func)   g_main_context_set_poll_func (NULL, func)
+
+#endif /* G_DISABLE_DEPRECATED */
+
+/* Source manipulation by ID */
+gboolean g_source_remove                     (guint          tag);
+gboolean g_source_remove_by_user_data        (gpointer       user_data);
+gboolean g_source_remove_by_funcs_user_data  (GSourceFuncs  *funcs,
+					      gpointer       user_data);
 
 /* Idles and timeouts */
 guint		g_timeout_add_full	(gint           priority,
@@ -270,6 +292,10 @@ guint	   	g_idle_add_full		(gint   	priority,
 					 gpointer	data,
 					 GDestroyNotify notify);
 gboolean	g_idle_remove_by_data	(gpointer	data);
+
+/* Hook for GClosure / GSource integration. Don't touch */
+GLIB_VAR GSourceFuncs g_timeout_funcs;
+GLIB_VAR GSourceFuncs g_idle_funcs;
 
 #ifdef G_OS_WIN32
 

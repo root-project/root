@@ -22,8 +22,8 @@
 #ifndef __G_UNICODE_H__
 #define __G_UNICODE_H__
 
-#include <stddef.h>      /* For size_t */
-#include <g_types.h>
+#include <glib/gerror.h>
+#include <glib/gtypes.h>
 
 G_BEGIN_DECLS
 
@@ -109,7 +109,7 @@ typedef enum
  * in case the locale's charset will be changed later using setlocale()
  * or in some other way.
  */
-gboolean g_get_charset (char **charset);
+gboolean g_get_charset (G_CONST_RETURN char **charset);
 
 /* These are all analogs of the <ctype.h> functions.
  */
@@ -151,88 +151,129 @@ GUnicodeBreakType g_unichar_break_type (gunichar c) G_GNUC_CONST;
    decomposed characters in the string according to their combining
    classes.  See the Unicode manual for more information.  */
 void g_unicode_canonical_ordering (gunichar *string,
-				   size_t   len);
+				   gsize     len);
 
 /* Compute canonical decomposition of a character.  Returns g_malloc()d
    string of Unicode characters.  RESULT_LEN is set to the resulting
    length of the string.  */
 gunichar *g_unicode_canonical_decomposition (gunichar  ch,
-					     size_t   *result_len);
+					     gsize    *result_len);
 
 /* Array of skip-bytes-per-initial character.
- * We prefix variable declarations so they can
- * properly get exported in windows dlls.
  */
-#ifndef GLIB_VAR
-#  ifdef G_OS_WIN32
-#    ifdef GLIB_COMPILATION
-#      define GLIB_VAR __declspec(dllexport)
-#    else /* !GLIB_COMPILATION */
-#      define GLIB_VAR extern __declspec(dllimport)
-#    endif /* !GLIB_COMPILATION */
-#  else /* !G_OS_WIN32 */
-#    define GLIB_VAR extern
-#  endif /* !G_OS_WIN32 */
-#endif /* !GLIB_VAR */
-
-GLIB_VAR char g_utf8_skip[256];
+GLIB_VAR const gchar * const g_utf8_skip;
 
 #define g_utf8_next_char(p) (char *)((p) + g_utf8_skip[*(guchar *)(p)])
 
-gunichar g_utf8_get_char          (const gchar *p);
-gchar *  g_utf8_offset_to_pointer  (const gchar *str,
-				    gint         offset);
-gint     g_utf8_pointer_to_offset (const gchar *str,
+gunichar g_utf8_get_char           (const gchar  *p);
+gunichar g_utf8_get_char_validated (const  gchar *p,
+				    gssize        max_len);
+
+gchar*   g_utf8_offset_to_pointer (const gchar *str,
+                                   glong        offset);  
+glong    g_utf8_pointer_to_offset (const gchar *str,      
 				   const gchar *pos);
-gchar *  g_utf8_prev_char         (const gchar *p);
-gchar *  g_utf8_find_next_char    (const gchar *p,
+gchar*   g_utf8_prev_char         (const gchar *p);
+gchar*   g_utf8_find_next_char    (const gchar *p,
 				   const gchar *end);
-gchar *  g_utf8_find_prev_char    (const gchar *str,
+gchar*   g_utf8_find_prev_char    (const gchar *str,
 				   const gchar *p);
 
-gint g_utf8_strlen (const gchar *p,
-		    gint         max);
+glong g_utf8_strlen (const gchar *p,  
+		     gssize       max);        
 
 /* Copies n characters from src to dest */
-gchar *g_utf8_strncpy (gchar       *dest,
+gchar* g_utf8_strncpy (gchar       *dest,
 		       const gchar *src,
-		       size_t       n);
+		       gsize        n);
 
 /* Find the UTF-8 character corresponding to ch, in string p. These
    functions are equivalants to strchr and strrchr */
-
-gchar *g_utf8_strchr  (const gchar *p,
+gchar* g_utf8_strchr  (const gchar *p,
+		       gssize       len,
 		       gunichar     c);
-gchar *g_utf8_strrchr (const gchar *p,
+gchar* g_utf8_strrchr (const gchar *p,
+		       gssize       len,
 		       gunichar     c);
 
-gunichar2 *g_utf8_to_utf16 (const gchar     *str,
-			    gint             len);
-gunichar * g_utf8_to_ucs4  (const gchar     *str,
-			    gint             len);
-gunichar * g_utf16_to_ucs4 (const gunichar2 *str,
-			    gint             len);
-gchar *    g_utf16_to_utf8 (const gunichar2 *str,
-			    gint             len);
-gunichar * g_ucs4_to_utf16 (const gunichar  *str,
-			    gint             len);
-gchar *    g_ucs4_to_utf8  (const gunichar  *str,
-			    gint             len);
+gunichar2 *g_utf8_to_utf16     (const gchar      *str,
+				glong             len,            
+				glong            *items_read,     
+				glong            *items_written,  
+				GError          **error);
+gunichar * g_utf8_to_ucs4      (const gchar      *str,
+				glong             len,            
+				glong            *items_read,     
+				glong            *items_written,  
+				GError          **error);
+gunichar * g_utf8_to_ucs4_fast (const gchar      *str,
+				glong             len,            
+				glong            *items_written); 
+gunichar * g_utf16_to_ucs4     (const gunichar2  *str,
+				glong             len,            
+				glong            *items_read,     
+				glong            *items_written,  
+				GError          **error);
+gchar*     g_utf16_to_utf8     (const gunichar2  *str,
+				glong             len,            
+				glong            *items_read,     
+				glong            *items_written,  
+				GError          **error);
+gunichar2 *g_ucs4_to_utf16     (const gunichar   *str,
+				glong             len,            
+				glong            *items_read,     
+				glong            *items_written,  
+				GError          **error);
+gchar*     g_ucs4_to_utf8      (const gunichar   *str,
+				glong             len,            
+				glong            *items_read,     
+				glong            *items_written,  
+				GError          **error);
 
 /* Convert a single character into UTF-8. outbuf must have at
  * least 6 bytes of space. Returns the number of bytes in the
  * result.
  */
 gint      g_unichar_to_utf8 (gunichar    c,
-			     char       *outbuf);
+			     gchar      *outbuf);
 
 /* Validate a UTF8 string, return TRUE if valid, put pointer to
  * first invalid char in **end
  */
 
 gboolean g_utf8_validate (const gchar  *str,
-                          gint          max_len,
+                          gssize        max_len,  
                           const gchar **end);
+
+/* Validate a Unicode character */
+gboolean g_unichar_validate (gunichar ch);
+
+gchar *g_utf8_strup   (const gchar *str,
+		       gssize       len);
+gchar *g_utf8_strdown (const gchar *str,
+		       gssize       len);
+gchar *g_utf8_casefold (const gchar *str,
+			gssize       len);
+
+typedef enum {
+  G_NORMALIZE_DEFAULT,
+  G_NORMALIZE_NFD = G_NORMALIZE_DEFAULT,
+  G_NORMALIZE_DEFAULT_COMPOSE,
+  G_NORMALIZE_NFC = G_NORMALIZE_DEFAULT_COMPOSE,
+  G_NORMALIZE_ALL,
+  G_NORMALIZE_NFKD = G_NORMALIZE_ALL,
+  G_NORMALIZE_ALL_COMPOSE,
+  G_NORMALIZE_NFKC = G_NORMALIZE_ALL_COMPOSE
+} GNormalizeMode;
+
+gchar *g_utf8_normalize (const gchar   *str,
+			 gssize         len,
+			 GNormalizeMode mode);
+
+gint   g_utf8_collate     (const gchar *str1,
+			   const gchar *str2);
+gchar *g_utf8_collate_key (const gchar *str,
+			   gssize       len);
 
 G_END_DECLS
 

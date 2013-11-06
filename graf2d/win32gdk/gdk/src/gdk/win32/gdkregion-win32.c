@@ -117,7 +117,6 @@ GdkOverlapType gdk_region_rect_in(GdkRegion * region, GdkRectangle * rect)
 {
    GdkRegionPrivate *private;
    RECT r;
-   int res;
 
    g_return_val_if_fail(region != NULL, 0);
 

@@ -283,8 +283,6 @@ void gdk_events_init(void)
 {
    GSource *source;
    HRESULT hres;
-   HMODULE user32, imm32;
-   HINSTANCE commctrl32;
 
    gdk_ping_msg = RegisterWindowMessage("gdk-ping");
    GDK_NOTE(EVENTS, g_print("gdk-ping = %#x\n", gdk_ping_msg));
@@ -389,8 +387,6 @@ gboolean gdk_events_pending(void)
 
 GdkEvent *gdk_event_get_graphics_expose(GdkWindow * window)
 {
-   MSG xevent;
-   GdkEvent *event;
    GdkWindowPrivate *private = (GdkWindowPrivate *) window;
 
    g_return_val_if_fail(window != NULL, NULL);
@@ -686,7 +682,6 @@ gint gdk_key_grab(gint keycode, gint mod, GdkWindow * window)
 void gdk_key_ungrab(gint keycode, gint mod, GdkWindow * window)
 {
    _Gdk_key_mod *key_mod;
-   int i;
 
    if (window == NULL) return;
    if (!GDK_IS_WINDOW(window)) return;
@@ -4212,7 +4207,6 @@ build_keypress_event(GdkWindowWin32Data * windata,
    bp = event->key.string;
    while (ucleft-- > 0) {
       int first;
-      int i;
       wchar_t c = *wcp++;
 
       if (c < 0x80) {
@@ -4765,9 +4759,6 @@ gdk_event_translate(GdkEvent * event,
                     MSG * xevent,
                     gboolean * ret_val_flagp, gint * ret_valp)
 {
-   DWORD pidActWin;
-   DWORD pidThis;
-   DWORD dwStyle;
    PAINTSTRUCT paintstruct;
    HDC hdc;
    HDC bgdc;
@@ -4781,15 +4772,12 @@ gdk_event_translate(GdkEvent * event,
    HCURSOR xcursor;
    GdkWindow *window, *orig_window, *newwindow;
    GdkColormapPrivateWin32 *colormap_private;
-   GdkEventMask mask;
    GdkPixmap *pixmap;
    GdkDrawablePrivate *pixmap_private;
    int button;
-   int i, j, n, k;
+   int i, j;
    gchar buf[256];
-   gchar *msgname;
    gboolean return_val;
-   gboolean flag;
 
    return_val = FALSE;
 
@@ -6462,10 +6450,7 @@ gdk_event_translate(GdkEvent * event,
 
 void gdk_events_queue(void)
 {
-   GList *node;
-   GdkEvent *event;
    MSG msg;
-   LRESULT lres;
 
    while (!gdk_event_queue_find_first()
           && PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {

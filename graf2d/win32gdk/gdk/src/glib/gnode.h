@@ -27,7 +27,7 @@
 #ifndef __G_NODE_H__
 #define __G_NODE_H__
 
-#include <gmem.h>
+#include <glib/gmem.h>
 
 G_BEGIN_DECLS
 
@@ -72,7 +72,7 @@ struct _GNode
 				 ((GNode*) (node))->next == NULL)
 #define	 G_NODE_IS_LEAF(node)	(((GNode*) (node))->children == NULL)
 
-void     g_node_push_allocator  (GAllocator       *allocato);
+void     g_node_push_allocator  (GAllocator       *allocator);
 void     g_node_pop_allocator   (void);
 GNode*	 g_node_new		(gpointer	   data);
 void	 g_node_destroy		(GNode		  *root);

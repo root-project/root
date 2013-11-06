@@ -63,7 +63,6 @@ int __stdcall DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID reserved)
 
 gboolean _gdk_windowing_init_check(int argc, char **argv)
 {
-   gint i, j, k;
 
    if (getenv("GDK_IGNORE_WINTAB") != NULL)
       gdk_input_ignore_wintab = TRUE;

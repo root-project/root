@@ -208,7 +208,7 @@ gdk_property_change(GdkWindow * window,
 
 void gdk_property_delete(GdkWindow * window, GdkAtom property)
 {
-   gchar *prop_name, *type_name;
+   gchar *prop_name;
    extern void gdk_selection_property_delete(GdkWindow *);
 
    g_return_if_fail(window != NULL);

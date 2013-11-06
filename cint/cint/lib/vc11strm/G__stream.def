@@ -1,0 +1,22 @@
+NAME              "" WINDOWAPI
+
+VERSION           1.0
+
+HEAPSIZE  1048576,4096
+
+EXPORTS
+        G__cpp_dllrevG__stream @1
+        G__set_cpp_environmentG__stream @2
+        G__cpp_setup_tagtableG__stream @3
+        G__cpp_setup_inheritanceG__stream @4
+        G__cpp_setup_typetableG__stream @5
+        G__cpp_setup_memvarG__stream @6
+        G__cpp_setup_memfuncG__stream @7
+        G__cpp_setup_globalG__stream @8
+        G__cpp_setup_funcG__stream @9
+        G__cpp_setupG__stream @10
+        cin @11
+        cout @12
+        cerr @13
+        clog @14
+

@@ -21,7 +21,7 @@
 #ifndef __G_ERROR_H__
 #define __G_ERROR_H__
 
-#include <gquark.h>
+#include <glib/gquark.h>
 
 G_BEGIN_DECLS
 

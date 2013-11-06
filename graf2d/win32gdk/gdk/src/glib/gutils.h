@@ -27,7 +27,7 @@
 #ifndef __G_UTILS_H__
 #define __G_UTILS_H__
 
-#include <g_types.h>
+#include <glib/gtypes.h>
 #include <stdarg.h>
 
 G_BEGIN_DECLS
@@ -113,12 +113,12 @@ G_BEGIN_DECLS
 
 /* Retrive static string info
  */
-gchar*	g_get_user_name		(void);
-gchar*	g_get_real_name		(void);
-gchar*	g_get_home_dir		(void);
-gchar*	g_get_tmp_dir		(void);
-gchar*	g_get_prgname		(void);
-void	g_set_prgname		(const gchar *prgname);
+G_CONST_RETURN gchar* g_get_user_name      (void);
+G_CONST_RETURN gchar* g_get_real_name      (void);
+G_CONST_RETURN gchar* g_get_home_dir       (void);
+G_CONST_RETURN gchar* g_get_tmp_dir        (void);
+gchar*                g_get_prgname        (void);
+void                  g_set_prgname        (const gchar *prgname);
 
 
 typedef struct _GDebugKey	GDebugKey;
@@ -130,40 +130,51 @@ struct _GDebugKey
 
 /* Miscellaneous utility functions
  */
-guint	g_parse_debug_string	(const gchar *string,
-				 GDebugKey   *keys,
-				 guint	      nkeys);
-gint	g_snprintf		(gchar	     *string,
-				 gulong	      n,
-				 gchar const *format,
-				 ...) G_GNUC_PRINTF (3, 4);
-gint	g_vsnprintf		(gchar	     *string,
-				 gulong	      n,
-				 gchar const *format,
-				 va_list      args);
+guint                 g_parse_debug_string (const gchar     *string,
+					    const GDebugKey *keys,
+					    guint            nkeys);
+
+gint                  g_snprintf           (gchar       *string,
+					    gulong       n,
+					    gchar const *format,
+					    ...) G_GNUC_PRINTF (3, 4);
+gint                  g_vsnprintf          (gchar       *string,
+					    gulong       n,
+					    gchar const *format,
+					    va_list      args);
+
 /* Check if a file name is an absolute path */
-gboolean g_path_is_absolute	(const gchar *file_name);
+gboolean              g_path_is_absolute   (const gchar *file_name);
+
 /* In case of absolute paths, skip the root part */
-gchar*  g_path_skip_root	(gchar       *file_name);
+G_CONST_RETURN gchar* g_path_skip_root     (const gchar *file_name);
+
+#ifndef G_DISABLE_DEPRECATED
 
 /* These two functions are deprecated and will be removed in the next
  * major release of GLib. Use g_path_get_dirname/g_path_get_basename
  * instead. Whatch out! The string returned by g_path_get_basename
  * must be g_freed, while the string returned by g_basename must not.*/
-gchar*	g_basename		(const gchar *file_name);
-gchar*	g_dirname		(const gchar *file_name);
+G_CONST_RETURN gchar* g_basename           (const gchar *file_name);
+#define g_dirname g_path_get_dirname
+
+#endif /* G_DISABLE_DEPRECATED */
 
 /* The returned strings are newly allocated with g_malloc() */
-gchar*	g_get_current_dir	(void);
-gchar*	g_path_get_basename	(const gchar *file_name);
-gchar*	g_path_get_dirname	(const gchar *file_name);
+gchar*                g_get_current_dir    (void);
+gchar*                g_path_get_basename  (const gchar *file_name);
+gchar*                g_path_get_dirname   (const gchar *file_name);
+
+
+/* Set the pointer at the specified location to NULL */
+void                  g_nullify_pointer    (gpointer    *nullify_location);
 
 /* Get the codeset for the current locale */
 /* gchar * g_get_codeset    (void); */
 
 /* return the environment string for the variable. The returned memory
  * must not be freed. */
-gchar*  g_getenv		(const gchar *variable);
+G_CONST_RETURN gchar* g_getenv             (const gchar *variable);
 
 
 /* we try to provide a usefull equivalent for ATEXIT if it is
@@ -188,11 +199,11 @@ gchar*  g_find_program_in_path  (const gchar *program);
 
 /* Bit tests
  */
-G_INLINE_FUNC gint	g_bit_nth_lsf (guint32 mask,
+G_INLINE_FUNC gint	g_bit_nth_lsf (gulong  mask,
 				       gint    nth_bit);
-G_INLINE_FUNC gint	g_bit_nth_msf (guint32 mask,
+G_INLINE_FUNC gint	g_bit_nth_msf (gulong  mask,
 				       gint    nth_bit);
-G_INLINE_FUNC guint	g_bit_storage (guint number);
+G_INLINE_FUNC guint	g_bit_storage (gulong  number);
 
 /* Trash Stacks
  * elements need to be >= sizeof (gpointer)
@@ -213,35 +224,35 @@ G_INLINE_FUNC guint	g_trash_stack_height	(GTrashStack **stack_p);
  */
 #if defined (G_CAN_INLINE) || defined (__G_UTILS_C__)
 G_INLINE_FUNC gint
-g_bit_nth_lsf (guint32 mask,
-	       gint    nth_bit)
+g_bit_nth_lsf (gulong mask,
+	       gint   nth_bit)
 {
   do
     {
       nth_bit++;
-      if (mask & (1 << (guint) nth_bit))
+      if (mask & (1 << (gulong) nth_bit))
 	return nth_bit;
     }
   while (nth_bit < 32);
   return -1;
 }
 G_INLINE_FUNC gint
-g_bit_nth_msf (guint32 mask,
-	       gint    nth_bit)
+g_bit_nth_msf (gulong mask,
+	       gint   nth_bit)
 {
   if (nth_bit < 0)
-    nth_bit = 32;
+    nth_bit = GLIB_SIZEOF_LONG * 8;
   do
     {
       nth_bit--;
-      if (mask & (1 << (guint) nth_bit))
+      if (mask & (1 << (gulong) nth_bit))
 	return nth_bit;
     }
   while (nth_bit > 0);
   return -1;
 }
 G_INLINE_FUNC guint
-g_bit_storage (guint number)
+g_bit_storage (gulong number)
 {
   register guint n_bits = 0;
   
@@ -305,16 +316,6 @@ g_trash_stack_height (GTrashStack **stack_p)
  * we prefix variable declarations so they can
  * properly get exported in windows dlls.
  */
-#ifdef G_OS_WIN32
-#  ifdef GLIB_COMPILATION
-#    define GLIB_VAR __declspec(dllexport)
-#  else /* !GLIB_COMPILATION */
-#    define GLIB_VAR extern __declspec(dllimport)
-#  endif /* !GLIB_COMPILATION */
-#else /* !G_OS_WIN32 */
-#  define GLIB_VAR extern
-#endif /* !G_OS_WIN32 */
-
 GLIB_VAR const guint glib_major_version;
 GLIB_VAR const guint glib_minor_version;
 GLIB_VAR const guint glib_micro_version;

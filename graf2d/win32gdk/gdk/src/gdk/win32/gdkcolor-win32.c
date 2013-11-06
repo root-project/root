@@ -165,7 +165,6 @@ terms specified in this license.
 static int alloc_color(Colormap colormap, XColor * color, gulong * pixelp)
 {
    PALETTEENTRY entry, closeEntry;
-   HDC hdc;
    unsigned int i;
 
    entry = *color;
@@ -333,7 +332,6 @@ static Colormap create_colormap(HWND w, Visual * visual, gboolean alloc)
 {
    char logPalBuf[sizeof(LOGPALETTE) + 256 * sizeof(PALETTEENTRY)];
    LOGPALETTE *logPalettePtr;
-   PALETTEENTRY *entryPtr;
    Colormap colormap;
    guint i;
    HPALETTE sysPal;
@@ -1263,7 +1261,6 @@ gboolean parse_color(Colormap map, const char *spec, GdkColor * colorPtr)
 static Colormap default_colormap()
 {
    static Colormap colormap;
-   gint i;
 
    if (colormap)
       return colormap;
@@ -1277,7 +1274,6 @@ GdkColormap *gdk_colormap_new(GdkVisual * visual, gint private_cmap)
    GdkColormap *colormap;
    GdkColormapPrivateWin32 *private;
    Visual *xvisual;
-   int size;
    int i;
 
    g_return_val_if_fail(visual != NULL, NULL);
@@ -1410,7 +1406,6 @@ GdkColormap *gdk_colormap_get_system(void)
 {
    static GdkColormap *colormap = NULL;
    GdkColormapPrivateWin32 *private;
-   gint i;
 
    if (!colormap) {
       private = g_new(GdkColormapPrivateWin32, 1);
@@ -1467,11 +1462,7 @@ gint gdk_colormap_get_system_size(void)
 void gdk_colormap_change(GdkColormap * colormap, gint ncolors)
 {
    GdkColormapPrivateWin32 *private;
-   GdkVisual *visual;
    XColor *palette;
-   gint shift;
-   int max_colors;
-   int size;
    int i;
 
    g_return_if_fail(colormap != NULL);
@@ -1532,7 +1523,6 @@ gdk_colors_alloc(GdkColormap * colormap,
 gboolean gdk_color_parse(const gchar * spec, GdkColor * color)
 {
    Colormap xcolormap;
-   XColor xcolor;
 
    g_return_val_if_fail(spec != NULL, FALSE);
    g_return_val_if_fail(color != NULL, FALSE);

@@ -15,7 +15,32 @@ WIN32GDKDIRI := $(WIN32GDKDIR)/inc
 GDKVERS      := gdk/src
 GDKDIRS      := $(MODDIR)/$(GDKVERS)/gdk
 GDKDIRI      := $(MODDIR)/$(GDKVERS)/gdk
+GLIBDIR      := $(MODDIR)/$(GDKVERS)/glib
 GLIBDIRI     := $(MODDIR)/$(GDKVERS)/glib
+ICONVDIR     := $(MODDIR)/$(GDKVERS)/iconv
+
+##### iconv-1.3.dll #####
+ICONVDLLA    := $(call stripsrc,$(ICONVDIR))/iconv-1.3.dll
+ICONVLIBA    := $(call stripsrc,$(ICONVDIR))/iconv-1.3.lib
+ICONVDLL     := bin/iconv-1.3.dll
+ICONVSRC     := $(wildcard $(ICONVDIR)/*.c)
+
+ICONVNMCXXFLAGS:= "$(OPT) $(BLDCXXFLAGS) -FI$(shell cygpath -w '$(ROOT_SRCDIR)/build/win/w32pragma.h')"
+ifeq (yes,$(WINRTDEBUG))
+ICONVNMCXXFLAGS += DEBUG=1
+endif
+
+##### glib-1.3.dll #####
+GLIBDLLA    := $(call stripsrc,$(GLIBDIR))/glib-1.3.dll
+GLIBLIBA    := $(call stripsrc,$(GLIBDIR))/glib-1.3.lib
+GLIBDLL     := bin/glib-1.3.dll
+GLIBLIB     := $(LPATH)/glib-1.3.lib
+GLIBSRC     := $(wildcard $(GLIBDIR)/*.c)
+
+GLIBNMCXXFLAGS:= "$(OPT) $(BLDCXXFLAGS) -FI$(shell cygpath -w '$(ROOT_SRCDIR)/build/win/w32pragma.h')"
+ifeq (yes,$(WINRTDEBUG))
+GLIBNMCXXFLAGS += DEBUG=1
+endif
 
 ##### gdk-1.3.dll #####
 GDKDLLA      := $(call stripsrc,$(GDKDIRS)/gdk-1.3.dll)
@@ -49,8 +74,8 @@ WIN32GDKLIB  := $(LPATH)/libWin32gdk.$(SOEXT)
 WIN32GDKMAP  := $(WIN32GDKLIB:.$(SOEXT)=.rootmap)
 
 # GDK libraries and DLL's
-GDKLIBS      := lib/glib-1.3.lib
-GDKDLLS      := bin/glib-1.3.dll bin/iconv-1.3.dll
+GDKLIBS      := $(GLIBLIB)
+GDKDLLS      := $(GLIBDLL) $(ICONVDLL)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(WIN32GDKH))
@@ -66,11 +91,36 @@ INCLUDEFILES += $(WIN32GDKDEP)
 include/%.h:    $(WIN32GDKDIRI)/%.h
 		cp $< $@
 
-lib/%.lib:      $(WIN32GDKDIR)/gdk/lib/%.lib
+$(ICONVLIBA):     $(ICONVSRC)
+		$(MAKEDIR)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.lib' --exclude '*.dll' $(ICONVDIR) $(dir $(call stripsrc,$(ICONVDIR)))
+endif
+		@(echo "*** Building $@..."; \
+		  unset MAKEFLAGS; \
+		  cd $(call stripsrc,$(ICONVDIR)); \
+		  nmake -nologo -f makefile.msc \
+		  NMCXXFLAGS=$(ICONVNMCXXFLAGS) VC_MAJOR=$(VC_MAJOR));
+
+$(GLIBLIBA):     $(GLIBSRC) $(ICONVLIBA)
+		$(MAKEDIR)
+ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
+		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.lib' --exclude '*.dll' $(GLIBDIR) $(dir $(call stripsrc,$(GLIBDIR)))
+endif
+		@(echo "*** Building $@..."; \
+		  unset MAKEFLAGS; \
+		  cd $(call stripsrc,$(GLIBDIR)); \
+		  nmake -nologo -f makefile.msc \
+		  NMCXXFLAGS=$(GLIBNMCXXFLAGS) VC_MAJOR=$(VC_MAJOR));
+
+$(ICONVDLL):      $(ICONVLIBA)
+		cp $(ICONVDLLA) $@
+
+$(GLIBLIB):      $(GLIBLIBA)
 		cp $< $@
 
-bin/%.dll:      $(WIN32GDKDIR)/gdk/dll/%.dll
-		cp $< $@
+$(GLIBDLL):      $(GLIBLIBA)
+		cp $(GLIBDLLA) $@
 
 $(GDKLIB):      $(GDKLIBA)
 		cp $< $@
@@ -78,11 +128,10 @@ $(GDKLIB):      $(GDKLIBA)
 $(GDKDLL):      $(GDKLIBA)
 		cp $(GDKDLLA) $@
 
-$(GDKLIBA):     $(GDKSRC)
+$(GDKLIBA):     $(GDKSRC) $(GLIBLIB)
 		$(MAKEDIR)
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@$(RSYNC) --exclude '.svn' --exclude '*.o' --exclude '*.lib' --exclude '*.dll' $(GDKDIRS) $(dir $(call stripsrc,$(GDKDIRS)))
-		@$(RSYNC) --exclude '.svn' $(WIN32GDKDIR)/gdk/lib $(call stripsrc,$(WIN32GDKDIR)/gdk)
 endif
 		@(echo "*** Building $@..."; \
 		  unset MAKEFLAGS; \

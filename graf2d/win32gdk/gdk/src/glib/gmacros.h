@@ -31,6 +31,10 @@
 #ifndef __G_MACROS_H__
 #define __G_MACROS_H__
 
+/* We include stddef.h to get the system's definition of NULL
+ */
+#include <stddef.h>
+
 /* Here we provide G_GNUC_EXTENSION as an alias for __extension__,
  * where this is valid. This allows for warningless compilation of
  * "long long" types even in the presence of '-ansi -pedantic'. 
@@ -63,6 +67,8 @@
   __attribute__((const))
 #define G_GNUC_UNUSED                           \
   __attribute__((unused))
+#define G_GNUC_NO_INSTRUMENT			\
+  __attribute__((no_instrument_function))
 #else   /* !__GNUC__ */
 #define G_GNUC_PRINTF( format_idx, arg_idx )
 #define G_GNUC_SCANF( format_idx, arg_idx )
@@ -70,6 +76,7 @@
 #define G_GNUC_NORETURN
 #define G_GNUC_CONST
 #define G_GNUC_UNUSED
+#define G_GNUC_NO_INSTRUMENT
 #endif  /* !__GNUC__ */
 
 /* Wrap the gcc __PRETTY_FUNCTION__ and __FUNCTION__ variables with
@@ -140,6 +147,11 @@
  * incorrect results.
  */
 #define G_N_ELEMENTS(arr)		(sizeof (arr) / sizeof ((arr)[0]))
+
+/* Macros by analogy to GINT_TO_POINTER, GPOINTER_TO_INT
+ */
+#define GPOINTER_TO_SIZE(p)	((gsize) (p))
+#define GSIZE_TO_POINTER(s)	((gpointer) (gsize) (s))
 
 /* Provide convenience macros for handling structure
  * fields through their offsets.

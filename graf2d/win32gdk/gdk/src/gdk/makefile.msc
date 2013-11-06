@@ -73,7 +73,7 @@ win32\gdk-win32.lib:
 	cd ..
 
 gdk-$(GTK_VER).dll : $(gdk_OBJECTS) gdk.def win32\gdk-win32.lib
-	$(CC) $(CFLAGS) -LD -Fegdk-$(GTK_VER).dll $(gdk_OBJECTS) win32\gdk-win32.lib ..\..\lib\glib-$(GLIB_VER).lib gdi32.lib user32.lib imm32.lib shell32.lib ole32.lib uuid.lib Msimg32.lib win32\gdk.res $(LDFLAGS) /def:gdk.def
+	$(CC) $(CFLAGS) -LD -Fegdk-$(GTK_VER).dll $(gdk_OBJECTS) win32\gdk-win32.lib $(GLIB)\glib-$(GLIB_VER).lib gdi32.lib user32.lib imm32.lib shell32.lib ole32.lib uuid.lib Msimg32.lib win32\gdk.res $(LDFLAGS) /def:gdk.def
 	$(MT_DLL)
 	$(CLEAN_MT)
 
