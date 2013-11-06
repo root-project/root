@@ -211,23 +211,9 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
 Bool_t PyROOT::TMethodHolder::InitExecutor_( TExecutor*& executor )
 {
 // install executor conform to the return type
-
-// CLING WORKAROUND -- #100728: can have received the wrong overload
-   MethodInfo_t* mi = gInterpreter->CallFunc_FactoryMethod(fMethodCall);
-   if ( gInterpreter->MethodInfo_IsValid( mi ) &&
-     /* beats me why void needs to be filtered, but it's always the wrong answer AFAICS */
-        gInterpreter->MethodInfo_TypeNormalizedName( mi ) != "void" ) {
-      executor = CreateExecutor( gInterpreter->MethodInfo_TypeNormalizedName( mi ) );
-   } else {
-//-- CLING WORKAROUND
    executor = CreateExecutor( (Bool_t)fMethod == true ?
       fMethod.TypeOf().ReturnType().Name( Rflx::QUALIFIED | Rflx::SCOPED | Rflx::FINAL )
       : fClass.Name( Rflx::SCOPED | Rflx::FINAL ) );
-// CLING WORKAROUND -- #100728:
-   }
-   gInterpreter->MethodInfo_Delete( mi );
-//-- CLING WORKAROUND
-
    if ( ! executor )
       return kFALSE;
 
