@@ -286,9 +286,6 @@ class STL6IteratorComparisonTestCase( MyTestCase ):
 
       self.assertEqual( len(v), 1 )
 
-      if FIXCLING:       # failure b/c no operator== available
-         return
-
       b1, e1 = v.begin(), v.end()
       b2, e2 = v.begin(), v.end()
 
