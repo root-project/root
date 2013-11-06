@@ -3014,10 +3014,6 @@ int RootCling(int argc,
       dictpathname = argv[ic];
       dictname = llvm::sys::path::filename(dictpathname);
 
-      string tmpdictpathname(dictpathname);
-      tmpCatalog.addFileName(tmpdictpathname);
-      fp = fopen(tmpdictpathname.c_str(), "w");
-      if (fp) fclose(fp);    // make sure file is created and empty
       ic++;
 
    } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
@@ -3320,20 +3316,20 @@ int RootCling(int argc,
    std::ofstream headerout;
    string main_dictname(dictpathname);
    if (!dictpathname.empty()) {
-      dictpathname = tmpCatalog.getTmpFileName(dictpathname); // This one has already been registered.
-      fileout.open(dictpathname.c_str());
-      dictSrcOut = &fileout;
-      if (!(*dictSrcOut)) {
-         ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
-               dictpathname.c_str());
-         return 1;
-      }
       tmpCatalog.addFileName(dictheader);
       headerout.open(dictheader.c_str());
       dictHdrOut = &headerout;
       if (!(*dictHdrOut)) {
          ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
-               dictheader.c_str());
+                                 dictheader.c_str());
+         return 1;
+      }
+      tmpCatalog.addFileName(dictpathname);
+      fileout.open(dictpathname.c_str());
+      dictSrcOut = &fileout;
+      if (!(*dictSrcOut)) {
+         ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
+               dictpathname.c_str());
          return 1;
       }
    } else {
