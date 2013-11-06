@@ -174,18 +174,6 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
       &fOffset,
       ROOT::kExactMatch );
 
-// CLING WORKAROUND -- ROOT/meta thinks string is string, but gInterpreter disagrees
-   if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) && fClass.Name() == "string" ) {
-      gInterpreter->CallFunc_SetFuncProto(
-         fMethodCall,
-         gcl,
-         "basic_string<char,char_traits<char>,allocator<char> >",
-         callString.c_str(),
-         (Bool_t)fMethod == true ? fMethod.IsConstant() : kFALSE,
-         &fOffset);      // <- no kExactMatch as that will fail
-   }
-// -- CLING WORKAROUND
-
 // CLING WORKAROUND -- The number of arguments is not always correct (e.g. when there
 //                     are default parameters, causing the callString to be wrong and
 //                     the exact match to fail); or the method may have been inline or
