@@ -723,7 +723,7 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
          }
       }
 
-   // for std::map, extract the key_type or iterator
+   // for std::map, extract the key_type, or iterator for either map or list
       else {
          pos = tclean.rfind( "::key_type" );
          if ( pos != std::string::npos ) {
@@ -736,8 +736,7 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
                         clName.substr( pos1+1, pos2-pos1-1 ) +
                         (isReference ? "&" : Compound( clName ));
                         }
-         } else if ( tclean.find( "_Rb_tree_iterator<pair" ) != std::string::npos &&
-                     tclean.rfind( "::_Self" ) != std::string::npos ) {
+         } else if ( tclean.rfind( "::_Self" ) != std::string::npos ) {
             tclean = containing_scope ? containing_scope->GetName() : tclean;
          }
       }
