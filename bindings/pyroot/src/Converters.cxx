@@ -919,6 +919,23 @@ Bool_t PyROOT::TRootObjectPtrConverter::ToMemory( PyObject* value, void* address
 }
 
 //____________________________________________________________________________
+// CLING WORKAROUND -- classes for STL iterators are completely undefined in that
+// they come in a bazillion different guises, so just do whatever
+Bool_t PyROOT::TSTLIteratorConverter::SetArg(
+      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t user )
+{
+   if ( ! ObjectProxy_Check( pyobject ) )
+      return kFALSE;
+
+// just set the pointer value, no check
+   ObjectProxy* pyobj = (ObjectProxy*)pyobject;
+   para.fVoidp = pyobj->GetObject();
+   if ( func ) gInterpreter->CallFunc_SetArg( func,  para.fLong );
+   return kTRUE;
+}
+// -- END CLING WORKAROUND
+
+//____________________________________________________________________________
 Bool_t PyROOT::TVoidPtrRefConverter::SetArg(
       PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
 {
@@ -1048,6 +1065,11 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
 // converters for known/ROOT classes and default (void*)
    TConverter* result = 0;
    if ( TClass* klass = TClass::GetClass( realType.c_str() ) ) {
+   // CLING WORKAROUND -- special case for STL iterators
+      if ( realType.find( "__gnu_cxx::__normal_iterator", 0 ) == 0 )
+         result = new TSTLIteratorConverter();
+      else
+   // -- CLING WORKAROUND
       if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
          result = new TRootObjectPtrConverter( klass, control );
       else if ( cpd == "*" )

@@ -419,7 +419,7 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
       return (h->second)();
 
 // resolve typedefs etc., and collect qualifiers
-   std::string resolvedType = TClassEdit::ResolveTypedef( fullType.c_str(), true );
+   std::string resolvedType = Utility::ResolveTypedef( fullType );
 
 // a full, qualified matching executor is preferred
    h = gExecFactories.find( resolvedType );

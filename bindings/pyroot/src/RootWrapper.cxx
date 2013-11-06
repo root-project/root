@@ -38,6 +38,10 @@
 #include <algorithm>
 #include <vector>
 
+//- FOR CLING WORKAROUND
+#include "TError.h"
+//
+
 
 //- data _______________________________________________________________________
 R__EXTERN PyObject* gRootModule;
@@ -763,7 +767,12 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
    }
 
 // get actual class for recycling checking and/or downcasting
+// CLING WORKAROUND -- silence:
+// Error in <TStreamerInfo::Build>: __gnu_cxx::__normal_iterator<int*,vector<int> >, discarding: int* _M_current, no [dimension]
+   Int_t oldval = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = 5000;
    TClass* clActual = isRef ? 0 : klass->GetActualClass( address );
+   gErrorIgnoreLevel = oldval;
 
 // obtain pointer to TObject base class (if possible) for memory mgmt; this is
 // done before downcasting, as upcasting from the current class may be easier and

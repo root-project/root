@@ -22,6 +22,7 @@
 #include "TCollection.h"
 #include "TDataType.h"
 #include "TFunction.h"
+#include "TMethod.h"
 #include "TMethodArg.h"
 #include "TError.h"
 #include "TInterpreter.h"
@@ -351,39 +352,18 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const char* op, co
 
 //____________________________________________________________________________
 static inline TFunction* FindAndAddOperator( const std::string& lcname, const std::string& rcname,
-     const char* op, TCollection* funcs = 0 ) {
+     const char* op, TClass* klass = 0 ) {
 // Helper to find a function with matching signature in 'funcs'.
    std::string opname = "operator";
    opname += op;
+   std::string proto = lcname + ", " + rcname;
 
 // case of global namespace
-   if ( ! funcs ) {
-      std::string proto = lcname + ", " + rcname;
+   if ( ! klass )
       return gROOT->GetGlobalFunctionWithPrototype( opname.c_str(), proto.c_str() );
-   }
 
 // case of specific namespace
-   TIter ifunc( funcs );
-
-   TFunction* func = 0;
-   while ( (func = (TFunction*)ifunc.Next()) ) {
-      if ( func->GetListOfMethodArgs()->GetSize() != 2 )
-         continue;
-
-      if ( func->GetName() == opname ) {
-         if ( ( lcname == ResolveTypedef( TClassEdit::CleanType(
-                  ((TMethodArg*)func->GetListOfMethodArgs()->At(0))->GetTypeNormalizedName().c_str(), 1 ).c_str() ) ) &&
-              ( rcname == ResolveTypedef( TClassEdit::CleanType(
-                  ((TMethodArg*)func->GetListOfMethodArgs()->At(1))->GetTypeNormalizedName().c_str(), 1 ).c_str() ) ) ) {
-
-         // done; break out loop
-            return func;
-         }
-
-      }
-   }
-
-   return 0;
+   return klass->GetMethodWithPrototype( opname.c_str(), proto.c_str() );
 }
 
 Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string& lcname,
@@ -396,7 +376,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 
    PyCallable* pyfunc = 0;
    if ( gnucxx.GetClass() ) {
-      TFunction* func = FindAndAddOperator( lcname, rcname, op, gnucxx->GetListOfMethods() );
+      TFunction* func = FindAndAddOperator( lcname, rcname, op, gnucxx.GetClass() );
       if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "__gnu_cxx" ), func );
    }
 
