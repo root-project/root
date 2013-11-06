@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.log xr.*
+CLEAN_TARGETS += $(ALL_LIBRARIES) *_rflx*
 TEST_TARGETS += root_5627
 
 # Search for Rules.mk in roottest/scripts
@@ -22,9 +22,8 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
+include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
-root_5627.log: runGenreflex.sh
-	$(CMDECHO) ./runGenreflex.sh >$@ 2>&1
+classes_rflx.cpp: TH2Analyzer.h
 
-root_5627: root_5627.log
-	$(TestDiff) && touch $@
+exec5627.log:  libclasses_dictrflx.$(DllSuf)

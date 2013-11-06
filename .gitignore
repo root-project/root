@@ -31,6 +31,7 @@ pt_*.root
 pt_*.gif
 dummy[0-9]*.C
 AutoDict_*.cxx
+*_rflx.h
 *_rflx.cpp
 *_rflxdriver.C
 *~

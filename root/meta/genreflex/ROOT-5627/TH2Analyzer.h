@@ -43,7 +43,7 @@ class TH2Analyzer : public TObject {
 
   ~TH2Analyzer() {Reset(); }
 
-  void Reset();
+  void Reset() {}
 
   void SetHisto( const TH2* h ) {hist2D_ = h;}
 
@@ -62,10 +62,10 @@ class TH2Analyzer : public TObject {
 
  private:
 
-  void ProcessSlices(  const TH2D* histo );
+  void ProcessSlices(  const TH2D* /* histo */ ) {}
 
   // no need for const, because i is copied
-  void ProcessSlice(const int i, TH1D* histo ) const;
+  void ProcessSlice(const int /* i */, TH1D* /* histo*/ ) const {}
 
   const TH2* hist2D_;
   TH2D*      rebinnedHist2D_;
