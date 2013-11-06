@@ -21,7 +21,7 @@
 #ifndef __G_FILEUTILS_H__
 #define __G_FILEUTILS_H__
 
-#include <gerror.h>
+#include <glib/gerror.h>
 
 G_BEGIN_DECLS
 
@@ -76,7 +76,7 @@ gboolean g_file_test         (const gchar  *filename,
                               GFileTest     test);
 gboolean g_file_get_contents (const gchar  *filename,
                               gchar       **contents,
-                              guint        *length,
+                              gsize        *length,    
                               GError      **error);
 
 
@@ -87,6 +87,12 @@ int     g_mkstemp            (char         *tmpl);
 int     g_file_open_tmp      (const char   *tmpl,
 			      char        **name_used,
 			      GError      **error);
+
+gchar *g_build_path     (const gchar *separator,
+			 const gchar *first_element,
+			 ...);
+gchar *g_build_filename (const gchar *first_element,
+			 ...);
 
 G_END_DECLS
 

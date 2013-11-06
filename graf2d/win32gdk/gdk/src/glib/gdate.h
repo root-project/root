@@ -27,7 +27,7 @@
 #ifndef __G_DATE_H__
 #define __G_DATE_H__
 
-#include <gquark.h>
+#include <glib/gquark.h>
 
 G_BEGIN_DECLS
 
@@ -126,7 +126,7 @@ void         g_date_free                  (GDate       *date);
  * dates (the exceptions are the mutators, since you need those to
  * return to validity).
  */
-gboolean     g_date_valid                 (GDate       *date);
+gboolean     g_date_valid                 (const GDate *date);
 gboolean     g_date_valid_day             (GDateDay     day) G_GNUC_CONST;
 gboolean     g_date_valid_month           (GDateMonth month) G_GNUC_CONST;
 gboolean     g_date_valid_year            (GDateYear  year) G_GNUC_CONST;
@@ -136,20 +136,20 @@ gboolean     g_date_valid_dmy             (GDateDay     day,
                                            GDateMonth   month,
                                            GDateYear    year) G_GNUC_CONST;
 
-GDateWeekday g_date_get_weekday           (GDate       *date);
-GDateMonth   g_date_get_month             (GDate       *date);
-GDateYear    g_date_get_year              (GDate       *date);
-GDateDay     g_date_get_day               (GDate       *date);
-guint32      g_date_get_julian            (GDate       *date);
-guint        g_date_get_day_of_year       (GDate       *date);
+GDateWeekday g_date_get_weekday           (const GDate *date);
+GDateMonth   g_date_get_month             (const GDate *date);
+GDateYear    g_date_get_year              (const GDate *date);
+GDateDay     g_date_get_day               (const GDate *date);
+guint32      g_date_get_julian            (const GDate *date);
+guint        g_date_get_day_of_year       (const GDate *date);
 /* First monday/sunday is the start of week 1; if we haven't reached
  * that day, return 0. These are not ISO weeks of the year; that
  * routine needs to be added.
  * these functions return the number of weeks, starting on the
  * corrsponding day
  */
-guint        g_date_get_monday_week_of_year (GDate      *date);
-guint        g_date_get_sunday_week_of_year (GDate      *date);
+guint        g_date_get_monday_week_of_year (const GDate *date);
+guint        g_date_get_sunday_week_of_year (const GDate *date);
 
 /* If you create a static date struct you need to clear it to get it
  * in a sane state before use. You can clear a whole array at
@@ -178,8 +178,8 @@ void         g_date_set_dmy               (GDate       *date,
                                            GDateYear    y);
 void         g_date_set_julian            (GDate       *date,
                                            guint32      julian_date);
-gboolean     g_date_is_first_of_month     (GDate       *date);
-gboolean     g_date_is_last_of_month      (GDate       *date);
+gboolean     g_date_is_first_of_month     (const GDate *date);
+gboolean     g_date_is_last_of_month      (const GDate *date);
 
 /* To go forward by some number of weeks just go forward weeks*7 days */
 void         g_date_add_days              (GDate       *date,
@@ -204,11 +204,23 @@ guint8       g_date_get_days_in_month     (GDateMonth   month,
 guint8       g_date_get_monday_weeks_in_year  (GDateYear    year) G_GNUC_CONST;
 guint8       g_date_get_sunday_weeks_in_year  (GDateYear    year) G_GNUC_CONST;
 
+/* Returns the number of days between the two dates.  If date2 comes
+   before date1, a negative value is return. */
+gint         g_date_days_between          (const GDate *date1,
+					   const GDate *date2);
+
 /* qsort-friendly (with a cast...) */
-gint         g_date_compare               (GDate       *lhs,
-                                           GDate       *rhs);
-void         g_date_to_struct_tm          (GDate       *date,
+gint         g_date_compare               (const GDate *lhs,
+                                           const GDate *rhs);
+void         g_date_to_struct_tm          (const GDate *date,
                                            struct tm   *tm);
+
+void         g_date_clamp                 (GDate *date,
+					   const GDate *min_date,
+					   const GDate *max_date);
+
+/* Swap date1 and date2's values if date1 > date2. */
+void         g_date_order                 (GDate *date1, GDate *date2);
 
 /* Just like strftime() except you can only use date-related formats.
  *   Using a time format is undefined.
@@ -216,7 +228,23 @@ void         g_date_to_struct_tm          (GDate       *date,
 gsize        g_date_strftime              (gchar       *s,
                                            gsize        slen,
                                            const gchar *format,
-                                           GDate       *date);
+                                           const GDate *date);
+
+#ifndef G_DISABLE_DEPRECATED
+
+#define g_date_weekday 			g_date_get_weekday
+#define g_date_month 			g_date_get_month
+#define g_date_year 			g_date_get_year
+#define g_date_day 			g_date_get_day
+#define g_date_julian 			g_date_get_julian
+#define g_date_day_of_year 		g_date_get_day_of_year
+#define g_date_monday_week_of_year 	g_date_get_monday_week_of_year
+#define g_date_sunday_week_of_year 	g_date_get_sunday_week_of_year
+#define g_date_days_in_month 		g_date_get_days_in_month
+#define g_date_monday_weeks_in_year 	g_date_get_monday_weeks_in_year
+#define g_date_sunday_weeks_in_year	g_date_get_sunday_weeks_in_year
+
+#endif /* G_DISABLE_DEPRECATED */
 
 G_END_DECLS
 

@@ -591,7 +591,7 @@ gdk_dropfiles_filter(GdkXEvent * xev, GdkEvent * event, gpointer data)
    MSG *msg = (MSG *) xev;
    HANDLE hdrop;
    POINT pt;
-   gint nfiles, i, k;
+   gint nfiles, i;
    guchar fileName[MAX_PATH], linkedFile[MAX_PATH];
 
    if (text_uri_list_atom == GDK_NONE)
@@ -658,7 +658,6 @@ gdk_dropfiles_filter(GdkXEvent * xev, GdkEvent * event, gpointer data)
 
 void gdk_dnd_init(void)
 {
-   HRESULT hres;
 #ifdef OLE2_DND
    hres = OleInitialize(NULL);
 

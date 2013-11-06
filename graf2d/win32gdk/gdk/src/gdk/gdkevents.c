@@ -604,10 +604,6 @@ gboolean
 gdk_check_typed_window_event(GdkWindow * w, gint type, GdkEvent * event)
 {
 
-   GList *cPtr;
-   GdkEventPrivate *pevent;
-   GList *head;
-
 //    GList *tmp_list = gdk_queued_events;
    GList *tmp_list = gdk_event_queue_find_first();
    while (tmp_list) {

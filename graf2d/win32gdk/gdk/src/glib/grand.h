@@ -27,7 +27,7 @@
 #ifndef __G_RAND_H__
 #define __G_RAND_H__
 
-#include <g_types.h>
+#include <glib/gtypes.h>
 
 G_BEGIN_DECLS
 
@@ -49,7 +49,7 @@ void    g_rand_free            (GRand      *rand);
 void    g_rand_set_seed        (GRand      *rand,
                                 guint32     seed);
 
-#define g_rand_boolean(rand) (g_rand_int ((rand)) & (1<<15))
+#define g_rand_boolean(rand) ((g_rand_int (rand) & (1 << 15)) != 0)
 
 guint32 g_rand_int             (GRand      *rand);
 gint32  g_rand_int_range       (GRand      *rand,
@@ -62,7 +62,7 @@ gdouble g_rand_double_range    (GRand      *rand,
 
 void    g_random_set_seed      (guint32     seed);
 
-#define g_random_boolean() (g_rand_boolean ((rand)))
+#define g_random_boolean() ((g_random_int () & (1 << 15)) != 0)
 
 guint32 g_random_int           (void);
 gint32  g_random_int_range     (gint32      begin,

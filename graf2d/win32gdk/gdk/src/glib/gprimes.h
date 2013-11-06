@@ -27,7 +27,7 @@
 #ifndef __G_PRIMES_H__
 #define __G_PRIMES_H__
 
-#include <g_types.h>
+#include <glib/gtypes.h>
 
 G_BEGIN_DECLS
 

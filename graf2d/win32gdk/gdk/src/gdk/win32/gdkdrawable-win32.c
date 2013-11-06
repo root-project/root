@@ -177,7 +177,6 @@ gdk_win32_draw_rectangle(GdkDrawable * drawable,
    HDC hdc;
    HGDIOBJ oldpen_or_brush;
    POINT pts[4];
-   HBRUSH stipple;
    gboolean ok = TRUE;
 
    GDK_NOTE(MISC,
@@ -597,7 +596,7 @@ gdk_win32_draw_text_wc(GdkDrawable * drawable,
                        gint y, const GdkWChar * text, gint text_length)
 {
    GdkGCPrivate *gc_private;
-   gint i, wlen;
+   gint i;
    wchar_t *wcstr;
    gdk_draw_text_arg arg;
 

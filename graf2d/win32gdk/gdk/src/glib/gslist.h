@@ -27,7 +27,7 @@
 #ifndef __G_SLIST_H__
 #define __G_SLIST_H__
 
-#include <gmem.h>
+#include <glib/gmem.h>
 
 G_BEGIN_DECLS
 
@@ -41,7 +41,7 @@ struct _GSList
 
 /* Singly linked lists
  */
-void     g_slist_push_allocator (GAllocator       *allocato);
+void     g_slist_push_allocator (GAllocator       *allocator);
 void     g_slist_pop_allocator  (void);
 GSList*  g_slist_alloc          (void);
 void     g_slist_free           (GSList           *list);
@@ -62,6 +62,8 @@ GSList*  g_slist_insert_before  (GSList           *slist,
 GSList*  g_slist_concat         (GSList           *list1,
 				 GSList           *list2);
 GSList*  g_slist_remove         (GSList           *list,
+				 gconstpointer     data);
+GSList*  g_slist_remove_all     (GSList           *list,
 				 gconstpointer     data);
 GSList*  g_slist_remove_link    (GSList           *list,
 				 GSList           *link);
@@ -88,7 +90,7 @@ void     g_slist_foreach        (GSList           *list,
 GSList*  g_slist_sort           (GSList           *list,
 				 GCompareFunc      compare_func);
 GSList*  g_slist_sort_with_data (GSList           *list,
-				 GCompareFuncData  compare_func,
+				 GCompareDataFunc  compare_func,
 				 gpointer          user_data);
 gpointer g_slist_nth_data       (GSList           *list,
 				 guint             n);

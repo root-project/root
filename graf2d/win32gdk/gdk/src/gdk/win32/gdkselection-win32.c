@@ -158,7 +158,6 @@ gdk_selection_convert(GdkWindow * requestor,
                       GdkAtom selection, GdkAtom target, guint32 time)
 {
    HGLOBAL hdata;
-   GdkSelProp *prop;
    guchar *ptr, *data, *datap, *p;
    guint i, length, slength;
    gchar *sel_name, *tgt_name;

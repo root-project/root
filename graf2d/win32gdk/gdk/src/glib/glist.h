@@ -27,7 +27,7 @@
 #ifndef __G_LIST_H__
 #define __G_LIST_H__
 
-#include <gmem.h>
+#include <glib/gmem.h>
 
 G_BEGIN_DECLS
 
@@ -42,7 +42,7 @@ struct _GList
 
 /* Doubly linked lists
  */
-void     g_list_push_allocator (GAllocator       *allocato);
+void     g_list_push_allocator (GAllocator       *allocator);
 void     g_list_pop_allocator  (void);
 GList*   g_list_alloc          (void);
 void     g_list_free           (GList            *list);
@@ -57,9 +57,14 @@ GList*   g_list_insert         (GList            *list,
 GList*   g_list_insert_sorted  (GList            *list,
 				gpointer          data,
 				GCompareFunc      func);
+GList*   g_list_insert_before  (GList            *list,
+				GList            *sibling,
+				gpointer          data);
 GList*   g_list_concat         (GList            *list1,
 				GList            *list2);
 GList*   g_list_remove         (GList            *list,
+				gconstpointer     data);
+GList*   g_list_remove_all     (GList            *list,
 				gconstpointer     data);
 GList*   g_list_remove_link    (GList            *list,
 				GList            *llink);
@@ -68,6 +73,8 @@ GList*   g_list_delete_link    (GList            *list,
 GList*   g_list_reverse        (GList            *list);
 GList*   g_list_copy           (GList            *list);
 GList*   g_list_nth            (GList            *list,
+				guint             n);
+GList*   g_list_nth_prev       (GList            *list,
 				guint             n);
 GList*   g_list_find           (GList            *list,
 				gconstpointer     data);
@@ -87,7 +94,7 @@ void     g_list_foreach        (GList            *list,
 GList*   g_list_sort           (GList            *list,
 				GCompareFunc      compare_func);
 GList*   g_list_sort_with_data (GList            *list,
-				GCompareFuncData  compare_func,
+				GCompareDataFunc  compare_func,
 				gpointer          user_data);
 gpointer g_list_nth_data       (GList            *list,
 				guint             n);

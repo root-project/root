@@ -27,7 +27,7 @@
 #ifndef __G_ARRAY_H__
 #define __G_ARRAY_H__
 
-#include <g_types.h>
+#include <glib/gtypes.h>
 
 G_BEGIN_DECLS
 
@@ -58,9 +58,9 @@ struct _GPtrArray
  * order by moving the last element to the position of the removed 
  */
 
-#define g_array_append_val(a,v)	  g_array_append_vals (a, &v, 1)
-#define g_array_prepend_val(a,v)  g_array_prepend_vals (a, &v, 1)
-#define g_array_insert_val(a,i,v) g_array_insert_vals (a, i, &v, 1)
+#define g_array_append_val(a,v)	  g_array_append_vals (a, &(v), 1)
+#define g_array_prepend_val(a,v)  g_array_prepend_vals (a, &(v), 1)
+#define g_array_insert_val(a,i,v) g_array_insert_vals (a, i, &(v), 1)
 #define g_array_index(a,t,i)      (((t*) (a)->data) [(i)])
 
 GArray* g_array_new               (gboolean          zero_terminated,
@@ -91,7 +91,7 @@ GArray* g_array_remove_index_fast (GArray           *array,
 void    g_array_sort              (GArray           *array,
 				   GCompareFunc      compare_func);
 void    g_array_sort_with_data    (GArray           *array,
-				   GCompareFuncData  compare_func,
+				   GCompareDataFunc  compare_func,
 				   gpointer          user_data);
 
 /* Resizable pointer array.  This interface is much less complicated
@@ -119,7 +119,7 @@ void       g_ptr_array_add                (GPtrArray        *array,
 void       g_ptr_array_sort               (GPtrArray        *array,
 					   GCompareFunc      compare_func);
 void       g_ptr_array_sort_with_data     (GPtrArray        *array,
-					   GCompareFuncData  compare_func,
+					   GCompareDataFunc  compare_func,
 					   gpointer          user_data);
 
 
@@ -146,7 +146,7 @@ GByteArray* g_byte_array_remove_index_fast (GByteArray       *array,
 void        g_byte_array_sort              (GByteArray       *array,
 					    GCompareFunc      compare_func);
 void        g_byte_array_sort_with_data    (GByteArray       *array,
-					    GCompareFuncData  compare_func,
+					    GCompareDataFunc  compare_func,
 					    gpointer          user_data);
 
 

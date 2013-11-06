@@ -27,7 +27,7 @@
 #ifndef __G_ASYNCQUEUE_H__
 #define __G_ASYNCQUEUE_H__
 
-#include <gthread.h>
+#include <glib/gthread.h>
 
 G_BEGIN_DECLS
 

@@ -27,11 +27,7 @@
 #ifndef __G_COMPLETION_H__
 #define __G_COMPLETION_H__
 
-#include <glist.h>
-#include <stddef.h>		/* For size_t */
-#ifdef G_OS_UNIX
-#include <unistd.h>
-#endif
+#include <glib/glist.h>
 
 G_BEGIN_DECLS
 
@@ -42,7 +38,9 @@ typedef gchar*          (*GCompletionFunc)      (gpointer);
 /* GCompletion
  */
 
-typedef int (*GCompletionStrncmpFunc)(const char *s1, const char *s2, size_t n);
+typedef gint (*GCompletionStrncmpFunc) (const gchar *s1,
+					const gchar *s2,
+					gsize        n);
 
 struct _GCompletion
 {

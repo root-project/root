@@ -27,7 +27,7 @@
 #ifndef __G_DATASET_H__
 #define __G_DATASET_H__
 
-#include <gquark.h>
+#include <glib/gquark.h>
 
 G_BEGIN_DECLS
 

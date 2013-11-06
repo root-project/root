@@ -21,7 +21,7 @@
 #ifndef __G_SHELL_H__
 #define __G_SHELL_H__
 
-#include <gerror.h>
+#include <glib/gerror.h>
 
 G_BEGIN_DECLS
 

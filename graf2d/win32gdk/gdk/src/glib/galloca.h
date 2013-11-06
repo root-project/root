@@ -27,7 +27,7 @@
 #ifndef __G_ALLOCA_H__
 #define __G_ALLOCA_H__
 
-#include <g_types.h>
+#include <glib/gtypes.h>
 
 #ifdef  __GNUC__
 /* GCC does the right thing */

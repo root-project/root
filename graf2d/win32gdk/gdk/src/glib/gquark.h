@@ -27,7 +27,7 @@
 #ifndef __G_QUARK_H__
 #define __G_QUARK_H__
 
-#include <g_types.h>
+#include <glib/gtypes.h>
 
 G_BEGIN_DECLS
 
@@ -35,10 +35,10 @@ typedef guint32 GQuark;
 
 /* Quarks (string<->id association)
  */
-GQuark    g_quark_try_string            (const gchar    *string);
-GQuark    g_quark_from_static_string    (const gchar    *string);
-GQuark    g_quark_from_string           (const gchar    *string);
-gchar*    g_quark_to_string             (GQuark          quark) G_GNUC_CONST;
+GQuark                g_quark_try_string         (const gchar *string);
+GQuark                g_quark_from_static_string (const gchar *string);
+GQuark                g_quark_from_string        (const gchar *string);
+G_CONST_RETURN gchar* g_quark_to_string          (GQuark       quark) G_GNUC_CONST;
 
 G_END_DECLS
 

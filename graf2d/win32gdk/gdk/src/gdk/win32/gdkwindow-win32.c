@@ -1214,7 +1214,6 @@ gdk_window_set_geometry_hints(GdkWindow * window,
    RECT rect;
    DWORD dwStyle;
    DWORD dwExStyle;
-   int diff;
    int maxw, maxh;
 
    g_return_if_fail(window != NULL);
@@ -1317,10 +1316,6 @@ gdk_window_set_geometry_hints(GdkWindow * window,
 
 void gdk_window_set_title(GdkWindow * window, const gchar * title)
 {
-   gint titlelen;
-   wchar_t *wcstr;
-   gint wlen;
-   char *mbstr;
 
    g_return_if_fail(window != NULL);
    g_return_if_fail(GDK_IS_WINDOW(window));
@@ -1721,7 +1716,6 @@ GdkWindow *gdk_window_at_pointer(gint * win_x, gint * win_y)
 
 GList *gdk_window_get_children(GdkWindow * window)
 {
-   GdkWindowPrivate *private;
    GList *children;
 
    g_return_val_if_fail(window != NULL, NULL);
@@ -2015,7 +2009,6 @@ static void gdk_propagate_shapes(HANDLE win, gboolean merge)
 {
    RECT emptyRect;
    HRGN region, childRegion;
-   RECT rect;
    HWND *list = NULL;
    gint i, num;
 

@@ -27,10 +27,12 @@
 #ifndef __G_HOOK_H__
 #define __G_HOOK_H__
 
-#include <gmem.h>
+#include <glib/gmem.h>
 
 G_BEGIN_DECLS
 
+
+/* --- typedefs --- */
 typedef struct _GHook		GHook;
 typedef struct _GHookList	GHookList;
 
@@ -39,60 +41,63 @@ typedef gint		(*GHookCompareFunc)	(GHook		*new_hook,
 typedef gboolean	(*GHookFindFunc)	(GHook		*hook,
 						 gpointer	 data);
 typedef void		(*GHookMarshaller)	(GHook		*hook,
-						 gpointer	 data);
+						 gpointer	 marshal_data);
 typedef gboolean	(*GHookCheckMarshaller)	(GHook		*hook,
-						 gpointer	 data);
+						 gpointer	 marshal_data);
 typedef void		(*GHookFunc)		(gpointer	 data);
 typedef gboolean	(*GHookCheckFunc)	(gpointer	 data);
-typedef void		(*GHookFreeFunc)	(GHookList      *hook_list,
+typedef void		(*GHookFinalizeFunc)	(GHookList      *hook_list,
 						 GHook          *hook);
-
-/* Callback maintenance functions
- */
-#define G_HOOK_FLAG_USER_SHIFT	(4)
 typedef enum
 {
-  G_HOOK_FLAG_ACTIVE	= 1 << 0,
-  G_HOOK_FLAG_IN_CALL	= 1 << 1,
-  G_HOOK_FLAG_MASK	= 0x0f
+  G_HOOK_FLAG_ACTIVE	    = 1 << 0,
+  G_HOOK_FLAG_IN_CALL	    = 1 << 1,
+  G_HOOK_FLAG_MASK	    = 0x0f
 } GHookFlagMask;
+#define G_HOOK_FLAG_USER_SHIFT	(4)
 
-#define	G_HOOK_DEFERRED_DESTROY	((GHookFreeFunc) 0x01)
 
+/* --- structures --- */
 struct _GHookList
 {
-  guint		 seq_id;
-  guint		 hook_size;
-  guint		 is_setup : 1;
-  GHook		*hooks;
-  GMemChunk	*hook_memchunk;
-  GHookFreeFunc	 hook_free; /* virtual function */
-  GHookFreeFunc	 hook_destroy; /* virtual function */
+  gulong	    seq_id;
+  guint		    hook_size : 16;
+  guint		    is_setup : 1;
+  GHook		   *hooks;
+  GMemChunk	   *hook_memchunk;
+  GHookFinalizeFunc finalize_hook;
 };
-
 struct _GHook
 {
   gpointer	 data;
   GHook		*next;
   GHook		*prev;
   guint		 ref_count;
-  guint		 hook_id;
+  gulong	 hook_id;
   guint		 flags;
   gpointer	 func;
   GDestroyNotify destroy;
 };
 
-#define	G_HOOK_ACTIVE(hook)		((((GHook*) hook)->flags & \
-					  G_HOOK_FLAG_ACTIVE) != 0)
-#define	G_HOOK_IN_CALL(hook)		((((GHook*) hook)->flags & \
-					  G_HOOK_FLAG_IN_CALL) != 0)
-#define G_HOOK_IS_VALID(hook)		(((GHook*) hook)->hook_id != 0 && \
-					 G_HOOK_ACTIVE (hook))
-#define G_HOOK_IS_UNLINKED(hook)	(((GHook*) hook)->next == NULL && \
-					 ((GHook*) hook)->prev == NULL && \
-					 ((GHook*) hook)->hook_id == 0 && \
-					 ((GHook*) hook)->ref_count == 0)
 
+/* --- macros --- */
+#define	G_HOOK(hook)			((GHook*) (hook))
+#define	G_HOOK_FLAGS(hook)		(G_HOOK (hook)->flags)
+#define	G_HOOK_ACTIVE(hook)		((G_HOOK_FLAGS (hook) & \
+					  G_HOOK_FLAG_ACTIVE) != 0)
+#define	G_HOOK_IN_CALL(hook)		((G_HOOK_FLAGS (hook) & \
+					  G_HOOK_FLAG_IN_CALL) != 0)
+#define G_HOOK_IS_VALID(hook)		(G_HOOK (hook)->hook_id != 0 && \
+					 (G_HOOK_FLAGS (hook) & \
+                                          G_HOOK_FLAG_ACTIVE))
+#define G_HOOK_IS_UNLINKED(hook)	(G_HOOK (hook)->next == NULL && \
+					 G_HOOK (hook)->prev == NULL && \
+					 G_HOOK (hook)->hook_id == 0 && \
+					 G_HOOK (hook)->ref_count == 0)
+
+
+/* --- prototypes --- */
+/* callback mainenance functions */
 void	 g_hook_list_init		(GHookList		*hook_list,
 					 guint			 hook_size);
 void	 g_hook_list_clear		(GHookList		*hook_list);
@@ -104,7 +109,7 @@ void	 g_hook_ref			(GHookList		*hook_list,
 void	 g_hook_unref			(GHookList		*hook_list,
 					 GHook			*hook);
 gboolean g_hook_destroy			(GHookList		*hook_list,
-					 guint			 hook_id);
+					 gulong			 hook_id);
 void	 g_hook_destroy_link		(GHookList		*hook_list,
 					 GHook			*hook);
 void	 g_hook_prepend			(GHookList		*hook_list,
@@ -116,7 +121,7 @@ void	 g_hook_insert_sorted		(GHookList		*hook_list,
 					 GHook			*hook,
 					 GHookCompareFunc	 func);
 GHook*	 g_hook_get			(GHookList		*hook_list,
-					 guint			 hook_id);
+					 gulong			 hook_id);
 GHook*	 g_hook_find			(GHookList		*hook_list,
 					 gboolean		 need_valids,
 					 GHookFindFunc		 func,
@@ -140,15 +145,12 @@ GHook*	 g_hook_first_valid		(GHookList		*hook_list,
 GHook*	 g_hook_next_valid		(GHookList		*hook_list,
 					 GHook			*hook,
 					 gboolean		 may_be_in_call);
-
 /* GHookCompareFunc implementation to insert hooks sorted by their id */
 gint	 g_hook_compare_ids		(GHook			*new_hook,
 					 GHook			*sibling);
-
 /* convenience macros */
 #define	 g_hook_append( hook_list, hook )  \
      g_hook_insert_before ((hook_list), NULL, (hook))
-
 /* invoke all valid hooks with the (*GHookFunc) signature.
  */
 void	 g_hook_list_invoke		(GHookList		*hook_list,
@@ -163,11 +165,11 @@ void	 g_hook_list_invoke_check	(GHookList		*hook_list,
 void	 g_hook_list_marshal		(GHookList		*hook_list,
 					 gboolean		 may_recurse,
 					 GHookMarshaller	 marshaller,
-					 gpointer		 data);
+					 gpointer		 marshal_data);
 void	 g_hook_list_marshal_check	(GHookList		*hook_list,
 					 gboolean		 may_recurse,
 					 GHookCheckMarshaller	 marshaller,
-					 gpointer		 data);
+					 gpointer		 marshal_data);
 
 G_END_DECLS
 

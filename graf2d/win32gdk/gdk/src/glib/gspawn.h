@@ -21,7 +21,7 @@
 #ifndef __G_SPAWN_H__
 #define __G_SPAWN_H__
 
-#include <gerror.h>
+#include <glib/gerror.h>
 
 G_BEGIN_DECLS
 
@@ -59,13 +59,14 @@ typedef void (* GSpawnChildSetupFunc) (gpointer user_data);
 typedef enum
 {
   G_SPAWN_LEAVE_DESCRIPTORS_OPEN = 1 << 0,
-  G_SPAWN_DO_NOT_REAP_CHILD = 1 << 1,
+  G_SPAWN_DO_NOT_REAP_CHILD      = 1 << 1,
   /* look for argv[0] in the path i.e. use execvp() */
-  G_SPAWN_SEARCH_PATH = 1 << 2,
+  G_SPAWN_SEARCH_PATH            = 1 << 2,
   /* Dump output to /dev/null */
-  G_SPAWN_STDOUT_TO_DEV_NULL = 1 << 3,
-  G_SPAWN_STDERR_TO_DEV_NULL = 1 << 4,
-  G_SPAWN_CHILD_INHERITS_STDIN = 1 << 5
+  G_SPAWN_STDOUT_TO_DEV_NULL     = 1 << 3,
+  G_SPAWN_STDERR_TO_DEV_NULL     = 1 << 4,
+  G_SPAWN_CHILD_INHERITS_STDIN   = 1 << 5,
+  G_SPAWN_FILE_AND_ARGV_ZERO     = 1 << 6
 } GSpawnFlags;
 
 GQuark g_spawn_error_quark (void);
