@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.log xr.* dummy* *pcm *o *rflx.*
+CLEAN_TARGETS += *.log xr.* dummy* *pcm *o *rflx.* $(ALL_LIBRARIES)
 TEST_TARGETS += root_5626
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
