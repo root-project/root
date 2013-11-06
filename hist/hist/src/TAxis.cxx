@@ -1023,8 +1023,13 @@ void TAxis::UnZoom()
          hobj1->SetMinimum(fXmin);
          hobj1->SetMaximum(fXmax);
       } else {
-         hobj1->SetMinimum(fXmin);
-         hobj1->SetMaximum(fXmax);
+         if (fXmin==hobj1->GetMinimum() && fXmax==hobj1->GetMaximum()) {
+            hobj1->SetMinimum(fXmin);
+            hobj1->SetMaximum(fXmax);
+         } else {
+            hobj1->SetMinimum();
+            hobj1->SetMaximum();
+         }
          hobj1->ResetBit(TH1::kIsZoomed);
       }
    }
