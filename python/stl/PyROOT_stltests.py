@@ -316,22 +316,6 @@ class STL6IteratorComparisonTestCase( MyTestCase ):
       self.assertNotEqual( b1, b2 )
       self.assertEqual( b1, e2 )
 
-   def test2CustomVectorIterators( self ):
-      """Test iterator comparison with operator== NOT reflected"""
-
-      v = std.vector( JustAClass )()
-      v.resize( 1 )
-
-      b1 = v.begin()
-      b2 = v.begin()
-
-      if sys.platform.find( 'win32' ) < 0:
-       # out-of-line operator==/!= are a gcc feature ...
-         self.assertRaises( LookupError, b1.__eq__, b2 )
-         self.assertRaises( LookupError, b1.__ne__, b2 )
-         if sys.hexversion < 0x3000000:
-            self.assertRaises( LookupError, cmp, b1, b2 )
-
 
 ## actual test run
 if __name__ == '__main__':

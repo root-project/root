@@ -303,9 +303,6 @@ class Cpp07GloballyOverloadedComparatorTestCase( MyTestCase ):
    def test1Comparator( self ):
       """Check that the global operator!=/== is picked up"""
 
-      if FIXCLING:       # fails b/c global operator overloads not reflected
-         return
-
       a, b = Comparable(), Comparable()
 
       self.assertEqual( a, b )
