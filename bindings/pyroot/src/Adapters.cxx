@@ -113,17 +113,6 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
    } else if ( mod & Rflx::FINAL )
       return Utility::ResolveTypedef( fMember->GetName() );
 
-// CLING WORKAROUND -- TMethod names are fully scoped ...
-   TMethod* m = (TMethod*)*this;
-   if (m && m->GetClass()) {
-      std::string scoped_name = m->GetName();
-      std::string class_name = m->GetClass()->GetName();
-      std::string::size_type pos = scoped_name.find(class_name + "::");
-      if (pos == 0)      // only accept found at start
-         scoped_name = scoped_name.substr(class_name.size() + 2 /* for :: */, std::string::npos);
-      return scoped_name;
-   }
-
 // CLING WORKAROUND -- should not be null, but can be due #100389
    if ( fMember != 0 )
       return fMember->GetName();
