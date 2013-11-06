@@ -1732,7 +1732,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       //      delete [] funcname;
 
       if (methodinfo &&
-          ROOT::TMetaUtils::GetFileName(methodinfo).find("Rtypes.h") == llvm::StringRef::npos) {
+          ROOT::TMetaUtils::GetFileName(methodinfo, interp).find("Rtypes.h") == llvm::StringRef::npos) {
 
          // GetClassVersion was defined in the header file.
          //fprintf(fp, "GetClassVersion((%s *)0x0), ",classname.c_str());
@@ -1745,7 +1745,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       //fprintf(stderr,"DEBUG: %s has value %d\n",classname.c_str(),(int)G__int(G__calc(temporary)));
    }
 
-   std::string filename = ROOT::TMetaUtils::GetFileName(cl);
+   std::string filename = ROOT::TMetaUtils::GetFileName(cl, interp);
    if (filename.length() > 0) {
       for (unsigned int i=0; i<filename.length(); i++) {
          if (filename[i]=='\\') filename[i]='/';
@@ -2313,7 +2313,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
 
    std::string a;
    std::string clName;
-   TMetaUtils::GetCppName(clName, ROOT::TMetaUtils::GetFileName(cl.GetRecordDecl()).str().c_str());
+   TMetaUtils::GetCppName(clName, ROOT::TMetaUtils::GetFileName(cl.GetRecordDecl(), interp).str().c_str());
    int version = ROOT::TMetaUtils::GetClassVersion(cl.GetRecordDecl());
    if (version == 0) return;
    if (version < 0 && !(cl.RequestStreamerInfo()) ) return;
@@ -3200,8 +3200,19 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
    return;
 }
 
+static clang::SourceLocation
+getFinalSpellingLoc(clang::SourceManager& sourceManager,
+                    clang::SourceLocation sourceLoc) {
+   // Follow macro expansion until we hit a source file.
+   if (!sourceLoc.isFileID()) {
+      return sourceManager.getExpansionRange(sourceLoc).second;
+   }
+   return sourceLoc;
+}
+
 //______________________________________________________________________________
-llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
+llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl,
+                                              const cling::Interpreter& interp)
 {
    // Return the header file to be included to declare the Decl.
 
@@ -3233,71 +3244,54 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl)
    //    }
    // }
 
-   clang::SourceLocation sourceLocation = decl->getLocation();
-
-   clang::SourceManager& sourceManager = decl->getASTContext().getSourceManager();
+   using namespace clang;
+   SourceLocation headerLoc = decl->getLocation();
 
    static const char invalidFilename[] = "invalid";
-   if (!sourceLocation.isValid() ) {
-      return invalidFilename;
+   if (!headerLoc.isValid()) return invalidFilename;
+
+   SourceManager& sourceManager = decl->getASTContext().getSourceManager();
+   headerLoc = getFinalSpellingLoc(sourceManager, headerLoc);
+   FileID headerFID = sourceManager.getFileID(headerLoc);
+   SourceLocation includeLoc
+      = getFinalSpellingLoc(sourceManager,
+                            sourceManager.getIncludeLoc(headerFID));
+
+
+   while (includeLoc.isValid() && sourceManager.isInSystemHeader(includeLoc)) {
+      headerFID = sourceManager.getFileID(includeLoc);
+      includeLoc = getFinalSpellingLoc(sourceManager,
+                                       sourceManager.getIncludeLoc(headerFID));
    }
 
-   if (!sourceLocation.isFileID()) {
-      sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
-   }
-
-   clang::PresumedLoc PLoc = sourceManager.getPresumedLoc(sourceLocation);
-   clang::SourceLocation includeLocation = PLoc.getIncludeLoc();
-
-   // Let's try to find out what was the first non system header entry point.
-   while (includeLocation.isValid()
-          && sourceManager.isInSystemHeader(includeLocation)) {
-      if (includeLocation.isFileID()) {
-         clang::SourceLocation incl2
-            = sourceManager.getIncludeLoc(sourceManager.getFileID(includeLocation));
-         if (incl2.isValid())
-            includeLocation = incl2;
-         else return invalidFilename;
-      } else {
-         clang::PresumedLoc includePLoc = sourceManager.getPresumedLoc(includeLocation);
-         if (includePLoc.getIncludeLoc().isValid())
-            includeLocation = includePLoc.getIncludeLoc();
-         else
-            return invalidFilename;
+   // Now headerFID references the last valid system header or the original
+   // user file.
+   // Find out how to include it by matching file name to include paths.
+   // This is tricky; use a simplistic algorithm here where we assume
+   // that the file "/A/B/C/D.h" can at some level be included as "C/D.h":
+   const FileEntry* headerFE = sourceManager.getFileEntryForID(headerFID);
+   if (!headerFE) return invalidFilename;
+   llvm::StringRef headerFileName = headerFE->getName();
+   HeaderSearch& HdrSearch = interp.getCI()->getPreprocessor().getHeaderSearchInfo();
+   const DirectoryLookup* FoundDir = 0;
+   // Iterates through path *parts* "C"; we need trailing parts "C/D.h"
+   for (llvm::sys::path::reverse_iterator
+           IDir = llvm::sys::path::rbegin(headerFileName),
+           EDir = llvm::sys::path::rend(headerFileName);
+        IDir != EDir; ++IDir) {
+      size_t lenTrailing = headerFileName.size() - (IDir->data() - headerFileName.data());
+      llvm::StringRef trailingPart(IDir->data(), lenTrailing);
+      assert(trailingPart.data() + trailingPart.size()
+             == headerFileName.data() + headerFileName.size()
+             && "Mismatched partitioning of file name!");
+      if (HdrSearch.LookupFile(trailingPart, true /*isAngled*/, 0/*FromDir*/,
+                               FoundDir, 0/*CurFileEntry*/, 0/*Searchpath*/,
+                               0/*RelPath*/, 0/*SuggModule*/)) {
+         return trailingPart;
       }
    }
 
-   // If the location is a macro get the expansion location.
-   if (!includeLocation.isFileID()) {
-      includeLocation = sourceManager.getExpansionRange(includeLocation).second;
-   }
-
-   // Ensure that the file is not the ubrella header / input-line pseudo-file.
-   // That file does not have a parent include location.
-   if (!sourceManager.getIncludeLoc(sourceManager.getFileID(includeLocation)).isValid())
-      return invalidFilename;
-
-   if (!llvm::sys::fs::exists(sourceManager.getFilename(includeLocation))) {
-      // We cannot open the including file; return our best bet.
-      return PLoc.getFilename();
-      // return "Interpreter Statement."; is another option.
-   }
-
-   // Try to find the spelling used in the #include
-   bool invalid;
-   const char *includeLineStart = sourceManager.getCharacterData(includeLocation, &invalid);
-   if (invalid)
-      return PLoc.getFilename();
-
-   char delim = includeLineStart[0];
-   if (delim=='<') delim = '>';
-   ++includeLineStart;
-
-   const char *includeLineEnd = includeLineStart;
-   while ( *includeLineEnd != delim && *includeLineEnd != '\n' && *includeLineEnd != '\r' ) {
-      ++includeLineEnd;
-   }
-   return llvm::StringRef(includeLineStart, includeLineEnd - includeLineStart); // This does *not* include the character at includeLineEnd.
+   return invalidFilename;
 }
 
 //______________________________________________________________________________

@@ -861,7 +861,7 @@ bool CheckInputOperator(const char *what,
    }
    bool has_input_error = false;
    if (method != 0 && (method->getAccess() == clang::AS_public || method->getAccess() == clang::AS_none) ) {
-      std::string filename = ROOT::TMetaUtils::GetFileName(method);
+      std::string filename = ROOT::TMetaUtils::GetFileName(method, interp);
       if (strstr(filename.c_str(),"TBuffer.h")!=0 ||
           strstr(filename.c_str(),"Rtypes.h" )!=0) {
 
@@ -1371,7 +1371,8 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl)
 }
 
 //______________________________________________________________________________
-void WriteNamespaceInit(const clang::NamespaceDecl *cl)
+void WriteNamespaceInit(const clang::NamespaceDecl *cl,
+                        cling::Interpreter& interp)
 {
    // Write the code to initialize the namespace name and the initialization object.
 
@@ -1436,7 +1437,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl)
       (*dictSrcOut) << "0 /*version*/, ";
    }
 
-   std::string filename = ROOT::TMetaUtils::GetFileName(cl);
+   std::string filename = ROOT::TMetaUtils::GetFileName(cl, interp);
    for (unsigned int i=0; i<filename.length(); i++) {
       if (filename[i]=='\\') filename[i]='/';
    }
@@ -3571,7 +3572,7 @@ int RootCling(int argc,
       RScanner::NamespaceColl_t::const_iterator ns_iter = scan.fSelectedNamespaces.begin();
       RScanner::NamespaceColl_t::const_iterator ns_end = scan.fSelectedNamespaces.end();
       for( ; ns_iter != ns_end; ++ns_iter) {
-         WriteNamespaceInit(*ns_iter);
+         WriteNamespaceInit(*ns_iter, interp);
       }
       
       iter = scan.fSelectedClasses.begin();
