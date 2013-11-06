@@ -249,7 +249,7 @@ TDocMacroDirective::~TDocMacroDirective()
 }
 
 //______________________________________________________________________________
-void TDocMacroDirective::SubProcess(const TString& what) {
+void TDocMacroDirective::SubProcess(const TString& what, const TString& out) {
    
 }
 
@@ -309,7 +309,6 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       }
    }
 
-   Int_t error = TInterpreter::kNoError;
    Long_t ret = 0;
    if (fIsFilename) {
       TString filename;
@@ -388,29 +387,17 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       }
       invoc += "-E 'TDocMacroDirective::SubProcess(\""
          + fileSysName + "\",\"" + outfilename + "\");'";
-      TString subProcOut = gSystem->GetFromPipe(invoc.Data());
-      Ssiz_t posResult = subProcOut.Index("TDOCDIRECTIVE RESULT=");
-      if (posResult == TString::kNPOS) {
-         Error("GetResult", "Error running %s!", invoc.Data());
-         result = "";
-         return kFALSE;
-      }
-      TString tok;
-      for (Int_t i = 0; i < 2; ++i) {
-         if (!subProcOut.Tokenize(tok, posResult, "\n")) {
-            Error("GetResult", "Cannot find expected output running %s!", invoc.Data());
-            result = "";
-            return kFALSE;
-         }
-         Long_t tok(strlen("TDOCDIRECTIVE RESULT="), (Ssiz_t)-1).
-         
+      Int_t exitCode = gSystem->Exec(invoc.Data());
 
-      ret = gROOT->ProcessLine(fileSysName, &error);
    } else {
-      gInterpreter->SaveContext();
-      gInterpreter->SaveGlobalsContext();
+      fileSysName = gSystem->TempDirectory();
+      fileSysName += '/';
+      TString directiveFilename;
+      GetName(directiveFilename);
+      fileSysName += directiveFilename;
       ret = fMacro->Exec(0, &error);
    }
+   ret = gROOT->ProcessLine(fileSysName, &error);
 
    if (fShowSource) {
       // convert the macro source
