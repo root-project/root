@@ -922,7 +922,8 @@ Bool_t PyROOT::TRootObjectPtrConverter::ToMemory( PyObject* value, void* address
 // CLING WORKAROUND -- classes for STL iterators are completely undefined in that
 // they come in a bazillion different guises, so just do whatever
 Bool_t PyROOT::TSTLIteratorConverter::SetArg(
-      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t user )
+      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t /* user */ )
+
 {
    if ( ! ObjectProxy_Check( pyobject ) )
       return kFALSE;
