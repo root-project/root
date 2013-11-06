@@ -3547,6 +3547,12 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
    return modCreation.first;
 }
 
+int dumpDeclForAssert(const clang::Decl& D, const char* commentStart) {
+   llvm::errs() << llvm::StringRef(commentStart, 80) << '\n';
+   D.dump();
+   return 0;
+}
+
 //______________________________________________________________________________
 llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::SourceLocation *loc)
 {
@@ -3581,14 +3587,19 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
 
    bool skipToSemi = true;
    if (const clang::FunctionDecl* FD = clang::dyn_cast<clang::FunctionDecl>(&decl)) {
-      if (FD->isDefaulted() && !FD->isExplicitlyDefaulted()) {
+      if (FD->isImplicit()) {
          // Compiler generated function.
          return "";
       }
-      if (FD->doesThisDeclarationHaveABody()) {
+      if (FD->isExplicitlyDefaulted() || FD->isDeletedAsWritten()) {
+         // ctorOrFunc() = xyz; with commentStart pointing somewhere into
+         // ctorOrFunc.
+         // We have to skipToSemi
+      } else if (FD->doesThisDeclarationHaveABody()) {
          // commentStart is at body's '}'
          // But we might end up e.g. at the ')' of a CPP macro
-         assert((decl.getLocEnd() != sourceLocation || *commentStart == '}')
+         assert((decl.getLocEnd() != sourceLocation || *commentStart == '}'
+                 || dumpDeclForAssert(*FD, commentStart))
                 && "Expected macro or end of body at '}'");
          if (*commentStart) ++commentStart;
 
@@ -3601,7 +3612,6 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
 
          skipToSemi = false;
       }
-      // FIXME: handle ctor() = delete; //COMMENT
    } else if (const clang::EnumConstantDecl* ECD
               = clang::dyn_cast<clang::EnumConstantDecl>(&decl)) {
       // either "konstant = 12, //COMMENT" or "lastkonstant // COMMENT"
