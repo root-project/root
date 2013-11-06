@@ -1,5 +1,5 @@
 CLEAN_TARGETS += *.log *.so *.d *pcm *rflx* dummy*.C
-#TEST_TARGETS += execbasic
+TEST_TARGETS += execbasic
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME:=$(shell expr $(CURDIR) : '\(.*/roottest/\)')
