@@ -1,4 +1,5 @@
 
 Processing execResolveTypedef.cxx+...
 The following should be 'int': int
-(int)0
+The following should be 'const int': const int
+(int) 0
