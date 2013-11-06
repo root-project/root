@@ -854,6 +854,9 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
                      tname += 5;
                      break;
                   } else {
+                     if (base.compare(0,6,"const ") == 0) {
+                        base.erase(0,6);
+                     }
                      if (gInterpreterHelper &&
                          !gInterpreterHelper->IsDeclaredScope(base)) {
                         // the nesting namespace is not declared
