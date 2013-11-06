@@ -3264,16 +3264,49 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl,
                                        sourceManager.getIncludeLoc(headerFID));
    }
 
-   // Now headerFID references the last valid system header or the original
-   // user file.
-   // Find out how to include it by matching file name to include paths.
-   // This is tricky; use a simplistic algorithm here where we assume
-   // that the file "/A/B/C/D.h" can at some level be included as "C/D.h":
    const FileEntry* headerFE = sourceManager.getFileEntryForID(headerFID);
    if (!headerFE) return invalidFilename;
    llvm::StringRef headerFileName = headerFE->getName();
    HeaderSearch& HdrSearch = interp.getCI()->getPreprocessor().getHeaderSearchInfo();
-   const DirectoryLookup* FoundDir = 0;
+
+   // Now headerFID references the last valid system header or the original
+   // user file.
+   // Find out how to include it by matching file name to include paths.
+   // We assume that the file "/A/B/C/D.h" can at some level be included as
+   // "C/D.h". Be we cannot know whether that happens to be a different file
+   // with the same name. Thus we first find the longest stem that can be
+   // reached, say B/C/D.h. Then we find the shortest one, say C/D.h, that
+   // points to the same file as the long version. If such a short version
+   // exists it will be returned. If it doesn't the long version is returned.
+   bool isAbsolute = llvm::sys::path::is_absolute(headerFileName);
+   const FileEntry* FELong = 0;
+   // Find the longest available match.
+   for (llvm::sys::path::const_iterator
+           IDir = llvm::sys::path::begin(headerFileName),
+           EDir = llvm::sys::path::end(headerFileName);
+        !FELong && IDir != EDir; ++IDir) {
+      if (isAbsolute) {
+         // skip "/" part
+         isAbsolute = false;
+         continue;
+      }
+      size_t lenTrailing = headerFileName.size() - (IDir->data() - headerFileName.data());
+      llvm::StringRef trailingPart(IDir->data(), lenTrailing);
+      assert(trailingPart.data() + trailingPart.size()
+             == headerFileName.data() + headerFileName.size()
+             && "Mismatched partitioning of file name!");
+      const DirectoryLookup* FoundDir = 0;
+      FELong = HdrSearch.LookupFile(trailingPart, true /*isAngled*/,
+                                    0/*FromDir*/, FoundDir, 0/*CurFileEntry*/,
+                                    0/*Searchpath*/, 0/*RelPath*/,
+                                    0/*SuggModule*/);
+   }
+
+   if (!FELong) {
+      // We did not find any file part in any search path.
+      return invalidFilename;
+   }
+
    // Iterates through path *parts* "C"; we need trailing parts "C/D.h"
    for (llvm::sys::path::reverse_iterator
            IDir = llvm::sys::path::rbegin(headerFileName),
@@ -3284,9 +3317,12 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl,
       assert(trailingPart.data() + trailingPart.size()
              == headerFileName.data() + headerFileName.size()
              && "Mismatched partitioning of file name!");
+      const DirectoryLookup* FoundDir = 0;
+      // Can we find it, and is it the same file as the long version?
+      // (or are we back to the previously found spelling, which is fine, too)
       if (HdrSearch.LookupFile(trailingPart, true /*isAngled*/, 0/*FromDir*/,
                                FoundDir, 0/*CurFileEntry*/, 0/*Searchpath*/,
-                               0/*RelPath*/, 0/*SuggModule*/)) {
+                               0/*RelPath*/, 0/*SuggModule*/) == FELong) {
          return trailingPart;
       }
    }
