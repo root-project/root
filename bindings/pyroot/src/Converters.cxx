@@ -367,45 +367,6 @@ Bool_t PyROOT::TVoidConverter::SetArg( PyObject*, TParameter_t&, CallFunc_t*, Lo
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::TMacroConverter::SetArg( PyObject*, TParameter_t&, CallFunc_t*, Long_t )
-{
-// C++ macro's are not acceptable function args (but their values could be)
-   PyErr_SetString( PyExc_SystemError, "macro arguments can\'t be set" );
-   return kFALSE;
-}
-
-PyObject* PyROOT::TMacroConverter::FromMemory( void* /* address */ )
-{
-// no info available from ROOT/meta; go directly to CINT for the type info
-   PyErr_SetString( PyExc_TypeError, "NO MACRO SUPPORT IN CLING!" );
-/* TODO: get macro support from Cling ---
-   G__DataMemberInfo dmi;
-   while ( dmi.Next() ) {    // using G__ClassInfo().GetDataMember() would cause overwrite
-
-      if ( (Long_t)address == dmi.Offset() ) {
-      // for now, only handle int, double, and C-string
-         switch ( dmi.Type()->Type() ) {
-         case 'p':
-            return PyInt_FromLong( (Long_t) *(Int_t*)address );
-         case 'P':
-            return PyFloat_FromDouble( (double) *(Double_t*)address );
-         case 'T':
-            return PyROOT_PyUnicode_FromString( *(char**)address );
-         default:
-         // type unknown/not implemented
-            PyErr_SetString( PyExc_NotImplementedError, "macro value could not be converted" );
-            return 0;
-         }
-      }
-   }
-
-// type unknown/not implemented
-   PyErr_SetString( PyExc_AttributeError, "requested macro not found" );
---- no macro support from Cling */
-   return 0;
-}
-
-//____________________________________________________________________________
 Bool_t PyROOT::TLongLongConverter::SetArg(
       PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
 {
@@ -1151,7 +1112,6 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( DoubleRef )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstDoubleRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Void )
-   PYROOT_BASIC_CONVERTER_FACTORY( Macro )
    PYROOT_BASIC_CONVERTER_FACTORY( LongLong )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstLongLongRef )
    PYROOT_BASIC_CONVERTER_FACTORY( ULongLong )
@@ -1216,7 +1176,6 @@ namespace {
       NFp_t( "double&",                   &CreateDoubleRefConverter          ),
       NFp_t( "const double&",             &CreateConstDoubleRefConverter     ),
       NFp_t( "void",                      &CreateVoidConverter               ),
-      NFp_t( "#define",                   &CreateMacroConverter              ),
 
    // pointer/array factories
       NFp_t( "bool*",                     &CreateBoolArrayConverter          ),
