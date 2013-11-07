@@ -151,11 +151,6 @@ namespace {
    // Build a representation string of the object proxy that shows the address
    // of the C++ object that is held, as well as its type.
       TClass* klass = pyobj->ObjectIsA();
-      if ( pyobj->GetObject() ) {
-         TClass* clActual = klass->GetActualClass( pyobj->GetObject() );
-         if ( clActual ) klass = clActual;
-      }
-
       std::string clName = klass ? klass->GetName() : "<unknown>";
       if ( pyobj->fFlags & ObjectProxy::kIsReference )
          clName.append( "*" );
