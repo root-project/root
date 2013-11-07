@@ -253,7 +253,6 @@ namespace genreflex {
 }
 
 std::ostream* dictSrcOut = &std::cout;
-std::ostream* dictHdrOut = &std::cout;
 
 //______________________________________________________________________________
 static void GetCurrentDirectory(std::string &output)
@@ -314,7 +313,7 @@ static std::string GetRelocatableHeaderName(const char *header, const std::strin
 }
 
 //______________________________________________________________________________
-bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name) 
+bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
 {
    std::string given_name(name);
    for (
@@ -344,10 +343,10 @@ void AnnotateFieldDecl(clang::NamedDecl& decl,
 
    // Nothing to do then ...
    if (fieldSelRules.size()==0) return;
-   
+
    clang::ASTContext &C = decl.getASTContext();
    clang::SourceRange commentRange; // Empty: this is a fake comment
-   
+
    const std::string declName (decl.getNameAsString());
    std::string varName;
    for(std::list<VariableSelectionRule>::const_iterator it = fieldSelRules.begin();
@@ -383,8 +382,8 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
    // In order to store the meaningful for the IO comments we have to transform
    // the comment into annotation of the given decl.
    // This works only with comments in the headers, so no selectionrules in an xml
-   // file.   
-   
+   // file.
+
    using namespace clang;
    SourceLocation commentSLoc;
    llvm::StringRef comment;
@@ -420,19 +419,19 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          CXXRD.addAttr(new (C) AnnotateAttr(commentRange, C, userDefinedProperty));
       }
    }
-   
-   // See if the rule is a class selection rule (FIX dynamic_cast)  
+
+   // See if the rule is a class selection rule (FIX dynamic_cast)
    const ClassSelectionRule* thisClassSelectionRule = reinterpret_cast<const ClassSelectionRule*>(thisClassBaseSelectionRule);
-   
+
    for(CXXRecordDecl::decl_iterator I = CXXRD.decls_begin(),
           E = CXXRD.decls_end(); I != E; ++I) {
-      
+
       // CXXMethodDecl,FieldDecl and VarDecl inherit from NamedDecl
       // See: http://clang.llvm.org/doxygen/classclang_1_1DeclaratorDecl.html
       if (!(*I)->isImplicit()
           && (isa<CXXMethodDecl>(*I) || isa<FieldDecl>(*I) || isa<VarDecl>(*I))) {
 
-         
+
          // For now we allow only a special macro (ClassDef) to have meaningful comments
          SourceLocation maybeMacroLoc = (*I)->getLocation();
          bool isClassDefMacro = maybeMacroLoc.isMacroID() && S.findMacroSpelling(maybeMacroLoc, "ClassDef");
@@ -462,7 +461,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          }
          // Match decls with sel rules if we are in presence of a selection file
          // and the cast was successful
-         if (selectionRules.IsSelectionXMLFile() && thisClassSelectionRule!=0){            
+         if (selectionRules.IsSelectionXMLFile() && thisClassSelectionRule!=0){
             const std::list<VariableSelectionRule>& fieldSelRules = thisClassSelectionRule->GetFieldSelectionRules();
 
             // This check is here to avoid asserts in debug mode (LLVMDEV env variable set)
@@ -697,16 +696,16 @@ bool IsExistingDir(const std::string& path)
    struct stat finfo;
    returnCode = lstat(path.c_str(), &finfo);
    isDir = S_ISDIR(finfo.st_mode);
-   #endif  
+   #endif
    return returnCode==0 && isDir ;
-   
+
 }
 
 //______________________________________________________________________________
 void CheckClassNameForRootMap(const std::string& classname, map<string,string>& autoloads)
 {
    if ( classname.find(':') == std::string::npos) return;
-      
+
    // We have a namespace and we have to check it first
    int slen = classname.size();
    for(int k=0;k<slen;++k) {
@@ -759,18 +758,18 @@ void ParseRootMapFile(ifstream& file, map<string,string>& autoloads)
 
       ReplaceAll (classname, "@@", "::");
       ReplaceAll (classname, "-", " ");
-      
+
       getline(file,line,'\n');
       while( line[0]==' ' ) line.replace(0,1,"");
 
       CheckClassNameForRootMap(classname,autoloads);
-      
+
       if ( classname == "ROOT::TImpProxy") {
          // Do not register the ROOT::TImpProxy so that they can be instantiated.
          continue;
       }
       autoloads[classname] = line;
-   }  
+   }
 
 }
 
@@ -801,7 +800,7 @@ void ParseRootMapFileNewFormat(ifstream& file, map<string,string>& autoloads)
          // No Action for the moment
       }
    }
-  
+
 }
 
 //______________________________________________________________________________
@@ -809,20 +808,20 @@ void LoadLibraryMap(const std::string& fileListName, map<string,string>& autoloa
 {
    // Fill the map of libraries to be loaded in presence of a class
    // Transparently support the old and new rootmap file format
-   
+
    std::ifstream filelist(fileListName.c_str());
-   
+
    std::string filename;
    std::string line;
-   
+
    while ( filelist >> filename ) {
-      
+
       if (IsExistingDir(filename)) continue;
-      
+
       ifstream file(filename.c_str());
 
       // Check which format is this
-      file >> line;         
+      file >> line;
       bool new_format = ( line[0] == '[' || line[0] == '{' ) ;
       file.clear();
       file.seekg(0, std::ios::beg);
@@ -836,9 +835,9 @@ void LoadLibraryMap(const std::string& fileListName, map<string,string>& autoloa
          }
 
       file.close();
-      
+
    } // end loop on files
-   filelist.close();   
+   filelist.close();
 }
 
 //______________________________________________________________________________
@@ -2082,7 +2081,7 @@ bool Which(cling::Interpreter &interp, const char *fname, string& pname)
    #else
    static const char* fopenopts = "r";
    #endif
-   
+
    pname = fname;
    fp = fopen(pname.c_str(), fopenopts);
    if (fp) {
@@ -2190,12 +2189,12 @@ static int GenerateModule(TModuleGenerator& modGen,
    // If not, full blown procedure is followed and the the pcm module is created
    // Returns != 0 on error.
 
-   if (inlineInputHeader){      
+   if (inlineInputHeader){
       modGen.WriteRegistrationSource(*dictSrcOut,true);
       return 0;
    }
 
-   
+
    modGen.WriteRegistrationSource(*dictSrcOut);
 
    if (!modGen.IsPCH()) {
@@ -2237,7 +2236,7 @@ static int GenerateModule(TModuleGenerator& modGen,
 
       // Write the generated bitstream to "Out".
       OS->write((char *)&Buffer.front(), Buffer.size());
-            
+
       // Make sure it hits disk now.
       OS->flush();
       bool deleteOutputFile =  CI->getDiagnostics().hasErrorOccurred();
@@ -2321,7 +2320,7 @@ void AddPlatformDefines(std::vector<std::string>& clingArgs)
    clingArgs.push_back(platformDefines);
    #endif
 }
-   
+
 //______________________________________________________________________________
 void ExtractFileName(const std::string& path, std::string& filename)
 {
@@ -2376,12 +2375,12 @@ int CreateCapabilitiesFile(const std::string& capaFileName,
       "names = clnames;\n",
       "n = sizeof(clnames)/sizeof(char*);\n",
       "}\n"};
-      
+
    std::list<std::string> model(model_c, model_c + sizeof(model_c) / sizeof(*model_c));
-      
-   
+
+
    // Create the capabilities file
-   
+
    const std::string startmark("//--Begin " + dictFileName + "\n");
    const std::string endmark  ("//--End   " + dictFileName + "\n");
    const std::string finalmark("//--Final End\n");
@@ -2390,7 +2389,7 @@ int CreateCapabilitiesFile(const std::string& capaFileName,
    std::list<std::string> new_lines;
 
    for (std::list<std::string>::const_iterator lineIt=classesNames.begin();
-        lineIt!=classesNames.end(); ++lineIt){      
+        lineIt!=classesNames.end(); ++lineIt){
       new_lines.push_back(" \""+capaPre+"/"+TClassEdit::InsertStd(lineIt->c_str())+"\",\n");
       }
 
@@ -2462,24 +2461,24 @@ void ManipForRootmap(std::string& name)
    // 2
    ReplaceAll(name,"const ","const-");
    ReplaceAll(name,"signed ","signed-");
-   
+
    // * "short int" becomes "short"
    ReplaceAll(name,"short int","short");
-   
+
    // * "long int" becomes "long"
    ReplaceAll(name,"long int","long");
-   
+
    // * "long long" becomes "long-long"
    ReplaceAll(name,"long long","long-long");
-   
+
    // * "long double" becomes "long-double"
    ReplaceAll(name,"long double","long-double");
-   
+
    // * " " becomes ""
    ReplaceAll(name," ","");
    // But this is could be more efficient
    //name.erase(std::remove_if(name.begin(), name.end(), isspace), name.end());
-   
+
    // * ">>" becomes ">->" except for "operator>>"
    // We replace blindly and recursively and then roll back for operator>->
    // in other words "Better to Say Sorry than to Ask Permission"
@@ -2493,7 +2492,7 @@ void ManipForRootmap(std::string& name)
 //______________________________________________________________________________
 void AdjustRootMapNames(std::string& rootmapFileName,
                         std::string& rootmapLibName){
-  
+
    // If the rootmap file name does not exist, create one following the libname
    // I.E. put into the directory of the lib the rootmap and within the rootmap the normalised path to the lib
    if (rootmapFileName.empty()){
@@ -2504,7 +2503,7 @@ void AdjustRootMapNames(std::string& rootmapFileName,
       ROOT::TMetaUtils::Info(0,"Rootmap file name %s built from rootmap lib name %s",
                             rootmapLibName.c_str(),
                             rootmapFileName.c_str());
-   } 
+   }
 }
 
 //______________________________________________________________________________
@@ -2520,17 +2519,17 @@ int CreateRootMapFile(const std::string& rootmapFileName,
       ROOT::TMetaUtils::Error(0,"Opening new rootmap file %s\n",rootmapFileName.c_str());
       return 1;
    }
-      
+
 
    // Preamble
-   time_t rawtime;  
+   time_t rawtime;
    time (&rawtime);
    char* theTime = ctime(&rawtime);
    rootmapFile << "# Automatically generated with genreflex on "
                << (theTime ? theTime : "TIME ERROR");
 
    rootmapFile << "#--Begin " << rootmapFileName << std::endl;
-   
+
    // Loop on selected classes and insert them in the rootmap
    std::string thisClassName;
    for (std::list<std::string>::const_iterator classNameIt=classesNames.begin();
@@ -2539,9 +2538,9 @@ int CreateRootMapFile(const std::string& rootmapFileName,
       ManipForRootmap(thisClassName);
       rootmapFile << "Library." << thisClassName << ": "
                   << std::setw(35-classNameIt->size()) << rootmapLibName
-                  << std::endl;   
+                  << std::endl;
       }
-   
+
    // Same for namespaces
    std::string thisNsName;
    for (std::list<std::string>::const_iterator nsNameIt=nsNames.begin();
@@ -2555,7 +2554,7 @@ int CreateRootMapFile(const std::string& rootmapFileName,
 
    rootmapFile << "#--End " << rootmapFileName << std::endl;
    rootmapFile << "#--Final End" << std::endl;
-   
+
    return 0;
 }
 
@@ -2580,7 +2579,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
       ROOT::TMetaUtils::Error(0,"Opening new rootmap file %s\n",rootmapFileName.c_str());
       return 1;
    }
-      
+
    // Preamble
    time_t rawtime;
    time (&rawtime);
@@ -2596,7 +2595,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
          rootmapFile << *tdefIt << std::endl;
       }
    }
-   
+
    // Add the "section"
    if (!nsNames.empty() || !classesNames.empty()){
       rootmapFile << "\n[" << rootmapLibName << "]\n";
@@ -2613,7 +2612,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
          rootmapFile << "namespace " << *nsNameIt << std::endl;
       }
    }
-   
+
    return 0;
 
 }
@@ -2629,7 +2628,7 @@ void ExtractEnclosingNameSpaces(const clang::DeclContext& definition,
    if (!enclosingNamespaceDeclCtxt) return;
 
    // Check if the parent is a namespace (it could be a class for example)
-   // if not, nothing to be done here 
+   // if not, nothing to be done here
    const clang::NamespaceDecl* enclosingNamespace = clang::dyn_cast<clang::NamespaceDecl>(enclosingNamespaceDeclCtxt);
    if (!enclosingNamespace) return;
 
@@ -2648,9 +2647,9 @@ int ExtractTemplateDefinition(const clang::RecordDecl& rDecl,
    // Construct a template definition for the declaration
    // A typical template definition looks like:
    // namespace A { template <typename T, int I, typename S = T, int J = I> class MyClass; }
-   
+
    const clang::RecordDecl* definition = rDecl.getDefinition();
-   if (!definition){      
+   if (!definition){
       TMetaUtils::Info(0, "Template definition of %s is absent", rDecl.getNameAsString().c_str());
       return 1;
    }
@@ -2674,7 +2673,7 @@ int ExtractTemplateDefinition(const clang::RecordDecl& rDecl,
    ReplaceAll(definitionStr,"\r","");
 
    definitionStr+=";";
-   
+
    // Check if we have enclosing namespaces
    std::list<std::string> enclosingNamespaces;
    ExtractEnclosingNameSpaces(*definition,enclosingNamespaces);
@@ -2685,7 +2684,7 @@ int ExtractTemplateDefinition(const clang::RecordDecl& rDecl,
       definitionStr = "namespace " + *enclosingNamespaceIt + " { " + definitionStr + " }";
    }
 
-   
+
    return 0;
 }
 
@@ -2699,7 +2698,7 @@ void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
 
    // Loop on selected classes. If they don't have the attribute "rootmap"
    // set to "false", store them in the list of classes for the rootmap
-   
+
    std::string attrName,attrValue;
    bool isClassSelected;
    // Loop on selected classes and put them in a list
@@ -2715,10 +2714,10 @@ void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
          std::string templateDefSrcStr;
          int retCode = ExtractTemplateDefinition(*rDecl,compilerInstance,templateDefSrcStr);
          if (retCode==0)
-            templateDefsList.push_back(templateDefSrcStr);                
+            templateDefsList.push_back(templateDefSrcStr);
       }
 
-   
+
       // Loop on attributes, if rootmap=false, don't put it in the list!
       for (clang::RecordDecl::attr_iterator ait = rDecl->attr_begin ();
            ait != rDecl->attr_end ();++ait){
@@ -2783,23 +2782,23 @@ public:
       if (nameStr.empty()) return;
 
       std::string tmpNameStr(getTmpFileName(nameStr));
-      
+
       // For brevity
-      const char* name(nameStr.c_str());     
+      const char* name(nameStr.c_str());
       const char* tmpName(tmpNameStr.c_str());
-      
+
       m_names.push_back(nameStr);
       m_tempNames.push_back(tmpNameStr);
       ROOT::TMetaUtils::Info(0,"File %s added to the tmp catalog.\n", name);
-            
+
       // This is to allow update of existing files
       if (0 == std::rename( name , tmpName )){
          ROOT::TMetaUtils::Info(0,"File %s existing. Preserved as %s.\n", name,tmpName);
-       }    
+       }
 
       // To change the name to its tmp version
       nameStr=tmpNameStr;
-       
+
       m_size++;
 
    }
@@ -2814,8 +2813,8 @@ public:
          // Check if the file exists
          std::ifstream ifile(tmpName);
          if (!ifile)
-            ROOT::TMetaUtils::Error(0, "Cannot find %s!\n", tmpName);       
-         
+            ROOT::TMetaUtils::Error(0, "Cannot find %s!\n", tmpName);
+
          if ( 0 != std::rename( tmpName , name )){
             ROOT::TMetaUtils::Error(0, "Renaming %s into %s!\n", tmpName , name);
             retval++;
@@ -2831,7 +2830,7 @@ public:
       if (i==m_tempNames.size()) return m_emptyString;
       return m_names[i];
    }
-   
+
    //______________________________________________
    void dump(){
       std::cout << "Restoring files in temporary file catalog:\n";
@@ -2839,7 +2838,7 @@ public:
          std::cout <<  m_tempNames[i] << " --> " << m_names[i] << std::endl;
       }
    }
-   
+
 private:
    unsigned int m_size;
    const std::string m_emptyString;
@@ -2853,7 +2852,7 @@ int RootCling(int argc,
               bool isDeep=false,
               bool isGenreflex=false)
 {
-   
+
    if (argc < 2) {
       fprintf(stderr,
               shortHelp,
@@ -2865,7 +2864,7 @@ int RootCling(int argc,
    std::string dictname;
    std::string dictpathname;
    int ic, force = 0, onepcm = 0;
-   bool requestAllSymbols = isDeep; 
+   bool requestAllSymbols = isDeep;
 
    std::string currentDirectory;
    GetCurrentDirectory(currentDirectory);
@@ -2907,7 +2906,7 @@ int RootCling(int argc,
 
    const char* libprefixOption = "--lib-list-prefix=";
    std::string liblistPrefix;
-   
+
    while (ic < argc && strncmp(argv[ic], "-",1)==0
           && strcmp(argv[ic], "-f")!=0 ) {
       if (!strcmp(argv[ic], "-l")) {
@@ -2967,7 +2966,7 @@ int RootCling(int argc,
 
    // Store the temp files
    tempFileNamesCatalog tmpCatalog;
-   
+
    if (ic < argc && (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
        strstr(argv[ic],".cp") || strstr(argv[ic],".cxx") ||
        strstr(argv[ic],".cc") || strstr(argv[ic],".c++"))) {
@@ -3026,7 +3025,7 @@ int RootCling(int argc,
    }
 
    std::vector<std::string> clingArgs;
-   clingArgs.push_back(argv[0]);   
+   clingArgs.push_back(argv[0]);
    clingArgs.push_back("-I.");
    clingArgs.push_back("-DROOT_Math_VectorUtil_Cint"); // ignore that little problem maker
 
@@ -3055,7 +3054,7 @@ int RootCling(int argc,
 
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = false;
-   
+
    int nextStart = 0;
    while (ic < argc) {
       if (*argv[ic] == '-' || *argv[ic] == '+') {
@@ -3066,7 +3065,7 @@ int RootCling(int argc,
             ic+=2;
             continue;
          }
-         
+
          if (strcmp("-rml", argv[ic]) == 0 && (ic+1) < argc) {
             // name of the lib for the rootmap
             rootmapLibName = argv[ic+1];
@@ -3087,7 +3086,7 @@ int RootCling(int argc,
             ic+=1;
             continue;
          }
-         
+
          if (strcmp("-s", argv[ic]) == 0 && (ic+1) < argc) {
             // precompiled modules
             sharedLibraryPathName = argv[ic+1];
@@ -3111,11 +3110,11 @@ int RootCling(int argc,
             inlineInputHeader = true;
             ic+=1;
             continue;
-         }         
+         }
          if (strcmp("-pipe", argv[ic])!=0 && strcmp("-pthread", argv[ic])!=0) {
             // filter out undesirable options
             if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
-                && strcmp("-p", argv[ic])) 
+                && strcmp("-p", argv[ic]))
                {
                   clingArgs.push_back(argv[ic]);
                }
@@ -3146,7 +3145,7 @@ int RootCling(int argc,
    clingArgs.push_back((dictname + ".h").c_str());
 
    ROOT::TMetaUtils::SetPathsForRelocatability(clingArgs);
-   
+
    std::vector<const char*> clingArgsC;
    for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
         iclingArgs < nclingArgs; ++iclingArgs) {
@@ -3154,7 +3153,7 @@ int RootCling(int argc,
    }
 
    std::string resourceDir;
-   
+
 #ifdef R__LLVMRESOURCEDIR
    resourceDir = R__LLVMRESOURCEDIR;
 #else
@@ -3206,7 +3205,7 @@ int RootCling(int argc,
 
    AddPlatformDefines(clingArgs);
 
-   
+
    std::string interpPragmaSource;
    std::string includeForSource;
    string esc_arg;
@@ -3246,7 +3245,7 @@ int RootCling(int argc,
             // coverity[tainted_data] The OS should already limit the argument size, so we are safe here
             if (!isSelectionFile) StrcpyArg(argkeep, argv[i]);
             std::string header( isSelectionFile ? argv[i] : GetRelocatableHeaderName( argv[i], currentDirectory ) );
-            // Strip any trailing + which is only used by GeneratedLinkdef.h which currently 
+            // Strip any trailing + which is only used by GeneratedLinkdef.h which currently
             // use directly argv.
             if (header[header.length()-1]=='+') {
                header.erase(header.length()-1);
@@ -3299,45 +3298,23 @@ int RootCling(int argc,
       GenerateLinkdef(&argc, argv, firstInputFile, interpPragmaSource);
    }
 
-   // make name of dict include file "aapDict.cxx" -> "aapDict.h"
-   std::string dictheader( dictpathname );
-   if (!dictheader.empty()) {
-      size_t pos = dictheader.rfind('.');
-      if (pos != std::string::npos) dictheader.erase(pos);
-      dictheader.append(".h");
-   }   
-   std::string inclf(dictname);
-   if (!inclf.empty()) {
-      size_t pos = inclf.rfind('.');
-      if (pos != std::string::npos) inclf.erase(pos);
-      inclf.append(".h");
-   }
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
    std::ofstream headerout;
    string main_dictname(dictpathname);
    if (!dictpathname.empty()) {
-      tmpCatalog.addFileName(dictheader);
-      headerout.open(dictheader.c_str());
-      dictHdrOut = &headerout;
-      if (!(*dictHdrOut)) {
-         ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
-                                 dictheader.c_str());
-         return 1;
-      }
       tmpCatalog.addFileName(dictpathname);
       fileout.open(dictpathname.c_str());
       dictSrcOut = &fileout;
       if (!(*dictSrcOut)) {
          ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
-               dictpathname.c_str());
+                                 dictpathname.c_str());
          return 1;
       }
    } else {
       dictSrcOut = &std::cout;
-      dictHdrOut = &std::cout;
    }
-   
+
    size_t dh = main_dictname.rfind('.');
    if (dh != std::string::npos) {
       main_dictname.erase(dh);
@@ -3356,11 +3333,43 @@ int RootCling(int argc,
    for (int i=0;i<argc;++i){
       (*dictSrcOut) << argv[i] << " ";
    }
-   (*dictSrcOut) << std::endl  
+   (*dictSrcOut) << std::endl
                  << "// Do NOT change. Changes will be lost next time file is generated" << std::endl
                  << "//" << std::endl << std::endl
                  << "#define R__DICTIONARY_FILENAME " << main_dictname << std::endl
-                 << "#include \"" << inclf << "\"\n"
+
+                 // Now that CINT is not longer there to write the header file,
+                 // write one and include in there a few things for backward
+                 // compatibility.
+                 << "\n/*******************************************************************/\n"
+                 << "#include <stddef.h>\n"
+                 << "#include <stdio.h>\n"
+                 << "#include <stdlib.h>\n"
+                 << "#include <math.h>\n"
+                 << "#include <string.h>\n"
+                 << "#include <assert.h>\n"
+                 << "#define G__DICTIONARY\n"
+                 << "#include \"RConfig.h\"\n"
+                 << "#include \"TClass.h\"\n"
+                 << "#include \"TClassAttributeMap.h\"\n"
+                 << "#include \"TInterpreter.h\"\n"
+                 << "#include \"TROOT.h\"\n"
+                 << "#include \"TBuffer.h\"\n"
+                 << "#include \"TMemberInspector.h\"\n"
+                 << "#include \"TError.h\"\n\n"
+                 << "#ifndef G__ROOT\n"
+                 << "#define G__ROOT\n"
+                 << "#endif\n\n"
+                 << "#include \"RtypesImp.h\"\n"
+                 << "#include \"TIsAProxy.h\"\n"
+                 << "#include \"TFileMergeInfo.h\""
+                 << std::endl;
+   //if (needsCollectionProxy) {   // too bad, include always
+      (*dictSrcOut) << "#include <algorithm>\n"
+                    << "#include \"TCollectionProxyInfo.h\""
+                    << std::endl;
+   //}
+   (*dictSrcOut) << "/*******************************************************************/\n\n"
                  << "#include \"TDataMember.h\"\n" // To set their transiency
                  << std::endl;
 #ifndef R__SOLARIS
@@ -3387,7 +3396,7 @@ int RootCling(int argc,
    std::string extraIncludes;
 
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
-   
+
    if (requestAllSymbols && !isSelXML) {
       selectionRules.SetDeep(true);
    } else if (!linkdefLoc) {
@@ -3467,13 +3476,12 @@ int RootCling(int argc,
 
    }
 
-   
    //---------------------------------------------------------------------------
    // Write schema evolution related headers and declarations
    //---------------------------------------------------------------------------
    if( !gReadRules.empty() || !gReadRawRules.empty() ) {
-      (*dictSrcOut) << "#include \"TBuffer.h\"\n" 
-                    << "#include \"TVirtualObject.h\"\n" 
+      (*dictSrcOut) << "#include \"TBuffer.h\"\n"
+                    << "#include \"TVirtualObject.h\"\n"
                     << "#include <vector>\n"
                     << "#include \"TSchemaHelper.h\"\n\n";
 
@@ -3518,7 +3526,7 @@ int RootCling(int argc,
    if (genreflex::verbose)
       selectionRules.PrintSelectionRules();
 
-   
+
 // SELECTION LOOP
    // Check for error in the class layout before doing anything else.
    RScanner::ClassColl_t::const_iterator iter = scan.fSelectedClasses.begin();
@@ -3545,7 +3553,7 @@ int RootCling(int argc,
    }
 
    bool needsCollectionProxy = false;
-   
+
    if (!onepcm) {
 
       //
@@ -3574,7 +3582,7 @@ int RootCling(int argc,
       for( ; ns_iter != ns_end; ++ns_iter) {
          WriteNamespaceInit(*ns_iter, interp);
       }
-      
+
       iter = scan.fSelectedClasses.begin();
       end = scan.fSelectedClasses.end();
       for( ; iter != end; ++iter)
@@ -3588,7 +3596,7 @@ int RootCling(int argc,
             // For now delay those for later.
             continue;
          }
-         
+
          // Very important: here we decide if we want to attach attributes to the decl.
          if (clang::CXXRecordDecl* CXXRD =
               llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
@@ -3682,45 +3690,8 @@ int RootCling(int argc,
    ROOT::RStl::Instance().WriteClassInit(*dictSrcOut, interp, normCtxt, needsCollectionProxy);
 
    // Now we have done all our looping and thus all the possible
-   // annotation, let's write the pcms.   
+   // annotation, let's write the pcms.
    GenerateModule(modGen, CI, currentDirectory,inlineInputHeader);
-
-   // Now that CINT is not longer there to write the header file,
-   // write one and include in there a few things for backward
-   // compatibility.
-   (*dictHdrOut) << "/********************************************************************\n"
-                 << "* " << tmpCatalog.getFileName(dictheader) << "\n"
-                 << "* CAUTION: DON'T CHANGE THIS FILE. THIS FILE IS AUTOMATICALLY GENERATED\n"
-                 << "*          FROM HEADER FILES LISTED IN 'DictInit::headers'.\n"
-                 << "*          CHANGE THOSE HEADER FILES AND REGENERATE THIS FILE.\n"
-                 << "********************************************************************/\n"
-                 << "#include <stddef.h>\n"
-                 << "#include <stdio.h>\n"
-                 << "#include <stdlib.h>\n"
-                 << "#include <math.h>\n"
-                 << "#include <string.h>\n"
-                 << "#include <assert.h>\n"
-                 << "#define G__DICTIONARY\n"
-                 << "#include \"RConfig.h\"\n"
-                 << "#include \"TClass.h\"\n"
-                 << "#include \"TClassAttributeMap.h\"\n"
-                 << "#include \"TInterpreter.h\"\n"
-                 << "#include \"TROOT.h\"\n"
-                 << "#include \"TBuffer.h\"\n"
-                 << "#include \"TMemberInspector.h\"\n"
-                 << "#include \"TError.h\"\n\n"
-                 << "#ifndef G__ROOT\n"
-                 << "#define G__ROOT\n"
-                 << "#endif\n\n"
-                 << "#include \"RtypesImp.h\"\n"
-                 << "#include \"TIsAProxy.h\"\n"
-                 << "#include \"TFileMergeInfo.h\"\n"
-                 << std::endl;
-   if (needsCollectionProxy) {
-      (*dictHdrOut) << "#include <algorithm>\n"
-                    << "\n#include \"TCollectionProxyInfo.h\"";
-   }
-   (*dictHdrOut) << std::endl;
 
    if (liblistPrefix.length()) {
       string liblist_filename = liblistPrefix + ".out";
@@ -3762,20 +3733,20 @@ int RootCling(int argc,
                                             templateDefsList,
                                             *interp.getCI());
    }
-   if (rootMapNeeded){      
+   if (rootMapNeeded){
       ExtractSelectedNamespaces(scan,nsNames);
    }
-   
-   
+
+
    // Create the rootmapfile if needed
    if (rootMapNeeded){
       AdjustRootMapNames(rootmapFileName,
                          rootmapLibName);
-      
+
       ROOT::TMetaUtils::Info(0,"Rootmap file name %s and lib name %s\n",
                              rootmapLibName.c_str(),
                              rootmapFileName.c_str());
-      
+
       tmpCatalog.addFileName(rootmapFileName);
       int rmStatusCode = 0;
       if (useNewRmfFormat){
@@ -3803,14 +3774,14 @@ int RootCling(int argc,
       if (0!=capaStatusCode) return 1;
    }
 
-      
+
    if (genreflex::verbose)
       tmpCatalog.dump();
-   
+
    // Before returning, rename the files
    return tmpCatalog.commit();
 
-   
+
 }
 
 namespace genreflex{
@@ -3858,14 +3829,14 @@ unsigned int checkHeadersNames(std::vector<std::string>& headersNames)
             headername.c_str());
       }
    }
-   return numberOfHeaders;   
+   return numberOfHeaders;
 }
 
 //______________________________________________________________________________
 unsigned int extractArgs(int argc, char** argv, std::vector<std::string>& args)
 {
    // Extract the arguments from the command line
-   
+
    // loop on argv, spot strings which are not preceeded by something
    unsigned int argvCounter=0;
    for (int i=1;i<argc;++i){
@@ -3896,12 +3867,12 @@ unsigned int extractArgs(int argc, char** argv, std::vector<std::string>& args)
 //______________________________________________________________________________
 void changeExtension(std::string& filename, const std::string& newExtension)
 {
-   size_t result = filename.find_last_of('.'); 
+   size_t result = filename.find_last_of('.');
    if (std::string::npos != result){
       filename.erase(result);
       filename.append(newExtension);
-   }   
-      
+   }
+
 }
 
 //______________________________________________________________________________
@@ -3946,7 +3917,7 @@ void AddToArgVector(std::vector<char*>& argvVector,
    for (std::vector<std::string>::const_iterator it = argsToBeAdded.begin();
         it!=argsToBeAdded.end();it++){
       argvVector.push_back(string2charptr(optName+*it));
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -3960,7 +3931,7 @@ void AddToArgVectorSplit(std::vector<char*>& argvVector,
          argvVector.push_back(string2charptr(optName));
       }
       argvVector.push_back(string2charptr(*it));
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -3991,7 +3962,7 @@ int invokeRootCling(const std::string& verbosity,
    // Extract the path to the dictionary
    std::string dictLocation;
    ExtractFilePath(ofilename,dictLocation);
-   
+
    // Rootmaps
 
    // Prepare the correct rootmap libname if not already set.
@@ -4015,8 +3986,8 @@ int invokeRootCling(const std::string& verbosity,
       newRootmapFileName = dictLocation+newRootmapFileName;
    }
 
-   
-   // RootMap filename 
+
+   // RootMap filename
    if (!newRootmapFileName.empty()){
       argvVector.push_back(string2charptr("-rmf"));
       argvVector.push_back(string2charptr(newRootmapFileName));
@@ -4025,14 +3996,14 @@ int invokeRootCling(const std::string& verbosity,
    // Switch for the new format
    if (newRmfFormat)
       argvVector.push_back(string2charptr("-newRmfFormat"));
-   
-   // RootMap Lib filename 
+
+   // RootMap Lib filename
    if (!newRootmapLibName.empty()){
       argvVector.push_back(string2charptr("-rml"));
       argvVector.push_back(string2charptr(newRootmapLibName));
    }
 
-   // Capabilities file   
+   // Capabilities file
    if (!capaFileName.empty()){
       std::string newCapaFileName(capaFileName);
       if (!HasPath(newCapaFileName)){
@@ -4040,8 +4011,8 @@ int invokeRootCling(const std::string& verbosity,
       }
       argvVector.push_back(string2charptr("-cap"));
       argvVector.push_back(string2charptr(newCapaFileName));
-   }   
-   
+   }
+
    if (!targetLibName.empty()){
       argvVector.push_back(string2charptr("-s"));
       argvVector.push_back(string2charptr(targetLibName));
@@ -4051,33 +4022,33 @@ int invokeRootCling(const std::string& verbosity,
 
    // Inline the input header
    argvVector.push_back(string2charptr("-inlineInputHeader"));
-   
+
    // Clingargs
    AddToArgVector(argvVector, includes, "-I");
    AddToArgVector(argvVector, preprocDefines, "-D");
    AddToArgVector(argvVector, preprocUndefines, "-U");
-   
+
    AddToArgVector(argvVector, headersNames);
-   
+
    if (!selectionFileName.empty()){
       argvVector.push_back(string2charptr(selectionFileName));
-   }         
-      
+   }
+
    const int argc = argvVector.size();
-      
+
    // Output commandline for rootcling
    if (genreflex::verbose){
       std::cout << "Rootcling commandline:\n";
       for (int i=0;i<argc;i++)
          std::cout << i << ") " << argvVector[i] <<std::endl;
    }
-   
+
    char** argv =  & (argvVector[0]);
    int rootclingReturnCode = RootCling(argc,
                                        argv,
                                        isDeep,
                                        true);
-   
+
    for (int i=0;i<argc;i++)
       delete [] argvVector[i];
 
@@ -4168,7 +4139,7 @@ void RiseWarningIfPresent(std::vector<option::Option>& options,
                           int optionIndex,
                           const char* descriptor)
 {
-   
+
    if (options[optionIndex]){
    ROOT::TMetaUtils::Warning(0,
                              "*** genereflex: %s is not supported anymore.\n",
@@ -4209,12 +4180,12 @@ int GenReflex(int argc, char **argv)
    // --interpreteronly
    // --gccxml{path,opt,post}
    // --reflex
-   //  
+   //
    //
    // Exceptions
    // The --deep option of genreflex is passed as function parameter to rootcling
    // since it's not needed at the moment there.
-   
+
    using namespace genreflex;
 
    // Setup the options parser
@@ -4294,7 +4265,7 @@ int GenReflex(int argc, char **argv)
 
    const char* rootmapLibUsage=
    "--rootmap-lib  \tLibrary name for the rootmap file.\n";
-   
+
    // The Descriptor
    const option::Descriptor genreflexUsageDescriptor[] =
    {
@@ -4339,7 +4310,7 @@ int GenReflex(int argc, char **argv)
         "c" , "capabilities" ,
         option::FullArg::Required,
         "-c, --capabilities\t Name of the output capabilities file"},
-        
+
       {PCMFILENAME,
         STRING ,
         "m" , "" ,
@@ -4357,7 +4328,7 @@ int GenReflex(int argc, char **argv)
         "" , "newRmfFormat",
         option::Arg::None,
         ""},
-        
+
       {DEBUG,
         NOTYPE ,
         "" , "debug",
@@ -4387,14 +4358,14 @@ int GenReflex(int argc, char **argv)
         STRING ,
         "D" , "" ,
         option::FullArg::Required,
-        ""},        
-        
+        ""},
+
       {PREPROCUNDEFINE,
         STRING ,
         "U" , "" ,
         option::FullArg::Required,
         ""},
-        
+
       // Options that rise warnings
       {NOMEMBERTYPEDEFS,
         STRING ,
@@ -4414,7 +4385,7 @@ int GenReflex(int argc, char **argv)
    std::vector<std::string> headersNames;
    const int originalArgc=argc;
    // The only args are the headers here
-   const int extractedArgs = extractArgs(argc,argv,headersNames); 
+   const int extractedArgs = extractArgs(argc,argv,headersNames);
 
    const int offset = 1; // skip argv[0]
    argc-=offset+extractedArgs;
@@ -4428,7 +4399,7 @@ int GenReflex(int argc, char **argv)
    // For example, --selction_file can be abbreviated with --sele at least.
 
    option::Parser parse(genreflexUsageDescriptor, argc, argv, &options[0], &buffer[0], 5);
-   
+
    if (parse.error()){
       ROOT::TMetaUtils::Error(0, "*** genreflex: Argument parsing error!\n");
       return 1;
@@ -4475,7 +4446,7 @@ int GenReflex(int argc, char **argv)
    // FIXME: treatment of directories
    std::string rootmapFileName(options[ROOTMAP].arg ? options[ROOTMAP].arg : "");
    std::string rootmapLibName(options[ROOTMAPLIB].arg ? options[ROOTMAPLIB].arg : "");
-   
+
    // The target lib name
    std::string targetLibName;
    if (options[TARGETLIB]){
@@ -4493,7 +4464,7 @@ int GenReflex(int argc, char **argv)
    bool newRmfFormat = false;
    if (options[NEWRMFFORMAT])
       newRmfFormat=true;
-   
+
    // Add the .so extension to the rootmap lib if not there
    if (!rootmapLibName.empty() && !endsWith(rootmapLibName,gLibraryExtension)){
       rootmapLibName+=gLibraryExtension;
@@ -4501,7 +4472,7 @@ int GenReflex(int argc, char **argv)
 
    // Capabilities file
    std::string capaFileName(options[CAPABILITIESFILENAME].arg ? options[CAPABILITIESFILENAME].arg : "");
-   
+
    // The list of pcms to be preloaded
    std::vector<std::string> pcmsNames;
    extractMultipleOptions(options,PCMFILENAME, pcmsNames);
