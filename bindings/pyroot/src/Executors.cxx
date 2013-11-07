@@ -121,7 +121,6 @@ PyObject* PyROOT::TULongExecutor::Execute( CallFunc_t* func, void* self, Bool_t 
 PyObject* PyROOT::TLongLongExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python long long return value
-// (CLING) TODO: this was returning a G__value
    Long64_t result;
    if ( release_gil ) {
       Py_BEGIN_ALLOW_THREADS
@@ -137,7 +136,6 @@ PyObject* PyROOT::TLongLongExecutor::Execute( CallFunc_t* func, void* self, Bool
 PyObject* PyROOT::TULongLongExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python unsigned long long return value
-// (CLING) TODO: this was returning a G__value
    ULong64_t result;
    if ( release_gil ) {
       Py_BEGIN_ALLOW_THREADS
