@@ -3241,10 +3241,6 @@ void TClass::ResetCaches()
       fEnums->Delete();
    delete fEnums;   fEnums = 0;
 
-   if (fMethod)
-      fMethod->Delete();
-   delete fMethod;   fMethod=0;
-
    if (fRealData)
       fRealData->Delete();
    delete fRealData;  fRealData=0;
