@@ -304,20 +304,13 @@ PyObject* PyROOT::TRootObjectExecutor::Execute( CallFunc_t* func, void* self, Bo
 PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execution will bring a temporary in existence
-   void* result = malloc( fClass->Size() );
+   TInterpreterValue *value = gInterpreter->CreateTemporary();
+   PRCallFuncExecValue( func, self, *value, release_gil );
 
-// CLING WORKAROUND (ROOT-5202): it's not clear when an object is returned as
-// struct, and when as a builtin value; for 64b, the cut-off appears to be 16 bytes
-   if ( fClass->Size() <= 16 ) {   // return by value
-      std::memcpy( result, (void*)PRCallFuncExecInt( func, self, release_gil ), 16 );
-   } else {
-// -- CLING WORKAROUND
-      TInterpreterValue *value = gInterpreter->CreateTemporary();
-      PRCallFuncExecValue( func, self, *value, release_gil );
-   // TODO: there's no guarantee that bit-wise copy is correct ...
-      std::memcpy( result, value->GetAsPointer(), fClass->Size() );
-      delete value;
-   }
+// TODO: there's no guarantee that bit-wise copy is correct ...
+   void* result = malloc( fClass->Size() );
+   std::memcpy( result, value->GetAsPointer(), fClass->Size() );
+   delete value;
 
    if ( ! result ) {
       if ( ! PyErr_Occurred() )         // callee may have set a python error itself
