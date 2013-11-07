@@ -27,6 +27,8 @@ void runMemberComments() {
    TIter iPubMeth(pubMeth);
    TMethod* meth = 0;
    while ((meth = (TMethod*)iPubMeth())) {
+      // skip C++11 move c'tor, move op=
+      if (strstr(meth->GetSignature(), "&&")) continue;
       printf("childCl::%s%s // %s\n", meth->GetName(), meth->GetSignature(),
              meth->GetTitle());
    }
