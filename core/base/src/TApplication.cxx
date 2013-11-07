@@ -207,7 +207,7 @@ TApplication::~TApplication()
    for (int i = 0; i < fArgc; i++)
       if (fArgv[i]) delete [] fArgv[i];
    delete [] fArgv;
-   SafeDelete(fAppImp);
+
    if (fgApplications)
       fgApplications->Remove(this);
 
@@ -227,6 +227,10 @@ TApplication::~TApplication()
          gInterpreter->ResetGlobals();
       }
    }
+
+   // Now that all the canvases and files have been closed we can
+   // delete the implementation.
+   SafeDelete(fAppImp);
 }
 
 //______________________________________________________________________________
