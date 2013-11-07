@@ -878,7 +878,7 @@ TCling::TCling(const char *name, const char *title)
                          "#include <string>\n"
                          "using namespace std;\n"
                          "#include <assert.h>\n"
-                         "#define __asm__(X) {assert(false && #X \"Inline __asm__ not supported!\");}");
+                         "#define __asm__(...) {assert(false && \"Inline __asm__ not supported!\");}");
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
