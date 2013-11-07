@@ -278,16 +278,11 @@ class STL5StringHandlingTestCase( MyTestCase ):
 
 ### Iterator comparison ======================================================
 class STL6IteratorComparisonTestCase( MyTestCase ):
-   def test1BuiltinVectorIterators( self ):
-      """Test iterator comparison with operator== reflected"""
+   def __run_tests( self, container ):
+      self.assertEqual( len(container), 1 )
 
-      v = std.vector( int )()
-      v.resize( 1 )
-
-      self.assertEqual( len(v), 1 )
-
-      b1, e1 = v.begin(), v.end()
-      b2, e2 = v.begin(), v.end()
+      b1, e1 = container.begin(), container.end()
+      b2, e2 = container.begin(), container.end()
 
       self.assert_( b1.__eq__( b2 ) )
       self.assert_( not b1.__ne__( b2 ) )
@@ -312,6 +307,30 @@ class STL6IteratorComparisonTestCase( MyTestCase ):
          self.assertEqual( cmp( b1, e1 ), 0 )
       self.assertNotEqual( b1, b2 )
       self.assertEqual( b1, e2 )
+
+   def test1BuiltinVectorIterators( self ):
+      """Test iterator comparison for vector"""
+
+      v = std.vector( int )()
+      v.resize( 1 )
+
+      self.__run_tests( v )
+
+   def test2BuiltinListIterators( self ):
+      """Test iterator comparison for list"""
+
+      l = std.list( int )()
+      l.push_back( 1 )
+
+      self.__run_tests( l )
+
+   def test3BuiltinMapIterators( self ):
+      """Test iterator comparison for map"""
+
+      m = std.map( int, int )()
+      m[1] = 1
+
+      self.__run_tests( m )
 
 
 ## actual test run

@@ -14,7 +14,9 @@ Test the iterator protocol mapping for an STL like class ... ok
 Test mapping of python strings and std::string ... ok
 Test access to std::string object data members ... ok
 Test that strings with NULL do not get truncated ... ok
-Test iterator comparison with operator== reflected ... ok
+Test iterator comparison for vector ... ok
+Test iterator comparison for list ... ok
+Test iterator comparison for map ... ok
 
 ----------------------------------------------------------------------
 
