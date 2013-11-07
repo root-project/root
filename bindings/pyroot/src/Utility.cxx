@@ -577,57 +577,6 @@ std::string PyROOT::Utility::MapOperatorName( const std::string& name, Bool_t bT
 }
 
 //____________________________________________________________________________
-PyROOT::Utility::EDataType PyROOT::Utility::EffectiveType( const std::string& name )
-{
-// Determine the actual type (to be used for types that are not classes).
-   EDataType effType = kOther;
-
-// TODO: figure out enum for Cling
-/*   if ( ti.Property() & G__BIT_ISENUM )
-     return EDataType( (int) kEnum ); */
-
-   std::string fullType = TClassEdit::CleanType( name.c_str() );
-   std::string resolvedType = TClassEdit::ResolveTypedef( fullType.c_str(), true );
-
-   std::string shortName = TClassEdit::ShortType( resolvedType.c_str(), 1 );
-
-   const std::string& cpd = Compound( name );
-   const int mask = cpd == "*" ? kPtrMask : 0;
-
-   if ( shortName == "bool" )
-      effType = EDataType( (int) kBool | mask );
-   else if ( shortName == "char" )
-      effType = EDataType( (int) kChar | mask );
-   else if ( shortName == "short" )
-      effType = EDataType( (int) kShort | mask );
-   else if ( shortName == "int" )
-      effType = EDataType( (int) kInt | mask );
-   else if ( shortName == "unsigned int" )
-      effType = EDataType( (int) kUInt | mask );
-   else if ( shortName == "long" )
-      effType = EDataType( (int) kLong | mask );
-   else if ( shortName == "unsigned long" )
-      effType = EDataType( (int) kULong | mask );
-   else if ( shortName == "long long" )
-      effType = EDataType( (int) kLongLong | mask );
-   else if ( shortName == "float" )
-      effType = EDataType( (int) kFloat | mask );
-   else if ( shortName == "double" )
-      effType = EDataType( (int) kDouble | mask );
-   else if ( shortName == "void" )
-      effType = EDataType( (int) kVoid | mask );
-   else if ( shortName == "string" && cpd == "" )
-      effType = kSTLString;
-   else if ( name == "#define" ) {
-      effType = kMacro;
-   }
-   else
-      effType = kOther;
-
-   return effType;
-}
-
-//____________________________________________________________________________
 const std::string PyROOT::Utility::Compound( const std::string& name )
 {
 // Break down the compound of a fully qualified type name.

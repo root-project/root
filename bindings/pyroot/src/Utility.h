@@ -75,35 +75,10 @@ namespace PyROOT {
    // data/return types
       const int kPtrMask = 0x10000000;
 
-      enum EDataType {
-         kBool        = 0x00000001,
-         kChar        = 0x00000002,
-         kShort       = 0x00000004,
-         kInt         = 0x00000008,
-         kUInt        = 0x00000010,
-         kLong        = 0x00000020,
-         kULong       = 0x00000040,
-         kFloat       = 0x00000080,
-         kDouble      = 0x00000100,
-         kVoid        = 0x00000200,
-         kOther       = 0x00000400,
-         kLongLong    = 0x00000800,
-         kEnum        = 0x00001000,
-         kSTLString   = 0x00002000,
-         kMacro       = 0x00004000,
-         kString      = kPtrMask | kChar,
-         kDoublePtr   = kPtrMask | kDouble,
-         kFloatPtr    = kPtrMask | kFloat,
-         kLongPtr     = kPtrMask | kLong,
-         kIntPtr      = kPtrMask | kInt,
-         kVoidPtr     = kPtrMask | kVoid
-      };
-
    // data/operator mappings
       std::string MapOperatorName( const std::string& name, Bool_t bTakesParames );
 
    // meta information
-      EDataType EffectiveType( const std::string& name );
       const std::string Compound( const std::string& name );
       const std::string ClassName( PyObject* pyobj );
       const std::string ResolveTypedef( const std::string& name, TClass* containing_scope = 0 );
