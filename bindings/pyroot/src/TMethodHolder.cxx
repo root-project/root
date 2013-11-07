@@ -13,17 +13,13 @@
 #include "Adapters.h"
 
 // ROOT
-#include "TROOT.h"
 #include "TClass.h"
-#include "TString.h"
-#include "TClassEdit.h"
-#include "TVirtualMutex.h"
-#include "TException.h"
+#include "TException.h"       // for TRY ... CATCH
 #include "TInterpreter.h"
+#include "TVirtualMutex.h"    // for R__LOCKGUARD2
 
 // Standard
 #include <assert.h>
-#include <string.h>
 #include <exception>
 #include <string>
 

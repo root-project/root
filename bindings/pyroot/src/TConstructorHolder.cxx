@@ -12,7 +12,6 @@
 // ROOT
 #include "TClass.h"
 #include "TFunction.h"
-#include "TMethod.h"
 
 // Standard
 #include <string>

@@ -72,9 +72,6 @@ namespace PyROOT {
       R__EXTERN ESignalPolicy gSignalPolicy;
       Bool_t SetSignalPolicy( ESignalPolicy e );
 
-   // data/return types
-      const int kPtrMask = 0x10000000;
-
    // data/operator mappings
       std::string MapOperatorName( const std::string& name, Bool_t bTakesParames );
 
