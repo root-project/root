@@ -434,7 +434,9 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
          std::cout << gLine;
          for (Int_t i = nch; i < 67; i++) std::cout << ".";
          std::cout << " OK" << std::endl;
+#ifndef ClingWorkAroundDeletedSourceFile
          if (!gOptionK) gSystem->Unlink(filename.Data());
+#endif
       } else {
          std::cout << gLine;
          Int_t ndots = 60;
@@ -625,8 +627,9 @@ void TestReport2(Int_t IPS)
    }
 
    sprintf(gCfile,"sg%2.2d.C",gTestNum);
+#ifndef ClingWorkAroundDeletedSourceFile
    if (!gOptionK && !i) gSystem->Unlink(gCfile);
-
+#endif
    return;
 }
 
