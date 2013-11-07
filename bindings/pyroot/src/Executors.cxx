@@ -278,7 +278,7 @@ PyObject* PyROOT::TSTLStringExecutor::Execute( CallFunc_t* func, void* self, Boo
       PyROOT_PyUnicode_FromStringAndSize( result->c_str(), result->size() );
    delete value;
 
-// TODO: does the suffice?? See also TRootObjectByValueExecutor
+// last time I checked, this was a no-op, but by convention it is required
    gInterpreter->ClearStack();
 
    return pyresult;
@@ -316,9 +316,8 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* s
       return 0;
    }
 
-// TODO: there's no guarantee that we're the only user of temp objects; this as well as
-// the bitwise-copy issue means that it'd be better if the ownership could be transferred
-   gInterpreter->ClearStack();     // currently a no-op for Cling (?)
+// last time I checked, this was a no-op, but by convention it is required
+   gInterpreter->ClearStack();
 
 // the result can then be bound
    ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( result, fClass );
