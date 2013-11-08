@@ -873,12 +873,9 @@ TCling::TCling(const char *name, const char *title)
       ::Info("TCling::TCling", "Using one PCM.");
 
    // For the list to also include string, we have to include it now.
-   // FIXME: remove __asm__ below once we use MCJIT.
    fInterpreter->declare("#include \"Rtypes.h\"\n"
                          "#include <string>\n"
-                         "using namespace std;\n"
-                         "#include <assert.h>\n"
-                         "#define __asm__(...) {assert(false && \"Inline __asm__ not supported!\");}");
+                         "using namespace std;");
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
