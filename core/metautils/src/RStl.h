@@ -57,8 +57,8 @@ namespace ROOT {
       void GenerateTClassFor(const clang::QualType &type, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
       void Print();
       void WriteClassInit(std::ostream &strm, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, bool &needCollectionProxy);
-      void WriteStreamer(FILE *file,const clang::CXXRecordDecl *stlcl);
-      void WriteStreamer(FILE *file);
+//       void WriteStreamer(FILE *file,const clang::CXXRecordDecl *stlcl);
+//       void WriteStreamer(FILE *file);
       
    private:
       RStl() : fList() {};
