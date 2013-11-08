@@ -27,7 +27,7 @@ namespace PyROOT {
 
 // construct a Python shadow class for the named ROOT class
    PyObject* MakeRootClassFromString(
-      const std::string& name, PyObject* scope = 0, Bool_t searchGlobal = kTRUE );
+      const std::string& name, PyObject* scope = 0 );
 
    PyObject* MakeRootClass( PyObject*, PyObject* args );
    PyObject* MakeRootClassFromType( TClass* );

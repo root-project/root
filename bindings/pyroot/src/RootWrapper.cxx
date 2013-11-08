@@ -452,8 +452,7 @@ PyObject* PyROOT::MakeRootClassFromType( TClass* klass )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::MakeRootClassFromString(
-    const std::string& fullname, PyObject* scope, Bool_t searchGlobal )
+PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject* scope )
 {
 // force building of the class if a scope is specified (prevents loops)
    Bool_t force = scope != 0;
@@ -507,7 +506,7 @@ PyObject* PyROOT::MakeRootClassFromString(
    }
 
    if ( ! (Bool_t)klass ) {   // if so, all options have been exhausted: it doesn't exist as such
-      if ( ! scope && searchGlobal && fullname.find( "ROOT::" ) == std::string::npos ) { // not already in ROOT::
+      if ( ! scope && fullname.find( "ROOT::" ) == std::string::npos ) { // not already in ROOT::
       // final attempt, for convenience, the "ROOT" namespace isn't required, try again ...
          PyObject* rtns = PyObject_GetAttr( gRootModule, PyStrings::gROOTns );
          PyObject* pyclass = PyObject_GetAttrString( rtns, (char*)fullname.c_str() );
