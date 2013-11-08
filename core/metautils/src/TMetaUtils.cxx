@@ -1334,7 +1334,9 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
       // It was also filtering out the 'G__virtualinfo' artificial member.
       
       typenameStr.clear();
+      dims.str("");
       dims.clear();
+   
       clang::QualType fieldType(field_iter->getType());
       if (fieldType->isConstantArrayType()) {
          const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(fieldType.getTypePtr());
@@ -1346,7 +1348,6 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
       }
 
       GetFullyQualifiedTypeName(typenameStr, fieldType, astContext);
-      
       nameType[field_iter->getName().str()] = ROOT::TSchemaType(typenameStr.c_str(),dims.str().c_str());      
    }
    
