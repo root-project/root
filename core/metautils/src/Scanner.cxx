@@ -738,14 +738,21 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
       if (fVerboseLevel > 0) std::cout<<"\tSelected class -> " << qual_name << "\n";
       
       std::string name_value;
+
+      // If the selection rules are expressed with an xml file, assume that the
+      // streamer info is automatically requested. The possibility to have
+      // an old-style streamer is left only to LinkDef files and to rootcling
+      // for legacy reasons
+      bool requestStreamerInfo = fSelectionRules.IsSelectionXMLFile() || selected->RequestStreamerInfo();
+      
       if (selected->GetAttributeValue("name", name_value)) {
          fSelectedClasses.push_back(ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),selected->GetRequestedType(), D,name_value.c_str(),
-                                                        selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
+                                                        requestStreamerInfo,selected->RequestNoStreamer(),
                                                         selected->RequestNoInputOperator(),selected->RequestOnlyTClass(),selected->RequestedVersionNumber(),
                                                         fInterpreter,fNormCtxt));
       } else {
          fSelectedClasses.push_back(ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),D,
-                                                        selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
+                                                        requestStreamerInfo,selected->RequestNoStreamer(),
                                                         selected->RequestNoInputOperator(),selected->RequestOnlyTClass(),selected->RequestedVersionNumber(),
                                                         fInterpreter,fNormCtxt));
       }         

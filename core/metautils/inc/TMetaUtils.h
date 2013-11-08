@@ -397,8 +397,7 @@ void WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
                     const AnnotatedRecordDecl &cl,
                     const cling::Interpreter &interp,
                     const TNormalizedCtxt &normCtxt,
-                    std::ostream& finalString,
-                    bool isGenreflex);
+                    std::ostream& finalString);
 
 //______________________________________________________________________________
 void WriteClassInit(std::ostream& finalString,
