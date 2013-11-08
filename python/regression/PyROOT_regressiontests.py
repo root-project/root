@@ -28,7 +28,7 @@ __all__ = [
    'Regression10BreakSmartPtrCircularLoop',
    'Regression10TVector3Pythonize',
    'Regression11CoralAttributeListIterators',
-   'Regression12ImportCout',
+   'Regression12GlobalsLookup',
    'Regression13WriteTGraph',
    'Regression14BaseClassUsing',
    'Regression15TPyException',
@@ -275,12 +275,18 @@ class Regression11CoralAttributeListIterators( MyTestCase ):
 
 
 ### importing cout should not result in printed errors =======================
-class Regression12ImportCout( MyTestCase ):
-   def test1ImportCout( self ):
+class Regression12GlobalsLookup( MyTestCase ):
+   def test1GetCout( self ):
       """Test that ROOT.cout does not cause error messages"""
 
       import ROOT
       c = ROOT.cout
+
+   def test2GlobalFromROOTNamespace( self ):
+      """Entities in 'ROOT::' need no explicit 'ROOT.'"""
+
+      import ROOT
+      m = ROOT.Math
 
 
 ### importing cout should not result in printed errors =======================
