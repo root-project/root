@@ -4283,6 +4283,8 @@ void TPad::Print(const char *filenam, Option_t *option)
    //    }// end loop
    //
    // The delay between each frame must be specified in each Print() statement.
+   // If the file "myfile.gif" already exists, the new frame are appended at
+   // the end of the file.
 
    TString psname, fs1, fs2;
    char *filename;
