@@ -409,6 +409,8 @@ check_libcxxcompat() {
     # The result of the check is stored in is_libcxxcompat, 1 if true,
     # 0 otherwise, which should be immediately copied, since the variable
     # will be overwritten at next invocation of this function.
+    # To avoid this check, in case std types are not used in the public
+    # API of the library, set skipchecklibcxxcompat="yes".
 
     is_libcxxcompat=1
     ret=0
@@ -417,6 +419,13 @@ check_libcxxcompat() {
     if test $# -ne 1 ; then
         echo "check_libcxxcompat: not 1 argument"
         return 1
+    fi
+
+    # Can we skip the check in case library has no std C++ in public API
+    if test "x$skipchecklibcxxcompat" = "xyes"; then
+        skipchecklibcxxcompat=""
+        logmsg "check_libcxxcompat: skipping check for $1"
+        return
     fi
 
     # Save arguments in logical names
@@ -2928,6 +2937,7 @@ if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
 	opengllib="-dylib_file /usr/X11R6/lib/libGL.dylib:/usr/X11R6/lib/libGL.dylib -lGL"
     fi
 
+    skipchecklibcxxcompat="yes"
     check_library "libGLU libMesaGLU" "$enable_shared" \
         "$keep" $opengllibdirs
     openglulib=$found_lib
