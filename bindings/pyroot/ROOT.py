@@ -225,10 +225,6 @@ class std( object ):
    for name in stlclasses:
       locals()[ name ] = Template( "std::%s" % name )
 
-   if sys.platform == 'darwin':
-      _root.gROOT.ProcessLine( '#include <string>' )
-   string = _root.MakeRootClass( 'string' )
-
 _root.std = std
 sys.modules['ROOT.std'] = std
 
@@ -513,6 +509,9 @@ class ModuleFacade( types.ModuleType ):
 
       if hasargv and PyConfig.IgnoreCommandLineOptions:
          sys.argv = argv
+
+    # now add 'string' to std so as to not confuse with module string
+      std.string = _root.MakeRootClass( 'string' )
 
     # must be called after gApplication creation:
       if '__IPYTHON__' in __builtins__:
