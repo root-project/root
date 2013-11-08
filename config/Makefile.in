@@ -19,8 +19,8 @@ endif
 # The macro below strips off the source dir path to make a relative path name
 stripsrc = $(subst $(ROOT_SRCDIR)/,,$(1))
 
-# The macro create the list of pcm files to be passed to a libraries
-# dictionary generation step, somethings like
+# This macro creates the list of pcm files to be passed to a library
+# dictionary generation step, something like
 #    $(call pcm_rootcling_opt,$(TREELIBDEPM))
 pcm_rootcling_opt = -m lib/libCore_rdict.pcm $(addprefix -m ,$(subst $(SOEXT),_rdict.pcm,$1))
 
@@ -28,22 +28,22 @@ pcm_rootcling_opt = -m lib/libCore_rdict.pcm $(addprefix -m ,$(subst $(SOEXT),_r
 #    $(call pcmname,$(TREELIB))
 pcmname = $(subst .$(SOEXT),_rdict.pcm,$1)
 
-# This macro return the list of pcm that are needed for a package
-#    $(call pcm_dep,TREE)  
-# the argument is the upper case name fo the library (see the Module.mk)
+# This macro returns the list of pcm's that are needed for a package
+#    $(call pcmdep,TREE)
+# the argument is the upper case name of the library (see the Module.mk)
 pcmdep = lib/libCore_rdict.pcm $(subst .$(SOEXT),_rdict.pcm,$($1LIBDEPM))
 
-# This macro return the argument to be passed to rootcling to
+# This macro returns the argument to be passed to rootcling to
 # properly setup the pcm
-#    $(call dictModule,TREE)  
-# the argument is the upper case name fo the library (see the Module.mk)
+#    $(call dictModule,TREE)
+# the argument is the upper case name of the library (see the Module.mk)
 dictModule = -s $($1LIB) $(call pcm_rootcling_opt,$($1LIBDEPM))
 
-# This macro is used to setup the rule where the pcm depends on the 
-# dictionary and the library's dependent pcm
-#    $(call pcmrule,TREE)  
-# the argument is the upper case name fo the library (see the Module.mk)
-pcmrule = $(call pcmname,$($1LIB)): $(call pcm_dep,$1LIB) $($1DS)
+# This macro is used to setup the rule where the pcm depends on the
+# dictionary and the library's dependent pcm's
+#    $(call pcmrule,TREE)
+# the argument is the upper case name of the library (see the Module.mk)
+pcmrule = $(call pcmname,$($1LIB)): $(call pcmdep,$1) $($1DS)
 
 noop = @true # "Do nothing really, this is just to make the rule stick"
 
