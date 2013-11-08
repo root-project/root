@@ -47,9 +47,10 @@ namespace faddeeva_impl {
 	// is optimising for code size
 	// (we insist on __unix__ here, since the assemblers on other OSs
 	// typically do not speak AT&T syntax as gas does...)
-#if !defined(__GNUC__) || !defined(__unix__) || !defined(__x86_64__) || \
+#if !(defined(__GNUC__) || defined(__clang__)) || \
+	!defined(__unix__) || !defined(__x86_64__) || \
 	!defined(__OPTIMIZE__) || defined(__OPTIMIZE_SIZE__) || \
-	defined(__INTEL_COMPILER) || defined(__clang__) || \
+	defined(__INTEL_COMPILER) || \
 	defined(__OPEN64__) || defined(__PATHSCALE__)
 	const double e = std::exp(re);
 	re = e * std::cos(im);
@@ -100,7 +101,21 @@ namespace faddeeva_impl {
 		"fxch %%st(2)\n\t"	 // st(2)=exp(re)*cos(im),st(0)=exp(im)
 		"fmulp %%st(1)\n\t"	 // st(1)=exp(re)*sin(im), pop st(0)
 		: "=t" (im), "=u" (re): "0" (re), "1" (im) :
-		    "eax", "dh", "cc", "st(5)", "st(6)", "st(7)");
+		    "eax", "dh", "cc"
+#ifndef __clang__
+		    // normal compilers (like gcc) want to be told that we
+		    // clobber x87 registers, even if we pop them afterwards
+		    // (so they can make sure they don't save anything there)
+		    , "st(5)", "st(6)", "st(7)"
+#else // __clang__
+		    // clang produces an error message with the clobber list
+		    // from above - not sure why; it seems harmless to leave
+		    // the popped x87 registers out of the clobber list for
+		    // clang, and that is in fact what seems to be recommended
+		    // here:
+		    // http://lists.cs.uiuc.edu/pipermail/cfe-dev/2012-May/021715.html
+#endif // __clang__
+		    );
 #endif
     }
 
