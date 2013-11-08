@@ -75,13 +75,22 @@ CXXFLAGS=`echo $CXXFLAGS | sed 's/-Iinclude //' `
 
 # Determine the compiler version
 COMPILERVERS="$CXX"
-if [ "$CXX" = "g++" ] || [ "$CXX" = "icc" ]; then
-   cxxTemp=`$CXX -dumpversion`
+if [ "$CXX" = "g++" ] || [ "$CXX" = "icc" ] || [ "$CXX" = "clang++" ]; then
+   if [ "$CXX" = "clang++" ]; then
+      cxxTemp=`$CXX --version | grep version | \
+              sed 's/.*\(version .*\)/\1/; s/.*based on \(LLVM .*\)svn)/\1/' | \
+              cut -d ' ' -f 2`
+   else
+      cxxTemp=`$CXX -dumpversion`
+   fi
    cxxMajor=`echo $cxxTemp 2>&1 | cut -d'.' -f1`
    cxxMinor=`echo $cxxTemp 2>&1 | cut -d'.' -f2`
    cxxPatch=`echo $cxxTemp 2>&1 | cut -d'.' -f3`
    if [ "$CXX" = "g++" ] ; then
       COMPILERVERS="gcc"
+   fi
+   if [ "$CXX" = "clang++" ] ; then
+      COMPILERVERS="clang"
    fi
    if [ "$cxxMajor" != "x" ] ; then
       COMPILERVERS="$COMPILERVERS$cxxMajor"
