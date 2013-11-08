@@ -2849,7 +2849,8 @@ private:
 //______________________________________________________________________________
 int RootCling(int argc,
               char **argv,
-              bool isDeep=false)
+              bool isDeep=false,
+              bool isGenreflex=false)
 {
 
    if (argc < 2) {
@@ -3668,7 +3669,8 @@ int RootCling(int argc,
                                           *iter,
                                           interp,
                                           normCtxt,
-                                          *dictSrcOut);
+                                          *dictSrcOut,
+                                          isGenreflex);
       }
    } else {
       // We need annotations even in the PCH
@@ -4044,7 +4046,8 @@ int invokeRootCling(const std::string& verbosity,
    char** argv =  & (argvVector[0]);
    int rootclingReturnCode = RootCling(argc,
                                        argv,
-                                       isDeep);
+                                       isDeep,
+                                       true);
 
    for (int i=0;i<argc;i++)
       delete [] argvVector[i];
