@@ -131,6 +131,7 @@ if not _builtin_cppyy:
          for name in stlclasses:
             locals()[ name ] = Template( 'std::%s' % name )
 
+         _backend.gROOT.ProcessLine( "#include <iostream>" )
          string = _backend.MakeRootClass( 'string' )
 
    _backend.SetRootLazyLookup( _global_cpp.__dict__ )
