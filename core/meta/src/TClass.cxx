@@ -2626,15 +2626,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       return 0; // reject long longs
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
-
-   // CheckClassInfo might modify the content of its parameter if it is
-   // a template and has extra or missing space (eg. one<two<tree>> becomes
-   // one<two<three> >
-   Int_t nch = strlen(name)*2;
-   char *modifiable_name = new char[nch];
-   strlcpy(modifiable_name,name,nch);
-   if (gInterpreter->CheckClassInfo(modifiable_name)) {
-      const char *altname = gInterpreter->GetInterpreterTypeName(modifiable_name,kTRUE);
+   if (gInterpreter->CheckClassInfo(name)) {
+      const char *altname = gInterpreter->GetInterpreterTypeName(name,kTRUE);
       if ( strncmp(altname,"std::",5)==0 ) {
          // Don't add std::, we almost always remove it.
          altname += 5;
@@ -2642,17 +2635,14 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       if (strcmp(altname,name)!=0) {
          // altname now contains the full name of the class including a possible
          // namespace if there has been a using namespace statement.
-         delete [] modifiable_name;
          return GetClass(altname,load);
       }
       TClass *ncl = gInterpreter->GenerateTClass(name, /* emulation = */ kFALSE, silent);
       if (!ncl->IsZombie()) {
-         delete [] modifiable_name;
          return ncl;
       }
       delete ncl;
    }
-   delete [] modifiable_name;
    return 0;
 }
 
