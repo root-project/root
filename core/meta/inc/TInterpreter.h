@@ -156,7 +156,7 @@ public:
    virtual void     UpdateListOfMethods(TClass *cl) const = 0;
    virtual TString  GetMangledName(TClass *cl, const char *method, const char *params, Bool_t objectIsConst = kFALSE) = 0;
    virtual TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) = 0;
-   virtual const char *GetInterpreterTypeName(const char *name,Bool_t full = kFALSE) = 0;
+   virtual void     GetInterpreterTypeName(const char *name, std::string &output, Bool_t full = kFALSE) = 0;
    virtual void    *GetInterfaceMethod(TClass *cl, const char *method, const char *params, Bool_t objectIsConst = kFALSE) = 0;
    virtual void    *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) = 0;
    virtual void     Execute(const char *function, const char *params, int *error = 0) = 0;

@@ -2531,13 +2531,14 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       if (splitname.IsSTLCont()) {
 
          TClassRef clref = cl;
-         const char * itypename = gCling->GetInterpreterTypeName(name);
+         std::string itypename;
+         gCling->GetInterpreterTypeName(name,itypename);
          // Protect again possible library loading
          if (clref->IsLoaded()) {
             return clref;
          }
-         if (itypename) {
-            std::string altname( TClassEdit::ShortType(itypename, TClassEdit::kDropStlDefault) );
+         if (itypename.length()) {
+            std::string altname( TClassEdit::ShortType(itypename.c_str(), TClassEdit::kDropStlDefault) );
             if (altname != name) {
 
                // Remove the existing (soon to be invalid) TClass object to
@@ -2627,7 +2628,9 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
    if (gInterpreter->CheckClassInfo(name)) {
-      const char *altname = gInterpreter->GetInterpreterTypeName(name,kTRUE);
+      std::string alternative;
+      gInterpreter->GetInterpreterTypeName(name,alternative,kTRUE);
+      const char *altname = alternative.c_str();
       if ( strncmp(altname,"std::",5)==0 ) {
          // Don't add std::, we almost always remove it.
          altname += 5;

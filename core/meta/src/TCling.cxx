@@ -2514,32 +2514,33 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
    }
    // We are in the case where we have AST nodes for this class.
    TClass *cl = 0;
-   TString classname = info->FullName(*fNormalizedCtxt); // Could we use Name()?
-   if (TClassEdit::IsSTLCont(classname)) {
+   std::string classname;
+   info->FullName(classname,*fNormalizedCtxt); // Could we use Name()?
+   if (TClassEdit::IsSTLCont(classname.c_str())) {
 #if 0
-      Info("GenerateTClass","Will (try to) generate the compiled TClass for %s.",classname.Data());
+      Info("GenerateTClass","Will (try to) generate the compiled TClass for %s.",classname.c_str());
       // We need to build up the list of required headers, by
       // looking at each template arguments.
       TString includes;
       GenerateTClass_GatherInnerIncludes(fInterpreter,includes,info);
 
-      if (0 == GenerateDictionary(classname,includes)) {
+      if (0 == GenerateDictionary(classname.c_str(),includes)) {
          // 0 means success.
-         cl = gROOT->LoadClass(classname, silent);
+         cl = gROOT->LoadClass(classnam.c_str(), silent);
          if (cl == 0) {
-            Error("GenerateTClass","Even though the dictionary generation for %s seemed successfull we can't find the TClass bootstrap!",classname.Data());
+            Error("GenerateTClass","Even though the dictionary generation for %s seemed successfull we can't find the TClass bootstrap!",classname.c_str());
          }
       }
 #endif
       if (cl == 0) {
          int version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
-         cl = new TClass(classname, version, 0, 0, -1, -1, silent);
+         cl = new TClass(classname.c_str(), version, 0, 0, -1, -1, silent);
          cl->SetBit(TClass::kIsEmulation);
       }
    } else {
       // For regular class, just create a TClass on the fly ...
       // Not quite useful yet, but that what CINT used to do anyway.
-      cl = new TClass(classname, 1, 0, 0, -1, -1, silent);
+      cl = new TClass(classname.c_str(), 1, 0, 0, -1, -1, silent);
    }
    return cl;
 }
@@ -2753,7 +2754,7 @@ TInterpreter::DeclId_t TCling::GetFunctionWithPrototype(ClassInfo_t *opaque_cl, 
 }
 
 //______________________________________________________________________________
-const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
+void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_t full)
 {
    // The 'name' is known to the interpreter, this function returns
    // the internal version of this name (usually just resolving typedefs)
@@ -2761,33 +2762,35 @@ const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
    // by rootcling and by the run-time enviroment (TClass)
    // Return 0 if the name is not known.
 
+   output.clear();
+
    R__LOCKGUARD(gInterpreterMutex);
 
    // This first step is likely redundant if
    // the next step never issue any warnings.
    if (!CheckClassInfo(name)) {
-      return 0;
+      return ;
    }
    TClingClassInfo cl(fInterpreter, name);
    if (!cl.IsValid()) {
-      return 0;
+      return ;
    }
    if (full) {
-      return cl.FullName(*fNormalizedCtxt);
+      cl.FullName(output,*fNormalizedCtxt);
+      return;
    }
    // Well well well, for backward compatibility we need to act a bit too
    // much like CINT.
    TClassEdit::TSplitType splitname( cl.Name(), TClassEdit::kDropStd );
-   static std::string result;
-   splitname.ShortType(result, TClassEdit::kDropStd );
+   splitname.ShortType(output, TClassEdit::kDropStd );
 
    static const char* basic_string_s = "basic_string<char>";
    static const unsigned int basic_string_len = strlen(basic_string_s);
    int pos = 0;
-   while( (pos = result.find( basic_string_s,pos) ) >=0 ) {
-      result.replace(pos,basic_string_len, "string");
+   while( (pos = output.find( basic_string_s,pos) ) >=0 ) {
+      output.replace(pos,basic_string_len, "string");
    }
-   return result.c_str();
+   return;
 }
 
 //______________________________________________________________________________
@@ -4777,7 +4780,9 @@ const char* TCling::ClassInfo_FileName(ClassInfo_t* cinfo) const
 const char* TCling::ClassInfo_FullName(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   return TClinginfo->FullName(*fNormalizedCtxt);
+   static std::string output;
+   TClinginfo->FullName(output,*fNormalizedCtxt);
+   return output.c_str();
 }
 
 //______________________________________________________________________________
@@ -4882,7 +4887,9 @@ Long_t TCling::BaseClassInfo_Tagnum(BaseClassInfo_t* bcinfo) const
 const char* TCling::BaseClassInfo_FullName(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
-   return TClinginfo->FullName(*fNormalizedCtxt);
+   static std::string output;
+   TClinginfo->FullName(output,*fNormalizedCtxt);
+   return output.c_str();
 }
 
 //______________________________________________________________________________

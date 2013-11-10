@@ -129,7 +129,7 @@ public:
    int                  Size() const;
    long                 Tagnum() const;
    const char          *FileName();
-   const char          *FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
+   void                 FullName(std::string &output, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char          *Name() const;
    const char          *Title();
    const char          *TmpltName() const;

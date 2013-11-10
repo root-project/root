@@ -1093,9 +1093,10 @@ static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent, con
    if (cl==0) {
       // Try the alternate name where all the typedefs are resolved:
 
-      const char *altname = gInterpreter->GetInterpreterTypeName(name);
-      if (altname && strcmp(altname,name)!=0 && strcmp(altname,outername)!=0) {
-         cl = TClass::GetClass(altname,load,silent);
+      std::string altname;
+      gInterpreter->GetInterpreterTypeName(name,altname);
+      if (altname.length() && altname != name && altname != outername) {
+         cl = TClass::GetClass(altname.c_str(),load,silent);
       }
    }
    if (cl==0) {

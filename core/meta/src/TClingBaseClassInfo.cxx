@@ -574,12 +574,13 @@ long TClingBaseClassInfo::Tagnum() const
    return fBaseInfo->Tagnum();
 }
 
-const char* TClingBaseClassInfo::FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
+void TClingBaseClassInfo::FullName(std::string &output, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
-      return 0;
+      output.clear();
+      return;
    }
-   return fBaseInfo->FullName(normCtxt);
+   fBaseInfo->FullName(output,normCtxt);
 }
 
 const char* TClingBaseClassInfo::Name() const

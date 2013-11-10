@@ -1069,29 +1069,26 @@ const char *TClingClassInfo::FileName()
    return fDeclFileName.c_str();
 }
 
-const char *TClingClassInfo::FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
+void TClingClassInfo::FullName(std::string &output, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    // Return QualifiedName.
+   output.clear();
    if (!IsValid()) {
-      return 0;
+      return;
    }
-   // Note: This *must* be static because we are returning a pointer inside it!
-   static std::string buf;
-   buf.clear();
    if (fType) {
       QualType type(fType, 0);
-      ROOT::TMetaUtils::GetNormalizedName(buf, type, *fInterp, normCtxt);
+      ROOT::TMetaUtils::GetNormalizedName(output, type, *fInterp, normCtxt);
    }
    else {
       if (const NamedDecl* ND =
             llvm::dyn_cast<NamedDecl>(fDecl)) {
          PrintingPolicy Policy(fDecl->getASTContext().
             getPrintingPolicy());
-         llvm::raw_string_ostream stream(buf);
+         llvm::raw_string_ostream stream(output);
          ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
       }
    }
-   return buf.c_str();
 }
 
 const char *TClingClassInfo::Name() const
