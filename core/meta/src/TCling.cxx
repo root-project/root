@@ -3179,10 +3179,10 @@ const char* TCling::TypeName(const char* typeDesc)
       t = new char[dlen + 1];
       tlen = dlen;
    }
-   char* s, *template_start;
+   const char* s, *template_start;
    if (!strstr(typeDesc, "(*)(")) {
-      s = const_cast<char*>(strchr(typeDesc, ' '));
-      template_start = const_cast<char*>(strchr(typeDesc, '<'));
+      s = strchr(typeDesc, ' ');
+      template_start = strchr(typeDesc, '<');
       if (!strcmp(typeDesc, "long long")) {
          strlcpy(t, typeDesc, dlen + 1);
       }
