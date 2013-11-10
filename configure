@@ -6836,8 +6836,7 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  graf3d/gl/src/G__GL.h gui/gui/src/G__Gui1.h \
  gui/gui/src/G__Gui2.h gui/gui/src/G__Gui3.h \
  graf2d/x11ttf/src/G__X11TTF.h graf2d/x11/src/G__X11.cxx \
- graf2d/postscript/src/G__PostScript.h \
- graf2d/gpad/src/G__GPad.h graf3d/x3d/src/G__X3D.h \
+ graf3d/x3d/src/G__X3D.h \
  hist/spectrumpainter/src/G__Spectrum2Painter.h \
  io/io/src/G__IO.h io/sql/src/G__SQL.h io/xml/src/G__XML.h \
  math/mathcore/src/G__Math.h math/mathcore/src/G__MathFit.h \
@@ -6862,8 +6861,7 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  net/ldap/src/G__LDAP.cxx core/winnt/src/G__WinNT.cxx \
  graf3d/eve/src/G__Eve1.cxx graf3d/eve/src/G__Eve2.cxx \
  graf2d/x11ttf/src/G__X11TTF.cxx graf2d/x11/src/G__X11.cxx \
- graf2d/postscript/src/G__PostScript.cxx \
- graf2d/gpad/src/G__GPad.cxx graf3d/x3d/src/G__X3D.cxx \
+ graf3d/x3d/src/G__X3D.cxx \
  roofit/roofitcore/src/G__RooFitCore1.cxx \
  roofit/roofitcore/src/G__RooFitCore2.cxx \
  roofit/roofitcore/src/G__RooFitCore3.cxx \
