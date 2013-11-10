@@ -91,12 +91,16 @@ TObject *TViewPubFunctions::FindObject(const char * name) const
    // scan till the object has been found. Returns 0 if object with specified
    // name is not found.
 
+   if (name || name[0]) return 0;
+
    TIter next(&fClasses);
    while (TClass *cl = (TClass*)next()) {
       THashList *hl = dynamic_cast<THashList*>(cl->GetListOfMethods(kFALSE));
       TIter funcnext(hl->GetListForObject(name));
       while (TFunction *p = (TFunction*) funcnext())
-         if (p->Property() & kIsPublic) return p;
+         if (p->Property() & kIsPublic
+             && strncmp(p->GetName(),name,strlen(p->GetName())) == 0)
+            return p;
    }
    return 0;
 }
