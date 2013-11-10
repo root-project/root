@@ -1,5 +1,3 @@
-
-
 # Module.mk for roostats module
 # Copyright (c) 2008 Rene Brun and Fons Rademakers
 #
@@ -56,10 +54,13 @@ $(ROOSTATSLIB): $(ROOSTATSO) $(ROOSTATSDO) $(ORDER_) $(MAINLIBS) \
 		   "$(ROOSTATSO) $(ROOSTATSDO)" \
 		   "$(ROOSTATSLIBEXTRA)"
 
-$(ROOSTATSDS):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCINTTMPDEP)
+$(call pcmrule,ROOSTATS)
+	$(noop)
+
+$(ROOSTATSDS):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOSTATS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(ROOSTATSH) $(ROOSTATSL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,ROOSTATS) -c $(ROOSTATSH) $(ROOSTATSL)
 
 $(ROOSTATSMAP): $(RLIBMAP) $(MAKEFILEDEP) $(ROOSTATSL)
 		$(RLIBMAP) -o $@ -l $(ROOSTATSLIB) \

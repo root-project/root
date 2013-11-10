@@ -36,17 +36,17 @@ HF_MAKEWORKSPACEEXE    := bin/hist2workspace$(EXEEXT)
 
 
 ifeq ($(PLATFORM),win32)
-HF_LIBS = $(HISTFACTORYLIBEXTRA) "$(ROOTSYS)/lib/libHistFactory.lib" 
+HF_LIBS = $(HISTFACTORYLIBEXTRA) "$(ROOTSYS)/lib/libHistFactory.lib"
 ifeq ($(BUILDMATHMORE),yes)
-HF_LIBS += "$(ROOTSYS)/lib/libMathMore.lib" 
+HF_LIBS += "$(ROOTSYS)/lib/libMathMore.lib"
 endif
 else
-#for other platforms HISTFACTORYLIBEXTRA is not defined 
+#for other platforms HISTFACTORYLIBEXTRA is not defined
 #need to copy from config/Makefile.depend
 HF_LIBS = -Llib -lRooFit -lRooFitCore -lTree -lRIO -lMatrix \
           -lHist -lMathCore -lGraf -lGpad -lMinuit -lFoam \
           -lRooStats -lXMLParser
-HF_LIBS += -lHistFactory 
+HF_LIBS += -lHistFactory
 ifeq ($(BUILDMATHMORE),yes)
 HF_LIBS += -lMathMore
 HF_LIBS += $(GSLLIBDIR) $(GSLLIBS)
@@ -99,16 +99,19 @@ include/RooStats/HistFactory/%.h:    $(HISTFACTORYDIRI)/RooStats/HistFactory/%.h
 		cp $< $@
 
 $(HISTFACTORYLIB): $(HISTFACTORYO) $(HISTFACTORYDO) $(ORDER_) $(MAINLIBS) \
-                $(HISTFACTORYLIBDEP) 
+                $(HISTFACTORYLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libHistFactory.$(SOEXT) $@ \
 		   "$(HISTFACTORYO) $(HISTFACTORYDO)" \
 		   "$(HISTFACTORYLIBEXTRA)"
 
-$(HISTFACTORYDS):  $(HISTFACTORYH) $(HISTFACTORYL) $(ROOTCINTTMPDEP)
+$(call pcmrule,HISTFACTORY)
+	$(noop)
+
+$(HISTFACTORYDS): $(HISTFACTORYH) $(HISTFACTORYL) $(ROOTCINTTMPDEP) $(call pcmdep,HISTFACTORY)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@  -c -I$(HISTFACTORYDICTI) $(HISTFACTORYH)  $(HISTFACTORYL) 
+		$(ROOTCINTTMP) -f $@ $(call dictModule,HISTFACTORY) -c -I$(HISTFACTORYDICTI) $(HISTFACTORYH) $(HISTFACTORYL)
 
 $(HISTFACTORYMAP): $(RLIBMAP) $(MAKEFILEDEP) $(HISTFACTORYL)
 		$(RLIBMAP) -o  $@ -l $(HISTFACTORYLIB) \
