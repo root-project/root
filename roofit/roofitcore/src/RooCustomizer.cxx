@@ -709,7 +709,7 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
 	char* saveptr ;
 	char* tok = strtok_r(buf2,",)",&saveptr) ;
 	while(tok) {
-	  cout << "$REMOVE is restricted to " << tok << endl ;
+	  //cout << "$REMOVE is restricted to " << tok << endl ;
 	  subst->setAttribute(Form("REMOVE_FROM_%s",tok)) ;
 	  tok = strtok_r(0,",)",&saveptr) ;
 	}
@@ -736,15 +736,14 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
     throw string(Form("RooCustomizer::CustIFace::create() ERROR in customizer build, object %snot created",instanceName)) ;
   }
 
-  // Set the desired name of the top level node
-
   // Import the object into the workspace
   if (instanceName) {
+    // Set the desired name of the top level node
     targ->SetName(instanceName) ;
-    ft.ws().import(*targ,RooFit::Silence()) ;
+    ft.ws().import(cust.cloneBranchList(),RooFit::Silence(),RooFit::NoRecursion(kTRUE)) ;
   } else {
-    ft.ws().import(*targ,RooFit::Silence(),RooFit::RenameConflictNodes("orig",1)) ;    
+    ft.ws().import(cust.cloneBranchList(),RooFit::Silence(),RooFit::RenameConflictNodes("orig",1),RooFit::NoRecursion(kTRUE)) ;    
   }
-      
+
   return string(instanceName?instanceName:targ->GetName()) ;
 }
