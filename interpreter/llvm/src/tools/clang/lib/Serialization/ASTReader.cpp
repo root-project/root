@@ -882,6 +882,39 @@ bool ASTReader::ReadSourceManagerBlock(ModuleFile &F) {
   }
 }
 
+/// \brief Attempt to resolve the location based on PP header search.
+/// Find the first match with the longest trailing part.
+static StringRef
+resolveFileThroughHeaderSearch(Preprocessor& PP, StringRef Filename) {
+  HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
+   bool isAbsolute = true;
+   // Find the longest available match.
+   for (llvm::sys::path::const_iterator
+           IDir = llvm::sys::path::begin(Filename),
+           EDir = llvm::sys::path::end(Filename);
+        IDir != EDir; ++IDir) {
+      if (isAbsolute) {
+         // skip "/" part
+         isAbsolute = false;
+         continue;
+      }
+      size_t lenTrailing = Filename.size() - (IDir->data() - Filename.data());
+      llvm::StringRef trailingPart(IDir->data(), lenTrailing);
+      assert(trailingPart.data() + trailingPart.size()
+             == Filename.data() + Filename.size()
+             && "Mismatched partitioning of file name!");
+      const DirectoryLookup* FoundDir = 0;
+      const FileEntry* FE
+        = HdrSearch.LookupFile(trailingPart, true /*isAngled*/,
+                               0/*FromDir*/, FoundDir, 0/*CurFileEntry*/,
+                               0/*Searchpath*/, 0/*RelPath*/,
+                               0/*SuggModule*/);
+      if (FE)
+        return FE->getName();
+   }
+   return StringRef();
+}
+
 /// \brief If a header file is not found at the path that we expect it to be
 /// and the PCH file was moved from its original location, try to resolve the
 /// file by assuming that header+PCH were moved together and the header is in
@@ -1677,6 +1710,11 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
                                                               CurrentDir);
       if (!Resolved.empty())
         File = FileMgr.getFile(Resolved);
+      if (!File) {
+        StringRef PPResolved = resolveFileThroughHeaderSearch(PP, Filename);
+        if (!PPResolved.empty())
+          File = FileMgr.getFile(PPResolved);
+      }
     }
     
     // For an overridden file, create a virtual file with the stored
@@ -1759,6 +1797,11 @@ const FileEntry *ASTReader::getFileEntry(StringRef filenameStrRef) {
                                                             CurrentDir);
     if (!resolved.empty())
       File = FileMgr.getFile(resolved);
+    if (!File) {
+      StringRef PPresolved = resolveFileThroughHeaderSearch(PP, Filename);
+      if (!PPresolved.empty())
+        File = FileMgr.getFile(PPresolved);
+    }
   }
 
   return File;
