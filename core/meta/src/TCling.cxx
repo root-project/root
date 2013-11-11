@@ -1601,10 +1601,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
    cling::DynamicLibraryManager* dyLibManager 
       = fInterpreter->getDynamicLibraryManager();
    if (found) {
-      std::string sname = found;
-      while (sname.find("/./") != std::string::npos)
-          sname.replace(sname.find("/./"), 3, "/");
-      if (dyLibManager->isDynamicLibraryLoaded(sname)) {
+      if (dyLibManager->isDynamicLibraryLoaded(found)) {
          return kTRUE;
       }
    }

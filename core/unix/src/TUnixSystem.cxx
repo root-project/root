@@ -4520,12 +4520,14 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
    // shared library search path). If no file name extension is provided
    // it first tries .so, .sl, .dl and then .a (for AIX).
 
+   char buf[PATH_MAX + 1];
+   char *res = realpath(sLib.Data(), buf);
+   if (res) sLib = buf;
    TString searchFor = sLib;
 #ifdef __APPLE__
    // On a MAC, a library might not have any extensions, so let's try the raw
    // name first.
    if (gSystem->FindFile(GetDynamicPath(), sLib, kReadPermission)) {
-      sLib.ReplaceAll("/./", "/");
       return sLib;
    }
    sLib = searchFor;
@@ -4540,7 +4542,6 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
                    !strcmp(lib+len-3, ".sl")    ||
                    !strcmp(lib+len-2, ".a"))) {
       if (gSystem->FindFile(GetDynamicPath(), sLib, kReadPermission)) {
-         sLib.ReplaceAll("/./", "/");
          return sLib;
       }
       if (!quiet)
@@ -4557,7 +4558,6 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
       ++ext;
       if (gSystem->FindFile(GetDynamicPath(), fname, kReadPermission)) {
          sLib.Swap(fname);
-         sLib.ReplaceAll("/./", "/");
          return sLib;
       }
    }
