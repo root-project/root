@@ -297,3 +297,8 @@ childCl::operator=(const childCl&) //
 childCl::~childCl() // 
 childCl::childCl() // 
 childCl::childCl(const childCl&) // 
+baseCl::fGetIndex(Int_t aIndex = 0) // Title Base
+baseCl::operator=(const baseCl&) // 
+baseCl::~baseCl() // 
+baseCl::baseCl() // 
+baseCl::baseCl(const baseCl&) // 

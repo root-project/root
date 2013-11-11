@@ -2,10 +2,22 @@
 
 // from ROOT-5660
 class baseCl {
-public: 
+#if __cplusplus >= 201103L
+   baseCl &operator=(baseCl&&) = delete;
+#endif
+public:
    virtual int fGetIndex(Int_t aIndex=0) { return 42; } // Title Base
 };
-class childCl : baseCl {
+
+class basePrCl {
+#if __cplusplus >= 201103L
+   basePrCl &operator=(basePrCl&&) = delete;
+#endif
+public:
+   virtual int fGetPrIndex(Int_t aIndex=0) { return 52; } // Title Base
+};
+
+class childCl : private basePrCl, public baseCl {
 public:
    virtual int fGetIndex(Int_t aIndex); // Title Derived
 };
@@ -29,7 +41,7 @@ void runMemberComments() {
    while ((meth = (TMethod*)iPubMeth())) {
       // skip C++11 move c'tor, move op=
       if (strstr(meth->GetSignature(), "&&")) continue;
-      printf("childCl::%s%s // %s\n", meth->GetName(), meth->GetSignature(),
+      printf("%s::%s%s // %s\n", meth->GetClass()->GetName(), meth->GetName(), meth->GetSignature(),
              meth->GetTitle());
    }
 }
