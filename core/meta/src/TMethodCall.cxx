@@ -79,6 +79,17 @@ fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 }
 
 //______________________________________________________________________________
+TMethodCall::TMethodCall(TFunction *func):
+fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
+{
+   // Create a global function invocation environment base on a TFunction object.
+   // To execute the function call TMethodCall::Execute(...).
+   // This two step method is much more efficient than calling for
+   // every invocation TInterpreter::Execute(...).
+
+   Init(func);
+}
+//______________________________________________________________________________
 TMethodCall::TMethodCall(const TMethodCall &orig) :
 TObject(orig),
 fFunc(orig.fFunc ? gCling->CallFunc_FactoryCopy(orig.fFunc) : 0),
