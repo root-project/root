@@ -95,11 +95,6 @@ STRESSTESTSCOMP_VETO :=  $(STRESSTESTSCOMP_VETO) $(STRESSTESTSINTERP:-itest=-cte
 # STRESSTESTSCOMP_VETO := 
 STRESSTESTSCOMP := $(filter-out $(STRESSTESTSCOMP_VETO),$(STRESSTESTS:-test=-ctest))
 
-ifneq ($(ClingWorkAroundSavePrimitive),)
-STRESSTESTSINTERP := $(filter-out stressGraphics-itest,$(STRESSTESTSINTERP))
-STRESSTESTSCOMP   := $(filter-out stressGraphics-ctest,$(STRESSTESTSCOMP))
-endif
-
 ifneq ($(ClingWorkAroundJITfullSymbolResolution)$(ClingWorkAroundMissingDynamicScope),)
 STRESSTESTSINTERP := $(filter-out stressGUI-itest,$(STRESSTESTSINTERP))
 STRESSTESTSCOMP   := $(filter-out stressGUI-ctest,$(STRESSTESTSCOMP))
@@ -191,6 +186,7 @@ test/libTrackMathCoreDict.$(DllSuf): $(STRESSFILESCOPIEDTAG)
 	$(CMDECHO) $(MAKE) -s --no-print-directory -C test $(notdir $@) | grep -v "$(notdir $@) done" || true
 
 test/hsimple.C: $(ROOT_LOC)/tutorials/hsimple.C
+	$(CMDECHO) test -d test || mkdir -p test
 	$(CMDECHO) cp -f $< $@
 
 # returns a TFile*, so root.exe's return code is not very helpful
@@ -212,7 +208,11 @@ endif
 stress-ctest.log: STRESSFLAGS:=-b 30
 stress-itest.log: STRESSFLAGS:="(30)"
 stressTMVA-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Automatic variable Endl is allocated'
+ifneq ($(ClingWorkAroundDeletedSourceFile),)
+stressGraphics-ctest.log: STRESSFLAGS:= -k
+endif
 stressGraphics-itest.log: STRESSFLAGS:= "" 2>&1 |grep -v 'Warning in <TUnixSystem::SetDisplay>'
+
 
 ifneq ($(ClingWorkAroundJITfullSymbolResolution)$(ClingWorkAroundMissingDynamicScope),)
 ifeq ($(FAST),)
@@ -222,18 +222,6 @@ stressGUI-itest:
 else
 stressGUI-ctest:
 	@echo "Please note: stressGUI is disabled!!!"
-	@echo "n/a" > $@.log
-endif
-endif
-
-ifneq ($(ClingWorkAroundSavePrimitive),)
-ifeq ($(FAST),)
-stressGraphics-itest:
-	@echo "Please note: stressGraphics is disabled!!!"
-	@echo "n/a" > $@.log
-else
-stressGraphics-ctest:
-	@echo "Please note: stressGraphics is disabled!!!"
 	@echo "n/a" > $@.log
 endif
 endif
