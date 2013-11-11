@@ -333,6 +333,13 @@ Int_t RooFormula::DefinedVariable(TString &name)
   } else {
     // Access by name
     arg= (RooAbsArg*) _origList.FindObject(argName) ;
+    if (!arg) {
+      for (RooLinkedListIter it = _origList.iterator(); RooAbsArg* v = dynamic_cast<RooAbsArg*>(it.Next());) {
+	if (!TString(argName).CompareTo(v->getStringAttribute("origName"))) {
+	  arg= v ;
+	}
+      }
+    }
   }
 
   // Check that arg exists
@@ -360,7 +367,8 @@ Int_t RooFormula::DefinedVariable(TString &name)
   Int_t i ;
   for(i=0 ; i<_useList.GetSize() ; i++) {
     RooAbsArg* var = (RooAbsArg*) _useList.At(i) ;
-    Bool_t varMatch = !TString(var->GetName()).CompareTo(arg->GetName()) ;
+    //Bool_t varMatch = !TString(var->GetName()).CompareTo(arg->GetName()) ;
+    Bool_t varMatch = !TString(var->GetName()).CompareTo(arg->GetName()) && !TString(var->getStringAttribute("origName")).CompareTo(arg->GetName());
 
     if (varMatch) {
       TString& lbl= ((TObjString*) _labelList.At(i))->String() ;
