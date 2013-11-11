@@ -263,8 +263,6 @@ protected:
 			   Double_t xmax= 0.99,Double_t ymax=0.95, const RooCmdArg* formatCmd=0) ;
 
 
-  void plotOnCompSelect(RooArgSet* selNodes) const ;
-
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;  
 
   friend class RooEffGenContext ;
