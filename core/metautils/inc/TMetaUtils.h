@@ -383,7 +383,6 @@ void WriteShowMembers(std::ostream& finalString,
 //______________________________________________________________________________
 bool NeedExternalShowMember(const AnnotatedRecordDecl &cl,
                             const clang::CXXRecordDecl *decl,
-                            const cling::Interpreter &interp,
                             const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
@@ -418,7 +417,6 @@ bool HasCustomStreamerMemberFunction(const AnnotatedRecordDecl &cl,
 void WriteBodyShowMembers(std::ostream& finalString,
                           const AnnotatedRecordDecl &cl,
                           const clang::CXXRecordDecl *decl,
-                          const cling::Interpreter &interp,
                           const TNormalizedCtxt &normCtxt,
                           bool outside);
 

@@ -837,10 +837,10 @@ bool ROOT::TMetaUtils::ClassInfo__HasMethod(const clang::RecordDecl *cl, const c
 }
 
 //______________________________________________________________________________
-const clang::CXXRecordDecl *ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &gInterp, const clang::Type** resultType)
+const clang::CXXRecordDecl *ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &interp, const clang::Type** resultType)
 {
    // Return the scope corresponding to 'name' or std::'name'
-   const cling::LookupHelper& lh = gInterp.getLookupHelper();
+   const cling::LookupHelper& lh = interp.getLookupHelper();
    const clang::CXXRecordDecl *result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh.findScope(name,resultType));
    if (!result) {
       std::string std_name("std::");
@@ -869,14 +869,14 @@ bool ROOT::TMetaUtils::IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRe
 }
 
 //______________________________________________________________________________
-bool ROOT::TMetaUtils::IsBase(const clang::FieldDecl &m, const char* basename, const cling::Interpreter &gInterp)
+bool ROOT::TMetaUtils::IsBase(const clang::FieldDecl &m, const char* basename, const cling::Interpreter &interp)
 {
    const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(ROOT::TMetaUtils::GetUnderlyingRecordDecl(m.getType()));
    if (!CRD) {
       return false;
    }
 
-   const clang::NamedDecl *base = ScopeSearch(basename, gInterp);
+   const clang::NamedDecl *base = ScopeSearch(basename, interp);
 
    if (base) {
       return IsBase(CRD, llvm::dyn_cast<clang::CXXRecordDecl>( base ),
@@ -890,11 +890,11 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
                                       const clang::NamedDecl &forcontext,
                                       const clang::QualType &qti,
                                       const char *R__t,int rwmode,
-                                      const cling::Interpreter &gInterp,
+                                      const cling::Interpreter &interp,
                                       const char *tcl)
 {
 
-   static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::ScopeSearch("TObject", gInterp);
+   static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::ScopeSearch("TObject", interp);
    enum {
       kBIT_ISTOBJECT     = 0x10000000,
       kBIT_HASSTREAMER   = 0x20000000,
@@ -1130,10 +1130,10 @@ bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl, RConstru
 
 //______________________________________________________________________________
 const clang::CXXMethodDecl *GetMethodWithProto(const clang::Decl* cinfo,
-                                               const char *method, const char *proto, const cling::Interpreter &gInterp)
+                                               const char *method, const char *proto, const cling::Interpreter &interp)
 {
    const clang::FunctionDecl* funcD
-      = gInterp.getLookupHelper().findFunctionProto(cinfo, method, proto);
+   = interp.getLookupHelper().findFunctionProto(cinfo, method, proto);
    if (funcD) {
       return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
    }
@@ -1144,9 +1144,9 @@ const clang::CXXMethodDecl *GetMethodWithProto(const clang::Decl* cinfo,
 //______________________________________________________________________________
 namespace ROOT {
    namespace TMetaUtils {
-      RConstructorType::RConstructorType(const char *type_of_arg, const cling::Interpreter &gInterp) : fArgTypeName(type_of_arg),fArgType(0)
+      RConstructorType::RConstructorType(const char *type_of_arg, const cling::Interpreter &interp) : fArgTypeName(type_of_arg),fArgType(0)
       {
-         const cling::LookupHelper& lh = gInterp.getLookupHelper();
+         const cling::LookupHelper& lh = interp.getLookupHelper();
          // We can not use findScope since the type we are given are usually,
          // only forward declared (and findScope explicitly reject them).
          clang::QualType instanceType = lh.findType(type_of_arg);
@@ -1160,7 +1160,7 @@ namespace ROOT {
 
 
 //______________________________________________________________________________
-bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl, std::string *arg, const cling::Interpreter &gInterp)
+bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl, std::string *arg, const cling::Interpreter &interp)
 {
    // return true if we can find an constructor calleable without any arguments
    // or with one the IOCtor special types.
@@ -1190,7 +1190,7 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl, std::str
       if (result) {
          const char *name = "operator new";
          proto = "size_t";
-         const clang::CXXMethodDecl *method = GetMethodWithProto(cl,name,proto.c_str(), gInterp);
+         const clang::CXXMethodDecl *method = GetMethodWithProto(cl,name,proto.c_str(), interp);
          if (method && method->getAccess() != clang::AS_public) {
             result = false;
          }
@@ -1219,13 +1219,13 @@ bool ROOT::TMetaUtils::NeedDestructor(const clang::CXXRecordDecl *cl)
 
 //______________________________________________________________________________
 bool ROOT::TMetaUtils::CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl,
-                                                   const char *methodname,
-                                                   const char *proto,
-                                                   const cling::Interpreter &gInterp)
+                                                 const char *methodname,
+                                                const char *proto,
+                                                const cling::Interpreter &interp)
 {
    // Return true, if the function (defined by the name and prototype) exists and is public
 
-   const clang::CXXMethodDecl *method = GetMethodWithProto(cl,methodname,proto, gInterp);
+   const clang::CXXMethodDecl *method = GetMethodWithProto(cl,methodname,proto, interp);
    return (method && method->getAccess() == clang::AS_public);
 }
 
@@ -1453,9 +1453,9 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
 const clang::FunctionDecl *ROOT::TMetaUtils::GetFuncWithProto(const clang::Decl* cinfo,
                                                               const char *method,
                                                               const char *proto,
-                                                              const cling::Interpreter &gInterp)
+                                                              const cling::Interpreter &interp)
 {
-   return gInterp.getLookupHelper().findFunctionProto(cinfo, method, proto);
+   return interp.getLookupHelper().findFunctionProto(cinfo, method, proto);
 }
 
 //______________________________________________________________________________
@@ -1510,7 +1510,6 @@ long ROOT::TMetaUtils::GetLineNumber(const clang::Decl *decl)
 //______________________________________________________________________________
 bool ROOT::TMetaUtils::NeedExternalShowMember(const AnnotatedRecordDecl &cl,
                                               const clang::CXXRecordDecl *decl,
-                                              const cling::Interpreter &interp,
                                               const TNormalizedCtxt &normCtxt)
 {
 
@@ -1842,7 +1841,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    }
    finalString << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << "\n" << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << "\n" << "                  ";
 
-   if (!ROOT::TMetaUtils::NeedExternalShowMember(cl, decl, interp, normCtxt)) {
+   if (!ROOT::TMetaUtils::NeedExternalShowMember(cl, decl, normCtxt)) {
       if (!ClassInfo__HasMethod(decl,"ShowMembers")) finalString << "0, ";
    } else {
       if (!ClassInfo__HasMethod(decl,"ShowMembers"))
@@ -2051,7 +2050,6 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 void ROOT::TMetaUtils::WriteBodyShowMembers(std::ostream& finalString,
                                             const AnnotatedRecordDecl &cl,
                                             const clang::CXXRecordDecl *decl,
-                                            const cling::Interpreter &interp,
                                             const TNormalizedCtxt &normCtxt,
                                             bool outside)
 {
@@ -2247,7 +2245,7 @@ void ROOT::TMetaUtils::WriteShowMembers(std::ostream& finalString,
 
    if (outside || IsTemplate(*decl)) {
       finalString << "namespace ROOT {" << "\n" << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp)" << "\n" << "   {" << "\n";
-      WriteBodyShowMembers(finalString, cl, decl, interp, normCtxt, outside || IsTemplate(*decl));
+      WriteBodyShowMembers(finalString, cl, decl, normCtxt, outside || IsTemplate(*decl));
       finalString << "   }" << "\n" << "\n" << "}" << "\n" << "\n";
    }
 
@@ -2268,7 +2266,7 @@ void ROOT::TMetaUtils::WriteShowMembers(std::ostream& finalString,
       finalString << "void " << clsname << "::ShowMembers(TMemberInspector &R__insp)" << "\n" << "{" << "\n";
 
       if (!IsTemplate(*decl)) {
-         WriteBodyShowMembers(finalString, cl, decl, interp, normCtxt, outside);
+         WriteBodyShowMembers(finalString, cl, decl, normCtxt, outside);
       } else {
          std::string clnameNoDefArg = TClassEdit::GetLong64_Name( cl.GetNormalizedName() );
          std::string mappednameNoDefArg;
@@ -2718,7 +2716,7 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
    if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"ShowMembers")) {
       ROOT::TMetaUtils::WriteShowMembers(finalString, cl, decl, interp, normCtxt);
    } else {
-      if (ROOT::TMetaUtils::NeedExternalShowMember(cl, decl, interp, normCtxt)) {
+      if (ROOT::TMetaUtils::NeedExternalShowMember(cl, decl, normCtxt)) {
          ROOT::TMetaUtils::WriteShowMembers(finalString, cl, decl, interp, normCtxt, true);
       }
    }
