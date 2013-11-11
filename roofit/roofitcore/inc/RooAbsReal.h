@@ -336,6 +336,7 @@ protected:
 
   RooFitResult* chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList) ;
 
+  void plotOnCompSelect(RooArgSet* selNodes) const ;
   RooPlot* plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, Double_t Z, const RooArgSet* params, const RooLinkedList& argList, Bool_t method1) const ;
 
   // Support interface for subclasses to advertise their analytic integration

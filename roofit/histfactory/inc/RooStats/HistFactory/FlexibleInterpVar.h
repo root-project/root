@@ -28,6 +28,10 @@ namespace HistFactory{
     FlexibleInterpVar() ;
     FlexibleInterpVar(const char *name, const char *title,
 		      const RooArgList& _paramList, 
+		      Double_t nominal, const RooArgList& low, const RooArgList& high);
+
+    FlexibleInterpVar(const char *name, const char *title,
+		      const RooArgList& _paramList, 
 		      double nominal, std::vector<double> low, std::vector<double> high);
 
     FlexibleInterpVar(const char *name, const char *title,

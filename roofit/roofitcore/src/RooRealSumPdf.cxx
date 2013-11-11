@@ -394,8 +394,8 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     Double_t coefVal = coef->getVal(normSet2) ;
     if (coefVal) {
       assert(func);
-      if (func->isSelectedComp()) {
-    assert(funcInt);
+      if (normSet2 ==0 || func->isSelectedComp()) {
+	assert(funcInt);
 	value += funcInt->getVal()*coefVal ;
       }
       lastCoef -= coef->getVal(normSet2) ;
@@ -405,7 +405,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   if (!_haveLastCoef) {
     // Add last func with correct coefficient
     funcInt = (RooAbsReal*) funcIntIter.next() ;
-    if (func->isSelectedComp()) {
+    if (normSet2 ==0 || func->isSelectedComp()) {
       assert(funcInt);
       value += funcInt->getVal()*lastCoef ;
     }
