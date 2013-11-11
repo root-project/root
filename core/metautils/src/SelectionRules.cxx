@@ -1589,7 +1589,7 @@ bool SelectionRules::SearchNames(cling::Interpreter &interp)
             it->GetAttributeValue("name", name_value);
             // In Class selection rules, we should be interested in scopes.
             const clang::Type *typeptr = 0;
-            const clang::CXXRecordDecl *target = ROOT::TMetaUtils::R__ScopeSearch(name_value.c_str(), interp, &typeptr);            
+            const clang::CXXRecordDecl *target = ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), interp, &typeptr);
             if (target) {
                it->SetCXXRecordDecl(target,typeptr);
             }

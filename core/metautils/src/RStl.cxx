@@ -64,7 +64,7 @@ void ROOT::RStl::GenerateTClassFor(const clang::QualType &type, const cling::Int
 
    if (templateCl == 0) {
       ROOT::TMetaUtils::Error("RStl::GenerateTClassFor","%s not in a template",
-            ROOT::TMetaUtils::R__GetQualifiedName(*stlclass).c_str());      
+            ROOT::TMetaUtils::GetQualifiedName(*stlclass).c_str());
    }
 
    if ( TClassEdit::STLKind( stlclass->getName().str().c_str() )  == TClassEdit::kVector ) {
@@ -118,7 +118,7 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
 
    if (templateCl == 0) {
       ROOT::TMetaUtils::Error("RStl::GenerateTClassFor","%s not in a template",
-            ROOT::TMetaUtils::R__GetQualifiedName(*stlclass).c_str());      
+            ROOT::TMetaUtils::GetQualifiedName(*stlclass).c_str());
    }
    
    
@@ -176,7 +176,7 @@ void ROOT::RStl::Print()
    fprintf(stderr,"ROOT::RStl singleton\n");
    list_t::iterator iter;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
-      fprintf(stderr, "need TClass for %s\n", ROOT::TMetaUtils::R__GetQualifiedName(*(*iter)).c_str());
+      fprintf(stderr, "need TClass for %s\n", ROOT::TMetaUtils::GetQualifiedName(*(*iter)).c_str());
    }
 }
 
@@ -223,7 +223,7 @@ void ROOT::RStl::WriteClassInit(std::ostream &ostr, const cling::Interpreter &in
 
 //    std::string streamerName = "stl_streamer_";
 
-//    std::string shortTypeName = GetLong64_Name( TClassEdit::ShortType(ROOT::TMetaUtils::R__GetQualifiedName(*stlcl).c_str(),TClassEdit::kDropStlDefault) );
+//    std::string shortTypeName = GetLong64_Name( TClassEdit::ShortType(ROOT::TMetaUtils::GetQualifiedName(*stlcl).c_str(),TClassEdit::kDropStlDefault) );
 //    std::string noConstTypeName( TClassEdit::CleanType(shortTypeName.c_str(),2) );
 
 //    std::string typedefName;
@@ -346,7 +346,7 @@ void ROOT::RStl::WriteClassInit(std::ostream &ostr, const cling::Interpreter &in
 //    fprintf(file, "         }\n");
 
 //    fprintf(file, "      }\n");
-//    fprintf(file, "   } // end of %s streamer\n",ROOT::TMetaUtils::R__GetQualifiedName(*stlcl).c_str());
+//    fprintf(file, "   } // end of %s streamer\n",ROOT::TMetaUtils::GetQualifiedName(*stlcl).c_str());
 //    fprintf(file, "} // close namespace ROOT\n\n");
 
 //    fprintf(file, "// Register the streamer (a typedef is used to avoid problem with macro parameters\n");

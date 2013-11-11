@@ -239,16 +239,16 @@ void CreateNameTypeMap(clang::CXXRecordDecl const&, std::map<std::string, ROOT::
 int ElementStreamer(std::ostream& finalString,
                     const clang::NamedDecl &forcontext,
                     const clang::QualType &qti,
-                    const char *R__t,
+                    const char *t,
                     int rwmode,
                     const cling::Interpreter &gInterp,
                     const char *tcl=0);
 
 //______________________________________________________________________________
-bool R__IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base, const clang::CXXRecordDecl *context = 0);
+bool IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base, const clang::CXXRecordDecl *context = 0);
 
 //______________________________________________________________________________
-bool R__IsBase(const clang::FieldDecl &m, const char* basename, const cling::Interpreter &gInterp);
+bool IsBase(const clang::FieldDecl &m, const char* basename, const cling::Interpreter &gInterp);
 
 //______________________________________________________________________________
 bool HasCustomOperatorNewArrayPlacement(clang::RecordDecl const&, const cling::Interpreter &interp);
@@ -287,43 +287,43 @@ bool NeedDestructor(clang::CXXRecordDecl const*);
 bool NeedTemplateKeyword(clang::CXXRecordDecl const*);
 
 //______________________________________________________________________________
-bool R__CheckPublicFuncWithProto(clang::CXXRecordDecl const*, char const*, char const*, const cling::Interpreter&);
+bool CheckPublicFuncWithProto(clang::CXXRecordDecl const*, char const*, char const*, const cling::Interpreter&);
 
 //______________________________________________________________________________
-long R__GetLineNumber(clang::Decl const*);
+long GetLineNumber(clang::Decl const*);
 
 //______________________________________________________________________________
-bool R__GetNameWithinNamespace(std::string&, std::string&, std::string&, clang::CXXRecordDecl const*);
+bool GetNameWithinNamespace(std::string&, std::string&, std::string&, clang::CXXRecordDecl const*);
 
 //______________________________________________________________________________
-void R__GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext);
+void GetQualifiedName(std::string &qual_name, const clang::QualType &type, const clang::NamedDecl &forcontext);
 
 //----
-std::string R__GetQualifiedName(const clang::QualType &type, const clang::NamedDecl &forcontext);
+std::string GetQualifiedName(const clang::QualType &type, const clang::NamedDecl &forcontext);
 
 //______________________________________________________________________________
-void R__GetQualifiedName(std::string &qual_name, const clang::Type &type, const clang::NamedDecl &forcontext);
+void GetQualifiedName(std::string &qual_name, const clang::Type &type, const clang::NamedDecl &forcontext);
 
 //----
-std::string R__GetQualifiedName(const clang::Type &type, const clang::NamedDecl &forcontext);
+std::string GetQualifiedName(const clang::Type &type, const clang::NamedDecl &forcontext);
 
 //______________________________________________________________________________
-void R__GetQualifiedName(std::string &qual_name, const clang::NamespaceDecl &nsd);
+void GetQualifiedName(std::string &qual_name, const clang::NamespaceDecl &nsd);
 
 //----
-std::string R__GetQualifiedName(const clang::NamespaceDecl &nsd);
+std::string GetQualifiedName(const clang::NamespaceDecl &nsd);
 
 //______________________________________________________________________________
-void R__GetQualifiedName(std::string &qual_name, const AnnotatedRecordDecl &annotated);
+void GetQualifiedName(std::string &qual_name, const AnnotatedRecordDecl &annotated);
 
 //----
-std::string R__GetQualifiedName(const AnnotatedRecordDecl &annotated);
+std::string GetQualifiedName(const AnnotatedRecordDecl &annotated);
 
 //______________________________________________________________________________
-void R__GetQualifiedName(std::string &qual_name, const clang::RecordDecl &recordDecl);
+void GetQualifiedName(std::string &qual_name, const clang::RecordDecl &recordDecl);
 
 //----
-std::string R__GetQualifiedName(const clang::RecordDecl &recordDecl);
+std::string GetQualifiedName(const clang::RecordDecl &recordDecl);
 
 //______________________________________________________________________________
 int WriteNamespaceHeader(std::ostream&, const clang::RecordDecl *);
@@ -353,13 +353,13 @@ std::string ShortTypeName(const clang::FieldDecl &m);
 bool IsStreamableObject(const clang::FieldDecl &m);
 
 //______________________________________________________________________________
-clang::RecordDecl *R__GetUnderlyingRecordDecl(clang::QualType type);
+clang::RecordDecl *GetUnderlyingRecordDecl(clang::QualType type);
 
 //______________________________________________________________________________
-std::string R__TrueName(const clang::FieldDecl &m);
+std::string TrueName(const clang::FieldDecl &m);
 
 //______________________________________________________________________________
-const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const cling::Interpreter &gInterp, const clang::Type** resultType = 0);
+const clang::CXXRecordDecl *ScopeSearch(const char *name, const cling::Interpreter &gInterp, const clang::Type** resultType = 0);
 
 //______________________________________________________________________________
 void AddConstructorType(const char *arg, const cling::Interpreter &interp);
@@ -387,7 +387,7 @@ bool NeedExternalShowMember(const AnnotatedRecordDecl &cl,
                             const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
-const clang::FunctionDecl *R__GetFuncWithProto(const clang::Decl* cinfo,
+const clang::FunctionDecl *GetFuncWithProto(const clang::Decl* cinfo,
                                                const char *method,
                                                const char *proto,
                                                const cling::Interpreter &gInterp);

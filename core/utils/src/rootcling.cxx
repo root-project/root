@@ -502,19 +502,19 @@ public:
 bool InheritsFromTObject(const clang::RecordDecl *cl,
                          const cling::Interpreter &interp)
 {
-   static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::R__ScopeSearch("TObject", interp);
+   static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::ScopeSearch("TObject", interp);
 
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
-   return ROOT::TMetaUtils::R__IsBase(clxx, TObject_decl);
+   return ROOT::TMetaUtils::IsBase(clxx, TObject_decl);
 }
 
 //______________________________________________________________________________
 bool InheritsFromTSelector(const clang::RecordDecl *cl,
                            const cling::Interpreter &interp)
 {
-   static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::R__ScopeSearch("TSelector", interp);
+   static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::ScopeSearch("TSelector", interp);
 
-   return ROOT::TMetaUtils::R__IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
+   return ROOT::TMetaUtils::IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
 }
 
 //______________________________________________________________________________
@@ -851,12 +851,12 @@ bool CheckInputOperator(const char *what,
    // resquested a custom version.
 
 
-   const clang::FunctionDecl *method = ROOT::TMetaUtils::R__GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl->getDeclContext()), what, proto, interp);
+   const clang::FunctionDecl *method = ROOT::TMetaUtils::GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl->getDeclContext()), what, proto, interp);
    if (!method) {
       // This intended to find the global scope.
       clang::TranslationUnitDecl *TU =
          cl->getASTContext().getTranslationUnitDecl();
-      method = ROOT::TMetaUtils::R__GetFuncWithProto(TU, what, proto, interp);
+      method = ROOT::TMetaUtils::GetFuncWithProto(TU, what, proto, interp);
    }
    bool has_input_error = false;
    if (method != 0 && (method->getAccess() == clang::AS_public || method->getAccess() == clang::AS_none) ) {
@@ -894,7 +894,7 @@ bool CheckInputOperator(const clang::RecordDecl *cl, cling::Interpreter &interp)
    // resquested a custom version.
 
    string fullname;
-   ROOT::TMetaUtils::R__GetQualifiedName(fullname,*cl);
+   ROOT::TMetaUtils::GetQualifiedName(fullname,*cl);
    int ncha = fullname.length()+13;
    char *proto = new char[ncha];
    snprintf(proto,ncha,"TBuffer&,%s*&",fullname.c_str());
@@ -926,7 +926,7 @@ bool CheckClassDef(const clang::RecordDecl& cl, const cling::Interpreter &interp
    bool result = true;
    if (!isAbstract && InheritsFromTObject(clxx, interp) && !InheritsFromTSelector(clxx, interp) && !hasClassDef) {
       std::string qualName;
-      ROOT::TMetaUtils::R__GetQualifiedName(qualName,cl);
+      ROOT::TMetaUtils::GetQualifiedName(qualName,cl);
       const char* qualName_c=qualName.c_str();
       ROOT::TMetaUtils::Error(qualName_c,
                               "%s inherits from TObject but does not have its own ClassDef\n",
@@ -948,7 +948,7 @@ string GetNonConstMemberName(const clang::FieldDecl &m, const string &prefix = "
    if (m.getType().isConstQualified()) {
       string ret = "const_cast< ";
       string type_name;
-      ROOT::TMetaUtils::R__GetQualifiedName(type_name, m.getType(), m);
+      ROOT::TMetaUtils::GetQualifiedName(type_name, m.getType(), m);
       ret += type_name;
       ret += " &>( ";
       ret += prefix;
@@ -997,9 +997,9 @@ int STLContainerStreamer(const clang::FieldDecl &m,
 
    int stltype = abs(ROOT::TMetaUtils::IsSTLContainer(m));
    std::string mTypename;
-   ROOT::TMetaUtils::R__GetQualifiedName(mTypename, m.getType(), m);
+   ROOT::TMetaUtils::GetQualifiedName(mTypename, m.getType(), m);
 
-   const clang::CXXRecordDecl* clxx = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(ROOT::TMetaUtils::R__GetUnderlyingRecordDecl(m.getType()));
+   const clang::CXXRecordDecl* clxx = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(ROOT::TMetaUtils::GetUnderlyingRecordDecl(m.getType()));
 
    if (stltype!=0) {
       //        fprintf(stderr,"Add %s (%d) which is also %s\n",
@@ -1220,7 +1220,7 @@ int STLStringStreamer(const clang::FieldDecl &m, int rwmode)
    // 0 otherwise.
 
    std::string mTypenameStr;
-   ROOT::TMetaUtils::R__GetQualifiedName(mTypenameStr, m.getType(),m);
+   ROOT::TMetaUtils::GetQualifiedName(mTypenameStr, m.getType(),m);
    // Note: here we could to a direct type comparison!
    const char *mTypeName = ROOT::TMetaUtils::ShortTypeName(mTypenameStr.c_str());
    if (!strcmp(mTypeName, "string")) {
@@ -1316,7 +1316,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl)
    string nsname;
    int enclSpaceNesting = 0;
 
-   if (ROOT::TMetaUtils::R__GetNameWithinNamespace(fullname,clsname,nsname,cl)) {
+   if (ROOT::TMetaUtils::GetNameWithinNamespace(fullname,clsname,nsname,cl)) {
       enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(*dictSrcOut, cl);
    }
 
@@ -1381,7 +1381,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
    }
 
    // coverity[fun_call_w_exception] - that's just fine.
-   string classname = ROOT::TMetaUtils::R__GetQualifiedName(*cl).c_str();
+   string classname = ROOT::TMetaUtils::GetQualifiedName(*cl).c_str();
    string mappedname;
    TMetaUtils::GetCppName(mappedname,classname.c_str());
 
@@ -1440,7 +1440,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
    for (unsigned int i=0; i<filename.length(); i++) {
       if (filename[i]=='\\') filename[i]='/';
    }
-   (*dictSrcOut) << "\"" << filename << "\", " << ROOT::TMetaUtils::R__GetLineNumber(cl) << "," << std::endl
+   (*dictSrcOut) << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << std::endl
                  << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
                  << "                     ";
 
@@ -1532,7 +1532,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    string nsname;
    int enclSpaceNesting = 0;
 
-   if (ROOT::TMetaUtils::R__GetNameWithinNamespace(fullname,clsname,nsname,clxx)) {
+   if (ROOT::TMetaUtils::GetNameWithinNamespace(fullname,clsname,nsname,clxx)) {
       enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(*dictSrcOut, cl);
    }
 
@@ -1555,7 +1555,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
       {
          if (ROOT::TMetaUtils::ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer")) {
             string base_fullname;
-            ROOT::TMetaUtils::R__GetQualifiedName(base_fullname,* iter->getType()->getAsCXXRecordDecl ());
+            ROOT::TMetaUtils::GetQualifiedName(base_fullname,* iter->getType()->getAsCXXRecordDecl ());
 
             if (strstr(base_fullname.c_str(),"::")) {
                // there is a namespace involved, trigger MS VC bug workaround
@@ -1611,7 +1611,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
       {
          if (ROOT::TMetaUtils::ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer")) {
             string base_fullname;
-            ROOT::TMetaUtils::R__GetQualifiedName(base_fullname,* iter->getType()->getAsCXXRecordDecl ());
+            ROOT::TMetaUtils::GetQualifiedName(base_fullname,* iter->getType()->getAsCXXRecordDecl ());
 
             if (strstr(base_fullname.c_str(),"::")) {
                // there is a namespace involved, trigger MS VC bug workaround
@@ -1716,13 +1716,13 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                            (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << field_iter->getName().str() << ");" << std::endl;
                         else {
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16((" << ROOT::TMetaUtils::R__TrueName(**field_iter)
+                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32((" << ROOT::TMetaUtils::R__TrueName(**field_iter)
+                              (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.ReadStaticArray((" << ROOT::TMetaUtils::R__TrueName(**field_iter)
+                              (*dictSrcOut) << "      R__b.ReadStaticArray((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ");" << std::endl;
                            }
                         }
@@ -1735,7 +1735,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                            } else if (isDouble32) {
                               (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32(" << field_iter->getName().str() << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.ReadStaticArray((" << ROOT::TMetaUtils::R__TrueName(**field_iter)
+                              (*dictSrcOut) << "      R__b.ReadStaticArray((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ");" << std::endl;
                            }
                         }
@@ -1750,13 +1750,13 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                                          << s << ");" << std::endl;
                         else
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.WriteArrayFloat16((" << ROOT::TMetaUtils::R__TrueName(**field_iter)
+                              (*dictSrcOut) << "      R__b.WriteArrayFloat16((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.WriteArrayDouble32((" << ROOT::TMetaUtils::R__TrueName(**field_iter)
+                              (*dictSrcOut) << "      R__b.WriteArrayDouble32((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.WriteArray((" << ROOT::TMetaUtils::R__TrueName(**field_iter)
+                              (*dictSrcOut) << "      R__b.WriteArray((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            }
                      } else {
@@ -1824,7 +1824,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   if (i == 0)
                      (*dictSrcOut) << "         R__b >> " << GetNonConstMemberName(**field_iter);
                   else {
-                     if (ROOT::TMetaUtils::R__IsBase(**field_iter,"TObject", interp) && ROOT::TMetaUtils::R__IsBase(**field_iter,"TArray", interp))
+                     if (ROOT::TMetaUtils::IsBase(**field_iter,"TObject", interp) && ROOT::TMetaUtils::IsBase(**field_iter,"TArray", interp))
                         (*dictSrcOut) << "         R__b << (TObject*)" << field_iter->getName().str();
                      else
                         (*dictSrcOut) << "         R__b << " << GetNonConstMemberName(**field_iter);
@@ -1845,7 +1845,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                         (*dictSrcOut) << "      //R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);";
                      }
                   } else {
-                     if (ROOT::TMetaUtils::R__GetQualifiedName(*ROOT::TMetaUtils::GetUnderlyingType(field_iter->getType()),**field_iter) == "TClonesArray") {
+                     if (ROOT::TMetaUtils::GetQualifiedName(*ROOT::TMetaUtils::GetUnderlyingType(field_iter->getType()),**field_iter) == "TClonesArray") {
                         (*dictSrcOut) << "      " << field_iter->getName().str() << "->Streamer(R__b);" << std::endl;
                      } else {
                         if (i == 0) {
@@ -1859,7 +1859,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                            // and either the user request an old branch or the streamer has been customized.
                            (*dictSrcOut) << "      R__b >> " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
                         } else {
-                           if (ROOT::TMetaUtils::R__IsBase(**field_iter,"TObject",interp) && ROOT::TMetaUtils::R__IsBase(**field_iter,"TArray",interp))
+                           if (ROOT::TMetaUtils::IsBase(**field_iter,"TObject",interp) && ROOT::TMetaUtils::IsBase(**field_iter,"TArray",interp))
                               (*dictSrcOut) << "      R__b << (TObject*)" << field_iter->getName().str() << ";" << std::endl;
                            else
                               (*dictSrcOut) << "      R__b << " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
@@ -1876,7 +1876,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   }
                   (*dictSrcOut) << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
                   std::string mTypeNameStr;
-                  ROOT::TMetaUtils::R__GetQualifiedName(mTypeNameStr,field_iter->getType(),**field_iter);
+                  ROOT::TMetaUtils::GetQualifiedName(mTypeNameStr,field_iter->getType(),**field_iter);
                   const char *mTypeName = mTypeNameStr.c_str();
                   const char *constwd = "const ";
                   if (strncmp(constwd,mTypeName,strlen(constwd))==0) {
@@ -1890,7 +1890,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                      (*dictSrcOut) << "[R__i].Streamer(R__b);" << std::endl;
                   }
                } else {
-                  if (ROOT::TMetaUtils::ClassInfo__HasMethod(ROOT::TMetaUtils::R__GetUnderlyingRecordDecl(field_iter->getType()),"Streamer"))
+                  if (ROOT::TMetaUtils::ClassInfo__HasMethod(ROOT::TMetaUtils::GetUnderlyingRecordDecl(field_iter->getType()),"Streamer"))
                      (*dictSrcOut) << "      " << GetNonConstMemberName(**field_iter) << ".Streamer(R__b);" << std::endl;
                   else {
                      (*dictSrcOut) << "      R__b.StreamObject(&(" << field_iter->getName().str() << "),typeid("
@@ -1944,7 +1944,7 @@ void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    string nsname;
    int enclSpaceNesting = 0;
 
-   if (ROOT::TMetaUtils::R__GetNameWithinNamespace(fullname,clsname,nsname,clxx)) {
+   if (ROOT::TMetaUtils::GetNameWithinNamespace(fullname,clsname,nsname,clxx)) {
       enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(*dictSrcOut, cl);
    }
 
@@ -1984,7 +1984,7 @@ void WriteBodyShowMembers(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                           bool outside)
 {
    string csymbol;
-   ROOT::TMetaUtils::R__GetQualifiedName(csymbol,cl);
+   ROOT::TMetaUtils::GetQualifiedName(csymbol,cl);
 
    if ( !TMetaUtils::IsStdClass(*cl) ) {
 
@@ -2740,7 +2740,7 @@ void ExtractSelectedNamespaces(RScanner& scan, std::list<std::string>& nsList){
    // Loop on selected classes and put them in a list
    for (RScanner::NamespaceColl_t::const_iterator selNsIter = scan.fSelectedNamespaces.begin();
      selNsIter!= scan.fSelectedNamespaces.end(); selNsIter++){
-   nsList.push_back(ROOT::TMetaUtils::R__GetQualifiedName(* selNsIter->GetNamespaceDecl()));
+   nsList.push_back(ROOT::TMetaUtils::GetQualifiedName(* selNsIter->GetNamespaceDecl()));
    }
 }
 
@@ -3588,7 +3588,7 @@ int RootCling(int argc,
       for( ; iter != end; ++iter)
       {
          if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-            ROOT::TMetaUtils::Error(0,"A dictionary has been requested for %s but there is no declaration!\n",ROOT::TMetaUtils::R__GetQualifiedName(* iter).c_str());
+            ROOT::TMetaUtils::Error(0,"A dictionary has been requested for %s but there is no declaration!\n",ROOT::TMetaUtils::GetQualifiedName(* iter).c_str());
             continue;
          }
          if (iter->RequestOnlyTClass()) {
