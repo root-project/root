@@ -6,7 +6,24 @@ bool IsEquiv(const std::string &, int orig, int copy)       { return orig==copy;
 bool IsEquiv(const std::string &, UInt_t orig, UInt_t copy) { return orig==copy; }
 bool IsEquiv(const std::string &, short orig, short copy)   { return orig==copy; }
 bool IsEquiv(const std::string &, char orig, char copy)     { return orig==copy; }
+
+// On some platform (clang stdc++ ... std::vector<bool>::const_reference and bool& are not the same
+// And thus we need both:
+//   bool IsEquiv(const std::string &, bool orig, bool copy)     { return orig==copy; }
+//   bool IsEquiv(const std::string &, const std::vector<bool>::const_reference &orig, const std::vector<bool>::const_reference &copy)     { return orig==copy; }
+// but on some platform they are the same and then we have an ambiguity :(.
+// So detect the case and try to make it go ....
+//
+template <typename T> struct bool_helper {
+   typedef const T &type;
+};
+template <> struct bool_helper<bool> {
+   struct Nothing{ bool operator==(const Nothing&) const { return false; } };
+   typedef Nothing type; 
+};
+
 bool IsEquiv(const std::string &, bool orig, bool copy)     { return orig==copy; }
+bool IsEquiv(const std::string &, bool_helper<std::vector<bool>::const_reference>::type orig, bool_helper<std::vector<bool>::const_reference>::type &copy)     { return orig==copy; }
 
 
 template <class T> bool IsEquiv(const std::string &test, T* orig, T* copy);
