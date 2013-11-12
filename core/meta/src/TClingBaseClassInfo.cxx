@@ -165,34 +165,7 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClas
    // from the parameter derived class to the parameter target class for the
    // address.
 
-   //  Get the class or namespace name.
-   string derived_class_name;
-   if (derivedClass->GetType()) {
-      // This is a class, struct, or union member.
-      clang::QualType QTDerived(derivedClass->GetType(), 0);
-      ROOT::TMetaUtils::GetFullyQualifiedTypeName(derived_class_name, QTDerived, *fInterp);
-   }
-   else if (const clang::NamedDecl* ND =
-            dyn_cast<clang::NamedDecl>(derivedClass->GetDecl()->getDeclContext())) {
-      // This is a namespace member.
-      raw_string_ostream stream(derived_class_name);
-      ND->getNameForDiagnostic(stream, ND->getASTContext().getPrintingPolicy(), /*Qualified=*/true);
-      stream.flush();
-   }
-   string target_class_name;
-   if (targetClass->GetType()) {
-      // This is a class, struct, or union member.
-      clang::QualType QTTarget(targetClass->GetType(), 0);
-      ROOT::TMetaUtils::GetFullyQualifiedTypeName(target_class_name, QTTarget, *fInterp);
-   }
-   else if (const clang::NamedDecl* ND =
-            dyn_cast<clang::NamedDecl>(targetClass->GetDecl()->getDeclContext())) {
-      // This is a namespace member.
-      raw_string_ostream stream(target_class_name);
-      ND->getNameForDiagnostic(stream, ND->getASTContext().getPrintingPolicy(), /*Qualified=*/true);
-      stream.flush();
-   }
-
+   // Get the dedcls for the two classes.
    const clang::Decl* derivedDecl = derivedClass->GetDecl();
    const clang::Decl* targetDecl = targetClass->GetDecl();
 
@@ -205,59 +178,94 @@ OffsetPtrFunc_t TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClas
       buf << "h" << targetDecl;
       wrapper_name = buf.str();
    }
-   //  Write the wrapper code.
-   string wrapperFwdDecl = "long " + wrapper_name + "(void* address)";
-   ostringstream buf;
-   buf << wrapperFwdDecl << "{\n";
-   buf << indent_string << derived_class_name << " *object = (" << derived_class_name << "*)address;";
-   buf << "\n";
-   buf << indent_string << target_class_name << " *target = object;";
-   buf << "\n";
-   buf << indent_string << "return ((long)target - (long)object);";
-   buf << "\n";
-   buf << "}\n";
-   string wrapper = "extern \"C\" " + wrapperFwdDecl + ";\n"
+   // Check whether the unction was already generated.
+   const GlobalValue* GV = fInterp->getModule()->getNamedValue(wrapper_name);
+
+   if (!GV) {
+      //  Get the class or namespace name.
+      string derived_class_name;
+      if (derivedClass->GetType()) {
+         // This is a class, struct, or union member.
+         clang::QualType QTDerived(derivedClass->GetType(), 0);
+         ROOT::TMetaUtils::GetFullyQualifiedTypeName(derived_class_name, QTDerived, *fInterp);
+      }
+      else if (const clang::NamedDecl* ND =
+               dyn_cast<clang::NamedDecl>(derivedClass->GetDecl()->getDeclContext())) {
+         // This is a namespace member.
+         raw_string_ostream stream(derived_class_name);
+         ND->getNameForDiagnostic(stream, ND->getASTContext().getPrintingPolicy(), /*Qualified=*/true);
+         stream.flush();
+      }
+      string target_class_name;
+      if (targetClass->GetType()) {
+         // This is a class, struct, or union member.
+         clang::QualType QTTarget(targetClass->GetType(), 0);
+         ROOT::TMetaUtils::GetFullyQualifiedTypeName(target_class_name, QTTarget, *fInterp);
+      }
+      else if (const clang::NamedDecl* ND =
+               dyn_cast<clang::NamedDecl>(targetClass->GetDecl()->getDeclContext())) {
+         // This is a namespace member.
+         raw_string_ostream stream(target_class_name);
+         ND->getNameForDiagnostic(stream, ND->getASTContext().getPrintingPolicy(), /*Qualified=*/true);
+         stream.flush();
+      }
+
+
+      //  Write the wrapper code.
+      string wrapperFwdDecl = "long " + wrapper_name + "(void* address)";
+      ostringstream buf;
+      buf << wrapperFwdDecl << "{\n";
+      buf << indent_string << derived_class_name << " *object = (" << derived_class_name << "*)address;";
+      buf << "\n";
+      buf << indent_string << target_class_name << " *target = object;";
+      buf << "\n";
+      buf << indent_string << "return ((long)target - (long)object);";
+      buf << "\n";
+      buf << "}\n";
+      string wrapper = "extern \"C\" " + wrapperFwdDecl + ";\n"
                     + buf.str();
 
-   //  Compile the wrapper code.
-   const FunctionDecl* WFD = 0;
-   {
-      cling::Transaction* Tp = 0;
-      cling::Interpreter::CompilationResult CR = fInterp->declare(wrapper, &Tp);
-      if (CR != cling::Interpreter::kSuccess) {
-         Error("TClingBaseClassInfo::GenerateBaseOffsetFunction", "Wrapper compile failed!");
-         return 0;
-      }
-      for (cling::Transaction::const_iterator I = Tp->decls_begin(),
-           E = Tp->decls_end(); !WFD && I != E; ++I) {
-         if (I->m_Call == cling::Transaction::kCCIHandleTopLevelDecl) {
-            if (const FunctionDecl* createWFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin())) {
-               if (createWFD && isa<TranslationUnitDecl>(createWFD->getDeclContext())) {
-                  DeclarationName FName = createWFD->getDeclName();
-                  if (const IdentifierInfo* FII = FName.getAsIdentifierInfo()) {
-                     if (FII->getName() == wrapper_name) {
-                        WFD = createWFD;
+      //  Compile the wrapper code.
+      const FunctionDecl* WFD = 0;
+      {
+         cling::Transaction* Tp = 0;
+         cling::Interpreter::CompilationResult CR = fInterp->declare(wrapper, &Tp);
+         if (CR != cling::Interpreter::kSuccess) {
+            Error("TClingBaseClassInfo::GenerateBaseOffsetFunction", "Wrapper compile failed!");
+            return 0;
+         }
+         for (cling::Transaction::const_iterator I = Tp->decls_begin(),
+            E = Tp->decls_end(); !WFD && I != E; ++I) {
+            if (I->m_Call == cling::Transaction::kCCIHandleTopLevelDecl) {
+               if (const FunctionDecl* createWFD = dyn_cast<FunctionDecl>(*I->m_DGR.begin())) {
+                  if (createWFD && isa<TranslationUnitDecl>(createWFD->getDeclContext())) {
+                     DeclarationName FName = createWFD->getDeclName();
+                     if (const IdentifierInfo* FII = FName.getAsIdentifierInfo()) {
+                        if (FII->getName() == wrapper_name) {
+                           WFD = createWFD;
+                        }
                      }
                   }
                }
             }
          }
+         if (!WFD) {
+            Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
+                  "Wrapper compile did not return a function decl!");
+            return 0;
+         }
       }
-      if (!WFD) {
+
+      //  Get the wrapper function pointer
+      //  from the ExecutionEngine (the JIT).
+      GV = fInterp->getModule()->getNamedValue(wrapper_name);
+      if (!GV) {
          Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
-               "Wrapper compile did not return a function decl!");
+               "Wrapper function name not found in Module!");
          return 0;
       }
    }
 
-   //  Get the wrapper function pointer
-   //  from the ExecutionEngine (the JIT).
-   const GlobalValue* GV = fInterp->getModule()->getNamedValue(wrapper_name);
-   if (!GV) {
-      Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
-            "Wrapper function name not found in Module!");
-      return 0;
-   }
    ExecutionEngine* EE = fInterp->getExecutionEngine();
    OffsetPtrFunc_t f = (OffsetPtrFunc_t)EE->getPointerToGlobalIfAvailable(GV);
    if (!f) {
