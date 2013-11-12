@@ -1,0 +1,38 @@
+
+Processing execTemplate.C...
+Looking at UserClass.
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+As expected, can not find getA without an instantiation.
+Found getA<int> while searching for getA<int>.
+Found getA<int> while searching for getA.
+As expected, can not find setA without an instantiation.
+Found setA<int> while searching for setA<int>.
+Found setA<int> while searching for setA.
+As expected, can not find getB without an instantiation.
+As expected, can not find getB<int>.
+Found getB<int, float> while searching for getB<int,float>.
+As expected, can not find getB<int>.
+Found getB<int, float> while searching for getB.
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+ OBJ: TMethod	getA<int>	 : 0
+ OBJ: TMethod	setA<int>	 : 0
+ OBJ: TMethod	getB<int, float>	 : 0
+
+Looking at UserSpace.
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+As expected, can not find getA without an instantiation.
+Found getA<int> while searching for getA<int>.
+Found getA<int> while searching for getA.
+As expected, can not find setA without an instantiation.
+Found setA<int> while searching for setA<int>.
+Found setA<int> while searching for setA.
+As expected, can not find getB without an instantiation.
+As expected, can not find getB<int>.
+Found getB<int, float> while searching for getB<int,float>.
+As expected, can not find getB<int>.
+Found getB<int, float> while searching for getB.
+OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
+ OBJ: TMethod	getA<int>	 : 0
+ OBJ: TMethod	setA<int>	 : 0
+ OBJ: TMethod	getB<int, float>	 : 0
+
