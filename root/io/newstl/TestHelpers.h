@@ -153,7 +153,7 @@ bool operator<(const TNamed&lhs, const TNamed&rhs) {
 
 template <class T> class PtrCmp {
 public:
-   bool operator()(const T * lhs, const T * rhs) {
+   bool operator()(const T * lhs, const T * rhs) const {
       if (lhs==0) return (rhs!=0);
       if (rhs==0) return false;
       return *lhs < *rhs;
