@@ -71,6 +71,16 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject*, void* )               \
    return kFALSE;                                                             \
 }
 
+static inline Bool_t VerifyPyBool( PyObject* pyobject )
+{
+   Long_t l = PyLong_AsLong( pyobject );
+   if ( ! ( l == 0 || l == 1 ) ) {
+      PyErr_SetString( PyExc_TypeError, "boolean value should be bool, or integer 1 or 0" );
+      return kFALSE;
+   }
+   return kTRUE;
+}
+
 static inline Bool_t VerifyPyLong( PyObject* pyobject )
 {
 #if PY_VERSION_HEX >= 0x02070000
@@ -168,9 +178,7 @@ Bool_t PyROOT::TLongConverter::SetArg(
 {
 // convert <pyobject> to C++ long, set arg for call
 #if PY_VERSION_HEX >= 0x02070000
-// p2.7 silently converts floats to long ...
-   if ( ! (PyLong_Check( pyobject ) || PyInt_Check( pyobject )) )
-      return kFALSE;
+   if ( ! VerifyPyLong( pyobject ) ) return kFALSE;
 #endif
    para.fLong = PyLong_AsLong( pyobject );
    if ( para.fLong == -1 && PyErr_Occurred() )
@@ -207,7 +215,7 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Bool,      Bool_t,    PyInt_AsLong, VerifyPyLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Bool,      Bool_t,    PyInt_AsLong, VerifyPyBool )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Short,     Short_t,   PyInt_AsLong, VerifyPyLong )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UShort,    UShort_t,  PyInt_AsLong, VerifyPyLong )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Int,       Int_t,     PyInt_AsLong, VerifyPyLong )
@@ -253,12 +261,8 @@ Bool_t PyROOT::TBoolConverter::SetArg(
       PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
 {
 // convert <pyobject> to C++ bool, allow int/long -> bool, set arg for call
+   if ( ! VerifyPyBool( pyobject ) ) return kFALSE;
    para.fLong = PyLong_AsLong( pyobject );
-   if ( ! ( para.fLong == 0 || para.fLong == 1 ) ) {
-      PyErr_SetString( PyExc_TypeError, "boolean value should be bool, or integer 1 or 0" );
-      return kFALSE;
-   }
-
    if ( func )
       gInterpreter->CallFunc_SetArg( func,  para.fLong );
    return kTRUE;
