@@ -71,10 +71,26 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject*, void* )               \
    return kFALSE;                                                             \
 }
 
-#define PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( name, type, F1 )          \
+static inline Bool_t VerifyPyLong( PyObject* pyobject )
+{
+#if PY_VERSION_HEX >= 0x02070000
+// p2.7 silently converts floats to long ...
+   if ( ! (PyLong_Check( pyobject ) || PyInt_Check( pyobject )) )
+      return kFALSE;
+#endif
+   return kTRUE;
+}
+
+static inline Bool_t VerifyPyFloat( PyObject* )
+{
+   return kTRUE;
+}
+
+#define PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( name, type, F1, verifier )\
 Bool_t PyROOT::TConst##name##RefConverter::SetArg(                            \
       PyObject* pyobject, TParameter_t& /* para */, CallFunc_t* func, Long_t )\
 {                                                                             \
+   if ( ! verifier( pyobject ) ) return kFALSE;                               \
    fBuffer = (type)F1( pyobject );                                            \
    if ( fBuffer == (type)-1 && PyErr_Occurred() )                             \
       return kFALSE;                                                          \
@@ -191,15 +207,15 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Bool,      Bool_t,    PyInt_AsLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Short,     Short_t,   PyInt_AsLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UShort,    UShort_t,  PyInt_AsLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Int,       Int_t,     PyInt_AsLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UInt,      UInt_t,    PyLongOrInt_AsULong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Long,      Long_t,    PyLong_AsLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( ULong,     ULong_t,   PyLongOrInt_AsULong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( LongLong,  Long64_t,  PyLong_AsLongLong )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( ULongLong, ULong64_t, PyLongOrInt_AsULong64 )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Bool,      Bool_t,    PyInt_AsLong, VerifyPyLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Short,     Short_t,   PyInt_AsLong, VerifyPyLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UShort,    UShort_t,  PyInt_AsLong, VerifyPyLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Int,       Int_t,     PyInt_AsLong, VerifyPyLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UInt,      UInt_t,    PyLongOrInt_AsULong,   VerifyPyLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Long,      Long_t,    PyLong_AsLong,         VerifyPyLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( ULong,     ULong_t,   PyLongOrInt_AsULong,   VerifyPyLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( LongLong,  Long64_t,  PyLong_AsLongLong,     VerifyPyLong )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( ULongLong, ULong64_t, PyLongOrInt_AsULong64, VerifyPyLong )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TIntRefConverter::SetArg(
@@ -355,8 +371,8 @@ Bool_t PyROOT::TDoubleRefConverter::SetArg(
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( DoubleRef )
 
 //____________________________________________________________________________
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Float,  Float_t,  PyFloat_AsDouble )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Double, Double_t, PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Float,  Float_t,  PyFloat_AsDouble, VerifyPyFloat )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Double, Double_t, PyFloat_AsDouble, VerifyPyFloat )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidConverter::SetArg( PyObject*, TParameter_t&, CallFunc_t*, Long_t )
