@@ -16,7 +16,7 @@ void readBack()
    cout << "fBits settings B: 0x" << hex << testB->TestRefBits(0xFFFFFFFF) << endl;
 #endif
    
-  cout << "Readback for testB->GetRef()" << std::endl << testB->GetRef() << endl;
+  cout << "Readback for testB->GetRef()" << std::endl << (ULong_t)testB->GetRef() << endl;
   cout << "******************************************" << std::endl;
 }
 
