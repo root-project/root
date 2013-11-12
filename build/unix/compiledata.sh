@@ -107,8 +107,9 @@ rm -f __compiledata
 
 echo "/* This is file is automatically generated */" > __compiledata
 echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
-echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
-echo "#define COMPILER \""`type -path $CXX`"\" " >> __compiledata
+echo "#define BUILD_NODE \""`uname -a`"\"" >> __compiledata
+echo "#define CXX \"$CXX\"" >> __compiledata
+echo "#define COMPILER \""`type -path $CXX`"\"" >> __compiledata
 echo "#define COMPILERVERS \"$COMPILERVERS\"" >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then
    echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> __compiledata

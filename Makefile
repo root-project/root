@@ -682,9 +682,9 @@ endif
 endif
 endif
 
-rootcling:      all-cling all-utils
+rootcling:      all-cling all-utils compiledata
 
-rootlibs:       rootcling compiledata $(ALLLIBS) $(ALLMAPS)
+rootlibs:       rootcling $(ALLLIBS) $(ALLMAPS)
 
 rootexecs:      rootlibs $(ALLEXECS)
 
