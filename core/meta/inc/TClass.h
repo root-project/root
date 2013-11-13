@@ -55,6 +55,7 @@ class TVirtualRefProxy;
 class THashTable;
 class TListOfFunctions;
 class TViewPubFunctions;
+class TFunctionTemplate;
 
 namespace clang {
    class Decl;
@@ -97,6 +98,7 @@ private:
    TList             *fBase;            //linked list for base classes
    TList             *fData;            //linked list for data members
    TList             *fEnums;           //linked list for the enums
+   TList             *fFuncTemplate;    //linked list for function templates [Not public until implemented as active list]
    TListOfFunctions  *fMethod;          //linked list for methods
    TList             *fAllPubData;      //all public data members (including from base classes)
    TViewPubFunctions *fAllPubMethod;    //all public methods (including from base classes)
@@ -288,6 +290,7 @@ public:
    Int_t              GetBaseClassOffset(const TClass *base, void *address = 0);
    TClass            *GetBaseDataMember(const char *datamember);
    ROOT::DirAutoAdd_t GetDirectoryAutoAdd() const;
+   TFunctionTemplate *GetFunctionTemplate(const char *name);
    UInt_t             GetInstanceCount() const { return fInstanceCount; }
    UInt_t             GetHeapInstanceCount() const { return fOnHeap; }
    void               GetMenuItems(TList *listitems);

@@ -109,6 +109,7 @@
 #include "TInterpreter.h"
 #include "TListOfTypes.h"
 #include "TListOfFunctions.h"
+#include "TFunctionTemplate.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -1215,6 +1216,25 @@ TObject *TROOT::GetFunction(const char *name) const
    gROOT->ProcessLine("TF1::InitStandardFunctions();");
 
    return fFunctions->FindObject(name);
+}
+
+//______________________________________________________________________________
+TFunctionTemplate *TROOT::GetFunctionTemplate(const char *name)
+{
+   if (!gInterpreter) return 0;
+
+   if (!fFuncTemplate) fFuncTemplate = new TList();
+
+   TFunctionTemplate *result;
+   result = (TFunctionTemplate*)fFuncTemplate->FindObject(name);
+   if (!result) {
+      TInterpreter::DeclId_t id = gInterpreter->GetFunctionTemplate(0,name);
+      if (id) {
+         FuncTempInfo_t *info = gInterpreter->FuncTempInfo_Factory(id);
+         result = new TFunctionTemplate(info);
+      }
+   }
+   return result;
 }
 
 //______________________________________________________________________________
