@@ -1449,8 +1449,8 @@ L110:
                coded = &chcoded[0];
                if (if1 > 14) if1=14;
                if (if2 > 14) if2=14;
-               if (if2) snprintf(coded,8,"%%%d.%df",if1,if2);
-               else     snprintf(coded,8,"%%%d.%df",if1+1,1);
+               if (if2>0) snprintf(coded,8,"%%%d.%df",if1,if2);
+               else       snprintf(coded,8,"%%%d.%df",if1+1,1);
             }
 
 //*-*-              We draw labels
