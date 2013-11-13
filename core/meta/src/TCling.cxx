@@ -2302,7 +2302,6 @@ Bool_t TCling::CheckClassTemplate(const char *name)
 {
    // Return true if there is a class template by the given name ...
 
-
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    const clang::Decl *decl = lh.findClassTemplate(name);
    if (!decl) {
@@ -5020,6 +5019,44 @@ const char* TCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) con
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
    return TClinginfo->ValidArrayIndex();
+}
+
+static void ConstructorName(std::string &name, const clang::NamedDecl *decl,
+                            cling::Interpreter &interp,
+                            const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+{
+   const clang::TypeDecl* td = llvm::dyn_cast<clang::TypeDecl>(decl->getDeclContext());
+   if (!td) return;
+
+   clang::QualType qualType(td->getTypeForDecl(),0);
+   ROOT::TMetaUtils::GetNormalizedName(name, qualType, interp, normCtxt);
+   unsigned int level = 0;
+   for(size_t cursor = name.length()-1; cursor != 0; --cursor) {
+      if (name[cursor] == '>') ++level;
+      else if (name[cursor] == '<' && level) --level;
+      else if (level == 0 && name[cursor] == ':') {
+         name.erase(0,cursor+1);
+         break;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TCling::GetFunctionName(const clang::FunctionDecl *decl, std::string &output) const
+{
+   output.clear();
+   if (llvm::isa<clang::CXXConstructorDecl>(decl))
+   {
+      ConstructorName(output, decl, *fInterpreter, *fNormalizedCtxt);
+
+   } else if (llvm::isa<clang::CXXDestructorDecl>(decl))
+   {
+      ConstructorName(output, decl, *fInterpreter, *fNormalizedCtxt);
+      output.insert(output.begin(), '~');
+   } else {
+      llvm::raw_string_ostream stream(output);
+      decl->getNameForDiagnostic(stream, decl->getASTContext().getPrintingPolicy(), /*Qualified=*/false);
+   }
 }
 
 

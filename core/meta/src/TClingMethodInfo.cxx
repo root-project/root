@@ -32,6 +32,7 @@
 #include "TClingTypeInfo.h"
 #include "TError.h"
 #include "TMetaUtils.h"
+#include "TCling.h"
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/AST.h"
@@ -518,46 +519,13 @@ const char *TClingMethodInfo::GetPrototype(const ROOT::TMetaUtils::TNormalizedCt
    return buf.c_str();
 }
 
-static void ConstructorName(std::string &name, const clang::FunctionDecl *decl,
-                            cling::Interpreter &interp,
-                            const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
-{
-   const clang::TypeDecl* td = llvm::dyn_cast<clang::TypeDecl>(decl->getDeclContext());
-   if (!td) return;
-
-   clang::QualType qualType(td->getTypeForDecl(),0);
-   ROOT::TMetaUtils::GetNormalizedName(name, qualType, interp, normCtxt);
-   unsigned int level = 0;
-   for(size_t cursor = name.length()-1; cursor != 0; --cursor) {
-      if (name[cursor] == '>') ++level;
-      else if (name[cursor] == '<' && level) --level;
-      else if (level == 0 && name[cursor] == ':') {
-         name.erase(0,cursor+1);
-         break;
-      }
-   }
-}
-
 const char *TClingMethodInfo::Name(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
       return 0;
    }
    static std::string buf;
-   buf.clear();
-   const clang::FunctionDecl *decl = GetMethodDecl();
-   if (llvm::isa<clang::CXXConstructorDecl>(decl))
-   {
-      ConstructorName(buf, decl, *fInterp, normCtxt);
-      
-   } else if (llvm::isa<clang::CXXDestructorDecl>(decl))
-   {
-      ConstructorName(buf, decl, *fInterp, normCtxt);
-      buf.insert(buf.begin(), '~');
-   } else {
-      llvm::raw_string_ostream stream(buf);
-      decl->getNameForDiagnostic(stream, decl->getASTContext().getPrintingPolicy(), /*Qualified=*/false);
-   }
+   ((TCling*)gCling)->GetFunctionName(GetMethodDecl(),buf);
    return buf.c_str();
 }
 

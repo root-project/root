@@ -252,6 +252,7 @@ public: // Public Interface
 
    // core/meta helper functions.
    virtual TMethodCall::EReturnType MethodCallReturnType(TFunction *func) const;
+   virtual void GetFunctionName(const clang::FunctionDecl *decl, std::string &name) const;
 
    // CallFunc interface
    virtual DeclId_t GetDeclId(CallFunc_t *info) const;
