@@ -66,7 +66,7 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
                        RooAbsReal& x, RooDataSet& data,
                        Mirror mirror, Double_t rho) :
   RooAbsPdf(name,title),
-  _x("x","Dependent",this,x),
+  _x("x","observable",this,x),
   _nEvents(0),
   _dataPts(0),
   _dataWgts(0),
@@ -79,7 +79,36 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 {
   // cache stuff about x
   snprintf(_varName, 128,"%s", x.GetName());
-  RooRealVar real= (RooRealVar&)(_x.arg());
+  RooAbsRealLValue& real= (RooRealVar&)(_x.arg());
+  _lo = real.getMin();
+  _hi = real.getMax();
+  _binWidth = (_hi-_lo)/(_nPoints-1);
+
+  // form the lookup table
+  LoadDataSet(data);
+}
+
+
+
+//_____________________________________________________________________________
+RooKeysPdf::RooKeysPdf(const char *name, const char *title,
+                       RooAbsReal& xpdf, RooRealVar& xdata, RooDataSet& data,
+                       Mirror mirror, Double_t rho) :
+  RooAbsPdf(name,title),
+  _x("x","Observable",this,xpdf),
+  _nEvents(0),
+  _dataPts(0),
+  _dataWgts(0),
+  _weights(0),
+  _mirrorLeft(mirror==MirrorLeft || mirror==MirrorBoth || mirror==MirrorLeftAsymRight),
+  _mirrorRight(mirror==MirrorRight || mirror==MirrorBoth || mirror==MirrorAsymLeftRight),
+  _asymLeft(mirror==MirrorAsymLeft || mirror==MirrorAsymLeftRight || mirror==MirrorAsymBoth),
+  _asymRight(mirror==MirrorAsymRight || mirror==MirrorLeftAsymRight || mirror==MirrorAsymBoth),
+  _rho(rho)
+{
+  // cache stuff about x
+  snprintf(_varName, 128,"%s", xdata.GetName());
+  RooAbsRealLValue& real= (RooRealVar&)(xdata);
   _lo = real.getMin();
   _hi = real.getMax();
   _binWidth = (_hi-_lo)/(_nPoints-1);
@@ -152,7 +181,7 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
   Int_t i, idata=0;
   for (i=0; i<data.numEntries(); i++) {
     const RooArgSet *values= data.get(i);
-    RooRealVar real= (RooRealVar&)(values->operator[](_varName));
+    RooRealVar& real= (RooRealVar&)(values->operator[](_varName));
 
     _dataPts[idata]= real.getVal();
     _dataWgts[idata] = data.weight() ;
@@ -199,22 +228,24 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
 Double_t RooKeysPdf::evaluate() const {
   Int_t i = (Int_t)floor((Double_t(_x)-_lo)/_binWidth);
   if (i<0) {
-    cerr << "got point below lower bound:"
-	 << Double_t(_x) << " < " << _lo
-	 << " -- performing linear extrapolation..." << endl;
+//     cerr << "got point below lower bound:"
+// 	 << Double_t(_x) << " < " << _lo
+// 	 << " -- performing linear extrapolation..." << endl;
     i=0;
   }
   if (i>_nPoints-1) {
-    cerr << "got point above upper bound:"
-	 << Double_t(_x) << " > " << _hi
-	 << " -- performing linear extrapolation..." << endl;
+//     cerr << "got point above upper bound:"
+// 	 << Double_t(_x) << " > " << _hi
+// 	 << " -- performing linear extrapolation..." << endl;
     i=_nPoints-1;
   }
   Double_t dx = (Double_t(_x)-(_lo+i*_binWidth))/_binWidth;
   
   // for now do simple linear interpolation.
   // one day replace by splines...
-  return (_lookupTable[i]+dx*(_lookupTable[i+1]-_lookupTable[i]));
+  Double_t ret = (_lookupTable[i]+dx*(_lookupTable[i+1]-_lookupTable[i]));
+  if (ret<0) ret=0 ;
+  return ret ;
 }
 
 Int_t RooKeysPdf::getAnalyticalIntegral(
