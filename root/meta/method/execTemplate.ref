@@ -36,3 +36,18 @@ OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
  OBJ: TMethod	setA<int>	 : 0
  OBJ: TMethod	getB<int, float>	 : 0
 
+Looking for function template in UserClass.
+As expected, can not find setB without an instantiation.
+Found setB function template while searching for setB.
+Looking for function template in UserSpace.
+As expected, can not find setB without an instantiation.
+Found setB function template while searching for setB.
+Looking fo function template in global scope.
+As expected, can not find globalSet without an instantiation.
+Found globalSet function template while searching for globalSet.
+Found Mean function template while searching for TMath::Mean.
+As expected did not find a function template for  TMath::Maen.
+As expected, can not find TMath::Mean without an instantiation.
+As expected, can not find TMath::Maen which does not exist.
+As expected, can not find TMath::Mean without an instantiation.
+As expected, can not find TMath::Maen which does not exist.

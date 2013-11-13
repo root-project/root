@@ -18,6 +18,90 @@ namespace UserSpace
    template <typename T, typename Q> void setB(T) {  }
 }
 
+template <typename T> void globalSet(T&) {}
+
+void CheckTemplate(TClass *cl)
+{
+   fprintf(stdout,"Looking for function template in %s.\n",cl->GetName());
+
+   TObject *obj;
+
+   obj = cl->GetListOfMethods(false)->FindObject("setB");
+   if (obj) {
+      fprintf(stdout,"Error: Found %s even-though it should not be instantiated.\n",obj->GetName());
+   } else {
+      fprintf(stdout,"As expected, can not find setB without an instantiation.\n");
+   }
+
+   obj = cl->GetFunctionTemplate("setB");
+   if (obj) {
+      fprintf(stdout,"Found %s function template while searching for setB.\n", obj->GetName());
+   } else {
+      fprintf(stdout,"Error: did not find a function template for setB.\n");
+   }
+
+}
+
+void CheckGlobalTemplate()
+{
+   fprintf(stdout,"Looking fo function template in %s.\n","global scope");
+
+   TObject *obj;
+
+   obj = gROOT->GetListOfGlobalFunctions(false)->FindObject("globalSet");
+   if (obj) {
+      fprintf(stdout,"Error: Found %s even-though it should not be instantiated.\n",obj->GetName());
+   } else {
+      fprintf(stdout,"As expected, can not find globalSet without an instantiation.\n");
+   }
+
+   obj = gROOT->GetFunctionTemplate("globalSet");
+   if (obj) {
+      fprintf(stdout,"Found %s function template while searching for globalSet.\n", obj->GetName());
+   } else {
+      fprintf(stdout,"Error: did not find a function template for globalSet.\n");
+   }
+
+   TClass *cl = TClass::GetClass("TMath");
+   obj = cl->GetFunctionTemplate("Mean");
+   if (obj) {
+      fprintf(stdout,"Found %s function template while searching for TMath::Mean.\n", obj->GetName());
+   } else {
+      fprintf(stdout,"Error: did not find a function template for  TMath::Mean.\n");
+   }
+   obj = cl->GetFunctionTemplate("Maen");
+   if (obj) {
+      fprintf(stdout,"Error: found %s function template while searching for TMath::Maen.\n", obj->GetName());
+   } else {
+      fprintf(stdout,"As expected did not find a function template for  TMath::Maen.\n");
+   }
+   obj = cl->GetListOfMethods(true)->FindObject("Mean");
+   if (obj) {
+      fprintf(stdout,"Error: Found %s even-though it should not be instantiated.\n",obj->GetName());
+   } else {
+      fprintf(stdout,"As expected, can not find TMath::Mean without an instantiation.\n");
+   }
+   obj = cl->GetListOfMethods(true)->FindObject("Maen");
+   if (obj) {
+      fprintf(stdout,"Error: Found %s even-though it should not exist.\n",obj->GetName());
+   } else {
+      fprintf(stdout,"As expected, can not find TMath::Maen which does not exist.\n");
+   }
+   obj = cl->GetMethodAny("Mean");
+   if (obj) {
+      fprintf(stdout,"Error: Found %s even-though it should not be instantiated.\n",obj->GetName());
+   } else {
+      fprintf(stdout,"As expected, can not find TMath::Mean without an instantiation.\n");
+   }
+   obj = cl->GetMethodAny("Maen");
+   if (obj) {
+      fprintf(stdout,"Error: Found %s even-though it should not exist.\n",obj->GetName());
+   } else {
+      fprintf(stdout,"As expected, can not find TMath::Maen which does not exist.\n");
+   }
+
+}
+
 
 void Check(TClass *cl)
 {
@@ -106,4 +190,9 @@ void execTemplate()
 {
    Check(TClass::GetClass("UserClass"));
    Check(TClass::GetClass("UserSpace"));
+   CheckTemplate(TClass::GetClass("UserClass"));
+   CheckTemplate(TClass::GetClass("UserSpace"));
+
+   //CheckGlobal();
+   CheckGlobalTemplate();
 }
