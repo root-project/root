@@ -2903,6 +2903,22 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
           I!=E ? ++I : 0, ++Idecl, ++Param) {
 
          if (I != E) {
+               
+            if (I->getKind() == clang::TemplateArgument::Template) {
+               clang::TemplateName templateName = I->getAsTemplate();
+               clang::TemplateDecl* templateDecl = templateName.getAsTemplateDecl();
+               clang::DeclContext* declCtxt = templateDecl->getDeclContext();
+               
+               if (templateDecl && declCtxt && !templateName.getAsQualifiedTemplateName()){
+                  clang::NamespaceDecl* ns = clang::dyn_cast<clang::NamespaceDecl>(declCtxt);
+                  clang::NestedNameSpecifier* nns = ::CreateNestedNameSpecifier(Ctx, ns);
+                  clang::TemplateName templateNameWithNSS ( Ctx.getQualifiedTemplateName(nns, false, templateDecl) );
+                  desArgs.push_back(clang::TemplateArgument(templateNameWithNSS));
+                  mightHaveChanged = true;
+                  continue;
+               }
+            }
+            
             if (I->getKind() != clang::TemplateArgument::Type) {
                desArgs.push_back(*I);
                continue;
