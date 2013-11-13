@@ -5104,14 +5104,14 @@ void   TCling::FuncTempInfo_Delete(FuncTempInfo_t * /* ft_info */) const
 }
 
 //______________________________________________________________________________
-FuncTempInfo_t  *TCling::FuncTempInfo_Factory(DeclId_t declid) const
+FuncTempInfo_t *TCling::FuncTempInfo_Factory(DeclId_t declid) const
 {
    // Construct a FuncTempInfo_t
 
    // Currently the address of ft_info is actually the decl itself,
    // so we have nothing to do.
 
-   return (FuncTempInfo_t*)declid;
+   return (FuncTempInfo_t*)const_cast<void*>(declid);
 }
 
 //______________________________________________________________________________
@@ -5143,7 +5143,7 @@ UInt_t TCling::FuncTempInfo_TemplateNargs(FuncTempInfo_t *ft_info) const
    // function template described by ft_info.
 
    if (!ft_info) return 0;
-   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+   const clang::FunctionTemplateDecl *ft = (const clang::FunctionTemplateDecl*)ft_info;
    return ft->getTemplateParameters()->size();
 }
 
