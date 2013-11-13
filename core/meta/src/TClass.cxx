@@ -3246,8 +3246,7 @@ void TClass::ResetCaches()
    // To clean out all caches.
 
    // Not owning lists, don't call Delete()
-   delete fAllPubData;     fAllPubData  =0;
-   delete fAllPubMethod;   fAllPubMethod=0;
+   delete fAllPubData; fAllPubData = 0;
 
    if (fBase)
       fBase->Delete();
