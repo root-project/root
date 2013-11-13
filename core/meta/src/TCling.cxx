@@ -2594,6 +2594,24 @@ Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 
       std::vector<std::string>(), std::vector<std::string>());
 }
 
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char *name)
+{
+   // Return pointer to cling DeclId for a data member with a given name.
+
+   R__LOCKGUARD2(gInterpreterMutex);
+   DeclId_t d;
+   TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
+   TClingCallFunc func(fInterpreter);
+   if (cl) {
+      d = cl->GetDataMember(name);
+   }
+   else {
+      TClingClassInfo gcl(fInterpreter);
+      d = gcl.GetDataMember(name);
+   }
+   return d;
+}
 
 //______________________________________________________________________________
 TString TCling::GetMangledName(TClass* cl, const char* method,
@@ -4338,6 +4356,16 @@ TInterpreter::DeclId_t TCling::GetDeclId(ClassInfo_t* cinfo) const
    // opaque typedef.
 
    if (cinfo) return ((TClingClassInfo*)cinfo)->GetDeclId();
+   return 0;
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDeclId(DataMemberInfo_t* data) const
+{
+   // Return a unique identifier of the declaration represented by the
+   // MethodInfo
+
+   if (data) return ((TClingDataMemberInfo*)data)->GetDeclId();
    return 0;
 }
 

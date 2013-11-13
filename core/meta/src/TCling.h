@@ -192,6 +192,7 @@ public: // Public Interface
    void    UpdateListOfDataMembers(TClass* cl) const;
    void    UpdateListOfEnums(TClass* cl) const;
 
+   virtual DeclId_t GetDataMember(ClassInfo_t *cl, const char *name);
    TString GetMangledName(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
    TString GetMangledNameWithPrototype(TClass* cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void*   GetInterfaceMethod(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
@@ -338,6 +339,7 @@ public: // Public Interface
    virtual const char* BaseClassInfo_TmpltName(BaseClassInfo_t* bcinfo) const;
 
    // DataMemberInfo interface
+   virtual DeclId_t GetDeclId(DataMemberInfo_t *info) const;
    virtual int    DataMemberInfo_ArrayDim(DataMemberInfo_t* dminfo) const;
    virtual void   DataMemberInfo_Delete(DataMemberInfo_t* dminfo) const;
    virtual DataMemberInfo_t*  DataMemberInfo_Factory(ClassInfo_t* clinfo = 0) const;

@@ -204,10 +204,12 @@ public:
    typedef TDictionary::DeclId_t DeclId_t;
    virtual DeclId_t GetDeclId(CallFunc_t *info) const = 0;   
    virtual DeclId_t GetDeclId(ClassInfo_t *info) const = 0;
+   virtual DeclId_t GetDeclId(DataMemberInfo_t *info) const = 0;
    virtual DeclId_t GetDeclId(FuncTempInfo_t *info) const = 0;
    virtual DeclId_t GetDeclId(MethodInfo_t *info) const = 0;
    virtual DeclId_t GetDeclId(TypedefInfo_t *info) const = 0;
 
+   virtual DeclId_t GetDataMember(ClassInfo_t *cl, const char *name) = 0;
    virtual DeclId_t GetFunction(ClassInfo_t *cl, const char *funcname) = 0;
    virtual DeclId_t GetFunctionWithPrototype(ClassInfo_t *cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) = 0;
    virtual DeclId_t GetFunctionWithValues(ClassInfo_t *cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE) = 0;
