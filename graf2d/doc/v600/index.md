@@ -84,6 +84,8 @@ file `simple.pdf`.
     transported from a time zone to an other in a ROOT file are correct
     too. A new example test have been introduced to test the time axis
     (timeonaxis3.C)
+-   In some case the format use to build the axis labels was incorrect.
+    (cf: Jira report ROOT-5635).
 
 ### TLegend
 
