@@ -342,9 +342,9 @@ PyObject* PyROOT::TRootObjectRefExecutor::Execute( CallFunc_t* func, void* self,
       if ( ! assign ) {
          PyErr_Clear();
          PyObject* descr = PyObject_Str( result );
-         if ( descr && PyString_CheckExact( descr ) ) {
+         if ( descr && PyBytes_CheckExact( descr ) ) {
             PyErr_Format( PyExc_TypeError, "can not assign to return object (%s)",
-                          PyString_AS_STRING( descr ) );
+                          PyBytes_AS_STRING( descr ) );
          } else {
             PyErr_SetString( PyExc_TypeError, "can not assign to result" );
          }
