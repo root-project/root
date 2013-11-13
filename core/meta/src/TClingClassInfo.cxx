@@ -261,6 +261,15 @@ const FunctionTemplateDecl *TClingClassInfo::GetFunctionTemplate(const char *fna
    return fd;
 }
 
+const clang::ValueDecl *TClingClassInfo::GetDataMember(const char *name) const
+{
+   // Return the value decl (if any) corresponding to a data member which
+   // the given name declared in this scope.
+
+  const cling::LookupHelper &lh = fInterp->getLookupHelper();
+  const ValueDecl *vd = lh.findDataMember(fDecl, name);
+  return vd;
+}
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname) const
 {

@@ -39,6 +39,7 @@ namespace cling {
 namespace clang {
    class CXXMethodDecl;
    class FunctionTemplateDecl;
+   class ValueDecl;
 }
 
 namespace ROOT {
@@ -84,8 +85,10 @@ public:
    void                 Delete(void *arena) const;
    void                 DeleteArray(void *arena, bool dtorOnly) const;
    void                 Destruct(void *arena) const;
-   const clang::Decl   *GetDecl() const { return fDecl; } // Underlying representation without Double32_t
-   TDictionary::DeclId_t GetDeclId() const { return (const clang::Decl*)(fDecl->getCanonicalDecl()); }
+   OffsetPtrFunc_t      FindBaseOffsetFunction(const clang::Decl* decl) const;
+   const clang::ValueDecl *GetDataMember(const char *name) const;
+   const clang::Decl      *GetDecl() const { return fDecl; } // Underlying representation without Double32_t
+   TDictionary::DeclId_t   GetDeclId() const { return (const clang::Decl*)(fDecl->getCanonicalDecl()); }
    const clang::FunctionTemplateDecl *GetFunctionTemplate(const char *fname) const;
    TClingMethodInfo     GetMethod(const char *fname) const;
    TClingMethodInfo     GetMethod(const char *fname, const char *proto,
