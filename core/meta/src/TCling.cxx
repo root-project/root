@@ -2753,6 +2753,26 @@ TInterpreter::DeclId_t TCling::GetFunctionWithPrototype(ClassInfo_t *opaque_cl, 
 }
 
 //______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetFunctionTemplate(ClassInfo_t *opaque_cl, const char* name)
+{
+   // Return pointer to cling interface function for a method of a class with
+   // a certain name.
+
+   R__LOCKGUARD2(gInterpreterMutex);
+   DeclId_t f;
+   TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
+   if (cl) {
+      f = cl->GetFunctionTemplate(name);
+   }
+   else {
+      TClingClassInfo gcl(fInterpreter);
+      f = gcl.GetFunctionTemplate(name);
+   }
+   return f;
+
+}
+
+//______________________________________________________________________________
 void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_t full)
 {
    // The 'name' is known to the interpreter, this function returns
@@ -5021,6 +5041,12 @@ const char* TCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) con
    return TClinginfo->ValidArrayIndex();
 }
 
+//______________________________________________________________________________
+//
+// Function Template interface
+//
+
+//______________________________________________________________________________
 static void ConstructorName(std::string &name, const clang::NamedDecl *decl,
                             cling::Interpreter &interp,
                             const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
@@ -5059,6 +5085,176 @@ void TCling::GetFunctionName(const clang::FunctionDecl *decl, std::string &outpu
    }
 }
 
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDeclId(FuncTempInfo_t *info) const
+{
+   // Return a unique identifier of the declaration represented by the
+   // FuncTempInfo
+
+   return (DeclId_t)info;
+}
+
+//______________________________________________________________________________
+void   TCling::FuncTempInfo_Delete(FuncTempInfo_t * /* ft_info */) const
+{
+   // Delete the FuncTempInfo_t
+
+   // Currently the address of ft_info is actually the decl itself,
+   // so we have nothing to do.
+}
+
+//______________________________________________________________________________
+FuncTempInfo_t  *TCling::FuncTempInfo_Factory(DeclId_t declid) const
+{
+   // Construct a FuncTempInfo_t
+
+   // Currently the address of ft_info is actually the decl itself,
+   // so we have nothing to do.
+
+   return (FuncTempInfo_t*)declid;
+}
+
+//______________________________________________________________________________
+FuncTempInfo_t *TCling::FuncTempInfo_FactoryCopy(FuncTempInfo_t *ft_info) const
+{
+   // Construct a FuncTempInfo_t
+
+   // Currently the address of ft_info is actually the decl itself,
+   // so we have nothing to do.
+
+   return (FuncTempInfo_t*)ft_info;
+}
+
+//______________________________________________________________________________
+Bool_t TCling::FuncTempInfo_IsValid(FuncTempInfo_t *t_info) const
+{
+   // Check validity of a FuncTempInfo_t
+
+   // Currently the address of ft_info is actually the decl itself,
+   // so we have nothing to do.
+
+   return t_info != 0;
+}
+
+//______________________________________________________________________________
+UInt_t TCling::FuncTempInfo_TemplateNargs(FuncTempInfo_t *ft_info) const
+{
+   // Return the maximum number of template arguments of the
+   // function template described by ft_info.
+
+   if (!ft_info) return 0;
+   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+   return ft->getTemplateParameters()->size();
+}
+
+//______________________________________________________________________________
+UInt_t TCling::FuncTempInfo_TemplateMinReqArgs(FuncTempInfo_t *ft_info) const
+{
+   // Return the number of required template arguments of the
+   // function template described by ft_info.
+
+   if (!ft_info) return 0;
+   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+   return ft->getTemplateParameters()->getMinRequiredArguments();
+}
+
+//______________________________________________________________________________
+Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
+{
+   // Return the property of the function template.
+
+   if (!ft_info) return 0;
+
+   long property = 0L;
+   property |= kIsCompiled;
+
+   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+
+   switch (ft->getAccess()) {
+      case clang::AS_public:
+         property |= kIsPublic;
+         break;
+      case clang::AS_protected:
+         property |= kIsProtected;
+         break;
+      case clang::AS_private:
+         property |= kIsPrivate;
+         break;
+      case clang::AS_none:
+         if (ft->getDeclContext()->isNamespace())
+            property |= kIsPublic;
+         break;
+      default:
+         // IMPOSSIBLE
+         break;
+   }
+
+   const clang::FunctionDecl *fd = ft->getTemplatedDecl();
+   if (const clang::CXXMethodDecl *md =
+       llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
+      if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
+         property |= kIsConstant | kIsConstMethod;
+      }
+      if (md->isVirtual()) {
+         property |= kIsVirtual;
+      }
+      if (md->isPure()) {
+         property |= kIsPureVirtual;
+      }
+      if (const clang::CXXConstructorDecl *cd =
+          llvm::dyn_cast<clang::CXXConstructorDecl>(md)) {
+         if (cd->isExplicit()) {
+            property |= kIsExplicit;
+         }
+      }
+      else if (const clang::CXXConversionDecl *cd =
+               llvm::dyn_cast<clang::CXXConversionDecl>(md)) {
+         if (cd->isExplicit()) {
+            property |= kIsExplicit;
+         }
+      }
+   }
+   return property;
+}
+
+//______________________________________________________________________________
+void TCling::FuncTempInfo_Name(FuncTempInfo_t *ft_info, TString &output) const
+{
+   // Return the name of this function template.
+
+   output.Clear();
+   if (!ft_info) return;
+   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+   std::string buf;
+   GetFunctionName(ft->getTemplatedDecl(), buf);
+   output = buf;
+}
+
+//______________________________________________________________________________
+void TCling::FuncTempInfo_Title(FuncTempInfo_t *ft_info, TString &output) const
+{
+   // Return the comments associates with this function template.
+
+   output.Clear();
+   if (!ft_info) return;
+   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+
+   // Iterate over the redeclarations, we can have muliple definitions in the
+   // redecl chain (came from merging of pcms).
+   if (const RedeclarableTemplateDecl *AnnotFD
+       = ROOT::TMetaUtils::GetAnnotatedRedeclarable((RedeclarableTemplateDecl*)ft)) {
+      if (AnnotateAttr *A = AnnotFD->getAttr<AnnotateAttr>()) {
+         output = A->getAnnotation().str();
+         return;
+      }
+   }
+   if (!ft->isFromASTFile()) {
+      // Try to get the comment from the header file if present
+      // but not for decls from AST file, where rootcling would have
+      // created an annotation
+      output = ROOT::TMetaUtils::GetComment(*ft).str();
+   }
+}
 
 
 //______________________________________________________________________________
