@@ -74,7 +74,7 @@ public:
    long          Offset(void * address = 0) const;
    long          Property() const;
    long          Tagnum() const;
-   const char   *FullName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
+   void          FullName(std::string &output, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char   *Name() const;
    const char   *TmpltName() const;
 

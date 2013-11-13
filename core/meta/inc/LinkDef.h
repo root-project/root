@@ -30,6 +30,7 @@
 #pragma link C++ class TEnumConstant+;
 #pragma link C++ class TEnum+;
 #pragma link C++ class TFunction;
+#pragma link C++ class TFunctionTemplate+;
 #pragma link C++ class ROOT::TSchemaMatch+;
 #pragma link C++ class ROOT::TSchemaRule+;
 #pragma link C++ class ROOT::TSchemaRule::TSources+;

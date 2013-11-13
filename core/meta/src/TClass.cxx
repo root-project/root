@@ -40,6 +40,7 @@
 #include "TDataType.h"
 #include "TError.h"
 #include "TExMap.h"
+#include "TFunctionTemplate.h"
 #include "THashList.h"
 #include "TInterpreter.h"
 #include "TMemberInspector.h"
@@ -774,8 +775,8 @@ ClassImp(TClass)
 TClass::TClass() :
    TDictionary(),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fEnums(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
-   fClassMenuList(0),
+   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fAllPubMethod(0), fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
@@ -800,8 +801,8 @@ TClass::TClass() :
 TClass::TClass(const char *name, Bool_t silent) :
    TDictionary(name),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fEnums(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
-   fClassMenuList(0),
+   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fAllPubMethod(0), fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
@@ -849,8 +850,8 @@ TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
    TDictionary(name),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fEnums(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
-   fClassMenuList(0),
+   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fAllPubMethod(0), fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
@@ -878,7 +879,8 @@ TClass::TClass(const char *name, Version_t cversion,
                Bool_t silent) :
    TDictionary(name),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
-   fBase(0), fData(0), fEnums(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
+   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fAllPubMethod(0),
    fClassMenuList(0),
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
@@ -1133,6 +1135,7 @@ TClass::TClass(const TClass& cl) :
   fBase(cl.fBase),
   fData(cl.fData),
   fEnums(cl.fEnums),
+  fFuncTemplate(cl.fFuncTemplate),
   fMethod(cl.fMethod),
   fAllPubData(cl.fAllPubData),
   fAllPubMethod(cl.fAllPubMethod),
@@ -1238,6 +1241,10 @@ TClass::~TClass()
    if (fEnums)
       fEnums->Delete();
    delete fEnums; fEnums = 0;
+
+   if (fFuncTemplate)
+      fFuncTemplate->Delete();
+   delete fFuncTemplate; fFuncTemplate = 0;
 
    if (fMethod)
       fMethod->Delete();
@@ -2531,13 +2538,14 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       if (splitname.IsSTLCont()) {
 
          TClassRef clref = cl;
-         const char * itypename = gCling->GetInterpreterTypeName(name);
+         std::string itypename;
+         gCling->GetInterpreterTypeName(name,itypename);
          // Protect again possible library loading
          if (clref->IsLoaded()) {
             return clref;
          }
-         if (itypename) {
-            std::string altname( TClassEdit::ShortType(itypename, TClassEdit::kDropStlDefault) );
+         if (itypename.length()) {
+            std::string altname( TClassEdit::ShortType(itypename.c_str(), TClassEdit::kDropStlDefault) );
             if (altname != name) {
 
                // Remove the existing (soon to be invalid) TClass object to
@@ -2626,15 +2634,10 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       return 0; // reject long longs
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
-
-   // CheckClassInfo might modify the content of its parameter if it is
-   // a template and has extra or missing space (eg. one<two<tree>> becomes
-   // one<two<three> >
-   Int_t nch = strlen(name)*2;
-   char *modifiable_name = new char[nch];
-   strlcpy(modifiable_name,name,nch);
-   if (gInterpreter->CheckClassInfo(modifiable_name)) {
-      const char *altname = gInterpreter->GetInterpreterTypeName(modifiable_name,kTRUE);
+   if (gInterpreter->CheckClassInfo(name)) {
+      std::string alternative;
+      gInterpreter->GetInterpreterTypeName(name,alternative,kTRUE);
+      const char *altname = alternative.c_str();
       if ( strncmp(altname,"std::",5)==0 ) {
          // Don't add std::, we almost always remove it.
          altname += 5;
@@ -2642,17 +2645,14 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       if (strcmp(altname,name)!=0) {
          // altname now contains the full name of the class including a possible
          // namespace if there has been a using namespace statement.
-         delete [] modifiable_name;
          return GetClass(altname,load);
       }
       TClass *ncl = gInterpreter->GenerateTClass(name, /* emulation = */ kFALSE, silent);
       if (!ncl->IsZombie()) {
-         delete [] modifiable_name;
          return ncl;
       }
       delete ncl;
    }
-   delete [] modifiable_name;
    return 0;
 }
 
@@ -2948,6 +2948,26 @@ TRealData* TClass::GetRealData(const char* name) const
 
    // Not found;
    return 0;
+}
+
+//______________________________________________________________________________
+TFunctionTemplate *TClass::GetFunctionTemplate(const char *name)
+{
+   if (!gInterpreter || !fClassInfo) return 0;
+
+   // The following
+   if (!fFuncTemplate) fFuncTemplate = new TList();
+
+   TFunctionTemplate *result;
+   result = (TFunctionTemplate*)fFuncTemplate->FindObject(name);
+   if (!result) {
+      DeclId_t id = gInterpreter->GetFunctionTemplate(fClassInfo,name);
+      if (id) {
+         FuncTempInfo_t *info = gInterpreter->FuncTempInfo_Factory(id);
+         result = new TFunctionTemplate(info);
+      }
+   }
+   return result;
 }
 
 //______________________________________________________________________________

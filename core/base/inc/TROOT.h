@@ -54,6 +54,7 @@ class TClassGenerator;
 class TVirtualMutex;
 class TROOT;
 class TListOfFunctions;
+class TFunctionTemplate;
 
 
 
@@ -109,6 +110,7 @@ protected:
    TVirtualPad     *fSelectPad;           //Currently selected pad
    TCollection     *fClasses;             //List of classes definition
    TCollection     *fTypes;               //List of data types definition
+   TCollection     *fFuncTemplate;        //List of global function templates
    TCollection     *fGlobals;             //List of global variables
    TListOfFunctions*fGlobalFunctions;     //List of global functions
    TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl. 
@@ -222,6 +224,7 @@ public:
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
    TFile            *GetFile() const { if (gDirectory != this) return gDirectory->GetFile(); else return 0;}
    TFile            *GetFile(const char *name) const;
+   TFunctionTemplate*GetFunctionTemplate(const char *name);
    TStyle           *GetStyle(const char *name) const;
    TObject          *GetFunction(const char *name) const;
    TGlobal          *GetGlobal(const char *name, Bool_t load = kFALSE) const;

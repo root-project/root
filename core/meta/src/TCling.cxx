@@ -2302,7 +2302,6 @@ Bool_t TCling::CheckClassTemplate(const char *name)
 {
    // Return true if there is a class template by the given name ...
 
-
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    const clang::Decl *decl = lh.findClassTemplate(name);
    if (!decl) {
@@ -2514,32 +2513,33 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
    }
    // We are in the case where we have AST nodes for this class.
    TClass *cl = 0;
-   TString classname = info->FullName(*fNormalizedCtxt); // Could we use Name()?
-   if (TClassEdit::IsSTLCont(classname)) {
+   std::string classname;
+   info->FullName(classname,*fNormalizedCtxt); // Could we use Name()?
+   if (TClassEdit::IsSTLCont(classname.c_str())) {
 #if 0
-      Info("GenerateTClass","Will (try to) generate the compiled TClass for %s.",classname.Data());
+      Info("GenerateTClass","Will (try to) generate the compiled TClass for %s.",classname.c_str());
       // We need to build up the list of required headers, by
       // looking at each template arguments.
       TString includes;
       GenerateTClass_GatherInnerIncludes(fInterpreter,includes,info);
 
-      if (0 == GenerateDictionary(classname,includes)) {
+      if (0 == GenerateDictionary(classname.c_str(),includes)) {
          // 0 means success.
-         cl = gROOT->LoadClass(classname, silent);
+         cl = gROOT->LoadClass(classnam.c_str(), silent);
          if (cl == 0) {
-            Error("GenerateTClass","Even though the dictionary generation for %s seemed successfull we can't find the TClass bootstrap!",classname.Data());
+            Error("GenerateTClass","Even though the dictionary generation for %s seemed successfull we can't find the TClass bootstrap!",classname.c_str());
          }
       }
 #endif
       if (cl == 0) {
          int version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
-         cl = new TClass(classname, version, 0, 0, -1, -1, silent);
+         cl = new TClass(classname.c_str(), version, 0, 0, -1, -1, silent);
          cl->SetBit(TClass::kIsEmulation);
       }
    } else {
       // For regular class, just create a TClass on the fly ...
       // Not quite useful yet, but that what CINT used to do anyway.
-      cl = new TClass(classname, 1, 0, 0, -1, -1, silent);
+      cl = new TClass(classname.c_str(), 1, 0, 0, -1, -1, silent);
    }
    return cl;
 }
@@ -2753,7 +2753,27 @@ TInterpreter::DeclId_t TCling::GetFunctionWithPrototype(ClassInfo_t *opaque_cl, 
 }
 
 //______________________________________________________________________________
-const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
+TInterpreter::DeclId_t TCling::GetFunctionTemplate(ClassInfo_t *opaque_cl, const char* name)
+{
+   // Return pointer to cling interface function for a method of a class with
+   // a certain name.
+
+   R__LOCKGUARD2(gInterpreterMutex);
+   DeclId_t f;
+   TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
+   if (cl) {
+      f = cl->GetFunctionTemplate(name);
+   }
+   else {
+      TClingClassInfo gcl(fInterpreter);
+      f = gcl.GetFunctionTemplate(name);
+   }
+   return f;
+
+}
+
+//______________________________________________________________________________
+void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_t full)
 {
    // The 'name' is known to the interpreter, this function returns
    // the internal version of this name (usually just resolving typedefs)
@@ -2761,33 +2781,35 @@ const char* TCling::GetInterpreterTypeName(const char* name, Bool_t full)
    // by rootcling and by the run-time enviroment (TClass)
    // Return 0 if the name is not known.
 
+   output.clear();
+
    R__LOCKGUARD(gInterpreterMutex);
 
    // This first step is likely redundant if
    // the next step never issue any warnings.
    if (!CheckClassInfo(name)) {
-      return 0;
+      return ;
    }
    TClingClassInfo cl(fInterpreter, name);
    if (!cl.IsValid()) {
-      return 0;
+      return ;
    }
    if (full) {
-      return cl.FullName(*fNormalizedCtxt);
+      cl.FullName(output,*fNormalizedCtxt);
+      return;
    }
    // Well well well, for backward compatibility we need to act a bit too
    // much like CINT.
    TClassEdit::TSplitType splitname( cl.Name(), TClassEdit::kDropStd );
-   static std::string result;
-   splitname.ShortType(result, TClassEdit::kDropStd );
+   splitname.ShortType(output, TClassEdit::kDropStd );
 
    static const char* basic_string_s = "basic_string<char>";
    static const unsigned int basic_string_len = strlen(basic_string_s);
    int pos = 0;
-   while( (pos = result.find( basic_string_s,pos) ) >=0 ) {
-      result.replace(pos,basic_string_len, "string");
+   while( (pos = output.find( basic_string_s,pos) ) >=0 ) {
+      output.replace(pos,basic_string_len, "string");
    }
-   return result.c_str();
+   return;
 }
 
 //______________________________________________________________________________
@@ -3179,10 +3201,10 @@ const char* TCling::TypeName(const char* typeDesc)
       t = new char[dlen + 1];
       tlen = dlen;
    }
-   char* s, *template_start;
+   const char* s, *template_start;
    if (!strstr(typeDesc, "(*)(")) {
-      s = const_cast<char*>(strchr(typeDesc, ' '));
-      template_start = const_cast<char*>(strchr(typeDesc, '<'));
+      s = strchr(typeDesc, ' ');
+      template_start = strchr(typeDesc, '<');
       if (!strcmp(typeDesc, "long long")) {
          strlcpy(t, typeDesc, dlen + 1);
       }
@@ -4777,7 +4799,9 @@ const char* TCling::ClassInfo_FileName(ClassInfo_t* cinfo) const
 const char* TCling::ClassInfo_FullName(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   return TClinginfo->FullName(*fNormalizedCtxt);
+   static std::string output;
+   TClinginfo->FullName(output,*fNormalizedCtxt);
+   return output.c_str();
 }
 
 //______________________________________________________________________________
@@ -4882,7 +4906,9 @@ Long_t TCling::BaseClassInfo_Tagnum(BaseClassInfo_t* bcinfo) const
 const char* TCling::BaseClassInfo_FullName(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
-   return TClinginfo->FullName(*fNormalizedCtxt);
+   static std::string output;
+   TClinginfo->FullName(output,*fNormalizedCtxt);
+   return output.c_str();
 }
 
 //______________________________________________________________________________
@@ -5015,6 +5041,220 @@ const char* TCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) con
    return TClinginfo->ValidArrayIndex();
 }
 
+//______________________________________________________________________________
+//
+// Function Template interface
+//
+
+//______________________________________________________________________________
+static void ConstructorName(std::string &name, const clang::NamedDecl *decl,
+                            cling::Interpreter &interp,
+                            const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+{
+   const clang::TypeDecl* td = llvm::dyn_cast<clang::TypeDecl>(decl->getDeclContext());
+   if (!td) return;
+
+   clang::QualType qualType(td->getTypeForDecl(),0);
+   ROOT::TMetaUtils::GetNormalizedName(name, qualType, interp, normCtxt);
+   unsigned int level = 0;
+   for(size_t cursor = name.length()-1; cursor != 0; --cursor) {
+      if (name[cursor] == '>') ++level;
+      else if (name[cursor] == '<' && level) --level;
+      else if (level == 0 && name[cursor] == ':') {
+         name.erase(0,cursor+1);
+         break;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TCling::GetFunctionName(const clang::FunctionDecl *decl, std::string &output) const
+{
+   output.clear();
+   if (llvm::isa<clang::CXXConstructorDecl>(decl))
+   {
+      ConstructorName(output, decl, *fInterpreter, *fNormalizedCtxt);
+
+   } else if (llvm::isa<clang::CXXDestructorDecl>(decl))
+   {
+      ConstructorName(output, decl, *fInterpreter, *fNormalizedCtxt);
+      output.insert(output.begin(), '~');
+   } else {
+      llvm::raw_string_ostream stream(output);
+      decl->getNameForDiagnostic(stream, decl->getASTContext().getPrintingPolicy(), /*Qualified=*/false);
+   }
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDeclId(FuncTempInfo_t *info) const
+{
+   // Return a unique identifier of the declaration represented by the
+   // FuncTempInfo
+
+   return (DeclId_t)info;
+}
+
+//______________________________________________________________________________
+void   TCling::FuncTempInfo_Delete(FuncTempInfo_t * /* ft_info */) const
+{
+   // Delete the FuncTempInfo_t
+
+   // Currently the address of ft_info is actually the decl itself,
+   // so we have nothing to do.
+}
+
+//______________________________________________________________________________
+FuncTempInfo_t  *TCling::FuncTempInfo_Factory(DeclId_t declid) const
+{
+   // Construct a FuncTempInfo_t
+
+   // Currently the address of ft_info is actually the decl itself,
+   // so we have nothing to do.
+
+   return (FuncTempInfo_t*)declid;
+}
+
+//______________________________________________________________________________
+FuncTempInfo_t *TCling::FuncTempInfo_FactoryCopy(FuncTempInfo_t *ft_info) const
+{
+   // Construct a FuncTempInfo_t
+
+   // Currently the address of ft_info is actually the decl itself,
+   // so we have nothing to do.
+
+   return (FuncTempInfo_t*)ft_info;
+}
+
+//______________________________________________________________________________
+Bool_t TCling::FuncTempInfo_IsValid(FuncTempInfo_t *t_info) const
+{
+   // Check validity of a FuncTempInfo_t
+
+   // Currently the address of ft_info is actually the decl itself,
+   // so we have nothing to do.
+
+   return t_info != 0;
+}
+
+//______________________________________________________________________________
+UInt_t TCling::FuncTempInfo_TemplateNargs(FuncTempInfo_t *ft_info) const
+{
+   // Return the maximum number of template arguments of the
+   // function template described by ft_info.
+
+   if (!ft_info) return 0;
+   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+   return ft->getTemplateParameters()->size();
+}
+
+//______________________________________________________________________________
+UInt_t TCling::FuncTempInfo_TemplateMinReqArgs(FuncTempInfo_t *ft_info) const
+{
+   // Return the number of required template arguments of the
+   // function template described by ft_info.
+
+   if (!ft_info) return 0;
+   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+   return ft->getTemplateParameters()->getMinRequiredArguments();
+}
+
+//______________________________________________________________________________
+Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
+{
+   // Return the property of the function template.
+
+   if (!ft_info) return 0;
+
+   long property = 0L;
+   property |= kIsCompiled;
+
+   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+
+   switch (ft->getAccess()) {
+      case clang::AS_public:
+         property |= kIsPublic;
+         break;
+      case clang::AS_protected:
+         property |= kIsProtected;
+         break;
+      case clang::AS_private:
+         property |= kIsPrivate;
+         break;
+      case clang::AS_none:
+         if (ft->getDeclContext()->isNamespace())
+            property |= kIsPublic;
+         break;
+      default:
+         // IMPOSSIBLE
+         break;
+   }
+
+   const clang::FunctionDecl *fd = ft->getTemplatedDecl();
+   if (const clang::CXXMethodDecl *md =
+       llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
+      if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
+         property |= kIsConstant | kIsConstMethod;
+      }
+      if (md->isVirtual()) {
+         property |= kIsVirtual;
+      }
+      if (md->isPure()) {
+         property |= kIsPureVirtual;
+      }
+      if (const clang::CXXConstructorDecl *cd =
+          llvm::dyn_cast<clang::CXXConstructorDecl>(md)) {
+         if (cd->isExplicit()) {
+            property |= kIsExplicit;
+         }
+      }
+      else if (const clang::CXXConversionDecl *cd =
+               llvm::dyn_cast<clang::CXXConversionDecl>(md)) {
+         if (cd->isExplicit()) {
+            property |= kIsExplicit;
+         }
+      }
+   }
+   return property;
+}
+
+//______________________________________________________________________________
+void TCling::FuncTempInfo_Name(FuncTempInfo_t *ft_info, TString &output) const
+{
+   // Return the name of this function template.
+
+   output.Clear();
+   if (!ft_info) return;
+   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+   std::string buf;
+   GetFunctionName(ft->getTemplatedDecl(), buf);
+   output = buf;
+}
+
+//______________________________________________________________________________
+void TCling::FuncTempInfo_Title(FuncTempInfo_t *ft_info, TString &output) const
+{
+   // Return the comments associates with this function template.
+
+   output.Clear();
+   if (!ft_info) return;
+   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+
+   // Iterate over the redeclarations, we can have muliple definitions in the
+   // redecl chain (came from merging of pcms).
+   if (const RedeclarableTemplateDecl *AnnotFD
+       = ROOT::TMetaUtils::GetAnnotatedRedeclarable((RedeclarableTemplateDecl*)ft)) {
+      if (AnnotateAttr *A = AnnotFD->getAttr<AnnotateAttr>()) {
+         output = A->getAnnotation().str();
+         return;
+      }
+   }
+   if (!ft->isFromASTFile()) {
+      // Try to get the comment from the header file if present
+      // but not for decls from AST file, where rootcling would have
+      // created an annotation
+      output = ROOT::TMetaUtils::GetComment(*ft).str();
+   }
+}
 
 
 //______________________________________________________________________________

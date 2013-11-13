@@ -100,7 +100,7 @@ public:
    char    *GetPrompt();
    void    *GetInterfaceMethod(TClass *cl, const char *method, const char *params);
    void    *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto);
-   const char *GetInterpreterTypeName(const char*,Bool_t=kFALSE);
+   void     GetInterpreterTypeName(const char*,std::string &output,Bool_t=kFALSE);
    void     Execute(const char *function, const char *params, int *error = 0);
    void     Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0);
    void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);

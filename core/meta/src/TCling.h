@@ -199,7 +199,8 @@ public: // Public Interface
    DeclId_t GetFunction(ClassInfo_t *cl, const char *funcname);
    DeclId_t GetFunctionWithPrototype(ClassInfo_t *cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    DeclId_t GetFunctionWithValues(ClassInfo_t *cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
-   const char* GetInterpreterTypeName(const char* name, Bool_t full = kFALSE);
+   DeclId_t GetFunctionTemplate(ClassInfo_t *cl, const char *funcname);
+   void    GetInterpreterTypeName(const char* name, std::string &output, Bool_t full = kFALSE);
    void    Execute(const char* function, const char* params, int* error = 0);
    void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, int* error = 0);
    void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, Bool_t objectIsConst, int* error = 0);
@@ -252,6 +253,7 @@ public: // Public Interface
 
    // core/meta helper functions.
    virtual TMethodCall::EReturnType MethodCallReturnType(TFunction *func) const;
+   virtual void GetFunctionName(const clang::FunctionDecl *decl, std::string &name) const;
 
    // CallFunc interface
    virtual DeclId_t GetDeclId(CallFunc_t *info) const;
@@ -352,6 +354,18 @@ public: // Public Interface
    virtual const char* DataMemberInfo_Name(DataMemberInfo_t* dminfo) const;
    virtual const char* DataMemberInfo_Title(DataMemberInfo_t* dminfo) const;
    virtual const char* DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) const;
+
+   // Function Template interface
+   virtual DeclId_t GetDeclId(FuncTempInfo_t *info) const;
+   virtual void   FuncTempInfo_Delete(FuncTempInfo_t * /* ft_info */) const;
+   virtual FuncTempInfo_t  *FuncTempInfo_Factory(DeclId_t declid) const;
+   virtual FuncTempInfo_t  *FuncTempInfo_FactoryCopy(FuncTempInfo_t * /* ft_info */) const;
+   virtual Bool_t FuncTempInfo_IsValid(FuncTempInfo_t * /* ft_info */) const;
+   virtual UInt_t FuncTempInfo_TemplateNargs(FuncTempInfo_t * /* ft_info */) const;
+   virtual UInt_t FuncTempInfo_TemplateMinReqArgs(FuncTempInfo_t * /* ft_info */) const;
+   virtual Long_t FuncTempInfo_Property(FuncTempInfo_t * /* ft_info */) const;
+   virtual void FuncTempInfo_Name(FuncTempInfo_t * /* ft_info */, TString& name) const;
+   virtual void FuncTempInfo_Title(FuncTempInfo_t * /* ft_info */, TString& name) const;
 
    // MethodInfo interface
    virtual DeclId_t GetDeclId(MethodInfo_t *info) const;

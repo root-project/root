@@ -109,6 +109,7 @@
 #include "TInterpreter.h"
 #include "TListOfTypes.h"
 #include "TListOfFunctions.h"
+#include "TFunctionTemplate.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -1093,9 +1094,10 @@ static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent, con
    if (cl==0) {
       // Try the alternate name where all the typedefs are resolved:
 
-      const char *altname = gInterpreter->GetInterpreterTypeName(name);
-      if (altname && strcmp(altname,name)!=0 && strcmp(altname,outername)!=0) {
-         cl = TClass::GetClass(altname,load,silent);
+      std::string altname;
+      gInterpreter->GetInterpreterTypeName(name,altname);
+      if (altname.length() && altname != name && altname != outername) {
+         cl = TClass::GetClass(altname.c_str(),load,silent);
       }
    }
    if (cl==0) {
@@ -1214,6 +1216,25 @@ TObject *TROOT::GetFunction(const char *name) const
    gROOT->ProcessLine("TF1::InitStandardFunctions();");
 
    return fFunctions->FindObject(name);
+}
+
+//______________________________________________________________________________
+TFunctionTemplate *TROOT::GetFunctionTemplate(const char *name)
+{
+   if (!gInterpreter) return 0;
+
+   if (!fFuncTemplate) fFuncTemplate = new TList();
+
+   TFunctionTemplate *result;
+   result = (TFunctionTemplate*)fFuncTemplate->FindObject(name);
+   if (!result) {
+      TInterpreter::DeclId_t id = gInterpreter->GetFunctionTemplate(0,name);
+      if (id) {
+         FuncTempInfo_t *info = gInterpreter->FuncTempInfo_Factory(id);
+         result = new TFunctionTemplate(info);
+      }
+   }
+   return result;
 }
 
 //______________________________________________________________________________

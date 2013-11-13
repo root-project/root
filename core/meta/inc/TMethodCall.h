@@ -60,6 +60,7 @@ public:
    TMethodCall(TClass *cl, CallFunc_t *callfunc, Long_t offset = 0);
    TMethodCall(TClass *cl, const char *method, const char *params);
    TMethodCall(const char *function, const char *params);
+   TMethodCall(TFunction *func);
    TMethodCall(const TMethodCall &org);
    TMethodCall& operator=(const TMethodCall &rhs);
    ~TMethodCall();
