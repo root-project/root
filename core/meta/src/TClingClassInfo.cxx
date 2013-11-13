@@ -133,6 +133,14 @@ void TClingClassInfo::AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFu
    fOffsetFunctions[decl] = func;
 }
 
+void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, long offset)
+{
+   // Add the offset value from this class to the non-virtual base class
+   // determined by the parameter decl.
+
+   fOffsetValues[decl] = offset;
+}
+
 long TClingClassInfo::ClassProperty() const
 {
    if (!IsValid()) {
@@ -232,6 +240,14 @@ void TClingClassInfo::Destruct(void *arena) const
    }
    TClingCallFunc cf(fInterp);
    cf.ExecDestructor(this, arena, /*nary=*/0, /*withFree=*/false);
+}
+
+long TClingClassInfo::FindBaseOffsetValue(const clang::Decl* decl) const
+{
+   // Find a pointer function for computing the offset to the base class determined 
+   // by the parameter decl.
+
+   return fOffsetValues.lookup(decl);
 }
 
 OffsetPtrFunc_t TClingClassInfo::FindBaseOffsetFunction(const clang::Decl* decl) const

@@ -498,15 +498,13 @@ long TClingBaseClassInfo::Offset(void * address) const
          }
          clang_val = -1;
       }
+      const_cast<TClingClassInfo*>(fClassInfo)->AddBaseOffsetValue(fBaseInfo->GetDecl(), clang_val);
       return clang_val;
    }
    // Virtual inheritance case
-   OffsetPtrFunc_t executableFunc = fClassInfo->FindBaseOffsetFunction(fBaseInfo->GetDecl());
-   if (!executableFunc) {
-      // Error generated already by GenerateBaseOffsetFunction if executableFunc = 0.
+   OffsetPtrFunc_t executableFunc;
       executableFunc = GenerateBaseOffsetFunction(fClassInfo, fBaseInfo, address);
       const_cast<TClingClassInfo*>(fClassInfo)->AddBaseOffsetFunction(fBaseInfo->GetDecl(), executableFunc);
-   }
    if (address && executableFunc)
       return (*executableFunc)(address);
    return -1;   
