@@ -106,11 +106,13 @@ public:
       }
       return *this;
    }
-   
+
+   typedef TDictionary::DeclId_t DeclId_t;
    
    int                ArrayDim() const;
    TClingClassInfo   *GetClassInfo() const { return fClassInfo; }
    const clang::Decl *GetDecl() const { return fSingleDecl ? fSingleDecl : *fIter; }
+   DeclId_t           GetDeclId() const;
    bool               IsValid() const { return GetDecl(); }
    int                MaxIndex(int dim) const;
    int                InternalNext();

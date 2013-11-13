@@ -87,6 +87,14 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
           "The decl should be either VarDecl or FieldDecl or EnumConstDecl");
 }
 
+TDictionary::DeclId_t TClingDataMemberInfo::GetDeclId() const
+{
+   if (!IsValid()) {
+      return TDictionary::DeclId_t();
+   }
+   return (const clang::Decl*)(GetDecl()->getCanonicalDecl());
+}
+
 int TClingDataMemberInfo::ArrayDim() const
 {
    if (!IsValid()) {
