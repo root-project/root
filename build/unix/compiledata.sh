@@ -47,8 +47,8 @@ else
    EXPLLINKLIBS="\$DepLibs"
 fi
 
-if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosxxlc" ] || \
-   [ "$ARCH" = "macosx64" ] || [ "$ARCH" = "macosxicc" ]; then
+if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosx64" ] || \
+   [ "$ARCH" = "macosxicc" ]; then
    macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    SOEXT="so"
    if [ $macosx_minor -ge 5 ]; then
@@ -74,22 +74,33 @@ fi
 CXXFLAGS=`echo $CXXFLAGS | sed 's/-Iinclude //' `
 
 # Determine the compiler version
-COMPILERVERS="$CXX"
-if [ "$CXX" = "g++" ] || [ "$CXX" = "icc" ]; then
+BXX="`basename $CXX`"
+COMPILERVERS="$BXX"
+case $BXX in
+g++*)
    cxxTemp=`$CXX -dumpversion`
-   cxxMajor=`echo $cxxTemp 2>&1 | cut -d'.' -f1`
-   cxxMinor=`echo $cxxTemp 2>&1 | cut -d'.' -f2`
-   cxxPatch=`echo $cxxTemp 2>&1 | cut -d'.' -f3`
-   if [ "$CXX" = "g++" ] ; then
-      COMPILERVERS="gcc"
-   fi
-   if [ "$cxxMajor" != "x" ] ; then
-      COMPILERVERS="$COMPILERVERS$cxxMajor"
-      if [ "$cxxMinor" != "x" ] ; then
-         COMPILERVERS="$COMPILERVERS$cxxMinor"
-         if [ "$cxxPatch" != "x" ] ; then
-            COMPILERVERS="$COMPILERVERS$cxxPatch"
-         fi
+   COMPILERVERS="gcc"
+   ;;
+icc)
+   cxxTemp=`$CXX -dumpversion`
+   ;;
+clang++*)
+   cxxTemp=`$CXX --version | grep version | \
+           sed 's/.*\(version .*\)/\1/; s/.*based on \(LLVM .*\)svn)/\1/' | \
+           cut -d ' ' -f 2`
+   COMPILERVERS="clang"
+   ;;
+esac
+
+cxxMajor=`echo $cxxTemp 2>&1 | cut -d'.' -f1`
+cxxMinor=`echo $cxxTemp 2>&1 | cut -d'.' -f2`
+cxxPatch=`echo $cxxTemp 2>&1 | cut -d'.' -f3`
+if [ "$cxxMajor" != "x" ] ; then
+   COMPILERVERS="$COMPILERVERS$cxxMajor"
+   if [ "$cxxMinor" != "x" ] ; then
+      COMPILERVERS="$COMPILERVERS$cxxMinor"
+      if [ "$cxxPatch" != "x" ] ; then
+         COMPILERVERS="$COMPILERVERS$cxxPatch"
       fi
    fi
 fi
@@ -98,16 +109,17 @@ rm -f __compiledata
 
 echo "/* This is file is automatically generated */" > __compiledata
 echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
-echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
-echo "#define COMPILER \""`type -path $CXX`"\" " >> __compiledata
+echo "#define BUILD_NODE \""`uname -a`"\"" >> __compiledata
+echo "#define CXX \"$BXX\"" >> __compiledata
+echo "#define COMPILER \""`type -path $CXX`"\"" >> __compiledata
 echo "#define COMPILERVERS \"$COMPILERVERS\"" >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then
-   echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> __compiledata
+   echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $BXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $BXX \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> __compiledata
 else
    echo "#define MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi
 if [ "$CUSTOMEXE" = "" ]; then
-   echo "#define MAKEEXE \"cd \$BuildDir ; $CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles; $CXX \$ObjectFiles $LDFLAGS -o \$ExeName \$LinkedLibs $SYSLIBS\""  >> __compiledata
+   echo "#define MAKEEXE \"cd \$BuildDir ; $BXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles; $BXX \$ObjectFiles $LDFLAGS -o \$ExeName \$LinkedLibs $SYSLIBS\""  >> __compiledata
 else
    echo "#define MAKEEXE \"$CUSTOMEXE\"" >> __compiledata
 fi
@@ -116,8 +128,8 @@ echo "#define CXXDEBUG \"$CXXDEBUG\"" >> __compiledata
 echo "#define ROOTBUILD \"$ROOTBUILD\"" >> __compiledata
 echo "#define LINKEDLIBS \"-L$LIBDIR $ROOTLIBS $RINTLIBS \""  >> __compiledata
 echo "#define INCLUDEPATH \"-I$INCDIR\"" >> __compiledata
-echo "#define OBJEXT \"o\" " >> __compiledata
-echo "#define SOEXT \"$SOEXT\" " >> __compiledata
+echo "#define OBJEXT \"o\"" >> __compiledata
+echo "#define SOEXT \"$SOEXT\"" >> __compiledata
 
 (
 if [ -r $COMPILEDATA ]; then
