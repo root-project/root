@@ -291,8 +291,6 @@ set(shadowpw ${value${shadowpw}})
 set(buildgenvector ${value${genvector}})
 set(buildmathmore ${value${mathmore}})
 set(buildcling ${value${cling}})
-set(buildcintex ${value${cintex}})
-set(buildreflex ${value${reflex}})
 set(buildroofit ${value${roofit}})
 set(buildminuit2 ${value${minuit2}})
 set(buildunuran ${value${unuran}})
@@ -312,7 +310,6 @@ set(curseslib ${CURSES_LIBRARIES})
 set(curseshdr ${CURSES_HEADER_FILE})
 set(buildeditline ${value${editline}})
 set(cppunit)
-set(gccxml)
 set(dicttype ${ROOT_DICTTYPE})
 
 #---RConfigure-------------------------------------------------------------------------------------------------
@@ -352,17 +349,7 @@ set(altcxx ${CMAKE_CXX_COMPILER})
 set(altf77 ${CMAKE_Fortran_COMPILER})
 set(altld ${CMAKE_CXX_COMPILER})
 set(pythonvers ${PYTHON_VERSION})
-
-#---CINT Configuration---------------------------------------------------------------------------------------
-#configure_file(${PROJECT_SOURCE_DIR}/cmake/scripts/cint-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/cint-config @ONLY)
-
-#---Create the configcint.h header file and copy the file first to the cint/cint directory. Copy it to the 
-#   temporary include directory only if there is a change. Otherwise you have to recompile unneccessarily some files 
-#   depending on configcint.h all the time. 
-include(WriteConfigCint)
-WRITE_CONFIG_CINT( ${CMAKE_CURRENT_BINARY_DIR}/tmp/configcint.h)
-execute_process(COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/tmp/configcint.h ${HEADER_OUTPUT_PATH}/configcint.h)
-#install(FILES ${HEADER_OUTPUT_PATH}/configcint.h DESTINATION include)
+get_filename_component(cxx ${CMAKE_CXX_COMPILER} NAME)
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in include/RConfigure.h)
@@ -370,7 +357,6 @@ install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION include)
 
 #---Configure and install various files----------------------------------------------------------------------
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
-
 
 configure_file(${CMAKE_SOURCE_DIR}/config/rootrc.in ${CMAKE_BINARY_DIR}/etc/system.rootrc @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in include/RConfigOptions.h)

@@ -83,7 +83,6 @@ ROOT_BUILD_OPTION(cxx11 OFF "Build using C++11 compatible mode, requires gcc > 4
 ROOT_BUILD_OPTION(libcxx OFF "Build using libc++, requires cxx11 option (MacOS X only, for the time being)")
 ROOT_BUILD_OPTION(castor ON "CASTOR support, requires libshift from CASTOR >= 1.5.2")
 ROOT_BUILD_OPTION(chirp ON "Chirp support (Condor remote I/O), requires libchirp_client")
-ROOT_BUILD_OPTION(cintex ON "Build the libCintex Reflex interface library")
 ROOT_BUILD_OPTION(clarens ON "Clarens RPC support, optionally used by PROOF")
 ROOT_BUILD_OPTION(cling ON "Enable new CLING C++ interpreter")
 ROOT_BUILD_OPTION(cocoa ${cocoa_defvalue} "Use native Cocoa/Quartz graphics backend (MacOS X only)")

@@ -1,6 +1,7 @@
 /* This is file is automatically generated */
 #define BUILD_ARCH "@ROOT_ARCHITECTURE@"
 #define BUILD_NODE "@BuildNodeInfo@"
+#define CXX "@cxx@"
 #define COMPILER "@CMAKE_CXX_COMPILER@"
 #define COMPILERVERS "@COMPILER_VERSION@"
 #define  MAKESHAREDLIB "cl $Opt -nologo -TP -c @CMAKE_CXX_FLAGS@ $IncludePath $SourceFiles -Fo$ObjectFiles && bindexplib $LibName $ObjectFiles > $BuildDir\\$LibName.def && lib -nologo -MACHINE:IX86 -out:$BuildDir\\$LibName.lib $ObjectFiles -def:$BuildDir\\$LibName.def && link -nologo $ObjectFiles -DLL -out:$BuildDir\\$LibName.dll $BuildDir\\$LibName.exp -LIBPATH:%ROOTSYS%\\lib  $LinkedLibs libCore.lib libCint.lib kernel32.lib advapi32.lib user32.lib gdi32.lib comdlg32.lib winspool.lib && if EXIST \"$BuildDir\\$LibName.dll.manifest\" ( mt -nologo -manifest \"$BuildDir\\$LibName.dll.manifest\" \"-outputresource:$BuildDir\\$LibName.dll;2\" && del \"$BuildDir\\$LibName.dll.manifest\" )"

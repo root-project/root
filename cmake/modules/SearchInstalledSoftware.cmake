@@ -249,19 +249,6 @@ if(ruby)
   endif()
 endif()
 
-#---Check for GCCXML installation-------------------------------------------------------
-if(cintex OR reflex)
-  message(STATUS "Looking for GCCXML")
-  find_package(GCCXML)
-  if(GCCXML_FOUND)
-    set(gccxml ${GCCXML_EXECUTABLE})
-  else()
-    if(fail-on-missing)
-      message(FATAL_ERROR "GCCXML not found and cintex or reflex option required")
-    endif()    
-  endif()
-endif()
-
 #---Check for OpenGL installation-------------------------------------------------------
 if(opengl)
   message(STATUS "Looking for OpenGL")
