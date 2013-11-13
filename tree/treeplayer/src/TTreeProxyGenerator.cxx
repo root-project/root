@@ -406,6 +406,7 @@ namespace ROOT {
          const char *filename = cl->GetDeclFileName();
 
          if (!filename) return;
+         if (!strcmp(filename, "(C++ compiled)")) return;
 
 #ifdef R__WIN32
          TString inclPath("include;prec_stl"); // GetHtml()->GetIncludePath());
@@ -499,19 +500,19 @@ namespace ROOT {
    {
       // Generate an enum for a given type if it is not known in the list of class
       // unless the type itself a template.
-      
+
       if (!TClassEdit::IsStdClass(clname) && !TClass::GetClass(clname) && gROOT->GetType(clname) == 0) {
-         
+
          TObject *obj = fListOfForwards.FindObject(clname);
          if (obj) return;
-         
+
          // The class does not exist, let's create it if ew can.
          if (clname[strlen(clname)-1]=='>') {
             // Template instantiation.
             fListOfForwards.Add(new TNamed(clname,TString::Format("template <> class %s { public: operator int() { return 0; } };\n", clname).Data()));
          } else if (isscope) {
-            // a scope 
-            
+            // a scope
+
          } else {
             // Class or enum we know nothing about, let's assume it is an enum.
             fListOfForwards.Add(new TNamed(clname,TString::Format("enum %s { kDefault_%s };\n", clname, clname).Data()));
@@ -523,12 +524,12 @@ namespace ROOT {
    {
       // Check if the template parameter refers to an enum and/or a missing class (we can't tell those 2 apart unless
       // the name as template syntax).
-      
+
       UInt_t len = strlen(clname);
       UInt_t nest = 0;
       UInt_t last = 0;
       //Bool_t istemplate = kFALSE; // mark whether the current right most entity is a class template.
-      
+
       for (UInt_t i = 0; i < len; ++i) {
          switch (clname[i]) {
             case ':':
@@ -550,7 +551,7 @@ namespace ROOT {
                   TString incName(clname + last, i - last);
                   incName = TClassEdit::ShortType(incName.Data(), TClassEdit::kDropTrailStar | TClassEdit::kLong64);
                   if (clname[i] == '>' && nest == 1) incName.Append(">");
-                  
+
                   if (isdigit(incName[0])) {
                      // Not a class name, nothing to do.
                   } else {
@@ -562,7 +563,7 @@ namespace ROOT {
       }
       AddMissingClassAsEnum(TClassEdit::ShortType(clname, TClassEdit::kDropTrailStar | TClassEdit::kLong64).c_str(),kFALSE);
    }
-   
+
 static TString GetContainedClassName(TBranchElement *branch, TStreamerElement *element, Bool_t ispointer)
 {
    TString cname = branch->GetClonesName();
@@ -928,7 +929,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                         }
                         local_cldesc = new TBranchProxyClassDescriptor(cl->GetName(), binfo,
                                                                        branch->GetName(),
-                                                                       isclones, 0 /* unsplit object */, 
+                                                                       isclones, 0 /* unsplit object */,
                                                                        containerName);
 
                         TStreamerElement *elem = 0;
@@ -1340,7 +1341,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
             if (cl) {
                if (NeedToEmulate(cl,0) || branchname[strlen(branchname)-1] == '.' || branch->GetSplitLevel()) {
                   TBranchElement *be = dynamic_cast<TBranchElement*>(branch);
-                  TVirtualStreamerInfo *beinfo = (be && isclones == TBranchProxyClassDescriptor::kOut) 
+                  TVirtualStreamerInfo *beinfo = (be && isclones == TBranchProxyClassDescriptor::kOut)
                      ? be->GetInfo() : cl->GetStreamerInfo(); // the 2nd hand need to be fixed
                   desc = new TBranchProxyClassDescriptor(cl->GetName(), beinfo, branchname,
                      isclones, branch->GetSplitLevel(),containerName);
@@ -1474,7 +1475,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
          // In case the content is a class, move forward
          AddForward(cl);
          AddHeader(cl);
-        
+
          if (level<=fMaxUnrolling) {
 
             // See AnalyzeTree for similar code!
@@ -1484,14 +1485,14 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
                //                                          branch->GetName(),
                //                                          isclones, 0 /* non-split object */,
                //                                          containerName);
-               
+
                TVirtualStreamerInfo *info = cl->GetStreamerInfo();
                TStreamerElement *elem = 0;
-               
+
                TString subpath = path;
                if (subpath.Length()>0) subpath += ".";
                subpath += dataMemberName;
-               
+
                TIter next(info->GetElements());
                while( (elem = (TStreamerElement*)next()) ) {
                   AnalyzeElement(branch, elem, level+1, topdesc, subpath.Data());
@@ -1723,7 +1724,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       // true if it has been added _or_ if it is known to
       // not be needed.
       // (I.e. return kFALSE if a container of this class
-      // can not have a "pragma C++ class" 
+      // can not have a "pragma C++ class"
 
       if (!cl) return kFALSE;
       if (cl->GetCollectionProxy()) {
@@ -1735,7 +1736,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
             if (!cl->IsLoaded()) gen->AddPragma(Form("#pragma link C++ class %s;\n", cl->GetName()));
             return kTRUE;
          }
-      } 
+      }
       if (cl->IsLoaded()) return kTRUE;
       return kFALSE;
    }
@@ -1747,7 +1748,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       // true if it has been added _or_ if it is known to
       // not be needed.
       // (I.e. return kFALSE if a container of this class
-      // can not have a "pragma C++ class" 
+      // can not have a "pragma C++ class"
 
       return R__AddPragmaForClass( gen, TClass::GetClass(classname) );
 
@@ -1937,12 +1938,13 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
       TObject *header;
       while ( (header = next()) ) {
          fprintf(hf,"%s",header->GetTitle());
+
       }
       fprintf(hf,"\n\n");
 
       fprintf(hf,"class %s_Interface {\n", scriptfunc.Data());
       fprintf(hf,"   // This class defines the list of methods that are directly used by %s,\n",classname.Data());
-      fprintf(hf,"   // and that can be overloaded in the user's script\n"); 
+      fprintf(hf,"   // and that can be overloaded in the user's script\n");
       fprintf(hf,"public:\n");
       fprintf(hf,"   void %s_Begin(TTree*) {}\n",scriptfunc.Data());
       fprintf(hf,"   void %s_SlaveBegin(TTree*) {}\n",scriptfunc.Data());
