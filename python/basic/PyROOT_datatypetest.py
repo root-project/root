@@ -154,7 +154,33 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
          for i in range(N):
             self.assertEqual( getattr( c, 'f'+names[j]+'Array2' )[i], b[i] )
 
-   def test3RangeAccess( self ):
+   def test3WriteAccessThroughConstRef( self ):
+      """Const ref is by-ptr for Cling, verify independently"""
+
+      c = ClassWithData()
+      self.failUnless( isinstance( c, ClassWithData ) )
+
+    # boolean types
+      c.SetBoolCR( True );  self.assertEqual( c.fBool,      True )
+      c.SetBoolCR( kTRUE ); self.assertEqual( c.fBool,     kTRUE )
+      self.failUnlessRaises( TypeError, c.SetBoolCR, 10 )
+
+    # TODO: char types through const-ref are not implemented
+
+    # integer types
+      names = [ 'Short', 'UShort', 'Int', 'UInt', 'Long', 'ULong', 'Long64', 'ULong64' ]
+      for i in range(len(names)):
+         getattr( c, 'Set'+names[i]+'CR' )( 2*i )
+         self.assertEqual( getattr( c, 'f'+names[i] ), 2*i )
+
+    # float types
+      c.SetFloatCR( 0.234 );  self.assertEqual( round( c.fFloat      - 0.234, 5 ), 0 )
+      c.SetDoubleCR( 0.567 ); self.assertEqual( round( c.fDouble     - 0.567, 8 ), 0 )
+
+    # arrays; there will be pointer copies, so destroy the current ones
+      c.DestroyArrays()
+
+   def test4RangeAccess( self ):
       """Test the ranges of integer types"""
 
       def call( c, name, value ):
@@ -167,7 +193,7 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
       self.assertRaises( ValueError, call, c, 'fULong',   -1 )
       self.assertRaises( ValueError, call, c, 'fULong64', -1 )
 
-   def test4TypeConversions( self ):
+   def test5TypeConversions( self ):
       """Test conversions between builtin types"""
 
       c = ClassWithData()

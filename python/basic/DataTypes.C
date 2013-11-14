@@ -150,6 +150,22 @@ public:
    void SetFloat( Float_t f )      { fFloat  = f;   }
    void SetDouble( Double_t d )    { fDouble = d;   }
 
+// setters const-ref
+   void SetBoolCR( const Bool_t& b )        { fBool   = b;   }
+   void SetCharCR( const Char_t& c )        { fChar   = c;   }
+   void SetSCharCR( const SChar_t& sc )     { fSChar  = sc;  }
+   void SetUCharCR( const UChar_t& uc )     { fUChar  = uc;  }
+   void SetShortCR( const Short_t& s )      { fShort  = s;   }
+   void SetUShortCR( const UShort_t& us )   { fUShort = us;  }
+   void SetIntCR( const Int_t& i )          { fInt    = i;   }
+   void SetUIntCR( const UInt_t& ui )       { fUInt   = ui;  }
+   void SetLongCR( const Long_t& l )        { fLong   = l;   }
+   void SetULongCR( const ULong_t& ul )     { fULong  = ul;  }
+   void SetLong64CR( const Long64_t& l )    { fLong64 = l;   }
+   void SetULong64CR( const ULong64_t& ul ) { fULong64 = ul; }
+   void SetFloatCR( const Float_t& f )      { fFloat  = f;   }
+   void SetDoubleCR( const Double_t& d )    { fDouble = d;   }
+
 public:
 // basic types
    Bool_t    fBool;
