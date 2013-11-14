@@ -81,7 +81,7 @@ void TSelectorList::AddFirst(TObject *obj)
 
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
-      TList::AddFirst(obj);
+      THashList::AddFirst(obj);
 }
 
 //______________________________________________________________________________
@@ -91,7 +91,7 @@ void TSelectorList::AddFirst(TObject *obj, Option_t *opt)
 
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
-      TList::AddFirst(obj, opt);
+      THashList::AddFirst(obj, opt);
 }
 
 //______________________________________________________________________________
@@ -101,7 +101,7 @@ void TSelectorList::AddLast(TObject *obj)
 
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
-      TList::AddLast(obj);
+      THashList::AddLast(obj);
 }
 
 //______________________________________________________________________________
@@ -111,7 +111,7 @@ void TSelectorList::AddLast(TObject *obj, Option_t *opt)
 
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
-      TList::AddLast(obj, opt);
+      THashList::AddLast(obj, opt);
 }
 
 //______________________________________________________________________________
@@ -121,7 +121,7 @@ void TSelectorList::AddAt(TObject *obj, Int_t idx)
 
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
-      TList::AddAt(obj, idx);
+      THashList::AddAt(obj, idx);
 }
 
 //______________________________________________________________________________
@@ -131,7 +131,7 @@ void TSelectorList::AddAfter(const TObject *after, TObject *obj)
 
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
-      TList::AddAfter(after, obj);
+      THashList::AddAfter(after, obj);
 }
 
 //______________________________________________________________________________
@@ -141,7 +141,7 @@ void TSelectorList::AddAfter(TObjLink *after, TObject *obj)
 
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
-      TList::AddAfter(after, obj);
+      THashList::AddAfter(after, obj);
 }
 
 //______________________________________________________________________________
@@ -151,7 +151,7 @@ void TSelectorList::AddBefore(const TObject *before, TObject *obj)
 
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
-      TList::AddBefore(before, obj);
+      THashList::AddBefore(before, obj);
 }
 
 //______________________________________________________________________________
@@ -161,5 +161,5 @@ void TSelectorList::AddBefore(TObjLink *before, TObject *obj)
 
    UnsetDirectory(obj);
    if (CheckDuplicateName(obj))
-      TList::AddBefore(before, obj);
+      THashList::AddBefore(before, obj);
 }

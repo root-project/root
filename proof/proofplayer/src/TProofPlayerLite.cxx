@@ -25,7 +25,7 @@
 #include "TDSetProxy.h"
 #include "TEntryList.h"
 #include "TEventList.h"
-#include "TList.h"
+#include "THashList.h"
 #include "TMap.h"
 #include "TMessage.h"
 #include "TObjString.h"
@@ -120,7 +120,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
 
    //   delete fOutput;
    if (!fOutput)
-      fOutput = new TList;
+      fOutput = new THashList;
    else
       fOutput->Clear();
 

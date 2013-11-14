@@ -63,6 +63,7 @@ public:
    virtual ~ProcFileElements() { if (fElements) { fElements->SetOwner();
                                                   delete fElements; } }
    const char *   GetName() const { return fName; }
+   ULong_t        Hash() const { return fName.Hash(); }
 
    Int_t          Add(Long64_t fst = 0, Long64_t lst = -1);
    Int_t          Merge(TCollection *list);
