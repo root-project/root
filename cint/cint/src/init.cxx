@@ -2193,6 +2193,16 @@ void G__platformMacro()
 #ifdef __GLIBC_MINOR__  /* GNU C library minor version */
    G__DEFINE_MACRO(__GLIBC_MINOR__);
 #endif
+#ifdef __clang__   /* Clang C++ compiler, note it also defines still GNUC */
+   G__DEFINE_MACRO(__clang__);
+#endif
+#ifdef _LIBCPP_ABI_VERSION   /* libc++ C++ std lib */
+   if (G__globalcomp == G__NOLINK) {
+      G__snprintf(temp, sizeof(temp), "G__LIBCPP=%ld", (long)_LIBCPP_ABI_VERSION);
+      G__add_macro(temp);
+   }
+   G__DEFINE_MACRO(_LIBCPP_ABI_VERSION);
+#endif
 #ifdef __HP_aCC     /* HP aCC C++ compiler */
    if (G__globalcomp == G__NOLINK) {
       G__snprintf(temp, sizeof(temp), "G__HP_aCC=%ld", (long)__HP_aCC);
