@@ -62,8 +62,7 @@ private:
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.
    std::string           fTitle; // The meta info for the class.
    std::string           fDeclFileName; // Name of the file where the underlying entity is declared.
-   llvm::DenseMap<const clang::Decl*, long> fOffsetValues;
-   llvm::DenseMap<const clang::Decl*, OffsetPtrFunc_t> fOffsetFunctions; // Functions already generated for offsets.
+   llvm::DenseMap<const clang::Decl*, std::pair<long, OffsetPtrFunc_t> > fOffsetCache; // Functions already generated for offsets.
 
    explicit TClingClassInfo() /* = delete */; // NOT IMPLEMENTED
    TClingClassInfo &operator=(const TClingClassInfo &) /* = delete */; // NOT IMPLEMENTED
@@ -85,8 +84,8 @@ public:
    void                 Delete(void *arena) const;
    void                 DeleteArray(void *arena, bool dtorOnly) const;
    void                 Destruct(void *arena) const;
-   long                 FindBaseOffsetValue(const clang::Decl* decl) const;
-   OffsetPtrFunc_t      FindBaseOffsetFunction(const clang::Decl* decl) const;
+   bool                 HasBaseOffsetCached(const clang::Decl* decl) const;
+   std::pair<long, OffsetPtrFunc_t> FindBaseOffset(const clang::Decl* decl) const;
    const clang::Decl   *GetDecl() const { return fDecl; } // Underlying representation without Double32_t
    TDictionary::DeclId_t GetDeclId() const { return (const clang::Decl*)(fDecl->getCanonicalDecl()); }
    const clang::FunctionTemplateDecl *GetFunctionTemplate(const char *fname) const;

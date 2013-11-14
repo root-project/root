@@ -4884,17 +4884,19 @@ Long_t TCling::ClassInfo_GetBaseOffset(ClassInfo_t* derived, ClassInfo_t* target
    if (TClinginfo->GetDecl() == TClinginfoTarget->GetDecl()) {
       return 0;
    }
-
-   long offset = TClinginfo->FindBaseOffsetValue(TClinginfoTarget->GetDecl());
-   if (offset) {
-      return offset;
+   // Check for the offset in the cache.
+   if (TClinginfo->HasBaseOffsetCached(TClinginfoTarget->GetDecl())) {
+      std::pair<long, OffsetPtrFunc_t> offsetCache = TClinginfo->FindBaseOffset(TClinginfoTarget->GetDecl());
+      if (OffsetPtrFunc_t executableFunc = offsetCache.second) {
+         if (address && executableFunc) {
+            return (*executableFunc)(address);
+         }
+      }
+      else {
+         return offsetCache.first;
+      }
    }
-   else {
-      OffsetPtrFunc_t executableFunc = TClinginfo->FindBaseOffsetFunction(TClinginfoTarget->GetDecl());
-      if (address && executableFunc)
-         return (*executableFunc)(address);
-   }
-
+   // Compute the offset.
    TClingBaseClassInfo binfo(fInterpreter, TClinginfo, TClinginfoTarget);
    return binfo.Offset(address);
 }

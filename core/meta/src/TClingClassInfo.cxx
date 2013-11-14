@@ -49,6 +49,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
@@ -71,7 +72,7 @@ static std::string FullyQualifiedName(const Decl *decl) {
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), fOffsetFunctions(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), fOffsetCache(0)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
@@ -98,7 +99,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
-     fTitle(""), fOffsetFunctions(0)
+     fTitle(""), fOffsetCache(0)
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const Type *type = 0;
@@ -120,7 +121,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const Type &tag)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), 
-     fTitle(""), fOffsetFunctions(0)
+     fTitle(""), fOffsetCache(0)
 {
    Init(tag);
 }
@@ -129,16 +130,17 @@ void TClingClassInfo::AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFu
 {
    // Add a function pointer for the offset from this class to the base class
    // determined by the parameter decl.
-
-   fOffsetFunctions[decl] = func;
+   
+   fOffsetCache[decl] = std::make_pair(0, func);
 }
 
 void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, long offset)
 {
    // Add the offset value from this class to the non-virtual base class
    // determined by the parameter decl.
-
-   fOffsetValues[decl] = offset;
+   
+   OffsetPtrFunc_t executableFunc = 0;
+   fOffsetCache[decl] = std::make_pair(offset, executableFunc);
 }
 
 long TClingClassInfo::ClassProperty() const
@@ -242,20 +244,23 @@ void TClingClassInfo::Destruct(void *arena) const
    cf.ExecDestructor(this, arena, /*nary=*/0, /*withFree=*/false);
 }
 
-long TClingClassInfo::FindBaseOffsetValue(const clang::Decl* decl) const
+std::pair<long, OffsetPtrFunc_t> TClingClassInfo::FindBaseOffset(const clang::Decl* decl) const
 {
-   // Find a pointer function for computing the offset to the base class determined 
+   // Find the pair caching the offset to the base class determined 
    // by the parameter decl.
 
-   return fOffsetValues.lookup(decl);
+   llvm::DenseMapIterator<const clang::Decl *, std::pair<long, long (*)(void *)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter = fOffsetCache.find(decl);
+   return (*iter).second;
 }
 
-OffsetPtrFunc_t TClingClassInfo::FindBaseOffsetFunction(const clang::Decl* decl) const
+bool TClingClassInfo::HasBaseOffsetCached(const clang::Decl* decl) const
 {
-   // Find a pointer function for computing the offset to the base class determined 
-   // by the parameter decl.
    
-   return fOffsetFunctions.lookup(decl);
+   llvm::DenseMapIterator<const clang::Decl *, std::pair<long, long (*)(void *)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter = fOffsetCache.find(decl);
+   if (iter != fOffsetCache.end()) {
+      return true;
+   }
+   return false;
 }
 
 const FunctionTemplateDecl *TClingClassInfo::GetFunctionTemplate(const char *fname) const
