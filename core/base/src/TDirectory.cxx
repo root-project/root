@@ -541,7 +541,7 @@ void TDirectory::Delete(const char *namecycle)
    TDirectory::TContext ctxt(gDirectory, this);
    Short_t  cycle;
    char     name[kMaxLen];
-   DecodeNameCycle(namecycle, name, cycle);
+   DecodeNameCycle(namecycle, name, cycle, kMaxLen);
 
    Int_t deleteall    = 0;
    Int_t deletetree   = 0;
@@ -683,7 +683,7 @@ TObject *TDirectory::Get(const char *namecycle)
    Short_t  cycle;
    char     name[kMaxLen];
 
-   DecodeNameCycle(namecycle, name, cycle);
+   DecodeNameCycle(namecycle, name, cycle, kMaxLen);
    char *namobj = name;
    Int_t nch = strlen(name);
    for (Int_t i = nch-1; i > 0; i--) {
@@ -768,7 +768,7 @@ void *TDirectory::GetObjectChecked(const char *namecycle, const TClass* expected
    Short_t  cycle;
    char     name[kMaxLen];
 
-   DecodeNameCycle(namecycle, name, cycle);
+   DecodeNameCycle(namecycle, name, cycle, kMaxLen);
    char *namobj = name;
    Int_t nch = strlen(name);
    for (Int_t i = nch-1; i > 0; i--) {
@@ -1089,13 +1089,15 @@ void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
 }
 
 //______________________________________________________________________________
-void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle)
+void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
+   Ssiz_t maxlen)
 {
    // Decode a namecycle "aap;2" into name "aap" and cycle "2".
 
    cycle     = 9999;
-   Int_t nch = buffer ? strlen(buffer) : 0;
-   for (Int_t i = 0; i < nch; i++) {
+   Ssiz_t nch = buffer ? strlen(buffer) : 0;
+   if (maxlen && (nch > maxlen)) nch = maxlen;
+   for (Ssiz_t i = 0; i < nch; i++) {
       if (buffer[i] != ';')
          name[i] = buffer[i];
       else {
