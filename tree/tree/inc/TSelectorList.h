@@ -17,7 +17,7 @@
 //                                                                      //
 // TSelectorList                                                        //
 //                                                                      //
-// A TList derived class that makes sure that objects added to it       //
+// A THashList derived class that makes sure that objects added to it   //
 // are not linked to the currently open file (like histograms,          //
 // eventlists and trees). Also it makes sure the name of the added      //
 // object is unique. This class is used in the TSelector for the        //
@@ -25,19 +25,19 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TList
-#include "TList.h"
+#ifndef ROOT_THashList
+#include "THashList.h"
 #endif
 
 
-class TSelectorList : public TList {
+class TSelectorList : public THashList {
 
 private:
    Bool_t UnsetDirectory(TObject *obj);
    Bool_t CheckDuplicateName(TObject *obj);
 
 public:
-   TSelectorList() : TList() { SetOwner(); }
+   TSelectorList() : THashList() { SetOwner(); }
 
    void AddFirst(TObject *obj);
    void AddFirst(TObject *obj, Option_t *opt);

@@ -59,6 +59,7 @@
 #include "TStatus.h"
 #include "TEventList.h"
 #include "TProofLimitsFinder.h"
+#include "THashList.h"
 #include "TSortedList.h"
 #include "TTree.h"
 #include "TEntryList.h"
@@ -1041,7 +1042,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       version = fSelector->Version();
       if (version == 0 && IsClient()) fSelector->GetOutputList()->Clear();
  
-      fOutput = fSelector->GetOutputList();
+      fOutput = (THashList *) fSelector->GetOutputList();
 
       if (gProofServ)
          TPerfStats::Start(fInput, fOutput);
@@ -2164,7 +2165,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
    //   delete fOutput;
    if (!fOutput)
-      fOutput = new TList;
+      fOutput = new THashList;
    else
       fOutput->Clear();
 
@@ -2946,7 +2947,7 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
 
    // Reset the list
    if (!fOutput)
-      fOutput = new TList;
+      fOutput = new THashList;
    else
       fOutput->Clear();
 
@@ -3297,7 +3298,7 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
 
    // Create the output list, if not yet done
    if (!fOutput)
-      fOutput = new TList;
+      fOutput = new THashList;
 
    // Flag about merging
    Bool_t merged = kTRUE;
@@ -3459,7 +3460,7 @@ void TProofPlayerRemote::AddOutput(TList *out)
 
    // Create the output list, if not yet done
    if (!fOutput)
-      fOutput = new TList;
+      fOutput = new THashList;
 
    // Process event lists first
    Bool_t merged = kTRUE;
@@ -4327,7 +4328,7 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
    fb->SetOwner(kFALSE);
 
    if (fOutput == 0) {
-      fOutput = fSelector->GetOutputList();
+      fOutput = (THashList *) fSelector->GetOutputList();
    }
 
    if (fOutput) {
@@ -4428,7 +4429,7 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
    if (!proof) return -1;
 
    delete fOutput;
-   fOutput = new TList;
+   fOutput = new THashList;
 
    TPerfStats::Start(fInput, fOutput);
 

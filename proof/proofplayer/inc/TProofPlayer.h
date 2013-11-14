@@ -81,7 +81,7 @@ private:
 
 protected:
    TList        *fInput;           //-> list with input objects
-   TList        *fOutput;          //   list with output objects
+   THashList    *fOutput;          //   list with output objects
    TSelector    *fSelector;        //!  the latest selector
    Bool_t        fCreateSelObj;    //!  kTRUE when fSelector has been created locally
    TClass       *fSelectorClass;   //!  class of the latest selector
