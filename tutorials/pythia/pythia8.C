@@ -31,7 +31,9 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
    }
     
 // Load libraries
+#ifndef G__WIN32 // Pythia8 is a static library on Windows
    gSystem->Load("$PYTHIA8/lib/libpythia8");
+#endif
    gSystem->Load("libEG");
    gSystem->Load("libEGPythia8");
 // Histograms
