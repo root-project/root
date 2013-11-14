@@ -176,16 +176,57 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
 
       m = MyTemplatedMethodClass()
 
+    # template without arguments can not resolve; check that there is an exception
+    # and a descriptive error message
+      self.assertRaises( TypeError, m.GetSize )
+      try:
+         m.GetSize()
+      except TypeError, e:
+         self.assert_( "must be explicit" in str(e) )
+
       self.assertEqual( m.GetSize( 'char' )(),   m.GetCharSize() )
       self.assertEqual( m.GetSize( int )(),      m.GetIntSize() )
       self.assertEqual( m.GetSize( pylong )(),   m.GetLongSize() )
       self.assertEqual( m.GetSize( float )(),    m.GetFloatSize() )
       self.assertEqual( m.GetSize( 'double' )(), m.GetDoubleSize() )
 
-      if not FIXCLING:   # fails b/c Cling does not construct a generic template
-         self.assertEqual( m.GetSize( 'MyDoubleVector_t' )(), m.GetVectorOfDoubleSize() )
+      self.assertEqual( m.GetSize( 'MyDoubleVector_t' )(), m.GetVectorOfDoubleSize() )
+      self.assertEqual( m.GetSize( 'vector<double>' )(), m.GetVectorOfDoubleSize() )
 
-   def test5TemplateGlobalFunctions( self ):
+   def test5TemplateMemberFunctions( self ):
+      """Test template member functions lookup and calls (set 2)"""
+
+    # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
+
+      m = MyTemplatedMethodClass()
+
+    # note that the function and template arguments are reverted
+      self.assertRaises( TypeError, m.GetSize2( 'char', 'long' ), 'a', 1 )
+      self.assertEqual( m.GetSize2( 'char', 'long' )( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
+      self.assertEqual( m.GetSize2( 1L, 1. ), m.GetFloatSize() - m.GetLongSize() )
+
+   def test6OverloadedTemplateMemberFunctions( self ):
+      """Test overloaded template member functions lookup and calls"""
+
+    # gROOT.LoadMacro( "Template.C+" )  # already loaded ...
+
+      m = MyTemplatedMethodClass()
+
+    # use existing (note '-' to make sure the correct call was made
+      self.assertEqual( m.GetSizeOL( 1 ),             -m.GetLongSize() )
+      self.assertEqual( m.GetSizeOL( "aapje" ),       -len("aapje") )
+
+    # use existing explicit instantiations
+      self.assertEqual( m.GetSizeOL( float )( 3.14 ),  m.GetFloatSize() )
+      self.assertEqual( m.GetSizeOL( 3.14 ),           m.GetFloatSize() )
+
+    # explicit forced instantiation
+      self.assertEqual( m.GetSizeOL( int )( 1 ),       m.GetIntSize() )
+
+    # implicitly forced instantiation
+      self.assertEqual( m.GetSizeOL( MyDoubleVector_t() ), m.GetVectorOfDoubleSize() )
+
+   def test7TemplateGlobalFunctions( self ):
       """Test template global function lookup and calls"""
 
     # gROOT.LoadMacro( "Template.C+" )  # already loaded ...

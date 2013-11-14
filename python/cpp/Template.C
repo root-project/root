@@ -2,10 +2,12 @@
   File: roottest/python/cpp/Template.C
   Author: Wim Lavrijsen@lbl.gov
   Created: 01/07/08
-  Last: 11/07/08
+  Last: 11/13/13
 */
 
+#include <string>
 #include <vector>
+
 
 template< class T >
 class MyTemplatedClass {
@@ -28,6 +30,7 @@ template double MyTemplatedFunction< double >( double );
 
 class MyTemplatedMethodClass {
 public:
+// not overloaded
    template< class B > long GetSize();
 
    long GetCharSize()   { return sizeof(char); }
@@ -37,10 +40,31 @@ public:
    long GetDoubleSize() { return sizeof(double); }
 
    long GetVectorOfDoubleSize() { return sizeof( std::vector< double > ); }
+
+// cross-args
+   template< class A, class B > long GetSize2( const B&, const A& );
+
+// overloaded (note limitations as types must be distinguishable)
+   template< class B > long GetSizeOL( const B& );
+   long GetSizeOL( const long& ) { return -sizeof(long); }
+
+// the following actually means that it is not possible to specify template
+// arguments in python with a string, as it will match this overload ...
+   long GetSizeOL( const std::string& s ) { return -s.size(); }
 };
 
 template< class B >
 long MyTemplatedMethodClass::GetSize() {
+   return sizeof(B);
+}
+
+template< class A, class B >
+long MyTemplatedMethodClass::GetSize2( const B&, const A& ) {
+   return sizeof(A) - sizeof(B);
+}
+
+template< class B >
+long MyTemplatedMethodClass::GetSizeOL( const B& ) {
    return sizeof(B);
 }
 
@@ -49,6 +73,10 @@ template long MyTemplatedMethodClass::GetSize< int >();
 template long MyTemplatedMethodClass::GetSize< long >();
 template long MyTemplatedMethodClass::GetSize< float >();
 template long MyTemplatedMethodClass::GetSize< double >();
+
+template long MyTemplatedMethodClass::GetSize2< char, char >( const char&, const char& );
+
+template long MyTemplatedMethodClass::GetSizeOL< float >( const float& );
 
 typedef std::vector< double > MyDoubleVector_t;
 template long MyTemplatedMethodClass::GetSize< MyDoubleVector_t >();
