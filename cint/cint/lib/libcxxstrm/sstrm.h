@@ -45,12 +45,7 @@ class basic_stringbuf : public basic_streambuf<charT, traits>
 
   typedef basic_ios<charT, traits>                 ios_type;
 #ifdef __CINT__
-#if 0 && !(G__GNUC>=3)
   typedef string  string_type;
-#else
-  typedef string  __string_type;
-  //typedef basic_string<charT, traits, Allocator >  __string_type;
-#endif
 #else
   typedef basic_string<charT, traits, Allocator >  string_type;
 #endif
@@ -58,14 +53,14 @@ class basic_stringbuf : public basic_streambuf<charT, traits>
   explicit basic_stringbuf(ios_base::openmode which =
 			   ios_base::in | ios_base::out );
 
-  explicit basic_stringbuf(const __string_type& str,
+  explicit basic_stringbuf(const string_type& str,
 			   ios_base::openmode which =
 			   ios_base::in | ios_base::out );
 
   virtual ~basic_stringbuf();
 
-  __string_type str() const;
-  void str(const __string_type& str_arg);
+  string_type str() const;
+  void str(const string_type& str_arg);
 
  protected:
 
@@ -102,17 +97,13 @@ class basic_istringstream : public basic_istream<charT, traits>
   typedef basic_stringbuf<charT, traits, Allocator>       sb_type;
   typedef basic_ios<charT, traits>                        ios_type;
 #ifdef __CINT__
-#if 0 && !(G__GNUC>=3)
   typedef string         string_type;
-#else
-  typedef string         __string_type;
-#endif
 #else
   typedef basic_string<charT, traits, Allocator >         string_type;
 #endif
 
   explicit basic_istringstream(ios_base::openmode which = ios_base::in);
-  explicit basic_istringstream(const __string_type& str,
+  explicit basic_istringstream(const string_type& str,
 			       ios_base::openmode which = ios_base::in);
 #ifdef __CINT__
   explicit basic_istringstream(const char *str,
@@ -122,9 +113,9 @@ class basic_istringstream : public basic_istream<charT, traits>
   virtual ~basic_istringstream();
 
   basic_stringbuf<charT, traits, Allocator> *rdbuf() const;
-  __string_type str() const;
+  string_type str() const;
 
-  void str(const __string_type& str);
+  void str(const string_type& str);
 };
 
 
@@ -141,20 +132,20 @@ class basic_ostringstream : public basic_ostream<charT, traits>
   typedef basic_stringbuf<charT, traits, Allocator>         sb_type;
   typedef basic_ios<charT, traits>                          ios_type;
 #ifdef __CINT__
-  typedef string          __string_type;
+  typedef string          string_type;
 #else
   typedef basic_string<charT, traits, Allocator>            string_type;
 #endif
 
   explicit basic_ostringstream(ios_base::openmode which = ios_base::out);
-  explicit basic_ostringstream(const __string_type& str,
+  explicit basic_ostringstream(const string_type& str,
 			       ios_base::openmode which = ios_base::out);
 
   virtual ~basic_ostringstream();
   basic_stringbuf<charT, traits, Allocator> *rdbuf() const;
 
-  __string_type str() const;
-  void str(const __string_type& str);
+  string_type str() const;
+  void str(const string_type& str);
 };
 
 
@@ -171,7 +162,7 @@ class basic_stringstream : public basic_iostream<charT, traits>
   typedef basic_stringbuf<charT, traits, Allocator>         sb_type;
   typedef basic_ios<charT, traits>                          ios_type;
 #ifdef __CINT__
-  typedef string            __string_type;
+  typedef string            string_type;
 #else
   typedef basic_string<charT, traits, Allocator>            string_type;
 #endif
@@ -179,14 +170,14 @@ class basic_stringstream : public basic_iostream<charT, traits>
   explicit basic_stringstream(ios_base::openmode which = ios_base::out |
 			      ios_base::in);
 
-  explicit basic_stringstream(const __string_type& str,
+  explicit basic_stringstream(const string_type& str,
 			      ios_base::openmode which =
 			      ios_base::out | ios_base::in);
 
   virtual ~basic_stringstream();
   basic_stringbuf<charT, traits, Allocator> *rdbuf() const;
-  __string_type str() const;
-  void str(const __string_type& str);
+  string_type str() const;
+  void str(const string_type& str);
 };
 
 

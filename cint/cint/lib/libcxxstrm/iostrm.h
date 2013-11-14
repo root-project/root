@@ -443,46 +443,46 @@ class basic_istream : virtual public basic_ios<charT, traits> {
     //__istream_type& operator>>(ios_base& (*pf)(ios_base&));
     //__istream_type& operator>>(__ios_type& (*pf)(__ios_type&));
 #ifndef __CINT__
-    __istream_type& operator>>(bool& n);
-    __istream_type& operator>>(short& n);
-    __istream_type& operator>>(unsigned short& n);
-    __istream_type& operator>>(int& n);
-    __istream_type& operator>>(unsigned int& n);
-    __istream_type& operator>>(long& n);
-    __istream_type& operator>>(unsigned long& n);
-    __istream_type& operator>>(float& f);
-    __istream_type& operator>>(double& f);
-    __istream_type& operator>>(long double& f);
+    basic_istream<charT, traits>& operator>>(bool& n);
+    basic_istream<charT, traits>& operator>>(short& n);
+    basic_istream<charT, traits>& operator>>(unsigned short& n);
+    basic_istream<charT, traits>& operator>>(int& n);
+    basic_istream<charT, traits>& operator>>(unsigned int& n);
+    basic_istream<charT, traits>& operator>>(long& n);
+    basic_istream<charT, traits>& operator>>(unsigned long& n);
+    basic_istream<charT, traits>& operator>>(float& f);
+    basic_istream<charT, traits>& operator>>(double& f);
+    basic_istream<charT, traits>& operator>>(long double& f);
 #if !(G__GNUC>=3)
-    __istream_type& operator>>(__streambuf_type *sb);
+    basic_istream<charT, traits>& operator>>(basic_streambuf<charT, traits> *sb);
 #endif
-    __istream_type& operator>>(void*& p);
+    basic_istream<charT, traits>& operator>>(void*& p);
 #endif
 #if !(G__GNUC>=3)
-    __istream_type& operator>>(__streambuf_type& sb);
+    basic_istream<charT, traits>& operator>>(basic_streambuf<charT, traits>& sb);
 #endif
     int_type get();
-    __istream_type& get(char_type *s, streamsize n, char_type delim);
-    __istream_type& get(char_type *s, streamsize n);
-    __istream_type& get(char_type& c);
-    __istream_type& get(__streambuf_type& sb, char_type delim);
-    __istream_type& get(__streambuf_type& sb);
-    __istream_type& getline(char_type *s, streamsize n, char_type delim);
-    __istream_type& getline(char_type *s, streamsize n);
-    __istream_type& ignore(streamsize n , int_type delim );
-    __istream_type& ignore(streamsize n =1 );
+    basic_istream& get(char_type *s, streamsize n, char_type delim);
+    basic_istream& get(char_type *s, streamsize n);
+    basic_istream& get(char_type& c);
+    basic_istream& get(basic_streambuf<charT, traits>& sb, char_type delim);
+    basic_istream& get(basic_streambuf<charT, traits>& sb);
+    basic_istream& getline(char_type *s, streamsize n, char_type delim);
+    basic_istream& getline(char_type *s, streamsize n);
+    basic_istream& ignore(streamsize n , int_type delim );
+    basic_istream& ignore(streamsize n =1 );
     //__istream_type& ignore(streamsize n = 1, int_type delim = traits::eof());
-    __istream_type& read(char_type *s, streamsize n);
+    basic_istream& read(char_type *s, streamsize n);
     streamsize readsome(char_type *s, streamsize n);
     int peek();
     pos_type tellg();
-    __istream_type& seekg(pos_type pos);
+    basic_istream<charT, traits>& seekg(pos_type pos);
     int sync();
 //#ifndef __CINT__
-    __istream_type& seekg(off_type, ios_base::seekdir);
+    basic_istream& seekg(off_type, ios_base::seekdir);
 //#endif
-    __istream_type& putback(char_type c);
-    __istream_type& unget();
+    basic_istream& putback(char_type c);
+    basic_istream& unget();
     streamsize gcount() const;
   protected:
     basic_istream( );
@@ -521,25 +521,25 @@ class basic_ostream : virtual public basic_ios<charT, traits> {
     //__ostream_type& operator<<(ios_base& (*pf)(ios_base&));
     //__ostream_type& operator<<(__ios_type& (*pf)(__ios_type&));
 #ifndef __CINT__
-    __ostream_type& operator<<(short n);
-    __ostream_type& operator<<(unsigned short n);
-    __ostream_type& operator<<(int n);
-    __ostream_type& operator<<(unsigned int n);
-    __ostream_type& operator<<(long n);
-    __ostream_type& operator<<(unsigned long n);
-    __ostream_type& operator<<(float f);
-    __ostream_type& operator<<(double f);
-    __ostream_type& operator<<(long double f);
-    __ostream_type& operator<<(bool n);
-    __ostream_type& operator<<(basic_streambuf<char_type, traits> *sb);
-    __ostream_type& operator<<(void *p);
+    basic_ostream<charT, traits>& operator<<(short n);
+    basic_ostream<charT, traits>& operator<<(unsigned short n);
+    basic_ostream<charT, traits>& operator<<(int n);
+    basic_ostream<charT, traits>& operator<<(unsigned int n);
+    basic_ostream<charT, traits>& operator<<(long n);
+    basic_ostream<charT, traits>& operator<<(unsigned long n);
+    basic_ostream<charT, traits>& operator<<(float f);
+    basic_ostream<charT, traits>& operator<<(double f);
+    basic_ostream<charT, traits>& operator<<(long double f);
+    basic_ostream<charT, traits>& operator<<(bool n);
+    basic_ostream<charT, traits>& operator<<(basic_streambuf<char_type, traits> *sb);
+    basic_ostream<charT, traits>& operator<<(void *p);
 #endif
     //__ostream_type& operator<<(basic_streambuf<char_type, traits>& sb);
-    __ostream_type& put(char_type c);
-    __ostream_type& write(const char_type *s, streamsize n);
-    __ostream_type& flush();
-    __ostream_type& seekp(pos_type pos);
-    __ostream_type& seekp(off_type , ios_base::seekdir );
+    basic_ostream<charT, traits>& put(char_type c);
+    basic_ostream<charT, traits>& write(const char_type *s, streamsize n);
+    basic_ostream<charT, traits>& flush();
+    basic_ostream<charT, traits>& seekp(pos_type pos);
+    basic_ostream<charT, traits>& seekp(off_type , ios_base::seekdir );
     pos_type tellp();
   protected:
     basic_ostream();

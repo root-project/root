@@ -6,8 +6,8 @@ MV	   = mv
 
 CINTSYSDIR = ../..
 
-SRCCPPIFC  = $(CINTSYSDIR)/src/libcxxstrm.cxx
-SRCCPPIFH  = $(CINTSYSDIR)/src/libcxxstrm.h
+SRCCPPIFC  = $(CINTSYSDIR)/src/dict/libcxxstrm.cxx
+SRCCPPIFH  = $(CINTSYSDIR)/src/dict/libcxxstrm.h
 CPPIFC     = libcxxstrm.cxx
 CPPIFH     = libcxxstrm.h
 
