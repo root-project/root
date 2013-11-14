@@ -81,7 +81,11 @@ static inline Bool_t VerifyPyBool( PyObject* pyobject )
    return kTRUE;
 }
 
+#if PY_VERSION_HEX >= 0x02070000
 static inline Bool_t VerifyPyLong( PyObject* pyobject )
+#else
+static inline Bool_t VerifyPyLong( PyObject* )
+#endif
 {
 #if PY_VERSION_HEX >= 0x02070000
 // p2.7 silently converts floats to long ...
