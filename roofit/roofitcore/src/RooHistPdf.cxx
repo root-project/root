@@ -380,7 +380,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 
   Double_t ret = (code & 1) ?
       _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE) :
-      _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE, ranges);
+      _dataHist->sum(intSet,_histObsList,kFALSE,kTRUE, ranges);
 
 //    cout << "intSet = " << intSet << endl ;
 //    cout << "slice position = " << endl ;
