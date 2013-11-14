@@ -27,12 +27,11 @@ using namespace std;
 #error This header must be processed with a Cint compiled with gcc3.x
 #endif
 
-//#include <string>
+#include <string>
 //#include <memory>
 class allocator<char>;
 class allocator<wchar_t>;
 #include "iostrm.h"
-#include "strng"
 
 template<class charT, class traits, class Allocator>
 class basic_stringbuf : public basic_streambuf<charT, traits>
