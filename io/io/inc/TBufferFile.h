@@ -1,4 +1,4 @@
-// @(#)root/io:$Id$
+// @(#)root/io:$Id: 697641b2b52ed3d97bb5bde0fb5d2ff4a2f6c24f $
 // Author: Rene Brun   17/01/2007
 
 /*************************************************************************
@@ -111,6 +111,7 @@ public:
 
    virtual void       SkipVersion(const TClass *cl = 0);
    virtual Version_t  ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0);
+   virtual Version_t  ReadVersionNoCheckSum(UInt_t *start = 0, UInt_t *bcnt = 0);
    virtual Version_t  ReadVersionForMemberWise(const TClass *cl = 0);
    virtual UInt_t     WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
    virtual UInt_t     WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt = kFALSE);
