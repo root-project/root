@@ -393,12 +393,16 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::Utility::BuildTemplateName( PyObject*& pyname, PyObject* args, int argoff )
+PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, int argoff )
 {
 // Helper to construct the "< type, type, ... >" part of a templated name (either
 // for a class as in MakeRootTemplateClass in RootModule.cxx) or for method lookup
 // (as in TemplatedMemberHook, below).
 
+   if ( pyname )
+      pyname = PyROOT_PyUnicode_FromString( PyROOT_PyUnicode_AsString( pyname ) );
+   else
+      pyname = PyROOT_PyUnicode_FromString( "" );
    PyROOT_PyUnicode_AppendAndDel( &pyname, PyROOT_PyUnicode_FromString( "<" ) );
 
    Py_ssize_t nArgs = PyTuple_GET_SIZE( args );
@@ -422,7 +426,8 @@ Bool_t PyROOT::Utility::BuildTemplateName( PyObject*& pyname, PyObject* args, in
       // last ditch attempt, works for things like int values
          PyObject* pystr = PyObject_Str( tn );
          if ( ! pystr ) {
-            return kFALSE;
+            Py_DECREF( pyname );
+            return 0;
          }
 
          PyROOT_PyUnicode_AppendAndDel( &pyname, pystr );
@@ -439,7 +444,7 @@ Bool_t PyROOT::Utility::BuildTemplateName( PyObject*& pyname, PyObject* args, in
    else
       PyROOT_PyUnicode_AppendAndDel( &pyname, PyROOT_PyUnicode_FromString( ">" ) );
 
-   return kTRUE;
+   return pyname;
 }
 
 //____________________________________________________________________________

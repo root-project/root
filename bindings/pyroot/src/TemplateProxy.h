@@ -12,6 +12,9 @@
 
 namespace PyROOT {
 
+   class PyCallable;
+   class MethodProxy;
+
 /** Template proxy object to return functions and methods
       @author  WLAV
       @date    01/15/2008
@@ -20,19 +23,18 @@ namespace PyROOT {
 
    class TemplateProxy {
    public:
-      void Set( const std::string& name, PyObject* pyclass )
-      {
-      // Initialize the proxy for the given 'pyclass.'
-         fPyName  = PyROOT_PyUnicode_FromString( const_cast< char* >( name.c_str() ) );
-         Py_XINCREF( pyclass );
-         fPyClass = pyclass;
-      }
+      void Set( const std::string& name, PyObject* pyclass );
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
       PyObject* fPyName;
       PyObject* fPyClass;
       PyObject* fSelf;
+      MethodProxy* fNonTemplated;  // holder for non-template overloads
+      MethodProxy* fTemplated;     // holder for templated overloads
+
+   public:
+      void AddMethod( PyCallable* pc );
 
    private:              // private, as the python C-API will handle creation
       TemplateProxy() {}

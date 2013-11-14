@@ -3,10 +3,40 @@
 // Bindings
 #include "PyROOT.h"
 #include "TemplateProxy.h"
+#include "Adapters.h"
+#include "MethodProxy.h"
+#include "TMethodHolder.h"
+#include "PyCallable.h"
+#include "PyStrings.h"
 #include "Utility.h"
+
+// ROOT
+#include "TMethod.h"
 
 
 namespace PyROOT {
+
+//____________________________________________________________________________
+void TemplateProxy::Set( const std::string& name, PyObject* pyclass )
+{   
+// Initialize the proxy for the given 'pyclass.'
+   fPyName       = PyROOT_PyUnicode_FromString( const_cast< char* >( name.c_str() ) );
+   Py_XINCREF( pyclass );
+   fPyClass      = pyclass;
+   fSelf         = NULL;
+   std::vector< PyCallable* > dummy;
+   fNonTemplated = MethodProxy_New( name, dummy );
+   fTemplated    = MethodProxy_New( name, dummy );
+}
+
+//____________________________________________________________________________
+void TemplateProxy::AddMethod( PyCallable* pc )
+{
+// Store callables that are overloads of this templated method on name, but are
+// not templated themselves.
+   fNonTemplated->AddMethod( pc );
+}
+
 
 namespace {
 
@@ -15,9 +45,11 @@ namespace {
    {
    // Create a new empty template method proxy.
       TemplateProxy* pytmpl = PyObject_GC_New( TemplateProxy, &TemplateProxy_Type );
-      pytmpl->fPyName  = NULL;
-      pytmpl->fPyClass = NULL;
-      pytmpl->fSelf    = NULL;
+      pytmpl->fPyName       = NULL;
+      pytmpl->fPyClass      = NULL;
+      pytmpl->fSelf         = NULL;
+      pytmpl->fNonTemplated = NULL;
+      pytmpl->fTemplated    = NULL;
 
       PyObject_GC_Track( pytmpl );
       return pytmpl;
@@ -36,21 +68,28 @@ namespace {
    {
    // Garbage collector traverse of held python member objects.
       if ( pytmpl->fPyName ) {
-         int err = visit( (PyObject*)pytmpl->fPyName, args );
-         if ( err )
-            return err;
+         int err = visit( pytmpl->fPyName, args );
+         if ( err ) return err;
       }
 
       if ( pytmpl->fPyClass ) {
-         int err = visit( (PyObject*)pytmpl->fPyClass, args );
-         if ( err )
-            return err;
+         int err = visit( pytmpl->fPyClass, args );
+         if ( err ) return err;
       }
 
       if ( pytmpl->fSelf ) {
-         int err = visit( (PyObject*)pytmpl->fSelf, args );
-         if ( err )
-            return err;
+         int err = visit( pytmpl->fSelf, args );
+         if ( err ) return err;
+      }
+
+      if ( pytmpl->fNonTemplated ) {
+         int err = visit( (PyObject*)pytmpl->fNonTemplated, args );
+         if ( err ) return err;
+      }
+
+      if ( pytmpl->fTemplated ) {
+         int err = visit( (PyObject*)pytmpl->fTemplated, args );
+         if ( err ) return err;
       }
 
       return 0;
@@ -60,14 +99,20 @@ namespace {
    int tpp_clear( TemplateProxy* pytmpl )
    {
    // Garbage collector clear of held python member objects.
-      Py_XDECREF( (PyObject*)pytmpl->fPyName );
+      Py_XDECREF( pytmpl->fPyName );
       pytmpl->fPyName = NULL;
 
-      Py_XDECREF( (PyObject*)pytmpl->fPyClass );
+      Py_XDECREF( pytmpl->fPyClass );
       pytmpl->fPyClass = NULL;
 
-      Py_XDECREF( (PyObject*)pytmpl->fSelf );
+      Py_XDECREF( pytmpl->fSelf );
       pytmpl->fSelf = NULL;
+
+      Py_XDECREF( (PyObject*)pytmpl->fNonTemplated );
+      pytmpl->fNonTemplated = NULL;
+
+      Py_XDECREF( (PyObject*)pytmpl->fTemplated );
+      pytmpl->fTemplated = NULL;
 
       return 0;
    }
@@ -75,36 +120,164 @@ namespace {
 //= PyROOT template proxy callable behavior ==================================
    PyObject* tpp_call( TemplateProxy* pytmpl, PyObject* args, PyObject* kwds )
    {
-   // dispatcher to the actual member method, args is self object + template arguments
-   // (as in a function call); build full instantiation
-      PyObject* pymeth = 0;
+   // Dispatcher to the actual member method, several uses possible; in order:
+   //
+   // case 1:
+   //
+   //    obj.method( a0, a1, ... )              # non-template
+   //       => obj->method( a0, a1, ... )      // non-template
+   //
+   // case 2:
+   //
+   //    obj.method( t0, t1, ... )( a0, a1, ... )
+   //       -> getattr( obj, 'method< t0, t1, ... >' )( a0, a1, ... )
+   //       => obj->method< t0, t1, ... >( a0, a1, ... )
+   //
+   // case 3:
+   //
+   //    obj.method( a0, a1, ... )              # all known templates
+   //       => obj->method( a0, a1, ... )      // all known templates
+   //
+   // case 4:
+   //
+   //    collect types of arguments unless they are a type themselves (the idea
+   //    here is it is more likely for e.g. (1, 3.14) to be real arguments and
+   //    e.g. (int, 'double') to be template arguments:
+   //       a) if ! is_type(arg)
+   //             template<> method< T0, T1, ... >( type(a0), type(a1), ... )
+   //       b) else
+   //             drop to case 5
+   //    TODO: there is ambiguity in the above if the arguments are strings
+   //
+   // case 5:
+   //
+   //    instantiate template<> method< t0, t1, ... >
 
+   // case 1: obj->method( a0, a1, ... )
+
+   // simply forward the call: all non-templated methods are defined on class definition
+   // and thus already available
+      PyObject* pymeth = MethodProxy_Type.tp_descr_get(
+         (PyObject*)pytmpl->fNonTemplated, pytmpl->fSelf, (PyObject*)&MethodProxy_Type );
+      if ( MethodProxy_Check( pymeth ) ) {
+      // now call the method with the arguments
+         PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
+         Py_DECREF( pymeth );
+         if ( result )
+            return result;
+      // TODO: collect error here, as the failure may be either an overload
+      // failure after which we should continue; or a real failure, which should
+      // be reported.
+      }
+      Py_XDECREF( pymeth ); pymeth = 0;
+      PyErr_Clear();
+
+   // error check on method() which can not be derived if non-templated case fails
       Py_ssize_t nArgs = PyTuple_GET_SIZE( args );
-      if ( 1 <= nArgs ) {
-
-      // build "< type, type, ... >" part of method name
-         Py_INCREF( pytmpl->fPyName );
-         PyObject* pyname = pytmpl->fPyName;
-         if ( Utility::BuildTemplateName( pyname, args, 0 ) ) {
-         // lookup method on self (to make sure it propagates), which is readily callable
-            pymeth = PyObject_GetAttr( pytmpl->fSelf, pyname );
-         }
-         Py_XDECREF( pyname );
-
+      if ( nArgs == 0 ) {
+         PyErr_Format( PyExc_TypeError, "template method \'%s\' with no arguments must be explicit",
+            PyROOT_PyUnicode_AsString( pytmpl->fPyName ) );
+         return 0;
       }
 
-      if ( pymeth )
-         return pymeth;       // templated, now called by the user
+   // case 2: non-instantiating obj->method< t0, t1, ... >( a0, a1, ... )
 
-   // if the method lookup fails, try to locate the "generic" version of the template
+   // build "< type, type, ... >" part of method name
+      PyObject* pyname_v1 = Utility::BuildTemplateName( pytmpl->fPyName, args, 0 );
+      if ( pyname_v1 ) {
+      // lookup method on self (to make sure it propagates), which is readily callable
+         pymeth = PyObject_GetAttr( pytmpl->fSelf, pyname_v1 );
+         if ( pymeth ) { // overloads stop here, as this is an explicit match
+            Py_DECREF( pyname_v1 );
+            return pymeth;         // callable method, next step is by user
+         }
+      }
       PyErr_Clear();
-      pymeth = PyObject_GetAttrString( pytmpl->fSelf, const_cast< char* >(
-         (std::string( "__generic_" ) + PyROOT_PyUnicode_AsString( pytmpl->fPyName )).c_str()) );
 
-      if ( pymeth )
-         return PyObject_Call( pymeth, args, kwds );   // non-templated, executed as-is
-      
-      return pymeth;
+   // case 3: loop over all previously instantiated templates
+
+   // TODO: this should also contain the pre-instantiated templates
+      pymeth = MethodProxy_Type.tp_descr_get(
+         (PyObject*)pytmpl->fTemplated, pytmpl->fSelf, (PyObject*)&MethodProxy_Type );
+      if ( MethodProxy_Check( pymeth ) ) {
+      // now call the method with the arguments
+         PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
+         Py_DECREF( pymeth );
+         if ( result ) {
+            Py_XDECREF( pyname_v1 );
+            return result;
+         }
+      // TODO: collect error here, as the failure may be either an overload
+      // failure after which we should continue; or a real failure, which should
+      // be reported.
+      }
+      Py_XDECREF( pymeth ); pymeth = 0;
+      PyErr_Clear();
+
+   // still here? try instantiating methods
+
+      Bool_t isType = kFALSE;
+      Int_t nStrings = 0;
+      PyObject* tpArgs = PyTuple_New( nArgs );
+      for ( Int_t i = 0; i < nArgs; ++i ) {
+         PyObject* itemi = PyTuple_GET_ITEM( args, i );
+         if ( PyType_Check( itemi ) ) isType = kTRUE;
+         else if ( ! isType && PyString_Check( itemi ) ) nStrings += 1;
+         PyObject* tp = (PyObject*)Py_TYPE( itemi );
+         Py_INCREF( tp );
+         PyTuple_SET_ITEM( tpArgs, i, tp );
+      }
+
+      PyObject* clName = PyObject_GetAttr( pytmpl->fPyClass, PyStrings::gName );
+      TClass* klass = TClass::GetClass( PyROOT_PyUnicode_AsString( clName ) );
+      Py_DECREF( clName );
+      const std::string& tmplname = pytmpl->fNonTemplated->fMethodInfo->fName;
+
+    // case 4a: instantiating obj->method< T0, T1, ... >( type(a0), type(a1), ... )( a0, a1, ... )
+      if ( ! isType && ! ( nStrings == nArgs ) ) {    // no types among args and not all strings
+         PyObject* pyname_v2 = Utility::BuildTemplateName( NULL, tpArgs, 0 );
+         if ( pyname_v2 ) {
+            std::string mname = PyROOT_PyUnicode_AsString( pyname_v2 );
+            Py_DECREF( pyname_v2 );
+            std::string proto = mname.substr( 1, mname.size() - 2 );
+         // the following causes instantiation as necessary
+            TMethod* cppmeth = klass ? klass->GetMethodWithPrototype( tmplname.c_str(), proto.c_str() ) : 0;
+            if ( cppmeth ) {    // overload stops here
+               Py_XDECREF( pyname_v1 );
+               pytmpl->fTemplated->AddMethod( new TMethodHolder( klass, cppmeth ) );
+               pymeth = (PyObject*)MethodProxy_New( cppmeth->GetName(), new TMethodHolder( klass, cppmeth ) );
+               PyObject_SetAttrString( pytmpl->fPyClass, (char*)cppmeth->GetName(), (PyObject*)pymeth );
+               Py_DECREF( pymeth );
+               pymeth = PyObject_GetAttrString( pytmpl->fSelf, (char*)cppmeth->GetName() );
+               PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
+               Py_DECREF( pymeth );
+               return result;
+            }
+         }
+      }
+
+   // case 4b/5: instantiating obj->method< t0, t1, ... >( a0, a1, ... )
+      if ( pyname_v1 ) {
+         std::string mname = PyROOT_PyUnicode_AsString( pyname_v1 );
+       // the following causes instantiation as necessary
+         TMethod* cppmeth = klass ? klass->GetMethodAny( mname.c_str() ) : 0;
+         if ( cppmeth ) {    // overload stops here
+            pymeth = (PyObject*)MethodProxy_New( mname, new TMethodHolder( klass, cppmeth ) );
+            PyObject_SetAttr( pytmpl->fPyClass, pyname_v1, (PyObject*)pymeth );
+            if ( mname != cppmeth->GetName() ) // happens with typedefs and template default arguments
+               PyObject_SetAttrString( pytmpl->fPyClass, (char*)mname.c_str(), (PyObject*)pymeth );
+            Py_DECREF( pymeth );
+            pymeth = PyObject_GetAttr( pytmpl->fSelf, pyname_v1 );
+            Py_DECREF( pyname_v1 );
+            return pymeth;         // callable method, next step is by user
+         }
+         Py_DECREF( pyname_v1 );
+      }
+
+   // moderately generic error message, but should be clear enough
+      PyErr_Format( PyExc_TypeError, "can not resolve method template call for \'%s\'",
+         PyROOT_PyUnicode_AsString( pytmpl->fPyName ) );
+      return 0;
    }
 
 //____________________________________________________________________________
@@ -113,12 +286,20 @@ namespace {
    // create and use a new template proxy (language requirement)
       TemplateProxy* newPyTmpl = (TemplateProxy*)TemplateProxy_Type.tp_alloc( &TemplateProxy_Type, 0 );
 
-   // copy name and class
+   // copy name and class pointers
       Py_INCREF( pytmpl->fPyName );
       newPyTmpl->fPyName = pytmpl->fPyName;
 
       Py_XINCREF( pytmpl->fPyClass );
       newPyTmpl->fPyClass = pytmpl->fPyClass;
+
+   // copy non-templated method proxy pointer
+      Py_INCREF( pytmpl->fNonTemplated );
+      newPyTmpl->fNonTemplated = pytmpl->fNonTemplated;
+
+   // copy templated method proxy pointer
+      Py_INCREF( pytmpl->fTemplated );
+      newPyTmpl->fTemplated = pytmpl->fTemplated;
 
    // new method is to be bound to current object (may be NULL)
       Py_XINCREF( pyobj );

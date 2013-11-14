@@ -42,6 +42,8 @@
 #include "TError.h"
 //
 
+#include <iostream>
+
 
 //- data _______________________________________________________________________
 R__EXTERN PyObject* gRootModule;
@@ -274,7 +276,8 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
             Py_DECREF( pytmpl );
          }
          Py_XDECREF( attr );
-      // note: need to continue here to actually add the method ...
+      // continue processing to actually add the method so that the proxy can find
+      // it on the class when called
       }
 
    // public methods are normally visible, private methods are mangled python-wise
@@ -322,18 +325,19 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
    // one (to be picked up by the templated one as appropriate) if a template exists
       PyObject* attr = PyObject_GetAttrString( pyclass, const_cast< char* >( imd->first.c_str() ) );
       MethodProxy* method = 0;
-      if ( ! TemplateProxy_Check( attr ) ) {
-      // normal case: no template
-         PyErr_Clear();
-         method = MethodProxy_New( imd->first, imd->second );
+      if ( TemplateProxy_Check( attr ) ) {
+      // template exists, supply it with the non-templated methods
+         for ( Callables_t::iterator cit = imd->second.begin(); cit != imd->second.end(); ++cit )
+            ((TemplateProxy*)attr)->AddMethod( *cit );
       } else {
-      // template exists, supply it with the generic edition
-         Py_XDECREF( attr );
-         method = MethodProxy_New( "__generic_" + imd->first, imd->second );
+      // normal case, add a new method
+         method = MethodProxy_New( imd->first, imd->second );
+         PyObject_SetAttrString(
+            pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
+         Py_DECREF( method );
       }
-      PyObject_SetAttrString(
-         pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
-      Py_DECREF( method );
+
+      Py_XDECREF( attr );     // could have be found in base class or non-existent
    }
 
 // collect data members

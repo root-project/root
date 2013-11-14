@@ -233,15 +233,10 @@ namespace {
          return 0;
       }
 
-   // copy initial argument (no check, comes from internal class)
-      PyObject* pyname = PyROOT_PyUnicode_FromString(
-         PyROOT_PyUnicode_AsString( PyTuple_GET_ITEM( args, 0 ) ) );
-
    // build "< type, type, ... >" part of class name (modifies pyname)
-      if ( ! Utility::BuildTemplateName( pyname, args, 1 ) ) {
-         Py_DECREF( pyname );
+      PyObject* pyname = Utility::BuildTemplateName( PyTuple_GET_ITEM( args, 0 ), args, 1 );
+      if ( ! pyname )
          return 0;
-      }
 
       std::string name = PyROOT_PyUnicode_AsString( pyname );
       Py_DECREF( pyname );
