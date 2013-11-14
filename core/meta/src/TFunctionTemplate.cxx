@@ -24,11 +24,11 @@
 ClassImp(TFunctionTemplate)
 
 //______________________________________________________________________________
-TFunctionTemplate::TFunctionTemplate(FuncTempInfo_t *info) : TDictionary()
+TFunctionTemplate::TFunctionTemplate(FuncTempInfo_t *info, TClass *cl) : TDictionary(),
+   fInfo(info), fClass(cl)
 {
    // Default TFunctionTemplate ctor.
 
-   fInfo = info;
    if (fInfo) {
       gCling->FuncTempInfo_Name(fInfo,fName);
       gCling->FuncTempInfo_Title(fInfo,fTitle);
@@ -44,6 +44,7 @@ TFunctionTemplate::TFunctionTemplate(const TFunctionTemplate &orig) : TDictionar
       fInfo = gCling->FuncTempInfo_FactoryCopy(orig.fInfo);
    } else
       fInfo = 0;
+   fClass = orig.fClass;
 }
 
 //______________________________________________________________________________

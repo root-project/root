@@ -31,7 +31,7 @@ protected:
    TClass         *fClass; //pointer to the class (if any).
 
 public:
-   TFunctionTemplate(FuncTempInfo_t *info = 0);
+   TFunctionTemplate(FuncTempInfo_t *info, TClass *cl);
    TFunctionTemplate(const TFunctionTemplate &orig);
    TFunctionTemplate& operator=(const TFunctionTemplate &rhs);
    virtual            ~TFunctionTemplate();

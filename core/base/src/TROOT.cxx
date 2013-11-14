@@ -1231,7 +1231,7 @@ TFunctionTemplate *TROOT::GetFunctionTemplate(const char *name)
       TInterpreter::DeclId_t id = gInterpreter->GetFunctionTemplate(0,name);
       if (id) {
          FuncTempInfo_t *info = gInterpreter->FuncTempInfo_Factory(id);
-         result = new TFunctionTemplate(info);
+         result = new TFunctionTemplate(info, 0);
       }
    }
    return result;

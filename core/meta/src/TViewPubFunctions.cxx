@@ -91,7 +91,7 @@ TObject *TViewPubFunctions::FindObject(const char * name) const
    // scan till the object has been found. Returns 0 if object with specified
    // name is not found.
 
-   if (name || name[0]) return 0;
+   if (name==0 || name[0]==0) return 0;
 
    TIter next(&fClasses);
    while (TClass *cl = (TClass*)next()) {

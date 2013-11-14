@@ -2907,15 +2907,19 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
             if (I->getKind() == clang::TemplateArgument::Template) {
                clang::TemplateName templateName = I->getAsTemplate();
                clang::TemplateDecl* templateDecl = templateName.getAsTemplateDecl();
-               clang::DeclContext* declCtxt = templateDecl->getDeclContext();
+               if (templateDecl) {
+                  clang::DeclContext* declCtxt = templateDecl->getDeclContext();
                
-               if (templateDecl && declCtxt && !templateName.getAsQualifiedTemplateName()){
-                  clang::NamespaceDecl* ns = clang::dyn_cast<clang::NamespaceDecl>(declCtxt);
-                  clang::NestedNameSpecifier* nns = ::CreateNestedNameSpecifier(Ctx, ns);
-                  clang::TemplateName templateNameWithNSS ( Ctx.getQualifiedTemplateName(nns, false, templateDecl) );
-                  desArgs.push_back(clang::TemplateArgument(templateNameWithNSS));
-                  mightHaveChanged = true;
-                  continue;
+                  if (declCtxt && !templateName.getAsQualifiedTemplateName()){
+                     clang::NamespaceDecl* ns = clang::dyn_cast<clang::NamespaceDecl>(declCtxt);
+                     clang::NestedNameSpecifier* nns;
+                     if (ns) nns = ::CreateNestedNameSpecifier(Ctx, ns);
+                     else nns = ::CreateNestedNameSpecifier(Ctx,llvm::dyn_cast<clang::TagDecl>(declCtxt));
+                     clang::TemplateName templateNameWithNSS ( Ctx.getQualifiedTemplateName(nns, false, templateDecl) );
+                     desArgs.push_back(clang::TemplateArgument(templateNameWithNSS));
+                     mightHaveChanged = true;
+                     continue;
+                  }
                }
             }
             

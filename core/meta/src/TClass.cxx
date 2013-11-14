@@ -2964,7 +2964,7 @@ TFunctionTemplate *TClass::GetFunctionTemplate(const char *name)
       DeclId_t id = gInterpreter->GetFunctionTemplate(fClassInfo,name);
       if (id) {
          FuncTempInfo_t *info = gInterpreter->FuncTempInfo_Factory(id);
-         result = new TFunctionTemplate(info);
+         result = new TFunctionTemplate(info,this);
       }
    }
    return result;
