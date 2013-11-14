@@ -2776,49 +2776,42 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
 
    Version_t version;
 
-   if (startpos && bcnt) {
+   if (startpos) {
       // before reading object save start position
       *startpos = UInt_t(fBufCur-fBuffer);
+   }
 
-      // read byte count (older files don't have byte count)
-      // byte count is packed in two individual shorts, this to be
-      // backward compatible with old files that have at this location
-      // only a single short (i.e. the version)
-      union {
-         UInt_t     cnt;
-         Version_t  vers[2];
-      } v;
+   // read byte count (older files don't have byte count)
+   // byte count is packed in two individual shorts, this to be
+   // backward compatible with old files that have at this location
+   // only a single short (i.e. the version)
+   union {
+      UInt_t     cnt;
+      Version_t  vers[2];
+   } v;
 #ifdef R__BYTESWAP
-      frombuf(this->fBufCur,&v.vers[1]);
-      frombuf(this->fBufCur,&v.vers[0]);
+   frombuf(this->fBufCur,&v.vers[1]);
+   frombuf(this->fBufCur,&v.vers[0]);
 #else
-      frombuf(this->fBufCur,&v.vers[0]);
-      frombuf(this->fBufCur,&v.vers[1]);
+   frombuf(this->fBufCur,&v.vers[0]);
+   frombuf(this->fBufCur,&v.vers[1]);
 #endif      
 
-      // no bytecount, backup and read version
-      if (!(v.cnt & kByteCountMask)) {
-         fBufCur -= sizeof(UInt_t);
-         v.cnt = 0;
-      }
-      *bcnt = (v.cnt & ~kByteCountMask);
-      frombuf(this->fBufCur,&version);
-
-   } else {
-
-      // not interested in byte count
-      frombuf(this->fBufCur,&version);
-
-      // if this is a byte count, then skip next short and read version
-      if (version & kByteCountVMask) {
-         frombuf(this->fBufCur,&version);
-         frombuf(this->fBufCur,&version);
-      }
+   // no bytecount, backup and read version
+   if (!(v.cnt & kByteCountMask)) {
+      fBufCur -= sizeof(UInt_t);
+      v.cnt = 0;
    }
+   if (bcnt) *bcnt = (v.cnt & ~kByteCountMask);
+   frombuf(this->fBufCur,&version);
+
    if (version<=1) {
       if (version <= 0)  {
          if (cl) {
-            if (cl->GetClassVersion() != 0) {
+            if (cl->GetClassVersion() != 0
+                // If v.cnt < 6 then we have a class with a version that used to be zero and so there is no checksum.
+                && (v.cnt && v.cnt >= 6)
+                ) {
                UInt_t checksum = 0;
                //*this >> checksum;
                frombuf(this->fBufCur,&checksum);
@@ -2847,7 +2840,9 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
          } else { // of if (cl) {
             UInt_t checksum = 0;
             //*this >> checksum;
-            frombuf(this->fBufCur,&checksum);            
+            // If *bcnt < 6 then we have a class with 'just' version zero and no checksum
+            if (v.cnt && v.cnt >= 6)
+               frombuf(this->fBufCur,&checksum);
          }
       }  else if (version == 1 && fParent && ((TFile*)fParent)->GetVersion()<40000 && cl && cl->GetClassVersion() != 0) {
          // We could have a file created using a Foreign class before
@@ -3614,6 +3609,12 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
             infos->AddAtAndExpand(sinfo, version);
             if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
             sinfo->Build();
+         } else if (version==0) {
+            // When the object was written the class was version zero, so
+            // there is no StreamerInfo to be found.
+            // Check that the buffer position corresponds to the byte count.
+            CheckByteCount(start, count, cl);
+            return 0;
          } else {
             Error("ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
                   version, cl->GetName(), Length() );
@@ -3708,6 +3709,12 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             sinfo->Build();
 
             if (v2file) sinfo->BuildEmulated(file);
+         } else if (version==0) {
+            // When the object was written the class was version zero, so
+            // there is no StreamerInfo to be found.
+            // Check that the buffer position corresponds to the byte count.
+            CheckByteCount(R__s, R__c, cl);
+            return 0;
          } else {
             Error( "ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
                   version, cl->GetName(), Length() );
