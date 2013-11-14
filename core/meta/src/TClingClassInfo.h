@@ -84,8 +84,6 @@ public:
    void                 Delete(void *arena) const;
    void                 DeleteArray(void *arena, bool dtorOnly) const;
    void                 Destruct(void *arena) const;
-   bool                 HasBaseOffsetCached(const clang::Decl* decl) const;
-   std::pair<long, OffsetPtrFunc_t> FindBaseOffset(const clang::Decl* decl) const;
    const clang::Decl   *GetDecl() const { return fDecl; } // Underlying representation without Double32_t
    TDictionary::DeclId_t GetDeclId() const { return (const clang::Decl*)(fDecl->getCanonicalDecl()); }
    const clang::FunctionTemplateDecl *GetFunctionTemplate(const char *fname) const;
@@ -110,7 +108,7 @@ public:
                                   InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    long                 GetOffset(const clang::CXXMethodDecl* md) const;
-   //long                 GetBaseOffset(TClingClassInfo* base, void* address);
+   long                 GetBaseOffset(TClingClassInfo* base, void* address);
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    bool                 HasDefaultConstructor() const;
    bool                 HasMethod(const char *name) const;

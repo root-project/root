@@ -244,25 +244,6 @@ void TClingClassInfo::Destruct(void *arena) const
    cf.ExecDestructor(this, arena, /*nary=*/0, /*withFree=*/false);
 }
 
-std::pair<long, OffsetPtrFunc_t> TClingClassInfo::FindBaseOffset(const clang::Decl* decl) const
-{
-   // Find the pair caching the offset to the base class determined 
-   // by the parameter decl.
-
-   llvm::DenseMapIterator<const clang::Decl *, std::pair<long, long (*)(void *)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter = fOffsetCache.find(decl);
-   return (*iter).second;
-}
-
-bool TClingClassInfo::HasBaseOffsetCached(const clang::Decl* decl) const
-{
-   
-   llvm::DenseMapIterator<const clang::Decl *, std::pair<long, long (*)(void *)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter = fOffsetCache.find(decl);
-   if (iter != fOffsetCache.end()) {
-      return true;
-   }
-   return false;
-}
-
 const FunctionTemplateDecl *TClingClassInfo::GetFunctionTemplate(const char *fname) const
 {
    // Return any method or function in this scope with the name 'fname'.
@@ -552,6 +533,28 @@ long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
       }
    }
    return offset;
+}
+
+long TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address)
+{
+   // Check for the offset in the cache.
+   llvm::DenseMapIterator<const clang::Decl *, std::pair<long, long (*)(void *)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter 
+      = fOffsetCache.find(base->GetDecl());
+   if (iter != fOffsetCache.end()) {
+      std::pair<long, OffsetPtrFunc_t> offsetCache = (*iter).second;
+      if (OffsetPtrFunc_t executableFunc = offsetCache.second) {
+         if (address && executableFunc) {
+            return (*executableFunc)(address);
+         }
+      }
+      else {
+         return offsetCache.first;
+      }
+   }
+
+   // Compute the offset.
+   TClingBaseClassInfo binfo(fInterp, this, base);
+   return binfo.Offset(address);
 }
 
 static bool HasBody(const clang::FunctionDecl &decl, const cling::Interpreter &interp)
