@@ -2875,6 +2875,46 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
 }
 
 //______________________________________________________________________________
+Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
+{
+   // Read class version from I/O buffer, when the caller knows for sure that
+   // there is no checksum written/involved.
+
+   Version_t version;
+
+   if (startpos) {
+      // before reading object save start position
+      *startpos = UInt_t(fBufCur-fBuffer);
+   }
+
+   // read byte count (older files don't have byte count)
+   // byte count is packed in two individual shorts, this to be
+   // backward compatible with old files that have at this location
+   // only a single short (i.e. the version)
+   union {
+      UInt_t     cnt;
+      Version_t  vers[2];
+   } v;
+#ifdef R__BYTESWAP
+   frombuf(this->fBufCur,&v.vers[1]);
+   frombuf(this->fBufCur,&v.vers[0]);
+#else
+   frombuf(this->fBufCur,&v.vers[0]);
+   frombuf(this->fBufCur,&v.vers[1]);
+#endif
+
+   // no bytecount, backup and read version
+   if (!(v.cnt & kByteCountMask)) {
+      fBufCur -= sizeof(UInt_t);
+      v.cnt = 0;
+   }
+   if (bcnt) *bcnt = (v.cnt & ~kByteCountMask);
+   frombuf(this->fBufCur,&version);
+
+   return version;
+}
+
+//______________________________________________________________________________
 Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
 {
    // Read class version from I/O buffer ; to be used when streaming out
