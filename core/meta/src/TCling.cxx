@@ -5237,12 +5237,12 @@ void TCling::FuncTempInfo_Title(FuncTempInfo_t *ft_info, TString &output) const
 
    output.Clear();
    if (!ft_info) return;
-   const clang::FunctionTemplateDecl *ft = (clang::FunctionTemplateDecl*)ft_info;
+   const clang::FunctionTemplateDecl *ft = (const clang::FunctionTemplateDecl*)ft_info;
 
    // Iterate over the redeclarations, we can have muliple definitions in the
    // redecl chain (came from merging of pcms).
    if (const RedeclarableTemplateDecl *AnnotFD
-       = ROOT::TMetaUtils::GetAnnotatedRedeclarable((RedeclarableTemplateDecl*)ft)) {
+       = ROOT::TMetaUtils::GetAnnotatedRedeclarable((const RedeclarableTemplateDecl*)ft)) {
       if (AnnotateAttr *A = AnnotFD->getAttr<AnnotateAttr>()) {
          output = A->getAnnotation().str();
          return;
