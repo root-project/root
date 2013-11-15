@@ -1013,25 +1013,21 @@ void TDocOutput::CreateModuleIndex()
          Bool_t already_indirect = kFALSE;
          for (std::set<std::string>::const_iterator iDep2 = deps.begin();
               !already_indirect && iDep2 != deps.end(); ++iDep2) {
-            if (iDep == iDep2) {
-               ++iDep;
-               continue;
-            }
+            if (iDep == iDep2) continue;
             TLibraryDocInfo* libinfo2 = (TLibraryDocInfo*)
                fHtml->GetLibraryDependencies()->FindObject(iDep2->c_str());
-            if (!libinfo2) {
-               ++iDep;
-               continue;
-            }
+            if (!libinfo2) continue;
             const std::set<std::string>& deps2 = libinfo2->GetDependencies();
             already_indirect |= deps2.find(*iDep) != deps2.end();
          }
          if (already_indirect) {
             std::set<std::string>::iterator iRemove = iDep;
-            // Advance the iterator before erasing the element which invalidate the iterator.
+            // Advance the iterator before erasing the element which invalidates the iterator.
             ++iDep;
             deps.erase(iRemove);
-         } else ++iDep;
+         } else {
+            ++iDep;
+         }
       } // for library dependencies of module in library
    } // for libaries
 
