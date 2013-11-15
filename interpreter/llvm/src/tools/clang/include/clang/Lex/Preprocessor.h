@@ -566,9 +566,9 @@ public:
   DefMacroDirective *appendDefMacroDirective(IdentifierInfo *II, MacroInfo *MI){
     return appendDefMacroDirective(II, MI, MI->getDefinitionLoc(), false);
   }
-  
+
   /// \brief Remove a IdentifierInfo and MacroDirective from the history.
-  /// Given an IdentifierInfo and a MacroDirective we can remove them from 
+  /// Given an IdentifierInfo and a MacroDirective we can remove them from
   /// the macros vector.
   void removeMacro(IdentifierInfo *II, const MacroDirective *MD);
 
@@ -692,7 +692,6 @@ public:
   void EnterTokenStream(const Token *Toks, unsigned NumToks,
                         bool DisableMacroExpansion, bool OwnsTokens);
 
-  
   /// A RAII object to temporarily reset PP's state and restore it.
   class CleanupAndRestoreCacheRAII {
   private:
