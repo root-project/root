@@ -67,7 +67,7 @@ void TMVAMultiClassGui( const char* fName = "TMVAMulticlass.root" )
    gSystem->SetIncludePath(newIncludePath);
    std::cout <<"new include path="<<gSystem->GetIncludePath()<<std::endl;
   
-   cout << "--- Launch TMVA GUI to view input file: " << fName << endl;
+   std::cout << "--- Launch TMVA GUI to view input file: " << fName << std::endl;
 
    // init
    TMVAGui_inactiveButtons.clear();
@@ -75,7 +75,7 @@ void TMVAMultiClassGui( const char* fName = "TMVAMulticlass.root" )
    // check if file exist
    TFile* file = TFile::Open( fName );
    if (!file) {
-      cout << "==> Abort TMVAGui, please verify filename" << endl;
+      std::cout << "==> Abort TMVAGui, please verify filename" << std::endl;
       return;
    }
    // find all references   
@@ -272,7 +272,7 @@ void TMVAMultiClassGui( const char* fName = "TMVAMulticlass.root" )
    // indicate inactive buttons
    for (UInt_t i=0; i<TMVAGui_inactiveButtons.size(); i++) cbar->SetButtonState( TMVAGui_inactiveButtons[i], 3 );
    if (TMVAGui_inactiveButtons.size() > 0) {
-      cout << "=== Note: inactive buttons indicate that the corresponding classifiers were not trained ===" << endl;
+      std::cout << "=== Note: inactive buttons indicate that the corresponding classifiers were not trained ===" << std::endl;
    }
 
    gROOT->SaveContext();
