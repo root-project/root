@@ -4321,7 +4321,7 @@ int GenReflex(int argc, char **argv)
         NOTYPE ,
         "" , "deep",
         option::Arg::None,
-        "--deep  \tGenerate dictionaries for all dependent classes.\n"},
+        "--deep  \tGenerate dictionaries for all dependent classes (ignored).\n"},
 
       {NEWRMFFORMAT,
         NOTYPE ,
@@ -4417,9 +4417,7 @@ int GenReflex(int argc, char **argv)
       return 1;
       }
 
-   // Warnings:
-   RiseWarningIfPresent(options,NOMEMBERTYPEDEFS,"Exclusion of member typedefs");
-   RiseWarningIfPresent(options,NOTEMPLATETYPEDEFS,"Exclusion of template typedefs");
+   ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kNote;
 
    // The verbosity: debug wins over quiet
    std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
@@ -4440,6 +4438,13 @@ int GenReflex(int argc, char **argv)
          return 1;
       }
    }
+
+   // Warn if a selection file is not present and exit
+   if (NULL==options[SELECTIONFILENAME].arg){
+      ROOT::TMetaUtils::Warning(0,"The usage of genreflex without a selection file is not yet supported.\n");
+      return 1;      
+   }
+   
 
    // Set the parameters for the rootmap file. If the libname is not set,
    // it will be set according to the header in invokeRootCling.
@@ -4501,7 +4506,7 @@ int GenReflex(int argc, char **argv)
    std::string ofileName(options[OFILENAME] ? options[OFILENAME].arg : "");
 
    // Now check if the --deep option was selected
-   bool isDeep = options[DEEP];
+   bool isDeep = false; //options[DEEP];
 
    // If not empty and not a directory (therefore it's a file)
    // call rootcling directly. The number of headers files is irrelevant.
