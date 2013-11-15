@@ -4978,6 +4978,14 @@ DataMemberInfo_t* TCling::DataMemberInfo_Factory(ClassInfo_t* clinfo /*= 0*/) co
 }
 
 //______________________________________________________________________________
+DataMemberInfo_t* TCling::DataMemberInfo_Factory(DeclId_t declid) const
+{
+   const clang::Decl* decl = reinterpret_cast<const clang::Decl*>(declid);
+   const clang::ValueDecl* vd = llvm::dyn_cast_or_null<clang::ValueDecl>(decl);
+   return (DataMemberInfo_t*) new TClingDataMemberInfo(fInterpreter, vd);
+}
+
+//______________________________________________________________________________
 DataMemberInfo_t* TCling::DataMemberInfo_FactoryCopy(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
