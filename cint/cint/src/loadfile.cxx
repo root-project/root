@@ -45,6 +45,7 @@
 
 #ifdef __APPLE__
 #include <dlfcn.h>
+#include <AvailabilityMacros.h>
 #endif
 
 #define G__OLDIMPLEMENTATION1849
