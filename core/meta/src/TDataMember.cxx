@@ -199,6 +199,15 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    fSTLCont     = -1;
    if (!fInfo && !fClass) return; // default ctor is called
 
+   Init();
+}
+
+//______________________________________________________________________________
+void TDataMember::Init()
+{
+   // Routines called by the constructor and Update to reset the member's
+   // information.
+
    if (fInfo) {
       fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
       fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
@@ -806,6 +815,32 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
    }
 
    return fValueSetter;
+}
+
+//______________________________________________________________________________
+Bool_t TDataMember::Update(DataMemberInfo_t *info)
+{
+   // Update the TFunction to reflect the new info.
+   //
+   // This can be used to implement unloading (info == 0) and then reloading
+   // (info being the 'new' decl address).
+
+   if (fInfo) gCling->DataMemberInfo_Delete(fInfo);
+   SafeDelete(fValueSetter);
+   SafeDelete(fValueGetter);
+   if (fOptions) {
+      fOptions->Delete();
+      SafeDelete(fOptions);
+   }
+
+   if (info == 0) {
+      fInfo = 0;
+      return kTRUE;
+   } else {
+      fInfo = info;
+      Init();
+      return kTRUE;
+   }
 }
 
 //______________________________________________________________________________

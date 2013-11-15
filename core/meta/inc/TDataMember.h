@@ -54,6 +54,8 @@ private:
    TMethodCall        *fValueSetter;  //method which sets value;
    TList              *fOptions;      //list of possible values 0=no restrictions
 
+   void Init();
+
 protected:
    TDataMember(const TDataMember&);
    TDataMember& operator=(const TDataMember&);
@@ -84,6 +86,8 @@ public:
    Bool_t         IsPersistent() const { return TestBit(kObjIsPersistent); }
    Int_t          IsSTLContainer();
    Long_t         Property() const;
+   virtual bool   Update(DataMemberInfo_t *info);
+
    ClassDef(TDataMember,0)  //Dictionary for a class data member
 };
 
