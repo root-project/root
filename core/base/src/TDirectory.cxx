@@ -1090,28 +1090,33 @@ void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
 
 //______________________________________________________________________________
 void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
-   Ssiz_t maxlen)
+   const Ssiz_t maxlen)
 {
    // Decode a namecycle "aap;2" into name "aap" and cycle "2".
 
-   cycle     = 9999;
-   Ssiz_t nch = buffer ? strlen(buffer) : 0;
-   if (maxlen && (nch > maxlen)) nch = maxlen;
-   for (Ssiz_t i = 0; i < nch; i++) {
-      if (buffer[i] != ';')
-         name[i] = buffer[i];
-      else {
-         name[i] = 0;
-         if (i < nch-1 )
-            if (buffer[i+1] == '*') {
-               cycle = 10000;
-               return;
-            }
-         sscanf(buffer+i+1, "%hd", &cycle);
-         return;
+   char *sc = strchr(buffer, ';');
+   if (sc) {
+      // Cycle specified
+      Ssiz_t len = sc - buffer;
+      if (maxlen && len > maxlen)
+         len = maxlen;
+      strncpy(name, buffer, len);
+      name[len] = '\0';
+      if (*(++sc) == '*') {
+         cycle = 10000;
       }
+      else if (isdigit(*sc)) {
+         // Negative numbers not allowed
+         cycle = atoi(sc);
+      }
+      else cycle = 9999;
    }
-   name[nch] = 0;
+   else {
+      // No cycle specified
+      if (maxlen) strncpy(name, buffer, maxlen);
+      else strcpy(name, buffer);  // unsafe
+      cycle = 9999;
+   }
 }
 
 //______________________________________________________________________________
