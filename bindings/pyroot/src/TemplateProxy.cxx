@@ -5,6 +5,7 @@
 #include "TemplateProxy.h"
 #include "Adapters.h"
 #include "MethodProxy.h"
+#include "TFunctionHolder.h"
 #include "TMethodHolder.h"
 #include "PyCallable.h"
 #include "PyStrings.h"
@@ -186,7 +187,7 @@ namespace {
       PyObject* pyname_v1 = Utility::BuildTemplateName( pytmpl->fPyName, args, 0 );
       if ( pyname_v1 ) {
       // lookup method on self (to make sure it propagates), which is readily callable
-         pymeth = PyObject_GetAttr( pytmpl->fSelf, pyname_v1 );
+         pymeth = PyObject_GetAttr( pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname_v1 );
          if ( pymeth ) { // overloads stop here, as this is an explicit match
             Py_DECREF( pyname_v1 );
             return pymeth;         // callable method, next step is by user
@@ -223,9 +224,41 @@ namespace {
          PyObject* itemi = PyTuple_GET_ITEM( args, i );
          if ( PyType_Check( itemi ) ) isType = kTRUE;
          else if ( ! isType && PyString_Check( itemi ) ) nStrings += 1;
-         PyObject* tp = (PyObject*)Py_TYPE( itemi );
-         Py_INCREF( tp );
-         PyTuple_SET_ITEM( tpArgs, i, tp );
+      // special case for arrays
+         PyObject* pytc = PyObject_GetAttr( itemi, PyStrings::gTypeCode );
+         if ( ! ( pytc && PyROOT_PyUnicode_Check( pytc ) ) ) {
+         // normal case (not an array)
+            PyErr_Clear();
+            PyObject* tp = (PyObject*)Py_TYPE( itemi );
+            Py_INCREF( tp );
+            PyTuple_SET_ITEM( tpArgs, i, tp );
+         } else {
+         // array, build up a pointer type
+            char tc = ((char*)PyROOT_PyUnicode_AsString( pytc ))[0];
+            const char* ptrname = 0;
+            switch ( tc ) {
+               case 'b': ptrname = "char*";           break;
+               case 'h': ptrname = "short*";          break;
+               case 'H': ptrname = "unsigned short*"; break;
+               case 'i': ptrname = "int*";            break;
+               case 'I': ptrname = "unsigned int*";   break;
+               case 'l': ptrname = "long*";           break;
+               case 'L': ptrname = "unsigned long*";  break;
+               case 'f': ptrname = "float*";          break;
+               case 'd': ptrname = "double*";         break;
+               default:  ptrname = "void*";  // TODO: verify if this is right
+            }
+            if ( ptrname ) {
+               PyObject* pyptrname = PyString_FromString( ptrname );
+               PyTuple_SET_ITEM( tpArgs, i, pyptrname );
+            // string added, but not counted towards nStrings
+            } else {
+            // this will cleanly fail instantiation
+               Py_INCREF( pytc );
+               PyTuple_SET_ITEM( tpArgs, i, pytc );
+            }
+         }
+         Py_XDECREF( pytc );
       }
 
       PyObject* clName = PyObject_GetAttr( pytmpl->fPyClass, PyStrings::gName );
@@ -244,11 +277,17 @@ namespace {
             TMethod* cppmeth = klass ? klass->GetMethodWithPrototype( tmplname.c_str(), proto.c_str() ) : 0;
             if ( cppmeth ) {    // overload stops here
                Py_XDECREF( pyname_v1 );
-               pytmpl->fTemplated->AddMethod( new TMethodHolder( klass, cppmeth ) );
-               pymeth = (PyObject*)MethodProxy_New( cppmeth->GetName(), new TMethodHolder( klass, cppmeth ) );
+               if ( (klass->Property() & kIsNamespace) || (cppmeth->Property() & kIsStatic) ) {
+                  pytmpl->fTemplated->AddMethod( new TFunctionHolder( klass, cppmeth ) );
+                  pymeth = (PyObject*)MethodProxy_New( cppmeth->GetName(), new TFunctionHolder( klass, cppmeth ) );
+               } else {
+                  pytmpl->fTemplated->AddMethod( new TMethodHolder( klass, cppmeth ) );
+                  pymeth = (PyObject*)MethodProxy_New( cppmeth->GetName(), new TMethodHolder( klass, cppmeth ) );
+               }
                PyObject_SetAttrString( pytmpl->fPyClass, (char*)cppmeth->GetName(), (PyObject*)pymeth );
                Py_DECREF( pymeth );
-               pymeth = PyObject_GetAttrString( pytmpl->fSelf, (char*)cppmeth->GetName() );
+               pymeth = PyObject_GetAttrString(
+                  pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, (char*)cppmeth->GetName() );
                PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
                Py_DECREF( pymeth );
                return result;
@@ -267,7 +306,7 @@ namespace {
             if ( mname != cppmeth->GetName() ) // happens with typedefs and template default arguments
                PyObject_SetAttrString( pytmpl->fPyClass, (char*)mname.c_str(), (PyObject*)pymeth );
             Py_DECREF( pymeth );
-            pymeth = PyObject_GetAttr( pytmpl->fSelf, pyname_v1 );
+            pymeth = PyObject_GetAttr( pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname_v1 );
             Py_DECREF( pyname_v1 );
             return pymeth;         // callable method, next step is by user
          }

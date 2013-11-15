@@ -4,11 +4,12 @@
 // Bindings
 #include "PyROOT.h"
 #include "PyRootType.h"
-#include "RootWrapper.h"
-#include "TClassMethodHolder.h"
+#include "Adapters.h"
 #include "MethodProxy.h"
 #include "PropertyProxy.h"
-#include "Adapters.h"
+#include "RootWrapper.h"
+#include "TClassMethodHolder.h"
+#include "TemplateProxy.h"
 
 // ROOT
 #include "TDataMember.h"
@@ -130,13 +131,19 @@ namespace {
                         }
                      }
                   }
+               }
 
-                  if ( attr ) {
-                     PyObject_SetAttr( pyclass, pyname, attr );
-                     Py_DECREF( attr );
-                     attr = PyType_Type.tp_getattro( pyclass, pyname );
-                  }
+            // function templates that have not been instantiated
+               if ( ! attr ) {
+                  TFunctionTemplate* tmpl = ((TClass*)klass.Id())->GetFunctionTemplate( name.c_str() );
+                  if ( tmpl )
+                     attr = (PyObject*)TemplateProxy_New( name, pyclass );
+               }
 
+               if ( attr ) {
+                  PyObject_SetAttr( pyclass, pyname, attr );
+                  Py_DECREF( attr );
+                  attr = PyType_Type.tp_getattro( pyclass, pyname );
                }
             }
 

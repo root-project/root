@@ -423,13 +423,17 @@ PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, 
 
          PyROOT_PyUnicode_AppendAndDel( &pyname, tpName );
       } else {
-      // last ditch attempt, works for things like int values
-         PyObject* pystr = PyObject_Str( tn );
+      // last ditch attempt, works for things like int values; since this is a
+      // source of errors otherwise, it is limited to specific types and not
+      // generally used (str(obj) can print anything ...)
+         PyObject* pystr = 0;
+         if ( PyInt_Check( tn ) || PyLong_Check( tn ) || PyFloat_Check( tn ) )
+            pystr = PyObject_Str( tn );
+
          if ( ! pystr ) {
             Py_DECREF( pyname );
             return 0;
          }
-
          PyROOT_PyUnicode_AppendAndDel( &pyname, pystr );
       }
 
