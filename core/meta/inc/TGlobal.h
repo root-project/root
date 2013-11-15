@@ -38,6 +38,7 @@ public:
    
    virtual       ~TGlobal();
    Int_t          GetArrayDim() const;
+   DeclId_t       GetDeclId() const;
    Int_t          GetMaxIndex(Int_t dim) const;
    void          *GetAddress() const;
    const char    *GetTypeName() const;

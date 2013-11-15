@@ -90,6 +90,12 @@ Int_t TGlobal::GetArrayDim() const
 }
 
 //______________________________________________________________________________
+TDictionary::DeclId_t TGlobal::GetDeclId() const
+{
+   return gInterpreter->GetDeclId(fInfo);
+}
+
+//______________________________________________________________________________
 Int_t TGlobal::GetMaxIndex(Int_t dim) const
 {
    // Return maximum index for array dimension "dim".
