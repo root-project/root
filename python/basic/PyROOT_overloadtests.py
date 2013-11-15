@@ -90,9 +90,6 @@ class Overloads2TMathTestCase( MyTestCase ):
    def test1MeanOverloads( self ):
       """Test overloads using TMath::Mean(), TMath::Median"""
 
-      if FIXCLING:       # Mean and Median fail b/c they're templates
-         return
-
       numbers = [ 8, 2, 4, 2, 4, 2, 4, 4, 1, 5, 6, 3, 7 ]
       mean, median = 4.0, 4.0
 
@@ -116,9 +113,9 @@ class Overloads2TMathTestCase( MyTestCase ):
       self.assertEqual( round( TMath.Mean( len(al), al ) - mean, 8), 0 )
       self.assertEqual( round( TMath.Median( len(al), al ) - median, 8), 0 )
 
-    # this one should fail because there's no TMath::Mean( Long64_t, ULong_t* )
       aL = array( 'L', numbers )
-      self.assertRaises( TypeError, TMath.Mean, len(aL), aL )
+      self.assertEqual( round( TMath.Mean( len(aL), aL ) - mean, 8), 0 )
+      self.assertEqual( round( TMath.Median( len(aL), aL ) - median, 8), 0 )
 
    def test2DoubleIntOverloads( self ):
       """Test overloads on int/doubles"""
