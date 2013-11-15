@@ -30,7 +30,7 @@ namespace aux {
   using std::sqrt;
   using std::cos;
   using std::sin;
-  using std::conj;
+//  using std::conj;
   using std::norm;
 #endif /* __CINT__ */
 
