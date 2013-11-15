@@ -44,7 +44,7 @@ class TClingBaseClassInfo {
 private:
 
    cling::Interpreter           *fInterp; // Cling interpreter, we do *not* own.
-   const TClingClassInfo        *fClassInfo; // Class we were intialized with, we own.
+   TClingClassInfo              *fClassInfo; // Class we were intialized with, we own.
    bool                          fFirstTime; // Flag to provide Cint semantics for iterator advancement (not first time)
    bool                          fDescend; // Flag for signaling the need to descend on this advancement.
    const clang::Decl            *fDecl; // Current class whose bases we are iterating through, we do *not* own.
@@ -61,8 +61,8 @@ public:
       delete fBaseInfo;
    }
 
-   TClingBaseClassInfo(cling::Interpreter*, const TClingClassInfo*);
-   TClingBaseClassInfo(cling::Interpreter*, const TClingClassInfo* derived, TClingClassInfo* base);
+   TClingBaseClassInfo(cling::Interpreter*, TClingClassInfo*);
+   TClingBaseClassInfo(cling::Interpreter*, TClingClassInfo* derived, TClingClassInfo* base);
    TClingBaseClassInfo(const TClingBaseClassInfo&);
    TClingBaseClassInfo& operator=(const TClingBaseClassInfo&);
 
@@ -71,7 +71,7 @@ public:
    bool          IsValid() const;
    int           Next();
    int           Next(int onlyDirect);
-   long          Offset(void * address = 0) const;
+   ptrdiff_t     Offset(void * address = 0) const;
    long          Property() const;
    long          Tagnum() const;
    void          FullName(std::string &output, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;

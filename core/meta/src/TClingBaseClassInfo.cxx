@@ -60,7 +60,7 @@ using namespace std;
 static const string indent_string("   ");
 
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
-                                         const TClingClassInfo* ci)
+                                         TClingClassInfo* ci)
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
      fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L), fClassInfoOwnership(true)
 {
@@ -86,7 +86,7 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
 }
 
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
-                                         const TClingClassInfo* derived,
+                                         TClingClassInfo* derived,
                                          TClingClassInfo* base)
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
      fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L), fClassInfoOwnership(false)
@@ -443,7 +443,7 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
    return Offset;
  }
 
-long TClingBaseClassInfo::Offset(void * address) const
+ptrdiff_t TClingBaseClassInfo::Offset(void * address) const
 {
    // Compute the offset of the derived class to the base class.
 
@@ -498,16 +498,23 @@ long TClingBaseClassInfo::Offset(void * address) const
          }
          clang_val = -1;
       }
-      const_cast<TClingClassInfo*>(fClassInfo)->AddBaseOffsetValue(fBaseInfo->GetDecl(), clang_val);
+      fClassInfo->AddBaseOffsetValue(fBaseInfo->GetDecl(), clang_val);
       return clang_val;
    }
+   // Verify the address of the instatiated object
+   if (!address) {
+      Error("TClingBaseClassInfo::Offset", "The address of the object for virtual base offset calculation is not valid.");
+      return -1;
+   }
+
    // Virtual inheritance case
-   OffsetPtrFunc_t executableFunc;
-      executableFunc = GenerateBaseOffsetFunction(fClassInfo, fBaseInfo, address);
-      const_cast<TClingClassInfo*>(fClassInfo)->AddBaseOffsetFunction(fBaseInfo->GetDecl(), executableFunc);
-   if (address && executableFunc)
+   OffsetPtrFunc_t executableFunc = GenerateBaseOffsetFunction(fClassInfo, fBaseInfo, address);
+   if (executableFunc) {
+      fClassInfo->AddBaseOffsetFunction(fBaseInfo->GetDecl(), executableFunc);
       return (*executableFunc)(address);
-   return -1;   
+   }
+
+   return -1;
 }
 
 

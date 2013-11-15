@@ -49,7 +49,6 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 
-#include "llvm/ADT/DenseMap.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
@@ -124,14 +123,6 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
      fTitle(""), fOffsetCache(0)
 {
    Init(tag);
-}
-
-void TClingClassInfo::AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFunc_t func)
-{
-   // Add a function pointer for the offset from this class to the base class
-   // determined by the parameter decl.
-   
-   fOffsetCache[decl] = std::make_pair(0, func);
 }
 
 void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, long offset)
@@ -535,16 +526,20 @@ long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
    return offset;
 }
 
-long TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address)
+ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address)
 {
    // Check for the offset in the cache.
-   llvm::DenseMapIterator<const clang::Decl *, std::pair<long, long (*)(void *)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter 
+   llvm::DenseMapIterator<const clang::Decl *, std::pair<ptrdiff_t, long (*)(void *)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter 
       = fOffsetCache.find(base->GetDecl());
    if (iter != fOffsetCache.end()) {
-      std::pair<long, OffsetPtrFunc_t> offsetCache = (*iter).second;
+      std::pair<ptrdiff_t, OffsetPtrFunc_t> offsetCache = (*iter).second;
       if (OffsetPtrFunc_t executableFunc = offsetCache.second) {
-         if (address && executableFunc) {
+         if (address) {
             return (*executableFunc)(address);
+         }
+         else {
+            Error("TClingBaseClassInfo::Offset", "The address of the object for virtual base offset calculation is not valid.");
+            return -1;
          }
       }
       else {
