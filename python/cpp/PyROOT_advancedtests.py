@@ -212,19 +212,42 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
 
       m = MyTemplatedMethodClass()
 
+    # the number of entries in the class dir() is used to check whether
+    # member templates have been instantiated on it
+      nd = len(dir(MyTemplatedMethodClass))
+
     # use existing (note '-' to make sure the correct call was made
       self.assertEqual( m.GetSizeOL( 1 ),             -m.GetLongSize() )
       self.assertEqual( m.GetSizeOL( "aapje" ),       -len("aapje") )
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd )
 
     # use existing explicit instantiations
       self.assertEqual( m.GetSizeOL( float )( 3.14 ),  m.GetFloatSize() )
       self.assertEqual( m.GetSizeOL( 3.14 ),           m.GetFloatSize() )
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd )
 
     # explicit forced instantiation
       self.assertEqual( m.GetSizeOL( int )( 1 ),       m.GetIntSize() )
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 1 )
+      self.assert_( 'GetSizeOL<int>' in dir(MyTemplatedMethodClass) )
+      gzoi_id = id( MyTemplatedMethodClass.__dict__[ 'GetSizeOL<int>' ] )
+
+    # second call should make no changes, but re-use
+      self.assertEqual( m.GetSizeOL( int )( 1 ),       m.GetIntSize() )
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 1 )
+      self.assertEqual( gzoi_id, id( MyTemplatedMethodClass.__dict__[ 'GetSizeOL<int>' ] ) )
 
     # implicitly forced instantiation
       self.assertEqual( m.GetSizeOL( MyDoubleVector_t() ), m.GetVectorOfDoubleSize() )
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 2 )
+      mname = 'GetSizeOL<std::vector<double, std::allocator<double> > >'
+      self.assert_( mname in dir(MyTemplatedMethodClass) )
+      gzoi_id = id( MyTemplatedMethodClass.__dict__[ mname ] )
+
+    # as above, no changes on 2nd call
+      self.assertEqual( m.GetSizeOL( MyDoubleVector_t() ), m.GetVectorOfDoubleSize() )
+      self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 2 )
+      self.assertEqual( gzoi_id, id( MyTemplatedMethodClass.__dict__[ mname ] ) )
 
    def test7TemplateGlobalFunctions( self ):
       """Test template global function lookup and calls"""
