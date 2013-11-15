@@ -1,6 +1,8 @@
-Unix.*.Root.MacroPath:   .:$TMVASYS/test
+Unix.*.Root.MacroPath:   .:$TMVASYS/test:$(ROOTSYS)/macros
 
-Unix.*.Root.DynamicPath: $TMVASYS/lib
+Unix.*.Root.DynamicPath: $TMVASYS/lib:$(ROOTSYS)/lib
+
+
 Rint.Logon:              TMVAlogon.C
 Rint.Logoff:             TMVAlogoff.C
 Root.History:            ./.root_hist

@@ -33,7 +33,6 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-#include "TMVAGui.C"
 
 #if not defined(__CINT__) || defined(__MAKECINT__)
 // needs to be included when makecint runs (ACLIC)
@@ -51,6 +50,17 @@ void TMVAClassificationCategory()
    // Example for usage of different event categories with classifiers 
 
    std::cout << std::endl << "==> Start TMVAClassificationCategory" << std::endl;
+
+   // This loads the library
+   TMVA::Tools::Instance();
+
+   // to get access to the GUI and all tmva macros
+   TString tmva_dir(TString(gRootDir) + "/tmva");
+   if(gSystem->Getenv("TMVASYS"))
+      tmva_dir = TString(gSystem->Getenv("TMVASYS"));
+   gROOT->SetMacroPath(tmva_dir + "/test/:" + gROOT->GetMacroPath() );
+   gROOT->ProcessLine(".L TMVAGui.C");
+
 
    bool batchMode = false;
 

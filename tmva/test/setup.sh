@@ -40,12 +40,12 @@ echo "use TMVA version installed in " $TMVASYS
 #cd test;
 if [[ !  -h tmva_example.root  && $TMVATESTDIR -eq 1 ]]; then ln -s data/toy_sigbkg.root tmva_example.root; fi
 if [[ ! -h tmva_reg_example.root && $TMVATESTDIR -eq 1 ]]; then ln -s data/regression_parabola_noweights.root tmva_reg_example.root; fi
-ln -sf $TMVASYS/lib/libTMVA.rootmap;
-ln -sf $TMVASYS/lib/libTMVA.rootmap .rootmap; 
-if [[ ! -f TMVAlogon.C ]]; then cp $TMVASYS/test/TMVAlogon.C . ; fi
-if [[ ! -f TMVAGui.C ]]; then cp $TMVASYS/test/TMVAGui.C . ; fi
-if [[ ! -f TMVARegGui.C ]]; then cp $TMVASYS/test/TMVARegGui.C . ; fi
-if [[ ! -f tmvaglob.C ]]; then cp $TMVASYS/test/tmvaglob.C . ; fi
+#ln -sf $TMVASYS/lib/libTMVA.rootmap;
+#ln -sf $TMVASYS/lib/libTMVA.rootmap .rootmap; 
+#if [[ ! -f TMVAlogon.C ]]; then cp $TMVASYS/test/TMVAlogon.C . ; fi
+#if [[ ! -f TMVAGui.C ]]; then cp $TMVASYS/test/TMVAGui.C . ; fi
+#if [[ ! -f TMVARegGui.C ]]; then cp $TMVASYS/test/TMVARegGui.C . ; fi
+#if [[ ! -f tmvaglob.C ]]; then cp $TMVASYS/test/tmvaglob.C . ; fi
 if [[ ! -f .rootrc ]]; then cp $TMVASYS/test/.rootrc . ; fi
 
 

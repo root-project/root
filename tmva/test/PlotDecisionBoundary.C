@@ -21,7 +21,6 @@
 #include "TH2F.h"
 #include "TH3F.h"
 
-#include "TMVAGui.C"
 #include "tmvaglob.C"
 
 #if not defined(__CINT__) || defined(__MAKECINT__)

@@ -36,7 +36,6 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-#include "TMVARegGui.C"
 
 #if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TMVA/Tools.h"
@@ -59,6 +58,14 @@ void TMVARegression( TString myMethodList = "" )
    //---------------------------------------------------------------
    // This loads the library
    TMVA::Tools::Instance();
+
+   // to get access to the GUI and all tmva macros
+   TString tmva_dir(TString(gRootDir) + "/tmva");
+   if(gSystem->Getenv("TMVASYS"))
+      tmva_dir = TString(gSystem->Getenv("TMVASYS"));
+   gROOT->SetMacroPath(tmva_dir + "/test/:" + gROOT->GetMacroPath() );
+   gROOT->ProcessLine(".L TMVARegGui.C");
+
 
    // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;

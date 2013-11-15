@@ -18,8 +18,6 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-#include "TMVAMultiClassGui.C"
-
 #ifndef __CINT__
 #include "TMVA/Tools.h"
 #include "TMVA/Factory.h"
@@ -30,7 +28,16 @@ using namespace TMVA;
 int main(int argc, char** argv )
 {
    
+   // This loads the library
    TMVA::Tools::Instance();
+
+  // to get access to the GUI and all tmva macros
+    TString tmva_dir(TString(gRootDir) + "/tmva");
+   if(gSystem->Getenv("TMVASYS"))
+      tmva_dir = TString(gSystem->Getenv("TMVASYS"));
+   gROOT->SetMacroPath(tmva_dir + "/test/:" + gROOT->GetMacroPath() );
+   gROOT->ProcessLine(".L TMVAGui.C");
+
    
    //---------------------------------------------------------------
    // default MVA methods to be trained + tested
@@ -80,10 +87,10 @@ int main(int argc, char** argv )
       input = TFile::Open( fname );
    }
    else {
-      cout << "Creating testdata...." << std::endl;
+      std::cout << "Creating testdata...." << std::endl;
       gROOT->ProcessLine(".L createData.C+");
       gROOT->ProcessLine("create_MultipleBackground(2000)");
-      cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<endl;
+      std::cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<std::endl;
       input = TFile::Open( fname );
    }
    if (!input) {
