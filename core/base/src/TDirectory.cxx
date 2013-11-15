@@ -8,6 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+#include <stdlib.h>
 
 #include "Riostream.h"
 #include "Strlen.h"
@@ -1090,11 +1091,11 @@ void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
 
 //______________________________________________________________________________
 void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
-   const Ssiz_t maxlen)
+                                 const Ssiz_t maxlen)
 {
    // Decode a namecycle "aap;2" into name "aap" and cycle "2".
 
-   char *sc = strchr(buffer, ';');
+   char *sc = (char *) strchr(buffer, ';');
    if (sc) {
       // Cycle specified
       Ssiz_t len = sc - buffer;
@@ -1104,14 +1105,13 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
       name[len] = '\0';
       if (*(++sc) == '*') {
          cycle = 10000;
-      }
-      else if (isdigit(*sc)) {
+      } else if (isdigit(*sc)) {
          // Negative numbers not allowed
          cycle = atoi(sc);
+      } else {
+         cycle = 9999;
       }
-      else cycle = 9999;
-   }
-   else {
+   } else {
       // No cycle specified
       if (maxlen) strncpy(name, buffer, maxlen);
       else strcpy(name, buffer);  // unsafe
