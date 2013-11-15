@@ -401,7 +401,7 @@ Bool_t TFilePrefetch::CheckBlockInCache(char*& path, TFPBlock* block)
 
    Int_t value = 0;
 
-   if (gSystem->OpenDirectory(fullPath) == 0)
+   if (!gSystem->OpenDirectory(fullPath))
       gSystem->mkdir(fullPath);
 
    //dir is SHA1 value modulo 16; filename is the value of the SHA1(offset+len)
@@ -494,7 +494,7 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
    dirName.Form("%i", value);
    fullPath += ("/" + dirName);
 
-   if (gSystem->OpenDirectory(fullPath) == false)
+   if (!gSystem->OpenDirectory(fullPath))
       gSystem->mkdir(fullPath);
 
    TFile* file = 0;
@@ -554,7 +554,7 @@ Bool_t TFilePrefetch::SetCache(const char* path)
       fPathCache = path;
 
       if (!gSystem->OpenDirectory(path)){
-        gSystem->mkdir(path);
+         gSystem->mkdir(path);
       }
    } else
       return false;
