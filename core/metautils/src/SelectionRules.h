@@ -32,8 +32,7 @@ namespace cling {
    class Interpreter;
 }
 
-class SelectionRules
-{
+class SelectionRules {
    
 public:
    enum ESelectionFileTypes { // type of selection file
@@ -42,27 +41,11 @@ public:
       kNumSelectionFileTypes
    };
    
-private:
-   std::list<ClassSelectionRule>    fClassSelectionRules;    // list of the class selection rules
-   std::list<FunctionSelectionRule> fFunctionSelectionRules; // list of the global functions selection rules
-   std::list<VariableSelectionRule> fVariableSelectionRules; // list of the global variables selection rules
-   std::list<EnumSelectionRule>     fEnumSelectionRules;     // list of the enums selection rules
-   
-   ESelectionFileTypes fSelectionFileType;
-   
-   bool fIsDeep; // if --deep option passed from command line, this should be set to true
-   bool fHasFileNameRule; // if we have a file name rule, this should be set to true
-
-   cling::Interpreter &fInterp;
-
-public:
-   
    SelectionRules(cling::Interpreter &interp):
       fSelectionFileType(kNumSelectionFileTypes),
       fIsDeep(false),
       fHasFileNameRule(false),
-      fInterp(interp)
-   {}
+      fInterp(interp) {}
    
    void AddClassSelectionRule(const ClassSelectionRule& classSel);
    bool HasClassSelectionRules() const;
@@ -145,6 +128,21 @@ public:
    // Go through all the selections rules and lookup the name if any in the AST.
    // and force the instantiation of template if any are used in the rules.
    bool SearchNames(cling::Interpreter &interp);
+
+   
+private:
+   std::list<ClassSelectionRule>    fClassSelectionRules;    // list of the class selection rules
+   std::list<FunctionSelectionRule> fFunctionSelectionRules; // list of the global functions selection rules
+   std::list<VariableSelectionRule> fVariableSelectionRules; // list of the global variables selection rules
+   std::list<EnumSelectionRule>     fEnumSelectionRules;     // list of the enums selection rules
+   
+   ESelectionFileTypes fSelectionFileType;
+   
+   bool fIsDeep; // if --deep option passed from command line, this should be set to true
+   bool fHasFileNameRule; // if we have a file name rule, this should be set to true
+   
+   cling::Interpreter &fInterp;
+   
 };
 
 #endif

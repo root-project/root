@@ -18,19 +18,13 @@
 #include "clang/Frontend/CompilerInstance.h"
 
 #include "cling/Interpreter/Interpreter.h"
-extern cling::Interpreter *gInterp;
 
 #include "TClassEdit.h"
-#include "TMetaUtils.h"
-
-using namespace ROOT;
 
 #include <iostream>
 #include <sstream> // class ostringstream
 
 #include "SelectionRules.h"
-
-/* -------------------------------------------------------------------------- */
 
 //#define DEBUG
 
@@ -43,7 +37,6 @@ using namespace ROOT;
 #define FILTER_WARNINGS
 #define DIRECT_OUTPUT
 
-
 // SHOW_WARNINGS - enable warnings
 // SHOW_TEMPLATE_INFO - enable informations about encoutered tempaltes
 
@@ -54,10 +47,30 @@ using namespace ROOT;
 
 // #define SELECTION_DEBUG
 
-// void R__GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl);
 
-/* -------------------------------------------------------------------------- */
+
+namespace {
+   
+   class RPredicateIsSameNamespace
+   {
+   private:
+      clang::NamespaceDecl *fTarget;
+   public:
+      RPredicateIsSameNamespace(clang::NamespaceDecl *target) : fTarget(target) {}
+      
+      bool operator()(const RScanner::AnnotatedNamespaceDecl& element)
+      {
+         return (fTarget == element);
+      }
+   };   
+   
+}
+   
+using namespace ROOT;
 using namespace clang;
+
+extern cling::Interpreter *gInterp;
+
 const char* RScanner::fgClangDeclKey = "ClangDecl"; // property key used for connection with Clang objects
 const char* RScanner::fgClangFuncKey = "ClangFunc"; // property key for demangled names
 
@@ -70,7 +83,12 @@ std::map <clang::Decl*, std::string> RScanner::fgAnonymousEnumMap;
 
 //______________________________________________________________________________
 RScanner::RScanner (const SelectionRules &rules, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, unsigned int verbose /* = 0 */) : 
-   fSelectionRules(rules), fRecordDeclCallback(0), fSourceManager(0), fVerboseLevel(verbose), fInterpreter(interpret), fNormCtxt(normCtxt)
+  fVerboseLevel(verbose),
+  fSourceManager(0),
+  fInterpreter(interpret),
+  fRecordDeclCallback(0),
+  fNormCtxt(normCtxt),
+  fSelectionRules(rules)  
 {
    // Regular constructor setting up the scanner to search for entities
    // matching the 'rules'.
@@ -89,16 +107,12 @@ RScanner::~RScanner ()
 {
 }
 
-/********************************* PROPERTIES **********************************/
-
 //______________________________________________________________________________
 inline void* ToDeclProp(clang::Decl* item)
 {
    /* conversion and type check used by AddProperty */
    return item;
 }
-
-/*********************************** NUMBERS **********************************/
 
 //______________________________________________________________________________
 inline size_t APIntToSize(const llvm::APInt& num)
@@ -133,8 +147,6 @@ inline std::string IntToStd(int num)
    stream << num;
    return stream.str();
 }
-
-/********************************** MESSAGES **********************************/
 
 //______________________________________________________________________________
 inline std::string Message(const std::string &msg, const std::string &location)
@@ -397,8 +409,6 @@ void RScanner::UnimplementedType (const clang::Type* T)
    }
 }
 
-/******************************* CLASS BUILDER ********************************/
-
 //______________________________________________________________________________
 std::string RScanner::GetClassName(clang::RecordDecl* D) const
 {
@@ -448,10 +458,6 @@ std::string RScanner::GetEnumName(clang::EnumDecl* D) const
    return enum_name;
 }
 
-/*********************************** TYPES ************************************/
-
-/********************************* EXPRESSION *********************************/
-
 //______________________________________________________________________________
 std::string RScanner::ExprToStr(clang::Expr* expr) const
 {
@@ -465,8 +471,6 @@ std::string RScanner::ExprToStr(clang::Expr* expr) const
    
    return stream.str();
 }
-
-/********************************** TEMPLATE ***********************************/
 
 //______________________________________________________________________________
 std::string RScanner::ConvTemplateName(clang::TemplateName& N) const
@@ -560,8 +564,6 @@ std::string RScanner::ConvTemplateArguments(const clang::TemplateArgumentList& l
 }
 #endif // COMPLETE_TEMPLATES
 
-/********************************** FUNCTION **********************************/
-
 //______________________________________________________________________________
 std::string RScanner::FuncParameters(clang::FunctionDecl* D) const
 {
@@ -606,23 +608,10 @@ std::string RScanner::FuncParameterList(clang::FunctionDecl* D) const
    return "(" + result + ")";
 }
 
-class RPredicateIsSameNamespace
-{
-private:
-   clang::NamespaceDecl *fTarget;
-public:
-   RPredicateIsSameNamespace(clang::NamespaceDecl *target) : fTarget(target) {}
-
-   bool operator()(const RScanner::AnnotatedNamespaceDecl& element) 
-   {
-      return (fTarget == element);
-   }
-};
-
-// This method visits a namespace node 
+//______________________________________________________________________________
 bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
 {
-   
+   // This method visits a namespace node    
    // in case it is implicit we don't create a builder 
    if(N && N->isImplicit()){
       return true;
@@ -666,15 +655,13 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
    return ret;
 }
  
-/********************* Velislava's Method implementations **********************/
-
-// This method visits a class node - for every class is created a new class buider
-// irrespectful of weather the class is internal for another class declaration or not.
-// For every class the class builder is put on top of the fClassBuilders stack
+//______________________________________________________________________________
 bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
 {
 
-   bool ret = true;
+   // This method visits a class node - for every class is created a new class buider
+   // irrespectful of weather the class is internal for another class declaration or not.
+   // For every class the class builder is put on top of the fClassBuilders stack
 
    if (D && fRecordDeclCallback) {
       // Pass on any declaration.   This is usually used to record dependency.
@@ -694,11 +681,12 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
       return true;
    }
 
+   // Never select the class templates themselves.
    const clang::CXXRecordDecl *cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(D);
    if (cxxdecl && cxxdecl->getDescribedClassTemplate ()) {
-      // Never select the class templates themselves.
       return true;
    }
+   
    DumpDecl(D, "");
 
    #ifdef SELECTION_DEBUG   
@@ -729,39 +717,42 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
          }
       }
 
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
-#endif
-
       std::string qual_name;
       GetDeclQualName(D,qual_name);
       if (fVerboseLevel > 0) std::cout<<"\tSelected class -> " << qual_name << "\n";
       
       std::string name_value;
       if (selected->GetAttributeValue("name", name_value)) {
-         fSelectedClasses.push_back(ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),selected->GetRequestedType(), D,name_value.c_str(),
-                                                        selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
-                                                        selected->RequestNoInputOperator(),selected->RequestOnlyTClass(),selected->RequestedVersionNumber(),
-                                                        fInterpreter,fNormCtxt));
+         fSelectedClasses.push_back(
+            ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),
+                                                  selected->GetRequestedType(),
+                                                  D,
+                                                  name_value.c_str(),
+                                                  selected->RequestStreamerInfo(),
+                                                  selected->RequestNoStreamer(),
+                                                  selected->RequestNoInputOperator(),
+                                                  selected->RequestOnlyTClass(),
+                                                  selected->RequestedVersionNumber(),
+                                                  fInterpreter,
+                                                  fNormCtxt));
       } else {
-         fSelectedClasses.push_back(ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),D,
-                                                        selected->RequestStreamerInfo(),selected->RequestNoStreamer(),
-                                                        selected->RequestNoInputOperator(),selected->RequestOnlyTClass(),selected->RequestedVersionNumber(),
-                                                        fInterpreter,fNormCtxt));
+         fSelectedClasses.push_back(
+            ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),
+                                                  D,
+                                                  selected->RequestStreamerInfo(),
+                                                  selected->RequestNoStreamer(),
+                                                  selected->RequestNoInputOperator(),
+                                                  selected->RequestOnlyTClass(),
+                                                  selected->RequestedVersionNumber(),
+                                                  fInterpreter,
+                                                  fNormCtxt));
       }         
-      ret = true;
-   }
-   else {
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
-#endif
    }
    
-   // DEBUG if(ret) std::cout<<"\n\tReturning true ...";
-   // DEBUG else std::cout<<"\n\tReturning false ...";
-   return ret;
+   return true;
 }
 
+//______________________________________________________________________________
 bool RScanner::VisitTypedefDecl(clang::TypedefDecl* D)
 {
    // Visitor for every TypedefDecl i.e. class node in the AST
@@ -779,7 +770,7 @@ bool RScanner::VisitTypedefDecl(clang::TypedefDecl* D)
    return true;
 }
 
-// This method visits an enumeration
+//______________________________________________________________________________
 bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
 {
    DumpDecl(D, "");
@@ -840,7 +831,7 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
    return ret;
 }
 
-// This method visits a varable 
+//______________________________________________________________________________
 bool RScanner::VisitVarDecl(clang::VarDecl* D)
 {
    DumpDecl(D, "");
@@ -867,6 +858,7 @@ bool RScanner::VisitVarDecl(clang::VarDecl* D)
    return ret;
 }
 
+//______________________________________________________________________________
 bool RScanner::VisitFieldDecl(clang::FieldDecl* D)
 {
    DumpDecl(D, "");
@@ -893,8 +885,7 @@ bool RScanner::VisitFieldDecl(clang::FieldDecl* D)
    return ret;
 }
 
-
-// This method visits a function declaration
+//______________________________________________________________________________
 bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
 {
    DumpDecl(D, "");
@@ -941,6 +932,7 @@ bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
    return ret;
 }
 
+//______________________________________________________________________________
 bool RScanner::TraverseDeclContextHelper(DeclContext *DC)
 {
    bool ret = true;
@@ -963,6 +955,7 @@ bool RScanner::TraverseDeclContextHelper(DeclContext *DC)
    
 }
 
+//______________________________________________________________________________
 std::string RScanner::GetClassName(clang::DeclContext* DC) const
 {
    
@@ -974,6 +967,7 @@ std::string RScanner::GetClassName(clang::DeclContext* DC) const
    return ret;
 }
 
+//______________________________________________________________________________
 void RScanner::DumpDecl(clang::Decl* D, const char* msg) const
 {
    if (fVerboseLevel > 3) {
@@ -1009,7 +1003,7 @@ bool RScanner::GetDeclName(clang::Decl* D, std::string& name) const
    }
 }
 
-
+//______________________________________________________________________________
 bool RScanner::GetDeclQualName(clang::Decl* D, std::string& qual_name) const
 {
    clang::NamedDecl* N = dyn_cast<clang::NamedDecl> (D);
@@ -1024,7 +1018,7 @@ bool RScanner::GetDeclQualName(clang::Decl* D, std::string& qual_name) const
    }  
 }
 
-
+//______________________________________________________________________________
 bool RScanner::GetFunctionPrototype(clang::Decl* D, std::string& prototype) const {
    if (!D) {
       return false;
