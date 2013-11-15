@@ -63,6 +63,7 @@ public:
    TDataMember(DataMemberInfo_t *info = 0, TClass *cl = 0);
    virtual       ~TDataMember();
    Int_t          GetArrayDim() const;
+   DeclId_t       GetDeclId() const;
    Int_t          GetMaxIndex(Int_t dim) const;
    TClass        *GetClass() const { return fClass; }
    TDataType     *GetDataType() const { return fDataType; } //only for basic type

@@ -545,6 +545,12 @@ const char *TDataMember::GetArrayIndex() const
 }
 
 //______________________________________________________________________________
+TDictionary::DeclId_t TDataMember::GetDeclId() const
+{
+   return gInterpreter->GetDeclId(fInfo);
+}
+
+//______________________________________________________________________________
 Int_t TDataMember::GetMaxIndex(Int_t dim) const
 {
    // Return maximum index for array dimension "dim".
