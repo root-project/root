@@ -593,7 +593,7 @@ void TDirectoryFile::Delete(const char *namecycle)
    TDirectory::TContext ctxt(gDirectory, this);
    Short_t  cycle;
    char     name[kMaxLen];
-   DecodeNameCycle(namecycle, name, cycle);
+   DecodeNameCycle(namecycle, name, cycle, kMaxLen);
 
    Int_t deleteall    = 0;
    Int_t deletetree   = 0;
@@ -718,7 +718,7 @@ TKey *TDirectoryFile::FindKey(const char *keyname) const
    Short_t  cycle;
    char     name[kMaxLen];
 
-   DecodeNameCycle(keyname, name, cycle);
+   DecodeNameCycle(keyname, name, cycle, kMaxLen);
    return GetKey(name,cycle);
 }
 
@@ -734,7 +734,7 @@ TKey *TDirectoryFile::FindKeyAny(const char *keyname) const
    Short_t  cycle;
    char     name[kMaxLen];
 
-   DecodeNameCycle(keyname, name, cycle);
+   DecodeNameCycle(keyname, name, cycle, kMaxLen);
 
    TIter next(GetListOfKeys());
    TKey *key;
@@ -777,7 +777,7 @@ TObject *TDirectoryFile::FindObjectAny(const char *aname) const
    Short_t  cycle;
    char     name[kMaxLen];
 
-   DecodeNameCycle(aname, name, cycle);
+   DecodeNameCycle(aname, name, cycle, kMaxLen);
 
    TIter next(GetListOfKeys());
    TKey *key;
@@ -849,7 +849,7 @@ TObject *TDirectoryFile::Get(const char *namecycle)
    Short_t  cycle;
    char     name[kMaxLen];
 
-   DecodeNameCycle(namecycle, name, cycle);
+   DecodeNameCycle(namecycle, name, cycle, kMaxLen);
    Int_t nch = strlen(name);
    for (Int_t i = nch-1; i > 0; i--) {
       if (name[i] == '/') {
@@ -949,7 +949,7 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expe
    Short_t  cycle;
    char     name[kMaxLen];
 
-   DecodeNameCycle(namecycle, name, cycle);
+   DecodeNameCycle(namecycle, name, cycle, kMaxLen);
    Int_t nch = strlen(name);
    for (Int_t i = nch-1; i > 0; i--) {
       if (name[i] == '/') {
