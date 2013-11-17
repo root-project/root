@@ -2750,7 +2750,8 @@ TDataMember *TClass::GetDataMember(const char *datamember) const
    const char *start_name = datamember;
    while (*start_name == '*') ++start_name;
 
-   if (*start_name == 0) return 0;
+   // Empty name are 'legal', they represent anonymous unions.
+   //   if (*start_name == 0) return 0;
 
    if (const char *s = strchr(start_name, '[')){
       UInt_t len = s-start_name;
