@@ -54,7 +54,7 @@ class TClingDataMemberInfo {
    
 private:
    
-   cling::Interpreter    *fInterp; // Cling interpreter, we do *not* own.
+   cling::Interpreter    *fInterp;    // Cling interpreter, we do *not* own.
    TClingClassInfo       *fClassInfo; // Class we are iterating over, we own.
    bool                   fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
    clang::DeclContext::decl_iterator fIter; // Current decl.
