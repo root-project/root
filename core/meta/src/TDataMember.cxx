@@ -409,7 +409,7 @@ void TDataMember::Init()
                value = (Int_t*)(enumval->GetAddress());
                l     = (Long_t)(*value);
             } else if (IsEnum()) {
-               TObject *obj = fClass->GetListOfDataMembers()->FindObject(ptr1);
+               TObject *obj = fClass->GetListOfDataMembers(false)->FindObject(ptr1);
                if (obj)
                   l = gROOT->ProcessLineFast(Form("%s::%s;",fClass->GetName(),ptr1));
                else

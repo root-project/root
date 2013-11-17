@@ -452,7 +452,6 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
       }
       // Could trigger deserialization of decls.
       cling::Interpreter::PushTransactionRAII RAII(interp);
-      ((TCling*)gCling)->UpdateListOfDataMembers(*I);
       ((TCling*)gCling)->UpdateListOfEnums(*I);
       // Unlock the TClass for updates
       ((TCling*)gCling)->GetModTClasses().erase(*I);
@@ -2367,20 +2366,9 @@ void TCling::CreateListOfEnums(TClass* cl) const
 void TCling::CreateListOfDataMembers(TClass* cl) const
 {
    // Create list of pointers to data members for TClass cl.
-   R__LOCKGUARD2(gInterpreterMutex);
-   if (cl->fData) {
-      return;
-   }
-   cl->fData = new TList;
-   cl->fData->SetOwner();
-   TClingDataMemberInfo t(fInterpreter, (TClingClassInfo*)cl->GetClassInfo());
-   while (t.Next()) {
-      // if name cannot be obtained no use to put in list
-      if (t.IsValid() && t.Name()) {
-         TClingDataMemberInfo* a = new TClingDataMemberInfo(t);
-         cl->fData->Add(new TDataMember((DataMemberInfo_t *)a, cl));
-      }
-   }
+   // This is now a nop.  The creation and updating is handled in
+   // TListOfDataMembers.
+
 }
 
 //______________________________________________________________________________
@@ -2413,9 +2401,8 @@ void TCling::UpdateListOfEnums(TClass* cl) const
 void TCling::UpdateListOfDataMembers(TClass* cl) const
 {
    // Update the list of pointers to data members for TClass cl
-   delete cl->fData;
-   cl->fData = 0;
-   CreateListOfDataMembers(cl);
+   // This is now a nop.  The creation and updating is handled in
+   // TListOfDataMembers.
 }
 
 //______________________________________________________________________________
@@ -2602,7 +2589,6 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
    R__LOCKGUARD2(gInterpreterMutex);
    DeclId_t d;
    TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
-   TClingCallFunc func(fInterpreter);
    if (cl) {
       d = cl->GetDataMember(name);
    }
