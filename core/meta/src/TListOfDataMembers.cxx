@@ -30,7 +30,7 @@
 ClassImp(TListOfDataMembers)
 
 //______________________________________________________________________________
-TListOfDataMembers::TListOfDataMembers(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0)
+TListOfDataMembers::TListOfDataMembers(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE)
 {
    // Constructor.
 
@@ -198,6 +198,7 @@ void TListOfDataMembers::Clear(Option_t *option)
    }
    fIds->Clear();
    THashList::Clear(option);
+   fIsLoaded = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -207,6 +208,7 @@ void TListOfDataMembers::Delete(Option_t *option /* ="" */)
 
    fUnloaded->Delete(option);
    THashList::Delete(option);
+   fIsLoaded = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -370,7 +372,20 @@ void TListOfDataMembers::Load()
 
    if (fClass && fClass->GetClassInfo() == 0) return;
 
-   R__LOCKGUARD(gInterpreterMutex);
+   if (fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
+      // Class and union are not extendable, if we already
+      // loaded all the data member there is no need to recheck
+      if (fIsLoaded) return;
+   }
+   // In the case of namespace, even if we have loaded before we need to
+   // load again in case there was new data member added.
+   // (We may want to avoid doing it if there was no change in the AST).
+
+   // Mark the list as loaded to avoid an infinite recursion in the case
+   // where we have a data member that is a variable size array.  In that
+   // case TDataMember::Init needs to get/load the list to find the data
+   // member used as the array size.
+   fIsLoaded = kTRUE;
 
    ClassInfo_t *info;
    if (fClass) info = fClass->GetClassInfo();
@@ -407,6 +422,7 @@ void TListOfDataMembers::Unload()
    }
 
    THashList::Clear();
+   fIsLoaded = kFALSE;
 }
 
 //______________________________________________________________________________

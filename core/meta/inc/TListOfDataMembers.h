@@ -41,6 +41,7 @@ private:
 
    TExMap    *fIds;      // Map from DeclId_t to TDataMember*
    THashList *fUnloaded; // Holder of TDataMember for unloaded DataMembers.
+   Bool_t     fIsLoaded; // Mark whether Load was executed.
 
    TListOfDataMembers(const TListOfDataMembers&);              // not implemented
    TListOfDataMembers& operator=(const TListOfDataMembers&);   // not implemented
@@ -59,6 +60,7 @@ public:
    TDictionary *Get(DeclId_t id);
    TDictionary *Get(DataMemberInfo_t *info);
 
+   Bool_t     IsLoaded() const { return fIsLoaded; }
    void       AddFirst(TObject *obj);
    void       AddFirst(TObject *obj, Option_t *opt);
    void       AddLast(TObject *obj);
