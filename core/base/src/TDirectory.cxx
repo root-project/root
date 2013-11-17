@@ -1091,32 +1091,41 @@ void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
 
 //______________________________________________________________________________
 void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
-                                 const Ssiz_t maxlen)
+                                 const size_t namesize)
 {
-   // Decode a namecycle "aap;2" into name "aap" and cycle "2".
+   // Decode a namecycle "aap;2" into name "aap" and cycle "2". Destination
+   // buffer size for name (including string terminator) should be specified in
+   // namesize.
 
-   char *sc = (char *) strchr(buffer, ';');
-   if (sc) {
-      // Cycle specified
-      Ssiz_t len = sc - buffer;
-      if (maxlen && len > maxlen)
-         len = maxlen;
-      strncpy(name, buffer, len);
-      name[len] = '\0';
-      if (*(++sc) == '*') {
-         cycle = 10000;
-      } else if (isdigit(*sc)) {
-         // Negative numbers not allowed
-         cycle = atoi(sc);
-      } else {
-         cycle = 9999;
-      }
+   size_t len = 0;
+   const char *ni = strchr(buffer, ';');
+
+   if (ni) {
+      // Found ';'
+      len = ni - buffer;
+      ++ni;
    } else {
-      // No cycle specified
-      if (maxlen) strncpy(name, buffer, maxlen);
-      else strcpy(name, buffer);  // unsafe
-      cycle = 9999;
+      // No ';' found
+      len = strlen(buffer);
+      ni = &buffer[len];
    }
+
+   if (namesize) {
+      if (len > namesize-1ul) len = namesize-1;  // accommodate string terminator
+   } else {
+      ::Warning("TDirectory::DecodeNameCycle",
+         "Using unsafe version: invoke this metod by specifying the buffer size");
+   }
+
+   strncpy(name, buffer, len);
+   name[len] = '\0';
+
+   if (*ni == '*')
+      cycle = 10000;
+   else if (isdigit(*ni))
+      cycle = atoi(ni);
+   else
+      cycle = 9999;
 }
 
 //______________________________________________________________________________
