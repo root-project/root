@@ -301,6 +301,7 @@ TMVA::DataSetInfo& TMVA::MethodCategory::CreateCategoryDSI(const TCut& theCut,
    dsi->SetNormalization(norm);
 
    DataSetInfo& dsiReference= (*dsi);
+
    return dsiReference;  
 }
 
@@ -406,6 +407,10 @@ void TMVA::MethodCategory::Train()
                << " not trained (training tree has less entries ["
                << mva->Data()->GetNTrainingEvents()
                << "] than required [" << MinNoTrainingEvents << "]" << Endl;
+
+         Log() << kERROR << " w/o training/test events for that category, I better stop here and let you fix " << Endl;
+         Log() << kFATAL << "that one first, otherwise things get too messy later ... " << Endl;
+
       }
    }
 
