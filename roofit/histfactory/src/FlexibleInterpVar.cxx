@@ -370,7 +370,7 @@ Double_t FlexibleInterpVar::evaluate() const
 	double pow_up_log   = _high[i] <= 0.0 ? 0.0 : pow_up*_logHi[i] ;
 	double pow_down_log = _low[i] <= 0.0 ? 0.0 : -pow_down*_logLo[i] ;
 	double pow_up_log2  = _high[i] <= 0.0 ? 0.0 : pow_up_log*_logHi[i] ;
-	double pow_down_log2= _low[i] <= 0.0 ? 0.0 : pow_down_log*_logLo[i] ;
+	double pow_down_log2= _low[i] <= 0.0 ? 0.0 : -pow_down_log*_logLo[i] ;
 	/*
 	double pow_up       = pow(_high[i]/_nominal, x0);
 	double pow_down     = pow(_low[i]/_nominal,  x0);
