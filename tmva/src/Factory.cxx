@@ -91,7 +91,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
 : Configurable          ( theOption ),
    fDataSetManager       ( NULL ), //DSMTEST
    fDataInputHandler     ( new DataInputHandler ),
-   fTransformations      ( "" ),
+   fTransformations      ( "I" ),
    fVerbose              ( kFALSE ),
    fJobName              ( jobName ),
    fDataAssignType       ( kAssignEvents ),
@@ -122,8 +122,14 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    // directory and hence don't go out of scope when closing the file
    // TH1::AddDirectory(kFALSE);
    Bool_t silent          = kFALSE;
+#ifdef WIN32
+   // under Windows, switch progress bar and color off by default, as the typical windows shell doesn't handle these (would need different sequences..)
+   Bool_t color           = kFALSE;
+   Bool_t drawProgressBar = kFALSE;
+#else
    Bool_t color           = !gROOT->IsBatch();
    Bool_t drawProgressBar = kTRUE;
+#endif
    DeclareOptionRef( fVerbose, "V", "Verbose flag" );
    DeclareOptionRef( color,    "Color", "Flag for coloured screen output (default: True, if in batch mode: False)" );
    DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
