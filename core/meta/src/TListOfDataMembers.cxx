@@ -36,7 +36,6 @@ TListOfDataMembers::TListOfDataMembers(TClass *cl) : fClass(cl),fIds(0),fUnloade
 
    fIds = new TExMap;
    fUnloaded = new THashList;
-   TCollection::SetOwner();
 }
 
 //______________________________________________________________________________
@@ -44,6 +43,7 @@ TListOfDataMembers::~TListOfDataMembers()
 {
    // Destructor.
 
+   THashList::Delete();
    delete fIds;
    fUnloaded->Delete();
    delete fUnloaded;
@@ -56,10 +56,18 @@ void TListOfDataMembers::AddFirst(TObject *obj)
 
    THashList::AddFirst(obj);
 
-   TDataMember *d = dynamic_cast<TDataMember*>(obj);
-   if (d) {
-      DeclId_t id = d->GetDeclId();
-      fIds->Add((Long64_t)id,(Long64_t)d);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)d);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)g);
+      }
    }
 }
 
@@ -74,10 +82,18 @@ void TListOfDataMembers::AddFirst(TObject *obj, Option_t *opt)
 
    THashList::AddFirst(obj,opt);
 
-   TDataMember *f = dynamic_cast<TDataMember*>(obj);
-   if (f) {
-      DeclId_t id = f->GetDeclId();
-      fIds->Add((Long64_t)id,(Long64_t)f);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)d);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)g);
+      }
    }
 }
 
@@ -88,10 +104,18 @@ void TListOfDataMembers::AddLast(TObject *obj)
 
    THashList::AddLast(obj);
 
-   TDataMember *f = dynamic_cast<TDataMember*>(obj);
-   if (f) {
-      DeclId_t id = f->GetDeclId();
-      fIds->Add((Long64_t)id,(Long64_t)f);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)d);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)g);
+      }
    }
 }
 
@@ -106,10 +130,18 @@ void TListOfDataMembers::AddLast(TObject *obj, Option_t *opt)
 
    THashList::AddLast(obj, opt);
 
-   TDataMember *f = dynamic_cast<TDataMember*>(obj);
-   if (f) {
-      DeclId_t id = f->GetDeclId();
-      fIds->Add((Long64_t)id,(Long64_t)f);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)d);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)g);
+      }
    }
 }
 
@@ -120,10 +152,18 @@ void TListOfDataMembers::AddAt(TObject *obj, Int_t idx)
 
    THashList::AddAt(obj, idx);
 
-   TDataMember *f = dynamic_cast<TDataMember*>(obj);
-   if (f) {
-      DeclId_t id = f->GetDeclId();
-      fIds->Add((Long64_t)id,(Long64_t)f);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)d);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)g);
+      }
    }
 }
 
@@ -134,10 +174,18 @@ void TListOfDataMembers::AddAfter(const TObject *after, TObject *obj)
 
    THashList::AddAfter(after, obj);
 
-   TDataMember *f = dynamic_cast<TDataMember*>(obj);
-   if (f) {
-      DeclId_t id = f->GetDeclId();
-      fIds->Add((Long64_t)id,(Long64_t)f);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)d);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)g);
+      }
    }
 }
 
@@ -148,10 +196,18 @@ void TListOfDataMembers::AddAfter(TObjLink *after, TObject *obj)
 
    THashList::AddAfter(after, obj);
 
-   TDataMember *f = dynamic_cast<TDataMember*>(obj);
-   if (f) {
-      DeclId_t id = f->GetDeclId();
-      fIds->Add((Long64_t)id,(Long64_t)f);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)d);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)g);
+      }
    }
 }
 
@@ -162,10 +218,18 @@ void TListOfDataMembers::AddBefore(const TObject *before, TObject *obj)
 
    THashList::AddBefore(before, obj);
 
-   TDataMember *f = dynamic_cast<TDataMember*>(obj);
-   if (f) {
-      DeclId_t id = f->GetDeclId();
-      fIds->Add((Long64_t)id,(Long64_t)f);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)d);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)g);
+      }
    }
 }
 
@@ -176,10 +240,18 @@ void TListOfDataMembers::AddBefore(TObjLink *before, TObject *obj)
 
    THashList::AddBefore(before, obj);
 
-   TDataMember *f = dynamic_cast<TDataMember*>(obj);
-   if (f) {
-      DeclId_t id = f->GetDeclId();
-      fIds->Add((Long64_t)id,(Long64_t)f);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)d);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Add((Long64_t)id,(Long64_t)g);
+      }
    }
 }
 
@@ -189,13 +261,7 @@ void TListOfDataMembers::Clear(Option_t *option)
    // Remove all objects from the list. Does not delete the objects unless
    // the THashList is the owner (set via SetOwner()).
 
-   Bool_t nodel = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
-
-   if (nodel) {
-      fUnloaded->Clear();
-   } else {
-      fUnloaded->Clear();
-   }
+   fUnloaded->Clear(option);
    fIds->Clear();
    THashList::Clear(option);
    fIsLoaded = kFALSE;
@@ -246,9 +312,14 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
 
       // Let's see if this is a reload ...
       const char *name = gInterpreter->DataMemberInfo_Name(info);
-      TDataMember *update = (TDataMember *)fUnloaded->FindObject(name);
+
+      TDictionary *update = (TDictionary *)fUnloaded->FindObject(name);
       if (update) {
-         update->Update(info);
+         if (fClass) {
+            ((TDataMember*)update)->Update(info);
+         } else {
+            ((TGlobal*)update)->Update(info);
+         }
          dm = update;
       }
       if (!dm) {
@@ -317,10 +388,18 @@ void TListOfDataMembers::RecursiveRemove(TObject *obj)
    THashList::RecursiveRemove(obj);
    fUnloaded->RecursiveRemove(obj);
 
-   TDataMember *f = dynamic_cast<TDataMember*>(obj);
-   if (f) {
-      DeclId_t id = f->GetDeclId();
-      fIds->Remove((Long64_t)id);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Remove((Long64_t)id);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Remove((Long64_t)id);
+      }
    }
 }
 
@@ -335,10 +414,18 @@ TObject* TListOfDataMembers::Remove(TObject *obj)
    if (!found) {
       found = fUnloaded->Remove(obj);
    }
-   TDataMember *f = dynamic_cast<TDataMember*>(obj);
-   if (f) {
-      DeclId_t id = f->GetDeclId();
-      fIds->Remove((Long64_t)id);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Remove((Long64_t)id);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Remove((Long64_t)id);
+      }
    }
    if (found) return obj;
    else return 0;
@@ -356,10 +443,18 @@ TObject* TListOfDataMembers::Remove(TObjLink *lnk)
    THashList::Remove(lnk);
    fUnloaded->Remove(obj);
 
-   TDataMember *f = dynamic_cast<TDataMember*>(obj);
-   if (f) {
-      DeclId_t id = f->GetDeclId();
-      fIds->Remove((Long64_t)id);
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(obj);
+      if (d) {
+         DeclId_t id = d->GetDeclId();
+         fIds->Remove((Long64_t)id);
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(obj);
+      if (g) {
+         DeclId_t id = g->GetDeclId();
+         fIds->Remove((Long64_t)id);
+      }
    }
    return obj;
 }
@@ -413,10 +508,13 @@ void TListOfDataMembers::Unload()
 
    TObjLink *lnk = FirstLink();
    while (lnk) {
-      TDataMember *func = (TDataMember*)lnk->GetObject();
+      DeclId_t id;
+      TDictionary *data = (TDictionary *)lnk->GetObject();
+      if (fClass) id = ((TDataMember*)data)->GetDeclId();
+      else id = ((TGlobal*)data)->GetDeclId();
 
-      fIds->Remove((Long64_t)func->GetDeclId());
-      fUnloaded->Add(func);
+      fIds->Remove((Long64_t)id);
+      fUnloaded->Add(data);
 
       lnk = lnk->Next();
    }
